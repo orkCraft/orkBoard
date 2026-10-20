@@ -211,6 +211,11 @@ class OpRunner(CommandsMixin, BriefsMixin):
         with self._lock:
             return list(self._running)
 
+    def busy(self) -> bool:
+        """A call runs or waits in the queue (spec 47: the computer is kept awake meanwhile)."""
+        with self._lock:
+            return bool(self._queue or self._running)
+
     def wait_idle(self, timeout: float = 10.0) -> bool:
         """Until nothing runs or waits in the queue (tests, closing)."""
         end = time.monotonic() + timeout
