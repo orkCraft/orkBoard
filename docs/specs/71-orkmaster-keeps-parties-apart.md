@@ -143,3 +143,19 @@ Part A, the host; no desktop or phone file. The shapes of §8 are as written; wh
   `leave`), device}. Slugs only, no goal's words. `TERMS` has `collide` (*collision*, *collisions*).
 - **Tests**: new `tests/test_collide.py` (14) and `tests/test_idea_collide.py` (22), `test_lexicon.py` (+1). Not done: push words for a `collide` row (the phone's push says
   *waits for your answer*; `phone_push.KIND_WORDS` is tied to the page's table), and the Orkmaster's cost on a party's work (the week is `project.collide_week`).
+
+## As built (B)
+Part B, the desktop, against the stub host of `tests/test_collide_desktop_browser.py` with the shapes of §8; no Python and no `pwa/` file touched.
+- **The stop** (`js/arena/collide.js`, `collidewords.js`; `stops.js`, `arenawords.js`): `collide` is a kind of stop as `plan` and `change` are. Its card is the small one: the Orkmaster's small head from
+  `project.orkmaster` (`stopsOf` takes it as its fourth argument, `handOf` gives it) beside *Orkmaster asks*, the two goals one line each (element, *<party> · <goal>*; a press opens that goal), the judge's why
+  as the stop's note (two lines), and one button for each of `collide.answers`: *<goal> first*, *One goal*, *Leave it*, *Re-plan it*, each with what happens in its title; the judge's `first` is the primary
+  one (none suggested: the first). A press sends `ideas.collide_answer {id, answer}`. The statement (`text`) is the stop's aria-label, not drawn. A press outside the buttons opens the goal asked about; the
+  stop is as urgent as a plan's (1) and rings that goal's cards as a plan does. A stop of another party says its party as every other.
+- **The row** (`goalwords.js` `goalMark`, `goals.js`, `column.css`): a goal with an open `waits_for` (its `flag` empty) and no stronger sign wears orkUI's `before` sign; *waits for <party> · <goal>* is in its
+  title whatever sign it wears. A button over the sign (`.arena-goal__go`, 20 × 28, nothing drawn) opens the first goal waited for: its party shown, that goal the one picked. A raised flag ends the wait. A goal
+  with a collision stop asked about wears the alert sign (`needs_you: "collide"`).
+- **The level** (`project.js` `useLinks`, `collidewords.js` `orkLinks`, `arrows.js`): the Orkmaster's links are drawn always, not only on a hover: an open collision (`project.collisions`) is a plain line in
+  `--ork-alert` between its two decks, no head; a wait is the dashed ink arrow from the goal waited for to the one that waits. A link whose deck is not shown (a flag under its fold) is not drawn; the links are
+  redrawn when the level's width changes. `segment` now says its `tip`.
+- **An older host**: no `collide` row, no `waits_for`, no `project.collisions`: no stop, no sign, no link (a test).
+- Words are in `collidewords.js`; `KIND_WORD.collide` is *Orkmaster asks*. Screenshots: `desk-collide-stop.png`, `desk-collide-project.png`.

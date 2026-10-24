@@ -23,12 +23,12 @@ function edgeOf(a, b) {
 export function segment(key, a, b) {
   const p = edgeOf(a, b), q = edgeOf(b, a), ang = Math.atan2(q.y - p.y, q.x - p.x);
   const w = (d) => `${(q.x - HEAD * Math.cos(ang + d)).toFixed(1)},${(q.y - HEAD * Math.sin(ang + d)).toFixed(1)}`;
-  return { key, x1: p.x, y1: p.y, x2: q.x - (HEAD - 1) * Math.cos(ang), y2: q.y - (HEAD - 1) * Math.sin(ang), head: `${q.x.toFixed(1)},${q.y.toFixed(1)} ${w(0.45)} ${w(-0.45)}` };
+  return { key, x1: p.x, y1: p.y, x2: q.x - (HEAD - 1) * Math.cos(ang), y2: q.y - (HEAD - 1) * Math.sin(ang), tip: q, head: `${q.x.toFixed(1)},${q.y.toFixed(1)} ${w(0.45)} ${w(-0.45)}` };
 }
 
 /** The svg layer that draws `lines` (from `segment`) over its positioned host. */
 export function ArrowLines({ lines }) {
-  return html`<svg class="arena-arrows" aria-hidden="true">${lines.map((l) => html`<g key=${l.key} class="arena-arrow" data-edge=${l.key}>
+  return html`<svg class="arena-arrows" aria-hidden="true">${lines.map((l) => html`<g key=${l.key} class="arena-arrow" data-edge=${l.key} data-kind=${l.kind || undefined}>
     <line x1=${l.x1} y1=${l.y1} x2=${l.x2} y2=${l.y2} /><polygon points=${l.head} /></g>`)}</svg>`;
 }
 

@@ -18,7 +18,10 @@
   letter-spacing: var(--ork-type-label-track); }
 
 /* a goal: its element, its type's sign, its title, its state's sign; one line, 28 px */
-.arena-goal { display: flex; flex: none; height: 28px; }
+.arena-goal { position: relative; display: flex; flex: none; height: 28px; }
+.arena-goal__go { appearance: none; position: absolute; top: 0; right: calc(var(--ork-4) - 4px); width: 20px; height: 28px; padding: 0; border: 0; background: none; cursor: pointer; }      /* the press on a waiting goal's sign (spec 71 §6): over the sign, nothing drawn */
+.arena-goal__go:hover { background: var(--ork-raised); box-shadow: inset 0 0 0 var(--ork-line) var(--ork-edge); }
+.arena-goal__go:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 .arena-goal__main { appearance: none; flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--ork-3); height: 28px; box-sizing: border-box; padding: 0 var(--ork-4) 0 var(--ork-5);
   background: none; border: 0; color: var(--ork-ink); text-align: left; cursor: pointer; font: var(--ork-type-body); }
 .arena-goal__main:hover { background: var(--ork-raised); }

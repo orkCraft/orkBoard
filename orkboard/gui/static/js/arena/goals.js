@@ -15,6 +15,8 @@ import { openDialog } from "../shell/modals.js";
 import { reducedMotion } from "./motion.js";
 import { picks, peek, rawOpen, flagsOpen, flagsAll, togglePick, clearPicks } from "./arenastate.js";
 import { litFlags } from "./flags.js";
+import { waitsOf, waitsForWords } from "./collidewords.js";
+import { show } from "./partylist.js";
 import { powerOf } from "./arenawords.js";
 import { typeSign } from "./stacks.js";
 import { elementOf, flagRow, goalMark, listsOf, pickTip, waitsMain, workLine } from "./goalwords.js";
@@ -32,7 +34,8 @@ const TONES = { danger: "is-danger", alert: "is-alert" };
 function GoalRow({ g, n, plan = null, raw = false, party }) {
   const el = elementOf(n), mark = goalMark(n), on = (picks.value[party] || []).includes(n.slug), some = (picks.value[party] || []).length > 0;
   const stop = mark.sign === "alert";
-  const words = raw || plan ? plan.words : workLine(n);
+  const waits = waitsOf(n), words = [raw || plan ? plan.words : workLine(n), waitsForWords(n)].filter(Boolean).join(" · ");     // *waits for Backend · Auth API* is in the title, whatever sign the row wears
+  const toWait = () => { const w = waits[0]; show(w.party, party); picks.value = { ...picks.value, [w.party]: [w.goal] }; };          // the sign: that goal's party, with it picked
   const open = () => (plan?.kind === "plan" ? showPlan(n.slug, "", { via: "map" }) : showIdea(n.slug, { via: "map" }));
   const press = () => { if (raw || on) open(); else togglePick(party, n.slug); };
   const enter = (e) => { if (e.movementX || e.movementY) peek.value = n.slug; }, leave = () => { if (peek.value === n.slug) peek.value = ""; };   // a peek follows a move, not a layout under a pointer at rest (a switch draws the new body under the heading just pressed)
@@ -44,6 +47,7 @@ function GoalRow({ g, n, plan = null, raw = false, party }) {
       <span class="arena-goal__title">${n.short || n.title}</span>
       <span class=${cls("arena-goal__mark", TONES[mark.tone])} title=${mark.label || undefined}>${mark.sign && html`<${Sign} name=${mark.sign} />`}</span>
     </button>
+    ${mark.sign === "before" && html`<button type="button" class="arena-goal__go" aria-label=${`${mark.label}: open it`} title=${`${mark.label} · opens ${waits[0].party_name || waits[0].party} with it picked`} onClick=${toWait}></button>`}
   </div>`;
 }
 

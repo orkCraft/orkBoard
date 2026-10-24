@@ -16,6 +16,7 @@ import { typeSign } from "./stacks.js";
 import { ArrowLines, segment } from "./arrows.js";
 import { PartyList, show } from "./partylist.js";
 import { NewGoalPile, NewPartyPile } from "./projectdeal.js";
+import { orkLinks } from "./collidewords.js";
 import { GROUPS, PARTIES_WORDS, THE_PROJECT, deckCount, decksOf, emptyWords, linksOf } from "./projectwords.js";
 
 const TONES = { danger: "is-danger", alert: "is-alert" };
@@ -52,11 +53,20 @@ function Column({ g, nodes, lit, setLit }) {
   </section>`;
 }
 
-/** The links the lit deck's route draws, in the host's coordinates: the two decks' boxes joined by an arrow, from the earlier step to the later. */
-function useLinks(host, nodes, lit) {
+/** The links on the level, in the host's coordinates: the Orkmaster's (spec 71 §6: a collision, in the signal's colour, between its two decks while its stop is open; a wait, an arrow from the goal waited for), always;
+ *  and the lit deck's route (the two decks' boxes joined by an arrow, from the earlier step to the later). `collisions`: `project.collisions`. */
+function useLinks(host, nodes, lit, collisions) {
   const [lines, setLines] = useState([]);
+  const [size, setSize] = useState(0);
   useLayoutEffect(() => {
-    const el = host.current, mine = lit ? linksOf(nodes).filter((l) => l.from === lit || l.to === lit) : [];
+    const el = host.current;
+    if (!el || typeof ResizeObserver !== "function") return undefined;
+    const watch = new ResizeObserver(() => setSize(Math.round(el.getBoundingClientRect().width)));
+    watch.observe(el);
+    return () => watch.disconnect();
+  }, []);
+  useLayoutEffect(() => {
+    const el = host.current, mine = [...orkLinks(collisions, nodes), ...(lit ? linksOf(nodes).filter((l) => l.from === lit || l.to === lit) : [])];
     if (!el || !mine.length) { setLines((was) => (was.length ? [] : was)); return; }
     const base = el.getBoundingClientRect(), box = (slug) => {
       const x = el.querySelector(`.arena-pdeck[data-slug="${CSS.escape(slug)}"]`);
@@ -64,15 +74,15 @@ function useLinks(host, nodes, lit) {
       const r = x.getBoundingClientRect();
       return { x: r.left - base.left, y: r.top - base.top, w: r.width, h: r.height };
     };
-    setLines(mine.map((l) => [l, box(l.from), box(l.to)]).filter(([, a, b]) => a && b).map(([l, a, b]) => segment(l.key, a, b)));
-  }, [lit, nodes]);
+    setLines(mine.map((l) => [l, box(l.from), box(l.to)]).filter(([, a, b]) => a && b).map(([l, a, b]) => { const g = segment(l.key, a, b); return { ...g, ...(l.kind === "collide" ? { x2: g.tip.x, y2: g.tip.y } : {}), kind: l.kind || "" }; }));          // a collision has no head: its line goes to the deck
+  }, [lit, nodes, collisions, size]);
   return lines;
 }
 
 /** The project's level: the field in place of a party's. `stops`: the one hand's, as Operations' field has it. */
 export function Project({ m, stops }) {
   const parties = goalsOf(m, goalList().map((x) => x.slug)), [lit, setLit] = useState(""), host = useRef();
-  const lines = useLinks(host, m.nodes || [], lit);
+  const lines = useLinks(host, m.nodes || [], lit, m.project?.collisions);
   const ork = m.project?.orkmaster;
   return html`<div class="arena arena-project" data-goal=${PROJECT}>
     <${PartyList} />

@@ -25,6 +25,7 @@ import { askedOf, changeToast, fanOf, laidOut } from "./arenawords.js";
 import { missingWords } from "./types.js";
 import { Tiles, choiceOf } from "./picks.js";
 import { manyWords, variantOf } from "./pickwords.js";
+import { CollideAnswers, CollideGoals } from "./collide.js";
 
 const SENT = "Sent: the Taskmaster answers in a moment.";
 
@@ -47,7 +48,7 @@ export function aboutOf(s) {
   if (s.kind === "failed" && s.node && s.task) return { task: `${s.node.slug}/${s.task.id}` };
   if (s.kind === "pick" && row?.slug) return { task: `${row.slug}/${row.task}` };
   if (s.kind === "result" && s.result) return { task: `${s.result.idea}/${s.result.task}` };
-  if (["plan", "change", "asks", "proposal", "todo"].includes(s.kind) && row?.idea) return { idea: row.idea };
+  if (["plan", "change", "asks", "proposal", "todo", "collide"].includes(s.kind) && row?.idea) return { idea: row.idea };
   return null;
 }
 
@@ -156,6 +157,7 @@ function Answers({ s, g, see }) {
     return html`<button type="button" class="ork-btn primary arena-hc__q" title="Its views, the case against and the decision; Send, Pass or Change are there"
       onClick=${() => { see(); showIdea(row.idea, { via: "hand" }); }}>Open the pitch</button>`;
   }
+  if (s.kind === "collide") return html`<${CollideAnswers} s=${s} />`;                         // the Orkmaster asks (spec 71): each answer says what happens
   if (s.kind === "op_rules") {
     const template = row.template;
     return html`<${Decline} s=${s} yes=${["Take", "Take the rules"]} ask=${["No", "No rules"]} sure="Decline the rules" take=${() => runOp("ops.rules_answer", { template, take: true })}
@@ -174,7 +176,7 @@ function open(s) {
   else if (s.kind === "todo") showPlan(row.idea, row.todo?.id || "", via);
   else if (s.kind === "failed") (s.task ? showTask(n.slug, s.task.id, via) : showIdea(row.idea, via));
   else if (s.kind === "pick") showPick(row.slug, row.task, via);
-  else if (s.kind === "pitch") showIdea(row.idea, via);
+  else if (s.kind === "pitch" || s.kind === "collide") showIdea(row.idea, via);
   else openDialog("opcheck", { op: row.op });
 }
 
@@ -206,14 +208,15 @@ function Stop({ s, g, place, of }) {
     <button type="button" class="arena-hc__open" aria-label=${`${label}: ${s.full}`} aria-describedby=${about ? said : undefined} title=${pick ? `${s.full} · ${s.text}` : undefined} onClick=${() => { see(); open(s); }}>
       <span class="arena-hc__top">${s.gem !== "" && html`<span class=${cls("ork-gem", { danger: s.tone === "danger" })} title=${s.gemTip}>${typeof s.gem === "object" ? html`<${Sign} name=${s.gem.sign} />` : s.gem}</span>`}
         <span class=${cls("arena-hc__kind", { "is-no": s.tone === "danger" })}>${s.label}</span>
-        ${s.small && s.head && html`<span class="arena-hc__who" title=${s.whoTip}><${Head} race=${s.head.race} tier=${s.head.tier} /></span>`}</span>
+        ${s.small && s.head && html`<span class="arena-hc__who" title=${s.whoTip}><${Head} race=${s.head.race} tier=${s.head.tier} small=${s.kind === "collide"} /></span>`}</span>
       ${other && html`<span class="arena-hc__party" title=${p.ops ? p.name : `${p.name} · led by ${p.lead}`}>${p.ops ? html`<${Icon} name="sliders" />` : p.head && html`<${Head} race=${p.head.race} tier=${p.head.tier} />`}</span>`}
       ${!s.small && html`<span class="arena-art">${s.head && html`<${Head} race=${s.head.race} tier=${s.head.tier} size="mid" />`}</span>`}
-      ${!pick && html`<span class="arena-banner">${other ? `${p.name} · ${s.title}` : s.title}</span><span class="arena-hc__text" title=${s.text}>${s.text}</span>`}
+      ${!pick && s.kind !== "collide" && html`<span class="arena-banner">${other ? `${p.name} · ${s.title}` : s.title}</span><span class="arena-hc__text" title=${s.text}>${s.text}</span>`}
       ${s.why && html`<span class="arena-hc__note" title=${s.why}>${s.why}</span>`}
       ${s.kind === "plan" && (s.row?.missing || []).length > 0 && html`<span class="arena-hc__miss">${missingWords(s.row.missing)}</span>`}
     </button>
     ${about && html`<span id=${said} hidden>${about.task ? ", its task is ringed on the field" : ", its goal is ringed on the field"}</span>`}
+    ${s.kind === "collide" && html`<${CollideGoals} row=${s.row} see=${see} />`}
     ${pick && html`<${Tiles} row=${s.row} />`}
     <div class="arena-hc__quick" role="group" aria-label=${s.kind === "asks" || s.kind === "goal" ? "Answer in one click" : pick ? "Pick one" : "Quick moves"}><${Answers} s=${s} g=${g} see=${see} /></div>
   </div>`;
