@@ -49,3 +49,10 @@ that wraps to two at most, then *and k more*); a tap closes the sheet and switch
   scroll; the service worker's version.
 - Each part: the critical tests (CLAUDE.md "Alpha"), its files' tests, `tests/test_gui_wording.py`,
   `tests/test_design_system.py`; C also `tests/test_pwa.py`.
+
+## As built (B)
+
+- `js/arena/partylist.js` `AtWork` (under `Heading` of every closed party, in the same `.arena-party` section: the heading's button and the line are siblings, never nested; none at work draws nothing). The goals are the party's nodes with `state === "working"` in the map's order; each button is `Elem` + `short || title`, its `title` and accessible name the whole title; the group's `aria-label` and `title` are *At work: <titles>*. `openWith` is a press's one path: `show()` (the heading's switch), then `picks` of that party set to that goal alone, or `clearPicks(party)` for *and k more*. No change to `arenastate.js`.
+- The fit is measured, not guessed: the line is drawn in full once (`.is-measuring`, hidden, items not shrinking) with a probe *and 9 more*, then the count that fits in the line's width is kept (`fit`, re-measured when the goals change, when the column's width changes and on `document.fonts` `loadingdone`, since the text face arrives after the first draw). A name that does not fit beside *and k more* is left to it whole: with a long first name the line is the sign and *and k more* alone. Only a lone goal that is wider than the line ends in an end ellipsis.
+- `arena.css` (`.arena-atwork*`): the line 20 px high, indented by the head's width, margin -6 px above / +6 px below so the section grows by exactly 20 px; the buttons are 32 px high with -6 px vertical margins (the target reaches into the heading's padding); the caption type, `--ork-ink-muted`, orkUI's `work` sign, no overflow clipping (it would cut the targets).
+- Tests: `tests/test_at_work_line_desktop_browser.py` (10); a heading's height is not asserted in `test_party_list_desktop_browser.py` for a party with a line, so that file is unchanged.

@@ -25,12 +25,12 @@ function Deck({ d, party, lit, setLit }) {
   const n = d.n, el = elementOf(n), mark = n.pitch ? pitchMark(n) : goalMark(n);
   const open = () => (n.needs_you === "plan" ? showPlan(n.slug, "", { via: "map" }) : showIdea(n.slug, { via: "map" }));
   const on = () => setLit(n.slug), off = () => setLit((now) => (now === n.slug ? "" : now));
-  return html`<button type="button" class=${cls("arena-deck", { "is-lit": lit === n.slug })} data-slug=${n.slug} data-party=${party} title=${`${n.title} · ${d.words}`}
+  return html`<button type="button" class=${cls("arena-pdeck", { "is-lit": lit === n.slug })} data-slug=${n.slug} data-party=${party} title=${`${n.title} · ${d.words}`}
       aria-label=${`${n.title}, ${d.words}`} onClick=${open} onMouseEnter=${on} onMouseLeave=${off} onFocus=${on} onBlur=${off}>
-    <span class="arena-deck__top"><${Elem} name=${el.name} dim=${el.dim} />${typeSign(n, "arena-goal__type")}<span class="arena-spacer"></span>
-      ${mark.sign && html`<span class=${cls("arena-deck__mark", TONES[mark.tone])} title=${mark.label || undefined}><${Sign} name=${mark.sign} /></span>`}</span>
-    <span class="arena-deck__title">${n.short || n.title}</span>
-    <span class="arena-deck__line">${d.words}</span>
+    <span class="arena-pdeck__top"><${Elem} name=${el.name} dim=${el.dim} />${typeSign(n, "arena-goal__type")}<span class="arena-spacer"></span>
+      ${mark.sign && html`<span class=${cls("arena-pdeck__mark", TONES[mark.tone])} title=${mark.label || undefined}><${Sign} name=${mark.sign} /></span>`}</span>
+    <span class="arena-pdeck__title">${n.short || n.title}</span>
+    <span class="arena-pdeck__line">${d.words}</span>
   </button>`;
 }
 
@@ -59,7 +59,7 @@ function useLinks(host, nodes, lit) {
     const el = host.current, mine = lit ? linksOf(nodes).filter((l) => l.from === lit || l.to === lit) : [];
     if (!el || !mine.length) { setLines((was) => (was.length ? [] : was)); return; }
     const base = el.getBoundingClientRect(), box = (slug) => {
-      const x = el.querySelector(`.arena-deck[data-slug="${CSS.escape(slug)}"]`);
+      const x = el.querySelector(`.arena-pdeck[data-slug="${CSS.escape(slug)}"]`);
       if (!x) return null;
       const r = x.getBoundingClientRect();
       return { x: r.left - base.left, y: r.top - base.top, w: r.width, h: r.height };
