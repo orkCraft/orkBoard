@@ -572,6 +572,21 @@ dialog.sheet.drawer .sheet-foot { margin-top: auto; }
 .today .ork-count { min-width: 20px; }
 .arena { position: relative; z-index: 3; flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; gap: 0; }   /* its own stacking: the ideas list rises over the field, the bar (4), the stops (8) and a screen (10) over it */
 .arena-empty { padding: var(--ork-6); text-align: center; }
+/* spec 74 §4: the empty Board in the void: faint 2 px stars behind the words (one in eight, in the ink, twinkles); only the screen with no party has them, never Loading or an error */
+.arena-empty.has-void { position: relative; isolation: isolate; overflow: hidden; flex: 1 1 auto; }
+.arena-empty__say { margin: var(--ork-3) auto var(--ork-4); max-width: 30ch; font: 400 13px/18px var(--ork-font-text); }
+.void-stars { position: absolute; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+.void-stars::before { content: ""; position: absolute; left: 0; top: 0; width: 2px; height: 2px; box-shadow: 72px 366px var(--ork-ink-faint), 356px 642px var(--ork-frame), 444px 774px var(--ork-frame), 312px 234px var(--ork-ink-faint), 180px 154px var(--ork-frame), 80px 130px var(--ork-ink-faint), 172px 254px var(--ork-frame), 360px 210px var(--ork-ink-faint), 452px 154px var(--ork-frame), 64px 362px var(--ork-ink-faint), 28px 334px var(--ork-frame), 280px 106px var(--ork-ink-faint), 52px 434px var(--ork-frame), 80px 378px var(--ork-ink-faint), 172px 838px var(--ork-frame), 392px 6px var(--ork-ink-faint), 36px 718px var(--ork-frame), 256px 238px var(--ork-ink-faint), 92px 142px var(--ork-frame), 408px 66px var(--ork-ink-faint), 468px 750px var(--ork-frame), 304px 898px var(--ork-ink-faint), 396px 662px var(--ork-frame), 228px 690px var(--ork-frame), 448px 698px var(--ork-ink-faint), 92px 350px var(--ork-frame), 344px 142px var(--ork-ink-faint), 404px 190px var(--ork-frame), 304px 810px var(--ork-ink-faint), 236px 354px var(--ork-frame), 296px 698px var(--ork-ink-faint), 36px 858px var(--ork-frame), 320px 402px var(--ork-ink-faint), 476px 694px var(--ork-frame), 152px 402px var(--ork-ink-faint), 404px 514px var(--ork-frame), 336px 450px var(--ork-ink-faint), 236px 678px var(--ork-frame), 200px 630px var(--ork-ink-faint), 288px 798px var(--ork-ink-faint), 412px 282px var(--ork-frame), 152px 534px var(--ork-ink-faint), 308px 58px var(--ork-frame), 304px 846px var(--ork-ink-faint), 236px 210px var(--ork-frame), 328px 446px var(--ork-ink-faint), 4px 834px var(--ork-frame), 448px 546px var(--ork-ink-faint), 188px 878px var(--ork-frame), 88px 154px var(--ork-ink-faint), 84px 306px var(--ork-frame), 44px 630px var(--ork-frame), 40px 706px var(--ork-ink-faint), 420px 494px var(--ork-frame), 366px 0px var(--ork-ink-faint), 188px 494px var(--ork-frame), 120px 566px var(--ork-ink-faint), 148px 694px var(--ork-frame), 16px 30px var(--ork-ink-faint); }
+.void-stars b { position: absolute; width: 2px; height: 2px; background: var(--ork-ink); opacity: 0.25; animation: twinkle 4s steps(4) infinite; }
+.void-stars b:nth-child(1) { left: 70%; top: 91%; animation-delay: -3.6s; }
+.void-stars b:nth-child(2) { left: 93%; top: 34%; animation-delay: -1.1s; }
+.void-stars b:nth-child(3) { left: 32%; top: 87%; animation-delay: -3.0s; }
+.void-stars b:nth-child(4) { left: 95%; top: 42%; animation-delay: -0.5s; }
+.void-stars b:nth-child(5) { left: 74%; top: 33%; animation-delay: -2.4s; }
+.void-stars b:nth-child(6) { left: 81%; top: 52%; animation-delay: -3.9s; }
+.void-stars b:nth-child(7) { left: 4%; top: 89%; animation-delay: -3.4s; }
+.void-stars b:nth-child(8) { left: 83%; top: 80%; animation-delay: -3.3s; }
+.void-stars b:nth-child(9) { left: 14%; top: 59%; animation-delay: -1.7s; }
 .arena .ork-card.away { margin: var(--ork-4); }
 .ops-view { display: flex; flex-direction: column; gap: var(--ork-4); padding: var(--ork-5) var(--ork-5) var(--ork-8); }
 
@@ -742,6 +757,9 @@ button.band__face .band__sign { right: 5px; top: 6px; }      /* the head sits 10
 .deck__flash { position: absolute; inset: 0; z-index: 4; display: flex; align-items: center; justify-content: center; background: var(--ork-panel); animation: flash 0.3s steps(1) forwards; }
 .deck.is-leaving[data-sign="check"] .deck__flash { color: var(--ork-success); }
 .deck.is-leaving[data-sign="cross"] .deck__flash { color: var(--ork-danger); }
+.deck.is-leaving[data-sign="check"] .deck__flash { animation: none; }                                               /* spec 74 §1: the goal's element, stamped in the first third and held while the card fades */
+.deck__flash .ork-elem { animation: stamp 0.1s steps(3) both; }
+.deck.is-leaving[data-sign="back"] { animation: back 0.3s steps(3) forwards; }                                       /* spec 74 §2: a result sent back goes down toward the field */
 .deck.is-drawn { animation: rise 0.36s steps(4) both; }
 /* spec 67 §2: a token of the field (and of Planning): 74 px wide, 5:7. Its top row is the card's (the goal's element, its type's sign); the goal's line is not drawn; its name (the text face 600, three lines at most,
    broken between words); one value at its foot (its time at work, the hour of a hold). At work, testing, in Review or asking to pick, and failed, it lies raised; the rows after *now* stay muted (decisions §62.1). */
@@ -763,6 +781,9 @@ button.band__face .band__sign { right: 5px; top: 6px; }      /* the head sits 10
 @keyframes rise { from { transform: translateY(60px); opacity: 0; } to { transform: none; opacity: 1; } }
 @keyframes leave { to { opacity: 0; } }
 @keyframes flash { 0% { opacity: 1; } 34% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes stamp { from { transform: scale(2); opacity: 0.4; } to { transform: scale(1); opacity: 1; } }
+@keyframes back { to { opacity: 0; transform: translateY(24px); } }
+@keyframes twinkle { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
 .is-reward { animation: reward 0.6s steps(4, end) both; }
 @keyframes reward { from { background: var(--ork-ink); color: var(--ork-on-ink); } to { background: transparent; } }
 
@@ -1059,7 +1080,8 @@ dialog.sheet.full { margin: 0; height: 100dvh; max-height: 100dvh; border-top: 0
 .raised.is-pick .pk__note { min-height: 56px; height: 56px; }
 
 @media (prefers-reduced-motion: reduce) {
-  .deck.is-drawn, .raised.is-pop, .is-reward, .deck.is-leaving, .deck__flash { animation: none; }
+  .deck.is-drawn, .raised.is-pop, .is-reward, .deck.is-leaving, .deck__flash, .deck__flash .ork-elem, .deck.is-leaving[data-sign="back"] { animation: none; }
+  .void-stars b { animation: none; opacity: 0.6; }
   .band__face.is-struck, .band__face.is-struck .ork-race__head, .band__face.is-calling, .band__face.is-calling .band__sign { animation: none; }
   .deck.is-dealt, .flagline__row .ork-elem.is-dealt { visibility: visible; animation: none; }
   .deal-fly, .flag-fly, .gather-fly, .hcg { display: none; }
