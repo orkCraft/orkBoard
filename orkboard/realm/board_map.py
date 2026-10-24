@@ -261,11 +261,12 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
     goal_state_of = goal_state_of or (lambda slug: ideas.goal_state(state_dir, slug))
     tracks = [t for t in ideas.tracks(root, make=False) if t["slug"] != ideas.GENERAL]
     shown = [t for t in tracks if not goal or t["slug"] == goal]
-    found = ideas.ideas(root)
+    found, read_pages = ideas.ideas_and_pages(root)                                 # the pages read once: the ideas' rows and their pages
+
     states = {i["slug"]: state_of(i["slug"]) for i in found}
     titles = {i["slug"]: i["title"] for i in found}
     place = {i["slug"]: n for n, i in enumerate(found)}
-    pages = {i["slug"]: ideas.idea_page(root, i["slug"]) for i in found}
+    pages = {i["slug"]: read_pages.get(i["slug"]) for i in found}
     depends = {s: list_of(p.get("depends_on")) if p else [] for s, p in pages.items()}
 
     # a done idea stays while an idea that stays depends on it, so every edge has both ends
