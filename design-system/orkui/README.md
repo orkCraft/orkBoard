@@ -38,9 +38,16 @@ flame), each a 7 x 7 grid of unit squares (`elements/README.md`). `<span class="
 green nor the alert or danger hue, each 3:1 on panel and raised); `.dim` draws it in `--ork-ink-faint`, for a goal not yet given one.
 No size between 14 and 28: whole pixels. The element is shown on a card, never named in the interface.
 
+## The moons
+`moons/` holds a goal's progress in orkBoard (spec 74): new, crescent, half, gibbous and full, by its tasks merged, from four 7 x 7 masks
+(`disk`, `crescent`, `half`, `gibbous`; `moons/README.md`). `<span class="ork-moon half" aria-hidden="true"></span>` draws one at 14 x 14,
+`.ork-moon.big` at 28 x 28: the dark side in `--ork-frame`, the lit part over it in `--ork-ink-muted`, the full moon's in `--ork-ink`
+(`.new` has none). No colour and no new token; no size between 14 and 28: whole pixels. A moon is `aria-hidden`, shown beside a goal's
+words and never named.
+
 ## The signs
 `signs/` holds the thirty-six signs of orkBoard's window (spec 50 §1.6, spec 51 §1, spec 52 §1, spec 56, spec 59): check (done), cross (failed), work (at work), night
-(held for tonight, a clock), alert (a stop that asks), flag (a goal in main), before (what a task waits for), after (what waits for it),
+(held for tonight, a moon and a star), alert (a stop that asks), flag (a goal in main), before (what a task waits for), after (what waits for it),
 and the media signs play and pause (a sound's or a clip's control), sound (a sound's tile), film (a clip's tile) and text (a text's tile),
 and a goal type's mark, each type its own: feature, bug, tidy, restructure, screen, picture, logo, target, flask, horn, chart, page, abtest, landing, post, tagline, mechanic, level, balance, character, release, store, tune,
 each a 7 x 7 grid of unit squares (`signs/README.md`). `<span class="ork-sign check" aria-hidden="true"></span>` draws one at 14 x 14, `.ork-sign.big`

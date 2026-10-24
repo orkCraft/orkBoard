@@ -27,11 +27,15 @@
   .box { border: 1px solid var(--ork-frame); }
   .marks { display: flex; flex-wrap: wrap; gap: var(--ork-4); }
   .marks figure { width: 96px; }
-  .marks .pair, .elems .pair { display: flex; align-items: end; gap: var(--ork-3); }
+  .marks .pair, .elems .pair, .moons .pair { display: flex; align-items: end; gap: var(--ork-3); }
   .elems { display: grid; gap: var(--ork-4); }
   .elems .ground { display: flex; flex-wrap: wrap; align-items: end; gap: var(--ork-6); padding: var(--ork-5); border: 1px solid var(--ork-frame); }
   .elems .ground.panel { background: var(--ork-panel); }
   .elems .ground.raised { background: var(--ork-raised); }
+  .moons { display: grid; gap: var(--ork-4); }
+  .moons .ground { display: flex; flex-wrap: wrap; align-items: end; gap: var(--ork-6); padding: var(--ork-5); border: 1px solid var(--ork-frame); }
+  .moons .ground.panel { background: var(--ork-panel); }
+  .moons .ground.raised { background: var(--ork-raised); }
   .signs { display: grid; grid-template-columns: 80px repeat(5, 1fr); background: var(--ork-panel); border: 1px solid var(--ork-frame); }
   .signs > * { display: flex; align-items: end; gap: var(--ork-3); padding: var(--ork-3) var(--ork-4); }
   .signs .head { font: var(--ork-type-label); color: var(--ork-ink-muted); text-transform: uppercase; align-items: center; }
@@ -139,6 +143,20 @@
   <div class="ork-card"><div class="row"><span class="ork-elem lava" aria-hidden="true"></span><b>Faster first run</b></div><div style="color:var(--ork-ink-muted)">waits for main</div></div>
   <div class="ork-card"><div class="row"><span class="ork-elem void" aria-hidden="true"></span><b>Quiet nights</b></div><div style="color:var(--ork-ink-muted)">2 of 4 tasks</div></div>
   <div class="ork-card"><div class="row"><span class="ork-elem meadow dim" aria-hidden="true"></span><b>New goal</b></div><div style="color:var(--ork-ink-muted)">not yet read: dim</div></div></div></section>
+
+<section><h2>Moons (a goal's progress; 14 and 28 px)</h2><div class="moons">
+  <div class="ground panel" title="on panel">
+    <figure><span class="pair"><span class="ork-moon new" aria-hidden="true"></span><span class="ork-moon new big" aria-hidden="true"></span></span><figcaption>new</figcaption></figure>
+    <figure><span class="pair"><span class="ork-moon crescent" aria-hidden="true"></span><span class="ork-moon crescent big" aria-hidden="true"></span></span><figcaption>crescent</figcaption></figure>
+    <figure><span class="pair"><span class="ork-moon half" aria-hidden="true"></span><span class="ork-moon half big" aria-hidden="true"></span></span><figcaption>half</figcaption></figure>
+    <figure><span class="pair"><span class="ork-moon gibbous" aria-hidden="true"></span><span class="ork-moon gibbous big" aria-hidden="true"></span></span><figcaption>gibbous</figcaption></figure>
+    <figure><span class="pair"><span class="ork-moon full" aria-hidden="true"></span><span class="ork-moon full big" aria-hidden="true"></span></span><figcaption>full</figcaption></figure></div>
+  <div class="ground raised" title="on raised">
+    <figure><span class="pair"><span class="ork-moon new" aria-hidden="true"></span><span class="ork-moon new big" aria-hidden="true"></span></span><figcaption>new</figcaption></figure>
+    <figure><span class="pair"><span class="ork-moon crescent" aria-hidden="true"></span><span class="ork-moon crescent big" aria-hidden="true"></span></span><figcaption>crescent</figcaption></figure>
+    <figure><span class="pair"><span class="ork-moon half" aria-hidden="true"></span><span class="ork-moon half big" aria-hidden="true"></span></span><figcaption>half</figcaption></figure>
+    <figure><span class="pair"><span class="ork-moon gibbous" aria-hidden="true"></span><span class="ork-moon gibbous big" aria-hidden="true"></span></span><figcaption>gibbous</figcaption></figure>
+    <figure><span class="pair"><span class="ork-moon full" aria-hidden="true"></span><span class="ork-moon full big" aria-hidden="true"></span></span><figcaption>full</figcaption></figure></div></div></section>
 
 <section><h2>Signs (every symbol the window draws; 14 and 28 px)</h2><div class="signs">
   <span class="head"></span><span class="head">ink</span><span class="head">muted</span><span class="head">success</span><span class="head">danger</span><span class="head">alert</span>

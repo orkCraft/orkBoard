@@ -5,7 +5,7 @@ words it explains (a state, a stop, an order), in the colour of that text; it is
 (or a `title`) stay and the sign is `aria-hidden`.
 
     check   a done thing (✓)                         cross   a failure (✗)
-    work    at work (↻)                              night   held for tonight (a clock)
+    work    at work (↻)                              night   held for tonight (a moon and a star)
     alert   a stop that asks (!)                     flag    a goal in main (⚑)
     before  what a task waits for (←)                after   what waits for it (→)
     play    a sound's or a clip's control (▶)        pause   a sound's or a clip's control (‖)
@@ -41,7 +41,7 @@ never a being; the thing drawn in brackets):
 
 The twenty-three pictures are also in `../emblems/` (the library), with seven more that no face draws.
 
-*night* is a clock: a crescent is the *void* element (`../elements/`), so a moon would say two things. The close (×), the plus (+)
+*night* is a crescent and a star: the star tells it from the *void* element (`../elements/`), whose crescent it shares (an element is a coloured mark beside a goal's name, a sign a state in the text's colour), and the moons (`../moons/`) draw a goal's progress, never a state. The close (×), the plus (+)
 and the chevrons (›, ⌄) are not here: they are orkUI's icons already (`../icons/icons.svg`).
 
 Each is a **7 x 7** grid of unit squares, one `path` (`M{x} {y}h1v1h-1z` for every pixel, row by row from the top), `viewBox="0 0

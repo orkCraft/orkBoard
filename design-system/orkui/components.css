@@ -161,6 +161,20 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-elem.lava { background: var(--ork-elem-lava); -webkit-mask-image: url(elements/lava.svg); mask-image: url(elements/lava.svg); }
 .ork-elem.dim { background: var(--ork-ink-faint); }
 
+/* --- Moons: a goal's progress (moons/, four 7 x 7 pixel masks), drawn in two layers: the box is the dark side in the frame colour, its ::after
+   the lit part in the muted ink (the full moon in ink). 14 x 14 or 28 x 28, never a size between: two or four pixels a cell, whole pixels -- */
+.ork-moon { position: relative; display: inline-block; flex: none; width: 14px; height: 14px; vertical-align: middle; background: var(--ork-frame);
+  -webkit-mask-image: url(moons/disk.svg); mask-image: url(moons/disk.svg);
+  -webkit-mask-size: 100%; mask-size: 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
+.ork-moon::after { content: ""; position: absolute; inset: 0; background: var(--ork-ink-muted);
+  -webkit-mask-size: 100%; mask-size: 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
+.ork-moon.big { width: 28px; height: 28px; }
+.ork-moon.new::after { content: none; }
+.ork-moon.crescent::after { -webkit-mask-image: url(moons/crescent.svg); mask-image: url(moons/crescent.svg); }
+.ork-moon.half::after { -webkit-mask-image: url(moons/half.svg); mask-image: url(moons/half.svg); }
+.ork-moon.gibbous::after { -webkit-mask-image: url(moons/gibbous.svg); mask-image: url(moons/gibbous.svg); }
+.ork-moon.full::after { background: var(--ork-ink); -webkit-mask-image: url(moons/disk.svg); mask-image: url(moons/disk.svg); }
+
 /* --- Signs: every symbol a face draws (signs/, thirty-six 7 x 7 pixel shapes), drawn as a mask in the colour of the text it stands in
    (`currentColor`). 14 x 14 or 28 x 28, never a size between. -3px sets the 14 px box on the baseline of a 16 px line ---------- */
 .ork-sign { display: inline-block; flex: none; width: 14px; height: 14px; vertical-align: -3px; background: currentColor;
