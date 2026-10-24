@@ -14,6 +14,7 @@ import { elementOf, goalMark } from "./goalwords.js";
 import { pitchMark } from "./pitchwords.js";
 import { typeSign } from "./stacks.js";
 import { ArrowLines, segment } from "./arrows.js";
+import { reducedMotion } from "./motion.js";
 import { PartyList, show } from "./partylist.js";
 import { NewGoalPile, NewPartyPile } from "./projectdeal.js";
 import { orkLinks } from "./collidewords.js";
@@ -53,6 +54,9 @@ function Column({ g, nodes, lit, setLit }) {
   </section>`;
 }
 
+const LEAVE_MS = 420;                                         // a collision that was answered crumbles this long (arena.css `arena-crumble`)
+const seen = () => !reducedMotion() && !document.hidden;      // motion plays only while the page is seen and the person has not asked for none
+
 /** The links on the level, in the host's coordinates: the Orkmaster's (spec 71 §6: a collision, in the signal's colour, between its two decks while its stop is open; a wait, an arrow from the goal waited for), always;
  *  and the lit deck's route (the two decks' boxes joined by an arrow, from the earlier step to the later). `collisions`: `project.collisions`. */
 function useLinks(host, nodes, lit, collisions) {
@@ -65,16 +69,23 @@ function useLinks(host, nodes, lit, collisions) {
     watch.observe(el);
     return () => watch.disconnect();
   }, []);
+  const was = useRef([]);                                     // the lines drawn last: a collision that went is kept as they were
   useLayoutEffect(() => {
     const el = host.current, mine = [...orkLinks(collisions, nodes), ...(lit ? linksOf(nodes).filter((l) => l.from === lit || l.to === lit) : [])];
-    if (!el || !mine.length) { setLines((was) => (was.length ? [] : was)); return; }
-    const base = el.getBoundingClientRect(), box = (slug) => {
+    const base = el?.getBoundingClientRect(), box = (slug) => {
       const x = el.querySelector(`.arena-pdeck[data-slug="${CSS.escape(slug)}"]`);
       if (!x) return null;
       const r = x.getBoundingClientRect();
       return { x: r.left - base.left, y: r.top - base.top, w: r.width, h: r.height };
     };
-    setLines(mine.map((l) => [l, box(l.from), box(l.to)]).filter(([, a, b]) => a && b).map(([l, a, b]) => { const g = segment(l.key, a, b); return { ...g, ...(l.kind === "collide" ? { x2: g.tip.x, y2: g.tip.y } : {}), kind: l.kind || "" }; }));          // a collision has no head: its line goes to the deck
+    const next = !el ? [] : mine.map((l) => [l, box(l.from), box(l.to)]).filter(([, a, b]) => a && b).map(([l, a, b]) => { const g = segment(l.key, a, b); return { ...g, ...(l.kind === "collide" ? { x2: g.tip.x, y2: g.tip.y } : {}), kind: l.kind || "" }; });          // a collision has no head: its line goes to the deck
+    const open = new Set((collisions || []).map((c) => `collide:${c.id}`)), now = Date.now();
+    const out = was.current.filter((l) => l.leaving && l.until > now);              // a collision answered or withdrawn while the page is seen crumbles for LEAVE_MS (spec 74 §3); one the filter hid, or the first read, never
+    if (seen()) for (const l of was.current) if (l.kind === "collide" && !l.leaving && !open.has(l.key) && !next.some((x) => x.key === l.key)) out.push({ ...l, leaving: true, until: now + LEAVE_MS });
+    const all = [...next, ...out.filter((l) => !next.some((x) => x.key === l.key))];
+    was.current = all;
+    setLines((cur) => (!cur.length && !all.length ? cur : all));
+    if (out.length) setTimeout(() => { was.current = was.current.filter((l) => !l.leaving || l.until > Date.now()); setLines((cur) => cur.filter((l) => !l.leaving || l.until > Date.now())); }, LEAVE_MS + 30);
   }, [lit, nodes, collisions, size]);
   return lines;
 }

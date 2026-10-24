@@ -207,7 +207,12 @@
 .arena-task__flash { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--ork-panel); color: var(--ork-success); animation: arena-flash 0.3s steps(1) forwards; }
 .arena-task[data-sign="cross"] .arena-task__flash, .arena-result[data-sign="cross"] .arena-task__flash { color: var(--ork-danger); }
 .arena-task.is-gone, .arena-result.is-gone { visibility: hidden; pointer-events: none; }
+.arena-result[data-sign="check"] .arena-task__flash { animation: none; }                                    /* the seal (spec 74 §1): the panel is held while the card fades, the goal's element is stamped on it */
+.arena-result[data-sign="check"] .arena-task__flash .ork-elem { animation: arena-stamp 0.1s steps(3) both; }
+.arena-result[data-sign="back"].is-leaving { animation: arena-back 0.3s steps(3) forwards; }      /* sent back (spec 74 §2): 24 px toward the field, the left, as it fades */
 @keyframes arena-leave { to { opacity: 0; } }
+@keyframes arena-stamp { from { transform: scale(2); opacity: 0.4; } }
+@keyframes arena-back { to { opacity: 0; transform: translateX(-24px); } }
 @keyframes arena-flash { 0% { opacity: 1; } 34% { opacity: 0; } 100% { opacity: 0; } }
 @keyframes arena-rise { from { transform: translateY(60px); opacity: 0; } to { transform: none; opacity: 1; } }
 /* the deal (spec 57): a plan started from the hand deals its cards from the stop's box (--dx, --dy, --s set from it, --delay 35 ms apart) over the whole field; a card takes the pointer when it lands */
@@ -228,8 +233,10 @@
 .arena-spread__card { flex: none; width: 120px; height: 168px; }
 .arena-arrows { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 25; }
 .arena-arrow line { stroke: var(--ork-ink); stroke-width: 2; stroke-dasharray: 5 3; animation: arena-draw 0.16s steps(4) both; }   /* drawn from its start (arrows.js sets the origin), once a line comes */
+.arena-arrow.is-leaving line { animation: arena-crumble 0.42s steps(3) forwards; }                         /* a collision answered: its line breaks into pixels and goes (spec 74 §3; project.js keeps it LEAVE_MS) */
 .arena-arrow polygon { fill: var(--ork-ink); animation: arena-head 0s 0.16s both; }                                                /* the head when the line has reached it */
 @keyframes arena-draw { from { transform: scale(0); } }
+@keyframes arena-crumble { from { stroke-dasharray: 2 2; } to { stroke-dasharray: 2 14; opacity: 0; } }
 @keyframes arena-head { from { opacity: 0; } }
 .arena-arrow[data-kind="collide"] line { stroke: var(--ork-alert); stroke-dasharray: none; }           /* two goals that change the same thing (spec 71): a plain line in the signal's colour, no direction */
 .arena-arrow[data-kind="collide"] polygon { display: none; }
@@ -469,6 +476,18 @@
 .arena-ops__main { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 .arena-ops__body { flex: 1; min-height: 0; overflow-y: auto; padding: var(--ork-5) var(--ork-6); }
 .arena-ops__main > .arena-stops { flex: none; grid-column: auto; }
+/* the empty Board in the void (spec 74 §4): faint 2 x 2 stars behind the words, none under the pointer; a layer a lattice of one star, each its own tile, so about one in 6 000 px²; one in eight is ink and twinkles */
+.arena-void { position: relative; overflow: hidden; }
+.arena-void > p { position: relative; }
+.arena-stars { position: absolute; inset: 0; pointer-events: none; }
+.arena-stars i { position: absolute; inset: 0; mask-composite: intersect; }
+.arena-stars i.is-frame { background: var(--ork-frame); mask-size: 109px 97px; mask-image: linear-gradient(90deg, transparent 31px, black 31px, black 33px, transparent 33px), linear-gradient(transparent 52px, black 52px, black 54px, transparent 54px); }
+.arena-stars i.is-faint { background: var(--ork-ink-faint); mask-size: 127px 89px; mask-image: linear-gradient(90deg, transparent 88px, black 88px, black 90px, transparent 90px), linear-gradient(transparent 17px, black 17px, black 19px, transparent 19px); }
+.arena-stars i.is-ink { background: var(--ork-ink); animation: arena-twinkle 4s steps(4) var(--delay, 0s) infinite alternate; }
+.arena-stars i.is-ink:nth-child(3) { --delay: -1s; mask-size: 401px 359px; mask-image: linear-gradient(90deg, transparent 140px, black 140px, black 142px, transparent 142px), linear-gradient(transparent 90px, black 90px, black 92px, transparent 92px); }
+.arena-stars i.is-ink:nth-child(4) { --delay: -2.5s; mask-size: 353px 421px; mask-image: linear-gradient(90deg, transparent 266px, black 266px, black 268px, transparent 268px), linear-gradient(transparent 301px, black 301px, black 303px, transparent 303px); }
+.arena-stars i.is-ink:nth-child(5) { --delay: -3.5s; mask-size: 389px 373px; mask-image: linear-gradient(90deg, transparent 52px, black 52px, black 54px, transparent 54px), linear-gradient(transparent 244px, black 244px, black 246px, transparent 246px); }
+@keyframes arena-twinkle { from { opacity: 0.25; } to { opacity: 1; } }
 
 /* -- below 1 024 px: no strip, the left column 200 px, the results in the bottom row, the columns scroll sideways ------------------------ */
 @media (max-width: 1023px) {
@@ -488,7 +507,9 @@
   .arena-flagline.is-raising .arena-flagline__main b, .arena-flagline.is-raising .arena-flagline__x { animation: none; }
   .arena-tport.is-struck, .arena-tport.is-struck .ork-race__head, .arena-tport.is-calling, .arena-tport.is-calling .arena-sign { animation: none; }
   .arena-new__card, .arena-type__front, .arena-type__face { transition: none; }
-  .arena-arrow line, .arena-arrow polygon { animation: none; }
+  .arena-arrow line, .arena-arrow polygon, .arena-arrow.is-leaving line { animation: none; }
+  .arena-result[data-sign="check"] .arena-task__flash .ork-elem, .arena-result[data-sign="back"].is-leaving { animation: none; }
+  .arena-stars i.is-ink { animation: none; opacity: 0.6; }
 }
 
 /* A goal's route (spec 68 §7.1): the steps across the parties at the top of its screen, joined by orkUI's ›; each a button with the party's leader's head and its words. */

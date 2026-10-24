@@ -40,7 +40,7 @@ longer. A dropped result keeps its ✗; a result that leaves by the filter (`fad
 ## 2. Sent back: the result goes back to the field (A, B)
 A result sent back (its task is in the field again: queued, at work or waiting, not merged, not dropped) **leaves toward
 the field**: it moves 24 px toward it (desktop: left, the field's side; phone: down) as it fades, three steps, the same
-0.3 s, no flash. `leaveOf` (desktop) returns `back` for it, the phone's leave the same; today such a result simply goes.
+0.3 s, no flash. `resultLeaveOf` (desktop; `leaveOf` stays the field cards') returns `back` for it, the phone's leave the same; today such a result simply goes.
 
 ## 3. A collision that crumbles (A)
 The project's level draws a collision's line in the alert colour while its stop is open (spec 71 §6). When the line goes

@@ -1,7 +1,7 @@
 // Waits for your look (docs/specs/49-one-window.md §5.5, docs/specs/50-parties-and-goals.md §3.5): the right column. A result per row, oldest first —
 // its goal's element and name (one line), its title (a link to the result in the drawer), who made it, its tests or a check's findings, its size and price,
 // and Merge into dev · Send back · Drop (Review's own ResultActions). A result is not a signal (decisions §54.1): no alert colour. The goals the filter takes
-// away leave with the rest. At the top, While you were away and Last week (Cards); at the foot, Last week (MapFoot). One that was merged a moment ago folds out once.
+// away leave with the rest. At the top, While you were away and Last week (Cards); at the foot, Last week (MapFoot). One that was merged a moment ago folds out once, its goal's element stamped (spec 74 §1); one sent back leaves toward the field (§2).
 import { useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Sign } from "../orkui.js";
@@ -12,7 +12,7 @@ import { MapFoot } from "../board/mapfoot.js";
 import { useColumn } from "./motion.js";
 import { solo } from "./arenastate.js";
 import { plural } from "./arenawords.js";
-import { elementOf, inFilter, leaveOf } from "./goalwords.js";
+import { elementOf, inFilter, resultLeaveOf } from "./goalwords.js";
 
 function Result({ r, nodes, sign = "", quiet = false, fresh = false }) {
   const leaving = !!sign || quiet;
@@ -28,8 +28,8 @@ function Result({ r, nodes, sign = "", quiet = false, fresh = false }) {
     <span class=${cls("arena-result__tests", `is-${t.tone}`)}>${t.mark && html`<${Sign} name=${t.mark} /> `}${t.text}${t.names.length ? html` <span class="ok-tone-muted">${t.names.join(", ")}</span>` : ""}</span>
     <span class="arena-cap">${size}</span>
     ${html`<${Found} r=${r} />${r.conflict && html`<p class="ok-tone-error shell-conflict">⚠ ${r.conflict}</p>`}`}
-    ${leaving ? html`<span class="arena-cap">${sign === "check" ? `merged into ${review.value?.into || "dev"}` : sign === "cross" ? "dropped" : ""}</span>` : html`<${ResultActions} r=${r} />`}
-    ${!!sign && html`<span class="arena-task__flash">${sign !== "fade" && html`<${Sign} name=${sign} big=${true} />`}</span>`}
+    ${leaving ? html`<span class="arena-cap">${sign === "check" ? `merged into ${review.value?.into || "dev"}` : sign === "cross" ? "dropped" : sign === "back" ? "sent back" : ""}</span>` : html`<${ResultActions} r=${r} />`}
+    ${!!sign && sign !== "back" && html`<span class="arena-task__flash">${sign === "check" ? html`<${Elem} name=${el.name} dim=${el.dim} big=${true} />` : sign !== "fade" && html`<${Sign} name=${sign} big=${true} />`}</span>`}
   </div>`;
 }
 
@@ -40,7 +40,7 @@ export function Looks({ g, results, nodes, shown }) {
   const who = by ? [...(nodes.flatMap((n) => n.tasks.map((t) => t.by)))].find((x) => x.slug === by)?.name : "";
   const ref = useRef(), at = useRef({ nodes, shown });
   at.current = { nodes, shown };
-  const list = useColumn(ref, there, (r) => `${r.idea}/${r.task}`, (r) => leaveOf(at.current.nodes, at.current.shown, r.idea, r.task));
+  const list = useColumn(ref, there, (r) => `${r.idea}/${r.task}`, (r) => resultLeaveOf(at.current.nodes, at.current.shown, r.idea, r.task));
   return html`<aside class="arena-look" aria-label="Waits for your look">
     <div class="arena-look__head"><h2 class="arena-lbl">Waits for your look</h2>${there.length > 0 && html`<span class="ork-count">${there.length}</span>`}
       ${who && html`<span class="arena-cap">· only ${who}’s</span>`}</div>

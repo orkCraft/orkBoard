@@ -67,6 +67,15 @@ export function leaveOf(nodes, shown, goal, task) {
   if (t.state === "dropped") return "cross";
   return inFilter(shown, goal) ? "" : "fade";
 }
+/** The states of a task that is in the field: not at Review, not merged, not dropped, not failed. */
+const FIELD = ["ready", "waiting", "held", "picking", "running", "testing"];
+/** A result's leave in Waits for your look: `leaveOf`'s, or *back* when it was sent back (its task is in the field again: spec 74 §2). A field card never takes *back*. */
+export function resultLeaveOf(nodes, shown, goal, task) {
+  const sign = leaveOf(nodes, shown, goal, task);
+  if (sign) return sign;
+  const t = nodes.find((n) => n.slug === goal)?.tasks.find((y) => y.id === task);
+  return t && FIELD.includes(t.state) ? "back" : "";
+}
 
 // -- flags -------------------------------------------------------------------------------------------------------------------------------
 
