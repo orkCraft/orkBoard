@@ -122,4 +122,4 @@ async def test_a_party_with_nothing_at_work_has_no_line_and_the_rows_keep_their_
 
 def test_the_service_worker_is_one_up():
     sw = (Path(pwa.__file__).parent / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")
-    assert 'const CACHE = "orkcraft-app-v80";' in sw and re.search(r'"shell-where\.js"', sw)
+    assert 'const CACHE = "orkcraft-app-v81";' in sw and re.search(r'"shell-where\.js"', sw)
