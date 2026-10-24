@@ -77,6 +77,7 @@ class GateMixin:
         self._ev(event_log.IDEA_FLAGGED, None, idea=slug, goal=party, by=by, tasks=got["tasks"], first_time=got["first_time"],
                  usd=got["usd"], days=got["days"])
         self.changed(slug)
+        self.collide_released(slug)             # the goals of other parties that waited for this flag may start (spec 71 §4)
         return True
 
     def _flag_after_gate(self, brought: list[dict], commit: str, git: IdeaGit, main: str) -> None:

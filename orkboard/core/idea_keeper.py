@@ -47,7 +47,7 @@ from orkboard.core.idea_night import NightMixin
 from orkboard.core.idea_lead import LeadMixin
 from orkboard.core.idea_revise import ReviseMixin
 from orkboard.core.idea_plan import _task, _why, estimate, readiness  # noqa: F401  (the plan's small helpers: the callers and tests use them from here)
-from orkboard.realm import event_log, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_pick, idea_spend, idea_target, ideas, releases, roles, status
+from orkboard.realm import collide, event_log, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_pick, idea_spend, idea_target, ideas, releases, roles, status
 from orkboard.realm.idea_words import short_said
 
 CHANGED = "ideas.changed"          # the bus's topic: slug
@@ -468,6 +468,8 @@ three lines. {self.reads("talk", [])} You may read the repository (read only).
         goal = next((t for t in ideas.tracks(root, make=False) if t["slug"] == page.get("track")), None)
         parts = [(n, page.section(n)) for n in ("Gist", "Done when", "Out", "Risks", "Depends on")]
         parts.append(("Its goal's summary", goal["summary"] if goal else ""))
+        if told := collide.told_of(self.state_dir, slug):
+            parts.append(("The Orkmaster tells you (another party's goal changed what this one rests on)", told))     # spec 71 §3
         context = idea_target.cut(parts, idea_target.CONTEXT["plan"])
         touches = [t for t in json.loads(page.get("touches") or "[]") if isinstance(t, str)] if page.get("touches", "").startswith("[") else []
         kinds = "; ".join(f'"{k}" ({roles.KIND_LINES[k]})' for k in roles.TASK_KINDS)
@@ -531,6 +533,7 @@ Answer with one JSON object and nothing else:
             return
         idea_change.clear(self.state_dir, slug)          # nothing changed since this plan, and a plan change waiting was for the one before (spec 62 §1.4, §3.3)
         idea_change.drop(self.state_dir, slug)
+        collide.clear_told(self.state_dir, slug)         # what the Orkmaster told it is used (spec 71 §3)
         self.write_stages(slug, data)
         self.assess(slug)
         ideas.save_state(self.state_dir, slug, state="plan", error="", held_until="", measure=self.measure())

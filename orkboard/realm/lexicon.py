@@ -192,6 +192,7 @@ TERMS: tuple[Term, ...] = (
     _t("release", "release", "releases"),                          # a goal of A release: a version, the goals that go in, its notes and the stores' list (spec 68 §3; realm/releases.py)
     _t("release_out", "out"),                                      # a release the person said is out in the stores: Mark it out, Out in 1.4 (spec 68 §3.5)
     _t("orkmaster", "Orkmaster"),                                  # the project's ork: it deals the parties and a goal's party; it plans nothing (spec 70; realm/orkmaster.py)
+    _t("collide", "collision", "collisions"),                      # two goals of different parties that change the same thing; the Orkmaster finds them and asks what goes first (spec 71; realm/collide.py)
     _t("project_level", "The project"),                            # the project's level: its parties as columns, their goals in them (spec 70 §2)
     _t("notification", "notification", "notifications"),          # a push to a paired phone: an answer that waits, the morning (spec 42 §3)
     _t("record", "record"),                                        # what an agent did in the last 30 days, in its dialog (spec 42 §4)

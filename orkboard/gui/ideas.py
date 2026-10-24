@@ -29,6 +29,9 @@ Spec 68: a goal's route (`ideas.move` only before its work starts), a release (`
 
 Spec 70: the Orkmaster's suggestion of a goal's party (`ideas.party_for`): gui/ideas_project.py; its deal is in `ideas.map`'s `project`.
 
+Spec 71: the Orkmaster keeps the parties from colliding (`ideas.collide_answer`; a plan made or a spec changed is compared with the other parties'
+open goals; a goal's `depends_on` across parties holds its start until a flag): gui/ideas_project.py, realm/collide.py, core/idea_collide.py.
+
 Spec 37 §8: the Board's settings are the project's (`BoardHost.board_settings`: `<repo>/.orkcraft/board.json` over the
 machine's `ideas`), read through `settings_now()` and written with `save_settings()`.
 """
@@ -210,6 +213,7 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
                      usd_low=est.get("usd_low"), usd_high=est.get("usd_high"),
                      **{k: m.get(k) for k in ("step", "prompt_chars", "tokens", "cost")} if m.get("step") == "plan" else
                      {"step": "plan", "prompt_chars": None, "tokens": None, "cost": None})
+            self.collide_plan(slug)                # what it touches against the open goals of other parties (spec 71 §2)
 
     def _since(self, iso: object) -> float | None:
         try:
@@ -592,6 +596,6 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
         table.update({"ideas.judge": self.judge, "ideas.pitch_send": self.pitch_send, "ideas.pitch_again": self.pitch_again,
                       "ideas.pitch_pass": self.pitch_pass,
                       "ideas.release_out": self.release_out, "ideas.release_candidates": self.release_candidates, "ideas.shown": self.shown,
-                      "ideas.party_for": self.party_for})
+                      "ideas.party_for": self.party_for, "ideas.collide_answer": self.collide_answer})
         return {name: guarded(name, fn) for name, fn in table.items()}
 

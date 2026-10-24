@@ -14,11 +14,11 @@ import re
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import (goal_flags, goal_types, goal_verdict, idea_change, idea_checks, idea_flag, idea_pick, idea_questions, idea_risk, idea_spend,
+from orkboard.realm import (collide, goal_flags, goal_types, goal_verdict, idea_change, idea_checks, idea_flag, idea_pick, idea_questions, idea_risk, idea_spend,
                             idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles)
 from orkboard.realm.idea_words import short_of
 
-NEEDS = ("asks", "plan", "change", "todo", "failed", "proposal", "pitch")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65)
+NEEDS = ("asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71)
 _HELD_FILES = re.compile(r"^files(?: beside)? · (.+)$")
 _AFTER = re.compile(r"after (\d{1,2}:\d{2})")
 
@@ -285,6 +285,10 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
     made = releases.index(root, state_dir, found)                           # the releases, read once: a goal's route, a flag's release (spec 68)
     held, rel = releases.holding(root, state_dir, made), goal_types.release_party(root)
     releasing = {r["goal"]: r for r in made}
+    asked = {}                                                              # the Orkmaster's open questions, each on its goal (spec 71 §8.1)
+    for n in collide.rows(root, state_dir, tracks=tracks, state_of=state_of):
+        asked.setdefault(n["idea"], []).append(n)
+    track_of, party_names = {i["slug"]: i["track"] for i in found}, {t["slug"]: t["title"] for t in tracks}
     for g in shown:
         mine = [i for i in found if i["track"] == g["slug"]]
         ideation = (g.get("leader") or "") == library.INVESTOR       # Ideation: its goals are pitches (spec 65)
@@ -317,7 +321,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
             plan = ideas.plan(state_dir, slug)
             tasks = (plan or {}).get("tasks") or []
             asks = ideas.items(page.section("Open questions")) if page else []
-            needs = idea_needs(root, state_dir, i, st, plan, asks)
+            needs = idea_needs(root, state_dir, i, st, plan, asks) + asked.get(slug, [])
             r = row(root, state_dir, i, st, plan, page, asks, states, needs)
             started = any(t.get("state") not in (None, "waiting", "ready", "held") for t in tasks)
             est = (plan or {}).get("estimate")
@@ -331,6 +335,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                     "held_until": r["held_until"], "start_at": r["start_at"], "night_by": r["night_by"], "by_pace": bool((plan or {}).get("by_pace")),
                     "priority": r["priority"], "size": r["size"],
                     "risk": r["risk"], "tier": tier[slug], "depends_on": r["depends_on"], "waits_on": r["waits_on"],
+                    "waits_for": collide.waits_for(state_dir, slug, r["depends_on"], g["slug"], track_of, titles, party_names) if r["depends_on"] else [],
                     "waits": None, "needs_you": next((k for k in NEEDS if any(n["kind"] == k for n in needs)), "")
                     if r["state"] != "done" else "",
                     "progress": r["progress"],
