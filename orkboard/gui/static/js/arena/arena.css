@@ -227,8 +227,10 @@
 .arena-spread__row { display: flex; flex-wrap: wrap; gap: var(--ork-5); justify-content: center; max-width: 94%; }
 .arena-spread__card { flex: none; width: 120px; height: 168px; }
 .arena-arrows { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 25; }
-.arena-arrow line { stroke: var(--ork-ink); stroke-width: 2; stroke-dasharray: 5 3; }
-.arena-arrow polygon { fill: var(--ork-ink); }
+.arena-arrow line { stroke: var(--ork-ink); stroke-width: 2; stroke-dasharray: 5 3; animation: arena-draw 0.16s steps(4) both; }   /* drawn from its start (arrows.js sets the origin), once a line comes */
+.arena-arrow polygon { fill: var(--ork-ink); animation: arena-head 0s 0.16s both; }                                                /* the head when the line has reached it */
+@keyframes arena-draw { from { transform: scale(0); } }
+@keyframes arena-head { from { opacity: 0; } }
 .arena-arrow[data-kind="collide"] line { stroke: var(--ork-alert); stroke-dasharray: none; }           /* two goals that change the same thing (spec 71): a plain line in the signal's colour, no direction */
 .arena-arrow[data-kind="collide"] polygon { display: none; }
 
@@ -486,6 +488,7 @@
   .arena-flagline.is-raising .arena-flagline__main b, .arena-flagline.is-raising .arena-flagline__x { animation: none; }
   .arena-tport.is-struck, .arena-tport.is-struck .ork-race__head, .arena-tport.is-calling, .arena-tport.is-calling .arena-sign { animation: none; }
   .arena-new__card, .arena-type__front, .arena-type__face { transition: none; }
+  .arena-arrow line, .arena-arrow polygon { animation: none; }
 }
 
 /* A goal's route (spec 68 §7.1): the steps across the parties at the top of its screen, joined by orkUI's ›; each a button with the party's leader's head and its words. */
