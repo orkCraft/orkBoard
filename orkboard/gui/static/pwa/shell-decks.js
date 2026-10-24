@@ -20,8 +20,8 @@ export function cardFace(it, { planning = false, spread = false } = {}) {
     h("span", { class: "tcard__name" }, it.title), ...dep, spread ? h("span", { class: "tcard__foot" }, it.words) : it.value ? h("span", { class: "tcard__foot" }, it.value) : null);
 }
 
-/** A stack as the field draws it: a button holding its edges, its front card and *×n*. `press(stack)` runs on a tap. `ghost`: a stack that left (`{sign}`: *check* a merge, *cross* a drop, none for a
- *  goal the filter put away), standing where it stood while it fades; `drawn`: it was not there a moment ago and rises. */
+/** A stack as the field draws it: a button holding its edges, its front card and *×n*. `press(stack)` runs on a tap. `ghost`: a stack that left (`{sign}`: *check* a merge, its goal's element stamped (spec 74 §1), *cross* a drop, *back* a result sent back to the field (it moves down, no
+ *  flash), none for a goal the filter put away), standing where it stood while it fades; `drawn`: it was not there a moment ago and rises. */
 export function deckNode(stack, { press, planning = false, drawn = false, ghost = null, label = "" } = {}) {
   const top = stack.top, many = stack.n > 1;
   const edges = Math.min(stack.n - 1, 2);
@@ -34,7 +34,7 @@ export function deckNode(stack, { press, planning = false, drawn = false, ghost 
   if (drawn) cls.push("is-drawn");
   if (ghost) {
     return h("div", { class: `${cls.join(" ")} is-leaving`, "aria-hidden": "true", "data-ghost": stack.key, "data-sign": ghost.sign || "" }, ...kids,
-      ghost.sign ? h("span", { class: "deck__flash" }, sign(ghost.sign, "", { big: true })) : null);
+      ghost.sign && ghost.sign !== "back" ? h("span", { class: "deck__flash" }, (ghost.sign === "check" && elem(top.element, { big: true, dim: Boolean(top.raw) })) || sign(ghost.sign, "", { big: true })) : null);
   }
   return h("button", { class: cls.join(" "), type: "button", title: top.tip, "aria-label": label || top.label, "data-key": stack.key, "data-idea": stack.idea, "data-phase": stack.phase || null,
     "data-n": String(stack.n), "data-task": !planning && !many ? top.id : null, "data-state": planning ? top.kind : top.state, onclick: () => press(stack) }, ...kids);

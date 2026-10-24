@@ -91,7 +91,8 @@ export function makeArena(core, ctx, parts) {
       h("button", { class: "ork-btn", type: "button", "aria-haspopup": "dialog", onclick: () => ops.openMenu() }, "New…"), gear, core.partyDeck())), ...ops.section());
   }
 
-  const needsGoal = () => h("div", { class: "arena-empty" }, h("p", { class: "muted" }, "No parties yet."),
+  const needsGoal = () => h("div", { class: "arena-empty has-void" }, h("i", { class: "void-stars", "aria-hidden": "true" }, ...Array.from({ length: 9 }, () => h("b"))), h("p", { class: "muted" }, "No parties yet."),
+    h("p", { class: "muted arena-empty__say" }, "Make a party, then write it a goal in plain words, like a spell. Its orks do the work; you look at it before it goes in."),
     h("div", { class: "row" }, h("button", { class: "ork-btn primary", type: "button", onclick: () => goalSheet.open("") }, "New party"), core.partyDeck()));
 
   /** The party's window drawn: the goals bar with the gate, the flag line and the field (what the person sees of the Board read). */

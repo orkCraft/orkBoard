@@ -118,9 +118,10 @@ export function makeField(core, hooks) {
         if (cur.has(key) || ghosts.has(key)) continue;
         const states = info.stack.items.map((t) => state.get(t.key));
         const gone = states.every((x) => x === "merged" || x === "dropped"), putAway = !gone && !keep(ui, info.stack.idea) && states.some((x) => x && x !== "merged" && x !== "dropped");
-        if ((gone || putAway) && ++leaving <= GHOSTS) {
+        const back = !gone && !putAway && info.stack.items.some((t) => t.state === "review") && info.stack.items.every((t) => t.state !== "review" || state.get(t.key) !== "review") && states.every((x) => x && x !== "merged" && x !== "dropped");      // a result sent back: its tasks are in the field again (spec 74 §2)
+        if ((gone || putAway || back) && ++leaving <= GHOSTS) {
           ghosts.set(key, { member: info.member, phase: info.phase, index: info.index, at: Date.now(), stack: info.stack,
-            sign: gone ? (states.includes("dropped") ? "cross" : "check") : "" });
+            sign: gone ? (states.includes("dropped") ? "cross" : "check") : back ? "back" : "" });
         }
       }
       for (const m of members) if (mergedOf(model, m) > (merged.get(m.slug) ?? Infinity)) rewarded.add(m.slug);
