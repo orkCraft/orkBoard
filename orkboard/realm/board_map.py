@@ -14,11 +14,11 @@ import re
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import (goal_flags, goal_types, goal_verdict, idea_change, idea_checks, idea_flag, idea_pick, idea_questions, idea_risk, idea_spend,
+from orkboard.realm import (collide, goal_flags, goal_types, goal_verdict, idea_change, idea_checks, idea_flag, idea_pick, idea_questions, idea_risk, idea_spend,
                             idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles)
 from orkboard.realm.idea_words import short_of
 
-NEEDS = ("asks", "plan", "change", "todo", "failed", "proposal", "pitch")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65)
+NEEDS = ("asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71)
 _HELD_FILES = re.compile(r"^files(?: beside)? · (.+)$")
 _AFTER = re.compile(r"after (\d{1,2}:\d{2})")
 
@@ -41,12 +41,12 @@ def list_of(text: object) -> list[str]:
     return [str(x) for x in got if isinstance(x, str)] if isinstance(got, list) else []
 
 
-def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None, asks: list[str]) -> list[dict]:
+def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None, asks: list[str], at: str | None = None) -> list[dict]:
     """What of one idea needs the person (spec 35 §10): its questions, its plan waiting, the leader's plan change waiting (spec 62), its to-dos,
     a failure, a proposal; a judged pitch (spec 65 §5: low, blocking nothing, its answer)."""
     slug, state = i["slug"], st["state"]
     base = {"idea": slug, "goal": i["track"], "title": i["title"], "priority": i["priority"], "blocks": False,
-            "at": ideas.touched_at(root, state_dir, slug)}
+            "at": ideas.touched_at(root, state_dir, slug) if at is None else at}
     tasks = (plan or {}).get("tasks") or []
     out = []
     if state == "asks":
@@ -119,7 +119,7 @@ def _night_by(i: dict, st: dict, plan: dict | None) -> str:
 
 
 def row(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None, page: ideas.Page | None, asks: list[str],
-        states: dict[str, dict], mine: list[dict]) -> dict:
+        states: dict[str, dict], mine: list[dict], at: str | None = None) -> dict:
     """An idea as `ideas.board` lists it: the state and what words it (queue, held_until, start_at, progress, waits_on)."""
     slug = i["slug"]
     tasks = (plan or {}).get("tasks") or []
@@ -128,7 +128,7 @@ def row(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None, page:
             "state": st["state"], "size": i["size"], "thesis": i["thesis"], "asks": len(asks),
             "priority": i["priority"],
             "progress": {"done": sum(1 for t in tasks if t.get("state") == "merged"), "total": len(tasks)},
-            "updated": ideas.touched_at(root, state_dir, slug),
+            "updated": ideas.touched_at(root, state_dir, slug) if at is None else at,
             "queue": ideas.queue_of(st), "held_until": st["held_until"],
             "risk": idea_risk.level(page.get("risk")) if page and page.get("risk") else "",
             "risk_triggers": list_of(page.get("risk_triggers")) if page else [],
@@ -261,11 +261,12 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
     goal_state_of = goal_state_of or (lambda slug: ideas.goal_state(state_dir, slug))
     tracks = [t for t in ideas.tracks(root, make=False) if t["slug"] != ideas.GENERAL]
     shown = [t for t in tracks if not goal or t["slug"] == goal]
-    found = ideas.ideas(root)
+    found, read_pages = ideas.ideas_and_pages(root)                                 # the pages read once: the ideas' rows and their pages
+
     states = {i["slug"]: state_of(i["slug"]) for i in found}
     titles = {i["slug"]: i["title"] for i in found}
     place = {i["slug"]: n for n, i in enumerate(found)}
-    pages = {i["slug"]: ideas.idea_page(root, i["slug"]) for i in found}
+    pages = {i["slug"]: read_pages.get(i["slug"]) for i in found}
     depends = {s: list_of(p.get("depends_on")) if p else [] for s, p in pages.items()}
 
     # a done idea stays while an idea that stays depends on it, so every edge has both ends
@@ -283,8 +284,12 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
     today = dt.date.fromtimestamp(now).isoformat() if now else dt.date.today().isoformat()
     offered = pitches.offers(root, state_dir) if any((t.get("leader") or "") == library.INVESTOR for t in shown) else {}
     made = releases.index(root, state_dir, found)                           # the releases, read once: a goal's route, a flag's release (spec 68)
-    held, rel = releases.holding(root, state_dir, made), goal_types.release_party(root)
+    held, rel = releases.holding(root, state_dir, made), goal_types.release_party(root, tracks)
     releasing = {r["goal"]: r for r in made}
+    asked = {}                                                              # the Orkmaster's open questions, each on its goal (spec 71 §8.1)
+    for n in collide.rows(root, state_dir, tracks=tracks, state_of=state_of):
+        asked.setdefault(n["idea"], []).append(n)
+    track_of, party_names = {i["slug"]: i["track"] for i in found}, {t["slug"]: t["title"] for t in tracks}
     for g in shown:
         mine = [i for i in found if i["track"] == g["slug"]]
         ideation = (g.get("leader") or "") == library.INVESTOR       # Ideation: its goals are pitches (spec 65)
@@ -317,8 +322,9 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
             plan = ideas.plan(state_dir, slug)
             tasks = (plan or {}).get("tasks") or []
             asks = ideas.items(page.section("Open questions")) if page else []
-            needs = idea_needs(root, state_dir, i, st, plan, asks)
-            r = row(root, state_dir, i, st, plan, page, asks, states, needs)
+            at = ideas.touched_at(root, state_dir, slug)                                # read once: the row's `updated` and its needs' `at`
+            needs = idea_needs(root, state_dir, i, st, plan, asks, at) + asked.get(slug, [])
+            r = row(root, state_dir, i, st, plan, page, asks, states, needs, at)
             started = any(t.get("state") not in (None, "waiting", "ready", "held") for t in tasks)
             est = (plan or {}).get("estimate")
             waves = map_stage.waves_of(tasks)
@@ -331,6 +337,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                     "held_until": r["held_until"], "start_at": r["start_at"], "night_by": r["night_by"], "by_pace": bool((plan or {}).get("by_pace")),
                     "priority": r["priority"], "size": r["size"],
                     "risk": r["risk"], "tier": tier[slug], "depends_on": r["depends_on"], "waits_on": r["waits_on"],
+                    "waits_for": collide.waits_for(state_dir, slug, r["depends_on"], g["slug"], track_of, titles, party_names) if r["depends_on"] else [],
                     "waits": None, "needs_you": next((k for k in NEEDS if any(n["kind"] == k for n in needs)), "")
                     if r["state"] != "done" else "",
                     "progress": r["progress"],

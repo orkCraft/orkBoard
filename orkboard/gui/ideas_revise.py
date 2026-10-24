@@ -71,3 +71,4 @@ class ReviseMixin:
         """From the bus, whenever a goal changed: a plan change that cannot be taken any more (the goal is done, its plan was made again,
         every task it names has started and it adds nothing) is dropped by itself (spec 62 §3.3)."""
         idea_change.settle(self.state_dir, slug)
+        self.collide_changed(slug)               # a spec changed under another party's goal is compared (spec 71 §3)

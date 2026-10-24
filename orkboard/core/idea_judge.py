@@ -25,7 +25,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from orkboard.realm import event_log, idea_lens, idea_target, ideas, library, pitches, roles
+from orkboard.realm import event_log, idea_lens, idea_target, ideas, library, orkmaster, pitches, roles
 
 AT_ONCE = 2                        # the views asked at once
 GOALS = 40                         # the goals done and in work a call reads
@@ -65,6 +65,8 @@ class JudgeMixin:
     def role_as(self, slug: str) -> dict:
         """The role a pitch's call speaks as: the project's (its name, model and instruction as the person left them on Agents),
         else the library's."""
+        if slug == orkmaster.ROLE:                  # the Orkmaster judges a collision (spec 71 §2)
+            return orkmaster.role(self.state_dir)
         a = library.get(slug)
         return roles.role(self.state_dir, slug) or {"slug": slug, "name": a.name if a else slug, "model": a.tier if a else "",
                                                      "instruction": a.instruction if a else ""}
@@ -74,10 +76,13 @@ class JudgeMixin:
         not its library tier) wins, as a task's role does."""
         own = str(self.role_as(slug).get("model") or "")
         a = library.get(slug)
-        return idea_target.keeper_pick(step, self.target(), "" if a is not None and own == a.tier else own)
+        default = a.tier if a is not None else orkmaster.ROLE_MODEL if slug == orkmaster.ROLE else None
+        return idea_target.keeper_pick(step, self.target(), "" if own == default else own)
 
     def speak_as(self, slug: str) -> str:
         """What a role is told before a pitch's call: who it is, and its instruction."""
+        if slug == orkmaster.ROLE:
+            return orkmaster.speak(self.state_dir)
         r = self.role_as(slug)
         return f"You are the {r['name']} of this project's Ideation party. {r.get('instruction') or ''}\n\n"
 

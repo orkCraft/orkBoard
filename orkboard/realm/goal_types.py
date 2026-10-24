@@ -299,9 +299,9 @@ def offered(state_dir: Path, root: Path, party_slug: str, *, read: Party | None 
     return [(t, rows) for t, rows in found if t.id not in hidden and not (rows and t.over in whole)]
 
 
-def release_party(root: Path) -> str:
-    """The slug of the project's Release party (the one the Release manager leads), "" with none (spec 68 §3.1)."""
-    return next((t["slug"] for t in ideas.tracks(root, make=False) if t.get("leader") == library.RELEASE_MANAGER), "")
+def release_party(root: Path, tracks: list[dict] | None = None) -> str:
+    """The slug of the project's Release party (the one the Release manager leads), "" with none (spec 68 §3.1). `tracks`: read once by the caller."""
+    return next((t["slug"] for t in (ideas.tracks(root, make=False) if tracks is None else tracks) if t.get("leader") == library.RELEASE_MANAGER), "")
 
 
 def lacking(state_dir: Path, p: Party, t: GoalType) -> str:
