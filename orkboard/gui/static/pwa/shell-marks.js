@@ -10,6 +10,11 @@ export function elem(name, { dim = false, big = false } = {}) {
   return ELEMENTS.includes(name) ? h("span", { class: `ork-elem ${name}${big ? " big" : ""}${dim ? " dim" : ""}`, "aria-hidden": "true" }) : null;
 }
 
+/** A goal's moon (spec 74 §6) as a node, 14 px (`big`: 28 px): `phase` is new, crescent, half, gibbous or full; null (no node) for a goal that has none. Shown, never named: `aria-hidden`. */
+export function moon(phase, { big = false } = {}) {
+  return phase ? h("span", { class: `ork-moon ${phase}${big ? " big" : ""}`, "aria-hidden": "true" }) : null;
+}
+
 /** The class of a type's sign, its goal's colour (spec 55 §1.2): the element's, `dim` (faint) while the element is drawn dim, `none` (muted) for a goal with no element. */
 export const typeTone = (element, dim = false) => (!ELEMENTS.includes(element) ? "none" : dim ? "dim" : element);
 

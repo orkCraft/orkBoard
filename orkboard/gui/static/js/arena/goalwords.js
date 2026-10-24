@@ -21,6 +21,15 @@ export const goalsCount = (lists) => lists.work.length + lists.planRows.length;
 /** A goal's element and whether it is drawn dim (a raw goal, not yet read: until its draft). */
 export const elementOf = (n) => ({ name: n?.element || "", dim: n?.state === "raw" || n?.state === "reading" });
 
+/** A goal's moon (spec 74 §6): its tasks merged of its tasks, in quarters: new, crescent, half, gibbous, full (all merged). None for a raw goal, a pitch, a release
+ *  and a goal with no tasks (a dropped task is not counted). `n`: a node of the map, or a goal's screen's state, tasks and pitch put over its node. */
+export function moonOf(n) {
+  if (!n || n.state === "raw" || n.pitch || n.release || n.type?.id === "release") return null;
+  const tasks = (n.tasks || []).filter((t) => t.state !== "dropped");
+  return tasks.length ? MOONS[Math.round((tasks.filter((t) => t.state === "merged").length / tasks.length) * 4)] : null;
+}
+const MOONS = ["new", "crescent", "half", "gibbous", "full"];
+
 /** The elements, in orkUI's order (orkboard/realm/idea_element.py `ELEMENTS`). */
 export const ELEMENTS = ["meadow", "ice", "dust", "void", "lava"];
 /** The element a new goal of a party will get: the one used least among the party's open goals (not done), ties by the order above — the host's rule

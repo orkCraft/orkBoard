@@ -1,7 +1,7 @@
 // The open party's body in the left column, under its heading (docs/specs/49-one-window.md §4.4, docs/specs/50-parties-and-goals.md §3.3, docs/specs/52-goal-types.md §3.2, §4,
 // docs/specs/69-parties-in-the-column.md §3, docs/specs/73-a-lighter-column.md §1, §3; the headings are partylist.js): its groups — *At work*, *Planning* — then *New · n* with
 // *Process now* at its right and *Flags · n* with *k wait for main*, each folded, one 28 px row. The party's leader is the heading (partylist.js), there is no row of its own and no
-// *Goals n*; a party's New goal is the + in the project line (newgoal.js). A goal's row is one line (28 px): its element, its type's sign in its goal's colour, its title, its state's
+// *Goals n*; a party's New goal is the + in the project line (newgoal.js). A goal's row is one line (28 px): its element, its type's sign in its goal's colour, its title, its moon (spec 74 §6), its state's
 // sign; what its second line said is in its title (the tooltip). A press on the row picks the goal into the filter, a second press on a picked row opens its screen (a raw goal opens on
 // the first); hovering it peeks (the board shows only that goal's cards while the pointer is on the row). A stop is marked once, by its sign (no alert edge, no alert words).
 // Ideation (docs/specs/65-ideation.md §8) lists its pitches by state instead (pitches.js), with *Judge now* in place of *Process now*.
@@ -9,7 +9,7 @@
 // version and *k goals* with **Mark it out** (asking first) and then *Out in 1.4*; another party's flags say *In Release 1.4*, *Out in 1.4* or *Waits for a release*.
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
-import { Chev, Elem, Sign } from "../orkui.js";
+import { Chev, Elem, Moon, Sign } from "../orkui.js";
 import { act, showIdea, showPlan } from "../shell/store.js";
 import { openDialog } from "../shell/modals.js";
 import { reducedMotion } from "./motion.js";
@@ -19,7 +19,7 @@ import { waitsOf, waitsForWords } from "./collidewords.js";
 import { show } from "./partylist.js";
 import { powerOf } from "./arenawords.js";
 import { typeSign } from "./stacks.js";
-import { elementOf, flagRow, goalMark, listsOf, pickTip, waitsMain, workLine } from "./goalwords.js";
+import { elementOf, flagRow, goalMark, listsOf, moonOf, pickTip, waitsMain, workLine } from "./goalwords.js";
 import { FoldRow } from "./foldrow.js";
 import { PitchGoals } from "./pitches.js";
 import { judgePower, pitchLists } from "./pitchwords.js";
@@ -32,7 +32,7 @@ const TONES = { danger: "is-danger", alert: "is-alert" };
 /** One goal of the party, one line (spec 73 §1): its element, its type's sign (the space kept for a goal with none), its title, its state's sign. `plan`: a Planning row (its words come from the
  *  leader's reading); a raw goal (`raw`) opens on a press, it has no task to pick. A press picks, a second press on a picked row opens its screen; the whole line is in its title. */
 function GoalRow({ g, n, plan = null, raw = false, party }) {
-  const el = elementOf(n), mark = goalMark(n), on = (picks.value[party] || []).includes(n.slug), some = (picks.value[party] || []).length > 0;
+  const el = elementOf(n), mark = goalMark(n), moon = moonOf(n), on = (picks.value[party] || []).includes(n.slug), some = (picks.value[party] || []).length > 0;
   const stop = mark.sign === "alert";
   const waits = waitsOf(n), words = [raw || plan ? plan.words : workLine(n), waitsForWords(n)].filter(Boolean).join(" · ");     // *waits for Backend · Auth API* is in the title, whatever sign the row wears
   const toWait = () => { const w = waits[0]; show(w.party, party); picks.value = { ...picks.value, [w.party]: [w.goal] }; };          // the sign: that goal's party, with it picked
@@ -45,6 +45,7 @@ function GoalRow({ g, n, plan = null, raw = false, party }) {
       <${Elem} name=${el.name} dim=${el.dim} />
       ${typeSign(n, "arena-goal__type") || html`<span class="arena-goal__type is-none" aria-hidden="true"></span>`}
       <span class="arena-goal__title">${n.short || n.title}</span>
+      ${moon && html`<${Moon} phase=${moon} />`}
       <span class=${cls("arena-goal__mark", TONES[mark.tone])} title=${mark.label || undefined}>${mark.sign && html`<${Sign} name=${mark.sign} />`}</span>
     </button>
     ${mark.sign === "before" && html`<button type="button" class="arena-goal__go" aria-label=${`${mark.label}: open it`} title=${`${mark.label} · opens ${waits[0].party_name || waits[0].party} with it picked`} onClick=${toWait}></button>`}

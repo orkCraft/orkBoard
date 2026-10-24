@@ -15,7 +15,8 @@ import { heldWords } from "./shell-words.js";
 import { limitsNote } from "./shell-limits.js";
 import { who, whoHead, headWords, TIER_WORDS } from "./shell-who.js";
 import { gateScreen } from "./shell-gate.js";
-import { sign } from "./shell-marks.js";
+import { moon, sign } from "./shell-marks.js";
+import { moonOf } from "./shell-goals-words.js";
 import { pointerGuard } from "./shell-motion.js";
 import { pickRow, pickSig, stopAll } from "./shell-picks.js";
 import { screenBody } from "./shell-pick-answer.js";
@@ -214,7 +215,8 @@ export function makePreview(core, ctx, screens = {}) {
     const talk = (p.talk || []).slice(-TALK_SHOWN), lead = leadOf(p);
     body.replaceChildren(...[
       routeLine(core, p.route, p.slug),                  // its way across the parties, under its title (spec 68 §7.1)
-      h("p", { class: "muted" }, [p.size ? `Size ${p.size} · ` : "", stateWords({ state: p.state, progress: { done: (p.plan?.tasks || []).filter((t) => t.state === "merged").length, total: (p.plan?.tasks || []).length } })].join("")),
+      h("div", { class: "goal-state" }, moon(moonOf({ ...(core.st.map?.nodes || []).find((n) => n.slug === p.slug), state: p.state, tasks: p.plan?.tasks, pitch: p.pitch }), { big: true }),     // its tasks merged (spec 74 §6)
+        h("p", { class: "muted" }, [p.size ? `Size ${p.size} · ` : "", stateWords({ state: p.state, progress: { done: (p.plan?.tasks || []).filter((t) => t.state === "merged").length, total: (p.plan?.tasks || []).length } })].join(""))),
       stateError(p) ? h("p", { class: "warn", role: "alert" }, stateError(p)) : null,
       pointedAt(p.lens),
       checksLine(p, cur),

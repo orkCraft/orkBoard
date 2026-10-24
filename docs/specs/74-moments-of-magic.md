@@ -62,7 +62,7 @@ spell. Its orks do the work; you look at it before it goes in.** The buttons kee
 The line is the only place *spell* is said; it names no concept.
 
 ## 6. The moon: a goal's progress (C, after §7)
-A goal's **moon** says how much of it is done: its tasks merged of its tasks, rounded to quarters: new (none), crescent,
+A goal's **moon** says how much of it is done: its tasks merged of its tasks (a dropped task not counted), rounded to quarters: new (none), crescent,
 half, gibbous, full (all merged; it waits at the gate or for Review). The lit part in `--ork-ink-muted`, the full moon's
 in `--ork-ink`, the dark part in `--ork-frame`; no colour. **Where**: a goal's row (desktop 12 x 12 between its title
 and its state's sign; the phone's row likewise at 14 x 14) and its screen's head (28 x 28 beside *k of n tasks*). A raw

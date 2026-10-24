@@ -5,7 +5,7 @@
 // mark is the stop's one sign) and ✓ when picked, then › (44 px) that opens it; its old second line is its `aria-label` after the title. A tap picks or unpicks: only the picked goals' cards stay on the field, only their results and stops
 // stay along the bottom (the filter, kept per party for the session in `st.picks`).
 import { h, icon, sheet } from "./util.js";
-import { elem, sign, typeTone } from "./shell-marks.js";
+import { elem, moon, sign, typeTone } from "./shell-marks.js";
 import { barName, barWords, filterWords, flagRelease, flagTally, goalsOf, hasReleaseParty, mainWaitWords, newOf, partyNameOf, releaseLine, waitWords } from "./shell-goals-words.js";
 
 const LIT_MS = 700;                                  // a flag lit once in the sheet
@@ -37,7 +37,7 @@ export function makeGoals(core, about, process = () => {}) {
       h("button", { class: "dk__main", type: "button", "aria-pressed": String(on), "data-idea": r.slug, "aria-label": words, title: words, onclick: () => toggle(r.slug) },
         h("span", { class: "dk__elem", "aria-hidden": "true" }, elem(r.element, { dim: r.raw })),
         r.type ? h("span", { class: `dk__type ${typeTone(r.element, r.raw)}`, "data-type": r.type.id }, sign(r.type.sign, r.type.name)) : h("span", { class: "dk__gap", "aria-hidden": "true" }),
-        h("span", { class: "dk__title" }, r.title),
+        h("span", { class: "dk__title" }, r.title), moon(r.moon),
         r.mark ? h("span", { class: "dk__mark" }, sign(r.mark, r.markTip)) : null, on ? h("span", { class: "dk__check" }, sign("check", "picked")) : null),
       h("button", { class: "dk__open", type: "button", "aria-label": `Open ${r.title}`, onclick: () => { sh.close(); core.open(r.open, "map"); } }, h("i", { class: "ork-chev right", "aria-hidden": "true" })));
   }

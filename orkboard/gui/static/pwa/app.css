@@ -17,6 +17,7 @@ h3 { margin: var(--ork-4) 0 var(--ork-2); font: var(--ork-type-label); text-tran
 p { margin: 0 0 var(--ork-4); }
 code, pre, kbd { font-family: var(--ork-font-code); }
 .muted { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.goal-state { display: flex; align-items: center; gap: var(--ork-4); }
 .warn { color: var(--ork-alert); font: var(--ork-type-caption); }
 :focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
 [hidden] { display: none !important; }

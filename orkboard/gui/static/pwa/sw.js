@@ -1,13 +1,14 @@
 // The app's worker (gui/pwa.py): the shell opens without the network, the town never does. Every file is
 // asked of the town first, so a new version arrives the next time it is reachable; the cache is only for
 // when it is not. The socket is never cached: what the town is comes live or not at all.
-const CACHE = "orkcraft-app-v82";
+const CACHE = "orkcraft-app-v83";
 // Orkboard's phone (pwa/board-app.js; docs/specs/37-board-and-line.md §4) keeps the shell's files only: no camp file
 // in its cache; orkUI's styles and faces (docs/specs/40-design-system.md), its race heads as they are drawn.
 const SHELL = ["./", "board-app.js", "util.js", "board.js", "shell-top.js", "shell-board.js", "shell-agents.js",
   "shell-review.js", "shell-preview.js", "shell-util.js", "shell-forms.js", "shell-goal.js", "shell-agent.js", "shell-words.js",
   "shell-needs.js", "shell-ideas.js", "shell-projects.js", "shell-drawer.js", "shell-ops.js", "shell-map.js", "shell-map-idea.js", "shell-who.js", "shell-idea-field.js", "shell-limits.js", "shell-goal-new.js", "shell-lens.js", "shell-lens-screen.js", "shell-cards.js", "shell-push.js", "shell-arena.js", "shell-arena-words.js", "shell-arena-field.js", "shell-motion.js", "shell-stops.js", "shell-today.js", "shell-fab.js", "shell-where.js", "shell-project.js", "shell-gate.js", "shell-marks.js", "shell-phases.js", "shell-goals-words.js", "shell-goals.js", "shell-decks.js", "shell-spread.js", "shell-party.js", "shell-picks.js", "shell-pick-answer.js", "shell-types.js", "shell-pitch.js", "shell-route.js", "shell-release.js", "shell-spend.js", "shell-update.js", "fonts.css", "tokens.css", "components.css",
   "elements/meadow.svg", "elements/ice.svg", "elements/dust.svg", "elements/void.svg", "elements/lava.svg",
+  "moons/disk.svg", "moons/crescent.svg", "moons/half.svg", "moons/gibbous.svg",
   "signs/check.svg", "signs/cross.svg", "signs/work.svg", "signs/night.svg", "signs/alert.svg", "signs/flag.svg", "signs/before.svg", "signs/after.svg",
   "signs/play.svg", "signs/pause.svg", "signs/sound.svg", "signs/film.svg", "signs/text.svg",
   "signs/feature.svg", "signs/bug.svg", "signs/tidy.svg", "signs/screen.svg", "signs/picture.svg", "signs/logo.svg",
