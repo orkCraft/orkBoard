@@ -1199,3 +1199,19 @@ Why: the owner, on the column as built: *the list is overloaded.* A goal row was
    the party shown picked and its types first (spec 70 §4's form); the pile at the column's foot goes. The phone keeps its
    FAB (the thumb's), whose form already starts with the party shown.
 The owner's call, on mockups G and H. Spec 73.
+
+## 89. Moments of magic, not a theme: the seal at Review, a collision that crumbles, the empty Board in the void, the moon (24 October, the owner)
+
+Why: the owner, on how the goals read: *it is really like spells; a little more mystery?* Talking to a model is more and
+more like casting. Weighed as a designer and a marketer (pixel faces, orks and races, the cards' game, now magic: four
+layers on one screen), the line is **what explains stays, what decorates goes**. So:
+1. **Moments, tied to an event**, never a backdrop: the arrows drawn from their start (built), a merged result's seal
+   (its goal's element stamped), a sent-back result going back to the field, a collision's line that crumbles when it
+   is answered, faint stars on the empty Board only, one line of words there.
+2. **The moon** is a goal's progress (new to full, its tasks merged) and tonight's sign; made in orkUI first.
+3. **Not**: a shimmering or moonlit background, runes on a press, a circle of the five elements at the gate, a
+   first-goal fanfare, *spell* as a word of the interface, the void's colour as a general colour of magic, any magic on a
+   control before it is pressed, any change to a signal (a collision, a failure, money, Stop all).
+4. The landing and the clips may carry far more of it (the void, the full moon, runes): the product is the office where
+   it shows in a few moments. *The orks do the work; the seal is yours.*
+The owner's call, on the mockups of *Orkboard — магия целей*. Spec 74.
