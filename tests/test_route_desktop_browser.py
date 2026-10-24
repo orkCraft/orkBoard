@@ -18,7 +18,7 @@ from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_arena_desktop_browser import ArenaHost, ELEMENT, member, pip  # noqa: E402
 from tests.test_ideation_desktop_browser import CASE, INVEST, VIEWS, VIEW_SAYS, who  # noqa: E402
 from tests.test_map_desktop_browser import node  # noqa: E402
-from tests.test_shell_browser import _calls, _open, _parties, _show_goal  # noqa: E402
+from tests.test_shell_browser import _calls, _open, _parties, _show_goal, _open_slug  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -164,8 +164,8 @@ def routed(gui):
 
 
 def _goal(pg, slug):
-    """A goal's screen in the drawer, opened with › on its row."""
-    pg.locator(f'.arena-goal[data-slug="{slug}"] .arena-goal__open').click()
+    """A goal's screen in the drawer, opened with a second press on its row."""
+    _open_slug(pg, slug)
     pg.locator(".board-ideaview").wait_for(timeout=WAIT_MS)
     return pg.locator(".shell-drawer")
 
@@ -182,7 +182,7 @@ def _tab(pg, slug):
     """The pitch of Ideation, opened from its row (the Sent fold opened first)."""
     _show_goal(pg, "ideas")
     if not pg.locator(f'.arena-pitchrow[data-slug="{slug}"]').count():
-        pg.locator(".arena-sent").click()
+        pg.locator(".arena-sent .arena-frow__main").click()
     pg.locator(f'.arena-pitchrow[data-slug="{slug}"] .arena-goal__main').click()
     pg.locator(".shell-pitch").wait_for(timeout=WAIT_MS)
 
@@ -224,8 +224,8 @@ def test_each_step_opens_what_it_names(routed):
     pg.locator('.arena[data-goal="passkey"]').wait_for(timeout=WAIT_MS)
     assert pg.locator('.arena-phead[data-goal="passkey"]').get_attribute("aria-current") == "true"
     pg.locator('.arena-goal[data-slug="register"].is-on').wait_for(timeout=WAIT_MS)
-    assert pg.locator(".arena-goal.is-on").count() == 1 and pg.locator(".arena-left__head .arena-lbl + .ork-count + .arena-spacer + button", has_text="Show all").count() == 1
-    pg.locator(".arena-left__head button", has_text="Show all").click()
+    assert pg.locator(".arena-goal.is-on").count() == 1 and pg.locator(".arena-showall").get_by_role("button", name="Show all").count() == 1
+    pg.locator(".arena-showall").get_by_role("button", name="Show all").click()
     assert pg.locator(".arena-goal.is-on").count() == 0
     _steps(pg).nth(3).click()                                                                              # in main: the same party, the goal picked
     pg.locator('.arena-goal[data-slug="register"].is-on').wait_for(timeout=WAIT_MS)
@@ -235,8 +235,8 @@ def test_each_step_opens_what_it_names(routed):
 
 
 def _open_register(pg):
-    """The register goal's screen again (its tab, or › on its row when the drawer shows something else)."""
-    pg.locator('.arena-goal[data-slug="register"] .arena-goal__open').click()
+    """The register goal's screen again (its tab, or a press on its row when the drawer shows something else)."""
+    _open_slug(pg, "register")
     pg.locator(".arena-route").wait_for(timeout=WAIT_MS)
 
 
@@ -276,12 +276,12 @@ def test_a_sent_pitch_says_its_goal_under_its_decision_and_a_press_opens_the_goa
 def test_ideations_list_says_a_sent_pitchs_goal_short_in_the_same_words(routed):
     pg, host = routed
     _show_goal(pg, "ideas")
-    pg.locator(".arena-sent").click()
-    said = {s: pg.locator(f'.arena-pitchrow[data-slug="{s}"] .arena-goal__line').inner_text() for s in ("dark", "pbadge", "pbutton", "pcreds", "pgone")}
+    pg.locator(".arena-sent .arena-frow__main").click()
+    said = {s: pg.locator(f'.arena-pitchrow[data-slug="{s}"] .arena-goal__main').get_attribute("aria-label").partition(": ")[2] for s in ("dark", "pbadge", "pbutton", "pcreds", "pgone")}
     assert said == {"dark": "At work in Passkey · 3 of 7", "pbadge": "In main", "pbutton": "In Release 1.4", "pcreds": "Out in 1.3", "pgone": "Dropped"}
     host.states["dark"].update(state="done", flag="2026-10-25T09:00:00")                                    # the goal reached main: the row follows
     host.bump({})
-    pg.wait_for_function("() => document.querySelector('.arena-pitchrow[data-slug=dark] .arena-goal__line')?.textContent === 'In main'", timeout=WAIT_MS)
+    pg.wait_for_function("() => document.querySelector('.arena-pitchrow[data-slug=dark] .arena-goal__main')?.getAttribute('aria-label').endsWith(': In main')", timeout=WAIT_MS)
 
 
 def test_an_older_host_draws_as_before_no_route_and_a_sent_pitch_says_where_it_went(gui):

@@ -74,6 +74,12 @@ export function typesOf(goals) {
   return out;
 }
 
+/** The goal types a New goal from the + offers (spec 73 §4.2): the party shown's own first (a type once), then the others of the project. `party`: its slug, "" for none. */
+export function typesFirst(goals, party) {
+  const mine = (goals.find((g) => g.slug === party)?.types || []).map((t) => ({ ...t, missing: [] }));
+  return [...mine, ...typesOf(goals).filter((t) => !mine.some((m) => m.id === t.id))];
+}
+
 /** What a deal card says of its why: *3 flags wait and no party releases them*, *No party judges small ideas yet*, *You have one* (muted). "" for none. */
 export function whyWords(entry) {
   if (!entry) return "";

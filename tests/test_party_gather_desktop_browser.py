@@ -218,7 +218,7 @@ def test_a_goal_made_through_its_party_first_gathers_nothing_the_goal_form_is_wh
     host = StubHost()
     host.goals, host.ideas = {}, {}                                                                     # a project with no party yet
     pg, host, errors = _open(gui, host=host, ready=".arena-note")
-    pg.get_by_role("button", name="New goal").click()
+    pg.locator(".arena-note").get_by_role("button", name="New goal").click()
     dlg = pg.get_by_role("dialog", name="New party")
     dlg.get_by_label("What it is for").fill(ABOUT)
     pg.evaluate(RECORD)

@@ -10,6 +10,7 @@ pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.pick_desktop_host import PickHost, open_pick  # noqa: E402
+from tests.test_arena_desktop_browser import solo_lead  # noqa: E402
 from tests.test_one_hand_desktop_browser import row, todo  # noqa: E402
 from tests.test_shell_browser import _sent, _stop  # noqa: E402
 
@@ -98,7 +99,7 @@ def test_a_plans_and_a_questions_stop_ring_their_goals_planning_card_and_a_goal_
     pg.wait_for_timeout(200)
     assert _linked(pg) == []                                                                             # Planning is not drawn on the field now: nothing to ring
     pg.evaluate("document.activeElement.blur()")
-    pg.locator(".arena-lead .arena-member").click()                                                      # the leader's solo: its Planning goals
+    solo_lead(pg)                                                                                                         # the leader's solo: its Planning goals
     pg.locator(".arena-solo[data-agent] .arena-task[data-slug=recovery]").wait_for(timeout=WAIT_MS)
     _stop(pg, "plan")
     _wait_ring(pg, ["recovery"])

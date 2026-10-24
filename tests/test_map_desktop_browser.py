@@ -15,7 +15,7 @@ pytest.importorskip("playwright.sync_api")
 
 from orkboard.realm.idea_words import short_of  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_shell_browser import _parties, _show_goal, PARTY, StubHost, _calls, _sent  # noqa: E402
+from tests.test_shell_browser import _parties, _press_row, _show_goal, PARTY, StubHost, _calls, _sent  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -182,9 +182,22 @@ def row(pg, title):
     return pg.locator(".arena-goal", has_text=title)
 
 
+class _Opener:
+    def __init__(self, main):
+        self.main = main
+
+    def click(self):
+        _press_row(self.main)
+
+
 def opener(pg, title):
-    """› on the goal's row (a goal not yet read: its row): a click opens it in the drawer."""
-    return row(pg, title).locator(":scope > button:last-child")
+    """The goal's row opens it in the drawer: a press picks it, a second press opens it (a goal not yet read opens on a press); `.click()` does both."""
+    return _Opener(row(pg, title).locator(".arena-goal__main"))
+
+
+def said(pg, title):
+    """What a goal's row says besides its title (spec 73 §1.2): in the title of its button, after the goal's whole title."""
+    return row(pg, title).locator(".arena-goal__main").get_attribute("title")
 
 
 def passing(pg):
@@ -235,7 +248,7 @@ def test_the_partys_deck_changes_the_party_and_the_device_keeps_it(mapped):
 def test_a_goal_at_work_has_its_row_its_tasks_in_the_party_s_columns_and_its_results_beside_them(mapped):
     pg, host = mapped
     work = row(pg, "Sync ideas between")                                                                   # At work: a goal's row says how far it is
-    assert work.get_attribute("data-state") == "work" and work.locator(".arena-goal__line").inner_text() == "1/4 in dev · implementation"
+    assert work.get_attribute("data-state") == "work" and work.locator(".arena-goal__main").get_attribute("title").startswith("Sync ideas between the phone and the town · 1/4 in dev · implementation")
     assert work.locator(".arena-goal__mark .ork-sign.work").count() == 1                                  # at work: orkUI's sign
     columns = pg.locator(".arena-stack[data-agent]")                                                      # a column per member of the party row
     assert [c.get_attribute("data-agent") for c in columns.all()] == ["grunt", "reviewer", "editor", "seo"]
@@ -247,10 +260,10 @@ def test_a_goal_at_work_has_its_row_its_tasks_in_the_party_s_columns_and_its_res
     assert "1 in dev" in grunt.inner_text() and grunt.locator(".ork-sign.check").count() == 1
     assert pg.locator(".arena-result[data-task=k3]").count() == 1                                         # its result waits on the right
     ask = row(pg, "Offline mode")                                                                         # Planning: a member's question and a plan
-    assert "asks you · Reviewer" in ask.inner_text() and ask.locator(".arena-goal__mark .ork-sign.alert").count() == 1
+    assert "asks you · Reviewer" in said(pg, "Offline mode") and ask.locator(".arena-goal__mark .ork-sign.alert").count() == 1
     dark = row(pg, "Dark mode")
-    assert "plan ready" in dark.inner_text() and "is-stop" in dark.get_attribute("class")
-    assert "ready · Taskmaster plans it next" in row(pg, "Cache the table").inner_text()
+    assert "plan ready" in said(pg, "Dark mode") and "is-stop" in dark.get_attribute("class")
+    assert "ready · Taskmaster plans it next" in said(pg, "Cache the table")
     # the window asks again when the board moves, and a merged task leaves its stack
     before = len(_calls(pg, host, "ideas.map"))
     host.nodes[0]["tasks"] = [pip("k1", "Read the sync code", "merged"), pip("k2", "Add the queue", "running", ["k1"], 2),

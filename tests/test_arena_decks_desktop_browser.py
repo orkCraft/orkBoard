@@ -1,5 +1,5 @@
 """Parties and goals on the desktop (docs/specs/50-parties-and-goals.md §3–§5, Tests → B), in a real browser at 1 440 × 900 against the one window's stub
-host (tests/test_arena_desktop_browser.py): the party line and About this party, New party, the goals list (At work, Planning, New (n), Flags (n)),
+host (tests/test_arena_desktop_browser.py): the party line and About this party, New party, the goals list (At work, Planning, New · n, Flags · n),
 the filter (a press picks, a hover peeks) on the field, the results and the stops, the rows by phase with their stacks of 5:7 cards, a spread and its
 deal, the arrows on hover, New goal's pile and its turn, the flag line, and every word the page says in today's words."""
 from __future__ import annotations
@@ -153,55 +153,62 @@ def test_edit_the_party_has_the_same_fields_and_sends_its_slug(arena):
 
 # -- the goals list (§3.3) --------------------------------------------------------------------------------------------------------------
 
-def test_the_goals_list_has_at_work_planning_new_and_flags_with_their_piles_elements_lines_and_marks(arena):
+def _said(row):
+    """A goal's old second line: in the title of its row (spec 73 §1.2), after the goal's whole title."""
+    return row.locator(".arena-goal__main").get_attribute("title")
+
+
+def test_the_goals_list_has_at_work_planning_new_and_flags_with_their_elements_lines_and_marks(arena):
     pg, host = arena
     goals = pg.get_by_role("region", name="Goals")
-    assert goals.locator(".arena-lbl").first.inner_text().lower() == "goals" and goals.locator(".arena-left__head .ork-count").inner_text() == "7"
+    assert goals.get_by_role("heading", name="Goals").count() == 0 and goals.locator(".arena-left__head").count() == 0                 # no heading of the list: the party's heading is its leader (spec 73 §2)
     assert [h.text_content() for h in goals.locator(".arena-sec").all()] == ["At work", "Planning"]
     rows = goals.locator(".arena-goal")
     assert [r.get_attribute("data-slug") for r in rows.all()] == GOALS                                         # at work in the Board's order, then Planning's stops first
     register, signin, cookie = (goals.locator(f".arena-goal[data-slug={s}]") for s in ("register", "signin", "cookie"))
-    assert register.locator(".arena-goal__pile .ork-elem.meadow").count() == 1 and signin.locator(".ork-elem.ice").count() == 1 and cookie.locator(".ork-elem.dust").count() == 1
-    assert [register.locator(".arena-goal__edge").count(), signin.locator(".arena-goal__edge").count(), cookie.locator(".arena-goal__edge").count()] == [3, 2, 2]     # one to three edges: its open tasks
-    assert goals.locator(".arena-goal[data-slug=recovery] .arena-goal__edge").count() == 0                       # a goal in Planning has no task to pile
-    assert _text(register.locator(".arena-goal__body")) == "WebAuthn register 0/6 in dev · implementation"
-    assert "2/4 in dev · checking" in _text(signin) and "0/2 in dev · implementation" in _text(cookie)
+    assert register.locator(".ork-elem.meadow").count() == 1 and signin.locator(".ork-elem.ice").count() == 1 and cookie.locator(".ork-elem.dust").count() == 1
+    assert goals.locator(".arena-goal__pile, .arena-goal__edge, .arena-goal__line, .arena-goal__open").count() == 0                       # no pile, no edges, no second line, no › (spec 73 §1)
+    assert _text(register) == "WebAuthn register" and _said(register) == "WebAuthn register · 0/6 in dev · implementation. A press shows only this goal’s tasks; press more to add them"
+    assert "2/4 in dev · checking" in _said(signin) and "0/2 in dev · implementation" in _said(cookie)
     assert register.locator(".arena-goal__mark .ork-sign.work").count() == 1 and signin.locator(".ork-sign.work").count() == 1       # at work
     assert cookie.locator(".arena-goal__mark .ork-sign.cross").count() == 1 and "is-danger" in cookie.locator(".arena-goal__mark").get_attribute("class")     # a failure
-    assert box(pg, ".arena-goal[data-slug=register] .arena-goal__main")["height"] == 42
+    assert box(pg, ".arena-goal[data-slug=register] .arena-goal__main")["height"] == 28
     plan = {s: goals.locator(f".arena-goal[data-slug={s}]") for s in ("recovery", "second", "pagewords", "ratelimit")}
-    assert "plan ready" in plan["recovery"].inner_text() and "asks you · Reviewer" in plan["second"].inner_text() and "proposed" in plan["pagewords"].inner_text()
-    assert "Taskmaster is reading" in plan["ratelimit"].inner_text() and plan["ratelimit"].locator(".ork-sign.work").count() == 1
+    assert "plan ready" in _said(plan["recovery"]) and "asks you · Reviewer" in _said(plan["second"]) and "proposed" in _said(plan["pagewords"])
+    assert "Taskmaster is reading" in _said(plan["ratelimit"]) and plan["ratelimit"].locator(".ork-sign.work").count() == 1
     for s in ("recovery", "second", "pagewords"):                                                              # a stop: its mark, once (spec 52 §4.5): no alert words
-        assert plan[s].locator(".arena-goal__line.is-alert").count() == 0 and plan[s].locator(".arena-goal__mark .ork-sign.alert").count() == 1
+        assert plan[s].inner_text().strip() == plan[s].locator(".arena-goal__title").inner_text().strip() and plan[s].locator(".arena-goal__mark .ork-sign.alert").count() == 1
     assert plan["recovery"].locator(".ork-elem.void").count() == 1 and plan["second"].locator(".ork-elem.lava").count() == 1
     assert plan["recovery"].evaluate("e => getComputedStyle(e.querySelector('.arena-goal__main')).boxShadow") == "none"       # no alert edge
-    for s, kind in (("register", "idea"), ("recovery", "plan")):                                                # › opens the goal's screen: its spec, its plan
-        goals.locator(f".arena-goal[data-slug={s}] .arena-goal__open").click()
+    for s, kind in (("register", "idea"), ("recovery", "plan")):                                                # a second press opens the goal's screen: its spec, its plan
+        goals.locator(f".arena-goal[data-slug={s}] .arena-goal__main").click()
+        assert goals.locator(f".arena-goal[data-slug={s}] .arena-goal__main").get_attribute("aria-pressed") == "true"                    # the first picked it
+        goals.locator(f".arena-goal[data-slug={s}] .arena-goal__main").click()
         assert _sent(pg, host, ("ideas.log", {"event": "opened", "what": kind, "ref": s, "device": "desktop", "via": "map"}))
         pg.get_by_role("button", name="Close the drawer").click()
-    fold = goals.get_by_role("button", name="New (2)")
+    pg.get_by_role("button", name="Show all").click()
+    fold = goals.get_by_role("button", name="New · 2")
     assert fold.get_attribute("aria-expanded") == "false" and goals.locator(".arena-goal[data-slug=magic]").count() == 0
     fold.click()
     magic, log = goals.locator(".arena-goal[data-slug=magic]"), goals.locator(".arena-goal[data-slug=log]")
-    assert "tonight" in magic.inner_text() and "new · Taskmaster reads it later" in log.inner_text()
+    assert "tonight" in _said(magic) and "new · Taskmaster reads it later" in _said(log)
     assert magic.locator(".ork-elem.dim").count() == 1 and log.locator(".ork-elem.void.dim").count() == 1      # a goal not yet read: its element dim
     log.locator(".arena-goal__main").click()                                                                   # a new goal has no task to pick: a press opens it
     assert _sent(pg, host, ("ideas.log", {"event": "opened", "what": "idea", "ref": "log", "device": "desktop", "via": "map"}))
     pg.get_by_role("button", name="Close the drawer").click()
-    flags = goals.get_by_role("button", name=re.compile(r"^Flags \(1\)"))
-    assert _text(flags) == "Flags (1) · 1 wait for main" and flags.get_attribute("aria-expanded") == "false"
+    flags = goals.get_by_role("button", name="Flags · 1")
+    assert _text(flags.locator("xpath=..").locator(".arena-frow__aside")) == "1 waits for main" and flags.get_attribute("aria-expanded") == "false"      # at its right, muted
     flags.click()
     rows_ = goals.locator(".arena-flags__list li")
     assert _text(rows_.nth(0)) == "Where the credentials in dev · waits for main" and rows_.nth(0).locator(".ork-sign.check").count() == 1      # waits for main: a check
     assert _text(rows_.nth(1)) == "Passkey button 14 Oct · ≈$2.10 · 4 of 4 first time" and rows_.nth(1).locator(".ork-sign.flag").count() == 1  # a flag: the goal, the day, the price, first time
-    power = pg.get_by_role("button", name=re.compile(r"^Process now"))
-    assert power.inner_text() == "Process now · 2 new goals" and power.get_attribute("title") == "Taskmaster reads “Magic link if the passkey fails” now"
+    power = pg.get_by_role("button", name="Process now")
+    assert power.inner_text() == "Process now" and goals.get_by_role("button", name="New · 2").count() == 1 and power.get_attribute("title") == "Taskmaster reads “Magic link if the passkey fails” now"
     power.click()
     assert _sent(pg, host, ("ideas.queue", {"slug": "magic", "queue": "now", "via": "party"}))
     _show_goal(pg, "weekly")
     assert pg.get_by_text("Nothing in Planning. A new goal starts here.").is_visible()                         # empty
-    assert pg.get_by_role("button", name="Process now · no new goal").is_disabled()
+    assert pg.get_by_role("button", name="Process now").is_disabled() and pg.get_by_role("button", name="Process now").get_attribute("title") == "No new goal to read"
     assert goals.get_by_role("button", name=re.compile("^Flags")).count() == 0 and goals.get_by_role("button", name=re.compile("^New")).count() == 1       # nothing done: no Flags fold
 
 
@@ -210,7 +217,7 @@ def test_the_flags_fold_shows_the_newest_ten_and_then_all_of_them(arena):
     for i in range(11):
         host.nodes.append({**host.node_of("button"), "slug": f"f{i}", "title": f"Flagged {i}", "short": f"Flagged {i}", "flag": {**host.node_of("button")["flag"], "at": f"2026-10-{10 + i:02d}T10:00:00"}})
     host.bump({})
-    pg.get_by_role("button", name=re.compile(r"^Flags \(12\)")).click()
+    pg.get_by_role("button", name="Flags · 12").click()
     assert pg.locator(".arena-flagrow[data-flag]").count() == 10 and "Flagged 10" in pg.locator(".arena-flagrow[data-flag]").first.inner_text()
     pg.get_by_role("button", name="All 12").click()
     assert pg.locator(".arena-flagrow[data-flag]").count() == 12
@@ -218,7 +225,7 @@ def test_the_flags_fold_shows_the_newest_ten_and_then_all_of_them(arena):
 
 # -- the filter (§3.5) -------------------------------------------------------------------------------------------------------------------
 
-def test_a_press_picks_a_goal_a_second_press_takes_it_out_a_hover_peeks_show_all_and_esc_clear_it(arena):
+def test_a_press_picks_a_goal_a_second_press_opens_it_a_hover_peeks_show_all_and_esc_clear_it(arena):
     pg, host = arena
     register, cookie = pg.locator(".arena-goal[data-slug=register] .arena-goal__main"), pg.locator(".arena-goal[data-slug=cookie] .arena-goal__main")
     assert register.get_attribute("aria-pressed") == "false" and pg.get_by_role("button", name="Show all").count() == 0
@@ -227,7 +234,11 @@ def test_a_press_picks_a_goal_a_second_press_takes_it_out_a_hover_peeks_show_all
     _settled(pg, ["register"])
     assert _keys(pg, "backend") == ["register/k2", "register/k5"] and _keys(pg, "screens") == ["register/k3", "register/k4"]       # only its cards, in their places
     assert pg.locator(".arena-goal.is-off").count() == 6                                                       # the others are dimmed in the list
-    register.click()                                                                                          # a second press takes it out
+    register.click()                                                                                          # a second press opens its screen (spec 73 §1.2): it stays picked
+    pg.locator(".shell-preview .board-ideaview").wait_for(timeout=WAIT_MS)
+    assert register.get_attribute("aria-pressed") == "true"
+    pg.get_by_role("button", name="Close the drawer").click()
+    pg.get_by_role("button", name="Show all").click()                                                         # Show all takes it out
     assert register.get_attribute("aria-pressed") == "false" and pg.get_by_role("button", name="Show all").count() == 0
     pg.mouse.move(150, 780)                                                                                   # (the pointer on the row would peek it)
     pg.wait_for_function("() => document.querySelectorAll('.arena-stack .arena-task').length >= 8", timeout=WAIT_MS)
@@ -301,7 +312,7 @@ def test_a_card_the_filter_takes_leaves_where_it_stands_without_a_check_and_come
     assert leaving.evaluate("e => getComputedStyle(e).animationName") == "arena-leave"
     _settled(pg, ["register"])
     pg.mouse.move(150, 780)
-    pg.locator(".arena-goal[data-slug=register] .arena-goal__main").click()
+    pg.get_by_role("button", name="Show all").click()                                                         # taken out again: a second press on the row would open its screen
     pg.mouse.move(150, 780)                                                                                   # (the pointer on the row would peek it)
     pg.locator(".arena-task[data-task=f1].is-drawn").wait_for(timeout=WAIT_MS)                                  # and rises back in
     _settle(pg)
@@ -534,15 +545,11 @@ def test_the_arrows_join_the_cards_of_a_spread_both_ways(arena):
 
 # -- New goal's pile (§3.3, §4.2) -------------------------------------------------------------------------------------------------------
 
-def test_the_new_goal_pile_turns_its_top_card_over_then_opens_new_goal_with_the_element_it_will_get(arena):
+def test_the_plus_opens_new_goal_with_the_element_it_will_get(arena):
     pg, host = arena
-    pile = pg.locator(".arena-new__pile")
-    assert "New goal" in pg.locator(".arena-new__words").text_content() and "pick its type" in pg.locator(".arena-new__words").text_content()
-    assert pile.locator(".arena-new__edge").count() == 3 and pile.locator(".arena-new__back .ork-icon").count() == 1
-    assert pile.locator(".arena-new__card").evaluate("e => getComputedStyle(e).transitionDuration") == "0.42s"
-    pile.click()
-    assert "is-drawing" in pile.get_attribute("class")                                                         # the card turns over
-    assert pg.get_by_role("dialog").count() == 0                                                               # before the form opens
+    plus = pg.locator(".arena-left__proj").get_by_role("button", name="New goal")
+    assert plus.locator(".ork-icon").count() == 1 and plus.get_attribute("title") == "New goal: in Sign in with a passkey, or another" and pg.locator(".arena-new__pile").count() == 0
+    plus.click()
     dialog = pg.get_by_role("dialog", name="New goal")
     dialog.wait_for(timeout=WAIT_MS)
     assert dialog.locator(".shell-blank .ork-elem.big").count() == 1 and "Your own goal" in dialog.text_content()
@@ -555,7 +562,6 @@ def test_the_new_goal_pile_turns_its_top_card_over_then_opens_new_goal_with_the_
     add = _calls(pg, host, "ideas.add")[0]
     assert add["text"] == "Sign in with a hardware key" and add["track"] == "passkey" and add["priority"] == "high"
     pg.get_by_role("dialog").wait_for(state="detached", timeout=WAIT_MS)
-    assert "is-drawing" not in pile.get_attribute("class")                                                     # the card is back on the pile
     assert host.log and [n for n, a in host.log if n == "ideas.add"] and idea_element_of(host, add) == shown     # the host's rule gave what the dialog showed
 
 
@@ -573,10 +579,9 @@ def test_put_it_back_closes_new_goal_and_adds_nothing_and_it_opens_at_once_under
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
     pg.locator(".arena[data-goal=passkey]").wait_for(timeout=WAIT_MS)
-    pg.locator(".arena-new__pile").click()
+    pg.get_by_role("button", name="New goal").click()
     dialog = pg.get_by_role("dialog", name="New goal")
     dialog.wait_for(timeout=1000)                                                                              # no turn to wait for
-    assert pg.locator(".arena-new__card").evaluate("e => getComputedStyle(e).transitionDuration") == "0s"
     dialog.get_by_role("button", name="Put it back").click()
     pg.get_by_role("dialog").wait_for(state="detached", timeout=WAIT_MS)
     assert not [1 for n, a in host.log if n == "ideas.add"]
@@ -633,7 +638,7 @@ def test_the_flag_lines_words_for_two_and_its_press_opens_about_this_party_at_it
     line = pg.locator(".arena-flagline")
     line.wait_for(timeout=WAIT_MS)
     assert _text(line) == f"2 flags raised · {host.node_of('prices')['short']} and {host.node_of('creds')['short']} are in main"
-    pg.get_by_role("button", name=re.compile(r"^Flags \(2\)")).click()                                          # the fold: the goal's row is lit once
+    pg.get_by_role("button", name="Flags · 2").click()                                          # the fold: the goal's row is lit once
     pg.wait_for_function("() => window.__anims.some((a) => a[1].includes('background'))", timeout=WAIT_MS)
     row = pg.locator(".arena-flagrow[data-slug=creds]")
     assert "Where the credentials" in row.inner_text()
@@ -658,7 +663,7 @@ def test_under_reduced_motion_the_flag_line_stands_and_nothing_flies(gui):
     host.flag(host.node_of("creds"), at="2026-10-21T09:00:00")
     host.bump({})
     pg.locator(".arena-flagline").wait_for(timeout=WAIT_MS)
-    pg.get_by_role("button", name=re.compile(r"^Flags \(2\)")).click()
+    pg.get_by_role("button", name="Flags · 2").click()
     pg.locator(".arena-flagrow[data-slug=creds]").wait_for(timeout=WAIT_MS)
     assert pg.evaluate("window.__anims.length") == 0
     pg.close()
@@ -700,7 +705,7 @@ def test_the_page_says_party_and_goal_never_idea_and_none_of_the_games_words(are
 
     read()
     pg.get_by_role("button", name=re.compile(r"^Flags")).click()
-    pg.get_by_role("button", name=re.compile(r"^New \(")).click()
+    pg.get_by_role("button", name=re.compile(r"^New · ")).click()
     pg.locator(".arena-stack[data-agent=backend] .arena-phase[data-row=now] .arena-stk[data-goal=register] .arena-task").click()
     pg.get_by_role("group", name=re.compile("tasks of Backend")).wait_for(timeout=WAIT_MS)
     pg.locator(".arena-spread__card").first.hover()
@@ -718,7 +723,7 @@ def test_the_page_says_party_and_goal_never_idea_and_none_of_the_games_words(are
         pg.get_by_role("dialog", name=dialog).wait_for(timeout=WAIT_MS)
         read()
         pg.keyboard.press("Escape")
-    pg.locator(".arena-new__pile").click()
+    pg.get_by_role("button", name="New goal").click()
     pg.get_by_role("dialog", name="New goal").wait_for(timeout=WAIT_MS)
     read()
     text = "\n".join(seen)

@@ -1,0 +1,56 @@
+/* The left column's lighter body (docs/specs/73-a-lighter-column.md, decisions §88; the column and its headings are arena.css, spec 69): the open party's heading is its leader, a goal is one
+   28 px line, New and Flags are 28 px rows, the + of New goal sits in the project's line. In orkUI's office look: its tokens only, no colour, font or corner of its own. */
+.arena-left__proj { display: flex; align-items: center; gap: var(--ork-3); }
+.arena-left__proj .shell-proj { flex: 1; min-width: 0; }
+.arena-plus { flex: none; width: 28px; height: 28px; padding: 0; --_fg: var(--ork-action); }
+.arena-plus .ork-icon { width: 16px; height: 16px; }
+
+/* the open party: its heading is its leader, a thicker rule closes its body */
+.arena-party.is-open { border-bottom-width: 2px; }
+.arena-phead__who { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.arena-phead__leads { font: var(--ork-type-caption); line-height: 14px; color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.arena-pbody { display: flex; flex-direction: column; }
+.arena-goals { display: flex; flex-direction: column; }
+.arena-showall { padding: var(--ork-2) var(--ork-4) 0 var(--ork-5); }
+.arena-deck { display: flex; flex-direction: column; padding: 0 0 var(--ork-4); }
+.arena-deck > p { padding: var(--ork-2) var(--ork-5); }
+.arena-pbody .arena-sec { margin: 0; padding: var(--ork-4) var(--ork-5) var(--ork-1); color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case);
+  letter-spacing: var(--ork-type-label-track); }
+
+/* a goal: its element, its type's sign, its title, its state's sign; one line, 28 px */
+.arena-goal { display: flex; flex: none; height: 28px; }
+.arena-goal__main { appearance: none; flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--ork-3); height: 28px; box-sizing: border-box; padding: 0 var(--ork-4) 0 var(--ork-5);
+  background: none; border: 0; color: var(--ork-ink); text-align: left; cursor: pointer; font: var(--ork-type-body); }
+.arena-goal__main:hover { background: var(--ork-raised); }
+.arena-goal__main:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.arena-goal.is-on .arena-goal__main { background: var(--ork-raised); box-shadow: inset 0 0 0 var(--ork-line) var(--ork-ink); }
+.arena-goal.is-on .arena-goal__main:focus-visible { box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.arena-goal.is-off { opacity: 0.5; }
+.arena-goal .ork-elem { width: 12px; height: 12px; }
+.arena-goal__type { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 12px; height: 12px; color: var(--ork-ink-muted); }
+.arena-goal__type .ork-sign, .arena-goal__mark .ork-sign { width: 12px; height: 12px; vertical-align: top; }
+.arena-goal__title { flex: 1; min-width: 0; line-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.arena-goal__mark { flex: none; width: 12px; height: 12px; display: inline-flex; align-items: center; justify-content: center; color: var(--ork-ink-muted); }
+.arena-goal__mark.is-danger { color: var(--ork-danger); }
+.arena-goal__mark.is-alert { color: var(--ork-alert); }
+
+/* New and Flags: a row each, folded; what the row offers at its right */
+.arena-frow { display: flex; align-items: center; gap: var(--ork-3); height: 28px; box-sizing: border-box; padding: 0 var(--ork-4) 0 var(--ork-5); }
+.arena-frow__main { appearance: none; flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: var(--ork-3); height: 28px; padding: 0; border: 0; background: none;
+  color: var(--ork-ink-muted); text-align: left; cursor: pointer; overflow: hidden; }
+.arena-frow__main:hover { color: var(--ork-ink); }
+.arena-frow__main:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); color: var(--ork-ink); }
+.arena-frow__main .ork-chev { margin: 0; }
+.arena-frow__word { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
+.arena-frow__n { font: var(--ork-type-caption); font-variant-numeric: tabular-nums; }
+.arena-frow__aside { flex: none; white-space: nowrap; }
+.arena-power { flex: none; height: 22px; padding: 0 var(--ork-4); }
+
+/* Flags unfolded, and what waits for a release */
+.arena-flags { display: flex; flex-direction: column; }
+.arena-flags__list { list-style: none; margin: 0; padding: 0 0 var(--ork-2); display: flex; flex-direction: column; gap: var(--ork-1); }
+.arena-flagrow { appearance: none; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--ork-3); width: 100%; box-sizing: border-box; padding: var(--ork-1) var(--ork-4) var(--ork-1) var(--ork-5);
+  border: 0; background: none; color: var(--ork-ink); text-align: left; cursor: pointer; font: var(--ork-type-caption); }
+.arena-flagrow:hover, .arena-flagrow:focus-visible { background: var(--ork-raised); outline: 0; }
+.arena-flagrow__t { color: var(--ork-ink); }
+.arena-flagrow__flag { color: var(--ork-success); display: inline-flex; }

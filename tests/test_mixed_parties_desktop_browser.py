@@ -8,7 +8,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_arena_desktop_browser import ArenaHost  # noqa: E402
+from tests.test_arena_desktop_browser import ArenaHost, solo_lead  # noqa: E402
 from tests.test_shell_browser import StubHost, _calls, _new_party, _open, _show_goal  # noqa: E402
 
 pytestmark = pytest.mark.browser
@@ -118,7 +118,7 @@ def test_the_board_says_the_stage_words_of_the_party_and_todays_without_stages(g
         pg.locator(".arena[data-goal=passkey]").wait_for(timeout=WAIT_MS)
         assert _labels(pg) == ["Build", "Playtest"]                                               # over the first builder, the first checker
         assert pg.locator(".arena-cols__head .arena-lbl", has_text="Build").get_attribute("title") == "4 seats"
-        pg.locator(".arena-member.is-lead").click()                                               # the leader alone: its stage
+        solo_lead(pg)                                                                             # the leader alone: its stage
         pg.locator(".arena-solo-wrap").wait_for(timeout=WAIT_MS)
         assert "Planning" not in pg.locator(".arena-solo-wrap").inner_text()
     finally:

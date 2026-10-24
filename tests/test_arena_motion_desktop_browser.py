@@ -139,7 +139,7 @@ def test_a_member_whose_sign_turns_a_cross_is_struck_and_one_whose_sign_turns_an
     pg, host = _party(gui)
     pg.wait_for_timeout(700)
     assert pg.evaluate(MOMENTS) == [] and pg.locator(".arena-tport.is-struck, .arena-tport.is-calling").count() == 0       # the first read: the signs stand (Backend's ✗ among them)
-    assert _sign(pg, "backend") == "cross" and _sign(pg, "taskmaster") == "alert"
+    assert _sign(pg, "backend") == "cross" 
     _turn(host, "screens", "needs", "failed")                                                                              # work → ✗
     port = pg.locator(".arena-member[data-agent=screens] .arena-tport")
     port.evaluate("e => e")
@@ -182,12 +182,12 @@ def test_at_most_three_heads_play_in_one_refresh_the_rest_simply_wear_the_sign(g
     pg, host = _party(gui)
     for slug, state, why in (("screens", "needs", "failed"), ("reviewer", "needs", "failed"), ("words", "needs", "pick")):
         next(m for m in host.party["passkey"] if m["slug"] == slug).update(state=state, why=why)
-    next(m for m in host.party["passkey"] if m["slug"] == "taskmaster").update(state="needs", why="failed")                # four change at once: ! → ✗ is a change too
+    next(m for m in host.party["passkey"] if m["slug"] == "backend").update(state="needs", why="pick")                     # four change at once: ✗ → ! is a change too
     host.bump({})
     pg.wait_for_function("() => window.__moments.length >= 3", timeout=WAIT_MS)
     pg.wait_for_timeout(500)
     assert len(pg.evaluate(MOMENTS)) == 3
-    assert [_sign(pg, s) for s in ("taskmaster", "screens", "reviewer", "words")] == ["cross", "cross", "cross", "alert"]   # all four wear theirs
+    assert [_sign(pg, s) for s in ("backend", "screens", "reviewer", "words")] == ["alert", "cross", "cross", "alert"]   # all four wear theirs
     pg.close()
 
 

@@ -88,43 +88,8 @@
 .arena-phead__stop { flex: none; display: inline-flex; line-height: 16px; }
 .arena-phead__stop.is-alert { color: var(--ork-alert); }
 .arena-phead__stop.is-danger { color: var(--ork-danger); }
-.arena-pbody { display: flex; flex-direction: column; padding-left: calc(var(--ork-5) + 24px + var(--ork-4) - var(--ork-3)); }
-.arena-lead { display: flex; flex-direction: column; align-items: stretch; gap: var(--ork-2); padding: var(--ork-2) var(--ork-3) var(--ork-4) var(--ork-3); }
-.arena-lead .arena-member { max-width: none; }
-.arena-goals { display: flex; flex-direction: column; }
-.arena-left__head { flex: none; display: flex; align-items: center; gap: var(--ork-4); height: 36px; padding: 0 var(--ork-3); box-sizing: border-box; border-top: var(--ork-line) solid var(--ork-frame); }
-.arena-deck { display: flex; flex-direction: column; padding: var(--ork-3) var(--ork-2) var(--ork-4); gap: var(--ork-1); }
-.arena-deck > p { padding: var(--ork-3) var(--ork-4); }
 .arena-sec { margin: var(--ork-4) var(--ork-2) var(--ork-1); color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
 .arena-fold { align-self: flex-start; }
-.arena-goal { display: flex; align-items: stretch; gap: var(--ork-1); flex: none; }
-.arena-goal__main { appearance: none; flex: 1; min-width: 0; display: flex; align-items: center; gap: 9px; min-height: 42px; box-sizing: border-box; padding: var(--ork-2) var(--ork-3);
-  background: none; border: var(--ork-line) solid transparent; color: var(--ork-ink); text-align: left; cursor: pointer; font: var(--ork-type-body); }
-.arena-goal__main:hover { background: var(--ork-raised); }
-.arena-goal__main:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
-.arena-goal.is-on .arena-goal__main { background: var(--ork-raised); border-color: var(--ork-ink); }
-.arena-goal.is-off { opacity: 0.5; }
-.arena-goal__pile { position: relative; flex: none; width: 24px; height: 32px; }
-.arena-goal__edge { position: absolute; width: 24px; height: 32px; box-sizing: border-box; background: var(--ork-canvas); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); }
-.arena-goal__back { position: absolute; inset: 0; z-index: 2; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch);
-  background: repeating-linear-gradient(45deg, var(--ork-raised) 0 2px, var(--ork-panel) 2px 4px); }
-.arena-goal__body { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.arena-goal__title { line-height: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.arena-goal__type { display: inline-flex; vertical-align: -2px; margin-right: var(--ork-2); color: var(--ork-ink-muted); }
-.arena-goal__line { font: var(--ork-type-caption); line-height: 15px; color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.arena-goal__mark { flex: none; width: 14px; display: inline-flex; justify-content: center; color: var(--ork-ink-muted); }
-.arena-goal__mark.is-danger { color: var(--ork-danger); }
-.arena-goal__mark.is-alert { color: var(--ork-alert); }
-.arena-goal__open { appearance: none; flex: none; width: 22px; display: inline-flex; align-items: center; justify-content: center; padding: 0; border: 0; background: none; color: var(--ork-ink-muted); cursor: pointer; }
-.arena-goal__open:hover, .arena-goal__open:focus-visible { color: var(--ork-ink); background: var(--ork-raised); outline: 0; }
-.arena-goal__open .ork-chev { margin: 0; }
-.arena-flags { display: flex; flex-direction: column; }
-.arena-flags__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-1); }
-.arena-flagrow { appearance: none; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--ork-3); width: 100%; box-sizing: border-box; padding: var(--ork-1) var(--ork-3); border: 0; background: none; color: var(--ork-ink);
-  text-align: left; cursor: pointer; font: var(--ork-type-caption); }
-.arena-flagrow:hover, .arena-flagrow:focus-visible { background: var(--ork-raised); outline: 0; }
-.arena-flagrow__t { color: var(--ork-ink); }
-.arena-flagrow__flag { color: var(--ork-success); display: inline-flex; }
 .arena-new { flex: none; display: flex; align-items: center; gap: var(--ork-5); box-sizing: border-box; height: 72px; padding: var(--ork-3) 14px; border-top: var(--ork-line) solid var(--ork-frame); }
 .arena-new__pile { appearance: none; position: relative; flex: none; width: 44px; height: 60px; padding: 0; border: 0; background: none; cursor: pointer; perspective: 300px; }
 .arena-new__pile:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--ork-ink); }
@@ -138,7 +103,6 @@
 .arena-new__pile.is-drawing .arena-new__card { transform: translate(18px, -22px) rotateY(180deg); }
 .arena-new__words { display: flex; flex-direction: column; }
 .arena-new__words b { font: var(--ork-type-button); text-transform: uppercase; letter-spacing: 0.04em; color: var(--ork-action); }
-.arena-power { align-self: center; }
 
 .arena-field { position: relative; flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) 312px; grid-template-rows: auto 64px minmax(0, 1fr) 64px; }
 .arena-top { grid-column: 1 / -1; grid-row: 1; border-bottom: var(--ork-line) solid var(--ork-frame); }
@@ -536,8 +500,6 @@
 .arena-goesin__text { display: flex; flex-direction: column; min-width: 0; }
 
 /* -- the Orkmaster and the project's level (spec 70, decisions §85) ------------------------------------------------------------------------------------------ */
-.arena-left__proj.has-ork { display: flex; align-items: center; gap: var(--ork-3); }
-.arena-left__proj.has-ork .shell-proj { flex: 1; min-width: 0; }
 .arena-left__proj.is-open { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); }                      /* marked as an open heading is */
 .arena-ork { appearance: none; flex: none; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; width: 36px; height: 36px; padding: 0; border: var(--ork-line) solid var(--ork-frame);
   background: none; clip-path: var(--ork-notch); cursor: pointer; }

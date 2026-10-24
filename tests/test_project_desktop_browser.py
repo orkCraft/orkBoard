@@ -370,13 +370,12 @@ def test_your_own_goal_on_the_level_says_any_party_with_ideation_last_and_a_pitc
     assert sent["track"] == "ideas" and sent["text"] == "A pitch for dark mode"
 
 
-def test_a_partys_own_new_goal_is_unchanged(level):
+def test_no_new_goal_pile_stands_at_a_partys_foot_the_plus_is_the_project_lines(level):
     pg, host = level
     _show_goal(pg, "passkey")
-    pg.locator(".arena-new__pile").click()
-    dlg = pg.get_by_role("dialog", name="New goal")
-    dlg.wait_for(timeout=WAIT_MS)
-    assert dlg.get_by_role("group", name="Its party").count() == 0 and not [c for n, c in host.log if n == "ideas.party_for"]
+    assert pg.locator(".arena-left .arena-new__pile").count() == 0 and pg.locator(".arena-left__proj").get_by_role("button", name="New goal").count() == 1      # spec 73 §4: its own test is test_lighter_column_desktop_browser.py
+    _project(pg)
+    assert pg.locator(".arena-pjgoal .arena-new__pile").count() == 1                                                    # the level's pile stays
 
 
 # -- ideas.shown ------------------------------------------------------------------------------------------------------------------------------------------------

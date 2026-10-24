@@ -183,6 +183,11 @@ class ArenaHost(StubHost):
         return super().handle(name, a)
 
 
+def solo_lead(pg, slug="taskmaster"):
+    """The leader's work alone. Its row left the column (spec 73 §2), and a press on it was the only way in: the page's own state is set, as that press did."""
+    pg.evaluate("async (s) => { const m = await import('/static/js/arena/arenastate.js'); m.solo.value = s; }", slug)
+
+
 def _settle(pg):
     pg.wait_for_function("() => !document.querySelector('.is-leaving') && !document.querySelector('.is-drawn')", timeout=WAIT_MS)
 
@@ -207,17 +212,16 @@ def test_the_regions_in_their_order_and_sizes_at_1440_by_900_with_no_page_scroll
     wide = {"strip": (".arena-today", 40), "left column": (".arena-left", 248), "results": (".arena-look", 312), "gate": (".arena-gatebox", 312), "limits": (".arena-limits", 312)}
     for name, (css, w) in wide.items():
         assert box(pg, css)["width"] == w, name
-    assert box(pg, ".arena-goal__main")["height"] == 42 and box(pg, ".arena-new")["height"] == 72                 # a goal's row 42; the New goal pile 60 + 12 of padding
-    assert box(pg, ".arena-new__pile")["width"] == 44 and box(pg, ".arena-new__pile")["height"] == 60
-    landmarks = [("navigation", "Today"), ("region", "Leader"), ("region", "Goals"), ("region", "Party"), ("region", "The party at work"),
+    assert box(pg, ".arena-goal__main")["height"] == 28 and pg.locator(".arena-new, .arena-new__pile").count() == 0                 # a goal's row 28 (spec 73 §1); no New goal pile in the column (spec 73 §4.3)
+    assert box(pg, ".arena-left__proj .arena-plus")["width"] == 28 and box(pg, ".arena-left__proj .arena-plus")["height"] == 28            # New goal is the + in the project line
+    landmarks = [("navigation", "Today"), ("region", "Goals"), ("region", "Party"), ("region", "The party at work"),
                  ("complementary", "Waits for your look"), ("region", "Waits for you"), ("region", "What is left of your AI tools")]
     seen = [pg.get_by_role(role, name=name, exact=True) for role, name in landmarks]
     assert [s.count() for s in seen] == [1] * len(landmarks)                                              # each one, in the order of the page
     handles = [s.element_handle() for s in seen]
     assert all(pg.evaluate("([a, b]) => !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)", [a, b]) for a, b in zip(handles, handles[1:]))
     by = {name: s.bounding_box() for (_r, name), s in zip(landmarks, seen)}
-    assert by["Today"]["x"] < by["Leader"]["x"] and box(pg, '.arena-phead[aria-current=true]')["y"] + 40 <= by["Leader"]["y"]          # the open party's heading over the leader
-    assert by["Leader"]["y"] < by["Goals"]["y"] and by["Leader"]["x"] == by["Goals"]["x"]                  # the leader over its goals, in the left column
+    assert by["Today"]["x"] < by["Goals"]["x"] and box(pg, '.arena-phead[aria-current=true]')["y"] + 40 <= by["Goals"]["y"]          # the open party's heading (its leader's) over its goals, in the left column
     ibar, party, cols, look, gate = box(pg, ".arena-ibar__bar"), by["Party"], by["The party at work"], by["Waits for your look"], box(pg, ".arena-gatebox")
     assert ibar["y"] + ibar["height"] <= party["y"] and party["y"] + party["height"] <= cols["y"]           # the party line, the party row, the columns under it
     assert party["x"] == cols["x"] and party["y"] == gate["y"] and gate["x"] == look["x"] and gate["y"] + gate["height"] <= look["y"]            # the gate at the row's right end, over the results
@@ -249,7 +253,7 @@ def test_the_parties_list_their_headings_the_count_operations_and_the_pick_kept(
         assert top.locator(".arena-phead__work .ork-sign.work").count() == 1                                   # at work: orkUI's sign
         assert col.locator(".arena-phead .ork-count").count() == 0                                                          # no count of stops anywhere (spec 54 §2.4)
         assert [c.get_attribute("data-goal") for c in heads.all()] == ["passkey", "pricing", "weekly", "@operations"]      # the Board's order: priority, then the person's; + New party after
-        assert top.get_attribute("aria-current") == "true" and top.get_attribute("aria-expanded") == "true" and top.get_attribute("title") == "Sign in with a passkey is open"
+        assert top.get_attribute("aria-current") == "true" and top.get_attribute("aria-expanded") == "true" and top.get_attribute("title") == "Sign in with a passkey · Taskmaster leads · 2 of 11 goals done"
         assert top.locator(".arena-phead__stop").count() == 0                                                  # the open party's stops lie in the hand: no sign
         assert heads.nth(1).locator(".arena-phead__stop").count() == 0 and "1/1" in heads.nth(1).inner_text()   # no stop: no sign
         stop = heads.nth(3).locator(".arena-phead__stop")
@@ -293,9 +297,7 @@ def test_a_member_two_numbers_marks_signs_and_peek(arena):
     assert screens.locator(".arena-num").nth(1).get_attribute("title") == "About: too few runs yet, the price of its level, at API prices, not your bill"
     reviewer = team.locator(".arena-member[data-agent=reviewer]")
     assert reviewer.locator(".arena-num").nth(0).inner_text() == "6/2" and reviewer.locator(".arena-num").nth(0).get_attribute("title") == "6 checks this week, 2 caught something"
-    lead = pg.locator(".arena-lead .arena-member")
-    assert lead.locator(".arena-num").nth(0).inner_text() == "6/1" and lead.locator(".arena-num").nth(0).get_attribute("title") == "6 plans this week, 1 made again"
-    assert lead.locator(".arena-num").nth(1).inner_text() == "$0.12" and lead.locator("img.ork-race__head").evaluate("e => e.getBoundingClientRect().width") == 36   # the leader's head is a member's
+    assert pg.locator(".arena-lead, .arena-left .arena-member").count() == 0                                   # the leader's row left the column: its head leads the open party's heading (spec 73 §2)
     marks = backend.locator("img.ork-mark")                                                                   # the tool's mark and the level's chevrons, with their tooltips
     assert [m.get_attribute("src") for m in marks.all()] == ["/ds/orkui/marks/rank-2.png", "/ds/orkui/marks/harness-claude.png"]
     assert backend.locator("img.arena-mark--h").get_attribute("title") == "Runs on Claude" and backend.locator("img.arena-mark--r").get_attribute("title") == "Seasoned: its level"
@@ -304,7 +306,6 @@ def test_a_member_two_numbers_marks_signs_and_peek(arena):
     assert all(pg.evaluate("(src) => fetch(src).then((r) => r.ok)", m.get_attribute("src")) for m in marks.all())      # the marks are served
     assert backend.locator(".arena-sign .ork-sign.cross").count() == 1 and "danger" in backend.locator(".arena-sign").get_attribute("class")       # a failure: the cross on the danger ground
     assert backend.locator(".arena-sign").get_attribute("title") == "failed" and backend.locator(".arena-sign").inner_text() == ""            # the sign is drawn, never typed
-    assert lead.locator(".arena-sign .ork-sign.alert").count() == 1 and "alert" in lead.locator(".arena-sign").get_attribute("class")          # plan ready: the alert sign on the alert ground
     assert screens.locator(".arena-sign .ork-sign.work").count() == 1 and team.locator(".arena-member[data-agent=words] .arena-sign").count() == 0   # at work: the work sign; next: none
     label = backend.get_attribute("aria-label")
     assert label.startswith("Backend, ork, Claude, Seasoned, failed, 5 runs this week") and "A click shows its work." in label
@@ -315,9 +316,6 @@ def test_a_member_two_numbers_marks_signs_and_peek(arena):
     assert peek.is_visible() and peek.get_attribute("aria-hidden") == "true" and peek.locator("button, a, input").count() == 0
     member_box, peek_box = backend.bounding_box(), peek.bounding_box()
     assert peek_box["y"] >= member_box["y"] + member_box["height"]                                            # it opens below the member: above it, the page would clip it
-    pg.locator(".arena-lead .arena-member").hover()
-    side, leader = pg.locator(".arena-lead .arena-peek").bounding_box(), pg.locator(".arena-lead .arena-member").bounding_box()
-    assert side["x"] >= leader["x"] + leader["width"] and side["y"] >= 0                                       # the leader's opens beside it, into the field
     backend.hover()
     text = " ".join(peek.inner_text().split())
     assert "$0.38 a run" in text and "BUILDS" in text.upper() and "Backend" in text and "ork · Claude · Seasoned" in text and "0 of 2 at once" in text and "Takes: code" in text
@@ -356,7 +354,7 @@ def test_solo_one_member_s_rows_across_the_field_in_the_same_order_and_back(aren
     pg.locator(".arena-member[data-agent=backend]").click()
     pg.keyboard.press("Escape")                                                                                # Esc shows all again
     pg.locator(".arena-stack[data-agent]").first.wait_for(timeout=WAIT_MS)
-    pg.locator(".arena-lead .arena-member").click()                                                            # the leader's solo: its goals in Planning the same way
+    solo_lead(pg)                                                                                              # the leader's solo: its goals in Planning the same way
     lead = pg.get_by_role("group", name="Only Taskmaster’s work")
     assert [t.get_attribute("data-slug") for t in lead.locator(".arena-task").all()] == ["recovery", "second", "pagewords", "ratelimit", "magic", "log"]
     assert lead.locator(".arena-task").first.locator(".ork-elem").count() == 1                                  # a goal per card, its element top left

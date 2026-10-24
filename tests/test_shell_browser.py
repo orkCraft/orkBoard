@@ -547,8 +547,8 @@ def _agents(pg):
 
 
 def _new_ideas(pg):
-    """The goals list's New (n) fold, open: its rows (a goal is a row of the list: `.arena-goal`)."""
-    fold = pg.locator(".arena-raw")
+    """The goals list's *New · n* row, its fold open: its rows (a goal is a row of the list: `.arena-goal`)."""
+    fold = pg.locator(".arena-raw .arena-frow__main")
     if fold.get_attribute("aria-expanded") != "true":
         fold.click()
     return pg.locator(".arena-goal")
@@ -559,15 +559,36 @@ def _goal_row(pg, title):
     return pg.locator(".arena-goal", has_text=title)
 
 
+def _said(row):
+    """What a goal's row says besides its title (spec 73 §1.2): its old second line, in the title of its button, after the goal's whole title."""
+    return row.locator(".arena-goal__main").get_attribute("title")
+
+
 def _open_goal(pg, title):
-    """› on a goal's row opens its screen in the drawer (its spec, its plan when the plan waits); a goal not yet read opens on a press."""
-    row = _goal_row(pg, title)
-    (row.locator(".arena-goal__open") if row.locator(".arena-goal__open").count() else row.locator(".arena-goal__main")).click()
+    """A goal's row opens its screen in the drawer (its spec, its plan when the plan waits): a press picks it, a second press on the picked row opens it (spec 73 §1.2);
+    a goal not yet read opens on a press."""
+    _press_row(_goal_row(pg, title).locator(".arena-goal__main"))
+
+
+def _press_row(main):
+    """The presses that open a goal's screen, as › did (spec 73 §1.2): the first picks the row, the second opens it; a raw goal has no pick, its press opens. The pick that
+    the first made is taken out again (Show all), so the board stands as it did when › opened a goal."""
+    picked = main.get_attribute("aria-pressed")
+    if picked == "false":
+        main.click()
+    main.click()
+    if picked == "false":
+        main.page.locator(".arena-showall").get_by_role("button", name="Show all").click()
+
+
+def _open_slug(pg, slug):
+    """A goal's screen, by its slug: a press picks its row, a second press opens it (spec 73 §1.2)."""
+    _press_row(pg.locator(f'.arena-goal[data-slug="{slug}"] .arena-goal__main'))
 
 
 def _new_goal(pg):
-    """New goal: a press on the pile turns its top card over, then the dialog opens."""
-    pg.locator(".arena-new__pile").click()
+    """New goal: the + in the project line (spec 73 §4); a host with no goal types opens the dialog at once."""
+    pg.locator(".arena-left__proj").get_by_role("button", name="New goal").click()
     dlg = pg.get_by_role("dialog", name="New goal")
     dlg.wait_for(timeout=WAIT_MS)
     return dlg
@@ -590,7 +611,8 @@ def test_one_window_the_parties_column_over_the_leader_and_no_camp(shell):
     top, line, arena = box(pg, ".shell-top"), box(pg, ".arena-left .arena-phead[aria-current=true]"), box(pg, ".arena")
     assert top["height"] == 32 and arena["y"] == top["height"] and arena["width"] == 1440                     # the window right under the top bar
     assert pg.locator(".shell-top .arena-phead, .shell-top .shell-proj, .shell-top [role=tablist]").count() == 0   # no parties, no project switcher in the top bar (spec 52 §3.1, spec 69 §1)
-    assert line["height"] >= 40 and line["y"] >= arena["y"] and line["y"] + line["height"] <= box(pg, ".arena-lead")["y"]      # the open party's heading over its leader
+    assert line["height"] >= 40 and line["y"] >= arena["y"] and line["y"] + line["height"] <= box(pg, ".arena-pbody")["y"] + 1      # the open party's heading over its goals
+    assert "leads" in pg.locator(".arena-phead[aria-current=true] .arena-phead__leads").inner_text() and pg.locator(".arena-lead").count() == 0      # its leader is the heading (spec 73 §2)
     assert pg.locator(".arena-tabs").count() == 0
     assert box(pg, ".arena-left")["width"] == 248 and box(pg, ".arena-field")["x"] > box(pg, ".arena-left")["x"]
     for gone in (".shell-board", ".shell-split", ".shell-agents", ".shell-tabs", ".shell-review"):             # no Board column, no split, no tab bar
@@ -753,7 +775,7 @@ def test_esc_puts_the_drawer_away_and_keeps_its_tabs(shell):
 
 def test_a_new_goal_comes_from_the_pile_and_lists_with_its_state_in_words(shell):
     pg, host = shell
-    assert "starts tonight" in _goal_row(pg, "Dark mode").inner_text()
+    assert "starts tonight" in _said(_goal_row(pg, "Dark mode"))
     dlg = _new_goal(pg)
     dlg.get_by_label("Your goal").fill("Offline sync")
     dlg.get_by_role("button", name="Add the goal").click()
@@ -926,7 +948,7 @@ def test_with_no_party_yet_new_goal_opens_new_party_first_and_then_itself_with_t
     host.goals.pop("grow"), host.goals.pop("ship-sync")
     host.bump({})
     pg.get_by_text("No parties yet").wait_for(timeout=WAIT_MS)
-    pg.get_by_role("button", name="New goal").click()
+    pg.locator(".arena-note").get_by_role("button", name="New goal").click()                           # (the + in the project line does the same)
     dlg = pg.get_by_role("dialog", name="New party")
     dlg.get_by_label("What it is for").fill("Make notes searchable.")
     dlg.get_by_role("button", name="Save party").click()
@@ -945,7 +967,7 @@ def test_one_goal_is_shown_the_first_by_priority_with_its_leader_and_the_goal_is
         assert pg.locator('.arena-phead[aria-current=true]').get_attribute("data-goal") == "grow"                                    # none kept yet: the first by priority
         assert pg.locator(".arena").get_attribute("data-goal") == "grow"
         _show_goal(pg, "ship-sync")
-        assert pg.locator(".arena-lead").get_by_role("button", name=re.compile("Architect")).count() == 1      # its leader under its heading in the left column
+        assert pg.locator(".arena-phead[aria-current=true] .arena-phead__leads").inner_text().strip() == "Architect leads"      # its leader is its heading's
         assert _goal_row(pg, "Dark mode").count() == 1                                                        # its goals in Planning, not another party's
         assert _goal_row(pg, "Tag the notes").count() == 0
         pg.get_by_role("button", name="About this party").click()
@@ -967,7 +989,7 @@ def test_edit_the_party_changes_its_members_and_sends_them_only_when_changed(she
     pg, host = shell
     host.goals["ship-sync"].update(about="Sync between devices.", craft="engineering", leader=host.leader("architect"), team=["grunt", "reviewer"], every=[])
     host.bump({})
-    pg.locator(".arena-lead", has_text="Architect").wait_for(timeout=WAIT_MS)                        # the window has read it
+    pg.locator(".arena-phead__leads", has_text="Architect").wait_for(timeout=WAIT_MS)                # the window has read it
     pg.get_by_role("button", name="Edit the party").click()
     dlg = pg.get_by_role("dialog", name="Edit the party")
     party = dlg.get_by_role("group", name="The party")
@@ -1011,19 +1033,19 @@ def test_a_high_goal_shows_a_sign_of_work_and_stop_leaves_it_stopped_a_low_one_w
     dlg.get_by_role("button", name="Add the goal").click()
     row = _goal_row(pg, "Fast one")
     row.wait_for(timeout=WAIT_MS)
-    assert row.locator(".ork-sign.work").count() == 1 and "Taskmaster is reading" in row.inner_text()   # the leader reads it: a sign and words
-    assert pg.locator(".arena-member.is-lead").get_attribute("data-state") == "work"
+    assert row.locator(".ork-sign.work").count() == 1 and "Taskmaster is reading" in _said(row)   # the leader reads it: a sign and words
+    assert pg.locator(".arena-phead[aria-current=true] .arena-phead__work").count() == 1                 # the party at work: the sign on its heading
     _open_goal(pg, "Fast one")                                                                        # its screen has Stop
     drawer = _drawer(pg)
     drawer.get_by_role("button", name="Stop", exact=True).click()
     assert _sent(pg, host, ("ideas.read_stop", {"slug": "fast-one"}))
     row = _new_ideas(pg).filter(has_text="Fast one")                                                  # stopped: a new one again, under New (n)
     row.wait_for(timeout=WAIT_MS)
-    assert "stopped" in row.inner_text() and row.locator(".ork-sign.work").count() == 0
+    assert "stopped" in _said(row) and row.locator(".ork-sign.work").count() == 0
     low = _new_ideas(pg).filter(has_text="Offline mode")                                              # a Low one: tonight
-    assert "tonight" in low.inner_text()
-    power = pg.get_by_role("button", name=re.compile("Process now ·"))                                  # Process now reads the first new goal
-    assert power.is_enabled() and "2 new goals" in power.inner_text()
+    assert "tonight" in _said(low)
+    power = pg.locator(".arena-left").get_by_role("button", name="Process now")                       # Process now reads the first new goal
+    assert power.is_enabled() and power.inner_text() == "Process now" and pg.locator(".arena-raw .arena-frow__main").get_attribute("aria-label") == "New · 2"
     power.click()
     assert _sent(pg, host, ("ideas.queue", {"slug": "offline", "queue": "now", "via": "party"}))
     _open_goal(pg, "Fast one")                                                                        # Delete asks first
@@ -1322,7 +1344,7 @@ def test_agents_add_an_agent_edit_it_and_give_it_a_task_type(shell):
 def test_every_dialog_has_a_dimmed_backdrop_an_opaque_panel_and_closes_on_esc(shell):
     pg, host = shell
     opens = [("New party", lambda: _new_party(pg)),
-             ("New goal", lambda: pg.locator(".arena-new__pile").click()),
+             ("New goal", lambda: _new_goal(pg)),
              ("Settings", lambda: pg.get_by_role("button", name="Settings").click()),
              ("Merge into", lambda: pg.locator("button.arena-into").click()),
              ("Drop this result?", lambda: pg.locator(".arena-result", has_text="Add the queue").get_by_role("button", name="Drop…").click()),
@@ -1374,7 +1396,7 @@ def test_pair_a_phone_from_the_gear_shows_the_qr_the_time_left_how_it_reaches_an
 def test_the_stops_are_not_counted_a_closed_party_with_one_wears_a_sign_on_its_heading(shell):
     pg, host = shell
     assert pg.locator(".arena-phead .ork-count").count() == 0                                                                 # no count in the column (spec 54 §2.4)
-    assert pg.locator(".arena-lead .ork-count.warning, .arena-goals .ork-count.warning, .arena-field .ork-count.warning").count() == 0      # nor of the party shown's stops
+    assert pg.locator(".arena-phead .ork-count.warning, .arena-goals .ork-count.warning, .arena-field .ork-count.warning").count() == 0      # nor of the party shown's stops
     ship = _party_card(pg, "ship-sync")
     assert ship.get_attribute("aria-current") == "true" and ship.locator(".ork-count, .arena-phead__stop").count() == 0     # the party shown: its stops lie in the hand
     grow = _party_card(pg, "grow")
