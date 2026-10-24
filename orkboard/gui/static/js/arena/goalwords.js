@@ -2,6 +2,7 @@
 // nodes (a goal is the code's idea) and `ideas.flags`. No signal and no template here; goals.js and its neighbours draw what these say.
 import { planningOf, atWork, openTasks, money, plural, countOf } from "./arenawords.js";
 import { pctRange } from "../spend.js";
+import { waitsForWords } from "./collidewords.js";
 
 /** The party's goals by where they lie in the left column (§3.3): at work (in the Board's order), Planning (the stops first, those that have been read),
  *  New (raw), those done that wait for main, and the flags (the newest first). `lead`: the leader's name. */
@@ -37,9 +38,10 @@ export const edgesOf = (n) => Math.min(3, openTasks(n).length);
 export function goalMark(n) {
   const tasks = n.tasks || [];
   if (tasks.some((t) => t.state === "failed") && atWork(n)) return { sign: "cross", tone: "danger", label: "a task failed" };
-  if (n.needs_you === "asks" || n.needs_you === "plan" || n.needs_you === "change" || n.needs_you === "proposal" || n.waits?.kind === "you" || tasks.some((t) => t.state === "picking")) return { sign: "alert", tone: "alert", label: "waits for you" };
+  if (n.needs_you === "asks" || n.needs_you === "plan" || n.needs_you === "change" || n.needs_you === "proposal" || n.needs_you === "collide" || n.waits?.kind === "you" || tasks.some((t) => t.state === "picking")) return { sign: "alert", tone: "alert", label: "waits for you" };
   if (n.state === "reading" || n.state === "planning" || tasks.some((t) => t.state === "running" || t.state === "testing")) return { sign: "work", tone: "", label: "at work" };
   if (n.waits?.kind === "night" || tasks.some((t) => t.state === "held") && n.waits?.kind === "night") return { sign: "night", tone: "", label: "tonight" };
+  if (waitsForWords(n)) return { sign: "before", tone: "", label: waitsForWords(n) };          // waits for another party's goal (spec 71 §4): orkUI's before sign, its words in the title
   return { sign: "", tone: "", label: "" };
 }
 

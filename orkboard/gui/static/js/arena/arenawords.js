@@ -340,9 +340,9 @@ export function limitLine(l, reserve, resetOf) {
 // -- the stops: the bottom row (§6) -------------------------------------------------------------------------------------------------
 
 export const KIND_WORD = { plan: "Plan ready", change: "Plan change", asks: "Asks you", goal: "Asks you", proposal: "Proposed", party: "Proposed", todo: "A to-do", failed: "Failed",
-  pick: "Pick one", op: "At your check", op_failed: "Failed", op_rules: "Rules to take", pitch: "Pitch judged" };
+  pick: "Pick one", op: "At your check", op_failed: "Failed", op_rules: "Rules to take", pitch: "Pitch judged", collide: "Orkmaster asks" };
 export const isOp = (n) => n.kind === "op" || n.kind === "op_failed" || n.kind === "op_rules";
-const GEM = { plan: "", change: "", asks: "?", goal: "?", proposal: "—", party: "—", todo: "·", failed: { sign: "cross" }, pick: "", op: "·", op_failed: { sign: "cross" }, op_rules: "—", pitch: "" };
+const GEM = { plan: "", change: "", asks: "?", goal: "?", proposal: "—", party: "—", todo: "·", failed: { sign: "cross" }, pick: "", op: "·", op_failed: { sign: "cross" }, op_rules: "—", pitch: "", collide: "" };
 
 /** What a plan change adds to the price, for the stop's gem (spec 62 §6.2): *+$0.40–1.20*, *−$0.13–0.38* when it saves (the real minus sign), said as a goal's price is (cents under $1,
  *  else whole dollars); "" for a change of nothing. One that may add or save says both ends: *−$0.10 to +$0.30*. */
@@ -371,7 +371,7 @@ export const askedOf = (row, node) => (row.asked?.length ? row.asked : node?.ask
   : (row.questions?.length ? row.questions : [row.text]).filter(Boolean).map((ask) => ({ ask, choices: [], pick: null, why: "" }))).slice(0, 3);
 
 /** The stops of a goal: its Needs you rows in the host's order, its failed tasks in place of the host's *failed* row of the same idea. */
-export function stopsOf(needs, g, nodes) {
+export function stopsOf(needs, g, nodes, ork = null) {
   const byIdea = Object.fromEntries(nodes.map((n) => [n.slug, n]));
   const lead = g?.leader?.head || null;
   const failedTasks = (n) => openTasks(n).filter((t) => t.state === "failed");
@@ -397,6 +397,10 @@ export function stopsOf(needs, g, nodes) {
       base.gemTip = base.gem ? `What the change should ${row.usd_high < 0 ? "save" : row.usd_low < 0 ? "cost or save" : "cost"}, at API prices` : "";
       base.why = row.why || "";
       base.small = true; base.whoTip = `proposed by ${g?.leader?.name || "Taskmaster"}`;        // the leader's small head on the top row: the card has no room for its art
+    } else if (row.kind === "collide") {               // the Orkmaster asks (spec 71): its head, the statement as the stop's name, the judge's why as its note; its goals and answers are collide.js
+      base.key = `collide/${row.idea}/${row.collide?.id || ""}`;
+      base.head = ork ? { race: ork.race || "peon", tier: ork.tier || "elder" } : null; base.small = true; base.whoTip = "asked by the Orkmaster";
+      base.full = row.text || row.title; base.why = row.collide?.why || "";
     } else if (row.kind === "asks" || row.kind === "goal") {
       const q = firstAsk(row, n);
       base.text = `“${q.ask}”`; base.gemTip = "A question costs nothing";
@@ -424,7 +428,7 @@ export function opStopsOf(needs) {
 // -- one hand (spec 54 §2) ---------------------------------------------------------------------------------------------------------
 
 /** How urgent a kind of stop is (§2.3): 0 red (a failure), 1 what holds work back, 2 what does not, 3 the results to look at. */
-const URGENCY = { failed: 0, op_failed: 0, plan: 1, change: 1, asks: 1, goal: 1, todo: 1, pick: 1, op: 1, proposal: 2, party: 2, op_rules: 2, pitch: 2, result: 3 };
+const URGENCY = { failed: 0, op_failed: 0, plan: 1, change: 1, asks: 1, goal: 1, todo: 1, pick: 1, op: 1, proposal: 2, party: 2, op_rules: 2, pitch: 2, collide: 1, result: 3 };
 export const urgencyOf = (s) => URGENCY[s.kind] ?? 1;
 const ageOf = (s) => String(s.row?.at || s.task?.finished || s.task?.started || s.result?.finished || "9999");
 
@@ -445,7 +449,7 @@ function inParty(stops, g, shown) {
 export function handOf({ map, needs, order, shown, keep, withResults = false, ops = true }) {
   const out = [];
   for (const g of goalsOf(map, order)) {
-    const nodes = nodesOf(map, g.slug), mine = stopsOf(needs, g, nodes);
+    const nodes = nodesOf(map, g.slug), mine = stopsOf(needs, g, nodes, map?.project?.orkmaster || null);
     if (withResults && g.slug === shown) mine.push(...resultsOf(nodes).map((r) => resultStop(r, nodes)));
     out.push(...inParty(mine.filter((s) => keep(g.slug, s)), g, shown));
   }
