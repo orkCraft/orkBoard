@@ -145,8 +145,10 @@ async def test_a_party_s_window_has_its_goals_bar_its_members_in_the_stages_and_
         row = goals.locator('.dk__main[data-idea="sync"]')
         await row.wait_for(timeout=WAIT_MS)
         assert (await row.get_attribute("title")).startswith("Sync between phone and town · ")
-        await goals.locator("h3", has_text="Waits for main").wait_for(timeout=WAIT_MS * 2)                    # (the gate was read again)
-        assert [await h.text_content() for h in await goals.locator("h3").all()] == ["At work", "Planning", "Waits for main · 1", "Flags · 0"]       # (drawn in capitals)
+        await goals.get_by_text("1 waits for main").wait_for(timeout=WAIT_MS * 2)                             # (the gate was read again): at the right of Flags
+        assert [await h.text_content() for h in await goals.locator("h3").all()] == ["At work", "Planning"]       # (drawn in capitals)
+        assert " ".join((await goals.locator('[data-fold="flags"]').inner_text()).split()).lower() == "flags · 0 1 waits for main"
+        await goals.locator('[data-fold="flags"] .gfold__head').click()
         assert "Old cleanup · in dev" in await goals.locator(".goals__line").first.inner_text()      # a done goal waits for main
         await row.click()                                                                            # one goal shown: its tasks only, and a way back to all of them
         await goals.locator('.dk__main[data-idea="sync"][aria-pressed="true"]').wait_for(timeout=WAIT_MS)      # (the sheet is drawn again just after the tap)
@@ -334,7 +336,7 @@ async def test_checking_has_the_checkers_column_and_its_goal_in_the_goals_sheet(
         assert [await c.get_attribute("data-task") for c in await page.locator('.stack[data-column="reviewer"] .deck').all()] == ["c1", "c2"]
         assert await page.locator('.deck[data-task="c2"]').locator("xpath=ancestor::*[contains(@class, 'phase')][1]").get_attribute("data-phase") == "next"      # wave 2: the next row
         await page.locator(".gbar__head").click()
-        assert "1/3 in dev · checking" in await page.get_by_role("dialog", name="Goals").locator('.dk[data-idea="chk"] .dk__line').inner_text()
+        assert "1/3 in dev · checking" in await page.get_by_role("dialog", name="Goals").locator('.dk[data-idea="chk"] .dk__main').get_attribute("aria-label")
 
 
 @pytest.mark.asyncio

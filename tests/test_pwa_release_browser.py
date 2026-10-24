@@ -27,10 +27,11 @@ def calls(stub, name):
 
 
 async def _goals(page):
-    """The Goals sheet of the party shown."""
+    """The Goals sheet of the party shown, its Flags row unfolded (spec 73 §5: Flags is a folded row)."""
     await page.locator(".gbar__head").click()
     sheet = page.get_by_role("dialog", name="Goals")
     await sheet.wait_for(timeout=WAIT_MS)
+    await sheet.locator('[data-fold="flags"] .gfold__head').click()
     return sheet
 
 

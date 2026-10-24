@@ -377,9 +377,9 @@ async def test_signs_keep_their_place_without_an_alert_edge_a_failure_keeps_its_
         asks = sheet.locator('.dk[data-idea="second"]')
         assert await asks.locator(".dk__mark .ork-sign.alert").count() == 1
         assert await asks.locator(".dk__main").evaluate("e => getComputedStyle(e).boxShadow") == "none"
-        assert await asks.locator(".dk__line").evaluate("e => getComputedStyle(e).color") != probe
+        assert await asks.locator(".dk__title").evaluate("e => getComputedStyle(e).color") != probe
 
 
 def test_the_service_worker_is_one_up_and_keeps_the_types_module():
     sw = (pwa.ROOT / "sw.js").read_text(encoding="utf-8")
-    assert 'const CACHE = "orkcraft-app-v79";' in sw and '"shell-types.js"' in sw[sw.index("const SHELL"):sw.index("];", sw.index("const SHELL"))]
+    assert 'const CACHE = "orkcraft-app-v80";' in sw and '"shell-types.js"' in sw[sw.index("const SHELL"):sw.index("];", sw.index("const SHELL"))]

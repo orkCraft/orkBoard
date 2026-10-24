@@ -109,6 +109,15 @@ export function goalsOf(st, model) {
   return { atWork, planning, waits, flags, all, asking, n: all.length };
 }
 
+/** The Goals sheet's Planning and New: the goals the party's leader has not read yet (`raw`) are the New row's, the rest are Planning's; Ideation's pitches all stay under Planning (spec 73 §3). */
+export function newOf(list, ideation = false) {
+  if (ideation) return { fresh: [], planning: list.planning };
+  return { fresh: list.planning.filter((r) => r.raw), planning: list.planning.filter((r) => !r.raw) };
+}
+
+/** *1 waits for main* (*3 wait for main*): the done goals that wait for the gate's merge, at the right of Flags (spec 73 §3). */
+export const mainWaitWords = (n) => `${n} ${n === 1 ? "waits" : "wait"} for main`;
+
 /** The goals bar's count, *3 of 12 goals done*: the party's done goals of all its goals (spec 52 §5.2); Ideation's *4 pitches · 1 passed* (a pitch is never done). */
 export const barWords = (g) => (g.ideation ? pitchCount(g) : `${g.done ?? 0} of ${plural(g.ideas ?? 0, "goal")} done`);
 
