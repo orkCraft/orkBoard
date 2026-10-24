@@ -41,12 +41,12 @@ def list_of(text: object) -> list[str]:
     return [str(x) for x in got if isinstance(x, str)] if isinstance(got, list) else []
 
 
-def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None, asks: list[str]) -> list[dict]:
+def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None, asks: list[str], at: str | None = None) -> list[dict]:
     """What of one idea needs the person (spec 35 §10): its questions, its plan waiting, the leader's plan change waiting (spec 62), its to-dos,
     a failure, a proposal; a judged pitch (spec 65 §5: low, blocking nothing, its answer)."""
     slug, state = i["slug"], st["state"]
     base = {"idea": slug, "goal": i["track"], "title": i["title"], "priority": i["priority"], "blocks": False,
-            "at": ideas.touched_at(root, state_dir, slug)}
+            "at": ideas.touched_at(root, state_dir, slug) if at is None else at}
     tasks = (plan or {}).get("tasks") or []
     out = []
     if state == "asks":
@@ -119,7 +119,7 @@ def _night_by(i: dict, st: dict, plan: dict | None) -> str:
 
 
 def row(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None, page: ideas.Page | None, asks: list[str],
-        states: dict[str, dict], mine: list[dict]) -> dict:
+        states: dict[str, dict], mine: list[dict], at: str | None = None) -> dict:
     """An idea as `ideas.board` lists it: the state and what words it (queue, held_until, start_at, progress, waits_on)."""
     slug = i["slug"]
     tasks = (plan or {}).get("tasks") or []
@@ -128,7 +128,7 @@ def row(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None, page:
             "state": st["state"], "size": i["size"], "thesis": i["thesis"], "asks": len(asks),
             "priority": i["priority"],
             "progress": {"done": sum(1 for t in tasks if t.get("state") == "merged"), "total": len(tasks)},
-            "updated": ideas.touched_at(root, state_dir, slug),
+            "updated": ideas.touched_at(root, state_dir, slug) if at is None else at,
             "queue": ideas.queue_of(st), "held_until": st["held_until"],
             "risk": idea_risk.level(page.get("risk")) if page and page.get("risk") else "",
             "risk_triggers": list_of(page.get("risk_triggers")) if page else [],
@@ -318,8 +318,9 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
             plan = ideas.plan(state_dir, slug)
             tasks = (plan or {}).get("tasks") or []
             asks = ideas.items(page.section("Open questions")) if page else []
-            needs = idea_needs(root, state_dir, i, st, plan, asks)
-            r = row(root, state_dir, i, st, plan, page, asks, states, needs)
+            at = ideas.touched_at(root, state_dir, slug)                                # read once: the row's `updated` and its needs' `at`
+            needs = idea_needs(root, state_dir, i, st, plan, asks, at)
+            r = row(root, state_dir, i, st, plan, page, asks, states, needs, at)
             started = any(t.get("state") not in (None, "waiting", "ready", "held") for t in tasks)
             est = (plan or {}).get("estimate")
             waves = map_stage.waves_of(tasks)
