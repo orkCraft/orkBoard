@@ -5,14 +5,14 @@ they do not collide.* Each party's leader sees its own goals; two parties' goals
 the gate. So the Orkmaster (spec 70) **finds** what two open goals of different parties both touch, **asks** the person
 what goes first, **tells** a party when another party's spec changed under it, and lets a goal **wait** for another
 party's flag. Code finds, a model of the cheaper tier judges, the person decides. **Builds:** Claude · **Review:** full ·
-P2. **Written, not built**: after spec 70 is seen at work (the owner's call).
+P2. Built after spec 70 was seen at work (the owner's call, 24 October); **A, B and C at once, in parallel**, B and C against their stub hosts with the shapes of §8.
 
 **What it is, and is not:** one finder (code), one judge (a model call, cheap tier, only when the finder found
 something), one kind of stop in the hand (`collide`), a goal's `depends_on` that may name another party's goal, and its
 lines on the project's level. Not: the Orkmaster editing another party's spec or plan; anything held, merged or re-planned
 without the person's answer; a model call on every event; reading the stores, the web or another project.
 
-Three parts. **A first**; B and C from `main` once A is in (they share no file).
+Three parts, **built at once**: B and C build against the shapes of §8 with their tests' stub hosts, and are merged after A. They share no file.
 
 | part | builds | files (and their tests) |
 |---|---|---|
@@ -71,3 +71,30 @@ week. A finder that finds nothing costs nothing; the judge runs only on what it 
   change judged and *Re-plan it*; a goal of another party in `depends_on` held and then started at the flag; events hold
   no goal's words.
 - **B**, **C**: the stop and its answers; the link on the project's level; the wait's line.
+
+## 8. The shapes (A answers them; B and C build against them)
+1. **The stop** is a Needs you row (`ideas.board`'s `needs_you`, the map's node `needs_you` gains `"collide"` in `NEEDS`),
+   on the goal asked about (the later of the two by its plan's `made_at`, or the goal whose spec did not change):
+   ```
+   {"kind": "collide", "idea": "sign-in-screen", "goal": "mobile", "title": "Sign-in screen", "priority": "normal",
+    "blocks": false, "at": "2026-10-24T10:00:00",
+    "text": "Mobile app «Sign-in screen» and Backend «Auth API» change the same thing",
+    "collide": {"id": "auth-api|sign-in-screen", "by": "plan",            // plan · change
+                "why": "Both change how a session token is issued",          // the judge's, ≤ 200
+                "first": "auth-api",                                         // the judge's suggestion, or ""
+                "goals": [{"idea": "auth-api", "party": "backend", "party_name": "Backend", "title": "Auth API", "element": "ice"},
+                          {"idea": "sign-in-screen", "party": "mobile", "party_name": "Mobile app", "title": "Sign-in screen", "element": "dust"}],
+                "answers": ["first:auth-api", "first:sign-in-screen", "one", "leave"]}}   // by change: ["replan", "leave"]
+   ```
+   With `by: "change"` the `text` is *<party> changed «<goal>»: «<goal>» in <party> rests on what it was* and `goals[0]` is
+   the goal whose spec changed. Sorted as a plan's row is (`sort_needs`: not last, not blocking). Counted in the
+   snapshot's `needs_you` as a plan's is.
+2. **`ideas.collide_answer {id, answer}`**: `answer` one of the stop's `answers`; `first:<slug>` makes the other goal
+   wait for `<slug>` (§4), `one` joins the later into the earlier (§2.3), `replan` re-plans what is left of the goal asked
+   about (spec 62's way, the change told), `leave` keeps them as they are. Answers `{ok: true}`; refused *That is
+   answered already* (an id kept as answered), *No such question* (an id not open), *Pick one of its answers*.
+3. **A wait across parties** on the map's node: `"waits_for": [{"goal": "auth-api", "party": "backend", "party_name":
+   "Backend", "title": "Auth API", "flag": ""}]` (`flag` the date once it is raised; the wait ends then); `[]` with none.
+4. **The project's level**: `ideas.map`'s `project` gains `"collisions": [{"id": "auth-api|sign-in-screen", "a":
+   "auth-api", "b": "sign-in-screen"}]`, the open ones; and a wait is read from the nodes' `waits_for`.
+5. The Orkmaster's head on its stop: `project.orkmaster` (spec 70 §1.1).
