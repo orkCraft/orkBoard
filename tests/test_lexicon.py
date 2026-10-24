@@ -144,3 +144,11 @@ def test_the_orkmaster_and_the_projects_level_are_the_words_of_spec_70():
     lines = {k: next(l for l in Path(lexicon.__file__).read_text(encoding="utf-8").splitlines() if l.lstrip().startswith(f'_t("{k}"'))
              for k in ("orkmaster", "project_level")}
     assert all("spec 70" in line for line in lines.values()) and "plans nothing" in lines["orkmaster"]
+
+
+def test_a_collision_is_the_word_of_spec_71():
+    """Spec 71 §0: two goals of different parties that change the same thing."""
+    from pathlib import Path
+    assert lexicon.term("collide") == "collision" and lexicon.term("collide", many=True) == "collisions"
+    line = next(l for l in Path(lexicon.__file__).read_text(encoding="utf-8").splitlines() if l.lstrip().startswith('_t("collide"'))
+    assert "spec 71" in line and "same thing" in line

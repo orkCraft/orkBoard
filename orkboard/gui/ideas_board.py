@@ -14,7 +14,7 @@ from typing import Any
 from orkboard import settings
 from orkboard.core import idea_keeper, idea_night
 from orkboard.gui.ideas_args import IdeasError, _device, _opt, _text, _via
-from orkboard.realm import board_map, event_log, idea_questions, idea_risk, idea_secrets, idea_target, ideas
+from orkboard.realm import board_map, collide, event_log, idea_questions, idea_risk, idea_secrets, idea_target, ideas
 from orkboard.realm.idea_git import BoardTree
 
 NEEDS_IDEA = ("asks", "plan", "failed", "proposed")
@@ -125,6 +125,7 @@ class BoardMixin:
             mine = self._idea_needs(i, st, plan, asks, root)
             needs += mine
             rows.append(board_map.row(root, self.state_dir, i, st, plan, page, asks, states, mine))
+        needs += collide.rows(root, self.state_dir, state_of=self._state)        # the Orkmaster's questions (spec 71 §8.1)
         return {"tracks": goals, "ideas": rows, "needs_you": sort_needs(needs), **self.board_settings(),
                 "rev": self.rev, "demo": bool(self.host.demo)}
 
@@ -153,8 +154,8 @@ class BoardMixin:
         if plan is None or page is None or plan.get("passed_at") or plan.get("stopped") \
                 or ideas.state(self.state_dir, slug)["state"] != "plan":
             return ""
-        if ideas.items(page.section("Open questions")):
-            return "wait"
+        if ideas.items(page.section("Open questions")) or collide.holds(self.root(), self.state_dir, slug):
+            return "wait"                      # …or it waits for another party's goal until that goal's flag (spec 71 §4)
         what = idea_risk.decide(page.get("risk"), page.get("priority"))
         if what != "wait":
             try:
