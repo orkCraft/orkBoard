@@ -357,7 +357,16 @@ def _idea(slug: str, page: Page) -> dict:
 
 def ideas(root: Path, track: str | None = None) -> list[dict]:
     """The ideas in order (a track's, or every track's by the tracks' order)."""
-    out = [_idea(s, p) for s, p in _pages(root / IDEAS)]
+    return ideas_and_pages(root, track)[0]
+
+
+def ideas_and_pages(root: Path, track: str | None = None) -> tuple[list[dict], dict[str, Page]]:
+    """`ideas()` and each idea's page by its slug, from one read of the pages (the Map reads both)."""
+    pages = dict(_pages(root / IDEAS))
+    return _in_order(root, [_idea(s, p) for s, p in pages.items()], track), pages
+
+
+def _in_order(root: Path, out: list[dict], track: str | None) -> list[dict]:
     if track is not None:
         return sorted((i for i in out if i["track"] == track), key=lambda i: (i["order"], i["slug"]))
     place = {t["slug"]: n for n, t in enumerate(_ordered(root, {}))}             # the tracks' order only: their counts would read every page again
