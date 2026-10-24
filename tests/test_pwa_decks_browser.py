@@ -214,21 +214,25 @@ async def test_the_goals_bar_is_one_quiet_line_and_its_sheet_lists_what_is_at_wo
         about = sheet.get_by_role("button", name=re.compile("^About "))                                                                # the head's *About Passkey ›*: it opens About this party
         assert norm(await about.inner_text()) == "About Passkey" and await about.locator(".ork-chev.right").count() == 1 and (await about.bounding_box())["height"] >= 44
         assert (await about.bounding_box())["y"] < (await sheet.locator(".goals__how").bounding_box())["y"]
-        assert [await h.text_content() for h in await sheet.locator("h3").all()] == ["At work", "Planning", "Waits for main · 1", "Flags · 1"]       # (drawn in capitals)
+        assert [await h.text_content() for h in await sheet.locator("h3").all()] == ["At work", "Planning"]                            # (drawn in capitals); New and Flags are folded rows (spec 73 §5)
+        assert norm(await sheet.locator('[data-fold="new"]').inner_text()).lower() == "new · 2 process now" and norm(await sheet.locator('[data-fold="flags"]').inner_text()).lower() == "flags · 1 1 waits for main"
+        assert await sheet.locator(".dk").count() == 7                                                                                 # the two new goals are folded away
+        await sheet.locator('[data-fold="new"] .gfold__head').click()
         rows = sheet.locator(".dk")
         assert [await r.get_attribute("data-idea") for r in await rows.all()] == ["register", "signin", "cookie", "recovery", "second", "pagewords", "ratelimit", "magic", "log"]
-        lines = {await r.get_attribute("data-idea"): norm(await r.locator(".dk__line").inner_text()) for r in await rows.all()}
+        lines = {await r.get_attribute("data-idea"): norm((await r.locator(".dk__main").get_attribute("aria-label")).split(" · ", 1)[1]) for r in await rows.all()}      # the old line: after the title
         assert lines["register"] == "0/6 in dev · implementation" and lines["signin"] == "3/5 in dev · checking" and lines["cookie"] == "0/2 in dev · implementation"
         assert lines["recovery"] == "plan ready · $1–2" and lines["second"] == "asks you · Reviewer" and lines["pagewords"] == "proposed" and lines["ratelimit"] == "Taskmaster is reading"
         assert lines["magic"] == "new · tonight" and lines["log"] == "new · Taskmaster reads it later"
+        assert await sheet.locator(".dk__line, .pile").count() == 0                                                                    # no second line, no pile
         marks = {await r.get_attribute("data-idea"): await r.locator(".dk__mark .ork-sign").get_attribute("class") if await r.locator(".dk__mark .ork-sign").count() else "" for r in await rows.all()}
         assert marks["register"] == "ork-sign work" and marks["cookie"] == "ork-sign cross" and marks["recovery"] == "ork-sign alert" and marks["ratelimit"] == "ork-sign work" and marks["magic"] == ""
         assert "asks" not in await rows.nth(3).get_attribute("class") and await rows.nth(3).locator(".dk__mark .ork-sign.alert").count() == 1     # a goal that asks you: its sign, no alert edge (spec 52 §5.8)
         for r in await rows.all():
-            assert (await r.locator(".dk__main").bounding_box())["height"] >= 52 and (await r.locator(".dk__open").bounding_box())["width"] == 44       # 52 px rows, › 44 px wide
-        pile = rows.nth(0).locator(".pile")                                                                                           # its pile: a back with its element, edges behind it for its open tasks
-        assert await pile.locator(".pile__back .ork-elem.meadow").count() == 1 and await pile.locator(".pile__edge").count() == 3
-        assert await rows.nth(7).locator(".ork-elem.lava.dim").count() == 1 and await rows.nth(7).locator(".pile__edge").count() == 0          # a goal not read yet: its element dim
+            assert round((await r.locator(".dk__main").bounding_box())["height"]) == 44 and (await r.locator(".dk__open").bounding_box())["width"] == 44       # 44 px rows, › 44 px wide
+        assert await rows.nth(0).locator(".dk__elem .ork-elem.meadow").count() == 1
+        assert await rows.nth(7).locator(".ork-elem.lava.dim").count() == 1                                                            # a goal not read yet: its element dim
+        await sheet.locator('[data-fold="flags"] .gfold__head').click()
         waits = sheet.locator(".goals__line").filter(has=page.locator(".ork-sign.check"))
         assert [norm(await w.inner_text()) for w in await waits.all()] == ["Where the credentials are kept · in dev"]                 # ✓ done, in dev, waiting for main
         flags = sheet.locator(".goals__flag")
@@ -726,7 +730,7 @@ async def test_every_new_target_is_a_finger_wide(fake_repo, monkeypatch):
         assert not small, small
         await page.locator(".gbar__head").click()
         sheet = page.get_by_role("dialog", name="Goals")
-        for selector in (".dk__main", ".dk__open"):
+        for selector in (".dk__main", ".dk__open", ".gfold__head"):
             for e in await sheet.locator(selector).all():
                 b = await e.bounding_box()
                 assert b["height"] >= 44 and (selector != ".dk__open" or b["width"] >= 44), (selector, b)

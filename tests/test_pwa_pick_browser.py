@@ -586,7 +586,7 @@ async def test_a_task_that_waits_for_a_pick_says_so_on_the_field_with_the_alert_
         goals = page.get_by_role("dialog", name="Goals")
         row = goals.locator('.dk[data-idea="logo"]')
         await row.wait_for(timeout=WAIT_MS)
-        assert "asks you to pick" in await row.locator(".dk__line").inner_text() and await row.locator(".dk__mark .ork-sign.alert").count() == 1 and "asks" not in await row.get_attribute("class")
+        assert "asks you to pick" in await row.locator(".dk__main").get_attribute("aria-label") and await row.locator(".dk__mark .ork-sign.alert").count() == 1 and "asks" not in await row.get_attribute("class")
         await page.keyboard.press("Escape")
         await goals.wait_for(state="hidden", timeout=WAIT_MS)
         await deck.click()                                                                                              # a tap opens the pick on its own screen

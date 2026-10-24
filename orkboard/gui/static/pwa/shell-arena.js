@@ -43,7 +43,7 @@ export function makeArena(core, ctx, parts) {
   }
 
   const party = makeParty(core, ctx);                         // the party's line, its sheet and the flag line (shell-party.js)
-  const goals = makeGoals(core, (slug) => party.open(slug));  // the goals bar, the Goals sheet and the filter (shell-goals.js)
+  const goals = makeGoals(core, (slug) => party.open(slug), (m) => process(m));  // the goals bar, the Goals sheet and the filter (shell-goals.js)
   const guard = pointerGuard([el, ...party.sheets, ...goals.sheets], () => api.draw());   // no lost tap: a draw waits while a pointer is down (spec 50 §6.9)
   let current = null;                                         // the model of the party shown, for the field's hooks
   const field = makeField(core, {

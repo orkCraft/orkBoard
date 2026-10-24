@@ -593,21 +593,13 @@ dialog.sheet.drawer .sheet-foot { margin-top: auto; }
 .goals__ink { color: var(--ork-ink); }
 .goals__flag .ork-sign { color: var(--ork-success); }
 .dk { display: flex; align-items: stretch; gap: var(--ork-1); }
-.dk__main { all: unset; box-sizing: border-box; cursor: pointer; flex: 1 1 auto; min-width: 0; min-height: 52px; padding: var(--ork-2) var(--ork-4); display: flex; align-items: center; gap: var(--ork-5);
+.dk__main { all: unset; box-sizing: border-box; cursor: pointer; flex: 1 1 auto; min-width: 0; height: var(--ork-tap); padding: 0 var(--ork-4); display: flex; align-items: center; gap: var(--ork-4);
   border: var(--ork-line) solid transparent; clip-path: var(--ork-notch); color: var(--ork-ink); }
 .dk.is-on .dk__main { background: var(--ork-raised); border-color: var(--ork-ink); }
 .dk__main:focus-visible { box-shadow: inset 0 0 0 2px var(--ork-ink); }
-.pile { position: relative; flex: none; width: 26px; height: 36px; margin-top: var(--ork-3); }
-.pile__edge { position: absolute; width: 26px; height: 36px; box-sizing: border-box; background: var(--ork-canvas); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); }
-.pile__edge.e1 { left: 2px; top: -2px; }
-.pile__edge.e2 { left: 4px; top: -4px; }
-.pile__edge.e3 { left: 6px; top: -6px; }
-.pile__back { position: absolute; inset: 0; z-index: 2; box-sizing: border-box; display: flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch);
-  background: repeating-linear-gradient(45deg, var(--ork-raised) 0 2px, var(--ork-panel) 2px 4px); }
-.dk__body { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; }
-.dk__title { font: 400 14px/18px var(--ork-font-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dk__line { font: 400 12px/16px var(--ork-font-text); color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dk__type { display: inline-flex; vertical-align: -2px; margin-right: var(--ork-2); color: var(--ork-ink-muted); }
+.dk__elem, .dk__gap { flex: none; width: 14px; height: 14px; display: inline-flex; }
+.dk__title { flex: 1 1 auto; min-width: 0; font: 400 15px/20px var(--ork-font-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dk__type { flex: none; width: 14px; height: 14px; display: inline-flex; color: var(--ork-ink-muted); }
 .dk__type.meadow, .tcard__type.meadow { color: var(--ork-elem-meadow); }
 .dk__type.ice, .tcard__type.ice { color: var(--ork-elem-ice); }
 .dk__type.dust, .tcard__type.dust { color: var(--ork-elem-dust); }
@@ -620,6 +612,14 @@ dialog.sheet.drawer .sheet-foot { margin-top: auto; }
 .dk__check { flex: none; display: inline-flex; color: var(--ork-ink); }
 .dk__open { all: unset; box-sizing: border-box; cursor: pointer; flex: none; width: var(--ork-tap); display: flex; align-items: center; justify-content: center; color: var(--ork-ink-muted); }
 .dk__open .ork-chev { margin: 0; }
+.gfold { display: flex; align-items: center; gap: var(--ork-3); min-height: var(--ork-tap); }
+.gfold__head { all: unset; box-sizing: border-box; cursor: pointer; flex: 1 1 auto; min-width: 0; min-height: var(--ork-tap); padding: 0 var(--ork-4); display: flex; align-items: center; gap: var(--ork-3); color: var(--ork-ink); }
+.gfold__head:focus-visible { box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.gfold__head .ork-chev { margin: 0; flex: none; color: var(--ork-ink-muted); }
+.gfold__word { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.gfold__n { font: 400 14px/20px var(--ork-font-text); color: var(--ork-ink-muted); }
+.gfold__act { flex: none; min-height: var(--ork-tap); }
+.gfold__note { flex: none; padding-right: var(--ork-4); font: 400 12px/16px var(--ork-font-text); color: var(--ork-ink-muted); }
 .dk__open:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 .done-row { all: unset; box-sizing: border-box; width: 100%; min-height: var(--ork-tap); display: flex; align-items: center; gap: var(--ork-2); cursor: pointer; font: 400 12px/16px var(--ork-font-text); }
 .done-row:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2px; }

@@ -111,8 +111,8 @@ async def test_a_spreads_cards_keep_the_phase_word_between_the_element_and_the_t
         sheet = page.get_by_role("dialog", name="Goals")
         row = sheet.locator('.dk[data-idea="register"]')
         await row.locator(".dk__type").wait_for(timeout=WAIT_MS)
-        assert await row.locator(".dk__type .ork-sign").evaluate(BG) == await row.locator(".pile__back .ork-elem").evaluate(BG) == await page.evaluate(PROBE, "--ork-elem-meadow")
-        assert await row.locator(".dk__type").evaluate("e => e.nextSibling.textContent") == "WebAuthn register"                          # the list keeps its place: before the title
+        assert await row.locator(".dk__type .ork-sign").evaluate(BG) == await row.locator(".dk__elem .ork-elem").evaluate(BG) == await page.evaluate(PROBE, "--ork-elem-meadow")
+        assert await row.locator(".dk__type").evaluate("e => e.nextElementSibling.textContent") == "WebAuthn register"                  # the list keeps its place: before the title
         plain = sheet.locator('.dk[data-idea="pagewords"]')
         assert await plain.locator(".dk__type").count() == 0
         for r in await sheet.locator(".dk__main").all():
