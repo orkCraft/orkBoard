@@ -283,7 +283,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
     today = dt.date.fromtimestamp(now).isoformat() if now else dt.date.today().isoformat()
     offered = pitches.offers(root, state_dir) if any((t.get("leader") or "") == library.INVESTOR for t in shown) else {}
     made = releases.index(root, state_dir, found)                           # the releases, read once: a goal's route, a flag's release (spec 68)
-    held, rel = releases.holding(root, state_dir, made), goal_types.release_party(root)
+    held, rel = releases.holding(root, state_dir, made), goal_types.release_party(root, tracks)
     releasing = {r["goal"]: r for r in made}
     asked = {}                                                              # the Orkmaster's open questions, each on its goal (spec 71 §8.1)
     for n in collide.rows(root, state_dir, tracks=tracks, state_of=state_of):

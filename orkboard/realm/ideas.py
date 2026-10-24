@@ -164,6 +164,11 @@ def tracks(root: Path, make: bool = True) -> list[dict]:
     for _slug, page in _pages(root / IDEAS):
         t = page.get("track") or GENERAL
         counts[t] = counts.get(t, 0) + 1
+    return _ordered(root, counts)
+
+
+def _ordered(root: Path, counts: dict[str, int]) -> list[dict]:
+    """The tracks in order with the counts given (none: 0), the ideas' pages not read."""
     out = [_track(s, p, counts.get(s, 0)) for s, p in _pages(root / TRACKS)]
     return sorted(out, key=lambda t: (PRIORITIES.index(t["priority"]), t["order"], t["slug"]))
 
@@ -355,7 +360,7 @@ def ideas(root: Path, track: str | None = None) -> list[dict]:
     out = [_idea(s, p) for s, p in _pages(root / IDEAS)]
     if track is not None:
         return sorted((i for i in out if i["track"] == track), key=lambda i: (i["order"], i["slug"]))
-    place = {t["slug"]: n for n, t in enumerate(tracks(root, make=False))}
+    place = {t["slug"]: n for n, t in enumerate(_ordered(root, {}))}             # the tracks' order only: their counts would read every page again
     return sorted(out, key=lambda i: (place.get(i["track"], len(place)), i["order"], i["slug"]))
 
 
