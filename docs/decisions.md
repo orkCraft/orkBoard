@@ -1181,3 +1181,21 @@ So: **under a closed party's heading, one quiet line: its goals at work**, each 
 register · Session cookies*), *and k more* when they do not fit; none at work, no line. A press on a goal opens that
 party with the goal picked into the filter. On the phone the same line is under each party of the parties' sheet but
 the one shown. The owner's call. Spec 72.
+
+## 88. A lighter column: a goal is one line; the open party's heading is its leader; New and Flags are rows; New goal at the Orkmaster (24 October, the owner)
+
+Why: the owner, on the column as built: *the list is overloaded.* A goal row was a small deck with two lines, a mark and
+›; under the open party's heading its leader had a card of its own, then *Process now*, then *Goals n*, and at the foot
+*New (n)* and *Flags (n) · k wait for main* wrapped as links, then the New goal pile. Mockup G of *Orkboard: one window*
+(the phone's: H). So (on the desktop; the phone's Goals sheet takes the rows):
+1. **A goal is one line**: its element, its type's sign (in its goal's colour), its title, one state's sign (at work,
+   asks you, failed, flag); what its line said goes to its title (the tooltip). 28 px on the desktop, 44 px on the phone.
+2. **The open party's heading is its leader**: the leader's head, the party's name, *<leader> leads* under it, the work
+   sign and *k/n*. The leader's own row, its numbers and the *Goals n* heading go from the column (its price and numbers
+   are in *About this party*; its question is in the hand).
+3. **New and Flags are rows** like a goal's, folded: *New · n* with **Process now** at its right (*Judge now* in
+   Ideation), *Flags · n* with *k wait for main* at its right.
+4. **New goal is at the Orkmaster** on the desktop: a **+** beside its head in the project's line opens New goal with
+   the party shown picked and its types first (spec 70 §4's form); the pile at the column's foot goes. The phone keeps its
+   FAB (the thumb's), whose form already starts with the party shown.
+The owner's call, on mockups G and H. Spec 73.
