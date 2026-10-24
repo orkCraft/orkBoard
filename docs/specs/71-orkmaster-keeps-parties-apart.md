@@ -98,3 +98,15 @@ week. A finder that finds nothing costs nothing; the judge runs only on what it 
 4. **The project's level**: `ideas.map`'s `project` gains `"collisions": [{"id": "auth-api|sign-in-screen", "a":
    "auth-api", "b": "sign-in-screen"}]`, the open ones; and a wait is read from the nodes' `waits_for`.
 5. The Orkmaster's head on its stop: `project.orkmaster` (spec 70 §1.1).
+
+## As built (C)
+The phone, against the shapes of §8 and a stub host (`tests/test_pwa_collide_browser.py`); no Python and no `static/js/` file touched; a host without `collide` rows or `waits_for` keeps today's phone.
+- **The stop** (`pwa/shell-stops.js` `collideItem`): kind `collide` is a hand card, *Orkmaster asks* (`shell-arena-words.js` `needsOf` and `URGENCY`: among the stops that hold nothing back, like a plan change, after a plan). Its head is `project.orkmaster`'s, drawn
+  in the raised card's art strip (`title="Orkmaster"`; without `project` the party leader's head). The raised card has the text, the why (`collide.why`), then its two goals, each a 44 px press (*<party> · <goal>*, its element, ›) that
+  lays the card back, shows that goal's party first and opens the goal; then the answers as buttons, one per `collide.answers`, saying what happens in their title: `first:<slug>` *<goal> first* (primary for the judge's `first`), *One goal*, *Re-plan it* (primary
+  for `by: change`), *Leave it*. Each sends `ideas.collide_answer {id, answer}` and says it in a toast; a refusal (*That is answered already*…) keeps the card and says why. The front card shows the primary and *More…*. `.raised.is-collide` keeps
+  its children from being squeezed (a card taller than the screen scrolls). The map's `needs_you: "collide"` reads *the Orkmaster asks* (`NEEDS`) and counts as a goal that asks (`STOPS`).
+- **A wait** (`shell-goals-words.js` `waitsForOf`, `waitsForWords`): a node's `waits_for` rows whose `flag` is empty give the goal's Goals-sheet row orkUI's *before* sign as its state sign (it yields only to a louder mark: failed, asks you) and
+  *waits for <party> · <goal>* after its line, so in its `aria-label`; the row stays one line of 44 px. A raised flag ends the wait.
+- **Not built here:** the project's level (spec 70 §2.3) draws no collision link on the phone: `project.collisions` is read by no phone file (the desktop draws it).
+- `sw.js` `CACHE` is `orkcraft-app-v81`; the pin is updated in `tests/test_pwa.py` and the thirteen phone tests that pin it.

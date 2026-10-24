@@ -5,7 +5,7 @@ import { STAGE_WORDS, stageOf } from "./shell-map-idea.js";
 import { hhmm } from "./shell-words.js";
 import { pctOf, pctRange } from "./shell-spend.js";
 
-const STOPS = ["asks", "plan", "change", "proposal", "todo"];        // what a goal that asks you waits for (a failure is its own mark; `change`: a plan change, spec 62)
+const STOPS = ["asks", "plan", "change", "proposal", "todo", "collide"];        // what a goal that asks you waits for (a failure is its own mark; `change`: a plan change, spec 62)
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 export const FLAGS_SHOWN = 10;                                       // the newest of a party's flags, then *All n*
 export const FLAG_ROW = 6;                                           // the flag line's row holds the elements of this many of its goals (spec 64 §1.2)
@@ -41,6 +41,12 @@ export const hasReleaseParty = (st) => (st.map?.goals || []).some((g) => g.leade
 
 const join = (...parts) => parts.filter(Boolean).join(" ");
 const kOfN = (done, total) => (total ? ` · ${done || 0} of ${total}` : "");
+
+/** The goal's waits for another party's goal that are not over (spec 71 §4, §8.3): the map's `waits_for`, those whose flag is not raised yet; a host without it has none. */
+export const waitsForOf = (n) => (Array.isArray(n?.waits_for) ? n.waits_for.filter((w) => w && !w.flag) : []);
+
+/** *waits for Backend · Auth API* (more than one: joined with a comma). */
+export const waitsForWords = (n) => waitsForOf(n).map((w) => `waits for ${w.party_name || w.party} · ${w.title || w.goal}`).join(", ");
 
 /** What a pitch's goal is now as the pitch's node says it (`goal_state`): *At work in Mobile app · 3 of 7* · *In main* · *In Release 1.4* · *Out in 1.4* · *Dropped*; `name`: a party's name by its slug. */
 export function goalStateWords(gs, name = (s) => s) {
@@ -91,7 +97,12 @@ export function goalsOf(st, model) {
   const done = (n) => n.state === "done";
   const edges = (n) => Math.min(3, (n.tasks || []).filter((t) => t.state !== "merged" && t.state !== "dropped").length);
   const row = (n, rest) => ({ slug: n.slug, title: n.title, short: n.short || n.title, element: n.element || "", raw: n.state === "raw", edges: edges(n), open: { kind: "idea", slug: n.slug },
-    type: n.type?.sign ? n.type : null, care: false, mark: "", markTip: "", ...rest });
+    type: n.type?.sign ? n.type : null, care: false, mark: "", markTip: "", ...rest, ...waiting(n, rest) });
+  /** A goal that waits for another party's goal (spec 71 §6): orkUI's ← sign is its state sign when nothing louder is, *waits for <party> · <goal>* is in its words. */
+  const waiting = (n, rest) => {
+    const w = waitsForWords(n);
+    return w ? { line: `${rest.line ? `${rest.line} · ` : ""}${w}`, ...(rest.mark && rest.mark !== "work" ? {} : { mark: "before", markTip: w }) } : {};
+  };
   const atWork = nodes.filter((n) => !done(n) && ["implementation", "checking"].includes(stageOf(n))).map((n) => {
     const tasks = (n.tasks || []).filter((t) => t.state !== "dropped");
     const failed = tasks.some((t) => t.state === "failed"), live = tasks.some((t) => t.state === "running" || t.state === "testing"), picking = tasks.some((t) => t.state === "picking");

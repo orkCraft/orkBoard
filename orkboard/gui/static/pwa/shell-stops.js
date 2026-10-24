@@ -24,7 +24,7 @@ import { makePanel, forget } from "./shell-pick-answer.js";
 
 const reducedMotion = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 const KIND = { plan: "Plan ready", change: "Plan change", asks: "Asks you", goal: "Asks you", proposal: "Proposed", party: "Proposed", todo: "A to-do", failed: "Failed", look: "To look at",
-  pick: "Pick one", op: "At your check", op_failed: "Failed", op_rules: "Proposed", pitch: "Judged" };
+  pick: "Pick one", op: "At your check", op_failed: "Failed", op_rules: "Proposed", pitch: "Judged", collide: "Orkmaster asks" };
 const gemOf = (g) => (g ? h("span", { class: `ork-gem ${g.cls || ""}`.trim(), title: g.tip }, g.sign ? sign(g.sign) : g.text) : null);       // a price, a mark or a sign (a failure's cross); none for a plan change of nothing
 const GHOSTS = 3, GHOST_MS = 300;                       // stops that leave with the fade in one refresh (the rest simply go), and how long it lasts (spec 58 §4; spec 49 §11.2)
 const CARD = 104, FRONT_OVERLAP = 12, WIDTH = 290;       // a fanned card's width, how far the front card lies over its neighbours, and the room the fan is drawn in (the row's width less 50 px at each side: the cards turn up to 4° a place outward); the zone's height is CSS (`:root.has-stops`)
@@ -188,6 +188,7 @@ export function makeStops(core, ctx, needs, ops) {
       return { ...base, gem: { text: "·", tip: "It holds nothing: it waits for your decision" }, big: lead, text: n.text || "Judged", open: null, quickLabel: "Quick moves",
         quick: () => [btn("Open the pitch", away((via) => core.openPitch(n.idea, via)), { primary: true, tip: "The views, the case against and the decision; Send, Pass or Change it there", attrs: { "data-act": "open-pitch" } })] };
     }
+    if (n.kind === "collide") return collideItem(n, base, lead);
     if (n.kind === "todo") {
       return { ...base, gem: { text: "·", tip: "A to-do costs nothing" }, text: n.todo?.why || n.text || n.title, quickLabel: "Quick moves", open: { kind: "plan", slug: n.idea, todo: n.todo?.id },
         quick: () => [btn("Open…", away(() => needs.todoSheet(n)), { primary: true, attrs: { "data-act": "todo" } }), ...needs.todoOuts(n, lower)] };
@@ -196,6 +197,32 @@ export function makeStops(core, ctx, needs, ops) {
     return { ...base, cls: "is-fail", tone: "danger", gem: { sign: "cross", cls: "danger", tip: "It failed" }, text: n.text || "Something failed", quickLabel: "Quick moves",
       quick: () => [btn("Start again", go("ideas.start", { slug: n.idea, via: "hand" }, "Started again."), { primary: true, tip: "Runs this goal's tasks that are not merged or in Review again", attrs: { "data-act": "again" } }),
         btn("Open…", away((via) => core.open({ kind: "idea", slug: n.idea }, via)), { attrs: { "data-act": "more" } })] };
+  }
+
+  /** The Orkmaster's stop (spec 71 §6, §8.1): two goals of different parties that change the same thing, or a spec changed under another party. Its head is `project.orkmaster`'s; each of its two goals is a 44 px
+   *  press that opens it (its party shown first); its answers are buttons that say what happens (`ideas.collide_answer {id, answer}`). */
+  function collideItem(n, base, lead) {
+    const c = n.collide || {}, goals = c.goals || [], answers = c.answers || [], first = c.first || "";
+    const o = st.map?.project?.orkmaster;
+    const head = () => (o ? h("img", { class: "ork-race__head mid", src: `races/${o.race}-${o.tier}@2x.png`, width: 36, height: 33, alt: "", title: "Orkmaster", draggable: "false" }) : midHead(lead));
+    const titleOf = (slug) => goals.find((g) => g.idea === slug)?.title || slug;
+    const say = (answer, said) => go("ideas.collide_answer", { id: c.id, answer }, said);
+    const openGoal = (g) => () => {
+      lower();
+      if (g.party && g.party !== core.parties().shown) core.pick(g.party);
+      core.open({ kind: "idea", slug: g.idea }, "hand");
+    };
+    const how = (a) => {
+      if (a.startsWith("first:")) { const one = titleOf(a.slice(6)), other = goals.find((g) => g.idea !== a.slice(6)); return { label: `${one} first`, said: `${one} goes first.`, tip: `${other ? other.title : "The other goal"} waits until ${one} is flagged` }; }
+      if (a === "one") return { label: "One goal", said: "Joined into one goal.", tip: "The later goal’s text joins the earlier goal as a change; the later goal is dropped" };
+      if (a === "replan") return { label: "Re-plan it", said: "Re-planning what is left.", tip: "The goal’s leader re-plans what is left, told what changed" };
+      return { label: "Leave it", said: "Left as they are.", tip: "Keeps both goals as they are; this pair is not asked again" };
+    };
+    const buttons = () => answers.map((a) => { const w = how(a); return btn(w.label, say(a, w.said), { primary: a === (first ? `first:${first}` : "replan"), text: true, tip: w.tip, attrs: { "data-answer": a } }); });
+    return { ...base, key: `collide:${c.id}`, gem: { text: "·", tip: "It holds nothing: the goals wait for your answer" }, small: null, big: null, head, text: n.text || "", why: c.why || "", open: null,
+      more: () => h("div", { class: "cl-goals", role: "group", "aria-label": "The two goals" }, ...goals.map((g) => h("button", { class: "ork-btn cl-goal", type: "button", "data-goal": g.idea, "data-party": g.party,
+        "aria-label": `${g.party_name} · ${g.title}: open it`, onclick: openGoal(g) }, g.element ? elem(g.element) : null, h("span", { class: "cl-goal__words" }, h("b", {}, g.party_name), " · ", g.title), h("i", { class: "ork-chev right", "aria-hidden": "true" })))),
+      quickLabel: "Answer in one tap", quick: buttons };
   }
 
   function failedItem(node, t) {
@@ -296,15 +323,15 @@ export function makeStops(core, ctx, needs, ops) {
     const frame = it.tone === "danger" ? " danger" : it.tone === "look" ? "" : " alert";
     const f = fan(places[i], n, items[i] === frontOf());
     const quick = h("div", { class: "raised__quick", role: "group", "aria-label": it.quickLabel }, ...it.quick());
-    const raised = h("div", { class: `raised ork-frame${frame}${it.kind === "pick" ? " is-pick" : ""}`, role: "document", "data-stop": it.key, "data-kind": it.kind },
+    const raised = h("div", { class: `raised ork-frame${frame}${it.kind === "pick" ? " is-pick" : ""}${it.kind === "collide" ? " is-collide" : ""}`, role: "document", "data-stop": it.key, "data-kind": it.kind },
       h("div", { class: "raised__top" }, gemOf(it.gem),
         h("span", { class: `raised__kind${it.tone === "danger" ? " no" : it.tone === "look" ? " muted" : ""}` }, KIND[it.kind]), elem(it.element), h("span", { class: "spacer" }),
         it.small ? whoHead(it.small, false) : null,
         h("button", { class: "ork-btn quiet", type: "button", "aria-label": "Put it back", onclick: lower }, icon("close"))),
-      it.big ? h("span", { class: "art" }, midHead(it.big)) : null,
+      it.big ? h("span", { class: "art" }, midHead(it.big)) : it.head ? h("span", { class: "art" }, it.head()) : null,
       h("span", { class: "banner" }, it.title),
       it.party ? h("p", { class: "cap raised__goal", "data-party": it.party.ops ? "ops" : it.party.slug }, partyMark(it.party), " ", h("span", { class: "raised__words" }, [it.party.name, it.goalName].filter(Boolean).join(" · ")))   // *<party> · <goal>*
-        : it.link ? h("p", { class: "cap raised__goal is-link", "data-link": "" }, h("span", { class: "raised__words" }, it.link.join(" · "))) : null,       // *<goal> · <task> · <member>* (spec 58 §3)
+        : it.link && it.kind !== "collide" ? h("p", { class: "cap raised__goal is-link", "data-link": "" }, h("span", { class: "raised__words" }, it.link.join(" · "))) : null,       // *<goal> · <task> · <member>* (spec 58 §3)
       h("div", { class: "raised__text" }, it.text),
       it.why ? h("p", { class: "muted raised__why" }, it.why) : null,                   // a plan change's why, under its text
       it.miss ? h("p", { class: "muted raised__miss" }, it.miss) : null,

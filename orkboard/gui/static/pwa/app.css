@@ -1231,3 +1231,14 @@ dialog.sheet.full { margin: 0; height: 100dvh; max-height: 100dvh; border-top: 0
 .newgoal.is-pitch .newgoal__type, .newgoal.is-pitch .newgoal__asks, .newgoal.is-pitch .newgoal__refs { display: none; }
 .preset-why { color: var(--ork-ink); }
 .preset-why.muted { color: var(--ork-ink-muted); }
+
+/* The Orkmaster's stop (spec 71 §6): its two goals, each a 44 px press that opens it (party in bold, goal after), in one line each, cut with an ellipsis */
+.cl-goals { display: flex; flex-direction: column; gap: var(--ork-1); }
+.cl-goal { width: 100%; min-height: var(--ork-tap); justify-content: flex-start; gap: var(--ork-3); text-align: left; }
+.cl-goal__words { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 400 14px/18px var(--ork-font-text); }
+.cl-goal__words b { font-weight: 600; }
+.cl-goal .ork-chev { flex: none; margin-left: auto; }
+.raised.is-collide > * { flex: none; }                                                                          /* nothing of it is squeezed: a card taller than the screen scrolls */
+.raised.is-collide { gap: var(--ork-2); }
+.raised.is-collide .art { height: 44px; }
+.raised.is-collide .raised__text { padding: var(--ork-3) var(--ork-4); font: 400 13px/18px var(--ork-font-text); }
