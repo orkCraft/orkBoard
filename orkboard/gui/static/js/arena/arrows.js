@@ -1,5 +1,6 @@
 // The arrows (docs/specs/50-parties-and-goals.md §3.4): hovering a card (or a spread card) draws an arrow from each task it waits for to it and from it
-// to each task that waits for it, between the cards that are shown — a dashed ink line, 2 px, with a head, over the field and under the drawer. An end
+// to each task that waits for it, between the cards that are shown — a dashed ink line, 2 px, with a head, over the field and under the drawer,
+// drawn from its start in four steps when it comes (arena.css `arena-draw`; none when motion is reduced). An end
 // that is not shown (a task under another card of its stack, or one the filter has taken away, or one scrolled out of its column) draws none. Only
 // with a fine pointer (`(hover: hover)`); the keyboard's focus draws them too. The card's foot keeps the words (stacks.js `footParts`).
 import { useLayoutEffect, useState } from "preact/hooks";
@@ -29,7 +30,7 @@ export function segment(key, a, b) {
 /** The svg layer that draws `lines` (from `segment`) over its positioned host. */
 export function ArrowLines({ lines }) {
   return html`<svg class="arena-arrows" aria-hidden="true">${lines.map((l) => html`<g key=${l.key} class="arena-arrow" data-edge=${l.key} data-kind=${l.kind || undefined}>
-    <line x1=${l.x1} y1=${l.y1} x2=${l.x2} y2=${l.y2} /><polygon points=${l.head} /></g>`)}</svg>`;
+    <line x1=${l.x1} y1=${l.y1} x2=${l.x2} y2=${l.y2} style=${`transform-origin: ${l.x1.toFixed(1)}px ${l.y1.toFixed(1)}px`} /><polygon points=${l.head} /></g>`)}</svg>`;
 }
 
 /** The lines between the cards shown: [{x1, y1, x2, y2, head: "points"}]. `host`: the element the lines are drawn in. */

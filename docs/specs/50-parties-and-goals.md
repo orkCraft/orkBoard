@@ -269,7 +269,8 @@ goal, today's), *About this party* (the drawer, §3.7) and *Edit the party*. Not
 - **A press**: a stack of one opens its task (or its result), as today; a stack of more **spreads** (§3.6).
 - **Arrows**: hovering a card (or a spread card) draws an arrow **from each task it waits for** to it and **from it
   to each task that waits for it**, for the cards shown (a dashed ink line with a head, over the field, under the
-  drawer); a hidden end draws none. Only with a fine pointer (`(hover: hover)`); keyboard focus draws them too. The
+  drawer; it is drawn from its start in four steps, 160 ms, then its head comes, and at once when motion is reduced); a
+  hidden end draws none. Only with a fine pointer (`(hover: hover)`); keyboard focus draws them too. The
   card's foot keeps the words (*← waits for <short>*, *→ n wait for it*).
 - Solo (one member): its rows across the width, as spec 49 (the same order, the others gone).
 - *✓ k in dev* under a column, *No task now*, Waits for your look, the gate, the bottom row and the limits: as spec 49.
