@@ -149,22 +149,22 @@ def test_the_level_is_a_column_for_each_party_with_its_goals_as_decks_in_groups_
     assert head.locator(".ork-race__head").count() == 1 and head.locator(".arena-pcol__name").inner_text() == "Passkey" and "/" in head.locator(".arena-phead__count").inner_text()
     assert head.get_attribute("title") == "Open Passkey"
     assert _groups(pg, "passkey") == ["Planning", "At work"]
-    decks = _col(pg, "passkey").locator(".arena-deck")
+    decks = _col(pg, "passkey").locator(".arena-pdeck")
     assert decks.count() == 9                                                                                           # Flags (4) are folded
-    one = _col(pg, "passkey").locator('.arena-deck[data-slug="register"]')
+    one = _col(pg, "passkey").locator('.arena-pdeck[data-slug="register"]')
     box = one.bounding_box()
     assert box["width"] <= 132.5 and box["height"] <= 72.5
-    assert one.locator(".ork-elem").count() == 1 and one.locator(".arena-deck__title").inner_text() == "WebAuthn register"
-    assert one.locator(".arena-deck__line").inner_text().strip() == "0/6 in dev · implementation"                        # as the party's goal row says it
-    assert _col(pg, "passkey").locator('.arena-pgroup[data-group="work"] .arena-deck').count() == 3
+    assert one.locator(".ork-elem").count() == 1 and one.locator(".arena-pdeck__title").inner_text() == "WebAuthn register"
+    assert one.locator(".arena-pdeck__line").inner_text().strip() == "0/6 in dev · implementation"                        # as the party's goal row says it
+    assert _col(pg, "passkey").locator('.arena-pgroup[data-group="work"] .arena-pdeck').count() == 3
     fold = _col(pg, "passkey").get_by_role("button", name="Flags (4)")
     assert fold.get_attribute("aria-expanded") == "false"
     fold.click()
-    assert fold.get_attribute("aria-expanded") == "true" and _col(pg, "passkey").locator('.arena-pgroup[data-group="flags"] .arena-deck').count() == 4
-    assert _groups(pg, "website") == ["Planning", "Waits for main"] and _col(pg, "website").locator(".arena-deck").count() == 2
-    assert _col(pg, "ideas").locator(".arena-deck").count() == 5 and _col(pg, "release").get_by_role("button", name="Flags (2)").count() == 1
+    assert fold.get_attribute("aria-expanded") == "true" and _col(pg, "passkey").locator('.arena-pgroup[data-group="flags"] .arena-pdeck').count() == 4
+    assert _groups(pg, "website") == ["Planning", "Waits for main"] and _col(pg, "website").locator(".arena-pdeck").count() == 2
+    assert _col(pg, "ideas").locator(".arena-pdeck").count() == 5 and _col(pg, "release").get_by_role("button", name="Flags (2)").count() == 1
     fold.click()
-    assert _col(pg, "passkey").locator('.arena-pgroup[data-group="flags"] .arena-deck').count() == 0
+    assert _col(pg, "passkey").locator('.arena-pgroup[data-group="flags"] .arena-pdeck').count() == 0
     assert not pg.evaluate("document.documentElement.scrollWidth > document.documentElement.clientWidth")
 
 
@@ -173,7 +173,7 @@ def test_an_empty_party_says_nothing_in_it_yet(level):
     host.nodes = [n for n in host.nodes if n["goal"] != "website"]
     host.bump({})
     _project(pg)
-    assert _col(pg, "website").locator(".arena-pcol__empty").inner_text() == "Nothing in Website yet" and _col(pg, "website").locator(".arena-deck").count() == 0
+    assert _col(pg, "website").locator(".arena-pcol__empty").inner_text() == "Nothing in Website yet" and _col(pg, "website").locator(".arena-pdeck").count() == 0
 
 
 def test_a_columns_press_opens_that_party_and_a_decks_press_opens_its_goal(level):
@@ -183,7 +183,7 @@ def test_a_columns_press_opens_that_party_and_a_decks_press_opens_its_goal(level
     pg.locator('.arena[data-goal="website"]').wait_for(timeout=WAIT_MS)
     assert pg.locator('.arena-phead[data-goal="website"][aria-current=true]').count() == 1
     _project(pg)
-    _col(pg, "passkey").locator('.arena-deck[data-slug="signin"]').click()
+    _col(pg, "passkey").locator('.arena-pdeck[data-slug="signin"]').click()
     pg.locator(".board-ideaview").wait_for(timeout=WAIT_MS)
     assert any(a.get("slug") == "signin" for a in _calls(pg, host, "ideas.page"))
     assert pg.locator(".arena-project").count() == 1                                                                    # the level stays under the drawer
@@ -208,14 +208,14 @@ def test_hovering_a_sent_goals_deck_draws_its_links_to_its_pitch_and_its_release
     _project(pg)
     _col(pg, "release").get_by_role("button", name="Flags (2)").click()
     assert pg.locator(".arena-arrow").count() == 0                                                                      # nothing at rest
-    pg.locator('.arena-deck[data-slug="register"]').hover()
+    pg.locator('.arena-pdeck[data-slug="register"]').hover()
     pg.locator('.arena-arrow[data-edge="dark>register"]').wait_for(timeout=WAIT_MS)                                     # the pitch it came from, in Ideation's column
     pg.locator('.arena-arrow[data-edge="register>r14"]').wait_for(timeout=WAIT_MS)                                      # the release it went into
     assert pg.locator(".arena-arrow").count() == 2
     shot(pg, "desk-project.png")
     pg.locator(".arena-pjtop").hover()
     pg.wait_for_function("() => !document.querySelector('.arena-arrow')", timeout=WAIT_MS)
-    pg.locator('.arena-deck[data-slug="dark"]').focus()                                                                 # the keyboard's focus draws them too
+    pg.locator('.arena-pdeck[data-slug="dark"]').focus()                                                                 # the keyboard's focus draws them too
     pg.locator('.arena-arrow[data-edge="dark>register"]').wait_for(timeout=WAIT_MS)
 
 

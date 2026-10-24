@@ -4,16 +4,16 @@
 // §65.2) —, Operations when the project has them, then *+ New party*. One party is open, the one the board shows, with its body under its heading (`body`: goals.js `Left`);
 // a press on a closed heading shows that party (the party switch: the board redraws in place, the party kept per device), a press on the open one does nothing. ↑ and ↓ move between
 // the headings. A switch says `ideas.shown` (spec 68 §7.9). A new party saved gathers its seats' heads onto its heading's head (spec 63 §3, goaltabs.js `gatherInto`). The column scrolls under the project's line.
-import { useEffect, useLayoutEffect, useRef } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
-import { Head, Icon, Sign } from "../orkui.js";
+import { Elem, Head, Icon, Sign } from "../orkui.js";
 import { track, OPS, PROJECT } from "../board/store.js";
 import { keepGoal } from "../board/tracks.js";
 import { mapData } from "../shell/store.js";
 import { command } from "../link.js";
 import { dialog, openDialog } from "../shell/modals.js";
 import { ProjectSwitcher } from "../shell/projects.js";
-import { dropGather, gather, leaveParty } from "./arenastate.js";
+import { clearPicks, dropGather, gather, leaveParty, picks } from "./arenastate.js";
 import { reducedMotion } from "./motion.js";
 import { countTip, countWords, plural } from "./arenawords.js";
 import { gatherInto, partiesOf, shownOf } from "./goaltabs.js";
@@ -46,6 +46,53 @@ function Heading({ x, open, want }) {
     <span class="arena-phead__count" title=${countTip(g, nodes)}>${countWords(g, nodes)}</span>
     <${WaitSign} n=${stops} failed=${x.failed} name=${name} />
   </button>`;
+}
+
+/** Opens a closed party from its line (spec 72 §1.3): shown as a press on its heading would, then with `goal` alone picked into its filter (spec 50 §3.5), or with no pick. */
+function openWith(slug, goal, want) {
+  show(slug, want);
+  if (goal) picks.value = { ...picks.value, [slug]: [goal] }; else clearPicks(slug);
+}
+
+/** A closed party's goals at work, in one quiet line under its heading (spec 72, decisions §87): each its element and short name, joined by ·, what does not fit ending *and k more*;
+ *  none at work, no line. Drawn in full first and measured (`fit` follows the goals and the width); a name is never cut in the middle. */
+function AtWork({ x, want }) {
+  const mine = x.nodes.filter((n) => n.state === "working"), line = useRef();
+  const sig = mine.map((n) => `${n.slug}|${n.short || n.title}|${n.element}`).join("\n");
+  const [fit, setFit] = useState({ sig: "", n: mine.length });
+  const measured = fit.sig === sig;
+  useLayoutEffect(() => {
+    const el = line.current;
+    if (!el || measured || !mine.length) return;
+    const sizes = [...el.querySelectorAll("[data-measure=item]")].map((e) => Math.ceil(e.getBoundingClientRect().width)), more = Math.ceil(el.querySelector("[data-measure=more]")?.getBoundingClientRect().width || 0), gap = 0;
+    const room = el.clientWidth - el.querySelector(".arena-atwork__sign").offsetWidth - 6 - 1;
+    let n = 0, used = 0;
+    for (let i = 0; i < sizes.length; i++) {
+      const next = used + (i ? gap : 0) + sizes[i], tail = i < sizes.length - 1 ? gap + more : 0;
+      if (next + tail > room && sizes.length > 1) break;           // a name that does not fit is left to *and k more*, never cut (one goal alone is the exception: it ends in an ellipsis)
+      used = next; n = i + 1;
+    }
+    setFit({ sig, n });
+  }, [sig, measured]);
+  useEffect(() => {                                   // the column's width changed: measure again
+    const el = line.current;
+    if (!el || typeof ResizeObserver !== "function") return;
+    let w = el.clientWidth;
+    const again = () => setFit((f) => ({ ...f, sig: "" })), ro = new ResizeObserver(() => { if (el.clientWidth !== w) { w = el.clientWidth; again(); } });
+    ro.observe(el);
+    document.fonts?.addEventListener?.("loadingdone", again);        // the text face arrives after the first measure: the names are wider
+    return () => { ro.disconnect(); document.fonts?.removeEventListener?.("loadingdone", again); };
+  }, [mine.length > 0]);
+  if (!mine.length) return null;
+  const shown = measured ? mine.slice(0, fit.n) : mine, rest = mine.length - shown.length, words = `At work: ${mine.map((n) => n.title).join(", ")}`;
+  return html`<div class=${cls("arena-atwork", { "is-measuring": !measured })} role="group" aria-label=${words} title=${words} ref=${line}>
+    <span class="arena-atwork__sign"><${Sign} name="work" /></span>
+    ${shown.map((n, i) => html`<span key=${n.slug} class="arena-atwork__item" data-measure=${measured ? undefined : "item"}>
+      ${i ? html`<span class="arena-atwork__dot" aria-hidden="true">·</span>` : null}<button type="button" class="arena-atwork__goal" data-slug=${n.slug} title=${n.title} aria-label=${n.title}
+        onClick=${() => openWith(x.g.slug, n.slug, want)}><${Elem} name=${n.element || ""} /><span class="arena-atwork__name">${n.short || n.title}</span></button></span>`)}
+    ${rest > 0 && html`<button type="button" class="arena-atwork__more" onClick=${() => openWith(x.g.slug, "", want)}>and ${rest} more</button>`}
+    ${!measured && html`<span class="arena-atwork__more" data-measure="more" aria-hidden="true">and 9 more</span>`}
+  </div>`;
 }
 
 function OpsHeading({ ps, open, want }) {
@@ -95,7 +142,7 @@ export function PartyList({ body = null }) {
     <div class="arena-plist" ref=${list} onScroll=${(e) => { scrolled = e.currentTarget.scrollTop; }}>
       ${ps.goals.map((x) => html`<section key=${x.g.slug} class=${cls("arena-party", { "is-open": open(x.g.slug) })}>
         <${Heading} x=${x} open=${open(x.g.slug)} want=${want} />
-        ${open(x.g.slug) && body}
+        ${open(x.g.slug) ? body : html`<${AtWork} x=${x} want=${want} />`}
       </section>`)}
       ${ps.ops && html`<section class=${cls("arena-party", { "is-open": want === OPS })}><${OpsHeading} ps=${ps} open=${want === OPS} want=${want} /></section>`}
       <button type="button" class="arena-pnew" title="One of yours, or its leader, builders and checkers from the library" onClick=${() => openDialog("goal")}>

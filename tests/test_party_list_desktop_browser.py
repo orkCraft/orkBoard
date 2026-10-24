@@ -72,6 +72,8 @@ def test_the_parties_are_listed_in_the_boards_order_then_operations_then_new_par
     assert pg.get_by_role("complementary", name="Parties").count() == 1 and box(pg, ".arena-left")["width"] == 248
     assert all(h.bounding_box()["height"] >= 40 for h in heads.all())
     assert pg.locator(".arena-ptop, .arena-hero, .arena-deck__card, .arena-spread").count() == 0       # the deck, the spread and the big card are gone
+    goals = pg.locator(".arena-pbody .arena-deck").first                                                # the open party's goals: the column's width, every row whole (no project deck's box)
+    assert goals.bounding_box()["width"] > 200 and goals.evaluate("e => e.scrollHeight <= e.clientHeight + 1 && getComputedStyle(e).overflow !== 'hidden'")
     plus.click()
     pg.get_by_role("dialog", name="New party").wait_for(timeout=WAIT_MS)
 
