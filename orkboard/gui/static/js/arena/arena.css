@@ -580,3 +580,20 @@
 .arena-itsparty__chip b { font-weight: inherit; }
 .arena-itsparty__chip small { font: var(--ork-type-caption); text-transform: none; letter-spacing: normal; }
 .arena-itsparty__chip[aria-checked="true"] { --_bg: var(--ork-ink); --_fg: var(--ork-on-ink); --_bd: var(--ork-ink); }
+
+/* -- a closed party's goals at work (spec 72, decisions §87): one quiet line under its heading, 20 px, indented by the head; the buttons are 32 px high and reach into the heading's padding -- */
+.arena-atwork { display: flex; align-items: center; flex-wrap: nowrap; height: 20px; margin: calc(var(--ork-3) * -1) var(--ork-4) var(--ork-3) calc(var(--ork-5) + 24px + var(--ork-4));
+  color: var(--ork-ink-muted); font: var(--ork-type-caption); line-height: 16px; }
+.arena-atwork.is-measuring { visibility: hidden; }
+.arena-atwork.is-measuring .arena-atwork__item { flex: none; }
+.arena-atwork__sign { flex: none; display: inline-flex; margin-right: var(--ork-3); }
+.arena-atwork__item { flex: 0 1 auto; display: inline-flex; align-items: center; min-width: 0; }
+.arena-atwork__dot { flex: none; padding: 0 var(--ork-3); }
+.arena-atwork__goal, .arena-atwork__more { appearance: none; display: inline-flex; align-items: center; gap: var(--ork-2); height: 32px; margin: -6px 0; padding: 0; border: 0; background: none;
+  color: inherit; font: inherit; line-height: 16px; white-space: nowrap; cursor: pointer; }
+.arena-atwork__goal { min-width: 0; }
+.arena-atwork__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.arena-atwork__more { flex: none; padding-left: var(--ork-4); }
+span.arena-atwork__more { cursor: default; height: auto; margin: 0; }
+.arena-atwork__goal:hover, .arena-atwork__more:hover { color: var(--ork-ink); }
+.arena-atwork__goal:focus-visible, .arena-atwork__more:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
