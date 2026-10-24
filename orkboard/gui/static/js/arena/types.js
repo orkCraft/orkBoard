@@ -110,7 +110,7 @@ export function TypesSpread({ g, from, back, done }) {
   const types = g.types || [];
   const pick = (t) => {
     if (turning) return;
-    const go = () => { done(); back?.focus(); openDialog("idea", { goal: g.slug, ...(t ? { type: t } : {}) }); };
+    const go = () => { done(); back?.focus(); openDialog("idea", { goal: g.slug, ...(g.first ? { party: g.first } : {}), ...(t ? { type: t } : {}) }); };
     if (reducedMotion()) { go(); return; }
     setTurning(t?.id || "blank");
     timer.current = setTimeout(go, TURN_MS);

@@ -1,7 +1,6 @@
 """Spec 69 B on the desktop (docs/specs/69-parties-in-the-column.md §1–§5; decisions §84), in a real browser at 1 440 × 900 against the one window's stub host
 (tests/test_arena_desktop_browser.py): the left column is the list of the parties — the project's line at its top (and not in the top bar), a heading for
-each party in the Board's order, Operations, then + New party —; the open party (the one shown) has its leader as a member's row, Process now, its goals and the
-New goal pile under its heading; a heading's head, name (two lines, then cut, the title whole), k/n and the sign of the stops that wait in a closed party;
+each party in the Board's order, Operations, then + New party —; the open party (the one shown) is its leader's heading (spec 73) with its goals and the New and Flags rows under it; a heading's head, name (two lines, then cut, the title whole), k/n and the sign of the stops that wait in a closed party;
 a press on a closed heading shows that party, a press on the open one changes nothing; the keys; the column scrolls under the project's line; Ideation's
 body; Operations; and the new party's heads gathering onto its heading's head. Screenshots to docs/design/img/v1/ when ORKCRAFT_SHOTS is set."""
 from __future__ import annotations
@@ -85,7 +84,8 @@ def test_the_project_switcher_heads_the_column_as_wide_as_it_and_is_not_in_the_t
     assert btn.inner_text().strip() == "shop"
     col, b = box(pg, ".arena-left"), btn.bounding_box()
     assert b["y"] < _heads(pg).first.bounding_box()["y"] and b["y"] - col["y"] < 12                     # at the column's top, over the first heading
-    assert col["width"] - b["width"] <= 24 and b["x"] >= col["x"]                                       # as wide as the column (its gutters)
+    plus = pg.locator(".arena-left > .arena-left__proj .arena-plus").bounding_box()
+    assert col["width"] - b["width"] - plus["width"] - 6 <= 24 and b["x"] >= col["x"]                   # as wide as the column (its gutters, and the + beside it)
     btn.click()
     menu = pg.get_by_role("menu", name="Projects")
     menu.wait_for(timeout=WAIT_MS)
@@ -97,20 +97,19 @@ def test_the_project_switcher_heads_the_column_as_wide_as_it_and_is_not_in_the_t
 def test_the_open_party_has_its_leader_process_now_its_goals_and_the_pile_under_its_heading(listed):
     pg, host = listed
     head = pg.locator(OPEN)
-    assert head.get_attribute("data-goal") == "passkey" and head.get_attribute("aria-expanded") == "true" and head.get_attribute("title") == "Sign in with a passkey is open"
+    assert head.get_attribute("data-goal") == "passkey" and head.get_attribute("aria-expanded") == "true" and head.get_attribute("title") == "Sign in with a passkey · Taskmaster leads · 2 of 11 goals done"
     assert _heads(pg).locator("xpath=self::*[@aria-current='true']").count() == 1                      # one open
     body = pg.locator(".arena-party.is-open .arena-pbody")
     assert body.count() == 1 and _parties(pg).locator(".arena-pbody").count() == 1                      # none under a closed heading
     assert head.locator(".ork-race__head").count() == 1 and head.locator(".arena-plist__head").bounding_box()["width"] == 24
-    member = body.locator(".arena-lead .arena-member")                                                  # the leader as a member's row
-    assert member.count() == 1 and member.locator(".ork-race__head.mid").count() == 1 and "Taskmaster" in member.inner_text()
+    assert head.locator(".arena-phead__leads").inner_text().strip() == "Taskmaster leads" and body.locator(".arena-lead, .arena-member").count() == 0       # its leader is its heading: no row of its own
     power = body.get_by_role("button", name="Process now", exact=False)
-    assert power.count() == 1 and body.locator(".arena-hero, .arena-hero__edge").count() == 0
-    ys = {k: body.locator(sel).first.bounding_box()["y"] for k, sel in (("head", ".arena-lead"), ("goals", ".arena-goals"), ("pile", ".arena-new"))}
-    assert box(pg, OPEN)["y"] < ys["head"] < ys["goals"] < ys["pile"]
+    assert power.count() == 1 and body.locator(".arena-hero, .arena-hero__edge").count() == 0 and power.locator("xpath=ancestor::*[contains(@class, 'arena-frow')]").count() == 1      # Process now: in the New row
+    ys = {k: body.locator(sel).first.bounding_box()["y"] for k, sel in (("goals", ".arena-goals"), ("new", '.arena-frow[data-fold="new"]'), ("flags", '.arena-frow[data-fold="flags"]'))}
+    assert box(pg, OPEN)["y"] < ys["goals"] < ys["new"] < ys["flags"]
     assert body.locator(".arena-goals .arena-goal").count() >= 5 and body.locator(".arena-sec", has_text="Planning").count() == 1
-    assert body.locator(".arena-new__pile").is_visible() and body.locator(".arena-new__words").text_content().startswith("New goal")     # the pile at its foot
-    assert head.bounding_box()["y"] + head.bounding_box()["height"] <= ys["head"]
+    assert body.locator(".arena-new__pile, .arena-new__words").count() == 0 and pg.locator(".arena-left__proj .arena-plus").is_visible()     # no pile at its foot: the + is in the project line
+    assert head.bounding_box()["y"] + head.bounding_box()["height"] <= ys["goals"] + 1
     assert not any(h.locator(".arena-phead__stop").count() for h in _heads(pg).all() if h.get_attribute("aria-current") == "true")      # the open heading has no sign
 
 
@@ -147,7 +146,10 @@ def test_a_closed_party_with_a_stop_wears_one_sign_a_failed_one_in_the_danger_co
 def test_a_press_on_a_closed_heading_shows_that_party_and_closes_the_other_a_press_on_the_open_one_does_nothing(listed):
     pg, host = listed
     assert pg.locator(".arena-team .arena-member").count() == 4                                         # the passkey party's team
-    pg.locator(OPEN).click()                                                                            # the open heading: not a toggle
+    pg.locator(OPEN).click()                                                                            # the open heading stays open: it shows only its leader's work (spec 73 §2)
+    assert pg.locator(OPEN).get_attribute("aria-pressed") == "true"
+    pg.locator(OPEN).click()                                                                            # again: everyone's work
+    assert pg.locator(OPEN).get_attribute("aria-pressed") == "false"
     pg.wait_for_timeout(200)
     assert pg.locator(OPEN).get_attribute("data-goal") == "passkey" and pg.locator(".arena-pbody").count() == 1 and pg.locator(".arena-team .arena-member").count() == 4
     pg.locator('.arena-phead[data-goal="weekly"]').click()
@@ -206,8 +208,8 @@ def test_ideations_body_has_judge_now_and_its_pitches(gui):
         body = pg.locator(".arena-party.is-open .arena-pbody")
         assert pg.locator(OPEN).get_attribute("data-goal") == IDEAS
         assert body.get_by_role("button", name="Judge now", exact=False).count() == 1 and body.get_by_role("button", name="Process now").count() == 0
-        assert body.locator(".arena-lead .arena-member").count() == 1 and body.locator(".arena-goals h2").text_content() == "Pitches"
-        assert "a pitch to judge" in body.locator(".arena-new__words").text_content()
+        assert body.locator(".arena-lead, .arena-member").count() == 0 and body.locator(".arena-goals").get_attribute("aria-label") == "Pitches"
+        assert pg.locator(OPEN + " .arena-phead__leads").inner_text().strip() == "Investor leads" and body.locator(".arena-new__words").count() == 0
     finally:
         pg.close()
     assert not errors, "\n".join(errors)

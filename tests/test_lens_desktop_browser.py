@@ -99,7 +99,7 @@ class TypedHost(StubHost):
 
 
 def _typed_form(pg, name):
-    pg.get_by_role("button", name="New goal: your own, or pick its type").click()
+    pg.locator(".arena-left__proj").get_by_role("button", name="New goal").click()
     pg.locator(".arena-type", has_text=name).click()
     dlg = pg.get_by_role("dialog", name="New goal", exact=True)
     dlg.wait_for(timeout=WAIT_MS)

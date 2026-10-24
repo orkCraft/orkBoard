@@ -221,8 +221,8 @@ def test_edit_the_party_of_ideation_offers_no_seat_change(lab):
 
 def test_new_goal_in_ideation_is_one_box_and_judge_now_tonight_or_hold(lab):
     pg, host = lab
-    assert "a pitch to judge" in pg.locator(".arena-new__words").inner_text()
-    pg.get_by_role("button", name="New goal: a pitch to judge").click()
+    assert pg.locator(".arena-new__words").count() == 0
+    pg.locator(".arena-left__proj").get_by_role("button", name="New goal").click()
     dlg = pg.get_by_role("dialog", name="New goal")
     dlg.wait_for(timeout=WAIT_MS)
     assert dlg.get_by_label("What is the pitch?").count() == 1 and dlg.locator("textarea").count() == 1
@@ -239,7 +239,7 @@ def test_new_goal_in_ideation_is_one_box_and_judge_now_tonight_or_hold(lab):
 
 
 def _new_and_judge(pg, text):
-    pg.get_by_role("button", name="New goal: a pitch to judge").click()
+    pg.locator(".arena-left__proj").get_by_role("button", name="New goal").click()
     dlg = pg.get_by_role("dialog", name="New goal")
     dlg.wait_for(timeout=WAIT_MS)
     dlg.get_by_label("What is the pitch?").fill(text)
@@ -252,7 +252,7 @@ def _new_and_judge(pg, text):
 def test_a_pitch_judging_lights_the_views_one_by_one_then_says_its_answer(lab):
     pg, host = lab
     assert [h.text_content() for h in pg.locator(".arena-pitches .arena-cols__head .arena-lbl:not(.is-blank)").all()] == ["Views", "Decision"]
-    assert pg.locator('.arena-phead[aria-current=true] .arena-phead__count').count() == 1 and "Judge now" in pg.locator(".arena-power").inner_text()
+    assert pg.locator('.arena-phead[aria-current=true] .arena-phead__count').count() == 1 and pg.locator(".arena-raw .arena-power").inner_text() == "Judge now"
     _new_and_judge(pg, "Share a note by link")
     line = pg.locator('.arena-pitch[data-slug="share-a-note"]')
     line.wait_for(timeout=WAIT_MS)
@@ -269,7 +269,7 @@ def test_a_pitch_judging_lights_the_views_one_by_one_then_says_its_answer(lab):
     pg.locator('.arena-pitch[data-slug="share-a-note"][data-state="judged"]').wait_for(timeout=WAIT_MS)
     assert line.locator(".arena-pitch__answer").text_content() == "Invest"
     row = pg.locator('.arena-pitchrow[data-slug="share-a-note"]')
-    assert "judged: Invest" in row.inner_text() and row.locator(".arena-goal__mark.is-alert").count() == 1
+    assert "judged: Invest" in row.locator(".arena-goal__main").get_attribute("title") and row.locator(".arena-goal__mark.is-alert").count() == 1
     assert pg.locator('.arena-hc[data-kind="pitch"]').count() == 2                                 # Needs you's pitch rows, in the one hand
 
 
@@ -302,8 +302,8 @@ def test_a_pitchs_screen_has_the_four_views_the_case_against_and_the_decision_an
     drawer.locator('.shell-pitch[data-state="sent"]').wait_for(timeout=WAIT_MS)
     assert "sent to Ship sync" in drawer.locator(".shell-pitch__after").inner_text()
     pg.keyboard.press("Escape")
-    pg.locator(".arena-sent").click()
-    assert "sent to Ship sync · Sync notes offline" in pg.locator('.arena-pitchrow[data-slug="dark-sync"]').inner_text()
+    pg.locator(".arena-sent .arena-frow__main").click()
+    assert "sent to Ship sync · Sync notes offline" in pg.locator('.arena-pitchrow[data-slug="dark-sync"] .arena-goal__main').get_attribute("title")
 
 
 def test_a_preset_the_project_lacks_opens_new_party_with_it(lab):
@@ -344,9 +344,9 @@ def test_pass_folds_it_under_passed_and_it_can_be_judged_again(lab):
     drawer.get_by_label("Why you pass").fill("Not this quarter")
     drawer.get_by_role("button", name="Pass it").click()
     assert _calls(pg, host, "ideas.pitch_pass")[0] == {"slug": "dark-sync", "why": "Not this quarter", "via": "pitch"}
-    fold = pg.locator(".arena-passed")
+    fold = pg.locator(".arena-passed .arena-frow__main")
     fold.wait_for(timeout=WAIT_MS)
-    assert fold.inner_text() == "Passed (1)" and fold.get_attribute("aria-expanded") == "false"
+    assert fold.get_attribute("aria-label") == "Passed · 1" and fold.get_attribute("aria-expanded") == "false"
     assert pg.locator('.arena-pitch[data-slug="dark-sync"]').count() == 0 and pg.locator('.arena-pitchrow[data-slug="dark-sync"]').count() == 0
     drawer.locator('.shell-pitch[data-state="passed"]').wait_for(timeout=WAIT_MS)
     assert "Not this quarter" in drawer.locator('[data-after="passed"]').inner_text()
@@ -372,7 +372,7 @@ def test_a_failed_pitch_says_why_and_tries_again(lab):
     host.bump({})
     row = pg.locator('.arena-pitchrow[data-slug="lost-views"]')
     row.wait_for(timeout=WAIT_MS)
-    assert "failed · Market view did not answer: try again" in row.inner_text() and row.locator(".arena-goal__mark.is-danger").count() == 1
+    assert "failed · Market view did not answer: try again" in row.locator(".arena-goal__main").get_attribute("title") and row.locator(".arena-goal__mark.is-danger").count() == 1
     drawer = _pitch_screen(pg, "lost-views")
     assert "Market view did not answer" in drawer.locator(".shell-error").inner_text()
     drawer.get_by_role("button", name="Try again").click()

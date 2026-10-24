@@ -1,6 +1,6 @@
 """Goal types and the parties' list on the desktop (docs/specs/52-goal-types.md §3, §4, §6; Tests → B), in a real browser at 1 440 × 900 against the one
 window's stub host (tests/test_arena_desktop_browser.py) with a party whose leader deals the designer's types: the top bar without the parties, the left
-column's list of the parties, the leader's row under its heading, a press on a heading, the New goal pile's types, New goal by a
+column's list of the parties, the leader's row under its heading, a press on a heading, the + 's types, New goal by a
 type (its head, the party fixed, the asks, Refs, the lens, the join line's three shapes), a plan's missing line and its answers, a stop marked once."""
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ pytest.importorskip("playwright.sync_api")
 
 from orkboard.realm import goal_types  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_arena_desktop_browser import ELF, ArenaHost, member  # noqa: E402
+from tests.test_arena_desktop_browser import ELF, ArenaHost, member, solo_lead  # noqa: E402
 from tests.test_shell_browser import _calls, _drawer, _open, _parties, _sent, _show_goal, _stop, box  # noqa: E402
 
 pytestmark = pytest.mark.browser
@@ -84,7 +84,7 @@ def typed(gui):
 
 
 def _types(pg):
-    pg.get_by_role("button", name="New goal: your own, or pick its type").click()
+    pg.locator(".arena-left__proj").get_by_role("button", name="New goal").click()
     deal = pg.get_by_role("dialog", name="New goal for Sign in with a passkey")
     deal.wait_for(timeout=WAIT_MS)
     _dealt(pg)
@@ -106,7 +106,7 @@ def test_the_top_bar_has_no_parties_and_the_left_column_lists_them_over_the_open
     assert top.get_by_role("tablist").count() == 0 and "Sign in with a passkey" not in top.inner_text() and top.locator(".arena-phead, .shell-proj").count() == 0
     assert "Agents" in top.inner_text() and "Stop all" in top.inner_text() and "Orkline" in top.text_content()
     head = pg.locator('.arena-phead[aria-current=true]')
-    assert box(pg, '.arena-phead[aria-current=true]')["y"] < box(pg, ".arena-lead")["y"]                                                       # over the leader's row
+    assert box(pg, '.arena-phead[aria-current=true]')["y"] < box(pg, ".arena-pbody")["y"] and head.locator(".arena-phead__leads").inner_text().strip() == "Product designer leads"      # over its goals: its leader's
     name = head.locator(".arena-phead__name")
     assert name.inner_text() == "Sign in with a passkey"
     assert name.evaluate("e => getComputedStyle(e).fontFamily") != pg.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--ork-font-pixel')")   # a person's words are not in the pixel face
@@ -131,7 +131,7 @@ def test_the_headings_list_the_parties_a_press_shows_one_and_the_keys_move(typed
     heads = col.locator(".arena-phead")
     assert [c.get_attribute("data-goal") for c in heads.all()] == ["passkey", "pricing", "weekly", "@operations"]
     shown = col.locator('.arena-phead[aria-current=true]')
-    assert shown.get_attribute("data-goal") == "passkey" and col.locator(".arena-lead .arena-member").count() == 1
+    assert shown.get_attribute("data-goal") == "passkey" and col.locator(".arena-lead, .arena-left .arena-member").count() == 0
     assert shown.locator(".ork-race__head").count() == 1 and box(pg, '.arena-phead[aria-current=true] .ork-race__head')["width"] == 24
     assert "2/11" in shown.inner_text() and shown.locator(".ork-count").count() == 0 and shown.locator(".ork-sign.work").count() == 1
     assert heads.nth(3).locator(".ork-icon").count() == 1 and "New party" in col.locator(".arena-pnew").inner_text()
@@ -154,7 +154,7 @@ def test_the_headings_list_the_parties_a_press_shows_one_and_the_keys_move(typed
 def test_no_deal_under_reduced_motion(gui):
     pg, host, errors = _open(gui, host=TypesHost(), ready=".arena-phead")
     pg.emulate_media(reduced_motion="reduce")
-    pg.get_by_role("button", name="New goal: your own, or pick its type").click()
+    pg.locator(".arena-left__proj").get_by_role("button", name="New goal").click()
     pg.get_by_role("dialog", name="New goal for Sign in with a passkey").wait_for(timeout=WAIT_MS)
     assert pg.evaluate("document.getAnimations().filter((a) => a.effect?.target?.classList?.contains('arena-spread__card')).length") == 0
     pg.locator(".arena-type", has_text="New screen").click()
@@ -165,10 +165,9 @@ def test_no_deal_under_reduced_motion(gui):
 
 # -- the New goal pile deals the types (§4.1) ---------------------------------------------------------------------------------------
 
-def test_the_pile_deals_your_own_goal_first_then_the_partys_types_the_most_used_first_with_what_they_need(typed):
+def test_the_plus_deals_your_own_goal_first_then_the_partys_types_the_most_used_first_with_what_they_need(typed):
     pg, host = typed
-    words = pg.locator(".arena-new__words")
-    assert "New goal" in words.text_content() and "pick its type" in words.text_content()
+    assert pg.locator(".arena-new, .arena-new__words").count() == 0 and pg.locator(".arena-plus").get_attribute("aria-haspopup") == "dialog"      # no pile at the foot: the + deals them
     deal = _types(pg)
     assert "New goal for Sign in with a passkey" in deal.locator(".arena-spread__cap").inner_text()
     cards = deal.locator(".arena-type")
@@ -191,8 +190,8 @@ def test_the_pile_deals_your_own_goal_first_then_the_partys_types_the_most_used_
 def test_your_own_goal_is_the_first_card_dealt_and_a_press_opens_the_form_headed_your_own_goal(typed):
     """Spec 61 §1, §3 B: *Your own goal* stands first on the spread (the pile's back with its +, dashed), the types after it in the map's order."""
     pg, host = typed
-    pile = pg.get_by_role("button", name="New goal: your own, or pick its type")
-    assert pile.get_attribute("title") == "New goal: your own, or pick its type"
+    pile = pg.locator(".arena-left__proj").get_by_role("button", name="New goal")
+    assert pile.get_attribute("title") == "New goal: in Sign in with a passkey, or another"
     deal = _types(pg)
     cards = deal.locator(".arena-spread__card")
     first = cards.first
@@ -223,8 +222,8 @@ def test_a_map_with_no_types_opens_the_form_of_your_own_goal(typed):
     pg, host = typed
     host.types = []
     host.bump({})
-    pg.wait_for_function("() => !document.querySelector('.arena-new__pile[aria-haspopup]')", timeout=WAIT_MS)
-    pg.get_by_role("button", name="New goal: your own, or pick its type").click()
+    pg.wait_for_function("() => !document.querySelector('.arena-plus[aria-haspopup]')", timeout=WAIT_MS)
+    pg.locator(".arena-left__proj").get_by_role("button", name="New goal").click()
     dialog = pg.get_by_role("dialog", name="New goal", exact=True)
     dialog.wait_for(timeout=WAIT_MS)
     assert dialog.locator(".shell-blank b").text_content() == "Your own goal" and dialog.get_by_label("Party").count() == 1
@@ -355,12 +354,12 @@ def test_a_stop_is_marked_once_by_its_sign_and_a_goal_of_a_type_shows_its_sign(t
     assert row.locator(".arena-goal__type").evaluate("e => getComputedStyle(e).color") != _alert(pg)
     assert row.locator(".arena-goal__mark .ork-sign.alert").count() == 1
     assert row.locator(".arena-goal__main").evaluate("e => getComputedStyle(e).boxShadow") == "none"                    # no alert edge
-    assert row.locator(".arena-goal__line").evaluate("e => getComputedStyle(e).color") != _alert(pg)                    # no alert words
-    assert pg.locator(".arena-goal[data-slug=register] .arena-goal__type").count() == 0                                  # a goal with no type: none
+    assert row.locator(".arena-goal__line").count() == 0 and row.inner_text().strip() == row.locator(".arena-goal__title").inner_text().strip()      # no alert words: no words but its title
+    assert pg.locator(".arena-goal[data-slug=register] .arena-goal__type .ork-sign").count() == 0                       # a goal with no type: no sign (the space is kept)
     failed = pg.locator(".arena-task[data-task=f1]")
     assert failed.evaluate("e => getComputedStyle(e).borderTopColor") == pg.evaluate(
         "(() => { const d = document.createElement('span'); d.style.color = 'var(--ork-danger)'; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; })()")
-    assert pg.locator(".arena-lead .ork-count.warning, .arena-goals .ork-count.warning, .arena-field .ork-count.warning").count() == 0   # no count of the shown party's stops
+    assert pg.locator(".arena-phead[aria-current=true] .ork-count.warning, .arena-goals .ork-count.warning, .arena-field .ork-count.warning").count() == 0   # no count of the shown party's stops
 
 
 def test_two_join_lines_one_ticked_at_a_time_since_one_joins_with_the_goal(typed):
@@ -398,7 +397,7 @@ def test_a_task_card_shows_its_goals_type_sign_top_right_and_a_planning_card_say
     assert "WebAuthn register, Fix a bug" in card.get_attribute("aria-label") and "(WebAuthn register, Fix a bug)" in card.get_attribute("title")
     plain = pg.locator(".arena-task[data-idea=cookie]").first
     assert plain.locator(".arena-task__type").count() == 0 and plain.locator(".arena-task__goal").inner_text() != ""                                    # a goal with no type: the name alone
-    pg.locator(".arena-lead .arena-member").click()                                                                       # the leader's solo: its Planning goals
+    solo_lead(pg, "product-designer")                                                                                     # the leader's solo: its Planning goals
     lead = pg.locator(".arena-solo[data-agent=product-designer]")
     planned = lead.locator(".arena-task[data-slug=recovery]")
     planned.locator(".arena-task__top .arena-task__type .ork-sign.bug").wait_for(timeout=WAIT_MS)

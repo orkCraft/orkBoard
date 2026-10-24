@@ -14,8 +14,9 @@ const fromMap = () => {
   return { parties: [...parties.filter((p) => p.fits !== "pitch"), ...parties.filter((p) => p.fits === "pitch")], suggested: parties.find((p) => p.fits !== "pitch")?.party || parties[0]?.party || "" };
 };
 
-/** `on`: the New goal is the project's (a party's own asks nothing); `typeId`: the goal's type, "" for *Your own goal*. {parties, suggested, picked, pick, typed, ready}. */
-export function usePartyFor(on, typeId = "") {
+/** `on`: the New goal is the project's (a party's own asks nothing); `typeId`: the goal's type, "" for *Your own goal*; `first`: the party shown when New goal came from the + (spec 73 §4.2),
+ *  picked until another is. {parties, suggested, picked, pick, typed, ready}. */
+export function usePartyFor(on, typeId = "", first = "") {
   const [got, setGot] = useState(null), [mine, setMine] = useState("");
   useEffect(() => {
     if (!on) return undefined;
@@ -25,7 +26,7 @@ export function usePartyFor(on, typeId = "") {
     return () => { live = false; };
   }, [on, typeId]);
   const parties = got?.parties || [], suggested = got?.suggested || parties[0]?.party || "";
-  const picked = parties.some((p) => p.party === mine) ? mine : suggested;
+  const picked = parties.some((p) => p.party === mine) ? mine : parties.some((p) => p.party === first) ? first : suggested;
   return { parties, suggested, picked, pick: setMine, typed: !!typeId, ready: !!got && !!picked };
 }
 

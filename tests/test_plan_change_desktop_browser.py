@@ -14,7 +14,7 @@ from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_arena_desktop_browser import ArenaHost, pip  # noqa: E402
 from tests.test_deal_start_desktop_browser import RECORD, _centre, _ms, _seen  # noqa: E402
 from tests.test_map_desktop_browser import node  # noqa: E402
-from tests.test_shell_browser import _drawer, _sent, _stop  # noqa: E402
+from tests.test_shell_browser import _drawer, _sent, _stop, _open_slug  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -139,8 +139,8 @@ def quiet(gui):
 
 
 def _spec(pg, slug="export"):
-    """A goal's spec in the drawer (the › on its row)."""
-    pg.locator(f".arena-goal[data-slug={slug}] .arena-goal__open").click()
+    """A goal's spec in the drawer (a second press on its row)."""
+    _open_slug(pg, slug)
     pg.locator(".shell-preview .board-ideaview").wait_for(timeout=WAIT_MS)
     return pg.locator(".shell-preview")
 
@@ -207,7 +207,7 @@ def test_a_party_the_taskmaster_leads_or_the_map_does_not_know_says_the_taskmast
 
 def test_before_the_start_a_changed_spec_says_so_and_re_plan_sends_the_plan(quiet):
     pg, host = quiet
-    pg.locator(".arena-goal[data-slug=recovery] .arena-goal__open").click()                           # its plan ready, not started: the plan screen, and from it the spec
+    _open_slug(pg, "recovery")                                                                        # its plan ready, not started: the plan screen, and from it the spec
     pg.get_by_role("button", name="Open the spec").click()
     pg.locator(".shell-preview .board-ideaview").wait_for(timeout=WAIT_MS)
     line = _line(pg)
@@ -450,6 +450,6 @@ def test_take_and_keep_on_the_plan_screen_answer_without_the_hand_and_deal_nothi
 
 def test_a_plan_screen_without_a_change_has_no_block(quiet):
     pg, host = quiet
-    pg.locator(".arena-goal[data-slug=recovery] .arena-goal__open").click()
+    _open_slug(pg, "recovery")
     _drawer(pg).locator(".board-plan").first.wait_for(timeout=WAIT_MS)
     assert pg.locator(".shell-change").count() == 0

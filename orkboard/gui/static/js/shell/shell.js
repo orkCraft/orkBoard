@@ -16,7 +16,7 @@ import { Arena } from "../arena/arena.js";
 import { solo, spread, picks, peek, clearPicks } from "../arena/arenastate.js";
 import { closeSpread } from "../arena/spread.js";
 
-const sheets = ["../board/board.css", "./shell.css", "../arena/arena.css"].map((p) => new URL(p, import.meta.url).href);
+const sheets = ["../board/board.css", "./shell.css", "../arena/arena.css", "../arena/column.css"].map((p) => new URL(p, import.meta.url).href);
 if (typeof document !== "undefined") {
   for (const href of sheets) {
     if (!document.querySelector(`link[href="${href}"]`)) {

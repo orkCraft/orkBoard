@@ -27,19 +27,20 @@ const MAX_PX = 1600;                        // as the phone's (pwa/shell-idea-fi
 const PICTURE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 const REFS = "refs";                        // realm/goal_types.py REFS: the id of Refs' links among a goal's asks
 
-/** New goal. On the project's level (`goal` is PROJECT, spec 70 §4) it has no party at first: the Orkmaster suggests one (arena/projectparty.js) and **Its party** picks it. */
-export function IdeaDialog({ goal = "", type = null }) {
+/** New goal. On the project's level (`goal` is PROJECT, spec 70 §4) it has no party at first: the Orkmaster suggests one (arena/projectparty.js) and **Its party** picks it;
+ *  from the + at the Orkmaster (spec 73 §4) `party` is the party shown, picked at first. */
+export function IdeaDialog({ goal = "", type = null, party = "" }) {
   const project = goal === PROJECT;
-  return type ? html`<${TypedGoal} goal=${goal} type=${type} project=${project} />` : html`<${BlankGoal} goal=${goal} project=${project} />`;
+  return type ? html`<${TypedGoal} goal=${goal} type=${type} project=${project} shown=${party} />` : html`<${BlankGoal} goal=${goal} project=${project} shown=${party} />`;
 }
 
 /** The party field of New goal on the project's level: the Orkmaster's suggestion and the parties as chips (arena/projectparty.js). */
 const partyField = (pf) => html`<${ItsParty} pf=${pf} />`;
 
-function BlankGoal({ goal: first = "", project = false }) {
+function BlankGoal({ goal: first = "", project = false, shown: at = "" }) {
   const parties = goalList();
   const [text, setText] = useState("");
-  const pf = usePartyFor(project, "");
+  const pf = usePartyFor(project, "", at);
   const [own, setOwn] = useState(project ? "" : first || (parties.some((g) => g.slug === track.value) ? track.value : parties[0]?.slug) || "");
   const party = project ? pf.picked : own, setParty = project ? pf.pick : setOwn;
   const [mine, setMine] = useState("");                      // the person's own priority; "" = the party's
@@ -166,8 +167,8 @@ function Refs({ links, setLinks, pictures, pick }) {
 /** The party's own entry of a goal type (its `missing` says who it lacks, in the join line's shape); the type as the project's union has it when the party does not offer it. */
 const ownType = (party, t) => (mapData.value?.goals || []).find((x) => x.slug === party)?.types?.find((x) => x.id === t.id) || t;
 
-function TypedGoal({ goal: first, type: t0, project = false }) {
-  const pf = usePartyFor(project, t0.id);
+function TypedGoal({ goal: first, type: t0, project = false, shown: at = "" }) {
+  const pf = usePartyFor(project, t0.id, at);
   const party = project ? pf.picked : first, t = project ? ownType(party, t0) : t0;
   const g = goalList().find((x) => x.slug === party) || {};
   const shown = (mapData.value?.goals || []).find((x) => x.slug === party) || {};

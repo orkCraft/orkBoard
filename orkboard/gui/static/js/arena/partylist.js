@@ -1,8 +1,9 @@
 // The parties in the left column (docs/specs/69-parties-in-the-column.md, decisions §84; it was the party's deck, spec 52 §3, and the parties' spread): from the top the
 // project switcher (shell/projects.js, as wide as the column), then a heading for each party in the Board's order — its leader's head, its whole name (two lines, then cut,
 // the title whole), *k/n*, the work sign while it is at work and, on a closed party, one sign for the stops that wait in it where they cannot be seen (! , ✗ when one failed:
-// §65.2) —, Operations when the project has them, then *+ New party*. One party is open, the one the board shows, with its body under its heading (`body`: goals.js `Left`);
-// a press on a closed heading shows that party (the party switch: the board redraws in place, the party kept per device), a press on the open one does nothing. ↑ and ↓ move between
+// §65.2) —, Operations when the project has them, then *+ New party*. One party is open, the one the board shows, with its body under its heading (`body`: goals.js `Left`); the open heading
+// is its leader's (spec 73 §2): the leader's head, the party's name and *<leader> leads* under it, the work sign and *k/n*, no row of the leader's in the body. The project's line also holds the **+** of New goal (newgoal.js).
+// a press on a closed heading shows that party (the party switch: the board redraws in place, the party kept per device), a press on the open one shows only its leader's work, or everyone's again (the leader's row did, spec 73 §2). ↑ and ↓ move between
 // the headings. A switch says `ideas.shown` (spec 68 §7.9). A new party saved gathers its seats' heads onto its heading's head (spec 63 §3, goaltabs.js `gatherInto`). The column scrolls under the project's line.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
@@ -13,10 +14,11 @@ import { mapData } from "../shell/store.js";
 import { command } from "../link.js";
 import { dialog, openDialog } from "../shell/modals.js";
 import { ProjectSwitcher } from "../shell/projects.js";
-import { clearPicks, dropGather, gather, leaveParty, picks } from "./arenastate.js";
+import { clearPicks, dropGather, gather, leaveParty, picks, solo } from "./arenastate.js";
 import { reducedMotion } from "./motion.js";
 import { countTip, countWords, plural } from "./arenawords.js";
 import { gatherInto, partiesOf, shownOf } from "./goaltabs.js";
+import { NewGoalPlus } from "./newgoal.js";
 import { THE_PROJECT } from "./projectwords.js";
 
 let scrolled = 0;                                       // the column's scroll, kept across the redraw a switch makes (the party is keyed, the list is drawn again)
@@ -35,13 +37,20 @@ function WaitSign({ n, failed, name }) {
   return html`<span class=${cls("arena-phead__stop", failed ? "is-danger" : "is-alert")} title=${`${plural(n, "waits", "wait")} in ${name}`}><${Sign} name=${failed ? "cross" : "alert"} /></span>`;
 }
 
-/** A party's heading: one button, its leader's head, its name, the work sign, *k/n*, the stop sign (closed only). */
+/** Who leads a party, by name (Ideation's is the Investor). */
+const leaderOf = (g) => g.leader?.name || (g.party || []).find((m) => m.band === "lead")?.name || (g.ideation ? "Investor" : "Taskmaster");
+
+/** A party's heading: one button, its leader's head, its name (the open one's has *<leader> leads* under it), the work sign, *k/n*, the stop sign (closed only). */
 function Heading({ x, open, want }) {
-  const { g, nodes, working } = x, name = g.short || g.title, stops = open ? 0 : x.stops;
+  const { g, nodes, working } = x, name = g.short || g.title, stops = open ? 0 : x.stops, leads = `${leaderOf(g)} leads`;
+  const lead = g.leader?.slug || "taskmaster", alone = open && solo.value === lead;        // the open heading is its leader's: a press shows only its work (spec 73 §2)
+  const press = () => (open ? (solo.value = alone ? "" : lead) : show(g.slug, want));
   return html`<button type="button" class=${cls("arena-phead", { "is-open": open })} data-goal=${g.slug} data-state=${open ? "open" : "closed"} aria-expanded=${open} aria-current=${open ? "true" : undefined}
-      title=${open ? `${name} is open` : `Open ${name}`} onClick=${() => show(g.slug, want)}>
+      aria-pressed=${open ? String(alone) : undefined}
+      title=${open ? `${name} · ${leads} · ${countTip(g, nodes)}` : `Open ${name}`} onClick=${press}>
     <span class="arena-plist__head">${g.leader?.head ? html`<${Head} race=${g.leader.head.race} tier=${g.leader.head.tier} />` : null}</span>
-    <span class="arena-phead__name" title=${g.title}>${name}</span>
+    ${open ? html`<span class="arena-phead__who"><span class="arena-phead__name" title=${g.title}>${name}</span><span class="arena-phead__leads">${leads}</span></span>`
+      : html`<span class="arena-phead__name" title=${g.title}>${name}</span>`}
     ${working && html`<span class="arena-phead__work"><${Sign} name="work" label="at work" /></span>`}
     <span class="arena-phead__count" title=${countTip(g, nodes)}>${countWords(g, nodes)}</span>
     <${WaitSign} n=${stops} failed=${x.failed} name=${name} />
@@ -138,7 +147,7 @@ export function PartyList({ body = null }) {
   const ork = m?.project?.orkmaster, level = want === PROJECT;          // the project's level: every heading closed, the project's line marked as an open heading is
   return html`<aside class="arena-left" aria-label="Parties" ref=${root} onKeyDown=${move}>
     <div class=${cls("arena-left__proj", { "has-ork": !!ork, "is-open": level && !!ork })}>
-      ${ork && html`<${Orkmaster} ork=${ork} open=${level} want=${want} />`}<${ProjectSwitcher} /></div>
+      ${ork && html`<${Orkmaster} ork=${ork} open=${level} want=${want} />`}<${NewGoalPlus} want=${want} /><${ProjectSwitcher} /></div>
     <div class="arena-plist" ref=${list} onScroll=${(e) => { scrolled = e.currentTarget.scrollTop; }}>
       ${ps.goals.map((x) => html`<section key=${x.g.slug} class=${cls("arena-party", { "is-open": open(x.g.slug) })}>
         <${Heading} x=${x} open=${open(x.g.slug)} want=${want} />

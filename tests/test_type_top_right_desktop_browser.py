@@ -11,6 +11,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
+from tests.test_arena_desktop_browser import solo_lead  # noqa: E402
 from tests.test_goal_types_desktop_browser import typed  # noqa: E402,F401  (fixture)
 
 pytestmark = pytest.mark.browser
@@ -53,7 +54,7 @@ def test_a_task_card_has_its_goals_type_top_right_in_its_elements_colour_no_stat
 def test_a_planning_card_says_its_type_or_planning_a_dim_goals_type_is_faint_and_a_goal_with_no_type_has_none(typed):
     pg, host = typed
     _give(host)
-    pg.locator(".arena-lead .arena-member").click()                                                                                       # the leader's solo: its Planning goals
+    solo_lead(pg, "product-designer")                                                                                                     # the leader's solo: its Planning goals
     lead = pg.locator(".arena-solo[data-agent=product-designer]")
     plan = lead.locator(".arena-task[data-slug=recovery]")
     plan.locator(".arena-task__top .arena-task__type .ork-sign.bug").wait_for(timeout=WAIT_MS)
@@ -80,6 +81,7 @@ def test_a_spreads_cards_keep_the_type_top_right_and_the_goals_list_draws_the_ty
     spread.wait_for(timeout=WAIT_MS)
     cards = spread.locator(".arena-spread__card")
     assert cards.count() == 2
+    pg.wait_for_function("() => document.getAnimations().length === 0", timeout=WAIT_MS)                  # the deal is over: the boxes are read at rest
     for c in cards.all():
         elem, sign = c.locator(".arena-task__top .ork-elem").bounding_box(), c.locator(".arena-task__top .arena-task__type .ork-sign").bounding_box()
         phase = c.locator(".arena-task__phase").bounding_box()
@@ -88,6 +90,6 @@ def test_a_spreads_cards_keep_the_type_top_right_and_the_goals_list_draws_the_ty
     spread.wait_for(state="hidden", timeout=WAIT_MS)
     row = pg.locator(".arena-goal[data-slug=register]")
     row.locator(".arena-goal__type .ork-sign.bug").wait_for(timeout=WAIT_MS)
-    assert row.locator(".arena-goal__type .ork-sign").evaluate(BG) == row.locator(".arena-goal__back .ork-elem").evaluate(BG) == pg.evaluate(PROBE, "--ork-elem-meadow")
-    assert row.locator(".arena-goal__title").evaluate("e => e.firstElementChild.classList.contains('arena-goal__type')")                  # the list keeps its place: before the title
-    assert pg.locator(".arena-goal[data-slug=pagewords] .arena-goal__type").count() == 0
+    assert row.locator(".arena-goal__type .ork-sign").evaluate(BG) == row.locator(".ork-elem").evaluate(BG) == pg.evaluate(PROBE, "--ork-elem-meadow")
+    assert row.locator(".arena-goal__type").bounding_box()["x"] < row.locator(".arena-goal__title").bounding_box()["x"]                  # the list keeps its place: before the title
+    assert pg.locator(".arena-goal[data-slug=pagewords] .arena-goal__type .ork-sign").count() == 0
