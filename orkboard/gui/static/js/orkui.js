@@ -24,6 +24,12 @@ export function Elem({ name = "", big = false, dim = false }) {
   return html`<span class=${`ork-elem ${name || "dust"}${big ? " big" : ""}${dim || !name ? " dim" : ""}`} aria-hidden="true"></span>`;
 }
 
+/** A goal's moon (orkUI's moons/, spec 74 §6): its tasks merged of its tasks, new, crescent, half, gibbous or full, 14 x 14 (`big` 28 x 28). Shown, never named:
+ *  `aria-hidden`; its words (*working 3/7*) are beside it. */
+export function Moon({ phase, big = false }) {
+  return html`<span class=${`ork-moon ${phase}${big ? " big" : ""}`} aria-hidden="true"></span>`;
+}
+
 /** orkUI's chevron: down (a menu, an open fold), up, right (a closed fold) or left. */
 export function Chev({ dir = "down" }) {
   return html`<i class=${`ork-chev${dir === "down" ? "" : ` ${dir}`}`} aria-hidden="true"></i>`;

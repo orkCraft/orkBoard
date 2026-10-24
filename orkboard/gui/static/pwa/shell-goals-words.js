@@ -11,6 +11,15 @@ export const FLAGS_SHOWN = 10;                                       // the newe
 export const FLAG_ROW = 6;                                           // the flag line's row holds the elements of this many of its goals (spec 64 §1.2)
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
+const MOONS = ["new", "crescent", "half", "gibbous", "full"];
+/** A goal's moon (spec 74 §6): its tasks merged of its tasks, in quarters: new, crescent, half, gibbous, full (all merged). Null for a raw goal, a pitch, a release and a goal with no
+ *  tasks (a dropped task is not counted). `n`: a node of the Map, or a goal's screen's state, tasks and pitch put over its node. */
+export function moonOf(n) {
+  if (!n || n.state === "raw" || n.pitch || n.release || n.type?.id === "release") return null;
+  const tasks = (n.tasks || []).filter((t) => t.state !== "dropped");
+  return tasks.length ? MOONS[Math.round((tasks.filter((t) => t.state === "merged").length / tasks.length) * 4)] : null;
+}
+
 /** A flag's date, *14 Oct*, "" when it does not read. */
 export function flagDate(at) {
   const d = new Date(at);
@@ -90,13 +99,13 @@ export const waitWords = (n) => `${plural(n, "flag")} ${n === 1 ? "waits" : "wai
 export const inMain = (gate, slug) => Boolean(gate && (gate.same || !(gate.ideas || []).some((i) => i.slug === slug)));
 
 /** What the goals bar and the Goals sheet list for one party: its goals at work, in Planning (the ones the leader has read and the new ones), the done ones that wait for main and its flags. A row:
- *  {slug, title, short, element, raw, type, line, care, mark, markTip, edges, open} (`type`: the goal's type, {id, name, sign}, or null); `model`: shell-arena-words.js `modelOf`. */
+ *  {slug, title, short, element, raw, moon, type, line, care, mark, markTip, edges, open} (`type`: the goal's type, {id, name, sign}, or null); `model`: shell-arena-words.js `modelOf`. */
 export function goalsOf(st, model) {
   if (model.goal?.ideation) return pitchesOf(model, (slug) => partyNameOf(st, slug));
   const nodes = model.nodes;
   const done = (n) => n.state === "done";
   const edges = (n) => Math.min(3, (n.tasks || []).filter((t) => t.state !== "merged" && t.state !== "dropped").length);
-  const row = (n, rest) => ({ slug: n.slug, title: n.title, short: n.short || n.title, element: n.element || "", raw: n.state === "raw", edges: edges(n), open: { kind: "idea", slug: n.slug },
+  const row = (n, rest) => ({ slug: n.slug, title: n.title, short: n.short || n.title, element: n.element || "", raw: n.state === "raw", moon: moonOf(n), edges: edges(n), open: { kind: "idea", slug: n.slug },
     type: n.type?.sign ? n.type : null, care: false, mark: "", markTip: "", ...rest, ...waiting(n, rest) });
   /** A goal that waits for another party's goal (spec 71 §6): orkUI's ← sign is its state sign when nothing louder is, *waits for <party> · <goal>* is in its words. */
   const waiting = (n, rest) => {

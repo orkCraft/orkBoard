@@ -87,4 +87,4 @@ async def test_new_and_flags_are_folded_rows_of_44_px_with_process_now_and_what_
 
 def test_the_service_worker_has_the_new_version():
     sw = (Path(pwa.__file__).parent / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")
-    assert 'const CACHE = "orkcraft-app-v82";' in sw
+    assert 'const CACHE = "orkcraft-app-v83";' in sw

@@ -5,7 +5,8 @@
 // The goal's route (spec 68 §7.1, arena/route.js) stands at the top of its screen.
 import { useState } from "preact/hooks";
 import { html, cls } from "../html.js";
-import { Who, Icon } from "../orkui.js";
+import { Who, Icon, Moon } from "../orkui.js";
+import { moonOf } from "../arena/goalwords.js";
 import { toast } from "../link.js";
 import { stateWords, board, PRIORITY_WORDS, holdWords } from "./store.js";
 import { Stages } from "./stages.js";
@@ -226,10 +227,12 @@ export function IdeaView({ p }) {
   const [section, setSection] = useState("");
   const [sure, setSure] = useState(false);
   const row = board.value?.ideas.find((i) => i.slug === p.slug), lead = leaderOf(p.track);
+  const moon = moonOf({ ...(mapData.value?.nodes || []).find((n) => n.slug === p.slug), state: p.state, tasks: p.plan?.tasks, pitch: p.pitch });   // its tasks merged, spec 74 §6
   const drop = async () => { await run("ideas.drop", { slug: p.slug }); closePreview(); };
   return html`<div class="board-ideaview">
     <${RouteLine} steps=${p.route} goal=${p.slug} />
     <div class="board-bar">
+      ${moon && html`<${Moon} phase=${moon} big=${true} />`}
       <span class="board-state" data-state=${p.state}>${stateWords({ state: p.state, progress: planProgress(p.plan) })}</span>
       ${p.size && html`<span class="board-size kit-well">${p.size}</span>`}
       ${row?.risk && html`<span class="board-chip" title=${(row.risk_triggers || []).join(", ")}>Risk: ${row.risk[0].toUpperCase() + row.risk.slice(1)}</span>`}
