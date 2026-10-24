@@ -4,7 +4,7 @@
 // that is not shown (a task under another card of its stack, or one the filter has taken away, or one scrolled out of its column) draws none. Only
 // with a fine pointer (`(hover: hover)`); the keyboard's focus draws them too. The card's foot keeps the words (stacks.js `footParts`).
 import { useLayoutEffect, useState } from "preact/hooks";
-import { html } from "../html.js";
+import { html, cls } from "../html.js";
 import { spread, taskHover, taskHoverBy } from "./arenastate.js";
 import { waitersOf, waitsForOf } from "./arenawords.js";
 
@@ -29,7 +29,7 @@ export function segment(key, a, b) {
 
 /** The svg layer that draws `lines` (from `segment`) over its positioned host. */
 export function ArrowLines({ lines }) {
-  return html`<svg class="arena-arrows" aria-hidden="true">${lines.map((l) => html`<g key=${l.key} class="arena-arrow" data-edge=${l.key} data-kind=${l.kind || undefined}>
+  return html`<svg class="arena-arrows" aria-hidden="true">${lines.map((l) => html`<g key=${l.key} class=${cls("arena-arrow", { "is-leaving": !!l.leaving })} data-edge=${l.key} data-kind=${l.kind || undefined}>
     <line x1=${l.x1} y1=${l.y1} x2=${l.x2} y2=${l.y2} style=${`transform-origin: ${l.x1.toFixed(1)}px ${l.y1.toFixed(1)}px`} /><polygon points=${l.head} /></g>`)}</svg>`;
 }
 

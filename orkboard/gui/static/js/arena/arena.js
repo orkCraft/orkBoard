@@ -106,6 +106,9 @@ function Party({ m, g }) {
   </div>`;
 }
 
+/** The empty Board's faint stars (spec 74 §4): a decorative layer behind the words, pure CSS (arena.css `.arena-stars`): two still lattices, three that twinkle. */
+const Stars = () => html`<span class="arena-stars" aria-hidden="true"><i class="is-frame" /><i class="is-faint" /><i class="is-ink" /><i class="is-ink" /><i class="is-ink" /></span>`;
+
 export function Arena() {
   useNarrow();
   const m = mapData.value, flags = flagsData.value;
@@ -119,7 +122,8 @@ export function Arena() {
   if (!g && want) return html`<p class="ok-tone-muted arena-note">Reading the board…</p>`;           // a party just saved: the Map has it in a moment
   if (!g) {
     const ops = town.value?.ops_rev !== undefined;                                    // no party, but Operations' stops still wait in the one hand
-    return html`<div class="arena arena-ops"><${PartyList} /><div class="arena-ops__main"><div class="shell-empty arena-note"><p>No parties yet</p>
+    return html`<div class="arena arena-ops"><${PartyList} /><div class="arena-ops__main"><div class="shell-empty arena-note arena-void"><${Stars} /><p>No parties yet</p>
+      <p class="arena-cap">Make a party, then write it a goal in plain words, like a spell. Its orks do the work; you look at it before it goes in.</p>
       <p><button class="ork-btn primary" onClick=${() => openDialog("goal")}>New party</button>
         <button class="ork-btn" title="A goal needs a party: this makes one first" onClick=${() => openDialog("goal", { then: "idea" })}>New goal</button></p></div>
       ${ops && html`<div class="arena-stops"><${Stops} stops=${handFor(m, "", false)} /><${Limits} /></div>`}</div></div>`;

@@ -1,7 +1,7 @@
 // Waits for your look (docs/specs/49-one-window.md §5.5, docs/specs/50-parties-and-goals.md §3.5): the right column. A result per row, oldest first —
 // its goal's element and name (one line), its title (a link to the result in the drawer), who made it, its tests or a check's findings, its size and price,
 // and Merge into dev · Send back · Drop (Review's own ResultActions). A result is not a signal (decisions §54.1): no alert colour. The goals the filter takes
-// away leave with the rest. At the top, While you were away and Last week (Cards); at the foot, Last week (MapFoot). One that was merged a moment ago folds out once.
+// away leave with the rest. At the top, While you were away and Last week (Cards); at the foot, Last week (MapFoot). One that was merged a moment ago folds out once, its goal's element stamped (spec 74 §1); one sent back leaves toward the field (§2).
 import { useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Sign } from "../orkui.js";
@@ -28,8 +28,8 @@ function Result({ r, nodes, sign = "", quiet = false, fresh = false }) {
     <span class=${cls("arena-result__tests", `is-${t.tone}`)}>${t.mark && html`<${Sign} name=${t.mark} /> `}${t.text}${t.names.length ? html` <span class="ok-tone-muted">${t.names.join(", ")}</span>` : ""}</span>
     <span class="arena-cap">${size}</span>
     ${html`<${Found} r=${r} />${r.conflict && html`<p class="ok-tone-error shell-conflict">⚠ ${r.conflict}</p>`}`}
-    ${leaving ? html`<span class="arena-cap">${sign === "check" ? `merged into ${review.value?.into || "dev"}` : sign === "cross" ? "dropped" : ""}</span>` : html`<${ResultActions} r=${r} />`}
-    ${!!sign && html`<span class="arena-task__flash">${sign !== "fade" && html`<${Sign} name=${sign} big=${true} />`}</span>`}
+    ${leaving ? html`<span class="arena-cap">${sign === "check" ? `merged into ${review.value?.into || "dev"}` : sign === "cross" ? "dropped" : sign === "back" ? "sent back" : ""}</span>` : html`<${ResultActions} r=${r} />`}
+    ${!!sign && sign !== "back" && html`<span class="arena-task__flash">${sign === "check" ? html`<${Elem} name=${el.name} dim=${el.dim} big=${true} />` : sign !== "fade" && html`<${Sign} name=${sign} big=${true} />`}</span>`}
   </div>`;
 }
 
