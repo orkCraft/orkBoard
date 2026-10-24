@@ -49,3 +49,10 @@ that wraps to two at most, then *and k more*); a tap closes the sheet and switch
   scroll; the service worker's version.
 - Each part: the critical tests (CLAUDE.md "Alpha"), its files' tests, `tests/test_gui_wording.py`,
   `tests/test_design_system.py`; C also `tests/test_pwa.py`.
+
+## As built (C)
+- `pwa/shell-where.js` `workLine(c)`: under each party's row of the parties' sheet but the one shown (nor Operations), a `.where-work` group of the party's nodes whose `state` is `working`, in the map's order: orkUI's `work` sign, then per goal a 44 px button (its element, its short name; `aria-label` and `title` its whole title) joined by *·*. The line's name is *At work: <whole titles of all at work>*. No goal at work: no line, so the sheet is as before.
+- It names **two** goals, then *and k more* (a button, joined by a gap and no *·*, so no dot dangles at a row's end); the line wraps to two rows at most at 390 px, no sideways scroll. The count is fixed, not measured: the sheet is drawn before it is open.
+- A tap puts the sheet away, says `ideas.shown`, sets `st.picks[party]` to that goal alone (*and k more*: to none) and picks the party, as the route's steps do (`shell-route.js`); `shell-goals.js` needed no change.
+- `app.css`: `.where-work*` (caption face, muted ink, the row's indent); `sw.js` `CACHE` is `orkcraft-app-v79`, and every phone test's pin with it.
+- `tests/test_pwa_at_work_line_browser.py`: the line and its words, the party shown and a party with none at work have no line, five end with *and 3 more*, a tap picks the goal, *and k more* shows the party whole, 44 px, muted ink, no nested buttons, no sideways scroll, the worker's version.

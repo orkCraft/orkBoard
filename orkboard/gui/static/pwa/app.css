@@ -911,6 +911,12 @@ dialog.sheet.top { margin: 0 0 auto; border-top: 0; border-bottom: var(--ork-dou
   clip-path: var(--ork-notch); color: var(--ork-ink); }
 .where-row.is-on { background: var(--ork-raised); border-color: var(--ork-ink); box-shadow: inset 2px 0 0 var(--ork-ink); }
 .where-row:focus-visible, .where-new:focus-visible, .goals__about:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.where-work { display: flex; flex-wrap: wrap; align-items: center; column-gap: var(--ork-3); margin: calc(-1 * var(--ork-2)) 0 0; padding: 0 var(--ork-4); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.where-work > .ork-sign { flex: none; width: 12px; height: 12px; margin-right: var(--ork-2); color: var(--ork-ink-muted); }
+.where-work__goal, .where-work__more { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: var(--ork-2); min-height: var(--ork-tap); min-width: 0; max-width: 100%; color: var(--ork-ink-muted); }
+.where-work__goal:focus-visible, .where-work__more:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.where-work__goal span:last-child { min-width: 0; overflow-wrap: anywhere; }
+.where-work__more { text-decoration: underline; }
 .where-row__head { flex: none; width: 24px; height: 22px; }
 .where-dot { flex: none; width: 8px; height: 8px; background: var(--ork-alert); }                     /* a stop waits in this party (spec 54 §2.4): alert, danger when one of them failed */
 .where-dot.danger { background: var(--ork-danger); }
