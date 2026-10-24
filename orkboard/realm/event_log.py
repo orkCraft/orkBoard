@@ -153,6 +153,10 @@ RELEASE_MADE = "release_made"     # goal, party, goals (n), parties (n), device
 RELEASE_OUT = "release_out"       # goal, goals (n), days (from its first goal's flag to out; None when no flag is dated), device
 PARTY_SHOWN = "party_shown"       # from, to (parties), face (desktop, phone), device
 
+# Spec 71 §5: the Orkmaster keeps the parties from colliding (never a goal's words: the pair is its two slugs).
+COLLIDE_FOUND = "collide_found"   # pair ("a|b", sorted), by ("plan" · "change"), judged (the judge answered), collide (it said they collide), tokens, cost
+COLLIDE_ANSWERED = "collide_answered"   # pair, answer ("first:<slug>" · "one" · "replan" · "leave"), device
+
 # Spec 42 §3: notifications to a paired phone (counts and tags, never a word of the push).
 PUSH_SET = "push_set"             # on, device
 PUSH_SENT = "push_sent"           # tag, devices, gone
@@ -164,7 +168,7 @@ EVENTS = (ASKED, ASSUMED, ANSWERED, STOPPED, WAIT_SKIPPED, HELD_AT_WORK, CAMP_LE
           IDEA_ANSWERED, GOAL_ANSWERED, PLAN_STARTED_NOW, IDEA_QUEUED, BOARD_COMMITTED, BOARD_HELD, PROJECT_OPENED, PROJECT_CLOSED, FILE_SAVED, GIT_COMMITTED,
           GIT_PUSHED, OP_ADDED, OP_PREPARED, OP_CHECKED, OP_DONE, OP_FAILED, OP_DROPPED, OP_NOT_RIGHT, OP_LEARNED,
           OP_RULES_ANSWERED, OP_TRUST, OP_KEPT, OP_FORGOT, OP_STANDING, PUSH_SET, PUSH_SENT, PARTY_PROPOSED, PARTY_ANSWERED, PARTY_SAVED, PARTY_DROPPED, WEEK_RESET, IDEA_EDITED, PLAN_REVISED, PLAN_CHANGE_ANSWERED,
-          PITCH_JUDGED, PITCH_SENT, PITCH_PASSED, PITCH_AGAIN, IDEA_MOVED, RELEASE_MADE, RELEASE_OUT, PARTY_SHOWN)
+          PITCH_JUDGED, PITCH_SENT, PITCH_PASSED, PITCH_AGAIN, IDEA_MOVED, RELEASE_MADE, RELEASE_OUT, PARTY_SHOWN, COLLIDE_FOUND, COLLIDE_ANSWERED)
 
 _LOCK = threading.Lock()
 

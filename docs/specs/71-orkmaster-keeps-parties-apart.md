@@ -99,6 +99,51 @@ week. A finder that finds nothing costs nothing; the judge runs only on what it 
    "auth-api", "b": "sign-in-screen"}]`, the open ones; and a wait is read from the nodes' `waits_for`.
 5. The Orkmaster's head on its stop: `project.orkmaster` (spec 70 §1.1).
 
+## As built (A)
+Part A, the host; no desktop or phone file. The shapes of §8 are as written; what A adds or fixes is below.
+- **`realm/collide.py`** (new, code only). `touches(root, state_dir, slug)`: the page's `touches`, the plan's tasks' `files` (a list of paths) and a path in
+  backticks in the brief of a task not merged yet (one with a `/`), the `files` of the merged tasks; normalised by `norm` (forward slashes, no `./`, a glob
+  tail `/*` is its folder, a folder ends with `/`, a last name with no dot is a folder, prose is no path), sorted, ≤ 40. `shared(a, b)`: the same path or a
+  folder and what is in it; `tests/` (and `test_*`) and docs (`docs/`, `*.md`, `.rst`, `.txt`) are left out unless both goals touch docs only.
+  `overlaps(root, state_dir, slug, planned=False)` → `[{"other", "paths"}]` with the open goals (not `done`/`passed`/`sent`/`proposed`, not General's, not an
+  Ideation party's, not a release) of **other parties**; `planned`: only goals that have a plan. `later_of(state_dir, a, b)`: the later by the plan's `made_at`; a goal
+  with no plan is later than one with a plan; a tie is `a`. `pair_id(a, b)` = `"a|b"` sorted.
+- **`<state_dir>/collide.json`**: `{"open": [stop], "answered": [{id, by, answer, at, note?}]}`; a stop is `{id, by, asked, other, why (≤ 200), first, at}`
+  (`asked` the goal the question is on, `other` the one beside it; `goals` in the row is `[other, asked]`). The last 200 answers and 50 open stops are kept.
+  `answered`'s `answer` is the stop's answer, or `no` when the judge said they do not collide. `known(state_dir, pair, by)`: open, or answered: a plan made never asks
+  a pair answered by anything; a spec changed (`change`) may ask once a pair that was answered by `plan` (the one deviation from "never again": a changed spec is new).
+- **§8.1 the row** is built by `collide.rows(root, state_dir, tracks=, state_of=)`, put in `ideas.board`'s `needs_you` (after the goals', `sort_needs` unchanged:
+  not last, not blocking) and on the Map's node (`board_map.build`; `NEEDS` ends with `"collide"`, so a node that has a `plan` row too says `plan`); the snapshot's
+  `needs_you` counts it. A stop whose goal is gone, done, sent or passed is not shown. `ideas.board`'s `ideas[]` rows are unchanged.
+- **§8.2 `ideas.collide_answer {id, answer}`** (`gui/ideas_project.py` `ProjectMixin`): refusals in the spec's order; `device` is read for the event. `first:<slug>` →
+  `collide.add_dependency` (the other goal's `depends_on` JSON and a line of its *Depends on* section; `changed` is not marked) and `autostart` of it decided again
+  (refused *«x» waits for «y» already* when it would close a cycle); `one` → the later goal's *Gist* (`Joined from «title»: …`) and new *Done when* lines join the
+  earlier's through `idea_change.update` (spec 62's `changed`, one line in *Decisions*), then `ideas.drop` of the later; refused *«x» has started: leave it, or let it
+  finish* when a task of the later has started; the answer's `note` is `joined into «<earlier title>»`. `replan` → `collide.set_told` (`ideas/<slug>/collide_told.txt`),
+  then `keeper.revise` when the plan is passed, else `keeper.plan`; the leader's `plan_prompt` and `revise_prompt` read it (*The Orkmaster tells you: …*), and it is
+  cleared when the plan or the plan change is saved. `leave` writes nothing. An answer that raises (the keeper busy) puts the stop back, open.
+- **§8.3 the node's `waits_for`**: `[{goal, party, party_name, title, flag}]`, from `depends_on` entries that exist and are in another party; `flag` is the flag's `at`
+  once raised (the entry stays, the wait is over), `""` before; `[]` with none; on a Map of one party too. `waits_on` (spec 35, done or not) is unchanged.
+- **§4 the hold**: `collide.holds(root, state_dir, slug)` (other parties' `depends_on` goals without a flag) makes `autostart` return `wait`; the person's own **Start** is
+  not held. `_raise_flag` calls `collide_released(slug)`: each goal of another party that names it is decided again (`autostart`). Within a party `depends_on` is still
+  only shown.
+- **§8.4 `ideas.map` `project`** gains `collisions: [{"id", "a", "b"}]` (the open ones, the pair sorted, also on `{goal}`) and, beyond §8, `collide_week:
+  {asked, answered, taken, usd}` (§5: the stops opened, answered, answered but *Leave it*, and the judge's cost in 7 days, from the event log; `usd` null when none priced).
+- **The finder and the judge** (`ProjectMixin.collide_plan`, `collide_changed`, `collide_run`): at `plan_made` (a line in `Ideas._state_event`) and, from the bus
+  (`settle_change`), when a goal's `changed` (spec 62) gets a section it had not, in a background thread, one thread per pair at a time. No overlap: no call, no
+  event. `core/idea_collide.py` `judge(keeper, asked, beside, by, words)`: one call, no tools, as the `orkmaster` role on the Target's new step `collide`
+  (`idea_target`: thrift laborer, balance warrior·low, quality warrior·medium; ≤ 3 000 characters of context, $0.05 cap; spend stage `plan`), the two goals' titles,
+  *Done when*, touches and the shared paths (by a change: the changed sections' words, ≤ 1 200), the answer `{"collide": bool, "why", "first"}` read strictly
+  (`collide` must be a bool; `first` not one of the two is ""). `orkmaster.install(state_dir)` writes `roles/orkmaster.md` (`warrior`, takes no task type) the first time
+  it judges; `orkmaster.role` reads it, else the default. `core/idea_judge.py`'s `role_as`/`speak_as`/`pick_as` know the role. A judge that cannot run (demo, budget, a spent
+  window, no model, an answer that is no JSON) is logged and skipped; `collide_found` says `judged: false`; the plan goes on; the pair is asked again next time.
+  **A plan is not held for the question**: the person's answer comes after the judge, and a plan may have auto-started meanwhile (then *One goal* is refused).
+  A change is compared with goals that have a plan only.
+- **Events** (`realm/event_log.py`): `collide_found` {pair, by, judged, collide, tokens, cost}, `collide_answered` {pair, answer (`first:<slug>` · `one` · `replan` ·
+  `leave`), device}. Slugs only, no goal's words. `TERMS` has `collide` (*collision*, *collisions*).
+- **Tests**: new `tests/test_collide.py` (14) and `tests/test_idea_collide.py` (22), `test_lexicon.py` (+1). Not done: push words for a `collide` row (the phone's push says
+  *waits for your answer*; `phone_push.KIND_WORDS` is tied to the page's table), and the Orkmaster's cost on a party's work (the week is `project.collide_week`).
+
 ## As built (B)
 Part B, the desktop, against the stub host of `tests/test_collide_desktop_browser.py` with the shapes of §8; no Python and no `pwa/` file touched.
 - **The stop** (`js/arena/collide.js`, `collidewords.js`; `stops.js`, `arenawords.js`): `collide` is a kind of stop as `plan` and `change` are. Its card is the small one: the Orkmaster's small head from

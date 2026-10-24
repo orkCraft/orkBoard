@@ -11,7 +11,7 @@ from collections import Counter
 from pathlib import Path
 
 from orkboard.gui.ideas_args import IdeasError, _opt
-from orkboard.realm import board_map, goal_team, goal_types, idea_element, ideas, library, orkmaster
+from orkboard.realm import board_map, collide, goal_team, goal_types, idea_element, ideas, library, orkmaster
 
 
 class MapMixin:
@@ -54,7 +54,9 @@ class MapMixin:
         if not goal:
             shut = {t["slug"] for t in tracks if t["slug"] == ideas.GENERAL or (t.get("leader") or "") == library.INVESTOR}
             flags = Counter(n["goal"] for n in got["nodes"] if n["flag"] and n["goal"] not in shut)
-        return {"orkmaster": dict(orkmaster.ORKMASTER), "deal": orkmaster.deal(root, self.state_dir, tracks=tracks, flags=flags)}
+        return {"orkmaster": dict(orkmaster.ORKMASTER), "deal": orkmaster.deal(root, self.state_dir, tracks=tracks, flags=flags),
+                "collisions": collide.collisions(root, self.state_dir, state_of=self._state),          # the open ones (spec 71 §8.4)
+                "collide_week": collide.work(self.host.repo_root)}                                     # what its stops did in a week (spec 71 §5)
 
     @staticmethod
     def stages_of(root: Path, party: str) -> dict:

@@ -5,6 +5,7 @@ and suggests a goal's party. By rules, with no model; it plans nothing, moves no
     deal(root, state_dir)                       # every preset once, in the order New party shows: [{"id", "why", "n"}]
     party_for(state_dir, root, "logo")          # the project's parties but General, each how it fits a goal type: [{party, name, fits, missing}]
     suggested(parties)                          # the slug `party_for`'s answer suggests
+    install(state_dir) / role(state_dir)        # its role for a collision's judge (spec 71 §2): `orkmaster`, a warrior, takes no task
 
 `why` of a deal row: `flags_wait` (Release first: no party releases and `n` flags wait), `no_pitches` (Ideation next: no party judges small
 ideas), `have` (the project has one: last), else "". No face, no model, no write.
@@ -13,7 +14,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from orkboard.realm import goal_types, idea_flag, ideas, library
+from orkboard.realm import goal_types, idea_flag, ideas, library, roles
 
 ORKMASTER = {"id": "orkmaster", "name": "Orkmaster", "race": "peon", "tier": "elder"}
 RELEASE, IDEATION = "release", "ideation"       # the presets' ids
@@ -93,3 +94,29 @@ def suggested(parties: list[dict]) -> str:
             if r["fits"] == fit:
                 return r["party"]
     return parties[0]["party"] if parties else ""
+
+
+# -- its role (spec 71 §2): the judge of a collision speaks as the Orkmaster ---------------------------------------------------------
+
+ROLE, ROLE_MODEL = "orkmaster", "warrior"
+INSTRUCTION = ("You keep the project's parties from colliding. You are given two goals of different parties that touch the same files, "
+               "and say only whether they change the same thing or just sit near each other. Answer from the two goals and what they touch; "
+               "invent nothing; when you cannot tell, say they do not collide.")
+
+
+def install(state_dir: Path) -> None:
+    """The Orkmaster as a role of the project (`roles/orkmaster.md`): a warrior, an ork, taking no task type. Written once, never over the
+    person's own."""
+    roles.install(state_dir, ROLE, ORKMASTER["name"], ROLE_MODEL, roles.DEFAULT_CRAFT, INSTRUCTION, (), ORKMASTER["race"])
+
+
+def role(state_dir: Path) -> dict:
+    """The role a collision is judged as: the project's file (the person may have set its model or its words on Agents), else the default
+    one as `install` writes it."""
+    return roles.role(state_dir, ROLE) or {"slug": ROLE, "name": ORKMASTER["name"], "model": ROLE_MODEL, "instruction": INSTRUCTION,
+                                          "craft": roles.DEFAULT_CRAFT, "takes": []}
+
+
+def speak(state_dir: Path) -> str:
+    """What the Orkmaster is told before a call: who it is, and its instruction."""
+    return f"You are the Orkmaster of this project. {role(state_dir).get('instruction') or ''}\n\n"

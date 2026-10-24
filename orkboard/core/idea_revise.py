@@ -19,7 +19,7 @@ import json
 from pathlib import Path
 
 from orkboard.core.idea_plan import _why, estimate
-from orkboard.realm import event_log, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_spend, idea_target, ideas, releases, roles
+from orkboard.realm import collide, event_log, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_spend, idea_target, ideas, releases, roles
 from orkboard.realm.idea_words import short_of, short_said
 
 SPEC_SHARE = 0.5                   # of the `plan` context, the most the spec takes: the tasks' part gets the rest
@@ -141,6 +141,8 @@ class ReviseMixin:
         goal = next((t for t in ideas.tracks(root, make=False) if t["slug"] == page.get("track")), None)
         changed = idea_change.changed_of(ideas.state(self.state_dir, slug))
         saying = f"These sections changed since the plan: {', '.join(changed)}." if changed else "The person asked to look again."
+        if told := collide.told_of(self.state_dir, slug):
+            saying += f"\nThe Orkmaster tells you: {told}"            # another party's goal changed what this one rests on (spec 71 §3)
         decisions = "\n".join(page.section("Decisions").splitlines()[-10:])
         done = [t for t in tasks if t.get("state") == "merged"]
         failed = [t for t in tasks if t.get("state") == "failed"]
@@ -233,6 +235,7 @@ Answer with one JSON object and nothing else:
                 ideas.save_state(self.state_dir, slug, error=f"No plan change: {_why(e)}")
             self.publish(slug)
             return
+        collide.clear_told(self.state_dir, slug)
         if str(ideas.state(self.state_dir, slug)["error"]).startswith("No plan change"):
             ideas.save_state(self.state_dir, slug, error="")
         shown = idea_change.summary(saved, ideas.plan(self.state_dir, slug))
