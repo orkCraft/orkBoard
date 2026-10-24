@@ -58,18 +58,23 @@ export const filterWords = (shown, all) => `${shown.length} of ${all} goals`;
 /** The goals of `nodes` the filter shows (`shown`: their slugs; [] shows all). */
 export const throughFilter = (nodes, shown) => (shown.length ? nodes.filter((n) => shown.includes(n.slug)) : nodes);
 export const inFilter = (shown, slug) => !shown.length || shown.includes(slug);
-/** The states of a task that is in the field: not at Review, not merged, not dropped, not failed. */
-const FIELD = ["ready", "waiting", "held", "picking", "running", "testing"];
-/** The sign a card or a result that is gone from a list leaves with (motion.js): *check* when its task merged, *cross* when it was dropped, *back* when its result was
- *  sent back (its task is in the field again, its goal in the filter: spec 74 §2), *fade* when only the filter took it away (no sign, spec 50 §4.4), "" when it only
- *  went elsewhere. `nodes`: the party's goals as they are now. */
+/** The sign a card or a result that is gone from a list leaves with (motion.js): *check* when its task merged, *cross* when it was dropped, *fade* when only
+ *  the filter took it away (no sign, spec 50 §4.4), "" when it only went elsewhere. `nodes`: the party's goals as they are now. */
 export function leaveOf(nodes, shown, goal, task) {
   const t = nodes.find((n) => n.slug === goal)?.tasks.find((y) => y.id === task);
   if (!t) return "";
   if (t.state === "merged") return "check";
   if (t.state === "dropped") return "cross";
-  if (!inFilter(shown, goal)) return "fade";
-  return FIELD.includes(t.state) ? "back" : "";
+  return inFilter(shown, goal) ? "" : "fade";
+}
+/** The states of a task that is in the field: not at Review, not merged, not dropped, not failed. */
+const FIELD = ["ready", "waiting", "held", "picking", "running", "testing"];
+/** A result's leave in Waits for your look: `leaveOf`'s, or *back* when it was sent back (its task is in the field again: spec 74 §2). A field card never takes *back*. */
+export function resultLeaveOf(nodes, shown, goal, task) {
+  const sign = leaveOf(nodes, shown, goal, task);
+  if (sign) return sign;
+  const t = nodes.find((n) => n.slug === goal)?.tasks.find((y) => y.id === task);
+  return t && FIELD.includes(t.state) ? "back" : "";
 }
 
 // -- flags -------------------------------------------------------------------------------------------------------------------------------

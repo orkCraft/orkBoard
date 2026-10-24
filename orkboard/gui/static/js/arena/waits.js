@@ -12,7 +12,7 @@ import { MapFoot } from "../board/mapfoot.js";
 import { useColumn } from "./motion.js";
 import { solo } from "./arenastate.js";
 import { plural } from "./arenawords.js";
-import { elementOf, inFilter, leaveOf } from "./goalwords.js";
+import { elementOf, inFilter, resultLeaveOf } from "./goalwords.js";
 
 function Result({ r, nodes, sign = "", quiet = false, fresh = false }) {
   const leaving = !!sign || quiet;
@@ -40,7 +40,7 @@ export function Looks({ g, results, nodes, shown }) {
   const who = by ? [...(nodes.flatMap((n) => n.tasks.map((t) => t.by)))].find((x) => x.slug === by)?.name : "";
   const ref = useRef(), at = useRef({ nodes, shown });
   at.current = { nodes, shown };
-  const list = useColumn(ref, there, (r) => `${r.idea}/${r.task}`, (r) => leaveOf(at.current.nodes, at.current.shown, r.idea, r.task));
+  const list = useColumn(ref, there, (r) => `${r.idea}/${r.task}`, (r) => resultLeaveOf(at.current.nodes, at.current.shown, r.idea, r.task));
   return html`<aside class="arena-look" aria-label="Waits for your look">
     <div class="arena-look__head"><h2 class="arena-lbl">Waits for your look</h2>${there.length > 0 && html`<span class="ork-count">${there.length}</span>`}
       ${who && html`<span class="arena-cap">· only ${who}’s</span>`}</div>

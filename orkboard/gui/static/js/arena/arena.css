@@ -209,7 +209,7 @@
 .arena-task.is-gone, .arena-result.is-gone { visibility: hidden; pointer-events: none; }
 .arena-result[data-sign="check"] .arena-task__flash { animation: none; }                                    /* the seal (spec 74 §1): the panel is held while the card fades, the goal's element is stamped on it */
 .arena-result[data-sign="check"] .arena-task__flash .ork-elem { animation: arena-stamp 0.1s steps(3) both; }
-.arena-task[data-sign="back"].is-leaving, .arena-result[data-sign="back"].is-leaving { animation: arena-back 0.3s steps(3) forwards; }      /* sent back (spec 74 §2): 24 px toward the field, the left, as it fades */
+.arena-result[data-sign="back"].is-leaving { animation: arena-back 0.3s steps(3) forwards; }      /* sent back (spec 74 §2): 24 px toward the field, the left, as it fades */
 @keyframes arena-leave { to { opacity: 0; } }
 @keyframes arena-stamp { from { transform: scale(2); opacity: 0.4; } }
 @keyframes arena-back { to { opacity: 0; transform: translateX(-24px); } }
@@ -508,7 +508,7 @@
   .arena-tport.is-struck, .arena-tport.is-struck .ork-race__head, .arena-tport.is-calling, .arena-tport.is-calling .arena-sign { animation: none; }
   .arena-new__card, .arena-type__front, .arena-type__face { transition: none; }
   .arena-arrow line, .arena-arrow polygon, .arena-arrow.is-leaving line { animation: none; }
-  .arena-result[data-sign="check"] .arena-task__flash .ork-elem, .arena-task[data-sign="back"].is-leaving, .arena-result[data-sign="back"].is-leaving { animation: none; }
+  .arena-result[data-sign="check"] .arena-task__flash .ork-elem, .arena-result[data-sign="back"].is-leaving { animation: none; }
   .arena-stars i.is-ink { animation: none; opacity: 0.6; }
 }
 
