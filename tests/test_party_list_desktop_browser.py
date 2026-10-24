@@ -146,7 +146,10 @@ def test_a_closed_party_with_a_stop_wears_one_sign_a_failed_one_in_the_danger_co
 def test_a_press_on_a_closed_heading_shows_that_party_and_closes_the_other_a_press_on_the_open_one_does_nothing(listed):
     pg, host = listed
     assert pg.locator(".arena-team .arena-member").count() == 4                                         # the passkey party's team
-    pg.locator(OPEN).click()                                                                            # the open heading: not a toggle
+    pg.locator(OPEN).click()                                                                            # the open heading stays open: it shows only its leader's work (spec 73 §2)
+    assert pg.locator(OPEN).get_attribute("aria-pressed") == "true"
+    pg.locator(OPEN).click()                                                                            # again: everyone's work
+    assert pg.locator(OPEN).get_attribute("aria-pressed") == "false"
     pg.wait_for_timeout(200)
     assert pg.locator(OPEN).get_attribute("data-goal") == "passkey" and pg.locator(".arena-pbody").count() == 1 and pg.locator(".arena-team .arena-member").count() == 4
     pg.locator('.arena-phead[data-goal="weekly"]').click()

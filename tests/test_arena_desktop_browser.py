@@ -184,8 +184,11 @@ class ArenaHost(StubHost):
 
 
 def solo_lead(pg, slug="taskmaster"):
-    """The leader's work alone. Its row left the column (spec 73 §2), and a press on it was the only way in: the page's own state is set, as that press did."""
-    pg.evaluate("async (s) => { const m = await import('/static/js/arena/arenastate.js'); m.solo.value = s; }", slug)
+    """The leader's work alone: a press on the open party's heading, its leader's (spec 73 §2; the leader's row did it before)."""
+    head = pg.locator(".arena-phead[aria-current=true]")
+    assert head.get_attribute("aria-pressed") == "false"
+    head.click()
+    assert head.get_attribute("aria-pressed") == "true"
 
 
 def _settle(pg):
