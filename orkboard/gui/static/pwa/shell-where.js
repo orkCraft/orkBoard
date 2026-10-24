@@ -5,7 +5,8 @@
 // *k/n done*, a dot where a stop waits (8 × 8, danger when one of them failed, else alert), the work sign; the one shown marked), Operations' row when the project has any, **+ New party**. A pick is kept per project (`orkcraft.goal`) and puts the sheet away.
 // A party just saved on New party gathers its heads into the deck, in the first draw that shows it (spec 63 §4: shell-motion.js `gather`).
 import { h, head, sheet } from "./util.js";
-import { sign } from "./shell-marks.js";
+import { elem, sign } from "./shell-marks.js";
+import { nodesOf } from "./shell-arena-words.js";
 import { whoHead } from "./shell-who.js";
 import { makeProjects } from "./shell-projects.js";
 import { OPS_VIEW } from "./shell-ops.js";
@@ -13,6 +14,7 @@ import { gather, gatherTo, motionOn } from "./shell-motion.js";
 import { PROJECT, makeProject, projectOf } from "./shell-project.js";
 
 const GOAL_KEPT = "orkcraft.goal";                    // {project: party slug}: the party this phone showed last
+const WORK_SHOWN = 2;                               // the goals at work a party's line names before *and k more*
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
 /** The party's deck's label (spec 52 §5.3): *Parties: Tech shown, 2 stops wait in the other parties. A tap shows the parties*; `p`: shell-arena-words.js `partiesOf`. The count is for a screen reader only: nothing on the screen counts the stops. */
@@ -60,6 +62,21 @@ export function makeWhere(core, ctx) {
   c.head ? whoHead(c.head, false) : h("span", { class: "where-row__head" }), h("span", { class: "where-row__body" }, h("b", {}, c.title), h("small", { class: "muted" }, c.done)),
   dot(c.stops, c.failed), c.working ? sign("work", "at work") : null);
 
+  /** A closed party's goals at work, in one quiet line under its row (spec 72 §1, §3): the work sign, then each goal's element and short name joined by *·* (*and k more* follows with a gap), the line wrapping to two rows at most (two goals, then *and k more*); none at work, no line.
+   *  A tap on a goal puts the sheet away and shows that party with that goal alone picked into its filter (spec 50 §3.5); *and k more* shows it with no pick. */
+  function workLine(c) {
+    const at = nodesOf(st, c.slug).filter((n) => n.state === "working");
+    if (!at.length) return null;
+    const words = `At work: ${at.map((n) => n.title).join(", ")}`;
+    const go = (picks) => { sh.close(); shown(c.slug); st.picks = { ...(st.picks || {}), [c.slug]: picks }; core.pick(c.slug); };
+    const kids = at.slice(0, WORK_SHOWN).map((n) => h("button", { class: "where-work__goal", type: "button", "data-idea": n.slug, "aria-label": n.title, title: n.title, onclick: () => go([n.slug]) },
+      elem(n.element), h("span", {}, n.short || n.title)));
+    const more = at.length - kids.length;
+    if (more > 0) kids.push(h("button", { class: "where-work__more", type: "button", "data-act": "at-work-more", onclick: () => go([]) }, `and ${more} more`));
+    return h("div", { class: "where-work", role: "group", "data-for": c.slug, "aria-label": words, title: words }, sign("work"),
+      ...kids.flatMap((k, i) => (i && i < at.length && k.dataset.idea ? [h("span", { class: "where-work__sep", "aria-hidden": "true" }, "·"), k] : [k])));
+  }
+
   /** *The project* at the sheet's top: the Orkmaster's head, its name and what it shows; none for a host that sends no `project`. */
   function projectRow() {
     const o = projectOf(core)?.orkmaster;
@@ -71,7 +88,7 @@ export function makeWhere(core, ctx) {
   function drawList() {
     const p = core.parties();
     const opsOn = p.shown === OPS_VIEW;
-    list.replaceChildren(...[projectRow(), ...p.list.map((c) => rowOf(c, c.slug === p.shown)),
+    list.replaceChildren(...[projectRow(), ...p.list.flatMap((c) => [rowOf(c, c.slug === p.shown), c.slug === p.shown ? null : workLine(c)]),
       p.ops ? h("button", { class: `where-row${opsOn ? " is-on" : ""}`, type: "button", "aria-current": opsOn ? "true" : null, "data-goal": OPS_VIEW,
         "aria-label": `Operations${p.ops.stops ? `${p.ops.failed ? ", a stop failed" : ""}, something waits for you` : ""}`, onclick: () => { sh.close(); core.pickOps(); } },
       h("span", { class: "where-row__head" }), h("span", { class: "where-row__body" }, h("b", {}, "Operations")), dot(p.ops.stops, p.ops.failed)) : null].filter(Boolean));
