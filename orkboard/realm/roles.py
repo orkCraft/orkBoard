@@ -385,12 +385,14 @@ def task_slug(task: dict, read: tuple[dict, dict]) -> str:
     return str(task.get("role") or "") or read[1].get(kind if kind in TASK_KINDS else DEFAULT_KIND, GRUNT)
 
 
-def task_head(state_dir: Path, task: dict, target: str, read: tuple[dict, dict] | None = None) -> dict:
+def task_head(state_dir: Path, task: dict, target: str, read: tuple[dict, dict] | None = None, tiers: dict[str, str] | None = None) -> dict:
     """The head of who does a task: the role it ran as (its type's role before it ran), at the tier it ran at (before it
-    ran, the tier it will run at: its planned tier shifted by the Target, a role's own model winning). `read`: `known()`."""
+    ran, the tier it will run at: its planned tier shifted by the Target, a role's own model winning). `read`: `known()`; `tiers`: the tiers
+    its party's size gave its seats (spec 81 §2), which the role wears in place of the library's tier it was installed with."""
+    from orkboard.realm import goal_team
     by_slug, _kinds = read = read or known(state_dir)
     r = by_slug.get(task_slug(task, read)) or by_slug.get(GRUNT) or role(state_dir, GRUNT)
-    got = head(r, target, str(task.get("tier") or "warrior"))
+    got = head(goal_team.seat_role(r, tiers or {}), target, str(task.get("tier") or "warrior"))
     if task.get("ran_tier") in TIERS:
         got["tier"] = task["ran_tier"]
     return got

@@ -65,7 +65,7 @@ def test_a_backend_is_offered_data_only_when_the_folder_has_sql():
 
 def test_lean_is_the_leader_alone_standard_two_builders_and_a_checker_full_every_seat():
     feat = party_recipes.get("mobile-features")
-    assert party_recipes.sized(feat, "lean") == {"leader": "product-manager", "team": [], "size": "lean"}
+    assert party_recipes.sized(feat, "lean") == {"leader": "product-manager", "team": [], "tiers": {"product-manager": "warrior"}, "size": "lean"}
     assert party_recipes.sized(feat, "standard")["team"] == ["grunt", "artist", "reviewer"]
     full = party_recipes.sized(feat, "full")["team"]
     assert full == ["grunt", "artist", "aso", "reviewer", "accessibility-reviewer"]          # (the fourth builder: no seat for it)
@@ -79,12 +79,14 @@ def test_lean_is_the_leader_alone_standard_two_builders_and_a_checker_full_every
     assert party_recipes.sized(wiki, "standard")["team"] == ["copywriter", "editor"] and party_recipes.sized(wiki, "lean")["team"] == []
 
 
-def test_ideation_and_release_keep_their_whole_seats_in_every_size():
+def test_ideation_and_release_are_sized_too_lean_the_leader_alone_standard_two_builders_and_the_checker_full_all():
     for pid in ("ideation", "release"):
         r = party_recipes.get(pid)
-        teams = [party_recipes.sized(r, s)["team"] for s in idea_target.SIZES]
-        assert teams[0] == teams[1] == teams[2] == [*r["build"], *r["check"]] and teams[0]
-    assert sorted(party_recipes.sized(party_recipes.get("ideation"), "lean")["team"]) == sorted([*library.VIEWS, library.SKEPTIC])
+        lean, standard, full = [party_recipes.sized(r, s)["team"] for s in idea_target.SIZES]
+        assert lean == [] and standard == [*r["build"][:2], *r["check"][:1]] and full == [*r["build"], *r["check"]]
+    ideation = party_recipes.sized(party_recipes.get("ideation"), "standard")["team"]
+    assert ideation == ["product-view", "market-view", "skeptic"]
+    assert sorted(party_recipes.sized(party_recipes.get("ideation"), "full")["team"]) == sorted([*library.VIEWS, library.SKEPTIC])
 
 
 def test_a_size_that_is_none_is_refused_and_each_size_has_its_target():
@@ -108,3 +110,16 @@ def test_a_party_the_project_has_is_the_same_leader_with_the_standard_team_insid
 def test_the_kind_a_recipe_is_proposed_to_prefers_the_projects_own():
     assert party_recipes.kind_of("release", "web") == "web" and party_recipes.kind_of("release", "wiki") == "mobile"
     assert party_recipes.kind_of("ideation", "design") == "design" and party_recipes.kind_of("nope") == ""
+
+
+def test_each_size_gives_its_seats_their_tiers_lean_seasoned_standard_the_main_seats_full_none_below_seasoned():
+    feat = party_recipes.get("mobile-features")
+    lean, std, full = (party_recipes.sized(feat, s) for s in idea_target.SIZES)
+    assert lean["tiers"] == {"product-manager": "warrior"}
+    assert std["tiers"] == {"product-manager": "elder", "grunt": "warrior", "artist": "warrior", "reviewer": "warrior"}
+    assert full["tiers"]["product-manager"] == "elder" and full["tiers"]["reviewer"] == "elder" == full["tiers"]["accessibility-reviewer"]
+    assert {full["tiers"][b] for b in ("grunt", "artist", "aso")} == {"warrior"} and set(full["tiers"]) == {full["leader"], *full["team"]}
+    for r in (party_recipes.get(i) for i in ("ideation", "release", "game", "wiki", "engineering-code")):
+        got = [party_recipes.sized(r, s) for s in idea_target.SIZES]
+        assert got[0]["team"] == [] and len(got[1]["team"]) <= 3 and len(got[0]["team"]) <= len(got[1]["team"]) <= len(got[2]["team"])
+        assert "laborer" not in got[2]["tiers"].values() and "laborer" not in got[0]["tiers"].values()

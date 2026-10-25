@@ -152,7 +152,7 @@ class ReviewMixin:
         page = ideas.idea_page(self.root(), slug)
         runner = self._runner
         return {**task, "idea": slug, "idea_title": (page.title if page else "") or slug,
-                "head": roles.task_head(self.state_dir, task, self.target_of_idea(slug)),
+                "head": roles.task_head(self.state_dir, task, self.target_of_idea(slug), None, self.tiers_of_idea(slug)),
                 "log": runner.log(slug, tid) if runner is not None else "",
                 "after": task.get("after") or [], "round": int(task.get("round") or 1)}
 

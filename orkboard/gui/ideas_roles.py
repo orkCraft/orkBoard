@@ -15,7 +15,7 @@ import datetime as dt
 
 from orkboard.core import idea_keeper
 from orkboard.gui.ideas_args import IdeasError, _device, _opt, _text
-from orkboard.realm import board_map, event_log, harnesses, idea_spend, idea_target, ideas, library, party_work, roles
+from orkboard.realm import board_map, event_log, goal_team, harnesses, idea_spend, idea_target, ideas, library, party_work, roles
 from orkboard.realm.idea_words import short_of
 
 
@@ -33,6 +33,17 @@ class RolesMixin:
         page = ideas.idea_page(self.root(False), slug)
         party = ideas.track_page(self.root(False), (page.get("track") if page is not None else "") or "")
         return (party.get("size") if party is not None else "") or ""
+
+    def party_of_idea(self, slug: str) -> dict:
+        """`{"tool", "tiers"}` of the party an idea is in (spec 81): its AI tool ("" the Main tool) and the tiers its size gave its seats."""
+        root = self.root(False)
+        page = ideas.idea_page(root, slug)
+        party = (page.get("track") if page is not None else "") or ideas.GENERAL
+        return {"tool": goal_team.tool_of(root, party), "tiers": goal_team.tiers_of(root, party)}
+
+    def tiers_of_idea(self, slug: str) -> dict:
+        """The tiers the size of the party an idea is in gave its seats (spec 81 §2)."""
+        return self.party_of_idea(slug)["tiers"]
 
     def target_of_idea(self, slug: str) -> str:
         """The Target an idea's goal works at: its party's size's, else the setting's (spec 75 §3.2)."""
@@ -61,7 +72,8 @@ class RolesMixin:
         if not plan:
             return plan
         target, read = self.target_of_idea(plan["idea"]) if plan.get("idea") else self._target(), roles.known(self.state_dir)
-        return {**plan, "tasks": [{**t, "head": roles.task_head(self.state_dir, t, target, read),
+        tiers = self.tiers_of_idea(plan["idea"]) if plan.get("idea") else {}
+        return {**plan, "tasks": [{**t, "head": roles.task_head(self.state_dir, t, target, read, tiers),
                                    "tag": roles.KIND_LABELS.get(str(t.get("kind") or ""), roles.KIND_LABELS[roles.DEFAULT_KIND])}
                                   for t in plan.get("tasks") or []]}
 
@@ -224,7 +236,7 @@ class RolesMixin:
                         {"idea": slug, "idea_title": titles.get(slug, title),
                          "idea_short": shorts.get(slug) or short_of(title), "task": t.get("id"),
                          "title": t.get("title", ""), "short": board_map.task_short(t), "state": state, "tier": t.get("tier", ""), "role": role,
-                         "kind": t.get("kind") or roles.DEFAULT_KIND, "head": roles.task_head(self.state_dir, t, mine, read),
+                         "kind": t.get("kind") or roles.DEFAULT_KIND, "head": roles.task_head(self.state_dir, t, mine, read, self.tiers_of_idea(slug)),
                          "tag": roles.KIND_LABELS.get(str(t.get("kind") or ""), roles.KIND_LABELS[roles.DEFAULT_KIND]),
                          "note": t.get("note") or (t.get("error") if state == "failed" else "") or "",
                          # spec 35 §11.5: who started it, and whether it waits for the night

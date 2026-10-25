@@ -63,7 +63,7 @@ class PickMixin:
             who = read[0].get(roles.task_slug(t, read)) or read[0].get(roles.GRUNT) or {}
             out.append({"kind": "pick", "slug": slug, "idea": slug, "goal": i["track"], "task": t.get("id"), "title": t.get("title") or "",
                         "short": task_short(t), "idea_title": i["title"], "priority": i["priority"], "blocks": True,
-                        "by": {"slug": who.get("slug") or "", "name": who.get("name") or "", "head": roles.task_head(self.state_dir, t, target, read)},
+                        "by": {"slug": who.get("slug") or "", "name": who.get("name") or "", "head": roles.task_head(self.state_dir, t, target, read, self.tiers_of_idea(slug))},
                         "ask": pick.get("ask") or "", "n": len(pick["variants"]), "media": pick.get("kind"),
                         "variants": [self._variant_row(slug, pick, v) for v in pick["variants"] if isinstance(v, dict)],
                         "round": int(pick.get("round") or 1), "at": str(pick.get("at") or t.get("finished") or "")})

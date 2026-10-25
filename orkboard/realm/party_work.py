@@ -22,13 +22,14 @@ ENDED = ("merged", "failed")             # a task that has an end: the work coun
 CHECKED = ("merged", "review")          # a check task that has said what it found: merged, or waiting for the person
 
 
-def who(state_dir: Path, slug: str, target: str = "balance") -> dict:
-    """{slug, name, head} of an agent of the project (a library agent not installed yet by its library name)."""
+def who(state_dir: Path, slug: str, target: str = "balance", tiers: dict[str, str] | None = None) -> dict:
+    """{slug, name, head} of an agent of the project (a library agent not installed yet by its library name); `tiers`: the tiers the party's
+    size gave its seats (spec 81 §2), which its head wears."""
     r = roles.role(state_dir, slug)
     if r is None:
         a = library.get(slug)
         r = {"slug": slug, "name": a.name if a else slug, "model": "", "craft": a.craft if a else roles.DEFAULT_CRAFT}
-    return {"slug": slug, "name": r["name"], "head": roles.head(r, target)}
+    return {"slug": slug, "name": r["name"], "head": roles.head(goal_team.seat_role(r, tiers or {}), target)}
 
 
 def _sum(values: list[float | None]) -> float | None:
@@ -65,7 +66,8 @@ def work(root: Path, state_dir: Path, goal: str, target: str = "balance") -> dic
 
     spent = idea_spend.of_goal(state_dir, goal, slugs)["stages"]
     steps = [spent[k] for k in ("goal", "spec", "plan")]
-    leader = {**who(state_dir, goal_team.leader_of(root, goal), target),
+    tiers = goal_team.tiers_of(root, goal)
+    leader = {**who(state_dir, goal_team.leader_of(root, goal), target, tiers),
               "usd": _sum([s["usd"] for s in steps]) if sum(s["calls"] for s in steps) else None}
 
     by_role: dict[str, list[tuple[str, dict]]] = {}
@@ -87,7 +89,7 @@ def work(root: Path, state_dir: Path, goal: str, target: str = "balance") -> dic
     for slug in order:
         rows = by_role[slug]
         merged = [t for _s, t in rows if t.get("state") == "merged"]
-        members.append({**who(state_dir, slug, target), "tasks": len(rows), "merged": len(merged),
+        members.append({**who(state_dir, slug, target, tiers), "tasks": len(rows), "merged": len(merged),
                         "first_time": sum(1 for t in merged if int(t.get("round") or 1) <= 1), "usd": usd_of(rows)})
 
     team_checks = {c["by"]: c for c in idea_checks.of_team(state_dir, team, goal_team.every_of(root, goal))}

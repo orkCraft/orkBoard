@@ -237,7 +237,7 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
                 from orkboard.core.idea_runner import IdeaRunner
                 self._runner = IdeaRunner(self.host.repo_root, self.state_dir, _Settings(self.host), _Hop(self.host),
                                           events=not self.host.demo, on_held=lambda: self.log_limits(force=True),
-                                          rank=self.rank, size_of=self.size_of_idea,
+                                          rank=self.rank, size_of=self.size_of_idea, party_of=self.party_of_idea,
                                           sign_ins=getattr(self.host, "sign_ins", None))
             except ImportError:
                 self._runner_error = "The runner is not in this build yet: plans cannot start"
@@ -615,6 +615,6 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
                       "ideas.pitch_pass": self.pitch_pass,
                       "ideas.release_out": self.release_out, "ideas.release_candidates": self.release_candidates, "ideas.shown": self.shown,
                       "ideas.party_for": self.party_for, "ideas.collide_answer": self.collide_answer,
-                      "ideas.proposals": self.proposals, **canvas_commands(self)})
+                      "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, **canvas_commands(self)})
         return {name: guarded(name, fn) for name, fn in table.items()}
 

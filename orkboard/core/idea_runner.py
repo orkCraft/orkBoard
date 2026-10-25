@@ -36,11 +36,11 @@ from orkboard.core.idea_picking import PickMixin
 from orkboard.core.sign_ins import HOLD_H
 from orkboard.core.idea_review import BACK, STOP_ONE, STOPPED_NOTE, ReviewMixin, RunnerError  # noqa: F401
 from orkboard.core.idea_task import FINDINGS_ASK, NO_DIFF, NO_FINDINGS, NO_RUN, TaskMixin, is_check, is_pick
-from orkboard.realm import call_log, event_log, halt, harnesses, idea_checks, idea_pick, idea_spend, idea_target, ideas, jobs, roles, status, tool_errors
+from orkboard.realm import call_log, event_log, goal_team, halt, harnesses, idea_checks, idea_pick, idea_spend, idea_target, ideas, jobs, roles, status, tool_errors
 from orkboard.realm.idea_git import BOARD_PAGE, CRITICAL_TESTS, Conflict, IdeaGit, env_name, has_summary, parse_tests, read_secret, spec_paths  # noqa: F401
 
 CHANGED = "ideas.changed"          # slug: an idea's state or one of its tasks changed
-HARNESS = "claude"
+HARNESS = "claude"                 # the tool a held task without one is taken to have been on (before a party had its own: spec 81)
 LIMITS_EVERY_S = 600               # how often the runner reads the quota itself, when nobody hands it one
 DEFAULTS = {"max_parallel": 1, "merge_into": "dev", "push": False, "review": True}
 STOPPED = "stopped"
@@ -113,12 +113,14 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
     def __init__(self, repo_root: Path, state_dir: Path, settings: Any, bus: Any = None, *,
                  limits: Callable[[], list] | None = None, events: bool = True,
                  on_held: Callable[[], None] | None = None, rank: Callable[[str], Any] | None = None,
-                 size_of: Callable[[str], str] | None = None, sign_ins: Any = None) -> None:
+                 size_of: Callable[[str], str] | None = None, sign_ins: Any = None,
+                 party_of: Callable[[str], dict] | None = None) -> None:
         """`limits`: the quota readers' last read (the town's `limits`); without it the runner reads it itself.
         `events`: write the task's events to the local event log (spec 33 §9); `on_held`: a task was held (the limits are read);
         `rank(slug)`: the idea's place (its priority, then the person's order): the ideas are served in that order.
         `size_of(slug)`: the size of the idea's party (spec 75 §3: lean, standard, full, else ""): its tasks work at that size's Target.
-        `sign_ins`: the host's sign-ins (core/sign_ins.py): a task whose tool is not signed in is held for it, not failed."""
+        `sign_ins`: the host's sign-ins (core/sign_ins.py): a task whose tool is not signed in is held for it, not failed.
+        `party_of(slug)`: the idea's party's `{"tool", "tiers"}` (spec 81): the tool its tasks run on (none: the Main tool) and the tiers its size gave its seats."""
         self.repo_root, self.state_dir = Path(repo_root), Path(state_dir)
         self.settings, self.bus = settings, bus
         self.git = IdeaGit(self.repo_root)
@@ -131,6 +133,7 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
         self._active: list[str] = []
         self._until: dict[tuple[str, str], float] = {}
         self.events, self.on_held, self.rank, self.size_of, self.sign_ins = events, on_held, rank, size_of, sign_ins
+        self.party_of = party_of
         self._since: dict[tuple[str, str], float] = {}     # when a task entered the state it is in (the event log)
         self._tls = threading.local()                       # Merge's `dear`, on the thread that merges
         self._resume_working()
@@ -325,12 +328,13 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
                     role = self._role(t)
                     if self._running_as(role["slug"]) >= role["max_parallel"]:
                         continue                     # this role's own limit (spec 34 §3): the task waits its turn
-                    until = status.reset_of(limits, HARNESS, now, status.NEARLY)
+                    tool = self.tool_of(slug)
+                    until = status.reset_of(limits, tool, now, status.NEARLY)
                     if until is not None or gate is not None:     # the window, else the person's reserve (§6), else the week (spec 44)
                         self._hold(slug, t, until if until is not None else gate,
                                    "" if until is not None else "week · " if isinstance(gate, idea_target.WeekHold) else "reserve · ")
-                    elif self.signed_out():                       # its tool needs a sign-in: held for it (spec 45 §6)
-                        self._hold_sign_in(t, "")
+                    elif self.signed_out(tool):                   # its tool needs a sign-in: held for it (spec 45 §6)
+                        self._hold_sign_in(t, "", tool)
                     else:
                         self._launch(slug, t)
                         slots -= 1
@@ -381,8 +385,24 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
         """(the model or tier a task runs on, its effort): the Target's shift of its tier, a role's own model winning. The Target is its idea's
         party's size's (spec 75 §3), else the setting's."""
         size = self.size_of(slug) if slug and self.size_of is not None else ""
+        seat = goal_team.seat_role(self._role(task), self.party(slug).get("tiers") or {})          # the tier its size gave this seat (spec 81 §2)
         return idea_target.task_pick(str(task.get("tier") or "warrior"), idea_target.target_for(self.board(), size or None),
-                                     str(self._role(task).get("model") or ""))
+                                     str((seat or {}).get("model") or ""))
+
+    def party(self, slug: str) -> dict:
+        """The idea's party's `{"tool", "tiers"}` as the host says them (spec 81); {} with none."""
+        try:
+            return (self.party_of(slug) if slug and self.party_of is not None else None) or {}
+        except Exception:                               # a party the host cannot read leaves the work as it was
+            return {}
+
+    def tool_of(self, slug: str) -> str:
+        """The AI tool an idea's tasks run on: its party's, else the Main tool (spec 81 §1.2)."""
+        tool = str(self.party(slug).get("tool") or "")
+        if harnesses.get(tool) is not None:
+            return tool
+        from orkboard import settings as machine
+        return machine.main_tool()
 
     def _running_as(self, slug: str) -> int:
         return sum(1 for r in self._runs.values() if r.role == slug)
@@ -442,9 +462,9 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
         """Whether the host says this tool needs its sign-in: what runs by itself waits for it."""
         return self.sign_ins is not None and bool(self.sign_ins.blocked(harness))
 
-    def _hold_sign_in(self, task: dict, line: str) -> None:
+    def _hold_sign_in(self, task: dict, line: str, harness: str = HARNESS) -> None:
         """The task waits for its tool's sign-in: at most `HOLD_H` hours, then it fails with `line`."""
-        task.update(state="held", note="", held_for="sign_in", harness=HARNESS, held_line=line[:600],
+        task.update(state="held", note="", held_for="sign_in", harness=harness, held_line=line[:600],
                     held_until=dt.datetime.fromtimestamp(time.time() + HOLD_H * 3600).isoformat(timespec="seconds"))
 
     def held_for(self, harness: str) -> int:
@@ -484,8 +504,9 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
         tid = task.get("id")
         cancel = threading.Event()
         run, effort = self.ran_on(task, slug)
-        h = harnesses.get(HARNESS)
-        task.update(tool=HARNESS, model=(h.pick(run) if h else run) or run)    # the model the run names (spec 35 §12)
+        tool = self.tool_of(slug)
+        h = harnesses.get(tool)
+        task.update(tool=tool, model=(h.pick(run) if h else run) or run)    # the model the run names (spec 35 §12)
         task.update(state="running", started=now_iso(), finished="", error="", note="",
                     branch=f"idea/{slug}/{tid}", commit="", session="", cost=None, tokens=None,
                     tests=None, diff=None, round=idea_pick.next_round(self.state_dir, slug, str(tid)) if is_pick(task) else 1,
@@ -512,7 +533,8 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
             task = next(t for t in plan["tasks"] if t.get("id") == tid)
             base = str(setting(self.settings, "merge_into") or "dev")
             env = self._env(slug, tid, plan)
-            h = harnesses.need(HARNESS)
+            tool = self.tool_of(slug)
+            h = harnesses.need(tool)
             run, effort = self.ran_on(task, slug)
             model = h.pick(run)                          # the role's model, else the tier the Target gives
             rnd = int(task.get("round") or 1)
@@ -593,7 +615,7 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
                 self._until[(slug, tid)] = e.until
             if e.line:                      # held for its tool's sign-in (spec 45 §6), not for a window
                 hold: dict = {}
-                self._hold_sign_in(hold, e.line)
+                self._hold_sign_in(hold, e.line, self.tool_of(slug))
                 self._set_task(slug, tid, finished="", **({**hold, "note": ""} if again is None or again.get("pick")
                                                           else {"state": "review", "note": e.line[:300]}))
             else:
@@ -625,9 +647,10 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
                  prompt: str, resume: str, spent: dict, effort: str = "", step: str = "task") -> str:
         """One turn of the task's Claude session (work mode); its cost and tokens add up on the task, and its line
         goes to the idea's ledger (spec 36 §1: `task`, or `fix` for the gate's retry)."""
+        tool = self.tool_of(slug)
         try:
             with call_log.of_project(self.repo_root), tool_errors.doing("task"):     # its log and spend: this project's
-                _text, cost, tokens, session = jobs.run_work(HARNESS, prompt, path, cancel, model=model, env=env,
+                _text, cost, tokens, session = jobs.run_work(tool, prompt, path, cancel, model=model, env=env,
                                                              resume=resume, effort=effort)
         except tool_errors.ToolError as e:
             if e.kind != tool_errors.LIMIT:
@@ -635,14 +658,14 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
                     raise Held(time.time() + HOLD_H * 3600, tool_errors.plainly(e)) from e
                 raise
             now = time.time()
-            raise Held(status.reset_of(self._read_limits(now), HARNESS, now, 1.0)
+            raise Held(status.reset_of(self._read_limits(now), tool, now, 1.0)
                        or now + status.UNKNOWN_RESET_S) from e
         for key, value in (("cost", cost), ("tokens", tokens)):
             if value is not None:
                 spent[key] = (spent[key] or 0) + value
         session = session or resume
         task = next((t for t in (self.plan(slug) or {}).get("tasks") or [] if t.get("id") == tid), {"id": tid})
-        idea_spend.task_line(self.state_dir, slug, task, step, HARNESS, model, cost, tokens)
+        idea_spend.task_line(self.state_dir, slug, task, step, tool, model, cost, tokens)
         self._log(slug, tid, f"== the session answered\n{_text}\n", env)
         self._set_task(slug, tid, session=session, cost=spent["cost"], tokens=spent["tokens"])
         return session

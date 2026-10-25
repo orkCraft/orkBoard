@@ -34,7 +34,7 @@ class LeadMixin:
         """The role the running step leads as: its goal's leader; None for the Taskmaster (no leader, or no goal)."""
         goal = self.goal_of_key(getattr(self._tls, "key", "") or getattr(self._tls, "slug", "") or "")
         slug = goal_team.leader_of(self.wiki_root(), goal) if goal else roles.TASKMASTER
-        return None if slug == roles.TASKMASTER else roles.role(self.state_dir, slug)
+        return None if slug == roles.TASKMASTER else goal_team.seat_role(roles.role(self.state_dir, slug), goal_team.tiers_of(self.wiki_root(), goal))      # on the tier its size gave it (spec 81 §2)
 
     @staticmethod
     def voice(lead: dict) -> str:

@@ -222,8 +222,10 @@ Answer with one JSON object and nothing else:
             plan = ideas.plan(self.state_dir, slug) or {}
             got = clean_change(plan, self.parse(text))
             team = self.plan_team(root, slug)
+            track = (ideas.idea_page(root, slug) or ideas.Page()).get("track") or ""
+            lean = goal_team.lean_role(root, track) if track else ""         # a Lean party's leader does it all (spec 81 §2)
             for row in [*got["change"], *got["add"]]:
-                row["role"] = roles.role_for(self.state_dir, row["kind"], team)["slug"] if team else ""
+                row["role"] = lean or (roles.role_for(self.state_dir, row["kind"], team)["slug"] if team else "")
             got["changed"] = idea_change.changed_of(ideas.state(self.state_dir, slug))
             got["estimate"] = self.change_price(plan, got)
             with ideas.LOCK:

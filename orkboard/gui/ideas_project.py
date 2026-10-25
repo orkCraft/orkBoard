@@ -4,6 +4,8 @@
     ideas.party_for {type?}      # the Orkmaster's suggestion of a goal's party: {parties: [{party, name, fits, missing}], suggested: slug}
     ideas.collide_answer {id, answer}   # the person's answer to a collision: `first:<slug>` · `one` · `replan` · `leave` → {ok: true}
     ideas.proposals {about?}      # the parties this project's kind needs, each Lean, Standard or Full with its price (spec 75 §4): {kind, ask, proposals, read?}
+    ideas.tools                   # the AI tools a party may run on, ready first (spec 81 §1.4): {main, tools: [{id, name, ready, signed_in, installed, experimental, tiers}]}
+    ideas.party_sizes {slug}      # what each size would make of a party: {size, sizes: {lean|standard|full: {team, tiers, joins, leaves, recipe}}} (spec 81 §3)
 
 `proposals` reads the folder's names (realm/project_kind.py), no model, but for an empty folder's one line (core/idea_kind.py, the cheaper tier, as the
 Orkmaster); it writes nothing, and the line is kept nowhere. `party_for` reads the project's parties and their teams; it writes nothing and asks no model (realm/orkmaster.py). A collision is found by code
@@ -14,12 +16,13 @@ Orkmaster edits no other party's spec or plan and moves nothing before then. No 
 from __future__ import annotations
 
 import logging
+import shutil
 import threading
 
 from orkboard.core import idea_collide, idea_kind
 from orkboard.core.idea_keeper import KeeperError
 from orkboard.gui.ideas_args import IdeasError, _opt, _text
-from orkboard.realm import collide, event_log, idea_change, ideas, orkmaster, project_kind
+from orkboard.realm import collide, event_log, goal_team, harnesses, idea_change, ideas, library, orkmaster, party_resize, project_kind
 
 log = logging.getLogger(__name__)
 _BUSY_LOCK = threading.Lock()      # the pairs being judged now: one thread judges a pair (the bus and the hook may both find it)
@@ -68,6 +71,34 @@ class ProjectMixin:
         got = orkmaster.proposals(self.root(False), self.state_dir, self.board_settings(), kind, facts, ideation_first=bool(line), told=told)
         self._ev(event_log.PROPOSALS_SHOWN, args, kind=kind["id"], n=len(got), ask=ask, read=read)
         return {"kind": kind, "ask": ask, **({"read": read} if read is not None else {}), "proposals": got}
+
+    # -- a party's AI tool and its size's team (spec 81) ---------------------------------------------------------------------------------
+
+    @staticmethod
+    def tools_installed() -> set[str]:
+        """The AI tools found on this computer (a lookup of their programs on the path; nothing is run)."""
+        return {h.id for h in harnesses.REGISTRY.values() if shutil.which(h.bin)}
+
+    def tools(self, args: dict) -> dict:
+        """`ideas.tools` (spec 81 §1.4): the list a party's AI tool is picked from, as Settings' rows know the tools: found on the path, and not waiting
+        for a sign-in. `main` is the Main tool, which a party with none of its own runs on. Ready first, then not signed in, then not installed."""
+        from orkboard import settings as machine
+        signs = getattr(self.host, "sign_ins", None)
+        out = [h.id for h in harnesses.REGISTRY.values() if signs is not None and signs.blocked(h.id)]
+        return harnesses.for_party(self.tools_installed(), out, machine.main_tool(getattr(self.host, "machine", None)))
+
+    def party_sizes(self, args: dict) -> dict:
+        """`{slug}`: what each size would make of the party, to show before the press: `{"size", "sizes": {lean|standard|full: {recipe, team, tiers,
+        joins, leaves}}}`, `joins` and `leaves` as `{slug, name}` (the agents that come and go; none for a party of the library with no recipe)."""
+        slug = _text(args, "slug", 100)
+        root = self.root(False)
+        if ideas.track_page(root, slug) is None:
+            raise IdeasError("That party is gone")
+
+        def said(ids: list[str]) -> list[dict]:
+            return [{"slug": a, "name": (library.get(a).name if library.get(a) is not None else a)} for a in ids]
+        return {"size": goal_team.size_of(root, slug),
+                "sizes": {k: {**v, "joins": said(v["joins"]), "leaves": said(v["leaves"])} for k, v in party_resize.resizes(root, slug).items()}}
 
     # -- finding (spec 71 §2, §3): code finds, one cheap call judges, nothing moves ----------------------------------------
 
