@@ -33,11 +33,26 @@ def gate_in(repo: Path, **more):
 
 # -- the file --------------------------------------------------------------------------------------------------
 
-def test_without_a_file_or_a_gate_table_the_gate_is_todays(tmp_path):
+def critical_tests(root: Path) -> None:
+    """The three files a Python project of Orkboard's way has (`gate_config.CRITICAL_TESTS`)."""
+    (root / "tests").mkdir(exist_ok=True)
+    for rel in gate_config.CRITICAL_TESTS:
+        (root / rel).write_text("")
+
+
+def test_without_a_file_or_a_gate_table_the_gate_is_todays_when_the_project_has_its_critical_tests(tmp_path):
+    critical_tests(tmp_path)
     assert gate_config.read(tmp_path) == gate_config.Gate() and not gate_config.read(tmp_path).custom
     toml(tmp_path, "[other]\nx = 1\n")
     assert gate_config.read(tmp_path) == gate_config.Gate()
     assert gate_config.Gate().always == idea_git.CRITICAL_TESTS == gate_config.CRITICAL_TESTS
+    assert not gate_config.Gate().none
+
+
+def test_without_critical_tests_always_is_empty_and_only_the_files_that_exist_count(tmp_path):
+    (tmp_path / "tests").mkdir()
+    (tmp_path / "tests" / "test_cli.py").write_text("")
+    assert gate_config.read(tmp_path).always == ("tests/test_cli.py",)
 
 
 def test_this_repository_names_its_three_critical_tests_in_always():
@@ -63,7 +78,18 @@ def test_a_broken_file_is_said_and_the_gate_is_todays(tmp_path, text):
     toml(tmp_path, text)
     gate = gate_config.read(tmp_path)
     assert gate.error.startswith("orkcraft.toml is not usable") and "ran as with no file" in gate.error
-    assert not gate.custom and gate.always == idea_git.CRITICAL_TESTS
+    assert not gate.custom and gate.always == () and gate.none           # an empty folder: no tests, said and not run
+
+
+def test_a_broken_file_gives_the_project_its_own_gate_with_the_error(tmp_path):
+    critical_tests(tmp_path)
+    toml(tmp_path, "[gate\n")
+    gate = gate_config.read(tmp_path)
+    assert gate.error.startswith("orkcraft.toml is not usable") and gate.always == gate_config.CRITICAL_TESTS and not gate.none
+    (tmp_path / "go.mod").write_text("module x\n")
+    import shutil
+    shutil.rmtree(tmp_path / "tests")
+    assert gate_config.read(tmp_path).run == "go test ./..." and gate_config.read(tmp_path).error
 
 
 def test_files_hold_always_and_the_mapped_tests_that_exist_and_the_command_quotes_them(tmp_path):
@@ -237,3 +263,96 @@ def test_a_link_to_a_secret_is_a_secret(host, tmp_path):                        
 def test_the_phone_reads_documents_through_the_same_command(host):                         # noqa: F811
     assert BoardPhone.allowed(host, "ideas.doc", {"path": "notes.md"})
     assert "ideas.doc" not in BoardPhone.COMMANDS                                       # no phone-only path to the files
+
+
+# -- the project's own gate (spec 86 §3) ----------------------------------------------------------------------------
+
+def package(folder: Path, test: str | None = None, **scripts: str) -> None:
+    folder.mkdir(parents=True, exist_ok=True)
+    table = {"build": "tsc", **scripts, **({"test": test} if test else {})}
+    (folder / "package.json").write_text(json.dumps({"name": "x", "scripts": table}))
+
+
+def test_a_node_project_is_gated_by_npm_test(tmp_path):
+    package(tmp_path, "node --test")
+    gate = gate_config.read(tmp_path)
+    assert (gate.run, gate.always, gate.none, gate.custom) == ("npm test", (), False, True)
+    assert gate_config.command(gate, gate_config.gate_files(gate, ["src/a.js"], tmp_path)) == "npm test"
+
+
+def test_each_folder_with_a_test_script_is_tested_three_at_most_with_prefix(tmp_path):
+    package(tmp_path / "server", "jest")
+    package(tmp_path / "web", "vitest")
+    package(tmp_path / "tools", None)                                                    # no test script: skipped
+    package(tmp_path / "a", "x")
+    package(tmp_path / "b", "y")
+    package(tmp_path / "web" / "node_modules" / "dep", "dep test")                     # never inside node_modules
+    run = gate_config.read(tmp_path).run
+    assert run == "npm test --prefix a && npm test --prefix b && npm test --prefix server"
+    assert gate_config.test_argv(run)[:2] == ["sh", "-c"]                                 # `&&` needs a shell
+    package(tmp_path, "mocha")
+    assert gate_config.read(tmp_path).run.startswith("npm test && npm test --prefix a")
+
+
+def test_npms_placeholder_test_script_is_no_test(tmp_path):
+    package(tmp_path, 'echo "Error: no test specified" && exit 1')
+    assert gate_config.read(tmp_path).none is True
+    (tmp_path / "go.mod").write_text("module x\n")
+    assert gate_config.read(tmp_path).run == "go test ./..."
+
+
+@pytest.mark.parametrize("files,run", [(("pyproject.toml",), "python -m pytest -q"), (("tests/x.txt",), "python -m pytest -q"),
+                                       (("go.mod",), "go test ./..."), (("Cargo.toml",), "cargo test")])
+def test_each_language_has_its_own_test_command(tmp_path, files, run):
+    for rel in files:
+        (tmp_path / rel).parent.mkdir(parents=True, exist_ok=True)
+        (tmp_path / rel).write_text("")
+    gate = gate_config.read(tmp_path)
+    assert (gate.run, gate.always, gate.none) == (run, (), False)
+
+
+def test_node_comes_before_python_and_the_first_that_holds_wins(tmp_path):
+    package(tmp_path, "jest")
+    (tmp_path / "pyproject.toml").write_text("")
+    (tmp_path / "go.mod").write_text("")
+    assert gate_config.read(tmp_path).run == "npm test"
+    (tmp_path / "package.json").unlink()
+    assert gate_config.read(tmp_path).run == "python -m pytest -q"
+
+
+def test_a_project_with_nothing_to_test_has_the_none_gate(tmp_path):
+    (tmp_path / "README.md").write_text("x")
+    gate = gate_config.read(tmp_path)
+    assert (gate.none, gate.run, gate.always, gate.custom) == (True, "", (), False)
+    assert gate_config.gate_files(gate, ["README.md"], tmp_path) == []
+
+
+def test_a_gate_table_of_the_project_is_never_replaced_by_the_derived_one(tmp_path):
+    package(tmp_path, "jest")
+    toml(tmp_path, '[gate]\nrun = "make check"\n')
+    assert gate_config.read(tmp_path).run == "make check"
+    toml(tmp_path, '[gate]\nalways = ["t/a.t"]\n')
+    gate = gate_config.read(tmp_path)
+    assert (gate.run, gate.always, gate.none) == ("", ("t/a.t",), False)
+
+
+def test_this_repository_keeps_its_gate_unchanged_with_and_without_its_file(tmp_path):
+    """Orkboard's own gate: its three critical tests, run by pytest; the project has the files, so deriving gives the same."""
+    assert gate_config.read(ROOT).always == tuple(f"tests/test_{n}.py" for n in ("architecture", "board_alone", "updates"))
+    assert gate_config.derive(ROOT).always == tuple(t for t in gate_config.CRITICAL_TESTS if (ROOT / t).is_file())     # no file: the same rule
+    assert not gate_config.read(ROOT).custom and not gate_config.read(ROOT).none
+
+
+def test_a_node_gate_runs_in_the_worktree_and_a_none_gate_runs_nothing(repo):
+    (repo / "package.json").write_text(json.dumps({"scripts": {"test": "echo node-tests-ran"}}))
+    git(repo, "add", "-A")
+    git(repo, "commit", "-m", "node")
+    import shutil
+    if shutil.which("npm"):
+        run = gate_in(repo)
+        assert run.ran and run.ok and run.command == "npm test" and "node-tests-ran" in run.out
+    (repo / "package.json").unlink()
+    git(repo, "add", "-A")
+    git(repo, "commit", "-m", "plain")
+    run = gate_in(repo)
+    assert run.ran is False and "no tests ran" in run.out

@@ -272,8 +272,8 @@ def test_a_line_is_read_by_one_cheap_call_as_the_orkmaster_into_a_kind_and_ideat
     assert got["proposals"][1]["why"].startswith("by what you said")
     [call] = h.model.asked
     assert call["as"] == orkmaster.ROLE and call["tools"] is False and LINE in call["prompt"]
-    assert call["tier"] == "warrior" and call["effort"] == "low" and call["budget"] == idea_target.budget("kind", "balance") == 0.03        # the cheaper tier, as the judge
-    assert idea_target.MATRIX["kind"] == idea_target.MATRIX["collide"] and "kind" in idea_target.STEPS
+    assert call["tier"] == "warrior" and call["effort"] == "low" and call["budget"] == idea_target.budget("kind", "balance") == 0.15        # the cheaper tier, as the judge, its budget 1.5 floors (spec 86 §5)
+    assert {t: idea_target.MATRIX["kind"][t] for t in ("balance", "quality")} == {t: idea_target.MATRIX["collide"][t] for t in ("balance", "quality")} and "kind" in idea_target.STEPS
     assert orkmaster.role(h.state)["slug"] == "orkmaster" and (h.state / "roles" / "orkmaster.md").is_file()
 
 

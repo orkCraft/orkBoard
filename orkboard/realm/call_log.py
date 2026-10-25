@@ -98,6 +98,13 @@ def keep_days(root: Path | None) -> None:
         _KEPT["days"] = root
 
 
+def days_root() -> Path | None:
+    """The project whose day log the calls made now go to: the one this thread's calls are placed in (`of_project`), else
+    the one `keep_days` named; None when no day log is kept (realm/idea_target.py `floor` reads its calls)."""
+    here = _HERE.get()
+    return (here[0] if here is not None else None) or _KEPT["days"]
+
+
 def day_folder(root: Path, day: str, building: str) -> Path:
     return root / DAYS / day / (_SAFE.sub("-", building)[:80] or TOWN)
 
