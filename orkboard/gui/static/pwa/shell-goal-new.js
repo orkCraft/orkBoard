@@ -19,6 +19,7 @@ import { motionOn, pulse, gather } from "./shell-motion.js";
 import { makeReleasesFrom } from "./shell-release.js";
 import { dealOf } from "./shell-project.js";
 import { PROPOSAL, STANDARD, makeProposals, proposes, sizeSwitch } from "./shell-proposals.js";
+import { loadTools, toolPick } from "./shell-party-tool.js";
 
 export const CRAFTS = [["engineering", "peon", "Code, tests and the build"], ["design", "elf", "Screens, flows and words on them"],
   ["data", "goblin", "Numbers, queries and reports"], ["marketing", "gnome", "Pages, posts and search"],
@@ -322,6 +323,7 @@ export function makeNewGoal(core) {
   const sh = sheet("New party", body, footEl);
   const sizeLib = sizeSwitch({ label: "Its size" });  // a party of one's own has a size too (spec 75 §5.1): Standard unless the person picks
   sizeLib.set(STANDARD);
+  const toolLib = toolPick(core);                    // its AI tool (spec 81 §4): the Main tool unless the person picks
   const proposals = makeProposals(core, { make: makeProposal, library: () => showLibrary(true) });
   const back = h("button", { class: "ork-btn quiet props__back", type: "button", "data-act": "to-proposals", onclick: () => showProposals("") }, h("i", { class: "ork-chev left", "aria-hidden": "true" }), "Orkmaster proposes");
   let mode = "library", opened = 0;                  // the sheet on the proposals or on the library; which opening this is (a late answer of an earlier one is let go)
@@ -420,14 +422,15 @@ export function makeNewGoal(core) {
     const heads = motionOn() ? gatherFrom() : [];                // read at the press, before the sheet closes
     const from = releasesFrom.get();
     const got = await core.call("ideas.goal_save", { about: about.value.trim(), craft: craftOf(), leader: p.leader, team: p.team, every: p.every, priority: priority.get(),
-      ...(p.party ? { party: p.party } : {}), ...(p.preset ? { preset: p.preset } : {}), ...(from ? { releases_from: from } : {}), ...(proposes(core) ? { size: sizeLib.get() } : {}) });
+      ...(p.party ? { party: p.party } : {}), ...(p.preset ? { preset: p.preset } : {}), ...(from ? { releases_from: from } : {}), ...(proposes(core) ? { size: sizeLib.get() } : {}),
+      ...(proposes(core) && toolLib.get() ? { tool: toolLib.get() } : {}) });
     sync();
     if (!got?.slug) { gather.drop(); return; }
     await made(got, heads);
   });
 
   /** **Make it** on a proposal's card: its leader, its team of the size picked and the size, as a tile's party saves (the words are the person's, else the proposal's own line). The heads gather from the card. */
-  async function makeProposal(p, size, card, button) {
+  async function makeProposal(p, size, card, button, tool = "") {
     const s = p.sizes?.[size];
     if (!s) return;
     button.disabled = true;
@@ -441,7 +444,7 @@ export function makeNewGoal(core) {
     const craft = library(core).find((x) => x.id === s.leader)?.craft || "engineering";
     const words = about.value.trim() || [p.name, p.line].filter(Boolean).join(": ");
     const got = await core.call("ideas.goal_save", { about: words, craft, leader: s.leader, team: s.team || [], every: [], priority: "normal", size, proposal: p.id,       // `proposal`: the host logs *proposal_taken* only with it
-      ...(presetsOf(core).some((x) => x.id === p.id) ? { preset: p.id } : {}) });
+      ...(tool ? { tool } : {}), ...(presetsOf(core).some((x) => x.id === p.id) ? { preset: p.id } : {}) });
     button.disabled = false;
     if (!got?.slug) { gather.drop(); return; }
     await made(got, heads);
@@ -468,10 +471,12 @@ export function makeNewGoal(core) {
     body.replaceChildren(...[proposing ? back : null,
       h("section", { class: "new-goal-for", "aria-label": "About the party" }, field("What it is for", about), h("div", { class: "field" }, h("span", { class: "field-label" }, "Priority"), priority.el)),
       proposes(core) ? h("div", { class: "field size-field" }, h("span", { class: "field-label" }, "Its size"), sizeLib.el) : null,
+      proposes(core) ? toolLib.el : null,
       h("section", { class: "new-goal-craft", "aria-label": "Craft" }, h("h3", {}, "Craft"), row, craftLine),
       party.team, party.checks, releasesFrom.el,
       h("p", { class: "muted hint" }, "The leader reads it and writes the title and the summary."), left].filter(Boolean));
     drawCraft();
+    if (proposes(core)) { toolLib.draw(); if (!core.st.tools) loadTools(core).then(() => toolLib.draw()); }
     if (fromProposals) about.focus();
   }
 
@@ -487,6 +492,7 @@ export function makeNewGoal(core) {
       save.disabled = true;
       priority.set("normal");
       sizeLib.set(STANDARD);
+      toolLib.set("");
       releaseOn = false;
       releasesFrom.set({ offers: false });
       party.set({ leader: TASKMASTER, team: [], every: [] }, () => craftOf());

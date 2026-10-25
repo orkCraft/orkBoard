@@ -151,6 +151,8 @@ def test_seats_refuse_ideation_without_a_view_with_a_code_agent_and_a_view_elsew
     assert goal_team.seats([*TEAM[:3], "grunt", "skeptic"], "investor") == whole                     # a code agent for a view
     assert goal_team.seats([*TEAM, "grunt"], "investor") == whole                                    # one more
     assert goal_team.seats(list(library.VIEWS), "investor") == whole                                 # no skeptic
+    assert not goal_team.seats([], "investor") and not goal_team.seats([*library.VIEWS[:2], "skeptic"], "investor")           # a size's part of it (spec 81 §2)
+    assert goal_team.seats([*library.VIEWS[:3], "skeptic"], "investor") == whole and goal_team.seats(["skeptic"], "investor") == whole
     only = "The views judge pitches: they are in Ideation only"
     assert goal_team.seats(["grunt", "market-view"], "architect") == only
     assert goal_team.seats(["skeptic"], "") == only and goal_team.seats(["grunt", "skeptic"], "product-manager") == only

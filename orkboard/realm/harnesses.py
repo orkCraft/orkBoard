@@ -10,6 +10,7 @@
     h.result(stdout, before)                 # (text, cost USD | None, tokens | None, session id)
     h.outcome(stdout, before, model)         # … priced from `model` when the tool prints tokens, no price
     harnesses.main(enabled, chosen)          # the tool decisions run on: the chosen one, else the first on
+    harnesses.for_party(installed, signed_out, main_id)   # the list a party's tool is picked from (spec 81 §1.4)
     harnesses.model_on("agy", "haiku")       # a model or tier of any tool, on this one
     h.pick("elder")                          # … the model a run of it names: the newest of the family
 
@@ -394,6 +395,18 @@ def main(enabled: Iterable[str] = (), chosen: str = "") -> str | None:
     if chosen in on:
         return chosen
     return next((t for t in REGISTRY if t in on), None)
+
+
+def for_party(installed: Iterable[str] = (), signed_out: Iterable[str] = (), main_id: str = "") -> dict:
+    """The list a party's AI tool is picked from (spec 81 §1.4): `{"main": id, "tools": [{id, name, ready, signed_in, installed, experimental,
+    tiers}]}` — the tools ready to run first, then those not signed in, then those not installed, each group in the registry's order.
+    `installed`: the ids found on this machine; `signed_out`: the ids that need their sign-in; `main_id`: the Main tool. `tiers` is
+    False for a tool with no tier table (it runs its own model). Nothing is run or asked."""
+    have, out = set(installed), set(signed_out)
+    rows = [{"id": h.id, "name": h.title, "ready": h.id in have and h.id not in out, "signed_in": h.id not in out,
+             "installed": h.id in have, "experimental": bool(h.experimental), "tiers": bool(h.models)} for h in REGISTRY.values()]
+    group = lambda r: 0 if r["ready"] else 1 if r["installed"] else 2        # noqa: E731
+    return {"main": main_id or main(have) or "claude", "tools": sorted(rows, key=group)}      # a stable sort: the registry's order within a group
 
 
 def tier_of_model(model: str) -> str | None:

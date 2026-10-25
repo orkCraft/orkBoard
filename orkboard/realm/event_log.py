@@ -83,7 +83,7 @@ LIMITS_READ = "limits_read"       # provider, left, window
 # Round 2 (docs/specs/34-v1-round-2.md §4): goals by dialog, agents by task type.
 GOAL_SAVED = "goal_saved"         # goal, new, metrics (their names), links, priority, device, party (the id of the saved party it was picked from, else ""),
 #                                    joined, out (the agent who joined, the member who left, else ""), via ("type": New goal by its type · "plan": a plan's stop · "": Edit the party) (spec 52 §2.7),
-#                                    preset (the library's party the seats started from, else ""), stages ("<builders>/<checkers>": the leader's seats) (spec 59 §5)
+#                                    preset (the library's party the seats started from, else ""), stages ("<builders>/<checkers>": the leader's seats) (spec 59 §5), tool (the party's AI tool id, else "": the Main tool) (spec 81)
 GOAL_ACCEPTED = "goal_accepted"   # goal, met, by (its leader's name), and the call's measure
 GOAL_READ = "goal_read"           # goal, state (asks · ready · raw: not read), seconds the keeper took, tier, effort
 ROLE_SAVED = "role_saved"         # role, model, max_parallel, new, device, kinds (the types it takes), instruction_chars
@@ -163,7 +163,7 @@ COLLIDE_ANSWERED = "collide_answered"   # pair, answer ("first:<slug>" · "one" 
 # Spec 75 §4.4: the Orkmaster fits the parties to the project (never the person's line: only the kind it was read as).
 PROPOSALS_SHOWN = "proposals_shown"   # kind (id), n (proposals), ask (an empty folder asked its line), read (the line was read by the model; None without a line), device
 PROPOSAL_TAKEN = "proposal_taken"     # kind (id), recipe (id), size (lean · standard · full), device
-PARTY_RESIZED = "party_resized"       # party (slug), from (lean · standard · full · ""), to, device
+PARTY_RESIZED = "party_resized"       # party (slug), from (lean · standard · full · ""), to, joins, leaves (the agents that came and went with it, spec 81 §3), device
 
 # Spec 42 §3: notifications to a paired phone (counts and tags, never a word of the push).
 PUSH_SET = "push_set"             # on, device

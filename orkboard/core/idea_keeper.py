@@ -53,7 +53,7 @@ from orkboard.realm import (collide, event_log, goal_team, goal_types, idea_chan
 from orkboard.realm.idea_words import short_said
 
 CHANGED = "ideas.changed"          # the bus's topic: slug
-HARNESS = "claude"
+HARNESS = "claude"                 # the tool when a step's party has none and the machine names none (spec 81: the Main tool is the default)
 MAX_TASKS, MAX_TODOS, MAX_QUESTIONS = 8, 5, 3
 INDEX_CHARS, PAGE_CHARS, REPLY_CHARS = 6000, 30_000, 4000
 TIERS = ("elder", "warrior", "laborer")
@@ -137,15 +137,26 @@ class IdeaKeeper(SignInMixin, DraftMixin, GoalMixin, NightMixin, LeadMixin, Revi
         """One shot (spec 35 §0): a fresh read-only run, no session kept; the night's proposals read nothing."""
         from orkboard.realm import call_log, harnesses, jobs
         from orkboard.sources import telemetry
-        h = harnesses.get(HARNESS)
+        tool = self.tool_now()
+        h = harnesses.get(tool)
         purpose = {"laborer": "sort", "elder": "plan"}.get(tier, "plan")      # the Taskmaster's own model is a plan
         cancel = getattr(self._tls, "cancel", None) or self.cancel
         with telemetry.tagged(purpose, "board"), call_log.of_project(self.repo_root):     # its log and spend: ours
-            got = jobs.run_read(HARNESS, prompt, self.repo_root, cancel, h.pick(tier) if h else tier,
+            got = jobs.run_read(tool, prompt, self.repo_root, cancel, h.pick(tier) if h else tier,
                                 env={"ORKCRAFT_ORC": "board/keeper", "ORKCRAFT_IDEA": getattr(self._tls, "slug", "")},
                                 effort=effort, budget=budget, one_shot=True, tools=getattr(self._tls, "tools", True))
         self._tls.usage, self._tls.capped = jobs.last_usage(), bool(getattr(jobs.LAST, "capped", False))
         return got
+
+    def tool_now(self) -> str:
+        """The AI tool the running step goes to: its goal's party's, else the Main tool (spec 81 §1.2); a step of no goal's, the Main tool."""
+        from orkboard.realm import harnesses
+        goal = self.goal_of_key(getattr(self._tls, "key", "") or getattr(self._tls, "slug", "") or "")
+        tool = goal_team.tool_of(self.wiki_root(), goal) if goal else ""
+        if harnesses.get(tool) is not None:
+            return tool
+        from orkboard import settings as machine
+        return machine.main_tool() or HARNESS
 
     def target(self) -> str:
         """The Target the running step works at: its goal's party's size, else the setting (spec 75 §3); a step of no goal's, the setting."""
@@ -193,10 +204,11 @@ class IdeaKeeper(SignInMixin, DraftMixin, GoalMixin, NightMixin, LeadMixin, Revi
     def _spent(self, step: str, got: tuple[str, str], usage: Any, tokens: Any, cost: Any) -> None:
         """The call's line in the ledger (spec 36 §1): its idea's, its goal's, or the board's (the night's proposals)."""
         from orkboard.realm import harnesses
-        h, tier = harnesses.get(HARNESS), idea_target.tier_of(got[0])
+        tool = self.tool_now()
+        h, tier = harnesses.get(tool), idea_target.tier_of(got[0])
         key = getattr(self._tls, "key", "") or getattr(self._tls, "slug", "") or ""
         where = {} if step in ("propose", "kind") else ({"goal": key[5:]} if key.startswith("goal:") else {"idea": key})
-        idea_spend.append(self.state_dir, idea_spend.line(step, getattr(self._tls, "as_role", "") or roles.TASKMASTER, HARNESS, (h.pick(got[0]) if h else "") or got[0],
+        idea_spend.append(self.state_dir, idea_spend.line(step, getattr(self._tls, "as_role", "") or roles.TASKMASTER, tool, (h.pick(got[0]) if h else "") or got[0],
                                                           tier, got[1], idea_spend.tokens_of(usage, tokens), cost), **where)
 
     def parse(self, text: str) -> dict:
@@ -529,11 +541,14 @@ Answer with one JSON object and nothing else:
             team = goal_team.for_idea(root, slug)
             if team and (lead := goal_team.leader_of(root, ideas.idea_page(root, slug).get("track") or "")) not in team:
                 team = [*team, lead]                     # the leader does the tags it takes when no builder does
+            track = (ideas.idea_page(root, slug).get("track") or "") if ideas.idea_page(root, slug) is not None else ""
+            lean = goal_team.lean_role(root, track) if track else ""         # a Lean party's leader does it all (spec 81 §2)
             for t in data["tasks"]:                      # who of the goal's team does it, by its tag (none: the project's)
-                t["role"] = roles.role_for(self.state_dir, t["kind"], team)["slug"] if team else ""
+                t["role"] = lean or (roles.role_for(self.state_dir, t["kind"], team)["slug"] if team else "")
             data["missing"] = goal_types.of_plan(self.state_dir, data["tasks"], team, lead) if team else []     # what no one of the party does (spec 52 §2.6)
             target = self.target()
-            runs = [idea_target.tier_of(idea_target.task_pick(t["tier"], target, str(self.role_of(t).get("model") or ""))[0])
+            tiers = goal_team.tiers_of(root, track) if track else {}
+            runs = [idea_target.tier_of(idea_target.task_pick(t["tier"], target, str((goal_team.seat_role(self.role_of(t), tiers) or {}).get("model") or ""))[0])
                     for t in data["tasks"]]
             data["estimate"] = estimate(data["tasks"], runs, idea_spend.tier_costs(self.state_dir))   # learned (spec 36 §6)
             ideas.save_plan(self.state_dir, slug, data)

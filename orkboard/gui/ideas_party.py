@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from orkboard.gui.ideas_args import IdeasError, _device, _opt, _text
-from orkboard.realm import event_log, goal_team, goal_types, idea_target, ideas, library, own_parties, party_hints, party_price, party_proposals, party_work, releases, roles
+from orkboard.realm import event_log, goal_team, goal_types, idea_target, ideas, library, own_parties, party_hints, party_price, party_proposals, party_recipes, party_work, releases, roles
 
 
 class PartyMixin:
@@ -40,7 +40,8 @@ class PartyMixin:
         types = [{"id": t.id, "name": t.name, "sign": t.sign, "missing": rows[0]["name"] if rows else ""}
                  for t, rows in goal_types.offered(self.state_dir, self.root(False), "", read=party)]
         ideation = leader == library.INVESTOR                # a pitch's price, no hint about code or checks (spec 65 §3)
-        return {**party_price.price(self.root(False), self.state_dir, self.board_settings(), leader, team, every, size or None),
+        return {**party_price.price(self.root(False), self.state_dir, self.board_settings(), leader, team, every, size or None,
+                                    party_recipes.tiers_for(leader, team, size) if size else None),
                 "hints": [] if ideation else party_hints.hints(self.root(False), self.state_dir, craft, leader, team, every), "types": types}
 
     def save_releases_from(self, party: str, value: object) -> None:

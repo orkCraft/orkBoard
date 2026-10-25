@@ -79,7 +79,7 @@ class CanvasesMixin:
         for got in out.values():
             page = ideas.idea_page(self.root(make=False), got["idea"])
             got["idea_title"] = (page.title if page else "") or got["idea"]
-            got["head"] = roles.task_head(self.state_dir, got.pop("plan_task"), self.target_of_idea(got["idea"]), read)
+            got["head"] = roles.task_head(self.state_dir, got.pop("plan_task"), self.target_of_idea(got["idea"]), read, self.tiers_of_idea(got["idea"]))
         return out
 
     @staticmethod

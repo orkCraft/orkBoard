@@ -48,6 +48,13 @@ IDEATION = proposal("ideation", "Ideation", "Pitches judged from four sides", "a
                     ["product-view", "market-view", "tech-view", "design-view"], ["skeptic"])
 WIKI = proposal("wiki", "Wiki", "The team's pages, kept and edited", "a team's wiki", "product-manager", ["copywriter"], ["editor"])
 CODE = proposal("engineering", "Engineering", "Plan, build, test and review", "code it cannot tell", "architect", ["grunt", "tester"], ["reviewer"])
+TOOLS = {"main": "claude", "tools": [
+    {"id": "claude", "name": "Claude Code", "ready": True, "signed_in": True, "installed": True, "experimental": False, "tiers": True},
+    {"id": "codex", "name": "Codex", "ready": True, "signed_in": True, "installed": True, "experimental": False, "tiers": True},
+    {"id": "pi", "name": "pi", "ready": True, "signed_in": True, "installed": True, "experimental": False, "tiers": False},
+    {"id": "cursor", "name": "Cursor", "ready": False, "signed_in": False, "installed": True, "experimental": False, "tiers": False},
+    {"id": "agy", "name": "Antigravity", "ready": False, "signed_in": True, "installed": False, "experimental": True, "tiers": True},
+    {"id": "hermes", "name": "Hermes Agent", "ready": False, "signed_in": True, "installed": False, "experimental": False, "tiers": False}]}
 KINDS = {"mobile": ("a mobile app", ["ios/", "android/"]), "empty": ("an empty folder", []), "wiki": ("a team's wiki", ["mkdocs.yml"]), "code": ("code", ["pyproject.toml"])}
 
 
@@ -63,6 +70,7 @@ class ProposalHost(ProjectHost):
     def __init__(self, kind_id="mobile", model=True):
         super().__init__()
         self.kind_id, self.model, self.sizes, self.read = kind_id, model, {}, {"wiki": "wiki", "garbage": "code"}
+        self.tools_doc, self.moves, self.refuse_size = copy.deepcopy(TOOLS), {}, ""         # `ideas.tools`; who joins and leaves with a size (`moves[slug][size] = {team, joins, leaves}`); a size the host refuses
         self.deal = [{"id": "mobile-features", "why": "proposal", "n": 0}, {"id": "mobile-architecture", "why": "proposal", "n": 0}, *copy.deepcopy(HAVING[:-2]), {"id": "release", "why": "have", "n": 0}, {"id": "ideation", "why": "have", "n": 0}]
 
     def map_doc(self):
@@ -92,6 +100,21 @@ class ProposalHost(ProjectHost):
         if name == "ideas.proposals":
             self.log.append((name, a))
             return self.proposed(a)
+        if name == "ideas.tools":                                           # spec 81 §1.4: the list a party's AI tool is picked from
+            self.log.append((name, a))
+            return copy.deepcopy(self.tools_doc)
+        if name == "ideas.party_sizes":                                     # spec 81 §3: what each size would make of the party
+            self.log.append((name, a))
+            team = self.goals[a["slug"]].get("team", [])
+            said = lambda ids: [{"slug": i, "name": i.replace("-", " ").title(), "head": head(i)} for i in ids]       # noqa: E731
+            return {"size": self.sizes.get(a["slug"], ""), "sizes": {s: {"recipe": "", "team": (m := self.moves.get(a["slug"], {}).get(s, {})).get("team", team), "tiers": {},
+                                                                           "joins": said(m.get("joins", [])), "leaves": said(m.get("leaves", []))} for s in PRICES}}
+        if name == "tools.sign_in":                                         # spec 45: the tool's own sign-in opens
+            self.log.append((name, a))
+            return {"harness": a["harness"], "state": "open", "by": "browser"}
+        if name == "ideas.goal_save" and a.get("size") and self.refuse_size:
+            self.log.append((name, a))
+            return {"error": self.refuse_size}
         if name == "ideas.party_price" and a.get("size"):                    # §3.3: a size's Target and its team, its price
             self.log.append((name, a))
             low, high = PRICES[a["size"]]
@@ -102,10 +125,14 @@ class ProposalHost(ProjectHost):
             if gone:                                                         # spec 52's swap holds on the host: a member with work open never leaves
                 self.log.append((name, a))
                 return {"error": f"{gone[0].title()} has work open: it cannot leave"}
+            was_tool = self.goals.get(a.get("slug", ""), {}).get("tool", "")
             got = super().handle(name, a)
             slug = a.get("slug") or got["slug"]
+            self.goals[slug]["tool"] = a["tool"] if "tool" in a else was_tool                # spec 81: the party's AI tool, "" the Main tool
             if a.get("size"):
                 self.sizes[slug] = a["size"]
+                if a.get("slug") and "team" not in a and a["size"] in self.moves.get(slug, {}):        # the host gives the party the size's team (spec 81 §3)
+                    self.goals[slug]["team"] = list(self.moves[slug][a["size"]]["team"])
             return self.bump(got) if a.get("size") else got
         return super().handle(name, a)
 
@@ -364,39 +391,62 @@ def test_a_party_with_no_size_of_its_own_says_it_works_as_the_target(desk):
     assert sec.get_by_role("radio", checked=True).count() == 0 and "No size of its own yet: it works as Balance" in sec.inner_text()
 
 
-def test_with_its_team_lean_empties_the_team_only_after_its_members_leave_the_party_is_confirmed(desk):
+MOVES = {"lean": {"team": [], "joins": [], "leaves": ["grunt", "tester", "reviewer"]},
+         "standard": {"team": list(TEAM), "joins": [], "leaves": []},
+         "full": {"team": [*TEAM, "security-reviewer"], "joins": ["security-reviewer"], "leaves": []}}
+
+
+def test_the_size_switch_shows_the_heads_that_join_and_leave_before_the_press_and_one_press_saves_the_size(desk):
+    """Spec 81 §4.3: the heads that join and leave are shown under the switch, then one press saves the size: no *With its team*, no second confirm."""
     pg, host = desk
     _party(host)
+    host.moves["passkey"] = copy.deepcopy(MOVES)
     sec = _about(pg)
-    sec.get_by_text("With its team").click()
+    pg.wait_for_function("() => document.querySelectorAll('[data-sec=size] .shell-size__moves li').length === 2", timeout=WAIT_MS)
+    moves = sec.locator(".shell-size__moves")
+    lean, full = moves.locator('[data-size-move="lean"]'), moves.locator('[data-size-move="full"]')
+    assert _words(lean) == "Lean Leaves: Grunt, Tester, Reviewer" and lean.locator('[data-move="leaves"] .ork-race__head').count() == 3
+    assert _words(full) == "Full Joins: Security Reviewer" and full.locator('[data-move="joins"] .ork-race__head').count() == 1
+    assert moves.locator('[data-size-move="standard"]').count() == 0 and "With its team" not in sec.inner_text()              # (the size picked changes no one)
+    assert not [1 for n, a in host.log if n == "ideas.goal_save" and a.get("size")]                                           # nothing sent before the press
+    pg.wait_for_timeout(300)
+    shot(pg, "desk-size-moves.png")
     sec.get_by_role("radio", name="Lean").click()
-    ask = sec.get_by_role("alert")
-    assert "Its members leave the party" in ask.inner_text() and "Grunt" in ask.inner_text()
-    assert not [1 for n, a in host.log if n == "ideas.goal_save" and a.get("size") == "lean"]                                 # nothing sent yet
-    ask.get_by_role("button", name="Keep them").click()
-    assert sec.get_by_role("alert").count() == 0 and not [1 for n, a in host.log if n == "ideas.goal_save" and a.get("size") == "lean"]
-    sec.get_by_role("radio", name="Lean").click()
-    sec.get_by_role("alert").get_by_role("button", name="Make it Lean").click()
     sent = _calls(pg, host, "ideas.goal_save")[-1]
-    assert sent == {"slug": "passkey", "about": "Builds the sign-in.", "priority": "high", "size": "lean", "leader": "architect", "team": [], "every": []}
+    assert sent == {"slug": "passkey", "about": "Builds the sign-in.", "priority": "high", "size": "lean"}                    # one press: the size alone, the host gives it its team
+    pg.wait_for_function("() => document.querySelector('[data-sec=size] [data-value=lean]')?.getAttribute('aria-checked') === 'true'", timeout=WAIT_MS)
+    assert sec.get_by_role("alert").count() == 0 and sec.get_by_role("button").count() == 0
 
 
-def test_a_member_with_work_open_never_leaves_with_the_size(desk):
+def test_a_member_with_work_open_is_not_let_go_by_a_size_and_it_is_said_in_place(desk):
     pg, host = desk
     _party(host)
+    host.moves["passkey"] = copy.deepcopy(MOVES)
     host.party["passkey"] = [{"slug": "architect", "name": "Architect", "head": None, "band": "lead", "state": "free", "why": ""},
                              {"slug": "grunt", "name": "Grunt", "head": None, "band": "build", "state": "work", "why": ""},
                              {"slug": "tester", "name": "Tester", "head": None, "band": "build", "state": "free", "why": ""},
                              {"slug": "reviewer", "name": "Reviewer", "head": None, "band": "check", "state": "free", "why": ""}]
     host.bump({})
     sec = _about(pg)
-    sec.get_by_text("With its team").click()
+    pg.wait_for_function("() => document.querySelectorAll('[data-sec=size] .shell-size__moves li').length === 2", timeout=WAIT_MS)
     sec.get_by_role("radio", name="Lean").click()
     assert sec.get_by_role("alert").inner_text() == "Grunt has work open: it cannot leave"
     assert not [1 for n, a in host.log if n == "ideas.goal_save" and a.get("size")]
-    sec.get_by_text("With its team").click()                                                                              # the size alone is always free to change
+    sec.get_by_role("radio", name="Full").click()                                                                              # a size that lets no one go is free to pick
+    assert _calls(pg, host, "ideas.goal_save")[-1]["size"] == "full" and sec.get_by_role("alert").count() == 0
+
+
+def test_a_hosts_own_refusal_of_a_size_is_said_in_place_not_toasted(desk):
+    pg, host = desk
+    _party(host)
+    host.moves["passkey"] = copy.deepcopy(MOVES)
+    host.refuse_size = "Tester has work open: it cannot leave"                                                                  # the page's own list says free: the host knows better
+    sec = _about(pg)
+    pg.wait_for_function("() => document.querySelectorAll('[data-sec=size] .shell-size__moves li').length === 2", timeout=WAIT_MS)
     sec.get_by_role("radio", name="Lean").click()
-    assert _calls(pg, host, "ideas.goal_save")[-1]["size"] == "lean"
+    sec.get_by_role("alert").wait_for(timeout=WAIT_MS)
+    assert sec.get_by_role("alert").inner_text() == "Tester has work open: it cannot leave" and pg.locator(".ork-toast, .shell-toast").count() == 0
+    assert sec.get_by_role("radio", name="Standard").get_attribute("aria-checked") == "true"
 
 
 def test_a_host_that_refuses_a_team_change_with_work_open_is_heard(desk):
@@ -428,15 +478,18 @@ def test_edit_the_party_has_its_size_and_save_party_sends_it(desk):
     dlg.get_by_role("button", name="Save party").click()
     sent = _calls(pg, host, "ideas.goal_save")[-1]
     assert sent["slug"] == "passkey" and sent["size"] == "full" and "team" not in sent                                      # the size alone
+    host.moves["passkey"] = copy.deepcopy(MOVES)
     _about(pg)
     pg.get_by_role("region", name="Preview").get_by_role("button", name="Edit the party").click()
     dlg = pg.get_by_role("dialog", name="Edit the party")
-    dlg.get_by_role("group", name="Its size").get_by_text("With its team").click()
-    dlg.get_by_role("group", name="Its size").get_by_role("radio", name="Lean").click()
-    dlg.get_by_role("group", name="Its size").get_by_role("button", name="Make it Lean").click()
+    size = dlg.get_by_role("group", name="Its size")
+    pg.wait_for_function("() => document.querySelectorAll('.shell-modal .shell-size__moves li').length === 1", timeout=WAIT_MS)       # (it is Full now: Lean is the one that changes who is in)
+    assert "Lean Leaves: Grunt, Tester, Reviewer" in _words(size)                                                                # (shown before the press)
+    size.get_by_role("radio", name="Lean").click()
+    assert size.get_by_role("radio", name="Lean").get_attribute("aria-checked") == "true"
     dlg.get_by_role("button", name="Save party").click()
     sent = _calls(pg, host, "ideas.goal_save", at_least=2)[-1]
-    assert sent["size"] == "lean" and sent["team"] == [] and sent["leader"] == "architect"
+    assert sent["size"] == "lean" and sent["team"] == [] and sent["leader"] == "architect"            # the team the size gave goes with Save party
 
 
 # -- the Target leaves the top bar; Settings keeps it ----------------------------------------------------------------------------------------------------------------

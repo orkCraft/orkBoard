@@ -11,6 +11,7 @@ import { GoalWizard, FOR_HINT } from "./goalwizard.js";
 import { ReleasesFrom, useReleasesFrom } from "./release.js";
 import { SizeField } from "./partysize.js";
 import { proposalsOn } from "./proposals.js";
+import { ToolPick, useTools } from "./toolpick.js";
 import { PartyBands, PriceLine, CanTake, ChecksBlock, OwnParties, TASKMASTER, IDEATION_STAYS, partyWords, pitchParty, usePartyPrice, useOwnParties } from "./party.js";
 
 export const PRIORITIES = [["high", "High"], ["normal", "Normal"], ["low", "Low"]];
@@ -32,6 +33,8 @@ function GoalEdit({ slug, then = "" }) {
   const [changing, setChanging] = useState(false);
   const wasSize = (mapData.value?.goals || []).find((x) => x.slug === slug)?.size || "";          // its size, its Target (spec 75 §5.4)
   const [size, setSize] = useState(wasSize);
+  const [tool, setTool] = useState(g?.tool || "");             // its AI tool ("" the Main tool, spec 81 §4)
+  const tools = useTools();
   const [partyId, setPartyId] = useState("");                // a saved party of the person's picked here, until a seat changes
   const [owns, loadOwns] = useOwnParties(changing);
   const seat = (set) => (v) => { set(v); setPartyId(""); };
@@ -49,6 +52,7 @@ function GoalEdit({ slug, then = "" }) {
     if (title.trim() && title.trim() !== g?.title) args.title = title.trim();     // a name typed is the person's
     if (moved || partyId) Object.assign(args, { leader, team, every: every.filter((id) => team.includes(id)), ...(partyId ? { party: partyId } : {}) });   // the party, when changed
     if (size && size !== wasSize) args.size = size;
+    if (tool !== (g?.tool || "")) args.tool = tool;
     const from = rf.value();
     if (from) args.releases_from = from;
     const got = await act("ideas.goal_save", args);
@@ -78,7 +82,8 @@ function GoalEdit({ slug, then = "" }) {
           <${ChecksBlock} team=${team} every=${every} setEvery=${seat(setEvery)} price=${price} />`
           : pitchParty(leader) ? html`<p class="ok-tone-muted">${IDEATION_STAYS}</p>`
           : html`<button type="button" class="ork-btn" onClick=${() => setChanging(true)}>Change the party</button>`}</div>`}
-      ${g && proposalsOn() && html`<${SizeField} leader=${leader} team=${team} every=${every} craft=${g.craft || ""} size=${size} working=${working}
+      ${g && proposalsOn() && html`<${ToolPick} tools=${tools} value=${tool} onChange=${setTool} />`}
+      ${g && proposalsOn() && html`<${SizeField} slug=${slug} leader=${leader} team=${team} every=${every} craft=${g.craft || ""} size=${size} working=${working}
         onChange=${(to, next) => { setSize(to); if (next) { setTeam(next); setEvery(every.filter((id) => next.includes(id))); setPartyId(""); } }} />`}
       <${ReleasesFrom} rf=${rf} />
       <div class="shell-field" role="group" aria-label="Priority"><span class="ok-font-label">Priority</span><small class="ok-tone-muted">${FOR_HINT}</small>

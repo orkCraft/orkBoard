@@ -185,18 +185,24 @@ def test_a_refused_party_is_refused_as_before_and_its_types_are_not_asked(host, 
             host.command("ideas.party_price", bad)
 
 
-def test_a_size_prices_the_party_at_its_target_and_none_at_the_setting(host):
-    """Spec 75 §3.3: `size` (lean · standard · full) is thrift, balance, quality for the price; without it the setting's."""
+def test_a_size_prices_the_party_at_its_target_and_its_tiers_and_none_at_the_setting(host):
+    """Spec 75 §3.3: `size` (lean · standard · full) is thrift, balance, quality for the price; without it the setting's. Spec 81 §2: the
+    size's tiers (Seasoned all through for Lean, the leader Veteran for Standard…) are what its seats are priced at."""
+    from orkboard.realm import party_recipes
     team = ("grunt", "tester", "reviewer")
-    by_size = {s: price(host, target=t) for s, t in (("lean", "thrift"), ("standard", "balance"), ("full", "quality"))}
+
+    def at(size, target):
+        return party_price.price(host.ideas.root(), host.ideas.state_dir, {"target": target}, "architect", list(team), [], tiers=party_recipes.tiers_for("architect", list(team), size))
+    by_size = {s: at(s, t) for s, t in (("lean", "thrift"), ("standard", "balance"), ("full", "quality"))}
     sent = {"leader": "architect", "team": list(team), "every": []}
     for size, want in by_size.items():
         got = host.command("ideas.party_price", {**sent, "size": size})
         assert (got["low"], got["high"]) == (want["low"], want["high"]), size
     assert by_size["lean"]["high"] < by_size["standard"]["high"] < by_size["full"]["high"]
-    assert host.command("ideas.party_price", sent)["high"] == by_size["standard"]["high"]                  # (balance is the setting)
+    plain = price(host)                                                                                    # no size: the setting's Target, the roles' own tiers
+    assert host.command("ideas.party_price", sent)["high"] == plain["high"]
     host.command("ideas.board_set", {"target": "quality"})
-    assert host.command("ideas.party_price", sent)["high"] == by_size["full"]["high"]
+    assert host.command("ideas.party_price", sent)["high"] == price(host, target="quality")["high"]
     assert host.command("ideas.party_price", {**sent, "size": "lean"})["high"] == by_size["lean"]["high"]  # a size wins over the setting
     views = [*library.VIEWS, library.SKEPTIC]
     lean = host.command("ideas.party_price", {"leader": "investor", "team": views, "size": "lean"})

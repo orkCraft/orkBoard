@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from orkboard.realm import goal_types, idea_flag, idea_target, ideas, library, party_price, party_recipes, project_kind, roles
+from orkboard.realm import goal_team, goal_types, idea_flag, idea_target, ideas, library, party_price, party_recipes, project_kind, roles
 
 ORKMASTER = {"id": "orkmaster", "name": "Orkmaster", "race": "peon", "tier": "crown"}
 RELEASE, IDEATION = "release", "ideation"       # the presets' ids
@@ -167,13 +167,14 @@ def _why(recipe: dict, signs: list[str], kind_id: str, told: bool) -> str:
     return f"{seen}: {recipe['because']}"[:WHY_CHARS] if recipe.get("because") else seen[:WHY_CHARS]
 
 
-def _head(state_dir: Path, slug: str, target: str) -> dict:
-    """The head a member wears: its role's when the project has it, else as installing it would make it (a role on its library tier)."""
+def _head(state_dir: Path, slug: str, target: str, tiers: dict[str, str] | None = None) -> dict:
+    """The head a member wears: its role's when the project has it, else as installing it would make it (a role on its library tier); at
+    the tier the size gives its seat (`tiers`, spec 81 §2) unless the person set its model by hand."""
     r = roles.role(state_dir, slug)
     if r is None:
         a = library.get(slug)
-        r = {"craft": a.craft, "race": a.race, "model": a.tier} if a else {}
-    got = roles.head(r, target)
+        r = {"slug": slug, "craft": a.craft, "race": a.race, "model": a.tier} if a else {}
+    got = roles.head(goal_team.seat_role(r, tiers or {}) or r, target)
     return {"race": got["race"], "tier": got["tier"]}
 
 
@@ -189,10 +190,10 @@ def proposals(root: Path, state_dir: Path, settings: dict, kind: dict, facts: di
         for size in idea_target.SIZES:
             party = party_recipes.sized(recipe, size)
             target = idea_target.SIZE_TARGET[size]
-            got = party_price.price(root, state_dir, {**(settings or {}), "target": target}, party["leader"], party["team"], [])
+            got = party_price.price(root, state_dir, {**(settings or {}), "target": target}, party["leader"], party["team"], [], tiers=party["tiers"])
             sizes[size] = {"leader": party["leader"], "team": party["team"], "agents": 1 + len(party["team"]), "target": target,
                            "price": {"low": got["low"], "high": got["high"]},
-                           "heads": [_head(state_dir, s, target) for s in [party["leader"], *party["team"]]]}
+                           "tiers": party["tiers"], "heads": [_head(state_dir, s, target, party["tiers"]) for s in [party["leader"], *party["team"]]]}
         out.append({"id": recipe["id"], "name": recipe["name"], "line": recipe["line"], "why": _why(recipe, kind["signs"], kind["id"], told),
                     "have": have, "sizes": sizes})
     return out

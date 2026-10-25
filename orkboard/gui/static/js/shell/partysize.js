@@ -1,35 +1,40 @@
-// A party's size in *About this party* and *Edit the party* (docs/specs/75-parties-fitted-to-the-project.md §5.4): **Its size**, the three-way switch Lean · Standard · Full with each size's price a goal
-// (`ideas.party_price` for the size's team and Target), and **With its team**: the size's team as well — Lean empties it, Standard keeps the leader's first two builders and first checker, Full the whole
-// recipe's (the host's proposal for this leader when it has one, else the party's own members). A member leaves only after *Its members leave the party* is confirmed, and never while it has work open
-// (spec 52's swap holds on the host too). The field is controlled: About this party saves at once (`PartySize`), Edit the party sends `size` (and the team) with Save party.
+// A party's size in *About this party* and *Edit the party* (docs/specs/81-a-party-its-tool-and-size.md §4.3, decisions §98): **Its size**, the three-way switch Lean · Standard · Full with each size's price a goal
+// (`ideas.party_price` for the size's team and its tiers). The size is the team: the host gives the party the size's team and its seats' tiers in one save (a party of a recipe; a party of the library with no recipe
+// keeps its team), so there is no *With its team* and no second confirm. Under the switch, before the press, **the heads that join and leave** for each other size (`ideas.party_sizes`: *Joins: …* / *Leaves: …*);
+// a member with work open is not let go (spec 52's swap holds on the host too): *<Name> has work open: it cannot leave*, said in place. The field is controlled: About this party saves at once (`PartySize`),
+// Edit the party sends `size` (and the team the size gave) with Save party.
 import { useEffect, useState } from "preact/hooks";
 import { html } from "../html.js";
 import { command } from "../link.js";
-import { Switch } from "../orkui.js";
+import { Head, Switch } from "../orkui.js";
 import { board } from "../board/store.js";
-import { act, mapData } from "./store.js";
-import { TASKMASTER, agentOf, inBand } from "./party.js";
-import { SIZES, SIZE_WORD, SIZE_TARGET, WorksAs, askProposals, priceWords, proposalsOn } from "./proposals.js";
+import { mapData, refreshShell } from "./store.js";
+import { SIZES, SIZE_TARGET, WorksAs, priceWords, proposalsOn } from "./proposals.js";
 import { TARGETS } from "../board/target.js";
 
-/** The team a size has for this leader: the host's proposal for the leader when one is known, else the party's own members cut to the size (it cannot grow past them). */
-export function teamFor(size, leader, team, proposals = []) {
-  const p = proposals.find((x) => x.sizes?.standard?.leader === leader);
-  if (p?.sizes?.[size]) return [...p.sizes[size].team];
-  if (size === "lean") return [];
-  if (size === "full") return [...team];
-  return [...inBand("build", leader, team).slice(0, 2), ...inBand("check", leader, team).slice(0, 1)];
+/** What each size would make of the party (`ideas.party_sizes`): {lean, standard, full: {team, joins, leaves}}, null while asked or refused. Asked again when the saved party changes. */
+function useMoves(slug) {
+  const [moves, setMoves] = useState(null);
+  const g = (mapData.value?.goals || []).find((x) => x.slug === slug);
+  const sig = JSON.stringify([slug, g?.size, (g?.party || []).map((m) => m.slug)]);
+  useEffect(() => {
+    if (!slug) return undefined;
+    let live = true;
+    command("ideas.party_sizes", { slug }, true).then((a) => { if (live && a?.sizes) setMoves(a.sizes); }).catch(() => {});
+    return () => { live = false; };
+  }, [sig]);
+  return moves;
 }
 
-/** Each size's price for the party (`ideas.party_price` with `size`), asked again when the party or the team option changes: {lean, standard, full} (null while asked or refused). */
-function useSizePrices(on, leader, team, every, craft, withTeam, proposals) {
+/** Each size's price for the party (`ideas.party_price` with `size`, on the team that size would have), asked again when the party or the moves change: {lean, standard, full} (null while asked or refused). */
+function useSizePrices(on, leader, team, every, craft, moves) {
   const [prices, setPrices] = useState({});
-  const key = JSON.stringify([on, leader, team, every, craft, withTeam, proposals.length]);
+  const key = JSON.stringify([on, leader, team, every, craft, SIZES.map(([s]) => moves?.[s]?.team)]);
   useEffect(() => {
     if (!on) return undefined;
     let live = true;
     Promise.all(SIZES.map(async ([size]) => {
-      const t = withTeam ? teamFor(size, leader, team, proposals) : team;
+      const t = moves?.[size]?.team || team;
       try {
         const got = await command("ideas.party_price", { leader, team: t, every: every.filter((id) => t.includes(id)), size, ...(craft ? { craft } : {}) });
         return [size, got && !got.error ? got : null];
@@ -40,49 +45,52 @@ function useSizePrices(on, leader, team, every, craft, withTeam, proposals) {
   return prices;
 }
 
-const names = (ids) => ids.map((id) => agentOf(id)?.name || id).join(", ");
+const names = (rows) => rows.map((a) => a.name).join(", ");
 
-/** **Its size**. `size`: the party's ("" none yet); `onChange(size, team|null)`: the pick, with the size's team when *With its team* is ticked; `working(id)`: the member has work open. */
-export function SizeField({ leader, team, every, craft = "", size, onChange, working = () => false, titled = true }) {
-  const [withTeam, setWithTeam] = useState(false);
-  const [asking, setAsking] = useState(null);          // {size, next, leaving}: the pick that waits for *Its members leave the party*
+/** The heads that join or leave if a size is picked: *Lean · Leaves: Grunt, Artist* (the heads beside the names). Nothing for a size that changes no one. */
+function Moves({ moves, size }) {
+  const rows = SIZES.filter(([id]) => id !== size && (moves?.[id]?.joins?.length || moves?.[id]?.leaves?.length));
+  if (!rows.length) return null;
+  return html`<ul class="shell-size__moves" aria-label="Who joins and leaves">${rows.map(([id, word]) => html`<li key=${id} data-size-move=${id}><b>${word}</b>
+    ${[["joins", "Joins"], ["leaves", "Leaves"]].map(([k, label]) => moves[id][k].length ? html`<span key=${k} class="shell-size__move" data-move=${k}>
+      ${label}: <span class="shell-size__heads">${moves[id][k].map((a) => a.head && html`<${Head} key=${a.slug} race=${a.head.race} tier=${a.head.tier} small=${true} title=${a.name} />`)}</span> ${names(moves[id][k])}</span>` : null)}</li>`)}</ul>`;
+}
+
+/** **Its size**. `size`: the party's ("" none yet); `onChange(to, team|null)`: the pick, with the team the size gives when it changes who is in the party (it may return a promise: a refusal rejects it and is said here);
+ *  `working(id)`: the member has work open. */
+export function SizeField({ slug, leader, team, every, craft = "", size, onChange, working = () => false, titled = true }) {
   const [note, setNote] = useState("");
-  const [proposals, setProposals] = useState([]);
-  const prices = useSizePrices(proposalsOn(), leader, team, every, craft, withTeam, proposals);
-  useEffect(() => { if (withTeam && !proposals.length) askProposals().then((a) => setProposals(a?.proposals || [])); }, [withTeam]);
-  const pick = (to, confirmed = false) => {
+  const moves = useMoves(slug);
+  const prices = useSizePrices(proposalsOn(), leader, team, every, craft, moves);
+  const pick = (to) => {
+    const plan = moves?.[to];
+    const busy = (plan?.leaves || []).filter((a) => working(a.slug));
+    if (busy.length) { setNote(`${names(busy)} ${busy.length === 1 ? "has" : "have"} work open: ${busy.length === 1 ? "it cannot" : "they cannot"} leave`); return; }
     setNote("");
-    if (!withTeam) { setAsking(null); onChange(to, null); return; }
-    const next = teamFor(to, leader, team, proposals), leaving = team.filter((id) => !next.includes(id));
-    const busy = leaving.filter(working);
-    if (busy.length) { setAsking(null); setNote(`${names(busy)} ${busy.length === 1 ? "has" : "have"} work open: ${busy.length === 1 ? "it cannot" : "they cannot"} leave`); return; }
-    if (leaving.length && !confirmed) { setAsking({ size: to, next, leaving }); return; }
-    setAsking(null);
-    onChange(to, next);
+    const changes = plan && (plan.joins.length || plan.leaves.length);
+    Promise.resolve(onChange(to, changes ? plan.team : null)).catch((e) => setNote(String(e?.message || e)));
   };
   const target = size ? (TARGETS.find(([id]) => id === SIZE_TARGET[size]) || TARGETS[1])[1] : (TARGETS.find(([id]) => id === (board.value?.target || "balance")) || TARGETS[1])[1];
   return html`<div class="shell-field shell-size" role="group" aria-label="Its size" data-size=${size}>${titled && html`<span class="ok-font-label">Its size</span>`}
-    <${Switch} label="Size" options=${SIZES.map(([id, word]) => [id, word, priceWords(prices[id])])} value=${size} onPick=${(id) => pick(id)} />
+    <${Switch} label="Size" options=${SIZES.map(([id, word]) => [id, word, priceWords(prices[id])])} value=${size} onPick=${pick} />
     ${size ? html`<${WorksAs} size=${size} />` : html`<small class="ok-tone-muted">No size of its own yet: it works as ${target}</small>`}
-    ${leader !== TASKMASTER || team.length > 0 ? html`<label class="ok-check shell-size__team">
-      <input type="checkbox" class="gui-onb__hide" checked=${withTeam} onChange=${(e) => { setWithTeam(e.target.checked); setAsking(null); setNote(""); }} />
-      <i>${withTeam ? "✓" : ""}</i><span>With its team</span></label>` : null}
+    <${Moves} moves=${moves} size=${size} />
     ${note && html`<p class="shell-size__note ok-font-status ok-tone-error" role="alert">${note}</p>`}
-    ${asking && html`<p class="shell-size__ask" role="alert">Its members leave the party: ${names(asking.leaving)}.
-      <button type="button" class="ork-btn primary" onClick=${() => pick(asking.size, true)}>Make it ${SIZE_WORD[asking.size]}</button>
-      <button type="button" class="ork-btn" onClick=${() => setAsking(null)}>Keep them</button></p>`}
   </div>`;
 }
 
-/** In *About this party*: the field, saved at once (`ideas.goal_save` with `size`, and the leader, team and checks when the team goes with it). */
+/** In *About this party*: the field, saved at once in one press (`ideas.goal_save` with `size`: the host gives the party the size's team and tiers). */
 export function PartySize({ slug, leader, team, every, craft, size, party }) {
   const track = (board.value?.tracks || []).find((t) => t.slug === slug);
   if (!proposalsOn() || !track) return null;
   const working = (id) => (party || []).some((m) => m.slug === id && m.band !== "lead" && m.state && m.state !== "free");
-  const change = (to, next) => act("ideas.goal_save", { slug, about: track.about, priority: track.priority || "normal", size: to,
-    ...(next ? { leader, team: next, every: every.filter((id) => next.includes(id)) } : {}) });
+  const change = async (to) => {
+    const got = await command("ideas.goal_save", { slug, about: track.about, priority: track.priority || "normal", size: to }, true);       // a refusal is said in place, not toasted
+    if (got?.error) throw new Error(got.error);
+    await refreshShell();
+  };
   return html`<section class="shell-goal__sec" data-sec="size"><h3 class="board-sub">Its size</h3>
-    <${SizeField} titled=${false} leader=${leader} team=${team} every=${every} craft=${craft} size=${size} onChange=${change} working=${working} /></section>`;
+    <${SizeField} titled=${false} slug=${slug} leader=${leader} team=${team} every=${every} craft=${craft} size=${size} onChange=${change} working=${working} /></section>`;
 }
 
 export const sizeOf = (slug) => (mapData.value?.goals || []).find((g) => g.slug === slug)?.size || "";

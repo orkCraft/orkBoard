@@ -486,3 +486,11 @@
 .shell-prop__make { margin-left: auto; }
 .shell-size__works { display: block; }
 .shell-size .ork-switch { margin-bottom: var(--ork-2); }
+.shell-size__moves { list-style: none; margin: var(--ork-2) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-1); color: var(--ork-ink-muted); }
+.shell-size__moves li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-1) var(--ork-4); }
+.shell-size__moves b { font-weight: normal; color: var(--ork-ink); min-width: 64px; }
+.shell-size__move { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2); }
+.shell-size__heads { display: inline-flex; gap: var(--ork-1); }
+.shell-tool .ork-select { max-width: 360px; }
+.shell-tool__hint, .shell-tool__own { display: block; }
+.shell-prop .shell-tool { gap: var(--ork-1); }

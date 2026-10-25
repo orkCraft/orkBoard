@@ -148,7 +148,8 @@ def test_a_goals_draft_plan_and_task_pick_their_partys_tier_not_the_settings(hos
     assert picked["lean"][0] == "thrift" and picked["lean"][1][1] == "low" and picked["lean"][3] is None        # thrift reads no goal again at night
     assert picked["full"][0] == "quality" and picked["full"][1][1] == "high" and picked["full"][3] is not None
     assert picked["old"][1][1] == "medium"
-    assert picked["lean_party"] == ("thrift", idea_target.pick("goal", "thrift")) and picked["full_party"][1][1] == "xhigh"
+    assert picked["lean_party"][0] == "thrift" and picked["lean_party"][1] == ("warrior", idea_target.pick("goal", "thrift")[1])   # (spec 81: the Lean leader is Seasoned)
+    assert picked["full_party"][1][1] == "xhigh"
     # the budget of a call follows the party's Target too
     keeper._tls.key = keeper._tls.slug = ideas.add_idea(h.root, "Another in lean", lean, h.state)
     assert idea_target.budget("draft", keeper.target()) == idea_target.budget("draft", "thrift") < idea_target.budget("draft", "quality")
@@ -162,11 +163,12 @@ def test_the_runner_runs_a_task_on_its_partys_target_and_on_the_setting_for_a_pa
     runner = h.ideas.runner(need=True)
     task = {"id": "t1", "tier": "warrior", "kind": "code", "role": "grunt"}
     got = {n: runner.ran_on(task, s) for n, s in ideas_of.items()}
-    assert got["lean"] == idea_target.task_pick("warrior", "thrift", "") == ("laborer", "low")
-    assert got["full"] == idea_target.task_pick("warrior", "quality", "") == ("elder", "high")
+    # the Target gives the effort; the party's size gives its seats' tiers (spec 81 §2: Seasoned all through for Lean and for Full's builders)
+    assert got["lean"] == idea_target.task_pick("warrior", "thrift", "warrior") == ("warrior", "low")
+    assert got["full"] == idea_target.task_pick("warrior", "quality", "warrior") and got["full"][1] == "high"
     assert got["old"] == idea_target.task_pick("warrior", "balance", "") == runner.ran_on(task)
     h.command("ideas.board_set", {"target": "quality"})
-    assert runner.ran_on(task, ideas_of["old"]) == ("elder", "high") and runner.ran_on(task, ideas_of["lean"]) == ("laborer", "low")
+    assert runner.ran_on(task, ideas_of["old"]) == ("elder", "high") and runner.ran_on(task, ideas_of["lean"]) == ("warrior", "low")
 
 
 def test_a_plans_heads_and_the_map_wear_the_partys_tier(host):
@@ -180,8 +182,8 @@ def test_a_plans_heads_and_the_map_wear_the_partys_tier(host):
         ideas.save_plan(h.state, idea, {"idea": idea, "todos": [], "tasks": [{"id": "t1", "title": "T", "state": "ready", "tier": "warrior", "role": "grunt", "kind": "code"}]})
         node = next(n for n in h.command("ideas.map", {})["nodes"] if n["slug"] == idea)
         heads[name] = h.command("ideas.page", {"slug": idea})["plan"]["tasks"][0]["head"], node["tasks"][0]["head"]
-    assert heads["lean"][1]["tier"] == "laborer" and heads["full"][1]["tier"] == "elder"
-    assert heads["lean"][0]["tier"] == "laborer" and heads["full"][0]["tier"] == "elder"
+    assert heads["lean"][1]["tier"] == "warrior" and heads["full"][1]["tier"] == "warrior"           # (spec 81: the size's tiers: no seat below Seasoned)
+    assert heads["lean"][0]["tier"] == "warrior" and heads["full"][0]["tier"] == "warrior"
 
 
 def test_the_price_reads_a_sizes_target_and_a_size_sent_changes_it(host):
@@ -190,7 +192,7 @@ def test_the_price_reads_a_sizes_target_and_a_size_sent_changes_it(host):
     plain = h.command("ideas.party_price", args)
     thrift, quality = h.command("ideas.party_price", {**args, "size": "lean"}), h.command("ideas.party_price", {**args, "size": "full"})
     assert thrift["high"] < plain["high"] < quality["high"]
-    assert h.command("ideas.party_price", {**args, "size": "standard"}) == plain                                   # (balance is the setting here)
+    assert thrift["high"] < h.command("ideas.party_price", {**args, "size": "standard"})["high"] < quality["high"]       # (its seats at the size's tiers)
 
 
 # -- §4: the proposals -----------------------------------------------------------------------------------------------------------------
@@ -207,7 +209,7 @@ def test_a_mobile_folder_is_proposed_three_parties_each_in_three_sizes_with_pric
     for p in got["proposals"]:
         lean, std, full = (p["sizes"][s] for s in ("lean", "standard", "full"))
         assert [x["target"] for x in (lean, std, full)] == ["thrift", "balance", "quality"]
-        assert set(lean) == {"leader", "team", "agents", "target", "price", "heads"}
+        assert set(lean) == {"leader", "team", "agents", "target", "price", "heads", "tiers"}
         assert set(lean["price"]) == {"low", "high"} and all(isinstance(v, float) for v in lean["price"].values())
         assert lean["price"]["high"] <= std["price"]["high"] <= full["price"]["high"] and lean["price"]["low"] <= std["price"]["low"] <= full["price"]["low"]
         for x in (lean, std, full):
@@ -217,8 +219,9 @@ def test_a_mobile_folder_is_proposed_three_parties_each_in_three_sizes_with_pric
     feat = got["proposals"][0]["sizes"]
     assert feat["lean"]["team"] == [] and feat["lean"]["agents"] == 1 and feat["standard"]["team"] == ["grunt", "artist", "reviewer"] and feat["standard"]["agents"] == 4
     assert feat["lean"]["price"]["high"] < feat["standard"]["price"]["high"] < feat["full"]["price"]["high"]
-    assert feat["lean"]["heads"][0] == {"race": "lich", "tier": "elder"}                                          # the leader first
-    assert got["proposals"][2]["sizes"]["lean"]["team"] == got["proposals"][2]["sizes"]["full"]["team"] and got["proposals"][2]["name"] == "Release"
+    assert feat["lean"]["heads"][0] == {"race": "lich", "tier": "warrior"} and feat["standard"]["heads"][0] == {"race": "lich", "tier": "elder"}                                          # the leader first
+    release = got["proposals"][2]["sizes"]                                                                          # (spec 81 §2: Release is sized too)
+    assert release["lean"]["team"] == [] and len(release["standard"]["team"]) == 3 and len(release["full"]["team"]) == 4 and got["proposals"][2]["name"] == "Release"
 
 
 def test_a_party_the_project_has_is_proposed_last_as_have(mobile):
@@ -244,7 +247,7 @@ def test_proposals_write_nothing_and_ask_no_model(mobile):
 def test_an_empty_folder_asks_its_line_and_is_proposed_ideation(empty):
     got = empty.command("ideas.proposals", {})
     assert got["kind"] == {"id": "empty", "words": "an empty folder", "signs": []} and got["ask"] is True and "read" not in got
-    assert [p["id"] for p in got["proposals"]] == ["ideation"] and got["proposals"][0]["sizes"]["lean"]["agents"] == 6
+    assert [p["id"] for p in got["proposals"]] == ["ideation"] and got["proposals"][0]["sizes"]["lean"]["agents"] == 1 and got["proposals"][0]["sizes"]["full"]["agents"] == 6
     assert empty.command("ideas.proposals", {"about": ""})["ask"] is True and empty.command("ideas.proposals", {"about": "   "})["ask"] is True
 
 
