@@ -356,7 +356,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
             r = row(root, state_dir, i, st, plan, page, asks, states, needs, at)
             started = any(t.get("state") not in (None, "waiting", "ready", "held") for t in tasks)
             est = (plan or {}).get("estimate")
-            waves = map_stage.waves_of(tasks)
+            waves, rows = map_stage.waves_of(tasks), map_stage.row_of(tasks)
             pitch = pitches.face(root, state_dir, slug, r["state"], target, offered) if ideation else None
             node = {"slug": slug, "goal": g["slug"], "title": i["title"], "short": i["short"], "state": r["state"], "queue": r["queue"],
                     "element": st.get("element") or "", "flag": (flag := flag_of(state_dir, slug, held)), "type": type_of(st),
@@ -380,6 +380,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                                "after": list(t.get("after") or []), "tier": t.get("tier") or "",
                                "head": roles.task_head(state_dir, t, target, read),
                                "by": _by(t, read), "band": "check" if map_stage.is_check(t) else "build", "wave": waves[str(t.get("id"))],
+                               "row": rows[str(t.get("id"))],
                                **_run_of(t), "pick": idea_pick.map_of(t),
                                "tag": roles.KIND_LABELS.get(str(t.get("kind") or ""), roles.KIND_LABELS[roles.DEFAULT_KIND])} for t in tasks],
                     "checks": idea_checks.status(idea_checks.kept(list_of_dicts(page.get("checks")) if page else [], checks),
