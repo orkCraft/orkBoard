@@ -1,14 +1,16 @@
 # Orkboard — notes for contributors and agents
 
-Orkboard is Orkline's Board on its own (docs/specs/37-board-and-line.md, docs/decisions.md §50): the Board with its
-parties and goals, the preview, Agents and Review, on the desktop and on a paired phone. **Orkline imports Orkboard, never the
-other way round**: nothing here imports Orkline's package (`orkcraft`).
+Orkboard is Orkline's Board on its own, published as a product of its own (docs/specs/37-board-and-line.md,
+docs/decisions.md §50, §91): the Board with its parties and goals, the preview, Agents and Review, on the desktop and on a
+paired phone. **Orkline imports Orkboard, never the other way round**: nothing here imports Orkline's package
+(`orkcraft`).
 
 ## Wording
 
 - In everything a person reads — the interface (labels, hints, toasts, errors), the docs, the README — write **ork** /
   **orks** / **Ork** and **orkestration** / **orkestrate**, never "orc" or "orchestration". The product's name in the
-  interface stays **Orkline** (decisions §50.1: Orkboard is the owner's lab, not published).
+  interface is **Orkboard**, published on its own (decisions §91); *Orkline* is the line's name. Where a page is shared
+  with Orkline it says its host's name, never a fixed one.
 - Code keeps its names: identifiers, module and file names (`orc_id`), CSS ids, dict keys, event ids and config values
   stay as they are. The state keeps Orkline's names, so Orkboard and Orkline read the same settings and the same Board
   of a project, and switching between them loses nothing: `~/.config/orkcraft/`, `<project>/.orkcraft/`,

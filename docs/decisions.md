@@ -214,7 +214,8 @@ nothing of the other. So:
 1. **Three slices, two products.**
    - **Orkboard:** the engine and its base modules (goals, ideas and their specs, agents, review; the Wiki under
      them) in one fixed loop, drawn as the v1 panes in Office's look, the phone included. The owner's lab, used every
-     day on other projects; not published (§37.2 stands: the public name is Orkline).
+     day on other projects; not published (§37.2 stands: the public name is Orkline). *Changed by §91 (25 October,
+     the owner): Orkboard is published on its own, under its own name.*
    - **Orkline, Office:** the same modules, assembled by the person into loops (item 3); no game.
    - **Orkline, Camp:** the same graph with the camp's art and its game layer (item 5), for the first audience's
      evening (audience.md §2a): a clear switch from the day's job to one's own project.
@@ -526,7 +527,8 @@ four launches, one product and its labs. So:
 1. **Orkline is the product; Orkboard, OrkWiki and OrkWatch are its labs.** Each crystallises one of Orkline's buildings
    on its own and checks that it is needed: the owner uses it every day, its shape and its words settle, its contract
    with the other modules is written (§50.7); then it enters Orkline ready, as that building, never a second copy (one
-   engine, §50.2). A lab is not published (§50.1, for each), and the public name stays Orkline (§37.2). A lab may end in
+   engine, §50.2). A lab is not published (§50.1, for each), and the public name stays Orkline (§37.2). *Changed by
+   §91 (25 October, the owner): each building's product is published on its own, under its own name.* A lab may end in
    *not needed*: a building no one turns out to need does not enter Orkline.
 2. **The labs and their buildings:**
    - **Orkboard:** the Board with its goals, Agents and Review, which are Orkline's Task board, Agent pool and Review
@@ -1240,3 +1242,23 @@ once whose effect is not seen where it acts. So:
 5. Parties stay teams and few (§83): a recipe proposes a party only for a team of its own (other agents or other
    checks), never one per step.
 The owner's call. Spec 75.
+
+## 91. Orkboard is published on its own, as each building's product, under its own name (25 October, the owner)
+
+Why: the owner: *Orkboard, like the other products of the buildings, will be published separately*; Orkboard first, in
+VS Code's Marketplace (the extension, `vscode/`), the week after. §50.1 kept Orkboard the owner's lab, not published, and
+§60.1 every lab with it; a tool used every day on other projects is worth putting in other people's hands, and its
+words and shape have settled enough for that. So:
+1. **Orkboard is a product, published on its own:** the app (`orkboard`, the window and the phone) and the VS Code
+   extension, which starts it (`orkboard --serve`, `gui/extension.py`). The package installs from a place anyone can
+   reach before the extension is listed, since the extension cannot run without it.
+2. **So is each building's product** (OrkWiki, OrkWatch, OrkMine, §60.2, §60.10): published on its own once it holds
+   (§60.3's order stands), each under its own name. A lab may still end in *not needed* (§60.1). One engine stands
+   (§50.2): Orkline lays the same modules into loops, never a second copy.
+3. **Its name is its own:** what a person reads says *Orkboard* (the window's title, the top bar, updates, settings, the
+   phone, the extension). *Orkline* is the line's name and the factory's (§60.2), and §37.2's public name holds for
+   Orkline itself. The state keeps its names (`~/.config/orkcraft/`, `<project>/.orkcraft/`, CLAUDE.md), so Orkboard and
+   Orkline still read the same settings and Boards.
+4. **A page shared with Orkline says its host's name:** where the Board's panes run inside Orkline they say Orkline, so a
+   pane never names the other product.
+This supersedes §50.1's *not published* and §60.1's *a lab is not published*. The owner's call.

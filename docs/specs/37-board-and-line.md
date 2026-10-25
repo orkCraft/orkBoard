@@ -28,7 +28,8 @@ choice inside its files. Wording: CLAUDE.md. **Change nothing outside these file
 ## 0. The words
 - **Orkboard:** the engine and its base modules (goals, ideas and their specs, agents, review; the Wiki under them)
   in one fixed loop, drawn as the v1 panes in Office's look, the phone included. The owner's lab, not published: the
-  interface says *Orkline* as today (§37.2 of the decisions). Nothing a person reads changes in this spec, but the
+  interface says *Orkline* as today (§37.2 of the decisions). *Since decisions §91 (25 October) Orkboard is published
+  on its own and the interface says Orkboard.* Nothing a person reads changes in this spec, but the
   command `orkcraft board` (§4).
 - **The line:** every module that is not Orkboard's: the town, its buildings and workers, the road engine, the camp,
   the missions, the game layer.
