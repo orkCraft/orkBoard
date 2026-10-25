@@ -79,7 +79,7 @@ def test_an_overlap_is_judged_as_the_orkmaster_on_the_cheaper_tier_with_the_two_
     assert call["prompt"].startswith("You are the Orkmaster of this project.") and "invent nothing" in call["prompt"]
     for text in ("Auth API", "Sign-in screen", "a token is issued once", "the screen asks for a token", "orkboard/realm/auth.py", "app/screens/signin.js"):
         assert text in call["prompt"]
-    assert call["budget"] == 0.05 and len(call["prompt"].split(MARK)[1]) <= 3_000 + 600           # the goals' part is at most 3 000 characters
+    assert call["budget"] == 0.15 and len(call["prompt"].split(MARK)[1]) <= 3_000 + 600           # the goals' part is at most 3 000 characters
     r = roles.role(h.state, "orkmaster")                                                          # installed as a role of the project
     assert (r["name"], r["model"], r["takes"], r["builtin"]) == ("Orkmaster", "warrior", [], False)
     assert orkmaster.role(h.state) == r and "orkmaster" not in roles.kinds(h.state).values()      # it takes no task
@@ -90,7 +90,7 @@ def test_an_overlap_is_judged_as_the_orkmaster_on_the_cheaper_tier_with_the_two_
     collide.read(h.state)
     collide.take_open(h.state, collide.pair_id(h.api, h.screen))
     run(h, h.api)
-    assert (model.asked[-1]["tier"], model.asked[-1]["effort"]) == ("laborer", "")                 # thrift: the laborer, no effort
+    assert (model.asked[-1]["tier"], model.asked[-1]["effort"]) == ("warrior", "low")                # thrift: the Seasoned tier too (spec 86 §5: a laborer call cannot judge within its floor)
 
 
 def test_a_judged_text_is_cut_to_three_thousand_characters_and_the_answer_is_read_strictly(two):

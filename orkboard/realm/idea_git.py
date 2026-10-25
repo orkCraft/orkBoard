@@ -28,7 +28,7 @@ import threading
 from pathlib import Path
 from typing import NamedTuple
 
-from orkboard.realm import gate_config, jobs, worktrees
+from orkboard.realm import dep_links, gate_config, jobs, worktrees
 
 GIT_TIMEOUT_S = 60
 PUSH_TIMEOUT_S = 120
@@ -109,6 +109,7 @@ class IdeaGit:
             self.remove(path)
             path.parent.mkdir(parents=True, exist_ok=True)
             _ok(_git(self.root, "worktree", "add", "-B", branch, str(path), base))
+            dep_links.link(self.root, path)          # the main checkout's node_modules and .venv, linked (spec 86 §2)
         return path, branch
 
     def remove(self, path: Path) -> None:

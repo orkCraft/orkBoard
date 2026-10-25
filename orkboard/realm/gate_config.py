@@ -1,13 +1,18 @@
 """The gate's command and files for a repository (docs/specs/37-board-and-line.md §5).
 
-    gate = read(repo_root)                       # orkcraft.toml `[gate]`, else today's gate (pytest on the critical tests)
+    gate = read(repo_root)                       # orkcraft.toml `[gate]`, else the project's own (spec 86 §3), else none
     files = gate_files(gate, touched, worktree)  # `always`, then the touched files' tests that exist
     argv = test_argv(command)                    # words, or `sh -c` when the command needs a shell
 
 `orkcraft.toml` is tracked at the repository's root; an unknown key is ignored, a bad file is said in `Gate.error`
-and the gate runs as with no file."""
+and the gate runs as with no file. With no file or no `[gate]` the gate is the project's own (`derive`): Orkboard's
+critical tests when the project has them (today's gate), else `npm test` / pytest / `go test ./...` / `cargo test`,
+else none (`Gate.none`: the project has no tests, and a result is never green for want of them)."""
 from __future__ import annotations
 
+import dataclasses
+import json
+import re
 import shlex
 import tomllib
 from dataclasses import dataclass, field
@@ -34,6 +39,7 @@ class Gate:
     map: tuple[str, ...] = DEFAULT_MAP
     timeout_min: float | None = None               # None = the caller's default
     error: str = field(default="", compare=False)  # a bad file, in words
+    none: bool = False                             # the project has no tests at all: nothing to run (`derive`)
 
     @property
     def custom(self) -> bool:
@@ -46,15 +52,77 @@ def _strings(value: object, key: str) -> tuple[str, ...]:
     return tuple(value)
 
 
+SKIP_DIRS = {"node_modules", ".git", ".venv", "venv", "dist", "build", "__pycache__"}
+_NO_TEST = re.compile(r"no test specified")       # `npm init`'s placeholder script is no test
+MAX_FOLDERS = 3                                   # package.json folders a derived gate runs
+
+
+def package_dirs(root: Path, depth: int = 2) -> list[Path]:
+    """The folders under `root` (itself first) that hold a `package.json`, down to `depth` levels, none inside
+    `node_modules` or a hidden folder."""
+    out: list[Path] = []
+
+    def walk(folder: Path, level: int) -> None:
+        if (folder / "package.json").is_file():
+            out.append(folder)
+        if level >= depth:
+            return
+        try:
+            subs = sorted(p for p in folder.iterdir() if p.is_dir() and p.name not in SKIP_DIRS and not p.name.startswith("."))
+        except OSError:
+            return
+        for sub in subs:
+            walk(sub, level + 1)
+
+    walk(Path(root), 0)
+    return out
+
+
+def scripts_of(folder: Path) -> dict[str, str]:
+    """A folder's `package.json` `scripts` (a bad file: none)."""
+    try:
+        data = json.loads((Path(folder) / "package.json").read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, ValueError):
+        return {}
+    got = data.get("scripts") if isinstance(data, dict) else None
+    return {k: v for k, v in got.items() if isinstance(k, str) and isinstance(v, str)} if isinstance(got, dict) else {}
+
+
+def has_test(script: str) -> bool:
+    """A `test` script that tests something (`npm init`'s `echo "Error: no test specified" && exit 1` does not)."""
+    return bool(script.strip()) and not _NO_TEST.search(script)
+
+
+def derive(root: Path) -> Gate:
+    """The project's own gate, when it names none (spec 86 §3): Orkboard's way (its critical tests that exist, run by pytest on
+    them and on the touched modules' tests) when the project has those files; else `npm test` (in each folder with a
+    `package.json` whose `test` script tests something, three at most, `--prefix` for a folder below the root), else
+    `python -m pytest -q` (a `pyproject.toml` or `tests/`), `go test ./...`, `cargo test`; none of them: `Gate(none=True)`."""
+    root = Path(root)
+    critical = tuple(f for f in CRITICAL_TESTS if (root / f).is_file())
+    if critical:
+        return Gate(always=critical)
+    folders = [f for f in package_dirs(root) if has_test(scripts_of(f).get("test", ""))][:MAX_FOLDERS]
+    if folders:
+        runs = ["npm test" if f == root else f"npm test --prefix {shlex.quote(f.relative_to(root).as_posix())}" for f in folders]
+        return Gate(run=" && ".join(runs), always=())
+    for marker, run in ((("pyproject.toml", "tests"), "python -m pytest -q"), (("go.mod",), "go test ./..."),
+                        (("Cargo.toml",), "cargo test")):
+        if any((root / m).exists() for m in marker):
+            return Gate(run=run, always=())
+    return Gate(always=(), none=True)
+
+
 def read(repo_root: Path) -> Gate:
-    """The repository's `[gate]`; today's gate with no file or no `[gate]`, and with a bad file (`error` says why)."""
+    """The repository's `[gate]`; with no file or no `[gate]`, and with a bad file (`error` says why), the project's own
+    (`derive`)."""
     path = Path(repo_root) / FILE
     if not path.is_file():
-        return Gate()
+        return derive(repo_root)
     try:
         table = tomllib.loads(path.read_text(encoding="utf-8")).get("gate")
         if table is None:
-            return Gate()
+            return derive(repo_root)
         if not isinstance(table, dict):
             raise ValueError("[gate] must be a table")
         run = table.get("run", "")
@@ -66,7 +134,7 @@ def read(repo_root: Path) -> Gate:
         return Gate(run=run.strip(), always=_strings(table.get("always", list(CRITICAL_TESTS)), "always"),
                     map=_strings(table.get("map", list(DEFAULT_MAP)), "map"), timeout_min=minutes)
     except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError, ValueError) as e:
-        return Gate(error=f"{FILE} is not usable ({' '.join(str(e).split())[:200]}): the gate ran as with no file")
+        return dataclasses.replace(derive(repo_root), error=f"{FILE} is not usable ({' '.join(str(e).split())[:200]}): the gate ran as with no file")
 
 
 def gate_files(gate: Gate, touched: list[str], root: Path) -> list[str]:

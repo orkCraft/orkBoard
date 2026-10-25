@@ -165,3 +165,70 @@ def test_one_file_is_committed_alone_and_a_worktree_is_put_back_as_it_was_cut_sp
     commit_in(path, "tool.py", "print(1)\n")
     g.restore(path, start)
     assert g.head(path) == start and not (path / "tool.py").exists() and not (path / "stray.txt").exists() and not g.dirty(path)
+
+
+# -- the main checkout's dependencies, linked into the worktree (spec 86 §2) -------------------------------------------
+
+def installed(repo: Path) -> None:
+    """A Node project with a web/ folder, both installed, and a virtual environment: untracked, as they are in life."""
+    (repo / "package.json").write_text('{"scripts": {"test": "node --test"}}')
+    (repo / "web").mkdir()
+    (repo / "web" / "package.json").write_text('{"scripts": {"build": "x"}}')
+    (repo / ".gitignore").write_text(".orkcraft/\nnode_modules/\n.venv/\n")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-m", "node")
+    for rel in ("node_modules/dep", "web/node_modules/dep", ".venv/bin"):
+        (repo / rel).mkdir(parents=True)
+    (repo / "node_modules" / "dep" / "index.js").write_text("module.exports = 1\n")
+
+
+def test_a_worktree_gets_the_main_checkouts_node_modules_and_venv_as_links(repo):
+    installed(repo)
+    path, _ = IdeaGit(repo).prepare("demo", "k1", "main")
+    for rel in ("node_modules", "web/node_modules", ".venv"):
+        assert (path / rel).is_symlink() and (path / rel).resolve() == (repo / rel).resolve(), rel
+    assert (path / "node_modules" / "dep" / "index.js").read_text() == "module.exports = 1\n"
+
+
+def test_the_links_are_never_committed_even_when_the_project_ignores_nothing(repo):
+    (repo / "package.json").write_text("{}")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-m", "node")
+    (repo / "node_modules" / "dep").mkdir(parents=True)                          # .gitignore does not name it
+    (repo / ".venv").mkdir()
+    g = IdeaGit(repo)
+    path, _ = g.prepare("demo", "k1", "main")
+    assert (path / "node_modules").is_symlink() and (path / ".venv").is_symlink()
+    assert g.dirty(path) is False                                                # git sees neither link
+    commit_in(path, "b.txt", "b\n")
+    git(path, "add", "-A")
+    assert git(path, "ls-files").split() == [".gitignore", "a.txt", "b.txt", "package.json"]
+    assert {"node_modules", ".venv"} <= set((repo / ".git" / "info" / "exclude").read_text().split())
+
+
+def test_a_worktree_that_has_its_own_or_a_project_without_them_gets_no_link(repo):
+    g = IdeaGit(repo)
+    path, _ = g.prepare("demo", "plain", "main")                                  # nothing installed: nothing linked
+    assert not (path / "node_modules").exists() and not (path / ".venv").exists()
+    installed(repo)
+    (repo / "tracked").mkdir()
+    (repo / "tracked" / "package.json").write_text("{}")
+    (repo / "tracked" / "node_modules").mkdir()
+    (repo / "tracked" / "node_modules" / "x.js").write_text("x\n")
+    git(repo, "add", "-f", "tracked/node_modules/x.js", "tracked/package.json")
+    git(repo, "commit", "-m", "tracked dependencies")
+    path, _ = g.prepare("demo", "k2", "main")
+    assert (path / "tracked" / "node_modules").is_dir() and not (path / "tracked" / "node_modules").is_symlink()   # its own
+    assert (path / "node_modules").is_symlink()
+
+
+def test_the_links_go_with_the_worktree_and_leave_the_main_checkout_whole(repo):
+    installed(repo)
+    g = IdeaGit(repo)
+    path, _ = g.prepare("demo", "k1", "main")
+    g.remove(path)
+    assert not path.exists()
+    assert (repo / "node_modules" / "dep" / "index.js").is_file() and (repo / ".venv" / "bin").is_dir()
+    again, _ = g.prepare("demo", "k1", "main")                                     # a second try links again, once
+    assert (again / "node_modules").is_symlink()
+    assert (repo / ".git" / "info" / "exclude").read_text().split().count("node_modules") == 1
