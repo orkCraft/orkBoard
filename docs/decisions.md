@@ -1215,3 +1215,28 @@ layers on one screen), the line is **what explains stays, what decorates goes**.
 4. The landing and the clips may carry far more of it (the void, the full moon, runes): the product is the office where
    it shows in a few moments. *The orks do the work; the seal is yours.*
 The owner's call, on the mockups of *Orkboard — магия целей*. Spec 74.
+
+## 90. The Orkmaster fits the parties to the project, each in three sizes; a party's size is its Target (25 October, the owner)
+
+Why: the owner: *the choice of a party now goes through the Orkmaster: prepare three kinds of party, thrift, standard and
+quality, as the toggle does now (it may go), one agent of the middle tier, a few with a leader of a high tier, a big set of
+good tiers; and maybe the presets are not needed at all: an empty project gets Ideation, a mobile app gets its features,
+its architecture and its release. A project need not be code: a manager's team wiki, a designer's folder.* Eleven tiles
+make the person pick a team before they know what the project needs, and the Target is one switch for every party at
+once whose effect is not seen where it acts. So:
+1. **The Orkmaster reads what the project is**, by its files, with no model: an empty folder, a mobile app, a web app, a
+   backend, a game, data work, a team's wiki, a designer's folder, texts, or code it cannot tell. An empty folder asks
+   one line, *What is this project for?*, read by a model of the cheaper tier into one of those kinds.
+2. **It proposes the parties that kind needs**, from recipes of the library's agents (an empty folder: Ideation; a mobile
+   app: its features, its architecture, Release; a wiki: its pages and Ideation; a designer's folder: screens and
+   pictures, and Ideation), each with a line of why for this project. The presets become those recipes; the library
+   stays under *More* for a party of one's own.
+3. **Each proposal comes in three sizes**, its price a goal beside each: **Lean**, one agent of the middle tier (the
+   leader alone, its tasks done by the Grunt); **Standard**, the leader of the high tier with a few builders and one
+   checker; **Full**, every seat of the recipe, builders of the middle tier at least, every check.
+4. **A party's size is its Target**: Lean works as thrift, Standard as balance, Full as quality, for that party's goals;
+   changed in a press in *About this party*. The Target leaves the top bar; Settings keeps it as what a party with no size
+   of its own works as (the parties made before).
+5. Parties stay teams and few (§83): a recipe proposes a party only for a team of its own (other agents or other
+   checks), never one per step.
+The owner's call. Spec 75.
