@@ -1240,3 +1240,16 @@ once whose effect is not seen where it acts. So:
 5. Parties stay teams and few (§83): a recipe proposes a party only for a team of its own (other agents or other
    checks), never one per step.
 The owner's call. Spec 75.
+
+## 91. The Orkmaster is crowned: a rank, not a tier (25 October, the owner)
+
+Why: the owner: *the Orkmaster could be an ork with a crown, so it stands out at once.* The Orkmaster wore `peon` ·
+`elder`, the head the Taskmaster wears by default: on the project's line and at a party's heading the two stood side by
+side, equal. So:
+1. **The Orkmaster's head is the ork's with a crown** (`peon-crown`), drawn in orkUI as a **rank**: gear on the same
+   grid and the same face, beside the three tiers and not one of them. orkUI's emblem `crown` already means *a rank*.
+2. **§53.7 holds**: an agent's gear is its tier; the crown is no tier, no role picks it, no model list shows it. Only
+   the Orkmaster wears it; the Taskmaster keeps its tier's gear.
+3. **One picture, an accent** (§53.8): the crown is drawn into the head, never an emblem laid over it; its colour a
+   muted brass under orkUI's race rules, no colour new to the system.
+The owner's call. Spec 76.
