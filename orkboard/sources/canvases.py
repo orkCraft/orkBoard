@@ -5,6 +5,7 @@ tool already writes on the machine.
     c.key                                       # "claude:https://claude.ai/artifact/…": the tool and its URL or file
     c.line() · Canvas.from_line(d)              # one line of `.orkcraft/canvases.jsonl` (core/canvases.py) and back
     link_host(url)                              # "claude.ai" for a link of an allowed host, else ""
+    from_call("claude", "Artifact", args, result, at, session, model)   # one tool call as a canvas, or None (the readers', the hook's)
     read_all(repo_root, agy_sessions)           # every canvas the project's sessions drew, oldest first
 
 The readers: `read_claude` (the project's transcripts and its worktrees'), `read_codex` (the rollouts whose `cwd` is
@@ -13,8 +14,10 @@ bounded and never raises: a file it cannot read gives nothing. Read-only, no fac
 """
 from __future__ import annotations
 
+import re
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Any
 from urllib.parse import urlparse
 
 TOOLS = ("claude", "codex", "agy")
@@ -23,6 +26,12 @@ KINDS = ("design", "slides", "document", "page", "picture")
 # The hosts a canvas's link may open on (§3.3): another host is shown as text, never a link.
 LINK_HOSTS = ("claude.ai", "figma.com", "tldraw.com", "canva.com")
 TITLE_CHARS = 120
+# A canvas tool reached through MCP (Codex's plugins, Claude's connectors): its server's name in `mcp__<server>__<tool>`.
+KNOWN_MCP = ("figma", "tldraw", "canva")
+IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".webp", ".gif")
+_ARTIFACT_URL = re.compile(r"https://claude\.ai/(?:code/)?artifact/[A-Za-z0-9_-]+")
+_URL = re.compile(r"https://[^\s\"'<>)\]]+")
+_IMAGE_PATH = re.compile(r"(?:[A-Za-z]:)?[/\\][^\s\"'<>]+?\.(?:png|jpe?g|webp|gif)\b", re.IGNORECASE)
 
 
 @dataclass
@@ -65,6 +74,67 @@ def link_host(url: str) -> str:
     if parts.scheme != "https":
         return ""
     return next((h for h in LINK_HOSTS if host == h or host.endswith("." + h)), "")
+
+
+def text_of(result: Any) -> str:
+    """A tool's answer as text: a string, a list of blocks (`{"type": "text", "text"}`), a dict (its JSON's strings)."""
+    if isinstance(result, str):
+        return result
+    if isinstance(result, list):
+        return "\n".join(text_of(r) for r in result)
+    if isinstance(result, dict):
+        if isinstance(result.get("text"), str):
+            return result["text"]
+        return "\n".join(text_of(v) for v in result.values() if isinstance(v, (str, list, dict)))
+    return ""
+
+
+def _kind_of_type(type_url: str) -> str:
+    t = type_url.lower()
+    return "slides" if "slide" in t or "deck" in t else "document" if "doc" in t else "design" if "design" in t else "page"
+
+
+def _first_link(text: str) -> str:
+    return next((u.rstrip(".,;") for u in _URL.findall(text) if link_host(u.rstrip(".,;"))), "")
+
+
+def from_call(tool: str, name: str, args: Any, result: Any, at: str, session: str = "", model: str = "") -> Canvas | None:
+    """One tool call as the canvas it drew (§1), or None: `tool` is the AI tool (TOOLS), `name` its tool's name as the
+    transcript or the hook says it, `args` its input, `result` its answer (a call that failed is not passed here)."""
+    args = args if isinstance(args, dict) else {}
+    text = text_of(result)
+    made = lambda kind, title, url="", file="": Canvas(tool, kind, str(title or "")[:TITLE_CHARS], at, url, file, session, model)
+    if name == "Artifact":
+        if (args.get("action") or "publish") != "publish" or args.get("asset"):
+            return None
+        m = _ARTIFACT_URL.search(text) or _ARTIFACT_URL.search(str(args.get("url") or ""))
+        if not m:
+            return None
+        file = str(args.get("file_path") or "")
+        kind = _kind_of_type(str(args["type_url"])) if args.get("type_url") else "page"
+        return made(kind, args.get("title") or (Path(file).stem if file else ""), m.group(0),
+                    file if file.lower().endswith((".html", ".htm", ".md")) and Path(file).is_absolute() else "")
+    if name == "mcp__Claude_Docs__batch":
+        create = (args.get("container") or {}).get("create") if isinstance(args.get("container"), dict) else None
+        m = _ARTIFACT_URL.search(text)
+        if not isinstance(create, dict) or not m:
+            return None
+        return made("document", create.get("name") or "", m.group(0))
+    server = name.split("__")[1].lower() if name.startswith("mcp__") and name.count("__") >= 2 else ""
+    if server in KNOWN_MCP:
+        if server == "figma" and not name.endswith("create_new_file"):
+            return None
+        url = _first_link(text)
+        title = next((args[k] for k in ("fileName", "file_name", "name", "title") if isinstance(args.get(k), str)), "")
+        return made("design", title, url) if url else None
+    if name == "generate_image":
+        found = _IMAGE_PATH.search(text) or next((m for v in args.values() if isinstance(v, str)
+                                                  for m in [_IMAGE_PATH.search(v)] if m), None)
+        if not found:
+            return None
+        title = next((args[k] for k in ("Prompt", "prompt", "ImageName", "Description") if isinstance(args.get(k), str)), "")
+        return made("picture", title.splitlines()[0] if title else Path(found.group(0)).stem, file=found.group(0))
+    return None
 
 
 def read_claude(repo_root: Path) -> list[Canvas]:

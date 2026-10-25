@@ -153,3 +153,36 @@ def test_the_phone_may_call_the_canvas_commands(host):
     for name in ("ideas.canvases", "ideas.canvas_seen", "ideas.canvas_file"):
         assert BoardPhone.allowed(host, name, {})
     assert SEEN == "canvas.seen"
+
+
+# -- one tool call as a canvas (sources/canvases.py `from_call`: the readers' and the hook's) -----------------------
+
+from orkboard.sources.canvases import from_call  # noqa: E402
+
+AT = "2026-10-25T10:00:00+00:00"
+
+
+def test_an_artifact_published_is_a_canvas_and_a_read_or_an_asset_is_not():
+    said = [{"type": "text", "text": f"Published: {ART}\nThis session watches it."}]
+    c = from_call("claude", "Artifact", {"file_path": "/home/u/p/onboarding.html", "icon": "chart"}, said, AT, "s1", "claude-opus-5-5")
+    assert (c.kind, c.title, c.url, c.file, c.session) == ("page", "onboarding", ART, "/home/u/p/onboarding.html", "s1")
+    d = from_call("claude", "Artifact", {"type_url": "https://claude.ai/artifact/types/design", "title": "Login"}, ART, AT)
+    assert (d.kind, d.title, d.file) == ("design", "Login", "")
+    assert from_call("claude", "Artifact", {"type_url": "x/slides"}, ART, AT).kind == "slides"
+    assert from_call("claude", "Artifact", {"action": "read", "url": ART}, "<html>", AT) is None
+    assert from_call("claude", "Artifact", {"asset": True, "url": ART, "file_path": "/a.png"}, ART, AT) is None
+    assert from_call("claude", "Artifact", {"file_path": "a.html"}, "refused", AT) is None
+
+
+def test_a_doc_a_figma_file_and_a_picture_are_canvases():
+    doc = from_call("claude", "mcp__Claude_Docs__batch", {"container": {"kind": "project", "create": {"name": "Plan"}}},
+                    {"ack": f"made {ART}"}, AT)
+    assert (doc.kind, doc.title, doc.url) == ("document", "Plan", ART)
+    assert from_call("claude", "mcp__Claude_Docs__batch", {"container": {"id": "x"}}, ART, AT) is None
+    fig = from_call("codex", "mcp__figma__create_new_file", {"fileName": "Board"}, "https://www.figma.com/design/K/Board.", AT)
+    assert (fig.tool, fig.kind, fig.url) == ("codex", "design", "https://www.figma.com/design/K/Board")
+    assert from_call("claude", "mcp__Figma__get_screenshot", {}, "https://www.figma.com/design/K", AT) is None
+    assert from_call("codex", "mcp__tldraw__create", {}, "https://evil.com/x", AT) is None
+    pic = from_call("agy", "generate_image", {"Prompt": "a pixel elf\nsmall"}, "Saved to /home/u/.gemini/brain/c1/elf.png", AT)
+    assert (pic.kind, pic.title, pic.file) == ("picture", "a pixel elf", "/home/u/.gemini/brain/c1/elf.png")
+    assert from_call("claude", "Bash", {"command": "ls"}, "", AT) is None

@@ -147,6 +147,11 @@ The critical tests (CLAUDE.md *Alpha*) and `tests/test_gui_wording.py` pass.
    `ideas.canvases` again when the rev moves.
 4. **The readers** (A) fill `read_claude(repo_root)`, `read_codex(repo_root)`, `read_agy(repo_root, sessions)` in
    `sources/canvases.py`: each returns `Canvas`es and never raises; the host runs them every 30 s off its thread.
+5. **One call as a canvas**: `from_call(tool, name, args, result, at, session, model)` (`sources/canvases.py`) is §1's
+   table for one tool call, shared by the readers (A) and the hook (D): `Artifact` (publish, not an asset),
+   `mcp__Claude_Docs__batch` (a create), a `KNOWN_MCP` server's call answering an allowed link (Figma's
+   `create_new_file` only), `generate_image` (an image's path in its answer or args). A reader or the hook that finds the
+   tool's format otherwise changes this one function, with its test.
 
 ## As found
 (§0's findings, by tool, once recorded.)
