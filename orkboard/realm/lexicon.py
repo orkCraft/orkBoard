@@ -208,6 +208,7 @@ TERMS: tuple[Term, ...] = (
     _t("proposal", "proposal", "proposals"),                       # a goal the keeper proposes at night, for the morning (spec 35 §8)
     _t("scribble", "note", "notes", "scribble", "scribbles"),       # a goal or a note on the board
     # Operations (docs/specs/38-operations.md §0): the person's everyday work by templates, across projects
+    _t("keep_awake", "Keep the computer awake"),                   # the computer does not sleep by itself, on power (spec 47 §0)
     _t("operations", "Operations"),                                # the person's list, one for all projects; not a party
     _t("operation", "operation", "operations"),                    # one piece of it, from one template
     _t("op_template", "template", "templates"),                    # a Claude skill with Orkboard's manifest beside it

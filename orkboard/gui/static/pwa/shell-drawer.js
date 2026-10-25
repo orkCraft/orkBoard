@@ -91,8 +91,10 @@ export function makeSettings(core, ctx, drawer, limits) {
     h("div", { class: "row" }, h("button", { class: "ork-btn", type: "button", onclick: () => { drawer.close(); limits(); } }, "What is left")),
   ];
   const push = makePush(ctx);
+  const sleeps = h("p", { class: "muted board-sleep", hidden: true });          // spec 47 §5: what the computer's sleep means for this phone
   const phone = [
     h("h3", {}, "This phone"),
+    sleeps,
     push.el,
     h("div", { class: "row" }, h("button", { class: "ork-btn", type: "button", "data-act": "update-check",           // the computer reads the list again (shell-update.js)
       onclick: () => { drawer.close(); ctx.checkUpdate?.(); } }, "Check for updates")),
@@ -128,6 +130,8 @@ export function makeSettings(core, ctx, drawer, limits) {
       if (document.activeElement !== nightFrom && document.activeElement !== nightTo) [nightFrom.value, nightTo.value] = String(core.st.board?.night || "01:00-07:00").split("-");
     },
     render(s) {
+      sleeps.textContent = s.sleep || "";
+      sleeps.hidden = !s.sleep;
       const gold = s.hud?.show_gold ? s.hud.gold : "";
       spend.replaceChildren(...(gold ? [h("button", { class: "linkish board-spend__open", type: "button", "aria-label": `Spend today: ${gold}. This week’s work`,
         onclick: () => { drawer.close(); week.open(); } }, h("span", { class: "word" }, "Spend today"), " ", h("b", {}, gold))] : []));
