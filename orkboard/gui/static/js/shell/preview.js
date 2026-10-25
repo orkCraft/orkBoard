@@ -104,7 +104,7 @@ function Result({ d, p }) {
 function Doc({ d, p }) {
   return html`<div class="shell-doc"><p><button class="board-link" onClick=${() => showGoal(p.slug)}>← Back to the party</button></p>
     ${!d ? html`<p class="ok-tone-muted">Opening…</p>`
-      : d.doc?.html ? html`<div class="shell-md" aria-label=${p.path} dangerouslySetInnerHTML=${{ __html: d.doc.html }}></div>${d.doc.truncated ? html`<p class="ok-tone-muted">Cut here: the document is longer.</p>` : ""}`
+      : d.doc?.html ? html`<div class="shell-md is-doc" aria-label=${p.path} dangerouslySetInnerHTML=${{ __html: d.doc.html }}></div>${d.doc.truncated ? html`<p class="ok-tone-muted">Cut here: the document is longer.</p>` : ""}`
       : d.doc ? html`<pre class="shell-log shell-doc__text" aria-label=${p.path}>${d.doc.text}</pre>${d.doc.truncated ? html`<p class="ok-tone-muted">Cut here: the document is longer.</p>` : ""}`
       : html`<p class="ok-tone-muted">That document cannot be shown.</p>`}</div>`;
 }

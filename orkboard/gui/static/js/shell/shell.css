@@ -292,6 +292,28 @@
 .shell-md table { border-collapse: collapse; }
 .shell-md th, .shell-md td { border: 1px solid var(--ork-frame); padding: 3px var(--ork-4); }
 .shell-md blockquote { margin-left: 0; padding-left: var(--ork-5); border-left: 2px solid var(--ork-frame); color: var(--ork-ink-muted); }
+/* A document to read through (a spec, a Markdown file): the body a step below full ink (about 10:1 on the canvas, not 16:1, so
+   the letters do not glare), 14px on a 1.7 line, a column of 72ch in the middle; headings and bold keep full ink. */
+.shell-md.is-doc { max-width: 72ch; margin-inline: auto; padding-bottom: var(--ork-8); font-size: 14px; line-height: 1.7;
+  color: color-mix(in srgb, var(--ork-ink) 80%, var(--ork-canvas)); text-wrap: pretty; }
+.shell-md.is-doc > :first-child { margin-top: 0; }
+.shell-md.is-doc p, .shell-md.is-doc ul, .shell-md.is-doc ol, .shell-md.is-doc pre, .shell-md.is-doc table,
+.shell-md.is-doc blockquote { margin: 0 0 1em; }
+.shell-md.is-doc ul, .shell-md.is-doc ol { padding-left: 1.5em; }
+.shell-md.is-doc li + li, .shell-md.is-doc li > ul, .shell-md.is-doc li > ol { margin-top: 0.3em; }
+.shell-md.is-doc h1, .shell-md.is-doc h2, .shell-md.is-doc h3, .shell-md.is-doc h4, .shell-md.is-doc strong, .shell-md.is-doc b { color: var(--ork-ink); }
+.shell-md.is-doc h1 { font-size: 20px; line-height: 28px; margin: 0 0 var(--ork-6); }
+.shell-md.is-doc h2 { font-size: 17px; line-height: 24px; margin: 2em 0 var(--ork-5); padding-bottom: var(--ork-3); border-bottom: 1px solid var(--ork-frame); }
+.shell-md.is-doc h3 { font-size: 15px; line-height: 22px; margin: 1.6em 0 var(--ork-4); }
+.shell-md.is-doc h4 { font-size: 14px; line-height: 20px; margin: 1.4em 0 var(--ork-3); font-family: var(--ork-font-text); font-weight: 600; }
+.shell-md.is-doc code { font-size: 0.9em; padding: 1px var(--ork-1); }
+.shell-md.is-doc pre { font-size: 13px; line-height: 1.55; border: 1px solid var(--ork-frame); }
+.shell-md.is-doc pre code { padding: 0; font-size: inherit; }
+.shell-md.is-doc table { display: block; overflow-x: auto; font-size: 13px; line-height: 1.5; }
+.shell-md.is-doc th, .shell-md.is-doc td { overflow-wrap: break-word; vertical-align: top; }      /* a narrow column wraps by words, never letter by letter */
+.shell-md.is-doc th { color: var(--ork-ink); text-align: left; background: var(--ork-panel); }
+.shell-md.is-doc a { color: var(--ork-ink); text-decoration-color: var(--ork-edge); text-underline-offset: 3px; }
+.shell-md.is-doc hr { border: 0; border-top: 1px solid var(--ork-frame); margin: 2em 0; }
 .shell-code { display: flex; overflow: auto; font: var(--ork-type-body); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame); }
 .shell-code pre { margin: 0; padding: var(--ork-4); }
 .shell-code__nos { flex: none; text-align: right; color: var(--ork-ink-muted); border-right: 1px solid var(--ork-frame); user-select: none; }
