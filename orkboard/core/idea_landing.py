@@ -93,11 +93,12 @@ class LandingMixin:
 
     # -- when a result lands by itself (spec 84 §1) --------------------------------------------------
 
-    def look_reason(self, slug: str, tests: dict, left: int, files: list[str], red: bool = False, gated: bool = True) -> str:
+    def look_reason(self, slug: str, tests: dict, left: int, files: list[str], red: bool = False, gated: bool = True,
+                    looked: bool = False) -> str:
         """"" when the result lands in dev by itself; else why it waits for the person's look, the first that holds: no tests in this
         project (the gate is `none`), the tests did not run, the tests are red, findings left, `touches <path>` of a risk path its goal's
         risk left out, it holds pictures, you asked to look at each result (`ideas.review`). `gated`: False for a check that changed no file,
-        which has no tests to speak of."""
+        which has no tests to speak of. `looked`: the person picked the variant it holds (a pick, §49.6), so its pictures were seen."""
         r = _r()
         if gated and tests.get("none"):
             return NO_TESTS
@@ -111,7 +112,7 @@ class LandingMixin:
         path = risky_path(files, set(self._list(page, "risk_triggers")), list(r.setting(self.settings, "risk_paths") or []))
         if path:
             return f"touches {path}"
-        if media_in(files):
+        if media_in(files) and not looked:
             return PICTURES
         return ASKED if r.setting(self.settings, "review") else ""
 
@@ -132,7 +133,7 @@ class LandingMixin:
         """Whether a ready task may start now: the Board's `max_parallel` (raised to its party's size where that is more), its party's slots by
         size, a party's member (a role its team picked) one task at a time, and never beside a running task whose paths meet its own."""
         r = _r()
-        running = list(self._runs)
+        running = list(self._runs) + [k for k in getattr(self, "_ticked", []) if k not in self._runs]
         board = max(1, int(r.setting(self.settings, "max_parallel") or 1))
         size = (self.size_of(slug) if self.size_of is not None else "") or ""
         cap = SIZE_SLOTS.get(size, board)

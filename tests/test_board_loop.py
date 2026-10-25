@@ -64,6 +64,7 @@ def town(fake_repo, tmp_path, monkeypatch):
     stub.chmod(stub.stat().st_mode | stat.S_IEXEC)
     monkeypatch.setenv("PATH", f"{bindir}{os.pathsep}{os.environ['PATH']}")
     host = Orkboard(fake_repo)
+    host.command("ideas.board_set", {"review": True})          # this loop goes through Review: every result waits for the look (spec 84 §1)
     yield host, fake_repo, origin
     host.ideas.stop_all()
 

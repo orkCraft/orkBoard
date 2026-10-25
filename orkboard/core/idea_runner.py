@@ -299,6 +299,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
         now = time.time()
         with self._lock:
             limits = self._read_limits(now)
+            self._ticked = []                      # what this tick launched: a slot it took is taken before its thread is seen
             for slug in sorted(self._active, key=self._rank_of):
                 plan = self.plan(slug)
                 if plan is None:
@@ -340,6 +341,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                         self._hold_sign_in(t, "", tool)
                     else:
                         self._launch(slug, t)
+                        self._ticked.append((slug, t.get("id")))
                         if paced:
                             self._mark_pace(slug)
                     changed = True
@@ -566,7 +568,8 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                 tests = self._tests_of(path, out, problem)
                 diff = self.git.stats(path, start_sha)
             look = self.look_reason(slug, tests, left, [] if check_task and not changed else self.git.touched(path, start_sha),
-                                    problem is not None, not (check_task and not changed))        # spec 84 §1: it lands by itself only when it holds
+                                    problem is not None, not (check_task and not changed),        # spec 84 §1: it lands by itself only when it holds
+                                    looked=bool(self._task(slug, tid).get("picked")))              # a variant the person picked was looked at (§49.6)
             if look:
                 self._set_task(slug, tid, state="review", tests=tests, diff=diff, conflict="", finished=now_iso(), look=look,
                                error="" if problem is None else "the tests are red", note=note)
