@@ -302,7 +302,7 @@ def test_orkboard_opens_the_folder_named_else_the_last_shown(two, monkeypatch, t
     from orkboard.gui import board_host
     shop, blog = two
     started = []
-    monkeypatch.setattr(board_host, "run", lambda root, browser=False, port=0: started.append(root) or 0)
+    monkeypatch.setattr(board_host, "run", lambda root, browser=False, port=0, serve=False: started.append(root) or 0)
     assert board_host.main([str(blog)]) == 0 and started[-1] == blog.resolve()
     assert board_host.main(["board", str(shop), "--browser"]) == 0 and started[-1] == shop.resolve()
     m = settings.load()

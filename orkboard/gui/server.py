@@ -21,7 +21,7 @@ A session's bytes go as binary frames, only to the pages that show it (`term.att
     ← [kind: 1 byte][key length: 1 byte][key, UTF-8][bytes]    kind 0: output, 1: all of it again (replay)
 
 The socket takes only the page this server gave out: a random token in its address and an Origin
-of this server, so another page open in a browser cannot drive the town.
+of this server (127.0.0.1 or localhost, its port), so another page open in a browser cannot drive the town.
 
 `GET /api/version` (the same token, as `?t=` or `Authorization: Bearer`) is the handshake a client
 other than the page makes first (docs/design/mobile.md): what this server speaks, as JSON.
@@ -148,6 +148,12 @@ class Server:
         return f"http://127.0.0.1:{self.port}"
 
     @property
+    def origins(self) -> tuple[str, str]:
+        """The origins the socket takes: this server's, by its number or as `localhost` (an editor's panel reaches it
+        through `asExternalUri`, which may name it so: gui/extension.py)."""
+        return self.origin, f"http://localhost:{self.port}"
+
+    @property
     def url(self) -> str:
         return f"{self.origin}/?t={self.token}"
 
@@ -169,7 +175,7 @@ class Server:
         if parts.path == "/ws":
             token = parse_qs(parts.query).get("t", [""])[0]
             origin = request.headers.get("Origin", "")
-            if not secrets.compare_digest(token, self.token) or origin != self.origin:
+            if not secrets.compare_digest(token, self.token) or origin not in self.origins:
                 return _response(HTTPStatus.FORBIDDEN, b"Forbidden")
             return None                                   # go on with the WebSocket handshake
         if parts.path == "/api/version":

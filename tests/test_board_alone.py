@@ -186,7 +186,8 @@ def test_the_page_is_board_js_in_offices_look_and_the_phones_board_app_js(host):
 def test_orkboard_starts_on_the_project_and_board_is_the_old_habit(fake_repo, monkeypatch):
     from orkboard.gui import board_host
     started = []
-    monkeypatch.setattr(board_host, "run", lambda root, browser=False, port=0: started.append((root, browser, port)) or 0)
+    monkeypatch.setattr(board_host, "run", lambda root, browser=False, port=0, serve=False:
+                        started.append((root, browser, port)) or 0)
     monkeypatch.setenv("ORKCRAFT_NO_UPDATE", "1")
     assert board_host.main(["--repo", str(fake_repo), "board", "--browser", "--port", "8765"]) == 0   # `orkboard board`
     assert started == [(fake_repo.resolve(), True, 8765)]
@@ -201,7 +202,7 @@ def test_outside_a_project_it_starts_on_the_start_screen_and_a_refused_folder_is
     a folder that may not be a project is refused in words."""
     from orkboard.gui import board_host
     started = []
-    monkeypatch.setattr(board_host, "run", lambda root, browser=False, port=0: started.append(root) or 0)
+    monkeypatch.setattr(board_host, "run", lambda root, browser=False, port=0, serve=False: started.append(root) or 0)
     monkeypatch.chdir(tmp_path)
     assert board_host.main([]) == 0 and started == [None]
     assert board_host.main([str(Path.home())]) == 1 and started == [None]

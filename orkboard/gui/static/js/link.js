@@ -89,9 +89,10 @@ export function command(name, args = {}) {
   });
 }
 
-/** A web link in the person's browser. The app's own window (pywebview) opens no tab, so the host opens it there. */
+/** A web link in the person's browser. The app's own window (pywebview) and an editor's panel (`app=1`,
+ *  gui/extension.py) open no tab, so the host opens it there. */
 export function openLink(url) {
-  if (window.pywebview) command("link.open", { url }).catch(() => {});
+  if (window.pywebview || new URLSearchParams(location.search).get("app") === "1") command("link.open", { url }).catch(() => {});
   else window.open(url, "_blank", "noopener");
 }
 

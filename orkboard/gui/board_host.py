@@ -506,16 +506,20 @@ def _stop(server: Any, thread: Any, stop: Callable[[], None]) -> None:
     stop()
 
 
-def run(repo_root: Path | None, browser: bool = False, port: int = 0, demo: bool = False) -> int:
+def run(repo_root: Path | None, browser: bool = False, port: int = 0, demo: bool = False, serve: bool = False) -> int:
     """Orkboard on `repo_root` (None: the start screen), the projects open when it last closed opened again, until
-    its window closes; `core.updates.RESTART` when it closed on an update it installed."""
-    from orkboard.gui import folder_dialog, mac_app
+    its window closes (`serve`: until the editor that started it goes away); `core.updates.RESTART` when it closed on
+    an update it installed."""
+    from orkboard.gui import extension, folder_dialog, mac_app
     from orkboard.gui.server import Server
     host = Orkboard(repo_root, demo=demo, restore=True)
     host.opened()
     server = Server(host, port)
     thread = server.start_thread()
-    show(host, server, thread, browser, attach=folder_dialog.attach, dress=mac_app.dress)
+    if serve:
+        extension.serve(host, server, thread, _stop)
+    else:
+        show(host, server, thread, browser, attach=folder_dialog.attach, dress=mac_app.dress)
     return core_updates.RESTART if host.updates.restart_wanted else 0
 
 
@@ -536,9 +540,9 @@ def start_folder(folder: Path | None, machine: settings.MachineSettings) -> Path
 
 
 def main(argv: list[str] | None = None) -> int:
-    """`orkboard [board] [<folder>] [--repo DIR] [--browser] [--port N]`: Orkboard on that folder; without one the last
-    shown project, else the one it was started in, else the start screen. `board` is the old habit of
-    `orkcraft board`, and changes nothing. `orkboard --make-app`: Orkboard.app in ~/Applications (gui/mac_app.py).
+    """`orkboard [board] [<folder>] [--repo DIR] [--browser | --serve] [--port N]`: Orkboard on that folder; without one
+    the last shown project, else the one it was started in, else the start screen. `board` is the old habit of
+    `orkcraft board`, and changes nothing. `--serve`: for the VS Code extension (gui/extension.py). `orkboard --make-app`: Orkboard.app in ~/Applications (gui/mac_app.py).
     `orkboard usage …` and `orkboard update …`: the usage stats' answer and the updates (gui/board_cli.py). A critical
     update installs before anything else loads, as the policy says (core/updates.py `at_launch`)."""
     from orkboard.realm import project_folder
@@ -550,6 +554,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--version", action="version", version=f"Orkboard {__version__}")
     parser.add_argument("--repo", type=Path, default=None, help="Path to project root (as a folder named)")
     parser.add_argument("--browser", action="store_true", help="Open it in the browser instead of a window")
+    parser.add_argument("--serve", action="store_true",
+                        help="No window and no browser: print the page's address as JSON and serve until stdin closes "
+                             "(the VS Code extension)")
     parser.add_argument("--port", type=int, default=0, help="Port on 127.0.0.1 (default: any free one)")
     parser.add_argument("--make-app", action="store_true",
                         help="Put Orkboard.app in ~/Applications (a Mac): Orkboard from the Dock, Launchpad and Spotlight")
@@ -570,10 +577,11 @@ def main(argv: list[str] | None = None) -> int:
         if why:
             sys.stderr.write(f"orkline: {root}: {why}\n")
             return 1
-    code = run(root, browser=args.browser, port=args.port)
+    code = run(root, browser=args.browser, port=args.port, serve=args.serve)
     if code == core_updates.RESTART:            # the window installed an update: it opens again on it
         core_updates.restart([*(["--repo", str(root)] if root is not None else []),
                               *(["--browser"] if args.browser else []),
+                              *(["--serve"] if args.serve else []),
                               *(["--port", str(args.port)] if args.port else [])])
     return code
 
