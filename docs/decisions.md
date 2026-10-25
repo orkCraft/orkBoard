@@ -1459,3 +1459,42 @@ never what it looks like. So:
 4. **A goal says how far it is**: *4 of 9 done* on its line and its stack; a card done turns over to say what it made.
 5. Thrift holds (§49): questions and looks only for goals that change what people see, one round of each a goal.
 Spec 85.
+
+## 103. What the logs of the owner's day said: a task may run its project's commands, the gate runs the project's tests, a resumed session's cost is counted once, a send back that cannot help is not offered, a budget is never under its call's floor (25 October, the owner and the PM)
+
+Why: the owner's logs of 25 October (a Node game, two goals, 28 calls): the Board said **$11.22**, about **$4.5** was
+spent. Read call by call:
+- **A resumed session's cost was counted again and again**: Claude's `total_cost_usd` is the session's total so far, and
+  the runner added it up on every `--resume`; one check task read $7.68 for about $1.13, its goal $8.73 for about $1.8,
+  and was marked *cost too much*.
+- **A task could run nothing**: `--permission-mode acceptEdits` with no command allowed, in `-p` with nobody to ask:
+  77 of 412 turns were refused (`grep`, `cat`, `ls`, `npm test`, `python3`, `ffmpeg`), each a turn that read the whole
+  context again; the Playtester never played; a pick of sounds failed twice for want of `ffmpeg`; every worktree tried
+  `npm ci`.
+- **The gate ran nothing**: with no `orkcraft.toml`, its `always` is Orkboard's own tests, absent from a Node project:
+  18 results, *0 passed, 0 failed*, each merged.
+- **A send back went round nine times**: the check said *the tests did not run*, which no session could fix, and
+  *Fix the findings left* sent it back seven times, each round resuming a session of 200–600 k tokens.
+- **A step's budget was under its call's floor**: one call of the leader costs $0.18–0.22 on the Veteran tier however
+  little it writes (Claude Code's own context, written to the cache anew each time); Lean halves the budgets, so the
+  answer to a draft's questions ($0.20) and the Orkmaster's collision judge ($0.025–0.05) ran out every time.
+So:
+1. **A resumed session's cost is its difference** from the session's last total, for every tool that reports a total.
+2. **A task may run its project's commands**, by a list code gives it, never by a model: reading (`ls`, `cat`, `grep`,
+   `find`, `head`, `tail`, `wc`, `git status|diff|log|show`), the project's own test, build and lint commands (the gate's
+   and `package.json`'s scripts), local git (`add`, `commit`, `checkout`, `switch`, `stash`, `merge`, `rebase` on its own
+   branch); a pick task also the media tools (`ffmpeg`, `sox`, `python3`, `node` on its candidates' folder). Never:
+   `git push`, `rm -rf`, `sudo`, `curl`, `wget`, `ssh`, a package install (the worktree's dependencies are laid by code:
+   the main checkout's `node_modules` (or `.venv`) linked into the worktree).
+3. **The gate runs the project's tests**: with no `orkcraft.toml` `[gate]`, it is read from the project (`package.json`'s
+   `test` script → `npm test`; `pyproject.toml` or `tests/` → pytest; `go.mod` → `go test ./...`; `Cargo.toml` →
+   `cargo test`); with none, the result says *no tests in this project* where the tests are said, and lands only on the
+   person's look, never by itself (§101.1).
+4. **A finding is of the code or of the place it ran in**: a check writes `"kind": "code" | "env"`; *Fix the findings
+   left* sends only the code's; a result whose findings left are all the place's offers Merge and Drop, not Send back;
+   the same findings left after two rounds offer the same. A send back with a small ask starts **a fresh session** given
+   the diff and the findings, when the old one is past 150 k tokens.
+5. **A budget is never under its call's floor**: each step's cap is at least the floor measured for its tier on the tool
+   (the last ten one-turn calls' median, else a table); Lean's draft, answer and judge run on the Seasoned tier, its goal
+   reading and plan on the Veteran.
+Spec 86.
