@@ -11,6 +11,7 @@ import { limitsNote } from "./shell-limits.js";
 import { flagWords } from "./shell-map.js";
 import { makeNewGoal, makeParty, IDEATION_WHOLE } from "./shell-goal-new.js";
 import { makeReleasesFrom } from "./shell-release.js";
+import { loadProposals, proposes, sizePrices, sizeSwitch } from "./shell-proposals.js";
 
 const CRAFTS = [["engineering", "peon"], ["design", "elf"], ["data", "goblin"], ["marketing", "gnome"], ["product", "lich"]];   // realm/roles.py RACES
 
@@ -35,6 +36,9 @@ export function makeGoalSheet(core) {
   const drawCraft = () => craftNow.replaceChildren(goalHead({ craft: craft.value, race: Object.fromEntries(CRAFTS)[craft.value] }));
   craft.addEventListener("change", drawCraft);
   const priority = prioritySwitch();
+  let sized = false;                                 // the size was changed here: Save party sends it (spec 75 §5.4)
+  const size = sizeSwitch({ label: "Its size", onPick: () => { sized = true; } });
+  const sizeField = h("div", { class: "field size-field", hidden: true }, h("span", { class: "field-label" }, "Its size"), size.el);
   const hint = h("p", { class: "muted hint" }, "The Taskmaster reads it and writes the name and the summary.");
   const releasesFrom = makeReleasesFrom(core);        // a party that offers A release: the parties its flags come from (spec 68 §7.6)
   const left = h("div", {});                         // what is left of the AI tools: reading the party spends them
@@ -42,7 +46,7 @@ export function makeGoalSheet(core) {
   const cancel = h("button", { class: "ork-btn big", type: "button" }, "Cancel");
   const form = h("form", { class: "sheet-form" }, titleField, field("What it is for", about),
     field("Craft", h("div", { class: "row craft-pick" }, craftNow, craft), "Its head marks the party in the top bar"),
-    h("div", { class: "field" }, h("span", { class: "field-label" }, "Priority"), priority.el), releasesFrom.el, hint, left, foot(cancel, save));
+    h("div", { class: "field" }, h("span", { class: "field-label" }, "Priority"), priority.el), sizeField, releasesFrom.el, hint, left, foot(cancel, save));
   const sh = sheet("Edit the party", form);
   let slug = "";
   let then = null;                                   // what to do with the party's slug instead of opening its screen (New goal with no party yet)
@@ -54,6 +58,7 @@ export function makeGoalSheet(core) {
     save.disabled = true;
     const args = { ...(slug ? { slug } : {}), about: about.value.trim(), craft: craft.value, priority: priority.get() };
     if (slug && title.value.trim()) args.title = title.value.trim();
+    if (slug && sized && size.get()) args.size = size.get();
     const from = releasesFrom.get();
     if (slug && from) args.releases_from = from;
     const got = await core.call("ideas.goal_save", args);
@@ -106,6 +111,12 @@ export function makeGoalSheet(core) {
       priority.set(g?.priority || "normal");
       craft.value = g?.craft || "engineering";
       const mapped = (core.st.map?.goals || []).find((x) => x.slug === which);
+      sized = false;
+      sizeField.hidden = !(slug && proposes(core));
+      size.set(mapped?.size || g?.size || "");
+      const prices = () => size.prices(sizePrices(core, mapped?.leader?.slug || "taskmaster"));
+      prices();
+      if (!sizeField.hidden && !core.st.proposed) loadProposals(core).then(prices);
       releasesFrom.set({ self: which, saved: mapped?.releases_from || [], leads: mapped?.leader?.slug === "release-manager", offers: (mapped?.types || []).some((t) => t.id === "release") });
       left.replaceChildren(limitsNote(core.st.snap) || "");
       drawCraft();

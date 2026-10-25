@@ -1,7 +1,7 @@
 """Spec 71 part C, the phone (docs/specs/71-orkmaster-keeps-parties-apart.md §6, §7 C, §8; decisions §86): Chromium at 390 × 844 against the stub host of spec §8. The hand's stop `collide`
 (the Orkmaster's head from `project.orkmaster`, *Orkmaster asks*, the text and the why, its two goals each a 44 px press that opens it, its answers as buttons that say what happens and send
 `ideas.collide_answer {id, answer}`); a goal with `waits_for` in the Goals sheet (orkUI's ← sign as its state sign, *waits for <party> · <goal>* in its words); a host without them keeps today's
-phone; no sideways scroll; `sw.js` v83."""
+phone; no sideways scroll; `sw.js` v84."""
 from __future__ import annotations
 
 import copy
@@ -263,4 +263,4 @@ async def test_the_hand_with_the_stop_raised_fits_the_screen(fake_repo, monkeypa
 
 def test_the_service_worker_is_one_up():
     sw = (Path(pwa.__file__).parent / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")
-    assert 'const CACHE = "orkcraft-app-v83";' in sw
+    assert 'const CACHE = "orkcraft-app-v84";' in sw

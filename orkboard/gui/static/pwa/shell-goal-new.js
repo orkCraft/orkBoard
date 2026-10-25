@@ -6,6 +6,7 @@
 // work (Grunt fills in); a checker's check adds its line to the spec's Done when and its task to the plan (realm/idea_checks.py). A Mixed
 // goal starts with the Taskmaster alone, its craft its party's most. `makeParty` is the team and the checks alone: a goal's own screen
 // changes its team with the same two (§7). Under the price, *It can take:* the goal types the seats would be offered (spec 63 §2); a party saved here gathers its heads into the party's deck (§4).
+// With a host that proposes (spec 75 §5, shell-proposals.js) New party opens on the Orkmaster's proposals, and this sheet — the tiles, the seats, Save party — is **More: the library**, with the size switch added to it.
 // Ideation (spec 65 §1) is the library's like any: its six agents are offered to no other party, and its seats are not changed (no Change; its price is a pitch's, it takes no goal type).
 import { h, sheet, head, icon } from "./util.js";
 import { pctOf, pctRange } from "./shell-spend.js";
@@ -17,6 +18,7 @@ import { sign } from "./shell-marks.js";
 import { motionOn, pulse, gather } from "./shell-motion.js";
 import { makeReleasesFrom } from "./shell-release.js";
 import { dealOf } from "./shell-project.js";
+import { PROPOSAL, STANDARD, makeProposals, proposes, sizeSwitch } from "./shell-proposals.js";
 
 export const CRAFTS = [["engineering", "peon", "Code, tests and the build"], ["design", "elf", "Screens, flows and words on them"],
   ["data", "goblin", "Numbers, queries and reports"], ["marketing", "gnome", "Pages, posts and search"],
@@ -316,7 +318,13 @@ export function makeNewGoal(core) {
   const left = h("div", {});
   const save = h("button", { class: "ork-btn primary big", type: "button", disabled: true }, "Save party");
   const body = h("div", { class: "goal-steps one-sheet" });
-  const sh = sheet("New party", body, foot(save));
+  const footEl = foot(save);
+  const sh = sheet("New party", body, footEl);
+  const sizeLib = sizeSwitch({ label: "Its size" });  // a party of one's own has a size too (spec 75 §5.1): Standard unless the person picks
+  sizeLib.set(STANDARD);
+  const proposals = makeProposals(core, { make: makeProposal, library: () => showLibrary(true) });
+  const back = h("button", { class: "ork-btn quiet props__back", type: "button", "data-act": "to-proposals", onclick: () => showProposals("") }, h("i", { class: "ork-chev left", "aria-hidden": "true" }), "Orkmaster proposes");
+  let mode = "library", opened = 0;                  // the sheet on the proposals or on the library; which opening this is (a late answer of an earlier one is let go)
   const releasesFrom = makeReleasesFrom(core);       // the Release party takes its goals from the project's other parties: ticked so (spec 68 §7.6)
   let releaseOn = false;
   const sync = () => {
@@ -391,16 +399,8 @@ export function makeNewGoal(core) {
     });
   }
 
-  save.addEventListener("click", async () => {
-    if (!about.value.trim() || !party.fits()) return;
-    save.disabled = true;
-    const p = party.get();
-    const heads = motionOn() ? gatherFrom() : [];                // read at the press, before the sheet closes
-    const from = releasesFrom.get();
-    const got = await core.call("ideas.goal_save", { about: about.value.trim(), craft: craftOf(), leader: p.leader, team: p.team, every: p.every, priority: priority.get(),
-      ...(p.party ? { party: p.party } : {}), ...(p.preset ? { preset: p.preset } : {}), ...(from ? { releases_from: from } : {}) });
-    sync();
-    if (!got?.slug) { gather.drop(); return; }
+  /** The party is made: the sheet closes, the heads gather into the deck (spec 63 §4), the party's screen opens (or `after` is told). */
+  async function made(got, heads) {
     for (const note of got.notes || []) core.flash(note);       // an agent of the project's own that the party carries stays as it was
     const after = then;
     then = null;
@@ -411,32 +411,93 @@ export function makeNewGoal(core) {
     if (after) after(got.slug);
     else if (heads.length) setTimeout(() => core.open({ kind: "goal", slug: got.slug }), gather.ms(heads.length));     // the party's screen covers the deck: it opens once the heads have gathered and the deck is lit
     else core.open({ kind: "goal", slug: got.slug });
+  }
+
+  save.addEventListener("click", async () => {
+    if (!about.value.trim() || !party.fits()) return;
+    save.disabled = true;
+    const p = party.get();
+    const heads = motionOn() ? gatherFrom() : [];                // read at the press, before the sheet closes
+    const from = releasesFrom.get();
+    const got = await core.call("ideas.goal_save", { about: about.value.trim(), craft: craftOf(), leader: p.leader, team: p.team, every: p.every, priority: priority.get(),
+      ...(p.party ? { party: p.party } : {}), ...(p.preset ? { preset: p.preset } : {}), ...(from ? { releases_from: from } : {}), ...(proposes(core) ? { size: sizeLib.get() } : {}) });
+    sync();
+    if (!got?.slug) { gather.drop(); return; }
+    await made(got, heads);
   });
+
+  /** **Make it** on a proposal's card: its leader, its team of the size picked and the size, as a tile's party saves (the words are the person's, else the proposal's own line). The heads gather from the card. */
+  async function makeProposal(p, size, card, button) {
+    const s = p.sizes?.[size];
+    if (!s) return;
+    button.disabled = true;
+    const view = sh.el.getBoundingClientRect(), mine = button.getBoundingClientRect();
+    const spot = card.querySelectorAll(".prop__heads img");
+    const shown = (r) => r.width > 0 && r.top >= view.top && r.bottom <= view.bottom && r.left >= 0 && r.right <= innerWidth;
+    const heads = motionOn() ? (s.heads || []).slice(0, GATHER_HEADS).map(({ race, tier }, i) => {
+      const r = spot[i]?.getBoundingClientRect(), at = r && shown(r) ? r : { left: mine.left + mine.width / 2 - 12, top: mine.top + mine.height / 2 - 11, width: 24, height: 22 };
+      return { race, tier, box: { left: at.left, top: at.top, width: at.width, height: at.height } };
+    }) : [];
+    const craft = library(core).find((x) => x.id === s.leader)?.craft || "engineering";
+    const words = about.value.trim() || [p.name, p.line].filter(Boolean).join(": ");
+    const got = await core.call("ideas.goal_save", { about: words, craft, leader: s.leader, team: s.team || [], every: [], priority: "normal", size, proposal: p.id,       // `proposal`: the host logs *proposal_taken* only with it
+      ...(presetsOf(core).some((x) => x.id === p.id) ? { preset: p.id } : {}) });
+    button.disabled = false;
+    if (!got?.slug) { gather.drop(); return; }
+    await made(got, heads);
+  }
+
   sh.el.addEventListener("close", () => { then = null; });
+
+  /** The Orkmaster's proposals (shell-proposals.js): no foot, a card has its own **Make it**; a host that cannot answer leaves today's New party. */
+  function showProposals(wanted) {
+    mode = "proposals";
+    footEl.hidden = true;
+    about.value = "";                                                                  // no second question beside the Orkmaster's: a proposal's own line says what it is for (Edit the party changes it)
+    proposals.hold(null);
+    body.replaceChildren(proposals.el);
+    const mine = opened;
+    proposals.load(wanted).then((ok) => { if (!ok && mine === opened && mode === "proposals") { showLibrary(false); } });
+  }
+  /** Today's New party: what it is for, the library's parties, the seats, Save party; under a host that proposes the way back is **Orkmaster proposes**. */
+  function showLibrary(fromProposals) {
+    mode = "library";
+    footEl.hidden = false;
+    about.rows = 4;
+    const proposing = proposes(core) && fromProposals;
+    body.replaceChildren(...[proposing ? back : null,
+      h("section", { class: "new-goal-for", "aria-label": "About the party" }, field("What it is for", about), h("div", { class: "field" }, h("span", { class: "field-label" }, "Priority"), priority.el)),
+      proposes(core) ? h("div", { class: "field size-field" }, h("span", { class: "field-label" }, "Its size"), sizeLib.el) : null,
+      h("section", { class: "new-goal-craft", "aria-label": "Craft" }, h("h3", {}, "Craft"), row, craftLine),
+      party.team, party.checks, releasesFrom.el,
+      h("p", { class: "muted hint" }, "The leader reads it and writes the title and the summary."), left].filter(Boolean));
+    drawCraft();
+    if (fromProposals) about.focus();
+  }
 
   return {
     el: sh.el,
     /** `presetId`: a party of the library picked at once (a pitch sent to a party the project lacks, spec 65 §5). */
     open(after = null, presetId = "") {
       then = after;
+      opened += 1;
       craft = "engineering";
       preset = "";
       about.value = "";
       save.disabled = true;
       priority.set("normal");
+      sizeLib.set(STANDARD);
       releaseOn = false;
       releasesFrom.set({ offers: false });
       party.set({ leader: TASKMASTER, team: [], every: [] }, () => craftOf());
       party.preset(craft, false);
-      const picked = presetId && presetsOf(core).find((p) => p.id === presetId);
+      const wanted = presetId.startsWith(PROPOSAL) ? presetId.slice(PROPOSAL.length) : "";    // a proposal of the deal (spec 75 §5.3)
+      const picked = presetId && !wanted && presetsOf(core).find((p) => p.id === presetId);
       if (picked) pickPreset(picked);
       drawCraft();
       left.replaceChildren(limitsNote(core.st.snap) || "");
-      body.replaceChildren(
-        h("section", { class: "new-goal-for", "aria-label": "About the party" }, field("What it is for", about), h("div", { class: "field" }, h("span", { class: "field-label" }, "Priority"), priority.el)),
-        h("section", { class: "new-goal-craft", "aria-label": "Craft" }, h("h3", {}, "Craft"), row, craftLine),
-        party.team, party.checks, releasesFrom.el,
-        h("p", { class: "muted hint" }, "The leader reads it and writes the title and the summary."), left);
+      if (proposes(core) && (!presetId || wanted)) { showProposals(wanted); sh.open(); return; }     // a host that proposes: its proposals first; a party of the library asked for by name is the library's
+      showLibrary(false);
       sh.open();
       about.focus();
     },
