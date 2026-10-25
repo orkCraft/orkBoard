@@ -240,6 +240,20 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
   animation: ork-blink 1s steps(1) infinite; }
 @keyframes ork-blink { 50% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .ork-think::after { animation: none; } }
+/* --- Busy: work under way on a card or a head, four pixels going round a 3 x 3 square (orkboard's spec 82 A0) ---------------------
+   12 px, the ink and the faint ink only; a step a frame (never a smooth spin); still under reduced motion, as three dots. */
+.ork-busy { position: relative; display: inline-block; width: 12px; height: 12px; flex: none; vertical-align: -1px; }
+.ork-busy::before, .ork-busy::after { content: ""; position: absolute; left: 0; top: 0; width: 4px; height: 4px;
+  animation: ork-busy .8s steps(1) infinite; }
+.ork-busy::before { background: var(--ork-ink); box-shadow: 4px 0 0 var(--ork-ink); }
+.ork-busy::after { background: var(--ork-ink-faint); animation-delay: -.1s; }
+@keyframes ork-busy {
+  0% { transform: translate(0, 0); } 12.5% { transform: translate(4px, 0); } 25% { transform: translate(8px, 0); }
+  37.5% { transform: translate(8px, 4px); } 50% { transform: translate(8px, 8px); } 62.5% { transform: translate(4px, 8px); }
+  75% { transform: translate(0, 8px); } 87.5% { transform: translate(0, 4px); } }
+@media (prefers-reduced-motion: reduce) {
+  .ork-busy::before { animation: none; top: 4px; box-shadow: 4px 0 0 var(--ork-ink-faint), 8px 0 0 var(--ork-ink); }
+  .ork-busy::after { display: none; } }
 .ork-empty { display: grid; place-content: center; justify-items: center; gap: var(--ork-5); min-height: 100%; text-align: center; color: var(--ork-ink-muted); }
 .ork-ork { margin: 0; text-align: left; white-space: pre; color: var(--ork-ink-muted); font: 400 12px/14px var(--ork-font-text); }
 

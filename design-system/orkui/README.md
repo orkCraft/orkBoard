@@ -32,6 +32,11 @@ a material, never a mark: no control, state, label or person's text takes it, an
 colours (a card its panel, a signal its signal). Text on the table holds AA as on the canvas; the lit lip stands 3:1 on the
 top and on the canvas, so the table's bound reads. One table a screen, under the work, never a panel or a dialog.
 
+## Busy
+`.ork-busy` says that work is under way where it stands (a card at work, a head that works): 12 px, four pixels going
+round a 3 x 3 square a step a frame, the ink and the faint ink only, never a colour. Under reduced motion it stands still
+as three dots. One per thing at work; never on a control.
+
 ## The races
 `races/` holds the seven races in three tiers and the peon's crown (generated; `../races/README.md`): 24 x 22 beside a word in a row, 48 x 44 @2x.
 They are the look's raster art with the marks below, in colour but muted: no head is more colourful than a signal, and a state
