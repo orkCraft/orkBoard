@@ -1271,3 +1271,13 @@ goals are dealt, the hand lies at the bottom, a party switch is a deck. So:
    bar (it stays *Orkline*, §50.1, while orkPage colours *line* copper): each its own call.
 The owner's call. Spec 77.
 
+## 93. The project's level is played on the table too: its goals are the field's cards (25 October, the owner)
+
+Why: a press on the Orkmaster turned the cards into tickets: the level drew its goals as small decks in ruled columns
+on the bare canvas, a tracker's board and not the game the party's field is (§92). So:
+1. **One table**: the project's columns lie on orkUI's `.ork-table`; the party heads stand above it on the canvas, as a
+   party's members do above its field.
+2. **One card**: a goal on the level is the field's card, 5:7, its element, state and type as the field's Planning
+   card draws them; no ruled columns.
+3. **Not now**: the phone's project sheet keeps its rows.
+The owner's call. Spec 78.

@@ -1,6 +1,7 @@
 // The project's level (docs/specs/70-orkmaster-and-the-project.md §2–§3, decisions §85): a press on the Orkmaster in the project's line shows the whole of the project in place of one party —
-// a column for each party in the Board's order (Operations is not one), its head (the leader's head, its name, *k/n*; a press opens that party), under it its goals as decks (132 × 72 at most:
-// the goal's element, its type's sign, its title, its state's words) grouped *Planning*, *At work*, *Waits for main*, then *Flags (n)* folded. A press on a deck opens the goal's screen in the drawer.
+// a column for each party in the Board's order (Operations is not one), its head (the leader's head, its name, *k/n*; a press opens that party) on the canvas, under the heads the table
+// (orkUI's `.ork-table`, as the party's field: docs/specs/78-the-project-on-the-table.md) with each party's goals as the field's cards (5:7: the goal's element, its type's sign, its type, its title,
+// its state's words) grouped *Planning*, *At work*, *Waits for main*, then *Flags (n)* folded. A press on a card opens the goal's screen in the drawer.
 // Wider than the field the columns scroll sideways and the heads stay. Hovering or focusing a deck draws, with arrows.js, a link to each deck its route names in another column (the pitch it came from,
 // the release it went into); nothing at rest. Above the columns the Orkmaster's head and *New party* (its deck: projectdeal.js), below them *New goal* (projectdeal.js, a goal's party from the Orkmaster).
 // The code's goal is a party; its idea is a goal; its deck is a goal drawn small, never a word a person reads.
@@ -22,35 +23,46 @@ import { GROUPS, PARTIES_WORDS, THE_PROJECT, deckCount, decksOf, emptyWords, lin
 
 const TONES = { danger: "is-danger", alert: "is-alert" };
 
-/** One goal as a deck: its element and type sign, its title (two lines) and its state's words. A press opens its screen (its plan when the plan waits). */
-function Deck({ d, party, lit, setLit }) {
+/** The classes a goal's card wears (as the field's Planning card, field.js `PlanCard`): at work, failed, waiting for you; a Planning goal not at work dashed; a done one muted. */
+const deckCls = (key, mark) => ({ "is-run": mark.sign === "work", "is-fail": mark.tone === "danger", "is-stop": mark.sign === "alert",
+  "is-wait": key === "planning" && mark.sign !== "work" && mark.sign !== "alert", "is-later": key === "waits" || key === "flags" });
+
+/** One goal as a card on the table (spec 78 §2), the field's card: its element, its state's sign, its type's sign top right; its type's name, its title (two lines), its state's words.
+ *  A press opens its screen (its plan when the plan waits). */
+function Deck({ d, group, party, lit, setLit }) {
   const n = d.n, el = elementOf(n), mark = n.pitch ? pitchMark(n) : goalMark(n);
   const open = () => (n.needs_you === "plan" ? showPlan(n.slug, "", { via: "map" }) : showIdea(n.slug, { via: "map" }));
   const on = () => setLit(n.slug), off = () => setLit((now) => (now === n.slug ? "" : now));
-  return html`<button type="button" class=${cls("arena-pdeck", { "is-lit": lit === n.slug })} data-slug=${n.slug} data-party=${party} title=${`${n.title} · ${d.words}`}
-      aria-label=${`${n.title}, ${d.words}`} onClick=${open} onMouseEnter=${on} onMouseLeave=${off} onFocus=${on} onBlur=${off}>
-    <span class="arena-pdeck__top"><${Elem} name=${el.name} dim=${el.dim} />${typeSign(n, "arena-goal__type")}<span class="arena-spacer"></span>
-      ${mark.sign && html`<span class=${cls("arena-pdeck__mark", TONES[mark.tone])} title=${mark.label || undefined}><${Sign} name=${mark.sign} /></span>`}</span>
-    <span class="arena-pdeck__title">${n.short || n.title}</span>
-    <span class="arena-pdeck__line">${d.words}</span>
+  return html`<div class="arena-stk"><button type="button" class=${cls("arena-task arena-pdeck", deckCls(group, mark), { "is-lit": lit === n.slug })} data-slug=${n.slug} data-party=${party}
+      title=${`${n.title} · ${d.words}`} aria-label=${`${n.title}, ${d.words}`} onClick=${open} onMouseEnter=${on} onMouseLeave=${off} onFocus=${on} onBlur=${off}>
+    <span class="arena-task__top"><${Elem} name=${el.name} dim=${el.dim} />
+      ${mark.sign && html`<span class=${cls("arena-pdeck__mark", TONES[mark.tone])} title=${mark.label || undefined}><${Sign} name=${mark.sign} /></span>`}${typeSign(n)}</span>
+    <span class="arena-task__goal">${n.type?.name || (n.pitch ? "Pitch" : "Goal")}</span>
+    <span class="arena-task__name arena-pdeck__title">${n.short || n.title}</span>
+    <span class="arena-task__foot arena-pdeck__line">${d.words}</span>
+  </button></div>`;
+}
+
+/** A party's head over its column, on the canvas above the table: its leader's head, its name, *k/n*; a press opens the party. */
+function ColumnHead({ g, nodes }) {
+  const name = g.short || g.title;
+  return html`<button type="button" class="arena-pcol__head" data-goal=${g.slug} title=${`Open ${name}`} onClick=${() => show(g.slug, PROJECT)}>
+    <span class="arena-plist__head">${g.leader?.head ? html`<${Head} race=${g.leader.head.race} tier=${g.leader.head.tier} />` : null}</span>
+    <span class="arena-pcol__name" title=${g.title}>${name}</span>
+    <span class="arena-phead__count" title=${countTip(g, nodes)}>${countWords(g, nodes)}</span>
   </button>`;
 }
 
-/** A party's column: its head, its groups of decks, its Flags folded. */
+/** A party's column on the table: its groups of cards, its Flags folded. */
 function Column({ g, nodes, lit, setLit }) {
   const [flags, setFlags] = useState(false), d = decksOf(g, nodes), name = g.short || g.title;
-  const decks = (list) => list.map((x) => html`<${Deck} key=${x.n.slug} d=${x} party=${g.slug} lit=${lit} setLit=${setLit} />`);
+  const decks = (key, list) => html`<div class="arena-phase">${list.map((x) => html`<${Deck} key=${x.n.slug} d=${x} group=${key} party=${g.slug} lit=${lit} setLit=${setLit} />`)}</div>`;
   return html`<section class="arena-pcol" data-goal=${g.slug} aria-label=${name}>
-    <button type="button" class="arena-pcol__head" title=${`Open ${name}`} onClick=${() => show(g.slug, PROJECT)}>
-      <span class="arena-plist__head">${g.leader?.head ? html`<${Head} race=${g.leader.head.race} tier=${g.leader.head.tier} />` : null}</span>
-      <span class="arena-pcol__name" title=${g.title}>${name}</span>
-      <span class="arena-phead__count" title=${countTip(g, nodes)}>${countWords(g, nodes)}</span>
-    </button>
     ${deckCount(d) === 0 && html`<p class="arena-cap arena-pcol__empty">${emptyWords(name)}</p>`}
-    ${GROUPS.map(([key, label]) => d[key].length > 0 && html`<div key=${key} class="arena-pgroup" data-group=${key}><h3 class="arena-sec">${label}</h3>${decks(d[key])}</div>`)}
+    ${GROUPS.map(([key, label]) => d[key].length > 0 && html`<div key=${key} class="arena-pgroup" data-group=${key}><h3 class="arena-sec">${label}</h3>${decks(key, d[key])}</div>`)}
     ${d.flags.length > 0 && html`<div class="arena-pgroup" data-group="flags">
       <button type="button" class="ork-btn quiet arena-fold" aria-expanded=${flags} onClick=${() => setFlags(!flags)}><${Chev} dir=${flags ? "down" : "right"} /> Flags (${d.flags.length})</button>
-      ${flags && decks(d.flags)}</div>`}
+      ${flags && decks("flags", d.flags)}</div>`}
   </section>`;
 }
 
@@ -102,9 +114,12 @@ export function Project({ m, stops }) {
         <span class="arena-cap">${PARTIES_WORDS}</span></div>
       <${NewPartyPile} deal=${m.project?.deal || []} />
       <section class="arena-project__body" aria-label=${THE_PROJECT}>
-        <div class="arena-project__cols" ref=${host}>
-          ${parties.map((g) => html`<${Column} key=${g.slug} g=${g} nodes=${nodesOf(m, g.slug)} lit=${lit} setLit=${setLit} />`)}
-          <${ArrowLines} lines=${lines} />
+        <div class="arena-project__grid">
+          <div class="arena-project__heads">${parties.map((g) => html`<${ColumnHead} key=${g.slug} g=${g} nodes=${nodesOf(m, g.slug)} />`)}</div>
+          <div class="arena-project__cols ork-table" ref=${host}>
+            ${parties.map((g) => html`<${Column} key=${g.slug} g=${g} nodes=${nodesOf(m, g.slug)} lit=${lit} setLit=${setLit} />`)}
+            <${ArrowLines} lines=${lines} />
+          </div>
         </div>
       </section>
       <${NewGoalPile} goals=${parties} />

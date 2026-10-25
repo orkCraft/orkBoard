@@ -92,6 +92,10 @@ def _col(pg, slug):
     return pg.locator(f'.arena-pcol[data-goal="{slug}"]')
 
 
+def _head(pg, slug):
+    return pg.locator(f'.arena-pcol__head[data-goal="{slug}"]')
+
+
 def _groups(pg, slug):
     return [h.text_content().strip() for h in _col(pg, slug).locator(".arena-pgroup > .arena-sec").all()]
 
@@ -147,7 +151,8 @@ def test_the_level_is_a_column_for_each_party_with_its_goals_as_decks_in_groups_
     _project(pg)
     cols = pg.locator(".arena-pcol")
     assert [c.get_attribute("data-goal") for c in cols.all()] == ["passkey", "ideas", "website", "release"]            # the Board's order, no Operations
-    head = _col(pg, "passkey").locator(".arena-pcol__head")
+    assert [h.get_attribute("data-goal") for h in pg.locator(".arena-project__heads > .arena-pcol__head").all()] == ["passkey", "ideas", "website", "release"]   # the heads on the canvas, above the table
+    head = _head(pg, "passkey")
     assert head.locator(".ork-race__head").count() == 1 and head.locator(".arena-pcol__name").inner_text() == "Passkey" and "/" in head.locator(".arena-phead__count").inner_text()
     assert head.get_attribute("title") == "Open Passkey"
     assert _groups(pg, "passkey") == ["Planning", "At work"]
@@ -155,7 +160,8 @@ def test_the_level_is_a_column_for_each_party_with_its_goals_as_decks_in_groups_
     assert decks.count() == 9                                                                                           # Flags (4) are folded
     one = _col(pg, "passkey").locator('.arena-pdeck[data-slug="register"]')
     box = one.bounding_box()
-    assert box["width"] <= 132.5 and box["height"] <= 72.5
+    assert box["width"] <= 104.5 and abs(box["height"] / box["width"] - 7 / 5) < 0.03                                    # the field's card, 5:7 (spec 78)
+    assert "arena-task" in one.get_attribute("class") and pg.locator(".arena-project__cols.ork-table").count() == 1      # on the table, as the party's field
     assert one.locator(".ork-elem").count() == 1 and one.locator(".arena-pdeck__title").inner_text() == "WebAuthn register"
     assert one.locator(".arena-pdeck__line").inner_text().strip() == "0/6 in dev · implementation"                        # as the party's goal row says it
     assert _col(pg, "passkey").locator('.arena-pgroup[data-group="work"] .arena-pdeck').count() == 3
@@ -181,7 +187,7 @@ def test_an_empty_party_says_nothing_in_it_yet(level):
 def test_a_columns_press_opens_that_party_and_a_decks_press_opens_its_goal(level):
     pg, host = level
     _project(pg)
-    _col(pg, "website").locator(".arena-pcol__head").click()
+    _head(pg, "website").click()
     pg.locator('.arena[data-goal="website"]').wait_for(timeout=WAIT_MS)
     assert pg.locator('.arena-phead[data-goal="website"][aria-current=true]').count() == 1
     _project(pg)
@@ -387,7 +393,7 @@ def test_the_project_is_counted_as_a_party_switch_to_and_from_it_fire_and_forget
     assert not [1 for n, _ in host.log if n == "ideas.shown"]
     _project(pg)
     assert _calls(pg, host, "ideas.shown")[-1] == {"party": "@project", "from": "passkey"}
-    _col(pg, "website").locator(".arena-pcol__head").click()
+    _head(pg, "website").click()
     pg.locator('.arena[data-goal="website"]').wait_for(timeout=WAIT_MS)
     assert _calls(pg, host, "ideas.shown", at_least=2)[-1] == {"party": "website", "from": "@project"}
     assert len([1 for n, _ in host.log if n == "ideas.shown"]) == 2

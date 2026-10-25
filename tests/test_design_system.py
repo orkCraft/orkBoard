@@ -92,5 +92,7 @@ def test_the_field_is_orkuis_table_its_wood_a_surface_and_never_a_mark():
     assert ".ork-table" in (orkui.ROOT / "components.css").read_text(encoding="utf-8")
     js = (STATIC / "js" / "arena" / "arena.js").read_text(encoding="utf-8")
     assert re.search(r'<section class="arena-body ork-table"', js)
+    proj = (STATIC / "js" / "arena" / "project.js").read_text(encoding="utf-8")
+    assert re.search(r'<div class="arena-project__cols ork-table"', proj)        # spec 78: the project's level is played on the same table
     sheets = "".join(p.read_text(encoding="utf-8") for p in SHEETS)
     assert "--ork-table" not in sheets                                            # only orkUI's .ork-table draws the wood
