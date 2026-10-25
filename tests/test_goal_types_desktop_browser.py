@@ -241,12 +241,11 @@ def test_new_goal_by_a_type_has_its_head_the_party_fixed_its_asks_refs_and_sends
     assert dialog.get_by_label("Party").count() == 0                                                                      # fixed: said, not a select
     assert dialog.get_by_text("Your own goal").count() == 0
     labels = dialog.locator(".shell-field > .ok-font-label").all_text_contents()
-    assert labels[:3] == ["Its title", "What it is for", "What it should say"] and "Refs" in labels
+    assert labels[:2] == ["The goal its first line is its title", "What it should say"] and "Refs" in labels and "Its title" not in labels and "What it is for" not in labels
     ask = dialog.get_by_label("What it should say")
     assert ask.get_attribute("placeholder") == "three words"
     assert dialog.get_by_role("radio", name="Text").get_attribute("aria-checked") == "true"                             # the type's lens first (text), not the leader's (pain)
-    dialog.get_by_label("Its title").fill("A mark for the app")
-    dialog.get_by_label("What it is for").fill("The store page and the icon")
+    dialog.get_by_label("The goal", exact=True).fill("A mark for the app\n\nThe store page and the icon")           # one field: its first line is its title (spec 83)
     ask.fill("  calm,   quick,  sure ")
     dialog.get_by_label("Links").fill("https://example.com/likes")
     dialog.locator("input[type=file]").set_input_files({"name": "like.png", "mimeType": "image/png", "buffer": PNG})
@@ -278,12 +277,12 @@ def test_the_join_line_free_seat_unticked_says_the_grunt_and_a_full_band_has_no_
     assert price.inner_text().startswith("≈$") and price.inner_text().endswith(" a run")
     box_.uncheck()
     assert "Without Artist, its pixel art goes to the Grunt." in join.inner_text()
-    dialog.get_by_label("Its title").fill("A sync icon")
+    dialog.get_by_label("The goal", exact=True).fill("A sync icon")
     dialog.get_by_role("button", name="Add the goal").click()
     sent = _calls(pg, host, "ideas.add")[-1]
     assert sent["type"] == "icon" and "join" not in sent
     dialog = _form(pg, "New icon")
-    dialog.get_by_label("Its title").fill("A second icon")
+    dialog.get_by_label("The goal", exact=True).fill("A second icon")
     dialog.get_by_role("button", name="Add the goal").click()
     assert _calls(pg, host, "ideas.add")[-1]["join"] == {"add": "artist"}
     pg.get_by_text("Added: Artist joined the party; Product designer drafts it now.").first.wait_for(timeout=WAIT_MS)
@@ -306,12 +305,12 @@ def _form_swap(pg, open_dialog):
 def test_put_it_back_with_words_keeps_the_type_and_asks_and_sends_no_join(typed):
     pg, host = typed
     dialog = _form(pg, "New icon")
-    dialog.get_by_label("Its title").fill("An icon for tonight")
+    dialog.get_by_label("The goal", exact=True).fill("An icon kept on the party")
     dialog.get_by_label("Where it shows").fill("the tab bar, 24 px")
     dialog.get_by_role("button", name="Put it back").click()
     pg.wait_for_function("() => !document.querySelector('.shell-modal')", timeout=WAIT_MS)
     sent = _calls(pg, host, "ideas.add")[-1]
-    assert sent["night"] is True and sent["type"] == "icon" and sent["asks"] == {"where": "the tab bar, 24 px"} and "join" not in sent
+    assert sent["hold"] is True and "night" not in sent and sent["type"] == "icon" and sent["asks"] == {"where": "the tab bar, 24 px"} and "join" not in sent
 
 
 # -- a plan's missing line (§4.4) ----------------------------------------------------------------------------------------------------
@@ -376,7 +375,7 @@ def test_two_join_lines_one_ticked_at_a_time_since_one_joins_with_the_goal(typed
     assert "Without UI kit, its UI kit goes to the Grunt." in dialog.locator(".arena-join[data-agent=ui-kit]").inner_text()
     kit.check()
     assert kit.is_checked() and not art.is_checked()
-    dialog.get_by_label("Its title").fill("A settings screen")
+    dialog.get_by_label("The goal", exact=True).fill("A settings screen")
     dialog.get_by_role("button", name="Add the goal").click()
     assert _calls(pg, host, "ideas.add")[-1]["join"] == {"add": "ui-kit"}
 

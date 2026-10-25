@@ -84,6 +84,7 @@ class StubHost:
         self.into, self.push = "dev", False
         self.paired = [{"id": "p1", "name": "Pixel 8", "seen": "2026-10-17T09:30:00"}]
         self.target, self.autostart, self.night = "balance", True, "01:00-07:00"
+        self.night_low = True                    # spec 83: Low work may run at night (None: not asked yet, False: no); a test of the question sets None
         self.awake = {"mode": "carts", "why": "", "holding": False, "battery": False, "can": True, "how": "systemd-inhibit", "machine": "Mac", "paired": True}   # awake.state (spec 47 §3)
         self.awake_offer = ""                         # phones.list's awake_offer: "Mac" while the offer is to be asked
         self.goals = {"general": self.goal("general", "General", "normal", "ready", order=0),
@@ -259,7 +260,7 @@ class StubHost:
                      for i in self.ideas.values()]
             return {"tracks": [g | {"count": sum(1 for i in ideas if i["track"] == g["slug"])} for g in self.goals.values()],
                     "ideas": ideas, "needs_you": self.needs_you(), "target": self.target, "autostart": self.autostart, "night": self.night,
-                    "rev": self.rev}
+                    "night_low": self.night_low, "rev": self.rev}
         if name == "ideas.page":
             return self.page(a["slug"])
         if name == "ideas.lens":                      # the goal's party's lenses (gui/ideas_lens.py)
@@ -384,6 +385,9 @@ class StubHost:
         if name == "ideas.board_set":
             self.target, self.autostart, self.night = a.get("target", self.target), a.get("autostart", self.autostart), a.get("night", self.night)
             return self.bump({"target": self.target, "autostart": self.autostart, "night": self.night})
+        if name == "ideas.night_allow":               # spec 83: the one standing permission
+            self.night_low = a["allow"]
+            return self.bump({"ok": True, "moved": 0})
         if name == "ideas.todo":
             return self.bump({"ok": True})
         if name == "ideas.doc":
@@ -449,9 +453,10 @@ class StubHost:
             if not a.get("track") or a["track"] == "general":
                 return {"error": "A goal needs a party"}
             slug = a["text"].lower().replace(" ", "-")
-            now = a["priority"] != "low" and not a.get("night")
-            self.ideas[slug] = self.idea(slug, a["text"], "reading" if now else "raw", 9, track=a["track"], priority=a["priority"], queue="now" if now else "night")
-            return self.bump({"slug": slug, "queue": "now" if now else "night", "element": "meadow"})
+            now = a["priority"] != "low" and not a.get("night") and not a.get("hold")
+            queue = "hold" if a.get("hold") else "now" if now else "night"
+            self.ideas[slug] = self.idea(slug, a["text"], "reading" if now else "raw", 9, track=a["track"], priority=a["priority"], queue=queue)
+            return self.bump({"slug": slug, "queue": queue, "element": "meadow"})
         if name == "onboarding.skip":
             self.onboarding = {"step": "raising", "steps": ["tools"], "n": 0, "raising": {"title": "x", "phase": "done", "steps": [], "buildings": [], "error": ""}}
             return self.bump({})
@@ -930,7 +935,7 @@ def test_a_party_with_a_verdict_of_before_says_it_as_history_and_nothing_asks_it
     assert not [1 for n, _a in host.log if n == "ideas.goal_accept"]
 
 
-def test_new_goal_needs_a_party_a_priority_and_one_button_and_a_closed_dialog_goes_to_the_night(shell):
+def test_new_goal_needs_a_party_a_priority_and_one_button_and_a_closed_dialog_is_kept_on_the_party_not_started(shell):
     pg, host = shell
     dlg = _new_goal(pg)
     assert dlg.get_by_role("button", name="Add the goal").is_disabled() and dlg.get_by_role("button", name="Later").count() == 0
@@ -945,11 +950,11 @@ def test_new_goal_needs_a_party_a_priority_and_one_button_and_a_closed_dialog_go
     dlg.get_by_role("button", name="Add the goal").click()
     _goal_row(pg, "Dark mode please").wait_for(timeout=WAIT_MS)                                       # at once: Taskmaster is reading it
     assert adds(host) == [{"text": "Dark mode please", "track": "ship-sync", "priority": "high"}]
-    dlg = _new_goal(pg)                                                                             # closed with text: tonight's queue
+    dlg = _new_goal(pg)                                                                             # closed with text: kept on the party, not started (spec 83)
     dlg.get_by_label("Your goal").fill("Later goal")
     pg.get_by_role("button", name="Close", exact=True).click()
     _new_ideas(pg).filter(has_text="Later goal").wait_for(timeout=WAIT_MS)                          # under New (n)
-    assert adds(host)[-1] == {"text": "Later goal", "track": "ship-sync", "priority": "normal", "night": True}
+    assert adds(host)[-1] == {"text": "Later goal", "track": "ship-sync", "priority": "normal", "hold": True}
     _new_goal(pg)                                                                                   # closed empty: nothing
     before = len(adds(host))
     pg.keyboard.press("Escape")
@@ -960,12 +965,12 @@ def test_new_goal_needs_a_party_a_priority_and_one_button_and_a_closed_dialog_go
     dlg.get_by_label("Your goal").fill("Saved by Esc")
     pg.keyboard.press("Escape")
     _new_ideas(pg).filter(has_text="Saved by Esc").wait_for(timeout=WAIT_MS)
-    assert adds(host)[-1]["night"] is True and adds(host)[-1]["text"] == "Saved by Esc"
+    assert adds(host)[-1]["hold"] is True and "night" not in adds(host)[-1] and adds(host)[-1]["text"] == "Saved by Esc"
     dlg = _new_goal(pg)                                                                             # Put it back: the same as closing it
     dlg.get_by_label("Your goal").fill("Put back")
     dlg.get_by_role("button", name="Put it back").click()
     _new_ideas(pg).filter(has_text="Put back").wait_for(timeout=WAIT_MS)
-    assert adds(host)[-1]["night"] is True and adds(host)[-1]["text"] == "Put back"
+    assert adds(host)[-1]["hold"] is True and adds(host)[-1]["text"] == "Put back"
 
 
 def test_with_no_party_yet_new_goal_opens_new_party_first_and_then_itself_with_that_party(shell):

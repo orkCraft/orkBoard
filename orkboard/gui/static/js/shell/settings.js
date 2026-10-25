@@ -71,7 +71,11 @@ export function SettingsDialog() {
           <input class="ork-field" type="time" value=${from} aria-label="Night from" onChange=${(e) => e.target.value && act("ideas.board_set", { night: `${e.target.value}-${to}` })} />
           <span aria-hidden="true">–</span>
           <input class="ork-field" type="time" value=${to} aria-label="Night to" onChange=${(e) => e.target.value && act("ideas.board_set", { night: `${from}-${e.target.value}` })} /></div>
-        <span class="ok-font-status ok-tone-muted">The low work, the refresh and the proposals wait for the night (your machine's time).</span></div>`}
+        <span class="ok-font-status ok-tone-muted">Your machine's time.</span>
+        <label class="ok-check" data-settings="night-low">
+          <input type="checkbox" class="gui-onb__hide" checked=${b.night_low === true} onChange=${(e) => act("ideas.night_allow", { allow: e.target.checked })} />
+          <i>${b.night_low === true ? "✓" : ""}</i><span>Low work may run at night</span></label>
+        <span class="ok-font-status ok-tone-muted" data-settings="night-low-hint">and the leaders re-read goals and propose new ones then${b.night_low === null ? " · not asked yet" : ""}</span></div>`}
       <${UpdatesField} />
       <div class="shell-field"><span class="ok-font-label">Your phone</span>
         <span><button type="button" class="ork-btn" onClick=${() => openDialog("pair")}>Pair a phone</button></span></div>
