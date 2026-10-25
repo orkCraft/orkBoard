@@ -6,6 +6,8 @@ and suggests a goal's party. By rules, with no model; it plans nothing, moves no
     party_for(state_dir, root, "logo")          # the project's parties but General, each how it fits a goal type: [{party, name, fits, missing}]
     suggested(parties)                          # the slug `party_for`'s answer suggests
     install(state_dir) / role(state_dir)        # its role for a collision's judge (spec 71 §2): `orkmaster`, a warrior, takes no task
+    proposals(root, state_dir, settings, kind, facts, tracks, ideation_first, told)   # the parties the project's kind needs, each in three sizes (spec 75 §4.1)
+    proposal_ids(kind_id, facts, tracks)        # their ids, the ones the project has last: for the deal (spec 75 §4.3)
 
 `why` of a deal row: `flags_wait` (Release first: no party releases and `n` flags wait), `no_pitches` (Ideation next: no party judges small
 ideas), `have` (the project has one: last), else "". No face, no model, no write.
@@ -14,7 +16,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from orkboard.realm import goal_types, idea_flag, ideas, library, roles
+from orkboard.realm import goal_types, idea_flag, idea_target, ideas, library, party_price, party_recipes, project_kind, roles
 
 ORKMASTER = {"id": "orkmaster", "name": "Orkmaster", "race": "peon", "tier": "elder"}
 RELEASE, IDEATION = "release", "ideation"       # the presets' ids
@@ -120,3 +122,77 @@ def role(state_dir: Path) -> dict:
 def speak(state_dir: Path) -> str:
     """What the Orkmaster is told before a call: who it is, and its instruction."""
     return f"You are the Orkmaster of this project. {role(state_dir).get('instruction') or ''}\n\n"
+
+
+# -- the proposals (spec 75 §4): the parties the project's kind needs, each in three sizes ------------------------------------------------------
+
+WHY_CHARS = 120
+EMPTY_WHY = "the folder is empty"
+BARE_WHY = "nothing here says more"
+TOLD_WHY = "by what you said"
+
+
+def recipes_of(kind_id: str, facts: dict | None, ideation_first: bool = False) -> list[dict]:
+    """The recipes a kind is proposed in order; `ideation_first` (an empty folder read from the person's line) puts Ideation first."""
+    rows = party_recipes.for_kind(kind_id, facts)
+    if ideation_first:
+        rows = [party_recipes.get(IDEATION), *[r for r in rows if r["id"] != IDEATION]]
+    return rows
+
+
+def _ordered(rows: list[dict], tracks: list[dict]) -> list[tuple[dict, bool]]:
+    """[(recipe, have)]: those the project has not, in their order, then those it has."""
+    got = [(r, party_recipes.has(r, tracks)) for r in rows]
+    return [x for x in got if not x[1]] + [x for x in got if x[1]]
+
+
+def proposal_ids(kind_id: str, facts: dict | None, tracks: list[dict], ideation_first: bool = False) -> list[str]:
+    """The ids of the proposals in the order they are shown, those the project has last (no price, no call)."""
+    return [r["id"] for r, _h in _ordered(recipes_of(kind_id, facts, ideation_first), tracks)]
+
+
+def deal_first(deal: list[dict], tracks: list[dict], kind_id: str, facts: dict | None) -> list[dict]:
+    """The deal (spec 70 §1.1) with the proposals' ids first (spec 75 §4.3): each proposal the project has not is a first row, in the
+    proposals' order, as the deal has it when it is a preset's (`ideation`, `release`, `game`), else `{"id", "why": "proposal", "n": 0}`;
+    the others follow as they were (the parties the project has still last)."""
+    by_id = {r["id"]: r for r in deal}
+    head = [by_id.get(r["id"]) or {"id": r["id"], "why": "proposal", "n": 0}
+            for r, have in _ordered(recipes_of(kind_id, facts), tracks) if not have]
+    return [*head, *[r for r in deal if r["id"] not in {h["id"] for h in head}]]
+
+
+def _why(recipe: dict, signs: list[str], kind_id: str, told: bool) -> str:
+    """A line of why for this project: what was seen (or said), then why the recipe's party fits it."""
+    seen = project_kind.in_words(signs) or (TOLD_WHY if told else EMPTY_WHY if kind_id == "empty" else BARE_WHY)
+    return f"{seen}: {recipe['because']}"[:WHY_CHARS] if recipe.get("because") else seen[:WHY_CHARS]
+
+
+def _head(state_dir: Path, slug: str, target: str) -> dict:
+    """The head a member wears: its role's when the project has it, else as installing it would make it (a role on its library tier)."""
+    r = roles.role(state_dir, slug)
+    if r is None:
+        a = library.get(slug)
+        r = {"craft": a.craft, "race": a.race, "model": a.tier} if a else {}
+    got = roles.head(r, target)
+    return {"race": got["race"], "tier": got["tier"]}
+
+
+def proposals(root: Path, state_dir: Path, settings: dict, kind: dict, facts: dict | None = None, tracks: list[dict] | None = None,
+              ideation_first: bool = False, told: bool = False) -> list[dict]:
+    """`ideas.proposals`' list (spec 75 §4.1): a card per recipe of the kind, those the project has last (`have`), each `sizes`: lean ·
+    standard · full with the leader, the team, how many agents, the Target it works as, its price a goal (`low`, `high`) and the members'
+    heads in seat order. `kind`: `{"id", "words", "signs"}`; `told`: the kind was read from the person's line."""
+    tracks = ideas.tracks(root, make=False) if tracks is None else tracks
+    out = []
+    for recipe, have in _ordered(recipes_of(kind["id"], facts, ideation_first), tracks):
+        sizes = {}
+        for size in idea_target.SIZES:
+            party = party_recipes.sized(recipe, size)
+            target = idea_target.SIZE_TARGET[size]
+            got = party_price.price(root, state_dir, {**(settings or {}), "target": target}, party["leader"], party["team"], [])
+            sizes[size] = {"leader": party["leader"], "team": party["team"], "agents": 1 + len(party["team"]), "target": target,
+                           "price": {"low": got["low"], "high": got["high"]},
+                           "heads": [_head(state_dir, s, target) for s in [party["leader"], *party["team"]]]}
+        out.append({"id": recipe["id"], "name": recipe["name"], "line": recipe["line"], "why": _why(recipe, kind["signs"], kind["id"], told),
+                    "have": have, "sizes": sizes})
+    return out

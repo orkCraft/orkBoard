@@ -135,3 +135,87 @@ the first that holds:
 - **C** (390 × 844): the same as sheets; no sideways scroll; the service worker's version.
 - Each part: the critical tests (CLAUDE.md "Alpha"), its files' tests, `tests/test_gui_wording.py`,
   `tests/test_design_system.py`; C also `tests/test_pwa.py`.
+
+## As built (A)
+
+The host, 25 October. Branch `claude/spec-75-host`. Files: new `realm/project_kind.py`, `realm/party_recipes.py`, `core/idea_kind.py`; changed
+`realm/idea_target.py`, `realm/orkmaster.py`, `realm/goal_team.py`, `realm/party_price.py`, `realm/board_map.py`, `realm/event_log.py`, `realm/lexicon.py`,
+`realm/ideas.py` (one key), `core/idea_keeper.py`, `core/idea_runner.py`, `core/idea_review.py`, `gui/ideas_project.py`, `gui/ideas_goals.py`,
+`gui/ideas_party.py`, `gui/ideas_roles.py`, `gui/ideas_map.py`, `gui/ideas_review.py`, `gui/ideas_pick.py`, `gui/ideas_pitch.py`, `gui/ideas.py` (two hooks).
+
+**`project_kind.read(root, fresh=False)`** → `{"kind": id, "signs": [≤ 4 strings, each ≤ 40 characters]}`; `scan(root)` also gives `facts` (`sql`, `notebooks`,
+`files`, `code`, `pictures`, `documents`, `markdown`, `seen`). The ids in the order they are tried: `empty` · `mobile` · `game` · `web` · `backend` · `data` · `wiki`
+· `design` · `texts` · `code`, as §1 has them, with these exact readings: the walk is breadth first (the top level first), counts every entry it sees (files and
+folders), stops at `LIMIT = 2000`, skips dot folders (`.git`, `.orkcraft/`, `.obsidian/`), `node_modules/`, `__pycache__/`, `Pods/` and the Wiki's `pages/tracks`
+and `pages/ideas`; `empty` is "no file but a README (any extension), a LICENSE and `orkcraft.toml`" (folders that hold no file count for nothing); `mobile`
+also by an `AndroidManifest.xml` anywhere, with no `ios/` or `android/`; `web`'s dependencies are `react next vue svelte vite astro`; `backend`'s files are
+read at the top level; `data` is `dbt_project.yml` or `*.ipynb` + `*.sql` outnumbering the other code; **`wiki` is tried before `texts`**: a folder of Markdown
+(more than half, no code) is a `wiki`, and `texts` is what is left of documents (`.docx .pdf .txt` mixed with Markdown, none of them most); `wiki`, `design` and
+`texts` all need *no code*. Signs are words like `ios/`, `pubspec.yaml`, `package.json: react`, `.xcodeproj`, `.obsidian/`, `docs/`, `212 pictures`,
+`3 notebooks`, `2 .c files`. Kept by the root and the modified times of the root, its top-level folders and its `package.json` (`_cache`); `ideas.map` reads it
+through that, `ideas.proposals` reads it `fresh`.
+
+**The recipes** (`party_recipes.RECIPES[kind]`, a list of `{id, name, line, leader, build, check, whole, because, when}`; `build` and `check` most needed first):
+
+| kind | id | name | leader | build | check | |
+|---|---|---|---|---|---|---|
+| `empty` | `ideation` | Ideation | investor | product-view, market-view, tech-view, design-view | skeptic | whole |
+| `mobile` | `mobile-features` | Mobile app: features | product-manager | grunt, artist, aso, ui-kit | reviewer, accessibility-reviewer | |
+| `mobile` | `mobile-architecture` | Mobile app: architecture | architect | grunt, tester | reviewer, security-reviewer | |
+| `mobile` `web` `game` | `release` | Release | release-manager | release-engineer, release-notes, aso | release-checker | whole |
+| `web` | `web-pages` | Web: pages | product-designer | grunt, ui-kit, copywriter, seo | reviewer, accessibility-reviewer | |
+| `backend` | `backend` | Backend | architect | grunt, tester | reviewer, security-reviewer | |
+| `backend` | `backend-data` | Data | analyst | data-engineer, sql, experimenter | data-reviewer | when the folder has `.sql` |
+| `game` | `game` | Game | game-designer | grunt, artist, level-designer, sound-designer | playtester | |
+| `data` | `data-work` | Data | analyst | data-engineer, sql, experimenter | data-reviewer | |
+| `wiki` | `wiki` | Wiki | product-manager | copywriter | editor | |
+| `design` | `design-screens` | Design | product-designer | artist, ui-kit | accessibility-reviewer | |
+| `texts` | `texts` | Texts | growth | copywriter, seo | editor | |
+| `wiki` `design` `texts` | `ideation` | Ideation | investor | (the four views) | skeptic | whole |
+| `code` | `engineering-code` | Engineering | architect | grunt, tester | reviewer | |
+
+The kinds list them in that order (`mobile`: features, architecture, release; `web`: pages, release; `game`: game, release; `wiki`, `design`, `texts`: theirs, then
+Ideation; `backend`: backend, then data). Ids never coincide with a library preset's (`engineering`, `design`, `data` are craft presets), so a row of the deal
+whose id is not a preset's is a proposal. `sized(recipe, size)` → `{"leader", "team", "size"}`: `lean` `[]`; `standard` the first two builders + the first checker;
+`full` every builder and checker up to `library.seats_of(leader)` (Web's fourth builder, SEO, and Mobile features' fourth, the design system designer, have no seat);
+a `whole` recipe is its whole seats in every size. `has(recipe, tracks)`: same leader, the standard team inside the party's team.
+
+**A party's size.** `goal_team.size_of(root, slug)` / `set_size(root, slug, size)`; `size` is a front-matter key of the party's page. `ideas._track` rows (so
+`ideas.board`'s parties, `ideas.goal`) and `ideas.map`'s `goals[]` carry `"size": "lean" | "standard" | "full" | ""` (`""`: made before sizes).
+`ideas.goal_save {…, size?, proposal?}`: `size` is kept with the party (refused: *A size is lean, standard or full*); when the request also carries a `team` that
+lets a member go (an existing party), a member with work open refuses it (*<Name> has work open: it cannot leave*) and nothing is saved; no `size` sent keeps the
+size it has. `proposal` (a recipe id; a recipe's id sent as `preset` does as well) on a **new** party with a `size` says `proposal_taken`.
+`idea_target.target_for(settings, party)` (a party row, a page, a size as text, or `None`): the size's Target (`SIZE_TARGET`), else `target_of(settings)`.
+Who uses it: the keeper's `target()` (the running step's goal's party: the effort, the tier, the budget, the plan's estimate and a plan change's price), the
+runner's `ran_on(task, slug)` (a new keyword argument `size_of=` of `IdeaRunner` gives it the idea's party's size; `Ideas.size_of_idea`), `board_map.build`'s heads,
+the plan's, a task's, Review's and a pick's heads, Agents' queue, a party's leader head, `ideas.party` and a pitch's face. Whole-Board uses keep the setting: the
+night's proposals and reserve, Operations (`core/op_runner.py`), `ideas.roles`' heads.
+
+**`ideas.party_price {leader, team, every, craft?, size?}`**: `size` prices it at the size's Target (refused with a size that is none), else the setting's.
+
+**`ideas.proposals {about?}`** (`about`: text, cut to 300 characters; not text: *about is not text*) →
+```
+{"kind": {"id", "words", "signs"}, "ask": bool, "read"?: bool,
+ "proposals": [{"id", "name", "line", "why" (≤ 120), "have",
+                "sizes": {"lean" | "standard" | "full": {"leader", "team": [ids], "agents": 1 + len(team), "target": "thrift" | "balance" | "quality",
+                                                         "price": {"low", "high"}, "heads": [{"race", "tier"}]}}}]}
+```
+`kind.words`: *an empty folder · a mobile app · a game · a web app · a backend · data work · a team's wiki · a designer's folder · texts · code*. `why`: what was
+seen in words (*ios/ and android/ are here*, *the folder is empty*, *by what you said*, *nothing here says more*), a colon, then why that party fits. The proposals the
+project has come last (`have: true`); the others in the recipes' order. An empty folder with no `about`: `ask: true`, Ideation only. An empty folder with
+`about`: one call of the cheaper tier (`idea_target` step `kind`, the matrix row of `collide`; a $0.03 cap at balance; `core/idea_kind.py`; the `orkmaster` role;
+no tools) reads one kind but `empty`; the answer is `{"kind": id}` or `code`; the proposals are that kind's with **Ideation first**, and `read: true` is said;
+when no call could be made (the demo, no model, a spent limit or window, an error) the kind is `code` and `read: false`. A folder that is not empty ignores
+`about` and has no `read`. Nothing is written but the event; the line is in the call's prompt only (its ledger line has the step, the role, the tier, the cost).
+
+**`ideas.map`'s `project`** gains `"kind": {id, words, signs}` (read from the cache, no walk) and its `deal` puts the proposals the project has not first: each as
+the deal's own row when its id is a preset's (`ideation`, `release`, `game`: `{"id", "why", "n"}` as spec 70 has it), else `{"id": <recipe id>, "why": "proposal",
+"n": 0}`; the other rows follow, the ones the project has still last. (`orkmaster.deal_first(deal, tracks, kind_id, facts)`.)
+
+**Events**: `proposals_shown {kind, n, ask, read (true · false · null), device}` on every `ideas.proposals`; `proposal_taken {kind (the project's, else the first that
+proposes the recipe), recipe, size, device}`; `party_resized {party, from ("" · lean · standard · full), to, device}` when `goal_save` changes the size of a party
+that was there. None holds a line of the person's.
+
+**Deviations from §4.1** (none in the shape): `price` is `{low, high}` only (no `learned`, `ideas`, `checks`); the prices are `party_price.price` with no `every`
+(so a checker's share is the project's, else a half); a lean Ideation or Release still has its whole team (`agents` 6 and 5). Words added to `TERMS`: `party_size`,
+`project_kind`.

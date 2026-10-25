@@ -54,7 +54,9 @@ class MapMixin:
         if not goal:
             shut = {t["slug"] for t in tracks if t["slug"] == ideas.GENERAL or (t.get("leader") or "") == library.INVESTOR}
             flags = Counter(n["goal"] for n in got["nodes"] if n["flag"] and n["goal"] not in shut)
-        return {"orkmaster": dict(orkmaster.ORKMASTER), "deal": orkmaster.deal(root, self.state_dir, tracks=tracks, flags=flags),
+        kind, facts = self.kind_now()                    # read by names, kept while the top level is as it was: no walk on every read (spec 75 §4.3)
+        deal = orkmaster.deal_first(orkmaster.deal(root, self.state_dir, tracks=tracks, flags=flags), tracks, kind["id"], facts)
+        return {"orkmaster": dict(orkmaster.ORKMASTER), "kind": kind, "deal": deal,
                 "collisions": collide.collisions(root, self.state_dir, state_of=self._state),          # the open ones (spec 71 §8.4)
                 "collide_week": collide.work(self.host.repo_root)}                                     # what its stops did in a week (spec 71 §5)
 

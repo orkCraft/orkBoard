@@ -3,8 +3,10 @@
 
     ideas.party_for {type?}      # the Orkmaster's suggestion of a goal's party: {parties: [{party, name, fits, missing}], suggested: slug}
     ideas.collide_answer {id, answer}   # the person's answer to a collision: `first:<slug>` · `one` · `replan` · `leave` → {ok: true}
+    ideas.proposals {about?}      # the parties this project's kind needs, each Lean, Standard or Full with its price (spec 75 §4): {kind, ask, proposals, read?}
 
-`party_for` reads the project's parties and their teams; it writes nothing and asks no model (realm/orkmaster.py). A collision is found by code
+`proposals` reads the folder's names (realm/project_kind.py), no model, but for an empty folder's one line (core/idea_kind.py, the cheaper tier, as the
+Orkmaster); it writes nothing, and the line is kept nowhere. `party_for` reads the project's parties and their teams; it writes nothing and asks no model (realm/orkmaster.py). A collision is found by code
 (realm/collide.py) when a plan is made (`collide_plan`) or a spec changed after its plan (`collide_changed`, from the bus), judged by one call
 of the cheaper tier only when the code found an overlap (core/idea_collide.py), and kept as a stop in the hand until the person answers; the
 Orkmaster edits no other party's spec or plan and moves nothing before then. No model, no judge: the plan or the change goes on as it did.
@@ -14,10 +16,10 @@ from __future__ import annotations
 import logging
 import threading
 
-from orkboard.core import idea_collide
+from orkboard.core import idea_collide, idea_kind
 from orkboard.core.idea_keeper import KeeperError
 from orkboard.gui.ideas_args import IdeasError, _opt, _text
-from orkboard.realm import collide, event_log, idea_change, ideas, orkmaster
+from orkboard.realm import collide, event_log, idea_change, ideas, orkmaster, project_kind
 
 log = logging.getLogger(__name__)
 _BUSY_LOCK = threading.Lock()      # the pairs being judged now: one thread judges a pair (the bus and the hook may both find it)
@@ -33,6 +35,39 @@ class ProjectMixin:
         except ValueError as e:
             raise IdeasError(str(e)) from None
         return {"parties": parties, "suggested": orkmaster.suggested(parties)}
+
+    # -- the proposals (spec 75 §4): what the project is, and the parties it needs in three sizes ----------------------------------------
+
+    def kind_now(self, fresh: bool = False) -> tuple[dict, dict]:
+        """`({"id", "words", "signs"}, facts)`: what the project is, read by names (realm/project_kind.py; kept while its top level is as it was)."""
+        got = project_kind.read_full(self.host.repo_root, fresh)
+        return {"id": got["kind"], "words": project_kind.words(got["kind"]), "signs": list(got["signs"])}, got["facts"]
+
+    def proposals(self, args: dict) -> dict:
+        """`{about?}`: `{"kind": {id, words, signs}, "ask", "proposals": [...]}` (realm/orkmaster.py `proposals`). An empty folder with no `about`
+        asks (`ask: true`) and proposes Ideation; with `about` (a line, at most 300 characters) one call of the cheaper tier reads it into a kind
+        (core/idea_kind.py) and its proposals follow, Ideation first, with `read: true`; with no model, a spent budget or window, `code`'s and
+        `read: false`; an answer that is none of the kinds is `code` too. The line is kept nowhere."""
+        about = args.get("about")
+        if about is not None and not isinstance(about, str):
+            raise IdeasError("about is not text")
+        line = idea_kind.clean(about)
+        kind, facts = self.kind_now(fresh=True)
+        ask, read, told = kind["id"] == "empty" and not line, None, False
+        if kind["id"] == "empty" and line:
+            read, picked = True, "code"
+            try:
+                if why := self.keeper._may_run():
+                    raise KeeperError(why)
+                self.keeper.refuse_spent()
+                picked = idea_kind.read(self.keeper, line)["kind"]
+            except Exception as e:                      # no model, a spent budget or window, a stop: code's, said so
+                log.info("proposals: the line was not read: %s", e)
+                read = False
+            kind, facts, told = {"id": picked, "words": project_kind.words(picked), "signs": []}, {}, read
+        got = orkmaster.proposals(self.root(False), self.state_dir, self.board_settings(), kind, facts, ideation_first=bool(line), told=told)
+        self._ev(event_log.PROPOSALS_SHOWN, args, kind=kind["id"], n=len(got), ask=ask, read=read)
+        return {"kind": kind, "ask": ask, **({"read": read} if read is not None else {}), "proposals": got}
 
     # -- finding (spec 71 §2, §3): code finds, one cheap call judges, nothing moves ----------------------------------------
 

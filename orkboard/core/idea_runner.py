@@ -102,10 +102,12 @@ class Run:
 class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
     def __init__(self, repo_root: Path, state_dir: Path, settings: Any, bus: Any = None, *,
                  limits: Callable[[], list] | None = None, events: bool = True,
-                 on_held: Callable[[], None] | None = None, rank: Callable[[str], Any] | None = None) -> None:
+                 on_held: Callable[[], None] | None = None, rank: Callable[[str], Any] | None = None,
+                 size_of: Callable[[str], str] | None = None) -> None:
         """`limits`: the quota readers' last read (the town's `limits`); without it the runner reads it itself.
         `events`: write the task's events to the local event log (spec 33 §9); `on_held`: a task was held (the limits are read);
-        `rank(slug)`: the idea's place (its priority, then the person's order): the ideas are served in that order."""
+        `rank(slug)`: the idea's place (its priority, then the person's order): the ideas are served in that order.
+        `size_of(slug)`: the size of the idea's party (spec 75 §3: lean, standard, full, else ""): its tasks work at that size's Target."""
         self.repo_root, self.state_dir = Path(repo_root), Path(state_dir)
         self.settings, self.bus = settings, bus
         self.git = IdeaGit(self.repo_root)
@@ -117,7 +119,7 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
         self._gate_runs: dict[str, object] = {}              # a worktree's last gate run, until the task reads it
         self._active: list[str] = []
         self._until: dict[tuple[str, str], float] = {}
-        self.events, self.on_held, self.rank = events, on_held, rank
+        self.events, self.on_held, self.rank, self.size_of = events, on_held, rank, size_of
         self._since: dict[tuple[str, str], float] = {}     # when a task entered the state it is in (the event log)
         self._tls = threading.local()                       # Merge's `dear`, on the thread that merges
         self._resume_working()
@@ -360,9 +362,11 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
         return {k: setting(self.settings, k, d) for k, d in (("target", "balance"), ("night", "01:00-07:00"),
                                                              ("reserve_day", 0.3), ("reserve_night", 0.1), ("autostart", True))}
 
-    def ran_on(self, task: dict) -> tuple[str, str]:
-        """(the model or tier a task runs on, its effort): the Target's shift of its tier, a role's own model winning."""
-        return idea_target.task_pick(str(task.get("tier") or "warrior"), idea_target.target_of(self.board()),
+    def ran_on(self, task: dict, slug: str = "") -> tuple[str, str]:
+        """(the model or tier a task runs on, its effort): the Target's shift of its tier, a role's own model winning. The Target is its idea's
+        party's size's (spec 75 §3), else the setting's."""
+        size = self.size_of(slug) if slug and self.size_of is not None else ""
+        return idea_target.task_pick(str(task.get("tier") or "warrior"), idea_target.target_for(self.board(), size or None),
                                      str(self._role(task).get("model") or ""))
 
     def _running_as(self, slug: str) -> int:
@@ -436,7 +440,7 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
     def _launch(self, slug: str, task: dict) -> None:
         tid = task.get("id")
         cancel = threading.Event()
-        run, effort = self.ran_on(task)
+        run, effort = self.ran_on(task, slug)
         h = harnesses.get(HARNESS)
         task.update(tool=HARNESS, model=(h.pick(run) if h else run) or run)    # the model the run names (spec 35 §12)
         task.update(state="running", started=now_iso(), finished="", error="", note="",
@@ -466,7 +470,7 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
             base = str(setting(self.settings, "merge_into") or "dev")
             env = self._env(slug, tid, plan)
             h = harnesses.need(HARNESS)
-            run, effort = self.ran_on(task)
+            run, effort = self.ran_on(task, slug)
             model = h.pick(run)                          # the role's model, else the tier the Target gives
             rnd = int(task.get("round") or 1)
             if again is None:
