@@ -64,7 +64,7 @@ def runners(monkeypatch) -> list:
 
 def _goal_and_idea(host: Orkboard, text: str) -> str:
     goal = host.command("ideas.track_add", {"title": f"Goal of {text}"})["slug"]
-    return host.command("ideas.add", {"text": text, "track": goal, "night": True})["slug"]
+    return host.command("ideas.add", {"text": text, "track": goal, "hold": True})["slug"]
 
 
 def _plan(host: Orkboard, slug: str) -> None:

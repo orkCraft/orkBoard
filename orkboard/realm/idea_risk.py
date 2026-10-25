@@ -140,6 +140,9 @@ AUTOSTART = {  # risk → priority → what the board does
 }
 
 
-def decide(risk: str, priority: str) -> str:
-    """"start" (passed by the board), "night" (passed, starts inside the night window) or "wait" (for the person)."""
-    return AUTOSTART[level(risk)].get(str(priority or "normal").lower(), "wait")
+def decide(risk: str, priority: str, night: bool = False) -> str:
+    """"start" (passed by the board), "night" (passed, starts inside the night window) or "wait" (for the person).
+    `night`: the person's standing word that Low work may run at night (`night_low`, spec 83); without it a Low goal of
+    low risk starts by day, after the other priorities."""
+    what = AUTOSTART[level(risk)].get(str(priority or "normal").lower(), "wait")
+    return "start" if what == "night" and not night else what

@@ -122,7 +122,9 @@ def test_the_hour_before_the_five_hours_come_back_eases_their_reserve_by_day_whi
 
 @pytest.fixture
 def host(fake_repo) -> Orkboard:
-    return Orkboard(fake_repo)
+    h = Orkboard(fake_repo)
+    h.ideas.save_settings({**h.ideas.settings_now(), "night_low": True})          # spec 83: Low work may run at night
+    return h
 
 
 def _add(host, text, **more):
@@ -134,7 +136,7 @@ def _add(host, text, **more):
 def test_a_low_idea_is_put_off_by_the_board_the_persons_own_night_and_tonight_by_them_and_before_reads_person(host):
     state = host.ideas.state_dir
     low = _add(host, "a low idea", priority="low")
-    mine = _add(host, "my night idea", priority="high", night=True)
+    mine = _add(host, "my night idea", priority="low", night=True)
     both = _add(host, "low, and mine too", priority="low", night=True)
     now = _add(host, "an idea for now", priority="high")
     assert [ideas.state(state, s)["night_by"] for s in (low, mine, both, now)] == ["board", "person", "person", ""]
@@ -410,7 +412,7 @@ def test_week_reset_is_written_once_when_the_weekly_reset_moves_later_to_the_pro
 def test_the_map_says_week_for_the_boards_low_work_held_at_night_and_night_by_and_by_pace(host):
     state = host.ideas.state_dir
     low = _add(host, "a low idea", priority="low")
-    mine = _add(host, "my own night idea", priority="high", night=True)
+    mine = _add(host, "my own night idea", priority="low", night=True)
     plan_idea = _add(host, "a low plan", priority="low")
     _plan(host, plan_idea)
     host.ideas.pass_plan(plan_idea, "auto", night=True)

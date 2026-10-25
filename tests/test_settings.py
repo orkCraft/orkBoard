@@ -61,7 +61,7 @@ def test_the_board_is_in_focus_by_default_and_its_settings_are_cleaned():
                                               "merge_into": "dev", "push": False, "review": True,
                                               # spec 35 §12: the Board's Target, autostart, night, reserves, own paths
                                               "target": "balance", "autostart": True, "night": "01:00-07:00",
-                                              "reserve_day": 0.3, "reserve_night": 0.1, "risk_paths": []}
+                                              "reserve_day": 0.3, "reserve_night": 0.1, "risk_paths": [], "night_low": None}
     back = settings.MachineSettings.from_dict({"focus": "", "ideas": {"batch_minutes": 0, "max_parallel": 2,
                                                                       "merge_into": "../x", "push": "yes"}})
     assert back.focus == "" and back.ideas["max_parallel"] == 2 and back.ideas["batch_minutes"] == 30

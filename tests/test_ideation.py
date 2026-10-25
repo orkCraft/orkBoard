@@ -83,7 +83,7 @@ def _wait(k, slug):
 def keeper(fake_repo, tmp_path):
     """A keeper with a project: an Engineering party `ship` (with a metric) and an Ideation party `ideas`."""
     root, state = tmp_path / "wiki", fake_repo / ".orkcraft"
-    settings = {"target": "balance", "autostart": True, "night": "01:00-07:00"}
+    settings = {"target": "balance", "autostart": True, "night": "01:00-07:00", "night_low": True}
     k = IdeaKeeper(fake_repo, state, lambda: root, lambda: settings)
     k.root, k.state, k.settings_now, k.limits_now = root, state, settings, []
     k.limits = lambda: k.limits_now

@@ -83,10 +83,11 @@ def shift(s: "MachineSettings") -> Span:
 # whether it is pushed (off), and whether a result waits for the person at Review (on; off merges by itself).
 # Spec 35: the Board's Target (thrift · balance · quality), whether a safe plan starts by itself, the night's window
 # (local time), the share of the window kept for the person by day and at night, and the repository's own risky paths.
+# Spec 83: `night_low`, the one standing permission for Low work (and the leaders' night) to run at night: None = not asked yet.
 # `batch_minutes` is kept, unused (the batch went in spec 35), so older settings keep loading.
 IDEAS = {"batch_minutes": 30, "idle_hours": 24, "max_parallel": 1, "merge_into": "dev", "push": False, "review": True,
          "target": "balance", "autostart": True, "night": "01:00-07:00", "reserve_day": 0.3, "reserve_night": 0.1,
-         "risk_paths": []}
+         "risk_paths": [], "night_low": None}
 IDEA_TARGETS = ("thrift", "balance", "quality")
 NIGHT = re.compile(r"^([01]\d|2[0-3]):([0-5]\d)-([01]\d|2[0-3]):([0-5]\d)$")
 FOCUSES = ("", "board")
@@ -100,7 +101,7 @@ PROJECTS_RECENT = 10                     # the projects the switcher's Recent re
 PROJECTS_OPEN = 20                       # the most projects open at once
 # The Board's settings that are the project's (spec 37 §8): read from `<repo>/.orkcraft/board.json`, the machine's
 # `ideas` being the defaults a new project starts from; `risk_paths` is the tracked `orkcraft.toml`'s `[board]`.
-BOARD = ("target", "autostart", "night", "merge_into", "push", "review", "wiki", "max_parallel", "reserve_day",
+BOARD = ("target", "autostart", "night", "night_low", "merge_into", "push", "review", "wiki", "max_parallel", "reserve_day",
          "reserve_night")
 BOARD_FILE = Path(".orkcraft") / "board.json"
 
@@ -255,6 +256,8 @@ def clean_ideas(raw: object) -> dict:
             out[k] = raw[k]
     if raw.get("target") in IDEA_TARGETS:
         out["target"] = raw["target"]
+    if isinstance(raw.get("night_low"), bool):       # spec 83: Low work may run at night; None = not asked yet
+        out["night_low"] = raw["night_low"]
     night = raw.get("night")
     if isinstance(night, str) and NIGHT.match(night.strip()) and night.strip()[:5] != night.strip()[6:]:
         out["night"] = night.strip()

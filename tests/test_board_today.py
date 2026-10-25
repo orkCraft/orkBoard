@@ -132,7 +132,7 @@ def host(fake_repo):
 def test_ideas_today_reads_the_log_since_midnight_and_joins_the_titles_from_the_board(host):
     root = host.ideas.root()
     goal = ideas.add_track(root, "Work offline")
-    slug = host.command("ideas.add", {"text": "Sync the queue\nwith the server", "track": goal, "night": True})["slug"]
+    slug = host.command("ideas.add", {"text": "Sync the queue\nwith the server", "track": goal, "hold": True})["slug"]
     ideas.save_plan(host.ideas.state_dir, slug, {"idea": slug, "tasks": [{"id": "k1", "title": "Queue writes", "state": "failed"}]})
     repo = Path(host.repo_root)
     now = dt.datetime.now().astimezone()
