@@ -2,7 +2,7 @@
 // and has at most one button. The computer sends a push (gui/phone_push.py) to the subscription this phone's browser gave it: for an
 // answer that waits, and once in the morning, never in the quiet hours. The tap that turns it on asks the browser for permission
 // from the tap itself, then the computer for its key, then the browser to subscribe, then tells the computer the subscription.
-import { h } from "./util.js";
+import { h, PRODUCT } from "./util.js";
 
 const IOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
 const STANDALONE = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
@@ -14,7 +14,7 @@ let quiet = "";                                         // the computer's quiet 
 /** Why this phone cannot be notified, in words; "" when it can ask. */
 export function unsupported() {
   if ("serviceWorker" in navigator && "PushManager" in window && "Notification" in window) return "";
-  return IOS && !STANDALONE() ? "Add Orkline to the Home Screen to get notifications here" : "This browser cannot show notifications from Orkline";
+  return IOS && !STANDALONE() ? `Add ${PRODUCT} to the Home Screen to get notifications here` : `This browser cannot show notifications from ${PRODUCT}`;
 }
 
 async function subscription() {
@@ -83,7 +83,7 @@ export function makePush(ctx) {
     const no = unsupported();
     if (no) { el.replaceChildren(label, h("small", { class: "muted" }, no)); return; }
     if (Notification.permission === "denied") {
-      el.replaceChildren(label, h("small", { class: "muted" }, "Notifications are off for Orkline in this phone’s settings"));
+      el.replaceChildren(label, h("small", { class: "muted" }, `Notifications are off for ${PRODUCT} in this phone’s settings`));
       return;
     }
     const on = Notification.permission === "granted" && Boolean(await subscription());

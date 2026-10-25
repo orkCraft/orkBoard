@@ -38,6 +38,8 @@ they allow.
 """
 from __future__ import annotations
 
+from orkboard import brand
+
 import json
 from dataclasses import dataclass
 
@@ -275,5 +277,5 @@ def guide(level: int, tools: tuple[str, ...] = ("claude", "agy")) -> str:
         lines.append("The 🏛 Elders answer a routine question for you when it has waited its minutes — at once in "
                      "quiet hours (a one-time yes or no); every answer is in .orkcraft/council/elders.jsonl.")
     else:
-        lines.append("Orkline never presses yes for an agent at this level: the Elders only advise.")
+        lines.append(f"{brand.name()} never presses yes for an agent at this level: the Elders only advise.")
     return "\n".join(lines)

@@ -1,14 +1,16 @@
 # Orkboard — notes for contributors and agents
 
-Orkboard is Orkline's Board on its own (docs/specs/37-board-and-line.md, docs/decisions.md §50): the Board with its
-parties and goals, the preview, Agents and Review, on the desktop and on a paired phone. **Orkline imports Orkboard, never the
-other way round**: nothing here imports Orkline's package (`orkcraft`).
+Orkboard is Orkline's Board on its own, published as a product of its own (docs/specs/37-board-and-line.md,
+docs/decisions.md §50, §95): the Board with its parties and goals, the preview, Agents and Review, on the desktop and on a
+paired phone. **Orkline imports Orkboard, never the other way round**: nothing here imports Orkline's package
+(`orkcraft`).
 
 ## Wording
 
 - In everything a person reads — the interface (labels, hints, toasts, errors), the docs, the README — write **ork** /
   **orks** / **Ork** and **orkestration** / **orkestrate**, never "orc" or "orchestration". The product's name in the
-  interface stays **Orkline** (decisions §50.1: Orkboard is the owner's lab, not published).
+  interface is **Orkboard**, published on its own (decisions §95); *Orkline* is the line's name. Where a page is shared
+  with Orkline it says its host's name, never a fixed one.
 - Code keeps its names: identifiers, module and file names (`orc_id`), CSS ids, dict keys, event ids and config values
   stay as they are. The state keeps Orkline's names, so Orkboard and Orkline read the same settings and the same Board
   of a project, and switching between them loses nothing: `~/.config/orkcraft/`, `<project>/.orkcraft/`,
@@ -43,6 +45,9 @@ other way round**: nothing here imports Orkline's package (`orkcraft`).
   (`tests/test_architecture.py`). New engine code (the Board, a tool's run, the gate) is written here. While Orkline
   keeps its frozen copy of these modules (the testers' week, spec 37 §9), a fix the testers need is made here first and
   in Orkline the same day, this repository's commit named in Orkline's.
+- **The VS Code extension** (`vscode/`) is a frame, not a second face: it starts `orkboard --serve <folder>`
+  (`gui/extension.py`) and shows the page in an editor tab. It draws nothing of the Board itself; a change to what the
+  Board shows is made in `gui/`. Its tests: `cd vscode && npm test`.
 - The rules a model gets for a UI document are `design/ui.py` `RULES`.
 - **The design system is orkUI** (github.com/orkCraft/orkUI): `design-system/orkui` is its copy, stamped and never edited
   here; a change to the look is made in orkUI, then copied (`python -m orkboard.design.orkui <orkUI>`). Orkboard's sheets

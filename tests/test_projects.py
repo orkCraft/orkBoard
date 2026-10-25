@@ -201,7 +201,7 @@ def test_open_folder_refuses_in_words_and_offers_git(tmp_path):
     assert "system" in host.command("projects.open", {"path": "/usr"})["error"]
     (Path.home() / ".ssh" / "keys").mkdir(parents=True)
     assert project_folder.refusal("/") and "keys" in project_folder.refusal(Path.home() / ".ssh" / "keys")
-    assert "Orkline's own" in project_folder.refusal(Path(project_folder.__file__).parent)
+    assert "Orkboard's own" in project_folder.refusal(Path(project_folder.__file__).parent)
     plain = tmp_path / "notes"
     plain.mkdir()
     (plain / "todo.md").write_text("- a\n", encoding="utf-8")
@@ -302,7 +302,7 @@ def test_orkboard_opens_the_folder_named_else_the_last_shown(two, monkeypatch, t
     from orkboard.gui import board_host
     shop, blog = two
     started = []
-    monkeypatch.setattr(board_host, "run", lambda root, browser=False, port=0: started.append(root) or 0)
+    monkeypatch.setattr(board_host, "run", lambda root, browser=False, port=0, serve=False: started.append(root) or 0)
     assert board_host.main([str(blog)]) == 0 and started[-1] == blog.resolve()
     assert board_host.main(["board", str(shop), "--browser"]) == 0 and started[-1] == shop.resolve()
     m = settings.load()

@@ -1,7 +1,7 @@
 // The drawer's settings on the phone (docs/specs/41-phone-round-3.md §2, spec 49 §10.1, spec 50 §6.1, spec 54 §5–§6): Stop all and Spend today at its head, then This project — the Target (one switch), Start plans by themselves, the night's hours, Merge into, *Agents of this project ›* (a screen of its own), Push after merging, What is left — and This phone — notifications, Check for updates (shell-update.js), Pair a phone,
 // Download the logs, Unpair this phone. Each setting writes with today's command (`ideas.board_set`, `ideas.into`) at once. Under a host that proposes (spec 75 §5.5) a party's size is its Target, so the one switch here is
 // *A party with no size of its own works as* (Thrift, Balance, Quality, as before).
-import { h, sheet, icon } from "./util.js";
+import { h, sheet, icon, PRODUCT } from "./util.js";
 import { foot } from "./shell-forms.js";
 import { targetSwitch } from "./shell-ops.js";
 import { makePush } from "./shell-push.js";
@@ -48,7 +48,7 @@ export function makeSettings(core, ctx, drawer, limits) {
     h("p", {}, "A phone is paired from the computer, never from another phone: that keeps a lost phone from adding more."),
     h("ol", { class: "steps" },
       h("li", {}, "On the computer, open the gear → Pair a phone: it shows a QR code and says how long the code lasts."),
-      h("li", {}, "Scan the code with this phone’s camera: Orkline opens in the browser and pairs.")),
+      h("li", {}, `Scan the code with this phone’s camera: ${PRODUCT} opens in the browser and pairs.`)),
     h("h3", {}, "How the phone reaches the computer"),
     h("ul", { class: "steps" },
       h("li", {}, "On the same Wi-Fi as the computer."),

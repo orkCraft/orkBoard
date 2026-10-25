@@ -21,7 +21,7 @@ A session's bytes go as binary frames, only to the pages that show it (`term.att
     ← [kind: 1 byte][key length: 1 byte][key, UTF-8][bytes]    kind 0: output, 1: all of it again (replay)
 
 The socket takes only the page this server gave out: a random token in its address and an Origin
-of this server, so another page open in a browser cannot drive the town.
+of this server (127.0.0.1 or localhost, its port), so another page open in a browser cannot drive the town.
 
 `GET /api/version` (the same token, as `?t=` or `Authorization: Bearer`) is the handshake a client
 other than the page makes first (docs/design/mobile.md): what this server speaks, as JSON.
@@ -56,7 +56,7 @@ from websockets.datastructures import Headers
 from websockets.exceptions import ConnectionClosed
 from websockets.http11 import Request, Response
 
-from orkboard import __version__
+from orkboard import __version__, brand
 from orkboard.design import tokens
 from orkboard.gui import media, phones, pwa
 from orkboard.gui.board_host import CommandError
@@ -75,6 +75,12 @@ def _response(status: HTTPStatus, body: bytes, content_type: str = "text/plain; 
     headers = Headers([("Content-Type", content_type), ("Content-Length", str(len(body))),
                        ("Cache-Control", "no-store"), ("X-Content-Type-Options", "nosniff")])
     return Response(status.value, status.phrase, headers, body)
+
+
+def named(page: bytes) -> bytes:
+    """A page with the product's name (brand.py, decisions §95): its files say Orkboard, Orkline's host serves Orkline."""
+    own = brand.name()
+    return page if own == brand.DEFAULT else page.replace(brand.DEFAULT.encode(), own.encode())
 
 
 def resolve(path: str, preview: Path | None = None) -> Path | None:
@@ -148,6 +154,12 @@ class Server:
         return f"http://127.0.0.1:{self.port}"
 
     @property
+    def origins(self) -> tuple[str, str]:
+        """The origins the socket takes: this server's, by its number or as `localhost` (an editor's panel reaches it
+        through `asExternalUri`, which may name it so: gui/extension.py)."""
+        return self.origin, f"http://localhost:{self.port}"
+
+    @property
     def url(self) -> str:
         return f"{self.origin}/?t={self.token}"
 
@@ -169,7 +181,7 @@ class Server:
         if parts.path == "/ws":
             token = parse_qs(parts.query).get("t", [""])[0]
             origin = request.headers.get("Origin", "")
-            if not secrets.compare_digest(token, self.token) or origin != self.origin:
+            if not secrets.compare_digest(token, self.token) or origin not in self.origins:
                 return _response(HTTPStatus.FORBIDDEN, b"Forbidden")
             return None                                   # go on with the WebSocket handshake
         if parts.path == "/api/version":
@@ -225,7 +237,7 @@ class Server:
         if entry:
             html = html.replace(b'src="/static/app.js"', f'src="/static/{entry}"'.encode()) \
                        .replace(b'data-theme="camp" data-look="camp"', b'data-theme="office" data-look="office"')
-        return html
+        return named(html)
 
     # -- the socket ----------------------------------------------------------------------------
 

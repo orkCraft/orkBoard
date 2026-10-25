@@ -1,0 +1,59 @@
+{
+  "name": "orkboard",
+  "displayName": "Orkboard",
+  "description": "The Board in VS Code: a project's parties and goals, the agents at work and the results to review",
+  "version": "0.1.0",
+  "publisher": "orkworks",
+  "license": "Apache-2.0",
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/orkWorks/orkBoard",
+    "directory": "vscode"
+  },
+  "bugs": { "url": "https://github.com/orkWorks/orkBoard/issues" },
+  "homepage": "https://github.com/orkWorks/orkBoard/tree/main/vscode#readme",
+  "engines": { "vscode": "^1.90.0" },
+  "categories": ["AI", "Other"],
+  "keywords": ["agents", "claude code", "codex", "board", "review"],
+  "galleryBanner": { "color": "#141210", "theme": "dark" },
+  "extensionKind": ["workspace"],
+  "main": "./out/extension.js",
+  "activationEvents": ["onWebviewPanel:orkboard.board"],
+  "contributes": {
+    "commands": [
+      { "command": "orkboard.openBoard", "title": "Open the Board", "category": "Orkboard" },
+      { "command": "orkboard.closeBoard", "title": "Close the Board", "category": "Orkboard" },
+      { "command": "orkboard.showLog", "title": "Show the log", "category": "Orkboard" }
+    ],
+    "configuration": {
+      "title": "Orkboard",
+      "properties": {
+        "orkboard.command": {
+          "type": "string",
+          "default": "",
+          "markdownDescription": "The program that runs the Board. Empty: `orkboard` from the PATH, else `uvx --from git+https://github.com/orkWorks/orkBoard orkboard`, which downloads it."
+        },
+        "orkboard.args": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": [],
+          "markdownDescription": "Arguments put before the extension's own (`--serve <folder>`), for example `[\"-m\", \"orkboard.gui.board_host\"]` when `orkboard.command` is a Python."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package",
+    "test": "npm run compile && node --test out/test/*.test.js"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/vscode": "~1.90.0",
+    "@vscode/vsce": "^3.2.0",
+    "typescript": "^5.6.0"
+  }
+}

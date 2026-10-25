@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from orkboard.realm import diagnostics
+from orkboard import brand
 
 PREFIX = "orkboard-logs-"
 SAID_CHARS = 20_000
@@ -46,8 +47,8 @@ def pack(host: Any, days: int = 1, said: str = "", about: dict | None = None) ->
     buf = io.BytesIO(packed[1] if packed else b"")
     with zipfile.ZipFile(buf, "a" if packed else "w", zipfile.ZIP_DEFLATED) as z:
         if not packed:
-            z.writestr("README.md", "# Orkline's logs\n\nNo model call is kept for this project yet: `about.json` says "
-                                    "where Orkline runs and how it finds each AI tool.\n")
+            z.writestr("README.md", f"# {brand.name()}'s logs\n\nNo model call is kept for this project yet: `about.json` "
+                                    f"says where {brand.name()} runs and how it finds each AI tool.\n")
         info = about if about is not None else diagnostics.about(getattr(host, "machine", None))
         z.writestr("about.json", json.dumps(info, ensure_ascii=False, indent=1))
         if said.strip():
@@ -88,7 +89,7 @@ def show(path: str, where: Path | None = None, start: Callable[..., Any] = subpr
     where = folder() if where is None else Path(where)
     p = Path(path)
     if p.parent != where or not p.name.startswith(PREFIX) or p.suffix != ".zip" or not p.is_file():
-        raise LogsError("Only logs saved by Orkline are shown")
+        raise LogsError(f"Only logs saved by {brand.name()} are shown")
     try:
         start(reveal_cmd(p), stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
               start_new_session=True)

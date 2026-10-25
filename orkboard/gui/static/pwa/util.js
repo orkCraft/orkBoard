@@ -1,5 +1,8 @@
 // Small things the app's modules share (gui/pwa.py): building elements, this browser's storage, a sheet.
 
+/** The product's name as a person reads it: the page's `data-product` (gui/pwa.py names it, decisions §95). */
+export const PRODUCT = document.documentElement.dataset.product || "Orkboard";
+
 export function h(tag, attrs = {}, ...kids) {
   const el = document.createElement(tag);
   for (const [k, v] of Object.entries(attrs)) {

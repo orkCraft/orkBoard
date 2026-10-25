@@ -1,7 +1,7 @@
 // The app's worker (gui/pwa.py): the shell opens without the network, the town never does. Every file is
 // asked of the town first, so a new version arrives the next time it is reachable; the cache is only for
 // when it is not. The socket is never cached: what the town is comes live or not at all.
-const CACHE = "orkcraft-app-v86";
+const CACHE = "orkcraft-app-v87";
 // Orkboard's phone (pwa/board-app.js; docs/specs/37-board-and-line.md §4) keeps the shell's files only: no camp file
 // in its cache; orkUI's styles and faces (docs/specs/40-design-system.md), its race heads as they are drawn.
 const SHELL = ["./", "board-app.js", "util.js", "board.js", "shell-top.js", "shell-board.js", "shell-agents.js",
@@ -152,7 +152,7 @@ self.addEventListener("push", (e) => {
   try { d = e.data ? e.data.json() : {}; } catch {}
   const tag = d.tag || "orkline";
   const badge = typeof d.badge === "number" && self.navigator.setAppBadge ? (d.badge > 0 ? self.navigator.setAppBadge(d.badge) : self.navigator.clearAppBadge()).catch(() => {}) : null;
-  e.waitUntil(Promise.all([self.registration.showNotification(d.title || "Orkline", { body: d.body || "", tag, icon: "icon-192.png", data: { url: d.url || "./", tag } }), badge]));
+  e.waitUntil(Promise.all([self.registration.showNotification(d.title || "Orkboard", { body: d.body || "", tag, icon: "icon-192.png", data: { url: d.url || "./", tag } }), badge]));
 });
 
 // A tap: the app's window is focused (and told which push it came from) or opened at the push's address, `#from=push-<tag>` added so the

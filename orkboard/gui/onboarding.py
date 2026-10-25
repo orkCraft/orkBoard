@@ -22,7 +22,7 @@ from dataclasses import replace
 from typing import Any, Callable
 from urllib.parse import urlencode
 
-from orkboard import settings, tools
+from orkboard import brand, settings, tools
 from orkboard.env import getenv
 from orkboard.realm import harnesses, tool_errors, tool_run
 
@@ -112,7 +112,7 @@ class Onboarding:
         except Exception as e:                      # a timeout or 🛑 Halt All is a failure like any other
             err = e if isinstance(e, tool_errors.ToolError) else tool_errors.ToolError(tid, str(e))
             title = harnesses.title(tid)
-            out = {"state": "failed", "kind": err.kind, "line": tool_errors.LINES[err.kind].format(tool=title),
+            out = {"state": "failed", "kind": err.kind, "line": tool_errors.LINES[err.kind].format(tool=title, product=brand.name()),
                    "action": tool_errors.what_to_do(err), "detail": err.detail or str(err)}
         self.host.town.call(self._checked, tid, out)
 

@@ -56,7 +56,7 @@ def test_saved_in_the_downloads_folder_and_shown_only_there(tmp_path):
     assert started == [logs_save.reveal_cmd(path)]
     (tmp_path / "secret.zip").write_bytes(b"x")
     for other in (tmp_path / "secret.zip", where / "notes.txt", where / "orkboard-logs-gone.zip"):
-        with pytest.raises(logs_save.LogsError, match="Only logs saved by Orkline"):
+        with pytest.raises(logs_save.LogsError, match="Only logs saved by Orkboard"):
             logs_save.show(str(other), where, start=lambda cmd, **kw: started.append(cmd))
     assert len(started) == 1
 
@@ -110,5 +110,5 @@ def test_the_commands_are_the_desktops_and_never_a_phones(fake_repo, tmp_path, m
     host = Orkboard(fake_repo)
     got = host.command("logs.save", {"said": "it failed", "days": 1})
     assert (tmp_path / got["name"]).is_file() and _names((tmp_path / got["name"]).read_bytes())["on-screen.txt"] == "it failed\n"
-    assert host.command("logs.show", {"path": "/etc/passwd"}) == {"error": "Only logs saved by Orkline are shown"}
+    assert host.command("logs.show", {"path": "/etc/passwd"}) == {"error": "Only logs saved by Orkboard are shown"}
     assert not BoardPhone.allowed(host, "logs.save", {}) and not BoardPhone.allowed(host, "logs.show", {})

@@ -10,6 +10,7 @@ import { showIdea, showGoal, showNeeds, logOpened } from "../shell/store.js";
 import { Modal, closeDialog, openDialog } from "../shell/modals.js";
 import { ask, goalList, track } from "./store.js";
 import { pctOf } from "../spend.js";
+import { PRODUCT } from "../link.js";
 
 const SHOWN = 5;                                     // ideas named under the results, then *and 3 more*
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
@@ -143,7 +144,7 @@ export function weekResults(w) {
 
 /** *The last 7 nights: 4 with work done, 2 with none, 1 Orkline was not running*: parts at 0 left out. */
 export function weekNights(n) {
-  const parts = [n.worked && `${n.worked} with work done`, n.idle && `${n.idle} with none`, n.off && `${n.off} Orkline was not running`].filter(Boolean);
+  const parts = [n.worked && `${n.worked} with work done`, n.idle && `${n.idle} with none`, n.off && `${n.off} ${PRODUCT} was not running`].filter(Boolean);
   return parts.length ? `The last 7 nights: ${parts.join(", ")}` : "";
 }
 

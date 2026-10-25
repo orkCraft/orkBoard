@@ -4,7 +4,7 @@
 // comes back on its own (board-app.js reconnects); then the bar says which version runs. Later hides an ordinary or a
 // major update until the next version, a critical one until the app opens again. Which updates install by themselves
 // is the computer's to say (Settings → Updates).
-import { h, sheet } from "./util.js";
+import { h, sheet, PRODUCT } from "./util.js";
 import { foot } from "./shell-forms.js";
 
 const LATER_KEY = "orkboard.update.later";
@@ -15,9 +15,9 @@ function write(key, value) { try { if (value) localStorage.setItem(key, value); 
 
 /** What the update is called: a critical one first, then a major one, else a plain newer version. */
 export function updateTitle(u) {
-  if (u.critical) return `Critical update: Orkline ${u.version}`;
-  if (u.major) return `New version: Orkline ${u.version}`;
-  return `Orkline ${u.version} is out`;
+  if (u.critical) return `Critical update: ${PRODUCT} ${u.version}`;
+  if (u.major) return `New version: ${PRODUCT} ${u.version}`;
+  return `${PRODUCT} ${u.version} is out`;
 }
 
 /** `ctx`: {send, flash}. Returns {el, sheets, render(snapshot), check()}. */
@@ -43,7 +43,7 @@ export function makeUpdate(ctx) {
     if (!r.ok) { ctx.flash(`Not installed: ${r.error}`); return; }
     write(ASKED_KEY, u.version);
     ask.close();
-    ctx.flash(`Installing Orkline ${u.version} on the computer. It restarts when it is in; this phone comes back by itself.`);
+    ctx.flash(`Installing ${PRODUCT} ${u.version} on the computer. It restarts when it is in; this phone comes back by itself.`);
   });
 
   function draw() {
@@ -52,9 +52,9 @@ export function makeUpdate(ctx) {
     bar.hidden = !show;
     bar.classList.toggle("is-critical", Boolean(u?.critical || u?.state === "failed"));
     if (!u) return;
-    bar.textContent = u.state === "installing" ? `Installing Orkline ${u.version} on the computer…`
-      : u.state === "installed" ? `Orkline ${u.version} is in: the computer restarts`
-        : u.state === "failed" ? `Orkline ${u.version} did not install`
+    bar.textContent = u.state === "installing" ? `Installing ${PRODUCT} ${u.version} on the computer…`
+      : u.state === "installed" ? `${PRODUCT} ${u.version} is in: the computer restarts`
+        : u.state === "failed" ? `${PRODUCT} ${u.version} did not install`
           : updateTitle(u);
     ask.title(updateTitle(u));
     body.replaceChildren(...[
@@ -63,7 +63,7 @@ export function makeUpdate(ctx) {
       u.major && !u.critical ? h("p", {}, "A major update: what is new may change how you work. Read it before you install.") : null,
       u.notes.length ? h("ul", { class: "steps" }, ...u.notes.map((n) => h("li", {}, n))) : null,
       h("p", { class: "muted" }, u.can
-        ? "Orkline restarts on the computer when it is in: what runs now stops, and the tasks cut off start again by themselves. This phone comes back on its own in a few seconds."
+        ? `${PRODUCT} restarts on the computer when it is in: what runs now stops, and the tasks cut off start again by themselves. This phone comes back on its own in a few seconds.`
         : `It cannot install itself on the computer: ${u.how}`),
       u.state === "failed" ? h("p", { class: "warn" }, `It did not install. The computer keeps running ${u.current}.`) : null,
       u.state === "failed" && u.error ? h("pre", { class: "update-error" }, u.error) : null].filter(Boolean));
@@ -78,7 +78,7 @@ export function makeUpdate(ctx) {
       const asked = read(ASKED_KEY);
       if (asked && s.version === asked) {                 // the computer came back on the version this phone asked for
         write(ASKED_KEY, "");
-        ctx.flash(`Updated: the computer runs Orkline ${s.version}.`);
+        ctx.flash(`Updated: the computer runs ${PRODUCT} ${s.version}.`);
       }
       u = s.update || null;
       draw();
@@ -87,7 +87,7 @@ export function makeUpdate(ctx) {
     async check() {
       const r = await ctx.send("update.check");
       if (!r.ok) { ctx.flash(r.error); return; }
-      if (!r.result) { ctx.flash("The computer runs the latest Orkline."); return; }
+      if (!r.result) { ctx.flash(`The computer runs the latest ${PRODUCT}.`); return; }
       later = "";                                         // asked for: shown again, whatever Later said (the next state brings it)
       write(LATER_KEY, "");
       draw();

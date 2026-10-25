@@ -9,6 +9,9 @@ export const toasts = signal([]);          // [{id, message, title, severity, to
 export const details = signal({});         // building id → its window's state (gui/views/), for the open ones
 
 const TOKEN = new URLSearchParams(location.search).get("t") || "";
+/** The product's name as a person reads it: the page's `data-product`, which its host serves (gui/server.py `named`,
+ *  decisions §95): Orkboard here, Orkline in Orkline. */
+export const PRODUCT = document.documentElement.dataset.product || "Orkboard";
 const pending = new Map();
 const terminals = new Map();               // session key → (kind, bytes) => void: who draws its frames                 // command id → {resolve, reject}
 let socket = null;
@@ -89,9 +92,10 @@ export function command(name, args = {}) {
   });
 }
 
-/** A web link in the person's browser. The app's own window (pywebview) opens no tab, so the host opens it there. */
+/** A web link in the person's browser. The app's own window (pywebview) and an editor's panel (`app=1`,
+ *  gui/extension.py) open no tab, so the host opens it there. */
 export function openLink(url) {
-  if (window.pywebview) command("link.open", { url }).catch(() => {});
+  if (window.pywebview || new URLSearchParams(location.search).get("app") === "1") command("link.open", { url }).catch(() => {});
   else window.open(url, "_blank", "noopener");
 }
 

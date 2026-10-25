@@ -1,7 +1,7 @@
 // The cards at the top of the Board tab (docs/specs/42-coming-back.md §1.4): *While you were away*, what the Board did since
 // this phone's last look (board.js). An `.ork-card` with its head in the pixel face and its lines in the text face, each only when it
 // has something to say; it covers nothing and one press closes it. Its links open an idea, a goal or Needs you and change nothing.
-import { h, sheet } from "./util.js";
+import { h, sheet, PRODUCT } from "./util.js";
 import { pctOf } from "./shell-spend.js";
 import { sign } from "./shell-marks.js";
 
@@ -189,7 +189,7 @@ export function weekPace(w) {
 
 /** *The last 7 nights: 4 with work done, 2 with none, 1 Orkline was not running*: parts at 0 left out. */
 export function weekNights(n) {
-  const parts = [n.worked && `${n.worked} with work done`, n.idle && `${n.idle} with none`, n.off && `${n.off} Orkline was not running`].filter(Boolean);
+  const parts = [n.worked && `${n.worked} with work done`, n.idle && `${n.idle} with none`, n.off && `${n.off} ${PRODUCT} was not running`].filter(Boolean);
   return parts.length ? `The last 7 nights: ${parts.join(", ")}` : "";
 }
 

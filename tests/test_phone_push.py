@@ -71,7 +71,7 @@ def test_a_new_answer_that_waits_sends_once_to_a_device_without_a_socket(rig):
     rig.ask("Offline mode retry queue")
     assert rig.tick(at(12, 0, DAY)) == []                               # the clock: not twice inside TICK_S
     (msg,) = rig.tick(at(12, 1))
-    assert msg == {"title": "Orkline", "body": "A spec asks · Offline mode retry queue", "tag": "needs", "badge": 1, "url": "./#needs"}
+    assert msg == {"title": "Orkboard", "body": "A spec asks · Offline mode retry queue", "tag": "needs", "badge": 1, "url": "./#needs"}
     assert rig.tick(at(12, 2)) == [msg]                                  # told: no second push for the same one
 
 
@@ -143,7 +143,7 @@ def test_the_morning_is_sent_once_a_day_when_the_device_was_not_seen_since_the_q
     rig.set_seen("2026-10-19T20:00:00")
     assert rig.tick(at(7, 0)) == []                                      # still the quiet hours
     (msg,) = rig.tick(at(8, 30))
-    assert msg == {"title": "Orkline", "body": "While you were away: 3 results in dev, 1 flag raised and nothing waits for you",
+    assert msg == {"title": "Orkboard", "body": "While you were away: 3 results in dev, 1 flag raised and nothing waits for you",
                    "tag": "recap", "badge": 0, "url": "./"}
     assert rig.pairing.get(rig.device)["push"]["morning"] == "2026-10-20"
     assert len(rig.tick(at(8, 31))) == 1 and len(rig.tick(at(9, 0))) == 1          # a restart or a later tick: not twice
@@ -213,7 +213,7 @@ def test_a_pick_that_waits_is_an_answer_that_waits_said_by_who_asks_and_never_by
     pf.make_pick(rig.state, tmp_path / "s", {"a.png": pf.png(), "b.png": pf.png(2, 2)}, slug=slug)
     rig.host.ideas.rev += 1
     (msg,) = rig.tick(at(12, 1))
-    assert msg == {"title": "Orkline", "body": "Grunt asks you to pick one", "tag": "needs", "badge": 1, "url": "./#needs"}
+    assert msg == {"title": "Orkboard", "body": "Grunt asks you to pick one", "tag": "needs", "badge": 1, "url": "./#needs"}
     assert "meanest" not in json.dumps(msg) and "Draw the logo" not in json.dumps(msg)
 
 

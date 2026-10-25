@@ -3,7 +3,7 @@
 // Roles only: warning at 20 % or less left, danger at 5 % or less (docs/design-system.md).
 import { html } from "../html.js";
 import { Icon } from "../orkui.js";
-import { town, command, say } from "../link.js";
+import { town, command, say, PRODUCT } from "../link.js";
 import { showAgents, showFiles } from "./store.js";
 import { openDialog } from "./modals.js";
 import { currentProject, projectsOn } from "./projects.js";
@@ -29,7 +29,7 @@ export function TopBar() {
   const spend = hud.show_gold ? hud.gold : hud.lumber;
   const shown = !projectsOn.value || !!currentProject.value?.path;      // the window is behind the project: the start screen has no drawer
   return html`<header class="shell-top">
-    <span class="shell-top__brand">Orkline</span>
+    <span class="shell-top__brand">${PRODUCT}</span>
     <span class="shell-top__spacer"></span>
     ${shown && html`<button type="button" class="ork-btn" title="The agents, what each takes and is doing" onClick=${() => showAgents()}>Agents</button>`}
     ${shown && projectsOn.value && html`<button type="button" class="ork-btn" title="The project’s files" onClick=${() => showFiles()}>Files</button>`}
