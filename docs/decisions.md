@@ -1318,3 +1318,23 @@ words and shape have settled enough for that. So:
 4. **A page shared with Orkline says its host's name:** where the Board's panes run inside Orkline they say Orkline, so a
    pane never names the other product.
 This supersedes §50.1's *not published* and §60.1's *a lab is not published*. The owner's call.
+
+## 96. Orkboard stays Apache-2.0; its names and the ork mark are not licensed; the licence is looked at again with running on our models (25 October, the owner)
+
+Why: Orkboard goes out on its own (§95), so others read its licence and its notices now. The owner asked the PM whether
+to keep it open for the community or keep room for money (a licence of the source-available kind, the FSL, AGPL with a
+commercial one). The PM's view: at the testers' stage what is scarce is people who come back (§45.11), not protection;
+a tool that runs agents on a person's code and subscriptions is installed when its code can be read, and used at work
+when its licence is one a company allows; and a skin is copied in a weekend whatever the licence (§60.7), so what keeps
+the line its own is its names, its pace and the engine's results. NOTICE was Orkline's, and named fonts Orkboard does
+not carry. So:
+1. **Orkboard stays Apache-2.0**, the VS Code extension with it, as orkUI is.
+2. **The names and the ork mark are not licensed** (the licence's section 6): Orkboard, Orkline, OrkWiki, OrkWatch,
+   OrkMine, orkUI, orkCraft, orkWorks and the pixel ork (`design-system/logo/`, the extension's icon). `NOTICE` and
+   `vscode/NOTICE` say so, as orkUI's does; a fork may say it comes from Orkboard, and goes by its own name and mark.
+3. **What is bundled is named**: `NOTICE` gives each copied file's origin and licence, and each licence lies beside its
+   files (orkUI's own, `gui/static/vendor/LICENSE-<package>.txt`).
+4. **The licence is looked at again when running on our models is worked out** (the owner): the orks running on models
+   the studio serves, beside the person's own subscriptions, is where a paid part may come; how is open. A version
+   already out stays Apache-2.0 whatever is decided then: a licence given cannot be taken back.
+The owner's call.

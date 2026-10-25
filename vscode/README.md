@@ -8,7 +8,7 @@ results to review. It is the same page as Orkboard's own window, for the folder 
 The extension runs the Board with the **orkboard** program (Python 3.11 or later) on this computer:
 
 ```sh
-uv tool install 'orkboard @ git+https://github.com/orkWorks/orkBoard'
+uv tool install 'orkboard @ git+https://github.com/orkCraft/orkBoard'
 ```
 
 Without it the extension starts the Board through `uvx` when `uv` is installed, which downloads Orkboard on first use.
@@ -38,3 +38,8 @@ themselves, and the usage stats and crash reports you choose on the first screen
 
 - **Local folders only for now.** Remote SSH, WSL, Dev Containers and Codespaces are not supported yet.
 - VS Code's own shortcuts do not reach the Board while it has the focus: click the editor to use them.
+
+## Licence
+
+The extension and Orkboard are open source under the [Apache License 2.0](LICENSE). The names and the ork mark (the
+extension's icon) are not part of the licence ([NOTICE](NOTICE)).

@@ -54,6 +54,9 @@ paired phone. **Orkline imports Orkboard, never the other way round**: nothing h
   read orkUI's tokens and carry no colour, font or corner of their own (`tests/test_design_system.py`).
 - **An agent's craft is its race** (decisions §53): an ork engineers, an elf designs, a goblin minds the data, a gnome
   markets; its tier is the gear on its head. Taskmaster and the Grunts are orks.
+- **The licence is Apache-2.0** (decisions §96), the extension's too; the names and the ork mark are not licensed
+  (`NOTICE`). A file copied from another project comes unchanged, its licence beside it and a line in `NOTICE`
+  (`gui/static/vendor/`, orkUI's copy).
 
 ## Alpha: merge fast, with the critical tests
 

@@ -2,7 +2,7 @@
 
 Orkline's Board on its own: a project's parties and their goals, the goals' specs and plans, the agents at work and the results to review, on the desktop and on a paired phone.
 
-Install it from git: `uv tool install 'orkboard[gui] @ git+https://github.com/orkWorks/orkBoard'` (`[gui]` brings the window
+Install it from git: `uv tool install 'orkboard[gui] @ git+https://github.com/orkCraft/orkBoard'` (`[gui]` brings the window
 elsewhere than a Mac, where it always comes, and the paired phone's TLS).
 
 Run `orkboard` in a project's folder: it opens in a window of its own (`orkboard --browser` opens it in the browser instead),
@@ -15,3 +15,10 @@ In VS Code, the [Orkboard extension](vscode/README.md) opens the Board of the wo
 It is drawn in [orkUI](https://github.com/orkCraft/orkUI)'s office look; on Agents each agent wears the head of its craft's race (an ork engineers, an elf designs, a goblin minds the data, a gnome markets) in its tier's gear.
 
 It shares Orkline's settings (`~/.config/orkcraft/`) and a project's Board (`<project>/.orkcraft/`, `orkcraft.toml`): switching between the two loses nothing.
+
+## Licence
+
+Orkboard is open source under the [Apache License 2.0](LICENSE): use it, change it and share it, at work too. The
+names (Orkboard, Orkline, orkUI, orkCraft…) and the ork mark are not part of the licence: a fork may say it comes from
+Orkboard, and goes by a name and a mark of its own. What Orkboard bundles from others, and under which licence, is in
+[NOTICE](NOTICE).

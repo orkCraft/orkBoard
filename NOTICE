@@ -1,11 +1,22 @@
-Orkline
+Orkboard
 Copyright 2026 Vadim Sidoryk
 
-This product includes software developed by Vadim Sidoryk (https://github.com/VadimSidoryk/orkcraft).
+This product is licensed under the Apache License, Version 2.0 (LICENSE). It began as a part of Orkline, by the same
+author.
 
-This product bundles fonts licensed under the SIL Open Font License, Version 1.1, in
-design-system/fonts/ with their licences:
-  Almendra SC      — Copyright (c) 2011 Ana Sanfelippo
-  Titillium Web    — Copyright (c) 2009-2011 Accademia di Belle Arti di Urbino
-  JetBrains Mono   — Copyright 2020 The JetBrains Mono Project Authors
-  Pixelify Sans    — Copyright 2021 The Pixelify Sans Project Authors
+The names Orkboard, Orkline, OrkWiki, OrkWatch, OrkMine, orkUI, orkCraft and orkWorks, and the ork mark (the pixel ork
+in design-system/logo/, which is also the VS Code extension's icon), are not licensed: the Apache License grants no
+right to use them as trade names or marks (its section 6). A fork may say it comes from Orkboard, and goes by a name and
+a mark of its own.
+
+This product bundles the following, each under its own licence:
+
+- orkUI's office look (design-system/orkui/), Copyright 2026 orkWorks, Apache License 2.0, with its own LICENSE and
+  NOTICE; through it IBM Plex Mono and Pixelify Sans (SIL Open Font License 1.1, their licences in
+  design-system/orkui/fonts/) and Pixelarticons (MIT License, its licence in design-system/orkui/icons/).
+- In orkboard/gui/static/vendor/, unchanged, each with its licence beside it (LICENSE-<package>.txt):
+  - Preact and its hooks, Copyright (c) 2015-present Jason Miller, MIT License.
+  - @preact/signals and @preact/signals-core, Copyright (c) 2022-present Preact Team, MIT License.
+  - htm, Copyright 2018 Google Inc., Apache License 2.0.
+  - xterm.js and its fit addon, Copyright (c) 2017-2019 The xterm.js authors, Copyright (c) 2014-2016 SourceLair
+    Private Company, Copyright (c) 2012-2013 Christopher Jeffrey, MIT License.

@@ -8,11 +8,11 @@
   "icon": "media/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/orkWorks/orkBoard",
+    "url": "https://github.com/orkCraft/orkBoard",
     "directory": "vscode"
   },
-  "bugs": { "url": "https://github.com/orkWorks/orkBoard/issues" },
-  "homepage": "https://github.com/orkWorks/orkBoard/tree/main/vscode#readme",
+  "bugs": { "url": "https://github.com/orkCraft/orkBoard/issues" },
+  "homepage": "https://github.com/orkCraft/orkBoard/tree/main/vscode#readme",
   "engines": { "vscode": "^1.90.0" },
   "categories": ["AI", "Other"],
   "keywords": ["agents", "claude code", "codex", "board", "review"],
