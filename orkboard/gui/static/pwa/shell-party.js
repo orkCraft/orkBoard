@@ -11,6 +11,7 @@ import { modelOf } from "./shell-arena-words.js";
 import { savePartyEl } from "./shell-goal.js";
 import { IDEATION_WHOLE } from "./shell-goal-new.js";
 import { loadProposals, proposes, sizePrices, sizeSwitch } from "./shell-proposals.js";
+import { makeRemove } from "./shell-party-remove.js";
 import { gatePress } from "./shell-gate.js";
 import { inView, motionOn, raise, raiseTo } from "./shell-motion.js";
 import { flagWords as oldFlagWords } from "./shell-map.js";
@@ -36,6 +37,7 @@ export function makeParty(core, ctx) {
   const st = core.st;
   const body = h("div", { class: "party-about" });
   const sh = sheet("About this party", body);
+  const remove = makeRemove(core);
   let shown = "", got = null, allFlags = false;       // the party the sheet is about, what `ideas.goal` read of it, whether every flag is listed
   const asking = new Set();
 
@@ -119,7 +121,8 @@ export function makeParty(core, ctx) {
       flags.length > FLAGS_SHOWN && !allFlags ? h("button", { class: "ork-btn quiet", type: "button", "data-act": "all-flags", onclick: () => { allFlags = true; draw(); } }, `All ${flags.length}`) : null),
       before,
       h("div", { class: "party-about__acts" }, edit, pitches ? null : add, savePartyEl(g, core)),
-      h("p", { class: "cap party-about__seats" }, pitches ? IDEATION_WHOLE : seatWords(m.freeBuild + m.freeCheck))].filter(Boolean));
+      h("p", { class: "cap party-about__seats" }, pitches ? IDEATION_WHOLE : seatWords(m.freeBuild + m.freeCheck)),
+      remove.can(g.slug) ? h("button", { class: "ork-btn danger party-about__remove", type: "button", "data-act": "remove-party", onclick: () => remove.ask(g, () => sh.close()) }, "Remove party") : null].filter(Boolean));
   }
 
   /** Opens the sheet on a party; `at`: a block to scroll to (*Its flags*). */
@@ -181,5 +184,5 @@ export function makeParty(core, ctx) {
     standing.classList.add("is-raised");
   }
 
-  return { sheets: [sh.el], gate: gateBox, line: flagNode, watch, open, sheet: sh };
+  return { sheets: [sh.el, remove.el], gate: gateBox, line: flagNode, watch, open, sheet: sh };
 }
