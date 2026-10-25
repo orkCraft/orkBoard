@@ -1354,3 +1354,103 @@ that name it. So:
 5. **No archive**: a party one does not want to see is closed already (§87); an archive is one more state for the column,
    the map, the project's level and the Orkmaster. Looked at again if people ask for a removed party back.
 Spec 80. The owner's call.
+
+## 98. A party picks its AI tool from a list; its size is how many agents it has and of what tiers (25 October, the owner and the PM)
+
+Why: the owner, testing: *when a party is made, pick its harness; the list of what is available may be long, so a list
+that drops down*; and *the size should change the party's size itself: Lean one agent, Standard either every agent on
+light models or the main ones on better models, Full the whole team on middle models and up*. Today a goal's work runs
+on Claude whatever the party (`core/idea_runner.py` and `core/idea_keeper.py` `HARNESS = "claude"`); the Main tool moves
+decisions only. Lean is the leader and the Grunt who does its tasks, two heads; Ideation and Release keep every seat in
+every size; a library agent keeps its own tier at any size, so the size changes models only through the Target's effort;
+and the switch in *About this party* changes the team only on a second confirm. So:
+1. **A party has its AI tool**, picked when it is made and changed in *Edit the party*: a list that drops down (orkUI's
+   select, the phone's own), the tools ready to run first, then those not signed in (picking one opens its sign-in,
+   §58), then those not installed (shown, not picked). *Main tool* is the default. Its goals' tasks and its leader run on
+   it; a tool with no tiers of its own (it runs its own model) says so in the list.
+2. **The size is the team:** **Lean** one agent of the Seasoned tier, the leader, who plans and does its tasks itself (no
+   Grunt); **Standard** the leader and the recipe's main seats; **Full** every seat, none below Seasoned, the leader and
+   the checkers Veteran. In a party the size sets each seat's tier; a seat the person set by hand keeps it.
+3. **Standard: the PM proposes the main seats on the better tier** (the leader Veteran, two builders and a checker
+   Seasoned) rather than every seat on Novice: fewer hands to hand work between, and a light model on many seats makes
+   more to send back. **Open, the owner's call.**
+4. **A change of size changes the team at once**, in one press, the heads that join and leave shown before it; a member
+   with work open is not let go (spec 75 §5.4's refusal). Ideation and Release are sized too: Lean the leader reading
+   from every side itself, Standard two views and the skeptic, Full all of them.
+Spec 81.
+
+## 99. The field is read at a glance: a row is what runs at once; a card at work turns; members are faces over their columns (25 October, the owner)
+
+Why: the owner, testing: *it is not clear which card is in progress; once every card on the field said wait*; *the
+members' cards are narrower than the columns: make a member a face and a rule the width of its column*; *cards that come
+later should lie lower: the first row what is done now and depends on nothing; one row, what can be done in parallel*;
+*cards at work need something that turns*; *cards come into the hand unnoticed*; *the dependency arrows say nothing: do
+it with rows, and the arrows in steps, not diagonals*. Today each member's column has its own rows (now, next, later) by
+a goal's wave, so rows do not line up across the field; a held card (a window spent, the night, a sign-in) and a card
+waiting for another are both drawn *wait*; nothing moves on a card at work; the arrows are diagonals, shown on hover;
+a new stop takes its place in the fan without a sign. So:
+1. **A row runs across the whole field**: the first, *Now*, holds what is at work or may start (nothing it waits for is
+   open); each row under it waits only for rows above it. One row is what can run at once. The rows line up across the
+   members' columns, each labelled at the table's left.
+2. **A card at work turns**: orkUI's busy mark (a small pixel mark that turns, still under reduced motion) and *working
+   4 min*; the member's face over its column turns with it.
+3. ***Waits* and *held* are told apart**: a card waiting for another lies in a lower row (*after X*); a card held says its
+   reason's sign (window, night, sign-in). When nothing is at work the table's top says why in one line (*Nothing at
+   work: 2 results wait for your look*, *Claude's window is at 95 %: back at 14:20*).
+4. **A member is a face**, not a framed card: the head and name over its column, and a rule the full width of the column
+   under them, lit while it works, the danger colour while it calls.
+5. **The arrows go in steps**: down from a card, across between the rows, down into the card that waits; square corners,
+   still on hover and focus only.
+6. **A new stop rises from the hand**: it comes up whole for two or three seconds, then sinks into its place in the fan;
+   several, one after another; under reduced motion its edge lights instead.
+Spec 82.
+
+## 100. New goal is one field on the desktop too; the night is only for Low work and only on the person's word (25 October, the owner)
+
+Why: the owner, testing: *New goal still shows its title and what it is for apart: one field*; *only Low work is offered
+the night, and only with the person's explicit permission*. The phone has had one field since §66.4, the desktop's typed
+goal kept two. And the night comes without a word today: the Board puts a Low goal of low risk off to the night itself
+(§57, `realm/idea_risk.py` `AUTOSTART`); closing New goal with words in it queues them tonight whatever their priority;
+Ideation's *Tonight* and a held goal's *Tonight* take any priority. So:
+1. **New goal is one field**, *The goal*, its first line its title (as the phone, §66.4), the type's asks under it.
+2. **The night is asked, never assumed**: New goal offers *Tonight* only for Low priority, a box the person ticks; the
+   Board never puts work off to the night by itself (Low work it starts does so by day, after the other priorities).
+3. **Closing New goal with words in it keeps them** (put back on the party, not started), never queues them tonight.
+4. ***Tonight* elsewhere** (a pitch, a held goal) makes the goal Low as it puts it off.
+5. **The night's own runs** (the leaders re-reading goals, their proposals, spec 44's pace) **ask once too**: one switch
+   in Settings, off until the person turns it on. **Open, the owner's call**: the PM proposes it off by default.
+This supersedes §57.1 (the Board's own night) and §66.4's *the desktop's New goal is unchanged for now*. Spec 83.
+
+## 101. The next task need not wait for your look: a safe result lands in dev by itself, and what depends on nothing runs beside it (25 October, the owner and the PM)
+
+Why: the owner, testing: *why does the work go on only after a merge into dev?* Because three things meet: a task that
+comes `after` another starts from its merged work in dev (`core/idea_runner.py` `after_ok`, `realm/plans.py`); every
+result waits at Review for the person's merge (`review` is on by default, `settings.py` `IDEAS`, for the testers' week,
+§45.6), so §49.4's *code lands in dev by itself when it holds* was never on; and one task runs at a time
+(`max_parallel` 1). A plan is mostly a chain, so the whole goal stands still behind one result waiting for a look. So:
+1. **A result lands in dev by itself when it holds** (§49.4 as written): its tests ran and are green, no findings left,
+   no risk path its goal's risk left out, no media. Anything else waits for the person's look, as now. Review becomes
+   *Waits for your look* for what needs a look, and *dev → main* stays the person's gate (§49.5).
+2. **What depends on nothing runs beside it**: tasks at once by size, Lean 1, Standard 2, Full 3, never past the
+   window's reserve; one per member (orks never on the same files, §49.1).
+3. **Not**: starting a task from a result that still waits (built on work the person may send back).
+4. **Open, the owner's call**: whether the testers' week (§45.6) is over for this, i.e. `review` off by default.
+Spec 84.
+
+## 102. Progress is seen: the elf asks about the look before it is built, and what changed shows its picture (25 October, the owner)
+
+Why: the owner, testing: *users need more to look at and check; if this is a game the designer should send more questions
+about style, pictures and so on; I sit and watch the cards move and do not feel the work progress.* Today a person is
+asked about the look only by a *Pick one* (an icon, a logo, a tagline, a character, at most one a goal), by up to three
+draft questions of the leader (rarely about the look), and by *Pictures you like* in New goal; a result shows its diff,
+never what it looks like. So:
+1. **The elf asks before it builds**: a goal that changes what people see (a screen, a flow, a landing, a level, a
+   character, an icon, a logo) gets up to three questions of the look at its draft (the mood, the palette, the
+   references), each with its answer picked and two or three others, as a stop in the hand.
+2. **A screen is picked before it is built**: the plan of a screen's goal begins with a *Pick one* of two or three
+   looks of it (§64, extended from icons and logos to screens).
+3. **What changed shows its picture**: a task that changed what people see is shown as a picture of its screen
+   (no model: the project's preview opened and drawn), on its card and in *Waits for your look*.
+4. **A goal says how far it is**: *4 of 9 done* on its line and its stack; a card done turns over to say what it made.
+5. Thrift holds (§49): questions and looks only for goals that change what people see, one round of each a goal.
+Spec 85.
