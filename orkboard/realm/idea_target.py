@@ -17,6 +17,10 @@ One Target per Board, for the whole route board → pool → gate (decisions §4
 from __future__ import annotations
 
 import datetime as dt
+import math
+import statistics
+import time
+from pathlib import Path
 from typing import Any
 
 from orkboard.realm import plans
@@ -35,10 +39,12 @@ TIER_ROLE = "elder"                                    # the Taskmaster's defaul
 # step → target → (tier, effort); a task's tier is relative: -1 one lighter, 0 its own, +1 one heavier.
 MATRIX: dict[str, dict[str, tuple[Any, str] | None]] = {
     "goal": {"thrift": ("elder", "medium"), "balance": ("elder", "high"), "quality": ("elder", "xhigh")},
-    "draft": {"thrift": ("elder", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
+    # Lean (thrift) runs the draft, its answer and the talk on the Seasoned tier: a leader's call costs $0.18-0.22 on the
+    # Veteran tier however little it writes (spec 86 §5); its goal reading and plan stay on the Veteran
+    "draft": {"thrift": ("warrior", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
     # the answer to a spec's questions (§0) is not in the spec's table: it finishes the draft, so it runs as the draft
-    "answer": {"thrift": ("elder", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
-    "talk": {"thrift": ("elder", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
+    "answer": {"thrift": ("warrior", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
+    "talk": {"thrift": ("warrior", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
     "plan": {"thrift": ("elder", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
     "refresh": {"thrift": None, "balance": ("elder", "medium"), "quality": ("elder", "high")},
     "propose": {"thrift": None, "balance": ("elder", "low"), "quality": ("elder", "medium")},
@@ -50,7 +56,7 @@ MATRIX: dict[str, dict[str, tuple[Any, str] | None]] = {
     "pitch_case": {"thrift": ("laborer", ""), "balance": ("warrior", "low"), "quality": ("warrior", "medium")},
     "pitch_decide": {"thrift": ("warrior", "medium"), "balance": ("elder", "low"), "quality": ("elder", "medium")},
     # the Orkmaster's judge (spec 71 §2): two goals that touch the same files, a collision or a coincidence; the cheaper tier
-    "collide": {"thrift": ("laborer", ""), "balance": ("warrior", "low"), "quality": ("warrior", "medium")},
+    "collide": {"thrift": ("warrior", "low"), "balance": ("warrior", "low"), "quality": ("warrior", "medium")},
     # what an empty folder is for (spec 75 §4.2): the Orkmaster reads one line into a kind, on the cheaper tier as its judge
     "kind": {"thrift": ("laborer", ""), "balance": ("warrior", "low"), "quality": ("warrior", "medium")},
     # Operations' calls (docs/specs/38-operations.md §4), under Operations' own Target: no effort on the laborer tier
@@ -74,11 +80,67 @@ CAPS = {"goal": 1.00, "draft": 0.60, "answer": 0.40, "talk": 0.20, "plan": 0.60,
 BUDGET_SHARE = {"thrift": 0.5, "balance": 1.0, "quality": 2.0}
 
 
+# What one call of a tier costs however little it writes (Claude Code's own context, written to the cache anew each time:
+# spec 86 §5), measured from the last calls when the day log has them, else this table.
+FLOOR = {"elder": 0.25, "warrior": 0.10, "laborer": 0.03}
+FLOOR_CALLS = 10                                         # the median of this many of the last one-turn keeper calls
+FLOOR_FROM = 3                                           # … and only when at least this many were read
+FLOOR_PURPOSES = ("plan", "sort")                        # a keeper call's purpose in the log (core/idea_keeper.py)
+FLOOR_OUT = 400                                          # a one-turn call wrote at most this many tokens
+FLOOR_DAYS = 4                                           # day folders back that are read
+FLOOR_TTL_S = 300                                        # a measure is kept this long
+HEADROOM = 1.5                                           # a budget is never under this many floors
+_FLOORS: dict[tuple, tuple[float, float]] = {}
+
+
+def _kept_costs(root: Path, tier: str, tool: str) -> list[float]:
+    """The costs of the last FLOOR_CALLS one-turn keeper calls of `tier` on `tool` in `root`'s day log, newest first."""
+    from orkboard.realm import call_log, harnesses
+    try:
+        days = sorted((d for d in (root / call_log.DAYS).iterdir() if d.is_dir()), reverse=True)[:FLOOR_DAYS]
+    except OSError:
+        return []
+    rows: list[dict] = []
+    for day in days:
+        for building in sorted(p for p in day.iterdir() if p.is_dir()):
+            rows += [r for r in call_log.read(building) if r.get("tool") == tool and r.get("mode") == "read"
+                     and r.get("purpose") in FLOOR_PURPOSES and not r.get("code")
+                     and isinstance(r.get("cost"), (int, float)) and r["cost"] > 0
+                     and (r.get("usage") or {}).get("output_tokens", 0) <= FLOOR_OUT
+                     and harnesses.tier_of_model(str(r.get("model") or "")) == tier]
+        if len(rows) >= FLOOR_CALLS:
+            break
+    rows.sort(key=lambda r: str(r.get("at") or ""), reverse=True)
+    return [float(r["cost"]) for r in rows[:FLOOR_CALLS]]
+
+
+def floor(tier: str, tool: str = "claude") -> float:
+    """The least one call of `tier` on `tool` costs, in USD: the median cost of the last ten one-turn keeper calls of it in
+    the shown project's day log (`calls.jsonl`, realm/call_log.py), else the table `FLOOR`. Kept for five minutes."""
+    from orkboard.realm import call_log
+    root = call_log.days_root()
+    key = (str(root), tier, tool)
+    now = time.monotonic()
+    got = _FLOORS.get(key)
+    if got is not None and now - got[1] < FLOOR_TTL_S:
+        return got[0]
+    costs = _kept_costs(root, tier, tool) if root is not None else []
+    value = round(statistics.median(costs), 4) if len(costs) >= FLOOR_FROM else FLOOR.get(tier, FLOOR["warrior"])
+    _FLOORS[key] = (value, now)
+    return value
+
+
 def budget(step: str, target: str) -> float | None:
-    """A keeper call's budget in USD under the Target; None for a step with no cap."""
+    """A keeper call's budget in USD under the Target; None for a step with no cap. Never under HEADROOM times the floor of
+    the tier the step runs on under the Target (spec 86 §5): a cap under what one call costs ends every call of it."""
     if step not in CAPS:
         return None
-    return round(CAPS[step] * BUDGET_SHARE.get(target if target in TARGETS else DEFAULT, 1.0), 2)
+    target = target if target in TARGETS else DEFAULT
+    cap = CAPS[step] * BUDGET_SHARE.get(target, 1.0)
+    got = pick(step, target) if step in MATRIX else None
+    if got is not None:
+        cap = max(cap, math.ceil(HEADROOM * floor(got[0]) * 100 - 1e-6) / 100)
+    return round(cap, 2)
 
 
 def cut(parts: list[tuple[str, str]], cap: int) -> str:

@@ -161,8 +161,8 @@ def test_ideation_is_offered_no_goal_type_and_prices_a_pitch_at_its_calls_caps(k
     read = goal_types.Party.of(keeper.state, keeper.root, "investor", TEAM)
     assert goal_types.offered(keeper.state, keeper.root, "", read=read) == []
     got = party_price.price(keeper.root, keeper.state, {"target": "balance"}, "investor", TEAM, [])
-    assert got == {"low": 0.29, "high": 0.58, "learned": False, "ideas": 0, "checks": [], "pitch": True}       # 4 × 0.08 + 0.06 + 0.20
-    assert party_price.price(keeper.root, keeper.state, {"target": "thrift"}, "investor", TEAM, [])["high"] == 0.29
+    assert got == {"low": 0.56, "high": 1.13, "learned": False, "ideas": 0, "checks": [], "pitch": True}       # 4 × 0.15 + 0.15 + 0.38: each cap at 1.5 floors (spec 86 §5)
+    assert party_price.price(keeper.root, keeper.state, {"target": "thrift"}, "investor", TEAM, [])["high"] == 0.40
 
 
 # -- §3: the calls ---------------------------------------------------------------------------------------------------
@@ -180,12 +180,12 @@ def test_a_pitch_is_judged_its_views_alone_the_engineering_view_alone_with_tools
         assert a["prompt"].startswith(f"You are the {library.get(a['view']).name} of this project's Ideation party.")
         assert WORDS in a["prompt"] and "- ship: Ship" in a["prompt"] and "night users" in a["prompt"]
         assert ("size" in a["prompt"]) is (a["view"] == "tech-view")
-        assert (a["tier"], a["effort"], a["budget"]) == ("warrior", "low", 0.08)
+        assert (a["tier"], a["effort"], a["budget"]) == ("warrior", "low", 0.15)
     (case,) = model.of("pitch_case")
     assert all(f"TOKEN-{v} for" in case["prompt"] for v in library.VIEWS) and case["tools"] is False and case["as"] == "skeptic"
-    assert (case["tier"], case["effort"], case["budget"]) == ("warrior", "low", 0.06)
+    assert (case["tier"], case["effort"], case["budget"]) == ("warrior", "low", 0.15)
     (decide,) = model.of("pitch_decide")
-    assert decide["as"] == "investor" and decide["tools"] is False and (decide["tier"], decide["effort"], decide["budget"]) == ("elder", "low", 0.2)
+    assert decide["as"] == "investor" and decide["tools"] is False and (decide["tier"], decide["effort"], decide["budget"]) == ("elder", "low", 0.38)
     assert "It solves nothing anyone asked for." in decide["prompt"] and "TOKEN-market-view against" in decide["prompt"]
     assert "- ship: Ship; its goal types: bug, tidy, shaped-feature, restructure" in decide["prompt"]             # the parties with the types each is offered
     assert "- game: Game (a party of the library, not in the project yet)" in decide["prompt"]
@@ -367,7 +367,7 @@ def test_the_party_is_made_only_whole_and_a_view_is_refused_elsewhere(host):
     with pytest.raises(CommandError, match="The views judge pitches: they are in Ideation only"):
         host.command("ideas.goal_save", {"about": "Mixed.", "leader": "architect", "team": ["grunt", "market-view"]})
     price = host.command("ideas.party_price", {"leader": "investor", "team": TEAM, "craft": "product"})
-    assert price["pitch"] is True and price["types"] == [] and price["hints"] == [] and price["high"] == 0.58
+    assert price["pitch"] is True and price["types"] == [] and price["hints"] == [] and price["high"] == 1.13
 
 
 def test_a_pitch_is_added_judged_and_refused_by_the_plans_commands(host):

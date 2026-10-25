@@ -135,7 +135,7 @@ def test_the_proposals_call_reads_nothing_and_keeps_no_session(keeper, monkeypat
     _goal(keeper, "Table")
     keeper.run_night()
     (call,) = seen
-    assert call["tools"] is False and call["one_shot"] is True and call["resume"] == "" and call["budget"] == 0.3
+    assert call["tools"] is False and call["one_shot"] is True and call["resume"] == "" and call["budget"] == 0.38      # 0.30, under 1.5 x the Veteran floor 0.25 (spec 86 §5)
 
 
 def test_at_work_and_tonight_are_what_the_computer_is_kept_awake_for(keeper):

@@ -76,6 +76,12 @@ def _claude_read_dirs(dirs: list[str]) -> list[str]:
     return out + (["--disallowedTools", ",".join(rules)] if rules else [])
 
 
+def _claude_work_rules(allow: list[str], deny: list[str]) -> list[str]:
+    """The commands a working task may run (realm/task_commands.py): in `-p` a command not allowed is refused, and a
+    denied one is refused whatever is allowed."""
+    return [*(["--allowedTools", ",".join(allow)] if allow else []), *(["--disallowedTools", ",".join(deny)] if deny else [])]
+
+
 def _claude_work(h, prompt, workdir, model, resume):
     return [h.bin, "-p", prompt, "--output-format", "json", "--permission-mode", "acceptEdits",
             *_model("--model", model), *(["--resume", resume] if resume else []), *_claude_mcp()]

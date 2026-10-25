@@ -22,7 +22,7 @@ import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-from orkboard.realm import call_log, halt, harnesses, tool_run  # noqa: F401  (halt: its runs wait under it, tool_run.wait)
+from orkboard.realm import call_log, halt, harnesses, task_commands, tool_run  # noqa: F401  (halt: its runs wait under it, tool_run.wait)
 from orkboard.realm.gate_config import test_argv
 from orkboard.sources import telemetry
 
@@ -93,23 +93,28 @@ def run_script(command: str, stdin: str, repo_root: Path, cancel: threading.Even
 
 
 def work_cmd(harness: str, prompt: str, workdir: Path, model: str = "", resume: str = "",
-             dirs: tuple = (), free: bool = False, effort: str = "") -> list[str]:
+             dirs: tuple = (), free: bool = False, effort: str = "", task: dict | None = None,
+             root: Path | None = None) -> list[str]:
     """An agent that may change files — only inside `workdir` (a Barracks worktree); `dirs` it may read too;
-    `free`: its building is unchained (autonomy.FREE), so it asks nothing."""
+    `free`: its building is unchained (autonomy.FREE), so it asks nothing. A tool that takes a list of commands (Claude
+    Code in `-p`, where nobody can be asked) gets the project's at `root` (default: `workdir`, a checkout of it) and
+    the task's (`task["pick"]`: also the media tools), spec 86 §2."""
     h = harnesses.get(tool_run.resolve(harness))
     if h is None:
         raise RuntimeError(f"harness {harness!r} cannot work in a worktree")
-    return h.work(prompt, workdir, model, resume if h.resumable else "", dirs, free, effort)
+    allow, deny = (task_commands.allowed(root or workdir, task), task_commands.denied()) if h.work_rules else ((), ())
+    return h.work(prompt, workdir, model, resume if h.resumable else "", dirs, free, effort, allow, deny)
 
 
 def run_work(harness: str, prompt: str, workdir: Path, cancel: threading.Event, model: str = "",
              env: dict | None = None, resume: str = "",
              timeout_s: int = WORK_TIMEOUT_S, dirs: tuple = (),
-             free: bool = False, effort: str = "") -> tuple[str, float | None, int | None, str]:
+             free: bool = False, effort: str = "", task: dict | None = None,
+             root: Path | None = None) -> tuple[str, float | None, int | None, str]:
     """(text, cost, tokens, session) of an agent working in `workdir` (and reading `dirs` too); `effort`: the model's
-    reasoning, where the tool takes one (spec 35 §1)."""
+    reasoning, where the tool takes one (spec 35 §1); `task`, `root`: whose commands it may run (see `work_cmd`)."""
     harness = tool_run.resolve(harness)
-    cmd = work_cmd(harness, prompt, workdir, model, resume, dirs, free, effort)
+    cmd = work_cmd(harness, prompt, workdir, model, resume, dirs, free, effort, task, root)
     tool_env = h.env("work", workdir) if (h := harnesses.get(harness)) else {}
     run_env = {**os.environ, **tool_env, **(env or {})}
     resumed = tool_run.codex_thread_usage(resume, run_env) if harness == "codex" and resume else None

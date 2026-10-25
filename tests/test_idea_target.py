@@ -13,8 +13,10 @@ from orkboard.sources.limits import Limit
 
 EXPECTED = {
     "goal": {"thrift": ("elder", "medium"), "balance": ("elder", "high"), "quality": ("elder", "xhigh")},
-    "draft": {"thrift": ("elder", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
-    "talk": {"thrift": ("elder", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
+    "draft": {"thrift": ("warrior", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
+    "answer": {"thrift": ("warrior", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
+    "collide": {"thrift": ("warrior", "low"), "balance": ("warrior", "low"), "quality": ("warrior", "medium")},
+    "talk": {"thrift": ("warrior", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
     "plan": {"thrift": ("elder", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
     "refresh": {"thrift": None, "balance": ("elder", "medium"), "quality": ("elder", "high")},
     "propose": {"thrift": None, "balance": ("elder", "low"), "quality": ("elder", "medium")},
@@ -44,7 +46,7 @@ def test_a_roles_own_model_wins_and_keeps_the_targets_effort():
 
 
 def test_the_budget_is_halved_in_thrift_and_doubled_in_quality_and_the_caps_hold():
-    assert idea_target.budget("draft", "balance") == 0.6 and idea_target.budget("draft", "thrift") == 0.3
+    assert idea_target.budget("draft", "balance") == 0.6 and idea_target.budget("draft", "thrift") == 0.3      # above their floors
     assert idea_target.budget("goal", "quality") == 2.0 and idea_target.budget("task", "balance") is None
     got = idea_target.cut([("A", "x" * 50), ("B", "y" * 5000), ("C", "never")], 1000)
     assert len(got) <= 1000 and "x" * 50 in got and "never" not in got
@@ -128,4 +130,71 @@ def test_a_partys_size_is_its_target_and_the_kind_step_is_the_cheaper_tier_of_th
     assert idea_target.target_for({}, {"size": "huge"}) == idea_target.DEFAULT
     assert idea_target.pick("kind", "balance") == idea_target.pick("collide", "balance") == ("warrior", "low")
     assert idea_target.pick("kind", "thrift") == ("laborer", "") and "kind" in idea_target.STEPS
-    assert set(idea_target.MATRIX) >= set(idea_target.STEPS) and idea_target.budget("kind", "balance") == 0.03 and idea_target.CONTEXT["kind"] == 1_500
+    assert set(idea_target.MATRIX) >= set(idea_target.STEPS) and idea_target.budget("kind", "balance") == 0.15 and idea_target.CONTEXT["kind"] == 1_500
+
+
+# -- the floor (spec 86 §5) -------------------------------------------------------------------------------------
+
+@pytest.fixture
+def fresh_floors():
+    idea_target._FLOORS.clear()
+    yield
+    idea_target._FLOORS.clear()
+
+
+def keeper_calls(root, costs, model="opus", day="2026-10-25", **more):
+    import json
+    folder = root / ".orkcraft" / "logs" / day / "board"
+    folder.mkdir(parents=True, exist_ok=True)
+    with (folder / "calls.jsonl").open("a", encoding="utf-8") as f:
+        for i, cost in enumerate(costs):
+            line = {"n": i, "at": f"{day}T10:{i:02d}:00", "side": "", "who": "", "purpose": "plan", "mode": "read",
+                    "tool": "claude", "model": model, "code": 0, "cost": cost, "usage": {"output_tokens": 50}}
+            f.write(json.dumps({**line, **more}) + "\n")
+
+
+def test_the_floor_is_the_table_when_no_calls_are_kept(fresh_floors, tmp_path):
+    from orkboard.realm import call_log
+    assert idea_target.FLOOR == {"elder": 0.25, "warrior": 0.10, "laborer": 0.03}
+    assert [idea_target.floor(t) for t in ("elder", "warrior", "laborer")] == [0.25, 0.10, 0.03]
+    with call_log.of_project(tmp_path):                                  # a project with no calls yet
+        assert idea_target.floor("elder", "claude") == 0.25
+        assert idea_target.floor("elder", "codex") == 0.25
+
+
+def test_the_floor_is_the_median_of_the_last_ten_one_turn_calls_of_that_tier_on_that_tool(fresh_floors, tmp_path):
+    from orkboard.realm import call_log
+    keeper_calls(tmp_path, [9.0, 9.0, 9.0], day="2026-10-20")                              # older than the last ten
+    keeper_calls(tmp_path, [0.20, 0.18, 0.22, 0.19, 0.21, 0.20, 0.18, 0.22, 0.20, 0.30])
+    keeper_calls(tmp_path, [5.0], usage={"output_tokens": 5000})                           # wrote a lot: not a floor
+    keeper_calls(tmp_path, [7.0], model="haiku")                                           # another tier
+    keeper_calls(tmp_path, [6.0], tool="codex")                                            # another tool
+    with call_log.of_project(tmp_path):
+        assert idea_target.floor("elder", "claude") == 0.20
+        assert idea_target.floor("laborer", "claude") == idea_target.FLOOR["laborer"]      # 1 call of it: too few to measure
+
+
+def test_a_budget_is_never_under_one_and_a_half_floors(fresh_floors, tmp_path):
+    from orkboard.realm import call_log
+    # Lean's collision judge ran out at $0.025: it is now a Seasoned call, with 1.5 x $0.10
+    assert idea_target.pick("collide", "thrift") == ("warrior", "low")
+    assert idea_target.budget("collide", "thrift") == 0.15 and idea_target.budget("collide", "balance") == 0.15
+    assert idea_target.budget("answer", "thrift") == 0.20 and idea_target.budget("talk", "thrift") == 0.15    # talk: 0.10 -> 0.15
+    assert idea_target.budget("pitch_view", "thrift") == 0.05                   # a laborer call: 1.5 x 0.03, rounded up
+    assert idea_target.pick("refresh", "thrift") is None and idea_target.budget("refresh", "thrift") == 0.25    # skipped: its cap alone
+    assert idea_target.budget("task", "balance") is None
+    for step in idea_target.CAPS:
+        for target in idea_target.TARGETS:
+            got = idea_target.pick(step, target) if step in idea_target.MATRIX else None
+            if got:
+                assert idea_target.budget(step, target) >= 1.5 * idea_target.floor(got[0]) - 0.01, (step, target)
+    keeper_calls(tmp_path, [0.40] * 5)                                                     # a dearer measure raises it
+    with call_log.of_project(tmp_path):
+        assert idea_target.budget("goal", "thrift") == 0.6 and idea_target.budget("plan", "thrift") == 0.6
+
+
+def test_lean_runs_its_draft_answer_talk_and_judge_on_the_seasoned_tier_and_its_goal_and_plan_on_the_veteran():
+    for step in ("draft", "answer", "talk", "collide"):
+        assert idea_target.pick(step, "thrift") == ("warrior", "low")
+    for step in ("goal", "plan"):
+        assert idea_target.pick(step, "thrift")[0] == "elder"

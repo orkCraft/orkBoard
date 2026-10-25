@@ -36,7 +36,7 @@ from orkboard.env import getenv
 from orkboard.realm import model_families
 from orkboard.realm.harness_claude import (  # noqa: F401  (re-exported: the names callers and tests use)
     CLAUDE_NO_TOOLS, CLAUDE_READ_ONLY, CLAUDE_READ_WEB, EFFORTS, _HELP, _claude_ask, _claude_call, _claude_mcp,
-    _claude_read, _claude_read_dirs, _claude_run, _claude_work, claude_error, cli_has, effort_supported)
+    _claude_read, _claude_read_dirs, _claude_run, _claude_work, _claude_work_rules, claude_error, cli_has, effort_supported)
 from orkboard.realm.harness_tools import (  # noqa: F401
     CODEX_USAGE_KEYS, CODEX_WEB, HERMES_READ, HERMES_WORK, NOWHERE, PI_READ, PI_WORK, _agy, _cursor, _hermes,
     _hermes_env, _model, _pi, _plain_tokens, codex_config_model, codex_error, codex_exec, codex_result,
@@ -167,6 +167,9 @@ class Harness:
     # in USD and a run that keeps no session (spec 35 §0, §1). None: the tool takes none of them, and they are ignored
     # (agy's reasoning is in its model's name).
     run_args: Callable[..., list[str]] | None = None
+    # (allow, deny) → what a working argv gets to run exactly the commands code lists and never the denied ones
+    # (realm/task_commands.py, spec 86 §2). None: the tool takes no such list (its own sandbox holds).
+    work_rules: Callable[[list[str], list[str]], list[str]] | None = None
     no_tools: tuple[str, ...] = ()   # what a reading argv gets to read nothing at all (the night's proposals)
     # The tool's own sign-in (spec 45 §1): what follows its `bin` (`()`: its session alone), whether it signs in by itself
     # in the browser it opens (`"browser"`) or only inside its session, which needs a terminal (`"terminal"`), and what the
@@ -225,11 +228,13 @@ class Harness:
         return self.run_args(self, model, effort, budget, one_shot)
 
     def work(self, prompt: str, workdir: str | Path, model: str = "", resume: str = "",
-             dirs: Iterable[str] = (), free: bool = False, effort: str = "") -> list[str]:
+             dirs: Iterable[str] = (), free: bool = False, effort: str = "",
+             allow: Iterable[str] = (), deny: Iterable[str] = ()) -> list[str]:
         """`dirs`: folders outside `workdir` it may read too; `free`: its building is unchained; `effort`: the model's
-        reasoning (where the tool takes one)."""
+        reasoning (where the tool takes one); `allow`, `deny`: the commands it may and never may run (where the tool takes a list)."""
         cmd = (self.work_cmd(self, prompt, str(workdir), self.pick(model), resume) + list(self.free_args if free else ())
-               + self._run(model, effort))
+               + self._run(model, effort)
+               + (self.work_rules(list(allow), list(deny)) if self.work_rules and (allow or deny) else []))
         dirs = [str(d) for d in dirs if str(d)]
         return cmd + self.read_dirs(dirs) if dirs and self.read_dirs else cmd
 
@@ -289,7 +294,7 @@ register(Harness(
     resumable=True, deploys=True, web=True, priced=True, mark="✻", color="bold #f59e0b", error=claude_error,
     resume_cmd=lambda h, sid: [h.bin, "--resume", sid], call_cmd=_claude_call, read_dirs=_claude_read_dirs,
     read_session=lambda sid, reopen: ["--resume", sid] if reopen else ["--session-id", sid], run_args=_claude_run,
-    no_tools=("--disallowedTools", CLAUDE_NO_TOOLS), sign_in=("auth", "login"), sign_in_by="browser"))
+    work_rules=_claude_work_rules, no_tools=("--disallowedTools", CLAUDE_NO_TOOLS), sign_in=("auth", "login"), sign_in_by="browser"))
 register(Harness(
     "agy", "Antigravity", "agy", "see antigravity.google", "agy login",
     {"elder": "gemini-pro-high", "warrior": "gemini-flash-high", "laborer": "gemini-flash-low"},
