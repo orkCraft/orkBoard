@@ -1369,11 +1369,12 @@ and the switch in *About this party* changes the team only on a second confirm. 
    §58), then those not installed (shown, not picked). *Main tool* is the default. Its goals' tasks and its leader run on
    it; a tool with no tiers of its own (it runs its own model) says so in the list.
 2. **The size is the team:** **Lean** one agent of the Seasoned tier, the leader, who plans and does its tasks itself (no
-   Grunt); **Standard** the leader and the recipe's main seats; **Full** every seat, none below Seasoned, the leader and
-   the checkers Veteran. In a party the size sets each seat's tier; a seat the person set by hand keeps it.
-3. **Standard: the PM proposes the main seats on the better tier** (the leader Veteran, two builders and a checker
-   Seasoned) rather than every seat on Novice: fewer hands to hand work between, and a light model on many seats makes
-   more to send back. **Open, the owner's call.**
+   Grunt; the owner: one Seasoned, not a Veteran on low effort); **Standard** the leader and the recipe's main seats;
+   **Full** every seat, none below Seasoned, the leader and the checkers Veteran. In a party the size sets each seat's
+   tier; a seat the person set by hand keeps it.
+3. **Standard is the main seats on the better tier** (the leader Veteran, two builders and a checker Seasoned), not
+   every seat on Novice: fewer hands to hand work between, and a light model on many seats makes more to send back.
+   The owner's call.
 4. **A change of size changes the team at once**, in one press, the heads that join and leave shown before it; a member
    with work open is not let go (spec 75 §5.4's refusal). Ideation and Release are sized too: Lean the leader reading
    from every side itself, Standard two views and the skeptic, Full all of them.
@@ -1413,13 +1414,16 @@ goal kept two. And the night comes without a word today: the Board puts a Low go
 (§57, `realm/idea_risk.py` `AUTOSTART`); closing New goal with words in it queues them tonight whatever their priority;
 Ideation's *Tonight* and a held goal's *Tonight* take any priority. So:
 1. **New goal is one field**, *The goal*, its first line its title (as the phone, §66.4), the type's asks under it.
-2. **The night is asked, never assumed**: New goal offers *Tonight* only for Low priority, a box the person ticks; the
-   Board never puts work off to the night by itself (Low work it starts does so by day, after the other priorities).
+2. **The night is asked, never assumed, and asked once**: one standing permission, *Low work may run at night*, asked
+   the first time a Low goal is added (*Yes, at night* / *No, by day*) and changed in Settings at any time. With it,
+   Low work goes at night as before; without it (and until it is answered) Low work runs by day, after the other
+   priorities. No box on each goal (the owner: one standing permission, not one a goal). Only Low work goes at night.
 3. **Closing New goal with words in it keeps them** (put back on the party, not started), never queues them tonight.
 4. ***Tonight* elsewhere** (a pitch, a held goal) makes the goal Low as it puts it off.
-5. **The night's own runs** (the leaders re-reading goals, their proposals, spec 44's pace) **ask once too**: one switch
-   in Settings, off until the person turns it on. **Open, the owner's call**: the PM proposes it off by default.
-This supersedes §57.1 (the Board's own night) and §66.4's *the desktop's New goal is unchanged for now*. Spec 83.
+5. **The night's own runs** (the leaders re-reading goals, their proposals, spec 44's pace) go under the same
+   permission: off until the person says yes.
+This supersedes §57.1 (the Board's own night, now on the person's standing word) and §66.4's *the desktop's New goal
+is unchanged for now*. The owner's call. Spec 83.
 
 ## 101. The next task need not wait for your look: a safe result lands in dev by itself, and what depends on nothing runs beside it (25 October, the owner and the PM)
 
@@ -1434,8 +1438,9 @@ result waits at Review for the person's merge (`review` is on by default, `setti
 2. **What depends on nothing runs beside it**: tasks at once by size, Lean 1, Standard 2, Full 3, never past the
    window's reserve; one per member (orks never on the same files, §49.1).
 3. **Not**: starting a task from a result that still waits (built on work the person may send back).
-4. **Open, the owner's call**: whether the testers' week (§45.6) is over for this, i.e. `review` off by default.
-Spec 84.
+4. **`review` is off by default** (the owner: the testers' week, §45.6, is over for this): a result that holds lands
+   by itself; the setting stays for a person who wants to look at each one.
+The owner's call. Spec 84.
 
 ## 102. Progress is seen: the elf asks about the look before it is built, and what changed shows its picture (25 October, the owner)
 

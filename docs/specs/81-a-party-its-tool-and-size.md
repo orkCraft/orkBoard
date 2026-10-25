@@ -2,7 +2,7 @@
 
 The owner, 25 October (decisions §98), testing: pick a party's AI tool when it is made, from a list that drops down; the
 size changes the party itself: Lean one agent, Standard the main seats, Full the whole team on middle tiers and up.
-**Builds:** Claude · **Review:** full · P1 (§98.3 waits for the owner's call; the rest does not).
+**Builds:** Claude · **Review:** full · P1.
 
 **What it is, and is not:** a party's `tool`, the runner and the leader running on it, the list on New party and Edit the
 party, and `party_recipes.sized` giving tiers as well as seats. Not: a tool per member (a later call: a seat keeps the
@@ -38,8 +38,8 @@ leave* (spec 75's).
 `party_recipes.sized(recipe, size)` → `{"leader", "team", "tiers": {agent: tier}, "size"}`:
 - **lean**: `team = []`; the leader at `warrior` (Seasoned). A task with no taker in a lean party goes to **the leader's
   role**, not the Grunt's.
-- **standard**: the leader at `elder`, the first two builders and the first checker at `warrior` (§98.3; if the owner
-  picks the other way: every seat of the recipe at `laborer`, the leader `warrior`; one table, `STANDARD`, decides).
+- **standard**: the leader at `elder`, the first two builders and the first checker at `warrior` (§98.3, the owner's
+  call: the main seats on the better tier, not every seat on `laborer`).
 - **full**: every seat up to `library.seats_of`; builders `warrior`, the leader and the checkers `elder`.
 - a `whole` recipe (Ideation, Release) is sized too: lean its leader alone, standard two builders and the checker, full
   all of them.

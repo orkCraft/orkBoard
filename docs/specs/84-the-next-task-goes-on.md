@@ -2,12 +2,11 @@
 
 The owner, 25 October, testing: *why does the work go on only after a merge into dev?* (decisions §101). Because a task
 `after` another starts from its merged work, every result waits at Review for the person's merge (`ideas.review` on by
-default), and one task runs at a time (`ideas.max_parallel` 1). **Builds:** Claude · **Review:** full · P1, once the
-owner says §101.4 (the default of `review`).
+default), and one task runs at a time (`ideas.max_parallel` 1). **Builds:** Claude · **Review:** full · P1.
 
 | part | builds | files (and their tests) |
 |---|---|---|
-| **A. Host** | §1–§3 | `core/idea_runner.py` (the land path; slots by size), `realm/idea_git.py` (risk paths of a diff), `realm/idea_risk.py`, `settings.py` (`IDEAS` defaults), `gui/ideas_review.py`; `tests/test_idea_runner.py`, new `tests/test_lands_by_itself.py` |
+| **A. Host** | §1–§3 | `core/idea_runner.py` (the land path; slots by size), `realm/idea_git.py` (risk paths of a diff), `realm/idea_risk.py`, `settings.py` (`IDEAS` defaults, the one-time `review_v` migration; `tests/test_settings.py`), `gui/ideas_review.py`; `tests/test_idea_runner.py`, new `tests/test_lands_by_itself.py` |
 | **B. Faces** | §4 | `js/arena/waits.js`, `js/shell/settings.js`, `pwa/shell-review.js`, `pwa/sw.js`; the Review tests on both faces |
 
 ## 0. The words
@@ -18,7 +17,13 @@ owner says §101.4 (the default of `review`).
 In the runner's land path (where `review` is read today) a result lands in dev by itself when **all** hold: its tests
 ran and are green; no findings left; its diff touches no risk path its goal's risk left out (`risk_paths` and the
 goal's `risk`, spec 35 §4); it holds no media (§49.6). Else it waits for the look with the first reason of §0. The
-`review` setting, on, keeps every result for the look (*you asked to look at each result*). Its default: §101.4.
+`review` setting, on, keeps every result for the look (*you asked to look at each result*). **Its default is off**
+(§101.4, the owner's call): `settings.py` `IDEAS` and `core/idea_runner.py` `DEFAULTS`. The machine's settings file
+holds every key of `ideas` once anything was saved (`settings.save` writes `to_dict()`), so a default alone moves no
+Board that ran before: **once**, on load, a settings file without `ideas.review_v` (new key, `2`) has its `review` set
+off and `review_v` written; a project's `board.json` that names `review` is migrated the same way. Said once in the
+window and on the phone: *Results that hold now land in dev by themselves; Settings → Board to look at each one*. After
+that, `review` is what the person sets.
 
 ## 2. What depends on nothing runs beside it (A)
 The slots: `ideas.max_parallel` (the whole Board's), and a party's by its size: Lean 1, Standard 2, Full 3; a party with
@@ -32,5 +37,5 @@ A task never starts from a result that waits for a look.
 column and its card turns done on the field.
 
 ## 5. Tests
-Each condition of §1 alone keeps a result for the look; all held lands it; `review` on keeps it; slots by size and the
+The default is off, and an old settings file with `review: true` and no `review_v` is moved off once and never again; each condition of §1 alone keeps a result for the look; all held lands it; `review` on keeps it; slots by size and the
 `touches` rule; a waiting `after` task starts as soon as its predecessor lands. The critical tests and the files' tests.
