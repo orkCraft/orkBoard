@@ -48,6 +48,7 @@ class Stub:
         self.calls: list[tuple[str, dict]] = []
         self.into, self.push = "dev", False
         self.target, self.autostart, self.night = "balance", True, "01:00-07:00"
+        self.night_low = True                    # spec 83: Low work may run at night (None: not asked yet, False: no)
         self.sleep = ""                                    # the phone snapshot's `sleep` (spec 47 §3): what the phone says of the computer's sleep
         self.chip_extra: dict[str, dict] = {}              # spec 35 §11.5: a chip's by / night / state / note / waits_title, by task id
         self.party: dict = {}                             # ideas.party (spec 43 B)
@@ -151,7 +152,7 @@ class Stub:
                  "plan", "start", "stop", "move", "add", "drop", "log", "logs", "goal_save", "goal", "read_now", "roles", "role_save", "role_drop",
                  "kind_set", "doc", "queue", "read_stop", "start_now", "proposal", "board_set", "answer", "spend", "words", "goal_accept", "lens",
                  "lens_code", "lens_screen", "map", "check_skip", "role_add", "party", "party_price", "party_answer", "parties", "party_save", "party_drop",
-                 "gate", "gate_merge", "today")
+                 "gate", "gate_merge", "today", "night_allow")
         return {f"ideas.{n}": (lambda a, n=n: self.run(f"ideas.{n}", a)) for n in names}
 
     def results(self):
@@ -182,7 +183,8 @@ class Stub:
                     needs.append({"kind": "todo", "idea": t["idea"], "goal": "general", "title": t["title"], "text": t["title"], "priority": "normal", "blocks": True,
                                   "at": "", "todo": {k: t.get(k) for k in ("id", "title", "kind", "why", "choices", "steps", "accept", "done")}})
             return {"tracks": list(self.goals.values()), "ideas": ideas, "needs_you": needs + self.extra_needs,
-                    "target": self.target, "autostart": self.autostart, "night": self.night, "rev": self.rev, "demo": False}
+                    "target": self.target, "autostart": self.autostart, "night": self.night, "night_low": self.night_low,
+                    "rev": self.rev, "demo": False}
         if name == "ideas.gate":                        # spec 49 §2.1: what dev holds that main lacks
             return {"into": self.into, **copy.deepcopy(self.gate)}
         if name == "ideas.gate_merge":
@@ -349,6 +351,9 @@ class Stub:
         if name == "ideas.answer":
             self.extra_needs = [n for n in self.extra_needs if n.get("goal") != a["slug"] and n.get("idea") != a["slug"]]
             return self.bump({"ok": True})
+        if name == "ideas.night_allow":                 # spec 83: the one standing permission
+            self.night_low = a["allow"]
+            return self.bump({"ok": True, "moved": 0})
         if name == "ideas.board_set":
             self.target, self.autostart, self.night = a.get("target", self.target), a.get("autostart", self.autostart), a.get("night", self.night)
             return self.bump({"target": self.target, "autostart": self.autostart, "night": self.night})
@@ -928,7 +933,7 @@ async def test_new_idea_sheet_a_goal_a_priority_one_add_closed_with_text_and_clo
         assert await sheet.get_by_role("radio", name="High").is_checked()                               # the party's priority
         assert await sheet.get_by_role("button", name="Add the goal").is_visible() and await sheet.get_by_role("button", name="Later").count() == 0
         await sheet.locator('.newgoal__opt[data-goal="docs"]').click()
-        assert await sheet.get_by_role("radio", name="Low").is_checked() and await sheet.get_by_role("button", name="Keep for tonight").is_visible()
+        assert await sheet.get_by_role("radio", name="Low").is_checked() and "Low: runs tonight." in await sheet.inner_text() and await sheet.get_by_role("button", name="Keep for tonight").count() == 0
         await sheet.get_by_label("The goal", exact=True).fill("Dark mode please")
         await sheet.get_by_role("radio", name="High").click()
         await _shot(page, "phone-new-idea-390x844")
@@ -937,23 +942,23 @@ async def test_new_idea_sheet_a_goal_a_priority_one_add_closed_with_text_and_clo
         card = _item(page, "Dark mode please")                                                          # the Board shows the goal it went to: the idea is in Planning
         await card.wait_for(timeout=WAIT_MS)
         assert _adds(stub) == [{"text": "Dark mode please", "track": "docs", "priority": "high"}]
-        await _new_idea(page)                                                                           # Low → the night
+        await _new_idea(page)                                                                           # Low → the night (the Board's word is yes)
         await page.locator(".newgoal__party").click()
         await page.locator('.newgoal__opt[data-goal="docs"]').click()
         await page.get_by_label("The goal", exact=True).fill("Low idea")
-        await page.get_by_role("dialog", name="New goal").get_by_role("button", name="Keep for tonight").click()
+        await page.get_by_role("dialog", name="New goal").get_by_role("button", name="Add the goal").click()
         low = _item(page, "Low idea")
         await low.wait_for(timeout=WAIT_MS)
         assert _adds(stub)[-1] == {"text": "Low idea", "track": "docs", "priority": "low"}
         assert "tonight" in await _said(page, "Low idea")
-        await _new_idea(page)                                                                           # closed with text: kept for tonight
+        await _new_idea(page)                                                                           # closed with text: kept on the party, not started
         await page.get_by_label("The goal", exact=True).fill("Closed with text")
         await page.get_by_role("dialog", name="New goal").get_by_role("button", name="Close").click()
-        assert await _called(stub, "ideas.add", {"text": "Closed with text", "track": "docs", "priority": "low", "night": True})
-        await _new_idea(page)                                                                           # Esc with text: tonight too
+        assert await _called(stub, "ideas.add", {"text": "Closed with text", "track": "docs", "priority": "low", "hold": True})
+        await _new_idea(page)                                                                           # Esc with text: kept too
         await page.get_by_label("The goal", exact=True).fill("Saved by Esc")
         await page.keyboard.press("Escape")
-        assert await _called(stub, "ideas.add", {"text": "Saved by Esc", "track": "docs", "priority": "low", "night": True})
+        assert await _called(stub, "ideas.add", {"text": "Saved by Esc", "track": "docs", "priority": "low", "hold": True})
         before = len(_adds(stub))                                                                       # closed empty: nothing
         await _new_idea(page)
         await page.get_by_role("dialog", name="New goal").get_by_role("button", name="Close").click()

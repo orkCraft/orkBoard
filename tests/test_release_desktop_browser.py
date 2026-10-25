@@ -177,7 +177,7 @@ def test_k_flags_wait_for_a_release_opens_new_goal_of_a_release_with_what_goes_i
     assert rows.first.locator(".ork-elem.ice").count() == 1                                                  # its goal's element
     assert "Nothing has raised" not in goes.inner_text()
     shot(pg, "desk-whatgoesin.png")
-    form.get_by_label("Its title").fill("Release 1.5")
+    form.get_by_label("The goal", exact=True).fill("Release 1.5")
     form.get_by_label("Version").fill("1.5")
     goes.locator('input[data-goal="dark-ui"]').uncheck()
     form.get_by_role("button", name="Add the goal").click()
@@ -192,7 +192,7 @@ def test_with_nothing_flagged_since_the_last_release_it_says_so_and_the_goal_can
     form = _release_form(pg)
     goes = form.get_by_role("group", name="What goes in")
     goes.get_by_text("Nothing has raised its flag since 1.3.").wait_for(timeout=WAIT_MS)
-    form.get_by_label("Its title").fill("Fixes")
+    form.get_by_label("The goal", exact=True).fill("Fixes")
     form.get_by_role("button", name="Add the goal").click()
     assert _calls(pg, host, "ideas.add")[-1]["goes_in"] == []
     host.since = None                                                                                        # before the first release: since the start
@@ -200,13 +200,13 @@ def test_with_nothing_flagged_since_the_last_release_it_says_so_and_the_goal_can
     pg.get_by_text("Nothing has raised its flag since the start.").wait_for(timeout=WAIT_MS)
 
 
-def test_kept_for_tonight_a_release_goal_sends_no_goals(released):
+def test_put_back_a_release_goal_is_held_and_sends_no_goals(released):
     pg, host = released
     form = _release_form(pg)
-    form.get_by_label("Its title").fill("Release 1.5")
+    form.get_by_label("The goal", exact=True).fill("Release 1.5")
     form.get_by_role("button", name="Put it back").click()
     sent = _calls(pg, host, "ideas.add")[-1]
-    assert sent["night"] is True and "goes_in" not in sent
+    assert sent["hold"] is True and "night" not in sent and "goes_in" not in sent
 
 
 # -- the flags ------------------------------------------------------------------------------------------------------------------------------------------------

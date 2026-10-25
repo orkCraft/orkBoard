@@ -1,10 +1,9 @@
 // New goal on the phone (docs/specs/35-goals-window.md §3, spec 50 §6.7, spec 52 §5.6, spec 53 §2): the full-screen form the create button opens at once — it slides up (180 ms; none under reduced
-// motion). From the top: **the party** (its leader's head, its name, *<leader> leads · k of n goals done*; a tap lists the project's parties and *+ New party*), the priority (*Low* says it waits for the
-// night, and *Add the goal* says *Keep for tonight*), **the goal type** (*Your own goal* first and picked, then the party's types; its line under the row), **the goal** — one field, three lines, Photo and the
+// motion). From the top: **the party** (its leader's head, its name, *<leader> leads · k of n goals done*; a tap lists the project's parties and *+ New party*), the priority (*Low* says whether it runs tonight or after the other priorities, as the person's one standing word about the night says: spec 83), **the goal type** (*Your own goal* first and picked, then the party's types; its line under the row), **the goal** — one field, three lines, Photo and the
 // mic mark at its corner (shell-idea-field.js); its first line is its title —, the type's asks (one line each), **Refs** when the type has them (*Links*; the pictures are Photo's), the lens of the
-// party (shell-lens.js: a typed goal shows its type's lens and no switch), the join line (shell-types.js) and, pinned at the foot, *Put it back* · *Add the goal*. A goal is `ideas.add`'s `text`.
+// party (shell-lens.js: a typed goal shows its type's lens and no switch), the join line (shell-types.js) and, pinned at the foot, *Put it back* · *Add the goal*. A goal is `ideas.add`'s `text`. Closing the form with words in it keeps them on the party, not started (`hold`); the first Low goal asks *Low work may run at night?* (shell-night-ask.js).
 // A goal's state in words (`rowState`) is said the same in the leader's column and on its screen. In an Ideation party (spec 65 §8) the goal is a pitch: one box, *What is the pitch?*, its lens a tap
-// away and *Hold* · *Tonight* · *Judge now* at the foot; no priority, no type, no asks.
+// away and *Hold* · *Tonight* · *Judge now* at the foot; no priority, no type, no asks. *Tonight* makes the pitch Low: it asks the question first when the Board has not been asked and is not drawn after *No, by day*.
 import { h, sheet } from "./util.js";
 import { foot, prioritySwitch } from "./shell-forms.js";
 import { hhmm } from "./shell-words.js";
@@ -103,14 +102,14 @@ export function makeIdeas(core, ctx, goalSheet) {
   partyBtn.addEventListener("keydown", escList);
   partyMenu.addEventListener("keydown", escList);
 
-  // The priority: *Low* says what happens.
-  const lowLine = h("p", { class: "muted newgoal__low", hidden: true }, "Waits for the night: the leader reads it then.");
+  // The priority: *Low* says what happens, as the standing word about the night says (spec 83 §4).
+  const lowLine = h("p", { class: "muted newgoal__low", hidden: true, "data-night": "priority" });
   const add = h("button", { class: "ork-btn primary big", type: "button", disabled: true }, "Add the goal");
   const putBack = h("button", { class: "ork-btn quiet big", type: "button", "data-act": "put-back" }, "Put it back");
   function lowOrNot() {
     const low = priority.get() === "low";
     lowLine.hidden = !low;
-    add.textContent = low ? "Keep for tonight" : "Add the goal";
+    lowLine.textContent = `Low: ${st.board?.night_low === true ? "runs tonight" : "runs after the other priorities"}.`;
   }
   priority.el.addEventListener("change", () => { touched = true; lowOrNot(); });
 
@@ -218,7 +217,12 @@ export function makeIdeas(core, ctx, goalSheet) {
     text.setAttribute("aria-label", pitchy ? "What is the pitch?" : "The goal");
     priorityField.hidden = pitchy;
     for (const b of [putBack, add]) b.hidden = pitchy;
-    for (const b of [hold, tonight, judge]) b.hidden = !pitchy;
+    pitchButtons();
+  }
+  /** A pitch's foot: *Tonight* is not drawn once the person said *No, by day*. */
+  function pitchButtons() {
+    for (const b of [hold, judge]) b.hidden = !pitchy;
+    tonight.hidden = !pitchy || core.nightOff();
   }
   newParty.addEventListener("click", () => {
     closeParties();
@@ -226,8 +230,9 @@ export function makeIdeas(core, ctx, goalSheet) {
   });
 
   let saved = false;                                 // a button saved it: closing the form after it saves nothing more
-  /** `night`: kept for tonight; `held`: a pitch on Hold (nothing judges it till the person does). */
-  async function drop(night, held = false) {
+  /** `how`: "add" (as it stands), "hold" (kept on the party, not started: Put it back, Close, Esc, a pitch on Hold) or "night" (a pitch for tonight, Low). */
+  async function drop(how = "add") {
+    const night = how === "night", held = how === "hold";
     const body = words();
     if (!body || !partyNow) return null;
     saved = true;
@@ -237,10 +242,10 @@ export function makeIdeas(core, ctx, goalSheet) {
     const photos = more.photos(), pointed = lens.value();
     const said = Object.fromEntries([...asks.querySelectorAll("input[data-ask]"), ...(typed?.refs ? [links] : [])]
       .map((i) => [i.dataset.ask, i.value.trim()]).filter(([, v]) => v));
-    const { name: joiner, ...joined } = (!night && typed && join.value()) || {};            // a goal kept for tonight never changes the party
-    const args = pitchy ? { text: body.slice(0, PITCH_CHARS), track: partyNow, ...(held ? { hold: true } : night ? { night: true } : {}), ...(photos.length ? { photos } : {}),
+    const { name: joiner, ...joined } = (how === "add" && typed && join.value()) || {};            // a goal put back never changes the party
+    const args = pitchy ? { text: body.slice(0, PITCH_CHARS), track: partyNow, ...(held ? { hold: true } : night ? { priority: "low", night: true } : {}), ...(photos.length ? { photos } : {}),
       ...(pointed.length ? { lens: pointed } : {}) }                                       // a pitch: no priority, no type, no asks (spec 65 §2)
-      : { text: body, track: partyNow, priority: priority.get(), ...(night ? { night: true } : {}), ...(photos.length ? { photos } : {}),
+      : { text: body, track: partyNow, priority: priority.get(), ...(held ? { hold: true } : {}), ...(photos.length ? { photos } : {}),
         ...(pointed.length ? { lens: pointed } : {}), ...(typed ? { type: typed.id } : {}), ...(Object.keys(said).length ? { asks: said } : {}),
         ...(joined.add ? { join: joined } : {}), ...(typed?.id === "release" ? { goes_in: goesIn.value() } : {}) };
     const r = await ctx.deliver("ideas.add", args, `${pitchy ? "the pitch" : "the goal"} “${short}”`);
@@ -256,9 +261,11 @@ export function makeIdeas(core, ctx, goalSheet) {
     return r;
   }
   add.addEventListener("click", async () => {
-    const r = await drop(false);
+    const low = priority.get() === "low" && !pitchy;
+    const r = await drop();
     if (!r) return;
     leave();
+    if (low && !r.kept && core.nightUnset()) core.askNight();            // the first Low goal asks whether Low work may run at night (spec 83 §3)
     ctx.flash(r.kept ? (r.unphotographed ? "No signal: the goal is kept and goes when the town answers, without its photos (no room for them on this phone)."
       : "No signal: the goal is kept and goes when the town answers.")
       : r.result?.queue === "night" ? "Kept for tonight." : r.joinedName ? `Added: ${r.joinedName} joined the party; ${r.leader} drafts it now.` : "Added: the Taskmaster drafts it now.");
@@ -267,7 +274,7 @@ export function makeIdeas(core, ctx, goalSheet) {
   putBack.addEventListener("click", leave);
   /** A pitch added: judged now, tonight, or held (spec 65 §2); the toast says which. */
   async function pitch(how) {
-    const r = await drop(how === "night", how === "hold");
+    const r = await drop(how === "now" ? "add" : how);
     if (!r) return;
     leave();
     ctx.flash(r.kept ? "No signal: the pitch is kept and goes when the town answers."
@@ -275,14 +282,17 @@ export function makeIdeas(core, ctx, goalSheet) {
     if (!r.kept) core.refresh();
   }
   judge.addEventListener("click", () => pitch("now"));
-  tonight.addEventListener("click", () => pitch("night"));
+  tonight.addEventListener("click", () => {            // Tonight is Low work's: the question first when the Board has not been asked; after *No, by day* it is not drawn and the form stays
+    if (!core.nightUnset()) { pitch("night"); return; }
+    core.askNight((allow) => { if (allow) pitch("night"); else pitchButtons(); });
+  });
   hold.addEventListener("click", () => pitch("hold"));
-  addSheet.el.addEventListener("close", async () => {      // Put it back · Close · Esc · the backdrop: words in it are kept for tonight, never lost
+  addSheet.el.addEventListener("close", async () => {      // Put it back · Close · Esc · the backdrop: words in it are kept on the party, not started, never lost
     closeParties();
     if (saved) { saved = false; return; }
-    const r = words() ? await drop(true) : null;
+    const r = words() ? await drop("hold") : null;
     saved = false;
-    if (r) { ctx.flash("Kept for tonight."); if (!r.kept) core.refresh(); }
+    if (r) { ctx.flash("Kept on the party, not started."); if (!r.kept) core.refresh(); }
   });
   const showProject = (on) => { byProject = on; partyBtn.hidden = on; itsParty.el.hidden = !on; };
   /** The goal types of the project's parties (spec 70 §4.1): the union of the map's parties' `types`, a type once. */
@@ -304,6 +314,7 @@ export function makeIdeas(core, ctx, goalSheet) {
     closeParties();
     showProject(false);
     setParty(list[0].slug);
+    lowOrNot();
     showProject(true);
     types = projectTypes();
     drawTypes();
@@ -324,6 +335,7 @@ export function makeIdeas(core, ctx, goalSheet) {
     lens.reset();
     closeParties();
     setParty(on.slug);
+    lowOrNot();
     const wanted = type && types.find((t) => t.id === type);          // *k flags wait for a release* opens it on A release (spec 68 §7.4)
     if (wanted) pickType(wanted);
     addSheet.open();
