@@ -32,7 +32,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.core.idea_holds import HoldsMixin
+from orkboard.core.idea_holds import Held, HoldsMixin  # noqa: F401  (Held: the runner's, raised by its session)
 from orkboard.core.idea_landing import LandingMixin
 from orkboard.core.idea_picking import PickMixin
 from orkboard.core.idea_session import SessionMixin
@@ -94,13 +94,6 @@ def _until_of(note: str, now: float) -> float | None:
     if t.timestamp() < now - 3600:
         t += dt.timedelta(days=1)
     return t.timestamp()
-
-
-class Held(Exception):
-    def __init__(self, until: float, line: str = "") -> None:
-        """`line`: the tool's refused sign-in in words, when the work is held for the tool's sign-in (spec 45 §6)."""
-        super().__init__("held")
-        self.until, self.line = until, line
 
 
 @dataclass

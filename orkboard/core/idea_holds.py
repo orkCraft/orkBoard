@@ -10,6 +10,16 @@ import time
 from orkboard.core.sign_ins import HOLD_H
 
 
+class Held(Exception):
+    """A task held, not failed: until `until` (its window, else its sign-in's hold). Here, not in the runner, so a session that looks
+    the runner's module up again (a test that drops it) raises the class the runner catches."""
+
+    def __init__(self, until: float, line: str = "") -> None:
+        """`line`: the tool's refused sign-in in words, when the work is held for the tool's sign-in (spec 45 §6)."""
+        super().__init__("held")
+        self.until, self.line = until, line
+
+
 def _r():
     """The runner's module (it imports this one: looked up when a hold is made)."""
     from orkboard.core import idea_runner

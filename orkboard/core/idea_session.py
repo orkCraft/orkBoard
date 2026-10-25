@@ -7,14 +7,9 @@ import threading
 import time
 from pathlib import Path
 
+from orkboard.core.idea_holds import Held
 from orkboard.core.sign_ins import HOLD_H
 from orkboard.realm import call_log, idea_spend, jobs, status, tool_errors, tool_run
-
-
-def _r():
-    """The runner's module (it imports this one: looked up when a task runs)."""
-    from orkboard.core import idea_runner
-    return idea_runner
 
 
 class SessionMixin:
@@ -28,7 +23,6 @@ class SessionMixin:
         A resumed session reports its running total (`total_cost_usd`): the task keeps it as `session_total` and adds only the
         difference, never below 0; a fresh session adds its whole cost (spec 86 §1). `last_tokens` is what the call read (cache
         reads included): a send back past `idea_task.FRESH_TOKENS` starts a fresh session."""
-        r = _r()
         tool = self.tool_of(slug)                     # its party's AI tool, else the Main tool (spec 81 §1.2)
         task = next((t for t in (self.plan(slug) or {}).get("tasks") or [] if t.get("id") == tid), {"id": tid})
         total = task.get("session_total")
@@ -41,10 +35,10 @@ class SessionMixin:
         except tool_errors.ToolError as e:
             if e.kind != tool_errors.LIMIT:
                 if self.sign_ins is not None and self.sign_ins.holds(e):      # its sign-in helps: the task waits for it
-                    raise r.Held(time.time() + HOLD_H * 3600, tool_errors.plainly(e)) from e
+                    raise Held(time.time() + HOLD_H * 3600, tool_errors.plainly(e)) from e
                 raise
             now = time.time()
-            raise r.Held(status.reset_of(self._read_limits(now), tool, now, 1.0)
+            raise Held(status.reset_of(self._read_limits(now), tool, now, 1.0)
                          or now + status.UNKNOWN_RESET_S) from e
         own = tool_run.cost_once(cost, before)
         for key, value in (("cost", own), ("tokens", tokens)):
