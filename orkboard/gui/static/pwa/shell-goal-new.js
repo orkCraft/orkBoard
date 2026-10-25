@@ -453,8 +453,8 @@ export function makeNewGoal(core) {
   function showProposals(wanted) {
     mode = "proposals";
     footEl.hidden = true;
-    about.rows = 2;
-    proposals.hold(field("What it is for", about, "Left empty, the proposal's own line says it."));
+    about.value = "";                                                                  // no second question beside the Orkmaster's: a proposal's own line says what it is for (Edit the party changes it)
+    proposals.hold(null);
     body.replaceChildren(proposals.el);
     const mine = opened;
     proposals.load(wanted).then((ok) => { if (!ok && mine === opened && mode === "proposals") { showLibrary(false); } });

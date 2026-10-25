@@ -156,14 +156,14 @@ async def test_make_it_saves_the_party_with_its_leader_its_team_and_size_and_the
 
 
 @pytest.mark.asyncio
-async def test_make_it_sends_the_words_the_person_wrote_and_opens_the_party(fake_repo, monkeypatch):
+async def test_make_it_sends_the_proposals_own_words_and_opens_the_party(fake_repo, monkeypatch):
     proposing(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
-        await sheet.get_by_label("What it is for").fill("Screens for dog walkers")
+        assert await sheet.get_by_label("What it is for").count() == 0                          # one question at most: the Orkmaster's, for an empty folder
         await card_of(sheet, "mobile-architecture").get_by_role("radio", name="Lean").click()
         await card_of(sheet, "mobile-architecture").get_by_role("button", name="Make it: Mobile app: architecture").click()
-        assert await _called(stub, "ideas.goal_save", {"about": "Screens for dog walkers", "craft": "engineering", "leader": ARCH, "team": [], "every": [], "priority": "normal", "size": "lean", "proposal": "mobile-architecture"})
+        assert await _called(stub, "ideas.goal_save", {"about": "Mobile app: architecture: How the app is built, and kept honest", "craft": "engineering", "leader": ARCH, "team": [], "every": [], "priority": "normal", "size": "lean", "proposal": "mobile-architecture"})
         await sheet.wait_for(state="hidden", timeout=WAIT_MS)
         screen = page.locator("section.screen:not([hidden])")                                                                        # the party's own screen opens, as after Save party
         await screen.wait_for(timeout=WAIT_MS * 2)
@@ -256,15 +256,15 @@ async def test_more_the_library_is_todays_tiles_and_seats_with_the_size_switch_a
 
 
 @pytest.mark.asyncio
-async def test_the_way_back_to_the_proposals_keeps_what_was_written(fake_repo, monkeypatch):
+async def test_the_way_back_from_the_library_shows_the_proposals_with_no_second_question(fake_repo, monkeypatch):
     proposing(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
-        await sheet.get_by_label("What it is for").fill("kept on the way")
         await sheet.get_by_role("button", name="More: the library").click()
+        await sheet.get_by_label("What it is for").fill("a party of my own")                                                          # the library asks it, as New party did
         await sheet.get_by_role("button", name="Orkmaster proposes").click()                                                          # the way back
         await sheet.locator(".prop").first.wait_for(timeout=WAIT_MS)
-        assert await sheet.get_by_label("What it is for").input_value() == "kept on the way" and await sheet.get_by_role("button", name="Save party").is_hidden()
+        assert await sheet.get_by_label("What it is for").count() == 0 and await sheet.get_by_role("button", name="Save party").is_hidden()
 
 
 # -- the deal ---------------------------------------------------------------------------------------------------------------------------------------------
