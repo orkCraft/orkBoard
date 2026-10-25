@@ -1,18 +1,18 @@
 {
  "from": "https://github.com/orkCraft/orkUI",
  "look": "office",
- "version": "0.7.0",
- "commit": "19e27971d6c1fd7418b38dd77ba4374dcc57f45a",
+ "version": "0.8.0",
+ "commit": "604cfdedc65f543aab02bba94ca36a9b44da315b",
  "files": {
   "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
   "NOTICE": "0d52dfcb0926e74acb9f69229d0464f0014a8e243e8cbc72044fd8e38dc2e70a",
-  "README.md": "a49f80a25345ef423438a18f2ef03e91d8dd2e3c1a9a8d4744a23b4df9fddc22",
+  "README.md": "2239fae98525261ed0ab3d4fa42fceffdd57362fffc1f8f16cef49a1383abd97",
   "ascii/ork-asks.txt": "7bb70f760f88ab79087d570aadbfaa16c7b598711e29b62dbfead3b0a8c25011",
   "ascii/ork-asleep.txt": "f89568e0616c880b25ce5a67e73b815e9217eac6eabedabd5c9a0a962b6aabed",
   "ascii/ork-failed.txt": "fdf0fc3553aa01d405a80fa402454f754f413425ef7a00cab652b7f722102e60",
   "ascii/ork-working.txt": "af052708dad2bce8a84c15851077074cf821f34c3580883d9386c88216e155a4",
   "ascii/ork.txt": "e13545620b898a1ed7919fdc0bad768c09afe251b626d6f49beb00994e53a94c",
-  "components.css": "6a2e64595015ace3de46e2637bb1c6a908eadfc10fb22df208a5c55f7a71c021",
+  "components.css": "012670790ff3730498eae5b5b9bd86a1963d686ddb2c18008e3a6015add028ec",
   "elements/README.md": "50cb1efec898605d8a0ff52999ccbf31496de627ca64bf41de98f250017b2571",
   "elements/dust.svg": "7bb13d01f0180fcb053c1118309b567577a8b3e868f98ca472754cd729a14584",
   "elements/ice.svg": "0c32af60459892ce4aa0dad3baa1124001d85fd7fca6402d1239c7e9bce42eb9",
@@ -119,7 +119,7 @@
   "moons/disk.svg": "6ab7300710f22bb9fecda3a7590cb871caae302d655d496e529c86739fd05c49",
   "moons/gibbous.svg": "895b11ff6e23d2994bc4080f113a3338ae5e719e8e7a223c7a8ecb85e9791bf2",
   "moons/half.svg": "f2bcda5039459977691c86add586e3e60cc10073bc71797bef7c37dc32fc5974",
-  "preview.html": "afff2d20a5ac3f5f72331ad5dd4b700cacc8d54da23bb90c1769cca683e49959",
+  "preview.html": "22559b220f958502b51b4d3e9750d45627f783f066323d1d6fcc94bcee48f40b",
   "races/elf-elder.png": "98b6cf7da51e31a6e781427daae1c22b5ccc6d77c96e7546f518f4e96c7d5a1b",
   "races/elf-elder@2x.png": "cfd1cce4c3b22499d97030389bda549c32e58f09ef689749b26644b88b4bec34",
   "races/elf-laborer.png": "6fb0c2930268bbf5a41d34ecff10643013e83ee6f5c4f36aacaf4c8cb08ce303",
@@ -201,7 +201,7 @@
   "signs/tidy.svg": "c4d3ddb46f93d1c604591303a6ac0f5331a3ed11c4ab950682ec88dbf480a9e5",
   "signs/tune.svg": "d5495ca0ded02d133abe41bdf39dc13a6040ed2d8bee9da77810120d944e3653",
   "signs/work.svg": "01a9c27d04c2643eca81f55f190c155f333ed3c7f8e8f31f22d3f054ed0907e3",
-  "tokens.css": "91d35876fc1001d7fdbd3809aa88cc07a5b0f8c4db6102cc18923ec81caebc6a",
-  "tokens.json": "6f00b0848f661122c6fe6bcc45ffc0b141efae65d299f75d0c9f087eeacf6d6d"
+  "tokens.css": "7c74b858715d2ad56f1d2b0de40a348a765e275163cbdef3094911169741e18a",
+  "tokens.json": "ec3a4ecd552de391d893ebe8ccbd2db5c38a9fbc0ecad4b3828c298687f8732f"
  }
 }

@@ -123,6 +123,9 @@
   <div class="ork-frame alert" style="width:156px;padding:var(--ork-3);display:grid;gap:var(--ork-2)"><span class="ork-gem alert" style="justify-self:start">?</span><b>Asks you</b><span style="color:var(--ork-ink-muted)">alert edge</span></div>
   <div class="ork-frame danger" style="width:156px;padding:var(--ork-3);display:grid;gap:var(--ork-2)"><span class="ork-gem danger" style="justify-self:start">!</span><b>Failed</b><span style="color:var(--ork-ink-muted)">danger edge</span></div></div></section>
 
+<section><h2>Table (the surface the work lies on; a wooden rim, never a mark)</h2><div class="ork-table" style="padding:16px 20px;max-width:520px"><div class="row" style="align-items:start">
+  <div class="ork-card">On the table<br><span class="ork-label">now</span></div><div class="ork-frame alert" style="padding:8px">Waits for you</div><div class="ork-frame danger" style="padding:8px">Failed</div></div></div></section>
+
 <section><h2>Elements (a goal's mark; 14 and 28 px)</h2><div class="elems">
   <div class="ground panel" title="on panel">
     <figure><span class="pair"><span class="ork-elem meadow" aria-hidden="true"></span><span class="ork-elem meadow big" aria-hidden="true"></span></span><figcaption>meadow</figcaption></figure>
@@ -274,7 +277,7 @@
 <script>
   const css = getComputedStyle(document.documentElement);
   const sw = document.getElementById("sw");
-  for (const n of ["canvas","panel","raised","frame","edge","ink","ink-muted","ink-faint","on-ink","action","action-hi","action-press","danger","alert","success","elem-meadow","elem-ice","elem-dust","elem-void","elem-lava"]) {
+  for (const n of ["canvas","panel","raised","frame","edge","ink","ink-muted","ink-faint","on-ink","action","action-hi","action-press","danger","alert","success","elem-meadow","elem-ice","elem-dust","elem-void","elem-lava","table","table-rim","table-rim-hi"]) {
     const d = document.createElement("div"); d.style.background = "var(--ork-" + n + ")"; d.textContent = n;
     d.style.color = ["ink","ink-muted","ink-faint","action","action-hi","action-press","danger","alert","success","edge","elem-meadow","elem-ice","elem-dust","elem-void","elem-lava"].includes(n) ? "var(--ork-on-ink)" : "var(--ork-ink)"; sw.append(d); }
   const cells = (el, on) => { for (let i = 0; i < 16; i++) { const c = document.createElement("i"); if (i < on) c.className = "on"; el.append(c); } };

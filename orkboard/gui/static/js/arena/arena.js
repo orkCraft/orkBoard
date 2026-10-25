@@ -90,7 +90,7 @@ function Party({ m, g }) {
       <div class="arena-top"><${PartyLine} g=${g} nodes=${nodes} lead=${lead?.name || "Taskmaster"} reading=${reading} doing=${pitch ? "judging" : "reading"} /><${FlagLine} /></div>
       <div class="arena-play">
         <${PartyRow} g=${g} members=${members} nodes=${nodes} planning=${planning} cols=${cols} />
-        <section class="arena-body" aria-label="The party at work" ref=${body}>
+        <section class="arena-body ork-table" aria-label="The party at work" ref=${body}>
           ${!wide && html`<div class="arena-cards"><${Cards} /></div>`}
           ${pitch ? html`<${PitchField} g=${g} members=${members} nodes=${nodes} cols=${cols} />`
             : solo.value ? html`<${Solo} g=${g} members=${members} lead=${lead} nodes=${nodes} planning=${planning} shown=${shown} />`

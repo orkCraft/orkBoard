@@ -1,7 +1,7 @@
 # orkUI / office
 
-Dark, monochrome, dense. **Colour is a signal** (danger, alert, success), except the one ork green of the primary action
-and the muted heads of the races.
+Dark, monochrome, dense. **Colour is a signal** (danger, alert, success), except the one ork green of the primary action,
+the muted heads of the races and the table's wood.
 The **pixel face** (Pixelify Sans) is for buttons and headings only, never below 12 px, whole pixels, no ligatures, no faux
 bold, never for a number or a person's text; **everything else is IBM Plex Mono** (12/18 on the desktop, 16/22 on the phone).
 Nothing is round: edges 1 px, corners notched by 2 px (`clip-path` on a control's `::before`, so the hit area is whole),
@@ -14,6 +14,13 @@ dialogs framed `3px double`. Selected is raised with a 2 px ink bar, never a whi
 `ork.txt` an empty screen · `ork-asleep.txt` the work waits for the night · `ork-asks.txt` the first thing on the list is a
 question · `ork-failed.txt` the only content is a failure · `ork-working.txt` an ork is working and there is nothing to read.
 On an empty screen the ork and its sentence are one block, centred on both axes in the pane's free area.
+
+## The table
+`.ork-table` is the surface the work lies on (orkboard's field, where the tasks are dealt): a dark walnut top
+(`--ork-table`) in a wooden rim 3 px wide (`--ork-table-rim`), its near lip lit by 1 px (`--ork-table-rim-hi`). The wood is
+a material, never a mark: no control, state, label or person's text takes it, and what lies on the table keeps its own
+colours (a card its panel, a signal its signal). Text on the table holds AA as on the canvas; the lit lip stands 3:1 on the
+top and on the canvas, so the table's bound reads. One table a screen, under the work, never a panel or a dialog.
 
 ## The races
 `races/` holds the seven races in three tiers and the peon's crown (generated; `../races/README.md`): 24 x 22 beside a word in a row, 48 x 44 @2x.

@@ -83,3 +83,14 @@ def test_every_crafts_head_is_in_the_copy_and_the_pages_words_are_the_glossarys(
         for name, want in words.items():
             got = dict(re.findall(r'(\w+): "([^"]+)"', re.search(rf"const {name} = \{{([^}}]*)\}}", js).group(1)))
             assert got == want, (path.name, name)
+
+
+def test_the_field_is_orkuis_table_its_wood_a_surface_and_never_a_mark():
+    """Spec 77 (decisions §92): the field the work is dealt on wears orkUI's table; the wood is orkUI's, never a sheet's."""
+    tok = (orkui.ROOT / "tokens.css").read_text(encoding="utf-8")
+    assert all(f"--ork-{t}:" in tok for t in ("table", "table-rim", "table-rim-hi"))
+    assert ".ork-table" in (orkui.ROOT / "components.css").read_text(encoding="utf-8")
+    js = (STATIC / "js" / "arena" / "arena.js").read_text(encoding="utf-8")
+    assert re.search(r'<section class="arena-body ork-table"', js)
+    sheets = "".join(p.read_text(encoding="utf-8") for p in SHEETS)
+    assert "--ork-table" not in sheets                                            # only orkUI's .ork-table draws the wood

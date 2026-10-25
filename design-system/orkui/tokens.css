@@ -1,4 +1,4 @@
-/* Generated from tokens.json by tools/build_tokens.py (orkUI 0.7.0, look office). Do not edit. */
+/* Generated from tokens.json by tools/build_tokens.py (orkUI 0.8.0, look office). Do not edit. */
 
 :root[data-look="office"] {
   color-scheme: dark;
@@ -23,6 +23,9 @@
   --ork-elem-dust: #d4b77a;
   --ork-elem-void: #8e88a8;
   --ork-elem-lava: #a49a96;
+  --ork-table: #16110d;
+  --ork-table-rim: #4e3a2c;
+  --ork-table-rim-hi: #7a5d49;
   --ork-font-pixel: "Pixelify Sans", "IBM Plex Mono", ui-monospace, monospace;
   --ork-font-text: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --ork-font-code: var(--ork-font-text);

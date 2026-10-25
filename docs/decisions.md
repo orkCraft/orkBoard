@@ -1254,3 +1254,20 @@ side, equal. So:
 3. **One picture, an accent** (§53.8): the crown is drawn into the head, never an emblem laid over it; the logo's
    gold and red toned to a muted brass and garnet under orkUI's race rules (as bright they would pass for signals).
 The owner's call. Spec 76.
+
+## 92. The field is a game table: Orkboard's wood, a surface and never a mark (25 October, the owner)
+
+Why: orkPage gave each tool its building's colour, and Orkboard's is the game table's wood (`#ac8266`, the Task Fields);
+the owner: find it a place in the product, *a nod to the table cards are played on*. The Board already plays as one:
+goals are dealt, the hand lies at the bottom, a party switch is a deck. So:
+1. **The field is a table** (the owner picked it from the trial's options): the area the tasks are dealt on is drawn as
+   orkUI's `.ork-table`, a dark walnut top in a wooden rim 3 px wide, its near lip lit.
+2. **§53.5 names its third exception**: colour means a signal, except the ork green of the primary action, the muted
+   heads of the races, and **the table's wood**: a material under the work, never on a control, a state, a label or a
+   person's words; what lies on the table keeps its own colours, and a signal stays a signal on it.
+3. **orkUI owns the wood** (§53.2): three tokens (`--ork-table`, `--ork-table-rim`, `--ork-table-rim-hi`) and the
+   component, orkUI 0.8.0; Orkboard's sheets still carry no colour.
+4. **Not now**: the hand's wooden shelf, the backs of a pile and the deck in wood, the phone's field, the name in the top
+   bar (it stays *Orkline*, §50.1, while orkPage colours *line* copper): each its own call.
+The owner's call. Spec 77.
+

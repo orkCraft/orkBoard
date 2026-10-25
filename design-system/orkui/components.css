@@ -149,6 +149,10 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-frame.alert { border-color: var(--ork-alert); }
 .ork-frame.danger { border-color: var(--ork-danger); }
 
+/* --- Table: the surface the work lies on (orkboard's field): a dark walnut top in a wooden rim 3 px wide, its near lip lit by 1 px.
+   A surface, never a mark: nothing on it takes the wood, and a signal stays a signal on it ---------------------------------------- */
+.ork-table { background: var(--ork-table); box-shadow: inset 0 0 0 3px var(--ork-table-rim), inset 0 1px 0 3px var(--ork-table-rim-hi); }
+
 /* --- Elements: a goal's mark (elements/, five 7 x 7 pixel shapes), drawn as a mask in the element's token. 14 x 14 or 28 x 28, never a
    size between: two or four pixels a cell, whole pixels. `.dim` is a goal not yet given one; it goes after the elements so it wins ----- */
 .ork-elem { display: inline-block; flex: none; width: 14px; height: 14px; vertical-align: middle;
