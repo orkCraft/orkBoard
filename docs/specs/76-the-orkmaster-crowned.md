@@ -76,3 +76,10 @@ to orkUI; a new word in `TERMS` (the crown is how the Orkmaster is drawn, not a 
   `peon-crown.png` and `@2x` in `office/races/` and `game/races/`; the gallery's Races row, *The ranks* in
   `races/README.md`, the CHANGELOG; `tests/test_orkui.py` pins the grid (its crown rows the logo's), the face against the
   peon's tiers, the colours and edges in both looks, the files. 241 passed.
+
+## As built (B)
+- The copy refreshed from orkUI 0.7.0 (`19e2797`) with `python -m orkboard.design.orkui`: `design-system/orkui/races/peon-crown.png` and `@2x`, `ORKUI.json`, tokens, README, preview. Nothing edited by hand.
+- `realm/orkmaster.py`: `ORKMASTER["tier"] = "crown"`. `roles.TIERS`, `TIER_WORDS`, the model list and the Taskmaster's head are unchanged.
+- Faces: the fallbacks for a host that sends no `project.orkmaster` are `crown` in `js/shell/proposals.js`, `js/arena/project.js`, `js/arena/partylist.js`, `js/arena/arenawords.js` (the collision's stop), `pwa/shell-proposals.js`, `pwa/shell-project.js`. The phone's project sheet head title is plainly *Orkmaster* (it no longer builds a tier's words, which a crown has none of); `shell-where.js` and `shell-stops.js` already draw `project.orkmaster`'s own tier with the title *Orkmaster*.
+- `pwa/sw.js` `CACHE` `orkcraft-app-v85` (the phone caches every `.png` it fetches, so the new head needs no list entry); every phone test's pin is v85.
+- Tests: `tests/test_orkmaster.py` (tier `crown`, not in `roles.TIERS`, the copy has both files); the Orkmaster's head pinned `crown` in `test_project_desktop_browser.py` (also: a party's Taskmaster keeps `-elder`, no `peon-crown` among the party headings), `test_collide_desktop_browser.py`, `test_proposals_desktop_browser.py`, `test_pwa_project_browser.py`, `test_pwa_collide_browser.py`, `test_pwa_proposals_browser.py`.

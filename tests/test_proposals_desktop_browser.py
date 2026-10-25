@@ -142,7 +142,7 @@ def test_new_party_opens_on_the_orkmasters_three_proposals_for_a_mobile_project_
     head_ = dlg.locator(".shell-props__head")
     assert "Orkmaster proposes" in head_.text_content() and "for this project" in head_.text_content()
     assert head_.locator(".shell-props__kind").inner_text() == "a mobile app · ios/ · android/"                          # the kind's words and signs
-    assert "peon-elder" in head_.locator(".ork-race__head").get_attribute("src")                                           # the Orkmaster's head
+    assert "peon-crown" in head_.locator(".ork-race__head").get_attribute("src")                                           # the Orkmaster's head
     cards = dlg.locator(".shell-prop")
     assert [c.get_attribute("data-proposal") for c in cards.all()] == ["mobile-features", "mobile-architecture", "release"]
     first = _card(dlg, "mobile-features")

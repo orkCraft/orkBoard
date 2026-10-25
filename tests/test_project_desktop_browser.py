@@ -19,7 +19,7 @@ from tests.test_shell_browser import _calls, _new_party, _open, _parties, _show_
 pytestmark = pytest.mark.browser
 
 SHOP = "/work/shop"
-ORK = {"id": "orkmaster", "name": "Orkmaster", "race": "peon", "tier": "elder"}
+ORK = {"id": "orkmaster", "name": "Orkmaster", "race": "peon", "tier": "crown"}
 ARTIST = {"kind": "art", "words": "pixel art", "agent": "artist", "name": "Artist", "band": "build", "free": True, "out": []}
 FIX = {"id": "fix", "name": "Fix a bug", "sign": "bug", "line": "Something is broken: find it, fix it, prove it", "lens": "code", "refs": False, "used": 2, "missing": [], "asks": []}
 LOGO = {"id": "logo", "name": "New logo", "sign": "logo", "line": "A mark for the product, in sizes", "lens": "text", "refs": False, "used": 0, "missing": [], "asks": []}
@@ -103,7 +103,9 @@ def test_the_orkmasters_head_stands_at_the_left_of_the_project_line_and_its_pres
     ork = pg.get_by_role("button", name="The project")
     assert ork.count() == 1 and ork.get_attribute("aria-pressed") == "false" and ork.get_attribute("title") == "The project"
     head = ork.locator(".ork-race__head")
-    assert "peon-elder" in head.get_attribute("src") and head.bounding_box()["width"] == 24 and head.bounding_box()["height"] == 22      # orkUI's Head, an ork, the elder tier, 24 × 22
+    assert "peon-crown" in head.get_attribute("src") and head.bounding_box()["width"] == 24 and head.bounding_box()["height"] == 22      # orkUI's Head, an ork, the crown, 24 × 22
+    leads = [e.get_attribute("src") for e in pg.locator(".arena-plist__head .ork-race__head").all()]
+    assert "peon-crown" not in "".join(leads) and any("-elder" in x for x in leads)                                    # a party's Taskmaster keeps its tier's head (spec 76 §2.4); only the Orkmaster is crowned
     line = pg.locator(".arena-left__proj")
     assert ork.bounding_box()["x"] < line.locator(".shell-proj").bounding_box()["x"]                                # at the line's left, then the switcher
     assert pg.locator(".arena-left__proj.is-open").count() == 0

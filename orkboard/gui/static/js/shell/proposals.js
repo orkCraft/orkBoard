@@ -102,7 +102,7 @@ export function Proposals({ then = "", pick = "", onMore }) {
   const [asked, setAsked] = useState(false);              // a line was read
   const [busy, setBusy] = useState("");
   const [sizes, setSizes] = useState({});
-  const ork = mapData.value?.project?.orkmaster || { race: "peon", tier: "elder" };
+  const ork = mapData.value?.project?.orkmaster || { race: "peon", tier: "crown" };
   useEffect(() => { askProposals().then((a) => { setGot(a); if (!a) onMore(); }); }, []);
   const read = async (about) => {
     setBusy("read");

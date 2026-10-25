@@ -20,7 +20,7 @@ from tests.test_pwa_shell_browser import FAB, NO_SCROLL, WAIT_MS, Stub, _called,
 pytest.importorskip("playwright.async_api")
 pytestmark = pytest.mark.browser
 
-ORKMASTER = {"id": "orkmaster", "name": "Orkmaster", "race": "peon", "tier": "elder"}
+ORKMASTER = {"id": "orkmaster", "name": "Orkmaster", "race": "peon", "tier": "crown"}
 LOGO = next(t for t in TYPES if t["id"] == "logo")                      # needs an Artist (free)
 LOGO_WHOLE = {**LOGO, "missing": []}
 BUG = next(t for t in TYPES if t["id"] == "bug")
@@ -112,7 +112,7 @@ async def test_the_project_is_the_first_row_of_the_parties_sheet_with_the_orkmas
         first = rows.first
         assert await first.get_attribute("data-act") == "the-project"
         assert norm(await first.inner_text()) == "The project The parties, their goals"
-        assert await first.locator("img.ork-race__head").get_attribute("src") == "races/peon-elder.png"             # the Orkmaster's head: an ork, the elder tier
+        assert await first.locator("img.ork-race__head").get_attribute("src") == "races/peon-crown.png"             # the Orkmaster's head: an ork with a crown
         assert await first.locator("img.ork-race__head").evaluate("(i) => i.complete && i.naturalWidth > 0")
         assert (await first.bounding_box())["height"] >= 44
         assert [await r.get_attribute("data-goal") for r in await sheet.locator(".where-row[data-goal]").all()][:2] == ["passkey", "ideation"]      # the parties follow it
@@ -362,4 +362,4 @@ async def test_a_partys_own_new_goal_is_unchanged(fake_repo, monkeypatch):
 def test_the_service_worker_is_one_up_and_keeps_the_projects_module():
     sw = (Path(pwa.__file__).parent / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")
     shell = sw[sw.index("const SHELL"):sw.index("];", sw.index("const SHELL"))]
-    assert 'const CACHE = "orkcraft-app-v84";' in sw and '"shell-project.js"' in shell
+    assert 'const CACHE = "orkcraft-app-v85";' in sw and '"shell-project.js"' in shell

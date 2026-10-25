@@ -6,7 +6,7 @@
 // Pure words here too: `whyWords`, `fitWords`, `dealOf`.
 import { h, head, sheet } from "./util.js";
 import { elem, sign, typeTone } from "./shell-marks.js";
-import { RACE_WORDS, raceOf, whoHead } from "./shell-who.js";
+import { raceOf, whoHead } from "./shell-who.js";
 import { foot } from "./shell-forms.js";
 import { chipsOf, modelOf } from "./shell-arena-words.js";
 import { flagTally, goalsOf } from "./shell-goals-words.js";
@@ -113,10 +113,10 @@ export function makeProject(core, act) {
   function draw() {
     const project = projectOf(core);
     if (!project) { body.replaceChildren(); return; }
-    const o = project.orkmaster || { race: "peon", tier: "elder", name: "Orkmaster" };
+    const o = project.orkmaster || { race: "peon", tier: "crown", name: "Orkmaster" };
     const parties = chipsOf(st).filter((c) => c.slug !== "general");
     body.replaceChildren(
-      h("div", { class: "pj-top" }, head(o.race, o.tier, { title: `Orkmaster · ${(o.tier === "elder" ? "Veteran" : o.tier === "warrior" ? "Seasoned" : "Novice")} ${RACE_WORDS[o.race] || ""}`.trim() }),
+      h("div", { class: "pj-top" }, head(o.race, o.tier, { title: "Orkmaster" }),
         h("span", { class: "pj-top__name" }, h("b", {}, "Orkmaster"), h("small", { class: "muted" }, "The parties, their goals")),
         h("button", { class: "ork-btn", type: "button", "data-act": "project-new-party", "aria-expanded": String(dealt), onclick: deal }, "New party")),
       ...[dealt ? strip() : null, ...parties.map(section), parties.length ? null : h("p", { class: "muted" }, "No parties yet.")].filter(Boolean));

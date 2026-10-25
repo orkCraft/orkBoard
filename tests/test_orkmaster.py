@@ -2,6 +2,8 @@
 parties' teams, `project` in `ideas.map`, `@project` in `ideas.shown`. Code, no model."""
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from orkboard.gui.board_host import CommandError
@@ -24,8 +26,12 @@ def rows(deal):
     return [(r["id"], r["why"], r["n"]) for r in deal]
 
 
-def test_the_orkmaster_is_an_elder_ork():
-    assert orkmaster.ORKMASTER == {"id": "orkmaster", "name": "Orkmaster", "race": "peon", "tier": "elder"}
+def test_the_orkmaster_is_an_ork_with_a_crown():
+    from orkboard.realm import roles
+    assert orkmaster.ORKMASTER == {"id": "orkmaster", "name": "Orkmaster", "race": "peon", "tier": "crown"}
+    assert orkmaster.ORKMASTER["tier"] == "crown" and "crown" not in roles.TIERS            # a rank, not a tier a role can pick (spec 76 §2.4)
+    races = Path(__file__).resolve().parent.parent / "design-system" / "orkui" / "races"
+    assert (races / "peon-crown.png").is_file() and (races / "peon-crown@2x.png").is_file()   # the copy has the crowned head
 
 
 def test_a_project_with_no_party_is_dealt_ideation_then_the_library_and_release_is_not_first_without_flags(bare):

@@ -101,7 +101,7 @@ def test_the_orkmasters_stop_has_its_head_its_two_goals_with_their_parties_the_w
     stop = _raise(pg, "landing")
     assert stop.get_attribute("data-party") == "website" and "is-other" in stop.get_attribute("class")                            # the goal asked about is the later one, of another party
     assert stop.locator(".arena-hc__kind").inner_text().strip().lower() == "orkmaster asks"
-    assert "peon-elder" in stop.locator(".arena-hc__who .ork-race__head").get_attribute("src")                                     # the Orkmaster's head from `project.orkmaster`
+    assert "peon-crown" in stop.locator(".arena-hc__who .ork-race__head").get_attribute("src")                                     # the Orkmaster's head from `project.orkmaster`
     assert stop.locator(".arena-hc__open").get_attribute("aria-label") == "Orkmaster asks in Website: " + BY_PLAN["text"]
     goals = stop.locator(".arena-hc__goal")
     assert [g.inner_text().strip() for g in goals.all()] == ["Passkey · Words of the sign-in page", "Website · Landing copy"]

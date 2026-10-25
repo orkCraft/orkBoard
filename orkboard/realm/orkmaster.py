@@ -18,7 +18,7 @@ from pathlib import Path
 
 from orkboard.realm import goal_types, idea_flag, idea_target, ideas, library, party_price, party_recipes, project_kind, roles
 
-ORKMASTER = {"id": "orkmaster", "name": "Orkmaster", "race": "peon", "tier": "elder"}
+ORKMASTER = {"id": "orkmaster", "name": "Orkmaster", "race": "peon", "tier": "crown"}
 RELEASE, IDEATION = "release", "ideation"       # the presets' ids
 
 

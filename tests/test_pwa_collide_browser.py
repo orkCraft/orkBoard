@@ -1,7 +1,7 @@
 """Spec 71 part C, the phone (docs/specs/71-orkmaster-keeps-parties-apart.md §6, §7 C, §8; decisions §86): Chromium at 390 × 844 against the stub host of spec §8. The hand's stop `collide`
 (the Orkmaster's head from `project.orkmaster`, *Orkmaster asks*, the text and the why, its two goals each a 44 px press that opens it, its answers as buttons that say what happens and send
 `ideas.collide_answer {id, answer}`); a goal with `waits_for` in the Goals sheet (orkUI's ← sign as its state sign, *waits for <party> · <goal>* in its words); a host without them keeps today's
-phone; no sideways scroll; `sw.js` v84."""
+phone; no sideways scroll; `sw.js` v85."""
 from __future__ import annotations
 
 import copy
@@ -19,7 +19,7 @@ pytest.importorskip("playwright.async_api")
 pytestmark = pytest.mark.browser
 
 SHOT = os.environ.get("COLLIDE_SHOT", "")                                  # a path: a screenshot of the hand is kept there (a test of the look, kept by hand)
-ORKMASTER = {"id": "orkmaster", "name": "Orkmaster", "race": "peon", "tier": "elder"}
+ORKMASTER = {"id": "orkmaster", "name": "Orkmaster", "race": "peon", "tier": "crown"}
 ANSWER: dict = {}                    # what `ideas.collide_answer` answers (or an error)
 LABELS = "() => [...document.querySelectorAll('.hand .hc')].map((b) => b.getAttribute('aria-label'))"
 
@@ -89,7 +89,7 @@ async def test_the_stop_is_a_card_in_the_hand_with_the_orkmasters_head_its_text_
         raised = await _raised(page)
         assert (await raised.locator(".raised__kind").inner_text()).strip().lower() == "orkmaster asks"
         head = raised.locator(".art img.ork-race__head")
-        assert await head.get_attribute("src") == "races/peon-elder@2x.png" and await head.get_attribute("title") == "Orkmaster"             # project.orkmaster
+        assert await head.get_attribute("src") == "races/peon-crown@2x.png" and await head.get_attribute("title") == "Orkmaster"             # project.orkmaster
         assert (await raised.locator(".raised__text").inner_text()).strip() == "Passkey «WebAuthn register» and Website «Site login» change the same thing"
         assert (await raised.locator(".raised__why").inner_text()).strip() == "Both change how a session token is issued"
         goals = raised.locator(".cl-goal")
@@ -263,4 +263,4 @@ async def test_the_hand_with_the_stop_raised_fits_the_screen(fake_repo, monkeypa
 
 def test_the_service_worker_is_one_up():
     sw = (Path(pwa.__file__).parent / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")
-    assert 'const CACHE = "orkcraft-app-v84";' in sw
+    assert 'const CACHE = "orkcraft-app-v85";' in sw

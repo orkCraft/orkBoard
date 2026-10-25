@@ -117,7 +117,7 @@ function OpsHeading({ ps, open, want }) {
 /** The Orkmaster in the project's line (spec 70 §2.1): its head, a button *The project*, pressed while the project's level is shown. Only a host that has the level draws it. */
 function Orkmaster({ ork, open, want }) {
   return html`<button type="button" class=${cls("arena-ork", { "is-open": open })} data-goal=${PROJECT} data-state=${open ? "open" : "closed"} aria-pressed=${open} title=${THE_PROJECT}
-      aria-label=${THE_PROJECT} onClick=${() => show(PROJECT, want)}><${Head} race=${ork.race || "peon"} tier=${ork.tier || "elder"} /></button>`;
+      aria-label=${THE_PROJECT} onClick=${() => show(PROJECT, want)}><${Head} race=${ork.race || "peon"} tier=${ork.tier || "crown"} /></button>`;
 }
 
 /** The left column: the project's line, the parties, Operations, *+ New party*; `body` is the open party's, drawn under its heading. */

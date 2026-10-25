@@ -98,7 +98,7 @@ export function Project({ m, stops }) {
   return html`<div class="arena arena-project" data-goal=${PROJECT}>
     <${PartyList} />
     <div class="arena-ops__main arena-project__main">
-      <div class="arena-pjtop">${ork && html`<${Head} race=${ork.race || "peon"} tier=${ork.tier || "elder"} />`}<h2 class="arena-pjtop__title">${THE_PROJECT}</h2>
+      <div class="arena-pjtop">${ork && html`<${Head} race=${ork.race || "peon"} tier=${ork.tier || "crown"} />`}<h2 class="arena-pjtop__title">${THE_PROJECT}</h2>
         <span class="arena-cap">${PARTIES_WORDS}</span></div>
       <${NewPartyPile} deal=${m.project?.deal || []} />
       <section class="arena-project__body" aria-label=${THE_PROJECT}>

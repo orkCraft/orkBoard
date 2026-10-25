@@ -109,7 +109,7 @@ async def test_new_party_opens_on_three_proposals_with_a_three_way_switch_and_th
         sheet = await _new_party(page)
         top = sheet.locator(".props__top")
         assert norm(await top.inner_text()) == "Orkmaster proposes for this project · a mobile app ios/ · android/"
-        assert await top.locator("img.ork-race__head").get_attribute("src") == "races/peon-elder.png"                          # the Orkmaster's head
+        assert await top.locator("img.ork-race__head").get_attribute("src") == "races/peon-crown.png"                          # the Orkmaster's head
         assert [await c.get_attribute("data-proposal") for c in await sheet.locator(".prop").all()] == ["mobile-features", "mobile-architecture", "release"]
         assert await sheet.get_by_role("button", name="Save party").is_hidden() and await sheet.locator(".preset-tile").count() == 0       # no library at first
         card = card_of(sheet, "mobile-features")
@@ -408,5 +408,5 @@ async def test_a_host_that_cannot_answer_proposals_leaves_new_party_as_it_was_wi
 
 def test_the_service_worker_keeps_the_proposals_and_is_one_version_up():
     sw = (Path(pwa.__file__).parent / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")
-    assert 'const CACHE = "orkcraft-app-v84";' in sw and '"shell-proposals.js"' in sw[sw.index("const SHELL"):sw.index("];", sw.index("const SHELL"))]
-    assert re.search(r'orkcraft-app-v(\d+)', sw).group(1) == "84" and library.get(PM) is not None
+    assert 'const CACHE = "orkcraft-app-v85";' in sw and '"shell-proposals.js"' in sw[sw.index("const SHELL"):sw.index("];", sw.index("const SHELL"))]
+    assert re.search(r'orkcraft-app-v(\d+)', sw).group(1) == "85" and library.get(PM) is not None

@@ -96,12 +96,12 @@ export function makeProposals(core, act) {
   const size = new Map();                                     // proposal id → the size picked on its card (Standard at first)
   let data = null, line = "", reading = false, note = "", pickedId = "", scrolled = false, hold = null;   // `hold`: the "What it is for" field, put under the Orkmaster's head
 
-  const orkmaster = () => core.st.map?.project?.orkmaster || { race: "peon", tier: "elder" };
+  const orkmaster = () => core.st.map?.project?.orkmaster || { race: "peon", tier: "crown" };
 
   function top() {
     const kind = data.kind || core.st.map?.project?.kind || {};
     const o = orkmaster();
-    return h("div", { class: "props__top" }, head(o.race || "peon", o.tier || "elder"),
+    return h("div", { class: "props__top" }, head(o.race || "peon", o.tier || "crown"),
       h("div", { class: "props__who" }, h("b", {}, "Orkmaster proposes"),
         h("small", { class: "muted props__for" }, ["for this project", kind.words].filter(Boolean).join(" · ")),
         (kind.signs || []).length ? h("small", { class: "muted props__signs" }, kind.signs.join(" · ")) : null));

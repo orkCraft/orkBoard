@@ -243,7 +243,7 @@
 
 <section><h2>Orks</h2><div class="orks" id="orks"></div></section>
 
-<section><h2>Races (laborer, warrior, elder; 48 x 44)</h2><div class="races" id="races"></div></section>
+<section><h2>Races (laborer, warrior, elder, and the peon's crown; 48 x 44)</h2><div class="races" id="races"></div></section>
 
 <section><h2>A race beside its word</h2><div class="row" id="race-words"></div>
   <div class="row"><span class="ork-race big"><img class="ork-race__head" src="races/elf-elder@2x.png" alt=""><span class="ork-race__word">elf <span class="ork-race__tier">elder</span></span></span>
@@ -286,6 +286,10 @@
   for (const tier of ["laborer","warrior","elder"]) for (const race of ["peon","knight","goblin","gnome","elf","lich","skeleton"]) {
     const f = document.createElement("figure"); const i = document.createElement("img"); i.src = "races/" + race + "-" + tier + "@2x.png";
     i.width = 48; i.height = 44; i.alt = ""; const c = document.createElement("figcaption"); c.textContent = race + " " + tier; f.append(i, c);
+    document.getElementById("races").append(f); }
+  for (const [race, rank] of [["peon", "crown"]]) {                                  // a rank, beside the tiers
+    const f = document.createElement("figure"); const i = document.createElement("img"); i.src = "races/" + race + "-" + rank + "@2x.png";
+    i.width = 48; i.height = 44; i.alt = ""; const c = document.createElement("figcaption"); c.textContent = race + " " + rank; f.append(i, c);
     document.getElementById("races").append(f); }
   for (const [race, tier] of [["peon", "laborer"], ["knight", "warrior"], ["goblin", "elder"], ["gnome", "laborer"], ["elf", "warrior"], ["lich", "elder"], ["skeleton", "warrior"]]) {
     const s = document.createElement("span"); s.className = "ork-race"; const i = document.createElement("img"); i.className = "ork-race__head";

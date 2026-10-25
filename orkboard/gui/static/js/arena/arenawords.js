@@ -399,7 +399,7 @@ export function stopsOf(needs, g, nodes, ork = null) {
       base.small = true; base.whoTip = `proposed by ${g?.leader?.name || "Taskmaster"}`;        // the leader's small head on the top row: the card has no room for its art
     } else if (row.kind === "collide") {               // the Orkmaster asks (spec 71): its head, the statement as the stop's name, the judge's why as its note; its goals and answers are collide.js
       base.key = `collide/${row.idea}/${row.collide?.id || ""}`;
-      base.head = ork ? { race: ork.race || "peon", tier: ork.tier || "elder" } : null; base.small = true; base.whoTip = "asked by the Orkmaster";
+      base.head = ork ? { race: ork.race || "peon", tier: ork.tier || "crown" } : null; base.small = true; base.whoTip = "asked by the Orkmaster";
       base.full = row.text || row.title; base.why = row.collide?.why || "";
     } else if (row.kind === "asks" || row.kind === "goal") {
       const q = firstAsk(row, n);
