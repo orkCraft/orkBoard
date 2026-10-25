@@ -1,7 +1,7 @@
 // Waits for your look (docs/specs/49-one-window.md §5.5, docs/specs/50-parties-and-goals.md §3.5): the right column. A result per row, oldest first —
 // its goal's element and name (one line), its title (a link to the result in the drawer), who made it, its tests or a check's findings, its size and price,
 // and Merge into dev · Send back · Drop (Review's own ResultActions). A result is not a signal (decisions §54.1): no alert colour. The goals the filter takes
-// away leave with the rest. At the top, While you were away and Last week (Cards); at the foot, Last week (MapFoot). One that was merged a moment ago folds out once, its goal's element stamped (spec 74 §1); one sent back leaves toward the field (§2).
+// away leave with the rest. Above it, the Canvases row (canvases.js, spec 78); at the top of the list, While you were away and Last week (Cards); at the foot, Last week (MapFoot). One that was merged a moment ago folds out once, its goal's element stamped (spec 74 §1); one sent back leaves toward the field (§2).
 import { useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Sign } from "../orkui.js";
@@ -9,6 +9,7 @@ import { showResult, review } from "../shell/store.js";
 import { ResultActions, Found, testsWords, usd } from "../shell/review.js";
 import { Cards } from "../board/cards.js";
 import { MapFoot } from "../board/mapfoot.js";
+import { Canvases } from "./canvases.js";
 import { useColumn } from "./motion.js";
 import { solo } from "./arenastate.js";
 import { plural } from "./arenawords.js";
@@ -42,6 +43,7 @@ export function Looks({ g, results, nodes, shown }) {
   at.current = { nodes, shown };
   const list = useColumn(ref, there, (r) => `${r.idea}/${r.task}`, (r) => resultLeaveOf(at.current.nodes, at.current.shown, r.idea, r.task));
   return html`<aside class="arena-look" aria-label="Waits for your look">
+    <${Canvases} />
     <div class="arena-look__head"><h2 class="arena-lbl">Waits for your look</h2>${there.length > 0 && html`<span class="ork-count">${there.length}</span>`}
       ${who && html`<span class="arena-cap">· only ${who}’s</span>`}</div>
     <div class="arena-look__list" ref=${ref}>

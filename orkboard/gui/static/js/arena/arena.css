@@ -259,6 +259,22 @@
 .arena-result .shell-actions { margin-top: var(--ork-2); }
 .arena-result .shell-round { color: var(--ork-ink-muted); }          /* a result is not a signal: no alert colour (decisions §54.1) */
 .arena-result .shell-actions__main { gap: var(--ork-3); }
+/* Canvases (spec 78 §3): the row above Waits for your look, folded; a card is a result's frame with the elf's small head, the kind in the pixel face's small caps, the title in the text face. Not a signal: no alert colour. */
+.arena-canvases { flex: none; max-height: 55%; overflow-y: auto; scrollbar-width: none; border-bottom: var(--ork-line) solid var(--ork-frame); }
+.arena-canvases::-webkit-scrollbar { display: none; }
+.arena-canvases__list { display: flex; flex-direction: column; gap: var(--ork-4); padding: var(--ork-2) var(--ork-5) var(--ork-4); }
+.arena-canvases__list .arena-frow { padding-left: 0; }
+.arena-canvas { display: flex; flex-direction: column; gap: var(--ork-2); padding: 10px; flex: none; }
+.arena-canvas.is-drawn { animation: arena-rise 0.36s steps(4) both; }
+.arena-canvas__top { display: flex; align-items: center; gap: var(--ork-3); }
+.arena-canvas__kind { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.arena-canvas__title { margin: 0; font: var(--ork-type-body); color: var(--ork-ink); font-weight: 600; overflow-wrap: anywhere; }
+.arena-canvas__goal { text-align: left; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.arena-canvas__text { overflow-wrap: anywhere; }
+.arena-canvas__acts { display: flex; flex-wrap: wrap; gap: var(--ork-3); margin-top: var(--ork-2); }
+.arena-cview { display: flex; flex-direction: column; gap: var(--ork-4); }
+.arena-cview__pic { max-width: 100%; align-self: flex-start; border: var(--ork-line) solid var(--ork-frame); }
+.arena-cview__page { width: 100%; height: 70vh; border: var(--ork-line) solid var(--ork-frame); background: var(--ork-ink); color-scheme: light; }      /* a page of its own, in a sandbox: its own ground, a light one so its dark text reads */
 
 /* -- the party row (64 px) and the gate ---------------------------------------------------------------------------------------------- */
 .arena-team { flex: none; height: 64px; box-sizing: border-box; display: grid; grid-template-columns: var(--cols); gap: var(--ork-4); padding: var(--ork-3) var(--ork-5); align-items: center; border-bottom: var(--ork-line) solid var(--ork-frame); }
@@ -510,6 +526,7 @@
   .arena-arrow line, .arena-arrow polygon, .arena-arrow.is-leaving line { animation: none; }
   .arena-result[data-sign="check"] .arena-task__flash .ork-elem, .arena-result[data-sign="back"].is-leaving { animation: none; }
   .arena-stars i.is-ink { animation: none; opacity: 0.6; }
+  .arena-canvas.is-drawn { animation: none; }
 }
 
 /* A goal's route (spec 68 §7.1): the steps across the parties at the top of its screen, joined by orkUI's ›; each a button with the party's leader's head and its words. */
