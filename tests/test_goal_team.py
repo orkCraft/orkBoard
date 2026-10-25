@@ -406,3 +406,20 @@ def test_seats_count_against_the_leaders_stages_and_the_refusal_names_the_leader
     assert goal_team.seats(["reviewer", "editor"], "growth") == "" and goal_team.seats(["reviewer", "editor", "data-reviewer"], "growth") == "A party led by Growth has at most 2 checkers"
     assert goal_team.seats(four[:4], "") == "A party led by Taskmaster has at most 3 builders"
     assert goal_team.SEATS == 5 and goal_team.seats(["playtester"], "game-designer") == ""
+
+
+def test_a_partys_size_is_kept_on_its_page_and_read_back(host):
+    """Spec 75 §3.1: `size` on the party's front matter; none for a party made before; a size that is none refused."""
+    root = host.ideas.root()
+    slug = host.command("ideas.goal_save", {"title": "Sized", "about": "Sized.", "craft": "engineering", "leader": "architect", "team": ["grunt"]})["slug"]
+    assert goal_team.size_of(root, slug) == "" and goal_team.SIZES == ("lean", "standard", "full")
+    for size in goal_team.SIZES:
+        goal_team.set_size(root, slug, size)
+        assert goal_team.size_of(root, slug) == size
+    goal_team.set_team(root, slug, ["grunt", "tester"], [], "architect")                    # a team changed keeps the size
+    assert goal_team.size_of(root, slug) == "full"
+    with pytest.raises(ValueError, match="lean, standard or full"):
+        goal_team.set_size(root, slug, "huge")
+    with pytest.raises(ValueError, match="No party"):
+        goal_team.set_size(root, "nowhere", "lean")
+    assert goal_team.size_of(root, "nowhere") == ""

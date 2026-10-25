@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from orkboard.gui.board_host import CommandError
-from orkboard.realm import event_log, library, orkmaster
+from orkboard.realm import event_log, ideas, library, orkmaster
 from tests.test_idea_route import events, flag, goal, host, party, wait_party  # noqa: F401  (`host`: the fixture of spec 68's route tests)
 
 PRESETS = [p["id"] for p in library.presets()]
@@ -108,12 +108,13 @@ def test_party_for_writes_nothing(host):
 def test_the_map_carries_the_project_counted_from_the_flags_it_read(host):
     h = host
     got = h.command("ideas.map", {})["project"]
-    assert got["orkmaster"] == orkmaster.ORKMASTER and rows(got["deal"])[0] == ("game", "", 0) and got["deal"][-1]["why"] == "have"
+    assert got["orkmaster"] == orkmaster.ORKMASTER and got["kind"]["id"] == "code"                  # (the project's kind, spec 75 §4.3)
+    assert rows(got["deal"])[:2] == [("engineering-code", "proposal", 0), ("game", "", 0)] and got["deal"][-1]["why"] == "have"   # (the kind's proposals first)
     flag(h, goal(h, h.app, "One"))
     flag(h, goal(h, h.web, "Two"))
     got = h.command("ideas.map", {})["project"]
-    assert rows(got["deal"])[0] == ("release", "flags_wait", 2)
-    assert got["deal"] == orkmaster.deal(h.root, h.state)                               # as the realm counts it
+    assert rows(got["deal"])[:2] == [("engineering-code", "proposal", 0), ("release", "flags_wait", 2)]
+    assert got["deal"] == orkmaster.deal_first(orkmaster.deal(h.root, h.state), ideas.tracks(h.root, make=False), "code", {})     # as the realm counts it
     assert h.command("ideas.map", {"goal": h.app})["project"]["deal"] == got["deal"]    # the project's, whatever party the Map is of
 
 

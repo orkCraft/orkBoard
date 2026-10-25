@@ -6,6 +6,7 @@
     pick("op_act", "balance")                      # ("laborer", ""): an operation's action (spec 38 §4)
     keeper_pick("talk", "quality", "haiku")        # ("haiku", "high"): the Taskmaster's own model wins
     task_pick("warrior", "thrift", "")             # ("laborer", "low"): Grunt runs on the shifted tier
+    target_for(settings, party)                    # a party's size's Target (lean thrift, standard balance, full quality), else the setting (spec 75 §3)
     in_night("01:00-07:00", now)                   # inside the night window (the machine's local time)
     reserve_held(limits, settings, now)            # the reserve left for the person: None, or until when
     week(limits, now), pace(limits, now)           # the Claude week's share left against the share of it still to come (spec 44 §1)
@@ -23,11 +24,13 @@ from orkboard.realm import plans
 TARGETS = ("thrift", "balance", "quality")
 DEFAULT = "balance"
 EFFORTS = ("low", "medium", "high", "xhigh", "max")      # the Claude CLI's `--effort` levels
-STEPS = ("goal", "draft", "answer", "talk", "plan", "refresh", "propose", "task", "pitch_view", "pitch_case", "pitch_decide", "collide")
+STEPS = ("goal", "draft", "answer", "talk", "plan", "refresh", "propose", "task", "pitch_view", "pitch_case", "pitch_decide", "collide", "kind")
 PITCH_STEPS = ("pitch_view", "pitch_case", "pitch_decide")   # a pitch's three calls (spec 65 §3, core/idea_judge.py)
 PROPOSALS = {"thrift": 0, "balance": 2, "quality": 3}  # the night's proposals by the Target (§8)
 MAX_WAITING = 3                                          # never more proposals than this waiting in all
-TIER_ROLE = "elder"                                      # the Taskmaster's default: its model is not the person's pick
+SIZES = ("lean", "standard", "full")                     # a party's size (spec 75 §3): its Target, for its goals
+SIZE_TARGET = {"lean": "thrift", "standard": "balance", "full": "quality"}
+TIER_ROLE = "elder"                                    # the Taskmaster's default: its model is not the person's pick
 
 # step → target → (tier, effort); a task's tier is relative: -1 one lighter, 0 its own, +1 one heavier.
 MATRIX: dict[str, dict[str, tuple[Any, str] | None]] = {
@@ -48,6 +51,8 @@ MATRIX: dict[str, dict[str, tuple[Any, str] | None]] = {
     "pitch_decide": {"thrift": ("warrior", "medium"), "balance": ("elder", "low"), "quality": ("elder", "medium")},
     # the Orkmaster's judge (spec 71 §2): two goals that touch the same files, a collision or a coincidence; the cheaper tier
     "collide": {"thrift": ("laborer", ""), "balance": ("warrior", "low"), "quality": ("warrior", "medium")},
+    # what an empty folder is for (spec 75 §4.2): the Orkmaster reads one line into a kind, on the cheaper tier as its judge
+    "kind": {"thrift": ("laborer", ""), "balance": ("warrior", "low"), "quality": ("warrior", "medium")},
     # Operations' calls (docs/specs/38-operations.md §4), under Operations' own Target: no effort on the laborer tier
     "op_prepare": {"thrift": ("warrior", "low"), "balance": ("warrior", "medium"), "quality": ("elder", "medium")},
     "op_act": {"thrift": ("laborer", ""), "balance": ("laborer", ""), "quality": ("warrior", "low")},
@@ -61,11 +66,11 @@ OP_STEPS = ("op_prepare", "op_act", "op_learn")
 # half in thrift, double in quality.
 CONTEXT = {"goal": 12_000, "draft": 8_000, "answer": 8_000, "talk": 6_000, "plan": 10_000, "refresh": 12_000, "accept": 10_000,
            "propose": 10_000, "op_prepare": 12_000, "op_act": 6_000, "op_learn": 6_000,
-           "pitch_view": 6_000, "pitch_case": 6_000, "pitch_decide": 8_000, "collide": 3_000}
+           "pitch_view": 6_000, "pitch_case": 6_000, "pitch_decide": 8_000, "collide": 3_000, "kind": 1_500}
 READS = {"goal": 8, "draft": 6, "plan": 6, "refresh": 6, "talk": 2, "answer": 2, "propose": 0, "accept": 4,
-         "pitch_view": 4, "pitch_case": 0, "pitch_decide": 0, "collide": 0}      # a view's reads: the Engineering view's only (the others get no tools)
+         "pitch_view": 4, "pitch_case": 0, "pitch_decide": 0, "collide": 0, "kind": 0}      # a view's reads: the Engineering view's only (the others get no tools)
 CAPS = {"goal": 1.00, "draft": 0.60, "answer": 0.40, "talk": 0.20, "plan": 0.60, "refresh": 0.50, "propose": 0.30, "accept": 0.60,
-        "op_prepare": 0.30, "op_act": 0.10, "op_learn": 0.10, "pitch_view": 0.08, "pitch_case": 0.06, "pitch_decide": 0.20, "collide": 0.05}
+        "op_prepare": 0.30, "op_act": 0.10, "op_learn": 0.10, "pitch_view": 0.08, "pitch_case": 0.06, "pitch_decide": 0.20, "collide": 0.05, "kind": 0.03}
 BUDGET_SHARE = {"thrift": 0.5, "balance": 1.0, "quality": 2.0}
 
 
@@ -95,6 +100,13 @@ def cut(parts: list[tuple[str, str]], cap: int) -> str:
 def target_of(settings: dict | None) -> str:
     value = (settings or {}).get("target")
     return value if value in TARGETS else DEFAULT
+
+
+def target_for(settings: dict | None, party: Any = None) -> str:
+    """The Target a party's goals work at (spec 75 §3): its size's (`lean` thrift, `standard` balance, `full` quality), else the setting's
+    (`target_of`: a party made before has no size). `party`: a party's row or page (anything with `.get("size")`) or its size as text."""
+    size = party if isinstance(party, str) else (party.get("size") if party is not None else None)
+    return SIZE_TARGET.get(size) or target_of(settings)
 
 
 def pick(step: str, target: str, tier: str = "warrior") -> tuple[str, str] | None:

@@ -510,3 +510,22 @@ def test_the_hand_sorts_a_plan_change_as_a_plan_not_last_and_not_blocking_spec_6
                       row("failed", blocks=True), row("plan", "high", "2026-10-23T09:00:00")])
     assert [(n["kind"], n["priority"], n["at"][11:13]) for n in got] == [
         ("failed", "normal", "10"), ("plan", "high", "09"), ("change", "high", "11"), ("change", "high", "12"), ("plan", "low", "10"), ("proposal", "high", "10")]
+
+
+def test_a_party_wears_its_sizes_target_on_the_map_and_one_with_no_size_the_settings_spec_75(host):
+    """Spec 75 §3.2: a task's head is of its party's Target (a Grunt on By Target); `goals[].size` says the size ("" with none)."""
+    root, state = _board(host)
+    parties = {}
+    for size in ("lean", "full", ""):
+        g = _goal(root, f"Party {size or 'old'}")
+        if size:
+            goal_team.set_size(root, g, size)
+        slug = _idea(root, state, g, f"Work of {size or 'old'}", state="plan")
+        _plan(state, slug, [{**_t("k1", "ready"), "kind": "code", "tier": "warrior"}])
+        parties[size] = (g, slug)
+    got = board_map.build(root, state, {"target": "balance"}, [], time.time(), rev=0)
+    assert {g["slug"]: g["size"] for g in got["goals"] if g["slug"] in {p[0] for p in parties.values()}} == {parties[s][0]: s for s in parties}
+    tier = {s: _node(got, parties[s][1])["tasks"][0]["head"]["tier"] for s in parties}
+    assert tier == {"lean": "laborer", "full": "elder", "": "warrior"}
+    again = board_map.build(root, state, {"target": "quality"}, [], time.time(), rev=0)
+    assert _node(again, parties[""][1])["tasks"][0]["head"]["tier"] == "elder" and _node(again, parties["lean"][1])["tasks"][0]["head"]["tier"] == "laborer"

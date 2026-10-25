@@ -280,7 +280,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
 
     goals, nodes, edges = [], [], []
     week = _week_of(settings, limits, now)
-    target, read = idea_target.target_of(settings), roles.known(state_dir)         # a task's head: who does it, at what tier
+    read = roles.known(state_dir)                                                  # a task's head: who does it, at what tier
     today = dt.date.fromtimestamp(now).isoformat() if now else dt.date.today().isoformat()
     offered = pitches.offers(root, state_dir) if any((t.get("leader") or "") == library.INVESTOR for t in shown) else {}
     made = releases.index(root, state_dir, found)                           # the releases, read once: a goal's route, a flag's release (spec 68)
@@ -291,6 +291,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
         asked.setdefault(n["idea"], []).append(n)
     track_of, party_names = {i["slug"]: i["track"] for i in found}, {t["slug"]: t["title"] for t in tracks}
     for g in shown:
+        target = idea_target.target_for(settings, g)                         # a party's size's Target, else the setting's (spec 75 §3)
         mine = [i for i in found if i["track"] == g["slug"]]
         ideation = (g.get("leader") or "") == library.INVESTOR       # Ideation: its goals are pitches (spec 65)
         order = [i["slug"] for i in mine]
@@ -308,6 +309,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
         goals.append({"slug": g["slug"], "title": g["title"], "short": g["short"], "priority": g["priority"], "state": gst["state"],
                       "craft": g.get("craft") or roles.DEFAULT_CRAFT, "race": roles.RACES.get(g.get("craft"), "peon"), "team": team,
                       "leader": {"slug": lead["slug"], "name": lead["name"], "head": roles.head(lead, target)} if lead else None,
+                      "size": g.get("size") or "",                                  # the party's size (spec 75 §3): lean · standard · full, "" with none
                       "verdict": {"met": verdict.get("met") is True, "by": verdict.get("by") or "", "at": verdict.get("at") or "",
                                   **({"tally": goal_flags.tally(root, state_dir, g["slug"])} if verdict.get("met") is True else {})}
                       if verdict else None,

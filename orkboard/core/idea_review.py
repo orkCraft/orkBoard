@@ -269,7 +269,7 @@ class ReviewMixin:
                     t["after"] = list(dict.fromkeys([*(t.get("after") or []), *added]))
             if added or changing or dropped:
                 plan["tasks"] = kept
-                plan["estimate"] = estimate(kept, [idea_target.tier_of(self.ran_on(t)[0]) for t in kept], idea_spend.tier_costs(self.state_dir))
+                plan["estimate"] = estimate(kept, [idea_target.tier_of(self.ran_on(t, slug)[0]) for t in kept], idea_spend.tier_costs(self.state_dir))
                 self._write(self._dir(slug) / "plan.json", plan)
                 self._note(slug, was, kept)
         self._settle_idea(slug)
