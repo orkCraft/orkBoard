@@ -24,15 +24,13 @@ FAR = "https://evil.example.com/steal"
 
 
 def host_of(monkeypatch) -> dict:
-    """The phone's snapshot as the host would say it with the canvases' count and rev (gui/ideas.py `snapshot`), and the host the listener serves, for the test to add canvases to."""
+    """The host the listener serves, for the test to add canvases to (its phone snapshot carries `canvases_new` and `canvases_rev`)."""
     got: dict = {}
     real = BoardPhone.phone_snapshot
 
     def snap(host):
-        s = real(host)
         got["host"] = host
-        full = host.snapshot()
-        return {**s, "canvases_new": full["canvases_new"], "canvases_rev": full["canvases_rev"], "rev": f"{s['rev']}-c{full['canvases_rev']}"}
+        return real(host)
     monkeypatch.setattr(BoardPhone, "phone_snapshot", staticmethod(snap))
     return got
 

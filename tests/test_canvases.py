@@ -193,3 +193,12 @@ def test_a_canvas_says_its_time_in_one_spelling():
     from orkboard.sources.canvases import norm_at
     assert _c("2026-10-25T10:00:00.123Z").at == "2026-10-25T10:00:00+00:00" == norm_at("2026-10-25T12:00:00+02:00")
     assert norm_at("not a time") == "not a time"
+
+
+def test_the_phones_snapshot_carries_the_count_and_a_canvas_moves_its_rev(host):
+    from orkboard.gui.board_host import BoardPhone
+    before = BoardPhone.phone_snapshot(host)
+    assert (before["canvases_new"], before["canvases_rev"]) == (0, 0)
+    host.ideas.canvas_store.add(_c("2026-10-25T10:00:00+00:00"))
+    after = BoardPhone.phone_snapshot(host)
+    assert after["canvases_new"] == 1 and after["rev"] != before["rev"]      # the phone is sent it again

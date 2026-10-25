@@ -154,4 +154,26 @@ The critical tests (CLAUDE.md *Alpha*) and `tests/test_gui_wording.py` pass.
    tool's format otherwise changes this one function, with its test.
 
 ## As found
-(§0's findings, by tool, once recorded.)
+(§0's findings, by tool, once recorded.) Until then the readers and the hook rest on the tools' sources and docs:
+- Codex: rollout lines `{timestamp, type, payload}`; `session_meta.payload.cwd`, `turn_context.payload.model`; a picture is
+  `response_item` `image_generation_call` met by `event_msg` `image_generation_end` (`saved_path`) on its call id, or a
+  paginated rollout's `item_completed` `image_gen.generation` (`savedPath`); MCP calls as `function_call` /
+  `function_call_output`, `mcp_tool_call_end` or `item_completed` `McpToolCall` (codex-rs `rollout/`, `protocol/`).
+- agy: the brain folder's images and their `.metadata.json` keys, and which names are screenshots or recordings, are
+  guesses; whether `PostToolUse` fires for `generate_image`, and its answer's key, are not known.
+- Claude: the `Artifact` answer's shape (text, blocks or a dict) is not known: `text_of` reads all three. Claude's
+  PostToolUse payload has no model, so a canvas the hook writes has none (its head: the elf at `warrior`).
+
+## As built
+- **Core** (Claude): `core/canvases.py`, `gui/ideas_canvases.py`, `sources/canvases.py` (`Canvas` with its time in one
+  spelling, UTC to the second: the store compares `at` as text; `from_call`; `link_host`), `TERMS` `canvas`, the events.
+  The phone's snapshot carries `canvases_new` and `canvases_rev` (gui/board_host.py), so a canvas moves its `rev`.
+- **A** (a cheaper model, reviewed by Claude): the readers read a file from where they stopped (offset, size, mtime);
+  their imports of `sessions` and `transcripts` are lazy, so the hook loads nothing heavy. Fixtures in
+  `tests/fixtures/canvases/`, written by hand (its README).
+- **B**: `js/arena/canvases.js` (the row in `waits.js`, so only where *Waits for your look* is: a party, on a wide
+  screen), the drawer's tab kind `canvas` (`js/shell/store.js`, not logged as opened), styles in `arena.css`.
+- **C**: `pwa/shell-canvases.js`, between the Board and the hand (the phone has no Review screen of its own); a link is
+  an `<a target=_blank>`, a picture opens in a sheet, a page has no tap; `sw.js` `CACHE` `orkcraft-app-v86`.
+- **D**: `hooks/canvas.py`; a worktree's session writes to its main checkout's `.orkcraft`. The installer's entries
+  are Orkline's (§5.2), not made yet.
