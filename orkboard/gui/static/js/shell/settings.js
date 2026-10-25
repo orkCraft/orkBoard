@@ -3,6 +3,7 @@
 import { html } from "../html.js";
 import { review, act } from "./store.js";
 import { board } from "../board/store.js";
+import { TargetSetting } from "../board/target.js";
 import { Modal, closeDialog, openDialog } from "./modals.js";
 import { currentProject } from "./projects.js";
 import { saveLogs } from "./errors.js";
@@ -27,6 +28,7 @@ export function SettingsDialog() {
           <input type="checkbox" class="gui-onb__hide" checked=${!!b.autostart} onChange=${(e) => act("ideas.board_set", { autostart: e.target.checked })} />
           <i>${b.autostart ? "✓" : ""}</i><span>Start plans by themselves</span></label>
         <span class="ok-font-status ok-tone-muted">Low-risk plans start alone; the rest wait for you.</span>
+        <${TargetSetting} />
         <div class="board-row"><span class="ok-font-label">Night</span>
           <input class="ork-field" type="time" value=${from} aria-label="Night from" onChange=${(e) => e.target.value && act("ideas.board_set", { night: `${e.target.value}-${to}` })} />
           <span aria-hidden="true">–</span>

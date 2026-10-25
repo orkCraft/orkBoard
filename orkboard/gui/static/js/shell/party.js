@@ -195,14 +195,14 @@ export function PartyBands({ craft = "", leader, setLeader, team, setTeam }) {
 
 const PRICE_MS = 300;
 /** What the party costs (spec 43 §3): `ideas.party_price` once the picker is open (`active`), again 300 ms after a seat or *Every idea* changes. null until answered. */
-export function usePartyPrice(active, leader, team, every, craft = "") {
+export function usePartyPrice(active, leader, team, every, craft = "", size = "") {
   const [price, setPrice] = useState(null);
   const asked = useRef(false);
-  const key = JSON.stringify([leader, team, every.filter((id) => team.includes(id)), craft]);
+  const key = JSON.stringify([leader, team, every.filter((id) => team.includes(id)), craft, size]);
   useEffect(() => {
     if (!active) { asked.current = false; return undefined; }
     let live = true;
-    const run = () => command("ideas.party_price", { leader, team, every: every.filter((id) => team.includes(id)), ...(craft ? { craft } : {}) })
+    const run = () => command("ideas.party_price", { leader, team, every: every.filter((id) => team.includes(id)), ...(craft ? { craft } : {}), ...(size ? { size } : {}) })
       .then((got) => { if (live && got && !got.error) setPrice(got); }).catch(() => {});
     const first = !asked.current;
     asked.current = true;

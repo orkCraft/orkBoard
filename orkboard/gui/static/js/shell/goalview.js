@@ -2,7 +2,7 @@
 // leader, each member with what it does and costs), *Checks on every goal*, *What it costs* (so far, today, the price a goal), *Its flags* (⚑ the goal · date ·
 // ≈$ · k of n first time; the newest ten, then All n) and, only for a party with a verdict of before, *Before: <its old flag>*; at the foot *Edit the party* and
 // *Save it to your parties*. No Metrics, no Verdict, no *Ask … to accept*: a party has no end, only a count and its goals' flags. A question the party's leader asked is
-// still answered here, in the same talk as a goal's.
+// still answered here, in the same talk as a goal's. With the Orkmaster's reading of the project (spec 75 §5.4) *Its size* follows *The party*: Lean · Standard · Full, saved at once (partysize.js).
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html } from "../html.js";
 import { say } from "../link.js";
@@ -13,6 +13,7 @@ import { openDialog } from "./modals.js";
 import { ErrorLine } from "./errors.js";
 import { Questions } from "../board/ask.js";
 import { SaveParty, libraryWords, rangeWords, usePartyPrice } from "./party.js";
+import { PartySize } from "./partysize.js";
 import { flagDate } from "../board/maplayout.js";
 import { soFarWords, todayWords } from "../board/mapstage.js";
 import { flagRow, waitsMain } from "../arena/goalwords.js";
@@ -98,6 +99,7 @@ export function GoalView() {
       <ul class="shell-goal__team"><li key="lead">${g.leader?.head && html`<${WhoHead} head=${g.leader.head} small />`} <b>${g.leader?.name || "Taskmaster"}</b> <span class="ok-tone-muted">leads</span></li>
         ${seats.map((s) => { const l = memberLine(s); return html`<li key=${s}>${l.head && html`<${WhoHead} head=${l.head} small />`} <b>${l.name}</b> <span class="ok-tone-muted">· ${l.text}</span></li>`; })}</ul>
       <${PartyWork} goal=${g.slug} /></section>
+    <${PartySize} slug=${g.slug} leader=${g.leader?.slug || "taskmaster"} team=${seats} every=${g.every || []} craft=${g.craft || ""} size=${m?.size || ""} party=${m?.party} />
     <section class="shell-goal__sec" aria-label="Checks on every goal" data-sec="checks"><h3 class="board-sub">Checks on every goal</h3>
       ${(g.every || []).length ? html`<ul class="shell-goal__team">${g.every.map((s) => { const c = checkLine(s); return html`<li key=${s}><b>${c.name}</b> <span class="ok-tone-muted">${c.text}</span></li>`; })}</ul>`
         : html`<p class="ok-tone-muted">None: a check holds a goal where it applies.</p>`}</section>

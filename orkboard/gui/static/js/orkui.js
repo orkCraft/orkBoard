@@ -45,6 +45,24 @@ export function Head({ race, tier = "laborer", small = false, size = "", title =
     width=${wide} height=${high} alt="" title=${title || undefined} draggable="false" />`;
 }
 
+/** A switch of a few words, one picked: orkUI's buttons in a radiogroup (`role="radio"`, `aria-checked`), one tab stop, the arrows move the pick (Home and End too). `options`: [[id, word, sub?]]
+ *  (`sub`: a muted second line under the word, e.g. a price); `value` the id picked ("" none: the first is then the tab stop); `onPick(id)`. `label`: the group's name. */
+export function Switch({ label, options, value = "", onPick, cls: extra = "" }) {
+  const at = Math.max(0, options.findIndex(([id]) => id === value));
+  const key = (e) => {
+    const step = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 }[e.key];
+    const to = e.key === "Home" ? 0 : e.key === "End" ? options.length - 1 : step ? (at + step + options.length) % options.length : -1;
+    if (to < 0) return;
+    e.preventDefault();
+    onPick(options[to][0]);
+    e.currentTarget.querySelectorAll("[role=radio]")[to]?.focus();
+  };
+  return html`<div class=${`ork-switch${extra ? ` ${extra}` : ""}`} role="radiogroup" aria-label=${label} onKeyDown=${key}>
+    ${options.map(([id, word, sub], n) => html`<button type="button" key=${id} role="radio" class="ork-btn" data-value=${id} aria-checked=${String(id === value)}
+      aria-label=${sub ? word : undefined} tabindex=${n === at ? 0 : -1} onClick=${() => onPick(id)}><span>${word}</span>${sub && html`<small class="ork-switch__sub">${sub}</small>`}</button>`)}
+  </div>`;
+}
+
 /** The tabs' marks, orkUI's pixel icons: the Board a list, Agents a robot (a head says a craft, not every agent), Review an eye. */
 export function TabMark({ tab }) {
   return html`<${Icon} name=${{ board: "list-box", agents: "robot" }[tab] || "eye"} />`;
