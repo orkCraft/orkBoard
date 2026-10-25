@@ -61,7 +61,8 @@ function GoalEdit({ slug, then = "" }) {
     else showGoal(got.slug);
   };
   return html`<${Modal} title="Edit the party" onClose=${closeDialog} wide=${true}
-    foot=${html`<button type="button" class="ork-btn" onClick=${closeDialog}>Cancel</button>
+    foot=${html`${g && slug !== "general" && html`<button type="button" class="ork-btn danger shell-modal__left" title="Its goals move to General or go with it, after one question" onClick=${() => openDialog("remove-party", { slug })}>Remove party</button>`}
+      <button type="button" class="ork-btn" onClick=${closeDialog}>Cancel</button>
       <button type="submit" form="goal-form" class="ork-btn primary" disabled=${!about.trim() || saving}>Save party</button>`}>
     <form id="goal-form" class="shell-form" onSubmit=${save}>
       <label class="shell-field"><span class="ok-font-label">Name</span>

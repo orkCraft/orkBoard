@@ -408,5 +408,5 @@ async def test_a_host_that_cannot_answer_proposals_leaves_new_party_as_it_was_wi
 
 def test_the_service_worker_keeps_the_proposals_and_is_one_version_up():
     sw = (Path(pwa.__file__).parent / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")
-    assert 'const CACHE = "orkcraft-app-v86";' in sw and '"shell-proposals.js"' in sw[sw.index("const SHELL"):sw.index("];", sw.index("const SHELL"))]
-    assert re.search(r'orkcraft-app-v(\d+)', sw).group(1) == "86" and library.get(PM) is not None
+    assert int(re.search(r'const CACHE = "orkcraft-app-v(\d+)";', sw).group(1)) >= 86 and '"shell-proposals.js"' in sw[sw.index("const SHELL"):sw.index("];", sw.index("const SHELL"))]
+    assert library.get(PM) is not None

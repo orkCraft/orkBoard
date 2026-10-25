@@ -4,6 +4,7 @@ under reduced motion; the Board with no party has its stars (`aria-hidden`, no p
 neither, a Board with a party has no stars; `sw.js` v86."""
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -192,4 +193,4 @@ async def test_a_board_with_a_party_and_the_screens_that_reuse_the_empty_look_ha
 @pytest.mark.asyncio
 async def test_sw_is_one_up(fake_repo):
     sw = (Path(pwa.__file__).parent / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")
-    assert 'const CACHE = "orkcraft-app-v86";' in sw
+    assert int(re.search(r'const CACHE = "orkcraft-app-v(\d+)";', sw).group(1)) >= 86

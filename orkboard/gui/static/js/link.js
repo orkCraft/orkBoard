@@ -75,8 +75,8 @@ export function act(id, name, args = {}) {
   return command("act", { id, act: name, args });
 }
 
-/** Send a command to the host; resolves with its result, rejects with its error (also toasted). */
-export function command(name, args = {}) {
+/** Send a command to the host; resolves with its result, rejects with its error (also toasted, unless `quiet`: the caller says it itself). */
+export function command(name, args = {}, quiet = false) {
   return new Promise((resolve, reject) => {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       toast("Not connected to the town", "error");
@@ -87,7 +87,7 @@ export function command(name, args = {}) {
     pending.set(id, { resolve, reject });
     socket.send(JSON.stringify({ t: "cmd", id, name, args }));
   }).catch((e) => {
-    if (e.message !== "offline") toast(e.message, "error", name);
+    if (e.message !== "offline" && !quiet) toast(e.message, "error", name);
     throw e;
   });
 }

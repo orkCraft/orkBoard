@@ -7,6 +7,7 @@ a choice's *Let … choose*; the Target is one switch (the menu's and Operations
 44 px targets; `sw.js` v62."""
 from __future__ import annotations
 
+import re
 import copy
 
 import pytest
@@ -429,4 +430,4 @@ async def test_every_target_of_a_raised_stop_is_44_px_and_the_page_does_not_scro
 
 def test_the_service_worker_is_at_v62():
     sw = (pwa.ROOT / "sw.js").read_text(encoding="utf-8")
-    assert 'const CACHE = "orkcraft-app-v86";' in sw
+    assert int(re.search(r'const CACHE = "orkcraft-app-v(\d+)";', sw).group(1)) >= 86

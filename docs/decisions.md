@@ -1338,3 +1338,19 @@ not carry. So:
    the studio serves, beside the person's own subscriptions, is where a paid part may come; how is open. A version
    already out stays Apache-2.0 whatever is decided then: a licence given cannot be taken back.
 The owner's call.
+
+## 97. A party can be removed; its goals move to General or go with it, never while one is at work (25 October, the owner)
+
+Why: the owner asked whether a party can be removed: it cannot. A party is added (`ideas.track_add`) and edited, never
+taken off the Board, so a project keeps every party it ever tried; a person's own saved parties (spec 43 §6) are removed
+already, a project's are not. A party is not one file alone: its goals, their plans, worktrees and spend, the routes
+that name it. So:
+1. **A party is removed from its screen, on both faces** (*Remove party*), after one question that says what happens.
+2. **Its goals move to General** (the default) **or are removed with it** (*Remove the party and its 3 goals*); a
+   removed goal goes as `ideas.drop` has it, its spend kept in `spend-gone.jsonl`.
+3. **Not while one of its goals is at work**: the question says *2 goals at work: stop them first*, and nothing is
+   removed. A party's agents are never stopped by a removal.
+4. **General is never removed**: it is where a goal goes when it has no party.
+5. **No archive**: a party one does not want to see is closed already (§87); an archive is one more state for the column,
+   the map, the project's level and the Orkmaster. Looked at again if people ask for a removed party back.
+Spec 80. The owner's call.

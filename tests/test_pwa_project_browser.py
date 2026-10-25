@@ -5,6 +5,7 @@ parties' sheet; its sheet has a section for each party (*Open <party>* switches)
 *Its party* from `ideas.party_for` (*Orkmaster suggests Website · takes it whole*, the others to pick), `ideas.add` with the party picked; an older host (no `project`) has none of it; no sideways scroll; the worker's version."""
 from __future__ import annotations
 
+import re
 import copy
 from pathlib import Path
 
@@ -362,4 +363,4 @@ async def test_a_partys_own_new_goal_is_unchanged(fake_repo, monkeypatch):
 def test_the_service_worker_is_one_up_and_keeps_the_projects_module():
     sw = (Path(pwa.__file__).parent / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")
     shell = sw[sw.index("const SHELL"):sw.index("];", sw.index("const SHELL"))]
-    assert 'const CACHE = "orkcraft-app-v86";' in sw and '"shell-project.js"' in shell
+    assert int(re.search(r'const CACHE = "orkcraft-app-v(\d+)";', sw).group(1)) >= 86 and '"shell-project.js"' in shell

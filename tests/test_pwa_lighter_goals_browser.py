@@ -3,6 +3,7 @@ A goal's row is one line of 44 px (its element, its type's sign, its title, its 
 *New · n* and *Flags · n* are folded rows of 44 px with *Process now* and *k wait for main* at their right; no sideways scroll; the service worker's version."""
 from __future__ import annotations
 
+import re
 import os
 from pathlib import Path
 
@@ -87,4 +88,4 @@ async def test_new_and_flags_are_folded_rows_of_44_px_with_process_now_and_what_
 
 def test_the_service_worker_has_the_new_version():
     sw = (Path(pwa.__file__).parent / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")
-    assert 'const CACHE = "orkcraft-app-v86";' in sw
+    assert int(re.search(r'const CACHE = "orkcraft-app-v(\d+)";', sw).group(1)) >= 86

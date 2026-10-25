@@ -18,7 +18,7 @@ from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
 from orkboard.realm import idea_secrets, ideas, jobs, roles, tool_run
 
 BOARD_COMMANDS = {"ideas.board", "ideas.page", "ideas.add", "ideas.say", "ideas.plan", "ideas.start", "ideas.move",
-                  "ideas.edit", "ideas.track_add", "ideas.track_set", "ideas.todo", "ideas.drop", "ideas.stop",
+                  "ideas.edit", "ideas.track_add", "ideas.track_set", "ideas.track_drop", "ideas.todo", "ideas.drop", "ideas.stop",
                   "ideas.review_list", "ideas.diff", "ideas.merge", "ideas.back", "ideas.drop_task",
                   "ideas.stop_task", "ideas.agents", "ideas.task", "ideas.into", "ideas.log", "ideas.logs", "ideas.goal_save",
                   "ideas.goal", "ideas.read_now", "ideas.roles", "ideas.role_save", "ideas.role_add", "ideas.role_drop",
