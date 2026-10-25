@@ -5,7 +5,6 @@ tasks going to the leader, a resize by a recipe with who joins and leaves, a mem
 from __future__ import annotations
 
 import json
-import sys
 from types import SimpleNamespace
 
 import pytest
@@ -25,7 +24,6 @@ def host(fake_repo):
     h.ideas.keeper.call = stub
     h.root, h.state = h.ideas.root(), h.ideas.state_dir
     yield h
-    sys.modules.pop("orkboard.core.idea_runner", None)
 
 
 @pytest.fixture

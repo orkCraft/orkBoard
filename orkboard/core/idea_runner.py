@@ -405,6 +405,8 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
         tool = str(self.party(slug).get("tool") or "")
         if harnesses.get(tool) is not None:
             return tool
+        if self.party_of is None:                       # a runner with no host to say the parties (its tests, a bare run): Claude, as before
+            return HARNESS
         from orkboard import settings as machine
         return machine.main_tool()
 
