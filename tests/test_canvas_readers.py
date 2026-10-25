@@ -82,10 +82,10 @@ def test_claude_reads_the_artifacts_the_docs_and_the_figma_files_a_session_made(
     page, design, doc, fig = found
     assert (page.tool, page.kind, page.url, page.file) == ("claude", "page", "https://claude.ai/artifact/a1b2c3",
                                                           "/work/elf-page/onboarding.html")
-    assert (page.session, page.model, page.at) == ("sess-1", "claude-opus-5-5", "2026-10-25T10:00:09.000Z")  # the result's line
+    assert (page.session, page.model, page.at) == ("sess-1", "claude-opus-5-5", "2026-10-25T10:00:09+00:00")  # the result's line
     assert (design.kind, design.url, design.file) == ("design", "https://claude.ai/code/artifact/d4e5f6", "")
     assert (doc.kind, doc.url, doc.model, doc.at) == ("document", "https://claude.ai/artifact/9a8b7c", "claude-sonnet-5-5",
-                                                      "2026-10-25T10:04:03.000Z")
+                                                      "2026-10-25T10:04:03+00:00")
     assert (fig.kind, fig.url) == ("design", "https://www.figma.com/design/AbCdEf123/Elf-kit")
     assert all(c.key == f"claude:{c.url}" for c in found)
 
@@ -104,9 +104,9 @@ def test_claude_reads_the_projects_worktrees_too_and_ignores_another_projects_fo
 
 def test_claude_a_broken_line_is_skipped_and_a_line_still_being_written_waits(world):
     lines = (FIXTURES / "claude_session.jsonl").read_text(encoding="utf-8").splitlines()
-    use = json.dumps({"type": "assistant", "timestamp": "2026-10-25T11:00:00.000Z", "message": {
+    use = json.dumps({"type": "assistant", "timestamp": "2026-10-25T11:00:00+00:00", "message": {
         "model": "m", "content": [{"type": "tool_use", "id": "late", "name": "Artifact", "input": {"title": "Late page"}}]}})
-    result = json.dumps({"type": "user", "timestamp": "2026-10-25T11:00:02.000Z", "message": {"content": [
+    result = json.dumps({"type": "user", "timestamp": "2026-10-25T11:00:02+00:00", "message": {"content": [
         {"type": "tool_result", "tool_use_id": "late", "content": "https://claude.ai/artifact/late1"}]}})
     path = _claude(world, text="\n".join(lines[:4] + ["{not json", "[1, 2]", "", *lines[4:], use]) + "\n" + result[:25])
     assert [c.title for c in read_claude(world)] == ["Onboarding", "Landing design", "Launch notes", "Elf kit"]
@@ -122,7 +122,7 @@ def test_claude_an_unchanged_file_is_not_parsed_again_and_a_grown_one_is_read_on
     monkeypatch.setattr(canvases, "_feed", lambda tail, p, line: (parsed.append((p.name, tail.offset)), real(tail, p, line))[1])
     first = read_claude(world)
     assert read_claude(world) == first and parsed == [("sess-1.jsonl", 0)]      # the second pass opened nothing
-    call = {"type": "assistant", "timestamp": "2026-10-25T12:00:00.000Z", "message": {"model": "m", "content": [
+    call = {"type": "assistant", "timestamp": "2026-10-25T12:00:00+00:00", "message": {"model": "m", "content": [
         {"type": "tool_use", "id": "x1", "name": "Artifact", "input": {"title": "Next page"}}]}}
     with path.open("a", encoding="utf-8") as f:
         f.write(json.dumps(call) + "\n")
@@ -130,7 +130,7 @@ def test_claude_an_unchanged_file_is_not_parsed_again_and_a_grown_one_is_read_on
     assert [n for n, _ in parsed] == ["sess-1.jsonl"] * 2 and parsed[1][1] > 0     # read on from where it was, not again
     assert grown == first                                                     # the call has no answer yet: no canvas
     with path.open("a", encoding="utf-8") as f:                               # its answer comes in a later read
-        f.write(json.dumps({"type": "user", "timestamp": "2026-10-25T12:00:03.000Z", "message": {"content": [
+        f.write(json.dumps({"type": "user", "timestamp": "2026-10-25T12:00:03+00:00", "message": {"content": [
             {"type": "tool_result", "tool_use_id": "x1", "content": "https://claude.ai/artifact/n3x7"}]}}) + "\n")
     assert [c.title for c in read_claude(world)][-1] == "Next page" and len(parsed) == 3
     path.write_text("", encoding="utf-8")                                     # a file that shrank is read again
@@ -169,10 +169,10 @@ def test_codex_reads_pictures_and_mcp_calls_of_the_rollouts_under_the_project(wo
     pic = found["A pixel elf with a lantern, facing left."]
     assert (pic.tool, pic.kind, pic.url, pic.session, pic.model) == ("codex", "picture", "", SESSION_ID, "gpt-6-luna")
     assert pic.file == str(home / "generated_images" / SESSION_ID / "ig_0001.png")      # the end event's `saved_path`
-    assert pic.at == "2026-10-25T10:00:30.050Z"
+    assert pic.at == "2026-10-25T10:00:30+00:00"
     fig, td = found["Elf kit"], found["Flow sketch"]
-    assert (fig.kind, fig.url, fig.at) == ("design", "https://www.figma.com/design/AbCdEf123/Elf-kit", "2026-10-25T10:02:04.000Z")
-    assert (td.kind, td.url, td.at, td.model) == ("design", "https://www.tldraw.com/r/abc123", "2026-10-25T10:03:02.000Z", "gpt-6-luna")
+    assert (fig.kind, fig.url, fig.at) == ("design", "https://www.figma.com/design/AbCdEf123/Elf-kit", "2026-10-25T10:02:04+00:00")
+    assert (td.kind, td.url, td.at, td.model) == ("design", "https://www.tldraw.com/r/abc123", "2026-10-25T10:03:02+00:00", "gpt-6-luna")
 
 
 def test_codex_a_picture_with_no_saved_path_is_the_file_codex_keeps_when_it_is_there(world):
@@ -196,11 +196,11 @@ def test_codex_a_rollout_of_another_folder_is_ignored_and_one_in_a_subfolder_is_
 
 
 def test_codex_reads_a_paginated_rollouts_items_and_a_broken_line_is_skipped(world):
-    meta = {"timestamp": "2026-10-25T09:00:00.000Z", "type": "session_meta", "payload": {"id": "thread-9", "cwd": str(world)}}
-    img = {"timestamp": "2026-10-25T09:01:00.000Z", "type": "event_msg", "payload": {"type": "item_completed", "item": {
+    meta = {"timestamp": "2026-10-25T09:00:00+00:00", "type": "session_meta", "payload": {"id": "thread-9", "cwd": str(world)}}
+    img = {"timestamp": "2026-10-25T09:01:00+00:00", "type": "event_msg", "payload": {"type": "item_completed", "item": {
         "type": "Extension", "kind": "image_gen.generation", "id": "ig_9", "status": "completed", "revisedPrompt": "A gnome\nwith a flag",
         "result": "Zm9v", "savedPath": "/saved/ig_9.png"}}}
-    mcp = {"timestamp": "2026-10-25T09:02:00.000Z", "type": "event_msg", "payload": {"type": "item_completed", "item": {
+    mcp = {"timestamp": "2026-10-25T09:02:00+00:00", "type": "event_msg", "payload": {"type": "item_completed", "item": {
         "type": "McpToolCall", "id": "c1", "server": "canva", "tool": "create_design", "arguments": {"title": "Poster"},
         "status": "completed", "result": {"content": [{"type": "text", "text": "https://www.canva.com/design/xyz/edit"}]}}}}
     text = "\n".join([json.dumps(meta), "garbage{", json.dumps(img), json.dumps(mcp)]) + "\n"
@@ -261,15 +261,15 @@ def test_read_all_is_every_canvas_oldest_first_and_a_canvas_drawn_again_is_one(w
     found = read_all(world, ["conv-1"])
     assert [c.at for c in found] == sorted(c.at for c in found) and len(found) == 8
     assert {c.tool for c in found} == {"claude", "codex", "agy"}
-    again = json.dumps({"type": "assistant", "timestamp": "2026-10-25T13:00:00.000Z", "message": {"model": "m", "content": [
+    again = json.dumps({"type": "assistant", "timestamp": "2026-10-25T13:00:00+00:00", "message": {"model": "m", "content": [
         {"type": "tool_use", "id": "again", "name": "Artifact", "input": {"title": "Onboarding v2", "action": "publish"}}]}})
-    back = json.dumps({"type": "user", "timestamp": "2026-10-25T13:00:03.000Z", "message": {"content": [
+    back = json.dumps({"type": "user", "timestamp": "2026-10-25T13:00:03+00:00", "message": {"content": [
         {"type": "tool_result", "tool_use_id": "again", "content": "https://claude.ai/artifact/a1b2c3"}]}})
     with next(iter(sessions.claude_projects_dir(world).glob("*.jsonl"))).open("a", encoding="utf-8") as f:
         f.write(again + "\n" + back + "\n")
     found = read_all(world, ["conv-1"])
     page = [c for c in found if c.url == "https://claude.ai/artifact/a1b2c3"]
-    assert len(found) == 8 and [(c.title, c.at) for c in page] == [("Onboarding v2", "2026-10-25T13:00:03.000Z")]
+    assert len(found) == 8 and [(c.title, c.at) for c in page] == [("Onboarding v2", "2026-10-25T13:00:03+00:00")]
     assert found[-1] is page[0]
 
 

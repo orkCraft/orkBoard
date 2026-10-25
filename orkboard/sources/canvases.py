@@ -23,8 +23,6 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
-from orkboard.sources import sessions as _sessions
-from orkboard.sources import transcripts
 
 TOOLS = ("claude", "codex", "agy")
 TOOL_WORDS = {"claude": "Claude", "codex": "Codex", "agy": "Antigravity"}
@@ -47,6 +45,29 @@ _AGY_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]*$")
 _ROLLOUT_ID = re.compile(r"^rollout-\d{4}-\d\d-\d\dT\d\d-\d\d-\d\d-(.+)$")
 
 
+def _sessions():
+    """sources/sessions.py, loaded when a reader runs: the hook (hooks/canvas.py) imports this module and nothing heavy."""
+    from orkboard.sources import sessions
+    return sessions
+
+
+def _transcripts():
+    from orkboard.sources import transcripts
+    return transcripts
+
+
+def norm_at(at: str) -> str:
+    """An ISO 8601 time as one spelling, UTC to the second (`2026-10-25T10:00:00+00:00`): the store compares `at` as text,
+    and the tools write `…Z`, `…+00:00` or a local offset. A time it cannot read is kept as written."""
+    try:
+        t = dt.datetime.fromisoformat(str(at).strip().replace("Z", "+00:00"))
+    except ValueError:
+        return str(at)
+    if t.tzinfo is None:
+        t = t.astimezone()
+    return t.astimezone(dt.timezone.utc).isoformat(timespec="seconds")
+
+
 @dataclass
 class Canvas:
     tool: str                  # TOOLS
@@ -57,6 +78,9 @@ class Canvas:
     file: str = ""             # a local file (absolute), when it has one
     session: str = ""          # the session that drew it
     model: str = ""            # the model that drew it, when the tool says
+
+    def __post_init__(self) -> None:
+        self.at = norm_at(self.at)
 
     @property
     def key(self) -> str:
@@ -177,11 +201,11 @@ _CODEX: dict[str, _Tail] = {}
 
 def _feed(tail: _Tail, path: Path, line) -> None:
     """The new complete lines of `path` (at most `transcripts.MAX_BYTES` of it), each parsed and given to `line`."""
-    if tail.offset >= transcripts.MAX_BYTES:
+    if tail.offset >= _transcripts().MAX_BYTES:
         return
     with path.open("rb") as f:
         f.seek(tail.offset)
-        data = f.read(min(tail.size, transcripts.MAX_BYTES) - tail.offset)
+        data = f.read(min(tail.size, _transcripts().MAX_BYTES) - tail.offset)
     end = data.rfind(b"\n") + 1
     rest = data[end:].strip()
     if rest:
@@ -221,7 +245,7 @@ def _read(cache: dict[str, _Tail], path: Path, root: str, line) -> _Tail | None:
 
 
 def _prune(cache: dict[str, _Tail], keep: set[str]) -> None:
-    if len(cache) > 8 * _sessions.MAX_LOCAL:
+    if len(cache) > 8 * _sessions().MAX_LOCAL:
         for k in [k for k in cache if k not in keep]:
             del cache[k]
 
@@ -273,11 +297,11 @@ def read_claude(repo_root: Path) -> list[Canvas]:
     project's transcripts and its worktrees' (the newest `sessions.MAX_LOCAL`)."""
     out: list[Canvas] = []
     try:
-        folders = [_sessions.claude_projects_dir(repo_root)]
+        folders = [_sessions().claude_projects_dir(repo_root)]
         trees = Path(repo_root) / ".orkcraft" / "worktrees"
         if trees.is_dir():
-            folders += [_sessions.claude_projects_dir(w) for w in sorted(trees.glob("*")) if w.is_dir()]
-        files = _newest([p for f in folders if f.is_dir() for p in f.glob("*.jsonl")], _sessions.MAX_LOCAL)
+            folders += [_sessions().claude_projects_dir(w) for w in sorted(trees.glob("*")) if w.is_dir()]
+        files = _newest([p for f in folders if f.is_dir() for p in f.glob("*.jsonl")], _sessions().MAX_LOCAL)
         for path in files:
             tail = _read(_CLAUDE, path, "", _claude_line)
             out += tail.found if tail is not None else []
@@ -429,7 +453,7 @@ def read_codex(repo_root: Path) -> list[Canvas]:
                 continue
             out += tail.found + _codex_pictures(tail)
             mine += 1
-            if mine >= _sessions.MAX_LOCAL:
+            if mine >= _sessions().MAX_LOCAL:
                 break
         _prune(_CODEX, {str(p) for p in listed})
     except OSError:
@@ -457,7 +481,7 @@ def read_agy(repo_root: Path, sessions: list[str]) -> list[Canvas]:
     its `.metadata.json` says. Written nowhere, the file only looked at: its time is the file's."""
     out: list[Canvas] = []
     try:
-        brain = _sessions.agy_brain_dir()
+        brain = _sessions().agy_brain_dir()
         for sid in dict.fromkeys(sessions):
             if not isinstance(sid, str) or not _AGY_ID.match(sid) or ".." in sid:
                 continue                             # a conversation id is a name, never a path

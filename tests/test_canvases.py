@@ -186,3 +186,10 @@ def test_a_doc_a_figma_file_and_a_picture_are_canvases():
     pic = from_call("agy", "generate_image", {"Prompt": "a pixel elf\nsmall"}, "Saved to /home/u/.gemini/brain/c1/elf.png", AT)
     assert (pic.kind, pic.title, pic.file) == ("picture", "a pixel elf", "/home/u/.gemini/brain/c1/elf.png")
     assert from_call("claude", "Bash", {"command": "ls"}, "", AT) is None
+
+
+def test_a_canvas_says_its_time_in_one_spelling():
+    """The store compares `at` as text: `…Z`, `…+00:00`, a fraction and another offset all read as one UTC spelling."""
+    from orkboard.sources.canvases import norm_at
+    assert _c("2026-10-25T10:00:00.123Z").at == "2026-10-25T10:00:00+00:00" == norm_at("2026-10-25T12:00:00+02:00")
+    assert norm_at("not a time") == "not a time"
