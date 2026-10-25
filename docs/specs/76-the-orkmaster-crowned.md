@@ -14,7 +14,7 @@ to orkUI; a new word in `TERMS` (the crown is how the Orkmaster is drawn, not a 
 
 | part | builds | files (and their tests) |
 |---|---|---|
-| **A. orkUI** (github.com/orkCraft/orkUI) | §1 | `races/races.json` (a `ranks` block, two role letters), `tools/build_races.py` (writes the ranks), `office/races/`, `game/races/` (generated), `office/preview.html` (the gallery's Races row), `races/README.md`, `README.md`, `CHANGELOG.md`, `pyproject.toml` (0.7.0), `tests/test_orkui.py` |
+| **A. orkUI** (github.com/orkCraft/orkUI) | §1 | `races/races.json` (a `ranks` block, two role letters `g`, `r`), `tools/build_races.py` (writes the ranks), `office/races/`, `game/races/` (generated), `office/preview.html` (the gallery's Races row), `races/README.md`, `README.md`, `CHANGELOG.md`, `pyproject.toml` (0.7.0), `tests/test_orkui.py` |
 | **B. Orkboard** | §2 | `design-system/orkui` (the copy: `python -m orkboard.design.orkui <orkUI>`, never by hand), `realm/orkmaster.py` (`ORKMASTER`'s tier), the faces' fallbacks (`js/shell/proposals.js`, `pwa/shell-project.js`, `pwa/shell-proposals.js`, and any other `{race: "peon", tier: "elder"}` that stands for the Orkmaster), `pwa/sw.js` (`CACHE` one up, every phone test's pin with it); `tests/test_orkmaster.py` and the tests that pin the Orkmaster's head |
 
 ## 1. The crown in orkUI (A)
@@ -22,13 +22,15 @@ to orkUI; a new word in `TERMS` (the crown is how the Orkmaster is drawn, not a 
    tier is, on the same 12 x 11 grid; it is not a tier: `races.<race>` keeps its three tiers, and the test of seven
    races in three tiers stays as it is. `build_races.py` writes each rank's head as `<race>-<rank>.png` (24 x 22) and
    `@2x` (48 x 44) for every look, as it writes the tiers; `--check` covers them.
-2. **The head**: the peon's face exactly as in its three tiers (rows 4 to 10 of `laborer`: the eyes and the mouth where
-   they are), and over it a crown of three points in place of the hood:
+2. **The head is orkCraft's logo's crown on the peon** (the owner: *take the ork with the crown of orkcraft's logo*;
+   orkPage `public/favicon.svg`): the logo's two crown rows exactly, three points and a gem, sitting on the top of the
+   peon's head; the peon's face exactly as in its three tiers (rows 3 to 10 of `laborer`: the eyes and the mouth where
+   they are, so the Orkmaster is the Taskmaster's own race, crowned):
    ```
    ............
    ...g.gg.g...
-   ...gggggg...
-   ..qqqqqqqq..
+   ...ggrrgg...
+   ...ssssss...
    s.ssssssss.s
    ssszzsszzsss
    .sseesseess.
@@ -37,13 +39,13 @@ to orkUI; a new word in `TERMS` (the crown is how the Orkmaster is drawn, not a 
    ..sbssssbs..
    ...ssssss...
    ```
-   The builder may move a cell for legibility at 12 x 11, never the face's rows. The crown must read apart from the
-   warrior's iron at 12 x 11: points, not a dome.
-3. **Its colour**: two new role letters, `g` *crown* and `q` *crown shade*, a muted brass in office (the hats' brass,
-   toned down, its hue kept), the game look's brass in game. The rules of every race colour hold (`races/README.md`
-   *Colour*, the tests): chroma at most 40 in office, a CIE76 distance of at least 20 from `danger`, `alert` and
-   `success` (brass sits near `alert`: keep it duller, not yellower), every edge pixel 3:1 on `canvas`, `panel`,
-   `raised`. If a muted brass cannot pass, the crown is bone (`b`) with an iron shade (`j`) and no new letter.
+   The logo's own face (no shade, no cheeks) and its collar are not taken: a race's head is a head, and its face is the
+   race's.
+3. **Its colour**: two new role letters, `g` *crown* and `r` *the crown's gem*. The logo's gold (`#e3b23c`) is 13 from
+   `alert` and its red 20 from `danger` (CIE76): they would pass for signals, so the shapes are the logo's and the colours
+   toned under the race rules (`races/README.md` *Colour*): chroma at most 40 in office, at least 20 from `danger`,
+   `alert` and `success`, every edge pixel 3:1 on `canvas`, `panel`, `raised`. Office: brass `#ac8b4d`, garnet `#9a6050`;
+   game: brass `#b08a3a`, garnet `#a0584c`.
 4. **The gallery** (`office/preview.html`, Races): the crowned peon after the peon's three tiers, with its word
    (`peon crown`). **README** (`races/README.md`): a section *The ranks*: `crown`, the peon's only; who wears it is the
    product's to decide. **CHANGELOG**: 0.7.0, citing Orkboard's spec 76 and decisions §91.
@@ -60,7 +62,7 @@ to orkUI; a new word in `TERMS` (the crown is how the Orkmaster is drawn, not a 
    "elder"}` as the Orkmaster) become `crown`.
 3. **Its words**: the Orkmaster's head keeps the title *Orkmaster* everywhere; it never goes through `headWords` (which
    would say a tier's words). A head of `tier: "crown"` that does reach `headWords` says *Orkmaster* for the tier part
-   only if a test shows it is drawn there; otherwise no change to `TIER_WORDS`.
+   only where a test shows it is drawn there; otherwise no change to `TIER_WORDS`.
 4. **Agents stay as they are**: the Taskmaster's head is still its tier's (`elder` by default), a role cannot pick
    `crown`, `roles.TIERS` and the model list are unchanged; `roles.own_race` never returns a rank.
 5. `pwa/sw.js` `CACHE` one up (the head is a new file the phone caches), with every phone test's pin.
@@ -68,3 +70,9 @@ to orkUI; a new word in `TERMS` (the crown is how the Orkmaster is drawn, not a 
    desktop and phone tests that pin the Orkmaster's head (`peon-elder` beside *Orkmaster*) now pin `peon-crown`; a test
    that the Taskmaster's head is still `peon-elder` where both stand (the project's line beside a party Taskmaster leads).
    The critical tests (CLAUDE.md *Alpha*) and `tests/test_design_system.py` pass.
+
+## As built (A)
+- orkUI 0.7.0 on its `main` (`8682903`, then the logo's crown): `ranks.crown.peon` in `races.json`, roles `g` and `r`,
+  `peon-crown.png` and `@2x` in `office/races/` and `game/races/`; the gallery's Races row, *The ranks* in
+  `races/README.md`, the CHANGELOG; `tests/test_orkui.py` pins the grid (its crown rows the logo's), the face against the
+  peon's tiers, the colours and edges in both looks, the files. 241 passed.
