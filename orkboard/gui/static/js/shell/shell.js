@@ -7,6 +7,7 @@ import { town } from "../link.js";
 import { TopBar } from "./topbar.js";
 import { Preview } from "./preview.js";
 import { Dialogs } from "./dialogs.js";
+import { SignIn } from "./signin.js";
 import { StartScreen, currentProject, projectsOn } from "./projects.js";
 import { resetFiles } from "./files.js";
 import { resetGit } from "./gitpane.js";
@@ -61,7 +62,7 @@ export function Shell() {
     return () => window.removeEventListener("keydown", key);
   }, []);
   if (!project) {
-    return html`<div class="shell" data-start="true"><${TopBar} /><${StartScreen} /><${Dialogs} /></div>`;
+    return html`<div class="shell" data-start="true"><${TopBar} /><${StartScreen} /><${Dialogs} /><${SignIn} /></div>`;
   }
   return html`<div class="shell" data-drawer=${drawerOpen.value}>
     <${TopBar} />
@@ -70,5 +71,6 @@ export function Shell() {
       ${drawerOpen.value && html`<aside class="shell-drawer" aria-label="Drawer"><${Preview} /></aside>`}
     </div>
     <${Dialogs} />
+    <${SignIn} />
   </div>`;
 }

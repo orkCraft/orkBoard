@@ -78,6 +78,8 @@ class StubHost:
 
     def __init__(self, look="camp", onboarding=None):
         self.look, self.onboarding, self.rev, self.log, self.ws = look, onboarding, 1, [], None
+        self.sign_in: list[dict] = []                 # the snapshot's `sign_in` (spec 45 §4): the tools not signed in, as core/sign_ins.py serves them
+        self.sign_in_needs: list[dict] = []           # the sign-in rows of Needs you (realm/board_map.py `sign_in_needs`)
         self.plan = make_plan()
         self.into, self.push = "dev", False
         self.paired = [{"id": "p1", "name": "Pixel 8", "seen": "2026-10-17T09:30:00"}]
@@ -153,7 +155,7 @@ class StubHost:
                        **({"asked": self.goals["grow"]["asked"]} if self.goals.get("grow", {}).get("asked") else {})},
                base | {"kind": "proposal", "idea": "tags", "goal": "grow", "title": "Tag the notes", "text": "Tags make a long list findable."}]
         gone = set(self.proposals) | set(self.asked)            # answered: out of the list
-        return [n for n in out if (n["idea"] or n["goal"]) not in gone] + self.party_rows
+        return [n for n in out if (n["idea"] or n["goal"]) not in gone] + self.party_rows + list(self.sign_in_needs)
 
     def goal(self, slug, title, priority, state, order=1, **more):
         return {"slug": slug, "title": title, "about": "", "criteria": [], "deadline": "", "order": order, "count": 0, "priority": priority,
@@ -182,7 +184,7 @@ class StubHost:
         return {"t": "state", "state": {
             "focus": "board", "ideas_rev": self.rev, "look": self.look, "project": "orkline", "demo": False, "onboarding": self.onboarding or False,
             "words": [], "resources": {}, "orkspaces": [], "buildings": [], "roads": [], "alerts": [], "score": {},
-            "limits": self.limits, "reserve": self.reserve, "rate": self.rate, "review_count": len(self.results()), "needs_you": 1,
+            "limits": self.limits, "reserve": self.reserve, "rate": self.rate, "review_count": len(self.results()), "needs_you": 1, "sign_in": json.loads(json.dumps(self.sign_in)),
             "hud": {"gold": "$2.40", "show_gold": True, "lumber": "120k"}}}
 
     def page(self, slug):
@@ -393,6 +395,17 @@ class StubHost:
         if name == "phones.tailnet":
             return {"running": True, "installed": True, "phones": [{"name": "Pixel 8", "os": "Android", "online": True}], "install_qr": QR,
                     "dns_qr": QR, "install": "https://tailscale.com/download", "dns": "https://login.tailscale.com/admin/dns", "account": "me@example.com"}
+        if name in ("tools.sign_in", "tools.sign_in_cancel", "tools.sign_in_done"):       # spec 45 §5: the desktop's commands
+            e = next((x for x in self.sign_in if x["harness"] == a["harness"]), None)
+            if e is None:
+                return {"error": "That tool needs no sign-in"}
+            if name == "tools.sign_in":
+                e.update(state="open", why="", command="", **({"auto": False} if a.get("auto") is not True else {}))
+            elif name == "tools.sign_in_cancel":
+                e.update(state="failed", why="cancelled")
+            else:
+                self.sign_in = [x for x in self.sign_in if x is not e]
+            return self.bump(dict(e))
         if name == "phones.list":
             return {"phones": self.paired, "listening": True, "address": "https://192.168.1.20:8443", "tail_address": "https://studio.tail1234.ts.net:8443",
                     "tail_trusted": True, "tailscale": True, "fingerprint": "AB:CD", "open": [], "pairing": 100, "awake_offer": self.awake_offer}

@@ -124,7 +124,8 @@ class Stub:
             nodes.append({"slug": i["slug"], "goal": i["track"], "title": i["title"], "state": i["state"], "queue": i.get("queue", ""),
                           "held_until": i.get("held_until", ""), "start_at": i.get("start_at", ""), "priority": i["priority"], "size": "M", "risk": "",
                           "tier": max(1, step[i["track"]]), "depends_on": list(i.get("depends_on") or []), "waits_on": list(i.get("waits_on") or []),
-                          "waits": {"kind": "you", "ref": "", "title": "", "until": ""} if needs
+                          "waits": i["waits"] if i.get("waits")                      # a test says why (spec 45: a sign-in)
+                          else {"kind": "you", "ref": "", "title": "", "until": ""} if needs
                           else {"kind": "limits", "ref": "", "title": "", "until": i["held_until"]} if i.get("held_until")
                           else {"kind": "night", "ref": "", "title": "", "until": ""} if i.get("queue") == "night" or i.get("start_at") == "night" else None,
                           "needs_you": needs,
@@ -1064,3 +1065,40 @@ async def test_the_drawer_says_what_the_computers_sleep_means_under_this_phone_w
         text = text.lower()
         assert text.index("this phone") < text.index("may sleep") < text.index("pair a phone")
         assert await page.evaluate(NO_SCROLL)
+
+
+# -- spec 45 B: the phone shows a sign-in's wait and opens nothing on the computer ---------------------------------------------
+
+SIGN_WAIT = {"kind": "sign_in", "ref": "claude", "title": "Claude Code", "tool": "Claude Code", "until": "2026-10-21T10:00:00"}
+
+
+@pytest.mark.asyncio
+async def test_the_need_to_sign_in_is_a_stop_on_the_phone_with_no_button_and_no_sign_in_is_ever_sent(fake_repo, monkeypatch):
+    async with _phone(fake_repo, monkeypatch) as (stub, page):
+        stub.extra_needs = [{"kind": "sign_in", "harness": "claude", "tool": "Claude Code", "title": "Claude Code", "goal": "", "idea": "", "blocks": True,
+                             "priority": "normal", "at": "2026-10-20T01:00:00", "waiting": 2,
+                             "text": "Claude Code is not signed in, or its sign-in has expired."}]
+        stub.bump({})
+        raised = await _pop(page, "Sign in: Claude Code")
+        text = " ".join((await raised.inner_text()).split())
+        assert "Sign in to Claude Code on the computer" in text and "2 tasks wait for it" in text
+        assert await raised.get_by_role("button", name=re.compile("^Sign in")).count() == 0
+        await page.wait_for_timeout(300)
+        assert not any(c[0].startswith("tools.") for c in stub.calls)
+        assert await page.evaluate(NO_SCROLL)
+
+
+@pytest.mark.asyncio
+async def test_a_row_held_for_the_sign_in_says_waits_claude_codes_sign_in_not_limits(fake_repo, monkeypatch):
+    async with _phone(fake_repo, monkeypatch) as (stub, page):
+        stub.ideas["held"] = stub.idea("held", "Held for its tool", "ready", 2)
+        stub.ideas["held"].update(waits=SIGN_WAIT, held_until="2026-10-21T10:00:00")      # a hold has `held_until` for both: the sign-in's words win
+        stub.bump({})
+        said = ""
+        for _ in range(100):
+            said = await _said(page, "Held for its tool")
+            if "sign-in" in said:
+                break
+            await page.wait_for_timeout(100)
+        assert "waits: Claude Code's sign-in" in said and "limits" not in said
+        assert not any(c[0].startswith("tools.") for c in stub.calls)

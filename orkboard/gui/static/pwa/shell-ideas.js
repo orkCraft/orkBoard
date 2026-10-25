@@ -28,6 +28,8 @@ export const BUSY = new Set(["reading", "planning", "working"]);
 export function rowState(idea, titleOf = (slug) => slug) {
   const p = idea.progress;
   const q = idea.queue || (idea.state === "raw" ? "night" : "");
+  // held for its tool's sign-in (spec 45): before the limits' words, `held_until` is set for both
+  if (idea.waits?.kind === "sign_in" && idea.state !== "done") return { text: `${idea.state === "working" ? "working · " : ""}waits: ${idea.waits.tool || idea.waits.title || "the tool"}'s sign-in`, cls: "held" };
   if ((idea.state === "raw" || idea.state === "ready") && idea.held_until) return { text: `waits for limits · after ${hhmm(idea.held_until)}`, cls: "held" };
   if (idea.state === "raw") return q === "hold" ? { text: "stopped", cls: "raw" } : q === "now" ? { text: "queued", cls: "raw" } : { text: idea.night_by === "board" ? "tonight, or sooner if the week has room" : "tonight", cls: "raw" };
   if (idea.state === "reading" || idea.state === "planning") return { text: STATE_WORDS[idea.state], cls: "work", spin: true };

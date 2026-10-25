@@ -27,7 +27,8 @@ export function waitsWords(w) {
   if (!w) return "";
   const who = w.title || w.ref || "another goal";
   return { idea: `waits for ${who}`, files: `same files as ${who}`, limits: `waits for limits${after(w.until)}`, reserve: `keeps your reserve${after(w.until)}`,
-    night: "tonight", stopped: "stopped", week: `waits: the week is behind${w.until ? ` · until ${dayAt(w.until)}` : ""}` }[w.kind] || "";
+    night: "tonight", stopped: "stopped", week: `waits: the week is behind${w.until ? ` · until ${dayAt(w.until)}` : ""}`,
+    sign_in: `waits: ${w.tool || w.title || "the tool"}'s sign-in` }[w.kind] || "";
 }
 
 /** *tonight*, or the Board's own night work: *tonight, or sooner if the week has room* (spec 44 §2); `starts` for a plan that starts tonight. */
@@ -77,7 +78,7 @@ export function planningOf(g, nodes, leader) {
     if (n.needs_you === "proposal") return "proposed";
     if (n.state === "reading") return `${lead} is reading`;
     if (n.state === "planning") return `${lead} is planning`;
-    if (n.waits?.kind === "week") return waitsWords(n.waits);
+    if (n.waits?.kind === "week" || n.waits?.kind === "sign_in") return waitsWords(n.waits);
     if (n.state === "plan" && n.start_at === "night") return tonightWords(n, true);
     if (n.state === "ready") return `ready · ${lead} plans it next`;
     return n.state;
@@ -90,7 +91,7 @@ export function planningOf(g, nodes, leader) {
   const mine = nodes.filter((n) => n.stage === "planning");
   const rows = mine.filter((n) => n.state !== "raw").map(row);
   const raw = mine.filter((n) => n.state === "raw").map((n) => ({ slug: n.slug, title: n.short || n.title, full: n.title, node: n, kind: "idea", stop: false, busy: false,
-    mark: "", cost: "", words: n.waits?.kind === "week" ? waitsWords(n.waits) : n.queue === "hold" ? "stopped" : n.queue === "night" ? tonightWords(n) : `new · ${lead} reads it later` }));
+    mark: "", cost: "", words: n.waits?.kind === "week" || n.waits?.kind === "sign_in" ? waitsWords(n.waits) : n.queue === "hold" ? "stopped" : n.queue === "night" ? tonightWords(n) : `new · ${lead} reads it later` }));
   return { rows: [...rows.filter((r) => r.stop), ...rows.filter((r) => !r.stop)], raw };
 }
 
@@ -260,6 +261,7 @@ export function taskFoot(t, n) {
   if (t.state === "held") {
     if (n?.waits?.kind === "night") return `tonight${n.waits.until ? ` · after ${hhmm(n.waits.until)}` : ""}`;
     if (n?.waits?.kind === "week") return waitsWords(n.waits);
+    if (t.held_for === "sign_in" || n?.waits?.kind === "sign_in") return waitsWords(n?.waits?.kind === "sign_in" ? n.waits : { kind: "sign_in" });   // held for its tool's sign-in (spec 45 §7)
     return holdWords(t.note, n?.waits?.title) || "held";
   }
   if (t.state === "waiting") return afterWords(t, n) || "waiting";
@@ -340,9 +342,9 @@ export function limitLine(l, reserve, resetOf) {
 // -- the stops: the bottom row (§6) -------------------------------------------------------------------------------------------------
 
 export const KIND_WORD = { plan: "Plan ready", change: "Plan change", asks: "Asks you", goal: "Asks you", proposal: "Proposed", party: "Proposed", todo: "A to-do", failed: "Failed",
-  pick: "Pick one", op: "At your check", op_failed: "Failed", op_rules: "Rules to take", pitch: "Pitch judged", collide: "Orkmaster asks" };
+  pick: "Pick one", op: "At your check", op_failed: "Failed", op_rules: "Rules to take", pitch: "Pitch judged", collide: "Orkmaster asks", sign_in: "Sign in" };
 export const isOp = (n) => n.kind === "op" || n.kind === "op_failed" || n.kind === "op_rules";
-const GEM = { plan: "", change: "", asks: "?", goal: "?", proposal: "—", party: "—", todo: "·", failed: { sign: "cross" }, pick: "", op: "·", op_failed: { sign: "cross" }, op_rules: "—", pitch: "", collide: "" };
+const GEM = { plan: "", change: "", asks: "?", goal: "?", proposal: "—", party: "—", todo: "·", failed: { sign: "cross" }, pick: "", op: "·", op_failed: { sign: "cross" }, op_rules: "—", pitch: "", collide: "", sign_in: { sign: "alert" } };
 
 /** What a plan change adds to the price, for the stop's gem (spec 62 §6.2): *+$0.40–1.20*, *−$0.13–0.38* when it saves (the real minus sign), said as a goal's price is (cents under $1,
  *  else whole dollars); "" for a change of nothing. One that may add or save says both ends: *−$0.10 to +$0.30*. */
@@ -418,6 +420,14 @@ export function stopsOf(needs, g, nodes, ork = null) {
   return out;
 }
 
+/** The tools that need a sign-in while work waits for them (spec 45 §7): one stop each, of no party (it holds the work of every party), its button **Sign in**. */
+export function signInStopsOf(needs, shown) {
+  return needs.filter((row) => row.kind === "sign_in").map((row) => ({ key: `sign_in/${row.harness}`, kind: "sign_in", row, node: null, task: null, label: KIND_WORD.sign_in,
+    gem: GEM.sign_in, tone: "alert", gemTip: "Its work waits for it", head: null, small: false, whoTip: "", title: row.tool || row.title, full: row.tool || row.title,
+    text: `${row.text}${row.waiting ? ` ${row.waiting} ${row.waiting === 1 ? "task waits" : "tasks wait"} for it.` : ""}`,
+    g: null, party: { slug: shown, name: "", head: null, lead: "", ops: false }, other: false }));
+}
+
 /** Operations' stops: its rows (op, op_failed, op_rules) in the host's order. */
 export function opStopsOf(needs) {
   return needs.filter(isOp).map((row) => ({ key: `${row.kind}/${row.op || row.template}`, kind: row.kind, row, node: null, task: null, label: KIND_WORD[row.kind],
@@ -428,7 +438,7 @@ export function opStopsOf(needs) {
 // -- one hand (spec 54 §2) ---------------------------------------------------------------------------------------------------------
 
 /** How urgent a kind of stop is (§2.3): 0 red (a failure), 1 what holds work back, 2 what does not, 3 the results to look at. */
-const URGENCY = { failed: 0, op_failed: 0, plan: 1, change: 1, asks: 1, goal: 1, todo: 1, pick: 1, op: 1, proposal: 2, party: 2, op_rules: 2, pitch: 2, collide: 1, result: 3 };
+const URGENCY = { failed: 0, op_failed: 0, plan: 1, change: 1, asks: 1, goal: 1, todo: 1, pick: 1, op: 1, proposal: 2, party: 2, op_rules: 2, pitch: 2, collide: 1, sign_in: 1, result: 3 };
 export const urgencyOf = (s) => URGENCY[s.kind] ?? 1;
 const ageOf = (s) => String(s.row?.at || s.task?.finished || s.task?.started || s.result?.finished || "9999");
 
@@ -454,6 +464,7 @@ export function handOf({ map, needs, order, shown, keep, withResults = false, op
     out.push(...inParty(mine.filter((s) => keep(g.slug, s)), g, shown));
   }
   if (ops) out.push(...inParty(opStopsOf(needs), null, shown));
+  out.push(...signInStopsOf(needs, shown));
   return byUrgency(out);
 }
 

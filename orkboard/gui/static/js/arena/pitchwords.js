@@ -55,7 +55,7 @@ export function pitchWords(n) {
     const why = n?.state_error || (board.value?.ideas || []).find((i) => i.slug === n?.slug)?.state_error || "";
     return `failed${why ? ` · ${why}` : ""}`;
   }
-  if (n?.waits?.kind === "limits" || n?.waits?.kind === "reserve" || n?.waits?.kind === "week") return waitsWords(n.waits);
+  if (n?.waits?.kind === "limits" || n?.waits?.kind === "reserve" || n?.waits?.kind === "week" || n?.waits?.kind === "sign_in") return waitsWords(n.waits);
   if (n?.queue === "hold") return "on hold · judged when you say";
   if (n?.queue === "night") return "tonight";
   return "next · judged in a moment";

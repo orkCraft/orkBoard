@@ -78,7 +78,7 @@ export const stopCount = (st, slug) => needsOf(st, slug).length + failedOf(st, s
 export const stopFailed = (st, slug) => failedOf(st, slug).length > 0 || needsOf(st, slug).some((n) => n.kind === "failed");
 
 // -- the hand: every stop of the project, by urgency (spec 54 §2.3) ----------------------------------------------------------
-const URGENCY = { failed: 0, op_failed: 0, plan: 1, change: 1, asks: 1, goal: 1, todo: 1, pick: 1, op: 1, proposal: 2, party: 2, pitch: 2, collide: 1, op_rules: 2, look: 3 };   // red, what holds work back, what does not (a pitch judged holds nothing), results
+const URGENCY = { failed: 0, op_failed: 0, plan: 1, change: 1, asks: 1, goal: 1, todo: 1, pick: 1, op: 1, proposal: 2, party: 2, pitch: 2, collide: 1, op_rules: 2, sign_in: 1, look: 3 };   // red, what holds work back, what does not (a pitch judged holds nothing), results
 
 /** The stops in the order of their urgency: a failure first, then what holds work back (a plan, a plan change, a question, a to-do, a Pick one, an operation at your check), then what does not
  *  (a proposal, a party's proposal, a template's rules), then the results to look at; in a group the oldest first (`at`, an ISO time; one without comes last). */

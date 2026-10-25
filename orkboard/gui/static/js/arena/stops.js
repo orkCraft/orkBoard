@@ -26,6 +26,7 @@ import { missingWords } from "./types.js";
 import { Tiles, choiceOf } from "./picks.js";
 import { manyWords, variantOf } from "./pickwords.js";
 import { CollideAnswers, CollideGoals } from "./collide.js";
+import { SignInButton, signIn } from "../shell/signin.js";
 
 const SENT = "Sent: the Taskmaster answers in a moment.";
 
@@ -157,7 +158,8 @@ function Answers({ s, g, see }) {
     return html`<button type="button" class="ork-btn primary arena-hc__q" title="Its views, the case against and the decision; Send, Pass or Change are there"
       onClick=${() => { see(); showIdea(row.idea, { via: "hand" }); }}>Open the pitch</button>`;
   }
-  if (s.kind === "collide") return html`<${CollideAnswers} s=${s} />`;                         // the Orkmaster asks (spec 71): each answer says what happens
+  if (s.kind === "collide") return html`<${CollideAnswers} s=${s} />`;
+  if (s.kind === "sign_in") return html`<${SignInButton} harness=${row.harness} tool=${row.tool} />`;   // the tool's own sign-in (spec 45 §7): the work goes on by itself once it is signed in                         // the Orkmaster asks (spec 71): each answer says what happens
   if (s.kind === "op_rules") {
     const template = row.template;
     return html`<${Decline} s=${s} yes=${["Take", "Take the rules"]} ask=${["No", "No rules"]} sure="Decline the rules" take=${() => runOp("ops.rules_answer", { template, take: true })}
@@ -177,6 +179,7 @@ function open(s) {
   else if (s.kind === "failed") (s.task ? showTask(n.slug, s.task.id, via) : showIdea(row.idea, via));
   else if (s.kind === "pick") showPick(row.slug, row.task, via);
   else if (s.kind === "pitch" || s.kind === "collide") showIdea(row.idea, via);
+  else if (s.kind === "sign_in") signIn(row.harness);
   else openDialog("opcheck", { op: row.op });
 }
 

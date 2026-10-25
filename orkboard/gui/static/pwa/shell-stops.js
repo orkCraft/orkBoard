@@ -24,7 +24,7 @@ import { makePanel, forget } from "./shell-pick-answer.js";
 
 const reducedMotion = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 const KIND = { plan: "Plan ready", change: "Plan change", asks: "Asks you", goal: "Asks you", proposal: "Proposed", party: "Proposed", todo: "A to-do", failed: "Failed", look: "To look at",
-  pick: "Pick one", op: "At your check", op_failed: "Failed", op_rules: "Proposed", pitch: "Judged", collide: "Orkmaster asks" };
+  pick: "Pick one", op: "At your check", op_failed: "Failed", op_rules: "Proposed", pitch: "Judged", collide: "Orkmaster asks", sign_in: "Sign in" };
 const gemOf = (g) => (g ? h("span", { class: `ork-gem ${g.cls || ""}`.trim(), title: g.tip }, g.sign ? sign(g.sign) : g.text) : null);       // a price, a mark or a sign (a failure's cross); none for a plan change of nothing
 const GHOSTS = 3, GHOST_MS = 300;                       // stops that leave with the fade in one refresh (the rest simply go), and how long it lasts (spec 58 §4; spec 49 §11.2)
 const CARD = 104, FRONT_OVERLAP = 12, WIDTH = 290;       // a fanned card's width, how far the front card lies over its neighbours, and the room the fan is drawn in (the row's width less 50 px at each side: the cards turn up to 4° a place outward); the zone's height is CSS (`:root.has-stops`)
@@ -123,6 +123,7 @@ export function makeStops(core, ctx, needs, ops) {
     }
     const party = shown === OPS_VIEW ? null : { ops: true, name: "Operations" };
     for (const n of (st.board?.needs_you || []).filter((x) => x.kind.startsWith("op"))) out.push({ ...opItem(n), at: n.at || "", party, goalName: "" });
+    for (const n of (st.board?.needs_you || []).filter((x) => x.kind === "sign_in")) out.push({ ...signInItem(n), at: n.at || "", party: null, goalName: "" });     // of no party: it holds every party's work
     return out;
   }
 
@@ -248,6 +249,14 @@ export function makeStops(core, ctx, needs, ops) {
     return { key: `${n.kind}:${n.op || n.template}`, kind: n.kind, cls: failed ? "is-fail" : "", tone: failed ? "danger" : "", title: n.title, sig: n,
       gem: failed ? { sign: "cross", cls: "danger", tip: "It failed" } : { text: n.kind === "op_rules" ? "—" : "·", tip: "" }, text: [n.text, n.kind === "op" ? n.why : ""].filter(Boolean).join(" · "), quickLabel: "Quick moves",
       open: null, quick: () => [btn("Open…", away(() => (n.kind === "op" ? ops.openCheck(n.op) : failed ? ops.openRun(n.op) : ops.openProposal(n))), { primary: true, attrs: { "data-act": "open-op" } })] };
+  }
+
+  /** A tool that needs a sign-in while work waits for it (spec 45 §7): the wait, no button — a phone opens nothing on the computer. */
+  function signInItem(n) {
+    const tool = n.tool || n.title;
+    return { key: `sign_in:${n.harness}`, kind: "sign_in", cls: "", tone: "", title: tool, sig: n, gem: { sign: "alert", tip: "Its work waits for it" },
+      text: `Sign in to ${tool} on the computer. ${n.waiting ? `${n.waiting} ${n.waiting === 1 ? "task waits" : "tasks wait"} for it. ` : ""}It goes on by itself once it is signed in.`,
+      quickLabel: "Quick moves", open: null, quick: () => [] };
   }
 
   // -- the fan ----------------------------------------------------------------------------------------------------------------------------------------
