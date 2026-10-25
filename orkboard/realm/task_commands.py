@@ -27,7 +27,7 @@ MEDIA = ("ffmpeg", "ffprobe", "sox", "soxi", "python3", "node")      # a pick ta
 NEVER = ("git push", "rm -rf", "rm -fr", "sudo", "curl", "wget", "ssh", "scp", "npm install", "npm i", "npm ci",
          "npm add", "pip install", "pip3 install", "python -m pip", "python3 -m pip", "yarn install", "yarn add",
          "pnpm install", "pnpm add", "pnpm i", "uv pip", "uv add", "uv sync")
-NEVER_RULES = ("Bash(find * -delete*)", "Bash(find * -exec rm*)")
+NEVER_RULES = ("Bash(find * -delete*)", "Bash(find * -exec*)", "Bash(find * -execdir*)", "Bash(find * -ok*)")
 SCRIPTS = re.compile(r"^(test|build|lint|check|typecheck)([:._-].+)?$")      # a package.json script a task may run
 MAKE_TARGET = re.compile(r"^(test|build|lint|check)[ \t]*:(?!=)", re.MULTILINE)
 
