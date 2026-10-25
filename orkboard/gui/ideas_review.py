@@ -43,7 +43,7 @@ class ReviewMixin:
                     out.append({"idea": slug, "idea_title": title, "task": t.get("id"), "title": t.get("title", ""),
                                 "round": int(t.get("round") or 1), "tests": t.get("tests") or _NO_TESTS,
                                 "diff": t.get("diff") or {"files": 0, "added": 0, "removed": 0},
-                                "cost": t.get("cost"), "conflict": t.get("conflict") or "",
+                                "cost": t.get("cost"), "conflict": t.get("conflict") or "", "look": str(t.get("look") or ""),
                                 "finished": t.get("finished") or "",
                                 "work": (split.get(t.get("id")) or {}).get("work"),
                                 "rework": (split.get(t.get("id")) or {}).get("rework"),
@@ -60,7 +60,8 @@ class ReviewMixin:
             slug = idea_checks.checker_of_tag(str(task.get("kind")))
         role, agent = roles.role(self.state_dir, slug), library.get(slug)
         return {"check": (role or {}).get("name") or (agent.name if agent else slug),
-                "findings": [f for f in task.get("findings") or [] if isinstance(f, dict)]}
+                "findings": [f for f in task.get("findings") or [] if isinstance(f, dict)],
+                "same": bool(task.get("same_as_before"))}          # the findings left are the round before's: a send back would carry nothing new (spec 86 §4)
 
     def review_list(self, args: dict) -> dict:
         m = self.settings_now()

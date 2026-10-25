@@ -64,9 +64,11 @@ export function makeSettings(core, ctx, drawer, limits) {
   const targetGroup = target.el.querySelector('[role="radiogroup"]');
   const pushBox = h("input", { type: "checkbox", id: "push-after" });
   const autoBox = h("input", { type: "checkbox", id: "autostart" });
+  const landBox = h("input", { type: "checkbox", id: "lands-by-itself" });
   const nightFrom = h("input", { class: "ork-field", type: "time", "aria-label": "Night from" });
   const nightTo = h("input", { class: "ork-field", type: "time", "aria-label": "Night to" });
   autoBox.addEventListener("change", async () => { await write("ideas.board_set", { autostart: autoBox.checked }); await core.refresh(); });
+  landBox.addEventListener("change", async () => { await write("ideas.board_set", { review: !landBox.checked }); await core.refresh(); });
   const setNight = async () => {
     if (!nightFrom.value || !nightTo.value) return;
     if (await write("ideas.board_set", { night: `${nightFrom.value}-${nightTo.value}` })) await core.refresh();
@@ -84,6 +86,7 @@ export function makeSettings(core, ctx, drawer, limits) {
     h("h3", {}, "This project"),
     h("div", { class: "field target-picks" }, targetLabel, target.el),
     h("label", { class: "check-line", for: "autostart" }, autoBox, h("span", {}, "Start plans by themselves")),
+    h("label", { class: "check-line", for: "lands-by-itself" }, landBox, h("span", {}, "A result that holds lands in dev by itself")),
     h("div", { class: "field" }, h("span", { class: "field-label" }, "Night"), h("div", { class: "row night-row" }, nightFrom, h("span", {}, "to"), nightTo)),
     h("div", { class: "row" }, intoBtn),
     h("div", { class: "row" }, agentsBtn),
@@ -127,6 +130,7 @@ export function makeSettings(core, ctx, drawer, limits) {
       target.set(core.st.board?.target || "balance");
       pushBox.checked = Boolean(core.st.review?.push);
       autoBox.checked = core.st.board?.autostart !== false;
+      landBox.checked = core.st.board?.review !== true;
       if (document.activeElement !== nightFrom && document.activeElement !== nightTo) [nightFrom.value, nightTo.value] = String(core.st.board?.night || "01:00-07:00").split("-");
     },
     render(s) {

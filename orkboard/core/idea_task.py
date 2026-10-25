@@ -3,19 +3,32 @@
 """
 from __future__ import annotations
 
+import subprocess
 import threading
 from pathlib import Path
 
-from orkboard.realm import idea_checks, idea_pick, idea_secrets
+from orkboard.realm import gate_config, idea_checks, idea_pick, idea_secrets
 from orkboard.realm.idea_git import BOARD_PAGE, CRITICAL_TESTS, env_name, has_summary, parse_tests, read_secret, spec_paths
 
 
 FINDINGS_ASK = (
     f"When you are done, write what you found to `{idea_checks.FINDINGS_FILE}` at the worktree's root, as JSON: "
-    '`{"findings": [{"where": "file:line, or the screen", "what": "one line: what goes wrong", "fixed": true}]}`, the worst first, '
-    'at most 20. Write `{"findings": []}` when you found nothing that blocks, and then change nothing else. Fix only what is small '
-    'and certain; leave the rest as findings with `"fixed": false`.')
+    '`{"findings": [{"where": "file:line, or the screen", "what": "one line: what goes wrong", "fixed": true, "kind": "code"}]}`, '
+    'the worst first, at most 20. Write `{"findings": []}` when you found nothing that blocks, and then change nothing else. Fix only what is '
+    'small and certain; leave the rest as findings with `"fixed": false`. Each finding has a `kind`: `"code"` when the code is wrong, '
+    '`"env"` when it could not be done here, in the place you ran in (a command was refused, a tool is missing, there is no device or '
+    'no network): a person can fix the code, not the place, so never write a finding about the place as `"code"`.')
 NO_FINDINGS = "You left no findings file and changed no file. Write your findings file, as the task asks."
+FRESH_TOKENS = 150_000            # a session that read more than this in its last call is not resumed again: a send back starts a fresh one (spec 86 §4)
+DIFF_KEEP = 20000                 # the diff so far a fresh session is given, in characters
+FRESH = """You are given this task again, in a new session: the one before it grew too long to go on. What it had done so far is
+committed in this worktree; the diff of it against `{base}` is below{cut}.
+
+```diff
+{diff}
+```
+
+"""
 PICK_BACK = """The person looked at your last variants and picked none of them:
 
 None of the last variants: "{note}"
@@ -65,6 +78,8 @@ class TaskMixin:
         tests["green"] = problem is None
         tests["ran"] = run.ran if run else True
         tests["command"] = run.command if run else ""
+        if getattr(gate_config.read(self.repo_root), "none", False):      # the project has no tests at all (spec 86 §3): it never lands by itself
+            tests["none"] = True
         if run and run.ran:
             tests["exit"] = run.code
             if not has_summary(out):
@@ -93,11 +108,21 @@ class TaskMixin:
             return role
         return idea_checks.checker_of_tag(str(task.get("kind") or ""))
 
-    def _again_ask(self, task: dict) -> str:
-        """What a check task is told besides a send back's line: the findings left of the last round, and the ask for the file again."""
-        left = [f for f in task.get("findings") or [] if isinstance(f, dict) and not f.get("fixed")]
-        rows = "".join(f"\n- {f.get('where')}: {f.get('what')}" for f in left)
-        return (f"\n\nThe findings left from the last round:{rows}" if rows else "") + "\n\n" + FINDINGS_ASK
+    def _again_ask(self, task: dict, ask: bool = True) -> str:
+        """What a check task is told besides a send back's line: the code findings left of the last round (the place's are not the
+        code's to fix), and the ask for the file again (`ask`: False when the prompt before already holds it)."""
+        rows = "".join(f"\n- {f.get('where')}: {f.get('what')}" for f in idea_checks.code_left(task.get("findings")))
+        return (f"\n\nThe findings left from the last round:{rows}" if rows else "") + ("\n\n" + FINDINGS_ASK if ask else "")
+
+    def _diff_so_far(self, path: Path, start_sha: str, base: str) -> str:
+        """The task's work so far for a fresh session: `git diff` of the worktree against where it was cut, cut to DIFF_KEEP characters."""
+        try:
+            text = subprocess.run(["git", "diff", "--no-color", f"{start_sha or base}...HEAD"], cwd=path, capture_output=True, text=True,
+                                  timeout=60).stdout
+        except (OSError, subprocess.SubprocessError):
+            text = ""
+        cut = f" (cut to its first {DIFF_KEEP} characters)" if len(text) > DIFF_KEEP else ""
+        return FRESH.format(base=base, cut=cut, diff=text[:DIFF_KEEP].rstrip() or "(nothing yet)")
 
     def _findings_round(self, path: Path, start_sha: str, title: str) -> tuple[list[dict] | None, bool]:
         """(the findings a check task wrote, whether it changed a file): its findings file is read (at most 64 KB) and removed before
@@ -204,13 +229,18 @@ class TaskMixin:
                 out.append(f"Instead of the file “{title}”, the person described it: {todo.get('value') or ''}")
         return out
 
-    def _again_prompt(self, slug: str, plan: dict, task: dict, again: dict, base: str) -> tuple[str, str]:
+    def _again_prompt(self, slug: str, plan: dict, task: dict, again: dict, base: str, path: Path | None = None,
+                      start_sha: str = "") -> tuple[str, str]:
         """(what a task is told, the session it resumes) when it goes on: a send back, the gate's conflict, a pick of none of them
         (spec 51 §2.3); a pick taken needs no turn, the gate runs on what was committed. The task's own prompt comes first when
-        there is no session to resume."""
+        there is no session to resume. A send back of a task whose last call read more than FRESH_TOKENS (spec 86 §4) starts a fresh
+        session: its prompt, the diff so far (`path` against `start_sha`) and the why."""
         resume = str(task.get("session") or "")
         if again.get("taken"):
             return "", resume
+        fresh = bool(resume) and not again.get("pick") and int(task.get("last_tokens") or 0) > FRESH_TOKENS
+        if fresh:
+            resume = ""
         extra, tests = "", task.get("tests") or {}
         if again["files"]:
             extra += (f"Your branch conflicted with `{base}` in {', '.join(again['files'])}. The merge of "
@@ -223,8 +253,11 @@ class TaskMixin:
             prompt = PICK_BACK.format(note=again["why"], n=(idea_pick.ask_of(task) or {}).get("n")) + "\n\n" + pick_ask(task)
         else:
             prompt = _r().BACK.format(why=again["why"], extra=extra)
-            if resume and is_check(task):
-                prompt += self._again_ask(task)
+            if is_check(task):
+                prompt += self._again_ask(task, ask=bool(resume))          # with no session the task's prompt, first, holds the ask
         if not resume:
-            prompt = self._prompt(slug, plan, task) + "\n\n" + prompt
+            lead = self._prompt(slug, plan, task) + "\n\n"
+            if fresh and path is not None:
+                lead += self._diff_so_far(path, start_sha, base)
+            prompt = lead + prompt
         return prompt, resume

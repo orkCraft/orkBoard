@@ -13,6 +13,7 @@ export const isRed = (r) => r.tests.failed > 0 || r.tests.green === false;
  *  (exit 1). `mark` is the name of orkUI's sign (`check`, `cross`) or "". */
 export function testsWords(r) {
   const t = r.tests, all = t.passed + t.failed;
+  if (t.none) return { mark: "", text: "no tests in this project", names: [], tone: "muted" };      // the project has none (spec 86 §3): it waits for your look
   if (t.ran === false) return { mark: "", text: "no tests ran", names: [], tone: "muted" };
   if (t.passed == null && t.failed == null) {          // a command that is not pytest: its exit code speaks
     const failed = isRed(r), code = t.exit ?? (failed ? 1 : 0);
@@ -44,11 +45,16 @@ export function foundWords(findings) {
   return n ? `Found ${n}: ${fixed ? `${fixed} fixed, ` : ""}${n - fixed} left` : "";
 }
 export const leftOf = (r) => (r.findings || []).filter((f) => !f.fixed);
+/** The findings left that are of the code; a finding of the place it ran in (`kind` "env": a command refused, a tool missing, no device) is not (spec 86 §4). */
+export const codeLeftOf = (r) => leftOf(r).filter((f) => f.kind !== "env");
+export const PLACE_LINE = "What is left is about where it ran, not the code";
+/** A check whose findings left are all of the place, or the round before's again: Send back could change nothing, so Merge and Drop stay. */
+export const placeOnly = (r) => Boolean(r.check) && leftOf(r).length > 0 && (codeLeftOf(r).length === 0 || Boolean(r.same));
 const WHY_MAX = 1000;
-/** *Fix the findings left:* and one line each (*where: what*), within the one line a send back takes. */
+/** *Fix the findings left:* and one line each (*where: what*) of the code's, within the one line a send back takes. */
 export function fixThemWhy(r) {
   let why = "Fix the findings left:";
-  const left = leftOf(r);
+  const left = codeLeftOf(r);
   for (const [n, f] of left.entries()) {
     const next = `${why}\n${f.where}: ${f.what}`, more = left.length - n - 1;
     if (next.length + (more ? 24 : 0) > WHY_MAX) return `${why}\nand ${left.length - n} more`;
@@ -61,7 +67,7 @@ export function foundOf(r) {
   const left = leftOf(r);
   if (!r.check || !left.length) return null;
   return h("div", { class: "found" }, h("p", { class: "found-sum muted" }, foundWords(r.findings)),
-    h("ul", { class: "found-list" }, ...left.map((f) => h("li", {}, h("span", { class: "found-where muted" }, f.where), " · ", f.what))));
+    h("ul", { class: "found-list" }, ...left.map((f) => h("li", {}, h("span", { class: "found-where muted" }, f.where), " · ", f.what, f.kind === "env" ? h("span", { class: "muted" }, " (where it ran)") : null))));
 }
 
 export function factsOf(r) {
@@ -69,7 +75,8 @@ export function factsOf(r) {
   return h("dl", { class: "facts" },
     h("dt", {}, "Tests"), h("dd", { class: `is-${t.tone}` }, t.mark ? sign(t.mark) : null, t.mark ? " " : "", t.text, t.names.length ? h("small", { class: "muted" }, ` ${t.names.join(", ")}`) : null),
     h("dt", {}, "Changes"), h("dd", {}, changesWords(r.diff)),
-    ...(r.cost != null ? [h("dt", {}, "Cost"), h("dd", {}, usd(r.cost))] : []));
+    ...(r.cost != null ? [h("dt", {}, "Cost"), h("dd", {}, usd(r.cost))] : []),
+    ...(r.look ? [h("dt", {}, "Waits"), h("dd", { class: "look" }, r.look)] : []));
 }
 
 // What the person has half done on a result — the open line and what is typed, the Drop confirm — kept apart from the DOM, so a
@@ -95,10 +102,12 @@ function askDrop(r, run) {
 export function resultActions(core, r, done = () => {}) {
   const mine = halfOf(r);
   const into = core.st.review?.into || "dev";
-  const reason = mergeReason(r), fix = isRed(r) || Boolean(r.conflict), check = Boolean(r.check) && leftOf(r).length > 0;
+  const reason = mergeReason(r), fix = isRed(r) || Boolean(r.conflict), place = placeOnly(r), check = Boolean(r.check) && leftOf(r).length > 0 && !place;
   const key = { slug: r.idea, task: r.task };
   const merge = h("button", { class: `ork-btn ${check ? "" : "primary "}big`, type: "button", disabled: Boolean(reason),
-    title: reason || (check ? (r.diff.files ? `Merge the fixes into ${into}` : "Nothing is merged") : null) }, check ? "Leave them" : `Merge into ${into}`);
+    title: reason || (check ? (r.diff.files ? `Merge the fixes into ${into}` : "Nothing is merged") : null) },
+  check || (place && !r.diff.files) ? "Leave them" : `Merge into ${into}`);
+  const placeLine = place ? h("p", { class: "muted why place", "data-place": "true", role: "status" }, PLACE_LINE) : null;
   const fixThem = h("button", { class: "ork-btn primary big", type: "button" }, "Fix them");
   const back = h("button", { class: "ork-btn", type: "button", "aria-expanded": "false" }, fix ? "Fix" : "Send back");
   const drop = h("button", { class: "linkish", type: "button" }, "Drop…");
@@ -140,6 +149,7 @@ export function resultActions(core, r, done = () => {}) {
     if (got?.ok) done();
     core.refresh();
   }));
+  if (place) return h("div", { class: "result-actions", "data-task": r.task }, why, placeLine, merge, h("div", { class: "row between" }, drop));
   if (check) return h("div", { class: "result-actions", "data-task": r.task }, why, fixThem, merge, h("div", { class: "row between" }, drop));
   return h("div", { class: "result-actions", "data-task": r.task }, why, merge, h("div", { class: "row between" }, back, drop), form);
 }

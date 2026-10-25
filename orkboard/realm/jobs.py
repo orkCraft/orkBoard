@@ -105,9 +105,10 @@ def work_cmd(harness: str, prompt: str, workdir: Path, model: str = "", resume: 
 def run_work(harness: str, prompt: str, workdir: Path, cancel: threading.Event, model: str = "",
              env: dict | None = None, resume: str = "",
              timeout_s: int = WORK_TIMEOUT_S, dirs: tuple = (),
-             free: bool = False, effort: str = "") -> tuple[str, float | None, int | None, str]:
+             free: bool = False, effort: str = "", before_cost: float | None = None) -> tuple[str, float | None, int | None, str]:
     """(text, cost, tokens, session) of an agent working in `workdir` (and reading `dirs` too); `effort`: the model's
-    reasoning, where the tool takes one (spec 35 §1)."""
+    reasoning, where the tool takes one (spec 35 §1). `cost` is the tool's figure; for a resumed Claude session that is the session's
+    running total, so `before_cost` (the total after its last call) makes the call's own cost, the one logged as `cost_own` and charged."""
     harness = tool_run.resolve(harness)
     cmd = work_cmd(harness, prompt, workdir, model, resume, dirs, free, effort)
     tool_env = h.env("work", workdir) if (h := harnesses.get(harness)) else {}
@@ -124,13 +125,15 @@ def run_work(harness: str, prompt: str, workdir: Path, cancel: threading.Event, 
     text, cost, tokens, session = tool_run.result_of(harness, out, before, model)
     if harness == "codex" and resume and resumed is None:
         cost = None                       # its running total holds earlier runs we cannot tell apart
+    own = tool_run.cost_once(cost, before_cost) if harness == "claude" and resume and before_cost is not None else None
     call_log.record(env, "work", harness, model, prompt, out, err, code, time.monotonic() - start, cost, tokens,
-                    session, workdir)
+                    session, workdir, cost_own=own)
     what = dict(tokens=tokens, building=telemetry.building_of(run_env), model=model)
+    paid = cost if own is None else own
     if not telemetry.charged(run_env):
-        telemetry.charge(cost, f"{harness} worker", **what)
+        telemetry.charge(paid, f"{harness} worker", **what)
     else:
-        telemetry.noted(cost, f"{harness} worker", **what)
+        telemetry.noted(paid, f"{harness} worker", **what)
     return text, cost, tokens, session
 
 

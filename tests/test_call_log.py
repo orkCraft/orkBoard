@@ -223,3 +223,22 @@ def test_orkboard_keeps_its_logs_and_serves_a_period(fake_repo, tool):
             thread.join(10)                      # it closes the host: not at once with the test
     finally:
         host.close()
+
+
+def test_a_resumed_sessions_line_keeps_the_tools_figure_and_its_own_cost(tmp_path, tool):
+    """Spec 86 §1: a resumed Claude session reports its running total; the line keeps it and the call's own difference."""
+    with call_log.kept(tmp_path / "calls", "building"):
+        jobs.run_work("claude", "first", tmp_path, threading.Event())                                    # fresh: no `cost_own`
+        jobs.run_work("claude", "again", tmp_path, threading.Event(), resume="s1", before_cost=0.02)     # total 0.03, 0.02 before
+        jobs.run_work("claude", "once more", tmp_path, threading.Event(), resume="s1", before_cost=0.05)   # the tool said less: never below 0
+    first, second, third = call_log.read(tmp_path / "calls")
+    assert first["cost"] == 0.03 and "cost_own" not in first
+    assert second["cost"] == 0.03 and second["cost_own"] == 0.01
+    assert third["cost"] == 0.03 and third["cost_own"] == 0.0
+    assert call_log.totals([first, second, third])[0]["cost"] == 0.04          # the sum counts each session once
+
+
+def test_cost_once_takes_the_sessions_last_total_off_and_never_goes_below_nothing():
+    assert tool_run.cost_once(0.77, 0.68) == 0.09
+    assert tool_run.cost_once(0.30, None) == 0.30 and tool_run.cost_once(None, 0.5) is None
+    assert tool_run.cost_once(0.5, 0.9) == 0.0

@@ -101,7 +101,7 @@ class ReviewMixin:
                 self._runs.pop((slug, tid), None)
         self._decided(slug, task, "merge", device, into=base, pushed=bool(_r().setting(self.settings, "push")) and not note)
         self._set_task(slug, tid, state="merged", commit=commit, subjects=subjects, note=note, finished=_r().now_iso(),
-                       error="", conflict="")
+                       error="", conflict="", look="")
         self._log(slug, tid, f"== merged into {base} · {commit[:10]}\n")
         self._remove_worktree(slug, tid)
         self._settle_idea(slug)
@@ -160,7 +160,7 @@ class ReviewMixin:
             red = tests.get("green") is False or bool(tests.get("failed"))
             self._decided(slug, task, "fix" if red or task.get("conflict") else "back", device, why=why, into=base)
             self._set_task(slug, tid, state="running", round=int(task.get("round") or 1) + 1, why=why, conflict="",
-                           error="", note="", finished="")
+                           error="", note="", finished="", look="")
             if slug not in self._active:
                 self._active.append(slug)
                 self._set_idea(slug, "working")

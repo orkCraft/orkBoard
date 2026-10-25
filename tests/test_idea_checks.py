@@ -3,6 +3,7 @@ task's prompt, and how a check task ends with a stub `claude` that writes its fi
 from __future__ import annotations
 
 import json
+from types import SimpleNamespace
 import subprocess
 
 import pytest
@@ -28,7 +29,7 @@ def test_the_tags_are_the_checkers_first_kinds():
 
 def test_parse_findings_is_strict_about_the_shape_twenty_at_most_and_the_lengths():
     assert idea_checks.parse_findings(text()) == []
-    assert idea_checks.parse_findings(text(finding(fixed=True))) == [finding(fixed=True)]
+    assert idea_checks.parse_findings(text(finding(fixed=True))) == [finding(fixed=True, kind="code")]
     assert idea_checks.parse_findings(text(*[finding()] * 20)) is not None
     assert idea_checks.parse_findings(text(*[finding()] * 21)) is None
     assert idea_checks.parse_findings(text(finding(where="w" * 200), finding(what="x" * 300))) is not None
@@ -37,7 +38,7 @@ def test_parse_findings_is_strict_about_the_shape_twenty_at_most_and_the_lengths
     for bad in ("", "not json", "[]", "null", '{"findings": 3}', '{"other": []}', text({"where": "a", "what": "b"}),
                 text({"where": "a", "what": "b", "fixed": "yes"}), text({"where": 1, "what": "b", "fixed": True}), text("a bug"), None, 5):
         assert idea_checks.parse_findings(bad) is None, bad
-    assert idea_checks.parse_findings(text(finding(extra=1))) == [finding()]            # only the three fields are kept
+    assert idea_checks.parse_findings(text(finding(extra=1))) == [finding(kind="code")]     # only the fields are kept, `kind` among them
 
 
 def test_counts_and_status_say_found_fixed_and_left_and_null_before_a_task_ends():
@@ -211,3 +212,75 @@ def test_drop_still_drops_a_check_s_result(town, monkeypatch):
     wait_task(runner, "k1", "review")
     runner.drop_task("demo", "k1")
     assert tasks_of(town)["k1"]["state"] == "failed" and tasks_of(town)["k1"]["error"] == "dropped by you"
+
+
+# -- spec 86 D: findings of the code and of the place -------------------------------------------------------------------------------
+
+def test_a_finding_is_of_the_code_unless_it_says_it_is_of_the_place():
+    got = idea_checks.parse_findings(text(finding(), finding(kind="env"), finding(kind="code"), finding(kind="other"), finding(kind=3)))
+    assert [f["kind"] for f in got] == ["code", "env", "code", "code", "code"]
+    assert [f["kind"] for f in idea_checks.code_left(got)] == ["code", "code", "code", "code"]
+    assert idea_checks.code_left([finding(kind="env")]) == [] and idea_checks.code_left(None) == []
+    assert idea_checks.code_left([{"where": "a", "what": "b", "fixed": False}]) != []             # one kept before `kind` was read is of the code
+    assert idea_checks.is_env(finding(kind="env")) and not idea_checks.is_env(finding()) and not idea_checks.is_env(None)
+
+
+def test_the_same_findings_left_are_told_by_where_and_what_in_any_order():
+    a, b = finding(where="a.py:1", what="one"), finding(where="b.py:2", what="two")
+    assert idea_checks.same_left([a, b], [b, a]) and idea_checks.same_left([a, finding(fixed=True)], [a])
+    assert idea_checks.same_left([finding(where="A.py:1 ", what="One")], [finding(where="a.py:1", what="one")])
+    assert not idea_checks.same_left([a, b], [a]) and not idea_checks.same_left([a], [a, b])
+    assert not idea_checks.same_left([], []) and not idea_checks.same_left(None, [a]) and not idea_checks.same_left([finding(fixed=True)], [a])
+
+
+def test_the_checks_instructions_ask_for_the_kind_and_say_what_the_place_is():
+    assert '"kind"' in FINDINGS_ASK and '"env"' in FINDINGS_ASK and "refused" in FINDINGS_ASK and "tool is missing" in FINDINGS_ASK
+
+
+def test_the_findings_of_the_place_are_kept_with_their_kind_and_wait_at_review(town, monkeypatch):
+    monkeypatch.setenv("STUB_MODE", "k1=check_env")
+    plan_of(town, [{"id": "k1", "kind": "review"}])
+    runner, _ = runner_of(town, review=False)
+    runner.start("demo")
+    task = wait_task(runner, "k1", "review")
+    assert [f["kind"] for f in task["findings"]] == ["env"] and task["look"] == "findings left" and task["same_as_before"] is False
+
+
+def test_a_send_back_tells_the_check_only_the_findings_of_the_code(town, monkeypatch):
+    monkeypatch.setenv("STUB_MODE", "k1=check_mixed_kinds")
+    plan_of(town, [{"id": "k1", "kind": "review"}])
+    runner, _ = reviewing(town)
+    runner.start("demo")
+    wait_task(runner, "k1", "review")
+    runner.back("demo", "k1", "Fix the findings left:\na.py:1: a bug")
+    monkeypatch.setenv("STUB_MODE", "k1=check_late")
+    wait_task(runner, "k1", "merged")
+    again = runner.log("demo", "k1", 400).split("== round 2")[1]
+    assert "The findings left from the last round:\n- a.py:1: a bug" in again and "the command was refused" not in again
+
+
+def test_findings_left_that_equal_the_round_befores_are_flagged_and_a_new_run_starts_over(town, monkeypatch):
+    monkeypatch.setenv("STUB_MODE", "k1=check_left")
+    plan_of(town, [{"id": "k1", "kind": "review"}])
+    runner, _ = reviewing(town)
+    runner.start("demo")
+    assert wait_task(runner, "k1", "review")["same_as_before"] is False          # the first round has none before it
+    runner.back("demo", "k1", "Fix the findings left:\na.py:1: a bug")
+    second = wait_task(runner, "k1", "review")
+    assert second["round"] == 2 and second["same_as_before"] is True              # the same two findings left
+    runner.back("demo", "k1", "Fix the findings left:\na.py:1: a bug")
+    monkeypatch.setenv("STUB_MODE", "k1=check_env")                               # a different one left
+    third = wait_task(runner, "k1", "review")
+    assert third["round"] == 3 and third["same_as_before"] is False
+
+
+def test_the_review_list_carries_the_kind_the_reason_and_the_flag(town, monkeypatch):
+    """What the faces read: `findings[].kind`, `look`, `same`, `tests.none` (gui/ideas_review.py)."""
+    from orkboard.gui.ideas_review import ReviewMixin
+    monkeypatch.setenv("STUB_MODE", "k1=check_env")
+    plan_of(town, [{"id": "k1", "kind": "review"}])
+    runner, _ = runner_of(town, review=False)
+    runner.start("demo")
+    task = wait_task(runner, "k1", "review")
+    row = ReviewMixin._check_of(SimpleNamespace(state_dir=town.state), task)
+    assert row["findings"][0]["kind"] == "env" and row["same"] is False

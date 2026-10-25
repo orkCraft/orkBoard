@@ -117,6 +117,16 @@ async function detailFor(p) {
 }
 
 let loading = false, again = false;
+const REVIEW_NOTICE = "Results that hold now land in dev by themselves; Settings → Board to look at each one";
+let reviewSaid = false;
+/** Spec 84 §1: the move of `review` to off is said once, in the window; the host forgets it when told. */
+function sayReview(b) {
+  if (!b?.review_notice || reviewSaid) return;
+  reviewSaid = true;
+  toast(REVIEW_NOTICE, "information", "", 12);
+  ask("ideas.board_set", { review_notice: false });
+}
+
 export async function refreshShell() {
   if (loading) { again = true; return; }
   loading = true;
@@ -130,7 +140,7 @@ export async function refreshShell() {
     if (board.value) [[b, r, a, ro, mp, gt, td, fl], [d, pg]] = await Promise.all([rest, side(board.value)]);
     else { [b, r, a, ro, mp, gt, td, fl] = await rest; [d, pg] = await side(b); }   // a restored tab: its thing is looked for only if the Board has it
     batch(() => {
-      if (b) board.value = b;
+      if (b) { board.value = b; sayReview(b); }
       if (r) review.value = r;
       if (a) agents.value = a;
       if (ro) roles.value = ro;

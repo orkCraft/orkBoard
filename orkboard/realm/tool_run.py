@@ -48,6 +48,15 @@ def result_of(harness: str, stdout: str, before: int | dict = 0,
     return h.outcome(stdout, before, model) if h else harnesses.json_result(stdout, before)
 
 
+def cost_once(cost: float | None, before: float | None) -> float | None:
+    """This call's own cost. A Claude call that resumed a session reports the session's total so far (`total_cost_usd`), so `before`, the
+    total the session had after its last call, is taken off, never below 0 (spec 86 §1); no `before` (a fresh session, or one whose total
+    is not known): the whole of `cost`."""
+    if cost is None or before is None:
+        return cost
+    return round(max(0.0, float(cost) - float(before)), 6)
+
+
 def codex_thread_usage(thread: str, env: dict | None = None) -> dict | None:
     """What a Codex thread has used so far: the last `token_count` total in its rollout
     (`$CODEX_HOME/sessions/YYYY/MM/DD/rollout-<ts>-<thread>.jsonl`), which `exec resume` starts its
