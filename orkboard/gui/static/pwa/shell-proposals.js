@@ -3,10 +3,12 @@
 // picked; a radiogroup of orkUI's buttons), under it for the size picked the heads, *one agent* / *n agents* and *≈$a–b a goal*, and **Make it**. A proposal the project has is muted, *You have one*. An empty folder
 // (`ask`) is asked one line, *What is this project for?*, and **Read it** draws the proposals of what the line says. Under the cards, **More: the library** opens today's tiles and seats (shell-goal-new.js).
 // A host without `ideas.proposals` (its Map's `project` says no `kind`) keeps today's phone: `proposes(core)` is false and nothing here is drawn.
+// Under the size switch each card has **Its AI tool** (shell-party-tool.js, spec 81 §4): the Main tool picked, a select; a tool with no tiers says *runs its own model* where the price was; the pick goes with **Make it** as `tool`.
 // Pure words here too: `priceWords`, `agentsWords`; `sizeSwitch` is the same switch in a party's *Its size* (shell-party.js, shell-goal.js) and in the library's seats.
 import { h, head } from "./util.js";
 import { field } from "./shell-forms.js";
 import { pctRange } from "./shell-spend.js";
+import { loadTools, runsOwn, toolPick } from "./shell-party-tool.js";
 
 export const SIZES = [["lean", "Lean"], ["standard", "Standard"], ["full", "Full"]];
 export const STANDARD = "standard";
@@ -90,10 +92,11 @@ export function sizeSwitch({ label = "Its size", onPick = null } = {}) {
   };
 }
 
-/** `core`: the board's frame; `act`: {make(proposal, size, card, button), library()}. Returns {el, load(pickedId) → Promise<boolean>, line(), about}: `load` asks the host and draws; false when it cannot. */
+/** `core`: the board's frame; `act`: {make(proposal, size, card, button, tool), library()}. Returns {el, load(pickedId) → Promise<boolean>, line(), about}: `load` asks the host and draws; false when it cannot. */
 export function makeProposals(core, act) {
   const el = h("div", { class: "props" });
   const size = new Map();                                     // proposal id → the size picked on its card (Standard at first)
+  const tool = new Map();                                     // proposal id → the AI tool picked on its card ("" the Main tool)
   let data = null, line = "", reading = false, note = "", pickedId = "", scrolled = false, hold = null;   // `hold`: the "What it is for" field, put under the Orkmaster's head
 
   const orkmaster = () => core.st.map?.project?.orkmaster || { race: "peon", tier: "crown" };
@@ -134,6 +137,8 @@ export function makeProposals(core, act) {
     const switchEl = sizeSwitch({ label: `Its size: ${p.name}`, onPick: (id) => { size.set(p.id, id); paint(); } });
     switchEl.prices(Object.fromEntries(SIZES.map(([id]) => [id, ""])));
     const have = Boolean(p.have);
+    const tools = toolPick(core, { label: `Its AI tool: ${p.name}`, onPick: (id) => { tool.set(p.id, id); paint(); } });
+    tools.set(tool.get(p.id) || "");
     const paint = () => {
       const id = size.get(p.id) || STANDARD, s = p.sizes?.[id];
       switchEl.set(id);
@@ -141,13 +146,13 @@ export function makeProposals(core, act) {
       if (!s) { detail.replaceChildren(); heads.replaceChildren(); return; }
       heads.replaceChildren(...(s.heads || []).map((x) => head(x.race || "peon", x.tier || "warrior")));
       detail.replaceChildren(...[heads, h("span", { class: "prop__agents" }, agentsWords(s.agents ?? (1 + (s.team || []).length))),
-        s.price ? h("span", { class: "prop__price" }, priceWords(s.price)) : null].filter(Boolean));
+        runsOwn(core, tool.get(p.id) || "") ? h("span", { class: "prop__price", "data-own": "" }, "runs its own model") : s.price ? h("span", { class: "prop__price" }, priceWords(s.price)) : null].filter(Boolean));
     };
-    make.addEventListener("click", () => act.make(p, size.get(p.id) || STANDARD, art, make));
+    make.addEventListener("click", () => act.make(p, size.get(p.id) || STANDARD, art, make, tool.get(p.id) || ""));
     const art = h("article", { class: `prop${have ? " is-have" : ""}${pickedId === p.id ? " is-picked" : ""}`, "data-proposal": p.id, "aria-label": p.name },
       h("div", { class: "prop__text" }, h("b", { class: "prop__name" }, p.name), p.line ? h("small", { class: "muted prop__line" }, p.line) : null,
         have ? h("small", { class: "prop__why" }, "You have one") : p.why ? h("small", { class: "prop__why" }, p.why) : null),
-      switchEl.el, detail, make);
+      switchEl.el, tools.el, detail, make);
     paint();
     return art;
   }
@@ -170,9 +175,9 @@ export function makeProposals(core, act) {
     forget() { line = ""; note = ""; },
     /** Asks the host, draws; `id`: a proposal to scroll to (the deal's press). False when the host cannot (the library is then New party). */
     async load(id = "") {
-      data = null; pickedId = id; scrolled = false; size.clear(); note = "";
+      data = null; pickedId = id; scrolled = false; size.clear(); tool.clear(); note = "";
       draw();
-      const got = await loadProposals(core);
+      const [got] = await Promise.all([loadProposals(core), loadTools(core)]);
       if (!got) return false;
       data = got;
       draw();

@@ -1327,3 +1327,16 @@ dialog.sheet.full { margin: 0; height: 100dvh; max-height: 100dvh; border-top: 0
 .prop__price { margin-left: auto; font: 600 13px/18px var(--ork-font-text); }
 .pj-tile__price { color: var(--ork-ink); font-weight: 600; }
 .size-field { gap: var(--ork-3); }
+
+/* -- A party's AI tool and who a size lets in and out (spec 81 §4) ------------------------------------------------------------------------------------------------------------- */
+.tool-field { gap: var(--ork-3); min-width: 0; }
+.tool-field select.ork-field { width: 100%; min-width: 0; box-sizing: border-box; min-height: var(--ork-tap); text-overflow: ellipsis; }
+.tool-hint { overflow-wrap: anywhere; }
+.prop .tool-field { gap: var(--ork-2); }
+.size-moves { list-style: none; margin: var(--ork-3) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; color: var(--ork-ink-muted); font: 400 13px/18px var(--ork-font-text); }
+.size-moves[hidden] { display: none; }
+.size-moves li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-1) var(--ork-3); min-width: 0; }
+.size-moves b { font-weight: 600; color: var(--ork-ink); min-width: 56px; }
+.size-move { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--ork-1); min-width: 0; overflow-wrap: anywhere; }
+.size-move__heads { display: inline-flex; gap: var(--ork-1); }
+.size-note { margin: var(--ork-2) 0 0; color: var(--ork-danger); overflow-wrap: anywhere; }
