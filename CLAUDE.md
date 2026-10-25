@@ -44,7 +44,7 @@ other way round**: nothing here imports Orkline's package (`orkcraft`).
   keeps its frozen copy of these modules (the testers' week, spec 37 §9), a fix the testers need is made here first and
   in Orkline the same day, this repository's commit named in Orkline's.
 - The rules a model gets for a UI document are `design/ui.py` `RULES`.
-- **The design system is orkUI** (github.com/orkWorks/orkUI): `design-system/orkui` is its copy, stamped and never edited
+- **The design system is orkUI** (github.com/orkCraft/orkUI): `design-system/orkui` is its copy, stamped and never edited
   here; a change to the look is made in orkUI, then copied (`python -m orkboard.design.orkui <orkUI>`). Orkboard's sheets
   read orkUI's tokens and carry no colour, font or corner of their own (`tests/test_design_system.py`).
 - **An agent's craft is its race** (decisions §53): an ork engineers, an elf designs, a goblin minds the data, a gnome

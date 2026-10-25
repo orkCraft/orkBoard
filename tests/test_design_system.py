@@ -16,7 +16,7 @@ SHEETS = [STATIC / "page.css", STATIC / "js" / "shell" / "shell.css", STATIC / "
 def test_the_copy_is_orkuis_office_look_as_stamped():
     assert orkui.problems() == []
     stamp = orkui.stamp()
-    assert stamp["from"] == "https://github.com/orkWorks/orkUI" and stamp["look"] == "office" and stamp["version"]
+    assert stamp["from"] == "https://github.com/orkCraft/orkUI" and stamp["look"] == "office" and stamp["version"]
     for name in ("tokens.css", "components.css", "fonts.css", "tokens.json", "LICENSE", "NOTICE", "icons/icons.svg",
                  "races/peon-laborer.png", "races/elf-elder@2x.png", "races/goblin-warrior.png", "races/gnome-laborer.png"):
         assert name in stamp["files"], name

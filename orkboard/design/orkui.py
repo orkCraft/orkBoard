@@ -1,4 +1,4 @@
-"""orkUI, the design system Orkboard is drawn in (https://github.com/orkWorks/orkUI; docs/specs/40-design-system.md): a
+"""orkUI, the design system Orkboard is drawn in (https://github.com/orkCraft/orkUI; docs/specs/40-design-system.md): a
 copy of its `office` look in `design-system/orkui/`, with orkUI's licence and notice, served at `/ds/orkui/` to the
 desktop (gui/server.py) and beside the app's own files to the phone (gui/pwa.py). Never edited here: a change is made in
 orkUI, then copied over, and `ORKUI.json` stamps which orkUI it is and every file's hash.
@@ -23,7 +23,7 @@ from orkboard.design import tokens
 
 ROOT = tokens.ORKUI
 STAMP = ROOT / "ORKUI.json"
-SOURCE = "https://github.com/orkWorks/orkUI"
+SOURCE = "https://github.com/orkCraft/orkUI"
 LOOK = "office"
 OWN = ("LICENSE", "NOTICE")           # orkUI's own, beside the look's files
 
