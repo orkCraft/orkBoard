@@ -11,7 +11,7 @@ import { Elem, Sign } from "../orkui.js";
 import { showPick, showResult, showTask } from "../shell/store.js";
 import { rises } from "./motion.js";
 import { taskHover, taskHoverBy, spread, stopAbout, stopLook } from "./arenastate.js";
-import { afterWords, followsBuild, rowsOf, taskFoot, waitersOf, waitsForOf } from "./arenawords.js";
+import { RUN, ROW_LABEL, afterWords, followsBuild, heldOf, heldWords, rowsOf, taskFoot, waitersOf, waitsForOf } from "./arenawords.js";
 import { elementOf } from "./goalwords.js";
 
 export const keyOf = (n, t) => `${n.slug}/${t.id}`;
@@ -43,7 +43,8 @@ export function relationOf(n, t) {
 
 /** A card's foot: its state in words; under a hover the words of the dependency (*<before> waits for <short>*, *<after> n wait for it*). Parts: [{sign, text}]. */
 export function footParts(n, t, rel) {
-  const rest = { sign: t.state === "picking" ? "alert" : "", text: taskFoot(t, n) };         // a pick waits for the person: *asks you to pick* with the alert sign (spec 51 §6)
+  const held = t.state === "held" ? heldOf(t, n) : null;                                    // a held card says its reason with the reason's sign (spec 82 §3): window, tonight, sign in, week
+  const rest = { sign: t.state === "picking" ? "alert" : held?.word || held?.kind === "files" ? held.sign : "", text: taskFoot(t, n) };         // a pick waits for the person: *asks you to pick* with the alert sign (spec 51 §6)
   const mine = waitersOf(n, t).length;
   if (rel.src && mine) return [{ sign: "after", text: `${mine} ${mine === 1 ? "waits" : "wait"} for it` }];
   if (rel.after) return [{ sign: "before", text: `waits for ${rel.hovered.short || rel.hovered.title}` }];
@@ -57,7 +58,7 @@ export const Foot = ({ parts }) => parts.map((p, i) => html`<span key=${i} class
 /** The tooltip of a card: its title and what it says of its state. */
 export function cardTip(n, t) {
   const foot = taskFoot(t, n), head = `${t.title} (${goalWords(n)})`;
-  return t.state === "failed" ? `${head} · ${t.error || "failed"}` : t.state === "held" ? `${head} · ${foot}` : `${head} · wave ${t.wave}${afterWords(t, n) ? ` · ${afterWords(t, n)}` : ""}`;
+  return t.state === "failed" ? `${head} · ${t.error || "failed"}` : t.state === "held" ? `${head} · ${heldWords(t, n)}` : `${head} · wave ${t.wave}${afterWords(t, n) ? ` · ${afterWords(t, n)}` : ""}`;
 }
 
 /** What a press on a card opens: its result at Review, its pick while it asks, else the task. */
@@ -66,7 +67,7 @@ export const open = (n, t) => (t.state === "review" ? showResult(n.slug, t.id, {
 /** The look of a card (shared by a stack's front and a spread's): the element, the type, the goal, the name. `phase`: the spread's word over the name. */
 export function CardBody({ n, t, phase = "", foot, deps = [], many = 0 }) {
   const el = elementOf(n);
-  return html`<span class="arena-task__top"><${Elem} name=${el.name} dim=${el.dim} />${phase && html`<span class="arena-task__phase">${phase}</span>`}${typeSign(n)}</span>
+  return html`<span class="arena-task__top">${RUN.includes(t.state) && html`<span class="ork-busy" title=${t.state === "testing" ? "testing" : "working"}></span>`}<${Elem} name=${el.name} dim=${el.dim} />${phase && html`<span class="arena-task__phase">${phase}</span>`}${typeSign(n)}</span>
     <span class="arena-task__goal">${n.short || n.title}</span>
     <span class="arena-task__name">${t.short || t.title}</span>
     ${deps.length > 0 && html`<span class="arena-task__deps">${deps.map((d, i) => html`<span key=${i}><${Sign} name=${d.sign} /> ${d.text}</span>`)}</span>`}
@@ -76,7 +77,7 @@ export function CardBody({ n, t, phase = "", foot, deps = [], many = 0 }) {
 
 /** The classes a card wears for its task's state and what the hover says of it. */
 export const stateCls = (n, t, rel, later) => ({ "is-run": t.state === "running" || t.state === "testing", "is-review": t.state === "review", "is-pick": t.state === "picking", "is-next": t.state === "ready",
-  "is-wait": t.state === "waiting" || t.state === "held", "is-fail": t.state === "failed", "is-later": later, "is-src": rel.src && waitersOf(n, t).length > 0,
+  "is-wait": t.state === "waiting", "is-held": t.state === "held", "is-fail": t.state === "failed", "is-later": later, "is-src": rel.src && waitersOf(n, t).length > 0,
   "is-after": rel.after, "is-before": rel.before });
 
 /** One stack: the front card, edges behind it and ×n. `items`: the stack's entries as the column shows them ([{it: {n, t}, key, sign, quiet, fresh}]),
@@ -109,10 +110,23 @@ function Stack({ goal, items, later, wide, member, row }) {
   </div>`;
 }
 
-/** A member's rows by phase: the label over each row's left edge (*now*, *next*, *later*), the rows after *now* muted. `list`: what `useColumn` shows. */
+/** A member shown alone: its rows by phase across the field, the label over each row's left edge (*now*, *next*, *later*), the rows after *now* muted. `list`: what `useColumn` shows. */
 export function Rows({ list, nodes, member, wide = false }) {
   return rowsOf(list, nodes).map((r) => html`<div key=${r.row} class=${cls("arena-phase", { "is-later": r.row !== "now", "is-wide": wide })} data-row=${r.row}>
     <span class="arena-phase__lbl">${r.row}</span>
     ${r.stacks.map((s) => html`<${Stack} key=${s.goal} goal=${s.goal} items=${s.items} later=${r.row !== "now"} wide=${wide} member=${member} row=${r.row} />`)}
   </div>`);
 }
+
+/** A member's cells on the field (spec 82 §2): one per row it has a stack in, each on its own
+ *  grid line (`gridRow`), in the member's column (field.js `Column`: a subgrid of the field's rows), so that a row reads straight across the table. Rows of the grid: label, cards, label, cards, label, cards. */
+export function Cells({ list, nodes, member }) {
+  return rowsOf(list, nodes).map((r) => html`<div key=${r.row} class=${cls("arena-phase is-cell", { "is-later": r.row !== "now" })} data-row=${r.row} style=${`grid-row:${gridRow(r.row)}`}>
+    ${r.stacks.map((s) => html`<${Stack} key=${s.goal} goal=${s.goal} items=${s.items} later=${r.row !== "now"} wide=${false} member=${member} row=${r.row} />`)}
+  </div>`);
+}
+
+/** The grid line of a row's cards (its label is the line above): now 2, next 4, later 6. */
+export const gridRow = (row) => ["now", "next", "later"].indexOf(row) * 2 + 2;
+/** A row's label, at the table's left edge, over its cells (spec 82 §2). */
+export const RowLabel = ({ row }) => html`<span class=${cls("arena-row__lbl", { "is-later": row !== "now" })} data-row=${row} style=${`grid-row:${gridRow(row) - 1}`}>${ROW_LABEL[row]}</span>`;

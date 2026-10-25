@@ -334,8 +334,10 @@ def test_a_goal_and_a_task_held_for_the_sign_in_say_so_and_not_limits(gui):
           const m = await import(base + 'arenawords.js');
           const goal = { slug: "offline", title: "Offline mode", stage: "planning", state: "ready", waits: w, held_until: w.until };
           return [m.waitsWords(w), m.planningOf({ slug: "ship-sync" }, [goal], "Taskmaster").rows[0].words,
-            m.taskFoot({ state: "held", note: "", held_for: "sign_in" }, { waits: w }), m.taskFoot({ state: "held", note: "", held_for: "sign_in" }, {})]; }""", WAIT)
-        assert got == ["waits: Claude Code's sign-in", "waits: Claude Code's sign-in", "waits: Claude Code's sign-in", "waits: the tool's sign-in"]
+            m.taskFoot({ state: "held", note: "", held_for: "sign_in" }, { waits: w }), m.taskFoot({ state: "held", note: "", held_for: "sign_in" }, {}),
+            m.heldWords({ state: "held", note: "", held_for: "sign_in" }, { waits: w }), m.heldWords({ state: "held", note: "", held_for: "sign_in" }, {})]; }""", WAIT)
+        assert got == ["waits: Claude Code's sign-in", "waits: Claude Code's sign-in", "held: sign in", "held: sign in",           # the card's foot says *held: sign in* (spec 82 §3); its tooltip says whose
+                       "waits: Claude Code's sign-in", "waits: the tool's sign-in"]
     finally:
         pg.close()
     assert not errors, "\n".join(errors)

@@ -1,7 +1,7 @@
-// The party's field (docs/specs/49-one-window.md §5.3–§5.4, §11, docs/specs/50-parties-and-goals.md §3.4–§3.5): a column per member of the party row;
-// under the member its open tasks lie in rows by phase, a stack per goal in a row (stacks.js). The goals the filter takes away leave (motion.js, without
-// a check), a member with none says *Nothing of these goals*. A member shown alone (solo) lays its rows across the field's whole width. A task the field
-// did not have a moment ago rises into its place (dealt from the stop of a plan just started, spec 57), a merged one fades where it stands and the rest settles (motion.js).
+// The party's field (docs/specs/49-one-window.md §5.3–§5.4, §11, docs/specs/50-parties-and-goals.md §3.4–§3.5, docs/specs/82-the-field-at-a-glance.md §2–§3): a column per member of the party row, all in
+// one grid whose rows (Now, Next, Later) run across every column, so that what can run at once lies on one line; in a cell a stack per goal (stacks.js). The goals the filter
+// takes away leave (motion.js, without a check), a member with none says *Nothing of these goals*. A member shown alone (solo) lays its rows across the field's whole width.
+// A task the field did not have a moment ago rises into its place (dealt from the stop of a plan just started, spec 57), a merged one fades where it stands and the rest settles (motion.js).
 // The cards the stop that is looked at is about wear a ring (spec 58): stacks.js `linkedTo`, and a Planning card here.
 import { useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
@@ -9,26 +9,29 @@ import { Elem, Sign } from "../orkui.js";
 import { showIdea, showPlan } from "../shell/store.js";
 import { useColumn, useLit } from "./motion.js";
 import { solo, stopAbout, stopLook } from "./arenastate.js";
-import { columnOf, mergedBy, plural, stageOf } from "./arenawords.js";
+import { ROWS, columnOf, mergedBy, plural, stageOf } from "./arenawords.js";
 import { elementOf, inFilter, leaveOf } from "./goalwords.js";
-import { Rows, goalWords, keyOf, typeSign } from "./stacks.js";
+import { Cells, RowLabel, Rows, goalWords, keyOf, typeSign } from "./stacks.js";
+import { IdleLine } from "./idle.js";
 
-/** A member's column: its rows by phase running down from it, *<check> k in dev* at its far end; what changes in it moves as motion.js says. */
-function Column({ m, nodes, col, shown }) {
+/** A member's column: a subgrid of the field's rows (arena.css `.arena-stack`), its stacks in the cells of the rows they lie in, *<check> k in dev* under the last row;
+ *  what changes in it moves as motion.js says. `at`: the column's place in the field's grid, from 1. */
+function Column({ m, nodes, col, shown, at: place }) {
   const ref = useRef(), done = useRef(), at = useRef({ nodes, shown });
   at.current = { nodes, shown };
   const list = useColumn(ref, col, (x) => keyOf(x.n, x.t), (x) => leaveOf(at.current.nodes, at.current.shown, x.n.slug, x.t.id), true);
   const merged = mergedBy(m, nodes);
   useLit(done, merged);
-  return html`<div ref=${ref} class=${cls("arena-stack", { "is-col": solo.value === m.slug })} role="group" data-agent=${m.slug}
+  return html`<div ref=${ref} class=${cls("arena-stack", { "is-col": solo.value === m.slug })} role="group" data-agent=${m.slug} style=${`grid-column:${place}`}
     aria-label=${`${m.name}: ${plural(col.length, "task", "tasks")}, the one at work nearest the agent`}>
     ${!list.length && html`<span class="arena-stack__empty">${shown.length ? "Nothing of these goals" : "No task now"}</span>`}
-    <${Rows} list=${list} nodes=${nodes} member=${m.slug} />
+    <${Cells} list=${list} nodes=${nodes} member=${m.slug} />
     ${merged > 0 && html`<span ref=${done} class="arena-stack__done"><${Sign} name="check" /> ${merged} in dev</span>`}
   </div>`;
 }
 
-/** The columns: the labels over the first builder and the first checker, a column per member. `shown`: the goals the filter shows ([] for all). */
+/** The columns: the labels over the first builder and the first checker, a column per member, the rows (Now, Next, Later) across all of them in one grid, each labelled at
+ *  the table's left edge and not drawn when no member has a stack in it (spec 82 §2); over them the line that says why nothing is at work (§3). `shown`: the goals the filter shows ([] for all). */
 export function Columns({ g, members, nodes, cols, shown }) {
   const first = {};
   const heads = members.map((m) => {
@@ -36,11 +39,15 @@ export function Columns({ g, members, nodes, cols, shown }) {
     if (st) first[m.band] = true;
     return { key: m.slug, label: st?.word || "", seats: st?.seats ? plural(st.seats, "seat", "seats") : "" };
   });
+  const columns = members.map((m) => ({ m, col: columnOf(m, nodes).filter((x) => inFilter(shown, x.n.slug)) }));
+  const rows = ROWS.filter((r) => columns.some((c) => c.col.some((x) => x.row === r)));
   return html`<div class="arena-cols" style=${`--cols:${cols}`}>
+    <${IdleLine} nodes=${nodes} />
     <div class="arena-cols__head">${heads.map((h) => html`<span key=${h.key} class=${cls("arena-lbl", { "is-blank": !h.label })} title=${h.seats || undefined}>${h.label}</span>`)}</div>
     <div class="arena-cols__grid">
       ${!members.length && html`<p class="arena-cap arena-cols__none">No builder and no checker in this party. Edit the party in the bar above.</p>`}
-      ${members.map((m) => html`<${Column} key=${m.slug} m=${m} nodes=${nodes} col=${columnOf(m, nodes).filter((x) => inFilter(shown, x.n.slug))} shown=${shown} />`)}
+      ${rows.map((r) => html`<${RowLabel} key=${r} row=${r} />`)}
+      ${columns.map(({ m, col }, i) => html`<${Column} key=${m.slug} m=${m} nodes=${nodes} col=${col} shown=${shown} at=${i + 1} />`)}
     </div>
   </div>`;
 }

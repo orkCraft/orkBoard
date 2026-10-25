@@ -146,12 +146,13 @@
 .arena-cards { flex: none; padding: var(--ork-3) var(--ork-5); }
 .arena-cols { flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; padding: 0 var(--ork-5); }
 .arena-cols__head { flex: none; display: grid; grid-template-columns: var(--cols); gap: var(--ork-4); align-items: center; height: 28px; }
-.arena-cols__grid { flex: 1; min-height: 0; display: grid; grid-template-columns: var(--cols); gap: var(--ork-4); align-items: stretch; }
-.arena-stack { min-height: 0; display: flex; flex-direction: column; justify-content: flex-start; gap: var(--ork-4); padding: var(--ork-2) var(--ork-4) var(--ork-3) var(--ork-2); overflow-y: auto; scrollbar-width: none; }
-.arena-stack::-webkit-scrollbar { display: none; }
-.arena-cols__none { padding: var(--ork-4); }
-.arena-stack__empty { flex: none; text-align: center; font: var(--ork-type-caption); color: var(--ork-ink-faint); }
-.arena-stack__done { flex: none; padding-top: var(--ork-2); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+/* the field is one grid (spec 82 §2, glance.css): a track per member, the rows (label, cards) across them; a member's column is a subgrid of its rows */
+.arena-cols__grid { flex: 1; min-height: 0; display: grid; grid-template-columns: var(--cols); grid-template-rows: repeat(6, auto) auto; column-gap: var(--ork-4); align-content: start; align-items: stretch; overflow-y: auto; scrollbar-width: none; }
+.arena-cols__grid::-webkit-scrollbar { display: none; }
+.arena-stack { grid-row: 1 / span 7; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: subgrid; }
+.arena-cols__none { grid-column: 1 / -1; padding: var(--ork-4); }
+.arena-stack__empty { grid-row: 2; text-align: center; font: var(--ork-type-caption); color: var(--ork-ink-faint); }
+.arena-stack__done { grid-row: 7; padding: var(--ork-2) var(--ork-2) 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .arena-phase { position: relative; flex: none; display: flex; flex-wrap: wrap; align-content: flex-start; gap: var(--ork-4) var(--ork-4); padding-top: var(--ork-5); }
 .arena-phase__lbl { position: absolute; left: 0; top: -1px; font-size: 10px; line-height: 12px; color: var(--ork-ink-faint); text-transform: uppercase; letter-spacing: 0.06em; }
 .arena-stk { position: relative; flex: 0 1 calc(50% - var(--ork-2)); min-width: 0; max-width: 104px; }
@@ -232,8 +233,8 @@
 .arena-spread__row { display: flex; flex-wrap: wrap; gap: var(--ork-5); justify-content: center; max-width: 94%; }
 .arena-spread__card { flex: none; width: 120px; height: 168px; }
 .arena-arrows { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 25; }
-.arena-arrow line { stroke: var(--ork-ink); stroke-width: 2; stroke-dasharray: 5 3; animation: arena-draw 0.16s steps(4) both; }   /* drawn from its start (arrows.js sets the origin), once a line comes */
-.arena-arrow.is-leaving line { animation: arena-crumble 0.42s steps(3) forwards; }                         /* a collision answered: its line breaks into pixels and goes (spec 74 §3; project.js keeps it LEAVE_MS) */
+.arena-arrow line, .arena-arrow polyline { stroke: var(--ork-ink); stroke-width: 2; stroke-dasharray: 5 3; animation: arena-draw 0.16s steps(4) both; }   /* drawn from its start (arrows.js sets the origin), once a line comes */
+.arena-arrow.is-leaving line, .arena-arrow.is-leaving polyline { animation: arena-crumble 0.42s steps(3) forwards; }                         /* a collision answered: its line breaks into pixels and goes (spec 74 §3; project.js keeps it LEAVE_MS) */
 .arena-arrow polygon { fill: var(--ork-ink); animation: arena-head 0s 0.16s both; }                                                /* the head when the line has reached it */
 @keyframes arena-draw { from { transform: scale(0); } }
 @keyframes arena-crumble { from { stroke-dasharray: 2 2; } to { stroke-dasharray: 2 14; opacity: 0; } }
@@ -277,20 +278,22 @@
 .arena-cview__page { width: 100%; height: 70vh; border: var(--ork-line) solid var(--ork-frame); background: var(--ork-ink); color-scheme: light; }      /* a page of its own, in a sandbox: its own ground, a light one so its dark text reads */
 
 /* -- the party row (64 px) and the gate ---------------------------------------------------------------------------------------------- */
-.arena-team { flex: none; height: 64px; box-sizing: border-box; display: grid; grid-template-columns: var(--cols); gap: var(--ork-4); padding: var(--ork-3) var(--ork-5); align-items: center; border-bottom: var(--ork-line) solid var(--ork-frame); }
+.arena-team { flex: none; height: 64px; box-sizing: border-box; display: grid; grid-template-columns: var(--cols); gap: var(--ork-4); padding: 0 var(--ork-5); align-items: stretch; border-bottom: var(--ork-line) solid var(--ork-frame); }
 .arena-mcol { position: relative; min-width: 0; }
-/* a member: a small framed row — its head wears three signs on its corners, three short lines beside it */
-.arena-member { appearance: none; width: 100%; max-width: 200px; margin: 0 auto; box-sizing: border-box; display: flex; flex-direction: row; align-items: center; justify-content: flex-start; gap: var(--ork-5);
-  padding: var(--ork-3) var(--ork-4) var(--ork-3) 9px; background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame); clip-path: var(--ork-notch); color: inherit; cursor: pointer; font: var(--ork-type-caption); }
-.arena-member:hover { border-color: var(--ork-edge); }
+/* a member is a face over its column, no frame (spec 82 §5): its head (40 px) and name centred, the marks beside the name, the numbers beside the head, a 2 px rule as wide as the column under them */
+.arena-member { appearance: none; position: relative; width: 100%; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 0;
+  padding: 0; background: none; border: 0; color: inherit; cursor: pointer; font: var(--ork-type-caption); }
+.arena-member:hover { background: var(--ork-raised); }
 .arena-member:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
-.arena-member.is-on { background: var(--ork-raised); border-color: var(--ork-ink); box-shadow: inset 0 2px 0 var(--ork-ink); }
+.arena-member.is-on { background: var(--ork-raised); }
 .arena-member.is-dim { opacity: 0.45; }
-.arena-tport { position: relative; flex: none; width: 36px; height: 33px; }
+.arena-member__line { display: flex; align-items: center; justify-content: center; gap: var(--ork-3); flex: none; max-width: 100%; min-width: 0; height: 16px; }
+.arena-member__rule { align-self: stretch; flex: none; height: 2px; margin-top: var(--ork-1); background: var(--ork-edge); }
+.arena-member[data-state="work"] .arena-member__rule { background: var(--ork-ink); }                      /* at work: the rule is ink and the head turns (orkUI's busy mark) */
+.arena-member[data-state="needs"] .arena-member__rule { background: var(--ork-danger); }                  /* it calls: the danger colour */
+.arena-tport { position: relative; flex: none; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; }
 .arena-tport .ork-race__head { display: block; }
-.arena-mark--r { position: absolute; left: -7px; top: -7px; }
-.arena-mark--h { position: absolute; left: -7px; bottom: -5px; }
-.arena-sign { position: absolute; right: -3px; top: -7px; min-width: 16px; height: 16px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; padding: 0 var(--ork-1);
+.arena-sign { position: absolute; right: -4px; top: -2px; min-width: 16px; height: 16px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; padding: 0 var(--ork-1);
   background: var(--ork-canvas); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); font: 600 11px/14px var(--ork-font-text); color: var(--ork-ink); }
 .arena-sign .ork-icon { width: 12px; height: 12px; }
 .arena-sign.danger { background: var(--ork-danger); border-color: var(--ork-danger); color: var(--ork-on-ink); }
@@ -303,8 +306,8 @@
 @keyframes arena-struck { 0% { background: var(--ork-ink); } 34% { background: transparent; } }
 @keyframes arena-hop { 0% { transform: translateY(-2px); } 50% { transform: none; } }
 @keyframes arena-call { from { transform: translateY(-3px); } to { transform: none; } }       /* 3 px: the member's notched frame clips what rises above its top */
-.arena-tbody { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; text-align: left; }
-.arena-member__nm { display: block; max-width: 100%; font: 600 12px/14px var(--ork-font-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.arena-tbody { position: absolute; left: calc(50% + 30px); top: var(--ork-3); display: flex; flex-direction: column; align-items: flex-start; min-width: 0; text-align: left; }
+.arena-member__nm { display: block; flex: 0 1 auto; min-width: 0; font: 600 12px/16px var(--ork-font-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .arena-num { font: 600 11px/13px var(--ork-font-text); color: var(--ork-ink); white-space: nowrap; }
 .arena-num.is-muted { font-weight: 400; color: var(--ork-ink-muted); }
 .arena-gate { box-sizing: border-box; height: 100%; border-left: var(--ork-line) solid var(--ork-frame); border-bottom: var(--ork-line) solid var(--ork-frame); padding: 0 var(--ork-5); display: flex; flex-direction: column; justify-content: center; gap: var(--ork-2); }
@@ -523,7 +526,7 @@
   .arena-flagline.is-raising .arena-flagline__main b, .arena-flagline.is-raising .arena-flagline__x { animation: none; }
   .arena-tport.is-struck, .arena-tport.is-struck .ork-race__head, .arena-tport.is-calling, .arena-tport.is-calling .arena-sign { animation: none; }
   .arena-new__card, .arena-type__front, .arena-type__face { transition: none; }
-  .arena-arrow line, .arena-arrow polygon, .arena-arrow.is-leaving line { animation: none; }
+  .arena-arrow line, .arena-arrow polyline, .arena-arrow polygon, .arena-arrow.is-leaving line, .arena-arrow.is-leaving polyline { animation: none; }
   .arena-result[data-sign="check"] .arena-task__flash .ork-elem, .arena-result[data-sign="back"].is-leaving { animation: none; }
   .arena-stars i.is-ink { animation: none; opacity: 0.6; }
   .arena-canvas.is-drawn { animation: none; }
