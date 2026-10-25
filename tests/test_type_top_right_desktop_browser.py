@@ -81,7 +81,7 @@ def test_a_spreads_cards_keep_the_type_top_right_and_the_goals_list_draws_the_ty
     spread.wait_for(timeout=WAIT_MS)
     cards = spread.locator(".arena-spread__card")
     assert cards.count() == 2
-    pg.wait_for_function("() => document.getAnimations().length === 0", timeout=WAIT_MS)                  # the deal is over: the boxes are read at rest
+    pg.wait_for_function("() => document.getAnimations().filter((a) => a.animationName !== 'ork-busy').length === 0", timeout=WAIT_MS)                  # the deal is over: the boxes are read at rest
     for c in cards.all():
         elem, sign = c.locator(".arena-task__top .ork-elem").bounding_box(), c.locator(".arena-task__top .arena-task__type .ork-sign").bounding_box()
         phase = c.locator(".arena-task__phase").bounding_box()

@@ -17,8 +17,9 @@ import { ResultActions } from "../shell/review.js";
 import { openDialog } from "../shell/modals.js";
 import { TodoWays, named } from "../shell/tododialog.js";
 import { run as runOp } from "../board/ops.js";
-import { track } from "../board/store.js";
-import { useHeld, useLeaving } from "./motion.js";
+import { board, track } from "../board/store.js";
+import { lookTick } from "../shell/store.js";
+import { reducedMotion, useHeld, useLeaving } from "./motion.js";
 import { dealWaits, dropDeal, leaveParty, stopAbout, stopLook } from "./arenastate.js";
 import { closeSpread } from "./spread.js";
 import { askedOf, changeToast, fanOf, laidOut } from "./arenawords.js";
@@ -191,7 +192,42 @@ const toParty = (s) => {
   track.value = s.party.slug;
 };
 
-function Stop({ s, g, place, of }) {
+const RISE_MS = 2500, RISE_APART_MS = 600, RISE_BACK_MS = 300;       // a new stop stays up this long, the next one rises this long after it, it takes this long to go back
+let seen = null, seenFor = -1;                                      // the keys of the hand at the last draw (kept over the parties' pages: the hand is the project's), null before the first; the look it was read for
+
+/** A stop that was not in the hand at the last draw rises (spec 82 §7): out of the fan, upright and whole, its foot on the hand's top line (`.is-up`, glance.css, 0.2 s), stays RISE_MS (longer
+ *  while the pointer or the focus is on it), then goes back to its place (`.is-down`, 0.3 s); several at once rise one after another, RISE_APART_MS apart. Under reduced motion nothing moves:
+ *  its edge is in the alert colour for RISE_MS (`.is-called`). The first draw after the page opens (or another project is shown) raises nothing, nor does one before the Board is read.
+ *  Returns {key: "up" | "down" | "called"}. */
+function useRising(stops, box) {
+  const [mark, setMark] = useState({}), timers = useRef([]);
+  const sig = stops.map((s) => s.key).join("|"), ready = !!board.value;
+  const put = (key, how) => setMark((m) => { const next = { ...m }; if (how) next[key] = how; else delete next[key]; return next; });
+  useEffect(() => {
+    if (!ready) return;
+    const keys = stops.map((s) => s.key);
+    if (seenFor !== lookTick.value) { seenFor = lookTick.value; seen = null; }
+    if (seen === null) { seen = new Set(keys); return; }
+    const fresh = keys.filter((k) => !seen.has(k));
+    seen = new Set(keys);
+    const after = (ms, fn) => { timers.current.push(setTimeout(fn, ms)); };
+    const held = (key) => { const el = box.current?.querySelector(`[data-key="${CSS.escape(key)}"]`); return !!el && el.matches(":hover, :focus-within"); };
+    const calm = reducedMotion();
+    fresh.forEach((key, i) => {
+      const end = () => {
+        if (!calm && held(key)) { after(300, end); return; }          // the pointer or the focus is on it: it stays up while they are
+        if (calm) { put(key, ""); return; }
+        put(key, "down");
+        after(RISE_BACK_MS, () => put(key, ""));
+      };
+      after(calm ? 0 : i * RISE_APART_MS, () => { put(key, calm ? "called" : "up"); after(RISE_MS, end); });
+    });
+  }, [sig, ready]);
+  useEffect(() => () => timers.current.forEach(clearTimeout), []);
+  return mark;
+}
+
+function Stop({ s, g, place, of, rise = "" }) {
   const fan = fanOf(place, of), pick = s.kind === "pick", other = s.other, p = s.party;
   const see = () => toParty(s);
   const label = other ? `${s.label} in ${p.name}` : s.label;
@@ -205,7 +241,7 @@ function Stop({ s, g, place, of }) {
   const unlook = () => { if (stopLook.value === s.key) { stopLook.value = ""; stopAbout.value = null; } };
   useEffect(() => { if (ghost) unlook(); }, [ghost]);               // answered or withdrawn: nothing stays ringed
   useEffect(() => unlook, []);
-  return html`<div class=${cls("arena-hc ork-frame", { alert: s.tone === "alert", danger: s.tone === "danger", "is-compact": s.small, "is-other": other, "is-leaving": ghost, "is-raised": ghost && s.raised })}
+  return html`<div class=${cls("arena-hc ork-frame", { alert: s.tone === "alert", danger: s.tone === "danger", "is-compact": s.small, "is-other": other, "is-leaving": ghost, "is-raised": ghost && s.raised, "is-up": rise === "up", "is-down": rise === "down", "is-called": rise === "called" })}
       data-kind=${s.kind} data-key=${s.key} data-party=${p.slug} style=${`--rot:${fan.rot}deg;--dy:${fan.dy}px;--z:${fan.z};order:${place}`} inert=${ghost || undefined} aria-hidden=${ghost ? "true" : undefined}
       onpointerenter=${(e) => look(e.currentTarget)} onfocusin=${(e) => look(e.currentTarget)} onpointerleave=${gone} onfocusout=${gone}>
     <button type="button" class="arena-hc__open" aria-label=${`${label}: ${s.full}`} aria-describedby=${about ? said : undefined} title=${pick ? `${s.full} · ${s.text}` : undefined} onClick=${() => { see(); open(s); }}>
@@ -230,7 +266,7 @@ function Stop({ s, g, place, of }) {
 export function Stops({ g = null, stops }) {
   const box = useRef();
   const shown = useLeaving(box, useHeld(box, stops, (s) => s.key), (s) => s.key);                // a stop that leaves fades where it stands (spec 58 §4)
-  const focus = needsFocus.value, n = shown.length;
+  const rising = useRising(stops, box), focus = needsFocus.value, n = shown.length;
   useEffect(() => { if (focus) box.current?.querySelector(".arena-hc__open")?.focus(); }, [focus]);
   useLayoutEffect(() => {
     const el = box.current;
@@ -244,6 +280,6 @@ export function Stops({ g = null, stops }) {
   const at = laidOut(n);
   return html`<div class="arena-hand" role="region" aria-label="Waits for you" ref=${box}>
     ${!n && html`<p class="arena-cap arena-hand__empty">Nothing waits for you.</p>`}
-    ${shown.map((s, i) => html`<${Stop} key=${s.key} s=${s} g=${g} place=${at[i]} of=${n} />`)}
+    ${shown.map((s, i) => html`<${Stop} key=${s.key} s=${s} g=${g} place=${at[i]} of=${n} rise=${rising[s.key] || ""} />`)}
   </div>`;
 }
