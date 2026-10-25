@@ -14,6 +14,8 @@ from tests.test_pwa_shell_browser import FAB, _agents, _band, _item, _menu, _new
 pytest.importorskip("playwright.async_api")
 pytestmark = pytest.mark.browser
 
+from tests.test_pwa_night_asked_browser import question, unasked  # noqa: E402
+
 
 async def _until(page, expr, ok, timeout=5.0):
     """`expr` read on the page until `ok` says so (the page's CSP refuses wait_for_function's eval)."""
@@ -385,3 +387,39 @@ async def test_the_create_button_floats_over_the_field_s_bottom_right_and_limits
         await _open_idea(page, "Offline mode")
         assert await page.locator(FAB).is_visible() is False or await page.locator(".screen").is_visible()   # a screen covers the button
         assert await page.evaluate(NO_SCROLL)
+
+
+# -- spec 83 (docs/specs/83-one-field-and-the-night-asked.md §3): Tonight on a held goal is Low work's, on the person's word -------------------------------------------
+
+async def _held(page, stub):
+    _two_goals(stub)
+    stub.ideas["held"] = stub.idea("held", "Kept goal", "raw", 8, track="ship", priority="normal", queue="hold")
+    stub.bump({})
+    await _pick_goal(page, "ship")
+    await _band(page, "lead")
+    await _item(page, "Kept goal").wait_for(timeout=WAIT_MS)
+    await _open_idea(page, _item(page, "Kept goal"))
+    return page.locator(".screen")
+
+
+@pytest.mark.asyncio
+async def test_spec_83_tonight_on_a_held_goal_asks_first_and_then_puts_it_off(fake_repo, monkeypatch):
+    unasked(monkeypatch)
+    async with _phone(fake_repo, monkeypatch) as (stub, page):
+        screen = await _held(page, stub)
+        await screen.get_by_role("button", name="Tonight", exact=True).click()
+        ask = question(page)
+        await ask.wait_for(timeout=WAIT_MS)
+        assert not [c for c in stub.calls if c[0] == "ideas.queue" and c[1].get("queue") == "night"]                         # asked first
+        await ask.get_by_role("button", name="Yes, at night").click()
+        assert await _called(stub, "ideas.night_allow", {"allow": True})
+        assert await _called(stub, "ideas.queue", {"slug": "held", "queue": "night"})                                        # then it is put off, as Low work
+
+
+@pytest.mark.asyncio
+async def test_spec_83_a_held_goal_has_no_tonight_after_no_by_day(fake_repo, monkeypatch):
+    unasked(monkeypatch, False)
+    async with _phone(fake_repo, monkeypatch) as (stub, page):
+        screen = await _held(page, stub)
+        await screen.get_by_role("button", name="Process now", exact=True).wait_for(timeout=WAIT_MS)
+        assert await screen.get_by_role("button", name="Tonight", exact=True).count() == 0

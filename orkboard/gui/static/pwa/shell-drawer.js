@@ -65,10 +65,13 @@ export function makeSettings(core, ctx, drawer, limits) {
   const pushBox = h("input", { type: "checkbox", id: "push-after" });
   const autoBox = h("input", { type: "checkbox", id: "autostart" });
   const landBox = h("input", { type: "checkbox", id: "lands-by-itself" });
+  const nightBox = h("input", { type: "checkbox", id: "night-low" });                   // Low work may run at night (spec 83): off while it is not asked yet
+  const nightHint = h("small", { class: "muted", "data-settings": "night-low-hint" });
   const nightFrom = h("input", { class: "ork-field", type: "time", "aria-label": "Night from" });
   const nightTo = h("input", { class: "ork-field", type: "time", "aria-label": "Night to" });
   autoBox.addEventListener("change", async () => { await write("ideas.board_set", { autostart: autoBox.checked }); await core.refresh(); });
   landBox.addEventListener("change", async () => { await write("ideas.board_set", { review: !landBox.checked }); await core.refresh(); });
+  nightBox.addEventListener("change", async () => { await write("ideas.night_allow", { allow: nightBox.checked }); await core.refresh(); });
   const setNight = async () => {
     if (!nightFrom.value || !nightTo.value) return;
     if (await write("ideas.board_set", { night: `${nightFrom.value}-${nightTo.value}` })) await core.refresh();
@@ -88,6 +91,8 @@ export function makeSettings(core, ctx, drawer, limits) {
     h("label", { class: "check-line", for: "autostart" }, autoBox, h("span", {}, "Start plans by themselves")),
     h("label", { class: "check-line", for: "lands-by-itself" }, landBox, h("span", {}, "A result that holds lands in dev by itself")),
     h("div", { class: "field" }, h("span", { class: "field-label" }, "Night"), h("div", { class: "row night-row" }, nightFrom, h("span", {}, "to"), nightTo)),
+    h("label", { class: "check-line", for: "night-low" }, nightBox, h("span", {}, "Low work may run at night")),
+    nightHint,
     h("div", { class: "row" }, intoBtn),
     h("div", { class: "row" }, agentsBtn),
     h("label", { class: "check-line", for: "push-after" }, pushBox, h("span", {}, "Push after merging (sends your code to origin)")),
@@ -131,6 +136,8 @@ export function makeSettings(core, ctx, drawer, limits) {
       pushBox.checked = Boolean(core.st.review?.push);
       autoBox.checked = core.st.board?.autostart !== false;
       landBox.checked = core.st.board?.review !== true;
+      nightBox.checked = core.st.board?.night_low === true;
+      nightHint.textContent = `and the leaders re-read goals and propose new ones then${core.st.board?.night_low === null ? " · not asked yet" : ""}`;
       if (document.activeElement !== nightFrom && document.activeElement !== nightTo) [nightFrom.value, nightTo.value] = String(core.st.board?.night || "01:00-07:00").split("-");
     },
     render(s) {

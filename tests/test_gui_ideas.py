@@ -26,12 +26,13 @@ BOARD_COMMANDS = {"ideas.board", "ideas.page", "ideas.add", "ideas.say", "ideas.
                   "ideas.revise", "ideas.revise_answer",
                   "ideas.judge", "ideas.pitch_send", "ideas.pitch_again", "ideas.pitch_pass",
                   "ideas.release_out", "ideas.release_candidates", "ideas.shown", "ideas.party_for", "ideas.proposals",
-                  "ideas.tools", "ideas.party_sizes"}   # … spec 81's two, spec 75's one, and spec 49's three, spec 51's one, spec 62's two, spec 65's four, spec 68's three, spec 70's one
+                  "ideas.tools", "ideas.party_sizes", "ideas.night_allow"}   # … spec 83's one, spec 81's two, spec 75's one, and spec 49's three, spec 51's one, spec 62's two, spec 65's four, spec 68's three, spec 70's one
 
 
 @pytest.fixture
 def host(fake_repo) -> Orkboard:
     h = Orkboard(fake_repo)
+    h.ideas.save_settings({**h.ideas.settings_now(), "night_low": True})          # spec 83: the night is on the person's word; most of these tests are of Low work at night
     yield h
     sys.modules.pop("orkboard.core.idea_runner", None)
 
@@ -45,10 +46,10 @@ def _wait(host, slug):
 
 
 def _add(host, text, **more):
-    """An idea under a goal (spec 35 §3: no idea without one, never General), waiting for the night unless asked."""
+    """An idea under a goal (spec 35 §3: no idea without one, never General), kept raw (held) unless asked (spec 83: the night is only for Low work, on the person's word)."""
     root = host.ideas.root()
     goal = next((t["slug"] for t in ideas.tracks(root, make=False) if t["slug"] != "general"), None) or ideas.add_track(root, "First goal")
-    return host.command("ideas.add", {"text": text, "track": goal, "night": True, **more})
+    return host.command("ideas.add", {"text": text, "track": goal, "hold": True, **more})
 
 
 def _plan(host, slug, todos=()):
@@ -357,7 +358,7 @@ def test_a_draft_the_tool_failed_says_why_on_the_page_not_as_its_error(host, mon
 
     monkeypatch.setattr(jobs, "run_read", run_read)
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")                   # a key is set: a sign-in cannot help (spec 45 §3)
-    slug = _add(host, "Dark mode", night=False)["slug"]                  # Normal: drafted at once
+    slug = _add(host, "Dark mode", hold=False)["slug"]                  # Normal: drafted at once
     _wait(host, slug)
     page = host.command("ideas.page", {"slug": slug})
     assert "error" not in page and page["state"] == "raw"
@@ -784,7 +785,7 @@ def test_ideas_flags_gains_the_goals_flags_every_partys_newest_first_and_keeps_t
     assert host.command("ideas.flags", {}) == {"flags": [], "goals": []}
     a, b, c = _add(host, "Dark mode for the night")["slug"], _add(host, "Larger text")["slug"], _add(host, "Not flagged")["slug"]
     other = ideas.add_track(host.ideas.root(), "Second party")
-    d = host.command("ideas.add", {"text": "In another party", "track": other, "night": True})["slug"]
+    d = host.command("ideas.add", {"text": "In another party", "track": other, "hold": True})["slug"]
     state, root = host.ideas.state_dir, host.ideas.root()
     for slug, at in ((a, "2026-10-19T09:00:00"), (b, "2026-10-21T09:00:00"), (d, "2026-10-20T09:00:00")):
         idea_flag.raise_flag(root, state, slug, "gate", "c" * 40)
@@ -974,7 +975,7 @@ def test_the_party_changes_before_the_goal_both_under_the_lock_and_never_for_ton
     _new(host, ship, "A screen", type="screen", join={"add": "ui-kit"})
     assert seen == [("party", True), ("goal", True)]
     seen.clear()
-    kept = host.command("ideas.add", {"text": "Kept for tonight", "track": ship, "night": True, "type": "experiment", "join": {"add": "experimenter"}})
+    kept = host.command("ideas.add", {"text": "Kept for tonight", "track": ship, "priority": "low", "night": True, "type": "experiment", "join": {"add": "experimenter"}})
     assert seen == [("goal", True)] and kept["joined"] is None and kept["type"] == "experiment"
     assert goal_team.team_of(host.ideas.root(), ship) == ["grunt", "ui-kit"]
 

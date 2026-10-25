@@ -309,10 +309,12 @@ def test_a_member_two_numbers_marks_signs_and_peek(arena):
     assert all(pg.evaluate("(src) => fetch(src).then((r) => r.ok)", m.get_attribute("src")) for m in marks.all())      # the marks are served
     assert backend.locator(".arena-sign .ork-sign.cross").count() == 1 and "danger" in backend.locator(".arena-sign").get_attribute("class")       # a failure: the cross on the danger ground
     assert backend.locator(".arena-sign").get_attribute("title") == "failed" and backend.locator(".arena-sign").inner_text() == ""            # the sign is drawn, never typed
-    assert screens.locator(".arena-sign .ork-sign.work").count() == 1 and team.locator(".arena-member[data-agent=words] .arena-sign").count() == 0   # at work: the work sign; next: none
+    assert screens.locator(".arena-sign .ork-busy").count() == 1 and screens.locator(".arena-sign .ork-sign").count() == 0 and team.locator(".arena-member[data-agent=words] .arena-sign").count() == 0   # at work: orkUI's busy mark (spec 82 §5); next: none
     label = backend.get_attribute("aria-label")
     assert label.startswith("Backend, ork, Claude, Seasoned, failed, 5 runs this week") and "A click shows its work." in label
-    assert box(pg, ".arena-member[data-agent=backend]")["height"] < 60 and box(pg, ".arena-member[data-agent=backend]")["width"] <= 200          # a small row
+    column = box(pg, ".arena-stack[data-agent=backend]")
+    assert box(pg, ".arena-member[data-agent=backend]")["height"] <= 64 and abs(box(pg, ".arena-member[data-agent=backend]")["width"] - column["width"]) <= 1          # a face over its column, no longer a framed row of at most 200 px (spec 82 §5)
+    assert backend.evaluate("e => getComputedStyle(e).borderTopWidth") == "0px" and backend.evaluate("e => getComputedStyle(e).clipPath") == "none"          # no frame
     peek = backend.locator("xpath=..").locator(".arena-peek")
     assert not peek.is_visible()
     backend.hover()                                                                                           # the peek: the whole face beside it
@@ -370,8 +372,9 @@ def test_the_columns_hold_rows_by_phase_the_merged_count_and_what_waits_for_a_ta
     assert _keys(pg, "words") == ["signin/c2"]
     rows = lambda agent: pg.locator(f".arena-stack[data-agent={agent}] .arena-phase").evaluate_all("els => els.map((e) => e.dataset.row)")      # noqa: E731
     assert rows("backend") == ["now", "next"] and rows("screens") == ["now", "later"] and rows("words") == ["now"]                # a row with nothing is not drawn
-    labels = pg.locator(".arena-stack[data-agent=screens] .arena-phase__lbl")
-    assert [l.text_content() for l in labels.all()] == ["now", "later"] and labels.first.evaluate("e => getComputedStyle(e).fontSize") == "10px"
+    labels = pg.locator(".arena-row__lbl")                                                                      # one label for a row across the whole field (spec 82 §2), in the pixel face
+    assert [l.text_content() for l in labels.all()] == ["Now", "Next", "Later"] and "pixel" in labels.first.evaluate("e => getComputedStyle(e).fontFamily").lower()
+    assert [l.evaluate("e => e.classList.contains('is-later')") for l in labels.all()] == [False, True, True]  # muted for Next and Later
     now, later = pg.locator(".arena-stack[data-agent=screens] .arena-phase.is-later"), pg.locator(".arena-stack[data-agent=screens] .arena-phase").first
     assert now.count() == 1 and "is-later" not in later.get_attribute("class")                                  # the rows after now are muted
     ys = [p.bounding_box()["y"] for p in pg.locator(".arena-stack[data-agent=screens] .arena-phase").all()]
@@ -395,7 +398,8 @@ def test_the_columns_hold_rows_by_phase_the_merged_count_and_what_waits_for_a_ta
     assert "failed" in failed.inner_text() and "You changed no file" in failed.get_attribute("title") and failed.locator(".ork-sign.cross").count() == 0   # the error in its tooltip
     assert "is-fail" in failed.locator("xpath=..").get_attribute("class")                                      # a failed stack has the danger edge
     held = pg.locator(".arena-stack[data-agent=screens] .arena-task[data-state=held]")
-    assert "tonight · after 01:00" in held.inner_text() and held.locator(".ork-sign.night").count() == 0       # a hold for tonight: said by the foot, no clock on the card (spec 55 §2)
+    assert "held: tonight" in held.inner_text() and held.locator(".ork-sign.night").count() == 1 and "is-held" in held.get_attribute("class") and "is-wait" not in held.get_attribute("class")      # a hold for tonight: said by the foot with its sign (spec 82 §3)
+    assert "tonight · after 01:00" in held.get_attribute("title")                                               # and the time in its tooltip
     assert column.locator(".arena-stk[data-goal=register] .arena-stk__n").inner_text() == "×2"                  # a stack of two: ×n on its corner
     pg.locator(".arena-task[data-key='register/k5']").hover()                                                  # hovering a card says what waits for it and what it waits for
     assert "1 waits for it" in pg.locator(".arena-task[data-key='register/k5']").inner_text()                   # k4 waits for k5

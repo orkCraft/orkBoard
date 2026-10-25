@@ -328,7 +328,7 @@ def test_new_goal_on_the_level_deals_every_type_of_the_parties_and_suggests_the_
     assert [c.get_attribute("data-party") for c in chips.all()] == ["website", "passkey", "release", "ideas"]           # Website (whole) first
     assert chips.nth(0).get_attribute("aria-checked") == "true" and chips.nth(1).locator("small").inner_text() == "needs Artist"
     assert chips.nth(2).locator("small").inner_text() == "no one there does it"
-    form.get_by_label("Its title").fill("A new mark")
+    form.get_by_label("The goal", exact=True).fill("A new mark")
     shot(pg, "desk-goal-party.png")
     chips.nth(1).click()                                                                                                # another chip: Passkey, which misses an Artist
     assert chips.nth(1).get_attribute("aria-checked") == "true" and chips.nth(0).get_attribute("aria-checked") == "false"
@@ -346,7 +346,7 @@ def test_the_suggested_party_is_picked_and_added_to_and_no_party_is_asked_for_be
     _project(pg)
     _new_goal(pg).locator('.arena-type[data-type="logo"]').click()
     form = pg.get_by_role("dialog", name="New goal")
-    form.get_by_label("Its title").fill("A new mark")
+    form.get_by_label("The goal", exact=True).fill("A new mark")
     form.locator(".arena-itsparty__chip").first.wait_for(timeout=WAIT_MS)
     form.get_by_role("button", name="Add the goal").click()
     assert _calls(pg, host, "ideas.add")[-1]["track"] == "website"

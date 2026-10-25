@@ -61,7 +61,7 @@ def land(repo: Path, slug: str, task: str, name: str, text: str = "x\n") -> str:
 def idea(host, text: str) -> str:
     root = host.ideas.root()
     goal = next((t["slug"] for t in ideas.tracks(root, make=False) if t["slug"] != "general"), None) or ideas.add_track(root, "First goal")
-    return host.command("ideas.add", {"text": text, "track": goal, "night": True})["slug"]
+    return host.command("ideas.add", {"text": text, "track": goal, "hold": True})["slug"]
 
 
 def merged(host, slug: str, **commits: str) -> None:

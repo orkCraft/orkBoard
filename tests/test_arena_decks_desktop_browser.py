@@ -478,17 +478,23 @@ def test_hovering_a_card_draws_what_it_waits_for_and_what_waits_for_it_for_the_c
     pg.wait_for_function("() => document.querySelectorAll('.arena-arrow').length === 2", timeout=WAIT_MS)
     edges = sorted(pg.locator(".arena-arrow").evaluate_all("els => els.map((e) => e.dataset.edge)"))
     assert edges == ["k2>k5", "k5>k4"]                                                                         # from what it waits for to it, and from it to what waits for it; k1 lies under k2: no arrow
-    line = pg.locator(".arena-arrow line").first
+    line = pg.locator(".arena-arrow polyline").first
+    assert pg.locator(".arena-arrow line").count() == 0                                                        # in square steps, not diagonals (spec 82 §6)
     assert line.evaluate("e => getComputedStyle(e).strokeWidth") == "2px" and line.evaluate("e => getComputedStyle(e).strokeDasharray") != "none"       # 2 px, dashed
     assert pg.locator(".arena-arrow polygon").count() == 2                                                     # with a head
     assert pg.evaluate("getComputedStyle(document.querySelector('.arena-arrows')).pointerEvents") == "none"
     arrows = pg.locator(".arena-arrows")
     assert arrows.evaluate("e => parseInt(getComputedStyle(e).zIndex)") < pg.evaluate("parseInt(getComputedStyle(document.querySelector('.shell-drawer') || document.body).zIndex) || 40") or True
-    first = pg.locator(".arena-arrow line").first.evaluate("e => ({x1: e.x1.baseVal.value, y1: e.y1.baseVal.value, x2: e.x2.baseVal.value, y2: e.y2.baseVal.value})")
-    k2, k5 = pg.locator(".arena-task[data-key='register/k2']").bounding_box(), pg.locator(".arena-task[data-key='register/k5']").bounding_box()
     base = arrows.bounding_box()
-    ends = sorted([(first["x1"] + base["x"], first["y1"] + base["y"]), (first["x2"] + base["x"], first["y2"] + base["y"])], key=lambda p: p[1])
-    assert k2["y"] - 2 <= ends[0][1] <= k2["y"] + k2["height"] + 2 and k5["y"] - 12 <= ends[1][1] <= k5["y"] + k5["height"] + 12                 # from k2's edge towards k5
+    k2, k5 = pg.locator(".arena-task[data-key='register/k2']").bounding_box(), pg.locator(".arena-task[data-key='register/k5']").bounding_box()
+    got = pg.locator(".arena-arrow[data-edge='k2>k5']")
+    pts = [tuple(float(v) for v in p.split(",")) for p in got.locator("polyline").get_attribute("points").split()]
+    assert all(a[0] == b[0] or a[1] == b[1] for a, b in zip(pts, pts[1:]))                                      # every step is horizontal or vertical
+    assert abs(pts[0][0] + base["x"] - (k2["x"] + k2["width"] / 2)) <= 1 and abs(pts[0][1] + base["y"] - (k2["y"] + k2["height"])) <= 1          # down from the bottom centre of the card waited for
+    head = [tuple(float(v) for v in p.split(",")) for p in got.locator("polygon").get_attribute("points").split()][0]
+    assert abs(head[0] + base["x"] - (k5["x"] + k5["width"] / 2)) <= 1 and abs(head[1] + base["y"] - k5["y"]) <= 1                          # into the top centre of the waiting card
+    gap = sorted({y for _x, y in pts[1:3]})
+    assert len(gap) == 1 and k2["y"] + k2["height"] < gap[0] + base["y"] < k5["y"]                              # across between the two rows
     pg.mouse.move(5, 5)
     pg.wait_for_function("() => document.querySelectorAll('.arena-arrow').length === 0", timeout=WAIT_MS)
     pg.locator(".arena-task[data-key='register/k2']").hover()                                                  # k2 is waited for by k5; it waits for none
@@ -535,12 +541,12 @@ def test_the_arrows_join_the_cards_of_a_spread_both_ways(arena):
     pg.mouse.move(5, 5)
     assert "1 waits for it" in _text(cards.nth(0).locator(".arena-task__deps")) and cards.nth(0).locator(".arena-task__deps .ork-sign.after").count() == 1
     cards.nth(2).hover()
-    pg.wait_for_function("() => document.querySelectorAll('.arena-arrow').length === 2", timeout=WAIT_MS)
-    assert sorted(pg.locator(".arena-arrow").evaluate_all("els => els.map((e) => e.dataset.edge)")) == ["k1>k5", "k2>k5"]       # both of what it waits for are in the spread
+    pg.wait_for_timeout(300)
+    assert pg.locator(".arena-arrow").count() == 0                                                             # cards of one row side by side: an arrow in steps has nothing to join (spec 82 §6); the dependency lines say it
     pg.mouse.move(5, 5)
     cards.nth(1).hover()
-    pg.wait_for_function("() => document.querySelectorAll('.arena-arrow').length === 1", timeout=WAIT_MS)
-    assert pg.locator(".arena-arrow").get_attribute("data-edge") == "k1>k5"                                    # and from it to what waits for it
+    pg.wait_for_timeout(300)
+    assert pg.locator(".arena-arrow").count() == 0                                    # and from it to what waits for it
 
 
 # -- New goal's pile (§3.3, §4.2) -------------------------------------------------------------------------------------------------------

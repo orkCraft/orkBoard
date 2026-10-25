@@ -288,7 +288,7 @@ def test_under_reduced_motion_no_copy_no_animation_and_the_row_is_drawn(gui):
     _merge(pg, host)
     pg.locator(".arena-flagline").wait_for(timeout=WAIT_MS)
     pg.wait_for_timeout(700)
-    assert _fly(pg)["copies"] == [] and _starts(pg) == [] and pg.evaluate("document.getAnimations().length") == 0
+    assert _fly(pg)["copies"] == [] and _starts(pg) == [] and pg.evaluate("document.getAnimations().filter((a) => a.animationName !== 'ork-busy').length") == 0
     assert pg.locator(".arena-flagfly, .is-raising, .is-coming").count() == 0
     assert _elements(pg) == [["meadow"], ["ice"]]
     assert pg.locator(".arena-flagline__el").evaluate_all("els => els.map((e) => getComputedStyle(e).visibility)") == ["visible", "visible"]

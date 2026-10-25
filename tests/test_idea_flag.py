@@ -65,7 +65,7 @@ def goal(host, text: str, state: str = "done") -> str:
     """A goal under the first party (never General), in `state`; its plan comes with `plan`."""
     root = host.ideas.root()
     party = next((t["slug"] for t in ideas.tracks(root, make=False) if t["slug"] != "general"), None) or ideas.add_track(root, "First party")
-    slug = host.command("ideas.add", {"text": text, "track": party, "night": True})["slug"]
+    slug = host.command("ideas.add", {"text": text, "track": party, "hold": True})["slug"]
     ideas.save_state(host.ideas.state_dir, slug, state=state)
     return slug
 

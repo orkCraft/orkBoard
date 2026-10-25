@@ -131,20 +131,24 @@ export const BAND_KEYWORD = { lead: "Leads:", build: "Takes:", check: "Checks:" 
 const STAGE_TODAY = { lead: "Planning", build: "Implementation", check: "Checking" };
 export const stageOf = (g, band) => ({ word: g?.stages?.[band]?.word || STAGE_TODAY[band], seats: g?.stages?.[band]?.seats || 0, own: !!g?.stages?.[band]?.word });
 
-/** A task's phase: its wave less the lowest wave among the open tasks of its goal (spec 50 §3.4): 0 now, 1 next, 2 and over later. */
+/** A task's phase when the host gave no row: its wave less the lowest wave among the open tasks of its goal (spec 50 §3.4): 0 now, 1 next, 2 and over later. */
 export function phaseOf(n, t) {
   const open = openTasks(n);
   return Math.max(0, t.wave - Math.min(t.wave, ...open.map((x) => x.wave)));
 }
 export const ROWS = ["now", "next", "later"];
 export const rowName = (phase) => ROWS[Math.min(phase, ROWS.length - 1)];
+/** The label of a row on the field (spec 82 §0). */
+export const ROW_LABEL = { now: "Now", next: "Next", later: "Later" };
+/** A task's phase (0 now, 1 next, 2 later): the host's `row` (1–3, `map_stage.row_of`, spec 82 §2: one row across the whole field), else its goal's own wave (`phaseOf`). */
+export const phaseFor = (n, t) => (Number.isInteger(t.row) && t.row >= 1 ? t.row - 1 : phaseOf(n, t));
 
 /** A member's open tasks of the goals at work, in its column's order: the one at work nearest it, then failed, in Review, ready, waiting, held (the
  *  front of a stack first); each with its phase and the row it lies in (*now*, *next*, *later*). `order`: the Board's order of the goals is `nodes`'. */
 export function columnOf(m, nodes) {
   const items = [];
   nodes.filter(atWork).forEach((n, i) => openTasks(n).forEach((t, j) => {
-    if (t.by.slug === m.slug) { const phase = phaseOf(n, t); items.push({ n, t, at: i * 1000 + j, phase, row: rowName(phase) }); }
+    if (t.by.slug === m.slug) { const phase = phaseFor(n, t); items.push({ n, t, at: i * 1000 + j, phase, row: rowName(phase) }); }
   }));
   return items.sort((a, b) => (RANK[a.t.state] ?? 9) - (RANK[b.t.state] ?? 9) || a.t.wave - b.t.wave || a.at - b.at);
 }
@@ -251,7 +255,27 @@ export function afterWords(t, n) {
   return names.length ? `after ${names.join(", ")}` : "";
 }
 
-/** A task's foot: its state in words (*working 4 min*, *in Review*, *after Challenge store*, *tonight · after 01:00*, *failed*). */
+/** Why a held task is held (spec 82 §3): {kind, word, sign}. `kind`: window · night · sign_in · week · files · "" (not known); `word` is what the foot says after *held:*,
+ *  `sign` the sign before it. A task held for the tool's window or the person's reserve is *window*; for tonight, *night*. */
+export function heldOf(t, n) {
+  const note = String(t.note || ""), w = n?.waits?.kind || "";
+  if (t.held_for === "sign_in" || w === "sign_in") return { kind: "sign_in", word: "sign in", sign: "alert" };
+  if (w === "night") return { kind: "night", word: "tonight", sign: "night" };
+  if (w === "week" || note.startsWith("week")) return { kind: "week", word: "week", sign: "pause" };
+  if (w === "files" || /^files/.test(note)) return { kind: "files", word: "", sign: "before" };
+  if (w === "limits" || w === "reserve" || note.startsWith("reserve") || /^after \d\d:\d\d/.test(note) || n?.held_until) return { kind: "window", word: "window", sign: "pause" };
+  return { kind: "", word: "", sign: "pause" };
+}
+
+/** A held task's long words (its tooltip): *tonight · after 01:00*, *waits for limits · after 14:20*, *waits: the week is behind*. */
+export function heldWords(t, n) {
+  if (n?.waits?.kind === "night") return `tonight${n.waits.until ? ` · after ${hhmm(n.waits.until)}` : ""}`;
+  if (n?.waits?.kind === "week") return waitsWords(n.waits);
+  if (t.held_for === "sign_in" || n?.waits?.kind === "sign_in") return waitsWords(n?.waits?.kind === "sign_in" ? n.waits : { kind: "sign_in" });   // held for its tool's sign-in (spec 45 §7)
+  return holdWords(t.note, n?.waits?.title) || "held";
+}
+
+/** A task's foot: its state in words (*working 4 min*, *in Review*, *after Challenge store*, *held: tonight*, *failed*). */
 export function taskFoot(t, n) {
   if (t.state === "running") return `working${sinceWords(t.started) ? ` ${sinceWords(t.started)}` : ""}`;
   if (t.state === "testing") return "testing";
@@ -259,10 +283,8 @@ export function taskFoot(t, n) {
   if (t.state === "picking") return "asks you to pick";
   if (t.state === "failed") return "failed";
   if (t.state === "held") {
-    if (n?.waits?.kind === "night") return `tonight${n.waits.until ? ` · after ${hhmm(n.waits.until)}` : ""}`;
-    if (n?.waits?.kind === "week") return waitsWords(n.waits);
-    if (t.held_for === "sign_in" || n?.waits?.kind === "sign_in") return waitsWords(n?.waits?.kind === "sign_in" ? n.waits : { kind: "sign_in" });   // held for its tool's sign-in (spec 45 §7)
-    return holdWords(t.note, n?.waits?.title) || "held";
+    const h = heldOf(t, n);
+    return h.word ? `held: ${h.word}` : heldWords(t, n);                          // spec 82 §0; a hold for the same files names the goal in its own words
   }
   if (t.state === "waiting") return afterWords(t, n) || "waiting";
   if (t.state === "ready") return t.note || "next";

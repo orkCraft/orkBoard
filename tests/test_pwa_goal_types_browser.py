@@ -304,7 +304,7 @@ async def test_a_swap_picks_who_leaves_a_full_band_says_why_and_put_it_back_neve
         form = await _form(page, "logo")
         await form.get_by_label("The goal", exact=True).fill("Kept for tonight")
         await form.get_by_role("button", name="Put it back").click()
-        assert await _called(stub, "ideas.add", {"text": "Kept for tonight", "track": "passkey", "priority": "high", "night": True, "type": "logo"})      # no join
+        assert await _called(stub, "ideas.add", {"text": "Kept for tonight", "track": "passkey", "priority": "high", "hold": True, "type": "logo"})      # no join
 
 
 # -- a plan's missing line (§5.7) ----------------------------------------------------------------------------------------------------------------------

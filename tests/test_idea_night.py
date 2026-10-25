@@ -24,7 +24,7 @@ def _git(repo, *args):
 @pytest.fixture
 def keeper(fake_repo, tmp_path):
     root, state = tmp_path / "wiki", fake_repo / ".orkcraft"
-    settings = {"target": "balance", "autostart": True, "night": "01:00-07:00"}
+    settings = {"target": "balance", "autostart": True, "night": "01:00-07:00", "night_low": True}
     started, plans = [], []
     k = IdeaKeeper(fake_repo, state, lambda: root, lambda: settings, on_plan=plans.append,
                    start_night=lambda slug: started.append(slug) or True)

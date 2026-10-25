@@ -255,7 +255,7 @@ def test_a_press_on_the_plus_deals_the_party_shown_types_first_and_new_goal_open
     assert [c.get_attribute("data-party") for c in chips.all()] == ["website", "passkey", "release", "ideas"]                            # the others as chips, as on the level
     assert its.locator(".arena-itsparty__says").inner_text().strip() == "Orkmaster suggests Website · takes it whole"
     shot(pg, "desk-lighter-newgoal.png")
-    form.get_by_label("Its title").fill("A new mark")
+    form.get_by_label("The goal", exact=True).fill("A new mark")
     form.get_by_role("button", name="Add the goal").click()
     sent = _calls(pg, host, "ideas.add")[-1]
     assert sent["track"] == "passkey" and sent["type"] == "logo"

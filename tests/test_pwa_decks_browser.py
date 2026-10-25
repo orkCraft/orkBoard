@@ -590,7 +590,7 @@ async def test_new_goal_slides_the_full_screen_form_up_at_once_with_no_card_lift
         await form.wait_for(timeout=WAIT_MS)
         await form.get_by_label("The goal", exact=True).fill("Only a title")
         await form.get_by_role("button", name="Put it back").click()
-        assert await _called(stub, "ideas.add", {"text": "Only a title", "track": "passkey", "priority": "high", "night": True})
+        assert await _called(stub, "ideas.add", {"text": "Only a title", "track": "passkey", "priority": "high", "hold": True})
 
 
 @pytest.mark.asyncio

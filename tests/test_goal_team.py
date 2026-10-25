@@ -120,7 +120,7 @@ def test_the_plan_tags_each_task_and_gives_it_to_the_team_member_who_does_that_k
     goal = host.command("ideas.goal_save", {"about": "A landing page.", "craft": "design", "leader": "product-designer",
                                             "team": ["grunt", "accessibility-reviewer"]})["slug"]
     _wait(host, goal, goal=True)
-    slug = host.command("ideas.add", {"text": "The hero section", "track": goal, "night": True})["slug"]
+    slug = host.command("ideas.add", {"text": "The hero section", "track": goal, "hold": True})["slug"]
     host.command("ideas.read_now", {"slug": slug})
     _wait(host, slug)
     host.command("ideas.plan", {"slug": slug})
@@ -162,7 +162,7 @@ def test_the_team_s_checks_go_in_the_spec_and_the_plan_where_they_apply_and_ever
                                             "team": ["grunt", "accessibility-reviewer", "reviewer", "sql"]})["slug"]
     _wait(host, goal, goal=True)
     assert next(t for t in host.command("ideas.board")["tracks"] if t["slug"] == goal)["every"] == ["reviewer"]   # only the team's
-    slug = host.command("ideas.add", {"text": "A weekly report", "track": goal, "night": True})["slug"]
+    slug = host.command("ideas.add", {"text": "A weekly report", "track": goal, "hold": True})["slug"]
     host.command("ideas.read_now", {"slug": slug})
     _wait(host, slug)
     draft = next(p for p in seen if "write its spec" in p)
@@ -204,7 +204,7 @@ def test_the_map_s_goal_carries_its_team_and_its_ideas_their_checks(host):
     goal = host.command("ideas.goal_save", {"about": "A settings screen.", "craft": "design", "every": ["reviewer"],
                                             "leader": "product-designer", "team": ["accessibility-reviewer", "reviewer"]})["slug"]
     _wait(host, goal, goal=True)
-    slug = host.command("ideas.add", {"text": "Dark mode", "track": goal, "night": True})["slug"]
+    slug = host.command("ideas.add", {"text": "Dark mode", "track": goal, "hold": True})["slug"]
     ideas.set_meta(host.ideas.root(), slug, checks=json.dumps([{"by": "accessibility-reviewer", "applies": False, "why": "No screen"}]))
     m = host.command("ideas.map", {})
     g = next(x for x in m["goals"] if x["slug"] == goal)
@@ -232,7 +232,7 @@ def test_a_goal_s_steps_run_as_its_leader_its_voice_and_model_and_the_taskmaster
     assert seen[-1]["prompt"].startswith("You are Analyst, the leader of this goal's party")
     assert library.get("analyst").instruction in seen[-1]["prompt"]
     assert seen[-1]["model"] == harnesses.get("claude").pick("warrior")                  # the Analyst's tier, not the Taskmaster's
-    idea = host.command("ideas.add", {"text": "A weekly report", "track": led, "night": True})["slug"]
+    idea = host.command("ideas.add", {"text": "A weekly report", "track": led, "hold": True})["slug"]
     host.command("ideas.read_now", {"slug": idea})
     _wait(host, idea)
     draft = next(c["prompt"] for c in seen if "write its spec" in c["prompt"])

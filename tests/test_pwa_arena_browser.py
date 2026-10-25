@@ -161,7 +161,7 @@ def _scene(monkeypatch):
 
         def ideas_board(a):
             return {"tracks": [Stub.goal("passkey", "Sign in with a passkey", "high", "ready")], "ideas": [], "needs_you": copy.deepcopy(SCENE["needs"]), "target": self.target,
-                    "autostart": self.autostart, "night": self.night, "rev": self.rev, "demo": False}
+                    "autostart": self.autostart, "night": self.night, "night_low": self.night_low, "rev": self.rev, "demo": False}
 
         def review(a):
             return {"into": self.into, "push": self.push, "branches": ["dev", "main"], "results": copy.deepcopy(SCENE["results"])}

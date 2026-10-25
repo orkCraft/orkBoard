@@ -18,6 +18,8 @@ In this order, each step stopping at the reserve (realm/idea_target.py `reserve_
      to leave its party. Code decides, no model is called, so it is not limited by the Target's proposals nor counted
      among the three waiting.
 
+All of it runs only with `night_low` (spec 83 §5, decisions §100): the person's one standing permission, asked once.
+
 The camp's Night round (docs/design/night-round.md) is another thing and is not touched here.
 """
 from __future__ import annotations
@@ -134,6 +136,11 @@ class NightMixin:
         threading.Thread(target=run, daemon=True, name="idea-night").start()
         return True
 
+    def night_allowed(self) -> bool:
+        """The person's standing word that Low work and the leaders' night may run at night (`night_low`, spec 83): `None` (not asked
+        yet) and `False` run nothing at night."""
+        return (self.settings() or {}).get("night_low") is True
+
     def _limits_read(self) -> list:
         try:
             return list(self.limits() or [])
@@ -161,7 +168,7 @@ class NightMixin:
         root = self.wiki_root()
         steps = (self._night_queue, self._night_starts, self._night_refresh, self._night_proposals, self._night_parties)
         for step in steps:
-            if self._may_run() or self.cancel.is_set():
+            if not self.night_allowed() or self._may_run() or self.cancel.is_set():       # one permission for what runs at night (spec 83 §5)
                 break
             step(root, counts)
         prev = self.night_state()
@@ -332,7 +339,8 @@ may want to take in the morning, each under one of the goals. {self.reads("propo
         self._pace_at = now
         if idea_target.in_night(str((self.settings() or {}).get("night") or "01:00-07:00"), dt.datetime.fromtimestamp(now)) or self._may_run():
             return False
-        if not bool((self.settings() or {}).get("autostart", True)) or idea_target.pace(self._limits_read(), now) != "ahead" or self._reserved():
+        if not self.night_allowed() or not bool((self.settings() or {}).get("autostart", True)) \
+                or idea_target.pace(self._limits_read(), now) != "ahead" or self._reserved():
             return False
         self._pace_busy = True
 

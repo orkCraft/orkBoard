@@ -1,6 +1,7 @@
-// The party's members (docs/specs/49-one-window.md §5.1–§5.3): a member is a small framed row — its head wearing three signs (its level, the tool it runs on,
-// its state: orkUI's signs), beside it its name and its two numbers (runs and redos, its price for a run). Hovering or focusing it shows its whole face
-// beside it (the peek); a click shows only its work (solo).
+// The party's members (docs/specs/49-one-window.md §5.1–§5.3, docs/specs/82-the-field-at-a-glance.md §5): a member is a face over its column, with no frame — its head (40 px) and its name centred, the marks of
+// its level and of the tool it runs on beside the name, its state's sign on the head's corner (orkUI's signs; orkUI's busy mark while it works), its two numbers (runs and redos, its price for a run) beside
+// the head, and under them a 2 px rule as wide as the column: the edge, the ink while it works, the danger colour while it calls. Hovering or focusing it shows its whole face beside it (the peek); a click
+// shows only its work (solo).
 import { useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Head, Sign, TIER_WORDS, ORKUI } from "../orkui.js";
@@ -46,9 +47,9 @@ function Peek({ m, st, line, role, view, lead, side, nodes, stage = "" }) {
   </div>`;
 }
 
-/** A member of the party row, or the leader: a small framed row. Its head wears three signs on its corners, half over it — its level's chevrons
- *  top left, the tool it runs on bottom left, its state top right (✗ a failure, ! another stop, ↻ at work, a moon tonight; none when next or free) —
- *  and beside it three short lines: its name, its runs and redos, its price for a run. The words of all that are in the peek and the label. */
+/** A member of the party row, or the leader: a face over its column. Its head (40 px) wears its state's sign on its top right corner, half over it (✗ a failure, ! another stop,
+ *  the busy mark at work, a moon tonight; none when next or free); its name is centred under it with its level's chevrons and the tool it runs on beside it; its runs and redos and its
+ *  price for a run stand beside the head; a 2 px rule as wide as the column closes it. The words of all that are in the peek and the label. */
 export function Member({ m, nodes, planning, lead = false, stage = "" }) {
   const role = roleOf(agents.value, m.slug), st = statsOf(m, role, lead);
   const col = lead ? [] : columnOf(m, nodes), line = nowOf(m, col, planning, lead);
@@ -63,10 +64,11 @@ export function Member({ m, nodes, planning, lead = false, stage = "" }) {
     <button type="button" class=${cls("arena-member", { "is-on": on, "is-dim": dim, "is-lead": lead })} data-state=${m.state} data-agent=${m.slug}
       aria-pressed=${on} aria-label=${view.label} onClick=${pick}>
       <span class="arena-tport" ref=${port}>${m.head && html`<${Head} race=${m.head.race} tier=${m.head.tier} size="mid" />`}
-        <${Mark} name=${`rank-${st.rank}`} tip=${st.rankTip} where="r" /><${Mark} name=${`harness-${st.harness.id}`} tip=${st.harnessTip} where="h" />
-        ${sign && html`<span class=${cls("arena-sign", sign.tone)} title=${view.words} data-sign=${sign.mark}><${Sign} name=${sign.mark} /></span>`}</span>
-      <span class="arena-tbody"><span class="arena-member__nm">${m.name}</span>
-        <span class="arena-num" ref=${runs} title=${st.runsTip}>${st.runs}</span><span class="arena-num is-muted" title=${st.priceTip}>${st.price}</span></span>
+        ${sign && html`<span class=${cls("arena-sign", sign.tone)} title=${view.words} data-sign=${sign.mark}>${sign.mark === "work" ? html`<span class="ork-busy"></span>` : html`<${Sign} name=${sign.mark} />`}</span>`}</span>
+      <span class="arena-tbody"><span class="arena-num" ref=${runs} title=${st.runsTip}>${st.runs}</span><span class="arena-num is-muted" title=${st.priceTip}>${st.price}</span></span>
+      <span class="arena-member__line"><span class="arena-member__nm">${m.name}</span>
+        <${Mark} name=${`rank-${st.rank}`} tip=${st.rankTip} where="r" /><${Mark} name=${`harness-${st.harness.id}`} tip=${st.harnessTip} where="h" /></span>
+      <span class="arena-member__rule" aria-hidden="true"></span>
     </button>
     <${Peek} m=${m} st=${st} line=${line} role=${role} view=${view} lead=${lead} side=${lead} nodes=${nodes} stage=${stage} />
   </div>`;

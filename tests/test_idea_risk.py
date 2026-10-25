@@ -52,4 +52,13 @@ def test_the_risks_line_says_the_risk_and_what_raised_it():
     ("medium", "high", "start"), ("medium", "normal", "wait"), ("medium", "low", "wait"),
     ("high", "high", "wait"), ("high", "normal", "wait"), ("high", "low", "wait")])
 def test_the_nine_cells_of_autostart(risk, priority, what):
-    assert idea_risk.decide(risk, priority) == what
+    assert idea_risk.decide(risk, priority, night=True) == what
+
+
+@pytest.mark.parametrize("risk,priority,what", [
+    ("low", "high", "start"), ("low", "normal", "start"), ("low", "low", "start"),
+    ("medium", "high", "start"), ("medium", "normal", "wait"), ("medium", "low", "wait"),
+    ("high", "high", "wait"), ("high", "normal", "wait"), ("high", "low", "wait")])
+def test_without_the_night_a_low_goal_starts_by_day(risk, priority, what):
+    """Spec 83 §2: `night_low` null or false: nothing goes at night; low/low reads "start", after the other priorities."""
+    assert idea_risk.decide(risk, priority) == what == idea_risk.decide(risk, priority, night=False)

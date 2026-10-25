@@ -110,13 +110,13 @@ def test_give_does_not_move_the_goals_modification_time(host):
 
 def test_a_new_goal_is_given_its_element_at_once_and_its_answer_says_it(host):
     p = party(host)
-    got = [host.command("ideas.add", {"text": f"A goal {n}\nwith a body", "track": p, "night": True}) for n in range(6)]
+    got = [host.command("ideas.add", {"text": f"A goal {n}\nwith a body", "track": p, "hold": True}) for n in range(6)]
     assert [g["element"] for g in got] == ["meadow", "ice", "dust", "void", "lava", "meadow"]
-    assert all(set(g) == {"slug", "queue", "element", "type", "joined"} for g in got) and got[0]["queue"] == "night"      # spec 52: its type, who joined
+    assert all(set(g) == {"slug", "queue", "element", "type", "joined"} for g in got) and got[0]["queue"] == "hold"      # spec 52: its type, who joined
     state = host.ideas.state_dir
     assert [ideas.state(state, g["slug"])["element"] for g in got] == [g["element"] for g in got]      # in each goal's state, raw as it is
     assert ideas.state(state, got[0]["slug"])["state"] == "raw"
-    other = host.command("ideas.add", {"text": "In another party", "track": party(host, "Second party"), "night": True})
+    other = host.command("ideas.add", {"text": "In another party", "track": party(host, "Second party"), "hold": True})
     assert other["element"] == "meadow"                                                       # each party counts its own
 
 
@@ -153,6 +153,6 @@ def test_the_map_counts_the_elements_a_party_has_before_it_gives(host):
 
 def test_a_goal_not_yet_read_has_one_too(host):
     p = party(host)
-    a = host.command("ideas.add", {"text": "Not read yet", "track": p, "night": True})
+    a = host.command("ideas.add", {"text": "Not read yet", "track": p, "hold": True})
     (node,) = host.command("ideas.map", {})["nodes"]
     assert node["state"] == "raw" and node["element"] == a["element"] != ""
