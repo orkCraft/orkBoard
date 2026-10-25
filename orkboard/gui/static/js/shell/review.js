@@ -16,6 +16,7 @@ export function noTests(r) { return !isRed(r) && r.tests.passed === 0; }
  *  command that is not pytest: passed (exit 0) / failed (exit 1). `mark` is the name of orkUI's sign, "" for none. */
 export function testsWords(r) {
   const t = r.tests, all = t.passed + t.failed;
+  if (t.none) return { mark: "", text: "no tests in this project", names: [], tone: "muted" };      // the project has none (spec 86 §3): it waits for your look
   if (t.ran === false) return { mark: "", text: "no tests ran", names: [], tone: "muted" };
   if (t.passed == null && t.failed == null) {          // a command that is not pytest: its exit code speaks
     const failed = isRed(r), code = t.exit ?? (failed ? 1 : 0);
@@ -48,11 +49,16 @@ export function foundWords(findings) {
   return `Found ${n}: ${fixed ? `${fixed} fixed, ` : ""}${n - fixed} left`;
 }
 export const leftOf = (r) => (r.findings || []).filter((f) => !f.fixed);
+/** The findings left that are of the code; a finding of the place it ran in (`kind` "env": a command refused, a tool missing, no device) is not (spec 86 §4). */
+export const codeLeftOf = (r) => leftOf(r).filter((f) => f.kind !== "env");
+export const PLACE_LINE = "What is left is about where it ran, not the code";
+/** A check whose findings left are all of the place, or the round before's again: Send back could change nothing, so Merge and Drop stay. */
+export const placeOnly = (r) => !!r.check && leftOf(r).length > 0 && (codeLeftOf(r).length === 0 || !!r.same);
 const WHY_MAX = 1000;
-/** *Fix the findings left:* and one line each (*where: what*), within the one line a send back takes. */
+/** *Fix the findings left:* and one line each (*where: what*) of the code's, within the one line a send back takes. */
 export function fixThemWhy(r) {
   let why = "Fix the findings left:";
-  const left = leftOf(r);
+  const left = codeLeftOf(r);
   for (const [n, f] of left.entries()) {
     const next = `${why}\n${f.where}: ${f.what}`, more = left.length - n - 1;
     if (next.length + (more ? 24 : 0) > WHY_MAX) return `${why}\nand ${left.length - n} more`;
@@ -67,7 +73,7 @@ export function ResultActions({ r, pinned = false }) {
   const into = review.value?.into || "dev";
   const [line, setLine] = useState(null);       // null: the one-line box is closed
   const [working, setWorking] = useState(false);
-  const reason = mergeReason(r, into), fix = isRed(r) || !!r.conflict, check = r.check && leftOf(r).length > 0;
+  const reason = mergeReason(r, into), fix = isRed(r) || !!r.conflict, place = placeOnly(r), check = r.check && leftOf(r).length > 0 && !place;
   const key = { slug: r.idea, task: r.task };
   const fixThem = async () => { setWorking(true); const got = await act("ideas.back", { ...key, why: fixThemWhy(r) }); setWorking(false); if (got?.ok) done(); };
   const done = () => { if (preview.value?.task === r.task && preview.value?.slug === r.idea) closePreview(); };
@@ -83,7 +89,9 @@ export function ResultActions({ r, pinned = false }) {
   };
   return html`<div class=${cls("shell-actions", { "is-pinned": pinned })} onClick=${(e) => e.stopPropagation()}>
     <div class="shell-actions__main">
-      ${check ? html`<button class="ork-btn primary" disabled=${working} onClick=${fixThem}>Fix them</button>
+      ${place ? html`<button class="ork-btn primary" disabled=${!!reason || working} title=${reason || (r.diff.files ? `Merge into ${into}` : "Nothing is merged")}
+          onClick=${merge}>${r.diff.files ? `Merge into ${into}` : "Leave them"}</button>`
+        : check ? html`<button class="ork-btn primary" disabled=${working} onClick=${fixThem}>Fix them</button>
         <button class="ork-btn" disabled=${!!reason || working} title=${reason || (r.diff.files ? `Merge the fixes into ${into}` : "Nothing is merged")}
           onClick=${merge}>Leave them</button>`
         : html`<button class="ork-btn primary" disabled=${!!reason || working} title=${reason || `Merge into ${into}`}
@@ -92,7 +100,8 @@ export function ResultActions({ r, pinned = false }) {
       <button class="shell-quiet" onClick=${() => openDialog("drop", { r })}>Drop…</button>
     </div>
     ${reason && html`<p class="shell-actions__why ok-tone-error" role="status">${reason}</p>`}
-    ${!check && line !== null && html`<form class="shell-actions__line" onSubmit=${back}>
+    ${place && html`<p class="shell-actions__why ok-tone-muted" data-place="true" role="status">${PLACE_LINE}</p>`}
+    ${!check && !place && line !== null && html`<form class="shell-actions__line" onSubmit=${back}>
       <input class="ork-field" autofocus value=${line} aria-label=${fix ? "What to fix, in one line" : "Why you send it back, in one line"}
         placeholder="One line: what should change?" onInput=${(e) => setLine(e.target.value)}
         onKeyDown=${(e) => e.key === "Escape" && (e.stopPropagation(), setLine(null))} />
@@ -105,7 +114,7 @@ export function Found({ r }) {
   const left = leftOf(r);
   if (!r.check || !left.length) return null;
   return html`<div class="shell-found"><p class="shell-found__sum">${foundWords(r.findings)}</p>
-    <ul class="shell-found__list">${left.map((f, n) => html`<li key=${n}><span class="shell-found__where">${f.where}</span> · ${f.what}</li>`)}</ul></div>`;
+    <ul class="shell-found__list">${left.map((f, n) => html`<li key=${n}><span class="shell-found__where">${f.where}</span> · ${f.what}${f.kind === "env" ? html` <span class="ok-tone-muted">(where it ran)</span>` : ""}</li>`)}</ul></div>`;
 }
 
 /** Merge into ▾ : the branch the results land in, from the local branches, or a new one. */

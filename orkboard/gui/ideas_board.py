@@ -90,18 +90,23 @@ class BoardMixin:
     def board_settings(self) -> dict:
         s = self.settings_now()
         return {"target": s.get("target", settings.IDEAS["target"]), "autostart": bool(s.get("autostart", True)),
-                "night": s.get("night", settings.IDEAS["night"])}
+                "night": s.get("night", settings.IDEAS["night"]), "review": bool(s.get("review", settings.IDEAS["review"])),
+                "review_notice": bool(getattr(getattr(self.host, "machine", None), "review_notice", False))}
 
     def board_set(self, args: dict) -> dict:
         mine = dict(self.settings_now())
-        for key in ("target", "autostart", "night"):
+        if args.get("review_notice") is False and getattr(getattr(self.host, "machine", None), "review_notice", False):      # said once (spec 84 §1)
+            self.host.machine.review_notice = False
+            settings.save(self.host.machine)
+        for key in ("target", "autostart", "night", "review"):
             if key not in args:
                 continue
             got = settings.clean_ideas({key: args[key]})[key]
             if got != args[key]:
                 raise IdeasError({"target": "The Target is thrift, balance or quality",
                                   "autostart": "Start plans by themselves is on or off",
-                                  "night": "The night is HH:MM-HH:MM"}[key])
+                                  "night": "The night is HH:MM-HH:MM",
+                                  "review": "Looking at each result is on or off"}[key])
             mine[key] = got
         self.save_settings(mine)
         out = self.board_settings()

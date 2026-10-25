@@ -157,7 +157,7 @@ def trail(harness: str, session: str, workdir: Path | None) -> str:
 
 def record(env: dict | None, mode: str, harness: str, model: str, prompt: str, stdout: str, stderr: str,
            code: int, seconds: float, cost: float | None = None, tokens: int | None = None,
-           session: str = "", workdir: Path | None = None, who: str = "", purpose: str = "") -> None:
+           session: str = "", workdir: Path | None = None, who: str = "", purpose: str = "", cost_own: float | None = None) -> None:
     """One call, where calls are kept now. Never raises: a call is not lost for its log. `who` and `purpose` name
     a call that carries no ork (`ORKCRAFT_ORC`) or was not tagged (a one-off `-p`, a connector's look)."""
     orc = str((env or {}).get("ORKCRAFT_ORC") or "")
@@ -186,6 +186,8 @@ def record(env: dict | None, mode: str, harness: str, model: str, prompt: str, s
     for key, name in (("idea", "ORKCRAFT_IDEA"), ("task", "ORKCRAFT_TASK")):     # the board's calls join the event log
         if (env or {}).get(name):
             line[key] = str(env[name])
+    if cost_own is not None:                 # a resumed session's cost is its running total: this call's own is the difference (spec 86 §1)
+        line["cost_own"] = cost_own
     try:
         folder.mkdir(parents=True, exist_ok=True)
         with gzip.open(folder / raw, "wt", encoding="utf-8") as f:
@@ -233,7 +235,7 @@ def totals(lines: list[dict]) -> list[dict]:
         row["calls"] += 1
         row["seconds"] = round(row["seconds"] + float(line.get("seconds") or 0.0), 1)
         row["tokens"] += int(line.get("tokens") or 0)
-        row["cost"] = round(row["cost"] + float(line.get("cost") or 0.0), 4)
+        row["cost"] = round(row["cost"] + float(line["cost_own"] if line.get("cost_own") is not None else line.get("cost") or 0.0), 4)   # a resumed session counted once
         for k, v in (line.get("usage") or {}).items():
             if isinstance(v, int):
                 row["usage"][k] = row["usage"].get(k, 0) + v

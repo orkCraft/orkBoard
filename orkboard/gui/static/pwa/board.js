@@ -210,10 +210,17 @@ export function makeBoard(ctx) {
 
   // -- reading the town ------------------------------------------------------------------------------------------
 
+  let reviewSaid = false;
+
   async function refresh() {
     const [b, r, a, ro, m, td, g] = await Promise.all(["ideas.board", "ideas.review_list", "ideas.agents", "ideas.roles", "ideas.map", "ideas.today", "ideas.gate"].map(read));
     const ok = (x) => x.ok && x.result && !x.result.error;
     if (ok(b)) st.board = b.result;
+    if (st.board?.review_notice && !reviewSaid) {            // spec 84 §1: the move of `review` to off is said once, on the phone too
+      reviewSaid = true;
+      ctx.flash("Results that hold now land in dev by themselves; Settings → Board to look at each one");
+      sendPaced("ideas.board_set", { review_notice: false });
+    }
     if (ok(r)) st.review = r.result;
     if (ok(a)) st.agents = a.result;
     if (ok(ro)) st.roles = ro.result;

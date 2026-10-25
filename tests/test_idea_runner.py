@@ -70,6 +70,10 @@ elif mode.startswith("check_"):                      # a check task (spec 43): w
         findings([])
     elif mode == "check_left":
         findings([left, left])
+    elif mode == "check_env":                          # what is left is the place's: a command was refused
+        findings([{"where": "npm test", "what": "the command was refused", "fixed": False, "kind": "env"}])
+    elif mode == "check_mixed_kinds":
+        findings([left, {"where": "npm test", "what": "the command was refused", "fixed": False, "kind": "env"}])
     elif mode in ("check_fixed", "check_mixed"):
         commit(f"{tid}.txt", f"fixed by {tid}\n", f"{tid}: fix")
         findings([fixed] if mode == "check_fixed" else [fixed, left])
@@ -77,6 +81,13 @@ elif mode.startswith("check_"):                      # a check task (spec 43): w
         open(".orkcraft-findings.json", "w").write("not json")
     elif mode == "check_claims":                      # says it fixed one, and changed no file
         findings([fixed])
+elif mode == "rewrite":                             # writes its file anew each call, resumed or not
+    seen = sum(1 for ln in open(os.environ["STUB_LOG"]) if json.loads(ln)["tid"] == tid) if os.path.exists(os.environ["STUB_LOG"]) else 0
+    commit(f"{tid}.txt", f"done by {tid} {seen}\n", f"{tid}: write {tid}.txt {seen}")
+elif mode == "risk":                                # touches a path the risk rules read: sign-in
+    commit("auth/login.py", "X = 1\n", f"{tid}: login")
+elif mode == "pictures":                            # holds a picture
+    commit("art/logo.png", "not really a picture\n", f"{tid}: logo")
 elif mode == "nocommit":
     pass
 elif mode == "uncommitted":                         # edits a file, runs no git (acceptEdits allows no Bash)
@@ -84,10 +95,17 @@ elif mode == "uncommitted":                         # edits a file, runs no git 
 else:
     time.sleep(float(os.environ.get("STUB_SLEEP", "0")))
     commit(f"{tid}.txt", f"done by {tid}\n", f"{tid}: add {tid}.txt")
+prior = [json.loads(ln) for ln in open(os.environ["STUB_LOG"]).read().splitlines()] if os.path.exists(os.environ["STUB_LOG"]) else []
+since = 0                                           # this session's calls so far: a fresh session starts its total again
+for row in prior:
+    if row["tid"] == tid:
+        since = since + 1 if row["resume"] else 1
 with open(os.environ["STUB_LOG"], "a") as f:
     f.write(json.dumps({"tid": tid, "resume": resume, "start": start, "end": time.time(), "argv": argv}) + "\n")
-print(json.dumps({"result": "done", "session_id": f"s-{tid}", "total_cost_usd": 0.01,
-                  "usage": {"input_tokens": 10, "output_tokens": 5}}))
+# a resumed session reports its running total, as Claude does: 0.01 a call, so 0.01, 0.02, 0.03
+big = tid in os.environ.get("STUB_BIG", "").split(",")
+print(json.dumps({"result": "done", "session_id": f"s-{tid}", "total_cost_usd": round(0.01 * ((since + 1) if resume else 1), 4),
+                  "usage": {"input_tokens": 200000 if big else 10, "output_tokens": 5}}))
 '''
 
 
@@ -234,16 +252,16 @@ def test_a_red_gate_gets_one_more_turn_on_the_same_session(town, monkeypatch):
     assert "VALUE = 2" in git(town.repo, "show", "main:pkg/thing.py")
 
 
-def test_a_gate_still_red_fails_and_main_stays(town, monkeypatch):
+def test_a_gate_still_red_waits_for_the_look_and_main_stays(town, monkeypatch):
+    """Spec 84 §1: tests that ran and are red are not a result that holds: it waits for the person, whatever `review` says."""
     monkeypatch.setenv("STUB_MODE", "k1=fail_always")
     plan_of(town, [{"id": "k1"}, {"id": "k2", "after": ["k1"]}])
     before = git(town.repo, "rev-parse", "main")
     runner, _ = runner_of(town)
     runner.start("demo")
-    state = wait_idle(runner)
-    assert state["state"] == "failed" and "gate" in state["error"]
-    tasks = tasks_of(town)
-    assert tasks["k1"]["state"] == "failed" and tasks["k2"]["state"] == "waiting"
+    task = wait_task(runner, "k1", "review")
+    assert task["look"] == "the tests are red" and task["tests"]["green"] is False
+    assert tasks_of(town)["k2"]["state"] == "waiting"             # never started from a result that waits
     assert len(calls(town)) == 2
     assert git(town.repo, "rev-parse", "main") == before == git(town.origin, "rev-parse", "main")
 
@@ -571,7 +589,7 @@ def test_the_log_is_cut_to_its_last_lines_and_masks_a_secret(town):
 
 def test_the_testers_defaults(town):
     from orkboard import settings
-    assert settings.IDEAS["merge_into"] == "dev" and settings.IDEAS["push"] is False and settings.IDEAS["review"] is True
+    assert settings.IDEAS["merge_into"] == "dev" and settings.IDEAS["push"] is False and settings.IDEAS["review"] is False
     assert settings.clean_ideas({"merge_into": "main", "push": True})["merge_into"] == "main"
     assert settings.clean_ideas({"merge_into": "main", "push": True})["push"] is True
 

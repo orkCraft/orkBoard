@@ -237,9 +237,9 @@ export function makeStops(core, ctx, needs, ops) {
     const t = (node?.tasks || []).find((x) => x.id === r.task), tw = testsWords(r);
     return { key: `look:${r.idea}/${r.task}`, kind: "look", cls: "is-look", tone: "look", title: r.title, sig: r, small: t?.head || null, whoTip: t?.by?.name ? `${t.by.name}${r.check ? " · its check" : ""}` : "",
       gem: { text: r.cost != null ? usd(r.cost) : "—", cls: "dim", tip: rated() ? `What it cost. ${SHARE_TIP}` : "What it cost, at API prices" },
-      text: [r.idea_title, h("span", {}, tw.mark ? sign(tw.mark) : null, tw.mark ? " " : "", tw.text), changesWords(r.diff), foundWords(r.findings)].filter(Boolean)
+      text: [r.idea_title, h("span", {}, tw.mark ? sign(tw.mark) : null, tw.mark ? " " : "", tw.text), changesWords(r.diff), foundWords(r.findings), r.look ? `waits: ${r.look}` : ""].filter(Boolean)
         .flatMap((x, i) => (i ? [" · ", x] : [x])),
-      plain: [r.idea_title, `${tw.mark} ${tw.text}`.trim(), changesWords(r.diff), foundWords(r.findings)].filter(Boolean).join(" · "),
+      plain: [r.idea_title, `${tw.mark} ${tw.text}`.trim(), changesWords(r.diff), foundWords(r.findings), r.look ? `waits: ${r.look}` : ""].filter(Boolean).join(" · "),
       more: () => foundOf(r),                           // a check's findings left, one line each, under its facts
       open: { kind: "result", slug: r.idea, task: r.task }, quickLabel: "Quick moves", quick: () => [resultActions(core, r, lower)] };
   }

@@ -28,6 +28,7 @@ function Result({ r, nodes, sign = "", quiet = false, fresh = false }) {
     <span class="arena-cap">${by}${r.check ? " · its check" : ""}</span>
     <span class=${cls("arena-result__tests", `is-${t.tone}`)}>${t.mark && html`<${Sign} name=${t.mark} /> `}${t.text}${t.names.length ? html` <span class="ok-tone-muted">${t.names.join(", ")}</span>` : ""}</span>
     <span class="arena-cap">${size}</span>
+    ${r.look && html`<span class="arena-cap arena-result__look" data-look="true">Waits: ${r.look}</span>`}
     ${html`<${Found} r=${r} />${r.conflict && html`<p class="ok-tone-error shell-conflict">⚠ ${r.conflict}</p>`}`}
     ${leaving ? html`<span class="arena-cap">${sign === "check" ? `merged into ${review.value?.into || "dev"}` : sign === "cross" ? "dropped" : sign === "back" ? "sent back" : ""}</span>` : html`<${ResultActions} r=${r} />`}
     ${!!sign && sign !== "back" && html`<span class="arena-task__flash">${sign === "check" ? html`<${Elem} name=${el.name} dim=${el.dim} big=${true} />` : sign !== "fade" && html`<${Sign} name=${sign} big=${true} />`}</span>`}

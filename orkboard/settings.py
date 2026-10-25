@@ -80,11 +80,14 @@ def shift(s: "MachineSettings") -> Span:
     return s.work or Span(SHIFT[0], SHIFT[1] - SHIFT[0])
 # The board's keeper and runner (spec 29a): how often the batch reads new ideas, when a talk's session is
 # compacted, how many tasks run at once, which branch they merge into (`dev`: the testers' default, spec 33 §4),
-# whether it is pushed (off), and whether a result waits for the person at Review (on; off merges by itself).
+# whether it is pushed (off), and whether every result waits for the person at Review (off: a result that holds lands by
+# itself, spec 84; `review_v` 2 marks a file that was moved to that default once, the notice said once: `review_notice`).
 # Spec 35: the Board's Target (thrift · balance · quality), whether a safe plan starts by itself, the night's window
 # (local time), the share of the window kept for the person by day and at night, and the repository's own risky paths.
 # `batch_minutes` is kept, unused (the batch went in spec 35), so older settings keep loading.
-IDEAS = {"batch_minutes": 30, "idle_hours": 24, "max_parallel": 1, "merge_into": "dev", "push": False, "review": True,
+REVIEW_V = 2
+IDEAS = {"batch_minutes": 30, "idle_hours": 24, "max_parallel": 1, "merge_into": "dev", "push": False, "review": False,
+         "review_v": REVIEW_V,
          "target": "balance", "autostart": True, "night": "01:00-07:00", "reserve_day": 0.3, "reserve_night": 0.1,
          "risk_paths": []}
 IDEA_TARGETS = ("thrift", "balance", "quality")
@@ -100,7 +103,7 @@ PROJECTS_RECENT = 10                     # the projects the switcher's Recent re
 PROJECTS_OPEN = 20                       # the most projects open at once
 # The Board's settings that are the project's (spec 37 §8): read from `<repo>/.orkcraft/board.json`, the machine's
 # `ideas` being the defaults a new project starts from; `risk_paths` is the tracked `orkcraft.toml`'s `[board]`.
-BOARD = ("target", "autostart", "night", "merge_into", "push", "review", "wiki", "max_parallel", "reserve_day",
+BOARD = ("target", "autostart", "night", "merge_into", "push", "review", "review_v", "wiki", "max_parallel", "reserve_day",
          "reserve_night")
 BOARD_FILE = Path(".orkcraft") / "board.json"
 
@@ -128,6 +131,7 @@ class MachineSettings:
     usage: bool | None = None     # anonymous usage stats (core/usage.py): None until the operator answers
     install_id: str = ""          # a random id while they share them; forgotten when they stop
     keep_awake: str = "carts"     # KEEP_AWAKE: when the computer does not sleep by itself, on power (gui/keep_awake.py; Orkline's gui/away.py)
+    review_notice: bool = False   # "results that hold now land in dev by themselves" is to be said once (spec 84 §1; the faces clear it)
     awake_offered: bool = False   # "keep it awake for the phone" was asked once, when a phone paired (js/phones.js; gui/keep_awake.py `offer`)
     fire: bool = True             # flames over a building whose ork has waited a minute or more (the GUI's huts)
     updates: str = "critical"     # which updates install by themselves when the town opens (core/updates.py)
@@ -164,6 +168,7 @@ class MachineSettings:
             "fire": self.fire,
             "keep_awake": self.keep_awake,
             "awake_offered": self.awake_offered,
+            "review_notice": self.review_notice,
             "updates": self.updates,
             "main_tool": self.main_tool,
             "phones": [dict(p) for p in self.phones],
@@ -203,6 +208,7 @@ class MachineSettings:
         s.fire = data.get("fire") is not False
         s.keep_awake = awake_mode(data.get("keep_awake"))
         s.awake_offered = data.get("awake_offered") is True
+        s.review_notice = data.get("review_notice") is True
         s.updates = data["updates"] if data.get("updates") in UPDATES else "critical"
         s.main_tool = data["main_tool"] if data.get("main_tool") in TOOLS else ""
         s.phones = clean_phones(data.get("phones"))
@@ -216,6 +222,11 @@ class MachineSettings:
         s.tier_models = clean_tier_models(data.get("tier_models"))
         s.focus = data["focus"] if data.get("focus") in FOCUSES else "board"
         s.ideas = clean_ideas(data.get("ideas"))
+        raw = data.get("ideas") if isinstance(data.get("ideas"), dict) else {}
+        if raw.get("review_v") != REVIEW_V:                       # spec 84 §1: once, a file moved off the old default is read as off
+            if data and raw.get("review", True) is not False:     # …and said once when it had asked to look at each result
+                s.review_notice = True
+            s.ideas["review"] = False
         s.projects_open = clean_folders(data.get("projects_open"), PROJECTS_OPEN)
         s.projects_recent = clean_folders(data.get("projects_recent"), PROJECTS_RECENT)
         s.ops = clean_ops(data.get("ops"))
@@ -343,6 +354,13 @@ def board_of(repo_root: Path, defaults: dict | None) -> dict:
     own = _read_cached(Path(repo_root) / BOARD_FILE, json.loads)
     merged = dict(defaults or IDEAS)
     if isinstance(own, dict):
+        if "review" in own and own.get("review_v") != REVIEW_V:   # spec 84 §1: the project's file moves off once, as the machine's did
+            own = {**own, "review": False, "review_v": REVIEW_V}
+            try:
+                _write(Path(repo_root) / BOARD_FILE, own)
+            except OSError:
+                pass                                              # read as moved all the same; written at the next save
+            _BOARD_CACHE.pop(str(Path(repo_root) / BOARD_FILE), None)
         merged.update({k: own[k] for k in BOARD if k in own})
     out = clean_ideas(merged)
     paths = risk_paths_of(repo_root)

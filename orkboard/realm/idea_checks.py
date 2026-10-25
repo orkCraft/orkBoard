@@ -11,6 +11,8 @@ to `every` idea applies always.
     with_check_tasks(tasks, kept_, checks)  # the plan's tasks, a check task added where the plan left one out
     status(kept_, checks, tasks)      # for a face: each check, whether it applies, why not, its task's state, what it found
     parse_findings(text)              # a check task's findings file (FINDINGS_FILE) as the list it holds, or None
+    code_left(findings)               # the findings left that are of the code (spec 86 §4); an "env" one is of the place it ran in
+    same_left(findings, before)       # the findings left are the ones the round before left
 
 A check is its checker's: an agent of the library the project has as a role (its instruction may be the person's now),
 its check the library's. No face, no model.
@@ -28,6 +30,7 @@ FINDINGS_FILE = ".orkcraft-findings.json"      # what a check task writes at its
 FINDINGS_MAX = 20
 FINDINGS_BYTES = 64 * 1024
 WHERE_MAX, WHAT_MAX = 200, 300
+KINDS = ("code", "env")              # a finding is of the code, or of the place it ran in (a command refused, a tool missing, no device)
 
 
 def is_checker(slug: str) -> bool:
@@ -41,8 +44,9 @@ def checker_of_tag(tag: str) -> str:
 
 
 def parse_findings(text: object) -> list[dict] | None:
-    """A findings file as `[{"where", "what", "fixed"}]`; None for bad JSON, a bad shape, more than FINDINGS_MAX findings or a
-    `where` or `what` that is too long. `{"findings": []}` is a clean check."""
+    """A findings file as `[{"where", "what", "fixed", "kind"}]` (`kind`: "env" for what could not be done where it ran, else "code":
+    a missing or any other kind is "code"); None for bad JSON, a bad shape, more than FINDINGS_MAX findings or a `where` or `what`
+    that is too long. `{"findings": []}` is a clean check."""
     try:
         data = json.loads(text) if isinstance(text, str) else None
     except ValueError:
@@ -55,8 +59,29 @@ def parse_findings(text: object) -> list[dict] | None:
         if not isinstance(x, dict) or not isinstance(x.get("where"), str) or not isinstance(x.get("what"), str) \
                 or not isinstance(x.get("fixed"), bool) or len(x["where"]) > WHERE_MAX or len(x["what"]) > WHAT_MAX:
             return None
-        out.append({"where": x["where"], "what": x["what"], "fixed": x["fixed"]})
+        out.append({"where": x["where"], "what": x["what"], "fixed": x["fixed"], "kind": "env" if x.get("kind") == "env" else "code"})
     return out
+
+
+def is_env(finding: object) -> bool:
+    """A finding of the place it ran in, not of the code (one kept before `kind` was read is of the code)."""
+    return isinstance(finding, dict) and finding.get("kind") == "env"
+
+
+def code_left(findings: list[dict] | None) -> list[dict]:
+    """The findings left that are of the code: what *Fix the findings left* lists."""
+    return [f for f in findings or [] if isinstance(f, dict) and not f.get("fixed") and not is_env(f)]
+
+
+def _key(f: dict) -> tuple[str, str]:
+    return " ".join(str(f.get("where") or "").lower().split()), " ".join(str(f.get("what") or "").lower().split())
+
+
+def same_left(findings: list[dict] | None, before: list[dict] | None) -> bool:
+    """The findings left now are the ones the round before left (where and what, in any order): a send back would carry nothing new."""
+    now = {_key(f) for f in findings or [] if isinstance(f, dict) and not f.get("fixed")}
+    was = {_key(f) for f in before or [] if isinstance(f, dict) and not f.get("fixed")}
+    return bool(now) and now == was
 
 
 def counts(findings: list[dict] | None) -> dict:

@@ -57,6 +57,31 @@ async def test_the_drawer_sets_the_target_autostart_and_the_night_and_the_board_
 
 
 @pytest.mark.asyncio
+async def test_the_drawer_holds_the_switch_a_result_that_holds_lands_in_dev_by_itself(fake_repo, monkeypatch):
+    """Spec 84 §4: on while `review` is off (the default); the switch writes `review` the other way round."""
+    async with _phone(fake_repo, monkeypatch) as (stub, page):
+        drawer = await _menu(page)
+        box_ = drawer.get_by_label("A result that holds lands in dev by itself")
+        assert await box_.is_checked()
+        await box_.uncheck()
+        assert await _called(stub, "ideas.board_set", {"review": True})
+        assert await page.evaluate(NO_SCROLL)
+
+
+@pytest.mark.asyncio
+async def test_the_move_of_review_to_off_is_said_once_on_the_phone(fake_repo, monkeypatch):
+    async with _phone(fake_repo, monkeypatch) as (stub, page):
+        stub.review_notice = True
+        stub.rev += 1
+        line = page.locator(".flash", has_text="Results that hold now land in dev by themselves; Settings → Board to look at each one")
+        await line.wait_for(timeout=WAIT_MS)
+        assert await _called(stub, "ideas.board_set", {"review_notice": False})
+        stub.rev += 1
+        await asyncio.sleep(0.5)
+        assert sum(1 for entry in stub.calls if (entry[0], entry[1]) == ("ideas.board_set", {"review_notice": False})) == 1
+
+
+@pytest.mark.asyncio
 async def test_the_board_shows_one_party_s_goals_its_goals_bar_and_the_parties_sheet_counts_every_party_s_stops(fake_repo, monkeypatch):
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         _two_goals(stub)

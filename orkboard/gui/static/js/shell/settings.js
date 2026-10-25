@@ -66,6 +66,10 @@ export function SettingsDialog() {
           <input type="checkbox" class="gui-onb__hide" checked=${!!b.autostart} onChange=${(e) => act("ideas.board_set", { autostart: e.target.checked })} />
           <i>${b.autostart ? "✓" : ""}</i><span>Start plans by themselves</span></label>
         <span class="ok-font-status ok-tone-muted">Low-risk plans start alone; the rest wait for you.</span>
+        <label class="ok-check" data-settings="lands">
+          <input type="checkbox" class="gui-onb__hide" checked=${!b.review} onChange=${(e) => act("ideas.board_set", { review: !e.target.checked })} />
+          <i>${!b.review ? "✓" : ""}</i><span>A result that holds lands in dev by itself</span></label>
+        <span class="ok-font-status ok-tone-muted">Its tests ran and are green, nothing is left to fix, it touches no risk path and holds no pictures. Anything else waits for your look; off, every result does.</span>
         <${TargetSetting} />
         <div class="board-row"><span class="ok-font-label">Night</span>
           <input class="ork-field" type="time" value=${from} aria-label="Night from" onChange=${(e) => e.target.value && act("ideas.board_set", { night: `${e.target.value}-${to}` })} />

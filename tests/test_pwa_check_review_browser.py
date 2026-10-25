@@ -75,3 +75,60 @@ async def test_the_idea_s_checks_say_clean_or_found_with_what_was_fixed_and_left
         await line.wait_for(timeout=WAIT_MS)
         assert [" ".join(t.split()) for t in await line.get_by_role("listitem").all_inner_texts()] == [
             "Reviewer clean", "Accessibility reviewer found 2: 1 fixed, 1 left"]
+
+
+# -- spec 86 C, D and spec 84 §4 on the phone ---------------------------------------------------------------------------------------------
+
+ENV = {"where": "npm test", "what": "the command was refused", "fixed": False, "kind": "env"}
+CODE = {"where": "queue.py:9", "what": "the queue is never emptied", "fixed": False, "kind": "code"}
+NO_FILES = {"files": 0, "added": 0, "removed": 0}
+PLACE = "What is left is about where it ran, not the code"
+
+
+def with_place(stub):
+    stub.plan["tasks"] += [
+        task("k8", "Check: Security", "review", ["k5"], kind="security", tests=NO_RUN, diff=NO_FILES, check="Security", findings=[ENV], note="1 left",
+             look="findings left"),
+        task("k9", "Check: Playtest", "review", ["k5"], kind="playtest", tests=NO_RUN, diff=NO_FILES, check="Playtester", findings=[CODE, ENV],
+             note="2 left", look="findings left"),
+        task("ka", "Check: Words", "review", ["k5"], kind="edit", tests=NO_RUN, diff=NO_FILES, check="Editor", findings=[CODE], note="1 left", same=True,
+             look="findings left"),
+        task("kb", "Add the store", "review", ["k5"], tests={**NO_RUN, "none": True}, diff={"files": 2, "added": 9, "removed": 0},
+             look="no tests in this project")]
+
+
+@pytest.mark.asyncio
+async def test_findings_of_the_place_alone_offer_merge_and_drop_and_say_what_is_left(fake_repo, monkeypatch):
+    async with _phone(fake_repo, monkeypatch) as (stub, page):
+        with_place(stub)
+        stub.rev += 1
+        card = await _pop(page, "To look at: Check: Security")
+        assert PLACE in await card.inner_text()
+        assert await card.get_by_role("button", name="Fix them").count() == 0 and await card.get_by_role("button", name="Send back").count() == 0
+        assert await card.get_by_role("button", name="Leave them").is_enabled() and await card.get_by_role("button", name="Drop…").count() == 1
+        await card.get_by_role("button", name="Leave them").click()
+        assert await _called(stub, "ideas.merge", {"slug": "sync", "task": "k8"})
+
+
+@pytest.mark.asyncio
+async def test_fix_them_lists_the_findings_of_the_code_only_and_the_same_again_offers_merge_and_drop(fake_repo, monkeypatch):
+    async with _phone(fake_repo, monkeypatch) as (stub, page):
+        with_place(stub)
+        stub.rev += 1
+        same = await _pop(page, "To look at: Check: Words")
+        assert PLACE in await same.inner_text() and await same.get_by_role("button", name="Fix them").count() == 0
+        await same.get_by_role("button", name="Put it back").click()
+        card = await _pop(page, "To look at: Check: Playtest")
+        assert PLACE not in await card.inner_text()
+        await card.get_by_role("button", name="Fix them").click()
+        assert await _called(stub, "ideas.back", {"slug": "sync", "task": "k9", "why": "Fix the findings left:\nqueue.py:9: the queue is never emptied"})
+
+
+@pytest.mark.asyncio
+async def test_a_result_of_a_project_with_no_tests_says_so_and_why_it_waits(fake_repo, monkeypatch):
+    async with _phone(fake_repo, monkeypatch) as (stub, page):
+        with_place(stub)
+        stub.rev += 1
+        card = await _pop(page, "To look at: Add the store")
+        text = await card.inner_text()
+        assert "no tests in this project" in text and "waits: no tests in this project" in text

@@ -177,7 +177,8 @@ class StubHost:
     def results(self):
         return [{"idea": "sync", "idea_title": "Sync ideas between the phone and the town", "task": t["id"], "title": t["title"], "round": t["round"],
                  "tests": t["tests"], "diff": t["diff"], "cost": t["cost"], "conflict": t["conflict"], "finished": t["finished"],
-                 **({"check": t["check"], "findings": t["findings"]} if "check" in t else {})}       # spec 43 A: a check's result
+                 **({"check": t["check"], "findings": t["findings"], "same": t.get("same", False)} if "check" in t else {}),       # spec 43 A: a check's result
+                 "look": t.get("look", "")}                                                                                  # spec 84: why it waits
                 for t in self.plan["tasks"] if t["state"] == "review"]
 
     def snapshot(self):
@@ -258,7 +259,8 @@ class StubHost:
             ideas = [i | {"thesis": "Gist in one line", "progress": {"done": 1, "total": 5} if i["slug"] == "sync" else {"done": 0, "total": 0}}
                      for i in self.ideas.values()]
             return {"tracks": [g | {"count": sum(1 for i in ideas if i["track"] == g["slug"])} for g in self.goals.values()],
-                    "ideas": ideas, "needs_you": self.needs_you(), "target": self.target, "autostart": self.autostart, "night": self.night,
+                    "ideas": ideas, "needs_you": self.needs_you(), "target": self.target, "autostart": self.autostart, "night": self.night, "review": getattr(self, "review", False),
+                    "review_notice": getattr(self, "review_notice", False),
                     "rev": self.rev}
         if name == "ideas.page":
             return self.page(a["slug"])
@@ -383,6 +385,9 @@ class StubHost:
             return self.bump({"ok": True})
         if name == "ideas.board_set":
             self.target, self.autostart, self.night = a.get("target", self.target), a.get("autostart", self.autostart), a.get("night", self.night)
+            self.review = a.get("review", getattr(self, "review", False))
+            if a.get("review_notice") is False:
+                self.review_notice = False
             return self.bump({"target": self.target, "autostart": self.autostart, "night": self.night})
         if name == "ideas.todo":
             return self.bump({"ok": True})
@@ -1309,6 +1314,29 @@ def test_the_gear_holds_start_plans_by_themselves_and_the_night(shell):
     dlg.get_by_label("Night from").fill("23:30")
     dlg.get_by_label("Night from").blur()
     assert _sent(pg, host, ("ideas.board_set", {"night": "23:30-07:00"}))
+
+
+def test_the_gear_holds_the_switch_a_result_that_holds_lands_in_dev_by_itself(shell):
+    """Spec 84 §4: on when `review` is off (the default); the switch writes `review` the other way round."""
+    pg, host = shell
+    pg.get_by_role("button", name="Settings").click()
+    dlg = pg.get_by_role("dialog", name="Settings")
+    box_ = dlg.get_by_role("checkbox", name="A result that holds lands in dev by itself")
+    assert box_.is_checked()
+    dlg.get_by_text("A result that holds lands in dev by itself").click()
+    assert _sent(pg, host, ("ideas.board_set", {"review": True}))
+    assert not box_.is_checked()
+
+
+def test_the_move_of_review_to_off_is_said_once_in_the_window(gui):
+    host = StubHost()
+    host.review_notice = True
+    pg, host, errors = _open(gui, host=host)
+    pg.locator(".ok-toast", has_text="Results that hold now land in dev by themselves; Settings → Board to look at each one").wait_for(timeout=WAIT_MS)
+    assert _sent(pg, host, ("ideas.board_set", {"review_notice": False}))
+    assert sum(1 for entry in host.log if entry == ("ideas.board_set", {"review_notice": False})) == 1
+    pg.close()
+    assert not errors, "\n".join(errors)
 
 
 def test_agents_chips_say_by_itself_tonight_and_why_a_task_is_held(shell):

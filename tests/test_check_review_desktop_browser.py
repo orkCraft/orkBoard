@@ -76,3 +76,65 @@ def test_the_idea_s_checks_say_clean_or_found_with_what_was_fixed_and_left(revie
     checks.wait_for(timeout=WAIT_MS)
     assert [" ".join(t.split()) for t in checks.get_by_role("listitem").all_inner_texts()] == [
         "Reviewer clean", "Accessibility reviewer found 2: 1 fixed, 1 left"]
+
+
+# -- spec 86 C, D and spec 84 §4: the place's findings, a project with no tests, the reason a result waits ------------------------------
+
+ENV = {"where": "npm test", "what": "the command was refused", "fixed": False, "kind": "env"}
+CODE = {"where": "queue.py:9", "what": "the queue is never emptied", "fixed": False, "kind": "code"}
+NO_FILES = {"files": 0, "added": 0, "removed": 0}
+PLACE = "What is left is about where it ran, not the code"
+
+
+def with_place(host):
+    host.plan["tasks"] += [
+        task("k8", "Check: Security", "review", ["k5"], kind="security", tests=NO_RUN, diff=NO_FILES, check="Security", findings=[ENV], note="1 left",
+             look="findings left"),
+        task("k9", "Check: Playtest", "review", ["k5"], kind="playtest", tests=NO_RUN, diff=NO_FILES, check="Playtester", findings=[CODE, ENV],
+             note="2 left", look="findings left"),
+        task("ka", "Check: Words", "review", ["k5"], kind="edit", tests=NO_RUN, diff=NO_FILES, check="Editor", findings=[CODE], note="1 left", same=True,
+             look="findings left"),
+        task("kb", "Add the store", "review", ["k5"], tests={**NO_RUN, "none": True}, diff={"files": 2, "added": 9, "removed": 0},
+             look="no tests in this project")]
+    return host
+
+
+@pytest.fixture
+def place(gui):
+    from tests.test_shell_browser import StubHost
+    pg, host, errors = _open(gui, host=with_place(StubHost()))
+    _show_goal(pg)
+    yield pg, host
+    pg.close()
+    assert not errors, "\n".join(errors)
+
+
+def test_findings_of_the_place_alone_offer_merge_and_drop_and_say_what_is_left(place):
+    pg, host = place
+    card = pg.locator(".arena-result", has_text="Check: Security")
+    assert PLACE in card.inner_text() and "(where it ran)" in card.inner_text()
+    assert card.get_by_role("button", name="Fix them").count() == 0 and card.get_by_role("button", name="Send back").count() == 0
+    assert card.get_by_role("button", name="Leave them").is_enabled() and card.get_by_role("button", name="Drop…").count() == 1
+    card.get_by_role("button", name="Leave them").click()
+    assert _sent(pg, host, ("ideas.merge", {"slug": "sync", "task": "k8"}))
+
+
+def test_fix_them_lists_the_findings_of_the_code_only(place):
+    pg, host = place
+    card = pg.locator(".arena-result", has_text="Check: Playtest")
+    assert PLACE not in card.inner_text() and card.get_by_role("button", name="Fix them").is_enabled()
+    card.get_by_role("button", name="Fix them").click()
+    assert _sent(pg, host, ("ideas.back", {"slug": "sync", "task": "k9", "why": "Fix the findings left:\nqueue.py:9: the queue is never emptied"}))
+
+
+def test_the_same_findings_as_the_round_before_offer_merge_and_drop(place):
+    pg, host = place
+    card = pg.locator(".arena-result", has_text="Check: Words")
+    assert PLACE in card.inner_text() and card.get_by_role("button", name="Fix them").count() == 0 and card.get_by_role("button", name="Send back").count() == 0
+
+
+def test_a_result_of_a_project_with_no_tests_says_so_and_why_it_waits(place):
+    pg, host = place
+    card = pg.locator(".arena-result", has_text="Add the store")
+    assert "no tests in this project" in card.inner_text() and "Waits: no tests in this project" in card.inner_text()
+    assert pg.locator(".arena-result", has_text="Check: Security").locator("[data-look]").inner_text() == "Waits: findings left"

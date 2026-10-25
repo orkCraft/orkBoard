@@ -157,7 +157,8 @@ class Stub:
     def results(self):
         return [{"idea": "sync", "idea_title": self.ideas["sync"]["title"], "task": t["id"], "title": t["title"], "round": t["round"], "tests": t["tests"],
                  "diff": t["diff"], "cost": t["cost"], "conflict": t["conflict"], "finished": t["finished"],
-                 **({"check": t["check"], "findings": t["findings"]} if "check" in t else {})}       # spec 43 A: a check's result
+                 **({"check": t["check"], "findings": t["findings"], "same": t.get("same", False)} if "check" in t else {}),       # spec 43 A: a check's result
+                 "look": t.get("look", "")}                                                                                  # spec 84: why it waits
                 for t in self.plan["tasks"] if t["state"] == "review"]
 
     def find(self, a):
@@ -182,7 +183,8 @@ class Stub:
                     needs.append({"kind": "todo", "idea": t["idea"], "goal": "general", "title": t["title"], "text": t["title"], "priority": "normal", "blocks": True,
                                   "at": "", "todo": {k: t.get(k) for k in ("id", "title", "kind", "why", "choices", "steps", "accept", "done")}})
             return {"tracks": list(self.goals.values()), "ideas": ideas, "needs_you": needs + self.extra_needs,
-                    "target": self.target, "autostart": self.autostart, "night": self.night, "rev": self.rev, "demo": False}
+                    "target": self.target, "autostart": self.autostart, "night": self.night, "review": getattr(self, "review", False),
+                    "review_notice": getattr(self, "review_notice", False), "rev": self.rev, "demo": False}
         if name == "ideas.gate":                        # spec 49 §2.1: what dev holds that main lacks
             return {"into": self.into, **copy.deepcopy(self.gate)}
         if name == "ideas.gate_merge":
@@ -351,6 +353,9 @@ class Stub:
             return self.bump({"ok": True})
         if name == "ideas.board_set":
             self.target, self.autostart, self.night = a.get("target", self.target), a.get("autostart", self.autostart), a.get("night", self.night)
+            self.review = a.get("review", getattr(self, "review", False))
+            if a.get("review_notice") is False:
+                self.review_notice = False
             return self.bump({"target": self.target, "autostart": self.autostart, "night": self.night})
         if name == "ideas.spend":
             return self.spend if self.spend is not None else {"error": "No such idea"}
