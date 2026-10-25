@@ -38,7 +38,7 @@ from orkboard.core.idea_picking import PickMixin
 from orkboard.core.idea_session import SessionMixin
 from orkboard.core.idea_review import BACK, STOP_ONE, STOPPED_NOTE, ReviewMixin, RunnerError  # noqa: F401
 from orkboard.core.idea_task import FINDINGS_ASK, NO_DIFF, NO_FINDINGS, NO_RUN, TaskMixin, is_check, is_pick
-from orkboard.realm import event_log, halt, harnesses, idea_checks, idea_pick, idea_target, ideas, roles, status, tool_errors
+from orkboard.realm import task_commands, event_log, halt, harnesses, idea_checks, idea_pick, idea_target, ideas, roles, status, tool_errors
 from orkboard.realm.idea_git import BOARD_PAGE, CRITICAL_TESTS, Conflict, IdeaGit, env_name, has_summary, parse_tests, read_secret, spec_paths  # noqa: F401
 
 CHANGED = "ideas.changed"          # slug: an idea's state or one of its tasks changed
@@ -496,7 +496,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
             if again is not None and again.get("taken"):           # a variant was picked and committed (spec 51 §2.3): the gate goes on from there
                 session = resume
             else:
-                self._log(slug, tid, f"== round {rnd} · {now_iso()} · {model}\n{prompt}\n", env)
+                self._log(slug, tid, f"== round {rnd} · {now_iso()} · {model}\n{task_commands.line(task_commands.allowed(self.repo_root, task))}\n{prompt}\n", env)
                 session = self._session(slug, tid, path, cancel, model, env, prompt, resume, spent, effort)
                 if is_pick(task) and (again is None or again.get("pick")) and self._variants(slug, tid, task, path, start_sha, rnd):
                     return                                        # it ends with variants for the person, not with a change (spec 51 §2.2)

@@ -35,7 +35,8 @@ class SessionMixin:
         try:
             with call_log.of_project(self.repo_root), tool_errors.doing("task"):     # its log and spend: this project's
                 _text, cost, tokens, session = jobs.run_work(r.HARNESS, prompt, path, cancel, model=model, env=env,
-                                                             resume=resume, effort=effort, before_cost=before)
+                                                             resume=resume, effort=effort, before_cost=before,
+                                                             task=task, root=self.repo_root)
         except tool_errors.ToolError as e:
             if e.kind != tool_errors.LIMIT:
                 if self.sign_ins is not None and self.sign_ins.holds(e):      # its sign-in helps: the task waits for it

@@ -78,7 +78,7 @@ class TaskMixin:
         tests["green"] = problem is None
         tests["ran"] = run.ran if run else True
         tests["command"] = run.command if run else ""
-        if getattr(gate_config.read(self.repo_root), "none", False):      # the project has no tests at all (spec 86 §3): it never lands by itself
+        if gate_config.read(self.repo_root).none:      # the project has no tests at all (spec 86 §3): it never lands by itself
             tests["none"] = True
         if run and run.ran:
             tests["exit"] = run.code

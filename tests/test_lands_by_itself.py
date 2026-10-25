@@ -72,12 +72,12 @@ def test_tests_that_did_not_run_wait_for_the_look(town, monkeypatch):
 
 
 def test_a_project_with_no_tests_at_all_never_lands_by_itself_and_says_why(town, monkeypatch):
-    """Spec 86 §3 (the runner's side): the gate says `none`, and the result waits with *no tests in this project*. Works with a `Gate` that has no `none` yet."""
+    """Spec 86 §3 (the runner's side): the gate says `none`, and the result waits with *no tests in this project*. """
     from orkboard.core import idea_task
     plan_of(town, [{"id": "k1"}])
     runner, _ = runner_of(town)
     monkeypatch.setattr(runner.git, "gate_run", lambda *a, **k: idea_git.GateRun(True, "no tests ran", False, ""))
-    monkeypatch.setattr(idea_task.gate_config, "read", lambda root: SimpleNamespace(none=True, error=""))
+    monkeypatch.setattr(idea_task.gate_config, "read", lambda root: idea_task.gate_config.Gate(always=(), none=True))
     runner.start("demo")
     task = wait_task(runner, "k1", "review")
     assert task["look"] == "no tests in this project" and task["tests"]["none"] is True

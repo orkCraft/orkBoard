@@ -245,7 +245,7 @@ def test_queue_read_stop_and_board_set(host, model, runner):
     assert [(e["queue"], e["via"]) for e in _events(host, "idea_queued")] == [("night", "idea"), ("now", "map")]   # spec 41 §4
     assert ideas.state(host.ideas.state_dir, slug)["state"] != "raw"
     got = host.command("ideas.board_set", {"target": "quality", "night": "22:00-05:00", "device": "phone"})
-    assert got == {"target": "quality", "autostart": True, "night": "22:00-05:00"}
+    assert got == {"target": "quality", "autostart": True, "night": "22:00-05:00", "review": False, "review_notice": False}      # spec 84 §4: review is off by default
     board = host.command("ideas.board")
     assert (board["target"], board["autostart"], board["night"]) == ("quality", True, "22:00-05:00")
     with pytest.raises(CommandError, match="thrift, balance or quality"):
@@ -297,3 +297,15 @@ def test_the_agents_chips_say_by_itself_tonight_and_why_held(host, runner):
     got = {(c["idea"], c["task"]): c for c in chips}
     assert got[(a, "k1")]["by"] == "auto" and got[(a, "k1")]["note"].startswith("reserve") and not got[(a, "k1")]["night"]
     assert got[(a, "k2")]["note"] == "after 19:00" and got[(b, "k1")]["night"] is True
+
+
+def test_board_set_turns_looking_at_each_result_on_and_the_notice_is_said_once(host):
+    """Spec 84 §1, §4: `review` is off by default and the Board says so; the person's switch writes it, and the face clears the notice."""
+    assert host.command("ideas.board")["review"] is False
+    host.machine.review_notice = True
+    assert host.command("ideas.board")["review_notice"] is True
+    got = host.command("ideas.board_set", {"review": True, "review_notice": False})
+    assert got["review"] is True and got["review_notice"] is False and host.machine.review_notice is False
+    assert host.command("ideas.board")["review"] is True
+    with pytest.raises(CommandError, match="Looking at each result"):
+        host.command("ideas.board_set", {"review": "yes"})
