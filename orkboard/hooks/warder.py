@@ -86,9 +86,9 @@ SECRET_NAMES = ("id_rsa", "id_dsa", "id_ecdsa", "id_ed25519", ".netrc", ".pgpass
 SECRET_GLOBS = ("*.pem", "*.key", "*.p12", "*.pfx", "*.keystore", "*.jks")
 SECRET_DIRS = (".ssh", ".gnupg")
 ENV_OK = (".env.example", ".env.sample", ".env.template", ".env.dist")
-SELF = ("orkcraft/hooks/warder.py", "orkboard/hooks/warder.py", "scripts/warder_hook.py", ".claude/settings.json",
-        ".claude/settings.local.json", ".codex/hooks.json", ".codex/config.toml", ".agents/hooks.json", ".cursor/hooks.json",
-        ".pi/extensions/orkcraft.ts")
+SELF = ("orkcraft/hooks/warder.py", "orkboard/hooks/warder.py", "orkcraft/hooks/canvas.py", "orkboard/hooks/canvas.py",
+        "scripts/warder_hook.py", ".claude/settings.json", ".claude/settings.local.json", ".codex/hooks.json",
+        ".codex/config.toml", ".agents/hooks.json", ".cursor/hooks.json", ".pi/extensions/orkcraft.ts")
 AGY_GLOBAL = Path.home() / ".gemini" / "config" / "hooks.json"   # agy's hooks for every folder, headless steps' too
 HERMES_GLOBAL = Path(os.environ.get("HERMES_HOME") or Path.home() / ".hermes") / "config.yaml"   # Hermes' hooks
 # Programs that may name a secret file without reading it.

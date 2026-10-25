@@ -69,7 +69,7 @@ nothing) and `project_level` (*The project*: the project's level, its parties as
    project's sheet.
 2. **The project's level** (B, the field in place of the party's members): one column per party in the Board's order,
    Operations not among them. A column's head: its leader's head, its name (two lines), *k/n*; a press on it **opens
-   that party** (title *Open <party>*). Under it its goals as **decks** (since spec 78: the field's cards on the table): a deck is 132 × 72 at most, a goal's element
+   that party** (title *Open <party>*). Under it its goals as **decks** (since spec 79: the field's cards on the table): a deck is 132 × 72 at most, a goal's element
    (`.ork-elem`), its type's sign in its goal's colour, its title (two lines), its state's words as the party's goal row
    says them; grouped *Planning*, *At work*, *Waits for main*, then *Flags (n)* folded (a press unfolds). A press on a
    deck opens the goal's screen (the drawer, as a goal row's ›). Empty: *Nothing in <party> yet*. Wider than the field:

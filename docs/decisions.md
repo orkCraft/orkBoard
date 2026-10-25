@@ -1271,7 +1271,22 @@ goals are dealt, the hand lies at the bottom, a party switch is a deck. So:
    bar (it stays *Orkline*, §50.1, while orkPage colours *line* copper): each its own call.
 The owner's call. Spec 77.
 
-## 93. The project's level is played on the table too: its goals are the field's cards (25 October, the owner)
+
+## 93. Canvases: what an AI tool draws outside the code is a card with the elf's head (25 October, the owner)
+
+Why: the owner: *can Orkboard catch a canvas made in Claude and show it as a card, an elf's, the designer's?* The models
+make more than code (a Claude artifact, a picture Antigravity or Codex generates, a file on Figma, tldraw or Canva), and
+Orkboard saw none of it. So:
+1. **A canvas is read, never made or fetched**: Orkboard reads what Claude Code, Codex and agy already write on the
+   machine (transcripts, rollouts, the brain folder) and a PostToolUse hook that only appends a line; it opens a link in
+   the person's browser and shows a local file, nothing more. No run of Orkboard's gets a tool to publish one.
+2. **Design's craft, so the elf's head** (§53.6), at the tier of the model that drew it; a design role's own head when
+   its task drew it.
+3. **Not a signal, not a result** (§54.1): a folded row above *Waits for your look*, no colour, no count in the top bar.
+4. **Not now**: a cloud session's canvases and a claude.ai chat's (nothing of them is on the machine), agy's plans,
+   walkthroughs and recordings, a canvas drawn inside Orkboard.
+
+## 94. The project's level is played on the table too: its goals are the field's cards (25 October, the owner)
 
 Why: a press on the Orkmaster turned the cards into tickets: the level drew its goals as small decks in ruled columns
 on the bare canvas, a tracker's board and not the game the party's field is (§92). So:
@@ -1280,4 +1295,4 @@ on the bare canvas, a tracker's board and not the game the party's field is (§9
 2. **One card**: a goal on the level is the field's card, 5:7, its element, state and type as the field's Planning
    card draws them; no ruled columns.
 3. **Not now**: the phone's project sheet keeps its rows.
-The owner's call. Spec 78.
+The owner's call. Spec 79.

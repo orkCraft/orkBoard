@@ -42,7 +42,7 @@ orkUI's type tokens (`design/tokens.json` `gui.fonts`).
 
 ## 4. Colour, space, shape
 Colour means a signal (danger, alert, success), except the one ork green of the primary action and the muted heads of
-the races (decisions §53.5), and the table's wood: the field's surface and the project level's, never a mark (decisions §92, §93, specs 77, 78). Spaces from orkUI's steps; nothing round; a control's corners notched by 2 px; a dialog
+the races (decisions §53.5), and the table's wood: the field's surface and the project level's, never a mark (decisions §92, §94, specs 77, 79). Spaces from orkUI's steps; nothing round; a control's corners notched by 2 px; a dialog
 framed `3px double`; selected is raised with a 2 px ink bar, never a white box. Orkboard's own sheets carry no colour, no
 font and no corner of their own (`tests/test_design_system.py`).
 

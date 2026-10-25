@@ -1,7 +1,7 @@
 // The drawer's body (docs/specs/33-v1-shell.md §6, spec 39 §3, spec 49 §9): tabs, one per thing opened: an idea's spec (29a's
 // sections view), an idea's plan (scrolled to a to-do, said what it unblocks), a task (its brief, state and log), a result's code
 // (commits, then the files changed, each patch folded), a goal, a pick (its variants large, a note: shell/pickview.js), a document, a file, a diff,
-// the gate's screen, Agents, Files. A result's actions stay pinned at its foot. A goal of Ideation is a pitch: its page's `pitch` shows its own screen (pitchview.js).
+// the gate's screen, Agents, Files, a canvas's file (spec 78). A result's actions stay pinned at its foot. A goal of Ideation is a pitch: its page's `pitch` shows its own screen (pitchview.js).
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Sign, Who } from "../orkui.js";
@@ -18,6 +18,7 @@ import { FileView, FilesPane } from "./files.js";
 import { GitDiffView } from "./gitpane.js";
 import { AgentsPane } from "./agents.js";
 import { GateView } from "../arena/gate.js";
+import { CanvasView } from "../arena/canvases.js";
 import { rowOf } from "../arena/pickwords.js";
 import { PickView } from "./pickview.js";
 import { PitchView } from "./pitchview.js";
@@ -117,6 +118,7 @@ function titleOf(p, d, pg) {
   if (p.kind === "gate") return "dev → main";
   if (p.kind === "agents") return "Agents";
   if (p.kind === "files") return "Files";
+  if (p.kind === "canvas") return p.title || "Canvas";
   return pg?.title || "";
 }
 
@@ -143,6 +145,7 @@ export function Preview() {
         : p.kind === "gate" ? html`<${GateView} />`
         : p.kind === "agents" ? html`<${AgentsPane} />`
         : p.kind === "files" ? html`<${FilesPane} />`
+        : p.kind === "canvas" ? html`<${CanvasView} p=${p} />`
         : p.kind === "task" ? html`<${Task} d=${d} />` : html`<${Result} d=${d} p=${p} />`}
     </div>
   </section>`;

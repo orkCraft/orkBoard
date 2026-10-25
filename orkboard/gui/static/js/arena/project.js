@@ -1,6 +1,6 @@
 // The project's level (docs/specs/70-orkmaster-and-the-project.md §2–§3, decisions §85): a press on the Orkmaster in the project's line shows the whole of the project in place of one party —
 // a column for each party in the Board's order (Operations is not one), its head (the leader's head, its name, *k/n*; a press opens that party) on the canvas, under the heads the table
-// (orkUI's `.ork-table`, as the party's field: docs/specs/78-the-project-on-the-table.md) with each party's goals as the field's cards (5:7: the goal's element, its type's sign, its type, its title,
+// (orkUI's `.ork-table`, as the party's field: docs/specs/79-the-project-on-the-table.md) with each party's goals as the field's cards (5:7: the goal's element, its type's sign, its type, its title,
 // its state's words) grouped *Planning*, *At work*, *Waits for main*, then *Flags (n)* folded. A press on a card opens the goal's screen in the drawer.
 // Wider than the field the columns scroll sideways and the heads stay. Hovering or focusing a deck draws, with arrows.js, a link to each deck its route names in another column (the pitch it came from,
 // the release it went into); nothing at rest. Above the columns the Orkmaster's head and *New party* (its deck: projectdeal.js), below them *New goal* (projectdeal.js, a goal's party from the Orkmaster).
@@ -27,7 +27,7 @@ const TONES = { danger: "is-danger", alert: "is-alert" };
 const deckCls = (key, mark) => ({ "is-run": mark.sign === "work", "is-fail": mark.tone === "danger", "is-stop": mark.sign === "alert",
   "is-wait": key === "planning" && mark.sign !== "work" && mark.sign !== "alert", "is-later": key === "waits" || key === "flags" });
 
-/** One goal as a card on the table (spec 78 §2), the field's card: its element, its state's sign, its type's sign top right; its type's name, its title (two lines), its state's words.
+/** One goal as a card on the table (spec 79 §2), the field's card: its element, its state's sign, its type's sign top right; its type's name, its title (two lines), its state's words.
  *  A press opens its screen (its plan when the plan waits). */
 function Deck({ d, group, party, lit, setLit }) {
   const n = d.n, el = elementOf(n), mark = n.pitch ? pitchMark(n) : goalMark(n);

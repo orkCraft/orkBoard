@@ -1,0 +1,11 @@
+# Canvas fixtures (docs/specs/78-canvases.md §0)
+
+**Every file here is written by hand from the tool's sources, not recorded from a session**, until spec 78 §0 records a
+real session of each tool on the owner's machine; a recorded file then replaces its own and `tests/test_canvas_readers.py`
+stays as it is, or says what changed. Private paths and texts are made up.
+
+| file | the tool | written from |
+|---|---|---|
+| `claude_session.jsonl` | Claude Code transcript, copied by the tests to `<claude home>/projects/<project>/<id>.jsonl`: an `Artifact` publish from a file and one from a `type_url`, a failed one (`is_error`), a `Bash` call whose answer holds an artifact link, a `mcp__Claude_Docs__batch` create, a `mcp__Figma__create_new_file` | `orkboard/sources/transcripts.py` (the transcript's lines: `assistant` `tool_use` blocks, `user` `tool_result` blocks), the `Artifact` tool's own description (the URL in its answer) |
+| `codex_rollout.jsonl` | Codex rollout, copied by the tests to `$CODEX_HOME/sessions/2026/10/25/rollout-<ts>-<thread>.jsonl` (`__PROJECT__` and `__CODEX_HOME__` are the test's folders): `session_meta`, `turn_context`, an image generation with its end event (`saved_path`), one with no saved path (its file is under `generated_images/<session>/<call>.png`), one that failed, a Figma MCP call as `function_call` + `function_call_output`, a tldraw one as `mcp_tool_call_end`, a failed Canva one | Codex `codex-rs/protocol/src/models.rs` (`ResponseItem::ImageGenerationCall`, `FunctionCall`), `codex-rs/protocol/src/protocol.rs` (`ImageGenerationEndEvent`, `McpToolCallEndEvent`, `SessionMeta`), `codex-rs/protocol/src/mcp.rs` (`CallToolResult`), `codex-rs/rollout/src/policy.rs` (what a rollout keeps), `codex-rs/ext/image-generation/src/artifact.rs` (the picture's path), and `orkboard/sources/telemetry.py` (`_CodexMeter`: a line is `{timestamp, type, payload}`) |
+| `agy_brain/` | agy conversation folder `brain/<id>/`, copied by the tests: a picture with its `.metadata.json`, a screenshot, a recording named by its metadata, a plan `.md`, and a picture in the hidden `.system_generated/` | `docs/specs/78-canvases.md` §1.3 and agy's observed layout (`~/.gemini/antigravity-cli/brain/<conversation>/`, a `<file>.metadata.json` beside an artifact); the metadata's keys are a guess until §0.3 records one |

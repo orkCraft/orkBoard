@@ -335,6 +335,7 @@ class Orkboard:
         out = {"v": 1, "project": root.name if root is not None else "", "focus": "board", "look": "office",
                **{k: s[k] for k in ("ideas_rev", "ops_rev", "needs_you", "idea_states", "review_count", "review_results",
                                     "limits", "reserve", "rate")},
+               "canvases_new": int(s.get("canvases_new") or 0), "canvases_rev": int(s.get("canvases_rev") or 0),   # spec 78 §4
                "hud": dict(s["hud"]), "version": __version__, "update": self._phone_update(s["update"])}
         out["rev"] = hashlib.sha256(json.dumps(out, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:16]
         return out

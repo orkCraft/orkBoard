@@ -1,6 +1,6 @@
-# Spec 78 — The project's level is played on the table too: its goals are the field's cards
+# Spec 79 — The project's level is played on the table too: its goals are the field's cards
 
-The owner, 25 October (decisions §93): a press on the Orkmaster turned the cards into tickets — the project's level
+The owner, 25 October (decisions §94): a press on the Orkmaster turned the cards into tickets — the project's level
 drew its goals as 132 × 72 decks in ruled columns on the bare canvas, a tracker's board, while the party's field is a
 table the cards are dealt on (spec 77). The level keeps the field's look: the same table, the same cards.
 **Built:** Claude · **Review:** light · P3.
