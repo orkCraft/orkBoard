@@ -62,7 +62,8 @@ class Ops:
         self.runner = op_runner.OpRunner(self.base, settings=lambda: self.host.machine.ops,
                                          limits=lambda: self.host.limits(), publish=self._published,
                                          demo=bool(getattr(host, "demo", False)), cap=self._cap(host),
-                                         reserve=lambda: getattr(self.host.machine, "ideas", None))
+                                         reserve=lambda: getattr(self.host.machine, "ideas", None),
+                                         sign_ins=getattr(host, "sign_ins", None))
         if not self.runner.demo:
             self.runner.start()
 

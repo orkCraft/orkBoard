@@ -14,13 +14,28 @@ import re
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import (collide, goal_flags, goal_types, goal_verdict, idea_change, idea_checks, idea_flag, idea_pick, idea_questions, idea_risk, idea_spend,
-                            idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles)
+from orkboard.realm import (collide, goal_flags, goal_types, goal_verdict, harnesses, idea_change, idea_checks, idea_flag, idea_pick, idea_questions,
+                            idea_risk, idea_spend, idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles, tool_errors)
 from orkboard.realm.idea_words import short_of
 
 NEEDS = ("asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71)
 _HELD_FILES = re.compile(r"^files(?: beside)? · (.+)$")
 _AFTER = re.compile(r"after (\d{1,2}:\d{2})")
+SIGN_IN_TOOL = "claude"          # what the Board runs by itself runs on Claude (core/idea_runner.py `HARNESS`)
+
+
+def sign_in_needs(entries: list[dict]) -> list[dict]:
+    """The Needs you rows of the tools that need a sign-in and hold work (spec 45 §7): one per tool, from the host's
+    `sign_in` entries (core/sign_ins.py). It blocks: the work in progress waits for it."""
+    out = []
+    for e in entries:
+        if e.get("state") == "done" or not e.get("waiting"):
+            continue
+        tool = str(e.get("tool") or harnesses.title(str(e.get("harness") or "")))
+        out.append({"kind": "sign_in", "harness": e["harness"], "tool": tool, "title": tool, "blocks": True,
+                    "priority": "normal", "at": dt.datetime.fromtimestamp(float(e.get("since") or 0)).isoformat(timespec="seconds"),
+                    "text": tool_errors.LINES[tool_errors.LOGIN].format(tool=tool), "waiting": int(e["waiting"])})
+    return out
 
 
 def list_of_dicts(text: object) -> list[dict]:
@@ -130,6 +145,7 @@ def row(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None, page:
             "progress": {"done": sum(1 for t in tasks if t.get("state") == "merged"), "total": len(tasks)},
             "updated": ideas.touched_at(root, state_dir, slug) if at is None else at,
             "queue": ideas.queue_of(st), "held_until": st["held_until"],
+            **({"held_for": st["held_for"]} if st.get("held_for") and st["held_until"] else {}),
             "risk": idea_risk.level(page.get("risk")) if page and page.get("risk") else "",
             "risk_triggers": list_of(page.get("risk_triggers")) if page else [],
             "depends_on": depends,
@@ -201,6 +217,12 @@ def _tiers(order: list[str], depends: dict[str, list[str]]) -> dict[str, int]:
     return tier
 
 
+def _sign_in_wait(harness: str, until: str) -> dict:
+    """`waits` kind `sign_in`: `ref` the tool, `tool` its title, `until` when it fails as it did (a day from the hold)."""
+    title = harnesses.title(harness)
+    return {"kind": "sign_in", "ref": harness, "title": title, "tool": title, "until": until}
+
+
 def _waits(node: dict, tasks: list[dict], titles: dict[str, str], page_waits: list[str], week: dict | None = None) -> dict | None:
     """Why a node that is not done does not move: the first that holds (spec 39 §1). Data, not words. `week`: {"until": the week's reset (local
     time, to the minute), "held": the Board's own Low work waits at night for the week} (spec 44 §4), or None with no week read."""
@@ -209,6 +231,11 @@ def _waits(node: dict, tasks: list[dict], titles: dict[str, str], page_waits: li
     if page_waits:
         return {"kind": "idea", "ref": page_waits[0], "title": titles.get(page_waits[0], page_waits[0]), "until": ""}
     held = [t for t in tasks if t.get("state") == "held"]
+    for t in held:                                    # a task held for its tool's sign-in (spec 45 §7)
+        if t.get("held_for") == "sign_in":
+            return _sign_in_wait(str(t.get("harness") or SIGN_IN_TOOL), str(t.get("held_until") or ""))
+    if node.get("held_for") == "sign_in":
+        return _sign_in_wait(SIGN_IN_TOOL, node["held_until"])
     for t in held:
         m = _HELD_FILES.match(str(t.get("note") or ""))
         if m:
@@ -336,7 +363,8 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                     "route": idea_route.route(root, state_dir, slug, page=page, st=st, plan=plan, held=held, flag=flag),
                     "goal_state": idea_route.goal_state(root, state_dir, slug, held) if ideation and r["state"] == "sent" else None,
                     "release": release_of(releasing.get(slug)),
-                    "held_until": r["held_until"], "start_at": r["start_at"], "night_by": r["night_by"], "by_pace": bool((plan or {}).get("by_pace")),
+                    "held_until": r["held_until"], **({"held_for": r["held_for"]} if r.get("held_for") else {}),
+                    "start_at": r["start_at"], "night_by": r["night_by"], "by_pace": bool((plan or {}).get("by_pace")),
                     "priority": r["priority"], "size": r["size"],
                     "risk": r["risk"], "tier": tier[slug], "depends_on": r["depends_on"], "waits_on": r["waits_on"],
                     "waits_for": collide.waits_for(state_dir, slug, r["depends_on"], g["slug"], track_of, titles, party_names) if r["depends_on"] else [],

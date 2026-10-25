@@ -33,6 +33,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from orkboard.core.idea_picking import PickMixin
+from orkboard.core.sign_ins import HOLD_H
 from orkboard.core.idea_review import BACK, STOP_ONE, STOPPED_NOTE, ReviewMixin, RunnerError  # noqa: F401
 from orkboard.core.idea_task import FINDINGS_ASK, NO_DIFF, NO_FINDINGS, NO_RUN, TaskMixin, is_check, is_pick
 from orkboard.realm import call_log, event_log, halt, harnesses, idea_checks, idea_pick, idea_spend, idea_target, ideas, jobs, roles, status, tool_errors
@@ -73,6 +74,14 @@ def setting(settings: Any, key: str, default: Any = None) -> Any:
     return default
 
 
+def _epoch(iso: object) -> float | None:
+    """A task's `held_until` (local ISO time) as seconds; None when it holds none."""
+    try:
+        return dt.datetime.fromisoformat(str(iso)).timestamp()
+    except ValueError:
+        return None
+
+
 def _until_of(note: str, now: float) -> float | None:
     """The time an "after HH:MM" note means: today's, else tomorrow's when it has passed by more than an hour."""
     try:
@@ -86,9 +95,10 @@ def _until_of(note: str, now: float) -> float | None:
 
 
 class Held(Exception):
-    def __init__(self, until: float) -> None:
+    def __init__(self, until: float, line: str = "") -> None:
+        """`line`: the tool's refused sign-in in words, when the work is held for the tool's sign-in (spec 45 §6)."""
         super().__init__("held")
-        self.until = until
+        self.until, self.line = until, line
 
 
 @dataclass
@@ -103,11 +113,12 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
     def __init__(self, repo_root: Path, state_dir: Path, settings: Any, bus: Any = None, *,
                  limits: Callable[[], list] | None = None, events: bool = True,
                  on_held: Callable[[], None] | None = None, rank: Callable[[str], Any] | None = None,
-                 size_of: Callable[[str], str] | None = None) -> None:
+                 size_of: Callable[[str], str] | None = None, sign_ins: Any = None) -> None:
         """`limits`: the quota readers' last read (the town's `limits`); without it the runner reads it itself.
         `events`: write the task's events to the local event log (spec 33 §9); `on_held`: a task was held (the limits are read);
         `rank(slug)`: the idea's place (its priority, then the person's order): the ideas are served in that order.
-        `size_of(slug)`: the size of the idea's party (spec 75 §3: lean, standard, full, else ""): its tasks work at that size's Target."""
+        `size_of(slug)`: the size of the idea's party (spec 75 §3: lean, standard, full, else ""): its tasks work at that size's Target.
+        `sign_ins`: the host's sign-ins (core/sign_ins.py): a task whose tool is not signed in is held for it, not failed."""
         self.repo_root, self.state_dir = Path(repo_root), Path(state_dir)
         self.settings, self.bus = settings, bus
         self.git = IdeaGit(self.repo_root)
@@ -119,7 +130,7 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
         self._gate_runs: dict[str, object] = {}              # a worktree's last gate run, until the task reads it
         self._active: list[str] = []
         self._until: dict[tuple[str, str], float] = {}
-        self.events, self.on_held, self.rank, self.size_of = events, on_held, rank, size_of
+        self.events, self.on_held, self.rank, self.size_of, self.sign_ins = events, on_held, rank, size_of, sign_ins
         self._since: dict[tuple[str, str], float] = {}     # when a task entered the state it is in (the event log)
         self._tls = threading.local()                       # Merge's `dear`, on the thread that merges
         self._resume_working()
@@ -236,6 +247,8 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
                     continue
                 if t.get("state") not in ("merged", "review", "picking"):      # a pick that waits keeps its variants
                     t.update(state="waiting", error="", note="")
+                    for key in ("held_for", "held_until", "held_line"):
+                        t.pop(key, None)
                 self._until.pop((slug, t.get("id")), None)
             self._save_tasks(slug, plan["tasks"])
             self._set_idea(slug, "working")
@@ -316,6 +329,8 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
                     if until is not None or gate is not None:     # the window, else the person's reserve (§6), else the week (spec 44)
                         self._hold(slug, t, until if until is not None else gate,
                                    "" if until is not None else "week · " if isinstance(gate, idea_target.WeekHold) else "reserve · ")
+                    elif self.signed_out():                       # its tool needs a sign-in: held for it (spec 45 §6)
+                        self._hold_sign_in(t, "")
                     else:
                         self._launch(slug, t)
                         slots -= 1
@@ -379,7 +394,17 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
         changed = False
         for t in tasks:
             tid, state = t.get("id"), t.get("state")
-            if state == "held" and str(t.get("note") or "").startswith("week") and limits is not None \
+            if state == "held" and t.get("held_for") == "sign_in":
+                if self.signed_out(t.get("harness") or HARNESS):
+                    if (due := _epoch(t.get("held_until"))) and now >= due:      # a day: it fails as it did, with the line
+                        t.update(state="failed", error=t.get("held_line") or tool_errors.LINES[tool_errors.LOGIN].format(
+                                     tool=harnesses.title(t.get("harness") or HARNESS)),
+                                 finished=now_iso(), held_for="", held_until="", held_line="")
+                        changed = True
+                    continue
+                t.update(state="waiting", note="", held_for="", held_until="", held_line="")     # signed in: it goes on
+                state, changed = "waiting", True
+            elif state == "held" and str(t.get("note") or "").startswith("week") and limits is not None \
                     and not isinstance(idea_target.gate(plan, limits, self.board(), now, self._still_low(slug)), idea_target.WeekHold):
                 self._until.pop((slug, tid), None)             # the week is not behind any more: no reason left to hold it
                 t.update(state="waiting", note="")
@@ -412,6 +437,24 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
             why = failed.get("error") or "it failed"
             self._set_idea(slug, "failed", f"{failed.get('title') or failed.get('id')}: {why}")
         self._changed(slug)
+
+    def signed_out(self, harness: str = HARNESS) -> bool:
+        """Whether the host says this tool needs its sign-in: what runs by itself waits for it."""
+        return self.sign_ins is not None and bool(self.sign_ins.blocked(harness))
+
+    def _hold_sign_in(self, task: dict, line: str) -> None:
+        """The task waits for its tool's sign-in: at most `HOLD_H` hours, then it fails with `line`."""
+        task.update(state="held", note="", held_for="sign_in", harness=HARNESS, held_line=line[:600],
+                    held_until=dt.datetime.fromtimestamp(time.time() + HOLD_H * 3600).isoformat(timespec="seconds"))
+
+    def held_for(self, harness: str) -> int:
+        """How many tasks wait for this tool's sign-in now."""
+        n = 0
+        for state_file in (self.state_dir / "ideas").glob("*/plan.json"):
+            plan = self._read(state_file) or {}
+            n += sum(1 for t in plan.get("tasks") or [] if isinstance(t, dict) and t.get("state") == "held"
+                     and t.get("held_for") == "sign_in" and (t.get("harness") or HARNESS) == harness)
+        return n
 
     def _hold(self, slug: str, task: dict, until: float, why: str = "") -> None:
         self._until[(slug, task.get("id"))] = until
@@ -548,8 +591,14 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
         except Held as e:
             with self._lock:
                 self._until[(slug, tid)] = e.until
-            self._set_task(slug, tid, state="held" if again is None or again.get("pick") else "review",
-                           note=f"after {dt.datetime.fromtimestamp(e.until):%H:%M}", finished="")
+            if e.line:                      # held for its tool's sign-in (spec 45 §6), not for a window
+                hold: dict = {}
+                self._hold_sign_in(hold, e.line)
+                self._set_task(slug, tid, finished="", **({**hold, "note": ""} if again is None or again.get("pick")
+                                                          else {"state": "review", "note": e.line[:300]}))
+            else:
+                self._set_task(slug, tid, state="held" if again is None or again.get("pick") else "review",
+                               note=f"after {dt.datetime.fromtimestamp(e.until):%H:%M}", finished="")
         except (InterruptedError, halt.Halted) as e:
             run = self._runs.get((slug, tid))
             why = (run.why if run else "") or (str(e) if isinstance(e, halt.Halted) else STOPPED)
@@ -577,11 +626,13 @@ class IdeaRunner(TaskMixin, PickMixin, ReviewMixin):
         """One turn of the task's Claude session (work mode); its cost and tokens add up on the task, and its line
         goes to the idea's ledger (spec 36 §1: `task`, or `fix` for the gate's retry)."""
         try:
-            with call_log.of_project(self.repo_root):        # its log and spend are this project's, shown or not
+            with call_log.of_project(self.repo_root), tool_errors.doing("task"):     # its log and spend: this project's
                 _text, cost, tokens, session = jobs.run_work(HARNESS, prompt, path, cancel, model=model, env=env,
                                                              resume=resume, effort=effort)
         except tool_errors.ToolError as e:
             if e.kind != tool_errors.LIMIT:
+                if self.sign_ins is not None and self.sign_ins.holds(e):      # its sign-in helps: the task waits for it
+                    raise Held(time.time() + HOLD_H * 3600, tool_errors.plainly(e)) from e
                 raise
             now = time.time()
             raise Held(status.reset_of(self._read_limits(now), HARNESS, now, 1.0)

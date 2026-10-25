@@ -47,7 +47,9 @@ from orkboard.core.idea_keeper import first_json
 from orkboard.core.op_briefs import (BOUND_WORDS, LOOKUP_CHARS, PEOPLE_RULE, PEOPLE_WORDS, STANDING_WAITS,  # noqa: F401
                                      BriefsMixin, about_people, breach, last_time)
 from orkboard.core.op_commands import CAP_WAITS, CommandsMixin, OpsError
-from orkboard.realm import call_log, event_log, harnesses, idea_spend, idea_target, jobs, op_runs, op_templates, status
+from orkboard.core.sign_ins import HOLD_H
+from orkboard.realm import (call_log, event_log, harnesses, idea_spend, idea_target, jobs, op_runs, op_templates, status,
+                            tool_errors)
 from orkboard.realm.op_templates import Template
 
 HARNESS = "claude"
@@ -103,15 +105,17 @@ class OpRunner(CommandsMixin, BriefsMixin):
                  templates: Callable[[], dict[str, Template]] = op_templates.find,
                  claude: Callable[[], bool] = claude_here,
                  cap: Callable[[], tuple[float, float]] | None = None,
-                 reserve: Callable[[], dict | None] = lambda: None) -> None:
+                 reserve: Callable[[], dict | None] = lambda: None, sign_ins: Any = None) -> None:
         """`cap`: (the day's spend, the person's cap) its calls are held by (the host's, across the open projects:
         core/treasury.py `persons_cap`); without it, Operations' own spend against the default cap. `reserve`: the
-        settings whose reserves a standing brief keeps (the machine's Board settings, `ideas`; spec 66 §3)."""
+        settings whose reserves a standing brief keeps (the machine's Board settings, `ideas`; spec 66 §3). `sign_ins`: the
+        host's sign-ins (core/sign_ins.py): a call whose tool is not signed in is held for it (spec 45 §6)."""
         self.base = Path(base)
         self.settings, self.limits, self.publish = settings, limits or (lambda: []), publish
         self.reserve, self.clock = reserve, dt.datetime.now
         self.cap = cap or (lambda: treasury.persons_cap([], op_runs.ledger(self.base)))
         self.demo, self.templates, self.claude = demo, templates, claude
+        self.sign_ins = sign_ins
         self._lock = threading.Lock()
         self._queue: list[tuple[str, str]] = []           # (op id or `learn:<template>`, step), in order
         self._running: dict[str, threading.Event] = {}     # key → its call's cancel
@@ -241,17 +245,42 @@ class OpRunner(CommandsMixin, BriefsMixin):
         except Exception:                      # a cap that cannot be read holds nothing
             return False
 
+    def signed_out(self) -> bool:
+        """Whether the host says Claude Code needs its sign-in: a call waits for it (spec 45 §6)."""
+        return self.sign_ins is not None and bool(self.sign_ins.blocked(HARNESS))
+
+    def held_for(self, harness: str) -> int:
+        """How many operations wait for this tool's sign-in now."""
+        return sum(1 for run in op_runs.runs(self.base) if run.get("state") == "held" and run.get("held_for") == "sign_in"
+                   and harness == HARNESS)
+
     def _held(self, run: dict, step: str) -> bool:
         """Held by a spent window, or by the cap; a standing brief (not the person's press) by the reserve too."""
         until = self.window_until()
         if until is None and run.get("standing"):
             until = self.reserve_until()
         if until is not None:
-            run.update(state="held", held_until=_iso(until), held=step, why=STANDING_WAITS if run.get("standing") else "")
+            run.update(state="held", held_until=_iso(until), held=step, why=STANDING_WAITS if run.get("standing") else "", held_for="")
         elif self.capped():
-            run.update(state="held", held_until=_midnight(), held=step, why=CAP_WAITS)
+            run.update(state="held", held_until=_midnight(), held=step, why=CAP_WAITS, held_for="")
+        elif self.signed_out():
+            self._hold_sign_in(run, step)
         else:
             return False
+        self._save(run)
+        return True
+
+    def _hold_sign_in(self, run: dict, step: str, line: str = "") -> None:
+        """The run waits for Claude Code's sign-in, at most `HOLD_H` hours; then it fails with `line`."""
+        run.update(state="held", held=step, why=line[:LINE_CHARS], held_for="sign_in",
+                   held_until=_iso(time.time() + HOLD_H * 3600))
+
+    def _sign_in_failure(self, run: dict, step: str, e: BaseException) -> bool:
+        """A call failed for its sign-in (it helps): the run waits for it, instead of failing. False when it did not."""
+        err = tool_errors.taken()
+        if self.sign_ins is None or err is None or not self.sign_ins.holds(err):
+            return False
+        self._hold_sign_in(run, step, tool_errors.plainly(err))
         self._save(run)
         return True
 
@@ -271,7 +300,9 @@ class OpRunner(CommandsMixin, BriefsMixin):
         cost: Any = None
         tokens: Any = None
         try:
-            with call_log.apart(self.base / "calls", "ops", op_runs.ledger(self.base)), telemetry.tagged("plan", "ops"):
+            tool_errors.taken()                  # a failure of this call is the one `_sign_in_failure` reads
+            with call_log.apart(self.base / "calls", "ops", op_runs.ledger(self.base)), telemetry.tagged("plan", "ops"), \
+                    tool_errors.doing("op"):
                 text, cost, tokens, events = jobs.run_call(HARNESS, prompt, work, cancel, allow, model, env=env,
                                                            effort=effort, budget=idea_target.budget(step, target),
                                                            result_chars=result_chars)
@@ -289,7 +320,7 @@ class OpRunner(CommandsMixin, BriefsMixin):
         return text, cost, events, measure
 
     def _fail(self, run: dict, step: str, why: str, acted: bool | None) -> None:
-        run.update(state="failed", why=why, acted=acted, step=step, held="", held_until="")
+        run.update(state="failed", why=why, acted=acted, step=step, held="", held_until="", held_for="")
         self._save(run)
         self._ev(event_log.OP_FAILED, op=run["id"], step=f"op_{step}", acted=acted)
 
@@ -344,10 +375,12 @@ class OpRunner(CommandsMixin, BriefsMixin):
             self._fail(self._run(op_id), "prepare", "stopped", False)
             return
         except jobs.CallFailed as e:
+            run = self._run(op_id)
             if bounds and breach(bounds, e.events, run["fields"]):
-                self._unbound(self._run(op_id))
+                self._unbound(run)
                 return
-            self._fail(self._run(op_id), "prepare", str(e)[:300], False)
+            if not self._sign_in_failure(run, "prepare", e):
+                self._fail(run, "prepare", str(e)[:300], False)
             return
         run = self._run(op_id)
         if run["state"] != "preparing":
@@ -440,6 +473,8 @@ class OpRunner(CommandsMixin, BriefsMixin):
         uses = [e for e in events if e["type"] == "tool_use"]
         results = {e["id"]: e for e in events if e["type"] == "tool_result"}
         if not uses:
+            if failed and self._sign_in_failure(run, "act", RuntimeError(failed)):    # nothing was done: it waits
+                return
             self._fail(run, "act", failed or "nothing was done", False)
             return
         if len(uses) != 1 or uses[0]["name"] != act or not _same(uses[0]["input"], run["args"]):
@@ -550,6 +585,25 @@ class OpRunner(CommandsMixin, BriefsMixin):
             if op_runs.forget_old(self.base, ops["keep_days"], follow=follow, follow_days=ops["follow_days"]):
                 self.publish()
 
+    def _sign_in_tick(self) -> None:
+        """What waits for Claude Code's sign-in goes on once it is signed in; after a day it fails with its line."""
+        for run in op_runs.runs(self.base):
+            if run.get("state") != "held" or run.get("held_for") != "sign_in":
+                continue
+            if self.signed_out():
+                try:
+                    due = dt.datetime.fromisoformat(str(run.get("held_until"))).timestamp()
+                except ValueError:
+                    due = 0.0
+                if time.time() >= due:
+                    why = run.get("why") or tool_errors.LINES[tool_errors.LOGIN].format(tool=harnesses.title(HARNESS))
+                    self._fail(run, "act" if run.get("held") == "act" else "prepare", why, False)
+                continue
+            step = "act" if run.get("held") == "act" else "prepare"
+            run.update(state="acting" if step == "act" else "preparing", held="", held_until="", held_for="", why="")
+            self._save(run)
+            self._enqueue(run["id"], step)
+
     def tick(self, now: float | None = None) -> None:
         now = time.monotonic() if now is None else now
         if now - self._tick_at < TICK_S:
@@ -557,9 +611,11 @@ class OpRunner(CommandsMixin, BriefsMixin):
         self._tick_at = now
         self.forget()
         self.standing()                                     # added even in a spent window: then they are held
+        self._sign_in_tick()
         if self.window_until() is not None:
             return
-        held = [run for run in op_runs.runs(self.base) if run.get("state") == "held"]
+        held = [run for run in op_runs.runs(self.base)
+                if run.get("state") == "held" and run.get("held_for") != "sign_in"]
         if (held or self._learn) and self.capped():        # the ledgers are read only when something waits
             return
         if any(run.get("standing") for run in held) and self.reserve_until() is not None:
