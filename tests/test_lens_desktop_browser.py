@@ -116,7 +116,7 @@ def test_a_goal_type_s_lens_is_open_first_when_the_party_offers_it_else_the_lead
         bar = dlg.get_by_role("radiogroup", name="Lens")
         bar.wait_for(timeout=WAIT_MS)
         assert bar.get_by_role("radio", name="Code").get_attribute("aria-checked") == "true"             # the type's, not the leader's (Pain)
-        dlg.get_by_label("Its title").fill("Sync in the background")
+        dlg.get_by_label("The goal", exact=True).fill("Sync in the background")
         dlg.get_by_role("button", name="Add the goal").click()
         assert _calls(pg, host, "ideas.add")[-1]["type"] == "shaped-feature"
         host.lens = {**PARTY, "lenses": [x for x in PARTY["lenses"] if x["id"] != "code"]}               # a party with no Code lens: the leader's first

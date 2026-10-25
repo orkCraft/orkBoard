@@ -237,7 +237,10 @@ export function makePreview(core, ctx, screens = {}) {
       case "raw": {                                     // the Board's list had these; the Board is the Map now (shell-map.js)
         if (row.held_until) return [left];
         const now = btn("Process now", () => act("ideas.queue", { slug, queue: "now" }, `${The(lead)} drafts it now.`).then(() => read(cur)));
-        return (row.queue || "night") === "hold" ? [left, now, btn("Tonight", () => act("ideas.queue", { slug, queue: "night" }, "Kept for tonight.").then(() => read(cur)), "")]
+        // Tonight is Low work's (spec 83): it makes the goal Low; asked first when the Board has not been asked, not drawn after *No, by day*
+        const queueNight = () => act("ideas.queue", { slug, queue: "night" }, "Kept for tonight, as Low work.").then(() => read(cur));
+        const tonight = btn("Tonight", () => (core.nightUnset() ? core.askNight((allow) => (allow ? queueNight() : read(cur))) : queueNight()), "");
+        return (row.queue || "night") === "hold" ? [left, now, ...(core.nightOff() ? [] : [tonight])]
           : row.queue === "now" ? [] : [left, now];
       }
       case "reading": case "planning": return [btn("Stop", () => act("ideas.read_stop", { slug }, "Stopped.").then(() => read(cur)), "danger")];

@@ -50,7 +50,7 @@ def _add(host, text, **more):
     """An idea under a goal (spec 35 §3: no idea without one), waiting for the night unless asked."""
     root = host.ideas.root()
     goal = next((t["slug"] for t in ideas.tracks(root, make=False) if t["slug"] != "general"), None) or ideas.add_track(root, "First goal")
-    return host.command("ideas.add", {"text": text, "track": goal, "night": True, **more})
+    return host.command("ideas.add", {"text": text, "track": goal, "hold": True, **more})
 
 
 def _wait(host, slug="", goal=False):
@@ -140,10 +140,10 @@ def test_the_answer_to_a_goals_question_is_the_same_talk_on_the_goal(host, model
 
 
 def test_an_idea_added_now_is_read_at_once_later_waits_for_the_batch(host, model):
-    # spec 35 §3: `now` became the queue (Normal → drafted at once; the closed dialog's `night` waits); with no
+    # spec 35 §3: `now` became the queue (Normal → drafted at once; the closed dialog's goal is held, spec 83); with no
     # question the plan follows at once (this stub answers it with no plan, so the idea stays ready)
     later = _add(host, "wait for the batch")["slug"]
-    now = _add(host, "dark mode please", night=False)["slug"]
+    now = _add(host, "dark mode please", hold=False)["slug"]
     _wait(host, now)
     assert [c["kind"] for c in model.seen][:1] == ["idea"] and "dark mode please" in model.seen[0]["prompt"]
     assert ideas.state(host.ideas.state_dir, later)["state"] == "raw"
@@ -290,9 +290,9 @@ def test_photos_go_with_an_idea_beside_its_state_and_the_taskmaster_reads_them_f
     for bad, why in (([{"data": base64.b64encode(b"not an image").decode()}], "JPEG, a PNG or a WebP"),
                      ([{"data": "@@@"}], "did not arrive whole"), ([{"data": JPEG}] * 5, "At most 4 photos")):
         with pytest.raises(CommandError, match=why):
-            host.command("ideas.add", {"text": "Cut off", "track": goal, "night": True, "photos": bad})
+            host.command("ideas.add", {"text": "Cut off", "track": goal, "hold": True, "photos": bad})
     assert ideas.ideas(root, goal) == []                                                     # nothing half made
-    slug = host.command("ideas.add", {"text": "The login screen is cut off", "track": goal, "night": True,
+    slug = host.command("ideas.add", {"text": "The login screen is cut off", "track": goal, "hold": True,
                                       "photos": [{"data": JPEG}, {"data": PNG}]})["slug"]
     assert idea_photos.listed(host.ideas.state_dir, slug) == [f".orkcraft/ideas/{slug}/photos/1.jpg", f".orkcraft/ideas/{slug}/photos/2.png"]
     assert (idea_photos.folder(host.ideas.state_dir, slug) / "1.jpg").read_bytes()[:3] == b"\xff\xd8\xff"
@@ -307,7 +307,7 @@ def test_photos_go_with_an_idea_beside_its_state_and_the_taskmaster_reads_them_f
 def test_the_words_of_a_goal_complete_new_idea_titles_first_then_its_terms(host):
     root = host.ideas.root()
     slug = ideas.save_goal(root, None, "Offline first", "The phone keeps working offline: the SyncQueue in sync_queue.py holds edits.")[0]
-    host.command("ideas.add", {"text": "Queue the edits while offline", "track": slug, "night": True})
+    host.command("ideas.add", {"text": "Queue the edits while offline", "track": slug, "hold": True})
     got = host.command("ideas.words", {"track": slug})
     assert got["track"] == slug and got["words"][0] == "Offline first"
     assert "offline" in got["words"] and "SyncQueue" in got["words"] and "sync_queue.py" in got["words"]

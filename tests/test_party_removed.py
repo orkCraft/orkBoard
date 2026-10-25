@@ -20,7 +20,7 @@ def host(fake_repo) -> Orkboard:
 
 def _party_with_goals(host, *texts):
     party = host.command("ideas.track_add", {"title": "Billing"})["slug"]
-    slugs = [host.command("ideas.add", {"text": t, "track": party, "night": True})["slug"] for t in texts]
+    slugs = [host.command("ideas.add", {"text": t, "track": party, "hold": True})["slug"] for t in texts]
     return party, slugs
 
 

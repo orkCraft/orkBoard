@@ -353,7 +353,8 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
 
     def add(self, args: dict, pitch: str = "") -> dict:
         """An idea: a text, its goal (never General: that is the system's) and a priority (default the goal's). High
-        and Normal are drafted at once, Low and a closed dialog's (`night`) wait for the night (spec 35 §3). `photos`
+        and Normal are drafted at once, Low waits for the night when the person allowed it (`night_low`, spec 83), else
+        it is drafted at once too (spec 35 §3); `night` is refused with any other priority. `photos`
         (the phone's, base64) are kept beside it for the Taskmaster to read (realm/idea_photos.py), and `lens`, what the
         person pointed at with the lens of the goal's party (realm/idea_lens.py). Spec 52 §2.3: `type` (one of the party's
         leader's), its `asks` (written after the text) and `join` (who joins the party first: gui/ideas_types.py). `hold`: kept, nothing
@@ -376,7 +377,10 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
         typed = self.typed(args, track, goals[track]["title"])
         rel = self.release_args(args, track, typed)          # a release's version and what goes in, checked before the goal exists (spec 68 §3)
         night, hold = args.get("night") is True, args.get("hold") is True
-        queue = "hold" if hold else "now" if pitch else "night" if priority == "low" or night else "now"     # a goal sent from a pitch: Now (spec 65 §5)
+        if night and priority != "low":
+            raise IdeasError("Only Low work waits for the night")                # spec 83 §2
+        queue = "hold" if hold else "now" if pitch else "night" if priority == "low" and self.night_allowed() else "now"     # tonight only on the person's word (spec 83 §2); a goal sent from a pitch: Now (spec 65 §5)
+        night = night and queue == "night"
         text = text[:pitches.PITCH_CHARS] if pitches.is_ideation(self.root(), track) else text
         with ideas.LOCK:                        # the party changes before the goal, under the same lock; never for tonight's (spec 52 §2.3)
             joined = self.join_goal(track, typed, args) if not night and not hold else None
@@ -606,7 +610,7 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
                  "ideas.goal": self.goal, "ideas.read_now": self.read_now, "ideas.doc": self.doc, "ideas.roles": self.roles,
                  "ideas.role_save": self.role_save, "ideas.role_add": self.role_add, "ideas.role_drop": self.role_drop,
                  "ideas.kind_set": self.kind_set,
-                 "ideas.queue": self.queue, "ideas.read_stop": self.read_stop, "ideas.start_now": self.start_now,
+                 "ideas.queue": self.queue, "ideas.night_allow": self.night_allow, "ideas.read_stop": self.read_stop, "ideas.start_now": self.start_now,
                  "ideas.proposal": self.proposal, "ideas.board_set": self.board_set, "ideas.answer": self.answer,
                  "ideas.spend": self.spend, "ideas.lens": self.lens, "ideas.lens_code": self.lens_code,
                  "ideas.lens_screen": self.lens_screen, "ideas.check_skip": self.check_skip,

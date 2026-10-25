@@ -1,7 +1,7 @@
 """Spec 53 part B, the phone's New goal (docs/specs/53-phone-simpler.md §2, §4, §5 "B"): Chromium at 390 × 844 against the scene of tests/test_pwa_arena_browser.py (a party, *Sign in
 with a passkey*) and a second one, *Product*, each with its leader's goal types. The create button opens the form at once, sliding up in 180 ms (none of the lift, the deal or the turn; none
 under reduced motion); the party first (the leader's head, *<leader> leads · k of n goals done*, the list of the parties with ✓ and *+ New party*, no Operations, a pick that deals that
-party's types); the priority (*Low*'s line and *Keep for tonight*); the types' row (*Your own goal* first and picked when the form opens, then the most used first, its line; spec 61 C); one field, *The goal*; the asks, Refs and the join
+party's types); the priority (*Low*'s line, *runs tonight* or *runs after the other priorities*, and the button staying *Add the goal*); the types' row (*Your own goal* first and picked when the form opens, then the most used first, its line; spec 61 C); one field, *The goal*; the asks, Refs and the join
 line; a typed goal with no lens switch; what *Add the goal* sends; and *Fix a bug* in one screen."""
 from __future__ import annotations
 
@@ -150,20 +150,19 @@ async def test_new_party_in_the_list_opens_new_party_and_esc_puts_the_list_away_
 
 
 @pytest.mark.asyncio
-async def test_the_priority_is_the_partys_and_low_says_it_waits_for_the_night_and_keeps_for_tonight(fake_repo, monkeypatch):
+async def test_the_priority_is_the_partys_and_low_says_whether_it_runs_tonight_and_the_button_stays_add_the_goal(fake_repo, monkeypatch):
     typed(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         form = await _form(page)
         assert await form.get_by_role("radio", name="High").is_checked()                                                                    # the party's own
-        low = "Waits for the night: the leader reads it then."
+        low = "Low: runs tonight."
         assert low not in await form.inner_text() and await form.get_by_role("button", name="Add the goal").is_visible()
         assert await form.get_by_role("radio", name="Normal").evaluate("e => e.parentElement.getBoundingClientRect().height") >= 44
         assert "High and Normal are drafted at once" not in await form.inner_text()                                                         # spec 50's hint is gone
         await form.get_by_role("radio", name="Low").click()
-        assert low in await form.inner_text() and await form.get_by_role("button", name="Add the goal").count() == 0
-        keep = form.get_by_role("button", name="Keep for tonight")
+        assert low in await form.inner_text() and await form.get_by_role("button", name="Add the goal").is_visible() and await form.get_by_role("button", name="Keep for tonight").count() == 0
         await form.get_by_label("The goal", exact=True).fill("Someday")
-        await keep.click()
+        await form.get_by_role("button", name="Add the goal").click()
         assert await _called(stub, "ideas.add", {"text": "Someday", "track": "passkey", "priority": "low"})                                 # one's own goal: no type
         await form.wait_for(state="hidden", timeout=WAIT_MS)
 
@@ -268,7 +267,7 @@ async def test_put_it_back_with_words_keeps_the_goal_for_tonight_and_never_sends
         assert await form.locator(".newgoal__refs").is_visible() and await form.get_by_label("What it should say").is_visible()
         await form.get_by_label("The goal", exact=True).fill("Kept for tonight")
         await form.get_by_role("button", name="Put it back").click()
-        assert await _called(stub, "ideas.add", {"text": "Kept for tonight", "track": "passkey", "priority": "high", "night": True, "type": "logo"})
+        assert await _called(stub, "ideas.add", {"text": "Kept for tonight", "track": "passkey", "priority": "high", "hold": True, "type": "logo"})
 
 
 @pytest.mark.asyncio

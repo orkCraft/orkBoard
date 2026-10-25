@@ -91,7 +91,48 @@ class BoardMixin:
         s = self.settings_now()
         return {"target": s.get("target", settings.IDEAS["target"]), "autostart": bool(s.get("autostart", True)),
                 "night": s.get("night", settings.IDEAS["night"]), "review": bool(s.get("review", settings.IDEAS["review"])),
-                "review_notice": bool(getattr(getattr(self.host, "machine", None), "review_notice", False))}
+                "review_notice": bool(getattr(getattr(self.host, "machine", None), "review_notice", False)),
+                "night_low": s.get("night_low") if isinstance(s.get("night_low"), bool) else None}      # None: not asked yet (spec 83)
+
+    def night_allowed(self) -> bool:
+        """The person's standing word that Low work (and the leaders' night) may run at night (spec 83 §2): only `True` is a yes."""
+        return self.settings_now().get("night_low") is True
+
+    def night_allow(self, args: dict) -> dict:
+        """`{"allow": bool}`: Low work may run at night, on or off. Off takes what waited for the night to the day (`moved`)."""
+        if not isinstance(args.get("allow"), bool):
+            raise IdeasError("Low work may run at night is on or off")
+        allow = args["allow"]
+        self.save_settings({**self.settings_now(), "night_low": allow})
+        moved = 0 if allow else self._night_to_day()
+        self._ev(event_log.NIGHT_ALLOWED, args, allow=allow, moved=moved, face=_device(args))
+        self.changed("")
+        return {"ok": True, "moved": moved}
+
+    def _night_to_day(self) -> int:
+        """What waited for the night goes on by day: a goal in the night queue is drafted now, a plan passed to start at night starts now."""
+        moved = 0
+        for i in ideas.ideas(self.root()):
+            slug, st = i["slug"], ideas.state(self.state_dir, i["slug"])
+            plan = ideas.plan(self.state_dir, slug) if st["state"] in ("plan", "working") else None
+            if st["state"] == "raw" and ideas.queue_of(st) == "night":
+                ideas.save_state(self.state_dir, slug, queue="now", error="")
+                try:
+                    self.keeper.draft(slug)
+                except idea_keeper.KeeperError as e:
+                    ideas.save_state(self.state_dir, slug, error=str(e))
+            elif plan and plan.get("passed_at") and plan.get("start_at") == "night":
+                ideas.edit_plan(self.state_dir, slug, lambda p: p.update(start_at=None))
+                if st["state"] == "plan":
+                    ideas.save_state(self.state_dir, slug, state="working", error="")
+                    self.runner(need=True).start(slug)
+                else:
+                    self.runner(need=True).tick()
+            else:
+                continue
+            moved += 1
+            self._publish(slug)
+        return moved
 
     def board_set(self, args: dict) -> dict:
         mine = dict(self.settings_now())
@@ -161,7 +202,7 @@ class BoardMixin:
             return ""
         if ideas.items(page.section("Open questions")) or collide.holds(self.root(), self.state_dir, slug):
             return "wait"                      # …or it waits for another party's goal until that goal's flag (spec 71 §4)
-        what = idea_risk.decide(page.get("risk"), page.get("priority"))
+        what = idea_risk.decide(page.get("risk"), page.get("priority"), self.night_allowed())
         if what != "wait":
             try:
                 self.pass_plan(slug, "auto", night=what == "night")
@@ -259,6 +300,9 @@ class BoardMixin:
         else:
             if self._state(slug)["state"] != "raw":
                 raise IdeasError("Only a new goal waits for the night")
+            if not self.night_allowed():
+                raise IdeasError("Low work may run at night is off: switch it on in Settings")
+            ideas.set_meta(self.root(), slug, priority="low")              # only Low work waits for the night (spec 83 §2)
             ideas.save_state(self.state_dir, slug, queue="night", held_until="", error="", night_by="person")      # Tonight is the person's
         self._ev(event_log.IDEA_QUEUED, args, idea=slug, queue=q, via=_via(args))
         self.changed(slug)
@@ -340,7 +384,7 @@ class BoardMixin:
             if priority not in ideas.PRIORITIES:
                 raise IdeasError("Priority is High, Normal or Low")
             ideas.set_meta(root, slug, priority=priority)
-            q = "night" if priority == "low" else "now"
+            q = "night" if priority == "low" and self.night_allowed() else "now"
             ideas.save_state(self.state_dir, slug, state="raw", queue=q, error="", **({"night_by": "board"} if q == "night" else {}))
             if q == "now":
                 try:

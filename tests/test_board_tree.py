@@ -148,7 +148,7 @@ def test_the_host_keeps_its_pages_in_the_tree_and_logs_each_commit(fake_repo):
     root = host.ideas.root()
     assert ".orkcraft/board" in root.as_posix()
     goal = ideas.add_track(root, "In the tree")
-    host.command("ideas.add", {"text": "an idea", "track": goal, "night": True})
+    host.command("ideas.add", {"text": "an idea", "track": goal, "hold": True})
     got = host.ideas.tree_flush(force=True)
     assert got["commit"] and got["held"] == ""
     assert git(fake_repo, "show", "--format=%s", "-s", "dev").startswith("board: ")

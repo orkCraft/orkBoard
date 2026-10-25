@@ -288,7 +288,7 @@ async def test_new_goal_in_ideation_is_one_box_held_kept_for_tonight_or_judged_n
         await form.wait_for(timeout=WAIT_MS)
         await form.get_by_label("What is the pitch?").fill("Undo a merge")
         await form.get_by_role("button", name="Tonight").click()
-        assert await _called(stub, "ideas.add", {"text": "Undo a merge", "track": "ideation", "night": True})
+        assert await _called(stub, "ideas.add", {"text": "Undo a merge", "track": "ideation", "priority": "low", "night": True})          # Tonight makes the pitch Low (spec 83 §2)
 
 
 @pytest.mark.asyncio

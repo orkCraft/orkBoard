@@ -12,6 +12,7 @@ import { makeAgents } from "./shell-agents.js";
 import { makeAgentSheet } from "./shell-agent.js";
 import { makeReview } from "./shell-review.js";
 import { makePreview } from "./shell-preview.js";
+import { makeNightAsk } from "./shell-night-ask.js";
 import { makeNeeds } from "./shell-needs.js";
 import { makeStops } from "./shell-stops.js";
 import { makeCanvases } from "./shell-canvases.js";
@@ -78,6 +79,10 @@ export function makeBoard(ctx) {
     openInto() { review.openInto(); },
     setToday(data) { top.today.set(data); },
     log: (what, ref, via) => logOpened(what, ref, via),
+    /** Low work may run at night? (spec 83 §3): asked once; `after(allow)` once it is answered. `nightUnset`: the Board has not been asked; `nightOff`: answered *No*, so *Tonight* is not drawn. */
+    askNight(after) { nightAsk.ask(after); },
+    nightUnset() { return nightAsk.unset(); },
+    nightOff() { return nightAsk.off(); },
     draw() { drawAll(); },
     flash(text) { ctx.flash(text); },
   };
@@ -93,6 +98,7 @@ export function makeBoard(ctx) {
   const stops = makeStops(core, ctx, needs, boardTab.ops);
   const preview = makePreview(core, ctx, { agents: agents.el });
   const pitch = makePitch(core, ctx);                      // a pitch of Ideation opens in its sheet, wherever it is opened from
+  const nightAsk = makeNightAsk(core);                     // the one question about the night (spec 83)
   const el = h("div", { class: "board v1" }, top.el, boardTab.el, canvases.el, stops.el, fab.el, preview.el);
 
   /** What the person opened, for the day's analysis (docs/specs/33-v1-shell.md §9): the host's one loggable event. The listener
@@ -252,7 +258,7 @@ export function makeBoard(ctx) {
 
   return {
     el,
-    sheets: [...top.sheets, ...boardTab.sheets, ...needs.sheets, ...review.sheets, ...canvases.sheets, ...agents.sheets, agentSheet.el, ...stops.sheets, ...pitch.sheets],
+    sheets: [...top.sheets, ...boardTab.sheets, ...needs.sheets, ...review.sheets, ...canvases.sheets, ...agents.sheets, agentSheet.el, ...stops.sheets, ...pitch.sheets, nightAsk.el],
     // What is acted on only while the town answers: not the bar's Stop all, nor New idea (kept with no signal).
     content: () => [boardTab.el, canvases.el, ...stops.content(), preview.el],
     /** A push's arrival (board-app.js `arrive`): the goal of the first stop is shown and the stop popped out, as soon as the Board has been read. */
