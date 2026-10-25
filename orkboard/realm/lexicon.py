@@ -161,6 +161,7 @@ TERMS: tuple[Term, ...] = (
     _t("craft.data", "Data"),                                      # a goblin
     _t("craft.marketing", "Marketing"),                            # a gnome
     _t("craft.product", "Product"),                                # the undead: a lich (a mummy in Orkline 0.2, until orkUI draws one)
+    _t("canvas", "canvas", "canvases"),                             # what an AI tool drew outside the code: a page, a design, a deck, a document, a picture (spec 78)
     _t("race", "race", "races"),                                   # orkUI's heads (races/<race>-<tier>.png)
     _t("race.peon", "ork", "orks"),                                # orkUI's id for the ork's head is the site's class, peon
     _t("race.elf", "elf", "elves"),

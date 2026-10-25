@@ -32,6 +32,9 @@ Spec 70: the Orkmaster's suggestion of a goal's party (`ideas.party_for`): gui/i
 Spec 71: the Orkmaster keeps the parties from colliding (`ideas.collide_answer`; a plan made or a spec changed is compared with the other parties'
 open goals; a goal's `depends_on` across parties holds its start until a flag): gui/ideas_project.py, realm/collide.py, core/idea_collide.py.
 
+Spec 78: what the AI tools drew outside the code, its canvases (`ideas.canvases`, `ideas.canvas_seen`, `ideas.canvas_open`,
+`ideas.canvas_file`; `canvases_new` and `canvases_rev` in the snapshot): gui/ideas_canvases.py.
+
 Spec 37 §8: the Board's settings are the project's (`BoardHost.board_settings`: `<repo>/.orkcraft/board.json` over the
 machine's `ideas`), read through `settings_now()` and written with `save_settings()`.
 """
@@ -49,6 +52,7 @@ from orkboard.core import idea_keeper
 from orkboard.realm import event_log, idea_checks, idea_lens, idea_photos, idea_route, idea_secrets, idea_target, ideas, pitches, wiki
 from orkboard.gui.ideas_args import VIA, IdeasError, _device, _opt, _text
 from orkboard.gui.ideas_board import BoardMixin
+from orkboard.gui.ideas_canvases import CanvasesMixin, canvas_commands
 from orkboard.gui.ideas_gate import GateMixin
 from orkboard.gui.ideas_goals import GoalsMixin
 from orkboard.gui.ideas_map import MapMixin
@@ -101,7 +105,7 @@ class _Hop:
 
 
 class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, ReviewMixin, ReviseMixin,
-            TypesMixin, BoardMixin):
+            TypesMixin, CanvasesMixin, BoardMixin):
     def __init__(self, host) -> None:
         """`host`: what the Board needs of whoever runs it, a `gui/board_host.py` `BoardHost` (spec 37 §4): Orkline's
         host makes one from its town, Orkboard its own."""
@@ -255,6 +259,7 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
                     runner.tick()
                 except Exception as e:
                     self.host.toast(f"{type(e).__name__}: {e}", title="The runner", severity="error")
+        self.canvas_tick(now)                   # what the AI tools drew outside the code (spec 78)
 
     def _ever_passed(self) -> bool:
         folder = self.state_dir / "ideas"
@@ -289,7 +294,8 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
                 data = {"needs_you": 0, "idea_states": [], "review_count": 0, "review_results": []}
             self._cache = (self.rev, now, data)
         return {"focus": focus_of(self.host.machine), "ideas_rev": self.rev, **self._cache[2],
-                "limits": self.limits(), "reserve": self.reserve()}
+                "limits": self.limits(), "reserve": self.reserve(), "canvases_new": self.canvas_store.new_count(),
+                "canvases_rev": self.canvas_store.rev}
 
     def reserve(self) -> dict[str, Any]:
         """`{share, night}` (spec 49 §2.3): the part of the AI tool's window the Board keeps from work that starts by
@@ -597,6 +603,6 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
                       "ideas.pitch_pass": self.pitch_pass,
                       "ideas.release_out": self.release_out, "ideas.release_candidates": self.release_candidates, "ideas.shown": self.shown,
                       "ideas.party_for": self.party_for, "ideas.collide_answer": self.collide_answer,
-                      "ideas.proposals": self.proposals})
+                      "ideas.proposals": self.proposals, **canvas_commands(self)})
         return {name: guarded(name, fn) for name, fn in table.items()}
 

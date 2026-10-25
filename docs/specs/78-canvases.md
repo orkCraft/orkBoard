@@ -6,7 +6,9 @@ deck, a doc), a picture Antigravity or Codex generates, a file on a canvas tool 
 Orkboard sees none of it: it lives in a link or a folder of the tool's. So Orkboard **reads the canvases its project's
 sessions made and lays each out as a card**, drawn with the head of design's race, the elf (decisions §53). **Builds:**
 Claude · **Review:** full (§0 and §1 read three tools' private formats) · P3. **§0 first** (on the owner's machine:
-this container has none of agy and Codex, and no session of theirs), **then A; B and C at once; D after A.**
+this container has none of agy and Codex, and no session of theirs). **The core first** (§7, by Claude: the store, the
+commands, the snapshot), **then A, B, C and D at once** on cheaper models, each against §7; until §0 is recorded, A's
+readers are built to fixtures written from the tools' sources (§0's *Until then*), which §0's recordings replace.
 
 Wording: CLAUDE.md. **This file is the contract.**
 
@@ -23,10 +25,11 @@ app (no hook, no transcript on the machine).
 | part | builds | files (and their tests) |
 |---|---|---|
 | **0. The probe** | §0 | `tests/fixtures/canvases/` (one recorded session a tool), `docs/specs/78-canvases.md` *As found* |
-| **A. The reader** (no face) | §1, §2 | new `sources/canvases.py`, new `core/canvases.py` (the store, the bus), `realm/lexicon.py` (`canvas`), `realm/event_log.py` (`CANVAS_MADE`, `CANVAS_SEEN`); new `tests/test_canvases.py` |
-| **B. Desktop** | §3 | `gui/` (the host's `canvases` and `canvas_seen`), new `js/arena/canvases.js`, `js/arena/waits.js` (the row), `arena.css`; new `tests/test_canvases_desktop_browser.py` |
+| **Core** (no face, built first) | §2, §7 | new `core/canvases.py` (the store, the bus), `sources/canvases.py` (`Canvas`, `link_host`, the readers' stubs), new `gui/ideas_canvases.py` (the commands), `gui/ideas.py` (wired), `realm/lexicon.py` (`canvas`), `realm/event_log.py` (`CANVAS_MADE`, `CANVAS_SEEN`); new `tests/test_canvases.py` |
+| **A. The readers** (no face) | §1 | `sources/canvases.py` (`read_claude`, `read_codex`, `read_agy`), new `tests/fixtures/canvases/`, new `tests/test_canvas_readers.py` |
+| **B. Desktop** | §3 | new `js/arena/canvases.js`, `js/arena/waits.js` (the row), `arena.css`, the preview's canvas (`js/shell/preview.js`); new `tests/test_canvases_desktop_browser.py` |
 | **C. Phone** | §4 | `pwa/shell-review*.js` (the row), `pwa/app.css`, `pwa/sw.js` `CACHE` one up with every phone test's pin; new `tests/test_pwa_canvases_browser.py` |
-| **D. The hook** | §5 | new `hooks/canvas.py`; in Orkline, the same day: `orkcraft hooks install` writes its entries (Orkline's commit names this one); `hooks/warder.py` `SELF` gains it; `tests/test_canvases.py` |
+| **D. The hook** | §5 | new `hooks/canvas.py`; in Orkline, the same day: `orkcraft hooks install` writes its entries (Orkline's commit names this one); `hooks/warder.py` `SELF` gains it; new `tests/test_canvas_hook.py` |
 
 ## 0. The probe: one real session a tool, recorded, before a line of the reader
 The formats below are read from each tool's sources and docs (25 October), not from a session; each is checked once
@@ -44,6 +47,8 @@ on the owner's machine and kept as a fixture, private paths and texts cut:
    probes so far saw only run_command, write_to_file, view_file, list_dir, read_url_content fire), and its payload
    (`toolCall`, `workspacePaths`, `artifactDirectoryPath`, `transcriptPath`).
 Each finding goes under *As found* below; where a tool says other than this spec, *As found* wins and §1 follows it.
+**Until then**: `tests/fixtures/canvases/` holds one file a tool written by hand from the formats above (its README says
+so, file by file); a recorded session replaces its file and the readers' tests stay as they are, or say what changed.
 
 ## 1. What a canvas is, by tool (A)
 A **canvas** is one thing a tool drew, keyed by `(tool, its URL or its file)`; drawing it again (an update, a new
@@ -123,6 +128,25 @@ a failed call is none; a link of another host is no link; a canvas drawn again i
 *seen* survives a restart; the head (elf, its tier, a design role's own); the hook's stdout is `{}` and its exit 0 on
 a bad payload. The browser tests: the row and its count, the card's words, the three offers, *Seen*; the phone's row.
 The critical tests (CLAUDE.md *Alpha*) and `tests/test_gui_wording.py` pass.
+
+## 7. The contract (the core, built first)
+1. **The store** (`core/canvases.py` `Canvases`): `add(canvas)`, `refresh(agy_sessions)`, `shown()` → (not seen, the last
+   20 seen; newest first), `seen(key)`, `get(key)`, `new_count()`, `rev`; it publishes `canvas.made` and `canvas.seen`.
+   A line of `.orkcraft/canvases.jsonl` is `Canvas.line()`: `{key, tool, kind, title, at, url, file, session, model}`,
+   or `{key, seen}`. The hook (D) writes the first kind of line, nothing else.
+2. **The commands** (`gui/ideas_canvases.py`; the phone may call all but `canvas_open`):
+   - `ideas.canvases {}` → `{canvases: [card], seen: [card]}`; a card is `{key, tool, tool_word (Claude · Codex ·
+     Antigravity), kind, title, at, url (an allowed host's, else ""), host ("claude.ai", …, else ""), link_text (a link of
+     another host, as text), local (a file the preview may show), session, model, idea, idea_title, task, head {craft,
+     race, tier}}`;
+   - `ideas.canvas_seen {key}` → `{ok}`; `ideas.canvas_open {key}` → `{ok}` (the computer's browser; refused from the
+     phone and for a link of another host); `ideas.canvas_file {key}` → `{name, mime, data}` (a picture, base64) or
+     `{name, mime, text}` (a page: HTML or Markdown), refused outside the project, `$CODEX_HOME/generated_images` and
+     agy's brain folder.
+3. **The snapshot** carries `canvases_new` (how many not seen) and `canvases_rev` (one up at each change): a face reads
+   `ideas.canvases` again when the rev moves.
+4. **The readers** (A) fill `read_claude(repo_root)`, `read_codex(repo_root)`, `read_agy(repo_root, sessions)` in
+   `sources/canvases.py`: each returns `Canvas`es and never raises; the host runs them every 30 s off its thread.
 
 ## As found
 (§0's findings, by tool, once recorded.)

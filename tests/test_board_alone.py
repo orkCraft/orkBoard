@@ -78,7 +78,8 @@ def test_the_snapshot_holds_only_what_the_shell_reads(host):
     snap = host.snapshot()
     assert set(snap) == {"focus", "onboarding", "ideas_rev", "ops_rev", "needs_you", "idea_states", "review_count",
                          "review_results", "limits", "reserve", "rate", "hud", "repo", "projects", "update",
-                         "update_policy", "version", "usage_ask"}          # Settings → Updates, the first screen's ask
+                         "update_policy", "version", "usage_ask",          # Settings → Updates, the first screen's ask
+                         "canvases_new", "canvases_rev"}                   # spec 78 §3: the Canvases row
     assert set(snap["reserve"]) == {"share", "night"}                                  # spec 49 §2.3
     assert snap["rate"] is None                                                      # no window learnt yet (decisions §82)
     assert snap["projects"] == host.command("projects.list")                         # the switcher (spec 37 §8)
