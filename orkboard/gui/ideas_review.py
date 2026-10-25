@@ -44,7 +44,7 @@ class ReviewMixin:
                                 "round": int(t.get("round") or 1), "tests": t.get("tests") or _NO_TESTS,
                                 "diff": t.get("diff") or {"files": 0, "added": 0, "removed": 0},
                                 "cost": t.get("cost"), "conflict": t.get("conflict") or "", "look": str(t.get("look") or ""),
-                                "finished": t.get("finished") or "",
+                                "finished": t.get("finished") or "", "shot": self.shot_of(slug, t),
                                 "work": (split.get(t.get("id")) or {}).get("work"),
                                 "rework": (split.get(t.get("id")) or {}).get("rework"),
                                 "estimate": est, "over": idea_spend.over(t.get("cost"), est),

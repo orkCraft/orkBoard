@@ -78,6 +78,7 @@ PICK_ANSWERED = "pick_answered"   # idea, task, key (the variant's letter; null:
 IDEA_FLAGGED = "idea_flagged"   # idea, goal (its party), by ("gate" · "done"), tasks, first_time, usd, days (spec 50 §2.2: a goal raised its flag in main)
 OPENED = "opened"                 # what (idea · plan · todo · task · result · tab · map · recap · flag · week · push · party · gate · today · pick), ref, via (map · board · needs · agents · review · recap · week · flags · push · hand · front · party · today · gate; old lines ""), device
 CANVAS_MADE = "canvas_made"       # tool (claude · codex · agy), kind (design · slides · document · page · picture), task ("" outside a task) (spec 78 §2)
+SHOT_TAKEN = "shot_taken"         # idea, task, ok, why ("" · no preview · no browser · no picture), seconds, round (spec 85 §3: the picture of what a task changed)
 CANVAS_SEEN = "canvas_seen"       # device: a canvas folded into Seen (spec 78 §3)
 LIMITS_READ = "limits_read"       # provider, left, window
 # Round 2 (docs/specs/34-v1-round-2.md §4): goals by dialog, agents by task type.
@@ -183,7 +184,7 @@ EVENTS = (ASKED, ASSUMED, ANSWERED, STOPPED, WAIT_SKIPPED, HELD_AT_WORK, CAMP_LE
           GIT_PUSHED, OP_ADDED, OP_PREPARED, OP_CHECKED, OP_DONE, OP_FAILED, OP_DROPPED, OP_NOT_RIGHT, OP_LEARNED,
           OP_RULES_ANSWERED, OP_TRUST, OP_KEPT, OP_FORGOT, OP_STANDING, PUSH_SET, PUSH_SENT, PARTY_PROPOSED, PARTY_ANSWERED, PARTY_SAVED, PARTY_DROPPED, PARTY_REMOVED, NIGHT_ALLOWED, WEEK_RESET, IDEA_EDITED, PLAN_REVISED, PLAN_CHANGE_ANSWERED,
           PITCH_JUDGED, PITCH_SENT, PITCH_PASSED, PITCH_AGAIN, IDEA_MOVED, RELEASE_MADE, RELEASE_OUT, PARTY_SHOWN, COLLIDE_FOUND, COLLIDE_ANSWERED,
-          PROPOSALS_SHOWN, PROPOSAL_TAKEN, PARTY_RESIZED, CANVAS_MADE, CANVAS_SEEN, SIGN_IN_NEEDED, SIGNED_IN, SIGN_IN_FAILED)
+          PROPOSALS_SHOWN, PROPOSAL_TAKEN, PARTY_RESIZED, CANVAS_MADE, CANVAS_SEEN, SHOT_TAKEN, SIGN_IN_NEEDED, SIGNED_IN, SIGN_IN_FAILED)
 
 _LOCK = threading.Lock()
 

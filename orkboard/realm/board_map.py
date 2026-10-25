@@ -14,7 +14,7 @@ import re
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import (collide, goal_flags, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_checks, idea_flag, idea_pick, idea_questions,
+from orkboard.realm import (collide, goal_flags, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_checks, idea_flag, idea_pick, idea_questions, idea_shots,
                             idea_risk, idea_spend, idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles, tool_errors)
 from orkboard.realm.idea_words import short_of
 
@@ -65,7 +65,8 @@ def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None
     tasks = (plan or {}).get("tasks") or []
     out = []
     if state == "asks":
-        asked = [idea_questions.parse(q) for q in asks[:5]]
+        looks = st.get("asks_look") if isinstance(st.get("asks_look"), int) and not isinstance(st.get("asks_look"), bool) else 0
+        asked = [{**idea_questions.parse(q), "look": n < looks} for n, q in enumerate(asks[:5])]          # the first ones are of the look (spec 85 §1)
         out.append({**base, "kind": "asks", "text": asked[0]["ask"] if asked else "The keeper asks you", "questions": asks[:5],
                     "asked": asked})
     if state == "plan" and plan and not plan.get("passed_at"):            # its `missing`: what no one of the party does, read now (spec 52 §2.6)
@@ -155,6 +156,13 @@ def row(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None, page:
             "in_needs_you": any(n["kind"] in ("asks", "plan", "proposal") for n in mine)}
 
 
+def made_of(task: dict) -> str:
+    """What a merged task made (spec 85 §4): its first commit's subject, cut; "" for a task not merged or one that committed nothing."""
+    subjects = task.get("subjects") if task.get("state") == "merged" and isinstance(task.get("subjects"), list) else []
+    first = next((" ".join(x.split()) for x in subjects if isinstance(x, str) and x.strip()), "")
+    return first if len(first) <= MADE_CHARS else first[:MADE_CHARS - 1].rstrip() + "…"
+
+
 def _by(task: dict, read: tuple[dict, dict]) -> dict:
     """The role a task runs as, `{slug, name}`; a role since dropped reads as Grunt."""
     slug = roles.task_slug(task, read)
@@ -165,15 +173,17 @@ def _by(task: dict, read: tuple[dict, dict]) -> dict:
 def _asked(st: dict, asks: list[str], by_slug: dict, lead: dict | None, target: str) -> list[dict]:
     """An idea's questions with who asks each: the state's `asks_by` (spec 46 §1), else the goal's leader."""
     who = st.get("asks_by") if isinstance(st.get("asks_by"), list) else []
+    looks = st.get("asks_look") if isinstance(st.get("asks_look"), int) and not isinstance(st.get("asks_look"), bool) else 0
     out = []
     for n, q in enumerate(idea_questions.parse(a) for a in asks[:5]):
         r = by_slug.get(who[n]) if n < len(who) and isinstance(who[n], str) else None
         r = r or lead
-        out.append({"ask": q["ask"], "choices": q.get("choices") or [], "pick": q.get("pick"), "why": q.get("why") or "",
+        out.append({"ask": q["ask"], "choices": q.get("choices") or [], "pick": q.get("pick"), "why": q.get("why") or "", "look": n < looks,
                     "by": {"slug": r["slug"], "name": r["name"], "head": roles.head(r, target)} if r else None})
     return out
 
 
+MADE_CHARS = 120                        # what a merged task made, as the Map carries it (spec 85 §4)
 ERROR_CHARS = 300                       # a failed task's error as the Map carries it (spec 49 §2.4)
 BRIEF_CHARS = 140                       # a party's brief (spec 50 §2.4)
 
@@ -372,7 +382,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                     "waits_for": collide.waits_for(state_dir, slug, r["depends_on"], g["slug"], track_of, titles, party_names) if r["depends_on"] else [],
                     "waits": None, "needs_you": next((k for k in NEEDS if any(n["kind"] == k for n in needs)), "")
                     if r["state"] != "done" else "",
-                    "progress": r["progress"],
+                    "progress": r["progress"], "done": r["progress"]["done"], "of": r["progress"]["total"],        # k of n done (spec 85 §4)
                     "stage": pitches.stage_of(r["state"], sum(v["answered"] for v in pitch["views"])) if pitch
                     else map_stage.stage_of(r["state"], tasks, bool((plan or {}).get("passed_at"))), "round": map_stage.round_of(tasks),
                     "usd": idea_spend.of_idea(state_dir, slug)["usd"] if tasks else None,
@@ -383,7 +393,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                                "head": roles.task_head(state_dir, t, target, read, tiers),
                                "by": _by(t, read), "band": "check" if map_stage.is_check(t) else "build", "wave": waves[str(t.get("id"))],
                                "row": rows[str(t.get("id"))],
-                               **_run_of(t), "pick": idea_pick.map_of(t),
+                               **_run_of(t), "pick": idea_pick.map_of(t), "shot": idea_shots.map_of(t), "made": made_of(t),
                                "tag": roles.KIND_LABELS.get(str(t.get("kind") or ""), roles.KIND_LABELS[roles.DEFAULT_KIND])} for t in tasks],
                     "checks": idea_checks.status(idea_checks.kept(list_of_dicts(page.get("checks")) if page else [], checks),
                                                  checks, tasks) if checks else [],

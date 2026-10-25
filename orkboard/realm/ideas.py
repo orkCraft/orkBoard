@@ -530,6 +530,8 @@ STATE_DEFAULT = {"state": "raw", "session": "", "session_at": "", "context": 0, 
                  "queue": "", "held_until": "", "held_for": "", "measure": None, "night_by": "",
                  "element": "",                       # a goal's element (realm/idea_element.py, spec 50 §2.3): given once, never changes
                  "type": "",                          # its type's key "<leader>/<id>" (realm/goal_types.py, spec 52 §2.2): given once by ideas.add
+                 "asks_by": [],                       # who asks each open question of the draft, by role slug ("" the goal's leader): the look's by the design member (spec 85 §1)
+                 "asks_look": 0,                      # how many of those, the first ones, are of the look (spec 85 §1): the faces say *<Name> asks about the look*
                  "changed": [],                       # the plan-making sections written since its plan (realm/idea_change.py, spec 62 §1): never changed in place
                  "from_pitch": ""}                    # the pitch it was sent from (spec 65 §5): its views and decision go to its draft
 

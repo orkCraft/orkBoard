@@ -48,7 +48,7 @@ from orkboard.core.idea_night import NightMixin
 from orkboard.core.idea_lead import LeadMixin
 from orkboard.core.idea_revise import ReviseMixin
 from orkboard.core.idea_plan import _task, _why, estimate, readiness  # noqa: F401  (the plan's small helpers: the callers and tests use them from here)
-from orkboard.realm import (collide, event_log, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_pick, idea_spend, idea_target, ideas,
+from orkboard.realm import (collide, event_log, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_look, idea_pick, idea_spend, idea_target, ideas,
                             releases, roles, status, tool_errors)
 from orkboard.realm.idea_words import short_said
 
@@ -500,6 +500,7 @@ three lines. {self.reads("talk", [])} You may read the repository (read only).
         if party:                                    # the leader does the tags it takes when no builder does
             party = [*party, goal_team.leader_of(root, page.get("track") or ideas.GENERAL)]
         team = self.team_lines([s for s in dict.fromkeys(party) if s != roles.TASKMASTER])
+        team += idea_look.instruction(self.state_dir, root, slug)                   # a screen's look is picked first, a task may name its screen (spec 85 §2, §3)
         checks = idea_checks.plan_lines(self.idea_checks(root, slug), self.team_checks(root, slug))
         return f"""You are the keeper of this project's Task board. This spec goes to work: turn it into a plan. You may
 read the repository (read only) to see what the work touches. {self.reads("plan", touches)}
@@ -536,7 +537,7 @@ Answer with one JSON object and nothing else:
         back = was if was in ("raw", "asks", "ready", "plan", "failed") else "ready"
         try:
             text, *_rest = self.ask("plan", self.plan_prompt(root, slug))
-            data = make_plan(slug, self.parse(text))
+            data = make_plan(slug, self.parse(text), look=idea_look.screen_title(self.state_dir, root, slug))
             data["tasks"] = idea_checks.with_check_tasks(data["tasks"], self.idea_checks(root, slug), self.team_checks(root, slug), _task)
             team = goal_team.for_idea(root, slug)
             if team and (lead := goal_team.leader_of(root, ideas.idea_page(root, slug).get("track") or "")) not in team:
@@ -570,14 +571,15 @@ Answer with one JSON object and nothing else:
         self.on_plan(slug)
 
 
-def make_plan(slug: str, answer: dict | None, made_at: str = "") -> dict:
+def make_plan(slug: str, answer: dict | None, made_at: str = "", look: str = "") -> dict:
     """plan.json from the model's answer, strictly: at most 8 tasks with their ids renamed k1…, `after` only to an
-    earlier task, known tiers and kinds; the estimate from the tiers' default cost, ±50 %."""
+    earlier task, known tiers and kinds; the estimate from the tiers' default cost, ±50 %. `look`: the title of a screen's goal (spec 85 §2):
+    its plan begins with a pick of the screen's look, every other task after it."""
     if not isinstance(answer, dict) or not isinstance(answer.get("tasks"), list):
         raise KeeperError("the keeper's answer was not a plan")
     names: dict[str, str] = {}
     tasks: list[dict] = []
-    for raw in answer["tasks"]:
+    for raw in idea_look.with_pick(answer["tasks"], look, slug, MAX_TASKS) if look else answer["tasks"]:
         if not isinstance(raw, dict) or len(tasks) >= MAX_TASKS:
             continue
         title, brief = _words(raw.get("title"), 200), _words(raw.get("brief"), 6000)
@@ -590,7 +592,8 @@ def make_plan(slug: str, answer: dict | None, made_at: str = "") -> dict:
         kind = raw.get("kind") if raw.get("kind") in roles.TASK_KINDS else roles.DEFAULT_KIND
         pick = idea_pick.clean_ask(raw.get("pick")) if kind not in idea_checks.TAGS else None      # a plan written before has none (spec 51 §2.1)
         tasks.append({**_task(tid, title, brief, kind, tier, list(dict.fromkeys(after))),
-                      "short": short_said(raw.get("short"), title), **({"pick": pick} if pick else {})})
+                      "short": short_said(raw.get("short"), title), **({"pick": pick} if pick else {}),
+                      **({"screen": screen} if (screen := idea_look.clean_screen(raw.get("screen"))) else {})})
     if not tasks:
         raise KeeperError("the plan had no task")
     todos: list[dict] = []

@@ -59,6 +59,8 @@ class PickMixin:
         message = f"{task.get('title') or task.get('id')}: {variant['key']} · {variant['name']}"
         if not target:
             raise RunnerError("The place the plan names for it is not one a file can be written to")
+        if pick.get("look"):                                               # a screen's look (spec 85 §2): the picked file keeps its own extension
+            target = f"{target}.{idea_pick.EXT[variant['mime']]}"
         try:
             path = self.git.reopen(slug, str(task.get("id")))
             dest, root = path / target, os.path.realpath(path)

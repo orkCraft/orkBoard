@@ -18,8 +18,8 @@ import json
 import time
 from pathlib import Path
 
-from orkboard.realm import (event_log, goal_team, goal_types, idea_checks, idea_lens, idea_questions, idea_risk, idea_target,
-                            ideas, pitches, releases, roles)
+from orkboard.realm import (event_log, goal_team, goal_types, idea_checks, idea_lens, idea_look, idea_photos, idea_questions, idea_risk,
+                            idea_target, ideas, pitches, releases, roles)
 from orkboard.realm.idea_words import short_said
 
 OTHERS = 40                        # of the other goals' ideas not done, the most the draft is given
@@ -149,10 +149,14 @@ class DraftMixin:
                                    ("The goal's other ideas", "\n".join(mine)),
                                    ("The other goals' open ideas", "\n".join(others))], idea_target.CONTEXT["draft"])
         why = "which of its goal's metrics it moves, and why it matters" if metrics else "why it matters"
+        seen = idea_look.visual(self.state_dir, root, slug)                                  # a goal that changes what people see is asked of its look (spec 85 §1)
+        asker = idea_look.asker(self.state_dir, root, slug)
+        look = idea_look.draft_lines(seen, (roles.role(self.state_dir, asker) or {}).get("name", "") if asker else "")
+        look_json = ',\n "look": [{"ask": "…", "choices": ["…"], "pick": 0, "why": "…"}]' if seen else ""
         return f"""You are the keeper of this project's Task board. A person wrote an idea under the goal
 {(g or {}).get('title', track)}: write its spec straight away. You may read the repository (read only).
 {self.reads("draft", links)}
-{idea_lens.attached(self.state_dir, slug)}{goal_types.prompt_line(self.state_dir, slug)}{releases.prompt_lines(root, self.state_dir, slug)}{idea_checks.draft_lines(checks)}{pitches.sent_lines(root, self.state_dir, slug)}
+{idea_lens.attached(self.state_dir, slug)}{goal_types.prompt_line(self.state_dir, slug)}{releases.prompt_lines(root, self.state_dir, slug)}{idea_checks.draft_lines(checks)}{pitches.sent_lines(root, self.state_dir, slug)}{look}
 {context}Answer with one JSON object and nothing else:
 {{"title": "a short title",
  "short": "its name in two or three words, 24 characters at most",
@@ -167,7 +171,7 @@ class DraftMixin:
  "depends_on": ["the slugs of listed ideas, of any goal, that must be done first"],
  "size": "S, M or L",
  "before": "the slug of the goal's idea this one should stand before, or empty",
- "questions": [{{"ask": "zero to three questions the person must answer before it can be planned, all at once: only what changes the plan, never what the repository, the goal or the person's text already answers", "choices": ["two to four likely answers, each at most 40 characters"], "pick": "the index of the one you recommend", "why": "one line: why that one"}}]{checks_json}}}
+ "questions": [{{"ask": "zero to three questions the person must answer before it can be planned, all at once: only what changes the plan, never what the repository, the goal or the person's text already answers", "choices": ["two to four likely answers, each at most 40 characters"], "pick": "the index of the one you recommend", "why": "one line: why that one"}}]{look_json}{checks_json}}}
 """
 
     def draft_one(self, slug: str) -> None:
@@ -258,6 +262,7 @@ class DraftMixin:
         parts = [("The questions and the person's answers", "\n".join(f"- {q}\n  {a or '(no answer: decide)'}" for q, a in pairs))]
         parts += [(n, page.section(n)) for n in names]
         context = idea_target.cut(parts, idea_target.CONTEXT["answer"])
+        context = idea_photos.prompt_lines(self.state_dir, slug) + context              # pictures the person gave with an answer (spec 85 §1)
         touches = _json_list(page.get("touches"))
         return f"""You are the keeper of this project's Task board. The person answered the questions of the spec
 {page.title}. Write the rest of the spec from their answers. Ask nothing more: where you are unsure, decide, and say what
@@ -290,7 +295,7 @@ Section names: {", ".join(names)}."""
         decisions += [f"Assumed: {x}" for x in kw._strings(answer.get("assumed"), 10)]
         ideas.update(root, slug, written, decisions)
         self.assess(slug)
-        ideas.save_state(self.state_dir, slug, state="ready", error="", measure=self.measure())
+        ideas.save_state(self.state_dir, slug, state="ready", error="", asks_by=[], asks_look=0, measure=self.measure())
         how = idea_questions.tally([q for q, _a in pairs], [a for _q, a in pairs])
         self._ev(event_log.IDEA_ANSWERED, idea=slug, answers=sum(1 for _q, a in pairs if a), decided=decided,
                  **({"picked": 0, "recommended": 0, "typed": 0} if decided else how), **self.measure())
@@ -328,7 +333,9 @@ Section names: {", ".join(names)}."""
         depends = depends_ok(root, slug, ss(answer.get("depends_on"), MAX_DEPENDS, 60))
         titles = {i["slug"]: i["title"] for i in ideas.ideas(root)}
         sections["Depends on"] = kw._bullets([f"{d} — {titles.get(d, d)}" for d in depends])
-        questions = [idea_questions.line(q) for q in idea_questions.all_of(answer.get("questions"), kw.MAX_QUESTIONS)]
+        seen = idea_look.visual(self.state_dir, root, slug)                                  # the look's questions first, in all at most MAX_QUESTIONS (spec 85 §1)
+        questions, by, looks = idea_look.questions(answer, kw.MAX_QUESTIONS, seen, idea_look.asker(self.state_dir, root, slug) if seen else "")
+        ideas.save_state(self.state_dir, slug, asks_by=by, asks_look=looks)
         sections["Open questions"] = kw._bullets(questions)
         ideas.update(root, slug, sections)
         meta: dict[str, str] = {"risk_model": idea_risk.level(answer.get("risk")),
