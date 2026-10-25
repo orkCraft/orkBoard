@@ -323,8 +323,6 @@
 .shell-ptab__x:hover, .shell-ptab__keep:hover, .shell-drawer__x:hover { color: var(--ork-ink); background: var(--ork-raised); }
 .shell-drawer__x { display: inline-flex; align-items: center; justify-content: center; width: 32px; padding: 0; }
 .shell-preview__body.is-pane { padding: 0; overflow: hidden; }
-.shell-top .board-target { position: relative; }
-.shell-top .board-target__menu { right: auto; min-width: 300px; z-index: 50; }
 
 /* decisions §53: who does a task, as orkUI draws it: the head of the craft's race in its tier's gear, its words beside it */
 .shell-role__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-1) var(--ork-4); }       /* a role in one line (spec 41 §8) */
@@ -457,3 +455,32 @@
 .shell-pitch__edit { display: flex; flex-direction: column; gap: var(--ork-3); }
 .shell-pitch__pass input { flex: 1; min-width: 200px; }
 .shell-band-fixed { margin: var(--ork-2) 0 0; }
+
+/* -- The Orkmaster's proposals (proposals.js, docs/specs/75-parties-fitted-to-the-project.md §5): a card per proposal, its size a three-way switch of orkUI's buttons ----------------------- */
+.ork-switch { display: inline-flex; align-self: flex-start; gap: var(--ork-2); }
+.ork-switch .ork-btn { flex-direction: column; align-items: center; justify-content: center; gap: 0; height: auto; min-height: var(--ork-control); padding-top: var(--ork-2); padding-bottom: var(--ork-2); }
+.ork-switch .ork-btn[aria-checked="true"] { --_bg: var(--ork-ink); --_fg: var(--ork-on-ink); --_bd: var(--ork-ink); --_ring: var(--ork-on-ink); }
+.ork-switch__sub { font: var(--ork-type-caption); text-transform: none; letter-spacing: normal; white-space: nowrap; }
+.shell-props { display: flex; flex-direction: column; gap: var(--ork-5); }
+.shell-props__head { display: flex; align-items: center; gap: var(--ork-4); }
+.shell-props__who { display: flex; flex-direction: column; gap: var(--ork-1); min-width: 0; }
+.shell-props__title { margin: 0; font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); }
+.shell-props__title span { font: var(--ork-type-body); text-transform: none; }
+.shell-props__kind, .shell-props__unread { margin: 0; }
+.shell-props__ask { display: flex; align-items: flex-end; gap: var(--ork-4); }
+.shell-props__ask .shell-field { flex: 1; min-width: 0; }
+.shell-props__cards { display: flex; flex-direction: column; gap: var(--ork-4); }
+.shell-props__more { display: flex; }
+.shell-prop { display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4) var(--ork-5); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); }
+.shell-prop.is-asked { background: var(--ork-raised); box-shadow: inset 0 -2px 0 var(--ork-ink); }
+.shell-prop.is-have { border-color: var(--ork-frame); }
+.shell-prop.is-have .shell-prop__name, .shell-prop.is-have .shell-prop__line { color: var(--ork-ink-muted); }
+.shell-prop__top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--ork-4); }
+.shell-prop__name { margin: 0; font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); }
+.shell-prop__line, .shell-prop__why { margin: 0; }
+.shell-prop__foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2) var(--ork-4); }
+.shell-prop__heads { display: inline-flex; flex-wrap: wrap; gap: var(--ork-2); }
+.shell-prop__agents, .shell-prop__price { color: var(--ork-ink-muted); font-variant-numeric: tabular-nums; }
+.shell-prop__make { margin-left: auto; }
+.shell-size__works { display: block; }
+.shell-size .ork-switch { margin-bottom: var(--ork-2); }

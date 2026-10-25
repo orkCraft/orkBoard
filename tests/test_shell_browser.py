@@ -1007,21 +1007,20 @@ def test_edit_the_party_changes_its_members_and_sends_them_only_when_changed(she
     assert (got["leader"], got["team"], got["every"]) == ("product-manager", ["grunt", "reviewer", "tester"], ["reviewer"])
 
 
-def test_the_target_chip_shows_and_sets_the_boards_one_target(shell):
+def test_the_target_is_in_settings_not_the_top_bar_and_sets_the_boards_one_target(shell):
+    """Spec 75 §5.5: the Target left the top bar (a party's size is its Target); Settings keeps it as what a party with no size of its own works as."""
     pg, host = shell
-    chip = pg.get_by_role("button", name="Target: Balance")
-    assert chip.is_visible()
-    chip.click()
-    menu = pg.get_by_role("menu", name="Target")
-    assert menu.get_by_role("menuitemradio").count() == 3
-    assert "lighter models, less reasoning, no proposals at night" in menu.inner_text()
-    assert "heavier models, more reasoning, three proposals a night" in menu.inner_text()
-    assert menu.get_by_role("menuitemradio", name="Balance").get_attribute("aria-checked") == "true"
-    menu.get_by_role("menuitemradio", name="Thrift").click()
-    pg.get_by_role("button", name="Target: Thrift").wait_for(timeout=WAIT_MS)
-    assert _sent(pg, host, ("ideas.board_set", {"target": "thrift"})) and pg.get_by_role("menu").count() == 0
+    assert pg.get_by_role("button", name="Target: Balance").count() == 0 and "Target" not in pg.locator(".shell-top").inner_text()
+    pg.get_by_role("button", name="Settings").click()
+    field = pg.get_by_role("dialog", name="Settings").get_by_role("group", name="A party with no size of its own works as")
+    assert field.get_by_role("radio").count() == 3
+    assert "the default: each step on the tier it needs" in field.inner_text()
+    assert field.get_by_role("radio", name="Balance").get_attribute("aria-checked") == "true"
+    field.get_by_role("radio", name="Thrift").click()
+    pg.wait_for_function("() => document.querySelector('[data-settings=target] [data-value=thrift]')?.getAttribute('aria-checked') === 'true'", timeout=WAIT_MS)
+    assert _sent(pg, host, ("ideas.board_set", {"target": "thrift"}))
+    assert "lighter models, less reasoning, no proposals at night" in field.inner_text()
     if os.environ.get("ORKCRAFT_SHOTS"):
-        pg.get_by_role("button", name="Target: Thrift").click()
         pg.screenshot(path=str(SHOTS / "desktop-board-target-1440x900.png"))
 
 

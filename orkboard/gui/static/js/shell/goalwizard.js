@@ -5,16 +5,18 @@
 // `priority`. A task goes to the one of the party who does its kind of work; a checker's check adds its line to a goal's Done when and its task to the plan
 // (realm/idea_checks.py). The code's goal is a party. At the press of *Save party* the boxes of the seats' heads are kept: once the party is saved and shown, the heads gather into its deck
 // (docs/specs/63-party-gathered.md §3, arena/goaltabs.js).
+// With the Orkmaster's reading of the project (`ideas.map` `project.kind`, spec 75) New party opens on its proposals (proposals.js); *More: the library* opens this screen, with the party's size
+// (Lean · Standard · Full, its Target) added. A host without the reading keeps this screen as it was.
 import { useState } from "preact/hooks";
 import { html } from "../html.js";
-import { say, toast } from "../link.js";
-import { track } from "../board/store.js";
-import { act, mapData, roles, showGoal } from "./store.js";
-import { Modal, closeDialog, openDialog } from "./modals.js";
+import { say } from "../link.js";
+import { Switch } from "../orkui.js";
+import { act, mapData, roles } from "./store.js";
+import { Modal, closeDialog } from "./modals.js";
 import { PRIORITIES } from "./goaldialog.js";
 import { ReleasesFrom, useReleasesFrom } from "./release.js";
-import { gatherWaits } from "../arena/arenastate.js";
 import { reducedMotion } from "../arena/motion.js";
+import { Proposals, SIZES, WorksAs, proposalsOn, savedParty } from "./proposals.js";
 import { TASKMASTER, raceOfAgent, PartyBands, PriceLine, CanTake, ChecksBlock, OwnParties, LibraryTiles, agentOf, inBand, partyWords, overfull, pitchParty, presetsOf, usePartyPrice, useOwnParties } from "./party.js";
 
 export const FOR_HINT = "goes first when the window is short";
@@ -31,7 +33,7 @@ function seatHeads(leader, team) {
   return heads.map((a, i) => seats[i] && { race: raceOfAgent(a), tier: a.tier, box: boxOf(seen(seats[i]) ? seats[i] : atSave(seats[i])) }).filter(Boolean);
 }
 
-export function GoalWizard({ then = "", preset: first = "" }) {
+export function GoalWizard({ then = "", preset: first = "", proposal = "" }) {
   const from = first ? presetsOf().find((p) => p.id === first) : null;    // opened with a party of the library (a pitch sent to one the project lacks, spec 65 §5)
   const start = from ? { lead: from.lead, build: from.build, check: from.check } : roles.value?.parties?.engineering || { lead: TASKMASTER, build: [], check: [] };
   const [title, setTitle] = useState(from?.name || "");
@@ -44,8 +46,13 @@ export function GoalWizard({ then = "", preset: first = "" }) {
   const [team, setTeam] = useState([...(start.build || []), ...(start.check || [])]);
   const [every, setEvery] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [size, setSize] = useState("standard");              // its size, its Target (spec 75 §5.1): asked only of a host that reads the project
+  const sized = proposalsOn();
+  const proposed = sized && !first;                         // the Orkmaster's proposals first, unless a party of the library was asked for
+  const [more, setMore] = useState(false);
+  const showLibrary = !proposed || more;
   const [partyId, setPartyId] = useState("");              // the saved party of the person's whose seats these are, until a seat changes
-  const [owns, loadOwns] = useOwnParties(true);
+  const [owns, loadOwns] = useOwnParties(showLibrary);
   const seat = (set) => (v) => { set(v); setPartyId(""); setPreset(""); setLit(""); };      // a seat changed afterwards: the party is then the person's own picking
   const pickOwn = (p) => {
     if (p.craft) setCraft(p.craft);
@@ -58,7 +65,7 @@ export function GoalWizard({ then = "", preset: first = "" }) {
   };
   const fromLibrary = (p) => { setCraft(p.craft === "mixed" ? "" : p.craft); setPreset(p.id); setLit(p.id); setPartyId(""); setLeader(p.lead || TASKMASTER); setTeam([...(p.build || []), ...(p.check || [])]); setEvery([]); };
   const rf = useReleasesFrom({ leads: leader === "release-manager" });             // the Release party takes its goals from the others (spec 68 §7.6): every party but Ideation, ticked
-  const price = usePartyPrice(true, leader, team, every, craft);
+  const price = usePartyPrice(showLibrary, leader, team, every, craft, sized ? size : "");
   const fits = overfull(leader, team).length === 0;      // a leader with fewer seats than the party fills: it is saved once it fits (spec 59 §6.2)
   const ready = (title.trim() || about.trim()) && !saving && fits;
   const save = async (e) => {
@@ -67,16 +74,11 @@ export function GoalWizard({ then = "", preset: first = "" }) {
     const heads = then === "idea" || reducedMotion() || document.hidden ? [] : seatHeads(leader, team);       // the heads' boxes at the press: the dialog is gone when they travel
     setSaving(true);
     const got = await act("ideas.goal_save", { ...(title.trim() ? { title: title.trim() } : {}), about: about.trim(), leader, team, every: every.filter((id) => team.includes(id)), priority,
-      ...(partyId ? { party: partyId } : {}), ...(preset && !partyId ? { preset } : {}), ...(rf.value() ? { releases_from: rf.value() } : {}) });
+      ...(partyId ? { party: partyId } : {}), ...(preset && !partyId ? { preset } : {}), ...(rf.value() ? { releases_from: rf.value() } : {}), ...(sized ? { size } : {}) });
     setSaving(false);
-    if (!got?.slug) return;
-    for (const note of got.notes || []) toast(note);       // an agent of the project's own that the party carries stays as it was
-    if (heads.length) gatherWaits(got.slug, heads);        // the heads gather into the party's deck once it is shown (arena/goaltabs.js)
-    closeDialog();
-    track.value = got.slug;
-    if (then === "idea") openDialog("idea", { goal: got.slug });
-    else showGoal(got.slug);
+    if (got?.slug) savedParty(got, heads, then);
   };
+  if (proposed && !more) return html`<${Proposals} then=${then} pick=${proposal} onMore=${() => setMore(true)} />`;
   return html`<${Modal} title="New party" onClose=${closeDialog} wide=${true}
     foot=${html`<button type="button" class="ork-btn" onClick=${closeDialog}>Cancel</button>
       <button type="submit" form="goal-form" class="ork-btn primary" disabled=${!ready}>Save party</button>`}>
@@ -90,6 +92,8 @@ export function GoalWizard({ then = "", preset: first = "" }) {
         <${LibraryTiles} picked=${partyId ? "" : lit} onPick=${fromLibrary} deal=${mapData.value?.project?.deal} />
         <${OwnParties} parties=${owns} onPick=${pickOwn} reload=${loadOwns} picked=${partyId} />
         <${PartyBands} craft=${craft} leader=${leader} setLeader=${seat(setLeader)} team=${team} setTeam=${seat(setTeam)} />
+        ${sized && html`<div class="shell-field shell-size" role="group" aria-label="Its size"><span class="ok-font-label">Its size</span>
+          <${Switch} label="Size" options=${SIZES} value=${size} onPick=${setSize} /><${WorksAs} size=${size} /></div>`}
         <${PriceLine} price=${price} />
         <${CanTake} price=${price} />
         <p class="ok-tone-muted shell-party-line">${partyWords(leader, team)}</p></div>

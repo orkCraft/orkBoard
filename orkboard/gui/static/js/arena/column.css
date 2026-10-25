@@ -57,3 +57,8 @@
 .arena-flagrow:hover, .arena-flagrow:focus-visible { background: var(--ork-raised); outline: 0; }
 .arena-flagrow__t { color: var(--ork-ink); }
 .arena-flagrow__flag { color: var(--ork-success); display: inline-flex; }
+
+/* the Orkmaster's deal of a proposal (projectdeal.js, spec 75 §5.3): its why and Standard's price a goal at the card's foot */
+.arena-type__foot { margin-top: auto; display: flex; flex-direction: column; gap: var(--ork-1); }
+.arena-type__foot .arena-type__why { margin-top: 0; }
+.arena-type__price { font: var(--ork-type-caption); font-variant-numeric: tabular-nums; color: var(--ork-ink-muted); }
