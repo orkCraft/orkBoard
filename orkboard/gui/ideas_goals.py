@@ -13,7 +13,8 @@ from typing import Any
 from orkboard.core import idea_keeper
 from orkboard.gui.ideas_args import IdeasError, _device, _opt, _text
 from orkboard.hooks.warder import is_secret
-from orkboard.realm import event_log, goal_team, goal_verdict, idea_questions, idea_words, ideas, library, own_parties, party_proposals, roles
+from orkboard.realm import (event_log, goal_team, goal_types, goal_verdict, idea_questions, idea_target, idea_words, ideas, library, own_parties,
+                            party_proposals, party_recipes, project_kind, roles)
 
 
 DOC_CHARS = 100_000
@@ -38,7 +39,7 @@ class GoalsMixin:
         st = self.goal_state(g["slug"])
         lead = roles.role(self.state_dir, g.get("leader") or roles.TASKMASTER) or roles.role(self.state_dir, roles.TASKMASTER)
         return {**g, "race": roles.RACES[g["craft"]], "state": st["state"], "state_error": st["error"], "ideas": g["count"],
-                "leader": {"slug": lead["slug"], "name": lead["name"], "head": roles.head(lead, self._target())},
+                "leader": {"slug": lead["slug"], "name": lead["name"], "head": roles.head(lead, idea_target.target_for(self.board_settings(), g))},
                 "party": goal_team.party_of(self.root(False), g["slug"]),
                 "verdict": goal_verdict.read(self.state_dir, g["slug"])}
 
@@ -120,6 +121,7 @@ class GoalsMixin:
             raise IdeasError(f"No agent {leader!r}")
         if why := goal_team.seats(team or [], leader or ""):
             raise IdeasError(why)
+        size = self._size_asked(args, slug, team)
         got, new = ideas.save_goal(self.root(), slug, title[:ideas.TITLE_CHARS],
                                    about[:ideas.SECTION_CHARS] if about is not None else None, metrics,
                                    _opt(args, "priority") or (None if slug else "normal"), links, deadline,
@@ -135,6 +137,8 @@ class GoalsMixin:
             own_parties.used(party, own_parties.project_key(self.host.repo_root), Path(self.host.repo_root).name, got)
         if leader:
             library.install(self.state_dir, [leader])
+        if size:
+            self._size_kept(args, got, size, before)
         if "releases_from" in args:                          # a Release party's sources (spec 68 §3.2)
             self.save_releases_from(got, args["releases_from"])
         g = next(t for t in ideas.tracks(self.root(), make=False) if t["slug"] == got)
@@ -145,6 +149,32 @@ class GoalsMixin:
             self._read_goal(got)                      # a save of its party alone reads nothing again (spec 41 §7)
         self.changed(f"goal:{got}")
         return {"slug": got, **({"notes": notes} if notes else {})}
+
+    def _size_asked(self, args: dict, slug: str | None, team: list[str] | None) -> str:
+        """`size` of `ideas.goal_save` (spec 75 §3.1): lean · standard · full, "" when none was sent. A team that lets a member with work open
+        go with the size is refused (spec 52's swap holds): *<name> has work open: it cannot leave*."""
+        size = args.get("size")
+        if size is None:
+            return ""
+        if size not in goal_team.SIZES:
+            raise IdeasError("A size is lean, standard or full")
+        if slug and team is not None:
+            left = [s for s in goal_team.team_of(self.root(), slug) if s not in team]
+            if left and (busy := [s for s in left if s in goal_types.Party(self.state_dir, self.root(), slug).busy()]):
+                r = roles.role(self.state_dir, busy[0])
+                raise IdeasError(f"{(r or {}).get('name') or busy[0]} has work open: it cannot leave")
+        return size
+
+    def _size_kept(self, args: dict, got: str, size: str, before: dict | None) -> None:
+        """The party's size kept, with `party_resized` when a party that was there changed it, and `proposal_taken` when it was made from one
+        of the Orkmaster's (`proposal`: the recipe's id, or a recipe's `preset`)."""
+        goal_team.set_size(self.root(), got, size)
+        was = (before or {}).get("size") or ""
+        if before is not None and was != size:
+            self._ev(event_log.PARTY_RESIZED, args, party=got, **{"from": was, "to": size})
+        recipe = _opt(args, "proposal") or _opt(args, "preset")
+        if before is None and party_recipes.get(recipe) is not None:
+            self._ev(event_log.PROPOSAL_TAKEN, args, kind=party_recipes.kind_of(recipe, project_kind.read(self.host.repo_root)["kind"]), recipe=recipe, size=size)
 
     @staticmethod
     def _preset_kept(args: dict, g: dict) -> str:

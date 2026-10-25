@@ -118,3 +118,14 @@ def test_the_reserve_by_day_and_at_night_and_none_without_limits():
     assert idea_target.reserve_held(rows(0.25), s, night) is None                             # night: 0.25 > 0.10
     assert idea_target.reserve_held(rows(0.08), s, night) is not None
     assert idea_target.reserve_held([], s, noon) is None
+
+
+def test_a_partys_size_is_its_target_and_the_kind_step_is_the_cheaper_tier_of_the_judge():
+    """Spec 75 §3, §4.2: `target_for` (a size's Target, else the setting's); the Orkmaster's `kind` step runs as its `collide` judge does."""
+    assert idea_target.SIZES == ("lean", "standard", "full") and idea_target.SIZE_TARGET == {"lean": "thrift", "standard": "balance", "full": "quality"}
+    assert [idea_target.target_for({"target": "thrift"}, {"size": s}) for s in idea_target.SIZES] == ["thrift", "balance", "quality"]
+    assert idea_target.target_for({"target": "quality"}, {"size": ""}) == idea_target.target_for({"target": "quality"}, None) == "quality"
+    assert idea_target.target_for({}, {"size": "huge"}) == idea_target.DEFAULT
+    assert idea_target.pick("kind", "balance") == idea_target.pick("collide", "balance") == ("warrior", "low")
+    assert idea_target.pick("kind", "thrift") == ("laborer", "") and "kind" in idea_target.STEPS
+    assert set(idea_target.MATRIX) >= set(idea_target.STEPS) and idea_target.budget("kind", "balance") == 0.03 and idea_target.CONTEXT["kind"] == 1_500

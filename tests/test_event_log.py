@@ -135,3 +135,15 @@ def test_spec_67_events_are_the_goals_move_a_release_made_and_out_and_a_party_sw
     assert (moved["from"], moved["to"], moved["goal"]) == ("app", "web", "dark-mode") and (made["goals"], made["parties"]) == (3, 2)
     assert (out["days"], out["goals"]) == (4, 3) and (shown["from"], shown["to"], shown["face"]) == ("app", "web", "phone")
     assert event_log.counts(tmp_path)["party_shown"] == 1 and event_log.counts(tmp_path)["release_out"] == 1
+
+
+def test_the_orkmasters_proposals_are_events_that_hold_a_kind_and_a_recipe_never_a_line(tmp_path):
+    """Spec 75 §4.4."""
+    for name, value in (("PROPOSALS_SHOWN", "proposals_shown"), ("PROPOSAL_TAKEN", "proposal_taken"), ("PARTY_RESIZED", "party_resized")):
+        assert getattr(event_log, name) == value and value in event_log.EVENTS
+    event_log.record(tmp_path, event_log.PROPOSALS_SHOWN, kind="wiki", n=2, ask=False, read=True, device="phone")
+    event_log.record(tmp_path, event_log.PROPOSAL_TAKEN, kind="mobile", recipe="mobile-features", size="standard", device="desktop")
+    event_log.record(tmp_path, event_log.PARTY_RESIZED, party="web", device="desktop", **{"from": "standard", "to": "full"})
+    rows = event_log.read(tmp_path)
+    assert [r["event"] for r in rows] == ["proposals_shown", "proposal_taken", "party_resized"]
+    assert rows[0]["kind"] == "wiki" and rows[1]["recipe"] == "mobile-features" and (rows[2]["from"], rows[2]["to"]) == ("standard", "full")

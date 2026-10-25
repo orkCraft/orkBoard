@@ -152,3 +152,15 @@ def test_a_collision_is_the_word_of_spec_71():
     assert lexicon.term("collide") == "collision" and lexicon.term("collide", many=True) == "collisions"
     line = next(l for l in Path(lexicon.__file__).read_text(encoding="utf-8").splitlines() if l.lstrip().startswith('_t("collide"'))
     assert "spec 71" in line and "same thing" in line
+
+
+def test_a_partys_size_and_what_the_project_is_are_the_words_of_spec_75():
+    """Spec 75 §0: a party's Lean, Standard or Full (its Target), and the kind of project the Orkmaster reads."""
+    from pathlib import Path
+    assert (lexicon.term("party_size"), lexicon.term("party_size", many=True)) == ("size", "sizes") and lexicon.term("project_kind") == "what the project is"
+    rows = {key: (word, was) for key, word, was in lexicon.glossary()}
+    assert rows["party_size"][1] == "" and rows["project_kind"][1] == ""
+    lines = {k: next(l for l in Path(lexicon.__file__).read_text(encoding="utf-8").splitlines() if l.lstrip().startswith(f'_t("{k}"'))
+             for k in ("party_size", "project_kind")}
+    assert all("spec 75" in line for line in lines.values())
+    assert lexicon.words("Its size: Lean, Standard or Full") == "Its size: Lean, Standard or Full"

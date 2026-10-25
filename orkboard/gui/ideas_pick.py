@@ -55,7 +55,7 @@ class PickMixin:
         waiting = [t for t in (plan or {}).get("tasks") or [] if isinstance(t, dict) and t.get("state") == "picking"]
         if not waiting:
             return out
-        read, target = roles.known(self.state_dir), self._target()
+        read, target = roles.known(self.state_dir), self.target_of_idea(slug)
         for t in waiting:
             pick = idea_pick.current(self.state_dir, slug, t)
             if pick is None or idea_pick.answered(pick):

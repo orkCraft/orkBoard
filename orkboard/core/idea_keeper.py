@@ -145,7 +145,9 @@ class IdeaKeeper(DraftMixin, GoalMixin, NightMixin, LeadMixin, ReviseMixin, Judg
         return got
 
     def target(self) -> str:
-        return idea_target.target_of(self.settings())
+        """The Target the running step works at: its goal's party's size, else the setting (spec 75 §3); a step of no goal's, the setting."""
+        goal = self.goal_of_key(getattr(self._tls, "key", "") or getattr(self._tls, "slug", "") or "")
+        return idea_target.target_for(self.settings(), ideas.track_page(self.wiki_root(), goal) if goal else None)
 
     def pick(self, step: str) -> tuple[str, str] | None:
         """The (model or tier, effort) a keeper step runs on: by the Target, its goal's leader's own model (else the
@@ -190,7 +192,7 @@ class IdeaKeeper(DraftMixin, GoalMixin, NightMixin, LeadMixin, ReviseMixin, Judg
         from orkboard.realm import harnesses
         h, tier = harnesses.get(HARNESS), idea_target.tier_of(got[0])
         key = getattr(self._tls, "key", "") or getattr(self._tls, "slug", "") or ""
-        where = {} if step == "propose" else ({"goal": key[5:]} if key.startswith("goal:") else {"idea": key})
+        where = {} if step in ("propose", "kind") else ({"goal": key[5:]} if key.startswith("goal:") else {"idea": key})
         idea_spend.append(self.state_dir, idea_spend.line(step, getattr(self._tls, "as_role", "") or roles.TASKMASTER, HARNESS, (h.pick(got[0]) if h else "") or got[0],
                                                           tier, got[1], idea_spend.tokens_of(usage, tokens), cost), **where)
 
