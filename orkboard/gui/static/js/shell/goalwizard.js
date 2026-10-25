@@ -17,6 +17,7 @@ import { PRIORITIES } from "./goaldialog.js";
 import { ReleasesFrom, useReleasesFrom } from "./release.js";
 import { reducedMotion } from "../arena/motion.js";
 import { Proposals, SIZES, WorksAs, proposalsOn, savedParty } from "./proposals.js";
+import { ToolPick, runsOwn, useTools } from "./toolpick.js";
 import { TASKMASTER, raceOfAgent, PartyBands, PriceLine, CanTake, ChecksBlock, OwnParties, LibraryTiles, agentOf, inBand, partyWords, overfull, pitchParty, presetsOf, usePartyPrice, useOwnParties } from "./party.js";
 
 export const FOR_HINT = "goes first when the window is short";
@@ -48,6 +49,8 @@ export function GoalWizard({ then = "", preset: first = "", proposal = "" }) {
   const [saving, setSaving] = useState(false);
   const [size, setSize] = useState("standard");              // its size, its Target (spec 75 §5.1): asked only of a host that reads the project
   const sized = proposalsOn();
+  const [tool, setTool] = useState("");                    // its AI tool ("" the Main tool, spec 81 §4)
+  const tools = useTools();
   const proposed = sized && !first;                         // the Orkmaster's proposals first, unless a party of the library was asked for
   const [more, setMore] = useState(false);
   const showLibrary = !proposed || more;
@@ -74,7 +77,7 @@ export function GoalWizard({ then = "", preset: first = "", proposal = "" }) {
     const heads = then === "idea" || reducedMotion() || document.hidden ? [] : seatHeads(leader, team);       // the heads' boxes at the press: the dialog is gone when they travel
     setSaving(true);
     const got = await act("ideas.goal_save", { ...(title.trim() ? { title: title.trim() } : {}), about: about.trim(), leader, team, every: every.filter((id) => team.includes(id)), priority,
-      ...(partyId ? { party: partyId } : {}), ...(preset && !partyId ? { preset } : {}), ...(rf.value() ? { releases_from: rf.value() } : {}), ...(sized ? { size } : {}) });
+      ...(partyId ? { party: partyId } : {}), ...(preset && !partyId ? { preset } : {}), ...(rf.value() ? { releases_from: rf.value() } : {}), ...(sized ? { size } : {}), ...(sized && tool ? { tool } : {}) });
     setSaving(false);
     if (got?.slug) savedParty(got, heads, then);
   };
@@ -94,8 +97,9 @@ export function GoalWizard({ then = "", preset: first = "", proposal = "" }) {
         <${PartyBands} craft=${craft} leader=${leader} setLeader=${seat(setLeader)} team=${team} setTeam=${seat(setTeam)} />
         ${sized && html`<div class="shell-field shell-size" role="group" aria-label="Its size"><span class="ok-font-label">Its size</span>
           <${Switch} label="Size" options=${SIZES} value=${size} onPick=${setSize} /><${WorksAs} size=${size} /></div>`}
-        <${PriceLine} price=${price} />
-        <${CanTake} price=${price} />
+        ${sized && html`<${ToolPick} tools=${tools} value=${tool} onChange=${setTool} />`}
+        ${sized && runsOwn(tools, tool) ? html`<p class="ok-tone-muted shell-tool__own">Runs its own model: its price is its own.</p>`
+          : html`<${PriceLine} price=${price} /><${CanTake} price=${price} />`}
         <p class="ok-tone-muted shell-party-line">${partyWords(leader, team)}</p></div>
       <${ReleasesFrom} rf=${rf} />
       ${!pitchParty(leader) && html`<${ChecksBlock} team=${team} every=${every} setEvery=${seat(setEvery)} price=${price} />`}

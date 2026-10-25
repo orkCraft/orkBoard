@@ -89,16 +89,23 @@ class ProjectMixin:
 
     def party_sizes(self, args: dict) -> dict:
         """`{slug}`: what each size would make of the party, to show before the press: `{"size", "sizes": {lean|standard|full: {recipe, team, tiers,
-        joins, leaves}}}`, `joins` and `leaves` as `{slug, name}` (the agents that come and go; none for a party of the library with no recipe)."""
+        joins, leaves}}}`, `joins` and `leaves` as `{slug, name, head: {race, tier}}` (the agents that come and go, their heads at the tier the size gives
+        them; none for a party of the library with no recipe)."""
         slug = _text(args, "slug", 100)
         root = self.root(False)
         if ideas.track_page(root, slug) is None:
             raise IdeasError("That party is gone")
 
-        def said(ids: list[str]) -> list[dict]:
-            return [{"slug": a, "name": (library.get(a).name if library.get(a) is not None else a)} for a in ids]
+        def said(ids: list[str], tiers: dict[str, str]) -> list[dict]:
+            out = []
+            for s in ids:
+                a = library.get(s)
+                out.append({"slug": s, "name": a.name if a is not None else s,
+                            "head": {"race": library.race_of(a) if a is not None else "peon", "tier": tiers.get(s) or (a.tier if a is not None else "warrior")}})
+            return out
         return {"size": goal_team.size_of(root, slug),
-                "sizes": {k: {**v, "joins": said(v["joins"]), "leaves": said(v["leaves"])} for k, v in party_resize.resizes(root, slug).items()}}
+                "sizes": {k: {**v, "joins": said(v["joins"], v["tiers"]), "leaves": said(v["leaves"], goal_team.tiers_of(root, slug))}
+                          for k, v in party_resize.resizes(root, slug).items()}}
 
     # -- finding (spec 71 §2, §3): code finds, one cheap call judges, nothing moves ----------------------------------------
 

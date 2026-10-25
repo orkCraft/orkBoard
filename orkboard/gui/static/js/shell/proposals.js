@@ -3,6 +3,8 @@
 // size switch (Standard picked); **Make it** saves that party (`ideas.goal_save` with the leader, the team, `size` and the proposal's id — the host logs `proposal_taken` by it —, as a tile's party saves) and the heads gather into its deck (spec 63). An empty folder
 // asks one line first, *What is this project for?*, and **Read it** draws the proposals of what the line says. **More: the library** opens today's tiles and seats. A host that does not send `project.kind`
 // has no proposals: New party is today's (goalwizard.js). The words are spec 75 §0's; this file draws and sends, the host reads.
+// Under the size switch each card has **Its AI tool** (toolpick.js, spec 81 §4): the Main tool picked, a list that drops down; a tool with no tiers of its own says *runs its own model* where the price was, and the pick is
+// sent as `tool` with **Make it**. The size gives the party its team and its seats' tiers (the heads wear them).
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { command, toast } from "../link.js";
@@ -15,6 +17,7 @@ import { act, mapData, showGoal } from "./store.js";
 import { Modal, closeDialog, openDialog } from "./modals.js";
 import { TARGETS } from "../board/target.js";
 import { presetsOf } from "./party.js";
+import { ToolPick, runsOwn, useTools } from "./toolpick.js";
 
 export const SIZES = [["lean", "Lean"], ["standard", "Standard"], ["full", "Full"]];
 export const SIZE_WORD = Object.fromEntries(SIZES);
@@ -66,13 +69,13 @@ function cardHeads(card, heads) {
   return heads.slice(0, 6).map((h, i) => imgs[i] && { race: h.race, tier: h.tier, box: { left: imgs[i].left, top: imgs[i].top, width: imgs[i].width, height: imgs[i].height } }).filter(Boolean);
 }
 
-/** The size's heads, its agents, its price. */
-function SizeLine({ z }) {
+/** The size's heads, its agents, its price (*runs its own model* for a tool with no tiers: the price is its own). */
+function SizeLine({ z, own = false }) {
   return html`<span class="shell-prop__heads">${(z.heads || []).map((h, i) => html`<${Head} key=${i} race=${h.race} tier=${h.tier} />`)}</span>
-    <span class="shell-prop__agents">${agentsWords(z.agents)}</span><span class="shell-prop__price">${priceWords(z.price)}</span>`;
+    <span class="shell-prop__agents">${agentsWords(z.agents)}</span><span class="shell-prop__price">${own ? "runs its own model" : priceWords(z.price)}</span>`;
 }
 
-function Proposal({ p, size, setSize, make, busy, asked }) {
+function Proposal({ p, size, setSize, make, busy, asked, tools, tool, setTool }) {
   const z = p.sizes?.[size] || p.sizes?.standard, root = useRef();
   useEffect(() => { if (asked) root.current?.scrollIntoView?.({ block: "nearest" }); }, [asked]);
   return html`<article ref=${root} class=${cls("shell-prop", { "is-have": p.have, "is-asked": asked })} data-proposal=${p.id} data-size=${size} aria-label=${p.name}>
@@ -80,8 +83,9 @@ function Proposal({ p, size, setSize, make, busy, asked }) {
     <p class="shell-prop__line">${p.line}</p>
     ${p.why && html`<p class="shell-prop__why ok-tone-muted">${p.why}</p>`}
     <${Switch} label="Size" options=${SIZES} value=${size} onPick=${setSize} />
-    <div class="shell-prop__foot"><${SizeLine} z=${z} />
-      <button type="button" class="ork-btn primary shell-prop__make" disabled=${busy} onClick=${() => make(p, size, root.current)}>Make it</button></div>
+    <${ToolPick} tools=${tools} value=${tool} onChange=${setTool} id=${`tool-${p.id}`} />
+    <div class="shell-prop__foot"><${SizeLine} z=${z} own=${runsOwn(tools, tool)} />
+      <button type="button" class="ork-btn primary shell-prop__make" disabled=${busy} onClick=${() => make(p, size, root.current, tool)}>Make it</button></div>
   </article>`;
 }
 
@@ -102,6 +106,8 @@ export function Proposals({ then = "", pick = "", onMore }) {
   const [asked, setAsked] = useState(false);              // a line was read
   const [busy, setBusy] = useState("");
   const [sizes, setSizes] = useState({});
+  const [pickedTool, setPickedTool] = useState({});        // each card's AI tool ("" the Main tool)
+  const tools = useTools();
   const ork = mapData.value?.project?.orkmaster || { race: "peon", tier: "crown" };
   useEffect(() => { askProposals().then((a) => { setGot(a); if (!a) onMore(); }); }, []);
   const read = async (about) => {
@@ -110,11 +116,11 @@ export function Proposals({ then = "", pick = "", onMore }) {
     setBusy("");
     if (a) { setGot(a); setAsked(true); }
   };
-  const make = async (p, size, card) => {
+  const make = async (p, size, card, tool = "") => {
     const z = p.sizes[size];
     const heads = then === "idea" || reducedMotion() || document.hidden ? [] : cardHeads(card, z.heads || []);
     setBusy(p.id);
-    const saved = await act("ideas.goal_save", { title: p.name, about: p.line, leader: z.leader, team: z.team || [], every: [], priority: "normal", size, proposal: p.id,
+    const saved = await act("ideas.goal_save", { title: p.name, about: p.line, leader: z.leader, team: z.team || [], every: [], priority: "normal", size, proposal: p.id, ...(tool ? { tool } : {}),
       ...(presetsOf().some((x) => x.id === p.id) ? { preset: p.id } : {}) });
     setBusy("");
     if (saved?.slug) savedParty(saved, heads, then);
@@ -129,7 +135,8 @@ export function Proposals({ then = "", pick = "", onMore }) {
       ${got && (got.ask || asked) && html`<${AskLine} onRead=${read} busy=${busy === "read"} />`}
       ${got && asked && got.read === false && html`<p class="shell-props__unread ok-font-status ok-tone-muted" role="status">No model could read the line: these are the proposals for code.</p>`}
       ${got && html`<div class="shell-props__cards" role="group" aria-label="Orkmaster proposes">${got.proposals.map((p) => html`<${Proposal} key=${p.id} p=${p} size=${sizes[p.id] || "standard"}
-        setSize=${(s) => setSizes({ ...sizes, [p.id]: s })} make=${make} busy=${!!busy} asked=${p.id === pick} />`)}</div>`}
+        setSize=${(s) => setSizes({ ...sizes, [p.id]: s })} make=${make} busy=${!!busy} asked=${p.id === pick}
+        tools=${tools} tool=${pickedTool[p.id] || ""} setTool=${(t) => setPickedTool({ ...pickedTool, [p.id]: t })} />`)}</div>`}
       <div class="shell-props__more"><button type="button" class="ork-btn" onClick=${onMore}>More: the library</button></div>
     </div>
   <//>`;
