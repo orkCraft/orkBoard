@@ -96,6 +96,27 @@ def set_team(root: Path, slug: str, team: list[str], every: list[str] | None = N
         ideas._write(Path(root) / ideas.TRACKS / f"{slug}.md", page.text())
 
 
+SIZES = ("lean", "standard", "full")                 # a party's size (spec 75 §3): its Target, for its goals
+
+
+def size_of(root: Path, slug: str) -> str:
+    """A party's size (lean · standard · full) kept on its page; "" for a party made before sizes (it works as the setting says)."""
+    page = ideas.track_page(root, slug)
+    return page.get("size") if page is not None and page.get("size") in SIZES else ""
+
+
+def set_size(root: Path, slug: str, size: str) -> None:
+    """The party's size kept (ValueError for one that is not lean, standard or full)."""
+    if size not in SIZES:
+        raise ValueError("A size is lean, standard or full")
+    with ideas.LOCK:
+        page = ideas.track_page(root, slug)
+        if page is None:
+            raise ValueError(f"No party {slug!r}")
+        page.set("size", size)
+        ideas._write(Path(root) / ideas.TRACKS / f"{slug}.md", page.text())
+
+
 def party_of(root: Path, slug: str) -> str:
     """The id of the saved party the goal's party was picked from; "" with none."""
     page = ideas.track_page(root, slug)

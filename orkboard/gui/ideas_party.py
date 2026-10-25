@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from orkboard.gui.ideas_args import IdeasError, _device, _opt, _text
-from orkboard.realm import event_log, goal_team, goal_types, ideas, library, own_parties, party_hints, party_price, party_proposals, party_work, releases, roles
+from orkboard.realm import event_log, goal_team, goal_types, idea_target, ideas, library, own_parties, party_hints, party_price, party_proposals, party_work, releases, roles
 
 
 class PartyMixin:
@@ -14,10 +14,10 @@ class PartyMixin:
         goal = _text(args, "goal", 100)
         if ideas.track_page(self.root(False), goal) is None:
             raise IdeasError("That party is gone")
-        return party_work.work(self.root(False), self.state_dir, goal, self._target())
+        return party_work.work(self.root(False), self.state_dir, goal, self.target_of_goal(goal))
 
     def party_price(self, args: dict) -> dict:
-        """`{"leader", "team", "every", "craft"?}`: about what an idea costs with this party, before it starts (spec 43 §3.1), `hints`, at
+        """`{"leader", "team", "every", "craft"?, "size"?}`: about what an idea costs with this party, before it starts (spec 43 §3.1; at `size`'s Target when given, spec 75 §3.3), `hints`, at
         most two quiet lines about it (§5; `craft` is the goal's, left out for a Mixed goal), and `types`, the goal types it would be offered
         (spec 63 §1: `[{id, name, sign, missing}]` in the catalog's order, `missing` the name of the agent a type needs, "" with none).
         Nothing is saved. Led by the Investor (Ideation): a pitch's price (`pitch: true`), no hints, no types (spec 65 §1, §3)."""
@@ -32,12 +32,15 @@ class PartyMixin:
         if why := goal_team.seats(team, "" if leader == roles.TASKMASTER else leader):
             raise IdeasError(why)
         every = [s for s in every if s in team]
+        size = _opt(args, "size")
+        if size and size not in idea_target.SIZES:
+            raise IdeasError("A size is lean, standard or full")
         craft = _opt(args, "craft")
         party = goal_types.Party.of(self.state_dir, self.root(False), leader, team)
         types = [{"id": t.id, "name": t.name, "sign": t.sign, "missing": rows[0]["name"] if rows else ""}
                  for t, rows in goal_types.offered(self.state_dir, self.root(False), "", read=party)]
         ideation = leader == library.INVESTOR                # a pitch's price, no hint about code or checks (spec 65 §3)
-        return {**party_price.price(self.root(False), self.state_dir, self.board_settings(), leader, team, every),
+        return {**party_price.price(self.root(False), self.state_dir, self.board_settings(), leader, team, every, size or None),
                 "hints": [] if ideation else party_hints.hints(self.root(False), self.state_dir, craft, leader, team, every), "types": types}
 
     def save_releases_from(self, party: str, value: object) -> None:

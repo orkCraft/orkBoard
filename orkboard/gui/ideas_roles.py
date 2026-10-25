@@ -25,7 +25,22 @@ CHECK_WEEK = 7                     # a checker's check, the muted line under its
 
 class RolesMixin:
     def _target(self) -> str:
+        """The Board's Target (the setting): for what is the whole Board's, Operations' and a party with no size of its own."""
         return idea_target.target_of(self.board_settings())
+
+    def size_of_idea(self, slug: str) -> str:
+        """The size of the party an idea is in (spec 75 §3: lean, standard, full), "" with none."""
+        page = ideas.idea_page(self.root(False), slug)
+        party = ideas.track_page(self.root(False), (page.get("track") if page is not None else "") or "")
+        return (party.get("size") if party is not None else "") or ""
+
+    def target_of_idea(self, slug: str) -> str:
+        """The Target an idea's goal works at: its party's size's, else the setting's (spec 75 §3.2)."""
+        return idea_target.target_for(self.board_settings(), self.size_of_idea(slug))
+
+    def target_of_goal(self, goal: str) -> str:
+        party = ideas.track_page(self.root(False), goal)
+        return idea_target.target_for(self.board_settings(), party)
 
     @staticmethod
     def _harness(slug: str) -> dict:
@@ -45,7 +60,7 @@ class RolesMixin:
         its tag in words (`tag`: the kind of work it is)."""
         if not plan:
             return plan
-        target, read = self._target(), roles.known(self.state_dir)
+        target, read = self.target_of_idea(plan["idea"]) if plan.get("idea") else self._target(), roles.known(self.state_dir)
         return {**plan, "tasks": [{**t, "head": roles.task_head(self.state_dir, t, target, read),
                                    "tag": roles.KIND_LABELS.get(str(t.get("kind") or ""), roles.KIND_LABELS[roles.DEFAULT_KIND])}
                                   for t in plan.get("tasks") or []]}
@@ -197,7 +212,9 @@ class RolesMixin:
         by_role: dict[str, list] = {}
         done, today = [], dt.date.today().isoformat()
         target, read = board.get("target") or self._target(), roles.known(self.state_dir)
+        sized: dict[str, str] = {}                                   # each idea's party's size, read once (spec 75 §3)
         for slug, title, plan in self._plans():
+            mine = idea_target.target_for({"target": target}, sized.setdefault(slug, self.size_of_idea(slug)))
             for t in plan.get("tasks") or []:
                 state, role = t.get("state"), str(t.get("role") or roles.GRUNT)
                 if state == "merged" and str(t.get("finished") or "").startswith(today):
@@ -207,7 +224,7 @@ class RolesMixin:
                         {"idea": slug, "idea_title": titles.get(slug, title),
                          "idea_short": shorts.get(slug) or short_of(title), "task": t.get("id"),
                          "title": t.get("title", ""), "short": board_map.task_short(t), "state": state, "tier": t.get("tier", ""), "role": role,
-                         "kind": t.get("kind") or roles.DEFAULT_KIND, "head": roles.task_head(self.state_dir, t, target, read),
+                         "kind": t.get("kind") or roles.DEFAULT_KIND, "head": roles.task_head(self.state_dir, t, mine, read),
                          "tag": roles.KIND_LABELS.get(str(t.get("kind") or ""), roles.KIND_LABELS[roles.DEFAULT_KIND]),
                          "note": t.get("note") or (t.get("error") if state == "failed" else "") or "",
                          # spec 35 §11.5: who started it, and whether it waits for the night
