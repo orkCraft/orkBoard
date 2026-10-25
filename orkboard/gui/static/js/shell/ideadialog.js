@@ -23,13 +23,11 @@ import { isIdeation } from "../arena/pitchwords.js";
 import { GoesIn } from "./release.js";
 import { ItsParty, usePartyFor } from "../arena/projectparty.js";
 import { askAfterLow, nightOff, nightUnset } from "./nightask.js";
+import { MAX_PICTURES, PICTURE_TYPES, shrink } from "../board/pictures.js";
 
 /** The line under Priority (spec 83 §4): what Low does, as the standing word says. */
 const lowLine = () => `Low: ${board.value?.night_low === true ? "runs tonight" : "runs after the other priorities"}.`;
 
-const MAX_PICTURES = 4;                     // realm/idea_photos.py MAX_PHOTOS
-const MAX_PX = 1600;                        // as the phone's (pwa/shell-idea-field.js): a JPEG of at most this, for the leader to read
-const PICTURE_TYPES = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 const REFS = "refs";                        // realm/goal_types.py REFS: the id of Refs' links among a goal's asks
 
 /** New goal. On the project's level (`goal` is PROJECT, spec 70 §4) it has no party at first: the Orkmaster suggests one (arena/projectparty.js) and **Its party** picks it;
@@ -148,20 +146,6 @@ function PitchGoal({ parties, party, setParty, text, setText, info, lens, setLen
       <p class="ok-font-status ok-tone-muted">Four views read it, each alone: product, market, engineering and design; the Skeptic makes the case against it, then ${lead} invests in it, reshapes it or passes, and says why. Nothing is built.</p>
     </div>
   <//>`;
-}
-
-/** A picture the person likes, as `ideas.add`'s `photos` takes it: a JPEG of at most MAX_PX on its longer side, as a data URL. */
-async function shrink(file) {
-  const url = await new Promise((ok, fail) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = fail; r.readAsDataURL(file); });
-  const img = new Image();
-  img.src = url;
-  await img.decode();
-  const k = Math.min(1, MAX_PX / Math.max(img.naturalWidth, img.naturalHeight));
-  const canvas = document.createElement("canvas");
-  canvas.width = Math.max(1, Math.round(img.naturalWidth * k));
-  canvas.height = Math.max(1, Math.round(img.naturalHeight * k));
-  canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-  return canvas.toDataURL("image/jpeg", 0.85);
 }
 
 /** Refs (§4.2): *Links*, one line; *Pictures you like*: *Add a picture* (a file), or a paste or a drop on the form; small thumbnails with ×. */

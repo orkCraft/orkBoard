@@ -22,7 +22,7 @@ import { lookTick } from "../shell/store.js";
 import { reducedMotion, useHeld, useLeaving } from "./motion.js";
 import { dealWaits, dropDeal, leaveParty, stopAbout, stopLook } from "./arenastate.js";
 import { closeSpread } from "./spread.js";
-import { askedOf, changeToast, fanOf, laidOut } from "./arenawords.js";
+import { PICTURES, askedOf, changeToast, fanOf, laidOut } from "./arenawords.js";
 import { missingWords } from "./types.js";
 import { Tiles, choiceOf } from "./picks.js";
 import { manyWords, variantOf } from "./pickwords.js";
@@ -129,7 +129,8 @@ function Answers({ s, g, see }) {
     const decide = html`<${Decide} s=${s} target=${target} isGoal=${isGoal} name=${isGoal ? s.party.lead : asked.find((q) => q.by?.name)?.by?.name || s.party.lead} />`;
     if (asked.length === 1 && asked[0].choices.length) {
       return html`${asked[0].choices.map((c, i) => html`<button type="button" key=${c} class=${cls("ork-btn arena-hc__q is-text", { primary: i === asked[0].pick })}
-          title=${i === asked[0].pick ? "Picked for you: one click answers" : "One click answers with this"} onClick=${() => send([c])}>${i === asked[0].pick ? "● " : ""}${c}</button>`)}
+          title=${c === PICTURES ? "Opens the form: add the pictures there" : i === asked[0].pick ? "Picked for you: one click answers" : "One click answers with this"}
+          onClick=${() => (c === PICTURES ? more([c]) : send([c]))}>${i === asked[0].pick ? "● " : ""}${c}</button>`)}
         <button type="button" class="ork-btn quiet arena-hc__q" onClick=${() => more(picks)}>Open…</button>${decide}`;
     }
     return html`${asked.length > 1 && html`<button type="button" class="ork-btn primary arena-hc__q" disabled=${!picks.some(Boolean)} onClick=${() => send(picks)}>Send the picks</button>`}

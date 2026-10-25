@@ -388,6 +388,11 @@ export function changeToast(got) {
   return [parts.length ? `The plan changed: ${parts.join(", ")}.` : "The plan stays as it was.", k ? `${k} left as ${k === 1 ? "it was: it started" : "they were: they started"}.` : ""].filter(Boolean).join(" ");
 }
 
+/** *<Name> asks about the look* (spec 85 §1): the title of the stop of a look's question. */
+export const lookTitle = (name) => `${name || "Taskmaster"} asks about the look`;
+/** The answer that takes pictures (spec 85 §1): *Pictures you like* adds them in the form. */
+export const PICTURES = "Pictures you like";
+
 /** The question a row asks first: its `asked` (with the choices and the pick), else its plain text. */
 export const firstAsk = (row, node) => (row.asked?.[0] || node?.asked?.[0] || { ask: row.text, choices: [], pick: null, why: "" });
 /** A row's questions as `asked` says them (at most three), a plain row's lines with no choices. */
@@ -428,7 +433,11 @@ export function stopsOf(needs, g, nodes, ork = null) {
     } else if (row.kind === "asks" || row.kind === "goal") {
       const q = firstAsk(row, n);
       base.text = `“${q.ask}”`; base.gemTip = "A question costs nothing";
-      if (row.kind === "asks") { base.head = q.by?.head || n?.asked?.[0]?.by?.head || lead; base.small = true; base.whoTip = q.by?.name ? `asked by ${q.by.name}` : ""; }
+      if (row.kind === "asks") {
+        const by = q.by || n?.asked?.[0]?.by;                                                // the row's questions carry no asker: the idea's do
+        base.head = by?.head || lead; base.small = true; base.whoTip = by?.name ? `asked by ${by.name}` : "";
+        if (q.look ?? n?.asked?.[0]?.look) base.title = lookTitle(by?.name || g?.leader?.name);        // the elf asks about the look (spec 85 §1): the stop's title is the member's name
+      }
       else base.small = false;
     } else if (row.kind === "failed") { base.small = true; base.head = lead; base.gemTip = "It failed"; }
     else if (row.kind === "pick") {                 // the gem is the count; the member's head; the ask is its line (spec 51 §6)

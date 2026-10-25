@@ -1,11 +1,12 @@
 // Waits for your look (docs/specs/49-one-window.md §5.5, docs/specs/50-parties-and-goals.md §3.5): the right column. A result per row, oldest first —
 // its goal's element and name (one line), its title (a link to the result in the drawer), who made it, its tests or a check's findings, its size and price,
 // and Merge into dev · Send back · Drop (Review's own ResultActions). A result is not a signal (decisions §54.1): no alert colour. The goals the filter takes
-// away leave with the rest. Above it, the Canvases row (canvases.js, spec 78); at the top of the list, While you were away and Last week (Cards); at the foot, Last week (MapFoot). One that was merged a moment ago folds out once, its goal's element stamped (spec 74 §1); one sent back leaves toward the field (§2).
+// away leave with the rest. Above it, the Canvases row (canvases.js, spec 78); at the top of the list, While you were away and Last week (Cards); at the foot, Last week (MapFoot). One that was merged a moment ago folds out once, its goal's element stamped (spec 74 §1); one sent back leaves toward the field (§2). A result whose task changed what people see shows the picture of it large, the width of the column (docs/specs/85-the-elf-asks-and-shows.md §3),
+// or says *no picture: no preview*; one merged says what it made.
 import { useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Sign } from "../orkui.js";
-import { showResult, review } from "../shell/store.js";
+import { mapData, showResult, review } from "../shell/store.js";
 import { ResultActions, Found, testsWords, usd } from "../shell/review.js";
 import { Cards } from "../board/cards.js";
 import { MapFoot } from "../board/mapfoot.js";
@@ -19,17 +20,22 @@ function Result({ r, nodes, sign = "", quiet = false, fresh = false }) {
   const leaving = !!sign || quiet;
   const node = nodes.find((n) => n.slug === r.idea), task = node?.tasks.find((t) => t.id === r.task);
   const by = task?.by?.name || "", el = elementOf(node);
-  const t = testsWords(r);
+  const t = testsWords(r), shot = r.shot, said = `What “${r.title}” looks like`;
+  const made = sign === "check" ? (mapData.value?.nodes || []).find((x) => x.slug === r.idea)?.tasks.find((x) => x.id === r.task)?.made || "" : "";
   const size = [r.diff ? plural(r.diff.files, "file", "files") : "", r.cost != null ? usd(r.cost) : ""].filter(Boolean).join(" · ");
   return html`<div class=${cls("arena-result ork-frame", { "is-leaving": !!sign, "is-gone": quiet, "is-drawn": fresh })} data-key=${`${r.idea}/${r.task}`} data-task=${r.task} data-idea=${r.idea}
       data-sign=${sign || undefined} aria-hidden=${leaving ? "true" : undefined}>
     <span class="arena-cap arena-result__idea"><${Elem} name=${el.name} dim=${el.dim} />${r.idea_title || node?.title || r.idea}</span>
     <button type="button" class="arena-link" title="Open the result: its code" onClick=${() => showResult(r.idea, r.task, { via: "map" })}>${r.title}${r.round > 1 ? html` <span class="shell-round">round ${r.round}</span>` : ""}</button>
     <span class="arena-cap">${by}${r.check ? " · its check" : ""}</span>
+    ${shot?.url && html`<button type="button" class="arena-result__shot" title="Open the result" aria-label=${said} onClick=${() => showResult(r.idea, r.task, { via: "map" })}>
+      <img src=${shot.url} alt=${said} draggable="false" style=${shot.w && shot.h ? `aspect-ratio:${shot.w} / ${shot.h}` : undefined} /></button>`}
+    ${shot?.none && html`<span class="arena-cap arena-result__noshot" data-noshot="true">${shot.none}</span>`}
     <span class=${cls("arena-result__tests", `is-${t.tone}`)}>${t.mark && html`<${Sign} name=${t.mark} /> `}${t.text}${t.names.length ? html` <span class="ok-tone-muted">${t.names.join(", ")}</span>` : ""}</span>
     <span class="arena-cap">${size}</span>
     ${r.look && html`<span class="arena-cap arena-result__look" data-look="true">Waits: ${r.look}</span>`}
     ${html`<${Found} r=${r} />${r.conflict && html`<p class="ok-tone-error shell-conflict">⚠ ${r.conflict}</p>`}`}
+    ${made && html`<span class="arena-cap arena-result__made">What it made: ${made}</span>`}
     ${leaving ? html`<span class="arena-cap">${sign === "check" ? `merged into ${review.value?.into || "dev"}` : sign === "cross" ? "dropped" : sign === "back" ? "sent back" : ""}</span>` : html`<${ResultActions} r=${r} />`}
     ${!!sign && sign !== "back" && html`<span class="arena-task__flash">${sign === "check" ? html`<${Elem} name=${el.name} dim=${el.dim} big=${true} />` : sign !== "fade" && html`<${Sign} name=${sign} big=${true} />`}</span>`}
   </div>`;
