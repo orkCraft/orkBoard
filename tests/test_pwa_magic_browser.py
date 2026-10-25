@@ -1,7 +1,7 @@
 """Spec 74 part B, the phone (docs/specs/74-moments-of-magic.md §1, §2, §4, §5, §8; decisions §89): Chromium at 390 × 844 against the scene of tests/test_pwa_arena_browser.py. A merged result's
 stack leaves with its goal's element stamped (`.big`, its colour) where the ✓ was, a dropped one keeps its ✗, a result sent back (its task in the field again) goes down with no flash, none of it
 under reduced motion; the Board with no party has its stars (`aria-hidden`, no pointer, twinkling ones still at 0.6 under reduced motion) and the one line of words, Loading and an error have
-neither, a Board with a party has no stars; `sw.js` v83."""
+neither, a Board with a party has no stars; `sw.js` v84."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -192,4 +192,4 @@ async def test_a_board_with_a_party_and_the_screens_that_reuse_the_empty_look_ha
 @pytest.mark.asyncio
 async def test_sw_is_one_up(fake_repo):
     sw = (Path(pwa.__file__).parent / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")
-    assert 'const CACHE = "orkcraft-app-v83";' in sw
+    assert 'const CACHE = "orkcraft-app-v84";' in sw

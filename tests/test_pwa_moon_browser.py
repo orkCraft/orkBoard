@@ -1,7 +1,7 @@
 """Spec 74 part C, the phone (docs/specs/74-moments-of-magic.md §6, §8; decisions §89): Chromium at 390 × 844 against the scene of tests/test_pwa_arena_browser.py. A goal's moon is its tasks
 merged of its tasks in quarters (new, crescent, half, gibbous, full; 1 of 3 a crescent, 2 of 3 a gibbous), in its row of the Goals sheet 14 × 14 between its title and its state's sign and in its
 screen's head 28 × 28 (`.big`) beside its words; a raw goal, a goal with no task, a pitch and a release have none; the moon is `aria-hidden`, plays nothing and takes the frame's and the ink's colours;
-orkUI's `moons/` files are served by the app (and kept by the service worker); `sw.js` v83."""
+orkUI's `moons/` files are served by the app (and kept by the service worker); `sw.js` v84."""
 from __future__ import annotations
 
 import copy
@@ -165,4 +165,4 @@ def test_the_app_serves_the_moons_and_its_worker_keeps_them_in_the_new_version()
     assert {f"moons/{n}.svg" for n in MOONS} <= set(served) and all(served[f"moons/{n}.svg"].is_file() for n in MOONS)
     sw = (Path(pwa.__file__).parent / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")
     shell = sw[sw.index("const SHELL"):sw.index("];", sw.index("const SHELL"))]
-    assert 'const CACHE = "orkcraft-app-v83";' in sw and all(f'"moons/{n}.svg"' in shell for n in MOONS)
+    assert 'const CACHE = "orkcraft-app-v84";' in sw and all(f'"moons/{n}.svg"' in shell for n in MOONS)
