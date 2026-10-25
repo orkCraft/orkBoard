@@ -210,6 +210,35 @@ def set_track(root: Path, slug: str, about: str | None = None, criteria: list | 
         _reindex(root)
 
 
+def drop_track(root: Path, slug: str, goals: str = "move", state_dir: Path | None = None,
+               busy: frozenset | set = frozenset()) -> dict:
+    """A party removed (spec 80 §1): its goals move to General (`goals="move"`) or go as `drop` has it. Refused for General,
+    an unknown party and while a goal of it is at work (`busy`: the host's keeper or runner; or its state `working`), nothing
+    changed. Its page goes; what still names it (an event, a route, an own party's use) reads as its slug."""
+    if goals not in ("move", "drop"):
+        raise ValueError("Goals move or drop")
+    with LOCK:
+        if slug == GENERAL:
+            raise ValueError("General stays: it is where goals without a party go")
+        if track_page(root, slug) is None:
+            raise ValueError("That party is gone")
+        mine = [i["slug"] for i in ideas(root, slug)]
+        at_work = [s for s in mine if s in busy or (state_dir is not None and state(state_dir, s)["state"] == "working")]
+        if at_work:
+            n = len(at_work)
+            raise ValueError(f"{n} goals at work: stop them first" if n != 1 else "1 goal at work: stop it first")
+        if track_page(root, GENERAL) is None:
+            add_track(root, GENERAL_TITLE)
+        for s in mine:
+            move(root, s, GENERAL) if goals == "move" else drop(root, s, state_dir)
+        (root / TRACKS / f"{slug}.md").unlink(missing_ok=True)
+        if state_dir is not None:
+            for name in ("party-proposal.json", "party-declined.jsonl"):
+                (goal_folder(state_dir, slug) / name).unlink(missing_ok=True)
+        _reindex(root)
+    return {"moved": len(mine) if goals == "move" else 0, "dropped": len(mine) if goals == "drop" else 0}
+
+
 def _date(value: object) -> str:
     value = str(value or "").strip()
     if value and not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value):

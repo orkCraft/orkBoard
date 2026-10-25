@@ -67,6 +67,7 @@ from orkboard.gui.ideas_revise import ReviseMixin
 from orkboard.gui.ideas_lens import LensMixin
 from orkboard.gui.ideas_limits import LimitsMixin
 from orkboard.gui.ideas_roles import RolesMixin
+from orkboard.gui.ideas_track import TrackMixin
 from orkboard.gui.ideas_types import TypesMixin
 
 WORDS_CHARS = 2000                # the most a file to-do described instead may say (spec 54 §1.1)
@@ -104,7 +105,7 @@ class _Hop:
         self.host.call(lambda: self.host.publish(topic, **data))
 
 
-class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, ReviewMixin, ReviseMixin,
+class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, TrackMixin, ReviewMixin, ReviseMixin,
             TypesMixin, CanvasesMixin, BoardMixin):
     def __init__(self, host) -> None:
         """`host`: what the Board needs of whoever runs it, a `gui/board_host.py` `BoardHost` (spec 37 §4): Orkline's
@@ -596,7 +597,7 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
         table = {"ideas.board": lambda a: self.board(), "ideas.map": self.map, "ideas.recap": self.recap, "ideas.flags": self.flags, "ideas.week_work": self.week_work, "ideas.week": self.week, "ideas.party": self.party, "ideas.party_price": self.party_price, "ideas.party_answer": self.party_answer, "ideas.parties": self.parties, "ideas.party_save": self.party_save, "ideas.party_drop": self.party_drop, "ideas.page": lambda a: self.page(_text(a, "slug", 100)),
                  "ideas.add": self.add, "ideas.say": self.say, "ideas.plan": self.plan, "ideas.revise": self.revise, "ideas.revise_answer": self.revise_answer, "ideas.start": self.start,
                  "ideas.move": self.move, "ideas.edit": self.edit, "ideas.track_add": self.track_add,
-                 "ideas.track_set": self.track_set, "ideas.todo": self.todo, "ideas.drop": self.drop,
+                 "ideas.track_set": self.track_set, "ideas.track_drop": self.track_drop, "ideas.todo": self.todo, "ideas.drop": self.drop,
                  "ideas.stop": self.stop, "ideas.review_list": self.review_list, "ideas.diff": self.diff,
                  "ideas.merge": self.merge, "ideas.back": self.back, "ideas.drop_task": self.drop_task,
                  "ideas.stop_task": self.stop_task, "ideas.agents": self.agents, "ideas.task": self.task,
