@@ -16,7 +16,7 @@ import { pctOf, rated, SHARE_TIP } from "./shell-spend.js";
 import { elem, sign } from "./shell-marks.js";
 import { midHead, whoHead } from "./shell-who.js";
 import { needsOf, failedOf, looksOf, nodesOf, pickedOf, planPrice, changePrice, changeWords, byUrgency, fanPlaces } from "./shell-arena-words.js";
-import { resultActions, testsWords, changesWords, foundWords, foundOf } from "./shell-review.js";
+import { resultActions, testsWords, changesWords, foundWords, moreOf } from "./shell-review.js";
 import { OPS_VIEW } from "./shell-ops.js";
 import { pointerGuard, motionOn, deal } from "./shell-motion.js";
 import { thumbs, stopAll, countWords, pickSig } from "./shell-picks.js";
@@ -130,6 +130,7 @@ export function makeStops(core, ctx, needs, ops) {
   function needItem(n, node, goal, lead) {
     const base = { key: `${n.kind}:${n.idea || n.goal}:${n.todo?.id || (n.kind === "pick" ? n.task : "")}`, kind: n.kind, title: n.title, sig: n, open: n.idea ? { kind: "idea", slug: n.idea } : { kind: "goal", slug: n.goal } };
     const asking = n.kind === "asks" || n.kind === "goal", q = asking ? needs.askedOf(n)[0] : null;
+    const by = q?.by || (n.kind === "asks" ? node?.asked?.[0]?.by : null), looks = n.kind === "asks" && Boolean(q?.look ?? node?.asked?.[0]?.look);      // the elf asks about the look (spec 85 §1)
     if (n.kind === "plan") {
       const tasks = node?.tasks || [], checks = tasks.filter((t) => t.band === "check").length, price = planPrice(node?.plan_estimate || node?.estimate);
       const night = node?.start_at === "night", missing = n.missing || [], first = missing[0];
@@ -160,13 +161,13 @@ export function makeStops(core, ctx, needs, ops) {
       const picks = asked.map((x) => (x.pick != null ? x.choices[x.pick] || "" : ""));
       let quick;
       if (asked.length === 1 && q.choices.length) {
-        quick = () => [...q.choices.map((c, j) => btn(`${j === q.pick ? "● " : ""}${c}`, answer([c]), { primary: j === q.pick, text: true,
-          tip: j === q.pick ? "Picked for you: one tap answers" : "One tap answers with this", attrs: { "data-choice": String(j) } })), needs.decideButton(n, lower)];
+        quick = () => [...q.choices.map((c, j) => btn(`${j === q.pick ? "● " : ""}${c}`, c === needs.PICTURES ? away(() => needs.askForm(n, [c])) : answer([c]), { primary: j === q.pick, text: true,
+          tip: c === needs.PICTURES ? "Opens the form: add the pictures there" : j === q.pick ? "Picked for you: one tap answers" : "One tap answers with this", attrs: { "data-choice": String(j) } })), needs.decideButton(n, lower)];
       } else if (asked.length > 1) {
         quick = () => [btn("Send the picks", answer(picks), { primary: true, disabled: !picks.some(Boolean), tip: "Answers each question with its recommended choice", attrs: { "data-act": "picks" } }),
           btn("Open…", away(() => needs.askForm(n, picks)), { attrs: { "data-act": "more" } }), needs.decideButton(n, lower)];
       } else quick = () => [btn("Open…", away(() => needs.askForm(n)), { attrs: { "data-act": "more" } }), needs.decideButton(n, lower)];
-      return { ...base, gem: { text: "?", tip: "A question costs nothing" }, small: q?.by?.head || null, whoTip: q?.by?.name ? `asked by ${q.by.name}` : "",
+      return { ...base, ...(looks ? { title: `${by?.name || goal?.leader?.name || "Taskmaster"} asks about the look` } : {}), gem: { text: "?", tip: "A question costs nothing" }, small: by?.head || null, whoTip: by?.name ? `asked by ${by.name}` : "",
         text: q ? `“${q.ask}”` : n.text || "", quickLabel: "Answer in one tap", quick };
     }
     if (n.kind === "proposal" || n.kind === "party") {
@@ -240,7 +241,7 @@ export function makeStops(core, ctx, needs, ops) {
       text: [r.idea_title, h("span", {}, tw.mark ? sign(tw.mark) : null, tw.mark ? " " : "", tw.text), changesWords(r.diff), foundWords(r.findings), r.look ? `waits: ${r.look}` : ""].filter(Boolean)
         .flatMap((x, i) => (i ? [" · ", x] : [x])),
       plain: [r.idea_title, `${tw.mark} ${tw.text}`.trim(), changesWords(r.diff), foundWords(r.findings), r.look ? `waits: ${r.look}` : ""].filter(Boolean).join(" · "),
-      more: () => foundOf(r),                           // a check's findings left, one line each, under its facts
+      more: () => moreOf(r),                            // its picture (spec 85 §3), then a check's findings left, one line each, under its facts
       open: { kind: "result", slug: r.idea, task: r.task }, quickLabel: "Quick moves", quick: () => [resultActions(core, r, lower)] };
   }
 

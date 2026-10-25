@@ -70,6 +70,21 @@ export function foundOf(r) {
     h("ul", { class: "found-list" }, ...left.map((f) => h("li", {}, h("span", { class: "found-where muted" }, f.where), " · ", f.what, f.kind === "env" ? h("span", { class: "muted" }, " (where it ran)") : null))));
 }
 
+/** The picture of what the result's task changed, large, the width of the screen (spec 85 §3); *no picture: no preview* where the task changed what people see and no preview opened; null for any other result. */
+export function shotOf(r) {
+  if (r.shot?.url) {
+    return h("figure", { class: "result-shot", "data-shot": "true" }, h("img", { src: r.shot.url, alt: `What “${r.title}” looks like`, draggable: "false",
+      ...(r.shot.w && r.shot.h ? { style: `aspect-ratio:${r.shot.w} / ${r.shot.h}` } : {}) }));
+  }
+  return r.shot?.none ? h("p", { class: "muted result-noshot", "data-noshot": "true" }, r.shot.none) : null;
+}
+
+/** Under a result's stop: its picture, then a check's findings left. */
+export function moreOf(r) {
+  const shot = shotOf(r), found = foundOf(r);
+  return shot || found ? h("div", { class: "result-more" }, shot, found) : null;
+}
+
 export function factsOf(r) {
   const t = testsWords(r);
   return h("dl", { class: "facts" },

@@ -1343,3 +1343,23 @@ dialog.sheet.full { margin: 0; height: 100dvh; max-height: 100dvh; border-top: 0
 .size-move { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--ork-1); min-width: 0; overflow-wrap: anywhere; }
 .size-move__heads { display: inline-flex; gap: var(--ork-1); }
 .size-note { margin: var(--ork-2) 0 0; color: var(--ork-danger); overflow-wrap: anywhere; }
+
+/* -- What the elf asks and shows (spec 85 C): how far a goal is, the picture of what changed as a card's face and large on a result, a done card turned to what it made, a question that takes pictures ------- */
+.tcard__count { font: 400 10px/12px var(--ork-font-text); color: var(--ork-ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tcard__shot { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top center; z-index: 0; pointer-events: none; }
+.tcard.has-shot { overflow: hidden; }
+.tcard.has-shot > :not(.tcard__shot) { position: relative; z-index: 1; }
+.tcard.has-shot > .tcard__top, .tcard.has-shot > .tcard__name, .tcard.has-shot > .tcard__count, .tcard.has-shot > .tcard__foot, .tcard.has-shot > .tcard__idea { background: color-mix(in srgb, var(--ork-panel) 84%, transparent); }
+.deck__made { position: absolute; inset: 0; z-index: 5; box-sizing: border-box; display: flex; flex-direction: column; gap: var(--ork-1); padding: 5px; overflow: hidden; background: var(--ork-panel); color: var(--ork-ink); font: 400 10px/12px var(--ork-font-text); animation: turn 0.2s steps(2) 0.1s both; }
+.deck__made b { font-weight: 600; color: var(--ork-ink-muted); }
+.deck__made span { display: -webkit-box; -webkit-line-clamp: 6; line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+@keyframes turn { from { transform: scaleX(0); } to { transform: none; } }
+.result-shot { margin: 0 0 var(--ork-4); border: var(--ork-line) solid var(--ork-frame); background: var(--ork-canvas); }
+.result-shot img { display: block; width: 100%; height: auto; max-height: 60vh; object-fit: cover; object-position: top center; }
+.result-noshot { margin: 0 0 var(--ork-3); }
+.result-more { display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; }
+.q-choices { display: flex; flex-wrap: wrap; gap: var(--ork-2); margin: calc(-1 * var(--ork-2)) 0 var(--ork-3); }
+.q-choices .ork-btn { min-height: var(--ork-tap); }
+.q-add { margin: 0 0 var(--ork-2); }
+.q-photos { margin: 0 0 var(--ork-3); }
+@media (prefers-reduced-motion: reduce) { .deck__made { animation: none; } }

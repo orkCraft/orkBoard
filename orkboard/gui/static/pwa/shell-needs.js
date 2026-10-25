@@ -6,8 +6,11 @@
 // (a field and Send) or *Go without it*; a choice *Let <leader> choose*; any other to-do *Go without it*. Each is quiet and acts at once.
 import { h, sheet } from "./util.js";
 import { field, foot } from "./shell-forms.js";
+import { shrink } from "./shell-idea-field.js";
 
 const MAX_FILE = 5 * 1024 * 1024;
+const PICTURES = "Pictures you like";          // realm/idea_look.py PICTURES: the answer that takes pictures (spec 85 §1)
+const MAX_PHOTOS = 4;                         // realm/idea_photos.py MAX_PHOTOS
 const isList = /^([-*+]|\d+[.)])\s+/;
 
 /** A spec's Open questions section as the list the keeper counts (realm/ideas.py `items`). */
@@ -96,12 +99,34 @@ export function makeNeeds(core, ctx) {
     });
     const send = h("button", { class: "ork-btn primary big", type: "submit" }, "Send");
     const cancel = h("button", { class: "ork-btn big", type: "button", onclick: () => qSheet.close() }, "Cancel");
-    qBody.replaceChildren(h("p", { class: "muted" }, n.title), ...asked.map((q, i) => field(`${i + 1}. ${q.ask}`, boxes[i], q.why || null)),
+    const photos = [];                                                                  // the pictures of an answer that takes them (data URLs), at most MAX_PHOTOS
+    const thumbs = h("div", { class: "idea-photos q-photos", hidden: true, "data-pictures": "true" });
+    const picker = h("input", { type: "file", accept: "image/*", multiple: true, hidden: true, "aria-label": "Pictures you like" });
+    const add = h("button", { class: "ork-btn", type: "button", "data-act": "add-picture", onclick: () => picker.click() }, "Add a picture");
+    const drawPhotos = () => {
+      thumbs.hidden = !photos.length;
+      add.disabled = photos.length >= MAX_PHOTOS;
+      thumbs.replaceChildren(...photos.map((url, i) => h("div", { class: "idea-photo" }, h("img", { src: url, alt: `Picture ${i + 1}` }),
+        h("button", { class: "ork-btn", type: "button", "aria-label": `Remove picture ${i + 1}`, onclick: () => { photos.splice(i, 1); drawPhotos(); } }, "×"))));
+    };
+    picker.addEventListener("change", async () => {
+      const files = [...picker.files].slice(0, MAX_PHOTOS - photos.length);
+      picker.value = "";
+      for (const f of files) { try { photos.push(await shrink(f)); } catch { ctx.flash("That picture could not be read: try another."); } }
+      drawPhotos();
+    });
+    const takes = !isGoal && asked.some((q) => (q.choices || []).includes(PICTURES));
+    const choicesOf = (q, i) => ((q.choices || []).length ? h("div", { class: "q-choices", role: "group", "aria-label": `Choices: ${q.ask}` },
+      ...q.choices.map((c) => h("button", { class: "ork-btn quiet", type: "button", "data-choice-text": c, onclick: () => { boxes[i].value = c; } }, c))) : null);
+    const rows = asked.flatMap((q, i) => [field(`${i + 1}. ${q.ask}`, boxes[i], q.why || null), choicesOf(q, i),
+      takes && (q.choices || []).includes(PICTURES) ? h("div", { class: "row q-add" }, add, picker) : null, takes && (q.choices || []).includes(PICTURES) ? thumbs : null]);
+    qBody.replaceChildren(h("p", { class: "muted" }, n.title), ...rows.filter(Boolean),
       h("div", { class: "outs" }, decideButton(n, () => qSheet.close())), foot(cancel, send));
+    drawPhotos();
     qBody.onsubmit = async (e) => {
       e.preventDefault();
       send.disabled = true;
-      const r = await core.call("ideas.answer", { slug, answers: boxes.map((b) => b.value.trim()), ...(isGoal ? { goal: true } : {}) });
+      const r = await core.call("ideas.answer", { slug, answers: boxes.map((b) => b.value.trim()), ...(photos.length && takes ? { photos: photos.map((url) => ({ data: url.slice(url.indexOf(",") + 1) })) } : {}), ...(isGoal ? { goal: true } : {}) });
       send.disabled = false;
       if (!r) return;
       qSheet.close();
@@ -169,6 +194,6 @@ export function makeNeeds(core, ctx) {
   return {
     sheets: [qSheet.el, tSheet.el],
     askForm, todoSheet, askedOf, decideButton, todoOuts,
-    SENT,
+    SENT, PICTURES,
   };
 }

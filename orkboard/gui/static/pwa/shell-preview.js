@@ -7,7 +7,7 @@ import { pctOf, pctRange, pctShort } from "./shell-spend.js";
 import { pointedAt } from "./shell-lens.js";
 import { steady } from "./shell-util.js";
 import { stateWords } from "./shell-board.js";
-import { resultActions, factsOf, foundOf, mergeReason } from "./shell-review.js";
+import { resultActions, factsOf, foundOf, mergeReason, shotOf } from "./shell-review.js";
 import { gruntWords } from "./shell-agents.js";
 import { goalBody, leaderName } from "./shell-goal.js";
 import { changePrice, changeWords } from "./shell-arena-words.js";
@@ -371,7 +371,7 @@ export function makePreview(core, ctx, screens = {}) {
     body.replaceChildren(...[
       h("p", { class: "muted" }, t.idea_title),
       spend ? h("p", { class: "muted spend-line", title: "At API prices, not your bill" }, spendLine(spend)) : null,
-      r ? factsOf(r) : h("p", { class: "muted" }, "This result is no longer waiting at Review."),
+      r ? shotOf(r) : null, r ? factsOf(r) : h("p", { class: "muted" }, "This result is no longer waiting at Review."),
       r ? foundOf(r) : null,
       r?.conflict ? h("p", { class: "warn" }, sign("alert"), ` ${r.conflict}`) : null,
       !diff ? h("p", { class: "muted" }, "Reading the code…") : h("div", { class: "code" },
