@@ -2,7 +2,7 @@
 // `ideas.words`: a tap puts the word in place of the one being typed and a space after it), Photo (the camera or the
 // library; each made a JPEG of at most MAX_PX before it goes, for the Taskmaster to read) and Speak (the browser's own
 // speech to text, where it has one: the words go into the text as they are said; the `mic` mark at the field's corner, spec 41 §5).
-import { h, icon } from "./util.js";
+import { h, icon, PRODUCT } from "./util.js";
 
 const MAX_PX = 1600;
 const MAX_PHOTOS = 4;                    // realm/idea_photos.py MAX_PHOTOS
@@ -100,7 +100,7 @@ export function makeIdeaField(ctx, text) {
       text.dispatchEvent(new Event("input", { bubbles: true }));
     };
     rec.onerror = (e) => {
-      if (e.error === "not-allowed" || e.error === "service-not-allowed") ctx.flash("Orkline may not use the microphone: allow it in the phone’s settings for this browser.");
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") ctx.flash(`${PRODUCT} may not use the microphone: allow it in the phone’s settings for this browser.`);
       else if (e.error !== "no-speech" && e.error !== "aborted") ctx.flash("Speech stopped: type it, or use the keyboard’s microphone.");
     };
     rec.onend = () => { rec = null; rest(); };

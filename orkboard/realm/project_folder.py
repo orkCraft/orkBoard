@@ -10,6 +10,8 @@ No face, no model, no bus.
 """
 from __future__ import annotations
 
+from orkboard import brand
+
 import hashlib
 import os
 import sys
@@ -63,7 +65,7 @@ def refusal(path: str | Path) -> str:
         return "That folder holds your machine's settings or keys: it cannot be a project"
     own = Path(__file__).resolve().parents[1]           # the orkboard package
     if _within(folder, own) or "site-packages" in folder.parts or "dist-packages" in folder.parts:
-        return "That is Orkline's own folder: it cannot be a project"
+        return f"That is {brand.name()}'s own folder: it cannot be a project"
     if ".git" in folder.parts or ".orkcraft" in folder.parts:
         return "That folder is inside a repository's own state: open the repository's folder instead"
     if not os.access(folder, os.R_OK | os.X_OK):

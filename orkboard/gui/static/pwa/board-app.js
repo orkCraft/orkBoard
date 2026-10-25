@@ -5,7 +5,7 @@
 // may send what a phone may in Orkboard (gui/board_host.py `BoardPhone`): the Board's commands, Stop all, and a newer version
 // installed on the computer (shell-update.js), which restarts on it while this phone reconnects by itself.
 
-import { h, store, kept, outbox, clock, guessName } from "./util.js";
+import { h, store, kept, outbox, clock, guessName, PRODUCT } from "./util.js";
 import { makeBoard } from "./board.js";
 import { renewPush, dropPush } from "./shell-push.js";
 import { makeUpdate } from "./shell-update.js";
@@ -41,7 +41,7 @@ if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js?app=bo
 function unpaired(note = "") {
   ui = null;
   show(h("section", { class: "card" },
-    h("h1", {}, "Orkline"),
+    h("h1", {}, PRODUCT),
     note && h("p", { class: "warn" }, note),
     h("p", {}, "This phone is not paired with the board yet."),
     h("p", { class: "muted" }, "On the computer: the gear → Phones → Pair a phone, then scan the second QR code, "
@@ -68,7 +68,7 @@ async function pair(pairCode, name, msg, button) {
     const v = await fetch("/api/version", { headers: { Authorization: `Bearer ${pairCode}` } });
     if (!v.ok) throw new Error("The code was not taken: show a new one on the computer and scan it again.");
     const version = await v.json();
-    if (version.api !== API) throw new Error(`This app speaks api ${API}, the board ${version.api}: update Orkline.`);
+    if (version.api !== API) throw new Error(`This app speaks api ${API}, the board ${version.api}: update ${PRODUCT}.`);
     const r = await fetch("/api/pair", { method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ code: pairCode, name }) });
     const body = await r.json().catch(() => ({}));
@@ -96,7 +96,7 @@ function homeScreen() {
   handOff();
   show(h("section", { class: "card" },
     h("h1", {}, `Paired: ${device.name}`),
-    h("p", {}, "Now add it to the Home Screen: Share → Add to Home Screen, then open Orkline from there."),
+    h("p", {}, `Now add it to the Home Screen: Share → Add to Home Screen, then open ${PRODUCT} from there.`),
     h("p", { class: "muted" }, "Until then this page’s address holds the phone’s key: do not share it."),
     h("button", { class: "ork-btn", onclick: () => connect() }, "Use it in Safari for now")));
 }
@@ -253,7 +253,7 @@ function render(s, keptAt = 0) {
   board = s;
   seenAt = keptAt || Date.now();
   if (!keptAt) kept.set(s);
-  document.title = s.needs_you ? `(${s.needs_you}) Orkline` : "Orkline";
+  document.title = s.needs_you ? `(${s.needs_you}) ${PRODUCT}` : PRODUCT;
   try {                                          // the icon's badge: how many answers wait
     Promise.resolve(s.needs_you ? navigator.setAppBadge?.(s.needs_you) : navigator.clearAppBadge?.()).catch(() => {});
   } catch { /* a browser without badges */ }
@@ -265,7 +265,7 @@ function news(items) {
   for (const item of items) {
     flash(item.line);
     if (document.visibilityState === "hidden" && "Notification" in window && Notification.permission === "granted") {
-      navigator.serviceWorker?.ready.then((reg) => reg.showNotification("Orkline", { body: item.line, tag: item.id || item.kind, icon: "icon-192.png" }));
+      navigator.serviceWorker?.ready.then((reg) => reg.showNotification(PRODUCT, { body: item.line, tag: item.id || item.kind, icon: "icon-192.png" }));
     }
   }
   if (items.length && navigator.vibrate) navigator.vibrate(80);

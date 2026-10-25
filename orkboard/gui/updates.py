@@ -17,6 +17,7 @@ from typing import Any, Callable
 
 from orkboard import __version__, settings
 from orkboard.core import updates
+from orkboard import brand
 
 
 class Updates:
@@ -69,7 +70,7 @@ class Updates:
             raise UpdateError(f"The list of updates cannot be read: {e}") from None
         self._read(s)
         if self.offer is None:
-            self.host.town.toast(f"Orkline {__version__} is the latest", title="Updates")
+            self.host.town.toast(f"{brand.name()} {__version__} is the latest", title="Updates")
         return self.snapshot()
 
     def install(self, args: dict) -> dict[str, Any] | None:
@@ -96,11 +97,11 @@ class Updates:
     def _installed(self, result: updates.Result, version: str) -> None:
         if result.ok:
             self.state, self.installed = "installed", result.version or version
-            self.host.town.toast(f"Orkline {self.installed} is installed; it restarts now", title="Updates")
+            self.host.town.toast(f"{brand.name()} {self.installed} is installed; it restarts now", title="Updates")
             self.restart({})
         else:
             self.state, self.error = "failed", result.output
-            self.host.town.toast(f"The update {version} did not install. Orkline keeps running {__version__}.",
+            self.host.town.toast(f"The update {version} did not install. {brand.name()} keeps running {__version__}.",
                                  title="Updates", severity="error", timeout=15)
         self.host.on_change()
 

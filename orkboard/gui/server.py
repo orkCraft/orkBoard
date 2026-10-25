@@ -56,7 +56,7 @@ from websockets.datastructures import Headers
 from websockets.exceptions import ConnectionClosed
 from websockets.http11 import Request, Response
 
-from orkboard import __version__
+from orkboard import __version__, brand
 from orkboard.design import tokens
 from orkboard.gui import media, phones, pwa
 from orkboard.gui.board_host import CommandError
@@ -75,6 +75,12 @@ def _response(status: HTTPStatus, body: bytes, content_type: str = "text/plain; 
     headers = Headers([("Content-Type", content_type), ("Content-Length", str(len(body))),
                        ("Cache-Control", "no-store"), ("X-Content-Type-Options", "nosniff")])
     return Response(status.value, status.phrase, headers, body)
+
+
+def named(page: bytes) -> bytes:
+    """A page with the product's name (brand.py, decisions §91): its files say Orkboard, Orkline's host serves Orkline."""
+    own = brand.name()
+    return page if own == brand.DEFAULT else page.replace(brand.DEFAULT.encode(), own.encode())
 
 
 def resolve(path: str, preview: Path | None = None) -> Path | None:
@@ -231,7 +237,7 @@ class Server:
         if entry:
             html = html.replace(b'src="/static/app.js"', f'src="/static/{entry}"'.encode()) \
                        .replace(b'data-theme="camp" data-look="camp"', b'data-theme="office" data-look="office"')
-        return html
+        return named(html)
 
     # -- the socket ----------------------------------------------------------------------------
 

@@ -427,7 +427,7 @@ async def test_two_get_requests_on_one_connection_both_answered_keep_alive(fake_
                 assert r1.status == 200
                 assert r1.getheader("Connection", "").lower() == "keep-alive"
                 body1 = r1.read()
-                assert b"Orkline" in body1
+                assert b"Orkboard" in body1
 
                 conn.request("GET", "/app/board-app.js")
                 r2 = conn.getresponse()
@@ -460,7 +460,7 @@ async def test_connection_close_request_ends_the_connection(fake_repo):
                 assert r.will_close is True
                 assert conn.sock is None  # Connection: close ended the connection
                 body = r.read()
-                assert b"Orkline" in body
+                assert b"Orkboard" in body
                 assert r.isclosed()
             finally:
                 conn.close()
@@ -524,7 +524,7 @@ async def test_a_post_with_a_body_then_a_get_on_one_connection_gets_one_answer_a
         assert got.count(b"HTTP/1.1 ") == 1                 # one answer: the GET behind it is never read
         head = got.split(b"\r\n\r\n", 1)[0].decode("latin-1")
         assert "Connection: close" in head and "keep-alive" not in head
-        assert b"Orkline" not in got
+        assert b"Orkboard" not in got
     finally:
         server.stop()
         await asyncio.wait_for(task, 10)

@@ -9,6 +9,8 @@ repository. The Board's tasks use it; an orkspace's worktree (`link`, `unlink`, 
 """
 from __future__ import annotations
 
+from orkboard import brand
+
 import re
 import subprocess
 from dataclasses import dataclass
@@ -87,7 +89,7 @@ def remove(repo_root: Path, path: Path, force: bool = False) -> None:
     try:
         path.resolve().relative_to(root)
     except ValueError:
-        raise WorktreeError(f"{path} is not an Orkline worktree") from None
+        raise WorktreeError(f"{path} is not an {brand.name()} worktree") from None
     if not force and path.exists() and status(path).dirty:
         raise WorktreeError(f"{path.name} has uncommitted or untracked work — commit it or remove with force")
     args = ["worktree", "remove", *(["--force"] if force else []), str(path)]

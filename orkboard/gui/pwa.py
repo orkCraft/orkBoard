@@ -38,6 +38,7 @@ from pathlib import Path
 from typing import Any, Callable
 from urllib.parse import parse_qs, quote, urlsplit
 
+from orkboard import brand
 from orkboard.design import tokens
 from orkboard.gui import tailnet
 
@@ -163,6 +164,8 @@ def serve(method: str, target: str, keep_alive: bool = False, entry: str = "boar
         body = manifest(body, parts.query)
     if name == "index.html" and entry != "board-app.js" and entry in files():
         body = body.replace(b'src="board-app.js"', f'src="{entry}"'.encode())
+    if name in ("index.html", "manifest.webmanifest", "sw.js") and brand.name() != brand.DEFAULT:   # Orkline's (§91)
+        body = body.replace(brand.DEFAULT.encode(), brand.name().encode())
     extra = f"Content-Security-Policy: {CSP}\r\n" if path.suffix == ".html" else ""
     if name == "sw.js":
         extra += f"Service-Worker-Allowed: {PREFIX}\r\n"

@@ -9,6 +9,9 @@ export const toasts = signal([]);          // [{id, message, title, severity, to
 export const details = signal({});         // building id → its window's state (gui/views/), for the open ones
 
 const TOKEN = new URLSearchParams(location.search).get("t") || "";
+/** The product's name as a person reads it: the page's `data-product`, which its host serves (gui/server.py `named`,
+ *  decisions §91): Orkboard here, Orkline in Orkline. */
+export const PRODUCT = document.documentElement.dataset.product || "Orkboard";
 const pending = new Map();
 const terminals = new Map();               // session key → (kind, bytes) => void: who draws its frames                 // command id → {resolve, reject}
 let socket = null;

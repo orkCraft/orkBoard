@@ -23,7 +23,7 @@ import webbrowser
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard import __version__, settings
+from orkboard import __version__, brand, settings
 from orkboard.core import bus as b
 from orkboard.core import crashes, treasury, updates as core_updates, usage
 from orkboard.core.board_limits import BoardLimits
@@ -450,7 +450,7 @@ def toolkit() -> bool:
     return any(find_spec(name) is not None for name in ("gi", "qtpy"))
 
 
-def show(host: Any, server: Any, thread: Any, browser: bool, title: str = "Orkline",
+def show(host: Any, server: Any, thread: Any, browser: bool, title: str = "",
          toolkit: Callable[[], bool] = toolkit, attach: Callable[[Any], None] | None = None,
          stop: Callable[[], None] = lambda: None, dress: Callable[[], None] | None = None) -> None:
     """The served page in a window of its own (pywebview), else the browser (`browser`, no toolkit, no pywebview);
@@ -470,6 +470,7 @@ def show(host: Any, server: Any, thread: Any, browser: bool, title: str = "Orkli
         return
     if dress is not None:
         dress()
+    title = title or brand.name()
     url = server.url + ("&" if "?" in server.url else "?") + "app=1"      # the page knows it is the app's window
     window = webview.create_window(title, url, width=SIZE[0], height=SIZE[1], min_size=(960, 600),
                                    background_color="#141210")
@@ -490,7 +491,7 @@ def show(host: Any, server: Any, thread: Any, browser: bool, title: str = "Orkli
 
 def _in_browser(host: Any, server: Any, thread: Any, stop: Callable[[], None]) -> None:
     host.updates.quit = server.stop
-    print(f"Orkline is at {server.url} — Ctrl+C stops it")
+    print(f"{brand.name()} is at {server.url} — Ctrl+C stops it")
     webbrowser.open(server.url)
     try:
         thread.join()

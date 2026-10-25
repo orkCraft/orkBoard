@@ -12,7 +12,7 @@
 import { signal } from "@preact/signals";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "./html.js";
-import { command, say, town } from "./link.js";
+import { command, say, town, PRODUCT } from "./link.js";
 import { Dialog } from "./dialog.js";
 import { PhonesField } from "./phones.js";
 import { AccountsField } from "./accounts.js";
@@ -29,7 +29,7 @@ function Steps({ label, items, value, onPick }) {
     </span></div>`;
 }
 
-export const USAGE_WHAT = "Which features are used, as counts, and where in Orkline's own code something broke — "
+export const USAGE_WHAT = `Which features are used, as counts, and where in ${PRODUCT}'s own code something broke — `
   + "never your code, prompts, paths or project names. Every event: docs/usage-stats.md; crash reports: docs/crash-reports.md.";
 
 const UPDATE_WHAT = {
@@ -47,7 +47,7 @@ function UpdatesField({ s }) {
   return html`<${Steps} label=${say("Updates that install by themselves")} value=${policy}
       items=${[["auto", say("All")], ["critical", say("Critical")], ["ask", say("None")]]} onPick=${pick} />
     <p class="ok-font-status ok-tone-muted">${say(UPDATE_WHAT[policy] || "")}${t && t.update
-      ? say(` Orkline ${t.update.version} is out.`) : ""}</p>
+      ? say(` ${PRODUCT} ${t.update.version} is out.`) : ""}</p>
     <span><button class="ork-btn" onClick=${check}>Check for updates</button></span>`;
 }
 
@@ -64,7 +64,7 @@ function UsageField({ s, onPick }) {
 const AWAKE_WHAT = {
   off: "The computer sleeps as its power settings say. While it sleeps the orks stop, and a phone cannot reach the town.",
   carts: "While carts are in work and the computer is on power, it does not sleep by itself; with no work, or on battery, it sleeps as its power settings say.",
-  phone: "While Orkline runs, a phone is paired and the computer is on power, it does not sleep by itself, carts or not. On battery it sleeps as its power settings say, and the phone says so.",
+  phone: `While ${PRODUCT} runs, a phone is paired and the computer is on power, it does not sleep by itself, carts or not. On battery it sleeps as its power settings say, and the phone says so.`,
 };
 const AWAKE_WHY = {
   phone: "Holding now: a phone is paired and the computer is on power, so the phone can reach the town.",
@@ -75,7 +75,7 @@ function AwakeField({ s, onPick }) {
   const a = s.awake || {};
   const mode = a.mode || s.keep_awake;
   const lines = !s.awake_can && mode !== "off"
-    ? ["This computer gives Orkline no way to keep it awake here: set its power settings so it does not sleep while the town works."]
+    ? [`This computer gives ${PRODUCT} no way to keep it awake here: set its power settings so it does not sleep while the town works.`]
     : [AWAKE_WHAT[mode] || "",
       ...(mode === "phone" && !s.phones_paired ? ["No phone is paired yet: Settings → Phones."] : []),
       ...(s.awake_how && AWAKE_WHY[a.why] ? [AWAKE_WHY[a.why]] : []),
@@ -93,7 +93,7 @@ export function UsageAsk() {
   const t = town.value;
   if (done || !t || !t.usage_ask || t.onboarding || settingsOpen.value) return null;
   const answer = (v) => { setDone(true); command("usage.share", { share: v }).catch(() => {}); };
-  return html`<${Dialog} title=${say("Help improve Orkline?")} onCancel=${() => setDone(true)}
+  return html`<${Dialog} title=${say(`Help improve ${PRODUCT}?`)} onCancel=${() => setDone(true)}
       text=${say(USAGE_WHAT + " You can change this in Settings.")}
       actions=${html`<button class="ork-btn" onClick=${() => answer(false)}>${say("No, thanks")}</button>
         <button class="ork-btn primary" onClick=${() => answer(true)}>${say("Share")}</button>`} />`;
@@ -209,7 +209,7 @@ export function SettingsDialog() {
   const level = s.levels.find((x) => x.id === s.autonomy) || s.levels[0];
   const t = town.value;
   return html`<${Dialog} title=${say("Town settings")} onCancel=${close}
-      actions=${html`<span class="ok-font-status ok-tone-muted gui-settings__version">Orkline ${s.version}</span>
+      actions=${html`<span class="ok-font-status ok-tone-muted gui-settings__version">${PRODUCT} ${s.version}</span>
         <button class="ork-btn primary" onClick=${close}>${say("Close")}</button>`}>
     <div ref=${box} class="gui-form gui-settings gui-scrolls">
       <span class="gui-you__camp">${say(`Town: ${t.project}`)}</span>

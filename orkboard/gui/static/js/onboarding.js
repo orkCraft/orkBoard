@@ -6,7 +6,7 @@
 import { signal } from "@preact/signals";
 import { useEffect, useState } from "preact/hooks";
 import { html, cls } from "./html.js";
-import { command, openLink, say, town } from "./link.js";
+import { command, openLink, say, town, PRODUCT } from "./link.js";
 import { Dialog } from "./dialog.js";
 import { MascotHead, BIOMES, headerSprite, TypeIcon, ToolMark } from "./icons.js";
 import { terrainUrl } from "./terrain.js";
@@ -113,7 +113,7 @@ function CheckFailed({ c }) {
 function NoTools({ t }) {
   return html`<div class="gui-onb__none">
     <p class="ok-font-body">AI tools are the coding agents you run in a terminal: Claude Code, Codex, Cursor's agent.
-      Orks run on one of yours, with your own sign-in and your own plan. Orkline has no AI of its own, so it needs one of them.</p>
+      Orks run on one of yours, with your own sign-in and your own plan. ${PRODUCT} has no AI of its own, so it needs one of them.</p>
     <div class="gui-onb__table">
       ${t.recommended.map((h) => html`<div key=${h.id} class="gui-onb__row is-get">
         <span class="gui-onb__tool"><${ToolMark} id=${h.id} mark=${h.mark} />${h.title}</span>
@@ -561,7 +561,7 @@ export function Onboarding() {
   if (o.step === "raising") return o.raising ? html`<${Raising} o=${o} />` : null;
   const Step = STEPS[o.step];
   return html`<div class="gui-onb" role="dialog" aria-modal="true" aria-label=${say("Setting up")}>
-    <div class="gui-onb__brand"><img src="/ds/logo/orkcraft-dark.svg" alt="Orkline" onError=${(e) => { e.target.replaceWith(document.createTextNode("Orkline")); }} /></div>
+    <div class="gui-onb__brand"><img src="/ds/logo/orkcraft-dark.svg" alt=${PRODUCT} onError=${(e) => { e.target.replaceWith(document.createTextNode(PRODUCT)); }} /></div>
     ${Step && html`<${Step} o=${o} />`}
   </div>`;
 }

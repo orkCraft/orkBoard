@@ -4,7 +4,7 @@
 // until the window opens again (under the default policy it installs by itself then). Settings shows it too.
 import { signal } from "@preact/signals";
 import { html } from "../html.js";
-import { command, town } from "../link.js";
+import { command, town, PRODUCT } from "../link.js";
 import { Modal, dialog, closeDialog } from "./modals.js";
 
 const HIDDEN_KEY = "orkcraft.update.later";
@@ -28,9 +28,9 @@ export const setPolicy = (policy) => command("update.policy", { policy }).catch(
 
 /** What the offer is called: a critical one first, then a major one, else a plain newer version. */
 export function updateTitle(u) {
-  if (u.critical) return `Critical update: Orkline ${u.version}`;
-  if (u.major) return `New version: Orkline ${u.version}`;
-  return `Orkline ${u.version} is out`;
+  if (u.critical) return `Critical update: ${PRODUCT} ${u.version}`;
+  if (u.major) return `New version: ${PRODUCT} ${u.version}`;
+  return `${PRODUCT} ${u.version} is out`;
 }
 
 export function UpdateAsk() {
@@ -53,17 +53,17 @@ export function UpdateAsk() {
       ${u.major && !u.critical && !busy && html`<p class="ok-font-status">A major update: what is new may change how you work. Read it before you install.</p>`}
       ${notes.length > 0 && html`<div class="shell-md"><ul>${notes.map((n, k) => html`<li key=${k}>${n}</li>`)}</ul></div>`}
       <p class="ok-font-status ok-tone-muted">${u.can
-        ? html`Orkline restarts when it is in: what runs now stops. It installs with <code>${u.how}</code>`
+        ? html`${PRODUCT} restarts when it is in: what runs now stops. It installs with <code>${u.how}</code>`
         : html`It cannot install itself here: ${u.how}`}</p>
-      ${u.state === "failed" && html`<p class="ok-font-status ok-tone-error">It did not install. Orkline keeps running ${u.current}.</p>
+      ${u.state === "failed" && html`<p class="ok-font-status ok-tone-error">It did not install. ${PRODUCT} keeps running ${u.current}.</p>
         <pre class="shell-brief">${u.error}</pre>`}
     </div>
   <//>`;
 }
 
 const POLICIES = [
-  ["critical", "Critical ones", "A critical update (a fix for something that loses work or lets harm in) installs when Orkline opens; the others are offered."],
-  ["auto", "All", "Every update installs when Orkline opens."],
+  ["critical", "Critical ones", `A critical update (a fix for something that loses work or lets harm in) installs when ${PRODUCT} opens; the others are offered.`],
+  ["auto", "All", `Every update installs when ${PRODUCT} opens.`],
   ["ask", "None", "Nothing installs by itself: every update is offered, a critical one loudly."],
 ];
 
@@ -78,7 +78,7 @@ export function UpdatesField() {
     ${u && u.version && u.state !== "installed"
       ? html`<div class="board-row"><span class="ok-font-status">${updateTitle(u)} (you have ${u.current}).</span>
           <button type="button" class="ork-btn primary" onClick=${() => { askAgain(); closeDialog(); }}>Update…</button></div>`
-      : html`<span class="ok-font-status ok-tone-muted">You have the latest Orkline${t && t.version ? ` (${t.version})` : ""}.</span>`}
+      : html`<span class="ok-font-status ok-tone-muted">You have the latest ${PRODUCT}${t && t.version ? ` (${t.version})` : ""}.</span>`}
     <div class="board-row"><span class="ok-font-label">Install by themselves</span>
       <select class="ork-field" aria-label="Updates that install by themselves" value=${policy} onChange=${(e) => setPolicy(e.target.value)}>
         ${POLICIES.map(([v, label]) => html`<option key=${v} value=${v}>${label}</option>`)}

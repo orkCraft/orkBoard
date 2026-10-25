@@ -18,6 +18,7 @@ import shutil
 import threading
 from typing import Callable, Iterable
 
+from orkboard import brand
 from orkboard.realm import harnesses
 
 MISSING, LOGIN, LIMIT, NETWORK, OTHER = "missing", "login", "limit", "network", "other"
@@ -41,9 +42,9 @@ _WORDS: tuple[tuple[str, re.Pattern], ...] = (
                          r"|failed to connect|could not resolve|name resolution|socket hang up|fetch failed|offline")),
 )
 
-# What happened, in one line; {tool} is its title.
+# What happened, in one line; {tool} is its title, {product} the product's name (brand.py).
 LINES = {
-    MISSING: "{tool} is not installed, or Orkline cannot find it on this computer.",
+    MISSING: "{tool} is not installed, or {product} cannot find it on this computer.",
     LOGIN: "{tool} is not signed in, or its sign-in has expired.",
     LIMIT: "{tool} hit a usage limit or its service is overloaded.",
     NETWORK: "{tool} could not reach its service. Check the internet connection.",
@@ -139,7 +140,7 @@ def plainly(err: ToolError, cap: int = PLAIN_CHARS) -> str:
     is not signed in, or its sign-in has expired. Claude Code said: … If claude works in your terminal, …"); the
     tool's words are cut first when the line is longer than `cap`."""
     title = harnesses.title(err.harness)
-    line, step = LINES[err.kind].format(tool=title), what_to_do(err)
+    line, step = LINES[err.kind].format(tool=title, product=brand.name()), what_to_do(err)
     room = cap - len(line) - len(step) - len(title) - 10
     words = err.detail if len(err.detail) <= room else err.detail[:max(0, room - 1)].rstrip() + "…"
     if not words.endswith((".", "!", "?", "…")):
@@ -157,9 +158,9 @@ def claude_sign_in(said: str, env: dict | None = None) -> str:
     low = (said or "").lower()
     key = next((k for k in ("ANTHROPIC_AUTH_TOKEN", "ANTHROPIC_API_KEY") if env.get(k)), "")
     if key and ("api key" in low or "invalid" in low or "401" in low):
-        return f"{key} is set where Orkline runs, and claude -p uses it before your sign-in: remove it or fix the key."
+        return f"{key} is set where {brand.name()} runs, and claude -p uses it before your sign-in: remove it or fix the key."
     if "not logged in" in low or "no valid credential" in low:
-        return ("If claude works in your terminal, Orkline runs it with another config folder (CLAUDE_CONFIG_DIR) or "
+        return (f"If claude works in your terminal, {brand.name()} runs it with another config folder (CLAUDE_CONFIG_DIR) or "
                 "another claude: Save logs shows which. Else sign in in a terminal: claude, then /login.")
     if "another claude code process is refreshing" in low:
         # its sign-in was being renewed by another claude (Orkline runs several at once): no sign-in was refused
@@ -187,6 +188,6 @@ def report(err: ToolError, enabled: Iterable[str], main: str, where: str = "",
         hint = ""
     h = harnesses.get(err.harness)
     return {"harness": err.harness, "tool": title, "mark": h.mark if h else "", "kind": err.kind, "where": where,
-            "title": f"{title} hit an error", "line": LINES[err.kind].format(tool=title),
+            "title": f"{title} hit an error", "line": LINES[err.kind].format(tool=title, product=brand.name()),
             "action": what_to_do(err), "detail": err.detail or str(err), "code": err.code,
             "switch": switch, "hint": hint, "main": is_main}

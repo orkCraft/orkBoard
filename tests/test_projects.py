@@ -201,7 +201,7 @@ def test_open_folder_refuses_in_words_and_offers_git(tmp_path):
     assert "system" in host.command("projects.open", {"path": "/usr"})["error"]
     (Path.home() / ".ssh" / "keys").mkdir(parents=True)
     assert project_folder.refusal("/") and "keys" in project_folder.refusal(Path.home() / ".ssh" / "keys")
-    assert "Orkline's own" in project_folder.refusal(Path(project_folder.__file__).parent)
+    assert "Orkboard's own" in project_folder.refusal(Path(project_folder.__file__).parent)
     plain = tmp_path / "notes"
     plain.mkdir()
     (plain / "todo.md").write_text("- a\n", encoding="utf-8")

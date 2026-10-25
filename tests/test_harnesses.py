@@ -90,9 +90,9 @@ def test_a_refused_claude_sign_in_says_what_is_different_here():
     # the owner's 19 October: "not signed in", while claude starts in the terminal
     from orkboard.realm import tool_errors
     no = tool_errors.claude_sign_in("Not logged in · Please run /login", env={})
-    assert "Orkline runs it with another config folder (CLAUDE_CONFIG_DIR) or another claude" in no and "Save logs" in no
+    assert "Orkboard runs it with another config folder (CLAUDE_CONFIG_DIR) or another claude" in no and "Save logs" in no
     key = tool_errors.claude_sign_in("Invalid API key · Fix external API key", env={"ANTHROPIC_API_KEY": "sk-x"})
-    assert key.startswith("ANTHROPIC_API_KEY is set where Orkline runs, and claude -p uses it before your sign-in")
+    assert key.startswith("ANTHROPIC_API_KEY is set where Orkboard runs, and claude -p uses it before your sign-in")
     assert "sk-x" not in key
     assert tool_errors.claude_sign_in("OAuth token revoked · Please run /login", env={}) == "Sign in again in a terminal: claude, then /login."
     err = tool_errors.ToolError("claude", "Not logged in · Please run /login", 1)

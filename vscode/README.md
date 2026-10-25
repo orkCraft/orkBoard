@@ -1,11 +1,11 @@
-# Orkline for VS Code
+# Orkboard for VS Code
 
 The Board in an editor tab: a project's parties and their goals, the goals' specs and plans, the orks at work and the
-results to review. It is the same page as Orkline's own window, for the folder open in VS Code.
+results to review. It is the same page as Orkboard's own window, for the folder open in VS Code.
 
 ## What it needs
 
-Orkline runs the Board with **Orkboard**, a Python program (Python 3.11 or later), on this computer:
+The extension runs the Board with the **orkboard** program (Python 3.11 or later) on this computer:
 
 ```sh
 uv tool install 'orkboard @ git+https://github.com/orkWorks/orkBoard'
@@ -17,9 +17,9 @@ found and lets you choose.
 
 ## Use
 
-- **Orkline: Open the Board** opens the Board of the workspace's folder (with several folders, it asks which one).
-- **Orkline: Close the Board** closes every Board and stops Orkboard.
-- **Orkline: Show the log** shows what Orkboard printed.
+- **Orkboard: Open the Board** opens the Board of the workspace's folder (with several folders, it asks which one).
+- **Orkboard: Close the Board** closes every Board and stops Orkboard.
+- **Orkboard: Show the log** shows what Orkboard printed.
 
 A Board left open opens again when VS Code restarts.
 
@@ -27,8 +27,8 @@ A Board left open opens again when VS Code restarts.
 
 | Setting | What it does |
 | --- | --- |
-| `orkline.command` | The program that runs the Board. Empty: `orkboard` from the PATH, else `uvx`. |
-| `orkline.args` | Arguments put before the extension's own, e.g. `["-m", "orkboard.gui.board_host"]` when `orkline.command` is a Python. |
+| `orkboard.command` | The program that runs the Board. Empty: `orkboard` from the PATH, else `uvx`. |
+| `orkboard.args` | Arguments put before the extension's own, e.g. `["-m", "orkboard.gui.board_host"]` when `orkboard.command` is a Python. |
 
 ## How it works, and what it does not do
 

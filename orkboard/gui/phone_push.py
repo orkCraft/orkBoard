@@ -20,6 +20,7 @@ from orkboard.gui import web_push
 from orkboard.gui.ideas_recap import RECAP_DAYS
 from orkboard.realm import board_recap, event_log
 from orkboard.realm.idea_words import short_of
+from orkboard import brand
 
 TICK_S = 30.0
 PUSH_GAP_S = 900.0
@@ -153,7 +154,7 @@ class Pusher:
                 continue
             if waiting > self._told[did] and self._free(did, "needs", now):
                 self._told[did] = waiting
-                out.setdefault("needs", []).append((d, {"title": "Orkline", "body": self.words_needs(waiting), "tag": "needs",
+                out.setdefault("needs", []).append((d, {"title": brand.name(), "body": self.words_needs(waiting), "tag": "needs",
                                                          "badge": waiting, "url": "./#needs"}))
             elif self._morning_due(d, machine, now):
                 since = max(board_recap.when(d.get("seen")) or now, now - dt.timedelta(days=RECAP_DAYS))      # as `ideas.recap` caps it
@@ -161,7 +162,7 @@ class Pusher:
                 if not body:                                   # nothing to say: the day is checked, not asked again every tick
                     pairing.set_push(did, {**d["push"], "morning": now.date().isoformat()})
                 elif self._free(did, "recap", now):
-                    out.setdefault("recap", []).append((d, {"title": "Orkline", "body": body, "tag": "recap", "badge": waiting, "url": "./"}))
+                    out.setdefault("recap", []).append((d, {"title": brand.name(), "body": body, "tag": "recap", "badge": waiting, "url": "./"}))
                     pairing.set_push(did, {**d["push"], "morning": now.date().isoformat()})
         for tag, sends in out.items():
             for d, _m in sends:

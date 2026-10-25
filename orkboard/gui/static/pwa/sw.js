@@ -152,7 +152,7 @@ self.addEventListener("push", (e) => {
   try { d = e.data ? e.data.json() : {}; } catch {}
   const tag = d.tag || "orkline";
   const badge = typeof d.badge === "number" && self.navigator.setAppBadge ? (d.badge > 0 ? self.navigator.setAppBadge(d.badge) : self.navigator.clearAppBadge()).catch(() => {}) : null;
-  e.waitUntil(Promise.all([self.registration.showNotification(d.title || "Orkline", { body: d.body || "", tag, icon: "icon-192.png", data: { url: d.url || "./", tag } }), badge]));
+  e.waitUntil(Promise.all([self.registration.showNotification(d.title || "Orkboard", { body: d.body || "", tag, icon: "icon-192.png", data: { url: d.url || "./", tag } }), badge]));
 });
 
 // A tap: the app's window is focused (and told which push it came from) or opened at the push's address, `#from=push-<tag>` added so the

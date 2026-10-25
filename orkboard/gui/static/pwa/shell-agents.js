@@ -3,7 +3,7 @@
 // short name small, and Edit — with + Add agent at the top (from the library, or your own). A role is one line: its head, its name, how many
 // at once (×2) and what a task of it costs (≈ $0.40 a task), and under it, muted, its day and week (spent today; what a result costs and
 // how often it is right the first time, once it has three merged; the Taskmaster's, its plans' tasks). A card opens its task on its own screen.
-import { h, sheet, head as raceHead } from "./util.js";
+import { h, sheet, head as raceHead, PRODUCT } from "./util.js";
 import { pctOf, rated, SHARE_TIP } from "./shell-spend.js";
 import { steady } from "./shell-util.js";
 import { makeAgentSheet } from "./shell-agent.js";
@@ -89,7 +89,7 @@ export function makeAgents(core) {
 
   // -- + Add agent: from the library (the agents this project has not), or your own (spec 41 §8) -------------------------------
   const libList = h("div", { class: "team-list library-list" });
-  const choose = sheet("Add an agent", h("p", { class: "muted" }, "Pick one that comes with Orkline, or write your own."), libList,
+  const choose = sheet("Add an agent", h("p", { class: "muted" }, `Pick one that comes with ${PRODUCT}, or write your own.`), libList,
     h("div", { class: "row" }, h("button", { class: "ork-btn big", type: "button", "data-own": "", onclick: () => { choose.close(); sheetOf.open(); } }, "Your own")));
   function drawLibrary() {
     const free = (core.st.roles?.library || []).filter((a) => !a.installed);
@@ -100,7 +100,7 @@ export function makeAgents(core) {
       } }, raceHead(raceOf(a), a.tier || "warrior"), h("b", {}, a.name),
       h("small", { class: "muted" }, `${CRAFT_WORDS[a.craft] || a.craft} · ${TIER_WORDS[a.tier] || ""} · ${a.line || ""}`.replace(/ · +$/, "")),
       h("span", { class: "team-mark", "aria-hidden": "true" }, "+")))
-      : [h("p", { class: "muted" }, "Every agent that comes with Orkline is already in this project.")]));
+      : [h("p", { class: "muted" }, `Every agent that comes with ${PRODUCT} is already in this project.`)]));
   }
   const openAdd = () => { drawLibrary(); choose.open(); };
 

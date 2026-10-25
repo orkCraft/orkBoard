@@ -8,6 +8,7 @@ import { Modal, closeDialog, openDialog } from "./modals.js";
 import { currentProject } from "./projects.js";
 import { saveLogs } from "./errors.js";
 import { UpdatesField } from "./update.js";
+import { PRODUCT } from "../link.js";
 
 
 /** "01:00-07:00" → ["01:00", "07:00"]. */
@@ -40,7 +41,7 @@ export function SettingsDialog() {
       <div class="shell-gear__logs"><span class="ok-font-label">Download today's logs</span>
         <button type="button" class="ork-btn" onClick=${() => saveLogs("", 1)}>Today</button>
         <button type="button" class="ork-btn" onClick=${() => saveLogs("", 7)}>The last 7 days</button></div>
-      <p class="ok-font-status ok-tone-muted">Saved in your Downloads folder: every model call with what went in and came out, and where Orkline runs.</p>
+      <p class="ok-font-status ok-tone-muted">Saved in your Downloads folder: every model call with what went in and came out, and where ${PRODUCT} runs.</p>
       <p class="ok-font-status ok-tone-muted">What you did and what the orks did, on this machine only. Off by default. The colours follow your system's light or dark setting.</p>
     </div>
   <//>`;

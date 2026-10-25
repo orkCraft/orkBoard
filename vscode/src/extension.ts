@@ -1,10 +1,10 @@
-// Orkline in VS Code: the Board of a workspace's folder in an editor tab. The page is Orkboard's own (orkboard/gui/),
+// Orkboard in VS Code: the Board of a workspace's folder in an editor tab. The page is Orkboard's own (orkboard/gui/),
 // served by `orkboard --serve` on 127.0.0.1 and shown in an iframe, so the tab and the app's window are one page.
 import { randomBytes } from "node:crypto";
 import * as vscode from "vscode";
 import { BoardProcess, INSTALL, launches, type Served } from "./board";
 
-const VIEW = "orkline.board";
+const VIEW = "orkboard.board";
 
 interface State {
   folder?: string;
@@ -17,7 +17,7 @@ class Board {
 
   constructor(readonly folder: string | undefined, readonly panel: vscode.WebviewPanel, home: vscode.Uri,
               private readonly log: vscode.OutputChannel, private readonly gone: () => void) {
-    const config = vscode.workspace.getConfiguration("orkline");
+    const config = vscode.workspace.getConfiguration("orkboard");
     const ways = launches(config.get<string>("command", ""), config.get<string[]>("args", []), folder);
     this.process = new BoardProcess(ways, folder, {
       served: (served) => void this.show(served),
@@ -52,10 +52,10 @@ class Board {
     if (missing) {
       this.page("Orkboard, which runs the Board, is not installed.");
       const pick = await vscode.window.showErrorMessage(
-        `Orkline needs Orkboard to run the Board. Install it with ${INSTALL}, or name the program in the setting orkline.command.`,
+        `Orkboard is not installed. Install it with ${INSTALL}, or name the program in the setting orkboard.command.`,
         "Copy the install command", "Open the setting");
       if (pick === "Copy the install command") await vscode.env.clipboard.writeText(INSTALL);
-      if (pick === "Open the setting") await vscode.commands.executeCommand("workbench.action.openSettings", "orkline.command");
+      if (pick === "Open the setting") await vscode.commands.executeCommand("workbench.action.openSettings", "orkboard.command");
       return;
     }
     if (code === 0 && this.served === null) return;
@@ -100,7 +100,7 @@ ${url ? `<iframe src="${esc(url)}" allow="clipboard-read; clipboard-write"></ifr
 }
 
 export function activate(context: vscode.ExtensionContext): void {
-  const log = vscode.window.createOutputChannel("Orkline");
+  const log = vscode.window.createOutputChannel("Orkboard");
   const boards = new Map<string, Board>();
   const key = (folder: string | undefined) => folder ?? "";
 
@@ -129,14 +129,14 @@ export function activate(context: vscode.ExtensionContext): void {
 
   context.subscriptions.push(
     log,
-    vscode.commands.registerCommand("orkline.openBoard", async () => {
+    vscode.commands.registerCommand("orkboard.openBoard", async () => {
       const folder = await pickFolder();
       if (folder !== null) open(folder);
     }),
-    vscode.commands.registerCommand("orkline.closeBoard", () => {
+    vscode.commands.registerCommand("orkboard.closeBoard", () => {
       for (const board of [...boards.values()]) board.close();
     }),
-    vscode.commands.registerCommand("orkline.showLog", () => log.show()),
+    vscode.commands.registerCommand("orkboard.showLog", () => log.show()),
     vscode.window.registerWebviewPanelSerializer(VIEW, {
       async deserializeWebviewPanel(panel: vscode.WebviewPanel, state: State | undefined) {
         open(state?.folder, panel);

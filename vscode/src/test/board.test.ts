@@ -8,14 +8,14 @@ const SAID = { url: "http://127.0.0.1:5000/?t=abc&app=1", origin: "http://127.0.
 
 // A stand-in for `orkboard --serve`: says where it is, then serves until its stdin closes.
 const FAKE = `
-process.stdout.write("Orkline is starting\\n" + JSON.stringify(${JSON.stringify(SAID)}) + "\\n");
+process.stdout.write("Orkboard is starting\\n" + JSON.stringify(${JSON.stringify(SAID)}) + "\\n");
 process.stdin.resume();
 process.stdin.on("end", () => process.exit(0));
 `;
 
 test("the address is read from its line of JSON, and only a loopback http one", () => {
   assert.deepEqual(parseServed(JSON.stringify(SAID) + "\r"), SAID);
-  assert.equal(parseServed("Orkline is at http://127.0.0.1:5000"), null);
+  assert.equal(parseServed("Orkboard is at http://127.0.0.1:5000"), null);
   assert.equal(parseServed("{not json"), null);
   assert.equal(parseServed(JSON.stringify({ ...SAID, url: "https://example.com/?t=abc" })), null);
   assert.equal(parseServed(JSON.stringify({ origin: SAID.origin })), null);
@@ -43,7 +43,7 @@ test("a missing program gives way to the next; it is served, logs the rest and s
   });
   assert.deepEqual(await exited, [0, false]);
   assert.deepEqual(served, [SAID]);
-  assert.ok(logs.some((l) => l.includes("Orkline is starting")));
+  assert.ok(logs.some((l) => l.includes("Orkboard is starting")));
 });
 
 test("no program at all is said as missing", async () => {
