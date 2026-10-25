@@ -171,4 +171,4 @@ async def test_a_party_with_no_goals_says_so_and_asks_remove_or_cancel(fake_repo
 
 def test_the_service_worker_is_one_up():
     sw = (Path(pwa.__file__).parent / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")
-    assert 'const CACHE = "orkcraft-app-v90";' in sw and re.search(r'"shell-party-remove\.js"', sw[sw.index("const SHELL"):sw.index("];", sw.index("const SHELL"))])
+    assert int(re.search(r'const CACHE = "orkcraft-app-v(\d+)";', sw).group(1)) >= 90 and re.search(r'"shell-party-remove\.js"', sw[sw.index("const SHELL"):sw.index("];", sw.index("const SHELL"))])

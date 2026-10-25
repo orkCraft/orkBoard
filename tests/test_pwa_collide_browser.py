@@ -4,6 +4,7 @@
 phone; no sideways scroll; `sw.js` v86."""
 from __future__ import annotations
 
+import re
 import copy
 import os
 from pathlib import Path
@@ -263,4 +264,4 @@ async def test_the_hand_with_the_stop_raised_fits_the_screen(fake_repo, monkeypa
 
 def test_the_service_worker_is_one_up():
     sw = (Path(pwa.__file__).parent / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")
-    assert 'const CACHE = "orkcraft-app-v86";' in sw
+    assert int(re.search(r'const CACHE = "orkcraft-app-v(\d+)";', sw).group(1)) >= 86

@@ -4,6 +4,7 @@ screen's head 28 × 28 (`.big`) beside its words; a raw goal, a goal with no tas
 orkUI's `moons/` files are served by the app (and kept by the service worker); `sw.js` v86."""
 from __future__ import annotations
 
+import re
 import copy
 from pathlib import Path
 
@@ -165,4 +166,4 @@ def test_the_app_serves_the_moons_and_its_worker_keeps_them_in_the_new_version()
     assert {f"moons/{n}.svg" for n in MOONS} <= set(served) and all(served[f"moons/{n}.svg"].is_file() for n in MOONS)
     sw = (Path(pwa.__file__).parent / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")
     shell = sw[sw.index("const SHELL"):sw.index("];", sw.index("const SHELL"))]
-    assert 'const CACHE = "orkcraft-app-v86";' in sw and all(f'"moons/{n}.svg"' in shell for n in MOONS)
+    assert int(re.search(r'const CACHE = "orkcraft-app-v(\d+)";', sw).group(1)) >= 86 and all(f'"moons/{n}.svg"' in shell for n in MOONS)

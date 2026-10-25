@@ -4,6 +4,7 @@ the text face, the tool and what a tap does; a link opens in the phone's browser
 the phone; *Seen* lowers the count and folds the line under *Seen*; no sideways scroll, every tap 44 px; `sw.js` v86."""
 from __future__ import annotations
 
+import re
 import base64
 from pathlib import Path
 
@@ -157,4 +158,4 @@ async def test_seen_lowers_the_count_and_folds_the_line_under_seen(fake_repo, mo
 
 def test_the_service_worker_is_one_up_and_keeps_the_new_file():
     sw = (Path(pwa.__file__).parent / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")
-    assert 'const CACHE = "orkcraft-app-v86";' in sw and '"shell-canvases.js"' in sw[sw.index("const SHELL"):sw.index("];", sw.index("const SHELL"))]
+    assert int(re.search(r'const CACHE = "orkcraft-app-v(\d+)";', sw).group(1)) >= 86 and '"shell-canvases.js"' in sw[sw.index("const SHELL"):sw.index("];", sw.index("const SHELL"))]

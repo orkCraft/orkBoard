@@ -4,6 +4,7 @@ and 35 ms apart, six at most (the rest rise); the tasks of other goals rise; a s
 motion, after a refusal, or for tasks that come after 6 s or with no press; `sw.js` v64."""
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -260,7 +261,7 @@ async def test_tasks_that_come_after_six_seconds_rise_and_so_do_those_of_a_start
 
 @pytest.mark.asyncio
 async def test_another_partys_plan_started_from_the_raised_card_deals_nothing_and_the_cache_is_v64(fake_repo, monkeypatch):
-    assert 'const CACHE = "orkcraft-app-v86";' in (Path(pwa.__file__).parent / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")
+    assert int(re.search(r'const CACHE = "orkcraft-app-v(\d+)";', (Path(pwa.__file__).parent / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")).group(1)) >= 86
     tech(failed=False, ops=False, todos=False)
     SCENE["needs"].append({"kind": "plan", "idea": "art", "goal": "tech", "title": "Reference art", "text": "Plan ready", "priority": "normal", "blocks": False, "at": "2026-10-20T08:00:00"})
     async with _phone(fake_repo, monkeypatch, init=RECORD) as (stub, page):

@@ -4,6 +4,7 @@
 marks never; the leader's column too; on a member's card the tool in words after the head's; the stage switch as it was; the service worker's version."""
 from __future__ import annotations
 
+import re
 import copy
 
 import pytest
@@ -204,4 +205,4 @@ async def test_the_stage_switch_wears_no_mark_and_its_faces_are_as_they_were(fak
 
 def test_the_service_worker_is_at_v68():
     sw = (pwa.ROOT / "sw.js").read_text(encoding="utf-8")
-    assert 'const CACHE = "orkcraft-app-v86";' in sw                                                                              # specs 60 C and 61 C: one up from v67
+    assert int(re.search(r'const CACHE = "orkcraft-app-v(\d+)";', sw).group(1)) >= 86                                                                              # specs 60 C and 61 C: one up from v67

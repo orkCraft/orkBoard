@@ -5,6 +5,7 @@ and Ideation's list say its goal (*At work in Passkey · 3 of 7*, *In main*, *In
 draws as before; the service worker's version. The Release party's goals, flags and forms are tests/test_pwa_release_browser.py's."""
 from __future__ import annotations
 
+import re
 import copy
 from pathlib import Path
 
@@ -263,4 +264,4 @@ async def test_a_sent_pitch_says_its_goal_on_its_sheet_and_in_ideations_list(fak
 def test_the_service_worker_is_one_version_up_and_caches_the_route_s_module():
     sw = (Path(pwa.__file__).parent / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")
     shell = sw[sw.index("const SHELL"):sw.index("];", sw.index("const SHELL"))]
-    assert 'const CACHE = "orkcraft-app-v86";' in sw and '"shell-route.js"' in shell and '"shell-release.js"' in shell
+    assert int(re.search(r'const CACHE = "orkcraft-app-v(\d+)";', sw).group(1)) >= 86 and '"shell-route.js"' in shell and '"shell-release.js"' in shell

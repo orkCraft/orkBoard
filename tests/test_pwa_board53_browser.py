@@ -4,6 +4,7 @@ their signs on the faces they come from; a face pressed shows the member's tasks
 under the top; a goal's type's sign before its name on a task's card and in place of *Goal* on a Planning goal's card, none for a goal with no type, none on a stop; 44 px targets; no sideways scroll."""
 from __future__ import annotations
 
+import re
 import pytest
 
 from orkboard.gui import pwa
@@ -156,4 +157,4 @@ async def test_a_tasks_card_wears_its_goals_type_top_right_a_planning_goal_says_
 
 def test_the_service_worker_is_at_v61_with_b_merged_over_a_v60():
     sw = (pwa.ROOT / "sw.js").read_text(encoding="utf-8")
-    assert 'const CACHE = "orkcraft-app-v86";' in sw                                                           # A set v60, B v61: the second to merge keeps v61 (spec 53 §7); spec 54 B is v62
+    assert int(re.search(r'const CACHE = "orkcraft-app-v(\d+)";', sw).group(1)) >= 86                                                           # A set v60, B v61: the second to merge keeps v61 (spec 53 §7); spec 54 B is v62

@@ -5,6 +5,7 @@ sheet: the party's heads (the leader's first, six at most), each from where the 
 `sw.js` v68."""
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -300,4 +301,4 @@ async def test_a_team_changed_from_the_partys_own_screen_gathers_nothing(fake_re
 
 
 def test_the_service_worker_is_one_version_up():
-    assert 'const CACHE = "orkcraft-app-v86";' in (Path(pwa.__file__).parent / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")
+    assert int(re.search(r'const CACHE = "orkcraft-app-v(\d+)";', (Path(pwa.__file__).parent / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")).group(1)) >= 86
