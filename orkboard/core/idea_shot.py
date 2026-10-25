@@ -5,7 +5,7 @@ that opens says so (*no picture: no preview*, realm/idea_shots.py `NONE`). The p
 
     idea_shot.sees(["src/App.css", "tests/x.py"])                # True: a stylesheet is what people see
     idea_shot.preview_of(state_dir, worktree)                    # how the preview opens: static · a command ("npm run dev"), else None
-    got = idea_shot.draw(state_dir, worktree, "/tmp/shot.png")   # (ok, why): the PNG written, or the reason there is none
+    ok, why = idea_shot.make(state_dir, worktree, dest, "/")     # the PNG written to `dest`, or the reason there is none (`no preview`, `no browser`)
     runner.shoot(slug, tid, worktree, start_sha, rnd)            # the runner's: the task keeps `shot` (a mixin of IdeaRunner)
 
 The preview is, in this order: the `preview` line of `.orkcraft/checks.toml` (`preview = "npm run dev"`; `preview_port`, `preview_path`,
