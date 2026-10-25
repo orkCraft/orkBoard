@@ -14,6 +14,7 @@ import { makeReview } from "./shell-review.js";
 import { makePreview } from "./shell-preview.js";
 import { makeNeeds } from "./shell-needs.js";
 import { makeStops } from "./shell-stops.js";
+import { makeCanvases } from "./shell-canvases.js";
 import { makeFab } from "./shell-fab.js";
 import { firstStopGoal, partiesOf } from "./shell-arena-words.js";
 import { makePitch, pitchNode } from "./shell-pitch.js";
@@ -88,10 +89,11 @@ export function makeBoard(ctx) {
   const review = makeReview(core);
   const needs = makeNeeds(core, ctx);
   const fab = makeFab(core);
+  const canvases = makeCanvases(core);                     // what an AI tool drew outside the code: a fold row above what waits for you (spec 78 §4)
   const stops = makeStops(core, ctx, needs, boardTab.ops);
   const preview = makePreview(core, ctx, { agents: agents.el });
   const pitch = makePitch(core, ctx);                      // a pitch of Ideation opens in its sheet, wherever it is opened from
-  const el = h("div", { class: "board v1" }, top.el, boardTab.el, stops.el, fab.el, preview.el);
+  const el = h("div", { class: "board v1" }, top.el, boardTab.el, canvases.el, stops.el, fab.el, preview.el);
 
   /** What the person opened, for the day's analysis (docs/specs/33-v1-shell.md §9): the host's one loggable event. The listener
    *  allows a device only a few commands a second, so the lines go out one at a time, a moment apart, behind the ones that matter. */
@@ -243,9 +245,9 @@ export function makeBoard(ctx) {
 
   return {
     el,
-    sheets: [...top.sheets, ...boardTab.sheets, ...needs.sheets, ...review.sheets, ...agents.sheets, agentSheet.el, ...stops.sheets, ...pitch.sheets],
+    sheets: [...top.sheets, ...boardTab.sheets, ...needs.sheets, ...review.sheets, ...canvases.sheets, ...agents.sheets, agentSheet.el, ...stops.sheets, ...pitch.sheets],
     // What is acted on only while the town answers: not the bar's Stop all, nor New idea (kept with no signal).
-    content: () => [boardTab.el, ...stops.content(), preview.el],
+    content: () => [boardTab.el, canvases.el, ...stops.content(), preview.el],
     /** A push's arrival (board-app.js `arrive`): the goal of the first stop is shown and the stop popped out, as soon as the Board has been read. */
     showNeeds: () => go("needs"),
     render(s) {
@@ -254,6 +256,7 @@ export function makeBoard(ctx) {
       if (s.project !== lookProject) { lookProject = s.project; st.cards = []; away(); }       // another project is shown, or the page starts
       top.render(s, s.rev !== seenSnap ? s.rev : undefined);
       boardTab.ops.sync(s.ops_rev ?? 0);
+      canvases.render(s);
       seenSnap = s.rev;
       if (seenRev !== undefined && s.ideas_rev === seenRev) return;
       if (loading) { again = true; return; }                  // the Board changed while it was being read: read once more when this ends (the host says it once)
