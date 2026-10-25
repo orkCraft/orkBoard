@@ -2,6 +2,7 @@
 // Checks on every goal, What it costs (what it did so far and its price a goal), Its flags, and for a party with a verdict of before, *Before: …*; *Edit the party*, *Add to the party* and *Save it to your
 // parties*. The gate, quiet (no green) at the right of the goals bar: *dev → main* with its count, or *main ✓* (disabled) when main is up to date. After a gate's merge that raised flags, **the flag line**
 // stands under the goals bar, once per device (`localStorage` `orkcraft.flags.goals`): *⚑ 3 flags raised · <a>, <b> and 1 more are in main*, its × 44 px; a press on it opens About this party at *Its flags*.
+// *Its size* (spec 75 §5.4): Lean · Standard · Full with each size's price where the host's proposals know the party; a press saves `size` (`ideas.goal_save`), which is the party's Target.
 // Between its flag and its words a row holds the elements of its first six goals; the first time it stands, they travel from the gate to the row, then the flag is raised and the line lit once (spec 64 §4).
 import { h, icon, sheet } from "./util.js";
 import { pctOf } from "./shell-spend.js";
@@ -9,6 +10,7 @@ import { elem, sign } from "./shell-marks.js";
 import { modelOf } from "./shell-arena-words.js";
 import { savePartyEl } from "./shell-goal.js";
 import { IDEATION_WHOLE } from "./shell-goal-new.js";
+import { loadProposals, proposes, sizePrices, sizeSwitch } from "./shell-proposals.js";
 import { gatePress } from "./shell-gate.js";
 import { inView, motionOn, raise, raiseTo } from "./shell-motion.js";
 import { flagWords as oldFlagWords } from "./shell-map.js";
@@ -65,6 +67,22 @@ export function makeParty(core, ctx) {
     ...(off ? [g.main, sign("check")] : [g.into, sign("after"), g.main, h("span", { class: "ork-count" }, String(n || g.commits))]));
   }
 
+  /** *Its size*: the party's three-way switch, its prices where known; a party with none says what it works as (the Target of Settings). */
+  function sizeSec(g, sec) {
+    if (!proposes(core)) return null;
+    const sw = sizeSwitch({ label: "Its size", onPick: async (id) => {
+      const got = await core.call("ideas.goal_save", { slug: g.slug, size: id });
+      if (!got) { draw(); return; }
+      g.size = id;
+      await core.refresh();
+      if (sh.el.open && shown === g.slug) draw();
+    } });
+    sw.set(g.size || "");
+    sw.prices(sizePrices(core, g.leader?.slug || "taskmaster"));
+    const target = String(st.board?.target || "balance");
+    return sec("Its size", sw.el, g.size ? null : h("p", { class: "cap", "data-sec": "no-size" }, `A party with no size of its own works as ${target.charAt(0).toUpperCase()}${target.slice(1)}`));
+  }
+
   // -- About this party --------------------------------------------------------------------------------------------------------------------------------
   function draw() {
     const g = (st.map?.goals || []).find((x) => x.slug === shown);
@@ -94,6 +112,7 @@ export function makeParty(core, ctx) {
       sec("What it is for", ...(forWords.length ? forWords.map((t) => line(t)) : [line("Not written yet.")])),
       sec("The party", ...members),
       sec("Checks on every goal", ...(checkers.length ? checkers : [line("No checker in the party.")])),
+      sizeSec(g, sec),
       sec("What it costs", ...(spent.length ? [line(spent.join(" · "))] : []), range ? line(`about ${range} a ${pitches ? "pitch" : "goal"} with this party`) : null),
       pitches ? null : sec("Its flags", ...(listed.length ? listed.map((f) => h("p", { class: "cap party-about__flag", "data-idea": f.slug }, sign("flag"), ` ${[f.short, f.own ? releaseLine(f.own) : flagTally(f), flagRelease(f, hasReleaseParty(st), (s) => partyNameOf(st, s))].filter(Boolean).join(" · ")}`))
         : [line("None yet: a goal raises its flag when the gate takes it into main.")]),
@@ -109,6 +128,7 @@ export function makeParty(core, ctx) {
     got = null;
     allFlags = false;
     draw();
+    if (proposes(core) && !core.st.proposed) loadProposals(core).then(() => { if (sh.el.open && shown === slug) draw(); });       // each size's price comes from the proposals
     sh.open();
     const toAt = () => { if (at) body.querySelector(`[data-sec="${at}"]`)?.scrollIntoView({ block: "start" }); };
     requestAnimationFrame(toAt);

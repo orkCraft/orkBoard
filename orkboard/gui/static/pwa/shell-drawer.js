@@ -1,10 +1,12 @@
 // The drawer's settings on the phone (docs/specs/41-phone-round-3.md §2, spec 49 §10.1, spec 50 §6.1, spec 54 §5–§6): Stop all and Spend today at its head, then This project — the Target (one switch), Start plans by themselves, the night's hours, Merge into, *Agents of this project ›* (a screen of its own), Push after merging, What is left — and This phone — notifications, Check for updates (shell-update.js), Pair a phone,
-// Download the logs, Unpair this phone. Each setting writes with today's command (`ideas.board_set`, `ideas.into`) at once.
+// Download the logs, Unpair this phone. Each setting writes with today's command (`ideas.board_set`, `ideas.into`) at once. Under a host that proposes (spec 75 §5.5) a party's size is its Target, so the one switch here is
+// *A party with no size of its own works as* (Thrift, Balance, Quality, as before).
 import { h, sheet, icon } from "./util.js";
 import { foot } from "./shell-forms.js";
 import { targetSwitch } from "./shell-ops.js";
 import { makePush } from "./shell-push.js";
 import { makeWeek, pushWeek } from "./shell-cards.js";
+import { proposes } from "./shell-proposals.js";
 
 /** `core`: the board's frame; `ctx`: {send, flash, unpair}; `drawer`: the sheet these live in; `limits`: opens What is left.
  *  Returns {head, project, phone, sheets, sync(), render(snapshot)}. */
@@ -58,6 +60,8 @@ export function makeSettings(core, ctx, drawer, limits) {
   let writing = 0;                                       // settings being written: the board read in between must not put the old value back
   const write = async (name, args) => { writing += 1; try { return await core.call(name, args); } finally { writing -= 1; } };
   const target = targetSwitch("target", async (id) => { if (await write("ideas.board_set", { target: id })) await core.refresh(); });
+  const targetLabel = h("span", { class: "field-label" }, "Target");
+  const targetGroup = target.el.querySelector('[role="radiogroup"]');
   const pushBox = h("input", { type: "checkbox", id: "push-after" });
   const autoBox = h("input", { type: "checkbox", id: "autostart" });
   const nightFrom = h("input", { class: "ork-field", type: "time", "aria-label": "Night from" });
@@ -78,7 +82,7 @@ export function makeSettings(core, ctx, drawer, limits) {
 
   const project = [
     h("h3", {}, "This project"),
-    h("div", { class: "field target-picks" }, h("span", { class: "field-label" }, "Target"), target.el),
+    h("div", { class: "field target-picks" }, targetLabel, target.el),
     h("label", { class: "check-line", for: "autostart" }, autoBox, h("span", {}, "Start plans by themselves")),
     h("div", { class: "field" }, h("span", { class: "field-label" }, "Night"), h("div", { class: "row night-row" }, nightFrom, h("span", {}, "to"), nightTo)),
     h("div", { class: "row" }, intoBtn),
@@ -116,6 +120,8 @@ export function makeSettings(core, ctx, drawer, limits) {
       push.draw();
       intoBtn.replaceChildren("Merge into ", h("b", {}, core.st.review?.into || "dev"), h("i", { class: "ork-chev", "aria-hidden": "true" }));
       if (writing) return;
+      const sized = proposes(core), words = sized ? "A party with no size of its own works as" : "Target";
+      if (targetLabel.textContent !== words) { targetLabel.textContent = words; targetGroup.setAttribute("aria-label", words); }
       target.set(core.st.board?.target || "balance");
       pushBox.checked = Boolean(core.st.review?.push);
       autoBox.checked = core.st.board?.autostart !== false;

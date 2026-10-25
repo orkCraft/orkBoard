@@ -2,6 +2,7 @@
 // **The project**, a full sheet: the Orkmaster's head and **New party** (a press deals the library's parties as a strip of tiles, in `ideas.map`'s `project.deal` order, each with its why: a press opens New party
 // with that preset picked), a section for each party (its leader's head, its name, *k/n*, **Open <party>**; under it its goals as rows: Planning and At work, Waits for main and Flags folded; a row opens the goal's
 // screen) and, pinned at the foot, **New goal** (shell-ideas.js `openProject`: no party yet; **Its party** is asked of the host, `makeItsParty`). A host without `project` has none of it.
+// With a host that proposes (spec 75 §5.3) the strip shows the Orkmaster's proposals first, each with Standard's price a goal; a press opens New party on it (the library's parties of the deal follow).
 // Pure words here too: `whyWords`, `fitWords`, `dealOf`.
 import { h, head, sheet } from "./util.js";
 import { elem, sign, typeTone } from "./shell-marks.js";
@@ -9,6 +10,7 @@ import { RACE_WORDS, raceOf, whoHead } from "./shell-who.js";
 import { foot } from "./shell-forms.js";
 import { chipsOf, modelOf } from "./shell-arena-words.js";
 import { flagTally, goalsOf } from "./shell-goals-words.js";
+import { PROPOSAL, loadProposals, proposalTile, proposes } from "./shell-proposals.js";
 
 export const PROJECT = "@project";                   // `ideas.shown`'s party for the project's level
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
@@ -46,6 +48,7 @@ export function makeProject(core, act) {
   const sh = sheet("The project", body, foot(newGoal));
   sh.el.classList.add("full", "project-sheet");
   let dealt = false;                                 // the deal's strip is out
+  let proposing = [];                                // the proposals of the strip (`ideas.proposals`), none for a host that does not propose
   const folded = new Set();                          // the folds opened: `<party>:waits`, `<party>:flags`
 
   /** A goal's row: its element, its type's sign and title, its state's words, its mark; a tap opens the goal's screen. */
@@ -87,14 +90,24 @@ export function makeProject(core, act) {
   /** The library's parties dealt as a strip of tiles, in the deal's order, each with its why; a press opens New party with that preset picked. */
   function strip() {
     const deal = dealOf(core), lib = core.st.roles?.library || [];
-    const tiles = (core.st.roles?.presets || []).filter((p) => deal.has(p.id)).sort((a, b) => deal.get(a.id).i - deal.get(b.id).i).map((p) => {
+    const made = proposing.map((p) => proposalTile(p, () => { sh.close(); core.newParty(`${PROPOSAL}${p.id}`); }));
+    const ids = new Set(proposing.map((p) => p.id));
+    const tiles = (core.st.roles?.presets || []).filter((p) => deal.has(p.id) && !ids.has(p.id)).sort((a, b) => deal.get(a.id).i - deal.get(b.id).i).map((p) => {
       const heads = [p.lead, ...(p.build || []), ...(p.check || [])].map((id) => lib.find((a) => a.id === id)).filter((a) => a?.craft)
         .map((a) => head(raceOf(a), a.tier || "warrior", { small: true }));
       const why = deal.get(p.id);
       return h("button", { class: `pj-tile${why.why === "have" ? " is-have" : ""}`, type: "button", "data-preset": p.id, "data-why": why.why, onclick: () => { sh.close(); core.newParty(p.id); } },
         h("span", { class: "pj-tile__heads" }, ...heads), h("b", {}, p.name), h("small", { class: "muted" }, p.line), why.words ? h("small", { class: "pj-tile__why" }, why.words) : null);
     });
-    return h("div", { class: "pj-deal", role: "group", "aria-label": "New party" }, ...tiles);
+    return h("div", { class: "pj-deal", role: "group", "aria-label": "New party" }, ...made, ...tiles);
+  }
+
+  /** *New party* deals the strip; under a host that proposes the proposals are asked first, and a host that cannot answer deals the library's parties as before. */
+  async function deal() {
+    dealt = !dealt;
+    proposing = [];
+    if (dealt && proposes(core)) proposing = (await loadProposals(core))?.proposals || [];
+    draw();
   }
 
   function draw() {
@@ -105,14 +118,14 @@ export function makeProject(core, act) {
     body.replaceChildren(
       h("div", { class: "pj-top" }, head(o.race, o.tier, { title: `Orkmaster · ${(o.tier === "elder" ? "Veteran" : o.tier === "warrior" ? "Seasoned" : "Novice")} ${RACE_WORDS[o.race] || ""}`.trim() }),
         h("span", { class: "pj-top__name" }, h("b", {}, "Orkmaster"), h("small", { class: "muted" }, "The parties, their goals")),
-        h("button", { class: "ork-btn", type: "button", "data-act": "project-new-party", "aria-expanded": String(dealt), onclick: () => { dealt = !dealt; draw(); } }, "New party")),
+        h("button", { class: "ork-btn", type: "button", "data-act": "project-new-party", "aria-expanded": String(dealt), onclick: deal }, "New party")),
       ...[dealt ? strip() : null, ...parties.map(section), parties.length ? null : h("p", { class: "muted" }, "No parties yet.")].filter(Boolean));
   }
 
   return {
     el: sh.el,
     isOpen: () => sh.el.open,
-    open() { dealt = false; draw(); sh.open(); },
+    open() { dealt = false; proposing = []; draw(); sh.open(); },
     /** The sheet drawn again with the Board while it is open. */
     draw() { if (sh.el.open) draw(); },
   };
