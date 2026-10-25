@@ -97,7 +97,7 @@ export function FileView({ path }) {
   const canEdit = f.kind === "markdown" || f.kind === "text";
   const head = html`<div class="shell-file__bar"><span class="ok-font-status ok-tone-muted">${sizeWords(f.size || 0)}</span>
     ${canEdit && html`<button class="ork-btn" onClick=${() => setEditingNow(true)}>Edit</button>`}</div>`;
-  if (f.kind === "markdown") return html`${head}<div class="shell-md is-doc" data-kind="markdown" dangerouslySetInnerHTML=${{ __html: f.html || "" }}></div>`;
+  if (f.kind === "markdown") return html`${head}<div class="ork-read" data-kind="markdown" dangerouslySetInnerHTML=${{ __html: f.html || "" }}></div>`;
   if (f.kind === "text") return html`${head}<${Code} text=${f.text || ""} />`;
   if (f.kind === "secret") return html`<p class="ok-tone-muted" data-kind="secret">${path} ${SECRET_HINT}.</p>`;
   if (f.kind === "gone") return html`<p class="ok-tone-muted">That file cannot be shown.</p>`;

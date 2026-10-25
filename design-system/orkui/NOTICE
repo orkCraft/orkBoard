@@ -9,6 +9,8 @@ from it in office/ascii/), are not licensed: the Apache License grants no right 
 This product bundles the following, each under its own licence:
 
 - IBM Plex Mono, Copyright 2017 IBM Corp., SIL Open Font License 1.1 (office/fonts/OFL-IBM-Plex-Mono.txt).
+- IBM Plex Sans, Copyright 2018 IBM Corp., SIL Open Font License 1.1 (office/fonts/OFL-IBM-Plex-Sans.txt): the woff2 subsets
+  of @fontsource/ibm-plex-sans 5.1.1, copied unchanged.
 - Pixelify Sans, Copyright 2021 The Pixelify Sans Project Authors, SIL Open Font License 1.1 (office/fonts/OFL-Pixelify-Sans.txt).
 - Pixelarticons, Copyright (c) 2019 Gerrit Halfmann, MIT License (office/icons/LICENSE-pixelarticons.txt): the files in
   office/icons/src/ (but chevron-*.svg, which are this project's own), copied unchanged, and the sprite built from them.

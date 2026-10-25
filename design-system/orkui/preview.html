@@ -126,6 +126,17 @@
 <section><h2>Table (the surface the work lies on; a wooden rim, never a mark)</h2><div class="ork-table" style="padding:16px 20px;max-width:520px"><div class="row" style="align-items:start">
   <div class="ork-card">On the table<br><span class="ork-label">now</span></div><div class="ork-frame alert" style="padding:8px">Waits for you</div><div class="ork-frame danger" style="padding:8px">Failed</div></div></div></section>
 
+<section><h2>Reading (a long text read through: the paper, the reading ink, the reading face)</h2><article class="ork-read">
+  <h2>Spec 62: the spec after the start</h2>
+  <p>The owner wants to edit and discuss the spec with the leader, before the work starts and after it. Half of it is there: a goal's preview asks about one section at a time (<code>ideas.say</code>), and <strong>a plan not passed is made again by Re-plan</strong>. The body is a step below full ink, about 10:1, so a long page does not glare; <a href="#">a link</a>, headings and bold keep full ink.</p>
+  <h3>What it is, and is not</h3>
+  <ul><li>The person presses for a re-plan, never the model by itself.</li><li>Nothing is applied without the person's <em>Take</em>.</li></ul>
+  <blockquote>A quote, or what someone wrote, in the muted ink.</blockquote>
+  <pre><code>python tools/build_tokens.py
+python -m pytest</code></pre>
+  <table><thead><tr><th>part</th><th>builds</th><th>files</th></tr></thead><tbody><tr><td>A. Host</td><td>§1&ndash;§4</td><td><code>core/idea_revise.py</code>, its tests</td></tr><tr><td>B. Desktop</td><td>§5, §6</td><td><code>js/shell/preview.js</code></td></tr></tbody></table>
+</article></section>
+
 <section><h2>Elements (a goal's mark; 14 and 28 px)</h2><div class="elems">
   <div class="ground panel" title="on panel">
     <figure><span class="pair"><span class="ork-elem meadow" aria-hidden="true"></span><span class="ork-elem meadow big" aria-hidden="true"></span></span><figcaption>meadow</figcaption></figure>
@@ -277,9 +288,9 @@
 <script>
   const css = getComputedStyle(document.documentElement);
   const sw = document.getElementById("sw");
-  for (const n of ["canvas","panel","raised","frame","edge","ink","ink-muted","ink-faint","on-ink","action","action-hi","action-press","danger","alert","success","elem-meadow","elem-ice","elem-dust","elem-void","elem-lava","table","table-rim","table-rim-hi"]) {
+  for (const n of ["canvas","panel","raised","frame","edge","ink","ink-muted","ink-faint","on-ink","action","action-hi","action-press","danger","alert","success","elem-meadow","elem-ice","elem-dust","elem-void","elem-lava","table","table-rim","table-rim-hi","paper","ink-read"]) {
     const d = document.createElement("div"); d.style.background = "var(--ork-" + n + ")"; d.textContent = n;
-    d.style.color = ["ink","ink-muted","ink-faint","action","action-hi","action-press","danger","alert","success","edge","elem-meadow","elem-ice","elem-dust","elem-void","elem-lava"].includes(n) ? "var(--ork-on-ink)" : "var(--ork-ink)"; sw.append(d); }
+    d.style.color = ["ink","ink-muted","ink-faint","ink-read","action","action-hi","action-press","danger","alert","success","edge","elem-meadow","elem-ice","elem-dust","elem-void","elem-lava"].includes(n) ? "var(--ork-on-ink)" : "var(--ork-ink)"; sw.append(d); }
   const cells = (el, on) => { for (let i = 0; i < 16; i++) { const c = document.createElement("i"); if (i < on) c.className = "on"; el.append(c); } };
   cells(document.getElementById("m1"), 6); cells(document.getElementById("m2"), 13); cells(document.getElementById("m3"), 16);
   for (const n of ["ork","ork-asleep","ork-asks","ork-failed","ork-working"]) {

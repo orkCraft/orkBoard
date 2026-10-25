@@ -1,15 +1,17 @@
-/* Generated from tokens.json by tools/build_tokens.py (orkUI 0.8.0, look office). Do not edit. */
+/* Generated from tokens.json by tools/build_tokens.py (orkUI 0.9.0, look office). Do not edit. */
 
 :root[data-look="office"] {
   color-scheme: dark;
   --ork-canvas: #0b0b0b;
   --ork-panel: #111111;
   --ork-raised: #1a1a1a;
+  --ork-paper: #141414;
   --ork-frame: #333333;
   --ork-edge: #8a8a8a;
   --ork-ink: #e8e8e8;
   --ork-ink-muted: #9a9a9a;
   --ork-ink-faint: #858585;
+  --ork-ink-read: #c4c4c4;
   --ork-on-ink: #0b0b0b;
   --ork-action: #6aa84f;
   --ork-action-hi: #7fbf5f;
@@ -28,6 +30,7 @@
   --ork-table-rim-hi: #7a5d49;
   --ork-font-pixel: "Pixelify Sans", "IBM Plex Mono", ui-monospace, monospace;
   --ork-font-text: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  --ork-font-read: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --ork-font-code: var(--ork-font-text);
   --ork-type-title: 500 16px/20px var(--ork-font-pixel);
   --ork-type-title-case: uppercase;
@@ -47,6 +50,9 @@
   --ork-type-caption: 400 11px/16px var(--ork-font-text);
   --ork-type-caption-case: none;
   --ork-type-caption-track: 0;
+  --ork-type-read: 400 15px/26px var(--ork-font-read);
+  --ork-type-read-case: none;
+  --ork-type-read-track: 0;
   --ork-1: 2px;
   --ork-2: 4px;
   --ork-3: 6px;
@@ -230,6 +236,7 @@
     --ork-type-label: 500 14px/16px var(--ork-font-pixel);
     --ork-type-body: 400 16px/22px var(--ork-font-text);
     --ork-type-caption: 400 13px/18px var(--ork-font-text);
+    --ork-type-read: 400 17px/28px var(--ork-font-read);
     --ork-control: 40px;
     --ork-row: 44px;
     --ork-bar: 44px;

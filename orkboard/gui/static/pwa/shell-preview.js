@@ -303,7 +303,7 @@ export function makePreview(core, ctx, screens = {}) {
   // A Markdown file is read as the page renders it (the host's `html`, raw HTML already off); the rest as plain text.
   function docText(d, cur) {
     if (typeof d.html !== "string") return h("pre", { class: "log doc", "aria-label": cur.path }, d.text);
-    const md = h("div", { class: "md doc", "aria-label": cur.path });
+    const md = h("div", { class: "ork-read doc", "aria-label": cur.path });      // orkUI's reading page: the paper, a calmer ink, a face for reading
     md.innerHTML = d.html;
     return md;
   }

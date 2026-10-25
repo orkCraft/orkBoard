@@ -3,7 +3,17 @@
 Dark, monochrome, dense. **Colour is a signal** (danger, alert, success), except the one ork green of the primary action,
 the muted heads of the races and the table's wood.
 The **pixel face** (Pixelify Sans) is for buttons and headings only, never below 12 px, whole pixels, no ligatures, no faux
-bold, never for a number or a person's text; **everything else is IBM Plex Mono** (12/18 on the desktop, 16/22 on the phone).
+bold, never for a number or a person's text; **everything else is IBM Plex Mono** (12/18 on the desktop, 16/22 on the phone),
+but a long text read through.
+
+## Reading
+
+A spec, a document, anything read through rather than glanced at, is set in `.ork-read`: the **paper** (`--ork-paper`
+`#141414`, a step above the canvas) in the **reading ink** (`--ork-ink-read` `#c4c4c4`, about 10:1, not full ink's 16:1, so
+the letters do not glare) and the **reading face** IBM Plex Sans (15/26 on the desktop, 17/28 on the phone), a line of about
+68 characters. Headings, bold and links keep full ink, so the outline stands out; quotes are muted; code stays in Plex Mono.
+The interface around a page (its labels, buttons, lists) stays in Plex Mono.
+
 Nothing is round: edges 1 px, corners notched by 2 px (`clip-path` on a control's `::before`, so the hit area is whole),
 dialogs framed `3px double`. Selected is raised with a 2 px ink bar, never a white box. Every arrow and icon is a pixel mark.
 

@@ -325,7 +325,7 @@ def test_a_file_saved_from_its_tab_and_opening_what_has_a_tab_shows_that_tab(map
     pg, host = mapped
     pg.locator(".shell-top").get_by_role("button", name="Files").click()
     pg.locator(".shell-tree__row", has_text="README.md").click()
-    pg.locator(".shell-md").wait_for(timeout=WAIT_MS)
+    pg.locator(".ork-read").wait_for(timeout=WAIT_MS)
     pg.locator(".shell-ptab.is-on [role=tab]").dblclick()
     tab(pg, "Files").click()
     pg.locator(".shell-tree__row", has_text="README.md").wait_for(timeout=WAIT_MS)
@@ -334,7 +334,7 @@ def test_a_file_saved_from_its_tab_and_opening_what_has_a_tab_shows_that_tab(map
     assert pg.locator(".shell-tabstrip [role=tab]").count() == 3                                          # Files, README.md, the idea
     tab(pg, "Files").click()
     pg.locator(".shell-tree__row", has_text="README.md").click()                                          # already has a tab: shown, not added
-    pg.locator(".shell-md").wait_for(timeout=WAIT_MS)
+    pg.locator(".ork-read").wait_for(timeout=WAIT_MS)
     assert pg.locator(".shell-tabstrip [role=tab]").count() == 3 and "README.md" in active_tab(pg).inner_text()
     assert passing(pg).count() == 1                                                                       # the passing one is still Dark mode's
 

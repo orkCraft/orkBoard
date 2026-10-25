@@ -254,6 +254,36 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-tabbar__tab:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 .ork-tabbar__tab .ork-count { position: absolute; top: var(--ork-2); left: calc(50% + 6px); }
 
+/* --- Reading: a long text read through (a spec, a document), on the paper in the reading ink and the reading face -------------- */
+/* The body a step below full ink (about 10:1 on the paper, not 16:1, so the letters do not glare); headings, bold and links in
+   full ink, so the outline stands out. A line of about 68 characters. The rhythm between blocks is in em, the type's own. */
+.ork-read { box-sizing: border-box; max-width: 68ch; margin: 0 auto; padding: var(--ork-6) var(--ork-8); background: var(--ork-paper);
+  color: var(--ork-ink-read); font: var(--ork-type-read); overflow-wrap: break-word; text-wrap: pretty; }
+.ork-read > :first-child { margin-top: 0; }
+.ork-read > :last-child { margin-bottom: 0; }
+.ork-read p, .ork-read ul, .ork-read ol, .ork-read pre, .ork-read table, .ork-read blockquote, .ork-read figure { margin: 0 0 1em; }
+.ork-read ul, .ork-read ol { padding-left: 1.5em; }
+.ork-read li + li, .ork-read li > ul, .ork-read li > ol { margin-top: 0.3em; }
+.ork-read h1, .ork-read h2, .ork-read h3, .ork-read h4 { color: var(--ork-ink); font-family: var(--ork-font-read); font-weight: 600; text-transform: none;
+  letter-spacing: 0; text-wrap: balance; }      /* a person's words: never the pixel face nor its capitals, whatever the page around says */
+.ork-read h1 { font-size: 24px; line-height: 32px; margin: 0 0 0.8em; }
+.ork-read h2 { font-size: 19px; line-height: 28px; margin: 1.8em 0 0.7em; padding-bottom: 0.3em; border-bottom: var(--ork-line) solid var(--ork-frame); }
+.ork-read h3 { font-size: 16px; line-height: 24px; margin: 1.6em 0 0.5em; }
+.ork-read h4 { font-size: 15px; line-height: 24px; margin: 1.4em 0 0.4em; }
+.ork-read strong, .ork-read b { color: var(--ork-ink); font-weight: 600; }
+.ork-read a { color: var(--ork-ink); text-decoration-color: var(--ork-edge); text-underline-offset: 3px; }
+.ork-read a:hover { text-decoration-color: var(--ork-ink); }
+.ork-read code { padding: 0 var(--ork-1); background: var(--ork-raised); font-family: var(--ork-font-code); font-size: 0.87em; }
+.ork-read pre { overflow: auto; padding: var(--ork-4) var(--ork-5); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame);
+  font: 400 13px/20px var(--ork-font-code); }
+.ork-read pre code { padding: 0; background: none; font-size: inherit; }
+.ork-read blockquote { padding-left: var(--ork-5); border-left: 2px solid var(--ork-edge); color: var(--ork-ink-muted); }
+.ork-read table { display: block; overflow-x: auto; border-collapse: collapse; font-size: 14px; line-height: 22px; }
+.ork-read th, .ork-read td { padding: var(--ork-2) var(--ork-4); border: var(--ork-line) solid var(--ork-frame); text-align: left; vertical-align: top; }
+.ork-read th { background: var(--ork-panel); color: var(--ork-ink); font-family: var(--ork-font-read); font-weight: 600; text-transform: none; letter-spacing: 0; }
+.ork-read hr { margin: 2em 0; border: 0; border-top: var(--ork-line) solid var(--ork-frame); }
+.ork-read img { max-width: 100%; }
+
 /* --- The phone: a control is 44 px to hit and 40 to see; a field and a row are 44 -------------------------------------------------- */
 @media (max-width: 1023px) {
   .ork-btn { --_inset: 2px; height: auto; min-height: var(--ork-tap); padding: 0 var(--ork-5); }
@@ -261,4 +291,5 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
   .ork-field { height: var(--ork-tap); font-size: 16px; }
   .ork-row, .ork-card { padding: var(--ork-4); }
   .ork-gem { height: 24px; }
+  .ork-read { padding: var(--ork-5) var(--ork-6); }
 }
