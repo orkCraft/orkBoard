@@ -27,6 +27,8 @@ export const isOpen = (t) => t.state !== "merged" && t.state !== "dropped";
 const live = (t) => t.state === "running" || t.state === "testing";
 const usd = (n) => (n < 10 ? n.toFixed(2) : String(Math.round(n)));
 const short = (x) => x.short || x.title;
+/** How far a goal is (spec 85 §4): *4 of 9 done*, its tasks merged and in all; "" for a goal with no plan. */
+export const goalDone = (n) => (n?.of > 0 ? `${n.done} of ${n.of} done` : "");
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 
 /** *$1–2* from a plan's estimate ("" without one). */
@@ -226,7 +228,7 @@ export function taskItem(n, t, now = Date.now(), low = lowWave(n)) {
   const after = afterWords(t, n) ? ` · ${afterWords(t, n)}` : "";
   return {
     key: `${n.slug}/${t.id}`, idea: n.slug, id: t.id, ideaTitle: short(n), type: typeOf(n), title: short(t), wave: t.wave || 1, phase, phaseWord: when, element: n.element || "", state: t.state,
-    words, value: valueOf(t, words), dep: depWords(n, t),
+    words, value: valueOf(t, words), dep: depWords(n, t), count: goalDone(n), shot: t.shot?.url || "", made: t.made || "",
     tip: t.state === "failed" ? `${t.title} · ${t.error || "failed"}` : t.state === "held" ? `${t.title} · ${words}` : `${t.title} · ${when}${after}`,
     label: `${t.title} (${n.title}${typeOf(n) ? `, ${typeOf(n).name}` : ""}): ${words}${phase ? `, ${when}` : ""}`,
     open: { kind: t.state === "review" ? "result" : t.state === "picking" ? "pick" : "task", slug: n.slug, task: t.id },

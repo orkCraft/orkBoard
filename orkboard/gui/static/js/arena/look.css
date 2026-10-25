@@ -1,0 +1,34 @@
+/* What the elf asks and shows (docs/specs/85-the-elf-asks-and-shows.md, decisions §102): a card says how far its goal is (§4), wears the picture of what its task changed (§3), and a card
+   of a task that merged turns over once to what it made (§4); a result in Waits for your look shows its picture large (§3). In orkUI's office look: its tokens only, no colour, font or corner of its own. */
+
+/* -- how far a goal is: *4 of 9 done*, one quiet line under the goal's name -------------------------------------------------------------------- */
+.arena-task__count { font-size: 10px; line-height: 12px; color: var(--ork-ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* -- the picture of what changed is the card's face: the page behind the card's words, the words on a panel that lets it through ------------- */
+.arena-task__shot { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top center; z-index: 0; pointer-events: none; }
+.arena-task.has-shot { overflow: hidden; }
+.arena-task.has-shot > .arena-task__top, .arena-task.has-shot > .arena-task__goal, .arena-task.has-shot > .arena-task__count, .arena-task.has-shot > .arena-task__name,
+.arena-task.has-shot > .arena-task__deps, .arena-task.has-shot > .arena-task__foot { position: relative; z-index: 1; background: color-mix(in srgb, var(--ork-panel) 84%, transparent); }
+.arena-task.has-shot > .arena-task__foot { margin-top: auto; }
+
+/* -- a done card turns over once: *What it made* (stacks.js sets it on the card that leaves merged) ------------------------------------------- */
+.arena-task__made { position: absolute; inset: 0; z-index: 3; box-sizing: border-box; display: flex; flex-direction: column; gap: var(--ork-2); padding: 6px var(--ork-3); overflow: hidden;
+  background: var(--ork-panel); color: var(--ork-ink); font: var(--ork-type-caption); text-align: left; animation: arena-turn 0.2s steps(2) 0.1s both; }
+.arena-task__made b { font-weight: 600; color: var(--ork-ink-muted); }
+.arena-task__made span { display: -webkit-box; -webkit-line-clamp: 6; line-clamp: 6; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+@keyframes arena-turn { from { transform: scaleX(0); } to { transform: none; } }
+
+/* -- Waits for your look: the picture large, the column's width ------------------------------------------------------------------------------ */
+.arena-result__shot { all: unset; box-sizing: border-box; display: block; width: 100%; cursor: pointer; border: var(--ork-line) solid var(--ork-frame); background: var(--ork-canvas); }
+.arena-result__shot:hover { border-color: var(--ork-edge); }
+.arena-result__shot:focus-visible { outline: 2px solid var(--ork-ink); }
+.arena-result__shot img { display: block; width: 100%; height: auto; max-height: 260px; object-fit: cover; object-position: top center; }
+.arena-result__noshot { font-style: normal; }
+.arena-result__made { color: var(--ork-ink-muted); }
+
+/* -- a question that takes pictures (the form): its choices as buttons ------------------------------------------------------------------------ */
+.board-questions__choices { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .arena-task__made { animation: none; }
+}

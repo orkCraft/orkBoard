@@ -182,7 +182,9 @@ TERMS: tuple[Term, ...] = (
     _t("gate", "gate", "gates"),                                   # the one press that merges dev into main (decisions §49.5, spec 49 §2.1)
     _t("recap", "While you were away"),                            # the card of what the Board did since this device's last look (spec 42 §1)
     _t("flag", "flag", "flags"),                                   # a goal the gate took into main (spec 50 §2.2); a party's old flag is its verdict met (spec 42 §2)
-    _t("pick", "pick", "picks"),                                   # the stop Pick one and its screen: a task left two to six variants of one kind for the person to pick from (spec 51)
+    _t("goal_look", "look", "looks"),                              # how a goal's screen looks: asked by the elf, picked before it is built (spec 85)
+    _t("task_picture", "picture", "pictures"),                     # what a task that changed what people see looks like, drawn from the project's preview (spec 85)
+    _t("pick", "pick", "picks"),                                  # the stop Pick one and its screen: a task left two to six variants of one kind for the person to pick from (spec 51)
     _t("plan_change", "plan change", "plan changes"),              # the leader's re-plan of what is left, after a goal's spec changed: the tasks not started changed, dropped or added, answered Take the new plan or Keep the plan (spec 62; the code's `change`, plan_change.json)
     _t("goal_type", "goal type", "goal types"),                    # what kind of goal a party's team can take on: New logo, Fix a bug; realm/goal_types.py, specs 52 and 59
     _t("pitch", "pitch", "pitches"),                               # a goal of an Ideation party: a small idea to judge, not to build (spec 65; realm/pitches.py)

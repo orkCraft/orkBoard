@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from orkboard.gui import media
 from orkboard.gui.ideas_args import VIA, IdeasError, _device, _text
-from orkboard.realm import idea_pick, ideas, roles
+from orkboard.realm import idea_pick, idea_shots, ideas, roles
 from orkboard.realm.board_map import task_short
 
 PICK_VIA = ("hand", "front", "drawer", "screen")           # where a pick was answered: the stops along the bottom, the drawer, the phone's own screen
@@ -46,6 +46,13 @@ class PickMixin:
             except OSError:
                 row["text"] = ""
         return row
+
+    @staticmethod
+    def shot_of(slug: str, task: dict) -> dict | None:
+        """A task's picture as a face reads it (spec 85 §3): `{url, w, h}` with its signed address, `{none}` for a task that changed what people
+        see and had no preview to draw, None for a task with none."""
+        got = idea_shots.map_of(task)
+        return got if got is None or got.get("none") else {**got, "url": media.url(slug, got["id"], got["file"])}
 
     def pick_rows(self, i: dict, plan: dict | None) -> list[dict]:
         """The Needs you rows of a goal's tasks that wait for a pick, in the plan's order (realm/idea_pick.py `current`): kind `pick`,

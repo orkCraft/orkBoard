@@ -4,6 +4,7 @@ import { useEffect, useState } from "preact/hooks";
 import { html } from "../html.js";
 import { ask, items } from "../board/store.js";
 import { Questions } from "../board/ask.js";
+import { toast } from "../link.js";
 import { act } from "./store.js";
 import { Modal, closeDialog } from "./modals.js";
 
@@ -20,14 +21,15 @@ export function AskDialog({ slug, goal = false, title = "", asked = null, picks 
     })();
     return () => { live = false; };
   }, [slug, goal]);
-  const send = async (answers) => {
-    const got = await act("ideas.answer", { slug, answers, ...(goal ? { goal: true } : {}) });
+  const send = async (answers, photos = []) => {
+    const got = await act("ideas.answer", { slug, answers, ...(photos.length && !goal ? { photos: photos.map((url) => ({ data: url.slice(url.indexOf(",") + 1) })) } : {}), ...(goal ? { goal: true } : {}) });
     if (got) closeDialog();
+    else if (photos.length) toast("The pictures could not be sent: try fewer or smaller ones.", "warning");
   };
   return html`<${Modal} title=${`Questions: ${title}`} onClose=${closeDialog} wide=${true}
     foot=${html`<button type="button" class="ork-btn" onClick=${closeDialog}>Later</button>`}>
     ${questions === null ? html`<p class="ok-tone-muted">Opening…</p>`
-      : questions.length ? html`<${Questions} questions=${questions} onSend=${send} initial=${asked ? picks : []} hints=${asked ? asked.map((q) => q.why || "") : []} />`
+      : questions.length ? html`<${Questions} questions=${questions} onSend=${send} initial=${asked ? picks : []} hints=${asked ? asked.map((q) => q.why || "") : []} choices=${asked ? asked.map((q) => q.choices || []) : []} pictures=${!goal} />`
         : html`<p class="ok-tone-muted">No question is open any more.</p>`}
   <//>`;
 }

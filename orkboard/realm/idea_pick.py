@@ -108,14 +108,15 @@ def clean_target(value: object) -> str:
 
 def clean_ask(raw: object) -> dict | None:
     """A plan's task `pick` as plan.json keeps it, `{"n": 2–6, "kind", "ask": one line, "target"}`; None for a missing one or one
-    that is not (the task is then an ordinary task)."""
+    that is not (the task is then an ordinary task). `look: true` (spec 85 §2, a screen's look, made by code): the target has no
+    extension, the picked file keeps its own."""
     if not isinstance(raw, dict):
         return None
     n, kind = raw.get("n"), raw.get("kind")
     ask, target = " ".join(str(raw.get("ask") or "").split())[:ASK_MAX], clean_target(raw.get("target"))
     if isinstance(n, bool) or not isinstance(n, int) or not N_MIN <= n <= N_MAX or kind not in KINDS or not ask or not target:
         return None
-    return {"n": n, "kind": kind, "ask": ask, "target": target}
+    return {"n": n, "kind": kind, "ask": ask, "target": target, **({"look": True} if raw.get("look") is True else {})}
 
 
 def ask_of(task: dict) -> dict | None:
@@ -262,7 +263,7 @@ def store(state_dir: Path, slug: str, task: dict, rnd: int, variants: list[dict]
     for v in variants:
         shutil.move(str(v["src"]), str(folder / v["file"]))
     data = {"id": pid, "task": str(task.get("id")), "round": rnd, "by": by, "kind": ask.get("kind"), "ask": ask.get("ask"),
-            "target": ask.get("target"), "at": now or _now(), "variants": [{k: v[k] for k in VARIANT_KEYS} for v in variants]}
+            "target": ask.get("target"), **({"look": True} if ask.get("look") else {}), "at": now or _now(), "variants": [{k: v[k] for k in VARIANT_KEYS} for v in variants]}
     _write(folder / "pick.json", data)
     return data
 

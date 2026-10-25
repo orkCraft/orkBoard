@@ -287,7 +287,7 @@ def test_review_list_has_the_spec_shape_and_the_phones_may_call_it(host):
     json.dumps(got)
     (r,) = got["results"]
     assert set(r) == {"idea", "idea_title", "task", "title", "round", "tests", "diff", "cost", "conflict", "finished",
-                      "work", "rework", "estimate", "over", "look"}       # spec 36 §4; spec 84: why it waits
+                      "work", "rework", "estimate", "over", "look", "shot"}       # spec 36 §4; spec 84: why it waits; spec 85: its picture
     assert r["idea"] == slug and r["task"] == "k1" and r["round"] == 2 and r["diff"]["files"] == 14
     assert BoardPhone.allowed(host, "ideas.merge", {"slug": slug, "task": "k1"})
 

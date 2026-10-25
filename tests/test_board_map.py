@@ -158,7 +158,7 @@ def test_needs_you_names_the_kind(host):
     ideas.set_section(root, asks, "Open questions", "- Which store first? (**App Store** / Google Play) — iPhone first")
     row = next(r for r in host.command("ideas.board")["needs_you"] if r.get("idea") == asks)
     assert row["text"] == "Which store first?" and row["asked"] == [
-        {"ask": "Which store first?", "choices": ["App Store", "Google Play"], "pick": 0, "why": "iPhone first"}]
+        {"ask": "Which store first?", "choices": ["App Store", "Google Play"], "pick": 0, "why": "iPhone first", "look": False}]
 
 
 def test_tasks_estimate_and_by_itself(host):
@@ -176,7 +176,7 @@ def test_tasks_estimate_and_by_itself(host):
     assert n[begun]["tasks"][1] == {"id": "k2", "title": "Task k2", "short": "Task k2", "state": "running", "after": ["k1"], "tier": "warrior",
                                      "head": {"craft": "engineering", "race": "peon", "tier": "warrior"}, "tag": "Code",   # who does it: a Grunt; its tag
                                      "by": {"slug": "grunt", "name": "Grunt"}, "band": "build", "wave": 2, "row": 1,        # running: row 1 (spec 82 §2)
-                                     "error": "", "note": "", "round": 1, "cost": None, "started": "", "pick": None}
+                                     "error": "", "note": "", "round": 1, "cost": None, "started": "", "pick": None, "shot": None, "made": ""}
     assert n[none]["tasks"] == [] and n[none]["estimate"] is None and n[none]["by_itself"] is False
 
 
@@ -394,7 +394,7 @@ def test_a_question_says_its_recommended_choice_and_why_spec_49(host):
         ("Which store first?", ["App Store", "Google Play"], 0, "iPhone first"),
         ("Which store after?", ["App Store", "Google Play"], None, ""),               # no pick: null
         ("Anything else to know?", [], None, "")]                                    # no choices: the person writes
-    assert all(set(q) == {"ask", "choices", "pick", "why", "by"} for q in asked)
+    assert all(set(q) == {"ask", "choices", "pick", "why", "by", "look"} and q["look"] is False for q in asked)
 
 
 def test_a_node_has_its_element_and_its_flag_and_a_party_its_flags_waits_and_brief_spec_50(host):
@@ -529,3 +529,54 @@ def test_a_party_wears_its_sizes_target_on_the_map_and_one_with_no_size_the_sett
     assert tier == {"lean": "laborer", "full": "elder", "": "warrior"}
     again = board_map.build(root, state, {"target": "quality"}, [], time.time(), rev=0)
     assert _node(again, parties[""][1])["tasks"][0]["head"]["tier"] == "elder" and _node(again, parties["lean"][1])["tasks"][0]["head"]["tier"] == "laborer"
+
+
+def test_a_goal_says_how_far_it_is_and_a_task_merged_says_what_it_made_spec_85(host):
+    root, state = _board(host)
+    party = _goal(root, "Shots")
+    slug = _idea(root, state, party, "The runs page", "working")
+    merged = {**_t("k1", "merged"), "subjects": ["  Add the runs\n page ", "Fix a typo"]}
+    clean = {**_t("k2", "merged", ["k1"]), "subjects": [], "note": "clean"}
+    long = {**_t("k3", "merged", ["k1"]), "subjects": ["x" * 400]}
+    _plan(state, slug, [merged, clean, long, _t("k4", "running", ["k2"]), _t("k5", "waiting", ["k4"]),
+                        {**_t("k6", "ready"), "subjects": ["not merged: not said"]}])
+    node = _node(board_map.build(root, state), slug)
+    assert (node["done"], node["of"]) == (3, 6) and node["progress"] == {"done": 3, "total": 6}
+    made = {t["id"]: t["made"] for t in node["tasks"]}
+    assert made["k1"] == "Add the runs page" and made["k2"] == "" and made["k4"] == "" and made["k6"] == ""
+    assert len(made["k3"]) == board_map.MADE_CHARS and made["k3"].endswith("…")
+
+
+def test_a_goal_with_no_plan_is_nothing_of_nothing_and_a_task_with_a_picture_carries_it_spec_85(host):
+    root, state = _board(host)
+    party = _goal(root, "Shots")
+    bare = _idea(root, state, party, "No plan yet", "ready")
+    seen = _idea(root, state, party, "With pictures", "working")
+    _plan(state, seen, [{**_t("k1", "merged"), "subjects": ["a"], "shot": {"id": "k1-shot-r1", "file": "shot.png", "w": 1280, "h": 800, "at": "x"}},
+                        {**_t("k2", "merged"), "shot": {"none": True}}, _t("k3", "merged"), {**_t("k4", "merged"), "shot": {"id": 4}}])
+    got = board_map.build(root, state)
+    node = _node(got, bare)
+    assert (node["done"], node["of"]) == (0, 0)
+    shots = {t["id"]: t["shot"] for t in _node(got, seen)["tasks"]}
+    assert shots == {"k1": {"id": "k1-shot-r1", "file": "shot.png", "w": 1280, "h": 800}, "k2": {"none": "no picture: no preview"}, "k3": None, "k4": None}
+    json.dumps(got)
+
+
+def test_the_hosts_map_signs_a_pictures_address_and_review_carries_it_spec_85(host, tmp_path):
+    from orkboard.gui import media
+    from orkboard.realm import idea_shots
+    from tests import pick_files as pf
+    root, state = _board(host)
+    party = _goal(root, "Shots")
+    slug = _idea(root, state, party, "With a picture", "working")
+    png = tmp_path / "in.png"
+    png.write_bytes(pf.png(8, 6))
+    kept = idea_shots.store(state, slug, "k1", 1, png)
+    _plan(state, slug, [{**_t("k1", "review"), "shot": kept}, {**_t("k2", "merged"), "shot": {"none": True}}])
+    got = host.command("ideas.map")
+    tasks = {t["id"]: t for t in _node(got, slug)["tasks"]}
+    shot = tasks["k1"]["shot"]
+    assert (shot["id"], shot["w"], shot["h"]) == ("k1-shot-r1", 8, 6) and shot["url"].startswith(f"/media/{slug}/k1-shot-r1/shot.png?s=")
+    assert media.serve("GET", shot["url"], "", [state]).status == 200 and tasks["k2"]["shot"] == {"none": "no picture: no preview"}
+    (result,) = [r for r in host.command("ideas.review_list")["results"] if r["task"] == "k1"]
+    assert result["shot"]["url"] == shot["url"]

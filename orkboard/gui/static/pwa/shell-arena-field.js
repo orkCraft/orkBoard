@@ -90,7 +90,7 @@ export function makeField(core, hooks) {
       const row = rows.find((r) => r.phase === phase);
       const nodes = (row ? row.stacks : []).map((s) => deck(m, s));
       for (const g of [...ghosts.values()].filter((x) => x.member === m.slug && x.phase === phase).sort((a, b) => a.index - b.index)) {
-        const node = deckNode(g.stack, { ghost: { sign: g.sign } });
+        const node = deckNode(g.stack, { ghost: { sign: g.sign, made: g.made } });
         node.style.animationDelay = `${-Math.min(GHOST_MS, Date.now() - g.at)}ms`;       // a draw in the middle of the fade goes on from where it was
         nodes.splice(Math.min(g.index, nodes.length), 0, node);
       }
@@ -109,8 +109,8 @@ export function makeField(core, hooks) {
     const goal = model.goal.slug, cur = new Map(), curTasks = new Set(), rewarded = new Set();
     for (const m of members) for (const r of rows.get(m.slug)) r.stacks.forEach((s, index) => { cur.set(`${m.slug}|${s.key}`, { member: m.slug, phase: r.phase, index, stack: s }); s.items.forEach((t) => curTasks.add(t.key)); });
     const still = !quiet && seenGoal === goal;                    // the first read of a goal is not a change
-    const state = new Map();                                       // a task's state now, by key
-    for (const n of model.nodes) for (const t of n.tasks || []) state.set(`${n.slug}/${t.id}`, t.state);
+    const state = new Map(), made = new Map();                     // a task's state now, by key, and what a merged one made (spec 85 §4)
+    for (const n of model.nodes) for (const t of n.tasks || []) { state.set(`${n.slug}/${t.id}`, t.state); if (t.made) made.set(`${n.slug}/${t.id}`, t.made); }
     let leaving = 0;
     if (still) {
       for (const [key, info] of cur) if (!seen.has(key) && info.stack.items.some((t) => !seenTasks.has(t.key))) info.stack.drawn = true;
@@ -121,7 +121,7 @@ export function makeField(core, hooks) {
         const back = !gone && !putAway && info.stack.items.some((t) => t.state === "review") && info.stack.items.every((t) => t.state !== "review" || state.get(t.key) !== "review") && states.every((x) => x && x !== "merged" && x !== "dropped");      // a result sent back: its tasks are in the field again (spec 74 §2)
         if ((gone || putAway || back) && ++leaving <= GHOSTS) {
           ghosts.set(key, { member: info.member, phase: info.phase, index: info.index, at: Date.now(), stack: info.stack,
-            sign: gone ? (states.includes("dropped") ? "cross" : "check") : back ? "back" : "" });
+            sign: gone ? (states.includes("dropped") ? "cross" : "check") : back ? "back" : "", made: gone && !states.includes("dropped") ? info.stack.items.map((t) => made.get(t.key)).find(Boolean) || "" : "" });
         }
       }
       for (const m of members) if (mergedOf(model, m) > (merged.get(m.slug) ?? Infinity)) rewarded.add(m.slug);

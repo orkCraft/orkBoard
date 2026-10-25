@@ -37,6 +37,7 @@ from orkboard.core.idea_landing import LandingMixin
 from orkboard.core.idea_picking import PickMixin
 from orkboard.core.idea_session import SessionMixin
 from orkboard.core.idea_review import BACK, STOP_ONE, STOPPED_NOTE, ReviewMixin, RunnerError  # noqa: F401
+from orkboard.core.idea_shot import ShotMixin
 from orkboard.core.idea_task import FINDINGS_ASK, NO_DIFF, NO_FINDINGS, NO_RUN, TaskMixin, is_check, is_pick
 from orkboard.realm import task_commands, event_log, goal_team, halt, harnesses, idea_checks, idea_pick, idea_target, ideas, roles, status, tool_errors
 from orkboard.realm.idea_git import BOARD_PAGE, CRITICAL_TESTS, Conflict, IdeaGit, env_name, has_summary, parse_tests, read_secret, spec_paths  # noqa: F401
@@ -104,7 +105,7 @@ class Run:
     role: str = ""                 # the role it runs as (spec 34 §3): its `max_parallel` is held
 
 
-class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, ReviewMixin):
+class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, ReviewMixin, ShotMixin):
     def __init__(self, repo_root: Path, state_dir: Path, settings: Any, bus: Any = None, *,
                  limits: Callable[[], list] | None = None, events: bool = True,
                  on_held: Callable[[], None] | None = None, rank: Callable[[str], Any] | None = None,
@@ -468,7 +469,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
         task.update(tool=tool, model=(h.pick(run) if h else run) or run)    # the model the run names (spec 35 §12)
         task.update(state="running", started=now_iso(), finished="", error="", note="",
                     branch=f"idea/{slug}/{tid}", commit="", session="", cost=None, tokens=None, session_total=None, last_tokens=None,
-                    look="", same_as_before=False, tests=None, diff=None, round=idea_pick.next_round(self.state_dir, slug, str(tid)) if is_pick(task) else 1,
+                    look="", same_as_before=False, tests=None, diff=None, shot=None, round=idea_pick.next_round(self.state_dir, slug, str(tid)) if is_pick(task) else 1,
                     conflict="", why="", base="", role=self._role(task)["slug"],
                     ran_tier=idea_target.tier_of(run), effort=effort, **({"findings": None} if is_check(task) else {}),
                     **({"picked": None} if is_pick(task) else {}))
@@ -562,6 +563,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
             else:
                 tests = self._tests_of(path, out, problem)
                 diff = self.git.stats(path, start_sha)
+                self.shoot(slug, tid, path, start_sha, rnd)                  # a picture of what changed, when people see it (spec 85 §3)
             look = self.look_reason(slug, tests, left, [] if check_task and not changed else self.git.touched(path, start_sha),
                                     problem is not None, not (check_task and not changed),        # spec 84 §1: it lands by itself only when it holds
                                     looked=bool(self._task(slug, tid).get("picked")))              # a variant the person picked was looked at (§49.6)

@@ -14,7 +14,7 @@ from typing import Any
 from orkboard import settings
 from orkboard.core import idea_keeper, idea_night
 from orkboard.gui.ideas_args import IdeasError, _device, _opt, _text, _via
-from orkboard.realm import board_map, collide, event_log, idea_questions, idea_risk, idea_secrets, idea_target, ideas
+from orkboard.realm import board_map, collide, event_log, idea_photos, idea_questions, idea_risk, idea_secrets, idea_target, ideas
 from orkboard.realm.idea_git import BoardTree
 
 NEEDS_IDEA = ("asks", "plan", "failed", "proposed")
@@ -341,10 +341,22 @@ class BoardMixin:
             self._what[f"goal:{slug}"] = "answered"
             self.changed(f"goal:{slug}")
             return {"ok": True}
+        self._answer_photos(slug, args.get("photos"))
         self.keeper.answer(slug, answers, decide)
         self._what[slug] = "answered"
         self.changed(slug)
         return {"ok": True}
+
+    def _answer_photos(self, slug: str, photos: object) -> None:
+        """The pictures that came with an answer (*Pictures you like*, spec 85 §1), kept beside the goal for the keeper to read, as New goal's."""
+        if not photos:
+            return
+        try:
+            raws = idea_photos.decode(photos)
+        except ValueError as e:
+            raise IdeasError(str(e)) from None
+        for raw in raws[:max(0, idea_photos.MAX_PHOTOS - len(idea_photos.listed(self.state_dir, slug)))]:
+            idea_photos.put(self.state_dir, slug, raw)
 
     def _todo_file(self, args: dict, slug: str, todo: dict) -> str:
         """A file to-do's file (spec 35 §9): base64, at most 5 MB, kept beside the secrets (mode 600); plan.json says

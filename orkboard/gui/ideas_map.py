@@ -10,6 +10,7 @@ import time
 from collections import Counter
 from pathlib import Path
 
+from orkboard.gui import media
 from orkboard.gui.ideas_args import IdeasError, _opt
 from orkboard.realm import board_map, collide, goal_team, goal_types, idea_element, ideas, library, orkmaster
 
@@ -32,6 +33,9 @@ class MapMixin:
             if n["element"] and n["state"] != "done":
                 used.setdefault(n["goal"], []).append(n["element"])
         for n in got["nodes"]:
+            for t in n["tasks"]:                                         # a task's picture gets its signed address (spec 85 §3)
+                if t.get("shot") and not t["shot"].get("none"):
+                    t["shot"] = {**t["shot"], "url": media.url(n["slug"], t["shot"]["id"], t["shot"]["file"])}
             n["results"] = waiting.get(n["slug"], [])
             if not n["element"]:                                         # a goal of before: one is given now, once
                 try:

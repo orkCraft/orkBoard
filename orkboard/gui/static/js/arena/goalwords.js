@@ -57,6 +57,9 @@ export function goalMark(n) {
 /** A goal at work, in a line: *k/n in dev · implementation* (*checking*). */
 export const workLine = (n) => `${n.progress?.done ?? 0}/${n.progress?.total ?? 0} in dev · ${n.stage === "checking" ? "checking" : "implementation"}`;
 
+/** How far a goal is (spec 85 §4): *4 of 9 done*, its tasks merged and in all; "" for a goal with no plan. */
+export const doneWords = (n) => (n?.of > 0 ? `${n.done} of ${n.of} done` : "");
+
 /** What a press on a goal's row does to the filter, said for its tooltip. */
 export const pickTip = (picked) => (picked ? "Taken out of the filter: a press shows it with the others again" : "A press shows only this goal’s tasks; press more to add them");
 

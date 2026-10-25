@@ -6,13 +6,15 @@
 // What the member's rows do as tasks come and go is motion.js's (a column's `useColumn`); the cards of a plan just started from the hand are dealt in (`is-dealt`, spec 57).
 // A card the stop in the hand that is looked at is about wears `is-linked` (spec 58): the ring is drawn on its stack's box, a 2-px ink outline (the card itself is clipped to its notch).
 // A stop is marked once (docs/specs/52-goal-types.md §4.5): a pick's card keeps its alert sign and has no alert edge or alert words; a failure keeps its danger edge.
+// A card says how far its goal is (docs/specs/85-the-elf-asks-and-shows.md §4: *4 of 9 done*), wears the picture of what its task changed as its face when it has one (§3, look.css), and the card of a task
+// that merged turns over once as it leaves, to *What it made* (its first commit's subject).
 import { html, cls } from "../html.js";
 import { Elem, Sign } from "../orkui.js";
-import { showPick, showResult, showTask } from "../shell/store.js";
+import { mapData, showPick, showResult, showTask } from "../shell/store.js";
 import { rises } from "./motion.js";
 import { taskHover, taskHoverBy, spread, stopAbout, stopLook } from "./arenastate.js";
 import { RUN, ROW_LABEL, afterWords, followsBuild, heldOf, heldWords, rowsOf, taskFoot, waitersOf, waitsForOf } from "./arenawords.js";
-import { elementOf } from "./goalwords.js";
+import { doneWords, elementOf } from "./goalwords.js";
 
 export const keyOf = (n, t) => `${n.slug}/${t.id}`;
 
@@ -67,8 +69,9 @@ export const open = (n, t) => (t.state === "review" ? showResult(n.slug, t.id, {
 /** The look of a card (shared by a stack's front and a spread's): the element, the type, the goal, the name. `phase`: the spread's word over the name. */
 export function CardBody({ n, t, phase = "", foot, deps = [], many = 0 }) {
   const el = elementOf(n);
-  return html`<span class="arena-task__top">${RUN.includes(t.state) && html`<span class="ork-busy" title=${t.state === "testing" ? "testing" : "working"}></span>`}<${Elem} name=${el.name} dim=${el.dim} />${phase && html`<span class="arena-task__phase">${phase}</span>`}${typeSign(n)}</span>
+  return html`${t.shot?.url && html`<img class="arena-task__shot" src=${t.shot.url} alt="" draggable="false" />`}<span class="arena-task__top">${RUN.includes(t.state) && html`<span class="ork-busy" title=${t.state === "testing" ? "testing" : "working"}></span>`}<${Elem} name=${el.name} dim=${el.dim} />${phase && html`<span class="arena-task__phase">${phase}</span>`}${typeSign(n)}</span>
     <span class="arena-task__goal">${n.short || n.title}</span>
+    ${doneWords(n) && html`<span class="arena-task__count">${doneWords(n)}</span>`}
     <span class="arena-task__name">${t.short || t.title}</span>
     ${deps.length > 0 && html`<span class="arena-task__deps">${deps.map((d, i) => html`<span key=${i}><${Sign} name=${d.sign} /> ${d.text}</span>`)}</span>`}
     <span class="arena-task__foot"><${Foot} parts=${foot} /></span>
@@ -78,7 +81,7 @@ export function CardBody({ n, t, phase = "", foot, deps = [], many = 0 }) {
 /** The classes a card wears for its task's state and what the hover says of it. */
 export const stateCls = (n, t, rel, later) => ({ "is-run": t.state === "running" || t.state === "testing", "is-review": t.state === "review", "is-pick": t.state === "picking", "is-next": t.state === "ready",
   "is-wait": t.state === "waiting", "is-held": t.state === "held", "is-fail": t.state === "failed", "is-later": later, "is-src": rel.src && waitersOf(n, t).length > 0,
-  "is-after": rel.after, "is-before": rel.before });
+  "is-after": rel.after, "is-before": rel.before, "has-shot": !!t.shot?.url });
 
 /** One stack: the front card, edges behind it and ×n. `items`: the stack's entries as the column shows them ([{it: {n, t}, key, sign, quiet, fresh}]),
  *  the front first; a stack of more than one live card spreads on a press, a stack of one opens its task. */
@@ -97,6 +100,7 @@ function Stack({ goal, items, later, wide, member, row }) {
     if (live > 1) spread.value = { goal, member, row, keys: shown.filter((x) => !x.sign).map((x) => x.key), from: e.currentTarget.getBoundingClientRect() };
     else open(n, t);
   };
+  const made = front.sign === "check" ? (mapData.value?.nodes || []).find((x) => x.slug === n.slug)?.tasks.find((x) => x.id === t.id)?.made || "" : "";      // the card of a merged task turns over once
   const said = `${t.title} (${goalWords(n)}): ${taskFoot(t, n)}, wave ${t.wave}${live > 1 ? `, and ${live - 1} more of this goal: a press shows them all` : ""}`;
   return html`<div class=${cls("arena-stk", { "is-many": live > 1, "is-fail": t.state === "failed", "is-wide": wide, "is-linked": linked })} data-goal=${goal} data-n=${live}>
     ${Array.from({ length: edges }, (_, i) => html`<i key=${i} class="arena-stk__edge" style=${`left:${(i + 1) * 4}px;top:${-(i + 1) * 4}px`}></i>`)}
@@ -106,6 +110,7 @@ function Stack({ goal, items, later, wide, member, row }) {
       onMouseEnter=${enter} onMouseLeave=${leave} onFocus=${focus} onBlur=${leave}>
       <${CardBody} n=${n} t=${t} foot=${foot} many=${live} />
       ${leaving && html`<span class="arena-task__flash">${front.sign !== "fade" && html`<${Sign} name=${front.sign} big=${true} />`}</span>`}
+      ${made && html`<span class="arena-task__made" data-made><b>What it made</b><span>${made}</span></span>`}
     </button>
   </div>`;
 }
