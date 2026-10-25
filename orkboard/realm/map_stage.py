@@ -48,3 +48,33 @@ def waves_of(tasks: list[dict]) -> dict[str, int]:
     for tid in after:
         of(tid)
     return wave
+
+
+ROWS = 3                                                                               # the field's rows: Now, Next, Later (spec 82 §2)
+
+
+def row_of(tasks: list[dict]) -> dict[str, int]:
+    """{task id: its row on the field} (docs/specs/82-the-field-at-a-glance.md §2): a task that is open and does not wait on an open task
+    (running, testing, ready, held, at Review, picking, failed) is row 1; a task *waiting* is 1 + the highest row of the open tasks it waits for.
+    A merged or dropped task counts for nothing (it is row 1 and nothing waits on it). Rows past 3 are row 3 (*Later*). A cycle reads as no wait."""
+    by_id = {str(t.get("id")): t for t in tasks}
+    row: dict[str, int] = {}
+    walking: set[str] = set()
+
+    def of(tid: str) -> int:
+        if tid in row:
+            return row[tid]
+        t = by_id[tid]
+        if t.get("state") != "waiting":                 # merged, dropped, or not waiting: row 1
+            row[tid] = 1
+            return 1
+        walking.add(tid)
+        waits = (str(a) for a in t.get("after") or [])
+        deepest = max((of(a) for a in waits if a in by_id and a not in walking and by_id[a].get("state") not in _GONE), default=0)
+        walking.discard(tid)
+        row[tid] = deepest + 1
+        return row[tid]
+
+    for tid in by_id:
+        of(tid)
+    return {tid: min(r, ROWS) for tid, r in row.items()}

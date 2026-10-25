@@ -1,5 +1,6 @@
-// The arrows (docs/specs/50-parties-and-goals.md §3.4): hovering a card (or a spread card) draws an arrow from each task it waits for to it and from it
-// to each task that waits for it, between the cards that are shown — a dashed ink line, 2 px, with a head, over the field and under the drawer,
+// The arrows (docs/specs/50-parties-and-goals.md §3.4, docs/specs/82-the-field-at-a-glance.md §6): hovering a card (or a spread card) draws an arrow from each task it waits for to it and from it
+// to each task that waits for it, between the cards that are shown — a dashed ink line in square steps (down from the bottom centre of the card waited for, across in the strip between the rows,
+// down into the top centre of the waiting card), 2 px, with a head, over the field and under the drawer,
 // drawn from its start in four steps when it comes (arena.css `arena-draw`; none when motion is reduced). An end
 // that is not shown (a task under another card of its stack, or one the filter has taken away, or one scrolled out of its column) draws none. Only
 // with a fine pointer (`(hover: hover)`); the keyboard's focus draws them too. The card's foot keeps the words (stacks.js `footParts`).
@@ -27,13 +28,28 @@ export function segment(key, a, b) {
   return { key, x1: p.x, y1: p.y, x2: q.x - (HEAD - 1) * Math.cos(ang), y2: q.y - (HEAD - 1) * Math.sin(ang), tip: q, head: `${q.x.toFixed(1)},${q.y.toFixed(1)} ${w(0.45)} ${w(-0.45)}` };
 }
 
-/** The svg layer that draws `lines` (from `segment`) over its positioned host. */
-export function ArrowLines({ lines }) {
-  return html`<svg class="arena-arrows" aria-hidden="true">${lines.map((l) => html`<g key=${l.key} class=${cls("arena-arrow", { "is-leaving": !!l.leaving })} data-edge=${l.key} data-kind=${l.kind || undefined}>
-    <line x1=${l.x1} y1=${l.y1} x2=${l.x2} y2=${l.y2} style=${`transform-origin: ${l.x1.toFixed(1)}px ${l.y1.toFixed(1)}px`} /><polygon points=${l.head} /></g>`)}</svg>`;
+const STRIP = 8;                                      // half the strip between two rows (the label's line, 16 px): the arrow crosses at its middle
+const HALF = 4;                                       // half the width of a step's arrow head
+
+/** The arrow of a wait, in square steps (spec 82 §6), from the box `a` of the card waited for to the box `b` of the waiting one (both {x, y, w, h} in the host's coordinates; `a.cell`: the bottom of
+ *  a's row): down from a's bottom centre, across in the middle of the strip under a's row, down into b's top centre; `points` the polyline (which stops short of the head), `head` the head's
+ *  points. null when b does not lie under a (the same row: nothing to draw). */
+export function steps(key, a, b) {
+  const x1 = a.x + a.w / 2, y1 = a.y + a.h, x2 = b.x + b.w / 2, y2 = b.y;
+  if (y2 - y1 < 2) return null;
+  const mid = Math.min(a.cell != null ? a.cell + STRIP : (y1 + y2) / 2, y2 - HEAD);
+  const to = y2 - (HEAD - 1), at = (x, y) => `${x.toFixed(1)},${y.toFixed(1)}`;
+  return { key, x1, y1, points: [at(x1, y1), at(x1, mid), at(x2, mid), at(x2, to)].join(" "), tip: { x: x2, y: y2 }, head: `${at(x2, y2)} ${at(x2 - HALF, y2 - HEAD)} ${at(x2 + HALF, y2 - HEAD)}` };
 }
 
-/** The lines between the cards shown: [{x1, y1, x2, y2, head: "points"}]. `host`: the element the lines are drawn in. */
+/** The svg layer that draws `lines` (from `steps`, a field's; from `segment`, the project's diagonals) over its positioned host. */
+export function ArrowLines({ lines }) {
+  return html`<svg class="arena-arrows" aria-hidden="true">${lines.map((l) => html`<g key=${l.key} class=${cls("arena-arrow", { "is-leaving": !!l.leaving })} data-edge=${l.key} data-kind=${l.kind || undefined}>
+    ${l.points ? html`<polyline points=${l.points} fill="none" style=${`transform-origin: ${l.x1.toFixed(1)}px ${l.y1.toFixed(1)}px`} />`
+      : html`<line x1=${l.x1} y1=${l.y1} x2=${l.x2} y2=${l.y2} style=${`transform-origin: ${l.x1.toFixed(1)}px ${l.y1.toFixed(1)}px`} />`}<polygon points=${l.head} /></g>`)}</svg>`;
+}
+
+/** The arrows between the cards shown: [{key, points, head}] (`steps`). `host`: the element the lines are drawn in. */
 export function linesFor(host, nodes, hover, inSpread) {
   const slash = hover.lastIndexOf("/"), goal = hover.slice(0, slash), id = hover.slice(slash + 1);
   const n = nodes.find((x) => x.slug === goal), t = n?.tasks.find((x) => x.id === id);
@@ -43,7 +59,9 @@ export function linesFor(host, nodes, hover, inSpread) {
     const el = host.querySelector(`[${attr}="${CSS.escape(`${n.slug}/${task.id}`)}"]`);
     if (!el) return null;
     const r = el.getBoundingClientRect(), box = { x: r.left - base.left, y: r.top - base.top, w: r.width, h: r.height };
-    const clip = el.closest(".arena-stack, .arena-solo");           // a column scrolls inside itself: a card out of view is not shown
+    const cell = el.closest(".arena-phase.is-cell");                // the row it lies in: its bottom is where the arrows below it cross (spec 82 §6)
+    if (cell) box.cell = cell.getBoundingClientRect().bottom - base.top;
+    const clip = el.closest(".arena-cols__grid, .arena-solo");        // the field scrolls inside itself: a card out of view is not shown
     if (clip) {
       const c = clip.getBoundingClientRect();
       if (r.bottom <= c.top || r.top >= c.bottom || r.right <= c.left || r.left >= c.right) return null;
@@ -57,7 +75,8 @@ export function linesFor(host, nodes, hover, inSpread) {
   for (const [from, to] of pairs) {
     const a = from === t ? me : rect(from), b = to === t ? me : rect(to);
     if (!a || !b) continue;
-    out.push(segment(`${from.id}>${to.id}`, a, b));
+    const arrow = steps(`${from.id}>${to.id}`, a, b);
+    if (arrow) out.push(arrow);
   }
   return out;
 }
