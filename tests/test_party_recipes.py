@@ -31,9 +31,9 @@ def test_a_recipe_names_only_the_librarys_agents_and_fits_its_leaders_seats_in_e
 
 
 def test_the_ids_are_each_one_and_the_presets_are_built_on_their_seats():
-    ids = [r["id"] for _k, r in ALL if r["id"] not in ("ideation", "release", "game", "tech")]
+    ids = [r["id"] for _k, r in ALL if r["id"] not in ("ideation", "release", "game", "art", "tech")]
     assert len(ids) == len(set(ids))
-    for pid in ("ideation", "release", "game"):
+    for pid in ("ideation", "release", "game", "art"):
         preset = next(p for p in library.PRESETS if p[0] == pid)
         for _k, r in ALL:
             if r["id"] == pid:
@@ -43,8 +43,8 @@ def test_the_ids_are_each_one_and_the_presets_are_built_on_their_seats():
 def test_the_recipes_of_each_kind_are_the_specs():
     ids = {k: [r["id"] for r in party_recipes.for_kind(k, {"sql": 1})] for k in project_kind.KINDS}
     assert ids == {"empty": ["ideation"], "mobile": ["mobile-features", "mobile-architecture", "release"], "web": ["web-pages", "tech", "release"],
-                   "backend": ["backend", "backend-data"], "game": ["game", "tech", "release"], "data": ["data-work"], "wiki": ["wiki", "ideation"],
-                   "design": ["design-screens", "ideation"], "texts": ["texts", "ideation"], "code": ["engineering-code"]}
+                   "backend": ["backend", "backend-data"], "game": ["game", "tech", "art", "release"], "data": ["data-work"], "wiki": ["wiki", "ideation"],
+                   "design": ["design-screens", "art", "ideation"], "texts": ["texts", "ideation"], "code": ["engineering-code"]}
     lead = {r["id"]: r["leader"] for _k, r in ALL}
     assert lead["mobile-features"] == "product-manager" and lead["mobile-architecture"] == "architect" and lead["web-pages"] == "product-designer"
     assert lead["data-work"] == "analyst" and lead["wiki"] == "product-manager" and lead["design-screens"] == "product-designer" and lead["texts"] == "growth"
@@ -153,3 +153,22 @@ def test_the_parties_the_architect_leads_are_named_tech_and_web_and_games_offer_
     made_before = {"name": "Backend", "leader": "architect", "team": ["grunt", "tester", "reviewer"]}       # a party made before: its name stays
     assert party_recipes.has(party_recipes.get("backend"), [made_before]) and made_before["name"] == "Backend"
     assert party_recipes.has(party_recipes.get("tech"), [made_before])                                      # … and it is the Tech party
+
+
+def test_art_and_sound_is_offered_to_games_and_designs_after_their_first_and_sized_by_its_seats():
+    """The Art director's party: a game and a design are offered it with a reason; its sizes give the seats the first builder (the Artist) and the first
+    checker (the Art reviewer), not the sound designer, the animator, the composer or the icon artist, who stay listed."""
+    for kind, after in (("game", "tech"), ("design", "design-screens")):
+        rows = party_recipes.for_kind(kind)
+        i = [r["id"] for r in rows].index("art")
+        assert rows[i - 1]["id"] == after and rows[i]["because"] and party_recipes.kind_of("art", kind) == kind
+    assert party_recipes.get("game")["because"] != party_recipes.get("art")["because"]
+    art = party_recipes.get("art")
+    assert (art["name"], art["line"], art["leader"], art["whole"]) == ("Art and sound", "Pictures, icons, motion, sounds and music, in one style", "art-director", False)
+    assert art["build"] == ["artist", "sound-designer", "animator", "composer", "icon-artist"] and art["check"] == ["art-reviewer"]
+    lean, std, full = (party_recipes.sized(art, s) for s in idea_target.SIZES)
+    assert lean == {"leader": "art-director", "team": [], "tiers": {"art-director": "warrior"}, "size": "lean"}
+    assert std["team"] == ["artist"] and std["tiers"] == {"art-director": "elder", "artist": "warrior"}
+    assert full["team"] == ["artist", "art-reviewer"]
+    assert full["tiers"] == {"art-director": "elder", "artist": "warrior", "art-reviewer": "elder"}
+    assert party_recipes.has(art, [{"leader": "art-director", "team": ["artist", "composer"]}]) and not party_recipes.has(art, [{"leader": "art-director", "team": ["composer"]}])

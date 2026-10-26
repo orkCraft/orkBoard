@@ -45,28 +45,32 @@ BUILTIN = (TASKMASTER, GRUNT)
 # A task's kind is its tag: the kind of work it is, what decides who of a goal's team does it (realm/library.py).
 TASK_KINDS = ("code", "tests", "docs", "text", "research", "review", "architecture", "design", "uikit", "a11y", "art",
               "data", "query", "metrics", "experiment", "seo", "campaign", "community", "security", "datacheck", "edit",
-              "gamedesign", "level", "sound", "playtest", "aso")
+              "gamedesign", "level", "sound", "playtest", "aso", "artdirection", "motion", "music", "artcheck")
 KIND_LABELS = {"code": "Code", "tests": "Tests", "docs": "Docs", "text": "Text for people", "research": "Research",
                "review": "Review of a change", "architecture": "Architecture", "design": "Screens and flows",
                "uikit": "UI kit", "a11y": "Accessibility", "art": "Pixel art", "data": "Data pipelines and tables",
                "query": "Queries", "metrics": "Metrics", "experiment": "Experiments", "seo": "Search (SEO)",
                "campaign": "Launch and campaigns", "community": "Community", "security": "Security check",
                "datacheck": "Data check", "edit": "Editing", "gamedesign": "Game design", "level": "Levels",
-               "sound": "Sound", "playtest": "Playtest", "aso": "Store pages (ASO)"}
+               "sound": "Sound", "playtest": "Playtest", "aso": "Store pages (ASO)", "artdirection": "Art direction",
+               "motion": "Animation", "music": "Music", "artcheck": "Art check"}
 # What each kind is, for the Taskmaster's plan prompt.
 KIND_LINES = {"code": "the code a change needs", "tests": "tests only", "docs": "the repository's docs",
               "text": "text for people: pages, posts, release notes", "research": "finding out, no change",
               "review": "reading a change and saying what breaks", "architecture": "how a wide change is split and ordered",
               "design": "flows and screens", "uikit": "components and tokens of the design system",
-              "a11y": "accessibility checks and fixes", "art": "pixel art: icons, heads, pictures",
+              "a11y": "accessibility checks and fixes", "art": "pictures: icons, characters, logos, in the project's own style",
               "data": "events, tables and the jobs that fill them", "query": "queries for a report",
               "metrics": "counting a party's metrics", "experiment": "an A/B test", "seo": "search: pages found by their words",
               "campaign": "a launch, its channels and what they bring", "community": "answers to people, what they ask",
               "security": "a security check of a change", "datacheck": "checking numbers and personal data",
               "edit": "editing texts people read", "gamedesign": "the rules, the loop and the balance of a game",
-              "level": "a level: its layout, its path and its pace", "sound": "sounds and music, picked by ear",
+              "level": "a level: its layout, its path and its pace", "sound": "sound effects, picked by ear",
               "playtest": "playing a change through and saying where it breaks or bores",
-              "aso": "an app store's page: its keywords, texts and screenshots"}
+              "aso": "an app store's page: its keywords, texts and screenshots",
+              "artdirection": "the style guide and the list of assets a goal needs, who makes each",
+              "motion": "animation: sprite sheets, Lottie, CSS or the engine's own",
+              "music": "music and loops", "artcheck": "checking assets against the style guide: sizes, formats, loudness, licences"}
 DEFAULT_KIND = "code"
 MAX_PARALLEL = (1, 8)
 NAME_CHARS, INSTRUCTION_CHARS = 40, 600
