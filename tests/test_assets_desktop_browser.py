@@ -440,7 +440,7 @@ def test_play_opens_the_build_polls_while_it_starts_and_shows_it_in_a_sandboxed_
     assert pg.get_by_role("button", name="Open the build").count() == 1 and pg.locator("iframe").count() == 0
     pg.get_by_role("button", name="Open the build").click()
     pg.locator('.playpane[data-state="starting"]').wait_for(timeout=WAIT_MS)
-    assert pg.locator(".play-starting").text_content().strip() == "Starting shop…" and pg.locator(".play-title").text_content().strip() == "shop"
+    assert pg.locator(".play-stage-words").text_content().strip() == "Making its worktree" and pg.locator(".play-title").text_content().strip() == "shop"
     shot(pg, "play-starting.png")
     pg.locator('.playpane[data-state="playing"]').wait_for(timeout=WAIT_MS)
     calls = _calls(pg, host, "ideas.play", 3)
@@ -496,7 +496,7 @@ WATCH_FRAME = """(() => {                    // records the state of the pane ea
 CANVAS = "() => { const e = document.createElement('i'); e.style.background = 'var(--ork-canvas)'; document.body.append(e); const c = getComputedStyle(e).backgroundColor; e.remove(); return c; }"
 
 
-def test_the_start_screen_is_black_with_the_name_coming_up_in_steps_and_the_frame_only_after_the_page_answered(level):
+def test_the_start_screen_is_black_with_the_name_looping_in_steps_and_the_frame_only_after_the_page_answered(level):
     pg, host = level
     pg.evaluate(WATCH_FRAME)
     host.play = [{"state": "stopped"}, {"state": "starting", "commit": HEAD, "short": HEAD[:7]}, {"state": "starting", "commit": HEAD, "short": HEAD[:7]},
@@ -511,9 +511,9 @@ def test_the_start_screen_is_black_with_the_name_coming_up_in_steps_and_the_fram
     black = pg.evaluate(CANVAS)
     assert pane.evaluate("e => getComputedStyle(e).backgroundColor") == black and pg.locator(".play-intro").evaluate("e => getComputedStyle(e).backgroundColor") == black
     title, note = pg.locator(".play-title"), pg.locator(".play-starting")
-    assert title.text_content().strip() == "shop" and note.text_content().strip() == "Starting shop…"
+    assert title.text_content().strip() == "shop" and pg.locator(".play-stage-words").text_content().strip() == "Making its worktree"       # no stage said yet: the first
     assert "Pixelify" in title.evaluate("e => getComputedStyle(e).fontFamily") and title.evaluate("e => parseFloat(getComputedStyle(e).fontSize)") >= 40       # the pixel face, large
-    assert title.evaluate("e => getComputedStyle(e).animationTimingFunction").startswith("steps(") and title.evaluate("e => getComputedStyle(e).animationName") == "play-name-in"
+    assert title.evaluate("e => getComputedStyle(e).animationTimingFunction").startswith("steps(") and title.evaluate("e => getComputedStyle(e).animationName") == "play-name-loop"
     assert note.evaluate("e => getComputedStyle(e).color") == pg.evaluate("() => { const e = document.createElement('i'); e.style.color = 'var(--ork-ink-faint)'; document.body.append(e); const c = getComputedStyle(e).color; e.remove(); return c; }")
     box, pbox = title.bounding_box(), pane.bounding_box()
     assert abs((box["x"] + box["width"] / 2) - (pbox["x"] + pbox["width"] / 2)) < 3                                    # centred

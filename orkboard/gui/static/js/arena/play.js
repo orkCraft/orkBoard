@@ -2,9 +2,10 @@
 // starts (*Starting the build…*) the face asks what it is now (`ideas.play` with `peek`) about every second; once it plays, the preview is an `iframe` of its own origin — a sandbox that lets its scripts run, keeps its
 // origin and lets it lock the pointer —, *Plays dev at <short commit>* over it and *Stop the build*. While it is shown the face says `peek` every minute: the host stops a Play nobody has asked about for ten minutes.
 // A merge into dev changes nothing in it until *Open the build* is pressed again (`fresh`). A build that would not start says why; a project with no preview says *Nothing here yet* and how to give it one.
-// The start screen (docs/specs/90-what-the-first-look-said.md §1.3): while it starts the pane is black (orkUI's canvas), the project's name in the pixel face, large and centred, comes up in steps, *Starting <project>…* under it
-// in the faint ink; when the page has answered (`playing`) the name fades in steps and the frame comes up from the black — an `iframe` is never drawn before that; under reduced motion, no steps. A build whose port gives no page
-// (`why: "nopage"`) says so with the ports it tried and *Stop the build*.
+// The start screen (docs/specs/90-what-the-first-look-said.md §1.3, docs/specs/91-the-owners-list.md §5): while it starts the pane is black (orkUI's canvas), the project's name in the pixel face, large and centred,
+// fades in and out in a slow loop (2.4 s, in steps; still under reduced motion), and under it, in the faint ink, one line says the stage — *Making its worktree*, *Starting <command>*, *Waiting for a page on :<port>* — with
+// the seconds counting up (`since` from the host, local time after it); when the page has answered (`playing`) the name fades in steps and the frame comes up from the black — an `iframe` is never drawn before that; under reduced
+// motion, no steps. A build that did not start says why and shows the command's last lines (`tail`) in a quiet box that scrolls; a build whose port gives no page (`why: "nopage"`) says so with the ports it tried and *Stop the build*.
 // The build is the machine's own address (127.0.0.1): the phone has no Play.
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
@@ -18,16 +19,18 @@ export const NOTHING_HOW = "Say how the project opens in .orkcraft/checks.toml: 
 export const SANDBOX = "allow-scripts allow-same-origin allow-pointer-lock";
 export const playsAt = (short) => `Plays dev at ${short}`;
 export const wouldNot = (why) => `The build would not start: ${why}`;
-export const startingWords = (project) => `Starting ${project}…`;
+export const MAKING = "Making its worktree", STARTING_ITS = "Starting its preview", WAITING = "Waiting for a page", LAST_LINES = "Its last lines";
+export const waitingOn = (ports) => (ports || []).length ? `${WAITING} on ${ports.map((p) => `:${p}`).join(", ")}` : WAITING;
+export const secondsWords = (n) => `${n} s`;
 export const NO_PAGE = "The build started, but no port gives a page. Name it in .orkcraft/checks.toml: preview_port or preview_path.";
 export const portsTried = (ports) => `Ports tried: ${ports.join(", ")}`;
 
-const POLL_MS = 1000, KEEP_MS = 60_000, FADE_MS = 450;                // while it starts; while it plays (the host's idle limit is ten minutes)
+const POLL_MS = 1000, KEEP_MS = 60_000, FADE_MS = 450, TICK_MS = 500;                // while it starts; while it plays (the host's idle limit is ten minutes)
 
 /** The build as the face shows it: `stopped`, `starting`, `playing` ({url, commit, short, dev}) or `failed` ({error, none}); what `ideas.play` answers, or `reading` before the first answer. */
 function useBuild() {
   const [b, setB] = useState({ state: "reading" }), live = useRef(true);
-  const take = (r) => { if (live.current) setB(r && r.state ? r : { state: "failed", error: r?.error || "did not open" }); };
+  const take = (r) => { if (live.current) setB(r && r.state ? { ...r, at: Date.now() } : { state: "failed", error: r?.error || "did not open" }); };
   const ask = (args) => command("ideas.play", args, true).then(take).catch((e) => { if (live.current) setB({ state: "failed", error: e.message || "did not open" }); });
   useEffect(() => { live.current = true; ask({ peek: true }); return () => { live.current = false; }; }, []);
   useEffect(() => {
@@ -37,7 +40,7 @@ function useBuild() {
   }, [b.state]);
   return {
     b,
-    open: (fresh) => { setB({ state: "starting", commit: "", short: "" }); ask(fresh ? { fresh: true } : {}); },
+    open: (fresh) => { setB({ state: "starting", commit: "", short: "", stage: "worktree", since: 0, at: Date.now() }); ask(fresh ? { fresh: true } : {}); },
     stop: () => command("ideas.play_stop", {}, true).then(() => live.current && setB({ state: "stopped" })).catch((e) => live.current && setB({ state: "failed", error: e.message || "did not stop" })),
   };
 }
@@ -50,12 +53,41 @@ function projectName() {
   return (list.open || []).find((p) => p.path === cur)?.name || String(cur).split(/[\\/]/).filter(Boolean).pop() || "the project";
 }
 
+/** The time now, every `ms` while `on` (the seconds of a start count up on the page, from the host's `since`). */
+function useNow(on, ms) {
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    if (!on) return undefined;
+    setNow(Date.now());
+    const t = setInterval(() => setNow(Date.now()), ms);
+    return () => clearInterval(t);
+  }, [on, ms]);
+  return now;
+}
+
+/** The line under the name: the stage in words, and the seconds since the start. */
+function StageLine({ b }) {
+  const now = useNow(true, TICK_MS), secs = Math.max(0, Math.floor((Number(b.since) || 0) + (now - (b.at || now)) / 1000));
+  const words = b.stage === "command"
+    ? (b.command ? html`Starting <code class="play-cmd">${b.command}</code>` : STARTING_ITS)
+    : b.stage === "page" ? waitingOn(b.ports) : MAKING;
+  return html`<p class="play-starting" role="status"><span class="play-stage-words">${words}</span> <span class="play-secs" aria-hidden="true">${secondsWords(secs)}</span></p>`;
+}
+
 /** The black pane with the project's name: `fading` once the page answered (the name goes in steps over the frame under it). */
-function Intro({ name, fading, done }) {
+function Intro({ name, fading, done, b }) {
   return html`<div class=${cls("play-intro", { "is-fading": fading })} aria-hidden=${fading ? "true" : undefined} onAnimationEnd=${(e) => { if (fading && e.animationName === "play-intro-out") done(); }}>
     <h2 class="play-title">${name}</h2>
-    ${!fading && html`<p class="play-starting" role="status">${startingWords(name)}</p>`}
+    ${!fading && html`<${StageLine} b=${b} />`}
   </div>`;
+}
+
+/** The command's last lines, in a quiet box that scrolls (about twelve lines show), the newest at the foot. */
+function Tail({ lines }) {
+  const box = useRef(null);
+  useEffect(() => { if (box.current) box.current.scrollTop = box.current.scrollHeight; }, [lines.length]);
+  if (!lines.length) return null;
+  return html`<div class="play-tail"><p class="arena-cap play-tail__cap">${LAST_LINES}</p><pre class="play-tail__lines" ref=${box} tabindex="0" aria-label=${LAST_LINES}>${lines.join("\n")}</pre></div>`;
 }
 
 export function Play() {
@@ -70,7 +102,7 @@ export function Play() {
   }, [b.state]);
   if (b.state === "reading") return html`<div class="playpane" data-state="reading"><p class="arena-cap play-note"><span class="ork-busy"></span></p></div>`;
   if (b.state === "starting") {
-    return html`<div class="playpane is-black" data-state="starting"><${Intro} name=${name} /></div>`;
+    return html`<div class="playpane is-black" data-state="starting"><${Intro} name=${name} b=${b} /></div>`;
   }
   if (b.state === "playing") {
     const moved = b.dev && b.commit && b.dev !== b.commit, intro = came.current && !gone && !reduced();
@@ -96,6 +128,7 @@ export function Play() {
       <div class="play-start">
         <p class="play-error" role="alert">${NO_PAGE}</p>
         ${(b.ports || []).length > 0 && html`<p class="arena-cap play-ports">${portsTried(b.ports)}</p>`}
+        <${Tail} lines=${b.tail || []} />
         <button type="button" class="ork-btn primary" onClick=${stop}>${STOP}</button>
       </div>
     </div>`;
@@ -103,6 +136,7 @@ export function Play() {
   return html`<div class=${cls("playpane", { "is-failed": b.state === "failed" })} data-state=${b.state === "failed" ? "failed" : "idle"}>
     <div class="play-start">
       ${b.state === "failed" && html`<p class="play-error" role="alert">${wouldNot(b.error)}</p>`}
+      ${b.state === "failed" && html`<${Tail} lines=${b.tail || []} />`}
       <button type="button" class="ork-btn primary" onClick=${() => open(false)}>${OPEN}</button>
     </div>
   </div>`;

@@ -3,12 +3,15 @@ made of, seen and touched, and its own preview of dev. Read from the files, git 
 
     ideas.assets {since?}             # the assets of dev's head by kind, each with its signed address and, since `since`, what changed and its goal
     ideas.asset_before {path, since}  # the signed address of the file as it was at `since`; url "" when it was added since
-    ideas.play {fresh?, peek?}        # the project's preview of dev's head on 127.0.0.1: starting → playing {url, commit} or failed {error}
+    ideas.play {fresh?, peek?}        # the project's preview of dev's head on 127.0.0.1: starting {stage, command, ports, since} → playing {url, commit} or failed {error, tail}
     ideas.play_stop {}                # it stops and its worktree goes
 
 **Play** opens the preview core/idea_shot.py opens for a picture (`preview_of`, `opened`: checks.toml's `preview`, a static `index.html`,
 the package's `dev|preview|start` script) in a worktree of dev's head, `<state_dir>/play/` (its dependencies linked as a task's are,
-realm/dep_links.py), on a port of its own on the machine's own address. One Play a project: a second `ideas.play` while it starts or
+realm/dep_links.py), on a port of its own on the machine's own address. While it starts it says its **stage** (spec 91 §5): `worktree` (making it), `command` (the command started, `command` as words:
+`npm run dev`), `page` (something listens and no page has answered; `ports` asked so far), and `since` (seconds since the start); a failure says the
+last `idea_shot.TAIL_LINES` lines of the command's output (`tail`, colour codes out). Its wait for a page is `PLAY_OPEN_S`, not the picture's.
+One Play a project: a second `ideas.play` while it starts or
 plays answers the same (and says dev's head now, `dev`); `fresh: true` starts it anew when dev moved. `ideas.play_stop`, closing the
 project (`play_close`), quitting, its command ending, or IDLE_S with no face asking (`ideas.play`, `peek` too) stops it and removes the
 worktree. The phones never get it: the commands refuse a phone, and the listener never serves the preview's port.
@@ -30,7 +33,8 @@ from orkboard.gui.ideas_args import IdeasError, _device, _str, _text
 from orkboard.realm import assets, commit_goal, dep_links, event_log, idea_element, idea_git, ideas
 
 IDLE_S = 600.0                       # ten minutes with no face asking: Play stops
-ALIVE_S = 15.0                       # how often a playing preview is looked at (its command may have ended)
+PLAY_OPEN_S = 60.0                   # Play's wait for a page (a dev server's first build is slow); the picture's stays `idea_shot.OPEN_S`
+ALIVE_S = 15.0                      # how often a playing preview is looked at (its command may have ended)
 PLAY_DIR = "play"
 TOPIC = "play.changed"               # on the bus when Play started, failed or stopped (the snapshot follows)
 NO_PREVIEW = "no preview"
@@ -59,7 +63,10 @@ class Play:
         self._stop = threading.Event()
         self._why = ""
         self.state, self.commit, self.url, self.error, self.none = "", "", "", "", False
-        self.ports: list[int] = []                       # a start that gave no page (`nopage`): the ports it asked (spec 90 §1)
+        self.ports: list[int] = []                       # the ports asked so far (stage `page`); a start that gave no page (`nopage`): the ports it asked (spec 90 §1)
+        self.stage, self.command = "", ""                # while it starts: worktree · command · page (spec 91 §5), and the command as words
+        self.tail: list[str] = []                        # the command's output, its last lines (`idea_shot.opened`'s `tail`)
+        self.began = 0.0
         self.port: int | None = None
         self.seen_at = self._alive_at = 0.0
         _LIVE.add(self)
@@ -70,11 +77,14 @@ class Play:
         if self.state == "playing":
             return {"state": "playing", "url": self.url, "commit": self.commit, "short": self.commit[:7], "dev": commit_goal.head(self.root, ref)}
         if self.state == "starting":
-            return {"state": "starting", "commit": self.commit, "short": self.commit[:7]}
+            return {"state": "starting", "commit": self.commit, "short": self.commit[:7], "stage": self.stage, "command": self.command,
+                    "ports": list(self.ports), "since": round(max(0.0, time.monotonic() - self.began), 1)}
         if self.state == "failed":
             if self.error == NO_PAGE:
-                return {"state": "failed", "why": NO_PAGE, "error": NO_PAGE_WORDS, "ports": list(self.ports)}
-            return {"state": "failed", "error": self.error, **({"none": True} if self.none else {})}
+                return {"state": "failed", "why": NO_PAGE, "error": NO_PAGE_WORDS, "ports": list(self.ports), "tail": list(self.tail)}
+            if self.none:
+                return {"state": "failed", "error": self.error, "none": True}
+            return {"state": "failed", "error": self.error, "tail": list(self.tail)}
         return {"state": "stopped"}                  # never started, stopped, or stopping
 
     # -- start and stop --------------------------------------------------------------------------------------
@@ -97,8 +107,8 @@ class Play:
         with self._lock:
             self._stop = threading.Event()
             self.state, self.commit, self.url, self.error, self.none, self.port, self._why = "starting", tip, "", "", False, None, ""
-            self.ports = []
-            self._thread = threading.Thread(target=self._run, args=(tip, self._stop), name="play", daemon=True)
+            self.ports, self.tail, self.stage, self.command, self.began = [], [], "worktree", "", time.monotonic()
+            self._thread =threading.Thread(target=self._run, args=(tip, self._stop), name="play", daemon=True)
             self._thread.start()
         return self.answer(ref)
 
@@ -114,11 +124,11 @@ class Play:
             self.wait()
         return running
 
-    def wait(self, seconds: float = idea_shot.OPEN_S + 10) -> None:
-        """Waits for its thread (a start still opening the preview takes up to `idea_shot.OPEN_S`)."""
+    def wait(self, seconds: float | None = None) -> None:
+        """Waits for its thread (a start still opening the preview takes up to `PLAY_OPEN_S`)."""
         thread = self._thread
         if thread is not None and thread is not threading.current_thread():
-            thread.join(seconds)
+            thread.join(PLAY_OPEN_S + 10 if seconds is None else seconds)
 
     def _join(self) -> None:
         self.wait()
@@ -143,6 +153,17 @@ class Play:
                 setattr(self, k, v)
         self._publish()
 
+    def _stage(self, stage: str, command: str = "", ports: list[int] | None = None) -> None:
+        """Where the start is (`worktree` · `command` · `page`); the bus is told when it changed."""
+        with self._lock:
+            if self.state != "starting":
+                return
+            before = (self.stage, self.command, self.ports)
+            self.stage, self.command, self.ports = stage, command, list(ports or [])
+            changed = before != (self.stage, self.command, self.ports)
+        if changed:
+            self._publish()
+
     def _run(self, commit: str, stop: threading.Event) -> None:
         began = time.monotonic()
         try:
@@ -152,8 +173,11 @@ class Play:
                 return self._failed(began, stop, NO_PREVIEW, none=True)
             if stop.is_set():
                 return self._failed(began, stop, "stopped")
+            command = " ".join(how["run"]) if how["how"] == "command" else ""
+            self._stage("command" if command else "page", command)             # a static page has no command: it waits for its page at once
             path, tried = idea_shot._path("", idea_shot._config(self.state_dir)), []
-            with idea_shot.opened(how, self.path, idea_shot.OPEN_S, env={"HOST": "127.0.0.1"}, path=path, tried=tried) as port:
+            with idea_shot.opened(how, self.path, PLAY_OPEN_S, env={"HOST": "127.0.0.1"}, path=path, tried=tried, tail=self.tail,
+                                  asking=lambda ports: self._stage("page", command, ports)) as port:
                 if port is None or stop.is_set():
                     return self._failed(began, stop, NO_PAGE if tried else "did not open", ports=tried)
                 self._alive_at = time.monotonic()
