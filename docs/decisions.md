@@ -1703,3 +1703,32 @@ drawn and agreed the same day. So:
    task's worktree and the Warder's hook judging each command where it is installed; its reads (a spec, a plan, a talk)
    still run no command. The building's autonomy never reached a task's run, so it is no longer agy's condition.
 Spec 91.
+
+## 108. Running the project is a party by the project's kind; working with people is a party, Team; Operations are no longer a tab (26 October, the owner)
+
+Why: the owner: *Operations should not be a permanent tab but a party. We have LiveOps for games; something like it should
+exist for other kinds of project: apps, services, an LLM wiki, and managing a team of people.* A permanent row in every
+project's column holds what is the person's own and belongs to no project (§51.1), and a game's running after launch already
+had a party of its own (spec 91 §7). So:
+1. **The project's running is the fifth stage, a party for every kind of project**, named for what the project does when it
+   runs: *LiveOps* for a game, *Run* for an app, a site, a service, code and data, *Upkeep* for a wiki, a design and texts.
+   Made of the library's roles; it proposes two to four **recurring goals** when it is made (Run: *Weekly dependency check*,
+   *Read the new reviews*, *Look at the crashes*; Upkeep: *Find stale pages*, *Check the links*, *Take in the new sources*;
+   a game's LiveOps: the week's numbers, what players say, the crash reports, the next event), each ticked and left out by
+   the person if they do not want it.
+2. **A recurring goal is an ordinary goal that comes back** every day, week or month once it is done, with the same words in
+   the same party; the done one stays as the record of that round. (The owner's brief said *the existing recurring-goal
+   mechanism*; there was none, so this is it: a `repeat` on the goal's page and the host's clock.) It starts no model of its
+   own, is seen and stopped from its drawer, and ends with its party.
+3. **Working with people is a party, Team**, that the person puts in the one project they choose, e.g. their team's wiki. It
+   holds today's Operations, unchanged in behaviour and in storage (the person's folder, §51.1): the templates (the daily
+   brief, the email reply, the Jira task, the 1:1, the refinement, the retro), runs, checks and history. Its Board is
+   Operations' list in place of goal cards; its leader is the Product manager; it is in New party on every kind. **There is
+   one Team party across all of the person's projects**: elsewhere it is offered greyed, *Team is in <project>*. It holds no
+   goals.
+4. **The permanent *Operations* row goes** from the left column, on the desktop and on the phone, as soon as a Team party
+   exists anywhere. Until then Operations stay reachable where they are, with the line *Make it a Team party*. What exists
+   (runs, kept rules, standing) stays as it is; the Team party shows it, and removing the party gives the row back.
+5. **Words**: `TERMS` says *Team* (a party that holds the person's Operations), *Run*, *Upkeep* and *recurring goal*;
+   *Operations* stays the person's list, one for all projects, now reached through Team.
+Spec 92.

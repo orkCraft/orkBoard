@@ -140,7 +140,7 @@ STAGE_RECIPES: dict[str, list[dict]] = {
                "a game's idea is shaped before it is built"),
         _stage("game", "build", "Rules, levels, pictures and sounds, played through", "game-designer", ["grunt", "artist", "sound-designer"], ["playtester", "reviewer"],
                "a game is built, played and tuned"),
-        _stage("game", "liveops", "The numbers of play, what players say, small fixes", "analyst", ["data-engineer", "grunt", "copywriter"], ["data-reviewer"],
+        _stage("game", "liveops", "Events, the numbers of play, what players say, small fixes", "analyst", ["data-engineer", "grunt", "copywriter"], ["data-reviewer"],
                "a game that is out is read by its numbers"),
     ],
     "mobile": [

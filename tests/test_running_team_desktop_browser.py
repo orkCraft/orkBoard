@@ -175,6 +175,6 @@ def test_a_wikis_party_is_upkeep_and_a_games_is_liveops_each_with_its_recurring_
     gdlg = _dialog(gpg)
     gdlg.get_by_role("region", name="By stage of the project").locator(".shell-preset").last.click()
     assert gdlg.get_by_label("Name", exact=True).get_attribute("placeholder") == "LiveOps"
-    assert [b.get_attribute("data-routine") for b in gdlg.get_by_role("region", name="Recurring goals").locator("input").all()] == ["numbers", "players", "crashes"]
+    assert [b.get_attribute("data-routine") for b in gdlg.get_by_role("region", name="Recurring goals").locator("input").all()] == ["numbers", "players", "crashes", "events"]
     gpg.close()
     assert not gerrors, "\n".join(gerrors)

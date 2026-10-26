@@ -6,7 +6,6 @@
     every_of(root, "ship-it")                    # "day" · "week" · "month" · ""
     words_of(root, "ship-it")                    # what the next goal is written from: the words it was made with, else its Gist
     due(root, state_dir, now)                    # [slug, …]: recurring goals that were done a period ago (and stamps the day each was first seen done)
-    hand_over(root, old, new)                    # the new goal repeats as the old one did; the old one stops (it stays as it was done)
 
 A recurring goal is an ordinary goal of the party with `repeat` on its page (`day`, `week` or `month`). When it is done the host waits its period and
 then adds a fresh goal with the same words in the same party, and the repeat moves to the new one: the done goal stays as the record of that round, and
@@ -44,6 +43,7 @@ ROUTINES: dict[str, list[dict]] = {
         _r("numbers", "Read the week's numbers", "week", "Read the week's numbers of play: who came back, where they stopped, what they spent. Say what moved and what to try, with the counts it comes from."),
         _r("players", "Read what players say", "week", "Read what players wrote this week in the reviews and the community. Group it by what they ask for or are annoyed by, with how many said it, and propose the smallest fixes."),
         _r("crashes", "Look at the crash reports", "week", "Look at the week's crashes and errors. List the most common with how many players they touch, and fix what is small and certain."),
+        _r("events", "Plan the next event", "month", "Look at what players do and ask for, and propose the next small event or offer: what it is, who it is for, how long it runs and how we will know it worked."),
     ],
     "mobile-liveops": [
         _DEPS,
@@ -128,14 +128,6 @@ def set_every(root: Path, slug: str, every: str, words: str = "") -> None:
     page = ideas.idea_page(root, slug)
     keep = json.dumps(words, ensure_ascii=False) if every and words else (page.get(TEXT) if every and page is not None else "")
     ideas.set_meta(root, slug, **{META: every, FROM: "", TEXT: keep})
-
-
-def hand_over(root: Path, old: str, new: str) -> None:
-    """The repeat moves from a goal that was done to the goal that renews it."""
-    every, words = every_of(root, old), words_of(root, old)
-    ideas.set_meta(root, old, **{META: "", FROM: "", TEXT: ""})
-    if every:
-        set_every(root, new, every, words)
 
 
 def due(root: Path, state_dir: Path, now: dt.datetime) -> list[str]:
