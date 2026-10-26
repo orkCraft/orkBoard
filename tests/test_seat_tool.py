@@ -178,9 +178,10 @@ def test_only_antigravity_makes_pictures_and_the_list_says_so(host, installed):
     assert harnesses.for_party(["agy"], [], "agy")["tools"][0]["makes"] == ["pictures"]
 
 
-def test_three_roles_say_what_they_need_and_the_page_gets_it(host):
+def test_the_roles_that_make_pictures_or_sound_say_so_and_the_page_gets_it(host):
     needs = {a.id: a.needs for a in library.LIBRARY if a.needs}
-    assert needs == {"artist": ("pictures",), "aso": ("pictures",), "sound-designer": ("sound",)}
+    assert needs == {"artist": ("pictures",), "aso": ("pictures",), "sound-designer": ("sound",),       # Art and sound's makers too
+                     "animator": ("pictures",), "icon-artist": ("pictures",), "composer": ("sound",)}
     assert all(a.needs == () for a in library.LIBRARY if a.id not in needs)
     listed = {a["id"]: a for a in library.listed()}
     assert listed["artist"]["needs"] == ["pictures"] and listed["sound-designer"]["needs"] == ["sound"] and listed["grunt"]["needs"] == []
