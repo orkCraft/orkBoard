@@ -104,21 +104,14 @@ def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None
 
 
 def todo_lines(plan: dict | None, tasks: list[dict] | None = None) -> list[str]:
-    """The lines of a goal's plan for its to-dos (spec 87 §4.2): "Before <task title>: <to-do title>", one for each to-do not done, naming the
-    first (in the plan's order) of the tasks it is `for` that is not merged; the lines in the plan's order (a to-do for an earlier task first).
-    A to-do done, one for no task, or one whose tasks are all merged is not said. `tasks`: the plan's own when not given."""
+    """The lines of a goal's plan for its to-dos (spec 87 §4.2): "Before <task title>: <to-do title>", for each task not merged (or dropped), in the
+    plan's order, each to-do not done that is `for` it (within a task, the to-dos' order): the same lines the faces work out for themselves.
+    A to-do done, or one for no task still to come, is not said. `tasks`: the plan's own when not given."""
     plan = plan or {}
     tasks = [t for t in (plan.get("tasks") if tasks is None else tasks) or [] if isinstance(t, dict)]
-    place = {t.get("id"): n for n, t in enumerate(tasks)}
-    rows = []
-    for td in plan.get("todos") or []:
-        if not isinstance(td, dict) or td.get("done") or not str(td.get("title") or "").strip():
-            continue
-        left = [t for t in tasks if t.get("id") in (td.get("for") or []) and t.get("state") != "merged"]
-        if left:
-            first = min(left, key=lambda t: place[t.get("id")])
-            rows.append((place[first.get("id")], f"Before {first.get('title') or first.get('id')}: {str(td['title']).strip()}"))
-    return [line for _n, line in sorted(rows, key=lambda r: r[0])]
+    todos = [d for d in plan.get("todos") or [] if isinstance(d, dict) and not d.get("done") and str(d.get("title") or "").strip()]
+    return [f"Before {t.get('title') or t.get('id')}: {str(d['title']).strip()}" for t in tasks if t.get("state") not in ("merged", "dropped")
+            for d in todos if t.get("id") in (d.get("for") or [])]
 
 
 def type_of(st: dict) -> dict | None:

@@ -35,7 +35,7 @@ const STAGE_WORDS = { lead: "Planning", build: "Implementation", check: "Checkin
 /** A leader's stages (ideas.roles `stages`, spec 59 §2.3); the default's for a leader not in it, and for an older host that sends none. */
 const stagesOf = (leader) => roles.value?.stages?.[leader] || roles.value?.stages?.default || null;
 /** The seats of a leader's party: {lead, build, check}. */
-export const seatsFor = (leader) => stagesOf(leader)?.seats || roles.value?.seats || { lead: 1, build: 3, check: 2 };
+export const seatsFor = (leader) => stagesOf(leader)?.seats || roles.value?.seats || { lead: 1, build: 1, check: 1 };
 /** The word of a leader's stage in a band: *Concept*, *Build*, *Playtest* with a Game designer; *Planning*, *Implementation*, *Checking* otherwise. */
 export const stageWord = (leader, band) => stagesOf(leader)?.[band] || STAGE_WORDS[band];
 /** The agents in a band: the leader alone in Leads; the team's builders or checkers. */
@@ -50,10 +50,18 @@ export function partyWords(leader, team) {
  *  seats, but one picked under another leader has to fit before it is saved (spec 59 §6.2). */
 export function overfull(leader, team) {
   const seats = seatsFor(leader), who = agentOf(leader)?.name || "Taskmaster";
+  if (pitchParty(leader)) return [];                       // Ideation is its views and the Skeptic whole (or a size's part of them): no seat is past
   return ["build", "check"].map((band) => {
     const taken = inBand(band, leader, team);
     return { band, extra: taken.slice(seats[band]), text: `${stageWord(leader, band)} has ${seats[band]} seats with ${who}: take one out first.` };
   }).filter((x) => x.extra.length);
+}
+
+/** A party of the library as New party takes it (spec 87 §5): a seat a stage, so its first builder and its first checker (the library lists them most needed first); a pitch party
+ *  (Ideation) is its views and the Skeptic whole. `{lead, build, check}`. */
+export function seated(p) {
+  const lead = p?.lead || TASKMASTER, seats = seatsFor(lead), whole = pitchParty(lead);
+  return { lead, build: whole ? [...(p?.build || [])] : (p?.build || []).slice(0, seats.build), check: whole ? [...(p?.check || [])] : (p?.check || []).slice(0, seats.check) };
 }
 
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
@@ -164,7 +172,8 @@ export function SaveParty({ goal, craft }) {
 
 /** The three bands. `craft`: the party's, its agents listed first in each band. */
 export function PartyBands({ craft = "", leader, setLeader, team, setTeam }) {
-  const seats = seatsFor(leader), over = overfull(leader, team), fixed = pitchParty(leader);
+  const fixed = pitchParty(leader), over = overfull(leader, team);
+  const seats = fixed ? { lead: 1, build: Math.max(1, inBand("build", leader, team).length), check: Math.max(1, inBand("check", leader, team).length) } : seatsFor(leader);
   const on = (a) => (a.band === "lead" ? leader === a.id : team.includes(a.id));
   const toggle = (a) => {
     if (a.band === "lead") { setLeader(leader === a.id ? TASKMASTER : a.id); return; }

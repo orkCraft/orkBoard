@@ -15,7 +15,7 @@ import { OPS_VIEW } from "./shell-ops.js";
 export const BANDS = [["lead", "Planning"], ["build", "Implementation"], ["check", "Checking"]];
 /** A party's bands with its leader's words for the stages (`stages` of the Map's goal; today's words without it). */
 export const bandsOf = (stages) => { const w = stageWords(stages); return [["lead", w.planning], ["build", w.implementation], ["check", w.checking]]; };
-export const SEATS = { build: 3, check: 2 };                         // the seats a party leaves (decisions §56), the host's `seats` when it says them
+export const SEATS = { build: 1, check: 1 };                         // the seats a party leaves (decisions §56), the host's `seats` when it says them
 const RANK = ["running", "testing", "failed", "picking", "review", "ready", "waiting", "held"];      // nearest the member first (spec 49 §5.4); a task that waits for a pick is a stop like a failure
 const RANK_OF = { laborer: 1, warrior: 2, elder: 3 };                // a head's tier → the level's chevrons (marks/rank-N.png)
 const HARNESSES = new Set(["claude", "codex", "agy", "cursor", "hermes", "pi", "pipeline"]);   // the marks orkUI draws
@@ -297,7 +297,7 @@ export function membersOf(st, g, work, now = Date.now()) {
   return members;
 }
 
-/** The seats a party leaves free in a band (3 builders, 2 checkers). */
+/** The seats a party leaves free in a band (a seat a stage, spec 87 §5). */
 export const freeSeats = (st, band, taken, stages = null) => Math.max(0, (stages?.[band]?.seats ?? (st.roles?.seats || SEATS)[band] ?? SEATS[band]) - taken);
 
 // -- the ideas at work, Done, the Now line ------------------------------------------------------------------------------------------
