@@ -19,7 +19,7 @@ itself (a renewed goal is added as the person's own New goal is, and the keeper 
 | **A. Running by kind** | §1 | `realm/party_recipes.py` (`running_name`, the `<kind>-liveops` recipes), `realm/party_presets.py`; `tests/test_party_presets.py`, `tests/test_running_team.py` |
 | **B. Recurring goals** | §2 | new `realm/recurring.py`, new `gui/ideas_running.py` (`goal_save {routines}`, `ideas.repeat`, the clock), `gui/ideas.py` (`ideas.page` says `repeat`), `js/shell/partyrun.js` + `js/shell/partyform.js` + `js/shell/goalwizard.js`, `js/board/idea.js`; the phone's `pwa/shell-party-run.js`, `pwa/shell-party-new.js`, `pwa/shell-preview.js`; `tests/test_running_team.py`, both browser tests |
 | **C. The Team party** | §3 | `realm/party_recipes.py` (`TEAM`, `is_team`), new `realm/ops_team.py`, `gui/ops.py` (`team`, `moved`), `gui/board_host.py` (`ops_team` in both snapshots), `gui/ideas_running.py` (`ideas.team`, one Team party), `gui/ideas_map.py` (`ops` on the party), `gui/ideas_release.py`, `realm/pitches.py`, `realm/releases.py`, `realm/orkmaster.py`; `tests/test_running_team.py` |
-| **D. Operations leave the column** | §4 | `js/arena/goaltabs.js` (`teamOf`, `opsRow`), `js/arena/arena.js` (`OpsField` for the Team party), `js/arena/partylist.js`, `js/arena/arenawords.js`, `js/arena/stops.js`, `js/board/store.js`; the phone's `pwa/shell-arena.js`, `pwa/shell-arena-words.js`, `pwa/shell-where.js`, `pwa/shell-stops.js`, `pwa/shell-ideas.js`, `pwa/board.js`; `tests/test_running_team_desktop_browser.py`, `tests/test_running_team_pwa_browser.py` |
+| **D. Operations leave the column** | §4 | `js/arena/goaltabs.js` (`teamOf`, `opsRow`), `js/arena/arena.js` (`OpsField` for the Team party), `js/arena/partylist.js`, `js/arena/arenawords.js`, `js/arena/stops.js`, `js/arena/partymenu.js`, `js/board/store.js`, `js/shell/proposals.js`; the phone's `pwa/shell-arena.js`, `pwa/shell-arena-words.js`, `pwa/shell-where.js`, `pwa/shell-stops.js`, `pwa/shell-ideas.js`, `pwa/shell-party.js`, `pwa/shell-party-new.js`, `pwa/board.js`; `tests/test_running_team_desktop_browser.py`, `tests/test_running_team_pwa_browser.py`, `tests/test_running_team_real_browser.py` |
 | **E. Words, cache** | §0, §5 | `realm/lexicon.py`; `pwa/sw.js` (`CACHE` one up, with its pins) |
 
 ## 0. The words
@@ -87,6 +87,8 @@ with `repeat` (`day` · `week` · `month`) on its page, beside `repeat_from` (th
 - **Its Board is Operations'.** `ideas.map` says `ops` on the party; the desktop's field and the phone's are today's
   Operations list with its *New…* and *Settings*, its templates, runs, checks and history, unchanged in behaviour and storage.
   Its heading in the column has no *k/n* (it has no goals); its stops are Operations' stops, answered in place from any project.
+  **Save** shows it at once (no screen of goals opens, no heads gather). Its menu has only *Remove party…* on the desktop; on
+  the phone its field has *About Team* (what it is, and *Remove party*, which gives the row back).
 - **No goals.** `ideas.add`, `ideas.move`, the Orkmaster's `party_for`, the pitches' `offers`, a Release party's sources and
   the party lists of both faces leave it out; the keeper never reads it.
 - **Where it is reached.** Only in the project that has it. In another project there is no row and no party: New party offers
@@ -103,8 +105,9 @@ with `repeat` (`day` · `week` · `month`) on its page, beside `repeat_from` (th
 - A host with no Operations (Orkline's page) has none of this: Team is not offered to it.
 
 ## 5. The cache
-`pwa/sw.js` `CACHE` goes one up and lists `shell-party-run.js`; the tests that pin it follow (`tests/test_pwa.py` and the
-browser tests that name the version).
+`pwa/sw.js` `CACHE` goes up and lists `shell-party-run.js`; the tests that pin it follow (`tests/test_pwa.py` and the
+browser tests that name the version). Main had `orkcraft-app-v100`; the work is `orkcraft-app-v102` (the first session's
+unfinished save already took v101, this one's second bump the next), so the part that merges after keeps the higher.
 
 ## 6. Order
 A, B, C in parallel (B needs A's recipes for the ids, C is alone); D after C (it reads `ops_team`); E last. Each part merges
@@ -123,9 +126,12 @@ into `main` when its tests pass (the alpha rule).
   `shell-arena-words.js` (`teamOf`, `partiesOf().onTeam`), `shell-where.js` (the line), `shell-stops.js`.
 - **Tests**: `tests/test_running_team.py` (recipes and routines by kind, the presets, one Team party, its note and its
   healing, no goals in it, a host with no Operations, recurring goals made, renewed, reopened, stopped),
-  `tests/test_running_team_desktop_browser.py` and `tests/test_running_team_pwa_browser.py` (the row and its line, a Team
-  party made and its Board, Team greyed, a Run party's recurring goals, on both faces); `tests/test_party_presets.py` follows
-  the new names and leaders.
+  `tests/test_running_team_desktop_browser.py` and `tests/test_running_team_pwa_browser.py` (stub hosts: the row and its
+  line, a Team party made and its Board, Team greyed, a Run party's recurring goals, on both faces),
+  `tests/test_running_team_real_browser.py` (Orkboard's own host: the line, Save, the real Operations list in the Team party's
+  field, the person's note outside the repository, Team greyed, removing it); `tests/test_party_presets.py` and the browser
+  tests that list New party's presets (Team is the last of *By craft*) follow the new names and leaders; the ops tests' `StubOps`
+  says it has no Team party.
 - **`tests/test_arena_magic_desktop_browser.py`** waited for *No parties yet* in vain: the stub host of
   `tests/test_arena_desktop_browser.py` looked up a node (`cookie`) that an empty Board does not have, so every `ideas.board`
   call raised and the page never read the Board. The test's stub was wrong, not the page; it now asks for no node that is not there.
