@@ -149,10 +149,11 @@ class IdeaKeeper(SignInMixin, DraftMixin, GoalMixin, NightMixin, LeadMixin, Revi
         return got
 
     def tool_now(self) -> str:
-        """The AI tool the running step goes to: its goal's party's, else the Main tool (spec 81 §1.2); a step of no goal's, the Main tool."""
+        """The AI tool the running step goes to: its goal's leader's seat's, else its party's, else the Main tool (spec 81 §1.2, spec 91 §6); a step
+        of no goal's, the Main tool."""
         from orkboard.realm import harnesses
         goal = self.goal_of_key(getattr(self._tls, "key", "") or getattr(self._tls, "slug", "") or "")
-        tool = goal_team.tool_of(self.wiki_root(), goal) if goal else ""
+        tool = goal_team.tool_for(self.wiki_root(), goal, goal_team.leader_of(self.wiki_root(), goal)) if goal else ""
         if harnesses.get(tool) is not None:
             return tool
         from orkboard import settings as machine

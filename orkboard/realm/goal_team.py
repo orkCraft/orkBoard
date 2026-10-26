@@ -19,6 +19,9 @@ of its leader's (spec 87 §5; a party made before keeps the members it was saved
 A party's AI tool and its size's tiers (spec 81): `tool_of` / `set_tool` (a `harnesses.REGISTRY` id; "" is the Main tool), `tiers_of` /
 `set_tiers` ({agent: tier} the size gave the party's seats) and `seat_role` (a role as this party's seat runs it).
 
+A seat's own AI tool (spec 91 §6): `tools_of` / `set_tools` ({agent: tool} kept beside `tiers`) and `tool_for` — the seat's tool, else the
+party's, else "" (the Main tool): the one answer the runner and the keeper use.
+
 A goal with no team works as before: each task type goes to the project's role for it (Grunt when none).
 
 No face, no model.
@@ -140,6 +143,46 @@ def set_tool(root: Path, slug: str, tool: str) -> None:
             raise ValueError(f"No party {slug!r}")
         page.set("tool", tool)
         ideas._write(Path(root) / ideas.TRACKS / f"{slug}.md", page.text())
+
+
+def clean_tools(raw: object) -> dict[str, str]:
+    """`{agent: tool}` from a front-matter value (JSON text) or a dict: `harnesses.REGISTRY` ids and slug-shaped agents only."""
+    from orkboard.realm import harnesses
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw) if raw.strip() else {}
+        except ValueError:
+            raw = {}
+    if not isinstance(raw, dict):
+        return {}
+    return {str(a): str(t) for a, t in raw.items() if re.fullmatch(r"[a-z0-9-]{1,60}", str(a)) and isinstance(t, str) and harnesses.get(t) is not None}
+
+
+def tools_of(root: Path, slug: str) -> dict[str, str]:
+    """The AI tool of each seat of a party that has its own, {agent: tool}, kept on its page; {} for a party with none."""
+    page = ideas.track_page(root, slug)
+    return clean_tools(page.get("tools")) if page is not None else {}
+
+
+def set_tools(root: Path, slug: str, tools: dict[str, str]) -> None:
+    """The seats' own AI tools kept (spec 91 §6); {} clears them. ValueError for a tool that is none: *No AI tool <id>*."""
+    from orkboard.realm import harnesses
+    if not isinstance(tools, dict):
+        raise ValueError("Tools are a map of agent to tool")
+    if bad := next((t for t in tools.values() if not isinstance(t, str) or harnesses.get(t) is None), None):
+        raise ValueError(f"No AI tool {bad}")
+    with ideas.LOCK:
+        page = ideas.track_page(root, slug)
+        if page is None:
+            raise ValueError(f"No party {slug!r}")
+        kept = clean_tools(tools)
+        page.set("tools", json.dumps(kept) if kept else "")
+        ideas._write(Path(root) / ideas.TRACKS / f"{slug}.md", page.text())
+
+
+def tool_for(root: Path, slug: str, agent: str) -> str:
+    """The AI tool a party's seat runs on: its own, else the party's (`tool_of`), else "" (the Main tool, which a caller resolves)."""
+    return tools_of(root, slug).get(agent) or tool_of(root, slug)
 
 
 def tiers_of(root: Path, slug: str) -> dict[str, str]:

@@ -23,8 +23,8 @@ class SessionMixin:
         A resumed session reports its running total (`total_cost_usd`): the task keeps it as `session_total` and adds only the
         difference, never below 0; a fresh session adds its whole cost (spec 86 §1). `last_tokens` is what the call read (cache
         reads included): a send back past `idea_task.FRESH_TOKENS` starts a fresh session."""
-        tool = self.tool_of(slug)                     # its party's AI tool, else the Main tool (spec 81 §1.2)
         task = next((t for t in (self.plan(slug) or {}).get("tasks") or [] if t.get("id") == tid), {"id": tid})
+        tool = self.tool_of(slug, task)               # its taker's seat's AI tool, else its party's, else the Main tool (spec 81 §1.2, spec 91 §6)
         total = task.get("session_total")
         before = float(total) if resume and isinstance(total, (int, float)) and not isinstance(total, bool) else None
         try:

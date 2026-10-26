@@ -361,6 +361,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                       "leader": {"slug": lead["slug"], "name": lead["name"], "head": roles.head(goal_team.seat_role(lead, tiers), target)} if lead else None,
                       "size": g.get("size") or "",                                  # the party's size (spec 75 §3): lean · standard · full, "" with none
                       "tool": g.get("tool") or "",                                  # the party's AI tool (spec 81): a harnesses id, "" the Main tool
+                      "tools": g.get("tools") or {},                                # … and each seat's own, {agent: tool} (spec 91 §6)
                       "verdict": {"met": verdict.get("met") is True, "by": verdict.get("by") or "", "at": verdict.get("at") or "",
                                   **({"tally": goal_flags.tally(root, state_dir, g["slug"])} if verdict.get("met") is True else {})}
                       if verdict else None,
