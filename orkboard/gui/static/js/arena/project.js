@@ -4,6 +4,7 @@
 // its state's words) grouped *Planning*, *At work*, *Waits for main*, then *Flags (n)* folded. A press on a card opens the goal's screen in the drawer.
 // Wider than the field the columns scroll sideways and the heads stay. Hovering or focusing a deck draws, with arrows.js, a link to each deck its route names in another column (the pitch it came from,
 // the release it went into); nothing at rest. Above the columns the Orkmaster's head and *New party* (its deck: projectdeal.js), below them *New goal* (projectdeal.js, a goal's party from the Orkmaster).
+// Three tabs lie over the table (docs/specs/88-assets-and-play.md §6): Field (all of the above), Assets (assets.js: the project's files as cards by kind) and Play (play.js: the build in the pane); it opens on Field.
 // The code's goal is a party; its idea is a goal; its deck is a goal drawn small, never a word a person reads.
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
@@ -19,7 +20,9 @@ import { reducedMotion } from "./motion.js";
 import { PartyList, show } from "./partylist.js";
 import { NewGoalPile, NewPartyPile } from "./projectdeal.js";
 import { orkLinks } from "./collidewords.js";
-import { GROUPS, PARTIES_WORDS, THE_PROJECT, deckCount, decksOf, emptyWords, linksOf } from "./projectwords.js";
+import { GROUPS, PARTIES_WORDS, TABS, THE_PROJECT, deckCount, decksOf, emptyWords, linksOf } from "./projectwords.js";
+import { Assets } from "./assets.js";
+import { Play } from "./play.js";
 
 const TONES = { danger: "is-danger", alert: "is-alert" };
 
@@ -102,27 +105,52 @@ function useLinks(host, nodes, lit, collisions) {
   return lines;
 }
 
-/** The project's level: the field in place of a party's. `stops`: the one hand's, as Operations' field has it. */
-export function Project({ m, stops }) {
-  const parties = goalsOf(m, goalList().map((x) => x.slug)), [lit, setLit] = useState(""), host = useRef();
+/** The Field tab: the project's level as it was (spec 79): the Orkmaster's New party pile, the parties as columns of the goals' cards, New goal under them. `stops`: the one hand's. */
+function Field({ m, parties }) {
+  const [lit, setLit] = useState(""), host = useRef();
   const lines = useLinks(host, m.nodes || [], lit, m.project?.collisions);
+  return html`<${NewPartyPile} deal=${m.project?.deal || []} />
+    <section class="arena-project__body" aria-label=${THE_PROJECT}>
+      <div class="arena-project__grid">
+        <div class="arena-project__heads">${parties.map((g) => html`<${ColumnHead} key=${g.slug} g=${g} nodes=${nodesOf(m, g.slug)} />`)}</div>
+        <div class="arena-project__cols ork-table" ref=${host}>
+          ${parties.map((g) => html`<${Column} key=${g.slug} g=${g} nodes=${nodesOf(m, g.slug)} lit=${lit} setLit=${setLit} />`)}
+          <${ArrowLines} lines=${lines} />
+        </div>
+      </div>
+    </section>
+    <${NewGoalPile} goals=${parties} />`;
+}
+
+/** The level's three tabs over its table (spec 88 §6.1): *Field* (today's level), *Assets*, *Play*. The level opens on Field. ← → (Home, End) move between the tabs. */
+function Tabs({ tab, setTab }) {
+  const key = (e) => {
+    const at = TABS.findIndex(([id]) => id === tab), step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
+    const to = e.key === "Home" ? 0 : e.key === "End" ? TABS.length - 1 : step ? (at + step + TABS.length) % TABS.length : -1;
+    if (to < 0) return;
+    e.preventDefault();
+    setTab(TABS[to][0]);
+    e.currentTarget.querySelectorAll("[role=tab]")[to]?.focus();
+  };
+  return html`<div class="ork-tabs arena-pjtabs" role="tablist" aria-label=${THE_PROJECT} onKeyDown=${key}>
+    ${TABS.map(([id, word]) => html`<button type="button" key=${id} role="tab" class="ork-tab" id=${`pjtab-${id}`} data-tab=${id} aria-selected=${String(id === tab)} aria-controls="pjpanel"
+      tabindex=${id === tab ? 0 : -1} onClick=${() => setTab(id)}>${word}</button>`)}
+  </div>`;
+}
+
+/** The project's level: the field in place of a party's, with its Assets and Play (spec 88). `stops`: the one hand's, as Operations' field has it. */
+export function Project({ m, stops }) {
+  const parties = goalsOf(m, goalList().map((x) => x.slug)), [tab, setTab] = useState("field");
   const ork = m.project?.orkmaster;
   return html`<div class="arena arena-project" data-goal=${PROJECT}>
     <${PartyList} />
     <div class="arena-ops__main arena-project__main">
       <div class="arena-pjtop">${ork && html`<${Head} race=${ork.race || "peon"} tier=${ork.tier || "crown"} />`}<h2 class="arena-pjtop__title">${THE_PROJECT}</h2>
         <span class="arena-cap">${PARTIES_WORDS}</span></div>
-      <${NewPartyPile} deal=${m.project?.deal || []} />
-      <section class="arena-project__body" aria-label=${THE_PROJECT}>
-        <div class="arena-project__grid">
-          <div class="arena-project__heads">${parties.map((g) => html`<${ColumnHead} key=${g.slug} g=${g} nodes=${nodesOf(m, g.slug)} />`)}</div>
-          <div class="arena-project__cols ork-table" ref=${host}>
-            ${parties.map((g) => html`<${Column} key=${g.slug} g=${g} nodes=${nodesOf(m, g.slug)} lit=${lit} setLit=${setLit} />`)}
-            <${ArrowLines} lines=${lines} />
-          </div>
-        </div>
-      </section>
-      <${NewGoalPile} goals=${parties} />
+      <${Tabs} tab=${tab} setTab=${setTab} />
+      <div class="arena-pjpanel" id="pjpanel" role="tabpanel" aria-labelledby=${`pjtab-${tab}`} data-tab=${tab}>
+        ${tab === "field" ? html`<${Field} m=${m} parties=${parties} />` : tab === "assets" ? html`<${Assets} />` : html`<${Play} />`}
+      </div>
       ${stops}
     </div>
   </div>`;

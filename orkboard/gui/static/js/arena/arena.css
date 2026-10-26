@@ -3,6 +3,7 @@
    limits along the bottom. In orkUI's office look (design-system/orkui): its tokens and components only (.ork-gem, .ork-stat, .ork-crystals, .ork-frame, .ork-mark,
    .ork-elem, .ork-sign, .ork-race__head.mid), no raw colour, nothing round. The variables set here are the fan's (--rot, --dy, --z) and the columns' (--cols).
    Sizes are the mockup's at 1 440 × 900. */
+@import "./assets.css";                                   /* the project's Assets and Play, and the level's tabs (spec 88): its own sheet */
 .arena-spacer { flex: 1; }
 .arena-muted { color: var(--ork-ink-muted); }
 .arena-cap { font: var(--ork-type-caption); color: var(--ork-ink-muted); margin: 0; }

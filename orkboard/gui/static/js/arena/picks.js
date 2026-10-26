@@ -48,7 +48,7 @@ function useMedia(seconds) {
 }
 
 /** A picture, contained on the canvas ground: never cropped, never drawn past twice its size, crisp (`pixelated`) when it is 64 px or less on its side. */
-function Picture({ v, label }) {
+export function Picture({ v, label }) {
   const [own, setOwn] = useState({ w: 0, h: 0 }), [bad, setBad] = useState(false);
   const w = v.w || own.w, h = v.h || own.h;
   if (bad) return html`<span class="pick-miss">It will not show</span>`;
@@ -58,7 +58,7 @@ function Picture({ v, label }) {
 }
 
 /** A sound or a clip: the media, the sign and its length, *Play* or *Pause* (and a clip's sound), the bar of where it is. */
-function Player({ v, label, video, big }) {
+export function Player({ v, label, video, big }) {
   const m = useMedia(v.seconds), { s } = m, len = lengthWords(v.seconds > 0 ? v.seconds : s.dur > 0 ? s.dur : null);
   const word = s.on ? "Pause" : "Play";
   return html`<div class=${cls("pick-player", { "is-video": video, "is-on": s.on })}>
