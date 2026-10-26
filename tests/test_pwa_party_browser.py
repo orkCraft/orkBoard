@@ -121,7 +121,7 @@ LIT = """
     .observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] }));
 })();
 """
-GAME = ["New feature", "Fix a bug", "Clean up", "New icon", "New logo", "New mechanic", "New level", "New character", "Balance pass", "New sound"]
+LONG = ["New feature", "Fix a bug", "Clean up", "Solve a pain", "New screen (needs Design system designer)", "Try an experiment (needs Experimenter)", "Write the launch (needs Copywriter)"]      # the Mobile app's: its first builder, first checker
 BEFORE_PRICE = "e => { const l = e.querySelector('.party-takes'), p = e.querySelector('.party-price-box'); return Boolean(p.compareDocumentPosition(l) & Node.DOCUMENT_POSITION_FOLLOWING) && l.parentElement === p.parentElement; }"
 
 
@@ -158,19 +158,25 @@ async def test_new_party_says_what_it_can_take_under_the_price_three_lines_at_mo
     typed(monkeypatch, fake_repo)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _sheet(page)
-        await sheet.locator('.preset-tile[data-preset="game"]').click()
-        line = await _takes(sheet, "mechanic")
-        assert said(await line.inner_text()).startswith("It can take: New feature · Fix a bug · Clean up · New icon · New logo · New mechanic")
+        await sheet.locator('.preset-tile[data-preset="mobile-app"]').click()
+        line = await _takes(sheet, "pain")
+        assert said(await line.inner_text()).startswith("It can take: New feature · Fix a bug · Clean up · Solve a pain")
         shown = await line.locator(".take").count()
         more = line.locator(".take-more")
-        assert 3 <= shown < len(GAME) and said(await more.inner_text()) == f"and {len(GAME) - shown} more"          # what does not fit ends with *and k more*
-        assert await more.get_attribute("title") == ", ".join(GAME)                                                   # its title lists all
-        assert await line.locator(".take-with").count() == 0 and await line.locator(".is-missing").count() == 0       # the Game's types miss no one
+        assert 3 <= shown < len(LONG) and said(await more.inner_text()) == f"and {len(LONG) - shown} more"           # what does not fit ends with *and k more*
+        assert await more.get_attribute("title") == ", ".join(LONG)                                                   # its title lists all
+        game = sheet.locator('.preset-tile[data-preset="game"]')                                                      # the Game (a seat a stage): five types, none missing anyone
+        await game.click()
+        line = await _takes(sheet, "mechanic")
+        assert said(await line.inner_text()) == "It can take: New feature · Fix a bug · Clean up · New mechanic · Balance pass"
+        assert await line.locator(".take-with").count() == 0 and await line.locator(".is-missing").count() == 0 and await line.locator(".take-more").count() == 0
+        await sheet.locator('.preset-tile[data-preset="mobile-app"]').click()
+        line = await _takes(sheet, "pain")
         assert await line.evaluate("e => e.getBoundingClientRect().height / parseFloat(getComputedStyle(e).lineHeight)") <= 3.05
         assert await sheet.evaluate(BEFORE_PRICE)                                                                     # under the price
         first = line.locator(".take").first
         assert await first.locator(".ork-sign.feature").count() == 1                                                  # a type's sign, as New goal's chips draw it
-        assert await line.locator('.take[data-type="mechanic"] .ork-sign.mechanic').count() == 1
+        assert await line.locator('.take[data-type="pain"] .ork-sign').count() == 1
         box = await first.locator(".ork-sign").bounding_box()
         assert (round(box["width"]), round(box["height"])) == (12, 12)
         assert await first.locator(".ork-sign").evaluate("e => getComputedStyle(e).color") == await sheet.locator(".party-hint, .muted").first.evaluate("e => getComputedStyle(e).color")      # small, in the muted ink
@@ -185,11 +191,11 @@ async def test_a_type_that_needs_someone_follows_with_one_more_and_says_who(fake
         sheet = await _sheet(page)
         await sheet.locator('.preset-tile[data-preset="data"]').click()
         line = await _takes(sheet, "abtest")
-        assert said(await line.inner_text()) == "It can take: A new metric · A report, with one more: An A/B test (needs Experimenter)"
+        assert said(await line.inner_text()) == "It can take: A new metric, with one more: An A/B test (needs Experimenter)"
         assert await line.locator(".take-with").inner_text() == "with one more:" and await line.locator(".take.is-missing").count() == 1
         assert await line.locator(".take-more").count() == 0                                                          # it fits: no *and k more*
         await sheet.locator('.preset-tile[data-preset="mobile-app"]').click()                                         # a long list: the types that miss someone fall in *and k more*, titled whole
-        await _takes(sheet, "character")
+        await _takes(sheet, "pain")
         title = await sheet.locator(".party-takes .take-more").get_attribute("title")
         assert "New screen (needs Design system designer)" in title and "Try an experiment (needs Experimenter)" in title
         assert await page.evaluate(NO_SCROLL)
@@ -242,27 +248,28 @@ async def test_a_seat_that_opens_a_type_lights_it_once_the_first_answers_light_n
             await page.wait_for_timeout(100)
         await page.wait_for_timeout(700)
         assert await page.evaluate("window.__lit") == []                                    # nothing is lit by the first answers
-        await sheet.locator('.preset-tile[data-preset="game"]').click()
-        await _takes(sheet, "level")
+        await sheet.locator('.preset-tile[data-preset="website"]').click()
+        await _takes(sheet, "bug")
         await page.wait_for_timeout(300)
         await page.evaluate("window.__lit.length = 0")
         await sheet.locator('.party [data-change="team"]').click()
         builds = sheet.get_by_role("region", name="Builds")
         await builds.get_by_role("button").first.click()
-        await sheet.get_by_role("button", name="Take out: Level designer").click()
-        await sheet.locator('.party-takes .take[data-type="level"]').wait_for(state="detached", timeout=WAIT_MS)       # a type that went is simply not drawn
+        await sheet.get_by_role("button", name="Take out: Grunt").click()
         assert await page.evaluate("window.__lit") == []
-        await sheet.get_by_role("button", name="Take in: Level designer").click()
-        await _takes(sheet, "level")
+        await sheet.get_by_role("button", name="Take in: Copywriter").click()                 # the one builder's seat is the Copywriter's: A tagline opens
+        await _takes(sheet, "tagline")
         if reduced:
             await page.wait_for_timeout(500)
             assert await page.evaluate("window.__lit") == [] and await sheet.locator(".party-takes .is-reward").count() == 0
             return
         await page.wait_for_function("() => window.__lit.length > 0", timeout=WAIT_MS)
+        await sheet.get_by_role("button", name="Take out: Copywriter").click()
+        await sheet.locator('.party-takes .take[data-type="tagline"]').wait_for(state="detached", timeout=WAIT_MS)       # a type that went is simply not drawn
         await builds.get_by_role("button", name="Done").click()                             # a redraw for another reason does not light it again
         await page.wait_for_timeout(900)
         lit = await page.evaluate("window.__lit")
-        assert [(l["type"], l["name"], l["duration"], l["timing"]) for l in lit] == [("level", "reward", "0.6s", "steps(4)")]      # the one the seat opened, once, the quiet reward's look
+        assert [(l["type"], l["name"], l["duration"], l["timing"]) for l in lit] == [("tagline", "reward", "0.6s", "steps(4)")]      # the one the seat opened, once, the quiet reward's look
         assert await sheet.locator(".party-takes .is-reward").count() == 0                  # and it is over (0.6 s)
 
 

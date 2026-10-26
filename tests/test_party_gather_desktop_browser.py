@@ -68,12 +68,12 @@ def shell(gui):
 
 
 def _fill(pg, craft="game"):
-    """New party, its seats from the library's `craft` (the Game: six heads), what it is for."""
+    """New party, its seats from the library's `craft` (the Game: three heads, a seat a stage: its leader, its first builder, its first checker), what it is for."""
     _new_party(pg)
     dlg = pg.get_by_role("dialog", name="New party")
     dlg.locator(f'.shell-craft-tile[data-craft="{craft}"]').click()
     dlg.get_by_label("What it is for").fill(ABOUT)
-    heads = {"game": 6, "engineering": 4}[craft]
+    heads = {"game": 3, "engineering": 3}[craft]
     pg.wait_for_function("(n) => document.querySelectorAll('.shell-team-seat .ork-race__head').length === n", arg=heads, timeout=WAIT_MS)
     pg.wait_for_function("() => [...document.querySelectorAll('.shell-team-seat .ork-race__head')].every((e) => e.complete)", timeout=WAIT_MS)
     dlg.locator(".shell-price").wait_for(timeout=WAIT_MS)                                               # the dialog has taken its height
@@ -115,14 +115,14 @@ def test_save_party_gathers_the_heads_from_their_seats_into_the_deck_and_lights_
     pg, host = shell
     dlg = _fill(pg)
     top = _seats(pg, dlg)[0]["y"] - dlg.locator(".shell-modal__body").bounding_box()["y"]
-    seats = _seats(pg, dlg, top - 40)                                                                  # the leader's seat and the four builders' in view, the checker's below
-    assert [s["on"] for s in seats] == [True] * 5 + [False]
+    seats = _seats(pg, dlg, top - 40)                                                                  # the leader's seat and the builder's in view, the checker's below
+    assert [s["on"] for s in seats] == [True, True, False]
     pg.evaluate(RECORD)
     dlg.get_by_role("button", name="Save party").click()
     got = _gathered(pg)
     assert _calls(pg, host, "ideas.goal_save")[0]["leader"] == "game-designer"
-    copies = [got["copies"][f"{i * 35}ms"] for i in range(6)]                                         # six, 35 ms apart, the leader's first
-    assert sorted(got["copies"]) == sorted(f"{i * 35}ms" for i in range(6))
+    copies = [got["copies"][f"{i * 35}ms"] for i in range(3)]                                         # three, 35 ms apart, the leader's first
+    assert sorted(got["copies"]) == sorted(f"{i * 35}ms" for i in range(3))
     deck = _centre(got["first"]["deck"])
     for i, (c, seat) in enumerate(zip(copies, seats)):
         assert c["src"] == seat["src"].replace(".png", "@2x.png") and re.search(r"/races/\w+-\w+@2x\.png$", c["src"])    # the head's own image
@@ -143,15 +143,15 @@ def test_save_party_gathers_the_heads_from_their_seats_into_the_deck_and_lights_
     assert pg.locator(".shell-goal").count() == 1                                                      # About this party opens in the drawer as today
 
 
-def test_a_party_of_four_gathers_four_heads_the_leader_first(shell):
+def test_a_party_of_three_gathers_three_heads_the_leader_first(shell):
     pg, host = shell
     dlg = _fill(pg, "engineering")
     seats = _seats(pg, dlg)
     pg.evaluate(RECORD)
     dlg.get_by_role("button", name="Save party").click()
     got = _gathered(pg)
-    assert sorted(got["copies"]) == ["0ms", "105ms", "35ms", "70ms"]
-    assert [got["copies"][f"{i * 35}ms"]["src"] for i in range(4)] == [s["src"].replace(".png", "@2x.png") for s in seats]
+    assert sorted(got["copies"]) == ["0ms", "35ms", "70ms"]
+    assert [got["copies"][f"{i * 35}ms"]["src"] for i in range(3)] == [s["src"].replace(".png", "@2x.png") for s in seats]
     assert "peon-elder" in got["copies"]["0ms"]["src"]                                                 # the Architect leads
 
 
@@ -171,12 +171,12 @@ def test_a_head_whose_seat_is_scrolled_out_of_the_dialog_starts_from_save_partys
     pg, host = shell
     dlg = _fill(pg)
     seats = _seats(pg, dlg, 100000)                                                                    # the dialog scrolled to its end: only the checker's seat is in view
-    assert [s["on"] for s in seats] == [False] * 5 + [True]
+    assert [s["on"] for s in seats] == [False] * 2 + [True]
     save = dlg.get_by_role("button", name="Save party").bounding_box()
     pg.evaluate(RECORD)
     dlg.get_by_role("button", name="Save party").click()
     got = _gathered(pg)
-    assert len(got["copies"]) == 6
+    assert len(got["copies"]) == 3
     for i, seat in enumerate(seats):
         start = got["copies"][f"{i * 35}ms"]["start"]
         assert all(abs(start[k] - seat["from"][k]) <= 2 for k in ("x", "y", "width", "height"))
@@ -211,7 +211,7 @@ def test_a_refused_save_gathers_nothing_and_the_one_that_follows_gathers_once(sh
     host.refuse = False
     dlg.get_by_role("button", name="Save party").click()
     got = _gathered(pg)
-    assert len(got["copies"]) == 6 and len(_calls(pg, host, "ideas.goal_save", 2)) == 2                 # one gather, of the second press
+    assert len(got["copies"]) == 3 and len(_calls(pg, host, "ideas.goal_save", 2)) == 2                 # one gather, of the second press
 
 
 def test_a_goal_made_through_its_party_first_gathers_nothing_the_goal_form_is_what_is_looked_at(gui):

@@ -335,7 +335,7 @@ async def test_about_this_party_is_a_sheet_of_blocks_with_its_flags_and_only_a_v
         assert await flags.locator(".ork-sign.flag").count() == 1 and "14 Oct · ≈$2.10 · 4 of 4 first time" in await flags.inner_text()
         assert "Before: met, says Growth · 18 October" in await sheet.inner_text()                      # only a party with a verdict of before
         assert await sheet.get_by_role("button", name="Edit the party").is_visible() and await sheet.get_by_role("button", name="Save it to your parties").is_visible()
-        assert await sheet.get_by_role("button", name="Add to the party").is_visible() and "free seat" in await sheet.locator(".party-about__seats").inner_text()   # Add to the party: beside Edit the party
+        assert await sheet.get_by_role("button", name="Add to the party").is_visible() and "the party is full: change a member" in await sheet.locator(".party-about__seats").inner_text()   # Add to the party: beside Edit the party
         assert not re.search(r"Metrics|Verdict|accept", await sheet.inner_text())                       # no metrics, no verdict, no *Ask … to accept*
         await sheet.get_by_role("button", name="Edit the party").click()                                # Edit the party: its sheet
         edit = page.get_by_role("dialog", name="Edit the party")

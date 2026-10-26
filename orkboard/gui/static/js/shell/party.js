@@ -53,7 +53,7 @@ export function overfull(leader, team) {
   if (pitchParty(leader)) return [];                       // Ideation is its views and the Skeptic whole (or a size's part of them): no seat is past
   return ["build", "check"].map((band) => {
     const taken = inBand(band, leader, team);
-    return { band, extra: taken.slice(seats[band]), text: `${stageWord(leader, band)} has ${seats[band]} seats with ${who}: take one out first.` };
+    return { band, extra: taken.slice(seats[band]), text: `${stageWord(leader, band)} has ${plural(seats[band], "seat", "seats")} with ${who}: take one out first.` };
   }).filter((x) => x.extra.length);
 }
 
@@ -96,7 +96,7 @@ export function LibraryTiles({ picked, onPick, deal = null }) {
     return html`<button type="button" key=${p.id} class=${`shell-craft-tile${rich ? " is-mixed" : ""}`} data-craft=${p.id} aria-pressed=${String(p.id === picked)} title=${p.line}
       onClick=${() => onPick(p)}><${Head} race=${lead.race} tier=${lead.tier} small=${true} />
       ${rich ? html`<span class="shell-craft-tile__text"><b>${p.name}</b><small class="ok-tone-muted">${p.line}</small>
-        <span class="shell-craft-heads">${[...p.build, ...p.check].map((id, n) => agentOf(id) && html`<${Head} key=${n} race=${raceOfAgent(agentOf(id))} tier=${agentOf(id).tier} small=${true} />`)}</span>${why(p)}</span>`
+        <span class="shell-craft-heads">${(({ build, check }) => [...build, ...check])(seated(p)).map((id, n) => agentOf(id) && html`<${Head} key=${n} race=${raceOfAgent(agentOf(id))} tier=${agentOf(id).tier} small=${true} />`)}</span>${why(p)}</span>`
         : html`<span class="shell-craft-tile__text"><b>${p.name}</b>${why(p)}</span>`}</button>`;
   };
   return html`${mixed.length > 0 && html`<section class="shell-library-group" aria-label="Mixed"><h3 class="ok-font-label">Mixed</h3>
@@ -179,7 +179,7 @@ export function PartyBands({ craft = "", leader, setLeader, team, setTeam }) {
     if (a.band === "lead") { setLeader(leader === a.id ? TASKMASTER : a.id); return; }
     if (team.includes(a.id)) setTeam(team.filter((x) => x !== a.id));
     else if (inBand(a.band, leader, team).length < seats[a.band]) setTeam([...team, a.id]);
-    else toast(`${stageWord(leader, a.band)} has ${seats[a.band]} seats with ${agentOf(leader)?.name || "Taskmaster"}: take one out first.`, "warning");
+    else toast(`${stageWord(leader, a.band)} has ${plural(seats[a.band], "seat", "seats")} with ${agentOf(leader)?.name || "Taskmaster"}: take one out first.`, "warning");
   };
   const row = (a) => html`<button type="button" key=${a.id} class="shell-team-row" aria-pressed=${String(on(a))} data-agent=${a.id}
       aria-label=${`${on(a) ? "Take out" : "Take in"}: ${a.name}`} onClick=${() => toggle(a)}>

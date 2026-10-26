@@ -118,7 +118,7 @@ def test_new_party_has_its_fields_and_sends_goal_save_with_them(arena):
     sent = _calls(pg, host, "ideas.goal_save")[0]
     assert set(sent) == {"title", "about", "leader", "team", "every", "priority"}                              # no metrics, no deadline, no links, no craft
     assert sent["title"] == "Billing" and sent["about"] == "Money matters and receipts" and sent["priority"] == "high"
-    assert sent["leader"] == start["lead"] and sent["team"] == [*start["build"], *start["check"]] and sent["every"] == []
+    assert sent["leader"] == start["lead"] and sent["team"] == [*start["build"][:1], *start["check"][:1]] and sent["every"] == []
     pg.locator(".arena[data-goal=money-matters]").wait_for(timeout=WAIT_MS)                                           # the new party is shown (its tab picked)
     assert pg.locator('.arena-phead[aria-current="true"] .arena-phead__name').inner_text() == "Billing"                                           # the party's heading in the column is the open one
 
@@ -135,7 +135,7 @@ def test_new_party_takes_a_party_of_the_library_and_the_checks_on_every_goal(are
     dialog.get_by_role("button", name="Save party").click()
     sent = _calls(pg, host, "ideas.goal_save")[0]
     design = library.parties()["design"]
-    assert sent["leader"] == design["lead"] and sent["team"] == [*design["build"], *design["check"]] and sent["every"] == ["accessibility-reviewer"]
+    assert sent["leader"] == design["lead"] and sent["team"] == [*design["build"][:1], *design["check"][:1]] and sent["every"] == ["accessibility-reviewer"]
 
 
 def test_edit_the_party_has_the_same_fields_and_sends_its_slug(arena):

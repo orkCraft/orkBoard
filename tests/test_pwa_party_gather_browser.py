@@ -59,7 +59,7 @@ SAVED = "a-tower-game"                                                       # t
 def members(preset_id):
     """The heads of a library party as New party's tile draws them, the leader first: `races/<race>-<tier>@2x.png`."""
     p = next(p for p in library.presets() if p["id"] == preset_id)
-    return [f"races/{roles.RACES[library.get(i).craft]}-{library.get(i).tier}@2x.png" for i in (p["lead"], *p["build"], *p["check"])]
+    return [f"races/{roles.RACES[library.get(i).craft]}-{library.get(i).tier}@2x.png" for i in (p["lead"], *p["build"][:1], *p["check"][:1])]       # a seat a stage (spec 87 §5)
 
 
 async def _boxes(locator):
@@ -92,13 +92,13 @@ async def test_save_party_gathers_the_heads_of_the_party_into_its_deck_and_light
         tile = sheet.locator('.preset-tile[data-preset="game"]')
         await tile.evaluate("e => e.scrollIntoView({ block: 'center' })")                 # the picked party's tile is on screen: its heads are where the heads start
         heads = await _boxes(tile.locator(".preset-heads img"))
-        assert len(heads) == 6
+        assert len(heads) == 3
         await page.evaluate("() => { window.__screenAt = 0; }")
         await sheet.get_by_role("button", name="Save party").click()
-        flies = await _flies(page, 6)
-        assert [f["src"] for f in flies] == members("game")                                # the leader's head first, then the builders', the checker's
+        flies = await _flies(page, 3)
+        assert [f["src"] for f in flies] == members("game")                                # the leader's head first, then the builder's, the checker's
         assert all(_starts(f, b) for f, b in zip(flies, heads))                            # each from its head's box in the sheet
-        assert [f["delay"] for f in flies] == [f"{35 * i}ms" for i in range(6)] and [f["waits"] for f in flies] == ["0s", "0.035s", "0.07s", "0.105s", "0.14s", "0.175s"]       # 35 ms apart
+        assert [f["delay"] for f in flies] == [f"{35 * i}ms" for i in range(3)] and [f["waits"] for f in flies] == ["0s", "0.035s", "0.07s"]       # 35 ms apart
         assert {f["name"] for f in flies} == {"gather"} and {f["duration"] for f in flies} == {"0.3s"} and {f["timing"] for f in flies} == {"steps(6)"}    # 0.30 s, in steps
         assert all(f["position"] == "fixed" and f["pointer"] == "none" and f["parent"] == "BODY" and int(f["z"]) > 10 for f in flies)                       # over the page (the party's screen too), taking nothing
         assert not any(f["sheet"] for f in flies)                                          # the sheet had closed
@@ -109,10 +109,10 @@ async def test_save_party_gathers_the_heads_of_the_party_into_its_deck_and_light
         await page.wait_for_function("() => document.querySelectorAll('.gather-fly').length === 0", timeout=WAIT_MS)       # the copies are gone
         await page.wait_for_timeout(900)
         rec = await page.evaluate(GATHER)
-        assert len([g for g in rec if g["kind"] == "gone"]) == 6
+        assert len([g for g in rec if g["kind"] == "gone"]) == 3
         lit = [g for g in rec if g["kind"] == "lit"]
         assert [(g["goal"], g["name"], g["duration"], g["timing"]) for g in lit] == [(SAVED, "reward", "0.6s", "steps(4)")]       # the deck lit once, the quiet reward's look
-        assert lit[0]["at"] >= flies[-1]["at"] + 5 * 35 + 250                              # when the last has landed
+        assert lit[0]["at"] >= flies[-1]["at"] + 2 * 35 + 250                              # when the last has landed
         assert await page.locator(".gather-fly").count() == 0 and await page.locator(".partydeck.is-reward").count() == 0
         await page.locator(".screen").wait_for(timeout=WAIT_MS)                            # the party's own screen opened as it always did,
         assert await page.evaluate("() => window.__screenAt") >= lit[0]["at"] + 500         # once the heads had gathered and the deck's light was seen (it covers the deck)
@@ -129,9 +129,9 @@ async def test_heads_that_are_not_on_screen_start_from_save_party(fake_repo, mon
         assert all(b["top"] + b["height"] <= view["y"] for b in await _boxes(sheet.locator('.preset-tile[data-preset="game"] .preset-heads img')))
         save = await sheet.get_by_role("button", name="Save party").bounding_box()
         await sheet.get_by_role("button", name="Save party").click()
-        flies = await _flies(page, 6)
+        flies = await _flies(page, 3)
         assert [f["src"] for f in flies] == members("game")
-        for f in flies:                                                                    # all six from the middle of the button, at a head's size
+        for f in flies:                                                                    # all three from the middle of the button, at a head's size
             assert abs(f["left"] + f["width"] / 2 - (save["x"] + save["width"] / 2)) <= 1 and abs(f["top"] + f["height"] / 2 - (save["y"] + save["height"] / 2)) <= 1
             assert (f["width"], f["height"]) == (24, 22)
 
@@ -143,18 +143,18 @@ async def test_with_a_fold_open_its_taken_seats_are_where_the_heads_start_and_th
         sheet = await _ready(page)
         await sheet.locator('.party [data-change="team"]').click()
         builds = sheet.get_by_role("region", name="Builds")
-        await builds.get_by_role("button").first.click()                                   # Builds open: four taken seats of the Game's
+        await builds.get_by_role("button").first.click()                                   # Builds open: its one taken seat
         await builds.locator(".team-seats").evaluate("e => e.scrollIntoView({ block: 'center' })")
         view = await sheet.bounding_box()
         assert all(b["top"] + b["height"] <= view["y"] for b in await _boxes(sheet.locator('.preset-tile[data-preset="game"] .preset-heads img')))      # the tile is out of sight
         seats = await _boxes(builds.locator(".team-seat:not(.is-empty) img"))
-        assert len(seats) == 4
+        assert len(seats) == 1
         save = await sheet.get_by_role("button", name="Save party").bounding_box()
         await sheet.get_by_role("button", name="Save party").click()
-        flies = await _flies(page, 6)
+        flies = await _flies(page, 3)
         assert [f["src"] for f in flies] == members("game")
-        assert all(_starts(f, b) for f, b in zip(flies[1:5], seats))                       # the builders from their seats
-        for f in (flies[0], flies[5]):                                                      # the leader and the checker, whose folds are shut, from the button
+        assert all(_starts(f, b) for f, b in zip(flies[1:2], seats))                       # the builder from its seat
+        for f in (flies[0], flies[2]):                                                      # the leader and the checker, whose folds are shut, from the button
             assert abs(f["left"] + f["width"] / 2 - (save["x"] + save["width"] / 2)) <= 1 and abs(f["top"] + f["height"] / 2 - (save["y"] + save["height"] / 2)) <= 1
 
 
@@ -167,8 +167,8 @@ async def test_the_row_of_crafts_draws_no_head_of_the_party_so_each_starts_from_
         save = await sheet.get_by_role("button", name="Save party").bounding_box()
         await sheet.get_by_role("button", name="Save party").click()
         lead, build, check = library.PARTIES["design"]
-        flies = await _flies(page, 1 + len(build) + len(check))
-        assert [f["src"] for f in flies] == [f"races/{roles.RACES[library.get(i).craft]}-{library.get(i).tier}@2x.png" for i in (lead, *build, *check)]
+        flies = await _flies(page, 1 + len(build[:1]) + len(check[:1]))
+        assert [f["src"] for f in flies] == [f"races/{roles.RACES[library.get(i).craft]}-{library.get(i).tier}@2x.png" for i in (lead, *build[:1], *check[:1])]
         for f in flies:
             assert abs(f["left"] + f["width"] / 2 - (save["x"] + save["width"] / 2)) <= 1 and abs(f["top"] + f["height"] / 2 - (save["y"] + save["height"] / 2)) <= 1
 
@@ -199,7 +199,7 @@ async def test_under_reduced_motion_nothing_gathers(fake_repo, monkeypatch):
         sheet = await _ready(page)
         await sheet.get_by_role("button", name="Save party").click()
         assert await _called(stub, "ideas.goal_save", {"about": "A tower game.", "craft": "design", "leader": "game-designer", "priority": "normal", "preset": "game",
-                                                       "team": ["grunt", "artist", "level-designer", "sound-designer", "playtester"], "every": []})
+                                                       "team": ["grunt", "playtester"], "every": []})
         await page.locator(".screen").wait_for(timeout=WAIT_MS)
         await page.wait_for_timeout(900)
         assert await page.evaluate(GATHER) == [] and await page.locator(".gather-fly").count() == 0
@@ -254,7 +254,7 @@ async def test_the_gather_waits_six_seconds_for_the_deck_to_show_the_party(fake_
         rec = await page.evaluate(GATHER)
         flies = [g for g in rec if g["kind"] == "fly"]
         if plays:
-            assert len(flies) == 6 and [g["goal"] for g in rec if g["kind"] == "lit"] == ["a-late-party"]
+            assert len(flies) == 3 and [g["goal"] for g in rec if g["kind"] == "lit"] == ["a-late-party"]
         else:
             assert rec == []
 
@@ -270,7 +270,7 @@ async def test_a_party_made_from_new_goal_gathers_nothing_the_form_is_what_the_p
         await sheet.get_by_label("What it is for").fill("A tower game.")
         await sheet.get_by_role("button", name="Save party").click()
         assert await _called(stub, "ideas.goal_save", {"about": "A tower game.", "craft": "design", "leader": "game-designer", "priority": "normal", "preset": "game",
-                                                       "team": ["grunt", "artist", "level-designer", "sound-designer", "playtester"], "every": []})
+                                                       "team": ["grunt", "playtester"], "every": []})
         form = page.get_by_role("dialog", name="New goal")
         await form.wait_for(timeout=WAIT_MS)                                               # New goal opens for the party just made
         await page.wait_for_timeout(900)

@@ -889,7 +889,7 @@ async def test_new_goal_sheet_description_and_priority_then_the_goal_reads_and_s
         await _shot(page, "phone-new-goal-390x844")
         await sheet.get_by_role("button", name="Save party").click()
         assert await _called(stub, "ideas.goal_save", {"about": "More people try Orkline.", "craft": "marketing", "leader": "growth",
-                                                       "team": ["copywriter", "seo", "editor"], "every": [], "priority": "high"})
+                                                       "team": ["copywriter", "editor"], "every": [], "priority": "high"})
         screen = page.locator(".screen")
         await screen.get_by_text("Growth is reading", exact=False).first.wait_for(timeout=WAIT_MS)      # the goal on its own screen: its leader reads it
         stub.goals["more-people-try"].update(title="Grow installs", state="asks", summary="Installs are the first step.\nMore lines.", questions=["Which channel first?"],
