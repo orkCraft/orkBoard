@@ -10,7 +10,7 @@ from orkboard.gui import server
 
 STATIC = server.STATIC
 SHEETS = [STATIC / "page.css", STATIC / "js" / "shell" / "shell.css", STATIC / "js" / "board" / "board.css",
-          STATIC / "js" / "arena" / "arena.css", STATIC / "js" / "arena" / "column.css", STATIC / "js" / "arena" / "glance.css", STATIC / "js" / "arena" / "look.css", STATIC / "js" / "arena" / "assets.css", STATIC / "js" / "arena" / "systemmap.css", STATIC / "pwa" / "app.css"]
+          STATIC / "js" / "arena" / "arena.css", STATIC / "js" / "arena" / "column.css", STATIC / "js" / "arena" / "glance.css", STATIC / "js" / "arena" / "look.css", STATIC / "js" / "arena" / "assets.css", STATIC / "js" / "arena" / "systemmap.css", STATIC / "js" / "arena" / "limits.css", STATIC / "pwa" / "app.css"]
 
 
 def test_the_copy_is_orkuis_office_look_as_stamped():

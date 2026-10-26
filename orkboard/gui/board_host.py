@@ -84,6 +84,12 @@ class BoardHost:
         """The host's sign-ins (core/sign_ins.py), which the keeper and the runner hold work for; None in a host with none."""
         return getattr(self._owner, "sign_ins", None)
 
+    def open_boards(self) -> list[Any]:
+        """Every project open on this machine (this one among them), each with its `root`, `name` and `ideas`; `[]` in a host
+        that has only the one Board (spec 91 §2: what used a limit, in all projects)."""
+        projects = getattr(self._owner, "projects", None)
+        return list(projects.open_ones) if projects is not None else []
+
     @property
     def machine(self) -> settings.MachineSettings:
         return self._owner.machine
