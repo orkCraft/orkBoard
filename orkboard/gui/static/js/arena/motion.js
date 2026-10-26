@@ -21,6 +21,10 @@
 //   back               a result sent back (§2): its task is in the field again; the card moves 24 px toward the field, the left, as it fades (`data-sign="back"`, 3 steps, FADE_MS), no sign
 //   crumble            a collision's line on the project's level, answered or withdrawn while the page is seen (§3, project.js): kept 0.42 s more as `.is-leaving`, its stroke breaks into
 //                       pixels and goes (3 steps, `arena-crumble`); not on the first read, none for a goal the filter hid, at once under reduced motion
+//   the System's look  a Tech party's System tab opened (docs/specs/89-the-tech-lens-system.md §6.3, systemmap.js): what changed since the device's last look plays once — the map stands as it was
+//                       (0.3 s), then each goal in the order it landed: its new parts dealt (`.sys-dealt`, 0.3 s in steps, 20 ms apart, six at most), its changed ones sealed with its element (`.sys-seal`,
+//                       0.42 s), its gone ones crumble (`.sys-crumble`, 0.42 s, 3 steps); a goal 0.52 s after the one before, closer when there are many, so the whole is at most 3 s; a press (or a key)
+//                       ends it, the parts as they are now. Only on the first answer the tab shows (none for a goal that lands while it is open), none under reduced motion or while the page is hidden
 //   the quiet reward    a merge lights its member's first number and its column's ✓ k in dev once (≈ 0.6 s); nothing flies to them
 //   a member struck     its head's sign turned ✗: the head is lit once and jolts 2 px sideways three times (`.is-struck`, ≈ 0.3 s, steps); turned !: the sign drops into its corner and the head hops 2 px
 //                       (`.is-calling`, ≈ 0.25 s, steps). Not on the first read, not under the pointer or the focus, three heads at most in a refresh (decisions §80); nothing travels

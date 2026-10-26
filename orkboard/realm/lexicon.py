@@ -185,6 +185,7 @@ TERMS: tuple[Term, ...] = (
     _t("goal_look", "look", "looks"),                              # how a goal's screen looks: asked by the elf, picked before it is built (spec 85)
     _t("task_picture", "picture", "pictures"),                     # what a task that changed what people see looks like, drawn from the project's preview (spec 85)
     _t("asset", "asset", "assets"),                                # a file the project is made of that people see or hear: a screen's picture, art, an icon, a sound, music, a clip, a font (spec 88; realm/assets.py)
+    _t("lens_view", "view", "views"),                              # one map of a leader's lens: the Architect's System, read from the code (spec 89; decisions §104.1, realm/project_map.py)
     _t("pick", "pick", "picks"),                                  # the stop Pick one and its screen: a task left two to six variants of one kind for the person to pick from (spec 51)
     _t("plan_change", "plan change", "plan changes"),              # the leader's re-plan of what is left, after a goal's spec changed: the tasks not started changed, dropped or added, answered Take the new plan or Keep the plan (spec 62; the code's `change`, plan_change.json)
     _t("goal_type", "goal type", "goal types"),                    # what kind of goal a party's team can take on: New logo, Fix a bug; realm/goal_types.py, specs 52 and 59

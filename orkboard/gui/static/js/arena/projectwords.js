@@ -7,6 +7,9 @@ import { pitchWords } from "./pitchwords.js";
 export const THE_PROJECT = "The project";
 export const PARTIES_WORDS = "The parties, their goals";
 
+/** The level's tabs (spec 88 §6.1), the first the one it opens on. */
+export const TABS = [["field", "Field"], ["assets", "Assets"], ["play", "Play"]];
+
 /** The groups of a column, in order. */
 export const GROUPS = [["planning", "Planning"], ["work", "At work"], ["waits", "Waits for main"]];
 

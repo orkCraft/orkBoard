@@ -19,6 +19,7 @@ from __future__ import annotations
 from orkboard.realm import idea_target, library
 
 TARGET = idea_target.SIZE_TARGET
+TECH, TECH_LINE = library.TECH, library.TECH_LINE   # the parties the Architect leads (spec 89 §5, decisions §104.1); a party made before keeps its name
 SIZES = idea_target.SIZES
 
 
@@ -34,6 +35,11 @@ def _recipe(rid: str, name: str, line: str, leader: str, build: list[str], check
             "because": because, "when": when}
 
 
+def _tech(because: str) -> dict:
+    """The Tech party a kind is offered after its first (spec 89 §5): the Architect, a Grunt and the Tester, the Reviewer."""
+    return _recipe("tech", TECH, TECH_LINE, "architect", ["grunt", "tester"], ["reviewer"], because)
+
+
 def _ideation(because: str = "small ideas are judged before they cost anything") -> dict:
     return _preset("ideation", because, whole=True)
 
@@ -47,22 +53,23 @@ RECIPES: dict[str, list[dict]] = {
     "mobile": [
         _recipe("mobile-features", "Mobile app: features", "Screens and what people do on them", "product-manager",
                 ["grunt", "artist", "aso", "ui-kit"], ["reviewer", "accessibility-reviewer"], "features are the app's daily work"),
-        _recipe("mobile-architecture", "Mobile app: architecture", "How the app is built, tested and kept safe", "architect",
+        _recipe("mobile-architecture", TECH, TECH_LINE, "architect",
                 ["grunt", "tester"], ["reviewer", "security-reviewer"], "the app's structure needs its own hands"),
         _release(),
     ],
     "web": [
         _recipe("web-pages", "Web: pages", "Pages that say what it does, and are found", "product-designer",
                 ["grunt", "ui-kit", "copywriter", "seo"], ["reviewer", "accessibility-reviewer"], "pages are the product here"),
+        _tech("the site's code has parts to keep apart and test"),
         _release(),
     ],
     "backend": [
-        _recipe("backend", "Backend", "Services, tests and what keeps them safe", "architect",
+        _recipe("backend", TECH, TECH_LINE, "architect",
                 ["grunt", "tester"], ["reviewer", "security-reviewer"], "services are built and kept safe"),
         _recipe("backend-data", "Data", "Queries and the numbers they give", "analyst",
                 ["data-engineer", "sql", "experimenter"], ["data-reviewer"], "queries are written here", when="sql"),
     ],
-    "game": [_preset("game", "a game is built, played and tuned"), _release()],
+    "game": [_preset("game", "a game is built, played and tuned"), _tech("the game's code has parts to keep apart and test"), _release()],
     "data": [
         _recipe("data-work", "Data", "Numbers, queries and reports", "analyst",
                 ["data-engineer", "sql", "experimenter"], ["data-reviewer"], "the work is numbers and the questions they answer"),
@@ -83,7 +90,7 @@ RECIPES: dict[str, list[dict]] = {
         _ideation(),
     ],
     "code": [
-        _recipe("engineering-code", "Engineering", "Code, tests and the build", "architect",
+        _recipe("engineering-code", TECH, TECH_LINE, "architect",
                 ["grunt", "tester"], ["reviewer"], "there is code to change and test"),
     ],
 }

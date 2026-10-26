@@ -81,6 +81,9 @@ CANVAS_MADE = "canvas_made"       # tool (claude · codex · agy), kind (design 
 SHOT_TAKEN = "shot_taken"         # idea, task, ok, why ("" · no preview · no browser · no picture), seconds, round (spec 85 §3: the picture of what a task changed)
 PLAY_STARTED = "play_started"     # seconds, ok, why ("" · no preview · did not open · could not make its worktree: …) (spec 88 §5: the project's preview of dev opened in Play)
 PLAY_STOPPED = "play_stopped"     # why (stopped · idle · closed · quit · again · exited) (spec 88 §5)
+MAP_OPENED = "map_opened"         # lens (system), party, parts, changed (parts marked), hours (since the device's last look; None for none), device (spec 89 §4: a leader's map opened)
+MAP_PART_PRESSED = "map_part_pressed"   # lens, party, changed (its change since the last look: new · changed · gone · ""), goals (n), device (spec 89 §4)
+MAP_SNAPSHOT_FAILED = "map_snapshot_failed"   # commit (12), why (spec 89 §1: the parts not kept after a landing; the landing stands)
 CANVAS_SEEN = "canvas_seen"       # device: a canvas folded into Seen (spec 78 §3)
 LIMITS_READ = "limits_read"       # provider, left, window
 # Round 2 (docs/specs/34-v1-round-2.md §4): goals by dialog, agents by task type.
@@ -186,7 +189,7 @@ EVENTS = (ASKED, ASSUMED, ANSWERED, STOPPED, WAIT_SKIPPED, HELD_AT_WORK, CAMP_LE
           GIT_PUSHED, OP_ADDED, OP_PREPARED, OP_CHECKED, OP_DONE, OP_FAILED, OP_DROPPED, OP_NOT_RIGHT, OP_LEARNED,
           OP_RULES_ANSWERED, OP_TRUST, OP_KEPT, OP_FORGOT, OP_STANDING, PUSH_SET, PUSH_SENT, PARTY_PROPOSED, PARTY_ANSWERED, PARTY_SAVED, PARTY_DROPPED, PARTY_REMOVED, NIGHT_ALLOWED, WEEK_RESET, IDEA_EDITED, PLAN_REVISED, PLAN_CHANGE_ANSWERED,
           PITCH_JUDGED, PITCH_SENT, PITCH_PASSED, PITCH_AGAIN, IDEA_MOVED, RELEASE_MADE, RELEASE_OUT, PARTY_SHOWN, COLLIDE_FOUND, COLLIDE_ANSWERED,
-          PROPOSALS_SHOWN, PROPOSAL_TAKEN, PARTY_RESIZED, CANVAS_MADE, CANVAS_SEEN, SHOT_TAKEN, PLAY_STARTED, PLAY_STOPPED, SIGN_IN_NEEDED, SIGNED_IN, SIGN_IN_FAILED)
+          PROPOSALS_SHOWN, PROPOSAL_TAKEN, PARTY_RESIZED, CANVAS_MADE, CANVAS_SEEN, SHOT_TAKEN, PLAY_STARTED, PLAY_STOPPED, MAP_OPENED, MAP_PART_PRESSED, MAP_SNAPSHOT_FAILED, SIGN_IN_NEEDED, SIGNED_IN, SIGN_IN_FAILED)
 
 _LOCK = threading.Lock()
 

@@ -31,7 +31,7 @@ def test_a_recipe_names_only_the_librarys_agents_and_fits_its_leaders_seats_in_e
 
 
 def test_the_ids_are_each_one_and_the_presets_are_built_on_their_seats():
-    ids = [r["id"] for _k, r in ALL if r["id"] not in ("ideation", "release", "game")]
+    ids = [r["id"] for _k, r in ALL if r["id"] not in ("ideation", "release", "game", "tech")]
     assert len(ids) == len(set(ids))
     for pid in ("ideation", "release", "game"):
         preset = next(p for p in library.PRESETS if p[0] == pid)
@@ -42,8 +42,8 @@ def test_the_ids_are_each_one_and_the_presets_are_built_on_their_seats():
 
 def test_the_recipes_of_each_kind_are_the_specs():
     ids = {k: [r["id"] for r in party_recipes.for_kind(k, {"sql": 1})] for k in project_kind.KINDS}
-    assert ids == {"empty": ["ideation"], "mobile": ["mobile-features", "mobile-architecture", "release"], "web": ["web-pages", "release"],
-                   "backend": ["backend", "backend-data"], "game": ["game", "release"], "data": ["data-work"], "wiki": ["wiki", "ideation"],
+    assert ids == {"empty": ["ideation"], "mobile": ["mobile-features", "mobile-architecture", "release"], "web": ["web-pages", "tech", "release"],
+                   "backend": ["backend", "backend-data"], "game": ["game", "tech", "release"], "data": ["data-work"], "wiki": ["wiki", "ideation"],
                    "design": ["design-screens", "ideation"], "texts": ["texts", "ideation"], "code": ["engineering-code"]}
     lead = {r["id"]: r["leader"] for _k, r in ALL}
     assert lead["mobile-features"] == "product-manager" and lead["mobile-architecture"] == "architect" and lead["web-pages"] == "product-designer"
@@ -133,3 +133,23 @@ def test_tiers_for_any_team_follows_the_sizes_and_a_party_made_before_keeps_its_
     assert party_recipes.tiers_for("architect", team, "full") == {"architect": "elder", "grunt": "warrior", "tester": "warrior", "reviewer": "elder", "security-reviewer": "elder"}
     assert party_recipes.tiers_for("taskmaster", ["grunt"], "standard") == {"grunt": "warrior"}          # the Taskmaster is no seat
     assert party_recipes.sized(party_recipes.get("backend"), "standard")["team"] == ["grunt"]
+
+def test_the_parties_the_architect_leads_are_named_tech_and_web_and_games_offer_one_after_their_first():
+    """Spec 89 §5 (decisions §104.1): the Architect's recipes keep their ids and take the name Tech and its line; `game` and `web` gain a
+    `tech` recipe right after their first party; the engineering craft's party is Tech too; a party made before keeps its name."""
+    line = "How it is built: its parts, its tests and the build"
+    for rid in ("mobile-architecture", "backend", "engineering-code"):
+        r = party_recipes.get(rid)
+        assert (r["id"], r["name"], r["line"], r["leader"]) == (rid, "Tech", line, "architect")
+    assert all(r["name"] == "Tech" for _k, r in ALL if r["leader"] == "architect")
+    for kind in ("game", "web"):
+        rows = party_recipes.for_kind(kind)
+        assert rows[1]["id"] == "tech" and rows[0]["id"] != "tech"
+        tech = rows[1]
+        assert (tech["name"], tech["line"], tech["leader"], tech["build"], tech["check"]) == ("Tech", line, "architect", ["grunt", "tester"], ["reviewer"])
+        assert tech["because"] and party_recipes.kind_of("tech", kind) == kind
+    assert party_recipes.sized(party_recipes.get("tech"), "standard")["team"] == ["grunt"]
+    assert next(p for p in library.presets() if p["id"] == "engineering")["name"] == "Tech"
+    made_before = {"name": "Backend", "leader": "architect", "team": ["grunt", "tester", "reviewer"]}       # a party made before: its name stays
+    assert party_recipes.has(party_recipes.get("backend"), [made_before]) and made_before["name"] == "Backend"
+    assert party_recipes.has(party_recipes.get("tech"), [made_before])                                      # … and it is the Tech party

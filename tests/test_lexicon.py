@@ -174,3 +174,13 @@ def test_an_asset_is_the_word_of_spec_88():
     line = next(l for l in Path(lexicon.__file__).read_text(encoding="utf-8").splitlines() if l.lstrip().startswith('_t("asset"'))
     assert "spec 88" in line and "see or hear" in line
     assert lexicon.words("Assets · Art and icons") == "Assets · Art and icons"
+
+
+def test_a_view_is_one_map_of_a_leaders_lens_the_word_of_spec_89():
+    """Spec 89 §0: `lens_view`, one map of a leader's lens (the Architect's System); today's word, no old spelling."""
+    from pathlib import Path
+    assert (lexicon.term("lens_view"), lexicon.term("lens_view", many=True)) == ("view", "views")
+    assert {key: (word, was) for key, word, was in lexicon.glossary()}["lens_view"] == ("view", "")
+    line = next(l for l in Path(lexicon.__file__).read_text(encoding="utf-8").splitlines() if l.lstrip().startswith('_t("lens_view"'))
+    assert "spec 89" in line and "System" in line
+    assert lexicon.words("System · Board · Since your last look") == "System · Board · Since your last look"

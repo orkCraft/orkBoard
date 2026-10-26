@@ -456,7 +456,7 @@ def test_under_reduced_motion_nothing_about_a_pick_animates(gui):
                 "els => els.filter((e) => { const c = getComputedStyle(e); return c.transitionDuration.split(',').some((d) => parseFloat(d) > 0) || c.animationName !== 'none'; }).length")
             assert moving == 0
         assert card.evaluate("e => getComputedStyle(e).transitionDuration") == "0s"                              # the raised card does not slide either
-        assert pg.evaluate("document.getAnimations().filter((a) => a.animationName !== 'ork-busy').length") == 0
+        assert pg.evaluate("document.getAnimations().filter((a) => !String(a.animationName || '').startsWith('ork-busy')).length") == 0
     finally:
         pg.close()
     assert not errors, "\n".join(errors)

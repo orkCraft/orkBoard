@@ -159,3 +159,18 @@ def test_play_started_and_stopped_are_the_events_of_spec_88(tmp_path):
     started, stopped = event_log.read(tmp_path)
     assert (started["seconds"], started["ok"], started["why"], stopped["why"]) == (1.25, False, "no preview", "idle")
     assert event_log.counts(tmp_path)["play_started"] == 1 and event_log.counts(tmp_path)["play_stopped"] == 1
+
+
+def test_the_maps_events_are_spec_89s(tmp_path):
+    """Spec 89 §1, §4: a leader's map opened (its lens, the parts, how many changed, hours since the last look), a part pressed, and a
+    snapshot that failed after a landing."""
+    for name, value in (("MAP_OPENED", "map_opened"), ("MAP_PART_PRESSED", "map_part_pressed"), ("MAP_SNAPSHOT_FAILED", "map_snapshot_failed")):
+        assert getattr(event_log, name) == value and value in event_log.EVENTS
+    assert len(set(event_log.EVENTS)) == len(event_log.EVENTS)
+    event_log.record(tmp_path, event_log.MAP_OPENED, lens="system", party="tech", parts=12, changed=3, hours=17.5, device="desktop")
+    event_log.record(tmp_path, event_log.MAP_PART_PRESSED, lens="system", party="tech", changed="new", goals=1, device="desktop")
+    event_log.record(tmp_path, event_log.MAP_SNAPSHOT_FAILED, commit="0123456789ab", why="disk full")
+    opened, pressed, failed = event_log.read(tmp_path)
+    assert (opened["lens"], opened["parts"], opened["changed"], opened["hours"]) == ("system", 12, 3, 17.5)
+    assert (pressed["changed"], pressed["goals"], failed["commit"], failed["why"]) == ("new", 1, "0123456789ab", "disk full")
+    assert event_log.counts(tmp_path)["map_opened"] == 1

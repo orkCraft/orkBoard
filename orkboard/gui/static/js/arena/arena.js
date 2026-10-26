@@ -3,6 +3,8 @@
 // rows by phase as stacks of cards running down from them with the results beside them, what waits for you and the limits along the bottom. The drawer
 // (shell.js) slides over it. All of it reads `ideas.map`, `ideas.board`, `ideas.agents`, `ideas.gate`, `ideas.today`, `ideas.flags` and the snapshot; its
 // commands are the Board's own. The project's level (`PROJECT`, docs/specs/70-orkmaster-and-the-project.md: a press on the Orkmaster in the project's line) replaces the field as Operations does: project.js. Ideation's field is its pitches by state across the party's columns (pitches.js, docs/specs/65-ideation.md §8).
+// A party the Architect leads has two tabs over its table, System and Board (docs/specs/89-the-tech-lens-system.md §6.1): System is its lens's view of the project (systemmap.js), Board the field as it was.
+// It opens on System when something changed since the device's last look, else on the tab last pressed on this device (System at first).
 import { useEffect, useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { track, board, OPS, PROJECT } from "../board/store.js";
@@ -32,6 +34,7 @@ import { Cards } from "../board/cards.js";
 import { closeFlagLine, seeFlags } from "./flags.js";
 import { PitchField } from "./pitches.js";
 import { pitchPlanning } from "./pitchwords.js";
+import { PartyTabs, SystemMap, leadsSystem, usePartyTab, useSystem } from "./systemmap.js";
 
 const NARROW = "(max-width: 1023px)";
 
@@ -83,21 +86,25 @@ function Party({ m, g }) {
   const cols = members.map(() => (wide ? "minmax(0,1fr)" : "minmax(150px,1fr)")).join(" ") || "minmax(0,1fr)";
   const reading = planning.rows.find((r) => r.busy)?.full || "";
   const all = handFor(m, g.slug, !wide);                 // below 1 024 px the party shown's results join the bottom row (§3)
+  const lens = !pitch && leadsSystem(g), sys = useSystem(lens, g.slug), tech = lens && !sys.none;                       // the Architect's party: System | Board (spec 89 §6.1)
+  const [tab, setTab] = usePartyTab(tech, g.slug, sys);
   return html`<div class=${cls("arena", { "is-narrow": narrow.value, "is-ideation": pitch })} data-goal=${g.slug}>
     ${wide && html`<${TodayStrip} goal=${g.slug} />`}
     <${PartyList} body=${html`<${Left} g=${g} nodes=${nodes} planning=${planning} lead=${lead} />`} />
     <div class="arena-field">
       <div class="arena-top"><${PartyLine} g=${g} nodes=${nodes} lead=${lead?.name || "Taskmaster"} reading=${reading} doing=${pitch ? "judging" : "reading"} /><${FlagLine} /></div>
       <div class="arena-play">
+        ${tech && html`<${PartyTabs} tab=${tab} setTab=${setTab} name=${g.short || g.title} />`}
+        ${tab === "system" ? html`<div class="sys-panel" id="ppanel" role="tabpanel" aria-labelledby="ptab-system"><${SystemMap} sys=${sys} party=${g.slug} /></div>` : html`
         <${PartyRow} g=${g} members=${members} nodes=${nodes} planning=${planning} cols=${cols} />
-        <section class="arena-body ork-table" aria-label="The party at work" ref=${body}>
+        <section class="arena-body ork-table" aria-label="The party at work" ref=${body} id=${tech ? "ppanel" : undefined}>
           ${!wide && html`<div class="arena-cards"><${Cards} /></div>`}
           ${pitch ? html`<${PitchField} g=${g} members=${members} nodes=${nodes} cols=${cols} />`
             : solo.value ? html`<${Solo} g=${g} members=${members} lead=${lead} nodes=${nodes} planning=${planning} shown=${shown} />`
             : html`<${Columns} g=${g} members=${members} nodes=${nodes} cols=${cols} shown=${shown} />`}
           ${!pitch && html`<${Spread} members=${members} nodes=${nodes} />`}
           ${!pitch && html`<${Arrows} host=${body} nodes=${nodes} />`}
-        </section>
+        </section>`}
       </div>
       ${wide && html`<${Looks} g=${g} results=${results} nodes=${nodes} shown=${shown} />`}
       <div class="arena-gatebox"><${GateBox} /></div>

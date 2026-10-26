@@ -44,7 +44,7 @@ def test_a_card_at_work_wears_the_busy_mark_top_left_and_no_other_card_does(fiel
     assert "working 4 min" in running.locator(".arena-task__foot").inner_text()
     mark, elem, whole = busy.bounding_box(), running.locator(".ork-elem").bounding_box(), running.bounding_box()
     assert (mark["width"], mark["height"]) == (12, 12) and mark["x"] < elem["x"] and mark["y"] - whole["y"] < 12 and mark["x"] - whole["x"] < 12        # top left, before the goal's element
-    assert busy.evaluate("e => getComputedStyle(e, '::before').animationName") == "ork-busy"             # it turns
+    assert busy.evaluate("e => getComputedStyle(e).animationName") == "ork-busy-turn" and busy.evaluate("e => getComputedStyle(e, '::after').animationName") == "ork-busy-sand"      # the hourglass runs (orkUI 0.11.0)
     assert pg.locator(".arena-task:not([data-state=running]):not([data-state=testing]) .ork-busy").count() == 0      # a card that waits, is held, failed or lies at Review does not
     host.node_of("register")["tasks"][2]["state"] = "testing"
     host.bump({})
@@ -60,7 +60,7 @@ def test_the_busy_mark_stands_still_under_reduced_motion(gui):
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
     pg.locator(".arena-task[data-key='register/k3'] .ork-busy").wait_for(timeout=WAIT_MS)
-    assert pg.locator(".ork-busy").first.evaluate("e => getComputedStyle(e, '::before').animationName") == "none"
+    assert pg.locator(".ork-busy").first.evaluate("e => getComputedStyle(e, '::after').animationName") == "none"
     pg.close()
 
 
@@ -138,7 +138,7 @@ def test_an_arrow_between_cards_in_different_rows_goes_in_square_steps_and_none_
     chain = [pip("a", "First", "running", wave=1), pip("b", "Second", "waiting", ["a"], 2, "screens"), pip("c", "Third", "waiting", ["b"], 3), pip("d", "Fourth", "waiting", ["c"], 4, "screens")]
     alone(host, chain)
     pg.locator(".arena-task[data-task=d]").wait_for(timeout=WAIT_MS)
-    pg.wait_for_function("() => !document.querySelector('.is-drawn, .is-leaving') && document.getAnimations().every((a) => a.animationName === 'ork-busy')", timeout=WAIT_MS)      # the cards are in their places
+    pg.wait_for_function("() => !document.querySelector('.is-drawn, .is-leaving') && document.getAnimations().every((a) => String(a.animationName || '').startsWith('ork-busy'))", timeout=WAIT_MS)      # the cards are in their places
     card(pg, "register/b").hover()                                                                       # b: waits for a (row Now), c waits for b (row Later)
     pg.wait_for_function("() => document.querySelectorAll('.arena-arrow').length === 2", timeout=WAIT_MS)
     base = pg.locator(".arena-arrows").bounding_box()

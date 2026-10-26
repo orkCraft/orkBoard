@@ -4,6 +4,7 @@ of source files is a part; a part uses another when one of its files imports one
 what is imported from outside the repository is left out.
 
     parts(root)        # [{"path": "orkboard/realm", "files": ["ideas.py", …], "count": 40, "uses": [...], "used_by": [...]}]
+    parts(tree)        # the same of any tree: a task's worktree, or a detached one of dev's head (realm/project_map.py, spec 89 §1)
 
 Folders git and the machine keep (.git, .orkcraft), installed packages and builds are not read, nor a file that may hold
 a secret. At most MAX_FILES files are read. No face, no model.
