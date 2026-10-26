@@ -193,9 +193,9 @@ async def test_a_task_dropped_or_merged_with_nothing_made_does_not_turn(fake_rep
         assert await page.evaluate("window.__made") == []
 
 
-def test_the_service_worker_is_v94_and_the_look_sheet_has_no_colour_of_its_own():
+def test_the_service_worker_is_v95_and_the_look_sheet_has_no_colour_of_its_own():
     sw = (Path(__file__).resolve().parents[1] / "orkboard" / "gui" / "static" / "pwa" / "sw.js").read_text(encoding="utf-8")
-    assert 'const CACHE = "orkcraft-app-v94"' in sw
+    assert 'const CACHE = "orkcraft-app-v95"' in sw
     css = (Path(__file__).resolve().parents[1] / "orkboard" / "gui" / "static" / "pwa" / "app.css").read_text(encoding="utf-8")
     block = css[css.index("What the elf asks and shows (spec 85 C)"):]
     assert not re.findall(r"#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(|border-radius", block)
