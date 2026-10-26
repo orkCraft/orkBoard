@@ -1554,6 +1554,13 @@ channels, the Release manager the versions); they say it as text nobody reads wh
    made up by a model. A tab with a change not yet seen carries the goal's element by its name; opening it plays its
    reveal. **The hand is one, under every tab**: a card pressed opens the tab it is about and rings its parts. On the
    phone the views are a list under the title (no sideways scroll, spec 67).
+   **No drawer**: a hand card opens in the pane, never in a drawer from the right. A decision about a map (a question, a
+   fork, out of the contract, dev → main) **lifts the card in the hand**, its answers on it, while the pane shows the tab
+   it is about and each answer's change on the map; *Put it back* lowers it. A thing that is no map's (a task's log, a
+   diff, a failure, a pick's variants, a to-do's steps, a document, Agents, Files) opens as **one temporary tab** at the
+   end of the pane's, with ×: another replaces it unless it is pinned; *Back* returns to the tab before. The window is
+   three parts: the left column (where), the pane and its tabs (what), the hand (decide). On the phone, the same as
+   screens: a lifted card over the map, a thing opened as its own screen.
 9. **During the work the hand holds only what asks a decision**: a **fork** (a choice the plan did not settle: its
    answers drawn as changes on the map; only the tasks after it wait; §64 from pictures to structure), and **out of the
    contract** (a task whose map removes a part, or adds an outward one, that the will-be did not promise: asked before
@@ -1573,7 +1580,9 @@ channels, the Release manager the versions); they say it as text nobody reads wh
    made* (§102.4) become the map's cards; the spec's sections as the face (§75) become theses, map and hand; collisions
    by `touches` (§86) become two changes on the same cards; *Pick a look* (§102.2) becomes a fork; a party's field, its
    members' columns and its stages' seats (§99, §72) become the Orkmaster's field and a party's *Board* tab; the
-   projects' switcher at the left column's head (spec 69) moves to the Orkmaster's line.
+   projects' switcher at the left column's head (spec 69) moves to the Orkmaster's line; the drawer and its tab per
+   thing opened (spec 33 §6, spec 39 §3, spec 49 §9; `js/shell/preview.js`) become the lifted card and the pane's one
+   temporary tab.
 13. **In phases, each measured before the next**: (1) the lenses read from the code, and the reveal, on one real
     project (a Node game): can the owner tell the day in a minute, and did they see what an agent decided alone; (2) the
     change in the plan's call, the spec screen with one *Start*, out of the contract; (3) progress on the map and forks,
