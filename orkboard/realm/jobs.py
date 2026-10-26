@@ -92,6 +92,11 @@ def run_script(command: str, stdin: str, repo_root: Path, cancel: threading.Even
     return out.strip(), None, None
 
 
+# What the person can do when a working run ended with no answer because a command was refused (an unchained building is
+# not a setting a task's run reads yet, so the step is the other tool).
+EMPTY_WORK_STEP = "Pick another AI tool for this party."
+
+
 def work_cmd(harness: str, prompt: str, workdir: Path, model: str = "", resume: str = "",
              dirs: tuple = (), free: bool = False, effort: str = "", task: dict | None = None,
              root: Path | None = None) -> list[str]:
@@ -117,7 +122,8 @@ def run_work(harness: str, prompt: str, workdir: Path, cancel: threading.Event, 
     call's own cost, the one logged as `cost_own` and charged."""
     harness = tool_run.resolve(harness)
     cmd = work_cmd(harness, prompt, workdir, model, resume, dirs, free, effort, task, root)
-    tool_env = h.env("work", workdir) if (h := harnesses.get(harness)) else {}
+    h = harnesses.get(harness)
+    tool_env = h.env("work", workdir) if h else {}
     run_env = {**os.environ, **tool_env, **(env or {})}
     resumed = tool_run.codex_thread_usage(resume, run_env) if harness == "codex" and resume else None
     before = resumed or 0
@@ -140,6 +146,9 @@ def run_work(harness: str, prompt: str, workdir: Path, cancel: threading.Event, 
         telemetry.charge(paid, f"{harness} worker", **what)
     else:
         telemetry.noted(paid, f"{harness} worker", **what)
+    if h is not None and not text.strip() and (why := h.error(out)):    # it ended well with no answer, and says why (agy's refused command)
+        # agy's words are a clause ("it wanted to run RunCommand, …"): they say whose, and what the person can do
+        raise tool_errors.ToolError(harness, f"{h.title} {why.removeprefix('it ')}. {EMPTY_WORK_STEP}" if h.work_note else why)
     return text, cost, tokens, session
 
 

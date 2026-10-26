@@ -8,7 +8,7 @@ import threading
 from pathlib import Path
 
 from orkboard.realm import gate_config, idea_checks, idea_pick, idea_secrets
-from orkboard.realm.idea_git import BOARD_PAGE, CRITICAL_TESTS, env_name, has_summary, parse_tests, read_secret, spec_paths
+from orkboard.realm.idea_git import BOARD_PAGE, env_name, has_summary, parse_tests, read_secret, spec_paths
 
 
 FINDINGS_ASK = (
@@ -47,6 +47,18 @@ def _r():
     """The runner's module (it imports this one: looked up when a task runs)."""
     from orkboard.core import idea_runner
     return idea_runner
+
+
+def gate_words(gate: gate_config.Gate) -> str:
+    """What a task's prompt says of the gate: this project's own (`gate_config.read`), never Orkboard's by default."""
+    if gate.run:
+        what = f"Then the gate runs `{gate.run}`"
+    elif gate.always:
+        what = f"Then the gate runs `python -m pytest -q {' '.join(gate.always)}` and the test files of the modules you touch"
+    else:
+        return ("Then the gate checks that you changed something. This project has no tests, so the change waits for a "
+                "person's look; a gate that finds nothing changed comes back to you once, in this session.")
+    return what + ", and a red gate comes back to you once, in this session."
 
 
 def is_pick(task: dict) -> bool:
@@ -188,9 +200,7 @@ class TaskMixin:
         if (instruction := str(role.get("instruction") or "").strip()):
             parts.append(f"# Your role: {role['name']}\n\n{instruction}")
         parts.append("# When you are done\n\nCommit your work with git if you can, with clear messages; what you "
-                     "leave changed is committed for you under the task's title. Then the gate runs "
-                     f"`python -m pytest -q {' '.join(CRITICAL_TESTS)}` and the test files of the modules you touch, "
-                     "and a red gate comes back to you once, in this session.")
+                     f"leave changed is committed for you under the task's title. {gate_words(gate_config.read(self.repo_root))}")
         parts += [
             f"You do one task of the idea `{slug}` in this repository: a git worktree on branch "
             f"`idea/{slug}/{task.get('id')}`, cut from `{_r().setting(self.settings, 'merge_into') or 'main'}`. "
