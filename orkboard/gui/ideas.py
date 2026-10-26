@@ -52,6 +52,7 @@ from orkboard.core import idea_keeper
 from orkboard.realm import board_map, event_log, idea_checks, idea_lens, idea_photos, idea_route, idea_secrets, idea_target, ideas, pitches, wiki
 from orkboard.gui.ideas_args import VIA, IdeasError, _device, _opt, _text
 from orkboard.gui.ideas_board import BoardMixin
+from orkboard.gui.ideas_assets import AssetsMixin, asset_commands
 from orkboard.gui.ideas_canvases import CanvasesMixin, canvas_commands
 from orkboard.gui.ideas_gate import GateMixin
 from orkboard.gui.ideas_goals import GoalsMixin
@@ -106,7 +107,7 @@ class _Hop:
 
 
 class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, TrackMixin, ReviewMixin, ReviseMixin,
-            TypesMixin, CanvasesMixin, BoardMixin):
+            TypesMixin, CanvasesMixin, AssetsMixin, BoardMixin):
     def __init__(self, host) -> None:
         """`host`: what the Board needs of whoever runs it, a `gui/board_host.py` `BoardHost` (spec 37 §4): Orkline's
         host makes one from its town, Orkboard its own."""
@@ -263,6 +264,7 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
                 except Exception as e:
                     self.host.toast(f"{type(e).__name__}: {e}", title="The runner", severity="error")
         self.canvas_tick(now)                   # what the AI tools drew outside the code (spec 78)
+        self.play_tick(now)                     # Play stops after ten minutes with no face asking (spec 88 §5)
 
     def _ever_passed(self) -> bool:
         folder = self.state_dir / "ideas"
@@ -620,6 +622,6 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
                       "ideas.pitch_pass": self.pitch_pass,
                       "ideas.release_out": self.release_out, "ideas.release_candidates": self.release_candidates, "ideas.shown": self.shown,
                       "ideas.party_for": self.party_for, "ideas.collide_answer": self.collide_answer,
-                      "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, **canvas_commands(self)})
+                      "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, **canvas_commands(self), **asset_commands(self)})
         return {name: guarded(name, fn) for name, fn in table.items()}
 

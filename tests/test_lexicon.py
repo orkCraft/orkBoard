@@ -164,3 +164,13 @@ def test_a_partys_size_and_what_the_project_is_are_the_words_of_spec_75():
              for k in ("party_size", "project_kind")}
     assert all("spec 75" in line for line in lines.values())
     assert lexicon.words("Its size: Lean, Standard or Full") == "Its size: Lean, Standard or Full"
+
+
+def test_an_asset_is_the_word_of_spec_88():
+    """Spec 88 §0: a file the project is made of that people see or hear; today's word, no old spelling."""
+    from pathlib import Path
+    assert (lexicon.term("asset"), lexicon.term("asset", many=True)) == ("asset", "assets")
+    assert {key: (word, was) for key, word, was in lexicon.glossary()}["asset"] == ("asset", "")
+    line = next(l for l in Path(lexicon.__file__).read_text(encoding="utf-8").splitlines() if l.lstrip().startswith('_t("asset"'))
+    assert "spec 88" in line and "see or hear" in line
+    assert lexicon.words("Assets · Art and icons") == "Assets · Art and icons"

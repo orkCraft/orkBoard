@@ -33,9 +33,12 @@ colours (a card its panel, a signal its signal). Text on the table holds AA as o
 top and on the canvas, so the table's bound reads. One table a screen, under the work, never a panel or a dialog.
 
 ## Busy
-`.ork-busy` says that work is under way where it stands (a card at work, a head that works): 12 px, four pixels going
-round a 3 x 3 square a step a frame, the ink and the faint ink only, never a colour. Under reduced motion it stands still
-as three dots. One per thing at work; never on a control.
+`.ork-busy` says that work is under way where it stands (a card at work, a head that works): 12 px, drawn as an hourglass,
+a 6 x 6 grid of 2 px pixels in the faint ink (`--ork-ink-faint`) only. It draws no colour and is never brighter than the
+text beside it: work in progress is the quiet state (a question, a failure and money keep their signals). Its sand falls
+one grain a second (six frames, `steps`, never a smooth fall); after the last the glass turns over in two steps (90, then
+180 degrees) and starts again, about 7 s a round. Under reduced motion it stands still, half run (three grains down).
+One per thing at work; never on a control. Pure CSS, no script. The moon stays a goal's progress (`moons/`).
 
 ## The races
 `races/` holds the seven races in three tiers and the peon's crown (generated; `../races/README.md`): 24 x 22 beside a word in a row, 48 x 44 @2x.

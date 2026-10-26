@@ -119,8 +119,9 @@ class _Quiet(http.server.SimpleHTTPRequestHandler):
 
 
 @contextlib.contextmanager
-def opened(how: dict, worktree: Path, seconds: float = OPEN_S) -> Iterator[int | None]:
-    """The preview open on a worktree: the port it listens on, or None when it did not open in `seconds`. It is closed on leaving."""
+def opened(how: dict, worktree: Path, seconds: float = OPEN_S, env: dict[str, str] | None = None) -> Iterator[int | None]:
+    """The preview open on a worktree: the port it listens on, or None when it did not open in `seconds`. It is closed on leaving.
+    `env`: more for the command's environment (Play asks `HOST=127.0.0.1`, spec 88 §5); a static page is served on 127.0.0.1 always."""
     if how["how"] == "static":
         server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(_Quiet, directory=str(worktree)))
         threading.Thread(target=server.serve_forever, daemon=True, name="idea-shot-static").start()
@@ -134,7 +135,7 @@ def opened(how: dict, worktree: Path, seconds: float = OPEN_S) -> Iterator[int |
     seen: list[int] = []
     try:
         proc = subprocess.Popen(how["run"], cwd=str(worktree), stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
-                                errors="replace", start_new_session=os.name == "posix", env={**os.environ, "PORT": str(port), "BROWSER": "none", "CI": "1"})
+                                errors="replace", start_new_session=os.name == "posix", env={**os.environ, **(env or {}), "PORT": str(port), "BROWSER": "none", "CI": "1"})
     except (OSError, ValueError):
         yield None
         return

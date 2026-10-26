@@ -1099,7 +1099,7 @@ def test_what_waits_for_you_is_a_fan_of_the_goal_shown_the_questions_one_form_an
     pg, host = shell
     assert pg.locator(".arena-hc").count() == 5                                                          # every stop of the project lies in the one hand (spec 54 §2.1)
     kinds = pg.locator(".arena-hc").evaluate_all("els => els.map(e => e.dataset.kind)")
-    assert kinds == ["goal", "todo", "plan", "asks", "proposal"]                                         # urgency's order: what holds work back (the parties in the Board's order), then the proposal
+    assert kinds == ["goal", "plan", "asks", "proposal", "todo"]   # urgency's order: what holds work back, then the proposal, a to-do last of all (spec 87 §4.3)
     assert pg.locator(".arena-hc.is-other").count() == 2                                                  # the two of Grow installs say their party
     todo = pg.locator(".arena-hc[data-kind=todo]")
     assert "Sync ideas between the phone and the town" in todo.inner_text() and "API_KEY" in todo.inner_text()
@@ -1117,8 +1117,8 @@ def test_what_waits_for_you_is_a_fan_of_the_goal_shown_the_questions_one_form_an
     assert _sent(pg, host, ("ideas.answer", {"slug": "search", "answers": ["title and text", "yes"]}))
     pg.wait_for_function("() => document.querySelectorAll('.arena-hc[data-kind=asks]').length === 0", timeout=WAIT_MS)
     _show_goal(pg, "grow")                                                                                # another goal: its own stops, and Ship sync's now say their party
-    assert pg.locator(".arena-hc").evaluate_all("els => els.map(e => e.dataset.kind)") == ["goal", "todo", "plan", "proposal"]
-    assert pg.locator(".arena-hc.is-other").evaluate_all("els => els.map(e => e.dataset.kind)") == ["todo", "plan"]
+    assert pg.locator(".arena-hc").evaluate_all("els => els.map(e => e.dataset.kind)") == ["goal", "plan", "proposal", "todo"]
+    assert pg.locator(".arena-hc.is-other").evaluate_all("els => els.map(e => e.dataset.kind)") == ["plan", "todo"]
     goal = _stop(pg, "goal")
     goal.get_by_role("button", name="Open…").click()                                                      # a goal that asks
     pg.get_by_role("dialog", name="Questions: Grow installs").get_by_label("Answer 1: Which channel first?").fill("npm")

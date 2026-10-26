@@ -1511,6 +1511,15 @@ player's difficulty picker, and nobody had been asked. The leaders already see t
 (`realm/library.py`: the Architect its modules, the Product designer its flow and screens, the Product manager who it is
 for and what they need, the Game designer the loop, the Investor value against cost, the analyst the metrics, growth the
 channels, the Release manager the versions); they say it as text nobody reads whole. So:
+0. **The frame: three parts of the window, three roles, and the person who decides.** The window: **the left column is
+   where** (the projects, the parties, their goals), **the pane is what and why** (the Orkmaster's field, assets and
+   play; a party's or a goal's lens: its theses, its maps before → will be), **the hand is what the person decides or
+   does** (forks, out of the contract, dev → main, a to-do). The roles: **the Orkmaster says what is done and who does
+   it** (it deals goals to parties, offers a party, keeps them apart); **a party's leader says how, what changes and,
+   above all, why** (its lens, the spec, the will-be, the forks); **a member does** (builds or checks: one stage each),
+   seen on the cards, never in a part of the window of its own. **A member never asks the person**: its question goes to
+   its leader, who makes it a fork with its answers drawn on the map and its why (this changes §80's *a member calling
+   with a question*); a checker's findings go the same way, as *out of the contract* or a failure.
 1. **A party is a team and a lens** (§83.1 stays: a team, and few): its leader keeps **a map of the whole project as its
    craft sees it**, every goal on it, its party's own and the others'. The Orkmaster's map is the goals across the parties
    (the route, §83.2; the project's level, §85.2). A lens reads and asks; it never changes another party's work (§86).

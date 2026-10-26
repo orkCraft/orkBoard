@@ -19,6 +19,10 @@ paired phone. **Orkline imports Orkboard, never the other way round**: nothing h
 - **One look, orkUI's office** (dark, monochrome, colour a signal; its only pictures the races' heads, small: an accent,
   never a picture): the page and the phone are always drawn in it (docs/specs/40-design-system.md). The pixel face is for
   headings and buttons, never for a person's words.
+- **The frame** (decisions §104.0): the window is three parts, the left column *where*, the pane *what and why*, the hand
+  *what the person decides*; the Orkmaster says what and who, a party's leader how, what changes and why, a member does
+  (and asks only its leader). New faces keep to it: no drawer, no count of what waits, no question from a member straight
+  to the person.
 - **Orks by their orkish names, everything else by what it does**: the Taskmaster, a Grunt; the Board, Review, Agents,
   Stop all. Never the other way round: no ork gets a job title, no window a camp name.
   `orkboard/realm/lexicon.py` `TERMS` is the glossary: a new concept gets its one word there, and new code writes that

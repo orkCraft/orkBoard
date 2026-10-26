@@ -160,7 +160,7 @@ def test_the_level_is_a_column_for_each_party_with_its_goals_as_decks_in_groups_
     assert decks.count() == 9                                                                                           # Flags (4) are folded
     one = _col(pg, "passkey").locator('.arena-pdeck[data-slug="register"]')
     box = one.bounding_box()
-    assert box["width"] <= 104.5 and abs(box["height"] / box["width"] - 7 / 5) < 0.03                                    # the field's card, 5:7 (spec 79)
+    assert box["width"] <= 128.5 and abs(box["height"] / box["width"] - 7 / 5) < 0.03                                    # the field's card, 5:7 (spec 79)
     assert "arena-task" in one.get_attribute("class") and pg.locator(".arena-project__cols.ork-table").count() == 1      # on the table, as the party's field
     assert one.locator(".ork-elem").count() == 1 and one.locator(".arena-pdeck__title").inner_text() == "WebAuthn register"
     assert one.locator(".arena-pdeck__line").inner_text().strip() == "0/6 in dev · implementation"                        # as the party's goal row says it

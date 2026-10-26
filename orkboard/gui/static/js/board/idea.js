@@ -143,10 +143,21 @@ export function unblocks(todo) {
   return `${ids.length === 1 ? "task" : "tasks"} ${list} ${ids.length === 1 ? "waits" : "wait"} for it`;
 }
 
+/** The lines of a goal's plan for the to-dos not done yet (spec 87 §4.2): *Before <task>: <to-do>*, in the plan's order (the tasks', then the to-dos' within a task); a to-do done, and a task
+ *  already merged, are not said. The host's `todo_lines` (a list of lines) is used when the plan carries one; else they are read from the plan's `todos` and `tasks` here. */
+export function todoLines(plan) {
+  const given = plan?.todo_lines;
+  if (Array.isArray(given) && given.every((l) => typeof l === "string")) return given;
+  const todos = (plan?.todos || []).filter((t) => !t.done);
+  return (plan?.tasks || []).filter((k) => k.state !== "merged")
+    .flatMap((k) => todos.filter((t) => (t.for || []).includes(k.id)).map((t) => `Before ${k.title}: ${t.title}`));
+}
+
 function Plan({ plan, todo = "" }) {
-  const e = plan.estimate;
+  const e = plan.estimate, before = todoLines(plan);
   return html`<div class="board-plan kit-well"><h3 class="board-sub kit-legend">The plan ${e ? html`<span class="ok-tone-muted">${e.tasks} tasks · ${price(e)}</span>` : ""}</h3>
     <${Tasks} plan=${plan} />
+    ${before.length > 0 && html`<ul class="board-tasks board-plan__before" aria-label="To-dos to come">${before.map((l, i) => html`<li key=${i} data-before class="ok-tone-muted">${l}</li>`)}</ul>`}
     ${plan.todos?.length ? html`<h3 class="board-sub kit-legend">To-dos before it starts</h3><ul class="board-tasks">${plan.todos.map((t) =>
       html`<li key=${t.id} data-todo=${t.id} class=${cls("board-plan__todo", { "is-target": t.id === todo })}
         ref=${(el) => { if (el && t.id === todo) el.scrollIntoView({ block: "center" }); }}>

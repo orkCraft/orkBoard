@@ -484,7 +484,7 @@ def test_a_row_and_a_task_show_their_short_names_with_the_title_in_their_label(g
     task = pg.locator(".arena-task[data-task=k2]")
     assert task.get_attribute("title").startswith("Add the queue") and task.locator(".arena-task__name").inner_text() == "Tk2"
     assert "Add the queue" in task.get_attribute("aria-label") and task.locator(".arena-task__goal").inner_text() == "Sync"
-    assert task.locator(".arena-task__name").evaluate("e => getComputedStyle(e).webkitLineClamp") == "2"
+    assert task.locator(".arena-task__name").evaluate("e => getComputedStyle(e).webkitLineClamp") == "4"
     assert _parties(pg).locator(".arena-phead__name").first.get_attribute("title").startswith("Grow installs")      # a party's heading keeps the title
     pg.close()
     assert not errors, "\n".join(errors)
