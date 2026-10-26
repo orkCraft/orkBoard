@@ -13,6 +13,7 @@ import { useTools, runsOwn } from "./toolpick.js";
 import { Presets } from "./partypresets.js";
 import { Bands } from "./partyseats.js";
 import { usePartyDraft } from "./partydraft.js";
+import { Routines, TeamNote, useRoutines } from "./partyrun.js";
 import { recOf, sizedTeam, usePresets, seatsOf } from "./partymodel.js";
 import { TASKMASTER, PriceLine, CanTake, ChecksBlock, agentOf, overfull, pitchParty, useOwnParties, usePartyPrice } from "./party.js";
 
@@ -95,7 +96,8 @@ export function usePartyForm({ edit = null, first = "", proposal = "" }) {
   const seatTools = (from = d.seatTools, party = d.tool, who = [d.leader, ...d.team]) => Object.fromEntries(Object.entries(from).filter(([a, t]) => t && t !== (party || main) && who.includes(a)));
   const own_ = runsOwn(tools, d.tool);
   const suggest = edit ? "" : d.row?.name || "";                                // the pressed preset's name: the name the party is saved under when the person says neither a name nor what it is for
-  return { api, d, edit, sized, title, setTitle, suggest, about, setAbout, priority, setPriority, tools, presets, kind: found?.kind || mapData.value?.project?.kind || null, own, press, price, rf, fits,
+  const routines = useRoutines(d.row, edit);                                    // the recurring goals a running party proposes, ticked (spec 92 §2)
+  return { api, d, edit, routines, team: !edit && !!d.row?.ops, sized, title, setTitle, suggest, about, setAbout, priority, setPriority, tools, presets, kind: found?.kind || mapData.value?.project?.kind || null, own, press, price, rf, fits,
     note, setNote, pickSize, canLeave, seatTools, shownSize: shown?.size || "", runsOwn: own_, agents: 1 + d.team.length, working, ready: !!(title.trim() || about.trim() || suggest) && fits, loaded: !!found };
 }
 
@@ -111,19 +113,20 @@ export function PartyBody({ f, say = "" }) {
   return html`<div class="shell-p91">
     <${Presets} presets=${f.presets} kind=${f.kind} lit=${d.lit} onPick=${f.press}
       own=${{ parties: f.own[0], reload: f.own[1], picked: d.partyId, pick: (p) => { api.own(p); f.setNote(""); } }} />
-    <div class="shell-p91__team">
+    ${f.team ? html`<div class="shell-p91__team" data-team="true"><${PartyTitle} f=${f} autofocus="name" /><${TeamNote} /></div>` : html`<div class="shell-p91__team">
       <${PartyTitle} f=${f} autofocus=${f.edit ? "about" : "name"} />
       ${f.sized && html`<${SizeBar} size=${d.size} agents=${f.agents} onPick=${f.pickSize} note=${f.note} tools=${f.tools} tool=${d.tool} onTool=${(t) => api.set({ tool: t })} />`}
       <${Bands} api=${api} tools=${f.tools} canLeave=${f.canLeave} />
       ${f.sized && f.runsOwn ? html`<p class="ok-tone-muted shell-tool__own">Runs its own model: its price is its own.</p>` : html`<${PriceLine} price=${f.price} /><${CanTake} price=${f.price} />`}
+      <${Routines} r=${f.routines} />
       <${ReleasesFrom} rf=${f.rf} />
       ${!pitchParty(d.leader) && html`<${ChecksBlock} team=${d.team} every=${d.every} setEvery=${api.setEvery} price=${f.price} />`}
       <div class="shell-field" role="group" aria-label="Priority"><span class="ok-font-label">Priority</span><small class="ok-tone-muted">${FOR_HINT}</small>
         <div class="shell-seg">${PRIORITIES.map(([id, name]) => html`<label key=${id} class=${`shell-seg__one${f.priority === id ? " is-on" : ""}`}>
           <input type="radio" name="priority" class="gui-onb__hide" checked=${f.priority === id} onChange=${() => f.setPriority(id)} />${name}</label>`)}</div></div>
       ${say && html`<p class="ok-font-status ok-tone-muted">${say}</p>`}
-    </div></div>`;
+    </div>`}</div>`;
 }
 
 /** The foot's line: how many agents, and who takes a task. */
-export const footLine = (f) => `${f.agents} ${f.agents === 1 ? "agent" : "agents"} · a task goes to the one who does its kind of work, the Grunt fills in`;
+export const footLine = (f) => f.team ? "Your Operations stay yours: Team only shows them here" : `${f.agents} ${f.agents === 1 ? "agent" : "agents"} · a task goes to the one who does its kind of work, the Grunt fills in`;

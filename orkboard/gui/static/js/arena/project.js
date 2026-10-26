@@ -140,7 +140,7 @@ function Tabs({ tab, setTab }) {
 
 /** The project's level: the field in place of a party's, with its Assets and Play (spec 88). `stops`: the one hand's, as Operations' field has it. */
 export function Project({ m, stops }) {
-  const parties = goalsOf(m, goalList().map((x) => x.slug)), [tab, setTab] = useState("field");
+  const parties = goalsOf(m, goalList().map((x) => x.slug)).filter((g) => !g.ops), [tab, setTab] = useState("field");        // the Team party holds Operations, not goals: no column (spec 92 §3)
   return html`<div class="arena arena-project" data-goal=${PROJECT}>
     <${PartyList} />
     <div class="arena-ops__main arena-project__main">

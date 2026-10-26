@@ -18,6 +18,7 @@ import { makePrice } from "./shell-party-price.js";
 import { TASKMASTER, agentOf, bandOf, libraryPreset, loadPresets } from "./shell-party-model.js";
 import { makePresets } from "./shell-party-presets.js";
 import { makeSeats } from "./shell-party-seats.js";
+import { makeRoutines, teamNote } from "./shell-party-run.js";
 
 const GATHER_HEADS = 6;                                        // the heads that gather into the deck, the leader's first (spec 63 §4.1)
 
@@ -39,6 +40,8 @@ export function makeNewGoal(core) {
   const checks = h("div", { class: "party-checks", "data-sec": "checks" });
   const pr = makePrice(core, { current: priceOf, redraw: () => drawPrice() });             // what the party costs and can take (shell-party-price.js)
   const releasesFrom = makeReleasesFrom(core);       // the Release party takes its goals from the project's other parties: ticked so (spec 68 §7.6)
+  const routines = makeRoutines();                   // the recurring goals a running party proposes, ticked (spec 92 §2)
+  const about_team = teamNote();                     // Team has no seats: what it is, in their place (spec 92 §3)
   const left = h("div", {});
   const line = h("p", { class: "cap foot-line", "data-foot": "agents" });
   const save = h("button", { class: "ork-btn primary big", type: "button", disabled: true }, "Save party");
@@ -93,8 +96,11 @@ export function makeNewGoal(core) {
     presets.picked(p.partyId);
     name.placeholder = suggest() || "Its name, in a few words";
     save.disabled = !(name.value.trim() || about.value.trim() || suggest()) || !seats.fits();
-    const n = seats.agents();
-    line.textContent = `${n} ${n === 1 ? "agent" : "agents"} · a task goes to the one who does its kind of work, the Grunt fills in`;
+    const n = seats.agents(), team = Boolean(p.row?.ops);
+    routines.set(p.row);
+    for (const part of [seats.el, price, checks, releasesFrom.el]) part.hidden = team;
+    about_team.hidden = !team;
+    line.textContent = team ? "Your Operations stay yours: Team only shows them here" : `${n} ${n === 1 ? "agent" : "agents"} · a task goes to the one who does its kind of work, the Grunt fills in`;
     const key = JSON.stringify([p.leader, p.team, p.every, p.size, p.craft, seats.runsOwn()]);
     if (key !== priced && (p.lit || p.moved || p.partyId)) { const first = !priced; priced = key; pr.ask(first && firstAnswer, !(first && firstAnswer)); firstAnswer = false; }       // a party is on the seats: its price is asked (the opening's answer lights nothing)
     drawPrice();
@@ -121,15 +127,16 @@ export function makeNewGoal(core) {
   }
 
   /** The party is made: the sheet closes, the heads gather into the deck (spec 63 §4), the party's screen opens (or `after` is told). */
-  async function made(got, heads) {
+  async function made(got, heads, team = false) {
     for (const note of got.notes || []) core.flash(note);       // an agent of the project's own that the party carries stays as it was
     const after = then;
     then = null;
-    if (!after) gather.wait(got.slug, heads);                   // New goal opening right after is what the person looks at: the heads gather only into a party they are shown
+    if (!after && !team) gather.wait(got.slug, heads);          // New goal opening right after is what the person looks at: the heads gather only into a party they are shown
     sh.close();
     core.st.track = got.slug;
     await core.refresh();
     if (after) after(got.slug);
+    else if (team) return;                                      // the Team party (spec 92 §3): its field is the Operations list, shown at once; it has no screen of goals to open
     else if (heads.length) setTimeout(() => core.open({ kind: "goal", slug: got.slug }), gather.ms(heads.length));     // the party's screen covers the deck: it opens once the heads have gathered and the deck is lit
     else core.open({ kind: "goal", slug: got.slug });
   }
@@ -138,15 +145,15 @@ export function makeNewGoal(core) {
     if (save.disabled) return;
     save.disabled = true;
     const p = seats.get(), tools = seats.seatTools(), sized = proposes(core), from = releasesFrom.get();
-    const heads = motionOn() ? gatherFrom() : [];                // read at the press, before the sheet closes
+    const team = Boolean(p.row?.ops), heads = motionOn() && !team ? gatherFrom() : [];                // read at the press, before the sheet closes
     const library = !p.partyId && p.lit && (core.st.roles?.presets || []).some((x) => x.id === p.lit);
     const got = await core.call("ideas.goal_save", { ...(name.value.trim() || (!about.value.trim() && suggest()) ? { title: name.value.trim() || suggest() } : {}), about: about.value.trim(), craft: craftOf(p), leader: p.leader, team: p.team,
       every: p.every.filter((id) => p.team.includes(id)), priority: priority.get(), ...(p.partyId ? { party: p.partyId } : {}), ...(library ? { preset: p.lit } : {}),
-      ...(sized && !p.partyId && p.lit && p.row?.recipe ? { proposal: p.row.recipe } : {}), ...(from ? { releases_from: from } : {}), ...(sized && p.size ? { size: p.size } : {}),
+      ...(sized && !p.partyId && p.lit && p.row?.recipe ? { proposal: p.row.recipe } : {}), ...(routines.kept().length ? { routines: routines.kept() } : {}), ...(from ? { releases_from: from } : {}), ...(sized && p.size ? { size: p.size } : {}),
       ...(sized && p.tool ? { tool: p.tool } : {}), ...(sized && Object.keys(tools).length ? { tools } : {}) });
     sync();
     if (!got?.slug) { gather.drop(); return; }
-    await made(got, heads);
+    await made(got, heads, team);
   });
 
   sh.el.addEventListener("close", () => { then = null; });
@@ -154,7 +161,7 @@ export function makeNewGoal(core) {
   body.replaceChildren(
     presets.el,
     h("section", { class: "new-goal-for", "aria-label": "About the party" }, field("Name", name), field("What it is for", about), h("div", { class: "field" }, h("span", { class: "field-label" }, "Priority"), priority.el)),
-    seats.el, price, checks, releasesFrom.el,
+    seats.el, about_team, routines.el, price, checks, releasesFrom.el,
     h("p", { class: "muted hint" }, "The leader reads it and writes the title and the summary."), left);
 
   /** The preset to open on: the one asked for by id, a proposal of the deal (`proposal:<id>`), else the project's Build (a craft's Tech for an older host). */

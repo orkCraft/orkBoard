@@ -18,6 +18,9 @@ import { pctOf, pctRange } from "../spend.js";
 import { PointedAt } from "../shell/lens.js";
 import { RouteLine } from "../arena/route.js";
 
+/** A recurring goal (docs/specs/92-running-and-the-team.md §2): how often it comes back once it is done. */
+const REPEATS = { day: "every day", week: "every week", month: "every month" };
+
 // Section → [colour role, line icon, kit icon]. The role is a design-system token in board.css (`[data-sec]`); the line
 // icon (16px) is Office's, the kit's pixel icon (tools/ui_kit.py) Camp's.
 const SECTIONS = {
@@ -255,6 +258,8 @@ export function IdeaView({ p }) {
           ${Object.entries(PRIORITY_WORDS).map(([id, name]) => html`<option key=${id} value=${id}>${name}</option>`)}</select></label>`}</div>
     ${p.state_error && !["reading", "planning", "failed"].includes(p.state) && html`<${ErrorLine} text=${p.state_error} />`}
     <${PointedAt} lens=${p.lens} />
+    ${p.repeat && html`<p class="ok-font-status ok-tone-muted board-repeat" data-repeat=${p.repeat}>Comes back ${REPEATS[p.repeat]} once it is done.
+      <button type="button" class="board-link" onClick=${() => run("ideas.repeat", { slug: p.slug, every: "" })}>Stop repeating</button></p>`}
     <${Checks} checks=${p.checks} slug=${p.slug} planned=${!!p.plan} />
     <${Actions} p=${p} lead=${lead} />
     <div class="board-secs">${p.sections.map((s) => html`<${Block} key=${s.name} s=${s} slug=${p.slug} plan=${p.plan} asked=${section === s.name} onAsk=${setSection} />`)}</div>

@@ -24,7 +24,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from orkboard.realm import goal_team, goal_types, idea_flag, ideas, library, roles
+from orkboard.realm import goal_team, goal_types, idea_flag, ideas, library, party_recipes, roles
 from orkboard.realm.idea_words import short_of
 
 FILE = "judge.json"
@@ -142,7 +142,7 @@ def offers(root: Path, state_dir: Path) -> dict[str, dict]:
     out: dict[str, dict] = {}
     have = []
     for t in ideas.tracks(root, make=False):
-        if t["slug"] == ideas.GENERAL:
+        if t["slug"] == ideas.GENERAL or party_recipes.is_team(t):      # the Team party holds Operations, not goals (spec 92 §3)
             continue
         lead = t.get("leader") or roles.TASKMASTER
         have.append((lead, sorted(t.get("team") or [])))

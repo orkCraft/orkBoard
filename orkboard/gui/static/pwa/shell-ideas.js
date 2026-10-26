@@ -50,7 +50,7 @@ const PITCH_CHARS = 2000;                            // pitches.PITCH_CHARS: a p
 /** `core`: the board's frame; `ctx`: {deliver, flash}. Returns {sheets, openNew(partySlug)}. */
 export function makeIdeas(core, ctx, goalSheet) {
   const st = core.st;
-  const parties = () => [...(st.board?.tracks || [])].filter((t) => t.slug !== "general")
+  const parties = () => [...(st.board?.tracks || [])].filter((t) => t.slug !== "general" && t.recipe !== "team")        // the Team party holds Operations, not goals (spec 92 §3)
     .sort((a, b) => (RANK[a.priority] ?? 1) - (RANK[b.priority] ?? 1) || (a.order ?? 0) - (b.order ?? 0));       // the Board's order
   const goalOf = (slug) => (st.map?.goals || []).find((x) => x.slug === slug);
   const leaderName = (g) => g?.leader?.name || "Taskmaster";

@@ -23,5 +23,6 @@ class TrackMixin:
         except ValueError as e:
             raise IdeasError(str(e)) from None
         self._ev(event_log.PARTY_REMOVED, args, slug=slug, title=title, face=_device(args), **got)
+        self.team_dropped(slug)                                   # the Team party removed: Operations are in the left column again (spec 92 §3)
         self.changed("")
         return {"ok": True, **got, "title": title}

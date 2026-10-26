@@ -158,7 +158,7 @@ function makeRows(core, act, close) {
     } else kind = own = "";
     const got = await core.call("ideas.party_for", kind ? { type: kind } : {}, () => {});
     if (n !== seq) return;
-    const fromMap = (st.map?.goals || []).filter((g) => g.slug !== "general").map((g) => ({ party: g.slug, name: g.short || g.title, fits: g.ideation ? "pitch" : "", missing: [] }));
+    const fromMap = (st.map?.goals || []).filter((g) => g.slug !== "general" && !g.ops).map((g) => ({ party: g.slug, name: g.short || g.title, fits: g.ideation ? "pitch" : "", missing: [] }));
     parties = got && Array.isArray(got.parties) ? got.parties : fromMap;
     suggested = (got && got.suggested) || parties.find((p) => p.fits !== "pitch")?.party || parties[0]?.party || "";
     await refreshOwn(n);
@@ -257,7 +257,7 @@ export function makeProject(core, act) {
     const project = projectOf(core);
     if (!project) { body.replaceChildren(); return; }
     const o = project.orkmaster || { race: "peon", tier: "crown", name: "Orkmaster" };
-    const parties = chipsOf(st).filter((c) => c.slug !== "general");
+    const parties = chipsOf(st).filter((c) => c.slug !== "general" && !c.ops);
     rows.draw();
     top.replaceChildren(head(o.race, o.tier, { title: "Orkmaster" }), h("span", { class: "pj-top__name" }, h("b", {}, "Orkmaster"), h("small", { class: "muted" }, "The parties, their goals")));
     if (body.firstChild !== top || top.nextSibling !== rows.el) body.replaceChildren(top, rows.el);

@@ -107,7 +107,7 @@ export function makePitch(core, ctx) {
   const gist = () => (page?.sections || []).find((s) => s.name === "Gist")?.text || now().title;
   /** The parties a pitch may go to: the project's but General and Ideation's, and the party of the library the decision named when the project lacks it. */
   function targets(d) {
-    const list = (st.map?.goals || []).filter((g) => g.slug !== "general" && !isIdeation(g)).map((g) => ({ id: g.slug, name: g.short || g.title, preset: false }));
+    const list = (st.map?.goals || []).filter((g) => g.slug !== "general" && !g.ops && !isIdeation(g)).map((g) => ({ id: g.slug, name: g.short || g.title, preset: false }));
     const w = d?.where;
     if (w?.party && w.preset && !list.some((t) => t.id === w.party)) list.push({ id: w.party, name: w.name || w.party, preset: true });
     return list;

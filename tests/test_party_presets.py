@@ -23,7 +23,7 @@ def test_every_kind_has_a_concept_a_build_and_a_liveops_made_of_the_librarys_age
     assert set(party_recipes.STAGE_RECIPES) == set(project_kind.KINDS) - {"empty"}                   # an empty folder has code's
     for kind, rows in party_recipes.STAGE_RECIPES.items():
         assert [r["id"] for r in rows] == [f"{kind}-concept", f"{kind}-build", f"{kind}-liveops"]
-        assert [r["name"] for r in rows] == ["Concept", "Build", "LiveOps"]
+        assert [r["name"] for r in rows] == ["Concept", "Build", party_recipes.running_name(kind)]            # the project's running: LiveOps for a game, Upkeep for words and files, Run for the rest (spec 92 §1)
 
 
 @pytest.mark.parametrize("kind,recipe", STAGE_ROWS, ids=[r["id"] for _k, r in STAGE_ROWS])
@@ -47,7 +47,7 @@ def test_the_stage_recipes_are_proposed_to_no_one_but_are_found_by_id_and_kind()
     proposed = {r["id"] for rows in party_recipes.RECIPES.values() for r in rows}
     assert not proposed & {r["id"] for _k, r in STAGE_ROWS}
     assert all(party_recipes.for_kind(k) and not any(r["id"].endswith(("-concept", "-liveops")) for r in party_recipes.for_kind(k)) for k in project_kind.KINDS)
-    assert party_recipes.get("game-build")["leader"] == "game-designer" and party_recipes.get("web-liveops")["leader"] == "growth"
+    assert party_recipes.get("game-build")["leader"] == "game-designer" and party_recipes.get("web-liveops")["leader"] == "architect"
     assert party_recipes.kind_of("game-build") == "game" and party_recipes.kind_of("game-build", "mobile") == "game" and party_recipes.kind_of("mobile-concept", "mobile") == "mobile"
     assert party_recipes.get("nothing") is None
 
@@ -62,18 +62,20 @@ def test_the_stages_of_a_game_are_the_game_designers_concept_build_and_liveops()
 def test_the_stages_of_a_kind_are_ideation_concept_build_release_liveops_and_an_empty_folder_has_codes():
     for kind in project_kind.KINDS:
         rows = party_recipes.stages_of(kind)
-        assert [r["name"] for r in rows] == ["Ideation", "Concept", "Build", "Release", "LiveOps"], kind
+        assert [r["name"] for r in rows] == ["Ideation", "Concept", "Build", "Release", party_recipes.running_name(kind)], kind
         assert rows[0]["id"] == "ideation" and rows[3]["id"] == "release" and rows[0]["whole"] and rows[3]["whole"]
     assert [r["id"] for r in party_recipes.stages_of("empty")] == ["ideation", "code-concept", "code-build", "release", "code-liveops"]
     assert [r["id"] for r in party_recipes.stages_of("mobile")][1:4] == ["mobile-concept", "mobile-build", "release"]
     assert party_recipes.stages_of("nowhere")[2]["id"] == "code-build"
 
 
-def test_a_concept_is_led_by_the_designer_the_kind_has_and_a_liveops_by_the_one_who_reads_the_numbers():
+def test_a_concept_is_led_by_the_designer_the_kind_has_and_the_running_by_the_one_who_keeps_it_going():
     lead = {k: [r["leader"] for r in party_recipes.stages_of(k)] for k in project_kind.KINDS}
     assert lead["game"] == ["investor", "game-designer", "game-designer", "release-manager", "analyst"]
     assert lead["mobile"][1] == "product-designer" and lead["web"][1] == "product-designer" and lead["backend"][1] == "architect"
-    assert lead["web"][4] == "growth" and lead["data"][1:5] == ["analyst", "analyst", "release-manager", "analyst"] and lead["wiki"][1] == "product-manager"
+    assert lead["data"][1:5] == ["analyst", "analyst", "release-manager", "analyst"] and lead["wiki"][1] == "product-manager"
+    assert {k: lead[k][4] for k in lead if k != "empty"} == {"mobile": "product-manager", "web": "architect", "backend": "architect", "code": "architect", "data": "analyst", "game": "analyst",
+                                                              "wiki": "product-manager", "design": "product-designer", "texts": "growth"}
 
 
 # -- the list the dialog reads ------------------------------------------------------------------------------------------------------------------------------------
@@ -81,9 +83,9 @@ def test_a_concept_is_led_by_the_designer_the_kind_has_and_a_liveops_by_the_one_
 @pytest.mark.parametrize("kind", project_kind.KINDS)
 def test_the_presets_of_a_kind_are_the_stages_the_crafts_and_the_persons_own_each_with_its_three_sizes(kind):
     rows = party_presets.listed(kind)
-    assert [r["group"] for r in rows] == ["stage"] * 5 + ["craft"] * 6 + ["own"]
-    assert [r["name"] for r in rows[5:]] == ["Tech", "Design", "Data", "Marketing", "Product", "Art and sound", "Your own party"]
-    assert [r["id"] for r in rows[5:]] == ["engineering", "design", "data", "marketing", "product", "art", "mixed"]
+    assert [r["group"] for r in rows] == ["stage"] * 5 + ["craft"] * 7 + ["own"]
+    assert [r["name"] for r in rows[5:]] == ["Tech", "Design", "Data", "Marketing", "Product", "Art and sound", "Team", "Your own party"]
+    assert [r["id"] for r in rows[5:]] == ["engineering", "design", "data", "marketing", "product", "art", "team", "mixed"]
     assert [r["stage"] for r in rows[:5]] == ["ideation", "concept", "build", "release", "liveops"] and all(r["line"] for r in rows)
     assert len({r["id"] for r in rows}) == len(rows)
     for r in rows:

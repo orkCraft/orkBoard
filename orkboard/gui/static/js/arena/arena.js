@@ -18,7 +18,7 @@ import { town } from "../link.js";
 import { solo, narrow, picks, shownGoals } from "./arenastate.js";
 import { goalsOf, handOf, nodesOf, partyOf, planningOf } from "./arenawords.js";
 import { inFilter } from "./goalwords.js";
-import { shownOf } from "./goaltabs.js";
+import { shownOf, teamOf } from "./goaltabs.js";
 import { PartyList } from "./partylist.js";
 import { goalList } from "../board/store.js";
 import { TodayStrip } from "./todaystrip.js";
@@ -60,15 +60,16 @@ const keepOf = (shownSlug) => (party, s) => stopIn(party === shownSlug ? shownGo
 /** The one hand: every stop of the project, the most urgent first (`Stops` lays it out from the middle). The party shown's results to look at are its cards (spec 90 §2.3: no *Waits for your look*),
  *  and so is *n goals ready for main* (the gate's batch). */
 const handFor = (m, shown, withResults) => handOf({ map: m, needs: board.value?.needs_you || [], order: goalList().map((x) => x.slug), shown, keep: keepOf(shown), withResults,
-  ops: town.value?.ops_rev !== undefined, gate: gateData.value });
+  ops: town.value?.ops_rev !== undefined, gate: gateData.value, team: teamOf() });
 
-/** Operations' own field: the column's list (Operations open), its list, with the stops of the project along the bottom. */
-function OpsField({ m }) {
-  return html`<div class="arena arena-ops">
+/** Operations' own field: the column's list (Operations open, while the person has no Team party), its list, with the stops of the project along the bottom. The Team party's Board is this same list
+ *  (spec 92 §3): its heading is the open one in the column, and the stops of Operations are its own. */
+function OpsField({ m, team = null }) {
+  return html`<div class="arena arena-ops" data-goal=${team ? team.slug : undefined} data-team=${team ? "true" : undefined}>
     <${PartyList} />
     <div class="arena-ops__main">
-      <section class="arena-ops__body" aria-label="The party at work"><${Operations} withNew=${true} /></section>
-      <div class="arena-stops"><${Stops} stops=${handFor(m, OPS, false)} /></div>
+      <section class="arena-ops__body" aria-label=${team ? "Team" : "The party at work"}><${Operations} withNew=${true} /></section>
+      <div class="arena-stops"><${Stops} stops=${handFor(m, team ? team.slug : OPS, false)} /></div>
     </div>
   </div>`;
 }
@@ -127,6 +128,7 @@ export function Arena() {
   if (want === PROJECT) return html`<${ProjectField} m=${m} />`;
   const g = parties.find((x) => x.slug === want);
   if (!g && want) return html`<p class="ok-tone-muted arena-note">Reading the board…</p>`;           // a party just saved: the Map has it in a moment
+  if (g?.ops) return html`<${OpsField} key=${g.slug} m=${m} team=${g} />`;                  // the Team party: its Board is the person's Operations (spec 92 §3)
   if (!g) {
     const ops = town.value?.ops_rev !== undefined;                                    // no party, but Operations' stops still wait in the one hand
     return html`<div class="arena arena-ops"><${PartyList} /><div class="arena-ops__main"><div class="shell-empty arena-note arena-void"><${Stars} /><p>No parties yet</p>

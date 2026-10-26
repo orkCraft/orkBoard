@@ -88,7 +88,7 @@ async def test_new_party_is_the_presets_first_and_then_the_team_by_seats_in_one_
         assert norm(await nav.locator(".presets__kind").inner_text()) == "For a mobile app: the Orkmaster knows what this project is"
         stages = nav.get_by_role("region", name="By stage of the project").locator(".preset-tile")
         assert [await c.get_attribute("data-preset") for c in await stages.all()] == ["ideation", "mobile-concept", "mobile-build", "release", "mobile-liveops"]
-        assert [norm(await c.locator("b").text_content()) for c in await nav.get_by_role("region", name="By craft").locator(".preset-tile").all()] == ["Tech", "Design", "Data", "Marketing", "Product", "Art and sound"]
+        assert [norm(await c.locator("b").text_content()) for c in await nav.get_by_role("region", name="By craft").locator(".preset-tile").all()] == ["Tech", "Design", "Data", "Marketing", "Product", "Art and sound", "Team"]
         own = nav.get_by_role("region", name="Your own party").locator(".preset-tile")
         assert norm(await own.locator("b").text_content()) == "Your own party" and norm(await own.locator("small").text_content()) == "Start from the Taskmaster and add who you need"
         assert [await c.get_attribute("data-preset") for c in await sheet.locator('.preset-tile[aria-pressed="true"]').all()] == ["mobile-build"]       # the project's Build is where it opens
@@ -311,7 +311,7 @@ async def test_a_host_without_the_command_has_the_librarys_stages_and_crafts(fak
 def test_the_service_workers_version_and_its_files():
     from orkboard.gui import pwa
     sw = (pwa.ROOT / "sw.js").read_text(encoding="utf-8")
-    assert 'const CACHE = "orkcraft-app-v100"' in sw
+    assert 'const CACHE = "orkcraft-app-v102"' in sw
     for name in ("shell-party-new.js", "shell-party-presets.js", "shell-party-seats.js", "shell-party-model.js", "shell-seat-tool.js", "party.css"):
         assert f'"{name}"' in sw and (pwa.ROOT / name).is_file()
     assert '<link rel="stylesheet" href="party.css">' in (pwa.ROOT / "index.html").read_text(encoding="utf-8")
