@@ -72,7 +72,7 @@ export function CardBody({ n, t, phase = "", foot, deps = [], many = 0 }) {
   return html`${t.shot?.url && html`<img class="arena-task__shot" src=${t.shot.url} alt="" draggable="false" />`}<span class="arena-task__top">${RUN.includes(t.state) && html`<span class="ork-busy" title=${t.state === "testing" ? "testing" : "working"}></span>`}<${Elem} name=${el.name} dim=${el.dim} />${phase && html`<span class="arena-task__phase">${phase}</span>`}${typeSign(n)}</span>
     <span class="arena-task__goal">${n.short || n.title}</span>
     ${doneWords(n) && html`<span class="arena-task__count">${doneWords(n)}</span>`}
-    <span class="arena-task__name">${t.short || t.title}</span>
+    <span class="arena-task__name" title=${t.title}>${t.short || t.title}</span>
     ${deps.length > 0 && html`<span class="arena-task__deps">${deps.map((d, i) => html`<span key=${i}><${Sign} name=${d.sign} /> ${d.text}</span>`)}</span>`}
     <span class="arena-task__foot"><${Foot} parts=${foot} /></span>
     ${many > 1 && html`<span class="arena-stk__n">×${many}</span>`}`;

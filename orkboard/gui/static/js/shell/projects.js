@@ -1,11 +1,11 @@
-// The projects (docs/specs/37-board-and-line.md §8, docs/specs/69-parties-in-the-column.md §1): the switcher that heads the left column, as wide as it (it was the top bar's; the open projects with their counts,
+// The projects (docs/specs/37-board-and-line.md §8, docs/specs/69-parties-in-the-column.md §1): the switcher that heads the left column, as wide as it (it was the top bar's; the open projects with one mark each,
 // Recent, Open folder…, Close project), the Open folder dialog, the start screen when no project is open, and the dialog
 // that asks before a project with running tasks is closed. The host sends `projects` with every snapshot (projects.list),
-// so the counts are live; showing another project stops nothing in the others.
+// so the marks are live; showing another project stops nothing in the others.
 import { useEffect, useRef, useState } from "preact/hooks";
 import { computed } from "@preact/signals";
 import { html, cls } from "../html.js";
-import { Chev } from "../orkui.js";
+import { Chev, Sign } from "../orkui.js";
 import { town, command, toast } from "../link.js";
 import { Modal, closeDialog, openDialog } from "./modals.js";
 import { leaving } from "./store.js";
@@ -18,8 +18,14 @@ export const currentProject = computed(() => {
   const p = projectList.value;
   return p.open.find((o) => o.path === p.current) || null;
 });
-const countsWords = (p) => [p.working ? `working ${p.working}` : "", p.needs_you ? `needs you ${p.needs_you}` : "",
-  p.review ? `review ${p.review}` : ""].filter(Boolean).join(" · ") || "quiet";
+/** An open project's one mark in the switcher (spec 87 §6), never a count: orkUI's alert sign when something of it waits for the person (`needs_you`), else the busy mark while a task of it is at work
+ *  (`working`), else nothing. */
+export const projectMark = (p) => (p.needs_you > 0 ? "alert" : p.working > 0 ? "busy" : "");
+const Mark = ({ p }) => {
+  const mark = projectMark(p);
+  return mark === "alert" ? html`<span class="shell-proj__counts ok-tone-fire" role="img" aria-label="waits for you" data-mark="alert"><${Sign} name="alert" /></span>`
+    : mark === "busy" ? html`<span class="shell-proj__counts" role="img" aria-label="at work" data-mark="busy"><span class="ork-busy"></span></span>` : null;
+};
 
 /** Open a folder: a refusal comes back in words (the dialog shows it); a folder without git is offered Start git here. */
 export async function openFolder(path) {
@@ -155,7 +161,7 @@ export function ProjectSwitcher() {
       ${p.open.map((o) => html`<button key=${o.path} role="menuitem" class=${cls("shell-menu__item shell-proj__one", { "is-on": o.path === p.current })}
         data-path=${o.path} title=${o.path} onClick=${pick(() => (o.path === p.current ? null : showProject(o.path)))}>
         <span class="shell-proj__name">${o.path === p.current ? "✓ " : ""}${o.name}</span>
-        <span class="shell-proj__counts ok-tone-muted">${countsWords(o)}</span></button>`)}
+        <${Mark} p=${o} /></button>`)}
       ${p.recent.length > 0 && html`<div class="shell-proj__head ok-font-label">Recent</div>`}
       ${p.recent.map((r) => html`<button key=${r.path} role="menuitem" class="shell-menu__item" title=${r.path}
         onClick=${pick(() => leaving(() => openFolder(r.path)))}>${r.name}</button>`)}

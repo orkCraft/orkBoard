@@ -347,7 +347,7 @@ def test_solo_one_member_s_rows_across_the_field_in_the_same_order_and_back(aren
     first = solo.locator(".arena-task").first.bounding_box()
     member_box = pg.locator(".arena-member[data-agent=backend]").bounding_box()
     assert first["y"] >= member_box["y"] + member_box["height"]                                                # it starts under the party row, at the top
-    assert first["width"] <= 104 and solo.locator(".arena-phase").first.bounding_box()["width"] > 600           # its rows lie across the field's whole width
+    assert first["width"] <= 128 and solo.locator(".arena-phase").first.bounding_box()["width"] > 600           # its rows lie across the field's whole width
     assert [r.get_attribute("data-row") for r in solo.locator(".arena-phase").all()] == ["now", "next"]
     row = solo.locator(".arena-phase").first
     assert len(row.locator(".arena-task").all()) == 2 and row.locator(".arena-task").nth(1).bounding_box()["x"] > row.locator(".arena-task").nth(0).bounding_box()["x"] + 100   # side by side

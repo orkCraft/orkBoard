@@ -1,6 +1,6 @@
 // What waits for you (docs/specs/49-one-window.md §6, docs/specs/54-one-hand.md §2–§3): the bottom row. Every stop of the project — a plan ready, a question, a
 // proposal, a to-do, a failure, a pick, Operations' — each a framed item standing in a fan along the bottom edge, only its top showing, the most urgent in the middle
-// (arenawords.js `laidOut`); one of another party says its party. Hovering or focusing one raises it whole, with its quick answers and a way out that needs nothing
+// (arenawords.js `laidOut`; a to-do the last of all, spec 87 §4.3); one of another party says its party. Hovering or focusing one raises it whole, with its quick answers and a way out that needs nothing
 // from the person (*Let … decide*, *Describe it instead*, *Go without it*, *Let … choose*). A press answers; a click outside the buttons opens it in the drawer. A *Pick one*
 // (docs/specs/51-pick-one.md §6) holds its variants as small tiles, two by two (picks.js): a press on a strip picks one, *Take B* answers
 // with it, *Pick, with a note…* (*Add a note…* once one is picked) opens the drawer where the note is written. A plan that gives work to no one of the party
@@ -262,10 +262,13 @@ function Stop({ s, g, place, of, rise = "" }) {
   </div>`;
 }
 
+/** A to-do lies last in the hand (spec 87 §4.3): after the questions, the forks, the plans and the failures; the rest keep the order they came in. */
+export const todoLast = (stops) => [...stops.filter((s) => s.kind !== "todo"), ...stops.filter((s) => s.kind === "todo")];
+
 /** The fan, the most urgent in the middle (spec 54 §2.3): `stops` come in urgency's order and stay in it in the page (the keys and a screen reader read it), laid out from the
  *  middle by their `order`; a stop does not shift while one is raised (motion.js `useHeld`). A long hand overlaps more, so that it fits. */
-export function Stops({ g = null, stops }) {
-  const box = useRef();
+export function Stops({ g = null, stops: given }) {
+  const box = useRef(), stops = todoLast(given);
   const shown = useLeaving(box, useHeld(box, stops, (s) => s.key), (s) => s.key);                // a stop that leaves fades where it stands (spec 58 §4)
   const rising = useRising(stops, box), focus = needsFocus.value, n = shown.length;
   useEffect(() => { if (focus) box.current?.querySelector(".arena-hc__open")?.focus(); }, [focus]);
