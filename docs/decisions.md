@@ -1499,7 +1499,7 @@ So:
    reading and plan on the Veteran.
 Spec 86.
 
-## 104. A party is a team and a lens: its leader's map of the project, drawn as cards on the table; the spec is read in the hand; the will-be map is the contract (26 October, the owner and the PM)
+## 104. A party is a small team and a lens: its leader's map of the project, drawn as cards on the table; the field goes to the Orkmaster; the spec is read in the hand; the will-be map is the contract (26 October, the owner and the PM)
 
 Why: the owner, after a day of use: *everything is automated so far that you sit and do not understand what the system
 does: a card drips in now and then, a result lands in dev, the cards leave, and you never read the code.* Since §101 a
@@ -1514,6 +1514,10 @@ channels, the Release manager the versions); they say it as text nobody reads wh
 1. **A party is a team and a lens** (§83.1 stays: a team, and few): its leader keeps **a map of the whole project as its
    craft sees it**, every goal on it, its party's own and the others'. The Orkmaster's map is the goals across the parties
    (the route, §83.2; the project's level, §85.2). A lens reads and asks; it never changes another party's work (§86).
+   **A party is small**: most often its leader alone, or the leader and one or two members; a party is a slice of the
+   project (code, design, a game, a backend), and the Orkmaster offers the small sizes first (§98's Lean and Standard).
+   Who checks stays a seat of the party for now (§103: the checks are where the quality holds); a crew of builders and
+   checkers shared by the project is measured, not decided.
 2. **A map is a field of cards on the table, never a diagram** (§92): a part is a card (5:7, its goal's element top
    left, its kind's sign top right), a group a column or a stack, an order the field's arrow (few, short). What happens
    to it is the field's own motion (§89): new is dealt, changed is sealed with its goal's element, gone crumbles,
@@ -1532,22 +1536,28 @@ channels, the Release manager the versions); they say it as text nobody reads wh
    answered. The full text is the agents', behind *More*. A goal that changes no map (a bug, a tidy, a balance pass)
    keeps today's way.
 6. **The will-be is the contract**: the plan's call writes the map's change, each part of it tied to the task that makes
-   it. At work, the promised cards are ghosts that fill as their tasks merge, and the map is the goal's first view; the
-   field by member stays one press away (§99 holds there).
-7. **During the work the hand holds only what asks a decision**: a **fork** (a choice the plan did not settle: its
+   it. At work, the promised cards are ghosts that fill as their tasks merge, with the working member's head on a card at
+   work: the map is the goal's view at work too.
+7. **Two levels, two questions**: **the Orkmaster's level holds the field**: every party a column on the table (§85.2,
+   spec 79), its tasks at work as the field's cards with their member's head: who does what across the project, what is
+   stuck, what it costs. **A party's level holds only its map**: the left column lists the parties, a party's goals and
+   specs under each; a party picked shows its leader's map of the whole project with its goals' marks on it, a goal
+   picked its **before → will be**, and at work the same map filling.
+8. **During the work the hand holds only what asks a decision**: a **fork** (a choice the plan did not settle: its
    answers drawn as changes on the map; only the tasks after it wait; §64 from pictures to structure), and **out of the
    contract** (a task whose map removes a part, or adds an outward one, that the will-be did not promise: asked before
    that task's merge). Progress is never a stop. *Back to the spec* stops only the tasks whose part changed (§75.3).
-8. **The reveal**: when the person opens the map after being away, it plays what landed since their last look (or since
+9. **The reveal**: when the person opens the map after being away, it plays what landed since their last look (or since
    a release), promised against made; a press on a card says which goal changed it and how. The opening is the press,
    so §89.0 holds.
-9. **What it replaces, once built** (else it only adds): *Waits for your look*'s reasons (§101) become *out of the
+10. **What it replaces, once built** (else it only adds): *Waits for your look*'s reasons (§101) become *out of the
    contract*; *k of n done* and *What it made* (§102.4) become the map's cards; the spec's sections as the face (§75)
    become theses, map and hand; collisions by `touches` (§86) become two changes on the same cards; *Pick a look*
-   (§102.2) becomes a fork.
-10. **In phases, each measured before the next**: (1) the lenses read from the code, and the reveal, on one real
+   (§102.2) becomes a fork; a party's field, its members' columns and its stages' seats (§99, §72) become the
+   Orkmaster's field.
+11. **In phases, each measured before the next**: (1) the lenses read from the code, and the reveal, on one real
     project (a Node game): can the owner tell the day in a minute, and did they see what an agent decided alone; (2) the
     change in the plan's call, the spec screen with one *Start*, out of the contract; (3) progress on the map and forks,
-    and the replaced parts of 9 removed; (4) the lenses of judgement. The words (*lens*, *map*, *will be*, *fork*,
+    and the replaced parts of 10 removed; (4) the lenses of judgement. The words (*lens*, *map*, *will be*, *fork*,
     *contract*) get their one word each in `TERMS` with the first spec.
 The owner's call. The mockup *Orkboard — the map on the table* first; the specs are written from it.
