@@ -124,7 +124,7 @@ async def test_a_token_has_no_goal_line_its_type_top_right_one_value_and_the_sta
         assert run["bg"] == await _color(page, "--ork-raised") and run["border"] == await _color(page, "--ork-edge")
         assert (await waiting.locator(".tcard").evaluate(STYLE))["style"] == "dashed"                                  # waiting: dashed on the canvas
         name = await running.locator(".tcard__name").evaluate("(e) => { const s = getComputedStyle(e); return [s.fontWeight, s.fontSize, s.lineHeight]; }")
-        assert name == ["600", "11px", "14px"]
+        assert name == ["600", "12px", "15px"]
 
 
 @pytest.mark.asyncio

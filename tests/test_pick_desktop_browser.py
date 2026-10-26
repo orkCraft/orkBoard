@@ -235,7 +235,7 @@ def test_a_text_shows_its_words_and_the_text_sign_the_first_lines_on_the_card_al
     words = _tiles(drawer).nth(1).locator(".pick-words")
     assert words.inner_text().split("\n") == ["Your face is the key.", "Your phone is the door."]                 # its own lines, whole
     assert words.get_attribute("tabindex") == "0" and words.get_attribute("role") == "group" and words.get_attribute("aria-label") == "B · monogram"
-    assert words.evaluate("e => getComputedStyle(e).fontFamily").startswith('"IBM Plex Mono"')                    # a person's words: the text face, never the pixel face
+    assert words.evaluate("e => getComputedStyle(e).fontFamily").startswith('"IBM Plex Sans"')                    # a person's words: the interface's face (Plex Sans), never the pixel face
 
 
 # -- playing never picks; one at a time; nothing by itself (§5) -------------------------------------------------------------------------------

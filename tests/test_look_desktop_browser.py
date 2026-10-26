@@ -238,4 +238,4 @@ def test_the_looks_sheet_is_orkuis_tokens_only(look):
     pg, host = look
     img = card(pg, "register/k3").locator(".arena-task__name")
     assert img.evaluate("e => getComputedStyle(e).backgroundColor") != "rgba(0, 0, 0, 0)"                                  # a panel that lets the picture through
-    assert box(pg, ".arena-task__count")["height"] <= 14
+    assert box(pg, ".arena-task__count")["height"] <= 16                                           # one caption line (12/16)

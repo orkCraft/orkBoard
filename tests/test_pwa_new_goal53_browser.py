@@ -181,7 +181,7 @@ async def test_the_types_row_deals_your_own_goal_first_and_picked_then_the_types
         assert await chips.nth(1).locator(".ork-sign.bug").count() == 1 and (await chips.nth(1).locator(".ork-sign").bounding_box())["width"] == 14
         assert await row.evaluate("e => getComputedStyle(e).overflowX") == "auto"                                                           # scrolls sideways when wider
         line, field = form.locator(".newgoal__typeline"), form.get_by_label("The goal", exact=True)
-        assert norm(await line.inner_text()) == "In your words: the leader plans it like any other." and await line.evaluate("e => getComputedStyle(e).fontSize") == "11px"       # picked when the form opens
+        assert norm(await line.inner_text()) == "In your words: the leader plans it like any other." and await line.evaluate("e => getComputedStyle(e).fontSize") == "13px"       # picked when the form opens
         assert await field.get_attribute("placeholder") == "What should become possible" and await form.locator(".newgoal__asks").is_hidden()
         await chips.nth(1).click()
         assert norm(await line.inner_text()) == "Something that goes wrong, made right" and await chips.nth(1).get_attribute("aria-checked") == "true" and await chips.first.get_attribute("aria-checked") == "false"

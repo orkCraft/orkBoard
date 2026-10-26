@@ -1657,3 +1657,21 @@ was on another. So:
    doors, db and models its data, config its settings), and **what is shared** (a file both a client and a server use,
    like `config/balance.ts`, a part of its own: a change there touches both). The cards and the reveal stay §104.2's.
 Spec 90.
+
+## 106. Warm: easier on the eyes. The ground lifted, the ink softened, warm greys, the interface in IBM Plex Sans; the pixel face for titles, headings and buttons only (26 October, the owner)
+
+Why: the owner, on the Tech party's System: *the architecture reads badly: the pixel font tells on small modules, the
+text on the brown reads oddly, and white text on such a black screen strains the eyes.* Measured: full ink on the canvas
+was 16:1 (a glare, not legibility), a card on the table 1.01:1 (it melted into the wood), labels in the pixel face at
+12 px, the body in a 12 px monospace and captions down to 10 px. Three palettes were drawn side by side (now, soft,
+warm); the owner took soft (orkUI 0.12.0), then **warm** in its place (orkUI 0.13.0): the same rules in warm greys.
+1. **orkUI 0.13.0** (made in orkUI, copied here as §53 says): canvas `#16140f`, panel `#1f1c17`, raised `#2a261f`, frame
+   `#3d372d`, edge `#958a78`; ink `#e0dbd0` (13:1 on the canvas), muted `#b0a899`, faint `#9a9284`; every text pair
+   still AA, the ink AAA. Still dark and monochrome: the warm tint is the ground's, colour stays a signal (§53.5).
+2. **The table is a quiet warm grey** (`#1b1813`, its rim `#3d372d`), a step above the canvas; a card on it is raised
+   (`#2a261f`) in its frame line, so it reads as a card.
+3. **The interface reads in IBM Plex Sans** (orkUI 0.12.0): labels 12 px semibold caps, the body 14 px, captions 12 px
+   (the phone 14, 16, 13). The pixel face is for titles, headings and buttons, never under 13 px and never for a person's
+   words; IBM Plex Mono for code, paths, diffs, logs and terminals. **No text under 12 px.**
+4. The heads whose edges fell under 3:1 on the lighter raised are one step lighter.
+orkUI 0.12.0 and 0.13.0; spec 40.

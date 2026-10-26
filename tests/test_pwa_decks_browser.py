@@ -202,7 +202,7 @@ async def test_the_goals_bar_is_one_quiet_line_and_its_sheet_lists_what_is_at_wo
         await bar.wait_for(timeout=WAIT_MS)
         assert norm(await bar.inner_text()) == "Passkey · 2 of 9 goals done" and await bar.locator(".ork-chev").count() == 1          # ⌄ the party · k of n goals done
         box = await bar.bounding_box()
-        assert round(box["height"]) == 44 and await bar.evaluate("e => getComputedStyle(e).fontSize") == "12px"                    # one quiet line, 44 px
+        assert round(box["height"]) == 44 and await bar.evaluate("e => getComputedStyle(e).fontSize") == "13px"                    # one quiet line, 44 px
         await bar.click()
         sheet = page.get_by_role("dialog", name="Goals")
         await sheet.wait_for(timeout=WAIT_MS)
