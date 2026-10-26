@@ -85,9 +85,9 @@ def test_presets_answer_the_mixed_first_then_each_craft_then_the_taskmaster_alon
     game, eng, alone = got[0], got[5], got[-1]
     assert game == {"id": "game", "name": "Game", "line": "Rules, levels, art and sound, played through", "craft": "design", "race": "elf",
                     "mixed": True, "lead": "game-designer", "build": ["grunt", "artist", "level-designer", "sound-designer"], "check": ["playtester"]}
-    assert (eng["name"], eng["line"], eng["lead"], eng["race"]) == ("Engineering", "Code, tests and the build", "architect", "peon")
+    assert (eng["name"], eng["line"], eng["lead"], eng["race"]) == ("Tech", "How it is built: its parts, its tests and the build", "architect", "peon")   # spec 89 §5
     assert (alone["name"], alone["lead"], alone["build"], alone["check"]) == ("Taskmaster alone", "taskmaster", [], [])
-    assert [p["name"] for p in got[5:10]] == [roles.CRAFT_LABELS[c] for c in ("engineering", "design", "data", "marketing", "product")]
+    assert [p["name"] for p in got[6:10]] == [roles.CRAFT_LABELS[c] for c in ("design", "data", "marketing", "product")]
 
 
 def test_parties_keeps_every_craft_and_adds_the_three_mixed_ones_by_their_ids():

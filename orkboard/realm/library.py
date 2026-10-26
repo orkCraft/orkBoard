@@ -289,6 +289,8 @@ PRESETS = (("game", "Game", "Rules, levels, art and sound, played through", "des
             ("release-engineer", "release-notes", "aso"), ("release-checker",)))
 INVESTOR, SKEPTIC, RELEASE_MANAGER = "investor", "skeptic", "release-manager"
 VIEWS = ("product-view", "market-view", "tech-view", "design-view")   # Ideation's four views, in the order a pitch's screen shows them (spec 65 §1)
+TECH, TECH_LINE = "Tech", "How it is built: its parts, its tests and the build"   # the Architect's parties (spec 89 §5, decisions §104.1)
+PARTY_NAMES = {"engineering": (TECH, TECH_LINE)}     # a craft's party named otherwise than its craft (a party made before keeps its name)
 CRAFT_LINES = {"engineering": "Code, tests and the build", "design": "Screens, flows and words on them",
                "data": "Numbers, queries and reports", "marketing": "Pages, posts and search",
                "product": "Who it is for, what it moves, what it leaves out", "mixed": "The Taskmaster plans and a Grunt builds"}
@@ -343,7 +345,8 @@ def presets() -> list[dict]:
                 "mixed": mixed, "lead": lead, "build": list(build), "check": list(check)}
     out = [row(*p, True) for p in PRESETS]
     for craft, (lead, build, check) in PARTIES.items():
-        out.append(row(craft, "Taskmaster alone" if craft == "mixed" else roles.CRAFT_LABELS[craft], CRAFT_LINES[craft], craft, lead, build, check, False))
+        name, line = PARTY_NAMES.get(craft) or ("Taskmaster alone" if craft == "mixed" else roles.CRAFT_LABELS[craft], CRAFT_LINES[craft])
+        out.append(row(craft, name, line, craft, lead, build, check, False))
     return out
 
 
