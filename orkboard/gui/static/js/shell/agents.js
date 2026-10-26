@@ -20,7 +20,7 @@ const byState = (a, b) => (ORDER.indexOf(a.state) + 1 || 99) - (ORDER.indexOf(b.
 
 export function gruntWords(c) {
   const [word, mark] = GRUNT[c.state] || [c.state, ""];
-  if (c.state === "held") return holdWords(c.note, c.waits_title) || "held";
+  if (c.state === "held") return holdWords(c.note, c.waits_title, c.why) || "held";
   if (c.state === "ready" && c.note) return "stopped";
   return mark ? `${word} ${mark}` : word;
 }

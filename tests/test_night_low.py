@@ -174,7 +174,7 @@ def test_the_week_pace_by_day_goes_under_the_same_word(keeper, word, runs):
     noon = dt.datetime.now().replace(hour=12, minute=0, second=0, microsecond=0).timestamp()          # by day
     keeper._limits_read = lambda: []
     orig = idea_target.pace
-    idea_target.pace = lambda limits, at: "ahead"
+    idea_target.pace = lambda limits, at, provider="claude": "ahead"
     try:
         keeper._may_run = lambda: False
         keeper._reserved = lambda: False

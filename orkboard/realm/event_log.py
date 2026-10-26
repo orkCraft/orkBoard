@@ -58,7 +58,7 @@ KEEPER_STATE = "keeper_state"     # idea, state, was, seconds in the previous st
 PLAN_MADE = "plan_made"           # idea, tasks, todos, usd_low, usd_high
 PLAN_PASSED = "plan_passed"       # idea, tasks, device, seconds from plan_made, by ("person" · "auto"), risk, priority, via (where the press was: gui/ideas_args.py VIA, else "idea"), pace (by auto: it goes on by day, the week having room),
 #                                    joined (the agent who joined at the press, else ""), missing (how many kinds the plan missed when it passed) (spec 52 §2.7)
-PLAN_STARTED_NOW = "plan_started_now"   # idea, device, via (gui/ideas_args.py VIA, else "idea"): a plan held for the night started now (spec 41 §4)
+PLAN_STARTED_NOW = "plan_started_now"   # idea, device, via (gui/ideas_args.py VIA, else "idea"), held (how many tasks the reserve or the week held; old lines none): a plan held for the night, or its tasks held by the reserve, started now (spec 41 §4)
 IDEA_QUEUED = "idea_queued"       # idea, queue ("now" · "night"), device, via (gui/ideas_args.py VIA, else "idea") (spec 41 §4)
 TODO_DONE = "todo_done"           # idea, todo, kind, device, seconds since the plan, skipped (gone without it), words (a file described instead) (a secret's value never; spec 54 §1.3)
 TASK_STATE = "task_state"         # idea, task, state (waiting · ready · held · running · testing · picking · review · merged · failed · dropped: the person's Drop), was, round, tier, role, seconds in the previous state, tokens, cost, ran_tier, effort,

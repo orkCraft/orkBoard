@@ -17,11 +17,14 @@ export function hhmm(iso) {
 }
 
 /** A held task's note said in words (spec 35 §11.5): `after 18:00` · `reserve · after 18:00` · `files · <idea>` · `files beside · <idea>`.
- *  `idea`: the title of the idea it waits for, when it is known (`waits_title`). */
-export function heldWords(note, idea = "") {
+ *  `idea`: the title of the idea it waits for, when it is known (`waits_title`); `why`: the host's own sentence for a hold by the reserve or the week. */
+export function heldWords(note, idea = "", why = "") {
   const n = String(note || "");
+  if (why && /^(reserve|week)/.test(n)) return why;           // the host's sentence: the tool, its share, until when
   let m = n.match(/^reserve · after (.+)$/);
-  if (m) return `keeps your reserve · after ${m[1]}`;
+  if (m) return `Waits for your reserve: kept for you until ${m[1]}`;
+  m = n.match(/^week · after (.+)$/);
+  if (m) return `Waits for the week's pace until ${m[1]}`;
   m = n.match(/^after (.+)$/);
   if (m) return `waits for limits · after ${m[1]}`;
   m = n.match(/^files · (.+)$/);
@@ -30,6 +33,9 @@ export function heldWords(note, idea = "") {
   if (m) return `beside ${idea || m[1]} · same files`;
   return n || "held";
 }
+
+/** A task the person's reserve or the week's pace holds: what Start now lets go (a tool's window, or another goal's files, it cannot). */
+export const heldByYou = (t) => t?.state === "held" && /^(reserve|week)/.test(String(t.note || ""));
 
 /** A line the library or the host wrote with an old spelling, said in today's words (spec 50 §0): *idea* → *goal*, *ideas* → *goals* (a check's "when the idea changes code"). What people or agents wrote
  *  keeps its words: this is only for fixed lines. */

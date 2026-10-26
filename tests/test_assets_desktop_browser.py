@@ -1,5 +1,5 @@
 """Spec 88 part B on the desktop (docs/specs/88-assets-and-play.md §6, "As built (A)"): Chromium at 1 440 × 900 against the project test's stub host with `ideas.assets`, `ideas.asset_before`, `ideas.play` and
-`ideas.play_stop` answering in the shapes part A gives them, and the signed addresses served by the test (`/media/_asset/…`). The Orkmaster's level has three tabs (Field, Assets, Play) and opens on Field; the files
+`ideas.play_stop` answering in the shapes part A gives them, and the signed addresses served by the test (`/media/_asset/…`). The Orkmaster's level has three tabs (Board, Assets, Play) and opens on Board; the files
 as cards in a column for each kind in the order of §0, a stack ×n, *Changed by <goal>* with the goal's element; a card pressed lifts large (art at its size, a sound playing, *Not picked (n)*); a changed one turns
 over to *Before* in steps of at most 0.42 s; what changed since the device's last look is dealt, sealed and crumbled once and not under reduced motion, and the look is written when the tab is left; the filter by kind
 and by goal; Play's states (*Open the build*, *Starting the build…*, the sandboxed frame with *Plays dev at <short commit>* and *Stop the build*, the error, *Nothing here yet*). Screenshots to the directory
@@ -173,7 +173,7 @@ def test_the_level_has_three_tabs_and_opens_on_field(level):
     pg, host = level
     _project(pg)
     tabs = pg.get_by_role("tab")
-    assert [t.text_content().strip() for t in tabs.all()] == ["Field", "Assets and files", "Play"]
+    assert [t.text_content().strip() for t in tabs.all()] == ["Board", "Assets and files", "Play"]
     assert tabs.nth(0).get_attribute("aria-selected") == "true" and pg.locator(".arena-project__cols").count() == 1      # today's level
     assert pg.locator(".assets, .playpane").count() == 0 and not [c for c in host.log if c[0] in ("ideas.assets", "ideas.play")]    # nothing asked until a tab is opened
     _tab(pg, "Assets")
@@ -184,9 +184,9 @@ def test_the_level_has_three_tabs_and_opens_on_field(level):
     assert pg.locator(".assets").count() == 0
     pg.get_by_role("tab", name="Play").press("ArrowLeft")                                                           # ← moves to the tab before
     assert pg.get_by_role("tab", name="Assets").get_attribute("aria-selected") == "true"
-    _tab(pg, "Field")
+    _tab(pg, "Board")
     pg.locator(".arena-pcol").first.wait_for(timeout=WAIT_MS)
-    assert pg.locator(".arena-project__heads .arena-pcol__head").count() == 4                                    # the Field is as it was
+    assert pg.locator(".arena-project__heads .arena-pcol__head").count() == 4                                    # the Board is as it was
 
 
 # -- the table of assets ----------------------------------------------------------------------------------------------------------------------------------

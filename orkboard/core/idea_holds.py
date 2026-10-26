@@ -47,9 +47,27 @@ class HoldsMixin:
                      and t.get("held_for") == "sign_in" and (t.get("harness") or _r().HARNESS) == harness)
         return n
 
-    def _hold(self, slug: str, task: dict, until: float, why: str = "") -> None:
+    def _hold(self, slug: str, task: dict, until: float, why: str = "", line: str = "") -> None:
+        """`line`: what the hold means, in words, for the person's reserve or the week's pace (realm/idea_target.py `hold_line`)."""
         self._until[(slug, task.get("id"))] = until
-        task.update(state="held", note=f"{why}after {dt.datetime.fromtimestamp(until):%H:%M}")
+        task.update(state="held", note=f"{why}after {dt.datetime.fromtimestamp(until):%H:%M}", held_why=line)
+
+    def release_holds(self, slug: str) -> int:
+        """The person's Start now: what the reserve or the week's pace holds of this goal's tasks goes on. How many were let go."""
+        with self._lock:
+            plan = self.plan(slug)
+            if plan is None:
+                return 0
+            n = 0
+            for t in plan["tasks"]:
+                if t.get("state") == "held" and str(t.get("note") or "").startswith(("reserve", "week")):
+                    t.update(state="waiting", note="", held_why="")
+                    self._until.pop((slug, t.get("id")), None)
+                    n += 1
+            if n:
+                self._save_tasks(slug, plan["tasks"])
+                self._changed(slug)
+            return n
 
     def _read_limits(self, now: float) -> list:
         if self._limits_fn is not None:

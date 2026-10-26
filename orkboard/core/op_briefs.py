@@ -286,4 +286,5 @@ class BriefsMixin:
             limits = list(self.limits() or [])
         except Exception:
             limits = []
-        return idea_target.reserve_held(limits, self.reserve(), time.time())
+        from orkboard import settings as machine
+        return idea_target.reserve_held(limits, self.reserve(), time.time(), machine.main_tool())

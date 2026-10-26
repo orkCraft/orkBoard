@@ -226,7 +226,7 @@ async def test_the_specs_stages_say_each_tasks_state_and_a_file_todo_has_its_ste
         screen = page.locator(".screen")
         await screen.locator(".plan").wait_for(timeout=WAIT_MS)
         stages = await screen.locator(".tasks").inner_text()
-        for word in ("merged", "working", "at Review", "keeps your reserve · after 18:00", "needs you"):
+        for word in ("merged", "working", "at Review", "Waits for your reserve: kept for you until 18:00", "needs you"):
             assert word in stages, (word, stages)
         await _shot(page, "phone-stages-390x844")
         assert await page.evaluate(NO_SCROLL)
@@ -261,7 +261,7 @@ async def test_agents_chips_say_by_itself_tonight_and_why_a_task_is_held(fake_re
         await agents.locator(".chip-why").first.wait_for(timeout=WAIT_MS)
         assert "by itself" in await agents.locator(".chip", has_text="Retry on a lost signal").inner_text()
         assert "tonight" in await agents.locator(".chip", has_text="Add the queue").inner_text()
-        assert "keeps your reserve · after 18:00" in (await agents.locator(".chip", has_text="Write the notes").inner_text()).lower()
+        assert "waits for your reserve: kept for you until 18:00" in (await agents.locator(".chip", has_text="Write the notes").inner_text()).lower()
         assert "waits for dark mode · same files" in (await agents.locator(".chip", has_text="Test it offline").inner_text()).lower()
         assert "by itself" not in await agents.locator(".chip", has_text="Add the queue").inner_text()
         await _shot(page, "phone-agents-chips-390x844")
@@ -423,3 +423,27 @@ async def test_spec_83_a_held_goal_has_no_tonight_after_no_by_day(fake_repo, mon
         screen = await _held(page, stub)
         await screen.get_by_role("button", name="Process now", exact=True).wait_for(timeout=WAIT_MS)
         assert await screen.get_by_role("button", name="Tonight", exact=True).count() == 0
+
+
+@pytest.mark.asyncio
+async def test_a_held_task_says_whose_limit_and_how_much_is_left_and_has_start_now_on_the_plan_and_on_its_own_screen(fake_repo, monkeypatch):
+    """The owner, 26 October: *now I have this state and I don't know what to do next*. The host's sentence is on the held task, and Start now lets the goal's held tasks go."""
+    why = "Waits for Antigravity's limit: 14 % of the week left, kept for you until 12:00"
+    async with _phone(fake_repo, monkeypatch) as (stub, page):
+        stub.plan["tasks"][4].update(state="held", note="reserve · after 12:00", held_why=why)
+        stub.bump({})
+        await _band(page, "build")
+        await _open_task(page, "Retry on a lost signal")
+        await page.locator(".screen .facts").get_by_role("button", name="Sync ideas between the phone and the town").click()
+        plan = page.locator(".screen .plan")
+        await plan.locator(".tasks").wait_for(timeout=WAIT_MS)
+        assert why in await plan.locator(".tasks").inner_text() and "keeps your reserve" not in await plan.inner_text()
+        await plan.get_by_role("button", name="Start now").click()
+        assert await _called(stub, "ideas.start_now", {"slug": "sync"})
+        assert await page.evaluate(NO_SCROLL)
+        await plan.locator("li.t-held .task-title").click()                                                  # the task's own screen
+        facts = page.locator(".screen .facts dd[data-state=held]")
+        await facts.wait_for(timeout=WAIT_MS)
+        assert why in await facts.inner_text()
+        await page.locator(".screen").get_by_role("button", name="Start now").click()
+        assert len([c for c in stub.calls if c[0] == "ideas.start_now"]) == 2

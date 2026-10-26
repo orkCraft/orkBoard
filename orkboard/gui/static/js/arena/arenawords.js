@@ -26,8 +26,8 @@ const after = (until) => (until ? ` · after ${hhmm(until)}` : "");
 export function waitsWords(w) {
   if (!w) return "";
   const who = w.title || w.ref || "another goal";
-  return { idea: `waits for ${who}`, files: `same files as ${who}`, limits: `waits for limits${after(w.until)}`, reserve: `keeps your reserve${after(w.until)}`,
-    night: "tonight", stopped: "stopped", week: `waits: the week is behind${w.until ? ` · until ${dayAt(w.until)}` : ""}`,
+  return { idea: `waits for ${who}`, files: `same files as ${who}`, limits: `waits for limits${after(w.until)}`, reserve: w.title || `Waits for your reserve${w.until ? `: kept for you until ${hhmm(w.until)}` : ""}`,
+    night: "tonight", stopped: "stopped", week: w.title || `waits: the week is behind${w.until ? ` · until ${dayAt(w.until)}` : ""}`,
     sign_in: `waits: ${w.tool || w.title || "the tool"}'s sign-in` }[w.kind] || "";
 }
 
@@ -272,7 +272,7 @@ export function heldWords(t, n) {
   if (n?.waits?.kind === "night") return `tonight${n.waits.until ? ` · after ${hhmm(n.waits.until)}` : ""}`;
   if (n?.waits?.kind === "week") return waitsWords(n.waits);
   if (t.held_for === "sign_in" || n?.waits?.kind === "sign_in") return waitsWords(n?.waits?.kind === "sign_in" ? n.waits : { kind: "sign_in" });   // held for its tool's sign-in (spec 45 §7)
-  return holdWords(t.note, n?.waits?.title) || "held";
+  return holdWords(t.note, n?.waits?.title, t.why) || "held";
 }
 
 /** A task's foot: its state in words (*working 4 min*, *in Review*, *after Challenge store*, *held: tonight*, *failed*). */

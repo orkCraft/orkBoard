@@ -40,6 +40,12 @@ DECLINED_READ, COMMITS_READ = 30, 50
 _PATH = re.compile(r"`?([\w.-]+(?:/[\w.*-]+)+/?|[\w-]+\.(?:py|js|ts|tsx|md|json|toml|yaml|yml|css|html|sql))`?")
 
 
+def _main() -> str:
+    """The tool the night's own runs read the reserve and the week of: the Main tool's (the tasks themselves are held on their own tool's)."""
+    from orkboard import settings as machine
+    return machine.main_tool()
+
+
 def _kw():
     from orkboard.core import idea_keeper
     return idea_keeper
@@ -149,7 +155,7 @@ class NightMixin:
 
     def week_is_behind(self, now: float | None = None) -> bool:
         """What the Board itself put off to the night waits while the Claude week is behind its pace and `autostart` is on (spec 44 §3)."""
-        return bool((self.settings() or {}).get("autostart", True)) and idea_target.pace(self._limits_read(), time.time() if now is None else now) == "behind"
+        return bool((self.settings() or {}).get("autostart", True)) and idea_target.pace(self._limits_read(), time.time() if now is None else now, _main()) == "behind"
 
     def _reserved(self) -> bool:
         """The reserve is reached: what runs by itself stops here."""
@@ -157,7 +163,7 @@ class NightMixin:
             limits = list(self.limits() or [])
         except Exception:
             limits = []
-        return idea_target.reserve_held(limits, self.settings(), time.time()) is not None
+        return idea_target.reserve_held(limits, self.settings(), time.time(), _main()) is not None
 
     # -- the run ---------------------------------------------------------------------------------------------
 
@@ -340,7 +346,7 @@ may want to take in the morning, each under one of the goals. {self.reads("propo
         if idea_target.in_night(str((self.settings() or {}).get("night") or "01:00-07:00"), dt.datetime.fromtimestamp(now)) or self._may_run():
             return False
         if not self.night_allowed() or not bool((self.settings() or {}).get("autostart", True)) \
-                or idea_target.pace(self._limits_read(), now) != "ahead" or self._reserved():
+                or idea_target.pace(self._limits_read(), now, _main()) != "ahead" or self._reserved():
             return False
         self._pace_busy = True
 

@@ -210,14 +210,14 @@ export function taskWords(t, now = Date.now(), n = null) {
   if (t.state === "picking") return "asks you to pick";
   if (t.state === "ready") return /stop/i.test(t.note || "") ? "stopped by you" : "next";
   if (t.state === "waiting") return afterWords(t, n) || (t.band === "check" && !(t.after || []).length ? "after the build" : "waiting");
-  if (t.state === "held") return heldWords(t.note, t.waits_title);
+  if (t.state === "held") return heldWords(t.note, t.waits_title, t.why);
   if (t.state === "failed") return "failed";
   return t.state;
 }
 
 /** The one value at a token's foot (spec 67 §2.4): the time a task at work or testing has run (*42 h*, *7 min*), the hour a held one may start (*18:00*); "" for the rest. */
 export function valueOf(t, words) {
-  const m = live(t) ? words.match(/^(?:working|testing) (.+)$/) : t.state === "held" ? words.match(/after (\d{1,2}:\d\d)$/) : null;
+  const m = live(t) ? words.match(/^(?:working|testing) (.+)$/) : t.state === "held" ? words.match(/(?:after|until) (?:\w{3} )?(\d{1,2}:\d\d)\.?$/) : null;
   return m ? m[1] : "";
 }
 

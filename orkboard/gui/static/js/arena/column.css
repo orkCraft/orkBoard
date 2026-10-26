@@ -11,7 +11,10 @@
 .arena-party.is-open { border-bottom-width: 2px; }
 .arena-phead__who { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .arena-phead__leads { font: var(--ork-type-caption); color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.arena-pbody { display: flex; flex-direction: column; }
+/* what is under a party (its labels, goals, Show all, New, Process now) is one step in, a head's width and its gap (24 px + --ork-4), so the party reads as the parent; a thin guide in
+   --ork-frame runs down from the middle of the head (the owner, 26 October). The party row itself stays flush. */
+.arena-pbody { position: relative; display: flex; flex-direction: column; margin-left: calc(24px + var(--ork-4)); }
+.arena-pbody::before { content: ""; position: absolute; top: 0; bottom: 0; left: calc(var(--ork-4) * -1); border-left: var(--ork-line) solid var(--ork-frame); pointer-events: none; }
 .arena-goals { display: flex; flex-direction: column; }
 .arena-showall { padding: var(--ork-2) var(--ork-4) 0 var(--ork-5); }
 .arena-deck { display: flex; flex-direction: column; padding: 0 0 var(--ork-4); }

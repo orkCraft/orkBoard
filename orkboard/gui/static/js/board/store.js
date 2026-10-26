@@ -58,16 +58,23 @@ export function items(text) {
 }
 
 /** A held task's note in words (spec 35 §11.5): the limits, the person's reserve (§6), or another idea on the same files
- *  (§5; after the wait, beside it). `title` is that idea's title when the host sent it. */
-export function holdWords(note, title = "") {
+ *  (§5; after the wait, beside it). `title` is that idea's title when the host sent it. `why`: the host's own sentence for a hold by the reserve
+ *  or the week's pace (*Waits for Claude's limit: 14 % of the week left, kept for you until 12:00*: the tool, its share, until when); a hold
+ *  from before it was written says what it can. */
+export function holdWords(note, title = "", why = "") {
   const n = String(note || "");
   let m;
-  if ((m = /^reserve · after (.+)$/.exec(n))) return `keeps your reserve · after ${m[1]}`;
+  if (why && /^(reserve|week)/.test(n)) return why;
+  if ((m = /^reserve · after (.+)$/.exec(n))) return `Waits for your reserve: kept for you until ${m[1]}`;
+  if ((m = /^week · after (.+)$/.exec(n))) return `Waits for the week's pace until ${m[1]}`;
   if ((m = /^after (\d\d:\d\d)$/.exec(n))) return `waits for limits · after ${m[1]}`;
   if ((m = /^files beside · (.+)$/.exec(n))) return `beside ${title || m[1]} · same files`;
   if ((m = /^files · (.+)$/.exec(n))) return `waits for ${title || m[1]} · same files`;
   return n;
 }
+
+/** A task the person's reserve or the week's pace holds: what Start now lets go (the window of a tool, or another goal's files, it cannot). */
+export const heldByYou = (t) => t?.state === "held" && /^(reserve|week)/.test(String(t.note || ""));
 
 let opsLoading = null;
 /** Operations again (`ops.list`): the person's, the same in every project and with none open. */

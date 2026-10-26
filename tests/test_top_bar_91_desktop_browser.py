@@ -135,7 +135,7 @@ def test_the_orkmasters_assets_and_files_switch_shows_the_tree_and_a_file_opens_
     pg, host = bar
     _project(pg)
     tabs = pg.get_by_role("tab")
-    assert [t.text_content().strip() for t in tabs.all()] == ["Field", "Assets and files", "Play"]
+    assert [t.text_content().strip() for t in tabs.all()] == ["Board", "Assets and files", "Play"]
     pg.get_by_role("tab", name="Assets and files").click()
     pg.locator(".assets").wait_for(timeout=WAIT_MS)
     switch = pg.get_by_role("group", name="Show")
