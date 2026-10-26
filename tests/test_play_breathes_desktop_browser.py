@@ -91,6 +91,7 @@ def test_the_seconds_count_up_from_the_hosts_since_and_on_the_page_between_its_a
     pg, host = ticking
     host.play = [{"state": "stopped"}]
     _play(pg)
+    pg.locator('.playpane[data-state="idle"]').wait_for(timeout=WAIT_MS)                                       # the first peek is answered (stopped) before the script and the clock change
     host.play = [PAGE_ONE]
     host.live, host.t0 = PAGE_ONE, time.monotonic()
     pg.get_by_role("button", name="Open the build").click()

@@ -248,9 +248,13 @@ def test_the_limits_are_chips_on_the_top_bars_right_and_a_press_opens_their_pane
     assert codex.count() == 1 and chips.locator(".shell-top__chip").count() == 2 and chips.locator(".shell-top__spend").count() == 0
     assert _box(pg, ".shell-top__chips")["x"] > _box(pg, ".shell-top__settings")["x"]                                            # on the right, Settings is on the left
     codex.click()
-    region = pg.get_by_role("region", name="What is left of your AI tools")
+    region = pg.get_by_role("region", name="What is left of Codex")                                                                # the pressed tool's line only (spec 91 §2)
     region.wait_for(timeout=WAIT_MS)
-    assert [x.get_attribute("data-provider") for x in region.locator(".arena-limit").all()] == ["claude", "codex"]
+    assert [x.get_attribute("data-provider") for x in region.locator(".arena-limit").all()] == ["codex"]
+    assert region.locator(".arena-limit[data-provider=codex] .ork-crystals i.on").count() == 4
+    chips.get_by_role("button", name="Claude", exact=False).click()                                                              # another chip: its tool's line
+    region = pg.get_by_role("region", name="What is left of Claude")
+    region.wait_for(timeout=WAIT_MS)
     assert region.locator(".arena-limit[data-provider=claude] .ork-crystals i.on, .arena-limit[data-provider=claude] .ork-crystals i.kept").count() == 6
     panel, chipbox = _box(pg, ".shell-top__limits"), _box(pg, ".shell-top__chips")
     assert panel["y"] >= chipbox["y"] + chipbox["height"]                                                                         # under the chips

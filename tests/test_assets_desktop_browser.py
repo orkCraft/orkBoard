@@ -360,6 +360,7 @@ def test_the_changes_since_the_devices_last_look_are_dealt_sealed_and_crumbled_o
     assert _card(pg, "art/fresh.png").count() == 1 and _card(pg, "art/hero.png").locator(".assets-changed").count() == 1
     _tab(pg, "Play")                                                                                                    # the tab is left: the look is the commit shown
     pg.locator(".playpane").wait_for(timeout=WAIT_MS)
+    pg.wait_for_function(f"localStorage.getItem('{LOOK}') === '{HEAD}'", timeout=WAIT_MS)                              # written as the tab goes (a moment after Play is drawn)
     assert pg.evaluate(f"localStorage.getItem('{LOOK}')") == HEAD
     _tab(pg, "Assets")
     pg.locator(".assets[data-state=shown]").wait_for(timeout=WAIT_MS)

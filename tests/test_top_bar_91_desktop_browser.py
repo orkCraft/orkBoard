@@ -1,6 +1,6 @@
 """Spec 91 part A on the desktop (docs/specs/91-the-owners-list.md §1, §3, §4; decisions §107), in a real browser at 1 440 × 900: the top bar has the product's name and *Settings* as a word on its left; on its
 right one chip for each AI tool (its mark, name, share left and window; a tool not read shows a dash) and *Stop all*, nothing else (no *Agents*, *Files* nor *Spend*, no gear); a chip opens the panel under it
-(every tool's line, today's *Spend*, *Last week*) and Esc or a press elsewhere closes it; *Settings* opens Settings; the Orkmaster's *Assets and files* tab has the switch *Assets* / *Files*, *Files* the project's tree
+(that tool's line and what used it, today's *Spend*, *Last week*) and Esc or a press elsewhere closes it; *Settings* opens Settings; the Orkmaster's *Assets and files* tab has the switch *Assets* / *Files*, *Files* the project's tree
 (a file opens in the right column); a toast stands at the page's foot, centred, and never over a dialog."""
 from __future__ import annotations
 
@@ -33,6 +33,10 @@ class BarHost(AssetsHost):
         if name == "ideas.week_work":
             self.log.append((name, a))
             return dict(WEEK)
+        if name == "ideas.usage":
+            self.log.append((name, a))
+            return {"provider": a["provider"], "window": "5h", "scope": "project", "scopes": ["project"], "outside": 0, "estimated": True, "tokens_only": False,
+                    "rows": [{"party": "passkey", "title": "Sign in with a passkey", "share": 12, "tokens": 60_000, "members": []}]}
         if name == "files.tree":
             self.log.append((name, a))
             return {"entries": [{"name": n, "path": n, "dir": False, "secret": False, "ignored": False} for n in FILES]}
@@ -81,8 +85,10 @@ def test_a_chip_opens_the_panel_under_it_with_spend_and_last_week_and_esc_or_a_p
     panel = pg.locator(".shell-top__limits")
     panel.wait_for(timeout=WAIT_MS)
     assert chip.get_attribute("aria-expanded") == "true"
-    region = panel.get_by_role("region", name="What is left of your AI tools")
-    assert [x.get_attribute("data-provider") for x in region.locator(".arena-limit").all()] == ["claude", "codex", "cursor"]
+    region = panel.get_by_role("region", name="What is left of Codex")                                                              # the pressed tool's line only
+    assert [x.get_attribute("data-provider") for x in region.locator(".arena-limit").all()] == ["codex"] and panel.locator(".arena-limit").count() == 1
+    region.locator(".arena-usage__row").first.wait_for(timeout=WAIT_MS)                                                             # and what used it
+    assert [a for n, a in host.log if n == "ideas.usage"][-1] == {"provider": "codex", "scope": "project"}
     chips, shown = box(pg, ".shell-top__chips"), panel.bounding_box()
     assert shown["y"] >= chips["y"] + chips["height"] and shown["x"] + shown["width"] <= 1440 + 1                                  # under the chips, inside the window
     assert panel.get_by_role("button", name="Last week").count() == 1 and panel.get_by_role("button", name="Spend today: $2.40. This week's work").count() == 1
@@ -128,7 +134,7 @@ def test_with_no_limits_read_one_chip_for_the_spend_opens_the_same_panel(bar):
     chips.first.click()
     panel = pg.locator(".shell-top__limits")
     panel.wait_for(timeout=WAIT_MS)
-    assert panel.get_by_role("button", name="Last week").count() == 1 and panel.get_by_role("region", name="What is left of your AI tools").count() == 0
+    assert panel.get_by_role("button", name="Last week").count() == 1 and panel.locator(".arena-limits").count() == 0
 
 
 def test_the_orkmasters_assets_and_files_switch_shows_the_tree_and_a_file_opens_in_the_right_column(bar):

@@ -468,6 +468,10 @@ class StubHost:
         if name == "onboarding.close":
             self.onboarding = None
             return self.bump({})
+        if name == "ideas.usage":                     # spec 91 §2: what used the pressed tool's limit (js/arena/limits.js)
+            return {"provider": a["provider"], "name": a["provider"].title(), "left": 0.62, "window": "5h", "reset": f"{_TODAY}T18:00", "scope": a.get("scope", "project"), "scopes": ["project"],
+                    "rows": [{"party": "sync", "title": "Sync ideas", "share": 14, "tokens": 70_000, "members": [{"agent": "grunt", "name": "Grunt", "share": 14, "tokens": 70_000}]}],
+                    "outside": 3, "estimated": True, "tokens_only": False}
         if name == "logs.save":
             return {"path": SAVED, "name": SAVED.rsplit("/", 1)[1], "folder": SAVED.rsplit("/", 1)[0]}
         return {"ok": True}
@@ -711,19 +715,30 @@ def test_the_top_bar_settings_stop_all_and_the_push_switch(shell):
 
 def test_the_tools_limits_are_chips_whose_panel_has_their_diamonds_and_the_reserve_hatched(shell):
     pg, host = shell
-    pg.locator(".shell-top__chip").first.click()                                                           # a chip of the top bar opens the panel (spec 91 §1)
-    limits = pg.get_by_role("region", name="What is left of your AI tools")
-    lines = limits.locator(".arena-limit")
-    assert lines.count() == 3 and [l.get_attribute("data-provider") for l in lines.all()] == ["claude", "agy", "codex"]
-    claude = lines.nth(0)
+    chips = pg.locator(".shell-top__chip")
+    assert [c.get_attribute("data-provider") for c in chips.all()] == ["claude", "agy", "codex"]
+    chips.first.click()                                                                                    # a chip of the top bar opens the panel of that tool (spec 91 §1, §2)
+    limits = pg.get_by_role("region", name="What is left of Claude")
+    claude = limits.locator(".arena-limit")
+    assert claude.count() == 1 and claude.get_attribute("data-provider") == "claude"                       # one tool's line, not every tool's
     assert "62 %" in claude.inner_text() and claude.locator(".ork-crystals i").count() == 10
     assert claude.locator(".ork-crystals i.on").count() == 5 and claude.locator(".ork-crystals i.kept").count() == 1      # 6 left, 1 kept for tonight
-    assert lines.nth(1).locator(".ork-crystals i.kept").count() == 0 and lines.nth(1).locator(".ork-crystals i.on").count() == 2      # 15 %: two
-    assert "not read" in lines.nth(2).inner_text() and lines.nth(2).locator(".ork-crystals i").count() == 0                       # never missing
     assert claude.get_attribute("title") == "Claude: 62 % left, 10 % of it kept for tonight · resets at 18:00"
-    assert "hatched: kept for tonight" in limits.inner_text() and "Claude resets at 18:00" in limits.inner_text()
-    bb, chips = limits.bounding_box(), box(pg, ".shell-top__chips")
-    assert bb["y"] >= chips["y"] + chips["height"] and pg.locator(".arena-stops .arena-limits").count() == 0      # under the chips, not along the bottom
+    assert "Claude resets at 18:00" in limits.inner_text()
+    usage = limits.locator(".arena-usage")                                                                 # what used it (B's rows)
+    usage.locator(".arena-usage__row").first.wait_for(timeout=WAIT_MS)
+    assert _sent(pg, host, ("ideas.usage", {"provider": "claude", "scope": "project"}))
+    assert usage.locator(".arena-usage__who").all_inner_texts() == ["Sync ideas", "Grunt", "Outside Orkboard"]
+    bb, bar = limits.bounding_box(), box(pg, ".shell-top__chips")
+    assert bb["y"] >= bar["y"] + bar["height"] and pg.locator(".arena-stops .arena-limits").count() == 0      # under the chips, not along the bottom
+    chips.nth(1).click()                                                                                   # another chip: that tool's panel, its 15 % in two diamonds
+    agy = pg.get_by_role("region", name="What is left of Antigravity").locator(".arena-limit")
+    agy.wait_for(timeout=WAIT_MS)
+    assert agy.locator(".ork-crystals i.kept").count() == 0 and agy.locator(".ork-crystals i.on").count() == 2
+    chips.nth(2).click()                                                                                   # a tool not read: its name and "not read", no diamonds, never missing
+    codex = pg.get_by_role("region", name="What is left of Codex").locator(".arena-limit")
+    codex.wait_for(timeout=WAIT_MS)
+    assert "not read" in codex.inner_text() and codex.locator(".ork-crystals i").count() == 0
 
 
 def test_a_click_on_an_idea_a_todo_a_chip_and_a_result_opens_the_right_preview(shell):
