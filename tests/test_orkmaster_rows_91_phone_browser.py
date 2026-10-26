@@ -13,7 +13,7 @@ from orkboard.realm import goal_types
 from tests.test_pwa_arena_browser import SCENE, _redrawn, _scene, _shot_to  # noqa: F401  (`_scene`, `_redrawn`: the fixtures of the arena's world)
 from tests.test_pwa_goal_types_browser import TYPES
 from tests.test_pwa_project_browser import _project, calls
-from tests.test_pwa_proposals_browser import proposing
+from tests.test_pwa_proposals_browser import ARCH, PM, _seats, proposing
 from tests.test_pwa_route_browser import WORLD, norm, world  # noqa: F401
 from tests.test_pwa_shell_browser import NO_SCROLL, WAIT_MS, Stub, _called, _phone
 
@@ -99,8 +99,8 @@ async def test_the_parties_row_has_new_party_and_two_or_three_proposals_and_add_
         assert calls(stub, "ideas.proposals")[-1] == {}
         await cards.nth(0).get_by_role("button", name="Add Mobile app: features").click()
         sheet = page.get_by_role("dialog", name="New party")
-        await sheet.locator(".prop").first.wait_for(timeout=WAIT_MS)
-        assert "is-picked" in await sheet.locator('.prop[data-proposal="mobile-features"]').get_attribute("class")
+        await sheet.locator(".pseat[data-seat]").first.wait_for(timeout=WAIT_MS)
+        assert await _seats(sheet, "lead") == [PM] and await sheet.get_by_label("Name", exact=True).get_attribute("placeholder") == "Mobile app: features"       # New party on that proposal's seats
         assert await project.is_hidden()                                                                                        # the sheet gives way to New party
 
 

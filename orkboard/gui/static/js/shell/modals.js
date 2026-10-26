@@ -24,7 +24,7 @@ export function closeDialog() {
 
 const FOCUSABLE = "a[href], button:not([disabled]), input:not([disabled]):not([type=hidden]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex='-1'])";
 
-/** The panel: `title`, `children`, `foot` (the buttons, pinned at the foot), `onClose` (× · Esc · a click on the backdrop). */
+/** The panel: `title`, `children`, `foot` (the buttons, pinned at the foot), `onClose` (× · Esc · a click on the backdrop); `wide`: true is 640 px, "xl" is 1 200 px (New party's two halves). */
 export function Modal({ title, onClose, children, foot, wide = false }) {
   const panel = useRef();
   const close = useRef(onClose);
@@ -33,7 +33,10 @@ export function Modal({ title, onClose, children, foot, wide = false }) {
   useLayoutEffect(() => {
     const el = panel.current;
     (el.querySelector("[autofocus]") || el.querySelector(FOCUSABLE) || el).focus();
-    const key = (e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close.current(); } };
+    const key = (e) => {
+      if (e.key !== "Escape" || e.target?.closest?.("[data-pop]")) return;       // a popover in the dialog (a seat's list) closes itself on Esc, the dialog stays
+      e.preventDefault(); e.stopPropagation(); close.current();
+    };
     window.addEventListener("keydown", key, true);
     return () => window.removeEventListener("keydown", key, true);
   }, []);
@@ -46,7 +49,7 @@ export function Modal({ title, onClose, children, foot, wide = false }) {
     else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
   };
   return html`<div class="shell-backdrop" data-modal-backdrop onMouseDown=${(e) => { if (e.target === e.currentTarget) onClose(); }}>
-    <section class=${`ork-dialog shell-modal${wide ? " is-wide" : ""}`} role="dialog" aria-modal="true" aria-label=${title} tabindex="-1" ref=${panel} onKeyDown=${trap}>
+    <section class=${`ork-dialog shell-modal${wide === "xl" ? " is-xl" : wide ? " is-wide" : ""}`} role="dialog" aria-modal="true" aria-label=${title} tabindex="-1" ref=${panel} onKeyDown=${trap}>
       <header class="shell-modal__head"><h2 class="ork-dialog__title">${title}</h2>
         <button type="button" class="ork-btn shell-modal__x" aria-label="Close" onClick=${onClose}><${Icon} name="close" /></button></header>
       <div class="shell-modal__body">${children}</div>

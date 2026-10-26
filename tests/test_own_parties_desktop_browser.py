@@ -51,6 +51,10 @@ def test_save_it_to_your_parties_asks_a_name_asks_again_before_it_replaces_and_s
     assert _sent(pg, host, ("ideas.party_save", {"goal": "ship-sync", "name": "lean WEB", "replace": True}))
 
 
+def _in(dlg, band):
+    return [e.get_attribute("data-seat") for e in dlg.locator(f'.shell-band[data-band="{band}"] .shell-seat[data-seat]').all()]
+
+
 def _new_party(pg):
     _deal_new_party(pg)
     dlg = pg.get_by_role("dialog", name="New party")
@@ -66,12 +70,10 @@ def test_your_parties_fill_the_seats_and_a_seat_changed_afterwards_drops_the_id(
     assert " ".join(chip.inner_text().split()) == "Lean web 3 parties in 2 projects · 2 met" and chip.locator("img").count() == 4         # its heads, name, use
     fresh = row.locator("[data-party=p-5e6f7a8b]")
     assert " ".join(fresh.inner_text().split()) == "Fresh"                                              # not used yet: nothing muted
-    assert dlg.get_by_role("region", name="Leads").locator('.shell-team-row[aria-pressed="true"]').get_attribute("data-agent") == "product-designer"
+    assert _in(dlg, "lead") == ["product-designer"]
     chip.get_by_role("button", name="Pick your party “Lean web”").click()                              # fills the leader, the builders, the checkers, Every goal
-    assert dlg.get_by_role("region", name="Leads").locator('.shell-team-row[aria-pressed="true"]').get_attribute("data-agent") == "architect"
-    assert [e.get_attribute("data-agent") for e in dlg.get_by_role("region", name="Builds").locator('.shell-team-row[aria-pressed="true"]').all()] == ["grunt", "tester"]
-    assert [e.get_attribute("data-agent") for e in dlg.get_by_role("region", name="Checks").locator('.shell-team-row[aria-pressed="true"]').all()] == ["reviewer"]
-    assert "led by Architect" in dlg.locator(".shell-party-line").inner_text()
+    assert (_in(dlg, "lead"), _in(dlg, "build"), _in(dlg, "check")) == (["architect"], ["grunt", "tester"], ["reviewer"])            # a party made before keeps its two builders, as it was saved
+    assert dlg.locator(".shell-party-band .shell-team-seat.is-over").count() == 1
     assert dlg.get_by_label("Every goal: Reviewer").is_checked()
     dlg.get_by_label("What it is for").fill("A party from your party.")
     dlg.get_by_role("button", name="Save party").click()
@@ -79,7 +81,7 @@ def test_your_parties_fill_the_seats_and_a_seat_changed_afterwards_drops_the_id(
                                                       "every": ["reviewer"], "priority": "normal", "party": "p-1a2b3c4d"}
     dlg = _new_party(pg)                                                                                # a seat changed afterwards: no id
     dlg.get_by_role("region", name="Your parties").get_by_role("button", name="Pick your party “Lean web”").click()
-    dlg.get_by_role("button", name="Take out: Tester").click()
+    dlg.get_by_role("button", name="Remove Tester from the party").click()
     dlg.get_by_label("What it is for").fill("A changed party.")
     dlg.get_by_role("button", name="Save party").click()
     assert "party" not in _calls(pg, host, "ideas.goal_save", 2)[1]
@@ -107,7 +109,6 @@ def test_edit_the_party_picks_a_party_too_and_says_what_a_party_keeps(shell):
     host.bump({})
     pg.get_by_role("button", name="Edit the party").click()
     dlg = pg.get_by_role("dialog", name="Edit the party")
-    dlg.get_by_role("button", name="Change the party").click()
     dlg.get_by_role("region", name="Your parties").get_by_role("button", name="Pick your party “Lean web”").click()
     dlg.get_by_role("button", name="Save party").click()
     got = _calls(pg, host, "ideas.goal_save")[0]

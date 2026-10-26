@@ -11,7 +11,7 @@ import pytest
 
 pytest.importorskip("playwright.sync_api")
 
-from orkboard.realm import library, roles  # noqa: E402
+from orkboard.realm import library, party_presets, roles  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_project_desktop_browser import HAVING, ORK, ProjectHost  # noqa: E402
 from tests.test_route_desktop_browser import shot  # noqa: E402
@@ -55,7 +55,7 @@ TOOLS = {"main": "claude", "tools": [
     {"id": "cursor", "name": "Cursor", "ready": False, "signed_in": False, "installed": True, "experimental": False, "tiers": False},
     {"id": "agy", "name": "Antigravity", "ready": False, "signed_in": True, "installed": False, "experimental": True, "tiers": True},
     {"id": "hermes", "name": "Hermes Agent", "ready": False, "signed_in": True, "installed": False, "experimental": False, "tiers": False}]}
-KINDS = {"mobile": ("a mobile app", ["ios/", "android/"]), "empty": ("an empty folder", []), "wiki": ("a team's wiki", ["mkdocs.yml"]), "code": ("code", ["pyproject.toml"])}
+KINDS = {"game": ("a game", ["project.godot"]), "mobile": ("a mobile app", ["ios/", "android/"]), "empty": ("an empty folder", []), "wiki": ("a team's wiki", ["mkdocs.yml"]), "code": ("code", ["pyproject.toml"])}
 
 
 def kind(kid):
@@ -70,6 +70,7 @@ class ProposalHost(ProjectHost):
     def __init__(self, kind_id="mobile", model=True):
         super().__init__()
         self.kind_id, self.model, self.sizes, self.read = kind_id, model, {}, {"wiki": "wiki", "garbage": "code"}
+        self.presets = True                                                 # spec 91 §7: `ideas.party_presets` answers (False: a host from before it, which has the library's presets only)
         self.tools_doc, self.moves, self.refuse_size = copy.deepcopy(TOOLS), {}, ""         # `ideas.tools`; who joins and leaves with a size (`moves[slug][size] = {team, joins, leaves}`); a size the host refuses
         self.deal = [{"id": "mobile-features", "why": "proposal", "n": 0}, {"id": "mobile-architecture", "why": "proposal", "n": 0}, *copy.deepcopy(HAVING[:-2]), {"id": "release", "why": "have", "n": 0}, {"id": "ideation", "why": "have", "n": 0}]
 
@@ -97,6 +98,9 @@ class ProposalHost(ProjectHost):
         return {"kind": kind("mobile"), "ask": False, "proposals": [copy.deepcopy(FEATURES), copy.deepcopy(ARCHITECTURE), copy.deepcopy(have)]}
 
     def handle(self, name, a):
+        if name == "ideas.party_presets" and self.presets and self.kind_id:       # spec 91 §7: New party's presets for the project's kind
+            self.log.append((name, a))
+            return {"kind": kind(self.kind_id), "presets": party_presets.listed(self.kind_id)}
         if name == "ideas.proposals":
             self.log.append((name, a))
             return self.proposed(a)
@@ -145,162 +149,118 @@ def desk(gui):
     assert not errors, "\n".join(errors)
 
 
-def _dialog(pg):
-    dlg = pg.get_by_role("dialog", name="New party")
-    dlg.locator(".shell-prop, .shell-props__ask").first.wait_for(timeout=WAIT_MS)
-    return dlg
-
-
-def _card(dlg, pid):
-    return dlg.locator(f'.shell-prop[data-proposal="{pid}"]')
-
-
 def _words(el):
     return " ".join(el.inner_text().split())
 
 
-# -- New party opens on the proposals ---------------------------------------------------------------------------------------------------------------------------
+# -- New party: the project's presets, the size, the proposals of the deal --------------------------------------------------------------------------------------------
 
-def test_new_party_opens_on_the_orkmasters_three_proposals_for_a_mobile_project_each_standard_picked(desk):
+def _dialog(pg):
+    """New party (spec 91 §7): its presets and its seats are drawn."""
+    dlg = pg.get_by_role("dialog", name="New party")
+    dlg.locator(".shell-preset").first.wait_for(timeout=WAIT_MS)
+    dlg.locator(".shell-seat[data-seat]").first.wait_for(timeout=WAIT_MS)
+    return dlg
+
+
+def _seats(dlg, band):
+    return [s.get_attribute("data-seat") for s in dlg.locator(f'.shell-band[data-band="{band}"] .shell-seat[data-seat]').all()]
+
+
+def test_new_party_opens_on_the_projects_presets_and_asks_the_host_for_no_proposals(desk):
+    """Spec 91 §7 (spec 75 §5, before it): the Orkmaster's reading of the project fits New party's presets — the stages of a mobile app — and Standard is picked; the proposals are the deal's."""
     pg, host = desk
     _new_party(pg)
     dlg = _dialog(pg)
-    assert _calls(pg, host, "ideas.proposals")[-1] == {}
-    head_ = dlg.locator(".shell-props__head")
-    assert "Orkmaster proposes" in head_.text_content() and "for this project" in head_.text_content()
-    assert head_.locator(".shell-props__kind").inner_text() == "a mobile app · ios/ · android/"                          # the kind's words and signs
-    assert "peon-crown" in head_.locator(".ork-race__head").get_attribute("src")                                           # the Orkmaster's head
-    cards = dlg.locator(".shell-prop")
-    assert [c.get_attribute("data-proposal") for c in cards.all()] == ["mobile-features", "mobile-architecture", "release"]
-    first = _card(dlg, "mobile-features")
-    assert first.locator(".shell-prop__name").text_content() == "Mobile app: features"
-    assert first.locator(".shell-prop__line").inner_text() == "Screens and what people do on them" and first.locator(".shell-prop__why").inner_text() == "ios/ and android/ are here"
-    group = first.get_by_role("radiogroup", name="Size")
-    assert [r.inner_text() for r in group.get_by_role("radio").all()] == ["Lean", "Standard", "Full"]
-    assert group.get_by_role("radio", name="Standard").get_attribute("aria-checked") == "true"                             # Standard picked
-    assert first.locator(".shell-prop__heads .ork-race__head").count() == 4 and first.locator(".shell-prop__agents").inner_text() == "4 agents"
-    assert first.locator(".shell-prop__price").inner_text() == "≈$1–3 a goal"
-    assert _card(dlg, "release").get_attribute("class").count("is-have") == 1 and _card(dlg, "release").locator(".shell-prop__have").inner_text() == "You have one"
-    assert dlg.locator(".shell-craft-tile").count() == 0 and dlg.get_by_role("button", name="More: the library").count() == 1      # the library is under More
-    assert dlg.get_by_role("button", name="Make it").count() == 3
+    assert _calls(pg, host, "ideas.party_presets")[-1] == {} and not [1 for n, _ in host.log if n == "ideas.proposals"]
+    assert dlg.locator(".shell-presets__kind").inner_text() == "For a mobile app: the Orkmaster knows what this project is"      # what the Orkmaster read
+    assert [c.get_attribute("data-craft") for c in dlg.locator(".shell-presets__group.is-stage .shell-preset").all()] == ["ideation", "mobile-concept", "mobile-build", "release", "mobile-liveops"]
+    assert dlg.get_by_role("radio", name="Standard").get_attribute("aria-checked") == "true" and dlg.locator(".shell-props, .shell-prop").count() == 0
+    assert (_seats(dlg, "lead"), _seats(dlg, "build"), _seats(dlg, "check")) == (["product-manager"], ["grunt"], [])
     pg.wait_for_timeout(300)
-    shot(pg, "desk-proposals.png")
+    shot(pg, "desk-new-party.png")
 
 
-def test_the_size_switch_changes_the_heads_the_agents_and_the_price_and_the_arrows_move_it(desk):
+def test_the_size_switch_changes_the_seats_and_the_price_a_size_asks_for_its_target(desk):
     pg, host = desk
     _new_party(pg)
     dlg = _dialog(pg)
-    card = _card(dlg, "mobile-features")
-    group = card.get_by_role("radiogroup", name="Size")
+    dlg.locator(".shell-price").wait_for(timeout=WAIT_MS)
+    group = dlg.get_by_role("radiogroup", name="Size")
     group.get_by_role("radio", name="Lean").click()
-    assert card.get_attribute("data-size") == "lean" and card.locator(".shell-prop__agents").inner_text() == "one agent"
-    assert card.locator(".shell-prop__heads .ork-race__head").count() == 1 and card.locator(".shell-prop__price").inner_text() == "≈$0.40–1.20 a goal"
+    assert _seats(dlg, "build") == [] and "One agent, Seasoned · works as thrift" in _words(dlg.locator(".shell-sizebar__says"))
+    pg.wait_for_function("() => document.querySelector('.shell-price')?.textContent.includes('$0.40')", timeout=WAIT_MS)       # Lean's price: the party's team of one
     group.get_by_role("radio", name="Full").click()
-    assert card.locator(".shell-prop__agents").inner_text() == "7 agents" and card.locator(".shell-prop__heads .ork-race__head").count() == 7
-    assert card.locator(".shell-prop__price").inner_text() == "≈$2–7 a goal"
+    assert _seats(dlg, "build") == ["grunt"] and _seats(dlg, "check") == ["reviewer"] and "3 agents, Seasoned and up · works as quality" in _words(dlg.locator(".shell-sizebar__says"))
+    pg.wait_for_function("() => document.querySelector('.shell-price')?.textContent.includes('$2–7')", timeout=WAIT_MS)       # Full's price, at Full's Target
+    assert [a for n, a in host.log if n == "ideas.party_price"][-1]["size"] == "full"                                      # the price reads the size's Target
     assert group.get_by_role("radio", name="Full").get_attribute("aria-checked") == "true" and group.get_by_role("radio", name="Lean").get_attribute("aria-checked") == "false"
-    assert _card(dlg, "mobile-architecture").get_by_role("radio", name="Standard").get_attribute("aria-checked") == "true"       # another card keeps its own
     group.get_by_role("radio", name="Full").focus()
     pg.keyboard.press("ArrowLeft")
     assert group.get_by_role("radio", name="Standard").get_attribute("aria-checked") == "true" and group.get_by_role("radio", name="Standard").evaluate("e => document.activeElement === e")
     assert [r.get_attribute("tabindex") for r in group.get_by_role("radio").all()] == ["-1", "0", "-1"]                    # one tab stop
 
 
-def test_make_it_saves_the_party_with_its_leader_its_team_and_its_size_and_shows_it(desk):
+def test_save_party_saves_the_party_with_its_leader_its_team_its_size_and_its_recipe_and_shows_it(desk):
     pg, host = desk
     _new_party(pg)
     dlg = _dialog(pg)
-    _card(dlg, "mobile-architecture").get_by_role("button", name="Make it").click()
+    dlg.locator('.shell-preset[data-craft="mobile-concept"]').click()
+    dlg.get_by_label("What it is for").fill("How the app looks before it is built.")
+    dlg.get_by_role("button", name="Save party").click()
     sent = _calls(pg, host, "ideas.goal_save")[-1]
-    assert sent == {"title": "Mobile app: architecture", "about": "How it is built, what it stores, what it calls", "leader": "architect", "team": ["grunt", "tester", "reviewer"],
-                    "every": [], "priority": "normal", "size": "standard", "proposal": "mobile-architecture"}
+    assert sent == {"about": "How the app looks before it is built.", "leader": "product-designer", "team": ["ui-kit"], "every": [], "priority": "normal", "size": "standard",
+                    "proposal": "mobile-concept"}
     pg.get_by_role("dialog", name="New party").wait_for(state="detached", timeout=WAIT_MS)
-    pg.locator('.arena[data-goal="mobile-architecture"], .arena-phead[data-goal="how-it"]').first.wait_for(timeout=WAIT_MS)       # the new party is shown (its slug is the stub's)
     _new_party(pg)
     dlg = _dialog(pg)
-    card = _card(dlg, "mobile-features")
-    card.get_by_role("radio", name="Lean").click()
-    card.get_by_role("button", name="Make it").click()
+    dlg.locator('.shell-preset[data-craft="release"]').click()
+    dlg.get_by_role("radio", name="Full").click()
+    dlg.get_by_label("What it is for").fill("1.4 goes out.")
+    dlg.get_by_role("button", name="Save party").click()
     sent = _calls(pg, host, "ideas.goal_save", at_least=2)[-1]
-    assert sent["leader"] == "product-manager" and sent["team"] == [] and sent["size"] == "lean" and sent["title"] == "Mobile app: features" and sent["proposal"] == "mobile-features"
-    _new_party(pg)
-    dlg = _dialog(pg)
-    _card(dlg, "release").get_by_role("radio", name="Full").click()
-    _card(dlg, "release").get_by_role("button", name="Make it").click()
-    sent = _calls(pg, host, "ideas.goal_save", at_least=3)[-1]
-    assert sent["leader"] == "release-manager" and sent["size"] == "full" and sent["preset"] == "release" and sent["proposal"] == "release" and sent["team"] == ["release-engineer", "release-notes", "aso", "release-checker"]
+    assert sent["leader"] == "release-manager" and sent["size"] == "full" and sent["preset"] == "release" and sent["proposal"] == "release" and sent["team"] == ["release-engineer", "release-checker"]
 
 
-def test_more_the_library_opens_todays_tiles_and_seats_with_the_size_switch_added(desk):
+def test_a_size_works_as_a_target_and_a_craft_pressed_keeps_it(desk):
     pg, host = desk
     _new_party(pg)
     dlg = _dialog(pg)
-    dlg.get_by_role("button", name="More: the library").click()
-    dlg.locator(".shell-craft-tile").first.wait_for(timeout=WAIT_MS)
-    assert dlg.locator(".shell-prop").count() == 0 and dlg.get_by_label("Name", exact=True).count() == 1 and dlg.get_by_role("region", name="Leads").count() == 1
-    size = dlg.get_by_role("group", name="Its size")
-    assert size.get_by_role("radio", name="Standard").get_attribute("aria-checked") == "true"
-    assert "Works as Balance" in size.inner_text()
+    size = dlg.locator(".shell-sizebar")
+    assert "works as balance" in _words(size)
     size.get_by_role("radio", name="Full").click()
-    assert "Works as Quality" in size.inner_text()
-    dlg.locator('.shell-craft-tile[data-craft="design"]').click()
-    pg.wait_for_timeout(500)
-    assert _calls(pg, host, "ideas.party_price")[-1].get("size") == "full"                                                 # the price reads the size's Target
+    assert "works as quality" in _words(size)
+    dlg.locator('.shell-preset[data-craft="design"]').click()
+    assert "works as quality" in _words(size) and _seats(dlg, "check") == ["accessibility-reviewer"]                         # the size stays with the party's seats
     dlg.get_by_label("What it is for").fill("Designs of our own.")
     dlg.get_by_role("button", name="Save party").click()
     sent = _calls(pg, host, "ideas.goal_save")[-1]
-    assert sent["size"] == "full" and sent["leader"] == "product-designer" and sent["about"] == "Designs of our own."
+    assert sent["size"] == "full" and sent["leader"] == "product-designer" and sent["about"] == "Designs of our own." and sent["preset"] == "design"
 
 
-def test_a_proposal_the_host_would_not_give_falls_back_to_the_library(gui):
+def test_a_host_that_cannot_say_what_the_project_is_keeps_the_librarys_stages_and_crafts(gui):
     host = ProposalHost()
     host.proposed = lambda a: {"error": "No project"}
+    host.presets = False                                                                                                     # no `ideas.party_presets`: the library's presets from `ideas.roles`
     pg, host, errors = _open(gui, host=host, ready=".arena[data-goal=passkey]")
     _new_party(pg)
     dlg = pg.get_by_role("dialog", name="New party")
-    dlg.locator(".shell-craft-tile").first.wait_for(timeout=WAIT_MS)
+    dlg.locator(".shell-preset").first.wait_for(timeout=WAIT_MS)
+    assert [c.get_attribute("data-craft") for c in dlg.get_by_role("region", name="By craft").locator(".shell-preset").all()] == ["engineering", "design", "data", "marketing", "product", "art"]
     assert dlg.locator(".shell-prop").count() == 0
-    pg.close()
-
-
-# -- an empty folder asks its line -----------------------------------------------------------------------------------------------------------------------------
-
-def test_an_empty_project_asks_the_line_and_read_it_draws_the_proposals_of_what_it_says(gui):
-    pg, host, errors = _open(gui, host=ProposalHost(kind_id="empty"), ready=".arena[data-goal=passkey]")
-    _new_party(pg)
-    dlg = _dialog(pg)
-    assert dlg.locator(".shell-props__kind").inner_text() == "an empty folder"
-    ask = dlg.locator(".shell-props__ask")
-    line = ask.get_by_label("What is this project for?")
-    assert line.get_attribute("placeholder") == "a line is enough: a mobile app for…, our team's wiki, my design files"
-    read = ask.get_by_role("button", name="Read it")
-    assert read.is_disabled()                                                                                               # a line first
-    assert [c.get_attribute("data-proposal") for c in dlg.locator(".shell-prop").all()] == ["ideation"]                     # Ideation beside it at once
-    pg.wait_for_timeout(300)
-    shot(pg, "desk-proposals-empty.png")
-    line.fill("our team's wiki for the support desk")
-    read.click()
-    dlg.locator('.shell-prop[data-proposal="wiki"]').wait_for(timeout=WAIT_MS)
-    assert _calls(pg, host, "ideas.proposals")[-1] == {"about": "our team's wiki for the support desk"}
-    assert [c.get_attribute("data-proposal") for c in dlg.locator(".shell-prop").all()] == ["wiki", "ideation"]
-    assert dlg.locator(".shell-props__kind").inner_text() == "a team's wiki · mkdocs.yml"
-    assert dlg.get_by_label("What is this project for?").input_value() == "our team's wiki for the support desk"             # the line stays to be read again
-    dlg.locator('.shell-prop[data-proposal="wiki"]').get_by_role("button", name="Make it").click()
-    sent = _calls(pg, host, "ideas.goal_save")[-1]
-    assert sent["leader"] == "product-manager" and sent["team"] == ["copywriter", "editor"] and sent["size"] == "standard"
     pg.close()
     assert not errors, "\n".join(errors)
 
 
-def test_a_line_no_model_could_read_gives_the_proposals_for_code_and_says_so(gui):
-    pg, host, errors = _open(gui, host=ProposalHost(kind_id="empty", model=False), ready=".arena[data-goal=passkey]")
+# -- an empty folder --------------------------------------------------------------------------------------------------------------------------------------------
+
+def test_an_empty_project_has_ideations_stage_and_the_stages_of_code_and_says_what_it_is(gui):
+    pg, host, errors = _open(gui, host=ProposalHost(kind_id="empty"), ready=".arena[data-goal=passkey]")
     _new_party(pg)
     dlg = _dialog(pg)
-    dlg.get_by_label("What is this project for?").fill("something")
-    dlg.get_by_role("button", name="Read it").click()
-    dlg.locator('.shell-prop[data-proposal="engineering"]').wait_for(timeout=WAIT_MS)
-    assert "No model could read the line: these are the proposals for code." in dlg.inner_text() and dlg.locator(".shell-props__kind").inner_text() == "code · pyproject.toml"
+    assert dlg.locator(".shell-presets__kind").inner_text() == "For an empty folder: the Orkmaster knows what this project is"
+    assert [c.get_attribute("data-craft") for c in dlg.locator(".shell-presets__group.is-stage .shell-preset").all()] == ["ideation", "code-concept", "code-build", "release", "code-liveops"]
+    assert not [1 for n, a in host.log if n == "ideas.proposals" and a.get("about")]                                          # no line is asked of the person here
     pg.close()
     assert not errors, "\n".join(errors)
 
@@ -321,19 +281,18 @@ def test_the_orkmasters_row_shows_the_proposals_first_each_with_its_why_and_add_
     assert first.locator(".arena-rcard__cap").inner_text().startswith("Product manager + 3") and "Screens and what people do on them" in first.locator(".arena-rcard__cap").inner_text()
     first.get_by_role("button", name="Add Mobile app: features").click()
     dlg = _dialog(pg)
-    assert dlg.locator('.shell-prop[data-proposal="mobile-features"]').get_attribute("class").count("is-asked") == 1        # New party on that proposal
-    assert dlg.locator('.shell-prop[data-proposal="mobile-architecture"]').get_attribute("class").count("is-asked") == 0
+    assert (_seats(dlg, "lead"), _seats(dlg, "build")) == (["product-manager"], ["grunt"])                                  # New party on that proposal's seats
+    assert dlg.get_by_label("Name", exact=True).get_attribute("placeholder") == "Mobile app: features"
 
 
-def test_a_library_party_of_the_row_opens_new_party_on_the_library_with_the_size_switch(desk):
+def test_a_library_party_of_the_row_opens_new_party_on_its_seats_with_the_size_switch(desk):
     pg, host = desk
     pg.get_by_role("button", name="The project").click()
     card = pg.locator('.arena-prow[data-row="parties"] article.arena-rcard[data-preset="game"]')
     card.wait_for(timeout=WAIT_MS)
     card.get_by_role("button", name="Add Game").click()
-    dlg = pg.get_by_role("dialog", name="New party")
-    dlg.locator(".shell-craft-tile").first.wait_for(timeout=WAIT_MS)
-    assert dlg.locator('.shell-craft-tile[data-craft="game"]').get_attribute("aria-pressed") == "true" and dlg.get_by_role("group", name="Its size").count() == 1
+    dlg = _dialog(pg)
+    assert _seats(dlg, "lead") == ["game-designer"] and dlg.get_by_role("radiogroup", name="Size").count() == 1
 
 
 # -- its size in About this party and Edit the party -------------------------------------------------------------------------------------------------------------
@@ -442,8 +401,8 @@ def test_a_hosts_own_refusal_of_a_size_is_said_in_place_not_toasted(desk):
     assert sec.get_by_role("radio", name="Standard").get_attribute("aria-checked") == "true"
 
 
-def test_a_host_that_refuses_a_team_change_with_work_open_is_heard(desk):
-    """The host refuses a change that drops a member with work open (spec 75 host, 5): the refusal is shown as it is said."""
+def test_a_member_with_work_open_cannot_leave_by_its_x_and_the_dialog_says_so_in_place(desk):
+    """A change that drops a member with work open is refused (spec 52's swap, the host's rule, spec 75): in Edit the party its × says so where it stands, and nothing is sent."""
     pg, host = desk
     _party(host)
     host.party["passkey"][1]["state"] = "work"
@@ -451,38 +410,37 @@ def test_a_host_that_refuses_a_team_change_with_work_open_is_heard(desk):
     _about(pg)
     pg.get_by_role("region", name="Preview").get_by_role("button", name="Edit the party").click()
     dlg = pg.get_by_role("dialog", name="Edit the party")
-    dlg.get_by_role("button", name="Change the party").click()
-    dlg.get_by_role("button", name="Take out: Grunt").click()
+    dlg.locator(".shell-seat[data-seat=grunt]").wait_for(timeout=WAIT_MS)
+    dlg.get_by_role("button", name="Remove Grunt from the party").click()
+    assert "Grunt has work open: it cannot leave" in dlg.locator(".shell-bands").inner_text() and [s.get_attribute("data-seat") for s in dlg.locator(".shell-band[data-band=build] .shell-seat[data-seat]").all()] == ["grunt", "tester"]
     dlg.get_by_role("button", name="Save party").click()
-    pg.get_by_text("Grunt has work open: it cannot leave").first.wait_for(timeout=WAIT_MS)
-    assert dlg.is_visible()                                                                                                  # the dialog stays: nothing was saved
+    sent = _calls(pg, host, "ideas.goal_save")[-1]
+    assert "team" not in sent                                                                                              # the party is as it was
 
 
-def test_edit_the_party_has_its_size_and_save_party_sends_it(desk):
+def test_edit_the_party_has_its_size_and_save_party_sends_it_with_the_seats_the_size_gave(desk):
     pg, host = desk
     _party(host)
     _about(pg)
     pg.get_by_role("region", name="Preview").get_by_role("button", name="Edit the party").click()
     dlg = pg.get_by_role("dialog", name="Edit the party")
-    size = dlg.get_by_role("group", name="Its size")
+    size = dlg.get_by_role("radiogroup", name="Size")
     size.wait_for(timeout=WAIT_MS)
     assert size.get_by_role("radio", name="Standard").get_attribute("aria-checked") == "true"
     size.get_by_role("radio", name="Full").click()
+    assert [s.get_attribute("data-seat") for s in dlg.locator(".shell-band[data-band=check] .shell-seat[data-seat]").all()] == ["reviewer"]       # the seats change at once: a seat a stage
     dlg.get_by_role("button", name="Save party").click()
     sent = _calls(pg, host, "ideas.goal_save")[-1]
-    assert sent["slug"] == "passkey" and sent["size"] == "full" and "team" not in sent                                      # the size alone
-    host.moves["passkey"] = copy.deepcopy(MOVES)
+    assert sent["slug"] == "passkey" and sent["size"] == "full" and sent["leader"] == "architect" and sent["team"] == ["grunt", "reviewer"]       # the team the size gave goes with Save party
     _about(pg)
     pg.get_by_role("region", name="Preview").get_by_role("button", name="Edit the party").click()
     dlg = pg.get_by_role("dialog", name="Edit the party")
-    size = dlg.get_by_role("group", name="Its size")
-    pg.wait_for_function("() => document.querySelectorAll('.shell-modal .shell-size__moves li').length === 1", timeout=WAIT_MS)       # (it is Full now: Lean is the one that changes who is in)
-    assert "Lean Leaves: Grunt, Tester, Reviewer" in _words(size)                                                                # (shown before the press)
+    size = dlg.get_by_role("radiogroup", name="Size")
     size.get_by_role("radio", name="Lean").click()
-    assert size.get_by_role("radio", name="Lean").get_attribute("aria-checked") == "true"
+    assert size.get_by_role("radio", name="Lean").get_attribute("aria-checked") == "true" and dlg.locator(".shell-seat[data-seat]").count() == 1       # the leader alone
     dlg.get_by_role("button", name="Save party").click()
     sent = _calls(pg, host, "ideas.goal_save", at_least=2)[-1]
-    assert sent["size"] == "lean" and sent["team"] == [] and sent["leader"] == "architect"            # the team the size gave goes with Save party
+    assert sent["size"] == "lean" and sent["team"] == [] and sent["leader"] == "architect"
 
 
 # -- the Target leaves the top bar; Settings keeps it ----------------------------------------------------------------------------------------------------------------

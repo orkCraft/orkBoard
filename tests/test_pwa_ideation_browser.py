@@ -224,13 +224,13 @@ async def test_new_party_offers_ideation_whose_seats_stay_and_whose_agents_no_ot
         await _new_goal(page)
         sheet = page.get_by_role("dialog", name="New party")
         await sheet.locator('.preset-tile[data-preset="ideation"]').click()
-        assert await sheet.locator(".party-line").first.inner_text() == \
-            "Leads: Investor · Builds: Product view, Market view, Engineering view, Design view · Checks: Skeptic"
-        assert await sheet.locator('.party [data-change="team"]').count() == 0 and await sheet.locator('.party-checks [data-change="checks"]').count() == 0
-        assert "its views and the skeptic stay" in await sheet.locator('.party [data-sec="ideation"]').inner_text()
+        seats = {b: [await x.get_attribute("data-seat") for x in await sheet.locator(f'.pband[data-band="{b}"] .pseat[data-seat]').all()] for b in ("lead", "build", "check")}
+        assert seats == {"lead": ["investor"], "build": ["product-view", "market-view", "tech-view", "design-view"], "check": ["skeptic"]}      # Leads Investor · Does the four views · Checks Skeptic
+        assert await sheet.locator("[data-free]").count() == 0 and await sheet.locator('.pseat [data-act="remove"]').count() == 0                  # its seats stay: none free, none to take out
+        assert await sheet.locator('.party-checks [data-change="checks"]').count() == 0
+        assert "its views and the skeptic stay" in await sheet.locator('[data-sec="ideation"]').inner_text()
         await sheet.locator(".party-price").filter(has_text="a pitch").wait_for(timeout=WAIT_MS)
         assert await sheet.locator(".party-takes").count() == 0                                    # a pitch has no goal type
-        assert "Skeptic makes the case against every pitch; Investor decides." in await sheet.locator(".party-checks").inner_text()
         await _shot_to(page, "ideation-new-party")
         assert await page.evaluate(NO_SCROLL)
         await sheet.get_by_label("What it is for").fill("Small ideas for the app.")
@@ -245,15 +245,18 @@ async def test_no_other_party_is_offered_the_pitch_agents(fake_repo, monkeypatch
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         await _new_goal(page)
         sheet = page.get_by_role("dialog", name="New party")
-        await sheet.locator('.preset-tile[data-preset="game"]').click()
-        await sheet.locator('.party [data-change="team"]').click()
-        for band in ("Leads", "Builds", "Checks"):
-            fold = sheet.get_by_role("region", name=band)
-            if await fold.get_attribute("class") and "is-open" not in await fold.get_attribute("class"):
-                await fold.locator(".fold-head").click()
-            await fold.locator(".team-row").first.wait_for(timeout=WAIT_MS)
-            listed = [await r.get_attribute("data-agent") for r in await fold.locator(".team-row").all()]
+        await sheet.locator('.preset-tile[data-preset="code-build"]').click()
+        await sheet.locator(".pseat[data-seat]").first.wait_for(timeout=WAIT_MS)
+        for band in ("lead", "build", "check"):
+            await sheet.locator(f'.pband[data-band="{band}"] .pseat[data-seat] [data-act="remove"]').first.click()                     # the seat is free: its list of roles
+            await sheet.locator(f'[data-free="{band}"]').click()
+            lists = page.locator("dialog[open] .seat-list")
+            await lists.locator(".team-row").first.wait_for(timeout=WAIT_MS)
+            if await lists.locator('[data-act="more-roles"]').count():
+                await lists.locator('[data-act="more-roles"]').click()
+            listed = [await r.get_attribute("data-agent") for r in await lists.locator(".team-row").all()]
             assert listed and not {"investor", "product-view", "market-view", "tech-view", "design-view", "skeptic"} & set(listed), (band, listed)
+            await page.keyboard.press("Escape")
 
 
 @pytest.mark.asyncio
@@ -442,7 +445,10 @@ async def test_a_party_of_the_library_the_project_lacks_opens_new_party_with_it_
         await sheet.get_by_role("button", name="Send to Website").click()
         party = page.get_by_role("dialog", name="New party")
         await party.wait_for(timeout=WAIT_MS)
-        assert await party.locator('.preset-tile[data-preset="website"]').get_attribute("aria-pressed") == "true"
+        await party.locator(".pseat[data-seat]").first.wait_for(timeout=WAIT_MS)
+        site = next(x for x in library.presets() if x["id"] == "website")                                 # the library's Website, as the seats say (it is no tile of this project's stages)
+        assert await party.locator('.pband[data-band="lead"] .pseat[data-seat]').get_attribute("data-seat") == site["lead"]
+        assert await party.locator('.preset-tile[aria-pressed="true"]').count() == 0
         assert not _strip(stub.calls, "ideas.pitch_send")
         await party.get_by_label("What it is for").fill("The app's website.")
         await party.get_by_role("button", name="Save party").click()

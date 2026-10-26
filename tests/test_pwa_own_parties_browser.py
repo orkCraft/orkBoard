@@ -27,8 +27,9 @@ async def test_your_parties_fill_the_seats_and_the_craft_and_a_seat_changed_afte
         assert " ".join((await chip.inner_text()).split()) == "Lean web 3 parties in 2 projects · 2 met" and await chip.locator("img").count() == 4
         assert " ".join((await row.locator("[data-party=p-5e6f7a8b]").inner_text()).split()) == "Fresh"              # not used yet: nothing muted
         await chip.get_by_role("button", name="Pick your party “Lean web”").click()
-        assert await sheet.locator(".craft-tile[aria-pressed='true']").get_attribute("data-craft") == "engineering"
-        assert await sheet.locator(".party-line").first.inner_text() == "Leads: Architect · Builds: Grunt, Tester · Checks: Reviewer"
+        assert await sheet.locator(".preset-tile[aria-pressed='true']").count() == 0 and await chip.get_by_role("button", name="Pick your party “Lean web”").get_attribute("aria-pressed") == "true"
+        seats = {b: [await x.get_attribute("data-seat") for x in await sheet.locator(f'.pband[data-band="{b}"] .pseat[data-seat]').all()] for b in ("lead", "build", "check")}
+        assert seats == {"lead": ["architect"], "build": ["grunt", "tester"], "check": ["reviewer"]}          # the seats as the party was made: Leads Architect, Does Grunt, Tester, Checks Reviewer
         await sheet.get_by_label("What it is for").fill("A goal from your party.")
         await sheet.get_by_role("button", name="Save party").click()
         assert await _called(stub, "ideas.goal_save", {"about": "A goal from your party.", "craft": "engineering", "leader": "architect", "team": ["grunt", "tester", "reviewer"],
@@ -38,9 +39,7 @@ async def test_your_parties_fill_the_seats_and_the_craft_and_a_seat_changed_afte
         await _new_goal(page)
         sheet = page.get_by_role("dialog", name="New party")
         await sheet.get_by_role("region", name="Your parties").get_by_role("button", name="Pick your party “Lean web”").click()
-        await sheet.locator('.party [data-change="team"]').click()
-        await sheet.get_by_role("region", name="Builds").get_by_role("button").first.click()
-        await sheet.get_by_role("button", name="Take out: Tester").click()                                              # a seat changed afterwards
+        await sheet.get_by_role("button", name="Remove Tester from the party").click()                                  # a seat changed afterwards
         await sheet.get_by_label("What it is for").fill("A changed party.")
         await sheet.get_by_role("button", name="Save party").click()
         saves = [c[1] for c in stub.calls if c[0] == "ideas.goal_save"]

@@ -600,8 +600,10 @@ async def test_new_party_is_the_where_sheets_and_opens_the_new_party_sheet(fake_
         await _new_goal(page)                                                                                                         # one of yours, or from the library: the New party sheet
         sheet = page.get_by_role("dialog", name="New party")
         await sheet.wait_for(timeout=WAIT_MS)
-        assert await sheet.get_by_role("button", name="Save party").is_disabled() and await sheet.get_by_label("What it is for").is_visible()
-        assert await sheet.get_by_role("heading", name="The party").count() == 1 and await sheet.get_by_role("heading", name="Checks on every goal").count() == 1
+        await sheet.locator(".pseat[data-seat]").first.wait_for(timeout=WAIT_MS)
+        assert await sheet.get_by_role("button", name="Save party").is_enabled() and await sheet.get_by_label("What it is for").is_visible()       # the opening preset names the party until it is named (spec 91 §7)
+        assert [await r.get_attribute("data-band") for r in await sheet.get_by_role("region").filter(has=page.locator(".pseat")).all()] == ["lead", "build", "check"]
+        assert await sheet.get_by_role("heading", name="Checks on every goal").count() == 1
         text = await sheet.inner_text()
         assert not re.search(r"\b[Ii]deas?\b", text) and "Description" not in text
         await sheet.get_by_label("What it is for").fill("A team for the sign-in.")

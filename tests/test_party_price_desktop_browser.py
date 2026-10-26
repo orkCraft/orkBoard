@@ -1,6 +1,6 @@
 """Spec 43 C on the desktop (docs/specs/43-party-measured.md §3.3, Tests → C; docs/specs/50-parties-and-goals.md §3.7): the price line when the picker opens and
 after a seat changes (one call for the changes of 300 ms), *a first guess* and *from this project's last N goals*, each check's *adds about … · about half of
-them*, in New party and in Edit the party's *Change the party*. And spec 63 B (docs/specs/63-party-gathered.md §2, Tests → B): under the price the line *It can take:* with the
+them*, in New party and in Edit the party (spec 91 §7: asked as the dialog opens, the party being there). And spec 63 B (docs/specs/63-party-gathered.md §2, Tests → B): under the price the line *It can take:* with the
 goal types the party would be offered (`types` of the price's answer), *with one more:* the ones that miss someone, *and k more* past two lines, a type the last seat change
 opened lit once, nothing for an older host that sends no `types`."""
 from __future__ import annotations
@@ -9,7 +9,7 @@ import pytest
 
 pytest.importorskip("playwright.sync_api")
 
-from orkboard.realm import goal_types  # noqa: E402
+from orkboard.realm import goal_types, library, party_presets  # noqa: E402
 from tests.browser_kit import gui  # noqa: E402,F401  (fixture)
 from tests.test_shell_browser import _new_party, WAIT_MS, StubHost, _open, _show_goal  # noqa: E402
 
@@ -27,15 +27,24 @@ def types(ids, team=()):
     return [{"id": i, "name": by[i].name, "sign": by[i].sign, "missing": need(i)} for i in ids]
 
 
+def legacy(pid):
+    """The library's mixed party `pid` (the Game, the Mobile app) as a craft's preset row: this stub offers them so that a leader the types are listed for can be picked (spec 91 §7 has the stages of a kind instead)."""
+    p = next(p for p in library.presets() if p["id"] == pid)
+    return {"id": pid, "name": p["name"], "line": p["line"], "group": "craft", "stage": "", "craft": p["craft"], "recipe": "", "whole": False, "leader": p["lead"], "build": p["build"], "check": p["check"], "sizes": {}}
+
+
 class TypesHost(StubHost):
     """A host that answers `types` for the leader and the team it is asked about: spec 59 §4.3's lists of the Game and the Mobile app, the Taskmaster's for any other leader.
-    `offered` is a function of the call (None: an older host, no `types`)."""
+    `offered` is a function of the call (None: an older host, no `types`). Its presets are those of a project of code and the library's Game and Mobile app."""
 
     def __init__(self):
         super().__init__()
         self.offered = lambda a: types({"game-designer": GAME, "product-manager": MOBILE}.get(a["leader"], ("feature", "bug", "tidy")), a["team"])
 
     def handle(self, name, a):
+        if name == "ideas.party_presets":
+            self.log.append((name, a))
+            return {"kind": {"id": "code", "words": "code"}, "presets": [*party_presets.listed("code"), legacy("game"), legacy("mobile-app")]}
         got = super().handle(name, a)
         if name == "ideas.party_price" and self.offered:
             got["types"] = self.offered(a)
@@ -80,7 +89,7 @@ def test_new_party_asks_the_price_when_it_opens_and_after_a_seat_changes_and_say
     dlg = pg.get_by_role("dialog", name="New party")
     price = dlg.locator(".shell-price")
     price.wait_for(timeout=WAIT_MS)
-    assert asked(host) == [{"leader": "architect", "team": ["grunt", "reviewer"], "every": [], "craft": "engineering"}]       # the library's engineering party, asked at once
+    assert asked(host) == [{"leader": "architect", "team": ["grunt", "reviewer"], "every": [], "craft": "engineering"}]       # the project's Build, asked at once
     dlg.locator('.shell-craft-tile[data-craft="design"]').click()
     got = asks(pg, host, 2)
     assert got[1] == {"leader": "product-designer", "team": ["ui-kit", "accessibility-reviewer"], "every": [], "craft": "design"}
@@ -88,9 +97,18 @@ def test_new_party_asks_the_price_when_it_opens_and_after_a_seat_changes_and_say
     bands = dlg.get_by_role("region", name="Checks").bounding_box(), price.bounding_box()
     assert bands[1]["y"] > bands[0]["y"]                                                          # under the bands
     host.learned = False
-    dlg.get_by_role("button", name="Take in: Analyst").click()
-    dlg.get_by_role("button", name="Take out: Design system designer").click()
-    dlg.get_by_role("button", name="Take in: Copywriter").click()                                 # three changes within 300 ms: one call (the one builder's seat swapped)
+    dlg.get_by_role("button", name="Remove Product designer from the party").click()
+    dlg.locator('[data-free="lead"]').click()
+    dlg.get_by_role("group", name="Choose a leader").locator('[data-agent="analyst"]').click()
+    dlg.get_by_role("button", name="Remove Design system designer from the party").click()
+    dlg.locator('[data-free="build"]').click()
+    pop = dlg.get_by_role("group", name="Add a member")
+    pop.get_by_role("button", name="More roles").click()
+    pop.locator('[data-agent="copywriter"]').click()                                              # four changes within 300 ms: one call (the one builder's seat swapped)
+    for _ in range(100):                                                                          # the last change is asked 300 ms after it
+        if asked(host) and asked(host)[-1]["team"] == ["accessibility-reviewer", "copywriter"]:
+            break
+        pg.wait_for_timeout(100)
     pg.wait_for_function("() => document.querySelector('.shell-price')?.innerText.includes('a first guess')", timeout=WAIT_MS)
     got = asks(pg, host, 3)
     assert len(got) == 3 and got[2] == {"leader": "analyst", "team": ["accessibility-reviewer", "copywriter"], "every": [], "craft": "design"}
@@ -121,14 +139,14 @@ def test_below_a_dollar_the_price_is_said_in_cents(shell):
 
 def test_edit_the_party_asks_when_the_party_is_changed_and_its_checks_say_what_they_add(shell):
     pg, host = shell
+    host.goals["ship-sync"].update(about="Sync between devices.", craft="engineering", leader=host.leader("architect"), team=["grunt", "reviewer"], every=[])
+    host.bump({})
+    pg.locator(".arena-phead__leads", has_text="Architect").wait_for(timeout=WAIT_MS)
+    n = len(asked(host))
     pg.get_by_role("button", name="Edit the party").click()
     dlg = pg.get_by_role("dialog", name="Edit the party")
-    n = len(asked(host))
-    assert dlg.locator(".shell-price").count() == 0                                               # the party is not picked yet
-    dlg.get_by_role("button", name="Change the party").click()
-    dlg.locator(".shell-price").wait_for(timeout=WAIT_MS)
-    assert len(asked(host)) == n + 1
-    dlg.get_by_role("button", name="Take in: Reviewer").click()
+    dlg.locator(".shell-price").wait_for(timeout=WAIT_MS)                                         # the party is there: its price is asked at once
+    assert {"leader": "architect", "team": ["grunt", "reviewer"], "every": [], "craft": "engineering"} in asked(host)[n:]
     pg.wait_for_function("() => document.querySelector('.shell-checks')?.innerText.includes('adds about')", timeout=WAIT_MS)
     assert "adds about $0.35 to a goal it checks · about half of them" in " ".join(dlg.get_by_role("group", name="Checks").inner_text().split())
 
@@ -157,6 +175,21 @@ def test_hints_are_quiet_lines_under_the_price_and_never_block_save(shell):
 def _line(dlg):
     """The line *It can take:* as it reads."""
     return " ".join(dlg.locator(".shell-cantake").inner_text().split())
+
+
+def _put(dlg, agent):
+    """The free builder's seat takes `agent` from its list (More roles when it is past the short list)."""
+    dlg.locator('[data-free="build"]').click()
+    pop = dlg.get_by_role("group", name="Add a member")
+    if not pop.locator(f'[data-agent="{agent}"]').count():
+        pop.get_by_role("button", name="More roles").click()
+    pop.locator(f'[data-agent="{agent}"]').click()
+
+
+def _swap(dlg, name, agent):
+    """The builder `name` out of its seat and `agent` in."""
+    dlg.get_by_role("button", name=f"Remove {name} from the party").click()
+    _put(dlg, agent)
 
 
 def _lit(pg):
@@ -217,17 +250,15 @@ def test_the_types_that_miss_someone_follow_with_one_more_and_a_seat_that_opens_
     assert _line(dlg) == "It can take: New feature · Fix a bug · Clean up · Solve a pain with one more: New screen (needs Design system designer) · Write the launch (needs Copywriter)"
     assert dlg.locator('.shell-cantake [data-type="screen"] .ork-sign.screen').count() == 1          # drawn with its sign too
     pg.evaluate(RECORD)
-    dlg.get_by_role("button", name="Take out: Grunt").click()                                     # the one builder's seat is the Copywriter's: it opens Write the launch
-    dlg.get_by_role("button", name="Take in: Copywriter").click()
+    _swap(dlg, "Grunt", "copywriter")                                                             # the one builder's seat is the Copywriter's: it opens Write the launch
     pg.wait_for_function("() => window.__lit.length >= 1", timeout=WAIT_MS)
     assert _lit(pg) == ["launch"]
-    dlg.get_by_role("button", name="Take out: Copywriter").click()
-    dlg.get_by_role("button", name="Take in: Design system designer").click()                    # … and Design system designer's opens New screen instead
+    _swap(dlg, "Copywriter", "ui-kit")                                                            # … and Design system designer's opens New screen instead
     pg.wait_for_function("() => window.__lit.length >= 2", timeout=WAIT_MS)
     assert _lit(pg) == ["launch", "screen"]
-    dlg.get_by_role("button", name="Take out: Design system designer").click()                   # a type that goes is not lit: it is said to need the agent
+    dlg.get_by_role("button", name="Remove Design system designer from the party").click()        # a type that goes is not lit: it is said to need the agent
     pg.wait_for_function("() => document.querySelector('.shell-cantake')?.innerText.includes('(needs Design system designer)')", timeout=WAIT_MS)
-    dlg.get_by_role("button", name="Take in: Design system designer").click()                    # … and lit when it is back
+    _put(dlg, "ui-kit")                                                                           # … and lit when it is back
     pg.wait_for_function("() => window.__lit.length >= 3", timeout=WAIT_MS)
     assert _lit(pg) == ["launch", "screen", "screen"]
 
@@ -253,14 +284,17 @@ def test_what_does_not_fit_in_two_lines_ends_with_and_k_more_and_its_title_lists
 
 def test_edit_the_party_has_the_line_and_a_new_leader_lights_what_it_opens(shell):
     pg, host = shell
+    host.goals["ship-sync"].update(about="Sync between devices.", craft="engineering", leader=host.leader("architect"), team=["grunt", "reviewer"], every=[])
+    host.bump({})
+    pg.locator(".arena-phead__leads", has_text="Architect").wait_for(timeout=WAIT_MS)
+    pg.evaluate(RECORD)
     pg.get_by_role("button", name="Edit the party").click()
     dlg = pg.get_by_role("dialog", name="Edit the party")
-    assert dlg.locator(".shell-cantake").count() == 0                                             # the party is not picked yet
-    pg.evaluate(RECORD)
-    dlg.get_by_role("button", name="Change the party").click()
-    dlg.locator(".shell-cantake").wait_for(timeout=WAIT_MS)
+    dlg.locator(".shell-cantake").wait_for(timeout=WAIT_MS)                                       # the party is there: what it can take is asked at once
     assert _line(dlg) == "It can take: New feature · Fix a bug · Clean up"
-    dlg.get_by_role("region", name="Leads").get_by_role("button", name="Take in: Game designer").click()
+    dlg.get_by_role("button", name="Remove Architect from the party").click()
+    dlg.locator('[data-free="lead"]').click()
+    dlg.get_by_role("group", name="Choose a leader").locator('[data-agent="game-designer"]').click()
     pg.wait_for_function("() => document.querySelector('.shell-cantake')?.innerText.includes('New sound')", timeout=WAIT_MS)
     assert _line(dlg).startswith("It can take: New feature · Fix a bug · Clean up · New icon · New logo · New mechanic")
     price, box = dlg.locator(".shell-price").bounding_box(), dlg.locator(".shell-cantake").bounding_box()

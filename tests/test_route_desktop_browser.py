@@ -329,7 +329,7 @@ def test_the_skeletons_head_is_drawn_from_the_hosts_race_in_the_column_and_in_ne
     dlg.wait_for(timeout=WAIT_MS)
     tiles = dlg.locator(".shell-craft-tile")
     tiles.first.wait_for(timeout=WAIT_MS)
-    assert [t.get_attribute("data-craft") for t in tiles.all()][:5] == ["game", "mobile-app", "website", "ideation", "release"]       # the fifth tile of the mixed group
+    assert [t.get_attribute("data-craft") for t in tiles.all()][:3] == ["ideation", "release", "engineering"]       # the stages first (this host reads no project: Ideation and Release), then the crafts
     srcs = dlg.locator('.shell-craft-tile[data-craft="release"] img.ork-race__head').evaluate_all("(is) => is.map((i) => i.getAttribute('src'))")
     assert srcs and all("/races/skeleton-" in s for s in srcs[:1]) and "/races/skeleton-" in srcs[-1]        # the Release manager and the checker are skeletons
     dlg.locator('.shell-craft-tile[data-craft="release"]').click()

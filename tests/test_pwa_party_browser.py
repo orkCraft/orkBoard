@@ -59,30 +59,35 @@ async def test_new_party_says_the_price_asks_again_300_ms_after_a_seat_and_each_
         assert " ".join((await price.inner_text()).split()) == "This party: about $2–6 a goal from this project's last 12 goals"
         stub.learned = False
         before = len(asked())
-        await sheet.locator('.craft-tile[data-craft="design"]').click()                      # the craft's party: changes in the seats
-        await sheet.locator('.party [data-change="team"]').click()
-        await sheet.get_by_role("button", name="Take in: Analyst").click()
-        await sheet.get_by_role("button", name="Take in: Copywriter").click()
+        await sheet.locator('.preset-tile[data-preset="design"]').click()                    # the craft's party: changes in the seats
+        await sheet.get_by_role("button", name="Remove Product designer from the party").click()
+        await sheet.locator('[data-free="lead"]').click()
+        await page.get_by_role("dialog", name="Choose a leader").locator('[data-agent="analyst"]').click()
+        await sheet.get_by_role("button", name="Remove Design system designer from the party").click()
+        await sheet.locator('[data-free="build"]').click()
+        await page.get_by_role("dialog", name="Add a member").locator('[data-act="more-roles"]').click()
+        await page.get_by_role("dialog", name="Add a member").locator('[data-agent="copywriter"]').click()
         for _ in range(100):                                                                 # the last change is asked 300 ms after it
             if asked()[-1]["leader"] == "analyst" and len(asked()) > before:
                 break
             await page.wait_for_timeout(100)
         await page.wait_for_function("() => document.querySelector('.party-price')?.innerText.includes('a first guess')", timeout=WAIT_MS)
-        assert len(asked()) - before <= 3                                                     # the changes of 300 ms are a call each at most (and the picker's own)
+        assert len(asked()) - before <= 4                                                     # the changes of 300 ms are a call each at most (and the picker's own)
         assert asked()[-1]["leader"] == "analyst"
         assert " ".join((await price.inner_text()).split()) == "This party: about $2–6 a goal a first guess: it learns from this project's goals"
-        await sheet.get_by_role("region", name="Checks").get_by_role("button").first.click()
-        mark = sheet.get_by_role("button", name="Take out: Accessibility reviewer").locator(".check-badge")
+        mark = sheet.locator('.pseat[data-seat="accessibility-reviewer"] .check-badge')
         assert await mark.text_content() == "checks"                                            # a checker's mark, as the desktop's
-        assert await sheet.get_by_role("button", name="Take in: Reviewer").locator(".check-badge").text_content() == "checks"
-        await sheet.get_by_role("region", name="Checks").get_by_role("button", name="Done").click()
-        await sheet.locator('.party-checks [data-change="checks"]').click()
+        await sheet.get_by_role("button", name="Remove Accessibility reviewer from the party").click()
+        await sheet.locator('[data-free="check"]').click()
+        assert await page.get_by_role("dialog", name="Add a checker").locator('[data-agent="reviewer"] .check-badge').text_content() == "checks"
+        await page.get_by_role("dialog", name="Add a checker").locator('[data-agent="reviewer"]').click()
         block = sheet.get_by_role("group", name="Checks")
+        await page.wait_for_function("() => document.querySelector('.checks-block')?.innerText.includes('adds about $0.35')", timeout=WAIT_MS)       # the price comes back a moment after the pick
         text = " ".join((await block.inner_text()).split())
         assert "adds about $0.35 to a goal it checks · about half of them" in text and "a goal they all apply to" not in text
-        await block.get_by_label("Every goal: Accessibility reviewer").check()
+        await block.get_by_label("Every goal: Reviewer").check()
         await page.wait_for_function("() => document.querySelector('.checks-block')?.innerText.includes('· every goal')", timeout=WAIT_MS)
-        assert asked()[-1]["every"] == ["accessibility-reviewer"]
+        assert asked()[-1]["every"] == ["reviewer"]
         assert await page.evaluate(NO_SCROLL)
 
 
@@ -252,21 +257,20 @@ async def test_a_seat_that_opens_a_type_lights_it_once_the_first_answers_light_n
         await _takes(sheet, "bug")
         await page.wait_for_timeout(300)
         await page.evaluate("window.__lit.length = 0")
-        await sheet.locator('.party [data-change="team"]').click()
-        builds = sheet.get_by_role("region", name="Builds")
-        await builds.get_by_role("button").first.click()
-        await sheet.get_by_role("button", name="Take out: Grunt").click()
+        await sheet.get_by_role("button", name="Remove Grunt from the party").click()
         assert await page.evaluate("window.__lit") == []
-        await sheet.get_by_role("button", name="Take in: Copywriter").click()                 # the one builder's seat is the Copywriter's: A tagline opens
+        await sheet.locator('[data-free="build"]').click()
+        await page.get_by_role("dialog", name="Add a member").locator('[data-act="more-roles"]').click()
+        await page.get_by_role("dialog", name="Add a member").locator('[data-agent="copywriter"]').click()          # the one builder's seat is the Copywriter's: A tagline opens
         await _takes(sheet, "tagline")
         if reduced:
             await page.wait_for_timeout(500)
             assert await page.evaluate("window.__lit") == [] and await sheet.locator(".party-takes .is-reward").count() == 0
             return
         await page.wait_for_function("() => window.__lit.length > 0", timeout=WAIT_MS)
-        await sheet.get_by_role("button", name="Take out: Copywriter").click()
+        await sheet.get_by_role("button", name="Remove Copywriter from the party").click()
         await sheet.locator('.party-takes .take[data-type="tagline"]').wait_for(state="detached", timeout=WAIT_MS)       # a type that went is simply not drawn
-        await builds.get_by_role("button", name="Done").click()                             # a redraw for another reason does not light it again
+        await sheet.get_by_label("Name").fill("Taglines")                                   # a redraw for another reason does not light it again
         await page.wait_for_timeout(900)
         lit = await page.evaluate("window.__lit")
         assert [(l["type"], l["name"], l["duration"], l["timing"]) for l in lit] == [("tagline", "reward", "0.6s", "steps(4)")]      # the one the seat opened, once, the quiet reward's look
