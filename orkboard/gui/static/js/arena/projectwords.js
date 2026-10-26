@@ -7,6 +7,21 @@ import { pitchWords } from "./pitchwords.js";
 export const THE_PROJECT = "The project";
 export const PARTIES_WORDS = "The parties, their goals";
 
+/** The Orkmaster's two rows (docs/specs/91-the-owners-list.md §0, §8): the words as the spec gives them. */
+export const ROWS = {
+  parties: "Parties", partiesCap: "who works on this project", newParty: "New party", add: "Add",
+  goal: "New goal", goalCap: "say it in a line: the Orkmaster picks its kind", addGoal: "Add goal", more: "More kinds…", guessed: "guessed",
+  placeholder: "Say it in a line, in your own words", pitch: "takes it as a pitch: no kind", others: "Other parties' kinds",
+};
+/** *for Website*. */
+export const forWords = (name) => `for ${name}`;
+/** *Website's kinds:*. */
+export const kindsWords = (name) => `${name}'s kinds:`;
+/** *Fix a bug · guessed*. */
+export const kindChip = (name, guessed) => (guessed ? `${name} · ${ROWS.guessed}` : name);
+/** The most kinds the row shows; the rest are under *More kinds…*. */
+export const KINDS_SHOWN = 3;
+
 /** The level's tabs (spec 88 §6.1), the first the one it opens on. */
 export const TABS = [["field", "Board"], ["assets", "Assets and files"], ["play", "Play"]];
 

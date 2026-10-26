@@ -3,7 +3,7 @@
 // (orkUI's `.ork-table`, as the party's field: docs/specs/79-the-project-on-the-table.md) with each party's goals as the field's cards (5:7: the goal's element, its type's sign, its type, its title,
 // its state's words) grouped *Planning*, *At work*, *Waits for main*, then *Flags (n)* folded. A press on a card opens the goal's screen in the drawer.
 // Wider than the field the columns scroll sideways and the heads stay. Hovering or focusing a deck draws, with arrows.js, a link to each deck its route names in another column (the pitch it came from,
-// the release it went into); nothing at rest. Above the columns the Orkmaster's head and *New party* (its deck: projectdeal.js), below them *New goal* (projectdeal.js, a goal's party from the Orkmaster).
+// the release it went into); nothing at rest. Above the columns the Orkmaster's head and its two rows (projectrows.js, docs/specs/91-the-owners-list.md §8): *Parties* (*New party* and two or three ready parties) and *New goal* (a line, its party from the Orkmaster, its kind guessed).
 // Three tabs lie over the table (docs/specs/88-assets-and-play.md §6, docs/specs/91-the-owners-list.md §3): Board (all of the above; its id stays `field`), Assets and files (assetsfiles.js: Assets, the project's files as cards by kind, or Files, its tree) and Play (play.js: the build in the pane); it opens on Board.
 // The code's goal is a party; its idea is a goal; its deck is a goal drawn small, never a word a person reads.
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
@@ -19,7 +19,7 @@ import { ArrowLines, segment } from "./arrows.js";
 import { reducedMotion } from "./motion.js";
 import { PartyList, show } from "./partylist.js";
 import { PartyMenu } from "./partymenu.js";
-import { NewGoalPile, NewPartyPile } from "./projectdeal.js";
+import { ProjectRows } from "./projectrows.js";
 import { orkLinks } from "./collidewords.js";
 import { GROUPS, PARTIES_WORDS, TABS, THE_PROJECT, deckCount, decksOf, emptyWords, linksOf } from "./projectwords.js";
 import { AssetsAndFiles } from "./assetsfiles.js";
@@ -106,11 +106,11 @@ function useLinks(host, nodes, lit, collisions) {
   return lines;
 }
 
-/** The Field tab: the project's level as it was (spec 79): the Orkmaster's New party pile, the parties as columns of the goals' cards, New goal under them. `stops`: the one hand's. */
+/** The Field tab: the project's level (spec 79): the Orkmaster's two rows (spec 91 §8), the parties as columns of the goals' cards. */
 function Field({ m, parties }) {
   const [lit, setLit] = useState(""), host = useRef();
   const lines = useLinks(host, m.nodes || [], lit, m.project?.collisions);
-  return html`<${NewPartyPile} deal=${m.project?.deal || []} />
+  return html`<${ProjectRows} ork=${m.project?.orkmaster} deal=${m.project?.deal || []} />
     <section class="arena-project__body" aria-label=${THE_PROJECT}>
       <div class="arena-project__grid">
         <div class="arena-project__heads">${parties.map((g) => html`<${PartyMenu} key=${g.slug} slug=${g.slug} name=${g.short || g.title} at="arena-pcol__headwrap"><${ColumnHead} g=${g} nodes=${nodesOf(m, g.slug)} /><//>`)}</div>
@@ -119,8 +119,7 @@ function Field({ m, parties }) {
           <${ArrowLines} lines=${lines} />
         </div>
       </div>
-    </section>
-    <${NewGoalPile} goals=${parties} />`;
+    </section>`;
 }
 
 /** The level's three tabs over its table (spec 88 §6.1): *Board* (today's level; it was called Field), *Assets*, *Play*. The level opens on Board. ← → (Home, End) move between the tabs. */
@@ -142,11 +141,10 @@ function Tabs({ tab, setTab }) {
 /** The project's level: the field in place of a party's, with its Assets and Play (spec 88). `stops`: the one hand's, as Operations' field has it. */
 export function Project({ m, stops }) {
   const parties = goalsOf(m, goalList().map((x) => x.slug)), [tab, setTab] = useState("field");
-  const ork = m.project?.orkmaster;
   return html`<div class="arena arena-project" data-goal=${PROJECT}>
     <${PartyList} />
     <div class="arena-ops__main arena-project__main">
-      <div class="arena-pjtop">${ork && html`<${Head} race=${ork.race || "peon"} tier=${ork.tier || "crown"} />`}<h2 class="arena-pjtop__title">${THE_PROJECT}</h2>
+      <div class="arena-pjtop"><h2 class="arena-pjtop__title">${THE_PROJECT}</h2>
         <span class="arena-cap">${PARTIES_WORDS}</span></div>
       <${Tabs} tab=${tab} setTab=${setTab} />
       <div class="arena-pjpanel" id="pjpanel" role="tabpanel" aria-labelledby=${`pjtab-${tab}`} data-tab=${tab}>

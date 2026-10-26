@@ -3,6 +3,7 @@
 // (*Its party*: the others are its chips, asked of `ideas.party_for` when a type is picked). On the project's level, or in Operations (no party shown), it is spec 70 §4: no party at first.
 // A host from before spec 70 (`ideas.map` has no `project`) has no Orkmaster to suggest: the + deals the shown party's own types and New goal is that party's, as its pile was.
 // A host with no types opens New goal at once.
+// Spec 91 §8: with an Orkmaster this + is gone — New goal is a row of the Orkmaster's level (projectrows.js), the one way in; partylist.js draws this + only for a host with no Orkmaster.
 import { useRef, useState } from "preact/hooks";
 import { html } from "../html.js";
 import { Icon } from "../orkui.js";

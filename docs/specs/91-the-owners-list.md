@@ -86,7 +86,12 @@ Beside the Orkmaster's head on its level: **Parties**: *New party* (opens §7) a
 project (`ideas.proposals`) each with *Add*; **New goal**: one line for the goal, *for <party>* (the party it goes to,
 the Orkmaster's guess first), *Add goal*; under it at most three kinds for that party (the guessed one marked) and *More
 kinds…* (the full list, grouped). The kind is guessed from the line when it is typed (`idea_kind`), never asked first.
-The project line's separate *New goal* and *New party* piles go.
+The project line's separate *New goal* and *New party* piles go, and so does its **+** of New goal (a host with no Orkmaster, from before spec 70, keeps it: it has no level to hold the rows).
+`ideas.kind_for {text, party?}` → `{type: id | "", types: [ids]}` (`core/idea_kind.py` `guess` / `ranked`: the words each goal type says, no model, nothing written): the kind the line says among the kinds the
+party is offered (all of the catalog's with no `party`), the guessed one first. The row asks it as the line rests (≈ 0.25 s), then `ideas.party_for` of that kind for the party the Orkmaster picks (a party the person
+picked stays), then the kind among that party's. *Add goal* sends `ideas.add` as New goal does (`text`, `track`, the party's `priority`, `type` when one is picked or guessed; a pitch has none). *More kinds…* deals the
+party's kinds, then the others', under their headings (`js/arena/types.js`) and opens New goal on the kind picked with the line in it. The phone's project sheet has the same two rows, one under the other, every target
+44 px at least (`pwa/shell-project.js`); its *More kinds…* opens today's New goal form with the line and the party picked.
 
 ## 9. Order
 A, B, C, D in parallel; E and F after D (E needs `tools`, F the proposals and E's dialog). Each part merges into `main` when
