@@ -186,7 +186,7 @@ def test_the_level_has_three_tabs_and_opens_on_field(level):
     assert pg.get_by_role("tab", name="Assets").get_attribute("aria-selected") == "true"
     _tab(pg, "Field")
     pg.locator(".arena-pcol").first.wait_for(timeout=WAIT_MS)
-    assert pg.locator(".arena-project__heads > .arena-pcol__head").count() == 4                                    # the Field is as it was
+    assert pg.locator(".arena-project__heads .arena-pcol__head").count() == 4                                    # the Field is as it was
 
 
 # -- the table of assets ----------------------------------------------------------------------------------------------------------------------------------

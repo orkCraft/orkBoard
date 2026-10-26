@@ -4,7 +4,7 @@
 // §65.2) —, Operations when the project has them, then *+ New party*. One party is open, the one the board shows, with its body under its heading (`body`: goals.js `Left`); the open heading
 // is its leader's (spec 73 §2): the leader's head, the party's name and *<leader> leads* under it, the work sign and *k/n*, no row of the leader's in the body. The project's line also holds the **+** of New goal (newgoal.js).
 // a press on a closed heading shows that party (the party switch: the board redraws in place, the party kept per device), a press on the open one shows only its leader's work, or everyone's again (the leader's row did, spec 73 §2). ↑ and ↓ move between
-// the headings. A switch says `ideas.shown` (spec 68 §7.9). A new party saved gathers its seats' heads onto its heading's head (spec 63 §3, goaltabs.js `gatherInto`). The column scrolls under the project's line.
+// the headings. A party's menu (partymenu.js: a right click on its heading or its …, spec 90 §5) has *About this party*, *Edit the party*, *Remove party…*. A switch says `ideas.shown` (spec 68 §7.9). A new party saved gathers its seats' heads onto its heading's head (spec 63 §3, goaltabs.js `gatherInto`). The column scrolls under the project's line.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Head, Icon, Sign } from "../orkui.js";
@@ -20,6 +20,7 @@ import { countTip, countWords, plural } from "./arenawords.js";
 import { gatherInto, partiesOf, shownOf } from "./goaltabs.js";
 import { NewGoalPlus } from "./newgoal.js";
 import { THE_PROJECT } from "./projectwords.js";
+import { PartyMenu } from "./partymenu.js";
 
 let scrolled = 0;                                       // the column's scroll, kept across the redraw a switch makes (the party is keyed, the list is drawn again)
 
@@ -150,7 +151,7 @@ export function PartyList({ body = null }) {
       ${ork && html`<${Orkmaster} ork=${ork} open=${level} want=${want} />`}<${NewGoalPlus} want=${want} /><${ProjectSwitcher} /></div>
     <div class="arena-plist" ref=${list} onScroll=${(e) => { scrolled = e.currentTarget.scrollTop; }}>
       ${ps.goals.map((x) => html`<section key=${x.g.slug} class=${cls("arena-party", { "is-open": open(x.g.slug) })}>
-        <${Heading} x=${x} open=${open(x.g.slug)} want=${want} />
+        <${PartyMenu} slug=${x.g.slug} name=${x.g.short || x.g.title}><${Heading} x=${x} open=${open(x.g.slug)} want=${want} /><//>
         ${open(x.g.slug) ? body : html`<${AtWork} x=${x} want=${want} />`}
       </section>`)}
       ${ps.ops && html`<section class=${cls("arena-party", { "is-open": want === OPS })}><${OpsHeading} ps=${ps} open=${want === OPS} want=${want} /></section>`}

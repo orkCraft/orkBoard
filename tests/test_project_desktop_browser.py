@@ -151,7 +151,7 @@ def test_the_level_is_a_column_for_each_party_with_its_goals_as_decks_in_groups_
     _project(pg)
     cols = pg.locator(".arena-pcol")
     assert [c.get_attribute("data-goal") for c in cols.all()] == ["passkey", "ideas", "website", "release"]            # the Board's order, no Operations
-    assert [h.get_attribute("data-goal") for h in pg.locator(".arena-project__heads > .arena-pcol__head").all()] == ["passkey", "ideas", "website", "release"]   # the heads on the canvas, above the table
+    assert [h.get_attribute("data-goal") for h in pg.locator(".arena-project__heads .arena-pcol__head").all()] == ["passkey", "ideas", "website", "release"]   # the heads on the canvas, above the table
     head = _head(pg, "passkey")
     assert head.locator(".ork-race__head").count() == 1 and head.locator(".arena-pcol__name").inner_text() == "Passkey" and "/" in head.locator(".arena-phead__count").inner_text()
     assert head.get_attribute("title") == "Open Passkey"
