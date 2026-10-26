@@ -92,3 +92,22 @@
   .assets-seal, .assets-card.is-crumble { display: none; }
   .assets-lift__face { transition: none; }
 }
+
+/* spec 90 A begins -- Play's start screen (docs/specs/90-what-the-first-look-said.md §1.3): black, the project's name coming up in steps, the frame out of the black */
+.playpane.is-black { background: var(--ork-canvas); }
+.play-intro { position: absolute; inset: 0; z-index: 2; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--ork-5); padding: var(--ork-6); background: var(--ork-canvas); text-align: center; }
+.play-title { margin: 0; max-width: 100%; overflow-wrap: anywhere; font-family: var(--ork-font-pixel); font-weight: 500; font-size: 56px; line-height: 64px; text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); color: var(--ork-ink); animation: play-name-in 0.8s steps(8) both; }
+.play-starting { margin: 0; font: var(--ork-type-body); color: var(--ork-ink-faint); animation: play-name-in 0.8s steps(8) 0.4s both; }
+.play-intro.is-fading { animation: play-intro-out 0.45s steps(5) forwards; pointer-events: none; }
+.play-intro.is-fading .play-title { animation: none; }
+.play-stage { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--ork-canvas); }
+.play-stage > .play-frame { flex: 1; }
+.play-stage.is-rising > .play-frame { animation: play-frame-in 0.45s steps(5) both; }
+.play-ports { margin: 0; font-variant-numeric: tabular-nums; }
+@keyframes play-name-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes play-intro-out { from { opacity: 1; } to { opacity: 0; } }
+@keyframes play-frame-in { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .play-title, .play-starting, .play-intro.is-fading, .play-stage.is-rising > .play-frame { animation: none; }
+}
+/* spec 90 A ends */

@@ -12,12 +12,16 @@ The preview is, in this order: the `preview` line of `.orkcraft/checks.toml` (`p
 `preview_size = "390x844"` beside it), a static `index.html` at the worktree's root (served by Python on a port of its own), the project's
 `package.json` script `dev`, `preview` or `start`. The command runs in the worktree with `PORT` set; the port is the one it prints or the
 one asked. Time-boxed: up to `OPEN_S` seconds for the port, `DRAW_S` for the picture, then the preview is killed with its process group.
+A command may print several ports (an Express server that honours `PORT`, a Vite client that prints its own later): `opened` keeps every port
+printed and `PORT`, and `page_of(ports, path)` asks each, in that order, for the screen's path with a second's timeout; the first that answers 2xx with
+`text/html` is the page (spec 90 §1) and the picture and Play are of it. When none gives a page by `OPEN_S`, `tried` says which ports were asked.
 The browser is `$ORKCRAFT_CHROMIUM`, the preinstalled one (`/opt/pw-browsers/chromium`), one on the PATH, else Playwright's own.
 """
 from __future__ import annotations
 
 import contextlib
 import functools
+import http.client
 import http.server
 import json
 import os
@@ -118,10 +122,37 @@ class _Quiet(http.server.SimpleHTTPRequestHandler):
         pass
 
 
+def page_of(ports: list[int], path: str = "/", timeout: float = 1.0) -> int | None:
+    """The first of `ports`, in the order given, that answers a `GET` of `path` with 2xx and `text/html` (a port that is no page — a server's
+    404 at `/`, JSON, nothing listening — is passed over); None when none does. A redirect is followed up to three times on the same port."""
+    for port in dict.fromkeys(ports):
+        target = path if path.startswith("/") else "/"
+        for _hop in range(4):
+            conn = http.client.HTTPConnection("127.0.0.1", port, timeout=timeout)
+            try:
+                conn.request("GET", target, headers={"Accept": "text/html", "Connection": "close"})
+                res = conn.getresponse()
+                if 300 <= res.status < 400 and (where := res.getheader("Location") or "").startswith("/"):
+                    target = where
+                    continue
+                if 200 <= res.status < 300 and (res.getheader("Content-Type") or "").lower().lstrip().startswith("text/html"):
+                    return port
+            except (OSError, http.client.HTTPException, ValueError):
+                pass
+            finally:
+                conn.close()
+            break
+    return None
+
+
 @contextlib.contextmanager
-def opened(how: dict, worktree: Path, seconds: float = OPEN_S, env: dict[str, str] | None = None) -> Iterator[int | None]:
-    """The preview open on a worktree: the port it listens on, or None when it did not open in `seconds`. It is closed on leaving.
-    `env`: more for the command's environment (Play asks `HOST=127.0.0.1`, spec 88 §5); a static page is served on 127.0.0.1 always."""
+def opened(how: dict, worktree: Path, seconds: float = OPEN_S, env: dict[str, str] | None = None, path: str = "/",
+           tried: list[int] | None = None) -> Iterator[int | None]:
+    """The preview open on a worktree: the port of its page, or None when it gave none in `seconds`. It is closed on leaving.
+    The page is the first port the command prints, then `PORT`, that answers `path` with an HTML page (`page_of`); a port that only listens
+    (Express's, with Vite's page on another) is not the page. `env`: more for the command's environment (Play asks `HOST=127.0.0.1`,
+    spec 88 §5); a static page is served on 127.0.0.1 always. `tried`: a list that is given the ports asked (printed order, then `PORT`)
+    when something listened but none gave a page, so a caller can tell *no page* from *did not open*."""
     if how["how"] == "static":
         server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(_Quiet, directory=str(worktree)))
         threading.Thread(target=server.serve_forever, daemon=True, name="idea-shot-static").start()
@@ -147,12 +178,18 @@ def opened(how: dict, worktree: Path, seconds: float = OPEN_S, env: dict[str, st
 
     threading.Thread(target=read, daemon=True, name="idea-shot-out").start()
     found: int | None = None
+    listened: list[int] = []
     try:
         end = time.monotonic() + seconds
         while time.monotonic() < end and found is None and proc.poll() is None:
-            found = next((p for p in [*seen, port] if _listening(p)), None)
+            ports = list(dict.fromkeys([*seen, port]))
+            listened = [p for p in ports if _listening(p)]
+            if listened:
+                found = page_of(listened, path)
             if found is None:
                 time.sleep(0.25)
+        if found is None and listened and tried is not None:
+            tried[:] = list(dict.fromkeys([*seen, port]))
         yield found
     finally:
         _kill(proc)
@@ -206,17 +243,18 @@ def _path(screen: str, conf: dict) -> str:
 
 def make(state_dir: Path, worktree: Path, dest: Path, screen: str = "") -> tuple[bool, str]:
     """The picture of the screen `screen` (a path, else the preview's own, else "/") of the project on `worktree`, into the PNG `dest`:
-    (True, "") or (False, why) with why `no preview` (nothing opens) or `no browser`."""
+    (True, "") or (False, why) with why `no preview` (nothing opens), `no page` (it listens but no port gives a page) or `no browser`."""
     how = preview_of(state_dir, worktree)
     if how is None:
         return False, "no preview"
     if browser() is None:
         return False, "no browser"
     conf = _config(state_dir)
-    with opened(how, worktree, OPEN_S) as port:
+    path, tried = _path(screen, conf), []
+    with opened(how, worktree, OPEN_S, path=path, tried=tried) as port:
         if port is None:
-            return False, "no preview"
-        if not draw(f"http://127.0.0.1:{port}{_path(screen, conf)}", dest, _size(conf)):
+            return False, "no page" if tried else "no preview"
+        if not draw(f"http://127.0.0.1:{port}{path}", dest, _size(conf)):
             return False, "no picture"
     return True, ""
 

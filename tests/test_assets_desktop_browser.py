@@ -436,7 +436,7 @@ def test_play_opens_the_build_polls_while_it_starts_and_shows_it_in_a_sandboxed_
     assert pg.get_by_role("button", name="Open the build").count() == 1 and pg.locator("iframe").count() == 0
     pg.get_by_role("button", name="Open the build").click()
     pg.locator('.playpane[data-state="starting"]').wait_for(timeout=WAIT_MS)
-    assert pg.locator(".playpane").text_content().strip().strip() == "Starting the build…"
+    assert pg.locator(".play-starting").text_content().strip() == "Starting shop…" and pg.locator(".play-title").text_content().strip() == "shop"
     shot(pg, "play-starting.png")
     pg.locator('.playpane[data-state="playing"]').wait_for(timeout=WAIT_MS)
     calls = _calls(pg, host, "ideas.play", 3)
@@ -478,3 +478,89 @@ def test_play_says_why_the_build_would_not_start_and_nothing_here_yet_for_a_proj
     assert pg.locator(".assets-none__title").text_content().strip() == "Nothing here yet"
     assert "checks.toml" in pg.locator(".playpane").text_content().strip() and "preview" in pg.locator(".playpane").text_content().strip()
     assert pg.get_by_role("button", name="Open the build").count() == 0
+
+
+# -- the start screen and the page that answered (spec 90 §1) ---------------------------------------------------------------------------------------------
+
+WATCH_FRAME = """(() => {                    // records the state of the pane each time a frame is put into the page
+  window.__frames = [];
+  new MutationObserver((list) => { for (const m of list) for (const n of m.addedNodes) {
+    const frames = n.nodeType === 1 ? (n.matches("iframe.play-frame") ? [n] : [...n.querySelectorAll("iframe.play-frame")]) : [];
+    for (const f of frames) window.__frames.push(f.closest(".playpane")?.dataset.state || "?");
+  } }).observe(document, { childList: true, subtree: true });
+})()"""
+CANVAS = "() => { const e = document.createElement('i'); e.style.background = 'var(--ork-canvas)'; document.body.append(e); const c = getComputedStyle(e).backgroundColor; e.remove(); return c; }"
+
+
+def test_the_start_screen_is_black_with_the_name_coming_up_in_steps_and_the_frame_only_after_the_page_answered(level):
+    pg, host = level
+    pg.evaluate(WATCH_FRAME)
+    host.play = [{"state": "stopped"}, {"state": "starting", "commit": HEAD, "short": HEAD[:7]}, {"state": "starting", "commit": HEAD, "short": HEAD[:7]},
+                 {"state": "starting", "commit": HEAD, "short": HEAD[:7]}, PLAYING]
+    _play(pg)
+    pg.get_by_role("button", name="Open the build").click()
+    pane = pg.locator('.playpane[data-state="starting"]')
+    pane.wait_for(timeout=WAIT_MS)
+    assert pg.locator("iframe").count() == 0                                                                           # no frame while it starts
+    black = pg.evaluate(CANVAS)
+    assert pane.evaluate("e => getComputedStyle(e).backgroundColor") == black and pg.locator(".play-intro").evaluate("e => getComputedStyle(e).backgroundColor") == black
+    title, note = pg.locator(".play-title"), pg.locator(".play-starting")
+    assert title.text_content().strip() == "shop" and note.text_content().strip() == "Starting shop…"
+    assert "Pixelify" in title.evaluate("e => getComputedStyle(e).fontFamily") and title.evaluate("e => parseFloat(getComputedStyle(e).fontSize)") >= 40       # the pixel face, large
+    assert title.evaluate("e => getComputedStyle(e).animationTimingFunction").startswith("steps(") and title.evaluate("e => getComputedStyle(e).animationName") == "play-name-in"
+    assert note.evaluate("e => getComputedStyle(e).color") == pg.evaluate("() => { const e = document.createElement('i'); e.style.color = 'var(--ork-ink-faint)'; document.body.append(e); const c = getComputedStyle(e).color; e.remove(); return c; }")
+    box, pbox = title.bounding_box(), pane.bounding_box()
+    assert abs((box["x"] + box["width"] / 2) - (pbox["x"] + pbox["width"] / 2)) < 3                                    # centred
+    assert abs((box["y"] + box["height"] / 2) - (pbox["y"] + pbox["height"] / 2)) < 60
+    shot(pg, "play-start-screen.png")
+    pg.locator('.playpane[data-state="playing"]').wait_for(timeout=WAIT_MS)
+    assert pg.locator("iframe.play-frame").count() == 1
+    pg.locator(".play-intro.is-fading").wait_for(timeout=WAIT_MS)                                                      # the name fades over the frame coming up
+    assert pg.locator(".play-intro.is-fading").evaluate("e => getComputedStyle(e).animationTimingFunction").startswith("steps(")
+    pg.locator(".play-intro").wait_for(state="detached", timeout=WAIT_MS)
+    assert pg.frame_locator("iframe.play-frame").locator("p").text_content().strip() == "the build"
+    assert pg.evaluate("window.__frames") == ["playing"]                                                               # a frame was put in only once the page had answered
+    assert pg.locator("iframe.play-frame").evaluate("e => getComputedStyle(e).backgroundColor") == black
+
+
+def test_under_reduced_motion_the_start_screen_has_no_steps_and_the_page_follows_the_name_at_once(gui, tmp_path):
+    pg = gui[1].new_page(viewport={"width": 1440, "height": 900}, reduced_motion="reduce")
+    errors = []
+    pg.on("pageerror", lambda e: errors.append(str(e)))
+    host = AssetsHost()
+    host.play = [{"state": "stopped"}, {"state": "starting", "commit": HEAD, "short": HEAD[:7]}, {"state": "starting", "commit": HEAD, "short": HEAD[:7]}, PLAYING]
+    pg.route_web_socket("**/ws*", host.on_socket)
+    serve(pg, tmp_path)
+    pg.goto(gui[0].url)
+    pg.locator(".arena[data-goal=passkey]").wait_for(timeout=WAIT_MS)
+    pg.evaluate(WATCH_FRAME)
+    _play(pg)
+    pg.get_by_role("button", name="Open the build").click()
+    pg.locator('.playpane[data-state="starting"]').wait_for(timeout=WAIT_MS)
+    assert pg.locator(".play-title").text_content().strip() == "shop" and pg.locator("iframe").count() == 0
+    assert pg.locator(".play-title").evaluate("e => getComputedStyle(e).animationName") == "none" and pg.locator(".play-starting").evaluate("e => getComputedStyle(e).animationName") == "none"
+    assert pg.locator(".play-title").evaluate("e => getComputedStyle(e).opacity") == "1"                                # there at once, not coming up
+    pg.locator('.playpane[data-state="playing"]').wait_for(timeout=WAIT_MS)
+    assert pg.locator(".play-intro").count() == 0 and pg.locator("iframe.play-frame").count() == 1                      # the name and then the page: nothing fades between
+    assert pg.frame_locator("iframe.play-frame").locator("p").text_content().strip() == "the build"
+    assert pg.evaluate("window.__frames") == ["playing"]
+    pg.close()
+    assert not errors, "\n".join(errors)
+
+
+def test_a_build_whose_ports_give_no_page_says_so_with_the_ports_tried_and_offers_to_stop_it(level):
+    pg, host = level
+    pg.evaluate(WATCH_FRAME)
+    host.play = [{"state": "stopped"}, {"state": "failed", "why": "nopage", "error": "The build started, but no port gives a page. Name it in .orkcraft/checks.toml: preview_port or preview_path.", "ports": [3001, 5173]}]
+    _play(pg)
+    pg.get_by_role("button", name="Open the build").click()
+    pane = pg.locator('.playpane[data-state="nopage"]')
+    pane.wait_for(timeout=WAIT_MS)
+    assert pg.locator(".play-error").text_content().strip() == "The build started, but no port gives a page. Name it in .orkcraft/checks.toml: preview_port or preview_path."
+    assert pg.locator(".play-ports").text_content().strip() == "Ports tried: 3001, 5173"
+    assert pg.get_by_role("button", name="Stop the build").count() == 1 and pg.get_by_role("button", name="Open the build").count() == 0
+    assert pg.locator("iframe").count() == 0 and pg.evaluate("window.__frames") == []                                   # never a frame, never a white page
+    shot(pg, "play-nopage.png")
+    pg.get_by_role("button", name="Stop the build").click()
+    pg.locator('.playpane[data-state="idle"]').wait_for(timeout=WAIT_MS)
+    assert _calls(pg, host, "ideas.play_stop") == [{}]

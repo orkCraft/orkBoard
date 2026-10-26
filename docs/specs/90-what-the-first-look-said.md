@@ -97,6 +97,40 @@ HTTP and socket link with its routes and events, the ways in, the layers, the sh
 container; nothing in skipped folders. E2: the three tabs, the containers, the arrows and their routes. The critical
 tests and each part's files' tests.
 
+## As built (A)
+
+Files: `core/idea_shot.py` (`page_of`, `opened`, `make`), `gui/ideas_assets.py` (the failure), `realm/event_log.py` (the words of `shot_taken`'s and
+`play_started`'s `why`), `js/arena/play.js`, `js/arena/assets.css` (a block at the end, between `spec 90 A begins` and `spec 90 A ends`).
+Tests: `tests/test_idea_shot.py`, `tests/test_play.py`, `tests/test_assets_desktop_browser.py`. No model.
+
+- **`page_of(ports, path="/", timeout=1.0)`** → the first port of `ports` (in the order given) whose `GET path` answers 2xx with `text/html`, else None.
+  It talks to `127.0.0.1` with `http.client` (no proxy is ever asked), follows up to three redirects that stay on the port, and passes over a port
+  that refuses, times out, answers 4xx/5xx or gives JSON or plain text.
+- **`opened(how, worktree, seconds, env, path="/", tried=None)`** keeps every port the command prints (today's `URL` pattern, in the order printed) and
+  `PORT` last (the configured `preview_port` when there is one). About every 0.25 s it asks `page_of` over those that listen, until `seconds`
+  (`OPEN_S`); it yields the **page's port**, or None. `tried`, when given, is filled with the ports asked (printed order, then `PORT`) if something
+  listened but none gave a page, so a caller tells *no page* from *did not open* (nothing listened, or the command ended). A static page is
+  unchanged. `make` (§102's picture) passes the screen's path and draws the page's port; with no page it answers `(False, "no page")`, and
+  `shot_taken`'s `why` may be `no page` (the task then keeps `{"none": true}` as for `no preview`).
+- **`ideas.play`**: a start that listens but gives no page answers `{state: "failed", why: "nopage", error: <§0's line>, ports: [...]}` (`peek`
+  repeats it until Play is pressed again; no worktree is left), and `play_started` says `ok: false, why: "nopage"`. `none`, `did not open` and the
+  rest are as before. A playing build's `url` is `http://127.0.0.1:<the page's port><preview_path>`.
+- **The start screen** (`Play`): `starting` is `.playpane.is-black` (orkUI's `--ork-canvas`) holding `.play-intro`: the project's name (the switcher's
+  name for the open project, else its folder's, else *the project*) in the pixel face at 56 px, centred, `play-name-in` (`0.8s steps(8)`), and
+  *Starting <project>…* in `--ork-ink-faint` under it (`0.4s` later, the same steps). On `playing` after a start the `iframe` is mounted at once
+  (its page has answered) with `.play-intro.is-fading` over it, black, `0.45s steps(5)` to nothing while the frame comes up in `steps(5)`, and
+  then the overlay is gone (a 0.7 s timer is the net); the `iframe`'s background and its stage are `--ork-canvas`. A Play already running when the
+  tab opens shows its frame at once, without the start screen. No `iframe` exists at `idle`, `starting`, `nopage` or `failed`. Under
+  `prefers-reduced-motion` there are no animations: the name is there at once, and on `playing` the frame replaces it with no overlay.
+- **`nopage`** (`.playpane[data-state="nopage"]`): *The build started, but no port gives a page. Name it in .orkcraft/checks.toml: preview_port or
+  preview_path.*, *Ports tried: 3001, 5173* under it, and *Stop the build* (`ideas.play_stop`, then *Open the build* is there again).
+- **Decided here:** the busy mark of *Starting the build…* is gone (the name coming up is the sign that it starts; the constant `STARTING` stays
+  exported); `STARTING`'s words are no longer shown.
+- **Tests:** `page_of` by order, HTML, status, redirect and a dead port; a stub command printing two ports (Express's on `PORT` 404 at `/`, the
+  second a page) opens the second, in `opened`, in Play and in the picture; none gives a page → `tried` and `nopage` with two ports; the start
+  screen's states in Chromium (black, the name's face, size, centre and steps, the faint ink, no frame before `playing`, a MutationObserver
+  recording every frame put in the page, the overlay leaving), reduced motion, and the `nopage` line.
+
 ## As built (D)
 **Files.** New `js/arena/partymenu.js` (`PartyMenu`, a wrapper around a party's row or column head; `itemsOf(slug)`): the **…** button (`aria-label` *More about <party>*, `aria-haspopup="menu"`, opacity 0 at rest, 1 on hover, on focus within and while open) and the list (`role="menu"`, fixed under **…** or at the pointer for a right click, kept inside the window). Items: *About this party* (`aboutAt` cleared, `showGoal(slug, {via: "map"})`, as the party line's), *Edit the party* (`openDialog("goal", {slug})`), *Remove party…* (`openDialog("remove-party", {slug})`, in the danger colour; `partyremove.js` is not touched, its question is the one Edit the party's foot opens). General's list (`itemsOf("general")`) has no *Remove party…*; General has no row in the column nor a column at the level (`goalList()` never lists it), so no menu is drawn for it. Keyboard: Enter or Space on **…** opens it and focuses the first item, ↑ ↓ (Home, End) move and wrap, Esc closes and returns the focus to **…**, Tab leaves, a press away or on another row closes it, one menu stands at a time. The sheet is `column.css` (`.arena-pmenu*`: orkUI's tokens only, no heading, so no pixel face).
 **`partylist.js`:** one import and each party's `Heading` wrapped in `<PartyMenu>` (the open party's too); Operations, *New party* and the *At work* line are not. **`project.js`, exactly:** one import and, in `Field`, `ColumnHead` wrapped in `<PartyMenu at="arena-pcol__headwrap">` inside `.arena-project__heads`; nothing of the level's layout, tabs, columns or links is changed. The wrapper takes the head's old flex (`flex: 1 0 172px; max-width: 260px`, in `column.css`, not `arena.css`) and the head fills it, so the heads still lie over their columns (the test measures it). Part B, editing the level's layout, meets this only at that one line.

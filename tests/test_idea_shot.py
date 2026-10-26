@@ -60,6 +60,110 @@ def test_a_bad_checks_file_or_line_is_no_preview_never_an_error(tmp_path):
     assert idea_shot.preview_of(state, work) is None or idea_shot.preview_of(state, work)["how"] == "command"
 
 
+# -- the page, not the first port (spec 90 §1) ---------------------------------------------------------------------------
+
+# A monorepo's `dev`: Express answers on `PORT` (404 at `/`), Vite prints its own port later and serves the page. `TWO_PORTS_PAGE=none`: no page anywhere.
+TWO_PORTS = """import http.server, os, socket, sys, threading, time
+class H(http.server.BaseHTTPRequestHandler):
+    def log_message(self, *a): pass
+    def do_GET(self):
+        page = self.server.page and self.path.split("?")[0] in ("/", "/index.html")
+        body = b"<!doctype html><title>Vite</title><h1>the client</h1>" if page else b"Cannot GET " + self.path.encode()
+        self.send_response(200 if page else 404)
+        self.send_header("Content-Type", "text/html; charset=utf-8" if page else "text/plain")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+def serve(port, page):
+    s = http.server.ThreadingHTTPServer(("127.0.0.1", port), H)
+    s.page = page
+    threading.Thread(target=s.serve_forever, daemon=True).start()
+    return s
+serve(int(os.environ["PORT"]), False)
+print("server listening on http://localhost:" + os.environ["PORT"], flush=True)
+time.sleep(float(os.environ.get("TWO_PORTS_WAIT", "0.6")))
+with socket.socket() as probe:
+    probe.bind(("127.0.0.1", 0))
+    other = probe.getsockname()[1]
+serve(other, os.environ.get("TWO_PORTS_PAGE") != "none")
+print("  Local:   http://localhost:%d/" % other, flush=True)
+time.sleep(120)
+"""
+
+
+def two_ports(tmp_path, monkeypatch, page=True):
+    """A preview command printing two ports (spec 90 §1): the work folder, the state folder and how the preview opens."""
+    work, state = tmp_path / "work", tmp_path / "state"
+    work.mkdir()
+    state.mkdir()
+    (work / "twoports.py").write_text(TWO_PORTS)
+    (state / "checks.toml").write_text(f'preview = "{sys.executable} twoports.py"\n')
+    monkeypatch.setenv("TWO_PORTS_PAGE", "yes" if page else "none")
+    return work, state, idea_shot.preview_of(state, work)
+
+
+def test_page_of_takes_the_first_port_that_answers_html_at_the_path_in_the_order_given():
+    import http.server
+    import threading
+
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def log_message(self, *_a):
+            pass
+
+        def do_GET(self):
+            kind = {"/page": ("text/html; charset=utf-8", 200), "/json": ("application/json", 200), "/gone": ("text/html", 404), "/go": ("text/html", 302)}.get(self.path, ("text/html", 200))
+            self.send_response(kind[1])
+            if kind[1] == 302:
+                self.send_header("Location", "/page")
+            self.send_header("Content-Type", kind[0])
+            self.end_headers()
+            self.wfile.write(b"x")
+
+    servers = [http.server.ThreadingHTTPServer(("127.0.0.1", 0), Handler) for _ in range(2)]
+    for s in servers:
+        threading.Thread(target=s.serve_forever, daemon=True).start()
+    a, b = (s.server_address[1] for s in servers)
+    try:
+        assert idea_shot.page_of([a, b], "/page") == a                                     # the order given
+        assert idea_shot.page_of([b, a], "/page") == b
+        assert idea_shot.page_of([a, b], "/json") is None and idea_shot.page_of([a, b], "/gone") is None       # not HTML · not 2xx
+        assert idea_shot.page_of([a], "/go") == a                                          # a redirect to a page is the page
+        assert idea_shot.page_of([idea_shot._free_port(), b], "/page") == b                # nothing listening is passed over
+        assert idea_shot.page_of([], "/") is None
+    finally:
+        for s in servers:
+            s.shutdown()
+            s.server_close()
+
+
+def test_a_command_printing_two_ports_the_first_a_server_without_a_page_opens_the_second(tmp_path, monkeypatch):
+    import urllib.request
+    work, _state, how = two_ports(tmp_path, monkeypatch)
+    tried: list[int] = []
+    with idea_shot.opened(how, work, 15, path="/", tried=tried) as port:
+        assert port and idea_shot.page_of([port]) == port
+        assert b"the client" in urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=3).read()
+    assert tried == []                                                                     # a page was found: nothing to say of ports tried
+    assert not idea_shot._listening(port)                                                  # closed on leaving
+
+
+def test_a_command_whose_ports_give_no_page_says_which_ports_it_asked(tmp_path, monkeypatch):
+    work, state, how = two_ports(tmp_path, monkeypatch, page=False)
+    tried: list[int] = []
+    began = time.monotonic()
+    with idea_shot.opened(how, work, 3, path="/", tried=tried) as port:
+        assert port is None
+    assert len(tried) == 2 and tried[0] != tried[1] and time.monotonic() - began < 12
+    monkeypatch.setattr(idea_shot, "OPEN_S", 3.0)
+    assert idea_shot.make(state, work, tmp_path / "shot.png") in ((False, "no page"), (False, "no browser"))     # the picture is of a page or of none
+
+
+@needs_browser
+def test_the_picture_is_drawn_of_the_page_not_of_the_first_port(tmp_path, monkeypatch):
+    work, state, _how = two_ports(tmp_path, monkeypatch)
+    assert idea_shot.make(state, work, tmp_path / "shot.png") == (True, "") and (tmp_path / "shot.png").stat().st_size > 0
+
+
 # -- the picture ---------------------------------------------------------------------------------------------------------
 
 @needs_browser

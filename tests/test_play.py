@@ -178,3 +178,37 @@ def test_a_phone_never_gets_play(host):
     with pytest.raises(IdeasError):
         host.ideas.play({"device": "phone"})
     assert host.ideas._play is None                                                                # nothing was started
+
+
+# -- the page, not the first port (spec 90 §1) ---------------------------------------------------------------------------------------
+
+def _two_ports(host, repo, monkeypatch, page: bool) -> None:
+    """A preview that prints two ports: the first (`PORT`) answers 404 at `/`, the second a page when `page`."""
+    from tests.test_idea_shot import TWO_PORTS
+    commit(repo, {"twoports.py": TWO_PORTS})
+    state = host.ideas.state_dir
+    state.mkdir(exist_ok=True)
+    (state / "checks.toml").write_text(f'preview = "{sys.executable} twoports.py"\n')
+    monkeypatch.setenv("TWO_PORTS_PAGE", "yes" if page else "none")
+
+
+def test_play_shows_the_port_that_gives_a_page_not_the_first_that_listens(host, repo, monkeypatch):
+    _two_ports(host, repo, monkeypatch, page=True)
+    host.command("ideas.play", {})
+    got = settle(host)
+    assert got["state"] == "playing" and got["url"].endswith("/")
+    assert "the client" in fetch(got["url"])                                              # Vite's page, not Express's "Cannot GET /"
+    assert [e["ok"] for e in events(repo, event_log.PLAY_STARTED)] == [True]
+
+
+def test_play_with_no_port_that_gives_a_page_says_nopage_with_the_ports_it_asked(host, repo, monkeypatch):
+    _two_ports(host, repo, monkeypatch, page=False)
+    monkeypatch.setattr(idea_shot, "OPEN_S", 4.0)
+    host.command("ideas.play", {})
+    got = settle(host)
+    assert got["state"] == "failed" and got["why"] == "nopage" and len(got["ports"]) == 2 and all(isinstance(p, int) for p in got["ports"])
+    assert "no port gives a page" in got["error"] and "preview_port or preview_path" in got["error"]
+    assert not (host.ideas.state_dir / "play").exists()
+    e = events(repo, event_log.PLAY_STARTED)[-1]
+    assert (e["ok"], e["why"]) == (False, "nopage")
+    assert host.command("ideas.play", {"peek": True}) == got                              # it stays said until Play is pressed again
