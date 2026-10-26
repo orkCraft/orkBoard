@@ -1,8 +1,9 @@
 """The Architect's *System* as `gui/ideas.py`'s `Ideas` has it (docs/specs/89-the-tech-lens-system.md §4, decisions §104.1): the project's
-parts laid out as columns of cards, and what changed since the device's last look with the goals that changed it. Read from the code and
-git (realm/project_map.py), no model.
+parts laid out as columns of cards (*Feature modules*, spec 90), the architecture beside them (`overview`: containers, links, shared;
+realm/system_overview.py), and what changed since the device's last look with the goals that changed it. Read from the code and git
+(realm/project_map.py), no model.
 
-    ideas.system {party?, since?}            # the parts of dev's head by column, what changed since `since`, the goals: map_opened
+    ideas.system {party?, since?}            # dev's head: its parts by column, its overview, what changed since `since`, the goals: map_opened
     ideas.system_part {path, since?}         # one part: its files, uses, used by, and its changes since with their goals and What it made
     ideas.system_rearrange {party?, since?}  # *Rearrange*: laid out anew (the gone parts' places taken away), answered as ideas.system
 """
@@ -12,7 +13,7 @@ import datetime as dt
 from pathlib import Path
 
 from orkboard.gui.ideas_args import IdeasError, _opt, _str, _text
-from orkboard.realm import board_map, commit_goal, event_log, ideas, project_map
+from orkboard.realm import board_map, commit_goal, event_log, ideas, project_map, system_overview
 
 LENS = "system"
 PATH_MAX = 300
@@ -30,7 +31,7 @@ class SystemMixin:
         snap = project_map.ensure(self.state_dir, root, ref)
         if snap is None:
             return ({"commit": "", "short": "", "at": "", "ref": ref, "since": "", "columns": [], "changed": {}, "uses_changed": [],
-                     "goals": {}}, project_map.nothing())
+                     "goals": {}, "overview": {**system_overview.empty(), "parts": {}}}, project_map.nothing())
         since = self._map_since(args)
         changes = project_map.changed(self.state_dir, root, since, ref) if since else project_map.nothing(snap["commit"])
         now = {p["path"]: p for p in snap["parts"]}
@@ -46,7 +47,26 @@ class SystemMixin:
         uses = [{k: u[k] for k in ("from", "to", "kind", "goal", "task", "at")} for u in changes["uses"]]
         slugs = {m["goal"] for m in marks.values()} | {u["goal"] for u in uses}
         return ({"commit": snap["commit"], "short": snap["commit"][:7], "at": snap.get("at") or "", "ref": ref, "since": changes["since"],
-                 "columns": cols, "changed": marks, "uses_changed": uses, "goals": self._goals(slugs)}, changes)
+                 "columns": cols, "changed": marks, "uses_changed": uses, "goals": self._goals(slugs),
+                 "overview": self._map_overview(snap, gone, root.name)}, changes)
+
+    @staticmethod
+    def _map_overview(snap: dict, gone: dict[str, dict], project: str) -> dict:
+        """The architecture (spec 90 §6, As built (E1)): the snapshot's overview with each container's gone parts, and every part's card
+        by path (`changed` marks them by the same paths)."""
+        ov = snap.get("overview") or system_overview.empty()
+        ids = [c["path"] for c in ov["containers"]]
+        out = {p: [] for p in ids}
+        for path in sorted(gone):
+            at = system_overview.owner(path, ids)
+            if at is not None:
+                out[at].append(path)
+        cards = {p["path"]: {**p, "gone": False} for p in snap["parts"]}
+        cards.update({p: g for p, g in gone.items() if system_overview.owner(p, ids) is not None})
+        return {"containers": [{**c, "gone": out[c["path"]]} for c in ov["containers"]], "links": ov["links"], "shared": ov["shared"],
+                "parts": {p: {"path": p, "name": project_map.name_of(p, project), "count": int(c.get("count") or 0),
+                              "uses": list(c.get("uses") or []), "used_by": list(c.get("used_by") or []), "gone": bool(c.get("gone"))}
+                          for p, c in sorted(cards.items())}}
 
     @staticmethod
     def _map_recent(root: Path, ref: str) -> dict[str, str]:
