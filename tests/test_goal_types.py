@@ -308,7 +308,7 @@ def test_a_party_not_saved_offers_what_the_same_party_saved_does_and_a_library_a
     base = tmp_path_factory.mktemp("fresh")
     fresh_root, fresh_state = base / "wiki", base / ".orkcraft"
     ask = lambda st, rt, slug, read=None: [(t.id, [m["agent"] for m in rows]) for t, rows in goal_types.offered(st, rt, slug, read=read)]
-    parties = [(c, lead, [*build, *check]) for c, (lead, build, check) in library.PARTIES.items()] + [(p[0], p[4], [*p[5], *p[6]]) for p in library.PRESETS]
+    parties = [(c, lead, [*build, *check]) for c, (lead, build, check) in library.PARTIES.items()] + [(p[0], p[4], [*p[5][:goal_team.SEATS - len(p[6])], *p[6]]) for p in library.PRESETS]   # a team holds at most SEATS: Art and sound's fifth builder is left out here
     for name, lead, team in parties:
         saved = _party(root, state, team, leader=lead, title=name)
         got = ask(fresh_state, fresh_root, "", goal_types.Party.of(fresh_state, fresh_root, lead, team))

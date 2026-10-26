@@ -11,7 +11,7 @@
 A recipe is made of the library's agents (realm/library.py), `build` and `check` most needed first; a party's seats are its leader's stages, one
 agent a stage (`library.seats_of`, spec 87 §5). Its sizes: **lean**, the leader alone (its tasks go to the leader: spec 81); **standard**, the
 leader and its first builder; **full**, the leader, its first builder and its first checker; each size also gives its seats their tiers (`tiers`).
-A `whole` recipe (Ideation, Release) is sized the same way (spec 81 §2). Ideation, Release and Game are the library's presets, built on their seats.
+A `whole` recipe (Ideation, Release) is sized the same way (spec 81 §2). Ideation, Release, Game and Art and sound are the library's presets, built on their seats.
 No face, no model.
 """
 from __future__ import annotations
@@ -38,6 +38,11 @@ def _recipe(rid: str, name: str, line: str, leader: str, build: list[str], check
 def _tech(because: str) -> dict:
     """The Tech party a kind is offered after its first (spec 89 §5): the Architect, a Grunt and the Tester, the Reviewer."""
     return _recipe("tech", TECH, TECH_LINE, "architect", ["grunt", "tester"], ["reviewer"], because)
+
+
+def _art(because: str) -> dict:
+    """The Art and sound party (the Art director, the library's preset): offered after a kind's first party."""
+    return _preset("art", because)
 
 
 def _ideation(because: str = "small ideas are judged before they cost anything") -> dict:
@@ -69,7 +74,8 @@ RECIPES: dict[str, list[dict]] = {
         _recipe("backend-data", "Data", "Queries and the numbers they give", "analyst",
                 ["data-engineer", "sql", "experimenter"], ["data-reviewer"], "queries are written here", when="sql"),
     ],
-    "game": [_preset("game", "a game is built, played and tuned"), _tech("the game's code has parts to keep apart and test"), _release()],
+    "game": [_preset("game", "a game is built, played and tuned"), _tech("the game's code has parts to keep apart and test"),
+             _art("a game needs its pictures and sounds made in one style"), _release()],
     "data": [
         _recipe("data-work", "Data", "Numbers, queries and reports", "analyst",
                 ["data-engineer", "sql", "experimenter"], ["data-reviewer"], "the work is numbers and the questions they answer"),
@@ -82,6 +88,7 @@ RECIPES: dict[str, list[dict]] = {
     "design": [
         _recipe("design-screens", "Design", "Screens, pictures and who can use them", "product-designer",
                 ["artist", "ui-kit"], ["accessibility-reviewer"], "screens and pictures are made here"),
+        _art("a design needs its pictures, icons and sounds made in one style"),
         _ideation(),
     ],
     "texts": [
