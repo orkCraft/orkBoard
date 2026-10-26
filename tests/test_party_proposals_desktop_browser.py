@@ -43,7 +43,7 @@ def test_the_party_row_is_a_proposal_s_with_take_it_out_and_keep_it_and_is_never
     assert "Take Reviewer out of Ship sync's party?" in row.inner_text() and "It found nothing in the last 8 goals; a check costs about $0.35." in row.inner_text()
     assert "proposed" in row.inner_text().lower()
     assert row.get_by_role("button", name="Take it out: Take Reviewer out of Ship sync's party?").is_visible()
-    rows = pg.locator(".arena-hc").evaluate_all("els => els.map(e => e.dataset.kind)")
+    rows = [k for k in pg.locator(".arena-hc").evaluate_all("els => els.map(e => e.dataset.kind)") if k not in ("result", "gate")]       # the stops: the results and the gate's batch are cards of their own
     assert rows[-1] == "todo"                                                                           # a to-do lies last of all (spec 87 §4.3)
     rows = rows[:-1]
     assert rows[-1] == "party" or rows[-2:] == ["proposal", "party"]                                    # then the party's, with the proposals

@@ -509,9 +509,9 @@ def _calls(pg, host, name, at_least=1, ms=WAIT_MS) -> list[dict]:
     return [a for n, a in host.log if n == name]
 
 
-def _open(gui, viewport=None, host=None, ready=".arena-result", query=""):
+def _open(gui, viewport=None, host=None, ready=".arena-hc[data-kind=result]", query=""):
     """The window against a stub host. The goals are tabs and the first by priority is shown: the stub's Ship sync (most of its ideas)
-    is picked, and its results are in the column on the right (`ready`)."""
+    is picked, and its results are the hand's cards (`ready`, spec 90 §2.3)."""
     server, browser = gui
     host = host or StubHost()
     pg = browser.new_page(viewport=viewport or {"width": 1440, "height": 900})
@@ -520,7 +520,7 @@ def _open(gui, viewport=None, host=None, ready=".arena-result", query=""):
     pg.on("console", lambda m: m.type == "error" and errors.append(f"console: {m.text}"))
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url + query)
-    if ready == ".arena-result":
+    if ready == ".arena-hc[data-kind=result]":
         pg.wait_for_selector(".arena-phead", timeout=WAIT_MS)
         _show_goal(pg)
         pg.wait_for_selector(ready, timeout=WAIT_MS)
@@ -568,8 +568,26 @@ def _stop(pg, kind, nth=0):
     return item
 
 
+def _look_card(pg, title):
+    """A result to look at: its card in the hand (docs/specs/90-what-the-first-look-said.md §2.3), raised (its answers then in reach)."""
+    item = pg.locator(f'.arena-hc[data-kind=result]:has(.arena-hc__open[aria-label="To look at: {title}"])')
+    item.wait_for(timeout=WAIT_MS)
+    item.locator(".arena-hc__open").focus()
+    pg.wait_for_function("(el) => getComputedStyle(el).transform === 'matrix(1, 0, 0, 1, 0, -184)'", arg=item.element_handle(), timeout=WAIT_MS)
+    return item
+
+
+def _look_open(pg, title):
+    """A result to look at opened from its card: its code, tests and answers in the right column."""
+    _look_card(pg, title).locator(".arena-hc__open").press("Enter")
+    pg.wait_for_function("(t) => document.querySelector('.shell-drawer .shell-ptab.is-on')?.textContent.includes(t)", arg=title, timeout=WAIT_MS)
+    got = pg.locator(".shell-drawer .shell-result")
+    got.wait_for(timeout=WAIT_MS)
+    return got
+
+
 def _drawer(pg):
-    """The drawer, once it is out."""
+    """The right column (the drawer that was), once it is out."""
     pg.locator(".shell-drawer").wait_for(timeout=WAIT_MS)
     return pg.locator(".shell-drawer")
 
@@ -689,8 +707,9 @@ def test_the_top_bar_spend_stop_all_and_the_push_switch(shell):
     assert _sent(pg, host, ("logs.show", {"path": SAVED}))
 
 
-def test_the_tools_limits_are_at_the_bottom_right_with_their_diamonds_and_the_reserve_hatched(shell):
+def test_the_tools_limits_are_under_spend_with_their_diamonds_and_the_reserve_hatched(shell):
     pg, host = shell
+    pg.locator(".shell-top__leftbtn").click()                                                             # under Spend in the top bar (spec 90 §2.3)
     limits = pg.get_by_role("region", name="What is left of your AI tools")
     lines = limits.locator(".arena-limit")
     assert lines.count() == 3 and [l.get_attribute("data-provider") for l in lines.all()] == ["claude", "agy", "codex"]
@@ -701,8 +720,8 @@ def test_the_tools_limits_are_at_the_bottom_right_with_their_diamonds_and_the_re
     assert "not read" in lines.nth(2).inner_text() and lines.nth(2).locator(".ork-crystals i").count() == 0                       # never missing
     assert claude.get_attribute("title") == "Claude: 62 % left, 10 % of it kept for tonight · resets at 18:00"
     assert "hatched: kept for tonight" in limits.inner_text() and "Claude resets at 18:00" in limits.inner_text()
-    bb = limits.bounding_box()
-    assert bb["x"] + bb["width"] == 1440 and bb["width"] == 312 and bb["y"] + bb["height"] == 900                  # at the bottom right
+    bb, spend = limits.bounding_box(), box(pg, ".shell-top__money")
+    assert bb["y"] >= spend["y"] + spend["height"] and pg.locator(".arena-stops .arena-limits").count() == 0      # under Spend, not along the bottom
 
 
 def test_a_click_on_an_idea_a_todo_a_chip_and_a_result_opens_the_right_preview(shell):
@@ -713,7 +732,7 @@ def test_a_click_on_an_idea_a_todo_a_chip_and_a_result_opens_the_right_preview(s
     assert pg.locator(".shell-drawer .board-sec").count() == len(SECTIONS)
     assert "goal" in pg.locator(".shell-drawer .shell-tabstrip").inner_text().lower()
 
-    pg.get_by_role("button", name="Close the drawer").click()                     # the drawer covers the fan's middle: it goes, its tab stays
+    pg.get_by_role("button", name="Close the right column").click()                     # the drawer covers the fan's middle: it goes, its tab stays
     item = _stop(pg, "todo")                                                      # a to-do → its dialog; from it the plan, scrolled to it
     item.get_by_role("button", name="Open…").click()
     pg.get_by_role("dialog", name="API_KEY").get_by_role("button", name="What waits for it").click()
@@ -751,13 +770,14 @@ def test_a_click_on_an_idea_a_todo_a_chip_and_a_result_opens_the_right_preview(s
 
 def test_merge_is_off_on_red_with_its_reason_and_send_back_needs_a_line(shell):
     pg, host = shell
-    green, red = pg.locator(".arena-result", has_text="Add the queue"), pg.locator(".arena-result", has_text="Test it offline")
-    assert "20 / 20 passed" in green.inner_text() and "14 files · $0.42" in green.inner_text()
-    assert "10 / 20 failed" in red.inner_text() and "test_retry" in red.inner_text() and "round 2" in red.inner_text()
+    green = _look_open(pg, "Add the queue")                                                               # a result opened from its card in the hand (spec 90 §2.3)
+    assert "20 / 20 passed" in green.inner_text() and "14 files" in green.inner_text()
+    assert green.get_by_role("button", name="Merge into dev").is_enabled()
+    red = _look_open(pg, "Test it offline")
+    assert "10 / 20 failed" in red.inner_text() and "test_retry" in red.inner_text() and "Round" in red.inner_text()
     assert "conflicts with dev in a.py, b.py" in red.inner_text()
     merge = red.get_by_role("button", name="Merge into dev")
     assert merge.is_disabled() and "red" in red.locator(".shell-actions__why").inner_text()
-    assert green.get_by_role("button", name="Merge into dev").is_enabled()
     # the quiet Drop is apart from Merge
     drop, mergeb = red.get_by_role("button", name="Drop…").bounding_box(), merge.bounding_box()
     assert drop["x"] > mergeb["x"] + mergeb["width"] + 10
@@ -772,17 +792,18 @@ def test_merge_is_off_on_red_with_its_reason_and_send_back_needs_a_line(shell):
     red.locator(".shell-actions__line .ork-btn.primary").click()
     assert _sent(pg, host, ("ideas.back", {"slug": "sync", "task": "k4", "why": "Rebase and keep both queues"}))
 
+    green = _look_card(pg, "Add the queue")                                                             # its card in the hand answers as well
     green.get_by_role("button", name="Send back").click()
     assert green.locator(".shell-actions__line .ork-btn.primary").is_disabled()
     green.get_by_role("button", name="Merge into dev").click()
     assert _sent(pg, host, ("ideas.merge", {"slug": "sync", "task": "k2"}))
-    pg.mouse.move(150, 500)                                                                           # nothing moves under the pointer: it settles when the pointer leaves
-    pg.locator(".arena-result", has_text="Add the queue").wait_for(state="detached", timeout=WAIT_MS)      # it fades once, then it is gone
+    pg.mouse.move(150, 500)
+    pg.locator('.arena-hc__open[aria-label="To look at: Add the queue"]').wait_for(state="detached", timeout=WAIT_MS)      # it fades once, then it is gone
 
 
 def test_drop_asks_first_and_merge_into_changes_the_branch(shell):
     pg, host = shell
-    card = pg.locator(".arena-result", has_text="Add the queue")
+    card = _look_card(pg, "Add the queue")
     card.get_by_role("button", name="Drop…").click()
     assert pg.get_by_role("dialog", name="Drop this result?").is_visible()
     pg.get_by_role("dialog").get_by_role("button", name="Keep it").click()
@@ -829,7 +850,7 @@ def test_below_1024_no_strip_the_drawer_takes_the_window_and_the_results_join_th
         pg.locator(".shell-result").wait_for(timeout=WAIT_MS)
         drawer = box(pg, ".shell-drawer")
         assert drawer["x"] == 0 and drawer["width"] == 900                                                    # the drawer takes the window's width
-        pg.get_by_role("button", name="Close the drawer").click()
+        pg.get_by_role("button", name="Close the right column").click()
         pg.locator(".shell-drawer").wait_for(state="detached", timeout=WAIT_MS)
         assert pg.locator(".arena-task[data-task=k2]").is_visible()
     finally:
@@ -909,7 +930,7 @@ def test_new_party_is_a_name_what_it_is_for_its_party_and_a_priority_then_readin
     pg.get_by_label("Answer 1: Which channel first?").fill("npm first")                              # §0: one round, one Send
     pg.locator(".shell-goal").get_by_role("button", name="Send").click()
     assert _sent(pg, host, ("ideas.answer", {"slug": "more-people", "answers": ["npm first"], "goal": True}))
-    pg.get_by_role("button", name="Close the drawer").click()                                       # the party's screen goes: Edit is in the party line
+    pg.get_by_role("button", name="Close the right column").click()                                       # the party's screen goes: Edit is in the party line
     pg.get_by_role("button", name="Edit the party").click()                                         # Edit: name, what it is for and priority
     dlg = pg.get_by_role("dialog", name="Edit the party")
     assert dlg.get_by_label("Name", exact=True).input_value() == "Grow installs" and dlg.get_by_label("What it is for").input_value() == "More people try Orkline."
@@ -918,7 +939,7 @@ def test_new_party_is_a_name_what_it_is_for_its_party_and_a_priority_then_readin
     pg.wait_for_function("() => document.querySelectorAll('[role=dialog]').length === 0", timeout=WAIT_MS)
     assert _calls(pg, host, "ideas.goal_save", 2)[-1] == {"slug": "more-people", "about": "More people try Orkline, and stay.", "priority": "high"}
     if pg.locator(".shell-drawer").count():
-        pg.get_by_role("button", name="Close the drawer").click()
+        pg.get_by_role("button", name="Close the right column").click()
     pg.get_by_role("button", name="Edit the party").click()                                         # a corrected name is sent, and only then
     pg.get_by_role("dialog", name="Edit the party").get_by_label("Name", exact=True).fill("Grow weekly installs")
     pg.get_by_role("dialog", name="Edit the party").get_by_role("button", name="Save party").click()
@@ -1012,7 +1033,7 @@ def test_one_goal_is_shown_the_first_by_priority_with_its_leader_and_the_goal_is
         pg.reload()                                                                                         # the goal shown is kept
         pg.locator('.arena[data-goal="ship-sync"]').wait_for(timeout=WAIT_MS)
         assert pg.locator('.arena-phead[aria-current=true] .arena-phead__name').inner_text() == "Ship sync"
-        pg.get_by_role("button", name="Close the drawer").click()                                           # the drawer came back with the page: its tabs were kept
+        pg.get_by_role("button", name="Close the right column").click()                                           # the drawer came back with the page: its tabs were kept
         pg.get_by_role("button", name="Edit the party").click()
         assert pg.get_by_role("dialog", name="Edit the party").is_visible()
         pg.keyboard.press("Escape")
@@ -1099,8 +1120,9 @@ def test_a_high_goal_shows_a_sign_of_work_and_stop_leaves_it_stopped_a_low_one_w
 
 def test_what_waits_for_you_is_a_fan_of_the_goal_shown_the_questions_one_form_and_a_proposal_is_answered_in_its_item(shell):
     pg, host = shell
-    assert pg.locator(".arena-hc").count() == 5                                                          # every stop of the project lies in the one hand (spec 54 §2.1)
-    kinds = pg.locator(".arena-hc").evaluate_all("els => els.map(e => e.dataset.kind)")
+    stops = ".arena-hc:not([data-kind=result]):not([data-kind=gate])"                                                                                     # the stops (a result and the batch for main are cards of their own: spec 90 §2.3)
+    assert pg.locator(stops).count() == 5                                                                 # every stop of the project lies in the one hand (spec 54 §2.1)
+    kinds = pg.locator(stops).evaluate_all("els => els.map(e => e.dataset.kind)")
     assert kinds == ["goal", "plan", "asks", "proposal", "todo"]   # urgency's order: what holds work back, then the proposal, a to-do last of all (spec 87 §4.3)
     assert pg.locator(".arena-hc.is-other").count() == 2                                                  # the two of Grow installs say their party
     todo = pg.locator(".arena-hc[data-kind=todo]")
@@ -1119,7 +1141,7 @@ def test_what_waits_for_you_is_a_fan_of_the_goal_shown_the_questions_one_form_an
     assert _sent(pg, host, ("ideas.answer", {"slug": "search", "answers": ["title and text", "yes"]}))
     pg.wait_for_function("() => document.querySelectorAll('.arena-hc[data-kind=asks]').length === 0", timeout=WAIT_MS)
     _show_goal(pg, "grow")                                                                                # another goal: its own stops, and Ship sync's now say their party
-    assert pg.locator(".arena-hc").evaluate_all("els => els.map(e => e.dataset.kind)") == ["goal", "plan", "proposal", "todo"]
+    assert pg.locator(stops).evaluate_all("els => els.map(e => e.dataset.kind)") == ["goal", "plan", "proposal", "todo"]
     assert pg.locator(".arena-hc.is-other").evaluate_all("els => els.map(e => e.dataset.kind)") == ["plan", "todo"]
     goal = _stop(pg, "goal")
     goal.get_by_role("button", name="Open…").click()                                                      # a goal that asks
@@ -1406,7 +1428,7 @@ def test_every_dialog_has_a_dimmed_backdrop_an_opaque_panel_and_closes_on_esc(sh
              ("New goal", lambda: _new_goal(pg)),
              ("Settings", lambda: pg.get_by_role("button", name="Settings").click()),
              ("Merge into", lambda: pg.locator("button.arena-into").click()),
-             ("Drop this result?", lambda: pg.locator(".arena-result", has_text="Add the queue").get_by_role("button", name="Drop…").click()),
+             ("Drop this result?", lambda: _look_card(pg, "Add the queue").get_by_role("button", name="Drop…").click()),
              ("Add an agent", lambda: (_agents(pg), pg.get_by_role("button", name="+ Add agent").click()))]
     for name, opener in opens:
         opener()

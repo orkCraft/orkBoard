@@ -94,7 +94,7 @@ def test_unticking_a_party_sends_the_parties_left_and_the_last_one_stays(release
 # -- Edit the party --------------------------------------------------------------------------------------------------------------------------------------------
 
 def _edit(pg, slug):
-    close = pg.get_by_role("button", name="Close the drawer")
+    close = pg.get_by_role("button", name="Close the right column")
     if close.count():                                                                                        # the party's screen a save opens
         close.click()
         pg.locator(".shell-drawer").wait_for(state="detached", timeout=WAIT_MS) if pg.locator(".shell-drawer").count() else None

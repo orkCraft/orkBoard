@@ -15,14 +15,30 @@
 .shell-top__spacer { flex: 1; }
 .shell-top__spend { all: unset; box-sizing: border-box; cursor: pointer; font-variant-numeric: tabular-nums; padding: 0 var(--ork-2); }
 .shell-top__spend:hover, .shell-top__spend:focus-visible { outline: 0; box-shadow: inset 0 0 0 var(--ork-line) var(--ork-edge); }
+/* under Spend, what is left of the AI tools (docs/specs/90-what-the-first-look-said.md §2.3): the tightest share, and its panel of every tool's line */
+.shell-top__money { position: relative; display: flex; align-items: center; gap: var(--ork-3); }
+.shell-top__left { position: relative; }
+.shell-top__leftbtn { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: var(--ork-2); padding: 0 var(--ork-2); color: var(--ork-ink-muted);
+  font: var(--ork-type-caption); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.shell-top__leftbtn:hover, .shell-top__leftbtn:focus-visible { outline: 0; color: var(--ork-ink); box-shadow: inset 0 0 0 var(--ork-line) var(--ork-edge); }
+.shell-top__leftbtn.is-warn { color: var(--ork-warning); }
+.shell-top__leftbtn.is-danger { color: var(--ork-danger); }
+.shell-top__limits { position: absolute; top: calc(100% + var(--ork-3)); right: 0; z-index: 60; width: 312px; box-sizing: border-box; display: flex; flex-direction: column; gap: var(--ork-4);
+  padding: var(--ork-4) var(--ork-5); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-edge); }
 .week { display: flex; flex-direction: column; gap: var(--ork-3); }
 .week p { margin: 0; overflow-wrap: anywhere; }
-/* spec 49: the window is the goal tabs over the arena (js/arena/arena.css); anything opened is the drawer on its right */
+/* spec 49: the window is the arena (js/arena/arena.css); anything opened is the window's right column (docs/specs/90-what-the-first-look-said.md §2): docked at the pane's right,
+   max(480px, 34%) wide and at most 640 px, the pane narrowed by it, never covered; with nothing open there is none. Below 1 024 px there is no room for two: it takes the width. */
 .shell-main { position: relative; flex: 1; min-height: 0; display: flex; }
-.shell-drawer { position: absolute; top: 0; right: 0; bottom: 0; z-index: 40; width: max(62%, 560px); max-width: 100%; box-sizing: border-box; display: flex; flex-direction: column;
-  background: var(--ork-panel); border-left: var(--ork-double) double var(--ork-edge); box-shadow: -24px 0 0 0 var(--ork-scrim); }
+.shell-drawer { position: relative; flex: none; width: clamp(480px, 34%, 640px); max-width: 100%; min-height: 0; box-sizing: border-box; display: flex; flex-direction: column;
+  background: var(--ork-panel); border-left: var(--ork-double) double var(--ork-edge); }
 .shell-drawer .shell-preview { flex: 1; min-height: 0; }
-@media (max-width: 1023px) { .shell-drawer { width: 100%; } }
+@media (max-width: 1023px) { .shell-drawer { position: absolute; top: 0; right: 0; bottom: 0; z-index: 40; width: 100%; } }
+/* a toast never covers the hand nor what is open: it stands at the top of the pane, at its right, left of the right column when one is out */
+@media (min-width: 1024px) {
+  body:has(.shell-main) .gui-toasts { top: calc(var(--ork-bar) + var(--ork-4)); bottom: auto; }
+  body:has(.shell-drawer) .gui-toasts { right: calc(clamp(480px, 34vw, 640px) + var(--ork-6)); }
+}
 .shell-pane { min-height: 0; min-width: 0; display: flex; flex-direction: column; background: var(--ork-panel); }
 .shell-pane__head { display: flex; align-items: center; gap: var(--ork-3); padding: var(--ork-2) var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-frame); min-height: 40px; box-sizing: border-box; }
 .shell-pane__head h2 { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--ork-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;

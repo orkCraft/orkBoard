@@ -1,7 +1,7 @@
 // The drawer's body (docs/specs/33-v1-shell.md §6, spec 39 §3, spec 49 §9): tabs, one per thing opened: an idea's spec (29a's
 // sections view), an idea's plan (scrolled to a to-do, said what it unblocks), a task (its brief, state and log), a result's code
 // (commits, then the files changed, each patch folded), a goal, a pick (its variants large, a note: shell/pickview.js), a document, a file, a diff,
-// the gate's screen, Agents, Files, a canvas's file (spec 78). A result's actions stay pinned at its foot. A goal of Ideation is a pitch: its page's `pitch` shows its own screen (pitchview.js).
+// the gate's screen, Agents, Files, a canvas's file (spec 78), an asset (spec 88) and a part of System (spec 89) — the window's right column (docs/specs/90-what-the-first-look-said.md §2). A result's actions stay pinned at its foot. A goal of Ideation is a pitch: its page's `pitch` shows its own screen (pitchview.js).
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Sign, Who } from "../orkui.js";
@@ -9,7 +9,7 @@ import { ErrorLine } from "./errors.js";
 import { board, page } from "../board/store.js";
 import { IdeaView, PlanView } from "../board/idea.js";
 import { TASK_STATE } from "../board/maplayout.js";
-import { preview, detail, review, goal, editing, active, goneWords, keepTab, setTabTitle, act, closePreview, showIdea, showResult, showGoal, refreshShell } from "./store.js";
+import { mapData, preview, detail, review, goal, editing, active, goneWords, keepTab, setTabTitle, act, closePreview, showIdea, showResult, showGoal, refreshShell } from "./store.js";
 import { TabStrip } from "./tabs.js";
 import { ResultActions, Found, testsWords, changesWords, isRed } from "./review.js";
 import { GoalView } from "./goalview.js";
@@ -19,6 +19,8 @@ import { GitDiffView } from "./gitpane.js";
 import { AgentsPane } from "./agents.js";
 import { GateView } from "../arena/gate.js";
 import { CanvasView } from "../arena/canvases.js";
+import { AssetView } from "../arena/assets.js";
+import { PartView } from "../arena/systemmap.js";
 import { rowOf } from "../arena/pickwords.js";
 import { PickView } from "./pickview.js";
 import { PitchView } from "./pitchview.js";
@@ -77,7 +79,9 @@ export function spendWords(s) {
 }
 
 function Result({ d, p }) {
-  const r = (review.value?.results || []).find((x) => x.idea === p.slug && x.task === p.task);
+  const mine = (mapData.value?.nodes || []).find((n) => n.slug === p.slug)?.results?.find((x) => x.task === p.task) || null;      // the hand's card is the Map's (spec 90 §2.3)
+  const r = (review.value?.results || []).find((x) => x.idea === p.slug && x.task === p.task) || mine;
+  const shot = r?.shot || mine?.shot || null;                                                       // what it changed people see (spec 85 §3)
   const diff = d?.diff;
   const t = r && testsWords(r);
   return html`<div class="shell-result">
@@ -86,6 +90,9 @@ function Result({ d, p }) {
       ${r ? html`<dl class="shell-facts">
         <dt>Tests</dt><dd class=${`is-${t.tone}`}>${t.mark && html`<${Sign} name=${t.mark} /> `}${t.text}${t.names.length ? html` <span class="ok-tone-muted">${t.names.join(", ")}</span>` : ""}</dd>
         <dt>Changes</dt><dd>${changesWords(r.diff)}</dd>${r.round > 1 ? html`<dt>Round</dt><dd>${r.round}</dd>` : ""}</dl>
+        ${shot?.url && html`<span class="arena-result__shot"><img src=${shot.url} alt=${`What “${r.title}” looks like`} draggable="false"
+          style=${shot.w && shot.h ? `aspect-ratio:${shot.w} / ${shot.h}` : undefined} /></span>`}
+        ${shot?.none && html`<p class="arena-cap arena-result__noshot" data-noshot="true">${shot.none}</p>`}
         ${r.conflict && html`<p class="ok-tone-error">⚠ ${r.conflict}</p>`}
         <${Found} r=${r} />
         ${isRed(r) && r.tests.tail && html`<details class="shell-file"><summary>What the tests said</summary><pre class="shell-log">${r.tests.tail}</pre></details>`}`
@@ -119,6 +126,7 @@ function titleOf(p, d, pg) {
   if (p.kind === "agents") return "Agents";
   if (p.kind === "files") return "Files";
   if (p.kind === "canvas") return p.title || "Canvas";
+  if (p.kind === "asset" || p.kind === "part") return p.title || p.path.split("/").pop() || p.path;
   return pg?.title || "";
 }
 
@@ -146,6 +154,8 @@ export function Preview() {
         : p.kind === "agents" ? html`<${AgentsPane} />`
         : p.kind === "files" ? html`<${FilesPane} />`
         : p.kind === "canvas" ? html`<${CanvasView} p=${p} />`
+        : p.kind === "asset" ? html`<${AssetView} p=${p} />`
+        : p.kind === "part" ? html`<${PartView} p=${p} />`
         : p.kind === "task" ? html`<${Task} d=${d} />` : html`<${Result} d=${d} p=${p} />`}
     </div>
   </section>`;

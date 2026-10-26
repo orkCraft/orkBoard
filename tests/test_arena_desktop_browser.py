@@ -212,25 +212,25 @@ def test_the_regions_in_their_order_and_sizes_at_1440_by_900_with_no_page_scroll
         assert box(pg, css)["height"] == h, name
     assert pg.locator(".arena-tabs").count() == 0 and pg.locator(".shell-top [role=tablist], .shell-top .arena-phead, .shell-top .shell-proj").count() == 0      # no parties and no project switcher in the top bar (spec 52 §3.1, spec 69 §1)
     assert all(box(pg, css)["y"] == 32 for css in (".shell-main", ".arena-today", ".arena-left", ".arena-field"))      # the main row starts right under the top bar
-    wide = {"strip": (".arena-today", 40), "left column": (".arena-left", 248), "results": (".arena-look", 312), "gate": (".arena-gatebox", 312), "limits": (".arena-limits", 312)}
+    wide = {"strip": (".arena-today", 40), "left column": (".arena-left", 248)}
+    assert pg.locator(".arena-look, .arena-gatebox, .arena-stops .arena-limits").count() == 0                     # no right column of the field's own (spec 90 §2.3)
     for name, (css, w) in wide.items():
         assert box(pg, css)["width"] == w, name
     assert box(pg, ".arena-goal__main")["height"] == 28 and pg.locator(".arena-new, .arena-new__pile").count() == 0                 # a goal's row 28 (spec 73 §1); no New goal pile in the column (spec 73 §4.3)
     assert box(pg, ".arena-left__proj .arena-plus")["width"] == 28 and box(pg, ".arena-left__proj .arena-plus")["height"] == 28            # New goal is the + in the project line
     landmarks = [("navigation", "Today"), ("region", "Goals"), ("region", "Party"), ("region", "The party at work"),
-                 ("complementary", "Waits for your look"), ("region", "Waits for you"), ("region", "What is left of your AI tools")]
+                 ("region", "Waits for you")]
     seen = [pg.get_by_role(role, name=name, exact=True) for role, name in landmarks]
     assert [s.count() for s in seen] == [1] * len(landmarks)                                              # each one, in the order of the page
     handles = [s.element_handle() for s in seen]
     assert all(pg.evaluate("([a, b]) => !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)", [a, b]) for a, b in zip(handles, handles[1:]))
     by = {name: s.bounding_box() for (_r, name), s in zip(landmarks, seen)}
     assert by["Today"]["x"] < by["Goals"]["x"] and box(pg, '.arena-phead[aria-current=true]')["y"] + 40 <= by["Goals"]["y"]          # the open party's heading (its leader's) over its goals, in the left column
-    ibar, party, cols, look, gate = box(pg, ".arena-ibar__bar"), by["Party"], by["The party at work"], by["Waits for your look"], box(pg, ".arena-gatebox")
+    ibar, party, cols = box(pg, ".arena-ibar__bar"), by["Party"], by["The party at work"]
     assert ibar["y"] + ibar["height"] <= party["y"] and party["y"] + party["height"] <= cols["y"]           # the party line, the party row, the columns under it
-    assert party["x"] == cols["x"] and party["y"] == gate["y"] and gate["x"] == look["x"] and gate["y"] + gate["height"] <= look["y"]            # the gate at the row's right end, over the results
-    assert look["y"] == cols["y"] and look["x"] > cols["x"] + cols["width"] - 1                              # the results beside the columns
-    stops, limits = by["Waits for you"], by["What is left of your AI tools"]
-    assert abs(stops["y"] - limits["y"]) <= 1 and stops["y"] >= cols["y"] + cols["height"] and limits["x"] > stops["x"]       # the bottom row: the stops, the limits at its right
+    assert party["x"] == cols["x"] and abs(cols["x"] + cols["width"] - 1440) <= 1                            # the field takes the width: nothing open, no right column (spec 90 §2.1)
+    stops = by["Waits for you"]
+    assert stops["y"] >= cols["y"] + cols["height"] and abs(stops["x"] + stops["width"] - 1440) <= 1        # the bottom row: the hand, the whole width
     assert not pg.evaluate("document.documentElement.scrollWidth > document.documentElement.clientWidth")
     assert not pg.evaluate("document.documentElement.scrollHeight > document.documentElement.clientHeight")
     assert box(pg, ".arena-left")["x"] == 40 and box(pg, ".arena-field")["x"] == 288                      # strip 40, left 248
@@ -263,16 +263,16 @@ def test_the_parties_list_their_headings_the_count_operations_and_the_pick_kept(
         assert stop.count() == 1 and stop.get_attribute("title") == "1 waits in Operations"                    # Operations' row: a sign where the count was
         heads.nth(3).click()
         pg.locator(".arena-ops").wait_for(timeout=WAIT_MS)                                                    # Operations: its view in the field, its rows below
-        assert pg.locator(".arena-hc[data-kind=op]").count() == 1 and pg.locator(".arena-hc").count() == 5 and pg.locator(".arena-phead .ork-count").count() == 0   # the passkey party's lie in the hand too
+        assert pg.locator(".arena-hc[data-kind=op]").count() == 1 and pg.locator(".arena-hc").count() == 6 and pg.locator(".arena-phead .ork-count").count() == 0   # the passkey party's lie in the hand too, and the gate's card
         _show_goal(pg, "passkey")
         pg.reload()                                                                                         # the pick is kept per device
         pg.locator(".arena[data-goal=passkey]").wait_for(timeout=WAIT_MS)
         _show_goal(pg, "pricing")
         pg.reload()
         pg.locator(".arena[data-goal=pricing]").wait_for(timeout=WAIT_MS)
-        into = pg.get_by_role("button", name=re.compile("results go into"))                                    # the results' branch: a quiet line under the gate's button
-        assert into.is_visible() and into.inner_text().strip() == "results go into dev" and into.evaluate("e => e.closest('.arena-gatebox') !== null")
-        assert box(pg, ".arena-into")["y"] > box(pg, ".arena-gate__btn")["y"] + box(pg, ".arena-gate__btn")["height"] - 1
+        into = pg.get_by_role("button", name=re.compile("results go into"))                                    # the results' branch: the gate's quiet line, under the project's line (spec 90 §2.3)
+        assert into.is_visible() and into.inner_text().strip() == "results go into dev" and into.evaluate("e => e.closest('.arena-left .arena-gateline') !== null")
+        assert box(pg, ".arena-into")["y"] > box(pg, ".arena-gateline__main")["y"] + box(pg, ".arena-gateline__main")["height"] - 1
         into.click()                                                                                          # the same dialog as the results' own Merge into
         assert pg.get_by_role("dialog", name=re.compile("Merge into")).is_visible()
         pg.keyboard.press("Escape")
@@ -351,11 +351,9 @@ def test_solo_one_member_s_rows_across_the_field_in_the_same_order_and_back(aren
     assert [r.get_attribute("data-row") for r in solo.locator(".arena-phase").all()] == ["now", "next"]
     row = solo.locator(".arena-phase").first
     assert len(row.locator(".arena-task").all()) == 2 and row.locator(".arena-task").nth(1).bounding_box()["x"] > row.locator(".arena-task").nth(0).bounding_box()["x"] + 100   # side by side
-    assert "only Backend’s" in pg.locator(".arena-look__head").inner_text() and pg.locator(".arena-result[data-task=k1]").count() == 1       # the right column: only its results
-    assert pg.locator('.arena-result[data-task="c2"]').count() == 0
     assert pg.locator(".arena-member[data-agent=backend]").get_attribute("aria-pressed") == "true"
     pg.get_by_role("button", name="Show everyone’s work").click()
-    assert pg.locator(".arena-stack[data-agent]").count() == 4 and pg.locator(".arena-result").count() == 2
+    assert pg.locator(".arena-stack[data-agent]").count() == 4 and pg.locator(".arena-hc[data-kind=result]").count() == 2
     pg.locator(".arena-member[data-agent=backend]").click()
     pg.keyboard.press("Escape")                                                                                # Esc shows all again
     pg.locator(".arena-stack[data-agent]").first.wait_for(timeout=WAIT_MS)
@@ -410,39 +408,43 @@ def test_the_columns_hold_rows_by_phase_the_merged_count_and_what_waits_for_a_ta
     assert "waits for it" not in pg.locator(".arena-task[data-key='register/k5']").inner_text()
     pg.locator(".arena-task[data-key='register/k5']").click()                                                  # a stack of one: a click opens the task in the drawer
     assert _sent(pg, host, ("ideas.log", {"event": "opened", "what": "task", "ref": "register/k5", "device": "desktop", "via": "map"}))
-    pg.get_by_role("button", name="Close the drawer").click()                                                  # the drawer covers the right of the field: it goes, its tab stays
+    pg.get_by_role("button", name="Close the right column").click()                                                  # the drawer covers the right of the field: it goes, its tab stays
     pg.locator(".arena-task[data-key='signin/c2']").click()                                                    # in Review: its result
     assert _sent(pg, host, ("ideas.log", {"event": "opened", "what": "result", "ref": "signin/c2", "device": "desktop", "via": "map"}))
 
 
-def test_waits_for_your_look_its_results_buttons_and_commands_and_no_alert_colour(arena):
+def _look(pg, key):
+    """A result to look at in the hand (spec 90 §2.3), raised: the focus brings it up."""
+    item = pg.locator(f'.arena-hc[data-key="{key}"]')
+    item.wait_for(timeout=WAIT_MS)
+    item.locator(".arena-hc__open").focus()
+    pg.wait_for_function("(el) => getComputedStyle(el).transform === 'matrix(1, 0, 0, 1, 0, -184)'", arg=item.element_handle(), timeout=WAIT_MS)
+    return item
+
+
+def test_a_result_to_look_at_is_the_hands_card_with_reviews_answers_and_no_alert_colour(arena):
     pg, host = arena
-    look = pg.get_by_role("complementary", name="Waits for your look")
-    assert look.locator(".ork-count").inner_text() == "2"
-    results = look.locator(".arena-result")
-    assert [r.get_attribute("data-task") for r in results.all()] == ["k1", "c2"]                                 # oldest first
-    first, check = results.nth(0), results.nth(1)
-    text = " ".join(first.inner_text().split())
-    assert text.startswith("WebAuthn register Challenge store Backend 14 / 14 passed 14 files · $0.42") and first.locator(".arena-result__tests .ork-sign.check").count() == 1
-    assert first.locator(".arena-result__idea .ork-elem.meadow").count() == 1                                    # its goal's element, before its name
-    assert "Words" in check.inner_text() and "its check" in check.inner_text() and "Found 2: 1 fixed, 1 left" in check.inner_text()          # a check: its findings
-    assert first.locator(".arena-link").inner_text() == "Challenge store"
+    assert pg.get_by_role("complementary", name="Waits for your look").count() == 0                              # not a place any more (spec 90 §2.3)
+    keys = pg.locator(".arena-hc[data-kind=result]").evaluate_all("els => els.map((e) => e.dataset.key)")
+    assert sorted(keys) == ["result/register/k1", "result/signin/c2"]
+    first = _look(pg, "result/register/k1")
+    assert first.locator(".arena-banner").inner_text() == "Challenge store" and "14 files · $0.42" in first.inner_text()
+    assert first.locator(".arena-hc__open").get_attribute("aria-label") == "To look at: Challenge store"
+    assert "alert" not in first.get_attribute("class") and "danger" not in first.get_attribute("class")         # a result is not a signal
     assert first.get_by_role("button", name="Merge into dev").is_enabled() and first.get_by_role("button", name="Send back").is_visible() and first.get_by_role("button", name="Drop…").is_visible()
-    alert = pg.evaluate("(() => { const d = document.createElement('span'); d.style.color = 'var(--ork-alert)'; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; })()")
-    assert alert not in look.locator("*").evaluate_all("els => els.map((e) => getComputedStyle(e).color)")        # a result is not a signal
-    assert pg.get_by_role("button", name="Last week").is_visible()                                                # the foot
+
     def again():                                                                                              # the host took the result off the list; the next one comes
         pg.mouse.move(5, 5)
-        pg.locator(".arena-result[data-task=k1]").wait_for(state="detached", timeout=WAIT_MS)
+        pg.locator('.arena-hc[data-key="result/register/k1"]').wait_for(state="detached", timeout=WAIT_MS)
         host.nodes[0]["results"] = [dict(RESULT)]
         host.nodes[0]["tasks"][0]["state"] = "review"
         host.bump({})
-        pg.locator(".arena-result[data-task=k1]").wait_for(timeout=WAIT_MS)
         _settle(pg)
-        return pg.locator(".arena-result[data-task=k1]")
-    first.locator(".arena-link").click()                                                                       # its code, in the drawer
+        return _look(pg, "result/register/k1")
+    first.locator(".arena-hc__open").click()                                                                   # its code, in the right column
     _drawer(pg).locator(".shell-result").wait_for(timeout=WAIT_MS)
-    pg.get_by_role("button", name="Close the drawer").click()
+    pg.get_by_role("button", name="Close the right column").click()
+    first = _look(pg, "result/register/k1")
     first.get_by_role("button", name="Send back").click()
     first.get_by_label("Why you send it back, in one line").fill("Name it better")
     first.locator(".shell-actions__line button").click()
@@ -454,18 +456,17 @@ def test_waits_for_your_look_its_results_buttons_and_commands_and_no_alert_colou
     first = again()
     first.get_by_role("button", name="Merge into dev").click()
     assert _sent(pg, host, ("ideas.merge", {"slug": "register", "task": "k1"}))
+    pg.mouse.move(5, 5)
+    check = _look(pg, "result/signin/c2")                                                                     # a check with findings left: Fix them on its card
     check.get_by_role("button", name="Fix them").click()
     assert _calls(pg, host, "ideas.back", 2)[-1]["task"] == "c2"
-    pg.mouse.move(5, 5)
-    pg.get_by_text("Nothing waits for your look. Results come here as their tasks finish.").wait_for(timeout=WAIT_MS)       # empty
 
 
-def test_the_gate_button_its_screen_and_the_one_press_that_merges_dev_into_main(arena):
+def test_the_gates_card_its_screen_and_the_one_press_that_merges_dev_into_main(arena):
     pg, host = arena
-    gate = pg.locator(".arena-gate")
-    button = gate.get_by_role("button", name="Merge dev into main")
-    assert button.is_enabled() and "primary" in button.get_attribute("class") and "2 goals in dev wait for main" in gate.inner_text()
-    button.click()
+    line = pg.locator(".arena-gateline")
+    assert "2 goals in dev wait for main" in line.inner_text() and pg.locator(".arena-gate__btn").count() == 0
+    line.locator(".arena-gateline__main").click()
     assert _sent(pg, host, ("ideas.log", {"event": "opened", "what": "gate", "ref": "", "device": "desktop", "via": "gate"}))
     view = _drawer(pg).locator(".arena-gateview")
     view.wait_for(timeout=WAIT_MS)
@@ -473,19 +474,28 @@ def test_the_gate_button_its_screen_and_the_one_press_that_merges_dev_into_main(
     assert "Passkey button on the page" in view.inner_text() and "Sign in with a passkey" in view.inner_text()      # the goals, with their parties
     assert "5 commits" in view.inner_text() and "12 files" in view.inner_text() and "Nothing reaches main without you." in view.inner_text()
     assert "gate" in _drawer(pg).get_by_role("tab").first.inner_text().lower()
-    view.get_by_role("button", name="Merge dev into main").click()
+    item = _stop(pg, "gate")
+    assert item.locator(".arena-banner").inner_text() == "2 goals ready for main"                              # one card for the batch (spec 90 §2.3)
+    item.get_by_role("button", name="Merge into main").click()
     assert _sent(pg, host, ("ideas.gate_merge", {}))
-    pg.get_by_text("main has every goal of dev").wait_for(timeout=WAIT_MS)                                      # after: the drawer says so, the button is off
+    pg.get_by_text("main has every goal of dev").wait_for(timeout=WAIT_MS)                                      # after: the right column says so, the button is off
     assert view.get_by_role("button", name="Merge dev into main").is_disabled()
-    assert gate.get_by_role("button", name="Merge dev into main").is_disabled() and "main is up to date" in gate.inner_text()
+    pg.locator(".arena-hc[data-kind=gate]").wait_for(state="detached", timeout=WAIT_MS)
+    assert "main is up to date" in line.inner_text()
     host.gate_doc.update(same=True)                                                                           # one branch: no gate to draw
     host.bump({})
-    pg.wait_for_function("() => !document.querySelector('.arena-gate__btn')", timeout=WAIT_MS)
+    pg.wait_for_function("() => !document.querySelector('.arena-gateline__main')", timeout=WAIT_MS)
 
 
 def test_what_waits_for_you_a_fan_raised_on_hover_and_focus_each_kind_and_its_quick_answers(arena):
     pg, host = arena
     hand = pg.get_by_role("region", name="Waits for you")
+    for n in host.nodes:                                                                                         # the stops alone: the results and the gate's card are the tests above'
+        n["results"] = []
+    host.gate_doc.update(same=True)
+    host.bump({})
+    pg.wait_for_function("() => document.querySelectorAll('.arena-hc').length === 4", timeout=WAIT_MS)
+    _settle(pg)
     kinds = pg.locator(".arena-hc").evaluate_all("els => els.map((e) => e.dataset.kind)")
     assert kinds == ["failed", "plan", "asks", "proposal"]                                                      # urgency's order (spec 54 §2.3), a failed task in its row's place
     items = pg.locator(".arena-hc")
@@ -576,10 +586,10 @@ def test_the_strip_marks_the_day_of_the_goal_and_a_click_opens_what_it_says(gui)
         marks.nth(0).click()
         assert _sent(pg, host, ("ideas.log", {"event": "opened", "what": "result", "ref": "signin/s2", "device": "desktop", "via": "today"}))
         _drawer(pg).locator(".shell-result").wait_for(timeout=WAIT_MS)
-        pg.get_by_role("button", name="Close the drawer").click()
+        pg.get_by_role("button", name="Close the right column").click()
         marks.nth(4).click()
         pg.locator(".arena-gateview").wait_for(timeout=WAIT_MS)
-        pg.get_by_role("button", name="Close the drawer").click()
+        pg.get_by_role("button", name="Close the right column").click()
         _show_goal(pg, "pricing")
         assert [what(m) for m in strip.locator(".arena-hitem").all()] == ["·", "check"]                         # another party's day, and the gate's on every party
     finally:
@@ -592,6 +602,7 @@ def test_the_limits_inside_the_night_window_say_the_morning(gui):
     host.reserve = {"share": 0.2, "night": True}
     pg, host, errors = _open(gui, host=host, ready=".arena-phead")
     try:
+        pg.locator(".shell-top__leftbtn").click()                                                                   # under Spend (spec 90 §2.3)
         limits = pg.get_by_role("region", name="What is left of your AI tools")
         claude = limits.locator(".arena-limit[data-provider=claude]")
         assert claude.locator(".ork-crystals i.kept").count() == 2 and claude.locator(".ork-crystals i.on").count() == 4
@@ -603,7 +614,7 @@ def test_the_limits_inside_the_night_window_say_the_morning(gui):
     assert not errors, "\n".join(errors)
 
 
-def test_the_drawer_opens_on_a_click_keeps_its_tabs_on_esc_and_holds_agents_and_files(gui):
+def test_the_right_column_opens_on_a_click_pushes_the_pane_keeps_its_tabs_on_esc_and_holds_agents_and_files(gui):
     from tests.test_map_desktop_browser import MapHost
     pg, host, errors = _open(gui, host=MapHost(), ready=".arena-phead")
     try:
@@ -612,9 +623,10 @@ def test_the_drawer_opens_on_a_click_keeps_its_tabs_on_esc_and_holds_agents_and_
         pg.locator(".arena-task[data-task=k4]").click()
         drawer = _drawer(pg)
         bb = drawer.bounding_box()
-        assert abs(bb["width"] - 0.62 * 1440) < 3 and bb["x"] + bb["width"] == 1440 and bb["height"] > 800                 # 62 % of the window, from the right
+        assert abs(bb["width"] - 0.34 * 1440) < 3 and abs(bb["x"] + bb["width"] - 1440) <= 1 and bb["height"] > 800        # max(480 px, 34 %) of the window, at its right (spec 90 §2.1)
         assert drawer.evaluate("e => getComputedStyle(e).borderLeftStyle") == "double"
-        assert pg.locator(".arena-phead").first.is_visible() and pg.locator(".arena-left").is_visible()                       # the window is still there, behind it
+        arena = box(pg, ".shell-main > .arena")
+        assert abs(arena["x"] + arena["width"] - bb["x"]) <= 1                                                          # the pane pushed, never covered
         pg.locator(".shell-top").get_by_role("button", name="Agents").click()
         assert "Add agent" in drawer.inner_text() and drawer.get_by_role("tab").count() == 2                        # Agents: today's pane, in a tab of the drawer
         pg.locator(".shell-top").get_by_role("button", name="Files").click()
@@ -624,14 +636,14 @@ def test_the_drawer_opens_on_a_click_keeps_its_tabs_on_esc_and_holds_agents_and_
         pg.locator(".shell-drawer").wait_for(state="detached", timeout=WAIT_MS)
         pg.locator(".shell-top").get_by_role("button", name="Agents").click()
         assert _drawer(pg).get_by_role("tab").count() == 3                                                         # its tabs are kept
-        pg.get_by_role("button", name="Close the drawer").click()
+        pg.get_by_role("button", name="Close the right column").click()
         pg.locator(".shell-drawer").wait_for(state="detached", timeout=WAIT_MS)
     finally:
         pg.close()
     assert not errors, "\n".join(errors)
 
 
-def test_below_1024_the_columns_scroll_sideways_and_the_drawer_takes_the_window(gui):
+def test_below_1024_the_columns_scroll_sideways_and_the_right_column_takes_the_window(gui):
     pg, host, errors = _open(gui, host=ArenaHost(), viewport={"width": 900, "height": 800}, ready=".arena-phead")
     try:
         pg.locator(".arena[data-goal=passkey]").wait_for(timeout=WAIT_MS)

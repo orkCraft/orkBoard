@@ -279,7 +279,7 @@ def test_a_pitchs_screen_has_the_four_views_the_case_against_and_the_decision_an
     views = drawer.locator(".shell-pitch__view")
     assert views.count() == 4 and [v.get_attribute("data-view") for v in views.all()] == VIEWS
     tops = {round(v.bounding_box()["y"]) for v in views.all()}
-    assert len(tops) == 1                                                                         # side by side
+    assert len(tops) == 2                                                                         # two by two in the right column (spec 90 §2.1)
     tech = drawer.locator('.shell-pitch__view[data-view="tech-view"]')
     assert "The sync queue is there" in tech.inner_text() and "Conflicts on two devices" in tech.inner_text() and "Which device wins a conflict?" in tech.inner_text()
     assert tech.locator(".ork-race__head").count() == 1 and tech.locator(".board-size").inner_text() == "M"

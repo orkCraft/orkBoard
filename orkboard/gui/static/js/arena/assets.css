@@ -1,6 +1,6 @@
-/* The project's Assets and Play (docs/specs/88-assets-and-play.md §6): the level's tabs, the files laid out as the field's cards in a column for each kind (the card itself is arena.css `.arena-task` in `.arena-stk`,
-   whatever size the field gives it), a card lifted in the pane, the version before turned over to, the three moments of what changed, and the build in the pane. In orkUI's office look: its tokens only,
-   no colour, font or corner of its own. */
+/* The project's Assets and Play (docs/specs/88-assets-and-play.md §6): the level's tabs, the files laid out as the field's cards, the kinds as sections one under another, their cards wrapping across the width
+   (docs/specs/90-what-the-first-look-said.md §3; the card itself is arena.css `.arena-task` in `.arena-stk`, 128 px as the field's), a file opened in the right column, the version before turned over to, the three
+   moments of what changed, and the build in the pane. In orkUI's office look: its tokens only, no colour, font or corner of its own. */
 
 /* -- the level's three tabs over its table ----------------------------------------------------------------------------------------------------- */
 .arena-pjtabs { flex: none; padding: 0 var(--ork-6); }
@@ -14,14 +14,19 @@
 .assets-kinds .ork-btn[aria-pressed="true"] { --_bg: var(--ork-ink); --_fg: var(--ork-on-ink); --_bd: var(--ork-ink); }
 .assets-goals { margin-left: auto; min-width: 200px; }
 
-/* -- the table: a column for each kind, the files as cards ----------------------------------------------------------------------------------- */
-.assets-body { flex: 1; min-height: 0; overflow: auto; }
-.assets-cols { position: relative; display: flex; align-items: stretch; min-width: max-content; min-height: 100%; }
-.assets-col { flex: 1 0 148px; max-width: 220px; box-sizing: border-box; display: flex; flex-direction: column; gap: var(--ork-4); padding: var(--ork-2) var(--ork-4) var(--ork-5); }
-.assets-col > .arena-sec { display: flex; align-items: center; gap: var(--ork-3); margin: var(--ork-3) var(--ork-1) 0; }
-.assets-col__n { color: var(--ork-ink-faint); }
-.assets-stk { flex: none; width: 100%; }
-.assets-stack { display: flex; flex-direction: column; gap: var(--ork-4); }
+/* -- the table: the kinds as sections one under another, each its cards wrapping across the width ------------------------------------------- */
+.assets-body { flex: 1; min-height: 0; overflow-y: auto; overflow-x: hidden; }
+.assets-secs { position: relative; display: flex; flex-direction: column; gap: var(--ork-5); padding: var(--ork-3) var(--ork-6) var(--ork-8); }
+.assets-sec { min-width: 0; display: flex; flex-direction: column; gap: var(--ork-4); }
+.assets-sec > .arena-sec { display: flex; align-items: center; gap: var(--ork-3); margin: var(--ork-3) var(--ork-1) 0; }
+.assets-sec__n { color: var(--ork-ink-faint); }
+.assets-sec__cards { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--ork-6) var(--ork-5); }
+.assets-stk { flex: none; width: 128px; max-width: 128px; }
+.assets-stack { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--ork-6) var(--ork-5); }
+.assets-stack > .arena-fold { flex-basis: 100%; justify-content: flex-start; }
+.assets-card.is-on { border-color: var(--ork-ink); box-shadow: inset 0 0 0 var(--ork-line) var(--ork-ink); }
+.assets-sec .arena-canvas { width: 248px; box-sizing: border-box; }
+.assets-sec .arena-canvases__seen { padding-left: 0; }
 .assets-card .assets-face { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--ork-canvas); border: var(--ork-line) solid var(--ork-frame); }
 .assets-card .assets-name { -webkit-line-clamp: 1; line-clamp: 1; }
 .assets-card.is-changed { border-color: var(--ork-edge); }
@@ -50,11 +55,11 @@
 .assets-card.is-crumble { pointer-events: none; animation: assets-crumble 0.42s steps(3) forwards; }
 @keyframes assets-crumble { 0% { opacity: 1; filter: none; } 34% { opacity: 0.7; transform: translateY(2px); } 67% { opacity: 0.35; transform: translateY(5px); } 100% { opacity: 0; transform: translateY(10px); } }
 
-/* -- a card lifted in the pane ------------------------------------------------------------------------------------------------------------- */
-.assets-lift { position: absolute; inset: 0; z-index: 20; box-sizing: border-box; display: flex; align-items: stretch; justify-content: center; padding: var(--ork-5); background: var(--ork-scrim); }
-.assets-lift__panel { flex: 1; min-width: 0; max-width: 1180px; display: flex; flex-direction: column; gap: var(--ork-4); box-sizing: border-box; padding: var(--ork-5); overflow: auto;
-  background: var(--ork-panel); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); }
-.assets-lift__head { flex: none; display: flex; align-items: center; gap: var(--ork-4); min-width: 0; }
+/* -- a file opened in the right column (spec 90 §2) ----------------------------------------------------------------------------------------- */
+.assets-lift { min-height: 100%; min-width: 0; display: flex; flex-direction: column; gap: var(--ork-4); box-sizing: border-box; }
+.assets-lift__head { flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-3) var(--ork-4); min-width: 0; }
+.assets-lift__path { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.assets-lift__path:empty { display: none; }
 .assets-lift__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--ork-type-body); font-weight: 600; }
 .assets-lift__by { display: inline-flex; align-items: center; gap: var(--ork-2); flex: none; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
 .assets-lift__stage { position: relative; flex: 1 1 320px; min-height: 240px; perspective: 900px; }

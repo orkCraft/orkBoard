@@ -91,7 +91,7 @@ def test_the_field_is_orkuis_table_its_wood_a_surface_and_never_a_mark():
     assert all(f"--ork-{t}:" in tok for t in ("table", "table-rim", "table-rim-hi"))
     assert ".ork-table" in (orkui.ROOT / "components.css").read_text(encoding="utf-8")
     js = (STATIC / "js" / "arena" / "arena.js").read_text(encoding="utf-8")
-    assert re.search(r'<section class="arena-body ork-table"', js)
+    assert re.search(r'<div class="arena-play ork-table"', js)                 # spec 90 §4: the table starts at the pane's top, the party's tabs and faces on its wood
     proj = (STATIC / "js" / "arena" / "project.js").read_text(encoding="utf-8")
     assert re.search(r'<div class="arena-project__cols ork-table"', proj)        # spec 79: the project's level is played on the same table
     sheets = "".join(p.read_text(encoding="utf-8") for p in SHEETS)

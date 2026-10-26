@@ -1,20 +1,28 @@
-// The project's Assets (docs/specs/88-assets-and-play.md §6, decisions §104.11): the project's own files, read from dev's tree (`ideas.assets`), laid out on the table as the field's cards in a column for each kind —
-// Screens, Art and icons, Sound, Music, Clips, Fonts, the order of §0 —, a folder of more than six of one kind a stack (×n, a press opens it). A card's face is the thing itself: art and a screen drawn whole
+// The project's Assets (docs/specs/88-assets-and-play.md §6, decisions §104.11, §105.3): the project's own files, read from dev's tree (`ideas.assets`), laid out on the table as the field's cards, the kinds as
+// sections one under another (docs/specs/90-what-the-first-look-said.md §3) — Screens, Art and icons, Sound, Music, Clips, Fonts, the order of §0, then the canvases (canvases.js, spec 90 §2.3) —, a section's name
+// over its cards and its cards wrapping across the whole width, a folder of more than six of one kind a stack (×n, a press opens it). A card's face is the thing itself: art and a screen drawn whole
 // (contained, crisp when it is smaller than the card), a sound or music its name over orkUI's *sound* sign and its length, a clip its first frame (else the *film* sign), a font its name set in it. Its foot is its name
-// and, when a goal changed it last, *Changed by <goal>* with the goal's element. A press lifts the card in the pane: art at its size up to the pane, a sound or a clip playing with its controls (picks.js's
-// pieces, large), *Not picked (n)* under it (the variants a *Pick one* left), and for a changed file *Before* / *Now*: the stage turns over (orkUI's steps, 0.42 s) to the file as it was at the device's last look.
+// and, when a goal changed it last, *Changed by <goal>* with the goal's element. A press opens the file in the window's right column (spec 90 §2, a tab of kind `asset`, never over the window): art at its size up to
+// the column, a sound or a clip playing with its controls (picks.js's pieces, large), *Not picked (n)* under it (the variants a *Pick one* left), and for a changed file *Before* / *Now*: the stage turns over
+// (orkUI's steps, 0.42 s) to the file as it was at the device's last look.
 // What changed since that look (`localStorage` `orkboard.assets.look.<project>`, the commit shown when the tab was left) is played once when the tab is opened (spec 74 §0's rules: only while the page is seen and
 // the person has not asked for no motion): an added file is dealt, a changed one sealed with its goal's element, a removed one crumbles. A filter by kind and by goal. No model, nothing sent anywhere.
 import { useEffect, useRef, useState } from "preact/hooks";
+import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
 import { Chev, Elem, Sign, Switch } from "../orkui.js";
 import { command, town } from "../link.js";
-import { mapData } from "../shell/store.js";
+import { mapData, preview, show } from "../shell/store.js";
 import { reducedMotion } from "./motion.js";
 import { Picture, Player } from "./picks.js";
 import { isPixel, labelOf, lengthWords } from "./pickwords.js";
+import { CanvasSection, useCanvases } from "./canvases.js";
 
-/** The kinds in the order of the columns (spec 88 §0): [id, the column's word]. */
+/** The last answer of `ideas.assets` the page read: a file opened in the right column is found in it. */
+export const assetsDoc = signal(null);
+export const CANVASES = "Canvases";
+
+/** The kinds in the order of the sections (spec 88 §0): [id, the section's word]. */
 export const KINDS = [["screen", "Screens"], ["art", "Art and icons"], ["sound", "Sound"], ["music", "Music"], ["clip", "Clips"], ["font", "Fonts"]];
 export const ALL_GOALS = "All goals";
 export const NOTHING = "Nothing here yet";
@@ -67,6 +75,7 @@ function useAssets() {
       now.current = r;
       setErr("");
       setDoc(r);
+      assetsDoc.value = r;
       if (played.current) return;
       played.current = true;
       const added = r.assets.filter((a) => a.change === "added").map((a) => a.id), changed = r.assets.filter((a) => a.change === "changed").map((a) => a.id);
@@ -112,10 +121,11 @@ function Face({ a }) {
 /** One asset as the field's card (5:7, spec 87's size): its face, its name, *Changed by <goal>* with the goal's element. `many` > 1: the front of a stack (edges behind it, ×n). `fx`: what the reveal plays on it. */
 function Card({ a, goals, fx, many = 0, onPress }) {
   const goal = a.goal ? goals[a.goal] : null, el = goal?.element || "", dealt = fx?.deal.get(a.id), sealed = fx?.seal.has(a.id);
+  const on = many <= 1 && preview.value?.kind === "asset" && preview.value.path === a.id;              // open in the right column
   const edges = Math.min(2, many - 1), said = `${a.name}${goal ? `, ${changedBy(goal.title)}` : ""}${many > 1 ? `, and ${many - 1} more in ${a.stack}: a press opens them` : ""}`;
   return html`<div class=${cls("arena-stk assets-stk", { "is-many": many > 1 })} data-n=${many > 1 ? many : undefined}>
     ${Array.from({ length: edges }, (_, i) => html`<i key=${i} class="arena-stk__edge" style=${`left:${(i + 1) * 4}px;top:${-(i + 1) * 4}px`}></i>`)}
-    <button type="button" class=${cls("arena-task assets-card", { "is-changed": !!a.change, "has-n": many > 1, "is-dealt-in": dealt != null, "is-sealed": sealed })} data-asset=${a.id} data-kind=${a.kind}
+    <button type="button" class=${cls("arena-task assets-card", { "is-changed": !!a.change, "has-n": many > 1, "is-dealt-in": dealt != null, "is-sealed": sealed, "is-on": on })} data-asset=${a.id} data-kind=${a.kind}
       data-change=${a.change || undefined} style=${dealt != null ? `--delay:${dealt * APART_MS}ms` : undefined} title=${goal ? `${a.name} · ${changedBy(goal.title)}` : a.name} aria-label=${said}
       aria-expanded=${many > 1 ? "false" : undefined} onClick=${() => onPress(a)}>
       <span class="assets-face"><${Face} a=${a} /></span>
@@ -140,7 +150,7 @@ function StackOf({ s, goals, fx, open, toggle, press }) {
   </div>`;
 }
 
-/** A column's entries: a card for a file, a stack for a folder with more than one file left (the list is the host's, the changed first). */
+/** A section's entries: a card for a file, a stack for a folder with more than one file left (the list is the host's, the changed first). */
 export function entriesOf(list) {
   const out = [], by = new Map();
   for (const a of list) {
@@ -173,15 +183,10 @@ function Other({ v }) {
     <span class="assets-other__label" title=${label}>${label}</span></div>`;
 }
 
-/** A card pressed, lifted in the pane (spec 88 §6.3). A changed file has *Before* / *Now*: the stage turns over to the file as it was at the device's last look. Esc, the scrim and Close put it back. */
-function Lift({ a, goals, since, onClose }) {
-  const [before, setBefore] = useState(null), [turned, setTurned] = useState(false), stage = useRef(), close = useRef();
+/** A card pressed, in the right column (spec 88 §6.3, spec 90 §2–§3). A changed file has *Before* / *Now*: the stage turns over to the file as it was at the device's last look. The tab's × (or Esc) closes it. */
+function Lift({ a, goals, since }) {
+  const [before, setBefore] = useState(null), [turned, setTurned] = useState(false), stage = useRef();
   const goal = a.goal ? goals[a.goal] : null, still = a.change === "changed" && !a.id.startsWith("screen:");
-  useEffect(() => {
-    const back = document.activeElement;
-    close.current?.focus();
-    return () => { if (back && document.contains(back)) back.focus?.(); };
-  }, []);
   useEffect(() => {                                                   // the card was pressed: a sound or a clip plays (the press is the person's)
     if (a.kind === "sound" || a.kind === "music" || a.kind === "clip") stage.current?.querySelector(".is-now audio, .is-now video")?.play?.().catch(() => {});
   }, [a.id]);
@@ -196,25 +201,42 @@ function Lift({ a, goals, since, onClose }) {
     setTurned(id === "before");
   };
   const others = a.others?.variants || [];
-  const keys = (e) => { if (e.key === "Escape") { e.stopPropagation(); onClose(); } };
-  return html`<div class="assets-lift" onClick=${(e) => { if (e.target === e.currentTarget) onClose(); }} onKeyDown=${keys}>
-    <div class="assets-lift__panel" role="dialog" aria-label=${a.name} data-asset=${a.id} data-kind=${a.kind}>
-      <div class="assets-lift__head">
-        <b class="assets-lift__name" title=${a.name}>${a.name}</b>
-        ${goal && html`<span class="assets-lift__by"><${Elem} name=${goal.element || ""} dim=${!goal.element} />${changedBy(goal.title)}</span>`}
-        <span class="arena-spacer"></span>
-        ${before && html`<${Switch} label="Version" cls="assets-lift__turn" value=${turned ? "before" : "now"} onPick=${turn} options=${[["now", "Now"], ["before", "Before"]]} />`}
-        <button type="button" class="ork-btn" ref=${close} onClick=${onClose}>Close</button>
-      </div>
-      <div class=${cls("assets-lift__stage", { "is-turned": turned })} ref=${stage} data-kind=${a.kind}>
-        <div class="assets-lift__face is-now" aria-hidden=${turned ? "true" : undefined}><${Large} a=${a} v=${a} /></div>
-        ${before && html`<div class="assets-lift__face is-before" data-before aria-hidden=${turned ? undefined : "true"}><${Large} a=${a} v=${before} /></div>`}
-      </div>
-      ${others.length > 0 && html`<section class="assets-lift__others" aria-label=${notPicked(others.length)}>
-        <h3 class="arena-sec">${notPicked(others.length)}</h3>
-        <div class="assets-others">${others.map((v) => html`<${Other} key=${v.key} v=${v} />`)}</div></section>`}
+  return html`<section class="assets-lift" aria-label=${a.name} data-asset=${a.id} data-kind=${a.kind}>
+    <div class="assets-lift__head">
+      <b class="assets-lift__name" title=${a.name}>${a.name}</b>
+      ${goal && html`<span class="assets-lift__by"><${Elem} name=${goal.element || ""} dim=${!goal.element} />${changedBy(goal.title)}</span>`}
+      <span class="arena-spacer"></span>
+      ${before && html`<${Switch} label="Version" cls="assets-lift__turn" value=${turned ? "before" : "now"} onPick=${turn} options=${[["now", "Now"], ["before", "Before"]]} />`}
     </div>
-  </div>`;
+    <p class="arena-cap assets-lift__path" title=${a.id}>${a.id.startsWith("screen:") ? "" : a.id}</p>
+    <div class=${cls("assets-lift__stage", { "is-turned": turned })} ref=${stage} data-kind=${a.kind}>
+      <div class="assets-lift__face is-now" aria-hidden=${turned ? "true" : undefined}><${Large} a=${a} v=${a} /></div>
+      ${before && html`<div class="assets-lift__face is-before" data-before aria-hidden=${turned ? undefined : "true"}><${Large} a=${a} v=${before} /></div>`}
+    </div>
+    ${others.length > 0 && html`<section class="assets-lift__others" aria-label=${notPicked(others.length)}>
+      <h3 class="arena-sec">${notPicked(others.length)}</h3>
+      <div class="assets-others">${others.map((v) => html`<${Other} key=${v.key} v=${v} />`)}</div></section>`}
+  </section>`;
+}
+
+/** A file opened in the right column (a tab `{kind: "asset", path: <its id>}`): found in the last answer of `ideas.assets`; a tab kept from an earlier visit reads it again. */
+export function AssetView({ p }) {
+  const doc = assetsDoc.value, [err, setErr] = useState("");
+  useEffect(() => {
+    if (doc) return undefined;
+    let live = true;
+    const since = read(`${LOOK}${town.value?.projects?.current || ""}`);
+    command("ideas.assets", since ? { since } : {}, true).then((r) => {
+      if (!live) return;
+      if (!r || r.error) setErr(r?.error || "The assets could not be read");
+      else assetsDoc.value = r;
+    }).catch((e) => { if (live) setErr(e.message || "The assets could not be read"); });
+    return () => { live = false; };
+  }, [!doc]);
+  if (!doc) return html`<p class="ok-tone-muted">${err || "Opening…"}</p>`;
+  const a = doc.assets.find((x) => x.id === p.path);
+  if (!a) return html`<p class="ok-tone-muted">This file is no longer in dev.</p>`;
+  return html`<${Lift} key=${a.id} a=${a} goals=${doc.goals || {}} since=${doc.since} />`;
 }
 
 // -- the table ----------------------------------------------------------------------------------------------------------------------------------------------------
@@ -225,38 +247,46 @@ function effects(reveal) {
   return { deal: new Map(reveal.added.map((id, i) => [id, Math.min(i, DEALT)])), seal: new Set(reveal.changed) };
 }
 
+/** A file pressed opens in the right column (spec 90 §2); pressed again while it is the tab shown there, it stays. */
+const open = (a) => show({ kind: "asset", path: a.id, title: a.name }, { via: "assets" });
+
 export function Assets() {
-  const { doc, err, reveal } = useAssets();
-  const [kind, setKind] = useState(""), [goal, setGoal] = useState(""), [openStacks, setOpenStacks] = useState(() => new Set()), [liftedId, lift] = useState("");
+  const { doc, err, reveal } = useAssets(), canvas = useCanvases();
+  const [kind, setKind] = useState(""), [goal, setGoal] = useState(""), [openStacks, setOpenStacks] = useState(() => new Set());
   if (err && !doc) return html`<div class="assets" data-state="failed"><p class="arena-cap assets-note">${err}</p></div>`;
   if (!doc) return html`<div class="assets" data-state="reading"><p class="arena-cap assets-note"><span class="ork-busy"></span></p></div>`;
   const goals = doc.goals || {}, fx = effects(reveal);
   const used = new Set(doc.assets.map((a) => a.goal).filter(Boolean)), goalIds = Object.keys(goals).filter((g) => used.has(g));
   const pick = (r) => (!kind || r.kind === kind) && (!goal || r.goal === goal);
   const shown = doc.assets.filter(pick), gone = reveal ? reveal.removed.filter(pick) : [];
-  const has = (k) => doc.assets.some((a) => a.kind === k);
-  const lifted = liftedId ? doc.assets.find((a) => a.id === liftedId) : null;
+  const anyCanvas = canvas.canvases.length + canvas.seen.length > 0;
+  const has = (k) => (k === "canvas" ? anyCanvas : doc.assets.some((a) => a.kind === k));
+  const pickCanvas = (c) => (!kind || kind === "canvas") && (!goal || c.idea === goal);
+  const canvases = canvas.canvases.filter(pickCanvas), seen = canvas.seen.filter(pickCanvas);
   const toggle = (k) => setOpenStacks((s) => { const n = new Set(s); n.has(k) ? n.delete(k) : n.add(k); return n; });
-  const cols = KINDS.map(([id, word]) => ({ id, word, list: shown.filter((a) => a.kind === id), gone: gone.filter((r) => r.kind === id) })).filter((c) => c.list.length || c.gone.length);
+  const secs = KINDS.map(([id, word]) => ({ id, word, list: shown.filter((a) => a.kind === id), gone: gone.filter((r) => r.kind === id) })).filter((c) => c.list.length || c.gone.length);
+  const any = secs.length > 0 || canvases.length + seen.length > 0;
   return html`<div class="assets" data-state="shown">
     <div class="assets-bar">
       <div class="assets-kinds" role="group" aria-label="Kinds">
-        ${KINDS.filter(([id]) => has(id)).map(([id, word]) => html`<button type="button" key=${id} class="ork-btn" data-kind=${id} aria-pressed=${String(kind === id)} onClick=${() => setKind(kind === id ? "" : id)}>${word}</button>`)}
+        ${[...KINDS, ["canvas", CANVASES]].filter(([id]) => has(id)).map(([id, word]) => html`<button type="button" key=${id} class="ork-btn" data-kind=${id} aria-pressed=${String(kind === id)} onClick=${() => setKind(kind === id ? "" : id)}>${word}</button>`)}
       </div>
       ${goalIds.length > 0 && html`<div class="ork-select assets-goals"><select class="ork-field" aria-label="Goal" value=${goal} onChange=${(e) => setGoal(e.target.value)}>
         <option value="">${ALL_GOALS}</option>${goalIds.map((g) => html`<option key=${g} value=${g} selected=${g === goal}>${goals[g].title}</option>`)}</select></div>`}
     </div>
-    ${doc.assets.length === 0 ? html`<div class="assets-none"><p class="assets-none__title">${NOTHING}</p><p class="arena-cap">${NOTHING_HOW}</p></div>`
-      : cols.length === 0 ? html`<div class="assets-none"><p class="assets-none__title">${NOTHING}</p></div>` : html`
-      <div class="assets-body"><div class="assets-cols ork-table">
-        ${cols.map((c) => html`<section key=${c.id} class="assets-col" data-kind=${c.id} aria-label=${c.word}>
-          <h3 class="arena-sec">${c.word} <span class="assets-col__n">${c.list.length}</span></h3>
-          ${entriesOf(c.list).map((e) => (e.stack
-            ? html`<${StackOf} key=${e.key} s=${e} goals=${goals} fx=${fx} open=${openStacks.has(e.key)} toggle=${() => toggle(e.key)} press=${(a) => lift(a.id)} />`
-            : html`<${Card} key=${e.a.id} a=${e.a} goals=${goals} fx=${fx} onPress=${(a) => lift(a.id)} />`))}
-          ${c.gone.map((r) => html`<${Ghost} key=${`gone:${r.id}`} r=${r} />`)}
+    ${doc.assets.length === 0 && !anyCanvas ? html`<div class="assets-none"><p class="assets-none__title">${NOTHING}</p><p class="arena-cap">${NOTHING_HOW}</p></div>`
+      : !any ? html`<div class="assets-none"><p class="assets-none__title">${NOTHING}</p></div>` : html`
+      <div class="assets-body ork-table"><div class="assets-secs">
+        ${secs.map((c) => html`<section key=${c.id} class="assets-sec" data-kind=${c.id} aria-label=${c.word}>
+          <h3 class="arena-sec">${c.word} <span class="assets-sec__n">${c.list.length}</span></h3>
+          <div class="assets-sec__cards">
+            ${entriesOf(c.list).map((e) => (e.stack
+              ? html`<${StackOf} key=${e.key} s=${e} goals=${goals} fx=${fx} open=${openStacks.has(e.key)} toggle=${() => toggle(e.key)} press=${open} />`
+              : html`<${Card} key=${e.a.id} a=${e.a} goals=${goals} fx=${fx} onPress=${open} />`))}
+            ${c.gone.map((r) => html`<${Ghost} key=${`gone:${r.id}`} r=${r} />`)}
+          </div>
         </section>`)}
+        <${CanvasSection} list=${canvases} seen=${seen} done=${canvas.done} />
       </div></div>`}
-    ${lifted && html`<${Lift} key=${lifted.id} a=${lifted} goals=${goals} since=${doc.since} onClose=${() => lift("")} />`}
   </div>`;
 }

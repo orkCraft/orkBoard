@@ -11,7 +11,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_shell_browser import SHOTS, StubHost, _agents, _open, box  # noqa: E402
+from tests.test_shell_browser import SHOTS, StubHost, _agents, _look_open, _open, box  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -176,8 +176,8 @@ def test_an_instruction_over_600_says_so_and_cannot_be_saved_and_a_hand_set_mode
 
 def test_the_result_preview_says_what_the_goal_cost_so_far_and_dashes_when_nothing_is_priced(shell36):
     pg, host = shell36
-    pg.get_by_role("button", name="Close the drawer").click()                      # Agents (the fixture's) covers the results: the drawer goes, its tab stays
-    pg.locator(".arena-result", has_text="Add the queue").locator(".arena-link").click()
+    pg.get_by_role("button", name="Close the right column").click()                      # Agents (the fixture's) covers the results: the drawer goes, its tab stays
+    _look_open(pg, "Add the queue")                                                       # its card in the hand opens it (spec 90 §2.3)
     line = pg.locator(".shell-spend")
     line.wait_for(timeout=WAIT_MS)
     assert line.inner_text() == "This goal so far: ≈$3.10 — party 0.40 · spec 0.50 · plan 0.20 · work 1.50 · rework 0.50"   # dropped at 0 left out
@@ -186,5 +186,5 @@ def test_the_result_preview_says_what_the_goal_cost_so_far_and_dashes_when_nothi
         pg.screenshot(path=str(SHOTS / "desktop-result-spend-1440x900.png"))
     pg.keyboard.press("Escape")
     host.spend = {"usd": None, "unpriced": 3, "tasks": {}, "stages": {k: {"usd": None, "tokens": 1, "calls": 1} for k in ("goal", "spec", "plan")}}
-    pg.locator(".arena-result", has_text="Add the queue").locator(".arena-link").click()
+    _look_open(pg, "Add the queue")
     pg.wait_for_function("() => document.querySelector('.shell-spend')?.textContent === 'This goal so far: —'", timeout=WAIT_MS)

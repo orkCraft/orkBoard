@@ -74,7 +74,7 @@ def test_the_party_line_says_now_the_price_a_goal_and_today_and_about_this_party
     assert [b.inner_text() for b in foot.get_by_role("button").all()] == ["Edit the party", "Save it to your parties"]
     host.goals["passkey"]["verdict"] = {"met": True, "by": "Product manager", "at": "2026-10-18T09:00:00"}        # a verdict of before: its old flag
     host.bump({})
-    pg.get_by_role("button", name="Close the drawer").click()
+    pg.get_by_role("button", name="Close the right column").click()
     pg.get_by_role("button", name="About this party").click()
     pg.locator("[data-sec=before]").wait_for(timeout=WAIT_MS)
     assert _text(_drawer(pg).locator("[data-sec=before]")) == "Before: met, says Product manager · 18 October"
@@ -185,7 +185,7 @@ def test_the_goals_list_has_at_work_planning_new_and_flags_with_their_elements_l
         assert goals.locator(f".arena-goal[data-slug={s}] .arena-goal__main").get_attribute("aria-pressed") == "true"                    # the first picked it
         goals.locator(f".arena-goal[data-slug={s}] .arena-goal__main").click()
         assert _sent(pg, host, ("ideas.log", {"event": "opened", "what": kind, "ref": s, "device": "desktop", "via": "map"}))
-        pg.get_by_role("button", name="Close the drawer").click()
+        pg.get_by_role("button", name="Close the right column").click()
     pg.get_by_role("button", name="Show all").click()
     fold = goals.get_by_role("button", name="New · 2")
     assert fold.get_attribute("aria-expanded") == "false" and goals.locator(".arena-goal[data-slug=magic]").count() == 0
@@ -195,7 +195,7 @@ def test_the_goals_list_has_at_work_planning_new_and_flags_with_their_elements_l
     assert magic.locator(".ork-elem.dim").count() == 1 and log.locator(".ork-elem.void.dim").count() == 1      # a goal not yet read: its element dim
     log.locator(".arena-goal__main").click()                                                                   # a new goal has no task to pick: a press opens it
     assert _sent(pg, host, ("ideas.log", {"event": "opened", "what": "idea", "ref": "log", "device": "desktop", "via": "map"}))
-    pg.get_by_role("button", name="Close the drawer").click()
+    pg.get_by_role("button", name="Close the right column").click()
     flags = goals.get_by_role("button", name="Flags · 1")
     assert _text(flags.locator("xpath=..").locator(".arena-frow__aside")) == "1 waits for main" and flags.get_attribute("aria-expanded") == "false"      # at its right, muted
     flags.click()
@@ -237,7 +237,7 @@ def test_a_press_picks_a_goal_a_second_press_opens_it_a_hover_peeks_show_all_and
     register.click()                                                                                          # a second press opens its screen (spec 73 §1.2): it stays picked
     pg.locator(".shell-preview .board-ideaview").wait_for(timeout=WAIT_MS)
     assert register.get_attribute("aria-pressed") == "true"
-    pg.get_by_role("button", name="Close the drawer").click()
+    pg.get_by_role("button", name="Close the right column").click()
     pg.get_by_role("button", name="Show all").click()                                                         # Show all takes it out
     assert register.get_attribute("aria-pressed") == "false" and pg.get_by_role("button", name="Show all").count() == 0
     pg.mouse.move(150, 780)                                                                                   # (the pointer on the row would peek it)
@@ -284,21 +284,23 @@ def test_the_picks_stay_with_their_party_for_the_session_and_not_across_a_reload
 
 def test_the_filter_takes_the_results_the_stops_and_the_other_members_cards_with_it_but_the_tabs_count_stays(arena):
     pg, host = arena
-    assert [r.get_attribute("data-idea") for r in pg.locator(".arena-result").all()] == ["register", "signin"]
-    assert pg.locator(".arena-hc").evaluate_all("els => els.map((e) => e.dataset.kind)") == ["failed", "plan", "asks", "proposal"]
+    looks = "() => [...document.querySelectorAll('.arena-hc[data-kind=result]:not(.is-leaving)')].map((e) => e.dataset.key.split('/')[1]).sort()"     # the results: the hand's cards (spec 90 §2.3)
+    stops = ".arena-hc:not([data-kind=result]):not([data-kind=gate])"
+    assert pg.evaluate(looks) == ["register", "signin"]
+    assert pg.locator(stops).evaluate_all("els => els.map((e) => e.dataset.kind)") == ["failed", "plan", "asks", "proposal"]
     pg.locator(".arena-goal[data-slug=cookie] .arena-goal__main").click()
     _settled(pg, ["cookie"])
-    pg.wait_for_function("() => document.querySelectorAll('.arena-result').length === 0 && document.querySelectorAll('.arena-hc').length === 1", timeout=WAIT_MS)
-    assert pg.locator(".arena-hc").first.get_attribute("data-kind") == "failed"                                # only its stop (a failed task of Session cookie flags)
-    assert pg.get_by_text("Nothing of these goals").count() >= 3                                               # the results and the members with none say so
+    pg.wait_for_function("() => document.querySelectorAll('.arena-hc[data-kind=result]').length === 0 && document.querySelectorAll('.arena-hc:not([data-kind=gate])').length === 1", timeout=WAIT_MS)
+    assert pg.locator(stops).first.get_attribute("data-kind") == "failed"                                      # only its stop (a failed task of Session cookie flags)
+    assert pg.get_by_text("Nothing of these goals").count() >= 1                                               # the members with none say so
     words = pg.locator(".arena-stack[data-agent=words]")
     assert "Nothing of these goals" in words.inner_text() and "No task now" not in words.inner_text()
     assert pg.locator(".arena-phead .ork-count").count() == 0                                                  # no count of the party shown's stops: the bottom row is it
     pg.get_by_role("button", name="Show all").click()
-    pg.wait_for_function("() => document.querySelectorAll('.arena-result').length === 2 && document.querySelectorAll('.arena-hc').length === 4", timeout=WAIT_MS)
+    pg.wait_for_function("() => document.querySelectorAll('.arena-hc[data-kind=result]').length === 2 && document.querySelectorAll('.arena-hc:not([data-kind=result]):not([data-kind=gate])').length === 4", timeout=WAIT_MS)
     pg.locator(".arena-goal[data-slug=register] .arena-goal__main").click()
-    pg.wait_for_function("() => document.querySelectorAll('.arena-result').length === 1", timeout=WAIT_MS)
-    assert [r.get_attribute("data-idea") for r in pg.locator(".arena-result").all()] == ["register"]
+    pg.wait_for_function("() => document.querySelectorAll('.arena-hc[data-kind=result]:not(.is-leaving)').length === 1", timeout=WAIT_MS)
+    assert pg.evaluate(looks) == ["register"]
 
 
 def test_a_card_the_filter_takes_leaves_where_it_stands_without_a_check_and_comes_back(arena):
@@ -720,7 +722,7 @@ def test_the_page_says_party_and_goal_never_idea_and_none_of_the_games_words(are
     pg.get_by_role("button", name="About this party").click()
     _drawer(pg).locator("[data-sec=for]").wait_for(timeout=WAIT_MS)
     read()
-    pg.get_by_role("button", name="Close the drawer").click()
+    pg.get_by_role("button", name="Close the right column").click()
     for name, dialog in (("Edit the party", "Edit the party"), ("New party", "New party")):
         if name == "New party":
             _new_party(pg)

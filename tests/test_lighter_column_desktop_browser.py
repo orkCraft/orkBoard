@@ -107,7 +107,7 @@ def test_a_press_picks_a_goal_a_second_press_opens_its_screen_and_enter_does_the
     main.click()                                                                                                                      # a second press opens its screen
     pg.locator(".shell-preview .board-ideaview").wait_for(timeout=WAIT_MS)
     _preview(pg, "WebAuthn register")
-    pg.get_by_role("button", name="Close the drawer").click()
+    pg.get_by_role("button", name="Close the right column").click()
     other = _main(pg, "signin")                                                                                                      # the keyboard: Enter picks, Enter again opens
     other.focus()
     pg.keyboard.press("Enter")

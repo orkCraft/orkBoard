@@ -217,7 +217,7 @@ def show(pg, kind, **args):
 def test_nothing_is_open_at_start_no_pinned_tab_and_esc_puts_the_drawer_away_and_keeps_its_tabs(mapped):
     pg, host = mapped
     assert pg.locator(".shell-drawer").count() == 0 and pg.locator(".shell-tabstrip").count() == 0          # no pinned Map tab: nothing opened, no drawer
-    assert pg.locator(".arena").is_visible() and pg.locator(".arena-look").is_visible()                       # the field is never behind a tab
+    assert pg.locator(".arena").is_visible() and pg.locator(".arena-play").is_visible()                       # the field is never behind a tab
     assert _sent(pg, host, ("ideas.log", {"event": "opened", "what": "map", "ref": "", "device": "desktop"}))
     assert len(_calls(pg, host, "ideas.map")) >= 1
     pg.keyboard.press("Escape")                                                                               # nothing to close
@@ -258,7 +258,7 @@ def test_a_goal_at_work_has_its_row_its_tasks_in_the_party_s_columns_and_its_res
     assert [t.get_attribute("data-task") for t in grunt.locator(".arena-task").all()] == ["k2"]
     assert grunt.locator(".arena-task.is-fail, .arena-task.is-stop").count() == 0                          # nobody stopped here: no alert
     assert "1 in dev" in grunt.inner_text() and grunt.locator(".ork-sign.check").count() == 1
-    assert pg.locator(".arena-result[data-task=k3]").count() == 1                                         # its result waits on the right
+    assert pg.locator('.arena-hc[data-key="result/sync/k3"]').count() == 1                                 # its result is a card in the hand (spec 90 §2.3)
     ask = row(pg, "Offline mode")                                                                         # Planning: a member's question and a plan
     assert "asks you · Reviewer" in said(pg, "Offline mode") and ask.locator(".arena-goal__mark .ork-sign.alert").count() == 1
     dark = row(pg, "Dark mode")
@@ -284,14 +284,14 @@ def test_a_click_on_a_row_opens_a_passing_tab_another_replaces_it_and_a_double_c
     assert passing(pg).count() == 1 and "Cache the table" in passing(pg).inner_text()
     assert passing(pg).locator("[role=tab]").evaluate("e => getComputedStyle(e).fontStyle") == "italic"
     assert pg.locator(".shell-tabstrip [role=tab]").count() == 1                                          # no pinned Map: the one tab
-    pg.get_by_role("button", name="Close the drawer").click()
+    pg.get_by_role("button", name="Close the right column").click()
     opener(pg, "Offline mode").click()                                                                       # replaces the passing tab
     pg.locator(".shell-ptab.is-passing", has_text="Offline mode").wait_for(timeout=WAIT_MS)
     assert pg.locator(".shell-tabstrip [role=tab]").count() == 1 and "Cache the table" not in pg.locator(".shell-tabstrip").inner_text()
     passing(pg).locator("[role=tab]").dblclick()                                                          # kept: upright, stays
     assert passing(pg).count() == 0 and kept(pg).count() == 1
     assert kept(pg).locator("[role=tab]").evaluate("e => getComputedStyle(e).fontStyle") == "normal"
-    pg.get_by_role("button", name="Close the drawer").click()
+    pg.get_by_role("button", name="Close the right column").click()
     opener(pg, "Cache the table").click()
     pg.locator(".shell-ptab.is-passing", has_text="Cache the table").wait_for(timeout=WAIT_MS)
     assert pg.locator(".shell-tabstrip [role=tab]").count() == 2                                          # Offline stays beside the new passing one
@@ -398,7 +398,7 @@ def test_tabs_come_back_after_a_reload_and_each_project_has_its_own(mapped):
     opener(pg, "Offline mode").click()
     pg.locator(".shell-ptab.is-passing", has_text="Offline mode").wait_for(timeout=WAIT_MS)
     passing(pg).locator("[role=tab]").dblclick()
-    pg.get_by_role("button", name="Close the drawer").click()
+    pg.get_by_role("button", name="Close the right column").click()
     opener(pg, "Cache the table").click()
     pg.locator(".shell-ptab.is-passing", has_text="Cache the table").wait_for(timeout=WAIT_MS)
     pg.reload()
@@ -465,7 +465,7 @@ def test_an_idea_opened_says_where_it_was_opened_from(mapped):
         return False
     opener(pg, "Cache the table").click()
     assert opened_via("idea", "map")
-    pg.get_by_role("button", name="Close the drawer").click()                                             # the drawer covers the middle of the fan
+    pg.get_by_role("button", name="Close the right column").click()                                             # the drawer covers the middle of the fan
     item = pg.locator(".arena-hc[data-kind=plan]")
     item.locator(".arena-hc__open").focus()
     item.get_by_role("button", name="Open the plan").click()
@@ -490,20 +490,28 @@ def test_a_row_and_a_task_show_their_short_names_with_the_title_in_their_label(g
     assert not errors, "\n".join(errors)
 
 
-def test_the_results_column_merges_sends_back_and_drops_but_never_into_main_and_a_plan_starts_from_its_stop(mapped):
+def _raised(pg, key):
+    item = pg.locator(f'.arena-hc[data-key="{key}"]')
+    item.locator(".arena-hc__open").focus()
+    pg.wait_for_function("(el) => getComputedStyle(el).transform === 'matrix(1, 0, 0, 1, 0, -184)'", arg=item.element_handle(), timeout=WAIT_MS)
+    return item
+
+
+def test_a_results_card_merges_sends_back_and_drops_but_never_into_main_and_a_plan_starts_from_its_stop(mapped):
     pg, host = mapped
-    look = pg.get_by_role("complementary", name="Waits for your look")
-    result = look.locator(".arena-result[data-task=k3]")
-    assert "20 / 20 passed" in result.inner_text() and "14 files · $0.42" in result.inner_text() and "Retry on a lost signal" in result.inner_text()
+    result = _raised(pg, "result/sync/k3")                                                               # a result to look at: the hand's card (spec 90 §2.3)
+    assert "14 files · $0.42" in result.inner_text() and "Retry on a lost signal" in result.inner_text()
     assert "main" not in result.get_by_role("button").all_inner_texts() and result.get_by_role("button", name="Merge into dev").is_visible()
     assert result.evaluate("e => getComputedStyle(e).borderTopStyle") == "double"                         # orkUI's double frame
     result.get_by_role("button", name="Send back").first.click()
     result.get_by_label("Why you send it back, in one line").fill("Retry less often")
     result.locator(".shell-actions__line button").click()
     assert _sent(pg, host, ("ideas.back", {"slug": "sync", "task": "k3", "why": "Retry less often"}))
+    result = _raised(pg, "result/sync/k3")
     result.get_by_role("button", name="Drop…").click()
     pg.get_by_role("dialog").get_by_role("button", name="Drop it").click()
     assert _sent(pg, host, ("ideas.drop_task", {"slug": "sync", "task": "k3"}))
+    result = _raised(pg, "result/sync/k3")
     result.get_by_role("button", name="Merge into dev").click()
     assert _sent(pg, host, ("ideas.merge", {"slug": "sync", "task": "k3"}))
     # Planning with a plan waiting: its stop starts the work (the plan's pass), or opens the plan
@@ -516,10 +524,12 @@ def test_the_results_column_merges_sends_back_and_drops_but_never_into_main_and_
 def test_no_review_column_and_the_alert_is_only_where_the_work_stopped(mapped):
     pg, host = mapped
     assert pg.locator(".shell-review").count() == 0 and pg.locator("[aria-label=Review]").count() == 0
-    assert pg.locator(".arena-result .ork-count.warning, .arena-result .is-alert, .arena-look .ork-count.warning").count() == 0     # a result is not a signal
+    looks = pg.locator(".arena-hc[data-kind=result]")
+    looks.first.wait_for(timeout=WAIT_MS)
+    assert pg.locator(".arena-hc[data-kind=result].alert, .arena-hc[data-kind=result] .ork-count.warning").count() == 0     # a result is not a signal
     alert = pg.evaluate("(() => { const d = document.createElement('span'); d.style.color = 'var(--ork-alert)'; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; })()")
-    colours = pg.locator(".arena-look *").evaluate_all("els => els.map(e => getComputedStyle(e).color)")
-    assert alert not in colours                                                                           # no alert colour anywhere in the results' column
+    colours = pg.locator(".arena-hc[data-kind=result] *").evaluate_all("els => els.map(e => getComputedStyle(e).color)")
+    assert alert not in colours                                                                           # no alert colour anywhere on a result's card
     assert pg.locator(".arena-member[data-agent=grunt] .arena-sign.alert, .arena-member[data-agent=grunt] .arena-sign.danger").count() == 0
     host.nodes[0]["tasks"][1]["state"] = "failed"
     host.bump({})

@@ -9,7 +9,7 @@ pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_arena_desktop_browser import ArenaHost  # noqa: E402
-from tests.test_one_hand_desktop_browser import OneHostOne  # noqa: E402
+from tests.test_one_hand_desktop_browser import OneHostOne, stops_only  # noqa: E402
 from tests.test_shell_browser import StubHost, _drawer, _open, _stop  # noqa: E402
 
 pytestmark = pytest.mark.browser
@@ -75,7 +75,7 @@ def test_a_short_name_keeps_its_own_lines_and_a_spread_takes_the_same_size(gui):
 
 
 def test_a_to_do_lies_last_in_the_hand_after_the_questions_the_plans_and_the_failures(gui):
-    pg, host, errors = _open(gui, host=OneHostOne(), ready=".arena[data-goal=passkey]")
+    pg, host, errors = _open(gui, host=stops_only(OneHostOne()), ready=".arena[data-goal=passkey]")       # the stops alone (a result and the batch for main: cards of their own, spec 90 §2.3)
     try:
         cards = pg.locator(".arena-hc")
         cards.first.wait_for(timeout=WAIT_MS)

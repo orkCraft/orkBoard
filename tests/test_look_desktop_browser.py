@@ -1,6 +1,6 @@
 """Spec 85 B (docs/specs/85-the-elf-asks-and-shows.md §1, §3, §4, §5): the faces of the look on the desktop, in a real browser at 1 440 × 900 against the arena's stub host.
 The elf's question is a stop in the hand with the elf's head and *<Name> asks about the look*, its choices answer in one click and *Pictures you like* opens the form that takes
-pictures; a card with a picture wears it as its face and Waits for your look shows it large, or says there is none; a card and a stack say *k of n done*; the card of a merged task
+pictures; a card with a picture wears it as its face and a result opened in the right column shows it large, or says there is none (spec 90 §2.3); a card and a stack say *k of n done*; the card of a merged task
 turns over once to *What it made*."""
 from __future__ import annotations
 
@@ -157,21 +157,30 @@ def test_a_card_says_how_far_its_goal_is_and_a_goal_with_no_plan_says_nothing(lo
     pg.wait_for_function("() => !document.querySelector(\"[data-key='register/k3'] .arena-task__count\")", timeout=WAIT_MS)
 
 
-# -- Waits for your look (§3) ---------------------------------------------------------------------------------------------------------------
+# -- a result opened in the right column (§3; spec 90 §2.3) ------------------------------------------------------------------------------------
 
-def test_waits_for_your_look_shows_the_picture_large_or_says_there_is_none(look):
+def _opened(pg, key):
+    """A result's card in the hand pressed: the result in the right column."""
+    pg.locator(f'.arena-hc[data-key="{key}"] .arena-hc__open').focus()
+    pg.keyboard.press("Enter")
+    got = pg.locator(".shell-drawer .shell-result")
+    got.wait_for(timeout=WAIT_MS)
+    return got
+
+
+def test_a_result_opened_shows_the_picture_large_or_says_there_is_none(look):
     pg, host = look
-    column = pg.locator(".arena-look")
-    mine = column.locator(".arena-result[data-task=k1]")
+    mine = _opened(pg, "result/register/k1")
     img = mine.locator(".arena-result__shot img")
+    img.wait_for(timeout=WAIT_MS)
     whole = mine.bounding_box()
     assert img.get_attribute("src") == PNG and img.get_attribute("alt") == "What “Challenge store” looks like"
     shown = img.bounding_box()
-    assert shown["width"] >= whole["width"] - 32 and shown["width"] >= 250 and abs(shown["width"] / shown["height"] - 1280 / 800) < 0.05      # the width of the column, its own shape
-    none = column.locator(".arena-result[data-task=c2] [data-noshot]")
-    assert none.inner_text() == "no picture: no preview" and column.locator(".arena-result[data-task=c2] img").count() == 0
-    mine.locator(".arena-result__shot").click()
-    pg.locator(".shell-drawer").wait_for(timeout=WAIT_MS)
+    assert shown["width"] >= whole["width"] - 64 and shown["width"] >= 250 and abs(shown["width"] / shown["height"] - 1280 / 800) < 0.05      # the width of the column, its own shape
+    other = _opened(pg, "result/signin/c2")
+    none = other.locator("[data-noshot]")
+    none.wait_for(timeout=WAIT_MS)
+    assert none.inner_text() == "no picture: no preview" and other.locator(".arena-result__shot img").count() == 0
 
 
 def test_a_result_without_a_picture_or_a_word_about_one_is_as_it_was(look):
@@ -179,8 +188,9 @@ def test_a_result_without_a_picture_or_a_word_about_one_is_as_it_was(look):
     host.node_of("register")["results"][0]["shot"] = None
     host.node_of("signin")["results"][0].pop("shot")
     host.bump({})
+    got = _opened(pg, "result/register/k1")
     pg.wait_for_function("() => !document.querySelector('.arena-result__shot')", timeout=WAIT_MS)
-    assert pg.locator(".arena-result img, [data-noshot]").count() == 0
+    assert got.locator(".arena-result__shot img, [data-noshot]").count() == 0
 
 
 # -- a done card turns over (§4) ------------------------------------------------------------------------------------------------------------

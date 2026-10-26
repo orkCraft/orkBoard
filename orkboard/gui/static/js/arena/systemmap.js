@@ -6,13 +6,14 @@
 // opened: the map stands as it was, then each goal in the order it landed — its new parts dealt, its changed ones sealed with its element, its gone ones crumble (spec 74's moments: steps, ≤ 0.42 s each,
 // the whole at most 3 s, a press ends it, none under reduced motion or while the page is hidden, none for a goal that landed while the tab was open). Over the table *Since your last look at <time>* and the
 // goals with their elements: a press on one dims the others' marks. Hovering a card draws its uses as the field's arrows (arrows.js `across`; a use new since the last look in its goal's element), never all
-// of them at once; a card pressed shows its part beside the table (`ideas.system_part`): its files, *Uses*, *Used by*, and its changes since the last look with their goals and *What it made*; a goal
+// of them at once; a card pressed opens its part in the window's right column (`ideas.system_part`, spec 90 §2): its files, *Uses*, *Used by*, and its changes since the last look with their goals and *What it made*; a goal
 // there opens the goal. *Reading the project…* while the host reads it (the first snapshot of a project takes a moment).
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
 import { Chev, Elem } from "../orkui.js";
 import { command, town } from "../link.js";
-import { mapData, showIdea } from "../shell/store.js";
+import { closePreview, mapData, preview, show, showIdea } from "../shell/store.js";
 import { reducedMotion } from "./motion.js";
 import { ArrowLines, across, fine } from "./arrows.js";
 
@@ -225,9 +226,23 @@ function placesOf(col, open) {
 /** A list of parts, each a press that shows it. */
 const Parts = ({ list, names, onPart }) => html`<ul class="sys-side__list">${list.map((p) => html`<li key=${p}><button type="button" class="sys-side__part" data-part=${p} title=${p} onClick=${() => onPart(p)}>${names[p] || p.split("/").pop() || p}</button></li>`)}</ul>`;
 
-/** A part pressed (spec 89 §6.5): beside the table, its files, *Uses*, *Used by*, and its changes since the last look, each with its goal (a press opens the goal) and *What it made*. Esc and Close put it away. */
-function PartSide({ path, party, since, look, names, onClose, onPart }) {
-  const [p, setP] = useState(null), [err, setErr] = useState(""), close = useRef();
+/** What the System shown last read (`{doc, look, party}`): a part opened in the right column names its uses by it and says its changes since the same look. */
+const shownSys = signal(null);
+
+/** A part opens in the right column (spec 90 §2, a tab `{kind: "part", path, slug: <its party>}`). */
+const openPart = (path, party, name) => show({ kind: "part", path, slug: party, title: name || path.split("/").pop() || path }, { via: "map" });
+
+/** A part pressed (spec 89 §6.5), in the window's right column (spec 90 §2): its files, *Uses*, *Used by*, and its changes since the last look, each with its goal (a press opens the goal) and *What it made*;
+ *  a part under *Uses* or *Used by* pressed opens in its place. The tab's × (or Esc) closes it. */
+export function PartView({ p: tab }) {
+  const path = tab.path, party = tab.slug || "", sys = shownSys.value;
+  const doc = sys && sys.party === party ? sys.doc : null, look = doc ? sys.look : null, since = doc?.since || "";
+  const names = doc ? Object.fromEntries(doc.columns.flatMap((c) => [...c.parts, ...c.stack]).map((c) => [c.path, c.name])) : {};
+  return html`<${PartSide} key=${path} path=${path} party=${party} since=${since} look=${look} names=${names} onPart=${(to) => openPart(to, party, names[to])} />`;
+}
+
+function PartSide({ path, party, since, look, names, onPart }) {
+  const [p, setP] = useState(null), [err, setErr] = useState("");
   useEffect(() => {
     let live = true;
     setP(null);
@@ -239,15 +254,9 @@ function PartSide({ path, party, since, look, names, onClose, onPart }) {
     }).catch((e) => { if (live) setErr(e.message || COULD_NOT); });
     return () => { live = false; };
   }, [path, since]);
-  useEffect(() => {
-    const keys = (e) => { if (e.key === "Escape" && !document.querySelector(".shell-drawer.is-open, [role=dialog]")) { e.stopPropagation(); onClose(); } };
-    addEventListener("keydown", keys);
-    return () => removeEventListener("keydown", keys);
-  }, []);
   const name = p?.name || path.split("/").pop() || path, goals = p?.goals || {};
-  return html`<aside class="sys-side" aria-label=${name} data-path=${path}>
-    <div class="sys-side__head"><b class="sys-side__name" title=${path}>${name}</b><span class="arena-spacer"></span>
-      <button type="button" class="ork-btn quiet" ref=${close} onClick=${onClose}>Close</button></div>
+  return html`<section class="sys-side" aria-label=${name} data-path=${path}>
+    <div class="sys-side__head"><b class="sys-side__name" title=${path}>${name}</b></div>
     ${err ? html`<p class="arena-cap">${err}</p>` : !p ? html`<p class="arena-cap"><span class="ork-busy"></span></p>` : html`
       <p class="arena-cap sys-side__path">${p.path}${p.kind && html` · <b class="sys-side__kind">${KIND_WORDS[p.kind]}</b>`}</p>
       ${p.changes.length > 0 && html`<section class="sys-side__sec" data-sec="changes"><h3 class="arena-sec">${look?.at ? sinceWords(timeWords(look.at)) : KIND_WORDS[p.kind] || ""}</h3>
@@ -259,7 +268,7 @@ function PartSide({ path, party, since, look, names, onClose, onPart }) {
         <ul class="sys-side__list sys-side__files">${p.files.map((f) => html`<li key=${f} title=${f}>${f.split("/").pop()}</li>`)}</ul></section>
       <section class="sys-side__sec" data-sec="uses"><h3 class="arena-sec">Uses</h3>${p.uses.length ? html`<${Parts} list=${p.uses} names=${names} onPart=${onPart} />` : html`<p class="arena-cap">—</p>`}</section>
       <section class="sys-side__sec" data-sec="used_by"><h3 class="arena-sec">Used by</h3>${p.used_by.length ? html`<${Parts} list=${p.used_by} names=${names} onPart=${onPart} />` : html`<p class="arena-cap">—</p>`}</section>`}
-  </aside>`;
+  </section>`;
 }
 
 // -- the table ---------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -295,13 +304,15 @@ function usesOf(host, doc, path) {
 export function SystemMap({ sys, party }) {
   const { doc, err, look } = sys;
   const order = doc ? orderOf(doc) : [], step = useReveal(doc, order);
-  const [pick, setPick] = useState(""), [opened, setOpened] = useState(() => new Set()), [shown, show] = useState("");
+  const [pick, setPick] = useState(""), [opened, setOpened] = useState(() => new Set());
   const [hover, setHover] = useState({ path: "", by: "" }), [lines, setLines] = useState([]), host = useRef();
+  const tab = preview.value, shown = tab?.kind === "part" && tab.slug === party ? tab.path : "";      // the part open in the right column
   useEffect(() => {                                        // the tab is left (or the page): what it showed is seen
     const save = () => sys.seen();
     addEventListener("pagehide", save);
     return () => { removeEventListener("pagehide", save); save(); };
   }, []);
+  useEffect(() => { if (doc) shownSys.value = { doc, look, party }; }, [doc, look, party]);
   useLayoutEffect(() => {
     const on = !!hover.path && !!doc && (hover.by === "focus" || fine());
     const next = on ? usesOf(host.current, doc, hover.path) : [];
@@ -319,7 +330,8 @@ export function SystemMap({ sys, party }) {
   const rows = cols.reduce((k, c) => Math.max(k, c.rows), 0);
   const press = (ci) => (c) => {
     if (cols[ci].col.stack.length && !opened.has(ci) && cols[ci].col.stack[0].path === c.path) { toggle(ci); return; }
-    show(shown === c.path ? "" : c.path);
+    if (shown === c.path) closePreview();                  // pressed again: the right column closes it
+    else openPart(c.path, party, c.name);
   };
   const hovered = (path, by) => setHover((h) => (path ? { path, by } : h.path ? { path: "", by: "" } : h));
   const since = doc.since ? (look?.at ? sinceWords(timeWords(look.at)) : sinceWords(doc.since.slice(0, 7))) : "";
@@ -331,11 +343,11 @@ export function SystemMap({ sys, party }) {
           ${o.goal ? html`<${Elem} name=${goals[o.goal]?.element || ""} />${goals[o.goal]?.title || o.goal}` : BY_YOU}</button>`)}</div>`
         : html`<span class="sys-since is-none">${NOTHING_CHANGED}</span>`)}
       <span class="arena-spacer"></span>
-      <button type="button" class="ork-btn sys-rearrange" onClick=${() => { show(""); sys.rearrange(); }}>${REARRANGE}</button>
+      <button type="button" class="ork-btn sys-rearrange" onClick=${() => sys.rearrange()}>${REARRANGE}</button>
     </div>
     <div class="sys-main">
       ${!doc.columns.length ? html`<div class="assets-none"><p class="assets-none__title">${NOTHING}</p></div>` : html`
-      <div class="sys-scroll ork-table">
+      <div class="sys-scroll">
         <div class="sys-table" ref=${host} style=${`--cols:repeat(${cols.length}, 128px)`} data-rows=${rows}>
           ${cols.map(({ col, ci }) => html`<div key=${`h${ci}`} class="sys-area" style=${`grid-column:${ci + 1}`} data-area=${col.name}>
             <span class="arena-member__nm sys-area__nm" title=${col.name}>${col.name}</span>
@@ -350,7 +362,6 @@ export function SystemMap({ sys, party }) {
           <${ArrowLines} lines=${lines} />
         </div>
       </div>`}
-      ${shown && html`<${PartSide} key=${shown} path=${shown} party=${party} since=${doc.since} look=${look} names=${Object.fromEntries(doc.columns.flatMap((c) => [...c.parts, ...c.stack]).map((c) => [c.path, c.name]))} onClose=${() => show("")} onPart=${show} />`}
     </div>
   </div>`;
 }
