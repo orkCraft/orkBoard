@@ -30,13 +30,12 @@ def test_a_prompt_never_reads_as_a_flag(tool, tmp_path):
     assert h.interactive("-x") in (None, [*h.interactive(), *h.deploy_args, "Orders: -x"])
 
 
-def test_an_unchained_agy_asks_nothing_and_stays_in_its_sandbox(tmp_path):
+def test_agys_work_asks_nothing_and_stays_in_its_sandbox(tmp_path):
     # agy's --print denies every command it would ask about and ends its turn empty, so an ork that runs its
-    # tests first came back with nothing; unchained (autonomy.FREE) it skips the asking, never the sandbox.
+    # tests first came back with nothing; its work skips the asking (decisions §107.7), never the sandbox.
     h = harnesses.need("agy")
-    assert "--dangerously-skip-permissions" not in h.work("x", tmp_path)
-    free = h.work("x", tmp_path, free=True)
-    assert "--dangerously-skip-permissions" in free and "--sandbox" in free
+    for cmd in (h.work("x", tmp_path), h.work("x", tmp_path, free=True)):
+        assert cmd.count("--dangerously-skip-permissions") == 1 and "--sandbox" in cmd
     assert harnesses.need("claude").work("x", tmp_path, free=True) == harnesses.need("claude").work("x", tmp_path)
 
 

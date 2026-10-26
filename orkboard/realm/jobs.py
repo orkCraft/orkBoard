@@ -148,7 +148,7 @@ def run_work(harness: str, prompt: str, workdir: Path, cancel: threading.Event, 
         telemetry.noted(paid, f"{harness} worker", **what)
     if h is not None and not text.strip() and (why := h.error(out)):    # it ended well with no answer, and says why (agy's refused command)
         # agy's words are a clause ("it wanted to run RunCommand, …"): they say whose, and what the person can do
-        raise tool_errors.ToolError(harness, f"{h.title} {why.removeprefix('it ')}. {EMPTY_WORK_STEP}" if h.work_note else why)
+        raise tool_errors.ToolError(harness, f"{h.title} {why.removeprefix('it ')}. {EMPTY_WORK_STEP}" if why.startswith("it ") else why)
     return text, cost, tokens, session
 
 
