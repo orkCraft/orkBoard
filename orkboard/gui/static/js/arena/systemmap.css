@@ -1,0 +1,89 @@
+/* The Tech lens's System (docs/specs/89-the-tech-lens-system.md §6): a party's two tabs over its table, the project's parts laid out as the field's cards in a column for each area (the card itself is
+   arena.css `.arena-task` in `.arena-stk`, at the field's 128 × 180), the area's name over its column as a member's name is over its, the uses drawn as the field's arrows, the part pressed beside the table,
+   and the three moments of what changed since the last look. In orkUI's office look: its tokens only, no colour, font or corner of its own. */
+
+/* -- the party's two tabs ---------------------------------------------------------------------------------------------------------------------- */
+.sys-tabs { flex: none; padding: 0 var(--ork-5); }
+.sys-panel { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.sys { position: relative; flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.sys-note { margin: var(--ork-6); display: flex; align-items: center; gap: var(--ork-3); font: var(--ork-type-body); color: var(--ork-ink-muted); }
+
+/* -- the bar: since the last look, the goals, Rearrange in the corner ------------------------------------------------------------------------ */
+.sys-bar { flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-2) var(--ork-4); min-height: 40px; box-sizing: border-box; padding: var(--ork-2) var(--ork-5);
+  border-bottom: var(--ork-line) solid var(--ork-frame); }
+.sys-since { font: var(--ork-type-body); color: var(--ork-ink); white-space: nowrap; }
+.sys-since.is-none { color: var(--ork-ink-muted); }
+.sys-goals { display: flex; flex-wrap: wrap; gap: var(--ork-2); min-width: 0; }
+.sys-goal { display: inline-flex; align-items: center; gap: var(--ork-2); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sys-goal[aria-pressed="true"] { --_bg: var(--ork-ink); --_fg: var(--ork-on-ink); --_bd: var(--ork-ink); }
+.sys-rearrange { flex: none; }
+
+/* -- the table: a column for each area, the parts in their places ---------------------------------------------------------------------------- */
+.sys-main { position: relative; flex: 1; min-height: 0; display: flex; }
+.sys-scroll { flex: 1; min-width: 0; min-height: 0; overflow: auto; }
+.sys-table { position: relative; display: grid; grid-template-columns: var(--cols); grid-auto-rows: 180px; grid-template-rows: 40px; column-gap: var(--ork-8); row-gap: var(--ork-6);
+  width: max-content; padding: var(--ork-2) var(--ork-8) var(--ork-8) var(--ork-6); }
+.sys-area { grid-row: 1; position: relative; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; min-width: 0; }
+.sys-area__nm { max-width: 100%; text-align: center; color: var(--ork-ink); }
+.sys-area__rule { align-self: stretch; flex: none; height: 2px; margin-top: var(--ork-1); background: var(--ork-edge); }
+.sys-area__fold { position: absolute; right: 0; top: 0; height: 20px; min-height: 0; padding: 0 var(--ork-2); }
+.sys-stk { width: 128px; max-width: 128px; }
+.sys-table .sys-stk.is-many { margin-top: 0; }
+.sys-part .arena-task__top { min-height: 18px; }
+.sys-part .sys-part__kind { color: var(--ork-ink-muted); }
+.sys-part .sys-part__name { font-weight: 600; }
+.sys-part .sys-part__files { margin-top: var(--ork-1); }
+.sys-part .sys-part__uses { white-space: normal; }                        /* *Uses k · Used by m*: two lines, broken between the two, when the card is too narrow for one */
+.sys-part__uses > span { white-space: nowrap; }
+.sys-part.is-marked { border-color: var(--ork-edge); }
+.sys-part.is-marked .sys-part__kind { color: var(--ork-ink); }
+.sys-part.is-dim { border-color: var(--ork-frame); }
+.sys-part.is-dim .sys-part__kind { color: var(--ork-ink-faint); }
+.sys-part[aria-pressed="true"] { border-color: var(--ork-ink); background: var(--ork-raised); box-shadow: inset 0 0 0 1px var(--ork-ink); }
+
+/* a use (arrows.js `across`): the field's dashed ink line; a use new since the last look in its goal's element */
+.arena-arrow[data-elem="meadow"] polyline { stroke: var(--ork-elem-meadow); }
+.arena-arrow[data-elem="ice"] polyline { stroke: var(--ork-elem-ice); }
+.arena-arrow[data-elem="dust"] polyline { stroke: var(--ork-elem-dust); }
+.arena-arrow[data-elem="void"] polyline { stroke: var(--ork-elem-void); }
+.arena-arrow[data-elem="lava"] polyline { stroke: var(--ork-elem-lava); }
+.arena-arrow[data-elem="meadow"] polygon { fill: var(--ork-elem-meadow); }
+.arena-arrow[data-elem="ice"] polygon { fill: var(--ork-elem-ice); }
+.arena-arrow[data-elem="dust"] polygon { fill: var(--ork-elem-dust); }
+.arena-arrow[data-elem="void"] polygon { fill: var(--ork-elem-void); }
+.arena-arrow[data-elem="lava"] polygon { fill: var(--ork-elem-lava); }
+
+/* -- what changed since the device's last look, played once (spec 89 §6.3; spec 74 §0: steps, at most 0.42 s each, none under reduced motion) --- */
+.sys-part.sys-unborn, .sys-part.sys-left { visibility: hidden; pointer-events: none; }
+.sys-part.sys-dealt { position: relative; z-index: 60; animation: sys-deal 0.3s steps(6) var(--delay, 0s) backwards; }
+@keyframes sys-deal { from { transform: translateY(-48px) scale(0.9); opacity: 0.2; } to { transform: none; opacity: 1; } }
+.sys-seal { position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center; background: var(--ork-panel); animation: sys-seal 0.42s steps(6) forwards; pointer-events: none; }
+@keyframes sys-seal { 0% { opacity: 0; transform: scale(2); } 35% { opacity: 1; transform: none; } 75% { opacity: 1; } 100% { opacity: 0; } }
+.sys-part.sys-crumble { pointer-events: none; animation: sys-crumble 0.42s steps(3) forwards; }
+@keyframes sys-crumble { 0% { opacity: 1; } 34% { opacity: 0.7; transform: translateY(2px); } 67% { opacity: 0.35; transform: translateY(5px); } 100% { opacity: 0; transform: translateY(10px); } }
+
+/* -- the part pressed, beside the table ---------------------------------------------------------------------------------------------------------- */
+.sys-side { flex: none; width: 300px; box-sizing: border-box; overflow: auto; display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4) var(--ork-5);
+  background: var(--ork-panel); border-left: var(--ork-line) solid var(--ork-frame); }
+.sys-side__head { display: flex; align-items: center; gap: var(--ork-3); min-width: 0; }
+.sys-side__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--ork-type-body); font-weight: 600; }
+.sys-side__path { overflow-wrap: anywhere; }
+.sys-side__kind { color: var(--ork-ink); font-weight: 600; }
+.sys-side__sec > .arena-sec { margin: var(--ork-2) 0 var(--ork-2); }
+.sys-side__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-1); font: var(--ork-type-caption); color: var(--ork-ink); }
+.sys-side__files li { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sys-side__part { appearance: none; padding: 0; border: 0; background: none; color: var(--ork-ink); font: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-decoration-color: var(--ork-frame); }
+.sys-side__part:hover, .sys-side__part:focus-visible { text-decoration-color: var(--ork-ink); outline: 0; }
+.sys-side__changes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-4); }
+.sys-change { display: flex; flex-direction: column; gap: var(--ork-1); }
+.sys-change__goal { appearance: none; display: inline-flex; align-items: center; gap: var(--ork-2); padding: 0; border: 0; background: none; color: var(--ork-ink); font: var(--ork-type-body); font-weight: 600;
+  text-align: left; cursor: pointer; }
+.sys-change__goal:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--ork-ink); }
+.sys-change__goal.is-you { cursor: default; }
+.sys-change__made { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.sys-change__made b { color: var(--ork-ink); font-weight: 600; }
+
+@media (prefers-reduced-motion: reduce) {
+  .sys-part.sys-dealt { animation: none; }
+  .sys-seal, .sys-part.sys-crumble { display: none; }
+}
