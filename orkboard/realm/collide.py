@@ -82,7 +82,7 @@ def touches(root: Path, state_dir: Path, slug: str) -> list[str]:
             continue
         if isinstance(t.get("files"), list):
             found += [str(f) for f in t["files"] if isinstance(f, str)]
-        if t.get("state") != "merged":
+        if t.get("state") not in ("merged", "dropped"):
             found += [m for m in _BRIEF_PATH.findall(str(t.get("brief") or "")) if "/" in m]
     return sorted({p for p in (norm(f) for f in found) if p})[:MAX_PATHS]
 

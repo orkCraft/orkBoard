@@ -358,7 +358,7 @@ may want to take in the morning, each under one of the goals. {self.reads("propo
         for j in found:
             plan = ideas.plan(self.state_dir, j["slug"])
             if plan and plan.get("by_pace") and not plan.get("stopped") \
-                    and not all(t.get("state") in ("merged", "failed") for t in plan.get("tasks") or []):
+                    and not all(t.get("state") in ("merged", "failed", "dropped") for t in plan.get("tasks") or []):
                 return True
         return False
 

@@ -628,7 +628,7 @@ def test_a_picking_task_can_be_dropped(rig, monkeypatch):
     runner = start_pick(rig, monkeypatch)
     wait_for(runner, rig, "k1", ("picking",))
     runner.drop_task("demo", "k1")
-    assert tasks_of(rig)["k1"]["state"] == "failed" and tasks_of(rig)["k1"]["error"] == "dropped by you"
+    assert tasks_of(rig)["k1"]["state"] == "dropped" and tasks_of(rig)["k1"]["error"] == "dropped by you"
     with pytest.raises(RunnerError, match="That pick is answered already"):
         runner.pick("demo", "k1", "A", "")
 

@@ -211,7 +211,7 @@ def test_drop_still_drops_a_check_s_result(town, monkeypatch):
     runner.start("demo")
     wait_task(runner, "k1", "review")
     runner.drop_task("demo", "k1")
-    assert tasks_of(town)["k1"]["state"] == "failed" and tasks_of(town)["k1"]["error"] == "dropped by you"
+    assert tasks_of(town)["k1"]["state"] == "dropped" and tasks_of(town)["k1"]["error"] == "dropped by you"
 
 
 # -- spec 86 D: findings of the code and of the place -------------------------------------------------------------------------------

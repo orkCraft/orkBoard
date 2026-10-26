@@ -18,6 +18,7 @@ from pathlib import Path
 from orkboard.core.idea_plan import _task, estimate
 from orkboard.core.idea_task import is_check
 from orkboard.realm import idea_change, idea_spend, idea_target, project_map
+from orkboard.realm.goal_types import DROPPED
 
 STOP_ONE = "stop-one"                # a Run's `why` when one task is stopped (stop_task)
 STOPPED_NOTE = "stopped by you"      # a task stopped on its own waits as `ready` with this note until Start
@@ -134,9 +135,10 @@ class ReviewMixin:
             pass
 
     def _settle_idea(self, slug: str) -> None:
-        """An idea that is not being run (a restart, a stop) whose tasks are all merged is done."""
+        """An idea that is not being run (a restart, a stop) whose tasks are all merged (or dropped, one at least merged) is done."""
         plan = self.plan(slug)
-        if plan and slug not in self._active and all(t.get("state") == "merged" for t in plan["tasks"]):
+        if plan and slug not in self._active and all(t.get("state") in ("merged", "dropped") for t in plan["tasks"]) \
+                and any(t.get("state") == "merged" for t in plan["tasks"]):
             self._set_idea(slug, "done")
             self._changed(slug)
 
@@ -169,19 +171,41 @@ class ReviewMixin:
         self._changed(slug)
 
     def drop_task(self, slug: str, tid: str, device: str = "desktop") -> None:
-        """Drop a result: the task fails with "dropped by you", its worktree goes, its branch stays."""
+        """Drop a task (a result at Review, a failed one, one not started): it is `dropped` with "dropped by you", its worktree goes, its
+        branch stays. It is gone from the plan as a merged task is, not failed: what waited for it no longer does (it is taken out of the others'
+        `after`, as `skip_task` does), and the goal goes on with what is left. A goal that failed over it is `working` again, unless another task
+        failed for real; with nothing left to run the runner settles it (`_finish`: done where something merged, else `plan`)."""
         with self._lock:
             task = self._task(slug, tid)
             if task.get("state") not in ("review", "failed", "ready", "waiting", "held", "picking") or (slug, tid) in self._runs:
                 raise RunnerError("That task cannot be dropped now")
             if task.get("state") == "review":
                 self._decided(slug, task, "drop", device, into=str(_r().setting(self.settings, "merge_into") or "dev"))
-            self._set_task(slug, tid, state="failed", error="dropped by you", finished=_r().now_iso(), conflict="")
+            self._set_task(slug, tid, state="dropped", error=DROPPED, finished=_r().now_iso(), conflict="")
+            plan = self.plan(slug) or {"tasks": []}
+            self._retire_dropped(plan["tasks"])
+            self._save_tasks(slug, plan["tasks"])
             if slug not in self._active:
                 self._active.append(slug)
+            if not any(t.get("state") == "failed" for t in plan["tasks"]) and (self._read(self._dir(slug) / "state.json") or {}).get("state") == "failed":
+                self._set_idea(slug, "working")           # the goal failed over this task, or over one it held back: it goes on
         self._remove_worktree(slug, tid)
         self._log(slug, tid, f"== dropped by you · {_r().now_iso()}\n")
         self.tick()
+
+    @staticmethod
+    def _retire_dropped(tasks: list[dict]) -> bool:
+        """Free what waits for a dropped task: it is taken out of the others' `after`, as a skipped one is. A task dropped before a dropped task had a state
+        of its own (`failed`, "dropped by you") is made `dropped` first. True when anything changed."""
+        changed = False
+        for t in tasks:
+            if t.get("state") == "failed" and t.get("error") == DROPPED:
+                t["state"], changed = "dropped", True
+        gone = {t.get("id") for t in tasks if t.get("state") == "dropped"}
+        for t in tasks:
+            if gone & set(t.get("after") or []):
+                t["after"], changed = [a for a in t["after"] if a not in gone], True
+        return changed
 
     def skip_task(self, slug: str, tid: str, device: str = "desktop") -> None:
         """Skip a task before it runs (a check the person spares): it is taken out of the plan, and out of what the

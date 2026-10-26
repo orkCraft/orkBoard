@@ -18,7 +18,7 @@ from typing import Any
 from orkboard.realm import board_recap, goal_team, idea_checks, idea_spend, ideas, library, pitches, releases, roles
 
 QUIET_RUN = 8                            # check tasks of a goal that all ended clean in round 1: the night proposes to take the checker out
-ENDED = ("merged", "failed")             # a task that has an end: the work counts from here
+ENDED = ("merged", "failed", "dropped")             # a task that has an end: the work counts from here
 CHECKED = ("merged", "review")          # a check task that has said what it found: merged, or waiting for the person
 
 
@@ -198,7 +198,7 @@ def quiet_run(root: Path, state_dir: Path, goal: str, by: str, oldest: bool = Fa
     done: list[tuple[str, str]] = []
     for i in ideas.ideas(root, goal):
         for t in (ideas.plan(state_dir, i["slug"]) or {}).get("tasks") or []:
-            if str(t.get("kind") or "") in idea_checks.TAGS and check_by(t) == by and t.get("finished") and t.get("state") in ("merged", "review", "failed"):
+            if str(t.get("kind") or "") in idea_checks.TAGS and check_by(t) == by and t.get("finished") and t.get("state") in ("merged", "review", "failed", "dropped"):
                 done.append((str(t["finished"]), _verdict(t)))
     newest = sorted(done, reverse=True)[:QUIET_RUN]
     return newest[-1 if oldest else 0][0] if len(newest) == QUIET_RUN and all(v == "clean" for _at, v in newest) else None

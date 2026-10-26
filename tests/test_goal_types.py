@@ -271,6 +271,8 @@ def test_out_leaves_the_members_with_open_work_out_and_puts_the_fewest_runs_firs
     _goal(root, state, full, [open_])
     (art,) = goal_types.missing(state, root, full, ("art",))
     assert art["out"] == [{"slug": "grunt", "name": "Grunt", "runs": 1}, {"slug": "tester", "name": "Tester", "runs": 4}]
+    assert goal_types.is_dropped({"state": "dropped"}) and goal_types.is_dropped({"state": "failed", "error": "dropped by you"})
+    assert not goal_types.is_dropped({"state": "failed", "error": "tests failed"}) and not goal_types.is_dropped({"state": "merged"})
     for gone in ({"state": "merged"}, {"state": "dropped"}, {"state": "failed", "error": "dropped by you"}):
         other = _party(root, state, ["grunt", "tester", "ui-kit"], leader="product-designer", title=f"Other {len(ideas.tracks(root))}")
         _goal(root, state, other, [{**open_, **gone}])

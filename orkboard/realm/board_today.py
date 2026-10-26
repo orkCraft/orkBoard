@@ -10,6 +10,7 @@ longer has reads as the slug (a task's as its idea's title, else the idea's slug
 
     task_state merged        ✓ ok     merged into <into>      (a check that found nothing, `clean`, landed nothing: no row)
     task_state failed        ✗ danger failed
+    task_state dropped       ✗ muted  dropped                 (one dropped at Review has its `result_decided` row instead)
     result_decided back/fix  ↺ muted  sent back
     result_decided drop      ✗ muted  dropped
     plan_passed              ▸ ink    the work started
@@ -58,6 +59,8 @@ def _says(r: dict, into: str) -> tuple[str, str, str, str] | None:
         return "✓", "ok", f"merged into {r.get('into') or into}", "result"
     if event == event_log.TASK_STATE and state == "failed":
         return "✗", "danger", "failed", "task"
+    if event == event_log.TASK_STATE and state == "dropped" and r.get("was") != "review":      # at Review, its `result_decided` drop says it
+        return "✗", "muted", "dropped", "task"
     if event == event_log.RESULT_DECIDED and decision in ("back", "fix"):
         return "↺", "muted", "sent back", "result"
     if event == event_log.RESULT_DECIDED and decision == "drop":

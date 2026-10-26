@@ -96,7 +96,7 @@ function Talk({ turns, lead }) {
 }
 
 const TASK_WORDS = { waiting: "waiting", ready: "ready", running: "working", testing: "testing", review: "at Review", merged: "merged",
-  failed: "failed", held: "held" };
+  failed: "failed", held: "held", dropped: "dropped" };
 
 function Tasks({ plan, working }) {
   return html`<ul class="board-tasks">${plan.tasks.map((k) => html`<li key=${k.id} data-state=${k.state}>
@@ -114,7 +114,7 @@ function Tasks({ plan, working }) {
 }
 
 /** "tasks k2 and k3 wait for it": the tasks a to-do holds back. */
-const CHECK_STATE = { waiting: "waiting", ready: "queued", running: "working", testing: "testing", review: "at Review", held: "held", failed: "failed" };
+const CHECK_STATE = { waiting: "waiting", ready: "queued", running: "working", testing: "testing", review: "at Review", held: "held", failed: "failed", dropped: "dropped" };
 
 /** A check the person may still skip: it applies, it has not run (no task yet, or its task waits). */
 export const skippable = (c) => c.applies && !c.skipped && (!c.state || ["waiting", "ready", "held"].includes(c.state));
@@ -149,7 +149,7 @@ export function todoLines(plan) {
   const given = plan?.todo_lines;
   if (Array.isArray(given) && given.every((l) => typeof l === "string")) return given;
   const todos = (plan?.todos || []).filter((t) => !t.done);
-  return (plan?.tasks || []).filter((k) => k.state !== "merged")
+  return (plan?.tasks || []).filter((k) => k.state !== "merged" && k.state !== "dropped")
     .flatMap((k) => todos.filter((t) => (t.for || []).includes(k.id)).map((t) => `Before ${k.title}: ${t.title}`));
 }
 
@@ -178,7 +178,7 @@ function Actions({ p, lead }) {
     ${plan && html`<${Plan} plan=${plan} />`}
     ${s === "plan" && e && html`<button class="ork-btn primary" onClick=${() => run("ideas.start", { slug })}>Start · ${e.tasks} tasks · ${price(e)}</button>`}
     ${s === "working" && html`<button class="ork-btn danger" onClick=${() => run("ideas.stop", { slug })}>Stop</button>`}
-    ${s === "failed" && html`<${ErrorLine} text=${plan?.tasks.find((k) => k.error)?.error || "It stopped and needs you."} />
+    ${s === "failed" && html`<${ErrorLine} text=${plan?.tasks.find((k) => k.error && k.state !== "dropped")?.error || "It stopped and needs you."} />
       <button class="ork-btn primary" onClick=${() => run("ideas.start", { slug })}>Start again</button>`}
   </div>`;
 }
@@ -266,5 +266,5 @@ export function IdeaView({ p }) {
 }
 
 export function planProgress(plan) {
-  return plan ? { done: plan.tasks.filter((k) => k.state === "merged").length, total: plan.tasks.length } : { done: 0, total: 0 };
+  return plan ? { done: plan.tasks.filter((k) => k.state === "merged").length, total: plan.tasks.filter((k) => k.state !== "dropped").length } : { done: 0, total: 0 };
 }
