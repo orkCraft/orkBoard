@@ -114,7 +114,7 @@ def test_edit_the_party_and_about_this_party_open_theirs_from_the_menu(menu):
     pg.wait_for_function("() => !document.querySelector('[role=dialog]')", timeout=WAIT_MS)
     _row(pg, "website").get_by_role("button", name="More about Website").click()
     pg.get_by_role("menuitem", name="About this party").click()
-    drawer = pg.get_by_role("complementary", name="Drawer")
+    drawer = pg.get_by_role("complementary", name="The right column")
     drawer.locator(".shell-goal").wait_for(timeout=WAIT_MS)
     assert ("ideas.goal", {"slug": "website"}) in host.log                                          # the party's own screen, not the one shown
 
