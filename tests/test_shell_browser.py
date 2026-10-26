@@ -15,7 +15,7 @@ import pytest
 
 pytest.importorskip("playwright.sync_api")
 
-from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
+from tests.browser_kit import WAIT_MS, gui, open_pane  # noqa: E402,F401  (fixture)
 from orkboard.realm import library, plans, roles  # noqa: E402
 
 _TODAY = dt.date.today().isoformat()                 # a reset today reads "resets at 18:00", whatever the day
@@ -594,7 +594,7 @@ def _drawer(pg):
 
 def _agents(pg):
     """Agents in the drawer (the top bar's button)."""
-    pg.locator(".shell-top").get_by_role("button", name="Agents").click()
+    open_pane(pg, "agents")
     pg.locator(".shell-agents").wait_for(timeout=WAIT_MS)
     return pg.locator(".shell-agents")
 
@@ -684,11 +684,13 @@ def test_one_window_the_parties_column_over_the_leader_and_no_camp(shell):
         pg.screenshot(path=str(SHOTS / "desktop-1440x900.png"))
 
 
-def test_the_top_bar_spend_stop_all_and_the_push_switch(shell):
+def test_the_top_bar_settings_stop_all_and_the_push_switch(shell):
     pg, host = shell
     top = pg.locator(".shell-top")
-    assert top.locator(".shell-limit").count() == 0                                                         # the limits left the bar (spec 49 §3)
-    assert "$2.40" in top.inner_text()
+    assert top.locator(".shell-limit").count() == 0 and "$2.40" not in top.inner_text()                      # the spend is in a chip's panel (spec 91 §1), not on the bar
+    top.locator(".shell-top__chip").first.click()
+    assert top.locator(".shell-top__limits").get_by_role("button", name="Spend today: $2.40. This week's work").is_visible()
+    pg.keyboard.press("Escape")
     top.get_by_role("button", name="Stop all").click()
     assert _sent(pg, host, ("halt", {}))
     top.get_by_role("button", name="Settings").click()
@@ -707,9 +709,9 @@ def test_the_top_bar_spend_stop_all_and_the_push_switch(shell):
     assert _sent(pg, host, ("logs.show", {"path": SAVED}))
 
 
-def test_the_tools_limits_are_under_spend_with_their_diamonds_and_the_reserve_hatched(shell):
+def test_the_tools_limits_are_chips_whose_panel_has_their_diamonds_and_the_reserve_hatched(shell):
     pg, host = shell
-    pg.locator(".shell-top__leftbtn").click()                                                             # under Spend in the top bar (spec 90 §2.3)
+    pg.locator(".shell-top__chip").first.click()                                                           # a chip of the top bar opens the panel (spec 91 §1)
     limits = pg.get_by_role("region", name="What is left of your AI tools")
     lines = limits.locator(".arena-limit")
     assert lines.count() == 3 and [l.get_attribute("data-provider") for l in lines.all()] == ["claude", "agy", "codex"]
@@ -720,8 +722,8 @@ def test_the_tools_limits_are_under_spend_with_their_diamonds_and_the_reserve_ha
     assert "not read" in lines.nth(2).inner_text() and lines.nth(2).locator(".ork-crystals i").count() == 0                       # never missing
     assert claude.get_attribute("title") == "Claude: 62 % left, 10 % of it kept for tonight · resets at 18:00"
     assert "hatched: kept for tonight" in limits.inner_text() and "Claude resets at 18:00" in limits.inner_text()
-    bb, spend = limits.bounding_box(), box(pg, ".shell-top__money")
-    assert bb["y"] >= spend["y"] + spend["height"] and pg.locator(".arena-stops .arena-limits").count() == 0      # under Spend, not along the bottom
+    bb, chips = limits.bounding_box(), box(pg, ".shell-top__chips")
+    assert bb["y"] >= chips["y"] + chips["height"] and pg.locator(".arena-stops .arena-limits").count() == 0      # under the chips, not along the bottom
 
 
 def test_a_click_on_an_idea_a_todo_a_chip_and_a_result_opens_the_right_preview(shell):

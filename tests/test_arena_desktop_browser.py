@@ -15,7 +15,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from orkboard.realm import idea_element  # noqa: E402
-from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
+from tests.browser_kit import WAIT_MS, gui, open_pane  # noqa: E402,F401  (fixture)
 from tests.test_map_desktop_browser import node, pip as _pip  # noqa: E402
 from tests.test_shell_browser import LEAD, _parties, SHOTS, StubHost, _calls, _drawer, _open, _sent, _show_goal, _stop, box  # noqa: E402
 
@@ -603,7 +603,7 @@ def test_the_limits_inside_the_night_window_say_the_morning(gui):
     host.reserve = {"share": 0.2, "night": True}
     pg, host, errors = _open(gui, host=host, ready=".arena-phead")
     try:
-        pg.locator(".shell-top__leftbtn").click()                                                                   # under Spend (spec 90 §2.3)
+        pg.locator(".shell-top__chip").first.click()                                                                  # a chip opens the panel (spec 91 §1)
         limits = pg.get_by_role("region", name="What is left of your AI tools")
         claude = limits.locator(".arena-limit[data-provider=claude]")
         assert claude.locator(".ork-crystals i.kept").count() == 2 and claude.locator(".ork-crystals i.on").count() == 4
@@ -628,14 +628,14 @@ def test_the_right_column_opens_on_a_click_pushes_the_pane_keeps_its_tabs_on_esc
         assert drawer.evaluate("e => getComputedStyle(e).borderLeftStyle") == "double"
         arena = box(pg, ".shell-main > .arena")
         assert abs(arena["x"] + arena["width"] - bb["x"]) <= 1                                                          # the pane pushed, never covered
-        pg.locator(".shell-top").get_by_role("button", name="Agents").click()
+        open_pane(pg, "agents")
         assert "Add agent" in drawer.inner_text() and drawer.get_by_role("tab").count() == 2                        # Agents: today's pane, in a tab of the drawer
-        pg.locator(".shell-top").get_by_role("button", name="Files").click()
+        open_pane(pg, "files")
         pg.locator(".shell-tree__row", has_text="notes.txt").wait_for(timeout=WAIT_MS)
         assert drawer.get_by_role("tab").count() == 3
         pg.keyboard.press("Escape")
         pg.locator(".shell-drawer").wait_for(state="detached", timeout=WAIT_MS)
-        pg.locator(".shell-top").get_by_role("button", name="Agents").click()
+        open_pane(pg, "agents")
         assert _drawer(pg).get_by_role("tab").count() == 3                                                         # its tabs are kept
         pg.get_by_role("button", name="Close the right column").click()
         pg.locator(".shell-drawer").wait_for(state="detached", timeout=WAIT_MS)

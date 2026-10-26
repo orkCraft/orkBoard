@@ -104,7 +104,7 @@ def test_the_top_bar_has_no_parties_and_the_left_column_lists_them_over_the_open
     pg, host = typed
     top = pg.locator(".shell-top")
     assert top.get_by_role("tablist").count() == 0 and "Sign in with a passkey" not in top.inner_text() and top.locator(".arena-phead, .shell-proj").count() == 0
-    assert "Agents" in top.inner_text() and "Stop all" in top.inner_text() and "Orkline" in top.text_content()
+    assert "Agents" not in top.inner_text() and "Stop all" in top.inner_text() and "Orkboard" in top.text_content()
     head = pg.locator('.arena-phead[aria-current=true]')
     assert box(pg, '.arena-phead[aria-current=true]')["y"] < box(pg, ".arena-pbody")["y"] and head.locator(".arena-phead__leads").inner_text().strip() == "Product designer leads"      # over its goals: its leader's
     name = head.locator(".arena-phead__name")

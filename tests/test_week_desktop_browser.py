@@ -27,13 +27,20 @@ class WeekHost(StubHost):
         return super().handle(name, a)
 
 
+def _spend(pg):
+    """*Spend today*, in the panel a chip of the top bar opens (docs/specs/91-the-owners-list.md §1)."""
+    if not pg.locator(".shell-top__limits").count():
+        pg.locator(".shell-top__chip").first.click()
+    return pg.get_by_role("button", name="Spend today: $2.40. This week's work")
+
+
 def _lines(pg):
     return [" ".join(p.text_content().split()) for p in pg.get_by_role("dialog", name="This week").locator(".week p").all()]
 
 
 def _show(gui, host):
     pg, host, errors = _open(gui, host=host)
-    pg.get_by_role("button", name="Spend today: $2.40. This week's work").click()
+    _spend(pg).click()
     pg.get_by_role("dialog", name="This week").locator(".week").wait_for(timeout=WAIT_MS)
     return pg, host, errors
 
@@ -59,7 +66,7 @@ def test_tonight_says_how_many_wait_and_a_null_part_a_missing_price_and_no_night
                           "The last 7 nights: 7 with none", "Tonight: 2 wait"]
     pg.keyboard.press("Escape")
     host.week.update(night_on=False, usd=None, ops_usd=None, merged=0, first_time=0, nights={"worked": 0, "idle": 0, "off": 0})
-    pg.get_by_role("button", name="Spend today: $2.40. This week's work").click()
+    _spend(pg).click()
     pg.get_by_role("dialog", name="This week").locator(".week").wait_for(timeout=WAIT_MS)
     assert _lines(pg) == ["No results in dev in the last 7 days"]
     pg.close()
@@ -77,13 +84,13 @@ def test_the_week_line_says_what_low_work_does_and_last_weeks_unused_share(gui):
     pg.keyboard.press("Escape")
     for pace, words in (("even", "Low work waits for the night"), ("behind", "Low work waits until the week comes back")):
         host.week.update(week={"left": 0.2, "rest": 1 / 7, "pace": pace, "reset": 0}, last_unused=None)
-        pg.get_by_role("button", name="Spend today: $2.40. This week's work").click()
+        _spend(pg).click()
         pg.get_by_role("dialog", name="This week").locator(".week").wait_for(timeout=WAIT_MS)
         got = _lines(pg)
         assert f"The week: 20 % left with 1 day to go: {words}" in got and not [x for x in got if x.startswith("Last week ended")]
         pg.keyboard.press("Escape")
     host.week.update(week=None)
-    pg.get_by_role("button", name="Spend today: $2.40. This week's work").click()
+    _spend(pg).click()
     pg.get_by_role("dialog", name="This week").locator(".week").wait_for(timeout=WAIT_MS)
     assert not [x for x in _lines(pg) if x.startswith("The week")]                                     # no week read: no line
     pg.close()
@@ -202,9 +209,9 @@ def test_a_device_with_no_week_key_writes_it_and_shows_nothing_and_an_empty_week
 
 
 def _last_week(pg):
-    """*Last week*, under Spend in the top bar (docs/specs/90-what-the-first-look-said.md §2.3): in the limits' panel when the snapshot has limits, else beside Spend."""
-    if pg.locator(".shell-top__leftbtn").count() and not pg.locator(".shell-top__limits").count():
-        pg.locator(".shell-top__leftbtn").click()
+    """*Last week*, in the panel a chip of the top bar opens (docs/specs/91-the-owners-list.md §1)."""
+    if not pg.locator(".shell-top__limits").count():
+        pg.locator(".shell-top__chip").first.click()
     pg.get_by_role("button", name="Last week", exact=True).click()
 
 
@@ -233,7 +240,7 @@ def test_nights_in_a_row_is_line_four_of_this_week_from_two_and_after_the_nights
     assert _lines(pg)[2:4] == ["The last 7 nights: 4 with work done, 2 with none, 1 Orkline was not running", "5 nights in a row"]
     pg.keyboard.press("Escape")
     host.week.update(streak=1)
-    pg.get_by_role("button", name="Spend today: $2.40. This week's work").click()
+    _spend(pg).click()
     pg.get_by_role("dialog", name="This week").locator(".week").wait_for(timeout=WAIT_MS)
     assert not [x for x in _lines(pg) if "in a row" in x]
     pg.close()

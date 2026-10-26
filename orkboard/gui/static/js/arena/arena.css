@@ -439,7 +439,7 @@
 .arena-task.is-pick .arena-task__line { white-space: normal; }                         /* *asks you to pick* is two short lines on a card 128 px wide */
 .arena-hitem.is-alert { color: var(--ork-alert); }
 
-/* -- what is left of your AI tools, under Spend in the top bar (spec 90 §2.3; the panel is shell.css `.shell-top__limits`) ------------------- */
+/* -- what is left of your AI tools, in the panel a chip of the top bar opens (spec 91 §1; the panel is shell.css `.shell-top__limits`) ------------------- */
 .arena-limits { display: flex; flex-direction: column; gap: var(--ork-2); }
 .arena-limit { display: flex; align-items: center; gap: var(--ork-4); flex: none; font: var(--ork-type-caption); }
 .arena-limit__name { display: inline-flex; align-items: center; gap: var(--ork-2); width: 96px; flex: none; color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
