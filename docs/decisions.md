@@ -1521,7 +1521,10 @@ channels, the Release manager the versions); they say it as text nobody reads wh
 2. **A map is a field of cards on the table, never a diagram** (§92): a part is a card (5:7, its goal's element top
    left, its kind's sign top right), a group a column or a stack, an order the field's arrow (few, short). What happens
    to it is the field's own motion (§89): new is dealt, changed is sealed with its goal's element, gone crumbles,
-   promised is a ghost, at work turns with its member's head.
+   promised is a ghost, at work turns with its member's head. **A card is read, not guessed**: on the desktop a card is
+   128 x 180 (5:7; was 104 x 146 at most) and its name shows up to four lines (was two, about 12 characters a line, so
+   cut almost always); the planner writes a task's name short (60 characters at most, the verb first); the whole name on
+   hover and on a lifted card. The phone's tokens stay 74 px (spec 67).
 3. **A map is read from the project where it can be**, with no model: modules and imports, routes and screens, the
    Board's goals and flags. A lens of judgement (people and needs, value, channels) is the leader's and the person's,
    kept in the project's state, marked as theirs and corrected by the person. A part has a stable id; a map keeps its
