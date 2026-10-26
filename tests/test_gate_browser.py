@@ -42,20 +42,25 @@ def test_desktop_review_card_reads_ran_then_the_exit_code_then_the_counts(gui):
     pg, host, errors = _open(gui, host=StubHost())
     host.plan["tasks"] = tasks()
     host.bump(None)
-    pg.locator(".arena-result", has_text="Pytest counts").wait_for(timeout=WAIT_MS)                # the column lists every result waiting
-    for title, line in LINES.items():
-        facts = pg.locator(".arena-result", has_text=title).locator(".arena-result__tests")
+    card = lambda title: pg.locator(f'.arena-hc[data-kind=result]:has(.arena-hc__open[aria-label="To look at: {title}"])')      # noqa: E731  (a result: the hand's card, spec 90 §2.3)
+    card("Pytest counts").wait_for(timeout=WAIT_MS)                                                     # the hand holds every result waiting
+    for title, line in LINES.items():                                                                   # each opened in the right column: its tests' line
+        card(title).locator(".arena-hc__open").focus()
+        pg.keyboard.press("Enter")
+        pg.wait_for_function("(t) => document.querySelector('.shell-drawer .shell-ptab.is-on')?.textContent.includes(t)", arg=title, timeout=WAIT_MS)
+        facts = pg.locator(".shell-drawer .shell-facts dd").first
+        facts.wait_for(timeout=WAIT_MS)
         sign = {"✓": "check", "✗": "cross"}.get(line[0])                                                  # the desktop draws the mark as orkUI's sign, the phone still types it
         assert " ".join(facts.inner_text().split()) == (line[2:] if sign else line), title
         assert facts.locator(f".ork-sign.{sign}").count() == (1 if sign else 0), title
-    exit_one = pg.locator(".arena-result", has_text="Exit one")
+    pg.get_by_role("button", name="Close the right column").click()
+    exit_one = card("Exit one")
+    exit_one.locator(".arena-hc__open").focus()
     assert exit_one.get_by_role("button", name="Fix", exact=True).is_visible()
     assert exit_one.get_by_role("button", name="Merge into dev").is_disabled()
-    assert pg.locator(".arena-result", has_text="Nothing ran").get_by_role("button", name="Merge into dev").is_enabled()
-    pg.locator(".arena-result", has_text="Exit one").locator(".arena-link").click()                       # the result's preview says it too
-    pg.locator(".shell-preview").get_by_text("failed (exit 1)").wait_for(timeout=WAIT_MS)
-    pg.get_by_role("button", name="Close the drawer").click()
-    pg.locator(".arena-result").first.scroll_into_view_if_needed()
+    nothing = card("Nothing ran")
+    nothing.locator(".arena-hc__open").focus()
+    assert nothing.get_by_role("button", name="Merge into dev").is_enabled()
     shot(pg, "review-desktop-1440x900")
     pg.close()
     assert not errors, "\n".join(errors)

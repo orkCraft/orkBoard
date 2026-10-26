@@ -2,8 +2,8 @@
 `ideas.system`, `ideas.system_part` and `ideas.system_rearrange` answering in the shapes part A gives them. The party has two tabs, System and Board, and opens on System when something changed since the device's
 last look, else on the tab last pressed; the parts lie as the field's cards in a column for each area with the area's name over it (*n files*, *Uses k · Used by m*, a gone part's place kept, a stack ×n); what
 changed is played once in the order the goals landed (new dealt, changed sealed with the goal's element, gone crumble), in steps, the whole at most 3 s, ended by a press, none under reduced motion; *Since your
-last look at <time>* and the goals, a press on one dims the others' marks; a card hovered draws its uses (a new one in its goal's element); a card pressed shows its part beside the table, a goal there opens the
-goal; *Rearrange*; *Reading the project…* while the host reads. Screenshots to the directory ORKCRAFT_SHOTS_DIR names when it is set."""
+last look at <time>* and the goals, a press on one dims the others' marks; a card hovered draws its uses (a new one in its goal's element); a card pressed shows its part in the window's right column (spec 90 §2), a goal there
+opens the goal; *Rearrange*; *Reading the project…* while the host reads. Screenshots to the directory ORKCRAFT_SHOTS_DIR names when it is set."""
 from __future__ import annotations
 
 import copy
@@ -395,7 +395,7 @@ def test_hovering_a_part_draws_its_uses_and_a_new_one_in_its_goals_element(tech)
     pg.wait_for_selector(".sys .arena-arrow", state="detached", timeout=WAIT_MS)
 
 
-def test_a_part_pressed_shows_its_files_uses_and_changes_beside_the_table_and_a_goal_there_opens_the_goal(tech):
+def test_a_part_pressed_shows_its_files_uses_and_changes_in_the_right_column_and_a_goal_there_opens_the_goal(tech):
     pg, host = tech
     _seed(pg)
     pg.reload()
@@ -404,12 +404,12 @@ def test_a_part_pressed_shows_its_files_uses_and_changes_beside_the_table_and_a_
     _rest(pg)
     table = pg.locator(".sys-scroll").bounding_box()
     _part(pg, "src/core").click()
-    side = pg.locator('.sys-side[data-path="src/core"]')
+    side = pg.locator('.shell-drawer .sys-side[data-path="src/core"]')
     side.locator('[data-sec="files"]').wait_for(timeout=WAIT_MS)
     assert _calls(pg, host, "ideas.system_part") == [{"path": "src/core", "party": "tech", "since": OLD}]
     assert side.get_attribute("aria-label") == "core" and _part(pg, "src/core").get_attribute("aria-pressed") == "true"
     assert side.bounding_box()["x"] >= pg.locator(".sys-scroll").bounding_box()["x"] + pg.locator(".sys-scroll").bounding_box()["width"] - 1 and \
-        pg.locator(".sys-scroll").bounding_box()["width"] < table["width"]                                          # beside the table
+        pg.locator(".sys-scroll").bounding_box()["width"] < table["width"]                                          # in the right column, beside the table (spec 90 §2)
     assert side.locator('[data-sec="files"] h3').text_content().strip() == "5 files" and side.locator('[data-sec="files"] li').count() == 5
     assert side.locator('[data-sec="uses"] h3').text_content().strip() == "Uses" and [b.text_content().strip() for b in side.locator('[data-sec="uses"] button').all()] == ["db"]
     assert side.locator('[data-sec="used_by"] h3').text_content().strip() == "Used by" and [b.text_content().strip() for b in side.locator('[data-sec="used_by"] button').all()] == ["app", "screens", "shop"]      # by their names: the top's is the project's

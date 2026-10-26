@@ -96,3 +96,31 @@ General. E1: a monorepo of a Vite client, an Express server and a shared config:
 HTTP and socket link with its routes and events, the ways in, the layers, the shared part; a Python project with one
 container; nothing in skipped folders. E2: the three tabs, the containers, the arrows and their routes. The critical
 tests and each part's files' tests.
+
+## As built (B)
+
+- **The right column** (`shell.css`, `shell.js`, `tabs.js`): `.shell-drawer` is a flex item of `.shell-main`, `clamp(480px, 34%, 640px)` wide, docked at the right; the pane
+  (`.arena`) is narrowed by it, never covered. With no tab shown there is no right column. Esc and *Close the right column* (the strip's ×, the word *drawer* gone) put it away
+  and keep its tabs, as spec 39 did; the last tab's × closes it. Below 1 024 px there is no room for two: it still takes the window. A toast stands at the top of the pane, at
+  its right and left of the right column when one is out, so that it covers neither the hand nor what is open.
+- **Its new kinds** (`store.js`, `preview.js`): `asset` (`path`: the asset's id; `assets.js` `AssetView`, the lifted card of spec 88 without its scrim or Close: the name,
+  *Changed by*, *Now* / *Before*, the stage, *Not picked (n)*) and `part` (`path`, `slug`: its party; `systemmap.js` `PartView`, spec 89's part beside the table, its uses named
+  from the System last shown). A part under *Uses* or *Used by* opens in the same passing tab; a part pressed again closes it.
+- **What stood in the right column** (`arena.js`; `waits.js` removed): a result to look at is the hand's card on the party shown at every width (`handOf` `withResults`, kind
+  `result`, *To look at*, Review's answers on it; its *Waits: …* as the card's note); opened, the right column shows its picture large (spec 85 §3), read from the Map when Review's
+  list lacks it. The gate is one card, `arenawords.js` `gateStop` (kind `gate`, its label *dev → main*, its title *n goals ready for main* or *k commits ready for main*, the goals'
+  titles as its text, the Orkmaster's head), its answer *Merge into main* (`gate.js` `mergeGate`, the gate screen's command, which keeps the press for the flags); a press beside
+  the button opens the gate's screen. The quiet line is `gate.js` `GateLine` under the project's line in the left column (one line in `partylist.js`): *n goals in dev wait for
+  main* (*main is up to date*), a press opens the gate's screen, and *results go into dev ⌄*. The flags raised travel from that line when nothing was pressed (`flags.js`).
+  A result's and the gate's card say their kind in the muted ink, not the alert colour (decisions §54.1). *While you were away* and *Last week* lie at the top of the field
+  (`.arena-cards`); the *Last week* link is in the limits' panel.
+- **The limits under Spend** (`topbar.js`): beside *Spend* the tightest tool's share (*Codex 40 %*, the warning colour at 20 % or less, danger at 5 %); a press opens a panel
+  under it with `limits.js`' lines and *Last week*; Esc or a press elsewhere closes it. The hand takes the field's whole width.
+- **Assets** (`assets.js`, `assets.css`, `canvases.js`): the kinds are `.assets-sec` sections one under another, each a heading over its cards wrapping across the table's
+  width (`.assets-sec__cards`, 128 px cards); an opened stack wraps its files on a line of its own. A card pressed opens in the right column (`.is-on` while it is shown).
+  The canvases are the last section, *Canvases n* (n: the new ones), spec 78's cards, *Seen · k* folded after them, and a kind of the filter; the right column's fold row went.
+- **The table from the pane's top** (`arena.js`, `arena.css`, `systemmap.css`): `.arena-play` is the one `.ork-table`, under the party's line: System and Board's tabs at its
+  edge (no rule under them) and the members' faces on its wood; the field and the System's scroll are no tables of their own. The project's level is unchanged (`project.js`
+  is part D's).
+- Tests: `tests/test_right_column_desktop_browser.py` (§7 B); the desktop tests that read Waits, the gate's box, the limits, the drawer's width or the lifted asset now read the
+  hand's cards, the gate's line, the panel under Spend, the right column and its region.

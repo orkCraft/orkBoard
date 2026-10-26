@@ -1,4 +1,4 @@
-// What is left of your AI tools (docs/specs/49-one-window.md §8): at the bottom right, a line per tool of the snapshot's limits — its
+// What is left of your AI tools (docs/specs/49-one-window.md §8): under *Spend* in the top bar (docs/specs/90-what-the-first-look-said.md §2.3, shell/topbar.js), a line per tool of the snapshot's limits — its
 // mark and name, ten diamonds for what is left (the last ones hatched for the reserve, Claude only), its % — and under them what the
 // hatching is and when the tightest window resets. A tool whose limits were not read says so and has no diamonds.
 import { html, cls } from "../html.js";

@@ -191,12 +191,12 @@ def test_the_level_has_three_tabs_and_opens_on_field(level):
 
 # -- the table of assets ----------------------------------------------------------------------------------------------------------------------------------
 
-def test_the_assets_lie_in_a_column_for_each_kind_in_the_order_of_the_words_with_the_thing_itself_as_the_face(level):
+def test_the_assets_lie_in_a_section_for_each_kind_in_the_order_of_the_words_with_the_thing_itself_as_the_face(level):
     pg, host = level
     _assets(pg)
-    assert [c.get_attribute("aria-label") for c in pg.locator(".assets-col").all()] == KINDS
-    assert [h.text_content().strip().rsplit(" ", 1)[0] for h in pg.locator(".assets-col > h3").all()] == KINDS
-    assert pg.locator('.assets-col[data-kind="art"] .arena-stk').count() == 4                  # hero, fresh, icon and the stack of seven as one
+    assert [c.get_attribute("aria-label") for c in pg.locator(".assets-sec").all()] == KINDS
+    assert [h.text_content().strip().rsplit(" ", 1)[0] for h in pg.locator(".assets-sec > h3").all()] == KINDS
+    assert pg.locator('.assets-sec[data-kind="art"] .arena-stk').count() == 4                  # hero, fresh, icon and the stack of seven as one
     hero = _card(pg, "art/hero.png")
     img = hero.locator("img.assets-face__img")
     pg.wait_for_function("e => e.complete && e.naturalWidth > 0", arg=img.element_handle(), timeout=WAIT_MS)
@@ -231,7 +231,7 @@ def test_a_goals_files_say_changed_by_the_goal_with_its_element_and_a_folder_of_
     assert foot.text_content().strip().strip() == "Changed by Passkey login" and foot.locator(".ork-elem.meadow").count() == 1
     assert _card(pg, "art/fresh.png").locator(".assets-changed .ork-elem.lava").count() == 1
     assert _card(pg, "art/icon.png").locator(".assets-changed").count() == 0                                          # the person's own: no goal to name
-    stack = pg.locator('.assets-col[data-kind="art"] .assets-stk[data-n="7"]')
+    stack = pg.locator('.assets-sec[data-kind="art"] .assets-stk[data-n="7"]')
     assert stack.count() == 1 and stack.locator(".arena-stk__n").text_content().strip() == "×7" and stack.locator(".arena-stk__edge").count() == 2
     assert pg.locator('.assets-card[data-asset^="art/ui/"]').count() == 1                                             # shut: the front only
     stack.locator("button.assets-card").click()
@@ -246,34 +246,38 @@ def test_a_goals_files_say_changed_by_the_goal_with_its_element_and_a_folder_of_
 
 # -- a card lifted -----------------------------------------------------------------------------------------------------------------------------------------
 
-def test_a_pressed_card_lifts_art_at_its_size_and_esc_puts_it_back(level):
+def _lifted(pg, name):
+    """A file opened in the right column (docs/specs/90-what-the-first-look-said.md §2–§3)."""
+    return pg.locator(".shell-drawer").get_by_role("region", name=name, exact=True)
+
+
+def test_a_pressed_card_opens_art_at_its_size_in_the_right_column_and_esc_puts_it_away(level):
     pg, host = level
     _assets(pg)
     _card(pg, "art/hero.png").click()
-    lift = pg.get_by_role("dialog", name="hero.png")
+    lift = _lifted(pg, "hero.png")
     lift.wait_for(timeout=WAIT_MS)
     img = lift.locator("img.assets-lift__img")
     pg.wait_for_function("e => e.complete && e.naturalWidth > 0", arg=img.element_handle(), timeout=WAIT_MS)
     box = img.bounding_box()
-    assert abs(box["width"] - 400) <= 1 and abs(box["height"] - 240) <= 1                                              # at its size: 400 × 240 in a pane that is wider
+    assert abs(box["width"] - 400) <= 1 and abs(box["height"] - 240) <= 1                                              # at its size: 400 × 240 in a column that is wider
     assert lift.get_by_text("Changed by Passkey login").count() == 1 and lift.locator("h3").count() == 0              # no variants: no Not picked
     shot(pg, "assets-lifted.png")
     pg.keyboard.press("Escape")
     pg.locator(".assets-lift").wait_for(state="detached", timeout=WAIT_MS)
-    assert pg.evaluate("document.activeElement.dataset.asset") == "art/hero.png"                                         # the focus returns to the card
     _card(pg, "art/icon.png").click()
-    small = pg.get_by_role("dialog", name="icon.png").locator("img.assets-lift__img")
+    small = _lifted(pg, "icon.png").locator("img.assets-lift__img")
     pg.wait_for_function("e => e.complete && e.naturalWidth > 0", arg=small.element_handle(), timeout=WAIT_MS)
     assert "is-pixel" in small.get_attribute("class") and abs(small.bounding_box()["width"] - 16) <= 1                  # a 16 px icon is not blown up
-    pg.get_by_role("button", name="Close").click()
-    pg.locator(".assets-lift").wait_for(state="detached", timeout=WAIT_MS)
+    pg.get_by_role("button", name="Close icon.png").click()                                                          # its tab's ×: the last, so no column
+    pg.locator(".assets-lift, .shell-drawer").first.wait_for(state="detached", timeout=WAIT_MS)
 
 
 def test_a_sound_plays_when_lifted_with_its_controls_and_the_variants_not_picked_lie_under_it(level):
     pg, host = level
     _assets(pg)
     _card(pg, "music/theme.wav").click()
-    lift = pg.get_by_role("dialog", name="theme.wav")
+    lift = _lifted(pg, "theme.wav")
     lift.wait_for(timeout=WAIT_MS)
     pg.wait_for_function("() => { const a = document.querySelector('.assets-lift__face.is-now audio'); return !!a && !a.paused; }", timeout=WAIT_MS)       # playing
     assert lift.locator(".is-now .pick-play").get_attribute("aria-label").startswith("Pause")                                  # its control says what a press does
@@ -284,7 +288,7 @@ def test_a_sound_plays_when_lifted_with_its_controls_and_the_variants_not_picked
     pg.wait_for_function("() => document.querySelector('.assets-lift__face.is-now audio').paused", timeout=WAIT_MS)
     pg.keyboard.press("Escape")
     _card(pg, "clips/intro.webm").click()
-    clip = pg.get_by_role("dialog", name="intro.webm")
+    clip = _lifted(pg, "intro.webm")
     clip.wait_for(timeout=WAIT_MS)
     assert clip.locator("video").count() == 1 and clip.locator(".pick-play").count() + clip.locator(".pick-miss").count() >= 1
 
@@ -296,12 +300,12 @@ def test_a_changed_file_turns_over_to_before_in_steps_and_back_to_now(level):
     pg.locator(".arena[data-goal=passkey]").wait_for(timeout=WAIT_MS)
     _assets(pg)
     _card(pg, "art/fresh.png").click()
-    lift = pg.get_by_role("dialog", name="fresh.png")
+    lift = _lifted(pg, "fresh.png")
     lift.wait_for(timeout=WAIT_MS)
     assert lift.get_by_role("radio").count() == 0                                                                     # an added file has no version before
     pg.keyboard.press("Escape")
     _card(pg, "art/hero.png").click()
-    lift = pg.get_by_role("dialog", name="hero.png")
+    lift = _lifted(pg, "hero.png")
     lift.wait_for(timeout=WAIT_MS)
     assert _calls(pg, host, "ideas.asset_before") == [{"path": "art/hero.png", "since": OLD}]
     now, before = lift.get_by_role("radio", name="Now"), lift.get_by_role("radio", name="Before")
@@ -393,25 +397,25 @@ def test_the_filter_by_kind_and_by_goal(level):
     kinds = pg.locator(".assets-kinds button")
     assert [k.text_content().strip() for k in kinds.all()] == KINDS
     kinds.filter(has_text="Sound").click()
-    assert [c.get_attribute("aria-label") for c in pg.locator(".assets-col").all()] == ["Sound"] and kinds.filter(has_text="Sound").get_attribute("aria-pressed") == "true"
+    assert [c.get_attribute("aria-label") for c in pg.locator(".assets-sec").all()] == ["Sound"] and kinds.filter(has_text="Sound").get_attribute("aria-pressed") == "true"
     kinds.filter(has_text="Sound").click()                                                                               # pressed again: all kinds
-    assert pg.locator(".assets-col").count() == 6
+    assert pg.locator(".assets-sec").count() == 6
     goals = pg.get_by_label("Goal", exact=True)
     assert goals.locator("option").evaluate_all("l => l.map(e => e.textContent)") == ["All goals", "Passkey login", "Landing copy"]
     goals.select_option(label="Landing copy")
     assert pg.locator(".assets-card").evaluate_all("l => l.map(e => e.dataset.asset).sort()") == ["art/fresh.png", "audio/jump.wav"]
-    assert [c.get_attribute("aria-label") for c in pg.locator(".assets-col").all()] == ["Art and icons", "Sound"]
+    assert [c.get_attribute("aria-label") for c in pg.locator(".assets-sec").all()] == ["Art and icons", "Sound"]
     kinds.filter(has_text="Sound").click()
     assert pg.locator(".assets-card").count() == 1
     goals.select_option(label="All goals")
     kinds.filter(has_text="Sound").click()
-    assert pg.locator(".assets-col").count() == 6
+    assert pg.locator(".assets-sec").count() == 6
 
 
 def test_a_project_with_no_assets_says_nothing_here_yet(gui, tmp_path):
     pg, host, errors = _open(gui, host=AssetsHost(empty=True), ready=".arena[data-goal=passkey]")
     _assets(pg)
-    assert pg.locator(".assets-none__title").text_content().strip() == "Nothing here yet" and pg.locator(".assets-col").count() == 0
+    assert pg.locator(".assets-none__title").text_content().strip() == "Nothing here yet" and pg.locator(".assets-sec").count() == 0
     pg.close()
     assert not errors, "\n".join(errors)
 

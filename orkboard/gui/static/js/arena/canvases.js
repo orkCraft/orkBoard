@@ -1,8 +1,8 @@
-// Canvases (docs/specs/78-canvases.md §3): what an AI tool drew outside the code, a card each, in the right column above *Waits for your look*. A fold row *Canvases · n* (FoldRow,
-// spec 73 §3), folded, shown only when there are canvases (new or seen); n is what is not seen (the snapshot's `canvases_new`), and the cards are read again (`ideas.canvases`) when the
-// snapshot's `canvases_rev` moves and when the row is unfolded. A card is an `.ork-frame` like a result's: the elf's head (a small accent), the kind in the pixel face's small caps, the title in
+// Canvases (docs/specs/78-canvases.md §3, docs/specs/90-what-the-first-look-said.md §2.3): what an AI tool drew outside the code, a card each, a kind of Assets (assets.js): the section
+// *Canvases*, shown only when there are canvases (new or seen), the new ones' cards wrapping across the width and *Seen · k* folded after them; the cards are read again (`ideas.canvases`) when the
+// snapshot's `canvases_rev` moves. A card is an `.ork-frame` like a result's: the elf's head (a small accent), the kind in the pixel face's small caps, the title in
 // the text face, the tool and when, its goal and task when it has them, and what it offers: **Open on claude.ai** (its host: a link of another host is text, never a link), **Show here**
-// (a local file in the drawer: a picture, a page in a sandbox with no scripts; Markdown as text) and **Seen**, which folds it into *Seen* at the foot (the last 20). A canvas is not a signal
+// (a local file in the right column: a picture, a page in a sandbox with no scripts; Markdown as text) and **Seen**, which folds it into *Seen* at the foot (the last 20). A canvas is not a signal
 // and not a result (decisions §54.1): no alert colour, nothing in the top bar. One that comes while the page is seen draws in once (0.36 s, in steps; none under reduced motion).
 import { useEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
@@ -20,7 +20,7 @@ const KIND_WORDS = { design: "Design", slides: "Slides", document: "Document", p
 const OPEN_WORDS = { "claude.ai": "Open on claude.ai", "figma.com": "Open in Figma", "tldraw.com": "Open on tldraw", "canva.com": "Open on Canva" };
 
 const data = signal({ canvases: [], seen: [] });           // ideas.canvases
-const open = signal(false), seenOpen = signal(false);      // the two folds: both folded by default
+const seenOpen = signal(false);                            // *Seen*: folded by default
 const drawn = signal([]);                                  // the keys drawing in now
 let known = { project: null, keys: null };                 // the keys the page has read for this project (null: not read yet: nothing draws in on the first read)
 let reading = 0;
@@ -36,19 +36,19 @@ export function whenWords(iso, now = Date.now()) {
 }
 
 /** The cards from the host, the last read winning. The keys that are new to the page (none on its first read of a project) are set in `drawn` just before the cards are, so a card is
- *  drawn with its motion from its first frame; they are drawn in only where they can be seen (the row open), while the page is seen, and when the person has not asked for none. */
+ *  drawn with its motion from its first frame; they are drawn in only while the page is seen, and when the person has not asked for none. */
 async function read(project) {
   const mine = ++reading, got = await ask("ideas.canvases");
   if (!got || mine !== reading || !Array.isArray(got.canvases)) return false;
   const seen = Array.isArray(got.seen) ? got.seen : [], keys = [...got.canvases, ...seen].map((c) => c.key), had = known.project === project ? known.keys : null;
   known = { project, keys: new Set([...(had || []), ...keys]) };
-  const fresh = had && open.value && !reducedMotion() && !document.hidden ? keys.filter((k) => !had.has(k)) : [];
+  const fresh = had && !reducedMotion() && !document.hidden ? keys.filter((k) => !had.has(k)) : [];
   if (fresh.length) drawn.value = fresh;
   data.value = { canvases: got.canvases, seen };
   return fresh.length > 0;
 }
 
-/** A canvas's local file in the drawer (`ideas.canvas_file`): a picture, an HTML page in a sandbox with no scripts and no origin, Markdown and the rest as text. */
+/** A canvas's local file in the right column (`ideas.canvas_file`): a picture, an HTML page in a sandbox with no scripts and no origin, Markdown and the rest as text. */
 export function CanvasView({ p }) {
   const [got, setGot] = useState(undefined);
   useEffect(() => {
@@ -80,33 +80,38 @@ function Card({ c, fresh = false, isSeen = false, onSeen = null }) {
     ${!link && c.link_text && html`<span class="arena-cap arena-canvas__text" data-text>${c.link_text}</span>`}
     <div class="arena-canvas__acts">
       ${link && html`<button type="button" class="ork-btn" title="Opens it in your browser" onClick=${() => ask("ideas.canvas_open", { key: c.key })}>${OPEN_WORDS[c.host] || `Open on ${c.host}`}</button>`}
-      ${c.local && html`<button type="button" class="ork-btn" title="Shows its file in the drawer" onClick=${() => show({ kind: "canvas", path: c.key, title: c.title })}>Show here</button>`}
+      ${c.local && html`<button type="button" class="ork-btn" title="Shows its file in the right column" onClick=${() => show({ kind: "canvas", path: c.key, title: c.title })}>Show here</button>`}
       ${!isSeen && html`<button type="button" class="ork-btn" disabled=${busy} title="Folds it into Seen" onClick=${seen}>Seen</button>`}
     </div>
   </div>`;
 }
 
-/** The right column's row: *Canvases · n*, and in it, after the cards, *Seen · k* once a canvas has been seen. */
-export function Canvases() {
-  const t = town.value, rev = t?.canvases_rev ?? 0, count = t?.canvases_new ?? 0, project = currentProject.value?.path || "";
+/** The project's canvases (`ideas.canvases`), read when the snapshot's `canvases_rev` moves: `{canvases, seen, done(c)}`; `done` folds one into *Seen*. */
+export function useCanvases() {
+  const rev = town.value?.canvases_rev ?? 0, project = currentProject.value?.path || "";
   const timer = useRef(0);
-  const { canvases, seen } = data.value;
   const load = async () => {
     if (!await read(project)) return;
     clearTimeout(timer.current);
     timer.current = setTimeout(() => { drawn.value = []; }, DRAWN_MS);
   };
-  useEffect(() => { load(); }, [rev, project, open.value]);
+  useEffect(() => { load(); }, [rev, project]);
   useEffect(() => () => clearTimeout(timer.current), []);
   const done = async (c) => { await ask("ideas.canvas_seen", { key: c.key }); await load(); };
-  if (!count && !canvases.length && !seen.length) return null;
-  return html`<section class="arena-canvases" aria-label="Canvases">
-    <${FoldRow} word="Canvases" n=${count} open=${open.value} toggle=${() => { open.value = !open.value; }} />
-    ${open.value && html`<div class="arena-canvases__list">
-      ${canvases.map((c) => html`<${Card} key=${c.key} c=${c} fresh=${drawn.value.includes(c.key)} onSeen=${done} />`)}
-      ${!canvases.length && html`<p class="arena-cap">Nothing new. What an AI tool draws comes here.</p>`}
-      ${seen.length > 0 && html`<${FoldRow} word="Seen" n=${seen.length} open=${seenOpen.value} toggle=${() => { seenOpen.value = !seenOpen.value; }} kind="arena-canvases__seen" />
-        ${seenOpen.value && seen.map((c) => html`<${Card} key=${c.key} c=${c} isSeen=${true} />`)}`}
-    </div>`}
+  return { ...data.value, done };
+}
+
+/** Assets' *Canvases* (docs/specs/90-what-the-first-look-said.md §2.3): a kind of Assets, its cards spec 78's, wrapping across the width as the other kinds' do, and after them *Seen · k*
+ *  (folded) once a canvas has been seen. `list`, `seen`: what the filter leaves of each; `done`: `useCanvases`'s. Not drawn with neither. */
+export function CanvasSection({ list, seen, done }) {
+  if (!list.length && !seen.length) return null;
+  return html`<section class="assets-sec arena-canvases" data-kind="canvas" aria-label="Canvases">
+    <h3 class="arena-sec">Canvases <span class="assets-sec__n">${list.length}</span></h3>
+    <div class="assets-sec__cards">
+      ${list.map((c) => html`<${Card} key=${c.key} c=${c} fresh=${drawn.value.includes(c.key)} onSeen=${done} />`)}
+      ${!list.length && html`<p class="arena-cap">Nothing new. What an AI tool draws comes here.</p>`}
+    </div>
+    ${seen.length > 0 && html`<${FoldRow} word="Seen" n=${seen.length} open=${seenOpen.value} toggle=${() => { seenOpen.value = !seenOpen.value; }} kind="arena-canvases__seen" />
+      ${seenOpen.value && html`<div class="assets-sec__cards">${seen.map((c) => html`<${Card} key=${c.key} c=${c} isSeen=${true} />`)}</div>`}`}
   </section>`;
 }

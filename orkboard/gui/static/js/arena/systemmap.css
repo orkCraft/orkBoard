@@ -1,9 +1,9 @@
 /* The Tech lens's System (docs/specs/89-the-tech-lens-system.md §6): a party's two tabs over its table, the project's parts laid out as the field's cards in a column for each area (the card itself is
-   arena.css `.arena-task` in `.arena-stk`, at the field's 128 × 180), the area's name over its column as a member's name is over its, the uses drawn as the field's arrows, the part pressed beside the table,
+   arena.css `.arena-task` in `.arena-stk`, at the field's 128 × 180), the area's name over its column as a member's name is over its, the uses drawn as the field's arrows, the part pressed in the right column,
    and the three moments of what changed since the last look. In orkUI's office look: its tokens only, no colour, font or corner of its own. */
 
-/* -- the party's two tabs ---------------------------------------------------------------------------------------------------------------------- */
-.sys-tabs { flex: none; padding: 0 var(--ork-5); }
+/* -- the party's two tabs, on the table's wood at its edge (docs/specs/90-what-the-first-look-said.md §4) ------------------------------------------- */
+.sys-tabs { flex: none; padding: 3px var(--ork-5) 0; border-bottom: 0; }
 .sys-panel { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 .sys { position: relative; flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 .sys-note { margin: var(--ork-6); display: flex; align-items: center; gap: var(--ork-3); font: var(--ork-type-body); color: var(--ork-ink-muted); }
@@ -62,9 +62,8 @@
 .sys-part.sys-crumble { pointer-events: none; animation: sys-crumble 0.42s steps(3) forwards; }
 @keyframes sys-crumble { 0% { opacity: 1; } 34% { opacity: 0.7; transform: translateY(2px); } 67% { opacity: 0.35; transform: translateY(5px); } 100% { opacity: 0; transform: translateY(10px); } }
 
-/* -- the part pressed, beside the table ---------------------------------------------------------------------------------------------------------- */
-.sys-side { flex: none; width: 300px; box-sizing: border-box; overflow: auto; display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4) var(--ork-5);
-  background: var(--ork-panel); border-left: var(--ork-line) solid var(--ork-frame); }
+/* -- the part pressed, in the window's right column (docs/specs/90-what-the-first-look-said.md §2) ---------------------------------------------------- */
+.sys-side { min-width: 0; box-sizing: border-box; display: flex; flex-direction: column; gap: var(--ork-3); }
 .sys-side__head { display: flex; align-items: center; gap: var(--ork-3); min-width: 0; }
 .sys-side__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--ork-type-body); font-weight: 600; }
 .sys-side__path { overflow-wrap: anywhere; }

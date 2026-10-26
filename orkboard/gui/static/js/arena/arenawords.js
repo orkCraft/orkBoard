@@ -364,7 +364,7 @@ export function limitLine(l, reserve, resetOf) {
 // -- the stops: the bottom row (§6) -------------------------------------------------------------------------------------------------
 
 export const KIND_WORD = { plan: "Plan ready", change: "Plan change", asks: "Asks you", goal: "Asks you", proposal: "Proposed", party: "Proposed", todo: "A to-do", failed: "Failed",
-  pick: "Pick one", op: "At your check", op_failed: "Failed", op_rules: "Rules to take", pitch: "Pitch judged", collide: "Orkmaster asks", sign_in: "Sign in" };
+  pick: "Pick one", op: "At your check", op_failed: "Failed", op_rules: "Rules to take", pitch: "Pitch judged", collide: "Orkmaster asks", sign_in: "Sign in", gate: "Ready for main" };
 export const isOp = (n) => n.kind === "op" || n.kind === "op_failed" || n.kind === "op_rules";
 const GEM = { plan: "", change: "", asks: "?", goal: "?", proposal: "—", party: "—", todo: "·", failed: { sign: "cross" }, pick: "", op: "·", op_failed: { sign: "cross" }, op_rules: "—", pitch: "", collide: "", sign_in: { sign: "alert" } };
 
@@ -469,7 +469,7 @@ export function opStopsOf(needs) {
 // -- one hand (spec 54 §2) ---------------------------------------------------------------------------------------------------------
 
 /** How urgent a kind of stop is (§2.3): 0 red (a failure), 1 what holds work back, 2 what does not, 3 the results to look at. */
-const URGENCY = { failed: 0, op_failed: 0, plan: 1, change: 1, asks: 1, goal: 1, todo: 1, pick: 1, op: 1, proposal: 2, party: 2, op_rules: 2, pitch: 2, collide: 1, sign_in: 1, result: 3 };
+const URGENCY = { failed: 0, op_failed: 0, plan: 1, change: 1, asks: 1, goal: 1, todo: 1, pick: 1, op: 1, proposal: 2, party: 2, op_rules: 2, pitch: 2, collide: 1, sign_in: 1, gate: 2, result: 3 };
 export const urgencyOf = (s) => URGENCY[s.kind] ?? 1;
 const ageOf = (s) => String(s.row?.at || s.task?.finished || s.task?.started || s.result?.finished || "9999");
 
@@ -485,9 +485,22 @@ function inParty(stops, g, shown) {
   return stops.map((s) => ({ ...s, g: g || null, party, other: party.slug !== shown }));
 }
 
+/** *n goals ready for main* (docs/specs/90-what-the-first-look-said.md §2.3, decisions §104.9): what dev holds that main lacks, one card for the batch, its answer *Merge into main*; none when nothing
+ *  waits or dev and main are one branch (`ideas.gate`). The goals' titles are its text (*k commits ready for main* when no goal's are among them). */
+export function gateStop(gate, shown, ork = null) {
+  const shape = gateOf(gate);
+  if (!shape || shape.off) return null;
+  const n = (gate.ideas || []).length;
+  const title = n ? `${n === 1 ? "1 goal" : `${n} goals`} ready for ${gate.main}` : `${plural(gate.commits, "commit", "commits")} ready for ${gate.main}`;
+  return { key: "gate", kind: "gate", row: null, node: null, task: null, gate, label: `${gate.into} → ${gate.main}`, gem: "", tone: "", gemTip: "", small: false, whoTip: "",
+    head: ork ? { race: ork.race || "peon", tier: ork.tier || "crown" } : null, title, full: title,
+    text: n ? gate.ideas.map((i) => i.title).join(" · ") : plural(gate.files, "file", "files"),
+    g: null, party: { slug: shown, name: "", head: null, lead: "", ops: false }, other: false };
+}
+
 /** Every stop of the project (§2.1): each party's Needs you rows, failed tasks and Pick one, then Operations'; `keep(partySlug, stop)` is the filter (only the picked goals'),
- *  and the party shown's results join them when `withResults` (below 1 024 px). In urgency's order (§2.3). */
-export function handOf({ map, needs, order, shown, keep, withResults = false, ops = true }) {
+ *  the party shown's results join them when `withResults` (spec 90 §2.3: always on the desktop's party), and the gate's batch when `gate` (`ideas.gate`) has one. In urgency's order (§2.3). */
+export function handOf({ map, needs, order, shown, keep, withResults = false, ops = true, gate = null }) {
   const out = [];
   for (const g of goalsOf(map, order)) {
     const nodes = nodesOf(map, g.slug), mine = stopsOf(needs, g, nodes, map?.project?.orkmaster || null);
@@ -496,6 +509,8 @@ export function handOf({ map, needs, order, shown, keep, withResults = false, op
   }
   if (ops) out.push(...inParty(opStopsOf(needs), null, shown));
   out.push(...signInStopsOf(needs, shown));
+  const ready = gate ? gateStop(gate, shown, map?.project?.orkmaster || null) : null;
+  if (ready) out.push(ready);
   return byUrgency(out);
 }
 
@@ -514,11 +529,11 @@ export function fanOf(i, n, fanned = true) {
   return { rot: fanned ? Math.round(off * 5 * ease * 10) / 10 : 0, dy: fanned ? Math.round(off * off * 4 * ease * ease) : 0, z: 10 + i };
 }
 
-/** A result among the stops, below 1 024 px (§3): *To look at*, with a result's own answers. */
+/** A result among the stops (§3; on the desktop's party at every width since spec 90 §2.3): *To look at*, with a result's own answers. */
 export function resultStop(r, nodes) {
   const node = nodes.find((n) => n.slug === r.idea) || null, task = node?.tasks.find((t) => t.id === r.task) || null;
   const t = r.tests && !r.check ? r.tests : null;
   return { key: `result/${r.idea}/${r.task}`, kind: "result", row: null, node, task, result: r, label: "To look at", gem: { sign: r.check || !(t && (t.failed > 0 || t.green === false)) ? "check" : "cross" },
     tone: "", gemTip: "A result waits for your look", head: task?.head || null, small: true, whoTip: task ? `${task.by.name}’s task` : "", title: r.title, full: r.title,
-    text: [r.diff ? `${plural(r.diff.files, "file", "files")}` : "", r.cost != null ? money(r.cost) : ""].filter(Boolean).join(" · ") };
+    text: [r.diff ? `${plural(r.diff.files, "file", "files")}` : "", r.cost != null ? money(r.cost) : ""].filter(Boolean).join(" · "), why: r.look ? `Waits: ${r.look}` : "" };
 }

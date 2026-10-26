@@ -1,6 +1,6 @@
 """Pick one on the desktop (docs/specs/51-pick-one.md §5, §6, Tests → B), in a real browser at 1 440 × 900 against the one window's stub host
 (tests/test_arena_desktop_browser.py) with a pick that waits (tests/pick_desktop_host.py): the raised stop in the bottom row (the count, the member's head, the tiles two
-by two, *Take B*, *Pick, with a note…*), the drawer's Pick one (the ask, the tiles four across, ← →, the note, *Take B*, *None of them: make new ones*), the tile of
+by two, *Take B*, *Pick, with a note…*), the drawer's Pick one (the ask, the tiles two by two in the right column, ← →, the note, *Take B*, *None of them: make new ones*), the tile of
 each kind (a picture, a clip's first frame, a sound, a text), picking by the label strip and never by *Play*, one media at a time on the page, nothing playing by itself,
 the map's *asks you to pick*, today's rows, and reduced motion. The files are real: the page plays a WAV and a tiny WEBM the stub serves it. Screenshots to the folder
 ORKCRAFT_SHOTS names (docs/design/img/v1/ when it is just set)."""
@@ -85,7 +85,7 @@ def _shot(pg, name: str) -> None:
 
 def test_the_stop_is_pick_one_its_gem_the_count_with_the_members_head_and_the_tiles_two_by_two(picking):
     pg, host = picking
-    kinds = pg.locator(".arena-hc").evaluate_all("els => els.map((e) => e.dataset.kind)")
+    kinds = pg.locator(".arena-hc:not([data-kind=result]):not([data-kind=gate])").evaluate_all("els => els.map((e) => e.dataset.kind)")              # the stops (a result and the batch for main are cards of their own: spec 90 §2.3)
     assert kinds == ["failed", "plan", "asks", "pick", "proposal"]                                                        # red first, then what holds work back (the pick with it), then the proposal (spec 54 §2.3)
     card = _card(pg)
     assert box(pg, ".arena-hc[data-kind=pick]")["width"] == 156 and box(pg, ".arena-hc[data-kind=pick]")["height"] == 246       # the card of the fan, as every stop
@@ -262,7 +262,7 @@ def test_playing_never_picks_one_plays_at_a_time_on_the_whole_page_and_nothing_p
     drawer.locator(".pick-tile[data-variant=D] .pick-play").click()
     pg.wait_for_function("() => document.querySelector('.shell-drawer .pick-tile[data-variant=D] audio, .shell-drawer .pick-tile[data-variant=D] video').currentTime > 0.1", timeout=WAIT_MS)
     assert _playing(pg) == ["drawer/D"] and _picked(drawer) == ["C"]                                              # across the card and the drawer: one
-    pg.get_by_role("button", name="Close the drawer").click()                                                     # the drawer goes: what played there stops
+    pg.get_by_role("button", name="Close the right column").click()                                                     # the drawer goes: what played there stops
     pg.wait_for_function("() => document.querySelectorAll('.pick-tile audio, .pick-tile video').length > 0 && ![...document.querySelectorAll('.pick-tile audio, .pick-tile video')].some((m) => !m.paused)", timeout=WAIT_MS)
 
 
@@ -281,7 +281,7 @@ def test_the_drawer_has_the_ask_four_tiles_across_the_note_and_take_with_none_of
     assert _text(view.locator(".shell-pickone__by")) == "made by Screens · 4 pictures" and view.locator(".shell-pickone__by img.ork-race__head.small").count() == 1
     assert view.locator(".shell-pickone__ask").text_content() == f"“{ASK}”"
     tiles = [t.bounding_box() for t in _tiles(drawer).all()]
-    assert len(tiles) == 4 and len({t["y"] for t in tiles}) == 1 and all(b["x"] > a["x"] for a, b in zip(tiles, tiles[1:])) and all(t["width"] >= 190 for t in tiles)    # four across at 1 440
+    assert len(tiles) == 4 and len({t["y"] for t in tiles}) == 2 and tiles[1]["x"] > tiles[0]["x"] and all(t["width"] >= 190 for t in tiles)    # two by two in the right column (spec 90 §2.1)
     note = drawer.get_by_role("textbox", name="Note")
     assert note.get_attribute("placeholder") == "Say why, or what to change (it goes to Screens)" and note.evaluate("e => e.tagName") == "TEXTAREA"
     foot = drawer.locator(".shell-result__foot")
@@ -386,7 +386,7 @@ def test_what_is_picked_and_written_is_one_state_of_the_card_and_the_drawer(pick
     _radio(drawer, "D").click()                                                                                      # and the other way round
     drawer.get_by_role("textbox", name="Note").fill("a draft")
     assert _picked(card) == ["D"]
-    pg.get_by_role("button", name="Close the drawer").click()
+    pg.get_by_role("button", name="Close the right column").click()
     card = _card(pg)
     assert card.get_by_role("button", name="Take D").is_visible()
     card.get_by_role("button", name="Add a note").click()
@@ -407,7 +407,7 @@ def test_a_task_that_asks_you_to_pick_says_so_with_the_alert_sign_on_its_card_it
     assert "asks you to pick" in member.get_attribute("aria-label") and member.locator(".arena-sign .ork-sign.alert").count() == 1             # the member that waits for the person
     row = pg.locator(".arena-goal[data-slug=logo]")
     assert row.locator(".arena-goal__mark .ork-sign.alert").count() == 1 and row.locator(".arena-goal__mark").get_attribute("title") == "waits for you"
-    assert pg.locator(".arena-hc").count() == 5                                                                                                # the pick is one of the stops
+    assert pg.locator(".arena-hc:not([data-kind=result]):not([data-kind=gate])").count() == 5                                                                                                # the pick is one of the stops
     task.click()                                                                                                    # a press on it opens the pick, not its log
     assert _sent(pg, host, ("ideas.log", {"event": "opened", "what": "pick", "ref": "logo/p1", "device": "desktop", "via": "map"}))
     assert "Draw the mark" in _drawer_of(pg).locator(".shell-pickone").inner_text()

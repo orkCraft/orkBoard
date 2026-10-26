@@ -1,6 +1,6 @@
 // The drawer's tab strip (docs/specs/39-map.md §3, spec 49 §9): a tab per thing opened, none pinned. The passing tab is in italics;
-// a double-click or Keep keeps it. × or a middle click closes a tab; *Close the drawer* (×) at the right puts the drawer away and keeps
-// its tabs. A `tablist`: the arrow keys move between the tabs, Enter shows one.
+// a double-click or Keep keeps it. × or a middle click closes a tab (the last one closes the right column, spec 90 §2); *Close the right column* (×) at the right puts
+// it away and keeps its tabs. A `tablist`: the arrow keys move between the tabs, Enter shows one.
 import { html, cls } from "../html.js";
 import { Icon } from "../orkui.js";
 import { tabs, active, editing, activate, closeTab, keepTab, hideDrawer, kindWords } from "./store.js";
@@ -31,6 +31,6 @@ export function TabStrip() {
         <button class="shell-ptab__x" aria-label=${`Close ${title}`} title="Close this tab" onClick=${() => closeTab(t.id)}>×</button></span>`;
     })}
     </div>
-    <button class="shell-drawer__x" aria-label="Close the drawer" title="Close the drawer (Esc)" onClick=${hideDrawer}><${Icon} name="close" /></button>
+    <button class="shell-drawer__x" aria-label="Close the right column" title="Close the right column (Esc): its tabs are kept" onClick=${hideDrawer}><${Icon} name="close" /></button>
   </header>`;
 }

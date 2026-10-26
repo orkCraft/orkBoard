@@ -7,7 +7,7 @@ import { command, toast } from "../link.js";
 import { ask, board, opened, page, BUSY } from "../board/store.js";
 import { openDialog } from "./modals.js";
 
-export const preview = signal(null);       // the active tab's thing, null with no tab: {kind: "idea"|"plan"|"task"|"result"|"goal"|"pick"|"doc"|"file"|"gitdiff"|"gate"|"agents"|"files"|"canvas" (spec 78: path is its key, title), slug?, task?, todo?, path?}
+export const preview = signal(null);       // the active tab's thing, null with no tab: {kind: "idea"|"plan"|"task"|"result"|"goal"|"pick"|"doc"|"file"|"gitdiff"|"gate"|"agents"|"files"|"canvas" (spec 78: path is its key, title)|"asset" (spec 88: path is its id)|"part" (spec 89: path, slug its party), slug?, task?, todo?, path?}
 export const review = signal(null);        // ideas.review_list
 export const agents = signal(null);        // ideas.agents
 export const detail = signal(null);        // the preview's own data: {task} (ideas.task) · {task, diff, spend} (a result; spend: ideas.spend of its idea) · {goal} · {doc}
@@ -15,7 +15,7 @@ export const goal = signal(null);          // ideas.goal of the goal in the prev
 export const roles = signal(null);         // ideas.roles: the agents, the task types and their agent, the models
 export const editing = signal(null);       // the file open in the editor: {path, dirty, save()}, null when none is
 
-// The drawer's tabs (docs/specs/39-map.md §3, spec 49 §9): a tab per thing opened, no pinned one. A click opens a thing in the one
+// The drawer's tabs (docs/specs/39-map.md §3, spec 49 §9; the window's right column, docs/specs/90-what-the-first-look-said.md §2): a tab per thing opened, no pinned one. A click opens a thing in the one
 // passing tab (replacing the one there); a double-click, an edit or Keep keeps it. At most 12; each project's tabs are kept per
 // device (the refs only: every tab reads its thing again when shown). No active tab is the drawer closed; Esc puts the drawer
 // away and keeps its tabs (`drawerOpen`), and opening anything brings it back.
@@ -30,9 +30,9 @@ export const flagsData = signal(null);     // ideas.flags: the goals' flags (`go
 export const aboutAt = signal("");         // the section of About this party to scroll to when it opens ("flags": Its flags); "" for the top
 export const mapFolded = signal([]);       // the folds kept with the tabs (the Flags fold)
 
-const KINDS = ["idea", "plan", "task", "result", "goal", "pick", "doc", "file", "gitdiff", "gate", "agents", "files", "canvas"];
+const KINDS = ["idea", "plan", "task", "result", "goal", "pick", "doc", "file", "gitdiff", "gate", "agents", "files", "canvas", "asset", "part"];
 const KIND_WORDS = { idea: "Goal", plan: "Plan", task: "Task", result: "Code", goal: "Party", pick: "Pick one", doc: "Document", file: "File", gitdiff: "Changes",
-  gate: "Gate", agents: "Agents", files: "Files", canvas: "Canvas" };
+  gate: "Gate", agents: "Agents", files: "Files", canvas: "Canvas", asset: "Asset", part: "Part" };
 export const kindWords = (kind) => KIND_WORDS[kind] || "";
 export const tabId = (p) => `${p.kind}:${p.slug || ""}:${p.task || ""}:${p.path || ""}`;
 
@@ -271,7 +271,7 @@ export function show(p, opts = {}) {
 function showNow(p, { keep = false, via = "" } = {}) {
   if (p.kind === "agents" || p.kind === "files") logOpened("tab", p.kind, via);
   else if (p.kind === "gate") logOpened("gate", "", via);
-  else if (!["doc", "file", "gitdiff", "canvas"].includes(p.kind)) logOpened(p.kind === "goal" ? "idea" : p.kind === "plan" && p.todo ? "todo" : p.kind,
+  else if (!["doc", "file", "gitdiff", "canvas", "asset", "part"].includes(p.kind)) logOpened(p.kind === "goal" ? "idea" : p.kind === "plan" && p.todo ? "todo" : p.kind,
     p.kind === "goal" ? `goal:${p.slug}` : p.task ? `${p.slug}/${p.task}` : p.todo ? `${p.slug}/${p.todo}` : p.slug, via);
   const id = tabId(p);
   const list = tabs.value;

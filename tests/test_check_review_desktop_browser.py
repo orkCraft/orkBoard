@@ -1,5 +1,6 @@
 """Spec 43 A on the desktop (docs/specs/43-party-measured.md §1.4, §1.5, Tests → A): a check's result in Review says what it found, with *Fix
-them* and *Leave them*; the idea's Checks say *clean* and *found 2: 1 fixed, 1 left*."""
+them* and *Leave them*; the idea's Checks say *clean* and *found 2: 1 fixed, 1 left*. A result to look at is the hand's card and opens in the right column
+(docs/specs/90-what-the-first-look-said.md §2.3): the findings are read there."""
 from __future__ import annotations
 
 import pytest
@@ -27,6 +28,21 @@ def with_checks(host):
     return host
 
 
+def _card(pg, title):
+    """The result's card in the hand (spec 90 §2.3)."""
+    return pg.locator(f'.arena-hc[data-kind=result]:has(.arena-hc__open[aria-label="To look at: {title}"])')
+
+
+def _result(pg, title):
+    """The result opened from its card in the hand: its code, its tests, its findings and its answers, in the right column."""
+    pg.locator(f'.arena-hc__open[aria-label="To look at: {title}"]').focus()
+    pg.keyboard.press("Enter")
+    got = pg.locator(".shell-drawer .shell-result")
+    got.wait_for(timeout=WAIT_MS)
+    pg.wait_for_function("(t) => document.querySelector('.shell-drawer .shell-ptab.is-on')?.textContent.includes(t)", arg=title, timeout=WAIT_MS)
+    return got
+
+
 @pytest.fixture
 def review(gui):
     from tests.test_shell_browser import StubHost
@@ -39,7 +55,7 @@ def review(gui):
 
 def test_a_check_s_card_says_what_it_found_and_has_fix_them_leave_them_and_drop(review):
     pg, host = review
-    card = pg.locator(".arena-result", has_text="Check: Reviewer")
+    card = _result(pg, "Check: Reviewer")
     assert card.locator(".shell-found__sum").inner_text() == "Found 3: 1 fixed, 2 left"
     assert [" ".join(t.split()) for t in card.locator(".shell-found__list li").all_inner_texts()] == [
         "queue.py:9 · the queue is never emptied", "the Sync screen · no way to cancel"]                    # the findings left, not the fixed one
@@ -47,21 +63,21 @@ def test_a_check_s_card_says_what_it_found_and_has_fix_them_leave_them_and_drop(
     assert card.get_by_role("button", name="Drop…").count() == 1
     assert card.get_by_role("button", name="Merge into dev").count() == 0 and card.get_by_role("button", name="Send back").count() == 0
     assert "no tests ran" in card.inner_text()
-    fix = pg.locator(".arena-result", has_text="Check: Accessibility reviewer")                          # nothing left: today's card
+    fix = _result(pg, "Check: Accessibility reviewer")                          # nothing left: today's card
     assert fix.locator(".shell-found").count() == 0 and fix.get_by_role("button", name="Merge into dev").is_enabled()
     assert fix.get_by_role("button", name="Fix them").count() == 0
 
 
 def test_fix_them_sends_back_with_the_findings_left_as_its_why(review):
     pg, host = review
-    pg.locator(".arena-result", has_text="Check: Reviewer").get_by_role("button", name="Fix them").click()
+    _result(pg, "Check: Reviewer").get_by_role("button", name="Fix them").click()
     assert _sent(pg, host, ("ideas.back", {"slug": "sync", "task": "k6",
                                            "why": "Fix the findings left:\nqueue.py:9: the queue is never emptied\nthe Sync screen: no way to cancel"}))
 
 
 def test_leave_them_is_the_merge(review):
     pg, host = review
-    pg.locator(".arena-result", has_text="Check: Reviewer").get_by_role("button", name="Leave them").click()
+    _result(pg, "Check: Reviewer").get_by_role("button", name="Leave them").click()
     assert _sent(pg, host, ("ideas.merge", {"slug": "sync", "task": "k6"}))
 
 
@@ -111,7 +127,7 @@ def place(gui):
 
 def test_findings_of_the_place_alone_offer_merge_and_drop_and_say_what_is_left(place):
     pg, host = place
-    card = pg.locator(".arena-result", has_text="Check: Security")
+    card = _result(pg, "Check: Security")
     assert PLACE in card.inner_text() and "(where it ran)" in card.inner_text()
     assert card.get_by_role("button", name="Fix them").count() == 0 and card.get_by_role("button", name="Send back").count() == 0
     assert card.get_by_role("button", name="Leave them").is_enabled() and card.get_by_role("button", name="Drop…").count() == 1
@@ -121,7 +137,7 @@ def test_findings_of_the_place_alone_offer_merge_and_drop_and_say_what_is_left(p
 
 def test_fix_them_lists_the_findings_of_the_code_only(place):
     pg, host = place
-    card = pg.locator(".arena-result", has_text="Check: Playtest")
+    card = _result(pg, "Check: Playtest")
     assert PLACE not in card.inner_text() and card.get_by_role("button", name="Fix them").is_enabled()
     card.get_by_role("button", name="Fix them").click()
     assert _sent(pg, host, ("ideas.back", {"slug": "sync", "task": "k9", "why": "Fix the findings left:\nqueue.py:9: the queue is never emptied"}))
@@ -129,12 +145,12 @@ def test_fix_them_lists_the_findings_of_the_code_only(place):
 
 def test_the_same_findings_as_the_round_before_offer_merge_and_drop(place):
     pg, host = place
-    card = pg.locator(".arena-result", has_text="Check: Words")
+    card = _result(pg, "Check: Words")
     assert PLACE in card.inner_text() and card.get_by_role("button", name="Fix them").count() == 0 and card.get_by_role("button", name="Send back").count() == 0
 
 
 def test_a_result_of_a_project_with_no_tests_says_so_and_why_it_waits(place):
     pg, host = place
-    card = pg.locator(".arena-result", has_text="Add the store")
-    assert "no tests in this project" in card.inner_text() and "Waits: no tests in this project" in card.inner_text()
-    assert pg.locator(".arena-result", has_text="Check: Security").locator("[data-look]").inner_text() == "Waits: findings left"
+    assert _card(pg, "Add the store").locator(".arena-hc__note").text_content() == "Waits: no tests in this project"       # why it waits, on its card
+    assert "no tests in this project" in _result(pg, "Add the store").inner_text()
+    assert _card(pg, "Check: Security").locator(".arena-hc__note").text_content() == "Waits: findings left"

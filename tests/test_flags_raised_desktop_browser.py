@@ -1,5 +1,5 @@
 """Spec 64, the desktop (docs/specs/64-flags-raised.md §1–§3; Tests → B): Chromium at 1 440 × 900 against the one window's stub host (tests/test_arena_desktop_browser.py) whose gate's merge raises
-the flags of two goals. When the flag line first stands, its goals' elements travel from the merge's press (else the gate's button) to a row after its flag, six at most, then the flag is raised
+the flags of two goals. When the flag line first stands, its goals' elements travel from the merge's press (else the gate's quiet line) to a row after its flag, six at most, then the flag is raised
 and the line lit once; with no gate on screen nothing travels and the flag is still raised; under reduced motion and on a hidden page the row is drawn still."""
 from __future__ import annotations
 
@@ -73,7 +73,7 @@ def _scene(gui, host, **page):
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
     pg.locator(".arena[data-goal=passkey]").wait_for(timeout=WAIT_MS)
-    pg.locator(".arena-gate__btn").wait_for(timeout=WAIT_MS)
+    pg.locator(".arena-gateline__main").wait_for(timeout=WAIT_MS)
     pg.wait_for_function("() => Object.keys(localStorage).some((k) => k.startsWith('orkboard.flags.goals.'))", timeout=WAIT_MS)       # this device has looked: what comes now is new
     return pg, errors
 
@@ -98,7 +98,7 @@ def raising_many(gui):
 
 def _merge(pg, host):
     """The gate's screen is opened and its one press is made: returns the box of the press, as it is then."""
-    pg.locator(".arena-gate__btn").click()
+    pg.locator(".arena-gateline__main").click()
     view = _drawer(pg).locator(".arena-gateview")
     view.wait_for(timeout=WAIT_MS)
     button = view.get_by_role("button", name="Merge dev into main")
@@ -203,13 +203,13 @@ def test_eight_flags_six_elements_travel_and_stay_in_the_row_and_the_words_say_t
     assert " ".join(pg.locator(".arena-flagline").inner_text().split()) == f"8 flags raised · {a}, {b} and 6 more are in main"      # the rest, in today's words (k = n − 2)
 
 
-def test_the_gates_button_is_where_they_travel_from_when_nothing_was_pressed(raising):
+def test_the_gates_line_is_where_they_travel_from_when_nothing_was_pressed(raising):
     pg, host = raising
     pg.evaluate(RECORD)
     host.raise_flags()                                                                                    # raised from another device: no press here
     host.bump({})
     pg.wait_for_function("() => window.__fly.copies.length === 2", timeout=WAIT_MS)
-    button = pg.locator(".arena-gate__btn").bounding_box()                                                # (the line has pushed the field down: it is read where it stands now)
+    button = pg.locator(".arena-gateline__main").bounding_box()                                                # (the line has pushed the field down: it is read where it stands now)
     bx, by = _centre(button)
     for c in _fly(pg)["copies"]:
         assert abs(c["centre"][0] - bx) <= 3 and abs(c["centre"][1] - by) <= 3 and abs(c["width"] - button["height"]) <= 2
@@ -221,25 +221,25 @@ def test_a_merge_pressed_more_than_ten_seconds_ago_is_not_where_they_travel_from
     pg, host = raising
     host.hold = True                                                                                      # the merge is made, the Board raises nothing yet
     press = _merge(pg, host)
-    pg.get_by_role("button", name="Close the drawer").click()
+    pg.get_by_role("button", name="Close the right column").click()
     pg.wait_for_timeout(10_400)
     host.hold = False
     host.raise_flags()
     host.bump({})
     pg.wait_for_function("() => window.__fly.copies.length === 2", timeout=WAIT_MS)
-    button = pg.locator(".arena-gate__btn").bounding_box()
+    button = pg.locator(".arena-gateline__main").bounding_box()
     c = _fly(pg)["copies"][0]
-    assert abs(c["centre"][0] - _centre(button)[0]) <= 3 and abs(c["centre"][1] - _centre(button)[1]) <= 3       # the gate's button, not the press
+    assert abs(c["centre"][0] - _centre(button)[0]) <= 3 and abs(c["centre"][1] - _centre(button)[1]) <= 3       # the gate's line, not the press
     assert abs(c["centre"][0] - _centre(press)[0]) > 20 or abs(c["centre"][1] - _centre(press)[1]) > 20
     _over(pg)
 
 
-def test_a_gate_under_the_drawer_is_not_a_place_to_travel_from_but_the_flag_is_still_raised(raising):
+def test_a_gate_covered_is_not_a_place_to_travel_from_but_the_flag_is_still_raised(raising):
     pg, host = raising
-    pg.get_by_role("button", name="About this party").click()                                             # the drawer lies over the gate's button
-    _drawer(pg).wait_for(timeout=WAIT_MS)
-    button = pg.locator(".arena-gate__btn").bounding_box()
-    assert pg.evaluate("([x, y]) => document.elementFromPoint(x, y).closest('.arena-gate__btn') === null", list(_centre(button)))
+    pg.evaluate("""() => { const d = document.createElement('div'); d.id = 'cover';
+      Object.assign(d.style, { position: 'fixed', left: '0', top: '0', width: '400px', height: '100vh', zIndex: '100' }); document.body.append(d); }""")     # something over the gate's line (never the right column: spec 90 §2.1)
+    button = pg.locator(".arena-gateline__main").bounding_box()
+    assert pg.evaluate("([x, y]) => document.elementFromPoint(x, y).closest('.arena-gateline__main') === null", list(_centre(button)))
     pg.evaluate(RECORD)
     host.raise_flags()
     host.bump({})
@@ -254,7 +254,7 @@ def test_with_no_gate_on_screen_nothing_travels_and_the_flag_is_still_raised(rai
     pg, host = raising
     host.gate_doc.update(same=True)                                                                       # one branch: no gate to draw
     host.bump({})
-    pg.wait_for_function("() => !document.querySelector('.arena-gate__btn')", timeout=WAIT_MS)
+    pg.wait_for_function("() => !document.querySelector('.arena-gateline__main')", timeout=WAIT_MS)
     pg.evaluate(RECORD)
     host.raise_flags()
     host.bump({})
@@ -268,7 +268,7 @@ def test_with_no_gate_on_screen_nothing_travels_and_the_flag_is_still_raised(rai
 
 def test_closing_the_line_while_they_travel_takes_the_copies_away(raising):
     pg, host = raising
-    pg.locator(".arena-gate__btn").click()
+    pg.locator(".arena-gateline__main").click()
     view = _drawer(pg).locator(".arena-gateview")
     view.wait_for(timeout=WAIT_MS)
     pg.evaluate(RECORD)

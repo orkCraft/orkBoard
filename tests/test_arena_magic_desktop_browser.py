@@ -1,5 +1,5 @@
 """Moments of magic on the desktop (docs/specs/74-moments-of-magic.md §1–§5, decisions §89), in a real browser at 1 440 × 900 against the one window's stub host
-(tests/test_arena_decks_desktop_browser.py): a merged result's seal (its goal's element stamped), a dropped one's ✗, a sent-back result that goes back to the field,
+(tests/test_arena_decks_desktop_browser.py): a result answered leaves the hand as a stop does (spec 90 §2.3: Waits for your look and its seal are gone), a sent-back one's task in the field,
 a collision's line that crumbles when it is answered (none under reduced motion, none on the first read), the empty Board's stars and its line of words, and a Board
 with a party that has no stars."""
 from __future__ import annotations
@@ -9,7 +9,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_arena_desktop_browser import RESULT, ArenaHost, arena  # noqa: E402,F401  (fixture)
+from tests.test_arena_desktop_browser import ArenaHost, arena  # noqa: E402,F401  (fixture)
 from tests.test_collide_desktop_browser import PAIR, CollideHost, _open_host, _project  # noqa: E402
 from tests.test_shell_browser import _open  # noqa: E402
 
@@ -17,69 +17,35 @@ pytestmark = pytest.mark.browser
 
 LINE = "Make a party, then write it a goal in plain words, like a spell. Its orks do the work; you look at it before it goes in."
 
-# Records each result that starts to leave, with what its flash holds, at the frame it gets `is-leaving` (it lasts 0.3 s: a poll could miss it).
-WATCH = """() => { window.__left = []; new MutationObserver((ms) => { for (const m of ms) { const e = m.target; if (m.type !== 'attributes' || !e.classList?.contains('is-leaving')) continue;
+# Records each result's card that starts to leave the hand, at the frame it gets `is-leaving` (it lasts 0.3 s: a poll could miss it).
+WATCH = """() => { window.__left = []; new MutationObserver((ms) => { for (const m of ms) { const e = m.target; if (m.type !== 'attributes' || !e.classList?.contains('is-leaving') || e.dataset.kind !== 'result') continue;
   const cs = getComputedStyle(e);
-  window.__left.push({ task: e.dataset.task, sign: e.dataset.sign, elem: e.querySelector('.arena-task__flash .ork-elem.big')?.className || '', sign_mark: e.querySelector('.arena-task__flash .ork-sign')?.className || '',
-    flash: !!e.querySelector('.arena-task__flash'), name: cs.animationName, dur: cs.animationDuration, fn: cs.animationTimingFunction }); } }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] }); }"""
+  window.__left.push({ key: e.dataset.key, name: cs.animationName, dur: cs.animationDuration, fn: cs.animationTimingFunction }); } }).observe(document.body, { subtree: true, attributes: true, attributeFilter: ['class'] }); }"""
+
+KEY = "result/register/k1"
 
 
-def _left(pg, task):
-    pg.wait_for_function("(t) => window.__left.some((x) => x.task === t)", arg=task, timeout=WAIT_MS)
-    return next(x for x in pg.evaluate("() => window.__left") if x["task"] == task)
+# -- a result answered (§1, §2; a card of the hand since docs/specs/90-what-the-first-look-said.md §2.3) -----------------------------------------------
 
-
-def _again(pg, host, task="k1"):
-    """The result is back on the list (a task at Review with its result) once the last one has gone."""
-    pg.mouse.move(5, 5)
-    pg.locator(f".arena-result[data-task={task}]").wait_for(state="detached", timeout=WAIT_MS)
-    host.nodes[0]["results"] = [dict(RESULT)]
-    host.nodes[0]["tasks"][0]["state"] = "review"
-    host.bump({})
-    pg.locator(f".arena-result[data-task={task}]:not(.is-leaving)").wait_for(timeout=WAIT_MS)
-    pg.evaluate("() => { window.__left = []; }")
-
-
-# -- the seal, back (§1, §2) ------------------------------------------------------------------------------------------------------------------
-
-def test_a_merged_result_leaves_with_its_goals_element_stamped_and_a_dropped_one_keeps_its_cross(arena):
+def test_a_result_answered_leaves_the_hand_where_it_stands_as_a_stop_does(arena):
     pg, host = arena
     pg.evaluate(WATCH)
     pg.mouse.move(5, 5)
-    pg.locator(".arena-result[data-task=k1] .arena-result__idea .ork-elem.meadow").wait_for(timeout=WAIT_MS)
+    pg.locator(f'.arena-hc[data-key="{KEY}"]').wait_for(timeout=WAIT_MS)
     host.leave("ideas.merge", {"slug": "register", "task": "k1"})
-    seal = _left(pg, "k1")
-    assert seal["sign"] == "check" and seal["name"] == "arena-leave" and seal["dur"] == "0.3s"                    # the card fades where it stands, in FADE_MS, as it did
-    assert "ork-elem" in seal["elem"] and "meadow" in seal["elem"] and "big" in seal["elem"] and "dim" not in seal["elem"] and seal["sign_mark"] == ""    # the goal's element, 28 x 28, in its colour: no ✓
-    _again(pg, host)
-    pg.get_by_role("button", name="Drop…").first.click()
-    pg.get_by_role("dialog", name="Drop this result?").get_by_role("button", name="Drop it").click()
-    drop = _left(pg, "k1")
-    assert drop["sign"] == "cross" and "ork-sign" in drop["sign_mark"] and "cross" in drop["sign_mark"] and drop["elem"] == ""          # a drop keeps its ✗
+    pg.wait_for_function("(k) => window.__left.some((x) => x.key === k)", arg=KEY, timeout=WAIT_MS)
+    left = next(x for x in pg.evaluate("() => window.__left") if x["key"] == KEY)
+    assert [left["name"], left["dur"], left["fn"]] == ["arena-leave", "0.3s", "steps(4)"]                        # it fades where it stands, in steps
+    pg.locator(f'.arena-hc[data-key="{KEY}"]').wait_for(state="detached", timeout=WAIT_MS)
+    assert pg.locator(".arena-stack .arena-task[data-task=k1]").count() == 0                                    # merged: not in the field
 
 
-def test_the_seal_is_stamped_in_three_steps_over_the_first_third_and_the_card_still_leaves_in_fade_time(arena):
+def test_a_sent_back_results_task_is_in_the_field_again(arena):
     pg, host = arena
-    pg.evaluate(WATCH)
-    pg.mouse.move(5, 5)
-    host.leave("ideas.merge", {"slug": "register", "task": "k1"})
-    pg.locator(".arena-result[data-task=k1].is-leaving .arena-task__flash .ork-elem.big").wait_for(timeout=WAIT_MS)
-    anim = pg.evaluate("""() => { const e = document.querySelector('.arena-result[data-task=k1] .arena-task__flash .ork-elem'), c = getComputedStyle(e), f = getComputedStyle(e.parentElement),
-      card = getComputedStyle(e.closest('.arena-result')); return [c.animationName, c.animationDuration, c.animationTimingFunction, f.animationName, card.animationDuration]; }""")
-    assert anim == ["arena-stamp", "0.1s", "steps(3)", "none", "0.3s"]                                           # a third of 0.3 s, then held; the card's own 0.3 s
-    pg.locator(".arena-result[data-task=k1]").wait_for(state="detached", timeout=WAIT_MS)
-
-
-def test_a_sent_back_result_leaves_toward_the_field_with_no_flash(arena):
-    pg, host = arena
-    pg.evaluate(WATCH)
     pg.mouse.move(5, 5)
     host.leave("ideas.back", {"slug": "register", "task": "k1"})                                                # its task is running again
-    back = _left(pg, "k1")
-    assert back["sign"] == "back" and back["flash"] is False                                                    # no flash
-    assert [back["name"], back["dur"], back["fn"]] == ["arena-back", "0.3s", "steps(3)"]                        # its own motion, three steps, 0.3 s
-    pg.locator(".arena-result[data-task=k1]").wait_for(state="detached", timeout=WAIT_MS)                      # then the column settles
-    assert pg.locator(".arena-stack .arena-task[data-task=k1]").count() == 1                                    # and its task is in the field
+    pg.locator(f'.arena-hc[data-key="{KEY}"]').wait_for(state="detached", timeout=WAIT_MS)
+    pg.locator(".arena-stack .arena-task[data-task=k1]").wait_for(timeout=WAIT_MS)
 
 
 def test_nothing_plays_under_reduced_motion_a_result_just_goes(arena):
@@ -88,8 +54,8 @@ def test_nothing_plays_under_reduced_motion_a_result_just_goes(arena):
     pg.evaluate(WATCH)
     pg.mouse.move(5, 5)
     host.leave("ideas.merge", {"slug": "register", "task": "k1"})
-    pg.locator(".arena-result[data-task=k1]").wait_for(state="detached", timeout=WAIT_MS)
-    assert pg.evaluate("() => window.__left.length") == 0
+    pg.locator(f'.arena-hc[data-key="{KEY}"]').wait_for(state="detached", timeout=WAIT_MS)
+    assert all(x["name"] == "none" for x in pg.evaluate("() => window.__left"))
 
 
 # -- a collision that crumbles (§3) -----------------------------------------------------------------------------------------------------------

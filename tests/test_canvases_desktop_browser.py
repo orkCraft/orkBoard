@@ -1,5 +1,5 @@
-"""Canvases on the desktop (docs/specs/78-canvases.md §3, Tests → B), in a real browser at 1 440 × 900 against Orkboard's own host on a fixture project: the row *Canvases · n* above
-*Waits for your look* (none with no canvases, folded by default, the count of what is not seen), a card's words (the elf's small head, the kind, the title in the text face, the tool and
+"""Canvases on the desktop (docs/specs/78-canvases.md §3, Tests → B; a kind of Assets since docs/specs/90-what-the-first-look-said.md §2.3), in a real browser at 1 440 × 900 against Orkboard's
+own host on a fixture project: the section *Canvases* among Assets' kinds (none with no canvases, the count of what is not seen), a card's words (the elf's small head, the kind, the title in the text face, the tool and
 when), *Open on claude.ai* in the person's browser, a link of another host as text, *Show here* (a picture, a page in a sandbox with no scripts, Markdown as text), *Seen* into *Seen* with
 the count down, and a canvas that arrives while the page is seen drawing in once (none under reduced motion)."""
 from __future__ import annotations
@@ -32,7 +32,7 @@ def _ago(minutes: int) -> str:
 
 @pytest.fixture
 def board(tmp_path, monkeypatch):
-    """Orkboard on a fixture project that has a party (its right column is *Waits for your look*), a picture, a page and a note under it."""
+    """Orkboard on a fixture project that has a party, a picture, a page and a note under it."""
     for key, value in {"ORKCRAFT_SETTINGS_FILE": tmp_path / "settings.json", "ORKCRAFT_LOOK": "office", "ORKCRAFT_ONBOARDING": "0", "ORKCRAFT_LIMITS": "0",
                        "ORKCRAFT_NO_UPDATE": "1", "ORKCRAFT_MODEL_LIST": "0", "XDG_CONFIG_HOME": tmp_path / "config", "XDG_CACHE_HOME": tmp_path / "cache",
                        "ORKCRAFT_STATE_DIR": tmp_path / "state", "CODEX_HOME": tmp_path / "codex", "HOME": tmp_path}.items():
@@ -54,19 +54,21 @@ def board(tmp_path, monkeypatch):
 
 @pytest.fixture
 def desk(board):
-    """(page, host, repo, errors): the window open on the party, the host's canvases still empty."""
+    """(page, host, repo, errors): the window open on the project's Assets (spec 90 §2.3), the host's canvases still empty."""
     host, repo = board
     server = Server(host)
     thread = server.start_thread()
     pw = playwright.sync_playwright().start()
     browser = launch(pw)
-    pg = browser.new_page(viewport={"width": 1440, "height": 900})
     errors: list[str] = []
-    pg.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
-    pg.on("console", lambda m: m.type == "error" and errors.append(f"console: {m.text}"))
-    pg.goto(server.url)
-    pg.locator(".arena-look").wait_for(timeout=WAIT_MS)
     try:
+        pg = browser.new_page(viewport={"width": 1440, "height": 900})
+        pg.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
+        pg.on("console", lambda m: m.type == "error" and errors.append(f"console: {m.text}"))
+        pg.goto(server.url)
+        pg.get_by_role("button", name="The project").click()
+        pg.get_by_role("tab", name="Assets").click()
+        pg.locator(".assets[data-state=shown]").wait_for(timeout=WAIT_MS)
         yield pg, host, repo, errors
     finally:
         browser.close()
@@ -82,43 +84,41 @@ def _add(host, **kw):
 
 
 def _row(pg):
-    return pg.locator('.arena-look .arena-canvases .arena-frow[data-fold="canvases"]')
+    return pg.locator('.assets-sec[data-kind="canvas"]')
 
 
 def _unfold(pg):
+    """The section's cards, once the host's canvases are read (no fold: a kind of Assets lies open)."""
     _row(pg).wait_for(timeout=WAIT_MS)
-    if _row(pg).locator("button").get_attribute("aria-expanded") != "true":
-        _row(pg).locator("button").click()
     pg.locator(".arena-canvas").first.wait_for(timeout=WAIT_MS)
+
+
+def _count(pg):
+    return _row(pg).locator(".assets-sec__n").inner_text()
 
 
 def _card(pg, key):
     return pg.locator(f'.arena-canvas[data-key="{key}"]')
 
 
-# -- the row (§3.1) -----------------------------------------------------------------------------------------------------------------
+# -- the section (§3.1, spec 90 §2.3) --------------------------------------------------------------------------------------------------
 
-def test_no_canvases_no_row(desk):
+def test_no_canvases_no_section(desk):
     pg, host, repo, errors = desk
     pg.wait_for_timeout(400)
     assert pg.locator(".arena-canvases").count() == 0
-    assert pg.locator(".arena-look").inner_text().count("Canvases") == 0
+    assert pg.get_by_role("group", name="Kinds").get_by_role("button", name="Canvases").count() == 0
 
 
-def test_the_row_is_above_waits_for_your_look_folded_with_the_count_of_what_is_not_seen_and_signals_nothing(desk):
+def test_the_section_is_a_kind_of_assets_after_the_files_with_the_count_of_what_is_not_seen_and_signals_nothing(desk):
     pg, host, repo, errors = desk
     _add(host, url=ART)
     _add(host, url=FIGMA, tool="codex", kind="design", title="Checkout")
-    row = _row(pg)
-    row.wait_for(timeout=WAIT_MS)
-    assert row.locator(".arena-frow__word").text_content() == "Canvases" and row.locator(".arena-frow__n").inner_text() == "· 2"
-    assert row.locator("button").get_attribute("aria-expanded") == "false" and pg.locator(".arena-canvas").count() == 0                 # folded by default
-    above = pg.evaluate("""() => document.querySelector('.arena-canvases').getBoundingClientRect().bottom <= document.querySelector('.arena-look__head').getBoundingClientRect().top + 1""")
-    assert above                                                                                                                        # above Waits for your look
+    _unfold(pg)
+    assert _row(pg).locator("h3").text_content().strip() == "Canvases 2" and pg.locator(".arena-canvas").count() == 2
+    assert [x.get_attribute("aria-label") for x in pg.locator(".assets-sec").all()][-1] == "Canvases"                       # after the project's files
+    assert pg.get_by_role("group", name="Kinds").get_by_role("button", name="Canvases").count() == 1
     assert pg.locator(".shell-top").inner_text().count("Canvases") == 0 and pg.locator(".shell-top .ork-count").count() == 0         # nothing in the top bar
-    row.locator("button").click()
-    pg.locator(".arena-canvas").first.wait_for(timeout=WAIT_MS)
-    assert pg.locator(".arena-canvas").count() == 2
 
 
 # -- the card (§3.2) ----------------------------------------------------------------------------------------------------------------
@@ -197,7 +197,7 @@ def test_show_here_shows_a_page_in_a_sandbox_with_no_scripts_and_markdown_as_tex
     inner = pg.frame_locator(".shell-preview iframe.arena-cview__page")
     inner.locator("h1").wait_for(timeout=WAIT_MS)
     assert inner.locator("h1").inner_text() == "Plans" and inner.locator("html").evaluate("e => document.title") != "ran"                # its script never ran
-    pg.get_by_role("button", name="Close the drawer").click()                                                                           # the drawer lies over the column while it is out
+    pg.get_by_role("button", name="Close the right column").click()
     pg.locator('.arena-canvas', has_text="Notes").get_by_role("button", name="Show here").click()
     pre = pg.locator(".shell-preview pre")
     pre.wait_for(timeout=WAIT_MS)
@@ -221,9 +221,9 @@ def test_seen_moves_a_canvas_into_seen_and_the_count_drops(desk):
     _add(host, url=ART)
     _add(host, url=FIGMA, title="Checkout", at=_ago(1))
     _unfold(pg)
-    assert _row(pg).locator(".arena-frow__n").inner_text() == "· 2" and pg.locator('.arena-frow[data-fold="seen"]').count() == 0
+    assert _count(pg) == "2" and pg.locator('.arena-frow[data-fold="seen"]').count() == 0
     _card(pg, f"claude:{ART}").get_by_role("button", name="Seen").click()
-    pg.wait_for_function("() => document.querySelector('.arena-frow[data-fold=canvases] .arena-frow__n').innerText === '· 1'", timeout=WAIT_MS)
+    pg.wait_for_function("() => document.querySelector('.assets-sec[data-kind=canvas] .assets-sec__n').innerText === '1'", timeout=WAIT_MS)
     assert pg.locator(".arena-canvas").count() == 1 and _card(pg, f"claude:{ART}").count() == 0
     seen = pg.locator('.arena-frow[data-fold="seen"]')
     assert seen.locator(".arena-frow__n").inner_text() == "· 1" and seen.locator("button").get_attribute("aria-expanded") == "false"
@@ -232,8 +232,8 @@ def test_seen_moves_a_canvas_into_seen_and_the_count_drops(desk):
     old.wait_for(timeout=WAIT_MS)
     assert old.get_by_role("button", name="Seen").count() == 0 and old.get_by_role("button", name="Open on claude.ai").count() == 1       # no Seen button on a seen one
     _card(pg, f"claude:{FIGMA}").get_by_role("button", name="Seen").click()
-    pg.wait_for_function("() => document.querySelector('.arena-frow[data-fold=canvases] .arena-frow__n').innerText === '· 0'", timeout=WAIT_MS)
-    assert _row(pg).count() == 1                                                                                                        # seen ones keep the row: its Seen fold is there
+    pg.wait_for_function("() => document.querySelector('.assets-sec[data-kind=canvas] .assets-sec__n').innerText === '0'", timeout=WAIT_MS)
+    assert _row(pg).count() == 1                                                                                                        # seen ones keep the section: its Seen fold is there
 
 
 # -- a canvas that arrives (§3.4) ---------------------------------------------------------------------------------------------------
@@ -241,6 +241,9 @@ def test_seen_moves_a_canvas_into_seen_and_the_count_drops(desk):
 def test_a_canvas_that_arrives_while_the_page_is_seen_draws_in_once_and_the_first_read_draws_nothing(desk):
     pg, host, repo, errors = desk
     _add(host, url=ART)
+    pg.reload()                                                                                                                          # the page's first read of the project's canvases
+    pg.get_by_role("button", name="The project").click()
+    pg.get_by_role("tab", name="Assets").click()
     _unfold(pg)
     assert pg.locator(".arena-canvas.is-drawn").count() == 0                                                                            # the first read: nothing draws in
     pg.evaluate("""() => { window.__drawn = []; new MutationObserver((ms) => { for (const m of ms) for (const n of m.addedNodes) { const c = n.matches && n.matches('.arena-canvas.is-drawn') ? n : null;

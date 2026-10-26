@@ -45,7 +45,7 @@ def _hand(pg):
 
 
 def test_the_bottom_row_holds_every_stop_of_the_project_the_most_urgent_in_the_middle(gui):
-    pg, host, errors = _open(gui, host=OneHostOne(), ready=".arena[data-goal=passkey]")
+    pg, host, errors = _open(gui, host=stops_only(OneHostOne()), ready=".arena[data-goal=passkey]")
     try:
         cards = _hand(pg)
         cards.first.wait_for(timeout=WAIT_MS)
@@ -125,12 +125,21 @@ def test_no_count_on_the_parties_and_a_sign_on_a_closed_heading_red_when_one_fai
     assert not errors, "\n".join(errors)
 
 
+def stops_only(host):
+    """The stops alone: no result to look at and nothing for main (their cards are tests/test_right_column_desktop_browser.py's, spec 90 §2.3)."""
+    for n in host.nodes:
+        n["results"] = []
+    host.gate_doc.update(same=True)
+    return host
+
+
 class Quiet(ArenaHost):
-    """Nothing waits: no row, no failed task."""
+    """Nothing waits: no row, no failed task, no result, nothing for main."""
 
     def __init__(self):
         super().__init__()
         self.cookie[0]["state"] = "merged"
+        stops_only(self)
 
     def needs_you(self):
         return []

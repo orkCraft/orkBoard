@@ -1,6 +1,6 @@
 // The one window (docs/specs/49-one-window.md, docs/specs/50-parties-and-goals.md, decisions §62, §63): the top bar (with the party switch), and under it the party's arena — the day's
-// strip, the leader over the party's goals, the field with its party, results, stops and limits (js/arena/). Anything opened slides in as a
-// drawer from the right (spec 49 §9): the preview's tabs, Agents and Files. Always Office's calm look; no camp.
+// strip, the leader over the party's goals, the field with its party and the hand (js/arena/). Anything opened is the window's right column, docked beside the pane and
+// pushing it (spec 49 §9, docs/specs/90-what-the-first-look-said.md §2): the preview's tabs, Agents and Files; with nothing open there is none. Always Office's calm look; no camp.
 import { useEffect, useRef } from "preact/hooks";
 import { html } from "../html.js";
 import { town } from "../link.js";
@@ -51,7 +51,7 @@ export function Shell() {
         e.preventDefault();
         if (!document.querySelector("[aria-modal='true']")) openDialog("open-folder");
       } else if (e.key === "Escape" && drawerOpen.value && !typing(e.target) && !document.querySelector("[aria-modal='true']")) {
-        hideDrawer();                                   // the drawer goes and keeps its tabs
+        hideDrawer();                                   // the right column goes and keeps its tabs
       } else if (e.key === "Escape" && !typing(e.target) && !document.querySelector("[aria-modal='true']")) {
         if (spread.value) closeSpread();                // a spread's cards go back to their stack
         else if (solo.value) solo.value = "";           // a member's work alone: everyone's again
@@ -68,7 +68,7 @@ export function Shell() {
     <${TopBar} />
     <div class="shell-main">
       <${Arena} />
-      ${drawerOpen.value && html`<aside class="shell-drawer" aria-label="Drawer"><${Preview} /></aside>`}
+      ${drawerOpen.value && html`<aside class="shell-drawer" aria-label="The right column"><${Preview} /></aside>`}
     </div>
     <${Dialogs} />
     <${SignIn} />

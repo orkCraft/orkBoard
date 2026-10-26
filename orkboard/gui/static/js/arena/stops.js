@@ -1,5 +1,5 @@
 // What waits for you (docs/specs/49-one-window.md §6, docs/specs/54-one-hand.md §2–§3): the bottom row. Every stop of the project — a plan ready, a question, a
-// proposal, a to-do, a failure, a pick, Operations' — each a framed item standing in a fan along the bottom edge, only its top showing, the most urgent in the middle
+// proposal, a to-do, a failure, a pick, Operations', a result to look at and *n goals ready for main* (docs/specs/90-what-the-first-look-said.md §2.3) — each a framed item standing in a fan along the bottom edge, only its top showing, the most urgent in the middle
 // (arenawords.js `laidOut`; a to-do the last of all, spec 87 §4.3); one of another party says its party. Hovering or focusing one raises it whole, with its quick answers and a way out that needs nothing
 // from the person (*Let … decide*, *Describe it instead*, *Go without it*, *Let … choose*). A press answers; a click outside the buttons opens it in the drawer. A *Pick one*
 // (docs/specs/51-pick-one.md §6) holds its variants as small tiles, two by two (picks.js): a press on a strip picks one, *Take B* answers
@@ -12,7 +12,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Head, Icon, Sign } from "../orkui.js";
 import { say, toast } from "../link.js";
-import { act, showIdea, showPlan, showTask, showGoal, showResult, showPick, needsFocus } from "../shell/store.js";
+import { act, showIdea, showPlan, showTask, showGoal, showResult, showPick, showGate, needsFocus } from "../shell/store.js";
 import { ResultActions } from "../shell/review.js";
 import { openDialog } from "../shell/modals.js";
 import { TodoWays, named } from "../shell/tododialog.js";
@@ -28,6 +28,7 @@ import { Tiles, choiceOf } from "./picks.js";
 import { manyWords, variantOf } from "./pickwords.js";
 import { CollideAnswers, CollideGoals } from "./collide.js";
 import { SignInButton, signIn } from "../shell/signin.js";
+import { mergeGate } from "./gate.js";
 
 const SENT = "Sent: the Taskmaster answers in a moment.";
 
@@ -91,8 +92,17 @@ function PickAnswers({ s, see }) {
       onClick=${() => { see(); showPick(row.slug, row.task, { via: "hand" }); }}>${key ? "Add a note…" : "Pick, with a note…"}</button>`;
 }
 
+/** *n goals ready for main*'s answer (spec 90 §2.3): *Merge into main*, the gate's command as its screen has it. */
+function GateAnswer({ s }) {
+  const [busy, setBusy] = useState(false);
+  const merge = async (e) => { setBusy(true); await mergeGate(e); setBusy(false); };
+  return html`<button type="button" class="ork-btn primary arena-hc__q" disabled=${busy} title=${`Merges ${s.gate.into} into ${s.gate.main}: nothing reaches ${s.gate.main} without you`}
+    aria-label=${`Merge into ${s.gate.main}: ${s.full}`} onClick=${merge}>Merge into ${s.gate.main}</button>`;
+}
+
 function Answers({ s, g, see }) {
   if (s.kind === "result") return html`<${ResultActions} r=${s.result} />`;
+  if (s.kind === "gate") return html`<${GateAnswer} s=${s} />`;
   if (s.kind === "pick") return html`<${PickAnswers} s=${s} see=${see} />`;
   const row = s.row, n = s.node, slug = row?.idea || n?.slug || "";
   if (s.kind === "plan") {
@@ -182,6 +192,7 @@ function open(s) {
   else if (s.kind === "pick") showPick(row.slug, row.task, via);
   else if (s.kind === "pitch" || s.kind === "collide") showIdea(row.idea, via);
   else if (s.kind === "sign_in") signIn(row.harness);
+  else if (s.kind === "gate") showGate(via);
   else openDialog("opcheck", { op: row.op });
 }
 

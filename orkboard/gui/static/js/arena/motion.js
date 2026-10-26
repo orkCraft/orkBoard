@@ -16,9 +16,7 @@
 //   nothing moves under the pointer or the focus: while the pointer is over a column or the focus is inside it, its settle and moves wait
 //                       (the gap stays empty) until the pointer leaves or the focus goes, at most 10 s
 //   a stop leaves      answered or withdrawn, the stop in the hand fades where it stands (`useLeaving`, spec 58 §4), in the render its task changes; then the hand closes the gap
-//   the seal           a result merged from Waits for your look (spec 74 §1): its goal's element, 28 x 28, stamped on the card (scale 2 → 1, 0.4 → 1 in three steps over the first third, `arena-stamp`),
-//                       held while the card fades; the same FADE_MS. A dropped result keeps its ✗, one the filter took away no sign
-//   back               a result sent back (§2): its task is in the field again; the card moves 24 px toward the field, the left, as it fades (`data-sign="back"`, 3 steps, FADE_MS), no sign
+//   a result answered  a result to look at is the hand's card (docs/specs/90-what-the-first-look-said.md §2.3: no *Waits for your look*): merged, sent back or dropped, it leaves as a stop does
 //   crumble            a collision's line on the project's level, answered or withdrawn while the page is seen (§3, project.js): kept 0.42 s more as `.is-leaving`, its stroke breaks into
 //                       pixels and goes (3 steps, `arena-crumble`); not on the first read, none for a goal the filter hid, at once under reduced motion
 //   the System's look  a Tech party's System tab opened (docs/specs/89-the-tech-lens-system.md §6.3, systemmap.js): what changed since the device's last look plays once — the map stands as it was

@@ -201,11 +201,18 @@ def test_a_device_with_no_week_key_writes_it_and_shows_nothing_and_an_empty_week
     assert not errors and not errors2
 
 
+def _last_week(pg):
+    """*Last week*, under Spend in the top bar (docs/specs/90-what-the-first-look-said.md §2.3): in the limits' panel when the snapshot has limits, else beside Spend."""
+    if pg.locator(".shell-top__leftbtn").count() and not pg.locator(".shell-top__limits").count():
+        pg.locator(".shell-top__leftbtn").click()
+    pg.get_by_role("button", name="Last week", exact=True).click()
+
+
 def test_the_maps_last_week_link_shows_the_card_any_time_and_logs_via_map(gui):
     host = LastHost()
     host.last = {**LAST, "goals": [], "flags": [], "dearest": None, "fastest": None, "answers": None, "before": None, "usd_per_merged": None}
     pg, host, errors = _open_map(gui, host, ready=".arena-phead")
-    pg.get_by_role("button", name="Last week", exact=True).click()
+    _last_week(pg)
     card = pg.get_by_label("Last week")
     card.wait_for(timeout=WAIT_MS)
     assert [" ".join(p.text_content().split()) for p in card.locator(".away__lines p").all()] == ["23 results in dev, 19 the first time (83 %)",
@@ -213,7 +220,7 @@ def test_the_maps_last_week_link_shows_the_card_any_time_and_logs_via_map(gui):
     assert _sent(pg, host, ("ideas.log", {"event": "opened", "what": "week", "ref": "2026-W42", "device": "desktop", "via": "map"}))
     card.get_by_role("button", name="Close").click()
     host.last = {**host.last, "empty": True, "merged": 0, "first_time": 0, "nights": {"worked": 0, "idle": 0, "off": 0}}
-    pg.get_by_role("button", name="Last week", exact=True).click()
+    _last_week(pg)
     pg.get_by_label("Last week").get_by_text("Nothing was merged or finished.").wait_for(timeout=WAIT_MS)
     pg.close()
     assert not errors, "\n".join(errors)

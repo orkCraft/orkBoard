@@ -18,6 +18,7 @@ import { clearPicks, dropGather, gather, leaveParty, picks, solo } from "./arena
 import { reducedMotion } from "./motion.js";
 import { countTip, countWords, plural } from "./arenawords.js";
 import { gatherInto, partiesOf, shownOf } from "./goaltabs.js";
+import { GateLine } from "./gate.js";
 import { NewGoalPlus } from "./newgoal.js";
 import { THE_PROJECT } from "./projectwords.js";
 
@@ -148,6 +149,7 @@ export function PartyList({ body = null }) {
   return html`<aside class="arena-left" aria-label="Parties" ref=${root} onKeyDown=${move}>
     <div class=${cls("arena-left__proj", { "has-ork": !!ork, "is-open": level && !!ork })}>
       ${ork && html`<${Orkmaster} ork=${ork} open=${level} want=${want} />`}<${NewGoalPlus} want=${want} /><${ProjectSwitcher} /></div>
+    <${GateLine} />
     <div class="arena-plist" ref=${list} onScroll=${(e) => { scrolled = e.currentTarget.scrollTop; }}>
       ${ps.goals.map((x) => html`<section key=${x.g.slug} class=${cls("arena-party", { "is-open": open(x.g.slug) })}>
         <${Heading} x=${x} open=${open(x.g.slug)} want=${want} />

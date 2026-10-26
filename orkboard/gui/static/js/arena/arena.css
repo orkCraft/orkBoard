@@ -106,13 +106,13 @@
 .arena-new__words { display: flex; flex-direction: column; }
 .arena-new__words b { font: var(--ork-type-button); text-transform: uppercase; letter-spacing: 0.04em; color: var(--ork-action); }
 
-.arena-field { position: relative; flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr) 312px; grid-template-rows: auto 64px minmax(0, 1fr) 64px; }
+/* the field: the party's line, the table under it from the pane's top (docs/specs/90-what-the-first-look-said.md §4: its tabs and the members' faces on its wood), the hand along the bottom; no right column of
+   its own (spec 90 §2: what is opened is the window's right column, shell.css) */
+.arena-field { position: relative; flex: 1; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) 64px; }
 .arena-top { grid-column: 1 / -1; grid-row: 1; border-bottom: var(--ork-line) solid var(--ork-frame); }
-.arena-play { grid-column: 1; grid-row: 2 / 4; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.arena-play { grid-column: 1; grid-row: 2; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 .arena-body { position: relative; flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; }
-.arena-gatebox { grid-column: 2; grid-row: 2; }
-.arena-look { grid-column: 2; grid-row: 3; }
-.arena-stops { grid-column: 1 / -1; grid-row: 4; position: relative; z-index: 6; height: 64px; box-sizing: border-box; background: var(--ork-canvas); border-top: var(--ork-line) solid var(--ork-frame); }
+.arena-stops { grid-column: 1 / -1; grid-row: 3; position: relative; z-index: 6; height: 64px; box-sizing: border-box; background: var(--ork-canvas); border-top: var(--ork-line) solid var(--ork-frame); }
 
 /* -- the party line (36 px) and the flag line (36 px) --------------------------------------------------------------------------------- */
 .arena-ibar__bar { display: flex; align-items: center; gap: var(--ork-3); height: 36px; box-sizing: border-box; padding: 0 var(--ork-5) 0 var(--ork-6); }
@@ -146,6 +146,7 @@
 
 /* -- the columns: rows by phase, a stack per goal in a row ------------------------------------------------------------------------------ */
 .arena-cards { flex: none; padding: var(--ork-3) var(--ork-5); }
+.arena-cards:empty { display: none; }
 .arena-cols { flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; padding: 0 var(--ork-5); }
 .arena-cols__head { flex: none; display: grid; grid-template-columns: var(--cols); gap: var(--ork-4); align-items: center; height: 28px; }
 /* the field is one grid (spec 82 §2, glance.css): a track per member, the rows (label, cards) across them; a member's column is a subgrid of its rows */
@@ -205,17 +206,12 @@
 .arena-task.is-src { border-color: var(--ork-ink); background: var(--ork-raised); }
 .arena-task.is-src .arena-task__foot, .arena-task.is-after .arena-task__foot, .arena-task.is-before .arena-task__foot { color: var(--ork-ink); }
 .arena-task.is-after, .arena-task.is-before { border-color: var(--ork-ink); box-shadow: inset 0 0 0 1px var(--ork-ink); background: var(--ork-raised); }
-.arena-task.is-drawn, .arena-result.is-drawn { animation: arena-rise 0.36s steps(4) both; }
-.arena-task.is-leaving, .arena-result.is-leaving { position: relative; animation: arena-leave 0.3s steps(3) forwards; pointer-events: none; }
+.arena-task.is-drawn { animation: arena-rise 0.36s steps(4) both; }
+.arena-task.is-leaving { position: relative; animation: arena-leave 0.3s steps(3) forwards; pointer-events: none; }
 .arena-task__flash { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: var(--ork-panel); color: var(--ork-success); animation: arena-flash 0.3s steps(1) forwards; }
-.arena-task[data-sign="cross"] .arena-task__flash, .arena-result[data-sign="cross"] .arena-task__flash { color: var(--ork-danger); }
-.arena-task.is-gone, .arena-result.is-gone { visibility: hidden; pointer-events: none; }
-.arena-result[data-sign="check"] .arena-task__flash { animation: none; }                                    /* the seal (spec 74 §1): the panel is held while the card fades, the goal's element is stamped on it */
-.arena-result[data-sign="check"] .arena-task__flash .ork-elem { animation: arena-stamp 0.1s steps(3) both; }
-.arena-result[data-sign="back"].is-leaving { animation: arena-back 0.3s steps(3) forwards; }      /* sent back (spec 74 §2): 24 px toward the field, the left, as it fades */
+.arena-task[data-sign="cross"] .arena-task__flash { color: var(--ork-danger); }
+.arena-task.is-gone { visibility: hidden; pointer-events: none; }
 @keyframes arena-leave { to { opacity: 0; } }
-@keyframes arena-stamp { from { transform: scale(2); opacity: 0.4; } }
-@keyframes arena-back { to { opacity: 0; transform: translateX(-24px); } }
 @keyframes arena-flash { 0% { opacity: 1; } 34% { opacity: 0; } 100% { opacity: 0; } }
 @keyframes arena-rise { from { transform: translateY(60px); opacity: 0; } to { transform: none; opacity: 1; } }
 /* the deal (spec 57): a plan started from the hand deals its cards from the stop's box (--dx, --dy, --s set from it, --delay 35 ms apart) over the whole field; a card takes the pointer when it lands */
@@ -244,29 +240,11 @@
 .arena-arrow[data-kind="collide"] line { stroke: var(--ork-alert); stroke-dasharray: none; }           /* two goals that change the same thing (spec 71): a plain line in the signal's colour, no direction */
 .arena-arrow[data-kind="collide"] polygon { display: none; }
 
-/* -- Waits for your look (312 px) ----------------------------------------------------------------------------------------------- */
-.arena-look { min-height: 0; display: flex; flex-direction: column; border-left: var(--ork-line) solid var(--ork-frame); }
-.arena-look__head { flex: none; display: flex; align-items: center; gap: var(--ork-4); height: 28px; padding: 0 var(--ork-5); }
-.arena-look__list { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; padding: var(--ork-2) var(--ork-5) var(--ork-5); display: flex; flex-direction: column; gap: var(--ork-4); }
-.arena-look__list::-webkit-scrollbar { display: none; }
-.arena-look__list .ork-card { flex: none; }
-.arena-result { display: flex; flex-direction: column; gap: var(--ork-2); padding: 10px; flex: none; }
-.arena-result.is-dim { opacity: 0.45; }
-.arena-result__idea { display: flex; align-items: center; gap: var(--ork-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.arena-result__tests.is-success { color: var(--ork-success); }
-.arena-result__tests.is-danger { color: var(--ork-danger); }
-.arena-result__tests.is-muted { color: var(--ork-ink-muted); }
+/* -- a link in the text face (a goal's, a task's) ------------------------------------------------------------------------------------ */
 .arena-link { all: unset; box-sizing: border-box; cursor: pointer; font-weight: 600; overflow-wrap: anywhere; }
 .arena-link:hover { text-decoration: underline; }
 .arena-link:focus-visible { outline: 2px solid var(--ork-ink); }
-.arena-result .shell-actions { margin-top: var(--ork-2); }
-.arena-result .shell-round { color: var(--ork-ink-muted); }          /* a result is not a signal: no alert colour (decisions §54.1) */
-.arena-result .shell-actions__main { gap: var(--ork-3); }
-/* Canvases (spec 78 §3): the row above Waits for your look, folded; a card is a result's frame with the elf's small head, the kind in the pixel face's small caps, the title in the text face. Not a signal: no alert colour. */
-.arena-canvases { flex: none; max-height: 55%; overflow-y: auto; scrollbar-width: none; border-bottom: var(--ork-line) solid var(--ork-frame); }
-.arena-canvases::-webkit-scrollbar { display: none; }
-.arena-canvases__list { display: flex; flex-direction: column; gap: var(--ork-4); padding: var(--ork-2) var(--ork-5) var(--ork-4); }
-.arena-canvases__list .arena-frow { padding-left: 0; }
+/* Canvases (spec 78 §3), a kind of Assets (spec 90 §2.3): a card is a frame with the elf's small head, the kind in the pixel face's small caps, the title in the text face. Not a signal: no alert colour. */
 .arena-canvas { display: flex; flex-direction: column; gap: var(--ork-2); padding: 10px; flex: none; }
 .arena-canvas.is-drawn { animation: arena-rise 0.36s steps(4) both; }
 .arena-canvas__top { display: flex; align-items: center; gap: var(--ork-3); }
@@ -312,11 +290,13 @@
 .arena-member__nm { display: block; flex: 0 1 auto; min-width: 0; font: 600 12px/16px var(--ork-font-text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .arena-num { font: 600 11px/13px var(--ork-font-text); color: var(--ork-ink); white-space: nowrap; }
 .arena-num.is-muted { font-weight: 400; color: var(--ork-ink-muted); }
-.arena-gate { box-sizing: border-box; height: 100%; border-left: var(--ork-line) solid var(--ork-frame); border-bottom: var(--ork-line) solid var(--ork-frame); padding: 0 var(--ork-5); display: flex; flex-direction: column; justify-content: center; gap: var(--ork-2); }
-.arena-gate__row { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.arena-gate__row .arena-cap { flex: 1; min-width: 0; }
-.arena-gatebox { min-height: 0; }
-.arena-gate__btn { flex: none; height: 40px; font: 500 14px/16px var(--ork-font-pixel); text-transform: uppercase; letter-spacing: 0.04em; }
+/* the gate's quiet line under the project's line (spec 90 §2.3): what waits for main, where the results go; the merge itself is the hand's card */
+.arena-gateline { flex: none; display: flex; flex-direction: column; align-items: flex-start; gap: 0; padding: var(--ork-1) var(--ork-5) var(--ork-2); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.arena-gateline__main { appearance: none; max-width: 100%; padding: 0; border: 0; background: none; cursor: pointer; text-align: left; color: var(--ork-ink-muted); font: var(--ork-type-caption);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.arena-gateline.is-off .arena-gateline__main { color: var(--ork-ink-faint); }
+.arena-gateline__main:hover, .arena-gateline__main:focus-visible { color: var(--ork-ink); outline: 0; }
+.arena-gateline__main:focus-visible { box-shadow: 0 0 0 2px var(--ork-ink); }
 .arena-into { appearance: none; align-self: flex-start; display: inline-flex; align-items: center; gap: var(--ork-2); height: 16px; padding: 0; border: 0; background: none; cursor: pointer;
   color: var(--ork-ink-muted); font: var(--ork-type-caption); white-space: nowrap; }
 .arena-into:hover, .arena-into:focus-visible { color: var(--ork-ink); outline: 0; }
@@ -351,7 +331,7 @@
 .arena-pcard__foot { display: flex; align-items: center; min-height: 22px; }
 
 /* -- what waits for you: the fan along the bottom edge (64 px showing) -------------------------------------------------------------- */
-.arena-hand { position: absolute; left: 0; right: 312px; bottom: -182px; display: flex; justify-content: center; pointer-events: none; z-index: 8; }
+.arena-hand { position: absolute; left: 0; right: 0; bottom: -182px; display: flex; justify-content: center; pointer-events: none; z-index: 8; }
 .arena-hand__empty { position: absolute; left: 0; right: 0; top: -160px; text-align: center; pointer-events: none; }
 .arena-hc { pointer-events: auto; position: relative; flex: none; display: flex; flex-direction: column; width: 156px; height: 246px; margin: 0 calc(var(--ov, 14px) * -1); padding: var(--ork-3); box-sizing: border-box; z-index: var(--z);
   transform: translateY(var(--dy)) rotate(var(--rot)); transform-origin: 50% 100%; transition: transform 0.12s steps(3); }
@@ -364,6 +344,7 @@
 .arena-hc__top { display: flex; align-items: center; gap: var(--ork-3); }
 .arena-hc__kind { font: 500 12px/14px var(--ork-font-pixel); text-transform: uppercase; letter-spacing: 0.04em; color: var(--ork-alert); }
 .arena-hc__kind.is-no { color: var(--ork-danger); }
+.arena-hc[data-kind="result"] .arena-hc__kind, .arena-hc[data-kind="gate"] .arena-hc__kind { color: var(--ork-ink-muted); }   /* a result and the batch for main are not signals (decisions §54.1, spec 90 §2.3) */
 .arena-hc__who { margin-left: auto; display: inline-flex; }
 .arena-hc__kind { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .arena-hc.is-other .arena-hc__top { padding-right: 20px; }
@@ -458,12 +439,8 @@
 .arena-task.is-pick .arena-task__line { white-space: normal; }                         /* *asks you to pick* is two short lines on a card 128 px wide */
 .arena-hitem.is-alert { color: var(--ork-alert); }
 
-/* -- what is left of your AI tools (312 px, bottom right) -------------------------------------------------------------------------- */
-.arena-limits { position: absolute; right: 0; top: 0; bottom: 0; width: 312px; box-sizing: border-box; border-left: var(--ork-line) solid var(--ork-frame); padding: var(--ork-2) var(--ork-5); display: flex; flex-direction: column;
-  overflow-y: auto; scrollbar-width: none; z-index: 9; background: var(--ork-canvas); }
-.arena-limits > :first-child { margin-top: auto; }
-.arena-limits > :last-child { margin-bottom: auto; }
-.arena-limits::-webkit-scrollbar { display: none; }
+/* -- what is left of your AI tools, under Spend in the top bar (spec 90 §2.3; the panel is shell.css `.shell-top__limits`) ------------------- */
+.arena-limits { display: flex; flex-direction: column; gap: var(--ork-2); }
 .arena-limit { display: flex; align-items: center; gap: var(--ork-4); flex: none; font: var(--ork-type-caption); line-height: 14px; }
 .arena-limit__name { display: inline-flex; align-items: center; gap: var(--ork-2); width: 96px; flex: none; color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .arena-limit b { font-weight: 600; font-variant-numeric: tabular-nums; }
@@ -513,15 +490,11 @@
 /* -- below 1 024 px: no strip, the left column 200 px, the results in the bottom row, the columns scroll sideways ------------------------ */
 @media (max-width: 1023px) {
   .arena-left { width: 200px; }
-  .arena-field { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto 64px; }
-  .arena-play { grid-row: 2; overflow-x: auto; }
+  .arena-play { overflow-x: auto; }
   .arena-cols, .arena-team { min-width: max-content; }
-  .arena-gatebox { grid-column: 1; grid-row: 3; }
-  .arena-gate { height: auto; border-left: 0; border-bottom: 0; border-top: var(--ork-line) solid var(--ork-frame); padding: var(--ork-3) var(--ork-5); }
-  .arena-gate__btn { width: auto; height: 32px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .arena-task.is-drawn, .arena-result.is-drawn, .arena-task.is-leaving, .arena-result.is-leaving, .arena-task__flash { animation: none; }
+  .arena-task.is-drawn, .arena-task.is-leaving, .arena-task__flash { animation: none; }
   .arena-hc { transition: none; }
   .arena-stk .arena-task.is-dealt, .arena-hc.is-leaving { animation: none; }
   .arena-flagfly, .arena-flagline__el.is-coming, .arena-flagline.is-raising, .arena-flagline.is-raising .arena-flagline__flag, .arena-flagline.is-raising .arena-flagline__main,
@@ -529,7 +502,6 @@
   .arena-tport.is-struck, .arena-tport.is-struck .ork-race__head, .arena-tport.is-calling, .arena-tport.is-calling .arena-sign { animation: none; }
   .arena-new__card, .arena-type__front, .arena-type__face { transition: none; }
   .arena-arrow line, .arena-arrow polyline, .arena-arrow polygon, .arena-arrow.is-leaving line, .arena-arrow.is-leaving polyline { animation: none; }
-  .arena-result[data-sign="check"] .arena-task__flash .ork-elem, .arena-result[data-sign="back"].is-leaving { animation: none; }
   .arena-stars i.is-ink { animation: none; opacity: 0.6; }
   .arena-canvas.is-drawn { animation: none; }
 }
