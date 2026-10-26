@@ -38,7 +38,7 @@ def test_a_task_that_appears_rises_a_merged_one_fades_with_its_check_and_the_col
     pg.mouse.move(5, 5)
     pg.locator(".arena-task[data-task=k2]").wait_for(state="detached", timeout=WAIT_MS)                            # then the column settles
     _settle(pg)
-    pg.wait_for_function("() => document.getAnimations().filter((a) => a.animationName !== 'ork-busy').length === 0", timeout=WAIT_MS)
+    pg.wait_for_function("() => document.getAnimations().filter((a) => !String(a.animationName || '').startsWith('ork-busy')).length === 0", timeout=WAIT_MS)
     assert pg.locator(".arena-stk[data-goal=register] .arena-stk__n").count() == 0 and pg.locator(".arena-task[data-task=k1]").count() == 1           # the stack is one card now: k1
     assert pg.locator(".arena-task[data-task=k5]").bounding_box()["y"] < behind                                   # and the row behind it stepped up toward the member
     assert "2 in dev" in pg.locator(".arena-stack[data-agent=backend] .arena-stack__done").inner_text()           # and the count of what merged goes up
@@ -218,5 +218,5 @@ def test_under_reduced_motion_no_head_is_struck_and_none_calls(gui):
     pg.wait_for_function("() => document.querySelector('.arena-member[data-agent=words] .arena-sign')", timeout=WAIT_MS)
     pg.wait_for_timeout(500)
     assert pg.evaluate(MOMENTS) == [] and _sign(pg, "screens") == "cross" and _sign(pg, "words") == "alert"                # the signs are there, nothing plays
-    assert pg.evaluate("document.getAnimations().filter((a) => a.animationName !== 'ork-busy').length") == 0
+    assert pg.evaluate("document.getAnimations().filter((a) => !String(a.animationName || '').startsWith('ork-busy')).length") == 0
     pg.close()
