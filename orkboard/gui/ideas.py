@@ -49,7 +49,7 @@ from typing import Any, Callable
 
 from orkboard import settings
 from orkboard.core import idea_keeper
-from orkboard.realm import board_map, event_log, idea_checks, idea_lens, idea_photos, idea_route, idea_secrets, idea_target, ideas, pitches, wiki
+from orkboard.realm import board_map, event_log, idea_checks, idea_lens, idea_photos, idea_route, idea_secrets, idea_target, ideas, party_recipes, pitches, wiki
 from orkboard.gui.ideas_args import VIA, IdeasError, _device, _opt, _text
 from orkboard.gui.ideas_board import BoardMixin
 from orkboard.gui.ideas_assets import AssetsMixin, asset_commands
@@ -65,6 +65,7 @@ from orkboard.gui.ideas_project import ProjectMixin
 from orkboard.gui.ideas_recap import RecapMixin
 from orkboard.gui.ideas_release import ReleaseMixin
 from orkboard.gui.ideas_review import ReviewMixin
+from orkboard.gui.ideas_running import RunningMixin
 from orkboard.gui.ideas_revise import ReviseMixin
 from orkboard.gui.ideas_lens import LensMixin
 from orkboard.gui.ideas_limits import LimitsMixin
@@ -108,7 +109,7 @@ class _Hop:
         self.host.call(lambda: self.host.publish(topic, **data))
 
 
-class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, TrackMixin, ReviewMixin, ReviseMixin,
+class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
             TypesMixin, CanvasesMixin, AssetsMixin, SystemMixin, BoardMixin):
     def __init__(self, host) -> None:
         """`host`: what the Board needs of whoever runs it, a `gui/board_host.py` `BoardHost` (spec 37 §4): Orkline's
@@ -265,6 +266,7 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
                     runner.tick()
                 except Exception as e:
                     self.host.toast(f"{type(e).__name__}: {e}", title="The runner", severity="error")
+        self.routines_tick(now)                 # a recurring goal that was done a period ago comes back (spec 92 §2)
         self.canvas_tick(now)                   # what the AI tools drew outside the code (spec 78)
         self.play_tick(now)                     # Play stops after ten minutes with no face asking (spec 88 §5)
 
@@ -371,6 +373,8 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
             raise IdeasError("A goal needs a party")
         if track not in goals:
             raise IdeasError("That party is gone")
+        if goals[track].get("recipe") == party_recipes.TEAM_ID:
+            raise IdeasError("Team holds your Operations, not goals: add the goal to another party")          # spec 92 §3
         priority = _opt(args, "priority").lower() or goals[track]["priority"]
         if priority not in ideas.PRIORITIES:
             raise IdeasError("Priority is High, Normal or Low")
@@ -624,6 +628,6 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
                       "ideas.pitch_pass": self.pitch_pass,
                       "ideas.release_out": self.release_out, "ideas.release_candidates": self.release_candidates, "ideas.shown": self.shown,
                       "ideas.party_for": self.party_for, "ideas.kind_for": self.kind_for, "ideas.collide_answer": self.collide_answer,
-                      "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, "ideas.party_presets": self.party_presets, **canvas_commands(self), **asset_commands(self), **system_commands(self), **usage_commands(self)})
+                      "ideas.repeat": self.repeat, "ideas.team": self.team, "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, "ideas.party_presets": self.party_presets, **canvas_commands(self), **asset_commands(self), **system_commands(self), **usage_commands(self)})
         return {name: guarded(name, fn) for name, fn in table.items()}
 

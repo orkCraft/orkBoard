@@ -94,7 +94,7 @@ class ProjectMixin:
         stages (Ideation, Concept, Build, Release, LiveOps), the crafts and the person's own, each with its leader, its builders and checkers and its three sizes' teams and tiers
         (realm/party_presets.py). It writes nothing."""
         kind, _facts = self.kind_now()
-        return {"kind": {"id": kind["id"], "words": kind["words"]}, "presets": party_presets.listed(kind["id"])}
+        return {"kind": {"id": kind["id"], "words": kind["words"]}, "presets": party_presets.listed(kind["id"], self.team_at())}
 
     # -- a party's AI tool and its size's team (spec 81) ---------------------------------------------------------------------------------
 

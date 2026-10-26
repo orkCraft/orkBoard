@@ -216,7 +216,12 @@ TERMS: tuple[Term, ...] = (
     _t("scribble", "note", "notes", "scribble", "scribbles"),       # a goal or a note on the board
     # Operations (docs/specs/38-operations.md §0): the person's everyday work by templates, across projects
     _t("keep_awake", "Keep the computer awake"),                   # the computer does not sleep by itself, on power (spec 47 §0)
-    _t("operations", "Operations"),                                # the person's list, one for all projects; not a party
+    _t("operations", "Operations"),                                # the person's list, one for all projects (decisions §51); reached through the Team party once there is one, and in the left column until then (spec 92 §3)
+    _t("team_party", "Team"),                                      # a party that holds the person's Operations, put in one project of their choosing; only one across all of them (spec 92 §3). Not `team`, a party's agents
+    _t("run", "Run"),                                              # a project's running when it runs: an app, a site, a service, code, data; a stage party by the project's kind, with recurring goals (spec 92 §1)
+    _t("upkeep", "Upkeep"),                                        # a project's running when it is kept true: a wiki, a design, texts (spec 92 §1)
+    _t("liveops", "LiveOps"),                                      # a game's running, after launch: events, numbers, small fixes (spec 91 §7); Run and Upkeep are the other kinds'
+    _t("recurring_goal", "recurring goal", "recurring goals"),     # a goal that comes back every day, week or month once it is done; a running party proposes some when it is made (spec 92 §2; realm/recurring.py)
     _t("operation", "operation", "operations"),                    # one piece of it, from one template
     _t("op_template", "template", "templates"),                    # a Claude skill with Orkboard's manifest beside it
     _t("op_check", "check", "checks"),                             # the person's look before its action

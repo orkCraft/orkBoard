@@ -31,6 +31,8 @@ export function makeArena(core, ctx, parts) {
     window.scrollTo(0, 0);
   }
   function pickOps() {
+    const team = st.snap?.ops_team;                               // once there is a Team party it is the way to Operations (spec 92 §3); in another project there is nothing to show here
+    if (team) { if (team.here) pickGoal(team.party); return; }
     Object.assign(st, { view: OPS_VIEW, focus: "" });
     core.draw();
   }
@@ -85,9 +87,9 @@ export function makeArena(core, ctx, parts) {
   }
 
   // -- Operations in the field's place ------------------------------------------------------------------------------------------------------------------------
-  function opsView() {
+  function opsView(team = false) {
     const gear = h("button", { class: "ork-btn gear", type: "button", "aria-haspopup": "dialog", "aria-label": "Operations settings", onclick: () => ops.openGear() }, "Settings");
-    return h("div", { class: "ops-view" }, h("div", { class: "pane-head" }, h("h2", {}, "Operations"), h("div", { class: "row" },
+    return h("div", { class: "ops-view", ...(team ? { "data-team": "true" } : {}) }, h("div", { class: "pane-head" }, h("h2", {}, "Operations"), h("div", { class: "row" },
       h("button", { class: "ork-btn", type: "button", "aria-haspopup": "dialog", onclick: () => ops.openMenu() }, "New…"), gear, core.partyDeck())), ...ops.section());
   }
 
@@ -107,10 +109,12 @@ export function makeArena(core, ctx, parts) {
     if (st.mapError && !st.map) { el.replaceChildren(...lead, h("p", { class: "muted arena-empty" }, st.mapError)); return; }
     const slug = shownGoal(st, keptGoal(st.snap?.project));
     if (slug && slug !== st.track) st.track = slug;
-    const m = st.view === OPS_VIEW ? null : modelOf(st, slug);
+    const onTeam = core.parties().onTeam;                       // the Team party is the party shown: its field is the person's Operations (spec 92 §3)
+    const m = st.view === OPS_VIEW || onTeam ? null : modelOf(st, slug);
     current = m;
     todayOf(slug, m);
     if (st.view === OPS_VIEW) { el.replaceChildren(...lead, opsView()); return; }
+    if (onTeam) { el.replaceChildren(...lead, opsView(true)); return; }
     if (!m) { el.replaceChildren(...lead, needsGoal()); return; }
     if (isIdeation(m.goal)) {                                // Ideation: its pitches by its three stages take the columns' place (spec 65 §8)
       el.replaceChildren(...[...lead, goals.bar(m, party.gate(), core.partyDeck()), party.line(slug), pitches.draw(m)].filter(Boolean));

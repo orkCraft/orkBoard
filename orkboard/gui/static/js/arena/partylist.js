@@ -46,15 +46,15 @@ const leaderOf = (g) => g.leader?.name || (g.party || []).find((m) => m.band ===
 function Heading({ x, open, want }) {
   const { g, nodes, working } = x, name = g.short || g.title, stops = open ? 0 : x.stops, leads = `${leaderOf(g)} leads`;
   const lead = g.leader?.slug || "taskmaster", alone = open && solo.value === lead;        // the open heading is its leader's: a press shows only its work (spec 73 §2)
-  const press = () => (open ? (solo.value = alone ? "" : lead) : show(g.slug, want));
+  const press = () => (open ? (g.ops ? null : (solo.value = alone ? "" : lead)) : show(g.slug, want));        // the Team party has no work of a leader's to show alone: its Board is Operations.
   return html`<button type="button" class=${cls("arena-phead", { "is-open": open })} data-goal=${g.slug} data-state=${open ? "open" : "closed"} aria-expanded=${open} aria-current=${open ? "true" : undefined}
       aria-pressed=${open ? String(alone) : undefined}
-      title=${open ? `${name} · ${leads} · ${countTip(g, nodes)}` : `Open ${name}`} onClick=${press}>
+      title=${open ? `${name} · ${leads}${g.ops ? "" : ` · ${countTip(g, nodes)}`}` : `Open ${name}`} onClick=${press}>
     <span class="arena-plist__head">${g.leader?.head ? html`<${Head} race=${g.leader.head.race} tier=${g.leader.head.tier} />` : null}</span>
     ${open ? html`<span class="arena-phead__who"><span class="arena-phead__name" title=${g.title}>${name}</span><span class="arena-phead__leads">${leads}</span></span>`
       : html`<span class="arena-phead__name" title=${g.title}>${name}</span>`}
     ${working && html`<span class="arena-phead__work"><${Sign} name="work" label="at work" /></span>`}
-    <span class="arena-phead__count" title=${countTip(g, nodes)}>${countWords(g, nodes)}</span>
+    ${!g.ops && html`<span class="arena-phead__count" title=${countTip(g, nodes)}>${countWords(g, nodes)}</span>`}
     <${WaitSign} n=${stops} failed=${x.failed} name=${name} />
   </button>`;
 }
@@ -156,7 +156,8 @@ export function PartyList({ body = null }) {
         <${PartyMenu} slug=${x.g.slug} name=${x.g.short || x.g.title}><${Heading} x=${x} open=${open(x.g.slug)} want=${want} /><//>
         ${open(x.g.slug) ? body : html`<${AtWork} x=${x} want=${want} />`}
       </section>`)}
-      ${ps.ops && html`<section class=${cls("arena-party", { "is-open": want === OPS })}><${OpsHeading} ps=${ps} open=${want === OPS} want=${want} /></section>`}
+      ${ps.ops && html`<section class=${cls("arena-party", { "is-open": want === OPS })}><${OpsHeading} ps=${ps} open=${want === OPS} want=${want} />
+        <button type="button" class="arena-pmake" title="Operations stay yours, in every project: a Team party is the way to them, put in the project you choose" onClick=${() => openDialog("goal", { preset: "team" })}>Make it a Team party</button></section>`}
       <button type="button" class="arena-pnew" title="One of yours, or its leader, builders and checkers from the library" onClick=${() => openDialog("goal")}>
         <span class="arena-plist__head arena-plist__icon"><${Icon} name="plus" /></span><span class="arena-phead__name">New party</span></button>
     </div>

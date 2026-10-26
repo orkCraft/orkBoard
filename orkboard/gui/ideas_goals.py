@@ -90,6 +90,10 @@ class GoalsMixin:
         if about is not None and not isinstance(about, str) or not isinstance(title, str):
             raise IdeasError("about is not text")
         before = next((t for t in ideas.tracks(self.root(), make=False) if t["slug"] == slug), None) if slug else None
+        recipe = _opt(args, "proposal") or _opt(args, "preset")
+        if not slug and recipe == party_recipes.TEAM_ID:
+            self.team_refuse()                                 # one Team party across the person's projects (spec 92 §3)
+        routines = self.routines_asked(args, recipe) if not slug else []        # the running party's recurring goals the person kept (spec 92 §2)
         metrics, links = args.get("metrics"), args.get("links")
         if metrics is not None and not isinstance(metrics, list) or links is not None and not isinstance(links, list):
             raise IdeasError("Metrics and links are lists")
@@ -158,12 +162,14 @@ class GoalsMixin:
             self._tiers_kept(got)                           # a party with a size: its seats' tiers follow its team (spec 81 §2)
         if "releases_from" in args:                          # a Release party's sources (spec 68 §3.2)
             self.save_releases_from(got, args["releases_from"])
+        if before is None and (routines or recipe == party_recipes.TEAM_ID):
+            self.running_made(got, recipe, routines, args)       # Team's note and recipe; the recurring goals added (spec 92)
         g = next(t for t in ideas.tracks(self.root(), make=False) if t["slug"] == got)
         self._ev(event_log.GOAL_SAVED, args, goal=got, new=new, preset=self._preset_kept(args, g), metrics=[m["name"] for m in g["metrics"]], links=g["links"],
                  priority=g["priority"], craft=g["craft"], team=g["team"], every=g["every"], leader=g["leader"] or roles.TASKMASTER,
                  party=goal_team.party_of(self.root(), got), tool=g["tool"], tools=[f"{a}:{t}" for a, t in g["tools"].items()])
-        if new or before is None or _what_it_says(before) != _what_it_says(g):
-            self._read_goal(got)                      # a save of its party alone reads nothing again (spec 41 §7)
+        if (new or before is None or _what_it_says(before) != _what_it_says(g)) and not (before is None and recipe == party_recipes.TEAM_ID):    # the Team party has nothing for the keeper to read
+            self._read_goal(got)                    # a save of its party alone reads nothing again (spec 41 §7)
         self.changed(f"goal:{got}")
         return {"slug": got, **({"notes": notes} if notes else {})}
 

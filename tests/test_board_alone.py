@@ -76,7 +76,7 @@ def test_orkboards_wiki_is_the_setting_else_the_general_one(fake_repo):
 
 def test_the_snapshot_holds_only_what_the_shell_reads(host):
     snap = host.snapshot()
-    assert set(snap) == {"focus", "onboarding", "ideas_rev", "ops_rev", "needs_you", "idea_states", "review_count",
+    assert set(snap) == {"focus", "onboarding", "ideas_rev", "ops_rev", "ops_team", "needs_you", "idea_states", "review_count",
                          "review_results", "limits", "reserve", "rate", "hud", "repo", "projects", "update",
                          "update_policy", "version", "usage_ask",          # Settings → Updates, the first screen's ask
                          "canvases_new", "canvases_rev",                   # spec 78 §3: the Canvases row
