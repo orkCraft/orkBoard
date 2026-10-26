@@ -465,7 +465,7 @@ def test_under_reduced_motion_nothing_about_a_pick_animates(gui):
 def test_the_sheets_give_a_pick_no_transition_and_no_animation_to_begin_with():
     from orkboard.gui import server
     css = (server.STATIC / "js" / "arena" / "arena.css").read_text(encoding="utf-8")
-    start, end = css.index("/* -- Pick one"), css.index("/* -- what is left of your AI tools")
+    start, end = css.index("/* -- Pick one"), css.index("/* -- Ideation's line")          # the limits that followed moved to limits.css (spec 91 B)
     mine = css[start:end]
     assert "transition" not in mine and "animation" not in mine and "@keyframes" not in mine
     assert "image-rendering: pixelated" in mine and "object-fit: contain" in mine                                  # the picture's two rules of §5
