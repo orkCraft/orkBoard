@@ -101,7 +101,7 @@ class TaskMixin:
     def _paced_elsewhere(self, slug: str) -> bool:
         """Another plan of the project already runs by day because the week had room (it is not finished)."""
         for other in self._active:
-            if other != slug and ((p := self.plan(other)) or {}).get("by_pace") and not all(t.get("state") in ("merged", "failed") for t in p["tasks"]):
+            if other != slug and ((p := self.plan(other)) or {}).get("by_pace") and not all(t.get("state") in ("merged", "failed", "dropped") for t in p["tasks"]):
                 return True
         return False
 

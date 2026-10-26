@@ -38,6 +38,9 @@ def test_each_event_is_one_row_with_its_mark_tone_words_and_what_a_click_opens()
         got = one("result_decided", **k1, decision=decision)
         assert (got["mark"], got["tone"], got["words"], got["title"]) == ("↺", "muted", "sent back", "Queue writes")
         assert got["open"] == {"kind": "result", "slug": "sync", "task": "k1"}
+    got = one("task_state", **k1, state="dropped", was="failed")          # a failed task dropped has this row; one dropped at Review has `result_decided`'s
+    assert (got["mark"], got["tone"], got["words"], got["open"]["kind"]) == ("✗", "muted", "dropped", "task")
+    assert board_today.rows([line("task_state", **k1, state="dropped", was="review")], TITLES) == []
     got = one("result_decided", **k1, decision="drop")
     assert (got["mark"], got["tone"], got["words"], got["open"]["kind"]) == ("✗", "muted", "dropped", "task")
     assert one("plan_passed", idea="sync", tasks=2) == {

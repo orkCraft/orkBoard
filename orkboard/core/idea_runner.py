@@ -39,7 +39,7 @@ from orkboard.core.idea_session import SessionMixin
 from orkboard.core.idea_review import BACK, STOP_ONE, STOPPED_NOTE, ReviewMixin, RunnerError  # noqa: F401
 from orkboard.core.idea_shot import ShotMixin
 from orkboard.core.idea_task import FINDINGS_ASK, NO_DIFF, NO_FINDINGS, NO_RUN, TaskMixin, is_check, is_pick
-from orkboard.realm import task_commands, event_log, goal_team, halt, harnesses, idea_checks, idea_pick, idea_target, ideas, project_map, roles, status, tool_errors
+from orkboard.realm import task_commands, event_log, goal_team, goal_types, halt, harnesses, idea_checks, idea_pick, idea_target, ideas, project_map, roles, status, tool_errors
 from orkboard.realm.idea_git import BOARD_PAGE, CRITICAL_TESTS, Conflict, IdeaGit, env_name, has_summary, parse_tests, read_secret, spec_paths  # noqa: F401
 
 CHANGED = "ideas.changed"          # slug: an idea's state or one of its tasks changed
@@ -241,10 +241,11 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
             plan = self.plan(slug)
             if plan is None:
                 raise RuntimeError(f"no plan for {slug!r}")
+            self._retire_dropped(plan["tasks"])
             for t in plan["tasks"]:
                 if (slug, t.get("id")) in self._runs:
                     continue
-                if t.get("state") not in ("merged", "review", "picking"):      # a pick that waits keeps its variants
+                if t.get("state") not in ("merged", "review", "picking", "dropped"):      # a pick that waits keeps its variants; a dropped task is gone
                     t.update(state="waiting", error="", note="")
                     for key in ("held_for", "held_until", "held_line"):
                         t.pop(key, None)
@@ -289,7 +290,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
 
     def tick(self) -> None:
         """Move what can move: waiting → ready, a held task whose window came back, a free slot → a task starts,
-        an idea whose tasks are all merged → done, one with a failed task (and none running) → failed."""
+        an idea whose tasks are all merged or dropped → done, one with a failed task (and none running) → failed."""
         now = time.time()
         with self._lock:
             limits = self._read_limits(now)
@@ -302,7 +303,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                 tasks, changed = plan["tasks"], self._advance(slug, plan, now, limits)
                 running = [t for t in tasks if (slug, t.get("id")) in self._runs]
                 failed = next((t for t in tasks if t.get("state") == "failed"), None)
-                if failed is not None or all(t.get("state") == "merged" for t in tasks):
+                if failed is not None or all(t.get("state") in goal_types.GONE for t in tasks):
                     if changed:
                         self._save_tasks(slug, tasks)
                     if not running:
@@ -413,7 +414,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
         tasks = plan["tasks"]
         merged = {t.get("id") for t in tasks if t.get("state") == "merged"}
         todos = [d for d in plan.get("todos") or [] if isinstance(d, dict)]
-        changed = False
+        changed = self._retire_dropped(tasks)
         for t in tasks:
             tid, state = t.get("id"), t.get("state")
             if state == "held" and t.get("held_for") == "sign_in":
@@ -454,7 +455,8 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
     def _finish(self, slug: str, failed: dict | None) -> None:
         self._active.remove(slug)
         if failed is None:
-            self._set_idea(slug, "done")
+            tasks = (self.plan(slug) or {}).get("tasks") or []
+            self._set_idea(slug, "plan" if tasks and not any(t.get("state") == "merged" for t in tasks) else "done")       # all dropped: nothing landed, nothing to run
         else:
             why = failed.get("error") or "it failed"
             self._set_idea(slug, "failed", f"{failed.get('title') or failed.get('id')}: {why}")

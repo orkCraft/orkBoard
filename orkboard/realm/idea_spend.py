@@ -28,6 +28,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 STAGES = ("goal", "spec", "plan", "work", "rework", "dropped")
+ENDED = ("merged", "failed", "dropped")        # the states a task that ended is in
 STEP_STAGE = {"goal": "goal", "refresh": "goal", "draft": "spec", "answer": "spec", "talk": "spec", "plan": "plan",
               "pitch_view": "spec", "pitch_case": "spec", "pitch_decide": "spec", "collide": "plan"}     # a pitch's judging is its spec's stage (spec 65 §3)
 TOKEN_KEYS = ("in", "out", "cache_read", "cache_write")
@@ -204,10 +205,10 @@ def _stages(rows: list[dict], failed: Callable[[dict], bool]) -> dict[str, dict]
 
 def of_idea(state_dir: Path, slug: str) -> dict:
     """{"usd", "unpriced", "stages": {stage: {"usd", "tokens", "calls"}}, "tasks": {tid: {"usd", "work", "rework"}}}:
-    a task that ended `failed` (dropped or failed) counts in *dropped*, not in work or rework."""
+    a task that ended `failed` or `dropped` counts in *dropped*, not in work or rework."""
     rows = read(Path(state_dir) / "ideas" / slug / FILE) if _SLUG.fullmatch(slug or "") else []
     tasks = _tasks(_plan(state_dir, slug))
-    failed = {tid for tid, t in tasks.items() if t.get("state") == "failed"}
+    failed = {tid for tid, t in tasks.items() if t.get("state") in ("failed", "dropped")}
     per: dict[str, list[dict]] = {}
     for r in rows:
         if r.get("step") in ("task", "fix") and r.get("task"):
@@ -232,7 +233,7 @@ def of_goal(state_dir: Path, slug: str, idea_slugs: list[str] | tuple = ()) -> d
         merged += sum(1 for t in tasks.values() if t.get("state") == "merged")
         for r in read(Path(state_dir) / "ideas" / idea / FILE):
             rows.append(r)
-            if (tasks.get(str(r.get("task") or "")) or {}).get("state") == "failed":
+            if (tasks.get(str(r.get("task") or "")) or {}).get("state") in ("failed", "dropped"):
                 failed.add(id(r))
     total = usd(rows)
     return {"usd": total, "unpriced": sum(1 for r in rows if _num(r.get("cost")) is None),
@@ -291,17 +292,17 @@ def between_file(path: Path, since: dt.datetime, now: dt.datetime) -> float | No
 
 
 def _finished(state_dir: Path, gone: list[dict]) -> dict[tuple[str, str], dict]:
-    """(idea, task) → {"state", "finished", "round", "role"} of every task that ended (merged or failed): the plans'
+    """(idea, task) → {"state", "finished", "round", "role"} of every task that ended (merged, failed or dropped): the plans'
     and the deleted ideas' (from their lines in `spend-gone.jsonl`)."""
     out = {}
     for path in sorted((Path(state_dir) / "ideas").glob("*/plan.json")):
         for tid, t in _tasks(_plan(state_dir, path.parent.name)).items():
-            if t.get("state") in ("merged", "failed"):
+            if t.get("state") in ENDED:
                 out[(path.parent.name, tid)] = {"state": t["state"], "finished": str(t.get("finished") or ""),
                                                 "round": int(t.get("round") or 1), "role": str(t.get("role") or "grunt")}
     for r in gone:
         key = (str(r.get("idea") or ""), str(r.get("task") or ""))
-        if r.get("ended") in ("merged", "failed") and key[1] and key not in out:
+        if r.get("ended") in ENDED and key[1] and key not in out:
             out[key] = {"state": r["ended"], "finished": str(r.get("finished") or ""),
                         "round": int(r.get("last_round") or 1), "role": str(r.get("role") or "grunt")}
     return out
@@ -359,7 +360,7 @@ def tier_costs(state_dir: Path, last: int = LEARN_LAST) -> dict[str, float]:
     for path in sorted((Path(state_dir) / "ideas").glob("*/plan.json")):
         for t in _tasks(_plan(state_dir, path.parent.name)).values():
             cost = _num(t.get("cost"))
-            if t.get("state") in ("merged", "failed") and t.get("ran_tier") and cost is not None:
+            if t.get("state") in ENDED and t.get("ran_tier") and cost is not None:
                 runs.setdefault(str(t["ran_tier"]), []).append((str(t.get("finished") or ""), float(cost)))
     out = dict(plans.DEFAULT_COST)
     for tier, got in runs.items():

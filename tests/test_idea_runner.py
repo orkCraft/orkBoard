@@ -543,7 +543,7 @@ def test_a_conflict_found_at_merge_stays_at_review_and_fix_resolves_it(town, mon
     assert git(town.repo, "show", "dev:k1.txt") == "resolved"
 
 
-def test_drop_fails_the_task_removes_its_worktree_and_keeps_its_branch(town):
+def test_drop_ends_the_task_as_dropped_removes_its_worktree_and_keeps_its_branch(town):
     plan_of(town, [{"id": "k1"}])
     runner, _ = reviewing(town)
     runner.start("demo")
@@ -551,11 +551,102 @@ def test_drop_fails_the_task_removes_its_worktree_and_keeps_its_branch(town):
     assert list((town.repo / ".orkcraft" / "worktrees").glob("*"))
     runner.drop_task("demo", "k1")
     task = tasks_of(town)["k1"]
-    assert task["state"] == "failed" and task["error"] == "dropped by you"
+    assert task["state"] == "dropped" and task["error"] == "dropped by you"          # gone from the plan, not failed
     assert not list((town.repo / ".orkcraft" / "worktrees").glob("*"))
     assert git(town.repo, "branch", "--list", "idea/demo/k1")
     state = json.loads((town.state / "ideas" / "demo" / "state.json").read_text())
-    assert state["state"] == "failed" and "dropped by you" in state["error"]
+    assert state["state"] == "plan" and state["error"] == ""                           # its only task gone, nothing merged: no failure, nothing to run
+
+
+def goal_state(town, slug: str = "demo") -> dict:
+    return json.loads((town.state / "ideas" / slug / "state.json").read_text())
+
+
+def hand_of(town, slug: str = "demo") -> list[str]:
+    """The kinds of stop the goal has in the hand (realm/board_map.py `idea_needs`), read from its files."""
+    from orkboard.realm import board_map, ideas
+    plan = json.loads((town.state / "ideas" / slug / "plan.json").read_text())
+    i = {"slug": slug, "track": "general", "title": "Demo", "priority": "normal"}
+    return [n["kind"] for n in board_map.idea_needs(town.repo, town.state, i, goal_state(town, slug), plan, [], at="x")]
+
+
+def test_dropping_the_failed_task_frees_what_waited_for_it_and_the_goal_goes_on(town, monkeypatch):
+    """The owner's 26 October: k1 failed, k2 and k3 waited for it for ever, the goal stayed failed and its card stayed in the hand
+    after Drop."""
+    monkeypatch.setenv("STUB_MODE", "k1=nocommit")
+    plan_of(town, [{"id": "k1"}, {"id": "k2", "after": ["k1"]}, {"id": "k3", "after": ["k1", "k2"]}])
+    runner, _ = runner_of(town)
+    runner.start("demo")
+    assert wait_idle(runner)["state"] == "failed" and hand_of(town) == ["failed"]
+    assert tasks_of(town)["k2"]["state"] == "waiting"
+    runner.drop_task("demo", "k1")
+    assert tasks_of(town)["k1"]["state"] == "dropped" and tasks_of(town)["k1"]["error"] == "dropped by you"
+    assert tasks_of(town)["k2"]["after"] == [] and tasks_of(town)["k3"]["after"] == ["k2"]        # nothing waits for k1 any more
+    assert goal_state(town)["state"] in ("working", "done") and hand_of(town) == []
+    assert wait_idle(runner)["state"] == "done"
+    tasks = tasks_of(town)
+    assert tasks["k1"]["state"] == "dropped" and tasks["k2"]["state"] == tasks["k3"]["state"] == "merged"
+    assert [c["tid"] for c in calls(town)] == ["k1", "k1", "k2", "k3"] and hand_of(town) == []        # k1's turn and its one fix, never again
+
+
+def test_a_goal_that_failed_over_a_dropped_task_is_working_again_with_no_failed_stop(town, monkeypatch):
+    monkeypatch.setenv("STUB_MODE", "k1=nocommit")
+    plan_of(town, [{"id": "k1"}, {"id": "k2", "after": ["k1"]}])
+    runner, _ = reviewing(town)
+    runner.start("demo")
+    assert wait_idle(runner)["state"] == "failed"
+    runner.drop_task("demo", "k1")
+    wait_task(runner, "k2", "review")
+    assert goal_state(town) == {"state": "working", "error": ""} and hand_of(town) == []         # k2 waits for the person at Review, nothing failed
+    assert tasks_of(town)["k2"]["after"] == []
+
+
+def test_a_goal_whose_last_tasks_are_dropped_is_done_where_something_merged_else_it_returns_to_its_plan(town):
+    plan_of(town, [{"id": "k1"}, {"id": "k2", "after": ["k1"]}])
+    runner, _ = reviewing(town)
+    runner.start("demo")
+    wait_task(runner, "k1", "review")
+    runner.merge("demo", "k1")
+    wait_task(runner, "k2", "review")
+    runner.drop_task("demo", "k2")
+    assert goal_state(town)["state"] == "done" and hand_of(town) == []
+    assert [t["state"] for t in tasks_of(town).values()] == ["merged", "dropped"]
+    plan_of(town, [{"id": "x1"}], slug="other")                                                  # nothing merged, the only task dropped
+    runner.start("other")
+    wait_task(runner, "x1", "review", slug="other")
+    runner.drop_task("other", "x1")
+    assert goal_state(town, "other") == {"state": "plan", "error": ""} and hand_of(town, "other") == []
+
+
+def test_dropping_a_task_at_review_still_keeps_its_branch_records_the_decision_and_frees_the_next(town):
+    from orkboard.realm import event_log
+    plan_of(town, [{"id": "k1"}, {"id": "k2", "after": ["k1"]}])
+    runner, _ = reviewing(town)
+    runner.start("demo")
+    wait_task(runner, "k1", "review")
+    runner.drop_task("demo", "k1")
+    assert git(town.repo, "branch", "--list", "idea/demo/k1") and not list((town.repo / ".orkcraft" / "worktrees").glob("*k1*"))
+    assert [(r["task"], r["decision"]) for r in event_log.read(town.repo) if r["event"] == "result_decided"] == [("k1", "drop")]
+    assert [r["state"] for r in event_log.read(town.repo) if r["event"] == "task_state" and r["task"] == "k1"][-1] == "dropped"
+    wait_task(runner, "k2", "review")                                                           # it no longer waits for a result that will not come
+    assert goal_state(town)["state"] == "working"
+
+
+def test_a_task_dropped_before_it_had_its_own_state_is_dropped_when_the_goal_starts_again(town):
+    """A plan the owner dropped a task of on 26 October holds it as `failed`, "dropped by you", and the goal failed."""
+    plan_of(town, [{"id": "k1"}, {"id": "k2", "after": ["k1"]}])
+    path = town.state / "ideas" / "demo" / "plan.json"
+    plan = json.loads(path.read_text())
+    plan["tasks"][0].update(state="failed", error="dropped by you")
+    path.write_text(json.dumps(plan))
+    (town.state / "ideas" / "demo" / "state.json").write_text(json.dumps({"state": "failed", "error": "Task k1: dropped by you"}))
+    assert hand_of(town) == []                                                                   # the Board reads it as gone
+    runner, _ = runner_of(town)
+    runner.start("demo")
+    assert wait_idle(runner)["state"] == "done"
+    tasks = tasks_of(town)
+    assert tasks["k1"]["state"] == "dropped" and tasks["k2"]["state"] == "merged" and tasks["k2"]["after"] == []
+    assert [c["tid"] for c in calls(town)] == ["k2"]
 
 
 def test_stop_task_stops_one_and_the_others_go_on(town, monkeypatch):

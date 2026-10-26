@@ -226,7 +226,7 @@ export function makePreview(core, ctx, screens = {}) {
     body.replaceChildren(...[
       routeLine(core, p.route, p.slug),                  // its way across the parties, under its title (spec 68 §7.1)
       h("div", { class: "goal-state" }, moon(moonOf({ ...(core.st.map?.nodes || []).find((n) => n.slug === p.slug), state: p.state, tasks: p.plan?.tasks, pitch: p.pitch }), { big: true }),     // its tasks merged (spec 74 §6)
-        h("p", { class: "muted" }, [p.size ? `Size ${p.size} · ` : "", stateWords({ state: p.state, progress: { done: (p.plan?.tasks || []).filter((t) => t.state === "merged").length, total: (p.plan?.tasks || []).length } })].join(""))),
+        h("p", { class: "muted" }, [p.size ? `Size ${p.size} · ` : "", stateWords({ state: p.state, progress: { done: (p.plan?.tasks || []).filter((t) => t.state === "merged").length, total: (p.plan?.tasks || []).filter((t) => t.state !== "dropped").length } })].join(""))),
       stateError(p) ? h("p", { class: "warn", role: "alert" }, stateError(p)) : null,
       pointedAt(p.lens),
       checksLine(p, cur),

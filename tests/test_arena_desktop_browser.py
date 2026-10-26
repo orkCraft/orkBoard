@@ -135,7 +135,8 @@ class ArenaHost(StubHost):
 
     def needs_you(self):
         base = {"goal": "passkey", "priority": "high", "blocks": False, "at": "2026-10-18T09:00:00"}
-        return [base | {"kind": "failed", "idea": "cookie", "title": "Session cookie flags", "text": "Secure cookie flags: The session ended", "blocks": True},
+        failing = any(t["state"] == "failed" for t in self.node_of("cookie")["tasks"])           # as the host does: a dropped task is no failure, nor the goal's
+        return [*([base | {"kind": "failed", "idea": "cookie", "title": "Session cookie flags", "text": "Secure cookie flags: The session ended", "blocks": True}] if failing else []),
                 base | {"kind": "plan", "idea": "recovery", "title": "Recovery codes", "text": "Plan ready · 3 tasks"},
                 base | {"kind": "asks", "idea": "second", "title": "Passkey on a second device", "text": "Should a lost phone sign out every passkey?",
                         "questions": ["Should a lost phone sign out every passkey?"]},
@@ -540,6 +541,8 @@ def test_what_waits_for_you_a_fan_raised_on_hover_and_focus_each_kind_and_its_qu
     _drawer(pg).get_by_role("button", name="Drop it").click()
     assert _sent(pg, host, ("ideas.drop_task", {"slug": "cookie", "task": "f1"}))
     pg.locator(".shell-drawer").wait_for(state="detached", timeout=WAIT_MS)                                  # a drop ends the thing: its tab goes, and the drawer with it
+    pg.locator('.arena-hc[data-kind="failed"]').wait_for(state="detached", timeout=WAIT_MS)                  # and its card in the hand: a dropped task does not fail
+    assert pg.locator('.arena-hc[data-kind="failed"]').count() == 0
     _stop(pg, "proposal").get_by_role("button", name="Take: Words of the sign-in page").click()
     assert _sent(pg, host, ("ideas.proposal", {"slug": "pagewords", "take": True, "priority": "high"}))
     assert hand.get_by_role("button", name="Plan ready: Recovery codes").count() == 1
