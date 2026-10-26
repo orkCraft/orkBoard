@@ -1,18 +1,18 @@
-/* Generated from tokens.json by tools/build_tokens.py (orkUI 0.12.0, look office). Do not edit. */
+/* Generated from tokens.json by tools/build_tokens.py (orkUI 0.13.0, look office). Do not edit. */
 
 :root[data-look="office"] {
   color-scheme: dark;
-  --ork-canvas: #151515;
-  --ork-panel: #1d1d1d;
-  --ork-raised: #262626;
-  --ork-paper: #1a1a1a;
-  --ork-frame: #3a3a3a;
-  --ork-edge: #8f8f8f;
-  --ork-ink: #d4d4d4;
-  --ork-ink-muted: #a6a6a6;
-  --ork-ink-faint: #939393;
-  --ork-ink-read: #c4c4c4;
-  --ork-on-ink: #151515;
+  --ork-canvas: #16140f;
+  --ork-panel: #1f1c17;
+  --ork-raised: #2a261f;
+  --ork-paper: #1b1813;
+  --ork-frame: #3d372d;
+  --ork-edge: #958a78;
+  --ork-ink: #e0dbd0;
+  --ork-ink-muted: #b0a899;
+  --ork-ink-faint: #9a9284;
+  --ork-ink-read: #cdc7bb;
+  --ork-on-ink: #16140f;
   --ork-action: #6aa84f;
   --ork-action-hi: #7fbf5f;
   --ork-action-press: #58903f;
@@ -25,9 +25,9 @@
   --ork-elem-dust: #d4b77a;
   --ork-elem-void: #8e88a8;
   --ork-elem-lava: #a49a96;
-  --ork-table: #1a1a1a;
-  --ork-table-rim: #2e2e2e;
-  --ork-table-rim-hi: #3a3a3a;
+  --ork-table: #1b1813;
+  --ork-table-rim: #3d372d;
+  --ork-table-rim-hi: #4a4338;
   --ork-font-pixel: "Pixelify Sans", "IBM Plex Mono", ui-monospace, monospace;
   --ork-font-text: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --ork-font-read: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;

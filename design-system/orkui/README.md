@@ -1,8 +1,9 @@
 # orkUI / office
 
-Dark, monochrome, soft. **Colour is a signal** (danger, alert, success), except the one ork green of the primary action and
-the muted heads of the races. The ground is lifted (canvas `#151515`) and the ink softened (`#d4d4d4`, 12.3:1 on the canvas,
-not 16:1), so the screen does not glare; the table is a neutral grey a step above the canvas.
+Dark, monochrome, soft and warm. **Colour is a signal** (danger, alert, success), except the one ork green of the primary action and
+the muted heads of the races. The ground is lifted (canvas `#16140f`) and the ink softened (`#e0dbd0`, 13.3:1 on the canvas,
+not 16:1), so the screen does not glare; the greys are warm (parchment ink on dark wood-brown greys, one tint across the
+canvas, panels, table and inks, never a mark), and the table is a warm grey a step above the canvas.
 The **pixel face** (Pixelify Sans) is for titles, headings and buttons only, never below 12 px, whole pixels, no ligatures, no
 faux bold, never for a number or a person's text. **The interface's text is IBM Plex Sans**: body 14/20, caption 12/16 and the
 label 12/16 in weight 600 and capitals (on the phone 16/22, 13/18 and 14/16). **IBM Plex Mono** stays the face of code, paths,
@@ -11,7 +12,7 @@ diffs, logs and terminals (`--ork-font-code`, `--ork-font-text`). A long text re
 ## Reading
 
 A spec, a document, anything read through rather than glanced at, is set in `.ork-read`: the **paper** (`--ork-paper`
-`#1a1a1a`, a step above the canvas) in the **reading ink** (`--ork-ink-read` `#c4c4c4`, about 10:1, not full ink's 11.7:1 on the
+`#1b1813`, a step above the canvas) in the **reading ink** (`--ork-ink-read` `#cdc7bb`, 10.5:1, not full ink's 12.8:1 on the
 paper, so the letters do not glare) and the **reading face** IBM Plex Sans (15/26 on the desktop, 17/28 on the phone), a line of about
 68 characters. Headings, bold and links keep full ink, so the outline stands out; quotes are muted; code stays in Plex Mono.
 The interface around a page (its labels, buttons, lists) is set in the interface's own scale.
@@ -28,11 +29,11 @@ question · `ork-failed.txt` the only content is a failure · `ork-working.txt` 
 On an empty screen the ork and its sentence are one block, centred on both axes in the pane's free area.
 
 ## The table
-`.ork-table` is the surface the work lies on (orkboard's field, where the tasks are dealt): a neutral grey top
-(`--ork-table`, `#1a1a1a`, a step above the canvas) in a rim 3 px wide (`--ork-table-rim`), its near lip lit by 1 px
-(`--ork-table-rim-hi`); all three are greys, no wood. The table is a surface, never a mark: no control, state, label or
+`.ork-table` is the surface the work lies on (orkboard's field, where the tasks are dealt): a warm grey top
+(`--ork-table`, `#1b1813`, a step above the canvas) in a rim 3 px wide (`--ork-table-rim`), its near lip lit by 1 px
+(`--ork-table-rim-hi`); all three are warm greys (rim `#3d372d`, lip `#4a4338`), no wood. The table is a surface, never a mark: no control, state, label or
 person's text takes it, and what lies on the table keeps its own colours (a card its panel, a signal its signal). Text on the
-table holds AA as on the canvas (ink 11.7:1); the rim and the lip are steps of the same grey (the lip 1.5:1 on the top), so a
+table holds AA as on the canvas (ink 12.8:1); the rim and the lip are steps of the same grey (the lip 1.8:1 on the top), so a
 card is set off by its own frame line, not by the table. One table a screen, under the work, never a panel or a dialog.
 
 ## Busy
