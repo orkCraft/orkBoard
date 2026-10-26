@@ -1540,24 +1540,44 @@ channels, the Release manager the versions); they say it as text nobody reads wh
    work: the map is the goal's view at work too.
 7. **Two levels, two questions**: **the Orkmaster's level holds the field**: every party a column on the table (§85.2,
    spec 79), its tasks at work as the field's cards with their member's head: who does what across the project, what is
-   stuck, what it costs. **A party's level holds only its map**: the left column lists the parties, a party's goals and
-   specs under each; a party picked shows its leader's map of the whole project with its goals' marks on it, a goal
-   picked its **before → will be**, and at work the same map filling.
-8. **During the work the hand holds only what asks a decision**: a **fork** (a choice the plan did not settle: its
+   stuck, what it costs. **A party's level is its lens**: the left column lists the parties, a party's goals and specs
+   under each. The project's name in the Orkmaster's line is the projects' switcher (spec 69's, moved there): one
+   Orkmaster's head, the open projects in a list, each with one mark (waits for you, at work, or none); not tabs.
+8. **The right pane is the lens's views, as tabs**: a party picked shows **Overview** (no prose: short lines under *Now*,
+   *Next*, *Waits for you*, *Changed since your last look*, each leading to its part; and the leader's stance in a
+   sentence or two), then **one to three views of its lens** (maps before → will be, as cards: the Product manager's
+   *Pains*, *Journey* and *Storyboard*; the Architect's *System* and *Feature modules*; the Game designer's *Loop*,
+   *Economy*, *Levels*; the Product designer's *Flow* and *Screens*), then **Board** last (the Orkmaster's field
+   filtered to the party). A goal picked shows its tabs by its state: **Spec** (theses and the hand's questions), **Will
+   be** (only the views it changes), **Board** (its tasks, at work), **Result** (promised → made, done), and opens on the
+   tab its state names. Five tabs at most. A leader's views are set in the library, as its stages are (`STAGES`), never
+   made up by a model. A tab with a change not yet seen carries the goal's element by its name; opening it plays its
+   reveal. **The hand is one, under every tab**: a card pressed opens the tab it is about and rings its parts. On the
+   phone the views are a list under the title (no sideways scroll, spec 67).
+9. **During the work the hand holds only what asks a decision**: a **fork** (a choice the plan did not settle: its
    answers drawn as changes on the map; only the tasks after it wait; §64 from pictures to structure), and **out of the
    contract** (a task whose map removes a part, or adds an outward one, that the will-be did not promise: asked before
-   that task's merge). Progress is never a stop. *Back to the spec* stops only the tasks whose part changed (§75.3).
-9. **The reveal**: when the person opens the map after being away, it plays what landed since their last look (or since
+   that task's merge). Progress is never a stop. *Back to the spec* stops only the tasks whose part changed (§75.3). **A
+   to-do comes last**: something the person must do themselves is a line in the spec's theses until the next task cannot
+   start without it; only then is it dealt, after the forks and questions, with *Remind me when it's needed*. **dev → main
+   is one card for the batch** (*4 goals ready for main*), its promised → made of them all; never a card a goal. No count
+   of what waits anywhere (§67): the hand is the count.
+10. **Work in progress is quiet**: an hourglass of orkUI's (7 x 7, the faint ink, a grain a second, turned over in a few
+   steps, still under reduced motion) replaces `.ork-busy`'s running pixels; the moon stays a goal's progress (§89), and
+   only a signal (a question, a failure, money) draws the eye. Made in orkUI first, then copied.
+11. **The reveal**: when the person opens the map after being away, it plays what landed since their last look (or since
    a release), promised against made; a press on a card says which goal changed it and how. The opening is the press,
    so §89.0 holds.
-10. **What it replaces, once built** (else it only adds): *Waits for your look*'s reasons (§101) become *out of the
-   contract*; *k of n done* and *What it made* (§102.4) become the map's cards; the spec's sections as the face (§75)
-   become theses, map and hand; collisions by `touches` (§86) become two changes on the same cards; *Pick a look*
-   (§102.2) becomes a fork; a party's field, its members' columns and its stages' seats (§99, §72) become the
-   Orkmaster's field.
-11. **In phases, each measured before the next**: (1) the lenses read from the code, and the reveal, on one real
+12. **What it replaces, once built** (else it only adds): the list of results on the right (*Waits for your look*, its
+   reasons, §101) becomes cards in the hand (*out of the contract*, a failure, dev → main); *k of n done* and *What it
+   made* (§102.4) become the map's cards; the spec's sections as the face (§75) become theses, map and hand; collisions
+   by `touches` (§86) become two changes on the same cards; *Pick a look* (§102.2) becomes a fork; a party's field, its
+   members' columns and its stages' seats (§99, §72) become the Orkmaster's field and a party's *Board* tab; the
+   projects' switcher at the left column's head (spec 69) moves to the Orkmaster's line.
+13. **In phases, each measured before the next**: (1) the lenses read from the code, and the reveal, on one real
     project (a Node game): can the owner tell the day in a minute, and did they see what an agent decided alone; (2) the
     change in the plan's call, the spec screen with one *Start*, out of the contract; (3) progress on the map and forks,
-    and the replaced parts of 10 removed; (4) the lenses of judgement. The words (*lens*, *map*, *will be*, *fork*,
-    *contract*) get their one word each in `TERMS` with the first spec.
+    the tabs, and the replaced parts of 12 removed; (4) the lenses of judgement (pains, journey, storyboard, value), each
+    view kept only while it is opened. The words (*lens*, *map*, *view*, *will be*, *fork*, *contract*) get their one word
+    each in `TERMS` with the first spec; a part of a map is not called a *card* where a person reads it (spec 70 §0).
 The owner's call. The mockup *Orkboard — the map on the table* first; the specs are written from it.
