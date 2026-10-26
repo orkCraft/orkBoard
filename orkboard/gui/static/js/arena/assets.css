@@ -39,7 +39,7 @@
 .assets-face__video.is-shown { opacity: 1; }
 .assets-face__sign { position: relative; display: inline-flex; color: var(--ork-ink-muted); }
 .assets-face__sound { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--ork-2); padding: var(--ork-2); max-width: 100%; box-sizing: border-box; color: var(--ork-ink); }
-.assets-face__title { max-width: 100%; font-size: 10px; line-height: 12px; overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; text-align: center; }
+.assets-face__title { max-width: 100%; font: var(--ork-type-caption); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; text-align: center; }
 .assets-face__len { font: var(--ork-type-caption); font-variant-numeric: tabular-nums; color: var(--ork-ink-muted); }
 .assets-face__video ~ .assets-face__len { position: absolute; left: var(--ork-2); bottom: var(--ork-2); padding: 0 var(--ork-2); background: var(--ork-canvas); }
 .assets-face__font { padding: var(--ork-2); font-size: 15px; line-height: 18px; text-align: center; overflow-wrap: anywhere; color: var(--ork-ink); }
@@ -50,7 +50,7 @@
 /* -- what changed since the device's last look, played once (spec 88 §6.4; spec 74 §0's rules: steps, none under reduced motion) --------------- */
 .assets-card.is-dealt-in { position: relative; z-index: 60; animation: assets-deal 0.3s steps(6) var(--delay, 0s) backwards; }
 @keyframes assets-deal { from { transform: translateY(-48px) scale(0.9); opacity: 0.2; } to { transform: none; opacity: 1; } }
-.assets-seal { position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center; background: var(--ork-panel); animation: assets-seal 0.7s steps(7) forwards; pointer-events: none; }
+.assets-seal { position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; justify-content: center; background: var(--ork-raised); animation: assets-seal 0.7s steps(7) forwards; pointer-events: none; }
 @keyframes assets-seal { 0% { opacity: 0; transform: scale(2); } 30% { opacity: 1; transform: none; } 80% { opacity: 1; } 100% { opacity: 0; } }
 .assets-card.is-crumble { pointer-events: none; animation: assets-crumble 0.42s steps(3) forwards; }
 @keyframes assets-crumble { 0% { opacity: 1; filter: none; } 34% { opacity: 0.7; transform: translateY(2px); } 67% { opacity: 0.35; transform: translateY(5px); } 100% { opacity: 0; transform: translateY(10px); } }
@@ -58,7 +58,7 @@
 /* -- a file opened in the right column (spec 90 §2) ----------------------------------------------------------------------------------------- */
 .assets-lift { min-height: 100%; min-width: 0; display: flex; flex-direction: column; gap: var(--ork-4); box-sizing: border-box; }
 .assets-lift__head { flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-3) var(--ork-4); min-width: 0; }
-.assets-lift__path { margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.assets-lift__path { margin: 0; font-family: var(--ork-font-code); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .assets-lift__path:empty { display: none; }
 .assets-lift__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--ork-type-body); font-weight: 600; }
 .assets-lift__by { display: inline-flex; align-items: center; gap: var(--ork-2); flex: none; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
@@ -82,7 +82,7 @@
 .assets-other__media { position: relative; height: 120px; overflow: hidden; background: var(--ork-canvas); border: var(--ork-line) solid var(--ork-frame); }
 .assets-other .pick-btn { height: 20px; min-width: 20px; padding: 0 var(--ork-1); }
 .assets-other .pick-play__w { display: none; }
-.assets-other .pick-sound { position: absolute; left: var(--ork-2); top: var(--ork-2); flex-direction: row; gap: var(--ork-2); font-size: 10px; }
+.assets-other .pick-sound { position: absolute; left: var(--ork-2); top: var(--ork-2); flex-direction: row; gap: var(--ork-2); }
 .assets-other__label { font: var(--ork-type-caption); color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 /* -- Play: the build in the pane --------------------------------------------------------------------------------------------------------------- */

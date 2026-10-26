@@ -4,7 +4,7 @@
 
 /* -- the rows: Now, Next, Later across every member's column ----------------------------------------------------------------------------- */
 .arena-row__lbl { grid-column: 1 / -1; align-self: end; height: 16px; padding-left: var(--ork-2); box-sizing: border-box; pointer-events: none; color: var(--ork-ink);
-  font: 500 12px/16px var(--ork-font-pixel); letter-spacing: 0.04em; }
+  font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
 .arena-row__lbl.is-later { color: var(--ork-ink-muted); }
 .arena-phase.is-cell { align-self: stretch; padding: var(--ork-2) var(--ork-4) var(--ork-3) var(--ork-2); }
 .arena-cols__grid:has(.arena-stack.is-dealing) { overflow: visible; }                      /* the dealt cards travel over the field: the grid does not clip them for that moment */

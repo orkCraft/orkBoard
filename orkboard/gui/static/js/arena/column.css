@@ -10,7 +10,7 @@
 /* the open party: its heading is its leader, a thicker rule closes its body */
 .arena-party.is-open { border-bottom-width: 2px; }
 .arena-phead__who { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.arena-phead__leads { font: var(--ork-type-caption); line-height: 14px; color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.arena-phead__leads { font: var(--ork-type-caption); color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .arena-pbody { display: flex; flex-direction: column; }
 .arena-goals { display: flex; flex-direction: column; }
 .arena-showall { padding: var(--ork-2) var(--ork-4) 0 var(--ork-5); }
