@@ -107,7 +107,7 @@ async def test_no_members_strip_a_name_over_each_column_and_the_first_phase_row_
         names = page.locator(".colname")
         assert [norm(await n.text_content()) for n in await names.all()] == ["Backend", "Screens"]
         n0 = await names.first.bounding_box()
-        assert round(n0["height"]) == 28 and await names.first.evaluate("e => e.tagName === 'SPAN' && getComputedStyle(e).textTransform === 'uppercase' && getComputedStyle(e).fontSize === '11px'")
+        assert round(n0["height"]) == 28 and await names.first.evaluate("e => e.tagName === 'SPAN' && getComputedStyle(e).textTransform === 'none' && getComputedStyle(e).fontSize === '13px' && !getComputedStyle(e).fontFamily.includes('Pixelify')")
         assert await names.first.evaluate("e => getComputedStyle(e).justifyContent === 'center' && e.getBoundingClientRect().width === e.parentElement.getBoundingClientRect().width")      # centred over the column
         row = await page.locator(".stack .phase").first.bounding_box()
         assert 180 <= row["y"] <= 190                                                                                                    # 48 + 44 + 60 + 28, and the bars' lines and the column's own 7 px

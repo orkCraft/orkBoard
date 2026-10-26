@@ -87,7 +87,7 @@ async def test_the_top_bar_has_the_projects_button_and_its_sheet_and_no_party_an
         await page.locator(".gbar").wait_for(timeout=WAIT_MS)
         btn = bar.locator(".projbtn")
         assert norm(await btn.inner_text()) == "project" and await btn.get_attribute("aria-label") == "Project project. A tap shows your projects"
-        assert (await btn.bounding_box())["height"] >= 44 and await btn.locator(".projbtn__name").evaluate("e => getComputedStyle(e).fontSize") == "12px"
+        assert (await btn.bounding_box())["height"] >= 44 and await btn.locator(".projbtn__name").evaluate("e => getComputedStyle(e).fontSize") == "13px"
         assert await btn.locator(".ork-chev").count() == 1
         assert await bar.locator(".ork-count, .where, img.ork-race__head").count() == 0 and "Passkey" not in await bar.inner_text()      # the party, its head and its counts left the bar
         await btn.click()
@@ -139,7 +139,7 @@ async def test_the_stage_switch_wears_the_partys_faces_over_its_words_with_one_s
         assert not re.search(r"\d", await tabs.inner_text()) and await tabs.locator(".ork-count").count() == 0
         assert [round((await b.bounding_box())["height"]) for b in await bands.all()] == [60, 60, 60]                                   # spec 53 §1.2
         assert all([abs((await b.bounding_box())["width"] - 130) <= 2 for b in await bands.all()])                                     # the whole width, shared (the deck is at the goals bar's left)
-        assert all([await b.locator(".band__name").evaluate("e => e.scrollWidth <= e.clientWidth && getComputedStyle(e).fontSize === '11px'") for b in await bands.all()])
+        assert all([await b.locator(".band__name").evaluate("e => e.scrollWidth <= e.clientWidth && getComputedStyle(e).fontSize === '13px'") for b in await bands.all()])
         heads = lambda key: tabs.locator(f'.band[data-band="{key}"] img.ork-race__head')                                             # noqa: E731
         assert [await heads(k).count() for k in ("lead", "build", "check")] == [1, 2, 2]
         build = [await h.bounding_box() for h in await heads("build").all()]
