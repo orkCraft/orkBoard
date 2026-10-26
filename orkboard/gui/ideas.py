@@ -49,7 +49,7 @@ from typing import Any, Callable
 
 from orkboard import settings
 from orkboard.core import idea_keeper
-from orkboard.realm import board_map, event_log, idea_checks, idea_lens, idea_photos, idea_route, idea_secrets, idea_target, ideas, party_recipes, pitches, wiki
+from orkboard.realm import board_map, event_log, idea_checks, idea_lens, idea_photos, idea_route, idea_secrets, idea_target, ideas, party_recipes, pitches, recurring, wiki
 from orkboard.gui.ideas_args import VIA, IdeasError, _device, _opt, _text
 from orkboard.gui.ideas_board import BoardMixin
 from orkboard.gui.ideas_assets import AssetsMixin, asset_commands
@@ -350,7 +350,7 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
                 "talk": ideas.talk(self.state_dir, slug),
                 "plan": {**self._with_heads(plan), "missing": self.plan_missing(slug, plan),         # read now (spec 52 §2.6)
                          "todo_lines": board_map.todo_lines(plan)} if plan else plan,                 # *Before <task>: <to-do>* (spec 87 §4.2)
-                "busy": bool(self.keeper.busy(slug)) or st["state"] in ("reading", "planning"),
+                "busy": bool(self.keeper.busy(slug)) or st["state"] in ("reading", "planning"), "repeat": recurring.every_of(root, slug),        # a recurring goal (spec 92 §2)
                 "state_error": st.get("error", ""), "proposed_track": page.get("proposed_track"),
                 "lens": idea_lens.read(self.state_dir, slug), **self.after_start(slug, plan, st),      # spec 62 §1.5
                 "pitch": self.pitch_of(root, slug, st["state"]),                                        # a pitch's views, case and decision (spec 65)

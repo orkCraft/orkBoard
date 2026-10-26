@@ -236,7 +236,8 @@ def test_a_repeat_is_set_and_stopped_by_the_person(host):
     got = host.command("ideas.add", {"text": "Read the logs", "track": slug})["slug"]
     assert host.command("ideas.repeat", {"slug": got, "every": "month"}) == {"ok": True, "every": "month"}
     assert recurring.every_of(host.root, got) == "month"
-    assert host.command("ideas.repeat", {"slug": got, "every": ""})["every"] == ""
+    assert host.command("ideas.page", {"slug": got})["repeat"] == "month"                    # the goal's drawer says it comes back, with a way to stop it
+    assert host.command("ideas.repeat", {"slug": got, "every": ""})["every"] == "" and host.command("ideas.page", {"slug": got})["repeat"] == ""
     with pytest.raises(Exception, match="day, week or month"):
         host.command("ideas.repeat", {"slug": got, "every": "hour"})
     with pytest.raises(Exception, match="gone"):
