@@ -496,6 +496,7 @@ def test_what_waits_for_you_a_fan_raised_on_hover_and_focus_each_kind_and_its_qu
     host.bump({})
     pg.wait_for_function("() => document.querySelectorAll('.arena-hc').length === 4", timeout=WAIT_MS)
     _settle(pg)
+    pg.wait_for_function("() => [...document.querySelectorAll('.arena-hc')].every((e) => !e.getAnimations().length)", timeout=WAIT_MS)     # the fan laid anew: measured once it stands still
     kinds = pg.locator(".arena-hc").evaluate_all("els => els.map((e) => e.dataset.kind)")
     assert kinds == ["failed", "plan", "asks", "proposal"]                                                      # urgency's order (spec 54 §2.3), a failed task in its row's place
     items = pg.locator(".arena-hc")

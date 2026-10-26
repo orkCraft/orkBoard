@@ -3,7 +3,8 @@
 // rows by phase as stacks of cards running down from them, and the one hand along the bottom (a result to look at and *n goals ready for main* are its cards: docs/specs/90-what-the-first-look-said.md §2.3).
 // Anything opened is the window's right column (shell.js), beside the field, never over it; the AI tools' limits are under *Spend* in the top bar. All of it reads `ideas.map`, `ideas.board`, `ideas.agents`, `ideas.gate`, `ideas.today`, `ideas.flags` and the snapshot; its
 // commands are the Board's own. The project's level (`PROJECT`, docs/specs/70-orkmaster-and-the-project.md: a press on the Orkmaster in the project's line) replaces the field as Operations does: project.js. Ideation's field is its pitches by state across the party's columns (pitches.js, docs/specs/65-ideation.md §8).
-// A party the Architect leads has two tabs over its table, System and Board (docs/specs/89-the-tech-lens-system.md §6.1): System is its lens's view of the project (systemmap.js), Board the field as it was.
+// A party the Architect leads has three tabs over its table, System, Feature modules and Board (docs/specs/90-what-the-first-look-said.md §6.7): System is the project's architecture (systemarch.js),
+// Feature modules spec 89's table of folders (systemmap.js), Board the field as it was.
 // The table begins at the pane's top, under the party's line (spec 90 §4): the tabs at its edge and the members' faces lie on its wood.
 // It opens on System when something changed since the device's last look, else on the tab last pressed on this device (System at first).
 import { useEffect, useRef } from "preact/hooks";
@@ -33,7 +34,8 @@ import { Cards } from "../board/cards.js";
 import { closeFlagLine, seeFlags } from "./flags.js";
 import { PitchField } from "./pitches.js";
 import { pitchPlanning } from "./pitchwords.js";
-import { PartyTabs, SystemMap, leadsSystem, usePartyTab, useSystem } from "./systemmap.js";
+import { PartyTabs, leadsSystem, usePartyTab, useSystem } from "./systemmap.js";
+import { Lens } from "./systemarch.js";
 
 const NARROW = "(max-width: 1023px)";
 
@@ -95,7 +97,7 @@ function Party({ m, g }) {
       <div class="arena-top"><${PartyLine} g=${g} nodes=${nodes} lead=${lead?.name || "Taskmaster"} reading=${reading} doing=${pitch ? "judging" : "reading"} /><${FlagLine} /></div>
       <div class="arena-play ork-table">
         ${tech && html`<${PartyTabs} tab=${tab} setTab=${setTab} name=${g.short || g.title} />`}
-        ${tab === "system" ? html`<div class="sys-panel" id="ppanel" role="tabpanel" aria-labelledby="ptab-system"><${SystemMap} sys=${sys} party=${g.slug} /></div>` : html`
+        ${tab !== "board" ? html`<div class="sys-panel" id="ppanel" role="tabpanel" aria-labelledby=${`ptab-${tab}`}><${Lens} sys=${sys} party=${g.slug} tab=${tab} /></div>` : html`
         <${PartyRow} g=${g} members=${members} nodes=${nodes} planning=${planning} cols=${cols} />
         <section class="arena-body" aria-label="The party at work" ref=${body} id=${tech ? "ppanel" : undefined}>
           <div class="arena-cards"><${Cards} /></div>
