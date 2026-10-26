@@ -160,6 +160,40 @@ ref)` take the state folder (screens, picks and goals live there); `since` may b
 wait for the port (above) and has `fresh` and `peek`; Stop all does not stop Play (it is the person's, not an agent's); a screen is a
 task's newest picture, one per task.
 
+## As built (B)
+
+Files: `js/arena/project.js` (the level is `Tabs` over a `role="tabpanel"`: **Field** holds today's level as the new component `Field`, which now owns `lit` and the links' host, so they are rebuilt when the tab comes back;
+**Assets**, **Play**; it opens on Field, the tab is not kept; `projectwords.js` `TABS`), new `js/arena/assets.js`, new `js/arena/play.js`, new `js/arena/assets.css` (`@import`ed at the top of `arena.css`, in
+`tests/test_design_system.py` `SHEETS`), `js/arena/picks.js` (`Picture` and `Player` are now `export`ed: nothing in what they do changed; a lifted sound or clip is `Player`, a variant not picked is `Picture` or `Player`).
+Test: `tests/test_assets_desktop_browser.py` (13 tests, a stub host answering part A's four commands in their As built (A) shapes, the signed addresses and the preview served by the test).
+
+- **The cards are the field's own** (`.arena-stk` > `.arena-task`, with `.assets-card` on top), so they have whatever size the field's card has: 104 x 146 while spec 87's 128 x 180 is not on `main`, 128 x 180 once it is, with
+  no change here. A column is a kind (`.assets-col`, orkUI's `.ork-table`), only the kinds that have a file or a file that went; the head says the word and how many. A folder of a stack is one card with two edges
+  behind it and ×n; a press opens it (a fold row *<folder> ×n* and every card), the fold row shuts it.
+- **Faces:** art and a screen are an `<img>` contained (a screen from the top, covering), crisp (`image-rendering: pixelated`) when its natural size is smaller than the face's box (never for an SVG); a sound or
+  music its name over the *sound* sign and its length; a clip a muted `<video>` of its first frame (`#t=0.001`, `preload="metadata"`), the *film* sign until a frame is there and when the browser will not read it;
+  a font its name set in it (`FontFace` from the signed address, one a font, the page's own face until it has loaded).
+- **Foot:** the name (one line, the whole in the tooltip) and *Changed by <goal>* with the goal's element whenever the host names a `goal` (the last change, spec 88 §1), whether or not it changed since the device's last look;
+  `change` (`added`/`changed` since the look) is the mark that the reveal plays and that `data-change` carries. A file nobody's goal made has no foot line.
+- **Lifted:** a dialog over the table (Esc, the scrim and *Close* put it back, the focus returns to the card). Art at its natural size, contained in the pane (crisp at 64 px or less, no larger than it is); a sound or a clip
+  starts playing when it is lifted (the press is the gesture), with picks.js's *Pause*/*Play*, the bar, the clip's sound off until turned on; a font as a specimen; *Not picked (n)* under it with each variant's label (*B · slow*)
+  and its own player. A changed file (`change: "changed"`, not a screen) asks `ideas.asset_before {path, since}` when it is lifted and, when that gives an address, shows *Now* / *Before* (orkUI's `Switch`): the stage turns
+  over (`rotateY`, `0.42s steps(7)`, none under reduced motion) to the file as it was; a sound on the face turned away is paused.
+- **The look:** `localStorage` `orkboard.assets.look.<project path>` holds the commit the tab showed, written when the tab is left (the component goes) or the page is hidden (`pagehide`); read once when the tab opens and sent
+  as `since` (no look: no `since` is sent and nothing is marked). The marks stay as long as the tab is open; the Board's `rev` changing asks again with the same `since`. The reveal is the first answer's, once a time the tab is
+  opened: added `is-dealt-in` (`0.3s steps(6)`, 35 ms apart, six in turn), changed `is-sealed` (the goal's element, big, stamped, `0.7s steps(7)`), removed a crumbling place in its column (`0.42s steps(3)`); all gone
+  after about 1.4 s; none while the page is hidden or `prefers-reduced-motion` (then the removed ones are not drawn at all).
+- **Filter:** the kinds as buttons (`aria-pressed`, a press again clears; only the kinds that have a file), the goals in one orkUI select (*All goals*, then the goals that made a file, by their titles); both apply to the
+  reveal's removed files too.
+- **Play:** `play.js` asks `ideas.play {peek: true}` when the tab opens (nothing is started by looking), *Open the build* presses `ideas.play {}`, then `{peek: true}` every second while `starting`
+  (*Starting the build…*, the busy mark) and every minute while `playing` (keeps the host's ten minutes at bay; a `stopped` answer, the build having ended, shows *Open the build* again). `playing`: the bar says *Plays dev at
+  <short>* (the literal word *dev*) and has *Stop the build*, under it the `iframe` (`sandbox="allow-scripts allow-same-origin allow-pointer-lock"`, `allow="autoplay; fullscreen; gamepad"`); when `dev` is not `commit` the bar also
+  says *dev is at <short> now* and offers *Open the build*, which presses `{fresh: true}`. `failed`: *The build would not start: <error>* and *Open the build* to try again; `failed` with `none`: *Nothing here yet* and the
+  one line of how (`.orkcraft/checks.toml`: `preview = "npm run dev"`, or an `index.html` at the root). Leaving the tab leaves the build running (the host stops it after ten minutes); coming back shows it by `peek`.
+- **Decided here, not in the text above:** the strings *Nothing here yet* for an Assets table with no file and its one line (*The pictures, sounds, clips and fonts the project is made of show here once they are in dev*),
+  the select's and the groups' labels (*Goal*, *Kinds*, *Version*), *Close* and *dev is at <short> now* are new; the tabs are orkUI's `.ork-tab`s (`role="tab"`, ← → Home End); the root of Play's pane is `.playpane`
+  because orkUI's sign `.play` is a class too.
+
 ## As built (C)
 
 Files: new `pwa/shell-assets.js`; `pwa/shell-project.js` (`makeAssets(core)`, its section drawn after the parties, `assets.load()` when the sheet opens, `assets.leave()` when it is put away); `pwa/app.css` (the block
