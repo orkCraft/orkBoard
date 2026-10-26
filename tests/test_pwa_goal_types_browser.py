@@ -96,7 +96,7 @@ async def test_the_top_bar_has_the_projects_button_and_its_sheet_and_no_party_an
         box = await sheet.bounding_box()
         assert box["x"] == 0 and box["y"] == 0 and box["width"] == 390                                                                  # from the top
         rows = sheet.locator(".project-row")
-        assert [norm(await r.inner_text()) for r in await rows.all()] == ["alpha this one", "beta 3 to review", "gamma nothing waits"]
+        assert [norm(await r.inner_text()) for r in await rows.all()] == ["alpha this one", "beta", "gamma"]
         assert await rows.first.get_attribute("aria-current") == "true" and await rows.nth(1).get_attribute("aria-current") is None
         assert "Open on your computer: a tap switches this phone to one." in await sheet.inner_text()
         assert await sheet.locator(".where-row, .where-new").count() == 0                                                              # the parties are the deck's

@@ -234,6 +234,8 @@ input[type="radio"] { accent-color: var(--ork-ink); }
 .sec-text { padding: 0 var(--ork-5) var(--ork-5); display: flex; flex-direction: column; gap: var(--ork-4); }
 .sec-text p { margin: 0; white-space: pre-wrap; }
 .plan .tasks { list-style: none; margin: 0 0 var(--ork-4); padding: 0; display: flex; flex-direction: column; gap: var(--ork-3); }
+.plan .before-lines { list-style: none; margin: 0 0 var(--ork-4); padding: 0; display: flex; flex-direction: column; gap: var(--ork-1); }
+.before-line { color: var(--ork-ink-muted); font: var(--ork-type-caption); overflow-wrap: anywhere; }
 .plan .todos { margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-3); }
 .plan .tasks .task-title { text-align: left; min-height: 32px; }
 .task { display: flex; flex-direction: column; }
@@ -367,6 +369,9 @@ input[type="radio"] { accent-color: var(--ork-ink); }
 .project-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .project-row { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; min-height: 56px; padding: var(--ork-4) var(--ork-2); display: flex;
   flex-direction: column; justify-content: center; gap: var(--ork-1); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.project-list .project-row { flex-direction: row; align-items: center; justify-content: space-between; gap: var(--ork-3); }
+.project-mark { display: inline-flex; align-items: center; flex: none; }
+.project-mark.alert { color: var(--ork-alert); }
 .project-row[aria-current="true"] { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); padding-left: var(--ork-5); }
 .project-recent { min-height: var(--ork-tap); display: flex; align-items: center; padding: var(--ork-2); border-bottom: var(--ork-line) solid var(--ork-frame); }
 .ops-menu, .ops-gear, .ops-servers { display: flex; flex-direction: column; gap: var(--ork-4); }

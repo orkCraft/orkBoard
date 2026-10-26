@@ -1022,8 +1022,8 @@ async def test_what_waits_for_you_is_the_signal_the_chip_counts_the_stops_and_th
         hand = page.locator(".hc")
         await hand.first.wait_for(timeout=WAIT_MS)
         assert await chip.locator(".ork-count").count() == 0 and "stop" not in await chip.get_attribute("aria-label")   # the party shown's stops are counted by the bottom row alone (spec 52 §5.8)
-        assert await hand.count() == 4 and await page.locator('.hc[data-kind="look"]').count() == 2           # … and two results: all four lie along the bottom, stops first
-        assert [await b.get_attribute("data-kind") for b in await hand.all()] == ["plan", "todo", "look", "look"]
+        assert await hand.count() == 4 and await page.locator('.hc[data-kind="look"]').count() == 2           # … and two results: all four lie along the bottom, stops first, a to-do last (spec 87 §4.3)
+        assert [await b.get_attribute("data-kind") for b in await hand.all()] == ["plan", "look", "look", "todo"]
         assert await page.locator(".handcount").count() == 0                                                  # the fan is the count: there is no number beside it
         await _shot(page, "phone-needs-signal-390x844")
         stub.hide_plan = True

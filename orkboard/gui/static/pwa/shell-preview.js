@@ -23,6 +23,14 @@ import { screenBody } from "./shell-pick-answer.js";
 import { routeLine } from "./shell-route.js";
 
 const TALK_SHOWN = 6;
+
+/** The goal's plan, a to-do until it is dealt (spec 87 §4.2): "Before <task>: <to-do>", a line for each task a to-do is `for`, in the plan's order; a to-do already done, and a task already
+ *  merged or dropped, is not said. The host's `todo_lines` (realm/board_map.py) says the same; this reads the plan's `todos` and `tasks` itself, so it works with or without it. */
+export function beforeLines(plan) {
+  const byId = new Map((plan?.tasks || []).map((t) => [t.id, t]));
+  return (plan?.todos || []).filter((d) => !d.done).flatMap((d) => (d.for || []).map((f) => ({ d, t: byId.get(f) })).filter(({ t }) => t && !["merged", "dropped"].includes(t.state))
+    .map(({ d, t }) => ({ todo: d.id, task: t.id, text: `Before ${t.title}: ${d.title}` })));
+}
 const LOG_MS = 5000;
 const BUSY = new Set(["reading", "planning", "working"]);
 // A section's colour role (app.css `.sec-*`), its mark (Office) and its kit icon.
@@ -179,6 +187,8 @@ export function makePreview(core, ctx, screens = {}) {
       h("small", { class: "muted" }, [t.tag, t.head ? TIER_WORDS[t.head.tier] : t.tier, (t.after || []).length ? `after ${t.after.map((a) => byId.get(a)?.title || a).join(", ")}` : "",
         TASK_WORDS[t.state] && p.state !== "plan" ? TASK_WORDS[t.state] : "", t.state === "held" && t.note ? heldWords(t.note, t.waits_title) : "",
         t.commit ? `commit ${t.commit.slice(0, 7)}` : "", t.state === "failed" && t.error ? t.error : ""].filter(Boolean).join(" · ")))))];
+    const before = beforeLines(plan);
+    if (before.length) kids.push(h("ul", { class: "before-lines" }, ...before.map((b) => h("li", { class: "before-line", "data-todo": b.todo, "data-task": b.task }, b.text))));
     if ((plan.todos || []).length) {
       kids.push(h("h3", {}, "To-dos before it starts"), h("ul", { class: "todos" }, ...plan.todos.map((t) => h("li", { class: `plan-todo${t.id === todo ? " is-target" : ""}`, "data-todo": t.id },
         h("b", {}, t.title), " ", h("small", { class: "chip-kind" }, t.kind), t.why ? h("small", { class: "muted" }, t.why) : null,
