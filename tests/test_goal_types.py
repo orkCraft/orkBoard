@@ -174,7 +174,7 @@ def test_a_type_missing_one_agent_is_offered_only_when_the_leader_does_another_p
     pm = _party(root, state, ["grunt"], leader="product-manager")
     rows = {t.id: r for t, r in goal_types.offered(state, root, pm)}
     assert [m["agent"] for m in rows["screen"]] == ["ui-kit"] and [m["agent"] for m in rows["experiment"]] == ["experimenter"]
-    assert set(rows["screen"][0]) == {"kind", "words", "agent", "name", "band", "free", "out"} and rows["screen"][0]["free"] is True
+    assert set(rows["screen"][0]) == {"kind", "words", "agent", "name", "band", "free", "out"} and rows["screen"][0]["free"] is False    # the Grunt holds the one builder's seat (spec 87 §5)
     assert rows["pain"] == []                                                                 # the leader's own work: nothing missing
     assert "tagline" not in rows and "icon" not in rows and "store" not in rows               # one agent missing, but beside the leader's own work
     assert "landing" not in rows and "abtest" not in rows                                     # two missing
@@ -208,14 +208,17 @@ def test_a_type_that_stands_in_for_another_hides_it_when_it_is_met_and_is_not_of
 
 def test_the_free_seat_of_a_missing_row_reads_the_leaders_seats(board):
     root, state = board
-    three = _party(root, state, ["grunt", "ui-kit", "level-designer"], leader="product-designer", title="Three")
-    (row,) = goal_types.missing(state, root, three, ("art",))
-    assert row["free"] is False and len(row["out"]) == 3                                       # the default's three builders
-    four = _party(root, state, ["grunt", "level-designer", "sound-designer"], leader="game-designer", title="Four")
-    (row,) = goal_types.missing(state, root, four, ("art",))
-    assert row["free"] is True                                                                  # a Game designer's four
-    full = _party(root, state, ["grunt", "level-designer", "sound-designer", "artist"], leader="game-designer", title="Full")
-    assert goal_types.missing(state, root, full, ("aso",))[0]["free"] is False
+    held = _party(root, state, ["grunt"], leader="product-designer", title="Held")
+    (row,) = goal_types.missing(state, root, held, ("art",))
+    assert row["free"] is False and len(row["out"]) == 1                                       # one builder's seat, for every leader (spec 87 §5)
+    game = _party(root, state, ["grunt"], leader="game-designer", title="Game")
+    (row,) = goal_types.missing(state, root, game, ("art",))
+    assert row["free"] is False
+    empty = _party(root, state, [], leader="product-designer", title="Empty")
+    (row,) = goal_types.missing(state, root, empty, ("art",))
+    assert row["free"] is True and row["out"] == []                                              # nobody in the seat
+    old = _party(root, state, ["grunt", "level-designer", "sound-designer", "artist"], leader="game-designer", title="Old")      # a party made before
+    assert goal_types.missing(state, root, old, ("aso",))[0]["free"] is False
 
 
 def test_the_taker_is_of_the_leaders_craft_first_and_never_a_leader(monkeypatch):
@@ -252,7 +255,7 @@ def test_missing_says_who_would_join_once_each_and_whether_a_seat_is_free(board)
     ship = _party(root, state, ["grunt"], leader="product-designer")
     got = goal_types.missing(state, root, ship, ("uikit", "art", "uikit", "design", "code"))
     assert [(m["kind"], m["agent"], m["name"], m["band"], m["free"]) for m in got] == [
-        ("uikit", "ui-kit", "Design system designer", "build", True), ("art", "artist", "Artist", "build", True)]
+        ("uikit", "ui-kit", "Design system designer", "build", False), ("art", "artist", "Artist", "build", False)]
     assert got[0]["words"] == "UI kit" and got[1]["words"] == "pixel art" and got[1]["out"] == [{"slug": "grunt", "name": "Grunt", "runs": 0}]
     full = _party(root, state, ["grunt", "tester", "ui-kit"], leader="product-designer", title="Full")
     (art,) = goal_types.missing(state, root, full, ("art", "uikit"))
@@ -334,7 +337,7 @@ def test_a_plans_missing_read_now_drops_what_a_member_added_since_does_and_a_par
     ship = _party(root, state, ["grunt"], leader="product-designer")
     missed = [{"kind": "art", "agent": "artist"}, {"kind": "uikit", "agent": "ui-kit"}, {"kind": "nope", "agent": "x"}]
     assert [(m["kind"], m["name"], m["free"]) for m in goal_types.still_missing(state, root, ship, missed)] == [
-        ("art", "Artist", True), ("uikit", "Design system designer", True)]
+        ("art", "Artist", False), ("uikit", "Design system designer", False)]
     library.install(state, ["artist"])
     goal_team.set_team(root, ship, ["grunt", "artist"])
     assert [m["kind"] for m in goal_types.still_missing(state, root, ship, missed)] == ["uikit"]

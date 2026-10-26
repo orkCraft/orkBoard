@@ -30,7 +30,7 @@ async def test_new_goal_is_one_sheet_a_craft_in_one_row_its_team_in_three_folds_
         assert "Product: who it is for, what it moves, what it leaves out" in await sheet.locator(".craft-line").inner_text()
         await sheet.locator('.craft-tile[data-craft="design"]').click()
         line = sheet.locator(".party-line").first
-        assert await line.inner_text() == "Leads: Product designer · Builds: Design system designer, Artist · Checks: Accessibility reviewer"   # folded to one line
+        assert await line.inner_text() == "Leads: Product designer · Builds: Design system designer · Checks: Accessibility reviewer"   # folded to one line: a seat a stage (spec 87 §5)
         assert "null" not in await sheet.inner_text()                                                    # no saved party of yours: no row, and no word in its place
         await _shot(page, "phone-goal-new-390x844")
         await sheet.locator('.party [data-change="team"]').click()                                      # Change: the folds, Leads open
@@ -41,19 +41,19 @@ async def test_new_goal_is_one_sheet_a_craft_in_one_row_its_team_in_three_folds_
         await sheet.get_by_role("button", name="Take in: Analyst").click()                              # a lead's pick folds Leads and opens Builds
         await builds.locator(".team-row").first.wait_for(timeout=WAIT_MS)
         assert await leads.locator(".team-row").count() == 0 and "Analyst" in await leads.inner_text()
-        assert [await r.get_attribute("data-agent") for r in await builds.locator('.team-row[aria-pressed="true"]').all()] == ["ui-kit", "artist"]
-        await sheet.get_by_role("button", name="Take in: Copywriter").click()                           # the third builder
-        await sheet.get_by_role("button", name="Take in: Grunt").click()                                # a fourth: no seat
-        assert await builds.locator(".team-seat:not(.is-empty)").count() == 3
-        assert "Builds has 3 seats" in await page.locator(".flash").last.inner_text()
-        await sheet.get_by_role("button", name="Take out: Artist").click()
+        assert [await r.get_attribute("data-agent") for r in await builds.locator('.team-row[aria-pressed="true"]').all()] == ["ui-kit"]
+        await sheet.get_by_role("button", name="Take in: Copywriter").click()                           # a second builder: no seat
+        assert await builds.locator(".team-seat:not(.is-empty)").count() == 1
+        assert "Builds has 1 seat" in await page.locator(".flash").last.inner_text()
+        await sheet.get_by_role("button", name="Take out: Design system designer").click()
+        await sheet.get_by_role("button", name="Take in: Copywriter").click()                           # the one seat, taken again
         await _shot(page, "phone-goal-team-folds-390x844")
         await builds.get_by_role("button", name="Done").click()                                         # Done: every fold closed, back to the line
-        assert await line.inner_text() == "Leads: Analyst · Builds: Design system designer, Copywriter · Checks: Accessibility reviewer"
+        assert await line.inner_text() == "Leads: Analyst · Builds: Copywriter · Checks: Accessibility reviewer"
         await sheet.get_by_label("What it is for").fill("A landing page that says what Orkline does in one screen.")
         await save.click()
         assert await _called(stub, "ideas.goal_save", {"about": "A landing page that says what Orkline does in one screen.", "craft": "design",
-                                                       "leader": "analyst", "team": ["ui-kit", "accessibility-reviewer", "copywriter"],
+                                                       "leader": "analyst", "team": ["accessibility-reviewer", "copywriter"],
                                                        "every": [], "priority": "normal"})
         assert await page.evaluate(NO_SCROLL)
 
@@ -68,14 +68,14 @@ async def test_a_mixed_goal_starts_with_the_taskmaster_alone_and_is_its_party_s_
         await sheet.locator('.party [data-change="team"]').click()
         builds = sheet.get_by_role("region", name="Builds")
         await sheet.get_by_role("region", name="Builds").get_by_role("button").first.click()            # open Builds
-        for name in ("Grunt", "Copywriter", "SEO"):
-            await sheet.get_by_role("button", name=f"Take in: {name}").click()
-        assert await builds.locator(".team-seat:not(.is-empty)").count() == 3
+        await sheet.get_by_role("button", name="Take in: Copywriter").click()
+        await sheet.get_by_role("button", name="Take in: SEO").click()                                  # the one builder's seat is taken: no second
+        assert await builds.locator(".team-seat:not(.is-empty)").count() == 1
         await builds.get_by_role("button", name="Done").click()
         await sheet.get_by_label("What it is for").fill("Launch the beta: the build and its page.")
         await sheet.get_by_role("button", name="Save party").click()
         assert await _called(stub, "ideas.goal_save", {"about": "Launch the beta: the build and its page.", "craft": "marketing",
-                                                       "leader": "taskmaster", "team": ["grunt", "copywriter", "seo"], "every": [], "priority": "normal"})
+                                                       "leader": "taskmaster", "team": ["copywriter"], "every": [], "priority": "normal"})
 
 
 @pytest.mark.asyncio
@@ -112,24 +112,25 @@ async def test_the_team_s_checkers_say_what_they_add_every_idea_is_kept_and_the_
         await sheet.locator('.craft-tile[data-craft="design"]').click()
         await sheet.locator('.party [data-change="team"]').click()
         await sheet.get_by_role("region", name="Checks").get_by_role("button").first.click()            # open Checks
-        await sheet.get_by_role("button", name="Take in: Reviewer").click()                             # the second checker
+        await sheet.get_by_role("button", name="Take out: Accessibility reviewer").click()              # the one checker's seat, given to the Reviewer
+        await sheet.get_by_role("button", name="Take in: Reviewer").click()
         await sheet.get_by_role("region", name="Checks").get_by_role("button", name="Done").click()
-        assert await sheet.locator(".party-checks .party-line").inner_text() == "2 checks, where each applies"      # folded to one line
+        assert await sheet.locator(".party-checks .party-line").inner_text() == "1 check, where each applies"      # folded to one line
         await sheet.locator('.party-checks [data-change="checks"]').click()
         block = sheet.get_by_role("group", name="Checks")
         await expect(block).to_contain_text("adds about $0.35 to a goal it checks", timeout=WAIT_MS)      # the price comes back from the host a moment after the pick
         text = await block.inner_text()
-        assert "Accessibility reviewer" in text and "Reviewer" in text and "Product designer" not in text   # checkers only
-        assert "applies when the goal changes what people see or use" in text and "≈ $1.30 a goal they all apply to" not in text   # the sum goes: each check says what it adds (spec 43 C)
+        assert "Reviewer" in text and "Product designer" not in text and "Design system designer" not in text   # checkers only
+        assert "applies when the goal changes code" in text and "≈ $1.30 a goal they all apply to" not in text   # the sum goes: each check says what it adds (spec 43 C)
         assert "adds about $0.35 to a goal it checks · about half of them" in text
         await block.get_by_label("Every goal: Reviewer").check()
         await block.get_by_role("button", name="Done").click()
-        assert await sheet.locator(".party-checks .party-line").inner_text() == "2 checks, 1 on every goal"
+        assert await sheet.locator(".party-checks .party-line").inner_text() == "1 check, 1 on every goal"
         await sheet.get_by_label("What it is for").fill("A settings screen.")
         await _shot(page, "phone-goal-3-checks-390x844")
         await sheet.get_by_role("button", name="Save party").click()
         assert await _called(stub, "ideas.goal_save", {"about": "A settings screen.", "craft": "design", "leader": "product-designer",
-                                                       "team": ["ui-kit", "artist", "accessibility-reviewer", "reviewer"],
+                                                       "team": ["ui-kit", "reviewer"],
                                                        "every": ["reviewer"], "priority": "normal"})
         stub.checks = [{"by": "accessibility-reviewer", "name": "Accessibility reviewer", "applies": True, "why": "", "state": "passed"},
                        {"by": "reviewer", "name": "Reviewer", "applies": True, "why": "", "state": "review"},
@@ -223,10 +224,11 @@ async def test_a_goal_s_team_is_changed_from_its_screen_and_saved_alone(fake_rep
         assert await sheet.locator(".party-line").first.inner_text() == "Leads: Product designer · Builds: Design system designer · Checks: Accessibility reviewer"
         await sheet.locator('.party [data-change="team"]').click()
         await sheet.get_by_role("button", name="Take in: Analyst").click()                              # the leader changes; Builds opens
+        await sheet.get_by_role("button", name="Take out: Design system designer").click()                # the one builder's seat: out, then another in
         await sheet.get_by_role("button", name="Take in: Artist").click()
         await sheet.get_by_role("region", name="Builds").get_by_role("button", name="Done").click()
         await sheet.get_by_role("button", name="Save the party").click()
-        assert await _called(stub, "ideas.goal_save", {"slug": "land", "team": ["ui-kit", "accessibility-reviewer", "artist"], "every": [], "leader": "analyst"})
+        assert await _called(stub, "ideas.goal_save", {"slug": "land", "team": ["accessibility-reviewer", "artist"], "every": [], "leader": "analyst"})
         assert not any(c[0] == "ideas.goal_save" and "about" in c[1] and c[1].get("slug") == "land" for c in stub.calls)   # the party alone: no words sent
         await sheet.wait_for(state="hidden", timeout=WAIT_MS)
         assert await page.evaluate(NO_SCROLL)

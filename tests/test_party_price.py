@@ -110,7 +110,6 @@ def test_ideas_party_price_is_the_hosts_and_a_phones_and_checks_the_party(host):
     assert got["checks"][0]["every"] is True and got["checks"][0]["share"] == 1.0 and set(got) == {"low", "high", "learned", "ideas", "checks", "hints", "types"}
     assert host.command("ideas.party_price", {})["checks"] == []                                      # the Taskmaster alone
     for bad, why in (({"leader": "nobody"}, "No agent"), ({"team": "grunt"}, "list of agents"),
-                     ({"leader": "architect", "team": ["grunt", "tester", "ui-kit", "artist"]}, "at most 3 builders"),
                      ({"leader": "grunt"}, "does not lead")):
         with pytest.raises(CommandError, match=why):
             host.command("ideas.party_price", bad)
@@ -179,10 +178,14 @@ def test_a_refused_party_is_refused_as_before_and_its_types_are_not_asked(host, 
     monkeypatch.setattr(goal_types.Party, "of", asked)
     monkeypatch.setattr(goal_types, "offered", asked)
     for bad, why in (({"leader": "nobody"}, "No agent"), ({"team": "grunt"}, "list of agents"),
-                     ({"leader": "architect", "team": ["grunt", "tester", "ui-kit", "artist"]}, "at most 3 builders"),
                      ({"leader": "grunt"}, "does not lead"), ({"leader": "architect", "team": ["grunt", "product-manager"]}, "A leader leads")):
         with pytest.raises(CommandError, match=why):
             host.command("ideas.party_price", bad)
+
+
+def test_a_party_made_before_with_more_than_a_seat_a_stage_is_still_priced_as_it_is_spec_87(host):
+    got = host.command("ideas.party_price", {"leader": "architect", "team": ["grunt", "tester", "ui-kit", "artist"]})      # a quote, not a save
+    assert got["high"] > 0
 
 
 def test_a_size_prices_the_party_at_its_target_and_its_tiers_and_none_at_the_setting(host):

@@ -57,7 +57,7 @@ def list_of(text: object) -> list[str]:
 
 
 def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None, asks: list[str], at: str | None = None) -> list[dict]:
-    """What of one idea needs the person (spec 35 §10): its questions, its plan waiting, the leader's plan change waiting (spec 62), its to-dos,
+    """What of one idea needs the person (spec 35 §10): its questions, its plan waiting, the leader's plan change waiting (spec 62), a to-do only when it blocks (spec 87 §4.1),
     a failure, a proposal; a judged pitch (spec 65 §5: low, blocking nothing, its answer)."""
     slug, state = i["slug"], st["state"]
     base = {"idea": slug, "goal": i["track"], "title": i["title"], "priority": i["priority"], "blocks": False,
@@ -90,16 +90,28 @@ def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None
             if t.get("state") == "failed":
                 out.append({**base, "kind": "failed", "blocks": True, "text": f"{t.get('title', '')}: {t.get('error') or 'failed'}",
                             "at": str(t.get("finished") or base["at"])})
-    if plan and state in ("plan", "working", "failed"):
+    if plan and state == "working":                  # a to-do is a stop only when it blocks (spec 87 §4.1); before that it is a line of the plan (`todo_lines`)
         for td in plan.get("todos") or []:
             if td.get("done"):
                 continue
             waits = [t for t in tasks if t.get("id") in (td.get("for") or []) and t.get("state") != "merged"
                      and set(t.get("after") or []) <= merged]
-            out.append({**base, "kind": "todo", "text": td.get("title") or "", "blocks": state == "working" and bool(waits),
-                        "at": str(plan.get("made_at") or base["at"]),
-                        "todo": {k: td.get(k) for k in ("id", "title", "kind", "why", "choices", "steps", "accept", "done")}})
+            if waits:
+                out.append({**base, "kind": "todo", "text": td.get("title") or "", "blocks": True,
+                            "at": str(plan.get("made_at") or base["at"]),
+                            "todo": {k: td.get(k) for k in ("id", "title", "kind", "why", "choices", "steps", "accept", "done")}})
     return out
+
+
+def todo_lines(plan: dict | None, tasks: list[dict] | None = None) -> list[str]:
+    """The lines of a goal's plan for its to-dos (spec 87 §4.2): "Before <task title>: <to-do title>", for each task not merged (or dropped), in the
+    plan's order, each to-do not done that is `for` it (within a task, the to-dos' order): the same lines the faces work out for themselves.
+    A to-do done, or one for no task still to come, is not said. `tasks`: the plan's own when not given."""
+    plan = plan or {}
+    tasks = [t for t in (plan.get("tasks") if tasks is None else tasks) or [] if isinstance(t, dict)]
+    todos = [d for d in plan.get("todos") or [] if isinstance(d, dict) and not d.get("done") and str(d.get("title") or "").strip()]
+    return [f"Before {t.get('title') or t.get('id')}: {str(d['title']).strip()}" for t in tasks if t.get("state") not in ("merged", "dropped")
+            for d in todos if t.get("id") in (d.get("for") or [])]
 
 
 def type_of(st: dict) -> dict | None:
@@ -400,6 +412,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                     "estimate": {"usd_low": est.get("usd_low"), "usd_high": est.get("usd_high")}
                     if isinstance(est, dict) and plan and not started else None,
                     "by_itself": bool(plan) and plan.get("passed_by") == "auto",
+                    "todo_lines": todo_lines(plan, tasks) if r["state"] in ("plan", "working", "failed") else [],      # the to-dos not yet a stop (spec 87 §4.2)
                     "folded": slug not in kept or r["state"] == "passed", "updated": r["updated"], "pitch": pitch}
             if r["state"] != "done":
                 node["waits"] = _waits(node, tasks, titles, r["waits_on"], week)

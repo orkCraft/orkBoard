@@ -871,11 +871,12 @@ def test_new_party_is_a_name_what_it_is_for_its_party_and_a_priority_then_readin
     dlg.locator('.shell-craft-tile[data-craft="design"]').click()                                   # the library's design party, in three bands
     leads, builds = dlg.get_by_role("region", name="Leads"), dlg.get_by_role("region", name="Builds")
     assert leads.locator('.shell-team-row[aria-pressed="true"]').get_attribute("data-agent") == "product-designer"
-    assert builds.locator(".shell-team-seat:not(.is-empty)").count() == 2 and builds.locator(".shell-team-seat").count() == 3
+    assert builds.locator(".shell-team-seat:not(.is-empty)").count() == 1 and builds.locator(".shell-team-seat").count() == 1       # a seat a stage: its first builder (spec 87 §5)
     dlg.get_by_role("button", name="Take in: Analyst").click()                                      # another leader
-    dlg.get_by_role("button", name="Take in: Copywriter").click()                                   # the third builder
-    dlg.get_by_role("button", name="Take in: Grunt").click()                                        # a fourth: no seat
-    assert builds.locator(".shell-team-seat:not(.is-empty)").count() == 3
+    dlg.get_by_role("button", name="Take in: Copywriter").click()                                   # a second builder: no seat
+    assert builds.locator(".shell-team-seat:not(.is-empty)").count() == 1
+    dlg.get_by_role("button", name="Take out: Design system designer").click()
+    dlg.get_by_role("button", name="Take in: Copywriter").click()                                   # the one seat, taken again
     assert leads.locator('.shell-team-row[aria-pressed="true"]').get_attribute("data-agent") == "analyst"
     assert dlg.get_by_role("button", name="Save party").is_disabled()                               # a name or what it is for is required
     assert "led by Analyst" in dlg.inner_text()
@@ -892,7 +893,7 @@ def test_new_party_is_a_name_what_it_is_for_its_party_and_a_priority_then_readin
     dlg.get_by_role("button", name="Save party").click()
     pg.wait_for_function("() => document.querySelectorAll('[role=dialog]').length === 0", timeout=WAIT_MS)
     assert _calls(pg, host, "ideas.goal_save")[0] == {"about": "More people try Orkline.", "leader": "analyst",
-                                                      "team": ["ui-kit", "artist", "accessibility-reviewer", "copywriter"],
+                                                      "team": ["accessibility-reviewer", "copywriter"],
                                                       "every": ["accessibility-reviewer"], "priority": "high"}
     pg.locator(".shell-goal").wait_for(timeout=WAIT_MS)                                             # the party opens in the drawer: About this party
     assert "reading" in pg.locator(".shell-goal").inner_text()
@@ -1031,6 +1032,7 @@ def test_edit_the_party_changes_its_members_and_sends_them_only_when_changed(she
     assert "led by Architect · builds: Grunt · checks: Reviewer" in party.inner_text()
     party.get_by_role("button", name="Change the party").click()
     party.get_by_role("button", name="Take in: Product manager").click()                              # another leader
+    party.get_by_role("button", name="Take out: Grunt").click()                                       # the one builder's seat: Grunt out, then Tester in
     party.get_by_role("button", name="Take in: Tester").click()
     party.get_by_label("Every goal: Reviewer").check()
     if os.environ.get("ORKCRAFT_SHOTS"):
@@ -1039,7 +1041,7 @@ def test_edit_the_party_changes_its_members_and_sends_them_only_when_changed(she
     dlg.get_by_role("button", name="Save party").click()
     pg.wait_for_function("() => document.querySelectorAll('[role=dialog]').length === 0", timeout=WAIT_MS)
     got = _calls(pg, host, "ideas.goal_save")[-1]
-    assert (got["leader"], got["team"], got["every"]) == ("product-manager", ["grunt", "reviewer", "tester"], ["reviewer"])
+    assert (got["leader"], got["team"], got["every"]) == ("product-manager", ["reviewer", "tester"], ["reviewer"])
 
 
 def test_the_target_is_in_settings_not_the_top_bar_and_sets_the_boards_one_target(shell):

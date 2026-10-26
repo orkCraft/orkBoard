@@ -30,10 +30,15 @@ const presetsOf = (core) => core.st.roles?.presets || [];       // the library's
 const TASKMASTER = "taskmaster";
 const MIXED = "mixed";
 const library = (core) => core.st.roles?.library || [];     // the agents that come with Orkline (ideas.roles: realm/library.py)
-const DEFAULT_SEATS = { lead: 1, build: 3, check: 2 };
+const DEFAULT_SEATS = { lead: 1, build: 1, check: 1 };     // a seat a stage (spec 87 §5)
 /** The seats of a leader's party (spec 59 §2.3: `ideas.roles` `stages`), the default's for an older host or a leader the host does not name. */
 const stagesOf = (core, leader) => core.st.roles?.stages?.[leader] || core.st.roles?.stages?.default || { lead: "Planning", build: "Implementation", check: "Checking", seats: core.st.roles?.seats || DEFAULT_SEATS };
 const seatsOf = (core, leader) => stagesOf(core, leader).seats || DEFAULT_SEATS;
+/** A party of the library as New party takes it (spec 87 §5): its leader's first builder and first checker (listed most needed first); Ideation (a pitch leader) its views and the Skeptic whole. The ids of its builders and checkers. */
+const seatedOf = (core, p) => {
+  const whole = library(core).find((a) => a.id === p.lead)?.pitch === true, s = seatsOf(core, p.lead || TASKMASTER);
+  return [...(whole ? p.build : p.build.slice(0, s.build)), ...(whole ? p.check : p.check.slice(0, s.check))];
+};
 const partyOf = (core, c) => core.st.roles?.parties?.[c] || { lead: TASKMASTER, build: [], check: [] };
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
 const lcfirst = (t) => t.charAt(0).toLowerCase() + t.slice(1);
@@ -67,9 +72,10 @@ export function makeParty(core, opts = {}) {
   /** The party is Ideation: its leader judges pitches (the library's `pitch`). */
   const ideation = () => agent(leader)?.pitch === true;
   const seats = (band) => seatsOf(core, leader)[band];
+  const seated = (p) => seatedOf(core, p);
   /** The refusal for a stage that has fewer seats with this leader than the party has members (spec 59 §6.2): "" when the party fits. */
   const overWords = () => {
-    const band = ["build", "check"].find((b) => inBand(b).length > seats(b));
+    const band = ideation() ? null : ["build", "check"].find((b) => inBand(b).length > seats(b));       // (Ideation is its views and the Skeptic whole)
     return band ? `${stagesOf(core, leader)[band]} has ${seats(band)} ${seats(band) === 1 ? "seat" : "seats"} with ${nameOf(leader)}: take one out first.` : "";
   };
   async function loadOwns() {
@@ -186,8 +192,8 @@ export function makeParty(core, opts = {}) {
         if (band === "lead") { leader = on ? TASKMASTER : id; fold = on ? "lead" : "build"; }      // a pick folds Leads and opens Builds
         else if (on) team = team.filter((x) => x !== id);
         else if (inBand(band).length < seats(band)) team = [...team, id];
-        else { core.flash(core.st.roles?.stages ? `${stagesOf(core, leader)[band]} has ${seats(band)} seats with ${nameOf(leader)}: take one out first.`
-          : `${BANDS.find((b) => b[0] === band)[1]} has ${seats(band)} seats: take one out first.`); return; }       // an older host has no stages: today's words
+        else { core.flash(core.st.roles?.stages ? `${stagesOf(core, leader)[band]} has ${plural(seats(band), "seat")} with ${nameOf(leader)}: take one out first.`
+          : `${BANDS.find((b) => b[0] === band)[1]} has ${plural(seats(band), "seat")}: take one out first.`); return; }       // an older host has no stages: today's words
         partyId = ""; presetId = "";                             // a seat changed: the party is then the person's own picking
         draw();
         askPrice();
@@ -280,7 +286,7 @@ export function makeParty(core, opts = {}) {
     preset(craft, lights = true) {
       const p = partyOf(core, craft);
       leader = p.lead || TASKMASTER;
-      team = [...p.build, ...p.check];
+      team = seated(p);
       every = [];
       partyId = ""; presetId = "";
       draw();
@@ -289,14 +295,14 @@ export function makeParty(core, opts = {}) {
     /** A library party in the seats at once (`preset(id)` keeps its id for `ideas.goal_save`, cleared when a seat changes, as `party` is). */
     library(p) {
       leader = p.lead || TASKMASTER;
-      team = [...p.build, ...p.check];
+      team = seated(p);
       every = [];
       partyId = "";
       presetId = p.id;
       draw();
       askPrice();
     },
-    fits: () => !overWords(),
+    fits: () => !overWords() || !!partyId,        // a saved party of the person's (made before) is saved as it was
     get: () => ({ ...current(), party: partyId, preset: partyId ? "" : presetId }),
     /** The crafts of the party's agents, for a Mixed goal's own craft. */
     crafts: () => [leader, ...team].filter((id) => id !== TASKMASTER).map((id) => agent(id)?.craft).filter(Boolean),
@@ -360,7 +366,7 @@ export function makeNewGoal(core) {
     const deal = dealOf(core);                       // the Orkmaster's deal (spec 70 §3.2): inside a group its order, a tile's why under its line; an older host has none: today's order
     const dealt = (list) => (deal.size ? [...list].sort((a, b) => (deal.get(a.id)?.i ?? 1e9) - (deal.get(b.id)?.i ?? 1e9)) : list);
     const tile = (p) => {
-      const ids = [p.lead, ...p.build, ...p.check];
+      const ids = [p.lead, ...seatedOf(core, p)];       // the heads of the party it will be: a seat a stage
       const heads = ids.map((id) => library(core).find((a) => a.id === id)).filter((a) => a?.craft).map((a) => tag(head(raceOf(a), a.tier || "warrior", { small: true }), a.id));
       const alone = p.craft === MIXED;
       return h("button", { class: `craft-tile preset-tile${p.mixed ? " is-mixed" : ""}`, type: "button", "data-preset": p.id, ...(p.mixed ? {} : { "data-craft": p.craft }),

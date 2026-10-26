@@ -8,7 +8,7 @@ import sys
 import pytest
 
 from orkboard.gui.board_host import CommandError, Orkboard
-from orkboard.realm import board_map, event_log, idea_flag, idea_route, ideas, library, pitches, releases
+from orkboard.realm import board_map, event_log, goal_team, idea_flag, idea_route, ideas, library, pitches, releases
 
 TEAM = [*library.VIEWS, library.SKEPTIC]
 PITCH_AT = "2026-10-22T09:00:00"
@@ -22,7 +22,9 @@ def stub(tier, prompt, effort="", budget=None):
 def party(h, title, preset):
     lead, build, check = next((p[4], p[5], p[6]) for p in library.PRESETS if p[0] == preset)
     craft = next(p[3] for p in library.PRESETS if p[0] == preset)
-    slug = h.command("ideas.goal_save", {"title": title, "about": title + ".", "craft": craft, "leader": lead, "team": [*build, *check], "preset": preset})["slug"]
+    slug = h.command("ideas.goal_save", {"title": title, "about": title + ".", "craft": craft, "leader": lead, "team": [*build[:1], *check[:1]], "preset": preset})["slug"]
+    library.install(h.ideas.state_dir, [*build, *check])
+    goal_team.set_team(h.ideas.root(), slug, [*build, *check])          # the library's whole party: made before a party had one seat a stage (spec 87 §5), its team kept
     wait_party(h, slug)
     return slug
 

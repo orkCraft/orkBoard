@@ -57,19 +57,19 @@ async def test_the_library_gives_the_mixed_parties_first_in_one_column(fake_repo
         for t in await tiles.all():
             assert (await t.bounding_box())["height"] >= 44
         game = sheet.locator('.preset-tile[data-preset="game"]')
-        assert "Rules, levels, art and sound, played through" in await game.inner_text() and await game.locator("img").count() == 6
+        assert "Rules, levels, art and sound, played through" in await game.inner_text() and await game.locator("img").count() == 3          # its leader, its first builder, its first checker (spec 87 §5)
         await game.click()
         assert await sheet.locator(".party-line").first.inner_text() == \
-            "Leads: Game designer · Builds: Grunt, Artist, Level designer, Sound designer · Checks: Playtester"
+            "Leads: Game designer · Builds: Grunt · Checks: Playtester"
         await sheet.get_by_label("What it is for").fill("A tower game.")
         await sheet.get_by_role("button", name="Save party").click()
         assert await _called(stub, "ideas.goal_save", {"about": "A tower game.", "craft": "design", "leader": "game-designer", "priority": "normal", "preset": "game",
-                                                       "team": ["grunt", "artist", "level-designer", "sound-designer", "playtester"], "every": []})
+                                                       "team": ["grunt", "playtester"], "every": []})
         assert await page.evaluate(NO_SCROLL)
 
 
 @pytest.mark.asyncio
-async def test_a_seat_changed_clears_the_preset_and_the_game_has_four_builders_seats(fake_repo, monkeypatch):
+async def test_a_seat_changed_clears_the_preset_and_the_game_has_one_builders_seat(fake_repo, monkeypatch):
     hosted(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _sheet(page)
@@ -78,38 +78,43 @@ async def test_a_seat_changed_clears_the_preset_and_the_game_has_four_builders_s
         builds = sheet.get_by_role("region", name="Builds")
         await builds.get_by_role("button").first.click()
         assert await builds.get_attribute("data-stage") == "Build"
-        assert await builds.locator(".team-seat").count() == 4 and await builds.locator(".team-seat:not(.is-empty)").count() == 4
-        assert "4 of 4" in await builds.inner_text() and "Build · 4 seats" in await builds.inner_text()
+        assert await builds.locator(".team-seat").count() == 1 and await builds.locator(".team-seat:not(.is-empty)").count() == 1
+        assert "1 of 1" in await builds.inner_text() and "Build · 1 seat" in await builds.inner_text()
         assert await sheet.get_by_role("region", name="Leads").get_attribute("data-stage") == "Concept"
         assert await sheet.get_by_role("region", name="Checks").get_attribute("data-stage") == "Playtest"
-        await sheet.get_by_role("button", name="Take out: Sound designer").click()
+        await sheet.get_by_role("button", name="Take out: Grunt").click()
+        await sheet.get_by_role("button", name="Take in: Artist").click()                          # the one seat taken again by another
         await builds.get_by_role("button", name="Done").click()
         await sheet.get_by_label("What it is for").fill("A tower game, quiet.")
         await sheet.get_by_role("button", name="Save party").click()
         assert await _called(stub, "ideas.goal_save", {"about": "A tower game, quiet.", "craft": "design", "leader": "game-designer", "priority": "normal",
-                                                       "team": ["grunt", "artist", "level-designer", "playtester"], "every": []})
+                                                       "team": ["playtester", "artist"], "every": []})
         sent = [c[1] for c in stub.calls if c[0] == "ideas.goal_save"][-1]
         assert "preset" not in sent
 
 
 @pytest.mark.asyncio
-async def test_a_leader_with_fewer_seats_says_so_and_save_stays_off_until_it_fits(fake_repo, monkeypatch):
+async def test_a_party_made_before_with_more_than_a_seat_a_stage_says_so_and_is_saved_as_it_was(fake_repo, monkeypatch):
     hosted(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
+        stub.own = [{"id": "p-1a2b3c4d", "name": "Wide web", "craft": "engineering", "leader": "architect", "team": ["grunt", "tester", "reviewer"], "every": [],
+                     "own": [], "goals": 3, "projects": 2, "met": 2, "saved": "2026-10-20T10:00:00"}]
         sheet = await _sheet(page)
-        await sheet.locator('.preset-tile[data-preset="game"]').click()
-        await sheet.get_by_label("What it is for").fill("A tower game.")
+        chip = sheet.locator("[data-party=p-1a2b3c4d]")
+        await chip.wait_for(timeout=WAIT_MS)
+        await chip.get_by_role("button", name="Pick your party “Wide web”").click()
+        await sheet.get_by_label("What it is for").fill("A wide one.")
         save = sheet.get_by_role("button", name="Save party")
-        assert await save.is_enabled()
+        assert await save.is_enabled()                                                             # a party the person made before keeps its team
         await sheet.locator('.party [data-change="team"]').click()
-        await sheet.get_by_role("region", name="Leads").get_by_role("button", name="Take in: Architect").click()      # the Architect leads three builders: the Game's four do not fit
-        line = "Implementation has 3 seats with Architect: take one out first."
         builds = sheet.get_by_role("region", name="Builds")
-        assert await builds.locator(".party-over").inner_text() == line
-        assert await builds.locator(".team-seat.is-over").count() == 1
-        assert await save.is_disabled()
-        await builds.get_by_role("button", name="Take out: Sound designer").click()
-        assert await builds.locator(".party-over").count() == 0 and await save.is_enabled()
+        await builds.get_by_role("button").first.click()
+        assert await builds.locator(".party-over").inner_text() == "Implementation has 1 seat with Architect: take one out first."
+        assert await save.is_enabled()
+        await builds.get_by_role("button", name="Done").click()
+        await save.click()
+        assert await _called(stub, "ideas.goal_save", {"about": "A wide one.", "craft": "engineering", "leader": "architect", "priority": "normal", "party": "p-1a2b3c4d",
+                                                       "team": ["grunt", "tester", "reviewer"], "every": []})
 
 
 @pytest.mark.asyncio

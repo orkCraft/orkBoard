@@ -18,7 +18,7 @@ import { ReleasesFrom, useReleasesFrom } from "./release.js";
 import { reducedMotion } from "../arena/motion.js";
 import { Proposals, SIZES, WorksAs, proposalsOn, savedParty } from "./proposals.js";
 import { ToolPick, runsOwn, useTools } from "./toolpick.js";
-import { TASKMASTER, raceOfAgent, PartyBands, PriceLine, CanTake, ChecksBlock, OwnParties, LibraryTiles, agentOf, inBand, partyWords, overfull, pitchParty, presetsOf, usePartyPrice, useOwnParties } from "./party.js";
+import { TASKMASTER, raceOfAgent, PartyBands, PriceLine, CanTake, ChecksBlock, OwnParties, LibraryTiles, agentOf, inBand, partyWords, overfull, pitchParty, presetsOf, seated, usePartyPrice, useOwnParties } from "./party.js";
 
 export const FOR_HINT = "goes first when the window is short";
 
@@ -36,7 +36,7 @@ function seatHeads(leader, team) {
 
 export function GoalWizard({ then = "", preset: first = "", proposal = "" }) {
   const from = first ? presetsOf().find((p) => p.id === first) : null;    // opened with a party of the library (a pitch sent to one the project lacks, spec 65 §5)
-  const start = from ? { lead: from.lead, build: from.build, check: from.check } : roles.value?.parties?.engineering || { lead: TASKMASTER, build: [], check: [] };
+  const start = seated(from || roles.value?.parties?.engineering || { lead: TASKMASTER, build: [], check: [] });      // a seat a stage: the first builder and the first checker (spec 87 §5)
   const [title, setTitle] = useState(from?.name || "");
   const [about, setAbout] = useState("");
   const [priority, setPriority] = useState("normal");
@@ -66,10 +66,10 @@ export function GoalWizard({ then = "", preset: first = "", proposal = "" }) {
     setPreset("");
     setLit("");
   };
-  const fromLibrary = (p) => { setCraft(p.craft === "mixed" ? "" : p.craft); setPreset(p.id); setLit(p.id); setPartyId(""); setLeader(p.lead || TASKMASTER); setTeam([...(p.build || []), ...(p.check || [])]); setEvery([]); };
+  const fromLibrary = (p) => { setCraft(p.craft === "mixed" ? "" : p.craft); setPreset(p.id); setLit(p.id); setPartyId(""); setLeader(p.lead || TASKMASTER); const q = seated(p); setTeam([...q.build, ...q.check]); setEvery([]); };
   const rf = useReleasesFrom({ leads: leader === "release-manager" });             // the Release party takes its goals from the others (spec 68 §7.6): every party but Ideation, ticked
   const price = usePartyPrice(showLibrary, leader, team, every, craft, sized ? size : "");
-  const fits = overfull(leader, team).length === 0;      // a leader with fewer seats than the party fills: it is saved once it fits (spec 59 §6.2)
+  const fits = overfull(leader, team).length === 0 || !!partyId;      // a leader with fewer seats than the party fills: it is saved once it fits (spec 59 §6.2)
   const ready = (title.trim() || about.trim()) && !saving && fits;
   const save = async (e) => {
     e?.preventDefault();

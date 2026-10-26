@@ -80,20 +80,20 @@ def test_new_party_asks_the_price_when_it_opens_and_after_a_seat_changes_and_say
     dlg = pg.get_by_role("dialog", name="New party")
     price = dlg.locator(".shell-price")
     price.wait_for(timeout=WAIT_MS)
-    assert asked(host) == [{"leader": "architect", "team": ["grunt", "tester", "reviewer"], "every": [], "craft": "engineering"}]       # the library's engineering party, asked at once
+    assert asked(host) == [{"leader": "architect", "team": ["grunt", "reviewer"], "every": [], "craft": "engineering"}]       # the library's engineering party, asked at once
     dlg.locator('.shell-craft-tile[data-craft="design"]').click()
     got = asks(pg, host, 2)
-    assert got[1] == {"leader": "product-designer", "team": ["ui-kit", "artist", "accessibility-reviewer"], "every": [], "craft": "design"}
+    assert got[1] == {"leader": "product-designer", "team": ["ui-kit", "accessibility-reviewer"], "every": [], "craft": "design"}
     assert " ".join(price.inner_text().split()) == "This party: about $2–6 a goal from this project's last 12 goals"
     bands = dlg.get_by_role("region", name="Checks").bounding_box(), price.bounding_box()
     assert bands[1]["y"] > bands[0]["y"]                                                          # under the bands
     host.learned = False
     dlg.get_by_role("button", name="Take in: Analyst").click()
-    dlg.get_by_role("button", name="Take in: Copywriter").click()
-    dlg.get_by_role("button", name="Take out: Artist").click()                                    # three changes within 300 ms: one call
+    dlg.get_by_role("button", name="Take out: Design system designer").click()
+    dlg.get_by_role("button", name="Take in: Copywriter").click()                                 # three changes within 300 ms: one call (the one builder's seat swapped)
     pg.wait_for_function("() => document.querySelector('.shell-price')?.innerText.includes('a first guess')", timeout=WAIT_MS)
     got = asks(pg, host, 3)
-    assert len(got) == 3 and got[2] == {"leader": "analyst", "team": ["ui-kit", "accessibility-reviewer", "copywriter"], "every": [], "craft": "design"}
+    assert len(got) == 3 and got[2] == {"leader": "analyst", "team": ["accessibility-reviewer", "copywriter"], "every": [], "craft": "design"}
     assert " ".join(price.inner_text().split()) == "This party: about $2–6 a goal a first guess: it learns from this project's goals"
     checks = dlg.get_by_role("group", name="Checks")                                              # the checks say what each adds to a goal
     text = " ".join(checks.inner_text().split())
@@ -212,22 +212,24 @@ def test_the_types_that_miss_someone_follow_with_one_more_and_a_seat_that_opens_
     host.offered = lambda a: types(("feature", "bug", "tidy", "screen", "pain", "launch"), a["team"])
     _new_party(pg)
     dlg = pg.get_by_role("dialog", name="New party")
-    dlg.locator('.shell-craft-tile[data-craft="product"]').click()                                # the Product manager, the Grunt, the Copywriter, the Reviewer
-    pg.wait_for_function("() => document.querySelector('.shell-cantake')?.innerText.includes('Write the launch with one more')", timeout=WAIT_MS)       # the Copywriter is in this team
-    assert _line(dlg) == "It can take: New feature · Fix a bug · Clean up · Solve a pain · Write the launch with one more: New screen (needs Design system designer)"
+    dlg.locator('.shell-craft-tile[data-craft="product"]').click()                                # the Product manager, the Grunt, the Reviewer (a seat a stage)
+    pg.wait_for_function("() => document.querySelector('.shell-cantake')?.innerText.includes('with one more')", timeout=WAIT_MS)
+    assert _line(dlg) == "It can take: New feature · Fix a bug · Clean up · Solve a pain with one more: New screen (needs Design system designer) · Write the launch (needs Copywriter)"
     assert dlg.locator('.shell-cantake [data-type="screen"] .ork-sign.screen').count() == 1          # drawn with its sign too
     pg.evaluate(RECORD)
-    dlg.get_by_role("button", name="Take in: Design system designer").click()                    # the third builder opens New screen
-    pg.wait_for_function("() => !document.querySelector('.shell-cantake').innerText.includes('with one more')", timeout=WAIT_MS)
-    assert _line(dlg) == "It can take: New feature · Fix a bug · Clean up · New screen · Solve a pain · Write the launch"          # in the catalog's order
+    dlg.get_by_role("button", name="Take out: Grunt").click()                                     # the one builder's seat is the Copywriter's: it opens Write the launch
+    dlg.get_by_role("button", name="Take in: Copywriter").click()
     pg.wait_for_function("() => window.__lit.length >= 1", timeout=WAIT_MS)
-    assert _lit(pg) == ["screen"]
-    dlg.get_by_role("button", name="Take out: Copywriter").click()                               # a type that goes is not lit: it is said to need the Copywriter
-    pg.wait_for_function("() => document.querySelector('.shell-cantake')?.innerText.includes('Write the launch (needs Copywriter)')", timeout=WAIT_MS)
-    assert _line(dlg).endswith("Solve a pain with one more: Write the launch (needs Copywriter)")
-    dlg.get_by_role("button", name="Take in: Copywriter").click()                                # … and lit when it is back
+    assert _lit(pg) == ["launch"]
+    dlg.get_by_role("button", name="Take out: Copywriter").click()
+    dlg.get_by_role("button", name="Take in: Design system designer").click()                    # … and Design system designer's opens New screen instead
     pg.wait_for_function("() => window.__lit.length >= 2", timeout=WAIT_MS)
-    assert _lit(pg) == ["screen", "launch"]
+    assert _lit(pg) == ["launch", "screen"]
+    dlg.get_by_role("button", name="Take out: Design system designer").click()                   # a type that goes is not lit: it is said to need the agent
+    pg.wait_for_function("() => document.querySelector('.shell-cantake')?.innerText.includes('(needs Design system designer)')", timeout=WAIT_MS)
+    dlg.get_by_role("button", name="Take in: Design system designer").click()                    # … and lit when it is back
+    pg.wait_for_function("() => window.__lit.length >= 3", timeout=WAIT_MS)
+    assert _lit(pg) == ["launch", "screen", "screen"]
 
 
 def test_what_does_not_fit_in_two_lines_ends_with_and_k_more_and_its_title_lists_them_all(shell):

@@ -116,13 +116,13 @@ def test_a_file_of_another_shape_reads_as_none_and_is_kept_until_a_save():
 def test_party_save_carries_an_agent_of_the_persons_own_and_refuses_a_taken_name_and_a_thirteenth(host):
     root = host.ideas.root()
     scribe = roles.save(host.ideas.state_dir, "Docs scribe", "warrior", 2, "You write docs.", None, ["docs"], "design")
-    goal = host.command("ideas.goal_save", {"about": "Docs.", "craft": "design", "leader": "product-designer", "team": ["ui-kit", scribe, "accessibility-reviewer"],
+    goal = host.command("ideas.goal_save", {"about": "Docs.", "craft": "design", "leader": "product-designer", "team": [scribe, "accessibility-reviewer"],
                                             "every": ["accessibility-reviewer"]})["slug"]
     assert BoardPhone.allowed(host, "ideas.party_save", {}) and BoardPhone.allowed(host, "ideas.parties", {}) and BoardPhone.allowed(host, "ideas.party_drop", {})
     got = host.command("ideas.party_save", {"goal": goal, "name": "Design with docs"})
     (saved,) = own_parties.list()
     assert got == {"id": saved["id"]} and saved["craft"] == "design" and saved["leader"] == "product-designer"
-    assert saved["team"] == ["ui-kit", scribe, "accessibility-reviewer"] and saved["every"] == ["accessibility-reviewer"]
+    assert saved["team"] == [scribe, "accessibility-reviewer"] and saved["every"] == ["accessibility-reviewer"]
     assert [o["slug"] for o in saved["own"]] == [scribe] and saved["own"][0]["instruction"] == "You write docs." and saved["own"][0]["takes"] == []   # the library's and built-in are not carried
     assert saved["own"][0]["craft"] == "design" and saved["own"][0]["model"] == "warrior" and saved["own"][0]["max_parallel"] == 2
     with pytest.raises(CommandError, match="You have a party named “Design with docs”"):
@@ -137,7 +137,7 @@ def test_party_save_carries_an_agent_of_the_persons_own_and_refuses_a_taken_name
     with pytest.raises(CommandError, match="You have 12 parties: remove one first"):
         host.command("ideas.party_save", {"goal": goal, "name": "One more"})
     log = [r for r in event_log.read(host.repo_root) if r["event"] == "party_saved"]
-    assert (log[0]["party"], log[0]["members"], log[0]["own"], log[0]["replaced"]) == (saved["id"], 4, 1, False) and log[1]["replaced"] is True
+    assert (log[0]["party"], log[0]["members"], log[0]["own"], log[0]["replaced"]) == (saved["id"], 3, 1, False) and log[1]["replaced"] is True
     assert host.command("ideas.party_drop", {"id": saved["id"]}) == {"ok": True}
     assert [r["party"] for r in event_log.read(host.repo_root) if r["event"] == "party_dropped"] == [saved["id"]]
     with pytest.raises(CommandError, match="That party is gone"):
@@ -152,16 +152,16 @@ def pick(host, party, **more):
 def test_a_party_picked_in_another_project_installs_its_own_agent_keeps_a_role_of_the_same_slug_and_says_so(host, tmp_path):
     root, state = host.ideas.root(), host.ideas.state_dir
     scribe = roles.save(state, "Docs scribe", "warrior", 2, "You write docs.", None, ["docs"], "design")
-    goal = host.command("ideas.goal_save", {"about": "Docs.", "craft": "design", "leader": "product-designer", "team": ["ui-kit", scribe, "accessibility-reviewer"],
+    goal = host.command("ideas.goal_save", {"about": "Docs.", "craft": "design", "leader": "product-designer", "team": [scribe, "accessibility-reviewer"],
                                             "every": ["accessibility-reviewer"]})["slug"]
     party = host.command("ideas.party_save", {"goal": goal, "name": "Design with docs"})["id"]
     other = Orkboard(repo(tmp_path, "other"))
     assert roles.role(other.ideas.state_dir, scribe) is None
     got = pick(other, party)
     assert "notes" not in got and roles.role(other.ideas.state_dir, scribe)["instruction"] == "You write docs."      # made here, as the party says it
-    assert roles.role(other.ideas.state_dir, "ui-kit") is not None                                          # the library's, as today
+    assert roles.role(other.ideas.state_dir, "accessibility-reviewer") is not None                                          # the library's, as today
     g = next(t for t in other.command("ideas.board")["tracks"] if t["slug"] == got["slug"])
-    assert g["party"] == party and g["team"] == ["ui-kit", scribe, "accessibility-reviewer"] and g["leader"]["slug"] == "product-designer"
+    assert g["party"] == party and g["team"] == [scribe, "accessibility-reviewer"] and g["leader"]["slug"] == "product-designer"
     (use,) = own_parties.list()[0]["uses"]
     assert (use["project"], use["name"], use["goal"], use["met"]) == (own_parties.project_key(other.repo_root), "other", got["slug"], None)
     assert [r["party"] for r in event_log.read(other.repo_root) if r["event"] == "goal_saved"] == [party]

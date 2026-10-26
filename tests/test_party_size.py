@@ -68,7 +68,7 @@ def events(h, name):
 
 def save(h, **more):
     return h.command("ideas.goal_save", {"title": "Engineering", "about": "Code.", "craft": "engineering", "leader": "architect",
-                                         "team": ["grunt", "tester", "reviewer"], **more})["slug"]
+                                         "team": ["grunt", "reviewer"], **more})["slug"]
 
 
 def track(h, slug):
@@ -122,12 +122,12 @@ def test_a_size_that_lets_a_member_with_work_open_go_is_refused_and_one_that_doe
     slug = save(h, size="full")
     idea = ideas.add_idea(h.root, "A goal", slug, h.state)
     ideas.save_state(h.state, idea, state="working")
-    ideas.save_plan(h.state, idea, {"idea": idea, "todos": [], "tasks": [{"id": "t1", "title": "T", "state": "running", "role": "tester", "kind": "tests"}]})
-    with pytest.raises(CommandError, match="Tester has work open: it cannot leave"):
+    ideas.save_plan(h.state, idea, {"idea": idea, "todos": [], "tasks": [{"id": "t1", "title": "T", "state": "running", "role": "grunt", "kind": "code"}]})
+    with pytest.raises(CommandError, match="Grunt has work open: it cannot leave"):
         h.command("ideas.goal_save", {"slug": slug, "size": "lean", "leader": "architect", "team": []})
-    assert track(h, slug)["size"] == "full" and track(h, slug)["team"] == ["grunt", "tester", "reviewer"]
-    h.command("ideas.goal_save", {"slug": slug, "size": "standard", "leader": "architect", "team": ["grunt", "tester"]})      # (the reviewer has none open)
-    assert track(h, slug)["size"] == "standard" and track(h, slug)["team"] == ["grunt", "tester"]
+    assert track(h, slug)["size"] == "full" and track(h, slug)["team"] == ["grunt", "reviewer"]
+    h.command("ideas.goal_save", {"slug": slug, "size": "standard", "leader": "architect", "team": ["grunt"]})      # (the reviewer has none open)
+    assert track(h, slug)["size"] == "standard" and track(h, slug)["team"] == ["grunt"]
 
 
 def test_a_goals_draft_plan_and_task_pick_their_partys_tier_not_the_settings(host):
@@ -217,11 +217,11 @@ def test_a_mobile_folder_is_proposed_three_parties_each_in_three_sizes_with_pric
             assert all(set(hd) == {"race", "tier"} and hd["tier"] in ("laborer", "warrior", "elder") for hd in x["heads"])
         assert goal_team.seats(full["team"], full["leader"]) == ""
     feat = got["proposals"][0]["sizes"]
-    assert feat["lean"]["team"] == [] and feat["lean"]["agents"] == 1 and feat["standard"]["team"] == ["grunt", "artist", "reviewer"] and feat["standard"]["agents"] == 4
+    assert feat["lean"]["team"] == [] and feat["lean"]["agents"] == 1 and feat["standard"]["team"] == ["grunt"] and feat["standard"]["agents"] == 2 and feat["full"]["team"] == ["grunt", "reviewer"]
     assert feat["lean"]["price"]["high"] < feat["standard"]["price"]["high"] < feat["full"]["price"]["high"]
     assert feat["lean"]["heads"][0] == {"race": "lich", "tier": "warrior"} and feat["standard"]["heads"][0] == {"race": "lich", "tier": "elder"}                                          # the leader first
     release = got["proposals"][2]["sizes"]                                                                          # (spec 81 §2: Release is sized too)
-    assert release["lean"]["team"] == [] and len(release["standard"]["team"]) == 3 and len(release["full"]["team"]) == 4 and got["proposals"][2]["name"] == "Release"
+    assert release["lean"]["team"] == [] and len(release["standard"]["team"]) == 1 and len(release["full"]["team"]) == 2 and got["proposals"][2]["name"] == "Release"
 
 
 def test_a_party_the_project_has_is_proposed_last_as_have(mobile):
@@ -247,7 +247,7 @@ def test_proposals_write_nothing_and_ask_no_model(mobile):
 def test_an_empty_folder_asks_its_line_and_is_proposed_ideation(empty):
     got = empty.command("ideas.proposals", {})
     assert got["kind"] == {"id": "empty", "words": "an empty folder", "signs": []} and got["ask"] is True and "read" not in got
-    assert [p["id"] for p in got["proposals"]] == ["ideation"] and got["proposals"][0]["sizes"]["lean"]["agents"] == 1 and got["proposals"][0]["sizes"]["full"]["agents"] == 6
+    assert [p["id"] for p in got["proposals"]] == ["ideation"] and got["proposals"][0]["sizes"]["lean"]["agents"] == 1 and got["proposals"][0]["sizes"]["full"]["agents"] == 3
     assert empty.command("ideas.proposals", {"about": ""})["ask"] is True and empty.command("ideas.proposals", {"about": "   "})["ask"] is True
 
 
@@ -390,3 +390,20 @@ def test_deal_first_is_the_deal_when_the_kind_proposes_nothing_new():
     tracks = [{"leader": "investor", "team": [*library.VIEWS, library.SKEPTIC]}]
     assert orkmaster.deal_first(deal, tracks, "empty", {}) == deal
     assert [r["id"] for r in orkmaster.deal_first(deal, [], "empty", {})] == ["ideation", "game"]
+
+
+def test_a_party_made_before_keeps_its_saved_team_and_a_size_gives_one_seat_a_stage_spec_87(host):
+    h = host
+    old = save(h, title="Older")
+    goal_team.set_team(h.root, old, ["grunt", "tester", "reviewer", "security-reviewer"])                          # made when a party had three builders and two checkers
+    h.command("ideas.goal_save", {"slug": old, "about": "Code, changed."})                                           # saved again with no team sent: kept
+    assert track(h, old)["team"] == ["grunt", "tester", "reviewer", "security-reviewer"]
+    h.command("ideas.goal_save", {"slug": old, "team": ["grunt", "tester", "reviewer", "security-reviewer"], "leader": "architect"})    # sent as it is: kept, not refused
+    assert track(h, old)["team"] == ["grunt", "tester", "reviewer", "security-reviewer"]
+    sizes = h.command("ideas.party_sizes", {"slug": old})["sizes"]
+    assert sizes["lean"]["team"] == [] and sizes["standard"]["team"] == ["grunt"] and sizes["full"]["team"] == ["grunt", "reviewer"]
+    assert [x["slug"] for x in sizes["standard"]["leaves"]] == ["tester", "reviewer", "security-reviewer"]                               # the switch says who leaves …
+    assert track(h, old)["team"] == ["grunt", "tester", "reviewer", "security-reviewer"]                            # … and takes no one away by itself
+    assert sizes["full"]["tiers"] == {"architect": "elder", "grunt": "warrior", "reviewer": "elder"}
+    h.command("ideas.goal_save", {"slug": old, "size": "standard"})                                                  # pressed: the size's team
+    assert track(h, old)["team"] == ["grunt"] and goal_team.tiers_of(h.root, old) == {"architect": "elder", "grunt": "warrior"}

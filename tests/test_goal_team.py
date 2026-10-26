@@ -40,7 +40,7 @@ def test_the_library_is_leaders_builders_and_checkers_each_with_its_kinds_and_an
     for craft, (lead, builds, checks) in library.PARTIES.items():                         # a craft's party fits its seats
         assert library.get(lead).band == "lead" and all(library.get(s).band == "build" for s in builds), craft
         assert all(library.get(s).band == "check" for s in checks) and len(builds) <= 3 and len(checks) <= 2, craft
-        assert not goal_team.seats([*builds, *checks], lead), craft
+        assert not goal_team.seats([*builds[:1], *checks[:1]], lead), craft         # one seat a stage (spec 87 §5): the first of each
     assert len({a.id for a in library.LIBRARY}) == len(library.LIBRARY) and library.get("grunt").id in roles.BUILTIN
     for a in library.LIBRARY:
         assert a.tier in roles.TIERS and a.takes and (set(a.takes) <= set(roles.TASK_KINDS)) != a.pitch, a.id   # a pitch agent takes a pitch kind only
@@ -84,10 +84,10 @@ def test_goal_save_with_a_team_makes_its_agents_keeps_the_team_and_never_overwri
     assert roles.role(host.ideas.state_dir, "product-designer")["takes"] == ["design"]
     with pytest.raises(CommandError, match="No agent 'wizard'"):
         host.command("ideas.goal_save", {"about": "x", "team": ["wizard"]})
-    with pytest.raises(CommandError, match="at most 3 builders"):
-        host.command("ideas.goal_save", {"about": "x", "team": ["grunt", "tester", "sql", "seo"]})
-    with pytest.raises(CommandError, match="at most 2 checkers"):
-        host.command("ideas.goal_save", {"about": "x", "team": ["reviewer", "editor", "data-reviewer"]})
+    with pytest.raises(CommandError, match="at most 1 builder"):
+        host.command("ideas.goal_save", {"about": "x", "team": ["grunt", "tester"]})
+    with pytest.raises(CommandError, match="at most 1 checker"):
+        host.command("ideas.goal_save", {"about": "x", "team": ["reviewer", "editor"]})
     with pytest.raises(CommandError, match="does not lead"):
         host.command("ideas.goal_save", {"about": "x", "leader": "grunt", "team": []})
     with pytest.raises(CommandError, match="A leader leads"):
@@ -159,7 +159,9 @@ def test_the_team_s_checks_go_in_the_spec_and_the_plan_where_they_apply_and_ever
     monkeypatch.setattr(jobs, "run_read", run_read)
     host.command("ideas.board_set", {"autostart": False})
     goal = host.command("ideas.goal_save", {"about": "Weekly numbers.", "craft": "data", "every": ["reviewer", "seo"],
-                                            "team": ["grunt", "accessibility-reviewer", "reviewer", "sql"]})["slug"]
+                                            "team": ["grunt", "reviewer"]})["slug"]
+    goal_team.set_team(host.ideas.root(), goal, ["grunt", "accessibility-reviewer", "reviewer", "sql"], ["reviewer"])          # a party made before keeps its team
+    library.install(host.ideas.state_dir, ["accessibility-reviewer", "sql"])
     _wait(host, goal, goal=True)
     assert next(t for t in host.command("ideas.board")["tracks"] if t["slug"] == goal)["every"] == ["reviewer"]   # only the team's
     slug = host.command("ideas.add", {"text": "A weekly report", "track": goal, "hold": True})["slug"]
@@ -202,7 +204,9 @@ def test_a_check_s_status_is_its_task_s_passed_once_merged_and_none_where_it_doe
 def test_the_map_s_goal_carries_its_team_and_its_ideas_their_checks(host):
     from orkboard.realm import idea_checks
     goal = host.command("ideas.goal_save", {"about": "A settings screen.", "craft": "design", "every": ["reviewer"],
-                                            "leader": "product-designer", "team": ["accessibility-reviewer", "reviewer"]})["slug"]
+                                            "leader": "product-designer", "team": ["accessibility-reviewer"]})["slug"]
+    library.install(host.ideas.state_dir, ["reviewer"])
+    goal_team.set_team(host.ideas.root(), goal, ["accessibility-reviewer", "reviewer"], ["reviewer"])                          # a party made before keeps its team
     _wait(host, goal, goal=True)
     slug = host.command("ideas.add", {"text": "Dark mode", "track": goal, "hold": True})["slug"]
     ideas.set_meta(host.ideas.root(), slug, checks=json.dumps([{"by": "accessibility-reviewer", "applies": False, "why": "No screen"}]))
@@ -396,16 +400,21 @@ def test_the_leaders_preamble_says_it_plans_the_goals_and_no_longer_that_it_acce
     assert "accept" not in voice
 
 
-def test_seats_count_against_the_leaders_stages_and_the_refusal_names_the_leader():
-    """Spec 59 §2.3: four builders and one checker with the Game designer, three and two with any other leader."""
+def test_seats_are_one_a_stage_for_every_leader_and_the_refusal_names_the_leader():
+    """Spec 87 §5: a party's seats are its leader's stages: one builder and one checker with any leader."""
     four = ["grunt", "artist", "level-designer", "sound-designer"]
-    assert goal_team.seats(four, "game-designer") == "" and goal_team.seats([*four, "aso"], "game-designer") == "A party led by Game designer has at most 4 builders"
-    assert goal_team.seats(four, "architect") == "A party led by Architect has at most 3 builders"
-    assert goal_team.seats(four[:3], "architect") == "" and goal_team.seats(four[:3]) == ""
-    assert goal_team.seats(four[:3] + ["reviewer"], "game-designer") == "" and goal_team.seats(["playtester", "reviewer"], "game-designer") == "A party led by Game designer has at most 1 checkers"
-    assert goal_team.seats(["reviewer", "editor"], "growth") == "" and goal_team.seats(["reviewer", "editor", "data-reviewer"], "growth") == "A party led by Growth has at most 2 checkers"
-    assert goal_team.seats(four[:4], "") == "A party led by Taskmaster has at most 3 builders"
+    for leader in ("game-designer", "architect", "growth", ""):
+        assert goal_team.seats(four[:1], leader) == "" and goal_team.seats([four[0], "reviewer"], leader) == "", leader
+    assert goal_team.seats(four[:2], "game-designer") == "A party led by Game designer has at most 1 builder"
+    assert goal_team.seats(four, "architect") == "A party led by Architect has at most 1 builder"
+    assert goal_team.seats(["playtester", "reviewer"], "game-designer") == "A party led by Game designer has at most 1 checker"
+    assert goal_team.seats(["reviewer", "editor"], "growth") == "A party led by Growth has at most 1 checker"
+    assert goal_team.seats(four[:2], "") == "A party led by Taskmaster has at most 1 builder"
     assert goal_team.SEATS == 5 and goal_team.seats(["playtester"], "game-designer") == ""
+    # a party made before keeps its team: a band whose members were all saved is not refused, so it can be saved again and lose one at a time
+    assert goal_team.seats(four[:3], "architect", four) == "" and goal_team.seats(four[:2], "architect", four[:3]) == ""
+    assert goal_team.seats([*four[:2], "aso"], "architect", four[:2]) == "A party led by Architect has at most 1 builder"      # a new one is not
+    assert goal_team.seats(["reviewer", "editor"], "growth", ["reviewer", "editor"]) == ""
 
 
 def test_a_partys_size_is_kept_on_its_page_and_read_back(host):

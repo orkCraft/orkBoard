@@ -29,7 +29,7 @@ class PartyMixin:
         except ValueError as e:
             raise IdeasError(str(e)) from None
         every = [s for s in args.get("every") or [] if isinstance(s, str)] if isinstance(args.get("every"), list) else []
-        if why := goal_team.seats(team, "" if leader == roles.TASKMASTER else leader):
+        if why := goal_team.seats(team, "" if leader == roles.TASKMASTER else leader, team):      # a quote: a party made before, with more than one seat a stage, is priced as it is (spec 87 §5)
             raise IdeasError(why)
         every = [s for s in every if s in team]
         size = _opt(args, "size")

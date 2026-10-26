@@ -43,11 +43,11 @@ def test_the_repository_s_parts_and_what_each_uses_python_and_javascript_relativ
 
 def test_the_party_offers_its_crafts_lenses_and_the_leader_s_is_open_first(host):
     slug = host.command("ideas.goal_save", {"about": "Settings people can find.", "craft": "engineering", "leader": "architect",
-                                            "team": ["grunt", "ui-kit", "reviewer"]})["slug"]
+                                            "team": ["ui-kit", "reviewer"]})["slug"]
     got = host.command("ideas.lens", {"track": slug})
     assert [x["id"] for x in got["lenses"]] == ["text", "code", "screen"] and got["default"] == "code"   # no product manager: no pain
     assert next(x for x in got["lenses"] if x["id"] == "code")["by"] == "Architect"
-    plain = host.command("ideas.goal_save", {"about": "Anything.", "craft": "engineering", "team": ["artist", "copywriter"]})["slug"]
+    plain = host.command("ideas.goal_save", {"about": "Anything.", "craft": "engineering", "team": ["artist"]})["slug"]
     got = host.command("ideas.lens", {"track": plain})
     assert got["default"] == "text" and [x["id"] for x in got["lenses"]] == ["text", "screen"]   # the Taskmaster leads: text first
     pm = host.command("ideas.goal_save", {"about": "Who buys.", "craft": "product", "leader": "product-manager"})["slug"]

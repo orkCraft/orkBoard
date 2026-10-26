@@ -9,7 +9,7 @@ import { html, cls } from "../html.js";
 import { Head, Icon } from "../orkui.js";
 import { PROJECT } from "../board/store.js";
 import { openDialog } from "../shell/modals.js";
-import { agentOf, presetsOf, raceOfAgent } from "../shell/party.js";
+import { agentOf, presetsOf, raceOfAgent, seated } from "../shell/party.js";
 import { askProposals, priceWords, proposalsOn } from "../shell/proposals.js";
 import { Dealt } from "./spread.js";
 import { TypesSpread } from "./types.js";
@@ -25,7 +25,7 @@ function Pile({ pile, label, onPress, haspopup }) {
 
 /** A library party's card in the Orkmaster's deal: its leader's head, its name, its members' small heads, its line, its why (*You have one* muted). */
 function PartyCard({ p, entry, press }) {
-  const lead = agentOf(p.lead), why = whyWords(entry), heads = [...p.build, ...p.check].map(agentOf).filter(Boolean);
+  const lead = agentOf(p.lead), why = whyWords(entry), heads = ((q) => [...q.build, ...q.check])(seated(p)).map(agentOf).filter(Boolean);
   return html`<button type="button" class=${cls("arena-spread__card arena-type arena-type--party", { "is-have": entry?.why === "have" })} data-preset=${p.id} data-why=${entry?.why || ""}
       aria-label=${`${p.name}: ${p.line}${why ? `, ${why}` : ""}`} onClick=${press}>
     <span class="arena-type__front">

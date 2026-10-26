@@ -8,9 +8,9 @@
     TARGET["lean"]                     # "thrift": the Target a size works at (realm/idea_target.py SIZE_TARGET)
     has(recipe, tracks)                # the project already has this recipe's party (same leader, the standard team inside its team)
 
-A recipe is made of the library's agents (realm/library.py), `build` and `check` most needed first. Its sizes: **lean**, the leader alone
-(its tasks go to the leader: spec 81); **standard**, the leader, the first two builders and the first checker; **full**,
-every builder and checker of the recipe up to its leader's seats (`library.seats_of`); each size also gives its seats their tiers (`tiers`).
+A recipe is made of the library's agents (realm/library.py), `build` and `check` most needed first; a party's seats are its leader's stages, one
+agent a stage (`library.seats_of`, spec 87 §5). Its sizes: **lean**, the leader alone (its tasks go to the leader: spec 81); **standard**, the
+leader and its first builder; **full**, the leader, its first builder and its first checker; each size also gives its seats their tiers (`tiers`).
 A `whole` recipe (Ideation, Release) is sized the same way (spec 81 §2). Ideation, Release and Game are the library's presets, built on their seats.
 No face, no model.
 """
@@ -115,8 +115,8 @@ def kind_of(recipe_id: str, prefer: str = "") -> str:
 
 def tiers_for(leader: str, team: list[str], size: str) -> dict[str, str]:
     """`{agent: tier}` a size gives a party's seats (spec 81 §2), for any leader and team: **lean** every seat Seasoned (`warrior`);
-    **standard** the leader Veteran (`elder`), the first two builders and the first checker Seasoned, the other seats as the library has
-    them (no entry); **full** the leader and the checkers Veteran, the builders Seasoned: none below Seasoned. The Taskmaster
+    **standard** the leader Veteran (`elder`), the first builder Seasoned, the other seats as the library has them (no entry); **full** the
+    leader and the checkers Veteran, the builders Seasoned (spec 87 §5): none below Seasoned. The Taskmaster
     (no leader picked) is no seat."""
     from orkboard.realm import goal_team
     build = [s for s in team if goal_team.band_of(s) == "build"]
@@ -125,23 +125,23 @@ def tiers_for(leader: str, team: list[str], size: str) -> dict[str, str]:
     if size == "lean":
         return {s: "warrior" for s in [*lead, *team]}
     if size == "standard":
-        return {**{s: "elder" for s in lead}, **{s: "warrior" for s in [*build[:2], *check[:1]]}}
+        return {**{s: "elder" for s in lead}, **{s: "warrior" for s in build[:1]}}
     return {**{s: "elder" for s in lead}, **{s: "warrior" for s in build}, **{s: "elder" for s in check}}
 
 
 def sized(recipe: dict, size: str) -> dict:
-    """`{"leader", "team", "tiers", "size"}` of a recipe in a size (spec 81 §2; `tiers`: `tiers_for`). **lean**: the leader alone, at Seasoned
-    (a task with no taker goes to the leader, not the Grunt); **standard**: the leader Veteran and the first two builders and the first
-    checker Seasoned; **full**: every seat up to `library.seats_of`, none below Seasoned. A `whole` recipe (Ideation, Release) is sized the
-    same way. ValueError for a size that is not lean, standard or full."""
+    """`{"leader", "team", "tiers", "size"}` of a recipe in a size (spec 87 §5; `tiers`: `tiers_for`). **lean**: the leader alone, at Seasoned
+    (a task with no taker goes to the leader, not the Grunt); **standard**: the leader Veteran and its first builder Seasoned; **full**: the
+    leader, its first builder and its first checker, the leader and the checker Veteran, the builder Seasoned. A `whole` recipe (Ideation,
+    Release) is sized the same way. ValueError for a size that is not lean, standard or full."""
     if size not in SIZES:
         raise ValueError(f"No size {size!r}: lean, standard or full")
-    seats = library.seats_of(recipe["leader"])
+    seats = library.seats_of(recipe["leader"])                # one seat a stage: the first builder, the first checker
     build, check = recipe["build"][:seats["build"]], recipe["check"][:seats["check"]]
     if size == "full":
         team = [*build, *check]
     elif size == "standard":
-        team = [*build[:2], *check[:1]]
+        team = list(build)
     else:
         team = []
     return {"leader": recipe["leader"], "team": team, "tiers": tiers_for(recipe["leader"], team, size), "size": size}

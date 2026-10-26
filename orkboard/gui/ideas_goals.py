@@ -97,10 +97,12 @@ class GoalsMixin:
         notes: list[str] = []
         party = _opt(args, "party")
         same_party = bool(party and slug and party == goal_team.party_of(self.root(), slug))      # sent again as it is: nothing is picked
+        kept: list[str] = []                                   # the team a party made before was saved with: seats do not refuse it (spec 87 §5)
         if party and not same_party:                           # a saved party picked (spec 43 §6.2): its own agents the project has not are made
             saved = own_parties.get(party)
             if saved is None:
                 raise IdeasError("That party is gone")
+            kept = list(saved.get("team") or [])
             if args.get("team") is None and args.get("leader") is None:        # only its id was sent: the party as it was saved
                 args = {**args, "team": saved.get("team") or [], "every": saved.get("every") or [], "leader": saved.get("leader") or roles.TASKMASTER}
             for o in saved.get("own") or []:
@@ -123,7 +125,9 @@ class GoalsMixin:
         sized = self._resized(args, slug, team, leader)          # a size sent for a party of a recipe: the size's team (spec 81 §3)
         if sized is not None:
             team, args = sized["team"], {**args, "team": sized["team"], "every": args.get("every") if isinstance(args.get("every"), list) else goal_team.every_of(self.root(), slug)}
-        if why := goal_team.seats(team or [], leader or (goal_team.leader_of(self.root(), slug) if sized is not None else "")):
+        if slug and ideas.track_page(self.root(False), slug) is not None:
+            kept += goal_team.team_of(self.root(False), slug)
+        if why := goal_team.seats(team or [], leader or (goal_team.leader_of(self.root(), slug) if sized is not None else ""), kept):
             raise IdeasError(why)
         size = self._size_asked(args, slug, team)
         got, new = ideas.save_goal(self.root(), slug, title[:ideas.TITLE_CHARS],
