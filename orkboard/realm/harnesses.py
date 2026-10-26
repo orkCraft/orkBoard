@@ -39,10 +39,10 @@ from orkboard.realm.harness_claude import (  # noqa: F401  (re-exported: the nam
     CLAUDE_NO_TOOLS, CLAUDE_READ_ONLY, CLAUDE_READ_WEB, EFFORTS, _HELP, _claude_ask, _claude_call, _claude_mcp,
     _claude_read, _claude_read_dirs, _claude_run, _claude_work, _claude_work_rules, claude_error, cli_has, effort_supported)
 from orkboard.realm.harness_tools import (  # noqa: F401
-    CODEX_USAGE_KEYS, CODEX_WEB, HERMES_READ, HERMES_WORK, NOWHERE, PI_READ, PI_WORK, _agy, _cursor, _hermes,
-    _hermes_env, _model, _pi, _plain_tokens, codex_config_model, codex_error, codex_exec, codex_result,
-    codex_usage_since, cursor_error, cursor_result, hermes_error, hermes_result, json_lines, pi_error, pi_guard,
-    pi_result)
+    AGY_NO_COMMANDS, CODEX_USAGE_KEYS, CODEX_WEB, HERMES_READ, HERMES_WORK, NOWHERE, PI_READ, PI_WORK, _agy, _agy_reads,
+    _cursor, _hermes, _hermes_env, _model, _pi, _plain_tokens, agy_error, codex_config_model, codex_error, codex_exec,
+    codex_result, codex_usage_since, cursor_error, cursor_result, hermes_error, hermes_result, json_lines, pi_error,
+    pi_guard, pi_result)
 
 MAIN = "main"                  # a step on the machine's main tool
 TIERS = ("elder", "warrior", "laborer")
@@ -299,10 +299,10 @@ register(Harness(
 register(Harness(
     "agy", "Antigravity", "agy", "see antigravity.google", "agy login",
     {"elder": "gemini-pro-high", "warrior": "gemini-flash-high", "laborer": "gemini-flash-low"},
-    lambda h, p, f, m: _agy(h, p, f, m),
-    lambda h, p, w, m, web: _agy(h, p, w, m),
+    lambda h, p, f, m: _agy_reads(h, p, f, m),
+    lambda h, p, w, m, web: _agy_reads(h, p, w, m),
     lambda h, p, w, m, r: _agy(h, p, w, m),
-    in_repo=False, default_model="gemini-flash-high", mark="✦", color="bold #3b82f6", fits=("docs",),
+    error=agy_error, in_repo=False, default_model="gemini-flash-high", mark="✦", color="bold #3b82f6", fits=("docs",),
     task_models={"code": "gemini-flash-high", "docs": "gemini-pro-high"},
     models_cmd=lambda h: [[h.bin, "models"]], parse_models=model_families.parse_agy,
     read_dirs=lambda dirs: [a for d in dirs for a in ("--add-dir", d)],    # its sandbox sees only these

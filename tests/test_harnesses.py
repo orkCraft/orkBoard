@@ -25,7 +25,7 @@ def test_a_prompt_never_reads_as_a_flag(tool, tmp_path):
         if h.stdin_prompt:
             assert "-rm everything" not in cmd and "-x" not in cmd
         else:
-            i = cmd.index("-rm everything") if "-rm everything" in cmd else cmd.index("-x")
+            i = next(k for k, a in enumerate(cmd) if a.startswith(("-rm everything", "-x")))   # agy's reads say one line more after it
             assert cmd[i - 1] in ("-p", "--print", "--")                    # it is a flag's value or after --
     assert h.interactive("-x") in (None, [*h.interactive(), *h.deploy_args, "Orders: -x"])
 
@@ -38,6 +38,41 @@ def test_an_unchained_agy_asks_nothing_and_stays_in_its_sandbox(tmp_path):
     free = h.work("x", tmp_path, free=True)
     assert "--dangerously-skip-permissions" in free and "--sandbox" in free
     assert harnesses.need("claude").work("x", tmp_path, free=True) == harnesses.need("claude").work("x", tmp_path)
+
+
+# agy's envelope from the logs of 26 October: a spec's read that asked for a terminal command, refused headless, and said nothing.
+AGY_REFUSED = json.dumps({"conversation_id": "9d5b2443", "status": "SUCCESS", "response": "", "duration_seconds": 44.4, "num_turns": 1,
+                          "usage": {"input_tokens": 26158, "output_tokens": 1819, "total_tokens": 27977},
+                          "denied_actions": [{"action": "command", "display_name": "RunCommand"}]})
+
+
+def test_agy_reads_with_its_file_tools_and_works_as_it_did(tmp_path):
+    h = harnesses.need("agy")
+    for cmd in (h.read("spec it", tmp_path), h.ask("spec it", tmp_path)):
+        prompt = cmd[cmd.index("--print") + 1]
+        assert prompt.startswith("spec it") and prompt.endswith(harnesses.AGY_NO_COMMANDS)
+    assert h.work("fix it", tmp_path)[h.work("fix it", tmp_path).index("--print") + 1] == "fix it"
+
+
+def test_agy_says_which_action_was_refused_and_nothing_when_none_was():
+    assert harnesses.agy_error(AGY_REFUSED) == ("it wanted to run RunCommand, which a run without a window refuses, "
+                                                "and ended with no answer")
+    assert harnesses.agy_error(json.dumps({"response": "{}", "denied_actions": []})) == ""
+    assert harnesses.agy_error("not json") == ""
+
+
+def test_an_agy_read_that_was_refused_a_command_is_its_failure_in_plain_words_not_an_empty_answer(tmp_path, monkeypatch):
+    import threading
+
+    from orkboard.realm import jobs, tool_errors
+    monkeypatch.setattr(tool_run, "run_proc", lambda *a, **k: (0, AGY_REFUSED, "jetski: no output produced"))
+    with pytest.raises(tool_errors.ToolError) as got:
+        jobs.run_read("agy", "spec it", tmp_path, threading.Event())
+    assert got.value.harness == "agy" and got.value.kind == tool_errors.OTHER and "RunCommand" in str(got.value)
+    assert "not signed in" not in tool_errors.plainly(got.value)
+    good = json.dumps({"response": '{"title": "x"}', "denied_actions": [{"action": "command", "display_name": "RunCommand"}]})
+    monkeypatch.setattr(tool_run, "run_proc", lambda *a, **k: (0, good, ""))
+    assert jobs.run_read("agy", "spec it", tmp_path, threading.Event())[0] == '{"title": "x"}'   # an answer given is used
 
 
 def test_hermes_reads_its_stream():
