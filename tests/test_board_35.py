@@ -52,6 +52,8 @@ def model(monkeypatch):
 
 class FakeRunner:
     started: list = []
+    released = ""
+    ticked = False
 
     def __init__(self, *a, **k):
         FakeRunner.started = []
@@ -63,7 +65,10 @@ class FakeRunner:
         pass
 
     def tick(self):
-        pass
+        FakeRunner.ticked = True
+
+    def release_holds(self, slug):
+        FakeRunner.released = slug
 
     def stop_all(self):
         pass
@@ -313,3 +318,27 @@ def test_board_set_turns_looking_at_each_result_on_and_the_notice_is_said_once(h
     assert host.command("ideas.board")["review"] is True
     with pytest.raises(CommandError, match="Looking at each result"):
         host.command("ideas.board_set", {"review": "yes"})
+
+
+def test_start_now_lets_the_reserves_held_task_go_as_the_persons_press_and_says_so(host, runner):
+    """The owner, 26 October: *now I have this state and I don't know what to do next*. A task the reserve holds has a Start now: the press
+    is the person's (the reserve is only for what starts by itself), the goal's held tasks are let go, the runner ticks, and the event
+    says how many were held."""
+    root, sd = host.ideas.root(), host.ideas.state_dir
+    g = ideas.add_track(root, "Chips")
+    a = ideas.add_idea(root, "auto", g, sd)
+    task = lambda tid, state, note="", **more: {"id": tid, "title": tid, "brief": "b", "tier": "warrior", "kind": "code",  # noqa: E731
+                                                "after": [], "state": state, "note": note, "started": "", **more}
+    why = "Waits for Antigravity's limit: 14 % of the week left, kept for you until 12:00"
+    ideas.save_plan(sd, a, {"idea": a, "passed_at": "x", "passed_by": "auto", "todos": [],
+                            "tasks": [task("k1", "held", "reserve · after 12:00", held_why=why), task("k2", "waiting")]})
+    ideas.save_state(sd, a, state="working", error="")
+    chips = [c for r in host.command("ideas.agents")["roles"] for c in r.get("chips") or [] if c.get("task")]
+    assert next(c for c in chips if c["task"] == "k1")["why"] == why                  # the Agents' chip carries the sentence
+    assert host.command("ideas.task", {"slug": a, "task": "k1"})["held_why"] == why
+    host.command("ideas.start_now", {"slug": a, "via": "hand"})
+    assert ideas.plan(sd, a)["passed_by"] == "person" and runner.released == a and runner.ticked is True
+    assert [(e["idea"], e["via"], e["held"]) for e in _events(host, "plan_started_now")] == [(a, "hand", 1)]
+    with pytest.raises(CommandError, match="does not wait for the night or for your reserve"):
+        ideas.edit_plan(sd, a, lambda p: p.update(tasks=[task("k1", "held", "after 12:00")]))      # a tool's own window is not the person's to override
+        host.command("ideas.start_now", {"slug": a})

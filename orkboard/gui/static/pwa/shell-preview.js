@@ -11,7 +11,7 @@ import { resultActions, factsOf, foundOf, mergeReason, shotOf } from "./shell-re
 import { gruntWords } from "./shell-agents.js";
 import { goalBody, leaderName } from "./shell-goal.js";
 import { changePrice, changeWords } from "./shell-arena-words.js";
-import { heldWords } from "./shell-words.js";
+import { heldWords, heldByYou } from "./shell-words.js";
 import { limitsNote } from "./shell-limits.js";
 import { who, whoHead, headWords, TIER_WORDS } from "./shell-who.js";
 import { gateScreen } from "./shell-gate.js";
@@ -180,13 +180,18 @@ export function makePreview(core, ctx, screens = {}) {
     return h("div", { class: "changed-line", "data-state": !p.passed ? "before" : revising ? "revising" : waits ? "waits" : "after" }, h("p", { role: "status" }, words), press);
   }
 
+  /** Start now, for a task the person's reserve or the week's pace holds (the host lets the goal's held tasks go, whoever started it). */
+  const startNow = (slug, cls = "") => h("p", {}, h("button", { class: `ork-btn primary${cls ? ` ${cls}` : ""}`, type: "button", "data-act": "start-now", title: "Runs it now, without keeping your reserve",
+    onclick: () => act("ideas.start_now", { slug }, "Started.").then(() => read(st.preview)) }, "Start now"));
+
   function planList(plan, p, todo = "") {
     const byId = new Map((plan.tasks || []).map((t) => [t.id, t]));
     const kids = [h("ul", { class: "tasks" }, ...(plan.tasks || []).map((t) => h("li", { class: `task t-${t.state}`, title: headWords(t.head) || null },
       h("button", { class: "linkish task-title", type: "button", onclick: () => core.open({ kind: "task", slug: p.slug, task: t.id }) }, whoHead(t.head, true), t.title),
       h("small", { class: "muted" }, [t.tag, t.head ? TIER_WORDS[t.head.tier] : t.tier, (t.after || []).length ? `after ${t.after.map((a) => byId.get(a)?.title || a).join(", ")}` : "",
-        TASK_WORDS[t.state] && p.state !== "plan" ? TASK_WORDS[t.state] : "", t.state === "held" && t.note ? heldWords(t.note, t.waits_title) : "",
+        TASK_WORDS[t.state] && p.state !== "plan" ? TASK_WORDS[t.state] : "", t.state === "held" && t.note ? heldWords(t.note, t.waits_title, t.held_why) : "",
         t.commit ? `commit ${t.commit.slice(0, 7)}` : "", t.state === "failed" && t.error ? t.error : ""].filter(Boolean).join(" · ")))))];
+    if ((plan.tasks || []).some(heldByYou)) kids.push(startNow(p.slug, "plan-start-now"));          // the reserve or the week's pace holds a task: the person may go on
     const before = beforeLines(plan);
     if (before.length) kids.push(h("ul", { class: "before-lines" }, ...before.map((b) => h("li", { class: "before-line", "data-todo": b.todo, "data-task": b.task }, b.text))));
     if ((plan.todos || []).length) {
@@ -351,13 +356,15 @@ export function makePreview(core, ctx, screens = {}) {
     const log = h("pre", { class: "log", "aria-label": "Log" }, t.log || "Nothing logged yet.");
     body.replaceChildren(...[
       h("dl", { class: "facts" },
-        h("dt", {}, "State"), h("dd", { "data-state": t.state }, TASK_WORDS[t.state] || t.state, t.note ? h("small", { class: "muted" }, ` ${t.state === "held" ? heldWords(t.note, t.waits_title) : t.note}`) : null),
+        h("dt", {}, "State"), h("dd", { "data-state": t.state }, TASK_WORDS[t.state] || t.state, t.note ? h("small", { class: "muted" }, ` ${t.state === "held" ? heldWords(t.note, t.waits_title, t.held_why) : t.note}`) : null),
         h("dt", {}, "Goal"), h("dd", {}, h("button", { class: "linkish", type: "button", onclick: () => core.open({ kind: "idea", slug: t.idea }) }, t.idea_title)),
         h("dt", {}, "Tier"), h("dd", {}, t.head ? who(t.head, true) : t.tier), h("dt", {}, "Branch"), h("dd", {}, h("code", {}, t.branch || "—")),
         h("dt", {}, "Round"), h("dd", {}, String(t.round || 1)), h("dt", {}, "Spend"), h("dd", {}, t.cost != null ? (pctOf(t.cost) ? `≈${pctOf(t.cost)}` : `$${Number(t.cost).toFixed(2)}`) : "—")),
       t.error ? h("p", { class: "warn", role: "alert" }, t.error) : null,
       h("h3", {}, "Brief"), h("p", { class: "brief" }, t.brief), h("h3", {}, "Log"), log].filter(Boolean));
     requestAnimationFrame(() => { log.scrollTop = log.scrollHeight; });
+    if (heldByYou(t)) return [h("button", { class: "ork-btn primary big", type: "button", "data-act": "start-now", title: "Runs it now, without keeping your reserve",
+      onclick: () => act("ideas.start_now", { slug: t.idea }, "Started.").then(() => read(cur)) }, "Start now")];
     if (live) return [h("button", { class: "ork-btn danger big", type: "button", onclick: () => act("ideas.stop_task", { slug: t.idea, task: t.id }, "Stopped.").then(() => read(cur)) }, "Stop")];
     if (t.state === "review") return [h("button", { class: "ork-btn primary big", type: "button", onclick: () => core.open({ kind: "result", slug: t.idea, task: t.id }) }, "Open the result")];
     if (t.state === "picking") return [h("button", { class: "ork-btn primary big", type: "button", onclick: () => core.open({ kind: "pick", slug: t.idea, task: t.id }) }, "Pick one")];

@@ -247,7 +247,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                     continue
                 if t.get("state") not in ("merged", "review", "picking", "dropped"):      # a pick that waits keeps its variants; a dropped task is gone
                     t.update(state="waiting", error="", note="")
-                    for key in ("held_for", "held_until", "held_line"):
+                    for key in ("held_for", "held_until", "held_line", "held_why"):
                         t.pop(key, None)
                 self._until.pop((slug, t.get("id")), None)
             self._save_tasks(slug, plan["tasks"])
@@ -313,25 +313,32 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                     continue
                 board = self.board()
                 low = self._still_low(slug)
-                gate = idea_target.gate(plan, limits, board, now, low)
-                paced = idea_target.by_pace(plan, limits, board, now, low)            # the Board's Low plan, started by day: the week has room (spec 44 §3)
-                if paced and self._paced_elsewhere(slug):
-                    gate = "night"                   # at most one of them by day in a project: a second waits for the first to end
+                gates: dict[str, tuple[str | float | None, bool]] = {}      # per tool: the reserve and the week are the tool's own
+
+                def gate_of(tool: str) -> tuple[str | float | None, bool]:
+                    if tool not in gates:
+                        g = idea_target.gate(plan, limits, board, now, low, tool)
+                        p = idea_target.by_pace(plan, limits, board, now, low, tool)     # the Board's Low plan, started by day: the week has room (spec 44 §3)
+                        gates[tool] = ("night" if p and self._paced_elsewhere(slug) else g), p     # at most one of them by day in a project: a second waits
+                    return gates[tool]
+
                 for t in tasks:
-                    if gate == "night":                     # starts at night: only inside the window
-                        break
                     if t.get("state") != "ready" or t.get("note") == STOPPED_NOTE:
+                        continue
+                    tool = self.tool_of(slug, t)
+                    gate, paced = gate_of(tool)
+                    if gate == "night":                     # starts at night: only inside the window
                         continue
                     role = self._role(t)
                     if self._running_as(role["slug"]) >= role["max_parallel"]:
                         continue                     # this role's own limit (spec 34 §3): the task waits its turn
                     if not self.room(slug, t, tasks):
                         continue                     # no slot of the Board's or its party's, or its files meet a running task's (spec 84 §2)
-                    tool = self.tool_of(slug, t)
                     until = status.reset_of(limits, tool, now, status.NEARLY)
                     if until is not None or gate is not None:     # the window, else the person's reserve (§6), else the week (spec 44)
-                        self._hold(slug, t, until if until is not None else gate,
-                                   "" if until is not None else "week · " if isinstance(gate, idea_target.WeekHold) else "reserve · ")
+                        by = "" if until is not None else "week" if isinstance(gate, idea_target.WeekHold) else "reserve"
+                        self._hold(slug, t, until if until is not None else gate, f"{by} · " if by else "",
+                                   idea_target.hold_line(limits, tool, by, gate, now) if by else "")
                     elif self.signed_out(tool):                   # its tool needs a sign-in: held for it (spec 45 §6)
                         self._hold_sign_in(t, "", tool)
                     else:
@@ -428,16 +435,17 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                 t.update(state="waiting", note="", held_for="", held_until="", held_line="")     # signed in: it goes on
                 state, changed = "waiting", True
             elif state == "held" and str(t.get("note") or "").startswith("week") and limits is not None \
-                    and not isinstance(idea_target.gate(plan, limits, self.board(), now, self._still_low(slug)), idea_target.WeekHold):
+                    and not isinstance(idea_target.gate(plan, limits, self.board(), now, self._still_low(slug), self.tool_of(slug, t)),
+                                       idea_target.WeekHold):
                 self._until.pop((slug, tid), None)             # the week is not behind any more: no reason left to hold it
-                t.update(state="waiting", note="")
+                t.update(state="waiting", note="", held_why="")
                 state, changed = "waiting", True
             if state == "held":
                 until = self._until.get((slug, tid)) or _until_of(t.get("note", ""), now) or now
                 if until > now:
                     continue
                 self._until.pop((slug, tid), None)
-                t.update(state="waiting", note="")
+                t.update(state="waiting", note="", held_why="")
                 state, changed = "waiting", True
             if state in LIVE and (slug, tid) not in self._runs:      # its thread is gone (should not happen)
                 t.update(state="ready")
