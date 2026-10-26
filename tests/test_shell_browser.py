@@ -1395,7 +1395,7 @@ def test_agents_chips_say_by_itself_tonight_and_why_a_task_is_held(shell):
     night = chips.filter(has_text="Dark palette")
     assert "tonight" in night.inner_text().lower()
     held = chips.filter(has_text="Write the notes")
-    assert "keeps your reserve · after 18:00" in held.inner_text().lower()
+    assert "waits for your reserve: kept for you until 18:00" in held.inner_text().lower()
     files = chips.filter(has_text="Write the export")
     assert "waits for sync ideas between the phone and the town · same files" in files.inner_text().lower()
     assert files.count() == 1                                                                         # after the wait: beside

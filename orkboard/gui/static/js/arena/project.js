@@ -4,7 +4,7 @@
 // its state's words) grouped *Planning*, *At work*, *Waits for main*, then *Flags (n)* folded. A press on a card opens the goal's screen in the drawer.
 // Wider than the field the columns scroll sideways and the heads stay. Hovering or focusing a deck draws, with arrows.js, a link to each deck its route names in another column (the pitch it came from,
 // the release it went into); nothing at rest. Above the columns the Orkmaster's head and *New party* (its deck: projectdeal.js), below them *New goal* (projectdeal.js, a goal's party from the Orkmaster).
-// Three tabs lie over the table (docs/specs/88-assets-and-play.md §6, docs/specs/91-the-owners-list.md §3): Field (all of the above), Assets and files (assetsfiles.js: Assets, the project's files as cards by kind, or Files, its tree) and Play (play.js: the build in the pane); it opens on Field.
+// Three tabs lie over the table (docs/specs/88-assets-and-play.md §6, docs/specs/91-the-owners-list.md §3): Board (all of the above; its id stays `field`), Assets and files (assetsfiles.js: Assets, the project's files as cards by kind, or Files, its tree) and Play (play.js: the build in the pane); it opens on Board.
 // The code's goal is a party; its idea is a goal; its deck is a goal drawn small, never a word a person reads.
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
@@ -123,7 +123,7 @@ function Field({ m, parties }) {
     <${NewGoalPile} goals=${parties} />`;
 }
 
-/** The level's three tabs over its table (spec 88 §6.1): *Field* (today's level), *Assets*, *Play*. The level opens on Field. ← → (Home, End) move between the tabs. */
+/** The level's three tabs over its table (spec 88 §6.1): *Board* (today's level; it was called Field), *Assets*, *Play*. The level opens on Board. ← → (Home, End) move between the tabs. */
 function Tabs({ tab, setTab }) {
   const key = (e) => {
     const at = TABS.findIndex(([id]) => id === tab), step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];

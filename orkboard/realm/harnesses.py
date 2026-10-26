@@ -39,8 +39,8 @@ from orkboard.realm.harness_claude import (  # noqa: F401  (re-exported: the nam
     CLAUDE_NO_TOOLS, CLAUDE_READ_ONLY, CLAUDE_READ_WEB, EFFORTS, _HELP, _claude_ask, _claude_call, _claude_mcp,
     _claude_read, _claude_read_dirs, _claude_run, _claude_work, _claude_work_rules, claude_error, cli_has, effort_supported)
 from orkboard.realm.harness_tools import (  # noqa: F401
-    AGY_NO_COMMANDS, AGY_WORK_NOTE, CODEX_USAGE_KEYS, CODEX_WEB, HERMES_READ, HERMES_WORK, NOWHERE, PI_READ, PI_WORK, _agy, _agy_reads,
-    _cursor, _hermes, _hermes_env, _model, _pi, _plain_tokens, agy_error, codex_config_model, codex_error, codex_exec,
+    AGY_NO_COMMANDS, AGY_WORK_FREE, CODEX_USAGE_KEYS, CODEX_WEB, HERMES_READ, HERMES_WORK, NOWHERE, PI_READ, PI_WORK, _agy,
+    _agy_reads, _agy_works, _cursor, _hermes, _hermes_env, _model, _pi, _plain_tokens, agy_error, codex_config_model, codex_error, codex_exec,
     codex_result, codex_usage_since, cursor_error, cursor_result, hermes_error, hermes_result, json_lines, pi_error,
     pi_guard, pi_result)
 
@@ -156,9 +156,6 @@ class Harness:
     # What a working agent's argv gets when its building is unchained (autonomy.FREE): a tool that cannot ask
     # in a headless run and refuses what it would have asked about.
     free_args: tuple[str, ...] = ()
-    # A line after a working prompt when the run is NOT unchained (agy: its terminal commands are refused, so it is told to
-    # edit with its file tools). "": none.
-    work_note: str = ""
     # (h) → the commands that print the models it has, tried in order, and the reader of their output.
     # None: it cannot say, and a family in its table runs on its own default.
     models_cmd: Callable[["Harness"], list[list[str]]] | None = None
@@ -237,9 +234,7 @@ class Harness:
              allow: Iterable[str] = (), deny: Iterable[str] = ()) -> list[str]:
         """`dirs`: folders outside `workdir` it may read too; `free`: its building is unchained; `effort`: the model's
         reasoning (where the tool takes one); `allow`, `deny`: the commands it may and never may run (where the tool takes a list)."""
-        if self.work_note and not free:
-            prompt = f"{prompt}\n\n{self.work_note}"
-        cmd = (self.work_cmd(self, prompt, str(workdir), self.pick(model), resume) + list(self.free_args if free else ())
+        cmd =(self.work_cmd(self, prompt, str(workdir), self.pick(model), resume) + list(self.free_args if free else ())
                + self._run(model, effort)
                + (self.work_rules(list(allow), list(deny)) if self.work_rules and (allow or deny) else []))
         dirs = [str(d) for d in dirs if str(d)]
@@ -307,14 +302,13 @@ register(Harness(
     {"elder": "gemini-pro-high", "warrior": "gemini-flash-high", "laborer": "gemini-flash-low"},
     lambda h, p, f, m: _agy_reads(h, p, f, m),
     lambda h, p, w, m, web: _agy_reads(h, p, w, m),
-    lambda h, p, w, m, r: _agy(h, p, w, m),
+    lambda h, p, w, m, r: _agy_works(h, p, w, m),
     error=agy_error, in_repo=False, default_model="gemini-flash-high", mark="✦", color="bold #3b82f6", fits=("docs",),
     task_models={"code": "gemini-flash-high", "docs": "gemini-pro-high"},
     models_cmd=lambda h: [[h.bin, "models"]], parse_models=model_families.parse_agy,
     read_dirs=lambda dirs: [a for d in dirs for a in ("--add-dir", d)],    # its sandbox sees only these
-    # `--print` denies every terminal command it would ask about and ends the turn with no answer (1.3.3), so a
-    # task whose ork runs its tests first comes back empty. Unchained, it asks nothing; `--sandbox` still holds.
-    free_args=("--dangerously-skip-permissions",), work_note=AGY_WORK_NOTE,
+    # `--print` denies every terminal command it would ask about and ends the turn with no answer (1.3.3): its work always
+    # skips the asking (`_agy_works`, decisions §107.7), its reads never do (`_agy_reads`); `--sandbox` holds either way.
     resume_cmd=lambda h, sid: [h.bin, "--conversation", sid], sign_in=("login",), makes=("pictures",),
     # docs/design/decisions-2026-10.md §5: Google banned accounts in February 2026 for using Antigravity through
     # third-party tools; a second flag is permanent.

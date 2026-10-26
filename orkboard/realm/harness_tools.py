@@ -140,11 +140,15 @@ AGY_NO_COMMANDS = ("Read with your file tools (view_file, list_dir, grep_search)
                    "every command is refused and the run ends with no answer.")
 
 
-# The same for a working run that is not unchained (`Harness.work_note`): it edits with its file tools, and the gate
-# runs the tests after it. An unchained run (`free_args`) asks nothing and gets no such line.
-AGY_WORK_NOTE = ("Edit files with your file tools (view_file, list_dir, grep_search, write_to_file, replace_file_content) "
-                 "and run no terminal command: in this run every command is refused and the run ends with no answer. "
-                 "The gate runs the tests after you.")
+# A working run may run its commands (the owner, 26 October: tests and builds are the work, decisions §107.7): `--print`
+# would refuse each one and end the turn empty, so agy's work always skips the asking; `--sandbox` keeps it to the task's
+# worktree, and the Warder's hook (hooks/warder.py) still judges each command where it is installed. Its reads never do.
+AGY_WORK_FREE = ("--dangerously-skip-permissions",)
+
+
+def _agy_works(h, prompt, workdir, model):
+    """An agy run that works in a task's worktree: it runs its commands, in its sandbox."""
+    return [*_agy(h, prompt, workdir, model), *AGY_WORK_FREE]
 
 
 def _agy_reads(h, prompt, workdir, model):

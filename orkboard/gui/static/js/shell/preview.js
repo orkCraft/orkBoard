@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Sign, Who } from "../orkui.js";
 import { ErrorLine } from "./errors.js";
-import { board, page } from "../board/store.js";
+import { board, page, holdWords, heldByYou } from "../board/store.js";
 import { IdeaView, PlanView } from "../board/idea.js";
 import { TASK_STATE } from "../board/maplayout.js";
 import { mapData, preview, detail, review, goal, editing, active, goneWords, keepTab, setTabTitle, act, closePreview, showIdea, showResult, showGoal, refreshShell } from "./store.js";
@@ -51,7 +51,7 @@ function Task({ d }) {
   if (!t) return html`<p class="ok-tone-muted">Opening…</p>`;
   return html`<div class="shell-task">
     <dl class="shell-facts">
-      <dt>State</dt><dd data-state=${t.state}>${TASK_STATE[t.state] || t.state}${t.note ? html` <span class="ok-tone-muted">${t.note}</span>` : ""}</dd>
+      <dt>State</dt><dd data-state=${t.state}>${TASK_STATE[t.state] || t.state}${t.note ? html` <span class="ok-tone-muted">${t.state === "held" ? holdWords(t.note, "", t.held_why) : t.note}</span>` : ""}</dd>
       <dt>Goal</dt><dd><button class="board-link" onClick=${() => showIdea(t.idea)}>${t.idea_title}</button></dd>
       <dt>Tier</dt><dd>${t.head ? html`<${Who} head=${t.head} small />` : t.tier}</dd>
       <dt>Branch</dt><dd><code>${t.branch || "—"}</code></dd>
@@ -60,6 +60,7 @@ function Task({ d }) {
     </dl>
     ${t.error && html`<${ErrorLine} text=${t.error} />`}
     ${t.state === "failed" && html`<${FailedActions} t=${t} />`}
+    ${heldByYou(t) && html`<div class="board-row"><button class="ork-btn primary" data-act="start-now" title="Runs it now, without keeping your reserve" onClick=${() => act("ideas.start_now", { slug: t.idea })}>Start now</button></div>`}
     <h3 class="board-sub">Brief</h3><p class="shell-brief">${t.brief}</p>
     ${t.state === "review" && html`<p><button class="ork-btn primary" onClick=${() => showResult(t.idea, t.id)}>Open the result</button></p>`}
     ${live && html`<p><button class="ork-btn danger" onClick=${() => act("ideas.stop_task", { slug: t.idea, task: t.id })}>Stop</button></p>`}

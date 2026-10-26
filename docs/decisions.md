@@ -1698,4 +1698,8 @@ drawn and agreed the same day. So:
    seats (*Leads*, *Does*, *Checks*) on the right, the size changing seats and tiers at once.
 6. **Beside the Orkmaster, two rows**: *Parties* (New party and two or three proposals) and *New goal* (one line, the party
    guessed, at most three kinds and *More kinds…*).
+7. **Antigravity runs a task's commands** (the owner, the same afternoon, after its tasks came back empty: *let it run
+   them in its sandbox*): agy's work skips its asking (`--dangerously-skip-permissions`), `--sandbox` keeping it to the
+   task's worktree and the Warder's hook judging each command where it is installed; its reads (a spec, a plan, a talk)
+   still run no command. The building's autonomy never reached a task's run, so it is no longer agy's condition.
 Spec 91.

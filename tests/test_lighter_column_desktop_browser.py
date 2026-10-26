@@ -68,7 +68,7 @@ def test_a_goal_is_one_line_of_28_px_with_its_element_its_type_its_title_and_its
     main = row.locator(".arena-goal__main")
     assert main.bounding_box()["height"] == 28 and row.bounding_box()["height"] == 28
     elem = row.locator(".ork-elem").bounding_box()
-    assert elem["x"] - col["x"] == 12 and elem["width"] == 12 and elem["height"] == 12                                           # 12 px in from the column's edge, orkUI's element at 12 px
+    assert elem["x"] - col["x"] == 12 + 32 and elem["width"] == 12 and elem["height"] == 12                                           # 12 px in from the party body, which is one step (32 px) in from the column's edge (the owner, 26 October), orkUI's element at 12 px
     kind = row.locator(".arena-goal__type")
     assert kind.locator(".ork-sign.bug").count() == 1 and kind.bounding_box()["width"] == 12                                      # its type's sign, in its goal's colour
     assert kind.evaluate("e => getComputedStyle(e).color") == row.locator(".ork-elem").evaluate("e => getComputedStyle(e).backgroundColor")

@@ -536,7 +536,8 @@
 .arena-pjnew { border-top: 0; border-bottom: var(--ork-line) solid var(--ork-frame); }
 .arena-project__body { flex: 1; min-height: 0; overflow: auto; }
 /* the heads on the canvas, the table under them (spec 79): a row of heads and a row of columns, each column as wide as its head */
-.arena-project__grid { display: flex; flex-direction: column; min-width: max-content; min-height: 100%; }
+/* it lies in the pane as a party's board does: its columns share the width the pane has (172 px at least, 260 at most) and the right column pushes them in (decisions §105.2); only more parties than fit scroll */
+.arena-project__grid { display: flex; flex-direction: column; min-width: min-content; min-height: 100%; }
 .arena-project__heads { position: sticky; top: 0; z-index: 3; flex: none; display: flex; background: var(--ork-canvas); }
 .arena-project__cols { position: relative; flex: 1; display: flex; align-items: stretch; }
 .arena-pcol, .arena-pcol__head { flex: 1 0 172px; max-width: 260px; box-sizing: border-box; }

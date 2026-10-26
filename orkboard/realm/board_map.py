@@ -210,11 +210,12 @@ def brief_of(g: dict) -> str:
 
 def _run_of(t: dict) -> dict:
     """What a task's run left, for its card (spec 49 §2.4): the failure as the runner wrote it (cut), a hold's or a stop's
-    note, the round, what it cost (usd; None before it ran) and when it started (ISO, "" before)."""
+    note, the round, what it cost (usd; None before it ran), when it started (ISO, "" before) and `why`, a hold by the reserve or the week in words."""
     cost = t.get("cost")
     return {"error": str(t.get("error") or "")[:ERROR_CHARS], "note": str(t.get("note") or ""), "round": int(t.get("round") or 1),
             "cost": cost if isinstance(cost, (int, float)) and not isinstance(cost, bool) else None,
-            "started": str(t.get("started") or "")}
+            "started": str(t.get("started") or ""),
+            **({"why": str(t["held_why"])} if t.get("state") == "held" and t.get("held_why") else {})}
 
 
 # -- the Map -------------------------------------------------------------------------------------------------
@@ -273,12 +274,12 @@ def _waits(node: dict, tasks: list[dict], titles: dict[str, str], page_waits: li
         note = str(t.get("note") or "")
         got = _AFTER.search(note)
         if got and note.startswith("reserve"):
-            return {"kind": "reserve", "ref": "", "title": "", "until": got.group(1)}
+            return {"kind": "reserve", "ref": "", "title": str(t.get("held_why") or ""), "until": got.group(1)}      # `title`: the hold in words, when the runner wrote them
     for t in held:
         note = str(t.get("note") or "")
         got = _AFTER.search(note)
         if got and note.startswith("week"):
-            return {"kind": "week", "ref": "", "title": "", "until": (week or {}).get("until") or ""}      # no week read: no time the faces can say
+            return {"kind": "week", "ref": "", "title": str(t.get("held_why") or ""), "until": (week or {}).get("until") or ""}      # no week read: no time the faces can say
     if (node["queue"] == "night" or node["start_at"] == "night") and node.get("night_by") == "board" and (week or {}).get("held"):
         return {"kind": "week", "ref": "", "title": "", "until": week["until"]}      # the Board's own Low work, held at night by the pace
     if node["queue"] == "night" or node["start_at"] == "night":

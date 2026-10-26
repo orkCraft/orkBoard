@@ -267,14 +267,20 @@ class BoardMixin:
         return True
 
     def start_now(self, args: dict) -> dict:
-        """Start now: a plan that starts at night starts now."""
+        """Start now: a plan that starts at night starts now; and a task the person's reserve or the week's pace holds (the owner, 26
+        October: *now I have this state and I don't know what to do next*) goes on: the press is the person's, and the reserve is only for
+        what starts by itself (realm/idea_target.py `gate`)."""
         slug = _text(args, "slug", 100)
         plan = ideas.plan(self.state_dir, slug)
-        if not plan or plan.get("start_at") != "night":
-            raise IdeasError("This plan does not wait for the night")
-        ideas.edit_plan(self.state_dir, slug, lambda p: p.update(start_at=None))
-        self._ev(event_log.PLAN_STARTED_NOW, args, idea=slug, via=_via(args))
+        held = [t for t in (plan or {}).get("tasks") or [] if isinstance(t, dict) and t.get("state") == "held"
+                and str(t.get("note") or "").startswith(("reserve", "week"))]
+        if not plan or (plan.get("start_at") != "night" and not held):
+            raise IdeasError("This plan does not wait for the night or for your reserve")
+        ideas.edit_plan(self.state_dir, slug, lambda p: p.update(start_at=None, passed_by="person"))
+        self._ev(event_log.PLAN_STARTED_NOW, args, idea=slug, via=_via(args), held=len(held))
         runner = self.runner(need=True)
+        if held:
+            runner.release_holds(slug)
         if ideas.state(self.state_dir, slug)["state"] == "plan":
             ideas.save_state(self.state_dir, slug, state="working", error="")
             runner.start(slug)

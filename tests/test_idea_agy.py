@@ -59,17 +59,16 @@ def test_the_prompt_says_a_project_with_no_tests_waits_for_a_look(town):
     assert "pytest" not in prompt and "the gate runs" not in prompt
 
 
-def test_agy_is_told_to_edit_with_its_file_tools_when_it_is_not_unchained_and_not_when_it_is(tmp_path):
+def test_agy_works_running_its_commands_in_its_sandbox_and_reads_running_none(tmp_path):
+    # the owner, 26 October (decisions §107.7): a task's tests and builds are its work, so agy's work never asks
     h = harnesses.need("agy")
     said = lambda cmd: cmd[cmd.index("--print") + 1]                            # noqa: E731
-    chained = said(h.work("fix it", tmp_path))
-    assert chained == f"fix it\n\n{harnesses.AGY_WORK_NOTE}"
-    assert "write_to_file, replace_file_content" in chained and "The gate runs the tests after you." in chained
-    free = h.work("fix it", tmp_path, free=True)
-    assert said(free) == "fix it" and "--dangerously-skip-permissions" in free
-    assert "--dangerously-skip-permissions" not in h.work("fix it", tmp_path)
-    assert said(h.read("spec it", tmp_path)) == f"spec it\n\n{harnesses.AGY_NO_COMMANDS}"        # the read line, as it was
-    assert harnesses.need("claude").work_note == "" and "fix it" in harnesses.need("claude").work("fix it", tmp_path)
+    for cmd in (h.work("fix it", tmp_path), h.work("fix it", tmp_path, free=True)):
+        assert said(cmd) == "fix it" and cmd.count("--dangerously-skip-permissions") == 1 and "--sandbox" in cmd
+        assert cmd[cmd.index("--add-dir") + 1] == str(tmp_path)                 # its sandbox is the task's worktree
+    read = h.read("spec it", tmp_path)
+    assert said(read) == f"spec it\n\n{harnesses.AGY_NO_COMMANDS}" and "--dangerously-skip-permissions" not in read
+    assert "--dangerously-skip-permissions" not in harnesses.need("claude").work("fix it", tmp_path)
 
 
 def test_a_work_run_that_ended_with_no_answer_because_a_command_was_refused_is_a_failure_that_is_still_counted(tmp_path, monkeypatch):
@@ -107,4 +106,4 @@ def test_an_agy_task_refused_its_command_fails_once_in_plain_words_with_no_round
     assert task["error"].startswith("Antigravity wanted to run RunCommand") and "Pick another AI tool" in task["error"]
     assert "changed no file" not in task["error"] and "still red" not in task["error"]
     assert len(asked) == 1                                                            # no second turn: sending it back could not help
-    assert harnesses.AGY_WORK_NOTE in asked[0][asked[0].index("--print") + 1]         # not unchained: told to use its file tools
+    assert "--dangerously-skip-permissions" in asked[0]                               # it may run its commands, in its sandbox

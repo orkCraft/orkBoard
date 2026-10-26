@@ -310,25 +310,53 @@ def board_low(plan: dict, board: dict, low: bool = True) -> bool:
     return low and plan.get("start_at") == "night" and plan.get("start_at_by") == "board" and bool(board.get("autostart", True))
 
 
-def by_pace(plan: dict, limits, board: dict, now: float, low: bool = True) -> bool:
-    """The Board's Low plan may start by day: the week is ahead of its pace (spec 44 §3)."""
+def by_pace(plan: dict, limits, board: dict, now: float, low: bool = True, provider: str = "claude") -> bool:
+    """The Board's Low plan may start by day: the week of the tool it runs on (`provider`) is ahead of its pace (spec 44 §3)."""
     night = in_night(str(board.get("night") or "01:00-07:00"), dt.datetime.fromtimestamp(now))
-    return board_low(plan, board, low) and not night and pace(limits, now) == "ahead"
+    return board_low(plan, board, low) and not night and pace(limits, now, provider) == "ahead"
 
 
-def gate(plan: dict, limits, board: dict, now: float, low: bool = True) -> str | float | None:
+def gate(plan: dict, limits, board: dict, now: float, low: bool = True, provider: str = "claude") -> str | float | None:
     """What holds a passed plan's tasks besides the spent window: "night" (it starts at night and the window is not
     open: its tasks wait, unheld), the reserve's reset (it started by itself), the week's reset (`WeekHold`: the Board's
     Low plan at night while the week is behind), else None (spec 35 §5, §6; spec 44 §3). The Board's Low plan is the one
-    exception to "night": by day, with the week ahead of its pace, it starts, the reserve as for any autostart."""
+    exception to "night": by day, with the week ahead of its pace, it starts, the reserve as for any autostart. The reserve and the
+    week's pace are those of `provider`, the tool the task runs on (a tool with no limits read has none)."""
     night = in_night(str(board.get("night") or "01:00-07:00"), dt.datetime.fromtimestamp(now))
     if plan.get("start_at") == "night":
         low = board_low(plan, board, low)
-        if not night and not (low and pace(limits, now) == "ahead"):
+        if not night and not (low and pace(limits, now, provider) == "ahead"):
             return "night"
-        if night and low and pace(limits, now) == "behind":
-            got = week(limits, now)
+        if night and low and pace(limits, now, provider) == "behind":
+            got = week(limits, now, provider)
             return WeekHold(got["reset"])
     if plan.get("passed_by") == "auto" or plan.get("start_at") == "night":
-        return reserve_held(limits, board, now)
+        return reserve_held(limits, board, now, provider)
     return None
+
+
+WINDOW_WORDS = {"weekly": "week", "session": "five hours"}
+
+
+def hold_line(limits, provider: str, kind: str, until: float, now: float) -> str:
+    """What a task held by the person's reserve (`kind` "reserve") or by the week's pace ("week") says, in plain words, with the tool it
+    waits on, its share left and until when: *Waits for Claude's limit: 14 % of the week left, kept for you until 12:00* (the owner, 26
+    October: a held task must say what is happening). A tool with no share read says only whose limit it is."""
+    from orkboard.realm import harnesses
+    tool = harnesses.title(provider)
+    rows = [lim for lim in limits or () if getattr(lim, "provider", "") == provider and getattr(lim, "remaining", None) is not None]
+    if kind == "week":
+        got = week(limits, now, provider)
+        share = f" {tool} has {round(got['left'] * 100)} % of its week left." if got else ""
+        return f"Waits for the week's pace:{share} The Board holds its own work until {_when(until, now)}."
+    if not rows:
+        return f"Waits for {tool}'s limit: kept for you until {_when(until, now)}"
+    low = min(rows, key=lambda lim: lim.remaining)
+    window = WINDOW_WORDS.get(getattr(low, "window", ""), getattr(low, "window", "") or "limit")
+    return f"Waits for {tool}'s limit: {round(low.remaining * 100)} % of the {window} left, kept for you until {_when(until, now)}"
+
+
+def _when(at: float, now: float) -> str:
+    """*12:00* today, else *Mon 09:00*."""
+    d, today = dt.datetime.fromtimestamp(at), dt.datetime.fromtimestamp(now).date()
+    return f"{d:%H:%M}" if d.date() == today else f"{d:%a %H:%M}"

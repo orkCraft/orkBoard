@@ -6,12 +6,13 @@ from __future__ import annotations
 import datetime as dt
 import json
 import threading
+import time
 from types import SimpleNamespace
 
 import pytest
 
 from orkboard.core.idea_runner import IdeaRunner
-from orkboard.realm import event_log, idea_secrets
+from orkboard.realm import event_log, idea_secrets, idea_target
 from orkboard.sources.limits import Limit
 
 from tests.test_idea_runner import git, plan_of, town  # noqa: F401  (the fixture repository with a stub claude)
@@ -82,6 +83,29 @@ def test_the_reserve_holds_what_started_by_itself_and_never_the_persons_press(to
     assert launched == [("demo", "k1")]
 
 
+def test_the_reserve_is_read_on_the_tool_the_task_runs_on_not_on_claudes(town):
+    """The owner's 26 October: a Game party's task (Antigravity, 99 % left) was held by Claude's low week."""
+    reset = dt.datetime.now() + dt.timedelta(hours=2)
+    limits = lambda: [Limit("claude", "", "weekly", 0.14, reset), Limit("agy", "", "weekly", 0.99, reset)]      # noqa: E731
+    for tool, held in (("agy", False), ("claude", True)):
+        plan_of(town, [{"id": "k1"}])
+        _pass(town, passed_by="auto")
+        r, launched = _runner(town, limits=limits, night=_now_in(False))
+        r.party_of = lambda slug, tool=tool: {"tool": tool}
+        r.start("demo")
+        (task,) = r.plan("demo")["tasks"]
+        assert (task["state"] == "held") is held, (tool, task)
+        assert (launched == []) is held
+        if held:
+            assert task["note"] == f"reserve · after {reset:%H:%M}"
+    plan_of(town, [{"id": "k1"}])                                              # a tool with no limits read has no reserve
+    _pass(town, passed_by="auto")
+    r, launched = _runner(town, limits=lambda: [Limit("claude", "", "weekly", 0.05, reset)], night=_now_in(False))
+    r.party_of = lambda slug: {"tool": "agy"}
+    r.start("demo")
+    assert launched == [("demo", "k1")]
+
+
 def test_high_goes_before_normal(town):
     for slug in ("normal-one", "high-one"):
         plan_of(town, [{"id": "k1"}], slug=slug)
@@ -122,3 +146,23 @@ def test_the_gate_refuses_a_result_that_edits_the_boards_pages(town):
     problem, out = r._check(path, start, threading.Event(), "t")
     assert "never edits the Board's pages" in problem and "pages/ideas/other.md" in problem and out == ""
     r.git.remove(path)
+
+
+def test_a_held_task_says_whose_limit_how_much_is_left_and_until_when_and_start_now_lets_it_go(town):
+    """The owner, 26 October: *Waits for Claude's limit: 14 % of the week left, kept for you until 12:00*; the person's press releases it."""
+    reset = dt.datetime.now() + dt.timedelta(hours=2)
+    limits = lambda: [Limit("claude", "", "weekly", 0.14, reset), Limit("claude", "", "session", 0.9, reset)]      # noqa: E731
+    plan_of(town, [{"id": "k1"}, {"id": "k2", "after": ["k1"]}])
+    _pass(town, passed_by="auto")
+    r, launched = _runner(town, limits=limits, night=_now_in(False))
+    r.start("demo")
+    task = r.plan("demo")["tasks"][0]
+    assert task["held_why"] == f"Waits for Claude Code's limit: 14 % of the week left, kept for you until {reset:%H:%M}", task
+    assert idea_target.hold_line([Limit("agy", "", "session", 0.2, reset)], "agy", "reserve", reset.timestamp(), time.time()) \
+        == f"Waits for Antigravity's limit: 20 % of the five hours left, kept for you until {reset:%H:%M}"
+    assert idea_target.hold_line([], "agy", "reserve", reset.timestamp(), time.time()) == f"Waits for Antigravity's limit: kept for you until {reset:%H:%M}"
+    _pass(town, passed_by="person")                                         # the person's press: no reserve for it
+    assert r.release_holds("demo") == 1
+    assert r.plan("demo")["tasks"][0]["state"] == "waiting" and r.plan("demo")["tasks"][0]["held_why"] == ""
+    r.tick()
+    assert launched == [("demo", "k1")]

@@ -8,7 +8,7 @@ import { html, cls } from "../html.js";
 import { Who, Icon, Moon } from "../orkui.js";
 import { moonOf } from "../arena/goalwords.js";
 import { toast } from "../link.js";
-import { stateWords, board, PRIORITY_WORDS, holdWords } from "./store.js";
+import { stateWords, board, PRIORITY_WORDS, holdWords, heldByYou } from "./store.js";
 import { Stages } from "./stages.js";
 import { act as run, showTask, showIdea, closePreview, roles, mapData } from "../shell/store.js";
 import { missingWords } from "../arena/types.js";
@@ -99,6 +99,7 @@ const TASK_WORDS = { waiting: "waiting", ready: "ready", running: "working", tes
   failed: "failed", held: "held", dropped: "dropped" };
 
 function Tasks({ plan, working }) {
+  const first = plan.tasks.find(heldByYou);           // one Start now for the goal: it lets all its held tasks go
   return html`<ul class="board-tasks">${plan.tasks.map((k) => html`<li key=${k.id} data-state=${k.state}>
     <span class="board-task__state" data-state=${k.state}>${TASK_WORDS[k.state] || k.state}</span>
     <button class="board-link board-task__title" onClick=${() => showTask(plan.idea, k.id)}><b>${k.title}</b></button>
@@ -107,7 +108,8 @@ function Tasks({ plan, working }) {
     ${k.after?.length ? html`<span class="ok-tone-muted">after ${k.after.join(", ")}</span>` : ""}
     ${k.commit && html`<code class="board-commit" title=${k.branch}>${k.commit.slice(0, 8)}</code>`}
     ${plan.passed_by === "auto" && !["waiting", "ready"].includes(k.state) && html`<span class="ok-tone-muted">by itself</span>`}
-    ${k.state === "held" && k.note && html`<span class="ok-tone-wait">${holdWords(k.note, k.waits_title || board.value?.ideas.find((i) => k.note.endsWith(` · ${i.slug}`))?.title)}</span>`}
+    ${k.state === "held" && k.note && html`<span class="ok-tone-wait board-task__held" data-held=${heldByYou(k) ? "you" : "other"}>${holdWords(k.note, k.waits_title || board.value?.ideas.find((i) => k.note.endsWith(` · ${i.slug}`))?.title, k.held_why)}</span>`}
+    ${k === first && html`<button class="ork-btn primary" data-act="start-now" title="Runs it now, without keeping your reserve" onClick=${() => run("ideas.start_now", { slug: plan.idea })}>Start now</button>`}
     ${k.error && html`<span class="ok-tone-error">${k.error}</span>`}
     ${working && k.cost != null && html`<span class="ok-tone-muted">${pctOf(k.cost) || `$${usd(k.cost)}`}</span>`}
   </li>`)}</ul>`;

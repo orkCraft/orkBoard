@@ -21,7 +21,7 @@ const FEW = 3;                                   // merged results (a Grunt's) o
 
 export function gruntWords(c) {
   const [word, mark] = GRUNT[c.state] || [c.state, ""];
-  if (c.state === "held") return heldWords(c.note, c.waits_title);
+  if (c.state === "held") return heldWords(c.note, c.waits_title, c.why);
   if (c.state === "ready" && c.note) return "stopped";
   return mark ? `${word} ${mark}` : word;
 }

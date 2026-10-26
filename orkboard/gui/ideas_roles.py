@@ -240,6 +240,7 @@ class RolesMixin:
                          "kind": t.get("kind") or roles.DEFAULT_KIND, "head": roles.task_head(self.state_dir, t, mine, read, self.tiers_of_idea(slug)),
                          "tag": roles.KIND_LABELS.get(str(t.get("kind") or ""), roles.KIND_LABELS[roles.DEFAULT_KIND]),
                          "note": t.get("note") or (t.get("error") if state == "failed" else "") or "",
+                         **({"why": t["held_why"]} if state == "held" and t.get("held_why") else {}),      # a hold by the reserve or the week, in words
                          # spec 35 §11.5: who started it, and whether it waits for the night
                          "by": "auto" if plan.get("passed_by") == "auto" else "person",
                          "night": plan.get("start_at") == "night" and not t.get("started"),
