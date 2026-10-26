@@ -3,6 +3,8 @@
 // keeps its team), so there is no *With its team* and no second confirm. Under the switch, before the press, **the heads that join and leave** for each other size (`ideas.party_sizes`: *Joins: …* / *Leaves: …*);
 // a member with work open is not let go (spec 52's swap holds on the host too): *<Name> has work open: it cannot leave*, said in place. The field is controlled: About this party saves at once (`PartySize`),
 // Edit the party sends `size` (and the team the size gave) with Save party.
+// **`SizeBar`** (docs/specs/91-the-owners-list.md §7) is New party's and Edit the party's: the label *Size*, the switch Lean · Standard · Full — a press changes the seats and their tiers on the dialog at once
+// (partydraft.js) — and a line saying what the size gives (*3 agents: the leader Veteran, the rest Seasoned · works as Balance*), with the party's own AI tool beside it (toolpick.js).
 import { useEffect, useState } from "preact/hooks";
 import { html } from "../html.js";
 import { command } from "../link.js";
@@ -11,6 +13,8 @@ import { board } from "../board/store.js";
 import { mapData, refreshShell } from "./store.js";
 import { SIZES, SIZE_TARGET, WorksAs, priceWords, proposalsOn } from "./proposals.js";
 import { TARGETS } from "../board/target.js";
+import { sizeWords } from "./partymodel.js";
+import { ToolPick } from "./toolpick.js";
 
 /** What each size would make of the party (`ideas.party_sizes`): {lean, standard, full: {team, joins, leaves}}, null while asked or refused. Asked again when the saved party changes. */
 function useMoves(slug) {
@@ -94,3 +98,14 @@ export function PartySize({ slug, leader, team, every, craft, size, party }) {
 }
 
 export const sizeOf = (slug) => (mapData.value?.goals || []).find((g) => g.slug === slug)?.size || "";
+
+/** New party's size bar (spec 91 §7): **Size**, the switch, what the size gives, and the party's **Its AI tool** (the seats' own are on their rows). `agents`: how many agents the party has now. */
+export function SizeBar({ size, agents, onPick, note = "", tools = null, tool = "", onTool = () => {} }) {
+  const works = size ? (TARGETS.find(([id]) => id === SIZE_TARGET[size]) || TARGETS[1])[1].toLowerCase() : "";
+  return html`<div class="shell-sizebar" role="group" aria-label="Size" data-size=${size}>
+    <div class="shell-sizebar__size"><span class="ok-font-label">Size</span>
+      <${Switch} label="Size" options=${SIZES} value=${size} onPick=${onPick} />
+      <small class="shell-sizebar__says ok-tone-muted">${size ? `${sizeWords(size, agents)} · works as ${works}` : "No size of its own yet"}</small>
+      ${note && html`<p class="shell-size__note ok-font-status ok-tone-error" role="alert">${note}</p>`}</div>
+    ${tools && html`<${ToolPick} tools=${tools} value=${tool} onChange=${onTool} />`}</div>`;
+}

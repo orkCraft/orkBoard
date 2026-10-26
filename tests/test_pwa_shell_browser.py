@@ -479,8 +479,9 @@ async def _new_idea(page):
 
 
 async def _wizard(sheet, craft="engineering"):
-    """New party is one sheet (spec 41 §6): a craft picked puts its party in the seats; the rest is below it."""
-    await sheet.locator(f'.craft-tile[data-craft="{craft}"]').click()
+    """New party is one sheet (spec 41 §6, spec 91 §7): a craft picked puts its party in the seats; the rest is below it."""
+    await sheet.locator(f'.preset-tile[data-preset="{craft}"]').click()
+    await sheet.locator(".pseat[data-seat]").first.wait_for(timeout=WAIT_MS)
 
 
 async def _band(page, band):
@@ -869,7 +870,7 @@ async def test_every_sheet_is_dimmed_closes_on_esc_and_keeps_its_buttons_at_its_
             await sheet.wait_for(state="hidden", timeout=WAIT_MS)
         await _new_goal(page)                                                                           # the buttons are pinned at the foot
         sheet = page.get_by_role("dialog", name="New party")
-        await sheet.locator('.craft-tile[data-craft="design"]').click()
+        await sheet.locator('.preset-tile[data-preset="design"]').click()
         foot = await sheet.locator(".sheet-foot").bounding_box()
         assert foot["y"] + foot["height"] >= 844 - 2
         await page.keyboard.press("Escape")
@@ -881,8 +882,8 @@ async def test_new_goal_sheet_description_and_priority_then_the_goal_reads_and_s
         await _new_goal(page)
         sheet = page.get_by_role("dialog", name="New party")
         await _wizard(sheet, "marketing")                                                               # its craft, its party as suggested
-        assert await sheet.get_by_role("button", name="Save party").is_disabled()                       # what it is for is required
-        assert await sheet.get_by_label("Name").count() == 0                                             # no name to type on a new party
+        assert await sheet.get_by_role("button", name="Save party").is_enabled()                        # the preset's name stands for the party's until it is named
+        assert await sheet.get_by_label("Name").input_value() == "" and await sheet.get_by_label("Name").get_attribute("placeholder") == "Marketing"       # the name is the person's: the preset's is only shown
         assert await sheet.get_by_label("Metric 1: what is measured").count() == 0 and await sheet.get_by_label("Deadline").count() == 0
         await sheet.get_by_label("What it is for").fill("More people try Orkline.")
         await sheet.get_by_role("radio", name="High").click()

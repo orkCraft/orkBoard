@@ -5,6 +5,7 @@
     ideas.collide_answer {id, answer}   # the person's answer to a collision: `first:<slug>` · `one` · `replan` · `leave` → {ok: true}
     ideas.proposals {about?}      # the parties this project's kind needs, each Lean, Standard or Full with its price (spec 75 §4): {kind, ask, proposals, read?}
     ideas.tools                   # the AI tools a party may run on, ready first (spec 81 §1.4): {main, tools: [{id, name, ready, signed_in, installed, experimental, tiers, makes}]}; `makes`: what the tool can make beside code and text (agy: pictures; spec 91 §6)
+    ideas.party_presets           # New party's presets for this project's kind (spec 91 §7): {kind: {id, words}, presets: [{id, name, line, group: stage|craft|own, build, check, sizes, …}]}
     ideas.party_sizes {slug}      # what each size would make of a party: {size, sizes: {lean|standard|full: {team, tiers, joins, leaves, recipe}}} (spec 81 §3)
 
 `proposals` reads the folder's names (realm/project_kind.py), no model, but for an empty folder's one line (core/idea_kind.py, the cheaper tier, as the
@@ -22,7 +23,7 @@ import threading
 from orkboard.core import idea_collide, idea_kind
 from orkboard.core.idea_keeper import KeeperError
 from orkboard.gui.ideas_args import IdeasError, _opt, _text
-from orkboard.realm import collide, event_log, goal_team, harnesses, idea_change, ideas, library, orkmaster, party_resize, project_kind
+from orkboard.realm import collide, event_log, goal_team, harnesses, idea_change, ideas, library, orkmaster, party_presets, party_resize, project_kind
 
 log = logging.getLogger(__name__)
 _BUSY_LOCK = threading.Lock()      # the pairs being judged now: one thread judges a pair (the bus and the hook may both find it)
@@ -71,6 +72,13 @@ class ProjectMixin:
         got = orkmaster.proposals(self.root(False), self.state_dir, self.board_settings(), kind, facts, ideation_first=bool(line), told=told)
         self._ev(event_log.PROPOSALS_SHOWN, args, kind=kind["id"], n=len(got), ask=ask, read=read)
         return {"kind": kind, "ask": ask, **({"read": read} if read is not None else {}), "proposals": got}
+
+    def party_presets(self, args: dict) -> dict:
+        """`ideas.party_presets` (spec 91 §7): what New party offers on its left, fitted to what the project is (the folder's names, no model): the
+        stages (Ideation, Concept, Build, Release, LiveOps), the crafts and the person's own, each with its leader, its builders and checkers and its three sizes' teams and tiers
+        (realm/party_presets.py). It writes nothing."""
+        kind, _facts = self.kind_now()
+        return {"kind": {"id": kind["id"], "words": kind["words"]}, "presets": party_presets.listed(kind["id"])}
 
     # -- a party's AI tool and its size's team (spec 81) ---------------------------------------------------------------------------------
 

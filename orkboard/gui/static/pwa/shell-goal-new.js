@@ -1,49 +1,23 @@
-// New party on the phone, on one sheet (docs/specs/41-phone-round-3.md §6, spec 50 §0, §6.7), top to bottom: what it is for — the description (focused) and the
-// priority —, its craft — one row of six heads, the five crafts and Mixed, the picked one's word and line under it (decisions §53) —, its
-// party folded to one line (Leads · Builds · Checks) with Change, its checks folded to one line, what is left of the AI tools, and Save party
-// pinned at the foot. The team is three folds, one open at a time, each closed by Done: Leads (one seat: a pick folds it and opens Builds),
-// Builds (three at most), Checks (two at most); the craft's party is in them at once. A task goes to the one of the party who does its kind of
-// work (Grunt fills in); a checker's check adds its line to the spec's Done when and its task to the plan (realm/idea_checks.py). A Mixed
-// goal starts with the Taskmaster alone, its craft its party's most. `makeParty` is the team and the checks alone: a goal's own screen
-// changes its team with the same two (§7). Under the price, *It can take:* the goal types the seats would be offered (spec 63 §2); a party saved here gathers its heads into the party's deck (§4).
-// With a host that proposes (spec 75 §5, shell-proposals.js) New party opens on the Orkmaster's proposals, and this sheet — the tiles, the seats, Save party — is **More: the library**, with the size switch added to it.
-// Ideation (spec 65 §1) is the library's like any: its six agents are offered to no other party, and its seats are not changed (no Change; its price is a pitch's, it takes no goal type).
-import { h, sheet, head, icon } from "./util.js";
-import { pctOf, pctRange } from "./shell-spend.js";
-import { field, foot, prioritySwitch } from "./shell-forms.js";
-import { CRAFT_WORDS, RACE_WORDS, TIER_WORDS, raceOf } from "./shell-who.js";
-import { limitsNote } from "./shell-limits.js";
+// The team of a party on the phone as the Add to the party sheet changes it (docs/specs/41-phone-round-3.md §6, spec 50 §0, §6.7, spec 59 §2): `makeParty` is the team and the checks alone — the party
+// folded to one line (Leads · Builds · Checks) with Change, its checks folded to one line —; the team is three folds, one open at a time, each closed by Done: Leads (one seat: a pick folds it and
+// opens Builds), Builds, Checks, each a seat a stage (spec 87 §5). A task goes to the one of the party who does its kind of work (Grunt fills in); a checker's check adds its line to the spec's Done when
+// and its task to the plan (realm/idea_checks.py). A goal's own screen changes its team with the same two (shell-goal.js). Under the price, *It can take:* the goal types the seats would be offered
+// (spec 63 §2). Ideation (spec 65 §1) is the library's like any: its six agents are offered to no other party, and its seats are not changed (no Change; its price is a pitch's, it takes no goal type).
+// **New party** is shell-party-new.js (docs/specs/91-the-owners-list.md §7): presets, then the team by seats with a size and each seat's AI tool.
+import { h, head, icon } from "./util.js";
+import { makePrice } from "./shell-party-price.js";
+import { RACE_WORDS, TIER_WORDS, raceOf } from "./shell-who.js";
 import { say } from "./shell-words.js";
-import { sign } from "./shell-marks.js";
-import { motionOn, pulse, gather } from "./shell-motion.js";
-import { makeReleasesFrom } from "./shell-release.js";
-import { dealOf } from "./shell-project.js";
-import { PROPOSAL, STANDARD, makeProposals, proposes, sizeSwitch } from "./shell-proposals.js";
-import { loadTools, toolPick } from "./shell-party-tool.js";
 
-export const CRAFTS = [["engineering", "peon", "Code, tests and the build"], ["design", "elf", "Screens, flows and words on them"],
-  ["data", "goblin", "Numbers, queries and reports"], ["marketing", "gnome", "Pages, posts and search"],
-  ["product", "lich", "Who it is for, what it moves, what it leaves out"]];
 const BANDS = [["lead", "Leads", "reads and plans each goal"], ["build", "Builds", "do the work"],
   ["check", "Checks", "hold each goal to their check"]];
-const presetsOf = (core) => core.st.roles?.presets || [];       // the library's parties, the mixed first (spec 59 §2.4); none from an older host
 const TASKMASTER = "taskmaster";
-const MIXED = "mixed";
 const library = (core) => core.st.roles?.library || [];     // the agents that come with Orkline (ideas.roles: realm/library.py)
 const DEFAULT_SEATS = { lead: 1, build: 1, check: 1 };     // a seat a stage (spec 87 §5)
 /** The seats of a leader's party (spec 59 §2.3: `ideas.roles` `stages`), the default's for an older host or a leader the host does not name. */
 const stagesOf = (core, leader) => core.st.roles?.stages?.[leader] || core.st.roles?.stages?.default || { lead: "Planning", build: "Implementation", check: "Checking", seats: core.st.roles?.seats || DEFAULT_SEATS };
 const seatsOf = (core, leader) => stagesOf(core, leader).seats || DEFAULT_SEATS;
-/** A party of the library as New party takes it (spec 87 §5): its leader's first builder and first checker (listed most needed first); Ideation (a pitch leader) its views and the Skeptic whole. The ids of its builders and checkers. */
-const seatedOf = (core, p) => {
-  const whole = library(core).find((a) => a.id === p.lead)?.pitch === true, s = seatsOf(core, p.lead || TASKMASTER);
-  return [...(whole ? p.build : p.build.slice(0, s.build)), ...(whole ? p.check : p.check.slice(0, s.check))];
-};
-const partyOf = (core, c) => core.st.roles?.parties?.[c] || { lead: TASKMASTER, build: [], check: [] };
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
-const lcfirst = (t) => t.charAt(0).toLowerCase() + t.slice(1);
-const TAKES_LINES = 3;                                         // *It can take* runs to three lines at most, then *and k more* (spec 63 §2.1)
-const GATHER_HEADS = 6;                                        // the heads that gather into the deck, the leader's first (spec 63 §4.1)
 /** Ideation is always its four views and the skeptic (spec 65 §1, realm/goal_team.py `IDEATION_WHOLE`): its seats are not changed, and its agents sit in no other party. */
 export const IDEATION_WHOLE = "Ideation reads every pitch from all four sides: its views and the skeptic stay.";
 /** A head of the sheet that stands for an agent: the gather finds where the sheet shows it by this. */
@@ -56,11 +30,9 @@ export function makeParty(core, opts = {}) {
   let owns = [], partyId = "", asking = "";                // your parties (spec 43 §6); `partyId`: the one whose seats these are, until a seat changes
   let editing = false, fold = "", checking = false;
   let presetId = "";                                       // the library's party the seats are, until a seat changes
-  let price = null, priceTimer = 0;                        // `ideas.party_price`: asked when the picker opens, 300 ms after a seat or *Every idea* changes
-  let seen = null, opened = new Set();                     // the goal types of the answer before (none at the first), and those the last change opened: lit once (spec 63 §2.2)
-  let takes = null;                                        // the *It can take* line drawn last, cut to its lines once it is in the page
   const teamEl = h("div", { class: "party" });
   const checksEl = h("div", { class: "party-checks" });
+  const pr = makePrice(core, { current: () => ({ ...current(), ...(craftNow() ? { craft: craftNow() } : {}) }), redraw: () => draw() });       // what the party costs and can take (shell-party-price.js)
 
   const agent = (id) => library(core).find((a) => a.id === id) || (core.st.roles?.roles || []).find((r) => r.slug === id && { id: r.slug, name: r.name });
   const nameOf = (id) => agent(id)?.name || agent(id)?.id || id;
@@ -72,7 +44,6 @@ export function makeParty(core, opts = {}) {
   /** The party is Ideation: its leader judges pitches (the library's `pitch`). */
   const ideation = () => agent(leader)?.pitch === true;
   const seats = (band) => seatsOf(core, leader)[band];
-  const seated = (p) => seatedOf(core, p);
   /** The refusal for a stage that has fewer seats with this leader than the party has members (spec 59 §6.2): "" when the party fits. */
   const overWords = () => {
     const band = ideation() ? null : ["build", "check"].find((b) => inBand(b).length > seats(b));       // (Ideation is its views and the Skeptic whole)
@@ -110,77 +81,9 @@ export function makeParty(core, opts = {}) {
     partyId = p.id; presetId = "";
     if (p.craft && opts.onCraft) opts.onCraft(p.craft);
     draw();
-    askPrice();
+    pr.ask();
   }
   const current = () => ({ leader, team: [...team], every: every.filter((id) => team.includes(id)) });
-  /** `lights`: whether the types this answer newly offers are lit (a seat the person changed); the answers to the picker's opening are the baseline and light nothing (spec 63 §2.2). */
-  function askPrice(now = false, lights = true) {
-    clearTimeout(priceTimer);
-    const go = async () => {
-      const got = await core.call("ideas.party_price", { ...current(), ...(craftNow() ? { craft: craftNow() } : {}) });
-      if (!got) return;
-      const ids = Array.isArray(got.types) ? got.types.map((t) => t.id) : null;           // an older host sends none: no line
-      opened = new Set(lights && seen && ids ? ids.filter((id) => !seen.has(id)) : []);
-      seen = ids && new Set(ids);
-      price = got;
-      draw();
-    };
-    if (now) go(); else priceTimer = setTimeout(go, 300);
-  }
-  /** *This party: about $2–6 a goal* (below $1, in cents) and, muted, where it comes from. */
-  function priceLine() {
-    if (!price) return null;
-    const { low, high } = price, a = Math.round(low), b = Math.round(high);
-    const range = pctRange(low, high) || (low < 1 ? `$${low.toFixed(2)}–${high.toFixed(2)}` : a === b ? `$${a}` : `$${a}–${b}`);
-    const [one, many] = price.pitch ? ["pitch", "pitches"] : ["goal", "goals"];            // Ideation's price is a pitch's (spec 65 §3)
-    return h("div", { class: "party-price-box" },
-      h("p", { class: "party-price", role: "status" }, `This party: about ${range} a ${one}`,
-        h("small", { class: "muted" }, ` ${price.learned ? `from this project's last ${price.ideas} ${many}` : `a first guess: it learns from this project's ${many}`}`)),
-      ...(price.hints || []).map((t) => h("p", { class: "muted party-hint" }, t)));    // spec 43 §5: quiet lines, never a block, no button
-  }
-  /** *It can take:* the goal types a party of these seats would be offered (spec 63 §2): `ideas.party_price`'s `types`, each its sign and name, joined by ·; then *with one more:* the types that
-   *  miss someone (*New screen (needs Design system designer)*); none at all, *nothing of its own yet: add a builder*. Three lines at most (`fitTakes`); a type the last change opened is
-   *  lit once. Null for an older host (no `types`). */
-  function takesLine() {
-    takes = null;
-    if (!Array.isArray(price?.types) || price.pitch) return null;                        // a pitch has no goal type: its decision names the one it will have
-    const lit = motionOn() ? opened : new Set();
-    opened = new Set();
-    const have = price.types.filter((t) => !t.missing), all = [...have, ...price.types.filter((t) => t.missing)];
-    const words = (t) => (t.missing ? `${t.name} (needs ${t.missing})` : t.name);
-    const item = (t) => h("span", { class: `take${t.missing ? " is-missing" : ""}`, "data-type": t.id }, sign(t.sign), words(t));
-    const el = h("p", { class: "party-takes" });
-    /** The first `n` types; the rest are said as *and k more*, their names in its title. */
-    const paint = (n) => {
-      const nodes = all.slice(0, n).map(item), kids = [h("b", {}, "It can take:"), " "];
-      if (!have.length) kids.push("nothing of its own yet: add a builder", nodes.length ? ", " : ".");
-      nodes.forEach((node, i) => {
-        if (i === have.length) kids.push(i ? ", " : "", h("span", { class: "take-with" }, "with one more:"), " ");
-        else if (i) kids.push("\u00a0· ");
-        kids.push(node);
-      });
-      if (n < all.length) kids.push(" ", h("span", { class: "take-more", title: all.map(words).join(", ") }, `and ${all.length - n} more`));
-      el.replaceChildren(...kids);
-      nodes.forEach((node, i) => lit.has(all[i].id) && pulse(node));
-    };
-    paint(all.length);
-    takes = { el, count: all.length, paint };
-    return el;
-  }
-  /** The line cut to its lines once it is in the page (its sheet open): types come off its end until it fits. */
-  function fitTakes() {
-    if (!takes?.el.getClientRects().length) return;
-    const { el, count, paint } = takes, style = getComputedStyle(el);
-    const line = parseFloat(style.lineHeight) || parseFloat(style.fontSize) * 1.4;
-    for (let n = count; n > 1 && el.getBoundingClientRect().height > line * TAKES_LINES + 1; n--) paint(n - 1);
-  }
-  /** *adds about $0.35 to a goal it checks · about half of them* (*· every goal* when it checks every goal). */
-  function addsWords(id) {
-    const c = (price?.checks || []).find((x) => x.by === id);
-    if (!c) return "";
-    const share = c.every ? "every goal" : Math.abs(c.share - 0.5) < 0.03 ? "about half of them" : `about ${Math.round(c.share * 100)} % of them`;
-    return ` · adds about ${pctOf(c.usd) || `$${c.usd.toFixed(2)}`} to a goal it checks · ${share}`;
-  }
 
   /** An agent's row in its fold: a tap takes it in or out (a leader takes the one seat; out, the Taskmaster leads). */
   function seat(a) {
@@ -196,7 +99,7 @@ export function makeParty(core, opts = {}) {
           : `${BANDS.find((b) => b[0] === band)[1]} has ${plural(seats(band), "seat")}: take one out first.`); return; }       // an older host has no stages: today's words
         partyId = ""; presetId = "";                             // a seat changed: the party is then the person's own picking
         draw();
-        askPrice();
+        pr.ask();
       } }, head(kind, a.tier || "warrior"), h("b", {}, a.name, a.check ? h("span", { class: "check-badge" }, "checks") : null),
       h("small", { class: "muted" }, say(`${TIER_WORDS[a.tier] || ""} ${RACE_WORDS[kind]}${a.line ? ` · ${a.line}` : ""}`.trim())),
       h("span", { class: "team-mark", "aria-hidden": "true" }, icon(on ? "check" : "plus")));
@@ -227,15 +130,15 @@ export function makeParty(core, opts = {}) {
     const line = h("p", { class: "party-line" }, h("b", {}, "Leads: "), names("lead"), " · ", h("b", {}, "Builds: "), names("build"), " · ", h("b", {}, "Checks: "), names("check"));
     if (ideation()) editing = false;                              // Ideation's seats stay: no Change
     if (!editing) {
-      teamEl.replaceChildren(...[h("h3", {}, "The party"), ownRow(), line, overWords() ? h("p", { class: "party-over", role: "alert" }, overWords()) : null, priceLine(), takesLine(),
+      teamEl.replaceChildren(...[h("h3", {}, "The party"), ownRow(), line, overWords() ? h("p", { class: "party-over", role: "alert" }, overWords()) : null, pr.line(), pr.takes(),
         ideation() ? h("p", { class: "muted party-whole", "data-sec": "ideation" }, IDEATION_WHOLE)
           : h("button", { class: "ork-btn", type: "button", "data-change": "team", onclick: () => { editing = true; fold = "lead"; draw(); } }, "Change")].filter(Boolean));
-      fitTakes();
+      pr.fit();
       return;
     }
     if (!fold) { editing = false; drawTeam(); return; }            // every fold closed by Done: back to the line
-    teamEl.replaceChildren(...[h("h3", {}, "The party"), ownRow(), ...BANDS.map(band), priceLine(), takesLine()].filter(Boolean));
-    fitTakes();
+    teamEl.replaceChildren(...[h("h3", {}, "The party"), ownRow(), ...BANDS.map(band), pr.line(), pr.takes()].filter(Boolean));
+    pr.fit();
   }
 
   /** The craft the party was started from (the goal's craft sorts its agents first); set by the sheet. */
@@ -259,9 +162,9 @@ export function makeParty(core, opts = {}) {
       h("p", { class: "muted" }, `How deep each goal is worked: every check adds a line to its Done when and a task to its plan.`),
       ...checkers.map((a) => {
         const box = h("input", { type: "checkbox", "aria-label": `Every goal: ${a.name}`, ...(every.includes(a.id) ? { checked: true } : {}) });
-        box.addEventListener("change", () => { every = box.checked ? [...every, a.id] : every.filter((x) => x !== a.id); partyId = ""; presetId = ""; askPrice(); });
+        box.addEventListener("change", () => { every = box.checked ? [...every, a.id] : every.filter((x) => x !== a.id); partyId = ""; presetId = ""; pr.ask(); });
         return h("div", { class: "check-row" }, head(raceOf(a), a.tier, { small: true }),
-          h("span", { class: "check-text" }, h("b", {}, a.name), h("small", { class: "muted" }, say(`${a.check.done} · applies ${a.check.applies}`) + addsWords(a.id))),
+          h("span", { class: "check-text" }, h("b", {}, a.name), h("small", { class: "muted" }, say(`${a.check.done} · applies ${a.check.applies}`) + pr.adds(a.id))),
           h("label", { class: "check-every" }, box, h("span", {}, "Every goal")));
       }),
       h("button", { class: "ork-btn", type: "button", "data-done": "checks", onclick: () => { checking = false; drawChecks(); } }, "Done")));
@@ -275,32 +178,12 @@ export function makeParty(core, opts = {}) {
       leader = party.leader || TASKMASTER;
       team = [...(party.team || [])];
       every = [...(party.every || [])];
-      editing = false; fold = ""; checking = false; price = null; seen = null; opened = new Set(); asking = "";
+      editing = false; fold = ""; checking = false; pr.reset(); asking = "";
       partyId = party.party || ""; presetId = "";
       craftNow = craft;
       draw();
-      askPrice(true, false);                               // the picker opens: its answers light nothing
+      pr.ask(true, false);                               // the picker opens: its answers light nothing
       loadOwns();
-    },
-    /** A craft's party in the seats at once (`lights`: false when the sheet opens with it, which lights nothing). */
-    preset(craft, lights = true) {
-      const p = partyOf(core, craft);
-      leader = p.lead || TASKMASTER;
-      team = seated(p);
-      every = [];
-      partyId = ""; presetId = "";
-      draw();
-      askPrice(false, lights);
-    },
-    /** A library party in the seats at once (`preset(id)` keeps its id for `ideas.goal_save`, cleared when a seat changes, as `party` is). */
-    library(p) {
-      leader = p.lead || TASKMASTER;
-      team = seated(p);
-      every = [];
-      partyId = "";
-      presetId = p.id;
-      draw();
-      askPrice();
     },
     fits: () => !overWords() || !!partyId,        // a saved party of the person's (made before) is saved as it was
     get: () => ({ ...current(), party: partyId, preset: partyId ? "" : presetId }),
@@ -310,208 +193,5 @@ export function makeParty(core, opts = {}) {
     heads: () => [leader, ...team].filter((id) => agent(id)).map((id) => ({ id, race: raceOf(agent(id)), tier: agent(id).tier || "warrior" })),
     names,
     draw,
-  };
-}
-
-/** `core`: the board's frame. Returns {el, open(after)}; `after(slug)` instead of opening the party's screen. */
-export function makeNewGoal(core) {
-  let craft = "engineering", then = null;
-  let preset = "";                                   // the library's party picked (its id), "" for the old row of crafts
-  const party = makeParty(core, { onCraft: (c) => { craft = c; preset = ""; drawCraft(); }, onChange: () => sync() });
-  const about = h("textarea", { class: "ork-field", rows: "4", "aria-label": "What it is for", placeholder: "A few lines: what it is for", maxlength: "20000" });
-  const priority = prioritySwitch("new-goal-priority");
-  const row = h("div", { class: "craft-row", role: "group", "aria-label": "Craft" });
-  const craftLine = h("p", { class: "muted craft-line", "aria-live": "polite" });
-  const left = h("div", {});
-  const save = h("button", { class: "ork-btn primary big", type: "button", disabled: true }, "Save party");
-  const body = h("div", { class: "goal-steps one-sheet" });
-  const footEl = foot(save);
-  const sh = sheet("New party", body, footEl);
-  const sizeLib = sizeSwitch({ label: "Its size" });  // a party of one's own has a size too (spec 75 §5.1): Standard unless the person picks
-  sizeLib.set(STANDARD);
-  const toolLib = toolPick(core);                    // its AI tool (spec 81 §4): the Main tool unless the person picks
-  const proposals = makeProposals(core, { make: makeProposal, library: () => showLibrary(true) });
-  const back = h("button", { class: "ork-btn quiet props__back", type: "button", "data-act": "to-proposals", onclick: () => showProposals("") }, h("i", { class: "ork-chev left", "aria-hidden": "true" }), "Orkmaster proposes");
-  let mode = "library", opened = 0;                  // the sheet on the proposals or on the library; which opening this is (a late answer of an earlier one is let go)
-  const releasesFrom = makeReleasesFrom(core);       // the Release party takes its goals from the project's other parties: ticked so (spec 68 §7.6)
-  let releaseOn = false;
-  const sync = () => {
-    save.disabled = !about.value.trim() || !party.fits();                            // a leader with fewer seats than the party has keeps Save off
-    const on = party.get().leader === "release-manager";
-    if (on !== releaseOn) { releaseOn = on; releasesFrom.set({ self: "", saved: [], leads: true, offers: on }); }
-  };
-  about.addEventListener("input", sync);
-
-  /** The goal's craft: the one picked, or a Mixed team's most (the first in the team on a tie). */
-  function craftOf() {
-    if (craft !== MIXED) return craft;
-    const crafts = party.crafts();
-    return crafts.sort((a, b) => crafts.filter((x) => x === b).length - crafts.filter((x) => x === a).length)[0] || "engineering";
-  }
-
-  function pick(c) {
-    craft = c;
-    preset = "";
-    party.preset(c);
-    drawCraft();
-  }
-  function pickPreset(p) {
-    craft = p.craft;
-    preset = p.id;
-    party.library(p);
-    drawCraft();
-  }
-  /** The library's parties in one column (spec 59 §7.1): *Mixed* first, then *One craft*, then the Taskmaster alone. */
-  function drawLibrary(presets) {
-    const deal = dealOf(core);                       // the Orkmaster's deal (spec 70 §3.2): inside a group its order, a tile's why under its line; an older host has none: today's order
-    const dealt = (list) => (deal.size ? [...list].sort((a, b) => (deal.get(a.id)?.i ?? 1e9) - (deal.get(b.id)?.i ?? 1e9)) : list);
-    const tile = (p) => {
-      const ids = [p.lead, ...seatedOf(core, p)];       // the heads of the party it will be: a seat a stage
-      const heads = ids.map((id) => library(core).find((a) => a.id === id)).filter((a) => a?.craft).map((a) => tag(head(raceOf(a), a.tier || "warrior", { small: true }), a.id));
-      const alone = p.craft === MIXED;
-      return h("button", { class: `craft-tile preset-tile${p.mixed ? " is-mixed" : ""}`, type: "button", "data-preset": p.id, ...(p.mixed ? {} : { "data-craft": p.craft }),
-        "aria-label": p.name, "aria-pressed": String(preset ? preset === p.id : !p.mixed && p.craft === craft), onclick: () => (alone ? pick(MIXED) : pickPreset(p)) },
-      alone ? h("span", { class: "craft-heads" }, ...CRAFTS.slice(0, 2).map(([, race]) => head(race, "laborer", { small: true }))) : h("span", { class: "preset-heads" }, ...heads),
-      h("span", { class: "preset-text" }, h("b", {}, p.name), h("small", { class: "muted" }, p.line),
-        deal.get(p.id)?.words ? h("small", { class: `preset-why${deal.get(p.id).why === "have" ? " muted" : ""}`, "data-why": deal.get(p.id).why }, deal.get(p.id).words) : null));
-    };
-    const group = (name, list) => (list.length ? h("div", { class: "preset-group", role: "group", "aria-label": name }, h("h4", {}, name), ...dealt(list).map(tile)) : null);
-    row.replaceChildren(...[group("Mixed", presets.filter((p) => p.mixed)), group("One craft", presets.filter((p) => !p.mixed && p.craft !== MIXED)),
-      group("Taskmaster alone", presets.filter((p) => p.craft === MIXED))].filter(Boolean));
-    const one = presets.find((p) => (preset ? p.id === preset : !p.mixed && p.craft === craft));
-    craftLine.replaceChildren(...(one ? [h("b", {}, one.name), `: ${lcfirst(one.line)}`] : []));
-  }
-  function drawCraft() {
-    if (presetsOf(core).length) { row.className = "preset-list"; drawLibrary(presetsOf(core)); sync(); return; }
-    row.className = "craft-row";
-    row.replaceChildren(...CRAFTS.map(([c, race]) => h("button", { class: "craft-tile", type: "button", "data-craft": c, "aria-label": CRAFT_WORDS[c],
-      "aria-pressed": String(c === craft), title: CRAFT_WORDS[c], onclick: () => pick(c) }, head(race, "laborer"))),
-      h("button", { class: "craft-tile mixed", type: "button", "data-craft": MIXED, "aria-label": "Mixed", "aria-pressed": String(craft === MIXED), title: "Mixed",
-        onclick: () => pick(MIXED) }, h("span", { class: "craft-heads" }, ...CRAFTS.slice(0, 2).map(([, race]) => head(race, "laborer", { small: true })))));
-    const line = craft === MIXED ? "A party of any crafts: the Taskmaster leads, you pick the rest" : CRAFTS.find((x) => x[0] === craft)?.[2] || "";
-    craftLine.replaceChildren(h("b", {}, craft === MIXED ? "Mixed" : CRAFT_WORDS[craft]), `: ${craft === MIXED ? line : lcfirst(line)}`);
-    sync();
-  }
-
-  /** Where the sheet shows the party's heads at the press (spec 63 §4.1), the leader's first, six at most: [{race, tier, box}]. A head is where its seat is drawn in the open fold, else in the tile or the
-   *  chip of the party picked; one that is not on screen (scrolled away, or never drawn) starts from Save party. */
-  function gatherFrom() {
-    const view = sh.el.getBoundingClientRect(), floor = save.parentElement.getBoundingClientRect().top, mine = save.getBoundingClientRect();
-    const shown = (b) => b.width > 0 && b.top >= view.top && b.bottom <= floor && b.left >= 0 && b.right <= innerWidth;
-    const from = { left: mine.left + mine.width / 2 - 12, top: mine.top + mine.height / 2 - 11, width: 24, height: 22 };
-    return party.heads().slice(0, GATHER_HEADS).map(({ id, race, tier }) => {
-      const where = [".party-fold.is-open .team-seat", '.preset-tile[aria-pressed="true"]', ".own-chip.is-on"]
-        .map((s) => sh.el.querySelector(`${s} img[data-agent="${CSS.escape(id)}"]`)?.getBoundingClientRect()).find((b) => b && shown(b));
-      const b = where || from;
-      return { race, tier, box: { left: b.left, top: b.top, width: b.width, height: b.height } };
-    });
-  }
-
-  /** The party is made: the sheet closes, the heads gather into the deck (spec 63 §4), the party's screen opens (or `after` is told). */
-  async function made(got, heads) {
-    for (const note of got.notes || []) core.flash(note);       // an agent of the project's own that the party carries stays as it was
-    const after = then;
-    then = null;
-    if (!after) gather.wait(got.slug, heads);                   // New goal opening right after is what the person looks at: the heads gather only into a party they are shown
-    sh.close();
-    core.st.track = got.slug;
-    await core.refresh();
-    if (after) after(got.slug);
-    else if (heads.length) setTimeout(() => core.open({ kind: "goal", slug: got.slug }), gather.ms(heads.length));     // the party's screen covers the deck: it opens once the heads have gathered and the deck is lit
-    else core.open({ kind: "goal", slug: got.slug });
-  }
-
-  save.addEventListener("click", async () => {
-    if (!about.value.trim() || !party.fits()) return;
-    save.disabled = true;
-    const p = party.get();
-    const heads = motionOn() ? gatherFrom() : [];                // read at the press, before the sheet closes
-    const from = releasesFrom.get();
-    const got = await core.call("ideas.goal_save", { about: about.value.trim(), craft: craftOf(), leader: p.leader, team: p.team, every: p.every, priority: priority.get(),
-      ...(p.party ? { party: p.party } : {}), ...(p.preset ? { preset: p.preset } : {}), ...(from ? { releases_from: from } : {}), ...(proposes(core) ? { size: sizeLib.get() } : {}),
-      ...(proposes(core) && toolLib.get() ? { tool: toolLib.get() } : {}) });
-    sync();
-    if (!got?.slug) { gather.drop(); return; }
-    await made(got, heads);
-  });
-
-  /** **Make it** on a proposal's card: its leader, its team of the size picked and the size, as a tile's party saves (the words are the person's, else the proposal's own line). The heads gather from the card. */
-  async function makeProposal(p, size, card, button, tool = "") {
-    const s = p.sizes?.[size];
-    if (!s) return;
-    button.disabled = true;
-    const view = sh.el.getBoundingClientRect(), mine = button.getBoundingClientRect();
-    const spot = card.querySelectorAll(".prop__heads img");
-    const shown = (r) => r.width > 0 && r.top >= view.top && r.bottom <= view.bottom && r.left >= 0 && r.right <= innerWidth;
-    const heads = motionOn() ? (s.heads || []).slice(0, GATHER_HEADS).map(({ race, tier }, i) => {
-      const r = spot[i]?.getBoundingClientRect(), at = r && shown(r) ? r : { left: mine.left + mine.width / 2 - 12, top: mine.top + mine.height / 2 - 11, width: 24, height: 22 };
-      return { race, tier, box: { left: at.left, top: at.top, width: at.width, height: at.height } };
-    }) : [];
-    const craft = library(core).find((x) => x.id === s.leader)?.craft || "engineering";
-    const words = about.value.trim() || [p.name, p.line].filter(Boolean).join(": ");
-    const got = await core.call("ideas.goal_save", { about: words, craft, leader: s.leader, team: s.team || [], every: [], priority: "normal", size, proposal: p.id,       // `proposal`: the host logs *proposal_taken* only with it
-      ...(tool ? { tool } : {}), ...(presetsOf(core).some((x) => x.id === p.id) ? { preset: p.id } : {}) });
-    button.disabled = false;
-    if (!got?.slug) { gather.drop(); return; }
-    await made(got, heads);
-  }
-
-  sh.el.addEventListener("close", () => { then = null; });
-
-  /** The Orkmaster's proposals (shell-proposals.js): no foot, a card has its own **Make it**; a host that cannot answer leaves today's New party. */
-  function showProposals(wanted) {
-    mode = "proposals";
-    footEl.hidden = true;
-    about.value = "";                                                                  // no second question beside the Orkmaster's: a proposal's own line says what it is for (Edit the party changes it)
-    proposals.hold(null);
-    body.replaceChildren(proposals.el);
-    const mine = opened;
-    proposals.load(wanted).then((ok) => { if (!ok && mine === opened && mode === "proposals") { showLibrary(false); } });
-  }
-  /** Today's New party: what it is for, the library's parties, the seats, Save party; under a host that proposes the way back is **Orkmaster proposes**. */
-  function showLibrary(fromProposals) {
-    mode = "library";
-    footEl.hidden = false;
-    about.rows = 4;
-    const proposing = proposes(core) && fromProposals;
-    body.replaceChildren(...[proposing ? back : null,
-      h("section", { class: "new-goal-for", "aria-label": "About the party" }, field("What it is for", about), h("div", { class: "field" }, h("span", { class: "field-label" }, "Priority"), priority.el)),
-      proposes(core) ? h("div", { class: "field size-field" }, h("span", { class: "field-label" }, "Its size"), sizeLib.el) : null,
-      proposes(core) ? toolLib.el : null,
-      h("section", { class: "new-goal-craft", "aria-label": "Craft" }, h("h3", {}, "Craft"), row, craftLine),
-      party.team, party.checks, releasesFrom.el,
-      h("p", { class: "muted hint" }, "The leader reads it and writes the title and the summary."), left].filter(Boolean));
-    drawCraft();
-    if (proposes(core)) { toolLib.draw(); if (!core.st.tools) loadTools(core).then(() => toolLib.draw()); }
-    if (fromProposals) about.focus();
-  }
-
-  return {
-    el: sh.el,
-    /** `presetId`: a party of the library picked at once (a pitch sent to a party the project lacks, spec 65 §5). */
-    open(after = null, presetId = "") {
-      then = after;
-      opened += 1;
-      craft = "engineering";
-      preset = "";
-      about.value = "";
-      save.disabled = true;
-      priority.set("normal");
-      sizeLib.set(STANDARD);
-      toolLib.set("");
-      releaseOn = false;
-      releasesFrom.set({ offers: false });
-      party.set({ leader: TASKMASTER, team: [], every: [] }, () => craftOf());
-      party.preset(craft, false);
-      const wanted = presetId.startsWith(PROPOSAL) ? presetId.slice(PROPOSAL.length) : "";    // a proposal of the deal (spec 75 §5.3)
-      const picked = presetId && !wanted && presetsOf(core).find((p) => p.id === presetId);
-      if (picked) pickPreset(picked);
-      drawCraft();
-      left.replaceChildren(limitsNote(core.st.snap) || "");
-      if (proposes(core) && (!presetId || wanted)) { showProposals(wanted); sh.open(); return; }     // a host that proposes: its proposals first; a party of the library asked for by name is the library's
-      showLibrary(false);
-      sh.open();
-      about.focus();
-    },
   };
 }

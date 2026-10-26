@@ -886,23 +886,29 @@ def adds(host):
     return [a for n, a in host.log if n == "ideas.add"]
 
 
+def _in(dlg, band):
+    """The roles seated in a band of New party and Edit the party (spec 91 §7), in order."""
+    return [s.get_attribute("data-seat") for s in dlg.locator(f'.shell-band[data-band="{band}"] .shell-seat[data-seat]').all()]
+
+
 def test_new_party_is_a_name_what_it_is_for_its_party_and_a_priority_then_reading_its_title_and_summary(shell):
     pg, host = shell
     _new_party(pg)
     dlg = pg.get_by_role("dialog", name="New party")
-    assert dlg.locator(".shell-craft-tile").count() == 12                                           # from the library: the six mixed, the five crafts, the Taskmaster alone
+    assert dlg.locator(".shell-craft-tile").count() == 9                                           # from the library (this host reads no project): Ideation and Release, the six crafts, the Taskmaster alone
     dlg.locator('.shell-craft-tile[data-craft="design"]').click()                                   # the library's design party, in three bands
-    leads, builds = dlg.get_by_role("region", name="Leads"), dlg.get_by_role("region", name="Builds")
-    assert leads.locator('.shell-team-row[aria-pressed="true"]').get_attribute("data-agent") == "product-designer"
-    assert builds.locator(".shell-team-seat:not(.is-empty)").count() == 1 and builds.locator(".shell-team-seat").count() == 1       # a seat a stage: its first builder (spec 87 §5)
-    dlg.get_by_role("button", name="Take in: Analyst").click()                                      # another leader
-    dlg.get_by_role("button", name="Take in: Copywriter").click()                                   # a second builder: no seat
-    assert builds.locator(".shell-team-seat:not(.is-empty)").count() == 1
-    dlg.get_by_role("button", name="Take out: Design system designer").click()
-    dlg.get_by_role("button", name="Take in: Copywriter").click()                                   # the one seat, taken again
-    assert leads.locator('.shell-team-row[aria-pressed="true"]').get_attribute("data-agent") == "analyst"
-    assert dlg.get_by_role("button", name="Save party").is_disabled()                               # a name or what it is for is required
-    assert "led by Analyst" in dlg.inner_text()
+    assert (_in(dlg, "lead"), _in(dlg, "build"), _in(dlg, "check")) == (["product-designer"], ["ui-kit"], ["accessibility-reviewer"])       # a seat a stage: its first builder (spec 87 §5)
+    dlg.get_by_role("button", name="Remove Product designer from the party").click()             # another leader
+    dlg.locator('[data-free="lead"]').click()
+    dlg.get_by_role("group", name="Choose a leader").locator('[data-agent="analyst"]').click()
+    assert dlg.locator('[data-free="build"]').count() == 0                                         # a second builder: no free seat
+    dlg.get_by_role("button", name="Remove Design system designer from the party").click()
+    dlg.locator('[data-free="build"]').click()                                                     # the one seat, taken again
+    pop = dlg.get_by_role("group", name="Add a member")
+    pop.get_by_role("button", name="More roles").click()
+    pop.locator('[data-agent="copywriter"]').click()
+    assert (_in(dlg, "lead"), _in(dlg, "build")) == (["analyst"], ["copywriter"])
+    assert dlg.get_by_role("button", name="Save party").is_disabled()                               # a name or what it is for is required (the preset was a start: seats changed by hand)
     checks = dlg.get_by_role("group", name="Checks")                                                # the party's checkers, what they add
     assert "Accessibility reviewer" in checks.inner_text() and "Analyst" not in checks.inner_text()
     checks.get_by_label("Every goal: Accessibility reviewer").check()
@@ -1045,26 +1051,30 @@ def test_one_goal_is_shown_the_first_by_priority_with_its_leader_and_the_goal_is
 
 
 def test_edit_the_party_changes_its_members_and_sends_them_only_when_changed(shell):
+    """A leader changed and a check set on every goal are sent; a member with work open cannot be taken out (its ×, said where it stands)."""
     pg, host = shell
     host.goals["ship-sync"].update(about="Sync between devices.", craft="engineering", leader=host.leader("architect"), team=["grunt", "reviewer"], every=[])
     host.bump({})
     pg.locator(".arena-phead__leads", has_text="Architect").wait_for(timeout=WAIT_MS)                # the window has read it
     pg.get_by_role("button", name="Edit the party").click()
     dlg = pg.get_by_role("dialog", name="Edit the party")
-    party = dlg.get_by_role("group", name="The party")
-    assert "led by Architect · builds: Grunt · checks: Reviewer" in party.inner_text()
-    party.get_by_role("button", name="Change the party").click()
-    party.get_by_role("button", name="Take in: Product manager").click()                              # another leader
-    party.get_by_role("button", name="Take out: Grunt").click()                                       # the one builder's seat: Grunt out, then Tester in
-    party.get_by_role("button", name="Take in: Tester").click()
-    party.get_by_label("Every goal: Reviewer").check()
+    dlg.locator(".shell-seat[data-seat]").first.wait_for(timeout=WAIT_MS)
+    assert (_in(dlg, "lead"), _in(dlg, "build"), _in(dlg, "check")) == (["architect"], ["grunt"], ["reviewer"])
+    dlg.get_by_role("button", name="Remove Architect from the party").click()                        # another leader
+    dlg.locator('[data-free="lead"]').click()
+    dlg.get_by_role("group", name="Choose a leader").locator('[data-agent="product-manager"]').click()
+    dlg.get_by_role("button", name="Remove Grunt from the party").click()                           # Grunt has a task open in the stub: it stays, and the dialog says so
+    assert "Grunt has work open: it cannot leave" in dlg.locator(".shell-bands").inner_text() and _in(dlg, "build") == ["grunt"]
+    dlg.get_by_role("button", name="Remove Reviewer from the party").click()                         # the Reviewer has the next task: it stays, too
+    assert "Reviewer has work open: it cannot leave" in dlg.locator(".shell-bands").inner_text() and _in(dlg, "check") == ["reviewer"]
+    dlg.get_by_label("Every goal: Reviewer").check()
     if os.environ.get("ORKCRAFT_SHOTS"):
         SHOTS.mkdir(parents=True, exist_ok=True)
         pg.screenshot(path=str(SHOTS / "desktop-edit-party-1440x900.png"))
     dlg.get_by_role("button", name="Save party").click()
     pg.wait_for_function("() => document.querySelectorAll('[role=dialog]').length === 0", timeout=WAIT_MS)
     got = _calls(pg, host, "ideas.goal_save")[-1]
-    assert (got["leader"], got["team"], got["every"]) == ("product-manager", ["reviewer", "tester"], ["reviewer"])
+    assert (got["leader"], got["team"], got["every"]) == ("product-manager", ["grunt", "reviewer"], ["reviewer"])
 
 
 def test_the_target_is_in_settings_not_the_top_bar_and_sets_the_boards_one_target(shell):

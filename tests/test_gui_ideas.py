@@ -26,7 +26,7 @@ BOARD_COMMANDS = {"ideas.board", "ideas.page", "ideas.add", "ideas.say", "ideas.
                   "ideas.revise", "ideas.revise_answer",
                   "ideas.judge", "ideas.pitch_send", "ideas.pitch_again", "ideas.pitch_pass",
                   "ideas.release_out", "ideas.release_candidates", "ideas.shown", "ideas.party_for", "ideas.proposals",
-                  "ideas.tools", "ideas.party_sizes", "ideas.night_allow"}   # … spec 83's one, spec 81's two, spec 75's one, and spec 49's three, spec 51's one, spec 62's two, spec 65's four, spec 68's three, spec 70's one
+                  "ideas.tools", "ideas.party_sizes", "ideas.party_presets", "ideas.night_allow"}   # … spec 91's one, spec 83's one, spec 81's two, spec 75's one, and spec 49's three, spec 51's one, spec 62's two, spec 65's four, spec 68's three, spec 70's one
 
 
 @pytest.fixture

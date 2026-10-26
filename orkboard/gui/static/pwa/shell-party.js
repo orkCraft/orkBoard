@@ -4,6 +4,7 @@
 // stands under the goals bar, once per device (`localStorage` `orkcraft.flags.goals`): *⚑ 3 flags raised · <a>, <b> and 1 more are in main*, its × 44 px; a press on it opens About this party at *Its flags*.
 // *Its size* (spec 75 §5.4, spec 81 §4): Lean · Standard · Full with each size's price where the host's proposals know the party, under it the heads that join and leave for each other size; one press saves `size`
 // (`ideas.goal_save`: the host gives the party the size's team and tiers; a refusal is said in place). *Its AI tool* (spec 81): the party's select, a change saves `tool`.
+// *The party*: each member has **Its AI tool** (docs/specs/91-the-owners-list.md §6, §7: a 44 px button, the party's tool by default, that opens the sheet of shell-seat-tool.js; a pick saves `tools` at once, a refusal said in place).
 // Between its flag and its words a row holds the elements of its first six goals; the first time it stands, they travel from the gate to the row, then the flag is raised and the line lit once (spec 64 §4).
 import { h, icon, sheet } from "./util.js";
 import { pctOf } from "./shell-spend.js";
@@ -13,7 +14,9 @@ import { savePartyEl } from "./shell-goal.js";
 import { IDEATION_WHOLE } from "./shell-goal-new.js";
 import { loadProposals, proposes, sizePrices, sizeSwitch } from "./shell-proposals.js";
 import { makeRemove } from "./shell-party-remove.js";
-import { loadTools, sizeMoves, toolPick } from "./shell-party-tool.js";
+import { loadTools, sizeMoves, toolPick, toolRow } from "./shell-party-tool.js";
+import { makeSeatTool, toolMark } from "./shell-seat-tool.js";
+import { agentOf } from "./shell-party-model.js";
 import { gatePress } from "./shell-gate.js";
 import { inView, motionOn, raise, raiseTo } from "./shell-motion.js";
 import { flagWords as oldFlagWords } from "./shell-map.js";
@@ -40,6 +43,7 @@ export function makeParty(core, ctx) {
   const body = h("div", { class: "party-about" });
   const sh = sheet("About this party", body);
   const remove = makeRemove(core);
+  const seatTool = makeSeatTool(core);
   let shown = "", got = null, allFlags = false;       // the party the sheet is about, what `ideas.goal` read of it, whether every flag is listed
   const asking = new Set();
   let sizeNote = "";                                   // a size the host refused, said under the switch (*Grunt has work open: it cannot leave*)
@@ -107,6 +111,24 @@ export function makeParty(core, ctx) {
     return sec("Its AI tool", pick.el, note);
   }
 
+  /** *Its AI tool* of a member: the party's by default; a pick saves the seats' tools of the party at once (`ideas.goal_save` `tools`), a refusal is said under the button. */
+  function seatToolBtn(g, x) {
+    if (!proposes(core) || !st.tools || x.slug === "taskmaster") return null;
+    const role = agentOf(core, x.slug) || { id: x.slug, name: x.name }, mine = (g.tools || {})[x.slug] || "", row = mine ? st.tools.tools.find((t) => t.id === mine) : null, party = toolRow(core, g.tool || "");
+    const words = row ? row.name : `Party's tool · ${party?.name || "Claude Code"}`, said = h("p", { class: "cap size-note", role: "alert", "data-said": "seat-tool", hidden: true });
+    const btn = h("button", { class: "ork-btn pseat__tool", type: "button", "data-seat-tool": x.slug, "data-tool": mine, "aria-label": `Its AI tool for ${x.name}: ${words}`, "aria-haspopup": "dialog",
+      onclick: () => seatTool.open({ role, tier: x.head?.tier || role.tier || "warrior", value: mine, partyTool: g.tool || "", onPick: async (id) => {
+        said.hidden = true;
+        const rest = Object.fromEntries(Object.entries(g.tools || {}).filter(([a]) => a !== x.slug)), next = id ? { ...rest, [x.slug]: id } : rest;
+        const got = await core.call("ideas.goal_save", { slug: g.slug, tools: next }, (text) => { said.textContent = text || "That tool was not taken"; said.hidden = false; });
+        if (!got) return;
+        g.tools = next;
+        await core.refresh();
+        if (sh.el.open && shown === g.slug) draw();
+      } }) }, toolMark((row || party)?.id), h("span", {}, words), h("i", { class: "ork-chev", "aria-hidden": "true" }));
+    return h("div", { class: "party-about__seat-tool" }, btn, said);
+  }
+
   // -- About this party --------------------------------------------------------------------------------------------------------------------------------
   function draw() {
     const g = (st.map?.goals || []).find((x) => x.slug === shown);
@@ -117,7 +139,7 @@ export function makeParty(core, ctx) {
     const line = (t, cls = "") => h("p", { class: `cap${cls ? ` ${cls}` : ""}` }, t);
     const summary = String(got?.summary || "").split("\n")[0].trim();
     const forWords = [g.brief, summary && !String(g.brief || "").includes(summary) ? summary : ""].filter(Boolean);
-    const members = m.members.map((x) => line([x.name, BAND_WORDS[x.band], x.price && x.price !== "—" ? `${x.price} ${UNIT[x.band]}` : ""].filter(Boolean).join(" · ")));
+    const members = m.members.flatMap((x) => [line([x.name, BAND_WORDS[x.band], x.price && x.price !== "—" ? `${x.price} ${UNIT[x.band]}` : ""].filter(Boolean).join(" · ")), seatToolBtn(g, x)]);
     const checkers = m.members.filter((x) => x.band === "check").map((x) => {
       const c = x.role?.check_week;
       return line(`${x.name} checks ${x.rule}${c?.checks ? ` · caught ${c.caught || 0}/${c.checks} lately` : ""}`);
@@ -209,5 +231,5 @@ export function makeParty(core, ctx) {
     standing.classList.add("is-raised");
   }
 
-  return { sheets: [sh.el, remove.el], gate: gateBox, line: flagNode, watch, open, sheet: sh };
+  return { sheets: [sh.el, remove.el, seatTool.el], gate: gateBox, line: flagNode, watch, open, sheet: sh };
 }

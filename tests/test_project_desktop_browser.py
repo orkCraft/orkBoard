@@ -138,7 +138,7 @@ def test_a_host_without_project_keeps_todays_face_and_todays_tiles(gui):
     assert not pg.locator(".arena-left__proj").get_attribute("class").count("has-ork")
     _new_party(pg)
     dlg = pg.get_by_role("dialog", name="New party")
-    assert [t.get_attribute("data-craft") for t in dlg.locator(".shell-craft-tile").all()][:5] == ["game", "mobile-app", "website", "ideation", "release"]      # the library's order
+    assert [t.get_attribute("data-craft") for t in dlg.locator(".shell-craft-tile").all()] == ["ideation", "release", "engineering", "design", "data", "marketing", "product", "art", "mixed"]      # the library's: the stages, the crafts, the Taskmaster alone
     assert dlg.locator(".shell-craft-tile__why").count() == 0
     pg.close()
     assert not errors, "\n".join(errors)
@@ -272,26 +272,26 @@ def test_a_party_the_project_has_is_dealt_last_and_says_you_have_one(level):
     pg.get_by_role("dialog", name="New party").wait_for(state="detached", timeout=WAIT_MS)
 
 
-def test_new_partys_tiles_follow_the_deal_inside_each_group_with_the_why_under_the_line(level):
+def test_new_partys_stages_say_what_the_deal_says_of_them_under_their_line(level):
+    """Spec 70 §3.2 in spec 91's dialog: the cards keep their places (the stages, then the crafts) and a stage the deal has a why for says it under its line."""
     pg, host = level
     _lacking(pg, host)
     _new_party(pg)
     dlg = pg.get_by_role("dialog", name="New party")
-    mixed = dlg.locator('.shell-library-group[aria-label="Mixed"] .shell-craft-tile')
-    assert [t.get_attribute("data-craft") for t in mixed.all()] == ["release", "ideation", "game", "mobile-app", "website", "art"]
-    crafts = dlg.locator('.shell-library-group[aria-label="One craft"] .shell-craft-tile')
-    assert [t.get_attribute("data-craft") for t in crafts.all()] == ["engineering", "design", "data", "marketing", "product"]      # the groups keep their headings
+    stages = dlg.locator('.shell-presets__group.is-stage .shell-craft-tile')
+    assert [t.get_attribute("data-craft") for t in stages.all()] == ["ideation", "release"]
+    crafts = dlg.locator('.shell-presets__group.is-craft .shell-craft-tile')
+    assert [t.get_attribute("data-craft") for t in crafts.all()] == ["engineering", "design", "data", "marketing", "product", "art"]      # the groups keep their headings
     why = dlg.locator('.shell-craft-tile[data-craft="release"] .shell-craft-tile__why')
     assert why.inner_text() == "3 flags wait and no party releases them"
     assert dlg.locator('.shell-craft-tile[data-craft="ideation"] .shell-craft-tile__why').inner_text() == "No party judges small ideas yet"
-    assert dlg.locator('.shell-craft-tile[data-craft="game"] .shell-craft-tile__why').count() == 0
+    assert dlg.locator('.shell-craft-tile[data-craft="engineering"] .shell-craft-tile__why').count() == 0
     assert dlg.locator('.shell-craft-tile[data-craft="release"] .shell-craft-tile__text small').all_inner_texts()[-1] == "3 flags wait and no party releases them"      # under its line
     pg.get_by_role("button", name="Cancel").click()
     host.deal = copy.deepcopy(HAVING)
     host.bump({})
     _new_party(pg)
     dlg = pg.get_by_role("dialog", name="New party")
-    assert [t.get_attribute("data-craft") for t in dlg.locator('.shell-library-group[aria-label="Mixed"] .shell-craft-tile').all()] == ["game", "mobile-app", "website", "art", "release", "ideation"]     # those it has, last
     assert dlg.locator('.shell-craft-tile[data-craft="ideation"] .shell-craft-tile__why').inner_text() == "You have one"
 
 

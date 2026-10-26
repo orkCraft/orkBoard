@@ -67,13 +67,23 @@ def shell(gui):
     assert not errors, "\n".join(errors)
 
 
-def _fill(pg, craft="game"):
-    """New party, its seats from the library's `craft` (the Game: three heads, a seat a stage: its leader, its first builder, its first checker), what it is for."""
+@pytest.fixture
+def short(gui):
+    """A window 420 px tall: the dialog's body is 277 px of its 647, so the checker's seat is below the fold (spec 91 §7's dialog is whole in an ordinary window)."""
+    pg, host, errors = _open(gui, host=GatherHost(), viewport={"width": 1440, "height": 420})
+    _show_goal(pg)
+    yield pg, host
+    pg.close()
+    assert not errors, "\n".join(errors)
+
+
+def _fill(pg, craft="engineering"):
+    """New party, its seats from the library's `craft` (Tech: three heads, a seat a stage: the Architect, its first builder, its first checker), what it is for."""
     _new_party(pg)
     dlg = pg.get_by_role("dialog", name="New party")
     dlg.locator(f'.shell-craft-tile[data-craft="{craft}"]').click()
     dlg.get_by_label("What it is for").fill(ABOUT)
-    heads = {"game": 3, "engineering": 3}[craft]
+    heads = 3
     pg.wait_for_function("(n) => document.querySelectorAll('.shell-team-seat .ork-race__head').length === n", arg=heads, timeout=WAIT_MS)
     pg.wait_for_function("() => [...document.querySelectorAll('.shell-team-seat .ork-race__head')].every((e) => e.complete)", timeout=WAIT_MS)
     dlg.locator(".shell-price").wait_for(timeout=WAIT_MS)                                               # the dialog has taken its height
@@ -111,16 +121,15 @@ def _quiet(pg):
     pg.wait_for_timeout(900)
 
 
-def test_save_party_gathers_the_heads_from_their_seats_into_the_deck_and_lights_it(shell):
-    pg, host = shell
+def test_save_party_gathers_the_heads_from_their_seats_into_the_deck_and_lights_it(short):
+    pg, host = short
     dlg = _fill(pg)
-    top = _seats(pg, dlg)[0]["y"] - dlg.locator(".shell-modal__body").bounding_box()["y"]
-    seats = _seats(pg, dlg, top - 40)                                                                  # the leader's seat and the builder's in view, the checker's below
+    seats = _seats(pg, dlg)                                                                            # the leader's seat and the builder's in view, the checker's below
     assert [s["on"] for s in seats] == [True, True, False]
     pg.evaluate(RECORD)
     dlg.get_by_role("button", name="Save party").click()
     got = _gathered(pg)
-    assert _calls(pg, host, "ideas.goal_save")[0]["leader"] == "game-designer"
+    assert _calls(pg, host, "ideas.goal_save")[0]["leader"] == "architect"
     copies = [got["copies"][f"{i * 35}ms"] for i in range(3)]                                         # three, 35 ms apart, the leader's first
     assert sorted(got["copies"]) == sorted(f"{i * 35}ms" for i in range(3))
     deck = _centre(got["first"]["deck"])
@@ -135,7 +144,7 @@ def test_save_party_gathers_the_heads_from_their_seats_into_the_deck_and_lights_
         assert 0.4 <= c["last"]["width"] / c["start"]["width"] < 0.95                                   # … and getting smaller
         assert (c["name"], c["duration"], c["easing"], c["position"], c["events"]) == ("arena-gather", "0.3s", "steps(6)", "fixed", "none")
         assert float(c["delay"][:-1]) == pytest.approx(i * 0.035) and int(c["z"]) > 120                # 35 ms apart; over the dialogs' layers
-    assert "elf-elder" in copies[0]["src"]                                                             # the Game designer first
+    assert "peon-elder" in copies[0]["src"]                                                             # the Architect first
     assert got["first"]["dialogs"] == 0 and got["first"]["scrims"] == 0 and got["first"]["shown"]      # the dialog is closed, nothing dims, the party is shown
     lit = [a for a in got["lit"] if "arena-plist__head" in a["cls"]]
     assert len(lit) == 1 and "var(--ork-ink)" in lit[0]["kf"] and lit[0]["opts"] == {"duration": 600, "easing": "steps(4, end)"}      # the heading's head lit once, as the quiet reward
@@ -145,7 +154,7 @@ def test_save_party_gathers_the_heads_from_their_seats_into_the_deck_and_lights_
 
 def test_a_party_of_three_gathers_three_heads_the_leader_first(shell):
     pg, host = shell
-    dlg = _fill(pg, "engineering")
+    dlg = _fill(pg)
     seats = _seats(pg, dlg)
     pg.evaluate(RECORD)
     dlg.get_by_role("button", name="Save party").click()
@@ -167,11 +176,11 @@ def test_the_party_is_usable_while_the_heads_travel(shell):
     assert got["lit"]                                                                                   # and they land
 
 
-def test_a_head_whose_seat_is_scrolled_out_of_the_dialog_starts_from_save_partys_box(shell):
-    pg, host = shell
+def test_a_head_whose_seat_is_scrolled_out_of_the_dialog_starts_from_save_partys_box(short):
+    pg, host = short
     dlg = _fill(pg)
     body_top = dlg.locator(".shell-modal__body").bounding_box()["y"]
-    checker = _seats(pg, dlg)[2]["y"] - body_top                                                       # where the checker's seat is in the body (the library has grown a row since the end was its seat's)
+    checker = _seats(pg, dlg)[2]["y"] - body_top                                                       # where the checker's seat is in the body
     seats = _seats(pg, dlg, checker - 10)                                                              # the dialog scrolled to the checker's seat: only it is in view
     assert [s["on"] for s in seats] == [False] * 2 + [True]
     save = dlg.get_by_role("button", name="Save party").bounding_box()

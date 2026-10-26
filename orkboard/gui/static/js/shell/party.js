@@ -1,6 +1,5 @@
-// A party's members on the desktop (decisions §53; realm/goal_team.py), as New party (goalwizard.js) and Edit the party (goaldialog.js)
-// pick them: three bands of seats from the library (ideas.roles `library`, `seats`) — Leads (one: the party's steps run as it; the Taskmaster
-// when none), Builds (three at most), Checks (two at most) —; a click takes an agent in or out of its band, a full band says so. Under them what
+// What a party's members are on the desktop (decisions §53; realm/goal_team.py): the library's agents (ideas.roles `library`, `seats`) and the seats a leader's party has, the person's own parties, and — under
+// the bands New party and Edit the party draw (partyseats.js) — what
 // the party costs (`ideas.party_price`: about what a goal costs, asked when the picker opens and 300 ms after a seat or *Every goal* changes) and what it
 // can take (the goal types it would be offered, docs/specs/63-party-gathered.md), then the checkers' checks: where each applies or on every goal, and what each adds to a goal.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
@@ -9,8 +8,7 @@ import { command, say, toast } from "../link.js";
 import { roles } from "./store.js";
 import { pctOf, pctRange } from "../spend.js";
 import { reducedMotion } from "../arena/motion.js";
-import { Head, Icon, Sign, CRAFT_WORDS, RACE_WORDS, TIER_WORDS } from "../orkui.js";
-import { dealEntry, inDealOrder, whyWords } from "../arena/projectwords.js";
+import { Head, Icon, Sign, CRAFT_WORDS } from "../orkui.js";
 
 export const CRAFTS = [["engineering", "peon", "Code, tests and the build"], ["design", "elf", "Screens, flows and words on them"],
   ["data", "goblin", "Numbers, queries and reports"], ["marketing", "gnome", "Pages, posts and search"],
@@ -18,9 +16,6 @@ export const CRAFTS = [["engineering", "peon", "Code, tests and the build"], ["d
 export const RACE = Object.fromEntries(CRAFTS);
 /** An agent's race: the host's (`library.listed()`: an agent's own, the Release manager is a skeleton), the craft's for an older host that sends none (spec 68 §7.8). */
 export const raceOfAgent = (a) => a.race || RACE[a.craft];
-const BANDS = [["lead", "Leads", "plans the party's goals"], ["build", "Builds", "do the work"],
-  ["check", "Checks", "hold each goal to their check"]];
-const PITCH_BANDS = { lead: "decides on each pitch", build: "each reads every pitch, alone", check: "makes the case against" };     // what Ideation's bands do (spec 65 §1)
 export const TASKMASTER = "taskmaster";
 
 const library = () => roles.value?.library || [];
@@ -79,31 +74,6 @@ export function presetsOf() {
     const p = roles.value?.parties?.[c] || { lead: TASKMASTER, build: [], check: [] };
     return { id: c, name: CRAFT_WORDS[c], line, craft: c, race, mixed: false, lead: p.lead || TASKMASTER, build: p.build || [], check: p.check || [] };
   });
-}
-
-/** The library's parties as tiles: *Mixed* (each its leader's head, its name, its line and its members' small heads), *One craft* (a head and a name),
- *  then the Taskmaster alone. A tile's `data-craft` is the library's id; `picked` is the one pressed (""): none). `deal`: the Orkmaster's (`ideas.map` `project.deal`, spec 70 §3.2): inside each group the tiles
- *  follow it, and a tile with a why says it under its line; none (an older host): today's order. */
-export function LibraryTiles({ picked, onPick, deal = null }) {
-  const all = inDealOrder(presetsOf(), deal), mixed = all.filter((p) => p.mixed), crafts = all.filter((p) => !p.mixed && p.craft !== "mixed"), alone = all.filter((p) => !p.mixed && p.craft === "mixed");
-  const headOf = (id, fallback) => { const a = agentOf(id); return a ? { race: raceOfAgent(a), tier: a.tier } : fallback; };
-  const why = (p) => {
-    const e = dealEntry(deal, p.id), w = whyWords(e);
-    return w && html`<small class="shell-craft-tile__why ok-tone-muted" data-why=${e.why}>${w}</small>`;
-  };
-  const tile = (p, rich) => {
-    const lead = headOf(p.lead, { race: p.race, tier: "elder" });
-    return html`<button type="button" key=${p.id} class=${`shell-craft-tile${rich ? " is-mixed" : ""}`} data-craft=${p.id} aria-pressed=${String(p.id === picked)} title=${p.line}
-      onClick=${() => onPick(p)}><${Head} race=${lead.race} tier=${lead.tier} small=${true} />
-      ${rich ? html`<span class="shell-craft-tile__text"><b>${p.name}</b><small class="ok-tone-muted">${p.line}</small>
-        <span class="shell-craft-heads">${(({ build, check }) => [...build, ...check])(seated(p)).map((id, n) => agentOf(id) && html`<${Head} key=${n} race=${raceOfAgent(agentOf(id))} tier=${agentOf(id).tier} small=${true} />`)}</span>${why(p)}</span>`
-        : html`<span class="shell-craft-tile__text"><b>${p.name}</b>${why(p)}</span>`}</button>`;
-  };
-  return html`${mixed.length > 0 && html`<section class="shell-library-group" aria-label="Mixed"><h3 class="ok-font-label">Mixed</h3>
-      <div class="shell-craft-tiles is-mixed" role="group" aria-label="Mixed">${mixed.map((p) => tile(p, true))}</div></section>`}
-    <section class="shell-library-group" aria-label="One craft"><h3 class="ok-font-label">One craft</h3>
-      <div class="shell-craft-tiles" role="group" aria-label="One craft">${crafts.map((p) => tile(p, false))}</div></section>
-    ${alone.length > 0 && html`<div class="shell-craft-tiles shell-library-alone" role="group" aria-label="Taskmaster alone">${alone.map((p) => tile(p, false))}</div>`}`;
 }
 
 /** The person's own parties (spec 43 §6): asked when the picker opens (`active`); [parties, ask again]. */
@@ -168,38 +138,6 @@ export function SaveParty({ goal, craft }) {
     <input class="ork-field" autofocus value=${name} aria-label="Name of your party" maxlength="40" onInput=${(e) => setName(e.target.value)} />
     <button class="ork-btn primary" disabled=${!name.trim() || busy}>Save</button>
     <button type="button" class="ork-btn" onClick=${() => setName(null)}>Cancel</button></form>`;
-}
-
-/** The three bands. `craft`: the party's, its agents listed first in each band. */
-export function PartyBands({ craft = "", leader, setLeader, team, setTeam }) {
-  const fixed = pitchParty(leader), over = overfull(leader, team);
-  const seats = fixed ? { lead: 1, build: Math.max(1, inBand("build", leader, team).length), check: Math.max(1, inBand("check", leader, team).length) } : seatsFor(leader);
-  const on = (a) => (a.band === "lead" ? leader === a.id : team.includes(a.id));
-  const toggle = (a) => {
-    if (a.band === "lead") { setLeader(leader === a.id ? TASKMASTER : a.id); return; }
-    if (team.includes(a.id)) setTeam(team.filter((x) => x !== a.id));
-    else if (inBand(a.band, leader, team).length < seats[a.band]) setTeam([...team, a.id]);
-    else toast(`${stageWord(leader, a.band)} has ${plural(seats[a.band], "seat", "seats")} with ${agentOf(leader)?.name || "Taskmaster"}: take one out first.`, "warning");
-  };
-  const row = (a) => html`<button type="button" key=${a.id} class="shell-team-row" aria-pressed=${String(on(a))} data-agent=${a.id}
-      aria-label=${`${on(a) ? "Take out" : "Take in"}: ${a.name}`} onClick=${() => toggle(a)}>
-    <${Head} race=${raceOfAgent(a)} tier=${a.tier} /><b>${a.name}${a.check && html`<span class="shell-check-badge">checks</span>`}</b>
-    <small class="ok-tone-muted">${TIER_WORDS[a.tier]} ${RACE_WORDS[raceOfAgent(a)]} · ${a.line}</small>
-    <span class="shell-team-mark" aria-hidden="true"><${Icon} name=${on(a) ? "check" : "plus"} /></span></button>`;
-  const bands = BANDS.map(([id, words, what]) => {
-    const taken = inBand(id, leader, team);
-    const list = fixed ? [] : library().filter((a) => a.band === id && !a.pitch).sort((x, y) => (x.craft === craft ? 0 : 1) - (y.craft === craft ? 0 : 1));
-    const full = over.find((x) => x.band === id);
-    return html`<section key=${id} class=${`shell-party-band band-${id}`} aria-label=${words}>
-      <div class="shell-band-head"><h3>${stageWord(leader, id)}</h3><small class="ok-tone-muted">${words} · ${taken.length} of ${seats[id]} seats · ${fixed ? PITCH_BANDS[id] : what}</small></div>
-      <div class="shell-team-seats">${Array.from({ length: Math.max(seats[id], taken.length) }, (_, i) => {
-        const a = agentOf(taken[i]), past = i >= seats[id];
-        return html`<span key=${i} class=${`shell-team-seat${a ? "" : " is-empty"}${id === "lead" ? " is-lead" : ""}${past ? " is-over" : ""}`} title=${a?.name || "A free seat"}>${a && html`<${Head} race=${raceOfAgent(a)} tier=${a.tier} />`}</span>`;
-      })}</div>
-      ${full && html`<p class="shell-band-over" role="alert">${full.text}</p>`}
-      ${list.length > 0 && html`<div class="shell-team-list">${list.map(row)}</div>`}</section>`;
-  });
-  return fixed ? [...bands, html`<p key="fixed" class="ok-tone-muted shell-band-fixed">${IDEATION_STAYS}</p>`] : bands;
 }
 
 const PRICE_MS = 300;
