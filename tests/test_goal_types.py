@@ -271,6 +271,8 @@ def test_out_leaves_the_members_with_open_work_out_and_puts_the_fewest_runs_firs
     _goal(root, state, full, [open_])
     (art,) = goal_types.missing(state, root, full, ("art",))
     assert art["out"] == [{"slug": "grunt", "name": "Grunt", "runs": 1}, {"slug": "tester", "name": "Tester", "runs": 4}]
+    assert goal_types.is_dropped({"state": "dropped"}) and goal_types.is_dropped({"state": "failed", "error": "dropped by you"})
+    assert not goal_types.is_dropped({"state": "failed", "error": "tests failed"}) and not goal_types.is_dropped({"state": "merged"})
     for gone in ({"state": "merged"}, {"state": "dropped"}, {"state": "failed", "error": "dropped by you"}):
         other = _party(root, state, ["grunt", "tester", "ui-kit"], leader="product-designer", title=f"Other {len(ideas.tracks(root))}")
         _goal(root, state, other, [{**open_, **gone}])
@@ -308,7 +310,7 @@ def test_a_party_not_saved_offers_what_the_same_party_saved_does_and_a_library_a
     base = tmp_path_factory.mktemp("fresh")
     fresh_root, fresh_state = base / "wiki", base / ".orkcraft"
     ask = lambda st, rt, slug, read=None: [(t.id, [m["agent"] for m in rows]) for t, rows in goal_types.offered(st, rt, slug, read=read)]
-    parties = [(c, lead, [*build, *check]) for c, (lead, build, check) in library.PARTIES.items()] + [(p[0], p[4], [*p[5], *p[6]]) for p in library.PRESETS]
+    parties = [(c, lead, [*build, *check]) for c, (lead, build, check) in library.PARTIES.items()] + [(p[0], p[4], [*p[5][:goal_team.SEATS - len(p[6])], *p[6]]) for p in library.PRESETS]   # a team holds at most SEATS: Art and sound's fifth builder is left out here
     for name, lead, team in parties:
         saved = _party(root, state, team, leader=lead, title=name)
         got = ask(fresh_state, fresh_root, "", goal_types.Party.of(fresh_state, fresh_root, lead, team))

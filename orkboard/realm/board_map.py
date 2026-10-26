@@ -82,19 +82,19 @@ def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None
             (ideas.idea_page(root, slug) or ideas.Page()).section("Gist")) or "The keeper proposes this"})
     if state == "judged":
         out.append({**base, **pitches.need_of(state_dir, slug)})
-    if state == "failed":
+    failing = [t for t in tasks if t.get("state") == "failed" and not goal_types.is_dropped(t)]       # a task the person dropped does not fail
+    if state == "failed" and (failing or not any(goal_types.is_dropped(t) for t in tasks)):             # a goal that failed over a task since dropped needs no one
         out.append({**base, "kind": "failed", "text": st.get("error") or "Something failed"})
     merged = {t.get("id") for t in tasks if t.get("state") == "merged"}
     if state == "working":
-        for t in tasks:
-            if t.get("state") == "failed":
-                out.append({**base, "kind": "failed", "blocks": True, "text": f"{t.get('title', '')}: {t.get('error') or 'failed'}",
-                            "at": str(t.get("finished") or base["at"])})
+        for t in failing:
+            out.append({**base, "kind": "failed", "blocks": True, "text": f"{t.get('title', '')}: {t.get('error') or 'failed'}",
+                        "at": str(t.get("finished") or base["at"])})
     if plan and state == "working":                  # a to-do is a stop only when it blocks (spec 87 §4.1); before that it is a line of the plan (`todo_lines`)
         for td in plan.get("todos") or []:
             if td.get("done"):
                 continue
-            waits = [t for t in tasks if t.get("id") in (td.get("for") or []) and t.get("state") != "merged"
+            waits = [t for t in tasks if t.get("id") in (td.get("for") or []) and not goal_types.is_gone(t)
                      and set(t.get("after") or []) <= merged]
             if waits:
                 out.append({**base, "kind": "todo", "text": td.get("title") or "", "blocks": True,
@@ -110,7 +110,7 @@ def todo_lines(plan: dict | None, tasks: list[dict] | None = None) -> list[str]:
     plan = plan or {}
     tasks = [t for t in (plan.get("tasks") if tasks is None else tasks) or [] if isinstance(t, dict)]
     todos = [d for d in plan.get("todos") or [] if isinstance(d, dict) and not d.get("done") and str(d.get("title") or "").strip()]
-    return [f"Before {t.get('title') or t.get('id')}: {str(d['title']).strip()}" for t in tasks if t.get("state") not in ("merged", "dropped")
+    return [f"Before {t.get('title') or t.get('id')}: {str(d['title']).strip()}" for t in tasks if not goal_types.is_gone(t)
             for d in todos if t.get("id") in (d.get("for") or [])]
 
 
@@ -155,7 +155,7 @@ def row(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None, page:
     return {"slug": slug, "title": i["title"], "short": i["short"], "track": i["track"], "order": i["order"],
             "state": st["state"], "size": i["size"], "thesis": i["thesis"], "asks": len(asks),
             "priority": i["priority"],
-            "progress": {"done": sum(1 for t in tasks if t.get("state") == "merged"), "total": len(tasks)},
+            "progress": {"done": sum(1 for t in tasks if t.get("state") == "merged"), "total": sum(1 for t in tasks if not goal_types.is_dropped(t))},
             "updated": ideas.touched_at(root, state_dir, slug) if at is None else at,
             "queue": ideas.queue_of(st), "held_until": st["held_until"],
             **({"held_for": st["held_for"]} if st.get("held_for") and st["held_until"] else {}),
@@ -361,6 +361,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                       "leader": {"slug": lead["slug"], "name": lead["name"], "head": roles.head(goal_team.seat_role(lead, tiers), target)} if lead else None,
                       "size": g.get("size") or "",                                  # the party's size (spec 75 §3): lean · standard · full, "" with none
                       "tool": g.get("tool") or "",                                  # the party's AI tool (spec 81): a harnesses id, "" the Main tool
+                      "tools": g.get("tools") or {},                                # … and each seat's own, {agent: tool} (spec 91 §6)
                       "verdict": {"met": verdict.get("met") is True, "by": verdict.get("by") or "", "at": verdict.get("at") or "",
                                   **({"tally": goal_flags.tally(root, state_dir, g["slug"])} if verdict.get("met") is True else {})}
                       if verdict else None,
@@ -400,7 +401,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                     "usd": idea_spend.of_idea(state_dir, slug)["usd"] if tasks else None,
                     "plan_estimate": {"usd_low": est.get("usd_low"), "usd_high": est.get("usd_high")} if isinstance(est, dict) and plan else None,
                     "asked": _asked(st, asks, by_slug, lead, target) if r["state"] == "asks" else [],
-                    "tasks": [{"id": t.get("id"), "title": t.get("title") or "", "short": task_short(t), "state": t.get("state") or "waiting",
+                    "tasks": [{"id": t.get("id"), "title": t.get("title") or "", "short": task_short(t), "state": "dropped" if goal_types.is_dropped(t) else t.get("state") or "waiting",
                                "after": list(t.get("after") or []), "tier": t.get("tier") or "",
                                "head": roles.task_head(state_dir, t, target, read, tiers),
                                "by": _by(t, read), "band": "check" if map_stage.is_check(t) else "build", "wave": waves[str(t.get("id"))],

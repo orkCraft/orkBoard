@@ -23,7 +23,7 @@ def finding(**over):
 
 
 def test_the_tags_are_the_checkers_first_kinds():
-    assert idea_checks.TAGS == ("security", "review", "a11y", "playtest", "datacheck", "edit")      # spec 59: the Playtester checks after the Artist in the library
+    assert idea_checks.TAGS == ("security", "review", "a11y", "playtest", "artcheck", "datacheck", "edit")      # spec 59: the Playtester checks after the Artist in the library; the Art reviewer after it
     assert idea_checks.FINDINGS_FILE == ".orkcraft-findings.json"
 
 
@@ -211,7 +211,7 @@ def test_drop_still_drops_a_check_s_result(town, monkeypatch):
     runner.start("demo")
     wait_task(runner, "k1", "review")
     runner.drop_task("demo", "k1")
-    assert tasks_of(town)["k1"]["state"] == "failed" and tasks_of(town)["k1"]["error"] == "dropped by you"
+    assert tasks_of(town)["k1"]["state"] == "dropped" and tasks_of(town)["k1"]["error"] == "dropped by you"
 
 
 # -- spec 86 D: findings of the code and of the place -------------------------------------------------------------------------------

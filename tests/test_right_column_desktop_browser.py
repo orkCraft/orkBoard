@@ -12,7 +12,7 @@ import pytest
 
 pytest.importorskip("playwright.sync_api")
 
-from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
+from tests.browser_kit import WAIT_MS, gui, open_pane  # noqa: E402,F401  (fixture)
 from tests.test_arena_desktop_browser import ArenaHost  # noqa: E402
 from tests.test_assets_desktop_browser import AssetsHost, _assets, _card, serve  # noqa: E402
 from tests.test_route_desktop_browser import shot  # noqa: E402
@@ -96,14 +96,14 @@ def test_no_right_column_with_nothing_open_one_opened_pushes_the_pane_and_esc_or
     assert pg.locator(".shell-drawer").count() == 0 and abs(_box(pg, ".shell-main > .arena")["width"] - 1440) <= 1             # nothing open: the pane takes the width
     assert pg.locator(".arena-look").count() == 0 and "Waits for your look" not in pg.locator("body").inner_text()              # no Waits column (§2.3)
     shot(pg, "right-closed.png")
-    pg.locator(".shell-top").get_by_role("button", name="Agents").click()
+    open_pane(pg, "agents")
     _column(pg)
     _pushes(pg)
     assert pg.locator(".arena-play").bounding_box()["width"] < 1440 - 480 - 240                                                 # the field itself is narrower: the pane was pushed
     pg.keyboard.press("Escape")                                                                                               # Esc: the column goes
     pg.locator(".shell-drawer").wait_for(state="detached", timeout=WAIT_MS)
     assert abs(_box(pg, ".shell-main > .arena")["width"] - 1440) <= 1
-    pg.locator(".shell-top").get_by_role("button", name="Agents").click()                                                     # back, with its tab
+    open_pane(pg, "agents")                                                     # back, with its tab
     _column(pg).get_by_role("button", name="Close Agents").click()                                                            # the last tab's ×: no column at all
     pg.locator(".shell-drawer").wait_for(state="detached", timeout=WAIT_MS)
     assert abs(_box(pg, ".shell-main > .arena")["width"] - 1440) <= 1
@@ -240,20 +240,25 @@ def test_one_goal_ready_for_main_and_a_press_on_the_card_opens_the_gates_screen(
     assert not errors, "\n".join(errors)
 
 
-def test_the_limits_are_under_spend_in_the_top_bar(party):
+def test_the_limits_are_chips_on_the_top_bars_right_and_a_press_opens_their_panel(party):
     pg, host = party
     assert pg.locator(".arena-stops .arena-limits, .arena-limits").count() == 0                                                   # not along the bottom any more
-    money = pg.locator(".shell-top .shell-top__money")
-    left = money.get_by_role("button", name="What is left of your AI tools: Codex 40 %")
-    assert left.count() == 1 and money.locator(".shell-top__spend").count() == 1
-    assert _box(pg, ".shell-top__leftbtn")["x"] > _box(pg, ".shell-top__spend")["x"]
-    left.click()
-    region = pg.get_by_role("region", name="What is left of your AI tools")
+    chips = pg.locator(".shell-top .shell-top__chips")
+    codex = chips.get_by_role("button", name="Codex 40 % left, week")
+    assert codex.count() == 1 and chips.locator(".shell-top__chip").count() == 2 and chips.locator(".shell-top__spend").count() == 0
+    assert _box(pg, ".shell-top__chips")["x"] > _box(pg, ".shell-top__settings")["x"]                                            # on the right, Settings is on the left
+    codex.click()
+    region = pg.get_by_role("region", name="What is left of Codex")                                                                # the pressed tool's line only (spec 91 §2)
     region.wait_for(timeout=WAIT_MS)
-    assert [x.get_attribute("data-provider") for x in region.locator(".arena-limit").all()] == ["claude", "codex"]
+    assert [x.get_attribute("data-provider") for x in region.locator(".arena-limit").all()] == ["codex"]
+    assert region.locator(".arena-limit[data-provider=codex] .ork-crystals i.on").count() == 4
+    chips.get_by_role("button", name="Claude", exact=False).click()                                                              # another chip: its tool's line
+    region = pg.get_by_role("region", name="What is left of Claude")
+    region.wait_for(timeout=WAIT_MS)
     assert region.locator(".arena-limit[data-provider=claude] .ork-crystals i.on, .arena-limit[data-provider=claude] .ork-crystals i.kept").count() == 6
-    panel, spend = _box(pg, ".shell-top__limits"), _box(pg, ".shell-top__money")
-    assert panel["y"] >= spend["y"] + spend["height"] and money.get_by_role("button", name="Last week").count() == 1           # under Spend, with Last week
+    panel, chipbox = _box(pg, ".shell-top__limits"), _box(pg, ".shell-top__chips")
+    assert panel["y"] >= chipbox["y"] + chipbox["height"]                                                                         # under the chips
+    assert pg.locator(".shell-top__limits").get_by_role("button", name="Last week").count() == 1 and pg.locator(".shell-top__limits .shell-top__spend").count() == 1
     pg.keyboard.press("Escape")
     region.wait_for(state="detached", timeout=WAIT_MS)
 

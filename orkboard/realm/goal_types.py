@@ -33,7 +33,18 @@ SIGNS = ("feature", "bug", "tidy", "screen", "picture", "logo", "target", "flask
 ASK_CHARS = 300                                  # an answer to an ask, the most kept
 REFS = "refs"                                    # the id of Refs' links among a goal's asks
 GONE = ("merged", "dropped")                     # a task no longer to do
-DROPPED = "dropped by you"                       # a task dropped at Review fails with these words (core/idea_review.py)
+DROPPED = "dropped by you"                       # a task the person dropped is `dropped` with these words (core/idea_review.py)
+
+
+def is_dropped(task: dict) -> bool:
+    """A task the person dropped. A plan that dropped a task before a dropped task had a state of its own holds it as `failed`
+    with these words: it is dropped as well."""
+    return task.get("state") == "dropped" or (task.get("state") == "failed" and task.get("error") == DROPPED)
+
+
+def is_gone(task: dict) -> bool:
+    """A task no longer to do: merged or dropped."""
+    return task.get("state") in GONE or is_dropped(task)
 
 
 @dataclass(frozen=True)
@@ -221,7 +232,7 @@ class Party:
                 if ideas.state(self.state_dir, i["slug"])["state"] == "done":
                     continue
                 for t in (ideas.plan(self.state_dir, i["slug"]) or {}).get("tasks") or []:
-                    if t.get("state") not in GONE and not (t.get("state") == "failed" and t.get("error") == DROPPED):
+                    if not is_gone(t):
                         self._busy.add(roles.task_slug(t, read))
         return self._busy
 

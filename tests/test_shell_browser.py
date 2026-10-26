@@ -15,7 +15,7 @@ import pytest
 
 pytest.importorskip("playwright.sync_api")
 
-from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
+from tests.browser_kit import WAIT_MS, gui, open_pane  # noqa: E402,F401  (fixture)
 from orkboard.realm import library, plans, roles  # noqa: E402
 
 _TODAY = dt.date.today().isoformat()                 # a reset today reads "resets at 18:00", whatever the day
@@ -446,7 +446,7 @@ class StubHost:
             self.find(a).update(state="running", round=self.find(a)["round"] + 1, why=a["why"])
             return self.bump({"ok": True})
         if name == "ideas.drop_task":
-            self.find(a).update(state="failed", error="dropped by you")
+            self.find(a).update(state="dropped", error="dropped by you")
             return self.bump({"ok": True})
         if name == "ideas.stop_task":
             self.find(a).update(state="ready", note="stopped by you")
@@ -468,6 +468,10 @@ class StubHost:
         if name == "onboarding.close":
             self.onboarding = None
             return self.bump({})
+        if name == "ideas.usage":                     # spec 91 §2: what used the pressed tool's limit (js/arena/limits.js)
+            return {"provider": a["provider"], "name": a["provider"].title(), "left": 0.62, "window": "5h", "reset": f"{_TODAY}T18:00", "scope": a.get("scope", "project"), "scopes": ["project"],
+                    "rows": [{"party": "sync", "title": "Sync ideas", "share": 14, "tokens": 70_000, "members": [{"agent": "grunt", "name": "Grunt", "share": 14, "tokens": 70_000}]}],
+                    "outside": 3, "estimated": True, "tokens_only": False}
         if name == "logs.save":
             return {"path": SAVED, "name": SAVED.rsplit("/", 1)[1], "folder": SAVED.rsplit("/", 1)[0]}
         return {"ok": True}
@@ -594,7 +598,7 @@ def _drawer(pg):
 
 def _agents(pg):
     """Agents in the drawer (the top bar's button)."""
-    pg.locator(".shell-top").get_by_role("button", name="Agents").click()
+    open_pane(pg, "agents")
     pg.locator(".shell-agents").wait_for(timeout=WAIT_MS)
     return pg.locator(".shell-agents")
 
@@ -684,11 +688,13 @@ def test_one_window_the_parties_column_over_the_leader_and_no_camp(shell):
         pg.screenshot(path=str(SHOTS / "desktop-1440x900.png"))
 
 
-def test_the_top_bar_spend_stop_all_and_the_push_switch(shell):
+def test_the_top_bar_settings_stop_all_and_the_push_switch(shell):
     pg, host = shell
     top = pg.locator(".shell-top")
-    assert top.locator(".shell-limit").count() == 0                                                         # the limits left the bar (spec 49 §3)
-    assert "$2.40" in top.inner_text()
+    assert top.locator(".shell-limit").count() == 0 and "$2.40" not in top.inner_text()                      # the spend is in a chip's panel (spec 91 §1), not on the bar
+    top.locator(".shell-top__chip").first.click()
+    assert top.locator(".shell-top__limits").get_by_role("button", name="Spend today: $2.40. This week's work").is_visible()
+    pg.keyboard.press("Escape")
     top.get_by_role("button", name="Stop all").click()
     assert _sent(pg, host, ("halt", {}))
     top.get_by_role("button", name="Settings").click()
@@ -707,21 +713,32 @@ def test_the_top_bar_spend_stop_all_and_the_push_switch(shell):
     assert _sent(pg, host, ("logs.show", {"path": SAVED}))
 
 
-def test_the_tools_limits_are_under_spend_with_their_diamonds_and_the_reserve_hatched(shell):
+def test_the_tools_limits_are_chips_whose_panel_has_their_diamonds_and_the_reserve_hatched(shell):
     pg, host = shell
-    pg.locator(".shell-top__leftbtn").click()                                                             # under Spend in the top bar (spec 90 §2.3)
-    limits = pg.get_by_role("region", name="What is left of your AI tools")
-    lines = limits.locator(".arena-limit")
-    assert lines.count() == 3 and [l.get_attribute("data-provider") for l in lines.all()] == ["claude", "agy", "codex"]
-    claude = lines.nth(0)
+    chips = pg.locator(".shell-top__chip")
+    assert [c.get_attribute("data-provider") for c in chips.all()] == ["claude", "agy", "codex"]
+    chips.first.click()                                                                                    # a chip of the top bar opens the panel of that tool (spec 91 §1, §2)
+    limits = pg.get_by_role("region", name="What is left of Claude")
+    claude = limits.locator(".arena-limit")
+    assert claude.count() == 1 and claude.get_attribute("data-provider") == "claude"                       # one tool's line, not every tool's
     assert "62 %" in claude.inner_text() and claude.locator(".ork-crystals i").count() == 10
     assert claude.locator(".ork-crystals i.on").count() == 5 and claude.locator(".ork-crystals i.kept").count() == 1      # 6 left, 1 kept for tonight
-    assert lines.nth(1).locator(".ork-crystals i.kept").count() == 0 and lines.nth(1).locator(".ork-crystals i.on").count() == 2      # 15 %: two
-    assert "not read" in lines.nth(2).inner_text() and lines.nth(2).locator(".ork-crystals i").count() == 0                       # never missing
     assert claude.get_attribute("title") == "Claude: 62 % left, 10 % of it kept for tonight · resets at 18:00"
-    assert "hatched: kept for tonight" in limits.inner_text() and "Claude resets at 18:00" in limits.inner_text()
-    bb, spend = limits.bounding_box(), box(pg, ".shell-top__money")
-    assert bb["y"] >= spend["y"] + spend["height"] and pg.locator(".arena-stops .arena-limits").count() == 0      # under Spend, not along the bottom
+    assert "Claude resets at 18:00" in limits.inner_text()
+    usage = limits.locator(".arena-usage")                                                                 # what used it (B's rows)
+    usage.locator(".arena-usage__row").first.wait_for(timeout=WAIT_MS)
+    assert _sent(pg, host, ("ideas.usage", {"provider": "claude", "scope": "project"}))
+    assert usage.locator(".arena-usage__who").all_inner_texts() == ["Sync ideas", "Grunt", "Outside Orkboard"]
+    bb, bar = limits.bounding_box(), box(pg, ".shell-top__chips")
+    assert bb["y"] >= bar["y"] + bar["height"] and pg.locator(".arena-stops .arena-limits").count() == 0      # under the chips, not along the bottom
+    chips.nth(1).click()                                                                                   # another chip: that tool's panel, its 15 % in two diamonds
+    agy = pg.get_by_role("region", name="What is left of Antigravity").locator(".arena-limit")
+    agy.wait_for(timeout=WAIT_MS)
+    assert agy.locator(".ork-crystals i.kept").count() == 0 and agy.locator(".ork-crystals i.on").count() == 2
+    chips.nth(2).click()                                                                                   # a tool not read: its name and "not read", no diamonds, never missing
+    codex = pg.get_by_role("region", name="What is left of Codex").locator(".arena-limit")
+    codex.wait_for(timeout=WAIT_MS)
+    assert "not read" in codex.inner_text() and codex.locator(".ork-crystals i").count() == 0
 
 
 def test_a_click_on_an_idea_a_todo_a_chip_and_a_result_opens_the_right_preview(shell):
@@ -888,7 +905,7 @@ def test_new_party_is_a_name_what_it_is_for_its_party_and_a_priority_then_readin
     pg, host = shell
     _new_party(pg)
     dlg = pg.get_by_role("dialog", name="New party")
-    assert dlg.locator(".shell-craft-tile").count() == 11                                           # from the library: the five mixed, the five crafts, the Taskmaster alone
+    assert dlg.locator(".shell-craft-tile").count() == 12                                           # from the library: the six mixed, the five crafts, the Taskmaster alone
     dlg.locator('.shell-craft-tile[data-craft="design"]').click()                                   # the library's design party, in three bands
     leads, builds = dlg.get_by_role("region", name="Leads"), dlg.get_by_role("region", name="Builds")
     assert leads.locator('.shell-team-row[aria-pressed="true"]').get_attribute("data-agent") == "product-designer"

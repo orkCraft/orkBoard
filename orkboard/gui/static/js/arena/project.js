@@ -4,7 +4,7 @@
 // its state's words) grouped *Planning*, *At work*, *Waits for main*, then *Flags (n)* folded. A press on a card opens the goal's screen in the drawer.
 // Wider than the field the columns scroll sideways and the heads stay. Hovering or focusing a deck draws, with arrows.js, a link to each deck its route names in another column (the pitch it came from,
 // the release it went into); nothing at rest. Above the columns the Orkmaster's head and *New party* (its deck: projectdeal.js), below them *New goal* (projectdeal.js, a goal's party from the Orkmaster).
-// Three tabs lie over the table (docs/specs/88-assets-and-play.md §6): Field (all of the above), Assets (assets.js: the project's files as cards by kind) and Play (play.js: the build in the pane); it opens on Field.
+// Three tabs lie over the table (docs/specs/88-assets-and-play.md §6, docs/specs/91-the-owners-list.md §3): Field (all of the above), Assets and files (assetsfiles.js: Assets, the project's files as cards by kind, or Files, its tree) and Play (play.js: the build in the pane); it opens on Field.
 // The code's goal is a party; its idea is a goal; its deck is a goal drawn small, never a word a person reads.
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
@@ -22,7 +22,7 @@ import { PartyMenu } from "./partymenu.js";
 import { NewGoalPile, NewPartyPile } from "./projectdeal.js";
 import { orkLinks } from "./collidewords.js";
 import { GROUPS, PARTIES_WORDS, TABS, THE_PROJECT, deckCount, decksOf, emptyWords, linksOf } from "./projectwords.js";
-import { Assets } from "./assets.js";
+import { AssetsAndFiles } from "./assetsfiles.js";
 import { Play } from "./play.js";
 
 const TONES = { danger: "is-danger", alert: "is-alert" };
@@ -150,7 +150,7 @@ export function Project({ m, stops }) {
         <span class="arena-cap">${PARTIES_WORDS}</span></div>
       <${Tabs} tab=${tab} setTab=${setTab} />
       <div class="arena-pjpanel" id="pjpanel" role="tabpanel" aria-labelledby=${`pjtab-${tab}`} data-tab=${tab}>
-        ${tab === "field" ? html`<${Field} m=${m} parties=${parties} />` : tab === "assets" ? html`<${Assets} />` : html`<${Play} />`}
+        ${tab === "field" ? html`<${Field} m=${m} parties=${parties} />` : tab === "assets" ? html`<${AssetsAndFiles} />` : html`<${Play} />`}
       </div>
       ${stops}
     </div>

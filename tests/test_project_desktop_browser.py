@@ -23,7 +23,7 @@ ORK = {"id": "orkmaster", "name": "Orkmaster", "race": "peon", "tier": "crown"}
 ARTIST = {"kind": "art", "words": "pixel art", "agent": "artist", "name": "Artist", "band": "build", "free": True, "out": []}
 FIX = {"id": "fix", "name": "Fix a bug", "sign": "bug", "line": "Something is broken: find it, fix it, prove it", "lens": "code", "refs": False, "used": 2, "missing": [], "asks": []}
 LOGO = {"id": "logo", "name": "New logo", "sign": "logo", "line": "A mark for the product, in sizes", "lens": "text", "refs": False, "used": 0, "missing": [], "asks": []}
-LIBRARY = ["game", "mobile-app", "website", "ideation", "release", "engineering", "design", "data", "marketing", "product", "mixed"]
+LIBRARY = ["game", "mobile-app", "website", "ideation", "release", "art", "engineering", "design", "data", "marketing", "product", "mixed"]
 LACKING = [{"id": "release", "why": "flags_wait", "n": 3}, {"id": "ideation", "why": "no_pitches", "n": 0},
            *[{"id": i, "why": "", "n": 0} for i in LIBRARY if i not in ("release", "ideation")]]
 HAVING = [*[{"id": i, "why": "", "n": 0} for i in LIBRARY if i not in ("release", "ideation")], {"id": "release", "why": "have", "n": 0}, {"id": "ideation", "why": "have", "n": 0}]
@@ -278,7 +278,7 @@ def test_new_partys_tiles_follow_the_deal_inside_each_group_with_the_why_under_t
     _new_party(pg)
     dlg = pg.get_by_role("dialog", name="New party")
     mixed = dlg.locator('.shell-library-group[aria-label="Mixed"] .shell-craft-tile')
-    assert [t.get_attribute("data-craft") for t in mixed.all()] == ["release", "ideation", "game", "mobile-app", "website"]
+    assert [t.get_attribute("data-craft") for t in mixed.all()] == ["release", "ideation", "game", "mobile-app", "website", "art"]
     crafts = dlg.locator('.shell-library-group[aria-label="One craft"] .shell-craft-tile')
     assert [t.get_attribute("data-craft") for t in crafts.all()] == ["engineering", "design", "data", "marketing", "product"]      # the groups keep their headings
     why = dlg.locator('.shell-craft-tile[data-craft="release"] .shell-craft-tile__why')
@@ -291,7 +291,7 @@ def test_new_partys_tiles_follow_the_deal_inside_each_group_with_the_why_under_t
     host.bump({})
     _new_party(pg)
     dlg = pg.get_by_role("dialog", name="New party")
-    assert [t.get_attribute("data-craft") for t in dlg.locator('.shell-library-group[aria-label="Mixed"] .shell-craft-tile').all()] == ["game", "mobile-app", "website", "release", "ideation"]     # those it has, last
+    assert [t.get_attribute("data-craft") for t in dlg.locator('.shell-library-group[aria-label="Mixed"] .shell-craft-tile').all()] == ["game", "mobile-app", "website", "art", "release", "ideation"]     # those it has, last
     assert dlg.locator('.shell-craft-tile[data-craft="ideation"] .shell-craft-tile__why').inner_text() == "You have one"
 
 

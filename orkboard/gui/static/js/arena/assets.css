@@ -5,6 +5,11 @@
 /* -- the level's three tabs over its table ----------------------------------------------------------------------------------------------------- */
 .arena-pjtabs { flex: none; padding: 0 var(--ork-6); }
 .arena-pjpanel { position: relative; flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.assets-and-files { position: relative; flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.assets-switch { flex: none; align-self: flex-end; border-bottom: 0; padding: var(--ork-2) var(--ork-6) 0; }
+.assets-switch .ork-tab { height: var(--ork-control); padding: 0 var(--ork-4); }
+.assets-switch .ork-tab[aria-pressed="true"] { color: var(--ork-ink); background: var(--ork-raised); box-shadow: inset 0 -2px 0 var(--ork-ink); }
+.assets-files { flex: 1; min-height: 0; overflow-y: auto; padding: var(--ork-3) var(--ork-6) var(--ork-6); }
 .assets, .playpane { position: relative; flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 .assets-note, .play-note { margin: var(--ork-6); display: flex; align-items: center; gap: var(--ork-3); font: var(--ork-type-body); color: var(--ork-ink-muted); }
 
@@ -101,15 +106,23 @@
 /* spec 90 A begins -- Play's start screen (docs/specs/90-what-the-first-look-said.md §1.3): black, the project's name coming up in steps, the frame out of the black */
 .playpane.is-black { background: var(--ork-canvas); }
 .play-intro { position: absolute; inset: 0; z-index: 2; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--ork-5); padding: var(--ork-6); background: var(--ork-canvas); text-align: center; }
-.play-title { margin: 0; max-width: 100%; overflow-wrap: anywhere; font-family: var(--ork-font-pixel); font-weight: 500; font-size: 56px; line-height: 64px; text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); color: var(--ork-ink); animation: play-name-in 0.8s steps(8) both; }
-.play-starting { margin: 0; font: var(--ork-type-body); color: var(--ork-ink-faint); animation: play-name-in 0.8s steps(8) 0.4s both; }
+.play-title { margin: 0; max-width: 100%; overflow-wrap: anywhere; font-family: var(--ork-font-pixel); font-weight: 500; font-size: 56px; line-height: 64px; text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); color: var(--ork-ink); animation: play-name-loop 2.4s steps(6) infinite; }
+.play-starting { margin: 0; max-width: 100%; font: var(--ork-type-body); color: var(--ork-ink-faint); overflow-wrap: anywhere; animation: play-name-in 0.8s steps(8) 0.4s both; }
+.play-cmd { font-family: var(--ork-font-code); color: var(--ork-ink-muted); }
+.play-secs { font-variant-numeric: tabular-nums; margin-left: var(--ork-2); }
 .play-intro.is-fading { animation: play-intro-out 0.45s steps(5) forwards; pointer-events: none; }
 .play-intro.is-fading .play-title { animation: none; }
 .play-stage { position: relative; flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--ork-canvas); }
 .play-stage > .play-frame { flex: 1; }
 .play-stage.is-rising > .play-frame { animation: play-frame-in 0.45s steps(5) both; }
 .play-ports { margin: 0; font-variant-numeric: tabular-nums; }
+/* spec 91 C: what the command printed, in a quiet box that scrolls -- about twelve lines show, the code face for the output */
+.play-tail { width: min(720px, 100%); box-sizing: border-box; display: flex; flex-direction: column; gap: var(--ork-1); text-align: left; }
+.play-tail__cap { margin: 0; }
+.play-tail__lines { margin: 0; padding: var(--ork-3) var(--ork-4); box-sizing: border-box; max-height: calc(18em + 2 * var(--ork-3)); overflow: auto; background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame);
+  color: var(--ork-ink-muted); font: var(--ork-type-caption); font-family: var(--ork-font-code); line-height: 1.5; white-space: pre; }
 @keyframes play-name-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes play-name-loop { 0%, 100% { opacity: 0.15; } 50% { opacity: 1; } }
 @keyframes play-intro-out { from { opacity: 1; } to { opacity: 0; } }
 @keyframes play-frame-in { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {

@@ -5,6 +5,7 @@
    Sizes are the mockup's at 1 440 × 900. */
 @import "./assets.css";                                   /* the project's Assets and Play, and the level's tabs (spec 88): its own sheet */
 @import "./systemmap.css";                                /* the Tech lens's System and a party's two tabs (spec 89): its own sheet */
+@import "./limits.css";                                   /* what is left of your AI tools and what used it (specs 90, 91 §2): its own sheet */
 .arena-spacer { flex: 1; }
 .arena-muted { color: var(--ork-ink-muted); }
 .arena-cap { font: var(--ork-type-caption); color: var(--ork-ink-muted); margin: 0; }
@@ -438,14 +439,6 @@
 .arena-task.is-pick .arena-task__foot .ork-sign { color: var(--ork-alert); }            /* a stop is marked once, by its sign (spec 52 §4.5) */
 .arena-task.is-pick .arena-task__line { white-space: normal; }                         /* *asks you to pick* is two short lines on a card 128 px wide */
 .arena-hitem.is-alert { color: var(--ork-alert); }
-
-/* -- what is left of your AI tools, under Spend in the top bar (spec 90 §2.3; the panel is shell.css `.shell-top__limits`) ------------------- */
-.arena-limits { display: flex; flex-direction: column; gap: var(--ork-2); }
-.arena-limit { display: flex; align-items: center; gap: var(--ork-4); flex: none; font: var(--ork-type-caption); }
-.arena-limit__name { display: inline-flex; align-items: center; gap: var(--ork-2); width: 96px; flex: none; color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.arena-limit b { font-weight: 600; font-variant-numeric: tabular-nums; }
-.arena-limit:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
-.arena-limits__note { font: var(--ork-type-caption); color: var(--ork-ink-faint); }
 
 /* -- Ideation's line (spec 65 §8): a pitch per row across the party's columns, a head under each view lit as it answers, the decision under the Skeptic ---- */
 .arena-pitches__list { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-2) 0 var(--ork-4); }

@@ -86,6 +86,13 @@ def test_only_unpriced_lines_give_null_never_0(tmp_path):
     assert got["unpriced"] == 2 and got["tasks"]["k1"]["usd"] is None
 
 
+def test_a_task_the_person_dropped_counts_in_dropped_as_a_failed_one_does(tmp_path):
+    _fixture(tmp_path)
+    _plan(tmp_path, "dark-mode", [_task("k1", "review", 2), _task("k2", "dropped")])
+    assert idea_spend.of_idea(tmp_path, "dark-mode")["stages"]["dropped"] == {"usd": 0.3, "tokens": 160, "calls": 1}
+    assert idea_spend.of_goal(tmp_path, "speed", ["dark-mode"])["stages"]["dropped"]["usd"] == 0.3
+
+
 def test_a_goal_sums_its_own_lines_and_its_ideas(tmp_path):
     _fixture(tmp_path)
     _plan(tmp_path, "dark-mode", [_task("k1", "merged", 2), _task("k2", "failed")])

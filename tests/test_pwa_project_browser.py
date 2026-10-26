@@ -256,7 +256,7 @@ async def test_new_partys_tiles_follow_the_deal_with_the_why_under_the_line(fake
         sheet = page.get_by_role("dialog", name="New party")
         await sheet.locator(".preset-tile").first.wait_for(timeout=WAIT_MS)
         mixed = [await t.get_attribute("data-preset") for t in await sheet.locator('.preset-group[aria-label="Mixed"] .preset-tile').all()]
-        assert mixed == ["release", "ideation", "game", "mobile-app", "website"]                                          # inside the group, the deal's order
+        assert mixed == ["release", "ideation", "game", "mobile-app", "website", "art"]                                          # inside the group, the deal's order
         one = [await t.get_attribute("data-preset") for t in await sheet.locator('.preset-group[aria-label="One craft"] .preset-tile').all()]
         assert one == ["engineering", "design", "data", "marketing", "product"]                                           # the craft group keeps its headings and order
         assert [norm(await h.inner_text()) for h in await sheet.locator(".preset-group h4").all()][:2] == ["Mixed", "One craft"]

@@ -14,7 +14,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from orkboard.realm.idea_words import short_of  # noqa: E402
-from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
+from tests.browser_kit import WAIT_MS, gui, open_pane  # noqa: E402,F401  (fixture)
 from tests.test_shell_browser import _parties, _press_row, _show_goal, PARTY, StubHost, _calls, _sent  # noqa: E402
 
 pytestmark = pytest.mark.browser
@@ -301,7 +301,7 @@ def test_a_click_on_a_row_opens_a_passing_tab_another_replaces_it_and_a_double_c
 
 def test_editing_a_file_keeps_its_tab_and_unsaved_changes_ask_before_esc_closes_it(mapped):
     pg, host = mapped
-    pg.locator(".shell-top").get_by_role("button", name="Files").click()                                  # Files: a tab of the drawer
+    open_pane(pg, "files")                                  # Files: a tab of the drawer
     pg.locator(".shell-tree__row", has_text="notes.txt").click()
     pg.locator(".shell-code").wait_for(timeout=WAIT_MS)
     assert passing(pg).count() == 1 and kept(pg).count() == 1                                             # Files is kept, the file is the passing one
@@ -323,7 +323,7 @@ def test_editing_a_file_keeps_its_tab_and_unsaved_changes_ask_before_esc_closes_
 
 def test_a_file_saved_from_its_tab_and_opening_what_has_a_tab_shows_that_tab(mapped):
     pg, host = mapped
-    pg.locator(".shell-top").get_by_role("button", name="Files").click()
+    open_pane(pg, "files")
     pg.locator(".shell-tree__row", has_text="README.md").click()
     pg.locator(".ork-read").wait_for(timeout=WAIT_MS)
     pg.locator(".shell-ptab.is-on [role=tab]").dblclick()

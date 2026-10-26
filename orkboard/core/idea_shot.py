@@ -17,6 +17,9 @@ printed and `PORT`, and `page_of(ports, path)` asks each, in that order, for the
 `text/html` is the page (spec 90 §1) and the picture and Play are of it. When none gives a page by `OPEN_S`, `tried` says which ports were asked.
 The command runs with `NO_COLOR=1`, and its lines are read with their colour codes taken out: `CI=1` turns picocolors' colours on, and Vite
 prints its port in bold (`http://localhost:<bold>5173</bold>/`), which no address matches (the logs of 26 October: Play's `nopage`).
+A caller may pass `tail` (a list): it holds the last `TAIL_LINES` lines the command printed, colour codes out (spec 91 §5: Play shows them when
+the build did not start), and `asking` (a function): it is called with the ports asked so far each time that list changes while no page has
+answered (Play's stage *page*).
 The browser is `$ORKCRAFT_CHROMIUM`, the preinstalled one (`/opt/pw-browsers/chromium`), one on the PATH, else Playwright's own.
 """
 from __future__ import annotations
@@ -38,11 +41,12 @@ import threading
 import time
 import tomllib
 from pathlib import Path
-from typing import Iterator
+from typing import Callable, Iterator
 
 from orkboard.realm import event_log, idea_shots
 
 OPEN_S, DRAW_S = 20.0, 25.0
+TAIL_LINES, TAIL_WIDTH = 30, 400                    # the command's output kept for a caller that asks (`opened`'s `tail`): lines, and the longest of one
 SIZE = (1280, 800)
 SEEN = {".html", ".htm", ".css", ".scss", ".sass", ".less", ".svg", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico", ".vue", ".svelte",
         ".jsx", ".tsx", ".astro", ".ejs", ".hbs", ".njk", ".jinja", ".j2"}
@@ -166,12 +170,16 @@ def page_of(ports: list[int], path: str = "/", timeout: float = 1.0) -> int | No
 
 @contextlib.contextmanager
 def opened(how: dict, worktree: Path, seconds: float = OPEN_S, env: dict[str, str] | None = None, path: str = "/",
-           tried: list[int] | None = None) -> Iterator[int | None]:
+           tried: list[int] | None = None, tail: list[str] | None = None, asking: Callable[[list[int]], None] | None = None) -> Iterator[int | None]:
     """The preview open on a worktree: the port of its page, or None when it gave none in `seconds`. It is closed on leaving.
     The page is the first port the command prints, then `PORT`, that answers `path` with an HTML page (`page_of`); a port that only listens
     (Express's, with Vite's page on another) is not the page. `env`: more for the command's environment (Play asks `HOST=127.0.0.1`,
     spec 88 §5); a static page is served on 127.0.0.1 always. `tried`: a list that is given the ports asked (printed order, then `PORT`)
-    when something listened but none gave a page, so a caller can tell *no page* from *did not open*."""
+    when something listened but none gave a page, so a caller can tell *no page* from *did not open*. `tail`: a list that is given the last
+    `TAIL_LINES` non-blank lines of the command's output as they come (colour codes out); `asking`: called with the listening ports when
+    they change while no page has answered."""
+    if tail is not None:
+        tail.clear()
     if how["how"] == "static":
         server = http.server.ThreadingHTTPServer(("127.0.0.1", 0), functools.partial(_Quiet, directory=str(worktree)))
         threading.Thread(target=server.serve_forever, daemon=True, name="idea-shot-static").start()
@@ -192,23 +200,34 @@ def opened(how: dict, worktree: Path, seconds: float = OPEN_S, env: dict[str, st
 
     def read() -> None:
         for line in proc.stdout or ():
-            for m in URL.finditer(ANSI.sub("", line)):
+            plain = ANSI.sub("", line)
+            for m in URL.finditer(plain):
                 seen.append(int(m.group(1)))
+            if tail is not None and (text := plain.rstrip()).strip():
+                tail.append(text[:TAIL_WIDTH])
+                del tail[:-TAIL_LINES]
 
-    threading.Thread(target=read, daemon=True, name="idea-shot-out").start()
+    reader = threading.Thread(target=read, daemon=True, name="idea-shot-out")
+    reader.start()
     found: int | None = None
     listened: list[int] = []
+    told: list[int] = []
     try:
         end = time.monotonic() + seconds
         while time.monotonic() < end and found is None and proc.poll() is None:
             ports = list(dict.fromkeys([*seen, port]))
             listened = [p for p in ports if _listening(p)]
             if listened:
+                if asking is not None and listened != told:
+                    told = list(listened)
+                    asking(told)
                 found = page_of(listened, path)
             if found is None:
                 time.sleep(0.25)
         if found is None and listened and tried is not None:
             tried[:] = list(dict.fromkeys([*seen, port]))
+        if found is None and proc.poll() is not None:
+            reader.join(1.0)                       # the command ended: its last lines are in the pipe, wait for them to be read
         yield found
     finally:
         _kill(proc)

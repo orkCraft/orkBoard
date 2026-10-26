@@ -161,6 +161,31 @@ def test_needs_you_names_the_kind(host):
         {"ask": "Which store first?", "choices": ["App Store", "Google Play"], "pick": 0, "why": "iPhone first", "look": False}]
 
 
+def test_a_dropped_task_is_not_a_failure_in_the_hand_and_not_a_task_to_do(host):
+    """The owner's 26 October: a card of a failed task stayed in the hand after Drop in the ticket itself."""
+    root, state = _board(host)
+    g = _goal(root, "Dropped")
+    slug = _idea(root, state, g, "Idea", "working")
+    tasks = [_t("k1", "dropped"), _t("k2", "waiting"), _t("k3", "merged")]
+    _plan(state, slug, tasks, passed_at="x", todos=[{"id": "t1", "title": "Paste the key", "kind": "secret", "for": ["k1"]}])
+    i = next(x for x in ideas.ideas(root) if x["slug"] == slug)
+
+    def kinds():
+        return [n["kind"] for n in board_map.idea_needs(root, state, i, ideas.state(state, slug), ideas.plan(state, slug), [])]
+    assert kinds() == []                                                       # it waits for nothing: no failed stop, no to-do for a task gone
+    _plan(state, slug, [_t("k1", "failed"), *tasks[1:]], passed_at="x")
+    assert kinds() == ["failed"]                                               # a task that failed for real is still a stop
+    _plan(state, slug, [{**_t("k1", "failed"), "error": "dropped by you"}, *tasks[1:]], passed_at="x")
+    assert kinds() == []                                                       # a plan written before a dropped task had its own state
+    ideas.save_state(state, slug, state="failed", error="Task k1: dropped by you")
+    assert kinds() == []                                                       # … and the goal that failed over it needs no one
+    _plan(state, slug, [_t("k1", "dropped"), _t("k2", "failed")], passed_at="x")
+    assert kinds() == ["failed"]                                               # another task failed for real: the goal's stop stays
+    _plan(state, slug, [_t("k1", "dropped"), _t("k2", "merged")], passed_at="x")
+    node = next(n for n in host.command("ideas.map", {})["nodes"] if n["slug"] == slug)
+    assert node["progress"] == {"done": 1, "total": 1} and [t["state"] for t in node["tasks"]] == ["dropped", "merged"]      # a dropped task is not counted
+
+
 def test_tasks_estimate_and_by_itself(host):
     root, state = _board(host)
     g = _goal(root, "Plans")

@@ -147,7 +147,8 @@ class ReviseMixin:
         done = [t for t in tasks if t.get("state") == "merged"]
         failed = [t for t in tasks if t.get("state") == "failed"]
         todo = [t for t in tasks if idea_change.open_task(t)]
-        at_work = [t for t in tasks if t not in done and t not in failed and t not in todo]
+        dropped = [t for t in tasks if t.get("state") == "dropped"]
+        at_work = [t for t in tasks if t not in done and t not in failed and t not in dropped and t not in todo]
         each = max(300, BRIEF_NOT_STARTED // max(1, len(todo)))
         rows = [{"id": t.get("id"), "title": t.get("title"), "short": t.get("short") or short_of(str(t.get("title") or "")),
                  "brief": _cut(t.get("brief"), each), "kind": t.get("kind"), "tier": t.get("tier"), "after": t.get("after") or [],
@@ -160,6 +161,7 @@ class ReviseMixin:
             ("Done (these stay as they are)", "\n".join(f"{t.get('id')} {t.get('title')}" for t in done)),
             ("At work (these stay as they are)", "\n".join(f"{t.get('id')} {t.get('title')}: {_cut(t.get('brief'), BRIEF_AT_WORK)}" for t in at_work)),
             *([("Failed (these stay as they are)", "\n".join(f"{t.get('id')} {t.get('title')}" for t in failed))] if failed else []),
+            *([("Dropped by the person (gone: nothing waits for them)", "\n".join(f"{t.get('id')} {t.get('title')}" for t in dropped))] if dropped else []),
             ("Not started", "\n".join(json.dumps(r, ensure_ascii=False) for r in rows))], cap - len(spec))
         touches = [t for t in json.loads(page.get("touches") or "[]") if isinstance(t, str)] if page.get("touches", "").startswith("[") else []
         kinds = "; ".join(f'"{k}" ({roles.KIND_LINES[k]})' for k in roles.TASK_KINDS if k not in idea_checks.TAGS)

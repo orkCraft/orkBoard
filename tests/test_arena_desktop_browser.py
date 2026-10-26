@@ -15,7 +15,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from orkboard.realm import idea_element  # noqa: E402
-from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
+from tests.browser_kit import WAIT_MS, gui, open_pane  # noqa: E402,F401  (fixture)
 from tests.test_map_desktop_browser import node, pip as _pip  # noqa: E402
 from tests.test_shell_browser import LEAD, _parties, SHOTS, StubHost, _calls, _drawer, _open, _sent, _show_goal, _stop, box  # noqa: E402
 
@@ -135,7 +135,8 @@ class ArenaHost(StubHost):
 
     def needs_you(self):
         base = {"goal": "passkey", "priority": "high", "blocks": False, "at": "2026-10-18T09:00:00"}
-        return [base | {"kind": "failed", "idea": "cookie", "title": "Session cookie flags", "text": "Secure cookie flags: The session ended", "blocks": True},
+        failing = any(t["state"] == "failed" for t in self.node_of("cookie")["tasks"])           # as the host does: a dropped task is no failure, nor the goal's
+        return [*([base | {"kind": "failed", "idea": "cookie", "title": "Session cookie flags", "text": "Secure cookie flags: The session ended", "blocks": True}] if failing else []),
                 base | {"kind": "plan", "idea": "recovery", "title": "Recovery codes", "text": "Plan ready · 3 tasks"},
                 base | {"kind": "asks", "idea": "second", "title": "Passkey on a second device", "text": "Should a lost phone sign out every passkey?",
                         "questions": ["Should a lost phone sign out every passkey?"]},
@@ -540,6 +541,8 @@ def test_what_waits_for_you_a_fan_raised_on_hover_and_focus_each_kind_and_its_qu
     _drawer(pg).get_by_role("button", name="Drop it").click()
     assert _sent(pg, host, ("ideas.drop_task", {"slug": "cookie", "task": "f1"}))
     pg.locator(".shell-drawer").wait_for(state="detached", timeout=WAIT_MS)                                  # a drop ends the thing: its tab goes, and the drawer with it
+    pg.locator('.arena-hc[data-kind="failed"]').wait_for(state="detached", timeout=WAIT_MS)                  # and its card in the hand: a dropped task does not fail
+    assert pg.locator('.arena-hc[data-kind="failed"]').count() == 0
     _stop(pg, "proposal").get_by_role("button", name="Take: Words of the sign-in page").click()
     assert _sent(pg, host, ("ideas.proposal", {"slug": "pagewords", "take": True, "priority": "high"}))
     assert hand.get_by_role("button", name="Plan ready: Recovery codes").count() == 1
@@ -603,12 +606,15 @@ def test_the_limits_inside_the_night_window_say_the_morning(gui):
     host.reserve = {"share": 0.2, "night": True}
     pg, host, errors = _open(gui, host=host, ready=".arena-phead")
     try:
-        pg.locator(".shell-top__leftbtn").click()                                                                   # under Spend (spec 90 §2.3)
-        limits = pg.get_by_role("region", name="What is left of your AI tools")
+        pg.locator(".shell-top__chip", has_text="Claude").click()                                                   # a chip opens its tool's panel (spec 91 §1)
+        limits = pg.get_by_role("region", name=re.compile("^What is left of Claude"))
         claude = limits.locator(".arena-limit[data-provider=claude]")
         assert claude.locator(".ork-crystals i.kept").count() == 2 and claude.locator(".ork-crystals i.on").count() == 4
-        assert "hatched: kept for the morning" in limits.inner_text() and "kept for the morning" in claude.get_attribute("title")
-        assert limits.locator(".arena-limit[data-provider=codex] .ork-crystals i.kept").count() == 0                # the reserve is Claude's only
+        assert "kept for the morning" in claude.get_attribute("title")
+        pg.locator(".shell-top__chip", has_text="Codex").click()
+        codex = pg.get_by_role("region", name=re.compile("^What is left of Codex")).locator(".arena-limit[data-provider=codex]")
+        assert codex.locator(".ork-crystals i.kept").count() == 0                                                    # the reserve is Claude's only
+        pg.locator(".shell-top__chip", has_text="Claude").click()
         assert pg.evaluate("getComputedStyle(document.querySelector('.ork-crystals i.kept')).backgroundImage").startswith("repeating-linear-gradient")
     finally:
         pg.close()
@@ -628,14 +634,14 @@ def test_the_right_column_opens_on_a_click_pushes_the_pane_keeps_its_tabs_on_esc
         assert drawer.evaluate("e => getComputedStyle(e).borderLeftStyle") == "double"
         arena = box(pg, ".shell-main > .arena")
         assert abs(arena["x"] + arena["width"] - bb["x"]) <= 1                                                          # the pane pushed, never covered
-        pg.locator(".shell-top").get_by_role("button", name="Agents").click()
+        open_pane(pg, "agents")
         assert "Add agent" in drawer.inner_text() and drawer.get_by_role("tab").count() == 2                        # Agents: today's pane, in a tab of the drawer
-        pg.locator(".shell-top").get_by_role("button", name="Files").click()
+        open_pane(pg, "files")
         pg.locator(".shell-tree__row", has_text="notes.txt").wait_for(timeout=WAIT_MS)
         assert drawer.get_by_role("tab").count() == 3
         pg.keyboard.press("Escape")
         pg.locator(".shell-drawer").wait_for(state="detached", timeout=WAIT_MS)
-        pg.locator(".shell-top").get_by_role("button", name="Agents").click()
+        open_pane(pg, "agents")
         assert _drawer(pg).get_by_role("tab").count() == 3                                                         # its tabs are kept
         pg.get_by_role("button", name="Close the right column").click()
         pg.locator(".shell-drawer").wait_for(state="detached", timeout=WAIT_MS)

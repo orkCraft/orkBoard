@@ -140,6 +140,13 @@ AGY_NO_COMMANDS = ("Read with your file tools (view_file, list_dir, grep_search)
                    "every command is refused and the run ends with no answer.")
 
 
+# The same for a working run that is not unchained (`Harness.work_note`): it edits with its file tools, and the gate
+# runs the tests after it. An unchained run (`free_args`) asks nothing and gets no such line.
+AGY_WORK_NOTE = ("Edit files with your file tools (view_file, list_dir, grep_search, write_to_file, replace_file_content) "
+                 "and run no terminal command: in this run every command is refused and the run ends with no answer. "
+                 "The gate runs the tests after you.")
+
+
 def _agy_reads(h, prompt, workdir, model):
     """An agy run that answers or reads: its prompt, then the line that keeps it off the terminal."""
     return _agy(h, f"{prompt}\n\n{AGY_NO_COMMANDS}", workdir, model)

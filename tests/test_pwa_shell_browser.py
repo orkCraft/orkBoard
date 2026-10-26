@@ -304,7 +304,7 @@ class Stub:
             self.find(a).update(state="running", round=self.find(a)["round"] + 1)
             return self.bump({"ok": True})
         if name == "ideas.drop_task":
-            self.find(a).update(state="failed", error="dropped by you")
+            self.find(a).update(state="dropped", error="dropped by you")
             return self.bump({"ok": True})
         if name == "ideas.stop_task":
             self.find(a).update(state="ready", note="stopped by you")

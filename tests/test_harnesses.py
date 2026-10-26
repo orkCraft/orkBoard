@@ -51,7 +51,7 @@ def test_agy_reads_with_its_file_tools_and_works_as_it_did(tmp_path):
     for cmd in (h.read("spec it", tmp_path), h.ask("spec it", tmp_path)):
         prompt = cmd[cmd.index("--print") + 1]
         assert prompt.startswith("spec it") and prompt.endswith(harnesses.AGY_NO_COMMANDS)
-    assert h.work("fix it", tmp_path)[h.work("fix it", tmp_path).index("--print") + 1] == "fix it"
+    assert h.work("fix it", tmp_path, free=True)[h.work("fix it", tmp_path, free=True).index("--print") + 1] == "fix it"   # unchained: its prompt as it was
 
 
 def test_agy_says_which_action_was_refused_and_nothing_when_none_was():

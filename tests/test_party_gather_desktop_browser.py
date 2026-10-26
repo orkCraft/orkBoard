@@ -170,7 +170,9 @@ def test_the_party_is_usable_while_the_heads_travel(shell):
 def test_a_head_whose_seat_is_scrolled_out_of_the_dialog_starts_from_save_partys_box(shell):
     pg, host = shell
     dlg = _fill(pg)
-    seats = _seats(pg, dlg, 100000)                                                                    # the dialog scrolled to its end: only the checker's seat is in view
+    body_top = dlg.locator(".shell-modal__body").bounding_box()["y"]
+    checker = _seats(pg, dlg)[2]["y"] - body_top                                                       # where the checker's seat is in the body (the library has grown a row since the end was its seat's)
+    seats = _seats(pg, dlg, checker - 10)                                                              # the dialog scrolled to the checker's seat: only it is in view
     assert [s["on"] for s in seats] == [False] * 2 + [True]
     save = dlg.get_by_role("button", name="Save party").bounding_box()
     pg.evaluate(RECORD)

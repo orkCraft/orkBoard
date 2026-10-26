@@ -79,7 +79,7 @@ class GoalsMixin:
         return {"ok": True}
 
     def goal_save(self, args: dict) -> dict:
-        """`{"slug"?, "about", "priority", "title"?, "craft"?, "team"?, "every"?, "leader"?, "size"?, "tool"?}`: a party (realm/goal_team.py:
+        """`{"slug"?, "about", "priority", "title"?, "craft"?, "team"?, "every"?, "leader"?, "size"?, "tool"?, "tools"?}`: a party (realm/goal_team.py:
         a leader, builders and checkers in their seats); its agents of the library are made
         roles of the project (realm/library.py), the person's own agents taken as they are; `every`: the team's checkers
         whose check applies to every idea, not only where it applies (realm/idea_checks.py): a title typed is the person's (never rewritten); spec 34's
@@ -125,6 +125,7 @@ class GoalsMixin:
         sized = self._resized(args, slug, team, leader)          # a size sent for a party of a recipe: the size's team (spec 81 §3)
         if sized is not None:
             team, args = sized["team"], {**args, "team": sized["team"], "every": args.get("every") if isinstance(args.get("every"), list) else goal_team.every_of(self.root(), slug)}
+        tools = self._tools_asked(args, slug, team, leader)      # each seat's own AI tool (spec 91 §6)
         if slug and ideas.track_page(self.root(False), slug) is not None:
             kept += goal_team.team_of(self.root(False), slug)
         if why := goal_team.seats(team or [], leader or (goal_team.leader_of(self.root(), slug) if sized is not None else ""), kept):
@@ -147,6 +148,10 @@ class GoalsMixin:
             library.install(self.state_dir, [leader])
         if tool is not None:
             goal_team.set_tool(self.root(), got, tool)
+        if tools is not None:
+            goal_team.set_tools(self.root(), got, tools)
+        elif team is not None or leader is not None:         # a seat that left the party takes its tool with it
+            self._tools_pruned(got)
         if size:
             self._size_kept(args, got, size, before)
         elif team is not None or leader is not None:
@@ -156,7 +161,7 @@ class GoalsMixin:
         g = next(t for t in ideas.tracks(self.root(), make=False) if t["slug"] == got)
         self._ev(event_log.GOAL_SAVED, args, goal=got, new=new, preset=self._preset_kept(args, g), metrics=[m["name"] for m in g["metrics"]], links=g["links"],
                  priority=g["priority"], craft=g["craft"], team=g["team"], every=g["every"], leader=g["leader"] or roles.TASKMASTER,
-                 party=goal_team.party_of(self.root(), got), tool=g["tool"])
+                 party=goal_team.party_of(self.root(), got), tool=g["tool"], tools=[f"{a}:{t}" for a, t in g["tools"].items()])
         if new or before is None or _what_it_says(before) != _what_it_says(g):
             self._read_goal(got)                      # a save of its party alone reads nothing again (spec 41 §7)
         self.changed(f"goal:{got}")
@@ -188,6 +193,32 @@ class GoalsMixin:
         if tool and tool != (goal_team.tool_of(self.root(False), slug) if slug else "") and tool not in self.tools_installed():
             raise IdeasError(f"{harnesses.title(tool)} is not installed")
         return tool
+
+    def _tools_asked(self, args: dict, slug: str | None, team: list[str] | None, leader: str | None) -> dict[str, str] | None:
+        """`tools` of `ideas.goal_save` (spec 91 §6): `{agent: tool}`, each seat's own AI tool (a `harnesses` id); {} clears them; None when none was sent.
+        Refused: *No AI tool <id>*, and *<agent> is not in the party* for one that is not in the team the party has after this save (its leader too)."""
+        tools = args.get("tools")
+        if tools is None:
+            return None
+        if not isinstance(tools, dict):
+            raise IdeasError("tools is not a map of agent to tool")
+        for tool in tools.values():
+            if not isinstance(tool, str) or harnesses.get(tool) is None:
+                raise IdeasError(f"No AI tool {tool}")
+        root, there = self.root(False), bool(slug) and ideas.track_page(self.root(False), slug) is not None
+        seats = {*(team if team is not None else goal_team.team_of(root, slug) if there else []),
+                 leader or (goal_team.leader_of(root, slug) if there else roles.TASKMASTER)}
+        if gone := next((a for a in tools if a not in seats), None):
+            raise IdeasError(f"{gone} is not in the party")
+        return {str(a): t for a, t in tools.items()}
+
+    def _tools_pruned(self, got: str) -> None:
+        """The party's seats' tools without those of seats that left it."""
+        root = self.root()
+        mine = goal_team.tools_of(root, got)
+        seats = {*goal_team.team_of(root, got), goal_team.leader_of(root, got)}
+        if any(a not in seats for a in mine):
+            goal_team.set_tools(root, got, {a: t for a, t in mine.items() if a in seats})
 
     def _resized(self, args: dict, slug: str | None, team: list[str] | None, leader: str | None) -> dict | None:
         """A size sent for a party that is there, with no team of its own: the team and tiers the size gives a party of a recipe

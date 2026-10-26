@@ -39,7 +39,7 @@ from orkboard.core.idea_session import SessionMixin
 from orkboard.core.idea_review import BACK, STOP_ONE, STOPPED_NOTE, ReviewMixin, RunnerError  # noqa: F401
 from orkboard.core.idea_shot import ShotMixin
 from orkboard.core.idea_task import FINDINGS_ASK, NO_DIFF, NO_FINDINGS, NO_RUN, TaskMixin, is_check, is_pick
-from orkboard.realm import task_commands, event_log, goal_team, halt, harnesses, idea_checks, idea_pick, idea_target, ideas, project_map, roles, status, tool_errors
+from orkboard.realm import task_commands, event_log, goal_team, goal_types, halt, harnesses, idea_checks, idea_pick, idea_target, ideas, project_map, roles, status, tool_errors
 from orkboard.realm.idea_git import BOARD_PAGE, CRITICAL_TESTS, Conflict, IdeaGit, env_name, has_summary, parse_tests, read_secret, spec_paths  # noqa: F401
 
 CHANGED = "ideas.changed"          # slug: an idea's state or one of its tasks changed
@@ -241,10 +241,11 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
             plan = self.plan(slug)
             if plan is None:
                 raise RuntimeError(f"no plan for {slug!r}")
+            self._retire_dropped(plan["tasks"])
             for t in plan["tasks"]:
                 if (slug, t.get("id")) in self._runs:
                     continue
-                if t.get("state") not in ("merged", "review", "picking"):      # a pick that waits keeps its variants
+                if t.get("state") not in ("merged", "review", "picking", "dropped"):      # a pick that waits keeps its variants; a dropped task is gone
                     t.update(state="waiting", error="", note="")
                     for key in ("held_for", "held_until", "held_line"):
                         t.pop(key, None)
@@ -289,7 +290,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
 
     def tick(self) -> None:
         """Move what can move: waiting → ready, a held task whose window came back, a free slot → a task starts,
-        an idea whose tasks are all merged → done, one with a failed task (and none running) → failed."""
+        an idea whose tasks are all merged or dropped → done, one with a failed task (and none running) → failed."""
         now = time.time()
         with self._lock:
             limits = self._read_limits(now)
@@ -302,7 +303,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                 tasks, changed = plan["tasks"], self._advance(slug, plan, now, limits)
                 running = [t for t in tasks if (slug, t.get("id")) in self._runs]
                 failed = next((t for t in tasks if t.get("state") == "failed"), None)
-                if failed is not None or all(t.get("state") == "merged" for t in tasks):
+                if failed is not None or all(t.get("state") in goal_types.GONE for t in tasks):
                     if changed:
                         self._save_tasks(slug, tasks)
                     if not running:
@@ -326,7 +327,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                         continue                     # this role's own limit (spec 34 §3): the task waits its turn
                     if not self.room(slug, t, tasks):
                         continue                     # no slot of the Board's or its party's, or its files meet a running task's (spec 84 §2)
-                    tool = self.tool_of(slug)
+                    tool = self.tool_of(slug, t)
                     until = status.reset_of(limits, tool, now, status.NEARLY)
                     if until is not None or gate is not None:     # the window, else the person's reserve (§6), else the week (spec 44)
                         self._hold(slug, t, until if until is not None else gate,
@@ -394,11 +395,13 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
         except Exception:                               # a party the host cannot read leaves the work as it was
             return {}
 
-    def tool_of(self, slug: str) -> str:
-        """The AI tool an idea's tasks run on: its party's, else the Main tool (spec 81 §1.2)."""
-        tool = str(self.party(slug).get("tool") or "")
-        if harnesses.get(tool) is not None:
-            return tool
+    def tool_of(self, slug: str, task: dict | None = None) -> str:
+        """The AI tool an idea's tasks run on: its party's, else the Main tool (spec 81 §1.2); a `task` runs on its taker's seat's own tool
+        first (spec 91 §6: `goal_team.tool_for`, as the host says it in `party()`)."""
+        party = self.party(slug)
+        for tool in (str((party.get("tools") or {}).get(self._role(task)["slug"]) or "") if task else "", str(party.get("tool") or "")):
+            if harnesses.get(tool) is not None:
+                return tool
         if self.party_of is None:                       # a runner with no host to say the parties (its tests, a bare run): Claude, as before
             return HARNESS
         from orkboard import settings as machine
@@ -411,7 +414,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
         tasks = plan["tasks"]
         merged = {t.get("id") for t in tasks if t.get("state") == "merged"}
         todos = [d for d in plan.get("todos") or [] if isinstance(d, dict)]
-        changed = False
+        changed = self._retire_dropped(tasks)
         for t in tasks:
             tid, state = t.get("id"), t.get("state")
             if state == "held" and t.get("held_for") == "sign_in":
@@ -452,7 +455,8 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
     def _finish(self, slug: str, failed: dict | None) -> None:
         self._active.remove(slug)
         if failed is None:
-            self._set_idea(slug, "done")
+            tasks = (self.plan(slug) or {}).get("tasks") or []
+            self._set_idea(slug, "plan" if tasks and not any(t.get("state") == "merged" for t in tasks) else "done")       # all dropped: nothing landed, nothing to run
         else:
             why = failed.get("error") or "it failed"
             self._set_idea(slug, "failed", f"{failed.get('title') or failed.get('id')}: {why}")
@@ -464,7 +468,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
         tid = task.get("id")
         cancel = threading.Event()
         run, effort = self.ran_on(task, slug)
-        tool = self.tool_of(slug)
+        tool = self.tool_of(slug, task)
         h = harnesses.get(tool)
         task.update(tool=tool, model=(h.pick(run) if h else run) or run)    # the model the run names (spec 35 §12)
         task.update(state="running", started=now_iso(), finished="", error="", note="",
@@ -494,7 +498,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
             task = next(t for t in plan["tasks"] if t.get("id") == tid)
             base = str(setting(self.settings, "merge_into") or "dev")
             env = self._env(slug, tid, plan)
-            tool = self.tool_of(slug)
+            tool = self.tool_of(slug, task)
             h = harnesses.need(tool)
             run, effort = self.ran_on(task, slug)
             model = h.pick(run)                          # the role's model, else the tier the Target gives
@@ -582,7 +586,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                 self._until[(slug, tid)] = e.until
             if e.line:                      # held for its tool's sign-in (spec 45 §6), not for a window
                 hold: dict = {}
-                self._hold_sign_in(hold, e.line, self.tool_of(slug))
+                self._hold_sign_in(hold, e.line, self.tool_of(slug, task))
                 self._set_task(slug, tid, finished="", **({**hold, "note": ""} if again is None or again.get("pick")
                                                           else {"state": "review", "note": e.line[:300]}))
             else:

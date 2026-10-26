@@ -1675,3 +1675,27 @@ warm); the owner took soft (orkUI 0.12.0), then **warm** in its place (orkUI 0.1
    words; IBM Plex Mono for code, paths, diffs, logs and terminals. **No text under 12 px.**
 4. The heads whose edges fell under 3:1 on the lighter raised are one step lighter.
 orkUI 0.12.0 and 0.13.0; spec 40.
+
+## 107. The owner's list: the limits always seen and what used them, a quieter top bar, Play that breathes, an AI tool for each seat, New party in two halves, parties and goals beside the Orkmaster (26 October, the owner)
+
+Why: the owner, after a day on their game: *I liked it when the limits' percentages were seen without opening anything;
+clean up the top right: Agents goes, Files goes into the Orkmaster's assets, Settings is a word after Orkboard, only the
+limits and Stop all stay on the right; the toast was easier to see at the bottom; while the project builds the name could
+come and go in a loop; making a party is still heavy: presets on one side, the team by stages on the other, the size
+switched at once, each member's own AI tool (only Antigravity makes pictures today), the levels from the size; and the
+New goal and New party buttons together beside the Orkmaster, in two rows, without twenty kinds in a row.* The mockups were
+drawn and agreed the same day. So:
+1. **The top bar's right is the AI tools' limits and Stop all**: a chip a tool, always seen; a press shows **what used
+   it**, by party and member, estimated from the reads of the limit and the tokens of each call, with *Outside Orkboard*.
+   *Settings* is a word beside the product's name. *Agents* and *Files* leave the bar; the files are in the Orkmaster's
+   *Assets and files*.
+2. **The toasts are at the page's foot** again (spec 90's top goes).
+3. **Play breathes while the build starts**: the name fades in and out, the stage and the seconds under it; a failure
+   shows the command's last lines.
+4. **A seat has its own AI tool** (spec 81's *later call*, made now): the party's by default; the list says which tools can
+   do what the role needs (pictures, sound) and why the others cannot.
+5. **New party is two halves**: presets by the project's stage and by craft, and *Your own*, on the left; the team by
+   seats (*Leads*, *Does*, *Checks*) on the right, the size changing seats and tiers at once.
+6. **Beside the Orkmaster, two rows**: *Parties* (New party and two or three proposals) and *New goal* (one line, the party
+   guessed, at most three kinds and *More kinds…*).
+Spec 91.

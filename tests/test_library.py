@@ -20,7 +20,7 @@ def test_the_five_new_agents_are_in_the_librarys_order_with_their_craft_tier_kin
     assert rows["aso"] == ("ASO", "marketing", "gnome", "laborer", ("aso",), "build")
     assert [library.get(i).line for i in ("game-designer", "level-designer", "sound-designer", "playtester", "aso")] == [
         "Leads a game party: the rules, the loop, what makes it fun", "Lays out the levels: the path, the beats, where it gets hard",
-        "Makes the sounds and the music, picked by ear", "Plays a change through and says where it breaks or bores",
+        "Makes the sound effects, picked by ear", "Plays a change through and says where it breaks or bores",
         "Writes the store pages: keywords, title, texts, screenshots' words"]
 
 
@@ -69,12 +69,12 @@ def test_a_leaders_stages_each_have_one_seat_and_the_default_is_for_any_other():
 
 
 def test_the_librarys_parties_have_known_members_listed_most_needed_first_and_their_first_of_each_fits_the_seats():
-    assert [p[0] for p in library.PRESETS] == ["game", "mobile-app", "website", "ideation", "release"]    # Ideation after Website (spec 65 §1), Release after Ideation (spec 68 §1)
+    assert [p[0] for p in library.PRESETS] == ["game", "mobile-app", "website", "ideation", "release", "art"]    # Ideation after Website (spec 65 §1), Release after Ideation (spec 68 §1), Art and sound after Release
     for pid, name, line, craft, lead, build, check in library.PRESETS:
         assert library.get(lead).band == "lead" and craft in roles.CRAFTS and name and line, pid
         assert all(library.get(s).band == "build" for s in build) and all(library.get(s).band == "check" for s in check), pid
         assert not goal_team.seats([build[0], check[0]], lead), pid                  # a seat a stage: the first builder and the first checker (spec 87 §5)
-    game, app, site, _ideation, _release = library.PRESETS
+    game, app, site, *_rest = library.PRESETS
     assert (game[4], game[5], game[6]) == ("game-designer", ("grunt", "artist", "level-designer", "sound-designer"), ("playtester",))
     assert (app[4], app[5], app[6]) == ("product-manager", ("grunt", "artist", "aso"), ("reviewer", "accessibility-reviewer"))
     assert (site[4], site[5], site[6]) == ("growth", ("grunt", "copywriter", "seo"), ("reviewer", "editor"))
@@ -82,21 +82,21 @@ def test_the_librarys_parties_have_known_members_listed_most_needed_first_and_th
 
 def test_presets_answer_the_mixed_first_then_each_craft_then_the_taskmaster_alone():
     got = library.presets()
-    assert [p["id"] for p in got] == ["game", "mobile-app", "website", "ideation", "release", "engineering", "design", "data", "marketing", "product", "mixed"]
-    assert [p["mixed"] for p in got] == [True] * 5 + [False] * 6
-    game, eng, alone = got[0], got[5], got[-1]
+    assert [p["id"] for p in got] == ["game", "mobile-app", "website", "ideation", "release", "art", "engineering", "design", "data", "marketing", "product", "mixed"]
+    assert [p["mixed"] for p in got] == [True] * 6 + [False] * 6
+    game, eng, alone = got[0], got[6], got[-1]
     assert game == {"id": "game", "name": "Game", "line": "Rules, levels, art and sound, played through", "craft": "design", "race": "elf",
                     "mixed": True, "lead": "game-designer", "build": ["grunt", "artist", "level-designer", "sound-designer"], "check": ["playtester"]}
     assert (eng["name"], eng["line"], eng["lead"], eng["race"]) == ("Tech", "How it is built: its parts, its tests and the build", "architect", "peon")   # spec 89 §5
     assert (alone["name"], alone["lead"], alone["build"], alone["check"]) == ("Taskmaster alone", "taskmaster", [], [])
-    assert [p["name"] for p in got[6:10]] == [roles.CRAFT_LABELS[c] for c in ("design", "data", "marketing", "product")]
+    assert [p["name"] for p in got[7:11]] == [roles.CRAFT_LABELS[c] for c in ("design", "data", "marketing", "product")]
 
 
 def test_parties_keeps_every_craft_and_adds_the_three_mixed_ones_by_their_ids():
     got = library.parties()
     for craft, (lead, build, check) in library.PARTIES.items():
         assert got[craft] == {"lead": lead, "build": list(build), "check": list(check)}      # a face that reads parties[<craft>] is unchanged
-    assert {"game", "mobile-app", "website", "ideation", "release"} <= got.keys() and len(got) == len(library.PARTIES) + 5
+    assert {"game", "mobile-app", "website", "ideation", "release", "art"} <= got.keys() and len(got) == len(library.PARTIES) + 6
     assert got["game"] == {"lead": "game-designer", "build": ["grunt", "artist", "level-designer", "sound-designer"], "check": ["playtester"]}
 
 
@@ -205,3 +205,87 @@ def test_saving_a_role_keeps_its_race_and_a_role_without_one_reads_empty(tmp_pat
     roles.save(state, "Docs scribe", "warrior", 2, "Write plainly.")
     assert roles.role(state, "docs-scribe")["race"] == "" and "race:" not in (state / "roles" / "docs-scribe.md").read_text()
     assert roles.role(state, "grunt")["craft"] == "engineering" and roles.head(roles.role(state, "grunt"), "balance")["race"] == "peon"
+
+
+# -- Art and sound: the Art director's party (pictures, icons, motion, sounds and music of a project's own) ---------------------
+
+ART_IDS = ["art-director", "animator", "composer", "icon-artist", "art-reviewer"]
+
+
+def test_the_art_party_is_a_preset_of_elves_with_the_art_director_leading_and_the_art_reviewer_checking():
+    art = next(p for p in library.PRESETS if p[0] == "art")
+    assert art == ("art", "Art and sound", "Pictures, icons, motion, sounds and music, in one style", "design", "art-director",
+                   ("artist", "sound-designer", "animator", "composer", "icon-artist"), ("art-reviewer",))
+    assert not goal_team.seats([art[5][0], art[6][0]], art[4]) and library.seats_of("art-director") == {"lead": 1, "build": 1, "check": 1}
+    rows = {i: (a.name, a.craft, a.tier, a.band, a.takes) for i in ART_IDS for a in [library.get(i)]}
+    assert rows == {"art-director": ("Art director", "design", "elder", "lead", ("artdirection",)),
+                    "animator": ("Animator", "design", "warrior", "build", ("motion",)),
+                    "composer": ("Composer", "design", "laborer", "build", ("music",)),
+                    "icon-artist": ("Icon artist", "design", "laborer", "build", ("art",)),
+                    "art-reviewer": ("Art reviewer", "design", "warrior", "check", ("artcheck",))}
+    assert (library.get("artist").tier, library.get("artist").takes, library.get("sound-designer").tier, library.get("sound-designer").takes) == (
+        "laborer", ("art",), "laborer", ("sound",))                                                  # the two that were there keep their tier and skill
+    ids = [a.id for a in library.LIBRARY]
+    assert ids[ids.index("playtester") + 1:ids.index("playtester") + 6] == ART_IDS                  # after the Game's agents, before the data ones
+    row = next(p for p in library.presets() if p["id"] == "art")
+    assert row["race"] == "elf" and row["mixed"] and row["lead"] == "art-director" and row["check"] == ["art-reviewer"]
+    assert library.parties()["art"] == {"lead": "art-director", "build": list(art[5]), "check": ["art-reviewer"]}
+
+
+def test_every_art_agent_wears_an_elf_head_at_its_tier_in_the_library_and_as_a_role(tmp_path):
+    listed = {a["id"]: a for a in library.listed()}
+    state = tmp_path / ".orkcraft"
+    library.install(state, ["artist", "sound-designer", *ART_IDS])
+    for i in ["artist", "sound-designer", *ART_IDS]:
+        a = library.get(i)
+        assert listed[i]["race"] == "elf" and roles.RACES[a.craft] == "elf", i
+        assert roles.head(roles.role(state, i), "balance")["race"] == "elf", i
+        assert roles.head({**roles.role(state, i), "model": a.tier}, "balance") == {"craft": "design", "race": "elf", "tier": a.tier}, i
+    assert listed["art-reviewer"]["check"]["applies"] == "when the idea adds or changes pictures, icons, motion, sounds or music"
+
+
+def test_the_art_instructions_hold_each_agent_to_its_work_in_the_librarys_voice():
+    told = {i: library.get(i).instruction.lower() for i in [*ART_IDS, "artist", "sound-designer"]}
+    for i, text in told.items():
+        assert text.startswith("you "), i
+        assert 0 < len(library.get(i).instruction) <= roles.INSTRUCTION_CHARS and library.get(i).instruction.endswith("."), i
+    assert all(w in told["art-director"] for w in ("style guide", "docs/style-guide.md", "palette", "loudness", "list of assets", "who makes it", "unless the party is lean"))
+    assert all(w in told["icon-artist"] for w in ("sizes the project uses", "readable at its size", "one family", "svg source"))
+    assert all(w in told["animator"] for w in ("sprite sheets", "lottie", "css", "loopable", "one place", "still frame"))
+    assert all(w in told["composer"] for w in ("midi", "tone.js", "brief", "loop", "no click", "one loudness"))
+    assert all(w in told["art-reviewer"] for w in ("style guide", "size and format", "one loudness", "loop", "source", "licence", "the asset, what is wrong and the fix"))
+
+
+def test_the_artist_draws_in_the_projects_own_style_never_orkboards():
+    told = library.get("artist").instruction.lower()
+    assert "orkui" not in told and "pixel" not in told and "24 px" not in told and "a head is an accent" not in told      # Orkboard's own look is no rule for a project
+    assert all(w in told for w in ("the project's own style", "style guide the art director keeps", "the look the project already has", "source beside the export",
+                                   "draw only what the task asks", "say what you would add"))
+    assert "pixel" not in library.get("artist").line.lower() and (library.get("artist").id, library.get("artist").name, library.get("artist").craft) == ("artist", "Artist", "design")
+
+
+def test_the_sound_designer_makes_sound_effects_and_leaves_the_music_to_the_composer():
+    sound, composer = library.get("sound-designer"), library.get("composer")
+    told = sound.instruction.lower()
+    assert "sound effects" in told and "music goes to the composer" in told and "music" not in sound.line.lower()
+    assert all(w in told for w in ("jsfxr", "web audio", "write the brief", "say which", "one loudness", "loopable", "a pick of sounds"))
+    assert composer.takes == ("music",) and "music" in composer.line.lower() and sound.takes == ("sound",)
+
+
+def test_the_art_reviewers_check_applies_when_assets_change_and_its_tag_is_its_own():
+    check = library.get("art-reviewer").check
+    assert check.applies == "when the idea adds or changes pictures, icons, motion, sounds or music"
+    assert check.done == "Its assets follow the style guide, in the sizes and formats named, at one loudness, with their sources and licences named"
+    assert check.task == "Check the idea's assets against the style guide: sizes and formats, loudness and loops, sources and licences; fix what is small."
+    assert check.fits == ("design", "engineering") and library.get("art-reviewer").band == "check"
+    assert [a.id for a in library.LIBRARY if a.check and a.takes[0] == "artcheck"] == ["art-reviewer"]
+
+
+def test_a_task_of_an_art_kind_goes_to_the_art_party_member_who_takes_it(tmp_path):
+    library.install(tmp_path, ["art-director", "artist", "animator", "composer", "sound-designer", "icon-artist", "art-reviewer"])
+    team = ["artist", "sound-designer", "animator", "composer", "icon-artist", "art-reviewer"]
+    got = {k: roles.role_for(tmp_path, k, team)["slug"] for k in ("art", "sound", "motion", "music", "artcheck")}
+    assert got == {"art": "artist", "sound": "sound-designer", "motion": "animator", "music": "composer", "artcheck": "art-reviewer"}
+    assert roles.role_for(tmp_path, "artdirection", ["art-director", "artist"])["slug"] == "art-director"
+    assert roles.role_for(tmp_path, "art", ["icon-artist"])["slug"] == "icon-artist"              # as the party's one builder, it draws the pictures too
+    assert roles.role_for(tmp_path, "motion", ["artist"])["slug"] == "grunt"                      # no animator in the party: the Grunt fills in

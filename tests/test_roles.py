@@ -164,10 +164,21 @@ def test_a_tasks_head_is_who_runs_it_at_the_tier_it_runs_at(tmp_path):
 def test_the_five_kinds_of_a_mixed_party_follow_edit_with_their_labels_and_lines_spec_59():
     """Spec 59 §2.1: after `edit`, `gamedesign`, `level`, `sound`, `playtest`, `aso`, each with its label and its line for the plan prompt."""
     kinds = roles.TASK_KINDS
-    assert kinds[kinds.index("edit"):] == ("edit", "gamedesign", "level", "sound", "playtest", "aso")
-    assert [roles.KIND_LABELS[k] for k in kinds[-5:]] == ["Game design", "Levels", "Sound", "Playtest", "Store pages (ASO)"]
-    assert [roles.KIND_LINES[k] for k in kinds[-5:]] == [
+    assert kinds[kinds.index("edit"):kinds.index("aso") + 1] == ("edit", "gamedesign", "level", "sound", "playtest", "aso")
+    five = kinds[kinds.index("gamedesign"):kinds.index("aso") + 1]
+    assert [roles.KIND_LABELS[k] for k in five] == ["Game design", "Levels", "Sound", "Playtest", "Store pages (ASO)"]
+    assert [roles.KIND_LINES[k] for k in five] == [
         "the rules, the loop and the balance of a game", "a level: its layout, its path and its pace",
-        "sounds and music, picked by ear", "playing a change through and saying where it breaks or bores",
+        "sound effects, picked by ear", "playing a change through and saying where it breaks or bores",
         "an app store's page: its keywords, texts and screenshots"]
     assert set(roles.KIND_LABELS) == set(roles.KIND_LINES) == set(kinds) and len(set(kinds)) == len(kinds)
+
+
+def test_the_four_kinds_of_the_art_party_follow_aso_with_their_labels_and_lines():
+    """Art and sound: after `aso`, `artdirection`, `motion`, `music`, `artcheck`; a picture stays `art` (the Artist's and the Icon artist's), a sound `sound`."""
+    kinds = roles.TASK_KINDS
+    four = ("artdirection", "motion", "music", "artcheck")
+    assert kinds[kinds.index("aso") + 1:] == four
+    assert [roles.KIND_LABELS[k] for k in four] == ["Art direction", "Animation", "Music", "Art check"]
+    assert all(roles.KIND_LINES[k] for k in four) and "pixel" not in roles.KIND_LINES["art"]
+    assert set(roles.KIND_LABELS) == set(roles.KIND_LINES) == set(kinds)
