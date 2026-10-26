@@ -3,6 +3,7 @@
 // with that preset picked), a section for each party (its leader's head, its name, *k/n*, **Open <party>**; under it its goals as rows: Planning and At work, Waits for main and Flags folded; a row opens the goal's
 // screen) and, pinned at the foot, **New goal** (shell-ideas.js `openProject`: no party yet; **Its party** is asked of the host, `makeItsParty`). A host without `project` has none of it.
 // With a host that proposes (spec 75 §5.3) the strip shows the Orkmaster's proposals first, each with Standard's price a goal; a press opens New party on it (the library's parties of the deal follow).
+// After the parties comes a section **Assets** (spec 88 §7; shell-assets.js): the project's files by kind as tokens, a token's own screen, the changes since this device's last look.
 // Pure words here too: `whyWords`, `fitWords`, `dealOf`.
 import { h, head, sheet } from "./util.js";
 import { elem, sign, typeTone } from "./shell-marks.js";
@@ -11,6 +12,7 @@ import { foot } from "./shell-forms.js";
 import { chipsOf, modelOf } from "./shell-arena-words.js";
 import { flagTally, goalsOf } from "./shell-goals-words.js";
 import { PROPOSAL, loadProposals, proposalTile, proposes } from "./shell-proposals.js";
+import { makeAssets } from "./shell-assets.js";
 
 export const PROJECT = "@project";                   // `ideas.shown`'s party for the project's level
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
@@ -47,6 +49,8 @@ export function makeProject(core, act) {
   const newGoal = h("button", { class: "ork-btn primary big", type: "button", "data-act": "project-new-goal", onclick: () => { sh.close(); core.newIdea("", PROJECT); } }, "New goal");
   const sh = sheet("The project", body, foot(newGoal));
   sh.el.classList.add("full", "project-sheet");
+  const assets = makeAssets(core);            // the section *Assets* (spec 88 §7): drawn after the parties; its look is kept when the sheet is put away
+  sh.el.addEventListener("close", () => assets.leave());
   let dealt = false;                                 // the deal's strip is out
   let proposing = [];                                // the proposals of the strip (`ideas.proposals`), none for a host that does not propose
   const folded = new Set();                          // the folds opened: `<party>:waits`, `<party>:flags`
@@ -119,13 +123,13 @@ export function makeProject(core, act) {
       h("div", { class: "pj-top" }, head(o.race, o.tier, { title: "Orkmaster" }),
         h("span", { class: "pj-top__name" }, h("b", {}, "Orkmaster"), h("small", { class: "muted" }, "The parties, their goals")),
         h("button", { class: "ork-btn", type: "button", "data-act": "project-new-party", "aria-expanded": String(dealt), onclick: deal }, "New party")),
-      ...[dealt ? strip() : null, ...parties.map(section), parties.length ? null : h("p", { class: "muted" }, "No parties yet.")].filter(Boolean));
+      ...[dealt ? strip() : null, ...parties.map(section), parties.length ? null : h("p", { class: "muted" }, "No parties yet."), assets.el].filter(Boolean));
   }
 
   return {
     el: sh.el,
     isOpen: () => sh.el.open,
-    open() { dealt = false; proposing = []; draw(); sh.open(); },
+    open() { dealt = false; proposing = []; draw(); sh.open(); if (projectOf(core)) assets.load(); },
     /** The sheet drawn again with the Board while it is open. */
     draw() { if (sh.el.open) draw(); },
   };

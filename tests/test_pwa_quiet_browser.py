@@ -108,8 +108,8 @@ async def test_the_plan_says_before_which_task_a_todo_is_needed_until_it_is_done
         assert await screen.locator(".before-lines").count() == 0
 
 
-def test_the_service_worker_is_v94_and_the_new_marks_have_no_colour_of_their_own():
-    assert 'const CACHE = "orkcraft-app-v94"' in (ROOT / "sw.js").read_text(encoding="utf-8")
+def test_the_service_worker_is_v95_and_the_new_marks_have_no_colour_of_their_own():
+    assert 'const CACHE = "orkcraft-app-v95"' in (ROOT / "sw.js").read_text(encoding="utf-8")
     css = (ROOT / "app.css").read_text(encoding="utf-8")
     rules = [ln for ln in css.splitlines() if ln.startswith((".project-mark", ".before-line", ".plan .before-lines", ".project-list .project-row"))]
     assert len(rules) == 5 and not re.findall(r"#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(|border-radius", "\n".join(rules))

@@ -159,3 +159,29 @@ handed out is always `127.0.0.1`. Nothing proxies it: the phones' listener has n
 ref)` take the state folder (screens, picks and goals live there); `since` may be a time as well as a commit; `ideas.play` does not
 wait for the port (above) and has `fresh` and `peek`; Stop all does not stop Play (it is the person's, not an agent's); a screen is a
 task's newest picture, one per task.
+
+## As built (C)
+
+Files: new `pwa/shell-assets.js`; `pwa/shell-project.js` (`makeAssets(core)`, its section drawn after the parties, `assets.load()` when the sheet opens, `assets.leave()` when it is put away); `pwa/app.css` (the block
+*Assets (spec 88 C)*, orkUI's tokens only); `pwa/sw.js` (`CACHE` is `orkcraft-app-v95`, `shell-assets.js` in `SHELL`); the pins of the version in `tests/test_pwa.py`, `tests/test_pwa_look_browser.py` and
+`tests/test_pwa_quiet_browser.py`; new `tests/test_pwa_assets_browser.py` (Chromium at 390 × 844 over the stub host of spec 70's tests, `ideas.assets` and `ideas.asset_before` answering as "As built (A)" says). No Play, no model.
+
+- **The section** *Assets* is the last of the project's sheet (after the parties; the sheet's first screen is as it was). It asks `ideas.assets {since?}` each time the sheet opens; an error (a host without it) or
+  no answer leaves the section out, a project with no files says *Nothing here yet*. Each kind (§0's order, *Screens* · *Art and icons* · *Sound* · *Music* · *Clips* · *Fonts*, its count beside it) is a row of
+  74 px tokens (5:7) that wrap, never scroll sideways: art and a screen drawn whole (`object-fit: contain`, crisp when 64 px or less on a side), a sound or music the `sound` sign and its length, a clip the `film`
+  sign and its length (no video is loaded for a token), a font *Aa* set in itself (`FontFace`; the `text` sign until it loads or when the browser cannot read it); the name as the person wrote it at the foot.
+  The host's order is kept (the changed first). A kind shows its first eight entries and *All n* shows it whole. A stack (`stack`) is one token with edges and *×n* that a press opens in place; its front token
+  folds it again. *Play on the computer* closes the section (a line with the `play` sign, nothing to press).
+- **The marks.** What `ideas.assets` says changed (`change` *added* / *changed*) is raised (`is-changed`) and wears its goal's element (`goals[goal].element`); a removed file is a dashed ghost with a cross and
+  its goal's element, first in its kind, nothing to press. A change of the person's own (no goal) has the raised token and no element. The title and label say *Changed by <goal>*.
+- **The last look** is `localStorage` `orkcraft.assets.look`, `{project: dev's commit}`, written when the project's sheet is put away **after the section came into view** (an `IntersectionObserver`; a token
+  pressed counts): a sheet opened only to reach a party does not clear the marks. With no look yet nothing is marked (`since` not sent).
+- **The asset's screen** is a sheet of its own (full, mounted in the page's body on first use so the project's sheet's queries do not find it): the file's name and its length and size, the thing large (art drawn whole,
+  crisp art a whole number of times its size; a sound or a clip an `audio` / `video` with controls, `play()` tried at once and left to the controls when the browser refuses; a font set in itself), *Changed by <goal>* with
+  the element, and for a *changed* file two 44 px buttons **Before** / **Now** (`ideas.asset_before {path, since}` asked on the first *Before*, kept; a `url` of `""` removes the pair). Under it
+  *Not picked (n)*: picks.js's `tiles` for `others.variants`, looked at and listened to only, a press never picks (their label strips are disabled, a press is stopped before it reaches the tile). Closing the
+  screen pauses what plays and returns to the project's sheet.
+
+**Decided here, not in the text above:** the section is last in the sheet, not first; *All n* is the one new string (§0 has none for showing a kind whole), the shortest; a kind shows eight
+entries; a clip's token is its sign, not its first frame (a row of videos is heavy on a phone); removed files appear as ghosts (§7 asks only for the changes marked); the last look is kept when the section was
+seen, not when the sheet is left; the asset's screen is a sheet over the project's, not a route of the Board's screens.
