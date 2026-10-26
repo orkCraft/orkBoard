@@ -5,6 +5,11 @@
 /* -- the level's three tabs over its table ----------------------------------------------------------------------------------------------------- */
 .arena-pjtabs { flex: none; padding: 0 var(--ork-6); }
 .arena-pjpanel { position: relative; flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.assets-and-files { position: relative; flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
+.assets-switch { flex: none; align-self: flex-end; border-bottom: 0; padding: var(--ork-2) var(--ork-6) 0; }
+.assets-switch .ork-tab { height: var(--ork-control); padding: 0 var(--ork-4); }
+.assets-switch .ork-tab[aria-pressed="true"] { color: var(--ork-ink); background: var(--ork-raised); box-shadow: inset 0 -2px 0 var(--ork-ink); }
+.assets-files { flex: 1; min-height: 0; overflow-y: auto; padding: var(--ork-3) var(--ork-6) var(--ork-6); }
 .assets, .playpane { position: relative; flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 .assets-note, .play-note { margin: var(--ork-6); display: flex; align-items: center; gap: var(--ork-3); font: var(--ork-type-body); color: var(--ork-ink-muted); }
 

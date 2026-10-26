@@ -1,14 +1,12 @@
-// The top bar (docs/specs/33-v1-shell.md §6, spec 49 §3.1, spec 52 §3.1, docs/specs/69-parties-in-the-column.md §1, spec 75 §5.5): Orkline · Agents and Files (the right column's
-// panes) · today's Spend and, under it, what is left of the AI tools (docs/specs/90-what-the-first-look-said.md §2.3: arena/limits.js, in a panel a press on the tightest tool's share opens, with
-// *Last week*) · Stop all · the gear. The project switcher and the parties are the left column's (arena/partylist.js), not the top bar's.
+// The top bar (docs/specs/33-v1-shell.md §6, spec 49 §3.1, spec 52 §3.1, docs/specs/69-parties-in-the-column.md §1, spec 75 §5.5, docs/specs/91-the-owners-list.md §1): the product's name and *Settings* as a word
+// on the left; on the right a chip for each AI tool whose limits the snapshot has (its mark, its name, its share left, its window) and *Stop all*. A chip opens, under it, the panel of arena/limits.js with
+// today's *Spend* and *Last week* (the week's work). *Agents* and *Files* are not here: the files are in the Orkmaster's *Assets and files*. The project switcher and the parties are the left column's.
 // Roles only: warning at 20 % or less left, danger at 5 % or less (docs/design-system.md).
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
-import { Chev, Icon } from "../orkui.js";
+import { ORKUI } from "../orkui.js";
 import { town, command, say, PRODUCT } from "../link.js";
-import { showAgents, showFiles } from "./store.js";
 import { openDialog } from "./modals.js";
-import { currentProject, projectsOn } from "./projects.js";
 import { Limits } from "../arena/limits.js";
 import { MapFoot } from "../board/mapfoot.js";
 
@@ -24,52 +22,56 @@ export function resetWords(iso, now = new Date()) {
   return d.toDateString() === now.toDateString() ? `resets at ${hm}` : `resets ${d.toLocaleDateString([], { weekday: "short" })} ${hm}`;
 }
 
-function Gear() {
-  return html`<button class="ork-btn" aria-label="Settings" aria-haspopup="dialog" onClick=${() => openDialog("settings")}><${Icon} name="sliders" /></button>`;
+const MARKED = ["claude", "codex", "agy", "cursor", "hermes", "pi"];
+const pct = (left) => `${Math.round(left * 100)} %`;
+
+/** The window a chip names: the tightest row's (*5h*, *week*), "" with none. */
+export const windowOf = (l) => [...(l.rows || [])].sort((a, b) => a.left - b.left)[0]?.window || "";
+
+/** One AI tool's chip: its mark, its name, its share left and its window, in the warning colour at 20 % or less, danger at 5 %; a tool whose limits were not read shows its name and a dash.
+ *  A press opens (or closes) the panel under the chips. */
+function Chip({ l, open, press }) {
+  const read = typeof l.left === "number", win = read ? windowOf(l) : "";
+  const words = read ? `${l.name} ${pct(l.left)} left${win ? `, ${win}` : ""}` : `${l.name}: limits not read`;
+  return html`<button type="button" class=${cls("shell-top__chip", { [`is-${read ? levelOf(l.left) : "unread"}`]: true })} data-provider=${l.provider}
+    aria-expanded=${String(open)} aria-controls="shell-limits" aria-label=${words} title=${`${words}. What is left of your AI tools`} onClick=${press}>
+    ${MARKED.includes(l.provider) && html`<img class="ork-mark" src=${`${ORKUI}/marks/harness-${l.provider}.png`} srcset=${`${ORKUI}/marks/harness-${l.provider}@2x.png 2x`} alt="" draggable="false" />`}
+    <span class="shell-top__chipname">${l.name}</span> <b>${read ? pct(l.left) : "—"}</b>${win && html`<span class="shell-top__chipwin">${win}</span>`}</button>`;
 }
 
-/** The tool with the least left (its name and share), or null when no tool's limits were read. */
-export function tightest(limits) {
-  const read = (limits || []).filter((l) => typeof l.left === "number");
-  return read.length ? read.reduce((a, b) => (b.left < a.left ? b : a)) : null;
-}
-
-/** Under *Spend*: the tightest tool's share left (in the warning colour at 20 % or less, danger at 5 %), a press opens the panel of every tool's line (limits.js) and *Last week*.
- *  Esc, a press elsewhere, or the same press closes it. With no limits in the snapshot, *Last week* alone. */
-function Left() {
-  const [open, setOpen] = useState(false), box = useRef();
-  const limits = town.value?.limits || [], tight = tightest(limits);
+/** The chips and, under the one pressed, the panel: every tool's line (limits.js), today's *Spend* (a press opens the week's work) and *Last week*. Esc, a press elsewhere, or the same chip closes it.
+ *  With no tool's limits in the snapshot there is one chip, *Spend*, for the same panel. */
+function Chips() {
+  const [open, setOpen] = useState(""), box = useRef();
+  const limits = town.value?.limits || [], hud = town.value?.hud || {}, spend = hud.show_gold ? hud.gold : hud.lumber;
   useEffect(() => {
     if (!open) return undefined;
-    const away = (e) => { if (!box.current?.contains(e.target)) setOpen(false); };
+    const away = (e) => { if (!box.current?.contains(e.target)) setOpen(""); };
     addEventListener("pointerdown", away, true);
     return () => removeEventListener("pointerdown", away, true);
   }, [open]);
-  if (!limits.length) return html`<${MapFoot} />`;                                   // no tool's limits: Last week alone, beside Spend
-  const words = tight ? `${tight.name} ${Math.round(tight.left * 100)} %` : "limits not read";
-  return html`<div class="shell-top__left" ref=${box} onKeyDown=${(e) => { if (e.key === "Escape" && open) { e.stopPropagation(); setOpen(false); box.current?.querySelector("button")?.focus(); } }}>
-    <button type="button" class=${cls("shell-top__leftbtn", tight && `is-${levelOf(tight.left)}`)} aria-expanded=${String(open)} aria-controls="shell-limits"
-      aria-label=${`What is left of your AI tools: ${words}`} title="What is left of your AI tools" onClick=${() => setOpen(!open)}>${words}<${Chev} dir=${open ? "up" : "down"} /></button>
-    ${open && html`<div class="shell-top__limits" id="shell-limits"><${Limits} /><${MapFoot} /></div>`}
+  const press = (id) => () => setOpen(open === id ? "" : id);
+  const chips = limits.length ? limits.map((l) => html`<${Chip} key=${l.provider} l=${l} open=${open === l.provider} press=${press(l.provider)} />`)
+    : html`<button type="button" class="shell-top__chip" aria-expanded=${String(!!open)} aria-controls="shell-limits" aria-label=${`Spend today: ${spend ?? "—"}`} onClick=${press("spend")}>
+        <span class="shell-top__chipname">Spend</span> <b>${spend ?? "—"}</b></button>`;
+  return html`<div class="shell-top__chips" ref=${box} onKeyDown=${(e) => { if (e.key === "Escape" && open) { e.stopPropagation(); box.current?.querySelector("[aria-expanded=true]")?.focus(); setOpen(""); } }}>
+    ${chips}
+    ${open && html`<div class="shell-top__limits" id="shell-limits" data-open=${open}>
+      ${limits.length > 0 && html`<${Limits} provider=${open} />`}
+      <button type="button" class="shell-top__spend" title="What was spent today. This week's work" aria-haspopup="dialog"
+        aria-label=${`Spend today: ${spend ?? "—"}. This week's work`} onClick=${() => { setOpen(""); openDialog("this_week"); }}><span class="ok-tone-muted">Spend today</span> <b>${spend ?? "—"}</b></button>
+      <${MapFoot} />
+    </div>`}
   </div>`;
 }
 
 export function TopBar() {
-  const hud = town.value?.hud || {};
-  const spend = hud.show_gold ? hud.gold : hud.lumber;
-  const shown = !projectsOn.value || !!currentProject.value?.path;      // the window is behind the project: the start screen has no right column
   return html`<header class="shell-top">
     <span class="shell-top__brand">${PRODUCT}</span>
+    <button type="button" class="ork-btn quiet shell-top__settings" aria-haspopup="dialog" onClick=${() => openDialog("settings")}>Settings</button>
     <span class="shell-top__spacer"></span>
-    ${shown && html`<button type="button" class="ork-btn" title="The agents, what each takes and is doing" onClick=${() => showAgents()}>Agents</button>`}
-    ${shown && projectsOn.value && html`<button type="button" class="ork-btn" title="The project’s files" onClick=${() => showFiles()}>Files</button>`}
-    <div class="shell-top__money">
-      <button type="button" class="shell-top__spend" title="What was spent today. This week's work" aria-haspopup="dialog"
-        aria-label=${`Spend today: ${spend ?? "—"}. This week's work`} onClick=${() => openDialog("this_week")}><span class="ok-tone-muted">Spend</span> <b>${spend ?? "—"}</b></button>
-      <${Left} />
-    </div>
+    <${Chips} />
     <button class="ork-btn danger" title=${say("Stop every ork, script and browser at once")}
       onClick=${() => command("halt").catch(() => {})}>Stop all</button>
-    <${Gear} />
   </header>`;
 }

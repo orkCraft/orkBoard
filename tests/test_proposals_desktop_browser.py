@@ -497,7 +497,7 @@ def test_edit_the_party_has_its_size_and_save_party_sends_it(desk):
 def test_the_top_bar_has_no_target_and_settings_has_it_under_a_party_with_no_size_of_its_own(desk):
     pg, host = desk
     top = pg.locator(".shell-top")
-    assert top.get_by_role("button", name="Agents").count() == 1 and top.get_by_role("button", name="Settings").count() == 1
+    assert top.get_by_role("button", name="Agents").count() == 0 and top.get_by_role("button", name="Files").count() == 0 and top.get_by_role("button", name="Settings").count() == 1
     assert "Target" not in top.inner_text() and pg.locator(".board-target__chip").count() == 0
     top.get_by_role("button", name="Settings").click()
     dlg = pg.get_by_role("dialog", name="Settings")

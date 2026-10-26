@@ -41,9 +41,13 @@ input[type="radio"] { accent-color: var(--ork-ink); }
 .ok-check:focus-within i { outline: 2px solid var(--ork-ink); outline-offset: 1px; }
 .gui-onb__hide { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
 
-/* -- the toasts: over the page's foot, at its right; their mark in the signal's colour ------------------------------------- */
-.gui-toasts { position: fixed; right: var(--ork-6); bottom: var(--ork-6); z-index: 110; display: flex; flex-direction: column; align-items: flex-end;
-  gap: var(--ork-3); max-width: min(420px, calc(100vw - 32px)); pointer-events: none; }
+/* -- the toasts: at the page's foot, centred (docs/specs/91-the-owners-list.md §4); their mark in the signal's colour. A dialog leaves the foot band free, so a toast never covers its buttons ------ */
+.gui-toasts { position: fixed; left: 50%; transform: translateX(-50%); bottom: var(--ork-6); z-index: 130; display: flex; flex-direction: column; align-items: center;
+  gap: var(--ork-3); width: max-content; max-width: min(420px, calc(100vw - 32px)); pointer-events: none; }
+body:has(.gui-toast) .shell-backdrop, body:has(.gui-toast) .gui-modal { padding-bottom: calc(var(--ork-6) + 144px); }       /* while a toast stands, a dialog keeps above the foot band: it never covers its buttons */
+body:has(.gui-toast) .shell-backdrop .shell-modal { max-height: calc(100vh - 2 * var(--ork-6) - 144px); }
+body:has(.gui-toast) .gui-modal .gui-dialog { max-height: calc(100vh - 2 * var(--ork-6) - 144px); }
+@media (max-width: 640px) { body:has(.gui-toast) .shell-backdrop { padding: 0 0 144px; } body:has(.gui-toast) .shell-backdrop .shell-modal { max-height: calc(100vh - 144px); } }
 .gui-toast { pointer-events: auto; display: flex; align-items: flex-start; gap: var(--ork-3); width: 100%; box-sizing: border-box;
   padding: var(--ork-3) var(--ork-4); background: var(--ork-panel); color: var(--ork-ink); border: var(--ork-line) solid var(--ork-edge);
   clip-path: var(--ork-notch); font: var(--ork-type-body); user-select: text; -webkit-user-select: text; }

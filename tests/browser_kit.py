@@ -24,6 +24,11 @@ CHROMIUM = next((p for p in (os.environ.get("ORKCRAFT_CHROMIUM", ""), "/opt/pw-b
 WAIT_MS = 10_000
 
 
+def open_pane(pg, kind: str) -> None:
+    """The right column's *Agents* or *Files* pane as a tab (spec 91 §1: the top bar has neither button any more, the panes stay in the page's store)."""
+    pg.evaluate("kind => import('/static/js/shell/store.js').then((m) => (kind === 'agents' ? m.showAgents() : m.showFiles()))", kind)
+
+
 def launch(p):
     """Chromium as this machine has it: the preinstalled one, else Playwright's own (sync API)."""
     return p.chromium.launch(executable_path=CHROMIUM) if CHROMIUM else p.chromium.launch()

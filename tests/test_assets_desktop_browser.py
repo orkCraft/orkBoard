@@ -173,7 +173,7 @@ def test_the_level_has_three_tabs_and_opens_on_field(level):
     pg, host = level
     _project(pg)
     tabs = pg.get_by_role("tab")
-    assert [t.text_content().strip() for t in tabs.all()] == ["Field", "Assets", "Play"]
+    assert [t.text_content().strip() for t in tabs.all()] == ["Field", "Assets and files", "Play"]
     assert tabs.nth(0).get_attribute("aria-selected") == "true" and pg.locator(".arena-project__cols").count() == 1      # today's level
     assert pg.locator(".assets, .playpane").count() == 0 and not [c for c in host.log if c[0] in ("ideas.assets", "ideas.play")]    # nothing asked until a tab is opened
     _tab(pg, "Assets")
