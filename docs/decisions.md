@@ -1514,10 +1514,18 @@ channels, the Release manager the versions); they say it as text nobody reads wh
 1. **A party is a team and a lens** (§83.1 stays: a team, and few): its leader keeps **a map of the whole project as its
    craft sees it**, every goal on it, its party's own and the others'. The Orkmaster's map is the goals across the parties
    (the route, §83.2; the project's level, §85.2). A lens reads and asks; it never changes another party's work (§86).
-   **A party is small**: most often its leader alone, or the leader and one or two members; a party is a slice of the
-   project (code, design, a game, a backend), and the Orkmaster offers the small sizes first (§98's Lean and Standard).
-   Who checks stays a seat of the party for now (§103: the checks are where the quality holds); a crew of builders and
-   checkers shared by the project is measured, not decided.
+   **A party is small, and its seats are its leader's stages**: one agent a stage at most, so a party's roles and its
+   leader's stages (§72, `library.STAGES`) are one thing. **Lean** is the leader alone, running every stage; **Standard**
+   the leader and its builder (the build stage); **Full** the leader, its builder and its checker. A stage keeps its
+   leader's words (the Game designer's *Concept*, *Build*, *Playtest*). A party made before keeps its members.
+   **The parties come ready, each leader with its lens's views**: **Tech** (the Architect: *System*, *Feature modules*; any
+   code, not only a backend), **Product** (the Product manager: *Pains*, *Journey*, *Storyboard*), **Design** (the Product
+   designer: *Flow*, *Screens*), **Game** (the Game designer: *Loop*, *Economy*, *Levels*), **Marketing** (growth:
+   *Channels*), **Data** (the analyst: *Metrics*), **Ideation** (the Investor: *Bets*), **Release** (the Release manager:
+   *Versions*). The Orkmaster offers the ones a project's kind needs (§90's recipes become these parties); a leader of a
+   person's own is the rare, particular case. *Lens* is §53's word widened: the lens a leader points with at a new goal
+   (`realm/idea_lens.py`: Code, Screen, Pain) is the one it keeps of the whole project, and the Architect's *System* is
+   read by `realm/code_map.py` already.
 2. **A map is a field of cards on the table, never a diagram** (§92): a part is a card (5:7, its goal's element top
    left, its kind's sign top right), a group a column or a stack, an order the field's arrow (few, short). What happens
    to it is the field's own motion (§89): new is dealt, changed is sealed with its goal's element, gone crumbles,
@@ -1575,10 +1583,17 @@ channels, the Release manager the versions); they say it as text nobody reads wh
 10. **Work in progress is quiet**: an hourglass of orkUI's (7 x 7, the faint ink, a grain a second, turned over in a few
    steps, still under reduced motion) replaces `.ork-busy`'s running pixels; the moon stays a goal's progress (§89), and
    only a signal (a question, a failure, money) draws the eye. Made in orkUI first, then copied.
-11. **The reveal**: when the person opens the map after being away, it plays what landed since their last look (or since
+11. **Assets: what the project is made of, seen and touched**: the Orkmaster's level has tabs of its own, **Field**,
+   **Assets** and **Play**. Assets lays the project's own files out by kind as cards on the table (its screens from §102's
+   pictures, art and icons, sound, music, clips, fonts), each card's face the thing itself; a card lifted shows it large
+   and plays a sound or a clip; a changed one turns over to its version before; the variants not picked in *Pick one*
+   (§64) lie under the one picked; a change not yet seen carries its goal's element. Read from the files, git and the
+   picks, with no model. **Play** opens the project's own preview (§102's) of dev in the pane, kept apart from the page;
+   not on the phone. A goal's *Result* holds its assets.
+12. **The reveal**: when the person opens the map after being away, it plays what landed since their last look (or since
    a release), promised against made; a press on a card says which goal changed it and how. The opening is the press,
    so §89.0 holds.
-12. **What it replaces, once built** (else it only adds): the list of results on the right (*Waits for your look*, its
+13. **What it replaces, once built** (else it only adds): the list of results on the right (*Waits for your look*, its
    reasons, §101) becomes cards in the hand (*out of the contract*, a failure, dev → main); *k of n done* and *What it
    made* (§102.4) become the map's cards; the spec's sections as the face (§75) become theses, map and hand; collisions
    by `touches` (§86) become two changes on the same cards; *Pick a look* (§102.2) becomes a fork; a party's field, its
@@ -1586,10 +1601,12 @@ channels, the Release manager the versions); they say it as text nobody reads wh
    projects' switcher at the left column's head (spec 69) moves to the Orkmaster's line; the drawer and its tab per
    thing opened (spec 33 §6, spec 39 §3, spec 49 §9; `js/shell/preview.js`) become the lifted card and the pane's one
    temporary tab.
-13. **In phases, each measured before the next**: (1) the lenses read from the code, and the reveal, on one real
+14. **First, with no measure needed**: the faces' small changes (the hourglass, the cards, the to-do last, a party's
+    seats as its stages; spec 87) and Assets and Play (11; spec 88). **Then in phases, each measured before the next**:
+    (1) the lenses read from the code, and the reveal, on one real
     project (a Node game): can the owner tell the day in a minute, and did they see what an agent decided alone; (2) the
     change in the plan's call, the spec screen with one *Start*, out of the contract; (3) progress on the map and forks,
-    the tabs, and the replaced parts of 12 removed; (4) the lenses of judgement (pains, journey, storyboard, value), each
+    the tabs, and the replaced parts of 13 removed; (4) the lenses of judgement (pains, journey, storyboard, value), each
     view kept only while it is opened. The words (*lens*, *map*, *view*, *will be*, *fork*, *contract*) get their one word
     each in `TERMS` with the first spec; a part of a map is not called a *card* where a person reads it (spec 70 §0).
 The owner's call. The mockup *Orkboard — the map on the table* first; the specs are written from it.
