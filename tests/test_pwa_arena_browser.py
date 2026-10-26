@@ -282,7 +282,7 @@ async def test_the_project_button_says_the_project_the_goals_bar_the_party_and_h
         assert await page.locator(".partydeck").get_attribute("data-goal") == "passkey" and await page.locator(".board-bar .ork-count").count() == 0      # no count in the top bar (spec 52 §5.8)
         label = await where.get_attribute("aria-label")
         assert label == "Project project. A tap shows your projects" and "%" not in label + await where.inner_text()      # a party has no end: no %
-        assert await where.inner_text() == "project" and await where.locator(".projbtn__name").evaluate("e => getComputedStyle(e).fontSize") == "12px"
+        assert await where.inner_text() == "project" and await where.locator(".projbtn__name").evaluate("e => getComputedStyle(e).fontSize") == "13px"
         assert await where.locator(".ork-chev").count() == 1 and (await where.bounding_box())["height"] >= 44                       # harbor ⌄
         bar, menu, limits = [await page.locator(s).bounding_box() for s in (".board-bar", ".board-bar .menu", ".board-bar .limit-chip")]
         wb = await where.bounding_box()
@@ -290,7 +290,7 @@ async def test_the_project_button_says_the_project_the_goals_bar_the_party_and_h
         assert await page.locator(".gchips, .gchip, .ghead, .ibar, .pbar").count() == 0                # no chips row, no header, no party bar: the goals bar says the party
         line = page.locator(".gbar")
         assert " ".join((await line.locator(".gbar__head").inner_text()).split()) == "Passkey · 2 of 9 goals done" and "%" not in await line.inner_text()    # the party and its done goals
-        assert (await line.bounding_box())["height"] == 44 and await line.locator(".gbar__quiet").evaluate("e => getComputedStyle(e).fontSize") == "12px"       # one quiet line, 44 px
+        assert (await line.bounding_box())["height"] == 44 and await line.locator(".gbar__quiet").evaluate("e => getComputedStyle(e).fontSize") == "13px"       # one quiet line, 44 px
         first, second = await line.bounding_box(), await page.locator(".stagebar").bounding_box()
         assert round(first["y"]) == round(bar["y"] + bar["height"]) and round(second["y"]) == round(first["y"] + first["height"])           # two rows: the goals bar, the stage switch
         assert "k at work" not in await line.inner_text() and "ask you" not in await line.inner_text()    # the stage switch's counts say it
