@@ -64,3 +64,18 @@
 .arena-type__foot { margin-top: auto; display: flex; flex-direction: column; gap: var(--ork-1); }
 .arena-type__foot .arena-type__why { margin-top: 0; }
 .arena-type__price { font: var(--ork-type-caption); font-variant-numeric: tabular-nums; color: var(--ork-ink-muted); }
+
+/* a party's menu (spec 90 §5, partymenu.js): its … shows on hover and on focus; the list is a small panel in the double edge, as the project switcher's */
+.arena-pmenu { position: relative; }
+.arena-pmenu__btn { appearance: none; position: absolute; top: var(--ork-3); right: var(--ork-2); width: 24px; height: 24px; padding: 0; display: flex; align-items: center; justify-content: center;
+  border: var(--ork-line) solid var(--ork-frame); background: var(--ork-raised); color: var(--ork-ink); font: var(--ork-type-body); line-height: 1; cursor: pointer; opacity: 0; }
+.arena-pmenu:hover .arena-pmenu__btn, .arena-pmenu:focus-within .arena-pmenu__btn, .arena-pmenu__btn[aria-expanded="true"] { opacity: 1; }
+.arena-pmenu__btn:hover { border-color: var(--ork-ink); }
+.arena-pmenu__btn:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--ork-ink); }
+.arena-pmenu__list { position: fixed; z-index: 40; min-width: 180px; display: flex; flex-direction: column; padding: var(--ork-2); background: var(--ork-panel); border: var(--ork-double) double var(--ork-edge); }
+.arena-pmenu__item { appearance: none; text-align: left; background: none; border: 0; color: var(--ork-ink); padding: 6px var(--ork-4); cursor: pointer; font: var(--ork-type-body); }
+.arena-pmenu__item:hover, .arena-pmenu__item:focus-visible { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); outline: none; }
+.arena-pmenu__item.is-danger { color: var(--ork-danger); }
+/* at the Orkmaster's level the wrapper takes the column head's place in the row and the head fills it */
+.arena-pcol__headwrap { display: flex; flex: 1 0 172px; max-width: 260px; box-sizing: border-box; }
+.arena-pcol__headwrap > .arena-pcol__head { flex: 1 1 auto; max-width: none; min-width: 0; }

@@ -18,6 +18,7 @@ import { typeSign } from "./stacks.js";
 import { ArrowLines, segment } from "./arrows.js";
 import { reducedMotion } from "./motion.js";
 import { PartyList, show } from "./partylist.js";
+import { PartyMenu } from "./partymenu.js";
 import { NewGoalPile, NewPartyPile } from "./projectdeal.js";
 import { orkLinks } from "./collidewords.js";
 import { GROUPS, PARTIES_WORDS, TABS, THE_PROJECT, deckCount, decksOf, emptyWords, linksOf } from "./projectwords.js";
@@ -112,7 +113,7 @@ function Field({ m, parties }) {
   return html`<${NewPartyPile} deal=${m.project?.deal || []} />
     <section class="arena-project__body" aria-label=${THE_PROJECT}>
       <div class="arena-project__grid">
-        <div class="arena-project__heads">${parties.map((g) => html`<${ColumnHead} key=${g.slug} g=${g} nodes=${nodesOf(m, g.slug)} />`)}</div>
+        <div class="arena-project__heads">${parties.map((g) => html`<${PartyMenu} key=${g.slug} slug=${g.slug} name=${g.short || g.title} at="arena-pcol__headwrap"><${ColumnHead} g=${g} nodes=${nodesOf(m, g.slug)} /><//>`)}</div>
         <div class="arena-project__cols ork-table" ref=${host}>
           ${parties.map((g) => html`<${Column} key=${g.slug} g=${g} nodes=${nodesOf(m, g.slug)} lit=${lit} setLit=${setLit} />`)}
           <${ArrowLines} lines=${lines} />
