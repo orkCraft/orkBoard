@@ -1,8 +1,9 @@
 """The Architect's *System* (docs/specs/89-the-tech-lens-system.md §1–§3, decisions §104.1–3): the project's parts as
 realm/code_map.py reads them, kept at each landing in dev, laid out in a layout that stays, and what changed between two of
-them, each change with the goal that made it (realm/commit_goal.py).
+them, each change with the goal that made it (realm/commit_goal.py). Beside the parts a snapshot keeps the overview of the project's
+architecture (realm/system_overview.py, spec 90 §6): a snapshot kept before it has `overview` None and gets it at the next `ensure`.
 
-    project_map.snapshot(state_dir, tree, commit)      # <state_dir>/maps/system/<commit>.json: the parts of `tree`, standing at `commit`
+    project_map.snapshot(state_dir, tree, commit)      # <state_dir>/maps/system/<commit>.json: the parts and overview of `tree`, at `commit`
     project_map.landed(state_dir, root, tree, commit)  # the runner's one call after a task landed: a snapshot that never raises
     project_map.ensure(state_dir, root, "dev")         # the snapshot of dev's head, made from a detached worktree when none is kept
     project_map.read(state_dir, commit) / newest(state_dir) / kept(state_dir)
@@ -23,7 +24,7 @@ import threading
 import time
 from pathlib import Path, PurePosixPath
 
-from orkboard.realm import code_map, commit_goal, event_log, idea_git
+from orkboard.realm import code_map, commit_goal, event_log, idea_git, system_overview
 
 FOLDER = ("maps", "system")
 LAYOUT = "layout.json"
@@ -59,11 +60,14 @@ def _json(path: Path) -> dict | None:
 
 
 def read(state_dir: Path, commit: str) -> dict | None:
-    """The snapshot kept for `commit` (a full sha): `{commit, at, taken, parts}`; None when none is kept."""
+    """The snapshot kept for `commit` (a full sha): `{commit, at, taken, parts, overview}`, `overview` None for one kept before spec 90;
+    None when none is kept."""
     if not isinstance(commit, str) or not commit_goal.FULL_SHA.fullmatch(commit):
         return None
     got = _json(folder(state_dir) / f"{commit}.json")
-    return got if got and got.get("commit") == commit and isinstance(got.get("parts"), list) else None
+    if not (got and got.get("commit") == commit and isinstance(got.get("parts"), list)):
+        return None
+    return {**got, "overview": got.get("overview") if isinstance(got.get("overview"), dict) else None}
 
 
 def kept(state_dir: Path) -> list[str]:
@@ -91,8 +95,30 @@ def _at(tree: Path, commit: str) -> str:
     return got.stdout.strip() if got.returncode == 0 else ""
 
 
-def _keep(state_dir: Path, commit: str, at: str, parts: list[dict]) -> dict:
-    snap = {"commit": commit, "at": at, "taken": time.time(), "parts": parts}
+def _overview(tree: Path, parts: list[dict]) -> dict:
+    """The tree's overview (realm/system_overview.py); an empty one when its files cannot be read."""
+    try:
+        return system_overview.read(Path(tree), parts)
+    except (OSError, ValueError):                                        # the parts stand without it
+        return system_overview.empty()
+
+
+def _fill(state_dir: Path, snap: dict, tree: Path) -> dict:
+    """A snapshot kept before spec 90 given its overview, read from `tree` (standing at its commit), its place in the order kept."""
+    target = folder(state_dir) / f"{snap['commit']}.json"
+    with _LOCK:
+        try:
+            stamp = target.stat().st_mtime_ns
+        except OSError:
+            stamp = time.time_ns()
+        snap = {**snap, "overview": _overview(tree, snap["parts"])}
+        _write(target, snap)
+        os.utime(target, ns=(stamp, stamp))
+    return snap
+
+
+def _keep(state_dir: Path, commit: str, at: str, parts: list[dict], overview: dict) -> dict:
+    snap = {"commit": commit, "at": at, "taken": time.time(), "parts": parts, "overview": overview}
     with _LOCK:
         target = folder(state_dir) / f"{commit}.json"
         ahead = kept(state_dir)
@@ -110,14 +136,16 @@ def _keep(state_dir: Path, commit: str, at: str, parts: list[dict]) -> dict:
 
 
 def snapshot(state_dir: Path, tree: Path, commit: str) -> dict:
-    """The parts of `tree` (a worktree standing at `commit`) kept as `<state_dir>/maps/system/<commit>.json`, its new parts placed in
-    the layout; the newest KEEP kept. A commit already kept is not read again. ValueError for a commit that is not a full sha."""
+    """The parts of `tree` (a worktree standing at `commit`) and its overview kept as `<state_dir>/maps/system/<commit>.json`, its new
+    parts placed in the layout; the newest KEEP kept. A commit already kept is not read again (one kept without an overview gets it).
+    ValueError for a commit that is not a full sha."""
     if not isinstance(commit, str) or not commit_goal.FULL_SHA.fullmatch(commit):
         raise ValueError(f"not a commit: {commit!r}")
     got = read(state_dir, commit)
     if got is not None:
-        return got
-    return _keep(state_dir, commit, _at(Path(tree), commit), code_map.parts(Path(tree)))
+        return got if got["overview"] is not None else _fill(state_dir, got, Path(tree))
+    parts = code_map.parts(Path(tree))
+    return _keep(state_dir, commit, _at(Path(tree), commit), parts, _overview(Path(tree), parts))
 
 
 def landed(state_dir: Path, root: Path, tree: Path, commit: str, events: bool = True) -> dict | None:
@@ -133,15 +161,15 @@ def landed(state_dir: Path, root: Path, tree: Path, commit: str, events: bool = 
 
 
 def _sources_changed(root: Path, old: str, new: str) -> bool:
-    """Whether a file code_map reads may differ between two commits (any changed path with a source file's extension); True when git
-    cannot say."""
+    """Whether a file code_map or system_overview reads may differ between two commits (any changed path with a source file's extension,
+    a manifest, a page: `system_overview.matters`); True when git cannot say."""
     try:
         got = commit_goal.git(root, "diff", "--name-only", "--no-renames", old, new, "--")
     except (OSError, subprocess.SubprocessError):
         return True
     if got.returncode != 0:
         return True
-    return any(PurePosixPath(p.strip('"')).suffix in code_map.PY | code_map.JS for p in got.stdout.splitlines() if p)
+    return any(system_overview.matters(p.strip('"')) for p in got.stdout.splitlines() if p)
 
 
 def _git(root: Path, *args: str) -> subprocess.CompletedProcess:
@@ -160,19 +188,20 @@ def _remove_tree(root: Path, path: Path) -> None:
 
 
 def ensure(state_dir: Path, root: Path, ref: str = "dev") -> dict | None:
-    """The snapshot of `ref`'s head: the one kept; else, when no source file changed since the newest kept, that one's parts kept for the
-    head too; else read from a detached worktree of the head (`<state_dir>/maps/tree`, removed after). None when `ref` is no branch."""
+    """The snapshot of `ref`'s head: the one kept; else, when no source file (nor manifest, nor page) changed since the newest kept with
+    an overview, that one's parts and overview kept for the head too; else read from a detached worktree of the head
+    (`<state_dir>/maps/tree`, removed after), which also gives a head kept before spec 90 its overview. None when `ref` is no branch."""
     root = Path(root)
     tip = commit_goal.head(root, ref)
     if not tip:
         return None
     with _LOCK:
         got = read(state_dir, tip)
-        if got is not None:
+        if got is not None and got["overview"] is not None:
             return got
         last = newest(state_dir)
-        if last is not None and not _sources_changed(root, last["commit"], tip):
-            return _keep(state_dir, tip, _at(root, tip), last["parts"])
+        if got is None and last is not None and last["overview"] is not None and not _sources_changed(root, last["commit"], tip):
+            return _keep(state_dir, tip, _at(root, tip), last["parts"], last["overview"])
         path = Path(state_dir) / FOLDER[0] / TREE
         try:
             with idea_git.lock_of(root):

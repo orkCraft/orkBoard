@@ -184,3 +184,13 @@ def test_a_view_is_one_map_of_a_leaders_lens_the_word_of_spec_89():
     line = next(l for l in Path(lexicon.__file__).read_text(encoding="utf-8").splitlines() if l.lstrip().startswith('_t("lens_view"'))
     assert "spec 89" in line and "System" in line
     assert lexicon.words("System · Board · Since your last look") == "System · Board · Since your last look"
+
+
+def test_a_container_is_a_part_that_runs_on_its_own_the_word_of_spec_90():
+    """Spec 90 §0: `container`, a part of the project that is built and runs on its own (a client, a server); today's word."""
+    from pathlib import Path
+    assert (lexicon.term("container"), lexicon.term("container", many=True)) == ("container", "containers")
+    assert {key: (word, was) for key, word, was in lexicon.glossary()}["container"] == ("container", "")
+    line = next(l for l in Path(lexicon.__file__).read_text(encoding="utf-8").splitlines() if l.lstrip().startswith('_t("container"'))
+    assert "spec 90" in line and "runs on its own" in line
+    assert lexicon.words("Shared · Ways in · HTTP: 3 routes · socket: 2 events") == "Shared · Ways in · HTTP: 3 routes · socket: 2 events"

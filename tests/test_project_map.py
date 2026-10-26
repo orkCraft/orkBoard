@@ -102,7 +102,46 @@ def test_a_head_that_changed_no_source_file_takes_the_parts_kept_without_a_workt
     monkeypatch.setattr(project_map, "_git", no_worktree)
     got = project_map.ensure(state(repo), repo, "dev")
     assert got["commit"] == head(repo) != first["commit"] and got["parts"] == first["parts"]
+    assert got["overview"] == first["overview"] is not None
     assert project_map.ensure(state(repo), repo, "nope") is None                               # no such branch: no map
+
+
+# -- spec 90 E1: the overview beside the parts ----------------------------------------------------------------------------------------
+
+def test_a_snapshot_keeps_the_overview_beside_its_parts(repo):
+    commit(repo, "server/package.json", json.dumps({"dependencies": {"express": "4"}, "scripts": {"start": "node src/index.js"}}))
+    commit(repo, "server/src/index.js", "const app = require('express')();\napp.get('/api/x', f);\napp.listen(3000);\n")
+    snap = project_map.ensure(state(repo), repo, "dev")
+    kept = json.loads((project_map.folder(state(repo)) / f"{snap['commit']}.json").read_text())
+    assert kept["overview"] == snap["overview"] and set(snap["overview"]) == {"containers", "links", "shared"}
+    server = next(c for c in snap["overview"]["containers"] if c["path"] == "server")
+    assert server["stack"] == [{"name": "Express", "role": "server"}] and server["parts"] == ["server/src"]
+
+
+def test_an_old_snapshot_reads_as_no_overview_and_gets_it_on_the_next_ensure(repo):
+    commit(repo, "client/package.json", json.dumps({"dependencies": {"react": "18"}}))
+    commit(repo, "client/src/main.js", "export const x = 1;\n")
+    snap = project_map.ensure(state(repo), repo, "dev")
+    path = project_map.folder(state(repo)) / f"{snap['commit']}.json"
+    old = {k: v for k, v in json.loads(path.read_text()).items() if k != "overview"}           # as spec 89 kept it
+    path.write_text(json.dumps(old))
+    order = project_map.kept(state(repo))
+    assert project_map.read(state(repo), snap["commit"])["overview"] is None
+    got = project_map.ensure(state(repo), repo, "dev")
+    client, = got["overview"]["containers"]                                                   # no code of the root's own: no Root
+    assert client["stack"] == [{"name": "React", "role": "UI"}] and got["parts"] == old["parts"]
+    assert project_map.read(state(repo), snap["commit"])["overview"] == got["overview"] and project_map.kept(state(repo)) == order
+    assert not (state(repo) / "maps" / "tree").exists()
+
+
+def test_a_head_that_changed_a_manifest_is_read_again(repo):
+    commit(repo, "client/package.json", json.dumps({"dependencies": {"react": "18"}}))
+    commit(repo, "client/src/main.js", "export const x = 1;\n")
+    project_map.ensure(state(repo), repo, "dev")
+    commit(repo, "client/package.json", json.dumps({"dependencies": {"react": "18", "vite": "5"}}))
+    got = project_map.ensure(state(repo), repo, "dev")
+    client = next(c for c in got["overview"]["containers"] if c["path"] == "client")
+    assert [s["name"] for s in client["stack"]] == ["React", "Vite"]
 
 
 def test_the_newest_sixty_are_kept(tmp_path):
@@ -210,7 +249,7 @@ def test_ideas_system_answers_the_columns_what_changed_and_the_goals(host, repo)
     commit(repo, "src/ui/hud.py", HUD)
     commit(repo, "src/old/legacy.py", "X = 0\n")
     look = host.command("ideas.system", {"party": "tech"})                         # no look yet: the first snapshot, nothing marked
-    assert set(look) == {"commit", "short", "at", "ref", "since", "columns", "changed", "uses_changed", "goals"}
+    assert set(look) == {"commit", "short", "at", "ref", "since", "columns", "changed", "uses_changed", "goals", "overview"}
     assert look["changed"] == {} and look["since"] == "" and look["ref"] == "dev" and look["short"] == look["commit"][:7]
     assert [c["name"] for c in look["columns"]] == ["old", "ui"]
     land(repo, "waves", "k1", {"src/game/loop.py": LOOP})
@@ -222,6 +261,13 @@ def test_ideas_system_answers_the_columns_what_changed_and_the_goals(host, repo)
     assert set(got["changed"]["src/game"]) == {"kind", "goal", "task", "at"}
     by = {c["name"]: c for c in got["columns"]}
     assert [p["path"] for p in by["old"]["parts"]] == ["src/old"] and by["old"]["parts"][0]["gone"] is True     # crumbles in its place
+    ov = got["overview"]                                                            # spec 90 E1: the architecture beside the columns
+    assert set(ov) == {"containers", "links", "shared", "parts"} and ov["links"] == [] and ov["shared"] == []
+    root, = ov["containers"]                                                        # no manifest: the root's own code
+    assert (root["path"], root["name"], root["parts"], root["gone"]) == (".", "Root", ["src/game", "src/ui"], ["src/old"])
+    assert root["layers"] == [{"role": "", "parts": ["src/game"]}, {"role": "face", "parts": ["src/ui"]}]
+    assert ov["parts"]["src/game"] == {"path": "src/game", "name": "game", "count": 1, "uses": ["src/ui"], "used_by": [], "gone": False}
+    assert ov["parts"]["src/old"]["gone"] is True and set(ov["parts"]) >= set(got["changed"])   # the marks by the same paths
     assert by["game"]["parts"][0] == {"path": "src/game", "name": "game", "count": 1, "uses": ["src/ui"], "used_by": [], "row": 0, "gone": False}
     assert got["uses_changed"] == [{"from": "src/game", "to": "src/ui", "kind": "new", "goal": "waves", "task": "k1",
                                     "at": got["changed"]["src/game"]["at"]}]

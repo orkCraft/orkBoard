@@ -136,3 +136,64 @@ Tests: `tests/test_idea_shot.py`, `tests/test_play.py`, `tests/test_assets_deskt
 **`partylist.js`:** one import and each party's `Heading` wrapped in `<PartyMenu>` (the open party's too); Operations, *New party* and the *At work* line are not. **`project.js`, exactly:** one import and, in `Field`, `ColumnHead` wrapped in `<PartyMenu at="arena-pcol__headwrap">` inside `.arena-project__heads`; nothing of the level's layout, tabs, columns or links is changed. The wrapper takes the head's old flex (`flex: 1 0 172px; max-width: 260px`, in `column.css`, not `arena.css`) and the head fills it, so the heads still lie over their columns (the test measures it). Part B, editing the level's layout, meets this only at that one line.
 **Phone:** checked, unchanged: `pwa/shell-party.js` has *Remove party* at the party's sheet's foot (`remove.can(g.slug)` excludes General).
 **Tests:** new `tests/test_party_menu_desktop_browser.py` (7: right click on a row and the question; **…** hidden at rest, shown on hover and focus; Enter, Space, arrows, Esc and the focus back; *Edit the party* and *About this party*; click away and one at a time; the Orkmaster's columns and their heads' places; General). Two selectors in `tests/test_project_desktop_browser.py` and `tests/test_assets_desktop_browser.py` read `.arena-project__heads .arena-pcol__head` (the head is no longer a direct child).
+
+## As built (E1)
+
+Files: new `realm/system_overview.py` (`read(tree, parts=None)`, `owner`, `matters`, `empty`), new `realm/stacks_known.py` (`LIBS`: 399
+packages of npm, PyPI, Go and Cargo → `(name, role)`; `ROLES`: folder names → `face` · `doors` · `data` · `settings`; `lib(name,
+registry)`), `realm/project_map.py` (a snapshot keeps `overview` beside `parts`), `realm/code_map.py` (`sources(tree)`, the files it reads,
+public; its line-start patterns kept to one line), `gui/ideas_system.py` (`ideas.system` answers `overview`), `realm/lexicon.py`
+(`container`). Tests: new `tests/test_system_overview.py`; `tests/test_project_map.py`, `tests/test_lexicon.py`. No model; nothing run.
+
+**`system_overview.read(tree)`** → `{containers, links, shared}`:
+- `containers`: `[{path, name, manifests, stack, unknown, ways_in, layers, parts}]`, the root's first, then by path. `path` is the
+  container's id (`"."` the root's), `name` its folder's (*Root* for `"."`). A container is the root when it has a manifest, or when a
+  source lies under no other container (its own code); and each folder one or two deep (none in `code_map.SKIP`, none hidden) with a
+  `package.json`, `pyproject.toml`, `go.mod` or `Cargo.toml`, unless the folder over it is one (a folder under a container belongs to it).
+  - `manifests`: those it has, in that order.
+  - `stack`: `[{name, role}]`, its dependencies (`package.json`'s four kinds; `pyproject.toml`'s `[project]`, optional groups,
+    `dependency-groups`, Poetry's; `requirements*.txt` beside; `go.mod`'s `require`; `Cargo.toml`'s three tables) found in `LIBS`, one per
+    name (`react` and `react-dom` are *React*), ordered by role (`UI`, `server`, `realtime`, `data`, `game`, `build`, `test`) then name.
+    `unknown`: how many are not on the list (`@types/…` not counted).
+  - `ways_in`: `[{kind, name, path}]` in this order: `page` (`index.html`, `public/` or `src/`), `main` (`package.json` `main`; Go's
+    `main.go`, `cmd/*/main.go`; Rust's `src/main.rs`), `bin` (`package.json` `bin`; `[project.scripts]`, `path` its `module:function`;
+    Cargo's `[[bin]]`), `script` (`dev`, `start`, `build` of `package.json`, `path` the manifest), `listen` (a source calling `.listen(`,
+    or `app|uvicorn|socketio|web.run(`; five at most). `name` and `path` are `""` where they say nothing; paths from the project's root.
+  - `layers`: `[{role, parts}]` top to bottom, each a row of part paths (spec 89's parts, sorted): the parts no other part of the container
+    uses (`role` `""`), then `face`, then `doors`, then the other parts by their import level (one row each, `role` `""`), then `data`,
+    then `settings`. A part's role is its deepest folder name in `ROLES` under the container's folder; its level the longest chain of
+    uses from a top part (a cycle broken where the fewest uses wait). Empty rows are left out.
+  - `parts`: the paths of its parts (a part lies in the deepest container whose folder holds it).
+- `links`: `[{from, to, http, socket}]`, `from` and `to` container paths, one per ordered pair that talks: `from` calls a route `to`
+  answers, or `to` serves sockets (`io.on("connection")`, `new Server(`, `socket.io` imported, `SocketIO(`) and `from` does not and
+  connects (`io(`) or shares an event with it.
+  - `http`: `[{method, path, called_in, answered_in}]` by path then method; `path` the route as `to` writes it (`/api/rooms/:code`,
+    `/v1/items/{item_id}`), under its mount (`app.use("/api", router)`, `prefix=`/`url_prefix=`); `method` upper case, `*` for `all`; the
+    files of the first call and answer. A call (`fetch` with its `method`, `axios.<verb>` and a client made by `axios.create`,
+    `requests|httpx.<verb>`) is matched segment by segment (a `${…}`, `{…}`, `<…>` or `:x` matches any one), host and query off, to the
+    first route it meets. Answers: `app|router|server|fastify|*router|*app` and a name made by `Router()`/`express()`/`Fastify()`…,
+    `.<verb>("/…")`; Python's `@x.route|get|post|…|api_route|websocket("/…")`, `methods=` read.
+  - `socket`: `[{event, way, emitted_in, handled_in}]` by event, `way` `out` (`from` emits, `to` handles), `back` (the reverse) or `both`
+    (the files: the `out` side's). Read from `<x>.emit|on|once("event")` where `x` is `io`, `sio`, `sock`, `ws`, `nsp`, `namespace`,
+    `socketio` or holds `socket` (`.to(…)`, `.broadcast` and the like between), and `@sio.event` functions; `connect`, `connection`,
+    `disconnect`, `error`, `ping`, `open`, `close` and their kin are no events.
+- `shared`: `[{path, container, containers, used_by}]`, a part used by parts of two containers or more (`containers` theirs, `used_by` the
+  parts), by an import code_map resolves or an alias that resolves to a file of the project (`@config/balance`, `~/x`, `@/x`).
+  `container` the one it lies in (`"."` for `config/` beside `client/` and `server/`).
+
+**Bounds.** The sources are code_map's (at most `MAX_FILES`, `SKIP`, no secret, no link); a file over `MAX_BYTES` is never read, manifests
+alike; every repeat is bounded and a line-start pattern never spans lines (a 400 KB file of any one character reads in under a
+second); at most 400 calls, answers and events a container, 20 mounts, 5 `listen` files. A pattern is looked for only in a file that holds
+its words. Nothing is run or fetched.
+
+**The snapshot.** `<state_dir>/maps/system/<commit>.json` = `{commit, at, taken, parts, overview}`. `project_map.read` gives `overview`
+None for one kept before (spec 89's); `snapshot` and `ensure` fill it from the tree, the snapshot keeping its place in the order kept.
+`ensure` copies the newest's parts and overview to a new head only when no source, manifest, `index.html` or `requirements*.txt` changed
+between them (`system_overview.matters`), else reads the head from its detached worktree.
+
+**`ideas.system`** (and `ideas.system_rearrange`) answers spec 89's keys (its `columns` are *Feature modules*) and **`overview`** =
+`{containers, links, shared, parts}`: `containers` as above, each with `gone`, the paths of its parts gone since `since` (still to crumble;
+a gone part no container holds is left out); `links` and `shared` as above; `parts`: `{path: {path, name, count, uses, used_by, gone}}`,
+every part of dev's head and the gone ones, its card. Spec 89's marks apply as they are: `changed` and `uses_changed` name parts by the same
+paths, inside containers and shared alike. With no `ref` branch: `{containers: [], links: [], shared: [], parts: {}}`. `ideas.system_part`
+is unchanged.

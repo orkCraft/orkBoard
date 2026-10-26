@@ -5,6 +5,7 @@ what is imported from outside the repository is left out.
 
     parts(root)        # [{"path": "orkboard/realm", "files": ["ideas.py", …], "count": 40, "uses": [...], "used_by": [...]}]
     parts(tree)        # the same of any tree: a task's worktree, or a detached one of dev's head (realm/project_map.py, spec 89 §1)
+    sources(tree)      # the files it reads, which realm/system_overview.py reads too (spec 90 §6)
 
 Folders git and the machine keep (.git, .orkcraft), installed packages and builds are not read, nor a file that may hold
 a secret. At most MAX_FILES files are read. No face, no model.
@@ -24,9 +25,9 @@ MAX_FILES = 4000
 MAX_BYTES = 400_000
 FILES_SHOWN = 60
 
-_PY_FROM = re.compile(r"^\s*from\s+(\.*)([\w.]*)\s+import\s+([\w*, ()]+)", re.M)
-_PY_IMPORT = re.compile(r"^\s*import\s+([\w.]+(?:\s*,\s*[\w.]+)*)", re.M)
-_JS = re.compile(r"""(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*|^\s*import\s+)["'](\.{1,2}/[^"']+)["']""", re.M)
+_PY_FROM = re.compile(r"^[ \t]*from\s+(\.*)([\w.]*)\s+import\s+([\w*, ()]+)", re.M)
+_PY_IMPORT = re.compile(r"^[ \t]*import\s+([\w.]+(?:\s*,\s*[\w.]+)*)", re.M)
+_JS = re.compile(r"""(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*|^[ \t]*import\s+)["'](\.{1,2}/[^"']+)["']""", re.M)
 
 
 def _sources(root: Path) -> list[Path]:
@@ -50,6 +51,11 @@ def _sources(root: Path) -> list[Path]:
                 if len(out) >= MAX_FILES:
                     break
     return out
+
+
+def sources(root: Path) -> list[Path]:
+    """The source files `parts` reads (at most MAX_FILES, none in SKIP, none that may hold a secret): realm/system_overview.py's too."""
+    return _sources(Path(root))
 
 
 def _part(rel: Path) -> str:
