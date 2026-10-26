@@ -225,3 +225,45 @@ is unchanged.
   is part D's).
 - Tests: `tests/test_right_column_desktop_browser.py` (§7 B); the desktop tests that read Waits, the gate's box, the limits, the drawer's width or the lifted asset now read the
   hand's cards, the gate's line, the panel under Spend, the right column and its region.
+
+## As built (E2)
+
+Files: new `js/arena/systemarch.js` (`Lens`, `Architecture`, `LinkView`, `planOf`, the words), `js/arena/systemmap.js` (three tabs; `Modules`, spec 89's table as
+it was; `SysBar`; the reveal, a part's card and the part's view exported for System), `js/arena/systemmap.css` (`.arch*`), `js/arena/arena.js` (the Tech party's
+panel is `Lens` on System and Feature modules), `js/shell/preview.js` and `js/shell/store.js` (a tab of kind `link`, *Link*). Tests: `tests/test_system_desktop_browser.py`;
+one wait in `tests/test_arena_desktop_browser.py` (the hand's fan measured once it stands still: it was measured mid-transition, a race the extra module's load
+exposed). No model, no host change.
+
+- **The tabs**: *System*, *Feature modules*, *Board* (← → Home End). A device's first look opens System; the tab last pressed is kept per project and party; the
+  first answer opens System when something changed since the last look, or Feature modules when that answer has no `overview`. System and Feature modules are one
+  lens (`Lens`): the bar (*Since your last look at…*, the goals, *Rearrange* on Feature modules only; no bar on a first look at System) and spec 89's reveal are
+  shared, played once on the first answer a view can show; moving between the two is not leaving the lens; Board, another party or the page is (the look saved).
+- **System** (`Architecture`): the containers as columns left to right in the host's order, each `.arch-col[data-container]`: its name over it (a member's name,
+  the 2 px rule), its stack as small cards (`.arch-lib`, the name and its role in small capitals; *+n more* for the libraries not on the list), *Ways in*
+  (each marked with orkUI's `arrow-right`: *Page index.html*, *Main index.ts*, *Command <name>*, *Script dev*, *Listens index.ts*; the path in the title), then its
+  layers top to bottom as rows of spec 89's cards (`.arch-layer[data-role]`), the role named at the row's start in a 56 px gutter (*Its face*, *Its doors*, *Its
+  data*, *Its settings*; nothing for an unnamed row). A row wraps after three cards. A part no layer holds is a last row; a container's parts gone since the last
+  look a row after it, to crumble. A container left with no part of its own (the owner's Root: its only part is the shared config) lies after the others, narrower.
+- **Shared**: a part in `shared` is drawn once, not in its container's rows, in a *Shared* column (`.arch-shared`, its served containers' names under the rule)
+  placed after the first container it serves that another it serves follows (between client and server).
+- **The links**: one field's arrow a link (`.arena-arrow[data-edge="client>server"]`, dashed ink, drawn in `steps(4)`), in square steps: up from the top of the
+  `from` column, across a lane over the columns (40 px a lane, the shortest span lowest), down into the `to` column's top with the head; two ends at one container
+  28 px apart. Its name sits on the lane's middle as a button (`.arch-link`): *HTTP: 3 routes · socket: 3 events* (a side with none left out; *1 route*, *1 event*).
+  A press opens the link in the right column (`{kind: "link", path: "client>server", slug: <party>, title: "client → server"}`), pressed again closes it; the name is
+  ink filled while its link is open. Redrawn when the table's size changes.
+- **A link in the right column** (`LinkView`): *client → server*, its name, then *HTTP: n routes* (each the method, the path, *Called in api.ts · answered in
+  rooms.ts*) and *socket: n events* (the event, its way: *client → server*, *server → client* or *both ways*, *Sent in … · handled in …*), read from the System
+  shown last, else asked of `ideas.system`; *client and server no longer talk* when the link is gone.
+- **The cards**: spec 87's 128 × 180 (the field's card, `Part` as Feature modules has it: marks, reveal, *Uses k · Used by m*); **a crowded table (more than four
+  columns, or more than twenty parts) takes the smaller variant, 96 × 134** (5:7, the name in three lines, *Uses k · Used by m* left to the title and the right
+  column). Hovering a part outlines what it uses and what uses it; it draws no line on System (its arrows are the links'); a press opens the part in the right
+  column as before.
+- **The reveal and marks** are spec 89's on every part inside a container and the shared ones (new dealt, changed sealed with the goal's element, gone crumbling
+  in its row), in the order the goals landed, a goal pressed dimming the others'.
+- **`overview` null** (a host from before spec 90): System says *Reading the project…*; Feature modules is shown as before.
+- **Tests** (Chromium 1 440 × 900; `ArchHost`: the owner's monorepo, Root with `concurrently`, client with React, socket.io-client, Vite and one unknown, server
+  with Express, Socket.IO and one unknown, config shared, `GET /api/health`, `POST /api/rooms`, `GET /api/rooms/:code`, `answer` and `join` out, `state` back):
+  the three tabs and their keys; the containers' order, names, stacks and ways in; the layers' rows, their names at the row's start, top to bottom, the card's
+  size; the shared column between client and server; the arrow's square steps, its lane over the columns, its name on it; the press opening the routes and events
+  in the right column and closing it; the reveal on the parts inside containers and the shared config, the marks kept on Feature modules, seen when the lens is
+  left; Feature modules from `columns`; the crowded table's smaller cards and its rows of three; `overview` null. Spec 89's tests run on Feature modules.

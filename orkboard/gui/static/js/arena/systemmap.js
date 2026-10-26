@@ -1,5 +1,6 @@
-// The Tech lens's System (docs/specs/89-the-tech-lens-system.md §6, decisions §104.0, §104.2, §104.8): a party the Architect leads has two tabs over its table, System and Board (arena.js); System
-// lays the project's parts out on the table as the field's cards — a column for each area, the area's name over it as a member's name is over its column (a 2 px rule as wide as the column), a part a card
+// The Tech lens's views (docs/specs/89-the-tech-lens-system.md §6, docs/specs/90-what-the-first-look-said.md §6.7, decisions §104.0, §104.2, §104.8, §105.6): a party the Architect leads has three tabs over
+// its table, System, Feature modules and Board (arena.js). System is the project's architecture (systemarch.js: its containers, stacks, ways in, layers, what is shared, the links between them); Feature
+// modules (`Modules` here, spec 89's System as it was) lays the project's parts out on the table as the field's cards — a column for each area, the area's name over it as a member's name is over its column (a 2 px rule as wide as the column), a part a card
 // (5:7, 128 x 180: its folder's name, *n files*, *Uses k · Used by m*, the element of the goal that changed it top left until it is seen), the rest of a long column a stack ×n — from `ideas.system`
 // (realm/project_map.py: read from the code and git, no model). The places are the host's: a part keeps its column and row, a gone one its place until *Rearrange* (in the tab's corner) lays them out anew.
 // What changed since the device's last look (`localStorage` `orkboard.system.look.<project>`: dev's head as shown and the time, written when the tab is left or the page) is played once when the tab is
@@ -18,7 +19,7 @@ import { reducedMotion } from "./motion.js";
 import { ArrowLines, across, fine } from "./arrows.js";
 
 // -- the words (spec 89 §0) ---------------------------------------------------------------------------------------------------------------------------------------------------
-export const TABS = [["system", "System"], ["board", "Board"]];
+export const TABS = [["system", "System"], ["modules", "Feature modules"], ["board", "Board"]];
 export const READING = "Reading the project…";
 export const NOTHING_CHANGED = "Nothing changed since your last look";
 export const NOTHING = "Nothing here yet";
@@ -40,7 +41,7 @@ const STEP_MS = 420;                                     // a goal's moment: a d
 const SLOT_MS = 520;                                     // from one goal to the next, shortened so the whole is at most WHOLE_MS
 const WHOLE_MS = 2800;                                   // the whole at most 3 s (spec 89 §6.3), with room for a late frame
 const APART_MS = 20, DEALT = 6;
-const DONE = 1e9;                                        // the reveal's step once it is played (or when nothing plays)
+export const DONE = 1e9;                                        // the reveal's step once it is played (or when nothing plays)
 const motion = () => !reducedMotion() && typeof document !== "undefined" && !document.hidden;
 
 const LOOK = "orkboard.system.look.", TAB = "orkboard.party.tab.";
@@ -72,7 +73,9 @@ export function orderOf(doc) {
 }
 
 /** The answer as it is once seen: nothing marked, the gone parts' cards taken off (their places stay until Rearrange). */
-const seenOf = (d) => d && { ...d, since: d.commit, changed: {}, uses_changed: [], goals: {}, columns: d.columns.map((c) => ({ ...c, parts: c.parts.filter((p) => !p.gone), stack: c.stack.filter((p) => !p.gone) })) };
+const seenOf = (d) => d && { ...d, since: d.commit, changed: {}, uses_changed: [], goals: {}, columns: d.columns.map((c) => ({ ...c, parts: c.parts.filter((p) => !p.gone), stack: c.stack.filter((p) => !p.gone) })),
+  overview: d.overview && { ...d.overview, containers: (d.overview.containers || []).map((c) => ({ ...c, gone: [] })),
+    parts: Object.fromEntries(Object.entries(d.overview.parts || {}).filter(([, p]) => !p.gone)) } };
 
 /** The System of a party the Architect leads (`on`), read by arena.js for the whole party so its first answer can choose the tab: `{doc, err, look, changed, seen, rearrange}`. `seen()`: the tab is
  *  left — the device's look is dev's head as shown, now, and the answer is as seen. Read again with the same look when a task lands. */
@@ -119,18 +122,18 @@ export function useSystem(on, party) {
 /** The party's tab: the one last pressed on this device (System at first); the first answer of the System opens it on System when something changed since the last look, unless a tab was pressed. */
 export function usePartyTab(on, party, sys) {
   const key = `${TAB}${town.value?.projects?.current || ""}.${party}`;
-  const [tab, setTab] = useState(() => (read(key) === "board" ? "board" : "system"));
+  const [tab, setTab] = useState(() => (["board", "modules"].includes(read(key)) ? read(key) : "system"));
   const decided = useRef(false);
   useEffect(() => {
     if (!on || decided.current || !sys.doc) return;
     decided.current = true;
-    if (sys.changed) setTab("system");
+    if (sys.changed) setTab(sys.doc.overview ? "system" : "modules");           // an answer with no overview (a host from before spec 90): the changes where they are seen
   }, [on, sys.doc]);
   const press = (id) => { decided.current = true; write(key, id); setTab(id); };
   return [on ? tab : "board", press];
 }
 
-/** The two tabs over the party's table (spec 89 §6.1). ← → (Home, End) move between them. */
+/** The three tabs over the party's table (spec 90 §6.7). ← → (Home, End) move between them. */
 export function PartyTabs({ tab, setTab, name }) {
   const key = (e) => {
     const at = TABS.findIndex(([id]) => id === tab), step = { ArrowRight: 1, ArrowLeft: -1 }[e.key];
@@ -149,7 +152,7 @@ export function PartyTabs({ tab, setTab, name }) {
 // -- the reveal ---------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 /** Plays what changed once, on the first answer the tab shows (`doc`): the step is -1 while the map stands as it was, i while the i-th goal of `order` plays, DONE after (and at once when nothing plays). */
-function useReveal(doc, order) {
+export function useReveal(doc, order) {
   const [step, setStep] = useState(DONE), played = useRef(false), timers = useRef([]);
   const end = useRef(null);
   end.current = () => {
@@ -176,7 +179,7 @@ function useReveal(doc, order) {
 }
 
 /** What the reveal shows of a part now: its change `m` (or none), the index of its goal in `order`, the step. */
-function phaseOf(m, gi, step) {
+export function phaseOf(m, gi, step) {
   if (!m) return "";
   if (step === DONE || step > gi) return m.kind === "gone" ? "left" : "marked";
   if (step === gi) return { new: "dealt", changed: "sealed", gone: "crumble" }[m.kind] || "marked";
@@ -187,7 +190,7 @@ function phaseOf(m, gi, step) {
 
 /** A part as the field's card (5:7): the element of the goal that changed it and *New*, *Changed* or *Gone* top left while it is marked, its folder's name (four lines), *n files*, *Uses k · Used by m*.
  *  `many` > 1: the front of a stack (edges behind it, ×n; a press opens it). */
-function Part({ c, m, goal, phase, dim, on, lit, place, deal, many = 0, onPress, onHover }) {
+export function Part({ c, m, goal, phase, dim, on, lit, place, deal, many = 0, onPress, onHover }) {
   const marked = phase === "marked" || phase === "sealed" || phase === "dealt" || phase === "crumble";
   const by = m ? (m.goal ? changedBy(goal?.title || m.goal) : BY_YOU) : "", el = goal?.element || "";
   const edges = Math.min(2, many - 1), said = [c.name, filesWords(c.count), usesWords(c.uses.length, c.used_by.length), m && `${KIND_WORDS[m.kind]}, ${by}`,
@@ -227,17 +230,18 @@ function placesOf(col, open) {
 const Parts = ({ list, names, onPart }) => html`<ul class="sys-side__list">${list.map((p) => html`<li key=${p}><button type="button" class="sys-side__part" data-part=${p} title=${p} onClick=${() => onPart(p)}>${names[p] || p.split("/").pop() || p}</button></li>`)}</ul>`;
 
 /** What the System shown last read (`{doc, look, party}`): a part opened in the right column names its uses by it and says its changes since the same look. */
-const shownSys = signal(null);
+export const shownSys = signal(null);
 
 /** A part opens in the right column (spec 90 §2, a tab `{kind: "part", path, slug: <its party>}`). */
-const openPart = (path, party, name) => show({ kind: "part", path, slug: party, title: name || path.split("/").pop() || path }, { via: "map" });
+export const openPart = (path, party, name) => show({ kind: "part", path, slug: party, title: name || path.split("/").pop() || path }, { via: "map" });
 
 /** A part pressed (spec 89 §6.5), in the window's right column (spec 90 §2): its files, *Uses*, *Used by*, and its changes since the last look, each with its goal (a press opens the goal) and *What it made*;
  *  a part under *Uses* or *Used by* pressed opens in its place. The tab's × (or Esc) closes it. */
 export function PartView({ p: tab }) {
   const path = tab.path, party = tab.slug || "", sys = shownSys.value;
   const doc = sys && sys.party === party ? sys.doc : null, look = doc ? sys.look : null, since = doc?.since || "";
-  const names = doc ? Object.fromEntries(doc.columns.flatMap((c) => [...c.parts, ...c.stack]).map((c) => [c.path, c.name])) : {};
+  const names = doc ? { ...Object.fromEntries(Object.values(doc.overview?.parts || {}).map((c) => [c.path, c.name])),
+    ...Object.fromEntries(doc.columns.flatMap((c) => [...c.parts, ...c.stack]).map((c) => [c.path, c.name])) } : {};
   return html`<${PartSide} key=${path} path=${path} party=${party} since=${since} look=${look} names=${names} onPart=${(to) => openPart(to, party, names[to])} />`;
 }
 
@@ -300,31 +304,43 @@ function usesOf(host, doc, path) {
   return out;
 }
 
-/** The System tab: the bar (*Since your last look at <time>*, the goals, *Rearrange*), the table of the parts, the part pressed beside it. `sys`: `useSystem`'s. */
-export function SystemMap({ sys, party }) {
-  const { doc, err, look } = sys;
-  const order = doc ? orderOf(doc) : [], step = useReveal(doc, order);
-  const [pick, setPick] = useState(""), [opened, setOpened] = useState(() => new Set());
+/** Over both views: *Since your last look at <time>* and the goals that changed something (a press on one dims the others' marks), *Rearrange* in the corner on Feature modules (`rearrange`). */
+export function SysBar({ doc, look, order, pick, setPick, rearrange }) {
+  const goals = doc.goals || {};
+  const since = doc.since ? (look?.at ? sinceWords(timeWords(look.at)) : sinceWords(doc.since.slice(0, 7))) : "";
+  if (!doc.since && !rearrange) return null;              // nothing to say over System on a first look
+  return html`<div class="sys-bar">
+    ${doc.since && (order.length ? html`<span class="sys-since">${since}</span>
+      <div class="sys-goals" role="group" aria-label=${since}>${order.map((o) => html`<button type="button" key=${o.goal || "@you"} class="ork-btn quiet sys-goal" data-goal=${o.goal}
+        aria-pressed=${String(pick === (o.goal || "@you"))} onClick=${() => setPick(pick === (o.goal || "@you") ? "" : o.goal || "@you")}>
+        ${o.goal ? html`<${Elem} name=${goals[o.goal]?.element || ""} />${goals[o.goal]?.title || o.goal}` : BY_YOU}</button>`)}</div>`
+      : html`<span class="sys-since is-none">${NOTHING_CHANGED}</span>`)}
+    <span class="arena-spacer"></span>
+    ${rearrange && html`<button type="button" class="ork-btn sys-rearrange" onClick=${rearrange}>${REARRANGE}</button>`}
+  </div>`;
+}
+
+/** A goal's new parts in the order they are dealt: the first six 20 ms apart, the rest with the sixth. */
+export function dealsOf(doc, order) {
+  const deals = new Map();
+  for (const o of order) o.parts.filter((p) => doc.changed[p]?.kind === "new").forEach((p, i) => deals.set(p, Math.min(i, DEALT - 1)));
+  return deals;
+}
+
+/** Feature modules (spec 89's System, as it is): the table of the parts in a column for each area, a part's uses drawn when it is hovered, a part pressed opened in the right column. */
+export function Modules({ doc, order, step, pick, party }) {
+  const [opened, setOpened] = useState(() => new Set());
   const [hover, setHover] = useState({ path: "", by: "" }), [lines, setLines] = useState([]), host = useRef();
   const tab = preview.value, shown = tab?.kind === "part" && tab.slug === party ? tab.path : "";      // the part open in the right column
-  useEffect(() => {                                        // the tab is left (or the page): what it showed is seen
-    const save = () => sys.seen();
-    addEventListener("pagehide", save);
-    return () => { removeEventListener("pagehide", save); save(); };
-  }, []);
-  useEffect(() => { if (doc) shownSys.value = { doc, look, party }; }, [doc, look, party]);
   useLayoutEffect(() => {
-    const on = !!hover.path && !!doc && (hover.by === "focus" || fine());
+    const on = !!hover.path && (hover.by === "focus" || fine());
     const next = on ? usesOf(host.current, doc, hover.path) : [];
     setLines((was) => (!was.length && !next.length ? was : next));
   }, [hover.path, hover.by, doc, step]);
-  if (err && !doc) return html`<div class="sys" data-state="failed"><p class="arena-cap sys-note">${err}</p></div>`;
-  if (!doc) return html`<div class="sys" data-state="reading"><p class="arena-cap sys-note"><span class="ork-busy"></span> ${READING}</p></div>`;
+  if (!doc.columns.length) return html`<div class="sys-main"><div class="assets-none"><p class="assets-none__title">${NOTHING}</p></div></div>`;
   const goals = doc.goals || {}, gindex = new Map(order.map((o, i) => [o.goal, i]));
-  const playing = step !== DONE;
   const lit = new Set(hover.path ? doc.columns.flatMap((c) => [...c.parts, ...c.stack]).filter((c) => c.path === hover.path).flatMap((c) => [...c.uses, ...c.used_by]) : []);
-  const deals = new Map();                                 // a goal's new parts in the order they are dealt: the first six 20 ms apart, the rest with the sixth
-  for (const o of order) o.parts.filter((p) => doc.changed[p].kind === "new").forEach((p, i) => deals.set(p, Math.min(i, DEALT - 1)));
+  const deals = dealsOf(doc, order);
   const toggle = (k) => setOpened((s) => { const n = new Set(s); n.has(k) ? n.delete(k) : n.add(k); return n; });
   const cols = doc.columns.map((col, ci) => ({ col, ci, ...placesOf(col, opened.has(ci)) }));
   const rows = cols.reduce((k, c) => Math.max(k, c.rows), 0);
@@ -334,34 +350,21 @@ export function SystemMap({ sys, party }) {
     else openPart(c.path, party, c.name);
   };
   const hovered = (path, by) => setHover((h) => (path ? { path, by } : h.path ? { path: "", by: "" } : h));
-  const since = doc.since ? (look?.at ? sinceWords(timeWords(look.at)) : sinceWords(doc.since.slice(0, 7))) : "";
-  return html`<div class="sys" data-state="shown" data-reveal=${playing ? "playing" : "done"} data-step=${playing ? step : undefined}>
-    <div class="sys-bar">
-      ${doc.since && (order.length ? html`<span class="sys-since">${since}</span>
-        <div class="sys-goals" role="group" aria-label=${since}>${order.map((o) => html`<button type="button" key=${o.goal || "@you"} class="ork-btn quiet sys-goal" data-goal=${o.goal}
-          aria-pressed=${String(pick === (o.goal || "@you"))} onClick=${() => setPick(pick === (o.goal || "@you") ? "" : o.goal || "@you")}>
-          ${o.goal ? html`<${Elem} name=${goals[o.goal]?.element || ""} />${goals[o.goal]?.title || o.goal}` : BY_YOU}</button>`)}</div>`
-        : html`<span class="sys-since is-none">${NOTHING_CHANGED}</span>`)}
-      <span class="arena-spacer"></span>
-      <button type="button" class="ork-btn sys-rearrange" onClick=${() => sys.rearrange()}>${REARRANGE}</button>
-    </div>
-    <div class="sys-main">
-      ${!doc.columns.length ? html`<div class="assets-none"><p class="assets-none__title">${NOTHING}</p></div>` : html`
-      <div class="sys-scroll">
-        <div class="sys-table" ref=${host} style=${`--cols:repeat(${cols.length}, 128px)`} data-rows=${rows}>
-          ${cols.map(({ col, ci }) => html`<div key=${`h${ci}`} class="sys-area" style=${`grid-column:${ci + 1}`} data-area=${col.name}>
-            <span class="arena-member__nm sys-area__nm" title=${col.name}>${col.name}</span>
-            ${col.stack.length > 0 && opened.has(ci) && html`<button type="button" class="ork-btn quiet sys-area__fold" aria-expanded="true" onClick=${() => toggle(ci)}><${Chev} dir="up" /> ×${col.stack.length}</button>`}
-            <span class="sys-area__rule" aria-hidden="true"></span></div>`)}
-          ${cols.flatMap(({ col, ci, cards }) => cards.map(({ c, slot, many }) => {
-            const m = doc.changed[c.path], gi = m ? gindex.get(m.goal || "") : -1, phase = phaseOf(m, gi, step);
-            return html`<${Part} key=${c.path} c=${{ ...c, area: col.name }} m=${m} goal=${m?.goal ? goals[m.goal] : null} phase=${phase} many=${many || 0} deal=${deals.get(c.path) || 0}
-              dim=${!!pick && !!m && pick !== (m.goal || "@you")} on=${shown === c.path} lit=${hover.path === c.path ? "src" : lit.has(c.path) ? "use" : ""}
-              place=${`grid-column:${ci + 1};grid-row:${slot + 2}`} onPress=${press(ci)} onHover=${hovered} />`;
-          }))}
-          <${ArrowLines} lines=${lines} />
-        </div>
-      </div>`}
+  return html`<div class="sys-main">
+    <div class="sys-scroll">
+      <div class="sys-table" ref=${host} style=${`--cols:repeat(${cols.length}, 128px)`} data-rows=${rows}>
+        ${cols.map(({ col, ci }) => html`<div key=${`h${ci}`} class="sys-area" style=${`grid-column:${ci + 1}`} data-area=${col.name}>
+          <span class="arena-member__nm sys-area__nm" title=${col.name}>${col.name}</span>
+          ${col.stack.length > 0 && opened.has(ci) && html`<button type="button" class="ork-btn quiet sys-area__fold" aria-expanded="true" onClick=${() => toggle(ci)}><${Chev} dir="up" /> ×${col.stack.length}</button>`}
+          <span class="sys-area__rule" aria-hidden="true"></span></div>`)}
+        ${cols.flatMap(({ col, ci, cards }) => cards.map(({ c, slot, many }) => {
+          const m = doc.changed[c.path], gi = m ? gindex.get(m.goal || "") : -1, phase = phaseOf(m, gi, step);
+          return html`<${Part} key=${c.path} c=${{ ...c, area: col.name }} m=${m} goal=${m?.goal ? goals[m.goal] : null} phase=${phase} many=${many || 0} deal=${deals.get(c.path) || 0}
+            dim=${!!pick && !!m && pick !== (m.goal || "@you")} on=${shown === c.path} lit=${hover.path === c.path ? "src" : lit.has(c.path) ? "use" : ""}
+            place=${`grid-column:${ci + 1};grid-row:${slot + 2}`} onPress=${press(ci)} onHover=${hovered} />`;
+        }))}
+        <${ArrowLines} lines=${lines} />
+      </div>
     </div>
   </div>`;
 }

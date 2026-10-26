@@ -1,8 +1,9 @@
-/* The Tech lens's System (docs/specs/89-the-tech-lens-system.md §6): a party's two tabs over its table, the project's parts laid out as the field's cards in a column for each area (the card itself is
-   arena.css `.arena-task` in `.arena-stk`, at the field's 128 × 180), the area's name over its column as a member's name is over its, the uses drawn as the field's arrows, the part pressed in the right column,
-   and the three moments of what changed since the last look. In orkUI's office look: its tokens only, no colour, font or corner of its own. */
+/* The Tech lens (docs/specs/89-the-tech-lens-system.md §6, docs/specs/90-what-the-first-look-said.md §6.7): a party's three tabs over its table; Feature modules, the project's parts laid out as the field's
+   cards in a column for each area (the card itself is arena.css `.arena-task` in `.arena-stk`, at the field's 128 × 180), the area's name over its column as a member's name is over its, the uses drawn as the
+   field's arrows; System, the containers as columns (their names, stacks, ways in, layers), the shared parts between them, the links as the field's arrows named on them (`.arch*`); the part or link pressed
+   in the right column, and the three moments of what changed since the last look. In orkUI's office look: its tokens only, no colour, font or corner of its own. */
 
-/* -- the party's two tabs, on the table's wood at its edge (docs/specs/90-what-the-first-look-said.md §4) ------------------------------------------- */
+/* -- the party's tabs, on the table's wood at its edge (docs/specs/90-what-the-first-look-said.md §4) ----------------------------------------------- */
 .sys-tabs { flex: none; padding: 3px var(--ork-5) 0; border-bottom: 0; }
 .sys-panel { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 .sys { position: relative; flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
@@ -81,6 +82,56 @@
 .sys-change__goal.is-you { cursor: default; }
 .sys-change__made { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .sys-change__made b { color: var(--ork-ink); font-weight: 600; }
+
+/* -- System: the containers as columns on the table (docs/specs/90-what-the-first-look-said.md §6.7, systemarch.js) ------------------------------------ */
+.arch { position: relative; width: max-content; min-width: 100%; box-sizing: border-box; padding: var(--ork-2) var(--ork-8) var(--ork-8) var(--ork-6); }
+.arch-cols { display: flex; align-items: flex-start; column-gap: calc(2 * var(--ork-8)); }
+.arch-col { flex: none; display: flex; flex-direction: column; gap: var(--ork-6); min-width: 208px; }
+.arch-col.is-bare { min-width: 160px; }
+.arch-head { display: flex; flex-direction: column; gap: var(--ork-3); }
+.arch-name { max-width: 100%; text-align: center; color: var(--ork-ink); }
+.arch-rule { height: 2px; margin-top: calc(-1 * var(--ork-2)); background: var(--ork-edge); }
+.arch-stack, .arch-ways { width: 0; min-width: 100%; }                         /* the column is as wide as its rows (208 px at least): the stack and the ways in wrap inside it */
+.arch-stack { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--ork-2); }
+.arch-lib { display: inline-flex; flex-direction: column; padding: var(--ork-1) var(--ork-3) var(--ork-2); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame);
+  clip-path: var(--ork-notch); font: var(--ork-type-caption); color: var(--ork-ink); }
+.arch-lib__nm { font-weight: 600; line-height: 14px; white-space: nowrap; }
+.arch-lib__role { font-size: 10px; line-height: 12px; color: var(--ork-ink-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.arch-lib.is-more { justify-content: center; border-style: dashed; background: none; }
+.arch-lib.is-more .arch-lib__nm { font-weight: 400; color: var(--ork-ink-muted); }
+.arch-ways { display: flex; flex-direction: column; gap: var(--ork-1); }
+.arch-ways__h, .arch-layer__nm { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.arch-ways__list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--ork-1) var(--ork-4); font: var(--ork-type-caption); color: var(--ork-ink); }
+.arch-way { display: inline-flex; align-items: center; gap: var(--ork-1); white-space: nowrap; }
+.arch-way .ork-icon { width: 14px; height: 14px; color: var(--ork-ink); }
+.arch-way b { font-weight: 600; }
+.arch-way__what { color: var(--ork-ink-muted); }
+.arch-layers { display: flex; flex-direction: column; gap: var(--ork-6); }
+.arch-layer { display: flex; align-items: flex-start; gap: var(--ork-4); }
+.arch-layer__nm { flex: none; width: 56px; padding-top: var(--ork-2); }
+.arch-layer__parts { display: flex; flex-wrap: wrap; gap: var(--ork-6) var(--ork-5); max-width: calc(3 * 128px + 2 * var(--ork-5)); }
+.arch-shared { min-width: 128px; }
+.arch-shared .arch-layer__parts { flex-direction: column; align-items: center; }
+.arch-serves { text-align: center; }
+.arch .sys-stk { flex: none; }
+.arch.is-small .sys-stk { width: 96px; max-width: 96px; }                       /* a crowded table: the smaller card, 96 × 134 (5:7) */
+.arch.is-small .arch-layer__parts { max-width: calc(3 * 96px + 2 * var(--ork-5)); }
+.arch.is-small .sys-part .sys-part__name { -webkit-line-clamp: 3; line-clamp: 3; }
+.arch.is-small .sys-part .sys-part__uses { display: none; }
+.arch-link { position: absolute; z-index: 26; transform: translate(-50%, -50%); appearance: none; height: 22px; padding: 0 var(--ork-3); background: var(--ork-panel);
+  border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); color: var(--ork-ink); font: var(--ork-type-caption); font-weight: 600; white-space: nowrap; cursor: pointer; }
+.arch-link:hover { border-color: var(--ork-ink); background: var(--ork-raised); }
+.arch-link:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.arch-link[aria-pressed="true"] { border-color: var(--ork-ink); background: var(--ork-ink); color: var(--ork-on-ink); }
+
+/* a link in the right column: its routes and its events */
+.arch-side__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-3); font: var(--ork-type-caption); color: var(--ork-ink); }
+.arch-route, .arch-event { display: flex; flex-direction: column; gap: 0; min-width: 0; }
+.arch-route__head { display: flex; align-items: baseline; gap: var(--ork-3); min-width: 0; }
+.arch-route__m { flex: none; min-width: 44px; font-weight: 600; }
+.arch-route__path { min-width: 0; overflow-wrap: anywhere; font: var(--ork-type-caption); font-family: var(--ork-font-code); }
+.arch-event__way { color: var(--ork-ink-muted); white-space: nowrap; }
+.arch-route__where { color: var(--ork-ink-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 @media (prefers-reduced-motion: reduce) {
   .sys-part.sys-dealt { animation: none; }
