@@ -1,7 +1,7 @@
 """Spec 70 part C, the phone: the Orkmaster and the project's level (docs/specs/70-orkmaster-and-the-project.md §2.1, §2.4, §3, §4, §5 "C"): Chromium at 390 × 844 against the world of tests/test_pwa_route_browser.py
 (the Passkey, Ideation, Website and Release parties) with the stub host of spec 70 §1: `ideas.map`'s `project` block (the Orkmaster and the deal), `ideas.party_for` and `ideas.shown`. *The project* stands at the top of the
 parties' sheet; its sheet has a section for each party (*Open <party>* switches), its goals as rows (Planning and At work, Waits for main and Flags folded), a row opens the goal's screen, `ideas.shown` says `@project`;
-*New party* deals the library's parties as a strip in the deal's order with their why, a tile opens New party with that preset picked, and New party's own tiles follow the deal; *New goal* from the sheet has no party yet:
+the Orkmaster's *Parties* row has *New party* and the ready parties in the deal's order with their why (spec 91 §8), *Add* opens New party with that preset picked, and New party's own tiles follow the deal; *More kinds…* of the *New goal* row has no party yet:
 *Its party* from `ideas.party_for` (*Orkmaster suggests Website · takes it whole*, the others to pick), `ideas.add` with the party picked; an older host (no `project`) has none of it; no sideways scroll; the worker's version."""
 from __future__ import annotations
 
@@ -209,43 +209,50 @@ async def test_open_party_switches_the_board_and_closes_the_sheet(fake_repo, mon
 # -- The deal ------------------------------------------------------------------------------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_new_party_deals_the_presets_as_a_strip_in_the_deals_order_with_their_why(fake_repo, monkeypatch):
+async def test_the_parties_row_has_new_party_and_the_ready_parties_as_a_strip_in_the_deals_order_with_their_why(fake_repo, monkeypatch):
     hosted(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         project = await _project(page)
-        button = project.locator('[data-act="project-new-party"]')
-        assert norm(await button.inner_text()) == "New party" and await button.get_attribute("aria-expanded") == "false"
-        assert await project.locator(".pj-deal").count() == 0
-        await button.click()
-        strip = project.locator(".pj-deal")
-        await strip.wait_for(timeout=WAIT_MS)
-        tiles = strip.locator(".pj-tile")
-        assert [await t.get_attribute("data-preset") for t in await tiles.all()] == [d["id"] for d in deal_of("flags")]  # Release first, Ideation, then the library's order
-        assert "3 flags wait and no party releases them" in await tiles.nth(0).inner_text()
-        assert "No party judges small ideas yet" in await tiles.nth(1).inner_text()
-        assert await tiles.nth(2).locator(".pj-tile__why").count() == 0                                                  # the others say no why
-        assert "Your own goal" not in await strip.inner_text() and min([(await t.bounding_box())["height"] for t in await tiles.all()]) >= 44
-        assert await tiles.nth(0).locator("img.ork-race__head").count() >= 2                                             # its heads
-        assert await strip.evaluate("(e) => e.scrollWidth > e.clientWidth")                                              # a strip: it scrolls along itself
+        row = project.locator('.orow[data-row="parties"]')
+        button = row.locator('[data-act="project-new-party"]')
+        assert norm(await button.inner_text()) == "+ New party" and (await button.bounding_box())["height"] >= 44
+        assert await project.locator(".pj-deal").count() == 0 and await project.locator('[data-act="project-new-goal"]').count() == 0          # no strip to press open, no pinned New goal
+        cards = row.locator("article.ocard")
+        assert [await t.get_attribute("data-preset") for t in await cards.all()] == [d["id"] for d in deal_of("flags")][:3]            # Release first, Ideation, then the library's: three
+        assert "3 flags wait and no party releases them" in await cards.nth(0).inner_text()
+        assert "No party judges small ideas yet" in await cards.nth(1).inner_text()
+        assert await cards.nth(2).locator(".ocard__why").count() == 0                                                        # the others say no why
+        assert min([(await c.locator(".ocard__add").bounding_box())["height"] for c in await cards.all()]) >= 44              # Add: a 44 px target
+        assert await cards.nth(0).locator("img.ork-race__head").count() == 1 and norm(await cards.nth(0).locator(".ocard__add").inner_text()) == "Add"      # its leader's head
+        assert await row.locator(".orow__strip").evaluate("(e) => e.scrollWidth > e.clientWidth")                             # a strip: it scrolls along itself
         assert await page.evaluate(NO_SCROLL)
         await _shot_to(page, "phone-deal")
-        await tiles.nth(0).click()
+        await cards.nth(0).get_by_role("button", name="Add Release").click()
         form = page.get_by_role("dialog", name="New party")
         await form.wait_for(timeout=WAIT_MS)
         assert await form.locator('.preset-tile[data-preset="release"]').get_attribute("aria-pressed") == "true"       # New party with Release picked
 
 
 @pytest.mark.asyncio
-async def test_the_parties_you_have_come_last_in_the_deal_muted(fake_repo, monkeypatch):
-    hosted(monkeypatch, deal="have")
+async def test_new_party_in_the_row_opens_new_party(fake_repo, monkeypatch):
+    hosted(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         project = await _project(page)
         await project.locator('[data-act="project-new-party"]').click()
-        tiles = project.locator(".pj-deal .pj-tile")
-        await tiles.first.wait_for(timeout=WAIT_MS)
-        ids = [await t.get_attribute("data-preset") for t in await tiles.all()]
-        assert ids[-2:] == ["release", "ideation"] and "You have one" in await tiles.nth(len(ids) - 1).inner_text()
-        assert await tiles.last.get_attribute("class") and "is-have" in await tiles.last.get_attribute("class")
+        form = page.get_by_role("dialog", name="New party")
+        await form.wait_for(timeout=WAIT_MS)
+        assert await project.is_hidden()
+
+
+@pytest.mark.asyncio
+async def test_the_parties_you_have_are_not_offered_in_the_row(fake_repo, monkeypatch):
+    hosted(monkeypatch, deal="have")
+    async with _phone(fake_repo, monkeypatch) as (stub, page):
+        project = await _project(page)
+        cards = project.locator('.orow[data-row="parties"] article.ocard')
+        await cards.first.wait_for(timeout=WAIT_MS)
+        ids = [await t.get_attribute("data-preset") for t in await cards.all()]
+        assert "release" not in ids and "ideation" not in ids and len(ids) == 3 and ids[0] == "game"                           # the library's first three: those it has are left out
 
 
 @pytest.mark.asyncio
@@ -281,7 +288,7 @@ async def test_an_older_host_keeps_new_partys_tiles_as_they_were(fake_repo, monk
 
 async def _new_goal_from_project(page):
     project = await _project(page)
-    await project.locator('[data-act="project-new-goal"]').click()
+    await project.locator('[data-act="more-kinds"]').click()                                                              # the row's *More kinds…*: today's New goal form
     form = page.get_by_role("dialog", name="New goal")
     await form.wait_for(timeout=WAIT_MS)
     await page.wait_for_function("() => !document.getAnimations().some((a) => a.playState === 'running')", timeout=WAIT_MS)
@@ -297,7 +304,7 @@ async def test_new_goal_from_the_project_has_no_party_yet_and_its_party_from_the
         assert await form.locator(".newgoal__party").is_hidden()                                                        # no party button: the party is asked of the Orkmaster
         its = form.locator(".itsparty")
         assert await its.locator(".field-label").text_content() == "Its party" and norm(await its.locator(".itsparty__line").inner_text()) == "Any party"
-        assert calls(stub, "ideas.party_for") == [{}]                                                                   # without a type
+        assert calls(stub, "ideas.party_for") == [{}, {}]                                                               # without a type: the row's, then the form's
         chips = its.locator(".itsparty__chip")
         assert [await c.get_attribute("data-goal") for c in await chips.all()] == ["passkey", "website", "release", "ideation"]      # Ideation last
         assert "a pitch there" in await chips.last.inner_text()

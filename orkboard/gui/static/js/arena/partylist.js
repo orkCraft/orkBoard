@@ -2,7 +2,7 @@
 // project switcher (shell/projects.js, as wide as the column), then a heading for each party in the Board's order — its leader's head, its whole name (two lines, then cut,
 // the title whole), *k/n*, the work sign while it is at work and, on a closed party, one sign for the stops that wait in it where they cannot be seen (! , ✗ when one failed:
 // §65.2) —, Operations when the project has them, then *+ New party*. One party is open, the one the board shows, with its body under its heading (`body`: goals.js `Left`); the open heading
-// is its leader's (spec 73 §2): the leader's head, the party's name and *<leader> leads* under it, the work sign and *k/n*, no row of the leader's in the body. The project's line also holds the **+** of New goal (newgoal.js).
+// is its leader's (spec 73 §2): the leader's head, the party's name and *<leader> leads* under it, the work sign and *k/n*, no row of the leader's in the body. New goal and New party are the Orkmaster's two rows on the project's level (projectrows.js, spec 91 §8): with an Orkmaster the project's line holds no +; a host from before spec 70 (none) keeps the **+** of New goal (newgoal.js).
 // a press on a closed heading shows that party (the party switch: the board redraws in place, the party kept per device), a press on the open one shows only its leader's work, or everyone's again (the leader's row did, spec 73 §2). ↑ and ↓ move between
 // the headings. A party's menu (partymenu.js: a right click on its heading or its …, spec 90 §5) has *About this party*, *Edit the party*, *Remove party…*. A switch says `ideas.shown` (spec 68 §7.9). A new party saved gathers its seats' heads onto its heading's head (spec 63 §3, goaltabs.js `gatherInto`). The column scrolls under the project's line.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
@@ -149,7 +149,7 @@ export function PartyList({ body = null }) {
   const ork = m?.project?.orkmaster, level = want === PROJECT;          // the project's level: every heading closed, the project's line marked as an open heading is
   return html`<aside class="arena-left" aria-label="Parties" ref=${root} onKeyDown=${move}>
     <div class=${cls("arena-left__proj", { "has-ork": !!ork, "is-open": level && !!ork })}>
-      ${ork && html`<${Orkmaster} ork=${ork} open=${level} want=${want} />`}<${NewGoalPlus} want=${want} /><${ProjectSwitcher} /></div>
+      ${ork && html`<${Orkmaster} ork=${ork} open=${level} want=${want} />`}${!ork && html`<${NewGoalPlus} want=${want} />`}<${ProjectSwitcher} /></div>
     <${GateLine} />
     <div class="arena-plist" ref=${list} onScroll=${(e) => { scrolled = e.currentTarget.scrollTop; }}>
       ${ps.goals.map((x) => html`<section key=${x.g.slug} class=${cls("arena-party", { "is-open": open(x.g.slug) })}>

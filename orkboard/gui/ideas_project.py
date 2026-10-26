@@ -2,6 +2,7 @@
 (docs/specs/71-orkmaster-keeps-parties-apart.md) as `gui/ideas.py`'s `Ideas` has them. Split from ideas.py to keep it under ~600 lines.
 
     ideas.party_for {type?}      # the Orkmaster's suggestion of a goal's party: {parties: [{party, name, fits, missing}], suggested: slug}
+    ideas.kind_for {text, party?}  # the kind of a goal its line says, by words, no model (spec 91 §8): {type: id or "", types: [ids, the guessed first]}
     ideas.collide_answer {id, answer}   # the person's answer to a collision: `first:<slug>` · `one` · `replan` · `leave` → {ok: true}
     ideas.proposals {about?}      # the parties this project's kind needs, each Lean, Standard or Full with its price (spec 75 §4): {kind, ask, proposals, read?}
     ideas.tools                   # the AI tools a party may run on, ready first (spec 81 §1.4): {main, tools: [{id, name, ready, signed_in, installed, experimental, tiers, makes}]}; `makes`: what the tool can make beside code and text (agy: pictures; spec 91 §6)
@@ -22,7 +23,7 @@ import threading
 from orkboard.core import idea_collide, idea_kind
 from orkboard.core.idea_keeper import KeeperError
 from orkboard.gui.ideas_args import IdeasError, _opt, _text
-from orkboard.realm import collide, event_log, goal_team, harnesses, idea_change, ideas, library, orkmaster, party_resize, project_kind
+from orkboard.realm import collide, event_log, goal_team, goal_types, harnesses, idea_change, ideas, library, orkmaster, party_resize, project_kind
 
 log = logging.getLogger(__name__)
 _BUSY_LOCK = threading.Lock()      # the pairs being judged now: one thread judges a pair (the bus and the hook may both find it)
@@ -38,6 +39,21 @@ class ProjectMixin:
         except ValueError as e:
             raise IdeasError(str(e)) from None
         return {"parties": parties, "suggested": orkmaster.suggested(parties)}
+
+    def kind_for(self, args: dict) -> dict:
+        """`{text, party?}`: the kind of a goal its line says (spec 91 §8), by words, no model, nothing written: `{"type": id | "", "types": [ids]}`, `types` the ones
+        the party is offered (all of the catalog's with no `party`) with the guessed one first. A party the project lacks is refused (*No such party*)."""
+        text = args.get("text")
+        if text is not None and not isinstance(text, str):
+            raise IdeasError("text is not text")
+        party = _opt(args, "party")
+        if party:
+            if ideas.track_page(self.root(False), party) is None:
+                raise IdeasError("No such party")
+            offered = [t.id for t, _missing in goal_types.offered(self.state_dir, self.root(False), party)]
+        else:
+            offered = [t.id for t in goal_types.CATALOG]
+        return {"type": idea_kind.guess(text, offered), "types": idea_kind.ranked(text, offered)}
 
     # -- the proposals (spec 75 §4): what the project is, and the parties it needs in three sizes ----------------------------------------
 

@@ -301,17 +301,19 @@ export function makeIdeas(core, ctx, goalSheet) {
     for (const t of parties()) for (const ty of (goalOf(t.slug)?.ideation ? [] : goalOf(t.slug)?.types || [])) if (!seen.has(ty.id)) seen.set(ty.id, ty);
     return [...seen.values()];
   }
-  /** New goal on the project's sheet: no party yet; its type (the union of the parties'), its text, and **Its party** from the Orkmaster. */
-  function openProject() {
+  /** New goal on the project's sheet: no party yet; its type (the union of the parties'), its text, and **Its party** from the Orkmaster. `from`: {text, party}, what the Orkmaster's *New goal* row had when
+   *  *More kinds…* was pressed (spec 91 §8): the line is in the box, the party picked there is picked here at first. */
+  function openProject(from = null) {
     const list = parties();
     if (!list.length) { goalSheet.open("", (made) => open(made)); return; }
     saved = false;
     touched = false;
-    text.value = "";
+    text.value = from?.text || "";
     sync();
     more.reset();
     lens.reset();
     closeParties();
+    itsParty.want(from?.party || "");
     showProject(false);
     setParty(list[0].slug);
     lowOrNot();
@@ -343,8 +345,8 @@ export function makeIdeas(core, ctx, goalSheet) {
     text.focus();
   }
   /** New goal needs a party: with none yet, New party opens first and then this. */
-  function openNew(slug = "", type = "") {
-    if (slug === PROJECT) { openProject(); return; }
+  function openNew(slug = "", type = "", from = null) {
+    if (slug === PROJECT) { openProject(from); return; }
     if (parties().length) open(slug, type);
     else goalSheet.open("", (made) => open(made));
   }

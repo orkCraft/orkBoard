@@ -1,7 +1,8 @@
 /* The left column's lighter body (docs/specs/73-a-lighter-column.md, decisions §88; the column and its headings are arena.css, spec 69): the open party's heading is its leader, a goal is one
-   28 px line, New and Flags are 28 px rows, the + of New goal sits in the project's line. In orkUI's office look: its tokens only, no colour, font or corner of its own. */
+   28 px line, New and Flags are 28 px rows; the + of New goal sits in the project's line only for a host with no Orkmaster (spec 91 §8). In orkUI's office look: its tokens only, no colour, font or corner of its own. */
 @import "./glance.css";                                  /* the field's rows and what a glance reads (spec 82): its own sheet, arena.css being long */
 @import "./look.css";                                     /* what the elf asks and shows (spec 85): the picture of what changed, how far a goal is, what a done card made */
+@import "./rows.css";                                     /* the Orkmaster's two rows (spec 91 §8): the parties and the new goal beside its head */
 .arena-left__proj { display: flex; align-items: center; gap: var(--ork-3); }
 .arena-left__proj .shell-proj { flex: 1; min-width: 0; }
 .arena-plus { flex: none; width: 28px; height: 28px; padding: 0; --_fg: var(--ork-action); }

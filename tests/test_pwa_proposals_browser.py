@@ -1,7 +1,7 @@
 """Spec 75 part C, the phone (docs/specs/75-parties-fitted-to-the-project.md §5, §6 "C"; decisions §90): Chromium at 390 × 844 against the stub host of spec 75 §4.1 — `ideas.proposals`, `ideas.map`'s `project.kind`,
 `ideas.goal_save` with `size`, a party's `size`. New party opens on the Orkmaster's proposals for a mobile project (three cards, a three-way switch Lean · Standard · Full as a radiogroup of buttons, the heads, the agents and the
 price of the size picked, *Make it* sends the leader, the team and the size, a proposal the project has is muted); an empty project asks *What is this project for?* and *Read it* draws the proposals of the line; *More: the library* is
-today's tiles and seats with the size switch; the deal shows the proposals first with Standard's price; *About this party* and *Edit the party* have *Its size*; the drawer's Target is *A party with no size of its own works as*;
+today's tiles and seats with the size switch; the Orkmaster's *Parties* row shows the proposals first (spec 91 §8); *About this party* and *Edit the party* have *Its size*; the drawer's Target is *A party with no size of its own works as*;
 a host with no `ideas.proposals` keeps today's phone; 44 px targets, no sideways scroll; the service worker's version."""
 from __future__ import annotations
 
@@ -270,21 +270,20 @@ async def test_the_way_back_from_the_library_shows_the_proposals_with_no_second_
 # -- the deal ---------------------------------------------------------------------------------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_the_deal_shows_the_proposals_first_with_standards_price_and_a_press_opens_new_party_on_it(fake_repo, monkeypatch):
+async def test_the_parties_row_shows_the_proposals_first_and_add_opens_new_party_on_it(fake_repo, monkeypatch):
     proposing(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         project = await _project(page)
-        await project.get_by_role("button", name="New party").click()
-        deal = project.locator(".pj-deal")
-        await deal.locator('.pj-tile[data-proposal]').first.wait_for(timeout=WAIT_MS)
-        tiles = await deal.locator(".pj-tile").all()
-        ids = [await t.get_attribute("data-proposal") for t in tiles]
-        assert ids[:3] == ["mobile-features", "mobile-architecture", "release"] and ids[3] is None                                    # the proposals first, the library's tiles after
-        first = norm(await tiles[0].inner_text())
-        assert "Mobile app: features" in first and "≈$1–4 a goal" in first and "ios/ and android/ are here" in first
-        assert "You have one" in norm(await tiles[2].inner_text()) and "is-have" in await tiles[2].get_attribute("class")
+        cards = project.locator('.orow[data-row="parties"] article.ocard[data-proposal]:not([data-proposal=""])')
+        await cards.first.wait_for(timeout=WAIT_MS)
+        ids = [await t.get_attribute("data-proposal") for t in await cards.all()]
+        assert ids == ["mobile-features", "mobile-architecture"]                                                                      # the proposals first; the one it has is left out
+        row = project.locator('.orow[data-row="parties"] article.ocard')
+        assert [await t.get_attribute("data-preset") for t in await row.all()] == ["mobile-features", "mobile-architecture", "game"]  # the library's party after them
+        first = norm(await cards.nth(0).inner_text())
+        assert "Mobile app: features" in first and "ios/ and android/ are here" in first and "Product manager" in first and "Add" in first
         await _shot_to(page, "phone-proposals-deal")
-        await tiles[1].click()
+        await cards.nth(1).get_by_role("button", name="Add Mobile app: architecture").click()
         sheet = page.get_by_role("dialog", name="New party")
         await sheet.locator(".prop").first.wait_for(timeout=WAIT_MS)
         assert "is-picked" in await card_of(sheet, "mobile-architecture").get_attribute("class")
@@ -391,9 +390,8 @@ async def test_a_host_with_no_proposals_keeps_todays_target_and_deal(fake_repo, 
         assert await drawer.get_by_role("radiogroup", name="Target").count() == 1 and "no size of its own" not in await drawer.inner_text()
         await page.keyboard.press("Escape")
         project = await _project(page)
-        await project.get_by_role("button", name="New party").click()
-        await project.locator(".pj-tile").first.wait_for(timeout=WAIT_MS)
-        assert await project.locator(".pj-tile[data-proposal]").count() == 0 and calls(stub, "ideas.proposals") == []
+        await project.locator('.orow[data-row="parties"] article.ocard').first.wait_for(timeout=WAIT_MS)
+        assert await project.locator('.orow[data-row="parties"] article.ocard[data-proposal]:not([data-proposal=""])').count() == 0 and calls(stub, "ideas.proposals") == []
 
 
 @pytest.mark.asyncio

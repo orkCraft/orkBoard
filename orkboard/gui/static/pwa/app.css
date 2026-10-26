@@ -1277,6 +1277,41 @@ dialog.sheet.full { margin: 0; height: 100dvh; max-height: 100dvh; border-top: 0
 .pj-fold__head { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: var(--ork-3); min-height: var(--ork-tap); width: 100%; padding: 0 var(--ork-3); color: var(--ork-ink); }
 .pj-fold__head span { flex: 1 1 auto; font: var(--ork-type-body); }
 .pj-fold__head .ork-chev { margin: 0; flex: none; }
+/* The Orkmaster's two rows on the project's sheet (docs/specs/91-the-owners-list.md §8; shell-project.js): Parties, a strip of cards, and New goal, one line, its party, Add goal and the party's kinds, stacked; every target 44 px at least. */
+.orows { display: flex; flex-direction: column; gap: var(--ork-6); min-width: 0; }
+.orow { display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; padding-top: var(--ork-3); border-top: var(--ork-line) solid var(--ork-frame); }
+.orow__lab { display: flex; flex-direction: column; }
+.orow__lab b { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.orow__lab small { font: var(--ork-type-caption); }
+.orow__strip { display: flex; align-items: flex-start; gap: var(--ork-3); margin: 0 calc(-1 * var(--ork-6)); padding: 0 var(--ork-6) var(--ork-2); overflow-x: auto; scrollbar-width: none; scroll-snap-type: x proximity; }
+.orow__strip::-webkit-scrollbar { display: none; }
+.ocard { flex: none; scroll-snap-align: start; box-sizing: border-box; width: 208px; display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame); clip-path: var(--ork-notch); }
+.ocard__top { display: flex; align-items: center; gap: var(--ork-3); min-height: 24px; }
+.ocard__top .ork-race__head { flex: none; }
+.ocard__name { min-width: 0; font: var(--ork-type-button); letter-spacing: var(--ork-type-button-track); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ocard__cap { margin: 0; font: var(--ork-type-caption); display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.ocard__who { color: var(--ork-ink); }
+.ocard__why { font: var(--ork-type-caption); color: var(--ork-ink); }
+.ocard__add { align-self: stretch; min-height: var(--ork-tap); margin-top: var(--ork-1); }
+.ocard--new { appearance: none; align-self: stretch; width: 132px; min-height: var(--ork-tap); align-items: center; justify-content: center; background: none; border: var(--ork-line) dashed var(--ork-action); color: var(--ork-action); cursor: pointer; }
+.ocard--new b { font: var(--ork-type-button); font-weight: 500; }
+.ocard--new:focus-visible, .orow__opt:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2px; }
+.orow__text { height: var(--ork-tap); box-sizing: border-box; }
+.orow__go { display: flex; gap: var(--ork-3); }
+.orow__for { flex: 1 1 auto; min-width: 0; min-height: var(--ork-tap); justify-content: space-between; gap: var(--ork-3); }
+.orow__for span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.orow__add { flex: none; min-height: var(--ork-tap); }
+.orow__menu { display: flex; flex-direction: column; background: var(--ork-panel); border: var(--ork-line) solid var(--ork-edge); }
+.orow__menu[hidden] { display: none; }
+.orow__opt { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; gap: var(--ork-3); min-height: var(--ork-tap); padding: var(--ork-2) var(--ork-4); color: var(--ork-ink); font: var(--ork-type-body); }
+.orow__opt b { flex: 1 1 auto; min-width: 0; font-weight: 600; }
+.orow__opt small { flex: none; font: var(--ork-type-caption); }
+.orow__opt.is-on { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); }
+.okinds { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3); }
+.okinds__label { font: var(--ork-type-caption); }
+.okind { min-height: var(--ork-tap); gap: var(--ork-2); }
+.okind.is-picked { --_bg: var(--ork-ink); --_fg: var(--ork-on-ink); --_bd: var(--ork-ink); }
+.okinds__more { min-height: var(--ork-tap); }
 .newgoal__party[hidden], .itsparty[hidden] { display: none; }
 .itsparty { display: flex; flex-direction: column; gap: var(--ork-3); }
 .itsparty__line { margin: 0; font: var(--ork-type-caption); }

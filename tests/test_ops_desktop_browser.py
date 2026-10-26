@@ -287,7 +287,7 @@ def test_operations_is_in_the_goal_select_and_new_lists_the_templates(world):
         heads = pg.locator(".arena-phead")
         heads.last.wait_for(timeout=WAIT_MS)
         assert heads.last.get_attribute("data-goal") == "@operations" and pg.locator(".arena-pnew").count() == 1     # after the parties, before + New party
-        assert pg.locator(".arena-new__pile").count() == 0 and pg.locator(".arena-left__proj").get_by_role("button", name="New goal").count() == 1  # no pile under the party's goals: New goal is the + in the project line
+        assert pg.locator(".arena-new__pile").count() == 0 and pg.locator(".arena-left__proj").get_by_role("button", name="New goal").count() == 0  # no pile under the party's goals, no + in the project line: New goal is a row of the Orkmaster's level (spec 91 §8)
         _operations(pg)
         assert pg.locator(".arena-new__pile").count() == 0 and pg.get_by_role("button", name="New…").count() == 1  # New… is Operations' own
         pg.get_by_role("button", name="New…").click()

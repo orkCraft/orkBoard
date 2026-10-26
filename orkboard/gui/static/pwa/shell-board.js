@@ -58,7 +58,7 @@ export function makeBoardTab(core, ctx) {
     show: arena.show,
     pick: arena.pick,
     pickOps: arena.pickOps,
-    openNew: (goal, type) => ideas.openNew(goal, type),
+    openNew: (goal, type, from) => ideas.openNew(goal, type, from),
     newParty: (preset, after) => goalSheet.open("", after, preset),
     sheets: [...goalSheet.sheets, ...ops.sheets, ...ideas.sheets, ...arena.sheets],
     draw() {

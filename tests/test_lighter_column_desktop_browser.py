@@ -1,8 +1,8 @@
 """Spec 73 part B on the desktop (docs/specs/73-a-lighter-column.md §0–§4, §6 B; decisions §88), in a real browser at 1 440 × 900 against the project test's stub host (Passkey with eight new goals and four
 flags, one of them waiting for main; Ideation; Website; Release; the host's `project` block and `ideas.party_for`): a goal's row is one line (28 px: its element, its type's sign, its title, one state's sign; no pile, no
 ›; what its second line said is in its title); a press picks it, a second press opens its screen (Enter, Enter again); the open party's heading says *Taskmaster leads* and the column has no leader row, no *Goals n*;
-*New · 8* with *Process now*, *Flags · 4* with *1 waits for main*, each one 28 px row; the 2 px rule under the open party; the + in the project line opens New goal with the party shown picked and its types first;
-no New goal pile in the column (the project level's stays); Ideation's rows and *Judge now*; a host from before spec 70. Screenshots to the directory ORKCRAFT_SHOTS_DIR names when it is set."""
+*New · 8* with *Process now*, *Flags · 4* with *1 waits for main*, each one 28 px row; the 2 px rule under the open party; no + in the project line: New goal is the Orkmaster's row (spec 91 §8), its *More kinds…* deals the party picked's types first and New goal opens with it picked;
+no New goal pile in the column; Ideation's rows and *Judge now*; a host from before spec 70. Screenshots to the directory ORKCRAFT_SHOTS_DIR names when it is set."""
 from __future__ import annotations
 
 import pytest
@@ -11,7 +11,7 @@ pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_map_desktop_browser import node  # noqa: E402
-from tests.test_project_desktop_browser import ProjectHost  # noqa: E402
+from tests.test_project_desktop_browser import ProjectHost, _project  # noqa: E402
 from tests.test_route_desktop_browser import shot  # noqa: E402
 from tests.test_shell_browser import _calls, _open, _parties, _show_goal  # noqa: E402
 
@@ -226,22 +226,23 @@ def test_a_party_with_nothing_new_still_has_the_new_row_with_process_now_disable
 
 # -- New goal at the Orkmaster ---------------------------------------------------------------------------------------------------------------------------
 
-def test_the_plus_stands_between_the_orkmasters_head_and_the_project_switcher_28_px_and_named_new_goal(lighter):
+def test_no_plus_stands_in_the_project_line_new_goal_is_a_row_of_the_orkmasters_level(lighter):
     pg, host = lighter
-    plus = pg.locator(".arena-left__proj").get_by_role("button", name="New goal")
-    assert plus.count() == 1 and plus.get_attribute("title") == "New goal: in Passkey, or another"
-    box = plus.bounding_box()
-    ork, proj = pg.get_by_role("button", name="The project").bounding_box(), pg.locator(".arena-left__proj .shell-proj").bounding_box()
-    assert box["width"] == 28 and box["height"] == 28
-    assert ork["x"] + ork["width"] <= box["x"] and box["x"] + box["width"] <= proj["x"]
-    assert plus.locator(".ork-icon").count() == 1 and plus.evaluate("e => getComputedStyle(e).color") == pg.locator(".arena-pnew .arena-plist__icon").evaluate("e => getComputedStyle(e).color")
-    assert plus.evaluate("e => getComputedStyle(e, '::before').clipPath") != "none"                                                         # notched
+    line = pg.locator(".arena-left__proj")
+    assert line.get_by_role("button", name="New goal").count() == 0 and pg.locator(".arena-plus").count() == 0                                # spec 91 §8: one way in
+    ork, proj = pg.get_by_role("button", name="The project").bounding_box(), line.locator(".shell-proj").bounding_box()
+    assert ork["x"] + ork["width"] <= proj["x"]                                                                                               # the Orkmaster's head, then the project switcher
+    _project(pg)
+    assert pg.locator('.arena-prow[data-row="goal"]').get_by_role("button", name="Add goal", exact=True).count() == 1
 
 
-def test_a_press_on_the_plus_deals_the_party_shown_types_first_and_new_goal_opens_with_that_party_picked(lighter):
+def test_a_party_picked_in_the_new_goal_row_deals_its_types_first_and_new_goal_opens_with_that_party_picked(lighter):
     pg, host = lighter
-    pg.get_by_role("button", name="New goal").click()
-    deal = pg.get_by_role("dialog", name="New goal for Passkey")
+    _project(pg)
+    pg.locator(".arena-for__btn").click()
+    pg.locator('.arena-for__opt[data-party="passkey"]').click()                                                                              # the party the person picked (Passkey shown before)
+    pg.get_by_role("button", name="More kinds…").click()
+    deal = pg.get_by_role("dialog", name="New goal for the project")
     deal.locator(".arena-type").first.wait_for(timeout=WAIT_MS)
     assert [c.get_attribute("data-type") for c in deal.locator(".arena-type").all()] == ["", "fix", "logo", "release"]                    # Your own goal, Passkey's own, then the others'
     deal.locator('.arena-type[data-type="logo"]').click()
@@ -251,7 +252,7 @@ def test_a_press_on_the_plus_deals_the_party_shown_types_first_and_new_goal_open
     its.locator(".arena-itsparty__chip").first.wait_for(timeout=WAIT_MS)
     assert _calls(pg, host, "ideas.party_for")[-1] == {"type": "logo"}
     chips = its.locator(".arena-itsparty__chip")
-    assert its.get_attribute("data-picked") == "passkey" and chips.locator("xpath=..").locator('[data-party="passkey"]').get_attribute("aria-checked") == "true"      # the party shown, not Website (the Orkmaster's)
+    assert its.get_attribute("data-picked") == "passkey" and chips.locator("xpath=..").locator('[data-party="passkey"]').get_attribute("aria-checked") == "true"      # the party picked, not Website (the Orkmaster's)
     assert [c.get_attribute("data-party") for c in chips.all()] == ["website", "passkey", "release", "ideas"]                            # the others as chips, as on the level
     assert its.locator(".arena-itsparty__says").inner_text().strip() == "Orkmaster suggests Website · takes it whole"
     shot(pg, "desk-lighter-newgoal.png")
@@ -262,13 +263,15 @@ def test_a_press_on_the_plus_deals_the_party_shown_types_first_and_new_goal_open
     form.wait_for(state="detached", timeout=WAIT_MS)
 
 
-def test_the_plus_in_another_party_deals_its_types_first_and_your_own_goal_picks_it_too(lighter):
+def test_another_party_picked_in_the_row_deals_its_types_first_and_your_own_goal_picks_it_too(lighter):
     pg, host = lighter
     _show_goal(pg, "website")
-    plus = pg.get_by_role("button", name="New goal")
-    assert plus.get_attribute("title") == "New goal: in Website, or another"
-    plus.click()
-    deal = pg.get_by_role("dialog", name="New goal for Website")
+    _project(pg)
+    pg.locator(".arena-for__btn").click()
+    pg.locator('.arena-for__opt[data-party="website"]').click()
+    assert pg.locator(".arena-for__btn").inner_text().strip() == "for Website"
+    pg.get_by_role("button", name="More kinds…").click()
+    deal = pg.get_by_role("dialog", name="New goal for the project")
     deal.locator(".arena-type").first.wait_for(timeout=WAIT_MS)
     assert [c.get_attribute("data-type") for c in deal.locator(".arena-type").all()] == ["", "logo", "fix", "release"]
     deal.locator('.arena-type[data-type=""]').click()
@@ -282,14 +285,10 @@ def test_the_plus_in_another_party_deals_its_types_first_and_your_own_goal_picks
     assert sent["track"] == "website" and sent["text"] == "Offline mode" and "type" not in sent
 
 
-def test_the_plus_on_the_projects_level_is_spec_70s_no_party_at_first_and_the_projects_pile_stays(lighter):
+def test_more_kinds_on_the_projects_level_is_spec_70s_no_party_at_first_the_orkmaster_suggests_it_for_the_kind(lighter):
     pg, host = lighter
-    pg.get_by_role("button", name="The project").click()
-    pg.locator(".arena-project").wait_for(timeout=WAIT_MS)
-    plus = pg.get_by_role("button", name="New goal", exact=True).first
-    assert plus.get_attribute("title") == "New goal: your own, or pick its type"
-    assert pg.locator(".arena-pjgoal .arena-new__pile").count() == 1                                                                         # the level's own pile stays
-    plus.click()
+    _project(pg)
+    pg.get_by_role("button", name="More kinds…").click()                                                                                     # no party picked by the person: none is passed on
     deal = pg.get_by_role("dialog", name="New goal for the project")
     deal.locator(".arena-type").first.wait_for(timeout=WAIT_MS)
     assert [c.get_attribute("data-type") for c in deal.locator(".arena-type").all()] == ["", "fix", "logo", "release"]
@@ -307,9 +306,13 @@ def test_no_new_goal_pile_stands_in_the_column_any_more(lighter):
     assert pg.locator(".arena-left .arena-new, .arena-left .arena-new__pile").count() == 0
 
 
-def test_a_host_from_before_spec_70_has_the_plus_and_new_goal_is_the_shown_partys_own(gui):
+def test_a_host_from_before_spec_70_has_the_plus_28_px_and_notched_and_new_goal_is_the_shown_partys_own(gui):
     pg, host, errors = _open(gui, host=LighterHost(project=False), ready=".arena[data-goal=passkey]")
     _show_goal(pg, "passkey")
+    plus = pg.locator(".arena-left__proj").get_by_role("button", name="New goal")
+    box = plus.bounding_box()
+    assert plus.count() == 1 and box["width"] == 28 and box["height"] == 28 and plus.get_attribute("title") == "New goal: in Passkey, or another"      # no Orkmaster to hold the rows: the + stays
+    assert box["x"] + box["width"] <= pg.locator(".arena-left__proj .shell-proj").bounding_box()["x"] and plus.evaluate("e => getComputedStyle(e, '::before').clipPath") != "none"
     pg.get_by_role("button", name="New goal").click()
     dlg = pg.get_by_role("dialog", name="New goal")
     dlg.wait_for(timeout=WAIT_MS)
