@@ -22,7 +22,7 @@ import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-from orkboard.realm import call_log, halt, harnesses, task_commands, tool_run  # noqa: F401  (halt: its runs wait under it, tool_run.wait)
+from orkboard.realm import call_log, halt, harnesses, task_commands, tool_errors, tool_run  # noqa: F401  (halt: its runs wait under it, tool_run.wait)
 from orkboard.realm.gate_config import test_argv
 from orkboard.sources import telemetry
 
@@ -203,6 +203,8 @@ def run_read(harness: str, prompt: str, workdir: Path, cancel: threading.Event, 
         telemetry.charge(cost, f"{harness} reader", **what)
     else:
         telemetry.noted(cost, f"{harness} reader", **what)
+    if not text.strip() and (why := h.error(out)):        # it ended well with no answer, and says why (agy's refused command)
+        raise tool_errors.ToolError(harness, why)
     return text, cost, tokens, session
 
 

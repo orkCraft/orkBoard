@@ -133,6 +133,32 @@ def _agy(h, prompt, workdir, model):
             "--add-dir", workdir, "--output-format", "json"]
 
 
+# `--print` refuses every terminal command it would ask about and ends the turn with no answer; a reading run is never
+# unchained, so it is told to read with its file tools (the logs of 26 October: every spec on agy came back empty after a
+# refused `RunCommand`).
+AGY_NO_COMMANDS = ("Read with your file tools (view_file, list_dir, grep_search) and run no terminal command: in this run "
+                   "every command is refused and the run ends with no answer.")
+
+
+def _agy_reads(h, prompt, workdir, model):
+    """An agy run that answers or reads: its prompt, then the line that keeps it off the terminal."""
+    return _agy(h, f"{prompt}\n\n{AGY_NO_COMMANDS}", workdir, model)
+
+
+def agy_error(stdout: str) -> str:
+    """Why an agy run gave no answer, from its JSON envelope: the actions headless mode refused ("" when it says none)."""
+    try:
+        env = json.loads(stdout.strip())
+    except ValueError:
+        return ""
+    denied = env.get("denied_actions") if isinstance(env, dict) else None
+    if not isinstance(denied, list) or not denied:
+        return ""
+    names = sorted({str(d.get("display_name") or d.get("action") or "") for d in denied if isinstance(d, dict)} - {""})
+    return ("it wanted to run " + (", ".join(names) or "a terminal command") + ", which a run without a window refuses, "
+            "and ended with no answer")
+
+
 # Codex -------------------------------------------------------------------------------------------
 
 CODEX_WEB = {False: 'web_search="disabled"', True: 'web_search="live"'}   # Codex searches by default

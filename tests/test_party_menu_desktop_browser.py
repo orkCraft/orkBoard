@@ -56,6 +56,19 @@ def test_a_right_click_on_a_partys_row_opens_its_menu_and_remove_party_opens_the
     pg.wait_for_function("() => !document.querySelector('[role=dialog]')", timeout=WAIT_MS)
 
 
+def test_in_the_apps_window_a_right_click_opens_the_partys_menu_alone_and_remove_party_opens_the_question(gui):
+    # The app's window (`app=1`) has its own Copy menu on a right click, its veil over the page: it opened over the party's menu, and a press on
+    # *Remove party…* closed both (the owner, 26 October). A menu of its own opened is the right click's whole answer.
+    pg, _, errors = _open(gui, host=ProjectHost(), ready=".arena[data-goal=passkey]", query="&app=1")
+    _parties(pg).locator('.arena-phead[data-goal="website"]').click(button="right")
+    box, items = _items(pg)
+    assert items == WORDS and pg.locator(".shell-ctx").count() == 0
+    box.get_by_role("menuitem", name="Remove party…").click()
+    _question(pg, "Website")
+    pg.close()
+    assert not errors, "\n".join(errors)
+
+
 def test_the_dots_are_hidden_at_rest_shown_on_hover_and_on_focus_and_open_the_same_menu(menu):
     pg, _ = menu
     dots = _row(pg, "website").get_by_role("button", name="More about Website")
@@ -125,8 +138,9 @@ def test_a_click_away_closes_the_menu_and_only_one_stands(menu):
     _items(pg)
     _parties(pg).locator('.arena-phead[data-goal="passkey"]').click(button="right")          # above the first: its list hangs below the pointer
     assert pg.get_by_role("menu").count() == 1 and pg.get_by_role("menu").get_attribute("aria-label").startswith("Passkey")
+    pg.wait_for_function("() => document.activeElement?.getAttribute('role') === 'menuitem'", timeout=WAIT_MS)   # opened: its first item has the focus
     pg.mouse.click(900, 600)
-    assert pg.get_by_role("menu").count() == 0
+    pg.get_by_role("menu").wait_for(state="detached", timeout=WAIT_MS)                       # closed by the page's next render, not at once
 
 
 def test_the_orkmasters_columns_have_the_same_dots_and_remove_party_opens_the_question(menu):

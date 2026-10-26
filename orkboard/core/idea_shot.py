@@ -15,6 +15,8 @@ one asked. Time-boxed: up to `OPEN_S` seconds for the port, `DRAW_S` for the pic
 A command may print several ports (an Express server that honours `PORT`, a Vite client that prints its own later): `opened` keeps every port
 printed and `PORT`, and `page_of(ports, path)` asks each, in that order, for the screen's path with a second's timeout; the first that answers 2xx with
 `text/html` is the page (spec 90 §1) and the picture and Play are of it. When none gives a page by `OPEN_S`, `tried` says which ports were asked.
+The command runs with `NO_COLOR=1`, and its lines are read with their colour codes taken out: `CI=1` turns picocolors' colours on, and Vite
+prints its port in bold (`http://localhost:<bold>5173</bold>/`), which no address matches (the logs of 26 October: Play's `nopage`).
 The browser is `$ORKCRAFT_CHROMIUM`, the preinstalled one (`/opt/pw-browsers/chromium`), one on the PATH, else Playwright's own.
 """
 from __future__ import annotations
@@ -48,6 +50,7 @@ SEEN_DIRS = ("components", "pages", "views", "screens", "templates", "static", "
 NOT_SEEN = ("tests", "test", "__tests__", "node_modules", "docs", "design", ".orkcraft")        # `design/` holds a look picked, not the product
 SCRIPTS = ("dev", "preview", "start")
 URL = re.compile(r"https?://(?:localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\]):(\d{2,5})")
+ANSI = re.compile(r"\x1b\[[0-9;?]*[A-Za-z]")          # a terminal's colour and cursor codes (CSI)
 BROWSERS = ("chromium", "chromium-browser", "google-chrome", "google-chrome-stable", "chrome")
 
 
@@ -182,14 +185,14 @@ def opened(how: dict, worktree: Path, seconds: float = OPEN_S, env: dict[str, st
     seen: list[int] = []
     try:
         proc = subprocess.Popen(how["run"], cwd=str(worktree), stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
-                                errors="replace", start_new_session=os.name == "posix", env={**os.environ, **(env or {}), "PORT": str(port), "BROWSER": "none", "CI": "1"})
+                                errors="replace", start_new_session=os.name == "posix", env={**os.environ, **(env or {}), "PORT": str(port), "BROWSER": "none", "CI": "1", "NO_COLOR": "1"})
     except (OSError, ValueError):
         yield None
         return
 
     def read() -> None:
         for line in proc.stdout or ():
-            for m in URL.finditer(line):
+            for m in URL.finditer(ANSI.sub("", line)):
                 seen.append(int(m.group(1)))
 
     threading.Thread(target=read, daemon=True, name="idea-shot-out").start()

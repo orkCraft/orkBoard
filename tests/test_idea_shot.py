@@ -87,7 +87,10 @@ with socket.socket() as probe:
     probe.bind(("127.0.0.1", 0))
     other = probe.getsockname()[1]
 serve(other, os.environ.get("TWO_PORTS_PAGE") != "none")
-print("  Local:   http://localhost:%d/" % other, flush=True)
+if os.environ.get("TWO_PORTS_COLOUR") and (os.environ.get("TWO_PORTS_COLOUR") == "always" or not os.environ.get("NO_COLOR")):
+    print("  \x1b[32m\u279c\x1b[39m  \x1b[1mLocal\x1b[22m:   \x1b[36mhttp://localhost:\x1b[1m%d\x1b[22m/\x1b[39m" % other, flush=True)   # Vite's, coloured
+else:
+    print("  Local:   http://localhost:%d/" % other, flush=True)
 time.sleep(120)
 """
 
@@ -146,6 +149,17 @@ def test_a_command_printing_two_ports_the_first_a_server_without_a_page_opens_th
         assert b"the client" in urllib.request.urlopen(f"http://127.0.0.1:{port}/", timeout=3).read()
     assert tried == []                                                                     # a page was found: nothing to say of ports tried
     assert not idea_shot._listening(port)                                                  # closed on leaving
+
+
+@pytest.mark.parametrize("colour", ["picocolors", "always"])
+def test_a_port_printed_in_colour_is_read_as_vite_prints_it(tmp_path, monkeypatch, colour):
+    # Vite bolds its port, and picocolors colours when `CI` is set (the logs of 26 October: Play said *nopage* with Vite up): the command
+    # runs with NO_COLOR=1, and a port printed in colour all the same is read with its codes taken out.
+    work, _state, how = two_ports(tmp_path, monkeypatch)
+    monkeypatch.setenv("TWO_PORTS_COLOUR", colour)
+    monkeypatch.delenv("NO_COLOR", raising=False)
+    with idea_shot.opened(how, work, 15, path="/") as port:
+        assert port and idea_shot.page_of([port]) == port
 
 
 def test_a_command_whose_ports_give_no_page_says_which_ports_it_asked(tmp_path, monkeypatch):

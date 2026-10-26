@@ -47,7 +47,7 @@ export function lineAt(el) {
 }
 
 export function onContextMenu(e) {
-  if (!inWindow()) return;
+  if (!inWindow() || e.defaultPrevented) return;          // a menu of its own was opened (a party's, arena/partymenu.js): Copy's veil would cover it
   const el = e.target;
   if (el?.closest?.("input, textarea, select, [contenteditable=true], .xterm")) return;   // their own copy and paste
   const text = lineAt(el);
