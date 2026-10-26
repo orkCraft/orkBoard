@@ -34,6 +34,8 @@ ALIVE_S = 15.0                       # how often a playing preview is looked at 
 PLAY_DIR = "play"
 TOPIC = "play.changed"               # on the bus when Play started, failed or stopped (the snapshot follows)
 NO_PREVIEW = "no preview"
+NO_PAGE = "nopage"                   # it started and listens, but no port it printed (nor PORT) answers a page (spec 90 §1)
+NO_PAGE_WORDS = "The build started, but no port gives a page. Name it in .orkcraft/checks.toml: preview_port or preview_path."
 _LIVE: "weakref.WeakSet[Play]" = weakref.WeakSet()
 
 
@@ -57,6 +59,7 @@ class Play:
         self._stop = threading.Event()
         self._why = ""
         self.state, self.commit, self.url, self.error, self.none = "", "", "", "", False
+        self.ports: list[int] = []                       # a start that gave no page (`nopage`): the ports it asked (spec 90 §1)
         self.port: int | None = None
         self.seen_at = self._alive_at = 0.0
         _LIVE.add(self)
@@ -69,6 +72,8 @@ class Play:
         if self.state == "starting":
             return {"state": "starting", "commit": self.commit, "short": self.commit[:7]}
         if self.state == "failed":
+            if self.error == NO_PAGE:
+                return {"state": "failed", "why": NO_PAGE, "error": NO_PAGE_WORDS, "ports": list(self.ports)}
             return {"state": "failed", "error": self.error, **({"none": True} if self.none else {})}
         return {"state": "stopped"}                  # never started, stopped, or stopping
 
@@ -92,6 +97,7 @@ class Play:
         with self._lock:
             self._stop = threading.Event()
             self.state, self.commit, self.url, self.error, self.none, self.port, self._why = "starting", tip, "", "", False, None, ""
+            self.ports = []
             self._thread = threading.Thread(target=self._run, args=(tip, self._stop), name="play", daemon=True)
             self._thread.start()
         return self.answer(ref)
@@ -146,10 +152,10 @@ class Play:
                 return self._failed(began, stop, NO_PREVIEW, none=True)
             if stop.is_set():
                 return self._failed(began, stop, "stopped")
-            with idea_shot.opened(how, self.path, idea_shot.OPEN_S, env={"HOST": "127.0.0.1"}) as port:
+            path, tried = idea_shot._path("", idea_shot._config(self.state_dir)), []
+            with idea_shot.opened(how, self.path, idea_shot.OPEN_S, env={"HOST": "127.0.0.1"}, path=path, tried=tried) as port:
                 if port is None or stop.is_set():
-                    return self._failed(began, stop, "did not open")
-                path = idea_shot._path("", idea_shot._config(self.state_dir))
+                    return self._failed(began, stop, NO_PAGE if tried else "did not open", ports=tried)
                 self._alive_at = time.monotonic()
                 self._set("playing", port=port, url=f"http://127.0.0.1:{port}{path}")
                 self._emit(event_log.PLAY_STARTED, seconds=round(time.monotonic() - began, 1), ok=True, why="")
@@ -160,14 +166,14 @@ class Play:
         except Exception as e:                       # Play never troubles the host: it says why it did not start
             self._failed(began, stop, " ".join(str(e).split())[:300] or type(e).__name__)
 
-    def _failed(self, began: float, stop: threading.Event, why: str, none: bool = False) -> None:
+    def _failed(self, began: float, stop: threading.Event, why: str, none: bool = False, ports: list[int] | None = None) -> None:
         """It did not start: the worktree goes, `play_started` says why (or `play_stopped`, when it was told to stop meanwhile)."""
         self._remove()
         if stop.is_set():
             self._emit(event_log.PLAY_STOPPED, why=self._why or "stopped")
             return self._set("", url="", port=None)
         self._emit(event_log.PLAY_STARTED, seconds=round(time.monotonic() - began, 1), ok=False, why=why)
-        self._set("failed", error=why, none=none, url="", port=None)
+        self._set("failed", error=why, none=none, url="", port=None, ports=list(ports or []))
 
     def _git(self, *args: str) -> subprocess.CompletedProcess:
         return subprocess.run(["git", *args], cwd=self.root, capture_output=True, text=True, timeout=idea_git.GIT_TIMEOUT_S)
