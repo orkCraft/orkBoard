@@ -93,3 +93,69 @@ command and by the idle timeout, its worktree removed, the events. B: the three 
 lifted art, a playing sound; turned over; dealt, sealed and crumbled once, not under reduced motion; the filter; Play's
 three states and the frame's sandbox. C: the section, a token's screen, the marks, no Play, the service worker's version.
 The critical tests and each part's files' tests.
+
+## As built (A)
+
+Files: new `realm/assets.py`, `realm/commit_goal.py`, `gui/ideas_assets.py` (wired in `gui/ideas.py`: `AssetsMixin`, its four commands,
+`play_tick` in `tick`); `gui/media.py` (an asset's address and serving), `core/idea_shot.py` (`opened` takes `env`), `realm/lexicon.py`
+(`asset`), `realm/event_log.py` (`play_started`, `play_stopped`), and one line in `gui/board_projects.py` (closing a project stops its
+Play). Tests: `tests/test_assets.py`, `tests/test_commit_goal.py`, `tests/test_play.py`, `tests/test_media_route.py`,
+`tests/test_lexicon.py`, `tests/test_event_log.py`. No model anywhere.
+
+**The commands' answers** (the shapes B and C read; `ref` is the project's `merge_into`, `dev` by default):
+
+- `ideas.assets {since?}` → `{commit, short, ref, since, assets, removed, stacks, goals}`. `since` is the face's last look: a commit
+  (short or full, one of dev's) or an ISO time (dev's last commit at or before it); the answer's `since` is the commit it was read as,
+  `""` when none (then nothing is marked and `removed` is `[]`). `commit` is dev's head (`""` with no dev branch).
+  - `assets`: `[{id, kind, name, bytes, w, h, seconds, goal, task, at, change, url, stack?, others?}]`, at most 600, **the changed first,
+    then the newest `at`**. `id` is the repository path (a screen's is `screen:<goal>/<task>`); `kind` one of `screen`, `art`, `sound`,
+    `music`, `clip`, `font` (the faces' column order); `w`/`h` for art, a screen and a clip, `seconds` for a sound, music or a clip when
+    the header says (else null; a sound of unknown length is music unless its folder names `sfx|sound(s)|audio`); `goal`/`task`/`at` of
+    the last commit that touched it (`goal` `""`: the person's own, or older than the newest 5 000 commits); `change` `"added"`,
+    `"changed"` or `""` since `since` (a screen is `"added"` when taken after `since`'s commit); `url` its signed address (a screen's is
+    its pick route's); `stack` the folder when it is one of a stack; `others` for a file a *Pick one* wrote:
+    `{goal, pick, picked, variants: [{key, name, mime, w, h, seconds, url}]}`, the variants not picked.
+  - `removed`: `[{id, kind, goal, task, at}]` since `since` (the last commit that touched it, its goal `""` for the person's own).
+  - `stacks`: `[{folder, kind, n}]`, a folder holding more than six of one kind.
+  - `goals`: `{slug: {title, element}}` of every goal named above.
+- `ideas.asset_before {path, since}` → `{path, since, url, bytes, w, h, seconds}`, the file as it was at `since` (`url` signed);
+  `{path, since, url: ""}` when it was added since (or `since` names no commit of dev, `since` then `""`). A path that may not be an
+  asset: *That is not one of the project's assets*.
+- `ideas.play {fresh?, peek?}` answers at once (a start takes up to `OPEN_S`, and a command never holds the page's loop):
+  `{state: "starting", commit, short}` → `{state: "playing", url, commit, short, dev}` (`url` `http://127.0.0.1:<port><preview_path>`;
+  `dev` is dev's head now: when it differs from `commit`, a merge came since and *Play* pressed with `fresh: true` starts it anew) or
+  `{state: "failed", error, none?}` (`error` `no preview` with `none: true`: *Nothing here yet*; else `did not open`, `There is no dev
+  branch yet`, `could not make its worktree: …`). `peek: true` only says what it is now, starting nothing (`{state: "stopped"}` when
+  nothing runs). A second `ideas.play` while it starts or plays answers the same. The face presses with `ideas.play`, polls with
+  `{peek: true}` about every second while it starts, and while the tab shows the build sends `{peek: true}` at least every few
+  minutes: **ten minutes with no `ideas.play` of any kind stops it**. On start, failure and stop the bus carries `play.changed` (the
+  snapshot follows). A phone is refused both commands: *Play on the computer*.
+- `ideas.play_stop {}` → `{ok: true, stopped}` (`stopped` false when nothing ran); it answers at once, the preview's process group
+  is killed and `<state_dir>/play/` removed by Play's own thread.
+
+**Addresses.** An asset is `GET /media/_asset/<commit>/<path>?s=<signature>` (`media.asset_url`), served by the page's server and the
+phones' listener (C reads them) with the pick route's headers (`private, immutable`, `nosniff`, `CSP: sandbox; default-src 'none'`,
+inline) and Range; its media type by its extension. Not only the version before: **every asset is served from the before-cache**,
+`<state_dir>/assets-before/<commit>/<path>`, written once from git (`git cat-file`) on the first request, the newest 16 commits kept,
+so the working tree is never read and a signed address stays good.
+
+**Events.** `play_started` (`seconds`, `ok`, `why`: `""` · `no preview` · `did not open` · `could not make its worktree: …`) and
+`play_stopped` (`why`: `stopped` · `idle` · `closed` · `quit` · `again` · `exited`, the last when the preview's command ended by itself).
+
+**For spec 89** (`realm/commit_goal.py`): `of(state_dir, root, sha, ref="dev")` → `{goal, task}` or `{}`; `index(state_dir, root, ref)`
+→ `{sha: {goal, task}}` of every commit a task brought (cached by dev's head and the plans); `resolve(root, since, ref)` → the commit a
+sha or a time names, `""` for none; `last_touch(root, ref, since="")` → `{path: {sha, at}}`, the newest commit of `since..ref` that
+touched each file; `head(root, ref)`. A task's own commits are its `commit` and the commits behind it no earlier landing reached, as
+many as its `subjects`, so a person's commit between two landings is nobody's.
+
+**Security.** Only signed paths are served; a path is refused before git sees it when it has `..`, `.`, an empty part, a backslash or a
+control character, a hidden folder or one of `code_map.SKIP`'s, `design/looks/`, an extension that is no asset's, or a name
+`is_secret` names; the commit is a full hex sha; git runs with fixed arguments, `--literal-pathspecs` and `--` before a path; a file
+of the tree that is a link or a submodule is never an asset; the cache refuses a path that leads out through a link. Play's static
+preview listens on 127.0.0.1; a command preview is given `HOST=127.0.0.1` and `PORT` (where it binds is its own), and the address
+handed out is always `127.0.0.1`. Nothing proxies it: the phones' listener has no route to it, and the phone is refused the commands.
+
+**Decided here, not in the text above:** `assets.listed(state_dir, root, ref, changes)` and `assets.changed(state_dir, root, since,
+ref)` take the state folder (screens, picks and goals live there); `since` may be a time as well as a commit; `ideas.play` does not
+wait for the port (above) and has `fresh` and `peek`; Stop all does not stop Play (it is the person's, not an agent's); a screen is a
+task's newest picture, one per task.

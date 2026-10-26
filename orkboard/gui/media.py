@@ -12,6 +12,14 @@ The file is the pick's own (realm/idea_pick.py): from its folder only, with the 
 (206, so a sound or a clip seeks), `Cache-Control: private, max-age=31536000, immutable` (a round's files never change),
 `X-Content-Type-Options: nosniff` and `Content-Security-Policy: sandbox; default-src 'none'` with `Content-Disposition: inline`: an SVG
 opened on its own runs nothing. The phone's service worker never caches `/media/` (pwa/sw.js).
+
+An asset of the project (docs/specs/88-assets-and-play.md §1, §4) is `GET /media/_asset/<commit>/<path>?s=<signature>`, signed the
+same way (`asset_url()`, gui/ideas_assets.py): the file as it is in that commit (dev's head, or the commit before), written once from
+git into `<state>/assets-before/<commit>/<path>` and served from there, never from the working tree; with the media type of its
+extension and the same headers (a commit's file never changes). A path with `..`, a hidden or skipped folder, an extension that is no
+asset's, a secret's name (hooks/warder.py `is_secret`), or one the commit does not hold: 404, signed or not.
+
+    media.asset_url(commit, "art/hero.png")      # "/media/_asset/<commit>/art/hero.png?s=…"
 """
 from __future__ import annotations
 
@@ -25,9 +33,10 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, quote, unquote, urlsplit
 
-from orkboard.realm import idea_pick
+from orkboard.realm import assets, commit_goal, idea_pick
 
 PREFIX = "/media/"
+ASSET = "/media/_asset/"                              # `_` is in no goal's slug: an asset's address is never a pick's
 CHUNK = 256 * 1024
 _SECRET = secrets.token_bytes(32)                      # the host's, for its life: a pick's address from an earlier run is dead
 _GOAL, _PICK, _FILE = re.compile(r"[a-z0-9-]{1,100}"), re.compile(r"[a-z0-9_-]{1,60}-r[0-9]{1,6}"), re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,99}")
@@ -91,6 +100,41 @@ def find(dirs: list[Path], goal: str, pick: str, file: str) -> tuple[Path, str] 
     return None
 
 
+# -- an asset of the project (docs/specs/88-assets-and-play.md §1, §4): a file of a commit of dev, never of the working tree -----------
+
+def asset_url(commit: str, path: str) -> str:
+    """The signed address of the asset `path` as it is in `commit` (dev's head, or the commit before for *Before*)."""
+    signed = f"{ASSET}{commit}/" + "/".join(quote(p, safe="") for p in path.split("/"))
+    return f"{signed}?s={sign(signed)}"
+
+
+def parse_asset(target: str) -> tuple[str, str, str] | None:
+    """(the path as the host signs it, the commit, the asset's path) of a request target; None when it is not a full commit and a path
+    an asset may have (realm/assets.py `allowed`: no `..`, no hidden or skipped folder, a known extension, no secret's)."""
+    parts = urlsplit(target)
+    if not parts.path.startswith(ASSET):
+        return None
+    commit, _, rest = parts.path[len(ASSET):].partition("/")
+    names = [unquote(p) for p in rest.split("/")]
+    path = "/".join(names)
+    if not commit_goal.FULL_SHA.fullmatch(commit) or any("/" in n for n in names) or not assets.allowed(path):
+        return None
+    return f"{ASSET}{commit}/" + "/".join(quote(n, safe="") for n in names), commit, path
+
+
+def find_asset(dirs: list[Path], commit: str, path: str) -> tuple[Path, str] | None:
+    """(the file in the before-cache, its media type by its extension) of an asset of `commit`, in the first open project that has it:
+    written once from git (realm/assets.py `materialize`), never read from the working tree."""
+    for state in dirs:
+        try:
+            found = assets.materialize(state, state.parent, commit, path)
+        except (OSError, ValueError):
+            continue
+        if found is not None:
+            return found, assets.mime_of(path)
+    return None
+
+
 def span(header: str, size: int) -> tuple[int, int] | None | str:
     """The bytes a `Range` header asks for, `(first, last)`; None when there is none to serve (no header, another unit, several
     ranges, a bad one: the whole file); "unsatisfiable" when it starts past the end."""
@@ -133,24 +177,37 @@ def _missing() -> Reply:
 
 
 def serve(method: str, target: str, range_header: str, dirs: list[Path]) -> Reply:
-    """The reply to a request for a pick's file: 200, 206 for a range, 416 for one past the end, 404 for anything wrong (an unsigned
-    address, a wrong signature, a name that is not a plain one, a file the pick does not list), 405 for a method but GET and HEAD."""
+    """The reply to a request for a pick's file or an asset's: 200, 206 for a range, 416 for one past the end, 404 for anything wrong (an
+    unsigned address, a wrong signature, a name that is not a plain one, a file the pick does not list, a path that is not an asset of
+    that commit), 405 for a method but GET and HEAD."""
     if method not in ("GET", "HEAD"):
         return Reply(405, [("Allow", "GET, HEAD"), ("Content-Length", "0"), ("Cache-Control", "no-store")])
-    got = parse(target)
     sig = (parse_qs(urlsplit(target).query).get("s") or [""])[0]
-    if got is None or not check(got[0], sig):
-        return _missing()
-    found = find(dirs, got[1], got[2], got[3])
+    if urlsplit(target).path.startswith(ASSET):
+        asset = parse_asset(target)
+        if asset is None or not check(asset[0], sig):
+            return _missing()
+        found = find_asset(dirs, asset[1], asset[2])
+        name = asset[2].rsplit("/", 1)[-1]
+    else:
+        got = parse(target)
+        if got is None or not check(got[0], sig):
+            return _missing()
+        found = find(dirs, got[1], got[2], got[3])
+        name = got[3]
     if found is None:
         return _missing()
-    path, mime = found
+    return _reply(method, found[0], found[1], name, range_header)
+
+
+def _reply(method: str, path: Path, mime: str, name: str, range_header: str) -> Reply:
     try:
         size = path.stat().st_size
     except OSError:
         return _missing()
     kind = mime + ("; charset=utf-8" if mime.startswith("text/") else "")
-    base = [("Content-Type", kind), ("Accept-Ranges", "bytes"), *HEADERS, ("Content-Disposition", f'inline; filename="{got[3]}"')]
+    shown = re.sub(r"[^A-Za-z0-9._-]", "_", name)[:100] or "file"
+    base = [("Content-Type", kind), ("Accept-Ranges", "bytes"), *HEADERS, ("Content-Disposition", f'inline; filename="{shown}"')]
     wanted = span(range_header, size)
     if wanted == "unsatisfiable":
         return Reply(416, [base[0], ("Content-Range", f"bytes */{size}"), ("Content-Length", "0"), ("Cache-Control", "no-store")])

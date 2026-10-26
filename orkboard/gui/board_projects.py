@@ -60,6 +60,7 @@ class Project:
 
     def close(self) -> None:
         self.ideas.stop_all()
+        self.ideas.play_close()             # its preview of dev stops, its worktree goes (spec 88 §5)
         self.ideas.tree_flush(force=True)
         self._off()
 

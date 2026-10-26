@@ -278,3 +278,84 @@ def _phone_keepalive(server, targets: list[str]) -> bytes:
                 rest += tls.recv(65536)
             raw += head + b"\r\n\r\n" + rest
     return raw
+
+
+# -- an asset of the project (docs/specs/88-assets-and-play.md §1, §4) ----------------------------------------------------------
+
+def _commit_assets(repo: Path, files: dict[str, bytes]) -> str:
+    import subprocess
+    for name, data in files.items():
+        (repo / name).parent.mkdir(parents=True, exist_ok=True)
+        (repo / name).write_bytes(data)
+    subprocess.run(["git", "add", "-A"], cwd=repo, check=True, capture_output=True)
+    subprocess.run(["git", "commit", "-q", "-m", "assets"], cwd=repo, check=True, capture_output=True)
+    return subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True, text=True).stdout.strip()
+
+
+@pytest.fixture
+def asset_commit(host) -> str:
+    return _commit_assets(Path(host.repo_root), {"art/hero.png": PNG, "sfx/jump.wav": pf.wav(1.0), "art/ç a.svg": SVG})
+
+
+def test_an_assets_address_names_its_commit_and_path_signed_and_a_path_that_is_no_assets_is_no_address():
+    sha = "a" * 40
+    u = media.asset_url(sha, "art/ç a.svg")
+    path, sig = u.split("?s=")
+    assert path == f"/media/_asset/{sha}/art/%C3%A7%20a.svg" and media.check(path, sig)
+    assert media.parse_asset(u) == (path, sha, "art/ç a.svg")
+    for bad in (f"/media/_asset/{sha}/../x.png", f"/media/_asset/{sha}/art/%2e%2e/x.png", f"/media/_asset/{sha}/art%2Fx.png",
+                f"/media/_asset/{sha}/.git/x.png", f"/media/_asset/{sha}/node_modules/x.png", f"/media/_asset/{sha}/art/x.txt",
+                f"/media/_asset/{sha}/art/.env.png", f"/media/_asset/{sha}/art//x.png", f"/media/_asset/{sha}/design/looks/a.png",
+                "/media/_asset/HEAD/art/x.png", "/media/_asset/abc/art/x.png", f"/media/_asset/{sha}", f"/media/_asset/{sha}/art/x%00.png",
+                f"/media/_asset/{sha}/%2Fetc/x.png"):
+        assert media.parse_asset(bad) is None, bad
+    assert media.parse("/media/_asset/x/y") is None                                          # never a pick's address
+
+
+def test_a_signed_asset_is_served_from_its_commit_with_a_range_never_from_the_working_tree(host, asset_commit):
+    repo = Path(host.repo_root)
+    (repo / "art" / "hero.png").write_bytes(b"the working tree's own")                           # never what is served
+    reply = get(host, media.asset_url(asset_commit, "art/hero.png"))
+    h = headers(reply)
+    assert reply.status == 200 and reply.read() == PNG and h["content-type"] == "image/png"
+    assert h["cache-control"] == "private, max-age=31536000, immutable" and h["x-content-type-options"] == "nosniff"
+    assert h["content-security-policy"] == "sandbox; default-src 'none'" and h["content-disposition"] == 'inline; filename="hero.png"'
+    cached = host.ideas.state_dir / "assets-before" / asset_commit / "art" / "hero.png"
+    assert cached.read_bytes() == PNG                                                                  # written once, served from there
+    wav = pf.wav(1.0)
+    part = get(host, media.asset_url(asset_commit, "sfx/jump.wav"), "bytes=100-199")
+    assert part.status == 206 and part.read() == wav[100:200] and headers(part)["content-range"] == f"bytes 100-199/{len(wav)}"
+    assert headers(part)["content-type"] == "audio/wav"
+    svg = get(host, media.asset_url(asset_commit, "art/ç a.svg"))
+    assert svg.status == 200 and svg.read() == SVG and headers(svg)["content-type"] == "image/svg+xml"
+    assert headers(svg)["content-disposition"] == 'inline; filename="__a.svg"'
+
+
+def test_an_unsigned_forged_or_dotted_asset_address_or_one_its_commit_lacks_is_a_404(host, asset_commit):
+    path = f"/media/_asset/{asset_commit}/art/hero.png"
+    for target in (path, path + "?s=", path + "?s=" + media.sign(path)[::-1],
+                   f"/media/_asset/{asset_commit}/art/other.png?s=" + media.sign(path)):
+        assert get(host, target).status == 404, target
+    for p in (f"/media/_asset/{asset_commit}/../README.md", f"/media/_asset/{asset_commit}/art/%2e%2e/%2e%2e/README.md",
+              f"/media/_asset/{asset_commit}/.git/config.png"):
+        assert get(host, f"{p}?s={media.sign(p)}").status == 404, p                                  # signed, still not an asset's
+    assert get(host, media.asset_url(asset_commit, "art/missing.png")).status == 404
+    assert get(host, media.asset_url("0" * 40, "art/hero.png")).status == 404
+    (Path(host.repo_root) / "art" / "loose.png").write_bytes(PNG)                                        # in the working tree only
+    assert get(host, media.asset_url(asset_commit, "art/loose.png")).status == 404
+    assert not (host.ideas.state_dir / "assets-before" / asset_commit / "art" / "loose.png").exists()
+    assert get(host, media.asset_url(asset_commit, "art/hero.png"), method="POST").status == 405
+
+
+def test_the_pages_server_serves_a_signed_asset(host, asset_commit):
+    server = Server(host)
+    thread = server.start_thread()
+    try:
+        status, h, body = _fetch(server.origin, media.asset_url(asset_commit, "art/hero.png"))
+        assert (status, body, h["content-type"]) == (200, PNG, "image/png")
+        status, h, body = _fetch(server.origin, media.asset_url(asset_commit, "art/hero.png"), {"Range": "bytes=2-5"})
+        assert (status, body) == (206, PNG[2:6])
+        assert _fetch(server.origin, f"/media/_asset/{asset_commit}/art/hero.png")[0] == 404
+    finally:
+        server.stop()
+        thread.join(10)
