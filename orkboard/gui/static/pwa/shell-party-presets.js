@@ -2,6 +2,7 @@
 // head, its name and one line — **By stage of the project** (Ideation, Concept, Build, Release, LiveOps, fitted to what the project is: *For a mobile app: the Orkmaster knows what this project is*),
 // **By craft** (Tech, Design, Data, Marketing, Product, Art and sound: two to a row) and **Your own party** (the Taskmaster alone: *Start from the Taskmaster and add who you need*) — and, under them,
 // the person's saved parties when there are some (*Your parties*). A press fills the seats under it (shell-party-seats.js); nothing is saved until Save party. The desktop's twin is js/shell/partypresets.js.
+// **Team** (docs/specs/92-running-and-the-team.md §3) is the last of By craft: the person's Operations as a party, in one project; once the person has one, anywhere, its tile is greyed and says *Team is in <project>*.
 import { h, head, icon } from "./util.js";
 import { raceOf } from "./shell-who.js";
 import { GROUPS, agentOf } from "./shell-party-model.js";
@@ -16,10 +17,10 @@ export function makePresets(core, act) {
   const data = () => core.st.partyPresets || { kind: null, presets: [] };
 
   const card = (p, compact) => {
-    const lead = agentOf(core, p.leader);
-    return h("button", { class: `craft-tile preset-tile${compact ? " is-compact" : ""}`, type: "button", "data-preset": p.id, "data-craft": p.id, "data-stage": p.stage || null, "aria-pressed": String(!partyId && lit === p.id),
-      title: p.line, onclick: () => act.pick(p) },
-    head(lead ? raceOf(lead) : "peon", lead?.tier || "elder"), h("span", { class: "preset-text" }, h("b", {}, p.name), compact ? null : h("small", { class: "muted" }, p.line)));
+    const lead = agentOf(core, p.leader), off = p.blocked || "";                                // Team, when the person has one already: greyed, with where it is
+    return h("button", { class: `craft-tile preset-tile${compact ? " is-compact" : ""}${off ? " is-off" : ""}`, type: "button", "data-preset": p.id, "data-craft": p.id, "data-stage": p.stage || null, "aria-pressed": String(!partyId && lit === p.id),
+      title: off || p.line, ...(off ? { disabled: true, "aria-disabled": "true" } : {}), onclick: () => { if (!off) act.pick(p); } },
+    head(lead ? raceOf(lead) : "peon", lead?.tier || "elder"), h("span", { class: "preset-text" }, h("b", {}, p.name), compact && !off ? null : h("small", { class: "muted", ...(off ? { "data-blocked": "" } : {}) }, off || p.line)));
   };
 
   async function load() {

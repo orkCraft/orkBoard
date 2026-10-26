@@ -84,6 +84,11 @@ class BoardHost:
         """The host's sign-ins (core/sign_ins.py), which the keeper and the runner hold work for; None in a host with none."""
         return getattr(self._owner, "sign_ins", None)
 
+    @property
+    def ops(self) -> Any:
+        """The host's Operations (gui/ops.py), which are the person's, one for all projects; None in a host with none (Orkline's page has no Operations)."""
+        return getattr(self._owner, "ops", None)
+
     def open_boards(self) -> list[Any]:
         """Every project open on this machine (this one among them), each with its `root`, `name` and `ideas`; `[]` in a host
         that has only the one Board (spec 91 §2: what used a limit, in all projects)."""
@@ -345,8 +350,10 @@ class Orkboard:
         except Exception:                      # Operations never breaks the snapshot
             ops_needs = 0
         sign_in = self.sign_ins.snapshot()
+        if self.ideas is not None:
+            self.ideas.team_heal()               # a Team party taken out of its project's Board by hand gives Operations back
         board = {**board, "needs_you": int(board.get("needs_you") or 0) + ops_needs + len(board_map.sign_in_needs(sign_in)),
-                 "ops_rev": self.ops.rev}
+                 "ops_rev": self.ops.rev, "ops_team": self.ops.team(root)}      # the Team party, if the person has one (spec 92 §3)
         return {**board, "focus": "board", "onboarding": self.onboarding.snapshot(), "sign_in": sign_in,
                 "hud": {"show_gold": show_gold, "gold": gold, "lumber": lumber}, "rate": window_rate.shown(self.machine),
                 "repo": str(root) if root is not None else "", "projects": self.projects.list(),
@@ -360,7 +367,7 @@ class Orkboard:
         root = self.repo_root
         out = {"v": 1, "project": root.name if root is not None else "", "focus": "board", "look": "office",
                "sleep": self.keep_awake.phone_line(),
-               **{k: s[k] for k in ("ideas_rev", "ops_rev", "needs_you", "idea_states", "review_count", "review_results",
+               **{k: s[k] for k in ("ideas_rev", "ops_rev", "ops_team", "needs_you", "idea_states", "review_count", "review_results",
                                     "limits", "reserve", "rate")},
                "canvases_new": int(s.get("canvases_new") or 0), "canvases_rev": int(s.get("canvases_rev") or 0),   # spec 78 §4
                "hud": dict(s["hud"]), "version": __version__, "update": self._phone_update(s["update"])}

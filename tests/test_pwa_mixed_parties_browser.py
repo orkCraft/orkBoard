@@ -65,7 +65,7 @@ async def test_the_library_gives_the_stages_then_the_crafts_then_the_taskmaster_
         sheet = await _sheet(page)
         tiles = sheet.locator(".preset-tile")
         assert [await t.get_attribute("data-preset") for t in await tiles.all()] == ["ideation", "code-concept", "code-build", "release", "code-liveops", "engineering", "design", "data", "marketing", "product",
-                                                                                      "art", "game", "mobile-app", "website", "mixed"]
+                                                                                      "art", "team", "game", "mobile-app", "website", "mixed"]
         assert [await g.get_attribute("aria-label") for g in await sheet.locator(".preset-group").all()] == ["By stage of the project", "By craft", "Your own party"]
         stages = sheet.locator('.preset-group.is-stage .preset-tile')
         xs = {round((await t.bounding_box())["x"]) for t in await stages.all()}

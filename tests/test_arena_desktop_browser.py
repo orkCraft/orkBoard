@@ -135,7 +135,7 @@ class ArenaHost(StubHost):
 
     def needs_you(self):
         base = {"goal": "passkey", "priority": "high", "blocks": False, "at": "2026-10-18T09:00:00"}
-        failing = any(t["state"] == "failed" for t in self.node_of("cookie")["tasks"])           # as the host does: a dropped task is no failure, nor the goal's
+        failing = any(t["state"] == "failed" for n in self.nodes if n["slug"] == "cookie" for t in n["tasks"])           # as the host does (a Board with no goal has no cookie: no failure): a dropped task is no failure, nor the goal's
         return [*([base | {"kind": "failed", "idea": "cookie", "title": "Session cookie flags", "text": "Secure cookie flags: The session ended", "blocks": True}] if failing else []),
                 base | {"kind": "plan", "idea": "recovery", "title": "Recovery codes", "text": "Plan ready · 3 tasks"},
                 base | {"kind": "asks", "idea": "second", "title": "Passkey on a second device", "text": "Should a lost phone sign out every passkey?",

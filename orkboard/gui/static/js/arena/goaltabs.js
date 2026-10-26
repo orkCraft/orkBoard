@@ -16,28 +16,32 @@ export const projectOn = () => !!mapData.value?.project;
 /** The party shown: the picked one if the Map has it (or Operations, or the project's level when the host has one, or the Board has it and the Map comes a moment later: a party just saved), else the
  *  one kept for this project (the project's level too), else the first. */
 export function shownOf(goals, picked) {
-  if (picked === OPS || (picked === PROJECT && projectOn()) || goals.some((g) => g.slug === picked) || goalList().some((g) => g.slug === picked)) return picked;
+  if ((picked === OPS && opsRow()) || (picked === PROJECT && projectOn()) || goals.some((g) => g.slug === picked) || goalList().some((g) => g.slug === picked)) return picked;
   if (keptGoal() === PROJECT && projectOn()) return PROJECT;
   return (goals.find((g) => g.slug === keptGoal()) || goals[0])?.slug || "";
 }
 
 const opsOn = () => town.value?.ops_rev !== undefined;
+/** The person's Team party (docs/specs/92-running-and-the-team.md §3): `{name, party, here}` while they have one, in this project (`here`) or another; null while there is none, and on a host with no Operations. */
+export const teamOf = () => (opsOn() ? town.value?.ops_team || null : null);
+/** Operations' own row in the left column: only while no Team party exists anywhere (spec 92 §3); once there is one, the Team party is the way to them. */
+export const opsRow = () => opsOn() && !teamOf();
 const opStops = (needs) => opStopsOf(needs).length;
 const hurt = (stops) => stops.some((s) => s.tone === "danger");               // one of them failed: the dot is the danger colour
 export const atWork = (g) => (g.party || []).some((x) => x.state === "work") || g.state === "reading";
 
-/** The project's parties as the list holds them: [{g, nodes, stops, failed, working}], and whether Operations is one more. */
+/** The project's parties as the list holds them: [{g, nodes, stops, failed, working}], and whether Operations is one more (while there is no Team party). The Team party's stops are Operations' (`g.ops`). */
 export function partiesOf() {
   const m = mapData.value, needs = board.value?.needs_you || [];
   const goals = goalsOf(m, goalList().map((g) => g.slug));
-  return { goals: goals.map((g) => { const nodes = nodesOf(m, g.slug); const mine = stopsOf(needs, g, nodes); return { g, nodes, stops: mine.length, failed: hurt(mine), working: atWork(g) }; }),
-    ops: opsOn(), opStops: opStops(needs), opFailed: hurt(opStopsOf(needs)) };
+  return { goals: goals.map((g) => { const nodes = nodesOf(m, g.slug); const mine = g.ops ? opStopsOf(needs) : stopsOf(needs, g, nodes); return { g, nodes, stops: mine.length, failed: hurt(mine), working: atWork(g) }; }),
+    ops: opsRow(), opStops: opStops(needs), opFailed: hurt(opStopsOf(needs)) };
 }
 
-/** The stops that wait in the project's other parties and in Operations: those of every party but the one shown. */
+/** The stops that wait in the project's other parties and in Operations: those of every party but the one shown (Operations' are the Team party's when it is here; when it is in another project they wait in the hand). */
 export function othersStops(shown) {
-  const { goals, ops, opStops: o } = partiesOf();
-  return goals.filter((x) => x.g.slug !== shown).reduce((k, x) => k + x.stops, 0) + (ops && shown !== OPS ? o : 0);
+  const { goals, ops, opStops: o } = partiesOf(), team = teamOf();
+  return goals.filter((x) => x.g.slug !== shown).reduce((k, x) => k + x.stops, 0) + (ops && shown !== OPS ? o : 0) + (team && !team.here ? o : 0);
 }
 
 const GATHER_MS = 300, GATHER_SCALE = 0.4;     // a gathered head's travel (the deal's steps, arena.css `arena-gather`), and how large it is when it lands

@@ -234,6 +234,7 @@ export function makePreview(core, ctx, screens = {}) {
         h("p", { class: "muted" }, [p.size ? `Size ${p.size} · ` : "", stateWords({ state: p.state, progress: { done: (p.plan?.tasks || []).filter((t) => t.state === "merged").length, total: (p.plan?.tasks || []).filter((t) => t.state !== "dropped").length } })].join(""))),
       stateError(p) ? h("p", { class: "warn", role: "alert" }, stateError(p)) : null,
       pointedAt(p.lens),
+      repeatLine(p, cur),
       checksLine(p, cur),
       ...(p.sections || []).map(sectionBlock),
       changedLine(p, cur),
@@ -269,6 +270,13 @@ export function makePreview(core, ctx, screens = {}) {
       }
       default: return [];
     }
+  }
+
+  /** A recurring goal says how often it comes back once it is done, and stops (docs/specs/92-running-and-the-team.md §2). */
+  function repeatLine(p, cur) {
+    if (!p.repeat) return null;
+    const stop = h("button", { class: "linkish", type: "button", "data-act": "stop-repeat", onclick: async () => { if (await act("ideas.repeat", { slug: p.slug, every: "" }, "It will not come back.")) read(cur); } }, "Stop repeating");
+    return h("p", { class: "muted", "data-repeat": p.repeat }, `Comes back ${{ day: "every day", week: "every week", month: "every month" }[p.repeat] || p.repeat} once it is done. `, stop);
   }
 
   async function dropIdea(p) {

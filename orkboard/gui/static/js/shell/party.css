@@ -22,6 +22,20 @@
 .shell-presets .shell-preset.is-compact { padding: var(--ork-3) var(--ork-4); }
 .shell-presets .shell-preset.is-compact small { display: none; }
 
+/* a greyed preset (Team, when the person has one already), the recurring goals a running party proposes and what Team is (spec 92) */
+.shell-presets .shell-preset.is-off { cursor: not-allowed; color: var(--ork-ink-muted); }
+.shell-presets .shell-preset.is-off > .ork-race__head { opacity: 0.45; }
+.shell-presets .shell-preset.is-compact small[data-blocked] { display: block; }
+.shell-routines { display: flex; flex-direction: column; gap: var(--ork-3); }
+.shell-routines h3 { margin: 0; }
+.shell-routines__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-2); }
+.shell-routine { display: flex; align-items: flex-start; gap: var(--ork-4); padding: var(--ork-3) var(--ork-4); box-sizing: border-box; border: var(--ork-line) solid var(--ork-frame); cursor: pointer; }
+.shell-routine.is-on { background: var(--ork-raised); }
+.shell-routine input { margin-top: var(--ork-1); flex: none; }
+.shell-routine__text { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--ork-4); min-width: 0; }
+.shell-teamnote { display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4); box-sizing: border-box; border: var(--ork-line) solid var(--ork-frame); background: var(--ork-raised); }
+.shell-teamnote p { margin: 0; }
+
 /* the size bar */
 .shell-sizebar { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--ork-5); }
 .shell-sizebar__size { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; flex: 1 1 360px; }

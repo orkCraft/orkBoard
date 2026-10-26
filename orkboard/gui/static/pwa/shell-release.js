@@ -76,7 +76,7 @@ export function makeReleasesFrom(core) {
     /** `self`: the party's slug ("" for a new one); `saved`: its `releases_from`; `leads`: its leader is the Release manager; `offers`: it can take *A release*. Hidden otherwise. */
     set({ self = "", saved = [], leads: lead = false, offers = lead } = {}) {
       leads = lead;
-      parties = (core.st.map?.goals || []).filter((g) => g.slug !== self && g.slug !== "general" && !g.ideation);
+      parties = (core.st.map?.goals || []).filter((g) => g.slug !== self && g.slug !== "general" && !g.ideation && !g.ops);
       const slugs = new Set(parties.map((g) => g.slug));
       ticked = new Set(leads && !saved.length ? slugs : saved.filter((s) => slugs.has(s)));
       first = key(ticked);

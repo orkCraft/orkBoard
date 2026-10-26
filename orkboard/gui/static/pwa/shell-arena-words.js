@@ -104,27 +104,40 @@ export function firstStopGoal(st) {
   return row?.goal || goals.find((s) => failedOf(st, s).length) || goals.find((s) => looksOf(st, s).length) || "";
 }
 
-/** A party as the *where* button's sheet lists it: its leader's head, its names, *k/n done*, its stops, whether it is at work (no %: a party has no end, spec 50 §0). */
+/** Operations' rows of Needs you (op, op_failed, op_rules). */
+const opNeeds = (st) => (st.board?.needs_you || []).filter((n) => n.kind.startsWith("op"));
+
+/** A party as the *where* button's sheet lists it: its leader's head, its names, *k/n done*, its stops, whether it is at work (no %: a party has no end, spec 50 §0). The Team party (`ops`, spec 92 §3)
+ *  holds the person's Operations, not goals: its stops are Operations' and it says so in place of *k/n done*. */
 export function chipsOf(st) {
   return (st.map?.goals || []).map((g) => {
+    if (g.ops) {
+      const stops = opNeeds(st);
+      return { slug: g.slug, title: g.title, short: short(g), head: g.leader?.head || null, stops: stops.length, failed: stops.some((n) => n.kind === "op_failed"), working: false, done: "Your Operations", ops: true };
+    }
     const mine = nodesOf(st, g.slug);
     const working = g.state === "reading" || mine.some((n) => ["reading", "planning"].includes(n.state) || (n.tasks || []).some(live));
     return { slug: g.slug, title: g.title, short: short(g), head: g.leader?.head || null, stops: stopCount(st, g.slug), failed: stopFailed(st, g.slug), working, done: partyDone(g) };
   });
 }
 
-/** What the top bar's *where* button and its sheet say (spec 50 §6.1): the parties, Operations (when the project has any: what waits there is seen from every party), the one shown
- *  (`shown`: a party's slug, or OPS_VIEW), the stops that wait in it (`here`) and in all the others (`other`: never hidden). */
+/** The person's Team party (docs/specs/92-running-and-the-team.md §3): `{name, party, here}` once they have one, in this project (`here`) or another; null while there is none. */
+export const teamOf = (st) => (st.snap?.ops_rev !== undefined ? st.snap?.ops_team || null : null);
+
+/** What the top bar's *where* button and its sheet say (spec 50 §6.1): the parties, Operations (when the project has any: what waits there is seen from every party; only while the person has no Team
+ *  party — once they have one it is the way to them, spec 92 §3), the one shown (`shown`: a party's slug, or OPS_VIEW), `onTeam` (the Team party is the one shown: its field is Operations'), the stops
+ *  that wait in it (`here`) and in all the others (`other`: never hidden; Operations' stay in the hand when the Team party is in another project). */
 export function partiesOf(st, kept = "") {
-  const list = chipsOf(st);
-  const hasOps = st.snap?.ops_rev !== undefined && (!st.ops || (st.ops.templates || []).length || (st.ops.runs || []).length);
-  const opsStops = (st.board?.needs_you || []).filter((n) => n.kind.startsWith("op"));
+  const list = chipsOf(st), team = teamOf(st);
+  const hasOps = !team && st.snap?.ops_rev !== undefined && (!st.ops || (st.ops.templates || []).length || (st.ops.runs || []).length);
+  const opsStops = opNeeds(st);
   const ops = hasOps ? { stops: opsStops.length, failed: opsStops.some((n) => n.kind === "op_failed") } : null;
-  const inOps = st.view === OPS_VIEW;
+  const inOps = st.view === OPS_VIEW && !team;
   const shown = inOps ? OPS_VIEW : shownGoal(st, kept);
   const here = inOps ? ops?.stops || 0 : list.find((c) => c.slug === shown)?.stops || 0;
-  const all = list.reduce((n, c) => n + c.stops, 0) + (ops?.stops || 0);
-  return { list, ops, shown, here, other: all - here };
+  const orphan = team && !team.here ? opsStops.length : 0;
+  const all = list.reduce((n, c) => n + c.stops, 0) + (ops?.stops || 0) + orphan;
+  return { list, ops, team, shown, onTeam: Boolean(list.find((c) => c.slug === shown)?.ops), here, other: all - here };
 }
 
 // -- a member's two numbers and its marks ---------------------------------------------------------------------------------------

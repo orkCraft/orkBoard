@@ -478,10 +478,11 @@ export function byUrgency(stops) {
   return stops.map((s, i) => [s, i]).sort(([a, i], [b, j]) => urgencyOf(a) - urgencyOf(b) || ageOf(a).localeCompare(ageOf(b)) || i - j).map(([s]) => s);
 }
 
-/** Each stop of a party (`g`; null for Operations) with the party it belongs to — its name, leader (head and name) — and whether it is another party's than the one shown. */
-function inParty(stops, g, shown) {
+/** Each stop of a party (`g`; null for Operations) with the party it belongs to — its name, leader (head and name) — and whether it is another party's than the one shown. Operations' are the Team party's
+ *  once the person has one (`team`, the snapshot's `ops_team`: spec 92 §3): its slug when it is in this project, so they are not another party's while it is shown. */
+function inParty(stops, g, shown, team = null) {
   const party = g ? { slug: g.slug, name: g.short || g.title, head: g.leader?.head || null, lead: g.leader?.name || "Taskmaster", ops: false }
-    : { slug: OPS, name: "Operations", head: null, lead: "Taskmaster", ops: true };
+    : { slug: team?.here ? team.party : OPS, name: team ? "Team" : "Operations", head: null, lead: "Taskmaster", ops: true, away: Boolean(team && !team.here) };
   return stops.map((s) => ({ ...s, g: g || null, party, other: party.slug !== shown }));
 }
 
@@ -500,14 +501,14 @@ export function gateStop(gate, shown, ork = null) {
 
 /** Every stop of the project (§2.1): each party's Needs you rows, failed tasks and Pick one, then Operations'; `keep(partySlug, stop)` is the filter (only the picked goals'),
  *  the party shown's results join them when `withResults` (spec 90 §2.3: always on the desktop's party), and the gate's batch when `gate` (`ideas.gate`) has one. In urgency's order (§2.3). */
-export function handOf({ map, needs, order, shown, keep, withResults = false, ops = true, gate = null }) {
+export function handOf({ map, needs, order, shown, keep, withResults = false, ops = true, gate = null, team = null }) {
   const out = [];
   for (const g of goalsOf(map, order)) {
     const nodes = nodesOf(map, g.slug), mine = stopsOf(needs, g, nodes, map?.project?.orkmaster || null);
     if (withResults && g.slug === shown) mine.push(...resultsOf(nodes).map((r) => resultStop(r, nodes)));
     out.push(...inParty(mine.filter((s) => keep(g.slug, s)), g, shown));
   }
-  if (ops) out.push(...inParty(opStopsOf(needs), null, shown));
+  if (ops) out.push(...inParty(opStopsOf(needs), null, shown, team));
   out.push(...signInStopsOf(needs, shown));
   const ready = gate ? gateStop(gate, shown, map?.project?.orkmaster || null) : null;
   if (ready) out.push(ready);

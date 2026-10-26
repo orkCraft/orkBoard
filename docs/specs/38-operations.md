@@ -385,3 +385,7 @@ are pure functions in `realm/op_runs.py`, so they are tested apart:
 - **C:** the same at 390 × 844 as sheets; no horizontal scroll.
 - Each part: the critical tests, the touched modules' tests (`test_settings.py`, `test_gui_ideas.py`,
   `test_board_alone.py`, `test_pwa.py` and the new modules' own) and `tests/test_gui_wording.py`.
+
+## Later
+
+Spec 92 (decisions §108): Operations are no longer a permanent row. Once the person has a **Team party** (a party of one project of their choosing, one across all projects), its Board is this list and the row goes from the left column and the parties' sheet; until then the row stays, with the line *Make it a Team party*. What Operations are, where they are kept and how they run is as above.

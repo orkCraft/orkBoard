@@ -22,7 +22,7 @@ from typing import Any, Callable
 from orkboard import settings
 from orkboard.core import op_runner
 from orkboard.core.op_commands import OpsError
-from orkboard.realm import halt, harnesses, op_runs, op_standing, op_templates
+from orkboard.realm import halt, harnesses, op_runs, op_standing, op_templates, ops_team
 
 CHANGED = "ops.changed"            # the bus's topic: id or template
 RUNS_SHOWN = 200                   # the newest operations `ops.list` gives (dropped ones are not shown)
@@ -81,6 +81,15 @@ class Ops:
     def _changed(self, op: str = "", template: str = "") -> None:
         self.rev += 1
         self.host.bus.publish(CHANGED, id=op, template=template)
+
+    def moved(self) -> None:
+        """The Team party was made or removed (realm/ops_team.py): the page reads Operations and where they are again."""
+        self._changed()
+
+    def team(self, project: Any = None) -> dict | None:
+        """Where the person's Team party is, as the snapshot says it (spec 92 §3): `{name, party, here}` (`here`: it is in `project`), or None while there is none."""
+        got = ops_team.get(self.base)
+        return None if got is None else {"name": got["name"], "party": got["party"], "here": project is not None and got["project"] == str(project)}
 
     # -- what the page sees ----------------------------------------------------------------------------------------
 

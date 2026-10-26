@@ -52,6 +52,9 @@ class StubOps:
         self.names = ["claude.ai Jira", "claude.ai Gmail"]
 
     # -- the host's side of Operations ------------------------------------------------------------------------------
+    def team(self, project=None):
+        return None                                                              # no Team party: Operations are the left column's row (spec 92 §3)
+
     def commands(self):
         return {name: (lambda a, name=name: self.call(name, a)) for name in (
             "ops.list", "ops.add", "ops.prepare", "ops.act", "ops.drop", "ops.stop", "ops.retry", "ops.again", "ops.not_right",

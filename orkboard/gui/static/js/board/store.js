@@ -41,9 +41,9 @@ export function stateWords(i) {
 export const PRIORITY_WORDS = { high: "High", normal: "Normal", low: "Low" };
 const PRIORITY_ORDER = ["high", "normal", "low"];
 
-/** The goals a person can choose (spec 35 §3: General is the system's, never listed), by priority, then the person's order. */
+/** The parties a person can choose for a goal (spec 35 §3: General is the system's, never listed; the Team party holds Operations, not goals: spec 92 §3), by priority, then the person's order. */
 export function goalList() {
-  const tracks = (board.value?.tracks || []).filter((g) => g.slug !== "general");
+  const tracks = (board.value?.tracks || []).filter((g) => g.slug !== "general" && g.recipe !== "team");
   return [...tracks].sort((a, b) => PRIORITY_ORDER.indexOf(a.priority) - PRIORITY_ORDER.indexOf(b.priority) || a.order - b.order);
 }
 

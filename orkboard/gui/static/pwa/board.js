@@ -173,7 +173,7 @@ export function makeBoard(ctx) {
     boardTab.draw();
     agents.draw();
     stops.draw();
-    fab.show(Boolean(st.board) && !st.view);                 // a party's: not Operations'
+    fab.show(Boolean(st.board) && !st.view && !core.parties().onTeam);                 // a party's: not Operations' (nor the Team party's, which holds none)
     preview.redraw();
     pitch.sync();
     if (wantStop && st.board && st.map) { wantStop = false; showStop(); }

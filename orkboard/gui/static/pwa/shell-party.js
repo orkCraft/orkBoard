@@ -132,6 +132,13 @@ export function makeParty(core, ctx) {
   // -- About this party --------------------------------------------------------------------------------------------------------------------------------
   function draw() {
     const g = (st.map?.goals || []).find((x) => x.slug === shown);
+    if (g?.ops) {                                             // the Team party holds Operations, not goals (spec 92 §3): what it is, and Remove party
+      body.replaceChildren(h("p", { class: "cap" }, `${g.title} · led by ${g.leader?.name || "Taskmaster"}`),
+        h("p", {}, "Team holds your Operations: the daily brief, 1:1s, the retro, mail and Jira. They stay yours, in your own folder, the same in every project; Team only shows them here."),
+        h("p", { class: "cap" }, "Removing the party gives the Operations row back in the parties' sheet. Nothing of your Operations is removed."),
+        h("button", { class: "ork-btn danger party-about__remove", type: "button", "data-act": "remove-party", onclick: () => remove.ask(g, () => sh.close()) }, "Remove party"));
+      return;
+    }
     const m = g ? modelOf(st, shown) : null;
     if (!g || !m) { body.replaceChildren(h("p", { class: "muted" }, "That party is gone.")); return; }
     wantPrice(g);

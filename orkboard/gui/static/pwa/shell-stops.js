@@ -125,7 +125,8 @@ export function makeStops(core, ctx, needs, ops) {
       for (const { node, task } of failedOf(st, slug).filter(({ node: x }) => keep(x.slug))) out.push(tag(failedItem(node, task), node, task.finished, node.short || node.title, about(node, task.id, task.title)));
       for (const r of looksOf(st, slug).filter((x) => keep(x.idea))) out.push(tag(lookItem(r, nodes[r.idea]), nodes[r.idea], r.finished, r.idea_title, about(nodes[r.idea], r.task, r.title)));
     }
-    const party = shown === OPS_VIEW ? null : { ops: true, name: "Operations" };
+    const team = core.parties().team;                           // once the person has a Team party, Operations' stops are its own (spec 92 §3)
+    const party = shown === OPS_VIEW || (team?.here && shown === team.party) ? null : { ops: true, name: team ? "Team" : "Operations" };
     for (const n of (st.board?.needs_you || []).filter((x) => x.kind.startsWith("op"))) out.push({ ...opItem(n), at: n.at || "", party, goalName: "" });
     for (const n of (st.board?.needs_you || []).filter((x) => x.kind === "sign_in")) out.push({ ...signInItem(n), at: n.at || "", party: null, goalName: "" });     // of no party: it holds every party's work
     return out;

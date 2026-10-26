@@ -24,7 +24,7 @@ import datetime as dt
 import json
 from pathlib import Path
 
-from orkboard.realm import goal_team, goal_types, idea_element, idea_flag, ideas, library
+from orkboard.realm import goal_team, goal_types, idea_element, idea_flag, ideas, library, party_recipes
 
 FILE = "release.json"
 KEY = "releases_from"                    # a party's page, front matter: a JSON list of party slugs
@@ -99,7 +99,7 @@ def set_releases_from(root: Path, party: str, slugs: object) -> list[str]:
         page = ideas.track_page(root, party)
         if page is None:
             raise ValueError(f"No party {party!r}")
-        known = {t["slug"] for t in ideas.tracks(root, make=False) if t["slug"] not in (ideas.GENERAL, party) and t.get("leader") != library.INVESTOR}
+        known = {t["slug"] for t in ideas.tracks(root, make=False) if t["slug"] not in (ideas.GENERAL, party) and t.get("leader") != library.INVESTOR and not party_recipes.is_team(t)}
         if bad := [s for s in slugs if s not in known]:
             raise ValueError(f"No party {bad[0]!r} to release from")
         kept = list(dict.fromkeys(slugs))
@@ -116,7 +116,7 @@ def sources(root: Path, party: str) -> list[str]:
     if page is None or (page.get("leader") or "") != library.RELEASE_MANAGER:
         return [party]
     every = [t["slug"] for t in ideas.tracks(root, make=False)
-             if t["slug"] not in (ideas.GENERAL, party) and t.get("leader") != library.INVESTOR]
+             if t["slug"] not in (ideas.GENERAL, party) and t.get("leader") != library.INVESTOR and not party_recipes.is_team(t)]
     set_ = [s for s in releases_from(root, party) if s in every]
     return set_ or every
 

@@ -72,7 +72,7 @@ def party_for(state_dir: Path, root: Path, type_id: str | None = None) -> list[d
             raise ValueError(f"No goal type {type_id!r}")
     rows, pitch = [], []
     for track in ideas.tracks(root, make=False):
-        if track["slug"] == ideas.GENERAL:
+        if track["slug"] == ideas.GENERAL or party_recipes.is_team(track):      # the Team party holds Operations, not goals (spec 92 §3)
             continue
         row = {"party": track["slug"], "name": track["title"], "fits": "", "missing": []}
         if (track.get("leader") or "") == library.INVESTOR:

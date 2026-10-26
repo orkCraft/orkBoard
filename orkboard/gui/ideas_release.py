@@ -13,7 +13,7 @@ writes its file after. Orkboard never submits, uploads or tags: out is the perso
 from __future__ import annotations
 
 from orkboard.gui.ideas_args import IdeasError, _device, _opt, _text
-from orkboard.realm import event_log, idea_route, ideas, releases
+from orkboard.realm import event_log, idea_route, ideas, party_recipes, releases
 
 
 PROJECT = "@project"                    # the project's level (spec 70): a face's "party" for a switch, never a party's slug
@@ -25,6 +25,9 @@ class ReleaseMixin:
         work has started (*Its work has started in <party>: a goal moves only before its work starts. Add a new goal there.*) and
         recorded in its route otherwise; its element and its place are as before (spec 68 §2.2). `{ok}`."""
         slug = _text(args, "slug", 100)
+        to = next((t for t in ideas.tracks(self.root(), make=False) if t["slug"] == _opt(args, "track")), None)
+        if to is not None and party_recipes.is_team(to):
+            raise IdeasError("Team holds your Operations, not goals: move the goal to another party")          # spec 92 §3
         got = idea_route.move(self.root(), self.state_dir, slug, _opt(args, "track") or None, _opt(args, "before") or None, by="person")
         self._what[slug] = "moved"
         if got["moved"]:
