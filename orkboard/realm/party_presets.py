@@ -32,9 +32,10 @@ def team_words(team_at: str) -> str:
     return "" if not team_at else "Team is in this project" if team_at == "here" else f"Team is in {team_at}"
 
 
-def listed(kind: str = "code", team_at: str = "") -> list[dict]:
+def listed(kind: str = "code", team_at: str = "", ops: bool = True) -> list[dict]:
     """The rows of New party's left half for a kind of project, in the order they are shown: the stages, the crafts (Team last), then the person's own.
-    `team_at`: where the person's Team party is (`ops_team.where`): "" nowhere, "here", or the other project's name."""
+    `team_at`: where the person's Team party is (`ops_team.where`): "" nowhere, "here", or the other project's name. `ops`: the host has Operations (a host with none, Orkline's
+    page, is not offered Team)."""
     out = [_row(r["id"], r["name"], r["line"], "stage", r["leader"], r["build"], r["check"], stage=s, craft=_craft_of(r["leader"]),
                 recipe=r["id"], whole=r["whole"]) for s, r in zip(party_recipes.STAGES, party_recipes.stages_of(kind))]
     crafts = {p["id"]: p for p in library.presets()}
@@ -42,7 +43,8 @@ def listed(kind: str = "code", team_at: str = "") -> list[dict]:
         p = crafts[cid]
         out.append(_row(p["id"], p["name"], p["line"], "craft", p["lead"], p["build"], p["check"], craft=p["craft"]))
     t = party_recipes.TEAM
-    out.append(_row(t["id"], t["name"], t["line"], "craft", t["leader"], t["build"], t["check"], craft="product", recipe=t["id"], ops=True, blocked=team_words(team_at)))
+    if ops:
+        out.append(_row(t["id"], t["name"], t["line"], "craft", t["leader"], t["build"], t["check"], craft="product", recipe=t["id"], ops=True, blocked=team_words(team_at)))
     out.append(_row(OWN["id"], OWN["name"], OWN["line"], "own", "taskmaster", [], [], craft="mixed"))
     return out
 

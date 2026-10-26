@@ -482,7 +482,7 @@ export function byUrgency(stops) {
  *  once the person has one (`team`, the snapshot's `ops_team`: spec 92 §3): its slug when it is in this project, so they are not another party's while it is shown. */
 function inParty(stops, g, shown, team = null) {
   const party = g ? { slug: g.slug, name: g.short || g.title, head: g.leader?.head || null, lead: g.leader?.name || "Taskmaster", ops: false }
-    : { slug: team?.here ? team.party : OPS, name: team ? "Team" : "Operations", head: null, lead: "Taskmaster", ops: true };
+    : { slug: team?.here ? team.party : OPS, name: team ? "Team" : "Operations", head: null, lead: "Taskmaster", ops: true, away: Boolean(team && !team.here) };
   return stops.map((s) => ({ ...s, g: g || null, party, other: party.slug !== shown }));
 }
 

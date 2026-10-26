@@ -373,7 +373,7 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
             raise IdeasError("A goal needs a party")
         if track not in goals:
             raise IdeasError("That party is gone")
-        if goals[track].get("recipe") == party_recipes.TEAM_ID:
+        if party_recipes.is_team(goals[track]):
             raise IdeasError("Team holds your Operations, not goals: add the goal to another party")          # spec 92 §3
         priority = _opt(args, "priority").lower() or goals[track]["priority"]
         if priority not in ideas.PRIORITIES:

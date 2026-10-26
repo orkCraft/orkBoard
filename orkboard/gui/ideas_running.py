@@ -30,7 +30,21 @@ class RunningMixin:
     def team_at(self) -> str:
         """Where the person's Team party is: "" nowhere (or this host has no Operations), "here", or the other project's name."""
         base = self._ops_base()
-        return ops_team.where(base, self.host.repo_root) if base is not None else ""
+        if base is None:
+            return ""
+        self.team_heal()
+        return ops_team.where(base, self.host.repo_root)
+
+    def team_heal(self) -> None:
+        """The person's note says the Team party is in this project but the Board has parties and none is it (its file was removed by hand): the note goes, and Operations are in the left
+        column again. A Board with no parties yet (its tree is still being made) is left alone."""
+        base = self._ops_base()
+        got = ops_team.get(base) if base is not None else None
+        if got is None or got["project"] != str(self.host.repo_root):
+            return
+        here = ideas.tracks(self.root(False), make=False)
+        if here and not any(t["slug"] == got["party"] and party_recipes.is_team(t) for t in here):
+            ops_team.clear(base, got["project"], got["party"])
 
     def team_refuse(self) -> None:
         """A second Team party is refused, in plain words: *Team is in <project>*."""

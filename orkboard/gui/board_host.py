@@ -350,6 +350,8 @@ class Orkboard:
         except Exception:                      # Operations never breaks the snapshot
             ops_needs = 0
         sign_in = self.sign_ins.snapshot()
+        if self.ideas is not None:
+            self.ideas.team_heal()               # a Team party taken out of its project's Board by hand gives Operations back
         board = {**board, "needs_you": int(board.get("needs_you") or 0) + ops_needs + len(board_map.sign_in_needs(sign_in)),
                  "ops_rev": self.ops.rev, "ops_team": self.ops.team(root)}      # the Team party, if the person has one (spec 92 §3)
         return {**board, "focus": "board", "onboarding": self.onboarding.snapshot(), "sign_in": sign_in,

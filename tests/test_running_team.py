@@ -8,7 +8,7 @@ import time
 import pytest
 
 from orkboard.gui.board_host import Orkboard
-from orkboard.realm import goal_team, ideas, library, ops_team, party_presets, party_recipes, project_kind, recurring
+from orkboard.realm import goal_team, ideas, library, ops_team, party_presets, party_recipes, pitches, project_kind, recurring
 from orkboard.realm import op_runs
 
 RUNNING = [(k, party_recipes.get(f"{k}-liveops")) for k in project_kind.KINDS if k != "empty"]
@@ -241,3 +241,39 @@ def test_a_repeat_is_set_and_stopped_by_the_person(host):
         host.command("ideas.repeat", {"slug": got, "every": "hour"})
     with pytest.raises(Exception, match="gone"):
         host.command("ideas.repeat", {"slug": "nothing", "every": "week"})
+
+
+# -- the Team party holds Operations, not goals; a note that lost its party; a host with no Operations -----------------------------------------------------------------------------
+
+def test_no_goal_goes_to_the_team_party_not_by_add_not_by_move_and_no_pitch_is_offered_it(host):
+    slug = _team(host)
+    other = host.command("ideas.goal_save", {"title": "Tech", "about": "Code.", "leader": "architect", "team": [], "every": []})["slug"]
+    with pytest.raises(Exception, match="Team holds your Operations"):
+        host.command("ideas.add", {"text": "Call the bank", "track": slug})
+    goal = host.command("ideas.add", {"text": "Fix the login", "track": other})["slug"]
+    with pytest.raises(Exception, match="Team holds your Operations"):
+        host.command("ideas.move", {"slug": goal, "track": slug})
+    offers = pitches.offers(host.root, host.ideas.state_dir)
+    assert slug not in offers and other in offers
+
+
+def test_a_team_party_removed_by_hand_gives_operations_back_but_a_board_still_being_made_keeps_the_note(host):
+    slug = _team(host)
+    other = host.command("ideas.goal_save", {"title": "Tech", "about": "Code.", "leader": "architect", "team": [], "every": []})["slug"]
+    assert host.snapshot()["ops_team"]["party"] == slug
+    (host.root / ideas.TRACKS / f"{slug}.md").unlink()
+    assert host.snapshot()["ops_team"] is None and ops_team.get(op_runs.root()) is None
+    assert other in {t["slug"] for t in ideas.tracks(host.root, make=False)}
+    ops_team.set(op_runs.root(), host.repo_root, host.repo_root.name, "team")                     # a note about a party that was never here...
+    (host.root / ideas.TRACKS / f"{other}.md").unlink()
+    assert host.snapshot()["ops_team"] is not None                                              # ...while the Board has no party at all: left alone
+
+
+def test_a_host_with_no_operations_is_not_offered_team(host):
+    assert any(r["id"] == "team" for r in party_presets.listed("code"))
+    assert not any(r["id"] == "team" for r in party_presets.listed("code", ops=False))
+    ops, host.ops = host.ops, None                                                                # Orkline's page has none
+    try:
+        assert host.ideas.team_at() == "" and not any(r["id"] == "team" for r in host.command("ideas.party_presets", {})["presets"])
+    finally:
+        host.ops = ops

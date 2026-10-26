@@ -198,7 +198,7 @@ function open(s) {
 
 /** A stop of another party opens there (spec 54 §2.2): that party is shown first, as a pick of it in the parties' list; a quick answer acts in place. */
 const toParty = (s) => {
-  if (!s.other) return;
+  if (!s.other || s.party.away) return;                                  // Operations' stops while the Team party is in another project: they answer in place, there is no field of theirs here (spec 92 §3)
   closeSpread();
   leaveParty();
   track.value = s.party.slug;

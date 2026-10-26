@@ -224,6 +224,11 @@ def for_kind(kind: str, facts: dict | None = None) -> list[dict]:
     return [r for r in rows if not r["when"] or (facts or {}).get(r["when"])]
 
 
+def is_team(track: dict) -> bool:
+    """Whether a party of `ideas.tracks` is the Team party: it holds the person's Operations, not goals (spec 92 §3)."""
+    return track.get("recipe") == TEAM_ID
+
+
 def get(recipe_id: str) -> dict | None:
     if recipe_id == TEAM_ID:
         return TEAM
