@@ -110,6 +110,11 @@ async def test_a_team_party_made_takes_the_operations_row_away_and_its_field_is_
         await page.get_by_role("button", name="New…").wait_for(timeout=WAIT_MS)
         assert await page.get_by_role("button", name="Operations settings").count() == 1
         assert await page.locator(FAB).count() == 0 or not await page.locator(FAB).is_visible()                            # it holds no goals: nothing to add
+        await page.get_by_role("button", name="About Team").click()                                                         # what it is, and Remove party: nothing of a party's seats and goals
+        about = page.get_by_role("dialog", name="About this party")
+        await about.wait_for(timeout=WAIT_MS)
+        assert "Team holds your Operations" in await about.inner_text() and await about.get_by_role("button", name="Remove party").count() == 1
+        assert await about.get_by_text("Checks on every goal").count() == 0
         assert await page.evaluate(NO_SCROLL)
 
 

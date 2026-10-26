@@ -127,15 +127,16 @@ export function makeNewGoal(core) {
   }
 
   /** The party is made: the sheet closes, the heads gather into the deck (spec 63 §4), the party's screen opens (or `after` is told). */
-  async function made(got, heads) {
+  async function made(got, heads, team = false) {
     for (const note of got.notes || []) core.flash(note);       // an agent of the project's own that the party carries stays as it was
     const after = then;
     then = null;
-    if (!after) gather.wait(got.slug, heads);                   // New goal opening right after is what the person looks at: the heads gather only into a party they are shown
+    if (!after && !team) gather.wait(got.slug, heads);          // New goal opening right after is what the person looks at: the heads gather only into a party they are shown
     sh.close();
     core.st.track = got.slug;
     await core.refresh();
     if (after) after(got.slug);
+    else if (team) return;                                      // the Team party (spec 92 §3): its field is the Operations list, shown at once; it has no screen of goals to open
     else if (heads.length) setTimeout(() => core.open({ kind: "goal", slug: got.slug }), gather.ms(heads.length));     // the party's screen covers the deck: it opens once the heads have gathered and the deck is lit
     else core.open({ kind: "goal", slug: got.slug });
   }
@@ -144,7 +145,7 @@ export function makeNewGoal(core) {
     if (save.disabled) return;
     save.disabled = true;
     const p = seats.get(), tools = seats.seatTools(), sized = proposes(core), from = releasesFrom.get();
-    const heads = motionOn() ? gatherFrom() : [];                // read at the press, before the sheet closes
+    const team = Boolean(p.row?.ops), heads = motionOn() && !team ? gatherFrom() : [];                // read at the press, before the sheet closes
     const library = !p.partyId && p.lit && (core.st.roles?.presets || []).some((x) => x.id === p.lit);
     const got = await core.call("ideas.goal_save", { ...(name.value.trim() || (!about.value.trim() && suggest()) ? { title: name.value.trim() || suggest() } : {}), about: about.value.trim(), craft: craftOf(p), leader: p.leader, team: p.team,
       every: p.every.filter((id) => p.team.includes(id)), priority: priority.get(), ...(p.partyId ? { party: p.partyId } : {}), ...(library ? { preset: p.lit } : {}),
@@ -152,7 +153,7 @@ export function makeNewGoal(core) {
       ...(sized && p.tool ? { tool: p.tool } : {}), ...(sized && Object.keys(tools).length ? { tools } : {}) });
     sync();
     if (!got?.slug) { gather.drop(); return; }
-    await made(got, heads);
+    await made(got, heads, team);
   });
 
   sh.el.addEventListener("close", () => { then = null; });

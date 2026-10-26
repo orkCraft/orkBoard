@@ -298,7 +298,7 @@ async def test_an_empty_project_says_nothing_here_yet(fake_repo, monkeypatch):
 
 def test_the_service_worker_is_v95_keeps_shell_assets_and_the_section_has_no_colour_of_its_own():
     sw = (ROOT / "sw.js").read_text(encoding="utf-8")
-    assert 'const CACHE = "orkcraft-app-v101"' in sw and '"shell-assets.js"' in sw
+    assert 'const CACHE = "orkcraft-app-v102"' in sw and '"shell-assets.js"' in sw
     css = (ROOT / "app.css").read_text(encoding="utf-8")
     block = css[css.index("Assets (spec 88 C)"):]
     assert not re.findall(r"#[0-9a-fA-F]{3,8}\b|rgba?\(|hsla?\(|border-radius", block)

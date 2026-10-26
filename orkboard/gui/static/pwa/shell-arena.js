@@ -90,7 +90,8 @@ export function makeArena(core, ctx, parts) {
   function opsView(team = false) {
     const gear = h("button", { class: "ork-btn gear", type: "button", "aria-haspopup": "dialog", "aria-label": "Operations settings", onclick: () => ops.openGear() }, "Settings");
     return h("div", { class: "ops-view", ...(team ? { "data-team": "true" } : {}) }, h("div", { class: "pane-head" }, h("h2", {}, "Operations"), h("div", { class: "row" },
-      h("button", { class: "ork-btn", type: "button", "aria-haspopup": "dialog", onclick: () => ops.openMenu() }, "New…"), gear, core.partyDeck())), ...ops.section());
+      h("button", { class: "ork-btn", type: "button", "aria-haspopup": "dialog", onclick: () => ops.openMenu() }, "New…"), gear,
+      ...(team ? [h("button", { class: "ork-btn", type: "button", "aria-haspopup": "dialog", "data-act": "about-team", onclick: () => party.open(st.snap.ops_team.party) }, "About Team")] : []), core.partyDeck())), ...ops.section());
   }
 
   const needsGoal = () => h("div", { class: "arena-empty has-void" }, h("i", { class: "void-stars", "aria-hidden": "true" }, ...Array.from({ length: 9 }, () => h("b"))), h("p", { class: "muted" }, "No parties yet."),

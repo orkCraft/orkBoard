@@ -192,7 +192,7 @@ async def test_every_target_of_new_party_is_44_px_and_the_page_does_not_scroll_s
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
         boxes = await sheet.locator(".size-pick, .preset-tile, .pseat__x, .pseat.is-empty, .ork-btn.primary").evaluate_all("(els) => els.map((e) => { const r = e.getBoundingClientRect(); return [r.width, r.height, r.left, r.right]; })")
-        assert len(boxes) == 3 + 12 + 2 + 1 + 1                                                                                    # three sizes, the twelve tiles, × of two seats, a free seat, Save party
+        assert len(boxes) == 3 + 13 + 2 + 1 + 1                                                                                    # three sizes, the thirteen tiles (Team among them), × of two seats, a free seat, Save party
         assert all(round(w) >= 44 and round(h) >= 44 and left >= 0 and right <= 390 for w, h, left, right in boxes)
         assert await page.evaluate(NO_SCROLL)
 

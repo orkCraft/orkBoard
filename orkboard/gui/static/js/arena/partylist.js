@@ -153,7 +153,7 @@ export function PartyList({ body = null }) {
     <${GateLine} />
     <div class="arena-plist" ref=${list} onScroll=${(e) => { scrolled = e.currentTarget.scrollTop; }}>
       ${ps.goals.map((x) => html`<section key=${x.g.slug} class=${cls("arena-party", { "is-open": open(x.g.slug) })}>
-        <${PartyMenu} slug=${x.g.slug} name=${x.g.short || x.g.title}><${Heading} x=${x} open=${open(x.g.slug)} want=${want} /><//>
+        <${PartyMenu} slug=${x.g.slug} name=${x.g.short || x.g.title} ops=${!!x.g.ops}><${Heading} x=${x} open=${open(x.g.slug)} want=${want} /><//>
         ${open(x.g.slug) ? body : html`<${AtWork} x=${x} want=${want} />`}
       </section>`)}
       ${ps.ops && html`<section class=${cls("arena-party", { "is-open": want === OPS })}><${OpsHeading} ps=${ps} open=${want === OPS} want=${want} />

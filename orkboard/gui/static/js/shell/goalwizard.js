@@ -46,7 +46,7 @@ export function GoalWizard({ then = "", preset: first = "", proposal = "" }) {
       ...(d.partyId ? { party: d.partyId } : {}), ...(library ? { preset: d.lit } : {}), ...(f.routines.kept.length ? { routines: f.routines.kept } : {}), ...(f.sized && !d.partyId && d.lit && d.row?.recipe ? { proposal: d.row.recipe } : {}),
       ...(f.rf.value() ? { releases_from: f.rf.value() } : {}), ...(f.sized && d.size ? { size: d.size } : {}), ...(f.sized && d.tool ? { tool: d.tool } : {}), ...(f.sized && Object.keys(tools).length ? { tools } : {}) });
     setSaving(false);
-    if (got?.slug) savedParty(got, heads, then);
+    if (got?.slug) savedParty(got, heads, then, !!d.row?.ops);
   };
   return html`<${Modal} title="New party" onClose=${closeDialog} wide="xl"
     foot=${html`<span class="shell-p91__foot ok-font-status ok-tone-muted" data-foot="agents">${footLine(f)}</span>

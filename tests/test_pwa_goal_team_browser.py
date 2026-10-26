@@ -24,11 +24,11 @@ async def test_new_goal_is_one_sheet_the_presets_in_one_column_its_team_in_three
         sheet = page.get_by_role("dialog", name="New party")
         await sheet.locator(".pseat[data-seat]").first.wait_for(timeout=WAIT_MS)
         tiles = sheet.locator(".preset-tile")
-        assert await tiles.count() == 12                                                                 # five stages, six crafts and the person's own (spec 91 §7)
+        assert await tiles.count() == 13                                                                 # five stages, six crafts, Team and the person's own (spec 91 §7, spec 92 §3)
         stage = sheet.locator(".preset-group.is-stage .preset-tile")
         assert len({round((await t.bounding_box())["x"]) for t in await stage.all()}) == 1                # the stages in one column
         crafts = sheet.locator(".preset-group.is-craft .preset-tile")
-        assert [await t.get_attribute("data-preset") for t in await crafts.all()] == ["engineering", "design", "data", "marketing", "product", "art"]
+        assert [await t.get_attribute("data-preset") for t in await crafts.all()] == ["engineering", "design", "data", "marketing", "product", "art", "team"]
         assert [await g.get_attribute("aria-label") for g in await sheet.locator(".preset-group").all()] == ["By stage of the project", "By craft", "Your own party"]
         save = sheet.get_by_role("button", name="Save party")
         assert await save.is_enabled()                                                                   # the opening preset (Build) names the party until it is named

@@ -92,10 +92,10 @@ def test_new_party_is_presets_on_the_left_and_the_team_by_seats_on_the_right(des
     assert _words(left.locator(".shell-presets__kind")) == "For a mobile app: the Orkmaster knows what this project is"
     stages = left.get_by_role("region", name="By stage of the project").locator(".shell-preset")
     assert [(c.get_attribute("data-craft"), c.locator("b").text_content()) for c in stages.all()] == [
-        ("ideation", "Ideation"), ("mobile-concept", "Concept"), ("mobile-build", "Build"), ("release", "Release"), ("mobile-liveops", "LiveOps")]
+        ("ideation", "Ideation"), ("mobile-concept", "Concept"), ("mobile-build", "Build"), ("release", "Release"), ("mobile-liveops", "Run")]
     assert all(c.locator("small").first.inner_text() for c in stages.all())                                                       # a line each
     crafts = left.get_by_role("region", name="By craft").locator(".shell-preset")
-    assert [c.locator("b").text_content() for c in crafts.all()] == ["Tech", "Design", "Data", "Marketing", "Product", "Art and sound"]
+    assert [c.locator("b").text_content() for c in crafts.all()] == ["Tech", "Design", "Data", "Marketing", "Product", "Art and sound", "Team"]
     own = left.get_by_role("region", name="Your own party").locator(".shell-preset")
     assert own.locator("b").text_content() == "Your own party" and own.locator("small").inner_text() == "Start from the Taskmaster and add who you need"
     pressed = [c.get_attribute("data-craft") for c in dlg.locator(".shell-preset[aria-pressed=true]").all()]
@@ -127,7 +127,7 @@ def test_a_stage_preset_fills_the_bands_and_a_press_on_another_replaces_them(des
     assert (_seats(dlg, "lead"), _seats(dlg, "build"), _seats(dlg, "check")) == (["product-designer"], ["ui-kit"], [])        # Standard: the leader and the first builder
     assert dlg.get_by_label("Name", exact=True).get_attribute("placeholder") == "Concept"
     _press(dlg, "mobile-liveops")
-    assert (_seats(dlg, "lead"), _seats(dlg, "build")) == (["analyst"], ["data-engineer"]) and dlg.get_by_label("Name", exact=True).get_attribute("placeholder") == "LiveOps"
+    assert (_seats(dlg, "lead"), _seats(dlg, "build")) == (["product-manager"], ["grunt"]) and dlg.get_by_label("Name", exact=True).get_attribute("placeholder") == "Run"
     dlg.get_by_label("Name", exact=True).fill("Our numbers")
     _press(dlg, "design")
     assert _seats(dlg, "lead") == ["product-designer"] and dlg.get_by_label("Name", exact=True).input_value() == "Our numbers"      # a name the person typed stays

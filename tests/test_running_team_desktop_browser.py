@@ -107,6 +107,9 @@ def test_a_team_party_made_here_takes_the_operations_row_away_and_its_board_is_t
     head = col.locator('.arena-phead[data-goal="team"]')
     assert head.get_attribute("aria-current") == "true" and "leads" in head.inner_text() and head.locator(".arena-phead__count").count() == 0       # a party with no goals to count
     assert pg.locator(".arena-pbody, .arena-deck").count() == 0
+    col.locator('.arena-pmenu[data-party="team"] .arena-pmenu__btn').click()                                                # its menu: nothing to be about or to edit, only to remove
+    assert [i.inner_text().strip() for i in pg.locator(".arena-pmenu__list [role=menuitem]").all()] == ["Remove party…"]
+    pg.keyboard.press("Escape")
     _new_party(pg)
     off = _dialog(pg).locator('.shell-preset[data-craft="team"]')                                                           # one Team party: its card is greyed
     assert off.is_disabled() and off.locator("[data-blocked]").inner_text() == "Team is in this project"
