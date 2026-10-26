@@ -307,37 +307,30 @@ def test_a_line_no_model_could_read_gives_the_proposals_for_code_and_says_so(gui
 
 # -- the Orkmaster's deal ---------------------------------------------------------------------------------------------------------------------------------------
 
-def test_the_orkmasters_deal_shows_the_proposals_first_each_with_standards_price_and_a_press_opens_new_party_on_it(desk):
+def test_the_orkmasters_row_shows_the_proposals_first_each_with_its_why_and_add_opens_new_party_on_it(desk):
     pg, host = desk
     pg.get_by_role("button", name="The project").click()
-    pg.locator(".arena-pjnew .arena-new__pile").click()
-    deal = pg.get_by_role("dialog", name="New party")
-    deal.locator(".arena-type--party").first.wait_for(timeout=WAIT_MS)
-    cards = deal.locator(".arena-type--party")
+    cards = pg.locator('.arena-prow[data-row="parties"] article.arena-rcard')
+    cards.first.wait_for(timeout=WAIT_MS)
     ids = [c.get_attribute("data-preset") for c in cards.all()]
-    assert ids[:2] == ["mobile-features", "mobile-architecture"] and ids[-2:] == ["release", "ideation"] and len(ids) == len(set(ids))     # the proposals first; those it has, last
+    assert ids[:2] == ["mobile-features", "mobile-architecture"] and len(ids) == 3 and len(ids) == len(set(ids))        # the proposals first, then the library's; those it has (Release, Ideation) are not offered
+    assert "release" not in ids and "ideation" not in ids and ids[2] == "game"                                          # the library's parties follow
     first = cards.nth(0)
-    assert first.locator(".arena-type__name").inner_text() == "Mobile app: features" and first.locator(".arena-type__why").inner_text() == "ios/ and android/ are here"
-    assert first.locator(".arena-type__price").inner_text() == "≈$1–3 a goal"                                                  # Standard's price
-    assert first.locator(".arena-type__heads .ork-race__head").count() == 3 and first.locator(".arena-type__front > .ork-race__head").count() == 1
-    have = deal.locator('.arena-type--party[data-proposal="release"]')
-    assert have.locator(".arena-type__why").inner_text() == "You have one" and "is-have" in have.get_attribute("class")
-    assert deal.locator('.arena-type--party[data-preset="game"]').count() == 1                                              # the library's parties follow
-    pg.wait_for_timeout(900)
-    first.click()
+    assert first.locator(".arena-rcard__name").inner_text() == "Mobile app: features" and first.locator(".arena-rcard__why").inner_text() == "ios/ and android/ are here"
+    assert first.get_attribute("data-proposal") == "mobile-features" and first.locator(".arena-rcard__head .ork-race__head").count() == 1      # its leader's head
+    assert first.locator(".arena-rcard__cap").inner_text().startswith("Product manager + 3") and "Screens and what people do on them" in first.locator(".arena-rcard__cap").inner_text()
+    first.get_by_role("button", name="Add Mobile app: features").click()
     dlg = _dialog(pg)
     assert dlg.locator('.shell-prop[data-proposal="mobile-features"]').get_attribute("class").count("is-asked") == 1        # New party on that proposal
     assert dlg.locator('.shell-prop[data-proposal="mobile-architecture"]').get_attribute("class").count("is-asked") == 0
 
 
-def test_a_library_party_of_the_deal_opens_new_party_on_the_library_with_the_size_switch(desk):
+def test_a_library_party_of_the_row_opens_new_party_on_the_library_with_the_size_switch(desk):
     pg, host = desk
     pg.get_by_role("button", name="The project").click()
-    pg.locator(".arena-pjnew .arena-new__pile").click()
-    deal = pg.get_by_role("dialog", name="New party")
-    deal.locator(".arena-type--party").first.wait_for(timeout=WAIT_MS)
-    pg.wait_for_timeout(900)
-    deal.locator('.arena-type--party[data-preset="game"]').click()
+    card = pg.locator('.arena-prow[data-row="parties"] article.arena-rcard[data-preset="game"]')
+    card.wait_for(timeout=WAIT_MS)
+    card.get_by_role("button", name="Add Game").click()
     dlg = pg.get_by_role("dialog", name="New party")
     dlg.locator(".shell-craft-tile").first.wait_for(timeout=WAIT_MS)
     assert dlg.locator('.shell-craft-tile[data-craft="game"]').get_attribute("aria-pressed") == "true" and dlg.get_by_role("group", name="Its size").count() == 1
@@ -526,12 +519,11 @@ def test_a_host_without_the_reading_keeps_todays_new_party_and_asks_for_no_propo
     assert "size" not in sent and sent["leader"] == "architect"
     assert not [1 for n, _ in host.log if n == "ideas.proposals"]
     pg.get_by_role("dialog", name="New party").wait_for(state="detached", timeout=WAIT_MS)
-    pg.get_by_role("button", name="The project").click()                                                                     # the deal is the library's, as before
-    pg.locator(".arena-pjnew .arena-new__pile").click()
-    pg.get_by_role("dialog", name="New party").locator(".arena-type--party").first.wait_for(timeout=WAIT_MS)
+    pg.get_by_role("button", name="The project").click()                                                                     # the row's parties are the library's, as before
+    cards = pg.locator('.arena-prow[data-row="parties"] article.arena-rcard')
+    cards.first.wait_for(timeout=WAIT_MS)
+    assert cards.count() >= 2 and all(c.get_attribute("data-proposal") == "" for c in cards.all())
     assert not [1 for n, _ in host.log if n == "ideas.proposals"]
-    pg.keyboard.press("Escape")
-    pg.get_by_role("dialog", name="New party").wait_for(state="detached", timeout=WAIT_MS)
     top = pg.locator(".shell-top")
     assert "Target" not in top.inner_text()                                                                                   # the Target left the top bar for every host
     pg.locator(".shell-goal").wait_for(timeout=WAIT_MS)                                                                      # the party just made is shown: no size on this host

@@ -1,18 +1,23 @@
 // The project's level on the phone (docs/specs/70-orkmaster-and-the-project.md §2.1, §2.4, §3, §4; decisions §85): the Orkmaster is the project's ork; a row at the top of the parties' sheet (shell-where.js) opens
-// **The project**, a full sheet: the Orkmaster's head and **New party** (a press deals the library's parties as a strip of tiles, in `ideas.map`'s `project.deal` order, each with its why: a press opens New party
-// with that preset picked), a section for each party (its leader's head, its name, *k/n*, **Open <party>**; under it its goals as rows: Planning and At work, Waits for main and Flags folded; a row opens the goal's
-// screen) and, pinned at the foot, **New goal** (shell-ideas.js `openProject`: no party yet; **Its party** is asked of the host, `makeItsParty`). A host without `project` has none of it.
-// With a host that proposes (spec 75 §5.3) the strip shows the Orkmaster's proposals first, each with Standard's price a goal; a press opens New party on it (the library's parties of the deal follow).
+// **The project**, a full sheet: the Orkmaster's head, its **two rows** (docs/specs/91-the-owners-list.md §8, one under the other, every target 44 px at least) — **Parties**: a strip of *New party* (a dashed card) and two
+// or three ready parties that suit this kind of project, in `ideas.map`'s `project.deal` order (the Orkmaster's proposals first when the host proposes, spec 75 §5.3), each with its leader's head, its name, who and what for
+// and **Add**, which opens New party on it; **New goal**: one line, **for <party>** (the Orkmaster's guess, `ideas.party_for` of the kind the line says; the person's pick stays), **Add goal** and under them
+// *<Party>'s kinds:* (three at most, the guessed one marked *· guessed* once a line is typed: `ideas.kind_for`, words, no model) and **More kinds…**, which opens today's New goal form (shell-ideas.js `openProject`) with the
+// line carried over —, then a section for each party (its leader's head, its name, *k/n*, **Open <party>**; under it its goals as rows: Planning and At work, Waits for main and Flags folded; a row opens the goal's
+// screen). A host without `project` has none of it. *Add goal* sends what New goal sends (`ideas.add`, delivered as it is: kept when there is no signal).
 // After the parties comes a section **Assets** (spec 88 §7; shell-assets.js): the project's files by kind as tokens, a token's own screen, the changes since this device's last look.
 // Pure words here too: `whyWords`, `fitWords`, `dealOf`.
 import { h, head, sheet } from "./util.js";
 import { elem, sign, typeTone } from "./shell-marks.js";
 import { raceOf, whoHead } from "./shell-who.js";
-import { foot } from "./shell-forms.js";
 import { chipsOf, modelOf } from "./shell-arena-words.js";
 import { flagTally, goalsOf } from "./shell-goals-words.js";
-import { PROPOSAL, loadProposals, proposalTile, proposes } from "./shell-proposals.js";
+import { PROPOSAL, STANDARD, loadProposals, proposes } from "./shell-proposals.js";
 import { makeAssets } from "./shell-assets.js";
+
+const READY = 3, KINDS_SHOWN = 3, GUESS_MS = 250;         // ready parties offered; kinds shown; the line rests this long before its kind is guessed
+const ROWS = { parties: "Parties", partiesCap: "who works on this project", newParty: "New party", add: "Add", goal: "New goal", goalCap: "say it in a line: the Orkmaster picks its kind",
+  addGoal: "Add goal", more: "More kinds…", guessed: "guessed", placeholder: "Say it in a line, in your own words" };
 
 export const PROJECT = "@project";                   // `ideas.shown`'s party for the project's level
 const plural = (n, one, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
@@ -42,17 +47,174 @@ export function fitWords(p) {
   return "";
 }
 
-/** `core`: the board's frame; `act`: {openParty(slug)}. Returns {el, open(), draw(), isOpen()}. */
+/** The ready parties of the *Parties* row: the Orkmaster's proposals the deal names or lacks first, then the library's in the deal's order, those the project has left out, the first three; each
+ *  `{id, name, line, why, lead: {race, tier, name}, size, open: {proposal} | {preset}}`. `proposals`: `ideas.proposals`'. */
+export function readyOf(core, proposals = []) {
+  const deal = dealOf(core), lib = core.st.roles?.library || [], presets = core.st.roles?.presets || [], byId = new Map(proposals.map((p) => [p.id, p])), seen = new Set(), out = [];
+  const ofProposal = (p) => {
+    const std = p.sizes?.[STANDARD] || Object.values(p.sizes || {})[0], lead = std?.heads?.[0];
+    return { id: p.id, name: p.name, line: p.line || "", why: p.why || "", have: Boolean(p.have), lead: lead ? { race: lead.race || "peon", tier: lead.tier || "warrior", name: lib.find((a) => a.id === std.leader)?.name || "" } : null,
+      size: std ? Math.max(0, (std.agents ?? 1 + (std.team || []).length) - 1) : 0, open: { proposal: p.id } };
+  };
+  const ofPreset = (p, d) => {
+    const lead = lib.find((a) => a.id === p.lead);
+    return { id: p.id, name: p.name, line: p.line || "", why: d?.words || "", have: d?.why === "have", lead: lead ? { race: raceOf(lead), tier: lead.tier || "warrior", name: lead.name } : null,
+      size: (p.build || []).length + (p.check || []).length, open: { preset: p.id } };
+  };
+  for (const p of proposals) if (!deal.has(p.id)) { out.push(ofProposal(p)); seen.add(p.id); }
+  for (const id of deal.keys()) {
+    if (seen.has(id)) continue;
+    seen.add(id);
+    if (byId.has(id)) out.push(ofProposal(byId.get(id)));
+    else if (presets.some((p) => p.id === id)) out.push(ofPreset(presets.find((p) => p.id === id), deal.get(id)));
+  }
+  return out.filter((c) => !c.have).slice(0, READY);
+}
+
+/** The Orkmaster's two rows (docs/specs/91-the-owners-list.md §8), stacked: **Parties** and **New goal**. `act`: {deliver, flash}; `close`: puts the project's sheet away. Returns {el, draw(), load(), reset()}:
+ *  `reset` clears the line and what was picked, `load` asks the host for the proposals, the Orkmaster's party and the line's kind. */
+function makeRows(core, act, close) {
+  const st = core.st;
+  let proposing = [], parties = [], suggested = "", mineParty = "", kind = "", own = "", mine, busy = false, seq = 0, timer = 0, menuOn = false;       // `mine`: the kind the person picked (undefined: the guessed one)
+  const goalOf = (slug) => (st.map?.goals || []).find((g) => g.slug === slug);
+  const typesOf = (slug) => (goalOf(slug)?.ideation ? [] : goalOf(slug)?.types || []);
+  const picked = () => (parties.some((p) => p.party === mineParty) ? mineParty : suggested);
+  const nameOf = (slug) => parties.find((p) => p.party === slug)?.name || goalOf(slug)?.short || goalOf(slug)?.title || "";
+
+  const strip = h("div", { class: "orow__strip", role: "group", "aria-label": ROWS.parties });
+  const text = h("input", { class: "ork-field orow__text", type: "text", enterkeyhint: "done", maxlength: "2000", autocomplete: "off", "aria-label": ROWS.goal, placeholder: ROWS.placeholder });
+  const forBtn = h("button", { class: "ork-btn orow__for", type: "button", "aria-haspopup": "listbox", "aria-expanded": "false", "data-act": "for-party" });
+  const menu = h("div", { class: "orow__menu", role: "listbox", "aria-label": "Its party", hidden: true });
+  const add = h("button", { class: "ork-btn primary orow__add", type: "button", "data-act": "add-goal", disabled: true }, ROWS.addGoal);
+  const kinds = h("div", { class: "okinds", role: "group" });
+  const el = h("section", { class: "orows", "aria-label": "Parties and goals" },
+    h("div", { class: "orow", "data-row": "parties" }, h("div", { class: "orow__lab" }, h("b", {}, ROWS.parties), h("small", { class: "muted" }, ROWS.partiesCap)), strip),
+    h("div", { class: "orow", "data-row": "goal" }, h("div", { class: "orow__lab" }, h("b", {}, ROWS.goal), h("small", { class: "muted" }, ROWS.goalCap)),
+      text, h("div", { class: "orow__go" }, forBtn, add), menu, kinds));
+
+  const line = () => text.value.trim();
+  /** The kind in force: the person's pick ("" none), else the guessed one, only when the party picked offers it. */
+  function chosen() {
+    const ids = typesOf(picked()).map((t) => t.id), want = mine !== undefined ? mine : line() ? own : "";
+    return ids.includes(want) ? want : "";
+  }
+
+  function cards() {
+    const ready = readyOf(core, proposing);
+    const newParty = h("button", { class: "ocard ocard--new", type: "button", "data-act": "project-new-party", "aria-haspopup": "dialog", onclick: () => { close(); core.editGoal(""); } },
+      h("b", {}, `+ ${ROWS.newParty}`));
+    return [newParty, ...ready.map((c) => h("article", { class: "ocard", "data-preset": c.id, "data-proposal": c.open.proposal || "", "aria-label": c.name },
+      h("div", { class: "ocard__top" }, c.lead ? head(c.lead.race, c.lead.tier) : h("span", { class: "ocard__nohead" }), h("b", { class: "ocard__name" }, c.name)),
+      h("p", { class: "ocard__cap muted" }, c.lead?.name ? h("span", { class: "ocard__who" }, `${c.lead.name}${c.size ? ` + ${c.size}` : ""}`) : null, c.lead?.name && c.line ? " · " : null, c.line),
+      c.why ? h("small", { class: "ocard__why" }, c.why) : null,
+      h("button", { class: "ork-btn ocard__add", type: "button", "aria-label": `${ROWS.add} ${c.name}`, onclick: () => { close(); if (c.open.proposal) core.newParty(`${PROPOSAL}${c.open.proposal}`); else core.newParty(c.open.preset); } }, ROWS.add)))];
+  }
+
+  function chipsOf() {
+    const party = picked(), all = typesOf(party), guessed = line() && all.some((t) => t.id === own) ? own : "";
+    const order = guessed ? [all.find((t) => t.id === guessed), ...all.filter((t) => t.id !== guessed)] : all, now = chosen();
+    const label = `${nameOf(party)}'s kinds:`;
+    kinds.setAttribute("aria-label", label);
+    if (goalOf(party)?.ideation) { kinds.replaceChildren(h("small", { class: "muted" }, `${nameOf(party)} takes it as a pitch: no kind`)); return; }
+    kinds.replaceChildren(h("span", { class: "okinds__label muted" }, label),
+      ...order.slice(0, KINDS_SHOWN).map((t) => h("button", { class: `ork-btn okind${t.id === now ? " is-picked" : ""}`, type: "button", "data-type": t.id, "data-guessed": String(t.id === guessed), "aria-pressed": String(t.id === now), title: t.line || "",
+        onclick: () => { mine = t.id === now ? "" : t.id; draw(); } }, sign(t.sign), h("span", {}, t.id === guessed ? `${t.name} · ${ROWS.guessed}` : t.name))),
+      h("button", { class: "ork-btn quiet okinds__more", type: "button", "data-act": "more-kinds", onclick: () => { close(); core.newIdea("", PROJECT, { text: text.value, party: mineParty }); } }, ROWS.more));
+  }
+
+  function menuItems() {
+    menu.replaceChildren(...parties.map((p) => h("button", { class: `orow__opt${p.party === picked() ? " is-on" : ""}`, type: "button", role: "option", "aria-selected": String(p.party === picked()), "data-party": p.party,
+      onclick: () => { mineParty = p.party; mine = undefined; menuOn = false; draw(); refreshOwn().then(draw); forBtn.focus(); } }, h("b", {}, p.name), fitWords(p) ? h("small", { class: "muted" }, fitWords(p)) : null,
+    p.party === picked() ? sign("check", "Picked") : null)));
+  }
+
+  function draw() {
+    strip.replaceChildren(...cards());
+    forBtn.replaceChildren(h("span", {}, `for ${nameOf(picked()) || "…"}`), h("i", { class: `ork-chev${menuOn ? " up" : ""}`, "aria-hidden": "true" }));
+    forBtn.setAttribute("aria-expanded", String(menuOn));
+    forBtn.disabled = !parties.length;
+    menu.hidden = !menuOn;
+    if (menuOn) menuItems();
+    chipsOf();
+    add.disabled = !line() || !picked() || busy;
+  }
+
+  /** The kind among the party picked's (the line's kind over every kind when the party offers it, else asked of the host for this party). */
+  async function refreshOwn(n = ++seq) {
+    const party = picked(), t = line();
+    if (!t || !party) { own = ""; return; }
+    if (!kind || typesOf(party).some((x) => x.id === kind)) { own = kind; return; }
+    const got = await core.call("ideas.kind_for", { text: t, party }, () => {});
+    if (n === seq) own = got?.type || "";
+  }
+
+  /** The line has rested: its kind, then the Orkmaster's party for that kind, then the kind among that party's. */
+  async function guess() {
+    const n = ++seq, t = line();
+    if (t) {
+      const got = await core.call("ideas.kind_for", { text: t }, () => {});
+      if (n !== seq) return;
+      kind = got?.type || "";
+    } else kind = own = "";
+    const got = await core.call("ideas.party_for", kind ? { type: kind } : {}, () => {});
+    if (n !== seq) return;
+    const fromMap = (st.map?.goals || []).filter((g) => g.slug !== "general").map((g) => ({ party: g.slug, name: g.short || g.title, fits: g.ideation ? "pitch" : "", missing: [] }));
+    parties = got && Array.isArray(got.parties) ? got.parties : fromMap;
+    suggested = (got && got.suggested) || parties.find((p) => p.fits !== "pitch")?.party || parties[0]?.party || "";
+    await refreshOwn(n);
+    if (n === seq) draw();
+  }
+
+  text.addEventListener("input", () => { add.disabled = !line() || !picked() || busy; clearTimeout(timer); timer = setTimeout(guess, GUESS_MS); });
+  text.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.isComposing) { e.preventDefault(); send(); } });
+  forBtn.addEventListener("click", () => { menuOn = !menuOn; draw(); });
+  menu.addEventListener("keydown", (e) => { if (e.key === "Escape" && menuOn) { e.preventDefault(); e.stopPropagation(); menuOn = false; draw(); forBtn.focus(); } });
+  add.addEventListener("click", () => send());
+
+  /** *Add goal*: `ideas.add` as New goal sends it: the line, the party, its priority and the kind, if any (a pitch has none). */
+  async function send() {
+    const body = line(), party = picked();
+    if (!body || !party || busy) return;
+    const g = goalOf(party), track = (st.board?.tracks || []).find((t) => t.slug === party), pitch = Boolean(g?.ideation);
+    const priority = pitch ? (track?.priority === "high" ? "high" : "normal") : track?.priority || "normal", type = pitch ? "" : chosen();
+    busy = true;
+    draw();
+    const short = body.length > 40 ? `${body.slice(0, 40)}…` : body;
+    const r = await act.deliver("ideas.add", { text: body, track: party, priority, ...(type ? { type } : {}) }, `the goal “${short}”`);
+    busy = false;
+    if (!r.ok || r.result?.error) { act.flash(r.error || r.result?.error); draw(); return; }
+    text.value = "";
+    mine = undefined;
+    kind = own = "";
+    act.flash(r.kept ? "No signal: the goal is kept and goes when the town answers." : `Added to ${nameOf(party)}: the Taskmaster drafts it now.`);
+    if (priority === "low" && !pitch && !r.kept && core.nightUnset()) core.askNight();           // the first Low goal asks whether Low work may run at night (spec 83 §3)
+    if (!r.kept) core.refresh();
+    draw();
+  }
+
+  return {
+    el,
+    draw,
+    reset() { text.value = ""; clearTimeout(timer); mineParty = ""; mine = undefined; kind = own = ""; menuOn = false; busy = false; },
+    async load() {
+      proposing = [];
+      const asked = proposes(core) ? loadProposals(core) : null;
+      await guess();
+      if (asked) { proposing = (await asked)?.proposals || []; draw(); }
+    },
+  };
+}
+
+/** `core`: the board's frame; `act`: {openParty(slug), deliver, flash}. Returns {el, open(), draw(), isOpen()}. */
 export function makeProject(core, act) {
   const st = core.st;
   const body = h("div", { class: "project" });
-  const newGoal = h("button", { class: "ork-btn primary big", type: "button", "data-act": "project-new-goal", onclick: () => { sh.close(); core.newIdea("", PROJECT); } }, "New goal");
-  const sh = sheet("The project", body, foot(newGoal));
+  const top = h("div", { class: "pj-top" });                  // the Orkmaster's head, then the rows, then the parties: the head and the rows are drawn once and stay
+  const sh = sheet("The project", body);
   sh.el.classList.add("full", "project-sheet");
+  const rows = makeRows(core, act, () => sh.close());       // the Orkmaster's two rows (spec 91 §8)
   const assets = makeAssets(core);            // the section *Assets* (spec 88 §7): drawn after the parties; its look is kept when the sheet is put away
   sh.el.addEventListener("close", () => assets.leave());
-  let dealt = false;                                 // the deal's strip is out
-  let proposing = [];                                // the proposals of the strip (`ideas.proposals`), none for a host that does not propose
   const folded = new Set();                          // the folds opened: `<party>:waits`, `<party>:flags`
 
   /** A goal's row: its element, its type's sign and title, its state's words, its mark; a tap opens the goal's screen. */
@@ -91,45 +253,22 @@ export function makeProject(core, act) {
       fold(c, "flags", `Flags (${list.flags.length})`, list.flags.map(flagRow), false));
   }
 
-  /** The library's parties dealt as a strip of tiles, in the deal's order, each with its why; a press opens New party with that preset picked. */
-  function strip() {
-    const deal = dealOf(core), lib = core.st.roles?.library || [];
-    const made = proposing.map((p) => proposalTile(p, () => { sh.close(); core.newParty(`${PROPOSAL}${p.id}`); }));
-    const ids = new Set(proposing.map((p) => p.id));
-    const tiles = (core.st.roles?.presets || []).filter((p) => deal.has(p.id) && !ids.has(p.id)).sort((a, b) => deal.get(a.id).i - deal.get(b.id).i).map((p) => {
-      const heads = [p.lead, ...(p.build || []), ...(p.check || [])].map((id) => lib.find((a) => a.id === id)).filter((a) => a?.craft)
-        .map((a) => head(raceOf(a), a.tier || "warrior", { small: true }));
-      const why = deal.get(p.id);
-      return h("button", { class: `pj-tile${why.why === "have" ? " is-have" : ""}`, type: "button", "data-preset": p.id, "data-why": why.why, onclick: () => { sh.close(); core.newParty(p.id); } },
-        h("span", { class: "pj-tile__heads" }, ...heads), h("b", {}, p.name), h("small", { class: "muted" }, p.line), why.words ? h("small", { class: "pj-tile__why" }, why.words) : null);
-    });
-    return h("div", { class: "pj-deal", role: "group", "aria-label": "New party" }, ...made, ...tiles);
-  }
-
-  /** *New party* deals the strip; under a host that proposes the proposals are asked first, and a host that cannot answer deals the library's parties as before. */
-  async function deal() {
-    dealt = !dealt;
-    proposing = [];
-    if (dealt && proposes(core)) proposing = (await loadProposals(core))?.proposals || [];
-    draw();
-  }
-
   function draw() {
     const project = projectOf(core);
     if (!project) { body.replaceChildren(); return; }
     const o = project.orkmaster || { race: "peon", tier: "crown", name: "Orkmaster" };
     const parties = chipsOf(st).filter((c) => c.slug !== "general");
-    body.replaceChildren(
-      h("div", { class: "pj-top" }, head(o.race, o.tier, { title: "Orkmaster" }),
-        h("span", { class: "pj-top__name" }, h("b", {}, "Orkmaster"), h("small", { class: "muted" }, "The parties, their goals")),
-        h("button", { class: "ork-btn", type: "button", "data-act": "project-new-party", "aria-expanded": String(dealt), onclick: deal }, "New party")),
-      ...[dealt ? strip() : null, ...parties.map(section), parties.length ? null : h("p", { class: "muted" }, "No parties yet."), assets.el].filter(Boolean));
+    rows.draw();
+    top.replaceChildren(head(o.race, o.tier, { title: "Orkmaster" }), h("span", { class: "pj-top__name" }, h("b", {}, "Orkmaster"), h("small", { class: "muted" }, "The parties, their goals")));
+    if (body.firstChild !== top || top.nextSibling !== rows.el) body.replaceChildren(top, rows.el);
+    while (rows.el.nextSibling) rows.el.nextSibling.remove();                           // the rows stay where they are while the Board is drawn again: the line being typed keeps its focus
+    body.append(...[...parties.map(section), parties.length ? null : h("p", { class: "muted" }, "No parties yet."), assets.el].filter(Boolean));
   }
 
   return {
     el: sh.el,
     isOpen: () => sh.el.open,
-    open() { dealt = false; proposing = []; draw(); sh.open(); if (projectOf(core)) assets.load(); },
+    open() { rows.reset(); draw(); sh.open(); if (projectOf(core)) { assets.load(); rows.load(); } },
     /** The sheet drawn again with the Board while it is open. */
     draw() { if (sh.el.open) draw(); },
   };
@@ -138,7 +277,7 @@ export function makeProject(core, act) {
 /** **Its party** in New goal from the project (shell-ideas.js): the parties as `ideas.party_for` answers them, the suggested one picked, a line *Orkmaster suggests Website · takes it whole*, the others as chips
  *  with their fit; without a type *Any party*. `pick(slug)` is told the party picked (and the suggestion, at first). Returns {el, ask(type), reset()}. */
 export function makeItsParty(core, pick) {
-  let list = [], suggested = "", picked = "", type = "", seq = 0;
+  let list = [], suggested = "", picked = "", type = "", seq = 0, first = "";
   const line = h("p", { class: "itsparty__line", role: "status" });
   const chips = h("div", { class: "itsparty__chips", role: "radiogroup", "aria-label": "Its party" });
   const el = h("div", { class: "field itsparty", hidden: true }, h("span", { class: "field-label" }, "Its party"), line, chips);
@@ -154,6 +293,8 @@ export function makeItsParty(core, pick) {
     el,
     nameOf,
     picked: () => picked,
+    /** The party the person picked in the project's *New goal* row (spec 91 §8): picked at first, until another is ("" none: the Orkmaster's suggestion). */
+    want(slug = "") { first = slug; },
     /** Asks the host for the parties of a goal of this type ("" none) and picks the one it suggests. */
     async ask(t = "") {
       const n = ++seq;
@@ -162,7 +303,7 @@ export function makeItsParty(core, pick) {
       if (n !== seq || !got) return;
       list = got.parties || [];
       suggested = got.suggested || list[0]?.party || "";
-      picked = suggested;
+      picked = list.some((p) => p.party === first) ? first : suggested;
       draw();
       if (picked) pick(picked);
     },

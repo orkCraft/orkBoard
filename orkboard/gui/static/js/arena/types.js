@@ -107,10 +107,10 @@ export function TypesSpread({ g, from, back, done }) {
   const [turning, setTurning] = useState("");
   const timer = useRef(0);
   useEffect(() => () => clearTimeout(timer.current), []);
-  const types = g.types || [];
+  const types = g.types || [], groups = g.groups || [];                // spec 91 §8: `groups` [[label, types]] deals the kinds under their headings; `text` is the line already typed, carried into New goal
   const pick = (t) => {
     if (turning) return;
-    const go = () => { done(); back?.focus(); openDialog("idea", { goal: g.slug, ...(g.first ? { party: g.first } : {}), ...(t ? { type: t } : {}) }); };
+    const go = () => { done(); back?.focus(); openDialog("idea", { goal: g.slug, ...(g.first ? { party: g.first } : {}), ...(t ? { type: t } : {}), ...(g.text ? { text: g.text } : {}) }); };
     if (reducedMotion()) { go(); return; }
     setTurning(t?.id || "blank");
     timer.current = setTimeout(go, TURN_MS);
@@ -118,5 +118,8 @@ export function TypesSpread({ g, from, back, done }) {
   return html`<${Dealt} name=${`New goal for ${g.short || g.title}`} cap=${html`<b>New goal for ${g.short || g.title}</b>`} from=${from} back=${back} done=${done}
     cls="arena-types" cards=${() => html`
       <${TypeCard} t=${null} turning=${turning === "blank"} press=${() => pick(null)} />
-      ${types.map((t) => html`<${TypeCard} key=${t.id} t=${t} turning=${turning === t.id} press=${() => pick(t)} />`)}`} />`;
+      ${groups.length ? groups.filter(([, list]) => list.length).map(([label, list]) => html`<section key=${label} class="arena-types__group" role="group" aria-label=${label}>
+        <h3 class="arena-types__label">${label}</h3>
+        <div class="arena-types__cards">${list.map((t) => html`<${TypeCard} key=${t.id} t=${t} turning=${turning === t.id} press=${() => pick(t)} />`)}</div></section>`)
+      : types.map((t) => html`<${TypeCard} key=${t.id} t=${t} turning=${turning === t.id} press=${() => pick(t)} />`)}`} />`;
 }

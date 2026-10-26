@@ -235,41 +235,39 @@ def _lacking(pg, host):
     pg.wait_for_function("() => document.querySelector('.shell-main, .arena')", timeout=WAIT_MS)
 
 
-def test_the_orkmaster_deals_release_first_when_flags_wait_then_ideation_and_a_press_opens_new_party_with_it_picked(level):
+def _ready(pg):
+    """The ready parties of the Orkmaster's *Parties* row (spec 91 §8), after New party."""
+    cards = pg.locator('.arena-prow[data-row="parties"] article.arena-rcard')
+    cards.first.wait_for(timeout=WAIT_MS)
+    return cards
+
+
+def test_the_orkmaster_offers_release_first_when_flags_wait_then_ideation_and_add_opens_new_party_with_it_picked(level):
     pg, host = level
     _lacking(pg, host)
     _project(pg)
-    pile = pg.locator(".arena-pjnew .arena-new__pile")
-    assert pile.get_attribute("aria-label").startswith("New party") and pg.locator(".arena-pjnew").bounding_box()["y"] < pg.locator(".arena-project__body").bounding_box()["y"]      # under the field's head
-    pile.click()
-    deal = pg.get_by_role("dialog", name="New party")
-    deal.locator(".arena-type--party").first.wait_for(timeout=WAIT_MS)
-    cards = deal.locator(".arena-type--party")
-    assert [c.get_attribute("data-preset") for c in cards.all()] == [e["id"] for e in LACKING]                          # the host's order
+    row = pg.locator('.arena-prow[data-row="parties"]')
+    assert row.get_by_role("button", name="New party", exact=True).count() == 1 and row.bounding_box()["y"] < pg.locator(".arena-project__body").bounding_box()["y"]      # over the table
+    cards = _ready(pg)
+    assert [c.get_attribute("data-preset") for c in cards.all()] == [e["id"] for e in LACKING][:3]                       # the host's order, three of them
     first, second, plain = cards.nth(0), cards.nth(1), cards.nth(2)
-    assert first.locator(".arena-type__why").inner_text() == "3 flags wait and no party releases them"
-    assert second.locator(".arena-type__why").inner_text() == "No party judges small ideas yet" and plain.locator(".arena-type__why").count() == 0
-    assert first.locator(".arena-type__name").inner_text() == "Release" and first.locator(".arena-type__heads .ork-race__head").count() >= 1 and first.locator(".arena-type__line").inner_text().strip()
+    assert first.locator(".arena-rcard__why").inner_text() == "3 flags wait and no party releases them"
+    assert second.locator(".arena-rcard__why").inner_text() == "No party judges small ideas yet" and plain.locator(".arena-rcard__why").count() == 0
+    assert first.locator(".arena-rcard__name").inner_text() == "Release" and first.locator(".arena-rcard__cap").inner_text().strip()
     assert first.locator(".ork-race__head").first.get_attribute("src").count("skeleton") == 1                           # its leader's head
-    pg.wait_for_timeout(900)                                                                                            # the deal is played
     shot(pg, "desk-deal.png")
-    first.click()
+    first.get_by_role("button", name="Add Release").click()
     dlg = pg.get_by_role("dialog", name="New party")
     dlg.locator(".shell-craft-tile").first.wait_for(timeout=WAIT_MS)
     assert dlg.locator('.shell-craft-tile[data-craft="release"]').get_attribute("aria-pressed") == "true"
     assert dlg.locator(".arena-releasesfrom").count() == 1                                                              # Release picked: its Releases from is there
 
 
-def test_a_party_the_project_has_is_dealt_last_and_says_you_have_one(level):
+def test_a_party_the_project_has_is_not_offered_the_rows_show_the_ones_it_lacks(level):
     pg, host = level
     _project(pg)
-    pg.locator(".arena-pjnew .arena-new__pile").click()
-    cards = pg.get_by_role("dialog", name="New party").locator(".arena-type--party")
-    cards.first.wait_for(timeout=WAIT_MS)
-    assert [c.get_attribute("data-preset") for c in cards.all()][-2:] == ["release", "ideation"]
-    assert cards.last.locator(".arena-type__why").inner_text() == "You have one" and "is-have" in cards.last.get_attribute("class")
-    pg.keyboard.press("Escape")
-    pg.get_by_role("dialog", name="New party").wait_for(state="detached", timeout=WAIT_MS)
+    assert [c.get_attribute("data-preset") for c in _ready(pg).all()] == ["game", "mobile-app", "website"]            # Release and Ideation are had: left out, the library's first three after them
+    assert pg.locator('.arena-prow[data-row="parties"] [data-preset="release"], .arena-prow[data-row="parties"] [data-preset="ideation"]').count() == 0
 
 
 def test_new_partys_tiles_follow_the_deal_inside_each_group_with_the_why_under_the_line(level):
@@ -305,7 +303,8 @@ def test_the_columns_new_party_line_stays_and_opens_new_party_as_today(level):
 # -- New goal on the level: its party from the Orkmaster -------------------------------------------------------------------------------------------------
 
 def _new_goal(pg):
-    pg.locator(".arena-pjgoal .arena-new__pile").click()
+    """The Orkmaster's *New goal* row: *More kinds…* deals the kinds of the parties (spec 91 §8), the party not picked by the person."""
+    pg.get_by_role("button", name="More kinds…").click()
     deal = pg.get_by_role("dialog", name="New goal for the project")
     deal.locator(".arena-type").first.wait_for(timeout=WAIT_MS)
     return deal
@@ -367,8 +366,7 @@ def test_your_own_goal_on_the_level_says_any_party_with_ideation_last_and_a_pitc
     form.get_by_role("button", name="Add the goal").click()
     sent = _calls(pg, host, "ideas.add")[-1]
     assert sent["track"] == "passkey" and sent["text"] == "Offline mode" and "type" not in sent
-    pg.locator(".arena-pjgoal .arena-new__pile").click()
-    pg.get_by_role("dialog", name="New goal for the project").locator('.arena-type[data-type=""]').click()
+    _new_goal(pg).locator('.arena-type[data-type=""]').click()
     form = pg.get_by_role("dialog", name="New goal")
     form.locator(".arena-itsparty__chip").first.wait_for(timeout=WAIT_MS)
     form.locator('.arena-itsparty__chip[data-party="ideas"]').click()                                                    # Ideation: a pitch
@@ -378,12 +376,12 @@ def test_your_own_goal_on_the_level_says_any_party_with_ideation_last_and_a_pitc
     assert sent["track"] == "ideas" and sent["text"] == "A pitch for dark mode"
 
 
-def test_no_new_goal_pile_stands_at_a_partys_foot_the_plus_is_the_project_lines(level):
+def test_no_new_goal_pile_stands_at_a_partys_foot_and_no_plus_in_the_project_line_the_levels_row_is_the_way_in(level):
     pg, host = level
     _show_goal(pg, "passkey")
-    assert pg.locator(".arena-left .arena-new__pile").count() == 0 and pg.locator(".arena-left__proj").get_by_role("button", name="New goal").count() == 1      # spec 73 §4: its own test is test_lighter_column_desktop_browser.py
+    assert pg.locator(".arena-left .arena-new__pile").count() == 0 and pg.locator(".arena-left__proj").get_by_role("button", name="New goal").count() == 0      # spec 91 §8: its own test is test_orkmaster_rows_91_desktop_browser.py
     _project(pg)
-    assert pg.locator(".arena-pjgoal .arena-new__pile").count() == 1                                                    # the level's pile stays
+    assert pg.locator(".arena-new__pile").count() == 0 and pg.locator('.arena-prow[data-row="goal"]').count() == 1                                    # the level's row
 
 
 # -- ideas.shown ------------------------------------------------------------------------------------------------------------------------------------------------

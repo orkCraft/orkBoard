@@ -15,19 +15,19 @@ const fromMap = () => {
 };
 
 /** `on`: the New goal is the project's (a party's own asks nothing); `typeId`: the goal's type, "" for *Your own goal*; `first`: the party shown when New goal came from the + (spec 73 §4.2),
- *  picked until another is. {parties, suggested, picked, pick, typed, ready}. */
-export function usePartyFor(on, typeId = "", first = "") {
+ *  picked until another is; `keep`: a party the person picked stays picked when the type changes (spec 91 §8: the type is guessed as the line is typed). {parties, suggested, picked, pick, mine (the one the person picked, "" none), typed, ready}. */
+export function usePartyFor(on, typeId = "", first = "", keep = false) {
   const [got, setGot] = useState(null), [mine, setMine] = useState("");
   useEffect(() => {
     if (!on) return undefined;
     let live = true;
-    setMine("");
+    if (!keep) setMine("");
     command("ideas.party_for", typeId ? { type: typeId } : {}).then((r) => { if (live) setGot(r && !r.error && Array.isArray(r.parties) ? r : fromMap()); }).catch(() => { if (live) setGot(fromMap()); });
     return () => { live = false; };
   }, [on, typeId]);
   const parties = got?.parties || [], suggested = got?.suggested || parties[0]?.party || "";
   const picked = parties.some((p) => p.party === mine) ? mine : parties.some((p) => p.party === first) ? first : suggested;
-  return { parties, suggested, picked, pick: setMine, typed: !!typeId, ready: !!got && !!picked };
+  return { parties, suggested, picked, pick: setMine, mine: parties.some((p) => p.party === mine) ? mine : "", typed: !!typeId, ready: !!got && !!picked };
 }
 
 /** **Its party**: what the Orkmaster suggests, and the parties to pick. */

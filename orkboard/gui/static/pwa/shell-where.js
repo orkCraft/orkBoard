@@ -38,7 +38,7 @@ export function makeWhere(core, ctx) {
   mine.el.classList.add("top");
   const list = h("div", { class: "where-parties" });
   // The project's level (spec 70 §2.1, §2.4): the Orkmaster's row at the parties' sheet's top opens its sheet; *Open <party>* there switches the board and says `ideas.shown {party, from: "@project"}`.
-  const level = makeProject(core, { openParty(slug) { shown(slug, PROJECT); core.pick(slug); } });
+  const level = makeProject(core, { openParty(slug) { shown(slug, PROJECT); core.pick(slug); }, deliver: (...a) => ctx.deliver(...a), flash: (t) => ctx.flash(t) });
   const sh = sheet("Parties", list, h("button", { class: "where-new", type: "button", "data-act": "new-party",
     onclick: () => { sh.close(); core.editGoal(""); } }, h("b", {}, "+ New party"), h("span", { class: "muted" }, "one of yours, or from the library")));
   sh.el.classList.add("top");
