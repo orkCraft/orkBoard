@@ -1,18 +1,18 @@
-/* Generated from tokens.json by tools/build_tokens.py (orkUI 0.11.0, look office). Do not edit. */
+/* Generated from tokens.json by tools/build_tokens.py (orkUI 0.12.0, look office). Do not edit. */
 
 :root[data-look="office"] {
   color-scheme: dark;
-  --ork-canvas: #0b0b0b;
-  --ork-panel: #111111;
-  --ork-raised: #1a1a1a;
-  --ork-paper: #141414;
-  --ork-frame: #333333;
-  --ork-edge: #8a8a8a;
-  --ork-ink: #e8e8e8;
-  --ork-ink-muted: #9a9a9a;
-  --ork-ink-faint: #858585;
+  --ork-canvas: #151515;
+  --ork-panel: #1d1d1d;
+  --ork-raised: #262626;
+  --ork-paper: #1a1a1a;
+  --ork-frame: #3a3a3a;
+  --ork-edge: #8f8f8f;
+  --ork-ink: #d4d4d4;
+  --ork-ink-muted: #a6a6a6;
+  --ork-ink-faint: #939393;
   --ork-ink-read: #c4c4c4;
-  --ork-on-ink: #0b0b0b;
+  --ork-on-ink: #151515;
   --ork-action: #6aa84f;
   --ork-action-hi: #7fbf5f;
   --ork-action-press: #58903f;
@@ -25,9 +25,9 @@
   --ork-elem-dust: #d4b77a;
   --ork-elem-void: #8e88a8;
   --ork-elem-lava: #a49a96;
-  --ork-table: #16110d;
-  --ork-table-rim: #4e3a2c;
-  --ork-table-rim-hi: #7a5d49;
+  --ork-table: #1a1a1a;
+  --ork-table-rim: #2e2e2e;
+  --ork-table-rim-hi: #3a3a3a;
   --ork-font-pixel: "Pixelify Sans", "IBM Plex Mono", ui-monospace, monospace;
   --ork-font-text: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --ork-font-read: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -38,16 +38,16 @@
   --ork-type-heading: 500 14px/16px var(--ork-font-pixel);
   --ork-type-heading-case: uppercase;
   --ork-type-heading-track: 0.04em;
-  --ork-type-label: 500 12px/16px var(--ork-font-pixel);
+  --ork-type-label: 600 12px/16px var(--ork-font-read);
   --ork-type-label-case: uppercase;
-  --ork-type-label-track: 0.06em;
+  --ork-type-label-track: 0.08em;
   --ork-type-button: 500 13px/16px var(--ork-font-pixel);
   --ork-type-button-case: none;
   --ork-type-button-track: 0;
-  --ork-type-body: 400 12px/18px var(--ork-font-text);
+  --ork-type-body: 400 14px/20px var(--ork-font-read);
   --ork-type-body-case: none;
   --ork-type-body-track: 0;
-  --ork-type-caption: 400 11px/16px var(--ork-font-text);
+  --ork-type-caption: 400 12px/16px var(--ork-font-read);
   --ork-type-caption-case: none;
   --ork-type-caption-track: 0;
   --ork-type-read: 400 15px/26px var(--ork-font-read);
@@ -233,9 +233,9 @@
   :root[data-look="office"] {
     --ork-type-heading: 500 16px/20px var(--ork-font-pixel);
     --ork-type-button: 500 16px/20px var(--ork-font-pixel);
-    --ork-type-label: 500 14px/16px var(--ork-font-pixel);
-    --ork-type-body: 400 16px/22px var(--ork-font-text);
-    --ork-type-caption: 400 13px/18px var(--ork-font-text);
+    --ork-type-label: 600 14px/16px var(--ork-font-read);
+    --ork-type-body: 400 16px/22px var(--ork-font-read);
+    --ork-type-caption: 400 13px/18px var(--ork-font-read);
     --ork-type-read: 400 17px/28px var(--ork-font-read);
     --ork-control: 40px;
     --ork-row: 44px;

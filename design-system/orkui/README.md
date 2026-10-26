@@ -1,18 +1,20 @@
 # orkUI / office
 
-Dark, monochrome, dense. **Colour is a signal** (danger, alert, success), except the one ork green of the primary action,
-the muted heads of the races and the table's wood.
-The **pixel face** (Pixelify Sans) is for buttons and headings only, never below 12 px, whole pixels, no ligatures, no faux
-bold, never for a number or a person's text; **everything else is IBM Plex Mono** (12/18 on the desktop, 16/22 on the phone),
-but a long text read through.
+Dark, monochrome, soft. **Colour is a signal** (danger, alert, success), except the one ork green of the primary action and
+the muted heads of the races. The ground is lifted (canvas `#151515`) and the ink softened (`#d4d4d4`, 12.3:1 on the canvas,
+not 16:1), so the screen does not glare; the table is a neutral grey a step above the canvas.
+The **pixel face** (Pixelify Sans) is for titles, headings and buttons only, never below 12 px, whole pixels, no ligatures, no
+faux bold, never for a number or a person's text. **The interface's text is IBM Plex Sans**: body 14/20, caption 12/16 and the
+label 12/16 in weight 600 and capitals (on the phone 16/22, 13/18 and 14/16). **IBM Plex Mono** stays the face of code, paths,
+diffs, logs and terminals (`--ork-font-code`, `--ork-font-text`). A long text read through is set in Plex Sans, too (15/26).
 
 ## Reading
 
 A spec, a document, anything read through rather than glanced at, is set in `.ork-read`: the **paper** (`--ork-paper`
-`#141414`, a step above the canvas) in the **reading ink** (`--ork-ink-read` `#c4c4c4`, about 10:1, not full ink's 16:1, so
-the letters do not glare) and the **reading face** IBM Plex Sans (15/26 on the desktop, 17/28 on the phone), a line of about
+`#1a1a1a`, a step above the canvas) in the **reading ink** (`--ork-ink-read` `#c4c4c4`, about 10:1, not full ink's 11.7:1 on the
+paper, so the letters do not glare) and the **reading face** IBM Plex Sans (15/26 on the desktop, 17/28 on the phone), a line of about
 68 characters. Headings, bold and links keep full ink, so the outline stands out; quotes are muted; code stays in Plex Mono.
-The interface around a page (its labels, buttons, lists) stays in Plex Mono.
+The interface around a page (its labels, buttons, lists) is set in the interface's own scale.
 
 Nothing is round: edges 1 px, corners notched by 2 px (`clip-path` on a control's `::before`, so the hit area is whole),
 dialogs framed `3px double`. Selected is raised with a 2 px ink bar, never a white box. Every arrow and icon is a pixel mark.
@@ -26,11 +28,12 @@ question · `ork-failed.txt` the only content is a failure · `ork-working.txt` 
 On an empty screen the ork and its sentence are one block, centred on both axes in the pane's free area.
 
 ## The table
-`.ork-table` is the surface the work lies on (orkboard's field, where the tasks are dealt): a dark walnut top
-(`--ork-table`) in a wooden rim 3 px wide (`--ork-table-rim`), its near lip lit by 1 px (`--ork-table-rim-hi`). The wood is
-a material, never a mark: no control, state, label or person's text takes it, and what lies on the table keeps its own
-colours (a card its panel, a signal its signal). Text on the table holds AA as on the canvas; the lit lip stands 3:1 on the
-top and on the canvas, so the table's bound reads. One table a screen, under the work, never a panel or a dialog.
+`.ork-table` is the surface the work lies on (orkboard's field, where the tasks are dealt): a neutral grey top
+(`--ork-table`, `#1a1a1a`, a step above the canvas) in a rim 3 px wide (`--ork-table-rim`), its near lip lit by 1 px
+(`--ork-table-rim-hi`); all three are greys, no wood. The table is a surface, never a mark: no control, state, label or
+person's text takes it, and what lies on the table keeps its own colours (a card its panel, a signal its signal). Text on the
+table holds AA as on the canvas (ink 11.7:1); the rim and the lip are steps of the same grey (the lip 1.5:1 on the top), so a
+card is set off by its own frame line, not by the table. One table a screen, under the work, never a panel or a dialog.
 
 ## Busy
 `.ork-busy` says that work is under way where it stands (a card at work, a head that works): 12 px, drawn as an hourglass,
