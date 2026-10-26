@@ -502,6 +502,8 @@ def test_the_start_screen_is_black_with_the_name_coming_up_in_steps_and_the_fram
     host.play = [{"state": "stopped"}, {"state": "starting", "commit": HEAD, "short": HEAD[:7]}, {"state": "starting", "commit": HEAD, "short": HEAD[:7]},
                  {"state": "starting", "commit": HEAD, "short": HEAD[:7]}, PLAYING]
     _play(pg)
+    pg.evaluate("""() => { new MutationObserver(() => { const e = document.querySelector('.play-intro.is-fading');
+      if (e && !window.__fade) window.__fade = getComputedStyle(e).animationTimingFunction; }).observe(document.body, {subtree: true, childList: true, attributes: true}); }""")
     pg.get_by_role("button", name="Open the build").click()
     pane = pg.locator('.playpane[data-state="starting"]')
     pane.wait_for(timeout=WAIT_MS)
@@ -519,8 +521,8 @@ def test_the_start_screen_is_black_with_the_name_coming_up_in_steps_and_the_fram
     shot(pg, "play-start-screen.png")
     pg.locator('.playpane[data-state="playing"]').wait_for(timeout=WAIT_MS)
     assert pg.locator("iframe.play-frame").count() == 1
-    pg.locator(".play-intro.is-fading").wait_for(timeout=WAIT_MS)                                                      # the name fades over the frame coming up
-    assert pg.locator(".play-intro.is-fading").evaluate("e => getComputedStyle(e).animationTimingFunction").startswith("steps(")
+    timing = pg.wait_for_function("() => window.__fade", timeout=WAIT_MS).json_value()      # the name faded over the frame coming up (caught as it began)
+    assert timing.startswith("steps(")
     pg.locator(".play-intro").wait_for(state="detached", timeout=WAIT_MS)
     assert pg.frame_locator("iframe.play-frame").locator("p").text_content().strip() == "the build"
     assert pg.evaluate("window.__frames") == ["playing"]                                                               # a frame was put in only once the page had answered
