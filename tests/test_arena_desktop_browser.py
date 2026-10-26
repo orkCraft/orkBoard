@@ -606,12 +606,15 @@ def test_the_limits_inside_the_night_window_say_the_morning(gui):
     host.reserve = {"share": 0.2, "night": True}
     pg, host, errors = _open(gui, host=host, ready=".arena-phead")
     try:
-        pg.locator(".shell-top__chip").first.click()                                                                  # a chip opens the panel (spec 91 §1)
-        limits = pg.get_by_role("region", name="What is left of your AI tools")
+        pg.locator(".shell-top__chip", has_text="Claude").click()                                                   # a chip opens its tool's panel (spec 91 §1)
+        limits = pg.get_by_role("region", name=re.compile("^What is left of Claude"))
         claude = limits.locator(".arena-limit[data-provider=claude]")
         assert claude.locator(".ork-crystals i.kept").count() == 2 and claude.locator(".ork-crystals i.on").count() == 4
-        assert "hatched: kept for the morning" in limits.inner_text() and "kept for the morning" in claude.get_attribute("title")
-        assert limits.locator(".arena-limit[data-provider=codex] .ork-crystals i.kept").count() == 0                # the reserve is Claude's only
+        assert "kept for the morning" in claude.get_attribute("title")
+        pg.locator(".shell-top__chip", has_text="Codex").click()
+        codex = pg.get_by_role("region", name=re.compile("^What is left of Codex")).locator(".arena-limit[data-provider=codex]")
+        assert codex.locator(".ork-crystals i.kept").count() == 0                                                    # the reserve is Claude's only
+        pg.locator(".shell-top__chip", has_text="Claude").click()
         assert pg.evaluate("getComputedStyle(document.querySelector('.ork-crystals i.kept')).backgroundImage").startswith("repeating-linear-gradient")
     finally:
         pg.close()
