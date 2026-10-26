@@ -166,13 +166,15 @@ def usd(rows: list[dict]) -> float | None:
     return round(sum(priced), 4)
 
 
+def token_count(row: dict) -> int:
+    """One line's tokens: the sum of the counts it split, else the total the tool gave, else 0."""
+    t = row.get("tokens") if isinstance(row.get("tokens"), dict) else {}
+    split = [v for k in TOKEN_KEYS if (v := _num(t.get(k))) is not None]
+    return int(sum(split)) if split else int(_num(t.get("total")) or 0)
+
+
 def _tokens(rows: list[dict]) -> int:
-    n = 0
-    for r in rows:
-        t = r.get("tokens") if isinstance(r.get("tokens"), dict) else {}
-        split = [v for k in TOKEN_KEYS if (v := _num(t.get(k))) is not None]
-        n += int(sum(split)) if split else int(_num(t.get("total")) or 0)
-    return n
+    return sum(token_count(r) for r in rows)
 
 
 def _stage(row: dict, failed: bool) -> str:

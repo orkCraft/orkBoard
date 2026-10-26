@@ -1,0 +1,35 @@
+/* What is left of your AI tools and what used it (docs/specs/90-what-the-first-look-said.md §2.3, docs/specs/91-the-owners-list.md §2; js/arena/limits.js):
+   the tool lines, and one tool's panel under its chip in the top bar (the frame is shell.css `.shell-top__limits`). orkUI's tokens and components only
+   (.ork-crystals, .ork-mark, .ork-btn): no raw colour, nothing round, no text under 12 px. */
+.arena-limits { display: flex; flex-direction: column; gap: var(--ork-2); }
+.arena-limit { display: flex; align-items: center; gap: var(--ork-4); flex: none; font: var(--ork-type-caption); }
+.arena-limit__name { display: inline-flex; align-items: center; gap: var(--ork-2); width: 96px; flex: none; color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.arena-limit b { font-weight: 600; font-variant-numeric: tabular-nums; }
+.arena-limit:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.arena-limits__note { font: var(--ork-type-caption); color: var(--ork-ink-faint); }
+.arena-limits.is-one { gap: var(--ork-3); }
+
+/* -- what used it: a row a party, its members under it, then what no call of ours accounts for ------------------------------------------------ */
+.arena-usage { display: flex; flex-direction: column; gap: var(--ork-3); padding-top: var(--ork-3); border-top: var(--ork-line) solid var(--ork-frame); }
+.arena-usage__head { display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-3); }
+.arena-usage__head .arena-cap:first-child { color: var(--ork-ink); }
+.arena-usage__window { margin-right: auto; }
+.arena-usage__scope { display: inline-flex; gap: var(--ork-2); margin-left: auto; }
+.arena-usage__scope .ork-btn { font: var(--ork-type-caption); text-transform: none; letter-spacing: normal; }
+.arena-usage__scope .ork-btn[aria-pressed="true"] { --_bg: var(--ork-ink); --_fg: var(--ork-on-ink); --_bd: var(--ork-ink); }
+.arena-usage__rows, .arena-usage__members { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.arena-usage__rows { gap: var(--ork-3); }
+.arena-usage__members { gap: var(--ork-1); padding-left: var(--ork-5); margin-top: var(--ork-1); }
+.arena-usage__line { display: flex; align-items: center; gap: var(--ork-4); min-width: 0; font: var(--ork-type-body); }
+.arena-usage__line.is-sub { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.arena-usage__who { flex: 0 1 140px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.arena-usage__bar { flex: 1; min-width: 24px; height: 4px; background: var(--ork-frame); display: block; }
+.arena-usage__line.is-sub .arena-usage__bar { height: 2px; }
+.arena-usage__bar > b { display: block; height: 100%; background: var(--ork-ink); }
+.arena-usage__line.is-sub .arena-usage__bar > b { background: var(--ork-ink-muted); }
+.arena-usage__pct { flex: none; min-width: 40px; text-align: right; font-variant-numeric: tabular-nums; }
+.arena-usage__who + .arena-usage__pct { margin-left: auto; }
+.arena-usage__row.is-outside .arena-usage__line { color: var(--ork-ink-muted); }
+.arena-usage__row.is-outside .arena-usage__bar > b { background: var(--ork-edge); }
+.arena-usage__empty { margin: 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.arena-usage__note { color: var(--ork-ink-faint); }
