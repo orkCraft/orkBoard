@@ -141,8 +141,8 @@ def test_the_ideation_preset_follows_website_and_the_investors_stages_are_pitch_
     assert got[i - 1]["id"] == "website" and got[i + 1]["id"] == "release" and got[i] == {
         "id": "ideation", "name": "Ideation", "line": "Small pitches: invest, reshape or pass, and why", "craft": "product", "race": "lich",
         "mixed": True, "lead": "investor", "build": ["product-view", "market-view", "tech-view", "design-view"], "check": ["skeptic"]}
-    assert library.stages()["investor"] == {"lead": "Pitch", "build": "Views", "check": "Decision", "seats": {"lead": 1, "build": 4, "check": 1}}
-    assert not goal_team.seats(TEAM, "investor")
+    assert library.stages()["investor"] == {"lead": "Pitch", "build": "Views", "check": "Decision", "seats": {"lead": 1, "build": 1, "check": 1}}
+    assert not goal_team.seats(TEAM, "investor")           # a party made before keeps its four views
 
 
 def test_seats_refuse_ideation_without_a_view_with_a_code_agent_and_a_view_elsewhere():
@@ -152,6 +152,7 @@ def test_seats_refuse_ideation_without_a_view_with_a_code_agent_and_a_view_elsew
     assert goal_team.seats([*TEAM, "grunt"], "investor") == whole                                    # one more
     assert goal_team.seats(list(library.VIEWS), "investor") == whole                                 # no skeptic
     assert not goal_team.seats([], "investor") and not goal_team.seats([*library.VIEWS[:2], "skeptic"], "investor")           # a size's part of it (spec 81 §2)
+    assert not goal_team.seats([library.VIEWS[0]], "investor") and not goal_team.seats([library.VIEWS[0], "skeptic"], "investor")     # Standard, Full (spec 87 §5)
     assert goal_team.seats([*library.VIEWS[:3], "skeptic"], "investor") == whole and goal_team.seats(["skeptic"], "investor") == whole
     only = "The views judge pitches: they are in Ideation only"
     assert goal_team.seats(["grunt", "market-view"], "architect") == only
@@ -341,7 +342,7 @@ def host(fake_repo):
     h.model = h.ideas.keeper.call = Model(h.ideas.keeper, pitch_view=VIEW, pitch_case=CASE, pitch_decide=DECIDE(),
                                           goal={"summary": "", "questions": []}, draft={"title": "Dark theme", "questions": []})
     h.ship = h.command("ideas.goal_save", {"title": "Ship", "about": "Ship it.", "craft": "engineering", "leader": "architect",
-                                           "team": ["grunt", "tester", "reviewer"]})["slug"]
+                                           "team": ["grunt", "reviewer"]})["slug"]
     h.party = h.command("ideas.goal_save", {"title": "Ideas", "about": "Small ideas.", "craft": "product", "leader": "investor",
                                             "team": TEAM, "preset": "ideation"})["slug"]
     for g in (h.ship, h.party):
@@ -406,7 +407,7 @@ def test_what_the_faces_read_of_a_pitch_on_its_page_and_its_map_node_and_needs_y
     assert host.command("ideas.page", {"slug": ideas.add_idea(host.ideas.root(), "a goal", host.ship, host.ideas.state_dir)})["pitch"] is None
     m = host.command("ideas.map", {"goal": host.party})
     (g,) = m["goals"]
-    assert g["ideation"] is True and g["passed"] == 0 and g["types"] == [] and g["stages"]["build"] == {"word": "Views", "seats": 4}
+    assert g["ideation"] is True and g["passed"] == 0 and g["types"] == [] and g["stages"]["build"] == {"word": "Views", "seats": 1}
     (node,) = m["nodes"]
     assert node["pitch"]["decision"]["answer"] == "invest" and node["needs_you"] == "pitch" and node["stage"] == "checking"
     board = host.command("ideas.board")

@@ -5,6 +5,7 @@ a short name (docs/specs/41-phone-round-3.md §3): an idea's, a goal's or a task
         # ["Offline mode", "SyncQueue", "offline", …]: the phrases first, then the words, the most used first
     short_of("Давай сделаем тёмную тему в настройках")      # "Сделаем тёмную тему"
     short_said("Dark mode", "Add a dark mode toggle")     # the model's short name when it fits, else short_of(title)
+    title_of("Spawn enemies from the wave director")      # a task's title: kept up to 80 characters, a longer one cut at a word with "…" (spec 87 §3)
 
 A word is one of at least MIN_CHARS letters, or a name of the code (`sync_queue`, `docs/plan.md`, `SyncQueue`), in
 any script; the common words of English and Russian are left out. The same word in other cases is one, written as
@@ -122,3 +123,17 @@ def short_said(said: object, title: str, limit: int = SHORT_CHARS) -> str:
     if name and len(name) <= limit and len(name.split()) <= SHORT_WORDS:
         return name
     return short_of(title, limit)
+
+
+TITLE_CHARS = 80                 # a task's title as kept (spec 87 §3): the plan's prompt asks 60; a longer one up to this is kept as it is
+
+
+def title_of(value: object) -> str:
+    """A task's title (spec 87 §3): kept as it is up to 80 characters; a longer one is cut at the last word that fits, with "…" (80 characters at most)."""
+    text = " ".join(str(value).split()) if isinstance(value, (str, int, float)) and not isinstance(value, bool) else ""
+    if len(text) <= TITLE_CHARS:
+        return text
+    room = text[:TITLE_CHARS - 1]
+    if not text[TITLE_CHARS - 1].isspace() and " " in room:      # the cut falls inside a word: leave that word out
+        room = room.rsplit(" ", 1)[0]
+    return room.rstrip(" ,;:.-") + "…"

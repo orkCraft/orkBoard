@@ -246,3 +246,26 @@ def test_a_plan_says_the_kinds_no_one_of_its_party_does_and_its_prompt_says_the_
     keeper.plan(bare)
     _wait(keeper, bare)
     assert ideas.plan(keeper.state, bare)["missing"] == [] and "Its type:" not in keeper.call.asked[0]["prompt"]
+
+
+def test_a_tasks_title_is_asked_short_kept_to_eighty_and_a_longer_one_cut_at_a_word_spec_87(keeper):
+    """Spec 87 §3: the prompt asks a title in 60 characters at most, the verb first; `make_plan` keeps one up to 80 as it is and cuts a longer one at
+    the last word under 80, with "…" (80 characters at most)."""
+    slug = ideas.add_idea(keeper.root, "waves", state_dir=keeper.state)
+    keeper.call = model = Model({"tasks": [{"id": "a", "title": "Spawn enemies from the wave director", "brief": "b"}]})
+    keeper.plan(slug)
+    _wait(keeper, slug)
+    prompt = " ".join(model.asked[0]["prompt"].split())
+    assert "Each task's `title` is a name, 60 characters at most, the verb first (e.g. \"Spawn enemies from the wave director\")" in prompt
+    exact = "Write the long title of a task that is exactly eighty characters in all, no more"[:80]
+    assert len(exact) == 80
+    long = "Spawn the enemies of every wave from the wave director, then count the survivors of each wave after it"
+    one_word = "x" * 120
+    got = idea_keeper.make_plan("w", {"tasks": [{"title": t, "brief": "b"} for t in ("Short title", exact, long, one_word, "  Two   spaces\nhere ")]})["tasks"]
+    titles = [t["title"] for t in got]
+    assert titles[0] == "Short title" and titles[1] == exact                                     # up to 80: as it is
+    assert titles[2] == "Spawn the enemies of every wave from the wave director, then count the…" and len(titles[2]) <= 80
+    assert titles[3] == "x" * 79 + "…"                                                           # no word to cut at
+    assert titles[4] == "Two spaces here"
+    assert all(len(t) <= 80 for t in titles)
+    assert long.startswith(titles[2][:-1])                                                        # a cut, never a rewrite

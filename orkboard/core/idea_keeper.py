@@ -50,7 +50,7 @@ from orkboard.core.idea_revise import ReviseMixin
 from orkboard.core.idea_plan import _task, _why, estimate, readiness  # noqa: F401  (the plan's small helpers: the callers and tests use them from here)
 from orkboard.realm import (collide, event_log, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_look, idea_pick, idea_spend, idea_target, ideas,
                             releases, roles, status, tool_errors)
-from orkboard.realm.idea_words import short_said
+from orkboard.realm.idea_words import short_said, title_of
 
 CHANGED = "ideas.changed"          # the bus's topic: slug
 HARNESS = "claude"                 # the tool when a step's party has none and the machine names none (spec 81: the Main tool is the default)
@@ -511,6 +511,8 @@ Rules:
 - At most {MAX_TASKS} tasks. Each is a brief another Claude session can do alone, in a worktree of the repository:
   what to change, where, and how it is tested; it names the Done when lines it proves. `after` only where a task
   needs another's result.
+- Each task's `title` is a name, 60 characters at most, the verb first (e.g. "Spawn enemies from the wave director"):
+  the detail belongs in its brief.
 - Each task's tag (`kind`), the kind of work it is, one of: {kinds}. Ordinary work is "code".{team}
 - A task may end with two to six variants of one kind for the person to pick from instead of a change, only when the spec asks to
   choose by eye or by ear (a logo, an icon, a sound, a clip, a name or a tagline): give it `"pick": {{"n": 2 to 6, "kind": "image" |
@@ -582,7 +584,7 @@ def make_plan(slug: str, answer: dict | None, made_at: str = "", look: str = "")
     for raw in idea_look.with_pick(answer["tasks"], look, slug, MAX_TASKS) if look else answer["tasks"]:
         if not isinstance(raw, dict) or len(tasks) >= MAX_TASKS:
             continue
-        title, brief = _words(raw.get("title"), 200), _words(raw.get("brief"), 6000)
+        title, brief = title_of(raw.get("title")), _words(raw.get("brief"), 6000)
         if not title or not brief:
             continue
         tid = f"k{len(tasks) + 1}"

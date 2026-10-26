@@ -49,7 +49,7 @@ from typing import Any, Callable
 
 from orkboard import settings
 from orkboard.core import idea_keeper
-from orkboard.realm import event_log, idea_checks, idea_lens, idea_photos, idea_route, idea_secrets, idea_target, ideas, pitches, wiki
+from orkboard.realm import board_map, event_log, idea_checks, idea_lens, idea_photos, idea_route, idea_secrets, idea_target, ideas, pitches, wiki
 from orkboard.gui.ideas_args import VIA, IdeasError, _device, _opt, _text
 from orkboard.gui.ideas_board import BoardMixin
 from orkboard.gui.ideas_canvases import CanvasesMixin, canvas_commands
@@ -342,7 +342,8 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
                 "sections": [{"name": n, "thesis": ideas.thesis(page.section(n)), "text": page.section(n)}
                              for n in names],
                 "talk": ideas.talk(self.state_dir, slug),
-                "plan": {**self._with_heads(plan), "missing": self.plan_missing(slug, plan)} if plan else plan,     # read now (spec 52 §2.6)
+                "plan": {**self._with_heads(plan), "missing": self.plan_missing(slug, plan),         # read now (spec 52 §2.6)
+                         "todo_lines": board_map.todo_lines(plan)} if plan else plan,                 # *Before <task>: <to-do>* (spec 87 §4.2)
                 "busy": bool(self.keeper.busy(slug)) or st["state"] in ("reading", "planning"),
                 "state_error": st.get("error", ""), "proposed_track": page.get("proposed_track"),
                 "lens": idea_lens.read(self.state_dir, slug), **self.after_start(slug, plan, st),      # spec 62 §1.5

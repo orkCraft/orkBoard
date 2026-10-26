@@ -342,7 +342,7 @@ def test_ideas_flags_say_the_release_of_a_flag_and_goal_save_keeps_releases_from
         h.command("ideas.goal_save", {**save, "releases_from": [h.talk]})
     with pytest.raises(CommandError, match="Releases from is a list of parties"):
         h.command("ideas.goal_save", {**save, "releases_from": "all"})
-    made = h.command("ideas.goal_save", {"title": "Store releases", "about": "Out.", "craft": "product", "leader": lead, "team": [*build, *check],
+    made = h.command("ideas.goal_save", {"title": "Store releases", "about": "Out.", "craft": "product", "leader": lead, "team": [build[0], check[0]],
                                          "preset": "release", "releases_from": [h.web]})["slug"]
     assert releases.releases_from(h.root, made) == [h.web]
 

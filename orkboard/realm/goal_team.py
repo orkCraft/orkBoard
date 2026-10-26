@@ -9,8 +9,8 @@ every team and is never in the list.
     for_idea(root, "dark-mode")                                 # the team of the idea's goal; every_for_idea, its every
 
 A goal's party (library.seats_of): one leader — the goal's steps (its reading, its ideas' drafts, answers and plans, and
-accepting the goal) run as it; the Taskmaster when none is picked —, and its builders and checkers (the team): three and two,
-or the seats its leader sets (a Game designer's four and one; spec 59 §2.3).
+accepting the goal) run as it; the Taskmaster when none is picked —, and its builder and its checker (the team): one seat a stage
+of its leader's (spec 87 §5; a party made before keeps the members it was saved with, an edit holds to the seats).
 
     leader_of(root, "ship")                                     # "product-manager"; "taskmaster" when none was picked
     seats(team, leader)                                         # the error of a party that has too many in a band, else ""
@@ -53,24 +53,26 @@ def band_of(slug: str) -> str:
     return a.band if a is not None else "build"
 
 
-def seats(team: list[str], leader: str = "") -> str:
-    """Why a party does not fit its seats ("" when it does): one leader, and at most the builders and checkers its leader's stages
-    give (library.seats_of)."""
+def seats(team: list[str], leader: str = "", kept: list[str] | tuple[str, ...] = ()) -> str:
+    """Why a party does not fit its seats ("" when it does): one leader, and at most the builder and the checker its leader's stages
+    give (library.seats_of: one a stage, spec 87 §5). `kept`: the team the party was saved with; a band whose members were all in it is not
+    refused (a party made before keeps its team, and an edit may take members out one at a time)."""
     from orkboard.realm import library
     if leader and band_of(leader) != "lead":
         return f"{leader} does not lead: pick a leader of the library"
     if leader == library.INVESTOR:               # Ideation is its four views and the skeptic (spec 65 §1), or a size's part of them (spec 81 §2)
         views, skeptic = list(library.VIEWS), library.SKEPTIC
-        if sorted(team) not in (sorted([*views, skeptic]), sorted([*views[:2], skeptic]), []):
+        if sorted(team) not in (sorted([*views, skeptic]), sorted([*views[:2], skeptic]), [views[0]], sorted([views[0], skeptic]), []):
             return IDEATION_WHOLE
         return ""
     if any((a := library.get(s)) is not None and a.pitch for s in team):
         return PITCH_ONLY
     have = library.seats_of(leader or "taskmaster")
     name = library.get(leader).name if leader and library.get(leader) is not None else "Taskmaster"
-    for band, words in (("build", "builders"), ("check", "checkers")):
-        if sum(1 for s in team if band_of(s) == band) > have[band]:
-            return f"A party led by {name} has at most {have[band]} {words}"
+    for band, one in (("build", "builder"), ("check", "checker")):
+        mine = [s for s in team if band_of(s) == band]
+        if len(mine) > have[band] and not set(mine) <= set(kept):
+            return f"A party led by {name} has at most {have[band]} {one}{'' if have[band] == 1 else 's'}"
     if any(band_of(s) == "lead" for s in team):
         return "A leader leads: it is not one of the builders or checkers"
     return ""

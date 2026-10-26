@@ -268,7 +268,7 @@ LIBRARY: tuple[Agent, ...] = (
 
 BY_ID = {a.id: a for a in LIBRARY}
 SUGGESTED = 2                                # (kept for older faces) the first builders of a party's craft
-SEATS = {"lead": 1, "build": 3, "check": 2}  # the default's seats (older faces); a leader may set its own (STAGES)
+SEATS = {"lead": 1, "build": 1, "check": 1}  # a party's seats (older faces): one a stage, for every leader (spec 87 §5; `Stages.seats`)
 # The party of each craft starts with: its leader, its builders, its checkers (Mixed: the Taskmaster alone).
 PARTIES = {"engineering": ("architect", ("grunt", "tester"), ("reviewer",)),
            "design": ("product-designer", ("ui-kit", "artist"), ("accessibility-reviewer",)),
@@ -296,22 +296,21 @@ CRAFT_LINES = {"engineering": "Code, tests and the build", "design": "Screens, f
 
 @dataclass(frozen=True)
 class Stages:
-    """A leader's stages (spec 59 §2.3): the words of its three steps and the seats of its builders and checkers."""
+    """A leader's stages (spec 59 §2.3, spec 87 §5): the words of its three steps; each stage has **one seat** (a party's roles are its leader's
+    stages: the leader leads, one builder builds, one checker checks)."""
     lead: str = "Planning"
     build: str = "Implementation"
     check: str = "Checking"
-    build_seats: int = 3
-    check_seats: int = 2
 
     @property
     def seats(self) -> dict:
-        return {"lead": 1, "build": self.build_seats, "check": self.check_seats}
+        return {"lead": 1, "build": 1, "check": 1}
 
 
 DEFAULT_STAGES = Stages()
-STAGES: dict[str, Stages] = {"game-designer": Stages("Concept", "Build", "Playtest", 4, 1),   # one leader and five more at most
-                             "investor": Stages("Pitch", "Views", "Decision", 4, 1),
-                             "release-manager": Stages("Gather", "Prepare", "Check", 3, 1)}
+STAGES: dict[str, Stages] = {"game-designer": Stages("Concept", "Build", "Playtest"),
+                             "investor": Stages("Pitch", "Views", "Decision"),
+                             "release-manager": Stages("Gather", "Prepare", "Check")}
 
 
 def stages_of(leader: str) -> Stages:

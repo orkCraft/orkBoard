@@ -51,27 +51,29 @@ def test_the_product_manager_takes_screens_too_in_a_sentence_that_fits():
             "system's words.") in pm.instruction
 
 
-def test_the_stages_of_a_leader_sum_to_five_more_and_the_default_is_for_any_other():
+def test_a_leaders_stages_each_have_one_seat_and_the_default_is_for_any_other():
+    one = {"lead": 1, "build": 1, "check": 1}                                                 # spec 87 §5: a party's seats are its leader's stages
     for leader, s in {**library.STAGES, "default": library.DEFAULT_STAGES}.items():
-        assert s.build_seats + s.check_seats == (goal_team.SEATS - 1 if leader == "release-manager" else goal_team.SEATS), leader     # spec 68 §1.2: the Release manager's 3 and 1
-        assert 2 <= s.build_seats <= 4 and 1 <= s.check_seats <= 3, leader
+        assert s.seats == one, leader
+        assert not hasattr(s, "build_seats") and not hasattr(s, "check_seats"), leader
     assert library.STAGES.keys() == {"game-designer", "investor", "release-manager"}      # the Investor's: spec 65 §1; the Release manager's: spec 68 §1
     game = library.stages_of("game-designer")
-    assert (game.lead, game.build, game.check, game.build_seats, game.check_seats) == ("Concept", "Build", "Playtest", 4, 1)
+    assert (game.lead, game.build, game.check) == ("Concept", "Build", "Playtest")           # the stage words stay
+    assert (library.stages_of("investor").lead, library.stages_of("investor").build, library.stages_of("investor").check) == ("Pitch", "Views", "Decision")
     for other in ("architect", "taskmaster", "product-manager", "a-persons-own", ""):
         s = library.stages_of(other)
-        assert (s.lead, s.build, s.check, s.build_seats, s.check_seats) == ("Planning", "Implementation", "Checking", 3, 2), other
-    assert library.seats_of("game-designer") == {"lead": 1, "build": 4, "check": 1} and library.seats_of("growth") == {"lead": 1, "build": 3, "check": 2}
-    assert library.SEATS == {"lead": 1, "build": 3, "check": 2}                              # the default's, for older faces
+        assert (s.lead, s.build, s.check) == ("Planning", "Implementation", "Checking"), other
+        assert library.seats_of(other) == one
+    assert library.seats_of("game-designer") == one == library.seats_of("growth") == library.seats_of("investor")
+    assert library.SEATS == one                                                              # for older faces
 
 
-def test_the_librarys_parties_have_known_members_that_fit_their_leaders_seats_and_bands():
+def test_the_librarys_parties_have_known_members_listed_most_needed_first_and_their_first_of_each_fits_the_seats():
     assert [p[0] for p in library.PRESETS] == ["game", "mobile-app", "website", "ideation", "release"]    # Ideation after Website (spec 65 §1), Release after Ideation (spec 68 §1)
     for pid, name, line, craft, lead, build, check in library.PRESETS:
         assert library.get(lead).band == "lead" and craft in roles.CRAFTS and name and line, pid
         assert all(library.get(s).band == "build" for s in build) and all(library.get(s).band == "check" for s in check), pid
-        assert not goal_team.seats([*build, *check], lead), pid
-        assert len(build) <= library.seats_of(lead)["build"] and len(check) <= library.seats_of(lead)["check"], pid
+        assert not goal_team.seats([build[0], check[0]], lead), pid                  # a seat a stage: the first builder and the first checker (spec 87 §5)
     game, app, site, _ideation, _release = library.PRESETS
     assert (game[4], game[5], game[6]) == ("game-designer", ("grunt", "artist", "level-designer", "sound-designer"), ("playtester",))
     assert (app[4], app[5], app[6]) == ("product-manager", ("grunt", "artist", "aso"), ("reviewer", "accessibility-reviewer"))
@@ -102,9 +104,9 @@ def test_listed_and_stages_answer_the_new_agents_and_every_leader():
     listed = {a["id"]: a for a in library.listed()}
     assert listed["playtester"]["band"] == "check" and listed["playtester"]["check"]["applies"].startswith("when the idea changes what a player")
     stages = library.stages()
-    assert stages["game-designer"] == {"lead": "Concept", "build": "Build", "check": "Playtest", "seats": {"lead": 1, "build": 4, "check": 1}}
+    assert stages["game-designer"] == {"lead": "Concept", "build": "Build", "check": "Playtest", "seats": {"lead": 1, "build": 1, "check": 1}}
     assert stages["architect"] == stages["default"] == {"lead": "Planning", "build": "Implementation", "check": "Checking",
-                                                       "seats": {"lead": 1, "build": 3, "check": 2}}
+                                                       "seats": {"lead": 1, "build": 1, "check": 1}}
     assert set(stages) == {a.id for a in library.LIBRARY if a.band == "lead"} | {"default"}
 
 
@@ -151,8 +153,9 @@ def test_the_release_preset_follows_ideation_and_the_release_managers_stages_are
     assert got[i - 1]["id"] == "ideation" and got[i] == {
         "id": "release", "name": "Release", "line": "A version out: what goes in, its notes, the stores' list", "craft": "product", "race": "skeleton",
         "mixed": True, "lead": "release-manager", "build": ["release-engineer", "release-notes", "aso"], "check": ["release-checker"]}
-    assert library.stages()["release-manager"] == {"lead": "Gather", "build": "Prepare", "check": "Check", "seats": {"lead": 1, "build": 3, "check": 1}}
-    assert not goal_team.seats(["release-engineer", "release-notes", "aso", "release-checker"], "release-manager")
+    assert library.stages()["release-manager"] == {"lead": "Gather", "build": "Prepare", "check": "Check", "seats": {"lead": 1, "build": 1, "check": 1}}
+    assert not goal_team.seats(["release-engineer", "release-checker"], "release-manager")
+    assert goal_team.seats(["release-engineer", "release-notes", "release-checker"], "release-manager") == "A party led by Release manager has at most 1 builder"
     assert library.parties()["release"] == {"lead": "release-manager", "build": ["release-engineer", "release-notes", "aso"], "check": ["release-checker"]}
 
 

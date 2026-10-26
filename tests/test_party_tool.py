@@ -40,7 +40,7 @@ def events(h, name):
 
 def save(h, **more):
     return h.command("ideas.goal_save", {"title": "Engineering", "about": "Code.", "craft": "engineering", "leader": "architect",
-                                         "team": ["grunt", "tester", "reviewer"], **more})["slug"]
+                                         "team": ["tester", "reviewer"], **more})["slug"]
 
 
 def track(h, slug):
@@ -212,7 +212,7 @@ def test_the_keeper_runs_a_goals_steps_on_its_partys_tool_and_a_step_of_no_goal_
 def test_a_sizes_tiers_are_kept_and_win_over_the_library_tier_unless_the_person_set_one(host):
     h = host
     slug = save(h, size="standard")
-    assert goal_team.tiers_of(h.root, slug) == {"architect": "elder", "grunt": "warrior", "tester": "warrior", "reviewer": "warrior"}
+    assert goal_team.tiers_of(h.root, slug) == {"architect": "elder", "tester": "warrior"}                  # the leader Veteran, its builder Seasoned (spec 87 §5)
     assert track(h, slug)["size"] == "standard"
     lib = roles.role(h.state, "tester")                                                                      # installed with its library tier (laborer)
     assert lib["model"] == library.get("tester").tier == "laborer"
@@ -223,7 +223,7 @@ def test_a_sizes_tiers_are_kept_and_win_over_the_library_tier_unless_the_person_
     assert goal_team.seat_role(hand, goal_team.tiers_of(h.root, slug)) is hand                              # keeps its own
     assert goal_team.seat_role(None, {"x": "elder"}) is None and goal_team.seat_role(hand, {}) is hand
     full = save(h, size="full", title="Big")
-    assert goal_team.tiers_of(h.root, full) == {"architect": "elder", "grunt": "warrior", "tester": "warrior", "reviewer": "elder"}
+    assert goal_team.tiers_of(h.root, full) == {"architect": "elder", "tester": "warrior", "reviewer": "elder"}
     lean = save(h, size="lean", title="Small")
     assert set(goal_team.tiers_of(h.root, lean).values()) == {"warrior"}
     none = h.command("ideas.goal_save", {"title": "Old", "about": "Old.", "craft": "engineering"})["slug"]
@@ -237,7 +237,7 @@ def test_a_task_and_a_leaders_step_pick_the_seats_tier(host):
     idea = ideas.add_idea(h.root, "A goal", standard, h.state)
     task = {"id": "t1", "tier": "laborer", "kind": "tests", "role": "tester"}
     assert runner.ran_on(task, idea) == idea_target.task_pick("laborer", "balance", "warrior")                # not the library's laborer
-    assert runner.ran_on({**task, "role": "grunt"}, idea)[0] == "warrior"
+    assert runner.ran_on({**task, "role": "reviewer"}, idea)[0] == "elder"                                      # (a checker the size gave no tier keeps its library tier)
     keeper = h.ideas.keeper
     keeper._tls.key = keeper._tls.slug = idea
     assert keeper.leader()["model"] == "elder" and keeper.pick("draft")[0] == "elder"
@@ -248,9 +248,10 @@ def test_a_task_and_a_leaders_step_pick_the_seats_tier(host):
 
 
 def test_party_recipes_give_tiers_for_any_leader_and_team():
-    assert party_recipes.tiers_for("architect", ["grunt", "tester", "reviewer"], "lean") == {"architect": "warrior", "grunt": "warrior", "tester": "warrior", "reviewer": "warrior"}
-    assert party_recipes.tiers_for("architect", ["grunt", "tester", "reviewer"], "standard") == {"architect": "elder", "grunt": "warrior", "tester": "warrior", "reviewer": "warrior"}
-    assert party_recipes.tiers_for("architect", ["grunt", "tester", "reviewer"], "full") == {"architect": "elder", "grunt": "warrior", "tester": "warrior", "reviewer": "elder"}
+    team = ["grunt", "tester", "reviewer"]                                                                   # (a team made before may have more than a seat a stage)
+    assert party_recipes.tiers_for("architect", team, "lean") == {"architect": "warrior", "grunt": "warrior", "tester": "warrior", "reviewer": "warrior"}
+    assert party_recipes.tiers_for("architect", team, "standard") == {"architect": "elder", "grunt": "warrior"}
+    assert party_recipes.tiers_for("architect", team, "full") == {"architect": "elder", "grunt": "warrior", "tester": "warrior", "reviewer": "elder"}
     assert party_recipes.tiers_for("taskmaster", ["grunt"], "full") == {"grunt": "warrior"}                  # the Taskmaster is no seat
     mobile = party_recipes.get("mobile-features")
     for size in ("standard", "full"):
@@ -270,7 +271,7 @@ def test_a_lean_partys_task_with_no_taker_goes_to_its_leader_not_the_grunt(host)
     lean = h.command("ideas.goal_save", {"title": "Features", "about": "Features.", "craft": "product", "leader": "product-manager", "team": [],
                                          "size": "lean"})["slug"]
     big = h.command("ideas.goal_save", {"title": "Wide", "about": "Wide.", "craft": "product", "leader": "product-manager",
-                                        "team": ["grunt", "copywriter", "reviewer"], "size": "standard"})["slug"]
+                                        "team": ["copywriter", "reviewer"], "size": "standard"})["slug"]
     assert goal_team.lean_role(h.root, lean) == "product-manager" and goal_team.lean_role(h.root, big) == ""
     for goal, want in ((lean, {"product-manager"}), (big, {"copywriter", "grunt", "reviewer"})):
         idea = ideas.add_idea(h.root, f"A goal in {goal}", goal, h.state)
@@ -297,30 +298,30 @@ def made(h, recipe="mobile-features", size="standard", **more):
 def test_a_party_of_a_recipe_takes_the_sizes_team_and_tiers_in_one_save_and_says_who_joins_and_leaves(host):
     h = host
     slug = made(h)
-    assert goal_team.recipe_of(h.root, slug) == "mobile-features" and track(h, slug)["team"] == ["grunt", "artist", "reviewer"]
+    assert goal_team.recipe_of(h.root, slug) == "mobile-features" and track(h, slug)["team"] == ["grunt"]
     h.command("ideas.goal_save", {"slug": slug, "size": "full", "device": "phone"})
-    assert track(h, slug)["team"] == ["grunt", "artist", "aso", "reviewer", "accessibility-reviewer"] and track(h, slug)["size"] == "full"
-    assert goal_team.tiers_of(h.root, slug)["accessibility-reviewer"] == "elder" and goal_team.tiers_of(h.root, slug)["product-manager"] == "elder"
-    assert roles.role(h.state, "aso") is not None                                                            # those who joined are agents of the project
+    assert track(h, slug)["team"] == ["grunt", "reviewer"] and track(h, slug)["size"] == "full"
+    assert goal_team.tiers_of(h.root, slug) == {"product-manager": "elder", "grunt": "warrior", "reviewer": "elder"}
+    assert roles.role(h.state, "reviewer") is not None                                                            # those who joined are agents of the project
     h.command("ideas.goal_save", {"slug": slug, "size": "lean"})
     assert track(h, slug)["team"] == [] and goal_team.tiers_of(h.root, slug) == {"product-manager": "warrior"}
     h.command("ideas.goal_save", {"slug": slug, "size": "standard"})                                          # a Lean party grows back: its recipe was kept
-    assert track(h, slug)["team"] == ["grunt", "artist", "reviewer"]
+    assert track(h, slug)["team"] == ["grunt"]
     rows = events(h, "party_resized")
     assert [(r["from"], r["to"]) for r in rows] == [("standard", "full"), ("full", "lean"), ("lean", "standard")]
-    assert rows[0]["joins"] == ["aso", "accessibility-reviewer"] and rows[0]["leaves"] == [] and rows[0]["device"] == "phone"
-    assert rows[1]["joins"] == [] and rows[1]["leaves"] == ["grunt", "artist", "aso", "reviewer", "accessibility-reviewer"]
-    assert rows[2]["joins"] == ["grunt", "artist", "reviewer"]
+    assert rows[0]["joins"] == ["reviewer"] and rows[0]["leaves"] == [] and rows[0]["device"] == "phone"
+    assert rows[1]["joins"] == [] and rows[1]["leaves"] == ["grunt", "reviewer"]
+    assert rows[2]["joins"] == ["grunt"]
 
 
-def test_the_checks_a_party_has_for_every_idea_stay_across_a_resize(host):
+def test_the_checks_a_party_has_for_every_idea_stay_while_their_checker_does_across_a_resize(host):
     h = host
     slug = made(h, "engineering-code", "full", every=["reviewer"])
     assert goal_team.every_of(h.root, slug) == ["reviewer"]
+    h.command("ideas.goal_save", {"slug": slug, "size": "full"})
+    assert goal_team.every_of(h.root, slug) == ["reviewer"] and track(h, slug)["team"] == ["grunt", "reviewer"]
     h.command("ideas.goal_save", {"slug": slug, "size": "standard"})
-    assert goal_team.every_of(h.root, slug) == ["reviewer"] and track(h, slug)["team"] == ["grunt", "tester", "reviewer"]
-    h.command("ideas.goal_save", {"slug": slug, "size": "lean"})
-    assert goal_team.every_of(h.root, slug) == []                                                            # the checker left, so did its every
+    assert goal_team.every_of(h.root, slug) == [] and track(h, slug)["team"] == ["grunt"]                       # the checker left, so did its every
 
 
 def test_a_resize_that_lets_a_member_at_work_go_is_refused_and_nothing_changes(host):
@@ -328,12 +329,12 @@ def test_a_resize_that_lets_a_member_at_work_go_is_refused_and_nothing_changes(h
     slug = made(h, "engineering-code", "full")
     idea = ideas.add_idea(h.root, "A goal", slug, h.state)
     ideas.save_state(h.state, idea, state="working")
-    ideas.save_plan(h.state, idea, {"idea": idea, "todos": [], "tasks": [{"id": "t1", "title": "T", "state": "running", "role": "tester", "kind": "tests"}]})
-    with pytest.raises(CommandError, match="Tester has work open: it cannot leave"):
+    ideas.save_plan(h.state, idea, {"idea": idea, "todos": [], "tasks": [{"id": "t1", "title": "T", "state": "running", "role": "grunt", "kind": "code"}]})
+    with pytest.raises(CommandError, match="Grunt has work open: it cannot leave"):
         h.command("ideas.goal_save", {"slug": slug, "size": "lean"})
-    assert track(h, slug)["size"] == "full" and track(h, slug)["team"] == ["grunt", "tester", "reviewer"]
+    assert track(h, slug)["size"] == "full" and track(h, slug)["team"] == ["grunt", "reviewer"]
     assert goal_team.tiers_of(h.root, slug)["reviewer"] == "elder" and events(h, "party_resized") == []
-    h.command("ideas.goal_save", {"slug": slug, "size": "standard"})                                          # standard keeps the tester
+    h.command("ideas.goal_save", {"slug": slug, "size": "standard"})                                          # standard keeps the grunt
     assert track(h, slug)["size"] == "standard"
 
 
@@ -358,8 +359,8 @@ def test_party_sizes_says_what_each_size_would_make_of_a_party(host):
     got = h.command("ideas.party_sizes", {"slug": slug})
     assert got["size"] == "standard" and list(got["sizes"]) == ["lean", "standard", "full"]
     assert got["sizes"]["standard"]["joins"] == got["sizes"]["standard"]["leaves"] == [] and got["sizes"]["standard"]["recipe"] == "mobile-features"
-    assert [a["name"] for a in got["sizes"]["lean"]["leaves"]] == ["Grunt", "Artist", "Reviewer"]
-    assert [a["slug"] for a in got["sizes"]["full"]["joins"]] == ["aso", "accessibility-reviewer"]
+    assert [a["name"] for a in got["sizes"]["lean"]["leaves"]] == ["Grunt"]
+    assert [a["slug"] for a in got["sizes"]["full"]["joins"]] == ["reviewer"]
     assert got["sizes"]["lean"]["tiers"] == {"product-manager": "warrior"}
     assert [r["event"] for r in event_log.read(h.ideas.host.repo_root) if r["event"] == "party_resized"] == []        # a read: nothing is written
     with pytest.raises(CommandError, match="That party is gone"):
@@ -376,7 +377,7 @@ def test_ideation_and_release_are_sized_too(host):
     slug = h.command("ideas.goal_save", {"title": "Ideation", "about": "Pitches.", "craft": "product", "leader": "investor",
                                          "team": party_recipes.sized(ideation, "full")["team"], "size": "full", "proposal": "ideation"})["slug"]
     h.command("ideas.goal_save", {"slug": slug, "size": "standard"})
-    assert goal_team.team_of(h.root, slug) == ["product-view", "market-view", "skeptic"]
+    assert goal_team.team_of(h.root, slug) == ["product-view"]
     h.command("ideas.goal_save", {"slug": slug, "size": "lean"})
     assert goal_team.team_of(h.root, slug) == [] and goal_team.leader_of(h.root, slug) == "investor"
     with pytest.raises(CommandError, match="its views and the skeptic stay"):
@@ -384,4 +385,4 @@ def test_ideation_and_release_are_sized_too(host):
     release = made(h, "release", "lean")
     assert goal_team.team_of(h.root, release) == []
     h.command("ideas.goal_save", {"slug": release, "size": "full"})
-    assert len(goal_team.team_of(h.root, release)) == 4
+    assert goal_team.team_of(h.root, release) == ["release-engineer", "release-checker"]

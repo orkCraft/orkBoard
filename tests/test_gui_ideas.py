@@ -205,8 +205,12 @@ def test_a_secret_todo_is_stored_and_the_plan_says_stored(host):
          "done": False, "value": None},
         {"id": "t2", "title": "Which", "kind": "choice", "why": "w", "choices": ["a", "b"], "steps": [], "for": [],
          "done": False, "value": None}])
-    today = [n["todo"] for n in host.command("ideas.board")["needs_you"] if n["kind"] == "todo"]   # spec 35 §10
-    assert [t["id"] for t in today] == ["t1", "t2"] and "value" not in today[0]
+    assert [n for n in host.command("ideas.board")["needs_you"] if n["kind"] == "todo"] == []      # before the work starts a to-do is a line of the plan (spec 87 §4)
+    shown = host.command("ideas.page", {"slug": slug})["plan"]
+    assert shown["todo_lines"] == ["Before Do it: API_KEY"] and [t["id"] for t in shown["todos"]] == ["t1", "t2"]
+    ideas.save_state(host.ideas.state_dir, slug, state="working")                                   # now k1 cannot start without it: the stop is given (spec 35 §10)
+    today = [n["todo"] for n in host.command("ideas.board")["needs_you"] if n["kind"] == "todo"]
+    assert [t["id"] for t in today] == ["t1"] and "value" not in today[0]
     with pytest.raises(CommandError, match="needs its value"):
         host.command("ideas.todo", {"idea": slug, "id": "t1", "done": True})
     host.command("ideas.todo", {"idea": slug, "id": "t1", "done": True, "value": "sk-secret"})
@@ -904,12 +908,12 @@ def test_the_asks_are_written_after_the_goals_text_in_the_types_order(host):
 
 
 def test_a_free_seat_joins_the_party_before_the_goal_is_added(host):
-    ship = _party(host, ["grunt"], leader="product-manager")
+    ship = _party(host, [], leader="product-manager")                                      # one builder's seat (spec 87 §5), free
     got = _new(host, ship, "A screen", type="screen", join={"add": "ui-kit"})
     assert got["joined"] == {"add": "ui-kit", "out": ""}
-    assert goal_team.team_of(host.ideas.root(), ship) == ["grunt", "ui-kit"] and roles.role(host.ideas.state_dir, "ui-kit") is not None
+    assert goal_team.team_of(host.ideas.root(), ship) == ["ui-kit"] and roles.role(host.ideas.state_dir, "ui-kit") is not None
     (saved,) = _events(host, "goal_saved")
-    assert (saved["goal"], saved["joined"], saved["out"], saved["via"], saved["team"], saved["new"]) == (ship, "ui-kit", "", "type", ["grunt", "ui-kit"], False)
+    assert (saved["goal"], saved["joined"], saved["out"], saved["via"], saved["team"], saved["new"]) == (ship, "ui-kit", "", "type", ["ui-kit"], False)
     (added,) = _events(host, "idea_added")
     assert (added["type"], added["asks"], added["refs"], added["joined"], added["out"]) == ("screen", 0, 0, "ui-kit", "")
     assert _says(host, "ideas.add", {"text": "x", "track": ship, "type": "screen", "join": {"add": "ui-kit"}}) == "Design system designer is not what this goal misses"     # it has joined
@@ -928,32 +932,35 @@ def test_the_idea_added_event_counts_what_the_party_offered_and_how_many_with_so
 
 
 def test_a_full_band_swaps_a_member_with_no_open_work_and_out_is_required(host, monkeypatch):
-    ship = _party(host, ["grunt", "artist", "aso"], leader="product-manager")
+    ship = _party(host, ["artist"], leader="product-manager")
     busy = _new(host, ship, "Busy")["slug"]
     ideas.save_plan(host.ideas.state_dir, busy, {"idea": busy, "tasks": [{"id": "k1", "title": "t", "kind": "art", "role": "artist", "state": "running"}], "todos": []})
     assert _says(host, "ideas.add", {"text": "x", "track": ship, "type": "screen", "join": {"add": "ui-kit"}}) == "The party is full: pick who leaves"
     assert _says(host, "ideas.add", {"text": "x", "track": ship, "type": "screen", "join": {"add": "ui-kit", "out": "artist"}}) == "Artist has work open: it cannot leave"
     assert _says(host, "ideas.add", {"text": "x", "track": ship, "type": "screen", "join": {"add": "ui-kit", "out": "reviewer"}}) == "Reviewer is not one of the party's builders"
-    assert goal_team.team_of(host.ideas.root(), ship) == ["grunt", "artist", "aso"] and len(ideas.ideas(host.ideas.root(), ship)) == 1     # refused: nothing changed
-    goal_team.set_team(host.ideas.root(), ship, ["grunt", "artist", "aso"], every=["aso"])
-    got = _new(host, ship, "A screen", type="screen", join={"add": "ui-kit", "out": "aso"})
-    assert got["joined"] == {"add": "ui-kit", "out": "aso"}
-    assert goal_team.team_of(host.ideas.root(), ship) == ["grunt", "artist", "ui-kit"] and goal_team.every_of(host.ideas.root(), ship) == []    # in its seat
+    assert goal_team.team_of(host.ideas.root(), ship) == ["artist"] and len(ideas.ideas(host.ideas.root(), ship)) == 1     # refused: nothing changed
+    ideas.save_plan(host.ideas.state_dir, busy, {"idea": busy, "tasks": [{"id": "k1", "title": "t", "kind": "art", "role": "artist", "state": "merged"}], "todos": []})
+    goal_team.set_team(host.ideas.root(), ship, ["artist"], every=["artist"])
+    got = _new(host, ship, "A screen", type="screen", join={"add": "ui-kit", "out": "artist"})
+    assert got["joined"] == {"add": "ui-kit", "out": "artist"}
+    assert goal_team.team_of(host.ideas.root(), ship) == ["ui-kit"] and goal_team.every_of(host.ideas.root(), ship) == []    # in its seat
     saved = _events(host, "goal_saved")[-1]
-    assert (saved["joined"], saved["out"], saved["via"]) == ("ui-kit", "aso", "type")
+    assert (saved["joined"], saved["out"], saved["via"]) == ("ui-kit", "artist", "type")
 
 
-def test_a_game_designers_party_has_a_fourth_builders_seat(host):
-    ship = _party(host, ["grunt", "artist", "level-designer"], leader="game-designer")
+def test_a_party_has_one_seat_a_stage_with_any_leader_and_a_party_made_before_keeps_its_team(host):
+    ship = _party(host, ["grunt", "artist", "level-designer"], leader="game-designer")        # made before spec 87: three builders
     got = _new(host, ship, "A level", type="level")
     assert got["type"] == "level" and got["joined"] is None
-    assert host.command("ideas.goal_save", {"slug": ship, "team": ["grunt", "artist", "level-designer", "sound-designer"], "leader": "game-designer"})["slug"] == ship
-    assert _says(host, "ideas.goal_save", {"slug": ship, "team": ["grunt", "artist", "level-designer", "sound-designer", "aso"], "leader": "game-designer"}) == (
-        "A party led by Game designer has at most 4 builders")
+    assert host.command("ideas.goal_save", {"slug": ship, "team": ["grunt", "artist", "level-designer"], "leader": "game-designer"})["slug"] == ship     # saved again as it is
+    assert host.command("ideas.goal_save", {"slug": ship, "team": ["grunt", "artist"], "leader": "game-designer"})["slug"] == ship                      # one leaves
+    assert goal_team.team_of(host.ideas.root(), ship) == ["grunt", "artist"]
+    assert _says(host, "ideas.goal_save", {"slug": ship, "team": ["grunt", "artist", "level-designer", "sound-designer"], "leader": "game-designer"}) == (
+        "A party led by Game designer has at most 1 builder")                                  # one more than it was saved with
     assert _says(host, "ideas.goal_save", {"slug": ship, "team": ["grunt", "artist", "aso", "seo"], "leader": "architect"}) == (
-        "A party led by Architect has at most 3 builders")
+        "A party led by Architect has at most 1 builder")
     assert _says(host, "ideas.goal_save", {"slug": ship, "team": ["playtester", "reviewer"], "leader": "game-designer"}) == (
-        "A party led by Game designer has at most 1 checkers")
+        "A party led by Game designer has at most 1 checker")
 
 
 def test_the_party_changes_before_the_goal_both_under_the_lock_and_never_for_tonight(host, monkeypatch):
@@ -970,14 +977,14 @@ def test_the_party_changes_before_the_goal_both_under_the_lock_and_never_for_ton
     set_team, add_idea = goal_team.set_team, ideas.add_idea
     monkeypatch.setattr(goal_team, "set_team", lambda *a, **k: (seen.append(("party", held())), set_team(*a, **k))[1])
     monkeypatch.setattr(ideas, "add_idea", lambda *a, **k: (seen.append(("goal", held())), add_idea(*a, **k))[1])
-    ship = _party(host, ["grunt"], leader="product-manager")
+    ship = _party(host, [], leader="product-manager")
     seen.clear()
     _new(host, ship, "A screen", type="screen", join={"add": "ui-kit"})
     assert seen == [("party", True), ("goal", True)]
     seen.clear()
     kept = host.command("ideas.add", {"text": "Kept for tonight", "track": ship, "priority": "low", "night": True, "type": "experiment", "join": {"add": "experimenter"}})
     assert seen == [("goal", True)] and kept["joined"] is None and kept["type"] == "experiment"
-    assert goal_team.team_of(host.ideas.root(), ship) == ["grunt", "ui-kit"]
+    assert goal_team.team_of(host.ideas.root(), ship) == ["ui-kit"]
 
 
 class _Runner:
@@ -1004,7 +1011,7 @@ def _missing_plan(host, slug, tasks, missing):
 
 def test_add_and_start_joins_the_party_then_gives_the_tasks_not_started_their_new_member(host, monkeypatch):
     monkeypatch.setitem(sys.modules, "orkboard.core.idea_runner", types.SimpleNamespace(IdeaRunner=_Runner))
-    ship = _party(host, ["grunt"], leader="product-designer")
+    ship = _party(host, ["reviewer"], leader="product-designer")
     slug = _new(host, ship, "A logo")["slug"]
     task = {"title": "t", "brief": "b", "tier": "warrior", "after": []}
     _missing_plan(host, slug, [{**task, "id": "k1", "kind": "art", "role": "grunt", "state": "ready"},
@@ -1016,7 +1023,7 @@ def test_add_and_start_joins_the_party_then_gives_the_tasks_not_started_their_ne
     assert host.command("ideas.page", {"slug": slug})["plan"]["missing"] == row["missing"]                # the drawer's plan says the same
     assert _says(host, "ideas.start", {"slug": slug, "join": {"add": "ui-kit"}}) == "Design system designer is not what this plan misses"
     host.command("ideas.start", {"slug": slug, "join": {"add": "artist"}, "via": "hand"})
-    assert goal_team.team_of(host.ideas.root(), ship) == ["grunt", "artist"]
+    assert goal_team.team_of(host.ideas.root(), ship) == ["reviewer", "artist"]
     plan = ideas.plan(host.ideas.state_dir, slug)
     assert [t["role"] for t in plan["tasks"]] == ["artist", "grunt", "grunt"] and plan["passed_by"] == "person"     # in Review: as it was
     assert (_events(host, "goal_saved")[-1]["via"], _events(host, "goal_saved")[-1]["joined"]) == ("plan", "artist")
@@ -1049,19 +1056,21 @@ def test_edit_the_party_logs_goal_saved_with_no_one_joined(host):
 
 def test_goal_save_logs_the_library_party_its_seats_started_from_and_the_leaders_seats(host):
     game = next(p for p in library.presets() if p["id"] == "game")
-    args = {"about": "A game", "title": "Dragon", "leader": game["lead"], "team": [*game["build"], *game["check"]]}
+    first = [game["build"][0], game["check"][0]]                                            # one seat a stage (spec 87 §5): the first of each
+    args = {"about": "A game", "title": "Dragon", "leader": game["lead"], "team": first}
     host.command("ideas.goal_save", {**args, "preset": "game"})
     saved = _events(host, "goal_saved")[-1]
-    assert (saved["preset"], saved["stages"], saved["leader"]) == ("game", "4/1", "game-designer")
-    host.command("ideas.goal_save", {**args, "title": "Dragon two", "preset": "game", "team": [*game["build"][:3], *game["check"]]})
+    assert (saved["preset"], saved["stages"], saved["leader"]) == ("", "1/1", "game-designer")       # the preset lists more members than a party takes: not that party
+    host.command("ideas.goal_save", {**args, "title": "Dragon two", "preset": "game", "team": [game["build"][0]]})
     assert _events(host, "goal_saved")[-1]["preset"] == ""                          # a seat changed: no longer that party
     host.command("ideas.goal_save", {**args, "title": "Dragon three"})
     assert _events(host, "goal_saved")[-1]["preset"] == ""                          # none sent
     host.command("ideas.goal_save", {**args, "title": "Dragon four", "preset": "no-such-party"})
     assert _events(host, "goal_saved")[-1]["preset"] == ""
-    host.command("ideas.goal_save", {"about": "A site", "title": "Site", "leader": "architect", "team": ["grunt", "tester", "reviewer"], "preset": "engineering"})
+    ideation = next(p for p in library.presets() if p["id"] == "ideation")
+    host.command("ideas.goal_save", {"about": "Pitches", "title": "Pitches", "leader": ideation["lead"], "team": [*ideation["build"], *ideation["check"]], "preset": "ideation"})
     last = _events(host, "goal_saved")[-1]
-    assert (last["preset"], last["stages"]) == ("engineering", "3/2")
+    assert (last["preset"], last["stages"]) == ("ideation", "1/1")                  # Ideation is its four views and the skeptic whole: a party made before
 
 
 def test_the_map_gives_a_partys_types_the_most_used_first_then_those_missing_no_one_and_a_goals_type(host):
@@ -1080,7 +1089,7 @@ def test_the_map_gives_a_partys_types_the_most_used_first_then_those_missing_no_
     assert {k: logo[k] for k in ("name", "sign", "lens", "refs")} == {"name": "New logo", "sign": "logo", "lens": "text", "refs": True}
     assert logo["asks"] == [{"id": "says", "label": "What it should say", "hint": "three words"}] and logo["missing"] == []
     (kit,) = party["types"][-1]["missing"]
-    assert (kit["agent"], kit["free"], [o["slug"] for o in kit["out"]]) == ("ui-kit", True, ["artist", "grunt"])
+    assert (kit["agent"], kit["free"], [o["slug"] for o in kit["out"]]) == ("ui-kit", False, ["artist", "grunt"])
     nodes = {n["title"]: n["type"] for n in got["nodes"]}
     assert nodes["A logo"] == {"id": "logo", "name": "New logo", "sign": "logo"} and nodes["A bug"] == {"id": "bug", "name": "Fix a bug", "sign": "bug"}
     assert nodes["An old logo"] == {"id": "logo", "name": "New logo", "sign": "logo"}
@@ -1092,8 +1101,8 @@ def test_the_map_gives_a_party_its_leaders_stages(host):
     game = _party(host, ["grunt", "artist"], leader="game-designer", title="Game")
     alone = _party(host, title="Alone")
     got = {g["slug"]: g["stages"] for g in host.command("ideas.map")["goals"]}
-    assert got[game] == {"lead": {"word": "Concept"}, "build": {"word": "Build", "seats": 4}, "check": {"word": "Playtest", "seats": 1}}
-    default = {"lead": {"word": "Planning"}, "build": {"word": "Implementation", "seats": 3}, "check": {"word": "Checking", "seats": 2}}
+    assert got[game] == {"lead": {"word": "Concept"}, "build": {"word": "Build", "seats": 1}, "check": {"word": "Playtest", "seats": 1}}
+    default = {"lead": {"word": "Planning"}, "build": {"word": "Implementation", "seats": 1}, "check": {"word": "Checking", "seats": 1}}
     assert got[plain] == got[alone] == default
 
 

@@ -451,7 +451,7 @@ def test_a_plan_rows_missing_is_read_against_the_party_now_and_a_node_says_its_t
     def row():
         (got,) = [n for n in board_map.idea_needs(root, state, i, ideas.state(state, slug), ideas.plan(state, slug), []) if n["kind"] == "plan"]
         return got["missing"]
-    assert row() == [{"kind": "art", "words": "pixel art", "agent": "artist", "name": "Artist", "band": "build", "free": True}]
+    assert row() == [{"kind": "art", "words": "pixel art", "agent": "artist", "name": "Artist", "band": "build", "free": False}]        # the Grunt holds the one builder seat (spec 87 §5)
     _roles(state, "artist")
     goal_team.set_team(root, g, ["grunt", "artist"])
     assert row() == []                                                                          # the Artist joined since
@@ -580,3 +580,49 @@ def test_the_hosts_map_signs_a_pictures_address_and_review_carries_it_spec_85(ho
     assert media.serve("GET", shot["url"], "", [state]).status == 200 and tasks["k2"]["shot"] == {"none": "no picture: no preview"}
     (result,) = [r for r in host.command("ideas.review_list")["results"] if r["task"] == "k1"]
     assert result["shot"]["url"] == shot["url"]
+
+
+def _stops(host, slug):
+    """The kinds of the Needs you rows of one idea (the same rows the map's node names its `needs_you` from)."""
+    return [r["kind"] for r in host.command("ideas.board")["needs_you"] if r.get("idea") == slug]
+
+
+def test_a_todo_is_a_stop_only_when_it_blocks_and_a_line_of_the_plan_until_then_spec_87(host):
+    root, state = _board(host)
+    g = _goal(root, "Boss")
+    slug = _idea(root, state, g, "Spawn the boss", "working")
+    todos = [{"id": "t1", "title": "record the boss's sounds", "kind": "confirm", "for": ["k2"]},
+             {"id": "t2", "title": "paste the key", "kind": "secret", "for": ["k1"], "done": True},
+             {"id": "t3", "title": "pick the arena", "kind": "choice", "choices": ["a", "b"], "for": ["k3", "k2"]}]
+    _plan(state, slug, [_t("k1", "ready"), _t("k2", "waiting", ["k1"]), _t("k3", "waiting", ["k2"])], passed_at="x", todos=todos)
+    node = _node(host.command("ideas.map", {}), slug)
+    assert _stops(host, slug) == [] and node["needs_you"] == ""                       # k2 and k3 wait for k1: neither to-do blocks yet
+    assert node["todo_lines"] == ["Before Task k2: record the boss's sounds", "Before Task k2: pick the arena"]      # (the done one is not said)
+    _plan(state, slug, [_t("k1", "merged"), _t("k2", "ready", ["k1"]), _t("k3", "waiting", ["k2"])], passed_at="x", todos=todos)
+    node = _node(host.command("ideas.map", {}), slug)
+    got = [r for r in host.command("ideas.board")["needs_you"] if r.get("idea") == slug]
+    assert [(r["kind"], r["blocks"], r["todo"]["id"]) for r in got] == [("todo", True, "t1"), ("todo", True, "t3")] and node["needs_you"] == "todo"
+    _plan(state, slug, [_t("k1", "merged"), _t("k2", "merged", ["k1"]), _t("k3", "ready", ["k2"])], passed_at="x",
+          todos=[{**todos[0], "done": True}, todos[1], todos[2]])
+    node = _node(host.command("ideas.map", {}), slug)
+    assert _stops(host, slug) == ["todo"] and node["todo_lines"] == ["Before Task k3: pick the arena"]
+    _plan(state, slug, [_t("k1", "merged"), _t("k2", "merged", ["k1"]), _t("k3", "merged", ["k2"])], passed_at="x", todos=todos)
+    assert _stops(host, slug) == [] and _node(host.command("ideas.map", {}), slug)["todo_lines"] == []
+    ready = _idea(root, state, g, "Not started", "plan")                                # a plan waiting for the start: its to-dos are lines, not stops
+    _plan(state, ready, [_t("k1", "ready")], todos=[{"id": "t1", "title": "paste the key", "kind": "secret", "for": ["k1"]}])
+    assert _stops(host, ready) == ["plan"] and _node(host.command("ideas.map", {}), ready)["todo_lines"] == ["Before Task k1: paste the key"]
+
+
+def test_todo_lines_say_before_the_first_task_a_todo_is_for_in_the_plans_order_and_none_once_done_spec_87():
+    tasks = [{"id": "k1", "title": "Build the arena", "state": "merged"}, {"id": "k2", "title": "Spawn the boss", "state": "waiting"},
+             {"id": "k3", "title": "Play the boss's theme", "state": "waiting"}]
+    plan = {"tasks": tasks, "todos": [
+        {"id": "t1", "title": "record the boss's sounds", "for": ["k3", "k2"]},                 # the first of its tasks in the plan's order: k2
+        {"id": "t2", "title": "paste the key", "for": ["k1"]},                                  # its only task is merged
+        {"id": "t3", "title": "confirm the licence", "for": ["k2"], "done": True},
+        {"id": "t4", "title": "name the boss", "for": ["k1", "k3"]},
+        {"id": "t5", "title": "for no task", "for": []},
+        {"id": "t6", "title": "choose the arena", "for": ["k2"]}]}
+    assert board_map.todo_lines(plan, tasks) == ["Before Spawn the boss: record the boss's sounds", "Before Spawn the boss: choose the arena",
+                                                 "Before Play the boss's theme: name the boss"]
+    assert board_map.todo_lines(plan) == board_map.todo_lines(plan, tasks) and board_map.todo_lines(None, []) == [] and board_map.todo_lines({}) == []

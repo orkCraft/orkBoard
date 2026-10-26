@@ -68,7 +68,7 @@ class MapMixin:
     def stages_of(root: Path, party: str) -> dict:
         """A party's stages (spec 59 §3): the words of its leader's three steps and the seats of its builders and checkers."""
         s = library.stages_of(goal_team.leader_of(root, party))
-        return {"lead": {"word": s.lead}, "build": {"word": s.build, "seats": s.build_seats}, "check": {"word": s.check, "seats": s.check_seats}}
+        return {"lead": {"word": s.lead}, "build": {"word": s.build, "seats": s.seats["build"]}, "check": {"word": s.check, "seats": s.seats["check"]}}
 
     def types_of(self, root: Path, party: str, goals: list[str]) -> list[dict]:
         """A party's goal types (spec 59 §4.5): what it is offered (`goal_types.offered`), each with what it misses of the party, the
