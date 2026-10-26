@@ -17,7 +17,7 @@ from pathlib import Path
 
 from orkboard.core.idea_plan import _task, estimate
 from orkboard.core.idea_task import is_check
-from orkboard.realm import idea_change, idea_spend, idea_target
+from orkboard.realm import idea_change, idea_spend, idea_target, project_map
 
 STOP_ONE = "stop-one"                # a Run's `why` when one task is stopped (stop_task)
 STOPPED_NOTE = "stopped by you"      # a task stopped on its own waits as `ready` with this note until Start
@@ -103,6 +103,7 @@ class ReviewMixin:
         self._set_task(slug, tid, state="merged", commit=commit, subjects=subjects, note=note, finished=_r().now_iso(),
                        error="", conflict="", look="")
         self._log(slug, tid, f"== merged into {base} · {commit[:10]}\n")
+        project_map.landed(self.state_dir, self.repo_root, path, commit, self.events)      # the System's parts at the new head (spec 89 §1)
         self._remove_worktree(slug, tid)
         self._settle_idea(slug)
         self.tick()

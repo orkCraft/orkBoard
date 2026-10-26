@@ -39,7 +39,7 @@ from orkboard.core.idea_session import SessionMixin
 from orkboard.core.idea_review import BACK, STOP_ONE, STOPPED_NOTE, ReviewMixin, RunnerError  # noqa: F401
 from orkboard.core.idea_shot import ShotMixin
 from orkboard.core.idea_task import FINDINGS_ASK, NO_DIFF, NO_FINDINGS, NO_RUN, TaskMixin, is_check, is_pick
-from orkboard.realm import task_commands, event_log, goal_team, halt, harnesses, idea_checks, idea_pick, idea_target, ideas, roles, status, tool_errors
+from orkboard.realm import task_commands, event_log, goal_team, halt, harnesses, idea_checks, idea_pick, idea_target, ideas, project_map, roles, status, tool_errors
 from orkboard.realm.idea_git import BOARD_PAGE, CRITICAL_TESTS, Conflict, IdeaGit, env_name, has_summary, parse_tests, read_secret, spec_paths  # noqa: F401
 
 CHANGED = "ideas.changed"          # slug: an idea's state or one of its tasks changed
@@ -575,6 +575,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
             commit, subjects, note = self.git.land(path, branch, base, bool(setting(self.settings, "push")))
             self._set_task(slug, tid, state="merged", commit=commit, subjects=subjects, note=note, tests=tests,
                            diff=diff, finished=now_iso(), error="", look="")
+            project_map.landed(self.state_dir, self.repo_root, path, commit, self.events)   # the System's parts at dev's new head (spec 89 §1)
             self.git.remove(path)
         except Held as e:
             with self._lock:

@@ -53,6 +53,7 @@ from orkboard.realm import event_log, idea_checks, idea_lens, idea_photos, idea_
 from orkboard.gui.ideas_args import VIA, IdeasError, _device, _opt, _text
 from orkboard.gui.ideas_board import BoardMixin
 from orkboard.gui.ideas_assets import AssetsMixin, asset_commands
+from orkboard.gui.ideas_system import SystemMixin, system_commands
 from orkboard.gui.ideas_canvases import CanvasesMixin, canvas_commands
 from orkboard.gui.ideas_gate import GateMixin
 from orkboard.gui.ideas_goals import GoalsMixin
@@ -107,7 +108,7 @@ class _Hop:
 
 
 class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, TrackMixin, ReviewMixin, ReviseMixin,
-            TypesMixin, CanvasesMixin, AssetsMixin, BoardMixin):
+            TypesMixin, CanvasesMixin, AssetsMixin, SystemMixin, BoardMixin):
     def __init__(self, host) -> None:
         """`host`: what the Board needs of whoever runs it, a `gui/board_host.py` `BoardHost` (spec 37 §4): Orkline's
         host makes one from its town, Orkboard its own."""
@@ -621,6 +622,6 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
                       "ideas.pitch_pass": self.pitch_pass,
                       "ideas.release_out": self.release_out, "ideas.release_candidates": self.release_candidates, "ideas.shown": self.shown,
                       "ideas.party_for": self.party_for, "ideas.collide_answer": self.collide_answer,
-                      "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, **canvas_commands(self), **asset_commands(self)})
+                      "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, **canvas_commands(self), **asset_commands(self), **system_commands(self)})
         return {name: guarded(name, fn) for name, fn in table.items()}
 

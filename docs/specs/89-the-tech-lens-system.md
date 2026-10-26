@@ -82,3 +82,57 @@ the commands' shapes; the Tech names, the new recipes, an older party's name kep
 first tab chosen; the cards and their lines; the reveal's order, its 3 s cap, ended by a press, none under reduced
 motion; a goal pressed dims the others; the uses on hover; the part beside the table; *Rearrange*. The critical tests
 and each part's files' tests.
+
+## As built (A)
+
+Files: new `realm/project_map.py` (snapshots, layout, difference), new `gui/ideas_system.py` (`SystemMixin`, wired in `gui/ideas.py`: its
+import, the class's bases, `**system_commands(self)`); `core/idea_runner.py` and `core/idea_review.py` (one call each after a landing:
+`project_map.landed`), `realm/party_recipes.py` and `realm/library.py` (Tech), `realm/code_map.py` (its docstring only: `parts(tree)`
+already read any tree), `realm/lexicon.py` (`lens_view`), `realm/event_log.py` (three events). Tests: new `tests/test_project_map.py`;
+`tests/test_party_recipes.py`, `tests/test_library.py`, `tests/test_lexicon.py`, `tests/test_event_log.py`. No model anywhere.
+
+**The commands' answers** (the shapes B reads; `ref` is the project's `merge_into`, `dev` by default; `since` is the device's last look,
+a commit of dev, short or full, or an ISO time, read as the newest snapshot at or before it; none, or no snapshot at or before it:
+nothing is marked and the answer's `since` is `""`):
+
+- `ideas.system {party?, since?}` → `{commit, short, at, ref, since, columns, changed, uses_changed, goals}`. `commit` is dev's head (its
+  snapshot is made by `ensure` when not kept: the face says *Reading the project…* while it waits), `at` its commit time (ISO), `since`
+  the snapshot's commit it was read as. With no `ref` branch: `commit` `""`, `columns` `[]`, nothing marked.
+  - `columns`: `[{name, parts: [card], stack: [card]}]` in the layout's order, `parts` by `row` (rows may skip: a gone part keeps its
+    place), at most 14 cards a column; `stack` the rest (×n), the least changed (`changed` first among the cards, then the newest
+    change, then by row). `card` = `{path, name, count, uses, used_by, row, gone}`: `name` the folder's (the top's files, path `"."`:
+    the project's folder name; its column's `name` too), `uses`/`used_by` part paths, `gone` true for a part gone since `since` that
+    still has its place (its data from `since`'s snapshot), to crumble in.
+  - `changed`: `{path: {kind, goal, task, at}}`, `kind` `"new"` · `"changed"` · `"gone"`; `goal`/`task` of the last commit that touched
+    a file of its folder since (`goal` `""`: *By you*); `at` that commit's time (ISO): the order the goals landed in.
+  - `uses_changed`: `[{from, to, kind, goal, task, at}]`, `kind` `"new"` · `"gone"`, the goal of `from`'s last change.
+  - `goals`: `{slug: {title, element}}` of every goal named above.
+  - Event `map_opened` (`lens` `system`, `party`, `parts` (cards and stacked), `changed` (parts marked), `hours` since `since`, None
+    for none, `device`).
+- `ideas.system_part {path, since?, party?}` → `{path, name, count, files, uses, used_by, gone, kind, since, changes, goals}`: `files`
+  the folder's own source files (at most 60), `gone` true when dev's head has it no more (read from `since`'s snapshot), `kind` its
+  change since (`""` none), `changes` `[{goal, task, at, made}]` one a goal's task (and one *By you*, `goal` `""`), in the order they
+  landed, `at` the newest commit of each, `made` the task's *What it made* (spec 85 §4; `""` for the person's). A path that is no part of
+  dev's head nor of `since`'s snapshot: *That part is not in the project*. Event `map_part_pressed` (`lens`, `party`, `changed` the
+  kind, `goals` how many, `device`).
+- `ideas.system_rearrange {party?, since?}` → *Rearrange*: the layout laid out anew from dev's head (the gone parts' places taken
+  away), answered as `ideas.system`; no event.
+
+**The store.** `<state_dir>/maps/system/<commit>.json` = `{commit, at, taken, parts: [code_map.parts]}`, the newest 60 kept (by when they
+were taken); `layout.json` = `{prefix, columns, areas: {area: column}, parts: {path: {column, row}}}`. The runner's call
+(`project_map.landed(state_dir, root, tree, commit)`) reads the task's worktree after `land` and before it is removed, in the runner's
+own thread; any failure is `map_snapshot_failed` (`commit` (12), `why`) and the landing stands. `project_map.changed(state_dir, root,
+since, ref)` → `{since, commit, parts: {path: {kind, goal, task, sha, at}}, uses: [...]}`.
+
+**Decided here, not in the text above:**
+- `ensure` keeps dev's head current, not only the first: a head with no snapshot takes the newest one's parts when no source file
+  changed between them (a Board page's commit, a README), else is read from the detached worktree `<state_dir>/maps/tree` (removed after).
+  So a person's own commit and a result merged at Review are on the map too; a merge at Review also snapshots from its worktree
+  (`core/idea_review.py`, the same one call).
+- The areas: the common prefix is taken over the parts **but the top's** (`"."`), which is §2's *by their second* in one rule (parts all
+  under `src/` beside the top's config files are grouped by the folder under `src/`); the top's own column first, then by name, *Other*
+  last. A new area when 8 columns stand goes to *Other*; when there is none yet, the smallest column becomes *Other*.
+- A part changed is one with a file **directly** in its folder in the diff (a sub-folder is a part of its own); any file, not only source.
+- The Tech recipe of `game` and `web` is one id, `tech` (`kind_of` prefers the project's kind). A party made before is matched by its
+  leader and team (`has`), never by its name, so an older *Backend* or *Mobile app: architecture* party keeps its name and is not
+  offered again.
