@@ -136,3 +136,42 @@ since, ref)` → `{since, commit, parts: {path: {kind, goal, task, sha, at}}, us
 - The Tech recipe of `game` and `web` is one id, `tech` (`kind_of` prefers the project's kind). A party made before is matched by its
   leader and team (`has`), never by its name, so an older *Backend* or *Mobile app: architecture* party keeps its name and is not
   offered again.
+
+## As built (B)
+
+Files: `js/arena/arena.js` (a party the Architect leads, `g.leader.slug == "architect"`, has *System* | *Board* over its table; Board is the
+field as it was), new `js/arena/systemmap.js` (the words of §0, `useSystem`, `usePartyTab`, `PartyTabs`, `SystemMap`), new
+`js/arena/systemmap.css` (`@import`ed by `arena.css`, in `tests/test_design_system.py` `SHEETS`), `js/arena/arrows.js` (`across`, a use's
+route; `fine` exported; a line's `el` drawn as `data-elem`; what it does for tasks unchanged), `js/arena/motion.js` (its notes); new
+`tests/test_system_desktop_browser.py` (a stub host with a Tech party and the three commands in A's shapes). No host change.
+
+- **The tab.** `ideas.system` is asked when the party opens (its first answer chooses the tab): it opens on *System* when the answer marks
+  anything (`changed` or `uses_changed`), else on the tab last **pressed** on this device (`localStorage` `orkboard.party.tab.<project>.<party>`;
+  System at first). Only a press is kept, so a person who keeps to Board is brought to System only when something changed. A host that
+  answers `ideas.system` without `columns` (before spec 89) has no tabs: the Board as it was.
+- **The look.** `localStorage` `orkboard.system.look.<project>` = `{commit, at}`: dev's head as shown and the time, written when the System
+  tab is left (another tab, another party, the page hidden). `commit` is sent as `since`; `at` is the *<time>* of *Since your last look at
+  <time>* (*14:20* today, *25 Oct, 14:20* another day). Left, the answer is shown as seen at once (nothing marked, the gone parts' cards
+  off, their places kept) and read again with the new look. Read again with the same look when a task lands on the Board (a merge moves
+  dev; not on every refresh of the map, so `map_opened` is not sent for each), nothing played for it.
+- **The table.** One grid for all the columns (128 px each, the rows 180 px, so a row reads straight across and a use's line runs in the
+  gaps): the area's name over its column with a 2 px rule as wide as it (the member's look). A part lies at its `row`; a skipped row is an
+  empty place. A column with a `stack` lays its cards one after another, then the stack's front (edges, ×n); a press opens it (every part
+  of it), the fold beside the area's name shuts it. A card: top left the goal's element and *New* / *Changed* (*By you*: the word only,
+  no element) while marked; its folder's name; *n files*; *Uses k · Used by m* (broken between the two when it does not fit). *Gone* is a
+  card only while it crumbles; after, its place is empty until *Rearrange*.
+- **The reveal.** The map stands as it was 0.3 s (a new part not yet there, a gone one still standing, a changed one unmarked), then each
+  goal in the order of its newest change (`at`): new dealt (0.3 s, steps(6), 20 ms apart, six at most), changed sealed (its element 28 px,
+  0.42 s, steps(6)), gone crumble (0.42 s, steps(3)); a goal 0.52 s after the one before, closer for many so the whole is at most 2.8 s;
+  any press or key ends it. Only on the first answer the tab shows; none under reduced motion or while the page is hidden.
+- **The goals over the table**: buttons with their elements (*By you* last when it is newest), `aria-pressed`; one pressed draws the
+  others' marks dim (`Elem` dim, the edge back to the frame's). *Nothing changed since your last look* when `since` is set and nothing is
+  marked; nothing said on a device with no look.
+- **The uses on hover** (a fine pointer, or the focus): from the card to each part it uses and from each that uses it, `across`: out of the
+  side facing the other card into the gutter, along it to the gap over the other's row, across, down into its top; the field's dashed
+  2 px ink line and head, drawn in steps; a use new since the look in its goal's element. The ends light as a hovered task's do.
+- **A part pressed** shows `ideas.system_part {path, party, since?}` in a 300 px pane beside the table (the table narrows): its name and
+  path with *New* / *Changed* / *Gone*, its changes under *Since your last look at <time>* (a goal with its element, a press opens the goal;
+  *By you*; *What it made*), *n files* with the files, *Uses* and *Used by* (each part by its name, a press shows that part). Close or Esc.
+- *Rearrange* is in the bar's right corner (the tab's): `ideas.system_rearrange {party, since?}`, the answer replaces the table, nothing
+  played. *Reading the project…* (with orkUI's busy mark) until the first answer.
