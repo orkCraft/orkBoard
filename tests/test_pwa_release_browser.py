@@ -47,10 +47,10 @@ async def _release_form(page, type_id="release"):
     return form
 
 
-# -- New party: Release is the fifth mixed tile --------------------------------------------------------------------------------------------------------------
+# -- New party: Release is a stage tile --------------------------------------------------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_release_is_the_fifth_mixed_tile_its_heads_are_the_hosts_races_and_it_shows_releases_from_ticked(fake_repo, monkeypatch):
+async def test_release_is_a_stage_tile_its_heads_are_the_hosts_races_and_it_shows_releases_from_ticked(fake_repo, monkeypatch):
     world(monkeypatch, release=False)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         await _new_goal(page)
@@ -58,12 +58,12 @@ async def test_release_is_the_fifth_mixed_tile_its_heads_are_the_hosts_races_and
         tiles = sheet.locator(".preset-tile")
         await tiles.first.wait_for(timeout=WAIT_MS)
         ids = [await t.get_attribute("data-preset") for t in await tiles.all()]
-        assert ids[:5] == ["game", "mobile-app", "website", "ideation", "release"] and ids.index("release") == 4        # the fifth tile of the mixed group
+        assert ids[:5] == ["ideation", "code-concept", "code-build", "release", "code-liveops"] and ids.index("release") == 3        # Release is the project's fourth stage (spec 91 §7)
         tile = sheet.locator('.preset-tile[data-preset="release"]')
         assert "A version out: what goes in, its notes, the stores' list" in await tile.inner_text()
         heads = await tile.locator("img.ork-race__head").evaluate_all("(is) => is.map((i) => i.getAttribute('src'))")
-        assert heads[0].startswith("races/skeleton-") and heads[-1].startswith("races/skeleton-")                        # the Release manager and the checker are skeletons
-        assert await tile.locator('img[data-agent="release-manager"]').evaluate("(i) => i.complete && i.naturalWidth > 0")
+        assert len(heads) == 1 and heads[0].startswith("races/skeleton-")                                                  # the Release manager leads the tile: a skeleton
+        assert await tile.locator("img.ork-race__head").evaluate("(i) => i.complete && i.naturalWidth > 0")
         assert await sheet.locator(".releasesfrom").is_hidden()                                                         # only a Release party takes goals from the others
         await tile.click()
         box = sheet.locator(".releasesfrom")
@@ -71,7 +71,7 @@ async def test_release_is_the_fifth_mixed_tile_its_heads_are_the_hosts_races_and
         assert [norm(await r.inner_text()) for r in await box.locator(".releasesfrom__row").all()] == ["Passkey", "Website"]        # not Ideation, not General
         assert await box.locator("input:checked").count() == 2
         assert "Every party but Ideation" in await box.inner_text()
-        await sheet.locator('.preset-tile[data-preset="game"]').click()
+        await sheet.locator('.preset-tile[data-preset="code-build"]').click()
         await box.wait_for(state="hidden", timeout=WAIT_MS)
         await tile.click()
         await box.wait_for(timeout=WAIT_MS)

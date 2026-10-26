@@ -15,7 +15,7 @@ from orkboard.core import idea_kind  # noqa: E402
 from orkboard.realm import goal_types  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_project_desktop_browser import ARTIST, LACKING, LOGO, _project  # noqa: E402
-from tests.test_proposals_desktop_browser import ProposalHost  # noqa: E402
+from tests.test_proposals_desktop_browser import ProposalHost, _dialog, _seats  # noqa: E402
 from tests.test_route_desktop_browser import RELEASE_TYPE, shot  # noqa: E402
 from tests.test_shell_browser import _calls, _open  # noqa: E402
 
@@ -146,24 +146,22 @@ def test_the_parties_row_has_a_dashed_new_party_and_two_or_three_ready_parties_e
 def test_new_party_opens_new_party(rows):
     pg, host = rows
     _parties(pg).get_by_role("button", name="New party", exact=True).click()
-    dlg = pg.get_by_role("dialog", name="New party")
-    dlg.locator(".shell-prop").first.wait_for(timeout=WAIT_MS)
-    assert dlg.locator(".shell-prop.is-asked").count() == 0                                                                  # the proposals, none picked out
+    dlg = _dialog(pg)                                                                                                        # spec 91 §7's dialog: presets on the left, the seats on the right
+    assert dlg.get_by_role("region", name="By stage of the project").count() == 1 and dlg.locator(".shell-prop").count() == 0     # the old proposals screen is gone
+    assert dlg.get_by_label("Name", exact=True).get_attribute("placeholder") != "Mobile app: features"                       # no proposal picked out
 
 
 def test_add_takes_a_proposal_as_the_pile_did_and_a_library_party_opens_the_library_picked(rows):
     pg, host = rows
     _parties(pg).locator('article[data-proposal="mobile-features"]').get_by_role("button", name="Add Mobile app: features").click()
-    dlg = pg.get_by_role("dialog", name="New party")
-    dlg.locator(".shell-prop").first.wait_for(timeout=WAIT_MS)
-    assert "is-asked" in dlg.locator('.shell-prop[data-proposal="mobile-features"]').get_attribute("class")
-    assert "is-asked" not in dlg.locator('.shell-prop[data-proposal="mobile-architecture"]').get_attribute("class")
+    dlg = _dialog(pg)
+    assert (_seats(dlg, "lead"), _seats(dlg, "build")) == (["product-manager"], ["grunt"])                                   # that proposal's seats, picked in the new dialog
+    assert dlg.get_by_label("Name", exact=True).get_attribute("placeholder") == "Mobile app: features"
     pg.keyboard.press("Escape")
     dlg.wait_for(state="detached", timeout=WAIT_MS)
     _parties(pg).locator('article[data-preset="game"]').get_by_role("button", name="Add Game").click()
-    dlg = pg.get_by_role("dialog", name="New party")
-    dlg.locator(".shell-craft-tile").first.wait_for(timeout=WAIT_MS)
-    assert dlg.locator('.shell-craft-tile[data-craft="game"]').get_attribute("aria-pressed") == "true"
+    dlg = _dialog(pg)
+    assert _seats(dlg, "lead") == ["game-designer"] and dlg.get_by_role("radiogroup", name="Size").count() == 1             # the library's Game, with the size switch
 
 
 def test_a_host_that_does_not_read_the_project_offers_the_librarys_parties_in_the_deals_order_and_asks_for_no_proposals(gui):

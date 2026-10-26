@@ -1,5 +1,5 @@
-"""Spec 81 part C, the phone (docs/specs/81-a-party-its-tool-and-size.md §4, §5 "C"; decisions §98): Chromium at 390 × 844 against spec 75's stub host with `ideas.tools` and `ideas.party_sizes` (spec §1.4, §3). New party's cards
-and *More: the library* have **Its AI tool** under the size switch — the phone's own select, *Main tool (Claude Code)* picked, then *Ready*, *Not signed in* and *Not installed* (disabled); a tool with no tiers says it *runs its own
+"""Spec 81 part C, the phone (docs/specs/81-a-party-its-tool-and-size.md §4, §5 "C"; decisions §98): Chromium at 390 × 844 against spec 75's stub host with `ideas.tools` and `ideas.party_sizes` (spec §1.4, §3). New party (spec 91 §7)
+has **Its AI tool** under the size switch — the phone's own select, *Main tool (Claude Code)* picked, then *Ready*, *Not signed in* and *Not installed* (disabled); a tool with no tiers says it *runs its own
 model* where the price was; a tool not signed in stays picked and says its sign-in is the computer's; the pick is sent as `tool`. *About this party* has the list (a change saves `tool`) and its size switch shows the heads
 that join and leave before the press, then saves in one press, a refusal said in place. No sideways scroll at 390 px; the service worker's version."""
 from __future__ import annotations
@@ -13,7 +13,7 @@ import pytest
 from orkboard.gui import pwa
 from tests.test_pwa_arena_browser import SCENE, _about, _redrawn, _scene, _shot_to  # noqa: F401
 from tests.test_pwa_project_browser import calls  # noqa: F401
-from tests.test_pwa_proposals_browser import ARCH, MOBILE, PM, _new_party, card_of, proposing  # noqa: F401
+from tests.test_pwa_proposals_browser import ARCH, MOBILE, PM, _new_party, proposing  # noqa: F401
 from tests.test_pwa_route_browser import norm  # noqa: F401
 from tests.test_pwa_shell_browser import NO_SCROLL, WAIT_MS, Stub, _called, _phone  # noqa: F401
 
@@ -83,12 +83,11 @@ async def groups_of(select):
 # -- New party ---------------------------------------------------------------------------------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_each_card_has_its_ai_tool_the_main_tool_picked_and_the_tools_in_three_groups(fake_repo, monkeypatch):
+async def test_new_party_has_its_ai_tool_the_main_tool_picked_and_the_tools_in_three_groups(fake_repo, monkeypatch):
     with_tools(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
-        card = card_of(sheet, "mobile-features")
-        field = card.locator('[data-sec="tool"]')
+        field = sheet.locator('.tool-field[data-sec="tool"]')
         await field.wait_for(timeout=WAIT_MS)
         select = field.locator("select")
         assert await select.evaluate("s => s.tagName") == "SELECT" and await select.input_value() == ""
@@ -98,7 +97,6 @@ async def test_each_card_has_its_ai_tool_the_main_tool_picked_and_the_tools_in_t
         assert got[0][1] == [["claude", "Claude Code", False], ["codex", "Codex", False], ["pi", "pi · runs its own model", False]]
         assert got[1][1] == [["cursor", "Cursor · runs its own model", False]]
         assert got[2][1] == [["agy", "Antigravity", True], ["hermes", "Hermes Agent · runs its own model", True]]
-        assert await card_of(sheet, "mobile-architecture").locator("select").input_value() == ""
         assert len(calls(stub, "ideas.tools")) == 1
         box = await select.bounding_box()
         assert box["height"] >= 44 and box["x"] >= 0 and box["x"] + box["width"] <= 390
@@ -107,17 +105,26 @@ async def test_each_card_has_its_ai_tool_the_main_tool_picked_and_the_tools_in_t
 
 
 @pytest.mark.asyncio
-async def test_the_tool_picked_goes_with_make_it_and_the_main_tool_sends_none(fake_repo, monkeypatch):
+async def test_the_tool_picked_goes_with_save_party_and_the_main_tool_sends_none(fake_repo, monkeypatch):
     with_tools(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
-        card = card_of(sheet, "mobile-features")
-        await card.locator("select").select_option("codex")
-        assert await card_of(sheet, "mobile-architecture").locator("select").input_value() == ""
-        await card.get_by_role("button", name="Make it: Mobile app: features").click()
-        assert await _called(stub, "ideas.goal_save", {"about": "Mobile app: features: Screens and what people do on them", "craft": "product", "leader": PM,
-                                                       "team": ["grunt", "tester", "reviewer"], "every": [], "priority": "normal", "size": "standard", "proposal": "mobile-features", "tool": "codex"})
+        select = sheet.locator('.tool-field[data-sec="tool"] select')
+        await select.select_option("codex")
+        await sheet.get_by_label("What it is for").fill("Mobile app: features")
+        await sheet.get_by_role("button", name="Save party").click()
+        assert await _called(stub, "ideas.goal_save")
+        sent = calls(stub, "ideas.goal_save")[-1]
+        assert sent["tool"] == "codex" and sent["size"] == "standard" and sent["about"] == "Mobile app: features" and sent["team"] == ["grunt"]
         await sheet.wait_for(state="hidden", timeout=WAIT_MS)
+        stub.calls.clear()
+        sheet = await _new_party(page)                                                                                         # the Main tool picked again sends none
+        await sheet.locator('.tool-field[data-sec="tool"] select').select_option("codex")
+        await sheet.locator('.tool-field[data-sec="tool"] select').select_option("")
+        await sheet.get_by_label("What it is for").fill("Mobile app: architecture")
+        await sheet.get_by_role("button", name="Save party").click()
+        assert await _called(stub, "ideas.goal_save")
+        assert "tool" not in calls(stub, "ideas.goal_save")[-1]
 
 
 @pytest.mark.asyncio
@@ -125,39 +132,42 @@ async def test_a_tool_with_no_tiers_says_it_runs_its_own_model_where_the_price_w
     with_tools(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
-        card = card_of(sheet, "mobile-features")
-        assert "≈$1–4 a goal" in norm(await card.locator(".prop__detail").inner_text())
-        await card.locator("select").select_option("pi")
-        detail = norm(await card.locator(".prop__detail").inner_text())
-        assert "runs its own model" in detail and "a goal" not in detail and "4 agents" in detail
-        await card.locator("select").select_option("")
-        assert "≈$1–4 a goal" in norm(await card.locator(".prop__detail").inner_text())
-        await card.locator("select").select_option("cursor")
-        assert await card.locator("select").input_value() == "cursor"                                                          # stays picked
-        assert "Not signed in: sign in on the computer" in await card.locator(".tool-hint").inner_text()
+        select = sheet.locator('.tool-field[data-sec="tool"] select')
+        price = sheet.locator(".party-pricebox")
+        await sheet.locator(".party-pricebox .party-price").first.wait_for(timeout=WAIT_MS)
+        assert "This party: about" in norm(await price.inner_text()) and "runs its own model" not in norm(await price.inner_text()).lower()
+        await select.select_option("pi")
+        detail = norm(await price.inner_text())
+        assert "Runs its own model: its price is its own." in detail and "a goal" not in detail                                # where the price was
+        await select.select_option("")
+        await sheet.locator(".party-pricebox .party-price").filter(has_text="This party: about").wait_for(timeout=WAIT_MS)
+        await select.select_option("cursor")
+        assert await select.input_value() == "cursor"                                                                          # stays picked
+        assert "Not signed in: sign in on the computer" in await sheet.locator(".tool-field .tool-hint").inner_text()
         assert not calls(stub, "tools.sign_in")                                                                                # the phone opens nothing on the computer
-        await card.get_by_role("button", name="Make it: Mobile app: features").click()
+        await sheet.get_by_label("What it is for").fill("On cursor")
+        await sheet.get_by_role("button", name="Save party").click()
         assert await _called(stub, "ideas.goal_save")
         assert calls(stub, "ideas.goal_save")[-1]["tool"] == "cursor"
 
 
 @pytest.mark.asyncio
-async def test_the_library_has_the_list_and_save_party_sends_the_tool(fake_repo, monkeypatch):
+async def test_a_seat_has_its_own_ai_tool_the_party_s_by_default_and_a_pick_goes_with_save_party_as_tools(fake_repo, monkeypatch):
     with_tools(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
-        await sheet.get_by_role("button", name="More: the library").click()
-        await sheet.get_by_role("button", name="Save party").wait_for(timeout=WAIT_MS)
-        field = sheet.locator('.tool-field[data-sec="tool"]')
-        await field.wait_for(timeout=WAIT_MS)
-        assert await sheet.get_by_role("radiogroup", name="Its size").count() == 1
-        assert [g[0] for g in await groups_of(field.locator("select"))] == ["Ready", "Not signed in", "Not installed"]
-        await field.locator("select").select_option("codex")
-        await sheet.get_by_label("What it is for").fill("A party on codex")
+        seat = sheet.locator('[data-seat-tool="grunt"]')
+        await seat.wait_for(timeout=WAIT_MS)
+        assert "Party's tool · Claude Code" in norm(await seat.inner_text()) and (await seat.bounding_box())["height"] >= 44
+        await seat.click()
+        pick = page.get_by_role("dialog", name=re.compile("Its AI tool"))
+        await pick.locator('[data-tool="codex"]').click()
+        assert "Codex" in norm(await sheet.locator('[data-seat-tool="grunt"]').inner_text())
+        await sheet.get_by_label("What it is for").fill("A grunt on codex")
         await sheet.get_by_role("button", name="Save party").click()
         assert await _called(stub, "ideas.goal_save")
         sent = calls(stub, "ideas.goal_save")[-1]
-        assert sent["tool"] == "codex" and sent["size"] == "standard"
+        assert sent["tools"] == {"grunt": "codex"} and "tool" not in sent                                                      # the party's tool is the Main tool; the seat's is its own
         assert await page.evaluate(NO_SCROLL)
 
 
@@ -166,12 +176,13 @@ async def test_a_host_without_the_list_has_no_field(fake_repo, monkeypatch):
     with_tools(monkeypatch, tools=None)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
-        card = card_of(sheet, "mobile-features")
-        await card.get_by_role("button", name="Make it: Mobile app: features").wait_for(timeout=WAIT_MS)
-        assert await card.locator('[data-sec="tool"]').is_hidden()
-        await card.get_by_role("button", name="Make it: Mobile app: features").click()
+        await sheet.get_by_role("button", name="Save party").wait_for(timeout=WAIT_MS)
+        assert await sheet.locator('[data-sec="tool"]').is_hidden() and await sheet.locator("[data-seat-tool]").count() == 0
+        await sheet.get_by_label("What it is for").fill("No list")
+        await sheet.get_by_role("button", name="Save party").click()
         assert await _called(stub, "ideas.goal_save")
-        assert "tool" not in calls(stub, "ideas.goal_save")[-1]
+        sent = calls(stub, "ideas.goal_save")[-1]
+        assert "tool" not in sent and "tools" not in sent
 
 
 # -- About this party ----------------------------------------------------------------------------------------------------------------------------------------

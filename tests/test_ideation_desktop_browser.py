@@ -190,11 +190,18 @@ def test_new_party_offers_ideation_with_its_seats_fixed_and_no_pitch_agent_elsew
     try:
         _new_party(pg)
         dlg = pg.get_by_role("dialog", name="New party")
-        everyone = dlg.locator(".shell-team-row")
-        assert everyone.count() > 0 and not any(everyone.nth(i).get_attribute("data-agent") in ["investor", *TEAM] for i in range(everyone.count()))   # never offered elsewhere
+        dlg.locator('.shell-craft-tile[data-craft="mixed"]').click()                                      # the Taskmaster alone: a free seat in every band
+        for band in ("lead", "build", "check"):
+            dlg.locator(f'[data-free="{band}"]').click()
+            pop = dlg.locator("[data-pop]")
+            if pop.get_by_role("button", name="More roles").count():
+                pop.get_by_role("button", name="More roles").click()
+            everyone = pop.locator(".shell-team-row")
+            assert everyone.count() > 0 and not any(everyone.nth(i).get_attribute("data-agent") in ["investor", *TEAM] for i in range(everyone.count()))   # never offered elsewhere
+            pg.keyboard.press("Escape")
         dlg.locator('.shell-craft-tile[data-craft="ideation"]').click()
-        builds = dlg.get_by_role("region", name="Builds")
-        assert [b.locator("h3").text_content() for b in (dlg.get_by_role("region", name=n) for n in ("Leads", "Builds", "Checks"))] == ["Pitch", "Views", "Decision"]
+        builds = dlg.get_by_role("region", name="Does")
+        assert [b.get_attribute("data-stage") for b in (dlg.get_by_role("region", name=n) for n in ("Leads", "Does", "Checks"))] == ["Pitch", "Views", "Decision"]
         assert builds.locator(".shell-team-seat:not(.is-empty)").count() == 4 and dlg.locator(".shell-team-row").count() == 0      # no seat change in Ideation
         assert "its views and the Skeptic stay" in dlg.inner_text()
         pg.get_by_text("This party: about $0.29–0.58 a pitch").wait_for(timeout=WAIT_MS)
@@ -314,7 +321,9 @@ def test_a_preset_the_project_lacks_opens_new_party_with_it(lab):
     drawer.get_by_role("button", name="Send to Mobile app").click()
     dlg = pg.get_by_role("dialog", name="New party")
     dlg.wait_for(timeout=WAIT_MS)
-    assert dlg.locator('.shell-craft-tile[data-craft="mobile-app"]').get_attribute("aria-pressed") == "true"
+    dlg.locator(".shell-seat[data-seat]").first.wait_for(timeout=WAIT_MS)
+    assert dlg.get_by_label("Name", exact=True).get_attribute("placeholder") == "Mobile app"                       # the library's Mobile app: its leader and its first builder and checker
+    assert [e.get_attribute("data-seat") for e in dlg.locator(".shell-seat[data-seat]").all()] == ["product-manager", "grunt", "reviewer"]
     assert not [a for n, a in host.log if n == "ideas.pitch_send"]
 
 

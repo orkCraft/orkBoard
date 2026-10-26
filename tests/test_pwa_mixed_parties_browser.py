@@ -1,7 +1,7 @@
-"""Spec 59 part C, the phone (docs/specs/59-mixed-parties.md §7, §8 "C"): Chromium at 390 × 844 against the scene of tests/test_pwa_arena_browser.py. New party's library in one column, the mixed
-first (*Mixed*, *One craft*, *Taskmaster alone*): a pick fills the seats and sends `preset`, a seat changed clears it; the Game's four builders' seats and *Concept* / *Build* / *Playtest*; a leader with
-fewer seats (the alert line, *Save party* off); the stage switch's four heads (66 px) and its words whole at 390, a Game party's words and today's for another; an older host with no `stages` or
-`presets` (the row of crafts as before); the service worker's version."""
+"""Spec 59 part C, the phone (docs/specs/59-mixed-parties.md §7, §8 "C"), in the sheet of spec 91 §7: Chromium at 390 × 844 against the scene of tests/test_pwa_arena_browser.py. New party's presets in one column
+(*By stage of the project*, *By craft*, *Your own party*; this host reads no project: the library's stages Ideation and Release, the crafts, the Taskmaster alone, and the Game, the Mobile app and the Website as crafts
+of their own, as the stub offers them): a pick fills the seats and sends `preset`, a seat changed clears it; the Game's one builder seat and *Concept* / *Build* / *Playtest*; a party made before shown over its
+seats; the stage switch's four heads (66 px) and its words whole at 390, a Game party's words and today's for another; an older host with no `stages` or `presets` (the crafts' parties as before); the service worker's version."""
 from __future__ import annotations
 
 import re
@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from orkboard.gui import pwa
-from orkboard.realm import library
+from orkboard.realm import library, party_presets
 from tests.test_pwa_arena_browser import ELF, OWN, SCENE, _scene, member  # noqa: F401
 from tests.test_pwa_shell_browser import NO_SCROLL, WAIT_MS, Stub, _band, _called, _new_goal, _phone  # noqa: F401
 
@@ -21,8 +21,14 @@ pytestmark = pytest.mark.browser
 GAME = {"lead": {"word": "Concept"}, "build": {"word": "Build", "seats": 4}, "check": {"word": "Playtest", "seats": 1}}
 
 
+def legacy(pid):
+    """The library's mixed party `pid` (the Game, the Mobile app, the Website) as a craft's preset row: this stub offers them so that their leaders can be picked (spec 91 §7 has the stages of a kind instead)."""
+    p = next(p for p in library.presets() if p["id"] == pid)
+    return {"id": pid, "name": p["name"], "line": p["line"], "group": "craft", "stage": "", "craft": p["craft"], "recipe": "", "whole": False, "leader": p["lead"], "build": p["build"], "check": p["check"], "sizes": {}}
+
+
 def hosted(monkeypatch, *, newer=True):
-    """The host of spec 59 A answers `presets` and `stages` with the roles (`newer`), or an older one does not."""
+    """The host of spec 59 A answers `presets` and `stages` with the roles (`newer`), or an older one does not; and `ideas.party_presets` (a project of code, and the library's Game, Mobile app and Website)."""
     real = Stub.commands
 
     def commands(self):
@@ -32,7 +38,11 @@ def hosted(monkeypatch, *, newer=True):
         def serve(a):
             out = roles(a)
             return {**out, "presets": library.presets(), "stages": library.stages()} if newer else out
-        return {**got, "ideas.roles": serve}
+
+        def presets_(a):
+            self.calls.append(("ideas.party_presets", {k: v for k, v in a.items() if k not in ("link", "device")}))
+            return {"kind": {"id": "code", "words": "code"}, "presets": [*party_presets.listed("code"), legacy("game"), legacy("mobile-app"), legacy("website")]}
+        return {**{k: v for k, v in got.items() if newer or k != "ideas.party_presets"}, "ideas.roles": serve, **({"ideas.party_presets": presets_} if newer else {})}
     monkeypatch.setattr(Stub, "commands", commands)
 
 
@@ -40,27 +50,31 @@ async def _sheet(page):
     await _new_goal(page)
     sheet = page.get_by_role("dialog", name="New party")
     await sheet.wait_for(timeout=WAIT_MS)
+    await sheet.locator(".pseat[data-seat]").first.wait_for(timeout=WAIT_MS)
     return sheet
 
 
+async def _seats(sheet, band):
+    return [await s.get_attribute("data-seat") for s in await sheet.locator(f'.pband[data-band="{band}"] .pseat[data-seat]').all()]
+
+
 @pytest.mark.asyncio
-async def test_the_library_gives_the_mixed_parties_first_in_one_column(fake_repo, monkeypatch):
+async def test_the_library_gives_the_stages_then_the_crafts_then_the_taskmaster_alone_in_one_column(fake_repo, monkeypatch):
     hosted(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _sheet(page)
         tiles = sheet.locator(".preset-tile")
-        await tiles.first.wait_for(timeout=WAIT_MS)
-        assert [await t.get_attribute("data-preset") for t in await tiles.all()] == ["game", "mobile-app", "website", "ideation", "release", "art", "engineering", "design", "data", "marketing", "product", "mixed"]
-        assert [await g.get_attribute("aria-label") for g in await sheet.locator(".preset-group").all()] == ["Mixed", "One craft", "Taskmaster alone"]
-        xs = {round((await t.bounding_box())["x"]) for t in await tiles.all()}
+        assert [await t.get_attribute("data-preset") for t in await tiles.all()] == ["ideation", "code-concept", "code-build", "release", "code-liveops", "engineering", "design", "data", "marketing", "product",
+                                                                                      "art", "game", "mobile-app", "website", "mixed"]
+        assert [await g.get_attribute("aria-label") for g in await sheet.locator(".preset-group").all()] == ["By stage of the project", "By craft", "Your own party"]
+        stages = sheet.locator('.preset-group.is-stage .preset-tile')
+        xs = {round((await t.bounding_box())["x"]) for t in await stages.all()}
         assert len(xs) == 1                                                                     # one column
         for t in await tiles.all():
             assert (await t.bounding_box())["height"] >= 44
         game = sheet.locator('.preset-tile[data-preset="game"]')
-        assert "Rules, levels, art and sound, played through" in await game.inner_text() and await game.locator("img").count() == 3          # its leader, its first builder, its first checker (spec 87 §5)
         await game.click()
-        assert await sheet.locator(".party-line").first.inner_text() == \
-            "Leads: Game designer · Builds: Grunt · Checks: Playtester"
+        assert (await _seats(sheet, "lead"), await _seats(sheet, "build"), await _seats(sheet, "check")) == (["game-designer"], ["grunt"], ["playtester"])         # its leader, its first builder, its first checker (spec 87 §5)
         await sheet.get_by_label("What it is for").fill("A tower game.")
         await sheet.get_by_role("button", name="Save party").click()
         assert await _called(stub, "ideas.goal_save", {"about": "A tower game.", "craft": "design", "leader": "game-designer", "priority": "normal", "preset": "game",
@@ -74,17 +88,15 @@ async def test_a_seat_changed_clears_the_preset_and_the_game_has_one_builders_se
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _sheet(page)
         await sheet.locator('.preset-tile[data-preset="game"]').click()
-        await sheet.locator('.party [data-change="team"]').click()
-        builds = sheet.get_by_role("region", name="Builds")
-        await builds.get_by_role("button").first.click()
+        builds = sheet.get_by_role("region", name="Does")
         assert await builds.get_attribute("data-stage") == "Build"
-        assert await builds.locator(".team-seat").count() == 1 and await builds.locator(".team-seat:not(.is-empty)").count() == 1
-        assert "1 of 1" in await builds.inner_text() and "Build · 1 seat" in await builds.inner_text()
+        assert await builds.locator(".team-seat").count() == 0 and await builds.locator(".pseat[data-seat]").count() == 1 and await builds.locator("[data-free]").count() == 0       # a seat a stage: no free seat
+        assert "1 of 1 seats" in await builds.inner_text()
         assert await sheet.get_by_role("region", name="Leads").get_attribute("data-stage") == "Concept"
         assert await sheet.get_by_role("region", name="Checks").get_attribute("data-stage") == "Playtest"
-        await sheet.get_by_role("button", name="Take out: Grunt").click()
-        await sheet.get_by_role("button", name="Take in: Artist").click()                          # the one seat taken again by another
-        await builds.get_by_role("button", name="Done").click()
+        await sheet.get_by_role("button", name="Remove Grunt from the party").click()
+        await sheet.locator('[data-free="build"]').click()                                       # the one seat taken again by another
+        await page.get_by_role("dialog", name="Add a member").locator('[data-agent="artist"]').click()
         await sheet.get_by_label("What it is for").fill("A tower game, quiet.")
         await sheet.get_by_role("button", name="Save party").click()
         assert await _called(stub, "ideas.goal_save", {"about": "A tower game, quiet.", "craft": "design", "leader": "game-designer", "priority": "normal",
@@ -106,12 +118,10 @@ async def test_a_party_made_before_with_more_than_a_seat_a_stage_says_so_and_is_
         await sheet.get_by_label("What it is for").fill("A wide one.")
         save = sheet.get_by_role("button", name="Save party")
         assert await save.is_enabled()                                                             # a party the person made before keeps its team
-        await sheet.locator('.party [data-change="team"]').click()
-        builds = sheet.get_by_role("region", name="Builds")
-        await builds.get_by_role("button").first.click()
+        builds = sheet.get_by_role("region", name="Does")
         assert await builds.locator(".party-over").inner_text() == "Implementation has 1 seat with Architect: take one out first."
+        assert await builds.locator(".pseat__head.is-over").count() == 1 and "2 of 1 seats" in await builds.inner_text()
         assert await save.is_enabled()
-        await builds.get_by_role("button", name="Done").click()
         await save.click()
         assert await _called(stub, "ideas.goal_save", {"about": "A wide one.", "craft": "engineering", "leader": "architect", "priority": "normal", "party": "p-1a2b3c4d",
                                                        "team": ["grunt", "tester", "reviewer"], "every": []})
@@ -144,9 +154,12 @@ async def test_an_older_host_says_today_s_words_and_keeps_the_row_of_crafts(fake
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         names = [await page.locator(f'.band[data-band="{k}"] .band__name').inner_text() for k in ("lead", "build", "check")]
         assert [n.lower() for n in names] == ["planning", "implementation", "checking"]
-        sheet = await _sheet(page)
-        assert await sheet.locator(".craft-tile").count() == 6 and await sheet.locator(".preset-tile").count() == 0
-        await sheet.locator('.craft-tile[data-craft="design"]').click()
+        await _new_goal(page)
+        sheet = page.get_by_role("dialog", name="New party")
+        await sheet.locator(".preset-tile").first.wait_for(timeout=WAIT_MS)
+        ids = [await t.get_attribute("data-preset") for t in await sheet.locator(".preset-tile").all()]
+        assert [i for i in ids if i in ("engineering", "design", "data", "marketing", "product")] == ["engineering", "design", "data", "marketing", "product"]       # the crafts' parties stay
+        await sheet.locator('.preset-tile[data-preset="design"]').click()
         await sheet.get_by_label("What it is for").fill("A design party.")
         await sheet.get_by_role("button", name="Save party").click()
         assert await _called(stub, "ideas.goal_save")

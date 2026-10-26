@@ -1,5 +1,5 @@
 """Spec 63 part C, the phone (docs/specs/63-party-gathered.md §4, §5 "C"; decisions §76.2): Chromium at 390 × 844 against the stub of tests/test_pwa_shell_browser.py. *Save party* on New party's
-sheet: the party's heads (the leader's first, six at most), each from where the sheet shows it at the press (the open fold's taken seat, else the picked party's tile; one that is not on screen from
+sheet: the party's heads (the leader's first, six at most), each from where the sheet shows it at the press (its seat in the bands *Leads*, *Does* and *Checks*, spec 91 §7; one that is not on screen from
 *Save party*'s box), travel as copies over the page to the goals bar's deck once the sheet has closed and the deck shows the new party, steps(6) 0.30 s, 35 ms apart, each ending at the deck's centre at
 0.4 of its size and gone on landing; then the deck is lit once. Nothing under reduced motion, after a refusal, after 6 s, for New goal taking the new party, or for a team changed from its own screen;
 `sw.js` v68."""
@@ -76,6 +76,16 @@ def _starts(fly, box):
     return all(abs(fly[k] - box[k]) <= 0.5 for k in ("left", "top", "width", "height"))
 
 
+async def _seat_heads(sheet, ids):
+    """The boxes of the seats' heads, in the order of `ids` (the leader's, the builders', the checkers')."""
+    return [(await _boxes(sheet.locator(f'.pseat img[data-agent="{i}"]')))[0] for i in ids]
+
+
+async def _bring_in(sheet, band, block="center"):
+    """The band scrolled to the middle (or the top) of the sheet."""
+    await sheet.locator(f'.pband[data-band="{band}"]').evaluate("(e, b) => e.scrollIntoView({ block: b })", block)
+
+
 async def _ready(page, preset="game", about="A tower game."):
     """New party with a party picked and its words written: the sheet."""
     sheet = await _sheet(page)
@@ -89,9 +99,8 @@ async def test_save_party_gathers_the_heads_of_the_party_into_its_deck_and_light
     hosted(monkeypatch)
     async with _phone(fake_repo, monkeypatch, init=RECORD) as (stub, page):
         sheet = await _ready(page)
-        tile = sheet.locator('.preset-tile[data-preset="game"]')
-        await tile.evaluate("e => e.scrollIntoView({ block: 'center' })")                 # the picked party's tile is on screen: its heads are where the heads start
-        heads = await _boxes(tile.locator(".preset-heads img"))
+        await _bring_in(sheet, "build")                                                    # the seats are on screen: their heads are where the heads start
+        heads = await _seat_heads(sheet, ["game-designer", "grunt", "playtester"])
         assert len(heads) == 3
         await page.evaluate("() => { window.__screenAt = 0; }")
         await sheet.get_by_role("button", name="Save party").click()
@@ -124,9 +133,9 @@ async def test_heads_that_are_not_on_screen_start_from_save_party(fake_repo, mon
     hosted(monkeypatch)
     async with _phone(fake_repo, monkeypatch, init=RECORD) as (stub, page):
         sheet = await _ready(page)
-        await sheet.evaluate("e => { e.scrollTop = e.scrollHeight; }")                    # the tile is scrolled away
+        await sheet.evaluate("e => { e.scrollTop = 0; }")                                 # the seats are under the fold, below the presets
         view = await sheet.bounding_box()
-        assert all(b["top"] + b["height"] <= view["y"] for b in await _boxes(sheet.locator('.preset-tile[data-preset="game"] .preset-heads img')))
+        assert all(b["top"] >= view["y"] + view["height"] for b in await _seat_heads(sheet, ["game-designer", "grunt", "playtester"]))
         save = await sheet.get_by_role("button", name="Save party").bounding_box()
         await sheet.get_by_role("button", name="Save party").click()
         flies = await _flies(page, 3)
@@ -137,44 +146,42 @@ async def test_heads_that_are_not_on_screen_start_from_save_party(fake_repo, mon
 
 
 @pytest.mark.asyncio
-async def test_with_a_fold_open_its_taken_seats_are_where_the_heads_start_and_the_others_start_from_save_party(fake_repo, monkeypatch):
+async def test_the_seats_on_screen_are_where_the_heads_start_and_the_others_start_from_save_party(fake_repo, monkeypatch):
     hosted(monkeypatch)
     async with _phone(fake_repo, monkeypatch, init=RECORD) as (stub, page):
         sheet = await _ready(page)
-        await sheet.locator('.party [data-change="team"]').click()
-        builds = sheet.get_by_role("region", name="Builds")
-        await builds.get_by_role("button").first.click()                                   # Builds open: its one taken seat
-        await builds.locator(".team-seats").evaluate("e => e.scrollIntoView({ block: 'center' })")
-        view = await sheet.bounding_box()
-        assert all(b["top"] + b["height"] <= view["y"] for b in await _boxes(sheet.locator('.preset-tile[data-preset="game"] .preset-heads img')))      # the tile is out of sight
-        seats = await _boxes(builds.locator(".team-seat:not(.is-empty) img"))
-        assert len(seats) == 1
+        await sheet.evaluate("e => { e.scrollTop = 0; }")
+        floor = (await sheet.locator(".sheet-foot").bounding_box())["y"]
+        builder = (await _seat_heads(sheet, ["grunt"]))[0]
+        await sheet.evaluate("(e, y) => { e.scrollTop = y; }", max(0, builder["top"] + builder["height"] - floor + 1))      # scrolled so that the checker's seat is under the foot, the others above it
+        leader, builder, checker = await _seat_heads(sheet, ["game-designer", "grunt", "playtester"])
+        assert leader["top"] + leader["height"] <= floor and builder["top"] + builder["height"] <= floor and checker["top"] + checker["height"] > floor
         save = await sheet.get_by_role("button", name="Save party").bounding_box()
         await sheet.get_by_role("button", name="Save party").click()
         flies = await _flies(page, 3)
         assert [f["src"] for f in flies] == members("game")
-        assert all(_starts(f, b) for f, b in zip(flies[1:2], seats))                       # the builder from its seat
-        for f in (flies[0], flies[2]):                                                      # the leader and the checker, whose folds are shut, from the button
-            assert abs(f["left"] + f["width"] / 2 - (save["x"] + save["width"] / 2)) <= 1 and abs(f["top"] + f["height"] / 2 - (save["y"] + save["height"] / 2)) <= 1
+        assert _starts(flies[0], leader) and _starts(flies[1], builder)                     # the leader and the builder from their seats
+        assert abs(flies[2]["left"] + flies[2]["width"] / 2 - (save["x"] + save["width"] / 2)) <= 1 and abs(flies[2]["top"] + flies[2]["height"] / 2 - (save["y"] + save["height"] / 2)) <= 1   # the checker, under the foot, from the button
 
 
 @pytest.mark.asyncio
-async def test_the_row_of_crafts_draws_no_head_of_the_party_so_each_starts_from_save_party(fake_repo, monkeypatch):
-    async with _phone(fake_repo, monkeypatch, init=RECORD) as (stub, page):                # an older host with no library of parties: the row of crafts, a head each, not the party's
+async def test_a_craft_s_party_gathers_from_its_seats_the_leader_first(fake_repo, monkeypatch):
+    async with _phone(fake_repo, monkeypatch, init=RECORD) as (stub, page):                # a host with no library of mixed parties: the crafts' parties
         sheet = await _sheet(page)
-        await sheet.locator('.craft-tile[data-craft="design"]').click()
+        await sheet.locator('.preset-tile[data-preset="design"]').click()
         await sheet.get_by_label("What it is for").fill("A design party.")
-        save = await sheet.get_by_role("button", name="Save party").bounding_box()
-        await sheet.get_by_role("button", name="Save party").click()
         lead, build, check = library.PARTIES["design"]
-        flies = await _flies(page, 1 + len(build[:1]) + len(check[:1]))
-        assert [f["src"] for f in flies] == [f"races/{roles.RACES[library.get(i).craft]}-{library.get(i).tier}@2x.png" for i in (lead, *build[:1], *check[:1])]
-        for f in flies:
-            assert abs(f["left"] + f["width"] / 2 - (save["x"] + save["width"] / 2)) <= 1 and abs(f["top"] + f["height"] / 2 - (save["y"] + save["height"] / 2)) <= 1
+        ids = [lead, *build[:1], *check[:1]]
+        await _bring_in(sheet, "build")
+        heads = await _seat_heads(sheet, ids)
+        await sheet.get_by_role("button", name="Save party").click()
+        flies = await _flies(page, len(ids))
+        assert [f["src"] for f in flies] == [f"races/{roles.RACES[library.get(i).craft]}-{library.get(i).tier}@2x.png" for i in ids]
+        assert all(_starts(f, b) for f, b in zip(flies, heads))
 
 
 @pytest.mark.asyncio
-async def test_a_party_of_your_own_gathers_from_the_heads_of_its_chip(fake_repo, monkeypatch):
+async def test_a_party_of_your_own_gathers_from_the_seats_it_fills(fake_repo, monkeypatch):
     async with _phone(fake_repo, monkeypatch, init=RECORD) as (stub, page):
         stub.own = [{"id": "p-1a2b3c4d", "name": "Lean web", "craft": "engineering", "leader": "architect", "team": ["grunt", "tester", "reviewer"], "every": ["reviewer"],
                      "own": [], "goals": 3, "projects": 2, "met": 2, "saved": "2026-10-20T10:00:00"}]
@@ -183,9 +190,10 @@ async def test_a_party_of_your_own_gathers_from_the_heads_of_its_chip(fake_repo,
         await chip.wait_for(timeout=WAIT_MS)
         await chip.get_by_role("button", name="Pick your party “Lean web”").click()
         await sheet.get_by_label("What it is for").fill("A lean one.")
-        await chip.evaluate("e => e.scrollIntoView({ block: 'center' })")
-        heads = await _boxes(chip.locator(".own-heads img"))
-        assert len(heads) == 4 and {(round(b["width"]), round(b["height"])) for b in heads} == {(12, 11)}              # a chip's heads are small
+        chips = await _boxes(chip.locator(".own-heads img"))
+        assert len(chips) == 4 and {(round(b["width"]), round(b["height"])) for b in chips} == {(12, 11)}               # a chip's heads are small
+        await _bring_in(sheet, "build")
+        heads = await _seat_heads(sheet, ["architect", "grunt", "tester", "reviewer"])                                 # the seats it fills are where the heads start
         await sheet.get_by_role("button", name="Save party").click()
         flies = await _flies(page, 4)
         assert all(_starts(f, b) for f, b in zip(flies, heads)) and flies[0]["src"] == "races/peon-elder@2x.png"      # the Architect leads

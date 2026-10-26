@@ -1,8 +1,8 @@
-"""Spec 75 part C, the phone (docs/specs/75-parties-fitted-to-the-project.md §5, §6 "C"; decisions §90): Chromium at 390 × 844 against the stub host of spec 75 §4.1 — `ideas.proposals`, `ideas.map`'s `project.kind`,
-`ideas.goal_save` with `size`, a party's `size`. New party opens on the Orkmaster's proposals for a mobile project (three cards, a three-way switch Lean · Standard · Full as a radiogroup of buttons, the heads, the agents and the
-price of the size picked, *Make it* sends the leader, the team and the size, a proposal the project has is muted); an empty project asks *What is this project for?* and *Read it* draws the proposals of the line; *More: the library* is
-today's tiles and seats with the size switch; the Orkmaster's *Parties* row shows the proposals first (spec 91 §8); *About this party* and *Edit the party* have *Its size*; the drawer's Target is *A party with no size of its own works as*;
-a host with no `ideas.proposals` keeps today's phone; 44 px targets, no sideways scroll; the service worker's version."""
+"""Spec 75 part C, the phone (docs/specs/75-parties-fitted-to-the-project.md §5, §6 "C"; decisions §90), in the sheet of spec 91 §7: Chromium at 390 × 844 against the stub host of spec 75 §4.1 — `ideas.proposals`,
+`ideas.map`'s `project.kind`, `ideas.goal_save` with `size`, a party's `size` — and `ideas.party_presets` for the project's kind. The Orkmaster's reading of the project fits New party's presets (the stages of a mobile app),
+Standard is picked of the three-way switch Lean · Standard · Full (a radiogroup of buttons) that changes the seats, the agents and the price at once, *Save party* sends the leader, the team, the size and the stage's recipe;
+an empty project is asked no line here (the Orkmaster's row asks it, spec 91 §8); the Orkmaster's *Parties* row shows the proposals first (spec 91 §8) and *Add* opens New party on its seats; *About this party* and *Edit the party* have
+*Its size*; the drawer's Target is *A party with no size of its own works as*; a host with no `ideas.proposals` keeps today's phone; 44 px targets, no sideways scroll; the service worker's version."""
 from __future__ import annotations
 
 import copy
@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 from orkboard.gui import pwa
-from orkboard.realm import library
+from orkboard.realm import library, party_presets
 from tests.test_pwa_arena_browser import SCENE, _about, _redrawn, _scene, _shot_to  # noqa: F401
 from tests.test_pwa_project_browser import ORKMASTER, STATE, _project, calls, hosted  # noqa: F401
 from tests.test_pwa_route_browser import WORLD, norm, world  # noqa: F401
@@ -65,6 +65,10 @@ def proposing(monkeypatch, *, kind=KIND, proposals=MOBILE, ask=False, deal="have
     def commands(self):
         got = real(self)
 
+        def presets_(a):                                      # spec 91 §7: New party's presets for the project's kind
+            self.calls.append(("ideas.party_presets", {k: v for k, v in a.items() if k not in ("link", "device")}))
+            return {"kind": {"id": kind["id"], "words": kind["words"]}, "presets": party_presets.listed(kind["id"])}
+
         def proposals_(a):
             self.calls.append(("ideas.proposals", {k: v for k, v in a.items() if k not in ("link", "device")}))
             if fail:
@@ -84,193 +88,174 @@ def proposing(monkeypatch, *, kind=KIND, proposals=MOBILE, ask=False, deal="have
                 if g["slug"] == a.get("slug") and a.get("size"):
                     g["size"] = a["size"]
             return r
-        return {**got, "ideas.proposals": proposals_, "ideas.goal_save": goal_save}
+        return {**got, "ideas.proposals": proposals_, "ideas.goal_save": goal_save, **({"ideas.party_presets": presets_} if kind else {})}
     monkeypatch.setattr(Stub, "commands", commands)
 
 
 async def _new_party(page):
+    """New party, its presets and its seats drawn."""
     await _new_goal(page)
     sheet = page.get_by_role("dialog", name="New party")
     await sheet.wait_for(timeout=WAIT_MS)
-    await sheet.locator(".prop, .props__ask, .preset-list").first.wait_for(timeout=WAIT_MS)
+    await sheet.locator(".preset-tile").first.wait_for(timeout=WAIT_MS)
+    await sheet.locator(".pseat[data-seat]").first.wait_for(timeout=WAIT_MS)
     return sheet
 
 
-def card_of(sheet, pid):
-    return sheet.locator(f'.prop[data-proposal="{pid}"]')
+async def _seats(sheet, band):
+    return [await s.get_attribute("data-seat") for s in await sheet.locator(f'.pband[data-band="{band}"] .pseat[data-seat]').all()]
 
 
-# -- New party opens on the proposals ---------------------------------------------------------------------------------------------------------------------
+# -- New party opens on the project's presets --------------------------------------------------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_new_party_opens_on_three_proposals_with_a_three_way_switch_and_the_size_picked_says_its_heads_agents_and_price(fake_repo, monkeypatch):
+async def test_new_party_opens_on_the_projects_presets_with_a_three_way_switch_and_the_size_picked_says_its_agents_and_seats(fake_repo, monkeypatch):
     proposing(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
-        top = sheet.locator(".props__top")
-        assert norm(await top.inner_text()) == "Orkmaster proposes for this project · a mobile app ios/ · android/"
-        assert await top.locator("img.ork-race__head").get_attribute("src") == "races/peon-crown.png"                          # the Orkmaster's head
-        assert [await c.get_attribute("data-proposal") for c in await sheet.locator(".prop").all()] == ["mobile-features", "mobile-architecture", "release"]
-        assert await sheet.get_by_role("button", name="Save party").is_hidden() and await sheet.locator(".preset-tile").count() == 0       # no library at first
-        card = card_of(sheet, "mobile-features")
-        text = norm(await card.inner_text())
-        assert text.startswith("Mobile app: features Screens and what people do on them ios/ and android/ are here Lean Standard Full")
-        group = card.get_by_role("radiogroup", name="Its size: Mobile app: features")
+        assert norm(await sheet.locator(".presets__kind").inner_text()) == "For a mobile app: the Orkmaster knows what this project is"      # what the Orkmaster read
+        assert [await c.get_attribute("data-preset") for c in await sheet.locator(".preset-group.is-stage .preset-tile").all()] == ["ideation", "mobile-concept", "mobile-build", "release", "mobile-liveops"]
+        assert await sheet.locator(".prop, .props__top").count() == 0 and calls(stub, "ideas.proposals") == []                                  # no proposals here: they are the deal's
+        group = sheet.get_by_role("radiogroup", name="Size")
         assert [norm(await b.inner_text()) for b in await group.get_by_role("radio").all()] == ["Lean", "Standard", "Full"]
         assert await group.get_by_role("radio", name="Standard").get_attribute("aria-checked") == "true"                           # Standard picked
         assert await group.locator("button.ork-btn").count() == 3                                                                   # orkUI's buttons
-        assert await card.locator(".prop__heads img").count() == 4 and "4 agents" in text and "≈$1–4 a goal" in text
+        assert (await _seats(sheet, "lead"), await _seats(sheet, "build"), await _seats(sheet, "check")) == (["product-manager"], ["grunt"], [])
+        assert norm(await sheet.locator(".size-says").inner_text()).startswith("2 agents: the leader Veteran, the rest Seasoned")
         await group.get_by_role("radio", name="Lean").click()
-        text = norm(await card.inner_text())
-        assert await card.locator(".prop__heads img").count() == 1 and "one agent" in text and "≈$0.40–1.20 a goal" in text
+        assert await _seats(sheet, "build") == [] and norm(await sheet.locator(".size-says").inner_text()).startswith("One agent, Seasoned · works as thrift")
         assert await group.get_by_role("radio", name="Lean").get_attribute("aria-checked") == "true" and await group.get_by_role("radio", name="Standard").get_attribute("aria-checked") == "false"
         await group.get_by_role("radio", name="Full").click()
-        text = norm(await card.inner_text())
-        assert await card.locator(".prop__heads img").count() == 6 and "6 agents" in text and "≈$3–9 a goal" in text
-        assert await card.locator(".prop__heads img").first.get_attribute("src") == "races/lich-elder.png"                           # the leader's head first
-        other = card_of(sheet, "mobile-architecture")
-        assert await other.get_by_role("radio", name="Standard").get_attribute("aria-checked") == "true" and "≈$2–5 a goal" in norm(await other.inner_text())   # each card keeps its own size
-        await group.get_by_role("radio", name="Standard").click()
-        await group.get_by_role("radio", name="Standard").focus()
-        await page.keyboard.press("ArrowRight")                                                                                     # arrows move the pick
-        assert await group.get_by_role("radio", name="Full").get_attribute("aria-checked") == "true"
-        have = card_of(sheet, "release")
-        assert "You have one" in await have.inner_text() and "is-have" in await have.get_attribute("class")                          # muted
-        assert not calls(stub, "ideas.goal_save") and len(calls(stub, "ideas.proposals")) == 1 and calls(stub, "ideas.proposals")[0] == {}
+        assert (await _seats(sheet, "build"), await _seats(sheet, "check")) == (["grunt"], ["reviewer"]) and norm(await sheet.locator(".size-says").inner_text()).startswith("3 agents, Seasoned and up · works as quality")
+        await page.wait_for_function("() => document.querySelector('.party-price')?.textContent.includes('$')", timeout=WAIT_MS)
+        for _ in range(60):                                                                                                         # asked 300 ms after the pick
+            if calls(stub, "ideas.party_price")[-1].get("size") == "full":
+                break
+            await page.wait_for_timeout(100)
+        assert calls(stub, "ideas.party_price")[-1]["size"] == "full"                                                               # the price reads the size's Target
+        await group.get_by_role("radio", name="Full").focus()
+        await page.keyboard.press("ArrowLeft")                                                                                      # arrows move the pick
+        assert await group.get_by_role("radio", name="Standard").get_attribute("aria-checked") == "true"
+        assert not calls(stub, "ideas.goal_save")
         await _shot_to(page, "phone-proposals")
         assert await page.evaluate(NO_SCROLL) and await sheet.evaluate("(d) => d.scrollWidth <= d.clientWidth")
         assert "null" not in await sheet.inner_text() and "undefined" not in await sheet.inner_text()
 
 
 @pytest.mark.asyncio
-async def test_make_it_saves_the_party_with_its_leader_its_team_and_size_and_the_words_are_the_persons_else_the_proposals_line(fake_repo, monkeypatch):
+async def test_save_party_saves_the_party_with_its_leader_its_team_and_size_and_the_words_are_the_persons(fake_repo, monkeypatch):
     proposing(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
-        card = card_of(sheet, "mobile-features")
-        await card.get_by_role("radio", name="Full").click()
-        await card.get_by_role("button", name="Make it: Mobile app: features").click()
-        assert await _called(stub, "ideas.goal_save", {"about": "Mobile app: features: Screens and what people do on them", "craft": "product", "leader": PM,
-                                                       "team": ["grunt", "tester", "reviewer", "artist", "ui-kit"], "every": [], "priority": "normal", "size": "full", "proposal": "mobile-features"})
+        await sheet.locator('.preset-tile[data-preset="mobile-concept"]').click()
+        await sheet.get_by_role("radiogroup", name="Size").get_by_role("radio", name="Full").click()
+        await sheet.get_by_label("What it is for").fill("How the app looks before it is built.")
+        await sheet.get_by_role("button", name="Save party").click()
+        assert await _called(stub, "ideas.goal_save")
+        sent = calls(stub, "ideas.goal_save")[-1]
+        assert sent["about"] == "How the app looks before it is built." and sent["leader"] == "product-designer" and sent["size"] == "full" and sent["proposal"] == "mobile-concept"
+        assert sent["team"][0] == "ui-kit" and "title" not in sent and sent["priority"] == "normal"                               # the person's words, not the stage's name
         await sheet.wait_for(state="hidden", timeout=WAIT_MS)
 
 
 @pytest.mark.asyncio
-async def test_make_it_sends_the_proposals_own_words_and_opens_the_party(fake_repo, monkeypatch):
+async def test_save_party_opens_the_party_and_a_lean_party_is_its_leader_alone(fake_repo, monkeypatch):
     proposing(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
-        assert await sheet.get_by_label("What it is for").count() == 0                          # one question at most: the Orkmaster's, for an empty folder
-        await card_of(sheet, "mobile-architecture").get_by_role("radio", name="Lean").click()
-        await card_of(sheet, "mobile-architecture").get_by_role("button", name="Make it: Mobile app: architecture").click()
-        assert await _called(stub, "ideas.goal_save", {"about": "Mobile app: architecture: How the app is built, and kept honest", "craft": "engineering", "leader": ARCH, "team": [], "every": [], "priority": "normal", "size": "lean", "proposal": "mobile-architecture"})
+        await sheet.get_by_role("radiogroup", name="Size").get_by_role("radio", name="Lean").click()
+        await sheet.get_by_label("What it is for").fill("The first build.")
+        await sheet.get_by_role("button", name="Save party").click()
+        assert await _called(stub, "ideas.goal_save")
+        sent = calls(stub, "ideas.goal_save")[-1]
+        assert sent["about"] == "The first build." and sent["size"] == "lean" and sent["team"] == [] and sent["proposal"] == "mobile-build" and "title" not in sent
         await sheet.wait_for(state="hidden", timeout=WAIT_MS)
-        screen = page.locator("section.screen:not([hidden])")                                                                        # the party's own screen opens, as after Save party
+        screen = page.locator("section.screen:not([hidden])")                                                                        # the party's own screen opens
         await screen.wait_for(timeout=WAIT_MS * 2)
 
 
 @pytest.mark.asyncio
-async def test_a_refusal_of_the_host_is_said_and_the_card_stays_to_be_pressed_again(fake_repo, monkeypatch):
+async def test_a_refusal_of_the_host_is_said_and_the_sheet_stays_to_be_saved_again(fake_repo, monkeypatch):
     proposing(monkeypatch, refuse="Reviewer has work open: it cannot leave")
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
-        make = card_of(sheet, "mobile-features").get_by_role("button", name="Make it: Mobile app: features")
-        await make.click()
+        save = sheet.get_by_role("button", name="Save party")
+        await sheet.get_by_role("radiogroup", name="Size").get_by_role("radio", name="Full").click()
+        await save.click()
         await page.get_by_text("Reviewer has work open: it cannot leave").wait_for(timeout=WAIT_MS)
-        assert await sheet.is_visible() and await make.is_enabled() and await page.evaluate(NO_SCROLL)
+        assert await sheet.is_visible() and await save.is_enabled() and await page.evaluate(NO_SCROLL)
 
 
 @pytest.mark.asyncio
-async def test_every_target_of_the_proposals_is_44_px_and_the_page_does_not_scroll_sideways(fake_repo, monkeypatch):
+async def test_every_target_of_new_party_is_44_px_and_the_page_does_not_scroll_sideways(fake_repo, monkeypatch):
     proposing(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
-        boxes = await sheet.locator(".size-pick, [data-act='make-it'], [data-act='more-library']").evaluate_all("(els) => els.map((e) => { const r = e.getBoundingClientRect(); return [r.width, r.height, r.left, r.right]; })")
-        assert len(boxes) == 3 * 3 + 3 + 1
+        boxes = await sheet.locator(".size-pick, .preset-tile, .pseat__x, .pseat.is-empty, .ork-btn.primary").evaluate_all("(els) => els.map((e) => { const r = e.getBoundingClientRect(); return [r.width, r.height, r.left, r.right]; })")
+        assert len(boxes) == 3 + 12 + 2 + 1 + 1                                                                                    # three sizes, the twelve tiles, × of two seats, a free seat, Save party
         assert all(round(w) >= 44 and round(h) >= 44 and left >= 0 and right <= 390 for w, h, left, right in boxes)
         assert await page.evaluate(NO_SCROLL)
 
 
-# -- an empty folder asks one line ---------------------------------------------------------------------------------------------------------------------------
+# -- an empty folder: the Orkmaster's row asks, not New party ---------------------------------------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_an_empty_project_asks_what_it_is_for_and_read_it_draws_the_proposals_of_the_line_with_ideation_beside_it_at_once(fake_repo, monkeypatch):
-    def answer(about):
-        return {"kind": {"id": "wiki", "words": "a team's wiki", "signs": []}, "ask": False, "read": True, "proposals": copy.deepcopy(WIKI)}
-    proposing(monkeypatch, kind=EMPTY_KIND, proposals=[IDEATION], ask=True, answer=answer)
+async def test_an_empty_project_has_ideations_stage_and_the_stages_of_code_and_asks_no_line_here(fake_repo, monkeypatch):
+    proposing(monkeypatch, kind=EMPTY_KIND, proposals=[IDEATION], ask=True)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
-        assert norm(await sheet.locator(".props__top").inner_text()) == "Orkmaster proposes for this project · an empty folder"
-        assert [await c.get_attribute("data-proposal") for c in await sheet.locator(".prop").all()] == ["ideation"]               # Ideation at once
-        ask = sheet.locator(".props__ask")
-        assert "what is this project for?" in (await ask.inner_text()).lower() and "a line is enough: a mobile app for…, our team's wiki, my design files" in await ask.inner_text()
-        read = ask.get_by_role("button", name="Read it")
-        assert await read.is_disabled() and (await read.bounding_box())["height"] >= 44
+        assert norm(await sheet.locator(".presets__kind").inner_text()) == "For an empty folder: the Orkmaster knows what this project is"
+        assert [await c.get_attribute("data-preset") for c in await sheet.locator(".preset-group.is-stage .preset-tile").all()] == ["ideation", "code-concept", "code-build", "release", "code-liveops"]
+        assert await sheet.get_by_label("What is this project for?").count() == 0 and not [c for c in calls(stub, "ideas.proposals") if c.get("about")]      # no line is asked of the person here
         await _shot_to(page, "phone-proposals-empty")
-        await ask.get_by_label("What is this project for?").fill("our team's wiki")
-        await read.click()
-        await sheet.locator('.prop[data-proposal="wiki"]').wait_for(timeout=WAIT_MS)
-        assert calls(stub, "ideas.proposals")[-1] == {"about": "our team's wiki"}
-        assert [await c.get_attribute("data-proposal") for c in await sheet.locator(".prop").all()] == ["wiki", "ideation"]
-        assert norm(await sheet.locator(".props__top").inner_text()) == "Orkmaster proposes for this project · a team's wiki"
         assert await page.evaluate(NO_SCROLL)
 
 
 @pytest.mark.asyncio
-async def test_a_line_no_model_could_read_is_said_and_the_proposals_are_the_codes(fake_repo, monkeypatch):
-    def answer(about):
-        return {"kind": {"id": "code", "words": "code", "signs": []}, "ask": False, "read": False, "proposals": copy.deepcopy(MOBILE[:1])}
-    proposing(monkeypatch, kind=EMPTY_KIND, proposals=[IDEATION], ask=True, answer=answer)
+async def test_a_host_that_cannot_say_what_the_project_is_keeps_the_librarys_stages_and_crafts(fake_repo, monkeypatch):
+    proposing(monkeypatch, kind=None)                                                                                                 # no `ideas.party_presets` of the kind: the library's presets
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
-        await sheet.get_by_label("What is this project for?").fill("a thing")
-        await sheet.get_by_role("button", name="Read it").click()
-        await sheet.locator('.prop[data-proposal="mobile-features"]').wait_for(timeout=WAIT_MS)
-        assert "It could not read your line: these are the proposals for code." in await sheet.locator(".props__note").inner_text()
-        assert norm(await sheet.locator(".props__top").inner_text()) == "Orkmaster proposes for this project · code"
+        crafts = sheet.locator(".preset-group.is-craft .preset-tile")
+        assert [await t.get_attribute("data-preset") for t in await crafts.all()][:5] == ["engineering", "design", "data", "marketing", "product"]
+        assert await sheet.locator(".prop").count() == 0
 
 
-# -- More: the library -------------------------------------------------------------------------------------------------------------------------------------
+# -- a preset pressed keeps what the person chose -----------------------------------------------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_more_the_library_is_todays_tiles_and_seats_with_the_size_switch_and_the_way_back(fake_repo, monkeypatch):
+async def test_a_stage_pressed_keeps_the_size_picked_and_the_words_typed(fake_repo, monkeypatch):
     proposing(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
-        more = sheet.get_by_role("button", name="More: the library")
-        assert (await more.bounding_box())["height"] >= 44
-        await more.click()
-        await sheet.locator(".preset-tile").first.wait_for(timeout=WAIT_MS)
-        assert await sheet.locator(".prop").count() == 0 and await sheet.get_by_role("button", name="Save party").is_visible()
-        assert await sheet.locator('.preset-tile[data-preset="release"]').count() == 1 and await sheet.locator(".party-line").count() >= 1       # today's tiles and seats
-        group = sheet.get_by_role("radiogroup", name="Its size")
-        assert await group.get_by_role("radio", name="Standard").get_attribute("aria-checked") == "true"
+        group = sheet.get_by_role("radiogroup", name="Size")
         await group.get_by_role("radio", name="Full").click()
-        await sheet.get_by_label("What it is for").fill("A party of my own")
+        await sheet.get_by_label("What it is for").fill("A party of my own")                                                         # typed before the press
         await sheet.locator('.preset-tile[data-preset="release"]').click()
+        assert await group.get_by_role("radio", name="Full").get_attribute("aria-checked") == "true" and await sheet.get_by_label("What it is for").input_value() == "A party of my own"
         await sheet.get_by_role("button", name="Save party").click()
-        await _called(stub, "ideas.goal_save")
+        assert await _called(stub, "ideas.goal_save")
         sent = calls(stub, "ideas.goal_save")[-1]
-        assert sent["size"] == "full" and sent["about"] == "A party of my own" and sent["preset"] == "release" and sent["leader"] == "release-manager"
+        assert sent["size"] == "full" and sent["about"] == "A party of my own" and sent["leader"] == "release-manager"
         assert await page.evaluate(NO_SCROLL)
 
 
 @pytest.mark.asyncio
-async def test_the_way_back_from_the_library_shows_the_proposals_with_no_second_question(fake_repo, monkeypatch):
+async def test_a_preset_pressed_asks_no_second_question(fake_repo, monkeypatch):
     proposing(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
-        await sheet.get_by_role("button", name="More: the library").click()
-        await sheet.get_by_label("What it is for").fill("a party of my own")                                                          # the library asks it, as New party did
-        await sheet.get_by_role("button", name="Orkmaster proposes").click()                                                          # the way back
-        await sheet.locator(".prop").first.wait_for(timeout=WAIT_MS)
-        assert await sheet.get_by_label("What it is for").count() == 0 and await sheet.get_by_role("button", name="Save party").is_hidden()
+        await sheet.get_by_label("What it is for").fill("a party of my own")
+        await sheet.locator('.preset-tile[data-preset="mobile-liveops"]').click()
+        await sheet.locator('.preset-tile[data-preset="mobile-liveops"][aria-pressed="true"]').wait_for(timeout=WAIT_MS)
+        assert await sheet.get_by_label("What it is for").input_value() == "a party of my own" and await sheet.get_by_role("button", name="Save party").is_enabled()
+        assert not calls(stub, "ideas.goal_save")
 
 
 # -- the deal ---------------------------------------------------------------------------------------------------------------------------------------------
 
 @pytest.mark.asyncio
-async def test_the_parties_row_shows_the_proposals_first_and_add_opens_new_party_on_it(fake_repo, monkeypatch):
+async def test_the_parties_row_shows_the_proposals_first_and_add_opens_new_party_on_its_seats(fake_repo, monkeypatch):
     proposing(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         project = await _project(page)
@@ -285,9 +270,9 @@ async def test_the_parties_row_shows_the_proposals_first_and_add_opens_new_party
         await _shot_to(page, "phone-proposals-deal")
         await cards.nth(1).get_by_role("button", name="Add Mobile app: architecture").click()
         sheet = page.get_by_role("dialog", name="New party")
-        await sheet.locator(".prop").first.wait_for(timeout=WAIT_MS)
-        assert "is-picked" in await card_of(sheet, "mobile-architecture").get_attribute("class")
-        assert await card_of(sheet, "mobile-architecture").evaluate("(e) => { const r = e.getBoundingClientRect(); return r.top >= 0 && r.bottom <= innerHeight; }")
+        await sheet.locator(".pseat[data-seat]").first.wait_for(timeout=WAIT_MS)
+        assert await _seats(sheet, "lead") == [ARCH] and await sheet.get_by_label("Name", exact=True).get_attribute("placeholder") == "Mobile app: architecture"      # New party on that proposal's seats
+        assert await page.evaluate(NO_SCROLL)
 
 
 # -- a party's size ---------------------------------------------------------------------------------------------------------------------------------------

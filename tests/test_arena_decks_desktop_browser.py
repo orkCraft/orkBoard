@@ -105,18 +105,18 @@ def test_new_party_has_its_fields_and_sends_goal_save_with_them(arena):
     dialog = pg.get_by_role("dialog", name="New party")
     dialog.wait_for(timeout=WAIT_MS)
     text = _text(dialog)
-    for field in ("Name", "What it is for", "The party", "Priority", "goes first when the window is short", "Checks on every goal"):
+    for field in ("Name", "What it is for", "By stage of the project", "Priority", "goes first when the window is short", "Checks on every goal"):
         assert field in text or dialog.get_by_label(field).count() or field == "Checks on every goal", field
     for gone in ("Metrics", "Deadline", "Links", "Description"):
         assert gone not in text, gone
-    assert "one of yours, or from the library" in text.lower() and "Leads" in text and "Builds" in text and "Checks" in text          # the party's three bands
+    assert all(word in text.lower() for word in ("leads", "does", "checks"))                                      # the party's three bands
     dialog.get_by_label("Name", exact=True).fill("Billing")
     dialog.get_by_label("What it is for").fill("Money matters and receipts")
     dialog.get_by_text("High", exact=True).click()
     dialog.get_by_role("button", name="Save party").click()
     start = library.parties()["engineering"]
     sent = _calls(pg, host, "ideas.goal_save")[0]
-    assert set(sent) == {"title", "about", "leader", "team", "every", "priority"}                              # no metrics, no deadline, no links, no craft
+    assert set(sent) == {"title", "about", "leader", "team", "every", "priority", "preset"}                      # no metrics, no deadline, no links, no craft (the library's party it started from)
     assert sent["title"] == "Billing" and sent["about"] == "Money matters and receipts" and sent["priority"] == "high"
     assert sent["leader"] == start["lead"] and sent["team"] == [*start["build"][:1], *start["check"][:1]] and sent["every"] == []
     pg.locator(".arena[data-goal=money-matters]").wait_for(timeout=WAIT_MS)                                           # the new party is shown (its tab picked)
@@ -145,7 +145,7 @@ def test_edit_the_party_has_the_same_fields_and_sends_its_slug(arena):
     pg.get_by_role("button", name="Edit the party").click()
     dialog = pg.get_by_role("dialog", name="Edit the party")
     assert dialog.get_by_label("Name", exact=True).input_value() == "Sign in with a passkey" and dialog.get_by_label("What it is for").input_value() == "Builds the sign-in"
-    assert dialog.get_by_role("button", name="Change the party").is_visible() and "goes first when the window is short" in _text(dialog)
+    assert dialog.locator(".shell-seat[data-seat]").count() >= 1 and "goes first when the window is short" in _text(dialog)       # the party's seats are in the dialog
     dialog.get_by_label("What it is for").fill("Builds the whole sign-in")
     dialog.get_by_role("button", name="Save party").click()
     assert _sent(pg, host, ("ideas.goal_save", {"slug": "passkey", "about": "Builds the whole sign-in", "priority": "high"}))

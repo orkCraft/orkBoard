@@ -1,19 +1,13 @@
-// The Orkmaster's proposals on the phone (docs/specs/75-parties-fitted-to-the-project.md §4, §5; decisions §90): New party opens on **what the Orkmaster proposes for this project** — its head, *Orkmaster proposes*,
-// *for this project* and what the project is (its kind's words and the signs it saw, muted) — and a card for each proposal: its name, its line, its why and **a three-way switch Lean · Standard · Full** (Standard
-// picked; a radiogroup of orkUI's buttons), under it for the size picked the heads, *one agent* / *n agents* and *≈$a–b a goal*, and **Make it**. A proposal the project has is muted, *You have one*. An empty folder
-// (`ask`) is asked one line, *What is this project for?*, and **Read it** draws the proposals of what the line says. Under the cards, **More: the library** opens today's tiles and seats (shell-goal-new.js).
-// A host without `ideas.proposals` (its Map's `project` says no `kind`) keeps today's phone: `proposes(core)` is false and nothing here is drawn.
-// Under the size switch each card has **Its AI tool** (shell-party-tool.js, spec 81 §4): the Main tool picked, a select; a tool with no tiers says *runs its own model* where the price was; the pick goes with **Make it** as `tool`.
-// Pure words here too: `priceWords`, `agentsWords`; `sizeSwitch` is the same switch in a party's *Its size* (shell-party.js, shell-goal.js) and in the library's seats.
-import { h, head } from "./util.js";
-import { field } from "./shell-forms.js";
+// The Orkmaster's proposals on the phone (docs/specs/75-parties-fitted-to-the-project.md §4, §5; decisions §90; docs/specs/91-the-owners-list.md §7, §8): the words and the host's asking. The Orkmaster's *Parties* row
+// (shell-project.js) shows the proposals first and New party (shell-party-new.js) opens on one (`core.newParty("proposal:<id>")`, a stage of the project, seats and all); a Lean · Standard · Full switch (`sizeSwitch`) is in
+// that sheet and in a party's *Its size* (shell-party.js, shell-goal.js). A host without `ideas.proposals` (its Map's `project` says no `kind`) keeps today's phone: `proposes(core)` is false.
+// Pure words here too: `priceWords`, `agentsWords`.
+import { h } from "./util.js";
 import { pctRange } from "./shell-spend.js";
-import { loadTools, runsOwn, toolPick } from "./shell-party-tool.js";
 
 export const SIZES = [["lean", "Lean"], ["standard", "Standard"], ["full", "Full"]];
 export const STANDARD = "standard";
 export const PROPOSAL = "proposal:";                        // `core.newParty("proposal:<id>")`: New party opens on that proposal
-const ABOUT_CHARS = 300;                                      // the empty folder's line (spec 75 §4.2)
 
 /** Whether the host proposes: `ideas.map`'s `project` says what the project is (spec 75 §4.3). */
 export const proposes = (core) => Boolean(core.st.map?.project?.kind);
@@ -90,109 +84,4 @@ export function sizeSwitch({ label = "Its size", onPick = null } = {}) {
       });
     },
   };
-}
-
-/** `core`: the board's frame; `act`: {make(proposal, size, card, button, tool), library()}. Returns {el, load(pickedId) → Promise<boolean>, line(), about}: `load` asks the host and draws; false when it cannot. */
-export function makeProposals(core, act) {
-  const el = h("div", { class: "props" });
-  const size = new Map();                                     // proposal id → the size picked on its card (Standard at first)
-  const tool = new Map();                                     // proposal id → the AI tool picked on its card ("" the Main tool)
-  let data = null, line = "", reading = false, note = "", pickedId = "", scrolled = false, hold = null;   // `hold`: the "What it is for" field, put under the Orkmaster's head
-
-  const orkmaster = () => core.st.map?.project?.orkmaster || { race: "peon", tier: "crown" };
-
-  function top() {
-    const kind = data.kind || core.st.map?.project?.kind || {};
-    const o = orkmaster();
-    return h("div", { class: "props__top" }, head(o.race || "peon", o.tier || "crown"),
-      h("div", { class: "props__who" }, h("b", {}, "Orkmaster proposes"),
-        h("small", { class: "muted props__for" }, ["for this project", kind.words].filter(Boolean).join(" · ")),
-        (kind.signs || []).length ? h("small", { class: "muted props__signs" }, kind.signs.join(" · ")) : null));
-  }
-
-  /** *What is this project for?* and **Read it**: an empty folder is asked one line (the host reads it with a cheap model; the line is kept by no one). */
-  function ask() {
-    const input = h("input", { class: "ork-field", type: "text", "aria-label": "What is this project for?", maxlength: String(ABOUT_CHARS) });
-    input.value = line;
-    const read = h("button", { class: "ork-btn primary", type: "button", "data-act": "read-it", disabled: reading || !line.trim() }, reading ? "Reading…" : "Read it");
-    input.addEventListener("input", () => { line = input.value; read.disabled = reading || !line.trim(); });
-    input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !read.disabled) { e.preventDefault(); read.click(); } });
-    read.addEventListener("click", async () => {
-      const text = line.trim();
-      if (!text || reading) return;
-      reading = true; read.disabled = true; read.textContent = "Reading…";
-      const got = await core.call("ideas.proposals", { about: text.slice(0, ABOUT_CHARS) });
-      reading = false;
-      if (got && Array.isArray(got.proposals)) { data = got; note = got.read === false ? "It could not read your line: these are the proposals for code." : ""; scrolled = false; }
-      draw();
-    });
-    return h("div", { class: "props__ask", "data-sec": "ask" }, field("What is this project for?", input, "a line is enough: a mobile app for…, our team's wiki, my design files"), read);
-  }
-
-  /** A proposal's card: name, line, why, the switch, and for the size picked its heads, its agents and its price a goal; **Make it**. */
-  function card(p) {
-    const detail = h("div", { class: "prop__detail", "aria-live": "polite" });
-    const make = h("button", { class: "ork-btn primary big", type: "button", "data-act": "make-it", "aria-label": `Make it: ${p.name}` }, "Make it");
-    const heads = h("span", { class: "prop__heads" });
-    const switchEl = sizeSwitch({ label: `Its size: ${p.name}`, onPick: (id) => { size.set(p.id, id); paint(); } });
-    switchEl.prices(Object.fromEntries(SIZES.map(([id]) => [id, ""])));
-    const have = Boolean(p.have);
-    const tools = toolPick(core, { label: `Its AI tool: ${p.name}`, onPick: (id) => { tool.set(p.id, id); paint(); } });
-    tools.set(tool.get(p.id) || "");
-    const paint = () => {
-      const id = size.get(p.id) || STANDARD, s = p.sizes?.[id];
-      switchEl.set(id);
-      make.disabled = !s;
-      if (!s) { detail.replaceChildren(); heads.replaceChildren(); return; }
-      heads.replaceChildren(...(s.heads || []).map((x) => head(x.race || "peon", x.tier || "warrior")));
-      detail.replaceChildren(...[heads, h("span", { class: "prop__agents" }, agentsWords(s.agents ?? (1 + (s.team || []).length))),
-        runsOwn(core, tool.get(p.id) || "") ? h("span", { class: "prop__price", "data-own": "" }, "runs its own model") : s.price ? h("span", { class: "prop__price" }, priceWords(s.price)) : null].filter(Boolean));
-    };
-    make.addEventListener("click", () => act.make(p, size.get(p.id) || STANDARD, art, make, tool.get(p.id) || ""));
-    const art = h("article", { class: `prop${have ? " is-have" : ""}${pickedId === p.id ? " is-picked" : ""}`, "data-proposal": p.id, "aria-label": p.name },
-      h("div", { class: "prop__text" }, h("b", { class: "prop__name" }, p.name), p.line ? h("small", { class: "muted prop__line" }, p.line) : null,
-        have ? h("small", { class: "prop__why" }, "You have one") : p.why ? h("small", { class: "prop__why" }, p.why) : null),
-      switchEl.el, tools.el, detail, make);
-    paint();
-    return art;
-  }
-
-  function draw() {
-    if (!data) { el.replaceChildren(h("p", { class: "muted props__wait" }, "Reading…")); return; }
-    const cards = (data.proposals || []).map(card);
-    const library = h("button", { class: "ork-btn props__library", type: "button", "data-act": "more-library", onclick: () => act.library() }, "More: the library", h("i", { class: "ork-chev right", "aria-hidden": "true" }));
-    el.replaceChildren(...[top(), data.ask || line.trim() ? ask() : null, note ? h("p", { class: "muted props__note", role: "status" }, note) : null,
-      hold, h("div", { class: "props__cards" }, ...cards), library].filter(Boolean));
-    const at = cards.find((c) => c.dataset.proposal === pickedId);
-    if (at && !scrolled) { scrolled = true; requestAnimationFrame(() => at.scrollIntoView({ block: "start" })); }
-  }
-
-  return {
-    el,
-    /** The field *What it is for* the cards' **Make it** reads, drawn under the Orkmaster's head (the sheet owns it: it goes with the person to the library). */
-    hold(node) { hold = node; if (data) draw(); },
-    /** The line the person gave an empty folder lives on this page only. */
-    forget() { line = ""; note = ""; },
-    /** Asks the host, draws; `id`: a proposal to scroll to (the deal's press). False when the host cannot (the library is then New party). */
-    async load(id = "") {
-      data = null; pickedId = id; scrolled = false; size.clear(); tool.clear(); note = "";
-      draw();
-      const [got] = await Promise.all([loadProposals(core), loadTools(core)]);
-      if (!got) return false;
-      data = got;
-      draw();
-      return true;
-    },
-  };
-}
-
-/** The deal's tile for a proposal (shell-project.js): its Standard heads small, its name, its line, its Standard price a goal and its why. */
-export function proposalTile(p, press) {
-  const s = p.sizes?.[STANDARD] || Object.values(p.sizes || {})[0];
-  const heads = (s?.heads || []).map((x) => head(x.race || "peon", x.tier || "warrior", { small: true }));
-  const price = s?.price ? priceWords(s.price) : "";
-  return h("button", { class: `pj-tile${p.have ? " is-have" : ""}`, type: "button", "data-proposal": p.id, "data-why": p.have ? "have" : "proposal", onclick: press },
-    h("span", { class: "pj-tile__heads" }, ...heads), h("b", {}, p.name), p.line ? h("small", { class: "muted" }, p.line) : null,
-    price ? h("small", { class: "pj-tile__price" }, price) : null,
-    p.have ? h("small", { class: "pj-tile__why muted" }, "You have one") : p.why ? h("small", { class: "pj-tile__why" }, p.why) : null);
 }

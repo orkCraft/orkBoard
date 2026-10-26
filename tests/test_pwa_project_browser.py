@@ -1,7 +1,7 @@
 """Spec 70 part C, the phone: the Orkmaster and the project's level (docs/specs/70-orkmaster-and-the-project.md §2.1, §2.4, §3, §4, §5 "C"): Chromium at 390 × 844 against the world of tests/test_pwa_route_browser.py
 (the Passkey, Ideation, Website and Release parties) with the stub host of spec 70 §1: `ideas.map`'s `project` block (the Orkmaster and the deal), `ideas.party_for` and `ideas.shown`. *The project* stands at the top of the
 parties' sheet; its sheet has a section for each party (*Open <party>* switches), its goals as rows (Planning and At work, Waits for main and Flags folded), a row opens the goal's screen, `ideas.shown` says `@project`;
-the Orkmaster's *Parties* row has *New party* and the ready parties in the deal's order with their why (spec 91 §8), *Add* opens New party with that preset picked, and New party's own tiles follow the deal; *More kinds…* of the *New goal* row has no party yet:
+the Orkmaster's *Parties* row has *New party* and the ready parties in the deal's order with their why (spec 91 §8), *Add* opens New party with that preset picked, and New party's own tiles are the project's stages (spec 91 §7); *More kinds…* of the *New goal* row has no party yet:
 *Its party* from `ideas.party_for` (*Orkmaster suggests Website · takes it whole*, the others to pick), `ideas.add` with the party picked; an older host (no `project`) has none of it; no sideways scroll; the worker's version."""
 from __future__ import annotations
 
@@ -256,20 +256,18 @@ async def test_the_parties_you_have_are_not_offered_in_the_row(fake_repo, monkey
 
 
 @pytest.mark.asyncio
-async def test_new_partys_tiles_follow_the_deal_with_the_why_under_the_line(fake_repo, monkeypatch):
+async def test_new_partys_tiles_are_the_projects_stages_then_the_crafts_with_no_why_under_the_line(fake_repo, monkeypatch):
     hosted(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         await (await _where(page)).get_by_role("button", name="+ New party").click()                                     # the sheet's own *+ New party* stays
         sheet = page.get_by_role("dialog", name="New party")
         await sheet.locator(".preset-tile").first.wait_for(timeout=WAIT_MS)
-        mixed = [await t.get_attribute("data-preset") for t in await sheet.locator('.preset-group[aria-label="Mixed"] .preset-tile').all()]
-        assert mixed == ["release", "ideation", "game", "mobile-app", "website", "art"]                                          # inside the group, the deal's order
-        one = [await t.get_attribute("data-preset") for t in await sheet.locator('.preset-group[aria-label="One craft"] .preset-tile').all()]
-        assert one == ["engineering", "design", "data", "marketing", "product"]                                           # the craft group keeps its headings and order
-        assert [norm(await h.inner_text()) for h in await sheet.locator(".preset-group h4").all()][:2] == ["Mixed", "One craft"]
-        release = sheet.locator('.preset-tile[data-preset="release"]')
-        assert await release.locator(".preset-why").inner_text() == "3 flags wait and no party releases them"
-        assert await sheet.locator('.preset-tile[data-preset="game"] .preset-why').count() == 0
+        ids = [await t.get_attribute("data-preset") for t in await sheet.locator(".preset-tile").all()]
+        assert ids[:5] == ["ideation", "code-concept", "code-build", "release", "code-liveops"]                          # the project's stages in its order (spec 91 §7), no longer the deal's
+        assert ids[5:11] == ["engineering", "design", "data", "marketing", "product", "art"] and ids[-1] == "mixed"       # then the crafts, then the person's own
+        assert [norm(await g.get_attribute("aria-label")) for g in await sheet.locator(".preset-group").all()] == ["By stage of the project", "By craft", "Your own party"]
+        assert await sheet.locator(".preset-why").count() == 0                                                            # the deal's why is the Orkmaster's now (spec 91 §8, part F)
+        assert await sheet.locator('.preset-tile[data-preset="release"]').get_attribute("aria-pressed") in ("false", None)
         assert await page.evaluate(NO_SCROLL)
 
 
@@ -281,7 +279,7 @@ async def test_an_older_host_keeps_new_partys_tiles_as_they_were(fake_repo, monk
         sheet = page.get_by_role("dialog", name="New party")
         await sheet.locator(".preset-tile").first.wait_for(timeout=WAIT_MS)
         ids = [await t.get_attribute("data-preset") for t in await sheet.locator(".preset-tile").all()]
-        assert ids[:5] == ["game", "mobile-app", "website", "ideation", "release"] and await sheet.locator(".preset-why").count() == 0
+        assert ids[:5] == ["ideation", "code-concept", "code-build", "release", "code-liveops"] and await sheet.locator(".preset-why").count() == 0
 
 
 # -- New goal from the project -------------------------------------------------------------------------------------------------------------------------

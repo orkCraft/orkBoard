@@ -1,0 +1,86 @@
+/* New party and Edit the party in two halves (docs/specs/91-the-owners-list.md §7, decisions §107.5), in orkUI's office look: its tokens only, no colour, font or corner of its own.
+   Left, the presets (partypresets.js); right, the name, the size bar and the bands of seats (partyform.js, partyseats.js), a seat's AI tool and a free seat's list as popovers (seattool.js, partypop.js).
+   Loaded after shell.css (js/shell/shell.js), whose `.shell-craft-tile`, `.shell-team-row` and `.shell-party-band` it builds on. The pixel face is for a preset's name and the buttons. */
+.shell-modal.is-xl { width: 1200px; height: min(900px, calc(100vh - 2 * var(--ork-6))); }
+.shell-p91 { display: grid; grid-template-columns: 372px minmax(0, 1fr); gap: var(--ork-6); align-items: start; }
+.shell-p91__team { display: flex; flex-direction: column; gap: var(--ork-5); min-width: 0; }
+.shell-p91__names { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ork-5); }
+.shell-p91__foot { flex: 1 1 240px; min-width: 0; }
+
+/* the presets */
+.shell-presets { display: flex; flex-direction: column; gap: var(--ork-5); min-width: 0; }
+.shell-presets__group { display: flex; flex-direction: column; gap: var(--ork-3); }
+.shell-presets__group h3 { margin: 0; }
+.shell-presets__group.is-own { padding-top: var(--ork-5); border-top: var(--ork-line) solid var(--ork-frame); }
+.shell-presets__kind { margin: 0; font: var(--ork-type-caption); }
+.shell-presets__cards { display: flex; flex-direction: column; gap: var(--ork-3); }
+.shell-presets__cards.is-grid { display: grid; grid-template-columns: 1fr 1fr; }
+.shell-presets .shell-preset { width: 100%; align-items: center; }
+.shell-presets .shell-preset > .ork-race__head { width: 24px; height: 22px; }
+.shell-presets .shell-preset b { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.shell-presets .shell-preset small { font: var(--ork-type-caption); }
+.shell-presets .shell-preset.is-compact { padding: var(--ork-3) var(--ork-4); }
+.shell-presets .shell-preset.is-compact small { display: none; }
+
+/* the size bar */
+.shell-sizebar { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--ork-5); }
+.shell-sizebar__size { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; flex: 1 1 360px; }
+.shell-sizebar__size .ork-switch { align-self: flex-start; }
+.shell-sizebar .shell-tool { flex: 0 1 260px; }
+.shell-size__note { margin: 0; }
+
+/* the bands and their seats */
+.shell-bands { display: flex; flex-direction: column; }
+.shell-band .shell-band-head { align-items: baseline; flex-wrap: wrap; justify-content: flex-start; column-gap: var(--ork-4); }
+.shell-band .shell-band-head h3 { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.shell-band .shell-band__seats { margin-left: auto; }
+.shell-seat { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto auto auto; align-items: center; column-gap: var(--ork-4); padding: var(--ork-3) var(--ork-4); box-sizing: border-box;
+  border: var(--ork-line) solid var(--ork-frame); }
+.shell-seat.is-lead { background: var(--ork-raised); }
+.shell-seat .shell-team-seat { width: auto; height: auto; border: 0; background: none; }
+.shell-seat .shell-team-seat.is-over { border: var(--ork-line) solid var(--ork-alert); }          /* a member past the leader's seats (a party made before) */
+.shell-seat__who { display: flex; flex-direction: column; min-width: 0; }
+.shell-seat__who b { font-weight: 600; }
+.shell-seat__who small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shell-seat__needs { color: var(--ork-ink-muted); white-space: nowrap; }
+.shell-seat__x { padding: 0 var(--ork-3); }
+.shell-seat-free { position: relative; }
+.shell-seat.is-empty { all: unset; box-sizing: border-box; width: 100%; display: grid; grid-template-columns: 30px minmax(0, 1fr); align-items: center; column-gap: var(--ork-4); cursor: pointer;
+  padding: var(--ork-3) var(--ork-4); border: var(--ork-line) dashed var(--ork-edge); color: var(--ork-ink-muted); }
+.shell-seat.is-empty:hover { background: var(--ork-raised); color: var(--ork-ink); }
+.shell-seat.is-empty:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
+.shell-seat.is-empty .shell-team-seat { width: 24px; height: 22px; border: var(--ork-line) dashed var(--ork-frame); }
+.shell-seat__add { display: inline-flex; align-items: center; gap: var(--ork-3); font: var(--ork-type-button); }
+
+/* a seat's AI tool and the lists under a seat */
+.shell-seat__tool { position: relative; }
+.shell-seat__toolbtn { display: inline-flex; align-items: center; gap: var(--ork-3); max-width: 250px; }
+.shell-seat__toolbtn > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shell-pop { position: absolute; z-index: 20; top: calc(100% + var(--ork-2)); left: 0; width: 360px; max-width: calc(100vw - 2 * var(--ork-6)); max-height: 340px; overflow-y: auto; box-sizing: border-box;
+  display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); }
+.shell-pop--tools { left: auto; right: 0; width: 400px; }
+.shell-pop section { display: flex; flex-direction: column; gap: var(--ork-1); }
+.shell-pop h4 { margin: var(--ork-3) 0 var(--ork-1); }
+.shell-pop__row { all: unset; box-sizing: border-box; width: 100%; display: flex; align-items: flex-start; gap: var(--ork-4); padding: var(--ork-3); cursor: pointer; }
+.shell-pop__row:hover { background: var(--ork-raised); }
+.shell-pop__row:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2px; }
+.shell-pop__row[aria-pressed="true"] { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); }
+.shell-pop__row.is-off { color: var(--ork-ink-faint); cursor: not-allowed; }
+.shell-pop__row.is-off:hover { background: none; }
+.shell-pop__text { display: flex; flex-direction: column; min-width: 0; }
+.shell-pop__text b { font-weight: 600; }
+.shell-pop__alert { color: var(--ork-alert); font: var(--ork-type-caption); }
+.shell-pop__why { color: var(--ork-ink); }
+.shell-pop__none, .shell-pop__foot { margin: 0; font: var(--ork-type-caption); }
+.shell-pop__foot { padding-top: var(--ork-3); border-top: var(--ork-line) solid var(--ork-frame); }
+.shell-pop .shell-team-row { grid-template-columns: 24px 1fr auto; grid-template-areas: "head name chip" "head line chip"; padding: var(--ork-3); border-bottom: 0; }
+.shell-pop .shell-team-row .shell-seat__needs { grid-area: chip; }
+
+@media (max-width: 960px) {
+  .shell-p91 { grid-template-columns: 1fr; }
+  .shell-p91__names { grid-template-columns: 1fr; }
+  .shell-modal.is-xl { width: 100%; height: auto; }
+  .shell-seat { grid-template-columns: 30px minmax(0, 1fr) auto; row-gap: var(--ork-3); }
+  .shell-seat__who { grid-column: 2 / -1; }
+  .shell-pop--tools { right: auto; left: 0; }
+}

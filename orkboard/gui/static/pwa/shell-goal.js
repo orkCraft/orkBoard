@@ -9,7 +9,8 @@ import { PRIORITY_WORDS } from "./shell-words.js";
 import { CRAFT_WORDS, RACE_WORDS, goalHead, raceOf, whoHead } from "./shell-who.js";
 import { limitsNote } from "./shell-limits.js";
 import { flagWords } from "./shell-map.js";
-import { makeNewGoal, makeParty, IDEATION_WHOLE } from "./shell-goal-new.js";
+import { makeParty, IDEATION_WHOLE } from "./shell-goal-new.js";
+import { makeNewGoal } from "./shell-party-new.js";
 import { makeReleasesFrom } from "./shell-release.js";
 import { loadProposals, proposes, sizePrices, sizeSwitch } from "./shell-proposals.js";
 

@@ -64,7 +64,7 @@ def test_release_in_new_party_shows_releases_from_ticked_every_party_but_ideatio
     names = [r.inner_text().strip() for r in box.locator(".arena-releasesfrom__row").all()]
     assert names == ["Passkey", "Pricing page", "Weekly report email", "Website", "Release"]                  # not Ideation, not General
     assert box.locator("input:checked").count() == 5 and "Every party but Ideation" in box.inner_text()
-    dlg.locator('.shell-craft-tile[data-craft="game"]').click()
+    dlg.locator('.shell-craft-tile[data-craft="engineering"]').click()
     box.wait_for(state="detached", timeout=WAIT_MS)
     dlg.locator('.shell-craft-tile[data-craft="release"]').click()
     box.wait_for(timeout=WAIT_MS)
