@@ -49,9 +49,9 @@ async def test_the_projects_are_in_the_project_buttons_sheet_with_their_counts_a
         await page.keyboard.press("Escape")
         await page.locator(".board-bar .projbtn").click()                                   # the project button's sheet (spec 52 §5.1): this one, then the others
         sheet = page.get_by_role("dialog", name="Projects")
-        await sheet.get_by_text("3 to review").wait_for(timeout=WAIT_MS)
+        await sheet.get_by_role("button", name="beta").wait_for(timeout=WAIT_MS)
         text = await sheet.inner_text()
-        assert "beta" in text and "old" not in text and "Open a folder" not in text           # a recent one is not offered
+        assert "beta" in text and "3 to review" not in text and "old" not in text and "Open a folder" not in text           # a recent one is not offered
         assert " ".join((await sheet.locator('.project-row[aria-current="true"]').inner_text()).split()) == "alpha this one"     # the shown project, marked
         assert "Open on your computer: a tap switches this phone to one." in text
         box = await sheet.bounding_box()

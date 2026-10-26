@@ -23,6 +23,10 @@ import { thumbs, stopAll, countWords, pickSig } from "./shell-picks.js";
 import { makePanel, forget } from "./shell-pick-answer.js";
 
 const reducedMotion = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/** A to-do lies last in the hand (spec 87 §4.3, decisions §104.9): after the questions, the forks, the plans and the failures; the rest keeps the order of its urgency. */
+export const todoLast = (items) => [...items.filter((i) => i.kind !== "todo"), ...items.filter((i) => i.kind === "todo")];
+
 const KIND = { plan: "Plan ready", change: "Plan change", asks: "Asks you", goal: "Asks you", proposal: "Proposed", party: "Proposed", todo: "A to-do", failed: "Failed", look: "To look at",
   pick: "Pick one", op: "At your check", op_failed: "Failed", op_rules: "Proposed", pitch: "Judged", collide: "Orkmaster asks", sign_in: "Sign in" };
 const gemOf = (g) => (g ? h("span", { class: `ork-gem ${g.cls || ""}`.trim(), title: g.tip }, g.sign ? sign(g.sign) : g.text) : null);       // a price, a mark or a sign (a failure's cross); none for a plan change of nothing
@@ -392,7 +396,7 @@ export function makeStops(core, ctx, needs, ops) {
     draw() {
       if (guard.waits()) return;
       forget((st.board?.needs_you || []).filter((n) => n.kind === "pick"));        // a draft of a pick that is answered is let go
-      items = byUrgency(build());
+      items = todoLast(byUrgency(build()));
       const keys = new Set(items.map((i) => i.key));
       for (const [key, g] of ghosts) if (keys.has(key) || Date.now() - g.at >= GHOST_MS) ghosts.delete(key);       // faded, or back
       const sigNow = () => JSON.stringify(items.map((i) => [i.key, i.kind, i.gem, i.title, i.plain ?? i.text, i.miss, i.element, i.sig, i.link, i.party, i.goalName])) + st.hand + ghosts.size + frontKey;
