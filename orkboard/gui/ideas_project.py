@@ -4,7 +4,7 @@
     ideas.party_for {type?}      # the Orkmaster's suggestion of a goal's party: {parties: [{party, name, fits, missing}], suggested: slug}
     ideas.collide_answer {id, answer}   # the person's answer to a collision: `first:<slug>` · `one` · `replan` · `leave` → {ok: true}
     ideas.proposals {about?}      # the parties this project's kind needs, each Lean, Standard or Full with its price (spec 75 §4): {kind, ask, proposals, read?}
-    ideas.tools                   # the AI tools a party may run on, ready first (spec 81 §1.4): {main, tools: [{id, name, ready, signed_in, installed, experimental, tiers}]}
+    ideas.tools                   # the AI tools a party may run on, ready first (spec 81 §1.4): {main, tools: [{id, name, ready, signed_in, installed, experimental, tiers, makes}]}; `makes`: what the tool can make beside code and text (agy: pictures; spec 91 §6)
     ideas.party_sizes {slug}      # what each size would make of a party: {size, sizes: {lean|standard|full: {team, tiers, joins, leaves, recipe}}} (spec 81 §3)
 
 `proposals` reads the folder's names (realm/project_kind.py), no model, but for an empty folder's one line (core/idea_kind.py, the cheaper tier, as the

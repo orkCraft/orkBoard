@@ -89,7 +89,7 @@ LIMITS_READ = "limits_read"       # provider, left, window
 # Round 2 (docs/specs/34-v1-round-2.md §4): goals by dialog, agents by task type.
 GOAL_SAVED = "goal_saved"         # goal, new, metrics (their names), links, priority, device, party (the id of the saved party it was picked from, else ""),
 #                                    joined, out (the agent who joined, the member who left, else ""), via ("type": New goal by its type · "plan": a plan's stop · "": Edit the party) (spec 52 §2.7),
-#                                    preset (the library's party the seats started from, else ""), stages ("<builders>/<checkers>": the leader's seats) (spec 59 §5), tool (the party's AI tool id, else "": the Main tool) (spec 81)
+#                                    preset (the library's party the seats started from, else ""), stages ("<builders>/<checkers>": the leader's seats) (spec 59 §5), tool (the party's AI tool id, else "": the Main tool) (spec 81), tools (each seat's own AI tool, as "<agent>:<tool>" strings: an event keeps no map of words) (spec 91 §6)
 GOAL_ACCEPTED = "goal_accepted"   # goal, met, by (its leader's name), and the call's measure
 GOAL_READ = "goal_read"           # goal, state (asks · ready · raw: not read), seconds the keeper took, tier, effort
 ROLE_SAVED = "role_saved"         # role, model, max_parallel, new, device, kinds (the types it takes), instruction_chars

@@ -35,11 +35,12 @@ class RolesMixin:
         return (party.get("size") if party is not None else "") or ""
 
     def party_of_idea(self, slug: str) -> dict:
-        """`{"tool", "tiers"}` of the party an idea is in (spec 81): its AI tool ("" the Main tool) and the tiers its size gave its seats."""
+        """`{"tool", "tools", "tiers"}` of the party an idea is in (spec 81, 91): its AI tool ("" the Main tool), each seat's own AI tool and the
+        tiers its size gave its seats."""
         root = self.root(False)
         page = ideas.idea_page(root, slug)
         party = (page.get("track") if page is not None else "") or ideas.GENERAL
-        return {"tool": goal_team.tool_of(root, party), "tiers": goal_team.tiers_of(root, party)}
+        return {"tool": goal_team.tool_of(root, party), "tools": goal_team.tools_of(root, party), "tiers": goal_team.tiers_of(root, party)}
 
     def tiers_of_idea(self, slug: str) -> dict:
         """The tiers the size of the party an idea is in gave its seats (spec 81 §2)."""

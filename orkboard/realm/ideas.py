@@ -139,6 +139,12 @@ def _metrics_by(page: Page) -> str:
     return page.get("metrics_by") or ("person" if _metrics(page) and not page.get("title_by") else "")
 
 
+def _tools(raw: str) -> dict:
+    """A party's seats' AI tools, {agent: tool} (realm/goal_team.py `tools_of`)."""
+    from orkboard.realm import goal_team
+    return goal_team.clean_tools(raw)
+
+
 def _track(slug: str, page: Page, count: int = 0) -> dict:
     about = page.section("Description") or page.section("About")
     title = page.title or page.get("title") or slug
@@ -147,7 +153,7 @@ def _track(slug: str, page: Page, count: int = 0) -> dict:
             "metrics_by": _metrics_by(page),
             "criteria": items(page.section("Success criteria")), "deadline": page.get("deadline"),
             "order": _int(page.get("order")), "count": count, "priority": _priority(page.get("priority")),
-            "craft": page.get("craft") if page.get("craft") in CRAFTS else CRAFTS[0], "team": _json_list(page.get("team")), "every": _json_list(page.get("team_every")), "leader": page.get("leader") or "", "size": page.get("size") if page.get("size") in ("lean", "standard", "full") else "", "tool": page.get("tool") or "", "metrics": _metrics(page), "summary": page.section("Summary"),
+            "craft": page.get("craft") if page.get("craft") in CRAFTS else CRAFTS[0], "team": _json_list(page.get("team")), "every": _json_list(page.get("team_every")), "leader": page.get("leader") or "", "size": page.get("size") if page.get("size") in ("lean", "standard", "full") else "", "tool": page.get("tool") or "", "tools": _tools(page.get("tools")), "metrics": _metrics(page), "summary": page.section("Summary"),
             "links": _links(page),
             "questions": items(page.section("Open questions"))}
 

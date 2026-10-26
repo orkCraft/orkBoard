@@ -178,6 +178,7 @@ class Harness:
     sign_in: tuple[str, ...] = ()
     sign_in_by: str = "terminal"
     sign_in_type: str = ""
+    makes: tuple[str, ...] = ()      # what it can make beside code and text (spec 91 §6): "pictures"; a role may need it (library.Agent.needs)
 
     @property
     def bin(self) -> str:
@@ -309,7 +310,7 @@ register(Harness(
     # `--print` denies every terminal command it would ask about and ends the turn with no answer (1.3.3), so a
     # task whose ork runs its tests first comes back empty. Unchained, it asks nothing; `--sandbox` still holds.
     free_args=("--dangerously-skip-permissions",),
-    resume_cmd=lambda h, sid: [h.bin, "--conversation", sid], sign_in=("login",),
+    resume_cmd=lambda h, sid: [h.bin, "--conversation", sid], sign_in=("login",), makes=("pictures",),
     # docs/design/decisions-2026-10.md §5: Google banned accounts in February 2026 for using Antigravity through
     # third-party tools; a second flag is permanent.
     experimental="Experimental, at your own risk. Google has banned Google accounts for using Antigravity "
@@ -404,7 +405,8 @@ def for_party(installed: Iterable[str] = (), signed_out: Iterable[str] = (), mai
     False for a tool with no tier table (it runs its own model). Nothing is run or asked."""
     have, out = set(installed), set(signed_out)
     rows = [{"id": h.id, "name": h.title, "ready": h.id in have and h.id not in out, "signed_in": h.id not in out,
-             "installed": h.id in have, "experimental": bool(h.experimental), "tiers": bool(h.models)} for h in REGISTRY.values()]
+             "installed": h.id in have, "experimental": bool(h.experimental), "tiers": bool(h.models),
+             "makes": list(h.makes)} for h in REGISTRY.values()]
     group = lambda r: 0 if r["ready"] else 1 if r["installed"] else 2        # noqa: E731
     return {"main": main_id or main(have) or "claude", "tools": sorted(rows, key=group)}      # a stable sort: the registry's order within a group
 

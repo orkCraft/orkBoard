@@ -101,7 +101,7 @@ def test_a_not_signed_in_tool_is_saved_and_the_list_has_its_groups_in_order(host
         assert (rows["claude"]["signed_in"], rows["claude"]["installed"]) == (False, True)
         assert (rows["agy"]["installed"], rows["agy"]["ready"], rows["agy"]["experimental"]) == (False, False, True)
         assert rows["codex"]["tiers"] is True and rows["hermes"]["tiers"] is False and rows["pi"]["tiers"] is False
-        assert set(rows["codex"]) == {"id", "name", "ready", "signed_in", "installed", "experimental", "tiers"} and rows["codex"]["name"] == "Codex"
+        assert set(rows["codex"]) == {"id", "name", "ready", "signed_in", "installed", "experimental", "tiers", "makes"} and rows["codex"]["name"] == "Codex"
         slug = save(h, tool="pi")                                                                           # not signed in: saved, its sign-in follows
         assert goal_team.tool_of(h.root, slug) == "pi"
     finally:

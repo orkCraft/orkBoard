@@ -326,7 +326,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                         continue                     # this role's own limit (spec 34 §3): the task waits its turn
                     if not self.room(slug, t, tasks):
                         continue                     # no slot of the Board's or its party's, or its files meet a running task's (spec 84 §2)
-                    tool = self.tool_of(slug)
+                    tool = self.tool_of(slug, t)
                     until = status.reset_of(limits, tool, now, status.NEARLY)
                     if until is not None or gate is not None:     # the window, else the person's reserve (§6), else the week (spec 44)
                         self._hold(slug, t, until if until is not None else gate,
@@ -394,11 +394,13 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
         except Exception:                               # a party the host cannot read leaves the work as it was
             return {}
 
-    def tool_of(self, slug: str) -> str:
-        """The AI tool an idea's tasks run on: its party's, else the Main tool (spec 81 §1.2)."""
-        tool = str(self.party(slug).get("tool") or "")
-        if harnesses.get(tool) is not None:
-            return tool
+    def tool_of(self, slug: str, task: dict | None = None) -> str:
+        """The AI tool an idea's tasks run on: its party's, else the Main tool (spec 81 §1.2); a `task` runs on its taker's seat's own tool
+        first (spec 91 §6: `goal_team.tool_for`, as the host says it in `party()`)."""
+        party = self.party(slug)
+        for tool in (str((party.get("tools") or {}).get(self._role(task)["slug"]) or "") if task else "", str(party.get("tool") or "")):
+            if harnesses.get(tool) is not None:
+                return tool
         if self.party_of is None:                       # a runner with no host to say the parties (its tests, a bare run): Claude, as before
             return HARNESS
         from orkboard import settings as machine
@@ -464,7 +466,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
         tid = task.get("id")
         cancel = threading.Event()
         run, effort = self.ran_on(task, slug)
-        tool = self.tool_of(slug)
+        tool = self.tool_of(slug, task)
         h = harnesses.get(tool)
         task.update(tool=tool, model=(h.pick(run) if h else run) or run)    # the model the run names (spec 35 §12)
         task.update(state="running", started=now_iso(), finished="", error="", note="",
@@ -494,7 +496,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
             task = next(t for t in plan["tasks"] if t.get("id") == tid)
             base = str(setting(self.settings, "merge_into") or "dev")
             env = self._env(slug, tid, plan)
-            tool = self.tool_of(slug)
+            tool = self.tool_of(slug, task)
             h = harnesses.need(tool)
             run, effort = self.ran_on(task, slug)
             model = h.pick(run)                          # the role's model, else the tier the Target gives
@@ -582,7 +584,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                 self._until[(slug, tid)] = e.until
             if e.line:                      # held for its tool's sign-in (spec 45 §6), not for a window
                 hold: dict = {}
-                self._hold_sign_in(hold, e.line, self.tool_of(slug))
+                self._hold_sign_in(hold, e.line, self.tool_of(slug, task))
                 self._set_task(slug, tid, finished="", **({**hold, "note": ""} if again is None or again.get("pick")
                                                           else {"state": "review", "note": e.line[:300]}))
             else:

@@ -43,6 +43,7 @@ class Agent:
     band: str = "build"       # its band in a party: "lead" (plans: the party's steps run as it), "build", "check"
     pitch: bool = False       # Ideation's (spec 65 §1): it judges pitches, takes a pitch kind only, and sits in no other party
     race: str = ""            # its own race (orkUI's), when it is not its craft's (spec 68 §1.3); "" = the craft's (roles.RACES)
+    needs: tuple[str, ...] = ()  # what it needs its AI tool to make beside code and text ("pictures", "sound"; spec 91 §6): harnesses.Harness.makes
 
 
 # What each of Ideation's views and its skeptic holds to (spec 65 §1): the project's facts, never invented ones.
@@ -123,7 +124,7 @@ LIBRARY: tuple[Agent, ...] = (
           "You draw pixel art in the design system's style: a small grid, hard edges, no blur, the palette's colours "
           "only. An icon is 24 px, one colour, readable at its size; a head is an accent, never a picture to look at. "
           "Keep the source next to the export and name both by what they show. Draw only what the task asks; say what "
-          "you would add."),
+          "you would add.", needs=("pictures",)),
     Agent("level-designer", "Level designer", "design", "warrior", ("level",),
           "Lays out the levels: the path, the beats, where it gets hard",
           "You lay out levels. First on paper: the path, the beats, where it gets hard and how long it plays. Then "
@@ -133,7 +134,7 @@ LIBRARY: tuple[Agent, ...] = (
           "Makes the sounds and the music, picked by ear",
           "You make sounds and music. Keep each short, and loopable where it loops, at one loudness for all. When "
           "asked, give a few to pick from (a pick of sounds). Keep the source beside the export and name both by what "
-          "the sound is. Make only what the task asks; say what you would add."),
+          "the sound is. Make only what the task asks; say what you would add.", needs=("sound",)),
     Agent("playtester", "Playtester", "design", "warrior", ("playtest",),
           "Plays a change through and says where it breaks or bores",
           "You play the change through: the changed part, in the game's test build, or a headless run when it has one. "
@@ -207,7 +208,7 @@ LIBRARY: tuple[Agent, ...] = (
           "Writes the store pages: keywords, title, texts, screenshots' words",
           "You make the app found in its store. Find the words people search for in the store first. Write the title "
           "and subtitle within the store's limits, then the description, then the words on the screenshots. Never stuff "
-          "keywords or promise what the app does not do. Submit nothing without the person's yes."),
+          "keywords or promise what the app does not do. Submit nothing without the person's yes.", needs=("pictures",)),
     Agent("community", "Community", "marketing", "laborer", ("community",),
           "Answers in the forums and channels and brings back what people ask",
           "You keep the conversation with people. Draft answers to what people ask, kind and short, with a link to "
@@ -364,7 +365,7 @@ def listed() -> list[dict]:
     """The library as a face shows it: id, name, craft, race, tier, takes, line, a checker's check, and `pitch` (Ideation's: the faces
     offer it to no other party, and no seat change in Ideation; spec 65 §1)."""
     return [{"id": a.id, "name": a.name, "craft": a.craft, "race": race_of(a), "tier": a.tier, "band": a.band,
-             "takes": list(a.takes), "line": a.line, "pitch": a.pitch,
+             "takes": list(a.takes), "line": a.line, "pitch": a.pitch, "needs": list(a.needs),
              "check": {"applies": a.check.applies, "done": a.check.done} if a.check else None} for a in LIBRARY]
 
 
