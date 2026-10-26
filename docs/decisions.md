@@ -1619,3 +1619,41 @@ channels, the Release manager the versions); they say it as text nobody reads wh
     view kept only while it is opened. The words (*lens*, *map*, *view*, *will be*, *fork*, *contract*) get their one word
     each in `TERMS` with the first spec; a part of a map is not called a *card* where a person reads it (spec 70 §0).
 The owner's call. The mockup *Orkboard — the map on the table* first; the specs are written from it.
+
+## 105. What the first look said: Play opens the page, not a port; the right column is where a thing opened is seen; Assets fills the table; a party is removed from its menu; System is the project's architecture, not its folders (26 October, the owner)
+
+Why: the owner opened their game (a Node party game: `client/` on Vite and React, `server/` on Express, `config/`
+shared) on the Orkboard of specs 87–89: *I could not find how to remove an old party; Assets is the right tab but its
+table is almost empty and a preview opens over the whole window; Play shows a white page, "Cannot GET /"; System looks
+like a tree of folders, I want an overview of the architecture, cheaply; take Waits for your look away and show every
+preview in the right column, wider, not over the pane; let the tabs and the faces lie on the table.* Play had started
+(`play_started`, ok, 3.2 s): the first port that listened was Express's, which got the `PORT` Orkboard set; Vite's page
+was on another. So:
+1. **Play opens the page, not the first port**: every port the command prints, and `PORT`, is asked for `/` (and the
+   configured `preview_path`); the first that answers a page (2xx, `text/html`) is shown. None: a plain line says the
+   build started but no port gives a page, and how to name one (`.orkcraft/checks.toml`). The same choice serves §102's
+   pictures. **While the build starts, the pane is black**: the project's name in the pixel face comes up and fades, a nod
+   to a console's start screen, and the page comes out of the black only once it answered. Never a white frame.
+2. **The right column is where a thing opened is seen** (§104.8's temporary tab, at the side): the drawer becomes the
+   window's right column, about 480 px, **pushing the pane, never over it**, and **there is no right column while
+   nothing is open**: the pane takes the width. An asset, a part of System, a task, its log, a diff, a document open
+   there. What stood in the right column goes: *Waits for your look* to the hand (§104.9: what needs a look is a card),
+   *Merge dev into main* to one card in the hand (*n goals ready for main*) and a quiet line in the project's line, the
+   canvases (§93) to Assets, as assets of their own kind, the AI tools' limits to *Spend* in the top bar.
+3. **Assets fills the table**: its kinds lie as sections one under another, each section's cards wrapping across the
+   whole width; a stack still folds a folder. A card pressed opens in the right column (2), never over the window.
+4. **The table starts at the pane's top**: a party's tabs (*System*, *Board*) and its members' faces lie on the wood, as
+   tabs on a table's edge, so the table is never cut by a strip over it.
+5. **A party is removed from its menu**: *Remove party* is on the party's menu in the left column (a right click, or its
+   **…**) and on its column at the Orkmaster's level, the Orkmaster's being the parties' keeper (§104.0); the question is
+   spec 80's, and *Edit the party* keeps it too.
+6. **System is the project's architecture, read with no model** (§104.1's *System*; the folders become *Feature
+   modules*): **its containers** (each folder with its own `package.json`, `pyproject.toml`, `go.mod` or `Cargo.toml`,
+   and the root's own code), **each container's stack** (its dependencies, by a list of known libraries: React, Vite,
+   Express, Socket.IO, …), **how the containers talk** (HTTP routes a client calls and a server answers, socket events
+   emitted and handled, read by patterns, the arrow named by them: *HTTP: 6 routes · socket: 4 events*), **its ways in**
+   (`index.html`, a `listen`, `bin`, scripts), **its layers** inside a container (by the imports: what nothing uses on top,
+   what everything uses at the bottom; and a list of folder roles: views and components are its face, routes and api its
+   doors, db and models its data, config its settings), and **what is shared** (a file both a client and a server use,
+   like `config/balance.ts`, a part of its own: a change there touches both). The cards and the reveal stay §104.2's.
+Spec 90.
