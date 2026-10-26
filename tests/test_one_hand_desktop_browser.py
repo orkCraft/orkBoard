@@ -52,11 +52,11 @@ def test_the_bottom_row_holds_every_stop_of_the_project_the_most_urgent_in_the_m
         # urgency's order is the page's (the keys', a screen reader's): red first, then what holds work back, then what does not; the oldest first in a group
         assert [(c.get_attribute("data-kind"), c.get_attribute("data-party")) for c in cards.all()] == [
             ("op_failed", "@operations"), ("failed", "passkey"),
-            ("todo", "pricing"), ("goal", "weekly"), ("op", "@operations"), ("plan", "passkey"), ("asks", "passkey"),
-            ("proposal", "passkey")]
+            ("goal", "weekly"), ("op", "@operations"), ("plan", "passkey"), ("asks", "passkey"),
+            ("proposal", "passkey"), ("todo", "pricing")]                                                               # a to-do lies last of all (spec 87 §4.3)
         # laid out from the middle: the most urgent in it, the next to its right, the next to its left, and so outward
         by_x = sorted(cards.all(), key=lambda c: c.bounding_box()["x"])
-        assert [c.get_attribute("data-kind") for c in by_x] == ["asks", "op", "todo", "op_failed", "failed", "goal", "plan", "proposal"]
+        assert [c.get_attribute("data-kind") for c in by_x] == ["proposal", "plan", "goal", "op_failed", "failed", "op", "asks", "todo"]
         middle = pg.locator(".arena-hand").bounding_box()
         first = pg.locator('.arena-hc[data-kind="op_failed"]').bounding_box()
         assert abs((first["x"] + first["width"] / 2) - (middle["x"] + middle["width"] / 2)) <= 100                 # in the middle, give or take half a card

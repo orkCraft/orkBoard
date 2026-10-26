@@ -25,7 +25,7 @@ def _text(loc) -> str:
 
 
 def _dealt(pg):
-    """A spread's cards are in their places (the deal is over): they are then 120 × 168."""
+    """A spread's cards are in their places (the deal is over): they are then 128 × 180."""
     pg.wait_for_function("() => document.getAnimations().every((a) => !a.effect?.target?.classList?.contains('arena-spread__card'))", timeout=WAIT_MS)
 
 
@@ -320,7 +320,7 @@ def test_a_card_the_filter_takes_leaves_where_it_stands_without_a_check_and_come
 
 # -- rows by phase, stacks, cards (§3.4, §5) --------------------------------------------------------------------------------------------
 
-def test_a_stack_per_goal_in_a_row_the_goals_in_the_boards_order_two_to_a_row_with_5_to_7_cards_of_104_at_most(gui):
+def test_a_stack_per_goal_in_a_row_the_goals_in_the_boards_order_two_to_a_row_with_5_to_7_cards_of_128_at_most(gui):
     host = ArenaHost()
     host.node_of("signin")["tasks"] = [*host.node_of("signin")["tasks"], pip("b1", "Hash the key", "ready", wave=2, by="backend")]       # a third goal for Backend's first row
     pg, host, errors = _open(gui, host=host, ready=".arena-phead", viewport={"width": 1500, "height": 900})
@@ -335,7 +335,7 @@ def test_a_stack_per_goal_in_a_row_the_goals_in_the_boards_order_two_to_a_row_wi
         assert abs(ys[0] - ys[1]) < 12 and ys[2] > ys[1] + 100                                                   # two to a row: the third wraps under them
         for card in column.locator(".arena-task").all():
             bb = card.bounding_box()
-            assert bb["width"] <= 104.5 and bb["height"] <= 146.5 and abs(bb["height"] / bb["width"] - 7 / 5) < 0.02, bb    # 5:7, 104 × 146 at most
+            assert bb["width"] <= 128.5 and bb["height"] <= 180.5 and abs(bb["height"] / bb["width"] - 7 / 5) < 0.02, bb    # 5:7, 128 × 180 at most
         assert max(c.bounding_box()["width"] for c in column.locator(".arena-task").all()) > 90                   # and a share of the column, not a corner of it
         front = stacks.first.locator(".arena-task")
         assert front.get_attribute("data-task") == "k2"                                                          # at work in front, in Review behind it
@@ -345,10 +345,10 @@ def test_a_stack_per_goal_in_a_row_the_goals_in_the_boards_order_two_to_a_row_wi
         top = front.bounding_box()
         assert abs((edge["x"] - top["x"]) - 4) < 1.5 and abs((top["y"] - edge["y"]) - 4) < 1.5                  # behind it, 4 px up and right
         assert "is-fail" in stacks.nth(2).get_attribute("class") and stacks.nth(2).locator(".arena-stk__edge").count() == 0
-        pg.locator(".arena-member[data-agent=backend]").click()                                                  # alone: the full 104 × 146
+        pg.locator(".arena-member[data-agent=backend]").click()                                                  # alone: the full 128 × 180
         solo = pg.get_by_role("group", name="Only Backend’s tasks")
         one = solo.locator(".arena-task").first.bounding_box()
-        assert abs(one["width"] - 104) < 0.5 and abs(one["height"] - 146) < 0.5
+        assert abs(one["width"] - 128) < 0.5 and abs(one["height"] - 128 * 7 / 5) < 0.5
     finally:
         pg.close()
     assert not errors, "\n".join(errors)
@@ -398,7 +398,7 @@ def test_a_press_on_a_stack_of_more_spreads_it_deals_its_cards_and_put_them_back
     _dealt(pg)
     for c in cards.all():
         bb = c.bounding_box()
-        assert abs(bb["width"] - 120) < 0.5 and abs(bb["height"] - 168) < 0.5                                   # 120 × 168
+        assert abs(bb["width"] - 128) < 0.5 and abs(bb["height"] - 180) < 0.5                                   # 128 × 180
     assert [c.get_attribute("data-task") for c in cards.all()] == ["k2", "k1"]
     k2 = cards.nth(0)
     assert k2.locator(".ork-elem.meadow").count() == 1 and k2.locator(".arena-task__phase").text_content() == "now" and k2.locator(".ork-sign.work").count() == 0
