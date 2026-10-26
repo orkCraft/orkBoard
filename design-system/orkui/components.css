@@ -240,20 +240,90 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
   animation: ork-blink 1s steps(1) infinite; }
 @keyframes ork-blink { 50% { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .ork-think::after { animation: none; } }
-/* --- Busy: work under way on a card or a head, four pixels going round a 3 x 3 square (orkboard's spec 82 A0) ---------------------
-   12 px, the ink and the faint ink only; a step a frame (never a smooth spin); still under reduced motion, as three dots. */
-.ork-busy { position: relative; display: inline-block; width: 12px; height: 12px; flex: none; vertical-align: -1px; }
-.ork-busy::before, .ork-busy::after { content: ""; position: absolute; left: 0; top: 0; width: 4px; height: 4px;
-  animation: ork-busy .8s steps(1) infinite; }
-.ork-busy::before { background: var(--ork-ink); box-shadow: 4px 0 0 var(--ork-ink); }
-.ork-busy::after { background: var(--ork-ink-faint); animation-delay: -.1s; }
-@keyframes ork-busy {
-  0% { transform: translate(0, 0); } 12.5% { transform: translate(4px, 0); } 25% { transform: translate(8px, 0); }
-  37.5% { transform: translate(8px, 4px); } 50% { transform: translate(8px, 8px); } 62.5% { transform: translate(4px, 8px); }
-  75% { transform: translate(0, 8px); } 87.5% { transform: translate(0, 4px); } }
+/* --- Busy: work under way on a card or a head, an hourglass (orkboard's spec 87 A0) ----------------------------------------------
+   12 px, a 6 x 6 grid of 2 px pixels, the faint ink only (never a colour, never brighter than the text beside it). The glass
+   holds six grains: one falls a second (six frames, `steps`), then the glass turns over in two steps (90, 180 degrees) and
+   starts again, 7 s a round. Under reduced motion it stands still, half run (three grains down). */
+.ork-busy { --ork-busy-ink: var(--ork-ink-faint); position: relative; display: inline-block; width: 12px; height: 12px; flex: none;
+  vertical-align: -1px; animation: ork-busy-turn 7s steps(1) infinite; }
+.ork-busy::before, .ork-busy::after { content: ""; position: absolute; left: -2px; top: -2px; width: 2px; height: 2px; }
+.ork-busy::before { box-shadow:
+    2px 2px 0 var(--ork-busy-ink),
+    4px 2px 0 var(--ork-busy-ink),
+    6px 2px 0 var(--ork-busy-ink),
+    8px 2px 0 var(--ork-busy-ink),
+    10px 2px 0 var(--ork-busy-ink),
+    12px 2px 0 var(--ork-busy-ink),
+    2px 4px 0 var(--ork-busy-ink),
+    12px 4px 0 var(--ork-busy-ink),
+    4px 6px 0 var(--ork-busy-ink),
+    10px 6px 0 var(--ork-busy-ink),
+    4px 8px 0 var(--ork-busy-ink),
+    10px 8px 0 var(--ork-busy-ink),
+    2px 10px 0 var(--ork-busy-ink),
+    12px 10px 0 var(--ork-busy-ink),
+    2px 12px 0 var(--ork-busy-ink),
+    4px 12px 0 var(--ork-busy-ink),
+    6px 12px 0 var(--ork-busy-ink),
+    8px 12px 0 var(--ork-busy-ink),
+    10px 12px 0 var(--ork-busy-ink),
+    12px 12px 0 var(--ork-busy-ink); }
+.ork-busy::after { box-shadow:
+    8px 4px 0 var(--ork-busy-ink),
+    6px 6px 0 var(--ork-busy-ink),
+    8px 6px 0 var(--ork-busy-ink),
+    6px 10px 0 var(--ork-busy-ink),
+    8px 10px 0 var(--ork-busy-ink),
+    4px 10px 0 var(--ork-busy-ink);
+  animation: ork-busy-sand 7s steps(1) infinite; }
+@keyframes ork-busy-sand {
+  0% { box-shadow: 4px 4px 0 var(--ork-busy-ink),
+    10px 4px 0 var(--ork-busy-ink),
+    6px 4px 0 var(--ork-busy-ink),
+    8px 4px 0 var(--ork-busy-ink),
+    6px 6px 0 var(--ork-busy-ink),
+    8px 6px 0 var(--ork-busy-ink); }
+  14.286% { box-shadow: 10px 4px 0 var(--ork-busy-ink),
+    6px 4px 0 var(--ork-busy-ink),
+    8px 4px 0 var(--ork-busy-ink),
+    6px 6px 0 var(--ork-busy-ink),
+    8px 6px 0 var(--ork-busy-ink),
+    6px 10px 0 var(--ork-busy-ink); }
+  28.571% { box-shadow: 6px 4px 0 var(--ork-busy-ink),
+    8px 4px 0 var(--ork-busy-ink),
+    6px 6px 0 var(--ork-busy-ink),
+    8px 6px 0 var(--ork-busy-ink),
+    6px 10px 0 var(--ork-busy-ink),
+    8px 10px 0 var(--ork-busy-ink); }
+  42.857% { box-shadow: 8px 4px 0 var(--ork-busy-ink),
+    6px 6px 0 var(--ork-busy-ink),
+    8px 6px 0 var(--ork-busy-ink),
+    6px 10px 0 var(--ork-busy-ink),
+    8px 10px 0 var(--ork-busy-ink),
+    4px 10px 0 var(--ork-busy-ink); }
+  57.143% { box-shadow: 6px 6px 0 var(--ork-busy-ink),
+    8px 6px 0 var(--ork-busy-ink),
+    6px 10px 0 var(--ork-busy-ink),
+    8px 10px 0 var(--ork-busy-ink),
+    4px 10px 0 var(--ork-busy-ink),
+    10px 10px 0 var(--ork-busy-ink); }
+  71.429% { box-shadow: 8px 6px 0 var(--ork-busy-ink),
+    6px 10px 0 var(--ork-busy-ink),
+    8px 10px 0 var(--ork-busy-ink),
+    4px 10px 0 var(--ork-busy-ink),
+    10px 10px 0 var(--ork-busy-ink),
+    6px 8px 0 var(--ork-busy-ink); }
+  85.714% { box-shadow: 6px 10px 0 var(--ork-busy-ink),
+    8px 10px 0 var(--ork-busy-ink),
+    4px 10px 0 var(--ork-busy-ink),
+    10px 10px 0 var(--ork-busy-ink),
+    6px 8px 0 var(--ork-busy-ink),
+    8px 8px 0 var(--ork-busy-ink); } }
+@keyframes ork-busy-turn {
+  0% { transform: rotate(0); } 91.429% { transform: rotate(90deg); } 95.714% { transform: rotate(180deg); } }
 @media (prefers-reduced-motion: reduce) {
-  .ork-busy::before { animation: none; top: 4px; box-shadow: 4px 0 0 var(--ork-ink-faint), 8px 0 0 var(--ork-ink); }
-  .ork-busy::after { display: none; } }
+  .ork-busy { animation: none; }
+  .ork-busy::after { animation: none; } }
 .ork-empty { display: grid; place-content: center; justify-items: center; gap: var(--ork-5); min-height: 100%; text-align: center; color: var(--ork-ink-muted); }
 .ork-ork { margin: 0; text-align: left; white-space: pre; color: var(--ork-ink-muted); font: 400 12px/14px var(--ork-font-text); }
 
