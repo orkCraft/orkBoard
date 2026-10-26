@@ -95,12 +95,28 @@ def _free_port() -> int:
         return s.getsockname()[1]
 
 
+LOOPBACK = ("127.0.0.1", "::1")   # a dev server on a Mac often listens on `localhost` as ::1 only (Node 17+, Vite): both are asked
+
+
+def _host_of(port: int) -> str | None:
+    """The loopback address `port` listens on, 127.0.0.1 first, else ::1; None when neither."""
+    for host in LOOPBACK:
+        try:
+            with socket.create_connection((host, port), timeout=0.3):
+                return host
+        except OSError:
+            continue
+    return None
+
+
 def _listening(port: int) -> bool:
-    try:
-        with socket.create_connection(("127.0.0.1", port), timeout=0.3):
-            return True
-    except OSError:
-        return False
+    return _host_of(port) is not None
+
+
+def url_of(port: int, path: str = "/") -> str:
+    """The page's address on the loopback address its port listens on (`http://[::1]:5173/` when only ::1 does)."""
+    host = _host_of(port) or LOOPBACK[0]
+    return f"http://{'[' + host + ']' if ':' in host else host}:{port}{path if path.startswith('/') else '/'}"
 
 
 def _kill(proc: subprocess.Popen) -> None:
@@ -128,7 +144,7 @@ def page_of(ports: list[int], path: str = "/", timeout: float = 1.0) -> int | No
     for port in dict.fromkeys(ports):
         target = path if path.startswith("/") else "/"
         for _hop in range(4):
-            conn = http.client.HTTPConnection("127.0.0.1", port, timeout=timeout)
+            conn = http.client.HTTPConnection(_host_of(port) or LOOPBACK[0], port, timeout=timeout)
             try:
                 conn.request("GET", target, headers={"Accept": "text/html", "Connection": "close"})
                 res = conn.getresponse()
@@ -254,7 +270,7 @@ def make(state_dir: Path, worktree: Path, dest: Path, screen: str = "") -> tuple
     with opened(how, worktree, OPEN_S, path=path, tried=tried) as port:
         if port is None:
             return False, "no page" if tried else "no preview"
-        if not draw(f"http://127.0.0.1:{port}{path}", dest, _size(conf)):
+        if not draw(url_of(port, path), dest, _size(conf)):
             return False, "no picture"
     return True, ""
 

@@ -157,7 +157,7 @@ class Play:
                 if port is None or stop.is_set():
                     return self._failed(began, stop, NO_PAGE if tried else "did not open", ports=tried)
                 self._alive_at = time.monotonic()
-                self._set("playing", port=port, url=f"http://127.0.0.1:{port}{path}")
+                self._set("playing", port=port, url=idea_shot.url_of(port, path))
                 self._emit(event_log.PLAY_STARTED, seconds=round(time.monotonic() - began, 1), ok=True, why="")
                 stop.wait()
             self._remove()

@@ -9,6 +9,7 @@ import os
 import shutil
 import sys
 import time
+import socket
 from pathlib import Path
 
 import pytest
@@ -314,3 +315,44 @@ def test_a_look_picked_is_written_at_the_goals_look_with_the_extension_of_the_fi
     assert task.get("shot") is None                                                  # a look picked is a file of the design, not the product
     wait_for(runner, rig, "k2", ("merged",))
     assert 'The person picked B · v2: "calmer"' in calls(rig)[1]["argv"][1]
+
+
+def _v6_page_server():
+    """A page served on ::1 only, as Vite on a Mac serves `localhost`; None where this machine has no IPv6 loopback."""
+    import http.server
+    import threading
+
+    class V6(http.server.ThreadingHTTPServer):
+        address_family = socket.AF_INET6
+
+    class Page(http.server.BaseHTTPRequestHandler):
+        def do_GET(self):
+            body = b"<!doctype html><title>game</title>"
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, *_a):
+            pass
+
+    try:
+        srv = V6(("::1", 0), Page)
+    except OSError:
+        return None
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    return srv
+
+
+def test_a_page_served_on_the_ipv6_loopback_only_is_found_and_its_address_names_it():
+    srv = _v6_page_server()
+    if srv is None:
+        pytest.skip("no IPv6 loopback on this machine")
+    try:
+        port = srv.server_address[1]
+        assert idea_shot.page_of([port]) == port
+        assert idea_shot.url_of(port, "/") == f"http://[::1]:{port}/"
+    finally:
+        srv.shutdown()
+        srv.server_close()
