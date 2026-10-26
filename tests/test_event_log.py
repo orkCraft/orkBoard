@@ -147,3 +147,15 @@ def test_the_orkmasters_proposals_are_events_that_hold_a_kind_and_a_recipe_never
     rows = event_log.read(tmp_path)
     assert [r["event"] for r in rows] == ["proposals_shown", "proposal_taken", "party_resized"]
     assert rows[0]["kind"] == "wiki" and rows[1]["recipe"] == "mobile-features" and (rows[2]["from"], rows[2]["to"]) == ("standard", "full")
+
+
+def test_play_started_and_stopped_are_the_events_of_spec_88(tmp_path):
+    """Spec 88 §5: the project's preview of dev opened in Play (how long, whether it opened, why not) and why it stopped."""
+    for name, value in (("PLAY_STARTED", "play_started"), ("PLAY_STOPPED", "play_stopped")):
+        assert getattr(event_log, name) == value and value in event_log.EVENTS
+    assert len(set(event_log.EVENTS)) == len(event_log.EVENTS)
+    event_log.record(tmp_path, event_log.PLAY_STARTED, seconds=1.25, ok=False, why="no preview")
+    event_log.record(tmp_path, event_log.PLAY_STOPPED, why="idle")
+    started, stopped = event_log.read(tmp_path)
+    assert (started["seconds"], started["ok"], started["why"], stopped["why"]) == (1.25, False, "no preview", "idle")
+    assert event_log.counts(tmp_path)["play_started"] == 1 and event_log.counts(tmp_path)["play_stopped"] == 1
