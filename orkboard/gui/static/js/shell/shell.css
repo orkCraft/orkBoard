@@ -144,7 +144,7 @@
 .shell-file > summary code { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .shell-file .is-add, .shell-patch__line.is-add { color: var(--ork-success); }
 .shell-file .is-del, .shell-patch__line.is-del { color: var(--ork-danger); }
-.shell-patch, .shell-log { margin: 0; padding: var(--ork-3) var(--ork-4); overflow: auto; max-height: 420px; font: var(--ork-type-body); background: var(--ork-panel);
+.shell-patch, .shell-log { margin: 0; padding: var(--ork-3) var(--ork-4); overflow: auto; max-height: 420px; font: var(--ork-type-body); font-family: var(--ork-font-code); background: var(--ork-panel);
   border: var(--ork-line) solid var(--ork-frame); }
 .shell-log { max-height: 320px; white-space: pre-wrap; overflow-wrap: anywhere; }
 .shell-patch__line { display: block; white-space: pre; }
@@ -241,7 +241,7 @@
 .shell-links { margin: 0; padding-left: 20px; }
 .shell-goal { display: flex; flex-direction: column; gap: var(--ork-5); }
 .shell-goal__head { display: flex; flex-direction: column; gap: var(--ork-1); }
-.shell-goal__head h2 { font: 600 14px/20px var(--ork-font-text); }
+.shell-goal__head h2 { font: var(--ork-type-body); font-weight: 600; }
 .shell-goal__flags { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-2); }
 .shell-goal__flag { text-align: left; }
 .shell-goal__flagmark { color: var(--ork-success); display: inline-flex; }
@@ -282,7 +282,7 @@
 .shell-files__bar { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-4); }
 .shell-tree, .shell-tree__list { list-style: none; margin: 0; padding: 0; }
 .shell-tree__row { display: flex; align-items: baseline; gap: 4px; width: 100%; box-sizing: border-box; text-align: left; padding-top: 2px; padding-bottom: 2px; padding-right: var(--ork-4);
-  background: none; border: 0; color: var(--ork-ink); font: inherit; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  background: none; border: 0; color: var(--ork-ink); font: inherit; font-family: var(--ork-font-code); cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }      /* a file's name: the code face */
 .shell-tree__row:hover, .shell-tree__row:focus-visible { background: var(--ork-raised); outline: none; }
 .shell-tree__row.is-on { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); font-weight: 600; }
 .shell-tree__row.is-secret { color: var(--ork-ink-muted); font-style: italic; }
@@ -293,23 +293,23 @@
 .shell-git__files { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .shell-git__file { display: flex; align-items: baseline; gap: var(--ork-4); padding: 2px 0; }
 .shell-git__file.is-on { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); }
-.shell-git__name { flex: 1; min-width: 0; text-align: left; background: none; border: 0; color: var(--ork-ink); font: inherit; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.shell-git__name { flex: 1; min-width: 0; text-align: left; background: none; border: 0; color: var(--ork-ink); font: inherit; font-family: var(--ork-font-code); cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .shell-git__st { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); }
 .shell-git__commit, .shell-git__sync { display: flex; gap: var(--ork-4); align-items: center; }
 .shell-git__commit .ork-field { flex: 1; min-width: 0; }
 .shell-file__bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--ork-4); }
-.shell-md { max-width: 80ch; line-height: 1.55; overflow-wrap: anywhere; }
+.shell-md { max-width: 80ch; font: var(--ork-type-read); overflow-wrap: anywhere; }      /* a text read through: the reading face */
 .shell-md h1, .shell-md h2, .shell-md h3 { margin: var(--ork-6) 0 var(--ork-4); }
-.shell-md h1, .shell-md h2, .shell-md h3 { font-family: var(--ork-font-text); font-weight: 600; }      /* a person's words: never the pixel face */
-.shell-md h1 { font-size: 16px; line-height: 22px; }
-.shell-md h2 { font-size: 14px; line-height: 20px; }
-.shell-md h3 { font-size: 12px; line-height: 18px; }
-.shell-md pre, .shell-md code { font-family: var(--ork-font-code); background: var(--ork-panel); }
+.shell-md h1, .shell-md h2, .shell-md h3 { font-family: var(--ork-font-read); font-weight: 600; }      /* a person's words: never the pixel face */
+.shell-md h1 { font-size: 20px; line-height: 28px; }
+.shell-md h2 { font-size: 17px; line-height: 24px; }
+.shell-md h3 { font-size: 15px; line-height: 22px; }
+.shell-md pre, .shell-md code { font-family: var(--ork-font-code); font-size: 0.9em; background: var(--ork-panel); }
 .shell-md pre { padding: var(--ork-4); overflow: auto; }
 .shell-md table { border-collapse: collapse; }
 .shell-md th, .shell-md td { border: 1px solid var(--ork-frame); padding: 3px var(--ork-4); }
 .shell-md blockquote { margin-left: 0; padding-left: var(--ork-5); border-left: 2px solid var(--ork-frame); color: var(--ork-ink-muted); }
-.shell-code { display: flex; overflow: auto; font: var(--ork-type-body); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame); }
+.shell-code { display: flex; overflow: auto; font: var(--ork-type-body); font-family: var(--ork-font-code); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame); }
 .shell-code pre { margin: 0; padding: var(--ork-4); }
 .shell-code__nos { flex: none; text-align: right; color: var(--ork-ink-muted); border-right: 1px solid var(--ork-frame); user-select: none; }
 .shell-code__text { flex: 1; min-width: 0; white-space: pre; }
@@ -317,7 +317,7 @@
 .shell-edit__bar { display: flex; align-items: center; gap: var(--ork-4); }
 .shell-edit__why { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-4); }
 .shell-edit__text { flex: 1; min-height: 240px; width: 100%; box-sizing: border-box; resize: none; padding: var(--ork-3) var(--ork-4); background: var(--ork-canvas); color: var(--ork-ink);
-  border: var(--ork-line) solid var(--ork-edge); font: var(--ork-type-body); tab-size: 4; caret-shape: block; }
+  border: var(--ork-line) solid var(--ork-edge); font: var(--ork-type-body); font-family: var(--ork-font-code); tab-size: 4; caret-shape: block; }
 .shell-edit__text:focus { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 
 /* Operations on the start screen (spec 38 §10): the person's, with no project open */
@@ -444,9 +444,9 @@
 
 /* -- the drawer's Pick one (docs/specs/51-pick-one.md §6): its title and ask, the variants large, the note, and at the foot Take B and None of them -- */
 .shell-pickone__head { display: flex; flex-direction: column; gap: var(--ork-1); }
-.shell-pickone__head h2 { margin: 0; font: 600 14px/20px var(--ork-font-text); }
+.shell-pickone__head h2 { margin: 0; font: var(--ork-type-body); font-weight: 600; }
 .shell-pickone__by { display: flex; align-items: center; gap: var(--ork-3); }
-.shell-pickone__ask { margin: 0; font: 400 14px/20px var(--ork-font-text); overflow-wrap: anywhere; }
+.shell-pickone__ask { margin: 0; font: var(--ork-type-body); overflow-wrap: anywhere; }
 .shell-pickone__refused { margin: 0; }
 .shell-pickone__foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-4); }
 
@@ -494,7 +494,7 @@
 .shell-prop.is-have { border-color: var(--ork-frame); }
 .shell-prop.is-have .shell-prop__name, .shell-prop.is-have .shell-prop__line { color: var(--ork-ink-muted); }
 .shell-prop__top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--ork-4); }
-.shell-prop__name { margin: 0; font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); }
+.shell-prop__name { margin: 0; font: var(--ork-type-body); font-weight: 600; }      /* the Orkmaster's words: never the pixel face */
 .shell-prop__line, .shell-prop__why { margin: 0; }
 .shell-prop__foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2) var(--ork-4); }
 .shell-prop__heads { display: inline-flex; flex-wrap: wrap; gap: var(--ork-2); }

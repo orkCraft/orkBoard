@@ -384,7 +384,7 @@ def test_the_columns_hold_rows_by_phase_the_merged_count_and_what_waits_for_a_ta
     for t in pg.locator(".arena-stack .arena-task").all():                                                   # a name never runs into its state line
         name, foot = t.locator(".arena-task__name").bounding_box(), t.locator(".arena-task__foot").bounding_box()
         assert name["y"] + name["height"] <= foot["y"] + 0.5, t.inner_text()
-        assert round(name["height"]) % 15 == 0, t.inner_text()                                                # whole lines only, none cut in half
+        assert round(name["height"]) % 18 == 0, t.inner_text()                                                # whole lines (18 px each) only, none cut in half
     column = pg.locator(".arena-stack[data-agent=backend]")
     assert "1 in dev" in column.locator(".arena-stack__done").inner_text() and column.locator(".arena-stack__done .ork-sign.check").count() == 1       # what merged stays a count
     assert "1 in dev" in pg.locator(".arena-stack[data-agent=screens] .arena-stack__done").inner_text()

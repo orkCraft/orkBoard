@@ -136,8 +136,8 @@ def test_a_card_is_a_frame_with_the_elfs_small_head_its_kind_its_title_in_the_te
     assert card.locator(".arena-cap").first.inner_text() == "Claude · 4 min ago"
     fonts = card.evaluate("""(c) => [getComputedStyle(c.querySelector('.arena-canvas__kind')).fontFamily, getComputedStyle(c.querySelector('.arena-canvas__title')).fontFamily]""")
     token = pg.evaluate("""(n) => { const i = document.createElement('i'); i.style.fontFamily = `var(${n})`; document.body.append(i); const f = getComputedStyle(i).fontFamily; i.remove(); return f; }""",
-                        "--ork-font-text")
-    assert fonts[1] == token and fonts[0] != token                                                                                      # a title is never in the pixel face
+                        "--ork-font-read")
+    assert fonts[1] == token and "Pixelify" not in fonts[0]                                                                                      # a title is in the interface's face, never the pixel face
     colours = card.evaluate("""(c) => [...c.querySelectorAll('*')].map((e) => getComputedStyle(e).color)""")
     alert = pg.evaluate("""() => { const i = document.createElement('i'); i.style.color = 'var(--ork-alert)'; document.body.append(i); const c = getComputedStyle(i).color; i.remove(); return c; }""")
     assert alert not in colours                                                                                                         # not a signal
