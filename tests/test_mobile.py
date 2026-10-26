@@ -48,7 +48,7 @@ def test_the_compact_snapshot_is_small_and_names_its_content(fake_repo):
     json.dumps(snap)
     assert snap["v"] == phones.API and snap["project"] == fake_repo.name
     assert len(json.dumps(snap)) < len(json.dumps(full))
-    assert set(snap) == {"v", "project", "focus", "look", "ideas_rev", "ops_rev", "needs_you", "idea_states",
+    assert set(snap) == {"v", "project", "focus", "look", "ideas_rev", "ops_rev", "ops_team", "needs_you", "idea_states",
                          "review_count", "review_results", "limits", "reserve", "rate", "hud", "version", "update", "rev",
                          "canvases_new", "canvases_rev", "sleep"}
     assert snap["focus"] == "board" and snap["look"] == "office"
