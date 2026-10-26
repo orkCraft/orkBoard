@@ -162,6 +162,67 @@ def test_a_port_printed_in_colour_is_read_as_vite_prints_it(tmp_path, monkeypatc
         assert port and idea_shot.page_of([port]) == port
 
 
+CHATTY = """import os, sys, time
+for i in range(45):
+    print("\\x1b[32mlog %d\\x1b[0m" % i)
+    if i % 10 == 0:
+        print()                                              # a blank line is not kept
+print("x" * 900, flush=True)                                 # a long line is cut
+print("done", flush=True)
+time.sleep(60)
+"""
+
+
+def test_the_last_30_lines_of_the_output_are_kept_without_colour_codes_in_the_list_given(tmp_path):
+    work, state = tmp_path / "work", tmp_path / "state"
+    work.mkdir()
+    state.mkdir()
+    (work / "chatty.py").write_text(CHATTY)
+    (state / "checks.toml").write_text(f'preview = "{sys.executable} chatty.py"\n')
+    how = idea_shot.preview_of(state, work)
+    tail = ["left over from an earlier start"]
+    with idea_shot.opened(how, work, 1, path="/", tail=tail) as port:
+        assert port is None                                                                  # it listens on nothing
+        deadline = time.monotonic() + 5
+        while not tail or tail[-1] != "done":
+            assert time.monotonic() < deadline
+            time.sleep(0.05)
+    assert len(tail) == idea_shot.TAIL_LINES == 30                                           # capped: the 45 lines and the rest came, the last 30 stay
+    assert tail[-1] == "done" and tail[-2] == "x" * idea_shot.TAIL_WIDTH and tail[-3] == "log 44"
+    assert "log 0" not in tail and "left over from an earlier start" not in tail
+    assert all("\x1b" not in line and line.strip() for line in tail)
+
+
+def test_asking_is_told_the_ports_that_listen_while_no_page_has_answered(tmp_path, monkeypatch):
+    work, _state, how = two_ports(tmp_path, monkeypatch, page=False)
+    asked: list[list[int]] = []
+    with idea_shot.opened(how, work, 3, path="/", asking=lambda ports: asked.append(list(ports))) as port:
+        assert port is None
+    assert len(asked) == 2 and len(asked[0]) == 1 and asked[1][:1] == asked[0] and len(asked[1]) == 2      # first the port asked of the command, then Vite's too
+
+
+def test_a_caller_with_no_tail_or_asking_is_unchanged(tmp_path):
+    work = tmp_path / "work"
+    work.mkdir()
+    (work / "index.html").write_text(PAGE)
+    tail = ["x"]
+    with idea_shot.opened({"how": "static"}, work, 5, tail=tail) as port:
+        assert port and idea_shot.page_of([port]) == port
+    assert tail == []                                                                        # a static page prints nothing: the list is emptied, not filled
+    with idea_shot.opened({"how": "command", "run": [sys.executable, "-c", "print('hi')"], "port": None}, work, 3) as port:
+        assert port is None                                                                  # the same call as the picture's: no tail, no asking
+
+
+def test_a_command_that_ends_has_its_last_lines_kept(tmp_path):
+    work = tmp_path / "work"
+    work.mkdir()
+    tail: list[str] = []
+    how = {"how": "command", "run": [sys.executable, "-c", "print('one'); print('boom', flush=True)"], "port": None}
+    with idea_shot.opened(how, work, 5, tail=tail) as port:
+        assert port is None
+    assert tail == ["one", "boom"]                                                           # read to the end before it is given back
+
+
 def test_a_command_whose_ports_give_no_page_says_which_ports_it_asked(tmp_path, monkeypatch):
     work, state, how = two_ports(tmp_path, monkeypatch, page=False)
     tried: list[int] = []

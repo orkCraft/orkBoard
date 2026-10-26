@@ -3,6 +3,7 @@ machine's own address; one a project, answered the same while it runs; stopped b
 closing the project, its worktree removed; `play_started` and `play_stopped`; never for a phone. A stub preview, as tests/test_idea_shot.py's."""
 from __future__ import annotations
 
+import inspect
 import subprocess
 import sys
 import time
@@ -75,7 +76,8 @@ def test_play_opens_devs_preview_in_its_own_worktree_and_answers_the_same_while_
     (repo / "index.html").write_text("the working tree's own")                                   # never what plays
     head = git(repo, "rev-parse", "dev")
     first = host.command("ideas.play", {})
-    assert first == {"state": "starting", "commit": head, "short": head[:7]}
+    assert {k: first[k] for k in ("state", "commit", "short", "stage", "command", "ports")} == {"state": "starting", "commit": head, "short": head[:7], "stage": "worktree", "command": "", "ports": []}
+    assert isinstance(first["since"], float) and first["since"] >= 0
     got = settle(host)
     assert got["state"] == "playing" and got["commit"] == head and got["dev"] == head and got["short"] == head[:7]
     assert got["url"].startswith("http://127.0.0.1:") and got["url"].endswith("/")
@@ -158,10 +160,10 @@ def test_no_preview_or_one_that_never_opens_says_why_and_leaves_no_worktree(host
     e = events(repo, event_log.PLAY_STARTED)[-1]
     assert (e["ok"], e["why"]) == (False, "no preview")
     (host.ideas.state_dir / "checks.toml").write_text(f'preview = "{sys.executable} -c \\"import time; time.sleep(60)\\""\n')
-    monkeypatch.setattr(idea_shot, "OPEN_S", 1.0)
+    monkeypatch.setattr(ideas_assets, "PLAY_OPEN_S", 1.0)
     host.command("ideas.play", {})
     got = settle(host)
-    assert got == {"state": "failed", "error": "did not open"} and not (host.ideas.state_dir / "play").exists()
+    assert got == {"state": "failed", "error": "did not open", "tail": []} and not (host.ideas.state_dir / "play").exists()
 
 
 def test_no_dev_branch_is_said(host, repo):
@@ -203,12 +205,113 @@ def test_play_shows_the_port_that_gives_a_page_not_the_first_that_listens(host, 
 
 def test_play_with_no_port_that_gives_a_page_says_nopage_with_the_ports_it_asked(host, repo, monkeypatch):
     _two_ports(host, repo, monkeypatch, page=False)
-    monkeypatch.setattr(idea_shot, "OPEN_S", 4.0)
+    monkeypatch.setattr(ideas_assets, "PLAY_OPEN_S", 4.0)
     host.command("ideas.play", {})
     got = settle(host)
-    assert got["state"] == "failed" and got["why"] == "nopage" and len(got["ports"]) == 2 and all(isinstance(p, int) for p in got["ports"])
+    assert got["state"] == "failed" and got["why"] == "nopage" and len(got["ports"]) == 2 and any("server listening on" in line for line in got["tail"]) and all(isinstance(p, int) for p in got["ports"])
     assert "no port gives a page" in got["error"] and "preview_port or preview_path" in got["error"]
     assert not (host.ideas.state_dir / "play").exists()
     e = events(repo, event_log.PLAY_STARTED)[-1]
     assert (e["ok"], e["why"]) == (False, "nopage")
     assert host.command("ideas.play", {"peek": True}) == got                              # it stays said until Play is pressed again
+
+
+# -- Play breathes (spec 91 §5, decisions §107) ----------------------------------------------------------------------------------------
+
+# A preview that listens after a while and answers 404 for some time more (the page "building"), then serves the page: the start has time to be in each stage.
+SLOW_PAGE = """import http.server, os, time
+began = time.monotonic()
+class H(http.server.BaseHTTPRequestHandler):
+    def log_message(self, *a): pass
+    def do_GET(self):
+        ready = time.monotonic() - began > 1.8
+        body = b"<!doctype html><title>Game</title><h1>built</h1>" if ready else b"building"
+        self.send_response(200 if ready else 404)
+        self.send_header("Content-Type", "text/html")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+print("building...", flush=True)
+time.sleep(0.8)
+s = http.server.ThreadingHTTPServer(("127.0.0.1", int(os.environ["PORT"])), H)
+print("Local: http://localhost:%s/" % os.environ["PORT"], flush=True)
+s.serve_forever()
+"""
+
+# A preview that prints 40 lines in colour, then its error, and ends.
+FAILS = """import sys
+for i in range(40):
+    print("\\x1b[2mline %d\\x1b[0m" % i)
+print("\\x1b[31;1merror\\x1b[0m: the build broke \\x1b[4mhere\\x1b[24m", flush=True)
+sys.exit(1)
+"""
+
+
+def test_play_waits_sixty_seconds_for_a_page_and_the_pictures_wait_stays_twenty():
+    assert ideas_assets.PLAY_OPEN_S == 60.0 and idea_shot.OPEN_S == 20.0
+    assert inspect.signature(idea_shot.opened).parameters["seconds"].default == idea_shot.OPEN_S      # `opened` itself still waits the picture's 20 by default
+    assert inspect.signature(ideas_assets.Play.wait).parameters["seconds"].default is None            # the join follows PLAY_OPEN_S (read when it is called)
+
+
+def test_the_start_moves_from_the_worktree_to_the_command_to_the_page_to_playing(repo, monkeypatch):
+    commit(repo, {"slow.py": SLOW_PAGE})
+    state = repo / ".orkcraft"
+    state.mkdir(exist_ok=True)
+    (state / "checks.toml").write_text(f'preview = "{sys.executable} slow.py"\n')
+    make = ideas_assets.Play._worktree
+
+    def slow_worktree(self, commit_):                                                       # long enough for a poll to see the stage
+        time.sleep(0.5)
+        make(self, commit_)
+
+    monkeypatch.setattr(ideas_assets.Play, "_worktree", slow_worktree)
+    published: list[dict] = []
+    play = ideas_assets.Play(repo, state, lambda e, **f: None, lambda: published.append(play.answer("dev")))
+    try:
+        play.start("dev")
+        seen: list[dict] = []
+        end = time.monotonic() + 30
+        while time.monotonic() < end:
+            got = play.answer("dev")
+            if not seen or (got.get("stage") or got["state"]) != (seen[-1].get("stage") or seen[-1]["state"]):
+                seen.append(got)
+            if got["state"] != "starting":
+                break
+            time.sleep(0.05)
+        assert [g.get("stage") or g["state"] for g in seen] == ["worktree", "command", "page", "playing"]
+        worktree, command, page, playing = seen
+        assert worktree["command"] == "" and worktree["ports"] == []
+        assert command["command"] == f"{sys.executable} slow.py" and command["ports"] == []                  # the command as words
+        assert page["command"] == command["command"] and len(page["ports"]) >= 1 and all(isinstance(p, int) for p in page["ports"])
+        assert worktree["since"] <= command["since"] <= page["since"] and page["since"] >= 1.0                   # seconds since the start
+        assert playing["url"].startswith("http://127.0.0.1:") and "built" in fetch(playing["url"])
+        stages = [p.get("stage") or p["state"] for p in published]                                                # the bus is told of each change
+        assert [s for i, s in enumerate(stages) if i == 0 or s != stages[i - 1]][:3] == ["command", "page", "playing"]
+        assert stages.count("command") == 1 and stages.count("page") == 1                                         # not on every look at the ports
+    finally:
+        play.stop("stopped", wait=True)
+
+
+def test_a_failure_carries_the_commands_last_30_lines_without_colour_codes(host, repo):
+    commit(repo, {"fails.py": FAILS})
+    state = host.ideas.state_dir
+    state.mkdir(exist_ok=True)
+    (state / "checks.toml").write_text(f'preview = "{sys.executable} fails.py"\n')
+    host.command("ideas.play", {})
+    got = settle(host)
+    assert got["state"] == "failed" and got["error"] == "did not open"                                             # the command ended before a page
+    tail = got["tail"]
+    assert len(tail) == idea_shot.TAIL_LINES == 30 and tail[0] == "line 11" and tail[-1] == "error: the build broke here"
+    assert not any("\x1b" in line for line in tail)
+    assert host.command("ideas.play", {"peek": True}) == got                                                       # it stays said until Play is pressed again
+    assert not (state / "play").exists()
+
+
+def test_an_exception_says_why_and_answers_a_tail_too(host, monkeypatch):
+    def broken(self, commit_):
+        raise RuntimeError("could not make its worktree: disk full")
+
+    monkeypatch.setattr(ideas_assets.Play, "_worktree", broken)
+    host.command("ideas.play", {})
+    got = settle(host)
+    assert got == {"state": "failed", "error": "could not make its worktree: disk full", "tail": []}
