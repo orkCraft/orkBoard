@@ -2135,3 +2135,27 @@ nothing need be carried over. So:
 6. **A recurring goal of LiveOps or Run** (§108.2) is talked and decided once, when it is made; each round after takes
    the short way (§118.2).
 The owner's call.
+
+## 123. Three measures of §104–§122, read from the event log; the first slice is the parties by craft, the tabs, the sections and Talk on one real game; the rest after it is measured (27 October, the owner and the PM)
+
+Why: almost every decision from §104 ends *Measured*, yet none says which measures decide nor where they are read; and
+fourteen decisions (§109–§122) lean on each other, so built at once they could not be told apart when something is
+better or worse. So:
+1. **Three measures decide**, read from the event log (`realm/event_log.py`) with no model, and shown weekly in one short
+   report beside the analytics (`realm/analytics.py`), today's against the week before the slice:
+   - **the day in a minute** (§104.14): the time from opening the project to the first press on a goal or a hand card,
+     and how often the person opens a temporary tab to understand what happened;
+   - **what a member decided alone, seen** (§112.6): of the changes marked *a member alone*, the share the person
+     looked at (a lifted card, its goal opened) before it went to main;
+   - **a goal's cost** (§121.3): the calls and the share of the week's limits from *Idea* to *Done*, by route length,
+     against a goal of the same kind before the slice; with the forks and *out of the contract* cards after *Start*.
+2. **The first slice**, built and measured on one real project (the owner's Node party game): the parties by craft and
+   the route (§109, §117, §122), the leaders' tabs with the header, the squad and the views (§110, §119), the blank card
+   and the first opening (§116), the phases with *Talk* and *Decided* and the spec's sections read under the tabs
+   (§118, §120.5's first move), the words, the hand's stacks and the cost said before (§121).
+3. **After the slice is measured**: Play of a goal and several processes (§111, §113), System read anew and the lenses
+   of judgement (§112), the row's signs (§114), the right column's other moves (§120). The palette's side by side (§115)
+   is made in orkUI at any time, apart from the slices.
+4. **Until the slice**, the owner's game plays its client and server by a root script (`concurrently`) or `preview` in
+   `.orkcraft/checks.toml` (§113.5).
+The owner's call.
