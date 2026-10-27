@@ -2085,3 +2085,53 @@ pane's width each time it opened (§105.2), the reveal with it. So (this changes
    cards; the column's code is removed when nothing opens in it. On the phone (spec 67) a lifted card and a temporary tab
    are screens of their own, as today.
 The owner's call.
+
+## 121. One word each for the new things; the hand is a stack a goal; a goal's cost is said before it is talked or started, and a goal may wait for the limits to reset; Orkline follows later (27 October, the owner and the PM)
+
+Why: read together, §104–§120 used one word for two things (*part*: a part of the project on System, §89, and a party's
+part of a spec, §117–§118) and four words for one family (*stage*: a leader's seats, §104.1, the project's stages,
+§91.7, a step of a goal's route, §109.2, a goal's phase, §118.1); the hand gained Talk's questions, three a goal in
+rounds, beside the forks, failures and *dev → main*, while no count may be shown (§67); §117–§118 made a goal cost more
+calls before its work (a route, parallel sections, a join, Talk's rounds) and nothing says so before; and Orkline reads
+the same state. So:
+1. **The words** (`TERMS`, one each, with their first spec; this renames §117–§118's *part* of a spec): a **section**
+   (a party's part of a goal's spec; a *part* is only a part of the project), a **seat** (*Leads*, *Does*, *Checks*: the
+   leader's stages of §104.1), the project's **stage** (*Idea*, *Being made*, *Live*: §122.5), a **step** (a party's
+   turn on a goal's **route**), a goal's **phase** (*Idea*, *Talk*, *Decided*, *Spec*, *Work*, *Done*), the **blank
+   card**, a **lifted card**, the **temporary tab**.
+2. **The hand is a stack a goal**: every card of one goal in one stack, the most urgent face up with its kind's sign;
+   its edges hint there is more (five at most, never a number, §67). The stacks lie by their top card's urgency (money and
+   failures, then a question the work waits for, then the rest). **A stack pressed fans out in place** and picks its
+   goal in the left column, so the pane shows its map; one fanned at a time, the others close. The picked goal's stack
+   is fanned. Two cards are no goal's and keep their places: the blank card at the left, *n goals ready for main* at the
+   right. **Talk has two rounds at most**; after, the questions left take their leaders' defaults (§117.3).
+3. **The cost is said before**: on a goal's route, before *Talk* and before *Start*, one line: *This way: about 6 calls,
+   about 4% of Claude's week* (from the tiers, the route and §107.1's reads of the limits). **When the week's limits run
+   low** the Orkmaster offers the short way (§118.2) or **Later, by itself**: the goal waits and starts itself when the
+   limits reset, said plainly on its row (*Starts by itself after the reset, Mon 09:00*), stopped by a press.
+4. **Orkline follows later**: Orkboard writes the new parties, routes and sections; Orkline, frozen now, is changed to read
+   them when it is taken up again (in about two months); Orkboard keeps no reading of both until then.
+The owner's call.
+
+## 122. The parties that did not fit: General, Team and Ideation go; Release is called only to release; a recurring goal is decided once; the project's stage chooses the crafts (27 October, the owner)
+
+Why: after §109 a party is a craft, a lens and a step of a route; General (§80.4: never removed, where a goal with no
+party goes), Team (§108.3: Operations, no goals), Ideation (its Investor's *Bets*, now each goal's *Talk*, §118.1) and
+Release (its *Versions* gone, §112.9; it gathers many goals) were none of these. Only the owner uses Orkboard today, so
+nothing need be carried over. So:
+1. **General goes**: a goal with no route yet stays with the Orkmaster in its *Idea* phase.
+2. **Team goes for now**: Operations stay the person's own list, reached as before §108 (§108.3–§108.4 undone); a party
+   for them is asked again later.
+3. **Ideation goes**, its parties removed with no move offered; a goal's ideas are weighed in its *Talk* (§118.1), spec
+   65's views reused there.
+4. **Release is called only for a release**: never a step of another goal's route; its goal is *A release* (§83.5: the
+   flags since the last release, ticked; its version, notes and stores' list), its lens what goes in and what is out.
+5. **The project's stage chooses the crafts**: the Orkmaster's first tab (§116.1) asks first *Where is the project?*
+   (**Idea**, **Being made**, **Live**) and offers the crafts that stage needs: Idea, the concept's crafts lean (Game
+   design and Art; Product and Design); Being made, Tech too, standard; Live, LiveOps or Run too, and Release offered.
+   The stage is the project's, kept, and changed by the person (or offered by the Orkmaster: *Is the project live now?*,
+   then LiveOps or Run). **New party** keeps its left half *by the project's stage*, under each stage parties by craft,
+   never a party that is a stage (§107.5, §91.7 made precise).
+6. **A recurring goal of LiveOps or Run** (§108.2) is talked and decided once, when it is made; each round after takes
+   the short way (§118.2).
+The owner's call.
