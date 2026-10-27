@@ -1886,3 +1886,37 @@ some with nothing in the project to read them from, which §104.3 forbids. So:
 10. **A leader's views are the library's**, beside its `STAGES` (§104.8): a party shows the views its leader has there,
    never by testing which slug leads it.
 The owner's call.
+
+## 113. Play runs every process the project needs, a client and a server together; a mobile app plays as its web build in a phone's frame, and on the person's own phone over the local network when they allow it (27 October, the owner)
+
+Why: Play runs one command (`.orkcraft/checks.toml`'s `preview`, else the root's `dev|preview|start`) and shows the first
+port that answers a page (spec 90 §1). A project of a client and a server plays only when its root has a script that
+starts both; otherwise one of them is missing. Every command gets the same `PORT`, so two cannot share it, and a
+client's proxy names its server's port by hand (`localhost:3001`). A mobile app (Expo, React Native, Flutter) has no
+page at all unless its web build is asked for, and its real behaviour is on a phone, which spec 88 §5 keeps from the
+preview (`127.0.0.1` only). So (this changes spec 88 §5 for the case in 3, and only there):
+1. **Several processes**: `checks.toml` may list them (`[[play]]`: `name`, `dir`, `run`, `port`, `page = true` for the
+   one shown); with no list, Play reads them from the containers (§105.6, `system_overview`): each with a `dev` or
+   `start` script, the one with a page (its stack's UI, an `index.html`) shown. **The order**: a container another one
+   calls starts first (§112.1's links), the next once it listens. **The ports**: a process gets `PORT` only when it has
+   no port of its own; one named in the project (a proxy's target, a `listen(3001)`) is kept, and a port already taken
+   is said plainly (*Port 3001 is taken: stop your own dev server, or name another port in .orkcraft/checks.toml*).
+   **One group**: each process its own process group and its own last lines; one ending stops them all, and the failure
+   says whose. **The start screen** (spec 90 §1.3, §107.3) holds a line a process: *server · listens on 3001*, *client ·
+   building…*.
+2. **A mobile app's web build in a phone's frame** (a): an Expo or React Native project plays `expo start --web`, a
+   Flutter one `flutter run -d web-server`, as one more process of 1; the frame is a phone's (`preview_size`, 390 x 844
+   by default), and a line under it says plainly what it is not: *The web build: native modules, the camera and gestures
+   behave otherwise on a phone.*
+3. **On the person's own phone** (b), off by default, a setting of the project: **Let my phones open the build**, its
+   words saying what it opens: *While Play runs, the build's port (Metro's, 8081) is open to every device on this
+   network, not only your phones.* On, Play starts Expo's server listening on the local network, shows its QR code and
+   `exp://` link beside the frame, and sends the link to the paired phones (a card on the phone: *Open in Expo Go*).
+   Only that port, only while Play runs, only on the local network (never a tunnel); off, or Play stopped, it is closed.
+   The phones' listener still never serves the preview itself. Each start with it on is an event (`play_lan_opened`,
+   the port and the address).
+4. **A simulator or an emulator in the pane** (c) is not made: a native project without a web build says so plainly
+   and how to play it outside (*npx expo run:ios*, *flutter run*).
+5. **Until it is built**, a project plays both by a root script (`concurrently`) or `preview` in `checks.toml`, as
+   today.
+The owner's call.
