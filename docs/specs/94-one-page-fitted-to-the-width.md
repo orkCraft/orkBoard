@@ -77,6 +77,8 @@ outbox keeps. No new concept, so nothing new in `TERMS`; *narrow* and *wide* are
    **Stop all** stands always on the Orkmaster's line; the limits' chips are in its menu (§136.8).
 5. **A map at the narrow width**: cards as spec 67's tokens (74 px, 5:7) in rows that wrap; System opens on its
    containers (§112.4), which are few; a container pressed opens its parts as the next screen. No sideways scroll.
+   **The Board** at the narrow width keeps its columns under the row of heads, a head's width each, its tasks as tokens
+   (§143.4).
 6. **The hand at the foot**: spec 67's front card and fan; a card lifted from it is a sheet over the view it is about,
    its answers on it (§104.8). **The blank card** lies at the hand's left as on the wide width; pressed, it grows into a
    field over the keyboard (it rides `visualViewport`) with **Send** beside it: Enter writes a new line on a touch

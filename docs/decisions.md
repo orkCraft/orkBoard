@@ -2602,3 +2602,22 @@ files with no Tech nor Design, *New party*), and Play. So (this changes §104.8,
    §3.3); one rule at both widths.
 8. **Side by side and pinning** are not made; asked again when the owner says so (§120.4, §129.3).
 The owner's call.
+
+## 143. The Board's columns stand under the tabs: a tab is its column's head, the Board has no header of its own; the Orkmaster's column is its routing (27 October, the owner)
+
+Why: the Board is every party a column (§104.7), each headed by its leader's head and name, while the same heads stand
+in the row of tabs over it (§110.3): the leaders said twice. The members' heads on the task cards are not a repeat (who
+does a task, not who leads). The owner chose the tabs as the columns' heads over a Board by the state of the work. So
+(this changes §104.7, §110.3 and spec 94 §3.5):
+1. **On the Board each column stands under its party's tab**: the tab is the column's head and the Board draws no
+   header of its own. While the Board is shown (the Orkmaster's tab with no goal picked, or a goal at *Work* through it,
+   §136.10), the tabs take their columns' widths, in the same order; a tab pressed still opens its party's map
+   (§110.1).
+2. **The Orkmaster's column, under its tab, is its own work**: the routing and the joining of sections at work (§117),
+   as cards with its head; never the goals themselves (they are the left column's, §126.2).
+3. **The columns share the pane's width** (spec 67 §1.1): a column narrower than a card lays its tasks as spec 67's
+   tokens; a tab narrower than its name shows its head alone, the name on its hover and in the pane's title (§110.3).
+   No sideways scroll.
+4. **At the narrow width the same**: the row of heads (§110.9) heads the columns, each a head's width, its tasks as
+   tokens with their element, their member's head and their sign (the name on a lifted card, spec 94 §1.1).
+The owner's call.
