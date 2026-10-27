@@ -65,14 +65,15 @@ outbox keeps. No new concept, so nothing new in `TERMS`; *narrow* and *wide* are
 1. **One threshold, the window's width**: under 760 CSS px the page is narrow, whatever the device (a narrow desktop
    window is narrow too, so it is tried on the computer). `js/shell/narrow.js` keeps one signal of it; the sheets read
    the same width by a media query.
-2. **Three screens for three parts** (§104.0, §128.1): **the goals** (the left column: the Orkmaster's line, *The whole
-   project*, the goals in one list, §126.2) are the first; a goal or *The whole project* pressed opens **the pane** with
-   its tabs; **the hand** lies at the foot of both. A lifted card and the temporary tab are screens of their own (§120.5).
+2. **Three screens for three parts** (§104.0, §128.1): **the goals** (the left column: the Orkmaster's line and the goals
+   in one list, §126.2, with the tabs' heads over the list, §134.4) are the first; a goal pressed opens **the pane**
+   through its step's tab, a tab's head pressed opens it on the whole project through that party; **the hand** lies at
+   the foot of both. A lifted card and the temporary tab are screens of their own (§120.5).
 3. **Back is the browser's**: each screen is a history entry (`history.pushState`), so the phone's back gesture and
    button go back a screen, a lifted card lowered first. Reloading opens the screen it was on.
 4. **The tabs are a row of heads** (§110.9: six at 44 px fit 390 px); the picked tab's party name in the pane's title.
-   **A party's header is one line**: its name, what it does, the squad's heads; a head pressed opens its popover as a
-   sheet from the foot. **Its views**: icons when three or four, else a list under the title (§110.9).
+   **A party's header is one line**: its name and the squad's heads (§134.3); a head pressed opens its popover as a
+   sheet from the foot. A party is one map (§134.2); the Orkmaster's *Board* and *Assets* are two icons.
 5. **A map at the narrow width**: cards as spec 67's tokens (74 px, 5:7) in rows that wrap; System opens on its
    containers (§112.4), which are few; a container pressed opens its parts as the next screen. No sideways scroll.
 6. **The hand at the foot**: spec 67's front card and fan; a card lifted from it is a sheet over the view it is about,

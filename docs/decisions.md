@@ -2363,3 +2363,38 @@ gone (§131.1). So (this makes §116.2, §121.3 and §126.2 precise):
    4% of Claude's week; 6% is left*); it never spends the person's reserve (spec 49 §2.3) without saying so on the button
    (*Start now, from your reserve*).
 The owner's call.
+
+## 134. Less said twice: what waits is the hand's alone; a party is one map; its header is its name and its squad; *The whole project* is no goal picked; a goal with nothing to settle starts on its decision (27 October, the owner and the PM)
+
+Why: read as one window after §133: *waits for you* is said three times (the row's sign, §126.2; the tab's signal mark,
+§110.3; the goal's stack in the hand, §121.2); after §112.9 a party has one or two views, and the second is the first
+seen another way (*Flow* is the links between *Screens*; *Journey* is the flow seen by a segment; Product's pains are
+pinned to the screens and the flow's steps, §112.7); a party's *Now* line (§126.3) lists the goals whose rows now carry
+its leader's head (§133.3), and its stance in one sentence says nothing that a leader's stance on a goal, in *Talk*,
+does not; *The whole project* only opens the Orkmaster's *Board* (§119.2); and a small goal asks three presses (its
+route, its decision, *Start*) where nothing is left to settle after the second. So (this changes §110.3, §110.4–§110.5,
+§112.7, §119.2, §126.2–§126.3, §132.3 and §133.2–§133.3):
+1. **What waits for the person is said by the hand alone** (§104.9: the hand is the count): a goal's row carries no
+   *waits for you* (its signs are the leader's head while it works, the hourglass while it waits for a step, the
+   failure's alert), and a tab no signal mark. A stack pressed picks its goal and opens its tab, as before.
+2. **A party is one map**: its tab shows one view, and no segmented control is drawn in a party's header. **Design's
+   map is the screens laid out along their flow** (§112.7: read from the pictures and the routes); **Product looks at the
+   same map** with its pains pinned to the screens and the flow's steps, and a segment picked over it as a filter (what
+   was *Journey*); a project with Product and no Design draws the same map under Product's tab. Tech's is *System*, Game
+   design's *Loop*; a party with nothing to read is its header alone (§112.9). The Orkmaster's tab keeps *Board* and
+   *Assets*, its two views the one segmented control left.
+3. **A party's header is its name and its squad**: the *Now* line goes (the rows' heads say it, §133.3), the leader's
+   stance in a sentence goes (a leader's stance is on a goal, in *Talk*, §118.1), and what the party does is said on the
+   leader's head's hover and in its popover (§110.7).
+4. ***The whole project* is no goal picked**: its row goes from the left column; pressing the picked goal again, or Esc,
+   lets it go, and the pane shows the whole project through the tab that is open (the pane's title: *The whole project ·
+   through Tech*). The left column is the Orkmaster's line and the goals (§132.3: the list alone is dealt in with the
+   first goal). On a narrow width the goals' screen carries the tabs' heads over the list: a head pressed opens the
+   whole project through that party, a goal its step's tab (spec 94 §3.2).
+5. **A goal with nothing to settle starts on its decision**: the card that confirms its decision (*Decided*, §118.1)
+   carries **Confirm and start** first and **Confirm** beside it. **Confirm and start** commits the decision, has the
+   sections written (§117.2) and, when they are joined with no fork and no open question (§117.3), starts the work by
+   itself, with no *Start* card; with a fork or a question left, those come to the hand and *Start* after them, as
+   before (§133.2). **Confirm** writes the sections and always waits for *Start*. The cost said on the route's card
+   (§133.1) is the whole way's, so starting by itself spends nothing that was not said.
+The owner's call.
