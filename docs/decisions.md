@@ -2335,3 +2335,31 @@ opens whole. So (this makes §116.1–§116.2 precise; part of the first slice, 
    default, nothing that must be chosen; a seat's tool and tier are changed later in its popover (§110.7). Offering the
    parties from the first goal's route instead is asked again if the owner finds people stopping there (§129.3).
 The owner's call.
+
+## 133. A goal's first card is its route: the parties, the cost and one press before any call; the row's sign is the head of whoever has the goal now; a goal waiting for the reset may start now (27 October, the owner and the PM)
+
+Why: the owner wrote the flow of a general goal as they expect it: the idea written on the blank card, routed by the
+Orkmaster on the cheaper tier, *a card in the hand: your idea was taken, these parties write its spec, it starts now or
+later*, *I agree* or the goal opened to change its parties, and on the goal's row the heads of the leaders it is with.
+Read against §116–§131 it holds, but for three things: the answer cards of §116.2 and the cost of §121.3 are two cards
+where one would do; a row's one sign (§126.2) says that a goal works but never whose it is; and a goal waiting for the
+limits to reset can only be stopped (§121.3), never started now. Priority stays out (§124.2), and *Process now* stays
+gone (§131.1). So (this makes §116.2, §121.3 and §126.2 precise):
+1. **A goal's first card is its route**, dealt as soon as the Orkmaster has routed it (code or the cheaper tier, §117.2,
+   never the stronger): the route as the leaders' heads in order, the cost (*This way: about 6 calls, about 4% of
+   Claude's week*, §121.3), its place in the Orkmaster's order (*3rd in Next*; never a priority, §124.2), and **Talk**
+   and **Later, by itself**. A head pressed takes its party off the route, **+** adds one of the project's; the cost is
+   said again at once, with no call. **No call is made for a goal before that press**, the short way (§118.2) too: its
+   card says *Tech alone: a bug skips Talk* and **Start**, with the long way offered beside it.
+2. **The hand after it follows the phases** (§118.1), nothing else: the route; Talk's questions (two rounds at most,
+   §121.2); the decision to confirm (*Decided*); the spec's forks (§117.3) and **Start**; while it works, only forks and
+   *out of the contract* (§104.9); *n goals ready for main* (§121.2).
+3. **The row's sign while the goal works is the small head of the leader whose step it is in** (§126.2's hourglass while
+   it waits for a step), turned as a card at work turns (§104.2); two steps at once show the earlier one's; a signal
+   covers it (the failure's alert, *waits for you*). A head is an accent, not a seventh sign (§127.3). The route whole and
+   the phase stay on the picked goal: the pane's title (*Waves · Talk*), the tabs' dots.
+4. **A goal waiting for the reset may start now**: its row says *Starts by itself after the reset, Mon 09:00*; picked,
+   its route card carries **Start now** beside **Don't start**, with what it spends of the limits left said plainly (*about
+   4% of Claude's week; 6% is left*); it never spends the person's reserve (spec 49 §2.3) without saying so on the button
+   (*Start now, from your reserve*).
+The owner's call.
