@@ -2180,3 +2180,19 @@ types are chosen by the Orkmaster or the leader, no longer by the person):
    **An idea addressed to a party** puts the pane's view, already that party's, in picking: a press on a part of
    System, a screen or a pain pins it to the blank card as a mark. §53's Text, Code, Screen, Pain switch goes.
 The owner's call.
+
+## 125. The blank card takes a voice: a microphone writes the words into the field, never sends them; where the voice goes is said plainly (27 October, the owner)
+
+Why: the owner: an idea is often faster said than typed, as people talk to a chatbot today. So (§124.1 widened):
+1. **A microphone on the blank card**, beside the field: pressed (or held, on the phone), it listens and **writes what
+   it hears into the field**, as it comes; a press again stops it. **It never sends**: the words stay to be read and
+   corrected, Enter sends them as typed ones (§124.1). Any language the person speaks; the words are kept as said.
+2. **Where the voice goes is said plainly before the first use**, and in the microphone's tip: recognised on this
+   computer when the host has a local recogniser; else by the browser's own (*Your voice goes to Google to be written
+   down*, Chrome's), the person's yes asked once; on the phone, the phone's own dictation. No recording is kept, nothing
+   is sent to a model as sound.
+3. **No microphone without a way to recognise**: a browser and host with none show no button (never a button that
+   fails); the keyboard's dictation (the computer's, the phone's) still writes into the field as into any.
+4. Listening is a signal while it lasts (the field's edge in the signal's colour, a slow pulse; still under reduced
+   motion), so a microphone left on is never missed.
+The owner's call.
