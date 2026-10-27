@@ -2418,3 +2418,64 @@ whose craft is exactly those assets, has had no map (§112.9). So (this changes 
    map): a card lifted shows it large and plays it, a changed one turns to its version before, the variants not picked
    lie under the one picked (§104.11); an idea addressed to Art picks a card there (§124.5).
 The owner's call.
+
+## 136. What §132–§135 left uneven: one meaning for the hourglass, a cost said again when the route grows, no Assets button, recurring rounds and the wait as signs, how the project runs on System, Stop all on the phone, the picking mode, a goal at work through the Orkmaster is its Board, Agents goes; the first slice counted again (27 October, the owner and the PM)
+
+Why: §104–§135 read through once more: §133.3 gave the hourglass a second meaning (§127.3: one each); a leader may add
+a step after the route's press (§117.1) while *Confirm and start* (§134.5) leans on the cost said before it; under Art's
+tab the Assets button (§135.3) opened Art's own map, and a lens shows the assets of its craft better than a table apart;
+recurring rounds (§122.6) and the wait for the reset (§121.3) did not fit §133.1 and §126.2; how the project runs had no
+place once *Overview* went (§111.5, §126.3); the phone had no room for the limits and *Stop all* (§126.1, spec 94); and
+Agents repeats the Board, the limits' chips and the seats' popovers. So (this changes §104.10, §107.1, §110.7, §111.5,
+§114.1, §120.2, §123.2–§123.3, §126.4, §133.1–§133.4, §134.1, §134.5 and §135.2–§135.4):
+1. **The hourglass means one thing: a member works on it now**, where no head stands for it (a card on a map, the
+   Board). A goal's row: the head of the leader whose step it is in while it works (§133.3), **no sign** while it waits
+   for a step.
+2. **A cost changed is said again**: a step added after the route's press (§117.1) takes away *Confirm and start*'s own
+   start (§134.5); a *Start* card comes with the new cost, the old one beside it.
+3. **No Assets button: a lens shows the assets of its craft.** **Art's map** is its assets (art and icons, sound, music,
+   clips, §135.4); **Design's map** has the screens' pictures as its cards and, at its foot, a band of what they use
+   (the logo, icons, fonts); **Tech's System** carries the files: a part's files on its lifted card's back (§120.1), a
+   file opened as the temporary tab. A kind whose craft has no party in the project lies on Design's band, else among
+   System's files. A goal's assets are its *Result* (§104.11) and the changed cards of the maps. The pane's title keeps
+   **▶ Play** alone.
+4. **A recurring goal's rounds** (§122.6) take no route card: their cost is said once, when the goal is made (*each
+   round: about 2 calls, about 1% of Claude's week*), and each round starts by itself.
+5. **Waiting for the reset is a sign, not a line**: the moon (§127.3's, freed when the night went, §131.2) means *starts
+   by itself later*; the hour on its hover and on the route card (*Starts by itself after the reset, Mon 09:00*, **Start
+   now**, §133.4).
+6. **A goal's row signs are**: the leader's head (it works), the alert (it failed), the moon (it waits for the reset),
+   *done* (§130.1), or none. What waits for the person is the hand's alone (§134.1).
+7. **How the project runs is on System's containers**: a container's lifted card shows its command, its port and its
+   last lines; a Play that did not start opens its lines as the temporary tab and lifts the container that failed (this
+   moves §111.5 off the gone *Overview*).
+8. **On a narrow width** *Stop all* stands always on the Orkmaster's line; the limits' chips are in its menu, a chip
+   pressed still showing what used it (§107.1; spec 94 §3.4).
+9. **The picking mode and the narrow width are decided as spec 94 says**: picking a part for an idea is a mode that is
+   always seen (spec 94 §1.5; §124.5 made precise), and the window is narrow under 760 CSS px of its width (spec 94
+   §3.1).
+10. **A goal through the Orkmaster's tab at *Work* is its Board**: the Board's cards filtered to its tasks, their
+   members' heads on them (§126.4's *the will-be* moves): who does what. Its will-be is on its step's tab, its ghosts
+   filling the progress (§104.6), and picking a goal at work opens that tab first (§110.3), so the contract is seen
+   before the tasks.
+11. **Agents goes** (spec 36's monitor): the tasks at work are the Board's; what a role spends, the limits' chips
+   (§107.1); a role's text is read from its head's popover as the temporary tab (and written there for a role of the
+   person's own); a seat is added by its ghost (§110.6). §110.7's *its role on Agents* and §120.2's *a role of Agents*
+   read so.
+12. **The first slice, counted again** (§123.2; at the owner's yes, §129.2), on the owner's Node party game:
+    - **before it**, what goes goes: §131's list and Agents (11), so nothing new is built around them;
+    - **the slice**: parties by craft, the project's stage at the first opening, the route and the sections (§109,
+      §116.1, §117, §122); the window of three parts that grows from what there is (§120, §126.1, §132), the left column
+      the Orkmaster's line and the goals (§126.2, §127.2, §134.4); the Orkmaster's tab *Board* alone and the leaders'
+      tabs, each header its name and squad, its seats' popovers, *New party* as the temporary tab, no dialog (§110,
+      §127.1, §134.3, §135.1); one map, Tech's *System*, as it is read today; the blank card as a message, addressed by
+      *@* or the open tab (§124.1–§124.4); the phases with the route card and its cost, *Talk*, *Decided* with *Confirm
+      and start*, the forks and *Start* (§118, §121.3, §133.1–§133.2, §134.5, 2); the hand by goal, the one place of
+      what waits (§121.2, §134.1); the row's signs and a goal done until it is seen (§130.1–§130.3, 1, 6); a goal at work
+      through the Orkmaster (10); the words (§121.1) and the closed set of signs in orkUI (§127.3); spec 94 §1's rules;
+    - **after it, in this order**: the lenses (Design's and Product's map, Game design's *Loop*, Art's map, the assets in
+      them, picking on them: §112.7–§112.8, §134.2, §135.4, 3, 9); Play of a goal and of several processes, System read
+      anew and how it runs (§111, §112.1–§112.6, §113, 7); one page for the phone (§128, spec 94 §2–§5, 8); the wait
+      for the reset, *Start now* and recurring goals (§121.3, §133.4, §122.6, 4, 5); the voice (§125), the history
+      (§130.4), Settings made small (§127.4), the reveal *Since <version>* (§112.5).
+The owner's call.

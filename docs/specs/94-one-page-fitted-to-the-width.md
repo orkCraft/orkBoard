@@ -36,7 +36,7 @@ outbox keeps. No new concept, so nothing new in `TERMS`; *narrow* and *wide* are
 3. **A press is at least 44 × 44 px** under `pointer: coarse` (the visible thing may be smaller, its target is not).
 4. **What opens is a screen's or a sheet's at the narrow width** (§3): a popover, a lifted card, the temporary tab. A face
    is written once and told where it lies, never drawn twice.
-5. **Picking a part for an idea is a mode the person sees** (§124.5 made precise; this spec's, the owner's yes asked).
+5. **Picking a part for an idea is a mode the person sees** (§124.5 made precise; decided in §136.9).
    An idea addressed to a party (**→ Tech ×**) puts its party's view in picking only while the blank card holds the caret
    or its text: a line over the view says **Pick a part to point at it** and **Done**. In picking, a press on a part
    (of System, a screen, a pain) **pins it** to the blank card as a mark (its name and ×) and never lifts it; with the
@@ -73,7 +73,8 @@ outbox keeps. No new concept, so nothing new in `TERMS`; *narrow* and *wide* are
    button go back a screen, a lifted card lowered first. Reloading opens the screen it was on.
 4. **The tabs are a row of heads** (§110.9: six at 44 px fit 390 px); the picked tab's party name in the pane's title.
    **A party's header is one line**: its name and the squad's heads (§134.3); a head pressed opens its popover as a
-   sheet from the foot. Every tab is one map (§134.2, §135.1); *Assets* and *Play* stand in the pane's title (§135.2).
+   sheet from the foot. Every tab is one map (§134.2, §135.1); *Play* stands alone in the pane's title (§136.3).
+   **Stop all** stands always on the Orkmaster's line; the limits' chips are in its menu (§136.8).
 5. **A map at the narrow width**: cards as spec 67's tokens (74 px, 5:7) in rows that wrap; System opens on its
    containers (§112.4), which are few; a container pressed opens its parts as the next screen. No sideways scroll.
 6. **The hand at the foot**: spec 67's front card and fan; a card lifted from it is a sheet over the view it is about,
