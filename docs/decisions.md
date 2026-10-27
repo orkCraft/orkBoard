@@ -2271,3 +2271,18 @@ changes §123.1 and every *Measured* of §104–§128: §104.14, §109.8, §117.
    order stay; *after it is measured* reads *after the owner's yes*.
 3. Where a decision said *asked again if the measures show* (§119.4, §120.4), it is asked again when the owner says so.
 The owner's call.
+
+## 130. A goal done stays in the list until its result is seen, then leaves it; the done goals are a history, the temporary tab (27 October, the owner)
+
+Why: today a goal done goes to *Flags · n* folded at the foot of its party (`js/arena/goals.js` `FlagsFold`, spec 73 §3),
+with *k wait for main* over it: a fold seldom opened that only grows, two counts the list may not show (§67, §126.2), and
+*wait for main* is the hand's *n goals ready for main* already (§121.2). So (this changes §126.2's *Done folded at its
+foot* and spec 73 §3):
+1. **A goal done stays in its place until its result is seen**: faint, with the sign *done*; once the person has opened
+   its *Result* or seen its changes on a map's reveal, it leaves the list. Nothing done leaves unseen.
+2. **Nothing of main in the list**: *wait for main* is the hand's card alone.
+3. **No *Flags* fold**: the left column is the goals at work, waiting or not yet seen.
+4. **The history is the temporary tab**, from the Orkmaster's line's menu beside *Settings* and *Operations*: the goals
+   done by release (*Out in 1.4*), else by week, with a search; a goal pressed opens its *Result*, its route and what it
+   cost.
+The owner's call.
