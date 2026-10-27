@@ -1980,3 +1980,27 @@ So (this changes §107.6 and §110.2):
    (spec 52 §4.2). **Typing first is never blocked**: the caret is in the card from the start, and while the person
    writes the Orkmaster lights the row's card it guesses (§107.6), a guess never picked for them.
 The owner's call.
+
+## 117. The Orkmaster routes and gathers, never writes a spec: each leader on a goal's route writes its own part, the Orkmaster joins the parts, and what they disagree on is a fork (27 October, the owner and the PM)
+
+Why: §109.2 had the first step's leader write the one spec, *its theses by craft*: a Game designer does not write what Tech
+must check in the architecture, so each step's own reviews were lost; and a goal sent as *The whole way* (§116.3) to the
+Orkmaster alone would skip them too. The Orkmaster says what and who (§104.0), the leaders how and why. So (this makes
+§109.2 precise):
+1. **A party picked** (§116.3's first row): that party's leader writes the spec, the route starting at it; when the work
+   needs other parties, it adds their steps and the Orkmaster confirms them; each added leader writes its part (2).
+2. **The whole way**: **the Orkmaster only routes** (a cheaper call, §86.4: which parties, in what order); then **every
+   leader on the route writes its own part** of the spec at once (parallel calls): its craft's theses (*Done when*), its
+   reviews and checks, its questions; the leaders after the first step on the cheaper tier.
+3. **The Orkmaster joins the parts**, on the cheaper tier, and is held to it: **it never changes a part's words** (the
+   theses, the checks, the how are the leaders'); **what two parts disagree on is a fork** in the person's hand, both
+   sides with each leader's why (*Game design: ten waves · Tech: the server holds six*), never settled by it; **the
+   hand's three questions** (§102.1) are picked by rule, not taste: those the work cannot start without first, then by
+   the route's order; the others are closed by their leaders' defaults, written in their parts and seen in the spec. No
+   leader is above another: inside a party its leader, between parties the Orkmaster.
+4. **After *Start*** each leader keeps its part and plans its own step (§109.2); a part changed after the start (§75)
+   is checked by the Orkmaster against the other parts (§86.2).
+5. **A small goal** (a bug, a balance pass) has a route of one party: one leader, one part, as today.
+6. **Measured**: what the parts cost before the start against the forks and *out of the contract* cards they spare
+   later.
+The owner's call.
