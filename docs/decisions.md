@@ -1952,3 +1952,31 @@ every text pair AA, the ink AAA), so only the hue moves. So (§106.1 and §106.2
    System, a goal's spec, the left column), as §106's three were; the owner picks, and the one not picked is not copied.
 3. Colour stays a signal (§53.5); the pixel face, IBM Plex and the sizes of §106.3 are unchanged.
 The owner's call, after the side by side.
+
+## 116. Parties are made when a project is first opened, in the Orkmaster's tab; a new goal is the blank card of the hand; its kind is picked in two short rows: the whole way or one party, then that party's kinds (27 October, the owner and the PM)
+
+Why: the owner: parties are made far more seldom than goals, yet *New party* stands beside *New goal* (§107.6); the
+first goal's way is not understood, while people know writing at the foot of the window (Claude, Codex, Antigravity),
+and here everything the person does is cards in the hand; and picking a goal's kind shows a long list of cards at once.
+So (this changes §107.6 and §110.2):
+1. **Opening a project is the Orkmaster's first tab**: with no project open, the Orkmaster's tab is *Open a project*, in
+   the pane, never a dialog: the recent projects, a path, and the folders the host lists (a page cannot browse the
+   disk). **The parties follow at once**: the Orkmaster reads the project's kind and lays out the parties it needs by
+   craft (§109.1), each ticked, with its size and squad; the person leaves out what they do not want, and one *Start*
+   makes them. A project open with no party opens the same tab. After, a new party is the small *+* at the tabs' end
+   (§110.3); §107.6's row of *Parties* goes.
+2. **A new goal is the hand's blank card**, always at the hand's left: its own shape (a dashed edge, a caret, *New
+   goal*), never mistaken for a decision. Written and sent, it is dealt to the Orkmaster (§89's deal) and the goal comes
+   into the left column; the answers come as cards in the hand (its party, its route, the leader's questions); no talk
+   piles up, a goal is not a chat. **While the project has no goal**, the blank card lies large in the pane's middle with
+   two or three examples read from the project with no model (*Add waves of enemies in server/game*); after the first,
+   it goes to the hand. **One field** (§104.4): the field at the left column's head (§110.2) goes.
+3. **Its kind in two short rows, both optional** (the text alone is enough, §53): the blank card pressed lays **the
+   first row**: **The whole way** first (a goal that goes through every party it needs: a new feature; the Orkmaster
+   deals its route, §109.2), then **a card a party** the project has (Game design, Design, Tech, …: a goal of that
+   party's step alone, or starting there). A party's card pressed lays **the second row under the first**, the first
+   row kept (so the way back is in sight): that party's kinds (spec 52's goal types: *An icon* for Design, *Better
+   architecture* for Tech), at most five and *More kinds…*. A kind sets the route's first step and the lens open first
+   (spec 52 §4.2). **Typing first is never blocked**: the caret is in the card from the start, and while the person
+   writes the Orkmaster lights the row's card it guesses (§107.6), a guess never picked for them.
+The owner's call.
