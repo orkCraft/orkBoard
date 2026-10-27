@@ -2621,3 +2621,22 @@ does a task, not who leads). The owner chose the tabs as the columns' heads over
 4. **At the narrow width the same**: the row of heads (§110.9) heads the columns, each a head's width, its tasks as
    tokens with their element, their member's head and their sign (the name on a lifted card, spec 94 §1.1).
 The owner's call.
+
+## 144. The card battler kept: a card is played onto its party's lane, a card that spends carries its cost in its corner, the lane it is about rises while it is held (27 October, the owner and the PM)
+
+Why: the owner wants the window to keep its reference to a card battler: the Board's columns under the leaders' heads
+(§143) are its lanes under the heroes, the hand at the foot and the field's motions (§89) its cards. Kept within the
+rules: a head is a small accent, never a hero's portrait (CLAUDE.md); a view is looked at, never cast (§110.5: no
+cooldown, glow or burst); no count anywhere (§67), so no lane's power, no score, no hero's life and no opponent: the work
+is not a fight. So:
+1. **A card is played onto the table**: on *Start* (or *Confirm and start*, §134.5) the goal's card leaves the hand for
+   the lane of the party of its first step, on the Board (§143), and is laid out there as its tasks, their members' heads
+   coming over them. It is §89's *dealt*, from the hand to the lane: no new motion (§127.3), still under reduced motion.
+2. **A card that spends carries its cost in its corner**, as a battler's card its mana: the route card, *Start*, *Start
+   now*, *Release a version* and *Retry* show their share of the limits (*4%*) small at the bottom left, framed, with its
+   words on the card as always (*about 4% of Claude's week*, §121.3); the limits' chips read as what is left to spend
+   (§107.1). A card that spends nothing (a question of *Talk*, a fork, *To main*) carries no cost, so what is free is seen
+   at once. The cost's frame is drawn in orkUI first (§127.3), not a seventh sign: it is the place of a number.
+3. **The lane a held card is about rises**: while a card of the hand is lifted (§104.8), the lane, or the cards of a map,
+   it is about lie a little raised, as a battler shows where a card will be played; §89's *lifted*, no new motion.
+The owner's call.
