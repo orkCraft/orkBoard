@@ -1938,3 +1938,17 @@ precise):
    *Start* button stands in a row. Where a row shows ↻, it is a true button that only lifts the same card, never retries
    at once.
 The owner's call.
+
+## 115. Warm at half its tint, to be tried: the same lightness, half the warmth (27 October, the owner)
+
+Why: the owner, after living with §106's warm: *it is too warm.* The warm greys tint the ground brown and the ink
+yellow. Taking half the tint off each token and keeping its lightness keeps §106's measures (the ink 13:1 on the canvas,
+every text pair AA, the ink AAA), so only the hue moves. So (§106.1 and §106.2 to be tried again):
+1. **orkUI 0.14.0, a palette to try** (made in orkUI, copied here as §53 says; Orkboard carries no colour of its own):
+   each warm token mixed halfway to the grey of its own lightness: canvas `#151412`, panel `#1e1c1a`, the table
+   `#1a1816`, raised `#282622`, frame `#3a3832`, edge `#908a82`; ink `#dedbd6`, muted `#aca8a1`, faint `#96928c`.
+   The ratios are measured again in orkUI before it is copied.
+2. **Seen before it is taken**: drawn beside warm (0.13.0) and soft (0.12.0) on the same screens (the Tech party's
+   System, a goal's spec, the left column), as §106's three were; the owner picks, and the one not picked is not copied.
+3. Colour stays a signal (§53.5); the pixel face, IBM Plex and the sizes of §106.3 are unchanged.
+The owner's call, after the side by side.
