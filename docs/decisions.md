@@ -2529,6 +2529,6 @@ named. So (this changes §118.1, §124.2, §130.1, §132.4, §133.1, §136.3, §
    *Operations* and the history (§127.2, §130.4); once Tech is made, they are on System (§136.3).
 6. **A recurring round within the limits starts by itself** (§136.4); near them, it waits for the reset under the moon
    (§136.5), as any goal, and never spends the person's reserve.
-7. **A goal's decision is committed to dev** (§118.1), with its goal's work; it reaches main with the goal, by *To main*
-   (§137.4).
+7. **A goal's decision is committed to dev** when it is confirmed (§118.1); it reaches main with the goal's work, by
+   *To main* (§137.4).
 The owner's call.
