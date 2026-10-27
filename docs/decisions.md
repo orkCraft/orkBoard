@@ -2220,3 +2220,42 @@ System's table has a bar of controls over it. So (this changes §107.1, §104.8,
    that goal's other marks (the goals' buttons over the table go); *Rearrange* and *Since <version>* (§112.5) move to
    the tab's menu (**…**). The table begins under the header.
 The owner's call.
+
+## 127. No dialogs; Operations off the left column; one closed set of signs and motions; Settings only for what lives nowhere near the work (27 October, the owner and the PM)
+
+Why: after §109–§126 almost everything has a standing place (the pane, the temporary tab, a head's popover, a card in
+the hand); the dialogs left (*New party*, *Edit the party*, the question before removing a party) are a fourth way of
+asking. §122.2 put Operations back as the row they had before §108, against §126.2's one list of goals. The signs and the
+field's motions grew one decision at a time. And Settings still holds what moved beside the work. So:
+1. **No dialogs**: *New party* (the tabs' *+*) opens §116.1's layout of crafts by the project's stage as the temporary
+   tab; *Edit the party* goes (the seats, tools and tiers are the header's popovers, §110.7; the leader changed and the
+   party removed from the tab's menu, **…**); a question before an act (removing a party, a goal) is a card in the hand,
+   never a modal window. A question to the person is always a card.
+2. **Operations off the left column** (§122.2 made precise): reached from the Orkmaster's line's menu, beside *Settings*,
+   as the temporary tab; the left column is the goals alone (§126.2).
+3. **One closed set of signs and motions, kept in orkUI**: at most six signs and six motions, each one meaning; a new
+   thing takes one of them or replaces one, never adds a seventh. Made in orkUI first (§53), the set read against
+   today's (the goal's element, the signal's colour, the alert, the hourglass, *waits for you*, the moon; dealt, sealed,
+   crumbled, ghost, turned, lifted, the microphone's pulse). **The moon of a goal's progress goes** (§89): the will-be's
+   ghosts filling are its progress (§104.6).
+4. **Settings is only what lives nowhere near the work**: the account, the AI tools connected, the paired phones, the
+   project's paths (`docs/decisions.md`, §118.1, `.orkcraft/checks.toml`'s Play, §113); a seat's tool and tier are its
+   popover's (§110.7), the project's stage its first tab's (§122.5), the voice its microphone's (§125.2). A setting of a
+   party or a goal lives there, never in Settings.
+The owner's call.
+
+## 128. After the first slice, one face for the desktop and the phone: one page fitted to the width, the phone's app its frame (27 October, the owner and the PM)
+
+Why: the desktop (`static/board.js`, `js/shell`, `js/board`, `js/arena`) and the phone (`pwa/board-app.js`,
+`pwa/shell-*.js`) are two faces of the same window; every decision says its phone's half (§110.9, §120.5, …) and is built
+twice. After §109–§127 the window is one structure (the goals, the leaders' tabs, the pane, the hand); on a phone the
+same parts a screen each. So:
+1. **One page fitted to the width**: on a narrow screen the goals are the first screen, the pane and its tabs the next
+   (the tabs a row of heads, §110.9), the hand at the foot, a lifted card and a temporary tab screens of their own
+   (§120.5); spec 67's rules (no sideways scroll, the phone's sizes) are the narrow width's. The phone's PWA is its frame
+   (its cache, its pairing), as the VS Code extension is the desktop's (`vscode/`).
+2. **When**: after the first slice is measured (§123); the slice is built on the desktop alone, its specs written for
+   one page fitted to the width, so nothing of it is built twice. Until then the phone stays as it is.
+3. **Then the phone's own face is removed** (`pwa/shell-*.js`, `pwa/board-app.js`'s screens), its tests moved to the
+   page's at the narrow width; `tests/test_architecture.py` keeps one face.
+The owner's call.
