@@ -1844,3 +1844,45 @@ play; and a goal's new part cannot run alone (waves need the whole game). What T
    lines, §107.3), not to the Orkmaster.
 6. **The phone**: Play stays the computer's (spec 88 §7); a goal's row says *Play it on the computer*.
 The owner's call.
+
+## 112. System reads what the project really is, a container a card first; a change on a map says who decided it; the lenses of judgement are drawn from what the project has, and the ones with nothing to read wait (27 October, the owner and the PM)
+
+Why: `system_overview.read` run on Orkboard itself (a Python host, a JavaScript page, a VS Code extension) found no link
+at all, though the host and the page talk all day over a WebSocket (`ask("ideas.x")`) and the extension starts the host
+(`orkboard --serve`); its ways in held test files (`listen`), its parts `docs/…` and `vendor/`, and its layers had no role
+(`core`, `realm`, `gui` match no folder role), so the rows said nothing. And §104.14's phase 1 asks *did the owner see
+what an agent decided alone*: no map says who decided a change. The lenses beyond Tech's (§104.1) were listed by craft,
+some with nothing in the project to read them from, which §104.3 forbids. So:
+1. **The links a project really has**: beside `fetch` and `socket.emit`, the patterns of a command or RPC channel (a
+   name a client sends and a host dispatches: `ask("x")` / `"x":` handlers, JSON-RPC, tRPC, gRPC, a WebSocket's message
+   types) and a process one container starts of another (`spawn`, `exec`, a CLI's name in its scripts); the arrow named
+   as now (*commands: 40 · starts*).
+2. **Nothing that is not the project's working code**: tests are never a way in (a `listen` under a test folder or in a
+   test file), and `docs/`, vendored copies (`vendor/`, a folder with its own licence beside a copied library) and
+   generated output are not parts.
+3. **Layers that say something**: a layer's role from the folder roles when they match; else the rows are named by the
+   axis (*Nothing uses these* at the top, *Everything uses these* at the bottom), never left blank; and a project's own
+   words when it has them (its CLAUDE.md's or README's *Where code goes*, read with no model: a heading and the folders
+   it names).
+4. **A container is a card first**: System opens on one card a container (its stack, its ways in, its marks of change)
+   and the named arrows between them; a press opens the container's parts (§109.5's *Feature modules*, laid in its
+   layers). The architecture in a minute is the measure.
+5. **The reveal from a chosen point** (§104.12 made precise): *Since your last look* by default, *Since <version>* when
+   the project has a release, picked over the table.
+6. **A change on a map says who decided it**: a changed, new or gone card carries, beside its goal's element, **the
+   person** (an answer of theirs in the hand or the spec), **the leader** (written in the spec or its plan), or **a member
+   alone** (made by a task and promised nowhere): the last in the signal's colour, with *out of the contract*'s card
+   when the will-be was set (§104.9). Read from the spec, the plan and the answers, with no model.
+7. **Design's *Screens* and *Flow* and Product's pains are read from the project**: the screens from §102's pictures and
+   the routes (a router's table, a `pages/` or `screens/` folder), the flow from the links between them; Product's pains
+   are pinned to a screen or a step of the flow, never a free list (§53's Pain, kept in `segments.json`, gains its
+   place). *Journey* is the flow seen by a segment.
+8. **Game design's *Loop* is a frame of four to six cards** the person and the leader keep (§104.3's judgement, marked as
+   theirs), each tied to the parts and configs it rests on (`config/balance.ts`), so a goal that changes them shows on
+   the loop.
+9. **Cut, or wait for something to read**: *Storyboard* goes (the flow and the screens hold it); *Versions* goes (the
+   hand's *n goals ready for main* and a goal's *Result*); *Economy*, *Levels*, *Channels* and *Metrics* wait until the
+   project has where they are read from (configs, levels' files, analytics), never a model's drawing of cards.
+10. **A leader's views are the library's**, beside its `STAGES` (§104.8): a party shows the views its leader has there,
+   never by testing which slug leads it.
+The owner's call.
