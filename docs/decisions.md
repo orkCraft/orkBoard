@@ -2061,3 +2061,27 @@ down. So (§110.3 made precise):
 4. **Measured**: the tabs' switches; if the person lives on *Board* and seldom opens a party's tab, *Board* as the
    window's default is asked again.
 The owner's call.
+
+## 120. No right column: a card of the map is lifted and turned where it lies; what is read long opens as the pane's one temporary tab; the window is three parts again (27 October, the owner and the PM)
+
+Why: after §110–§119 what stood in the right column (§105.2) has a better place each: the spec reads under the tabs
+(§118.4), Play is a temporary tab (§111), a result's acts are the hand's cards (§104.9), Agents went from the top bar and
+Files to the Orkmaster's Assets (§107.1), a seat's settings are its popover (§110.7). What is left is either a quick look
+at a card of the map or a long read, and the column made a fourth part of a window of three (§104.0) and moved the
+pane's width each time it opened (§105.2), the reveal with it. So (this changes §105.2 and makes §104.8 precise):
+1. **A card of the map is lifted where it lies**: a part of System, an asset, a link between containers, a task on the
+   Board: pressed, it rises a little over its place and **turns over**: its back the details (a part's files, *Uses*,
+   *Used by*, its changes and their goals; a task's *What it made* and its last lines; a link's routes and events). Again,
+   Esc, or a press away lowers it. **It stays small**: at most twice a card, beside its place, never over the cards it
+   is about; whatever needs more room opens as the temporary tab (2). §105's *not over the pane* holds by that.
+2. **A long read is the pane's one temporary tab** (§104.8: at the end of the tabs, ×, *Back*, replaced by the next
+   unless pinned): a diff, a task's whole log, a failure's lines, an asset or a canvas's file large (the pane's whole
+   width, wider than the column was), the agents' full text behind *More*, a role of Agents, Play. On it, what it is
+   about stays lit on the map for *Back*.
+3. **The pane's width never moves**: no column opens or closes beside it.
+4. **Side by side** (a diff beside the map) is not made now; asked again only if the measures show people going back and
+   forth between a temporary tab and the map. Never as a standing column.
+5. **Moved one kind at a time**: the spec first (§118.4), then diffs and logs to the temporary tab, then the lifted
+   cards; the column's code is removed when nothing opens in it. On the phone (spec 67) a lifted card and a temporary tab
+   are screens of their own, as today.
+The owner's call.
