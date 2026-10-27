@@ -2286,3 +2286,23 @@ foot* and spec 73 §3):
    done by release (*Out in 1.4*), else by week, with a search; a goal pressed opens its *Result*, its route and what it
    cost.
 The owner's call.
+
+## 131. What the new window does already goes: *Process now*, the night, the gate's line, collisions as stops, a goal type's sign, the row's peek, the analytics page, the canvases (27 October, the owner)
+
+Why: each of these is done by a thing of §109–§130 or no longer needed. So:
+1. ***Process now* and *Judge now* go** (spec 73 §1, spec 65 §8): the Orkmaster routes a new idea by itself (§117,
+   §118), and *Later, by itself* (§121.3) starts it after the limits reset.
+2. **The night goes** (spec 83, *night tonight*): one way of starting later, *Later, by itself*: at night or after the
+   limits reset, said on the goal's row.
+3. **The gate's quiet line in the project's line goes** (§105.2): *n goals ready for main* is the hand's card alone.
+4. **Collisions are no stops of their own** (§86.1–§86.2): two goals changing the same thing is a fork in the hand and
+   one mark on both goals' cards of the map; found by code and judged on the cheaper tier as before.
+5. **A goal type's sign goes from the row** (spec 52 §3.2): the row is its element, name and one sign (§126.2); the type
+   is the Orkmaster's (§124.3).
+6. **The row's peek on hover goes** (spec 73: the board showing only a hovered goal's cards): a goal is picked with one
+   press (§119).
+7. **The analytics page goes** (`realm/analytics.py`'s page, its face): no measures (§129); what used the limits is the
+   limit's chip pressed (§107.1), a goal's cost its history (§130.4).
+8. **The canvases go** (spec 78; §105.2 made them a kind of Assets): their kind leaves Assets, their files stay the
+   project's.
+The owner's call.
