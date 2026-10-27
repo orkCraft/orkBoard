@@ -2564,3 +2564,14 @@ step (§137.1); and the picking mode's *Done* (spec 94 §1.5) is a goal's phase'
 3. **The route card's *+* offers the parties that can be a step**: every party of the project but Release (§137.1).
 4. **The picking mode ends on *Stop picking***, Esc, sending the idea or taking off its party's mark (spec 94 §1.5).
 The owner's call.
+
+## 141. An idea addressed to a party may pin any card of that party's map (27 October, the owner)
+
+Why: §124.5 names what an addressed idea may point at (*a part of System, a screen or a pain*), written when those were
+the only maps; Art's map (§135.4), Game design's *Loop* (§112.8) and Release's map (§137.3) came after, and each would
+need its line. So (this changes §124.5 and §135.4's last clause):
+1. **In picking (spec 94 §1.5), any card of the addressed party's one map (§134.2) is pinned** to the blank card as a
+   mark: a part of System, a screen, a pain, an asset, a card of the loop, a goal on Release's map, and whatever map
+   comes later, with no list to grow.
+2. A general idea (the Orkmaster's tab, no party addressed, §124.4) has no picking: it is its text alone.
+The owner's call.
