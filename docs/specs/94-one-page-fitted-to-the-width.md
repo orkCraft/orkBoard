@@ -22,7 +22,7 @@ spec 37 §8); a tablet's own layout (a wide tablet gets the wide one); Play on t
 
 ## 0. The words
 The narrow width says what the wide one says: one wording, one place it is written. New: the blank card's **Send** (§3.6,
-the narrow width only); the picking line **Pick a part to point at it** and **Done** (§1.5). Kept from the phone as they
+the narrow width only); the picking line **Pick a part to point at it** and **Stop picking** (§1.5, §140.4). Kept from the phone as they
 are: *As of 14:02.* and its reason while the computer cannot be reached, and *Sent when the computer answers* on what the
 outbox keeps. No new concept, so nothing new in `TERMS`; *narrow* and *wide* are the code's words, never the person's.
 
@@ -38,9 +38,9 @@ outbox keeps. No new concept, so nothing new in `TERMS`; *narrow* and *wide* are
    is written once and told where it lies, never drawn twice.
 5. **Picking a part for an idea is a mode the person sees** (§124.5 made precise; decided in §136.9).
    An idea addressed to a party (**→ Tech ×**) puts its party's view in picking only while the blank card holds the caret
-   or its text: a line over the view says **Pick a part to point at it** and **Done**. In picking, a press on a part
+   or its text: a line over the view says **Pick a part to point at it** and **Stop picking**. In picking, a press on a part
    (of System, a screen, a pain) **pins it** to the blank card as a mark (its name and ×) and never lifts it; with the
-   mode off, a press lifts it as always (§120.1). **Done**, Esc, sending the idea or taking off **→ Tech** ends it. On a
+   mode off, a press lifts it as always (§120.1). **Stop picking**, Esc, sending the idea or taking off **→ Tech** ends it. On a
    touch screen there is no hover to tell the two presses apart, so the mode is always seen, at both widths.
 6. **Each browser test of the slice runs at both widths** (`tests/narrow.py`: 1280 × 800 and 390 × 844 with touch): no
    sideways scroll at 390, every press of §1.1 reaches what the hover showed.

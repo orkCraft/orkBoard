@@ -2548,3 +2548,19 @@ at the left, its will-be on its map at the right, §118.4); an idea addressed to
 3. **When the route changes**, the next opening follows it: a step added (§117.1, §133.1) makes it a goal of several
    parties; steps taken off to one make it a goal of one. The tab the person has open is never switched under them.
 The owner's call.
+
+## 140. The Orkmaster's tier is not chosen; a head on the route card is taken off by its ×; *+* never offers Release; the picking mode ends on *Stop picking* (27 October, the owner and the PM)
+
+Why: read again after §139: the Orkmaster's header offers its tier (§110.4, §135.1) though it routes and joins on the
+cheaper tier, never the stronger (§117.2–§117.3, §133.1), so the choice changes nothing; a head pressed on the route card
+takes its party off (§133.1) where a head pressed anywhere else opens its popover (§110.7), one gesture with two
+meanings and a party lost by a slip; the route card's *+* offers any of the project's parties though Release is never a
+step (§137.1); and the picking mode's *Done* (spec 94 §1.5) is a goal's phase's word too (§118.1; one word a thing,
+§121.1). So (this changes §110.4, §133.1, §135.1 and spec 94 §0, §1.5):
+1. **The Orkmaster's header shows its AI tool alone**; its tier is always the cheaper, said in its popover (*Routes and
+   joins on the cheaper tier: it never writes a spec*, §117).
+2. **On the route card a head is taken off by its ×**, small at its corner; a press on the head opens its popover, as
+   everywhere (§110.7).
+3. **The route card's *+* offers the parties that can be a step**: every party of the project but Release (§137.1).
+4. **The picking mode ends on *Stop picking***, Esc, sending the idea or taking off its party's mark (spec 94 §1.5).
+The owner's call.
