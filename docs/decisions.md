@@ -2306,3 +2306,32 @@ Why: each of these is done by a thing of §109–§130 or no longer needed. So:
 8. **The canvases go** (spec 78; §105.2 made them a kind of Assets): their kind leaves Assets, their files stay the
    project's.
 The owner's call.
+
+## 132. The window grows from what there is: no onboarding of its own; a part comes when it has something to hold, first the pane, then the goals, then the hand (27 October, the owner and the PM)
+
+Why: the owner: a new person meets the three parts of the window (§104.0) all at once, two of them empty; opened one a
+step (the Orkmaster and its tab, then the first goal, then the cards in the hand), each is learnt by using it. A tour
+with *Next* would be a fourth way of asking (§127.1) and a state to keep, skip and reset; the window drawn from what
+the project has needs none, and holds for a second project, the phone (§128) and a Board brought from Orkline, which
+opens whole. So (this makes §116.1–§116.2 precise; part of the first slice, §123.2):
+1. **A part of the window is drawn when it has something to hold**, never by a step of an onboarding: no flag of a tour
+   seen, no *Skip*, no coach marks, no dialog. The first start keeps today's first screen, the AI tools found and their
+   *Check* (`gui/onboarding.py`), before any project.
+2. **The pane first**: with no project or no party, the window is the Orkmaster's tab (§116.1: *Open a project*, *Where
+   is the project?*, the parties ticked, one *Start*); the left column is the Orkmaster's line alone (the projects'
+   switcher, *Settings*, §126.1), with no *The whole project* and no list. The Orkmaster is met by what it does: its
+   header's line (*Deals goals to parties*, §110.4) and the parties it laid out, never a story. On *Start* the leaders'
+   heads are dealt onto the table's edge as their tabs (§89's *dealt*), one by one.
+3. **Then the goals**: with parties and no goal, the blank card lies large in the pane's middle with its examples read
+   from the project (§116.2). Sent, the first goal is dealt into the left column, which gains *The whole project* and the
+   list then (§126.2).
+4. **Then the hand**: the blank card moves from the pane's middle to the hand's left (§116.2), and the leaders' first
+   cards (their questions in *Talk*, §118) are dealt beside it: where the person acts and decides is shown by the first
+   thing to decide, never by an example card. An empty hand is the blank card alone, as at any time.
+5. **One line, once**: on the first card with answers the person ever gets, a quiet line under them, *Pick an answer:
+   the leader writes it into the spec*; gone once any answer is picked, on any project (kept in the machine's settings,
+   `~/.config/orkcraft/`). No other hint.
+6. **Parties before the first goal stay one press** (§116.1): every party the stage needs ticked, sizes and tiers by
+   default, nothing that must be chosen; a seat's tool and tier are changed later in its popover (§110.7). Offering the
+   parties from the first goal's route instead is asked again if the owner finds people stopping there (§129.3).
+The owner's call.
