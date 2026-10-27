@@ -2683,3 +2683,22 @@ slice only starts (§136.12), so this is cheapest now. So (this changes §104.0,
 10. **The first slice** (§136.12) reads *the table and the hand, with the deck, the discard and the Orkmaster's tab's
    menu* where it read *the left column the Orkmaster's line and the goals*.
 The owner's call.
+
+## 146. In VS Code a read opens in the editor, not over the pane; the Board can stand in the editor's side bar, narrow (27 October, the owner and the PM)
+
+Why: the owner: Orkboard may well be a VS Code extension, and windows inside the window are not wanted there. The editor
+has its own explorer, its diff, its editors and its output; what the pane opens over its map (§142: a diff, a file, a
+failure's lines, a log) is drawn a second time inside it. The extension stays a frame (CLAUDE.md, `vscode/`): it draws
+nothing of the Board, and handing the editor what it does best is not drawing. So (this makes §142.2 precise for the
+editor):
+1. **In VS Code a read of a card opens in the editor**: *Open* on a card's back opens a diff as the editor's own diff,
+   a file (a part of System, §136.3) at its line, a failure's lines and a task's log in an output channel *Orkboard*.
+   The page, told it is in the editor (`app=1`, `gui/extension.py`), asks its frame by `postMessage`; the extension
+   accepts only these asks, only from the page's own origin, and opens nothing outside the project's folder.
+2. **Everywhere else** (a browser, the phone) the read opens over the pane, as §142 says; a place (*Settings*,
+   *Operations*, the history, *New party*) and Play open over the pane in the editor too.
+3. **The Board can stand in the editor's side bar**, as a view of its own beside the explorer: the same page at the
+   narrow width (spec 94 §3), the table above and the hand at its foot, while diffs and files open beside it in the
+   editor. The Board in an editor tab stays.
+4. **The extension's tests** (`cd vscode && npm test`) cover the asks it accepts and the ones it refuses.
+The owner's call.

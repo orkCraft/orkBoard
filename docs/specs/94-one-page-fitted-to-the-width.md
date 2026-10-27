@@ -65,6 +65,7 @@ outbox keeps. No new concept, so nothing new in `TERMS`; *narrow* and *wide* are
 1. **One threshold, the window's width**: under 760 CSS px the page is narrow, whatever the device (a narrow desktop
    window is narrow too, so it is tried on the computer). `js/shell/narrow.js` keeps one signal of it; the sheets read
    the same width by a media query.
+   VS Code's side bar is a narrow width too (§146.3).
 2. **One screen for two parts** (§145.1, §145.9): **the table** above (the row of heads, the pane's map) and **the
    hand** at the foot, with the deck at its left and the discard at its right (§145.3–§145.4). A goal is picked by its
    stack, a card of it on the table, or in the opened deck or discard (§145.5). A lifted card and what the pane opens over
