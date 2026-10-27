@@ -2532,3 +2532,19 @@ named. So (this changes §118.1, §124.2, §130.1, §132.4, §133.1, §136.3, §
 7. **A goal's decision is committed to dev** when it is confirmed (§118.1); it reaches main with the goal's work, by
    *To main* (§137.4).
 The owner's call.
+
+## 139. A goal of one party opens on that party's tab at every phase (27 October, the owner)
+
+Why: the owner: a goal that belongs to one party should open on its tab at once, whatever its phase. With one party on
+its route the Orkmaster's page of a phase says little (*Asked*, a *Gist*, a route of one step): its one section is its
+leader's (§117.5), *Talk* is its leader's alone, and the party's tab shows the same phase whole (the section, its theses
+at the left, its will-be on its map at the right, §118.4); an idea addressed to a party is mostly written on its tab
+(§124.4), and moving the person off it says nothing. So (this changes §138.4):
+1. **A goal whose route is one party** (an idea addressed to it, *@Tech* or its open tab, §124.4; the short way, §118.2;
+   a route of one step, §117.5) **opens on that party's tab at every phase**: *Talk* its leader's stance and questions,
+   *Decided* the decision, *Spec* its section whole, *Work* its will-be, *Done* its *Result*, each through the party's
+   map.
+2. **A goal of several parties** keeps §138.4: before *Work* on the Orkmaster's tab, from *Work* on its step's tab.
+3. **When the route changes**, the next opening follows it: a step added (§117.1, §133.1) makes it a goal of several
+   parties; steps taken off to one make it a goal of one. The tab the person has open is never switched under them.
+The owner's call.
