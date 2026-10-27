@@ -1773,3 +1773,49 @@ its party. So:
 7. **The phone**: the same list under the Orkmaster; a party's sheet its views as a list (spec 67).
 8. **Measured**: the steps a goal takes, the calls each step costs against a goal in one party, and the forks asked back.
 The owner's call. Spec 93.
+
+## 110. The leaders are the pane's tabs; a party's header says what it does, holds its squad and its lenses' views as a segmented control; the left column is what is looked at, the tab who looks (27 October, the owner and the PM)
+
+Why: after §109 a party is a way of looking, not a place: a row of it among the goals in the left column (§109.3) mixed
+two kinds of rows, goals pressed all day and parties seldom. A party's seats, their AI tools and tiers were behind *Edit
+the party*, away from the map and from the limits they spend. So (this makes §109.3–§109.4 and §104.8 precise):
+1. **Two axes**: **the left column is what is looked at** (the whole project or one goal), **the pane's tabs are who
+   looks** (the Orkmaster, then each party's leader: its head and the party's name), the pane is the one through the
+   other. The whole project through the Orkmaster: the Board; through a party: its views as they are. A goal through the
+   Orkmaster: its spec (theses, route, *Result*); through a party: the goal's will-be on that party's views. The pane's
+   title says both (*Waves · through Tech*).
+2. **The left column**: the Orkmaster's line (the projects' switcher), the one field of *New goal* (§104.4), *The whole
+   project*, then the goals **by their state**, not by party (*Waits for you*, *At work*, *Next*; *Done* folded; no
+   count, §67); a goal's row its element, its name and its route as the leaders' small heads, its step lit, the steps
+   done faint. No party rows (§109.3's go).
+3. **The tabs**: the Orkmaster first, then the parties in their route's order; they lie on the table's edge (spec 90
+   §4), never in the top bar. *+* at their end is *New party*; a tab's right click or **…** is §105.5's menu. A goal
+   picked: the tabs of its route carry a dot, its step's its element; a tab off its route is faint and still pressed (a
+   lens reads, §104.1). Picking a goal opens the tab of its step; then the tab stays as the person left it. A tab whose
+   view holds a decision of the hand carries the signal's mark, no number; a hand card pressed opens its tab, its view
+   and its goal (§104.8). More than six parties: the tabs shrink to the heads, the name on hover.
+4. **A party's header, one band over its views**: at the left the party's name (the pixel face), what it does in one
+   line (its recipe's `line`) and the leader's stance in one sentence (moved here from *Overview*, §104.8: seen under
+   every view); in the middle **its squad**; at the right **its views as a segmented control**, an icon and a word each,
+   *Overview* first. The Orkmaster's header: what it does (*Deals goals to parties*), its own AI tool and tier, and
+   *Board*, *Assets*, *Play*.
+5. **The views are looked at, not cast**: the segmented control is a switch (the picked one pressed in), never a bar of
+   skills (no cooldown, no glow, no burst on a press). A view's word is what it shows (*System*, *Screens*, *Loop*), never
+   a spell's name; the orkish is the icon's and the leader's head. The icons are orkUI's, drawn there first. A view with a
+   change not yet seen carries its goal's element; a goal picked dims the views it does not change (still pressed).
+6. **The squad in the header**: a seat by its stage (*Leads*, *Does*, *Checks*, §107.5), at most three: the member's
+   head with its tier's gear (§53), its AI tool's name under it, turned while it works (a press: its task on the
+   Orkmaster's Board); an empty seat a ghost (*+ Checker*), a press grows the party's size. **A member's description is
+   never in the header**, only on hover and in its popover.
+7. **A head pressed opens a small popover beside it** (no drawer, §104.8): the member's name, its role's line and what it
+   does in this party; **its AI tool** (§107.4's list: the tools that can do what the role needs, the others with why
+   not); **its tier**, each with what it costs said plainly; **when it takes effect**, plainly: *From the next task; the
+   task at work finishes on <tool>*; then *Set* (nothing changes before it), a toast at the page's foot with *Undo*
+   (§107.2); at its foot *Take off the seat* and its role on Agents. *Edit the party* keeps the rest (the leader, the
+   recipe, removing the party).
+8. **A member never speaks from the header** (§104.0): no question mark or bubble on a head; its questions go to its
+   leader, and to the person only as a fork in the hand. The header shows who works, never their tasks (the Board's).
+9. **The phone**: the leaders' tabs a row of heads over the screen (six at 44 px fit 390 px); the header one line (the
+   name, what it does, the squad's heads), a head pressed opens a sheet with the popover's content; the views as icons
+   when three or four, else a list under the title (spec 67: no sideways scroll); the goals the first screen's list.
+The owner's call.
