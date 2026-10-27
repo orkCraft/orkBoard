@@ -65,7 +65,8 @@ outbox keeps. No new concept, so nothing new in `TERMS`; *narrow* and *wide* are
 1. **One threshold, the window's width**: under 760 CSS px the page is narrow, whatever the device (a narrow desktop
    window is narrow too, so it is tried on the computer). `js/shell/narrow.js` keeps one signal of it; the sheets read
    the same width by a media query.
-   VS Code's side bar is a narrow width too (§146.3).
+   VS Code's side bar is a narrow width too (§146.3). **A low window** (under 500 CSS px of height, 760 or more of
+   width: a phone on its side) keeps the wide layout made compact, the hand a fan of overlapping cards (§150).
 2. **One screen for two parts** (§145.1, §145.9): **the table** above (the row of heads, the pane's map) and **the
    hand** at the foot, with the deck at its left and the discard at its right (§145.3–§145.4). A goal is picked by its
    stack, a card of it on the table, or in the opened deck or discard (§145.5). A lifted card and what the pane opens over
@@ -111,5 +112,4 @@ outbox keeps. No new concept, so nothing new in `TERMS`; *narrow* and *wide* are
    `index.html`, the manifest, the icons) draws; a face is under `js/`.
 
 ## 6. Asked again later
-Side by side on a wide tablet (§120.4); a landscape phone's own layout (it is narrow or wide by its width); Orkline's
-phone on the same page (§121).
+Side by side on a wide tablet (§120.4); Orkline's phone on the same page (§121). A phone on its side is decided (§150).

@@ -150,6 +150,8 @@ spec*. No tour, no *Skip*.
 1. **One page at every width** (§128, spec 94): under 760 CSS px (§136.9) the table above (the tabs a row of heads, the
    Board's columns a head's width with tokens, §143.4) and the hand at the foot; what opens over the pane is a screen;
    **←** is the browser's back; *Stop all* at the end of the row of heads, the limits' chips in the Orkmaster's **…**.
+   **A phone on its side is the table** (§150): a low window (under 500 px high) keeps the wide layout made compact,
+   the hand a fan of overlapping cards, the deck and the discard at its ends; nothing locks the orientation.
 2. **The phone's app is a frame** (spec 94 §4): pairing, the cache, push, the update, what is kept with no signal.
 3. **VS Code** (§146): the Board in an editor tab, or in the side bar at the narrow width; reads open in the editor.
 

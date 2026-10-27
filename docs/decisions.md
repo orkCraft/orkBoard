@@ -2806,3 +2806,28 @@ closed set. So (made in orkUI first, then copied; this makes §89, §127.3, §14
 6. **When**: with §148's orkUI release (0.15.0) for the tokens, the back and the heads; the cards' answers built with the
    first slice's hand and table (§136.12); the marketing's art apart from the slices.
 The owner's call.
+
+## 150. The phone turned on its side is the table, as Balatro's: a low window keeps the wide layout made compact; upright stays the quick answer; nothing is locked (27 October, the owner and the PM)
+
+Why: the owner: a phone held on its side, as Balatro is played, would set Orkboard apart, and since the person types
+little, the keyboard costs little. On its side an iPhone is 844 × 390: the Board's columns under the tabs (§143) are six
+of about 140 px, whole cards, where upright they are tokens of about 60 px (§143.4); the hand at the foot with the deck
+at its left and the discard at its right is Balatro's own layout. But an installed web app on an iPhone cannot be held
+on its side (iOS honours neither `screen.orientation.lock()` nor the manifest's `orientation`); the phone is mostly the
+quick answer, a push opened, one card answered with one hand, in seconds; and an idea typed on its side leaves less than
+half the 390 px above the keyboard. So (this makes spec 94 §3.1 and §6 precise):
+1. **Both ways, nothing locked**: upright is spec 94's narrow width (the quick answer); on its side the phone is **the
+   table**. The manifest asks for no orientation.
+2. **A low window**: under 500 CSS px of height with 760 px of width or more (§136.9), the wide layout made compact:
+   the tabs and the pane's title on one line; the table's cards smaller (spec 67's tokens where a column is narrower than
+   a card, §143.3); the hand a strip whose cards overlap in a fan, as Balatro's, a card rising out of it under the finger
+   (§149.1); the deck at its left, the discard at its right; the safe areas of the notch's side kept clear
+   (`env(safe-area-inset-left)` and `-right`). The same layout serves any low window (a laptop's split screen).
+3. **Writing on its side**: the blank card pressed grows into a field over the keyboard with **Send** and the
+   microphone (§125, spec 94 §3.6); turning the phone upright to write is as good, the text kept as it was.
+4. **Turning keeps the place**: what is picked, the open tab, a lifted card and what is open over the pane stay as they
+   were when the phone turns.
+5. **The marketing's pictures are on their side**: the VS Code marketplace, the site and the store show the table as a
+   phone on its side shows it.
+6. **When**: with the phone's one page (§128, spec 94), after the first slice.
+The owner's call.
