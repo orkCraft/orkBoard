@@ -1920,3 +1920,21 @@ preview (`127.0.0.1` only). So (this changes spec 88 §5 for the case in 3, and 
 5. **Until it is built**, a project plays both by a root script (`concurrently`) or `preview` in `checks.toml`, as
    today.
 The owner's call.
+
+## 114. A goal's row carries its signs: the hourglass while it works, a failure that does not look like closing; a sign pressed lifts its card in the hand, where Retry and Start are (27 October, the owner and the PM)
+
+Why: the owner: a goal's red cross reads as closing the goal, and the hourglass and *Retry*/*Start* could be at each goal
+in the left column. ✗ is everywhere the sign of closing or removing, the more so at a row's end where a close stands;
+and *Start* (every question of the spec answered, §104.5) and *Retry* (new calls, money) are decisions, the hand's
+(§104.0), dangerous as buttons in a list scrolled all day, and two ways in to one act drift apart. So (§110.2 made
+precise):
+1. **The hourglass is the row's** (§104.10, the faint ink): a goal a member works on now; in *At work* it tells working
+   now from waiting its turn.
+2. **A failure is not a cross**: orkUI's alert in the signal's colour (an exclamation, or a cracked gem: drawn in orkUI
+   first, then copied), never ✗, and never at the row's end; on hover *Failed: <why>* (§65.2's ✗ goes, on the desktop
+   and the phone).
+3. **The sign is the way in**: a press on it opens the goal and lifts its card in the hand: the failure (what failed,
+   its last lines, **Retry**), the spec waiting for its answers (**Start**), a fork. One act, one place: no *Retry* or
+   *Start* button stands in a row. Where a row shows ↻, it is a true button that only lifts the same card, never retries
+   at once.
+The owner's call.
