@@ -2004,3 +2004,45 @@ Orkmaster alone would skip them too. The Orkmaster says what and who (§104.0), 
 6. **Measured**: what the parts cost before the start against the forks and *out of the contract* cards they spare
    later.
 The owner's call.
+
+## 118. A goal goes Idea → Talk → Decided → Spec → Work → Done; its decision is written in the project's docs/decisions.md in git; its spec is a common part and a part a party; a change while it works is a new idea of the goal; a bug goes straight to Tech (27 October, the owner and the PM)
+
+Why: the owner works this way with an agent today: an idea, talked through with the leaders, a decision written in git
+(this file), then the spec, then the work; and a change of a spec while it works goes through an idea again, never
+edited silently. After §109 Ideation is no project's party, yet every goal needs its idea weighed. And after §117 a spec
+has owners (the Orkmaster joins, each leader on the route writes its part) while its format is still one document for
+one party (`realm/idea_page.py` `SECTIONS`: Gist, Why, Done when, Out, Risks, Depends on, Stages, Open questions,
+Decisions). So (this makes §117 and §75 precise; spec 65's pitch flow is reused, not its party):
+1. **A goal's phases**: **Idea** (the blank card's words, §116.2) → **Talk** (the route's leaders answer short, on the
+   cheaper tier, as spec 65's views and skeptic do: a stance, for and against, questions; the person answers in the
+   hand, in rounds, a comment pinned to a card; cards, never a chat; the talk is kept behind *More*) → **Decided** (the
+   Orkmaster words the decision, *Why* and its points, as this file's entries; the person confirms or corrects it; it is
+   **committed** to the project's `docs/decisions.md`, numbered, the path a setting of the project) → **Spec** (the
+   parts, 3; it names its decision's number) → **Work** (the route's steps: code, assets, content) → **Done** (its
+   *Result*, promised against made; its flag in main). A goal's row shows its phase as a small mark beside its route
+   (§110.2's groups by state stay).
+2. **The short way**: **a bug fix is routed by the Orkmaster straight to Tech** and skips Talk and Decided: its spec is
+   Tech's one part, then the work. The Orkmaster offers the same short way to any small goal (a tidy, a balance pass, a
+   word); the person may take the long way instead. A decision is never skipped for a goal that changes what the
+   project is (a new feature, a removed one, a rule of the game).
+3. **The spec's format**: **the common part**, the Orkmaster's and the person's: *Asked* (the person's words, as they
+   are), *Gist* (one line, written when the parts are joined), *Route* (the parties in order, each step's leader and
+   state), *Depends on* (§86.3), *Decisions* (the forks answered, each naming the part it is about). **A part a party on
+   the route**, its leader's: *Why* (for its craft; Product's or Game design's is the goal's why), *Done when* (at most
+   five theses), *Checks* (its checkers' `Check.done`, apart from the theses), *Will be* (the change on its lens's views,
+   §104.6), *Out*, *Risks*, *Defaults* (questions closed by a default, seen), *Questions* (open; the Orkmaster deals three
+   to the hand, §117.3), *Plan* (its step's tasks, after *Start*). *Stages* goes (the route and each part's plan); the
+   common *Out*, *Risks* and *Open questions* go to the parts.
+4. **Read through the tabs** (§110.1): a goal through the Orkmaster's tab is the common part and every part's theses in
+   short, each with its leader's head; through a party's tab, that part whole, its theses at the left and its will-be on
+   its views at the right (§104.5); a question in the hand opens its part's tab.
+5. **A plan reads its own part whole** and of the others only *Done when* and *Will be*: the contract it must not break
+   (today `PLAN_SECTIONS` reads the one spec's Gist, Done when, Out, Risks, Depends on).
+6. **Every thesis says whose it is**: a leader's, the person's (a decision), or a default; §112.6's *who decided* is
+   read from it.
+7. **A change while it works is a new idea of the same goal**: written on the blank card with the goal picked; talked
+   only with the leaders whose parts it touches; decided as a new entry that names what it changes (*changes §N.2*);
+   the parts it touches rewritten by their leaders; only the tasks whose parts changed re-planned (§75.3). Nothing in a
+   spec changes without its why in `docs/decisions.md`; a bug's short way excepted (2).
+8. **A spec from before** is read as one part of its party, as an older goal's sections are (`OLD_TRACK_SECTIONS`).
+The owner's call.
