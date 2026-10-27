@@ -2505,3 +2505,30 @@ production must reach main in one press. So (this changes §104.9, §116.1, §12
 6. **In the first slice** (§136.12): Release with every project and *To main* on its map, in place of today's card;
    *Release a version* after the slice, with the wait for the reset and recurring goals.
 The owner's call.
+
+## 138. *Done* is in dev; the route card comes first on the first start too; a goal's place is *in line*; a goal before *Work* opens on the Orkmaster's tab; files with no Tech nor Design are the Orkmaster's menu's; a recurring round waits for the reset; a decision is committed to dev (27 October, the owner and the PM)
+
+Why: read again after §137: §118.1's *Done* asked for a flag in main, which only Release writes now (§137.2), so goals
+would stay at work until *To main* and the left column (§130) would not clear; §132.4 dealt the leaders' questions first,
+while a goal's first card is its route (§133.1); *Next* is named in §124.2 and §133.1 though §126.2 removed the groups;
+§110.3, §126.4 and §136.10 open a picked goal on its step's tab, which a goal before *Work* does not have; §136.3 leaves
+a game at the *Idea* stage, with no Tech nor Design (§122.5), no place to open its files; a recurring round (§136.4)
+starts by itself with nothing said for a week near its limits; and a decision is committed (§118.1) with no branch
+named. So (this changes §118.1, §124.2, §130.1, §132.4, §133.1, §136.3, §136.4 and §136.10):
+1. ***Done* is landed in dev**: a goal is done when its work is in dev (§101), its *Result* ready; it stays in the left
+   column until its result is seen (§130.1) and lies on Release's map until *To main* (§137.3). Being in main is
+   Release's, never a goal's phase.
+2. **On the first start the route card comes first** (§132.4): the blank card moves to the hand, the goal's route card
+   is dealt beside it (§133.1), then *Talk*'s questions; §132.5's one line stays on the first card with answers, a
+   question of *Talk*.
+3. **A goal's place is *in line***: the route card says *3rd in line*; the person moves a goal among the goals not yet
+   started, in the left column's one list (§126.2), never as a field (§124.2).
+4. **A picked goal opens on its phase**: before *Work* (*Idea*, *Talk*, *Decided*, *Spec*) on the Orkmaster's tab, the
+   page of its phase (§126.4); from *Work*, on its step's tab (§110.3, §136.10); then the tab stays as the person left it.
+5. **Files with no Tech nor Design** open from the Orkmaster's line's menu as the temporary tab, beside *Settings*,
+   *Operations* and the history (§127.2, §130.4); once Tech is made, they are on System (§136.3).
+6. **A recurring round within the limits starts by itself** (§136.4); near them, it waits for the reset under the moon
+   (§136.5), as any goal, and never spends the person's reserve.
+7. **A goal's decision is committed to dev** (§118.1), with its goal's work; it reaches main with the goal, by *To main*
+   (§137.4).
+The owner's call.
