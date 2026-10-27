@@ -2196,3 +2196,27 @@ Why: the owner: an idea is often faster said than typed, as people talk to a cha
 4. Listening is a signal while it lasts (the field's edge in the signal's colour, a slow pulse; still under reduced
    motion), so a microphone left on is never missed.
 The owner's call.
+
+## 126. Less to read twice: no top bar, a goal's row one sign, no Overview, a goal's pane follows its phase, nothing over System's table (27 October, the owner and the PM)
+
+Why: read together, §104–§125 show some things twice: the top bar holds four things on a band of its own; a goal's row
+carries its element, route, phase, state and its group; a party's *Overview* repeats the left column, the hand and the
+header's stance; a goal's own tabs (§104.8: *Spec*, *Will be*, *Board*, *Result*) repeat its phase (§118.1); and
+System's table has a bar of controls over it. So (this changes §107.1, §104.8, §110.2, §110.4, §118.1 and spec 89 §6):
+1. **No top bar**: the product's name is no longer shown in the window (the page's title, the browser's and VS Code's
+   tab, keeps *Orkboard*); *Settings* goes to the Orkmaster's line in the left column, beside the projects' switcher;
+   the AI tools' limits and *Stop all* stand at the right end of the leaders' tabs (§110.3), which had nothing there.
+2. **A goal's row is its element, its name and one sign** (the hourglass, the failure's alert, *waits for you*); its
+   route and phase are shown only on the picked goal (the pane's title, the tabs' dots, §110.3). **No *Waits for you*
+   group**: the hand's stacks are it (§121.2); the left column is one list in the Orkmaster's order, *Done* folded at
+   its foot (§110.2's groups go).
+3. **No *Overview* view**: a party's header gains one line, *Now* (*2 goals at its step, 1 coming to it*); what changed
+   since the last look is the element on a view's segment (§110.5); a party opens on its first view, and a party with no
+   view is its header alone.
+4. **A goal has no tabs of its own**: through the Orkmaster's tab the pane shows what its phase needs (*Talk*: the
+   leaders' stances; *Spec*: the common section and the theses; *Work*: the will-be, its ghosts filling; *Done*: the
+   result); a phase gone by is opened by a press on its mark in the pane's title.
+5. **Nothing over System's table**: the reveal plays as it does; a press on a mark says which goal made it and lights
+   that goal's other marks (the goals' buttons over the table go); *Rearrange* and *Since <version>* (§112.5) move to
+   the tab's menu (**…**). The table begins under the header.
+The owner's call.
