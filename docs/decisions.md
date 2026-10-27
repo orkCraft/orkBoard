@@ -2768,3 +2768,41 @@ this makes §115, §127.3 and §144.2 precise):
 12. **When**: one orkUI release (0.15.0) with all of the above, copied here before the first slice's faces are drawn
    (§136.12).
 The owner's call.
+
+## 149. The cards react as in Balatro, with no motion added; a hand card face down has one back; the heads on a 16 grid read by their silhouette; the detailed art is the marketing's (27 October, the owner and the PM)
+
+Why: the owner asked whether the heads and the cards should be drawn in more detail, as Slay the Spire's or Balatro's.
+Slay the Spire's card is a picture, each its own, and carries the game; ours carries what is read all day (a task's
+name, its element, its sign, who does it), and a picture a goal would be noise and a cost, against the heads as an
+accent (CLAUDE.md). Balatro's cards are plain pixels: what makes them a pleasure is how they answer a hand (they lean
+toward the pointer, weigh when played, are dealt with a snap). That is ours to take, inside §89's motions and §127.3's
+closed set. So (made in orkUI first, then copied; this makes §89, §127.3, §144 and §148.7 precise):
+1. **The cards answer the hand, as Balatro's**, every one of it a part of a motion the window has:
+   - **under the pointer** (part of *lifted*): a card of the hand or a map leans toward the pointer, at most 6°, and
+     rises 4 px on a pixel shadow; back flat as the pointer leaves;
+   - **pressed** (part of *lifted*): it gives a little (to 96%) and springs back on release;
+   - **played** (§144.1, *dealt* from the hand to a lane): it flies on an arc with its weight, lands with a short
+     overshoot, and the lane's cards beside it make room;
+   - **dealt** to the hand: the cards fan out one after another (about 40 ms apart), the stacks closing up;
+   - **sealed**: the element's stamp lands a little large and settles;
+   - **crumbled**: the card breaks into a few pixel shards that fall, not a fade;
+   - **fanned** (a stack pressed, §121.2): the cards spread with the same spring, and close the same way.
+   Short and sure: 120–250 ms, a play at most 400 ms; transforms only, at 60 frames a second. **No idle motion**: a
+   card at rest is still (a tool looked at all day never sways). **A card at rest and a lifted card being read are
+   flat**, so their text and pixels stay crisp. **Under reduced motion** none of it: a card moves at once, a crossfade
+   at most. No sound now. A view is still never cast (§110.5): no glow, no burst on a map's switch.
+2. **orkUI keeps the motions as tokens** (durations, the spring's curve, the lean's angle, the shards' count), so the
+   page carries none of its own (CLAUDE.md, `tests/test_design_system.py`), and its preview plays each.
+3. **One back for a hand card face down**: the deck, the cards under a stack's top, the discard's cards under its top;
+   a pixel pattern in the frame's and the faint ink's greys on the raised panel, the ork mark at its middle, no colour
+   (§53.5). It is the one drawing on the work's surface that is no head and no sign. A map card's back stays its details
+   (§120.1): a back pattern is the hand's alone.
+4. **The heads on a 16 × 16 grid** (32 at @2x), so §148.7's 16 px is their own size, never a scaled one: **the race read
+   by its silhouette** (the ork's tusks, the elf's long ears, the gnome's nose, the goblin's wide ears), **the tier by its
+   gear's silhouette** (a hood, a helm, a crown), never by small coloured details.
+5. **The detailed art is the marketing's**: large drawn portraits of the same leaders and their races (as rich as Slay
+   the Spire's) for the site, the VS Code marketplace, the README and the store's pictures, and at the window's few big
+   moments: the first start (§132) and an empty screen (orkUI's `ascii/`'s places). Never on a card, a tab or a seat.
+6. **When**: with §148's orkUI release (0.15.0) for the tokens, the back and the heads; the cards' answers built with the
+   first slice's hand and table (§136.12); the marketing's art apart from the slices.
+The owner's call.
