@@ -2159,3 +2159,24 @@ better or worse. So:
 4. **Until the slice**, the owner's game plays its client and server by a root script (`concurrently`) or `preview` in
    `.orkcraft/checks.toml` (§113.5).
 The owner's call.
+
+## 124. A new idea is written as a message: one field, Enter sends; no priority, no kind, no lens; *@party* or the open party's tab addresses it, and only then the party's views are pointed at (27 October, the owner and the PM)
+
+Why: the owner: a general idea, not a party's, must be as seamless as writing to a chatbot. §116.3's two rows of kinds,
+the priority, and the lens switch of New goal (§53, §109.6: Text, Code, Screen, Pain) each ask the person to decide
+what the Orkmaster and the leaders decide anyway after it is sent. So (this changes §116.3 and §109.6; spec 52's goal
+types are chosen by the Orkmaster or the leader, no longer by the person):
+1. **The blank card is one field** (§116.2): written, **Enter sends**, Shift+Enter a new line; a picture pasted or
+   dropped into it goes with it (`realm/idea_photos.py`), as in a chat. No other field.
+2. **No priority**: the Orkmaster orders the goals; the person who disagrees moves a goal within *Next* in the left
+   column, after, never as a field before.
+3. **No kind**: §116.3's rows go. The Orkmaster (or, for a party's idea, its leader) picks the goal's kind of spec 52,
+   which still sets the route's first step and the view opened first.
+4. **Addressed to a party only on purpose**: **`@` in the text** lists the parties (*@Tech fix the crash in the lobby*),
+   as a mention; and **with a party's tab open** the blank card carries **→ Tech ×**, one press taking it off. On the
+   Orkmaster's tab and on *The whole project* the idea is general. The mark is always seen, so no idea goes to one party
+   by the tab it happened to be written on.
+5. **No lens switch**: a general idea is its text alone (the leaders point at the project in their sections, §117).
+   **An idea addressed to a party** puts the pane's view, already that party's, in picking: a press on a part of
+   System, a screen or a pain pins it to the blank card as a mark. §53's Text, Code, Screen, Pain switch goes.
+The owner's call.
