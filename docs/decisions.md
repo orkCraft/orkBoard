@@ -1732,3 +1732,44 @@ had a party of its own (spec 91 §7). So:
 5. **Words**: `TERMS` says *Team* (a party that holds the person's Operations), *Run*, *Upkeep* and *recurring goal*;
    *Operations* stays the person's list, one for all projects, now reached through Team.
 Spec 92.
+
+## 109. A party does one kind of work and is its lens; a goal is one, and goes through the parties its work needs; the left column is the Orkmaster's goals; the Board is the Orkmaster's alone (27 October, the owner and the PM)
+
+Why: the leaders' lenses (§104.1) quarrel with the parties as they are made. A party mixes crafts (the game's party: the
+Game designer leading Grunts and artists; the app's *features*: the Product manager leading code), and since §91.7 the
+stages are parties whose leader changes with the kind (an app's Build led by the Product manager, a site's Run by the
+Architect), so a leader's lens (*Pains*) is not what its party does (screens and code); *System* is drawn only where
+`g.leader.slug == "architect"` happens to hold, and a game's code has no map unless a Tech party is added beside it.
+§83 refused a party a step, because a goal's story scattered over parties; it is kept here by making the goal one, not
+its party. So:
+1. **A party is one craft, one kind of work, one lens**: its leader's craft is the work of all its seats. A game:
+   **Game design** (the Game designer: *Loop*, *Economy*, *Levels*; it judges a game's ideas, Ideation's place),
+   **Tech** (the Architect: *System*), **Art** (the Art director), **Release**, **LiveOps**. An app or a site:
+   **Product** (the Product manager: who it is for and whether it is worth it, Ideation's place), **Design** (the Product
+   designer: *Flow*, *Screens*), **Tech**, **Release**, **Run**. The mixed recipes (`game`, `mobile-features`,
+   `web-pages`) and the Investor's Ideation as a project's party go; §91.7's stages are no longer parties but steps of a
+   goal (2). A party made before keeps its members and its name.
+2. **A goal is one and has a route of steps**, each a party's (§83.2 widened): *Concept · Game design → Build · Tech →
+   Art · Art → Playtest*. The goal does not move: its step is handed to the next party, its page, story and element stay
+   one. **The Orkmaster deals the route** (§85.4): only the steps the work needs (a bug: Tech alone; a balance pass: Game
+   design and one task of Tech). The first step's leader writes **the one spec**, its theses by craft (a *Done when* for
+   the design, the code, the art); each next leader plans its own step (a cheaper call), never rewrites the spec; a
+   question back to an earlier step is a fork in the person's hand, never a talk between parties (§104.0). This changes
+   §83.1 (a step of a goal's way may be a party now) and §83.3 (a goal goes on to another party after its work started,
+   by its route, not by being moved).
+3. **The left column is the Orkmaster's goals**: under the Orkmaster's line, every goal of the project, no party's
+   heading over them and nothing to unfold; a goal's row says its step (the party's leader's head) and its route in one
+   line. Under the goals the parties, a row each, a press opening its lens. The open party's goals under its heading
+   (§84, spec 69, spec 73) go.
+4. **The Board is the Orkmaster's alone**: its field (every party a column, its tasks with their members' heads, §104.7)
+   is the only Board. **A party picked shows only its lens**: *Overview* (§104.8: *Now*, *Next*, *Waits for you*,
+   *Changed since your last look*: the goals at its step and those coming to it) and its views; no *Board* tab (spec 89
+   §6.1, spec 90 §6.7). A goal picked shows *Spec*, *Will be* (the views of the parties on its route) and *Result*; its
+   tasks at work are on its Will be (§104.6) and lit on the Orkmaster's Board.
+5. **System is the project's map, kept by Tech**: Tech draws its will-be; another party sees on it what its step touches
+   (a lens reads and asks, §104.1). *Feature modules* is a container opened on System, not a tab (§105.6).
+6. **The lens of New goal is the parties' maps**: pointing at a goal is pressing a part on a view of the route's parties
+   (§53's Code, Screen, Pain become the parts of System, Screens and the Product's pains); with no view, the text.
+7. **The phone**: the same list under the Orkmaster; a party's sheet its views as a list (spec 67).
+8. **Measured**: the steps a goal takes, the calls each step costs against a goal in one party, and the forks asked back.
+The owner's call. Spec 93.
