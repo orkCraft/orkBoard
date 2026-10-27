@@ -1,9 +1,9 @@
 # Orkboard — notes for contributors and agents
 
 Orkboard is Orkline's Board on its own, published as a product of its own (docs/specs/37-board-and-line.md,
-docs/decisions.md §50, §95): the Board with its parties and goals, the preview, Agents and Review, on the desktop and on a
-paired phone. **Orkline imports Orkboard, never the other way round**: nothing here imports Orkline's package
-(`orkcraft`).
+docs/decisions.md §50, §95): the Board with its parties and goals, the hand and Play, on the desktop, in VS Code and on a
+paired phone; the window as decided is docs/specs/95-the-window-as-decided.md. **Orkline imports Orkboard, never the
+other way round**: nothing here imports Orkline's package (`orkcraft`).
 
 ## Wording
 
@@ -24,7 +24,7 @@ paired phone. **Orkline imports Orkboard, never the other way round**: nothing h
   goals done); a goal is in the deck, the hand, on the table or in the discard. The Orkmaster says what and who, a
   party's leader how, what changes and why, a member does (and asks only its leader). New faces keep to it: no left
   column, no drawer, no count of what waits, no question from a member straight to the person.
-- **Orks by their orkish names, everything else by what it does**: the Taskmaster, a Grunt; the Board, Review, Agents,
+- **Orks by their orkish names, everything else by what it does**: the Taskmaster, a Grunt; the Board, Play, Release,
   Stop all. Never the other way round: no ork gets a job title, no window a camp name.
   `orkboard/realm/lexicon.py` `TERMS` is the glossary: a new concept gets its one word there, and new code writes that
   word. A renamed concept keeps its old spelling in `was`, and the interface says an old spelling in today's word: the
