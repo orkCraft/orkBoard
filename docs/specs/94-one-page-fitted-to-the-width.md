@@ -73,7 +73,7 @@ outbox keeps. No new concept, so nothing new in `TERMS`; *narrow* and *wide* are
    button go back a screen, a lifted card lowered first. Reloading opens the screen it was on.
 4. **The tabs are a row of heads** (§110.9: six at 44 px fit 390 px); the picked tab's party name in the pane's title.
    **A party's header is one line**: its name and the squad's heads (§134.3); a head pressed opens its popover as a
-   sheet from the foot. A party is one map (§134.2); the Orkmaster's *Board* and *Assets* are two icons.
+   sheet from the foot. Every tab is one map (§134.2, §135.1); *Assets* and *Play* stand in the pane's title (§135.2).
 5. **A map at the narrow width**: cards as spec 67's tokens (74 px, 5:7) in rows that wrap; System opens on its
    containers (§112.4), which are few; a container pressed opens its parts as the next screen. No sideways scroll.
 6. **The hand at the foot**: spec 67's front card and fan; a card lifted from it is a sheet over the view it is about,

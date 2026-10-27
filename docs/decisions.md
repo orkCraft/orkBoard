@@ -2398,3 +2398,23 @@ route, its decision, *Start*) where nothing is left to settle after the second. 
    before (§133.2). **Confirm** writes the sections and always waits for *Start*. The cost said on the route's card
    (§133.1) is the whole way's, so starting by itself spends nothing that was not said.
 The owner's call.
+
+## 135. The Orkmaster keeps *Board* alone; Assets is what is looked at, beside Play, under every tab; Art's map is the Assets of its kinds (27 October, the owner and the PM)
+
+Why: the owner: after §134.2 every tab is one map but the Orkmaster's, which keeps *Board* and *Assets*; could Assets go
+to a party of its own, Art. Assets is not a craft's way of looking: it is the project's own material, the files with it
+(§107.1), as Play is the project run (§111); under the Orkmaster's tab it was the one segmented control left. And Art,
+whose craft is exactly those assets, has had no map (§112.9). So (this changes §104.11, §105.3, §110.4, §119.1 and
+§134.2):
+1. **The Orkmaster's tab is *Board* alone**: its header its name, its AI tool and tier (§110.4), no views; no segmented
+   control is left in the window.
+2. **Assets is on the left column's axis, as Play** (§111.1): **Assets** beside **▶ Play** in the pane's title, under
+   every tab, opens what is looked at: the whole project (its assets and its files, §105.3's table by kinds), or the
+   picked goal (what it made and changed, its *Result*'s assets, §104.11). It opens as the pane's one temporary tab, the
+   pane's whole width (§120.2). On the phone it is read as on the computer (Play stays the computer's, §111.6).
+3. **Through a party's tab Assets opens on its kinds first**: Art's (art and icons, sound, music, clips), Design's
+   (screens, icons, fonts), Tech's (the files); the other kinds lie under them, nothing hidden.
+4. **Art's map is the Assets table of its kinds**, in its tab as every party's map (§134.2: as Product looks at Design's
+   map): a card lifted shows it large and plays it, a changed one turns to its version before, the variants not picked
+   lie under the one picked (§104.11); an idea addressed to Art picks a card there (§124.5).
+The owner's call.
