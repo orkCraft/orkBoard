@@ -31,7 +31,7 @@ outbox keeps. No new concept, so nothing new in `TERMS`; *narrow* and *wide* are
    whole name (§104.2) on the lifted card; a member's description (§110.6) in its head's popover; a tab's party name when
    the tabs are heads (§110.3) in the pane's title; what a task waits for (spec 67 §3.2) on its lifted card. A tab's menu
    is its **…** (§110.3); the right click stays a shortcut to it.
-2. **No fixed width a part of the window**: the left column, the pane and the hand take their widths from orkUI's tokens
+2. **No fixed width a part of the window**: the table and the hand (§145.1) take their widths from orkUI's tokens
    and the window; a map lays its cards out in rows that wrap (spec 67 §1), never wider than the pane.
 3. **A press is at least 44 × 44 px** under `pointer: coarse` (the visible thing may be smaller, its target is not).
 4. **What opens is a screen's or a sheet's at the narrow width** (§3): a popover, a lifted card, what the pane opens (§142). A face
@@ -57,24 +57,24 @@ outbox keeps. No new concept, so nothing new in `TERMS`; *narrow* and *wide* are
 3. **The phone's snapshot is the page's**: `phone_snapshot` gives what the page reads (`snapshot()`'s Board, the
    projects, the limits, the update), less the computer's own (`onboarding`, the sign-ins' flows, `repo`'s path), with
    its `rev` as today. A view's own data is asked as on the computer (`ideas.*`, already allowed).
-4. **No signal**: the last snapshot is kept on the phone and drawn greyed with *As of 14:02.* on the Orkmaster's line
-   (§126.1: no top bar); an answer or an idea given meanwhile is kept (`outbox`) and sent when the computer answers,
+4. **No signal**: the last snapshot is kept on the phone and drawn greyed with *As of 14:02.* on the Orkmaster's tab
+   (§145.6); an answer or an idea given meanwhile is kept (`outbox`) and sent when the computer answers,
    marked *Sent when the computer answers* in the hand. Both moved as they are from `pwa/util.js`.
 
 ## 3. The narrow width (C)
 1. **One threshold, the window's width**: under 760 CSS px the page is narrow, whatever the device (a narrow desktop
    window is narrow too, so it is tried on the computer). `js/shell/narrow.js` keeps one signal of it; the sheets read
    the same width by a media query.
-2. **Three screens for three parts** (§104.0, §128.1): **the goals** (the left column: the Orkmaster's line and the goals
-   in one list, §126.2, with the tabs' heads over the list, §134.4) are the first; a goal pressed opens **the pane**
-   through its step's tab, a tab's head pressed opens it on the whole project through that party; **the hand** lies at
-   the foot of both. A lifted card and what the pane opens over its map are screens of their own (§120.5, §142.7).
+2. **One screen for two parts** (§145.1, §145.9): **the table** above (the row of heads, the pane's map) and **the
+   hand** at the foot, with the deck at its left and the discard at its right (§145.3–§145.4). A goal is picked by its
+   stack, a card of it on the table, or in the opened deck or discard (§145.5). A lifted card and what the pane opens over
+   its map are screens of their own (§120.5, §142.7).
 3. **Back is the browser's**: each screen is a history entry (`history.pushState`), so the phone's back gesture and
    button go back a screen, a lifted card lowered first. Reloading opens the screen it was on.
 4. **The tabs are a row of heads** (§110.9: six at 44 px fit 390 px); the picked tab's party name in the pane's title.
    **A party's header is one line**: its name and the squad's heads (§134.3); a head pressed opens its popover as a
    sheet from the foot. Every tab is one map (§134.2, §135.1); *Play* stands alone in the pane's title (§136.3).
-   **Stop all** stands always on the Orkmaster's line; the limits' chips are in its menu (§136.8).
+   **Stop all** stands at the end of the row of heads; the limits' chips are in the Orkmaster's **…** (§145.6).
 5. **A map at the narrow width**: cards as spec 67's tokens (74 px, 5:7) in rows that wrap; System opens on its
    containers (§112.4), which are few; a container pressed opens its parts as the next screen. No sideways scroll.
    **The Board** at the narrow width keeps its columns under the row of heads, a head's width each, its tasks as tokens

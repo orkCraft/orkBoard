@@ -2640,3 +2640,46 @@ is not a fight. So:
 3. **The lane a held card is about rises**: while a card of the hand is lifted (§104.8), the lane, or the cards of a map,
    it is about lie a little raised, as a battler shows where a card will be played; §89's *lifted*, no new motion.
 The owner's call.
+
+## 145. No left column: the window is two parts, the table and the hand; a goal lives in the deck, the hand, on the table or in the discard; the Orkmaster's line is its tab (27 October, the owner and the PM)
+
+Why: the owner: after §143–§144 the left column could go. What it holds is said elsewhere already: what waits for the
+person is the hand's (§121.2, §134.1), the goals at work are their cards in the lanes of the Board (§143–§144), a goal is
+picked by its stack or a card of it, and *The whole project* is no goal picked (§134.4). Three things are nowhere else:
+the goals not started or waiting for the reset, the goals done and not yet seen (§130.1), and the Orkmaster's line
+(§126.1). A card battler has their places: the deck and the discard. Nothing of §104.0's frame is built yet: the first
+slice only starts (§136.12), so this is cheapest now. So (this changes §104.0, §109.3, §110.1–§110.2, §119.3,
+§126.1–§126.2, §127.2, §130.1, §130.4, §132.2–§132.4, §134.4, §136.6, §136.8, §136.12, §138.3–§138.5 and spec 94
+§1.2, §2.4, §3.2, §3.4):
+1. **The window is two parts**: **the table** (the leaders' tabs and the pane: what and why, through whose eyes,
+   §110.1) and **the hand** at its foot (what the person decides, and where the goals wait). No left column. The roles
+   are §104.0's: the Orkmaster says what and who, a leader how, what changes and why, a member does.
+2. **A goal is in one of four places**: **the deck** (in line: not started, or waiting for the reset under the moon,
+   §136.5), **the hand** (its stack while it asks the person, §121.2), **the table** (at work: its cards in its lanes,
+   §143–§144, its will-be on its parties' maps), **the discard** (done, until its result is seen, §130.1, §138.1). A
+   goal at work that asks a fork is on the table and in the hand at once; a goal is never in two piles.
+3. **The deck lies at the hand's left**, beside the blank card; its edges hint how many (five at most, never a number,
+   §121.2). Pressed, it opens over the pane (§142) as the goals in line in the Orkmaster's order, with a search: a goal is
+   moved among those not started by dragging (§138.3), a press picks it. A goal sent from the blank card goes to the
+   hand as its route card (§133.1); *Later, by itself* puts it in the deck; *Talk* or *Start* keeps it in play.
+4. **The discard lies at the hand's right**, past Release's *n goals ready for main* (§137.5); its top card is the last
+   goal done, face up. Pressed, it opens the goals done and not yet seen over the pane; a goal pressed opens its
+   *Result*, and once seen it leaves for the history (§130.1). **The history is the whole discard**, from the
+   Orkmaster's tab's menu (§130.4).
+5. **A goal is picked** by its stack in the hand, any of its cards on the table (its other cards lit, as §126.5's
+   marks), or a goal in the opened deck or discard. Esc, or a press on the picked thing again, picks none: the whole
+   project (§134.4). The two axes stay (§110.1): what is picked, and the tab through which it is seen.
+6. **The Orkmaster's line is its tab**: the project's name on it (*Orkmaster · Party game*); its **…** holds the
+   projects' switcher, *Settings*, *Operations*, the history and the files (§138.5). The AI tools' limits and *Stop all*
+   stand at the tabs' right end (§126.1); at the narrow width *Stop all* at the end of the row of heads, the limits'
+   chips in the Orkmaster's **…** (§136.8), and *As of 14:02.* on its tab (spec 94 §2.4).
+7. **A goal's signs are its places'** (§136.6 goes with the rows): the moon on its card in the deck, the leader's head
+   and the alert on its cards on the table and its stack in the hand, *done* in the discard.
+8. **The first start** (§132): the pane and the hand only; the blank card in the pane's middle while there is no goal
+   (§116.2), then in the hand; the deck is dealt when the first goal waits in line, the discard when the first goal is
+   done: a part comes when it has something to hold (§132.1).
+9. **The narrow width** is one screen: the table above (the row of heads, the map), the hand at the foot with the deck
+   and the discard; what opens over the pane is a screen of its own (§142.7). The goals' screen of spec 94 §3.2 goes.
+10. **The first slice** (§136.12) reads *the table and the hand, with the deck, the discard and the Orkmaster's tab's
+   menu* where it read *the left column the Orkmaster's line and the goals*.
+The owner's call.
