@@ -1819,3 +1819,28 @@ the party*, away from the map and from the limits they spend. So (this makes §1
    name, what it does, the squad's heads), a head pressed opens a sheet with the popover's content; the views as icons
    when three or four, else a list under the title (spec 67: no sideways scroll); the goals the first screen's list.
 The owner's call.
+
+## 111. Play is what is looked at, not a lens: the whole project or one goal, under every tab, opened where the goal changed it; Tech keeps how the project runs (27 October, the owner and the PM)
+
+Why: §110.4 put *Play* among the Orkmaster's views, and the owner asked for it under Tech, to run *only what is new for a
+goal*. Play is the project itself, touched: the parties that need it most are Game design (a playtest), Design (the
+screens alive) and Product (the way through), so under Tech's tab a game's designer would look through other eyes to
+play; and a goal's new part cannot run alone (waves need the whole game). What Tech owns is how the project runs. So
+(this changes §110.4: the Orkmaster's views are *Board* and *Assets*):
+1. **Play is on the left column's axis, not the tabs'** (§110.1): a ▶ in the pane's title under every tab plays what
+   is looked at. *The whole project · through Game design ▶ Play*: dev's head, as §102 and spec 88. *Waves · through
+   Tech ▶ Play this goal*: the goal's own build. It opens as the pane's one temporary tab (§104.8), never in the right
+   column (§105.2: too narrow for a game).
+2. **A goal's Play is dev with the goal's work**: the tasks of it landed and those not landed yet (each task's result as
+   Review would merge it), in a worktree of its own, so its result is played before it is in dev.
+3. **It opens where the goal changed the project**: on the screen or route its work touched (its tasks' files read
+   against the routes and screens, §105.6's ways in, §102's pictures; else the goal's own screen, else `/`), with a strip
+   over the frame, **What this goal changed**, a press on each opening its place (*Waves*, *Lobby*). Nothing to find by
+   hand.
+4. **One Play a project at a time** (spec 88): a goal's Play started while another plays asks once, plainly, *Stop the
+   project's Play and play «Waves»?* Before and after side by side (two builds) is later, its own call.
+5. **Tech keeps how the project runs**: its *Overview* says it in one line (*Runs: client + server, ports 5173 and
+   3001*); the commands, ports and the build's log are Tech's, and a Play that did not start leads there (its failure's
+   lines, §107.3), not to the Orkmaster.
+6. **The phone**: Play stays the computer's (spec 88 §7); a goal's row says *Play it on the computer*.
+The owner's call.
