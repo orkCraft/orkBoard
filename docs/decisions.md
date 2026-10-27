@@ -2046,3 +2046,18 @@ Decisions). So (this makes §117 and §75 precise; spec 65's pitch flow is reuse
    spec changes without its why in `docs/decisions.md`; a bug's short way excepted (2).
 8. **A spec from before** is read as one part of its party, as an older goal's sections are (`OLD_TRACK_SECTIONS`).
 The owner's call.
+
+## 119. The Orkmaster's views stay its tab's; *The whole project* opens that tab, and the tab reads as one with the Orkmaster's line (27 October, the owner and the PM)
+
+Why: the owner asked whether the Orkmaster's views (*Board*, *Assets*) could stand in the left column. There they would
+mix §110.1's two axes (a row of the left column is what is looked at; *Assets* through Tech means nothing), leave the
+Orkmaster's tab empty and an exception to every other tab's header and views, and push the goals, scrolled all day,
+down. So (§110.3 made precise):
+1. **The Orkmaster's views stay in its tab** (*Board*, *Assets*, §111), its header as every party's.
+2. **A press on *The whole project* opens the Orkmaster's tab on *Board*** (as picking a goal opens its step's tab,
+   §110.3); after, the tab stays as the person leaves it.
+3. **The Orkmaster's tab reads as one with its line** in the left column: the same head, the tabs' first, joined to the
+   column's edge.
+4. **Measured**: the tabs' switches; if the person lives on *Board* and seldom opens a party's tab, *Board* as the
+   window's default is asked again.
+The owner's call.
