@@ -2723,3 +2723,48 @@ phases as the person reads them, §122.2, §127.2, §133.1, §134.5, §145.6 and
 4. ***Later, by itself* is on the route card only when the limits run low** (§121.3); else the route card's one act is
    **Talk** (**Start** on the short way, §118.2).
 The owner's call.
+
+## 148. orkUI made to fit the new window: the half-tint warm taken; one moon; the icons at the signs' weight; the marks in ink; the elements apart from the signals; the heads at 16 px at least; the races, signs and emblems Orkboard draws; the preview the window as decided (27 October, the owner and the PM)
+
+Why: orkUI's whole set laid out on one sheet against spec 95: the frame holds (the pixel face for headings and buttons,
+IBM Plex for the rest, square notched corners, the warm ground of a tabletop game, which the indie developers it is for
+know), but its parts were drawn for windows since changed. Three crescents mean three things (the element *void*, the
+sign *night*, the icon `moon`) while the moon now means *starts by itself later* (§136.5); the icons (pixelarticons, a
+1 px line on a 24 grid) stand beside the signs and emblems (solid pixels on a 7 grid) as two styles; the AI tools'
+marks are the most coloured things in a system where colour is a signal (§53.5); the elements sit on the signals' hues
+(meadow `#7fbf9a` by success `#86c062`, dust `#d4b77a` by alert `#f0d050`) and lava is a grey that reads as disabled;
+the ork's and goblin's green skin is the action's green (`#6aa84f`), so a head beside *Start* reads as a second button;
+a head at 12 px is a blot and its tier unreadable; the knight, lich and skeleton are no craft of Orkboard's (§53) and
+the lightest heads; the emblems repeat the signs under other names (anvil and restructure, beaker and flask, beetle and
+bug, broom and tidy, scroll and page, stall and store); the goal types' signs went (§131.5), the moons of progress went
+(§127.3); and orkUI's preview still shows *Agents* and *Review* tabs and counts (§67, §136.11). The repository still
+holds orkUI 0.13.0, the full warm; §115's half tint was to be tried. So (made in orkUI first, then copied, CLAUDE.md;
+this makes §115, §127.3 and §144.2 precise):
+1. **The half-tint warm is taken** (§115, orkUI 0.14.0): canvas `#151412`, panel `#1e1c1a`, table `#1a1816`, raised
+   `#282622`, frame `#3a3832`, edge `#908a82`; ink `#dedbd6`, muted `#aca8a1`, faint `#96928c`, the ratios measured in
+   orkUI before it is copied.
+2. **One moon**: the moon is the sign of *starts by itself later* alone (§136.5; the sign *night*, renamed); the icon
+   `moon` goes; **the element *void* is drawn anew**, never a crescent (an empty ring, or a whirl).
+3. **The icons at the signs' weight**: the icons the window draws (←, ×, **…**, **+**, the search, the microphone, ▶, ■,
+   the chevrons) are drawn again on the signs' grid in solid pixels, orkUI's own; the others go. Pixelarticons' licence
+   stays beside them while any of theirs is left.
+4. **The AI tools' marks in ink** in the window (a seat's tool under its head, a limit's chip); their brands' colours only
+   in the seat's popover, where the tool is chosen (§110.7). The ranks' chevrons in ink.
+5. **The elements apart from the signals**: each of a hue no signal has, and each at least 3:1 on the raised panel:
+   meadow toward teal, dust a darker ochre, lava a warm red-brown never the danger's, ice and void as they are but void's
+   new mark; measured in orkUI.
+6. **No head in the action's green**: the ork's and goblin's skin a step darker, toward olive, so a head beside a button
+   is never read as one.
+7. **A head is 16 px at least**: on a card, a seat, a token and a tab; where less room is left, the race's silhouette
+   without its tier's gear.
+8. **Orkboard draws the four crafts' races** (§53: ork, elf, goblin, gnome; the Orkmaster's crown); the knight, lich and
+   skeleton stay orkUI's for Orkline and are not copied into Orkboard's copy.
+9. **One vocabulary**: the emblems are not copied into Orkboard's copy (the signs say it); **the signs are pruned**: the
+   goal types' signs go (§131.5) and the moons of progress (§127.3); a map card's kind keeps its sign (§104.2: a screen, a
+   picture, a sound, a clip, a text, a page, a logo); the states are §127.3's closed set (spec 95 §9).
+10. **The cost's frame is orkUI's gem** (its *a price* already), showing the share of the limits (*4%*, §144.2).
+11. **orkUI's preview shows the window as decided** (spec 95): the table with its lanes under the tabs, the hand with
+   the deck, the stacks, Release's card and the discard, a card with its cost; no count, no *Agents* or *Review* tab.
+12. **When**: one orkUI release (0.15.0) with all of the above, copied here before the first slice's faces are drawn
+   (§136.12).
+The owner's call.

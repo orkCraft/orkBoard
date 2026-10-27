@@ -158,6 +158,9 @@ The closed set, kept in orkUI (§127.3): **signs** — the goal's element, the s
 the moon, *done*; the heads are accents, the cost's frame a number's place. **Motions** — dealt (and played, from the
 hand to a lane), sealed, crumbled, ghost, turned, lifted, the microphone's pulse. A new thing takes one of them or
 replaces one. Under reduced motion each is still.
+**The look** (§106, §115, §148): orkUI's office in the half-tint warm (0.14.0's greys); the moon one sign only; the
+icons drawn at the signs' weight; the AI tools' marks in ink; the elements on hues no signal has; a head 16 px at least,
+never the action's green; the four crafts' races only; the cost in orkUI's gem.
 
 ## 10. Gone
 The top bar; the left column, its groups and *The whole project* row; the right column; the drawer; the dialogs; the
