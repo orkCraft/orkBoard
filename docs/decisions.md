@@ -2575,3 +2575,30 @@ need its line. So (this changes §124.5 and §135.4's last clause):
    comes later, with no list to grow.
 2. A general idea (the Orkmaster's tab, no party addressed, §124.4) has no picking: it is its text alone.
 The owner's call.
+
+## 142. No temporary tab: the pane opens one thing over its map, with ← back; the tabs are the leaders alone (27 October, the owner and the PM)
+
+Why: the owner: the temporary tab is a weak place. It stands in the row of who looks (§110.1) while it holds what is
+opened, and it has rules of its own to learn (replaced by the next, pinned, *Back*, §104.8, §120.2); on the phone it is
+a screen anyway (spec 94 §3.2). What it holds is of three kinds: a read of a card (a diff, a task's log, a failure's
+lines, a file, an asset large, a role's text, the talk behind *More*), a place (Settings, Operations, the history, the
+files with no Tech nor Design, *New party*), and Play. So (this changes §104.8, §111.1, §120.2, §127.1–§127.2, §130.4,
+§136.3, §136.7, §136.11, §138.5 and spec 94 §1.4, §3.2, §3.7):
+1. **The pane opens one thing over its map**: whatever is no map opens in the pane itself, its title saying where it
+   came from (*← System · server/lobby.ts*); **←** or Esc goes back to the map as it was left, the card it came from
+   lit. Nothing is added to the row of tabs: **the tabs are the leaders alone** (§110.1). One thing at a time, the next
+   replacing it; nothing is pinned.
+2. **A read of a card**: the lifted card (§120.1) stays the quick look; **Open** on its back opens it over the pane (a
+   diff, a log, a failure's lines, a file, an asset large, a role's text).
+3. **A place**: *Settings*, *Operations*, the history, the files (§138.5) and *New party* open from the Orkmaster's
+   line's menu (the tabs' *+* for *New party*) the same way, over the pane, with **←**.
+4. **Play**: **▶ Play** turns the pane into the project running (§111); **←** goes back to the map while it keeps
+   running, **▶** again returns to the same run, never a restart; **■** in the pane's title stops it (§111.4: one Play a
+   project).
+5. **A long text of a phase** (*More* of *Talk*, the agents' full text of a spec, §104.5, §118.1) unfolds in place on its
+   phase's page, never opened elsewhere.
+6. **The hand stays under everything opened** (§104.8): a card is answered while a diff is read.
+7. **The narrow width does the same**: what opens over the pane is a screen of its own, **←** the browser's back (spec 94
+   §3.3); one rule at both widths.
+8. **Side by side and pinning** are not made; asked again when the owner says so (§120.4, §129.3).
+The owner's call.

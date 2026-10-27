@@ -34,7 +34,7 @@ outbox keeps. No new concept, so nothing new in `TERMS`; *narrow* and *wide* are
 2. **No fixed width a part of the window**: the left column, the pane and the hand take their widths from orkUI's tokens
    and the window; a map lays its cards out in rows that wrap (spec 67 §1), never wider than the pane.
 3. **A press is at least 44 × 44 px** under `pointer: coarse` (the visible thing may be smaller, its target is not).
-4. **What opens is a screen's or a sheet's at the narrow width** (§3): a popover, a lifted card, the temporary tab. A face
+4. **What opens is a screen's or a sheet's at the narrow width** (§3): a popover, a lifted card, what the pane opens (§142). A face
    is written once and told where it lies, never drawn twice.
 5. **Picking a part for an idea is a mode the person sees** (§124.5 made precise; decided in §136.9).
    An idea addressed to a party (**→ Tech ×**) puts its party's view in picking only while the blank card holds the caret
@@ -68,7 +68,7 @@ outbox keeps. No new concept, so nothing new in `TERMS`; *narrow* and *wide* are
 2. **Three screens for three parts** (§104.0, §128.1): **the goals** (the left column: the Orkmaster's line and the goals
    in one list, §126.2, with the tabs' heads over the list, §134.4) are the first; a goal pressed opens **the pane**
    through its step's tab, a tab's head pressed opens it on the whole project through that party; **the hand** lies at
-   the foot of both. A lifted card and the temporary tab are screens of their own (§120.5).
+   the foot of both. A lifted card and what the pane opens over its map are screens of their own (§120.5, §142.7).
 3. **Back is the browser's**: each screen is a history entry (`history.pushState`), so the phone's back gesture and
    button go back a screen, a lifted card lowered first. Reloading opens the screen it was on.
 4. **The tabs are a row of heads** (§110.9: six at 44 px fit 390 px); the picked tab's party name in the pane's title.
@@ -82,8 +82,8 @@ outbox keeps. No new concept, so nothing new in `TERMS`; *narrow* and *wide* are
    field over the keyboard (it rides `visualViewport`) with **Send** beside it: Enter writes a new line on a touch
    keyboard (`enterkeyhint="send"` on its key) and sends with a hardware one (§124.1). The microphone is the phone's
    dictation (§125.2). The foot keeps clear of the home bar (`env(safe-area-inset-bottom)`).
-7. **What stays the computer's**: Play says *Play it on the computer* (§111.6) unless §113's phone play is allowed; the
-   temporary tab's diff and logs are read, never edited.
+7. **What stays the computer's**: Play says *Play it on the computer* (§111.6) unless §113's phone play is allowed; a diff
+   and a log opened over the pane (§142.2) are read, never edited.
 
 ## 4. The frame (D)
 1. **`pwa/index.html` loads the page**: orkUI's styles, the page's styles, the import map of `vendor/` (Preact, its hooks,
