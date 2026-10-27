@@ -2259,3 +2259,15 @@ same parts a screen each. So:
 3. **Then the phone's own face is removed** (`pwa/shell-*.js`, `pwa/board-app.js`'s screens), its tests moved to the
    page's at the narrow width; `tests/test_architecture.py` keeps one face.
 The owner's call.
+
+## 129. No measures: the owner's yes or no after each slice is built (27 October, the owner)
+
+Why: the owner is the one person using Orkboard; a slice is judged by them using it, not by counted events. So (this
+changes §123.1 and every *Measured* of §104–§128: §104.14, §109.8, §117.6, §119.4, §120.4, §128.2):
+1. **No measures are built**: §123.1's three measures and their weekly report are not made; no event is added only to
+   count.
+2. **A slice is done when the owner says yes**: built, the owner uses it on their own project and says **yes** (it stays,
+   the next slice starts), or **no** with what is wrong (it is fixed, or taken back). §123.2's first slice and §123.3's
+   order stay; *after it is measured* reads *after the owner's yes*.
+3. Where a decision said *asked again if the measures show* (§119.4, §120.4), it is asked again when the owner says so.
+The owner's call.
