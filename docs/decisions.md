@@ -2702,3 +2702,24 @@ editor):
    editor. The Board in an editor tab stays.
 4. **The extension's tests** (`cd vscode && npm test`) cover the asks it accepts and the ones it refuses.
 The owner's call.
+
+## 147. Operations leave Orkboard's window; the person reads four phases; the decision has one button; *Later* only when the limits run low (27 October, the owner and the PM)
+
+Why: read once more as one window (spec 95), four things are still more than the work needs: *Operations* (the person's
+daily, 1:1s, retro, mail and Jira, spec 38) are no project's goals, and with Team gone (§122.2) they hang in the
+Orkmaster's menu; the person reads six phases where two are moments (*Idea*, while the Orkmaster routes; *Decided*, one
+card at the end of *Talk*); the decision's card has *Confirm* beside *Confirm and start* (§134.5), the first only to read
+the spec before the work, which is read at any time and stopped from its stack or by *Stop all*; and *Later, by itself*
+stands on every route card (§133.1) though §121.3 offered it only when the limits run low. So (this changes §118.1's
+phases as the person reads them, §122.2, §127.2, §133.1, §134.5, §145.6 and spec 95):
+1. **Operations leave Orkboard's window**: no entry in the Orkmaster's **…**, no card, no row. Their code
+   (`gui/ops.py`, `realm/ops_team.py`) stays for Orkline, frozen, which takes them up again with it (§121.4).
+2. **The person reads four phases: Talk → Spec → Work → Done.** The route card opens *Talk*; the decision's card closes
+   it. The pane's title, the phase marks and the words say these four; the engine keeps *Idea* and *Decided* as its own
+   states (the decision is still worded, confirmed and committed to dev, §118.1, §138.7).
+3. **The decision has one button, *Confirm and start*** (§134.5): the decision committed, the sections written, the work
+   started by itself when nothing is left to settle, else the forks and *Start* after them. A goal is held back by *Hold*,
+   in the **…** of its stack or of its lifted card on the table, or by *Stop all*, never by a second button on the card.
+4. ***Later, by itself* is on the route card only when the limits run low** (§121.3); else the route card's one act is
+   **Talk** (**Start** on the short way, §118.2).
+The owner's call.

@@ -21,7 +21,7 @@ the same commit**; where it and a decision differ, the decision is right and thi
 
 ## 2. The tabs
 1. **The Orkmaster's tab first**, the project's name on it (*Orkmaster · Party game*); its **…** holds the projects'
-   switcher, *Settings*, *Operations*, the history and the files (§145.6, §138.5). Its header: its AI tool alone, its
+   switcher, *Settings*, the history and the files (§145.6, §138.5, §147.1). Its header: its AI tool alone, its
    tier always the cheaper, said in its popover (§140.1).
 2. **Then a tab a party**, its leader's head and the party's name (§110.3); more than fit, the heads alone, the name on
    hover and in the pane's title. A picked goal's route puts a dot on its parties' tabs, its step's in its element.
@@ -59,7 +59,7 @@ the same commit**; where it and a decision differ, the decision is right and thi
    *Used by*, its changes and their goals; a task's *What it made*). At most twice a card, never over what it is about.
    Esc or a press away lowers it. A mark pressed says which goal made it and lights that goal's other marks (§126.5).
 5. **The pane opens one thing over its map** (§142): **Open** on a lifted card's back (a diff, a log, a failure's lines,
-   a file, an asset large, a role's text), a place from the Orkmaster's **…** (*Settings*, *Operations*, the history,
+   a file, an asset large, a role's text), a place from the Orkmaster's **…** (*Settings*, the history,
    the files) or **+** (*New party*), and **▶ Play** (§111). Its title says where it came from (*← System ·
    server/lobby.ts*); **←** or Esc goes back to the map as it was, the card it came from lit. One at a time, nothing
    pinned. Play keeps running after **←**; **▶** returns to it, **■** stops it. **In VS Code** a read opens in the editor
@@ -92,15 +92,17 @@ From left to right (§145.3–§145.4, §121.2, §137.5):
 1. **Four places** (§145.2): the deck, the hand, the table, the discard. Its signs are its places': the moon in the
    deck; the leader's head (it works) and the alert (it failed) on its cards on the table and its stack; *done* in the
    discard (§145.7). The hourglass is a card a member works on where no head stands (§136.1).
-2. **The phases** (§118.1): **Idea** → **Talk** → **Decided** → **Spec** → **Work** → **Done**.
-   - **Idea**: sent from the blank card, routed by the Orkmaster (code or the cheaper tier). **The route card** comes
-     first (§133.1, §138.2): the leaders' heads in order (a head's × takes it off, **+** adds any party but Release,
-     §140.2–§140.3), the cost, its place (*3rd in line*, §138.3), **Talk** and **Later, by itself**. No call before
-     that press. *Later* puts it in the deck.
-   - **Talk**: the route's leaders answer short on the cheaper tier (a stance, for and against, questions); the person
-     answers in the hand, two rounds at most; the questions left take their leaders' defaults (§118.1, §121.2).
-   - **Decided**: the Orkmaster words the decision; **Confirm and start** or **Confirm** (§134.5). Confirmed, it is
-     committed to dev, numbered, in the project's `docs/decisions.md` (§138.7).
+2. **The phases as the person reads them** (§147.2): **Talk** → **Spec** → **Work** → **Done** (the engine keeps
+   *Idea* and *Decided* as its own states, §118.1).
+   - **Talk** opens with **the route card** (§133.1, §138.2), once the Orkmaster has routed the idea sent from the blank
+     card (code or the cheaper tier): the leaders' heads in order (a head's × takes it off, **+** adds any party but
+     Release, §140.2–§140.3), the cost, its place (*3rd in line*, §138.3), and **Talk**; **Later, by itself** beside it
+     only when the limits run low (§147.4), putting it in the deck. No call before that press. Then the route's
+     leaders answer short on the cheaper tier (a stance, for and against, questions); the person answers in the hand,
+     two rounds at most; the questions left take their leaders' defaults (§118.1, §121.2). **Talk closes with the
+     decision's card**: the Orkmaster words the decision, one button, **Confirm and start** (§147.3); confirmed, it is
+     committed to dev, numbered, in the project's `docs/decisions.md` (§138.7). A goal is held back by *Hold* in the
+     **…** of its stack or of its lifted card on the table, or by *Stop all*.
    - **Spec**: every leader on the route writes its section at once (§117.2): *Why*, *Done when* (five at most),
      *Checks*, *Will be*, *Out*, *Risks*, *Defaults*, *Questions*; the Orkmaster joins them on the cheaper tier, never
      changing a leader's words; what two sections disagree on is a fork in the hand, both sides with their why (§117.3,
@@ -111,7 +113,7 @@ From left to right (§145.3–§145.4, §121.2, §137.5):
      contract* (§104.9).
    - **Done**: its work in dev (§138.1), its *Result* promised against made; it goes to the discard, and to Release's
      map until *To main*.
-3. **The short way** (§118.2): a bug goes to Tech alone and skips Talk and Decided; its route card says so, with
+3. **The short way** (§118.2): a bug goes to Tech alone and skips Talk; its route card says so, with
    **Start** and the long way beside it. A small goal is offered the same.
 4. **A change while it works** is a new idea of the same goal, written with the goal picked, talked only with the
    leaders it touches, decided as an entry that names what it changes; only the tasks whose sections changed are planned
@@ -162,7 +164,8 @@ The top bar; the left column, its groups and *The whole project* row; the right 
 temporary tab and pinning; a party's *Overview*, *Now* line and stance; the views' segmented control; *Feature modules*
 as a tab; the Assets button; *Agents*; the analytics page; the canvases; the night and *Process now*; a goal's priority,
 kind and lens switch; the moon of progress; *waits for you* on rows and tabs; the *Flags* fold; the parties General,
-Team and Ideation; *Storyboard* and *Versions*; the measures (§129).
+Team and Ideation; *Storyboard* and *Versions*; the measures (§129); Operations in Orkboard's window, *Idea* and
+*Decided* as the person's phases, a bare *Confirm*, *Later* on every route card (§147).
 
 ## 11. The first slice
 As decided (§136.12, §137.6, §145.10), on the owner's Node party game, done at the owner's yes: **before it** §131's
@@ -179,7 +182,7 @@ with the route card, *Talk* and *Start*, the deck and the discard), the rest aft
 
 ## 12. The words
 `TERMS` gets its one word each with the slice's first spec (§121.1): *table*, *hand*, *deck*, *discard*, *lane*,
-*blank card*, *lifted card*, *route*, *route card*, *step*, *phase*, *section*, *seat*, *stage*, *map*, *will be*,
+*blank card*, *lifted card*, *route*, *route card*, *step*, *phase* (*Talk*, *Spec*, *Work*, *Done*), *Hold*, *section*, *seat*, *stage*, *map*, *will be*,
 *fork*, *out of the contract*, *To main*, *Release a version*, *in line*. A part of a map is not called a *card* where a
 person reads it (spec 70 §0); the deck reads *In line* and the discard *Done* on hover, so the battler's words are never
 the only ones.
