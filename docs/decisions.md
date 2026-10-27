@@ -2479,3 +2479,29 @@ Agents repeats the Board, the limits' chips and the seats' popovers. So (this ch
       for the reset, *Start now* and recurring goals (§121.3, §133.4, §122.6, 4, 5); the voice (§125), the history
       (§130.4), Settings made small (§127.4), the reveal *Since <version>* (§112.5).
 The owner's call.
+
+## 137. Release is in every project from its start and is the one way into main: its map is dev against main; *To main* by code, *Release a version* with its cost (27 October, the owner and the PM)
+
+Why: the owner: every other party lands its work in dev by itself (§101); let Release be the one party through which
+anything goes into main. Today dev → main is a card of no goal's in the hand (*n goals ready for main*, §104.9, §121.2)
+and Release is offered only to a live project and called only for a release (§122.4–§122.5), so a project being made
+has no keeper of main, and §134.2's *a party is one map* left Release's map unsaid. Merging into main and releasing a
+version are two acts (a store's version, its notes and its submission are not wanted on every merge), and a fix for
+production must reach main in one press. So (this changes §104.9, §116.1, §121.2, §122.4–§122.5 and §136.12):
+1. **Release comes with every project, at every stage**: laid out ticked among the first parties (§116.1, §122.5),
+   lean (its leader alone, the cheaper tier); it cannot be removed (§97), its seat's tool and tier set in its popover
+   (§110.7). It is still never a step of another goal's route (§122.4).
+2. **Release alone writes main.** No other party, task or card merges into main; the gate's checks (§103: the project's
+   tests) run on its act as they run today.
+3. **Its map is dev against main**: a card a goal that is in dev and not in main, its element and name, ticked; a card
+   lifted shows its *Result*, promised against made (§104.11); what landed in main since the last version lies faint
+   under a line naming it (*Since 1.3*).
+4. **Two acts, said plainly**: **To main** merges the ticked goals into main by code, with no model and no call (one goal
+   ticked is a fix for production: one press); **Release a version** is §122.4's goal *A release* (its version, notes and
+   stores' list), with its cost said before as every goal's (§121.3, §133.1), and *@Release* on the blank card starts it
+   too.
+5. **The hand keeps one card for it**: *n goals ready for main* is Release's card, its leader's head on it (no longer a
+   card of no goal's, §121.2), at the hand's right; pressed, it opens Release's tab on its map.
+6. **In the first slice** (§136.12): Release with every project and *To main* on its map, in place of today's card;
+   *Release a version* after the slice, with the wait for the reset and recurring goals.
+The owner's call.
