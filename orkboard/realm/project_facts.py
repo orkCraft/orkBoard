@@ -167,7 +167,8 @@ def _head(root: Path, f: Path) -> str | None:
 
 def start_files(root: Path) -> list[dict]:
     """`[{path, text}]`: the project's README and the Markdown files at the top of `docs/` (START_DOCS at most, by name), the first START_CHARS
-    characters of each, chosen by code; for the one call that reads them (spec 99 §8.1)."""
+    characters of each, chosen by code; for the one call that reads them (spec 99 §8.1). The decisions file is never one
+    of them (spec 97 §1: a leader gets its entries by code)."""
     root = Path(root)
     try:
         top = sorted(root.iterdir(), key=lambda e: e.name.lower())
@@ -176,7 +177,7 @@ def start_files(root: Path) -> list[dict]:
     paths = [next((e for e in top if e.name.lower() in README), None)]
     docs = root / "docs"
     try:
-        found = sorted((e for e in docs.iterdir() if e.suffix.lower() == ".md" and e.is_file()), key=lambda e: (e.name.lower(), e.name)) \
+        found = sorted((e for e in docs.iterdir() if e.suffix.lower() == ".md" and e.is_file() and e.name.lower() != "decisions.md"), key=lambda e: (e.name.lower(), e.name)) \
             if docs.is_dir() and not docs.is_symlink() else []
     except OSError:
         found = []

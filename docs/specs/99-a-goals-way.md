@@ -182,7 +182,10 @@ went are removed with it (`tests/test_idea_night.py`, `tests/test_night_low.py`)
    section's words**; what two sections disagree on is **a fork**: the row **`fork`** `{kind: "fork", idea, sides:
    [{party, leader, says, why}], about}`, answered by `ideas.fork_answer {idea, side|text}` (the answer to *Decisions*,
    naming the sections it changes; the sections it changes are written again by their leaders, one call each).
-4. **Starts by itself** when the join leaves no fork and no open question: state `plan`, then H's first step's plan and
+4. **Who decided a change on the map**: once a section's *Will be* is stored, `map_text`'s *Changed since your last call* lines
+   say who decided each change (the person, the leader, a member alone: §112.6), read from the goal's sections and
+   decisions (B left it at the goal and *by you*).
+5. **Starts by itself** when the join leaves no fork and no open question: state `plan`, then H's first step's plan and
    the start as today's autostart does (`idea_risk.decide` holds as today); with a fork, the forks first, then
    *Start* (`start` row, C §4.6) — the cost said on the route card was the whole way's, so nothing unsaid is spent.
 
@@ -236,3 +239,17 @@ cards with picks from the files, the row laid after the others, answers kept and
 one after another, a task's party and tool from its step's party, the brief's sections, a one-step goal as today. The
 critical tests (`tests/test_architecture.py`, `tests/test_board_alone.py`, `tests/test_updates.py`) and each part's
 files' tests.
+
+## As built (B)
+
+New `realm/map_text.py` (`system(state_dir, root, since="", pages=None)`, `detail(state_dir, root, parts)`, `of(party, …)`; `LIMIT`
+3,000, `DETAIL` 1,500, `CHANGED` 1,200) and `realm/project_facts.py` (`keep`, `of`, `common`, `for_call`, `answered`, `start_files`;
+`<state_dir>/facts.json` with `common_by` beside `common`, so a reading never replaces the person's answer). Tests:
+`tests/test_map_text.py`, `tests/test_project_facts.py`.
+- **Decided here:** `system` is `None` with no `dev` branch; past 3,000 characters the parts keep their names, and past that
+  *and N more parts*; *Changed since your last call* has its own 1,200; with `since` empty the text below its first line (the
+  dev commit) is the same between two heads that changed no part. `pages` (the Board's pages root) gives a goal its title.
+  `start_files` reads the README and up to six `docs/*.md` (never `decisions.md`), 2,000 characters each, symlinks and secret
+  paths skipped. `answered` gives the keys already kept, for G.
+- **Not yet: who decided a change** (§112.6) is not stored before E's *Will be*; *Changed since* says the goal, and *by you*
+  for the person's own commits. **E adds the deciding party** to those lines once a section's *Will be* is stored.

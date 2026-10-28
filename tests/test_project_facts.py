@@ -155,3 +155,11 @@ def test_the_start_files_are_six_docs_at_most_none_secret_none_linked_and_none_w
     got = project_facts.start_files(tmp_path)
     assert got[0] == {"path": "readme", "text": "plain readme"}
     assert [f["path"] for f in got[1:]] == [f"docs/d{n}.md" for n in range(6)]          # a file left out does not take a slot
+
+
+def test_the_start_never_reads_the_decisions_file(tmp_path):
+    (tmp_path / "README.md").write_text("A party game.", encoding="utf-8")
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "decisions.md").write_text("## 1. A decision", encoding="utf-8")
+    (tmp_path / "docs" / "game.md").write_text("Rounds.", encoding="utf-8")
+    assert [f["path"] for f in project_facts.start_files(tmp_path)] == ["README.md", "docs/game.md"]
