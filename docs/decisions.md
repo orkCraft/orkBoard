@@ -3360,3 +3360,20 @@ not as cards. So (this makes §167.1, §167.4, §167.5 and §167.7 precise):
    same way, turned less (1° to 3°), showing their edge with the stage's sign and the element only; their names on a
    hover, which opens the fan, and on the picked goal, which unfolds as before. No strip of names (§167.4's strips go).
 The owner's call.
+
+## 169. S1 and S2b taken; seven seats; a risky step waits; the first start opens the parties' place; a fact can be added (28 October, the owner)
+
+Why: the owner's answers to the lead's questions after specs 98–101. So:
+1. **S1 (the window: the table and the hand, spec 98, spec 101) and S2b (a goal's way as cards, spec 100) are taken** (§129):
+   S3 may be specified.
+2. **A party has at most seven seats in all** (its leader and six), at most five who do and two who check (§151.1 made
+   exact): no craft's roles reach more today (the largest, Art, a leader, five who do and one who checks).
+3. **A later step of high risk waits for the person's Start** (spec 99 §9): the route's *Start* covers its steps of
+   ordinary risk; one `idea_risk.decide` holds is laid in the hand as the `start` card of that step, with its cost.
+4. **The first start opens the one place of the parties at once** (spec 95 §7: no tour, no button before it), over the
+   empty Board as soon as the project is read; ← or Esc leaves it to the empty Board, which keeps *Choose the parties*.
+5. **The hint under a fork's banner** stays: *The side you pick stands; the other leaders write their sections again*.
+6. **A fact can be added** to what a leader keeps of the project, beside correcting and forgetting one (§153.4).
+7. **Release's leader on Seasoned, the Live crafts proposed Standard** (spec 99 A's picks) stay.
+The owner's call.
+
