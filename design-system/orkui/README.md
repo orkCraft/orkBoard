@@ -5,7 +5,7 @@ the muted heads of the races. The ground is lifted (canvas `#151412`) and the in
 not 16:1), so the screen does not glare; the greys are warm in a **half tint** (0.15.0: each grey of the full warm of 0.13.0 taken
 halfway to the neutral grey of its own lightness: parchment ink on dark greys with a breath of brown, one tint across the
 canvas, panels, table and inks, never a mark), and the table is a warm grey a step above the canvas. Ink on canvas, panel,
-raised and table is 13.33, 12.30, 10.94 and 12.82:1; the muted ink 7.78, 7.17, 6.38, 7.48; the faint ink (0.15.3: `#98948e`, a step lighter, so it holds AA on the card) 6.10, 5.63, 5.01, 5.87 and 4.50 on the card;
+raised and table is 13.33, 12.30, 10.94 and 12.82:1; the muted ink 7.78, 7.17, 6.38, 7.48; the faint ink (0.15.3: `#98948e`, a step lighter, so it holds AA on the card) 6.10, 5.63, 5.01, 5.87 and 4.54 on the card;
 `edge` 5.39, 4.97, 4.42, 5.18 (3:1 holds on every ground).
 The **pixel face** (Pixelify Sans) is for titles, headings and buttons only, never below 12 px, whole pixels, no ligatures, no
 faux bold, never for a number or a person's text. **The interface's text is IBM Plex Sans**: body 14/20, caption 12/16 and the
@@ -21,7 +21,7 @@ paper, so the letters do not glare) and the **reading face** IBM Plex Sans (15/2
 The interface around a page (its labels, buttons, lists) is set in the interface's own scale.
 
 Nothing is round: edges 1 px, corners notched by 2 px (`clip-path` on a control's `::before`, so the hit area is whole),
-dialogs framed `3px double`. A row selected is raised, a card selected keeps its fill, each with a 2 px ink bar, never a white box. **A card is neutral on the warm table** (0.15.3, decisions §163): `card` `#2e2e2e` and `card-frame` `#3c3c3c`, soft greys a step lighter than `raised`; every card, the lifted card, the back and the + card are drawn on them; the grounds, panels, tabs and the table stay the half tint. Every arrow and icon is a pixel mark.
+dialogs framed `3px double`. A row selected is raised, a card selected keeps its fill, each with a 2 px ink bar, never a white box. **A card is a slate grey on the warm table** (0.15.3, decisions §163; a hint cold since 0.15.4, §166): `card` `#2a2e31` and `card-frame` `#383d41`, blue-greys (CIELAB hue 249 and 251, chroma 2.7 and 3.4, never near an element's: 68 from `ice`, 43 from `void`) a step lighter than `raised`, the table's warmth and the card's cold 175 degrees apart in hue (0.15.3 had neutral `#2e2e2e` and `#3c3c3c`); every card, the lifted card, the back and the + card are drawn on them; the grounds, panels, tabs and the table stay the half tint. Every arrow and icon is a pixel mark.
 
 ## The ork legend (a one-character mark never stands alone: its word is beside it)
 `@` Taskmaster · `o` Grunt · `?` idea · `*` goal · `+` task

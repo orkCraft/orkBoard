@@ -1,19 +1,19 @@
 {
  "from": "https://github.com/orkCraft/orkUI",
  "look": "office",
- "version": "0.15.3",
- "commit": "7034259d98947fda2c64b2e46d410841bee582f2",
+ "version": "0.15.4",
+ "commit": "0a82f5d95841f48a99e540cfa8755c18c2bbd2a6",
  "files": {
   "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
   "NOTICE": "f7290b6993b7685b2fb2d6f07cb722ed8df86907b22213d82d9417246dce7c3e",
-  "README.md": "2d845f99821ee4f44ca94bee78fede1d1a6fd2864cb2fb7ce852c048aabfdd98",
+  "README.md": "1acfba57c9616a66e0c1795e9658b35346f51a068603af96a837489131312b62",
   "ascii/ork-asks.txt": "7bb70f760f88ab79087d570aadbfaa16c7b598711e29b62dbfead3b0a8c25011",
   "ascii/ork-asleep.txt": "f89568e0616c880b25ce5a67e73b815e9217eac6eabedabd5c9a0a962b6aabed",
   "ascii/ork-failed.txt": "fdf0fc3553aa01d405a80fa402454f754f413425ef7a00cab652b7f722102e60",
   "ascii/ork-working.txt": "af052708dad2bce8a84c15851077074cf821f34c3580883d9386c88216e155a4",
   "ascii/ork.txt": "e13545620b898a1ed7919fdc0bad768c09afe251b626d6f49beb00994e53a94c",
-  "backs/README.md": "b452b34783fd5ae1c0bb0e8874e1a32e44e3051d203dfbfe39d2de5f2d9e3734",
-  "backs/back.svg": "dbe935651c293a3ca6b48205215b85ead89241cdc322ca189e9268f469f5541a",
+  "backs/README.md": "5c02c156eb6f05ccabdb2393f9ea9ba0b8bb27e83865b72d5e4127a4d21746b0",
+  "backs/back.svg": "05a27ac22eee679b4cafa83db8bf4244c0bfda57b631188b7640eb60e31520e0",
   "backs/ork.svg": "9d4a636c399372d72148a453e3171a805547dd140ce7d398569da7d17505af31",
   "components.css": "9c9f273cf59bca72aa07978704f6dea4862d50c8b9b922e4b4da41c1622ba85c",
   "elements/README.md": "70dafc0852ea0541d17a7a2499bd11e0b130a6e6e92324044a908c3d65e04b83",
@@ -232,7 +232,7 @@
   "signs/tidy.svg": "c4d3ddb46f93d1c604591303a6ac0f5331a3ed11c4ab950682ec88dbf480a9e5",
   "signs/tune.svg": "d5495ca0ded02d133abe41bdf39dc13a6040ed2d8bee9da77810120d944e3653",
   "signs/work.svg": "01a9c27d04c2643eca81f55f190c155f333ed3c7f8e8f31f22d3f054ed0907e3",
-  "tokens.css": "2bf95ee3357f1a0a1fa9956e64bb444d47ace66228a17c3fba5efa4980b24779",
-  "tokens.json": "71809dd94fb4a4a91a31dca8372bbf21e947bb9d4d3a82d53181029c3ece0453"
+  "tokens.css": "deeb8eb80c0959c5eb067f75224497a7141def76cbb57c42be7859c88d4ffa59",
+  "tokens.json": "92e263b08b4e232edd0a18a9bc5450bdae8fe310b3127797c9a60b3178d74a47"
  }
 }

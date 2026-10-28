@@ -1,4 +1,4 @@
-/* Generated from tokens.json by tools/build_tokens.py (orkUI 0.15.3, look office). Do not edit. */
+/* Generated from tokens.json by tools/build_tokens.py (orkUI 0.15.4, look office). Do not edit. */
 
 :root[data-look="office"] {
   color-scheme: dark;
@@ -28,8 +28,8 @@
   --ork-table: #1a1816;
   --ork-table-rim: #3a3832;
   --ork-table-rim-hi: #47443e;
-  --ork-card: #2e2e2e;
-  --ork-card-frame: #3c3c3c;
+  --ork-card: #2a2e31;
+  --ork-card-frame: #383d41;
   --ork-font-pixel: "Pixelify Sans", "IBM Plex Mono", ui-monospace, monospace;
   --ork-font-text: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --ork-font-read: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;

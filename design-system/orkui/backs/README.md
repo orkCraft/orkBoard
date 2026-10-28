@@ -2,7 +2,7 @@
 
 **The back**: a hand card face down (orkBoard's decisions §149.3, §160.3): the deck, the cards under a stack's top, the discard's cards
 under its top. One pattern, `back.svg`, drawn on a **15 x 21** grid of unit squares (5 : 7, a card): a border in the faint ink's grey, a
-lattice of pixels and an empty ring at the middle in the card's frame grey, on the card's grey (0.15.3, decisions §163). **No colour**: the three greys are the
+lattice of pixels and an empty ring at the middle in the card's frame grey, on the card's grey (0.15.3, decisions §163; a slate grey `#2a2e31` with `#383d41` since 0.15.4, §166). **No colour**: the three greys are the
 tokens `--ork-ink-faint`, `--ork-card-frame` and `--ork-card`, and a test holds the file to them. Since 0.15.1 the back draws no mark: the ork
 mark that stood in the ring is gone.
 
