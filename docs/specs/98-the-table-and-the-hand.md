@@ -230,3 +230,20 @@ New `realm/goal_place.py` (`place_of`, read by `board_map.row`, so a node and a 
 plan's `start_at` is `reset`; `line` is a deck goal waiting on another (`waits_on`); a failed goal with no Needs you row lies in the
 deck; pitches `sent`/`passed` are history; `ideas.board` reads the collision rows once and gives each goal its own, so a collision is
 on its row as on its node.
+
+## As built (C)
+
+New `js/table/` (`table.js` `Table`, `tabs.js`, `pane.js`, `boardmap.js`, `card.js`, `header.js`, `seatpop.js`, `syspane.js`, `over.js`,
+`places.js`, `data.js`, `menu.js`, `table.css`) and `tests/test_table_desktop_browser.py` (37 tests, both widths, a stub host of its own).
+Kinds drawn: `file`, `diff`, `log`, `task`, `role`, `settings`, `projects`, `files`, `party` (New party, Edit, Remove), `play`, `limits`.
+- **Decided here:** the tabs and the Board's columns read one `--cols`, so a tab stands exactly over its column; at the narrow width one
+  history entry while anything is open (the browser's back closes it); System is today's (`Lens`, `useSystem`, no *Feature modules*),
+  a press on a part or a link lifting it with today's part and link panes as its back; the old modules' own presses that would open the
+  drawer are caught and opened over the pane (`Reroute`); a form that was a dialog opens over the pane through `places.js`; Esc lowers a
+  lifted card of the table (key `t:…`), else goes back from what is over the pane, a handler acting only if `!e.defaultPrevented` and
+  calling `preventDefault` when it acts (D and E keep the convention; E adds *pick none*); after *New party* saves, its tab opens (the
+  person made it); a project switched restores its tab and closes what was open. No dashed ghosts on the Board (§3.3 lists tasks at
+  work); **▶ Play** stays at the narrow width as a 44 px icon.
+- **Left for E:** `shell/preview.js`'s `Task` and `Result` views exported (C keeps a copy, `TaskFace`); the presses that still set the
+  old drawer's state (`GoalEdit`'s `showGoal` after Save and the like); *Pair a phone* still a dialog; the history in the Orkmaster's
+  **…** (S6).
