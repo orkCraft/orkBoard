@@ -301,3 +301,24 @@ answers, the defaults, the stances, the cause, the project keys); `board_map.tal
   and both steps are the ledger's *spec* stage.
 - **Seams:** `self.decide(slug)` after a Talk's last round (E), `self.sections(slug)` after a bug's cause (E); without them, today's
   draft. A Talk lost when the process dies leaves the goal at `talk` with no row (a later part's tick).
+
+## As built (A)
+
+**Recipes by craft** (`realm/party_recipes.py`): a game's Game design, Tech, Art, Release, LiveOps, Marketing; every other kind's Product, Design, Tech,
+Release, Run, Marketing; recipe ids are the crafts (`product`, `game-design`, `design`, `art`, `tech`, `run`, `liveops`, `marketing`, `release`), each with
+`build`, `check` and `squad` (the first two doers and the first checker ticked; Release's empty). The mixed and stage recipes, Team and Ideation moved to
+`realm/party_recipes_before.py`: never offered, still found by id, so a party made before keeps its seats and its name. `ideas.goal_save` refuses a new
+General, Team or Ideation party (*General, Team and Ideation are not made any more: pick a party of the project's crafts*). **The stage**
+(`realm/project_stage.py`): kept in `project.json` (`stage`), read by names only (no code `idea`; a store page — `fastlane/metadata`, `store/` … — or a
+deploy — a platform file, `k8s/`, `helm/`, `terraform/`, a workflow named deploy/release/publish — `live`; else `being_made`); Idea's crafts lean, Being
+made's and Live's standard; Release `locked`, lean, its leader alone on Seasoned. `ideas.stage` → `{stage, read, kept, kind, offered: {stage: [card]}}`,
+`ideas.stage_set {stage}` (`gui/ideas_party.py` `stage_commands`, wired into `gui/ideas.py` after part E). **The squad and the size apart**: `goal_team.WAY`
+(lean: plan, do, one at once, no checker; standard: plan, do, check, two, one checker; full: three, every checker it concerns), the leader checking when the
+squad has no checker that concerns the task; a size changes only the tiers (`party_resize.resized` joins and removes no one); seats 7 in all, at most five
+doers and two checkers (`library.SEATS`). **Races by party**: `roles.PARTY_RACES` and `head(…, party=, lead=)`, `task_head(…, party=, leader=)`,
+`goal_team.craft_of`; a missing file falls back to the members' race, then the ork's; the Taskmaster and the Orkmaster orks in any party. `roles.RACES`
+(a role alone, by its craft) left as it was. **Left:** `party_drop` refusing Release (Release is dropped by `ideas.track_drop`, outside the part;
+`party_recipes.is_release` is ready); the other callers of `roles.head`/`task_head` that don't pass the party (`board_map`, `ideas_roles`,
+`ideas_canvases`, `ideas_review`, `ideas_pick`, `ideas_project.party_sizes`: spec 100 or H); `ideas_project`'s proposals not yet passing the stage;
+the lexicon's new races (spec 100); UA's roles (§151.8). **For the owner:** §151.1 says *at most seven (its leader, up to five who do, up to two who
+check)*, which can add up to eight; built as seven in all.
