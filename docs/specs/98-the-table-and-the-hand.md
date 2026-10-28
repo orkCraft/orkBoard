@@ -248,6 +248,17 @@ Kinds drawn: `file`, `diff`, `log`, `task`, `role`, `settings`, `projects`, `fil
   old drawer's state (`GoalEdit`'s `showGoal` after Save and the like); *Pair a phone* still a dialog; the history in the Orkmaster's
   **…** (S6).
 
+## As built (D)
+
+New `js/hand/`: `hand.js` (the hand's three places), `deck.js`/`deckrow.js` (the deck with its sealed back, its row: drag, pick, *All · search*, its
+list), `pluscard.js` (the + card drawn off the deck, the field it grows into: Enter, Shift+Enter, Esc, an address by tab and `@`, a pasted picture; the
+large card when there is no goal), `stacks.js`/`stopcard.js`/`stopface.js` (today's stops by goal, a lifted card with its answers and its cost's words),
+`discard.js`/`resultface.js` (what is ready for main), `data.js`, `state.js`, `motion.js` (orkUI's motions only); the faces of `deck`, `discard`,
+`result` and `stop` over the pane; `tests/test_hand_desktop_browser.py` at both widths. **Left:** the + card stands left of the deck (orkUI's
+`.ork-deck` draws it so); the cost's words say *week* only when the rate's window is the week, else the five-hour window; `ideas.move` only within a
+party; the question card on today's engine opens *Open…* with a green pick (spec 100 B redoes it); the fan rotated at rest. The cards' anatomy, the
+stacks under the table's columns and the goal's cascade on the table come after the owner's yes on `docs/mockups/cards/`.
+
 ## As built (E)
 
 `shell/shell.js` draws the frame (`frame/frame.js`: `Table` over `Hand`, imported directly) as the page's only window, with the start screen (no project) in a pane of its own and the sign-in page as it was. Gone: the top bar, the
