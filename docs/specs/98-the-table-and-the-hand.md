@@ -4,8 +4,7 @@ The owner and the PM, 28 October (decisions §104.0, §131, §136.11–§136.12,
 §9–§10; spec 94 §1). The first slice of spec 95 cut to **what proves the frame** (spec 95 §11's *Asked*, settled here):
 the window made of the table and the hand, drawn over the engine as it is today. What a goal's way adds to it (the route
 card, *Talk*, the decision's card, the sections, the forks, the project's questions, the one place of the parties) is
-spec 99 (its engine) and spec 100 (its faces), built on this frame; nothing here is built twice for them. **Builds:** A a
-cheaper model; B, C, D, E a cheaper model, each reviewed by Claude · **Review:** full · P0. **A first, alone** (it touches
+spec 99 (its engine) and spec 100 (its faces), built on this frame; nothing here is built twice for them. **Builds:** a cheaper model, each part reviewed by Claude · **Review:** full · P0. **A first, alone** (it touches
 the files everything else does); **then B, C and D at once** (they share no file; C and D read the seams of §0.2, which
 the lead writes before they start); **E after C and D**. **C, D and E only after the owner's yes on the mockup**
 (`docs/mockups/s1/`) and after orkUI 0.15.0 is copied here (spec 96).
@@ -48,7 +47,41 @@ slice). Until spec 100, a party is made and edited by today's form, opened over 
    - `tests/narrow.py` (spec 94 A): the narrow browser, 390 × 844 with touch, beside the wide 1280 × 800.
 
 ## 1. What goes first (A; §131, §136.11, §147.1)
-<!-- the table of files is written from the inventory -->
+**The desktop's window only.** The phone keeps its faces until spec 94 E removes them (spec 94: *until then the phone
+stays as it is*), so every host command, snapshot key and Needs you kind the phone or Orkline reads **stays**
+(`ideas.agents`, `ideas.night_allow`, `ideas.queue`, `ideas.canvases` and its kin, `ops.*`, `ops_rev`, `ops_team`,
+`canvases_new`, `canvases_rev`, `reserve.night`; `tests/test_board_alone.py` pins them). The engine's night (its runs,
+its refresh, its proposals: `core/idea_night.py`) goes with spec 99, where the map's text takes the refresh's place
+(§156.12). What A removes is drawn by the desktop's page alone:
+
+| item | goes (desktop) | stays |
+|---|---|---|
+| ***Process now*, *Judge now*** (§131.1) | the `arena-power` button (`arena/goals.js` 100–108, its imports), `pitches.js` 39–48's `power`, `arenawords.js` `powerOf`, `pitchwords.js` `judgePower`, `foldrow.js`'s aside for it, `column.css` `.arena-power`; *Process now* / *Try again* of a raw goal in `board/idea.js` 179–180 keeps *Try again* only; *Judge now* in `shell/pitchview.js` and `shell/ideadialog.js` `PitchGoal` | `ideas.queue`, `ideas.read_now`, `ideas.judge` (host; *Try again* uses it) |
+| **the night** (§131.2) | `shell/nightask.js` and its entry in `shell/dialogs.js`; *Tonight*, the Low line and `askAfterLow` in `shell/ideadialog.js`; the night's window and *Low work may run at night* in `shell/settings.js`; `board/cards.js`'s night words, streak and *Tonight: n wait*; `arenawords.js`'s *tonight* words and signs; `pitchwords.js`'s night lines; `goalwords.js` `moonOf` and `goals.js`'s moon on the row; `board/idea.js`'s big moon; `orkui.js` `Moon`; *Start now* on a plan that starts tonight in `stops.js` 109–119 (*Start now* for the reset stays); the night lines of `idle.js`, `limits.js`, `mapstage.js`, `target.js`, `stacks.js`, `stages.js`, `projectrows.js` | the engine (spec 99), the host's commands and keys |
+| **the gate's quiet line** (§131.3) | `arena/gate.js` `GateLine` and `IntoLine`, their uses in `partylist.js` and the unused import in `arena.js`, `arena.css` `.arena-gateline*`, `.arena-into*`; `flags.js` `gateButton` flies from the flag line's own place instead | `mergeGate`, `GateView`, `arenawords.js` `gateOf` (the hand's card and the gate's screen) |
+| **collisions as stops of their own** (§131.4) | the project level's collision line (`project.js` `orkLinks` use, `collidewords.js` `orkLinks`) | the collision's card in the hand (`collide.js`, its answers): it is the fork §131.4 asks for, a card of its goal's stack in D |
+| **a goal type's sign on the row** (§131.5) | `goals.js`'s `typeSign` on the row, `pitches.js`'s blank span, `column.css` `.arena-goal__type` | `stacks.js` `typeSign` (a card's kind) |
+| **the row's peek** (§131.6) | `arenastate.js` `peek` (and in `shownGoals`), `goals.js`'s hover, its use in `arena.js` and `shell.js`'s Esc | `members.js` `Peek` (a member's card), `play.js`'s `peek` argument |
+| **the analytics page** (§131.7) | nothing: Orkboard draws no analytics page (`realm/analytics.py` is the logs' zip, used by *Download today's logs*) | all |
+| **the canvases** (§131.8) | `arena/canvases.js`; the *Canvases* kind in `arena/assets.js` 19, 23, 254–289; the canvas tab in `shell/preview.js`; the canvas state in `shell/store.js`; `arena.css` and `assets.css` canvas rules | the host (`gui/ideas_canvases.py`, `core/canvases.py`, `sources/canvases.py`, the hook): the phone and Orkline read them |
+| ***Agents*** (§136.11) | `shell/agents.js`, `shell/agentdialog.js`, their entries in `shell/preview.js`, `shell/store.js` (`showAgents` and the pane), `shell/dialogs.js`, `shell/tabs.js`, `shell.css` 76–86, 245, 449–450 | `ideas.agents` (the members' numbers and `busy()` read it), `ideas.role_*` |
+| **Operations in the window** (§147.1) | `board/ops.js`, `shell/opdialog.js`, `shell/opcheck.js`; `arena.js` `OpsField` and the Team party's field; `partylist.js` `OpsHeading` and its uses; `goaltabs.js` `opsOn`, `teamOf`, `opsRow`; `arenawords.js` `isOp`, `opStopsOf`, `handOf`'s `ops`; `stops.js`'s operation stops; `board/store.js` `ops`, `refreshOps` and its `ops_rev` read; `board/today.js`'s operation rows; `shell/dialogs.js`'s entries; `shell/shell.js`'s `ops_rev` effect; `shell/projects.js`'s start-screen entry; `partymenu.js`, `proposals.js`, `partyrun.js` (Team), `partyform.js`, `goalwizard.js`, `partypresets.js` (Team's preset), `project.js`, `cards.js`'s `ops_usd` line, `orkui.js` 73; the rules in `arena.css` 457–460, `board.css` 132–152, `shell.css` 207–230 and 330–331 | `gui/ops.py`, `realm/ops_team.py`, `core/op_*`, `realm/op_*` (the phone and Orkline: §147.1) |
+
+**Tests** that go with what goes (wholly about it, desktop): `tests/test_canvases_desktop_browser.py`,
+`test_shell_36_browser.py`, `test_races_browser.py` (the heads on *Agents*), `test_record_desktop_browser.py`,
+`test_ops_desktop_browser.py`, `test_ops_briefs_desktop_browser.py`, `test_running_team_desktop_browser.py`,
+`test_night_asked_desktop_browser.py`, `test_moon_desktop_browser.py`. The tests that touch an item in part lose that part
+only (their other assertions kept): `test_arena_decks_desktop_browser`, `test_arena_desktop_browser`,
+`test_lighter_column_desktop_browser`, `test_party_list_desktop_browser`, `test_ideation_desktop_browser`,
+`test_flags_raised_desktop_browser`, `test_right_column_desktop_browser`, `test_goal_types_desktop_browser`,
+`test_type_top_right_desktop_browser`, `test_project_desktop_browser`, `test_assets_desktop_browser`,
+`test_party_proposals_desktop_browser`, `test_week_desktop_browser`, `test_owner_27c_desktop_browser`,
+`test_one_hand_desktop_browser`, `test_at_work_line_desktop_browser`, `test_route_desktop_browser`,
+`test_quiet_desktop_browser`, `test_shell_browser`, `test_spend_share_desktop_browser` (or its desktop name),
+`test_recap_desktop_browser`, `test_field_glance_browser`, `test_field_rows_browser`, `test_map_desktop_browser`. No
+`tests/test_pwa_*` test changes. **Done when** no desktop module imports what went, the page loads with no error in the
+browser's console, and the critical tests, `tests/test_gui_wording.py`, `tests/test_design_system.py` and every desktop
+browser test left pass.
 
 ## 2. The host (B; §130.1, §145.2, §121.1)
 1. **A goal's place** (§145.2): every node of `ideas.map` (and its row of `ideas.board`) carries `place`:
