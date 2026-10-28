@@ -3208,3 +3208,23 @@ what is to come, what is played, what is done. The blank card is a goal to come;
    in the gem (*4%*) on its face, and its words (*about 4% of Claude's week*) where it is lifted with its answers
    (§104.5). Every card of the hand has one size; what it asks is on its lifted state (§104.8).
 The owner's call.
+
+## 161. The heads keep their old drawing: the races are told by their faces and colours on the 12 × 11 grid, the leaders and the griffin drawn the same way (28 October, the owner)
+
+Why: the owner, on orkUI 0.15.0's heads (§149.4, §155): *I do not like the new heads; bring the old ones back and make
+another pass; the decision that they stand apart by their silhouette should be looked at again.* The 16 × 16 heads were
+drawn to be read by their outlines (horns, antlers, wings out of the gear's outline), and lost the faces and the manner
+of the heads the window had. So (this changes §148.7, §149.4 and §155.1–§155.3; §154 and §158's races by party stay):
+1. **The heads keep their old drawing**: orkUI's 12 × 11 grid of role letters, 2 px a cell (24 × 22), 4 px at @2x
+   (48 × 44), as they were before 0.15.0; the ork, the elf, the goblin, the gnome, the knight, the lich and the skeleton
+   as they were. A race is told by its face, its colour and its detail, the tier by its gear, as before; **not by the
+   silhouette**.
+2. **The new heads are drawn in the same manner**: the griffin (Product's and Game design's members) and the six leaders'
+   higher forms (the ork shaman, the elf dryad, the imp, the gnome fairy, the unicorn knight, the lich, §155.2), each a
+   head of that grid whose mark (horns, antlers, wings, the horn) is drawn inside its 12 × 11 like the old heads'
+   detail, never needing an outline of its own; the crown stays the Orkmaster's alone.
+3. **A head is drawn at its own sizes**, 24 × 22 or 48 × 44, never between and never at 12 × 11 (§148.7's *a blot* holds:
+   no head smaller than its own size); §151.3's squad heads at 24 px are these.
+4. The 16 × 16 heads are not drawn by the window; a second pass at the heads, if the owner asks for one, starts from
+   these.
+The owner's call.

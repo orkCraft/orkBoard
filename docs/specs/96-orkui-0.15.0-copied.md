@@ -1,4 +1,4 @@
-# Spec 96 — orkUI 0.15.0 copied: the window's look, its heads and its motions here
+# Spec 96 — orkUI 0.15.x copied: the window's look, its heads and its motions here
 
 The owner and the PM, 28 October (decisions §148, §149.2–§149.4, §151.9, §152.4, §154, §155, §158.5; orkUI's
 `docs/specs/0.15.0-the-window.md`). orkUI 0.15.0 is made in orkUI (its parts A, B, C); this spec copies it here and keeps
@@ -18,13 +18,13 @@ working (spec 94 E removes them).
 ## 1. The copy (D)
 `python -m orkboard.design.orkui /home/user/orkUI` with orkUI at its 0.15.0 commit; `ORKUI.json` stamps it. Never an
 edit by hand (`orkui.problems()` stays empty). **Left out** (`orkui.SKIP`, so the stamp lists only what is copied):
-`emblems/` (§148.9: the signs say it; no face draws one) and `races/v1/` (the 12 × 11 heads are Orkline's). Kept, for the
+`emblems/` (§148.9: the signs say it; no face draws one) and any heads' folder the window does not draw (orkUI's own sets for Orkline). Kept, for the
 phone until spec 94 E: `moons/` and the goal types' signs.
 
 ## 2. The page on it (D)
-1. **Heads**: `race_png` gives the 16 × 16 file (`big`: the 32 × 32 @2x); a head drawn smaller than 16 px today is drawn at
-   16 (§148.7); `.ork-race__head.small` (gone in 0.15.0) is no longer written; a head drawn at 24 × 22 or 48 × 44 is
-   drawn at 16 or 32 (whole pixels: `image-rendering: pixelated`, never a size between).
+1. **Heads** (§161): the heads keep their 24 × 22 drawing (`race_png` as today), the new races (griffin, shaman, dryad,
+   imp, fairy) at the same sizes; a head is drawn at 24 × 22 or 48 × 44, never at 12 × 11 (`.ork-race__head.small` no
+   longer written).
 2. **Signs**: the page writes `moon` where it wrote `night` (orkUI keeps `night` as its alias for Orkline and the
    phone).
 3. **Marks**: a seat's tool under its head and a limit's chip draw the ink mark (`harness-<id>-ink.png`); the coloured
