@@ -28,7 +28,7 @@ BOARD_COMMANDS = {"ideas.board", "ideas.page", "ideas.add", "ideas.say", "ideas.
                   "ideas.release_out", "ideas.release_candidates", "ideas.shown", "ideas.party_for", "ideas.kind_for", "ideas.proposals",
                   "ideas.tools", "ideas.party_sizes", "ideas.party_presets", "ideas.night_allow", "ideas.seen",
                   "ideas.route_set", "ideas.talk", "ideas.route_later", "ideas.route_start",
-                  "ideas.talk_answer", "ideas.cause_answer", "ideas.confirm", "ideas.fork_answer", "ideas.stage", "ideas.stage_set"}   # … the project's stage (spec 99 §1.2), the decision and the forks (spec 99 §6, §7), talk's two (spec 99 §5), the route's four (spec 99 §4), spec 91's two, spec 83's one, spec 81's two, spec 75's one, and spec 49's three, spec 51's one, spec 62's two, spec 65's four, spec 68's three, spec 70's one
+                  "ideas.talk_answer", "ideas.cause_answer", "ideas.confirm", "ideas.fork_answer", "ideas.stage", "ideas.stage_set", "ideas.project_ask", "ideas.project_answer"}   # … the project's questions (spec 99 §8), the project's stage (spec 99 §1.2), the decision and the forks (spec 99 §6, §7), talk's two (spec 99 §5), the route's four (spec 99 §4), spec 91's two, spec 83's one, spec 81's two, spec 75's one, and spec 49's three, spec 51's one, spec 62's two, spec 65's four, spec 68's three, spec 70's one
 
 
 @pytest.fixture

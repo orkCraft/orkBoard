@@ -23,10 +23,8 @@ from orkboard.realm import board_map, board_rows, goal_team, idea_lens, idea_que
 @pytest.fixture
 def host(fake_repo) -> Orkboard:
     h = Orkboard(fake_repo)
-    keeper, ideas_ = h.ideas.keeper, h.ideas
-    keeper.__class__ = type("WiredKeeper", (KeeperProjectQ, type(keeper)), {})                 # the lead's wiring: the keeper's bases …
-    ideas_.__class__ = type("WiredIdeas", (GuiProjectQ, type(ideas_)), {})                      # … and the host's, with its commands
-    h.commands.update(project_q_commands(ideas_))
+    assert isinstance(h.ideas.keeper, KeeperProjectQ) and isinstance(h.ideas, GuiProjectQ)      # wired: the keeper's bases, the host's and its commands
+    assert set(project_q_commands(h.ideas)) <= set(h.commands)
     yield h
     sys.modules.pop("orkboard.core.idea_runner", None)
 
@@ -363,9 +361,8 @@ def test_party_save_with_first_true_is_not_refused_where_the_questions_cannot_be
     assert set(host.command("ideas.party_save", {"goal": goal, "name": "Design alone", "first": True})) == {"id"} and not model.steps("project_q")
 
 
-def test_party_save_with_first_true_is_not_refused_on_a_host_without_the_wiring(fake_repo):
+def test_party_save_with_first_true_is_never_refused(fake_repo):
     h = Orkboard(fake_repo)
-    assert not hasattr(h.ideas, "project_start") and not hasattr(h.ideas.keeper, "project_ask")                       # the lead's wiring is not in yet
     goal = h.command("ideas.goal_save", {"about": "Docs.", "craft": "design", "leader": "product-designer", "team": ["accessibility-reviewer"]})["slug"]
     assert set(h.command("ideas.party_save", {"goal": goal, "name": "Design alone", "first": True})) == {"id"}
 
