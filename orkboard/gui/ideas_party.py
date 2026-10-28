@@ -119,6 +119,8 @@ class PartyMixin:
         self._ev(event_log.PARTY_SAVED, args, party=got, members=len(team) + (1 if leader != roles.TASKMASTER else 0), own=len(own),
                  replaced=" ".join(name.split()).lower() in existing)
         self.changed("")
+        if args.get("first") is True:                    # the first start's parties are made: the project's questions are asked (spec 99 §8.1; gui/ideas_project_q.py), never refusing the save
+            getattr(self, "project_start", dict)()
         return {"id": got}
 
     def party_drop(self, args: dict) -> dict:

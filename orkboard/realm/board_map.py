@@ -14,7 +14,7 @@ import re
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import (collide, goal_flags, goal_place, goal_route, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_checks, idea_flag, idea_pick, idea_questions, idea_shots,
+from orkboard.realm import (board_rows, collide, goal_flags, goal_place, goal_route, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_checks, idea_flag, idea_pick, idea_questions, idea_shots,
                             idea_risk, idea_spend, idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles, spec_sections, tool_errors)
 from orkboard.realm.idea_words import short_of
 
@@ -479,4 +479,4 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
         goals[-1].update(party=map_party.party_of(goals[-1], mine_nodes), today={"merged": len(today_tasks), "usd": round(cost, 2)},
                          flags=sum(1 for n in mine_nodes if n["flag"]),
                          waits_main=sum(1 for n in mine_nodes if n["state"] == "done" and not n["flag"]))
-    return {"goals": goals, "nodes": nodes, "edges": edges, "rev": rev}
+    return {"goals": goals, "nodes": nodes, "edges": edges, "rows": board_rows.rows(state_dir), "rev": rev}      # the stacks of no goal's, laid after the goals' own (spec 99 §8.2)

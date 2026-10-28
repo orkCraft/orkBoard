@@ -341,3 +341,19 @@ call each. An older page reads as one section of its party. With no fork the goa
 not read *Will be* yet (H), and today's plan still writes a flat *Stages* and risk line (H); the decisions file's chosen path (`project.json`
 `decisions`) is written by nothing yet (G), so it is `docs/decisions.md`; the entry signs *Orkboard* whatever the host (Orkline's signs the same until
 the host's name is passed).
+
+## As built (G)
+
+New `core/idea_project_q.py` (`ProjectQMixin`: `project_ask`, `project_prompt`, `project_run`), `realm/project_questions.py` (the party that asks, the answer taken strictly,
+the Orkmaster's card, `take`, the record `<state_dir>/project_q.json`), `realm/board_rows.py` (the row `project_q`; `board_map.build` lays `rows` after the goals' own and
+`gui/ideas_board.py` puts them last in Needs you), `gui/ideas_project_q.py` (`ideas.project_ask {}`, `ideas.project_answer {answers, decide?}`, `project_q_commands`). The step `project_q`
+(cheaper tier as `talk_round`, no tools, READS 0, the *spec* stage) runs as its party's own (`goal:<party>`): its leader's voice, tool and Target.
+- **Decided here:** the party that asks is Product's, else Game design's (by `goal_team.craft_of`); the call asks the keys not answered yet (`for_whom`, `hurts`, `leaves_out`) and
+  the leader says which the files say (`said`: kept as `read` in the record, the pick the reading); one to three cards are taken (a card that is none is dropped); a call that fails after one
+  more try leaves `status: "failed"` and is asked again at the next first start, otherwise a project is asked once. The Orkmaster's card has no choices (a line is the answer) and its
+  answer is kept as `for_whom` (the common core) under the party `orkmaster`. `ideas.party_save {first: true}` begins the questions without ever refusing the save (spec: *the parties
+  made*, but `party_save` is the person's *Save party*; the first start's parties are made by `ideas.goal_save`: the face sends `first` where it means it), `ideas.project_ask` is the
+  direct way. `project_answer` without `decide` needs every card answered; *Let … decide* keeps the leader's pick `read` and a card with none (the Orkmaster's) is let go.
+  Product's *whom* and *hurts* are kept as a segment and its pain only for a Product party.
+- **Not yet:** the face (spec 100); `needs_you`'s count in `ideas.snapshot` (`gui/ideas.py`) still counts the row (it holds nothing back: add `"project_q"` to the kinds it leaves out);
+  an event for the questions or their answers; the decisions file's chosen path (`project.json` `decisions`, E's note).

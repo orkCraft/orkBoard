@@ -14,7 +14,7 @@ from typing import Any
 from orkboard import settings
 from orkboard.core import idea_keeper
 from orkboard.gui.ideas_args import IdeasError, _device, _opt, _text, _via
-from orkboard.realm import board_map, collide, event_log, idea_photos, idea_questions, idea_risk, idea_secrets, idea_target, ideas
+from orkboard.realm import board_map, board_rows, collide, event_log, idea_photos, idea_questions, idea_risk, idea_secrets, idea_target, ideas
 from orkboard.realm.idea_git import BoardTree
 
 NEEDS_IDEA = ("asks", "plan", "failed", "proposed")
@@ -144,7 +144,7 @@ class BoardMixin:
             mine = self._idea_needs(i, st, plan, asks, root)
             needs += mine
             rows.append(board_map.row(root, self.state_dir, i, st, plan, page, asks, states, mine + by_idea.get(slug, [])))      # …on its goal's place too (spec 98 §2.1)
-        needs += asked
+        needs += asked + board_rows.rows(self.state_dir)         # the stacks of no goal's: the project's questions (spec 99 §8.2)
         return {"tracks": goals, "ideas": rows, "needs_you": sort_needs(needs), **self.board_settings(),
                 "rev": self.rev, "demo": bool(self.host.demo)}
 
@@ -405,6 +405,6 @@ def sort_needs(needs: list[dict]) -> list[dict]:
     judged pitch (spec 65 §5) comes after the goals' own, before the proposals."""
     def key(n: dict) -> tuple:
         prio = n.get("priority") if n.get("priority") in ideas.PRIORITIES else "normal"
-        last = 2 if n["kind"] in ("proposal", "op_rules", "party") else 1 if n["kind"] == "pitch" else 0
+        last = 2 if n["kind"] in ("proposal", "op_rules", "party", "project_q") else 1 if n["kind"] == "pitch" else 0
         return last, not n.get("blocks"), ideas.PRIORITIES.index(prio), str(n.get("at") or "")
     return sorted(needs, key=key)

@@ -163,3 +163,34 @@ def test_the_start_never_reads_the_decisions_file(tmp_path):
     (tmp_path / "docs" / "decisions.md").write_text("## 1. A decision", encoding="utf-8")
     (tmp_path / "docs" / "game.md").write_text("Rounds.", encoding="utf-8")
     assert [f["path"] for f in project_facts.start_files(tmp_path)] == ["README.md", "docs/game.md"]
+
+
+# -- §8 what the project's questions keep (spec 99 G: gui/ideas_project_q.py) ----------------------------------------------------------
+
+def test_the_projects_answers_are_in_every_leaders_call_whatever_party_asked_and_a_left_to_the_leader_pick_is_read(sd):
+    project_facts.keep(sd, "product", "for_whom", "Friends at one TV", "person")
+    project_facts.keep(sd, "product", "hurts", "Slow rounds", "read")                      # *Let … decide*: the leader's pick, kept `read`
+    project_facts.keep(sd, "product", "leaves_out", "Accounts", "person")
+    for party in ("tech", "design", "release"):                                            # the core reaches a party that is not on the asker's route
+        text = project_facts.for_call(sd, party, route(party))
+        assert text == "What the project is:\nWhom it is for: Friends at one TV\nWhat hurts them: Slow rounds\nWhat it leaves out: Accounts"
+    assert [(f["key"], f["by"]) for f in project_facts.of(sd, "product")] == [("for_whom", "person"), ("hurts", "read"), ("leaves_out", "person")]
+    assert project_facts.answered(sd) == set(project_facts.COMMON_KEYS)                    # a question answered is never asked again
+    project_facts.keep(sd, "product", "hurts", "Another reading", "read")                  # a reading replaces a reading …
+    assert project_facts.common(sd).splitlines()[1] == "What hurts them: Another reading"
+    project_facts.keep(sd, "product", "hurts", "Players waiting", "person")
+    project_facts.keep(sd, "product", "hurts", "A third reading", "read")                  # … never the person's answer
+    assert project_facts.common(sd).splitlines()[1] == "What hurts them: Players waiting"
+
+
+def test_the_orkmasters_one_answer_with_neither_party_is_the_common_core_and_is_asked_no_more(sd):
+    project_facts.keep(sd, "orkmaster", "for_whom", "a mobile app for tennis clubs", "person")
+    assert project_facts.for_call(sd, "tech", route("tech")) == "What the project is:\nWhom it is for: a mobile app for tennis clubs"
+    assert "for_whom" in project_facts.answered(sd) and project_facts.of(sd, "orkmaster")[0]["by"] == "person"
+
+
+def test_the_start_files_leave_the_decisions_file_out_in_any_case_of_its_name(tmp_path):
+    (tmp_path / "README.markdown").write_text("Readme in markdown.", encoding="utf-8")
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "Decisions.MD").write_text("## 1. x", encoding="utf-8")
+    assert project_facts.start_files(tmp_path) == [{"path": "README.markdown", "text": "Readme in markdown."}]
