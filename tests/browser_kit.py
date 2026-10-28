@@ -25,8 +25,8 @@ WAIT_MS = 10_000
 
 
 def open_pane(pg, kind: str) -> None:
-    """The right column's *Agents* or *Files* pane as a tab (spec 91 §1: the top bar has neither button any more, the panes stay in the page's store)."""
-    pg.evaluate("kind => import('/static/js/shell/store.js').then((m) => (kind === 'agents' ? m.showAgents() : m.showFiles()))", kind)
+    """The right column's *Files* pane as a tab (spec 91 §1; *Agents* went with spec 98 A)."""
+    pg.evaluate("() => import('/static/js/shell/store.js').then((m) => m.showFiles())")
 
 
 def launch(p):
