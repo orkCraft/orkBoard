@@ -89,9 +89,11 @@ browser test left pass.
    (`held_until`, a plan's later `start_at`)), `"hand"` (not at work, and it has a Needs you row the person answers: a
    plan ready to start, a question, a failure), `"table"` (the Orkmaster reads or plans it: `raw` in the queue `now`,
    `reading`, `planning`; or at work: `working`, a task running, testing or picking), `"discard"` (`done` and its result
-   not seen), `"history"` (`done` and seen). A goal at work that asks is `"table"` with `asks: true` (on the
-   table and in the hand at once, never in two piles). `waits` names why a deck goal waits: `"reset"` (with its hour),
-   `"held"`, `"line"`.
+   not seen), `"history"` (`done` and seen). A goal at work that asks is `"table"` with `asks_you: true` (on
+   the table and in the hand at once, never in two piles). `waits_as` names why a deck goal waits: `"reset"` (its hour
+   in today's `waits.until`), `"held"`, `"line"`; `""` otherwise. (Today's `waits` dict and the row's `asks` count stay as
+   they are: the phone reads them.) A pitch or a proposal of before lies on `"table"` while someone works on it, in the
+   `"hand"` with a Needs you row; a plan passed whose tasks are held stays `"table"`.
 2. **A result seen** (§130.1): `ideas.seen {idea}` writes `seen_at` (ISO) into the idea's state; a node carries `seen`
    (`seen_at` or `""`). Opening a goal's *Result* from the discard sends it; once seen, the goal is in the history.
 3. **The deck's order** is the Board's today (`ideas.move` moves a goal among those not started; the order of
