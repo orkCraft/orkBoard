@@ -1,0 +1,96 @@
+/* Talk's questions, Choose a card and the stances (docs/specs/100-a-goals-way-as-cards.md §2, decisions §167.1–§167.2, §168.1; the mockup docs/mockups/cards/, states 3, 4, 6, 7): layout only. Every colour, face, corner and motion is orkUI's
+   (tokens.css, components.css: `.ork-card`, `.ork-frame`, `.ork-gem`, `.ork-leans`, `.ork-deal`, `.ork-picked`, `.ork-field`, `.ork-btn`); a choice card has the Board's anatomy (spec 101 §2): the element at the left of its header, bare, then
+   the name left-aligned in the body face; its window; its label row; its foot. A card is the frame's `--card-w` wide, 5 : 7 at least, taller when a name needs the room. */
+
+/* the aside a question's lifted card would open is the pane's choices: it is not shown for the frame it takes */
+.hand-lifted:has(> .q-opening) { display: none; }
+
+/* ---------- Choose a card: the question as a banner over a row of cards ---------- */
+.q-choose { display: flex; flex-direction: column; align-items: center; gap: var(--ork-4); min-width: 0; max-width: 100%; margin: 0 auto; }
+.q-choose p { margin: 0; }
+.q-choose__q { max-width: min(720px, 100%); padding: var(--ork-3) var(--ork-6); text-align: center; font: var(--ork-type-body); font-weight: 600; letter-spacing: var(--ork-type-body-track, 0); overflow-wrap: anywhere; }
+.q-choose__hint { color: var(--ork-ink-muted); text-align: center; }
+.q-choose__row { display: flex; flex-wrap: wrap; justify-content: center; align-items: flex-start; gap: var(--ork-5); min-width: 0; max-width: 100%; padding-top: var(--ork-5); }
+.q-choose__acts { display: flex; flex-wrap: wrap; justify-content: center; gap: var(--ork-3); }
+
+.q-choose .q-card { box-sizing: border-box; position: relative; display: grid; grid-template-rows: minmax(48px, auto) 70px 24px minmax(32px, 1fr); gap: var(--ork-2); width: var(--card-w, 144px); min-height: calc(var(--card-w, 144px) * 7 / 5);
+  padding: var(--ork-3); text-align: left; cursor: pointer; align-self: flex-start; min-width: 0; }
+.q-card.ork-deal { --ork-deal-x: 0px; --ork-deal-y: 40px; animation-fill-mode: backwards; }                  /* dealt in, then still: a forwards fill would hold the hover's rise down */
+.q-card.is-pick { top: calc(var(--ork-4) * -1); box-shadow: inset 2px 0 0 var(--ork-ink); }                      /* the leader's pick, raised */
+.q-card__head { display: flex; align-items: flex-start; gap: var(--ork-3); min-width: 0; overflow: hidden; }
+.q-card__head > .ork-elem { margin-top: 1px; flex: none; }
+.q-card__name { flex: 1; min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-body); font-weight: 600; letter-spacing: var(--ork-type-body-track, 0); }
+.q-card__window { position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; overflow: hidden; border: var(--ork-line) solid var(--ork-card-frame); }
+.q-card__fig { position: relative; display: inline-flex; padding: 0 14px 7px 0; }
+.q-card__sign { display: inline-flex; color: var(--ork-ink-muted); }
+.q-card__sign .ork-sign { opacity: 0.6; }
+.q-card.el-meadow .q-card__sign { color: var(--ork-elem-meadow); }
+.q-card.el-ice .q-card__sign { color: var(--ork-elem-ice); }
+.q-card.el-dust .q-card__sign { color: var(--ork-elem-dust); }
+.q-card.el-void .q-card__sign { color: var(--ork-elem-void); }
+.q-card.el-lava .q-card__sign { color: var(--ork-elem-lava); }
+.q-card__asker { position: absolute; right: 0; bottom: 0; display: inline-flex; }
+.q-card__window > .q-card__asker { right: var(--ork-2); bottom: var(--ork-2); }
+.q-card__preview { display: block; width: 100%; height: 100%; object-fit: cover; image-rendering: pixelated; }
+.q-card__label { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-3); min-width: 0; }
+.q-card__by { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
+.q-card__foot { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; overflow-wrap: anywhere; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+
+/* Other…: a blank card with +; opened, the field on it */
+.q-card--blank { border-style: dashed; border-color: var(--ork-edge); background: none; }
+.q-card--blank .q-card__window { border-style: dashed; }
+.q-card--blank .q-card__window .ork-icon { width: 28px; height: 28px; color: var(--ork-ink-muted); }
+.q-choose .q-card--blank.is-open { grid-template-rows: minmax(48px, auto) minmax(70px, 1fr) auto; width: calc(var(--card-w, 144px) * 1.6); cursor: default; }
+.q-card__field { width: 100%; min-height: 70px; height: 100%; resize: none; box-sizing: border-box; font: var(--ork-type-body); }
+.q-card__label--acts { justify-content: flex-end; flex-wrap: wrap; }
+
+/* ---------- a bug's cause, lifted ---------- */
+.q-cause { display: flex; flex-direction: column; gap: var(--ork-3); }
+.q-cause__guess { margin: 0; }
+.q-cause__where { display: flex; flex-wrap: wrap; gap: var(--ork-2); margin: 0; padding: 0; list-style: none; }
+.q-cause__part { max-width: 100%; overflow-wrap: anywhere; text-align: left; }
+
+/* ---------- Talk on the pane: the stances and the questions together ---------- */
+.talk-page { display: flex; flex-direction: column; gap: var(--ork-5); max-width: 1040px; min-width: 0; }
+.talk-page p, .talk-page ul, .talk-page h2, .talk-page fieldset { margin: 0; padding: 0; }
+.talk-page__head { display: flex; align-items: center; gap: var(--ork-3); }
+.talk-page__title { font: var(--ork-type-body); font-weight: 600; overflow-wrap: anywhere; }
+.talk-page__row { display: flex; flex-wrap: wrap; gap: var(--ork-4); list-style: none; }
+.talk-stance { box-sizing: border-box; flex: 1 1 220px; max-width: 320px; min-width: 0; display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4); background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame); }
+.talk-stance__who { display: flex; align-items: center; gap: var(--ork-3); }
+.talk-stance__nm { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.talk-stance__line { overflow-wrap: anywhere; }
+.talk-stance__side { display: flex; flex-direction: column; gap: var(--ork-1); font: var(--ork-type-caption); overflow-wrap: anywhere; }
+.talk-stance__more { align-self: flex-start; }
+.talk-stance__asks { display: flex; flex-direction: column; gap: var(--ork-3); list-style: none; }
+.talk-stance__asks li { display: flex; flex-direction: column; gap: var(--ork-1); }
+.talk-stance__asks .cap { color: var(--ork-ink-muted); overflow-wrap: anywhere; }
+.talk-together { display: flex; flex-direction: column; gap: var(--ork-4); max-width: 640px; }
+.talk-together p { margin: 0; }
+.talk-ask { display: flex; flex-direction: column; gap: var(--ork-2); border: 0; min-width: 0; }
+.talk-ask legend { padding: 0; margin-bottom: var(--ork-2); overflow-wrap: anywhere; }
+.talk-ask__choices { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
+.talk-ask__choices .ork-btn { max-width: 100%; }
+.talk-together__hint { color: var(--ork-ink-muted); }
+.talk-together__acts { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3); }
+
+/* ---------- the narrow width: two cards a row, none cut; no sideways scroll ---------- */
+@media (max-width: 759.98px) {
+  .q-choose { width: 100%; }
+  .q-choose__q { width: 100%; box-sizing: border-box; padding: var(--ork-3) var(--ork-4); }
+  .q-choose__row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ork-3); width: 100%; }
+  .q-choose .q-card { width: auto; min-height: 152px; grid-template-rows: minmax(40px, auto) 56px 22px minmax(32px, auto); padding: var(--ork-2); }
+  .q-choose .q-card--blank.is-open { grid-column: 1 / -1; width: auto; }
+  .q-card.is-pick { top: calc(var(--ork-3) * -1); }
+  .talk-stance { max-width: none; flex-basis: 100%; }
+}
+
+/* a press is 44 x 44 under a touch pointer */
+@media (pointer: coarse) {
+  .q-cause__part, .talk-stance__more { min-height: var(--ork-tap); }
+}
+
+/* a card is dealt, never moved on its own, under reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .q-card.ork-deal { animation: none; }
+}

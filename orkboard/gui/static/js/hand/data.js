@@ -7,6 +7,7 @@ import { gateData, mapData } from "../shell/store.js";
 import { byUrgency, gateOf, goalsOf, nodesOf, resultStop, resultsOf, signInStopsOf, stopsOf, todoLast } from "../arena/arenawords.js";
 import { ORKMASTER } from "../frame/state.js";
 import { partiesNow } from "../table/data.js";
+import { projectStops, questionStops } from "./questions.js";
 
 /** The parties of the map in the Board's order. */
 export const partiesOf = (map = mapData.value) => goalsOf(map, goalList().map((x) => x.slug));
@@ -42,14 +43,14 @@ export function readyWords(r) {
  *  (arenawords.js, as the old hand read them). `open`: the tab that is open: a party's slug, or "orkmaster" for the Board's (every party at once, so no card says its party:
  *  its leader's head does). On a party's tab a stop of another party says its party. */
 export function stopsOfProject(map = mapData.value, needs = board.value?.needs_you || [], open = "") {
-  const out = [], ork = map?.project?.orkmaster || null;
+  const out = [], ork = map?.project?.orkmaster || null, byParty = partyBy(map), ctx = { party: (slug) => (slug ? byParty[slug] || null : null), open };
   for (const g of partiesOf(map)) {
     const nodes = nodesOf(map, g.slug), party = partyCard(g);
     const mine = [...stopsOf(needs, g, nodes, ork), ...resultsOf(nodes).map((r) => resultStop(r, nodes))];
-    out.push(...mine.map((s) => ({ ...s, g, party, other: open !== ORKMASTER && open !== party.slug })));
+    out.push(...mine.flatMap((s) => questionStops({ ...s, g, party, other: open !== ORKMASTER && open !== party.slug }, ctx)));      // a Talk's and a bug's questions: one card a question (questions.js)
   }
   out.push(...signInStopsOf(needs, open));
-  return todoLast(byUrgency(out));
+  return [...todoLast(byUrgency(out)), ...projectStops(needs, { ...ctx, goal: (slug) => partiesOf(map).find((g) => g.slug === slug) || null, ork })];          // the project's questions hold nothing back: after the others, under their leader's party's lane
 }
 
 /** The goal a stop belongs to ("" for a stop of no goal), and the stack it lies in: a goal's; a party's own question (`party:<slug>`); a sign-in alone. */
