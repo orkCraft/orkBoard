@@ -214,6 +214,21 @@ TERMS: tuple[Term, ...] = (
     _t("idea", "goal", "goals", "idea", "ideas"),                 # a goal: a page with its spec and plan, done in dev, its flag raised in main (spec 29, 50; the code's idea)
     _t("proposal", "proposal", "proposals"),                       # a goal the keeper proposes at night, for the morning (spec 35 §8)
     _t("scribble", "note", "notes", "scribble", "scribbles"),       # a goal or a note on the board
+    # The table and the hand (docs/specs/98-the-table-and-the-hand.md §0.1, §2.4; decisions §145): the window's two parts
+    _t("table", "table"),                                          # the window's upper part: the leaders' tabs and the pane under them (what and why, through whose eyes)
+    _t("hand", "hand"),                                            # the window's lower part: what the person decides, with the deck, the stacks of stops and the discard
+    _t("deck", "deck", "decks"),                                   # the goals in line, not started (read *In line*); the one back, its top sealed with the first goal's element
+    _t("discard", "discard"),                                      # the goals done and not yet seen, and what is ready for main (read *Done*)
+    _t("lane", "lane", "lanes"),                                   # a party's column on the Board under its tab
+    _t("blank_card", "blank card", "blank cards"),                 # the + card lying off the deck, and the field it grows into: *Write a goal…*
+    _t("lifted_card", "lifted card", "lifted cards"),              # a card pressed and raised over the pane, with its answers and *Put it back*
+    _t("map", "map", "maps"),                                      # what a party's tab shows under its header: Tech's is *System* (a part of it is never called a card)
+    _t("seat", "seat", "seats"),                                   # one place in a party: its leader's, a builder's, a checker's; a head sits in it
+    _t("squad", "squad", "squads"),                                # a party's seats together, grouped *Leads* | *Does* | *Checks*
+    _t("size", "size", "sizes"),                                   # how large a party is, in one word: lean, standard or full (the Target's, spec 75)
+    _t("in_line", "in line"),                                      # a goal not started, waiting its turn in the deck (*3rd in line*)
+    _t("hold", "Hold"),                                            # keep a goal in the deck: nothing reads it until the person says (the queue `hold`; a raw `night` reads so)
+    _t("to_main", "To main"),                                      # merge what is ready in dev into main, by code (the discard's button)
     # Operations (docs/specs/38-operations.md §0): the person's everyday work by templates, across projects
     _t("keep_awake", "Keep the computer awake"),                   # the computer does not sleep by itself, on power (spec 47 §0)
     _t("operations", "Operations"),                                # the person's list, one for all projects (decisions §51); reached through the Team party once there is one, and in the left column until then (spec 92 §3)

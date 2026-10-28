@@ -14,7 +14,7 @@ import re
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import (collide, goal_flags, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_checks, idea_flag, idea_pick, idea_questions, idea_shots,
+from orkboard.realm import (collide, goal_flags, goal_place, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_checks, idea_flag, idea_pick, idea_questions, idea_shots,
                             idea_risk, idea_spend, idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles, tool_errors)
 from orkboard.realm.idea_words import short_of
 
@@ -148,11 +148,12 @@ def _night_by(i: dict, st: dict, plan: dict | None) -> str:
 
 def row(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None, page: ideas.Page | None, asks: list[str],
         states: dict[str, dict], mine: list[dict], at: str | None = None) -> dict:
-    """An idea as `ideas.board` lists it: the state and what words it (queue, held_until, start_at, progress, waits_on)."""
+    """An idea as `ideas.board` lists it: the state and what words it (queue, held_until, start_at, progress, waits_on), and its
+    `place`, `asks_you`, `waits_as` and `seen` (spec 98 §2: realm/goal_place.py). `asks` stays the count of its open questions."""
     slug = i["slug"]
     tasks = (plan or {}).get("tasks") or []
     depends = list_of(page.get("depends_on")) if page else []
-    return {"slug": slug, "title": i["title"], "short": i["short"], "track": i["track"], "order": i["order"],
+    out = {"slug": slug, "title": i["title"], "short": i["short"], "track": i["track"], "order": i["order"],
             "state": st["state"], "size": i["size"], "thesis": i["thesis"], "asks": len(asks),
             "priority": i["priority"],
             "progress": {"done": sum(1 for t in tasks if t.get("state") == "merged"), "total": sum(1 for t in tasks if not goal_types.is_dropped(t))},
@@ -166,6 +167,9 @@ def row(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None, page:
             "start_at": str((plan or {}).get("start_at") or ""),
             "night_by": _night_by(i, st, plan),
             "in_needs_you": any(n["kind"] in ("asks", "plan", "proposal") for n in mine)}
+    seen = str(st.get("seen_at") or "")
+    return {**out, **goal_place.place_of(out, [n["kind"] for n in mine], passed=bool((plan or {}).get("passed_at")),
+                                         picking=any(t.get("state") == "picking" for t in tasks), seen=seen), "seen": seen}
 
 
 def made_of(task: dict) -> str:
@@ -390,7 +394,8 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                     "goal_state": idea_route.goal_state(root, state_dir, slug, held) if ideation and r["state"] == "sent" else None,
                     "release": release_of(releasing.get(slug)),
                     "held_until": r["held_until"], **({"held_for": r["held_for"]} if r.get("held_for") else {}),
-                    "start_at": r["start_at"], "night_by": r["night_by"], "by_pace": bool((plan or {}).get("by_pace")),
+                    "start_at": r["start_at"], "night_by": r["night_by"],
+                    "place": r["place"], "asks_you": r["asks_you"], "waits_as": r["waits_as"], "seen": r["seen"], "by_pace": bool((plan or {}).get("by_pace")),
                     "priority": r["priority"], "size": r["size"],
                     "risk": r["risk"], "tier": tier[slug], "depends_on": r["depends_on"], "waits_on": r["waits_on"],
                     "waits_for": collide.waits_for(state_dir, slug, r["depends_on"], g["slug"], track_of, titles, party_names) if r["depends_on"] else [],

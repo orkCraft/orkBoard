@@ -174,3 +174,9 @@ def test_the_maps_events_are_spec_89s(tmp_path):
     assert (opened["lens"], opened["parts"], opened["changed"], opened["hours"]) == ("system", 12, 3, 17.5)
     assert (pressed["changed"], pressed["goals"], failed["commit"], failed["why"]) == ("new", 1, "0123456789ab", "disk full")
     assert event_log.counts(tmp_path)["map_opened"] == 1
+
+
+def test_a_result_seen_is_an_event_of_spec_98(tmp_path):
+    assert event_log.RESULT_SEEN == "result_seen" and event_log.RESULT_SEEN in event_log.EVENTS
+    event_log.record(tmp_path, event_log.RESULT_SEEN, idea="a-goal", device="desktop")
+    assert event_log.counts(tmp_path)["result_seen"] == 1 and len(set(event_log.EVENTS)) == len(event_log.EVENTS)

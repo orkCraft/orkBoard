@@ -194,3 +194,19 @@ def test_a_container_is_a_part_that_runs_on_its_own_the_word_of_spec_90():
     line = next(l for l in Path(lexicon.__file__).read_text(encoding="utf-8").splitlines() if l.lstrip().startswith('_t("container"'))
     assert "spec 90" in line and "runs on its own" in line
     assert lexicon.words("Shared · Ways in · HTTP: 3 routes · socket: 2 events") == "Shared · Ways in · HTTP: 3 routes · socket: 2 events"
+
+
+def test_the_table_and_the_hand_are_the_words_of_spec_98():
+    """Spec 98 §2.4: each word of the frame has its key, today's word and no old spelling; each is one line of `TERMS`."""
+    keys = {"table": "table", "hand": "hand", "deck": "deck", "discard": "discard", "lane": "lane", "blank_card": "blank card",
+            "lifted_card": "lifted card", "map": "map", "seat": "seat", "squad": "squad", "size": "size", "in_line": "in line",
+            "hold": "Hold", "to_main": "To main"}
+    rows = {key: (word, was) for key, word, was in lexicon.glossary()}
+    for key, word in keys.items():
+        assert lexicon.term(key) == word and rows[key] == (word, ""), key
+    assert lexicon.term("deck", many=True) == "decks" and lexicon.term("lane", many=True) == "lanes"
+    from pathlib import Path
+    lines = Path(lexicon.__file__).read_text(encoding="utf-8").splitlines()
+    for key in keys:
+        line = next(l for l in lines if l.lstrip().startswith(f'_t("{key}"'))
+        assert "#" in line, key

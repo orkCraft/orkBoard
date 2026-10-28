@@ -60,6 +60,7 @@ PLAN_PASSED = "plan_passed"       # idea, tasks, device, seconds from plan_made,
 #                                    joined (the agent who joined at the press, else ""), missing (how many kinds the plan missed when it passed) (spec 52 §2.7)
 PLAN_STARTED_NOW = "plan_started_now"   # idea, device, via (gui/ideas_args.py VIA, else "idea"), held (how many tasks the reserve or the week held; old lines none): a plan held for the night, or its tasks held by the reserve, started now (spec 41 §4)
 IDEA_QUEUED = "idea_queued"       # idea, queue ("now" · "night"), device, via (gui/ideas_args.py VIA, else "idea") (spec 41 §4)
+RESULT_SEEN = "result_seen"       # idea, device: a done goal's result opened from the discard, the goal in the history (spec 98 §2.2)
 TODO_DONE = "todo_done"           # idea, todo, kind, device, seconds since the plan, skipped (gone without it), words (a file described instead) (a secret's value never; spec 54 §1.3)
 TASK_STATE = "task_state"         # idea, task, state (waiting · ready · held · running · testing · picking · review · merged · failed · dropped: the person's Drop), was, round, tier, role, seconds in the previous state, tokens, cost, ran_tier, effort,
 #                                    check (true: a check task's), clean (true: a check that found nothing, merged with no commit; spec 43 §1.3)
@@ -185,7 +186,7 @@ EVENTS = (ASKED, ASSUMED, ANSWERED, STOPPED, WAIT_SKIPPED, HELD_AT_WORK, CAMP_LE
           QUEST_DONE, QUEST_SKIPPED, BUILT, CART_MOVED, LOOKED, IDEA_ADDED, IDEA_SAID, KEEPER_STATE, PLAN_MADE, PLAN_PASSED,
           TODO_DONE, TASK_STATE, CHECK_DONE, RESULT_READY, RESULT_DECIDED, TASK_STOPPED, TASK_SKIPPED, CHECK_SKIPPED, STOP_ALL, INTO_CHANGED, GATE_MERGED, IDEA_FLAGGED, PICK_ASKED, PICK_ANSWERED, OPENED, LIMITS_READ, GOAL_SAVED, GOAL_READ, GOAL_ACCEPTED, ROLE_SAVED,
           ROLE_DROPPED, KIND_SET, BOARD_SET, IDEA_DRAFTED, KEEPER_STOPPED, NIGHT_RUN, PROPOSAL_MADE, PROPOSAL_ANSWERED,
-          IDEA_ANSWERED, GOAL_ANSWERED, PLAN_STARTED_NOW, IDEA_QUEUED, BOARD_COMMITTED, BOARD_HELD, PROJECT_OPENED, PROJECT_CLOSED, FILE_SAVED, GIT_COMMITTED,
+          IDEA_ANSWERED, GOAL_ANSWERED, PLAN_STARTED_NOW, IDEA_QUEUED, RESULT_SEEN, BOARD_COMMITTED, BOARD_HELD, PROJECT_OPENED, PROJECT_CLOSED, FILE_SAVED, GIT_COMMITTED,
           GIT_PUSHED, OP_ADDED, OP_PREPARED, OP_CHECKED, OP_DONE, OP_FAILED, OP_DROPPED, OP_NOT_RIGHT, OP_LEARNED,
           OP_RULES_ANSWERED, OP_TRUST, OP_KEPT, OP_FORGOT, OP_STANDING, PUSH_SET, PUSH_SENT, PARTY_PROPOSED, PARTY_ANSWERED, PARTY_SAVED, PARTY_DROPPED, PARTY_REMOVED, NIGHT_ALLOWED, WEEK_RESET, IDEA_EDITED, PLAN_REVISED, PLAN_CHANGE_ANSWERED,
           PITCH_JUDGED, PITCH_SENT, PITCH_PASSED, PITCH_AGAIN, IDEA_MOVED, RELEASE_MADE, RELEASE_OUT, PARTY_SHOWN, COLLIDE_FOUND, COLLIDE_ANSWERED,

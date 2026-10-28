@@ -101,7 +101,7 @@ def test_a_node_carries_its_boards_row_for_every_state(host):
     assert set(nodes) == set(row_of)
     for slug, n in nodes.items():
         for k in ("state", "queue", "held_until", "start_at", "priority", "size", "risk", "depends_on", "waits_on",
-                  "progress", "updated"):
+                  "progress", "updated", "place", "asks_you", "waits_as", "seen"):
             assert n[k] == row_of[slug][k], (slug, k)
 
 

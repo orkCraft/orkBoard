@@ -539,6 +539,7 @@ STATE_DEFAULT = {"state": "raw", "session": "", "session_at": "", "context": 0, 
                  "asks_by": [],                       # who asks each open question of the draft, by role slug ("" the goal's leader): the look's by the design member (spec 85 §1)
                  "asks_look": 0,                      # how many of those, the first ones, are of the look (spec 85 §1): the faces say *<Name> asks about the look*
                  "changed": [],                       # the plan-making sections written since its plan (realm/idea_change.py, spec 62 §1): never changed in place
+                 "seen_at": "",                       # when a done goal's result was seen (ISO; ideas.seen, spec 98 §2.2): "" until then
                  "from_pitch": ""}                    # the pitch it was sent from (spec 65 §5): its views and decision go to its draft
 
 

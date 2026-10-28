@@ -26,7 +26,7 @@ BOARD_COMMANDS = {"ideas.board", "ideas.page", "ideas.add", "ideas.say", "ideas.
                   "ideas.revise", "ideas.revise_answer",
                   "ideas.judge", "ideas.pitch_send", "ideas.pitch_again", "ideas.pitch_pass",
                   "ideas.release_out", "ideas.release_candidates", "ideas.shown", "ideas.party_for", "ideas.kind_for", "ideas.proposals",
-                  "ideas.tools", "ideas.party_sizes", "ideas.party_presets", "ideas.night_allow"}   # … spec 91's two, spec 83's one, spec 81's two, spec 75's one, and spec 49's three, spec 51's one, spec 62's two, spec 65's four, spec 68's three, spec 70's one
+                  "ideas.tools", "ideas.party_sizes", "ideas.party_presets", "ideas.night_allow", "ideas.seen"}   # … spec 91's two, spec 83's one, spec 81's two, spec 75's one, and spec 49's three, spec 51's one, spec 62's two, spec 65's four, spec 68's three, spec 70's one
 
 
 @pytest.fixture
@@ -82,7 +82,8 @@ def test_drop_an_idea_and_read_the_board_and_its_page(host):
                       "priority",                 # spec 34 §4: ideas gain a priority
                       "queue", "held_until", "risk", "risk_triggers", "depends_on", "waits_on", "start_at",
                       "in_needs_you",             # spec 35 §12
-                      "night_by"}                 # spec 44 §4: who put it off to the night
+                      "night_by",                 # spec 44 §4: who put it off to the night
+                      "place", "asks_you", "waits_as", "seen"}      # spec 98 §2: where it lies in the window (realm/goal_place.py)
     assert i["priority"] == "normal" and board["tracks"][0]["priority"] == "normal" and board["tracks"][0]["state"] == "raw"
     assert board["needs_you"] == [] and board["rev"] > rev      # spec 35 §10: `today` became `needs_you`, the batch went
     page = host.command("ideas.page", {"slug": slug})

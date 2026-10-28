@@ -133,20 +133,39 @@ class BoardMixin:
         rows, needs = [], self.goal_needs(goals)
         found = ideas.ideas(root)
         states = {i["slug"]: self._state(i["slug"]) for i in found}
+        asked = collide.rows(root, self.state_dir, state_of=self._state)        # the Orkmaster's questions (spec 71 §8.1)
+        by_idea: dict[str, list[dict]] = {}
+        for n in asked:
+            by_idea.setdefault(n["idea"], []).append(n)
         for i in found:
             slug, st = i["slug"], states[i["slug"]]
             plan, page = ideas.plan(self.state_dir, slug), ideas.idea_page(root, slug)
             asks = ideas.items(page.section("Open questions")) if page else []
             mine = self._idea_needs(i, st, plan, asks, root)
             needs += mine
-            rows.append(board_map.row(root, self.state_dir, i, st, plan, page, asks, states, mine))
-        needs += collide.rows(root, self.state_dir, state_of=self._state)        # the Orkmaster's questions (spec 71 §8.1)
+            rows.append(board_map.row(root, self.state_dir, i, st, plan, page, asks, states, mine + by_idea.get(slug, [])))      # …on its goal's place too (spec 98 §2.1)
+        needs += asked
         return {"tracks": goals, "ideas": rows, "needs_you": sort_needs(needs), **self.board_settings(),
                 "rev": self.rev, "demo": bool(self.host.demo)}
 
     def _idea_needs(self, i: dict, st: dict, plan: dict | None, asks: list[str], root) -> list[dict]:
         """What of one idea needs the person (§10): realm/board_map.py, which the Map reads too; and the picks that wait (spec 51)."""
         return board_map.idea_needs(root, self.state_dir, i, st, plan, asks) + self.pick_rows(i, plan)
+
+    def seen(self, args: dict) -> dict:
+        """`{idea}` (spec 98 §2.2): a done goal's result opened from the discard. Its `seen_at` is kept (the first time), and the goal
+        is in the history from then on."""
+        slug = _text(args, "idea", 100)
+        if ideas.idea_page(self.root(), slug) is None:
+            raise IdeasError("That goal is gone")
+        st = self._state(slug)
+        if st["state"] != "done":
+            raise IdeasError("Only a goal that is done has a result to see")
+        if not st.get("seen_at"):
+            ideas.save_state(self.state_dir, slug, seen_at=time.strftime("%Y-%m-%dT%H:%M:%S"))
+            self._ev(event_log.RESULT_SEEN, args, idea=slug)
+            self.changed(slug)
+        return {"ok": True, "seen": ideas.state(self.state_dir, slug)["seen_at"]}
 
     # -- who passes the plan (§5) ----------------------------------------------------------------------------
 
