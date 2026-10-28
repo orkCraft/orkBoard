@@ -3030,3 +3030,64 @@ Orkmaster's alone, colour a signal (§53.5). So (this changes §154.1 and §154.
 7. **When**: with §148's orkUI release (0.15.0), the heads redrawn on the 16 grid with the others (§149.4); the roles'
    races (`realm/roles.py` `RACES`, the leader's form by its seat) with the first slice's parties (§136.12).
 The owner's call.
+
+## 156. A leader reads the project through its map: every call carries its map as text, read by code and current with dev; the parties are kept in step by the parts of their maps, never by reading each other's specs; what a call may read is bounded in fact (28 October, the owner)
+
+Why: the owner asked whether, on a project opened as it is, each party's leader reads what it needs without being
+flooded. It does not yet: the maps of §104.3 and §112 are read by code, but no call is given them; every leader's call
+says *You may read the repository*, so Product, Design and Game would explore the code to learn its screens or its loop;
+*Read at most n files* is a request (`IdeaKeeper.reads`), the budget the only bound; Claude Code's own context (the
+project's CLAUDE.md, the person's MCP servers and skills) is paid on every call, and §117.2's parts at once pay it once a
+leader; §153.4's *read into every party's prompts* has no bound; who reads the README and the docs for §153.1's picks is
+not said; Orkboard's own `docs/decisions.md` is 293 KB; the night's refresh reads again every goal whose paths changed,
+on the elder tier; a task is pointed at its whole spec. And the project changes under a leader not only by code: a spec
+lands in dev too, and §86 finds two goals meeting by their files, while Product's map rests on screens and the flow's
+steps, and a goal of Product may touch no file at all. So (this makes §86, §104.3, §104.6, §112.6–§112.8, §117,
+§118.1, §118.5, §153.1 and §153.4 precise):
+1. **Every leader's call carries its map as text**, after its voice and before the step's own context: *The map of
+   <its lens> at dev <commit>*. Read by code, with no model, from what its views are read from (`system_overview`, the
+   screens and routes, the segments and pains, the loop's cards); rebuilt at dev's every new head (as
+   `project_map.landed` does for System), so a merge of code or of a spec. The leader reads the repository only to read
+   further what its map names.
+2. **The map's text is bounded**: the top level whole, a part a line (the containers, the flow's steps, the loop's
+   cards, the segments and their pains); in detail only the parts the call is about (the idea's marks, its touches, its
+   route's parts); then *Changed since your last call*, each change with its goal and who decided it (§112.6). About
+   3,000 characters at most; past it the top level keeps only its names, and says so. The map stands before what
+   changes from call to call, so its text is the same between two heads of dev and the prompt's cache keeps it.
+3. **A map of judgement is never rewritten unseen**: its cards (the pains, the loop) are tied to what they rest on
+   (§112.7–§112.8); a change under one is a mark on the card (*what it rests on changed: goal #N, decided by …*), in the
+   map's text at the leader's next call. The leader may change the card, with its why, seen as the leader's (§118.6).
+4. **A promised change is a ghost on every map it touches**, not only on its goal's (§104.6 widened): a spec's *Will be*
+   names the parts of the maps by their ids; a part that another party's card rests on, promised to change, carries on
+   that party's map a ghost mark (*promised: goal #N will change this, decided by …*). No call.
+5. **Goals meet by the parts of their maps as well as by their files** (§86.1–§86.2): an open goal of another party that
+   rests on the parts a spec's *Will be* changes gets §86's stop; the same cheap judge, the person decides, a re-plan
+   only on their yes. Only then does a leader read another party's spec, and of it only *Done when* and *Will be*
+   (§118.5).
+6. **A change that touches another party's map offers that party on the route card** (§133.1), with its cost, before
+   any start; a bug's short way (§118.2) too: a fix of Tech's whose *Will be* touches a part a card of Product rests on
+   offers Product. The Orkmaster offers, the person says yes.
+7. **The project's facts by party** (§153.4): each answer and each fact read from the files has its party; a leader is
+   given the common core (whom it is for, what hurts them, what it leaves out: about 600 characters) and its own party's;
+   another party's only when the goal's route has that party; a member none, but what its leader wrote in the task's
+   brief.
+8. **What a call may read is bounded in fact, not only in words**: the read-only calls deny `Read` on lockfiles,
+   vendored copies, generated output and the decisions file whole (the rules `_claude_read_dirs` already writes);
+   *Talk* reads no file (its map is enough); the files a call did read are counted from the tool's output, and a call
+   past its bound is a line in the day's log.
+9. **The floor of a leader's call**: a read-only call runs with none of the person's MCP servers (`--strict-mcp-config`
+   with an empty configuration) and no skills (`--disable-slash-commands`); the project's CLAUDE.md stays (Claude Code
+   reads it, and Tech needs it; `--bare` drops it but asks an API key, never a subscription). Measured before and after
+   on `calls.jsonl`: what a call writes to the cache.
+10. **Product's reading at the start** (§153.1): the files are chosen by code (the README, `docs/`'s top level by name,
+   the first part of each), one call with no tools on the cheaper tier, its budget as the `kind` step's.
+11. **The decisions file** (§118.1): its next number is read by code (the last `## N.`); a leader is given its goal's
+   entry, cut by code, and the headings of the last ten, never the file whole. At the first opening, a log of decisions
+   the project keeps already (`docs/adr/`, a `decisions.md` elsewhere) is offered as the path, never a second one.
+12. **Coming back**: the night's refresh reads again a few goals a night at most, those on the table and in the hand
+   first; a goal in the deck is read again when it is taken into the hand.
+13. **A task reads the spec's common part and its party's part**, and of the others only *Done when* and *Will be*
+   (§118.5 for the task too); its prompt names those, not the whole spec.
+14. **When**: 1–2, 7, 8 and 13 with the first slice's sections (§136.12), Tech's *System* first and the other maps as
+   they come (§104.14); 3–6 with the other maps; 10 with §153; 9, 11 and 12 at any time, 9 after its measure.
+The owner's call.
