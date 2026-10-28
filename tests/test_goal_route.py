@@ -219,6 +219,20 @@ def test_the_start_row_has_the_new_cost_and_the_old_beside_it_only_after_talk_an
     assert goal_route.rows(root, state, i, {**grown, "state": "working"}) == []
 
 
+def test_a_later_step_held_for_start_is_a_start_row_with_the_steps_own_cost_and_only_while_the_goal_works_decisions_169(project):
+    root, state, p = project
+    slug = _routed(project)
+    (i,) = [x for x in ideas.ideas(root) if x["slug"] == slug]
+    plan = {"tasks": [], "waits": {"step": 2, "party": p["design"], "cost": {"usd_low": 0.5, "usd_high": 1.5}}}
+    (row,) = goal_route.step_rows(root, i, {"state": "working"}, plan)
+    assert row == {"kind": "start", "idea": slug, "cost": {"usd_low": 0.5, "usd_high": 1.5}, "text": "Design's step is planned and waits for your Start"}
+    assert goal_route.step_rows(root, i, {"state": "plan"}, plan) == [] and goal_route.step_rows(root, i, {"state": "done"}, plan) == []
+    assert goal_route.step_rows(root, i, {"state": "working"}, {"tasks": []}) == [] and goal_route.step_rows(root, i, {"state": "working"}, None) == []
+    assert "cost" not in goal_route.step_rows(root, i, {"state": "working"}, {"waits": {"step": 2, "party": p["design"]}})[0]
+    needs = board_map.idea_needs(root, state, i, {**ideas.state(state, slug), "state": "working"}, plan, [])
+    assert [n["kind"] for n in needs] == ["start"] and needs[0]["blocks"] is False
+
+
 def test_the_rows_sit_on_the_boards_needs_you_of_a_goal_and_a_node_names_them(project):
     root, state, p = project
     slug = _routed(project)

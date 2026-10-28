@@ -12,6 +12,7 @@ own step when the one before is merged in dev; `way` is that route, `begin` reco
     at_step(plan) / step_done(plan, n)         # the step a plan is at (the highest a task is stamped with); whether step n's tasks are all merged or dropped, one merged at least
     next_step(plan) / steps_left(plan)         # {n, party, leader} when the plan's step is done and the route it was made for (`plan.route`) has another, else None
     begin(state_dir, "dark-mode", 2, "web", "architect", ["k3"])   # step 2 planned: recorded (`route.json` `steps`), the steps after a re-planned one forgotten
+    waits(plan) / holds(plan, task)            # a later step planned and held for the person's Start (`plan.waits`, decisions §169.3): {step, party, cost}; whether a task is of it
 
 The steps: `pitch` {answer, word, title}, `moved` {from, to} (its `party` is the one it was moved from), `party` {state, done, total} (a goal of a route of
 two steps or more has one for each, with `n` and `of`: the ones done `done`, the one at `state`, the ones after `waiting`), `main` {by}, `release` {version, out};
@@ -122,6 +123,20 @@ def next_step(plan: dict | None) -> dict | None:
     return {"n": at_step(plan) + 1, **legs_of(plan)[at_step(plan)]} if steps_left(plan) else None
 
 
+def waits(plan: dict | None) -> dict | None:
+    """The later step that waits for the person's Start (decisions §169.3): `plan.waits` = `{step, party, cost: {usd_low, usd_high}}`, laid when the keeper planned the step (a step
+    after the first, `core/idea_plan.py`) and `idea_risk.decide` held it; None when no step waits. Its tasks stay `waiting` (`holds`) until the person starts it."""
+    got = (plan or {}).get("waits")
+    n = got.get("step") if isinstance(got, dict) else None
+    return got if isinstance(n, int) and not isinstance(n, bool) and n >= 2 else None
+
+
+def holds(plan: dict | None, task: dict) -> bool:
+    """The task is of the step that waits (or one after it): it does not become `ready`."""
+    got = waits(plan)
+    return got is not None and step_of(task) >= got["step"]
+
+
 def begin(state_dir: Path, slug: str, n: int, party: str, leader: str, tasks: list[str]) -> None:
     """Step `n` was planned (`route.json` `steps`: `{n, party, leader, at, tasks}`; the steps from `n` on are replaced: a first step planned again forgets the rest)."""
     with ideas.LOCK:
@@ -142,7 +157,7 @@ def _legs(root: Path, state_dir: Path, slug: str, party: str, st: dict, plan: di
     legs = legs_of(plan) or way(root, state_dir, slug)
     if len(legs) < 2:
         done, total = _tasks(plan)
-        return [{"step": "party", "party": party, "goal": slug, "at": at, "state": st["state"], "done": done, "total": total}]
+        return [{"step": "party", "party": legs[0]["party"] if legs else party, "goal": slug, "at": at, "state": st["state"], "done": done, "total": total}]      # the route's party, else the goal's own
     tasks = [t for t in (plan or {}).get("tasks") or [] if isinstance(t, dict)]
     when = {s["n"]: str(s.get("at") or "") for s in recorded(state_dir, slug)}
     cur = at_step(plan)
@@ -187,9 +202,15 @@ def steps(root: Path, state_dir: Path, slug: str, page: ideas.Page | None = None
 
 
 def route(root: Path, state_dir: Path, slug: str, **read) -> list[dict]:
-    """A goal's route, oldest first (§2.1); [] for a goal with only its `party` step (the faces draw nothing). `read`: `steps`' reads."""
+    """A goal's route, oldest first (§2.1); [] for a goal with only its `party` step (the faces draw nothing) — unless that step is a party other than the one the goal lies in: a
+    goal routed to one party that is not its own yet (the person took its first party off the route) carries it, so the table's dot for that party is lit from `routed` on
+    (spec 100 As built E; decisions §169). `read`: `steps`' reads."""
     got = steps(root, state_dir, slug, **read)
-    return got if len(got) > 1 else []
+    if len(got) > 1:
+        return got
+    page = read.get("page") or ideas.idea_page(root, slug)
+    own = (page.get("track") if page is not None else "") or ideas.GENERAL
+    return got if got and got[0]["step"] == "party" and got[0]["party"] != own else []
 
 
 def goal_state(root: Path, state_dir: Path, pitch: str, held: dict | None = None) -> dict | None:

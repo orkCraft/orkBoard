@@ -339,8 +339,8 @@ two parties or more) writes *Gist* and up to three forks, never a section's word
 call each. An older page reads as one section of its party. With no fork the goal goes to `ready` and plans as today; after a fork it waits for *Start*
 (`way.json` `wait`). `map_text`'s changes say who decided (the person, the leader, a member alone) on a page with sections. **Left:** `plan_prompt` does
 not read *Will be* yet (H), and today's plan still writes a flat *Stages* and risk line (H); the decisions file's chosen path (`project.json`
-`decisions`) is written by nothing yet (G), so it is `docs/decisions.md`; the entry signs *Orkboard* whatever the host (Orkline's signs the same until
-the host's name is passed).
+`decisions`) is written by nothing yet (G), so it is `docs/decisions.md`; the entry is signed by its host (decisions §169): `brand.name()`, *Orkboard* here, *Orkline* where
+Orkline runs these modules, and a correction's signature of any name is read back.
 
 ## As built (G)
 
@@ -375,7 +375,11 @@ the Orkmaster's card, `take`, the record `<state_dir>/project_q.json`), `realm/b
   when no `party=` or `leader=` is passed. The brief names the common part, the task's section and the others' contract (`## <heading>`), never pasting them; a task of a page of before reads its
   spec as it was.
 - **A page of the new format** gets no flat *Stages* and no *Risk:* line: each step's tasks are the *Plan* part of its section; the risk is in the front matter (`risk`, `risk_triggers`).
-- **Left:** the later steps start by themselves (the person's *Start* covers the whole way, and `idea_risk.decide` is read at the first step only); `### Plan` is written when the step is planned, not at *Start*;
+- **A later step of high risk waits for Start** (decisions §169.3): a step after the first is appended with `plan.waits = {step, party, cost}` laid in the same write, so the runner starts none of its
+  tasks (`idea_route.holds`: they stay `waiting`); then the risk is assessed and `idea_risk.decide` read as the first step's plan is (`PlanMixin._gate_step`): a step it holds stays under `waits`, the
+  goal stays `working` (not failed) and a `start` row `{kind: "start", idea, cost: {usd_low, usd_high}, text}` (`goal_route.step_rows`: the step's own estimate, no `was`) lies in the hand; the start
+  card's `ideas.start {idea}` lifts `waits` (`route_answer`) and the tasks go ready at the runner's next tick; any other step lifts `waits` at once and starts by itself, as before.
+- **Left:** `### Plan` is written when the step is planned, not at *Start*;
   the runner's write of `plan.json` and the keeper's append are two writes of one file (the keeper's under `ideas.LOCK`, the runner's under its own lock, as a to-do's tick already is); *Re-plan what
   is left* (`revise`) reads the page as the first section's and the plan as a whole; `idea_checks.status` finds the first task of a check's tag (the first step's); the gui's other callers of
   `roles.head` for a role alone are unchanged.

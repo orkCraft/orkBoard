@@ -107,6 +107,7 @@ def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None
             "at": ideas.touched_at(root, state_dir, slug) if at is None else at}
     tasks = (plan or {}).get("tasks") or []
     out = [{**base, **n} for n in goal_route.rows(root, state_dir, i, st, line, settings)] if state in goal_route.ROUTE_STATES else []
+    out += [{**base, **n} for n in goal_route.step_rows(root, i, st, plan)]      # a later step planned and held for the person's Start (decisions §169.3)
     if state == "talk":
         out += [{**base, **n} for n in talk_rows(state_dir, slug)]
     if state in ("decided", "sections"):

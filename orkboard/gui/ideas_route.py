@@ -7,7 +7,7 @@
     ideas.route_later {idea}                                    # *Later, by itself*, only when the week's limits run low: `held_until` at the reset
     ideas.route_start {idea}                                    # the short way's Start: no Talk, no decision (E's `keeper.sections(slug)`); a bug whose report
                                                                 #   holds no failure goes to Talk, which is its diagnosis (D)
-    ideas.start {idea}                                          # answers the `start` row (a route that changed after Talk); the plan's start otherwise
+    ideas.start {idea}                                          # answers the `start` row (a route that changed after Talk, or a later step held for it: decisions §169.3); the plan's start otherwise
 
 **The seams.** Until Talk (part D) and the sections (part E) are built, `ideas.talk` and `ideas.route_start` hand the goal to today's draft, so it still moves:
 `getattr(self.keeper, "talk" | "sections")` is called when the keeper has it, with the state already set (`talk` / `sections`); the route is in
@@ -24,7 +24,7 @@ from typing import Any
 
 from orkboard.core import idea_keeper
 from orkboard.gui.ideas_args import IdeasError, _opt, _text
-from orkboard.realm import board_map, goal_route, idea_target, ideas, orkmaster, pitches
+from orkboard.realm import board_map, goal_route, idea_route, idea_target, ideas, orkmaster, pitches
 
 ROUTE_S = 30.0                    # how often a route waiting for its call, or put off to the reset, is looked at
 CONTEXT_S = 5.0                   # how long the Orkmaster's line is kept without a change (the limits move it)
@@ -205,6 +205,15 @@ class RouteMixin:
             return None
         st = self._state(slug)
         how = st["route_how"]
+        if st["state"] == "working" and idea_route.waits(ideas.plan(self.state_dir, slug)) is not None:      # a later step planned and held for the person's Start (decisions §169.3)
+            def lift(p: dict) -> None:
+                p.pop("waits", None)
+                idea_keeper.readiness(p)                        # its tasks are ready; the runner starts them at its next tick
+
+            ideas.edit_plan(self.state_dir, slug, lift)
+            self.runner(need=True).start(slug)
+            self.changed(slug)
+            return {"ok": True}
         if st["state"] not in goal_route.ROUTE_STATES[1:] or not how.get("changed"):
             return None
         said = goal_route.cost_of(self.root(), self.state_dir, st, self.settings_now())

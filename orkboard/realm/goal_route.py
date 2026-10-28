@@ -10,6 +10,7 @@ that write its spec and do its work, in order, worked out by the Orkmaster by **
     cost(state_dir, route, short, root=, settings=)      # {calls, usd_low, usd_high}: the calls counted by rule, priced from the tiers their steps run on
     context(found, states, settings, limits, now)    # what the rows share: {order: {slug: n}, low: bool}
     rows(root, state_dir, i, st, ctx, settings)         # the Needs you rows of a goal on its route: `route` (routed), `start` (a step added after Talk)
+    step_rows(root, i, st, plan)                        # the `start` row of a later step planned and held for the person's Start (decisions §169.3)
 
 **The rules.** A goal *addressed* to a party is routed to that party alone (it may add steps after, §117.1). A *bug* (the kind the line says most,
 `core/idea_kind.guess`) is Tech's alone, the short way (§118.2); a tidy and a balance pass are offered it too (`offer_short`). Any other goal goes to the
@@ -29,7 +30,7 @@ import time
 from pathlib import Path
 from typing import Any, Iterable
 
-from orkboard.realm import goal_team, goal_types, idea_spend, idea_target, ideas, library, orkmaster, party_recipes, roles
+from orkboard.realm import goal_team, goal_types, idea_route, idea_spend, idea_target, ideas, library, orkmaster, party_recipes, roles
 
 CRAFT_ORDER = ("product", "design", "engineering", "data", "marketing")      # the product's craft, the look's, the code's, the running's, the marketing's
 OFFER_SHORT = ("tidy", "balance")                                              # a small goal the short way is offered for (a bug is always short): §118.2
@@ -332,3 +333,17 @@ def rows(root: Path, state_dir: Path, i: dict, st: dict, ctx: dict | None = None
         return [{"kind": "start", "idea": i["slug"], "cost": cost_of(root, state_dir, st, settings), "was": how["said"],
                  "text": "A step was added to the route"}]
     return []
+
+
+def step_rows(root: Path, i: dict, st: dict, plan: dict | None) -> list[dict]:
+    """The `start` row of a later step that waits (decisions §169.3; `idea_route.waits`): the goal is `working`, the step after the first is planned and `idea_risk.decide` held it, so its
+    tasks are not started. The same row kind as a step added after Talk (`rows`), answered the same way (`ideas.start {idea}`): `{kind: "start", idea, cost: {usd_low, usd_high}, text}`, `cost`
+    the step's own estimate (left out where the plan has none) and no `was`: the person was told no price for this step before. Each is data; the face words it."""
+    held = idea_route.waits(plan)
+    if st.get("state") != "working" or held is None:
+        return []
+    track = ideas.track_page(root, str(held.get("party") or "")) if held.get("party") else None
+    cost = held.get("cost") if isinstance(held.get("cost"), dict) else {}
+    priced = {k: float(cost[k]) for k in ("usd_low", "usd_high") if isinstance(cost.get(k), (int, float)) and not isinstance(cost.get(k), bool)}
+    name = (track.title or held["party"]) if track is not None else "The next party"
+    return [{"kind": "start", "idea": i["slug"], **({"cost": priced} if priced else {}), "text": f"{name}'s step is planned and waits for your Start"}]

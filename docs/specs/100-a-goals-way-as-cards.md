@@ -187,7 +187,8 @@ old party form gone (`goalwizard`, `partyform`, `partyseats`, `partypresets`, `p
 they used; the `party` kind kept for *Remove party*); the phase marks *Talk · Spec · Work · Done* in the pane's title (Talk and Spec open
 their pages); the route's dots from the picked goal's rows too; the stances' *More* from `ideas.talk_read`; no race word in a seat's popover.
 **Decided here:** the first start opens the parties' place by a button on the empty Board (*Choose the parties*), not by itself. **Left:** a
-goal between its decision and its plan shows only its own party's dot (no row carries its route then); the kinds' list is the page's own copy of
+goal between its decision and its plan showed only its own party's dot: a node carries its route at every state from `routed` to `done` (tests/test_board_map.py), and a goal routed
+to one party that is not the one it lies in carries that party too (`idea_route.route`; decisions §169); the kinds' list is the page's own copy of
 `project_kind.KINDS`; no *add a fact*; the title is *Board · Parties*, not *← Parties*.
 
 ## As built (G; decisions §169.4, §169.6)

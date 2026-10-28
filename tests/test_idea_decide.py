@@ -130,6 +130,20 @@ def test_an_entry_is_the_files_heading_with_the_date_and_who_and_a_body_never_st
     assert worded("Dark mode", "add a dark mode option\nmore", ["Which first? — Web"], ["Tech"])["points"] == ["Which first? — Web", "Done by Tech"]
 
 
+def test_the_entry_is_signed_by_its_host_and_a_correction_reads_back_any_name(monkeypatch):
+    """Decisions §169: Orkboard signs Orkboard, Orkline (its profile bound) signs Orkline; a signature of any name is cut off a corrected title."""
+    import datetime as dt
+    from orkboard.orkget import profile
+    day = dt.date(2026, 10, 28)
+    assert entry_of(5, "T", "b", day).startswith("## 5. T (28 October, the person and Orkboard)")
+    assert entry_of(5, "T", "b", day, host="Orkline").startswith("## 5. T (28 October, the person and Orkline)")
+    monkeypatch.setattr(profile, "_current", profile.Profile(product="orkline", name="Orkline", package="orkcraft", version="0", agent="orkline", manifest="", source=""))
+    assert entry_of(5, "T", "b", day).startswith("## 5. T (28 October, the person and Orkline)")
+    for name in ("Orkboard", "Orkline", "Some Host"):
+        assert corrected(f"## 12. A better title (28 October, the person and {name})\nWhy: mine.", "Old") == ("A better title", "Why: mine.")
+    assert corrected("## 12. A title (with a word) here\nWhy.", "Old")[0] == "A title (with a word) here"
+
+
 # -- the call -----------------------------------------------------------------------------------------------------------------------------------
 
 def test_one_call_of_the_orkmaster_on_the_cheaper_tier_with_no_tools_and_the_decision_waits_in_a_row(host, parties, model):

@@ -143,3 +143,59 @@ def test_a_goal_of_one_step_is_done_when_its_tasks_are_merged_as_today(host, par
     assert ideas.state(host.ideas.state_dir, slug)["state"] == "done"
     assert [s["step"] for s in idea_route.steps(host.ideas.root(), host.ideas.state_dir, slug)] == ["party"]
     assert "n" not in idea_route.steps(host.ideas.root(), host.ideas.state_dir, slug)[0]
+
+
+def _risky_second_step(row):
+    """As `_plan_by_step`, but the second step's task publishes (an outward and irreversible act: high risk)."""
+    text = " ".join(row["prompt"].split())
+    if "step 2 of 2" in text:
+        return {"tasks": [{"id": "a", "title": "Publish the build", "brief": "Publish the build to the store", "kind": "code", "tier": "warrior"},
+                          {"id": "b", "title": "Test the build", "brief": "Test it", "kind": "tests", "after": ["a"]}]}
+    return _plan_by_step(row)
+
+
+def test_a_later_step_of_high_risk_waits_for_start_and_an_ordinary_one_goes_by_itself_decisions_169(work):
+    h, slug = work.host, work.slug
+    work.model.said[("plan", "")] = _risky_second_step
+    h.command("ideas.start", {"slug": slug})
+    assert ideas.idea_page(h.ideas.root(), slug).get("risk") == "low"                                                      # the first step's plan passed by itself
+    work.merge("k1")
+    work.runner.tick()
+    h.ideas.keeper.tick(time.time() + 100)
+    work.until()
+    plan = ideas.plan(h.ideas.state_dir, slug)
+    assert ideas.state(h.ideas.state_dir, slug)["state"] == "working" and ideas.state(h.ideas.state_dir, slug)["error"] == ""      # waiting, not failed
+    assert ideas.idea_page(h.ideas.root(), slug).get("risk") == "high" and list(work.tasks()) == ["k1", "k2", "k3"]
+    assert idea_route.waits(plan)["step"] == 2 and idea_route.waits(plan)["party"] == work.parties["tech"]
+    spawned = len(work.spawned)
+    work.runner.tick()
+    work.runner.tick()
+    assert len(work.spawned) == spawned and {work.tasks()[k]["state"] for k in ("k2", "k3")} == {"waiting"}                  # none of the step's tasks is started
+    assert h.ideas.keeper.tick(time.time() + 200) is False                                                                    # nor is it planned again
+    node = next(n for n in h.command("ideas.map", {})["nodes"] if n["slug"] == slug)
+    assert node["needs_you"] == "start" and node["asks_you"] is True
+    row = next(r for r in h.command("ideas.board")["needs_you"] if r["idea"] == slug and r["kind"] == "start")
+    assert row["cost"]["usd_low"] > 0 and row["cost"]["usd_high"] >= row["cost"]["usd_low"] and "was" not in row and "Start" in row["text"]
+    h.command("ideas.start", {"idea": slug})                                                                                  # the start card's answer
+    assert idea_route.waits(ideas.plan(h.ideas.state_dir, slug)) is None
+    work.runner.tick()
+    assert work.spawned[-1] == (slug, "k2") and work.tasks()["k3"]["state"] == "waiting"                                      # k3 is after k2
+    assert not [r for r in h.command("ideas.board")["needs_you"] if r["idea"] == slug and r["kind"] == "start"]
+    work.merge("k2")
+    work.runner.tick()
+    work.merge("k3")
+    work.runner.tick()
+    assert ideas.state(h.ideas.state_dir, slug)["state"] == "done"
+
+
+def test_a_later_step_of_ordinary_risk_leaves_nothing_waiting(work):
+    h, slug = work.host, work.slug
+    h.command("ideas.start", {"slug": slug})
+    work.merge("k1")
+    work.runner.tick()
+    h.ideas.keeper.tick(time.time() + 100)
+    work.until()
+    assert idea_route.waits(ideas.plan(h.ideas.state_dir, slug)) is None
+    work.runner.tick()
+    assert work.spawned[-1] == (slug, "k2")
+    assert not [r for r in h.command("ideas.board")["needs_you"] if r["idea"] == slug and r["kind"] == "start"]

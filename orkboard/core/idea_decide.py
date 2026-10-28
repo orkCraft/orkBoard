@@ -8,7 +8,7 @@ confirms it with one button, and it is committed, numbered, to the project's dec
   defaults that closed the rest, and the decisions file's last ten headings (`decisions_log.context`). It answers a title, *Why* (a few lines) and its points; code sets
   them as the file words its entries. A call that cannot be had never stops the goal: the decision is then worded by code from the same things, for the person to read and
   correct. Kept in `way.json` (`realm/spec_sections.py` `record`): `decision: {title, text, number, confirmed}`.
-- **Confirm** appends `## <n>. <title> (<date>, the person and Orkboard)` to the decisions file (`decisions_log.path(root, chosen)`: the path the project chose in
+- **Confirm** appends `## <n>. <title> (<date>, the person and <host>)` to the decisions file (`<host>`: `brand.name()`, Orkboard here, Orkline where Orkline runs these modules; `decisions_log.path(root, chosen)`: the path the project chose in
   `<state_dir>/project.json` `decisions`, else `docs/decisions.md`; the file made with a one-line head when missing). The number is read again **at the commit**, inside
   the repository's lock, from the file as dev holds it (`BoardTree.edit_file`), so two goals never take one. The commit is the Board's (its pages and that one file) and moves
   dev. Without the Board's tree (the demo, a folder with no history) the file is written in the working copy and nothing is committed (the keeper never commits).
@@ -23,6 +23,7 @@ import datetime as dt
 import re
 from pathlib import Path
 
+from orkboard import brand
 from orkboard.realm import decisions_log, idea_questions, idea_target, ideas, orkmaster, spec_sections
 from orkboard.realm.idea_talk_parse import total
 
@@ -30,7 +31,7 @@ TITLE_CHARS, WHY_CHARS, POINT_CHARS, BODY_CHARS = 120, 700, 300, 6000
 POINTS = (2, 8)                            # the points of a decision: at least, at most
 FIRST_LINE = "# Decisions"                 # the head of a decisions file made when the project has none
 _HASHES = re.compile(r"^#{1,2}(?=[ \t])", re.M)
-_SIGNED = re.compile(r"\s*\([^()]*the person and Orkboard\)\s*$")
+_SIGNED = re.compile(r"\s*\([^()]*the person and [^()]+\)\s*$")        # any host's name: the entry reads back whoever signed it
 
 
 def _kw():
@@ -79,7 +80,7 @@ def demote(text: str) -> str:
 
 
 def corrected(text: str, title: str) -> tuple[str, str]:
-    """`(title, body)` of the person's correction, kept as written: a first line that is a heading (`## 12. A title (… the person and Orkboard)`) is the title, the rest
+    """`(title, body)` of the person's correction, kept as written: a first line that is a heading (`## 12. A title (… the person and <host>)`) is the title, the rest
     the body; else the whole text is the body and the title stays."""
     text = str(text or "").strip()[:BODY_CHARS]
     lines = text.split("\n")
@@ -89,10 +90,11 @@ def corrected(text: str, title: str) -> tuple[str, str]:
     return title, demote(text)
 
 
-def entry_of(n: int, title: str, body: str, today: dt.date | None = None) -> str:
-    """The entry as the file has it: `## <n>. <title> (<date>, the person and Orkboard)`, a blank line, the body."""
+def entry_of(n: int, title: str, body: str, today: dt.date | None = None, host: str = "") -> str:
+    """The entry as the file has it: `## <n>. <title> (<date>, the person and <host>)`, a blank line, the body. `host`: the name of the product that runs the Board
+    (decisions §169; `brand.name()`: Orkboard, or Orkline where Orkline runs these modules), else that."""
     day = today or dt.date.today()
-    return f"## {n}. {title} ({day.day} {day:%B}, the person and Orkboard)\n\n{body.strip()}\n"
+    return f"## {n}. {title} ({day.day} {day:%B}, the person and {(host or '').strip() or brand.name()})\n\n{body.strip()}\n"
 
 
 class DecideMixin:
@@ -229,7 +231,7 @@ Answer with one JSON object and nothing else:
         def append(old: str) -> str:
             made["number"] = decisions_log.next_number(old)           # read again here, under the repository's lock: two goals never take one
             head = old if old.strip() else FIRST_LINE + "\n"
-            return head.rstrip("\n") + "\n\n" + entry_of(made["number"], title, body)
+            return head.rstrip("\n") + "\n\n" + entry_of(made["number"], title, body, host=brand.name())
 
         out: dict = {}
         try:

@@ -54,7 +54,7 @@ def readiness(data: dict) -> None:
     blocked = {f for td in data.get("todos") or [] if not td.get("done") for f in td.get("for") or []}
     for t in data.get("tasks") or []:
         if t.get("state") in ("waiting", "ready"):
-            t["state"] = "ready" if set(t.get("after") or []) <= merged and t["id"] not in blocked else "waiting"
+            t["state"] = "ready" if set(t.get("after") or []) <= merged and t["id"] not in blocked and not idea_route.holds(data, t) else "waiting"
 
 
 def _why(e: Exception) -> str:
@@ -247,7 +247,7 @@ Answer with one JSON object and nothing else:
             self._stamp(slug, data, track, n, lead)
             if not later and len(legs := self._legs(slug)) > 1:
                 data["route"] = legs                     # the steps this plan was made for: the runner and the clock read them from it, so a route is not read twice
-            ids = self._save_step(slug, data, n)
+            ids = self._save_step(slug, data, n, track)
         except Exception as e:
             if later:                                    # the plan is passed: the goal fails with why, and Start goes on from the step it was at
                 ideas.save_state(self.state_dir, slug, state="failed", error="" if isinstance(e, InterruptedError) else f"No plan for the next step: {kw._why(e)}")
@@ -268,6 +268,8 @@ Answer with one JSON object and nothing else:
         collide.clear_told(self.state_dir, slug)         # what the Orkmaster told it is used (spec 71 §3)
         self.write_stages(slug, {**data, "tasks": [t for t in (ideas.plan(self.state_dir, slug) or data)["tasks"] if idea_route.step_of(t) == n]} if later else data)
         self.assess(slug)
+        if later:
+            self._gate_step(slug, n)                     # its risk is read as the first step's: one that holds waits for the person's Start (decisions §169.3)
         ideas.save_state(self.state_dir, slug, state="working" if later else "plan", error="", held_until="", held_for="", measure=self.measure())
         self.publish(slug)
         if not later:
@@ -284,7 +286,22 @@ Answer with one JSON object and nothing else:
             t.update(step=n, party=party, **({"craft": craft} if craft else {}), **({"leader": lead} if lead and lead != roles.TASKMASTER else {}),
                      **({"section": heading} if heading else {}))
 
-    def _save_step(self, slug: str, data: dict, n: int) -> list[str]:
+    def _gate_step(self, slug: str, n: int) -> bool:
+        """A later step was planned (its tasks lie in the plan under `plan.waits`, so the runner has not started them) and its risk assessed: `idea_risk.decide` is read as it is for the
+        first step's plan. A step it holds (`wait`) stays under `waits`: the goal stays `working`, the `start` row is laid in the hand with the step's cost, and the person's *Start* lets it
+        go on (`gui/ideas_route.py` `route_answer`); any other starts by itself, as before. Whether it waits."""
+        page = ideas.idea_page(self.wiki_root(), slug)
+        wait = page is not None and idea_risk.decide(page.get("risk"), page.get("priority")) == "wait"
+        if not wait:
+            def lift(p: dict) -> None:
+                if (idea_route.waits(p) or {}).get("step") == n:
+                    p.pop("waits", None)
+                    readiness(p)                         # its tasks are ready now, as when they were appended before this gate
+
+            ideas.edit_plan(self.state_dir, slug, lift)
+        return wait
+
+    def _save_step(self, slug: str, data: dict, n: int, party: str = "") -> list[str]:
         """The step's plan kept: the first step's replaces the plan (never a passed one), a later step's is appended to the passed plan under the lock (its ids numbered on, its
         to-dos too, the estimate summed, a task ready when what it waits for is done). The ids of the step's tasks."""
         if n == 1:
@@ -299,6 +316,7 @@ Answer with one JSON object and nothing else:
             plan["missing"] = more.get("missing") or []
             was = plan.get("estimate") if isinstance(plan.get("estimate"), dict) else {}
             plan["estimate"] = {"tasks": len(plan["tasks"]), **{k: round(float(was.get(k) or 0) + float(more["estimate"].get(k) or 0), 2) for k in SUMMED}}
+            plan["waits"] = {"step": n, "party": party, "cost": {k: more["estimate"].get(k) for k in SUMMED}}      # held until `_gate_step` has read its risk: the runner starts none of its tasks before
             readiness(plan)
             out.extend(t["id"] for t in more["tasks"])
 

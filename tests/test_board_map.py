@@ -673,6 +673,23 @@ def test_the_route_and_start_rows_are_needs_you_of_a_goal_on_its_way_and_a_node_
     assert [r["state"] for r in host.command("ideas.board")["ideas"] if r["slug"] == c] == ["decided"]
 
 
+def test_a_node_carries_its_goals_route_at_every_state_from_routed_to_done_decisions_169(host):
+    """Spec 100 As built E's Left: a goal between its decision and its plan shows its route's parties, not only its own party's (`table/data.js` `routeParties` reads the node's `route`)."""
+    root, state = _board(host)
+    g, a_, b_ = _goal(root, "Way"), _goal(root, "Art"), _goal(root, "Sound")
+    two = [{"party": g, "leader": "taskmaster"}, {"party": a_, "leader": "artist"}]
+    away = [{"party": b_, "leader": "artist"}]                  # its first party taken off the route: the goal lies in `g` still
+    states = ("routed", "talk", "decided", "sections", "ready", "planning", "plan", "working", "done")
+    long = {s: _idea(root, state, g, "Long " + s, s, route=two) for s in states}
+    short = {s: _idea(root, state, g, "Away " + s, s, route=away) for s in states}
+    alone = _idea(root, state, g, "Alone", "decided", route=[{"party": g, "leader": "taskmaster"}])
+    nodes = {n["slug"]: n for n in host.command("ideas.map", {})["nodes"]}
+    for s in states:
+        assert [x["party"] for x in nodes[long[s]]["route"] if x["step"] == "party"] == [g, a_], s
+        assert [x["party"] for x in nodes[short[s]]["route"] if x["step"] == "party"] == [b_], s
+    assert nodes[alone]["route"] == []                         # a goal that stays in its own party: nothing to draw
+
+
 def test_the_decision_and_fork_rows_are_the_wording_to_confirm_and_the_first_disagreement_open_and_a_node_names_them(host):
     """Spec 99 §6–§7: `decision` {number, title, text, confirmed, error} on a goal `decided`; `fork` {id, about, sides} on a goal at `sections` while one is open."""
     root, state = _board(host)
