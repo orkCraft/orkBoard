@@ -167,7 +167,7 @@ def test_a_held_task_says_whose_limit_how_much_is_left_and_until_when_and_start_
     assert task["held_why"] == f"Waits for Claude Code's limit: 14 % of the week left, kept for you until {until}", task
     assert idea_target.hold_line([Limit("agy", "", "session", 0.2, reset)], "agy", "reserve", reset.timestamp(), time.time()) \
         == f"Waits for Antigravity's limit: 20 % of the five hours left, kept for you until {until}"
-    assert idea_target.hold_line([], "agy", "reserve", reset.timestamp(), time.time()) == f"Waits for Antigravity's limit: kept for you until {reset:%H:%M}"
+    assert idea_target.hold_line([], "agy", "reserve", reset.timestamp(), time.time()) == f"Waits for Antigravity's limit: kept for you until {until}"
     _pass(town, passed_by="person")                                         # the person's press: no reserve for it
     assert r.release_holds("demo") == 1
     assert r.plan("demo")["tasks"][0]["state"] == "waiting" and r.plan("demo")["tasks"][0]["held_why"] == ""
