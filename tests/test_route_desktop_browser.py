@@ -199,7 +199,7 @@ def test_a_goal_sent_from_ideation_shows_its_route_at_the_top_of_its_screen_one_
     assert [s.get_attribute("data-step") for s in steps.all()] == ["pitch", "moved", "party", "main", "release"]
     assert steps.last.get_attribute("aria-current") == "step" and pg.locator(".arena-route [aria-current]").count() == 1
     assert nav.locator(".ork-chev.right").count() == 4                                                    # joined by orkUI's ›, four of them
-    assert nav.locator(".arena-route__step .ork-race__head.small").count() == 5                            # the head of each party's leader, small
+    assert nav.locator(".arena-route__step .ork-race__head").count() == 5                            # the head of each party's leader
     heads = [s.locator(".ork-race__head").get_attribute("src") for s in steps.all()]
     assert "investor" not in heads[0] and "lich-" in heads[0] and "peon-" in heads[2] and "skeleton-" in heads[4]    # Ideation's Investor (a lich), Passkey's Taskmaster (an ork), the Release manager (a skeleton)
     assert all(s.bounding_box()["height"] >= 24 for s in steps.all())

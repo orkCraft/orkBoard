@@ -35,7 +35,7 @@ function Chip({ l, open, press }) {
   const words = read ? `${l.name} ${pct(l.left)} left${win ? `, ${win}` : ""}` : `${l.name}: limits not read`;
   return html`<button type="button" class=${cls("shell-top__chip", { [`is-${read ? levelOf(l.left) : "unread"}`]: true })} data-provider=${l.provider}
     aria-expanded=${String(open)} aria-controls="shell-limits" aria-label=${words} title=${`${words}. What is left of your AI tools`} onClick=${press}>
-    ${MARKED.includes(l.provider) && html`<img class="ork-mark" src=${`${ORKUI}/marks/harness-${l.provider}.png`} srcset=${`${ORKUI}/marks/harness-${l.provider}@2x.png 2x`} alt="" draggable="false" />`}
+    ${MARKED.includes(l.provider) && html`<img class="ork-mark" src=${`${ORKUI}/marks/harness-${l.provider}-ink.png`} srcset=${`${ORKUI}/marks/harness-${l.provider}-ink@2x.png 2x`} alt="" draggable="false" />`}
     <span class="shell-top__chipname">${l.name}</span> <b>${read ? pct(l.left) : "—"}</b>${win && html`<span class="shell-top__chipwin">${win}</span>`}</button>`;
 }
 

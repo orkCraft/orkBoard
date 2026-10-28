@@ -27,6 +27,6 @@ export function RouteLine({ steps, goal }) {
       const words = routeWords(step), head = partyOf(step.step === "moved" ? step.from || step.party : step.party)?.leader?.head;
       return html`${i > 0 && html`<${Chev} dir="right" />`}<button type="button" key=${i} class=${cls("arena-route__step", { "is-now": i === last })} data-step=${step.step} title=${words}
         aria-current=${i === last ? "step" : undefined} onClick=${() => openStep(step, goal)}>
-        ${head && html`<${Head} race=${head.race} tier=${head.tier} small=${true} />`}<span class="arena-route__words">${words}</span></button>`;
+        ${head && html`<${Head} race=${head.race} tier=${head.tier} />`}<span class="arena-route__words">${words}</span></button>`;
     })}</div></nav>`;
 }

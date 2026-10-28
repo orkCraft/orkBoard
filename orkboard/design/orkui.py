@@ -26,11 +26,14 @@ STAMP = ROOT / "ORKUI.json"
 SOURCE = "https://github.com/orkCraft/orkUI"
 LOOK = "office"
 OWN = ("LICENSE", "NOTICE")           # orkUI's own, beside the look's files
+SKIP = ("emblems",)                   # what of `office/` the window does not draw: not copied, not stamped (spec 96 §1);
+                                      # `moons/` and the goal types' signs stay, the phone still draws them (until spec 94 E)
 
 
-def _files(root: Path) -> dict[str, str]:
+def _files(root: Path, skip: tuple[str, ...] = ()) -> dict[str, str]:
     return {p.relative_to(root).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
-            for p in sorted(root.rglob("*")) if p.is_file() and p.name != STAMP.name}
+            for p in sorted(root.rglob("*")) if p.is_file() and p.name != STAMP.name
+            and p.relative_to(root).parts[0] not in skip}
 
 
 def stamp() -> dict:
@@ -64,7 +67,7 @@ def copy(source: Path) -> dict:
         raise ValueError(f"{source} is not a checkout of orkUI (no {LOOK}/tokens.css)")
     if ROOT.exists():
         shutil.rmtree(ROOT)
-    shutil.copytree(office, ROOT)
+    shutil.copytree(office, ROOT, ignore=lambda d, names: [n for n in names if Path(d) == office and n in SKIP])
     for name in OWN:
         shutil.copy2(source / name, ROOT / name)
     try:
@@ -74,7 +77,7 @@ def copy(source: Path) -> dict:
         commit = ""
     found = re.search(r'^version\s*=\s*"([^"]+)"', (source / "pyproject.toml").read_text(encoding="utf-8"), re.M)
     data = {"from": SOURCE, "look": LOOK, "version": found.group(1) if found else "", "commit": commit,
-            "files": _files(ROOT)}
+            "files": _files(ROOT, SKIP)}
     STAMP.write_text(json.dumps(data, indent=1) + "\n", encoding="utf-8")
     return data
 

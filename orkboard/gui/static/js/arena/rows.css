@@ -23,7 +23,7 @@
   font: var(--ork-type-button); cursor: pointer; }
 .arena-rcard--new:hover { background: var(--ork-raised); }
 .arena-rcard--new:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
-.arena-rcard--new .ork-icon { width: 16px; height: 16px; }
+.arena-rcard--new .ork-icon { width: 14px; height: 14px; }
 
 /* a goal: one line, the party it goes to, Add goal */
 .arena-goalrow { display: flex; align-items: center; gap: var(--ork-4); min-width: 0; }

@@ -57,7 +57,7 @@ function Moves({ moves, size }) {
   if (!rows.length) return null;
   return html`<ul class="shell-size__moves" aria-label="Who joins and leaves">${rows.map(([id, word]) => html`<li key=${id} data-size-move=${id}><b>${word}</b>
     ${[["joins", "Joins"], ["leaves", "Leaves"]].map(([k, label]) => moves[id][k].length ? html`<span key=${k} class="shell-size__move" data-move=${k}>
-      ${label}: <span class="shell-size__heads">${moves[id][k].map((a) => a.head && html`<${Head} key=${a.slug} race=${a.head.race} tier=${a.head.tier} small=${true} title=${a.name} />`)}</span> ${names(moves[id][k])}</span>` : null)}</li>`)}</ul>`;
+      ${label}: <span class="shell-size__heads">${moves[id][k].map((a) => a.head && html`<${Head} key=${a.slug} race=${a.head.race} tier=${a.head.tier} title=${a.name} />`)}</span> ${names(moves[id][k])}</span>` : null)}</li>`)}</ul>`;
 }
 
 /** **Its size**. `size`: the party's ("" none yet); `onChange(to, team|null)`: the pick, with the team the size gives when it changes who is in the party (it may return a promise: a refusal rejects it and is said here);

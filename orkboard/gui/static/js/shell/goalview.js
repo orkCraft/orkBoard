@@ -96,8 +96,8 @@ export function GoalView() {
       <p class="shell-brief">${brief || g.description || html`<span class="ok-tone-muted">${g.state === "reading" ? `${lead} is reading the party…` : "No description yet."}</span>`}</p>
       ${summary && summary !== brief && html`<p class="shell-brief ok-tone-muted">${summary}</p>`}</section>
     <section class="shell-goal__sec" aria-label="The party" data-sec="party"><h3 class="board-sub">The party</h3>
-      <ul class="shell-goal__team"><li key="lead">${g.leader?.head && html`<${WhoHead} head=${g.leader.head} small />`} <b>${g.leader?.name || "Taskmaster"}</b> <span class="ok-tone-muted">leads</span></li>
-        ${seats.map((s) => { const l = memberLine(s); return html`<li key=${s}>${l.head && html`<${WhoHead} head=${l.head} small />`} <b>${l.name}</b> <span class="ok-tone-muted">· ${l.text}</span></li>`; })}</ul>
+      <ul class="shell-goal__team"><li key="lead">${g.leader?.head && html`<${WhoHead} head=${g.leader.head} />`} <b>${g.leader?.name || "Taskmaster"}</b> <span class="ok-tone-muted">leads</span></li>
+        ${seats.map((s) => { const l = memberLine(s); return html`<li key=${s}>${l.head && html`<${WhoHead} head=${l.head} />`} <b>${l.name}</b> <span class="ok-tone-muted">· ${l.text}</span></li>`; })}</ul>
       <${PartyWork} goal=${g.slug} /></section>
     <${PartySize} slug=${g.slug} leader=${g.leader?.slug || "taskmaster"} team=${seats} every=${g.every || []} craft=${g.craft || ""} size=${m?.size || ""} party=${m?.party} />
     <section class="shell-goal__sec" aria-label="Checks on every goal" data-sec="checks"><h3 class="board-sub">Checks on every goal</h3>

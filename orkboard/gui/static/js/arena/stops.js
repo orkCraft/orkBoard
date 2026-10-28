@@ -251,7 +251,7 @@ function Stop({ s, g, place, of, rise = "" }) {
     <button type="button" class="arena-hc__open" aria-label=${`${label}: ${s.full}`} aria-describedby=${about ? said : undefined} title=${pick ? `${s.full} · ${s.text}` : undefined} onClick=${() => { see(); open(s); }}>
       <span class="arena-hc__top">${s.gem !== "" && html`<span class=${cls("ork-gem", { danger: s.tone === "danger" })} title=${s.gemTip}>${typeof s.gem === "object" ? html`<${Sign} name=${s.gem.sign} />` : s.gem}</span>`}
         <span class=${cls("arena-hc__kind", { "is-no": s.tone === "danger" })}>${s.label}</span>
-        ${s.small && s.head && html`<span class="arena-hc__who" title=${s.whoTip}><${Head} race=${s.head.race} tier=${s.head.tier} small=${s.kind === "collide"} /></span>`}</span>
+        ${s.small && s.head && html`<span class="arena-hc__who" title=${s.whoTip}><${Head} race=${s.head.race} tier=${s.head.tier} /></span>`}</span>
       ${other && html`<span class="arena-hc__party" title=${`${p.name} · led by ${p.lead}`}>${p.head && html`<${Head} race=${p.head.race} tier=${p.head.tier} />`}</span>`}
       ${!s.small && html`<span class="arena-art">${s.head && html`<${Head} race=${s.head.race} tier=${s.head.tier} size="mid" />`}</span>`}
       ${!pick && s.kind !== "collide" && html`<span class="arena-banner">${other ? `${p.name} · ${s.title}` : s.title}</span><span class="arena-hc__text" title=${s.text}>${s.text}</span>`}

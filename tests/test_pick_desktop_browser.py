@@ -278,7 +278,7 @@ def test_the_drawer_has_the_ask_four_tiles_across_the_note_and_take_with_none_of
     assert tab.count() == 1 and "Draw the mark" in tab.text_content()
     view = drawer.locator(".shell-pickone")
     assert view.locator(".arena-lbl").text_content() == "Pick one" and view.locator("h2").text_content() == "Draw the mark"
-    assert _text(view.locator(".shell-pickone__by")) == "made by Screens · 4 pictures" and view.locator(".shell-pickone__by img.ork-race__head.small").count() == 1
+    assert _text(view.locator(".shell-pickone__by")) == "made by Screens · 4 pictures" and view.locator(".shell-pickone__by img.ork-race__head").count() == 1
     assert view.locator(".shell-pickone__ask").text_content() == f"“{ASK}”"
     tiles = [t.bounding_box() for t in _tiles(drawer).all()]
     assert len(tiles) == 4 and len({t["y"] for t in tiles}) == 2 and tiles[1]["x"] > tiles[0]["x"] and all(t["width"] >= 190 for t in tiles)    # two by two in the right column (spec 90 §2.1)

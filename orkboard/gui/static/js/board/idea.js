@@ -106,7 +106,7 @@ function Tasks({ plan, working }) {
     <span class="board-task__state" data-state=${k.state}>${TASK_WORDS[k.state] || k.state}</span>
     <button class="board-link board-task__title" onClick=${() => showTask(plan.idea, k.id)}><b>${k.title}</b></button>
     ${k.tag && html`<span class="board-chip board-task__tag">${k.tag}</span>`}
-    ${k.head ? html`<${Who} head=${k.head} small />` : html`<span class="board-chip">${k.tier}</span>`}
+    ${k.head ? html`<${Who} head=${k.head} />` : html`<span class="board-chip">${k.tier}</span>`}
     ${k.after?.length ? html`<span class="ok-tone-muted">after ${k.after.join(", ")}</span>` : ""}
     ${k.commit && html`<code class="board-commit" title=${k.branch}>${k.commit.slice(0, 8)}</code>`}
     ${plan.passed_by === "auto" && !["waiting", "ready"].includes(k.state) && html`<span class="ok-tone-muted">by itself</span>`}

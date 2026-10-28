@@ -98,7 +98,7 @@ export function OwnParties({ parties, onPick, reload, picked = "" }) {
   return html`<section class="shell-own-parties" aria-label="Your parties"><h3 class="ok-font-label">Your parties</h3>
     <div class="shell-own-chips">${parties.map((p) => html`<div key=${p.id} class=${`shell-own-chip${picked === p.id ? " is-on" : ""}`} data-party=${p.id}>
       <button type="button" class="shell-own-chip__pick" aria-pressed=${String(picked === p.id)} aria-label=${`Pick your party “${p.name}”`} onClick=${() => onPick(p)}>
-        <span class="shell-own-heads">${[p.leader, ...p.team].map((id, n) => agentOf(id) && html`<${Head} key=${n} race=${raceOfAgent(agentOf(id))} tier=${agentOf(id).tier} small=${true} />`)}</span>
+        <span class="shell-own-heads">${[p.leader, ...p.team].map((id, n) => agentOf(id) && html`<${Head} key=${n} race=${raceOfAgent(agentOf(id))} tier=${agentOf(id).tier} />`)}</span>
         <b>${p.name}</b>${usedWords(p) && html`<small class="ok-tone-muted">${usedWords(p)}</small>`}</button>
       <button type="button" class="shell-own-chip__close" aria-label=${`Remove your party “${p.name}”`} onClick=${() => setAsking(p.id)}><${Icon} name="close" /></button>
       ${asking === p.id && html`<p class="shell-own-ask" role="alert">Remove your party “${p.name}”? Parties that use it keep their agents.
@@ -221,7 +221,7 @@ export function ChecksBlock({ team, every, setEvery, price = null }) {
   const adds = (a) => { const c = (price?.checks || []).find((x) => x.by === a.id); return c ? ` · ${addsWords(c)}` : ""; };
   return html`<div class="shell-checks" role="group" aria-label="Checks"><span class="ok-font-label">Checks on every goal</span>
     <p class="ok-tone-muted">How deep each goal is worked: every check adds a line to its Done when and a task to its plan.</p>
-    ${checkers.map((a) => html`<div key=${a.id} class="shell-check-row"><${Head} race=${raceOfAgent(a)} tier=${a.tier} small=${true} />
+    ${checkers.map((a) => html`<div key=${a.id} class="shell-check-row"><${Head} race=${raceOfAgent(a)} tier=${a.tier} />
       <span><b>${a.name}</b> <small class="ok-tone-muted">${libraryWords(`${a.check.done} · applies ${a.check.applies}`)}${adds(a)}</small></span>
       <label class="shell-check-every"><input type="checkbox" aria-label=${`Every goal: ${a.name}`} checked=${every.includes(a.id)}
         onChange=${(e) => setEvery(e.target.checked ? [...every, a.id] : every.filter((x) => x !== a.id))} /> Every goal</label></div>`)}</div>`;

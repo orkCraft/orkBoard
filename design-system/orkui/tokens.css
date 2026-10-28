@@ -1,18 +1,18 @@
-/* Generated from tokens.json by tools/build_tokens.py (orkUI 0.13.0, look office). Do not edit. */
+/* Generated from tokens.json by tools/build_tokens.py (orkUI 0.15.3, look office). Do not edit. */
 
 :root[data-look="office"] {
   color-scheme: dark;
-  --ork-canvas: #16140f;
-  --ork-panel: #1f1c17;
-  --ork-raised: #2a261f;
-  --ork-paper: #1b1813;
-  --ork-frame: #3d372d;
-  --ork-edge: #958a78;
-  --ork-ink: #e0dbd0;
-  --ork-ink-muted: #b0a899;
-  --ork-ink-faint: #9a9284;
-  --ork-ink-read: #cdc7bb;
-  --ork-on-ink: #16140f;
+  --ork-canvas: #151412;
+  --ork-panel: #1e1c1a;
+  --ork-raised: #282622;
+  --ork-paper: #1a1816;
+  --ork-frame: #3a3832;
+  --ork-edge: #908a82;
+  --ork-ink: #dedbd6;
+  --ork-ink-muted: #aca8a1;
+  --ork-ink-faint: #98948e;
+  --ork-ink-read: #cac7c1;
+  --ork-on-ink: #151412;
   --ork-action: #6aa84f;
   --ork-action-hi: #7fbf5f;
   --ork-action-press: #58903f;
@@ -20,18 +20,31 @@
   --ork-alert: #f0d050;
   --ork-warning: #f0d050;
   --ork-success: #86c062;
-  --ork-elem-meadow: #7fbf9a;
+  --ork-elem-meadow: #6fb8a8;
   --ork-elem-ice: #82aaff;
-  --ork-elem-dust: #d4b77a;
+  --ork-elem-dust: #b8914f;
   --ork-elem-void: #8e88a8;
-  --ork-elem-lava: #a49a96;
-  --ork-table: #1b1813;
-  --ork-table-rim: #3d372d;
-  --ork-table-rim-hi: #4a4338;
+  --ork-elem-lava: #ad6a5a;
+  --ork-table: #1a1816;
+  --ork-table-rim: #3a3832;
+  --ork-table-rim-hi: #47443e;
+  --ork-card: #2e2e2e;
+  --ork-card-frame: #3c3c3c;
   --ork-font-pixel: "Pixelify Sans", "IBM Plex Mono", ui-monospace, monospace;
   --ork-font-text: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
   --ork-font-read: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --ork-font-code: var(--ork-font-text);
+  --ork-motion-quick: 120ms;
+  --ork-motion-base: 180ms;
+  --ork-motion-sure: 250ms;
+  --ork-motion-play: 400ms;
+  --ork-motion-deal-gap: 40ms;
+  --ork-motion-spring: cubic-bezier(.34,1.56,.64,1);
+  --ork-motion-ease: cubic-bezier(.22,1,.36,1);
+  --ork-motion-lean: 6deg;
+  --ork-motion-rise: 4px;
+  --ork-motion-press: 0.96;
+  --ork-motion-shards: 6;
   --ork-type-title: 500 16px/20px var(--ork-font-pixel);
   --ork-type-title-case: uppercase;
   --ork-type-title-track: 0.04em;
@@ -72,6 +85,7 @@
   --ork-line: 1px;
   --ork-radius: 0px;
   --ork-double: 3px;
+  --ork-notch-size: 2px;
   --ork-notch: polygon(2px 0, calc(100% - 2px) 0, 100% 2px, 100% calc(100% - 2px), calc(100% - 2px) 100%, 2px 100%, 0 calc(100% - 2px), 0 2px);
   --ork-scrim: rgb(0 0 0 / 0.6);
 

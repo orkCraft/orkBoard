@@ -22,7 +22,7 @@ export const agentOf = (id) => (roles.value?.library || []).find((a) => a.id ===
 /** An agent's small head, from the library. */
 export function AgentHead({ id }) {
   const a = agentOf(id);
-  return a ? html`<${Head} race=${a.race} tier=${a.tier} small=${true} title=${a.name} />` : null;
+  return a ? html`<${Head} race=${a.race} tier=${a.tier} title=${a.name} />` : null;
 }
 
 /** *≈$0.40 a run*: the agent's tier's price (ideas.roles `tier_costs`), "" when there is none yet. */

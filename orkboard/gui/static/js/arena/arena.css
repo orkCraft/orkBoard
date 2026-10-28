@@ -37,7 +37,7 @@
 .arena-type__needs { margin-top: auto; display: flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .arena-type__back { display: flex; align-items: center; justify-content: center; width: 40px; height: 56px; box-sizing: border-box; border: var(--ork-line) solid var(--ork-action); color: var(--ork-action);
   clip-path: var(--ork-notch); background: repeating-linear-gradient(45deg, var(--ork-raised) 0 2px, var(--ork-panel) 2px 4px); }
-.arena-type__back .ork-icon { width: 16px; height: 16px; }
+.arena-type__back .ork-icon { width: 14px; height: 14px; }
 
 /* New goal by its type (shell/ideadialog.js): the type's head, the element, Refs' pictures, the join line */
 .arena-typed__head { display: flex; align-items: center; gap: var(--ork-4); }
@@ -82,7 +82,7 @@
 .arena-phead.is-open:focus-visible { box-shadow: inset 2px 0 0 var(--ork-ink), inset 0 0 0 2px var(--ork-ink); }
 .arena-plist__head { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 22px; }
 .arena-plist__icon { color: var(--ork-ink-muted); }
-.arena-plist__icon .ork-icon { width: 20px; height: 20px; }
+.arena-plist__icon .ork-icon { width: 21px; height: 21px; }
 .arena-pnew .arena-plist__icon { color: var(--ork-action); }
 .arena-phead__name { flex: 1; min-width: 0; line-height: 20px; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
 .arena-pnew .arena-phead__name { color: var(--ork-action); }
@@ -114,7 +114,7 @@
 .arena-flagline__main b { color: var(--ork-ink); font-weight: 600; }
 .arena-flagline__flag { display: inline-flex; color: var(--ork-success); }
 .arena-flagline__words { overflow: hidden; text-overflow: ellipsis; }
-.arena-flagline__x .ork-icon { width: 12px; height: 12px; }
+.arena-flagline__x .ork-icon { width: 14px; height: 14px; }
 .arena-flagline__row { display: inline-flex; align-items: center; flex: none; gap: var(--ork-2); }
 .arena-flagline__el { display: inline-flex; }
 /* the flags raised (spec 64): the line's goals' elements travel to their places in its row from the gate (--dx, --dy, --s set from the gate's box, --delay 35 ms apart) as copies over everything,

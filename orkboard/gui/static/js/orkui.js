@@ -6,13 +6,17 @@ import { html } from "./html.js";
 
 export const ORKUI = "/ds/orkui";
 
-/** One of orkUI's pixel icons (icons/icons.svg: flag, robot, eye, sliders, close, …), 24 px, in the text's colour. */
+// orkUI's own icons, drawn on the signs' 7 grid in solid pixels (0.15.0): drawn at 14, 21 or 28 px, never at 24.
+const GRID7 = new Set(["arrow-left", "close", "more-horizontal", "plus", "search", "mic", "play", "stop", "chevron-down", "chevron-left", "chevron-right", "chevron-up"]);
+
+/** One of orkUI's pixel icons (icons/icons.svg: flag, robot, eye, sliders, close, …), 24 px, in the text's colour; one of orkUI's own on the
+ *  7 grid (close, plus, …) is 21 px (`.ork-icon.g7`, page.css), and a sheet that sets its size sets 14, 21 or 28. */
 export function Icon({ name, label = "" }) {
-  return html`<svg class="ork-icon" aria-hidden=${label ? undefined : "true"} role=${label ? "img" : undefined} aria-label=${label || undefined}>
+  return html`<svg class=${GRID7.has(name) ? "ork-icon g7" : "ork-icon"} aria-hidden=${label ? undefined : "true"} role=${label ? "img" : undefined} aria-label=${label || undefined}>
     <use href=${`${ORKUI}/icons/icons.svg#${name}`} /></svg>`;
 }
 
-/** One of orkUI's signs (signs/<name>.svg, spec 50 §1.6): check, cross, work, night, alert, flag, before, after. Drawn in the colour of the text it
+/** One of orkUI's signs (signs/<name>.svg, spec 50 §1.6): check, cross, work, moon, alert, flag, before, after. Drawn in the colour of the text it
  *  stands in and never alone: its words are beside it or in its `label` (its title). `aria-hidden`. */
 export function Sign({ name, big = false, label = "" }) {
   return html`<span class=${`ork-sign ${name}${big ? " big" : ""}`} aria-hidden="true" title=${label || undefined}></span>`;
@@ -29,12 +33,12 @@ export function Chev({ dir = "down" }) {
   return html`<i class=${`ork-chev${dir === "down" ? "" : ` ${dir}`}`} aria-hidden="true"></i>`;
 }
 
-/** A race's head (orkUI races/), pixelated: 24 x 22 (its @2x for a sharp screen), `small` 12 x 11, a pixel a cell, an accent in a line of
- *  text, `mid` 36 x 33 (a member's head, from the @2x) or `big` 48 x 44 (the leader's). A head is an accent, never a picture to look at:
- *  the smallest that says it. Its word goes beside it. */
-export function Head({ race, tier = "laborer", small = false, size = "", title = "" }) {
-  const sz = size || (small ? "small" : ""), src = `${ORKUI}/races/${race}-${tier}`, from2x = sz === "mid" || sz === "big";
-  const wide = { small: 12, mid: 36, big: 48 }[sz] || 24, high = { small: 11, mid: 33, big: 44 }[sz] || 22;
+/** A race's head (orkUI races/), pixelated: 24 x 22 (its @2x for a sharp screen), a pixel a cell, an accent in a line of text, `mid` 36 x 33
+ *  (a member's head, from the @2x) or `big` 48 x 44 (the leader's); never 12 x 11 (spec 96 §2.1). A head is an accent, never a picture to
+ *  look at: the smallest that says it. Its word goes beside it. */
+export function Head({ race, tier = "laborer", size = "", title = "" }) {
+  const sz = size, src = `${ORKUI}/races/${race}-${tier}`, from2x = sz === "mid" || sz === "big";
+  const wide = { mid: 36, big: 48 }[sz] || 24, high = { mid: 33, big: 44 }[sz] || 22;
   return html`<img class=${`ork-race__head${sz ? ` ${sz}` : ""}`} src=${from2x ? `${src}@2x.png` : `${src}.png`} srcset=${sz || from2x ? undefined : `${src}@2x.png 2x`}
     width=${wide} height=${high} alt="" title=${title || undefined} draggable="false" />`;
 }
@@ -73,14 +77,14 @@ export const CRAFT_WORDS = { engineering: "Engineering", design: "Design", data:
 /** "Seasoned elf · Design": what a head says, in words. */
 export const headWords = (head) => (head ? `${TIER_WORDS[head.tier] || ""} ${RACE_WORDS[head.race] || ""} · ${CRAFT_WORDS[head.craft] || ""}` : "");
 
-/** Who does it (`head`: {craft, race, tier} as the host sends it, realm/roles.py `head`), its words in its title; `small` in a line. */
-export function WhoHead({ head, small = false, size = "" }) {
-  return head ? html`<${Head} race=${head.race} tier=${head.tier} small=${small} size=${size} title=${headWords(head)} />` : null;
+/** Who does it (`head`: {craft, race, tier} as the host sends it, realm/roles.py `head`), its words in its title. */
+export function WhoHead({ head, size = "" }) {
+  return head ? html`<${Head} race=${head.race} tier=${head.tier} size=${size} title=${headWords(head)} />` : null;
 }
 
 /** A head beside its words: the tier, then the race and the craft, muted (orkUI's .ork-race). */
-export function Who({ head, small = false }) {
+export function Who({ head }) {
   if (!head) return null;
-  return html`<span class=${`ork-race${small ? " small" : ""}`} data-race=${head.race} data-tier=${head.tier}><${Head} race=${head.race} tier=${head.tier} small=${small} />
+  return html`<span class="ork-race" data-race=${head.race} data-tier=${head.tier}><${Head} race=${head.race} tier=${head.tier} />
     <span class="ork-race__word">${TIER_WORDS[head.tier]} <span class="ork-race__tier">${RACE_WORDS[head.race]} · ${CRAFT_WORDS[head.craft]}</span></span></span>`;
 }

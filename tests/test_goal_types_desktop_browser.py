@@ -175,7 +175,7 @@ def test_the_plus_deals_your_own_goal_first_then_the_partys_types_the_most_used_
     icon = cards.nth(1)
     assert icon.locator(".ork-sign.picture.big").count() == 1 and "New icon" in icon.inner_text() and "An icon in the pixel style" in icon.inner_text()
     needs = icon.locator(".arena-type__needs")
-    assert "needs: Artist" in needs.inner_text() and needs.locator(".ork-race__head.small").count() == 1
+    assert "needs: Artist" in needs.inner_text() and needs.locator(".ork-race__head").count() == 1
     assert needs.evaluate("e => getComputedStyle(e).color") != _alert(pg)                                                # muted ink: not a stop
     assert cards.nth(2).locator(".arena-type__needs").count() == 0                                                       # it misses no one
     assert cards.nth(0).locator(".arena-type__needs").count() == 0
@@ -272,7 +272,7 @@ def test_the_join_line_free_seat_unticked_says_the_grunt_and_a_full_band_has_no_
     dialog = _form(pg, "New icon")
     join = dialog.locator(".arena-join[data-agent=artist]")
     box_ = join.get_by_role("checkbox")
-    assert box_.is_checked() and "Artist joins the party" in join.inner_text() and join.locator(".ork-race__head.small").count() == 1
+    assert box_.is_checked() and "Artist joins the party" in join.inner_text() and join.locator(".ork-race__head").count() == 1
     price = join.locator("[title='at API prices, not your bill']")
     assert price.inner_text().startswith("≈$") and price.inner_text().endswith(" a run")
     box_.uncheck()

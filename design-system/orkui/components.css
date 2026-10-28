@@ -86,16 +86,33 @@ textarea.ork-field { height: auto; min-height: calc(var(--ork-control) * 3); pad
 .ork-split { height: 4px; background: repeating-linear-gradient(90deg, var(--ork-frame) 0 2px, transparent 2px 4px); cursor: row-resize; }
 .ork-split:hover, .ork-split:focus-visible { background: repeating-linear-gradient(90deg, var(--ork-ink) 0 2px, transparent 2px 4px); outline: 0; }
 
-/* --- Row and card: a hairline edge; selected is raised with a 2 px bar (never a white box); asks and fails ------------------ */
+/* --- Row and card: a hairline edge; a row selected is raised with a 2 px bar (never a white box); asks and fails. A card is neutral on the
+   warm table (0.15.3, orkboard's decisions §163): its own fill and frame, `card` and `card-frame`, soft greys a step lighter than `raised`;
+   a card selected keeps its fill and wears the bar ------------------------------------------------------------------------ */
 .ork-row, .ork-card { display: block; box-sizing: border-box; padding: var(--ork-3) var(--ork-4); background: var(--ork-panel); color: var(--ork-ink);
   border: var(--ork-line) solid var(--ork-frame); clip-path: var(--ork-notch); text-align: left; }
+.ork-card { background: var(--ork-card); border-color: var(--ork-card-frame); }
 .ork-row { min-height: var(--ork-row); }
 button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: inherit; width: 100%; }
 .ork-row:hover, .ork-card:hover { border-color: var(--ork-edge); }
-.ork-row.is-on, .ork-card.is-on, .ork-row[aria-selected="true"], .ork-card[aria-selected="true"] { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); }
+.ork-row.is-on, .ork-row[aria-selected="true"] { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); }
+.ork-card.is-on, .ork-card[aria-selected="true"] { box-shadow: inset 2px 0 0 var(--ork-ink); }
 .ork-row:focus-visible, .ork-card:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 .ork-row.asks, .ork-card.asks { border-color: var(--ork-alert); }
 .ork-row.fails, .ork-card.fails { border-color: var(--ork-danger); }
+
+/* --- A card taken and the box that takes it (orkboard's decisions §152.4, in the ink only): pixel brackets at the four corners of a card
+   picked, 2 px thick and 8 px long, a pixel inside the notch; a dashed 2 px line for the box being drawn ------------------------- */
+.ork-picked { position: relative; }
+.ork-picked::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-repeat: no-repeat;
+  background-image: linear-gradient(var(--ork-ink), var(--ork-ink)), linear-gradient(var(--ork-ink), var(--ork-ink)),
+    linear-gradient(var(--ork-ink), var(--ork-ink)), linear-gradient(var(--ork-ink), var(--ork-ink)),
+    linear-gradient(var(--ork-ink), var(--ork-ink)), linear-gradient(var(--ork-ink), var(--ork-ink)),
+    linear-gradient(var(--ork-ink), var(--ork-ink)), linear-gradient(var(--ork-ink), var(--ork-ink));
+  background-size: 8px 2px, 2px 8px, 8px 2px, 2px 8px, 8px 2px, 2px 8px, 8px 2px, 2px 8px;
+  background-position: left 2px top 2px, left 2px top 2px, right 2px top 2px, right 2px top 2px,
+    left 2px bottom 2px, left 2px bottom 2px, right 2px bottom 2px, right 2px bottom 2px; }
+.ork-box { position: absolute; box-sizing: border-box; pointer-events: none; border: 2px dashed var(--ork-ink); background: none; }
 
 /* --- Chip, count, section label --------------------------------------------------------------------------------------------- */
 .ork-chip, .ork-count { display: inline-flex; align-items: center; height: var(--ork-chip); padding: 0 var(--ork-3); box-sizing: border-box;
@@ -107,13 +124,15 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
   text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
 .ork-label::before { content: ""; width: 6px; height: 6px; background: currentColor; flex: none; }
 
-/* --- A race's head beside its word (races/: 24 x 22, @2x 48 x 44): the look's only raster art, whole pixels; a state goes beside
-   it in its signal colour, never onto it ------------------------------------------------------------------------------------- */
+/* --- A race's head beside its word (races/: 12 x 11 cells, 2 px a cell = 24 x 22, @2x 48 x 44): the look's only raster art, whole
+   pixels, never drawn between its sizes; a state goes beside it in its signal colour, never onto it. `.bare` is the same box
+   for a head drawn without its tier's gear ----------------------------------------------------------------------------------- */
 .ork-race { display: inline-flex; align-items: center; gap: var(--ork-3); min-width: 0; max-width: 100%; vertical-align: middle; }
 .ork-race__head { flex: none; display: block; width: 24px; height: 22px; image-rendering: pixelated; }
 .ork-race.big .ork-race__head, .ork-race__head.big { width: 48px; height: 44px; }
-.ork-race.small .ork-race__head, .ork-race__head.small { width: 12px; height: 11px; }      /* 1 px a cell: an accent in a line of text */
 .ork-race.mid .ork-race__head, .ork-race__head.mid { width: 36px; height: 33px; }         /* 3 px a cell, from the @2x image: a member's head */
+.ork-race__head.bare { width: 24px; height: 22px; }
+.ork-race__head.bare.big { width: 48px; height: 44px; }
 .ork-race__word { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .ork-race__tier { color: var(--ork-ink-muted); }
 /* an AI tool's mark or a level's chevrons (marks/, 16 x 16, @2x 32 x 32), beside a name: an accent, drawn at its own size or a whole multiple */
@@ -138,6 +157,9 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-gem.alert { background: var(--ork-alert); }
 .ork-gem.danger { background: var(--ork-danger); }
 .ork-gem.dim { background: var(--ork-edge); }
+.ork-gem.share { background: var(--ork-frame); color: var(--ork-ink); }                   /* a share of the limits (4%): the frame's colour, in the label's token */
+.ork-gem.share.alert { background: var(--ork-alert); color: var(--ork-on-ink); }          /* it warns: the signal's colour, no other */
+.ork-gem.share.danger { background: var(--ork-danger); color: var(--ork-on-ink); }
 .ork-stat { display: inline-flex; align-items: center; justify-content: center; flex: none; box-sizing: border-box; min-width: 30px; height: 20px;
   padding: 0 var(--ork-2); background: var(--ork-canvas); color: var(--ork-ink); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch);
   font: var(--ork-type-label); font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -158,6 +180,7 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-elem { display: inline-block; flex: none; width: 14px; height: 14px; vertical-align: middle;
   -webkit-mask-size: 100%; mask-size: 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
 .ork-elem.big { width: 28px; height: 28px; }
+.ork-card-back__seal > .ork-elem { width: 28px; height: 28px; }      /* a back's seal: the element at its big size, whatever the markup says (the back is drawn further down) */
 .ork-elem.meadow { background: var(--ork-elem-meadow); -webkit-mask-image: url(elements/meadow.svg); mask-image: url(elements/meadow.svg); }
 .ork-elem.ice { background: var(--ork-elem-ice); -webkit-mask-image: url(elements/ice.svg); mask-image: url(elements/ice.svg); }
 .ork-elem.dust { background: var(--ork-elem-dust); -webkit-mask-image: url(elements/dust.svg); mask-image: url(elements/dust.svg); }
@@ -179,7 +202,7 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-moon.gibbous::after { -webkit-mask-image: url(moons/gibbous.svg); mask-image: url(moons/gibbous.svg); }
 .ork-moon.full::after { background: var(--ork-ink); -webkit-mask-image: url(moons/disk.svg); mask-image: url(moons/disk.svg); }
 
-/* --- Signs: every symbol a face draws (signs/, thirty-six 7 x 7 pixel shapes), drawn as a mask in the colour of the text it stands in
+/* --- Signs: every symbol a face draws (signs/, thirty-eight 7 x 7 pixel shapes), drawn as a mask in the colour of the text it stands in
    (`currentColor`). 14 x 14 or 28 x 28, never a size between. -3px sets the 14 px box on the baseline of a 16 px line ---------- */
 .ork-sign { display: inline-block; flex: none; width: 14px; height: 14px; vertical-align: -3px; background: currentColor;
   -webkit-mask-size: 100%; mask-size: 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
@@ -187,7 +210,8 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-sign.check { -webkit-mask-image: url(signs/check.svg); mask-image: url(signs/check.svg); }
 .ork-sign.cross { -webkit-mask-image: url(signs/cross.svg); mask-image: url(signs/cross.svg); }
 .ork-sign.work { -webkit-mask-image: url(signs/work.svg); mask-image: url(signs/work.svg); }
-.ork-sign.night { -webkit-mask-image: url(signs/night.svg); mask-image: url(signs/night.svg); }
+.ork-sign.moon { -webkit-mask-image: url(signs/moon.svg); mask-image: url(signs/moon.svg); }
+.ork-sign.night { -webkit-mask-image: url(signs/moon.svg); mask-image: url(signs/moon.svg); }       /* the old name of moon, kept for Orkline and the phone page */
 .ork-sign.alert { -webkit-mask-image: url(signs/alert.svg); mask-image: url(signs/alert.svg); }
 .ork-sign.flag { -webkit-mask-image: url(signs/flag.svg); mask-image: url(signs/flag.svg); }
 .ork-sign.before { -webkit-mask-image: url(signs/before.svg); mask-image: url(signs/before.svg); }
@@ -220,6 +244,8 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-sign.release { -webkit-mask-image: url(signs/release.svg); mask-image: url(signs/release.svg); }
 .ork-sign.store { -webkit-mask-image: url(signs/store.svg); mask-image: url(signs/store.svg); }
 .ork-sign.tune { -webkit-mask-image: url(signs/tune.svg); mask-image: url(signs/tune.svg); }
+.ork-sign.sword { -webkit-mask-image: url(signs/sword.svg); mask-image: url(signs/sword.svg); }      /* a squad's Does column, never a state */
+.ork-sign.shield { -webkit-mask-image: url(signs/shield.svg); mask-image: url(signs/shield.svg); }   /* a squad's Checks column, never a state */
 
 /* --- Dialog, menu, toast ------------------------------------------------------------------------------------------------------- */
 .ork-scrim { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: var(--ork-6); background: var(--ork-scrim); }
@@ -326,6 +352,84 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
   .ork-busy::after { animation: none; } }
 .ork-empty { display: grid; place-content: center; justify-items: center; gap: var(--ork-5); min-height: 100%; text-align: center; color: var(--ork-ink-muted); }
 .ork-ork { margin: 0; text-align: left; white-space: pre; color: var(--ork-ink-muted); font: 400 12px/14px var(--ork-font-text); }
+
+/* --- Motion: how a card answers a hand (orkboard's decisions §149.1 to §149.3). Transforms only, at 60 frames a second; the times, the
+   curves, the angle, the rise, the press and the shards' count are tokens (--ork-motion-*), nothing here has one of its own. No idle
+   motion: a card at rest is flat and still, and so is a card being read (`.is-read`). The page sets --ork-lean-x and --ork-lean-y
+   (-1 to 1, the pointer's place on the card), --ork-deal-i, --ork-fan-i and --ork-fan-mid (a card's place in the hand and the hand's
+   middle), --ork-deal-x/-y and --ork-play-x/-y (where it comes from, where it goes). Under reduced motion every one is still ---- */
+.ork-card.ork-leans { transition: transform var(--ork-motion-base) var(--ork-motion-spring); }
+.ork-card.ork-leans:hover, .ork-card.ork-leans.is-lifted {      /* leans toward the pointer (at most the lean token) and rises on a pixel shadow */
+  transform: perspective(40em) rotateX(calc(var(--ork-lean-y, 0) * var(--ork-motion-lean) * -1)) rotateY(calc(var(--ork-lean-x, 0) * var(--ork-motion-lean)))
+    translateY(calc(var(--ork-motion-rise) * -1));
+  box-shadow: 0 var(--ork-motion-rise) 0 var(--ork-scrim);
+  clip-path: polygon(var(--ork-notch-size) 0, calc(100% - var(--ork-notch-size)) 0, 100% var(--ork-notch-size),
+    100% calc(100% + var(--ork-motion-rise) - var(--ork-notch-size)), calc(100% - var(--ork-notch-size)) calc(100% + var(--ork-motion-rise)),
+    var(--ork-notch-size) calc(100% + var(--ork-motion-rise)), 0 calc(100% + var(--ork-motion-rise) - var(--ork-notch-size)), 0 var(--ork-notch-size)); }
+.ork-card.ork-leans:active {        /* gives to the press token, and springs back on release (the transition above) */
+  transform: perspective(40em) translateY(calc(var(--ork-motion-rise) * -1)) scale(var(--ork-motion-press));
+  transition-duration: var(--ork-motion-quick); transition-timing-function: var(--ork-motion-ease); }
+.ork-card.ork-leans.is-read { transform: none; box-shadow: none; clip-path: var(--ork-notch); }
+.ork-deal { animation: ork-deal var(--ork-motion-sure) var(--ork-motion-spring) both;
+  animation-delay: calc(var(--ork-deal-i, 0) * var(--ork-motion-deal-gap)); }          /* dealt: one after another, a gap apart */
+.ork-play { animation: ork-play var(--ork-motion-play) var(--ork-motion-spring) both; }  /* played: lifts, flies, lands with a short overshoot */
+.ork-seal { animation: ork-seal var(--ork-motion-sure) var(--ork-motion-spring) both; }  /* sealed: the stamp lands a little large and settles */
+.ork-fan > * { transform-origin: 50% 100%; animation: ork-fan var(--ork-motion-sure) var(--ork-motion-spring) both;
+  animation-delay: calc(var(--ork-fan-i, 0) * var(--ork-motion-deal-gap)); }           /* fanned: spread, one after another */
+.ork-fan.closing > * { animation-direction: reverse; }                                   /* and closed the same way */
+.ork-crumble { position: absolute; inset: 0; pointer-events: none; color: var(--ork-ink-muted); }     /* crumbled: shards fall, not a fade */
+.ork-crumble > i { position: absolute; left: var(--ork-shard-left, 50%); top: var(--ork-shard-top, 50%);
+  width: var(--ork-motion-rise); height: var(--ork-motion-rise); background: currentColor;
+  animation: ork-crumble var(--ork-motion-play) var(--ork-motion-ease) both; animation-delay: calc(var(--ork-shard-n, 0) * var(--ork-motion-deal-gap)); }
+.ork-crumble > i:nth-child(1) { --ork-shard-left: 14%; --ork-shard-top: 22%; --ork-shard-dx: -2; --ork-shard-n: 0; }
+.ork-crumble > i:nth-child(2) { --ork-shard-left: 38%; --ork-shard-top: 64%; --ork-shard-dx: -1; --ork-shard-n: 2; }
+.ork-crumble > i:nth-child(3) { --ork-shard-left: 46%; --ork-shard-top: 30%; --ork-shard-dx: 1; --ork-shard-n: 1; }
+.ork-crumble > i:nth-child(4) { --ork-shard-left: 62%; --ork-shard-top: 72%; --ork-shard-dx: 2; --ork-shard-n: 3; }
+.ork-crumble > i:nth-child(5) { --ork-shard-left: 78%; --ork-shard-top: 18%; --ork-shard-dx: 1; --ork-shard-n: 1; }
+.ork-crumble > i:nth-child(6) { --ork-shard-left: 88%; --ork-shard-top: 56%; --ork-shard-dx: 3; --ork-shard-n: 2; }
+.ork-crumble > i:nth-child(n+7) { display: none; }                                         /* the shards token is six */
+@keyframes ork-deal { from { transform: translate(var(--ork-deal-x, 0), var(--ork-deal-y, 0)) rotate(calc(var(--ork-motion-lean) * -1)) scale(var(--ork-motion-press)); }
+  to { transform: none; } }
+@keyframes ork-play { 0% { transform: none; }
+  35% { transform: translateY(calc(var(--ork-motion-rise) * -3)) rotate(var(--ork-motion-lean)); }
+  100% { transform: translate(var(--ork-play-x, 0), var(--ork-play-y, 0)); } }
+@keyframes ork-seal { from { transform: scale(calc(1 + (1 - var(--ork-motion-press)) * 4)) rotate(calc(var(--ork-motion-lean) * -1)); }
+  to { transform: none; } }
+@keyframes ork-fan { from { transform: none; }
+  to { transform: rotate(calc((var(--ork-fan-i, 0) - var(--ork-fan-mid, 0)) * var(--ork-motion-lean) / 2)); } }
+@keyframes ork-crumble { from { transform: none; }
+  to { transform: translate(calc(var(--ork-shard-dx, 0) * var(--ork-motion-rise) * 3), calc(var(--ork-motion-rise) * 12))
+    rotate(calc(var(--ork-shard-dx, 0) * var(--ork-motion-lean) * 8)); } }
+@media (prefers-reduced-motion: reduce) {
+  .ork-card.ork-leans, .ork-card.ork-leans:hover, .ork-card.ork-leans.is-lifted, .ork-card.ork-leans:active { transform: none; transition: none; box-shadow: none; clip-path: var(--ork-notch); }
+  .ork-deal, .ork-play, .ork-seal, .ork-fan > *, .ork-fan.closing > * { animation: none; }
+  .ork-crumble { display: none; } }
+
+/* --- The back: a hand card face down (the deck, the cards under a stack's top, the discard's), one pixel pattern in the frame's and the faint
+   ink's greys on the card's grey (backs/back.svg, 15 x 21 cells, 5 : 7), no colour. A ring lies at its middle, empty: the seal slot
+   (.ork-card-back__seal) lies at the back's centre in it and holds the element of the goal that waits next (`<span class="ork-elem dust">`,
+   28 px) and, beside it, the sign `moon` when that goal waits for the reset, the pair centred (orkboard's decisions §160.3). With nothing in
+   the slot the back is the pattern alone. A map card's back stays its details: this is the hand's alone ------------------------------- */
+.ork-card-back { display: grid; place-content: center; box-sizing: border-box; aspect-ratio: 5 / 7; background: var(--ork-card) url(backs/back.svg) center / 100% 100% no-repeat;
+  border: var(--ork-line) solid var(--ork-card-frame); clip-path: var(--ork-notch); image-rendering: pixelated; }
+.ork-card-back__seal { display: flex; align-items: center; justify-content: center; gap: var(--ork-2); color: var(--ork-ink-muted); pointer-events: none; }
+
+/* --- The + card and the deck (orkboard's decisions §160.2): the + card is the new goal's card, face up, its face orkUI's `plus` icon centred,
+   28 px (four pixels a cell, whole) and nothing else; the deck is a pile (the backs' edges, `--ork-deck-i` 1, 2, 3 ... a step each, the top
+   back last) with the + card lying off its top, to its left, so the seal at the back's middle stays in view: four fifths of its width out, a little
+   up, turned by the lean token; a transform that is still at rest (nothing moves, nothing idles). The page gives the deck its width and
+   leaves room at its left for the + card; every card in it is that wide, five to seven ------------------------------------------- */
+.ork-card.ork-plus { display: grid; place-items: center; aspect-ratio: 5 / 7; padding: 0; }
+.ork-card.ork-plus > .ork-icon { width: 28px; height: 28px; }
+.ork-deck { display: inline-grid; position: relative; isolation: isolate; }
+.ork-deck > * { grid-area: 1 / 1; }
+.ork-deck > .ork-card-back.edge { transform: translate(calc(var(--ork-deck-i, 1) * var(--ork-3) / 2), calc(var(--ork-deck-i, 1) * var(--ork-3) / 2)); }
+.ork-deck > .ork-card.ork-plus { --ork-lie: translate(-80%, calc(var(--ork-4) * -1)) rotate(calc(var(--ork-motion-lean) * -1)); transform: var(--ork-lie); }
+.ork-deck > .ork-card.ork-plus.ork-leans:hover, .ork-deck > .ork-card.ork-plus.ork-leans.is-lifted { transform: var(--ork-lie) translateY(calc(var(--ork-motion-rise) * -1)); }
+.ork-deck > .ork-card.ork-plus.ork-leans:active { transform: var(--ork-lie) scale(var(--ork-motion-press)); }
+@media (prefers-reduced-motion: reduce) {
+  .ork-deck > .ork-card.ork-plus.ork-leans, .ork-deck > .ork-card.ork-plus.ork-leans:hover, .ork-deck > .ork-card.ork-plus.ork-leans.is-lifted,
+  .ork-deck > .ork-card.ork-plus.ork-leans:active { transform: var(--ork-lie); } }
 
 /* --- The tab bar (the phone, and the desktop's narrow shell) ------------------------------------------------------------------ */
 .ork-tabbar { display: grid; grid-template-columns: repeat(3, 1fr); border-top: var(--ork-line) solid var(--ork-frame); background: var(--ork-canvas);

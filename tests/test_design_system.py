@@ -23,6 +23,56 @@ def test_the_copy_is_orkuis_office_look_as_stamped():
     assert ".ork-race__head" in (orkui.ROOT / "components.css").read_text(encoding="utf-8")
 
 
+def test_the_copy_leaves_out_what_the_window_does_not_draw_and_keeps_what_the_phone_does(tmp_path, monkeypatch):
+    """Spec 96 §1: `emblems/` is not copied and not stamped; `moons/` and the goal types' signs stay for the phone (until spec 94 E)."""
+    assert orkui.SKIP == ("emblems",)
+    assert not (orkui.ROOT / "emblems").exists() and not [n for n in orkui.stamp()["files"] if n.split("/")[0] in orkui.SKIP]
+    assert (orkui.ROOT / "moons").is_dir() and "signs/moon.svg" in orkui.stamp()["files"] and "signs/night.svg" in orkui.stamp()["files"]
+    assert "signs/bug.svg" in orkui.stamp()["files"]
+    (orkui.ROOT / "emblems").mkdir()
+    try:
+        (orkui.ROOT / "emblems" / "a.svg").write_text("x", encoding="utf-8")
+        assert orkui.problems() == ["emblems/a.svg: not orkUI's (copy orkUI again, never edit here)"]
+    finally:
+        import shutil
+        shutil.rmtree(orkui.ROOT / "emblems")
+    assert orkui.problems() == []
+
+
+def test_the_copy_is_orkui_0_15_3_with_the_ink_marks_the_moon_and_the_cards_tokens():
+    stamp = orkui.stamp()
+    assert tuple(int(n) for n in stamp["version"].split(".")) >= (0, 15, 3) and len(stamp["commit"]) == 40
+    for tool in ("claude", "codex", "agy", "cursor", "hermes", "pi"):
+        for name in (f"marks/harness-{tool}.png", f"marks/harness-{tool}-ink.png", f"marks/harness-{tool}-ink@2x.png"):
+            assert name in stamp["files"], name
+    for n in (1, 2, 3):
+        assert f"marks/rank-{n}-ink.png" in stamp["files"]
+    for race in ("peon", "elf", "goblin", "gnome", "knight", "lich", "skeleton", "shaman", "dryad", "imp", "fairy", "unicorn"):
+        assert orkui.race_png(race, "laborer") in stamp["files"] or orkui.race_png(race, "elder") in stamp["files"], race
+    assert "races/peon-crown.png" in stamp["files"] and "races/griffin-laborer.png" not in stamp["files"]
+    tokens_css = (orkui.ROOT / "tokens.css").read_text(encoding="utf-8")
+    assert "--ork-card:" in tokens_css and "--ork-card-frame:" in tokens_css
+
+
+def test_the_page_draws_the_ink_marks_the_moon_and_no_head_at_12_x_11():
+    js = STATIC / "js"
+    for name in ("arena/members.js", "arena/limits.js", "shell/topbar.js"):
+        text = (js / name).read_text(encoding="utf-8")
+        assert "-ink" in text and "ork-mark" in text, name                      # a seat's tool under its head, a limit's chip: the ink mark
+    assert "harness-${id}.png" in (js / "shell" / "seattool.js").read_text(encoding="utf-8")   # where a tool is chosen: the coloured one
+    head = (js / "orkui.js").read_text(encoding="utf-8")
+    assert not re.search(r"\bsmall\b", head.split("export function Head")[1].split("export function Switch")[0].replace("`small`", ""))
+    assert "ork-icon g7" in head
+    for path in js.rglob("*.js"):
+        if "vendor" in path.parts:
+            continue
+        text = path.read_text(encoding="utf-8")
+        assert not re.search(r"<\$\{(Head|Who|WhoHead)\}[^>]*\bsmall\b", text), path.name       # no head is drawn at 12 x 11 (spec 96 §2.1)
+        assert "sign night" not in text and 'name="night"' not in text, path.name                # the sign is `moon` (the phone keeps `night`)
+    page = (STATIC / "page.css").read_text(encoding="utf-8")
+    assert ".ork-icon.g7 { --ork-icon: 21px; }" in page
+
+
 def test_a_hand_edit_of_the_copy_is_caught(tmp_path, monkeypatch):
     copy = tmp_path / "orkui"
     copy.mkdir()

@@ -35,7 +35,7 @@ function View({ v, judging }) {
 function Case({ p }) {
   const c = p.case;
   return html`<section class="shell-goal__sec shell-pitch__case" aria-label="The case against" data-sec="case">
-    <h3 class="board-sub"><${WhoHead} head=${p.skeptic?.head} small /> The case against</h3>
+    <h3 class="board-sub"><${WhoHead} head=${p.skeptic?.head} /> The case against</h3>
     ${c ? html`<p class="shell-pitch__words">${c.case}</p>
       ${c.kills.length > 0 && html`<ul class="shell-pitch__kills" aria-label="Its kill reasons">${c.kills.map((k) => html`<li key=${k.id} data-kill=${k.id}><${Sign} name="cross" /> ${k.words}</li>`)}</ul>`}`
       : html`<p class="ok-tone-muted">${p.state === "judging" ? `${p.skeptic?.name || "The Skeptic"} makes it once the four views have answered.` : "Not made yet."}</p>`}
@@ -47,12 +47,12 @@ function Decision({ p }) {
   const d = p.decision, who = p.investor?.name || "The Investor";
   if (!d) {
     return html`<section class="shell-goal__sec shell-pitch__decision" aria-label="Decision" data-sec="decision">
-      <h3 class="board-sub"><${WhoHead} head=${p.investor?.head} small /> Decision</h3>
+      <h3 class="board-sub"><${WhoHead} head=${p.investor?.head} /> Decision</h3>
       <p class="ok-tone-muted">${p.state === "judging" ? `${who} decides after the case against.` : "None yet."}</p></section>`;
   }
   const where = whereWords(d);
   return html`<section class="shell-goal__sec shell-pitch__decision" aria-label="Decision" data-sec="decision" data-answer=${d.answer}>
-    <h3 class="board-sub"><${WhoHead} head=${p.investor?.head} small /> Decision</h3>
+    <h3 class="board-sub"><${WhoHead} head=${p.investor?.head} /> Decision</h3>
     <p class="shell-pitch__answer" data-answer=${d.answer}>${d.word}</p>
     ${d.reshaped && html`<p class="ok-tone-muted">${who} said invest; its kill reasons made it a reshape.</p>`}
     <span class="ok-font-label">Why</span><${List} items=${d.why} label="Why" />

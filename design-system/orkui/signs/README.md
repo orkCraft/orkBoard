@@ -1,11 +1,11 @@
 # orkUI / office / signs
 
-The thirty-six signs: **every symbol a face draws is orkUI's** (orkBoard's spec 50 §1.6, spec 51 §1 and spec 52 §1 and spec 56 §6 and spec 59 §1, decisions §63.10, §69 and §72). A sign stands beside the
+The thirty-eight signs: **every symbol a face draws is orkUI's** (orkBoard's spec 50 §1.6, spec 51 §1 and spec 52 §1 and spec 56 §6 and spec 59 §1, decisions §63.10, §69 and §72). A sign stands beside the
 words it explains (a state, a stop, an order), in the colour of that text; it is never the only thing that says it, so the words
 (or a `title`) stay and the sign is `aria-hidden`.
 
     check   a done thing (✓)                         cross   a failure (✗)
-    work    at work (↻)                              night   held for tonight (a moon and a star)
+    work    at work (↻)                              moon    starts by itself later (a crescent)
     alert   a stop that asks (!)                     flag    a goal in main (⚑)
     before  what a task waits for (←)                after   what waits for it (→)
     play    a sound's or a clip's control (▶)        pause   a sound's or a clip's control (‖)
@@ -39,10 +39,21 @@ never a being; the thing drawn in brackets):
     store        where the product is sold (a stall)
     tune         a sound for the game (a drum)
 
+A squad's two columns (orkBoard's decisions §151.9) have a mark each, never a state's sign:
+
+    sword   a squad's *Does* column (a sword)         shield  a squad's *Checks* column (a shield)
+
+**The window as decided draws** (0.15.0): the states of the closed set, `check`, `cross`, `work`, `moon`, `alert`, `flag`;
+`before` and `after`; `play` and `pause`; a map card's kinds, `screen`, `picture`, `sound`, `film`, `text`, `page`, `logo`;
+and `sword` and `shield`. The goal types' signs stay in this folder for Orkline, which still draws them; orkBoard's copy
+leaves them out.
+
 The twenty-three pictures are also in `../emblems/` (the library), with seven more that no face draws.
 
-*night* is a crescent and a star: the star tells it from the *void* element (`../elements/`), whose crescent it shares (an element is a coloured mark beside a goal's name, a sign a state in the text's colour), and the moons (`../moons/`) draw a goal's progress, never a state. The close (×), the plus (+)
-and the chevrons (›, ⌄) are not here: they are orkUI's icons already (`../icons/icons.svg`).
+`night`: the old name of `moon`, kept for Orkline (`night.svg` is `moon.svg`, `.ork-sign.night` draws the same mask); the window as decided writes `moon`.
+
+*moon* is a crescent alone, the one moon of the window (it was *night*, a crescent and a star, before 0.15.0): the *void* element (`../elements/`) is a ring now and no crescent, and the icon `moon` is gone from the sprite. The moons (`../moons/`) draw a goal's progress, never a state. The close (×), the plus (+)
+and the chevrons (›, ⌄) are not here: they are orkUI's icons (`../icons/icons.svg`), drawn on this same grid.
 
 Each is a **7 x 7** grid of unit squares, one `path` (`M{x} {y}h1v1h-1z` for every pixel, row by row from the top), `viewBox="0 0
 7 7"`, `fill="#000"`, `shape-rendering="crispEdges"`: no colour of its own, no metadata. They are **drawn as masks**:

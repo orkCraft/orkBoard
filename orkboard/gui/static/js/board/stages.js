@@ -23,7 +23,7 @@ export function Stages({ text, plan, slug }) {
   const by = Object.fromEntries((plan?.tasks || []).map((k) => [k.id, k]));
   return html`<ol class="board-stages">${lines.map((wave, n) => html`<li key=${n} class="board-stages__wave">
     ${wave.map((t) => { const k = by[t.id]; return html`<span key=${t.id || t.text} class="board-stages__task" data-task=${t.id} data-state=${k?.state || ""}>
-      ${k?.head && html`<${WhoHead} head=${k.head} small />`}${t.id && html`<button class="board-link" onClick=${() => showTask(slug, t.id)}>${t.id}</button>`} <span>${t.text}</span>
+      ${k?.head && html`<${WhoHead} head=${k.head} />`}${t.id && html`<button class="board-link" onClick=${() => showTask(slug, t.id)}>${t.id}</button>`} <span>${t.text}</span>
       ${k && html`<span class="board-stages__state board-task__state" data-state=${k.state}>${MARKS[k.state] && html`<${Sign} name=${MARKS[k.state]} /> `}${WORDS[k.state] || k.state}</span>`}</span>`; })}
   </li>`)}</ol>`;
 }

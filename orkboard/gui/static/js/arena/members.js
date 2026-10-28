@@ -11,9 +11,9 @@ import { useLit, useStruck } from "./motion.js";
 import { BAND_WORDS, BAND_KEYWORD, stageOf, columnOf, nowOf, statsOf, roleOf, memberView, raceOf, signOf } from "./arenawords.js";
 
 const MARKS = `${ORKUI}/marks`;
-/** One of orkUI's marks (a tool's, a level's) at 16 × 16 from the @2x image, pixelated; its word is its tooltip. */
+/** One of orkUI's marks in ink (a tool's, a level's, spec 96 §2.3) at 16 × 16 from the @2x image, pixelated; its word is its tooltip. */
 function Mark({ name, tip, where = "" }) {
-  return html`<img class=${`ork-mark${where ? ` arena-mark--${where}` : ""}`} src=${`${MARKS}/${name}.png`} srcset=${`${MARKS}/${name}@2x.png 2x`} alt="" title=${tip} draggable="false" />`;
+  return html`<img class=${`ork-mark${where ? ` arena-mark--${where}` : ""}`} src=${`${MARKS}/${name}-ink.png`} srcset=${`${MARKS}/${name}-ink@2x.png 2x`} alt="" title=${tip} draggable="false" />`;
 }
 
 /** A line of the peek: a sign's name and its words. */

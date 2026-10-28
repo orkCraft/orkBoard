@@ -35,7 +35,7 @@ export function tokensWords(n) {
 const shareWords = (n) => (n > 0 ? `${n} %` : "<1 %");
 
 function Mark({ line }) {
-  return html`<span class="arena-limit__name">${MARKED.includes(line.provider) && html`<img class="ork-mark" src=${`${ORKUI}/marks/harness-${line.provider}.png`} srcset=${`${ORKUI}/marks/harness-${line.provider}@2x.png 2x`} alt="" draggable="false" />`} ${line.name}</span>`;
+  return html`<span class="arena-limit__name">${MARKED.includes(line.provider) && html`<img class="ork-mark" src=${`${ORKUI}/marks/harness-${line.provider}-ink.png`} srcset=${`${ORKUI}/marks/harness-${line.provider}-ink@2x.png 2x`} alt="" draggable="false" />`} ${line.name}</span>`;
 }
 
 function Tool({ l }) {

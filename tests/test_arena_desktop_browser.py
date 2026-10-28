@@ -303,10 +303,10 @@ def test_a_member_two_numbers_marks_signs_and_peek(arena):
     assert reviewer.locator(".arena-num").nth(0).inner_text() == "6/2" and reviewer.locator(".arena-num").nth(0).get_attribute("title") == "6 checks this week, 2 caught something"
     assert pg.locator(".arena-lead, .arena-left .arena-member").count() == 0                                   # the leader's row left the column: its head leads the open party's heading (spec 73 §2)
     marks = backend.locator("img.ork-mark")                                                                   # the tool's mark and the level's chevrons, with their tooltips
-    assert [m.get_attribute("src") for m in marks.all()] == ["/ds/orkui/marks/rank-2.png", "/ds/orkui/marks/harness-claude.png"]
+    assert [m.get_attribute("src") for m in marks.all()] == ["/ds/orkui/marks/rank-2-ink.png", "/ds/orkui/marks/harness-claude-ink.png"]
     assert backend.locator("img.arena-mark--h").get_attribute("title") == "Runs on Claude" and backend.locator("img.arena-mark--r").get_attribute("title") == "Seasoned: its level"
-    assert screens.locator("img.arena-mark--h").get_attribute("src") == "/ds/orkui/marks/harness-codex.png" and screens.locator("img.arena-mark--h").get_attribute("title") == "Runs on Codex"
-    assert reviewer.locator("img.arena-mark--r").get_attribute("src") == "/ds/orkui/marks/rank-3.png" and team.locator(".arena-member[data-agent=words] img.arena-mark--r").get_attribute("src").endswith("rank-1.png")
+    assert screens.locator("img.arena-mark--h").get_attribute("src") == "/ds/orkui/marks/harness-codex-ink.png" and screens.locator("img.arena-mark--h").get_attribute("title") == "Runs on Codex"
+    assert reviewer.locator("img.arena-mark--r").get_attribute("src") == "/ds/orkui/marks/rank-3-ink.png" and team.locator(".arena-member[data-agent=words] img.arena-mark--r").get_attribute("src").endswith("rank-1-ink.png")
     assert all(pg.evaluate("(src) => fetch(src).then((r) => r.ok)", m.get_attribute("src")) for m in marks.all())      # the marks are served
     assert backend.locator(".arena-sign .ork-sign.cross").count() == 1 and "danger" in backend.locator(".arena-sign").get_attribute("class")       # a failure: the cross on the danger ground
     assert backend.locator(".arena-sign").get_attribute("title") == "failed" and backend.locator(".arena-sign").inner_text() == ""            # the sign is drawn, never typed

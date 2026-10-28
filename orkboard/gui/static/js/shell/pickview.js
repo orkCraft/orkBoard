@@ -32,7 +32,7 @@ export function PickView({ p }) {
       <header class="shell-pickone__head">
         <span class="arena-lbl">Pick one</span>
         <h2>${row.title}</h2>
-        <p class="arena-cap shell-pickone__by">${row.by?.head && html`<${WhoHead} head=${row.by.head} small=${true} />`}<span>made by ${row.by?.name || "a member"} · ${kindCount(row)}${row.round > 1 ? ` · round ${row.round}` : ""}</span></p>
+        <p class="arena-cap shell-pickone__by">${row.by?.head && html`<${WhoHead} head=${row.by.head} />`}<span>made by ${row.by?.name || "a member"} · ${kindCount(row)}${row.round > 1 ? ` · round ${row.round}` : ""}</span></p>
       </header>
       <p class="shell-pickone__ask">“${row.ask}”</p>
       <${Tiles} row=${row} big=${true} />
