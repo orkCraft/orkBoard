@@ -144,7 +144,7 @@ class TalkMixin:
 
     def _map(self, party: str) -> str | None:
         try:
-            return map_text.of(goal_team.craft_of(self.wiki_root(), party) or party, self.state_dir, self.repo_root)      # by the party's craft (spec 102 §4)
+            return map_text.of(goal_team.craft_of(self.wiki_root(), party) or party, self.state_dir, self.repo_root, pages=self.wiki_root())      # by the party's craft (spec 102 §4)
         except Exception:                            # a map that cannot be read never stops a Talk: the leader is given none
             return None
 

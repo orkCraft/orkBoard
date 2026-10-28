@@ -259,4 +259,7 @@ def of(party: str, state_dir: Path, root: Path, since: str = "", pages: Path | N
     if party == "game-design":
         from orkboard.realm import loop
         return loop.text(state_dir, root, since)
+    if party in ("art", "release", "marketing"):
+        from orkboard.realm import art_map, release_map, way_map
+        return {"art": art_map, "release": release_map, "marketing": way_map}[party].text(state_dir, root, since, pages)
     return None

@@ -107,9 +107,14 @@ def test_a_snapshot_that_cannot_be_made_reads_the_newest_kept(game, monkeypatch)
     assert map_text.system(state(game), game) == first
 
 
-def test_only_tech_has_a_map_as_text_today(game):
+def test_each_craft_has_its_map_as_text(game):
+    from orkboard.realm import art_map, loop, release_map, way_map
     assert map_text.of("tech", state(game), game) == map_text.system(state(game), game)
-    assert all(map_text.of(p, state(game), game) is None for p in ("design", "product", "game-design", "release", "marketing"))
+    assert map_text.of("game-design", state(game), game) == loop.text(state(game), game)                  # spec 102 §4: each craft's own
+    assert map_text.of("art", state(game), game) == art_map.text(state(game), game)
+    assert map_text.of("release", state(game), game) == release_map.text(state(game), game)
+    assert map_text.of("marketing", state(game), game) == way_map.text(state(game), game)
+    assert all(map_text.of(p, state(game), game) is None for p in ("design", "product", "nobody"))          # Design's and Product's with spec 102 A
 
 
 # -- §2.1 changed since the party's last call ------------------------------------------------------------------------------------------
