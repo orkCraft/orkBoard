@@ -144,34 +144,6 @@
 .shell-edit__text:focus { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 /* a role in one line (spec 41 §8) */
 .shell-facts .ork-race { vertical-align: middle; }
-/* -- New goal in three steps (goalwizard.js): the steps, the craft's tiles, the team's seats and rows, as on the phone ------------- */
-.shell-craft-tile { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: row; align-items: center; gap: var(--ork-4);
-  padding: var(--ork-3) var(--ork-4); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); }
-.shell-craft-tile[aria-pressed="true"] { background: var(--ork-raised); box-shadow: inset 0 -2px 0 var(--ork-ink); }
-.shell-craft-tile > .ork-race__head { width: 48px; height: 44px; image-rendering: pixelated; }
-.shell-craft-tile b { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); }
-.shell-craft-tile:hover, .shell-team-row:hover { background: var(--ork-raised); }
-.shell-craft-tile:focus-visible, .shell-team-row:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
-.shell-craft-tile.is-mixed { align-items: flex-start; }
-.shell-craft-tile__text { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; }
-.shell-team-seat.is-over { border-color: var(--ork-alert); }
-.shell-band-over { margin: 0; color: var(--ork-alert); font: var(--ork-type-status); }
-.shell-team-seat { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-edge); }
-.shell-team-seat.is-empty { border-style: dashed; border-color: var(--ork-frame); }
-.shell-team-seat.is-lead { background: var(--ork-raised); }
-.shell-party-band { display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-3) 0; border-top: var(--ork-line) solid var(--ork-edge); }
-.shell-band-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--ork-3); }
-.shell-band-head h3 { margin: 0; font: var(--ork-type-label); text-transform: var(--ork-type-label-case); }
-.shell-team-row { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: grid; grid-template-columns: 24px 1fr 28px;
-  grid-template-areas: "head name mark" "head line mark"; column-gap: var(--ork-4); align-items: center; padding: var(--ork-3) 0;
-  border-bottom: var(--ork-line) solid var(--ork-frame); }
-.shell-team-row > img { grid-area: head; }
-.shell-team-row > b { grid-area: name; }
-.shell-team-row > small { grid-area: line; }
-.shell-check-badge { margin-left: var(--ork-2); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); color: var(--ork-ink-muted); }
-.shell-checks { display: flex; flex-direction: column; gap: var(--ork-3); margin-top: var(--ork-4); }
-.shell-check-row { display: grid; grid-template-columns: 12px 1fr auto; gap: var(--ork-3); align-items: center; }
-.shell-check-every { display: inline-flex; align-items: center; gap: var(--ork-2); white-space: nowrap; }
 /* -- the drawer's Pick one (docs/specs/51-pick-one.md §6): its title and ask, the variants large, the note, and at the foot Take B and None of them -- */
 .shell-pickone__head { display: flex; flex-direction: column; gap: var(--ork-1); }
 .shell-pickone__head h2 { margin: 0; font: var(--ork-type-body); font-weight: 600; }
@@ -181,20 +153,11 @@
 .shell-pickone__foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-4); }
 /* -- a pitch's screen (docs/specs/65-ideation.md §8): the four views side by side, the case against, the decision with its answer large; the views' and the
    Investor's words in the text face, the pixel face for the headings and the buttons only -- */
-.shell-band-fixed { margin: var(--ork-2) 0 0; }
-/* -- The Orkmaster's proposals (proposals.js, docs/specs/75-parties-fitted-to-the-project.md §5): a card per proposal, its size a three-way switch of orkUI's buttons ----------------------- */
+/* -- orkUI's three-way switch (board/target.js `Switch`) ----------------------- */
 .ork-switch { display: inline-flex; align-self: flex-start; gap: var(--ork-2); }
 .ork-switch .ork-btn { flex-direction: column; align-items: center; justify-content: center; gap: 0; height: auto; min-height: var(--ork-control); padding-top: var(--ork-2); padding-bottom: var(--ork-2); }
 .ork-switch .ork-btn[aria-checked="true"] { --_bg: var(--ork-ink); --_fg: var(--ork-on-ink); --_bd: var(--ork-ink); --_ring: var(--ork-on-ink); }
 .ork-switch__sub { font: var(--ork-type-caption); text-transform: none; letter-spacing: normal; white-space: nowrap; }
-/* the Orkmaster's words: never the pixel face */
-.shell-size__works { display: block; }
-.shell-size .ork-switch { margin-bottom: var(--ork-2); }
-.shell-size__moves { list-style: none; margin: var(--ork-2) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-1); color: var(--ork-ink-muted); }
-.shell-size__moves li { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-1) var(--ork-4); }
-.shell-size__moves b { font-weight: normal; color: var(--ork-ink); min-width: 64px; }
-.shell-size__move { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2); }
-.shell-size__heads { display: inline-flex; gap: var(--ork-1); }
 .shell-tool .ork-select { max-width: 360px; }
 .shell-tool__hint, .shell-tool__own { display: block; }
 

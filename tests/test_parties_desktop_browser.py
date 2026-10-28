@@ -1,13 +1,17 @@
 """Spec 100 part D, the one place of the parties (docs/specs/100-a-goals-way-as-cards.md §4, decisions §151.5, §164; spec 99 §1; mockup docs/mockups/s2b/ state 8), at both widths (`tests/narrow.py`), against the
 stub host of the table's tests (tests/test_table_desktop_browser.py `TableHost`) with the commands of the parties added: `ideas.stage`, `ideas.stage_set`, `ideas.party_presets` (a game's, as the realm gives them),
-`ideas.party_price`, `ideas.goal_save` and `ideas.project_ask`; and `ideas.project_facts`, which the real host does not have yet.
+`ideas.party_price`, `ideas.goal_save` and `ideas.project_ask`; and the host's few of spec 100 §5b: `ideas.project_kind_set`, `ideas.project_facts` and `ideas.project_fact_set`.
+
+It opens the one place the way a person does: the tabs' **+**, a party's **…** *Edit*, and (with no party) the note's *Choose the parties* with `first`; the old form (New party, Edit the party) is gone.
 
 The first start (no party yet): the project's kind in a field, the stages' headings with the parties under them, the project's stage picked on its heading and the stages reached ticked, Release ticked and locked in
 every project, each party its leader's head (its party's race), **Start** making the ticked parties and then asking the project. A party opened at the right: the size's three lines and their price a goal, the
 leader's row with its name of its own beside its role (§164), its map, its AI tool's mark and tier; **Does** and **Checks** with their cards, at most five and two ticked, *Checks* dimmed under *Lean* with the words of
-each size; a made party: **Save** (*From the next task*) with only what changed, a seat's popover; what the leader keeps (read only). The narrow width: the left a screen and the right the next. Screenshots go to the
+each size; a made party: **Save** (*From the next task*) with only what changed, a seat's popover; what the leader keeps (read and changed here: *From the next goal*). The narrow width: the left a screen and the right the next. Screenshots go to the
 directory ORKCRAFT_SHOTS_DIR names when it is set."""
 from __future__ import annotations
+
+import re
 
 import pytest
 
@@ -23,6 +27,7 @@ pytestmark = pytest.mark.browser
 RECIPES = {"game": "game-design", "tech": "tech", "art": "art", "release": "release"}
 PRICE = {"lean": (0.5, 1.5), "standard": (1.0, 3.0), "full": (2.0, 5.0)}        # dollars a goal; the stub's rate is 0.5 dollars a percent
 FACTS = [{"key": "for_whom", "text": "Friends on a couch", "by": "person"}, {"key": "leaves_out", "text": "Online ranking", "by": "read"}]
+KINDS = {"game": "a game", "web": "a web app", "code": "code"}
 
 
 class PartiesHost(TableHost):
@@ -33,6 +38,7 @@ class PartiesHost(TableHost):
         if not made:
             self.parties, self.nodes = [], []
         self.stage, self.facts, self.wide_squads, self.made_extra = stage, facts, wide_squads, []
+        self.kind, self.fact_rows = "game", [dict(f) for f in FACTS]
 
     def snapshot(self):
         s = super().snapshot()
@@ -54,7 +60,7 @@ class PartiesHost(TableHost):
                     r["build"] = [*r["build"], "ui-kit"]
                 if r["id"] == "tech":
                     r["check"] = [*r["check"], "art-reviewer"]
-        return {"kind": {"id": "game", "words": "a game"}, "presets": rows}
+        return {"kind": {"id": self.kind, "words": KINDS.get(self.kind, self.kind)}, "presets": rows}
 
     def stage_doc(self):
         return {"stage": self.stage, "read": "being_made", "kept": self.stage != "being_made", "kind": "game", "offered": project_stage.offered("game")}
@@ -86,9 +92,20 @@ class PartiesHost(TableHost):
         if name == "ideas.project_ask":
             self.log.append((name, a))
             return {"ok": True}
+        if name == "ideas.project_kind_set":
+            self.log.append((name, a))
+            self.kind = a["kind"]
+            return {"ok": True, "kind": {"id": self.kind, "words": KINDS.get(self.kind, self.kind), "signs": [], "kept": True}}
         if name == "ideas.project_facts":
             self.log.append((name, a))
-            return {"facts": FACTS if self.facts and a["party"] == "tech" else []}
+            return {"facts": self.fact_rows if self.facts and a["party"] == "tech" else []}
+        if name == "ideas.project_fact_set":
+            self.log.append((name, a))
+            rows = [r for r in self.fact_rows if r["key"] != a["key"]]
+            if a["text"].strip():
+                rows = [{"key": a["key"], "text": a["text"], "by": "person"} if r["key"] == a["key"] else r for r in self.fact_rows]
+            self.fact_rows = rows
+            return {"ok": True, "facts": rows, **({"dropped": True} if not a["text"].strip() else {})}
         return super().handle(name, a)
 
     def called(self, name):
@@ -109,8 +126,16 @@ def start(gui, width, errors, **kw):
 
 
 def opened(pg, props="{}"):
-    """The place opened over the pane (part E wires the tabs' + and a party's … Edit to it; here the page is asked directly)."""
-    pg.evaluate("() => import('/static/js/frame/state.js').then((m) => m.openOver('parties', %s, {title: 'Board', key: ''}, 'Parties'))" % props)
+    """The place opened the way a person opens it: a party named (`{party: 'tech'}`) from that party's … Edit, else the tabs' + (the first start, with no party, through the note's button)."""
+    party = re.search(r"party:\s*'([^']+)'", props)
+    if party:
+        pg.locator(f'.table-tab[data-tab="{party.group(1)}"]').click()
+        pg.get_by_role("button", name=re.compile(r"'s menu$")).click()
+        pg.get_by_role("menuitem", name="Edit").click()
+    elif pg.locator(".table-empty").count():
+        pg.get_by_role("button", name="Choose the parties").click()
+    else:
+        pg.get_by_role("button", name="New party").click()
     pg.locator(".parties[data-screen]").wait_for(timeout=WAIT_MS)
 
 
@@ -209,7 +234,7 @@ def test_the_left_has_the_kind_a_field_the_stages_their_parties_and_release_in_e
     pg, host, w = first
     assert title(pg) == "Board · Parties"
     kind = pg.locator(".parties__kind")
-    assert "Read from the project" in words(kind) and kind.locator("input").input_value() == "a game"          # a field, to correct
+    assert "Read from the project" in words(kind) and kind.locator("select").input_value() == "game" and "a game" in words(kind.locator("select option:checked"))          # a list of the kinds, to correct
     assert [s.get_attribute("data-stage") for s in pg.locator(".parties__stage").all()] == ["idea", "being_made", "live", "every"]
     heads = {s.get_attribute("data-stage"): words(s.locator(".parties__stage-h").first) for s in pg.locator(".parties__stage").all()}
     assert heads == {"idea": "Idea", "being_made": "Being made The project is here", "live": "Live", "every": "In every project"}      # the project is at the stage read
@@ -394,11 +419,78 @@ def test_what_the_leader_keeps_of_the_project_is_read_where_the_host_has_it(gui)
     facts = pg.locator("[data-facts]")
     facts.wait_for(timeout=WAIT_MS)
     text = words(facts)
-    assert "Friends on a couch" in text and "Online ranking" in text and "From the next goal" in text and "you said" in text and "read from the project" in text
+    assert [i.input_value() for i in facts.locator("input").all()] == ["Friends on a couch", "Online ranking"]
+    assert "From the next goal" in text and "you said" in text and "read from the project" in text
     assert host.called("ideas.project_facts")[0] == {"party": "tech"}
     open_party(pg, "art")
     pg.wait_for_function("() => document.querySelectorAll('[data-facts]').length === 0", timeout=WAIT_MS)             # another party keeps none
     pg.context.close()
+    assert not errors, "\n".join(errors)
+
+
+def test_a_fact_is_changed_in_place_and_forgotten_from_the_next_goal(gui):
+    errors: list[str] = []
+    pg, host = start(gui, "wide", errors, facts=True)
+    opened(pg, "{party: 'tech'}")
+    facts = pg.locator("[data-facts]")
+    facts.wait_for(timeout=WAIT_MS)
+    first = facts.locator('[data-key="for_whom"] input')
+    first.fill("Friends on a couch and a TV")
+    first.press("Enter")                                                                                            # leaving the field keeps it as the person's
+    waits_for(pg, host, "ideas.project_fact_set")
+    assert host.called("ideas.project_fact_set") == [{"party": "tech", "key": "for_whom", "text": "Friends on a couch and a TV"}]
+    pg.wait_for_function("() => document.querySelector('[data-key=\"for_whom\"] input').value.endsWith('a TV')", timeout=WAIT_MS)
+    assert "you said" in words(facts.locator('[data-key="for_whom"]'))
+    shot(pg, "parties-facts-wide.png")
+    facts.get_by_role("button", name="Forget: Online ranking").click()
+    waits_for(pg, host, "ideas.project_fact_set", 2)
+    assert host.called("ideas.project_fact_set")[1] == {"party": "tech", "key": "leaves_out", "text": ""}           # an empty text drops it
+    pg.wait_for_function("() => document.querySelectorAll('[data-facts] li').length === 1", timeout=WAIT_MS)
+    pg.context.close()
+    assert not errors, "\n".join(errors)
+
+
+def test_the_kind_is_corrected_from_a_list_and_the_parties_are_asked_again(first):
+    pg, host, w = first
+    before = len(host.called("ideas.party_presets"))
+    kind = pg.locator(".parties__kind select")
+    assert [o.get_attribute("value") for o in kind.locator("option").all()][:3] == ["empty", "mobile", "game"] and kind.locator("option").count() == 10
+    kind.select_option("web")
+    waits_for(pg, host, "ideas.project_kind_set")
+    assert host.called("ideas.project_kind_set") == [{"kind": "web"}]
+    waits_for(pg, host, "ideas.party_presets", before + 1)                                                           # the parties fitted to it
+    pg.wait_for_function("() => document.querySelector('.parties__kind select').value === 'web'", timeout=WAIT_MS)
+
+
+# -- opened the way a person opens it ----------------------------------------------------------------------------------------------------------------------------
+
+def test_the_tabs_plus_opens_the_place_from_the_board(gui):
+    errors: list[str] = []
+    pg, host = start(gui, "wide", errors)
+    pg.get_by_role("button", name="New party").click()
+    pg.locator(".parties[data-screen]").wait_for(timeout=WAIT_MS)
+    assert title(pg) == "Board · Parties" and pg.locator(".parties").get_attribute("data-first") == "false" and pg.locator(".place").count() == 0
+    assert pg.locator(".parties__party").count() == 1                                                                # the first party of the stages is open at the right
+    pg.keyboard.press("Escape")                                                                                      # ← or Esc goes back to the Board
+    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    pg.context.close()
+    assert not errors, "\n".join(errors)
+
+
+def test_a_partys_edit_opens_the_place_at_that_party_and_the_first_start_says_first(gui):
+    errors: list[str] = []
+    pg, host = start(gui, "wide", errors)
+    opened(pg, "{party: 'art'}")
+    assert title(pg) == "Art · Parties"
+    assert pg.locator(".parties__party[data-party='art']").count() == 1 and pg.locator(".parties").get_attribute("data-first") == "false"
+    pg.get_by_role("button", name="Back").click()
+    pg.locator(".parties").wait_for(state="detached", timeout=WAIT_MS)
+    pg.context.close()
+    pg2, host2 = start(gui, "wide", errors, made=False)                                                              # a project with no party: the note's button, the first start
+    assert "No parties yet" in words(pg2.locator(".table-empty"))
+    opened(pg2)
+    assert pg2.locator(".parties").get_attribute("data-first") == "true" and pg2.get_by_role("button", name="Start", exact=True).is_visible()
+    pg2.context.close()
     assert not errors, "\n".join(errors)
 
 

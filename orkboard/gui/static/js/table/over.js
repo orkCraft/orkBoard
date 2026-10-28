@@ -1,7 +1,7 @@
 // One thing over the pane (docs/specs/98-the-table-and-the-hand.md §3.6, §7, decisions §142): `frame/state.js` `openOver(kind, props, from, title)` replaces the map with what is opened; the pane's title says where it came from
 // (*← System · server/lobby.ts*), **←** or Esc goes back to the map as it was with the card it came from lit, the next replaces it, nothing is pinned, the hand stays under it. The table draws these kinds
-// (frame/kinds.js): `file`, `diff`, `log`, `task`, `role`, `settings`, `projects`, `files`, `party`, `play`, `limits`, `pair`, `week`, each with today's renderer imported as it is (shell/preview.js's task view, shell/files.js,
-// shell/settings.js, shell/projects.js, shell/goaldialog.js and goalwizard.js and partyremove.js, shell/pair.js, board/week.js, arena/play.js, arena/limits.js), drawn inside the pane, never in a drawer or a dialog:
+// (frame/kinds.js): `file`, `diff`, `log`, `task`, `role`, `settings`, `projects`, `files`, `party` (a party removed), `parties`, `play`, `limits`, `pair`, `week`, each with today's renderer imported as it is (shell/preview.js's task view, shell/files.js,
+// shell/settings.js, shell/projects.js, shell/partyremove.js and the parties' place (parties.js), shell/pair.js, board/week.js, arena/play.js, arena/limits.js), drawn inside the pane, never in a drawer or a dialog:
 // the forms lie in a `Place` (frame/place.js), and their own closing is the pane's ←. The update's offer (shell/update.js) and the hand's (hand/hand.js) are drawn by their own parts.
 import { useEffect, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
@@ -14,7 +14,6 @@ import { FileView, FilesPane } from "../shell/files.js";
 import { GitDiffView } from "../shell/gitpane.js";
 import { SettingsPlace } from "../shell/settings.js";
 import { OpenFolderPlace, closeProject, currentProject, openFolder, projectList, projectMark, showProject } from "../shell/projects.js";
-import { PartyPlace } from "../shell/goaldialog.js";
 import { RemovePartyPlace } from "../shell/partyremove.js";
 import { PairPlace } from "../shell/pair.js";
 import { WeekView } from "../board/week.js";
@@ -122,9 +121,9 @@ function LimitsFace({ props }) {
     <p><button type="button" class="ork-btn" aria-label=${`Spend today: ${spend ?? "—"}. This week's work`} onClick=${() => openPlace("week", {}, "This week")}>Spend today <b>${spend ?? "—"}</b> · This week's work</button></p></div>`;
 }
 
+/** The question that follows a party's *Remove party*. Making and editing the parties is the one place of them (parties.js, kind `parties`). */
 function PartyFace({ props }) {
-  if (props.remove) return html`<${RemovePartyPlace} slug=${props.slug} />`;
-  return html`<${PartyPlace} slug=${props.slug || ""} then=${props.then || ""} preset=${props.preset || ""} proposal=${props.proposal || ""} />`;
+  return props.remove ? html`<${RemovePartyPlace} slug=${props.slug} />` : null;
 }
 
 const faces = {

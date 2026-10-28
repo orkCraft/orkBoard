@@ -1,4 +1,4 @@
-// Remove party (docs/specs/80-a-party-removed.md §0, §3, §4; decisions §97): the question that follows *Remove party* in Edit the party (goaldialog.js), a place over the pane. Its goals move to General
+// Remove party (docs/specs/80-a-party-removed.md §0, §3, §4; decisions §97): the question that follows *Remove party* in a party's menu (table/header.js), a place over the pane. Its goals move to General
 // (the default, first, focused) or go with it (the danger colour), or nothing is done (Cancel, Esc). A party with no goal asks only Remove / Cancel. A refusal of the host
 // (a goal at work, the party gone) is said in the question, which stays. On success: the toast, the tabs redrawn, and the Orkmaster's tab shown when the removed one was open.
 import { useState } from "preact/hooks";

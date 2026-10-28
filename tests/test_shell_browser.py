@@ -545,12 +545,6 @@ def _party_card(pg, slug):
     return _parties(pg).locator(f'.arena-phead[data-goal="{slug}"]')
 
 
-def _new_party(pg):
-    """New party, from the column's last line (docs/specs/69-parties-in-the-column.md §1)."""
-    _parties(pg).locator(".arena-pnew").click()
-    pg.get_by_role("dialog", name="New party").wait_for(timeout=WAIT_MS)
-
-
 def _show_goal(pg, slug="ship-sync"):
     """The window shows one party: this one, its heading pressed in the column (and kept, as the person's last)."""
     _parties(pg).locator(".arena-phead").first.wait_for(timeout=WAIT_MS)
@@ -661,11 +655,6 @@ def box(pg, selector):
 
 def adds(host):
     return [a for n, a in host.log if n == "ideas.add"]
-
-
-def _in(dlg, band):
-    """The roles seated in a band of New party and Edit the party (spec 91 §7), in order."""
-    return [s.get_attribute("data-seat") for s in dlg.locator(f'.shell-band[data-band="{band}"] .shell-seat[data-seat]').all()]
 
 
 def _awake_field(pg):

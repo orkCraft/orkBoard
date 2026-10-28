@@ -12,7 +12,7 @@ import { refreshShell, busy, resetForProject } from "./store.js";
 import { Frame } from "../frame/frame.js";
 import { lifted, openOver, over, pick, picked } from "../frame/state.js";
 
-const sheets = ["../board/board.css", "./shell.css", "./party.css", "../arena/arena.css"].map((p) => new URL(p, import.meta.url).href);
+const sheets = ["../board/board.css", "./shell.css", "../arena/arena.css"].map((p) => new URL(p, import.meta.url).href);
 if (typeof document !== "undefined") {
   for (const href of sheets) {
     if (!document.querySelector(`link[href="${href}"]`)) {

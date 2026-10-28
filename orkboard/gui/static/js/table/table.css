@@ -32,6 +32,13 @@ button.table-chip { appearance: none; font: inherit; }
 .table-title { flex: none; min-width: 0; padding-right: var(--ork-2); }
 .table-title__pt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .table-pathcase { text-transform: none; font-family: var(--ork-font-code); }
+/* the picked goal's phases in the title: Talk · Spec · Work · Done, the current one underlined, the ones gone by a step lighter; Talk and Spec are pressed to open their page */
+.table-phases { flex: none; display: flex; align-items: center; gap: var(--ork-1); margin-left: var(--ork-4); }
+.table-phase { padding: 0 var(--ork-3); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-faint); }
+button.table-phase { appearance: none; min-height: 28px; cursor: pointer; }
+.table-phase.is-past { color: var(--ork-ink-muted); }
+.table-phase.is-now { color: var(--ork-ink); box-shadow: inset 0 calc(var(--ork-line) * -2) 0 var(--ork-ink); }
+.table-phase.is-open { color: var(--ork-ink); background: var(--ork-raised); }
 .table-play { flex: none; }
 .table-body { position: relative; flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
 
@@ -207,8 +214,10 @@ button.table-token.ork-card { position: relative; display: flex; flex-direction:
   .table-tab__txt { display: none; }
   .table-tabs__end { padding-left: var(--ork-1); gap: var(--ork-1); justify-content: space-between; }
   .table-stop { padding: 0 var(--ork-3); }
-  .table-title { min-height: var(--ork-tap); padding-left: var(--ork-4); }
-  .table-title__pt { white-space: normal; }
+  .table-title { min-height: var(--ork-tap); padding-left: var(--ork-4); flex-wrap: wrap; }
+  .table-phases { order: 9; flex: 1 0 100%; margin-left: 0; padding-bottom: var(--ork-2); }
+  .table-title .table-grow { display: none; }
+  .table-title__pt { white-space: normal; flex: 1 1 6ch; }                 /* the words give way (they wrap), so Play and the … stay on the title's line and the phases lie under it */
   .table-play__w { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .table-board { padding: 0 var(--ork-2); }
   .table-lane { padding: var(--ork-3) 0; gap: var(--ork-3); }
@@ -222,7 +231,7 @@ button.table-token.ork-card { position: relative; display: flex; flex-direction:
 
 /* a press is at least 44 x 44 on a touch screen (spec 94 §1.3): the drawn thing may be smaller, its target is not */
 @media (pointer: coarse) {
-  .table-tab, .table-seat, .table-menu__btn, .table-plus, .table-stop, .table-play, .table-title__back, .table-chip, .table-back__x { min-width: var(--ork-tap); min-height: var(--ork-tap); }
+  .table-tab, .table-seat, .table-menu__btn, .table-plus, .table-stop, .table-play, .table-title__back, .table-chip, .table-back__x, button.table-phase { min-width: var(--ork-tap); min-height: var(--ork-tap); }
   .table-seat { justify-content: center; }
   .table-menu__item { min-height: var(--ork-tap); }
 }

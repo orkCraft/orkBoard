@@ -9,7 +9,7 @@ from orkboard.design import orkui, tokens
 from orkboard.gui import server
 
 STATIC = server.STATIC
-SHEETS = [STATIC / "page.css", STATIC / "js" / "shell" / "shell.css", STATIC / "js" / "shell" / "party.css", STATIC / "js" / "board" / "board.css",
+SHEETS = [STATIC / "page.css", STATIC / "js" / "shell" / "shell.css", STATIC / "js" / "board" / "board.css",
           STATIC / "js" / "arena" / "arena.css", STATIC / "js" / "arena" / "systemmap.css", STATIC / "js" / "arena" / "limits.css", STATIC / "pwa" / "app.css", STATIC / "pwa" / "party.css"]
 SHEETS += sorted(p for d in ("frame", "table", "hand") for p in (STATIC / "js" / d).glob("*.css"))   # the window as two parts (spec 98): every sheet of its folders
 
@@ -61,7 +61,6 @@ def test_the_page_draws_the_ink_marks_the_moon_and_no_head_at_12_x_11():
         text = (js / name).read_text(encoding="utf-8")
         assert ("-ink" in text or "markSrc" in text) and "ork-mark" in text, name   # a party's tool beside its seats, a limit's chip: the ink mark
     assert "-ink" in (js / "table" / "data.js").read_text(encoding="utf-8")
-    assert "harness-${id}.png" in (js / "shell" / "seattool.js").read_text(encoding="utf-8")   # where a tool is chosen: the coloured one
     head = (js / "orkui.js").read_text(encoding="utf-8")
     assert not re.search(r"\bsmall\b", head.split("export function Head")[1].split("export function Switch")[0].replace("`small`", ""))
     assert "ork-icon g7" in head

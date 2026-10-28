@@ -29,6 +29,10 @@ def shot(pg, name):
         pg.screenshot(path=str(SHOTS / f"{name}.png"))
 
 
+SHORT = ("cause", "report", "legacy", "legacy-report", "tidy", "balance")                    # the scenarios of a route of Tech alone, the short way
+TYPES = {"cause": "bug", "report": "bug", "tidy": "tidy", "balance": "balance"}               # the goal type the row carries
+
+
 def steps(parties):
     return [{"party": p, "leader": f"{p}-lead", "head": head(RACES[p][0], RACES[p][1])} for p in parties]
 
@@ -39,23 +43,26 @@ def cost_of(n):
 
 class RouteHost(HandHost):
     """A project of four parties (Release led by the release manager) and one goal with a route card: `scenario` "route" (Product, Design, Tech; 3rd in line), "cause" (a bug, Tech alone, no failing test),
-    "report" (a bug whose report holds a failing test) or "start" (a step was added after Talk). `low`: the limits run low."""
+    "report" (a bug whose report holds a failing test), "tidy" and "balance" (a short goal that is no bug: the row's `type`), "legacy" (a short bug of a host that sends no `type`) or "start" (a step was added
+    after Talk). `low`: the limits run low."""
 
     def __init__(self, scenario="route", low=False):
         super().__init__(empty=True)
         self.parties[3]["leader"]["slug"] = "release-manager"
         self.scenario, self.low = scenario, low
-        title = "Players can't rejoin a room" if scenario in ("cause", "report") else "A team-vs-team round"
+        title = "Players can't rejoin a room" if scenario in ("cause", "report", "legacy", "legacy-report") else "Clean up the lobby code" if scenario == "tidy" else "A team-vs-team round"
         self.nodes = [node("fresh", "tech", title, "hand", state="routed", element="ice")]
-        self.route = ["tech"] if scenario in ("cause", "report") else ["product", "design", "tech"]
+        self.route = ["tech"] if scenario in SHORT else ["product", "design", "tech"]
         self.needs = [self.row()]
 
     def row(self):
         if self.scenario == "start":
             return need("start", "tech", "fresh", self.nodes[0]["title"], "A step was added to the route", cost=cost_of(4), was=cost_of(3))
-        short = self.scenario in ("cause", "report")
+        short, more = self.scenario in SHORT, {}
+        if self.scenario != "legacy":
+            more["type"] = TYPES.get(self.scenario, "feature")
         return need("route", "tech", "fresh", self.nodes[0]["title"], "Route: " + ", then ".join(self.route), route=steps(self.route), cost=cost_of(len(self.route)), place=3, short=short,
-                    reproduces=self.scenario == "report", low=self.low, offer=["product"])
+                    reproduces=self.scenario in ("report", "legacy-report"), low=self.low, offer=["product"], **more)
 
     def handle(self, name, a):
         if name == "ideas.route_set":
@@ -288,3 +295,46 @@ def test_the_start_card_says_the_new_cost_with_the_old_one_struck_and_starts(gui
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+@pytest.mark.parametrize("scenario,words", [("tidy", "Tech alone: a small clean-up"), ("balance", "Tech alone: a small change to the numbers")])
+def test_a_short_goal_that_is_no_bug_says_its_own_line_and_has_talk_alone(gui, width, scenario, words):
+    host = RouteHost(scenario)
+    pg, log = open_route(gui, host, width)
+    try:
+        lifted = lift(pg)
+        assert lifted.locator(".hand-way__words").inner_text() == words
+        assert lifted.get_by_role("button", name="Talk", exact=True).count() == 1 and lifted.get_by_role("button", name="Start", exact=True).count() == 0 and lifted.get_by_role("button", name="The long way").count() == 0
+        assert "cause" not in lifted.inner_text() and "failing test" not in lifted.inner_text(), "the bug's words are the bug's"
+        fits(pg)
+        shot(pg, f"{width}-short-{scenario}")
+        lifted.get_by_role("button", name="Talk", exact=True).click()
+        assert _sent(pg, host, ("ideas.talk", {"idea": "fresh"}))
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_a_route_row_of_a_host_that_sends_no_type_is_read_as_before(gui, width):
+    host = RouteHost("legacy")
+    pg, log = open_route(gui, host, width)
+    try:
+        assert lift(pg).locator(".hand-way__words").inner_text() == "Tech alone: finding the cause"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_the_cards_kind_is_said_in_plain_words(gui, width):
+    for scenario, word in (("route", "Route"), ("start", "Start")):
+        host = RouteHost(scenario)
+        pg, log = open_route(gui, host, width)
+        try:
+            lifted = lift(pg, scenario)
+            assert " ".join(lifted.locator(".hand-lifted__kind").text_content().split()) == word and lifted.get_attribute("aria-label").startswith(f"Lifted: {word}:")
+        finally:
+            pg.close()
+        assert not log, "\n".join(log)

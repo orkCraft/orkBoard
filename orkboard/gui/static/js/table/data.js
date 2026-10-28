@@ -2,7 +2,7 @@
 // (the parties and their goals, the code's goals and ideas), `ideas.agents` and `ideas.roles` (the seats), the snapshot's limits —
 // and the words the table says. No template here. The table draws a party's name, never "goal" or "track" (CLAUDE.md, Wording).
 import { mapData, agents, roles } from "../shell/store.js";
-import { goalList, hhmm } from "../board/store.js";
+import { board, goalList, hhmm } from "../board/store.js";
 import { goalsOf, nodesOf, atWork, openTasks, partyOf, roleOf } from "../arena/arenawords.js";
 import { ORKMASTER } from "../frame/state.js";
 import { ORKUI } from "../orkui.js";
@@ -48,14 +48,28 @@ export function mapName(tab, parties) {
 /** Tech's map is the System: the party the Architect leads (systemmap.js `leadsSystem`). */
 export const leadsSystem = (g) => (g?.leader?.slug || "") === "architect";
 
-/** The parties a picked goal's route passes (`ideas.map` nodes' `route` steps), for the dot on their tabs: its own party always. */
+/** The parties a picked goal's route passes, for the dot on their tabs: its own party always; the parties of its route as the Board has it (`ideas.map` nodes' `route` steps, once its work is planned) and as the rows
+ *  that wait for the person say it (the `route` row's steps, the `talk` row's stances, a `fork`'s sides: `ideas.board` `needs_you`). */
 export function routeParties(picked) {
   const n = picked && (mapData.value?.nodes || []).find((x) => x.slug === picked);
   if (!n) return new Set();
   const out = new Set([n.goal]);
   for (const s of n.route || []) { if (s.party) out.add(s.party); if (s.from) out.add(s.from); }
+  for (const r of board.value?.needs_you || []) {
+    if (r.idea !== picked) continue;
+    for (const x of [...(r.route || []), ...(r.stances || []), ...(r.sides || [])]) if (x && x.party) out.add(x.party);
+  }
   return out;
 }
+
+// -- a goal's phases (docs/specs/95-the-window-as-decided.md §3.6, §5.2; decisions §126.4, §147.2) -----------------------------------------------------
+
+/** The phases as the person reads them, in order; the engine's states are its own (`realm/ideas.py` STATES). */
+export const PHASES = [["talk", "Talk"], ["spec", "Spec"], ["work", "Work"], ["done", "Done"]];
+const PHASE_OF = { routed: "talk", talk: "talk", decided: "spec", sections: "spec", ready: "work", planning: "work", plan: "work", working: "work", failed: "work", done: "done" };
+
+/** The phase a goal is in (`talk`, `spec`, `work`, `done`); "" for one with none (not routed yet, or a pitch). */
+export const phaseOf = (picked) => PHASE_OF[(mapData.value?.nodes || []).find((x) => x.slug === picked)?.state] || "";
 
 // -- the Board's cards (docs/specs/101-the-cards-the-cascade-and-the-hand-under-the-lanes.md §2, §3; decisions §167.1, §167.4) -------------------------------------------------
 

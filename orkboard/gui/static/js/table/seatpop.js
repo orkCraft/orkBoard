@@ -4,15 +4,15 @@
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html } from "../html.js";
 import { command, toast } from "../link.js";
-import { Head, Icon, RACE_WORDS, TIER_WORDS } from "../orkui.js";
+import { Head, Icon, TIER_WORDS } from "../orkui.js";
 import { agents } from "../shell/store.js";
 import { roleOf, statsOf } from "../arena/arenawords.js";
 import { ToolPick, useTools } from "../shell/toolpick.js";
 import { openOver } from "../frame/state.js";
 import { doesWords, groupsOf, nameOf, toolOf } from "./data.js";
 
-/** *Standard ork · does the work*: the seat's tier and race. */
-const tierWords = (m) => `${TIER_WORDS[m.head?.tier] || ""} ${RACE_WORDS[m.head?.race] || ""}`.replace(/\s+/g, " ").trim();
+/** *Novice · does*: the seat's tier and its role, and no word of a race (docs/specs/100-a-goals-way-as-cards.md §0). */
+const tierWords = (m) => [TIER_WORDS[m.head?.tier], m.band === "lead" ? "leads" : m.band === "check" ? "checks" : "does"].filter(Boolean).join(" · ");
 
 export function SeatPop({ g, slug, from, onClose }) {
   const m = groupsOf(g).flatMap((x) => x.seats).find((s) => s.slug === slug);

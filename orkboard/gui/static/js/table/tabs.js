@@ -10,6 +10,7 @@ import { ORKMASTER, openTab, openOver, picked } from "../frame/state.js";
 import { currentProject } from "../shell/projects.js";
 import { levelOf, windowOf } from "../arena/limits.js";
 import { nameOf, routeParties, MARKED, markSrc, mapName } from "./data.js";
+import { openParties } from "./parties.js";
 
 const LONG_MS = 500;
 
@@ -58,7 +59,7 @@ export function Tabs({ parties, current, narrow, compact }) {
       ${parties.map((g) => html`<${Tab} key=${g.slug} slug=${g.slug} on=${current === g.slug} name=${nameOf(g)} head=${g.leader?.head} dot=${route.has(g.slug)} compact=${compact} onPick=${() => openTab(g.slug)} />`)}
     </div>
     <div class="table-tabs__end">
-      <button type="button" class="ork-btn table-plus" aria-label="New party" title="New party" onClick=${() => openOver("party", {}, from, "New party")}><${Icon} name="plus" /></button>
+      <button type="button" class="ork-btn table-plus" aria-label="New party" title="New party" onClick=${() => openParties({}, from)}><${Icon} name="plus" /></button>
       ${!narrow && limits.map((l) => html`<${LimitChip} key=${l.provider} l=${l} from=${from} />`)}
       <button type="button" class="ork-btn danger table-stop" title="Stop every ork, script and browser at once" onClick=${() => command("halt").catch(() => {})}>Stop all</button>
     </div>

@@ -15,7 +15,7 @@ import { PICTURES, askedOf, changeToast } from "../arena/arenawords.js";
 import { choiceOf } from "../arena/picks.js";
 import { manyWords, variantOf } from "../arena/pickwords.js";
 import { openOver } from "../frame/state.js";
-import { openPlace } from "../frame/place.js";
+import { openParties } from "../table/parties.js";
 
 const SENT = "Sent: the Taskmaster answers in a moment.";
 
@@ -66,7 +66,7 @@ function PlanAnswers({ s, slug, row, g, here }) {
     return m.free ? html`<button type="button" class="ork-btn primary" title=${`${m.name} joins the party, then the work starts`} onClick=${join}>Add and start</button>
         <button type="button" class="ork-btn" title="Passes the plan as it is; the Grunt does that work" onClick=${() => start({})}>Start without</button>`
       : html`<button type="button" class="ork-btn primary" title="Passes the plan as it is; the Grunt does that work" onClick=${() => start({})}>Start without</button>
-        <button type="button" class="ork-btn" title="Change a member of the party" onClick=${() => openPlace("party", { slug: row.goal || g?.slug }, "Edit the party")}>Edit the party</button>`;
+        <button type="button" class="ork-btn" title="Change a member of the party" onClick=${() => openParties({ party: row.goal || g?.slug })}>Edit the party</button>`;
   }
   return html`<button type="button" class="ork-btn primary" title="Passes the plan; the work starts" onClick=${() => start({})}>Start the work</button>
     ${!here && html`<button type="button" class="ork-btn" title="The plan's tasks, over the pane" onClick=${() => openStop(s)}>Open the plan</button>`}`;

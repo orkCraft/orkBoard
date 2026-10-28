@@ -46,6 +46,9 @@ button.parties__lead { cursor: pointer; }
 .parties__facts h4 { margin: 0; }
 .parties__facts ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--ork-1); font: var(--ork-type-caption); }
 .parties__facts p { margin: 0; }
+.parties__fact { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-1) var(--ork-3); }
+.parties__fact .ork-field { flex: 1 1 200px; min-width: 0; height: auto; padding: var(--ork-2) var(--ork-4); }
+.parties__fact small { flex: 1 1 auto; }
 
 .parties__party { display: flex; flex-direction: column; gap: var(--ork-4); }
 .parties__cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ork-6); }

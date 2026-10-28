@@ -69,22 +69,24 @@ def test_orkboard_on_the_desktop_the_four_panes_a_goal_saved_and_needs_you_no_ca
             assert pg.locator(".shell-top, .shell-drawer, .arena-left, .shell-backdrop, [aria-modal]").count() == 0 and pg.locator(".table .table-tabs").count() == 1
             assert pg.evaluate("document.documentElement.dataset.look") == "office"
             assert pg.locator(".gui-hud, .gui-camp, .gui-town, .gui-foot").count() == 0
-            pg.locator(".table-empty").get_by_role("button", name="New party", exact=True).click()       # New party, from the pane's note: a place over the pane
-            dlg = pg.locator(".place")
-            dlg.locator('.shell-craft-tile[data-craft="marketing"]').click()          # a party of the library: its leader, builders and checkers
-            dlg.get_by_label("What it is for").fill("More people try Orkline.")
-            dlg.get_by_role("button", name="Save party").click()
-            pg.locator('.table-tab[aria-selected="true"]:not([data-tab="orkmaster"])').wait_for(timeout=WAIT_MS)       # the party's own tab opens
+            pg.locator(".table-empty").get_by_role("button", name="Choose the parties", exact=True).click()       # the first start, from the pane's note: the one place of the parties over the pane
+            pg.locator('.parties[data-first="true"]').wait_for(timeout=WAIT_MS)
+            assert pg.locator(".place, .shell-craft-tile").count() == 0 and pg.get_by_role("button", name="Start", exact=True).is_visible()
+            pg.locator('.parties__row[data-party="marketing"] [role="checkbox"]').click()          # a party of a stage not reached yet: ticked by the person
+            pg.get_by_role("button", name="Start", exact=True).click()                              # makes the ticked parties, each with its leader, builders and checkers
+            pg.locator(".parties").wait_for(state="detached", timeout=WAIT_MS)
             for pane in (".table-tabs", ".table-pane"):                # the window's two parts, on the real host's data
                 assert pg.locator(pane).is_visible(), pane
-            g = next(t for t in board.command("ideas.board")["tracks"] if t["team"])
+            g = next(t for t in board.command("ideas.board")["tracks"] if t["leader"]["slug"] == "growth")
             assert (g["leader"]["slug"], g["team"]) == ("growth", ["copywriter", "seo", "editor"])
             made = {r["slug"]: r for r in board.command("ideas.roles")["roles"]}
             assert made["copywriter"]["craft"] == "marketing" and made["growth"]["takes"] == ["campaign"]   # the party's agents: the project's roles
+            pg.locator(f'.table-tab[data-tab="{g["slug"]}"]').click()                               # its tab
             pg.locator(".table-head").wait_for(timeout=WAIT_MS)             # the party's header says who is in it
             assert pg.locator(".table-seat").count() >= 2
-            pg.locator(".hand-card[data-kind=goal]").wait_for(timeout=WAIT_MS)                    # the keeper's question: a card in the hand
-            assert pg.locator(".hand").is_visible() and "Which channel first?" in pg.locator(".hand-card[data-kind=goal]").get_attribute("title")
+            ask = pg.locator(".hand-card[data-kind=goal][data-party=marketing]")
+            ask.wait_for(timeout=WAIT_MS)                    # the keeper's question of each party made: a card in the hand
+            assert pg.locator(".hand").is_visible() and "Which channel first?" in ask.get_attribute("title")
             assert any(n["kind"] == "goal" for n in board.command("ideas.board")["needs_you"])
             assert not pg.evaluate("document.documentElement.scrollWidth > document.documentElement.clientWidth")
             if os.environ.get("ORKCRAFT_SHOTS"):

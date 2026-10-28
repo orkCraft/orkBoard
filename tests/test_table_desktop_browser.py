@@ -77,6 +77,7 @@ class TableHost:
         self.log: list[tuple[str, dict]] = []
         self.ws = None
         self.rev = 1
+        self.needs: list[dict] = []                                                                                           # the Needs you rows (spec 99), none unless a test adds them
         self.current = SHOP
         order = ["game", "tech", "art", "release"] + [f"extra{i}" for i in range(crowd)]
         seats = {"game": [("designer", "build")], "tech": [("grunt", "build"), ("tester", "build"), ("reviewer", "check")], "art": [("artist", "build")], "release": []}
@@ -126,7 +127,7 @@ class TableHost:
         ideas = [{"slug": n["slug"], "title": n["title"], "track": n["goal"], "order": i, "state": n["state"], "size": "M", "asks": 0, "updated": "x", "talk": [], "priority": "normal", "queue": "",
                   "held_until": "", "risk": "low", "risk_triggers": [], "depends_on": [], "waits_on": [], "start_at": "", "in_needs_you": False, "progress": n["progress"], "thesis": ""}
                  for i, n in enumerate(self.nodes)]
-        return {"tracks": tracks, "ideas": ideas, "needs_you": [], "target": "balance", "autostart": True, "review": False, "review_notice": False, "rev": self.rev}
+        return {"tracks": tracks, "ideas": ideas, "needs_you": copy.deepcopy(self.needs), "target": "balance", "autostart": True, "review": False, "review_notice": False, "rev": self.rev}
 
     def handle(self, name, a):
         self.log.append((name, a))
@@ -355,12 +356,12 @@ def test_the_orkmasters_menu_has_the_projects_settings_and_files_over_the_pane(t
     pg.locator(".table-board").wait_for(timeout=WAIT_MS)
 
 
-def test_plus_opens_new_party_in_the_pane_and_a_chip_opens_what_used_the_tool(table):
+def test_plus_opens_the_parties_in_the_pane_and_a_chip_opens_what_used_the_tool(table):
     pg, host, w = table
     pg.get_by_role("button", name="New party").click()
-    pg.locator('.table-over--form[data-kind="party"]').wait_for(timeout=WAIT_MS)
-    assert title(pg) == "Board · New party" and pg.locator(".place").count() == 1
-    pg.get_by_role("button", name="Cancel").click()
+    pg.locator('.table-over[data-kind="parties"]').wait_for(timeout=WAIT_MS)
+    assert title(pg) == "Board · Parties" and pg.locator(".place").count() == 0                                          # the one place of the parties (spec 100 §4)
+    pg.get_by_role("button", name="Back").click()
     pg.locator(".table-board").wait_for(timeout=WAIT_MS)
     if wide(w):
         pg.locator('.table-chip[data-provider="codex"]').click()
@@ -785,6 +786,10 @@ def test_a_partys_header_has_its_squad_in_three_groups_and_a_seat_pressed_opens_
     assert not wide(w) or pop.bounding_box()["y"] >= head.bounding_box()["y"]
     if not wide(w):
         assert pop.bounding_box()["width"] >= 380                                                                        # a sheet at the narrow width
+    said = " ".join(pop.locator(".table-seatpop__nm").text_content().split())
+    assert said == "GruntsSeasoned · does" or said.endswith("Seasoned · does"), said                                      # its tier and its role, and no word of a race (spec 100 §0)
+    assert not any(word in said.lower() for word in ("ork", "elf", "goblin", "gnome", "knight", "lich", "skeleton"))
+    assert "ork" not in (seat.get_attribute("aria-label") or "").lower().replace("work", "")
     pg.get_by_role("button", name="Close").click()
     assert pg.locator(".table-seatpop").count() == 0
     seat.click()
@@ -814,15 +819,20 @@ def test_a_seat_can_be_taken_off_and_its_tool_set_with_undo(table):
     assert pg.locator(".table-seatpop").count() == 0
 
 
-def test_a_party_menu_has_edit_and_remove_party_over_the_pane(table):
+def test_a_party_menu_has_edit_at_that_party_and_remove_party_over_the_pane(table):
     pg, host, w = table
     open_tab(pg, "art")
     assert pg.locator(".table-sys, .table-board").count() == 0                                                           # another party than Tech: its header alone (no map yet)
     pg.get_by_role("button", name="Art's menu").click()
+    assert [i.inner_text().strip() for i in pg.get_by_role("menuitem").all()] == ["Edit", "Remove party"]
     pg.get_by_role("menuitem", name="Edit").click()
-    pg.locator('.table-over--form[data-kind="party"]').wait_for(timeout=WAIT_MS)
-    assert title(pg) == "Art · Edit Art" and pg.get_by_role("button", name="Save party").count() == 1
-    pg.get_by_role("button", name="Remove party").click()                                                                # the Edit form's own button: today's question, in the pane too
+    pg.locator('.table-over[data-kind="parties"]').wait_for(timeout=WAIT_MS)
+    assert title(pg) == "Art · Parties" and pg.locator('.table-over[data-kind="parties"]').get_attribute("data-owner") == "table"       # the one place of the parties, not today's form
+    assert pg.get_by_role("button", name="Save party").count() == 0 and pg.locator(".place").count() == 0
+    pg.get_by_role("button", name="Back").click()
+    pg.locator(".table-head").wait_for(timeout=WAIT_MS)
+    pg.get_by_role("button", name="Art's menu").click()
+    pg.get_by_role("menuitem", name="Remove party").click()                                                              # the question of a party removed, in the pane too
     pg.locator(".place__text").wait_for(timeout=WAIT_MS)
     assert "Art has 1 goal" in pg.locator(".place__text").text_content()
     assert pg.locator(".shell-backdrop").count() == 0
@@ -922,6 +932,136 @@ def test_a_goal_picked_puts_a_dot_on_the_tabs_of_its_route_and_opens_on_its_part
     open_tab(pg, "orkmaster")
     pick(pg, "seat")
     assert tab(pg, "orkmaster").get_attribute("aria-selected") == "true"                                                 # the Orkmaster's tab stays: its Board shows the tasks alone
+
+
+# -- a goal on its way: the phase marks in the title, the route's dots on the tabs (spec 100 §5, spec 95 §3.6) -------------------------------------------------
+
+TALK_READ = {"idea": "seat", "mode": "talk", "round": 1, "done": True, "cause": None, "stances": [
+    {"party": "game", "leader": "Game lead", "stance": "One clock on every phone", "for": "Nobody argues about the time", "against": "A phone offline shows a stale time",
+     "questions": [{"id": "q1", "q": "Where does the timer run?", "choices": ["Server counts", "Each phone counts"], "pick": 0, "why": "One clock.", "project": False, "state": "answered", "answer": "Server counts", "round": 1, "how": "pick"}]},
+    {"party": "tech", "leader": "Architect", "stance": "The server owns the clock", "for": "One place to reset", "against": "Every round trip adds delay", "questions": []}]}
+SPEC_PAGE = [{"name": "Gist", "text": "Keep the seat."}, {"name": "Route", "text": "Game design, then Tech"},
+             {"name": "Game design", "text": "### Done when\n- The timer shows\n\n### Will be\n- new timer-bar"}, {"name": "Tech", "text": "### Done when\n- The seat is kept\n\n### Will be\n- changed server/lobby.ts"}]
+ROUTE_ROW = {"kind": "route", "goal": "tech", "idea": "seat", "title": "Keep the seat when a socket reconnects", "text": "Route: Game design, then Tech", "at": "2026-10-28T09:00:00", "priority": "normal", "blocks": False,
+             "route": [{"party": "game", "leader": "designer", "head": LEADS["game"]}, {"party": "tech", "leader": "architect", "head": LEADS["tech"]}], "cost": {"calls": 6, "usd_low": 0.2, "usd_high": 0.6},
+             "place": 1, "short": False, "reproduces": False, "low": False, "offer": [], "type": "feature"}
+TALK_ROW = {"kind": "talk", "goal": "tech", "idea": "seat", "title": "Keep the seat when a socket reconnects", "text": "", "at": "2026-10-28T09:00:00", "priority": "normal", "blocks": False, "questions": [],
+            "stances": [{"party": "art", "leader": "Art lead", "stance": "The seat shows its owner", "for": "", "against": ""}, {"party": "tech", "leader": "Architect", "stance": "Keep it on the server", "for": "", "against": ""}]}
+
+
+class WayHost(TableHost):
+    """The table's host with the goal `seat` on its way: its state (`routed`, `talk`, `decided`, `sections`, `plan`, `working`, `done`), the rows that wait (`needs`), the Talk as kept and the goal's Spec."""
+
+    def __init__(self, state="working", needs=(), route=None):
+        super().__init__(rich=False, line=0)
+        seat = next(n for n in self.nodes if n["slug"] == "seat")
+        seat["state"] = state
+        if route is not None:
+            seat["route"] = route
+        self.needs = list(needs)
+
+    def handle(self, name, a):
+        if name == "ideas.talk_read":
+            self.log.append((name, a))
+            return copy.deepcopy(TALK_READ)
+        if name == "ideas.page":
+            self.log.append((name, a))
+            return {"slug": a["slug"], "title": "Keep the seat when a socket reconnects", "sections": SPEC_PAGE, "state": "sections", "track": "tech"}
+        return super().handle(name, a)
+
+
+def way(gui, width, errors, **kw):
+    """The window at `width` against a WayHost: `(page, host)`."""
+    server, browser = gui
+    host = WayHost(**kw)
+    pg = narrow.page(browser, width)
+    watch(pg, errors)
+    pg.route_web_socket("**/ws*", host.on_socket)
+    pg.goto(server.url)
+    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-card, .table-token, .hand-card").first.wait_for(timeout=WAIT_MS)
+    return pg, host
+
+
+def marks(pg):
+    return [(m.get_attribute("data-phase"), m.evaluate("e => e.tagName") == "BUTTON", m.get_attribute("aria-current") == "step") for m in pg.locator(".table-phase").all()]
+
+
+@pytest.fixture(params=narrow.WIDTHS)
+def onway(gui, request):
+    """A goal at *Work*, the window at one of the two widths."""
+    errors: list[str] = []
+    pg, host = way(gui, request.param, errors)
+    yield pg, host, request.param
+    narrow.no_sideways(pg)
+    pg.context.close()
+    assert not errors, "\n".join(errors)
+
+
+def test_a_goal_picked_has_its_phase_marks_in_the_title_the_current_one_marked_and_a_past_one_opens_its_page(onway):
+    pg, host, w = onway
+    assert pg.locator(".table-phases").count() == 0                                                                      # nothing picked: no marks
+    pick(pg, "seat")
+    pg.locator(".table-phases").wait_for(timeout=WAIT_MS)
+    assert [m.text_content().strip() for m in pg.locator(".table-phase").all()] == ["Talk", "Spec", "Work", "Done"]
+    assert marks(pg) == [("talk", True, False), ("spec", True, False), ("work", False, True), ("done", False, False)]    # Work is now; Talk and Spec are gone by and pressed
+    assert title(pg) == "Keep the seat when a socket reconnects · through the Orkmaster"                                  # the title still says what and through whom
+    shot(pg, f"table-phases-{w}.png")
+    pg.get_by_role("button", name="Talk, done").click()
+    pg.locator('.table-over[data-kind="talk"] .talk-stance').first.wait_for(timeout=WAIT_MS)
+    assert title(pg) == "Board · Talk"
+    assert [e.text_content().strip() for e in pg.locator(".talk-stance__nm").all()] == ["Game design", "Tech"]            # the Talk as kept
+    assert pg.locator(".table-phase.is-open").get_attribute("data-phase") == "talk"
+    pg.get_by_role("button", name="Spec, done").click()
+    pg.locator('.table-over[data-kind="spec"] .spec-section').first.wait_for(timeout=WAIT_MS)
+    assert [e.get_attribute("data-party") for e in pg.locator(".spec-section").all()] == ["game", "tech"]
+    assert ("ideas.page", {"slug": "seat"}) in host.log
+    pg.get_by_role("button", name="Back").click()
+    pg.locator(".table-over").wait_for(state="detached", timeout=WAIT_MS)
+    assert pg.locator(".table-phases").count() == 1                                                                      # the goal is still picked
+    pick(pg, "")
+    pg.wait_for_function("() => document.querySelectorAll('.table-phases').length === 0", timeout=WAIT_MS)
+
+
+@pytest.mark.parametrize("state,now,pages", [("routed", "talk", ["talk"]), ("talk", "talk", ["talk"]), ("decided", "spec", ["talk", "spec"]), ("sections", "spec", ["talk", "spec"]),
+                                              ("plan", "work", ["talk", "spec"]), ("done", "done", ["talk", "spec"])])
+def test_the_current_phase_follows_the_goals_state(gui, state, now, pages):
+    errors: list[str] = []
+    pg, host = way(gui, "wide", errors, state=state)
+    pick(pg, "seat")
+    pg.locator(".table-phases").wait_for(timeout=WAIT_MS)
+    got = marks(pg)
+    assert [p for p, _b, cur in got if cur] == [now] and [p for p, button, _c in got if button] == pages
+    pg.context.close()
+    assert not errors, "\n".join(errors)
+
+
+def test_a_goal_not_routed_yet_has_no_marks(gui):
+    errors: list[str] = []
+    pg, host = way(gui, "wide", errors, state="reading")
+    pick(pg, "seat")
+    pg.wait_for_timeout(200)
+    assert pg.locator(".table-phases").count() == 0
+    pg.context.close()
+    assert not errors, "\n".join(errors)
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_the_route_of_a_goal_picked_puts_a_dot_on_the_tab_of_each_party_it_passes(gui, width):
+    errors: list[str] = []
+    for state, needs, route, dots in (("routed", [ROUTE_ROW], [], ["game", "tech"]),                                     # the route row's steps (its own party always)
+                                      ("talk", [TALK_ROW], [], ["tech", "art"]),                                         # the stances of the Talk
+                                      ("working", [], [{"step": "party", "party": "game", "goal": "seat"}, {"step": "party", "party": "tech", "goal": "seat"}], ["game", "tech"])):   # the route as planned
+        pg, host = way(gui, width, errors, state=state, needs=needs, route=route)
+        assert pg.locator(".table-tab__dot").count() == 0
+        pick(pg, "seat")
+        pg.locator(".table-tab__dot").first.wait_for(timeout=WAIT_MS)
+        assert sorted(t.get_attribute("data-tab") for t in pg.locator(".table-tab:has(.table-tab__dot)").all()) == sorted(dots), state
+        if state == "routed":
+            shot(pg, f"table-route-dots-{width}.png")
+        narrow.no_sideways(pg)
+        pg.context.close()
+    assert not errors, "\n".join(errors)
 
 
 def test_ctrl_o_opens_a_project_in_the_pane_and_another_project_is_shown_from_its_list(table):

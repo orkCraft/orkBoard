@@ -351,7 +351,8 @@ export function limitLine(l, reserve, resetOf) {
 // -- the stops: the bottom row (§6) -------------------------------------------------------------------------------------------------
 
 export const KIND_WORD = { plan: "Plan ready", change: "Plan change", asks: "Asks you", goal: "Asks you", proposal: "Proposed", party: "Proposed", todo: "A to-do", failed: "Failed",
-  pick: "Pick one", pitch: "Pitch judged", collide: "Orkmaster asks", sign_in: "Sign in", gate: "Ready for main" };
+  pick: "Pick one", pitch: "Pitch judged", collide: "Orkmaster asks", sign_in: "Sign in", gate: "Ready for main",
+  route: "Route", start: "Start", talk: "Talk", cause: "The cause", decision: "Decision", fork: "A fork", project_q: "About the project" };       // a goal's way (spec 100): what the card is, in plain words (a question's own label is "Question")
 const GEM = { plan: "", change: "", asks: "?", goal: "?", proposal: "—", party: "—", todo: "·", failed: { sign: "cross" }, pick: "", pitch: "", collide: "", sign_in: { sign: "alert" } };
 
 /** What a plan change adds to the price, for the stop's gem (spec 62 §6.2): *+$0.40–1.20*, *−$0.13–0.38* when it saves (the real minus sign), said as a goal's price is (cents under $1,
@@ -402,6 +403,7 @@ export function stopsOf(needs, g, nodes, ork = null) {
     }
     const base = { key: `${row.kind}/${row.idea || row.goal}/${row.todo?.id || row.task || ""}`, kind: row.kind, row, node: n, task: null, label: KIND_WORD[row.kind] || row.kind,
       gem: GEM[row.kind] ?? "·", tone: row.kind === "failed" ? "danger" : "alert", gemTip: "", title: row.title, full: row.title, text: row.text, head: lead, small: false, whoTip: "" };
+    if (row.kind === "decision" && Number(row.number) > 0) base.label = `${KIND_WORD.decision} ${row.number}`;        // its number is said once, where the card's kind is: the lifted card does not say it again
     if (row.kind === "plan") {
       const tasks = n?.tasks || [], checks = tasks.filter((t) => t.band === "check").length, builds = tasks.length - checks;
       base.gem = rangeWords(n?.plan_estimate || n?.estimate) || "—";

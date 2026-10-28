@@ -1,10 +1,10 @@
 // The one place of the parties, over the pane (docs/specs/100-a-goals-way-as-cards.md §4, decisions §122.5, §137.1, §151.5, §164; spec 99 §1): kind `parties`, from the first start, the tabs' **+** and a party's **…** *Edit*
-// (part E wires them to `openParties(props)`: `{party}` opens that party at the right). **At the left**, *Read from the project: <kind>* (a field to correct), the parties under the stages' headings *Idea*, *Being made* and
+// (they call `openParties(props)`: `{party}` opens that party at the right, `{first}` is the first start). **At the left**, *Read from the project: <kind>* (a list of the kinds, to correct it: `ideas.project_kind_set`), the parties under the stages' headings *Idea*, *Being made* and
 // *Live* — the stage the project is at is picked on its heading (*The project is here*: `ideas.stage_set`), the parties of the stages reached come ticked — and **Release** under *In every project*, ticked and locked (*the
 // one way into main*); each party a row with its leader's head, ticked or not, pressed to open it at the right (partyseats2.js). **At the foot**, what the ticked parties cost together and **Start** (the first time: it makes
 // them, then `ideas.project_ask`) or **Save** (*From the next task*). A made party is ticked for good here (it is removed from its tab's menu); a party that is not made yet is made by Start or Save with the squad and the
 // size on the screen (`ideas.goal_save`: its `preset`, `leader`, `team`, `size`); a made party that changed is saved as it is (`slug`, `team`, `leader`, `size`). At the narrow width the left is a screen and the right the next.
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { command } from "../link.js";
 import { Head, Icon, Sign } from "../orkui.js";
@@ -12,8 +12,9 @@ import { ask, board } from "../board/store.js";
 import { mapData, refreshShell } from "../shell/store.js";
 import { useTools } from "../shell/toolpick.js";
 import { drawn } from "../frame/kinds.js";
-import { openOver, over } from "../frame/state.js";
+import { openOver, over, tab } from "../frame/state.js";
 import { costOf } from "../hand/cost.js";
+import { mapName, partiesNow } from "./data.js";
 import { PartyRight, SIZES, Tick, headOf } from "./partyseats2.js";
 import { SeatPop } from "./seatpop.js";
 
@@ -31,10 +32,14 @@ const STAGES = ["idea", "being_made", "live"];
 const STAGE_WORDS = { idea: "Idea", being_made: "Being made", live: "Live" };
 const NARROW = "(max-width: 759px)";                                              // spec 94: the phone's width is the narrow one
 
-/** Opens the one place of the parties over the pane (`props.party`: a party's slug to open at the right). */
-export function openParties(props = {}, from = over.peek()?.from || null) {
+/** Opens the one place of the parties over the pane (`props.party`: a party's slug to open at the right; `props.first`: the first start, whatever the Board holds). It says it came from the map that was shown. */
+export function openParties(props = {}, from = over.peek()?.from || { title: mapName(tab.value, partiesNow()), key: "" }) {
   openOver("parties", props, from, "Parties");
 }
+
+/** The kinds a project can be (realm/project_kind.py `KINDS`, in its order) and how the interface says each. A kind the host names that is not here is listed with the host's words. */
+const KINDS = [["empty", "an empty folder"], ["mobile", "a mobile app"], ["game", "a game"], ["web", "a web app"], ["backend", "a backend"], ["data", "data work"], ["wiki", "a team's wiki"],
+  ["design", "a designer's folder"], ["texts", "texts"], ["code", "code"]];
 
 function useNarrow() {
   const [narrow, set] = useState(() => typeof matchMedia === "function" && matchMedia(NARROW).matches);
@@ -49,13 +54,12 @@ function useNarrow() {
 
 /** What the host says to start from: the stage (`ideas.stage`) and the parties of the project's kind (`ideas.party_presets`); null while asked. */
 function useBeginning() {
-  const [got, setGot] = useState(null);
-  useEffect(() => {
-    let live = true;
-    Promise.all([ask("ideas.stage"), ask("ideas.party_presets")]).then(([stage, presets]) => { if (live) setGot({ stage: stage || { stage: "idea", read: "idea" }, presets: (presets?.presets || []).filter((p) => p.group === "stage"), kind: presets?.kind || null }); });
-    return () => { live = false; };
-  }, []);
-  return [got, setGot];
+  const [got, setGot] = useState(null), live = useRef(true);
+  const load = () => Promise.all([ask("ideas.stage"), ask("ideas.party_presets")]).then(([stage, presets]) => {
+    if (live.current) setGot({ stage: stage || { stage: "idea", read: "idea" }, presets: (presets?.presets || []).filter((p) => p.group === "stage"), kind: presets?.kind || null });
+  });
+  useEffect(() => { live.current = true; load(); return () => { live.current = false; }; }, []);
+  return [got, setGot, load];
 }
 
 /** The party the Board has of a preset: the one made from its recipe, else (a party made before recipes were kept) the one its leader leads. */
@@ -112,11 +116,13 @@ function PartyRow({ v, open, onTick, onOpen }) {
       ${p.locked && html`<span class="parties__muted">the one way into main</span>`}</button></div>`;
 }
 
-function Left({ got, views, open, onTick, onOpen, onStage, kind, setKind }) {
+function Left({ got, views, open, onTick, onOpen, onStage, onKind }) {
   const stage = got.stage.stage, row = (v) => html`<${PartyRow} key=${v.p.id} v=${v} open=${open === v.p.id} onTick=${onTick} onOpen=${onOpen} />`;
+  const kind = got.kind?.id || "", kinds = KINDS.some(([id]) => id === kind) || !kind ? KINDS : [[kind, got.kind.words || kind], ...KINDS];
   return html`<div class="parties__left">
     <label class="parties__kind"><span class="ork-label">Read from the project</span>
-      <input class="ork-field" value=${kind} aria-label="The project's kind, read from the project; change it if it is wrong" onInput=${(e) => setKind(e.target.value)} /></label>
+      <span class="ork-select"><select class="ork-field" value=${kind} aria-label="The project's kind, read from the project; change it if it is wrong" onChange=${(e) => onKind(e.target.value)}>
+        ${kinds.map(([id, words]) => html`<option key=${id} value=${id} selected=${id === kind}>${words}</option>`)}</select></span></label>
     ${STAGES.map((s) => html`<section key=${s} class="parties__stage" data-stage=${s} aria-label=${STAGE_WORDS[s]}>
       <button type="button" class=${cls("ork-row parties__stage-h", { "is-on": stage === s })} aria-pressed=${String(stage === s)} onClick=${() => stage !== s && onStage(s)}>
         <span class="ork-label">${STAGE_WORDS[s]}</span>${stage === s && html`<span class="parties__here">The project is here</span>`}</button>
@@ -129,8 +135,8 @@ function Left({ got, views, open, onTick, onOpen, onStage, kind, setKind }) {
 // -- the page --------------------------------------------------------------------------------------------------------------------------------
 
 export function Parties({ props = {}, close }) {
-  const [got, setGot] = useBeginning(), tools = useTools(), narrow = useNarrow();
-  const [edit, setEdit] = useState({}), [kind, setKind] = useState(null), [screen, setScreen] = useState(props.party ? "right" : "left"), [pop, setPop] = useState(""), [open, setOpen] = useState(""), [busy, setBusy] = useState(false);
+  const [got, setGot, reload] = useBeginning(), tools = useTools(), narrow = useNarrow();
+  const [edit, setEdit] = useState({}), [screen, setScreen] = useState(props.party ? "right" : "left"), [pop, setPop] = useState(""), [open, setOpen] = useState(""), [busy, setBusy] = useState(false);
   const tracks = (board.value?.tracks || []).filter((t) => t.slug !== "general");
   const presets = got?.presets || [], stage = got?.stage.stage || "idea";
   const views = presets.map((p) => viewOf(p, tracks, edit, stage));
@@ -141,7 +147,7 @@ export function Parties({ props = {}, close }) {
     const asked = props.party && tracks.find((t) => t.slug === props.party), mine = asked && presets.find((p) => madeFrom(p, [asked]) === asked);
     setOpen((mine || presets.find((p) => !p.locked) || presets[0] || {}).id || "");
   }, [got]);
-  useEffect(() => {                                                                                      // Esc lowers the popover first: the table's own Esc would take the whole place away with it
+  useLayoutEffect(() => {                                                                                    // Esc lowers the popover first: the table's own Esc would take the whole place away with it
     if (!pop) return undefined;
     const esc = (e) => { if (e.key === "Escape" && !e.defaultPrevented) { e.preventDefault(); setPop(""); } };
     addEventListener("keydown", esc, true);
@@ -169,10 +175,12 @@ export function Parties({ props = {}, close }) {
   };
   const onOpen = (id) => { setOpen(id); setPop(""); setScreen("right"); };
   const seatPress = (slug) => setPop(pop === slug ? "" : slug);
-  const kindWords = kind ?? got.kind?.words ?? "";
+  const setKind = async (id) => {                                                                          // the person's correction: the parties fitted to it are asked again
+    if (id !== got.kind?.id && (await ask("ideas.project_kind_set", { kind: id }))) await reload();
+  };
   return html`<div class="parties" data-kind="parties" data-screen=${screen} data-first=${String(first)}>
     <div class="parties__body">
-      <${Left} got=${got} views=${views} open=${open} onTick=${(id) => change(id, { on: !views.find((x) => x.p.id === id).on })} onOpen=${onOpen} onStage=${setStage} kind=${kindWords} setKind=${setKind} />
+      <${Left} got=${got} views=${views} open=${open} onTick=${(id) => change(id, { on: !views.find((x) => x.p.id === id).on })} onOpen=${onOpen} onStage=${setStage} onKind=${setKind} />
       <div class="parties__right">
         ${narrow && html`<button type="button" class="ork-btn quiet parties__back" onClick=${() => { setScreen("left"); setPop(""); }}><${Icon} name="arrow-left" /> Parties</button>`}
         ${v ? html`<${PartyRight} v=${v} size=${v.size} setSize=${(size) => change(v.p.id, { size })} setSquad=${(squad) => change(v.p.id, { squad })} prices=${Object.fromEntries(SIZES.map(([s]) => [s, price(v, s)]))}

@@ -96,3 +96,15 @@ def test_no_template_says_an_old_camp_spelling():
            for path, line, parts in _templates() for text in _texts(parts)
            for w in lexicon._WORD.finditer(text)]
     assert not old, "write today's word in the template:\n" + "\n".join(old)
+
+
+def test_the_table_says_a_seat_by_its_tier_and_its_role_never_by_a_race():
+    """Spec 100 §0: no word of a race but the leaders' names on the place of the parties; a seat's popover and its header say the tier and the role."""
+    for name in ("seatpop.js", "header.js", "tabs.js", "pane.js"):
+        assert "RACE_WORDS" not in (STATIC / "js" / "table" / name).read_text(encoding="utf-8"), name
+
+
+def test_a_goals_way_has_its_kinds_plain_words_once():
+    words = (STATIC / "js" / "arena" / "arenawords.js").read_text(encoding="utf-8")
+    for pair in ('route: "Route"', 'start: "Start"', 'talk: "Talk"', 'cause: "The cause"', 'decision: "Decision"', 'fork: "A fork"', 'project_q: "About the project"'):
+        assert words.count(pair) == 1, pair

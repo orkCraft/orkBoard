@@ -35,7 +35,6 @@ export function DecisionLifted({ s, close }) {
   };
   const key = (e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); setEdit(false); } };
   return html`<div class="hand-way hand-way--decision" data-confirmed=${row.confirmed ? "1" : undefined}>
-    <p class="cap hand-way__place">${decisionWords(row)}</p>
     ${edit ? html`<textarea ref=${box} class="ork-field hand-way__entry" aria-label="The decision’s text" rows="12" value=${text} onInput=${(e) => setText(e.target.value)} onKeyDown=${key}></textarea>`
       : body ? html`<div class="hand-way__why"><span class="ork-label">Why</span><p class="body">${body.why}</p></div>
           ${body.points.length > 0 && html`<ol class="hand-way__points" aria-label="The points">${body.points.map((p, i) => html`<li key=${i} class="body">${p}</li>`)}</ol>`}

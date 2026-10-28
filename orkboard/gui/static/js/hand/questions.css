@@ -65,6 +65,7 @@
 .talk-stance__asks { display: flex; flex-direction: column; gap: var(--ork-3); list-style: none; }
 .talk-stance__asks li { display: flex; flex-direction: column; gap: var(--ork-1); }
 .talk-stance__asks .cap { color: var(--ork-ink-muted); overflow-wrap: anywhere; }
+.talk-stance__asks .talk-stance__ans { color: var(--ork-ink); }
 .talk-together { display: flex; flex-direction: column; gap: var(--ork-4); max-width: 640px; }
 .talk-together p { margin: 0; }
 .talk-ask { display: flex; flex-direction: column; gap: var(--ork-2); border: 0; min-width: 0; }

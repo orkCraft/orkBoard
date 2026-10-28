@@ -9,7 +9,7 @@ import { town } from "../link.js";
 import { ORKMASTER, closeOver, lifted, openOver, over, picked } from "../frame/state.js";
 import { KINDS, faceOf } from "../frame/kinds.js";
 import { mapData, leaving } from "../shell/store.js";
-import { leadsSystem, mapName, paneTitle } from "./data.js";
+import { PHASES, leadsSystem, mapName, paneTitle, phaseOf } from "./data.js";
 import { BoardMap } from "./boardmap.js";
 import { Header } from "./header.js";
 import { SystemPane, PartBack, LinkBack } from "./syspane.js";
@@ -17,6 +17,7 @@ import { Lifted, OwnBack, TaskBack, litKey, mineKey } from "./card.js";
 import { LimitChip } from "./tabs.js";
 import { Menu } from "./menu.js";
 import { isForm } from "./over.js";
+import { openParties } from "./parties.js";
 
 /** ← or Esc: the map as it was left, the card the thing came from lit. */
 export function back() {
@@ -56,6 +57,22 @@ function Over() {
   </div>`;
 }
 
+/** The picked goal's phases in the pane's title, *Talk · Spec · Work · Done*: the current one marked, the ones gone by lit; *Talk* and *Spec* are pages (the stances, the sections), opened by a press once the goal is at them or past them
+ *  (decisions §126.4). Work and Done are marks alone: their pane is the Board's. `from`: where the pane was (the page opened says it came from there). */
+function Phases({ goal, from }) {
+  const now = phaseOf(goal), at = PHASES.findIndex(([id]) => id === now), shown = over.value?.kind;
+  if (at < 0) return null;
+  return html`<nav class="table-phases" aria-label="The goal's phases" data-phase=${now}>${PHASES.map(([id, word], i) => {
+    const state = i < at ? "past" : i === at ? "now" : "next", page = id === "talk" || id === "spec";
+    const cls_ = cls("table-phase", { "is-past": state === "past", "is-now": state === "now", "is-open": shown === id });
+    const said = `${word}${state === "now" ? ", now" : state === "past" ? ", done" : ""}`;
+    return page && state !== "next"
+      ? html`<button type="button" key=${id} class=${cls("ork-btn quiet", cls_)} data-phase=${id} aria-current=${state === "now" ? "step" : undefined} aria-pressed=${String(shown === id)} aria-label=${said}
+          title=${`${word}: open it`} onClick=${() => { if (shown !== id) openOver(id, { idea: goal }, over.peek()?.from || from, word); }}>${word}</button>`
+      : html`<span key=${id} class=${cls_} data-phase=${id} aria-current=${state === "now" ? "step" : undefined} aria-label=${said}>${word}</span>`;
+  })}</nav>`;
+}
+
 /** The pane's title: *The whole project · through Tech*, or ← and *System · server/lobby.ts*. */
 function Title({ parties, tab, narrow }) {
   const o = over.value, where = o?.from?.title || "", code = o && (o.kind === "file" || (o.kind === "diff" && o.props?.path));
@@ -66,6 +83,7 @@ function Title({ parties, tab, narrow }) {
   return html`<header class="ork-head table-title">
     ${o && html`<button type="button" class="ork-btn quiet table-title__back" aria-label="Back" title="Back" onClick=${back}><${Icon} name="arrow-left" /></button>`}
     <span class="table-title__pt" data-title>${o ? html`${where && html`${where} · `}<span class=${code ? "table-pathcase" : undefined}>${o.title}</span>` : paneTitle(picked.value, tab, parties)}</span>
+    ${picked.value && html`<${Phases} goal=${picked.value} from=${from} />`}
     <span class="table-grow"></span>
     <button type="button" class="ork-btn table-play" aria-label="Play" title="Play: the project's preview of dev" onClick=${play}><${Icon} name="play" /><span class="table-play__w">Play</span></button>
     ${!o && tab === ORKMASTER && html`<${Menu} label="The Orkmaster's menu" items=${items}
@@ -83,7 +101,7 @@ export function Pane({ parties, tab, narrow }) {
       ${o ? html`<${Over} />` : tab === ORKMASTER ? html`<${BoardMap} parties=${parties} narrow=${narrow} />
           ${!parties.length && html`<div class="table-empty"><p>No parties yet</p>
             <p class="table-over__muted">Make a party, then write it a goal in plain words. Its orks do the work; you look at it before it goes in.</p>
-            <p><button type="button" class="ork-btn primary" onClick=${() => openOver("party", {}, from, "New party")}>New party</button></p></div>`}`
+            <p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`}`
         : g ? html`<${Header} key=${g.slug} g=${g} from=${from} />${leadsSystem(g) ? html`<${SystemPane} key=${g.slug} g=${g} />` : null}` : null}
       ${shown && html`<${Lifted} host=${body} name=${shown[0]} narrow=${narrow}>${shown[1]}</${Lifted}>`}
     </div>

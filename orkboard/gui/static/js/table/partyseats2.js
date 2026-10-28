@@ -1,12 +1,12 @@
 // The right half of the one place of the parties (docs/specs/100-a-goals-way-as-cards.md §4, decisions §151.5, §164): the party that is open — the size (*Lean · Standard · Full*, each its line and what it costs a goal:
-// `ideas.party_price`), the leader's row (its head, its name of its own beside its role, its map in one line, its AI tool's mark in ink and its tier), what the leader keeps of the project (read only: the host has no
-// command to change it yet), and the squad in two columns, **Does** under orkUI's sword and **Checks** under its shield, of the craft's role cards (head, role, tool's mark, the gear of its tier), each ticked or not
+// `ideas.party_price`), the leader's row (its head, its name of its own beside its role, its map in one line, its AI tool's mark in ink and its tier), what the leader keeps of the project (read and changed here, *From the next goal*), and the squad in two columns, **Does** under orkUI's sword and **Checks** under its shield, of the craft's role cards (head, role, tool's mark, the gear of its tier), each ticked or not
 // (at most five who do, two who check). A tick is the squad's; a press on the card opens the seat's popover (seatpop.js) when the party is made and the seat is in it, else it ticks the card. Under *Lean* the *Checks*
 // column is dimmed (*No separate check: the doer runs its own tests*). The leaders' names (§164) are said here and nowhere else. The squad is drawn from a view of the party (parties.js `viewOf`); nothing here saves.
 import { useEffect, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { command } from "../link.js";
 import { Head, Sign, TIER_WORDS } from "../orkui.js";
+import { ask } from "../board/store.js";
 import { roles } from "../shell/store.js";
 import { costOf } from "../hand/cost.js";
 import { MARKED, markSrc, toolOf } from "./data.js";
@@ -77,19 +77,32 @@ export function LeaderRow({ v, size, tools, g, onOpen, open }) {
     : html`<div class="ork-card parties__lead" data-seat=${lead}>${inner}</div>`;
 }
 
-/** What the leader keeps of the project (decisions §153.4), read from the host (`ideas.project_facts {party}` → `{facts: [{key, text, by}]}`); drawn only where the host answers, since it has no command for it yet. */
+/** What the leader keeps of the project (decisions §153.4), read from the host (`ideas.project_facts {party}` → `{facts: [{key, text, by}]}`) and changed here, *From the next goal*: a fact's text is edited in place and
+ *  kept as the person's on leaving the field (`ideas.project_fact_set {party, key, text}`); an empty text, or *Forget*, drops it. Drawn only for a party that is made and where the host answers with facts. */
 export function Facts({ party }) {
-  const [facts, setFacts] = useState([]);
+  const [facts, setFacts] = useState([]), [busy, setBusy] = useState(false);
   useEffect(() => {
     let live = true;
     setFacts([]);
-    command("ideas.project_facts", { party }, true).then((a) => { if (live && Array.isArray(a?.facts)) setFacts(a.facts); }).catch(() => {});
+    if (party) command("ideas.project_facts", { party }, true).then((a) => { if (live && Array.isArray(a?.facts)) setFacts(a.facts); }).catch(() => {});
     return () => { live = false; };
   }, [party]);
-  if (!facts.length) return null;
+  const keep = async (f, text) => {
+    if (busy || text.trim() === f.text) return;
+    setBusy(true);
+    try {
+      const got = await ask("ideas.project_fact_set", { party, key: f.key, text: text.trim() });
+      if (got && Array.isArray(got.facts)) setFacts(got.facts);
+    } finally { setBusy(false); }
+  };
+  if (!party || !facts.length) return null;
   return html`<section class="parties__facts" aria-label="What it keeps of the project" data-facts>
     <h4 class="ork-label">What it keeps of the project</h4>
-    <ul>${facts.map((f) => html`<li key=${f.key} data-key=${f.key}>${f.text} <small class="parties__muted">${f.by === "read" ? "read from the project" : "you said"}</small></li>`)}</ul>
+    <ul>${facts.map((f) => html`<li key=${f.key + f.text} data-key=${f.key} class="parties__fact">
+      <input class="ork-field" defaultValue=${f.text} maxlength="300" aria-label=${`What it keeps: ${f.text}`} disabled=${busy} onBlur=${(e) => keep(f, e.target.value)}
+        onKeyDown=${(e) => { if (e.key === "Enter") { e.preventDefault(); e.target.blur(); } }} />
+      <small class="parties__muted">${f.by === "read" ? "read from the project" : "you said"}</small>
+      <button type="button" class="ork-btn quiet" disabled=${busy} title="It stops keeping this, from the next goal" aria-label=${`Forget: ${f.text}`} onClick=${() => keep(f, "")}>Forget</button></li>`)}</ul>
     <p class="parties__muted">From the next goal</p></section>`;
 }
 
@@ -126,7 +139,7 @@ export function PartyRight({ v, size, setSize, setSquad, prices, tools, g, onOpe
   return html`<div class="parties__party" data-party=${v.p.id} data-size=${size}>
     <${SizeSwitch} size=${size} onPick=${setSize} prices=${prices} locked=${v.p.locked} />
     <${LeaderRow} v=${v} size=${size} tools=${tools} g=${g} onOpen=${onOpen} open=${open === v.p.leader} />
-    <${Facts} party=${v.p.id} />
+    <${Facts} party=${v.track?.slug || ""} />
     <div class="parties__cols">
       <${Column} band="build" v=${v} size=${size} tools=${tools} g=${g} squad=${v.squad} onTick=${tick} onPress=${onOpen} dim=${false} />
       <${Column} band="check" v=${v} size=${size} tools=${tools} g=${g} squad=${v.squad} onTick=${tick} onPress=${onOpen} dim=${size === "lean"} />

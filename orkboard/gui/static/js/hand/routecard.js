@@ -2,7 +2,7 @@
 // Orkmaster has routed it. Its face is the card of spec 101 (stopcard.js): the goal's element and name, the route's sign in its window with the Orkmaster's crowned head in its corner, the gem of its cost in the
 // label row. Lifted (`RouteLifted`, in place of the plain answers): the route as the leaders' heads in order, each with a small × (a press on the head opens its seat popover as the table's does), a **+** offering
 // the project's parties but Release (those the goal's marks touch first), the route in words, the cost (the gem and its words, said again from the answer of an edit), its place in line, and its one act: **Talk**
-// (with **Later, by itself** only when the limits run low). A bug is Tech alone: *finding the cause* with **Talk**, or, when its report holds a failing test, **Start** with *The long way* beside it.
+// (with **Later, by itself** only when the limits run low). A bug is Tech alone: *finding the cause* with **Talk**, or, when its report holds a failing test, **Start** with *The long way* beside it; another short goal (the row's `type`: a clean-up, a balance pass) says *<Party> alone* and its own line, with **Talk**.
 // Registers itself with ways.js (`route`); startcard.js (the `start` row) reads the same helpers. The sheet is way.css, linked as hand.css is (frame/frame.js).
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
@@ -139,8 +139,17 @@ function Steps({ s, v, busy, send }) {
   </div>`;
 }
 
-/** The party of a route of one step. */
-const aloneWords = (v) => `${partyName(v.route?.[0]?.party || "")} alone`;
+/** What a short goal that is no bug is, in a few plain words, by its type (`type`: the goal type's id): *Tech alone: a small clean-up*. */
+const SMALL = { tidy: "a small clean-up", balance: "a small change to the numbers" };
+
+/** A bug is the goal type `bug`; a route row of an older host has no `type` and is read as before (a short goal is a bug). */
+const isBug = (v) => v.type === undefined || v.type === "bug";
+
+/** A short goal in words: *Tech alone: finding the cause*, *Tech alone: the report has a failing test*, *Tech alone: a small clean-up*. */
+function aloneWords(v) {
+  const who = `${partyName(v.route?.[0]?.party || "")} alone`;
+  return `${who}: ${isBug(v) ? (v.reproduces ? "the report has a failing test" : "finding the cause") : SMALL[v.type] || "a small change"}`;
+}
 
 /** The route card lifted (in place of the plain answers; stopcard.js adds *Put it back*). */
 export function RouteLifted({ s, close }) {
@@ -158,10 +167,10 @@ export function RouteLifted({ s, close }) {
   const later = async () => {
     if (await run("ideas.route_later", {})) { toast("In line: it talks by itself after the limits reset."); close?.(); }
   };
-  const short = !!v.short && steps.length === 1, report = short && !!v.reproduces;
+  const short = !!v.short && steps.length === 1, report = short && isBug(v) && !!v.reproduces;
   return html`<div class="hand-way hand-way--route" data-short=${short ? "1" : undefined}>
     <${Steps} s=${s} v=${v} busy=${busy} send=${send} />
-    ${short ? html`<p class="body hand-way__words">${aloneWords(v)}: ${report ? "the report has a failing test" : "finding the cause"}</p>`
+    ${short ? html`<p class="body hand-way__words">${aloneWords(v)}</p>`
       : html`<p class="body hand-way__words">${routeWords(steps)}</p>`}
     <${CostLine} cost=${v.cost} />
     ${v.place > 0 && html`<p class="cap hand-way__place">${ordinal(v.place)} in line</p>`}

@@ -10,6 +10,7 @@ from __future__ import annotations
 import base64
 import copy
 import os
+import re
 from pathlib import Path
 
 import pytest
@@ -1005,6 +1006,38 @@ def test_a_card_that_comes_is_dealt_from_under_the_windows_edge_and_a_card_that_
         pg.locator(".hand-stack.is-gone .ork-crumble > i").first.wait_for(timeout=WAIT_MS)
         assert pg.locator(".hand-stack.is-gone .ork-crumble > i").count() == 6                  # six pixel squares fall, they do not fade
         pg.wait_for_function("() => !document.querySelector('.hand-stack.is-gone')", timeout=WAIT_MS)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+# -- the words of the goal's way and the one place of the parties (spec 100 E) -------------------------------------------------------------------------------------
+
+def test_every_kind_of_a_goals_way_has_its_plain_word_and_no_word_of_a_race(gui):
+    pg, host, log = open_hand(gui, host=HandHost(bare=True))
+    try:
+        words = pg.evaluate("() => import('/static/js/arena/arenawords.js').then((m) => m.KIND_WORD)")
+        assert {k: words[k] for k in ("route", "start", "talk", "cause", "decision", "fork", "project_q")} == {
+            "route": "Route", "start": "Start", "talk": "Talk", "cause": "The cause", "decision": "Decision", "fork": "A fork", "project_q": "About the project"}
+        mine = " ".join(words[k] for k in ("route", "start", "talk", "cause", "decision", "fork", "project_q")).lower()
+        assert not re.search(r"\b(ork|orks|elf|elves|goblin|gnome|knight|lich|skeleton|undead)\b", mine)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_edit_the_party_on_a_plan_that_misses_a_member_opens_the_one_place_of_the_parties_at_its_party(gui, width):
+    host = HandHost(bare=True)
+    next(n for n in host.needs if n["kind"] == "plan")["missing"] = [{"agent": "artist", "name": "Artist", "free": False}]
+    pg, host, log = open_hand(gui, host=host, width=width)
+    try:
+        _stack(pg, "export").first.wait_for(timeout=WAIT_MS)
+        pg.locator('.hand-card[data-kind="plan"]').first.click(position={"x": 10, "y": 24}, force=True)
+        pg.locator(".hand-lifted").get_by_role("button", name="Edit the party").click()
+        pg.locator('.table-over[data-kind="parties"]').wait_for(timeout=WAIT_MS)
+        assert " ".join(pg.locator(".table-title__pt").text_content().split()) == "Board · Parties" and pg.locator(".place").count() == 0
+        narrow.no_sideways(pg)
     finally:
         pg.close()
     assert not log, "\n".join(log)

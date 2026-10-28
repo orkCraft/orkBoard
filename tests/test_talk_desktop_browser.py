@@ -42,18 +42,30 @@ PQ = [card("project-for_whom", "product", "Product lead", "Whom is it for?", ["F
       card("project-hurts", "product", "Product lead", "What hurts them?", ["Waiting for a slow host", "Arguing about the rules"], 1, "The README lists the rules.", project=True)]
 
 
+def kept(q, state, answer="", how="pick", pick=0, **more):
+    return {"id": q["id"], "q": q["q"], "choices": q["choices"], "pick": pick, "why": q["why"], "project": q["project"], "state": state,
+            **({"answer": answer, "round": 1} if state != "waiting" else {}), **({"how": how} if state == "answered" else {}), **more}
+
+
+# the Talk as the host kept it (`ideas.talk_read`): Design's first question answered by the person, its second left to its pick, Tech's still waiting
+KEPT = {"idea": "chat", "mode": "talk", "round": 1, "done": False, "cause": None, "stances": [
+    {**STANCES[0], "questions": [kept(C1, "answered", "Server counts, phones show it"), kept(card("r1-0", "design", "Design lead", "Dark or light first?", ["Dark", "Light"], 0, "The lobby is dark."), "closed", "Dark")]},
+    {**STANCES[1], "questions": [kept(C2, "waiting", pick=1)]}]}
+
+
 class TalkHost(HandHost):
     """A project of four parties (Tech, Design, Product, Release), a goal at Talk with three questions of three leaders and two stances, `bug`: a bug with a case question and Tech's guess of its cause, `project`: the project's two
     questions of Product's."""
 
-    def __init__(self, bug=False, project=False):
+    def __init__(self, bug=False, project=False, past=False):
         super().__init__(bare=True)
         self.refuse = False
         self.nodes = [n for n in self.nodes if n["place"] != "hand"]
         self.needs = []
-        chat = node("chat", "design", "Chat in the lobby", "hand", state="talk", element="ice")
+        chat = node("chat", "design", "Chat in the lobby", "hand", state="working" if past else "talk", element="ice")      # `past`: the goal has gone by its Talk, no row waits
         self.nodes.append(chat)
-        self.needs.append(need("talk", "design", "chat", chat["title"], C1["q"], round=1, stances=STANCES, questions=[C1, C2, C3]))
+        if not past:
+            self.needs.append(need("talk", "design", "chat", chat["title"], C1["q"], round=1, stances=STANCES, questions=[C1, C2, C3]))
         if bug:
             lag = node("lag", "tech", "The lobby lags after a reconnect", "hand", state="talk", element="dust")
             self.nodes.append(lag)
@@ -63,6 +75,9 @@ class TalkHost(HandHost):
             self.needs.append({"kind": "project_q", "party": "product", "leader": "Product lead", "questions": PQ, "text": PQ[0]["q"], "blocks": False, "priority": "normal", "at": "2026-10-20T10:00:00"})
 
     def handle(self, name, a):
+        if name == "ideas.talk_read":
+            self.log.append((name, a))
+            return KEPT
         if name in ("ideas.talk_answer", "ideas.cause_answer", "ideas.project_answer"):
             self.log.append((name, a))
             if self.refuse:
@@ -269,6 +284,53 @@ def test_the_stances_are_on_the_pane_a_row_of_the_leaders_with_more_unfolding_in
         if width == "wide":
             boxes = [s.bounding_box() for s in stances.all()]
             assert abs(boxes[0]["y"] - boxes[1]["y"]) <= 2, "in a row"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_more_unfolds_the_talk_as_the_host_kept_it_each_question_and_how_it_stands(gui, width):
+    pg, host, log = open_talk(gui, width)
+    try:
+        call(pg, "frame/state.js", "openOver", "talk", {"idea": "chat"}, {"title": "Board", "key": ""}, "Talk")
+        page = pg.locator('.table-over[data-kind="talk"]')
+        page.wait_for(timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelector('.talk-stance__more')", timeout=WAIT_MS)
+        assert ("ideas.talk_read", {"idea": "chat"}) in host.log
+        design, tech = page.locator(".talk-stance").nth(0), page.locator(".talk-stance").nth(1)
+        design.get_by_role("button", name="More").click()
+        rows = design.locator(".talk-stance__asks li")
+        assert [r.get_attribute("data-state") for r in rows.all()] == ["answered", "closed"]                       # the person's, then the one left to its leader's pick
+        assert "Where does the timer run?" in rows.nth(0).inner_text() and "You said: Server counts, phones show it" in rows.nth(0).inner_text()
+        assert "Dark or light first?" in rows.nth(1).inner_text() and "Its pick stands: Dark" in rows.nth(1).inner_text()
+        tech.get_by_role("button", name="More").click()
+        assert "Waits for you" in tech.locator(".talk-stance__asks li").inner_text()
+        design.get_by_role("button", name="Less").click()
+        assert design.locator(".talk-stance__asks").count() == 0
+        shot(pg, f"{width}-stances-more")
+        narrow.no_sideways(pg)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_the_talk_of_a_goal_past_it_is_opened_from_its_mark_in_the_title_and_read_as_kept(gui, width):
+    pg, host, log = open_hand(gui, host=TalkHost(past=True), width=width)
+    try:
+        call(pg, "frame/state.js", "pick", "chat")
+        pg.locator(".table-phases").wait_for(timeout=WAIT_MS)
+        assert pg.locator('.table-phase[data-phase="work"]').get_attribute("aria-current") == "step"
+        pg.get_by_role("button", name="Talk, done").click()
+        page = pg.locator('.table-over[data-kind="talk"]')
+        page.locator(".talk-stance").first.wait_for(timeout=WAIT_MS)
+        assert [s.locator(".talk-stance__nm").text_content().strip() for s in page.locator(".talk-stance").all()] == ["Design", "Tech"]
+        assert page.get_by_role("button", name="All the questions").count() == 0, "nothing waits: the Talk is read, not answered"
+        page.locator(".talk-stance").first.get_by_role("button", name="More").click()
+        assert "You said: Server counts" in page.locator(".talk-stance__asks").inner_text()
+        shot(pg, f"{width}-past-talk")
+        narrow.no_sideways(pg)
     finally:
         pg.close()
     assert not log, "\n".join(log)

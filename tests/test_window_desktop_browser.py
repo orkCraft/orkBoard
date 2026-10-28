@@ -156,17 +156,23 @@ def test_every_place_is_reached_over_the_pane(window):
         over(pg, kind)
         nothing_modal(pg)
         back(pg)
-    # + : New party; the party's …: Edit and Remove party
+    # + : the one place of the parties; the party's …: Edit (the same place, at that party) and Remove party
     pg.get_by_role("button", name="New party").click()
-    over(pg, "party")
-    assert title(pg) == "Board · New party" and pg.get_by_role("button", name="Save party").count() == 1
+    over(pg, "parties")
+    assert title(pg) == "Board · Parties" and pg.get_by_role("button", name="Save party").count() == 0
     nothing_modal(pg)
     back(pg)
     open_tab(pg, "art")
     pg.get_by_role("button", name="Art's menu").click()
     pg.get_by_role("menuitem", name="Edit").click()
+    over(pg, "parties")
+    assert title(pg) == "Art · Parties"
+    nothing_modal(pg)
+    pg.get_by_role("button", name="Back").click()
+    pg.locator(".table-head").wait_for(timeout=WAIT_MS)
+    pg.get_by_role("button", name="Art's menu").click()
+    pg.get_by_role("menuitem", name="Remove party").click()
     over(pg, "party")
-    pg.get_by_role("button", name="Remove party").click()
     pg.locator(".place__text").wait_for(timeout=WAIT_MS)
     nothing_modal(pg)
     pg.keyboard.press("Escape")
@@ -208,17 +214,14 @@ def test_every_place_is_reached_over_the_pane(window):
     back(pg)
 
 
-def test_a_new_party_saved_opens_its_tab_and_the_edit_form_says_where_it_came_from(window):
+def test_the_place_of_the_parties_is_in_the_pane_and_esc_goes_back(window):
     pg, host, w = window
     pg.get_by_role("button", name="New party").click()
-    over(pg, "party")
-    pg.get_by_label("What it is for").fill("Make the look.")
-    pg.get_by_role("button", name="Save party").click()
-    for _ in range(40):
-        if any(n == "ideas.goal_save" for n, _a in host.log):
-            break
-        pg.wait_for_timeout(50)
-    assert any(n == "ideas.goal_save" for n, _a in host.log)
+    over(pg, "parties")
+    nothing_modal(pg)
+    assert pg.locator(".place").count() == 0 and pg.locator(".table-over--form").count() == 0
+    pg.keyboard.press("Escape")
+    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
 
 
 # -- the keyboard -------------------------------------------------------------------------------------------------------------------------------------
