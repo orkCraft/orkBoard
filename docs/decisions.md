@@ -3286,3 +3286,15 @@ heads are drawn for dark grounds (25 of their 32 colours fall under 3:1 on the l
 2. **Light cards are a later pass** of orkUI's, apart from the slices: a set of heads that stand on a light ground, the
    elements and signals' kin for it, and both grounds measured; then the owner looks again.
 The owner's call.
+
+## 166. The cards a hint cold: a slate grey on the warm table (28 October, the owner)
+
+Why: the owner, after §163's neutral cards: *let's try them colder.* Two cool tints of A were laid beside it at the same
+lightness (orkUI's `docs/compare/cards.html`): A1, a hint cold (CIELAB chroma about 3, hue about 250), and A2, cold
+(chroma about 6). Both hold every measure; A2 reads as a colour of its own across a whole screen, A1 as paper. So (this
+makes §163.1 precise):
+1. **The cards' fill is a slate grey**: `card` `#2a2e31`, `card-frame` `#383d41` (chroma about 3, hue about 250, almost
+   opposite the warm table's), the backs' greys with them; every measure of §163.2 held on it (the faint ink 4.54, the
+   heads' edges 3.03 at least, at least 20 CIE76 from `ice` and `void`).
+2. In orkUI 0.15.4, then copied here (spec 96).
+The owner's call.
