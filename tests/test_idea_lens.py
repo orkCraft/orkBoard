@@ -4,6 +4,7 @@ a segment and its pain — is kept with the idea and given to the keeper with it
 from __future__ import annotations
 
 import base64
+import json
 import sys
 
 import pytest
@@ -96,3 +97,40 @@ def test_the_lens_points_at_the_repository_only_never_at_a_secret_or_the_machine
         host.command("ideas.add", {"text": "x", "track": slug, "priority": "low", "lens": [{"kind": "screen", "screen": "abc"}]})
     assert not [i for i in ideas.ideas(host.ideas.root()) if i["track"] == slug]           # nothing added
     assert host.command("ideas.lens_code", {})["parts"]                                      # the fake repository's own parts
+
+
+# -- spec 102 §1.3: a pain's place ---------------------------------------------------------------------------------------------------------------
+
+def test_a_pain_kept_before_has_no_place_and_stays_a_string_in_the_file_every_reader_reads_on(tmp_path):
+    state = tmp_path / ".orkcraft"
+    state.mkdir()
+    (state / "segments.json").write_text('{"segments": [{"segment": "Shop owners", "pains": ["Orders get lost", "Refunds take a week"]}]}')   # as kept before
+    assert idea_lens.segments(state) == [{"segment": "Shop owners", "pains": ["Orders get lost", "Refunds take a week"]}]
+    assert idea_lens.segments_placed(state) == [{"segment": "Shop owners", "pains": [{"text": "Orders get lost", "on": ""}, {"text": "Refunds take a week", "on": ""}]}]
+    idea_lens.keep_segment(state, "Shop owners", "New one")                                  # keeping a pain with no place writes the strings it always wrote
+    assert json.loads((state / "segments.json").read_text())["segments"][0]["pains"] == ["New one", "Orders get lost", "Refunds take a week"]
+
+
+def test_a_pinned_pain_is_an_object_in_the_file_the_lens_still_offers_its_text_and_keeping_it_again_keeps_its_place(tmp_path):
+    state = tmp_path / ".orkcraft"
+    state.mkdir()
+    idea_lens.keep_segment(state, "Shop owners", "Orders get lost", on="orders")
+    idea_lens.keep_segment(state, "Shop owners", "Refunds take a week")
+    assert json.loads((state / "segments.json").read_text())["segments"][0]["pains"] == ["Refunds take a week", {"text": "Orders get lost", "on": "orders"}]
+    assert idea_lens.segments(state) == [{"segment": "Shop owners", "pains": ["Refunds take a week", "Orders get lost"]}]
+    idea_lens.keep_segment(state, "shop owners", "ORDERS get lost")                          # an idea that brings the same pain again: first, same place, the person's words
+    assert idea_lens.segments_placed(state) == [{"segment": "Shop owners", "pains": [{"text": "ORDERS get lost", "on": "orders"}, {"text": "Refunds take a week", "on": ""}]}]
+    idea_lens.keep_segment(state, "Shop owners", "Orders get lost", on="step:2")             # moved
+    assert idea_lens.segments_placed(state)[0]["pains"][0] == {"text": "Orders get lost", "on": "step:2"}
+    idea_lens.keep_segment(state, "Shop owners", "Orders get lost", on="")                   # taken off its place
+    assert idea_lens.segments_placed(state)[0]["pains"][0] == {"text": "Orders get lost", "on": ""}
+    assert json.loads((state / "segments.json").read_text())["segments"][0]["pains"] == ["Orders get lost", "Refunds take a week"]
+
+
+def test_an_idea_s_pain_kept_with_it_does_not_move_a_pinned_one_off_its_screen(host):
+    slug = host.command("ideas.goal_save", {"about": "x", "craft": "product", "leader": "product-manager"})["slug"]
+    idea_lens.keep_segment(host.ideas.state_dir, "Shop owners", "Orders get lost", on="orders")
+    host.command("ideas.add", {"text": "Fix it", "track": slug, "priority": "low",
+                               "lens": [{"kind": "pain", "segment": "Shop owners", "pain": "Orders get lost"}]})
+    assert idea_lens.segments_placed(host.ideas.state_dir)[0]["pains"] == [{"text": "Orders get lost", "on": "orders"}]
+    assert host.command("ideas.lens", {"track": slug})["segments"] == [{"segment": "Shop owners", "pains": ["Orders get lost"]}]

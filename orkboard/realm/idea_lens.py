@@ -10,7 +10,8 @@ a lens no one in the party has is not offered.
     attached(state_dir, "dark-mode")     # for a keeper's prompt: the photos, then what the lens pointed at
 
 Kept beside the idea's state (`<state_dir>/ideas/<slug>/lens.json`). A screen is kept for the project
-(`<state_dir>/screens/`), so the next idea picks it again; a segment and its pains too (`<state_dir>/segments.json`).
+(`<state_dir>/screens/`), so the next idea picks it again; a segment and its pains too (`<state_dir>/segments.json`); a pain may be pinned to a screen or a step of Design's map (`keep_segment`'s `on`, spec 102 §1.3),
+which `segments_placed` gives as `{text, on}` and `segments` leaves out (a pain with no place is a string in the file, as it always was).
 No face, no model.
 """
 from __future__ import annotations
@@ -29,6 +30,7 @@ MAX_PATHS = 12
 MAX_MARKS = 8
 MAX_SEGMENTS = 40
 MAX_PAINS = 20
+PLACE = 80                    # a pain's place: the id of a screen or a step (realm/screen_map.py), at most
 HIDDEN = {".git", ".orkcraft"}
 
 
@@ -68,29 +70,46 @@ def _segments_file(state_dir: Path) -> Path:
     return Path(state_dir) / "segments.json"
 
 
-def segments(state_dir: Path) -> list[dict]:
+def _pain(raw: object) -> dict | None:
+    """A pain as kept: a string (no place), or `{text, on}` (`on`: the id of the screen or the step it is pinned to, spec 102 §1.3)."""
+    text = _words(raw.get("text") if isinstance(raw, dict) else raw, 300)
+    return {"text": text, "on": _words(raw.get("on"), PLACE) if isinstance(raw, dict) else ""} if text else None
+
+
+def segments_placed(state_dir: Path) -> list[dict]:
+    """The project's segments, the latest first: `{segment, pains: [{text, on}]}`, `on` "" for a pain with no place."""
     got = ideas._json(_segments_file(state_dir)) or {}
     out = []
     for s in got.get("segments") or []:
         if isinstance(s, dict) and _words(s.get("segment"), 120):
-            out.append({"segment": _words(s["segment"], 120), "pains": [_words(p, 300) for p in s.get("pains") or [] if _words(p, 300)]})
+            out.append({"segment": _words(s["segment"], 120), "pains": [p for p in map(_pain, s.get("pains") or []) if p]})
     return out
 
 
-def keep_segment(state_dir: Path, segment: str, pain: str) -> None:
-    """A segment and its pain kept for the next idea: the latest first."""
+def segments(state_dir: Path) -> list[dict]:
+    """The same with each pain as its text alone (what the lens offers): `{segment, pains: [str]}`."""
+    return [{"segment": s["segment"], "pains": [p["text"] for p in s["pains"]]} for s in segments_placed(state_dir)]
+
+
+def keep_segment(state_dir: Path, segment: str, pain: str, on: str | None = None) -> None:
+    """A segment and its pain kept for the next idea: the latest first. `on` pins the pain to a screen's or a step's id ("" takes its place off);
+    None leaves a pain it already holds where it was. A pain with no place is kept as a string, as before, so every reader of the file reads on."""
     if not segment:
         return
     with ideas.LOCK:
-        got = segments(state_dir)
+        got = segments_placed(state_dir)
         mine = next((s for s in got if s["segment"].lower() == segment.lower()), None)
         if mine is None:
             mine = {"segment": segment, "pains": []}
         got = [mine] + [s for s in got if s is not mine]
         if pain:
-            mine["pains"] = [pain] + [p for p in mine["pains"] if p.lower() != pain.lower()]
+            old = next((p for p in mine["pains"] if p["text"].lower() == pain.lower()), None)
+            place = _words(on, PLACE) if on is not None else (old["on"] if old else "")
+            mine["pains"] = [{"text": pain, "on": place}] + [p for p in mine["pains"] if p is not old]
             mine["pains"] = mine["pains"][:MAX_PAINS]
-        ideas._write_json(_segments_file(state_dir), {"segments": got[:MAX_SEGMENTS]})
+        ideas._write_json(_segments_file(state_dir), {"segments": [
+            {"segment": s["segment"], "pains": [{"text": p["text"], "on": p["on"]} if p["on"] else p["text"] for p in s["pains"]]}
+            for s in got[:MAX_SEGMENTS]]})
 
 
 def _screens_dir(state_dir: Path) -> Path:
