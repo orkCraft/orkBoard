@@ -3181,3 +3181,30 @@ person's look, the other for *To main*, side by side at the hand's right. So (th
 3. The hand from left to right: the blank card, the deck, the stacks, the discard. Release keeps its tab and its map
    (§137.3); *Release a version* is unchanged (§137.4).
 The owner's call.
+
+## 160. The hand is three places: the deck with the new goal's card drawn off it, the stacks, the discard; the deck's back says the next goal; a card's face its gem, its words when lifted (28 October, the owner and the PM)
+
+Why: the owner, on S1's mockup after §159: the blank card, the deck, the stacks and the discard are still four things to
+read at the hand's foot, and the deck's back says nothing (an ork mark on every one). A card battler's hand is three:
+what is to come, what is played, what is done. The blank card is a goal to come; the deck is the goals to come. So
+(this changes §116.2, §124.1, §144.2, §145.3, §145.8 and §149.3):
+1. **The hand is three places**: at the left **the deck**, at the middle **the stacks** (the goals that ask the person,
+   §121.2), at the right **the discard** (§145.4, §159). Nothing else lies in the hand.
+2. **The new goal's card is drawn off the deck**: the deck's top card lies a little off it, face up, its face a **+**
+   (the blank card, §116.2). Pressed, it grows into the field over the hand (one field, Enter sends, a picture pasted
+   goes with it, the microphone, §124–§125); typing with nothing focused opens it too. Sent, the goal goes to the deck
+   or the hand as its place says (§145.2). With no goal at all, the + card lies large in the pane's middle (§145.8).
+   Addressed to a party (*→ Tech ×*, *@Tech*) as before.
+3. **The deck's back says the next goal**: the top back carries the element of the first goal in line as a small seal
+   on the one back's pattern (§149.3: one back still, the seal its only mark), and the moon when that goal waits for
+   the reset (§136.5). With nothing in line, the deck is the + card alone.
+4. **The deck pressed fans out in a row over the hand** (only a press; under the pointer a card leans, §149.1): first
+   the + card, then the goals in line in the Orkmaster's order, each its element and name; a goal dragged moves in the
+   line (§138.3), a goal pressed is picked (§145.5). Past about seven, the row's last card is *All · search*, opening the
+   goals in line over the pane (§142) with a search. Esc or a press away closes the row.
+5. **To main stays one step inside the discard**: the discard says *n ready for main*; pressed, it opens over the pane
+   with **To main** (§159.2). Main is production: no act on it lies on a pile.
+6. **A card's face is its gem; its words are on the lifted card** (§144.2 changed): a card that spends shows its share
+   in the gem (*4%*) on its face, and its words (*about 4% of Claude's week*) where it is lifted with its answers
+   (§104.5). Every card of the hand has one size; what it asks is on its lifted state (§104.8).
+The owner's call.
