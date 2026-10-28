@@ -3,8 +3,10 @@
 The owner and the PM, 28 October (decisions §117, §118, §121.2, §133, §134.5, §136.2, §140, §147, §151.5, §153,
 §156.6, §158.1–§158.3, §159, §160, §167; spec 95 §4.2, §5.2–§5.3, §6.3–§6.6; the mockup `docs/mockups/s2b/`). The faces of
 spec 99's way, drawn on spec 98's frame (the table and the hand) with spec 99's Needs you rows. **Builds:** a cheaper
-model, each part reviewed by Claude · **Review:** full · P0. **A, B, C and D at once** (they share no file); **E after
-them**. **Only after the owner's yes on the S2b mockup**, after spec 98 D and E (the hand and the window) and the spec 99
+model, each part reviewed by Claude · **Review:** full · P0. **A, B and D at once** (they share no file), **C after B** (it deals a fork's sides with B's `hand/choose.js`);
+**E after them**. Each hand part registers its row kinds' sign and lifted card with `hand/ways.js` `way(kind, …)` and each
+page over the pane with `frame/kinds.js` `drawn(kind, …)` (`talk`, `spec`, `parties`, `choose`), from its own module (the stub
+the lead wrote; `hand/wayparts.js`, `table/wayparts.js` load them). **Only after the owner's yes on the S2b mockup**, after spec 98 D and E (the hand and the window) and the spec 99
 part each face reads (A: spec 99 C; B: D and G; C: E; D: A).
 
 **Every card here wears spec 101's face** (decisions §167.1: the element at the left of its header, its name
@@ -20,7 +22,7 @@ tabs, and the one place of the parties over the pane in place of today's form. N
 | part | builds | files (and their tests) |
 |---|---|---|
 | **A. The route card** | §1 | new `static/js/hand/routecard.js`, new `static/js/hand/startcard.js`, new `static/js/hand/way.css`; new `tests/test_route_card_desktop_browser.py` |
-| **B. Talk's questions** | §2, §5 | new `static/js/hand/questioncard.js` (a question; a goal's stack of them; the project's stack), new `static/js/hand/causecard.js`, new `static/js/table/talkpage.js` (the stances on the pane), new `static/js/hand/questions.css`; new `tests/test_talk_desktop_browser.py` |
+| **B. Talk's questions** | §2, §5 | new `static/js/hand/choose.js` (*Choose a card* over the pane, kind `choose`: the banner, the choice cards, *Other…*, *Let … decide*; used by C), `static/js/hand/questioncard.js` (a question; a goal's stack of them; the project's stack), new `static/js/hand/causecard.js`, new `static/js/table/talkpage.js` (the stances on the pane), new `static/js/hand/questions.css`, `hand/data.js` (the `project_q` row's stack: a row of no goal's); new `tests/test_talk_desktop_browser.py` |
 | **C. The decision and a fork** | §3 | new `static/js/hand/decisioncard.js`, new `static/js/hand/forkcard.js`, new `static/js/table/specpage.js` (the sections on the pane, a fork's sides lit), new `static/js/table/spec.css`; new `tests/test_decision_fork_desktop_browser.py` |
 | **D. The one place of the parties** | §4 | new `static/js/table/parties.js`, `partyseats2.js` (the squad's columns), new `static/js/table/parties.css`; today's `shell/goalwizard.js`, `partyform.js`, `partyseats.js`, `partypresets.js`, `partysize.js`, `partydraft.js`, `partymodel.js` removed once nothing imports them (E); new `tests/test_parties_desktop_browser.py` |
 | **E. The wiring** | §5, §6 | `static/js/hand/stopcard.js` (each new kind to its card), `static/js/frame/kinds.js` (`parties`, `talk`, `spec` over the pane), `static/js/table/pane.js` (the phase marks), `static/js/table/tabs.js` (the route's dots), the removed party form's modules; `tests/test_hand_desktop_browser.py`, `tests/test_table_desktop_browser.py` |
