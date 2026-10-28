@@ -8,7 +8,7 @@ import { Head, Icon } from "../orkui.js";
 import { command, toast, town } from "../link.js";
 import { ORKMASTER, openTab, openOver, picked } from "../frame/state.js";
 import { currentProject } from "../shell/projects.js";
-import { levelOf, windowOf } from "../shell/topbar.js";
+import { levelOf, windowOf } from "../arena/limits.js";
 import { nameOf, routeParties, MARKED, markSrc, mapName } from "./data.js";
 
 const LONG_MS = 500;

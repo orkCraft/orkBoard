@@ -1,13 +1,12 @@
 // The Orkmaster's proposals on the desktop (docs/specs/75-parties-fitted-to-the-project.md §5.1–§5.2, decisions §90; docs/specs/91-the-owners-list.md §7, §8): the words and the host's asking. The Orkmaster's
-// *Parties* row (arena/projectrows.js) shows the proposals first, *Add* opens New party on one (`openDialog("goal", {proposal})`) and New party (goalwizard.js, partyform.js) takes it as a stage of the project with its
+// *Parties* row (arena/projectrows.js) shows the proposals first, *Add* opens New party on one (`openOver("party", {proposal})`) and New party (goalwizard.js, partyform.js) takes it as a stage of the project with its
 // seats and its size switch (Lean · Standard · Full, partysize.js). A host that does not send `project.kind` has no proposals: New party is today's.
 import { html } from "../html.js";
 import { command, toast } from "../link.js";
-import { track } from "../board/store.js";
 import { pctRange } from "../spend.js";
-import { gatherWaits } from "../arena/arenastate.js";
-import { mapData, showGoal } from "./store.js";
-import { closeDialog, openDialog } from "./modals.js";
+import { mapData } from "./store.js";
+import { closePlace } from "../frame/place.js";
+import { openTab } from "../frame/state.js";
 import { TARGETS } from "../board/target.js";
 
 export const SIZES = [["lean", "Lean"], ["standard", "Standard"], ["full", "Full"]];
@@ -44,12 +43,9 @@ export async function askProposals(about = "") {
   } catch { return null; }
 }
 
-/** A party is saved (New party's Make it, the library's Save party): the heads gather into its deck once it is shown, the dialog closes, the party is shown (or the goal asked for). */
-export function savedParty(got, heads, then) {
+/** A party is saved (New party's Save party): the place closes and the party's own tab opens (the person made it). */
+export function savedParty(got) {
   for (const note of got.notes || []) toast(note);       // an agent of the project's own that the party carries stays as it was
-  if (heads.length) gatherWaits(got.slug, heads);        // the heads gather into the party's deck once it is shown (arena/goaltabs.js)
-  closeDialog();
-  track.value = got.slug;
-  if (then === "idea") openDialog("idea", { goal: got.slug });
-  else showGoal(got.slug);
+  closePlace();
+  openTab(got.slug);
 }

@@ -37,7 +37,7 @@ def _page(gui, host, init=AT_PAGE, **kw):
     pg.add_init_script(init)
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
-    pg.wait_for_selector(kw.get("ready", ".arena-phead"), timeout=WAIT_MS)
+    pg.wait_for_selector(kw.get("ready", ".table-tab"), timeout=WAIT_MS)
     return pg, errors
 
 
@@ -268,38 +268,6 @@ def test_the_first_screen_says_signed_in_for_a_tool_that_is_and_a_failed_check_o
     assert not errors, "\n".join(errors)
 
 
-def test_an_error_line_that_says_a_tool_is_not_signed_in_has_sign_in(gui):
-    host = StubHost()
-    host.sign_in = [entry(auto=False)]
-    host.ideas["offline"]["state_error"] = LINE
-    pg, errors = _page(gui, host)
-    try:
-        _show_goal(pg)
-        _new_ideas(pg).filter(has_text="Offline mode").click()
-        line = pg.locator(".shell-preview .shell-error", has_text="is not signed in")
-        line.first.wait_for(timeout=WAIT_MS)
-        line.get_by_role("button", name="Sign in to Claude Code").click()
-        assert _sent(pg, host, ("tools.sign_in", {"harness": "claude"}))
-    finally:
-        pg.close()
-    assert not errors, "\n".join(errors)
-
-
-def test_an_error_line_of_another_failure_has_no_sign_in(gui):
-    host = StubHost()
-    host.sign_in = [entry(auto=False)]
-    host.ideas["offline"]["state_error"] = "Codex hit an error: the model is not available."
-    pg, errors = _page(gui, host)
-    try:
-        _show_goal(pg)
-        _new_ideas(pg).filter(has_text="Offline mode").click()
-        pg.locator(".shell-preview .shell-error", has_text="the model is not available").first.wait_for(timeout=WAIT_MS)
-        assert pg.locator(".shell-error").get_by_role("button", name="Sign in to Claude Code").count() == 0
-    finally:
-        pg.close()
-    assert not errors, "\n".join(errors)
-
-
 def test_the_need_is_a_stop_of_the_hand_with_sign_in(gui):
     host = StubHost()
     host.sign_in = [entry(auto=False, waiting=2)]
@@ -307,14 +275,18 @@ def test_the_need_is_a_stop_of_the_hand_with_sign_in(gui):
                            "at": "2026-10-20T01:00:00", "text": "Claude Code is not signed in, or its sign-in has expired.", "waiting": 2}]
     pg, errors = _page(gui, host)
     try:
-        _show_goal(pg)
-        stop = _stop(pg, "sign_in")
-        text = " ".join(stop.inner_text().split())
+        card = pg.locator('.hand-card[data-kind="sign_in"]')
+        card.wait_for(timeout=WAIT_MS)
+        card.click()                                                       # lifted with its answer (docs/specs/98-the-table-and-the-hand.md §4.4)
+        lifted = pg.locator(".hand-lifted[data-kind=\"sign_in\"]")
+        lifted.wait_for(timeout=WAIT_MS)
+        text = " ".join(lifted.inner_text().split())
         assert "Sign in" in text and "Claude Code" in text and "is not signed in, or its sign-in has expired" in text and "2 tasks wait for it" in text
-        stop.get_by_role("button", name="Sign in to Claude Code").click()
+        lifted.get_by_role("button", name="Sign in to Claude Code").click()
         assert _sent(pg, host, ("tools.sign_in", {"harness": "claude"}))
-        _show_goal(pg, "grow")                                           # it holds every party's work: it is in every party's hand
-        pg.locator('.arena-hand .arena-hc[data-kind="sign_in"]').wait_for(timeout=WAIT_MS)
+        pg.keyboard.press("Escape")
+        pg.locator(".table-tab").nth(1).click()                             # it holds every party's work: it is in every party's hand
+        pg.locator('.hand-card[data-kind="sign_in"]').wait_for(timeout=WAIT_MS)
     finally:
         pg.close()
     assert not errors, "\n".join(errors)

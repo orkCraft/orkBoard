@@ -1,6 +1,6 @@
 // What is left of your AI tools, and what used it (docs/specs/49-one-window.md §8, docs/specs/91-the-owners-list.md §2, decisions §107).
 //
-//   export function Limits({ provider })      — the panel a tool's chip opens in the top bar (shell/topbar.js): `<Limits provider=${id} />`
+//   export function Limits({ provider })      — the panel a tool's chip opens over the pane (table/tabs.js, table/over.js): `<Limits provider=${id} />`
 //   export function Usage({ provider, line })  — the same panel's body on its own: *What used it* for one tool
 //   export function tokensWords(n)             — "12k tokens"
 //
@@ -13,16 +13,30 @@
 // (its name, a thin meter, its share of the window) and under it a smaller row per member, then *Outside Orkboard*, and the line *Each share
 // is estimated: the limit read before and after, split by the tokens of each call.* It asks `ideas.usage {provider, scope}` when it is
 // shown (and again when the tool's % changes or the switch is pressed), keeps the last answer while it asks, and says in words when the
-// host cannot tell. With fewer than two reads the rows carry tokens and say so. The caller puts it inside the panel; it has no frame of its own
+// host cannot tell. With fewer than two reads the rows carry tokens and say so. The caller puts it inside the pane; it has no frame of its own
 // (`.arena-usage`, js/arena/limits.css) and the host's `ideas.usage` is the one place the shares come from (no model, realm/limit_usage.py).
 import { useEffect, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { ORKUI } from "../orkui.js";
 import { town, command } from "../link.js";
-import { resetWords } from "../shell/topbar.js";
 import { limitLine } from "./arenawords.js";
 
 const MARKED = ["claude", "codex", "agy", "cursor", "hermes", "pi"];
+
+export const WARN = 0.2, DANGER = 0.05;      // roles only: warning at 20 % or less left, danger at 5 % or less (docs/design-system.md)
+
+export const levelOf = (left) => (left <= DANGER ? "danger" : left <= WARN ? "warn" : "ok");
+
+/** "resets at 18:00", or with the day when it is not today. */
+export function resetWords(iso, now = new Date()) {
+  const d = new Date(iso);
+  if (!iso || Number.isNaN(d.getTime())) return "";
+  const hm = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false });
+  return d.toDateString() === now.toDateString() ? `resets at ${hm}` : `resets ${d.toLocaleDateString([], { weekday: "short" })} ${hm}`;
+}
+
+/** The window a chip names: the tightest row's (*5h*, *week*), "" with none. */
+export const windowOf = (l) => [...(l.rows || [])].sort((a, b) => a.left - b.left)[0]?.window || "";
 
 /** A count of tokens in words: *840 tokens*, *12k tokens*, *1.2M tokens*. */
 export function tokensWords(n) {

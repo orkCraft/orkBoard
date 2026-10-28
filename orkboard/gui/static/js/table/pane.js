@@ -8,7 +8,7 @@ import { Icon } from "../orkui.js";
 import { town } from "../link.js";
 import { ORKMASTER, closeOver, lifted, openOver, over, picked } from "../frame/state.js";
 import { KINDS, faceOf } from "../frame/kinds.js";
-import { mapData } from "../shell/store.js";
+import { mapData, leaving } from "../shell/store.js";
 import { leadsSystem, mapName, paneTitle } from "./data.js";
 import { BoardMap } from "./boardmap.js";
 import { Header } from "./header.js";
@@ -20,8 +20,10 @@ import { isForm } from "./over.js";
 
 /** ← or Esc: the map as it was left, the card the thing came from lit. */
 export function back() {
-  const key = closeOver();
-  if (key) litKey.value = key;
+  leaving(() => {                                                    // a file being edited asks first, in its editor
+    const key = closeOver();
+    if (key) litKey.value = key;
+  });
 }
 
 /** The back of the lifted card, by its key (card.js): [name, content], or null when what it was is gone. */

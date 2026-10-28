@@ -1,4 +1,4 @@
-"""The hand of the new window (docs/specs/98-the-table-and-the-hand.md §4–§6, part D), in a real browser against a stub host, the page opened with `?frame=1`, at the two widths of
+"""The hand of the new window (docs/specs/98-the-table-and-the-hand.md §4–§6, part D), in a real browser against a stub host, the window (the page, spec 98 E), at the two widths of
 `tests/narrow.py` (1280 × 800 and 390 × 844 with touch): the three places (the deck with the + card drawn off it, the stacks, the discard), the + card and the field it grows into
 (a press, a key typed, Enter, Shift+Enter, Esc, the address by the tab and by *@*, a pasted picture, the large card with no goal), the deck's seal and its row (a drag, a pick, *All · search*
 and the list), the stacks by goal (the urgent first, fanned, a card lifted with its answers and its cost's words, the cards of the table it is about rise), the discard (*n ready for main*, *To main*,
@@ -154,15 +154,15 @@ class HandHost(StubHost):
 
 
 def open_hand(gui, host=None, width="wide", errors=True):
-    """The page with `?frame=1` against the stub, at one of the two widths; waits for the hand."""
+    """The page against the stub, at one of the two widths; waits for the hand."""
     server, browser = gui
     host = host or HandHost()
     pg = narrow.page(browser, width)
     log: list[str] = []
     pg.on("pageerror", lambda e: log.append(f"pageerror: {e}"))
-    pg.on("console", lambda m: m.type == "error" and "/table/table.js" not in m.location.get("url", "") and log.append(f"console: {m.text} {m.location.get('url', '')}"))
+    pg.on("console", lambda m: m.type == "error" and log.append(f"console: {m.text} {m.location.get('url', '')}"))
     pg.route_web_socket("**/ws*", host.on_socket)
-    pg.goto(server.url + ("&" if "?" in server.url else "?") + "frame=1")
+    pg.goto(server.url)
     pg.wait_for_selector(".hand", state="attached", timeout=WAIT_MS)
     return pg, host, log
 
@@ -732,7 +732,7 @@ def test_a_card_leans_and_rises_under_the_pointer_and_nothing_moves_under_reduce
     ctx = browser.new_context(viewport={"width": 1280, "height": 800}, reduced_motion="reduce")
     pg = ctx.new_page()
     pg.route_web_socket("**/ws*", HandHost().on_socket)
-    pg.goto(server.url + ("&" if "?" in server.url else "?") + "frame=1")
+    pg.goto(server.url)
     try:
         card = pg.locator('.hand-card[data-goal="timer"]')
         card.wait_for(timeout=WAIT_MS)

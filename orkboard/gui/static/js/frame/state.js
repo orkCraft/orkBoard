@@ -3,12 +3,13 @@
 // nothing pinned), and the one card lifted on the table or in the hand. The seam the table (js/table/) and the hand (js/hand/)
 // share: written by the lead, changed by neither. Signals only; the open tab is kept per project on this device.
 import { signal } from "@preact/signals";
-import { currentProject } from "../shell/projects.js";
 
 export const ORKMASTER = "orkmaster";
 const TAB_KEPT = "orkboard.frame.tab";
 
-const projectKey = () => currentProject.value?.path || "";
+let projectKey = () => "";
+/** Says which project is shown (shell/projects.js `currentProject`): the tab is kept per project. A function, so this seam imports nothing. */
+export const keepTabsBy = (fn) => { projectKey = fn; };
 const keptTabs = () => { try { return JSON.parse(localStorage.getItem(TAB_KEPT)) || {}; } catch { return {}; } };
 
 export const tab = signal(keptTabs()[projectKey()] || ORKMASTER);   // "orkmaster" or a party's slug (the code's goal)
@@ -21,6 +22,10 @@ export function openTab(slug) {
   tab.value = slug || ORKMASTER;
   try { localStorage.setItem(TAB_KEPT, JSON.stringify({ ...keptTabs(), [projectKey()]: tab.value })); } catch { /* this run only */ }
 }
+
+/** The keys of a part of the System and of a link between two containers, lifted on the table (table/card.js `Lifted`). */
+export const partKey = (party, path) => `t:part:${party}:${path}`;
+export const linkKey = (party, key) => `t:link:${party}:${key}`;
 
 /** The tab kept for the project now shown (on a project switch). */
 export function restoreTab() { tab.value = keptTabs()[projectKey()] || ORKMASTER; }

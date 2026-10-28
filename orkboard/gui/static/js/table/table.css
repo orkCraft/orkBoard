@@ -124,11 +124,19 @@ button.table-token { position: relative; display: flex; flex-direction: column; 
 .table-projects__one .table-over__muted { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .table-projects__acts { display: flex; gap: var(--ork-3); margin: var(--ork-3) 0 0; }
 
-/* a form that was a dialog (Settings, Open a project…, New party, Edit the party, Remove party) lies in the pane: no backdrop, no frame of its own, its title the pane's */
+/* a form that was a dialog (Settings, Open a project…, New party, Edit the party, Remove party, Pair a phone, This week, the update) lies in the pane (frame/place.js `Place`): no backdrop, no frame of its own, its title the pane's,
+   its buttons pinned at its foot */
 .table-over--form { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
-.table-over--form .shell-backdrop { position: static; inset: auto; z-index: auto; flex: 1; min-height: 0; padding: 0; background: none; align-items: stretch; justify-content: stretch; }
-.table-over--form .shell-modal { flex: 1; width: 100%; max-width: none; max-height: none; min-height: 0; border: 0; clip-path: none; background: none; padding: var(--ork-4); }
-.table-over--form .shell-modal__head { display: none; }
+.place { flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; gap: var(--ork-5); padding: var(--ork-4); box-sizing: border-box; }
+.place__body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--ork-4); }
+.place__foot { flex: none; display: flex; gap: var(--ork-3); flex-wrap: wrap; align-items: center; justify-content: flex-end; padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame); }
+.place__left { margin-right: auto; }
+.place__text { margin: 0; }
+.place__refused { color: var(--ork-danger); }
+.shell-start .place { width: min(640px, 100%); text-align: left; }
+.table-projects__ask { display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-4); border: var(--ork-line) solid var(--ork-edge); }
+.table-projects__ask p { margin: 0; }
+.table-over__limits { display: flex; flex-direction: column; gap: var(--ork-4); max-width: 60ch; }
 
 /* -- the narrow width: under 760 px the tabs are heads, a column a head wide, what opens over the pane a screen ------------------------- */
 @media (max-width: 759px) {

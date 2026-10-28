@@ -4,95 +4,24 @@
    still draws the idea's sections, the cards and the plan; this file is the frame around them. */
 .shell { display: flex; flex-direction: column; height: 100vh; overflow: clip; background: var(--ork-canvas); color: var(--ork-ink); font: var(--ork-type-body); }
 .shell h2, .shell h3 { margin: 0; }
-.shell-h { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
-
-/* top bar */
-.shell-top { display: flex; align-items: center; gap: var(--ork-5); height: var(--ork-bar); padding: 0 var(--ork-4) var(--ork-line); box-sizing: border-box;
-  background: var(--ork-panel); border-bottom: var(--ork-line) solid var(--ork-frame); }
-@media (max-width: 899px) { .shell-top { flex-wrap: wrap; height: auto; min-height: var(--ork-bar); row-gap: var(--ork-2); padding-top: var(--ork-2); }
-  .shell-top .arena-pswitch { order: 10; flex: 1 1 100%; } }
-.shell-top__brand { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink); }
-.shell-top__spacer { flex: 1; }
-.shell-top__spend { all: unset; box-sizing: border-box; cursor: pointer; font-variant-numeric: tabular-nums; padding: 0 var(--ork-2); }
-.shell-top__spend:hover, .shell-top__spend:focus-visible { outline: 0; box-shadow: inset 0 0 0 var(--ork-line) var(--ork-edge); }
-/* the word beside the product's name: the button's face from orkUI, quiet */
-.shell-top__settings { height: var(--ork-control); }
 /* on the right, a chip for each AI tool (docs/specs/91-the-owners-list.md §1): its mark, name, share left, window; a press opens the panel under the chips */
-.shell-top__chips { position: relative; display: flex; align-items: center; gap: var(--ork-2); }
-.shell-top__chip { all: unset; box-sizing: border-box; cursor: pointer; display: inline-flex; align-items: center; gap: var(--ork-2); height: var(--ork-control); padding: 0 var(--ork-3); color: var(--ork-ink);
-  font: var(--ork-type-caption); font-variant-numeric: tabular-nums; white-space: nowrap; box-shadow: inset 0 0 0 var(--ork-line) var(--ork-frame); }
-.shell-top__chip b { font-weight: 600; }
-.shell-top__chip:hover { box-shadow: inset 0 0 0 var(--ork-line) var(--ork-edge); }
-.shell-top__chip:focus-visible, .shell-top__chip[aria-expanded="true"] { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
-.shell-top__chip .ork-mark { flex: none; }
-.shell-top__chipname, .shell-top__chipwin, .shell-top__chip.is-unread { color: var(--ork-ink-muted); }
-.shell-top__chip.is-warn b { color: var(--ork-warning); }
-.shell-top__chip.is-danger b { color: var(--ork-danger); }
-.shell-top__limits { position: absolute; top: calc(100% + var(--ork-3)); right: 0; z-index: 60; width: 312px; box-sizing: border-box; display: flex; flex-direction: column; gap: var(--ork-4);
-  padding: var(--ork-4) var(--ork-5); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-edge); }
 .week { display: flex; flex-direction: column; gap: var(--ork-3); }
 .week p { margin: 0; overflow-wrap: anywhere; }
-/* spec 49: the window is the arena (js/arena/arena.css); anything opened is the window's right column (docs/specs/90-what-the-first-look-said.md §2): docked at the pane's right,
-   max(480px, 34%) wide and at most 640 px, the pane narrowed by it, never covered; with nothing open there is none. Below 1 024 px there is no room for two: it takes the width. */
-.shell-main { position: relative; flex: 1; min-height: 0; display: flex; }
-.shell-drawer { position: relative; flex: none; width: clamp(480px, 34%, 640px); max-width: 100%; min-height: 0; box-sizing: border-box; display: flex; flex-direction: column;
-  background: var(--ork-panel); border-left: var(--ork-double) double var(--ork-edge); }
-.shell-drawer .shell-preview { flex: 1; min-height: 0; }
-@media (max-width: 1023px) { .shell-drawer { position: absolute; top: 0; right: 0; bottom: 0; z-index: 40; width: 100%; } }
 /* a toast stands at the page's foot, centred, above the hand (docs/specs/91-the-owners-list.md §4); with a dialog open the hand is under its backdrop and the toast is at the very foot, under the dialog (page.css);
    with the window's right column out it is centred over the pane, left of the column */
-body:has(.shell-main) .gui-toasts { bottom: calc(64px + var(--ork-4)); }
-body:has(.shell-backdrop, .gui-modal) .gui-toasts { bottom: var(--ork-6); }
-@media (min-width: 1024px) {
-  body:has(.shell-drawer) .gui-toasts { left: calc((100vw - clamp(480px, 34vw, 640px)) / 2); }
-}
-.shell-pane { min-height: 0; min-width: 0; display: flex; flex-direction: column; background: var(--ork-panel); }
-.shell-pane__head { display: flex; align-items: center; gap: var(--ork-3); padding: var(--ork-2) var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-frame); min-height: 40px; box-sizing: border-box; }
-.shell-pane__head h2 { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--ork-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
-.shell-pane__body { flex: 1; min-height: 0; overflow-y: auto; padding: var(--ork-5); display: flex; flex-direction: column; gap: var(--ork-5); }
-.shell-count { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: var(--ork-chip); margin-left: var(--ork-3); padding: 0 var(--ork-2);
-  box-sizing: border-box; border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); font: var(--ork-type-label); font-variant-numeric: tabular-nums;
-  text-transform: none; letter-spacing: 0; color: var(--ork-ink); }
 .shell-quiet { background: none; border: 0; padding: 0 var(--ork-2); color: var(--ork-ink-muted); cursor: pointer; font: inherit; text-decoration: underline; }
-
 /* the drawer's body */
-.shell-preview { flex: 1; min-height: 0; }
-.shell-pane { min-height: 0; min-width: 0; display: flex; flex-direction: column; background: var(--ork-panel); }
-.shell-pane__head { display: flex; align-items: center; gap: var(--ork-3); padding: var(--ork-2) var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-frame); min-height: 40px; box-sizing: border-box; }
-.shell-pane__head h2 { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--ork-3); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
-.shell-pane__body { flex: 1; min-height: 0; overflow-y: auto; padding: var(--ork-5); display: flex; flex-direction: column; gap: var(--ork-5); }
-.shell-count { display: inline-flex; align-items: center; justify-content: center; min-width: 16px; height: var(--ork-chip); margin-left: var(--ork-3); padding: 0 var(--ork-2);
-  box-sizing: border-box; border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); font: var(--ork-type-label); font-variant-numeric: tabular-nums;
-  text-transform: none; letter-spacing: 0; color: var(--ork-ink); }
 .shell-quiet { background: none; border: 0; padding: 0 var(--ork-2); color: var(--ork-ink-muted); cursor: pointer; font: inherit; text-decoration: underline; }
-
 /* the centre: the preview */
-.shell-centre { min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--ork-canvas); }
-.shell-preview { flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--ork-canvas); }
-.shell-preview__body { flex: 1; min-height: 0; overflow-y: auto; padding: var(--ork-5) var(--ork-6); }
-.shell-empty { height: 100%; display: grid; place-content: center; text-align: center; gap: var(--ork-4); color: var(--ork-ink-muted); }
-.shell-chip.is-done { color: var(--ork-ink-muted); }
-.shell-chip__what { display: flex; flex-direction: column; min-width: 0; }
-.shell-spin { display: inline-block; animation: shell-spin 1.6s linear infinite; }
-@keyframes shell-spin { to { transform: rotate(360deg); } }
-@media (prefers-reduced-motion: reduce) { .shell-spin { animation: none; } }
-.shell-done { align-self: stretch; color: var(--ork-ink-muted); }
-.shell-done summary { cursor: pointer; margin-bottom: var(--ork-4); }
-
 /* Review */
 .shell-menu__item { text-align: left; background: none; border: 0; color: var(--ork-ink); padding: 6px var(--ork-4); cursor: pointer; font: inherit; }
 .shell-menu__item:hover, .shell-menu__item:focus-visible { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); outline: none; }
-.shell-menu__new { display: flex; gap: var(--ork-2); padding: var(--ork-2); }
-.shell-round { color: var(--ork-alert); }
 .shell-facts { display: grid; grid-template-columns: max-content 1fr; gap: 2px var(--ork-5); margin: 0; }
 .shell-facts dt { color: var(--ork-ink-muted); }
 .shell-facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .shell-facts .is-success { color: var(--ork-success); }
 .shell-facts .is-danger { color: var(--ork-danger); }
 .shell-facts .is-muted { color: var(--ork-ink-muted); }
-.shell-conflict { margin: 0; }
 .shell-own-parties { display: flex; flex-direction: column; gap: var(--ork-3); margin: 0 0 var(--ork-5); }
 .shell-own-parties h3 { margin: 0; }
 .shell-own-chips { display: flex; flex-wrap: wrap; gap: var(--ork-4); }
@@ -107,12 +36,10 @@ body:has(.shell-backdrop, .gui-modal) .gui-toasts { bottom: var(--ork-6); }
 .shell-party-save { margin-top: var(--ork-3); }
 .shell-price { margin: var(--ork-4) 0 var(--ork-2); }
 .shell-hint { margin: 0 0 var(--ork-2); }
-.shell-cantake { flex: none; margin: 0 0 var(--ork-2); max-height: 2lh; overflow: hidden; }          /* spec 63 §2: two lines at most, the rest ends with *and k more* (party.js) */
+.shell-cantake { flex: none; margin: 0 0 var(--ork-2); max-height: 2lh; overflow: hidden; }
+/* spec 63 §2: two lines at most, the rest ends with *and k more* (party.js) */
 .shell-cantake__one { white-space: nowrap; }
 .shell-cantake__one .ork-sign { color: var(--ork-ink-muted); }
-.shell-party > summary { cursor: pointer; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
-.shell-party__lines { margin: var(--ork-2) 0 0; padding-left: var(--ork-5); }
-.shell-party__lines li { overflow-wrap: anywhere; }
 .shell-found { display: flex; flex-direction: column; gap: var(--ork-2); }
 .shell-found__sum { margin: 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .shell-found__list { margin: 0; padding-left: var(--ork-5); }
@@ -123,7 +50,6 @@ body:has(.shell-backdrop, .gui-modal) .gui-toasts { bottom: var(--ork-6); }
 .shell-actions__main .shell-quiet { margin-left: auto; }
 .shell-actions__why { margin: 0; font: var(--ork-type-caption); }
 .shell-actions__line { display: flex; gap: var(--ork-4); }
-
 /* the preview's own pieces */
 .shell-result { height: 100%; display: flex; flex-direction: column; min-height: 0; margin: calc(-1 * var(--ork-5)) calc(-1 * var(--ork-6)); }
 .shell-result__body { flex: 1; min-height: 0; overflow-y: auto; padding: var(--ork-5) var(--ork-6); display: flex; flex-direction: column; gap: var(--ork-4); }
@@ -141,52 +67,17 @@ body:has(.shell-backdrop, .gui-modal) .gui-toasts { bottom: var(--ork-6); }
 .shell-patch__line.is-hunk { color: var(--ork-ink-muted); }
 .shell-task { display: flex; flex-direction: column; gap: var(--ork-4); }
 .shell-brief { margin: 0; white-space: pre-wrap; }
-.board-plan__todo.is-target { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); padding: var(--ork-1) var(--ork-3); }
-.board-plan__line { flex-basis: 100%; color: var(--ork-ink); font-weight: 600; }
-.board-task__title { text-align: left; }
-
-/* spec 62 §6: the line under a spec's sections that says which of them changed since the plan, and The change over the plan while the leader's plan change waits */
-.board-changed { padding: var(--ork-3) var(--ork-4); border-left: 2px solid var(--ork-edge); background: var(--ork-panel); }
-.board-changed > p { flex: 1 1 240px; margin: 0; min-width: 0; overflow-wrap: anywhere; }
-.shell-change { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ork-3); width: 100%; box-sizing: border-box; }
-.shell-change > p { margin: 0; overflow-wrap: anywhere; }
-.shell-change__why { color: var(--ork-ink); }
-.shell-change__rows li { flex-wrap: nowrap; align-items: baseline; gap: var(--ork-3); }
-.shell-change__op { flex: none; min-width: 1ch; font-weight: 600; text-align: center; }
-.shell-change__title { min-width: 0; overflow-wrap: anywhere; }
-.shell-change__rows li[data-op="drop"] .shell-change__op, .shell-change__rows li[data-op="drop"] .shell-change__title { color: var(--ork-ink-muted); }
-.shell-change__rows li[data-op="drop"] .shell-change__title { text-decoration: line-through; }
-
 /* spec 34 §5: every dialog and menu on a dimmed backdrop, in an opaque panel (orkUI's dialog: a double frame, notched); on a
    narrow screen a sheet from the bottom */
-.shell-backdrop { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: var(--ork-6);
-  background: var(--ork-scrim); box-sizing: border-box; }
-.shell-modal { display: flex; flex-direction: column; gap: var(--ork-5); width: 460px; max-width: 100%; max-height: calc(100vh - 2 * var(--ork-6)); overflow: hidden; }
-.shell-modal:focus { outline: none; }
-.shell-modal.is-wide { width: 640px; }
-.shell-modal__head { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-4); }
-.shell-modal__head .ork-dialog__title { flex: 1; min-width: 0; margin: 0; }
-.shell-modal__x { flex: none; }
-.shell-modal__text { margin: 0; }
-.shell-modal__body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: var(--ork-4); }
-.shell-modal__foot { flex: none; display: flex; gap: var(--ork-3); flex-wrap: wrap; align-items: center; padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame);
-  justify-content: flex-end; }
-.shell-modal__left { margin-right: auto; }
-.shell-modal__sure { flex: 1; min-width: 0; }
-.shell-modal__refused { color: var(--ork-danger); }
 .shell-form { display: flex; flex-direction: column; gap: var(--ork-5); }
 .shell-field { display: flex; flex-direction: column; gap: var(--ork-2); }
 .shell-field .ork-field { width: 100%; box-sizing: border-box; }
 .shell-pick { display: flex; gap: var(--ork-3); align-items: center; }
 .shell-pick > .ork-field { flex: 1; min-width: 0; }
-.shell-rowfields { display: flex; gap: var(--ork-4); }
-.shell-rowfields .ork-field { flex: 1; min-width: 0; }
-.shell-rowfields .shell-rowfields__target { flex: 0 0 30%; }
 .shell-seg { display: inline-flex; border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); align-self: flex-start; }
 .shell-seg__one { padding: var(--ork-2) var(--ork-5); cursor: pointer; color: var(--ork-ink-muted); font: var(--ork-type-button); }
 .shell-seg__one.is-on { background: var(--ork-raised); color: var(--ork-ink); box-shadow: inset 0 -2px 0 var(--ork-ink); }
 .shell-seg__one:focus-within { box-shadow: inset 0 0 0 2px var(--ork-ink); }
-
 .shell-brief { white-space: pre-wrap; overflow-wrap: anywhere; padding: var(--ork-4); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame);
   font: var(--ork-type-body); }
 .shell-menu__list { display: flex; flex-direction: column; }
@@ -198,64 +89,21 @@ body:has(.shell-backdrop, .gui-modal) .gui-toasts { bottom: var(--ork-6); }
 .shell-pair .gui-phones__awake { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ork-3); }
 .shell-gear__logs { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-4); }
 .shell-gear__logs .ork-btn { text-decoration: none; }
-
 /* goals and priorities on the Board */
-.board-goal { display: flex; align-items: flex-start; gap: var(--ork-4); }
-.board-goal__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--ork-1); text-align: left; padding: var(--ork-3) var(--ork-4); background: var(--ork-panel);
-  color: var(--ork-ink); border: var(--ork-line) solid var(--ork-frame); clip-path: var(--ork-notch); cursor: pointer; font: inherit; }
-.board-goal.is-on .board-goal__main { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); }
-.board-goal__meta { display: flex; flex-wrap: wrap; gap: var(--ork-4); font: var(--ork-type-caption); }
-.board-goals__new { margin-left: auto; }
-.board-prio { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
-.board-prio[data-priority="high"] { color: var(--ork-alert); font-weight: 600; }
-.board-card-row { display: flex; flex-direction: column; gap: var(--ork-2); }
-.board-card__now { align-self: flex-start; }
-
-.shell-links { margin: 0; padding-left: 20px; }
-.shell-goal { display: flex; flex-direction: column; gap: var(--ork-5); }
-.shell-goal__head { display: flex; flex-direction: column; gap: var(--ork-1); }
-.shell-goal__head h2 { font: var(--ork-type-body); font-weight: 600; }
-.shell-goal__flags { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-2); }
-.shell-goal__flag { text-align: left; }
-.shell-goal__flagmark { color: var(--ork-success); display: inline-flex; }
-.shell-blank { display: flex; align-items: center; gap: var(--ork-4); }
-.shell-blank b { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
-
-@media (max-width: 640px) {
-  .shell-backdrop { align-items: flex-end; padding: 0; }
-  .shell-modal, .shell-modal.is-wide { width: 100%; }
-}
 .shell-field .board-link { align-self: flex-start; }
 .shell-chip__tag { flex: none; white-space: nowrap; font: var(--ork-type-caption); color: var(--ork-ink-muted); border: var(--ork-line) solid var(--ork-frame); padding: 0 var(--ork-2); }
-.shell-chip.is-held .shell-chip__state { text-transform: none; }
-.shell-spend { margin: 0 0 var(--ork-5); }
-.shell-takes { border: 0; padding: 0; margin: 0; display: flex; flex-direction: column; gap: var(--ork-2); }
-.shell-takes__row { display: flex; align-items: baseline; gap: var(--ork-4); }
-.shell-takes__row small { margin-left: auto; }
-
-/* spec 37 §8: the project switcher, the start screen, the Files pane, the Git section, the file in the preview */
-.shell-proj { position: relative; display: block; }      /* at the left column's top (spec 69 §1): the button as wide as the column, the name never cut under two lines, the menu over the board */
-.shell-proj__btn { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-3); width: 100%; height: auto; min-height: var(--ork-control); padding: var(--ork-3) var(--ork-4); text-align: left; white-space: normal; }
-.shell-proj__btn .ork-chev { flex: none; margin: 0; }
-.shell-proj__btn b { flex: 1; min-width: 0; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; font-weight: inherit; }
-.shell-proj__menu { position: absolute; top: 100%; left: 0; z-index: 40; min-width: 300px; display: flex; flex-direction: column; padding: var(--ork-2);
-  background: var(--ork-panel); border: var(--ork-double) double var(--ork-edge); }
-.shell-proj__head { padding: var(--ork-2) var(--ork-4); color: var(--ork-ink-muted); }
-.shell-proj__one { display: flex; justify-content: space-between; gap: var(--ork-5); }
-.shell-proj__one.is-on { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); }
-.shell-proj__counts { font: var(--ork-type-caption); white-space: nowrap; }
-.shell-proj__sep { height: 1px; background: var(--ork-frame); margin: var(--ork-2) 0; }
+/* at the left column's top (spec 69 §1): the button as wide as the column, the name never cut under two lines, the menu over the board */
 .shell-start { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--ork-5); padding: var(--ork-6); text-align: center; }
 .shell-start h1 { margin: 0; font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); }
 .shell-start__recent { text-align: left; min-width: 320px; }
 .shell-start__recent ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-2); }
 .shell-start__recent h2 { margin: 0 0 var(--ork-2); }
-
 .shell-files { display: flex; flex-direction: column; gap: var(--ork-5); }
 .shell-files__bar { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-4); }
 .shell-tree, .shell-tree__list { list-style: none; margin: 0; padding: 0; }
 .shell-tree__row { display: flex; align-items: baseline; gap: 4px; width: 100%; box-sizing: border-box; text-align: left; padding-top: 2px; padding-bottom: 2px; padding-right: var(--ork-4);
-  background: none; border: 0; color: var(--ork-ink); font: inherit; font-family: var(--ork-font-code); cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }      /* a file's name: the code face */
+  background: none; border: 0; color: var(--ork-ink); font: inherit; font-family: var(--ork-font-code); cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* a file's name: the code face */
 .shell-tree__row:hover, .shell-tree__row:focus-visible { background: var(--ork-raised); outline: none; }
 .shell-tree__row.is-on { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); font-weight: 600; }
 .shell-tree__row.is-secret { color: var(--ork-ink-muted); font-style: italic; }
@@ -271,9 +119,11 @@ body:has(.shell-backdrop, .gui-modal) .gui-toasts { bottom: var(--ork-6); }
 .shell-git__commit, .shell-git__sync { display: flex; gap: var(--ork-4); align-items: center; }
 .shell-git__commit .ork-field { flex: 1; min-width: 0; }
 .shell-file__bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: var(--ork-4); }
-.shell-md { max-width: 80ch; font: var(--ork-type-read); overflow-wrap: anywhere; }      /* a text read through: the reading face */
+.shell-md { max-width: 80ch; font: var(--ork-type-read); overflow-wrap: anywhere; }
+/* a text read through: the reading face */
 .shell-md h1, .shell-md h2, .shell-md h3 { margin: var(--ork-6) 0 var(--ork-4); }
-.shell-md h1, .shell-md h2, .shell-md h3 { font-family: var(--ork-font-read); font-weight: 600; }      /* a person's words: never the pixel face */
+.shell-md h1, .shell-md h2, .shell-md h3 { font-family: var(--ork-font-read); font-weight: 600; }
+/* a person's words: never the pixel face */
 .shell-md h1 { font-size: 20px; line-height: 28px; }
 .shell-md h2 { font-size: 17px; line-height: 24px; }
 .shell-md h3 { font-size: 15px; line-height: 22px; }
@@ -292,52 +142,9 @@ body:has(.shell-backdrop, .gui-modal) .gui-toasts { bottom: var(--ork-6); }
 .shell-edit__text { flex: 1; min-height: 240px; width: 100%; box-sizing: border-box; resize: none; padding: var(--ork-3) var(--ork-4); background: var(--ork-canvas); color: var(--ork-ink);
   border: var(--ork-line) solid var(--ork-edge); font: var(--ork-type-body); font-family: var(--ork-font-code); tab-size: 4; caret-shape: block; }
 .shell-edit__text:focus { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
-
-/* spec 39 §3, spec 49 §9: the drawer's tabs — a tab per thing opened, none pinned; the passing tab in italics; Close the drawer at the right */
-.shell-tabstrip { flex: none; display: flex; align-items: stretch; background: var(--ork-panel); border-bottom: var(--ork-line) solid var(--ork-frame); height: 32px; box-sizing: border-box; }
-.shell-tabstrip__tabs { flex: 1; min-width: 0; display: flex; align-items: stretch; overflow-x: auto; scrollbar-width: none; }
-.shell-tabstrip__tabs::-webkit-scrollbar { display: none; }
-.shell-ptab { flex: none; display: inline-flex; align-items: center; max-width: 280px; border-right: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink-muted); }
-.shell-ptab:hover { color: var(--ork-ink); }
-.shell-ptab.is-on { background: var(--ork-raised); color: var(--ork-ink); box-shadow: inset 0 -2px 0 var(--ork-ink); }
-.shell-ptab__main { flex: 1; min-width: 0; display: inline-flex; align-items: baseline; gap: 4px; padding: 0 var(--ork-3) 0 var(--ork-5); height: 100%; background: none; border: 0; color: inherit; font: inherit;
-  cursor: pointer; white-space: nowrap; align-items: center; }
-.shell-ptab__main:focus-visible, .shell-ptab__x:focus-visible, .shell-ptab__keep:focus-visible, .shell-drawer__x:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2px; }
-.shell-ptab__kind { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-faint); }
-.shell-ptab__title { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
-.shell-ptab.is-passing .shell-ptab__main { font-style: italic; }
-.shell-ptab__x, .shell-ptab__keep, .shell-drawer__x { flex: none; background: none; border: 0; color: var(--ork-ink-muted); font: inherit; cursor: pointer; padding: 0 var(--ork-4); }
-.shell-ptab__keep { font: var(--ork-type-caption); text-decoration: underline; padding: 0 var(--ork-2); }
-.shell-ptab__x:hover, .shell-ptab__keep:hover, .shell-drawer__x:hover { color: var(--ork-ink); background: var(--ork-raised); }
-.shell-drawer__x { display: inline-flex; align-items: center; justify-content: center; width: 32px; padding: 0; }
-
-/* decisions §53: who does a task, as orkUI draws it: the head of the craft's race in its tier's gear, its words beside it */
-.shell-role__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-1) var(--ork-4); }       /* a role in one line (spec 41 §8) */
-.shell-role__head > .shell-role__facts { flex: 1 0 100%; }
-.shell-role__many, .shell-role__usd { flex: none; font: var(--ork-type-caption); font-variant-numeric: tabular-nums; color: var(--ork-ink-muted); }
-.shell-role__usd { cursor: help; }
-.shell-chip .shell-chip__name { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: break-word; min-width: 0; }
-.shell-told { border: var(--ork-line) solid var(--ork-frame); padding: var(--ork-3) var(--ork-4); }
-.shell-told summary { cursor: pointer; }
-.shell-told__text { margin: var(--ork-3) 0 0; white-space: pre-wrap; color: var(--ork-ink-muted); }
-.shell-library { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
-.shell-library__row { display: grid; grid-template-columns: auto 1fr auto; column-gap: var(--ork-4); align-items: center; width: 100%; padding: var(--ork-3) 0; text-align: left;
-  background: none; border: 0; border-bottom: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink); cursor: pointer; font: inherit; }
-.shell-library__row:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
-.shell-library__row small { grid-column: 2; color: var(--ork-ink-muted); }
-.shell-chip > .ork-race__head { align-self: center; }
-.shell-agent__who { min-height: 24px; display: flex; align-items: center; }
-.board-tasks .ork-race, .shell-facts .ork-race { vertical-align: middle; }
-.board-stages__task > .ork-race__head { align-self: center; }
-.map-task > .ork-race__head { display: inline-block; margin-right: var(--ork-2); vertical-align: -1px; }
-.board-stages__task > .ork-race__head { display: inline-block; vertical-align: -1px; }
-
+/* a role in one line (spec 41 §8) */
+.shell-facts .ork-race { vertical-align: middle; }
 /* -- New goal in three steps (goalwizard.js): the steps, the craft's tiles, the team's seats and rows, as on the phone ------------- */
-.shell-steps { list-style: none; margin: 0 0 var(--ork-5); padding: 0; display: flex; gap: var(--ork-3); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); }
-.shell-steps li { flex: 1 1 0; padding-bottom: var(--ork-2); color: var(--ork-ink-faint); box-shadow: inset 0 -2px 0 var(--ork-frame); }
-.shell-steps li.is-done { color: var(--ork-ink-muted); box-shadow: inset 0 -2px 0 var(--ork-ink-muted); }
-.shell-steps li.is-on { color: var(--ork-ink); box-shadow: inset 0 -2px 0 var(--ork-ink); }
-.shell-craft-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--ork-4); }
 .shell-craft-tile { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: row; align-items: center; gap: var(--ork-4);
   padding: var(--ork-3) var(--ork-4); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); }
 .shell-craft-tile[aria-pressed="true"] { background: var(--ork-raised); box-shadow: inset 0 -2px 0 var(--ork-ink); }
@@ -345,69 +152,26 @@ body:has(.shell-backdrop, .gui-modal) .gui-toasts { bottom: var(--ork-6); }
 .shell-craft-tile b { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); }
 .shell-craft-tile:hover, .shell-team-row:hover { background: var(--ork-raised); }
 .shell-craft-tile:focus-visible, .shell-team-row:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
-.shell-craft-heads { display: inline-flex; gap: var(--ork-2); }
-.shell-library-group { display: flex; flex-direction: column; gap: var(--ork-3); margin-bottom: var(--ork-4); }
-.shell-library-group h3 { margin: 0; }
-.shell-library-alone { margin-bottom: var(--ork-4); }
-.shell-craft-tiles.is-mixed { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
 .shell-craft-tile.is-mixed { align-items: flex-start; }
 .shell-craft-tile__text { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; }
 .shell-team-seat.is-over { border-color: var(--ork-alert); }
 .shell-band-over { margin: 0; color: var(--ork-alert); font: var(--ork-type-status); }
-.shell-team-seats { display: flex; gap: var(--ork-3); }
 .shell-team-seat { width: 40px; height: 40px; display: inline-flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-edge); }
 .shell-team-seat.is-empty { border-style: dashed; border-color: var(--ork-frame); }
 .shell-team-seat.is-lead { background: var(--ork-raised); }
 .shell-party-band { display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-3) 0; border-top: var(--ork-line) solid var(--ork-edge); }
 .shell-band-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--ork-3); }
 .shell-band-head h3 { margin: 0; font: var(--ork-type-label); text-transform: var(--ork-type-label-case); }
-.shell-team-list { display: flex; flex-direction: column; }
 .shell-team-row { all: unset; box-sizing: border-box; cursor: pointer; width: 100%; display: grid; grid-template-columns: 24px 1fr 28px;
   grid-template-areas: "head name mark" "head line mark"; column-gap: var(--ork-4); align-items: center; padding: var(--ork-3) 0;
   border-bottom: var(--ork-line) solid var(--ork-frame); }
 .shell-team-row > img { grid-area: head; }
 .shell-team-row > b { grid-area: name; }
 .shell-team-row > small { grid-area: line; }
-.shell-team-mark { grid-area: mark; justify-self: end; color: var(--ork-ink-muted); }
-.shell-team-row[aria-pressed="true"] .shell-team-mark { color: var(--ork-action); }
-.shell-team-craft { margin: var(--ork-4) 0 0; font: var(--ork-type-label); text-transform: var(--ork-type-label-case); color: var(--ork-ink-muted); }
 .shell-check-badge { margin-left: var(--ork-2); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); color: var(--ork-ink-muted); }
 .shell-checks { display: flex; flex-direction: column; gap: var(--ork-3); margin-top: var(--ork-4); }
 .shell-check-row { display: grid; grid-template-columns: 12px 1fr auto; gap: var(--ork-3); align-items: center; }
 .shell-check-every { display: inline-flex; align-items: center; gap: var(--ork-2); white-space: nowrap; }
-.shell-goal__team { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-2); }
-/* A goal's verdict (goalview.js): the next ideas, each with Add as idea; the button that asks its leader to accept it. */
-.shell-goal__next { display: flex; flex-direction: column; gap: var(--ork-2); }
-.shell-goal__next-row { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-3); }
-.shell-goal__acts { display: flex; gap: var(--ork-3); }
-/* The lens of New idea (lens.js, lensscreen.js): a row of lenses, then the open one's pane. */
-.shell-lens, .shell-lens-pane, .shell-lens-screen { display: flex; flex-direction: column; gap: var(--ork-3); }
-.shell-lens-bar { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: var(--ork-2); }
-.shell-lens-chip { display: flex; flex-direction: column; align-items: center; gap: 0; min-width: 0; height: auto; padding-top: var(--ork-2); padding-bottom: var(--ork-2); }
-.shell-lens-chip small { font: var(--ork-type-caption); text-transform: none; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.shell-lens-chip[aria-checked="true"], .shell-lens-pick[aria-pressed="true"], .shell-lens-chips .ork-btn[aria-pressed="true"] {
-  --_bg: var(--ork-ink); --_fg: var(--ork-on-ink); --_bd: var(--ork-ink); }
-.shell-lens-chips, .shell-lens-screens { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
-.shell-lens-chips .ork-btn { font: var(--ork-type-body); text-transform: none; letter-spacing: normal; }   /* the person's own words */
-.shell-lens-parts { list-style: none; margin: 0; padding: 0; max-height: 260px; overflow-y: auto; border: var(--ork-line) solid var(--ork-edge); }
-.shell-lens-part { all: unset; box-sizing: border-box; width: 100%; cursor: pointer; display: flex; flex-direction: column; gap: var(--ork-1);
-  padding: var(--ork-2) var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-edge); }
-.shell-lens-part:hover { background: var(--ork-raised); }
-.shell-lens-part[aria-pressed="true"] { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-action); }
-.shell-lens-part.is-near { box-shadow: inset 2px 0 0 var(--ork-frame); }
-.shell-lens-part:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2px; }
-.shell-lens-part small { font: var(--ork-type-caption); }
-.shell-lens-stage { position: relative; align-self: flex-start; max-width: 100%; touch-action: none; user-select: none; cursor: crosshair;
-  border: var(--ork-line) solid var(--ork-edge); }
-.shell-lens-shot { display: block; max-width: 100%; max-height: 420px; width: auto; height: auto; pointer-events: none; }
-.shell-lens-mark { position: absolute; border: 2px solid var(--ork-alert); }
-.shell-lens-mark b { position: absolute; top: 0; left: 0; padding: 0 var(--ork-1); background: var(--ork-alert); color: var(--ork-canvas); font: var(--ork-type-caption); }
-.shell-lens-marks { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--ork-2); }
-.shell-lens-marks li { display: flex; align-items: center; gap: var(--ork-2); }
-.shell-lens-marks li input { flex: 1; min-width: 0; }
-.shell-pointed { display: flex; flex-direction: column; gap: var(--ork-1); }
-.shell-pointed p { margin: 0; }
-
 /* -- the drawer's Pick one (docs/specs/51-pick-one.md §6): its title and ask, the variants large, the note, and at the foot Take B and None of them -- */
 .shell-pickone__head { display: flex; flex-direction: column; gap: var(--ork-1); }
 .shell-pickone__head h2 { margin: 0; font: var(--ork-type-body); font-weight: 600; }
@@ -415,57 +179,15 @@ body:has(.shell-backdrop, .gui-modal) .gui-toasts { bottom: var(--ork-6); }
 .shell-pickone__ask { margin: 0; font: var(--ork-type-body); overflow-wrap: anywhere; }
 .shell-pickone__refused { margin: 0; }
 .shell-pickone__foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-4); }
-
 /* -- a pitch's screen (docs/specs/65-ideation.md §8): the four views side by side, the case against, the decision with its answer large; the views' and the
    Investor's words in the text face, the pixel face for the headings and the buttons only -- */
-.shell-pitch__views { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: var(--ork-4); }
-.shell-pitch__view { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; padding: var(--ork-4); background: var(--ork-panel); }
-.shell-pitch__view.is-off { opacity: 0.5; }
-.shell-pitch__who { display: flex; align-items: center; gap: var(--ork-3); margin: 0 0 var(--ork-2); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); }
-.shell-pitch__who .board-size { margin-left: auto; }
-.shell-pitch__list { margin: 0; padding-left: var(--ork-6); display: flex; flex-direction: column; gap: var(--ork-1); font: var(--ork-type-body); overflow-wrap: anywhere; }
-.shell-pitch__q { margin: var(--ork-2) 0 0; font: var(--ork-type-body); overflow-wrap: anywhere; }
-.shell-pitch__words { margin: 0; font: var(--ork-type-body); white-space: pre-wrap; overflow-wrap: anywhere; }
-.shell-pitch__kills { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-1); font: var(--ork-type-body); }
-.shell-pitch__kills .ork-sign { color: var(--ork-danger); }
-.shell-pitch__case, .shell-pitch__decision { display: flex; flex-direction: column; gap: var(--ork-2); }
-.shell-pitch__answer { margin: 0; font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); color: var(--ork-ink); }
-.shell-pitch__answer[data-answer="pass"] { color: var(--ork-ink-muted); }
-.shell-pitch__facts { margin-top: var(--ork-2); }
-.shell-pitch__after { margin: 0; }
-.shell-pitch__after .ork-sign { color: var(--ork-success); }
-.shell-pitch__acts, .shell-pitch__send { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3); }
-.shell-pitch__send select { width: auto; min-width: 160px; }
-.shell-pitch__edit { display: flex; flex-direction: column; gap: var(--ork-3); }
-.shell-pitch__pass input { flex: 1; min-width: 200px; }
 .shell-band-fixed { margin: var(--ork-2) 0 0; }
-
 /* -- The Orkmaster's proposals (proposals.js, docs/specs/75-parties-fitted-to-the-project.md §5): a card per proposal, its size a three-way switch of orkUI's buttons ----------------------- */
 .ork-switch { display: inline-flex; align-self: flex-start; gap: var(--ork-2); }
 .ork-switch .ork-btn { flex-direction: column; align-items: center; justify-content: center; gap: 0; height: auto; min-height: var(--ork-control); padding-top: var(--ork-2); padding-bottom: var(--ork-2); }
 .ork-switch .ork-btn[aria-checked="true"] { --_bg: var(--ork-ink); --_fg: var(--ork-on-ink); --_bd: var(--ork-ink); --_ring: var(--ork-on-ink); }
 .ork-switch__sub { font: var(--ork-type-caption); text-transform: none; letter-spacing: normal; white-space: nowrap; }
-.shell-props { display: flex; flex-direction: column; gap: var(--ork-5); }
-.shell-props__head { display: flex; align-items: center; gap: var(--ork-4); }
-.shell-props__who { display: flex; flex-direction: column; gap: var(--ork-1); min-width: 0; }
-.shell-props__title { margin: 0; font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); }
-.shell-props__title span { font: var(--ork-type-body); text-transform: none; }
-.shell-props__kind, .shell-props__unread { margin: 0; }
-.shell-props__ask { display: flex; align-items: flex-end; gap: var(--ork-4); }
-.shell-props__ask .shell-field { flex: 1; min-width: 0; }
-.shell-props__cards { display: flex; flex-direction: column; gap: var(--ork-4); }
-.shell-props__more { display: flex; }
-.shell-prop { display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4) var(--ork-5); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); }
-.shell-prop.is-asked { background: var(--ork-raised); box-shadow: inset 0 -2px 0 var(--ork-ink); }
-.shell-prop.is-have { border-color: var(--ork-frame); }
-.shell-prop.is-have .shell-prop__name, .shell-prop.is-have .shell-prop__line { color: var(--ork-ink-muted); }
-.shell-prop__top { display: flex; align-items: baseline; justify-content: space-between; gap: var(--ork-4); }
-.shell-prop__name { margin: 0; font: var(--ork-type-body); font-weight: 600; }      /* the Orkmaster's words: never the pixel face */
-.shell-prop__line, .shell-prop__why { margin: 0; }
-.shell-prop__foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2) var(--ork-4); }
-.shell-prop__heads { display: inline-flex; flex-wrap: wrap; gap: var(--ork-2); }
-.shell-prop__agents, .shell-prop__price { color: var(--ork-ink-muted); font-variant-numeric: tabular-nums; }
-.shell-prop__make { margin-left: auto; }
+/* the Orkmaster's words: never the pixel face */
 .shell-size__works { display: block; }
 .shell-size .ork-switch { margin-bottom: var(--ork-2); }
 .shell-size__moves { list-style: none; margin: var(--ork-2) 0 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-1); color: var(--ork-ink-muted); }
@@ -475,4 +197,8 @@ body:has(.shell-backdrop, .gui-modal) .gui-toasts { bottom: var(--ork-6); }
 .shell-size__heads { display: inline-flex; gap: var(--ork-1); }
 .shell-tool .ork-select { max-width: 360px; }
 .shell-tool__hint, .shell-tool__own { display: block; }
-.shell-prop .shell-tool { gap: var(--ork-1); }
+
+/* a question asked in the card it confirms (spec 98 §7): Drop this result?, Unsaved changes */
+.shell-actions__drop, .shell-edit__leave { display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4); box-sizing: border-box; border: var(--ork-line) solid var(--ork-edge); }
+.shell-actions__drop p, .shell-edit__leave p { margin: 0; }
+.shell-switch { gap: var(--ork-3); padding-top: var(--ork-3); }

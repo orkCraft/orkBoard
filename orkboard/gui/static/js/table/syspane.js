@@ -1,28 +1,17 @@
 // Tech's map: the System as read today (docs/specs/98-the-table-and-the-hand.md §3.4), `arena/systemarch.js`'s `Lens` as it is, inside the pane — its containers, their links, the parts in layers, the reveal of what
-// changed. *Feature modules* is gone from the tabs: one map a tab. What today's System does on a press (a part or a link opened in the old drawer) is the table's now: a press on a part or a link is
-// caught here and lifts that card where it lies and turns it over (card.js `Lifted`); its back is today's part pane (`PartView`, `LinkView`) with **Open** on it. The old modules are imported, never changed.
+// changed. *Feature modules* is gone from the tabs: one map a tab. A press on a part or a link lifts that card where it lies and turns it over (arena/systemmap.js `openPart`, arena/systemarch.js; card.js `Lifted`); its back is today's part pane (`PartView`, `LinkView`) with **Open** on it.
 import { useEffect, useState } from "preact/hooks";
 import { html } from "../html.js";
 import { command } from "../link.js";
-import { lift, lifted, openOver, pick } from "../frame/state.js";
+import { lift, openOver, pick, partKey } from "../frame/state.js";
 import { Lens, LinkView } from "../arena/systemarch.js";
 import { PartView, useSystem, shownSys } from "../arena/systemmap.js";
-import { litKey, partKey, linkKey } from "./card.js";
 
-/** The System of a party the Architect leads. A press on a part or on a link's name lifts its card (the old drawer is not drawn in the window as two parts). */
+/** The System of a party the Architect leads. */
 export function SystemPane({ g }) {
   const sys = useSystem(true, g.slug);
-  const caught = (e) => {
-    const part = e.target.closest?.(".sys-part[data-part]"), link = e.target.closest?.(".arch-link[data-link]");
-    const to = part ? partKey(g.slug, part.dataset.part) : link ? linkKey(g.slug, link.dataset.link) : "";
-    if (!to) return;
-    e.stopPropagation();                                                     // the old modules would open it in the drawer
-    e.preventDefault();
-    litKey.value = "";
-    lift(lifted.value === to ? "" : to);
-  };
   if (sys.none) return html`<div class="table-sys" data-state="none"></div>`;
-  return html`<div class="table-sys" onClickCapture=${caught}><${Lens} sys=${sys} party=${g.slug} tab="system" /></div>`;
+  return html`<div class="table-sys"><${Lens} sys=${sys} party=${g.slug} tab="system" /></div>`;
 }
 
 /** The back of a part of the System: today's part pane (its files, *Uses*, *Used by*, its changes since the last look and their goals), **Open** on it. What is pressed inside it is the table's:

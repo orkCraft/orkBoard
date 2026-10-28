@@ -1,12 +1,10 @@
 /* New party and Edit the party in two halves (docs/specs/91-the-owners-list.md §7, decisions §107.5), in orkUI's office look: its tokens only, no colour, font or corner of its own.
    Left, the presets (partypresets.js); right, the name, the size bar and the bands of seats (partyform.js, partyseats.js), a seat's AI tool and a free seat's list as popovers (seattool.js, partypop.js).
    Loaded after shell.css (js/shell/shell.js), whose `.shell-craft-tile`, `.shell-team-row` and `.shell-party-band` it builds on. The pixel face is for a preset's name and the buttons. */
-.shell-modal.is-xl { width: 1200px; height: min(900px, calc(100vh - 2 * var(--ork-6))); }
 .shell-p91 { display: grid; grid-template-columns: 372px minmax(0, 1fr); gap: var(--ork-6); align-items: start; }
 .shell-p91__team { display: flex; flex-direction: column; gap: var(--ork-5); min-width: 0; }
 .shell-p91__names { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ork-5); }
 .shell-p91__foot { flex: 1 1 240px; min-width: 0; }
-
 /* the presets */
 .shell-presets { display: flex; flex-direction: column; gap: var(--ork-5); min-width: 0; }
 .shell-presets__group { display: flex; flex-direction: column; gap: var(--ork-3); }
@@ -21,7 +19,6 @@
 .shell-presets .shell-preset small { font: var(--ork-type-caption); }
 .shell-presets .shell-preset.is-compact { padding: var(--ork-3) var(--ork-4); }
 .shell-presets .shell-preset.is-compact small { display: none; }
-
 /* the recurring goals a running party proposes (spec 92) */
 .shell-routines { display: flex; flex-direction: column; gap: var(--ork-3); }
 .shell-routines h3 { margin: 0; }
@@ -30,14 +27,12 @@
 .shell-routine.is-on { background: var(--ork-raised); }
 .shell-routine input { margin-top: var(--ork-1); flex: none; }
 .shell-routine__text { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: var(--ork-4); min-width: 0; }
-
 /* the size bar */
 .shell-sizebar { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: var(--ork-5); }
 .shell-sizebar__size { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; flex: 1 1 360px; }
 .shell-sizebar__size .ork-switch { align-self: flex-start; }
 .shell-sizebar .shell-tool { flex: 0 1 260px; }
 .shell-size__note { margin: 0; }
-
 /* the bands and their seats */
 .shell-bands { display: flex; flex-direction: column; }
 .shell-band .shell-band-head { align-items: baseline; flex-wrap: wrap; justify-content: flex-start; column-gap: var(--ork-4); }
@@ -47,7 +42,8 @@
   border: var(--ork-line) solid var(--ork-frame); }
 .shell-seat.is-lead { background: var(--ork-raised); }
 .shell-seat .shell-team-seat { width: auto; height: auto; border: 0; background: none; }
-.shell-seat .shell-team-seat.is-over { border: var(--ork-line) solid var(--ork-alert); }          /* a member past the leader's seats (a party made before) */
+.shell-seat .shell-team-seat.is-over { border: var(--ork-line) solid var(--ork-alert); }
+/* a member past the leader's seats (a party made before) */
 .shell-seat__who { display: flex; flex-direction: column; min-width: 0; }
 .shell-seat__who b { font-weight: 600; }
 .shell-seat__who small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -60,7 +56,6 @@
 .shell-seat.is-empty:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
 .shell-seat.is-empty .shell-team-seat { width: 24px; height: 22px; border: var(--ork-line) dashed var(--ork-frame); }
 .shell-seat__add { display: inline-flex; align-items: center; gap: var(--ork-3); font: var(--ork-type-button); }
-
 /* a seat's AI tool and the lists under a seat */
 .shell-seat__tool { position: relative; }
 .shell-seat__toolbtn { display: inline-flex; align-items: center; gap: var(--ork-3); max-width: 250px; }
@@ -84,12 +79,10 @@
 .shell-pop__foot { padding-top: var(--ork-3); border-top: var(--ork-line) solid var(--ork-frame); }
 .shell-pop .shell-team-row { grid-template-columns: 24px 1fr auto; grid-template-areas: "head name chip" "head line chip"; padding: var(--ork-3); border-bottom: 0; }
 .shell-pop .shell-team-row .shell-seat__needs { grid-area: chip; }
-
 @media (max-width: 960px) {
-  .shell-p91 { grid-template-columns: 1fr; }
-  .shell-p91__names { grid-template-columns: 1fr; }
-  .shell-modal.is-xl { width: 100%; height: auto; }
-  .shell-seat { grid-template-columns: 30px minmax(0, 1fr) auto; row-gap: var(--ork-3); }
-  .shell-seat__who { grid-column: 2 / -1; }
-  .shell-pop--tools { right: auto; left: 0; }
+.shell-p91 { grid-template-columns: 1fr; }
+.shell-p91__names { grid-template-columns: 1fr; }
+.shell-seat { grid-template-columns: 30px minmax(0, 1fr) auto; row-gap: var(--ork-3); }
+.shell-seat__who { grid-column: 2 / -1; }
+.shell-pop--tools { right: auto; left: 0; }
 }

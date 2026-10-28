@@ -1,13 +1,12 @@
-// The projects (docs/specs/37-board-and-line.md §8, docs/specs/69-parties-in-the-column.md §1): the switcher that heads the left column, as wide as it (it was the top bar's; the open projects with one mark each,
-// Recent, Open folder…, Close project), the Open folder dialog, the start screen when no project is open, and the dialog
-// that asks before a project with running tasks is closed. The host sends `projects` with every snapshot (projects.list),
-// so the marks are live; showing another project stops nothing in the others.
+// The projects (docs/specs/37-board-and-line.md §8, docs/specs/98-the-table-and-the-hand.md §3.1, §7): what the projects are (the host sends `projects` with every snapshot, projects.list, so the marks are live; showing another
+// project stops nothing in the others), the Open folder place over the pane (its form, and *Start git here?* for a folder with none), and the start screen when no project is open (its form lies in the pane too).
+// The question before a project with running tasks is closed lies in the projects' place (table/over.js), in the card it confirms.
 import { useEffect, useRef, useState } from "preact/hooks";
-import { computed } from "@preact/signals";
-import { html, cls } from "../html.js";
-import { Chev, Sign } from "../orkui.js";
+import { computed, signal } from "@preact/signals";
+import { html } from "../html.js";
 import { town, command, toast } from "../link.js";
-import { Modal, closeDialog, openDialog } from "./modals.js";
+import { Place, closePlace } from "../frame/place.js";
+import { keepTabsBy } from "../frame/state.js";
 import { leaving } from "./store.js";
 
 export const projectList = computed(() => town.value?.projects || { current: null, open: [], recent: [] });
@@ -17,14 +16,10 @@ export const currentProject = computed(() => {
   const p = projectList.value;
   return p.open.find((o) => o.path === p.current) || null;
 });
+keepTabsBy(() => currentProject.value?.path || "");       // the open tab is kept per project (frame/state.js)
 /** An open project's one mark in the switcher (spec 87 §6), never a count: orkUI's alert sign when something of it waits for the person (`needs_you`), else the busy mark while a task of it is at work
  *  (`working`), else nothing. */
 export const projectMark = (p) => (p.needs_you > 0 ? "alert" : p.working > 0 ? "busy" : "");
-const Mark = ({ p }) => {
-  const mark = projectMark(p);
-  return mark === "alert" ? html`<span class="shell-proj__counts ok-tone-fire" role="img" aria-label="waits for you" data-mark="alert"><${Sign} name="alert" /></span>`
-    : mark === "busy" ? html`<span class="shell-proj__counts" role="img" aria-label="at work" data-mark="busy"><span class="ork-busy"></span></span>` : null;
-};
 
 /** Open a folder: a refusal comes back in words (the dialog shows it); a folder without git is offered Start git here. */
 export async function openFolder(path) {
@@ -37,13 +32,12 @@ export function showProject(path) {
   return leaving(() => command("projects.use", { path }).catch(() => {}));
 }
 
+/** Closes a project; with tasks running in it the host refuses and says how many: `{path, name, running}` for the question that asks to stop them (`stop`: they are stopped), else null. */
 export async function closeProject(path, stop = false) {
   let got;
-  try { got = await command("projects.close", { path, ...(stop ? { stop: true } : {}) }); } catch { return; }
-  if (got?.running) {
-    const name = projectList.value.open.find((o) => o.path === path)?.name || "the project";
-    openDialog("close-project", { path, name, running: got.running });
-  }
+  try { got = await command("projects.close", { path, ...(stop ? { stop: true } : {}) }); } catch { return null; }
+  if (!got?.running) return null;
+  return { path, name: projectList.value.open.find((o) => o.path === path)?.name || "the project", running: got.running };
 }
 
 export async function startGit(path) {
@@ -71,7 +65,8 @@ export async function chooseFolder(start, alive) {
   return { state: "none" };
 }
 
-export function OpenFolderDialog() {
+/** Open folder, a place over the pane (`onClose`: where Cancel and Esc go; ←, by default). */
+export function OpenFolderPlace({ onClose = closePlace }) {
   const [path, setPath] = useState("");
   const [why, setWhy] = useState("");
   const [busy, setBusy] = useState(false);
@@ -87,7 +82,7 @@ export function OpenFolderDialog() {
     setBusy(false);
     if (!got.ok) { if (got.error) setWhy(got.error); return; }
     if (got.git === false) { setNogit(p.trim()); return; }
-    closeDialog();
+    onClose();
   };
   // As an IDE's Open Folder: the system's dialog at once (quiet when there is none here), Choose… to open it again;
   // the folder chosen opens, and the path can still be typed or a recent one taken.
@@ -103,15 +98,15 @@ export function OpenFolderDialog() {
   };
   useEffect(() => { choose(true); return () => { alive.current = false; }; }, []);
   if (nogit) {
-    return html`<${Modal} title="Start git here?" onClose=${closeDialog}
-      foot=${html`<button type="button" class="ork-btn" onClick=${closeDialog}>Not now</button>
-        <button type="button" class="ork-btn primary" onClick=${async () => { if (await startGit(nogit)) closeDialog(); }}>Start git here</button>`}>
+    return html`<${Place} title="Start git here?" onClose=${onClose}
+      foot=${html`<button type="button" class="ork-btn" onClick=${onClose}>Not now</button>
+        <button type="button" class="ork-btn primary" onClick=${async () => { if (await startGit(nogit)) onClose(); }}>Start git here</button>`}>
       <p>This folder has no git. The Board works on a repository, so its tasks need one.</p>
       <p class="ok-font-status ok-tone-muted">Start git here makes a first commit of the folder's files as they are, and changes nothing else.</p>
     <//>`;
   }
-  return html`<${Modal} title="Open folder" onClose=${closeDialog}
-    foot=${html`<button type="button" class="ork-btn" onClick=${closeDialog}>Cancel</button>
+  return html`<${Place} title="Open folder" onClose=${onClose}
+    foot=${html`<button type="button" class="ork-btn" onClick=${onClose}>Cancel</button>
       <button type="submit" form="open-folder-form" class="ork-btn primary" disabled=${!path.trim() || busy}>Open folder</button>`}>
     <form id="open-folder-form" class="shell-form" onSubmit=${go}>
       <div class="shell-field"><label class="ok-font-label" for="open-folder-path">Folder</label>
@@ -128,58 +123,19 @@ export function OpenFolderDialog() {
   <//>`;
 }
 
-export function CloseProjectDialog({ path, name, running }) {
-  const [busy, setBusy] = useState(false);
-  return html`<${Modal} title="Close project" onClose=${closeDialog}
-    foot=${html`<button type="button" class="ork-btn" onClick=${closeDialog}>Keep it open</button>
-      <button type="button" class="ork-btn danger" disabled=${busy} onClick=${async () => { setBusy(true); await closeProject(path, true); closeDialog(); }}>Stop them and close</button>`}>
-    <p>${running} task${running === 1 ? " is" : "s are"} running in ${name}.</p>
-    <p class="ok-font-status ok-tone-muted">Stopping them ends their work; what they wrote so far stays in their branches.</p>
-  <//>`;
-}
+/** The start screen's form is out (Open folder…, Ctrl+O). */
+export const startForm = signal(false);
 
-export function ProjectSwitcher() {
-  const [open, setOpen] = useState(false);
-  const box = useRef();
-  const p = projectList.value, cur = currentProject.value;
-  useEffect(() => {
-    if (!open) return undefined;
-    const away = (e) => { if (box.current && !box.current.contains(e.target)) setOpen(false); };
-    const key = (e) => { if (e.key === "Escape") { setOpen(false); box.current?.querySelector("button")?.focus(); } };
-    window.addEventListener("mousedown", away);
-    window.addEventListener("keydown", key);
-    return () => { window.removeEventListener("mousedown", away); window.removeEventListener("keydown", key); };
-  }, [open]);
-  const pick = (fn) => () => { setOpen(false); fn(); };
-  if (!projectsOn.value) return null;
-  return html`<span class="shell-proj" ref=${box}>
-    <button class="ork-btn shell-proj__btn" aria-haspopup="menu" aria-expanded=${open} title=${cur?.path || ""}
-      onClick=${() => setOpen(!open)}><b>${cur ? cur.name : "No project"}</b><${Chev} /></button>
-    ${open && html`<div class="shell-proj__menu" role="menu" aria-label="Projects">
-      ${p.open.length > 0 && html`<div class="shell-proj__head ok-font-label">Open projects</div>`}
-      ${p.open.map((o) => html`<button key=${o.path} role="menuitem" class=${cls("shell-menu__item shell-proj__one", { "is-on": o.path === p.current })}
-        data-path=${o.path} title=${o.path} onClick=${pick(() => (o.path === p.current ? null : showProject(o.path)))}>
-        <span class="shell-proj__name">${o.path === p.current ? "✓ " : ""}${o.name}</span>
-        <${Mark} p=${o} /></button>`)}
-      ${p.recent.length > 0 && html`<div class="shell-proj__head ok-font-label">Recent</div>`}
-      ${p.recent.map((r) => html`<button key=${r.path} role="menuitem" class="shell-menu__item" title=${r.path}
-        onClick=${pick(() => leaving(() => openFolder(r.path)))}>${r.name}</button>`)}
-      <div class="shell-proj__sep"></div>
-      <button role="menuitem" class="shell-menu__item" onClick=${pick(() => openDialog("open-folder"))}>Open folder… <span class="ok-tone-muted">Ctrl+O</span></button>
-      ${cur && html`<button role="menuitem" class="shell-menu__item" onClick=${pick(() => leaving(() => closeProject(cur.path)))}>Close project</button>`}
-    </div>`}
-  </span>`;
-}
-
-/** No project is open: Open folder… and the recent ones. */
+/** No project is open: Open folder… and the recent ones, drawn in the pane. */
 export function StartScreen() {
   const recent = projectList.value.recent;
   return html`<main class="shell-start" aria-label="Start">
     <h1>Open a project</h1>
     <p class="ok-tone-muted">A project is a repository's folder. Its parties, goals and tasks are kept in it.</p>
-    <p><button class="ork-btn primary" onClick=${() => openDialog("open-folder")}>Open folder…</button>
-      <span class="ok-tone-muted"> Ctrl+O</span></p>
-    ${recent.length > 0 && html`<section class="shell-start__recent" aria-label="Recent"><h2 class="ok-font-label">Recent</h2>
+    ${startForm.value ? html`<${OpenFolderPlace} onClose=${() => { startForm.value = false; }} />`
+      : html`<p><button class="ork-btn primary" onClick=${() => { startForm.value = true; }}>Open folder…</button>
+        <span class="ok-tone-muted"> Ctrl+O</span></p>`}
+    ${recent.length > 0 && !startForm.value && html`<section class="shell-start__recent" aria-label="Recent"><h2 class="ok-font-label">Recent</h2>
       <ul>${recent.map((r) => html`<li key=${r.path}><button class="board-link" title=${r.path} onClick=${() => openFolder(r.path)}>${r.name}</button>
         <span class="ok-font-status ok-tone-muted">${r.path}</span></li>`)}</ul></section>`}
   </main>`;

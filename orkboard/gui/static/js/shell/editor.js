@@ -1,11 +1,10 @@
 // The editor (docs/specs/37-board-and-line.md §8): a plain monospace text area for a Markdown or text file. Ctrl+S / ⌘S
-// saves; leaving with changes asks (the shell's `leaving`); a save the host refuses says why in words — the file changed
+// saves; leaving with changes asks, in the editor itself (the shell's `leaving`, `leaveAsk`); a save the host refuses says why in words — the file changed
 // on disk since it was read (*changed on disk: reload*), it leaves the project, it is a Board page.
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html } from "../html.js";
 import { command, copyText } from "../link.js";
-import { editing } from "./store.js";
-import { Modal, closeDialog } from "./modals.js";
+import { editing, leaveAsk } from "./store.js";
 
 const CHANGED = "changed on disk: reload";
 
@@ -51,6 +50,7 @@ export function Editor({ file, onSaved, onCancel, onReload }) {
       <button class="ork-btn" onClick=${onCancel}>Cancel</button>
       ${dirty && html`<span class="ok-font-status ok-tone-muted">Unsaved changes</span>`}
     </div>
+    ${leaveAsk.value && html`<${LeaveAsk} />`}
     ${why && html`<div class="shell-edit__why ok-tone-error" role="alert"><span>${why}</span>
       ${why === CHANGED && html`<button class="ork-btn" onClick=${onReload}>Reload</button>
         <button class="ork-btn" onClick=${() => copyText(text)}>Copy my text</button>`}</div>`}
@@ -59,19 +59,20 @@ export function Editor({ file, onSaved, onCancel, onReload }) {
   </div>`;
 }
 
-/** Asked when the person leaves a file with unsaved changes (`leaving` in shell/store.js). */
-export function LeaveDialog({ then }) {
+/** Asked in the editor when the person leaves a file with unsaved changes (`leaving` in shell/store.js): the card it confirms. */
+function LeaveAsk() {
   const [busy, setBusy] = useState(false);
-  const file = editing.value;
-  return html`<${Modal} title="Unsaved changes" onClose=${closeDialog}
-    foot=${html`<button type="button" class="ork-btn" onClick=${closeDialog}>Keep editing</button>
-      <button type="button" class="ork-btn danger" disabled=${busy} onClick=${() => { editing.value = null; closeDialog(); then(); }}>Discard changes</button>
+  const file = editing.value, then = leaveAsk.value?.then;
+  const go = () => { leaveAsk.value = null; editing.value = null; then?.(); };
+  return html`<div class="shell-edit__leave" role="group" aria-label="Unsaved changes">
+    <p><b>Unsaved changes.</b> ${file?.path || "This file"} has changes you have not saved.</p>
+    <div class="shell-actions__main"><button type="button" class="ork-btn" onClick=${() => { leaveAsk.value = null; }}>Keep editing</button>
+      <button type="button" class="ork-btn danger" disabled=${busy} onClick=${go}>Discard changes</button>
       <button type="button" class="ork-btn primary" disabled=${busy} onClick=${async () => {
         setBusy(true);
         const ok = await file?.save();
         setBusy(false);
-        if (ok) { editing.value = null; closeDialog(); then(); } else closeDialog();
-      }}>Save and leave</button>`}>
-    <p>${file?.path || "This file"} has changes you have not saved.</p>
-  <//>`;
+        if (ok) go(); else leaveAsk.value = null;
+      }}>Save and leave</button></div>
+  </div>`;
 }

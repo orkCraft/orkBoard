@@ -247,3 +247,17 @@ Kinds drawn: `file`, `diff`, `log`, `task`, `role`, `settings`, `projects`, `fil
 - **Left for E:** `shell/preview.js`'s `Task` and `Result` views exported (C keeps a copy, `TaskFace`); the presses that still set the
   old drawer's state (`GoalEdit`'s `showGoal` after Save and the like); *Pair a phone* still a dialog; the history in the Orkmaster's
   **…** (S6).
+
+## As built (E)
+
+`shell/shell.js` draws the frame (`frame/frame.js`: `Table` over `Hand`, imported directly) as the page's only window, with the start screen (no project) in a pane of its own and the sign-in page as it was. Gone: the top bar, the
+left column and the old arena (`arena/arena.js` and everything only it imported: the goals, party lines, route, pitches, project rows, assets, stops' fan, stacks, spread, flags, members, field), the drawer (`shell/preview.js` keeps
+`Task` and `spendWords`; `shell/tabs.js`, `goalview.js`, `pitchview.js`, `ideadialog.js`, the lenses, `look.js` and the cards *While you were away* / *Last week*), `shell/modals.js`, `shell/dialogs.js`, `table/places.js`, and the sheets
+`arena/{column,glance,look,rows,assets}.css` (the rest of the sheets pruned to the classes still drawn); `shell/store.js` is the window's data only (no tabs, no preview, no drawer state).
+- **Where each dialog went.** `frame/place.js` `Place` (title, body, buttons at the foot; Esc and ← go back; nothing dims the window) is the form of what was a `Modal`: Settings, Open a project…, New party, Edit the party, Remove party,
+  Pair a phone (kind `pair`), the update's offer (kind `update`, asked once per version when nothing else is open over the pane), *This week* (kind `week`, from *Spend today · This week's work* under a tool's limits). A confirmation lies in the card
+  it confirms: *Drop this result?* in `ResultActions`, *Close project* (tasks running) in the projects' place, *Switch branch* in the Git section, *Unsaved changes* in the editor (`leaveAsk`; ← and project switches ask it). A stop's *Open…* (questions,
+  to-do) draws its form in the stop over the pane (`hand/askform.js`, `hand/todoform.js`); *Edit the party* from a card opens the form over the pane. New party saved opens its tab. *New goal* by type, the lenses and *What waits for it* went with the old window.
+- **Keyboard.** Esc: the table lowers a lifted card of its own, the hand its own, else back from what is over the pane (`defaultPrevented` convention), else `shell.js` picks none; Ctrl/⌘+O opens the projects over the pane (the start screen's form with no project).
+- **Left out, said:** the cards *While you were away* and *Last week* (`look.js`) and *Feature modules* stay out with the old window (spec 98 §3.4, S6); Result's `Result` view of the drawer was not exported (hand/resultface.js's copy stays, it is the hand's). Tests: the desktop tests of the removed faces are removed; `tests/test_shell_browser.py` keeps
+  only the stub host and helpers the phone's tests import; `tests/test_window_desktop_browser.py` is E's.

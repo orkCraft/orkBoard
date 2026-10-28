@@ -14,7 +14,8 @@ import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
 import { Chev, Elem } from "../orkui.js";
 import { command, town } from "../link.js";
-import { closePreview, mapData, preview, show, showIdea } from "../shell/store.js";
+import { mapData } from "../shell/store.js";
+import { lift, lifted, lower, partKey, pick as pickGoal } from "../frame/state.js";
 import { reducedMotion } from "./motion.js";
 import { ArrowLines, across, fine } from "./arrows.js";
 
@@ -232,8 +233,11 @@ const Parts = ({ list, names, onPart }) => html`<ul class="sys-side__list">${lis
 /** What the System shown last read (`{doc, look, party}`): a part opened in the right column names its uses by it and says its changes since the same look. */
 export const shownSys = signal(null);
 
-/** A part opens in the right column (spec 90 §2, a tab `{kind: "part", path, slug: <its party>}`). */
-export const openPart = (path, party, name) => show({ kind: "part", path, slug: party, title: name || path.split("/").pop() || path }, { via: "map" });
+/** A part is lifted where it lies and turned over (docs/specs/98-the-table-and-the-hand.md §3.5; the table's `Lifted`, its back this file's `PartView`). */
+export const openPart = (path, party) => lift(partKey(party, path));
+
+/** The path of the part of `party` that is lifted, "" for none. */
+export const liftedPart = (party) => { const k = lifted.value, head = `t:part:${party}:`; return k.startsWith(head) ? k.slice(head.length) : ""; };
 
 /** A part pressed (spec 89 §6.5), in the window's right column (spec 90 §2): its files, *Uses*, *Used by*, and its changes since the last look, each with its goal (a press opens the goal) and *What it made*;
  *  a part under *Uses* or *Used by* pressed opens in its place. The tab's × (or Esc) closes it. */
@@ -242,7 +246,7 @@ export function PartView({ p: tab }) {
   const doc = sys && sys.party === party ? sys.doc : null, look = doc ? sys.look : null, since = doc?.since || "";
   const names = doc ? { ...Object.fromEntries(Object.values(doc.overview?.parts || {}).map((c) => [c.path, c.name])),
     ...Object.fromEntries(doc.columns.flatMap((c) => [...c.parts, ...c.stack]).map((c) => [c.path, c.name])) } : {};
-  return html`<${PartSide} key=${path} path=${path} party=${party} since=${since} look=${look} names=${names} onPart=${(to) => openPart(to, party, names[to])} />`;
+  return html`<${PartSide} key=${path} path=${path} party=${party} since=${since} look=${look} names=${names} onPart=${(to) => openPart(to, party)} />`;
 }
 
 function PartSide({ path, party, since, look, names, onPart }) {
@@ -265,7 +269,7 @@ function PartSide({ path, party, since, look, names, onPart }) {
       <p class="arena-cap sys-side__path">${p.path}${p.kind && html` · <b class="sys-side__kind">${KIND_WORDS[p.kind]}</b>`}</p>
       ${p.changes.length > 0 && html`<section class="sys-side__sec" data-sec="changes"><h3 class="arena-sec">${look?.at ? sinceWords(timeWords(look.at)) : KIND_WORDS[p.kind] || ""}</h3>
         <ul class="sys-side__changes">${p.changes.map((c, i) => html`<li key=${i} class="sys-change">
-          ${c.goal ? html`<button type="button" class="sys-change__goal" data-goal=${c.goal} onClick=${() => showIdea(c.goal, { via: "map" })}><${Elem} name=${goals[c.goal]?.element || ""} />${goals[c.goal]?.title || c.goal}</button>`
+          ${c.goal ? html`<button type="button" class="sys-change__goal" data-goal=${c.goal} onClick=${() => pickGoal(c.goal)}><${Elem} name=${goals[c.goal]?.element || ""} />${goals[c.goal]?.title || c.goal}</button>`
             : html`<span class="sys-change__goal is-you">${BY_YOU}</span>`}
           ${c.made && html`<span class="sys-change__made"><b>What it made</b> ${c.made}</span>`}</li>`)}</ul></section>`}
       <section class="sys-side__sec" data-sec="files"><h3 class="arena-sec">${filesWords(p.count)}</h3>
@@ -331,7 +335,7 @@ export function dealsOf(doc, order) {
 export function Modules({ doc, order, step, pick, party }) {
   const [opened, setOpened] = useState(() => new Set());
   const [hover, setHover] = useState({ path: "", by: "" }), [lines, setLines] = useState([]), host = useRef();
-  const tab = preview.value, shown = tab?.kind === "part" && tab.slug === party ? tab.path : "";      // the part open in the right column
+  const shown = liftedPart(party);                          // the part lifted
   useLayoutEffect(() => {
     const on = !!hover.path && (hover.by === "focus" || fine());
     const next = on ? usesOf(host.current, doc, hover.path) : [];
@@ -346,8 +350,8 @@ export function Modules({ doc, order, step, pick, party }) {
   const rows = cols.reduce((k, c) => Math.max(k, c.rows), 0);
   const press = (ci) => (c) => {
     if (cols[ci].col.stack.length && !opened.has(ci) && cols[ci].col.stack[0].path === c.path) { toggle(ci); return; }
-    if (shown === c.path) closePreview();                  // pressed again: the right column closes it
-    else openPart(c.path, party, c.name);
+    if (shown === c.path) lower();                         // pressed again: it is lowered
+    else openPart(c.path, party);
   };
   const hovered = (path, by) => setHover((h) => (path ? { path, by } : h.path ? { path: "", by: "" } : h));
   return html`<div class="sys-main">

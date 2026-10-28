@@ -6,9 +6,9 @@ import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
 import { Elem, Head, Sign, WhoHead, headWords } from "../orkui.js";
-import { lifted, lift, lower, picked, pick, openOver } from "../frame/state.js";
+import { lifted, lift, lower, picked, pick, openOver, partKey, linkKey } from "../frame/state.js";
 import { TASK_STATE } from "../board/maplayout.js";
-import { typeTone } from "../arena/stacks.js";
+import { typeTone } from "../arena/goalwords.js";
 import { footWords, doingWords, readTask } from "./data.js";
 
 /** The key of the card that was lit on the way back from a thing opened over the pane, "" none (a press or a key puts it out). */
@@ -27,8 +27,7 @@ export const leans = {
 
 export const taskKey = (n, t) => `t:task:${n.slug}/${t.id}`;
 export const ownKey = (n) => `t:orc:${n.slug}`;
-export const partKey = (party, path) => `t:part:${party}:${path}`;
-export const linkKey = (party, key) => `t:link:${party}:${key}`;
+export { partKey, linkKey };
 export const mineKey = (key) => typeof key === "string" && key.startsWith("t:");
 
 const typeOf = (n) => (n?.type?.sign ? html`<span class=${`table-card__type ${typeTone(n)}`} title=${n.type.name}><${Sign} name=${n.type.sign} /></span>` : null);
@@ -38,7 +37,7 @@ export function TaskCard({ n, t, lit = false, dim = false }) {
   const key = taskKey(n, t), on = lifted.value === key, bad = t.state === "failed", asks = t.state === "picking";
   const said = `${t.title}, ${n.short || n.title}: ${footWords(t)}`;
   return html`<button type="button" class=${cls("ork-card ork-leans table-card", { fails: bad, asks, "is-lifted": on, "is-lit": lit || litKey.value === key, "is-dim": dim })} data-lkey=${key} data-goal=${n.slug} data-task=${t.id}
-    data-state=${t.state} aria-pressed=${String(on)} aria-label=${said} title=${n.title} onClick=${() => lift(on ? "" : key)} ...${leans}>
+    data-about=${`idea:${n.slug} task:${n.slug}/${t.id}`} data-state=${t.state} aria-pressed=${String(on)} aria-label=${said} title=${n.title} onClick=${() => lift(on ? "" : key)} ...${leans}>
     <span class="table-card__top"><${Elem} name=${n.element} dim=${!n.element} />
       ${bad || asks ? html`<span class=${bad ? "is-danger" : "is-alert"}><${Sign} name="alert" /></span>` : typeOf(n)}</span>
     <span class="table-card__nm table-clamp" title=${t.title}>${t.short || t.title}</span>
@@ -50,7 +49,7 @@ export function TaskCard({ n, t, lit = false, dim = false }) {
 /** A goal the Orkmaster reads or routes itself, as a card in its own column: its element, its name, its kind's sign, under it its crown and what it is doing. */
 export function OwnCard({ n, lit = false }) {
   const key = ownKey(n), on = lifted.value === key;
-  return html`<button type="button" class=${cls("ork-card ork-leans table-card table-card--own", { "is-lifted": on, "is-lit": lit || litKey.value === key })} data-lkey=${key} data-goal=${n.slug} data-state=${n.state}
+  return html`<button type="button" class=${cls("ork-card ork-leans table-card table-card--own", { "is-lifted": on, "is-lit": lit || litKey.value === key })} data-lkey=${key} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state}
     aria-pressed=${String(on)} aria-label=${`${n.title}: ${doingWords(n)}`} onClick=${() => lift(on ? "" : key)} ...${leans}>
     <span class="table-own__r1"><${Elem} name=${n.element} dim=${!n.element || n.state === "reading"} /><span class="table-own__nm table-clamp" title=${n.title}>${n.short || n.title}</span>${typeOf(n)}</span>
     <span class="table-own__r2"><${Head} race="peon" tier="crown" /><span class="table-own__word">${doingWords(n)}</span></span>
@@ -61,7 +60,7 @@ export function OwnCard({ n, lit = false }) {
 export function Token({ n, t = null, lit = false }) {
   const key = t ? taskKey(n, t) : ownKey(n), on = lifted.value === key, bad = t?.state === "failed";
   const words = t ? `${t.title}, ${n.short || n.title}: ${footWords(t)}` : `${n.title}: ${doingWords(n)}`;
-  return html`<button type="button" class=${cls("ork-card table-token", { fails: bad, "is-lifted": on, "is-lit": lit || litKey.value === key })} data-lkey=${key} data-goal=${n.slug} data-task=${t?.id} data-state=${t ? t.state : n.state}
+  return html`<button type="button" class=${cls("ork-card table-token", { fails: bad, "is-lifted": on, "is-lit": lit || litKey.value === key })} data-lkey=${key} data-goal=${n.slug} data-task=${t?.id} data-about=${t ? `idea:${n.slug} task:${n.slug}/${t.id}` : `idea:${n.slug}`} data-state=${t ? t.state : n.state}
     aria-pressed=${String(on)} aria-label=${words} title=${words} onClick=${() => lift(on ? "" : key)}>
     <span class="table-card__top"><${Elem} name=${n.element} dim=${!n.element} />${bad ? html`<span class="is-danger"><${Sign} name="alert" /></span>` : typeOf(n)}</span>
     ${t ? (t.head ? html`<${WhoHead} head=${t.head} />` : null) : html`<${Head} race="peon" tier="crown" />`}

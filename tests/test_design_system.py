@@ -10,7 +10,7 @@ from orkboard.gui import server
 
 STATIC = server.STATIC
 SHEETS = [STATIC / "page.css", STATIC / "js" / "shell" / "shell.css", STATIC / "js" / "shell" / "party.css", STATIC / "js" / "board" / "board.css",
-          STATIC / "js" / "arena" / "arena.css", STATIC / "js" / "arena" / "column.css", STATIC / "js" / "arena" / "glance.css", STATIC / "js" / "arena" / "look.css", STATIC / "js" / "arena" / "rows.css", STATIC / "js" / "arena" / "assets.css", STATIC / "js" / "arena" / "systemmap.css", STATIC / "js" / "arena" / "limits.css", STATIC / "pwa" / "app.css", STATIC / "pwa" / "party.css"]
+          STATIC / "js" / "arena" / "arena.css", STATIC / "js" / "arena" / "systemmap.css", STATIC / "js" / "arena" / "limits.css", STATIC / "pwa" / "app.css", STATIC / "pwa" / "party.css"]
 SHEETS += sorted(p for d in ("frame", "table", "hand") for p in (STATIC / "js" / d).glob("*.css"))   # the window as two parts (spec 98): every sheet of its folders
 
 
@@ -57,9 +57,10 @@ def test_the_copy_is_orkui_0_15_3_with_the_ink_marks_the_moon_and_the_cards_toke
 
 def test_the_page_draws_the_ink_marks_the_moon_and_no_head_at_12_x_11():
     js = STATIC / "js"
-    for name in ("arena/members.js", "arena/limits.js", "shell/topbar.js"):
+    for name in ("table/header.js", "table/tabs.js", "arena/limits.js"):
         text = (js / name).read_text(encoding="utf-8")
-        assert "-ink" in text and "ork-mark" in text, name                      # a seat's tool under its head, a limit's chip: the ink mark
+        assert ("-ink" in text or "markSrc" in text) and "ork-mark" in text, name   # a party's tool beside its seats, a limit's chip: the ink mark
+    assert "-ink" in (js / "table" / "data.js").read_text(encoding="utf-8")
     assert "harness-${id}.png" in (js / "shell" / "seattool.js").read_text(encoding="utf-8")   # where a tool is chosen: the coloured one
     head = (js / "orkui.js").read_text(encoding="utf-8")
     assert not re.search(r"\bsmall\b", head.split("export function Head")[1].split("export function Switch")[0].replace("`small`", ""))
@@ -141,9 +142,7 @@ def test_the_field_is_orkuis_table_its_wood_a_surface_and_never_a_mark():
     tok = (orkui.ROOT / "tokens.css").read_text(encoding="utf-8")
     assert all(f"--ork-{t}:" in tok for t in ("table", "table-rim", "table-rim-hi"))
     assert ".ork-table" in (orkui.ROOT / "components.css").read_text(encoding="utf-8")
-    js = (STATIC / "js" / "arena" / "arena.js").read_text(encoding="utf-8")
-    assert re.search(r'<div class="arena-play ork-table"', js)                 # spec 90 §4: the table starts at the pane's top, the party's tabs and faces on its wood
-    proj = (STATIC / "js" / "arena" / "project.js").read_text(encoding="utf-8")
-    assert re.search(r'<div class="arena-project__cols ork-table"', proj)        # spec 79: the project's level is played on the same table
+    pane = (STATIC / "js" / "table" / "pane.js").read_text(encoding="utf-8")
+    assert re.search(r'<section class="table-pane ork-table"', pane)           # spec 98 §3: the table starts at the pane's top, the Board and what is opened over it on its wood
     sheets = "".join(p.read_text(encoding="utf-8") for p in SHEETS)
     assert "--ork-table" not in sheets                                            # only orkUI's .ork-table draws the wood

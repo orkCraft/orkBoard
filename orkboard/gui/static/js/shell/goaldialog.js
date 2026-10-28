@@ -1,23 +1,23 @@
-// Edit the party (docs/specs/91-the-owners-list.md §7; docs/specs/50-parties-and-goals.md §3.7): the dialog of New party (goalwizard.js, partyform.js) on a party that is there — its name is the person's to
+// Edit the party (docs/specs/91-the-owners-list.md §7; docs/specs/50-parties-and-goals.md §3.7): the place of New party (goalwizard.js, partyform.js) on a party that is there — its name is the person's to
 // correct, its seats, its size, its AI tool and each seat's are as the party has them, and a preset pressed puts another team in the seats (nothing is changed until *Save party*). Saving sends only what
 // changed, and the party to its leader at once; *Remove party* stays at the foot. A member with work open never leaves (its row says so). The code's goal is a party.
 import { useState } from "preact/hooks";
 import { html } from "../html.js";
 import { say, toast } from "../link.js";
-import { board, track } from "../board/store.js";
-import { act, showGoal } from "./store.js";
-import { Modal, closeDialog, openDialog } from "./modals.js";
+import { board } from "../board/store.js";
+import { act } from "./store.js";
+import { Place, closePlace, openPlace } from "../frame/place.js";
 import { GoalWizard } from "./goalwizard.js";
 import { PRIORITIES, PartyBody, footLine, usePartyForm } from "./partyform.js";
 import { TASKMASTER } from "./party.js";
 
 export { PRIORITIES };
 
-export function GoalDialog({ slug = "", then = "", preset = "", proposal = "" }) {
-  return slug ? html`<${GoalEdit} slug=${slug} then=${then} />` : html`<${GoalWizard} then=${then} preset=${preset} proposal=${proposal} />`;
+export function PartyPlace({ slug = "", preset = "", proposal = "" }) {
+  return slug ? html`<${GoalEdit} slug=${slug} />` : html`<${GoalWizard} preset=${preset} proposal=${proposal} />`;
 }
 
-function GoalEdit({ slug, then = "" }) {
+function GoalEdit({ slug }) {
   const g = slug ? board.value?.tracks.find((t) => t.slug === slug) : null;
   const f = usePartyForm({ edit: g ? { ...g, slug } : { slug } });
   const { d, api } = f;
@@ -41,15 +41,12 @@ function GoalEdit({ slug, then = "" }) {
     setSaving(false);
     if (!got?.slug) return;
     for (const note of got.notes || []) toast(note);
-    closeDialog();
-    track.value = got.slug;
-    if (then === "idea") openDialog("idea", { goal: got.slug });
-    else showGoal(got.slug);
+    closePlace();
   };
-  return html`<${Modal} title="Edit the party" onClose=${closeDialog} wide="xl"
-    foot=${html`${g && slug !== "general" && html`<button type="button" class="ork-btn danger shell-modal__left" title="Its goals move to General or go with it, after one question" onClick=${() => openDialog("remove-party", { slug })}>Remove party</button>`}
+  return html`<${Place} title="Edit the party"
+    foot=${html`${g && slug !== "general" && html`<button type="button" class="ork-btn danger place__left" title="Its goals move to General or go with it, after one question" onClick=${() => openPlace("party", { slug, remove: true }, "Remove party")}>Remove party</button>`}
       <span class="shell-p91__foot ok-font-status ok-tone-muted" data-foot="agents">${footLine(f)}</span>
-      <button type="button" class="ork-btn" onClick=${closeDialog}>Cancel</button>
+      <button type="button" class="ork-btn" onClick=${closePlace}>Cancel</button>
       <button type="submit" form="goal-form" class="ork-btn primary" disabled=${!f.about.trim() || saving}>Save party</button>`}>
     <form id="goal-form" class="shell-form" onSubmit=${save}>
       <${PartyBody} f=${f} say=${say(`${g?.leader?.slug && g.leader.slug !== TASKMASTER ? g.leader.name : "The Taskmaster"} reads the repository and writes the summary.`)} />

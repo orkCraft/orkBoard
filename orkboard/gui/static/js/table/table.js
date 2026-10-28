@@ -1,8 +1,7 @@
-// The table (docs/specs/98-the-table-and-the-hand.md §3, §5, §6; decisions §104.0, §145.1): the leaders' tabs over the pane — *what and why, through whose eyes*. `frame/frame.js` draws `Table` over the hand while the
-// page is opened with `?frame=1`. The open tab and the goal picked are `frame/state.js`'s (the person's: nothing here switches a tab under them, but a goal picked from the hand opens on its party's tab); what is
+// The table (docs/specs/98-the-table-and-the-hand.md §3, §5, §6; decisions §104.0, §145.1): the leaders' tabs over the pane — *what and why, through whose eyes*. `frame/frame.js` draws `Table` over the hand: the page's window. The open tab and the goal picked are `frame/state.js`'s (the person's: nothing here switches a tab under them, but a goal picked from the hand opens on its party's tab); what is
 // open over the pane is its `over`. This file holds the tabs and the pane together with what they share: the width (under 760 px the tabs are heads and what opens over the pane is a screen, ← the browser's back),
 // Esc (lowers a lifted card, else goes back from what is over the pane) and the project shown (the tab kept for it). Each part is its own module: tabs.js, pane.js (title, over, lifted), boardmap.js, header.js,
-// seatpop.js, syspane.js, card.js, over.js (the kinds) and places.js (the forms that were dialogs).
+// seatpop.js, syspane.js, card.js and over.js (the kinds); the forms that were dialogs lie in frame/place.js.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html } from "../html.js";
 import { ORKMASTER, closeOver, lifted, lower, openTab, over, picked, restoreTab, tab } from "../frame/state.js";
@@ -10,9 +9,8 @@ import { currentProject } from "../shell/projects.js";
 import { mapData } from "../shell/store.js";
 import { Tabs } from "./tabs.js";
 import { Pane, back } from "./pane.js";
-import { bindPlaces } from "./places.js";
 import { litKey, elOf, mineKey, useLowering } from "./card.js";
-import { mapName, openTabOf, partiesNow } from "./data.js";
+import { openTabOf, partiesNow } from "./data.js";
 
 const NARROW = "(max-width: 759px)";                       // spec 94: the phone's width is the narrow one
 const SHARES = { ork: 1.3, tail: 2.2 };                      // the Board's columns, as shares of the width (table.css `--cols`): the Orkmaster's, then a party's 1 each, then the tabs' end
@@ -64,8 +62,6 @@ function useBackButton(open, narrow) {
 
 export function Table() {
   const parties = partiesNow(), current = openTabOf(tab.value, parties), narrow = useNarrow(), [host, compact] = useCompact(parties.length, narrow);
-  const where = () => ({ title: mapName(tab.value, partiesNow()), key: "" });
-  useEffect(() => bindPlaces(where), []);                                                  // the forms that were dialogs lie in the pane (places.js)
   const project = currentProject.value?.path || "";
   useEffect(() => { restoreTab(); picked.value = ""; lower(); closeOver(); }, [project]);   // another project: its tab, nothing picked, nothing open
   useEffect(() => {                                                                        // a goal picked in the hand opens on its party's tab (unless the Orkmaster's Board is shown: it shows its tasks alone)
@@ -74,7 +70,7 @@ export function Table() {
   }, [picked.value]);
   useEffect(() => {                                                                        // Esc: lowers a lifted card of the table, else goes back from what is over the pane (the hand's own is its)
     const key = (e) => {
-      if (e.key !== "Escape" || e.defaultPrevented || typing(e.target) || document.querySelector("[aria-modal='true']")) return;
+      if (e.key !== "Escape" || e.defaultPrevented || typing(e.target)) return;
       if (lifted.value) { if (mineKey(lifted.value)) { e.preventDefault(); lower(); } return; }
       if (over.value) { e.preventDefault(); back(); }
     };

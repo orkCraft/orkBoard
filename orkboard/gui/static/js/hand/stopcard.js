@@ -7,7 +7,7 @@ import { html, cls } from "../html.js";
 import { Elem, Head, Sign } from "../orkui.js";
 import { lift, lower } from "../frame/state.js";
 import { Tiles } from "../arena/picks.js";
-import { missingWords } from "../arena/types.js";
+import { missingWords } from "../arena/arenawords.js";
 import { goalLine, goalsOfRow } from "../arena/collidewords.js";
 import { Answers } from "./answers.js";
 import { costOf, Gem, Spend } from "./cost.js";

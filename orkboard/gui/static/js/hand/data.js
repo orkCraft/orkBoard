@@ -4,8 +4,7 @@
 // A node's `place` is the host's (realm/goal_place.py); nothing here decides where a goal lies.
 import { board, goalList } from "../board/store.js";
 import { gateData, mapData } from "../shell/store.js";
-import { byUrgency, gateOf, goalsOf, nodesOf, resultStop, resultsOf, signInStopsOf, stopsOf } from "../arena/arenawords.js";
-import { todoLast } from "../arena/stops.js";
+import { byUrgency, gateOf, goalsOf, nodesOf, resultStop, resultsOf, signInStopsOf, stopsOf, todoLast } from "../arena/arenawords.js";
 import { ORKMASTER } from "../frame/state.js";
 
 export const MANY = 7;                         // the deck's row shows this many goals, then *All · search* (§4.1)

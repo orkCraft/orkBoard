@@ -1,4 +1,4 @@
-"""Spec 98 part C, the table (docs/specs/98-the-table-and-the-hand.md §3, §5, §6; mockup docs/mockups/s1/ states 1–4 and 6): the window opened with `?frame=1`, at both widths (`tests/narrow.py`: 1280 × 800, and
+"""Spec 98 part C, the table (docs/specs/98-the-table-and-the-hand.md §3, §5, §6; mockup docs/mockups/s1/ states 1–4 and 6): the window (the page, spec 98 E), at both widths (`tests/narrow.py`: 1280 × 800, and
 390 × 844 with touch), against a stub host of its own (a project of four parties: Game design, Tech led by the Architect, Art and Release; the Orkmaster reading two goals; tasks at work, one failed; Tech's System).
 
 The tabs in order with the Orkmaster's first, its **…** and its three places over the pane, **+**, the chips, *Stop all*; the Board's columns under their tabs, the same widths, a task card's head, element and name, the Orkmaster's
@@ -183,15 +183,15 @@ def shot(pg, name):
 
 
 def watch(pg, errors):
-    """The page's errors: a script error, a console error, a failed request. The hand (js/hand/hand.js) is part D's, built beside this part: until it is there the frame says so with one 404, which is not this part's."""
+    """The page's errors: a script error, a console error, a failed request."""
     pg.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
     pg.on("console", lambda m: m.type == "error" and not m.text.startswith("Failed to load resource") and errors.append(f"console: {m.text}"))
-    pg.on("response", lambda r: r.status >= 400 and not r.url.endswith("/js/hand/hand.js") and errors.append(f"{r.status}: {r.url}"))
+    pg.on("response", lambda r: r.status >= 400 and errors.append(f"{r.status}: {r.url}"))
 
 
 @pytest.fixture(params=narrow.WIDTHS)
 def table(gui, request):
-    """The window opened with `?frame=1` at one of the two widths: `(page, host, width)`; the page's errors are asserted at the end."""
+    """The window at one of the two widths: `(page, host, width)`; the page's errors are asserted at the end."""
     server, browser = gui
     host = TableHost()
     pg = narrow.page(browser, request.param)
@@ -199,7 +199,7 @@ def table(gui, request):
     pg.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
     watch(pg, errors)
     pg.route_web_socket("**/ws*", host.on_socket)
-    pg.goto(f"{server.url}&frame=1")
+    pg.goto(server.url)
     pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
     pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
     yield pg, host, request.param
@@ -287,8 +287,8 @@ def test_the_orkmasters_menu_has_the_projects_settings_and_files_over_the_pane(t
     open_menu(pg)
     pg.get_by_role("menuitem", name="Settings").click()
     pg.locator('.table-over--form[data-kind="settings"]').wait_for(timeout=WAIT_MS)
-    assert title(pg) == "Board · Settings" and pg.locator('[role="dialog"][aria-modal="true"]').count() == 1               # the form is the old dialog's, lying in the pane (its own role stays)
-    assert pg.locator(".shell-backdrop").evaluate("e => getComputedStyle(e).position") == "static"
+    assert title(pg) == "Board · Settings" and pg.locator("[aria-modal]").count() == 0               # the form lies in the pane: no dialog, no backdrop
+    assert pg.locator(".place").count() == 1 and pg.locator(".shell-backdrop").count() == 0
     shot(pg, f"table-settings-{w}.png")
     pg.get_by_role("button", name="Done").click()                                                                        # the form closes itself: the pane is the Board again
     pg.locator(".table-board").wait_for(timeout=WAIT_MS)
@@ -303,7 +303,7 @@ def test_plus_opens_new_party_in_the_pane_and_a_chip_opens_what_used_the_tool(ta
     pg, host, w = table
     pg.get_by_role("button", name="New party").click()
     pg.locator('.table-over--form[data-kind="party"]').wait_for(timeout=WAIT_MS)
-    assert title(pg) == "Board · New party" and pg.locator(".shell-modal__head").is_hidden()
+    assert title(pg) == "Board · New party" and pg.locator(".place").count() == 1
     pg.get_by_role("button", name="Cancel").click()
     pg.locator(".table-board").wait_for(timeout=WAIT_MS)
     if wide(w):
@@ -476,9 +476,9 @@ def test_a_party_menu_has_edit_and_remove_party_over_the_pane(table):
     pg.locator('.table-over--form[data-kind="party"]').wait_for(timeout=WAIT_MS)
     assert title(pg) == "Art · Edit Art" and pg.get_by_role("button", name="Save party").count() == 1
     pg.get_by_role("button", name="Remove party").click()                                                                # the Edit form's own button: today's question, in the pane too
-    pg.locator(".shell-modal__text").wait_for(timeout=WAIT_MS)
-    assert "Art has 1 goal" in pg.locator(".shell-modal__text").text_content()
-    assert pg.locator(".shell-backdrop").evaluate("e => getComputedStyle(e).position") == "static"
+    pg.locator(".place__text").wait_for(timeout=WAIT_MS)
+    assert "Art has 1 goal" in pg.locator(".place__text").text_content()
+    assert pg.locator(".shell-backdrop").count() == 0
     pg.keyboard.press("Escape")
     pg.locator(".table-head").wait_for(timeout=WAIT_MS)
 
@@ -548,7 +548,7 @@ def test_with_many_parties_the_tabs_keep_their_heads_and_the_board_lays_tokens(g
     errors: list[str] = []
     watch(pg, errors)
     pg.route_web_socket("**/ws*", host.on_socket)
-    pg.goto(f"{server.url}&frame=1")
+    pg.goto(server.url)
     pg.locator(".table-tab").nth(8).wait_for(timeout=WAIT_MS)
     pg.wait_for_selector('.table[data-compact="true"]', timeout=WAIT_MS)
     assert tab(pg, "tech").locator(".table-tab__txt").is_hidden() and tab(pg, "tech").get_attribute("aria-label") == "Tech"           # more than fit: the heads alone
@@ -580,9 +580,12 @@ def test_a_goal_picked_puts_a_dot_on_the_tabs_of_its_route_and_opens_on_its_part
 def test_ctrl_o_opens_a_project_in_the_pane_and_another_project_is_shown_from_its_list(table):
     pg, host, w = table
     pg.keyboard.press("Control+o")
+    pg.locator('.table-over[data-kind="projects"]').wait_for(timeout=WAIT_MS)
+    assert title(pg) == "Projects" and pg.locator(".table-projects__one").count() == 3                                  # Ctrl+O opens the projects over the pane
+    pg.get_by_role("button", name="Open a project…").click()
     pg.locator('.table-over--form[data-kind="projects"]').wait_for(timeout=WAIT_MS)
-    assert pg.locator("#open-folder-form").count() == 1 and title(pg) == "Board · Open a project…"
-    assert pg.locator(".shell-backdrop").evaluate("e => getComputedStyle(e).position") == "static"                      # in the pane, not over the page
+    assert pg.locator("#open-folder-form").count() == 1 and title(pg) == "Open a project…"
+    assert pg.locator(".shell-backdrop").count() == 0 and pg.locator("[aria-modal]").count() == 0                       # in the pane, not over the page
     pg.get_by_role("button", name="Cancel").click()
     pg.locator(".table-board").wait_for(timeout=WAIT_MS)
     open_menu(pg)

@@ -2,7 +2,6 @@
    (design-system/orkui, docs/specs/40-design-system.md): the page itself, the toasts, the first screen (the AI tools found),
    the dialog of js/dialog.js, a checkbox, a select's chevron, the paired phones. orkUI's tokens and components only: no raw
    colour, nothing round; every arrow a pixel mark. */
-
 html, body, #app { height: 100%; margin: 0; }
 body { overflow: hidden; user-select: text; -webkit-user-select: text; }
 button { color: inherit; }
@@ -13,11 +12,9 @@ button { color: inherit; }
 .gui-scrolls[data-more="above"] { mask-image: linear-gradient(to top, #000 calc(100% - 40px), transparent); }
 .gui-scrolls[data-more="above below"] { mask-image: linear-gradient(to bottom, transparent, #000 40px, #000 calc(100% - 40px), transparent); }
 code, pre, kbd { font-family: var(--ork-font-code); }
-
 /* orkUI's own icons (close, plus, play, the chevrons, … drawn on the signs' 7 grid, js/orkui.js `Icon`) are whole pixels at 14, 21 or 28, never at
    the icon token's 24: a sheet sets 14 or 28 where it wants them, and the rest is 21. */
 .ork-icon.g7 { --ork-icon: 21px; }
-
 /* A select of orkUI's fields without its wrapper: the look's own chevron, drawn in five whole pixels of ink. */
 select.ork-field { padding-right: var(--ork-8); cursor: pointer;
   background-image: linear-gradient(var(--ork-ink) 0 0), linear-gradient(var(--ork-ink) 0 0), linear-gradient(var(--ork-ink) 0 0),
@@ -28,7 +25,6 @@ select.ork-field { padding-right: var(--ork-8); cursor: pointer;
 select.ork-field:disabled { background-image: none; }
 select.ork-field option { background: var(--ork-panel); color: var(--ork-ink); }
 textarea.ork-field { line-height: 18px; }
-
 /* A checkbox as the look draws one: a square edge, a whole ink square inside when it is on. The native box (its input) or
    an old one's mark (`.ok-check` with a hidden input and an <i>). */
 input[type="checkbox"] { appearance: none; -webkit-appearance: none; flex: none; width: 16px; height: 16px; margin: 0; box-sizing: border-box;
@@ -44,14 +40,12 @@ input[type="radio"] { accent-color: var(--ork-ink); }
 .ok-check i:not(:empty) { background: var(--ork-ink); box-shadow: inset 0 0 0 3px var(--ork-canvas); }
 .ok-check:focus-within i { outline: 2px solid var(--ork-ink); outline-offset: 1px; }
 .gui-onb__hide { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
-
 /* -- the toasts: at the page's foot, centred (docs/specs/91-the-owners-list.md §4); their mark in the signal's colour. A dialog leaves the foot band free, so a toast never covers its buttons ------ */
 .gui-toasts { position: fixed; left: 50%; transform: translateX(-50%); bottom: var(--ork-6); z-index: 130; display: flex; flex-direction: column; align-items: center;
   gap: var(--ork-3); width: max-content; max-width: min(420px, calc(100vw - 32px)); pointer-events: none; }
-body:has(.gui-toast) .shell-backdrop, body:has(.gui-toast) .gui-modal { padding-bottom: calc(var(--ork-6) + 144px); }       /* while a toast stands, a dialog keeps above the foot band: it never covers its buttons */
-body:has(.gui-toast) .shell-backdrop .shell-modal { max-height: calc(100vh - 2 * var(--ork-6) - 144px); }
+body:has(.gui-toast) .gui-modal { padding-bottom: calc(var(--ork-6) + 144px); }
+/* while a toast stands, a dialog keeps above the foot band: it never covers its buttons */
 body:has(.gui-toast) .gui-modal .gui-dialog { max-height: calc(100vh - 2 * var(--ork-6) - 144px); }
-@media (max-width: 640px) { body:has(.gui-toast) .shell-backdrop { padding: 0 0 144px; } body:has(.gui-toast) .shell-backdrop .shell-modal { max-height: calc(100vh - 144px); } }
 .gui-toast { pointer-events: auto; display: flex; align-items: flex-start; gap: var(--ork-3); width: 100%; box-sizing: border-box;
   padding: var(--ork-3) var(--ork-4); background: var(--ork-panel); color: var(--ork-ink); border: var(--ork-line) solid var(--ork-edge);
   clip-path: var(--ork-notch); font: var(--ork-type-body); user-select: text; -webkit-user-select: text; }
@@ -65,7 +59,6 @@ body:has(.gui-toast) .gui-modal .gui-dialog { max-height: calc(100vh - 2 * var(-
 .gui-toast__acts { flex: none; display: inline-flex; gap: var(--ork-1); align-self: flex-start; }
 .gui-toolerr__close { border: 0; background: none; padding: 0 var(--ork-1); color: var(--ork-ink-muted); font: inherit; cursor: pointer; }
 .gui-toolerr__close:hover, .gui-toolerr__close:focus-visible { color: var(--ork-ink); outline: 0; }
-
 /* -- the dialog of js/dialog.js (a tool's request, a risky tool's warning): orkUI's dialog on its scrim ---------------------- */
 .gui-modal { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: var(--ork-6); background: var(--ork-scrim); }
 .gui-dialog { display: flex; flex-direction: column; gap: var(--ork-4); width: min(560px, calc(100vw - 32px)); max-height: calc(100vh - 48px); }
@@ -81,14 +74,14 @@ body:has(.gui-toast) .gui-modal .gui-dialog { max-height: calc(100vh - 2 * var(-
 .gui-wait__glass::after { content: ""; display: inline-block; width: 7px; height: 13px; background: var(--ork-ink); animation: ork-blink 1s steps(1) infinite; }
 .gui-wait__what { flex: 1; min-width: 0; }
 .gui-wait__time { flex: none; color: var(--ork-ink-muted); font-variant-numeric: tabular-nums; }
-@media (prefers-reduced-motion: reduce) { .gui-wait__glass::after { animation: none; } }
-
+@media (prefers-reduced-motion: reduce) {
+.gui-wait__glass::after { animation: none; }
+}
 /* An AI tool's mark: its plain sign (the SVG), never Camp's sprite. */
 .gui-toolmark { display: inline-flex; align-items: center; vertical-align: -3px; }
 .gui-toolmark > img { display: none; }
 .gui-toolmark__svg { display: inline; }
 .gui-type-icon { flex: none; fill: none; stroke: currentColor; stroke-width: 1.4; color: var(--ork-ink-muted); }
-
 /* -- the first screen (js/onboarding.js, Orkboard's step: the AI tools found) --------------------------------------------- */
 .gui-onb { position: fixed; inset: 0; z-index: 30; overflow: auto; display: flex; flex-direction: column; align-items: center; gap: var(--ork-6);
   padding: var(--ork-8) var(--ork-6); box-sizing: border-box; background: var(--ork-canvas); color: var(--ork-ink); }
@@ -125,19 +118,17 @@ body:has(.gui-toast) .gui-modal .gui-dialog { max-height: calc(100vh - 2 * var(-
 .gui-onb__setup { pointer-events: auto; display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-5); background: var(--ork-panel);
   border: var(--ork-double) double var(--ork-edge); }
 @media (max-width: 720px) {
-  .gui-onb__row { grid-template-columns: 24px minmax(0, 1fr); }
-  .gui-onb__row > :nth-child(n + 3) { grid-column: 2; }
-  .gui-onb__without, .gui-onb__row.is-get { grid-template-columns: minmax(0, 1fr); }
-  .gui-onb__checked { grid-column: 1 / -1; }
+.gui-onb__row { grid-template-columns: 24px minmax(0, 1fr); }
+.gui-onb__row > :nth-child(n + 3) { grid-column: 2; }
+.gui-onb__without, .gui-onb__row.is-get { grid-template-columns: minmax(0, 1fr); }
+.gui-onb__checked { grid-column: 1 / -1; }
 }
-
 /* -- the paired phones (js/shell/pair.js) ----------------------------------------------------------------------------- */
 .gui-phones__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-2); }
 .gui-phones__one { display: flex; align-items: center; gap: var(--ork-3); flex-wrap: wrap; }
 .gui-phones__name { font-weight: 600; min-width: 0; overflow-wrap: anywhere; }
 .gui-phones__one > .ork-btn { margin-left: auto; }
 .gui-you__qr, .gui-phones__qr { image-rendering: pixelated; }
-
 /* An error with Copy and Save logs beside it, and the right click's menu in the app's window (js/shell/errors.js). */
 .shell-error { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--ork-2) var(--ork-4); }
 .shell-error > p { margin: 0; flex: 1 1 320px; min-width: 0; overflow-wrap: anywhere; }

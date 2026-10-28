@@ -1,4 +1,4 @@
-// The gear's menu (docs/specs/33-v1-shell.md §4, §9; spec 34 §5–§6), in the shell's modal: Push after merging, Download
+// Settings (docs/specs/33-v1-shell.md §4, §9; spec 34 §5–§6), a place over the pane (docs/specs/98-the-table-and-the-hand.md §7): Push after merging, Download
 // today's logs, Pair a phone, Keep the computer awake (spec 47 §5), the updates (js/shell/update.js). The theme follows the system.
 import { useEffect, useState } from "preact/hooks";
 import { html } from "../html.js";
@@ -6,7 +6,7 @@ import { command, PRODUCT } from "../link.js";
 import { review, act } from "./store.js";
 import { board } from "../board/store.js";
 import { TargetSetting } from "../board/target.js";
-import { Modal, closeDialog, openDialog } from "./modals.js";
+import { Place, closePlace, openPlace } from "../frame/place.js";
 import { currentProject } from "./projects.js";
 import { saveLogs } from "./errors.js";
 import { UpdatesField } from "./update.js";
@@ -31,7 +31,7 @@ export function awakeLines(a) {
     now, "The screen still turns off. A laptop with its lid closed still sleeps unless a display is attached."];
 }
 
-/** Keep the computer awake: Never · While the orks work · Stay reachable from your phone, read when the dialog opens and every 30 s. */
+/** Keep the computer awake: Never · While the orks work · Stay reachable from your phone, read when the place opens and every 30 s. */
 function AwakeField() {
   const [a, setA] = useState(null);
   useEffect(() => {
@@ -48,10 +48,10 @@ function AwakeField() {
     ${awakeLines(a).map((l, n) => html`<span key=${n} class="ok-font-status ok-tone-muted">${l}</span>`)}</div>`;
 }
 
-export function SettingsDialog() {
+export function SettingsPlace() {
   const push = !!review.value?.push;
   const b = board.value;
-  return html`<${Modal} title="Settings" onClose=${closeDialog} foot=${html`<button type="button" class="ork-btn primary" onClick=${closeDialog}>Done</button>`}>
+  return html`<${Place} title="Settings" foot=${html`<button type="button" class="ork-btn primary" onClick=${closePlace}>Done</button>`}>
     <div class="shell-form">
       ${currentProject.value && html`<p class="ok-font-status ok-tone-muted" data-settings="project">The Board's settings are for this project: ${currentProject.value.name}.</p>`}
       <label class="ok-check">
@@ -70,7 +70,7 @@ export function SettingsDialog() {
       </div>`}
       <${UpdatesField} />
       <div class="shell-field"><span class="ok-font-label">Your phone</span>
-        <span><button type="button" class="ork-btn" onClick=${() => openDialog("pair")}>Pair a phone</button></span></div>
+        <span><button type="button" class="ork-btn" onClick=${() => openPlace("pair", {}, "Pair a phone")}>Pair a phone</button></span></div>
       <${AwakeField} />
       <div class="shell-gear__logs"><span class="ok-font-label">Download today's logs</span>
         <button type="button" class="ork-btn" onClick=${() => saveLogs("", 1)}>Today</button>

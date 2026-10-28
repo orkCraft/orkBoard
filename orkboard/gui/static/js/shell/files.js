@@ -1,5 +1,5 @@
-// The Files pane (docs/specs/37-board-and-line.md §8): the project's tree one level at a time, folders folded, `.git/` and
-// `.orkcraft/` never shown, git-ignored files behind a toggle; a click opens the file in the preview — Markdown rendered,
+// The Files pane (docs/specs/37-board-and-line.md §8, docs/specs/98-the-table-and-the-hand.md §3.1): the project's tree one level at a time, folders folded, `.git/` and
+// `.orkcraft/` never shown, git-ignored files behind a toggle; a click opens the file over the pane (`onFile`) — Markdown rendered,
 // code and text with line numbers, a binary or large file by its size with Open in the system. What may hold a secret is
 // greyed and never read. The Git section (gitpane.js) sits under the tree.
 import { useEffect, useState } from "preact/hooks";
@@ -8,7 +8,7 @@ import { html, cls } from "../html.js";
 import { Chev } from "../orkui.js";
 import { command } from "../link.js";
 import { ask } from "../board/store.js";
-import { preview, showFile, leaving } from "./store.js";
+import { leaving } from "./store.js";
 import { Editor } from "./editor.js";
 import { GitSection } from "./gitpane.js";
 
@@ -39,21 +39,21 @@ async function toggle(dir) {
   expanded.value = set;
 }
 
-function Rows({ dir, depth }) {
+function Rows({ dir, depth, onFile }) {
   const list = entries.value[dir];
   if (!list) return depth ? html`<li class="shell-tree__note ok-tone-muted" style=${`padding-left:${depth * 14 + 8}px`}>Opening…</li>` : null;
   if (!list.length) return depth ? html`<li class="shell-tree__note ok-tone-muted" style=${`padding-left:${depth * 14 + 8}px`}>Empty</li>` : null;
-  const on = preview.value?.kind === "file" ? preview.value.path : "";
   return list.map((e) => html`<li key=${e.path} role="none">
-    <button role="treeitem" class=${cls("shell-tree__row", { "is-dir": e.dir, "is-secret": e.secret, "is-on": e.path === on })}
+    <button role="treeitem" class=${cls("shell-tree__row", { "is-dir": e.dir, "is-secret": e.secret })}
       style=${`padding-left:${depth * 14 + 8}px`} data-path=${e.path} aria-expanded=${e.dir ? expanded.value.has(e.path) : undefined}
-      title=${e.secret ? `${e.name}: ${SECRET_HINT}` : e.path} onClick=${() => (e.dir ? toggle(e.path) : showFile(e.path))}>
+      title=${e.secret ? `${e.name}: ${SECRET_HINT}` : e.path} onClick=${() => (e.dir ? toggle(e.path) : onFile(e.path))}>
       <span class="shell-tree__mark" aria-hidden="true">${e.dir ? html`<${Chev} dir=${expanded.value.has(e.path) ? "down" : "right"} />` : ""}</span>${e.name}${e.dir ? "/" : ""}</button>
-    ${e.dir && expanded.value.has(e.path) && html`<ul role="group" class="shell-tree__list"><${Rows} dir=${e.path} depth=${depth + 1} /></ul>`}
+    ${e.dir && expanded.value.has(e.path) && html`<ul role="group" class="shell-tree__list"><${Rows} dir=${e.path} depth=${depth + 1} onFile=${onFile} /></ul>`}
   </li>`);
 }
 
-export function FilesPane() {
+/** `onFile(path)`: a file pressed; `onDiff(path)`: a changed file pressed. */
+export function FilesPane({ onFile = () => {}, onDiff = () => {} }) {
   useEffect(() => { reloadTree(); }, []);
   return html`<div class="shell-files">
     <div class="shell-files__bar">
@@ -62,9 +62,9 @@ export function FilesPane() {
         <i>${showIgnored.value ? "✓" : ""}</i><span>Show git-ignored files</span></label>
       <button class="shell-quiet" onClick=${reloadTree}>Refresh</button>
     </div>
-    <ul role="tree" class="shell-tree" aria-label="Files"><${Rows} dir="" depth=${0} />
+    <ul role="tree" class="shell-tree" aria-label="Files"><${Rows} dir="" depth=${0} onFile=${onFile} />
       ${entries.value[""] && !entries.value[""].length && html`<li class="shell-tree__note ok-tone-muted">This folder is empty.</li>`}</ul>
-    <${GitSection} />
+    <${GitSection} onDiff=${onDiff} />
   </div>`;
 }
 
@@ -78,7 +78,7 @@ export function Code({ text }) {
     <pre class="shell-code__text">${text}</pre></div>`;
 }
 
-/** The file in the preview: read when its path changes; Edit for Markdown and text. */
+/** The file over the pane: read when its path changes; Edit for Markdown and text. */
 export function FileView({ path }) {
   const [f, setF] = useState(null);
   const [editingNow, setEditingNow] = useState(false);

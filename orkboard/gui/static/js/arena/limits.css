@@ -8,7 +8,6 @@
 .arena-limit:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 .arena-limits__note { font: var(--ork-type-caption); color: var(--ork-ink-faint); }
 .arena-limits.is-one { gap: var(--ork-3); }
-
 /* -- what used it: a row a party, its members under it, then what no call of ours accounts for ------------------------------------------------ */
 .arena-usage { display: flex; flex-direction: column; gap: var(--ork-3); padding-top: var(--ork-3); border-top: var(--ork-line) solid var(--ork-frame); }
 .arena-usage__head { display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-3); }

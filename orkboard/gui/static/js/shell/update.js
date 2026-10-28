@@ -1,11 +1,14 @@
 // A newer Orkline (gui/updates.py, core/updates.py, docs/updates.md): asked once per version, loudly for a critical
 // one, plainly for a major one (a later line, 0.2 → 0.3); one click installs it with the tool that installed this copy,
 // and the window opens again on it. "Later" hides an ordinary or a major update until the next version, a critical one
-// until the window opens again (under the default policy it installs by itself then). Settings shows it too.
+// until the window opens again (under the default policy it installs by itself then). It lies over the pane (spec 98 §7). Settings shows it too.
+import { useEffect } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html } from "../html.js";
 import { command, town, PRODUCT } from "../link.js";
-import { Modal, dialog, closeDialog } from "./modals.js";
+import { Place, closePlace, openPlace } from "../frame/place.js";
+import { drawn } from "../frame/kinds.js";
+import { openOver, over } from "../frame/state.js";
 
 const HIDDEN_KEY = "orkcraft.update.later";
 const hidden = signal(readHidden());          // the version "Later" was said to
@@ -33,20 +36,20 @@ export function updateTitle(u) {
   return `${PRODUCT} ${u.version} is out`;
 }
 
-export function UpdateAsk() {
-  const t = town.value;
-  const u = t && t.update;
-  if (!u || !u.version || t.onboarding || dialog.value) return null;
+/** The offer, as a place over the pane (`update`, frame/kinds.js): the version, what is new, Update and restart · Later. */
+function UpdateOffer() {
+  const t = town.value, u = t && t.update;
+  useEffect(() => { if (!u || !u.version) closePlace(); }, [!u || !u.version]);
+  if (!u || !u.version) return null;
   const busy = u.state === "installing" || u.state === "installed";
-  if (!busy && u.state !== "failed" && hidden.value === u.version) return null;
   const notes = (u.critical ? u.critical_notes : u.notes) || [];
-  const close = busy ? () => {} : () => later(u);
+  const close = busy ? () => {} : () => { later(u); closePlace(); };
   const foot = busy
     ? html`<button type="button" class="ork-btn primary" disabled>${u.state === "installed" ? "Restarting…" : "Installing…"}</button>`
     : html`<button type="button" class="ork-btn" onClick=${close}>Later</button>
       ${u.can && html`<button type="button" class="ork-btn primary" data-update="install" onClick=${install}>
         ${u.state === "failed" ? "Try again" : "Update and restart"}</button>`}`;
-  return html`<${Modal} title=${updateTitle(u)} onClose=${close} foot=${foot}>
+  return html`<${Place} title=${updateTitle(u)} onClose=${close} foot=${foot}>
     <div class="shell-form" data-update=${u.critical ? "critical" : u.major ? "major" : "minor"}>
       <p class="ok-font-status ok-tone-muted">You have ${u.current}.</p>
       ${u.critical && !busy && html`<p class="ok-font-status ok-tone-error">It fixes something that can lose work or let harm in: install it now.</p>`}
@@ -59,6 +62,23 @@ export function UpdateAsk() {
         <pre class="shell-brief">${u.error}</pre>`}
     </div>
   <//>`;
+}
+drawn("update", UpdateOffer);
+
+const offered = new Set();                    // the offers made in this page (a version and its state once each: ← does not ask again)
+
+/** Asks once per version (and once more when the install fails), over the pane when nothing else is open there; draws nothing itself. */
+export function UpdateAsk() {
+  const t = town.value, u = t && t.update;
+  const busy = !!u && (u.state === "installing" || u.state === "installed");
+  const want = !!u && !!u.version && !t.onboarding && (!t.projects || !!t.projects.current) && (busy || u.state === "failed" || hidden.value !== u.version);
+  const id = want ? `${u.version}:${u.state}` : "";
+  useEffect(() => {
+    if (!id || over.value || offered.has(id)) return;
+    offered.add(id);
+    openOver("update", {}, null, updateTitle(u));
+  }, [id, over.value]);
+  return null;
 }
 
 const POLICIES = [
@@ -77,7 +97,7 @@ export function UpdatesField() {
     <span class="ok-font-label">Updates</span>
     ${u && u.version && u.state !== "installed"
       ? html`<div class="board-row"><span class="ok-font-status">${updateTitle(u)} (you have ${u.current}).</span>
-          <button type="button" class="ork-btn primary" onClick=${() => { askAgain(); closeDialog(); }}>Update…</button></div>`
+          <button type="button" class="ork-btn primary" onClick=${() => { askAgain(); const u = town.value?.update; openPlace("update", {}, u ? updateTitle(u) : "Update"); }}>Update…</button></div>`
       : html`<span class="ok-font-status ok-tone-muted">You have the latest ${PRODUCT}${t && t.version ? ` (${t.version})` : ""}.</span>`}
     <div class="board-row"><span class="ok-font-label">Install by themselves</span>
       <select class="ork-field" aria-label="Updates that install by themselves" value=${policy} onChange=${(e) => setPolicy(e.target.value)}>

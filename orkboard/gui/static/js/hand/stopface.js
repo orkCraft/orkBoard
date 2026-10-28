@@ -11,6 +11,8 @@ import { askedOf } from "../arena/arenawords.js";
 import { TASK_STATE } from "../board/maplayout.js";
 import { stopsOfProject } from "./data.js";
 import { Answers } from "./answers.js";
+import { AskForm } from "./askform.js";
+import { TodoForm } from "./todoform.js";
 import { costOf, Spend } from "./cost.js";
 import { Mark, labelOf } from "./stopcard.js";
 
@@ -31,15 +33,15 @@ export function StopFace({ props }) {
   useEffect(() => { if (!s) closeOver(); }, [!s]);
   if (!s) return html`<p class="ok-tone-muted">That card is answered.</p>`;
   const cost = costOf(s), head = s.head || s.party?.head, tasks = s.kind === "plan" || s.kind === "failed" ? (s.node?.tasks || []).filter((t) => t.state !== "dropped") : [];
-  const asked = s.kind === "asks" ? askedOf(s.row, s.node) : [];
   return html`<article class="hand-stopface" data-key=${s.key} data-kind=${s.kind} aria-label=${labelOf(s)}>
     <header class="hand-stopface__head"><${Mark} s=${s} /><div class="hand-stopface__titles"><p class="cap">${s.label}${s.other && s.party?.name ? ` · ${s.party.name}` : ""}</p>
       <h2 class="hand-stopface__title">${s.full}</h2></div>${head && html`<${Head} race=${head.race} tier=${head.tier} size="big" />`}</header>
     ${s.kind === "pick" ? html`<${PickView} p=${{ slug: s.row.slug, task: s.row.task }} />` : html`
       ${s.text && html`<p class="body hand-stopface__text">${s.text}</p>`}
       ${s.why && html`<p class="cap">${s.why}</p>`}
-      ${asked.map((q, i) => html`<div key=${i} class="hand-stopface__ask"><p class="body">${q.ask}</p>${q.why && html`<p class="cap">${q.why}</p>`}
-        ${q.choices.length > 0 && html`<ul class="hand-stopface__choices">${q.choices.map((c, k) => html`<li key=${c} class=${k === q.pick ? "is-picked" : ""}>${k === q.pick ? "● " : ""}${c}</li>`)}</ul>`}</div>`)}
+      ${(s.kind === "asks" || s.kind === "goal") && html`<${AskForm} key=${s.key} slug=${s.kind === "goal" ? s.row.goal : s.row?.idea || s.node?.slug} goal=${s.kind === "goal"} asked=${s.row?.asked?.length ? askedOf(s.row, s.node) : null}
+        picks=${props.picks || askedOf(s.row, s.node).map((q) => (q.pick != null ? q.choices[q.pick] || "" : ""))} done=${closeOver} />`}
+      ${s.kind === "todo" && html`<${TodoForm} idea=${s.row.idea} todo=${s.row.todo} lead=${s.party.lead} done=${closeOver} />`}
       ${tasks.length > 0 && html`<h3 class="board-sub">Tasks</h3><ul class="hand-stopface__tasks">${tasks.map((t) => html`<li key=${t.id} data-state=${t.state}>
         <span class="body">${t.title}</span><span class="cap">${t.by?.name || ""} · ${TASK_STATE[t.state] || t.state}${t.error ? ` · ${t.error}` : ""}</span></li>`)}</ul>`}
       ${log && html`<h3 class="board-sub">Log</h3><pre class="shell-log" aria-label="Log">${log.log || "Nothing logged yet."}</pre>`}

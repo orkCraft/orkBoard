@@ -5,7 +5,7 @@
 // rather read a signal: `{task: "<goal>/<task>"}`, `{idea: "<goal>"}` or null. Nothing here draws a card of the table.
 import { signal } from "@preact/signals";
 import { useEffect } from "preact/hooks";
-import { aboutOf } from "../arena/stops.js";
+import { aboutOf } from "../arena/arenawords.js";
 
 export const aboutNow = signal(null);
 

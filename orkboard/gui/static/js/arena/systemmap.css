@@ -2,13 +2,11 @@
    cards in a column for each area (the card itself is arena.css `.arena-task` in `.arena-stk`, at the field's 128 × 180), the area's name over its column as a member's name is over its, the uses drawn as the
    field's arrows; System, the containers as columns (their names, stacks, ways in, layers), the shared parts between them, the links as the field's arrows named on them (`.arch*`); the part or link pressed
    in the right column, and the three moments of what changed since the last look. In orkUI's office look: its tokens only, no colour, font or corner of its own. */
-
 /* -- the party's tabs, on the table at its edge (docs/specs/90-what-the-first-look-said.md §4) ----------------------------------------------- */
 .sys-tabs { flex: none; padding: 3px var(--ork-5) 0; border-bottom: 0; }
 .sys-panel { flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 .sys { position: relative; flex: 1; min-width: 0; min-height: 0; display: flex; flex-direction: column; }
 .sys-note { margin: var(--ork-6); display: flex; align-items: center; gap: var(--ork-3); font: var(--ork-type-body); color: var(--ork-ink-muted); }
-
 /* -- the bar: since the last look, the goals, Rearrange in the corner ------------------------------------------------------------------------ */
 .sys-bar { flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-2) var(--ork-4); min-height: 40px; box-sizing: border-box; padding: var(--ork-2) var(--ork-5);
   border-bottom: var(--ork-line) solid var(--ork-frame); }
@@ -18,7 +16,6 @@
 .sys-goal { display: inline-flex; align-items: center; gap: var(--ork-2); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sys-goal[aria-pressed="true"] { --_bg: var(--ork-ink); --_fg: var(--ork-on-ink); --_bd: var(--ork-ink); }
 .sys-rearrange { flex: none; }
-
 /* -- the table: a column for each area, the parts in their places ---------------------------------------------------------------------------- */
 .sys-main { position: relative; flex: 1; min-height: 0; display: flex; }
 .sys-scroll { flex: 1; min-width: 0; min-height: 0; overflow: auto; }
@@ -34,14 +31,14 @@
 .sys-part .sys-part__kind { color: var(--ork-ink-muted); }
 .sys-part .sys-part__name { font-weight: 600; }
 .sys-part .sys-part__files { margin-top: var(--ork-1); }
-.sys-part .sys-part__uses { white-space: normal; }                        /* *Uses k · Used by m*: two lines, broken between the two, when the card is too narrow for one */
+.sys-part .sys-part__uses { white-space: normal; }
+/* *Uses k · Used by m*: two lines, broken between the two, when the card is too narrow for one */
 .sys-part__uses > span { white-space: nowrap; }
 .sys-part.is-marked { border-color: var(--ork-edge); }
 .sys-part.is-marked .sys-part__kind { color: var(--ork-ink); }
 .sys-part.is-dim { border-color: var(--ork-frame); }
 .sys-part.is-dim .sys-part__kind { color: var(--ork-ink-faint); }
 .sys-part[aria-pressed="true"] { border-color: var(--ork-ink); background: var(--ork-raised); box-shadow: inset 0 0 0 1px var(--ork-ink); }
-
 /* a use (arrows.js `across`): the field's dashed ink line; a use new since the last look in its goal's element */
 .arena-arrow[data-elem="meadow"] polyline { stroke: var(--ork-elem-meadow); }
 .arena-arrow[data-elem="ice"] polyline { stroke: var(--ork-elem-ice); }
@@ -53,7 +50,6 @@
 .arena-arrow[data-elem="dust"] polygon { fill: var(--ork-elem-dust); }
 .arena-arrow[data-elem="void"] polygon { fill: var(--ork-elem-void); }
 .arena-arrow[data-elem="lava"] polygon { fill: var(--ork-elem-lava); }
-
 /* -- what changed since the device's last look, played once (spec 89 §6.3; spec 74 §0: steps, at most 0.42 s each, none under reduced motion) --- */
 .sys-part.sys-unborn, .sys-part.sys-left { visibility: hidden; pointer-events: none; }
 .sys-part.sys-dealt { position: relative; z-index: 60; animation: sys-deal 0.3s steps(6) var(--delay, 0s) backwards; }
@@ -62,12 +58,12 @@
 @keyframes sys-seal { 0% { opacity: 0; transform: scale(2); } 35% { opacity: 1; transform: none; } 75% { opacity: 1; } 100% { opacity: 0; } }
 .sys-part.sys-crumble { pointer-events: none; animation: sys-crumble 0.42s steps(3) forwards; }
 @keyframes sys-crumble { 0% { opacity: 1; } 34% { opacity: 0.7; transform: translateY(2px); } 67% { opacity: 0.35; transform: translateY(5px); } 100% { opacity: 0; transform: translateY(10px); } }
-
 /* -- the part pressed, in the window's right column (docs/specs/90-what-the-first-look-said.md §2) ---------------------------------------------------- */
 .sys-side { min-width: 0; box-sizing: border-box; display: flex; flex-direction: column; gap: var(--ork-3); }
 .sys-side__head { display: flex; align-items: center; gap: var(--ork-3); min-width: 0; }
 .sys-side__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--ork-type-body); font-weight: 600; }
-.sys-side__path { overflow-wrap: anywhere; font-family: var(--ork-font-code); }          /* a path: the code face */
+.sys-side__path { overflow-wrap: anywhere; font-family: var(--ork-font-code); }
+/* a path: the code face */
 .sys-side__kind { color: var(--ork-ink); font-weight: 600; }
 .sys-side__sec > .arena-sec { margin: var(--ork-2) 0 var(--ork-2); }
 .sys-side__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-1); font: var(--ork-type-caption); color: var(--ork-ink); }
@@ -82,7 +78,6 @@
 .sys-change__goal.is-you { cursor: default; }
 .sys-change__made { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .sys-change__made b { color: var(--ork-ink); font-weight: 600; }
-
 /* -- System: the containers as columns on the table (docs/specs/90-what-the-first-look-said.md §6.7, systemarch.js) ------------------------------------ */
 .arch { position: relative; width: max-content; min-width: 100%; box-sizing: border-box; padding: var(--ork-2) var(--ork-8) var(--ork-8) var(--ork-6); }
 .arch-cols { display: flex; align-items: flex-start; column-gap: calc(2 * var(--ork-8)); }
@@ -91,7 +86,8 @@
 .arch-head { display: flex; flex-direction: column; gap: var(--ork-3); }
 .arch-name { max-width: 100%; text-align: center; color: var(--ork-ink); }
 .arch-rule { height: 2px; margin-top: calc(-1 * var(--ork-2)); background: var(--ork-edge); }
-.arch-stack, .arch-ways { width: 0; min-width: 100%; }                         /* the column is as wide as its rows (208 px at least): the stack and the ways in wrap inside it */
+.arch-stack, .arch-ways { width: 0; min-width: 100%; }
+/* the column is as wide as its rows (208 px at least): the stack and the ways in wrap inside it */
 .arch-stack { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--ork-2); }
 .arch-lib { display: inline-flex; flex-direction: column; padding: var(--ork-1) var(--ork-3); background: var(--ork-raised); border: var(--ork-line) solid var(--ork-frame);
   clip-path: var(--ork-notch); font: var(--ork-type-caption); color: var(--ork-ink); }
@@ -114,7 +110,8 @@
 .arch-shared .arch-layer__parts { flex-direction: column; align-items: center; }
 .arch-serves { text-align: center; }
 .arch .sys-stk { flex: none; }
-.arch.is-small .sys-stk { width: 96px; max-width: 96px; }                       /* a crowded table: the smaller card, 96 × 134 (5:7) */
+.arch.is-small .sys-stk { width: 96px; max-width: 96px; }
+/* a crowded table: the smaller card, 96 × 134 (5:7) */
 .arch.is-small .arch-layer__parts { max-width: calc(3 * 96px + 2 * var(--ork-5)); }
 .arch.is-small .sys-part .sys-part__name { -webkit-line-clamp: 3; line-clamp: 3; }
 .arch.is-small .sys-part .sys-part__uses { display: none; }
@@ -123,7 +120,6 @@
 .arch-link:hover { border-color: var(--ork-ink); }
 .arch-link:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 .arch-link[aria-pressed="true"] { border-color: var(--ork-ink); background: var(--ork-ink); color: var(--ork-on-ink); }
-
 /* a link in the right column: its routes and its events */
 .arch-side__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-3); font: var(--ork-type-caption); color: var(--ork-ink); }
 .arch-route, .arch-event { display: flex; flex-direction: column; gap: 0; min-width: 0; }
@@ -132,8 +128,7 @@
 .arch-route__path { min-width: 0; overflow-wrap: anywhere; font: var(--ork-type-caption); font-family: var(--ork-font-code); }
 .arch-event__way { color: var(--ork-ink-muted); white-space: nowrap; }
 .arch-route__where { color: var(--ork-ink-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
 @media (prefers-reduced-motion: reduce) {
-  .sys-part.sys-dealt { animation: none; }
-  .sys-seal, .sys-part.sys-crumble { display: none; }
+.sys-part.sys-dealt { animation: none; }
+.sys-seal, .sys-part.sys-crumble { display: none; }
 }

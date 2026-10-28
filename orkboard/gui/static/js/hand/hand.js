@@ -70,7 +70,7 @@ export function Hand() {
   useEffect(() => { if (key && !s && map) lower(); }, [key, !s]);                      // the stop was answered: the card goes with it
   useEffect(() => { if (key) { fieldOpen.value = false; rowOpen.value = false; } }, [key]);
   if (!map) return null;
-  const none = !(map.nodes || []).length, parties = partiesOf(map).length > 0, middle = none && parties;
+  const none = !(map.nodes || []).length, parties = partiesOf(map).length > 0, middle = none && parties && !stacks.length;      // no goal at all and nothing asked: the + card lies large in the pane
   const plus = () => { rowOpen.value = false; fanned.value = ""; lower(); fieldOpen.value = true; };
   const deck = () => { fieldOpen.value = false; fanned.value = ""; lower(); rowOpen.value = !rowOpen.value; };
   const anchor = key ? root.current?.querySelector(`.hand-card[data-key="${CSS.escape(key)}"]`) : null;

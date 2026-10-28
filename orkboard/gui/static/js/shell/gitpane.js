@@ -1,6 +1,6 @@
 // The Git section of the Files pane (docs/specs/37-board-and-line.md §8): the branch (the work branch or main), ahead / behind
-// its upstream, the changed files with their + / − (a click shows the file's diff in the preview, in Review's diff view),
-// Commit of the files the person ticks, Switch branch, Pull (fast-forward only) and Push (on the press only). A pull or
+// its upstream, the changed files with their + / − (a click shows the file's diff over the pane, in Review's diff view),
+// Commit of the files the person ticks, Switch branch (its list opens in the section), Pull (fast-forward only) and Push (on the press only). A pull or
 // a push runs on the host, off its thread: it shows as busy (git.status says `running`, then the outcome as `last`) and
 // the rest of the page stays usable. A folder with no git (projects.list `git: false`) is offered Start git here.
 import { useEffect, useState } from "preact/hooks";
@@ -8,9 +8,7 @@ import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
 import { command, toast } from "../link.js";
 import { ask } from "../board/store.js";
-import { preview, showGitDiff, showFile } from "./store.js";
 import { File } from "./diffview.js";
-import { Modal, closeDialog, openDialog } from "./modals.js";
 import { currentProject, startGit } from "./projects.js";
 
 export const gitStatus = signal(null);      // git.status, or {nogit: true} for a folder with no git
@@ -33,7 +31,8 @@ function aheadWords(s) {
   return bits.length ? `${bits.join(" · ")} of ${s.upstream}` : `in step with ${s.upstream}`;
 }
 
-export function SwitchDialog({ branch, work }) {
+/** Switch branch, in the Git section: the branches, one pressed switches to it. */
+function SwitchBranch({ branch, work, onClose }) {
   const [list, setList] = useState(null);
   const [why, setWhy] = useState("");
   const [busy, setBusy] = useState(false);
@@ -49,12 +48,11 @@ export function SwitchDialog({ branch, work }) {
       const got = await command("git.switch", { branch: to });
       if (got?.error) { setWhy(got.error); return; }
       await loadStatus();
-      closeDialog();
+      onClose();
     } catch (err) { setWhy(err.message || ""); } finally { setBusy(false); }
   };
-  return html`<${Modal} title="Switch branch" onClose=${closeDialog}
-    foot=${html`<button type="button" class="ork-btn" onClick=${closeDialog}>Cancel</button>`}>
-    <div class="shell-form">
+  return html`<section class="shell-form shell-switch" aria-label="Switch branch" onKeyDown=${(e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); onClose(); } }}>
+    <h4 class="ork-label">Switch branch</h4>
       <p>You are on <code>${branch || "no branch"}</code>.</p>
       ${list === null ? html`<p class="ok-tone-muted">Reading the branches…</p>`
         : list.length === 0 ? html`<p class="ok-tone-muted">This repository has no branch yet.</p>`
@@ -63,12 +61,13 @@ export function SwitchDialog({ branch, work }) {
           onClick=${() => go(b.name)}><code>${b.name}</code>${b.name === work ? html` <span class="ok-tone-muted">the work branch</span>` : ""}${b.current ? html` <span class="ok-tone-muted">you are here</span>` : ""}${b.upstream ? html` <span class="ok-tone-muted">· ${b.upstream}</span>` : ""}</button>`)}</div>`}
       ${why && html`<p class="ok-tone-error" role="alert">${why}</p>`}
       <p class="ok-font-status ok-tone-muted">Refused while files have uncommitted changes: commit them first.</p>
-    </div>
-  <//>`;
+      <p><button type="button" class="ork-btn" onClick=${onClose}>Cancel</button></p>
+  </section>`;
 }
 
-export function GitSection() {
+export function GitSection({ onDiff = () => {} }) {
   const s = gitStatus.value;
+  const [switching, setSwitching] = useState(false);
   const [picked, setPicked] = useState(new Set());
   const [message, setMessage] = useState("");
   const [why, setWhy] = useState("");
@@ -116,16 +115,16 @@ export function GitSection() {
   }
   const isWork = s.work_branch && s.branch === s.work_branch;
   const where = isWork ? "work branch" : s.branch === "main" ? "main" : "";
-  const shown = preview.value?.kind === "gitdiff" ? preview.value.path : "";
   return html`<section class="shell-git" aria-label="Git"><h3 class="board-sub">Git</h3>
     <div class="shell-git__branch"><b data-git="branch">${s.branch || "no branch"}</b>${where && html` <span class="shell-chip__tag">${where}</span>`}
       <span class="ok-font-status ok-tone-muted" data-git="ahead">${aheadWords(s)}</span>
-      <button class="shell-quiet" onClick=${() => openDialog("switch-branch", { branch: s.branch, work: s.work_branch })}>Switch branch</button></div>
+      <button class="shell-quiet" aria-expanded=${switching} onClick=${() => setSwitching(!switching)}>Switch branch</button></div>
+    ${switching && html`<${SwitchBranch} branch=${s.branch} work=${s.work_branch} onClose=${() => setSwitching(false)} />`}
     ${files.length === 0 ? html`<p class="ok-tone-muted" data-git="clean">No changes.</p>` : html`<ul class="shell-git__files" aria-label="Changed files">${files.map((f) => html`<li key=${f.path}
-      class=${cls("shell-git__file", { "is-on": f.path === shown })}>
+      class="shell-git__file">
       <label class="shell-git__tick"><input type="checkbox" aria-label=${`Commit ${f.path}`} checked=${picked.has(f.path)}
         onChange=${(e) => { const n = new Set(picked); e.target.checked ? n.add(f.path) : n.delete(f.path); setPicked(n); }} /></label>
-      <button class="shell-git__name" title=${f.path} onClick=${() => showGitDiff(f.path)}>${f.path}</button>
+      <button class="shell-git__name" title=${f.path} onClick=${() => onDiff(f.path)}>${f.path}</button>
       <span class="shell-git__st ok-tone-muted">${STATUS_WORDS[f.status] || f.status}</span>
       <span class="shell-file__n"><span class="is-add">+${f.added}</span> <span class="is-del">−${f.removed}</span></span></li>`)}</ul>`}
     ${files.length > 0 && html`<form class="shell-git__commit" onSubmit=${commit}>
@@ -141,8 +140,8 @@ export function GitSection() {
   </section>`;
 }
 
-/** A changed file's diff in the preview, as Review shows a result's code. */
-export function GitDiffView({ path }) {
+/** A changed file's diff over the pane, as Review shows a result's code. `onFile(path)`: *Open the file*. */
+export function GitDiffView({ path, onFile = () => {} }) {
   const [d, setD] = useState(null);
   const [gone, setGone] = useState(false);
   useEffect(() => {
@@ -150,7 +149,7 @@ export function GitDiffView({ path }) {
     ask("git.diff", { path }).then((got) => { if (got) setD(got); else setGone(true); });
   }, [path]);
   return html`<div class="shell-gitdiff">
-    <p><button class="board-link" onClick=${() => showFile(path)}>Open the file</button></p>
+    <p><button class="board-link" onClick=${() => onFile(path)}>Open the file</button></p>
     ${gone ? html`<p class="ok-tone-muted">That file has no changes to show.</p>`
       : !d ? html`<p class="ok-tone-muted">Reading the changes…</p>`
       : html`<p class="ok-font-status ok-tone-muted">Against the last commit${d.branch ? ` on ${d.branch}` : ""}.</p>

@@ -514,3 +514,26 @@ export function resultStop(r, nodes) {
     tone: "", gemTip: "A result waits for your look", head: task?.head || null, small: true, whoTip: task ? `${task.by.name}’s task` : "", title: r.title, full: r.title,
     text: [r.diff ? `${plural(r.diff.files, "file", "files")}` : "", r.cost != null ? money(r.cost) : ""].filter(Boolean).join(" · "), why: r.look ? `Waits: ${r.look}` : "" };
 }
+
+/** What a stop is about on the table (spec 58 §1): {task: "<goal>/<task>"} for a failed task, a pick and a result, {idea: "<goal>"} for a plan, a plan change, a question, a proposal and a to-do (the goal's cards),
+ *  null for a stop of another party, and a party's own (it has no card here). */
+export function aboutOf(s) {
+  if (s.other) return null;
+  const row = s.row;
+  if (s.kind === "failed" && s.node && s.task) return { task: `${s.node.slug}/${s.task.id}` };
+  if (s.kind === "pick" && row?.slug) return { task: `${row.slug}/${row.task}` };
+  if (s.kind === "result" && s.result) return { task: `${s.result.idea}/${s.result.task}` };
+  if (["plan", "change", "asks", "proposal", "todo", "collide"].includes(s.kind) && row?.idea) return { idea: row.idea };
+  return null;
+}
+
+/** A to-do lies last in the hand (spec 87 §4.3): after the questions, the forks, the plans and the failures; the rest keep the order they came in. */
+export const todoLast = (stops) => [...stops.filter((s) => s.kind !== "todo"), ...stops.filter((s) => s.kind === "todo")];
+
+/** A plan's missing line (§4.4): *No one in the party does pixel art: Artist would.*, *and 1 more* when it misses more than one kind. */
+export function missingWords(missing) {
+  const [m] = missing || [];
+  if (!m) return "";
+  const more = missing.length - 1;
+  return `No one in the party does ${m.words}: ${m.name} would.${more ? ` and ${more} more` : ""}`;
+}

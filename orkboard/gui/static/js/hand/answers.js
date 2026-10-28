@@ -1,27 +1,27 @@
 // A lifted card's answers (docs/specs/98-the-table-and-the-hand.md §4.4): today's stop answered from the card, the same commands as arena/stops.js sends, in the same
 // words (a plan: *Start the work*, a question: its choices and *Let <name> decide*, a failure: *Start again*, a proposal, a to-do, a collision, a pick, a result, a sign-in).
-// stops.js keeps its answers inside its own fan and exports none of them, so they are written once more here, over the parts it does export (TodoWays, CollideAnswers,
-// ResultActions, SignInButton, Tiles); the old window and its fan go with spec 98 E, and then these are the only ones. A press that needs more room than a card has
+// They are the only ones (the old window's fan went with spec 98 E), written over the parts shared with the pane (TodoWays, CollideAnswers, ResultActions, SignInButton, Tiles). A press that needs more room than a card has
 // (*Open…*: the plan's tasks, a pick's variants large) opens the stop over the pane (`openOver("stop")`, face: stopface.js). Starting a plan deals no cards onto the
 // field yet (that is the table's, spec 98 C).
 import { useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { say, toast } from "../link.js";
 import { act } from "../shell/store.js";
-import { openDialog } from "../shell/modals.js";
 import { ResultActions } from "../shell/review.js";
-import { TodoWays, named } from "../shell/tododialog.js";
+import { TodoWays, named } from "./todoform.js";
 import { SignInButton } from "../shell/signin.js";
 import { CollideAnswers } from "../arena/collide.js";
 import { PICTURES, askedOf, changeToast } from "../arena/arenawords.js";
 import { choiceOf } from "../arena/picks.js";
 import { manyWords, variantOf } from "../arena/pickwords.js";
 import { openOver } from "../frame/state.js";
+import { openPlace } from "../frame/place.js";
 
 const SENT = "Sent: the Taskmaster answers in a moment.";
 
 /** The stop opened over the pane, whole: its text, its tasks, its choices large (stopface.js). */
-export const openStop = (s) => openOver("stop", { key: s.key }, null, s.title || s.full || "");
+/** The stop opened over the pane, whole (`extra`: what the form there starts with, the answers pressed in the card). */
+export const openStop = (s, extra = {}) => openOver("stop", { key: s.key, ...extra }, null, s.title || s.full || "");
 
 /** An answer and its refusal: the first button answers at once, the second opens one line (*Why not?*) that the third sends. */
 function Decline({ s, yes, ask, sure, take, go }) {
@@ -66,7 +66,7 @@ function PlanAnswers({ s, slug, row, g, here }) {
     return m.free ? html`<button type="button" class="ork-btn primary" title=${`${m.name} joins the party, then the work starts`} onClick=${join}>Add and start</button>
         <button type="button" class="ork-btn" title="Passes the plan as it is; the Grunt does that work" onClick=${() => start({})}>Start without</button>`
       : html`<button type="button" class="ork-btn primary" title="Passes the plan as it is; the Grunt does that work" onClick=${() => start({})}>Start without</button>
-        <button type="button" class="ork-btn" title="Change a member of the party" onClick=${() => openDialog("goal", { slug: row.goal || g?.slug })}>Edit the party</button>`;
+        <button type="button" class="ork-btn" title="Change a member of the party" onClick=${() => openPlace("party", { slug: row.goal || g?.slug }, "Edit the party")}>Edit the party</button>`;
   }
   return html`<button type="button" class="ork-btn primary" title="Passes the plan; the work starts" onClick=${() => start({})}>Start the work</button>
     ${!here && html`<button type="button" class="ork-btn" title="The plan's tasks, over the pane" onClick=${() => openStop(s)}>Open the plan</button>`}`;
@@ -79,12 +79,13 @@ function ChangeAnswers({ slug }) {
     <button type="button" class="ork-btn" title="The plan stays as it is" onClick=${keep}>Keep the plan</button>`;
 }
 
-function AskAnswers({ s, row, n, slug }) {
+function AskAnswers({ s, row, n, slug, here }) {
   const isGoal = s.kind === "goal", target = isGoal ? row.goal : slug, asked = askedOf(row, n);
   const send = async (answers) => { const got = await act("ideas.answer", { slug: target, answers, ...(isGoal ? { goal: true } : {}) }); if (got) toast(say(SENT)); };
-  const more = (picks) => openDialog("ask", { slug: target, goal: isGoal, title: row.title, asked: row.asked?.length ? asked : undefined, picks });
+  const more = (picks) => openStop(s, { picks });                                          // the questions as a form, over the pane
   const picks = asked.map((q) => (q.pick != null ? q.choices[q.pick] || "" : ""));
   const decide = html`<${Decide} s=${s} target=${target} isGoal=${isGoal} name=${isGoal ? s.party.lead : asked.find((q) => q.by?.name)?.by?.name || s.party.lead} />`;
+  if (here) return decide;                                                                   // the form is under it: it answers
   if (asked.length === 1 && asked[0].choices.length) {
     return html`${asked[0].choices.map((c, i) => html`<button type="button" key=${c} class=${cls("ork-btn", { primary: i === asked[0].pick })}
         title=${c === PICTURES ? "Opens the form: add the pictures there" : i === asked[0].pick ? "Picked for you: one click answers" : "One click answers with this"}
@@ -103,7 +104,7 @@ export function Answers({ s, here = false }) {
     case "pick": return html`<${PickAnswers} s=${s} />`;
     case "plan": return html`<${PlanAnswers} s=${s} slug=${slug} row=${row} g=${s.g} here=${here} />`;
     case "change": return html`<${ChangeAnswers} slug=${slug} />`;
-    case "asks": case "goal": return html`<${AskAnswers} s=${s} row=${row} n=${n} slug=${slug} />`;
+    case "asks": case "goal": return html`<${AskAnswers} s=${s} row=${row} n=${n} slug=${slug} here=${here} />`;
     case "proposal": {
       const take = () => act("ideas.proposal", { slug, take: true, priority: s.g?.priority || "normal" });
       return html`<${Decline} s=${s} yes=${["Take", "Take"]} ask=${["No", "No"]} sure="Decline" take=${take} go=${(reason) => act("ideas.proposal", { slug, take: false, ...(reason ? { reason } : {}) })} />`;
@@ -113,7 +114,7 @@ export function Answers({ s, here = false }) {
       return html`<${Decline} s=${s} yes=${["Take it out", "Take it out"]} ask=${["Keep it", "Keep it"]} sure="Keep" take=${() => act("ideas.party_answer", { goal, take: true })}
         go=${(reason) => act("ideas.party_answer", { goal, take: false, ...(reason ? { reason } : {}) })} />`;
     }
-    case "todo": return html`<button type="button" class="ork-btn" onClick=${() => openDialog("todo", { idea: row.idea, todo: row.todo, lead: s.party.lead })}>Open…</button>
+    case "todo": return here ? null : html`<button type="button" class="ork-btn" onClick=${() => openStop(s)}>Open…</button>
       <${TodoWays} idea=${row.idea} todo=${row.todo} lead=${s.party.lead} agent=${row.todo?.by?.name} />`;
     case "failed": return html`<button type="button" class="ork-btn primary" title="Its goal’s tasks that are not merged or at Review run again"
         onClick=${() => act("ideas.start", { slug: n?.slug || row.idea, via: "hand" })}>Start again</button>

@@ -1,5 +1,5 @@
-// Orkboard's page (docs/specs/37-board-and-line.md §4): the v1 shell — Board, Review, the preview and Agents — the
-// onboarding's first screen (trust, the AI tools found) and the toasts, in Office's calm look, and no camp module.
+// Orkboard's page (docs/specs/37-board-and-line.md §4, docs/specs/98-the-table-and-the-hand.md §7): the window — the table over the hand, nothing else (js/shell/shell.js) — the
+// onboarding's first screen (trust, the AI tools found), the update's offer and the toasts, in Office's calm look, and no camp module.
 // gui/server.py serves it as the page's script when its host is Orkboard (gui/board_host.py); Orkline's page is
 // app.js, which draws the same shell when `focus` is "board".
 import { render } from "preact";

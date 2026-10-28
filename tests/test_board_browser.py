@@ -1,5 +1,5 @@
 """`orkboard` in a real browser (docs/specs/37-board-and-line.md §4, Tests → B): Orkboard's own host and server on a
-fixture repository, its keeper stubbed. On the desktop (1 440 × 900) the four panes, a goal saved, its question in Needs you;
+fixture repository, its keeper stubbed. On the desktop (1 440 × 900) the table and the hand, a party saved, its question a card of the hand;
 on a paired phone (390 × 844) the phone shell, the same, with no horizontal scroll. Neither asks for a camp file: nothing
 under js/camp/, js/buildings/, sprites/ or v3/ (the network log). Screenshots to docs/design/img/v1/ when ORKCRAFT_SHOTS
 is set."""
@@ -65,27 +65,26 @@ def test_orkboard_on_the_desktop_the_four_panes_a_goal_saved_and_needs_you_no_ca
             ctx.on("request", lambda r: urls.append(r.url))
             pg.on("pageerror", lambda e: errors.append(str(e)))
             pg.goto(server.url)
-            pg.get_by_text("No parties yet").wait_for(timeout=WAIT_MS)                              # the window: no party yet, the arena's note (spec 52: no parties in the top bar)
-            assert pg.locator(".shell-top .arena-phead, .shell-top .shell-proj").count() == 0 and pg.locator(".shell-board, .shell-agents, .shell-split").count() == 0
+            pg.get_by_text("No parties yet").wait_for(timeout=WAIT_MS)                              # the window: the table and the hand, no party yet (spec 98 E)
+            assert pg.locator(".shell-top, .shell-drawer, .arena-left, .shell-backdrop, [aria-modal]").count() == 0 and pg.locator(".table .table-tabs").count() == 1
             assert pg.evaluate("document.documentElement.dataset.look") == "office"
             assert pg.locator(".gui-hud, .gui-camp, .gui-town, .gui-foot").count() == 0
-            pg.locator(".arena-note").get_by_role("button", name="New party", exact=True).click()       # New party, from the note
-            dlg = pg.get_by_role("dialog", name="New party")
+            pg.locator(".table-empty").get_by_role("button", name="New party", exact=True).click()       # New party, from the pane's note: a place over the pane
+            dlg = pg.locator(".place")
             dlg.locator('.shell-craft-tile[data-craft="marketing"]').click()          # a party of the library: its leader, builders and checkers
             dlg.get_by_label("What it is for").fill("More people try Orkline.")
             dlg.get_by_role("button", name="Save party").click()
-            pg.locator(".shell-goal").get_by_role("region", name="The party").wait_for(timeout=WAIT_MS)
-            for pane in (".arena-left", ".arena-field", ".arena-look", ".arena-team", ".shell-drawer"):                # the window's regions, on the real host's data
+            pg.locator('.table-tab[aria-selected="true"]:not([data-tab="orkmaster"])').wait_for(timeout=WAIT_MS)       # the party's own tab opens
+            for pane in (".table-tabs", ".table-pane"):                # the window's two parts, on the real host's data
                 assert pg.locator(pane).is_visible(), pane
             g = next(t for t in board.command("ideas.board")["tracks"] if t["team"])
             assert (g["leader"]["slug"], g["team"]) == ("growth", ["copywriter", "seo", "editor"])
             made = {r["slug"]: r for r in board.command("ideas.roles")["roles"]}
             assert made["copywriter"]["craft"] == "marketing" and made["growth"]["takes"] == ["campaign"]   # the party's agents: the project's roles
-            team = pg.locator(".shell-goal").get_by_role("region", name="The party")             # the party's screen says who is in it
-            team.wait_for(timeout=WAIT_MS)
-            assert "Copywriter" in team.inner_text() and "Growth" in team.inner_text()
-            pg.locator(".arena-hc[data-kind=goal]").wait_for(timeout=WAIT_MS)                    # the keeper's question: a stop along the bottom
-            assert "Which channel first?" in pg.locator(".arena-hc[data-kind=goal]").inner_text()
+            pg.locator(".table-head").wait_for(timeout=WAIT_MS)             # the party's header says who is in it
+            assert pg.locator(".table-seat").count() >= 2
+            pg.locator(".hand-card[data-kind=goal]").wait_for(timeout=WAIT_MS)                    # the keeper's question: a card in the hand
+            assert pg.locator(".hand").is_visible() and "Which channel first?" in pg.locator(".hand-card[data-kind=goal]").get_attribute("title")
             assert any(n["kind"] == "goal" for n in board.command("ideas.board")["needs_you"])
             assert not pg.evaluate("document.documentElement.scrollWidth > document.documentElement.clientWidth")
             if os.environ.get("ORKCRAFT_SHOTS"):

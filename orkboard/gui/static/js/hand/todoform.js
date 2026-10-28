@@ -1,11 +1,10 @@
-// A to-do of a plan (docs/specs/35-goals-window.md §9): why it is asked, its steps, then its one input — a secret, a
+// A to-do of a plan (docs/specs/35-goals-window.md §9; docs/specs/98-the-table-and-the-hand.md §7): why it is asked, its steps, then its one input — a secret, a
 // choice, a confirm or a file. `instructions` are steps only. A file goes as base64 in `ideas.todo`'s `file`
-// (at most 5 MB); the host keeps it outside the repository.
+// (at most 5 MB); the host keeps it outside the repository. It lies in the stop opened over the pane (stopface.js).
 import { useState } from "preact/hooks";
 import { html } from "../html.js";
 import { say, toast } from "../link.js";
-import { act, showPlan } from "./store.js";
-import { Modal, closeDialog } from "./modals.js";
+import { act } from "../shell/store.js";
 
 const FILE_MAX = 5 * 1024 * 1024;
 
@@ -49,7 +48,7 @@ export function TodoWays({ idea, todo, lead, agent, done = () => {}, quick = tru
     : html`<button type="button" class=${look} aria-label=${`Describe it instead: ${todo.title}`} onClick=${() => setTelling(true)}>Describe it instead</button>${without("Go without it")}`;
 }
 
-export function TodoDialog({ idea, todo, lead }) {
+export function TodoForm({ idea, todo, lead, done: closed = () => {} }) {
   const [value, setValue] = useState("");
   const [file, setFile] = useState(null);
   const [problem, setProblem] = useState("");
@@ -59,7 +58,7 @@ export function TodoDialog({ idea, todo, lead }) {
     setBusy(true);
     const got = await act("ideas.todo", { idea, id: todo.id, done: true, ...extra });
     setBusy(false);
-    if (got) closeDialog();
+    if (got) closed();
   };
   const pick = (f) => {
     setProblem("");
@@ -71,12 +70,7 @@ export function TodoDialog({ idea, todo, lead }) {
     await done({ file: { name: file.name, data: await toBase64(file) } });
   };
   const kind = todo.kind;
-  return html`<${Modal} title=${todo.title} onClose=${closeDialog}
-    foot=${html`<button type="button" class="ork-btn" onClick=${() => { closeDialog(); showPlan(idea, todo.id); }}>What waits for it</button>
-      <button type="button" class="ork-btn" onClick=${closeDialog}>Later</button>
-      ${(kind === "instructions" || kind === "confirm" || !["secret", "choice", "file"].includes(kind)) && html`<button type="button" class="ork-btn primary"
-        disabled=${busy} onClick=${() => done()}>${kind === "instructions" ? "I did it" : "Done"}</button>`}`}>
-    <div class="shell-form board-todo-dialog" data-kind=${kind}>
+  return html`<div class="shell-form board-todo-dialog" data-kind=${kind}>
       ${todo.why && html`<p class="shell-brief">${todo.why}</p>`}
       ${todo.steps?.length > 0 && html`<div class="shell-field"><span class="ok-font-label">Steps</span>
         <ol class="board-steps">${todo.steps.map((s, n) => html`<li key=${n}>${s}</li>`)}</ol></div>`}
@@ -94,7 +88,9 @@ export function TodoDialog({ idea, todo, lead }) {
         <span class="ok-font-status ok-tone-muted">${say("At most 5 MB. Kept on this machine, outside the repository, never in a prompt.")}</span>
         ${problem && html`<span class="ok-tone-error" role="alert">${problem}</span>`}
         <span><button type="button" class="ork-btn primary" disabled=${!file || busy} onClick=${sendFile}>Send the file</button></span></div>`}
-      <div class="shell-field board-row board-todo-ways"><${TodoWays} idea=${idea} todo=${todo} lead=${lead} agent=${todo.by?.name} done=${closeDialog} quick=${false} /></div>
-    </div>
-  <//>`;
+      <div class="shell-field board-row board-todo-ways">
+        ${(kind === "instructions" || kind === "confirm" || !["secret", "choice", "file"].includes(kind)) && html`<button type="button" class="ork-btn primary"
+          disabled=${busy} onClick=${() => done()}>${kind === "instructions" ? "I did it" : "Done"}</button>`}
+        <${TodoWays} idea=${idea} todo=${todo} lead=${lead} agent=${todo.by?.name} done=${closed} quick=${false} /></div>
+    </div>`;
 }

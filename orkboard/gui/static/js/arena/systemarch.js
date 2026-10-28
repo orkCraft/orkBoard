@@ -11,9 +11,9 @@ import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Icon } from "../orkui.js";
 import { command } from "../link.js";
-import { closePreview, preview, show } from "../shell/store.js";
+import { lift, lifted, lower, linkKey } from "../frame/state.js";
 import { ArrowLines } from "./arrows.js";
-import { COULD_NOT, DONE, Modules, NOTHING, Part, READING, SysBar, dealsOf, openPart, orderOf, phaseOf, shownSys, useReveal } from "./systemmap.js";
+import { COULD_NOT, DONE, Modules, NOTHING, Part, READING, SysBar, dealsOf, liftedPart, openPart, orderOf, phaseOf, shownSys, useReveal } from "./systemmap.js";
 
 // -- the words (spec 90 §0) ---------------------------------------------------------------------------------------------------------------------------------------------------
 export const SHARED = "Shared";
@@ -112,8 +112,7 @@ function Head({ c }) {
 /** System: the containers as columns on the table, the shared parts between those they serve, the links as arrows named on them. */
 export function Architecture({ doc, order, step, pick, party }) {
   const ov = doc.overview, host = useRef(), [arrows, setArrows] = useState([]), [hover, setHover] = useState("");
-  const tab = preview.value;
-  const shownPart = tab?.kind === "part" && tab.slug === party ? tab.path : "", shownLink = tab?.kind === "link" && tab.slug === party ? tab.path : "";
+  const shownPart = liftedPart(party), linkHead = `t:link:${party}:`, shownLink = lifted.value.startsWith(linkHead) ? lifted.value.slice(linkHead.length) : "";
   const cols = planOf(ov), links = ov.links || [];
   const parts = ov.parts || {};
   const count = cols.reduce((k, col) => k + (col.kind === "shared" ? col.parts.length : col.rows.reduce((j, r) => j + r.parts.length, 0)), 0);
@@ -133,7 +132,7 @@ export function Architecture({ doc, order, step, pick, party }) {
   const goals = doc.goals || {}, gindex = new Map(order.map((o, i) => [o.goal, i])), deals = dealsOf(doc, order);
   const lit = new Set(hover ? [...(parts[hover]?.uses || []), ...(parts[hover]?.used_by || [])] : []);
   const names = Object.fromEntries((ov.containers || []).map((c) => [c.path, c.name]));
-  const press = (c) => (shownPart === c.path ? closePreview() : openPart(c.path, party, c.name));
+  const press = (c) => (shownPart === c.path ? lower() : openPart(c.path, party));
   const hovered = (path) => setHover(path);
   const card = (path, area) => {
     const c = parts[path] || { path, name: base(path), count: 0, uses: [], used_by: [], gone: false };
@@ -143,8 +142,8 @@ export function Architecture({ doc, order, step, pick, party }) {
   };
   const openLink = (l) => {
     const key = `${l.from}>${l.to}`;
-    if (shownLink === key) closePreview();
-    else show({ kind: "link", path: key, slug: party, title: `${names[l.from] || l.from} → ${names[l.to] || l.to}` }, { via: "map" });
+    if (shownLink === key) lower();
+    else lift(linkKey(party, key));
   };
   return html`<div class="sys-main">
     <div class="sys-scroll">

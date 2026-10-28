@@ -6,7 +6,8 @@ import { useRef, useState } from "preact/hooks";
 import { html } from "../html.js";
 import { WhoHead } from "../orkui.js";
 import { ask, board } from "../board/store.js";
-import { closePreview, refreshShell } from "./store.js";
+import { refreshShell } from "./store.js";
+import { closeOver } from "../frame/state.js";
 import { Tiles, choiceOf, choose } from "../arena/picks.js";
 import { NEEDS_NOTE, NONE, kindCount, manyWords, noteWords, rowOf, takeWords, variantOf } from "../arena/pickwords.js";
 
@@ -19,8 +20,8 @@ export function PickView({ p }) {
     setBusy(true);
     const got = await ask("ideas.pick", { slug: row.slug, task: row.task, key, ...(note ? { note } : {}), via: "drawer" });
     setBusy(false);
-    if (!got?.ok) return;                                  // a refusal is toasted in the host's words; the drawer stays
-    closePreview();
+    if (!got?.ok) return;                                  // a refusal is toasted in the host's words; the pane stays
+    closeOver();
     await refreshShell();
   };
   const none = () => {                                      // asking for new ones says what to change: the note first

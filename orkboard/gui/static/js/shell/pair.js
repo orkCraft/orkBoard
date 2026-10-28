@@ -1,16 +1,16 @@
 // Pair a phone, from the shell (docs/specs/34-v1-round-2.md §6): the existing pairing (`phones.pair`, `phones.pair_stop`,
-// `PairQr` of js/phones.js) inside the modal — the QR, the time the code has left, in plain words how the phone will reach
-// this computer, and the paired phones with Forget. Closing the dialog voids a code not used.
+// `PairQr` of js/phones.js) in a place over the pane — the QR, the time the code has left, in plain words how the phone will reach
+// this computer, and the paired phones with Forget. Closing the place voids a code not used.
 import { useEffect, useState } from "preact/hooks";
 import { html, linked } from "../html.js";
 import { command, say } from "../link.js";
 import { usePairing, PairQr, AwakeOffer } from "../phones.js";
-import { Modal, closeDialog, openDialog } from "./modals.js";
+import { Place, closePlace, openPlace } from "../frame/place.js";
 
 const when = (iso) => (iso ? iso.replace("T", " ").slice(0, 16) : "");
 const hostOf = (url) => { try { return new URL(url).hostname; } catch { return String(url || "").replace(/^https?:\/\//, "").split(/[:/]/)[0]; } };
 
-export function PairDialog() {
+export function PairPlace() {
   const pairing = usePairing();
   const { offer, left, paired, awake, pair, cancel, step } = pairing;
   const [info, setInfo] = useState(null);          // phones.list: the paired phones, the addresses
@@ -19,9 +19,9 @@ export function PairDialog() {
   useEffect(() => { if (paired) read(); }, [paired]);
   const forget = (id) => command("phones.forget", { id }).then(setInfo, () => {});
   const tail = offer?.tail_address || info?.tail_address, wifi = offer?.address || info?.address;
-  return html`<${Modal} title="Pair a phone" onClose=${closeDialog} wide=${true}
-    foot=${html`<button type="button" class="ork-btn" onClick=${() => openDialog("settings")}>← Settings</button>
-      <button type="button" class="ork-btn primary" onClick=${closeDialog}>Done</button>`}>
+  return html`<${Place} title="Pair a phone"
+    foot=${html`<button type="button" class="ork-btn" onClick=${() => openPlace("settings", {}, "Settings")}>← Settings</button>
+      <button type="button" class="ork-btn primary" onClick=${closePlace}>Done</button>`}>
     <div class="shell-pair">
       <div class="shell-pair__code" aria-live="polite">
         ${offer ? html`<${PairQr} pairing=${pairing} /><span class="ok-font-status shell-pair__left">The code is good for ${left} s, once.</span>
