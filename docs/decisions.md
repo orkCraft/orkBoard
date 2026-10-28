@@ -3055,15 +3055,17 @@ steps, and a goal of Product may touch no file at all. So (this makes §86, §10
    3,000 characters at most; past it the top level keeps only its names, and says so. The map stands before what
    changes from call to call, so its text is the same between two heads of dev and the prompt's cache keeps it.
 3. **A map of judgement is never rewritten unseen**: its cards (the pains, the loop) are tied to what they rest on
-   (§112.7–§112.8); a change under one is a mark on the card (*what it rests on changed: goal #N, decided by …*), in the
-   map's text at the leader's next call. The leader may change the card, with its why, seen as the leader's (§118.6).
+   (§112.7–§112.8); a change under one marks the card with the changing goal's element, as a changed card is sealed
+   (§104.2), its back saying *what it rests on changed: goal #N, decided by …*; the same line is in the map's text at the
+   leader's next call. The leader may change the card, with its why, seen as the leader's (§118.6).
 4. **A promised change is a ghost on every map it touches**, not only on its goal's (§104.6 widened): a spec's *Will be*
    names the parts of the maps by their ids; a part that another party's card rests on, promised to change, carries on
-   that party's map a ghost mark (*promised: goal #N will change this, decided by …*). No call.
+   that party's map the promising goal's ghost (§104.2's motion, in its element), its back saying *promised: goal #N will
+   change this, decided by …*. No call. Neither mark adds a sign or a motion to §127.3's closed set.
 5. **Goals meet by the parts of their maps as well as by their files** (§86.1–§86.2): an open goal of another party that
-   rests on the parts a spec's *Will be* changes gets §86's stop; the same cheap judge, the person decides, a re-plan
-   only on their yes. Only then does a leader read another party's spec, and of it only *Done when* and *Will be*
-   (§118.5).
+   rests on the parts a spec's *Will be* changes meets it as two goals changing the same thing do, a fork in the hand
+   and a mark on both goals' cards (§131.4); the same cheap judge, the person decides, a re-plan only on their yes.
+   Only then does a leader read another party's spec, and of it only *Done when* and *Will be* (§118.5).
 6. **A change that touches another party's map offers that party on the route card** (§133.1), with its cost, before
    any start; a bug's short way (§118.2) too: a fix of Tech's whose *Will be* touches a part a card of Product rests on
    offers Product. The Orkmaster offers, the person says yes.
@@ -3084,10 +3086,29 @@ steps, and a goal of Product may touch no file at all. So (this makes §86, §10
 11. **The decisions file** (§118.1): its next number is read by code (the last `## N.`); a leader is given its goal's
    entry, cut by code, and the headings of the last ten, never the file whole. At the first opening, a log of decisions
    the project keeps already (`docs/adr/`, a `decisions.md` elsewhere) is offered as the path, never a second one.
-12. **Coming back**: the night's refresh reads again a few goals a night at most, those on the table and in the hand
-   first; a goal in the deck is read again when it is taken into the hand.
+12. **Coming back**: a party's reading (the summary a party keeps today, `read_goal`, read again by the night's refresh)
+   gives way to its map's text (1), rebuilt by code at dev's head, so nothing is read again by a model when the person
+   comes back; the night and its refresh go with §131.2.
 13. **A task reads the spec's common part and its party's part**, and of the others only *Done when* and *Will be*
    (§118.5 for the task too); its prompt names those, not the whole spec.
-14. **When**: 1–2, 7, 8 and 13 with the first slice's sections (§136.12), Tech's *System* first and the other maps as
-   they come (§104.14); 3–6 with the other maps; 10 with §153; 9, 11 and 12 at any time, 9 after its measure.
+14. **When**: 1–2, 7, 8, 12 and 13 with the first slice's sections (§136.12), Tech's *System* first and the other maps
+   as they come (§104.14); 3–6 with the other maps; 10 with §153; 9 and 11 at any time, 9 after its measure.
+The owner's call.
+
+## 157. What §151–§156 left uneven: the project's questions are a stack among the stacks; Release's squad is its leader until seats are added; spec 95 read up to §157 (28 October, the owner and the PM)
+
+Why: §151–§156 read against spec 95 and each other: §153.2 lays Product's questions *beside the blank card and Release's
+card*, §121.2's hand, while §145.3–§145.4 laid the hand anew (the blank card, the deck, the stacks, Release's card, the
+discard); §154.2 names Release's engineer, notes and checker as its squad's seats, while §151.6 makes Release's squad its
+leader alone; and spec 95, which a decision changing the window changes in the same commit, stopped at §152 (it still
+says *the four crafts' races only*, §148.8, which §154.3 changed). So (this makes §153.2 and §154.2 precise):
+1. **The project's questions are a stack among the stacks** (§145.3, §121.2): one stack of no goal's, its leader's head
+   on it (Product's, or Game design's in a game, §153.1), laid by its top card's urgency as any stack (a question the
+   work does not wait for: after the others); answered or let go (*Let … decide*), it leaves the hand. No fixed place
+   beside the blank card or Release's card.
+2. **Release's squad is its leader** (§151.6), Lean, on the cheaper tier; its engineer, its notes and its checker are
+   seats the person may add in the one place of the parties (§151.5), and a seat added is a skeleton (§154.2).
+3. **Spec 95 is read up to §157** in this commit: the project's questions and the stack (§153), the six races and the
+   leaders' forms (§154–§155), what a leader's change shows on another party's map and on the route card (§156.3–§156.6),
+   and the first slice with what joined it since §136.12.
 The owner's call.
