@@ -494,7 +494,7 @@ def test_a_goal_picked_unfolds_its_cascade_and_is_lit_in_both_its_lanes_the_othe
     pg, host, w = table
     assert pg.locator(".ork-picked").count() == 0
     pick(pg, "bar")                                                                                                       # in the first lane it is being joined, in Art's it is at work
-    pg.wait_for_function("() => document.querySelectorAll('.ork-picked').length === 2", timeout=WAIT_MS)
+    pg.wait_for_function("() => document.querySelectorAll('.table .ork-picked').length === 2", timeout=WAIT_MS)
     assert title(pg) == "A timer bar that drains · through the Orkmaster"
     lit = pg.locator(".ork-picked")
     assert [l.get_attribute("data-goal") for l in lit.all()] == ["bar", "bar"]                                            # its strip (or token) in both lanes, lit alike
@@ -509,7 +509,7 @@ def test_a_goal_picked_unfolds_its_cascade_and_is_lit_in_both_its_lanes_the_othe
         assert pg.locator('.table-lane[data-lane="first"] .table-gstrip.ork-picked').evaluate("e => e.getAttribute('aria-pressed')") == "true"
     shot(pg, f"table-picked-{w}.png")
     pick(pg, "")
-    pg.wait_for_function("() => document.querySelectorAll('.ork-picked').length === 0", timeout=WAIT_MS)
+    pg.wait_for_function("() => document.querySelectorAll('.table .ork-picked').length === 0", timeout=WAIT_MS)
 
 
 def test_the_first_lane_holds_what_is_the_whole_projects_the_goals_read_routed_and_joined_then_the_line(table):
@@ -696,13 +696,13 @@ def test_a_goal_picked_through_the_orkmasters_tab_keeps_every_goal_on_the_board_
     pg, host, w = table
     cards = pg.locator("[data-lkey]").count()
     pick(pg, "seat")
-    pg.wait_for_function("() => document.querySelector('.table-casc[data-goal=\"seat\"], .table-token[data-goal=\"seat\"]') !== null && document.querySelectorAll('.ork-picked').length === 1", timeout=WAIT_MS)
+    pg.wait_for_function("() => document.querySelector('.table-casc[data-goal=\"seat\"], .table-token[data-goal=\"seat\"]') !== null && document.querySelectorAll('.table .ork-picked').length === 1", timeout=WAIT_MS)
     assert title(pg) == "Keep the seat when a socket reconnects · through the Orkmaster"
     assert pg.locator("[data-lkey]").count() >= cards                                                                    # nothing is hidden for it (a picked goal's unfolded cascade only adds cards)
     if wide(w):
         assert keys(pg, '.table-casc[data-goal="seat"]') == ["t:task:seat/s1", "t:task:seat/s2"] and pg.locator('.table-casc[data-goal="seat"] .table-card').count() == 2
     pick(pg, "")
-    pg.wait_for_function("() => document.querySelectorAll('.ork-picked').length === 0", timeout=WAIT_MS)
+    pg.wait_for_function("() => document.querySelectorAll('.table .ork-picked').length === 0", timeout=WAIT_MS)
 
 
 def pick(pg, slug):
