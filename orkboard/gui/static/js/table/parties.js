@@ -9,6 +9,7 @@ import { html, cls } from "../html.js";
 import { command } from "../link.js";
 import { Head, Icon, Sign } from "../orkui.js";
 import { ask, board } from "../board/store.js";
+import { currentProject } from "../shell/projects.js";
 import { mapData, refreshShell } from "../shell/store.js";
 import { useTools } from "../shell/toolpick.js";
 import { drawn } from "../frame/kinds.js";
@@ -35,6 +36,19 @@ const NARROW = "(max-width: 759px)";                                            
 /** Opens the one place of the parties over the pane (`props.party`: a party's slug to open at the right; `props.first`: the first start, whatever the Board holds). It says it came from the map that was shown. */
 export function openParties(props = {}, from = over.peek()?.from || { title: mapName(tab.value, partiesNow()), key: "" }) {
   openOver("parties", props, from, "Parties");
+}
+
+const offered = new Set();                                                          // the projects whose first start was opened by itself, this page load
+
+/** The first start (decisions §169.4): the project read and no party but General — the empty Board — opens the one place at once, once per project per page load, as soon as the map has answered (an earlier open
+ *  fires before the map is there). ← or Esc leaves it to the empty Board, which keeps *Choose the parties* to open it again. Nothing is opened over a thing already open. */
+export function useFirstStart(parties) {
+  const project = currentProject.value?.path || "", read = !!mapData.value && !!board.value;
+  useEffect(() => {
+    if (!read || parties.length || over.peek() || offered.has(project)) return;
+    offered.add(project);
+    openParties({ first: true });
+  }, [read, project, parties.length]);
 }
 
 /** The kinds a project can be (realm/project_kind.py `KINDS`, in its order) and how the interface says each. A kind the host names that is not here is listed with the host's words. */

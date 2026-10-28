@@ -77,32 +77,61 @@ export function LeaderRow({ v, size, tools, g, onOpen, open }) {
     : html`<div class="ork-card parties__lead" data-seat=${lead}>${inner}</div>`;
 }
 
-/** What the leader keeps of the project (decisions §153.4), read from the host (`ideas.project_facts {party}` → `{facts: [{key, text, by}]}`) and changed here, *From the next goal*: a fact's text is edited in place and
- *  kept as the person's on leaving the field (`ideas.project_fact_set {party, key, text}`); an empty text, or *Forget*, drops it. Drawn only for a party that is made and where the host answers with facts. */
+/** The keys a party's fact may not take: the project's common core (`realm/project_facts.py` `COMMON_KEYS`) is not a party's to replace. */
+const COMMON_KEYS = ["for_whom", "hurts", "leaves_out"];
+
+/** A key the host accepts (`a-z`, `0-9` and `_`, up to 40) for a new fact: the first words of its text, slugged, and unique among the party's keys (`_2`, `_3`, …); `fact` when the text has no letter or digit to slug. */
+export function factKey(text, taken = []) {
+  const base = String(text || "").toLowerCase().normalize("NFKD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, " ").trim().split(" ").filter(Boolean).slice(0, 4).join("_").slice(0, 36).replace(/_+$/, "") || "fact";
+  const used = new Set([...taken, ...COMMON_KEYS]);
+  let key = base, n = 1;
+  while (used.has(key)) key = `${base.slice(0, 36 - String(++n).length - 1)}_${n}`;
+  return key;
+}
+
+/** What the leader keeps of the project (decisions §153.4, §169.6), read from the host (`ideas.project_facts {party}` → `{facts: [{key, text, by}]}`) and changed here, *From the next goal*: a fact's text is edited in place and
+ *  kept as the person's on leaving the field (`ideas.project_fact_set {party, key, text}`); an empty text, or *Forget*, drops it; *Add a fact* opens one field, Enter (or *Add*) keeps it under a key made of its first words.
+ *  Drawn only for a party that is made and where the host answers with facts (an empty list too: the first fact is added here). */
 export function Facts({ party }) {
-  const [facts, setFacts] = useState([]), [busy, setBusy] = useState(false);
+  const [facts, setFacts] = useState(null), [busy, setBusy] = useState(false), [adding, setAdding] = useState(false), [draft, setDraft] = useState("");
   useEffect(() => {
     let live = true;
-    setFacts([]);
+    setFacts(null); setAdding(false); setDraft("");
     if (party) command("ideas.project_facts", { party }, true).then((a) => { if (live && Array.isArray(a?.facts)) setFacts(a.facts); }).catch(() => {});
     return () => { live = false; };
   }, [party]);
-  const keep = async (f, text) => {
-    if (busy || text.trim() === f.text) return;
+  const send = async (key, text) => {
     setBusy(true);
     try {
-      const got = await ask("ideas.project_fact_set", { party, key: f.key, text: text.trim() });
-      if (got && Array.isArray(got.facts)) setFacts(got.facts);
+      const got = await ask("ideas.project_fact_set", { party, key, text });
+      if (got && Array.isArray(got.facts)) { setFacts(got.facts); return true; }
+      return false;
     } finally { setBusy(false); }
   };
-  if (!party || !facts.length) return null;
+  const keep = async (f, text) => {
+    if (busy || text.trim() === f.text) return;
+    await send(f.key, text.trim());
+  };
+  const add = async () => {
+    const text = draft.trim();
+    if (busy || !text) return;
+    if (await send(factKey(text, facts.map((f) => f.key)), text)) { setAdding(false); setDraft(""); }
+  };
+  if (!party || !facts) return null;
   return html`<section class="parties__facts" aria-label="What it keeps of the project" data-facts>
     <h4 class="ork-label">What it keeps of the project</h4>
-    <ul>${facts.map((f) => html`<li key=${f.key + f.text} data-key=${f.key} class="parties__fact">
+    ${facts.length > 0 && html`<ul>${facts.map((f) => html`<li key=${f.key + f.text} data-key=${f.key} class="parties__fact">
       <input class="ork-field" defaultValue=${f.text} maxlength="300" aria-label=${`What it keeps: ${f.text}`} disabled=${busy} onBlur=${(e) => keep(f, e.target.value)}
         onKeyDown=${(e) => { if (e.key === "Enter") { e.preventDefault(); e.target.blur(); } }} />
       <small class="parties__muted">${f.by === "read" ? "read from the project" : "you said"}</small>
-      <button type="button" class="ork-btn quiet" disabled=${busy} title="It stops keeping this, from the next goal" aria-label=${`Forget: ${f.text}`} onClick=${() => keep(f, "")}>Forget</button></li>`)}</ul>
+      <button type="button" class="ork-btn quiet" disabled=${busy} title="It stops keeping this, from the next goal" aria-label=${`Forget: ${f.text}`} onClick=${() => keep(f, "")}>Forget</button></li>`)}</ul>`}
+    ${adding
+      ? html`<div class="parties__fact parties__fact-add" data-adding>
+          <input class="ork-field" value=${draft} maxlength="300" aria-label="A new fact" placeholder="What it should know of the project" disabled=${busy}
+            ref=${(el) => { if (el && !el.dataset.seen) { el.dataset.seen = "1"; el.focus(); } }} onInput=${(e) => setDraft(e.target.value)}
+            onKeyDown=${(e) => { if (e.key === "Enter") { e.preventDefault(); add(); } else if (e.key === "Escape") { e.preventDefault(); setAdding(false); setDraft(""); } }} />
+          <button type="button" class="ork-btn primary" disabled=${busy || !draft.trim()} onClick=${add}>Add</button></div>`
+      : html`<div><button type="button" class="ork-btn quiet" data-act="add-fact" onClick=${() => setAdding(true)}>Add a fact</button></div>`}
     <p class="parties__muted">From the next goal</p></section>`;
 }
 

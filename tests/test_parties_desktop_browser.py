@@ -2,7 +2,7 @@
 stub host of the table's tests (tests/test_table_desktop_browser.py `TableHost`) with the commands of the parties added: `ideas.stage`, `ideas.stage_set`, `ideas.party_presets` (a game's, as the realm gives them),
 `ideas.party_price`, `ideas.goal_save` and `ideas.project_ask`; and the host's few of spec 100 §5b: `ideas.project_kind_set`, `ideas.project_facts` and `ideas.project_fact_set`.
 
-It opens the one place the way a person does: the tabs' **+**, a party's **…** *Edit*, and (with no party) the note's *Choose the parties* with `first`; the old form (New party, Edit the party) is gone.
+It opens the one place the way a person does: the tabs' **+**, a party's **…** *Edit*, and, with no party, nothing at all: the first start opens it by itself once the map has answered (decisions §169.4; ← or Esc leaves it to the empty Board, whose *Choose the parties* opens it again); the old form (New party, Edit the party) is gone.
 
 The first start (no party yet): the project's kind in a field, the stages' headings with the parties under them, the project's stage picked on its heading and the stages reached ticked, Release ticked and locked in
 every project, each party its leader's head (its party's race), **Start** making the ticked parties and then asking the project. A party opened at the right: the size's three lines and their price a goal, the
@@ -103,7 +103,8 @@ class PartiesHost(TableHost):
             self.log.append((name, a))
             rows = [r for r in self.fact_rows if r["key"] != a["key"]]
             if a["text"].strip():
-                rows = [{"key": a["key"], "text": a["text"], "by": "person"} if r["key"] == a["key"] else r for r in self.fact_rows]
+                mine = {"key": a["key"], "text": a["text"], "by": "person"}                                          # kept as the person's: replaced where the key is there, else added last
+                rows = [mine if r["key"] == a["key"] else r for r in self.fact_rows] if any(r["key"] == a["key"] for r in self.fact_rows) else [*self.fact_rows, mine]
             self.fact_rows = rows
             return {"ok": True, "facts": rows, **({"dropped": True} if not a["text"].strip() else {})}
         return super().handle(name, a)
@@ -126,16 +127,12 @@ def start(gui, width, errors, **kw):
 
 
 def opened(pg, props="{}"):
-    """The place opened the way a person opens it: a party named (`{party: 'tech'}`) from that party's … Edit, else the tabs' + (the first start, with no party, through the note's button)."""
+    """The place opened the way a person opens it: a party named (`{party: 'tech'}`) from that party's … Edit; with no party (the first start) it opens by itself once the map has answered, so it is waited for."""
     party = re.search(r"party:\s*'([^']+)'", props)
     if party:
         pg.locator(f'.table-tab[data-tab="{party.group(1)}"]').click()
         pg.get_by_role("button", name=re.compile(r"'s menu$")).click()
         pg.get_by_role("menuitem", name="Edit").click()
-    elif pg.locator(".table-empty").count():
-        pg.get_by_role("button", name="Choose the parties").click()
-    else:
-        pg.get_by_role("button", name="New party").click()
     pg.locator(".parties[data-screen]").wait_for(timeout=WAIT_MS)
 
 
@@ -423,7 +420,7 @@ def test_what_the_leader_keeps_of_the_project_is_read_where_the_host_has_it(gui)
     assert "From the next goal" in text and "you said" in text and "read from the project" in text
     assert host.called("ideas.project_facts")[0] == {"party": "tech"}
     open_party(pg, "art")
-    pg.wait_for_function("() => document.querySelectorAll('[data-facts]').length === 0", timeout=WAIT_MS)             # another party keeps none
+    pg.wait_for_function("() => document.querySelectorAll('[data-facts] li').length === 0", timeout=WAIT_MS)         # another party keeps none
     pg.context.close()
     assert not errors, "\n".join(errors)
 
@@ -486,15 +483,96 @@ def test_a_partys_edit_opens_the_place_at_that_party_and_the_first_start_says_fi
     pg.get_by_role("button", name="Back").click()
     pg.locator(".parties").wait_for(state="detached", timeout=WAIT_MS)
     pg.context.close()
-    pg2, host2 = start(gui, "wide", errors, made=False)                                                              # a project with no party: the note's button, the first start
-    assert "No parties yet" in words(pg2.locator(".table-empty"))
-    opened(pg2)
-    assert pg2.locator(".parties").get_attribute("data-first") == "true" and pg2.get_by_role("button", name="Start", exact=True).is_visible()
-    pg2.context.close()
     assert not errors, "\n".join(errors)
 
 
-def test_the_place_without_facts_draws_none(made):
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_the_first_start_opens_the_place_at_once_after_the_map_and_leaves_the_empty_board_with_its_button(gui, width):
+    errors: list[str] = []
+    pg, host = start(gui, width, errors, made=False)                                                                 # a project with no party: nothing is pressed
+    pg.locator(".parties[data-screen]").wait_for(timeout=WAIT_MS)
+    assert pg.locator(".parties").get_attribute("data-first") == "true" and pg.get_by_role("button", name="Start", exact=True).is_visible()
+    names = [n for n, _ in host.log]
+    assert "ideas.map" in names and "ideas.stage" in names and names.index("ideas.map") < names.index("ideas.stage")   # not before the map's first answer
+    shot(pg, f"first-start-opened-{width}.png")
+    pg.keyboard.press("Escape")                                                                                      # Esc leaves it to the empty Board
+    pg.locator(".parties").wait_for(state="detached", timeout=WAIT_MS)
+    pg.locator(".table-empty").wait_for(timeout=WAIT_MS)
+    assert "No parties yet" in words(pg.locator(".table-empty"))
+    pg.wait_for_timeout(600)                                                                                         # ... and it does not open again by itself
+    assert pg.locator(".parties").count() == 0
+    shot(pg, f"first-start-left-{width}.png")
+    pg.get_by_role("button", name="Choose the parties").click()                                                      # the button opens it again
+    pg.locator('.parties[data-first="true"]').wait_for(timeout=WAIT_MS)
+    pg.get_by_role("button", name="Back").click()                                                                    # ← leaves it too
+    pg.locator(".parties").wait_for(state="detached", timeout=WAIT_MS)
+    pg.wait_for_timeout(300)
+    assert pg.locator(".parties").count() == 0 and pg.locator(".table-empty").is_visible()
+    narrow.no_sideways(pg)
+    pg.context.close()
+    assert not errors, "\n".join(errors)
+
+
+def test_a_project_with_parties_does_not_open_the_place_by_itself(gui):
+    errors: list[str] = []
+    pg, host = start(gui, "wide", errors)
+    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    pg.wait_for_timeout(600)
+    assert pg.locator(".parties").count() == 0 and pg.locator(".table-empty").count() == 0
+    pg.context.close()
+    assert not errors, "\n".join(errors)
+
+
+def test_the_place_without_facts_draws_none_but_the_way_to_add_one(made):
     pg, host, w = made
-    pg.wait_for_timeout(200)
-    assert pg.locator("[data-facts]").count() == 0
+    pg.locator("[data-facts]").wait_for(timeout=WAIT_MS)
+    assert pg.locator("[data-facts] li").count() == 0 and pg.get_by_role("button", name="Add a fact").is_visible()
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_a_fact_is_added_under_a_key_the_host_accepts_and_the_list_is_the_answer(gui, width):
+    errors: list[str] = []
+    pg, host = start(gui, width, errors, facts=True)
+    opened(pg, "{party: 'tech'}")
+    if width == "narrow":
+        pg.wait_for_selector(".parties__party", timeout=WAIT_MS)
+    facts = pg.locator("[data-facts]")
+    facts.wait_for(timeout=WAIT_MS)
+    assert facts.locator("input").count() == 2 and facts.locator("[data-adding]").count() == 0
+    facts.get_by_role("button", name="Add a fact").click()
+    field = facts.get_by_label("A new fact")
+    assert field.evaluate("e => e === document.activeElement") and facts.get_by_role("button", name="Add", exact=True).is_disabled()
+    field.fill("Players are on phones, mostly on the train!")
+    shot(pg, f"fact-adding-{width}.png")
+    field.press("Enter")                                                                                             # Enter sends it
+    waits_for(pg, host, "ideas.project_fact_set")
+    assert host.called("ideas.project_fact_set") == [{"party": "tech", "key": "players_are_on_phones", "text": "Players are on phones, mostly on the train!"}]
+    pg.wait_for_function("() => document.querySelectorAll('[data-facts] li').length === 3", timeout=WAIT_MS)       # the list from the answer
+    assert facts.locator("[data-adding]").count() == 0 and "you said" in words(facts.locator('[data-key="players_are_on_phones"]'))
+    facts.get_by_role("button", name="Add a fact").click()                                                           # the same first words: a key of its own
+    facts.get_by_label("A new fact").fill("Players are on phones, and offline too")
+    facts.get_by_role("button", name="Add", exact=True).click()                                                      # *Add* sends it
+    waits_for(pg, host, "ideas.project_fact_set", 2)
+    assert host.called("ideas.project_fact_set")[1]["key"] == "players_are_on_phones_2"
+    pg.wait_for_function("() => document.querySelectorAll('[data-facts] li').length === 4", timeout=WAIT_MS)
+    facts.get_by_role("button", name="Add a fact").click()
+    facts.get_by_label("A new fact").press("Escape")                                                                 # Esc closes the field, not the place
+    assert facts.locator("[data-adding]").count() == 0 and pg.locator(".parties").count() == 1
+    shot(pg, f"fact-added-{width}.png")
+    narrow.no_sideways(pg)
+    pg.context.close()
+    assert not errors, "\n".join(errors)
+
+
+def test_a_facts_key_is_made_of_its_first_words_and_the_hosts_format(gui):
+    errors: list[str] = []
+    pg, host = start(gui, "wide", errors)
+    cases = [("Friends on a couch", [], "friends_on_a_couch"), ("  Hurts: the WAIT!  ", [], "hurts_the_wait"), ("hurts", [], "hurts_2"), ("Same words", ["same_words", "same_words_2"], "same_words_3"),
+             ("!!!", [], "fact"), ("", ["fact"], "fact_2"), ("a very long first words that run on and on", [], "a_very_long_first"), ("Café crème", [], "cafe_creme"), ("x" * 80, [], "x" * 36)]
+    for text, taken, key in cases:
+        got = pg.evaluate("([t, k]) => import('/static/js/table/partyseats2.js').then((m) => m.factKey(t, k))", [text, taken])
+        assert got == key and re.fullmatch(r"[a-z0-9_]{1,40}", got), (text, got)
+    long = pg.evaluate("() => import('/static/js/table/partyseats2.js').then((m) => m.factKey('x'.repeat(80), ['x'.repeat(36)]))")
+    assert re.fullmatch(r"[a-z0-9_]{1,40}", long) and long != "x" * 36
+    pg.context.close()
+    assert not errors, "\n".join(errors)

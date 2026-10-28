@@ -65,11 +65,13 @@ def test_orkboard_on_the_desktop_the_four_panes_a_goal_saved_and_needs_you_no_ca
             ctx.on("request", lambda r: urls.append(r.url))
             pg.on("pageerror", lambda e: errors.append(str(e)))
             pg.goto(server.url)
-            pg.get_by_text("No parties yet").wait_for(timeout=WAIT_MS)                              # the window: the table and the hand, no party yet (spec 98 E)
+            pg.locator('.parties[data-first="true"]').wait_for(timeout=WAIT_MS)                    # the first start: the parties' place opens by itself, no party yet (decisions §169.4)
             assert pg.locator(".shell-top, .shell-drawer, .arena-left, .shell-backdrop, [aria-modal]").count() == 0 and pg.locator(".table .table-tabs").count() == 1
             assert pg.evaluate("document.documentElement.dataset.look") == "office"
             assert pg.locator(".gui-hud, .gui-camp, .gui-town, .gui-foot").count() == 0
-            pg.locator(".table-empty").get_by_role("button", name="Choose the parties", exact=True).click()       # the first start, from the pane's note: the one place of the parties over the pane
+            pg.keyboard.press("Escape")                                                             # Esc leaves it to the empty Board (the window: the table and the hand, no party yet: spec 98 E) ...
+            pg.get_by_text("No parties yet").wait_for(timeout=WAIT_MS)
+            pg.locator(".table-empty").get_by_role("button", name="Choose the parties", exact=True).click()       # ... whose note opens the one place of the parties over the pane again
             pg.locator('.parties[data-first="true"]').wait_for(timeout=WAIT_MS)
             assert pg.locator(".place, .shell-craft-tile").count() == 0 and pg.get_by_role("button", name="Start", exact=True).is_visible()
             pg.locator('.parties__row[data-party="marketing"] [role="checkbox"]').click()          # a party of a stage not reached yet: ticked by the person

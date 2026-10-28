@@ -189,3 +189,11 @@ their pages); the route's dots from the picked goal's rows too; the stances' *Mo
 **Decided here:** the first start opens the parties' place by a button on the empty Board (*Choose the parties*), not by itself. **Left:** a
 goal between its decision and its plan shows only its own party's dot (no row carries its route then); the kinds' list is the page's own copy of
 `project_kind.KINDS`; no *add a fact*; the title is *Board · Parties*, not *← Parties*.
+
+## As built (G; decisions §169.4, §169.6)
+
+**The first start opens by itself** (`table/parties.js` `useFirstStart`, called by `table/table.js`): once the map and the Board have answered, with no party but General and nothing open
+over the pane, `openParties({first: true})`, once per project per page load; ← or Esc leaves it to the empty Board, whose *Choose the parties* opens it again (this replaces E's
+*Decided here*). **A fact is added** (`table/partyseats2.js` `Facts`): under a made party's facts *Add a fact* opens one field (Esc closes it), Enter or *Add* sends
+`ideas.project_fact_set {party, key, text}` with `factKey(text, keys)`: the text's first four words, slugged to `a-z0-9_` (40 at most), `_2`, `_3` … among the party's keys and never one of the
+common core's (`for_whom`, `hurts`, `leaves_out`), `fact` for a text with no letter; the list is the answer's. A made party the host answers with no fact now draws the section too, with *Add a fact*.

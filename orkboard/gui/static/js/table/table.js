@@ -11,6 +11,7 @@ import { Tabs } from "./tabs.js";
 import { Pane, back } from "./pane.js";
 import { litKey, elOf, mineKey, useLowering } from "./card.js";
 import { openTabOf, partiesNow } from "./data.js";
+import { useFirstStart } from "./parties.js";
 import "./wayparts.js";                                   // the goal's way's pages over the pane (spec 100)
 
 const NARROW = "(max-width: 759px)";                       // spec 94: the phone's width is the narrow one
@@ -66,6 +67,7 @@ export function Table() {
   const parties = partiesNow(), current = openTabOf(tab.value, parties), narrow = useNarrow(), [host, compact] = useCompact(parties.length, narrow);
   const project = currentProject.value?.path || "";
   useEffect(() => { restoreTab(); picked.value = ""; lower(); closeOver(); }, [project]);   // another project: its tab, nothing picked, nothing open
+  useFirstStart(parties);                                                                  // no party yet: the parties' place opens at once (decisions §169.4)
   useEffect(() => {                                                                        // a goal picked in the hand opens on its party's tab (unless the Orkmaster's Board is shown: it shows its tasks alone)
     const n = picked.value && (mapData.value?.nodes || []).find((x) => x.slug === picked.value);
     if (n && tab.value !== ORKMASTER && tab.value !== n.goal && parties.some((g) => g.slug === n.goal)) openTab(n.goal);
