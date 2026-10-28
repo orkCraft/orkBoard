@@ -37,3 +37,13 @@ The copy's stamp and `problems()` empty; the left-out folders absent; `tests/tes
 carry no colour of their own); every desktop browser test that pinned a head's or an icon's size pinned anew; the
 critical tests (`tests/test_architecture.py`, `tests/test_board_alone.py`, `tests/test_updates.py`) and the phone's
 browser tests still passing (it keeps `night`, `moons/` and the type signs).
+
+## As built (D)
+
+orkUI 0.15.3 (commit `7034259`) copied: 230 files, `orkui.SKIP = ("emblems",)` applied to the copy and the stamp (`problems()` still
+reports a stray `emblems/`); `moons/`, the type signs and `backs/` kept. The page (desktop only): `orkui.js` `Head`/`WhoHead`/`Who` lose
+`small` (a head is 24 × 22, 36 × 33 or 48 × 44), `Icon` marks orkUI's twelve own icons `g7` (`page.css`: 21 px), the sheets' icon sizes
+12/16/20 made 14/14/21; the ink marks for a member's tool and rank (`members.js`), the limits' line and chips (`limits.js`,
+`topbar.js`); `seattool.js` keeps the coloured mark (a tool is chosen there). No card colour override existed. **Left:** two desktop
+browser tests pinning `.ork-sign.night` (the test cleanup's), `rows.css`'s 64 × 59 head (no whole multiple, for spec 98's table), the
+phone's `small` heads (spec 94 E).
