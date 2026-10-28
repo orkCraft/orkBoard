@@ -1,0 +1,5 @@
+/* The window as two parts (docs/specs/98-the-table-and-the-hand.md §7): the table over the hand, the hand at the foot under
+   everything opened (decisions §142.6). Layout only: every colour, face and corner is orkUI's. */
+.frame { display: grid; grid-template-rows: minmax(0, 1fr) auto; height: 100vh; height: 100dvh; min-width: 0; background: var(--ork-canvas); }
+.frame-table { min-height: 0; min-width: 0; overflow: hidden; }
+.frame-hand { min-width: 0; }

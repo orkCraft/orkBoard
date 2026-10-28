@@ -16,6 +16,7 @@ import { drawerOpen, refreshShell, hideDrawer, busy, resetForProject } from "./s
 import { Arena } from "../arena/arena.js";
 import { solo, spread, picks, clearPicks } from "../arena/arenastate.js";
 import { closeSpread } from "../arena/spread.js";
+import { FRAME, Frame } from "../frame/frame.js";
 
 const sheets = ["../board/board.css", "./shell.css", "./party.css", "../arena/arena.css", "../arena/column.css"].map((p) => new URL(p, import.meta.url).href);
 if (typeof document !== "undefined") {
@@ -62,6 +63,7 @@ export function Shell() {
   if (!project) {
     return html`<div class="shell" data-start="true"><${TopBar} /><${StartScreen} /><${Dialogs} /><${SignIn} /></div>`;
   }
+  if (FRAME) return html`<div class="shell" data-frame="1"><${Frame} /><${Dialogs} /><${SignIn} /></div>`;   // spec 98's window, until E makes it the one
   return html`<div class="shell" data-drawer=${drawerOpen.value}>
     <${TopBar} />
     <div class="shell-main">
