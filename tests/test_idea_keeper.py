@@ -269,3 +269,41 @@ def test_a_tasks_title_is_asked_short_kept_to_eighty_and_a_longer_one_cut_at_a_w
     assert titles[4] == "Two spaces here"
     assert all(len(t) <= 80 for t in titles)
     assert long.startswith(titles[2][:-1])                                                        # a cut, never a rewrite
+
+
+def test_a_keeper_call_runs_inside_its_steps_bound_and_its_line_says_when_it_read_more_spec_97(keeper, tmp_path):
+    """Spec 97 §3: `ask` sets the bound the step's prompt names (`idea_target.READS`); the call's line in the day's log says
+    the files it read, the bound and `over` (a stub call that read 3 files on `talk`, bounded at 2)."""
+    from orkboard.realm import call_log, idea_target
+    folder = tmp_path / "cx"
+
+    def reading(files):
+        out = [{"type": "assistant", "message": {"content": [{"type": "tool_use", "id": f"r{n}", "name": "Read",
+                                                             "input": {"file_path": str(tmp_path / f)}}]}} for n, f in enumerate(files)]
+        out.append({"type": "result", "subtype": "success", "result": "{}", "total_cost_usd": 0.01, "session_id": "s"})
+
+        def call(tier, prompt, effort="", budget=None):
+            call_log.record(None, "read", "claude", "opus", prompt, "\n".join(json.dumps(e) for e in out), "", 0, 1.0, workdir=tmp_path)
+            return "{}", 0.01, 1000, "s"
+        return call
+
+    assert idea_target.READS["talk"] == 2 and "propose" in idea_target.READS and "op_prepare" not in idea_target.READS
+    with call_log.kept(folder, "board"):
+        keeper.call = reading(["a.py", "b.py", "c.py"])
+        keeper.ask("talk", "talk")
+        keeper.call = reading(["a.py", "b.py"])
+        keeper.ask("talk", "talk")
+        keeper.call = reading(["a.py", "b.py", "c.py"])
+        keeper.ask("op_prepare", "prepare")                                  # a step that names no number: no bound
+        keeper.call = reading([])
+        keeper.ask("propose", "propose", tools=False)                        # reads no file: a bound of none
+    over, within, unbounded, none = call_log.read(folder)
+    assert (over["bound"], over["over"], over["reads"]["files"], over["reads"]["paths"]) == (2, True, 3, ["a.py", "b.py", "c.py"])
+    assert within["bound"] == 2 and "over" not in within and within["reads"]["files"] == 2
+    assert "bound" not in unbounded and "over" not in unbounded and unbounded["reads"]["files"] == 3
+    assert none["bound"] == 0 and "over" not in none
+    assert call_log._BOUND.get() is None                                    # the bound ends with the call
+    keeper.call = lambda *a, **k: (_ for _ in ()).throw(RuntimeError("down"))
+    with pytest.raises(RuntimeError):
+        keeper.ask("talk", "talk")
+    assert call_log._BOUND.get() is None

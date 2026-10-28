@@ -48,7 +48,7 @@ from orkboard.core.idea_night import NightMixin
 from orkboard.core.idea_lead import LeadMixin
 from orkboard.core.idea_revise import ReviseMixin
 from orkboard.core.idea_plan import _task, _why, estimate, readiness  # noqa: F401  (the plan's small helpers: the callers and tests use them from here)
-from orkboard.realm import (collide, event_log, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_look, idea_pick, idea_spend, idea_target, ideas,
+from orkboard.realm import (call_log, collide, event_log, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_look, idea_pick, idea_spend, idea_target, ideas,
                             releases, roles, status, tool_errors)
 from orkboard.realm.idea_words import short_said, title_of
 
@@ -135,7 +135,7 @@ class IdeaKeeper(SignInMixin, DraftMixin, GoalMixin, NightMixin, LeadMixin, Revi
 
     def _claude(self, tier: str, prompt: str, effort: str = "", budget: float | None = None) -> tuple[str, Any, Any, str]:
         """One shot (spec 35 §0): a fresh read-only run, no session kept; the night's proposals read nothing."""
-        from orkboard.realm import call_log, harnesses, jobs
+        from orkboard.realm import harnesses, jobs
         from orkboard.sources import telemetry
         tool = self.tool_now()
         h = harnesses.get(tool)
@@ -186,7 +186,8 @@ class IdeaKeeper(SignInMixin, DraftMixin, GoalMixin, NightMixin, LeadMixin, Revi
         self._tls.picked, self._tls.tools, self._tls.usage, self._tls.capped, self._tls.as_role = got, tools, None, False, as_role
         self._tls.measure = {"step": step, "prompt_chars": len(prompt), "tokens": None, "cost": None}
         try:
-            text, cost, tokens, session = self.call(got[0], prompt, got[1], idea_target.budget(step, self.target()))
+            with call_log.bounded(idea_target.READS.get(step)):       # the files its prompt names: its line says if it read more
+                text, cost, tokens, session = self.call(got[0], prompt, got[1], idea_target.budget(step, self.target()))
         except Exception as e:
             if "budget" in str(e).lower() and not isinstance(e, InterruptedError):
                 raise KeeperError(BUDGET_LINE) from None

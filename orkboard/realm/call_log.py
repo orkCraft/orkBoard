@@ -5,15 +5,20 @@
     with call_log.of_project(root):                      this thread's calls: the project's day log and ledger
     with call_log.apart(folder, "ops", ledger):          … kept in `folder`, charged in `ledger` (Operations')
     call_log.keep_days(root)                             from now on, every other call goes to the day's log
+    with call_log.bounded(n):                            the read calls here are held to n files: their line says if they went over
     call_log.record(env, "work", harness, model, prompt, stdout, stderr, code, seconds, cost, tokens, …)
     call_log.read(folder)                                the lines, oldest first
     call_log.totals(lines)                               by side, ork and purpose: calls, seconds, tokens, $
+    call_log.floor(lines)                                a keeper's read calls before and after the bare floor (spec 97 §4)
+    python -m orkboard.realm.call_log floor <project>    … of the project's last 7 days
 
 `calls.jsonl` holds one line per call: when, which side, who (an ork, the steward), what it was for, the tool and
 model, its seconds, exit code, cost, tokens and the usage the tool printed (input, output, cache). The call itself
 goes gzipped beside it (`<n>-<who>.json.gz`): the prompt, the tool's whole output, its errors, and the way it worked
 when the tool keeps one (`trail`: Claude Code's transcript of the session, with its thinking and tool calls; agy's
-brain folder). The environment is never written.
+brain folder). A Claude read call's line says what it read (`reads`, from its stream-json), the bound it was given (`bound`,
+`over` when it read more files) and the flags that kept the person's MCP servers and skills out (`bare`). The environment
+is never written.
 
 A bench run's calls go to its `calls/` (`kept`, process-wide: it wins). Outside one, a call goes where its caller
 placed it on its thread: a project's Board to that project's `.orkcraft/logs/<day>/<building>/` (`of_project`), whichever
@@ -48,6 +53,7 @@ _KEPT: dict = {"folder": None, "side": "", "days": None}
 _COUNT: dict[Path, int] = {}
 _HERE: contextvars.ContextVar[tuple[Path | None, Path | None, str] | None] = contextvars.ContextVar(
     "orkcraft_call_place", default=None)                     # this thread's (days root, folder, side)
+_BOUND: contextvars.ContextVar[int | None] = contextvars.ContextVar("orkcraft_call_bound", default=None)   # the files a read may read
 _SAFE = re.compile(r"[^A-Za-z0-9_-]+")
 
 
@@ -91,6 +97,17 @@ def apart(folder: Path, side: str, ledger: Path | None):
         yield
 
 
+@contextlib.contextmanager
+def bounded(files: int | None):
+    """The read calls made in this block, on this thread, were told to read `files` files at most: their lines say so, and
+    say `over` when they read more (None: no bound). Nothing stops them; the log counts (spec 97 §3)."""
+    token = _BOUND.set(files)
+    try:
+        yield
+    finally:
+        _BOUND.reset(token)
+
+
 def keep_days(root: Path | None) -> None:
     """Every call outside a bench run that no caller placed (`of_project`, `apart`) goes to `root`'s day log from now
     on (None: none is kept)."""
@@ -128,11 +145,9 @@ def usage_of(stdout: str) -> dict:
 
 
 def session_of(stdout: str) -> str:
-    """The session the tool says it ran in ("" when it says none)."""
-    try:
-        return harnesses.json_result(stdout)[3]
-    except (ValueError, TypeError, IndexError):
-        return ""
+    """The session the tool says it ran in ("" when it says none): its envelope's, or its stream's last result."""
+    env = harnesses.claude_envelope(stdout)
+    return str(env.get("session_id") or "") if env else ""
 
 
 def trail(harness: str, session: str, workdir: Path | None) -> str:
@@ -153,6 +168,24 @@ def trail(harness: str, session: str, workdir: Path | None) -> str:
     except OSError:
         return ""
     return ""
+
+
+def _reads(harness: str, stdout: str, workdir: Path | None) -> dict:
+    """What a read call's line adds (spec 97 §3): the files it read and whether it went over its bound, the bound, and the
+    flags that kept the person's MCP servers and skills out of a Claude call. Nothing for a tool that prints no events."""
+    out: dict = {}
+    bound = _BOUND.get()
+    if harness == "claude":
+        h = harnesses.get("claude")
+        if bare := harnesses.claude_floor(h)[1] if h is not None else []:
+            out["bare"] = bare
+        if harnesses.claude_events(stdout):
+            out["reads"] = harnesses.claude_reads(stdout, workdir or "")
+    if bound is not None:
+        out["bound"] = bound
+        if out.get("reads", {}).get("files", 0) > bound:
+            out["over"] = True
+    return out
 
 
 def record(env: dict | None, mode: str, harness: str, model: str, prompt: str, stdout: str, stderr: str,
@@ -186,6 +219,8 @@ def record(env: dict | None, mode: str, harness: str, model: str, prompt: str, s
     for key, name in (("idea", "ORKCRAFT_IDEA"), ("task", "ORKCRAFT_TASK")):     # the board's calls join the event log
         if (env or {}).get(name):
             line[key] = str(env[name])
+    if mode == "read":
+        line.update(_reads(harness, stdout, workdir))
     if cost_own is not None:                 # a resumed session's cost is its running total: this call's own is the difference (spec 86 §1)
         line["cost_own"] = cost_own
     try:
@@ -298,3 +333,60 @@ def unanswered() -> int:
     """Recorded calls not asked for in this block: the building asks less than it did."""
     with _LOCK:
         return sum(not c["used"] for c in _REPLAY["calls"] or [])
+
+
+# -- the bare floor, measured (spec 97 §4) ------------------------------------------------------------------------------
+
+def _median(values: list) -> float | None:
+    import statistics
+    return round(statistics.median(values), 4) if values else None
+
+
+def floor(lines: list[dict]) -> dict:
+    """What a keeper's one-turn read calls (`read`, a `plan` or `sort`, Claude's, ended well) cost the cache and the person,
+    before and after the bare floor: {"before": {...}, "after": {...}}, each side its `calls` and the median of the usage's
+    `cache_creation_input_tokens` and of the `cost`, a line with `bare` being after."""
+    from orkboard.realm import idea_target
+    sides: dict[str, list[dict]] = {"before": [], "after": []}
+    for line in lines:
+        if (line.get("mode") == "read" and line.get("tool") == "claude" and line.get("purpose") in idea_target.FLOOR_PURPOSES
+                and not line.get("code") and (line.get("usage") or {}).get("output_tokens", 0) <= idea_target.FLOOR_OUT):
+            sides["after" if line.get("bare") else "before"].append(line)
+    return {side: {"calls": len(rows),
+                   "cache_creation_input_tokens": _median([r["usage"]["cache_creation_input_tokens"] for r in rows
+                                                           if isinstance((r.get("usage") or {}).get("cache_creation_input_tokens"), int)]),
+                   "cost": _median([r["cost"] for r in rows if isinstance(r.get("cost"), (int, float)) and not isinstance(r["cost"], bool)])}
+            for side, rows in sides.items()}
+
+
+def week(root: Path, days: int = 7, today: dt.date | None = None) -> list[dict]:
+    """The lines of the project's last `days` days (`.orkcraft/logs/<day>/*/calls.jsonl`)."""
+    since = ((today or dt.date.today()) - dt.timedelta(days=days - 1)).isoformat()
+    out: list[dict] = []
+    try:
+        folders = sorted(d for d in (Path(root) / DAYS).iterdir() if d.is_dir() and d.name >= since)
+    except OSError:
+        return out
+    for day in folders:
+        for building in sorted(p for p in day.iterdir() if p.is_dir()):
+            out += read(building)
+    return out
+
+
+def main(argv: list[str] | None = None) -> int:
+    """`python -m orkboard.realm.call_log floor <project>`: the measure of the project's last 7 days, printed."""
+    import sys
+    args = list(sys.argv[1:] if argv is None else argv)
+    if len(args) != 2 or args[0] != "floor":
+        print("usage: python -m orkboard.realm.call_log floor <project>", file=sys.stderr)
+        return 2
+    got = floor(week(Path(args[1])))
+    for side, what in (("before", "without the bare floor"), ("after", "on the bare floor")):
+        row = got[side]
+        print(f"{side} ({what}): {row['calls']} calls · cache written, median: {row['cache_creation_input_tokens']} tokens"
+              f" · cost, median: {'$' + format(row['cost'], '.4f') if row['cost'] is not None else 'none'}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -242,3 +242,105 @@ def test_cost_once_takes_the_sessions_last_total_off_and_never_goes_below_nothin
     assert tool_run.cost_once(0.77, 0.68) == 0.09
     assert tool_run.cost_once(0.30, None) == 0.30 and tool_run.cost_once(None, 0.5) is None
     assert tool_run.cost_once(0.5, 0.9) == 0.0
+
+
+# -- spec 97 part A: a read call's reads, its bound and its bare floor on its line; the floor measured ---------------------
+
+def _stream(*files, searches=0):
+    events = [{"type": "system", "subtype": "init", "session_id": "s2"}]
+    for n, path in enumerate(files):
+        events.append({"type": "assistant", "message": {"content": [{"type": "tool_use", "id": f"r{n}", "name": "Read",
+                                                                     "input": {"file_path": path}}]}})
+    for n in range(searches):
+        events.append({"type": "assistant", "message": {"content": [{"type": "tool_use", "id": f"g{n}", "name": "Grep",
+                                                                     "input": {"pattern": "x"}}]}})
+    events.append({"type": "result", "subtype": "success", "result": "{}", "total_cost_usd": 0.05, "session_id": "s2",
+                   "usage": {"input_tokens": 10, "output_tokens": 50, "cache_creation_input_tokens": 3000},
+                   "permission_denials": [{"tool_name": "Read", "tool_input": {"file_path": "uv.lock"}}]})
+    return "\n".join(json.dumps(e) for e in events)
+
+
+def test_a_read_calls_line_says_what_it_read_its_bound_and_when_it_went_over(tmp_path, tool):
+    tool["out"] = _stream(str(tmp_path / "a.py"), str(tmp_path / "src" / "b.py"), str(tmp_path / "a.py"), "/etc/hosts", searches=2)
+    with call_log.kept(tmp_path / "calls", "building"), call_log.bounded(2):
+        jobs.run_read("claude", "read it", tmp_path, threading.Event())
+    [line] = call_log.read(tmp_path / "calls")
+    assert line["reads"] == {"files": 3, "searches": 2, "paths": ["a.py", "src/b.py", "/etc/hosts"], "denied": 1}
+    assert (line["bound"], line["over"]) == (2, True)
+    assert (line["session"], line["cost"], line["usage"]["cache_creation_input_tokens"]) == ("s2", 0.05, 3000)
+    tool["out"] = _stream(str(tmp_path / "a.py"))
+    with call_log.kept(tmp_path / "again", "building"), call_log.bounded(1):                # at the bound is not over
+        jobs.run_read("claude", "read it", tmp_path, threading.Event())
+    with call_log.kept(tmp_path / "again", "building"):                                    # no bound set: none on the line
+        jobs.run_read("claude", "read it", tmp_path, threading.Event())
+    first, second = call_log.read(tmp_path / "again")
+    assert first["bound"] == 1 and "over" not in first and "bound" not in second and "over" not in second
+    assert second["reads"]["files"] == 1
+
+
+def test_a_call_that_is_not_a_claude_read_stream_has_no_reads_and_a_work_call_none_at_all(tmp_path, tool):
+    with call_log.kept(tmp_path / "calls", "building"), call_log.bounded(2):
+        jobs.run_read("claude", "a recording of before", tmp_path, threading.Event())       # one JSON object: no events to count
+        tool["out"] = _stream("/a", "/b", "/c")
+        jobs.run_work("claude", "work", tmp_path, threading.Event())
+    old, work = call_log.read(tmp_path / "calls")
+    assert "reads" not in old and old["bound"] == 2 and "over" not in old                   # the line is as it was, and says its bound
+    assert not {"reads", "bound", "over", "bare"} & set(work)
+    assert call_log.totals([old, work])[0]["calls"] == 2                                    # every reader of lines reads either
+
+
+def test_a_claude_read_calls_line_names_the_flags_that_kept_the_persons_servers_and_skills_out(tmp_path, tool, monkeypatch):
+    from orkboard.realm import harness_claude
+    monkeypatch.setattr(harness_claude, "cli_has", lambda h, flag: flag in ("--strict-mcp-config", "--mcp-config", "--disable-slash-commands"))
+    with call_log.kept(tmp_path / "calls", "building"):
+        jobs.run_read("claude", "read it", tmp_path, threading.Event())
+        jobs.run_work("claude", "work", tmp_path, threading.Event())
+    monkeypatch.setattr(harness_claude, "cli_has", lambda h, flag: False)
+    with call_log.kept(tmp_path / "calls", "building"):
+        jobs.run_read("claude", "read it", tmp_path, threading.Event())
+    bare, work, before = call_log.read(tmp_path / "calls")
+    assert bare["bare"] == ["mcp", "skills"] and "bare" not in work and "bare" not in before
+
+
+def _kept(n, bare, cost, made, purpose="plan", mode="read", tool_="claude", code=0, out=100):
+    line = {"n": n, "mode": mode, "purpose": purpose, "tool": tool_, "code": code, "cost": cost,
+            "usage": {"output_tokens": out, "cache_creation_input_tokens": made}}
+    return {**line, "bare": ["mcp", "skills"]} if bare else line
+
+
+def test_the_floor_splits_a_keepers_one_turn_read_calls_by_bare_and_takes_the_medians():
+    lines = [_kept(1, False, 0.30, 30_000), _kept(2, False, 0.20, 20_000), _kept(3, False, 0.10, 40_000),
+             _kept(4, True, 0.06, 4_000), _kept(5, True, 0.04, 6_000, purpose="sort"),
+             _kept(6, True, 0.50, 9_000, purpose="draft"), _kept(7, True, 0.50, 9_000, mode="work"),       # not a keeper's read
+             _kept(8, True, 0.50, 9_000, tool_="codex"), _kept(9, True, 0.50, 9_000, code=1),             # not Claude's, not ended well
+             _kept(10, True, 0.50, 9_000, out=5_000)]                                                      # not one turn
+    got = call_log.floor(lines)
+    assert got["before"] == {"calls": 3, "cache_creation_input_tokens": 30_000, "cost": 0.2}
+    assert got["after"] == {"calls": 2, "cache_creation_input_tokens": 5_000, "cost": 0.05}
+    assert call_log.floor([]) == {"before": {"calls": 0, "cache_creation_input_tokens": None, "cost": None},
+                                  "after": {"calls": 0, "cache_creation_input_tokens": None, "cost": None}}
+
+
+def test_the_floor_command_prints_the_last_seven_days_of_a_project(tmp_path, capsys):
+    today = dt.date.today()
+    for ago, line in ((0, _kept(1, True, 0.04, 5_000)), (6, _kept(1, False, 0.20, 25_000)), (7, _kept(1, False, 9.0, 999_999))):
+        folder = call_log.day_folder(tmp_path, (today - dt.timedelta(days=ago)).isoformat(), "board")
+        folder.mkdir(parents=True)
+        (folder / call_log.LINES).write_text(json.dumps(line) + "\n")
+    assert call_log.main(["floor", str(tmp_path)]) == 0
+    out = capsys.readouterr().out.splitlines()
+    assert out[0].startswith("before") and "1 calls" in out[0] and "25000 tokens" in out[0] and "$0.2000" in out[0]
+    assert out[1].startswith("after") and "1 calls" in out[1] and "5000 tokens" in out[1] and "$0.0400" in out[1]
+    assert call_log.main(["floor"]) == 2 and call_log.main([]) == 2
+    assert len(call_log.week(tmp_path, 7)) == 2 and len(call_log.week(tmp_path, 8)) == 3 and call_log.week(tmp_path / "none") == []
+
+
+def test_a_recorded_read_of_before_the_one_json_object_still_plays_back_and_reads(tmp_path):
+    """A cassette recorded before spec 97 holds the single JSON envelope; the read argv now asks for stream-json, and the reader takes both."""
+    calls = tmp_path / "calls"
+    calls.mkdir()
+    (calls / "building-1-keeper.json").write_text(json.dumps({"line": {"mode": "read", "purpose": "plan", "code": 0},
+                                                              "prompt": "read it", "stdout": ENVELOPE, "stderr": ""}))
+    with call_log.replaying(calls):
+        got = jobs.run_read("claude", "read it", tmp_path, threading.Event())
+    assert got == ("done", 0.03, 5000, "s1") and jobs.last_usage() == {"in": 900, "out": 100, "cache_read": 4000}

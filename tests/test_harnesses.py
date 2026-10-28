@@ -264,3 +264,136 @@ def test_a_calls_stream_is_read_into_its_events():
                       {"type": "tool_use", "id": "t1", "name": "mcp__a__b", "input": {"x": 1}},
                       {"type": "tool_result", "id": "t1", "is_error": True, "text": "no such field"}]
     assert result["total_cost_usd"] == 0.02
+
+
+# -- spec 97 part A: the read-only call bounded in fact, its floor bare, its reads counted ---------------------------------
+
+def _flag_values(argv, flag):
+    return [argv[i + 1] for i, a in enumerate(argv) if a == flag]
+
+
+def _stream(*uses, text="done", subtype="success", denied=(), cost=0.04, session="s-1"):
+    """A read call's stream-json: its init, each tool use `(name, input)` with its result, and its result event."""
+    out = [{"type": "system", "subtype": "init", "session_id": session}]
+    for n, (name, given) in enumerate(uses):
+        out += [{"type": "assistant", "message": {"content": [{"type": "tool_use", "id": f"t{n}", "name": name, "input": given}]}},
+                {"type": "user", "message": {"content": [{"type": "tool_result", "tool_use_id": f"t{n}", "content": "x"}]}}]
+    out.append({"type": "result", "subtype": subtype, "is_error": False, "result": text, "total_cost_usd": cost,
+                "session_id": session, "usage": {"input_tokens": 900, "output_tokens": 100, "cache_creation_input_tokens": 3000,
+                                                 "cache_read_input_tokens": 4000}, "permission_denials": list(denied)})
+    return _lines(*out)
+
+
+def _envelope(**over):
+    return json.dumps({"type": "result", "subtype": "success", "is_error": False, "result": "done", "total_cost_usd": 0.04,
+                       "session_id": "s-1", "usage": {"input_tokens": 900, "output_tokens": 100, "cache_creation_input_tokens": 3000,
+                                                      "cache_read_input_tokens": 4000}, **over})
+
+
+def test_a_read_only_call_is_denied_the_files_no_leader_needs_in_its_one_list(tmp_path, monkeypatch):
+    from orkboard.realm import harness_claude
+    monkeypatch.setattr(harness_claude, "cli_has", lambda h, flag: False)
+    h = harnesses.get("claude")
+    assert len(harnesses.READ_DENIED) == len(set(harnesses.READ_DENIED)) == 18 + 8 + 11 + 4 + 2
+    for web in (False, True):
+        argv = harnesses._claude_read(h, "p", str(tmp_path), "opus", web)
+        [deny] = _flag_values(argv, "--disallowedTools")                        # one list, never a second flag
+        rules = deny.split(",")
+        for rule in ("Read(**/package-lock.json)", "Read(**/uv.lock)", "Read(**/packages.lock.json)", "Read(**/go.sum)",
+                     "Read(**/node_modules/**)", "Read(**/vendor/**)", "Read(**/.venv/**)", "Read(**/dist/**)",
+                     "Read(**/__pycache__/**)", "Read(**/*.min.js)", "Read(**/*.map)", "Read(**/decisions.md)",
+                     "Read(**/DECISIONS.md)", "Edit", "Bash"):
+            assert rule in rules
+        assert ("WebSearch" in rules) is (not web)                              # the lists it had are kept whole
+        assert set(harnesses.READ_DENIED) <= set(rules)
+    assert "--disallowedTools" in h.read("p", tmp_path, "opus", tools=False)    # no tools at all: still the lists it had
+    for argv in (h.work("p", tmp_path, "opus"), h.call("p", tmp_path, ["mcp__a__b"], "opus"), h.ask("p", tmp_path, "opus")):
+        assert "Read(**" not in " ".join(argv)                                  # a work, call or ask keeps its flags
+
+
+def test_a_read_only_calls_floor_is_no_mcp_and_no_skills_only_when_the_cli_lists_them(tmp_path, monkeypatch):
+    from orkboard.realm import harness_claude
+    h = harnesses.get("claude")
+    listed = {"--strict-mcp-config", "--mcp-config", "--disable-slash-commands"}
+    monkeypatch.setattr(harness_claude, "cli_has", lambda h, flag: flag in listed)
+    argv = h.read("p", tmp_path, "opus")
+    assert argv[argv.index("--strict-mcp-config"):][:3] == ["--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}']
+    assert "--disable-slash-commands" in argv and "--bare" not in argv          # the project's CLAUDE.md stays
+    assert harnesses.claude_floor(h)[1] == ["mcp", "skills"]
+    listed.discard("--disable-slash-commands")
+    assert "--disable-slash-commands" not in h.read("p", tmp_path, "opus") and harnesses.claude_floor(h)[1] == ["mcp"]
+    listed.clear()
+    argv = h.read("p", tmp_path, "opus")
+    assert "--strict-mcp-config" not in argv and "--mcp-config" not in argv and harnesses.claude_floor(h) == ([], [])
+    listed.update({"--strict-mcp-config", "--mcp-config", "--disable-slash-commands"})
+    monkeypatch.setenv("ORKCRAFT_MCP_CONFIG", str(tmp_path / "bench.json"))     # a Test bench run's own servers win
+    argv = h.read("p", tmp_path, "opus")
+    assert _flag_values(argv, "--mcp-config") == [str(tmp_path / "bench.json")] and '{"mcpServers":{}}' not in argv
+    assert harnesses.claude_floor(h)[1] == ["skills"]
+    for other in (h.work("p", tmp_path, "opus"), h.call("p", tmp_path, [], "opus"), h.ask("p", tmp_path, "opus")):
+        assert "--disable-slash-commands" not in other                          # only the read-only call is bare
+
+
+def test_a_read_only_call_prints_its_events_and_the_other_calls_keep_their_output(tmp_path):
+    h = harnesses.get("claude")
+    read = h.read("p", tmp_path, "opus")
+    assert read[read.index("--output-format") + 1] == "stream-json" and "--verbose" in read
+    assert _flag_values(h.ask("p", tmp_path), "--output-format") == ["json"]
+    assert _flag_values(h.work("p", tmp_path), "--output-format") == ["json"]
+
+
+def test_claude_envelope_is_the_last_result_of_a_stream_the_one_object_or_nothing():
+    stream, single = _stream(("Read", {"file_path": "a.py"})), _envelope()
+    assert harnesses.claude_envelope(stream)["result"] == "done" and harnesses.claude_envelope(single)["session_id"] == "s-1"
+    old = json.dumps({"result": "done", "total_cost_usd": 0.03, "session_id": "s1"})        # a recording of before: no `type`
+    assert harnesses.claude_envelope(old)["result"] == "done"
+    twice = _lines({"type": "result", "result": "first"}, {"type": "system"}, {"type": "result", "result": "last"})
+    assert harnesses.claude_envelope(twice)["result"] == "last"
+    assert harnesses.claude_envelope("") is None and harnesses.claude_envelope("not json") is None
+    assert harnesses.claude_envelope(_lines({"type": "system", "subtype": "init"}, {"type": "assistant"})) is None
+    assert harnesses.claude_envelope(json.dumps({"type": "system"})) is None                # one event is not a result
+    assert harnesses.claude_envelope("[1, 2]") is None
+
+
+def test_a_result_is_read_the_same_from_the_one_object_and_from_its_stream_json_twin():
+    stream, single = _stream(("Read", {"file_path": "a.py"}), ("Grep", {"pattern": "x"})), _envelope()
+    for out in (stream, single):
+        assert harnesses.get("claude").result(out, 0) == ("done", 0.04, 8000, "s-1")
+        assert harnesses.get("claude").outcome(out, 0, "opus") == ("done", 0.04, 8000, "s-1")
+        assert harnesses.usage_split(out) == {"in": 3900, "out": 100, "cache_read": 4000}
+        assert harnesses.claude_error(out) == "" and not harnesses.capped(out)
+    from orkboard.realm import call_log
+    assert call_log.session_of(stream) == call_log.session_of(single) == "s-1" and call_log.session_of("plain") == ""
+    assert harnesses.get("claude").result("plain words", 0) == ("plain words", None, None, "")
+    assert harnesses.usage_split("plain words") is None
+    cut = _lines({"type": "system", "subtype": "init"}, {"type": "assistant", "message": {"content": []}})
+    assert harnesses.get("claude").result(cut, 0)[0] == ""                                  # a stream that never reached its result
+    bare = '{"subtype": "error_max_budget_usd"}'
+    assert harnesses.get("claude").result(bare, 0)[0] == bare                               # as json_result gave it
+    assert harnesses.json_result(single)[:2] == ("done", 0.04)                              # the others' reader is as it was
+
+
+def test_a_run_ended_on_its_budget_is_told_from_its_stream_but_not_from_a_file_it_read():
+    spent = _stream(subtype="error_max_budget_usd")
+    assert harnesses.capped(spent) and harnesses.capped(_envelope(subtype="error_max_budget_usd"))
+    assert harnesses.capped("", "Error: max budget reached") and not harnesses.capped(_stream())
+    out = _lines({"type": "user", "message": {"content": [{"type": "tool_result", "content": "if spent > max_budget: stop"}]}},
+                 json.loads(_envelope()))
+    assert not harnesses.capped(out)                                                        # a file's words are not the run's
+    assert harnesses.capped(_envelope(result="Exceeded the max budget"))                    # its own are, as before
+
+
+def test_claude_reads_counts_files_searches_denials_and_makes_paths_relative(tmp_path):
+    folder = tmp_path / "game"
+    out = _stream(("Read", {"file_path": str(folder / "src" / "a.py")}), ("Read", {"file_path": str(folder / "src" / "a.py")}),
+                  ("Read", {"file_path": "/etc/hosts"}), ("Read", {"file_path": str(folder / "uv.lock")}),
+                  ("Grep", {"pattern": "x"}), ("Glob", {"pattern": "*.py"}), ("Bash", {"command": "ls"}),
+                  denied=[{"tool_name": "Read", "tool_use_id": "t3", "tool_input": {}}, {"tool_name": "Bash"},
+                          {"tool_name": "Glob"}, "junk"])
+    got = harnesses.claude_reads(out, folder)
+    assert got == {"files": 3, "searches": 2, "paths": ["src/a.py", "/etc/hosts", "uv.lock"], "denied": 2}
+    assert harnesses.claude_reads(out)["paths"][0] == str(folder / "src" / "a.py")           # no folder: as named
+    many = harnesses.claude_reads(_stream(*[("Read", {"file_path": f"/f/{n}.py"}) for n in range(40)]))
+    assert many["files"] == 40 and len(many["paths"]) == 30
+    assert harnesses.claude_reads(_envelope()) == {"files": 0, "searches": 0, "paths": [], "denied": 0}
+    assert harnesses.claude_reads("not json") == {"files": 0, "searches": 0, "paths": [], "denied": 0}

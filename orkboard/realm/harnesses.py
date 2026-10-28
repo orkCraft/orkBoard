@@ -36,8 +36,9 @@ from typing import Callable, Iterable
 from orkboard.env import getenv
 from orkboard.realm import model_families
 from orkboard.realm.harness_claude import (  # noqa: F401  (re-exported: the names callers and tests use)
-    CLAUDE_NO_TOOLS, CLAUDE_READ_ONLY, CLAUDE_READ_WEB, EFFORTS, _HELP, _claude_ask, _claude_call, _claude_mcp,
-    _claude_read, _claude_read_dirs, _claude_run, _claude_work, _claude_work_rules, claude_error, cli_has, effort_supported)
+    CLAUDE_NO_TOOLS, CLAUDE_READ_ONLY, CLAUDE_READ_WEB, EFFORTS, READ_DENIED, _HELP, _claude_ask, _claude_call, _claude_mcp,
+    _claude_read, _claude_read_dirs, _claude_run, _claude_work, _claude_work_rules, claude_envelope, claude_error, claude_events,
+    claude_floor, claude_reads, cli_has, effort_supported)
 from orkboard.realm.harness_tools import (  # noqa: F401
     AGY_NO_COMMANDS, AGY_WORK_FREE, CODEX_USAGE_KEYS, CODEX_WEB, HERMES_READ, HERMES_WORK, NOWHERE, PI_READ, PI_WORK, _agy,
     _agy_reads, _agy_works, _cursor, _hermes, _hermes_env, _model, _pi, _plain_tokens, agy_error, codex_config_model, codex_error, codex_exec,
@@ -64,12 +65,10 @@ def _tokens_of(usage) -> int | None:
 
 
 def usage_split(stdout: str) -> dict | None:
-    """A Claude envelope's tokens apart: {"in", "out", "cache_read"} (spec 35 §0's measure); None when not read."""
-    try:
-        env = json.loads(stdout.strip())
-    except ValueError:
-        return None
-    usage = env.get("usage") if isinstance(env, dict) else None
+    """A Claude result's tokens apart: {"in", "out", "cache_read"} (spec 35 §0's measure), from either output
+    (`claude_envelope`); None when not read."""
+    env = claude_envelope(stdout)
+    usage = env.get("usage") if env else None
     if not isinstance(usage, dict):
         return None
     n = lambda k: usage.get(k) if isinstance(usage.get(k), int) and not isinstance(usage.get(k), bool) else 0  # noqa: E731
@@ -78,15 +77,25 @@ def usage_split(stdout: str) -> dict | None:
 
 
 def capped(stdout: str, stderr: str = "") -> bool:
-    """Whether a run ended on its `--max-budget-usd` cap (its envelope's subtype, or its words)."""
-    try:
-        env = json.loads(stdout.strip())
-    except ValueError:
-        env = None
-    if isinstance(env, dict) and "budget" in str(env.get("subtype") or "").lower():
+    """Whether a run ended on its `--max-budget-usd` cap (its result's subtype, or its words: not those of a file its
+    stream-json shows it read, which a `user` event holds)."""
+    env = claude_envelope(stdout)
+    if env is not None and "budget" in str(env.get("subtype") or "").lower():
         return True
-    text = f"{stdout}\n{stderr}".lower()
+    said = "\n".join(line for line in stdout.splitlines() if '"type": "user"' not in line and '"type":"user"' not in line)
+    text = f"{said}\n{stderr}".lower()
     return "max budget" in text or "max_budget" in text or "budget exceeded" in text
+
+
+def _envelope_result(env: dict, fallback: str) -> tuple[str, float | None, int | None, str]:
+    """(text, cost, tokens, session) of one envelope: the answer under result / response / text / output, `total_cost_usd`,
+    `usage` and `session_id`; `fallback` is the text when it holds no answer."""
+    cost = env.get("total_cost_usd")
+    session = str(env.get("session_id") or "")
+    for key in ("result", "response", "text", "output"):
+        if isinstance(env.get(key), str):
+            return env[key], float(cost) if isinstance(cost, (int, float)) else None, _tokens_of(env.get("usage")), session
+    return fallback, None, None, session
 
 
 def json_result(stdout: str, before: int = 0) -> tuple[str, float | None, int | None, str]:
@@ -99,14 +108,18 @@ def json_result(stdout: str, before: int = 0) -> tuple[str, float | None, int | 
         return out, None, None, ""
     if not isinstance(env, dict):
         return out, None, None, ""
-    cost = env.get("total_cost_usd")
-    session = str(env.get("session_id") or "")
-    for key in ("result", "response", "text", "output"):
-        if isinstance(env.get(key), str):
-            return env[key], float(cost) if isinstance(cost, (int, float)) else None, _tokens_of(env.get("usage")), session
-    return out, None, None, session
+    return _envelope_result(env, out)
 
 
+def claude_result(stdout: str, before: int = 0) -> tuple[str, float | None, int | None, str]:
+    """`json_result` of Claude Code, from either output (`claude_envelope`): the one JSON object, or the last `result`
+    event of stream-json. A stream that never reached its result gives no text (it is not an answer)."""
+    env = claude_envelope(stdout)
+    if env is not None:
+        return _envelope_result(env, "" if claude_events(stdout) else stdout.strip())
+    if claude_events(stdout):
+        return "", None, None, ""
+    return json_result(stdout, before)
 
 
 # -- the tools ------------------------------------------------------------------------------------
@@ -293,7 +306,7 @@ register(Harness(
     "claude", "Claude Code", "claude", "npm i -g @anthropic-ai/claude-code", "claude  (then /login)",
     {"elder": "opus", "warrior": "sonnet", "laborer": "haiku"},
     _claude_ask, _claude_read, _claude_work,
-    resumable=True, deploys=True, web=True, priced=True, mark="✻", color="bold #f59e0b", error=claude_error,
+    resumable=True, deploys=True, web=True, priced=True, mark="✻", color="bold #f59e0b", error=claude_error, result=claude_result,
     resume_cmd=lambda h, sid: [h.bin, "--resume", sid], call_cmd=_claude_call, read_dirs=_claude_read_dirs,
     read_session=lambda sid, reopen: ["--resume", sid] if reopen else ["--session-id", sid], run_args=_claude_run,
     work_rules=_claude_work_rules, no_tools=("--disallowedTools", CLAUDE_NO_TOOLS), sign_in=("auth", "login"), sign_in_by="browser"))
