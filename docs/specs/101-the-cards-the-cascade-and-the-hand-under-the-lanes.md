@@ -146,3 +146,12 @@ label row); `deck.js`, `deckrow.js` and the `deck` kind gone. **Decided here:** 
 own); no fan inside a stack (a lane is too narrow): its top answered, the next comes forward; the toasts lifted over the hand (`hand.css`).
 **Left:** a crowded first lane leaves thin strips; the pixel face on the cards' names (§2, §4.5) against CLAUDE.md's *never for a person's words*,
 for the owner.
+
+## As built (E, F)
+
+**E:** a stack's backs fanned by a fixed table by place (7, −7, 10, −10, 9 px; 3°, −3°, 4°, −4°, 2°), wider on hover or focus (×1.6 the step,
+×1.3 the turn), tighter at the narrow width; still under reduced motion (no glide); the asker's head over the sign's lower right corner, the two
+centred as one figure. A fan's side edges reach a few px into the next lane, under its cards. **F:** a goal's tasks behind its front card a fan
+(2°, −1.5°, 2.5°, −1°, 1.5°, −2.5°; 3 to 4 px aside by turns), the nearest three a 20 px edge with the element and the stage's sign, the rest 5 px
+hints, five at most (the picked goal unfolds them all); a hover or focus opens it to 30 px an edge, the names fading in, pushing the lane's next
+cards down; an edge pressed lifts its task; the line the same (the moon on an edge). **Left:** on touch an edge is 20 px, under the press target.
