@@ -73,7 +73,7 @@ def test_a_broken_answer_leaves_the_idea_new(keeper):
 
 
 def test_tick_drafts_no_raw_idea_by_day_and_never_in_the_demo(keeper):
-    # spec 35 §3: no 30-minute batch; a raw idea waits for the night (or a draft at once)
+    # spec 35 §3: no 30-minute batch; a raw idea of before the night went is held (spec 99 §3), and one asked for is drafted at once
     slug = ideas.add_idea(keeper.root, "y", state_dir=keeper.state)
     keeper.settings_now["night"] = "00:00-00:01"
     keeper.call = Model()
@@ -202,7 +202,8 @@ def test_a_keeper_call_writes_its_line_to_its_ideas_ledger(keeper):
     ux = ideas.add_track(keeper.root, "UX")
     slug = ideas.add_idea(keeper.root, "dark mode pls", ux, state_dir=keeper.state)
     keeper.call = Model({"gist": "Dark mode.", "why": "calm", "size": "s", "questions": []})
-    assert keeper._sync(slug, "drafting", lambda: keeper.draft_one(slug))       # as the night runs it
+    keeper._claim(slug, "drafting")
+    keeper._run(slug, "drafting", lambda: keeper.draft_one(slug), slug)
     (row,) = idea_spend.read(keeper.state / "ideas" / slug / "spend.jsonl")
     assert row["step"] == "draft" and row["role"] == "taskmaster" and row["tool"] == "claude"
     assert row["tier"] == "elder" and row["effort"] == "medium" and row["model"] and row["cost"] == 0.01
@@ -210,15 +211,16 @@ def test_a_keeper_call_writes_its_line_to_its_ideas_ledger(keeper):
     assert "task" not in row and "round" not in row
 
 
-def test_an_unpriced_call_writes_null_a_goals_goes_to_the_goal_and_the_nights_to_the_board(keeper):
+def test_an_unpriced_call_writes_null_a_goals_goes_to_the_goal_and_one_of_no_idea_to_the_board(keeper):
     from orkboard.realm import idea_spend
     keeper.call = lambda tier, prompt, effort="", budget=None: ("{}", None, None, "")
-    assert keeper._sync("speed", "goal", lambda: keeper.ask("goal", "read it"), "goal:speed")
+    keeper._claim("goal:speed", "goal")
+    keeper._run("goal:speed", "goal", lambda: keeper.ask("goal", "read it"), "goal-speed")
     (row,) = idea_spend.read(keeper.state / "goals" / "speed" / "spend.jsonl")
     assert row["step"] == "goal" and row["cost"] is None and row["tokens"]["in"] is None
-    keeper.ask("propose", "propose", tools=False)
-    (night,) = idea_spend.read(keeper.state / "ideas" / "spend-board.jsonl")
-    assert night["step"] == "propose" and night["role"] == "taskmaster"
+    keeper.ask("kind", "kind", tools=False)
+    (board,) = idea_spend.read(keeper.state / "ideas" / "spend-board.jsonl")
+    assert board["step"] == "kind" and board["role"] == "taskmaster"
 
 
 def test_a_plan_says_the_kinds_no_one_of_its_party_does_and_its_prompt_says_the_goals_type_spec_52(keeper):
@@ -287,7 +289,7 @@ def test_a_keeper_call_runs_inside_its_steps_bound_and_its_line_says_when_it_rea
             return "{}", 0.01, 1000, "s"
         return call
 
-    assert idea_target.READS["talk"] == 2 and "propose" in idea_target.READS and "op_prepare" not in idea_target.READS
+    assert idea_target.READS["talk"] == 2 and "kind" in idea_target.READS and "op_prepare" not in idea_target.READS
     with call_log.kept(folder, "board"):
         keeper.call = reading(["a.py", "b.py", "c.py"])
         keeper.ask("talk", "talk")
@@ -296,7 +298,7 @@ def test_a_keeper_call_runs_inside_its_steps_bound_and_its_line_says_when_it_rea
         keeper.call = reading(["a.py", "b.py", "c.py"])
         keeper.ask("op_prepare", "prepare")                                  # a step that names no number: no bound
         keeper.call = reading([])
-        keeper.ask("propose", "propose", tools=False)                        # reads no file: a bound of none
+        keeper.ask("kind", "kind", tools=False)                              # reads no file: a bound of none
     over, within, unbounded, none = call_log.read(folder)
     assert (over["bound"], over["over"], over["reads"]["files"], over["reads"]["paths"]) == (2, True, 3, ["a.py", "b.py", "c.py"])
     assert within["bound"] == 2 and "over" not in within and within["reads"]["files"] == 2
@@ -307,3 +309,26 @@ def test_a_keeper_call_runs_inside_its_steps_bound_and_its_line_says_when_it_rea
     with pytest.raises(RuntimeError):
         keeper.ask("talk", "talk")
     assert call_log._BOUND.get() is None
+
+
+def test_the_night_is_gone_the_clock_runs_only_what_the_limits_held_and_a_night_queue_is_never_drafted(keeper):
+    """Spec 99 §3: no night run, refresh, proposal or pace; `tick` runs again an idea the limits held (`held_until`) and nothing else."""
+    import importlib
+    from orkboard.realm import idea_target
+    with pytest.raises(ImportError):
+        importlib.import_module("orkboard.core.idea_night")
+    for name in ("run_night", "night_tick", "pace_tick", "run_pace", "propose_prompt", "tonight", "night_allowed", "week_is_behind", "start_night"):
+        assert not hasattr(keeper, name), name
+    assert not {"refresh", "propose"} & set(idea_target.STEPS) and not hasattr(idea_target, "PROPOSALS")
+    ux = ideas.add_track(keeper.root, "UX")
+    older = ideas.add_idea(keeper.root, "an older state said night", ux, state_dir=keeper.state, queue="night")
+    plain = ideas.add_idea(keeper.root, "waits, held by nothing", ux, state_dir=keeper.state, queue="hold")
+    held = ideas.add_idea(keeper.root, "held by the limits", ux, state_dir=keeper.state, queue="now")
+    ideas.save_state(keeper.state, held, held_until="2026-10-19T20:00:00")
+    keeper.call = model = Model({"gist": "Held.", "why": "calm", "size": "s", "questions": ["Which one?"]})
+    assert keeper.tick(time.time()) is True
+    _wait(keeper, held)
+    assert len(model.asked) == 1 and "held by the limits" in model.asked[0]["prompt"]
+    assert ideas.state(keeper.state, held)["state"] == "asks"
+    assert ideas.state(keeper.state, older)["state"] == "raw" and ideas.state(keeper.state, plain)["state"] == "raw"
+    assert keeper.at_work() is False

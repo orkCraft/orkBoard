@@ -18,8 +18,6 @@ EXPECTED = {
     "collide": {"thrift": ("warrior", "low"), "balance": ("warrior", "low"), "quality": ("warrior", "medium")},
     "talk": {"thrift": ("warrior", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
     "plan": {"thrift": ("elder", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
-    "refresh": {"thrift": None, "balance": ("elder", "medium"), "quality": ("elder", "high")},
-    "propose": {"thrift": None, "balance": ("elder", "low"), "quality": ("elder", "medium")},
 }
 
 
@@ -42,7 +40,6 @@ def test_a_roles_own_model_wins_and_keeps_the_targets_effort():
     assert idea_target.task_pick("warrior", "thrift", "opus") == ("opus", "low")
     assert idea_target.keeper_pick("draft", "quality", "haiku") == ("haiku", "high")
     assert idea_target.keeper_pick("draft", "quality", "elder") == ("elder", "high")    # the default is not a pick
-    assert idea_target.keeper_pick("refresh", "thrift", "haiku") is None
 
 
 def test_the_budget_is_halved_in_thrift_and_doubled_in_quality_and_the_caps_hold():
@@ -78,7 +75,7 @@ def test_effort_budget_and_no_session_are_on_the_command_only_when_the_cli_lists
     assert harnesses.get("agy").read("p", tmp_path, "elder", effort="high")[-1] != "high"   # other tools ignore it
 
 
-def test_propose_reads_nothing(tmp_path, monkeypatch):
+def test_a_read_with_no_tools_reads_nothing(tmp_path, monkeypatch):
     h = _fake_cli(tmp_path, monkeypatch, "")
     cmd = h.read("p", tmp_path, "elder", tools=False)
     last = max(i for i, a in enumerate(cmd) if a == "--disallowedTools")
@@ -181,7 +178,6 @@ def test_a_budget_is_never_under_one_and_a_half_floors(fresh_floors, tmp_path):
     assert idea_target.budget("collide", "thrift") == 0.15 and idea_target.budget("collide", "balance") == 0.15
     assert idea_target.budget("answer", "thrift") == 0.20 and idea_target.budget("talk", "thrift") == 0.15    # talk: 0.10 -> 0.15
     assert idea_target.budget("pitch_view", "thrift") == 0.05                   # a laborer call: 1.5 x 0.03, rounded up
-    assert idea_target.pick("refresh", "thrift") is None and idea_target.budget("refresh", "thrift") == 0.25    # skipped: its cap alone
     assert idea_target.budget("task", "balance") is None
     for step in idea_target.CAPS:
         for target in idea_target.TARGETS:
@@ -198,3 +194,16 @@ def test_lean_runs_its_draft_answer_talk_and_judge_on_the_seasoned_tier_and_its_
         assert idea_target.pick(step, "thrift") == ("warrior", "low")
     for step in ("goal", "plan"):
         assert idea_target.pick(step, "thrift")[0] == "elder"
+
+
+def test_the_gate_holds_only_for_the_reserve_and_a_plan_of_before_the_night_went_is_read_as_one_the_board_passed():
+    """Spec 99 §3: no `night` answer, no week hold; a `start_at: "night"` plan waits for the reserve, never for a window."""
+    now = dt.datetime(2026, 10, 17, 12, 0).timestamp()
+    reset = dt.datetime(2026, 10, 17, 14, 0)
+    spent = [Limit("claude", "", "session", 0.2, reset)]                                  # 0.2 <= the day's 0.3
+    board = {"night": "01:00-07:00", "reserve_day": 0.3, "reserve_night": 0.1}
+    assert idea_target.gate({"passed_by": "person"}, spent, board, now) is None            # the person's press is never held
+    assert idea_target.gate({"passed_by": "auto"}, spent, board, now) == pytest.approx(reset.timestamp())
+    assert idea_target.gate({"passed_by": "person", "start_at": "night"}, spent, board, now) == pytest.approx(reset.timestamp())
+    assert idea_target.gate({"passed_by": "person", "start_at": "night"}, [], board, now) is None     # outside any window, nothing to wait for
+    assert not hasattr(idea_target, "WeekHold") and not hasattr(idea_target, "by_pace")

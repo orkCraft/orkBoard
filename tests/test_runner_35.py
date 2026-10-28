@@ -51,15 +51,21 @@ def test_a_task_runs_on_the_targets_tier_with_its_tool_and_model_recorded(town):
     assert (e["ran_tier"], e["effort"], e["tool"]) == ("laborer", "low", "claude") and "haiku" in e["model"]
 
 
-def test_a_plan_that_starts_at_night_waits_outside_the_window_and_starts_inside(town):
+def test_a_plan_of_before_the_night_went_waits_for_the_reserve_as_one_the_board_passed_and_never_for_a_window(town):
+    reset = dt.datetime.now() + dt.timedelta(hours=2)
+    limits = lambda: [Limit("claude", "", "session", 0.2, reset)]               # noqa: E731  above NEARLY, below the day's 0.3
     plan_of(town, [{"id": "k1"}])
-    _pass(town, start_at="night", passed_by="auto")
+    _pass(town, start_at="night", passed_by="person")
     r, launched = _runner(town, night=_now_in(False))
     r.start("demo")
-    assert launched == [] and r.plan("demo")["tasks"][0]["state"] == "ready"    # not held: it waits for the night
-    r, launched = _runner(town, night=_now_in(True))
+    assert launched == [("demo", "k1")]                                         # outside the window it starts: there is no night to wait for
+    plan_of(town, [{"id": "k1"}])
+    _pass(town, start_at="night", passed_by="person")
+    r, launched = _runner(town, limits=limits, night=_now_in(False))
     r.start("demo")
-    assert launched == [("demo", "k1")]
+    (task,) = r.plan("demo")["tasks"]
+    assert launched == [] and task["state"] == "held" and task["note"] == f"reserve · after {reset:%H:%M}"      # held for the reserve, as a plan passed by itself
+    assert idea_target.gate({"start_at": "night"}, [], {}, time.time()) is None and idea_target.gate({"start_at": None}, limits(), {}, time.time()) is None
 
 
 def test_the_reserve_holds_what_started_by_itself_and_never_the_persons_press(town):

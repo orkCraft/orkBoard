@@ -137,7 +137,7 @@ def test_waits_come_in_the_specs_order(host):
     assert n[limits]["waits"] == {"kind": "limits", "ref": "", "title": "", "until": "18:00"}
     assert n[reserve]["waits"] == {"kind": "reserve", "ref": "", "title": "", "until": "19:30"}
     assert n[held]["waits"] == {"kind": "limits", "ref": "", "title": "", "until": "2026-10-19T20:00:00"}
-    assert n[night]["waits"]["kind"] == "night" and n[night_plan]["waits"]["kind"] == "night"
+    assert n[night]["waits"]["kind"] == "stopped" and n[night]["queue"] == "hold" and n[night_plan]["waits"]["kind"] == "night"      # a raw `night` is held (spec 99 §3)
     assert n[stopped]["waits"]["kind"] == "stopped"
     assert n[free]["waits"] is None and n[base]["waits"] is None
 

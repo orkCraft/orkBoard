@@ -177,6 +177,5 @@ def test_the_clock_alone_makes_no_tree_and_no_branch(fake_repo):
     host = Orkboard(fake_repo)
     host.ideas.keeper._tick_at = float("-inf")
     host.ideas.tick()
-    host.ideas.keeper.run_night()
     assert not (fake_repo / ".orkcraft" / "board").exists()
     assert "dev" not in git(fake_repo, "branch", "--list", "dev")

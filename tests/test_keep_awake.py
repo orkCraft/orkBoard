@@ -5,7 +5,7 @@ import pytest
 
 from orkboard import settings
 from orkboard.gui import board_host, keep_awake
-from orkboard.gui.keep_awake import LINGER_S, POWER_S, TICK_S, TONIGHT_S
+from orkboard.gui.keep_awake import LINGER_S, POWER_S, TICK_S
 from orkboard.gui.board_host import Orkboard
 from tests.conftest import FakeAwake
 
@@ -40,10 +40,9 @@ def awake(fake_repo):
     keep.phones = False
     box = type("Box", (), {})()
     box.host, box.keep, box.clock, box.power, box.fake = host, keep, clock, power, host.awake
-    box.working, box.tonight, box.ops = False, 0, False
+    box.working, box.ops = False, False
     (project,) = host.projects.open_ones
     project.ideas.working = lambda: box.working
-    project.ideas.tonight = lambda: box.tonight
     host.ops.runner.busy = lambda: box.ops
     keep.start()
     return box
@@ -85,36 +84,12 @@ def test_the_power_is_read_at_most_every_minute_and_none_counts_as_on_power(awak
 
 def test_carts_holds_while_the_keeper_a_task_or_an_operation_is_at_work(awake):
     assert awake.keep.reason() == ""
-    awake.working = True                                   # a draft, a plan, a read, a check, the night, a task
+    awake.working = True                                   # a draft, a plan, a read, a check, a task
     assert awake.keep.reason() == "work"
     awake.working, awake.ops = False, True                 # an operation running or waiting
     assert awake.keep.reason() == "work"
     awake.ops = False
     assert awake.keep.reason() == ""                       # a task at Review, a held plan, a question: none of them
-
-
-def test_tonight_holds_for_work_waiting_for_the_night_and_not_for_its_proposals(awake):
-    awake.tonight = 2
-    awake.clock.go(TONIGHT_S)                              # the cached read of nothing is a minute old
-    assert awake.keep.reason() == "tonight"
-    awake.working = True
-    assert awake.keep.reason() == "work"                   # inside the window the night runs it
-    awake.working, awake.tonight = False, 0               # drafted and started
-    awake.clock.go(TONIGHT_S)
-    assert awake.keep.reason() == ""
-
-
-def test_tonight_is_read_at_most_every_minute_per_project(awake):
-    reads = []
-    (project,) = awake.host.projects.open_ones
-    project.ideas.tonight = lambda: reads.append(1) or 1
-    awake.clock.go(TONIGHT_S)
-    for _ in range(3):
-        assert awake.keep.reason() == "tonight"
-    assert len(reads) == 1
-    awake.clock.go(TONIGHT_S)
-    awake.keep.reason()
-    assert len(reads) == 2
 
 
 def test_phone_holds_with_a_phone_paired_and_falls_back_to_carts_without(awake):

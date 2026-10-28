@@ -1,9 +1,8 @@
 """Spec 65 A (docs/specs/65-ideation.md §1–§7, Tests → A): Ideation's agents, preset, stages and fixed seats; a pitch's own way; its three
 read-only calls (the keeper's model call stubbed), each as its role; the answers cut and cleaned; Send, Change and judge again, Pass and
-the 200 kept; the night; Stop all; the events; Needs you's row; what the faces read."""
+the 200 kept; Stop all; the events; Needs you's row; what the faces read."""
 from __future__ import annotations
 
-import datetime as dt
 import json
 import sys
 import threading
@@ -14,7 +13,6 @@ import pytest
 from orkboard.core.idea_keeper import IdeaKeeper
 from orkboard.gui.board_host import CommandError, Orkboard
 from orkboard.realm import event_log, goal_team, goal_types, idea_target, ideas, library, party_price, pitches, roles
-from orkboard.sources.limits import Limit
 
 STEPS = (("Read this pitch alone", "pitch_view"), ("Make the case against this pitch", "pitch_case"),
          ("Decide whether to invest", "pitch_decide"), ("write its spec straight away", "draft"), ("turn it into a plan", "plan"),
@@ -290,21 +288,15 @@ def test_an_invest_without_who_is_judged_a_reshape_and_its_page_says_why(keeper)
     assert "No one it is for is named" in ideas.idea_page(keeper.root, slug).section("Decision")
 
 
-# -- §7: the night, Stop all -------------------------------------------------------------------------------------------
+# -- §7: Stop all -------------------------------------------------------------------------------------------
 
-def test_the_night_judges_a_pitch_put_off_first_held_by_the_window_and_never_by_the_reserve(keeper):
+def test_nothing_judges_or_drafts_by_itself_what_an_older_state_put_off_to_the_night(keeper):
     goal = ideas.add_idea(keeper.root, "a goal for tonight", keeper.ship, keeper.state, queue="night")
     slug = _pitch(keeper, queue="night")
-    reset = dt.datetime.now() + dt.timedelta(hours=3)
-    keeper.limits_now = [Limit("claude", "", "session", 0.08, reset)]                     # the reserve reached, not the window
     keeper.call = model = Model(keeper, pitch_view=VIEW, pitch_case=CASE, pitch_decide=DECIDE(), draft={})
-    counts = keeper.run_night("2026-10-23T01:00")
-    assert ideas.state(keeper.state, slug)["state"] == "judged" and counts["drafted"] == 1 and counts["held"] >= 1
-    assert ideas.state(keeper.state, goal)["state"] == "raw" and model.of("draft") == []      # the goal waits for the reserve
-    other = _pitch(keeper, "a second pitch", queue="night")
-    keeper.limits_now = [Limit("claude", "", "session", 0.03, reset)]                     # the window nearly spent: it waits too
-    counts = keeper.run_night("2026-10-24T01:00")
-    assert ideas.state(keeper.state, other)["state"] == "raw" and ideas.state(keeper.state, other)["held_until"] and counts["drafted"] == 0
+    assert not keeper.tick(time.time())                                                    # the clock runs only what the limits held and what is `now`
+    assert ideas.state(keeper.state, slug)["state"] == "raw" and ideas.state(keeper.state, goal)["state"] == "raw"
+    assert model.of("pitch_view") == [] and model.of("draft") == [] and not hasattr(keeper, "run_night")
 
 
 def test_stop_all_stops_a_judging_pitch_failed_and_stopped(keeper):

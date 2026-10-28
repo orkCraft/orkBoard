@@ -9,7 +9,8 @@
 The setting is Orkline's (`keep_awake` off | carts | phone, `awake_offered`): switching between the two loses nothing.
 The hold itself is `gui/awake.py`; here is only *why* and *for how long*. The hold's reason, in this order: the mode
 is `off` or the computer is on battery: none; a phone is paired and the mode says so: `phone`; an ork or an operation
-is at work: `work`; the Board has work waiting for tonight: `tonight`. It lets go only after LINGER_S with no reason.
+is at work: `work`. It lets go only after LINGER_S with no reason (the Board's work for the night is gone, spec 99 §3:
+it was `tonight`).
 """
 from __future__ import annotations
 
@@ -22,7 +23,6 @@ from orkboard.gui.pairing import Pairing
 
 TICK_S = 30.0        # the host's clock asks this often
 POWER_S = 60.0       # the power is read again after this
-TONIGHT_S = 60.0     # a project's work for tonight is read again after this
 LINGER_S = 300.0     # the hold stays this long after the last reason: a task ending and the next starting leave no gap
 
 
@@ -36,7 +36,6 @@ class KeepAwake:
         self._tick_at = float("-inf")
         self._on_power: bool | None = None              # the last read; None: not read or unknown
         self._power_at = float("-inf")
-        self._tonight_read: dict[str, tuple[float, int]] = {}    # project → (read at, rows)
 
     @property
     def awake(self):
@@ -75,21 +74,8 @@ class KeepAwake:
         except Exception:
             return False
 
-    def _tonight(self, now: float) -> bool:
-        for p in self.host.projects.open_ones:
-            read = self._tonight_read.get(p.path)
-            if read is None or now - read[0] >= TONIGHT_S:
-                try:
-                    read = (now, int(p.ideas.tonight()))
-                except Exception:
-                    read = (now, 0)
-                self._tonight_read[p.path] = read
-            if read[1] > 0:
-                return True
-        return False
-
     def reason(self, now: float | None = None) -> str:
-        """"work" | "tonight" | "phone" | "" (spec 47 §2)."""
+        """"work" | "phone" | "" (spec 47 §2)."""
         now = self.clock() if now is None else now
         mode = self.mode
         if mode == "off" or self._battery(now):
@@ -98,8 +84,6 @@ class KeepAwake:
             return "phone"
         if self._working():
             return "work"
-        if self._tonight(now):
-            return "tonight"
         return ""
 
     # -- holding -----------------------------------------------------------------------------------------------

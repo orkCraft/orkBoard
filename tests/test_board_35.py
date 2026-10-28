@@ -125,28 +125,29 @@ def test_a_goal_from_a_description_and_a_priority_is_read_at_once_and_written(ho
     assert next(t for t in host.command("ideas.board")["tracks"] if t["slug"] == slug)["title_by"] == "person"
 
 
-def test_a_goal_needs_a_party_high_and_normal_are_drafted_at_once_low_and_night_wait(host, model, runner):
+def test_a_goal_needs_a_party_and_is_drafted_at_once_whatever_its_priority_for_there_is_no_night(host, model, runner):
     with pytest.raises(CommandError, match="^A goal needs a party$"):
         host.command("ideas.add", {"text": "x"})
     with pytest.raises(CommandError, match="^A goal needs a party$"):
         host.command("ideas.add", {"text": "x", "track": "general"})
     g = _goal(host)
-    host.command("ideas.night_allow", {"allow": True})          # spec 83: Low work goes at night on the word of the person
+    host.command("ideas.night_allow", {"allow": True})          # stored for the phone and Orkline, read by nothing here (spec 99 §3)
     seen = len(model.seen)
     high = host.command("ideas.add", {"text": "a high one", "track": g, "priority": "high"})
     _wait(host, high["slug"])
     normal = host.command("ideas.add", {"text": "a normal one", "track": g})
     _wait(host, normal["slug"])
     low = host.command("ideas.add", {"text": "a low one", "track": g, "priority": "low"})
-    closed = host.command("ideas.add", {"text": "closed dialog", "track": g, "priority": "low", "night": True})
-    assert [high["queue"], normal["queue"], low["queue"], closed["queue"]] == ["now", "now", "night", "night"]
+    _wait(host, low["slug"])
+    closed = host.command("ideas.add", {"text": "closed dialog", "track": g, "priority": "low", "night": True})        # `night` is no longer a thing
+    _wait(host, closed["slug"])
+    assert [high["queue"], normal["queue"], low["queue"], closed["queue"]] == ["now", "now", "now", "now"]
     drafted = [c["prompt"] for c in model.seen[seen:] if c["step"] == "draft"]
-    assert len(drafted) == 2 and "a high one" in drafted[0] and "a normal one" in drafted[1]
-    assert ideas.state(host.ideas.state_dir, low["slug"])["state"] == "raw"
-    rows = {i["slug"]: i for i in host.command("ideas.board")["ideas"]}
-    assert rows[low["slug"]]["queue"] == "night" and rows[normal["slug"]]["priority"] == "normal"
+    assert len(drafted) == 4 and "a high one" in drafted[0] and "a normal one" in drafted[1] and "a low one" in drafted[2]
+    kept = host.command("ideas.add", {"text": "kept back", "track": g, "hold": True})
+    assert kept["queue"] == "hold" and ideas.state(host.ideas.state_dir, kept["slug"])["state"] == "raw"
     added = _events(host, "idea_added")
-    assert [(e["priority"], e["queue"]) for e in added] == [("high", "now"), ("normal", "now"), ("low", "night"), ("low", "night")]
+    assert [(e["priority"], e["queue"]) for e in added] == [("high", "now"), ("normal", "now"), ("low", "now"), ("low", "now"), ("normal", "hold")]
     assert all(c["resume"] == "" and c["one_shot"] for c in model.seen)       # §0: no call ever resumes a session
 
 
@@ -181,22 +182,29 @@ def test_autostart_off_or_a_question_or_a_stopped_plan_waits_for_the_person(host
     assert host.ideas.autostart(a) == "" and ideas.plan(host.ideas.state_dir, a).get("passed_at") is None
 
 
-def test_a_low_safe_plan_starts_at_night_and_start_now_clears_it(host, model, runner):
+def test_a_low_safe_plan_starts_at_once_and_a_plan_of_before_the_night_went_waits_for_start_now_or_the_clock(host, model, runner):
     g = _goal(host, priority="low")
-    host.command("ideas.night_allow", {"allow": True})          # spec 83: Low work goes at night on the word of the person
+    host.command("ideas.night_allow", {"allow": True})          # stored, read by nothing here (spec 99 §3)
     slug = host.command("ideas.add", {"text": "low and safe", "track": g, "priority": "low"})["slug"]
     ideas.save_state(host.ideas.state_dir, slug, state="raw")
     host.ideas.keeper.draft_one(slug)
     plan = ideas.plan(host.ideas.state_dir, slug)
-    assert plan["start_at"] == "night" and plan["passed_by"] == "auto" and runner.started == []
-    row = next(i for i in host.command("ideas.board")["ideas"] if i["slug"] == slug)
-    assert row["start_at"] == "night" and row["state"] == "plan" and not row["in_needs_you"]
-    host.command("ideas.start_now", {"slug": slug, "via": "map"})
-    assert ideas.plan(host.ideas.state_dir, slug)["start_at"] is None and runner.started == [slug]
-    assert [(e["idea"], e["via"]) for e in _events(host, "plan_started_now")] == [(slug, "map")]       # spec 41 §4
-    assert "via" not in _events(host, "plan_passed")[-1]                       # passed by the board: no press
+    assert plan.get("start_at") is None and plan["passed_by"] == "auto" and runner.started == [slug]       # no night to wait for
     with pytest.raises(CommandError, match="does not wait for the night"):
         host.command("ideas.start_now", {"slug": slug})
+    old = ideas.add_idea(host.ideas.root(), "passed for the night, before it went", g, host.ideas.state_dir)
+    ideas.save_plan(host.ideas.state_dir, old, {"idea": old, "passed_at": "x", "passed_by": "auto", "start_at": "night", "todos": [], "tasks": []})
+    ideas.save_state(host.ideas.state_dir, old, state="plan")
+    row = next(i for i in host.command("ideas.board")["ideas"] if i["slug"] == old)
+    assert row["start_at"] == "night" and row["state"] == "plan"
+    host.command("ideas.start_now", {"slug": old, "via": "map"})
+    assert ideas.plan(host.ideas.state_dir, old)["start_at"] is None and runner.started == [slug, old]
+    assert [(e["idea"], e["via"]) for e in _events(host, "plan_started_now")] == [(old, "map")]       # spec 41 §4
+    other = ideas.add_idea(host.ideas.root(), "another of before", g, host.ideas.state_dir)
+    ideas.save_plan(host.ideas.state_dir, other, {"idea": other, "passed_at": "x", "passed_by": "auto", "start_at": "night", "todos": [], "tasks": []})
+    ideas.save_state(host.ideas.state_dir, other, state="plan")
+    assert host.ideas.older_night_plans() == 1 and runner.started == [slug, old, other]               # the clock hands it on: it waits for the reserve, not a night
+    assert ideas.plan(host.ideas.state_dir, other)["start_at"] == "night" and ideas.state(host.ideas.state_dir, other)["state"] == "working"
 
 
 def test_needs_you_is_one_list_blocks_then_priority_then_age_proposals_last(host, model, runner):
@@ -224,34 +232,35 @@ def test_needs_you_is_one_list_blocks_then_priority_then_age_proposals_last(host
     assert asks_low and asks_high
 
 
-def test_a_proposal_taken_joins_the_queue_one_declined_is_kept_for_the_night(host, model, runner):
+def test_a_proposal_that_waits_is_taken_and_drafted_at_once_or_dropped_and_none_is_kept_for_a_night(host, model, runner):
     g = _goal(host)
-    host.command("ideas.night_allow", {"allow": True})          # spec 83: Low work goes at night on the word of the person
     root, sd = host.ideas.root(), host.ideas.state_dir
     take = ideas.add_idea(root, "why take", g, sd)
     no = ideas.add_idea(root, "why not", g, sd)
     for s in (take, no):
         ideas.save_state(sd, s, state="proposed")
     host.command("ideas.proposal", {"slug": take, "take": True, "priority": "low"})
-    assert ideas.state(sd, take)["state"] == "raw" and ideas.state(sd, take)["queue"] == "night"
+    _wait(host, take)
+    assert ideas.state(sd, take)["state"] not in ("proposed", "raw") and ideas.state(sd, take)["queue"] != "night"        # drafted at once: Low waits for no night
     host.command("ideas.proposal", {"slug": no, "take": False, "reason": "not now"})
     assert ideas.idea_page(root, no) is None
-    from orkboard.core import idea_night
-    assert idea_night.declined(sd)[-1]["reason"] == "not now" and idea_night.declined(sd)[-1]["goal"] == g
+    assert not (sd / "ideas" / "declined.jsonl").exists()
     assert [(e["take"], e["has_reason"]) for e in _events(host, "proposal_answered")] == [(True, False), (False, True)]
 
 
 def test_queue_read_stop_and_board_set(host, model, runner):
     g = _goal(host)
-    host.command("ideas.night_allow", {"allow": True})          # spec 83: Low work goes at night on the word of the person
-    slug = host.command("ideas.add", {"text": "tonight", "track": g, "priority": "low", "night": True})["slug"]
+    host.command("ideas.night_allow", {"allow": True})          # stored, read by nothing here (spec 99 §3)
+    slug = host.command("ideas.add", {"text": "kept", "track": g, "hold": True})["slug"]
     host.command("ideas.read_stop", {"slug": slug})
     assert ideas.state(host.ideas.state_dir, slug)["queue"] == "hold"
-    host.command("ideas.queue", {"slug": slug, "queue": "night"})
-    assert ideas.state(host.ideas.state_dir, slug)["queue"] == "night"
+    host.command("ideas.queue", {"slug": slug, "queue": "night"})                       # the name of before the night went: read as hold
+    assert ideas.state(host.ideas.state_dir, slug)["queue"] == "hold"
+    with pytest.raises(CommandError, match="The queue is now or hold"):
+        host.command("ideas.queue", {"slug": slug, "queue": "later"})
     host.command("ideas.queue", {"slug": slug, "queue": "now", "via": "map"})
     _wait(host, slug)
-    assert [(e["queue"], e["via"]) for e in _events(host, "idea_queued")] == [("night", "idea"), ("now", "map")]   # spec 41 §4
+    assert [(e["queue"], e["via"]) for e in _events(host, "idea_queued")] == [("hold", "idea"), ("now", "map")]   # spec 41 §4
     assert ideas.state(host.ideas.state_dir, slug)["state"] != "raw"
     got = host.command("ideas.board_set", {"target": "quality", "night": "22:00-05:00", "device": "phone"})
     assert got == {"target": "quality", "autostart": True, "night": "22:00-05:00", "review": False, "review_notice": False, "night_low": True}      # spec 84 §4: review is off by default
@@ -262,6 +271,17 @@ def test_queue_read_stop_and_board_set(host, model, runner):
     (e,) = _events(host, "board_set")
     assert e["target"] == "quality" and e["night"] == "22:00-05:00" and e["device"] == "phone"
     assert [e["idea"] for e in _events(host, "keeper_stopped")] == [slug]
+    assert _events(host, "night_allowed") == []                                         # the answer is stored and nothing more
+
+
+def test_the_nights_answer_is_stored_for_the_phone_and_orkline_and_read_by_nothing(host, model, runner):
+    assert host.command("ideas.board")["night_low"] is None
+    assert host.command("ideas.night_allow", {"allow": True}) == {"ok": True, "moved": 0}
+    assert host.command("ideas.board")["night_low"] is True
+    host.command("ideas.night_allow", {"allow": False})
+    assert host.command("ideas.board")["night_low"] is False
+    with pytest.raises(CommandError, match="on or off"):
+        host.command("ideas.night_allow", {"allow": "yes"})
 
 
 def test_a_file_todo_is_kept_outside_the_repository_and_off_the_plan(host, model, runner):

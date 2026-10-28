@@ -7,7 +7,7 @@
     idea_spend.tier_costs(state_dir)               # $ a task per tier: the mean of the last 20 that ran on it
 
 **The ledger** (§1): one JSON line per call, appended where its work lives — a keeper call on an idea or a task's turn
-in `<state_dir>/ideas/<slug>/spend.jsonl`, on a goal in `<state_dir>/goals/<slug>/spend.jsonl`, the night's proposals
+in `<state_dir>/ideas/<slug>/spend.jsonl`, on a goal in `<state_dir>/goals/<slug>/spend.jsonl`, a call that is no idea's or goal's
 in `<state_dir>/ideas/spend-board.jsonl`; a deleted idea's lines move to `<state_dir>/ideas/spend-gone.jsonl` with
 how its tasks ended, so the week keeps what it cost. A line: `at, step, task?, round?, role, tool, model, tier,
 effort, tokens {in, out, cache_read, cache_write}, cost` — `cost` is the tool's $ at API prices, `None` when unpriced,
@@ -72,7 +72,7 @@ def line(step: str, role: str, tool: str, model: str, tier: str, effort: str, to
 
 
 def ledger(state_dir: Path, idea: str = "", goal: str = "") -> Path | None:
-    """Where a line goes: its idea's, its goal's, else the board's own (the night's proposals); None for a name
+    """Where a line goes: its idea's, its goal's, else the board's own; None for a name
     that is not a slug."""
     name = idea or goal
     if name and not _SLUG.fullmatch(name):

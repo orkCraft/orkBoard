@@ -1,8 +1,7 @@
 """The Board's Target (docs/specs/35-goals-window.md §1): thrift · balance · quality picks the tier and the reasoning
-(effort) of every step of the Board, the keeper's and the orks'; and the clock the Board's night and reserve read.
+(effort) of every step of the Board, the keeper's and the orks'; and the clock the Board's reserve reads.
 
     pick("draft", "balance")                       # ("elder", "medium")
-    pick("refresh", "thrift")                      # None: thrift reads no goal again at night
     pick("op_act", "balance")                      # ("laborer", ""): an operation's action (spec 38 §4)
     keeper_pick("talk", "quality", "haiku")        # ("haiku", "high"): the Taskmaster's own model wins
     task_pick("warrior", "thrift", "")             # ("laborer", "low"): Grunt runs on the shifted tier
@@ -28,10 +27,8 @@ from orkboard.realm import plans
 TARGETS = ("thrift", "balance", "quality")
 DEFAULT = "balance"
 EFFORTS = ("low", "medium", "high", "xhigh", "max")      # the Claude CLI's `--effort` levels
-STEPS = ("goal", "draft", "answer", "talk", "plan", "refresh", "propose", "task", "pitch_view", "pitch_case", "pitch_decide", "collide", "kind")
+STEPS = ("goal", "draft", "answer", "talk", "plan", "task", "pitch_view", "pitch_case", "pitch_decide", "collide", "kind")
 PITCH_STEPS = ("pitch_view", "pitch_case", "pitch_decide")   # a pitch's three calls (spec 65 §3, core/idea_judge.py)
-PROPOSALS = {"thrift": 0, "balance": 2, "quality": 3}  # the night's proposals by the Target (§8)
-MAX_WAITING = 3                                          # never more proposals than this waiting in all
 SIZES = ("lean", "standard", "full")                     # a party's size (spec 75 §3): its Target, for its goals
 SIZE_TARGET = {"lean": "thrift", "standard": "balance", "full": "quality"}
 TIER_ROLE = "elder"                                    # the Taskmaster's default: its model is not the person's pick
@@ -46,8 +43,6 @@ MATRIX: dict[str, dict[str, tuple[Any, str] | None]] = {
     "answer": {"thrift": ("warrior", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
     "talk": {"thrift": ("warrior", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
     "plan": {"thrift": ("elder", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
-    "refresh": {"thrift": None, "balance": ("elder", "medium"), "quality": ("elder", "high")},
-    "propose": {"thrift": None, "balance": ("elder", "low"), "quality": ("elder", "medium")},
     # a party's leader accepts it against its metrics when the person asks, for a party with metrics of before (core/idea_lead.py; spec 50 §2.2)
     "accept": {"thrift": ("elder", "low"), "balance": ("elder", "medium"), "quality": ("elder", "high")},
     "task": {"thrift": (-1, "low"), "balance": (0, "medium"), "quality": (1, "high")},
@@ -70,12 +65,12 @@ OP_STEPS = ("op_prepare", "op_act", "op_learn")
 # §0: one call, one job. What a keeper call is given is built by code and cut to a cap (characters of the prompt, the
 # call's own instructions not counted); how many files it may read; its budget in USD (`--max-budget-usd`) in balance,
 # half in thrift, double in quality.
-CONTEXT = {"goal": 12_000, "draft": 8_000, "answer": 8_000, "talk": 6_000, "plan": 10_000, "refresh": 12_000, "accept": 10_000,
-           "propose": 10_000, "op_prepare": 12_000, "op_act": 6_000, "op_learn": 6_000,
+CONTEXT = {"goal": 12_000, "draft": 8_000, "answer": 8_000, "talk": 6_000, "plan": 10_000, "accept": 10_000,
+           "op_prepare": 12_000, "op_act": 6_000, "op_learn": 6_000,
            "pitch_view": 6_000, "pitch_case": 6_000, "pitch_decide": 8_000, "collide": 3_000, "kind": 1_500}
-READS = {"goal": 8, "draft": 6, "plan": 6, "refresh": 6, "talk": 2, "answer": 2, "propose": 0, "accept": 4,
+READS = {"goal": 8, "draft": 6, "plan": 6, "talk": 2, "answer": 2, "accept": 4,
          "pitch_view": 4, "pitch_case": 0, "pitch_decide": 0, "collide": 0, "kind": 0}      # a view's reads: the Engineering view's only (the others get no tools)
-CAPS = {"goal": 1.00, "draft": 0.60, "answer": 0.40, "talk": 0.20, "plan": 0.60, "refresh": 0.50, "propose": 0.30, "accept": 0.60,
+CAPS = {"goal": 1.00, "draft": 0.60, "answer": 0.40, "talk": 0.20, "plan": 0.60, "accept": 0.60,
         "op_prepare": 0.30, "op_act": 0.10, "op_learn": 0.10, "pitch_view": 0.08, "pitch_case": 0.06, "pitch_decide": 0.20, "collide": 0.05, "kind": 0.03}
 BUDGET_SHARE = {"thrift": 0.5, "balance": 1.0, "quality": 2.0}
 
@@ -300,36 +295,11 @@ def reserve_held(limits, settings: dict | None, now: float, provider: str = "cla
     return max(resets) if resets else now + status.UNKNOWN_RESET_S
 
 
-class WeekHold(float):
-    """What `gate` answers when the week holds a Board's Low plan's tasks at night: the week's reset (a hold of kind `week`)."""
-
-
-def board_low(plan: dict, board: dict, low: bool = True) -> bool:
-    """A plan the Board itself put off to the night (a Low plan's start) while it may still decide: autostart is on. `low`: its idea is
-    still Low (raised to High or Normal it is as the person's)."""
-    return low and plan.get("start_at") == "night" and plan.get("start_at_by") == "board" and bool(board.get("autostart", True))
-
-
-def by_pace(plan: dict, limits, board: dict, now: float, low: bool = True, provider: str = "claude") -> bool:
-    """The Board's Low plan may start by day: the week of the tool it runs on (`provider`) is ahead of its pace (spec 44 §3)."""
-    night = in_night(str(board.get("night") or "01:00-07:00"), dt.datetime.fromtimestamp(now))
-    return board_low(plan, board, low) and not night and pace(limits, now, provider) == "ahead"
-
-
-def gate(plan: dict, limits, board: dict, now: float, low: bool = True, provider: str = "claude") -> str | float | None:
-    """What holds a passed plan's tasks besides the spent window: "night" (it starts at night and the window is not
-    open: its tasks wait, unheld), the reserve's reset (it started by itself), the week's reset (`WeekHold`: the Board's
-    Low plan at night while the week is behind), else None (spec 35 §5, §6; spec 44 §3). The Board's Low plan is the one
-    exception to "night": by day, with the week ahead of its pace, it starts, the reserve as for any autostart. The reserve and the
-    week's pace are those of `provider`, the tool the task runs on (a tool with no limits read has none)."""
-    night = in_night(str(board.get("night") or "01:00-07:00"), dt.datetime.fromtimestamp(now))
-    if plan.get("start_at") == "night":
-        low = board_low(plan, board, low)
-        if not night and not (low and pace(limits, now, provider) == "ahead"):
-            return "night"
-        if night and low and pace(limits, now, provider) == "behind":
-            got = week(limits, now, provider)
-            return WeekHold(got["reset"])
+def gate(plan: dict, limits, board: dict, now: float, provider: str = "claude") -> float | None:
+    """What holds a passed plan's tasks besides the spent window: the reserve's reset (it started by itself), else None (spec 35
+    §6). A plan of before the night went, with `start_at: "night"`, is read as one the Board passed by itself: it waits for the
+    reserve as today's do, and is never held for a night window. The reserve is that of `provider`, the tool the task runs on (a
+    tool with no limits read has none)."""
     if plan.get("passed_by") == "auto" or plan.get("start_at") == "night":
         return reserve_held(limits, board, now, provider)
     return None

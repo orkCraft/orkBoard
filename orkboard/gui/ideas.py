@@ -15,7 +15,7 @@ Spec 33 adds Review: the results waiting for the person (`ideas.review_list`, `i
 (`ideas.merge`, `ideas.back`, `ideas.drop_task`), `ideas.stop_task`, the Agents window (`ideas.agents`), one task
 with its log (`ideas.task`) and the branch results merge into (`ideas.into`).
 
-Spec 35: an idea needs a goal and is drafted at once (High, Normal) or at night (Low); the board, Needs you, autostart
+Spec 35: an idea needs a goal and is drafted at once (or kept on `hold`); the board, Needs you, autostart
 and the Board's own commands are in gui/ideas_board.py; a file to-do's file is kept beside the secrets.
 
 Spec 49: the gate, dev → main (`ideas.gate`, `ideas.gate_merge`: gui/ideas_gate.py), today's events (`ideas.today`:
@@ -131,7 +131,7 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
         self.keeper = idea_keeper.IdeaKeeper(
             self.host.repo_root, self.state_dir, self.keeper_root, self.settings_now, self._publish,
             demo=bool(self.host.demo), budget_ok=lambda: self.host.budget_ok(), limits=lambda: list(self.host.limits() or []),
-            on_plan=self._on_plan, start_night=self.start_night, events=not self.host.demo,
+            on_plan=self._on_plan, events=not self.host.demo,
             sign_ins=getattr(self.host, "sign_ins", None))
         self.keeper.index_root = self.wiki
         self.host.bus.subscribe(idea_keeper.CHANGED, self._changed)
@@ -154,7 +154,7 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
         return self.tree_root(self.wiki(), make)
 
     def keeper_root(self) -> Path:
-        """The keeper's (its clock, the night): the Board's tree is made only for a Board that has pages already."""
+        """The keeper's (its clock): the Board's tree is made only for a Board that has pages already."""
         wiki = self.wiki()
         used = any((wiki / f).is_dir() and any((wiki / f).glob("*.md")) for f in (ideas.TRACKS, ideas.IDEAS))
         return self.tree_root(wiki, make=used)
@@ -263,6 +263,10 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
             runner = self.runner() if self._ever_passed() else self._runner
             if runner is not None:
                 try:
+                    self.older_night_plans()          # a plan passed before the night went: it waits for the reserve, not for a night (spec 99 §3)
+                except Exception as e:
+                    self.host.toast(f"{type(e).__name__}: {e}", title="The runner", severity="error")
+                try:
                     runner.tick()
                 except Exception as e:
                     self.host.toast(f"{type(e).__name__}: {e}", title="The runner", severity="error")
@@ -282,10 +286,6 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
         """The keeper is at work or a task runs (spec 47: the computer is kept awake meanwhile); a runner not built
         is not at work."""
         return bool(self.keeper.at_work() or (self._runner is not None and self._runner.busy()))
-
-    def tonight(self) -> int:
-        """How much work waits for tonight (core/idea_night.py `tonight`)."""
-        return self.keeper.tonight()
 
     def stop_all(self, device: str = "desktop") -> None:
         self._ev(event_log.STOP_ALL, count=self.running(), device=device or "desktop")
@@ -327,6 +327,8 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
 
     def _state(self, slug: str) -> dict:
         st = ideas.state(self.state_dir, slug)
+        if st["state"] == "raw" and ideas.queue_of(st) == "night":
+            st["queue"] = "hold"                  # a state of before the night went: held, never drafted at night (spec 99 §3)
         if st["state"] in ("reading", "planning") and not self.keeper.busy(slug):
             st["state"] = "raw" if st["state"] == "reading" else "ready"     # a run the host lost (it closed)
         elif st["state"] == "judging" and not self.keeper.busy(slug):
@@ -359,9 +361,9 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
     # -- writing -------------------------------------------------------------------------------------------
 
     def add(self, args: dict, pitch: str = "") -> dict:
-        """An idea: a text, its goal (never General: that is the system's) and a priority (default the goal's). High
-        and Normal are drafted at once, Low waits for the night when the person allowed it (`night_low`, spec 83), else
-        it is drafted at once too (spec 35 §3); `night` is refused with any other priority. `photos`
+        """An idea: a text, its goal (never General: that is the system's) and a priority (default the goal's). It is
+        drafted at once, whatever its priority, or kept on `hold` (spec 99 §3: the night is gone, so there is no `night` and
+        Low waits for nothing). `photos`
         (the phone's, base64) are kept beside it for the Taskmaster to read (realm/idea_photos.py), and `lens`, what the
         person pointed at with the lens of the goal's party (realm/idea_lens.py). Spec 52 §2.3: `type` (one of the party's
         leader's), its `asks` (written after the text) and `join` (who joins the party first: gui/ideas_types.py). `hold`: kept, nothing
@@ -385,16 +387,12 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
         pointed = self._lens_args(args)
         typed = self.typed(args, track, goals[track]["title"])
         rel = self.release_args(args, track, typed)          # a release's version and what goes in, checked before the goal exists (spec 68 §3)
-        night, hold = args.get("night") is True, args.get("hold") is True
-        if night and priority != "low":
-            raise IdeasError("Only Low work waits for the night")                # spec 83 §2
-        queue = "hold" if hold else "now" if pitch else "night" if priority == "low" and self.night_allowed() else "now"     # tonight only on the person's word (spec 83 §2); a goal sent from a pitch: Now (spec 65 §5)
-        night = night and queue == "night"
+        hold = args.get("hold") is True
+        queue = "hold" if hold else "now"                      # a goal sent from a pitch: Now (spec 65 §5)
         text = text[:pitches.PITCH_CHARS] if pitches.is_ideation(self.root(), track) else text
-        with ideas.LOCK:                        # the party changes before the goal, under the same lock; never for tonight's (spec 52 §2.3)
-            joined = self.join_goal(track, typed, args) if not night and not hold else None
-            slug = ideas.add_idea(self.root(), self.with_asks(text, typed), track, self.state_dir, priority, queue,
-                                  night_by="person" if night else "board")      # a Low idea the Board puts off itself; the person's own night is theirs (spec 44 §2)
+        with ideas.LOCK:                        # the party changes before the goal, under the same lock; never for a goal kept on hold (spec 52 §2.3)
+            joined = self.join_goal(track, typed, args) if not hold else None
+            slug = ideas.add_idea(self.root(), self.with_asks(text, typed), track, self.state_dir, priority, queue)
             if typed["key"] or pitch:
                 ideas.save_state(self.state_dir, slug, type=typed["key"], from_pitch=pitch)
             if rel is not None:

@@ -32,7 +32,7 @@ BOARD_COMMANDS = {"ideas.board", "ideas.page", "ideas.add", "ideas.say", "ideas.
 @pytest.fixture
 def host(fake_repo) -> Orkboard:
     h = Orkboard(fake_repo)
-    h.ideas.save_settings({**h.ideas.settings_now(), "night_low": True})          # spec 83: the night is on the person's word; most of these tests are of Low work at night
+    h.ideas.save_settings({**h.ideas.settings_now(), "night_low": True})          # stored and read by nothing here (spec 99 §3)
     yield h
     sys.modules.pop("orkboard.core.idea_runner", None)
 
@@ -862,8 +862,9 @@ def _party(host, team=(), leader="taskmaster", title="Ship"):
 
 
 def _new(host, party, text="A goal", **more):
-    """A goal added at the press of Add the goal; Low, so nothing is drafted (no model)."""
-    return host.command("ideas.add", {"text": text, "track": party, "priority": "low", **more})
+    """A goal added at the press of Add the goal; its draft is not made (no model)."""
+    host.ideas.keeper.draft = lambda *a, **k: None
+    return host.command("ideas.add", {"text": text, "track": party, **more})
 
 
 def _says(host, command, args):
@@ -963,7 +964,7 @@ def test_a_party_has_one_seat_a_stage_with_any_leader_and_a_party_made_before_ke
         "A party led by Game designer has at most 1 checker")
 
 
-def test_the_party_changes_before_the_goal_both_under_the_lock_and_never_for_tonight(host, monkeypatch):
+def test_the_party_changes_before_the_goal_both_under_the_lock_and_never_for_a_goal_kept_on_hold(host, monkeypatch):
     import threading
     seen = []
 
@@ -982,7 +983,7 @@ def test_the_party_changes_before_the_goal_both_under_the_lock_and_never_for_ton
     _new(host, ship, "A screen", type="screen", join={"add": "ui-kit"})
     assert seen == [("party", True), ("goal", True)]
     seen.clear()
-    kept = host.command("ideas.add", {"text": "Kept for tonight", "track": ship, "priority": "low", "night": True, "type": "experiment", "join": {"add": "experimenter"}})
+    kept = host.command("ideas.add", {"text": "Kept back", "track": ship, "hold": True, "type": "experiment", "join": {"add": "experimenter"}})
     assert seen == [("goal", True)] and kept["joined"] is None and kept["type"] == "experiment"
     assert goal_team.team_of(host.ideas.root(), ship) == ["ui-kit"]
 

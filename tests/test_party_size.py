@@ -140,13 +140,13 @@ def test_a_goals_draft_plan_and_task_pick_their_partys_tier_not_the_settings(hos
     for name, party in (("lean", lean), ("full", full), ("old", old)):
         slug = ideas.add_idea(h.root, f"A goal in {name}", party, h.state)
         keeper._tls.key = keeper._tls.slug = slug
-        picked[name] = (keeper.target(), keeper.pick("draft"), keeper.pick("plan"), keeper.pick("refresh"))
+        picked[name] = (keeper.target(), keeper.pick("draft"), keeper.pick("plan"))
         keeper._tls.key = keeper._tls.slug = f"goal:{party}"
         picked[name + "_party"] = (keeper.target(), keeper.pick("goal"))
     keeper._tls.key = keeper._tls.slug = ""
     assert keeper.target() == "balance" and picked["old"][0] == "balance"
-    assert picked["lean"][0] == "thrift" and picked["lean"][1][1] == "low" and picked["lean"][3] is None        # thrift reads no goal again at night
-    assert picked["full"][0] == "quality" and picked["full"][1][1] == "high" and picked["full"][3] is not None
+    assert picked["lean"][0] == "thrift" and picked["lean"][1][1] == "low"
+    assert picked["full"][0] == "quality" and picked["full"][1][1] == "high"
     assert picked["old"][1][1] == "medium"
     assert picked["lean_party"][0] == "thrift" and picked["lean_party"][1] == ("warrior", idea_target.pick("goal", "thrift")[1])   # (spec 81: the Lean leader is Seasoned)
     assert picked["full_party"][1][1] == "xhigh"

@@ -95,7 +95,7 @@ GOAL_READ = "goal_read"           # goal, state (asks · ready · raw: not read)
 ROLE_SAVED = "role_saved"         # role, model, max_parallel, new, device, kinds (the types it takes), instruction_chars
 ROLE_DROPPED = "role_dropped"     # role, kinds (the task types sent back to Grunt), device
 KIND_SET = "kind_set"             # kind, role, device
-# Spec 35 §12: the Board writes, starts what is safe, and works at night.
+# Spec 35 §12: the Board writes and starts what is safe (its night went: spec 99 §3).
 BOARD_SET = "board_set"           # target, autostart, night, device
 IDEA_DRAFTED = "idea_drafted"     # idea, risk, triggers, questions, tier, effort, seconds
 IDEA_ANSWERED = "idea_answered"   # idea, answers (how many), picked, recommended, typed, decided (spec 41 §10)
@@ -103,8 +103,8 @@ GOAL_ANSWERED = "goal_answered"   # goal, answers, picked, recommended, typed, d
 # … and every keeper event (goal_read, idea_drafted, idea_answered, idea_said, plan_made, night_run) carries §0's
 # step, prompt_chars, tokens ({"in", "out", "cache_read"}) and cost (null when unpriced, never 0)
 KEEPER_STOPPED = "keeper_stopped"  # idea (the person stopped the keeper's run on it)
-NIGHT_RUN = "night_run"           # drafted, started, refreshed, proposed, held, paced (the Board's Low ideas the week's pace left for later), seconds
-PROPOSAL_MADE = "proposal_made"   # idea, goal
+NIGHT_RUN = "night_run"           # no longer written (spec 99 §3: the night is gone); old lines are still read (recap, week): drafted, started, refreshed, proposed, held, paced (the Board's Low ideas the week's pace left for later), seconds
+PROPOSAL_MADE = "proposal_made"   # no longer written (the night proposed them); old lines are still read: idea, goal
 PROPOSAL_ANSWERED = "proposal_answered"   # idea, take, has_reason
 BOARD_COMMITTED = "board_committed"   # commit, pages, what, seconds (spec 35 §13: the Board's pages on the work branch)
 BOARD_HELD = "board_held"         # why (the work branch could not move to the Board's commit)
@@ -133,7 +133,7 @@ OP_FORGOT = "op_forgot"           # template, runs (how many removed), standing 
 OP_STANDING = "op_standing"       # standing (its id), template, what (set · changed · stopped · added · skipped), device
 
 # Spec 43 §4: the night's proposal to take a checker out of a goal's party, and the person's answer.
-PARTY_PROPOSED = "party_proposed"   # goal, by (the checker's slug), runs
+PARTY_PROPOSED = "party_proposed"   # no longer written (the night proposed them); old lines are still read: goal, by (the checker's slug), runs
 PARTY_ANSWERED = "party_answered"   # goal, by, take, has_reason, device
 
 # Spec 44 §4: the Claude week came back; what was left of it unused.
@@ -143,7 +143,7 @@ WEEK_RESET = "week_reset"         # left (the share left, read just before it ca
 PARTY_SAVED = "party_saved"       # party (its id), members, own (agents of the person's own it carries), replaced, device
 PARTY_DROPPED = "party_dropped"   # party, device
 PARTY_REMOVED = "party_removed"   # slug, title, moved, dropped, face (a project's party removed, spec 80), device
-NIGHT_ALLOWED = "night_allowed"   # allow (Low work may run at night), moved (goals taken off the night), face, device (spec 83)
+NIGHT_ALLOWED = "night_allowed"   # no longer written (`ideas.night_allow` only stores the answer, spec 99 §3); old lines are still read: allow (Low work may run at night), moved (goals taken off the night), face, device (spec 83)
 
 # Spec 62 §4.4: the spec after the start: a section written by hand, the plan change the leader proposes, and the answer.
 IDEA_EDITED = "idea_edited"       # idea, section, chars, passed (its plan was passed), device: a section written by hand

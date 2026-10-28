@@ -1,7 +1,7 @@
-"""The night's one proposal about a party (docs/specs/43-party-measured.md §4.2): a checker that found nothing in the last eight check
-tasks of a goal is proposed to leave that goal's party. Code decides, no model is called; the person takes it out or keeps it.
+"""A proposal about a party (docs/specs/43-party-measured.md §4.2): a checker that found nothing in the last eight check tasks of a
+goal was proposed to leave that goal's party; the person takes it out or keeps it. The night that wrote these proposals is gone (spec
+99 §3): none is written now, one already waiting is still shown and answered.
 
-    party_proposals.propose(root, state_dir)              # the night's step: [{"goal", "by", "runs"}] written
     party_proposals.waiting(state_dir, goal)              # {"by", "runs", "usd", "at"} | None
     party_proposals.rows(root, state_dir, goals)          # Needs you's `party` rows
     party_proposals.answer(root, state_dir, goal, take)   # the party without the checker, or a decline; the file goes
@@ -16,7 +16,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from orkboard.realm import goal_team, goal_verdict, ideas, library, party_work, roles
+from orkboard.realm import goal_team, ideas, library, party_work, roles
 
 PROPOSAL, DECLINED = "party-proposal.json", "party-declined.jsonl"
 
@@ -50,14 +50,6 @@ def declines(state_dir: Path, goal: str) -> list[dict]:
     return out
 
 
-def _declined_after(state_dir: Path, goal: str, by: str, oldest: str) -> bool:
-    """The pair (goal, checker) has a decline after the oldest of the eight check tasks: it holds until eight new clean checks come after it."""
-    for row in declines(state_dir, goal):
-        if row.get("by") == by and str(row.get("at") or "") > oldest:
-            return True
-    return False
-
-
 def drop_left(root: Path, state_dir: Path, goal: str) -> None:
     """The goal's waiting proposal removed when its checker is no longer in the goal's party."""
     p = waiting(state_dir, goal)
@@ -66,28 +58,6 @@ def drop_left(root: Path, state_dir: Path, goal: str) -> None:
             (_folder(state_dir, goal) / PROPOSAL).unlink()
         except OSError:
             pass
-
-
-def propose(root: Path, state_dir: Path) -> list[dict]:
-    """The night's step: for each goal with a party and no met verdict, no proposal waiting (one whose checker left the party goes), the
-    first checker of its party whose newest eight check tasks in the goal all ended clean in round 1 and that has no decline after the
-    oldest of them. One a goal."""
-    out = []
-    for g in ideas.tracks(root, make=False):
-        goal = g["slug"]
-        drop_left(root, state_dir, goal)
-        if goal == ideas.GENERAL or waiting(state_dir, goal) or (goal_verdict.read(state_dir, goal) or {}).get("met"):
-            continue
-        for by in [s for s in goal_team.team_of(root, goal) if goal_team.band_of(s) == "check"]:
-            newest = party_work.quiet_run(root, state_dir, goal, by, oldest=True)
-            if newest is None or _declined_after(state_dir, goal, by, newest):
-                continue
-            usd = party_work.check_record(root, state_dir, by, 30)["usd_per_check"]
-            with ideas.LOCK:
-                ideas._write_json(_folder(state_dir, goal) / PROPOSAL, {"by": by, "runs": party_work.QUIET_RUN, "usd": usd, "at": now_iso()})
-            out.append({"goal": goal, "by": by, "runs": party_work.QUIET_RUN})
-            break
-    return out
 
 
 def _name(state_dir: Path, slug: str) -> str:

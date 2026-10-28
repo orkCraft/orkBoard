@@ -1,5 +1,5 @@
 """The board's keeper (spec 29a §4, decisions §43, §47; docs/specs/35-goals-window.md): it reads goals, drafts each
-idea straight into its spec, talks a spec through with the person, turns a spec into a plan, and works at night.
+idea straight into its spec, talks a spec through with the person, and turns a spec into a plan.
 
     keeper = IdeaKeeper(repo_root, state_dir, wiki_root=lambda: root, settings=lambda: machine.ideas,
                         publish=lambda slug: ..., limits=lambda: town.limits, on_plan=autostart)
@@ -10,9 +10,9 @@ idea straight into its spec, talks a spec through with the person, turns a spec 
     keeper.revise(slug)               # Re-plan what is left, after the start: a plan change for the tasks not started (core/idea_revise.py)
     keeper.judge(slug)                # a pitch (a goal of Ideation): its four views, the case against, the Investor's decision (core/idea_judge.py)
     keeper.read_stop(slug)            # this idea's run stops (its own cancel); its queue is `hold`
-    keeper.tick()                     # the host's clock: what the limits held runs again, and the night (core/idea_night.py)
+    keeper.tick()                     # the host's clock: what the limits held runs again
 
-- **The Target** (realm/idea_target.py) picks each step's tier and effort: goal, draft, talk, plan, refresh, propose. The
+- **The Target** (realm/idea_target.py) picks each step's tier and effort: goal, draft, answer, talk, plan. The
   Taskmaster's own model, when it is not its default `elder`, replaces the tier; the Target still gives the effort.
 - **Goal** (read-only, core/idea_goals.py): a goal saved is read at once: its title, Summary, Metrics, links, questions.
 - **Draft** and **answer** (read-only, core/idea_draft.py): an idea straight to its spec; its questions answered at once.
@@ -44,7 +44,6 @@ from orkboard.core.idea_draft import DraftMixin
 from orkboard.core.idea_sign_in import SignInMixin
 from orkboard.core.idea_goals import GoalMixin
 from orkboard.core.idea_judge import JudgeMixin
-from orkboard.core.idea_night import NightMixin
 from orkboard.core.idea_lead import LeadMixin
 from orkboard.core.idea_revise import ReviseMixin
 from orkboard.core.idea_plan import _task, _why, estimate, readiness  # noqa: F401  (the plan's small helpers: the callers and tests use them from here)
@@ -101,17 +100,16 @@ def _iso(at: float) -> str:
     return dt.datetime.fromtimestamp(at).isoformat(timespec="seconds")
 
 
-class IdeaKeeper(SignInMixin, DraftMixin, GoalMixin, NightMixin, LeadMixin, ReviseMixin, JudgeMixin):
+class IdeaKeeper(SignInMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
     def __init__(self, repo_root: Path, state_dir: Path, wiki_root: Callable[[], Path],
                  settings: Callable[[], dict], publish: Callable[[str], None] = lambda slug: None,
                  demo: bool = False, budget_ok: Callable[[], bool] = lambda: True,
                  taskmaster: Callable[[], str] | None = None, limits: Callable[[], list] | None = None,
-                 on_plan: Callable[[str], None] | None = None, start_night: Callable[[str], bool] | None = None,
+                 on_plan: Callable[[str], None] | None = None,
                  events: bool = True, sign_ins: Any = None) -> None:
         """`sign_ins`: the host's sign-ins (core/sign_ins.py): what runs by itself waits while Claude Code needs its
         sign-in (`held_for` "sign_in", spec 45 §6). `limits`: the quota readers' last read (spent windows hold the keeper); `on_plan(slug)`: a plan was made
-        or its risk changed (the face's autostart); `start_night(slug)`: a plan passed to start at night is started
-        (the night's step 2); `events`: the keeper's own events go to the local event log (spec 35 §12)."""
+        or its risk changed (the face's autostart); `events`: the keeper's own events go to the local event log (spec 35 §12)."""
         self.repo_root, self.state_dir = Path(repo_root), Path(state_dir)
         self.taskmaster = taskmaster or (lambda: (roles.role(self.state_dir, roles.TASKMASTER) or {}).get("model") or "elder")
         self._again: set[str] = set()                # a busy key asked again while it ran
@@ -120,7 +118,6 @@ class IdeaKeeper(SignInMixin, DraftMixin, GoalMixin, NightMixin, LeadMixin, Revi
         self.demo, self.budget_ok, self.events, self.sign_ins = demo, budget_ok, events, sign_ins
         self.limits = limits or (lambda: [])
         self.on_plan = on_plan or (lambda slug: None)
-        self.start_night = start_night or (lambda slug: False)
         self.call: Call = self._claude                # tests swap the model call here
         self.cancel = threading.Event()
         self._tls = threading.local()               # the idea a model call is for (its record in realm/call_log.py names it)
@@ -128,13 +125,11 @@ class IdeaKeeper(SignInMixin, DraftMixin, GoalMixin, NightMixin, LeadMixin, Revi
         self._busy: dict[str, str] = {}             # key → drafting | talking | planning | goal
         self._cancels: dict[str, threading.Event] = {}   # key → its run's own cancel (read_stop)
         self._tick_at = float("-inf")
-        self._night_busy, self._night_tried = False, float("-inf")
-        self._pace_busy, self._pace_at = False, float("-inf")        # the week's pace (core/idea_night.py `pace_tick`)
 
     # -- the model call -------------------------------------------------------------------------------------
 
     def _claude(self, tier: str, prompt: str, effort: str = "", budget: float | None = None) -> tuple[str, Any, Any, str]:
-        """One shot (spec 35 §0): a fresh read-only run, no session kept; the night's proposals read nothing."""
+        """One shot (spec 35 §0): a fresh read-only run, no session kept."""
         from orkboard.realm import harnesses, jobs
         from orkboard.sources import telemetry
         tool = self.tool_now()
@@ -204,12 +199,12 @@ class IdeaKeeper(SignInMixin, DraftMixin, GoalMixin, NightMixin, LeadMixin, Revi
         return text, cost, tokens, session
 
     def _spent(self, step: str, got: tuple[str, str], usage: Any, tokens: Any, cost: Any) -> None:
-        """The call's line in the ledger (spec 36 §1): its idea's, its goal's, or the board's (the night's proposals)."""
+        """The call's line in the ledger (spec 36 §1): its idea's, its goal's, or the board's own."""
         from orkboard.realm import harnesses
         tool = self.tool_now()
         h, tier = harnesses.get(tool), idea_target.tier_of(got[0])
         key = getattr(self._tls, "key", "") or getattr(self._tls, "slug", "") or ""
-        where = {} if step in ("propose", "kind") else ({"goal": key[5:]} if key.startswith("goal:") else {"idea": key})
+        where = {} if step == "kind" else ({"goal": key[5:]} if key.startswith("goal:") else {"idea": key})
         idea_spend.append(self.state_dir, idea_spend.line(step, getattr(self._tls, "as_role", "") or roles.TASKMASTER, tool, (h.pick(got[0]) if h else "") or got[0],
                                                           tier, got[1], idea_spend.tokens_of(usage, tokens), cost), **where)
 
@@ -270,6 +265,11 @@ class IdeaKeeper(SignInMixin, DraftMixin, GoalMixin, NightMixin, LeadMixin, Revi
         self.publish(slug)
         return ev is not None
 
+    def at_work(self) -> bool:
+        """The keeper is at work: a draft, a plan, a read or a check (spec 47 §3: keeping the computer awake)."""
+        with self._lock:
+            return bool(self._busy)
+
     def _may_run(self) -> str:
         if self.demo:
             return "The demo runs no model: the keeper only reads goals in a real town"
@@ -303,7 +303,7 @@ class IdeaKeeper(SignInMixin, DraftMixin, GoalMixin, NightMixin, LeadMixin, Revi
 
     def tick(self, now: float | None = None) -> bool:
         """The host's clock: an idea the limits held (or whose run the host lost) runs again once the window is
-        back, and the night runs at its start. True when something started."""
+        back. True when something started."""
         now = time.time() if now is None else now
         if now - self._tick_at < TICK_S or self._may_run():
             return False
@@ -323,7 +323,7 @@ class IdeaKeeper(SignInMixin, DraftMixin, GoalMixin, NightMixin, LeadMixin, Revi
                     started |= self._quiet(lambda: self.draft(slug))
                 elif st["state"] == "ready" and st["held_until"] and ideas.plan(self.state_dir, slug) is None:
                     started |= self._quiet(lambda: self.plan(slug, auto=True))
-        return self.night_tick(now) or self.pace_tick(now) or started
+        return started
 
     def _quiet(self, fn: Callable[[], Any]) -> bool:
         try:
@@ -360,16 +360,6 @@ class IdeaKeeper(SignInMixin, DraftMixin, GoalMixin, NightMixin, LeadMixin, Revi
         self._claim(key, what)
         threading.Thread(target=self._run, args=(key, what, fn, slug if key == slug else f"goal-{slug}"),
                          daemon=True, name=f"idea-{what}").start()
-
-    def _sync(self, slug: str, what: str, fn: Callable[[], None], key: str = "") -> bool:
-        """The night's way: the same run, on this thread; False when the key is busy."""
-        key = key or slug
-        try:
-            self._claim(key, what)
-        except KeeperError:
-            return False
-        self._run(key, what, fn, slug if key == slug else f"goal-{slug}")
-        return True
 
     def _place(self, root: Path, slug: str, before: str) -> None:
         """The keeper's proposal of an idea's place among its goal's ideas; the person's own drag is never undone."""

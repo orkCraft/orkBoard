@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from orkboard import settings
-from orkboard.core import idea_keeper, idea_night
+from orkboard.core import idea_keeper
 from orkboard.gui.ideas_args import IdeasError, _device, _opt, _text, _via
 from orkboard.realm import board_map, collide, event_log, idea_photos, idea_questions, idea_risk, idea_secrets, idea_target, ideas
 from orkboard.realm.idea_git import BoardTree
@@ -94,45 +94,14 @@ class BoardMixin:
                 "review_notice": bool(getattr(getattr(self.host, "machine", None), "review_notice", False)),
                 "night_low": s.get("night_low") if isinstance(s.get("night_low"), bool) else None}      # None: not asked yet (spec 83)
 
-    def night_allowed(self) -> bool:
-        """The person's standing word that Low work (and the leaders' night) may run at night (spec 83 §2): only `True` is a yes."""
-        return self.settings_now().get("night_low") is True
-
     def night_allow(self, args: dict) -> dict:
-        """`{"allow": bool}`: Low work may run at night, on or off. Off takes what waited for the night to the day (`moved`)."""
+        """`{"allow": bool}`: the answer of the phone's and Orkline's *Low work may run at night*, stored as `night_low` and read by
+        nothing here (spec 99 §3: the night is gone; Orkline reads the setting). Nothing moves, so `moved` is always 0."""
         if not isinstance(args.get("allow"), bool):
             raise IdeasError("Low work may run at night is on or off")
-        allow = args["allow"]
-        self.save_settings({**self.settings_now(), "night_low": allow})
-        moved = 0 if allow else self._night_to_day()
-        self._ev(event_log.NIGHT_ALLOWED, args, allow=allow, moved=moved, face=_device(args))
+        self.save_settings({**self.settings_now(), "night_low": args["allow"]})
         self.changed("")
-        return {"ok": True, "moved": moved}
-
-    def _night_to_day(self) -> int:
-        """What waited for the night goes on by day: a goal in the night queue is drafted now, a plan passed to start at night starts now."""
-        moved = 0
-        for i in ideas.ideas(self.root()):
-            slug, st = i["slug"], ideas.state(self.state_dir, i["slug"])
-            plan = ideas.plan(self.state_dir, slug) if st["state"] in ("plan", "working") else None
-            if st["state"] == "raw" and ideas.queue_of(st) == "night":
-                ideas.save_state(self.state_dir, slug, queue="now", error="")
-                try:
-                    self.keeper.draft(slug)
-                except idea_keeper.KeeperError as e:
-                    ideas.save_state(self.state_dir, slug, error=str(e))
-            elif plan and plan.get("passed_at") and plan.get("start_at") == "night":
-                ideas.edit_plan(self.state_dir, slug, lambda p: p.update(start_at=None))
-                if st["state"] == "plan":
-                    ideas.save_state(self.state_dir, slug, state="working", error="")
-                    self.runner(need=True).start(slug)
-                else:
-                    self.runner(need=True).tick()
-            else:
-                continue
-            moved += 1
-            self._publish(slug)
-        return moved
+        return {"ok": True, "moved": 0}
 
     def board_set(self, args: dict) -> dict:
         mine = dict(self.settings_now())
@@ -192,8 +161,8 @@ class BoardMixin:
         return (ideas.PRIORITIES.index(prio), place.get(page.get("track") or ideas.GENERAL, len(place)), ideas._int(page.get("order")))
 
     def autostart(self, slug: str) -> str:
-        """A plan made, or its idea's priority or risk changed: the board decides (code, no model) whether it starts,
-        starts at night, or waits for the person. What it did ("" nothing to decide)."""
+        """A plan made, or its idea's priority or risk changed: the board decides (code, no model) whether it starts
+        or waits for the person. What it did ("" nothing to decide)."""
         if not bool(self.settings_now().get("autostart", True)):
             return "wait"
         plan, page = ideas.plan(self.state_dir, slug), ideas.idea_page(self.root(), slug)
@@ -202,10 +171,10 @@ class BoardMixin:
             return ""
         if ideas.items(page.section("Open questions")) or collide.holds(self.root(), self.state_dir, slug):
             return "wait"                      # …or it waits for another party's goal until that goal's flag (spec 71 §4)
-        what = idea_risk.decide(page.get("risk"), page.get("priority"), self.night_allowed())
+        what = idea_risk.decide(page.get("risk"), page.get("priority"))
         if what != "wait":
             try:
-                self.pass_plan(slug, "auto", night=what == "night")
+                self.pass_plan(slug, "auto")
             except IdeasError:
                 return "wait"
         return what
@@ -218,9 +187,8 @@ class BoardMixin:
             pass
         self._publish(slug)
 
-    def pass_plan(self, slug: str, by: str, night: bool = False, args: dict | None = None) -> None:
-        """A plan passed: by the person's press ("person") or the board ("auto"); `night`: it starts inside the night
-        window. From now on it is the runner's."""
+    def pass_plan(self, slug: str, by: str, args: dict | None = None) -> None:
+        """A plan passed: by the person's press ("person") or the board ("auto"). From now on it is the runner's."""
         plan = ideas.plan(self.state_dir, slug)
         if plan is None:
             raise IdeasError("This goal has no plan yet: Take it to work first")
@@ -230,11 +198,8 @@ class BoardMixin:
 
             def passing(p: dict) -> None:
                 p.update(passed_at=time.strftime("%Y-%m-%dT%H:%M:%S"), passed_by=by)
-                p["start_at"] = "night" if night else None
-                if night:
-                    p["start_at_by"] = "board" if by == "auto" else "person"          # who put the start off (spec 44 §2)
-                else:
-                    p.pop("start_at_by", None)
+                p["start_at"] = None
+                p.pop("start_at_by", None)
                 p.pop("stopped", None)
             ideas.edit_plan(self.state_dir, slug, passing)
             self._ev(event_log.PLAN_PASSED, args, idea=slug, tasks=len(plan.get("tasks") or []), seconds=self._since(plan.get("made_at")),
@@ -242,10 +207,6 @@ class BoardMixin:
                      **({"via": _via(args)} if args is not None else {}))
         elif by == "person" and plan.get("start_at"):
             ideas.edit_plan(self.state_dir, slug, lambda p: p.update(start_at=None))
-        if night:
-            ideas.save_state(self.state_dir, slug, error="")
-            self._publish(slug)
-            return
         ideas.save_state(self.state_dir, slug, state="working", error="", queue="")
         runner.start(slug)
         self._publish(slug)
@@ -256,18 +217,22 @@ class BoardMixin:
         return {"night": s.get("night", settings.IDEAS["night"]), "autostart": bool(s.get("autostart", True)),
                 "reserve_day": s.get("reserve_day", 0.3), "reserve_night": s.get("reserve_night", 0.1)}
 
-    def start_night(self, slug: str) -> bool:
-        """The night's step 2: a plan passed to start at night goes to the runner (its tasks start inside the window)."""
-        plan = ideas.plan(self.state_dir, slug)
-        if not plan or plan.get("start_at") != "night" or ideas.state(self.state_dir, slug)["state"] != "plan":
-            return False
-        ideas.save_state(self.state_dir, slug, state="working", error="")
-        self.runner(need=True).start(slug)
-        self._publish(slug)
-        return True
+    def older_night_plans(self) -> int:
+        """A plan passed before the night went, with `start_at: "night"` still in `plan`, goes to the runner: its tasks wait for the
+        reserve as a plan the Board passed by itself does (realm/idea_target.py `gate`), never for a night window. How many went."""
+        started = 0
+        for i in ideas.ideas(self.root(make=False)):
+            plan = ideas.plan(self.state_dir, i["slug"])
+            if plan and plan.get("passed_at") and plan.get("start_at") == "night" \
+                    and ideas.state(self.state_dir, i["slug"])["state"] == "plan":
+                ideas.save_state(self.state_dir, i["slug"], state="working", error="")
+                self.runner(need=True).start(i["slug"])
+                self._publish(i["slug"])
+                started += 1
+        return started
 
     def start_now(self, args: dict) -> dict:
-        """Start now: a plan that starts at night starts now; and a task the person's reserve or the week's pace holds (the owner, 26
+        """Start now: a plan of before the night went, which starts at night, starts now; and a task the person's reserve or the week's pace holds (the owner, 26
         October: *now I have this state and I don't know what to do next*) goes on: the press is the person's, and the reserve is only for
         what starts by itself (realm/idea_target.py `gate`)."""
         slug = _text(args, "slug", 100)
@@ -292,10 +257,12 @@ class BoardMixin:
     # -- the queue, the keeper's own stop (§3, §12) ------------------------------------------------------------
 
     def queue(self, args: dict) -> dict:
-        """Process now (`now`: drafted at once; refused in plain words in a spent window) or Tonight (`night`)."""
+        """Process now (`now`: drafted at once; refused in plain words in a spent window) or keep it (`hold`: nothing drafts it till the
+        person does). `night`, the name of before the night went, is read as `hold` (spec 99 §3)."""
         slug, q = _text(args, "slug", 100), _opt(args, "queue")
-        if q not in ("now", "night"):
-            raise IdeasError("The queue is now or night")
+        if q not in ("now", "hold", "night"):
+            raise IdeasError("The queue is now or hold")
+        q = "hold" if q == "night" else q
         if ideas.idea_page(self.root(), slug) is None:
             raise IdeasError("That goal is gone")
         if q == "now":
@@ -305,11 +272,8 @@ class BoardMixin:
                 raise IdeasError(str(e)) from None
         else:
             if self._state(slug)["state"] != "raw":
-                raise IdeasError("Only a new goal waits for the night")
-            if not self.night_allowed():
-                raise IdeasError("Low work may run at night is off: switch it on in Settings")
-            ideas.set_meta(self.root(), slug, priority="low")              # only Low work waits for the night (spec 83 §2)
-            ideas.save_state(self.state_dir, slug, queue="night", held_until="", error="", night_by="person")      # Tonight is the person's
+                raise IdeasError("Only a new goal can be kept on hold")
+            ideas.save_state(self.state_dir, slug, queue="hold", held_until="", error="")
         self._ev(event_log.IDEA_QUEUED, args, idea=slug, queue=q, via=_via(args))
         self.changed(slug)
         return {"ok": True}
@@ -388,7 +352,8 @@ class BoardMixin:
     # -- proposals (§8) -----------------------------------------------------------------------------------------
 
     def proposal(self, args: dict) -> dict:
-        """Take (with a priority: the idea joins the queue) or No (with an optional reason, read back the next night)."""
+        """A proposal that waits (one the night made before it went): Take (with a priority: the idea is drafted at once) or No (it is dropped;
+        the optional reason is only counted in the event)."""
         slug = _text(args, "slug", 100)
         root = self.root()
         page = ideas.idea_page(root, slug)
@@ -402,15 +367,12 @@ class BoardMixin:
             if priority not in ideas.PRIORITIES:
                 raise IdeasError("Priority is High, Normal or Low")
             ideas.set_meta(root, slug, priority=priority)
-            q = "night" if priority == "low" and self.night_allowed() else "now"
-            ideas.save_state(self.state_dir, slug, state="raw", queue=q, error="", **({"night_by": "board"} if q == "night" else {}))
-            if q == "now":
-                try:
-                    self.keeper.draft(slug)
-                except idea_keeper.KeeperError as e:
-                    ideas.save_state(self.state_dir, slug, error=str(e))
+            ideas.save_state(self.state_dir, slug, state="raw", queue="now", error="")
+            try:
+                self.keeper.draft(slug)
+            except idea_keeper.KeeperError as e:
+                ideas.save_state(self.state_dir, slug, error=str(e))
         else:
-            idea_night.decline(self.state_dir, page.title or slug, page.get("track") or "", reason)
             ideas.drop(root, slug, self.state_dir)
             self._what[slug] = "declined"
         self._ev(event_log.PROPOSAL_ANSWERED, args, idea=slug, take=take, has_reason=bool(reason.strip()))

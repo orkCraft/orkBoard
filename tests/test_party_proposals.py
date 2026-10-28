@@ -1,7 +1,6 @@
 """Spec 43 D (docs/specs/43-party-measured.md §4, Tests → D): a check's record (30 and 7 days, `usd_per_check` under `TOO_FEW` is null),
-`quiet_run` and the night's step (eight clean in round 1 proposes; a catch, a send back or seven do not; a met goal does not; one waiting a
-goal; a decline holds until a newer run of eight), `ideas.party_answer` (take and keep), and Needs you's `party` row, sorted last and not
-counted. Code, no model."""
+`quiet_run`, `ideas.party_answer` (take and keep) and Needs you's `party` row, sorted last and not counted, for a proposal that waits. The
+night that wrote these proposals is gone (spec 99 §3): `party_proposals.propose` and its tests with it. Code, no model."""
 from __future__ import annotations
 
 import datetime as dt
@@ -10,7 +9,7 @@ import json
 import pytest
 
 from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
-from orkboard.realm import event_log, goal_team, goal_verdict, idea_spend, ideas, party_proposals, party_work
+from orkboard.realm import event_log, goal_team, idea_spend, ideas, party_proposals, party_work
 
 NOW = dt.datetime.now().replace(microsecond=0)
 
@@ -50,6 +49,13 @@ def quiet(host, goal, n=8, by="reviewer", kind="review", base=0.5):
     return [add(host, goal, f"Idea {by} {i}", [check("k1", by, kind, finished=at(base, hours=n - i))]) for i in range(n)]
 
 
+def waiting(state, goal, by="reviewer", usd=None):
+    """A proposal that waits, as the night wrote it before it went (`<state_dir>/goals/<slug>/party-proposal.json`)."""
+    folder = state / "goals" / goal
+    folder.mkdir(parents=True, exist_ok=True)
+    (folder / "party-proposal.json").write_text(json.dumps({"by": by, "runs": 8, "usd": usd, "at": at()}))
+
+
 def test_check_record_over_30_and_7_days_with_the_price_from_three_checks(host, goal):
     root, state = host.ideas.root(), host.ideas.state_dir
     a = add(host, goal, "One", [check("k1", finished=at(1)), check("k2", "accessibility-reviewer", "a11y", finished=at(1), findings=[{"where": "x", "what": "y", "fixed": False}])])
@@ -85,46 +91,12 @@ def test_quiet_run_is_the_newest_eight_all_clean_in_round_one(host, goal):
     assert party_work.quiet_run(root, state, goal, "reviewer") is None
 
 
-def test_the_night_proposes_once_a_goal_and_a_decline_holds_until_a_newer_run_of_eight(host, goal):
-    root, state = host.ideas.root(), host.ideas.state_dir
-    assert party_proposals.propose(root, state) == []
-    quiet(host, goal, 8)
-    quiet(host, goal, 8, by="accessibility-reviewer", kind="a11y")                                         # a second quiet checker: still one proposal a goal
-    got = party_proposals.propose(root, state)
-    assert got == [{"goal": goal, "by": "reviewer", "runs": 8}]
-    saved = json.loads((state / "goals" / goal / "party-proposal.json").read_text())
-    assert saved["by"] == "reviewer" and saved["runs"] == 8 and saved["usd"] is None and saved["at"]
-    assert party_proposals.propose(root, state) == []                                                      # one waiting a goal
-    by = party_proposals.answer(root, state, goal, False, "I like it  there")
-    assert by == "reviewer" and not (state / "goals" / goal / "party-proposal.json").exists()
-    (row,) = party_proposals.declines(state, goal)
-    assert row["by"] == "reviewer" and row["reason"] == "I like it there" and row["at"]
-    assert goal_team.team_of(root, goal) == ["grunt", "reviewer", "accessibility-reviewer"]                 # kept as it was
-    assert party_proposals.propose(root, state) == [{"goal": goal, "by": "accessibility-reviewer", "runs": 8}]      # the other checker is still quiet
-    party_proposals.answer(root, state, goal, False)
-    assert party_proposals.propose(root, state) == []                                                      # both declined after their runs
-    for i in range(8):                                                                                     # a newer run of eight
-        add(host, goal, f"Newer {i}", [check("k1", finished=(dt.datetime.now() + dt.timedelta(seconds=60 + i)).isoformat(timespec="seconds"))])
-    assert party_proposals.propose(root, state) == [{"goal": goal, "by": "reviewer", "runs": 8}]
-
-
-def test_a_met_goal_a_goal_without_the_checker_and_the_general_goal_are_not_proposed(host, goal):
-    root, state = host.ideas.root(), host.ideas.state_dir
-    quiet(host, goal, 8)
-    goal_verdict.save(state, goal, {"met": True, "verdict": "Done", "metrics": [], "next": []}, "Product manager")
-    assert party_proposals.propose(root, state) == []
-    goal_verdict.save(state, goal, {"met": False, "verdict": "Not yet", "metrics": [], "next": []}, "Product manager")
-    goal_team.set_team(root, goal, ["grunt"], leader="product-manager")                                    # the checker left the party already
-    assert party_proposals.propose(root, state) == []
-
-
 def test_ideas_party_answer_takes_the_checker_out_or_keeps_it_and_logs(host, goal):
     root, state = host.ideas.root(), host.ideas.state_dir
     assert BoardPhone.allowed(host, "ideas.party_answer", {})
     with pytest.raises(CommandError, match="That proposal is gone"):
         host.command("ideas.party_answer", {"goal": goal, "take": True})
-    quiet(host, goal, 8)
-    party_proposals.propose(root, state)
+    waiting(state, goal)
     with pytest.raises(CommandError, match="true or false"):
         host.command("ideas.party_answer", {"goal": goal})
     seen = ideas.track_page(root, goal).text()
@@ -133,8 +105,7 @@ def test_ideas_party_answer_takes_the_checker_out_or_keeps_it_and_logs(host, goa
     assert goal_team.leader_of(root, goal) == "product-manager"
     assert ideas.track_page(root, goal).text() != seen and not (state / "goals" / goal / "party-proposal.json").exists()
     assert not party_proposals.declines(state, goal)
-    quiet(host, goal, 8, by="accessibility-reviewer", kind="a11y")
-    party_proposals.propose(root, state)
+    waiting(state, goal, by="accessibility-reviewer")
     host.command("ideas.party_answer", {"goal": goal, "take": False, "reason": "needed for the public page"})
     assert goal_team.team_of(root, goal) == ["grunt", "accessibility-reviewer"]
     assert party_proposals.declines(state, goal)[0]["reason"] == "needed for the public page"
@@ -148,9 +119,7 @@ def test_the_row_is_in_needs_you_last_and_never_counted(host, goal):
     ideas.add_idea(root, "A waiting proposal", other, state)
     slug = ideas.ideas(root, other)[0]["slug"]
     ideas.save_state(state, slug, state="proposed")
-    quiet(host, goal, 8, base=0.2)
-    quiet(host, goal, 1, by="grunt", kind="code")
-    party_proposals.propose(root, state)
+    waiting(state, goal)
     host.ideas.changed("")
     needs = host.command("ideas.board")["needs_you"]
     party = [n for n in needs if n["kind"] == "party"]
@@ -182,45 +151,21 @@ def test_roles_and_agents_carry_a_checker_s_check_week_and_record(host, goal):
     assert blocks["reviewer"]["check_week"]["caught"] == 1 and "check_week" not in blocks["grunt"]
 
 
-def test_the_night_runs_the_party_step_after_its_proposals(host, goal):
-    quiet(host, goal, 8)
-    keeper = host.ideas.keeper
-    counts = {"drafted": 0, "started": 0, "refreshed": 0, "proposed": 0, "held": 0}
-    published = []
-    keeper.publish = published.append
-    keeper._night_parties(host.ideas.root(), counts)
-    assert counts == {"drafted": 0, "started": 0, "refreshed": 0, "proposed": 0, "held": 0}               # not among the ideas' proposals nor limited by them
-    (row,) = [r for r in event_log.read(host.repo_root) if r["event"] == "party_proposed"]
-    assert (row["goal"], row["by"], row["runs"]) == (goal, "reviewer", 8) and published == [f"goal:{goal}"]
-    steps = [s.__name__ for s in (keeper._night_queue, keeper._night_starts, keeper._night_refresh, keeper._night_proposals, keeper._night_parties)]
-    assert steps[-1] == "_night_parties"
 
-
-# -- fixes after review ----------------------------------------------------------------------------------------
-
-def test_a_proposal_whose_checker_left_the_party_goes_and_the_goal_is_proposed_again(host, goal):
+def test_a_decline_is_kept_with_its_reason_and_the_team_as_it_was_and_a_proposal_whose_checker_left_goes(host, goal):
     root, state = host.ideas.root(), host.ideas.state_dir
-    quiet(host, goal, 8)
-    party_proposals.propose(root, state)
     file = state / "goals" / goal / "party-proposal.json"
-    assert file.exists()
+    waiting(state, goal)
+    by = party_proposals.answer(root, state, goal, False, "I like it  there")
+    assert by == "reviewer" and not file.exists()
+    (row,) = party_proposals.declines(state, goal)
+    assert row["by"] == "reviewer" and row["reason"] == "I like it there" and row["at"]
+    assert goal_team.team_of(root, goal) == ["grunt", "reviewer", "accessibility-reviewer"]                 # kept as it was
+    waiting(state, goal)
     goal_team.set_team(root, goal, ["grunt", "accessibility-reviewer"], leader="product-manager")        # the checker left by hand
     host.command("ideas.goal_save", {"slug": goal, "team": ["grunt", "accessibility-reviewer"], "every": [], "leader": "product-manager"})
     assert not file.exists()                                                                              # a saved party removes it
-    goal_team.set_team(root, goal, ["grunt", "reviewer"], every=["reviewer"], leader="product-manager")  # back again
-    assert party_proposals.propose(root, state) == [{"goal": goal, "by": "reviewer", "runs": 8}]
-    goal_team.set_team(root, goal, ["grunt"], leader="product-manager")
-    assert party_proposals.propose(root, state) == [] and not file.exists()                               # and the night removes one that is left
-
-
-def test_a_decline_holds_until_eight_new_clean_checks_after_it(host, goal):
-    root, state = host.ideas.root(), host.ideas.state_dir
-    quiet(host, goal, 8)
-    party_proposals.propose(root, state)
-    party_proposals.answer(root, state, goal, False)
-    later = dt.datetime.now() + dt.timedelta(seconds=60)
-    for i in range(7):
-        add(host, goal, f"After {i}", [check("k1", finished=(later + dt.timedelta(seconds=i)).isoformat(timespec="seconds"))])
-        assert party_proposals.propose(root, state) == []                                                 # one, two ... seven new ones: still held
-    add(host, goal, "After 7", [check("k1", finished=(later + dt.timedelta(seconds=7)).isoformat(timespec="seconds"))])
-    assert party_proposals.propose(root, state) == [{"goal": goal, "by": "reviewer", "runs": 8}]          # the eighth new one
+    waiting(state, goal)
+    party_proposals.drop_left(root, state, goal)
+    assert not file.exists()
+    assert not hasattr(party_proposals, "propose")                                                        # nothing writes one any more

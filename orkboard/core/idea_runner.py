@@ -17,8 +17,8 @@ model and instruction; its `max_parallel` is held besides `ideas.max_parallel`, 
 same session when red) and waits at `review`, green or red, holding its worktree and branch (`ideas.review` false:
 green lands by itself, as before; a result for which no test ran waits at `review` all the same). Every task change publishes `ideas.changed`. All git: realm/idea_git.py.
 
-Spec 35: a task runs on the Target's tier and effort (`ran_tier`, `effort`; a role's own model wins); `start_at: "night"`
-starts only inside the night window; `passed_by: "auto"` leaves the person the reserve (realm/idea_target.py `gate`);
+Spec 35: a task runs on the Target's tier and effort (`ran_tier`, `effort`; a role's own model wins); `passed_by: "auto"`
+leaves the person the reserve (realm/idea_target.py `gate`; a plan of before the night went, `start_at: "night"`, waits for it too);
 ideas go by `rank` (priority, then order); a file to-do's path reaches its task in the environment (idea_secrets).
 """
 from __future__ import annotations
@@ -39,7 +39,7 @@ from orkboard.core.idea_session import SessionMixin
 from orkboard.core.idea_review import BACK, STOP_ONE, STOPPED_NOTE, ReviewMixin, RunnerError  # noqa: F401
 from orkboard.core.idea_shot import ShotMixin
 from orkboard.core.idea_task import FINDINGS_ASK, NO_DIFF, NO_FINDINGS, NO_RUN, TaskMixin, is_check, is_pick
-from orkboard.realm import task_commands, event_log, goal_team, goal_types, halt, harnesses, idea_checks, idea_pick, idea_target, ideas, project_map, roles, status, tool_errors
+from orkboard.realm import task_commands, event_log, goal_team, goal_types, halt, harnesses, idea_checks, idea_pick, idea_target, project_map, roles, status, tool_errors
 from orkboard.realm.idea_git import BOARD_PAGE, CRITICAL_TESTS, Conflict, IdeaGit, env_name, has_summary, parse_tests, read_secret, spec_paths  # noqa: F401
 
 CHANGED = "ideas.changed"          # slug: an idea's state or one of its tasks changed
@@ -181,8 +181,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
             self._since[(slug, tid)] = now
             check = ({"check": True, **({"clean": True} if new == "merged" and t.get("note") == "clean" else {})}
                      if is_check(t) else {})            # a check task's lines say so; a clean one is no result (spec 43 §1.3)
-            paced = {"by_pace": True} if new == "running" and (self.plan(slug) or {}).get("by_pace") else {}      # a task the week's pace started by day
-            self._emit(event_log.TASK_STATE, idea=slug, task=tid, state=new, was=old, round=int(t.get("round") or 1), **paced,
+            self._emit(event_log.TASK_STATE, idea=slug, task=tid, state=new, was=old, round=int(t.get("round") or 1),
                        tier=t.get("tier") or "", role=t.get("role") or "", seconds=round(now - since, 1) if since else None, tokens=t.get("tokens"),
                        cost=t.get("cost"), ran_tier=t.get("ran_tier") or "", effort=t.get("effort") or "",
                        tool=t.get("tool") or "", model=t.get("model") or "", **check)
@@ -312,31 +311,26 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                         self._changed(slug)
                     continue
                 board = self.board()
-                low = self._still_low(slug)
-                gates: dict[str, tuple[str | float | None, bool]] = {}      # per tool: the reserve and the week are the tool's own
+                gates: dict[str, float | None] = {}      # per tool: the reserve is the tool's own
 
-                def gate_of(tool: str) -> tuple[str | float | None, bool]:
+                def gate_of(tool: str) -> float | None:
                     if tool not in gates:
-                        g = idea_target.gate(plan, limits, board, now, low, tool)
-                        p = idea_target.by_pace(plan, limits, board, now, low, tool)     # the Board's Low plan, started by day: the week has room (spec 44 §3)
-                        gates[tool] = ("night" if p and self._paced_elsewhere(slug) else g), p     # at most one of them by day in a project: a second waits
+                        gates[tool] = idea_target.gate(plan, limits, board, now, tool)
                     return gates[tool]
 
                 for t in tasks:
                     if t.get("state") != "ready" or t.get("note") == STOPPED_NOTE:
                         continue
                     tool = self.tool_of(slug, t)
-                    gate, paced = gate_of(tool)
-                    if gate == "night":                     # starts at night: only inside the window
-                        continue
+                    gate = gate_of(tool)
                     role = self._role(t)
                     if self._running_as(role["slug"]) >= role["max_parallel"]:
                         continue                     # this role's own limit (spec 34 §3): the task waits its turn
                     if not self.room(slug, t, tasks):
                         continue                     # no slot of the Board's or its party's, or its files meet a running task's (spec 84 §2)
                     until = status.reset_of(limits, tool, now, status.NEARLY)
-                    if until is not None or gate is not None:     # the window, else the person's reserve (§6), else the week (spec 44)
-                        by = "" if until is not None else "week" if isinstance(gate, idea_target.WeekHold) else "reserve"
+                    if until is not None or gate is not None:     # the window, else the person's reserve (§6)
+                        by = "" if until is not None else "reserve"
                         self._hold(slug, t, until if until is not None else gate, f"{by} · " if by else "",
                                    idea_target.hold_line(limits, tool, by, gate, now) if by else "")
                     elif self.signed_out(tool):                   # its tool needs a sign-in: held for it (spec 45 §6)
@@ -344,8 +338,6 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                     else:
                         self._launch(slug, t)
                         self._ticked.append((slug, t.get("id")))
-                        if paced:
-                            self._mark_pace(slug)
                     changed = True
                 if changed:
                     self._save_tasks(slug, tasks)
@@ -368,13 +360,6 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
         """The role it runs as: the goal's team's pick in its plan (`role`), else its tag's in the project."""
         return (roles.role(self.state_dir, str(task.get("role") or "")) if task.get("role") else None) \
             or roles.role_for(self.state_dir, str(task.get("kind") or ""))
-
-    def _still_low(self, slug: str) -> bool:
-        """The idea is still Low: only a Low plan is the Board's to put off (spec 44 §2); with no rank to ask, it is."""
-        try:
-            return self.rank is None or self.rank(slug)[0] == ideas.PRIORITIES.index("low")
-        except Exception:
-            return False
 
     def _rank_of(self, slug: str) -> Any:
         try:
@@ -434,10 +419,8 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                     continue
                 t.update(state="waiting", note="", held_for="", held_until="", held_line="")     # signed in: it goes on
                 state, changed = "waiting", True
-            elif state == "held" and str(t.get("note") or "").startswith("week") and limits is not None \
-                    and not isinstance(idea_target.gate(plan, limits, self.board(), now, self._still_low(slug), self.tool_of(slug, t)),
-                                       idea_target.WeekHold):
-                self._until.pop((slug, tid), None)             # the week is not behind any more: no reason left to hold it
+            elif state == "held" and str(t.get("note") or "").startswith("week") and limits is not None:
+                self._until.pop((slug, tid), None)             # the week's pace holds no work any more: no reason left to hold it
                 t.update(state="waiting", note="", held_why="")
                 state, changed = "waiting", True
             if state == "held":
