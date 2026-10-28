@@ -221,8 +221,10 @@ task's own section (§156.14). **After it**: the other maps and picking on
 them; Play and System anew; the phone; the limits' wait, *Start now*, recurring goals, *Release a version*; the voice,
 the history, Settings, the reveal *Since <version>*.
 
-**Asked, not decided**: cutting the slice to what proves the frame first (the table with *System* and *Board*, the hand
-with the route card, *Talk* and *Start*, the deck and the discard), the rest after the owner's yes.
+**Cut** (spec 98, which settles what was asked here): the frame first on today's engine (spec 98: the table with *System*
+and *Board*, the hand with the deck, the stacks, Release's card and the discard), then a goal's way on it (spec 99 its
+engine, spec 100 its faces: the route card, *Talk*, *Confirm and start*, the forks, the project's questions, the one place
+of the parties), each at the owner's yes.
 
 ## 12. The words
 `TERMS` gets its one word each with the slice's first spec (§121.1): *table*, *hand*, *deck*, *discard*, *lane*,
