@@ -5,7 +5,7 @@ The owner and the PM, 28 October (decisions §167; spec 95 §2.1, §2.4, §3.1, 
 bare, the name left-aligned; no deck, the + card alone under the first lane; the first tab the project's; every lane a
 card and a quarter; the hand's cards half under the window's edge). The window of spec 98, re-faced. **Builds:** a
 cheaper model, each part reviewed by Claude · **Review:** full · P0. **A first** (in orkUI), **then B** (the lead's copy);
-**C at once with A**, **D after B** (it draws the new sign). C and D share no file; they read the seams the lead wrote:
+**C at once with A**, **D after B** (it draws the new sign); **E and F at once**, after D (§7, decisions §168). C and D share no file; they read the seams the lead wrote:
 `frame/frame.css` `--card-w` (144 px), `--col-w` (a card and a quarter) and `--cols` (the grid of the tabs, the Board
 and the hand: `--lanes` lanes, then the tabs' end), `frame/frame.js` setting `--lanes` (the parties and the first lane),
 `frame/kinds.js` `line` (C's, over the pane).
@@ -103,6 +103,22 @@ fanned within a lane, the back one's edge only and its rise; the discard under t
 (the action's sign and the asker's head) and label row (the gem at its right); the half under the edge and its rise on
 hover, focus and tap; a press lifting as today. The critical tests (`tests/test_architecture.py`,
 `tests/test_board_alone.py`, `tests/test_updates.py`), `tests/test_design_system.py`, `tests/test_gui_wording.py`.
+
+## 7. The fan (E, F; decisions §168)
+| part | builds | files (and their tests) |
+|---|---|---|
+| **E. The hand's fan** | §7.1 | `hand/stacks.js`, `hand/stopcard.js`, `hand/hand.css`; `tests/test_hand_desktop_browser.py` |
+| **F. The Board's fan** | §7.2 | `table/cascade.js`, `table/card.js`, `table/table.css`; `tests/test_table_desktop_browser.py` |
+
+1. **The hand (E)**: a stack's cards behind its front one turned 2° to 4° and moved 6 to 10 px aside, by turns left and
+   right, three at most seen (the edges hint more, five at most), a fixed turn a card by its place in the stack (never
+   random, no shake on a redraw); a hover or focus opens the fan a little wider; two goals under one lane two small fans,
+   the urgent in front. The asker's head lies **over the sign**, on its lower right corner, overlapping it (§168.3), the
+   two one figure. Still under reduced motion (a turn is not a motion).
+2. **The Board (F)**: a goal's tasks behind its front card lie as a fan, turned 1° to 3° and moved a few px aside by
+   turns, their edges showing the stage's sign and the element only, no names (the strips of §3.1 go); the goal's strip
+   with its element and name stays over it; a hover opens the fan, the cards' names seen on it; a press on a card behind
+   lifts it; the picked goal unfolds into whole cards as before. The line (*In line*) the same.
 
 ## As built (A, B)
 
