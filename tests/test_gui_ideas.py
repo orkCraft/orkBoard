@@ -27,7 +27,8 @@ BOARD_COMMANDS = {"ideas.board", "ideas.page", "ideas.add", "ideas.say", "ideas.
                   "ideas.judge", "ideas.pitch_send", "ideas.pitch_again", "ideas.pitch_pass",
                   "ideas.release_out", "ideas.release_candidates", "ideas.shown", "ideas.party_for", "ideas.kind_for", "ideas.proposals",
                   "ideas.tools", "ideas.party_sizes", "ideas.party_presets", "ideas.night_allow", "ideas.seen",
-                  "ideas.route_set", "ideas.talk", "ideas.route_later", "ideas.route_start"}   # … the route's four (spec 99 §4), spec 91's two, spec 83's one, spec 81's two, spec 75's one, and spec 49's three, spec 51's one, spec 62's two, spec 65's four, spec 68's three, spec 70's one
+                  "ideas.route_set", "ideas.talk", "ideas.route_later", "ideas.route_start",
+                  "ideas.talk_answer", "ideas.cause_answer"}   # … talk's two (spec 99 §5), the route's four (spec 99 §4), spec 91's two, spec 83's one, spec 81's two, spec 75's one, and spec 49's three, spec 51's one, spec 62's two, spec 65's four, spec 68's three, spec 70's one
 
 
 @pytest.fixture
@@ -365,7 +366,8 @@ def test_a_draft_the_tool_failed_says_why_on_the_page_not_as_its_error(host, mon
     monkeypatch.setattr(jobs, "run_read", run_read)
     monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")                   # a key is set: a sign-in cannot help (spec 45 §3)
     slug = _add(host, "Dark mode", hold=False)["slug"]                  # Normal: routed, no call before Talk (spec 99 §4)
-    host.command("ideas.talk", {"idea": slug})                          # Talk: until part D lands the goal is drafted, as it was at once
+    ideas.save_state(host.ideas.state_dir, slug, state="raw", queue="now")   # Talk is part D's (tests/test_idea_talk.py); this test is of the draft
+    host.ideas.keeper.draft(slug)
     _wait(host, slug)
     page = host.command("ideas.page", {"slug": slug})
     assert "error" not in page and page["state"] == "raw"

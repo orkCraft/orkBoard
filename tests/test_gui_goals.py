@@ -145,7 +145,8 @@ def test_an_idea_added_now_is_read_at_once_later_waits_for_the_batch(host, model
     later = _add(host, "wait for the batch")["slug"]
     now = _add(host, "dark mode please", hold=False)["slug"]
     assert model.seen == [] and ideas.state(host.ideas.state_dir, now)["state"] == "routed"
-    host.command("ideas.talk", {"idea": now})
+    ideas.save_state(host.ideas.state_dir, now, state="raw", queue="now")                # Talk is part D's (tests/test_idea_talk.py): this test is of the draft
+    host.ideas.keeper.draft(now)
     _wait(host, now)
     assert [c["kind"] for c in model.seen][:1] == ["idea"] and "dark mode please" in model.seen[0]["prompt"]
     assert ideas.state(host.ideas.state_dir, later)["state"] == "raw"

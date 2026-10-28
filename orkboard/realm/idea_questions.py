@@ -8,6 +8,8 @@ the one it recommends and why — taken strictly from the model's answer, kept i
     idea_questions.parse(line)   # {"ask", "choices", "pick", "why"}; a line of before ("… (one / other)") too
     idea_questions.picks(lines)  # each question's recommended choice ("" where it has none): Let the Taskmaster decide
     idea_questions.tally(lines, answers)   # how the person answered: picked, recommended, typed
+    idea_questions.card(raw, id=, by=, leader=, project=)   # a leader's question as a hand's card (spec 99 §5.2): {id, by, leader, q, choices, pick, why, project}
+    idea_questions.record(state_dir, slug) / save_record(…)  # what a goal's Talk keeps beside its state (talk.json: the cards waiting, the answers, the defaults, the cause)
 
 The page is the memory: the line says the pick too (in bold), so the person reading the page sees it. No face, no model.
 """
@@ -114,3 +116,70 @@ def tally(lines: list[str], answers: list[str]) -> dict[str, int]:
         out["picked"] += 1
         out["recommended"] += hit == q["pick"]
     return out
+
+
+# -- a question as a card (docs/specs/99-a-goals-way.md §5.2; decisions §153.5) -------------------------------------------------------
+
+CARD_CHOICE_CHARS = 60           # a card's choice, at most: it holds what the project holds (a container, a path), which a page's line (CHOICE_CHARS) could not
+
+
+def card(raw: object, *, id: str, by: str, leader: str, project: bool = False) -> dict | None:
+    """A leader's question as the hand's card, taken strictly from its answer: `{id, by: party, leader, q, choices: [2..4], pick: index, why, project}`.
+    Two to four real choices (`CHOICES`), never padded, each a different one; one picked for the person (an index of them, or the choice itself) with its why.
+    Anything else (no question, a choice that is none, too few or too many, no pick) is not a card: None. *Other…* is the face's. `id`, `by` and `leader`
+    are the caller's (code names them, never the model); `project` says the question is about the project, not the goal."""
+    if not isinstance(raw, dict):
+        return None
+    q = _plain(raw.get("q") if raw.get("q") is not None else raw.get("ask"), ASK_CHARS)
+    got = raw.get("choices")
+    if not q or not isinstance(got, list) or not CHOICES[0] <= len(got) <= CHOICES[1]:
+        return None
+    choices = [" ".join(c.split()) if isinstance(c, str) else "" for c in got]
+    if not all(0 < len(c) <= CARD_CHOICE_CHARS for c in choices) or len({c.lower() for c in choices}) < len(choices):
+        return None
+    pick = raw.get("pick")
+    if isinstance(pick, str):
+        pick = next((n for n, c in enumerate(choices) if c.lower() == " ".join(pick.split()).lower()), None)
+    if not isinstance(pick, int) or isinstance(pick, bool) or not 0 <= pick < len(choices):
+        return None
+    return {"id": str(id), "by": str(by), "leader": str(leader), "q": q, "choices": choices, "pick": pick,
+            "why": _plain(raw.get("why"), WHY_CHARS), "project": bool(project)}
+
+
+def default_of(c: dict) -> str:
+    """The answer a card takes when nobody answers it: its leader's pick."""
+    return c["choices"][c["pick"]]
+
+
+def answer_of(c: dict, said: object) -> tuple[str, str] | None:
+    """A person's answer to a card, `{id, pick?|text?}` as the command has it, as `(text, how)`: `how` "text" (the words written, *Other…*: they win when both
+    are given) or "pick" (one of its choices, by its index). None for no answer, or a pick that is none of the card's choices."""
+    if not isinstance(said, dict):
+        return None
+    text = " ".join(said["text"].split())[:2000] if isinstance(said.get("text"), str) else ""
+    if text:
+        return text, "text"
+    pick = said.get("pick")
+    if isinstance(pick, int) and not isinstance(pick, bool) and 0 <= pick < len(c["choices"]):
+        return c["choices"][pick], "pick"
+    return None
+
+
+# -- what a Talk keeps: <state_dir>/ideas/<slug>/talk.json ----------------------------------------------------------------------------
+
+TALK_FILE = "talk.json"
+
+
+def record(state_dir, slug: str) -> dict:
+    """What a goal's Talk keeps (core/idea_talk.py): `{mode: "talk"|"bug", round, stances, waiting: [card], second: [party], answers, defaults, keys, cause}`,
+    {} before it has begun. The talk itself is `talk.jsonl`; this is the state the rows and the decision read, never a model."""
+    from orkboard.realm import ideas
+    return ideas._json(ideas.state_folder(state_dir, slug) / TALK_FILE) or {}
+
+
+def save_record(state_dir, slug: str, rec: dict) -> dict:
+    """The Talk's record replaced whole (a caller that read it first holds `ideas.LOCK` for both)."""
+    from orkboard.realm import ideas
+    with ideas.LOCK:
+        ideas._write_json(ideas.state_folder(state_dir, slug) / TALK_FILE, rec)
+    return rec

@@ -87,7 +87,8 @@ def test_an_idea_goes_from_the_phone_through_review_to_a_commit_on_dev(town):
     main, pushed = _git(repo, "rev-parse", "main"), _git(origin, "rev-parse", "main")
     slug = host.command("ideas.add", {"text": "a feature file", "track": goal})["slug"]   # spec 99 §4: no call, it waits as `routed` …
     assert state(slug) == "routed"
-    host.command("ideas.talk", {"idea": slug})                                            # … until Talk (until part D lands, the draft as before)
+    ideas.save_state(host.ideas.state_dir, slug, state="raw", queue="now")               # … until Talk, which is part D's (tests/test_idea_talk.py): this test is of the draft
+    host.ideas.keeper.draft(slug)
 
     _until(host, lambda: state(slug) == "asks", "the draft asks")
     page = host.command("ideas.page", {"slug": slug})

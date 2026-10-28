@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
-from orkboard.realm import board_map, event_log, goal_team, idea_change, idea_spend, ideas, library, map_party
+from orkboard.realm import board_map, event_log, goal_team, idea_change, idea_questions, idea_spend, ideas, library, map_party
 
 
 @pytest.fixture
@@ -671,3 +671,36 @@ def test_the_route_and_start_rows_are_needs_you_of_a_goal_on_its_way_and_a_node_
     rows = {r["kind"]: r for r in host.command("ideas.board")["needs_you"] if r["idea"] in (a, b)}
     assert rows["route"]["place"] == 1 and rows["start"]["was"] == {"calls": 4, "usd_low": 1.0, "usd_high": 3.0} and rows["start"]["cost"]["calls"] > 0
     assert [r["state"] for r in host.command("ideas.board")["ideas"] if r["slug"] == c] == ["decided"]
+
+
+def _cards(party, n=3):
+    return [{"id": f"r1-{party}-{k}", "by": party, "leader": "taskmaster", "q": f"Question {k}?", "choices": ["A", "B"], "pick": 0, "why": "because", "project": False}
+            for k in range(1, n + 1)]
+
+
+def test_the_talk_and_cause_rows_are_the_stances_with_the_cards_and_the_guess_with_the_cases_and_a_node_names_them(host):
+    """Spec 99 §5.3–§5.4: `talk` {round, stances, questions: [card]} and `cause` {cause, where, q: [card]} sit on a goal at Talk while something waits; none while the leaders are heard."""
+    root, state = _board(host)
+    g = _goal(root, "Way")
+    assert board_map.NEEDS[:4] == ("route", "start", "talk", "cause")
+    route = [{"party": g, "leader": "taskmaster"}]
+    stances = [{"party": g, "leader": "taskmaster", "stance": "For it", "for": "Players want it", "against": "Costs a week"}]
+    a = _idea(root, state, g, "A talk", "talk", route=route)
+    b = _idea(root, state, g, "A bug", "talk", route=route)
+    c = _idea(root, state, g, "Being heard", "talk", route=route)
+    idea_questions.save_record(state, a, {"mode": "talk", "round": 2, "stances": stances, "waiting": _cards(g), "second": [], "answers": [], "defaults": []})
+    idea_questions.save_record(state, b, {"mode": "bug", "round": 1, "waiting": _cards(g, 2),
+                                          "cause": {"text": "The lobby's timer is not reset on reconnect", "where": ["server/lobby.ts"], "pending": True, "guesses": 1}})
+    idea_questions.save_record(state, c, {"mode": "talk", "round": 1, "waiting": [], "stances": stances})
+    got = host.command("ideas.map", {})
+    n = {x["slug"]: x for x in got["nodes"]}
+    assert (n[a]["needs_you"], n[a]["place"], n[a]["asks_you"]) == ("talk", "table", True)
+    assert (n[b]["needs_you"], n[b]["place"], n[b]["asks_you"]) == ("cause", "table", True)
+    assert (n[c]["needs_you"], n[c]["place"], n[c]["asks_you"]) == ("", "table", False)                  # the leaders are being heard: nothing waits
+    rows = {r["idea"]: r for r in host.command("ideas.board")["needs_you"] if r["kind"] in ("talk", "cause")}
+    assert set(rows) == {a, b}
+    assert rows[a]["kind"] == "talk" and rows[a]["round"] == 2 and rows[a]["stances"] == stances and rows[a]["questions"] == _cards(g) and rows[a]["text"] == "Question 1?"
+    assert rows[b]["kind"] == "cause" and rows[b]["cause"] == "The lobby's timer is not reset on reconnect" and rows[b]["where"] == ["server/lobby.ts"]
+    assert rows[b]["q"] == _cards(g, 2) and rows[b]["blocks"] is False
+    idea_questions.save_record(state, b, {"mode": "bug", "round": 1, "waiting": [], "cause": {"text": "x", "pending": False, "guesses": 2}})       # answered, or the second guess being made
+    assert not [r for r in host.command("ideas.board")["needs_you"] if r["idea"] == b and r["kind"] in ("talk", "cause")]

@@ -18,7 +18,7 @@ from orkboard.realm import (collide, goal_flags, goal_place, goal_route, goal_te
                             idea_risk, idea_spend, idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles, tool_errors)
 from orkboard.realm.idea_words import short_of
 
-NEEDS = ("route", "start", "asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71; a route and a step added after Talk: spec 99 §4)
+NEEDS = ("route", "start", "talk", "cause", "asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71; a route and a step added after Talk: spec 99 §4; Talk's cards and a bug's cause: §5)
 _HELD_FILES = re.compile(r"^files(?: beside)? · (.+)$")
 _AFTER = re.compile(r"after (\d{1,2}:\d{2})")
 SIGN_IN_TOOL = "claude"          # what the Board runs by itself runs on Claude (core/idea_runner.py `HARNESS`)
@@ -56,6 +56,26 @@ def list_of(text: object) -> list[str]:
     return [str(x) for x in got if isinstance(x, str)] if isinstance(got, list) else []
 
 
+def talk_rows(state_dir: Path, slug: str) -> list[dict]:
+    """The Needs you row of a goal at Talk that waits for the person (spec 99 §5.3–§5.4; core/idea_talk.py keeps what it shows, `idea_questions.record`):
+
+        {kind: "talk", round: 1|2, stances: [{party, leader, stance, for, against}], questions: [card], text}      # the leaders' stances and the stack of cards
+        {kind: "cause", cause, where: [path], q: [card], text}                                                       # a bug's diagnosis: the guess of the cause, the case questions
+
+    `card` is `idea_questions.card`'s `{id, by, leader, q, choices, pick, why, project}`. None while the leaders are being heard (nothing waits then)."""
+    rec = idea_questions.record(state_dir, slug)
+    cards = [c for c in rec.get("waiting") or [] if isinstance(c, dict)]
+    cause = rec.get("cause") if isinstance(rec.get("cause"), dict) else {}
+    if rec.get("mode") == "bug":
+        if not cause.get("pending"):
+            return []
+        return [{"kind": "cause", "cause": str(cause.get("text") or ""), "where": list(cause.get("where") or []), "q": cards, "text": str(cause.get("text") or "")}]
+    if not cards:
+        return []
+    return [{"kind": "talk", "round": 2 if rec.get("round") == 2 else 1, "stances": [dict(s) for s in rec.get("stances") or [] if isinstance(s, dict)],
+             "questions": cards, "text": cards[0]["q"]}]
+
+
 def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None, asks: list[str], at: str | None = None, *,
                line: dict | None = None, settings: dict | None = None) -> list[dict]:
     """What of one idea needs the person (spec 35 §10): its route (spec 99 §4) and the step added to it after Talk, its questions, its plan waiting, the leader's plan change waiting (spec 62),
@@ -66,6 +86,8 @@ def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None
             "at": ideas.touched_at(root, state_dir, slug) if at is None else at}
     tasks = (plan or {}).get("tasks") or []
     out = [{**base, **n} for n in goal_route.rows(root, state_dir, i, st, line, settings)] if state in goal_route.ROUTE_STATES else []
+    if state == "talk":
+        out += [{**base, **n} for n in talk_rows(state_dir, slug)]
     if state == "asks":
         looks = st.get("asks_look") if isinstance(st.get("asks_look"), int) and not isinstance(st.get("asks_look"), bool) else 0
         asked = [{**idea_questions.parse(q), "look": n < looks} for n, q in enumerate(asks[:5])]          # the first ones are of the look (spec 85 §1)

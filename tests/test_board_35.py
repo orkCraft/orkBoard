@@ -90,11 +90,17 @@ def _wait(host, slug="", goal=False):
     raise AssertionError("the keeper never finished")
 
 
+def _drafted(host, slug):
+    """Talk is part D's (the leaders heard: tests/test_idea_talk.py); these tests are of the draft, so the goal is handed to it as the keeper's seam did before D."""
+    ideas.save_state(host.ideas.state_dir, slug, state="raw", queue="now")
+    host.ideas.keeper.draft(slug)
+
+
 def _sent(host, text, track, **more):
     """A goal sent (spec 99 §4: no call, it waits as `routed`), then Talk: until part D lands, Talk reads it as the draft did at once."""
     got = host.command("ideas.add", {"text": text, "track": track, **more})
     assert ideas.state(host.ideas.state_dir, got["slug"])["state"] == "routed"
-    host.command("ideas.talk", {"idea": got["slug"]})
+    _drafted(host, got["slug"])
     return got
 
 

@@ -232,7 +232,8 @@ def test_the_draft_and_the_plan_prompts_hold_the_releases_lines_and_a_goal_that_
     prompts.clear()
     plain = h.command("ideas.add", {"text": "A plain goal", "track": h.app})            # a goal that is not a release waits as `routed` (spec 99 §4) until Talk …
     assert not prompts
-    h.command("ideas.talk", {"idea": plain["slug"]})                                    # … which, until part D lands, drafts it
+    ideas.save_state(h.ideas.state_dir, plain["slug"], state="raw", queue="now")        # … Talk is part D's (tests/test_idea_talk.py); this test is of the draft
+    h.ideas.keeper.draft(plain["slug"])
     wait(h, plain["slug"])
     assert prompts and not any("This goal is a release" in p for p in prompts)
     from orkboard.core import idea_keeper, idea_revise

@@ -199,3 +199,24 @@ def test_ideas_seen_refuses_a_goal_not_done_or_gone(host):
 
 def test_result_seen_is_an_event():
     assert event_log.RESULT_SEEN == "result_seen" and event_log.RESULT_SEEN in event_log.EVENTS
+
+
+def test_a_goal_at_talk_with_a_row_waiting_is_on_the_table_and_asks_you_and_with_none_it_does_not():
+    """Spec 99 §5: while the leaders are heard (or the decision is made) nothing waits and the goal only lies on the table; a `talk` row (the cards) or a bug's `cause`
+    row makes it ask, in the hand too (`asks_you`), never in two piles."""
+    assert _is(_of("talk"), "table") and _is(_of("talk", ["talk"]), "table", True) and _is(_of("talk", ["cause"]), "table", True)
+    assert _is(_of("talk", ["talk", "start"]), "table", True) and _is(_of("decided"), "table")
+    assert _is(_of("talk", ["talk"], held_until="2026-10-29T08:00:00"), "table", True)         # a Talk that is answered is never put in the deck
+
+
+def test_a_goal_at_talk_with_cards_waiting_is_a_node_and_a_row_that_ask_you(host):
+    from orkboard.realm import idea_questions
+    root, state = host.ideas.root(), host.ideas.state_dir
+    slug, _new = ideas.save_goal(root, None, "Way", "About", None, "normal")
+    idea = ideas.add_idea(root, "Add a dark mode", slug, state)
+    ideas.save_state(state, idea, state="talk", route=[{"party": slug, "leader": "taskmaster"}])
+    row = lambda: next(i for i in host.command("ideas.board")["ideas"] if i["slug"] == idea)           # noqa: E731
+    assert (row()["place"], row()["asks_you"]) == ("table", False)                                     # the leaders are being heard
+    card = {"id": "r1-way-1", "by": slug, "leader": "taskmaster", "q": "Which?", "choices": ["A", "B"], "pick": 0, "why": "", "project": False}
+    idea_questions.save_record(state, idea, {"mode": "talk", "round": 1, "waiting": [card], "stances": []})
+    assert (row()["place"], row()["asks_you"]) == ("table", True)                                      # cards wait: on the table, asking

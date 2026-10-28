@@ -175,12 +175,14 @@ def test_talk_sets_the_state_and_hands_the_goal_to_the_keepers_talk_when_it_has_
         host.command("ideas.talk", {"idea": slug})                                                          # Talk is pressed once
 
 
-def test_until_talk_is_built_talk_drafts_the_goal_so_it_still_moves(host, parties, calls):
+def test_talk_is_the_keepers_now_it_calls_the_leaders_of_the_route_and_does_not_draft_the_goal(host, parties, calls):
     slug = host.command("ideas.add", {"text": "add a dark mode option", "track": parties["tech"]})["slug"]
-    assert not hasattr(host.ideas.keeper, "talk")                                                          # part D is not in this build
+    assert hasattr(host.ideas.keeper, "talk")                                                              # part D is in this build
     host.command("ideas.talk", {"idea": slug})
     _wait(host, slug)
-    assert any("write its spec straight away" in c["prompt"] for c in calls) and _state(host, slug)["state"] in ("ready", "asks", "plan")
+    assert not any("write its spec straight away" in c["prompt"] for c in calls)                          # no draft: the leaders are heard
+    assert [c["step"] for c in calls] == ["talk_round", "talk_round"] and all(c["tools"] is False for c in calls)       # an answer that says no stance is tried once more
+    assert _state(host, slug)["state"] == "routed" and "did not answer" in _state(host, slug)["error"]    # and fails the round back to its route card
 
 
 def test_a_step_added_after_talk_brings_the_start_row_with_the_old_cost_beside_the_new(host, parties, calls, monkeypatch):

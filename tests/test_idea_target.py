@@ -217,3 +217,19 @@ def test_the_gate_holds_only_for_the_reserve_and_a_plan_of_before_the_night_went
     assert idea_target.gate({"passed_by": "person", "start_at": "night"}, spent, board, now) == pytest.approx(reset.timestamp())
     assert idea_target.gate({"passed_by": "person", "start_at": "night"}, [], board, now) is None     # outside any window, nothing to wait for
     assert not hasattr(idea_target, "WeekHold") and not hasattr(idea_target, "by_pace")
+
+
+def test_talks_steps_are_the_cheaper_tier_the_rounds_with_no_tools_and_no_reads_the_diagnosis_with_four():
+    """Spec 99 §5: a leader's round (`talk_round`) is the cheaper tier with no file read (its map's text is enough: §156.8), a bug's `diagnose` the cheaper tier reading
+    up to four files; each with its cap, never under the tier's floor."""
+    assert "talk_round" in idea_target.STEPS and "diagnose" in idea_target.STEPS and set(idea_target.MATRIX) >= set(idea_target.STEPS)
+    for target in idea_target.TARGETS:
+        assert idea_target.pick("talk_round", target) == idea_target.pick("route", target)         # as the Orkmaster's own calls
+        assert idea_target.pick("diagnose", target) == idea_target.pick("collide", target)
+        for step in ("talk_round", "diagnose"):
+            assert idea_target.tier_of(idea_target.pick(step, target)[0]) != "elder"                 # never the dearest tier
+    assert idea_target.pick("talk_round", "balance") == ("warrior", "low") and idea_target.pick("talk_round", "thrift") == ("laborer", "")
+    assert idea_target.READS["talk_round"] == 0 and idea_target.READS["diagnose"] == 4
+    assert idea_target.CONTEXT["talk_round"] >= 5_000 and idea_target.CONTEXT["diagnose"] >= idea_target.CONTEXT["talk_round"]       # a map's text (3,000) and the facts fit
+    assert idea_target.CAPS["talk_round"] <= idea_target.CAPS["diagnose"] <= 0.25
+    assert idea_target.budget("talk_round", "balance") == 0.15 and idea_target.budget("diagnose", "balance") == 0.2        # never under 1.5 floors (a warrior's call costs $0.10)

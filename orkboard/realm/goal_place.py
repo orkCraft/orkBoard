@@ -54,7 +54,7 @@ def place_of(row: dict, kinds: Iterable[str], *, passed: bool = False, picking: 
         return table if passed or not kinds else hand
     if state == "routed":                                          # a goal routed waits for the person's Talk; put off with *Later, by itself* it waits in the deck (spec 99 §4)
         return _deck(row, "reset") if row.get("held_until") else hand
-    if state in _WAY:                                              # Talk, the decision, the sections: on the table, asking when a row waits
+    if state in _WAY:                                              # Talk, the decision, the sections: on the table, asking when a row waits (Talk's cards: `talk`, a bug's `cause`: spec 99 §5)
         return table
     if state in _ASKING:
         return hand if kinds else (table if state == "asks" else _deck(row, ""))

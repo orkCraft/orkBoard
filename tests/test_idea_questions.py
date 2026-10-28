@@ -31,3 +31,32 @@ def test_the_pages_line_says_the_pick_in_bold_and_reads_back():
     assert iq.parse("Pick one (a / b / c / d / e)")["choices"] == []
     assert iq.parse("Both bold (**a** / **b**)")["pick"] is None
     assert iq.parse("") == {"ask": "", "choices": [], "pick": None, "why": ""}
+
+
+def test_a_card_is_a_question_of_two_to_four_real_choices_with_a_pick_and_its_why():
+    """Spec 99 §5.2: `{id, by, leader, q, choices, pick, why, project}`, parsed strictly; a card with a choice that is none is no card (never padded)."""
+    c = iq.card({"ask": " Where does it  run? ", "choices": ["A VPS", "server/lobby.ts", "A phone (iOS)"], "pick": "a vps", "why": "its README says so"},
+                id="p-tech-runs_on", by="tech", leader="architect", project=True)
+    assert c == {"id": "p-tech-runs_on", "by": "tech", "leader": "architect", "q": "Where does it run?", "choices": ["A VPS", "server/lobby.ts", "A phone (iOS)"],
+                 "pick": 0, "why": "its README says so", "project": True}
+    assert iq.card({"q": "Which?", "choices": ["a", "b"], "pick": 1}, id="x", by="t", leader="l")["q"] == "Which?"           # `q` or `ask`
+    assert iq.CHOICES == (2, 4) and iq.card({"ask": "A?", "choices": ["x" * 61, "y"], "pick": 0}, id="x", by="t", leader="l") is None
+    assert iq.card({"ask": "A?", "choices": ["x", "y"], "pick": 0, "why": "w " * 200}, id="x", by="t", leader="l")["why"].endswith("…")
+    assert len(iq.card({"ask": "A?", "choices": ["x", "y"], "pick": 0, "why": "w " * 200}, id="x", by="t", leader="l")["why"]) <= iq.WHY_CHARS
+    assert iq.card({"ask": "A?", "choices": ["x", "y"], "pick": 0}, id="x", by="t", leader="l")["why"] == ""
+
+
+def test_a_card_takes_its_leaders_pick_when_nobody_answers_and_a_persons_answer_is_a_pick_or_words():
+    c = iq.card({"ask": "A?", "choices": ["x", "y", "z"], "pick": 2}, id="x", by="t", leader="l")
+    assert iq.default_of(c) == "z"
+    assert iq.answer_of(c, {"id": "x", "pick": 1}) == ("y", "pick") and iq.answer_of(c, {"id": "x", "text": "  my  words "}) == ("my words", "text")
+    assert iq.answer_of(c, {"id": "x", "pick": 0, "text": "words win"}) == ("words win", "text")            # *Other…* opens with the pick in it: what is written wins
+    for none in ({"id": "x"}, {"id": "x", "pick": 3}, {"id": "x", "pick": -1}, {"id": "x", "pick": True}, {"id": "x", "text": "   "}, "y", None):
+        assert iq.answer_of(c, none) is None
+
+
+def test_a_talks_record_is_kept_beside_the_goals_state(tmp_path):
+    assert iq.record(tmp_path, "a-goal") == {}
+    iq.save_record(tmp_path, "a-goal", {"mode": "talk", "waiting": [{"id": "x"}]})
+    assert iq.record(tmp_path, "a-goal") == {"mode": "talk", "waiting": [{"id": "x"}]} and iq.record(tmp_path, "other") == {}
+    assert (tmp_path / "ideas" / "a-goal" / iq.TALK_FILE).is_file()
