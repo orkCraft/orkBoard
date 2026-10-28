@@ -225,6 +225,7 @@ def test_accepting_a_goal_that_picked_a_party_marks_its_use_met(host, monkeypatc
             if own_parties.list()[0]["uses"][0]["met"] is expected:
                 break
         assert own_parties.list()[0]["uses"][0]["met"] is expected
+        _wait(host, goal, goal=True)                                                                        # the leader done with it before it is asked again
 
 
 def test_ideas_parties_counts_goals_projects_and_met(host, tmp_path):
