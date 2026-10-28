@@ -12,6 +12,7 @@
 //                  preview   a choice of a look: an image address (a path or a data: address) or a vnode, drawn in the window
 //                  head      {race, tier}: the head of who says it (a fork's side), in the window (over the preview's corner when there is one)
 //                  sign      the window's sign by name, when there is no preview nor head (default `question`, the pick's `check`)
+//                  by        this card's label row (a fork's side: its party's name), in place of the row's `by`
 //     pick       the id of the leader's pick, raised; "" for none
 //     onChoose(id)    a press on a card answers at once
 //     onOther(text)   *Other…*: a blank card with +; pressed it opens a field with the pick's name in it, Enter or its *Send* answers; omit it for a choice with no *Other…*
@@ -55,7 +56,7 @@ function ChoiceCard({ c, i, picked, element, by, head, onPress }) {
       style=${`--ork-deal-i:${i}`} aria-label=${`${c.name}${picked ? ", the leader’s pick" : ""}${c.gem ? `, about ${c.gem}` : ""}`} title=${c.name} onClick=${onPress} ...${leans}>
     <span class="q-card__head"><${Elem} name=${element || ""} dim=${!element} /><span class="q-card__name">${c.name}</span></span>
     <${Window} c=${c} picked=${picked} head=${head} />
-    <span class="q-card__label"><span class="q-card__by">${by || ""}</span>${c.gem && html`<span class="ork-gem share" data-cost=${c.gem}>${c.gem}</span>`}</span>
+    <span class="q-card__label"><span class="q-card__by">${c.by || by || ""}</span>${c.gem && html`<span class="ork-gem share" data-cost=${c.gem}>${c.gem}</span>`}</span>
     <span class="q-card__foot">${c.why || ""}</span>
   </button>`;
 }

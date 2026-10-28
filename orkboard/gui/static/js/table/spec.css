@@ -1,0 +1,37 @@
+/* The goal's Spec on the pane (docs/specs/100-a-goals-way-as-cards.md §3.2, part C): layout only. Every colour, face, corner and motion is orkUI's tokens. The common part, then a section a party, its leader's head at the
+   top, its Done when at the left and its Will be at the right; a section a fork lights has a stripe at its left and its disagreeing lines lit (never colour alone: the word Disagrees stands in its head). */
+
+.spec-page { display: flex; flex-direction: column; gap: var(--ork-5); width: 100%; max-width: 1040px; min-width: 0; margin: 0 auto; }
+.spec-page p, .spec-page ul, .spec-page ol, .spec-page dl, .spec-page dd, .spec-page h2 { margin: 0; padding: 0; }
+.spec-page__head { display: flex; align-items: center; gap: var(--ork-3); min-width: 0; }
+.spec-page__title { flex: 1; min-width: 0; font: var(--ork-type-body); font-weight: 600; overflow-wrap: anywhere; }
+.spec-common { display: flex; flex-direction: column; gap: var(--ork-3); }
+.spec-common__one { display: flex; flex-direction: column; gap: var(--ork-1); min-width: 0; }
+.spec-common dd { white-space: pre-line; overflow-wrap: anywhere; }
+.spec-sections { display: flex; flex-direction: column; gap: var(--ork-4); list-style: none; }
+.spec-section { box-sizing: border-box; display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; padding: var(--ork-4); background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame); }
+.spec-section.is-lit { box-shadow: inset 3px 0 0 var(--ork-ink); }
+.spec-section__head { display: flex; align-items: center; gap: var(--ork-3); min-width: 0; }
+.spec-section__nm { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.spec-section__flag { margin-left: auto; color: var(--ork-ink); }
+.spec-section__cols { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--ork-5); }
+.spec-col { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; }
+.spec-list { display: flex; flex-direction: column; gap: var(--ork-2); list-style: none; }
+.spec-line { overflow-wrap: anywhere; padding: var(--ork-1) var(--ork-2); }
+.spec-line.is-lit { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); }
+.spec-will__kind { color: var(--ork-ink-muted); }
+.spec-will__id { font: var(--ork-type-caption); overflow-wrap: anywhere; }
+.spec-will__note { color: var(--ork-ink-muted); }
+
+/* a fork's sides and its Spec: at the wide width the cards at the left and the page beside them (both in sight); at the narrow one the cards, then the page */
+.spec-fork { display: flex; flex-direction: column; gap: var(--ork-6); min-width: 0; }
+@media (min-width: 760px) {
+  .spec-fork { display: grid; grid-template-columns: minmax(300px, 500px) minmax(0, 1fr); align-items: start; gap: var(--ork-6); }
+  .spec-fork .spec-page { margin: 0; }
+}
+
+/* the narrow width: Done when above Will be, no sideways scroll */
+@media (max-width: 759.98px) {
+  .spec-section__cols { grid-template-columns: minmax(0, 1fr); gap: var(--ork-3); }
+  .spec-section { padding: var(--ork-3); }
+}

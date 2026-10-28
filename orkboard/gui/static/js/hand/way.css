@@ -39,3 +39,8 @@ span.hand-route__head { cursor: default; }
   .hand-route__off { position: relative; top: auto; right: auto; width: var(--ork-tap); height: var(--ork-tap); min-width: var(--ork-tap); min-height: var(--ork-tap); }
   .hand-route__pick { min-height: var(--ork-tap); }
 }
+
+/* the decision lifted (docs/specs/100 §3.1, part C): Why, its numbered points, the entry field */
+.hand-way__why { display: flex; flex-direction: column; gap: var(--ork-1); }
+.hand-way__points { margin: 0; padding-left: var(--ork-6); display: flex; flex-direction: column; gap: var(--ork-2); overflow-wrap: anywhere; }
+.hand-way__entry { width: 100%; box-sizing: border-box; min-height: 200px; resize: vertical; font: var(--ork-type-body); }

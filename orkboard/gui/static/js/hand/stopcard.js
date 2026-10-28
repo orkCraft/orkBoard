@@ -41,7 +41,8 @@ export function Mark({ s, big = false }) {
 export const ElemOf = ({ s }) => html`<${Elem} name=${s.node?.element || ""} dim=${!s.node?.element} />`;
 
 const headOf = (s) => wayOf(s.kind)?.head?.(s) || s.head || s.party?.head || null;           // a goal's way's card may name its asker (spec 100: the route's is the Orkmaster)
-const partyWords = (s) => (s.other && s.party?.name ? `${s.party.name} · ` : "");
+const footOf = (s) => wayOf(s.kind)?.foot?.(s) ?? (s.text || s.why || "");           // a goal's way's card may say its own foot (spec 100 C: *Decision 118*, *Design and Tech disagree*)
+const partyWords =(s) => (s.other && s.party?.name ? `${s.party.name} · ` : "");
 /** What a card is called for a screen reader and a long press: *Asks you in Tech: The title*. */
 export const labelOf = (s) => `${s.label}${s.other && s.party?.name ? ` in ${s.party.name}` : ""}: ${s.full}`;
 
@@ -56,7 +57,7 @@ export function StopCard({ s, lit = false, slot = false, top = false, dealt = nu
     <span class="hand-card__head"><${ElemOf} s=${s} /><span class="hand-card__name">${s.title || s.full}</span></span>
     <span class="hand-card__window"><span class="hand-card__fig"><span class="hand-card__act"><${Mark} s=${s} big=${true} /></span>${head ? html`<span class="hand-card__asker"><${Head} race=${head.race} tier=${head.tier} /></span>` : null}</span></span>
     <span class="hand-card__label"><span class="hand-card__party">${s.party?.name || s.label}</span><span class="hand-card__gem"><${Gem} cost=${cost} /></span></span>
-    <span class="hand-card__foot">${s.text || s.why || ""}</span>
+    <span class="hand-card__foot">${footOf(s)}</span>
     ${children}
   </button>`;
 }
