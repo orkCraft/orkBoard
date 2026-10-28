@@ -2920,3 +2920,43 @@ only while picking, never against a touch screen's scroll, and never pinning a w
 7. **It ends as picking ends** (*Stop picking*, Esc, sending the idea, taking off the party's mark), what was taken
    staying the idea's marks.
 The owner's call.
+
+## 153. What a party asks of the project: Product at the start, each other leader at its party's first goal, inside the draft's three; a question is a card of up to four choices and *Other…*; a goal's questions a stack, one a card (28 October, the owner and the PM)
+
+Why: the owner asked whether each party's leader interviews the person about the project when it is first opened (what
+it is for, whom, what hurts them). None does: the first start reads the project's files (spec 75, no model) and asks one
+line only of an empty folder (*What is this project for?*); a leader asks at most three questions a goal, at its draft
+(`MAX_QUESTIONS`, §49's one round); whom it is for and what hurts them are kept only when the person writes them in the
+Pain lens (`segments.json`). An interview of every leader at the start is too much: the parties are picked together at
+the first start (§151.5), and four parties at two or three questions each is about twelve before any work. And the
+cards in the hand are there so the person writes less: an answer should be one press, picked from what the project
+already says. So (this makes spec 75 §2, spec 85 §1 and §141's questions precise):
+1. **At the start only Product asks** of the project: two or three cards, *whom it is for*, *what hurts them*, *what it
+   leaves out*, each only where the project's files (the README, the docs) do not say it; where they do, the leader's
+   reading is the card's pick, one press to confirm. With no Product party, the Orkmaster's one line (*What is this
+   project for?*) stands, as for an empty folder. The other leaders are quiet at the start.
+2. **Every other leader asks of the project at its party's first goal**, once in its party's life: Tech of the
+   architecture and the stack, Design of the mood and the references (spec 85), Marketing of the channels and the
+   tone. **Inside the draft's three, never beside them**: the goal's own questions and the project's share the three
+   places. A small first goal (a bug) gets only the project question it cannot be done without; the rest wait for the
+   party's next goals. A leader asks nothing the repository answers: Tech of a codebase reads its stack and containers
+   (`realm/system_overview.py`) and asks only what the code cannot say (where it runs, what it must not use); from
+   scratch only in an empty folder.
+3. **What is answered is the project's**, kept beside the segments (`<state_dir>/`), read into every party's prompts,
+   never asked again; Product's whom and what hurts fill the Pain lens. A fact a leader reads from the files is kept
+   the same way, without a question. The answers are read and changed where the party is (*About this party*) and the
+   project's at the Orkmaster's; a change applies from the next goal.
+4. **A question is a card of up to four choices and *Other…***: two to four real choices (`CHOICES`), never padded to
+   four; one picked for the person (●), with its why. The choices come from what the project holds, not from what is
+   common: Tech's first is the stack it found, with where it saw it; Product's are the segments and pains kept and the
+   README's. ***Other…*** (it replaces *Open…* on a question's card) opens the field with the picked answer already in
+   it, so the person edits rather than writes.
+5. **A goal's questions are a stack, one question a card**, never several on one card (a card is one decision; three
+   questions of four choices are a form, unreadable on the phone, and a single *Send* under picks made for the person is
+   pressed unread). The top card is answered with one press and the next is under it; the answers go together after
+   the last (the Taskmaster reads them at once, as today). The stack's depth shows as its thickness, never as a count
+   (*1/3*, §145). On the stack, *Let … decide* answers the rest with the picks; the goal's questions in one form stay
+   a press away for whoever wants them together.
+6. **When**: with the drafts' prompts and the hand's question card, after the first slice (§136.12); the stack on the
+   phone with the hand there.
+The owner's call.
