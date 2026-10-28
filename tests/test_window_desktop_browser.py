@@ -75,6 +75,9 @@ class WindowHost(TableHost):
         return super().handle(name, a)
 
 
+EDGE = {"x": 10, "y": 24}                                        # a press on a hand card's left edge: a card behind another in its lane shows only that (spec 101 §4.3)
+
+
 def shot(pg, name):
     if SHOTS:
         SHOTS.mkdir(parents=True, exist_ok=True)
@@ -191,13 +194,13 @@ def test_every_place_is_reached_over_the_pane(window):
     shot(pg, f"window-discard-{w}.png")
     nothing_modal(pg)
     back(pg)
-    pg.locator('.hand-card[data-kind="asks"]').click()
+    pg.locator('.hand-card[data-kind="asks"]').click(position=EDGE)
     pg.get_by_role("button", name="Open…").click()
     over(pg, "stop")
     pg.locator('[data-form="ask"] textarea').first.wait_for(timeout=WAIT_MS)                                           # the questions are a form in the pane, not a dialog
     nothing_modal(pg)
     back(pg)
-    pg.locator('.hand-card[data-kind="todo"]').click()
+    pg.locator('.hand-card[data-kind="todo"]').click(position=EDGE)
     pg.get_by_role("button", name="Open…").click()
     over(pg, "stop")
     pg.locator('.board-todo-dialog[data-kind="secret"]').wait_for(timeout=WAIT_MS)
@@ -228,7 +231,7 @@ def test_esc_lowers_a_lifted_card_then_closes_what_is_over_the_pane_then_picks_n
     open_menu(pg)
     pg.get_by_role("menuitem", name="Files").click()                                                                    # …and a place over the pane
     over(pg, "files")
-    pg.locator('.hand-card[data-kind="failed"]').click()                                                                 # …and a card of the hand lifted
+    pg.locator('.hand-card[data-kind="failed"]').click(position=EDGE)                                                                 # …and a card of the hand lifted
     pg.locator(".hand-lifted").wait_for(timeout=WAIT_MS)
     pg.keyboard.press("Escape")                                                                                         # 1: lowers the lifted card
     pg.locator(".hand-lifted").wait_for(state="detached", timeout=WAIT_MS)
@@ -260,7 +263,7 @@ def test_a_hand_card_lifted_raises_its_card_of_the_table(window):
     card = pg.locator('[data-lkey="t:task:seat/s2"]')
     assert "idea:seat" in card.get_attribute("data-about") and "task:seat/s2" in card.get_attribute("data-about")        # a task card says what it is about
     assert "idea:timer" in pg.locator('[data-lkey="t:orc:timer"]').get_attribute("data-about")                            # a goal's other card says its goal
-    pg.locator('.hand-card[data-kind="failed"]').click()
+    pg.locator('.hand-card[data-kind="failed"]').click(position=EDGE)
     pg.locator(".hand-lifted").wait_for(timeout=WAIT_MS)
     pg.wait_for_function("() => document.querySelector('[data-lkey=\"t:task:seat/s2\"]').classList.contains('is-about')", timeout=WAIT_MS)
     s1 = pg.locator('[data-lkey="t:task:seat/s1"]')                                                                      # a strip of the same goal (its other task; a token has none): not about the failure
@@ -268,13 +271,13 @@ def test_a_hand_card_lifted_raises_its_card_of_the_table(window):
     shot(pg, f"window-lifted-{w}.png")
     pg.keyboard.press("Escape")
     pg.wait_for_function("() => !document.querySelector('[data-lkey=\"t:task:seat/s2\"]').classList.contains('is-about')", timeout=WAIT_MS)
-    pg.locator('.hand-card[data-kind="asks"]').click()                                                                   # a question is about its goal's cards
+    pg.locator('.hand-card[data-kind="asks"]').click(position=EDGE)                                                                   # a question is about its goal's cards
     pg.wait_for_function("() => document.querySelector('[data-lkey=\"t:orc:timer\"]').classList.contains('is-about')", timeout=WAIT_MS)
 
 
 def test_tech_with_a_hand_card_lifted(window):
     pg, host, w = window
     open_tab(pg, "tech")
-    pg.locator('.hand-card[data-kind="failed"]').click()
+    pg.locator('.hand-card[data-kind="failed"]').click(position=EDGE)
     pg.locator(".hand-lifted").wait_for(timeout=WAIT_MS)
     shot(pg, f"window-tech-lifted-{w}.png")

@@ -1,7 +1,8 @@
-// The discard (docs/specs/98-the-table-and-the-hand.md §4.3, decisions §145.4, §159): the last goal done lies face up (*done*, its element, its name) with the backs of the others under it;
-// while dev holds goals main lacks (the gate), its top card carries the lich's head and *n goals ready for main*; with nothing done to see, that line alone is on its back. Pressed, it opens
-// over the pane (`discard`): the goals done and not yet seen (a goal pressed opens its Result and tells the host it was seen, `ideas.seen`, and it leaves the discard), and *Ready for main*
-// with **To main** (today's merge into main, by code). No act on main lies on the pile (§160.5): the pile only shows and opens. No part with nothing done and nothing ready for main.
+// The discard (docs/specs/101 §4.4, docs/specs/98-the-table-and-the-hand.md §4.3, decisions §145.4, §159, §167.7): under the tabs' end (the limits' chips and *Stop all*), at the grid's last column, whatever parties the project has.
+// The last goal done lies face up on a card's face (its element and name in the header, the check in the window, *Done* in the label row) with the backs of the others under it; while dev holds goals main lacks (the gate), its
+// window carries the lich's head and its foot *n goals ready for main*; with nothing done to see, that line alone is on its back. Pressed, it opens over the pane (`discard`): the goals done and not yet seen (a goal pressed opens
+// its Result and tells the host it was seen, `ideas.seen`, and it leaves the discard), and *Ready for main* with **To main** (today's merge into main, by code). No act on main lies on the pile (§160.5): the pile only shows and opens.
+// No part with nothing done and nothing ready for main.
 import { useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Head, Sign } from "../orkui.js";
@@ -33,15 +34,18 @@ export function Discard() {
   const top = done[0], under = Math.min(EDGES, Math.max(0, done.length - 1)), words = readyWords(ready), lit = over.value?.kind === "discard";
   const press = () => { if (lit) closeOver(); else openOver("discard", {}, null, "Done"); };
   const label = `Done${top ? `: ${top.full}` : ""}${words ? `. ${words}` : ""}`;
-  return html`<div class="ork-deck hand-deck hand-discard" data-n=${under} title="Done">
+  const lich = lichOf();
+  return html`<div class="ork-deck hand-discard" data-n=${under} title="Done">
     ${Array.from({ length: under }, (_, k) => under - k).map((i) => html`<i key=${i} class="ork-card-back edge hand-back" style=${`--ork-deck-i:${i}`} aria-hidden="true"></i>`)}
-    ${top ? html`<button type="button" class=${cls("ork-card ork-leans hand-card hand-done", { "is-on": lit })} aria-label=${label} aria-expanded=${lit ? "true" : "false"} onClick=${press} ...${leans}>
-        <span class="hand-card__top"><${Elem} name=${top.element} dim=${!top.element} /><span class="is-ok"><${Sign} name="check" label="Done" /></span></span>
-        <span class="hand-card__name">${top.title}</span>
-        <span class="hand-card__foot">${words && html`<${Head} race=${lichOf().race} tier=${lichOf().tier} size="mid" /><span class="cap hand-card__ready">${words}</span>`}</span>
+    ${top ? html`<button type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop hand-done${top.element ? ` el-${top.element}` : ""}`, { "is-on": lit })} aria-label=${label} aria-expanded=${lit ? "true" : "false"} onClick=${press} ...${leans}>
+        <span class="hand-card__head"><${Elem} name=${top.element} dim=${!top.element} /><span class="hand-card__name">${top.title}</span></span>
+        <span class="hand-card__window"><span class="hand-card__act"><span class="hand-mark is-ok"><${Sign} name="check" big=${true} label="Done" /></span></span>
+          ${words && html`<span class="hand-card__asker"><${Head} race=${lich.race} tier=${lich.tier} /></span>`}</span>
+        <span class="hand-card__label"><span class="hand-card__party">Done</span></span>
+        <span class="hand-card__foot">${words}</span>
       </button>`
-      : html`<button type="button" class=${cls("ork-card-back hand-back hand-deckback hand-done", { "is-on": lit })} aria-label=${label} aria-expanded=${lit ? "true" : "false"} onClick=${press}>
-        <span class="hand-back__ready"><${Head} race=${lichOf().race} tier=${lichOf().tier} size="mid" /><span class="cap">${words}</span></span></button>`}
+      : html`<button type="button" class=${cls("ork-card-back hand-back hand-done", { "is-on": lit })} aria-label=${label} aria-expanded=${lit ? "true" : "false"} onClick=${press}>
+        <span class="hand-back__ready"><${Head} race=${lich.race} tier=${lich.tier} /><span class="cap">${words}</span></span></button>`}
   </div>`;
 }
 

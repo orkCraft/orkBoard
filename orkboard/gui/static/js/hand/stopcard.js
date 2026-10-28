@@ -1,7 +1,8 @@
-// Today's stop as one card of the hand (docs/specs/98-the-table-and-the-hand.md §4.2, §4.4, decisions §160.6): one size; its face its sign or its goal's element,
-// its name (two lines at most), its leader's head and, when it spends, its gem; a card of another party says its party. Pressed, it is lifted over the pane's foot with its
-// answers (answers.js, the same commands the old fan sent), its cost's words and *Put it back*; the cards of the table it is about rise (about.js). A kind the hand does not
-// know (a goal's route card is spec 100's) is a plain card with its text, and a press lifts it all the same.
+// A stop as one card of the hand (docs/specs/101 §4.5, decisions §167.1; docs/specs/98 §4.2, §4.4, decisions §160.6): the card of a card game's anatomy, one size. Its header the goal's element at the left, bare, then its
+// name left-aligned (three lines at most); its window low, with the action's sign toned down (the alert of a failure, the question of a question, the check of a result) and the head of who asks small in its corner; its
+// label row the party's name and, when it spends, its gem at the right; its foot the question or the line (two lines at most). The hand shows the header and the window; the rest lies under the window's edge until the card
+// rises (hand.css). Pressed, it is lifted over the pane's foot with its answers (answers.js, the same commands the old fan sent), its cost's words and *Put it back*; the cards of the table it is about rise (about.js). A kind the
+// hand does not know (a goal's route card is spec 100's) is a plain card with its text, and a press lifts it all the same.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Head, Sign } from "../orkui.js";
@@ -11,37 +12,48 @@ import { missingWords } from "../arena/arenawords.js";
 import { goalLine, goalsOfRow } from "../arena/collidewords.js";
 import { Answers } from "./answers.js";
 import { costOf, Gem, Spend } from "./cost.js";
+import { goalOfStop } from "./data.js";
 import { liftKey } from "./state.js";
 import { leans } from "./motion.js";
 import { useAbout } from "./about.js";
 
-/** The top of a card: a failure's alert, a result's check or cross, a sign-in's alert, else the element of its goal (dim while it has none). */
-export function Mark({ s }) {
-  if (s.kind === "failed") return html`<span class="is-danger"><${Sign} name="alert" /></span>`;
-  if (s.kind === "result") return html`<span class=${s.gem?.sign === "cross" ? "is-danger" : "is-ok"}><${Sign} name=${s.gem?.sign || "check"} /></span>`;
-  if (s.kind === "sign_in") return html`<span class="is-alert"><${Sign} name="alert" /></span>`;
-  if (!s.node) return html`<${Sign} name="flag" />`;
-  return html`<${Elem} name=${s.node.element || ""} dim=${!s.node.element} />`;
+/** The action's sign of a stop and its tone: the alert of a failure and of a sign-in, the question of a question, the check (or cross) of a result, else the sign of what is asked (a plan's page, a pick's picture, a to-do's flag). */
+export function actionOf(s) {
+  if (s.kind === "failed") return { sign: "alert", tone: "danger" };
+  if (s.kind === "sign_in") return { sign: "alert", tone: "alert" };
+  if (s.kind === "result") return { sign: s.gem?.sign || "check", tone: s.gem?.sign === "cross" ? "danger" : "ok" };
+  if (s.kind === "asks" || s.kind === "goal" || s.kind === "collide") return { sign: "question", tone: "" };
+  if (s.kind === "pick") return { sign: "picture", tone: "" };
+  if (s.kind === "plan" || s.kind === "change") return { sign: "page", tone: "" };
+  return { sign: "flag", tone: "" };
 }
+
+/** The action's sign of a stop, at the signs' big size or the small one (`big`). */
+export function Mark({ s, big = false }) {
+  const a = actionOf(s);
+  return html`<span class=${cls("hand-mark", a.tone && `is-${a.tone}`)}><${Sign} name=${a.sign} big=${big} /></span>`;
+}
+
+/** The goal's element, bare; dim while it has none (a stop of no goal). */
+export const ElemOf = ({ s }) => html`<${Elem} name=${s.node?.element || ""} dim=${!s.node?.element} />`;
 
 const headOf = (s) => s.head || s.party?.head || null;
 const partyWords = (s) => (s.other && s.party?.name ? `${s.party.name} · ` : "");
 /** What a card is called for a screen reader and a long press: *Asks you in Tech: The title*. */
 export const labelOf = (s) => `${s.label}${s.other && s.party?.name ? ` in ${s.party.name}` : ""}: ${s.full}`;
 
-/** The card face of a stop `s` (the leader's head is drawn at its mid size; the narrow sheet draws it smaller). `onPress`: the press. */
+/** The card face of a stop `s` (docs/specs/101 §4.5). `top`: the front card of its stack. `onPress`: the press. */
 export function StopCard({ s, lit = false, slot = false, top = false, dealt = null, gone = false, onPress, onFocus, children }) {
-  const cost = costOf(s), head = headOf(s);
-  return html`<button type="button" class=${cls("ork-card ork-leans hand-card hand-card--stop", { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed", "is-on": lit,
+  const cost = costOf(s), head = headOf(s), element = s.node?.element || "";
+  return html`<button type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop${element ? ` el-${element}` : ""}`, { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed", "is-on ork-picked": lit,
         "is-slot": slot, "is-gone": gone, "ork-deal": dealt != null })}
-      data-key=${s.key} data-kind=${s.kind} data-goal=${s.node?.slug || s.row?.idea || ""} data-party=${s.party?.slug || ""} data-top=${top ? "1" : undefined}
+      data-key=${s.key} data-kind=${s.kind} data-goal=${goalOfStop(s)} data-party=${s.party?.slug || ""} data-top=${top ? "1" : undefined}
       style=${dealt != null ? `--ork-deal-i:${dealt}` : undefined} aria-label=${labelOf(s)} title=${`${labelOf(s)}${s.text ? ` · ${s.text}` : ""}`.slice(0, 200)}
       aria-haspopup="dialog" aria-expanded=${slot ? "true" : "false"} tabindex=${slot || gone ? -1 : undefined} inert=${gone || undefined} onClick=${onPress} onFocus=${onFocus} ...${leans}>
-    <span class="hand-card__mark"><${Mark} s=${s} /></span>
-    ${s.other && s.party?.name ? html`<span class="hand-card__party">${s.party.name}</span>` : null}
-    <span class="hand-card__name">${s.title || s.full}</span>
-    <span class="hand-card__gem"><${Gem} cost=${cost} /></span>
-    ${head ? html`<span class="hand-card__head"><${Head} race=${head.race} tier=${head.tier} size="mid" /></span>` : null}
+    <span class="hand-card__head"><${ElemOf} s=${s} /><span class="hand-card__name">${s.title || s.full}</span></span>
+    <span class="hand-card__window"><span class="hand-card__act"><${Mark} s=${s} big=${true} /></span>${head ? html`<span class="hand-card__asker"><${Head} race=${head.race} tier=${head.tier} /></span>` : null}</span>
+    <span class="hand-card__label"><span class="hand-card__party">${s.party?.name || s.label}</span><span class="hand-card__gem"><${Gem} cost=${cost} /></span></span>
+    <span class="hand-card__foot">${s.text || s.why || ""}</span>
     ${children}
   </button>`;
 }
@@ -74,8 +86,8 @@ export function Lifted({ s, anchor }) {
   const tone = s.tone === "danger" ? "danger" : s.tone === "alert" ? "alert" : "";
   return html`<aside ref=${box} class=${cls("ork-frame hand-lifted", tone)} role="dialog" tabindex="-1" aria-label=${`Lifted: ${labelOf(s)}`} data-key=${s.key} data-kind=${s.kind}
       style=${left != null ? `left:${left}px` : undefined}>
-    <div class="hand-lifted__top"><${Mark} s=${s} /><p class="cap hand-lifted__title">${partyWords(s)}${s.title || s.full}</p>${head && html`<${Head} race=${head.race} tier=${head.tier} size="mid" />`}</div>
-    <p class="cap hand-lifted__kind">${s.label}</p>
+    <div class="hand-lifted__top"><${ElemOf} s=${s} /><p class="cap hand-lifted__title">${partyWords(s)}${s.title || s.full}</p>${head && html`<${Head} race=${head.race} tier=${head.tier} size="mid" />`}</div>
+    <p class="cap hand-lifted__kind"><${Mark} s=${s} /> ${s.label}</p>
     <${Body} s=${s} />
     <div class="hand-answers" role="group" aria-label="Answers"><${Answers} s=${s} /></div>
     <${Spend} cost=${cost} />

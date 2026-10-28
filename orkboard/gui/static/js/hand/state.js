@@ -1,5 +1,5 @@
 // What the hand remembers while it is open (docs/specs/98-the-table-and-the-hand.md §4): the + card grown into the field (its text and pictures kept when it
-// closes), the deck's row, the stack fanned. The seam with the window is frame/state.js (`tab`, `picked`, `over`, `lifted`): the hand reads and writes those, and
+// closes). The seam with the window is frame/state.js (`tab`, `picked`, `over`, `lifted`): the hand reads and writes those, and
 // keeps the rest here. A lifted card of the hand has the key `hand:<stop key>` in `lifted`; the table's cards have their own.
 import { signal } from "@preact/signals";
 import { ORKMASTER } from "../frame/state.js";
@@ -8,8 +8,6 @@ export const fieldOpen = signal(false);        // the + card has grown into the 
 export const fieldText = signal("");           // what was written, kept when the field closes (Esc, a press away)
 export const fieldPhotos = signal([]);         // the pictures pasted, as data URLs (board/pictures.js `shrink`)
 export const fieldOff = signal("");            // the tab whose address the person took off (*→ Tech ×*): the goal is then general
-export const rowOpen = signal(false);          // the deck fanned out in a row
-export const fanned = signal("");              // the key of the stack fanned in place ("" none)
 
 export const HAND = "hand:";
 export const liftKey = (stopKey) => `${HAND}${stopKey}`;

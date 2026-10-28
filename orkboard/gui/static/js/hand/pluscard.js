@@ -1,4 +1,4 @@
-// The + card and the field it grows into (docs/specs/98-the-table-and-the-hand.md §4.1, decisions §160.2): the new goal's card lies a little off the deck, face up, a + on its face.
+// The + card and the field it grows into (docs/specs/101 §4.2, docs/specs/98-the-table-and-the-hand.md §4.1, decisions §160.2, §167.5): the new goal's card lies under the first lane, face up, a + on its face, alone (no deck) or the last of the Orkmaster's fan, where its edge shows the +.
 // Pressed (or a key typed with nothing focused), it grows into the field over the hand: one field, *Write a goal…*. Enter sends, Shift+Enter is a new line, a picture pasted goes with
 // it (`photos`, as the old New goal took them), Esc or a press away closes it and keeps its text. No priority, no kind. On a party's tab it is addressed to that party (*→ Tech ×*,
 // one press takes it off); *@Tech* in the text addresses it too; on the Orkmaster's tab it is general and the Orkmaster routes it by code (`ideas.add` with no party). The page has no

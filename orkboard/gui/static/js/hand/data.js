@@ -1,13 +1,12 @@
-// What the hand holds, read from the Board as the shell keeps it (docs/specs/98-the-table-and-the-hand.md §4): the goals in line (the deck), the
-// stacks (a goal's Needs you rows, the urgent first), the goals done (the discard) and what dev holds that main lacks (the gate). Pure functions
-// over `ideas.map`, `ideas.board` and `ideas.gate`, so that a face and a test read the same lists; the faces are the neighbouring modules.
+// What the hand holds, read from the Board as the shell keeps it (docs/specs/98-the-table-and-the-hand.md §4, docs/specs/101 §4): the stacks (a goal's Needs you rows, the urgent first, each under
+// the lane of who asks: `laneOf`), the goals done (the discard) and what dev holds that main lacks (the gate). The goals in line are the table's (table/data.js `lineNow`: no deck).
+// Pure functions over `ideas.map`, `ideas.board` and `ideas.gate`, so that a face and a test read the same lists; the faces are the neighbouring modules.
 // A node's `place` is the host's (realm/goal_place.py); nothing here decides where a goal lies.
 import { board, goalList } from "../board/store.js";
 import { gateData, mapData } from "../shell/store.js";
 import { byUrgency, gateOf, goalsOf, nodesOf, resultStop, resultsOf, signInStopsOf, stopsOf, todoLast } from "../arena/arenawords.js";
 import { ORKMASTER } from "../frame/state.js";
-
-export const MANY = 7;                         // the deck's row shows this many goals, then *All · search* (§4.1)
+import { partiesNow } from "../table/data.js";
 
 /** The parties of the map in the Board's order. */
 export const partiesOf = (map = mapData.value) => goalsOf(map, goalList().map((x) => x.slug));
@@ -15,14 +14,6 @@ export const partiesOf = (map = mapData.value) => goalsOf(map, goalList().map((x
 /** A party as a card says it: its name, its leader's head and name. */
 export function partyCard(g) {
   return { slug: g.slug, name: g.short || g.title, head: g.leader?.head || null, lead: g.leader?.name || "Taskmaster" };
-}
-
-/** The goals in line, in the Orkmaster's order (the order of the map's nodes): each its element and name; `reset` when it waits for the window's reset. */
-export function lineOf(map = mapData.value) {
-  const parties = Object.fromEntries((map?.goals || []).map((g) => [g.slug, g]));
-  return (map?.nodes || []).filter((n) => n.place === "deck").map((n) => ({
-    slug: n.slug, title: n.short || n.title, full: n.title, element: n.element || "", party: n.goal, partyName: parties[n.goal]?.short || parties[n.goal]?.title || "",
-    waits: n.waits_as || "", reset: n.waits_as === "reset", at: n.held_until || n.start_at || "", state: n.state }));
 }
 
 /** The goals done and not yet seen, the last one first. */
@@ -68,12 +59,26 @@ export function stackKey(s) {
   return goal || (s.kind === "sign_in" ? s.key : s.row?.goal ? `party:${s.row.goal}` : s.key);
 }
 
-/** The stacks (§4.2): one a goal that has Needs you rows, in the order of their top cards' urgency (the stops come in it), each `{key, goal, cards}`, the top first. */
-export function stacksOf(stops) {
+/** What is the whole goal's, not one party's: the route, Talk of several leaders, the decision, a fork, and the Orkmaster's collision (docs/specs/101 §4.2): they lie under the first lane. */
+const WHOLE = new Set(["route", "talk", "decision", "fork", "collide"]);
+
+/** The lane a row lies under (docs/specs/101 §4.3): 0 the first (the project's), else 1 + the place of its party among the tabs' parties (table/data.js `partiesNow`, the order of the lanes after the first).
+ *  A failure lies under its task's party, a party's question under its party, the project's questions (no goal of their own) under their leader's party; what is the whole goal's, a sign-in and a row
+ *  of a party the tabs do not have lie under the first. `row`: a stop (`stopsOfProject`) or a Needs you row (`{kind, goal}`). */
+export function laneOf(row, parties = partiesNow()) {
+  if (WHOLE.has(row?.kind || row?.row?.kind || "")) return 0;
+  const slug = row?.g?.slug || row?.row?.goal || row?.goal || "";
+  const at = parties.findIndex((g) => g.slug === slug);
+  return at < 0 ? 0 : at + 1;
+}
+
+/** The stacks (§4.3): one a goal and a lane that has Needs you rows, in the order of their top cards' urgency (the stops come in it), each `{key, goal, lane, cards}`, the top first. A goal's cards from one party are
+ *  one stack; the cards of a goal that two parties ask about lie in a stack each, under each one's lane. */
+export function stacksOf(stops, parties = partiesNow()) {
   const out = [], at = new Map();
   for (const s of stops) {
-    const key = stackKey(s);
-    if (!at.has(key)) { at.set(key, out.length); out.push({ key, goal: goalOfStop(s), cards: [] }); }
+    const lane = laneOf(s, parties), key = `${stackKey(s)}@${lane}`;
+    if (!at.has(key)) { at.set(key, out.length); out.push({ key, goal: goalOfStop(s), lane, cards: [] }); }
     out[at.get(key)].cards.push(s);
   }
   return out;

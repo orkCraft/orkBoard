@@ -5,7 +5,7 @@
 export const KINDS = {
   file: "table", diff: "table", log: "table", task: "table", role: "table", settings: "table", projects: "table",
   files: "table", party: "table", play: "table", limits: "table", pair: "table", week: "table", update: "table", line: "table",
-  deck: "hand", discard: "hand", result: "hand", stop: "hand",
+  discard: "hand", result: "hand", stop: "hand",
 };
 
 const FACES = {};

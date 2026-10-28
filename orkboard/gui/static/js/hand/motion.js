@@ -1,13 +1,13 @@
 // How the hand's cards answer the hand (docs/specs/98-the-table-and-the-hand.md §6.1, decisions §149.1): orkUI draws every motion (`.ork-leans`, `.ork-deal`,
 // `.ork-fan`, `.ork-crumble`: its tokens, its keyframes, nothing under reduced motion); the page only says when. A card leans toward the pointer (`lean`), a card that
-// comes is dealt (`useDealt`), a card that goes crumbles where it lay (`useGone`), a fan opens and closes with the spring (`useFan`). At rest and under reduced motion
+// comes is dealt (`useDealt`), a card that goes crumbles where it lay (`useGone`). At rest and under reduced motion
 // nothing moves: the hooks add no class then.
 import { h } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 
 export const reduced = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-export const DEAL_MS = 650, CRUMBLE_MS = 700, FAN_MS = 400;     // a dealt card's travel, the shards' fall (orkUI's play time and the six shards' gaps), a fan's closing
+export const DEAL_MS = 650, CRUMBLE_MS = 700;     // a dealt card's travel, the shards' fall (orkUI's play time and the six shards' gaps)
 
 /** The pointer's place on a card, -1 to 1 each way, for orkUI's lean (`--ork-lean-x`, `--ork-lean-y`); set on the card itself. */
 export function lean(e) {
@@ -62,17 +62,3 @@ export const Shards = () => {
   const n = 6;
   return h("span", { class: "ork-crumble", "aria-hidden": "true" }, Array.from({ length: n }, (_, i) => h("i", { key: i })));
 };
-
-/** A fan that opens and closes with the spring: `{shown, closing}`. It stays drawn for the closing, and not at all under reduced motion. */
-export function useFan(open) {
-  const [shown, setShown] = useState(open), [closing, setClosing] = useState(false);
-  useEffect(() => {
-    if (open) { setShown(true); setClosing(false); return undefined; }
-    if (!shown) return undefined;
-    if (reduced()) { setShown(false); return undefined; }
-    setClosing(true);
-    const t = setTimeout(() => { setShown(false); setClosing(false); }, FAN_MS);
-    return () => clearTimeout(t);
-  }, [open]);
-  return { shown: open || shown, closing: !open && closing };
-}

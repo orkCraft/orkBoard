@@ -117,6 +117,7 @@ def test_orkboards_own_sheets_carry_no_colour_no_font_and_no_corner_of_their_own
                                                                    "--rot", "--dy", "--z", "--ov", "--cols",   # spec 49: a fan's turn, rise, order and overlap; the columns
                                                                    "--dx", "--s", "--delay",                    # spec 57: a dealt card's travel (--dy as the fan's), scale and delay
                                                                    "--lanes", "--card-w", "--col-w"}            # decisions §167.7: the lanes, a card's and a lane's width
+        legacy -= {"--at", "--of", "--span"} | {f"--hc-{n}" for n in ("w", "h", "pad", "gap", "head", "window", "label", "top", "edge", "tight", "shown", "rise", "room")}   # spec 101 §4: the hand's sizes and a lane's fan
         assert not legacy, (path.name, legacy)
 
 
