@@ -4,7 +4,7 @@ The owner and the PM, 27 October. `docs/decisions.md` is a log: from §104 to §
 hours before (§134 changes §133, §138 changes §136, §145 turns §104.0's frame round). This spec is that log read as one
 window, with no deltas, so that a slice's spec is written from it and not from forty entries. **Builds:** nothing by
 itself; each slice's spec builds a part of it. **When a decision after §146 changes the window, this spec is changed in
-the same commit**; where it and a decision differ, the decision is right and this spec is fixed. Read up to §164.
+the same commit**; where it and a decision differ, the decision is right and this spec is fixed. Read up to §165.
 
 **What it is, and is not:** the window as it will be, each part with the decisions it rests on. Not: how it is built
 (files, tests: the slices' specs), the phone's frame (spec 94), the engine's calls beyond what the person sees.

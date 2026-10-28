@@ -3275,3 +3275,14 @@ one exception to §154.4 and §158.7):
    is its role, as before.
 3. They are words of the interface, written where the face writes them; code, keys and files keep their names.
 The owner's call.
+
+## 165. Light cards are for later: §163's neutral cards stay; a light card asks its own heads and a second palette (28 October, the owner)
+
+Why: a fourth way was drawn beside §163's (orkUI's `docs/compare/cards.html`, D): the cards the colour of today's ink
+(`#dedbd6`), their words dark. It reads as cards on a table most of all (12.8:1 against it, §163's A 1.30:1), but the
+heads are drawn for dark grounds (25 of their 32 colours fall under 3:1 on the light card, the elf's and the dryad's faces
+1.02:1), and the elements and signals need darker kin on it. So:
+1. **§163 stays**: the cards neutral on the warm table.
+2. **Light cards are a later pass** of orkUI's, apart from the slices: a set of heads that stand on a light ground, the
+   elements and signals' kin for it, and both grounds measured; then the owner looks again.
+The owner's call.
