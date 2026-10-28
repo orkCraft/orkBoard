@@ -380,7 +380,15 @@ def test_a_cards_face_is_a_header_a_window_a_label_row_and_a_foot(gui, width):
         window = timer.locator(".hand-card__window")
         w, sign, asker = window.bounding_box(), timer.locator(".hand-card__window .ork-sign.alert").bounding_box(), timer.locator(".hand-card__asker .ork-race__head").bounding_box()
         assert sign["width"] == 28 and sign["height"] == 28 and asker["width"] == 24 and asker["height"] == 22, "the action's sign at the signs' big size, the asker's head small"
-        assert asker["x"] + asker["width"] <= w["x"] + w["width"] + 1 and asker["y"] + asker["height"] <= w["y"] + w["height"] + 1 and asker["x"] > w["x"] + w["width"] / 2, "in the window's corner"
+        # the head lies OVER the sign, on its lower right corner (a badge), and the two are one figure, centred together in the window (decisions §168.3)
+        over_x, over_y = min(sign["x"] + 28, asker["x"] + 24) - max(sign["x"], asker["x"]), min(sign["y"] + 28, asker["y"] + 22) - max(sign["y"], asker["y"])
+        assert over_x >= 6 and over_y >= 6, "the head overlaps the sign"
+        assert asker["x"] > sign["x"] + 6 and asker["y"] > sign["y"] + 6 and asker["x"] + 24 > sign["x"] + 28 and asker["y"] + 22 >= sign["y"] + 28, "on the sign's lower right corner"
+        assert timer.locator(".hand-card__window .hand-card__fig").evaluate("e => [...e.children].map((c) => c.className)") == ["hand-card__act", "hand-card__asker"]
+        assert pg.evaluate("([s, a]) => getComputedStyle(document.querySelector(a)).zIndex === 'auto' && !!(document.querySelector(s).compareDocumentPosition(document.querySelector(a)) & 4)", [".hand-card[data-goal=timer] .hand-card__act", ".hand-card[data-goal=timer] .hand-card__asker"]), "the head after the sign: over it"
+        fx0, fx1, fy0, fy1 = min(sign["x"], asker["x"]), max(sign["x"] + 28, asker["x"] + 24), min(sign["y"], asker["y"]), max(sign["y"] + 28, asker["y"] + 22)
+        assert abs((fx0 + fx1) / 2 - (w["x"] + w["width"] / 2)) <= 2 and abs((fy0 + fy1) / 2 - (w["y"] + w["height"] / 2)) <= 3, "the figure centred in the window"
+        assert w["x"] <= fx0 and fx1 <= w["x"] + w["width"] and (width == "narrow" or (w["y"] <= fy0 and fy1 <= w["y"] + w["height"])), "inside the window"
         assert timer.locator(".hand-card__window .ork-sign.alert").evaluate("e => getComputedStyle(e).opacity") != "1" and window.evaluate("e => getComputedStyle(e).borderTopWidth") == "1px"
         gem = timer.locator(".hand-card__label .ork-gem")
         gb = gem.bounding_box()
@@ -641,6 +649,107 @@ def test_a_stacks_edges_hint_how_many_five_at_most_and_never_a_number(gui):
         pg.wait_for_function("() => document.querySelector('.hand-stack[data-stack=\"export@1\"]')?.dataset.cards === '9'", timeout=WAIT_MS)
         assert _stack(pg, "export").locator(".ork-card-back.edge").count() == 5
         assert all(not e.inner_text() for e in _stack(pg, "export").locator(".ork-card-back.edge").all())                                  # a back says nothing: no count
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+FAN_JS = """(sel) => [...document.querySelectorAll(sel)].map((e) => { const m = new DOMMatrix(getComputedStyle(e).transform); return [Math.round(Math.atan2(m.b, m.a) * 1800 / Math.PI) / 10, Math.round(m.e * 10) / 10]; })"""
+
+
+def _deepen(pg, host, n=6):
+    """Cards added to the `export` stack until it holds n + 3 (more than the five edges show)."""
+    todo = {"id": "t0", "title": "KEY", "kind": "secret", "why": "", "choices": [], "steps": [], "accept": [], "done": False}
+    for i in range(n):
+        host.needs.append(need("todo", "tech", "export", "Export the round scores", f"KEY_{i}", todo={**todo, "id": f"t{i}", "title": f"KEY_{i}"}, at=f"2026-10-20T09:{20 + i}:00"))
+    host.bump({})
+    pg.wait_for_function(f"() => document.querySelector('.hand-stack[data-stack=\"export@1\"]')?.dataset.cards === '{n + 2}'", timeout=WAIT_MS)
+    pg.wait_for_timeout(700)
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_a_stacks_cards_behind_the_front_one_lie_as_a_fan_turned_by_place_and_a_hover_opens_it(gui, width):
+    pg, host, log = open_hand(gui, width=width)
+    try:
+        _stack(pg, "export").wait_for(timeout=WAIT_MS)
+        pg.wait_for_timeout(700)
+        sel = '.hand-stack[data-stack="export@1"] > .ork-card-back.edge'
+        assert pg.evaluate(FAN_JS, sel) != [] and len(pg.evaluate(FAN_JS, sel)) == 1
+        _deepen(pg, host)
+        rest = pg.evaluate(FAN_JS, sel)
+        assert len(rest) == 5, "five edges at most"
+        by_place = rest[::-1]                                                                            # the DOM lists the deepest first: place 1 (the nearest the front) is the last
+        assert [t > 0 for t, _ in by_place] == [True, False, True, False, True] and [a > 0 for _, a in by_place] == [True, False, True, False, True], "by turns right and left"
+        scale = 1 if width == "wide" else 0.7
+        for turn, aside in by_place:
+            assert 2 <= abs(turn) <= 4 and 6 * scale - 0.1 <= abs(aside) <= 10 * scale + 0.1, f"turned 2 to 4 degrees, stepped 6 to 10 px aside ({turn}, {aside})"
+        front = pg.locator('.hand-card[data-goal="export"][data-top="1"]')
+        assert front.evaluate("e => getComputedStyle(e).transform") == "none", "the front card lies straight"
+        assert pg.locator(".hand-stack[data-stack='export@1'] .ork-card-back.edge").evaluate_all("els => els.every((e) => !e.innerText)")
+        pg.mouse.move(640, 200)
+        pg.wait_for_timeout(400)
+        shot(pg, f"{width}-fan-rest")
+        # a redraw shakes nothing: the same turns after the Board changes
+        host.bump({})
+        pg.wait_for_timeout(500)
+        assert pg.evaluate(FAN_JS, sel) == rest, "a fixed turn by place, no shake on a redraw"
+        slot = pg.locator('.hand-slot:has(.hand-stack[data-stack="export@1"])')
+        sb = slot.bounding_box()
+        pg.mouse.move(sb["x"] + 12, sb["y"] + 30)                                                          # hover: the fan opens a little wider
+        pg.wait_for_timeout(600)
+        opened = pg.evaluate(FAN_JS, sel)[::-1]
+        for (t0, a0), (t1, a1) in zip(by_place, opened):
+            assert abs(a1) > abs(a0) and abs(t1) >= abs(t0) and abs(t1) <= 6 and (a0 > 0) == (a1 > 0), "wider, the same sides"
+        assert pg.evaluate("() => document.documentElement.scrollWidth <= document.documentElement.clientWidth"), "no sideways scroll"
+        shot(pg, f"{width}-fan-open")
+        _at_rest(pg)
+        assert pg.evaluate(FAN_JS, sel) == rest, "closed again at rest"
+        card = pg.locator('.hand-card[data-goal="export"][data-top="1"]')                                   # keyboard focus opens it too
+        card.focus()
+        pg.wait_for_timeout(600)
+        assert abs(pg.evaluate(FAN_JS, sel)[-1][1]) > abs(rest[-1][1])
+        pg.evaluate("() => document.activeElement.blur()")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_fan_stands_still_under_reduced_motion(gui):
+    server, browser = gui
+    ctx = browser.new_context(viewport={"width": 1280, "height": 800}, reduced_motion="reduce")
+    pg = ctx.new_page()
+    host = HandHost()
+    pg.route_web_socket("**/ws*", host.on_socket)
+    pg.goto(server.url)
+    try:
+        _stack(pg, "export").wait_for(timeout=WAIT_MS)
+        _deepen(pg, host)
+        sel = '.hand-stack[data-stack="export@1"] > .ork-card-back.edge'
+        turns = pg.evaluate(FAN_JS, sel)
+        assert len(turns) == 5 and all(t != 0 and a != 0 for t, a in turns), "the turn stands (a turn is not a motion)"
+        assert pg.locator(sel).first.evaluate("e => getComputedStyle(e).transitionDuration") == "0s"
+    finally:
+        ctx.close()
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_two_goals_in_one_lane_are_two_small_fans_the_urgent_in_front(gui, width):
+    pg, host, log = open_hand(gui, width=width)
+    try:
+        pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
+        pg.wait_for_timeout(700)
+        sel = '.hand-lane[data-lane="1"] .hand-stack > .ork-card-back.edge'
+        edge = pg.locator(sel)
+        assert edge.count() == 1, "the second goal has a card behind its front, laid turned"
+        assert edge.evaluate("e => new DOMMatrix(getComputedStyle(e).transform).b") != 0
+        front, back = pg.locator('.hand-slot:has(.hand-card[data-goal="timer"])'), pg.locator('.hand-slot:has(.hand-card[data-goal="export"])')
+        if width == "wide":
+            assert int(front.evaluate("e => getComputedStyle(e).zIndex")) > int(back.evaluate("e => getComputedStyle(e).zIndex"))
+            assert front.bounding_box()["x"] > back.bounding_box()["x"], "the urgent at the right, the other behind it"
+        else:
+            assert front.bounding_box()["x"] < back.bounding_box()["x"], "a free row: the urgent first"
+        assert pg.evaluate("() => document.documentElement.scrollWidth <= document.documentElement.clientWidth")
+        shot(pg, f"{width}-fans-in-a-lane")
     finally:
         pg.close()
     assert not log, "\n".join(log)

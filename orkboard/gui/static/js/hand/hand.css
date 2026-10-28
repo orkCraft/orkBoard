@@ -45,7 +45,9 @@
 .hand-card__name { flex: 1; min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-body); font-weight: 600; letter-spacing: var(--ork-type-body-track, 0); }   /* a person's words: the body face (§167.1) */
 .hand-card__window { position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; border: var(--ork-line) solid var(--ork-card-frame); }
 .hand-card__act, .hand-mark { display: inline-flex; }
-.hand-card__asker { position: absolute; right: var(--ork-2); bottom: var(--ork-1); display: inline-flex; }
+/* the sign and the asker's head are one figure, centred together in the window: the head (24 x 22) lies over the sign's lower right corner, a badge (the mockup's); --ov is how far it stands out past the sign */
+.hand-card__fig { --ov: 14px; position: relative; display: inline-flex; padding: 0 var(--ov) calc(var(--ov) / 2) 0; }
+.hand-card__asker { position: absolute; right: 0; bottom: 0; display: inline-flex; }
 .hand-card__label { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-3); min-width: 0; }
 .hand-card__party { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
 .hand-card__gem { display: inline-flex; flex: none; }
@@ -78,6 +80,10 @@
 /* a stack is orkUI's pile: a back's edges, then the top; a card that comes is dealt from under the window's edge */
 .hand-stack, .hand-discard { display: grid; grid-template-columns: minmax(0, 1fr); width: 100%; }
 .hand-back { cursor: default; padding: 0; }
+/* a stack's cards behind its front one lie as a fan (spec 101 §7.1, decisions §168.4): each turned 2 to 4 degrees and stepped 6 to 10 px aside, by turns right and left (--dx and --rot, set by place in stacks.js, never random), three at most
+   seen and the edges hint at more up to five. A hover or focus opens it a little wider. A turn is a place, not a motion: it stands still under reduced motion */
+.hand .hand-stack > .hand-back.edge { transform: translate(calc(var(--dx, 0) * 1px), 0) rotate(calc(var(--rot, 0) * 1deg)); transform-origin: 50% 50%; transition: transform var(--ork-motion-base) var(--ork-motion-spring); }
+.hand-slot:hover .hand-stack > .hand-back.edge, .hand-slot:focus-within .hand-stack > .hand-back.edge { transform: translate(calc(var(--dx, 0) * 1.6px), 0) rotate(calc(var(--rot, 0) * 1.3deg)); }
 .hand .hand-done.hand-back { cursor: pointer; }
 .hand .hand-done.hand-back.is-on { box-shadow: inset 2px 0 0 var(--ork-ink); }
 .hand-back__ready { display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); padding: var(--ork-3); color: var(--ork-ink-muted); text-align: center; }
@@ -165,10 +171,11 @@
   .hand-card__party, .hand-card__foot { display: none; }
   .hand-card__label { justify-content: flex-end; }
   .hand-card__window { overflow: visible; }
-  .hand-card__asker { right: 0; bottom: 0; }
   .hand .hand-card .ork-gem { height: 20px; min-width: 0; padding: 0 var(--ork-2); }
   .hand .hand-plus.is-large { width: 120px; }
   .hand-back__ready { padding: var(--ork-1); }
+  .hand .hand-stack > .hand-back.edge { transform: translate(calc(var(--dx, 0) * 0.7px), 0) rotate(calc(var(--rot, 0) * 1deg)); }
+  .hand-slot:hover .hand-stack > .hand-back.edge, .hand-slot:focus-within .hand-stack > .hand-back.edge { transform: translate(calc(var(--dx, 0) * 1.1px), 0) rotate(calc(var(--rot, 0) * 1.3deg)); }
   .hand .hand-field { left: var(--ork-4); right: var(--ork-4); width: auto; }
   .hand .hand-lifted { left: var(--ork-4) !important; right: var(--ork-4); width: auto; max-height: calc(100dvh - 200px); }
   .hand-list__row, .hand-drow { gap: var(--ork-3); padding: var(--ork-3) var(--ork-4); }
@@ -182,6 +189,6 @@
 
 /* none of it moves under reduced motion: a card is marked by its edge instead; a card risen shows its whole face at once, without the spring */
 @media (prefers-reduced-motion: reduce) {
-  .hand-slot, .hand-end .hand-discard { transition: none; }
+  .hand-slot, .hand-end .hand-discard, .hand .hand-stack > .hand-back.edge { transition: none; }
   .frame-table .is-about { transform: none; transition: none; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 }

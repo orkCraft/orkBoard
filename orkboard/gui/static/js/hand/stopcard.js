@@ -1,5 +1,5 @@
 // A stop as one card of the hand (docs/specs/101 §4.5, decisions §167.1; docs/specs/98 §4.2, §4.4, decisions §160.6): the card of a card game's anatomy, one size. Its header the goal's element at the left, bare, then its
-// name left-aligned (three lines at most); its window low, with the action's sign toned down (the alert of a failure, the question of a question, the check of a result) and the head of who asks small in its corner; its
+// name left-aligned (three lines at most); its window low, with the action's sign toned down (the alert of a failure, the question of a question, the check of a result) and the head of who asks small over the sign's lower right corner, the two one figure centred in the window (decisions §168.3); its
 // label row the party's name and, when it spends, its gem at the right; its foot the question or the line (two lines at most). The hand shows the header and the window; the rest lies under the window's edge until the card
 // rises (hand.css). Pressed, it is lifted over the pane's foot with its answers (answers.js, the same commands the old fan sent), its cost's words and *Put it back*; the cards of the table it is about rise (about.js). A kind the
 // hand does not know (a goal's route card is spec 100's) is a plain card with its text, and a press lifts it all the same.
@@ -51,7 +51,7 @@ export function StopCard({ s, lit = false, slot = false, top = false, dealt = nu
       style=${dealt != null ? `--ork-deal-i:${dealt}` : undefined} aria-label=${labelOf(s)} title=${`${labelOf(s)}${s.text ? ` · ${s.text}` : ""}`.slice(0, 200)}
       aria-haspopup="dialog" aria-expanded=${slot ? "true" : "false"} tabindex=${slot || gone ? -1 : undefined} inert=${gone || undefined} onClick=${onPress} onFocus=${onFocus} ...${leans}>
     <span class="hand-card__head"><${ElemOf} s=${s} /><span class="hand-card__name">${s.title || s.full}</span></span>
-    <span class="hand-card__window"><span class="hand-card__act"><${Mark} s=${s} big=${true} /></span>${head ? html`<span class="hand-card__asker"><${Head} race=${head.race} tier=${head.tier} /></span>` : null}</span>
+    <span class="hand-card__window"><span class="hand-card__fig"><span class="hand-card__act"><${Mark} s=${s} big=${true} /></span>${head ? html`<span class="hand-card__asker"><${Head} race=${head.race} tier=${head.tier} /></span>` : null}</span></span>
     <span class="hand-card__label"><span class="hand-card__party">${s.party?.name || s.label}</span><span class="hand-card__gem"><${Gem} cost=${cost} /></span></span>
     <span class="hand-card__foot">${s.text || s.why || ""}</span>
     ${children}

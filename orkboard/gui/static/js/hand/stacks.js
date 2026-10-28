@@ -1,5 +1,5 @@
 // The stacks (docs/specs/101 §4.3, decisions §167.7; docs/specs/98-the-table-and-the-hand.md §4.2, decisions §121.2): one a goal and a lane that has Needs you rows, under the lane of who asks (data.js `laneOf`), its most
-// urgent card face up and the cards under it face down (orkUI's backs, five edges at most, never a number), the stacks in the order of their top cards' urgency (data.js `stacksOf`). Two goals under one lane fan within its
+// urgent card face up and the cards under it face down (orkUI's backs laid as a fan, five edges at most, never a number), the stacks in the order of their top cards' urgency (data.js `stacksOf`). Two goals under one lane fan within its
 // width: the urgent in front at the lane's right, those behind it to the left, showing their edge and their element only, each rising whole on hover, on focus or on a tap (hand.css); the first lane's last card is the +
 // card. A stack pressed picks its goal and lifts its top card (stopcard.js), answered one a press; a picked goal's stacks are lit alike (`.ork-picked`). A card that comes is dealt, a card that goes crumbles where it lay,
 // none of it under reduced motion (motion.js).
@@ -11,10 +11,13 @@ import { Shards, useDealt, useGone } from "./motion.js";
 import { liftKey } from "./state.js";
 
 const EDGES = 5;                                  // the backs under a stack's top that show (the stack's depth, never a number)
+/** The fan (docs/specs/101 §7.1, decisions §168.4): a card's place behind the front one (1 the next) fixes its step aside in px and its turn in degrees, by turns right and left, never random (a redraw shakes nothing).
+ *  The first two are cards seen, the rest hint at more by their edge. hand.css reads them as `--dx` and `--rot`, unitless. */
+const FAN = [null, [7, 3], [-7, -3], [10, 4], [-10, -4], [9, 2]];
 
-/** A stack's cards under its top, face down. */
+/** A stack's cards under its top, face down, laid as a fan. */
 function Edges({ n }) {
-  return Array.from({ length: n }, (_, k) => n - k).map((i) => html`<i key=${i} class="ork-card-back edge hand-back" style=${`--ork-deck-i:${i}`} aria-hidden="true"></i>`);
+  return Array.from({ length: n }, (_, k) => n - k).map((i) => html`<i key=${i} class="ork-card-back edge hand-back" style=${`--ork-deck-i:${i};--dx:${FAN[i][0]};--rot:${FAN[i][1]}`} aria-hidden="true"></i>`);
 }
 
 function Stack({ stack, dealt, ghost = false }) {
