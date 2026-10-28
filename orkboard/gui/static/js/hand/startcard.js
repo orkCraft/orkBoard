@@ -17,7 +17,7 @@ export function StartLifted({ s, close }) {
     try { if (await act("ideas.start", { idea: row.idea })) close?.(); } finally { setBusy(false); }
   };
   return html`<div class="hand-way hand-way--start">
-    <p class="body hand-way__words">${s.text || "A step was added to the route."}</p>
+    <p class="body hand-way__words">${row.party_name ? `${row.party_name}’s step is planned and waits for your Start.` : s.text || "A step was added to the route."}</p>
     <${CostLine} cost=${row.cost} />
     ${row.was && html`<div class="hand-way__was"><span class="cap">Before</span><del class="hand-way__old" title="What you were told before"><${CostLine} cost=${row.was} /></del></div>`}
     <div class="hand-answers hand-way__acts" role="group" aria-label="Answers">

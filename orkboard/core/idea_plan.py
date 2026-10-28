@@ -287,11 +287,11 @@ Answer with one JSON object and nothing else:
                      **({"section": heading} if heading else {}))
 
     def _gate_step(self, slug: str, n: int) -> bool:
-        """A later step was planned (its tasks lie in the plan under `plan.waits`, so the runner has not started them) and its risk assessed: `idea_risk.decide` is read as it is for the
-        first step's plan. A step it holds (`wait`) stays under `waits`: the goal stays `working`, the `start` row is laid in the hand with the step's cost, and the person's *Start* lets it
+        """A later step was planned (its tasks lie in the plan under `plan.waits`, so the runner has not started them) and its risk assessed: a step of high risk (the owner, decisions
+        §169.3) stays under `waits`: the goal stays `working`, the `start` row is laid in the hand with the step's cost, and the person's *Start* lets it
         go on (`gui/ideas_route.py` `route_answer`); any other starts by itself, as before. Whether it waits."""
         page = ideas.idea_page(self.wiki_root(), slug)
-        wait = page is not None and idea_risk.decide(page.get("risk"), page.get("priority")) == "wait"
+        wait = page is not None and str(page.get("risk") or "").lower() == "high"       # only a step of high risk waits (the owner, §169.3); idea_risk's own rule is the first step's
         if not wait:
             def lift(p: dict) -> None:
                 if (idea_route.waits(p) or {}).get("step") == n:

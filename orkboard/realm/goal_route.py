@@ -337,7 +337,7 @@ def rows(root: Path, state_dir: Path, i: dict, st: dict, ctx: dict | None = None
 
 def step_rows(root: Path, i: dict, st: dict, plan: dict | None) -> list[dict]:
     """The `start` row of a later step that waits (decisions §169.3; `idea_route.waits`): the goal is `working`, the step after the first is planned and `idea_risk.decide` held it, so its
-    tasks are not started. The same row kind as a step added after Talk (`rows`), answered the same way (`ideas.start {idea}`): `{kind: "start", idea, cost: {usd_low, usd_high}, text}`, `cost`
+    tasks are not started. The same row kind as a step added after Talk (`rows`), answered the same way (`ideas.start {idea}`): `{kind: "start", idea, cost: {usd_low, usd_high}, step, party_name}`, `cost`
     the step's own estimate (left out where the plan has none) and no `was`: the person was told no price for this step before. Each is data; the face words it."""
     held = idea_route.waits(plan)
     if st.get("state") != "working" or held is None:
@@ -346,4 +346,4 @@ def step_rows(root: Path, i: dict, st: dict, plan: dict | None) -> list[dict]:
     cost = held.get("cost") if isinstance(held.get("cost"), dict) else {}
     priced = {k: float(cost[k]) for k in ("usd_low", "usd_high") if isinstance(cost.get(k), (int, float)) and not isinstance(cost.get(k), bool)}
     name = (track.title or held["party"]) if track is not None else "The next party"
-    return [{"kind": "start", "idea": i["slug"], **({"cost": priced} if priced else {}), "text": f"{name}'s step is planned and waits for your Start"}]
+    return [{"kind": "start", "idea": i["slug"], **({"cost": priced} if priced else {}), "step": int(held.get("step") or 0), "party_name": name}]

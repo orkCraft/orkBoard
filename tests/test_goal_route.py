@@ -225,7 +225,7 @@ def test_a_later_step_held_for_start_is_a_start_row_with_the_steps_own_cost_and_
     (i,) = [x for x in ideas.ideas(root) if x["slug"] == slug]
     plan = {"tasks": [], "waits": {"step": 2, "party": p["design"], "cost": {"usd_low": 0.5, "usd_high": 1.5}}}
     (row,) = goal_route.step_rows(root, i, {"state": "working"}, plan)
-    assert row == {"kind": "start", "idea": slug, "cost": {"usd_low": 0.5, "usd_high": 1.5}, "text": "Design's step is planned and waits for your Start"}
+    assert row == {"kind": "start", "idea": slug, "cost": {"usd_low": 0.5, "usd_high": 1.5}, "step": 2, "party_name": "Design"}
     assert goal_route.step_rows(root, i, {"state": "plan"}, plan) == [] and goal_route.step_rows(root, i, {"state": "done"}, plan) == []
     assert goal_route.step_rows(root, i, {"state": "working"}, {"tasks": []}) == [] and goal_route.step_rows(root, i, {"state": "working"}, None) == []
     assert "cost" not in goal_route.step_rows(root, i, {"state": "working"}, {"waits": {"step": 2, "party": p["design"]}})[0]
