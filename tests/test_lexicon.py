@@ -210,3 +210,20 @@ def test_the_table_and_the_hand_are_the_words_of_spec_98():
     for key in keys:
         line = next(l for l in lines if l.lstrip().startswith(f'_t("{key}"'))
         assert "#" in line, key
+
+
+def test_the_route_and_the_phases_are_the_words_of_spec_99_c():
+    """Spec 99 §10: the words of a goal's way, each with its key, today's word and no old spelling; each is one line of `TERMS` with its meaning."""
+    keys = {"route": "route", "route_card": "route card", "step": "step", "phase": "phase", "phase.talk": "Talk", "phase.spec": "Spec",
+            "phase.work": "Work", "phase.done": "Done", "section": "section", "project_stage": "stage", "will_be": "Will be", "fork": "fork",
+            "out_of_contract": "out of the contract", "release_version": "Release a version", "other_choice": "Other…"}
+    rows = {key: (word, was) for key, word, was in lexicon.glossary()}
+    for key, word in keys.items():
+        assert lexicon.term(key) == word and rows[key] == (word, ""), key
+    assert lexicon.term("route", many=True) == "routes" and lexicon.term("step", many=True) == "steps" and lexicon.term("fork", many=True) == "forks"
+    assert lexicon.term("stage") == "stage" and lexicon.term("project_stage") == "stage"          # a party's stage (spec 48) and the project's (spec 99 §1) are two concepts
+    from pathlib import Path
+    lines = Path(lexicon.__file__).read_text(encoding="utf-8").splitlines()
+    for key in keys:
+        assert "#" in next(l for l in lines if l.lstrip().startswith(f'_t("{key}"')), key
+    assert lexicon.words("the route, Talk, Spec, Work and Done") == "the route, Talk, Spec, Work and Done"      # nothing changes: these have no old spelling

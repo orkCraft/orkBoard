@@ -651,3 +651,23 @@ def test_todo_lines_say_before_each_task_to_come_in_the_plans_order_and_none_onc
     assert board_map.todo_lines(plan, tasks) == ["Before Spawn the boss: record the boss's sounds", "Before Spawn the boss: choose the arena",
                                                  "Before Play the boss's theme: record the boss's sounds", "Before Play the boss's theme: name the boss"]
     assert board_map.todo_lines(plan) == board_map.todo_lines(plan, tasks) and board_map.todo_lines(None, []) == [] and board_map.todo_lines({}) == []
+
+
+def test_the_route_and_start_rows_are_needs_you_of_a_goal_on_its_way_and_a_node_names_them(host):
+    """Spec 99 §4: `route` (a goal routed, waiting for Talk) and `start` (a step added after Talk) sit on the goal, first among its kinds; the node's place follows."""
+    root, state = _board(host)
+    g = _goal(root, "Way")
+    assert board_map.NEEDS[:2] == ("route", "start")
+    route = [{"party": g, "leader": "taskmaster"}]
+    a = _idea(root, state, g, "Routed goal", "routed", route=route, route_how={"by": "party", "kind": "feature", "short": False})
+    b = _idea(root, state, g, "Talked goal", "talk", route=route, route_how={"by": "person", "said": {"calls": 4, "usd_low": 1.0, "usd_high": 3.0},
+                                                                          "said_route": [], "changed": True})
+    c = _idea(root, state, g, "Talked quietly", "decided", route=route, route_how={"said": {"calls": 4}, "changed": False})
+    got = host.command("ideas.map", {})
+    n = {x["slug"]: x for x in got["nodes"]}
+    assert (n[a]["needs_you"], n[a]["place"], n[a]["asks_you"]) == ("route", "hand", False)
+    assert (n[b]["needs_you"], n[b]["place"], n[b]["asks_you"]) == ("start", "table", True)
+    assert (n[c]["needs_you"], n[c]["place"], n[c]["asks_you"]) == ("", "table", False)
+    rows = {r["kind"]: r for r in host.command("ideas.board")["needs_you"] if r["idea"] in (a, b)}
+    assert rows["route"]["place"] == 1 and rows["start"]["was"] == {"calls": 4, "usd_low": 1.0, "usd_high": 3.0} and rows["start"]["cost"]["calls"] > 0
+    assert [r["state"] for r in host.command("ideas.board")["ideas"] if r["slug"] == c] == ["decided"]

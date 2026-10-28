@@ -90,6 +90,14 @@ def _wait(host, slug="", goal=False):
     raise AssertionError("the keeper never finished")
 
 
+def _sent(host, text, track, **more):
+    """A goal sent (spec 99 §4: no call, it waits as `routed`), then Talk: until part D lands, Talk reads it as the draft did at once."""
+    got = host.command("ideas.add", {"text": text, "track": track, **more})
+    assert ideas.state(host.ideas.state_dir, got["slug"])["state"] == "routed"
+    host.command("ideas.talk", {"idea": got["slug"]})
+    return got
+
+
 def _events(host, name):
     return [r for r in event_log.read(Path(host.town.repo_root)) if r["event"] == name]
 
@@ -133,13 +141,13 @@ def test_a_goal_needs_a_party_and_is_drafted_at_once_whatever_its_priority_for_t
     g = _goal(host)
     host.command("ideas.night_allow", {"allow": True})          # stored for the phone and Orkline, read by nothing here (spec 99 §3)
     seen = len(model.seen)
-    high = host.command("ideas.add", {"text": "a high one", "track": g, "priority": "high"})
+    high = _sent(host, "a high one", g, priority="high")
     _wait(host, high["slug"])
-    normal = host.command("ideas.add", {"text": "a normal one", "track": g})
+    normal = _sent(host, "a normal one", g)
     _wait(host, normal["slug"])
-    low = host.command("ideas.add", {"text": "a low one", "track": g, "priority": "low"})
+    low = _sent(host, "a low one", g, priority="low")
     _wait(host, low["slug"])
-    closed = host.command("ideas.add", {"text": "closed dialog", "track": g, "priority": "low", "night": True})        # `night` is no longer a thing
+    closed = _sent(host, "closed dialog", g, priority="low", night=True)        # `night` is no longer a thing
     _wait(host, closed["slug"])
     assert [high["queue"], normal["queue"], low["queue"], closed["queue"]] == ["now", "now", "now", "now"]
     drafted = [c["prompt"] for c in model.seen[seen:] if c["step"] == "draft"]
@@ -153,7 +161,7 @@ def test_a_goal_needs_a_party_and_is_drafted_at_once_whatever_its_priority_for_t
 
 def test_autostart_starts_what_is_safe_and_passed_by_says_who(host, model, runner):
     g = _goal(host)
-    slug = host.command("ideas.add", {"text": "safe", "track": g})["slug"]
+    slug = _sent(host, "safe", g)["slug"]
     _wait(host, slug)
     plan = ideas.plan(host.ideas.state_dir, slug)
     assert plan["passed_by"] == "auto" and runner.started == [slug] and plan.get("start_at") is None
@@ -166,12 +174,12 @@ def test_autostart_starts_what_is_safe_and_passed_by_says_who(host, model, runne
 def test_autostart_off_or_a_question_or_a_stopped_plan_waits_for_the_person(host, model, runner):
     g = _goal(host)
     host.command("ideas.board_set", {"autostart": False})
-    a = host.command("ideas.add", {"text": "off", "track": g})["slug"]
+    a = _sent(host, "off", g)["slug"]
     _wait(host, a)
     assert ideas.plan(host.ideas.state_dir, a).get("passed_at") is None and runner.started == []
     host.command("ideas.board_set", {"autostart": True})
     model.answers["draft"] = {**model.answers["draft"], "questions": ["Which columns?"]}
-    b = host.command("ideas.add", {"text": "asks", "track": g})["slug"]
+    b = _sent(host, "asks", g)["slug"]
     _wait(host, b)
     assert ideas.state(host.ideas.state_dir, b)["state"] == "asks" and ideas.plan(host.ideas.state_dir, b) is None
     host.command("ideas.start", {"slug": a})                                  # the person passes it …

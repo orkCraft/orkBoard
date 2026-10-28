@@ -126,6 +126,21 @@ def test_state_talk_and_plan_beside_the_page(tmp_path):
         ideas.state(state, "../x")
 
 
+def test_a_goal_has_its_route_and_the_states_of_its_way_beside_its_page(tmp_path):
+    """Spec 99 §4: the states `routed` · `talk` · `decided` · `sections`, and `route` (the parties, in order) with `route_how` in the state; an older state reads none."""
+    assert ideas.STATES[-4:] == ("routed", "talk", "decided", "sections")
+    assert ideas.STATE_DEFAULT["route"] == [] and ideas.STATE_DEFAULT["route_how"] == {}
+    state = tmp_path / "state"
+    assert ideas.state(state, "a")["route"] == []
+    ideas.save_state(state, "a", state="routed", route=[{"party": "tech", "leader": "architect"}], route_how={"by": "party", "short": False})
+    got = ideas.state(state, "a")
+    assert got["state"] == "routed" and got["route"] == [{"party": "tech", "leader": "architect"}] and got["route_how"]["by"] == "party"
+    ideas.save_state(state, "a", state="talk")
+    assert ideas.state(state, "a")["route"] and ideas.state(state, "a")["state"] == "talk"          # the rest of the file is kept
+    for way in ("decided", "sections"):
+        assert ideas.save_state(state, "a", state=way)["state"] == way and ideas.state(state, "a")["state"] == way
+
+
 def test_thesis_is_the_first_line_without_markdown():
     assert ideas.thesis("\n- **Bold** [link](x.md) and `code`\nmore") == "Bold link and code"
     assert ideas.items("- a\n- b\n") == ["a", "b"] and ideas.items("one\ntwo") == ["one", "two"]

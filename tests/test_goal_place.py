@@ -77,6 +77,16 @@ def test_a_goal_done_is_in_the_discard_until_its_result_is_seen_then_in_the_hist
     assert _is(_of("done", seen="2026-10-28T10:00:00"), "history")
 
 
+def test_a_goal_routed_is_in_the_hand_and_waits_in_the_deck_when_put_off_and_the_ways_other_states_are_on_the_table():
+    """Spec 99 §4: `routed` → hand (its route row waits); *Later, by itself* sets `held_until`, and it waits for the reset in the deck; `talk`, `decided`
+    and `sections` lie on the table, asking when a row waits."""
+    assert _is(_of("routed", ["route"]), "hand") and _is(_of("routed"), "hand")
+    assert _is(_of("routed", held_until="2026-10-29T08:00:00"), "deck", waits_as="reset")
+    for state in ("talk", "decided", "sections"):
+        assert _is(_of(state), "table") and _is(_of(state, ["asks"]), "table", True) and _is(_of(state, ["start"]), "table", True)
+        assert _is(_of(state, ["route"], waits_on=["a"]), "table", True)
+
+
 def test_every_state_has_a_place():
     for state in ideas.STATES:
         got = _of(state, ["plan"] if state == "plan" else [])

@@ -230,7 +230,9 @@ def test_the_draft_and_the_plan_prompts_hold_the_releases_lines_and_a_goal_that_
     assert "Its type: A release." in draft and "This goal is a release. Its version: 1.4." in draft and "- Dark mode — flag: commit" in draft
     assert draft.index("Its type: A release.") < draft.index("This goal is a release.")
     prompts.clear()
-    plain = h.command("ideas.add", {"text": "A plain goal", "track": h.app})
+    plain = h.command("ideas.add", {"text": "A plain goal", "track": h.app})            # a goal that is not a release waits as `routed` (spec 99 §4) until Talk …
+    assert not prompts
+    h.command("ideas.talk", {"idea": plain["slug"]})                                    # … which, until part D lands, drafts it
     wait(h, plain["slug"])
     assert prompts and not any("This goal is a release" in p for p in prompts)
     from orkboard.core import idea_keeper, idea_revise

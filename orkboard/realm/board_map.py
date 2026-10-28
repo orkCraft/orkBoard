@@ -14,11 +14,11 @@ import re
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import (collide, goal_flags, goal_place, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_checks, idea_flag, idea_pick, idea_questions, idea_shots,
+from orkboard.realm import (collide, goal_flags, goal_place, goal_route, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_checks, idea_flag, idea_pick, idea_questions, idea_shots,
                             idea_risk, idea_spend, idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles, tool_errors)
 from orkboard.realm.idea_words import short_of
 
-NEEDS = ("asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71)
+NEEDS = ("route", "start", "asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71; a route and a step added after Talk: spec 99 §4)
 _HELD_FILES = re.compile(r"^files(?: beside)? · (.+)$")
 _AFTER = re.compile(r"after (\d{1,2}:\d{2})")
 SIGN_IN_TOOL = "claude"          # what the Board runs by itself runs on Claude (core/idea_runner.py `HARNESS`)
@@ -56,14 +56,16 @@ def list_of(text: object) -> list[str]:
     return [str(x) for x in got if isinstance(x, str)] if isinstance(got, list) else []
 
 
-def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None, asks: list[str], at: str | None = None) -> list[dict]:
-    """What of one idea needs the person (spec 35 §10): its questions, its plan waiting, the leader's plan change waiting (spec 62), a to-do only when it blocks (spec 87 §4.1),
-    a failure, a proposal; a judged pitch (spec 65 §5: low, blocking nothing, its answer)."""
+def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None, asks: list[str], at: str | None = None, *,
+               line: dict | None = None, settings: dict | None = None) -> list[dict]:
+    """What of one idea needs the person (spec 35 §10): its route (spec 99 §4) and the step added to it after Talk, its questions, its plan waiting, the leader's plan change waiting (spec 62),
+    a to-do only when it blocks (spec 87 §4.1), a failure, a proposal; a judged pitch (spec 65 §5: low, blocking nothing, its answer). `line`: what the
+    route rows of one Board share (`goal_route.context`: the Orkmaster's line and whether the limits run low); `settings`: the Board's, for the Target of a cost."""
     slug, state = i["slug"], st["state"]
     base = {"idea": slug, "goal": i["track"], "title": i["title"], "priority": i["priority"], "blocks": False,
             "at": ideas.touched_at(root, state_dir, slug) if at is None else at}
     tasks = (plan or {}).get("tasks") or []
-    out = []
+    out = [{**base, **n} for n in goal_route.rows(root, state_dir, i, st, line, settings)] if state in goal_route.ROUTE_STATES else []
     if state == "asks":
         looks = st.get("asks_look") if isinstance(st.get("asks_look"), int) and not isinstance(st.get("asks_look"), bool) else 0
         asked = [{**idea_questions.parse(q), "look": n < looks} for n, q in enumerate(asks[:5])]          # the first ones are of the look (spec 85 §1)
@@ -334,6 +336,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
 
     goals, nodes, edges = [], [], []
     week = _week_of(settings, limits, now)
+    line = goal_route.context(found, states, settings, limits, now)           # the Orkmaster's line, once: the route rows' place and whether the limits run low (spec 99 §4)
     read = roles.known(state_dir)                                                  # a task's head: who does it, at what tier
     today = dt.date.fromtimestamp(now).isoformat() if now else dt.date.today().isoformat()
     offered = pitches.offers(root, state_dir) if any((t.get("leader") or "") == library.INVESTOR for t in shown) else {}
@@ -382,7 +385,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
             tasks = (plan or {}).get("tasks") or []
             asks = ideas.items(page.section("Open questions")) if page else []
             at = ideas.touched_at(root, state_dir, slug)                                # read once: the row's `updated` and its needs' `at`
-            needs = idea_needs(root, state_dir, i, st, plan, asks, at) + asked.get(slug, [])
+            needs = idea_needs(root, state_dir, i, st, plan, asks, at, line=line, settings=settings) + asked.get(slug, [])
             r = row(root, state_dir, i, st, plan, page, asks, states, needs, at)
             started = any(t.get("state") not in (None, "waiting", "ready", "held") for t in tasks)
             est = (plan or {}).get("estimate")

@@ -65,6 +65,7 @@ from orkboard.gui.ideas_project import ProjectMixin
 from orkboard.gui.ideas_recap import RecapMixin
 from orkboard.gui.ideas_release import ReleaseMixin
 from orkboard.gui.ideas_review import ReviewMixin
+from orkboard.gui.ideas_route import RouteMixin, route_commands
 from orkboard.gui.ideas_running import RunningMixin
 from orkboard.gui.ideas_revise import ReviseMixin
 from orkboard.gui.ideas_lens import LensMixin
@@ -109,7 +110,7 @@ class _Hop:
         self.host.call(lambda: self.host.publish(topic, **data))
 
 
-class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
+class Ideas(RouteMixin, LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
             TypesMixin, CanvasesMixin, AssetsMixin, SystemMixin, BoardMixin):
     def __init__(self, host) -> None:
         """`host`: what the Board needs of whoever runs it, a `gui/board_host.py` `BoardHost` (spec 37 §4): Orkline's
@@ -270,6 +271,7 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
                     runner.tick()
                 except Exception as e:
                     self.host.toast(f"{type(e).__name__}: {e}", title="The runner", severity="error")
+        self.route_tick(now)                    # a route waiting for its call, a goal put off to the reset (spec 99 §4)
         self.routines_tick(now)                 # a recurring goal that was done a period ago comes back (spec 92 §2)
         self.canvas_tick(now)                   # what the AI tools drew outside the code (spec 78)
         self.play_tick(now)                     # Play stops after ten minutes with no face asking (spec 88 §5)
@@ -361,16 +363,19 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
     # -- writing -------------------------------------------------------------------------------------------
 
     def add(self, args: dict, pitch: str = "") -> dict:
-        """An idea: a text, its goal (never General: that is the system's) and a priority (default the goal's). It is
-        drafted at once, whatever its priority, or kept on `hold` (spec 99 §3: the night is gone, so there is no `night` and
-        Low waits for nothing). `photos`
+        """An idea: a text, its party (`track`, or `party`; none, or General, and the Orkmaster routes it by code) and a priority (default the party's). It makes
+        **no model call** (spec 99 §4): it waits as `routed` with its route until `ideas.talk` (gui/ideas_route.py); only a goal kept on `hold`, a pitch, a
+        release or a goal sent from a pitch is drafted at once, whatever its priority (spec 99 §3: the night is gone, so there is no `night` and
+        Low waits for nothing). `marks`: the parts of System the goal points at (they offer Tech on its route). `photos`
         (the phone's, base64) are kept beside it for the Taskmaster to read (realm/idea_photos.py), and `lens`, what the
         person pointed at with the lens of the goal's party (realm/idea_lens.py). Spec 52 §2.3: `type` (one of the party's
         leader's), its `asks` (written after the text) and `join` (who joins the party first: gui/ideas_types.py). `hold`: kept, nothing
         drafts it till the person does. Spec 65: in Ideation it is a pitch (at most 2 000 characters), judged; `pitch`: the one it is sent from."""
         text = _text(args, "text", ideas.SECTION_CHARS)
-        track = _opt(args, "track")
+        track = _opt(args, "track") or _opt(args, "party")
         goals = {t["slug"]: t for t in ideas.tracks(self.root(), make=False)}
+        routed = self.route_plan(args, text, track, pitch)      # spec 99 §4 (gui/ideas_route.py): its route by code, no call; None: drafted at once as before
+        track = routed["home"] if routed else track
         if not track or track == ideas.GENERAL:
             raise IdeasError("A goal needs a party")
         if track not in goals:
@@ -387,12 +392,15 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
         pointed = self._lens_args(args)
         typed = self.typed(args, track, goals[track]["title"])
         rel = self.release_args(args, track, typed)          # a release's version and what goes in, checked before the goal exists (spec 68 §3)
+        routed = None if typed["key"] == "release" else routed
         hold = args.get("hold") is True
         queue = "hold" if hold else "now"                      # a goal sent from a pitch: Now (spec 65 §5)
         text = text[:pitches.PITCH_CHARS] if pitches.is_ideation(self.root(), track) else text
         with ideas.LOCK:                        # the party changes before the goal, under the same lock; never for a goal kept on hold (spec 52 §2.3)
             joined = self.join_goal(track, typed, args) if not hold else None
-            slug = ideas.add_idea(self.root(), self.with_asks(text, typed), track, self.state_dir, priority, queue)
+            slug = ideas.add_idea(self.root(), self.with_asks(text, typed), track, self.state_dir, priority, "hold" if routed else queue)
+            if routed:
+                self.route_save(slug, routed)         # waits as `routed`, nothing drafts it (spec 99 §4)
             if typed["key"] or pitch:
                 ideas.save_state(self.state_dir, slug, type=typed["key"], from_pitch=pitch)
             if rel is not None:
@@ -409,7 +417,11 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
                  asks=typed["answered"], refs=len(photos) if typed["type"] and typed["type"].refs else 0,
                  joined=(joined or {}).get("add", ""), out=(joined or {}).get("out", ""))
         out = {"slug": slug, "queue": queue, "element": element, "type": typed["key"], "joined": joined}
-        if queue == "now":                      # drafted at once, in the background (held in a spent window)
+        if routed:
+            out["route"] = [r["party"] for r in routed["route"]]
+            if not routed["route"]:
+                self.route_call(slug, text)     # code found no party: the one call on the cheaper tier, in the background
+        elif queue == "now":                    # drafted at once, in the background (held in a spent window)
             try:
                 self.keeper.draft(slug)
             except idea_keeper.KeeperError as e:
@@ -439,6 +451,8 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
     def start(self, args: dict) -> dict:
         """The person passes the plan (`passed_by: "person"`): it is the runner's from now on, and it starts. `join: {add}`
         (Add and start, spec 52 §2.6): the agent the plan misses joins the party first (gui/ideas_types.py)."""
+        if (answered := self.route_answer(args)) is not None:        # the `start` row's answer: a route that grew after Talk (spec 99 §4.6)
+            return answered
         slug = _text(args, "slug", 100)
         if ideas.plan(self.state_dir, slug) is None:
             raise IdeasError("This goal has no plan yet: Take it to work first")
@@ -626,6 +640,6 @@ class Ideas(LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin,
                       "ideas.pitch_pass": self.pitch_pass,
                       "ideas.release_out": self.release_out, "ideas.release_candidates": self.release_candidates, "ideas.shown": self.shown,
                       "ideas.party_for": self.party_for, "ideas.kind_for": self.kind_for, "ideas.collide_answer": self.collide_answer,
-                      "ideas.repeat": self.repeat, "ideas.team": self.team, "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, "ideas.party_presets": self.party_presets, **canvas_commands(self), **asset_commands(self), **system_commands(self), **usage_commands(self)})
+                      "ideas.repeat": self.repeat, "ideas.team": self.team, "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, "ideas.party_presets": self.party_presets, **canvas_commands(self), **asset_commands(self), **system_commands(self), **usage_commands(self), **route_commands(self)})
         return {name: guarded(name, fn) for name, fn in table.items()}
 

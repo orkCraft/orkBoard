@@ -85,7 +85,9 @@ def test_an_idea_goes_from_the_phone_through_review_to_a_commit_on_dev(town):
     goal = host.command("ideas.goal_save", {"about": "Ship features the tests can see.", "priority": "normal"})["slug"]
     _until(host, lambda: not host.ideas.keeper.busy_goal(goal), "the goal is read")
     main, pushed = _git(repo, "rev-parse", "main"), _git(origin, "rev-parse", "main")
-    slug = host.command("ideas.add", {"text": "a feature file", "track": goal})["slug"]   # Normal: drafted at once
+    slug = host.command("ideas.add", {"text": "a feature file", "track": goal})["slug"]   # spec 99 §4: no call, it waits as `routed` …
+    assert state(slug) == "routed"
+    host.command("ideas.talk", {"idea": slug})                                            # … until Talk (until part D lands, the draft as before)
 
     _until(host, lambda: state(slug) == "asks", "the draft asks")
     page = host.command("ideas.page", {"slug": slug})

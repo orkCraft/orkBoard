@@ -140,10 +140,12 @@ def test_the_answer_to_a_goals_question_is_the_same_talk_on_the_goal(host, model
 
 
 def test_an_idea_added_now_is_read_at_once_later_waits_for_the_batch(host, model):
-    # spec 35 §3: `now` became the queue (Normal → drafted at once; the closed dialog's goal is held, spec 83); with no
-    # question the plan follows at once (this stub answers it with no plan, so the idea stays ready)
+    # spec 35 §3: `now` became the queue (the closed dialog's goal is held, spec 83); spec 99 §4: a goal sent makes no call, it waits as `routed` until Talk
+    # (until part D lands Talk reads it as before); with no question the plan follows at once (this stub answers it with no plan, so the idea stays ready)
     later = _add(host, "wait for the batch")["slug"]
     now = _add(host, "dark mode please", hold=False)["slug"]
+    assert model.seen == [] and ideas.state(host.ideas.state_dir, now)["state"] == "routed"
+    host.command("ideas.talk", {"idea": now})
     _wait(host, now)
     assert [c["kind"] for c in model.seen][:1] == ["idea"] and "dark mode please" in model.seen[0]["prompt"]
     assert ideas.state(host.ideas.state_dir, later)["state"] == "raw"

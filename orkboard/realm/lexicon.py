@@ -228,7 +228,23 @@ TERMS: tuple[Term, ...] = (
     _t("size", "size", "sizes"),                                   # how large a party is, in one word: lean, standard or full (the Target's, spec 75)
     _t("in_line", "in line"),                                      # a goal not started, waiting its turn in the deck (*3rd in line*)
     _t("hold", "Hold"),                                            # keep a goal in the deck: nothing reads it until the person says (the queue `hold`; a raw `night` reads so)
-    _t("to_main", "To main"),                                      # merge what is ready in dev into main, by code (the discard's button)
+    # A goal's way (docs/specs/99-a-goals-way.md §10; decisions §117, §118, §121.1): the words of the route, Talk, the decision and the spec, each once
+    _t("route", "route", "routes"),                                # the parties that write a goal's spec and do its work, in order; the Orkmaster routes a goal, never a job title
+    _t("route_card", "route card", "route cards"),                 # a goal's first card: its route, the cost said before, its place in line, and Talk (the `route` row)
+    _t("step", "step", "steps"),                                   # one party's turn on a route: its leader writes its section, then its work is planned and done
+    _t("phase", "phase", "phases"),                                # where a goal is on its way: Talk, Spec, Work, Done
+    _t("phase.talk", "Talk"),                                      # the route's leaders answer short, the person answers in the hand
+    _t("phase.spec", "Spec"),                                      # the decision is made; each leader writes its section, the Orkmaster joins them
+    _t("phase.work", "Work"),                                      # the steps' tasks run
+    _t("phase.done", "Done"),                                      # the goal is in dev, its result to be seen
+    _t("section", "section", "sections"),                          # one party's part of a goal's spec, written by its leader
+    _t("project_stage", "stage", "stages"),                        # how far the project is: idea, being made, live (realm/project_stage.py); a party's `stage` is the other word above
+    _t("will_be", "Will be"),                                      # the change a section promises, on the maps it touches
+    _t("fork", "fork", "forks"),                                   # two sections that disagree: the person decides, and only the sections it touches are written again
+    _t("out_of_contract", "out of the contract"),                  # a task whose work goes past what its section promised: it waits for the person
+    _t("release_version", "Release a version"),                    # the Release party's act: a version goes out (not a step of a route)
+    _t("other_choice", "Other…"),                                  # a question card's last choice: the person's own words
+    _t("to_main", "To main"),                                     # merge what is ready in dev into main, by code (the discard's button)
     # Operations (docs/specs/38-operations.md §0): the person's everyday work by templates, across projects
     _t("keep_awake", "Keep the computer awake"),                   # the computer does not sleep by itself, on power (spec 47 §0)
     _t("operations", "Operations"),                                # the person's list, one for all projects (decisions §51); reached through the Team party once there is one, and in the left column until then (spec 92 §3)

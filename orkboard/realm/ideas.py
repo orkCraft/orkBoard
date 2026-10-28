@@ -38,7 +38,7 @@ GOAL_STATES = ("raw", "reading", "asks", "ready")
 MAX_METRICS, MAX_LINKS = 12, 12
 KEEPER_METRICS, KEEPER_LINKS = 3, 8   # what the keeper writes of a goal (spec 35 §2)
 STATES = ("raw", "reading", "asks", "ready", "planning", "plan", "working", "done", "failed", "proposed",
-          "judging", "judged", "sent", "passed")      # the last four a pitch's (spec 65 §2: realm/pitches.py), never a plan's
+          "judging", "judged", "sent", "passed", "routed", "talk", "decided", "sections")      # four a pitch's (spec 65 §2: realm/pitches.py), never a plan's; the last four a goal's way (spec 99 §4: realm/goal_route.py)
 TASK_STATES = ("waiting", "ready", "held", "running", "testing", "picking", "review", "merged", "failed", "dropped")   # a task of a plan (core/idea_runner.py); `picking`: it left variants of one kind for the person to pick from, and waits, spending nothing (spec 51); `dropped`: the person dropped it, and nothing waits for it any more
 QUEUES = ("now", "night", "hold")    # a raw idea: drafted at once, tonight, or stopped by the person (spec 35 §3)
 TITLE_KEEPER = 60                    # a goal's title as the keeper writes it
@@ -540,6 +540,8 @@ STATE_DEFAULT = {"state": "raw", "session": "", "session_at": "", "context": 0, 
                  "asks_look": 0,                      # how many of those, the first ones, are of the look (spec 85 §1): the faces say *<Name> asks about the look*
                  "changed": [],                       # the plan-making sections written since its plan (realm/idea_change.py, spec 62 §1): never changed in place
                  "seen_at": "",                       # when a done goal's result was seen (ISO; ideas.seen, spec 98 §2.2): "" until then
+                 "route": [],                         # the parties that write its spec and do its work, in order: [{party, leader}] (realm/goal_route.py, spec 99 §4)
+                 "route_how": {},                     # how it was routed and what the person was told of it: by, kind, short, reproduces, offer, said, said_route, changed
                  "from_pitch": ""}                    # the pitch it was sent from (spec 65 §5): its views and decision go to its draft
 
 

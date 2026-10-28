@@ -130,6 +130,16 @@ def test_a_partys_size_is_its_target_and_the_kind_step_is_the_cheaper_tier_of_th
     assert set(idea_target.MATRIX) >= set(idea_target.STEPS) and idea_target.budget("kind", "balance") == 0.15 and idea_target.CONTEXT["kind"] == 1_500
 
 
+def test_the_route_step_is_one_cheaper_call_with_no_tools_no_reads_and_a_small_cap():
+    """Spec 99 §4: when code finds no party for a goal the Orkmaster names them in one call on the cheaper tier, as its `kind`."""
+    assert "route" in idea_target.STEPS and set(idea_target.MATRIX) >= set(idea_target.STEPS)
+    for target in idea_target.TARGETS:
+        assert idea_target.pick("route", target) == idea_target.pick("kind", target)
+    assert idea_target.pick("route", "balance") == ("warrior", "low") and idea_target.pick("route", "thrift") == ("laborer", "")
+    assert idea_target.READS["route"] == 0 and idea_target.CONTEXT["route"] <= 3_000 and idea_target.CAPS["route"] <= 0.05
+    assert idea_target.budget("route", "balance") == 0.15      # never under the tier's floor (a warrior's call costs $0.10)
+
+
 # -- the floor (spec 86 §5) -------------------------------------------------------------------------------------
 
 @pytest.fixture

@@ -20,6 +20,7 @@ WAITS_AS = ("reset", "held", "line")
 
 _AT_WORK = ("reading", "planning", "working", "judging")        # the Orkmaster reads, plans or judges it; or its tasks run
 _ASKING = ("asks", "failed", "proposed", "judged")               # not at work: the person answers
+_WAY = ("talk", "decided", "sections")                           # a goal's way before its work (spec 99 §4–§7): the leaders talk, the decision, the sections
 _FINISHED = ("sent", "passed")                                   # a pitch since sent on or passed: nothing more to do with it
 
 
@@ -51,6 +52,10 @@ def place_of(row: dict, kinds: Iterable[str], *, passed: bool = False, picking: 
         if row.get("start_at"):                                    # a plan that starts later waits for the reset
             return hand if kinds - {"plan"} else _deck(row, "reset")
         return table if passed or not kinds else hand
+    if state == "routed":                                          # a goal routed waits for the person's Talk; put off with *Later, by itself* it waits in the deck (spec 99 §4)
+        return _deck(row, "reset") if row.get("held_until") else hand
+    if state in _WAY:                                              # Talk, the decision, the sections: on the table, asking when a row waits
+        return table
     if state in _ASKING:
         return hand if kinds else (table if state == "asks" else _deck(row, ""))
     return table if state in _AT_WORK or not kinds else hand
