@@ -2,10 +2,10 @@
 import { NEEDS_WORDS } from "./maplayout.js";
 import { pctOf, pctRange } from "../spend.js";
 
-/** A member's state in words (spec 48 §3.2): *at work*, *next*, *tonight*, *free*, or the Needs you words. */
+/** A member's state in words (spec 48 §3.2): *at work*, *next*, *free*, or the Needs you words. */
 export function memberWords(m) {
   if (m.state === "needs") return NEEDS_WORDS[m.why] || "needs you";
-  return { work: "at work", next: "next", tonight: "tonight", free: "free" }[m.state] || "";
+  return { work: "at work", next: "next", free: "free" }[m.state] || "";
 }
 
 /** *plan ≈$1–2*. */

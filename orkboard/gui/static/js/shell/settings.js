@@ -12,9 +12,6 @@ import { saveLogs } from "./errors.js";
 import { UpdatesField } from "./update.js";
 
 
-/** "01:00-07:00" → ["01:00", "07:00"]. */
-const window_ = (night) => (/^\d\d:\d\d-\d\d:\d\d$/.test(night || "") ? night.split("-") : ["01:00", "07:00"]);
-
 const AWAKE_MODES = [["off", "Never"], ["carts", "While the orks work"], ["phone", "Stay reachable from your phone"]];
 const AWAKE_LINES = {
   off: "The computer sleeps as its power settings say. While it sleeps the orks stop, the night's work waits, and a phone cannot reach it.",
@@ -54,7 +51,6 @@ function AwakeField() {
 export function SettingsDialog() {
   const push = !!review.value?.push;
   const b = board.value;
-  const [from, to] = window_(b?.night);
   return html`<${Modal} title="Settings" onClose=${closeDialog} foot=${html`<button type="button" class="ork-btn primary" onClick=${closeDialog}>Done</button>`}>
     <div class="shell-form">
       ${currentProject.value && html`<p class="ok-font-status ok-tone-muted" data-settings="project">The Board's settings are for this project: ${currentProject.value.name}.</p>`}
@@ -71,15 +67,7 @@ export function SettingsDialog() {
           <i>${!b.review ? "✓" : ""}</i><span>A result that holds lands in dev by itself</span></label>
         <span class="ok-font-status ok-tone-muted">Its tests ran and are green, nothing is left to fix, it touches no risk path and holds no pictures. Anything else waits for your look; off, every result does.</span>
         <${TargetSetting} />
-        <div class="board-row"><span class="ok-font-label">Night</span>
-          <input class="ork-field" type="time" value=${from} aria-label="Night from" onChange=${(e) => e.target.value && act("ideas.board_set", { night: `${e.target.value}-${to}` })} />
-          <span aria-hidden="true">–</span>
-          <input class="ork-field" type="time" value=${to} aria-label="Night to" onChange=${(e) => e.target.value && act("ideas.board_set", { night: `${from}-${e.target.value}` })} /></div>
-        <span class="ok-font-status ok-tone-muted">Your machine's time.</span>
-        <label class="ok-check" data-settings="night-low">
-          <input type="checkbox" class="gui-onb__hide" checked=${b.night_low === true} onChange=${(e) => act("ideas.night_allow", { allow: e.target.checked })} />
-          <i>${b.night_low === true ? "✓" : ""}</i><span>Low work may run at night</span></label>
-        <span class="ok-font-status ok-tone-muted" data-settings="night-low-hint">and the leaders re-read goals and propose new ones then${b.night_low === null ? " · not asked yet" : ""}</span></div>`}
+      </div>`}
       <${UpdatesField} />
       <div class="shell-field"><span class="ok-font-label">Your phone</span>
         <span><button type="button" class="ork-btn" onClick=${() => openDialog("pair")}>Pair a phone</button></span></div>

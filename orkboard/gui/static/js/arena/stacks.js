@@ -1,6 +1,6 @@
 // A member's open tasks as cards in stacks, in rows by phase (docs/specs/50-parties-and-goals.md §3.4): under the member, its tasks lie in rows —
 // *now* (a task at its goal's current wave), *next* (one wave after), *later* —, in a row one stack per goal (the goals in the Board's order),
-// the front card first (at work, failed, in Review, ready, waiting, tonight), behind it one or two edges and ×n when there are more. A card is 5:7:
+// the front card first (at work, failed, in Review, ready, waiting), behind it one or two edges and ×n when there are more. A card is 5:7:
 // the goal's element top left, its type's sign top right in the element's colour (spec 55), the goal's short name, the task's name, its foot. A press on a stack of one opens the
 // task (its result in Review), on a stack of more spreads it (spread.js); hovering a card draws what it waits for and what waits for it (arrows.js).
 // What the member's rows do as tasks come and go is motion.js's (a column's `useColumn`); the cards of a plan just started from the hand are dealt in (`is-dealt`, spec 57).
@@ -45,7 +45,7 @@ export function relationOf(n, t) {
 
 /** A card's foot: its state in words; under a hover the words of the dependency (*<before> waits for <short>*, *<after> n wait for it*). Parts: [{sign, text}]. */
 export function footParts(n, t, rel) {
-  const held = t.state === "held" ? heldOf(t, n) : null;                                    // a held card says its reason with the reason's sign (spec 82 §3): window, tonight, sign in, week
+  const held = t.state === "held" ? heldOf(t, n) : null;                                    // a held card says its reason with the reason's sign (spec 82 §3): window, sign in, week
   const rest = { sign: t.state === "picking" ? "alert" : held?.word || held?.kind === "files" ? held.sign : "", text: taskFoot(t, n) };         // a pick waits for the person: *asks you to pick* with the alert sign (spec 51 §6)
   const mine = waitersOf(n, t).length;
   if (rel.src && mine) return [{ sign: "after", text: `${mine} ${mine === 1 ? "waits" : "wait"} for it` }];

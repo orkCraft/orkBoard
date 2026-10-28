@@ -1,4 +1,4 @@
-/* The v1 shell (docs/specs/33-v1-shell.md §6–§7): Board | preview over Agents, one screen, in orkUI's office look
+/* The v1 shell (docs/specs/33-v1-shell.md §6–§7): Board | preview, one screen, in orkUI's office look
    (design-system/orkui, docs/specs/40-design-system.md): orkUI's tokens and components only, no raw colour, nothing round;
    the pixel face for headings and buttons, never for a person's text; selected is raised with a 2 px ink bar. board.css
    still draws the idea's sections, the cards and the plan; this file is the frame around them. */
@@ -68,28 +68,11 @@ body:has(.shell-backdrop, .gui-modal) .gui-toasts { bottom: var(--ork-6); }
   text-transform: none; letter-spacing: 0; color: var(--ork-ink); }
 .shell-quiet { background: none; border: 0; padding: 0 var(--ork-2); color: var(--ork-ink-muted); cursor: pointer; font: inherit; text-decoration: underline; }
 
-/* the centre: the preview over Agents */
+/* the centre: the preview */
 .shell-centre { min-width: 0; min-height: 0; display: flex; flex-direction: column; background: var(--ork-canvas); }
 .shell-preview { flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--ork-canvas); }
 .shell-preview__body { flex: 1; min-height: 0; overflow-y: auto; padding: var(--ork-5) var(--ork-6); }
 .shell-empty { height: 100%; display: grid; place-content: center; text-align: center; gap: var(--ork-4); color: var(--ork-ink-muted); }
-.shell-agents { display: flex; flex-direction: column; min-height: 0; height: 100%; background: var(--ork-panel); }
-.shell-agents__body { flex: 1; min-height: 0; overflow: auto; padding: var(--ork-5); display: flex; flex-wrap: wrap; align-content: flex-start; gap: var(--ork-6); }
-.shell-role { min-width: 220px; display: flex; flex-direction: column; gap: var(--ork-4); align-items: flex-start; }
-.shell-role[data-role="grunt"] { flex: 1; }
-.shell-role__name { font: var(--ork-type-body); font-weight: 600; color: var(--ork-ink); }      /* a name the person gave: never the pixel face */
-.shell-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: var(--ork-4); }
-.shell-chip { display: inline-flex; align-items: center; gap: var(--ork-3); max-width: 100%; padding: var(--ork-2) var(--ork-4); box-sizing: border-box;
-  background: var(--ork-panel); color: var(--ork-ink); border: var(--ork-line) solid var(--ork-frame); clip-path: var(--ork-notch); cursor: pointer; font: inherit; text-align: left; }
-.shell-chip:hover { border-color: var(--ork-edge); }
-.shell-chip:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
-.shell-chip__state { flex: none; font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
-.shell-chip.is-running .shell-chip__state, .shell-chip.is-testing .shell-chip__state, .shell-chip.is-live { color: var(--ork-ink); }
-.shell-chip.is-review .shell-chip__state { color: var(--ork-success); }
-.shell-chip.is-failed { border-color: var(--ork-danger); }
-.shell-chip.is-failed .shell-chip__state { color: var(--ork-danger); }
-.shell-chip.is-wait { border-color: var(--ork-alert); color: var(--ork-alert); }
-.shell-chip.is-held .shell-chip__state { color: var(--ork-ink-muted); }
 .shell-chip.is-done { color: var(--ork-ink-muted); }
 .shell-chip__what { display: flex; flex-direction: column; min-width: 0; }
 .shell-spin { display: inline-block; animation: shell-spin 1.6s linear infinite; }
@@ -204,22 +187,8 @@ body:has(.shell-backdrop, .gui-modal) .gui-toasts { bottom: var(--ork-6); }
 .shell-seg__one.is-on { background: var(--ork-raised); color: var(--ork-ink); box-shadow: inset 0 -2px 0 var(--ork-ink); }
 .shell-seg__one:focus-within { box-shadow: inset 0 0 0 2px var(--ork-ink); }
 
-/* a brief (docs/specs/66-team-briefs.md §7): what a template about people reads, Prepare before…, the page, Last time, standing briefs */
-.shell-reads { display: flex; flex-direction: column; gap: var(--ork-1); padding: var(--ork-3) var(--ork-4); border: var(--ork-line) solid var(--ork-frame);
-  clip-path: var(--ork-notch); overflow-wrap: anywhere; }
-.shell-days { flex-wrap: wrap; }
-.shell-days .shell-seg__one { padding: var(--ork-2) var(--ork-4); }
-.shell-when { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-5); }
-.shell-when__one { display: inline-flex; align-items: center; gap: var(--ork-3); white-space: nowrap; }
-.shell-when__one input[type="time"] { width: auto; }
 .shell-brief { white-space: pre-wrap; overflow-wrap: anywhere; padding: var(--ork-4); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame);
   font: var(--ork-type-body); }
-.shell-lasttime { border: var(--ork-line) solid var(--ork-frame); padding: var(--ork-3) var(--ork-4); }
-.shell-lasttime > summary { cursor: pointer; font: var(--ork-type-label); }
-.shell-lasttime[open] > summary { margin-bottom: var(--ork-3); }
-.board-op__standings { list-style: none; margin: 0; padding: 0 0 0 var(--ork-5); display: flex; flex-direction: column; gap: var(--ork-2);
-  border-left: var(--ork-line) solid var(--ork-frame); }
-.board-op__standing { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ork-3); }
 .shell-menu__list { display: flex; flex-direction: column; }
 .shell-pair { display: flex; flex-direction: column; gap: var(--ork-6); }
 .shell-pair__code { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ork-4); }
@@ -242,9 +211,6 @@ body:has(.shell-backdrop, .gui-modal) .gui-toasts { bottom: var(--ork-6); }
 .board-card-row { display: flex; flex-direction: column; gap: var(--ork-2); }
 .board-card__now { align-self: flex-start; }
 
-/* agents, a monitor */
-.shell-metrics { border-collapse: collapse; width: 100%; }
-.shell-metrics th, .shell-metrics td { text-align: left; padding: 3px var(--ork-4); border-bottom: 1px solid var(--ork-frame); vertical-align: top; }
 .shell-links { margin: 0; padding-left: 20px; }
 .shell-goal { display: flex; flex-direction: column; gap: var(--ork-5); }
 .shell-goal__head { display: flex; flex-direction: column; gap: var(--ork-1); }
@@ -327,9 +293,6 @@ body:has(.shell-backdrop, .gui-modal) .gui-toasts { bottom: var(--ork-6); }
   border: var(--ork-line) solid var(--ork-edge); font: var(--ork-type-body); font-family: var(--ork-font-code); tab-size: 4; caret-shape: block; }
 .shell-edit__text:focus { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 
-/* Operations on the start screen (spec 38 §10): the person's, with no project open */
-.shell-start__ops { width: min(100%, 560px); text-align: left; }
-
 /* spec 39 §3, spec 49 §9: the drawer's tabs — a tab per thing opened, none pinned; the passing tab in italics; Close the drawer at the right */
 .shell-tabstrip { flex: none; display: flex; align-items: stretch; background: var(--ork-panel); border-bottom: var(--ork-line) solid var(--ork-frame); height: 32px; box-sizing: border-box; }
 .shell-tabstrip__tabs { flex: 1; min-width: 0; display: flex; align-items: stretch; overflow-x: auto; scrollbar-width: none; }
@@ -347,7 +310,6 @@ body:has(.shell-backdrop, .gui-modal) .gui-toasts { bottom: var(--ork-6); }
 .shell-ptab__keep { font: var(--ork-type-caption); text-decoration: underline; padding: 0 var(--ork-2); }
 .shell-ptab__x:hover, .shell-ptab__keep:hover, .shell-drawer__x:hover { color: var(--ork-ink); background: var(--ork-raised); }
 .shell-drawer__x { display: inline-flex; align-items: center; justify-content: center; width: 32px; padding: 0; }
-.shell-preview__body.is-pane { padding: 0; overflow: hidden; }
 
 /* decisions §53: who does a task, as orkUI draws it: the head of the craft's race in its tier's gear, its words beside it */
 .shell-role__head { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-1) var(--ork-4); }       /* a role in one line (spec 41 §8) */
@@ -445,9 +407,6 @@ body:has(.shell-backdrop, .gui-modal) .gui-toasts { bottom: var(--ork-6); }
 .shell-lens-marks li input { flex: 1; min-width: 0; }
 .shell-pointed { display: flex; flex-direction: column; gap: var(--ork-1); }
 .shell-pointed p { margin: 0; }
-
-/* An agent's record in its dialog (spec 42 §4): read only, in the text face. */
-.shell-record { margin: 0; overflow-wrap: anywhere; }
 
 /* -- the drawer's Pick one (docs/specs/51-pick-one.md §6): its title and ask, the variants large, the note, and at the foot Take B and None of them -- */
 .shell-pickone__head { display: flex; flex-direction: column; gap: var(--ork-1); }

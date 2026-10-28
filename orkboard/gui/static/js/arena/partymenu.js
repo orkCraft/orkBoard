@@ -9,14 +9,14 @@ import { openDialog } from "../shell/modals.js";
 import { GENERAL } from "../shell/partyremove.js";
 
 /** The menu's items for a party: [word, what it does]. General is the system's, never removed. */
-export const itemsOf = (slug, ops = false) => [
-  ...(ops ? [] : [["About this party", () => { aboutAt.value = ""; showGoal(slug, { via: "map" }); }],        // the Team party (`ops`) holds Operations, not goals: it has nothing to be about or edited, only to be removed (spec 92 §3)
-    ["Edit the party", () => openDialog("goal", { slug })]]),
+export const itemsOf = (slug) => [
+  ["About this party", () => { aboutAt.value = ""; showGoal(slug, { via: "map" }); }],
+  ["Edit the party", () => openDialog("goal", { slug })],
   ...(slug === GENERAL ? [] : [["Remove party…", () => openDialog("remove-party", { slug })]]),
 ];
 
 /** A party's row (or column head) with its menu: `children` is the row's own button; the **…** and the menu come beside it. `at` is a class for the wrapper. */
-export function PartyMenu({ slug, name, at = "", ops = false, children }) {
+export function PartyMenu({ slug, name, at = "", children }) {
   const [pos, setPos] = useState(null), box = useRef(), btn = useRef(), list = useRef();
   const open = !!pos, close = (back) => { setPos(null); if (back) btn.current?.focus(); };
   useEffect(() => {
@@ -51,7 +51,7 @@ export function PartyMenu({ slug, name, at = "", ops = false, children }) {
     ${children}
     <button type="button" class="arena-pmenu__btn" ref=${btn} aria-haspopup="menu" aria-expanded=${open} aria-label=${`More about ${name}`} title=${`More about ${name}`} onClick=${byButton}>…</button>
     ${open && html`<div class="arena-pmenu__list" role="menu" aria-label=${name} ref=${list} onKeyDown=${keys}>
-      ${itemsOf(slug, ops).map(([word, fn]) => html`<button type="button" key=${word} role="menuitem" class=${cls("arena-pmenu__item", { "is-danger": word.startsWith("Remove") })} onClick=${pick(fn)}>${word}</button>`)}
+      ${itemsOf(slug).map(([word, fn]) => html`<button type="button" key=${word} role="menuitem" class=${cls("arena-pmenu__item", { "is-danger": word.startsWith("Remove") })} onClick=${pick(fn)}>${word}</button>`)}
     </div>`}
   </div>`;
 }

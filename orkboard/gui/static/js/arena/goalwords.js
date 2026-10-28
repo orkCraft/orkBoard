@@ -21,15 +21,6 @@ export const goalsCount = (lists) => lists.work.length + lists.planRows.length;
 /** A goal's element and whether it is drawn dim (a raw goal, not yet read: until its draft). */
 export const elementOf = (n) => ({ name: n?.element || "", dim: n?.state === "raw" || n?.state === "reading" });
 
-/** A goal's moon (spec 74 §6): its tasks merged of its tasks, in quarters: new, crescent, half, gibbous, full (all merged). None for a raw goal, a pitch, a release
- *  and a goal with no tasks (a dropped task is not counted). `n`: a node of the map, or a goal's screen's state, tasks and pitch put over its node. */
-export function moonOf(n) {
-  if (!n || n.state === "raw" || n.pitch || n.release || n.type?.id === "release") return null;
-  const tasks = (n.tasks || []).filter((t) => t.state !== "dropped");
-  return tasks.length ? MOONS[Math.round((tasks.filter((t) => t.state === "merged").length / tasks.length) * 4)] : null;
-}
-const MOONS = ["new", "crescent", "half", "gibbous", "full"];
-
 /** The elements, in orkUI's order (orkboard/realm/idea_element.py `ELEMENTS`). */
 export const ELEMENTS = ["meadow", "ice", "dust", "void", "lava"];
 /** The element a new goal of a party will get: the one used least among the party's open goals (not done), ties by the order above — the host's rule
@@ -43,13 +34,12 @@ export function nextElement(nodes) {
 /** The edges of a goal's pile: one to three, for its open tasks; none for a goal with none. */
 export const edgesOf = (n) => Math.min(3, openTasks(n).length);
 
-/** The mark at the right of a goal's row (§3.3): the sign's name, its tone and what it says. A stop is `alert`, a failure `cross`, work `work`, tonight `night`. */
+/** The mark at the right of a goal's row (§3.3): the sign's name, its tone and what it says. A stop is `alert`, a failure `cross`, work `work`. */
 export function goalMark(n) {
   const tasks = n.tasks || [];
   if (tasks.some((t) => t.state === "failed") && atWork(n)) return { sign: "cross", tone: "danger", label: "a task failed" };
   if (n.needs_you === "asks" || n.needs_you === "plan" || n.needs_you === "change" || n.needs_you === "proposal" || n.needs_you === "collide" || n.waits?.kind === "you" || tasks.some((t) => t.state === "picking")) return { sign: "alert", tone: "alert", label: "waits for you" };
   if (n.state === "reading" || n.state === "planning" || tasks.some((t) => t.state === "running" || t.state === "testing")) return { sign: "work", tone: "", label: "at work" };
-  if (n.waits?.kind === "night" || tasks.some((t) => t.state === "held") && n.waits?.kind === "night") return { sign: "night", tone: "", label: "tonight" };
   if (waitsForWords(n)) return { sign: "before", tone: "", label: waitsForWords(n) };          // waits for another party's goal (spec 71 §4): orkUI's before sign, its words in the title
   return { sign: "", tone: "", label: "" };
 }

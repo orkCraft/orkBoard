@@ -30,8 +30,6 @@
 .assets-stack { flex-basis: 100%; display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--ork-6) var(--ork-5); }
 .assets-stack > .arena-fold { flex-basis: 100%; justify-content: flex-start; }
 .assets-card.is-on { border-color: var(--ork-ink); box-shadow: inset 0 0 0 var(--ork-line) var(--ork-ink); }
-.assets-sec .arena-canvas { width: 248px; box-sizing: border-box; }
-.assets-sec .arena-canvases__seen { padding-left: 0; }
 .assets-card .assets-face { position: relative; flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; background: var(--ork-canvas); border: var(--ork-line) solid var(--ork-frame); }
 .assets-card .assets-name { -webkit-line-clamp: 1; line-clamp: 1; }
 .assets-card.is-changed { border-color: var(--ork-edge); }

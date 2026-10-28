@@ -3,7 +3,7 @@
 // the Investor's decision, never built. No signal and no template here; pitches.js (the line on the field, the left column) and shell/pitchview.js
 // (a pitch's screen) draw what these say.
 import { board, goalList } from "../board/store.js";
-import { plural, waitsWords } from "./arenawords.js";
+import { waitsWords } from "./arenawords.js";
 import { goalStateWords } from "./releasewords.js";
 
 export const INVESTOR = "investor";                       // realm/library.py INVESTOR: the leader whose party is Ideation
@@ -17,7 +17,7 @@ export function isIdeation(map, slug) {
 }
 
 /** What a pitch's state means, under its title on its screen. */
-export const PITCH_STATE = { raw: "Waits to be judged: now, tonight or when you say", judging: "The four views read it, each alone; then the Skeptic and the Investor",
+export const PITCH_STATE = { raw: "Waits to be judged when you say", judging: "The four views read it, each alone; then the Skeptic and the Investor",
   judged: "Judged: it waits for you", sent: "Sent: its goal is in its party now", passed: "Passed: kept with its why", failed: "A call failed: try again" };
 
 /** How many of a pitch's views have answered. */
@@ -43,7 +43,7 @@ export const decisionWords = (d) => (d ? [d.word, d.answer === "invest" ? whereW
 /** *sent to Ship · Offline mode*: a pitch sent, naming its party and the goal it became. */
 export const sentWords = (s) => (s ? `sent to ${s.name || s.party}${s.title ? ` · ${s.title}` : ""}` : "sent");
 
-/** A pitch's line in words, by its state (the left column, the field and the drawer's bar): *on hold*, *tonight*, *judging · 2 of 4 views*,
+/** A pitch's line in words, by its state (the left column, the field and the drawer's bar): *on hold*, *judging · 2 of 4 views*,
  *  *judged: Invest*, *sent to Ship · …*, *passed*, *failed · stopped*. `n`: a node of the Map (or a page) with its `pitch`. */
 export function pitchWords(n) {
   const p = n?.pitch, st = p?.state || n?.state;
@@ -57,21 +57,19 @@ export function pitchWords(n) {
   }
   if (n?.waits?.kind === "limits" || n?.waits?.kind === "reserve" || n?.waits?.kind === "week" || n?.waits?.kind === "sign_in") return waitsWords(n.waits);
   if (n?.queue === "hold") return "on hold · judged when you say";
-  if (n?.queue === "night") return "tonight";
   return "next · judged in a moment";
 }
 
-/** The sign at a pitch's row: work while it is judged, alert when its decision waits for you, cross when it failed, night tonight. */
+/** The sign at a pitch's row: work while it is judged, alert when its decision waits for you, cross when it failed. */
 export function pitchMark(n) {
   const st = n?.pitch?.state || n?.state;
   if (st === "judging") return { sign: "work", tone: "", label: "being judged" };
   if (st === "judged") return { sign: "alert", tone: "alert", label: "its decision waits for you" };
   if (st === "failed") return { sign: "cross", tone: "danger", label: "it failed" };
-  if (st === "raw" && n?.queue === "night") return { sign: "night", tone: "", label: "tonight" };
   return { sign: "", tone: "", label: "" };
 }
 
-/** Ideation's pitches by where they lie (§8): judging (with the ones that failed), judged, new (raw: Now, Tonight, Hold), sent, passed (folded). */
+/** Ideation's pitches by where they lie (§8): judging (with the ones that failed), judged, new (raw), sent, passed (folded). */
 export function pitchLists(nodes) {
   const of = (...states) => nodes.filter((n) => states.includes(n.pitch?.state || n.state));
   return { judging: of("judging", "failed"), judged: of("judged"), raw: of("raw"), sent: of("sent"), passed: of("passed") };
@@ -85,13 +83,6 @@ export function pitchPlanning(nodes) {
   const l = pitchLists(nodes);
   return { rows: [...l.judged.map((n) => row(n, true, false)), ...l.judging.filter((n) => (n.pitch?.state || n.state) === "judging").map((n) => row(n, false, true))],
     raw: l.raw.filter((n) => n.queue !== "hold").map((n) => row(n, false, false)) };
-}
-
-/** *Judge now · 2 new pitches* (the leader's button): the first new pitch it judges, and its tooltip. */
-export function judgePower(raw, lead) {
-  const first = raw[0];
-  return { slug: first?.slug || "", off: !first, words: first ? plural(raw.length, "new pitch", "new pitches") : "no new pitch",
-    tip: first ? `${lead} and the four views judge “${first.title}” now` : "No new pitch to judge" };
 }
 
 /** The parties a pitch may be sent to (§5): the project's, but General and Ideation's, in the Board's order; a preset the decision names that the project

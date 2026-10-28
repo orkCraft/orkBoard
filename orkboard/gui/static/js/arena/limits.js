@@ -103,6 +103,6 @@ export function Limits({ provider = "" } = {}) {
   const reset = lines.find((l) => l.reset)?.reset || "";
   return html`<section class="arena-limits" aria-label="What is left of your AI tools">
     ${lines.map((l) => html`<${Tool} key=${l.provider} l=${l} />`)}
-    ${lines.length > 0 && html`<span class="arena-cap arena-limits__note">${kept ? `hatched: kept for ${reserve?.night ? "the morning" : "tonight"}` : ""}${kept && reset ? " · " : ""}${reset}</span>`}
+    ${lines.length > 0 && html`<span class="arena-cap arena-limits__note">${kept ? "hatched: kept back" : ""}${kept && reset ? " · " : ""}${reset}</span>`}
   </section>`;
 }

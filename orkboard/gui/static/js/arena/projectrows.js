@@ -12,7 +12,6 @@ import { Chev, Head, Icon, Sign } from "../orkui.js";
 import { PROJECT, goalList } from "../board/store.js";
 import { act, mapData } from "../shell/store.js";
 import { openDialog } from "../shell/modals.js";
-import { askAfterLow } from "../shell/nightask.js";
 import { isIdeation } from "./pitchwords.js";
 import { usePartyFor } from "./projectparty.js";
 import { readyParties, useProposals } from "./projectdeal.js";
@@ -107,7 +106,6 @@ function GoalRow() {
     if (!got?.slug) return;
     setText(""); setSaid(""); setKind(""); setOwn(""); setMine(undefined);
     toast(`Added to ${name}.`);
-    askAfterLow(priority);
   };
   const open = (e) => {
     if (from) return;

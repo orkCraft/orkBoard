@@ -4,7 +4,7 @@
 // cheapest test, the goal it repeats —; what became of it (sent, naming the goal; passed, with the person's line) and the decisions before. At its foot what the
 // person does, saying what happens: **Send to <party>** with the party's select beside it (the decision's party first; a party of the library the project lacks
 // opens New party with it), **Change and judge again** (the words, changed, judged anew), **Pass** (a line why, optional), **Drop**; **Try again** after a
-// failure, **Judge again** for a passed one, **Judge now** for one on hold or tonight. A sent pitch says its goal's state under its decision (spec 68 §7.2: *Its goal · At work in Passkey · 3 of 7*, *In main*, *In Release 1.4*, *Out in 1.4*, *Dropped*), a press opening the goal. The pixel face is the headings' and the buttons'; the views' and the
+// failure, **Judge again** for a passed one. A sent pitch says its goal's state under its decision (spec 68 §7.2: *Its goal · At work in Passkey · 3 of 7*, *In main*, *In Release 1.4*, *Out in 1.4*, *Dropped*), a press opening the goal. The pixel face is the headings' and the buttons'; the views' and the
 // Investor's words are in the text face.
 import { useState } from "preact/hooks";
 import { html, cls } from "../html.js";
@@ -132,7 +132,6 @@ function Actions({ pg, p }) {
       <button type="button" class="ork-btn" title="Kept with its why: every later pitch is judged against it" onClick=${() => setMode("pass")}>Pass</button>`}
     ${st === "failed" && html`<button type="button" class="ork-btn primary" title="The views, the case against and the decision are asked again" onClick=${judge}>Try again</button>${change}`}
     ${st === "passed" && html`<button type="button" class="ork-btn primary" title="Judged anew, as it is: the four views read it again" onClick=${() => act("ideas.pitch_again", { slug, via: "pitch" })}>Judge again</button>`}
-    ${st === "raw" && html`<button type="button" class="ork-btn primary" title="The four views read it now" onClick=${judge}>Judge now</button>`}
     ${dropBtn}</div>`;
 }
 

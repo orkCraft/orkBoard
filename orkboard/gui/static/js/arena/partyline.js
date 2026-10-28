@@ -12,7 +12,7 @@ import { todayWords } from "../board/mapstage.js";
 import { nowParts, nowWords } from "./arenawords.js";
 import { inMainWords, priceWords, raisedWords } from "./goalwords.js";
 import { APART_MS, LIT_MS, reducedMotion } from "./motion.js";
-import { closeFlagLine, dropRaise, flagLine, gateButton, raise } from "./flags.js";
+import { closeFlagLine, dropRaise, flagLine, raise } from "./flags.js";
 
 /** *Backend <work> Credential table (WebAuthn register)* for every member at work, the leader reading, else *nothing at work right now*. */
 function Now({ parts }) {
@@ -79,7 +79,7 @@ export function FlagLine() {
     dropRaise(wait);
     if (!plays()) return;
     away.current?.();
-    away.current = raiseFlags(line.current, wait.goals, wait.from || gateButton());
+    away.current = raiseFlags(line.current, wait.goals, wait.from || line.current.getBoundingClientRect());
   }, [wait, f]);
   useEffect(() => () => away.current?.(), []);
   if (!f) return null;

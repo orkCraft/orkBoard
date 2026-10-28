@@ -1,7 +1,4 @@
-"""Spec 92 on the desktop (docs/specs/92-running-and-the-team.md, decisions §108), in a real browser at 1 440 × 900 against New party's stub host (tests/test_new_party_91_desktop_browser.py): the left
-column has an *Operations* row, with the line *Make it a Team party*, only while no Team party exists anywhere; a Team party made in a project takes the row away and its Board is today's Operations
-list; Team is the last of *By craft* on every kind, greyed with *Team is in <project>* once the person has one; a project's running (LiveOps · Run · Upkeep) offers its recurring goals, ticked, and
-Save sends the ones kept."""
+"""Spec 92 on the desktop, the recurring goals (docs/specs/92-running-and-the-team.md §2, decisions §108), in a real browser at 1 440 × 900 against New party's stub host (tests/test_new_party_91_desktop_browser.py): a project's running (LiveOps · Run · Upkeep) offers its recurring goals, ticked, and Save sends the ones kept. Its Team parts went with Operations off the desktop (spec 98 §1)."""
 from __future__ import annotations
 
 import copy
@@ -16,7 +13,6 @@ from tests.test_shell_browser import _calls, _new_party, _open, _parties  # noqa
 
 pytestmark = pytest.mark.browser
 
-OPS_ROW = '.arena-phead[data-goal="@operations"]'
 
 
 class TeamHost(PresetHost):
@@ -67,69 +63,6 @@ def _dialog(pg):
     dlg = pg.get_by_role("dialog", name="New party")
     dlg.locator(".shell-preset").first.wait_for(timeout=WAIT_MS)
     return dlg
-
-
-def test_operations_are_in_the_column_with_a_line_while_there_is_no_team_party_and_the_line_opens_new_party_on_team(gui):
-    pg, host, errors = _open_team(gui)
-    col = _parties(pg)
-    assert col.locator(OPS_ROW).count() == 1 and col.locator(OPS_ROW).inner_text().strip() == "Operations"
-    line = col.get_by_role("button", name="Make it a Team party")
-    assert line.count() == 1
-    line.click()
-    dlg = _dialog(pg)
-    assert dlg.locator(".shell-preset[aria-pressed=true]").get_attribute("data-craft") == "team"                           # New party opens on Team
-    team = dlg.locator('.shell-preset[data-craft="team"]')
-    assert team.locator("b").text_content() == "Team" and "your work with people" in team.get_attribute("title").lower() and team.is_enabled()
-    crafts = dlg.get_by_role("region", name="By craft").locator(".shell-preset")
-    assert [c.get_attribute("data-craft") for c in crafts.all()][-1] == "team"                                              # the last of By craft
-    note = dlg.locator("[data-team=true]")
-    assert "Team holds your Operations" in note.inner_text() and "stay yours" in note.inner_text()
-    assert dlg.get_by_role("radiogroup", name="Size").count() == 0 and dlg.locator(".shell-seat").count() == 0 and dlg.locator(".shell-routines").count() == 0       # no seats to fill, nothing recurring
-    assert dlg.locator('[data-foot="agents"]').inner_text() == "Your Operations stay yours: Team only shows them here"
-    assert dlg.get_by_label("Name", exact=True).get_attribute("placeholder") == "Team"
-    pg.close()
-    assert not errors, "\n".join(errors)
-
-
-def test_a_team_party_made_here_takes_the_operations_row_away_and_its_board_is_the_operations_list(gui):
-    pg, host, errors = _open_team(gui)
-    _parties(pg).get_by_role("button", name="Make it a Team party").click()
-    dlg = _dialog(pg)
-    dlg.get_by_role("button", name="Save party").click()
-    pg.wait_for_function("() => document.querySelectorAll('[role=dialog]').length === 0", timeout=WAIT_MS)
-    saved = _calls(pg, host, "ideas.goal_save")[-1]
-    assert saved["proposal"] == "team" and saved["leader"] == "product-manager" and saved["team"] == [] and "routines" not in saved
-    col = _parties(pg)
-    col.locator('.arena-phead[data-goal="team"]').wait_for(timeout=WAIT_MS)
-    assert col.locator(OPS_ROW).count() == 0 and col.get_by_role("button", name="Make it a Team party").count() == 0       # no Operations row, no line
-    pg.locator(".arena[data-team=true] .board-ops").wait_for(timeout=WAIT_MS)                                               # the Team party opens today's Operations list
-    assert pg.locator(".arena[data-team=true] .board-ops h3").first.text_content().strip().startswith("Operations")
-    head = col.locator('.arena-phead[data-goal="team"]')
-    assert head.get_attribute("aria-current") == "true" and "leads" in head.inner_text() and head.locator(".arena-phead__count").count() == 0       # a party with no goals to count
-    assert pg.locator(".arena-pbody, .arena-deck").count() == 0
-    col.locator('.arena-pmenu[data-party="team"] .arena-pmenu__btn').click()                                                # its menu: nothing to be about or to edit, only to remove
-    assert [i.inner_text().strip() for i in pg.locator(".arena-pmenu__list [role=menuitem]").all()] == ["Remove party…"]
-    pg.keyboard.press("Escape")
-    _new_party(pg)
-    off = _dialog(pg).locator('.shell-preset[data-craft="team"]')                                                           # one Team party: its card is greyed
-    assert off.is_disabled() and off.locator("[data-blocked]").inner_text() == "Team is in this project"
-    pg.close()
-    assert not errors, "\n".join(errors)
-
-
-def test_with_a_team_party_in_another_project_there_is_no_operations_row_and_team_is_offered_greyed_with_where(gui):
-    pg, host, errors = _open_team(gui, team={"name": "harbor", "party": "team", "here": False})
-    col = _parties(pg)
-    col.locator(".arena-phead").first.wait_for(timeout=WAIT_MS)
-    assert col.locator(OPS_ROW).count() == 0 and col.get_by_role("button", name="Make it a Team party").count() == 0
-    assert col.locator('.arena-phead[data-goal="team"]').count() == 0                                                       # it is in harbor, not here
-    _new_party(pg)
-    off = _dialog(pg).locator('.shell-preset[data-craft="team"]')
-    assert off.is_disabled() and off.get_attribute("title") == "Team is in harbor" and off.locator("[data-blocked]").inner_text() == "Team is in harbor"
-    off.click(force=True)
-    assert _dialog(pg).locator(".shell-preset[aria-pressed=true]").get_attribute("data-craft") == "mobile-build"           # a press on it picks nothing
-    pg.close()
-    assert not errors, "\n".join(errors)
 
 
 def test_a_mobile_projects_run_party_offers_its_recurring_goals_ticked_and_save_sends_the_ones_kept(gui):

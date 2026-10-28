@@ -2,23 +2,21 @@
 // column of the parties (partylist.js: the project's line, a heading for each party, the open party's leader and goals under its heading with the filter and the New goal pile), and the party's field — the party line, the party row with the gate, the members' tasks in
 // rows by phase as stacks of cards running down from them, and the one hand along the bottom (a result to look at and *n goals ready for main* are its cards: docs/specs/90-what-the-first-look-said.md §2.3).
 // Anything opened is the window's right column (shell.js), beside the field, never over it; the AI tools' limits are under *Spend* in the top bar. All of it reads `ideas.map`, `ideas.board`, `ideas.agents`, `ideas.gate`, `ideas.today`, `ideas.flags` and the snapshot; its
-// commands are the Board's own. The project's level (`PROJECT`, docs/specs/70-orkmaster-and-the-project.md: a press on the Orkmaster in the project's line) replaces the field as Operations does: project.js. Ideation's field is its pitches by state across the party's columns (pitches.js, docs/specs/65-ideation.md §8).
+// commands are the Board's own. The project's level (`PROJECT`, docs/specs/70-orkmaster-and-the-project.md: a press on the Orkmaster in the project's line) replaces the field: project.js. Ideation's field is its pitches by state across the party's columns (pitches.js, docs/specs/65-ideation.md §8).
 // A party the Architect leads has three tabs over its table, System, Feature modules and Board (docs/specs/90-what-the-first-look-said.md §6.7): System is the project's architecture (systemarch.js),
 // Feature modules spec 89's table of folders (systemmap.js), Board the field as it was.
 // The table begins at the pane's top, under the party's line (spec 90 §4): the tabs at its edge and the members' faces lie on its wood.
 // It opens on System when something changed since the device's last look, else on the tab last pressed on this device (System at first).
 import { useEffect, useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
-import { track, board, OPS, PROJECT } from "../board/store.js";
-import { Operations } from "../board/ops.js";
+import { track, board, PROJECT } from "../board/store.js";
 import { Project } from "./project.js";
 import { flagsData, gateData, lookTick, mapData } from "../shell/store.js";
 import { openDialog } from "../shell/modals.js";
-import { town } from "../link.js";
 import { solo, narrow, picks, shownGoals } from "./arenastate.js";
 import { goalsOf, handOf, nodesOf, partyOf, planningOf } from "./arenawords.js";
 import { inFilter } from "./goalwords.js";
-import { shownOf, teamOf } from "./goaltabs.js";
+import { shownOf } from "./goaltabs.js";
 import { PartyList } from "./partylist.js";
 import { goalList } from "../board/store.js";
 import { TodayStrip } from "./todaystrip.js";
@@ -28,7 +26,6 @@ import { Columns, Solo } from "./field.js";
 import { Spread } from "./spread.js";
 import { Arrows } from "./arrows.js";
 import { PartyRow } from "./members.js";
-import { GateLine } from "./gate.js";
 import { Stops } from "./stops.js";
 import { Cards } from "../board/cards.js";
 import { closeFlagLine, seeFlags } from "./flags.js";
@@ -50,7 +47,7 @@ function useNarrow() {
 }
 
 /** A stop of the project (spec 54 §2.1): the goal it is about is one its party's filter shows (a stop about the party itself, no goal, stays). The party shown has the
- *  filter and the goal peeked; another party has only its picks. */
+ *  filter; another party has only its picks. */
 const stopIn = (shown, s) => {
   const goal = s.node?.slug || s.row?.idea || "";
   return !goal || inFilter(shown, goal);
@@ -59,22 +56,9 @@ const keepOf = (shownSlug) => (party, s) => stopIn(party === shownSlug ? shownGo
 
 /** The one hand: every stop of the project, the most urgent first (`Stops` lays it out from the middle). The party shown's results to look at are its cards (spec 90 §2.3: no *Waits for your look*),
  *  and so is *n goals ready for main* (the gate's batch). */
-const handFor = (m, shown, withResults) => handOf({ map: m, needs: board.value?.needs_you || [], order: goalList().map((x) => x.slug), shown, keep: keepOf(shown), withResults,
-  ops: town.value?.ops_rev !== undefined, gate: gateData.value, team: teamOf() });
+const handFor = (m, shown, withResults) => handOf({ map: m, needs: board.value?.needs_you || [], order: goalList().map((x) => x.slug), shown, keep: keepOf(shown), withResults, gate: gateData.value });
 
-/** Operations' own field: the column's list (Operations open, while the person has no Team party), its list, with the stops of the project along the bottom. The Team party's Board is this same list
- *  (spec 92 §3): its heading is the open one in the column, and the stops of Operations are its own. */
-function OpsField({ m, team = null }) {
-  return html`<div class="arena arena-ops" data-goal=${team ? team.slug : undefined} data-team=${team ? "true" : undefined}>
-    <${PartyList} />
-    <div class="arena-ops__main">
-      <section class="arena-ops__body" aria-label=${team ? "Team" : "The party at work"}><${Operations} withNew=${true} /></section>
-      <div class="arena-stops"><${Stops} stops=${handFor(m, team ? team.slug : OPS, false)} /></div>
-    </div>
-  </div>`;
-}
-
-/** The project's level (spec 70 §2): the parties as columns, their goals as decks, with the stops of the project along the bottom as Operations' field has them. */
+/** The project's level (spec 70 §2): the parties as columns, their goals as decks, with the stops of the project along the bottom. */
 function ProjectField({ m }) {
   return html`<${Project} m=${m} stops=${html`<div class="arena-stops"><${Stops} stops=${handFor(m, PROJECT, false)} /></div>`} />`;
 }
@@ -124,18 +108,14 @@ export function Arena() {
   useEffect(() => { closeFlagLine(); }, [lookTick.value]);                           // another project: nothing of the last one's line stays
   if (!m) return html`<p class="ok-tone-muted arena-note">Reading the board…</p>`;
   const parties = goalsOf(m, goalList().map((x) => x.slug)), want = shownOf(parties, track.value);
-  if (want === OPS) return html`<${OpsField} m=${m} />`;
   if (want === PROJECT) return html`<${ProjectField} m=${m} />`;
   const g = parties.find((x) => x.slug === want);
   if (!g && want) return html`<p class="ok-tone-muted arena-note">Reading the board…</p>`;           // a party just saved: the Map has it in a moment
-  if (g?.ops) return html`<${OpsField} key=${g.slug} m=${m} team=${g} />`;                  // the Team party: its Board is the person's Operations (spec 92 §3)
   if (!g) {
-    const ops = town.value?.ops_rev !== undefined;                                    // no party, but Operations' stops still wait in the one hand
-    return html`<div class="arena arena-ops"><${PartyList} /><div class="arena-ops__main"><div class="shell-empty arena-note arena-void"><${Stars} /><p>No parties yet</p>
+    return html`<div class="arena"><${PartyList} /><div class="arena-ops__main"><div class="shell-empty arena-note arena-void"><${Stars} /><p>No parties yet</p>
       <p class="arena-cap">Make a party, then write it a goal in plain words, like a spell. Its orks do the work; you look at it before it goes in.</p>
       <p><button class="ork-btn primary" onClick=${() => openDialog("goal")}>New party</button>
-        <button class="ork-btn" title="A goal needs a party: this makes one first" onClick=${() => openDialog("goal", { then: "idea" })}>New goal</button></p></div>
-      ${ops && html`<div class="arena-stops"><${Stops} stops=${handFor(m, "", false)} /></div>`}</div></div>`;
+        <button class="ork-btn" title="A goal needs a party: this makes one first" onClick=${() => openDialog("goal", { then: "idea" })}>New goal</button></p></div></div></div>`;
   }
   return html`<${Party} key=${g.slug} m=${m} g=${g} />`;
 }

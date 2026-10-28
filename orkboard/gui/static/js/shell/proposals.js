@@ -45,9 +45,8 @@ export async function askProposals(about = "") {
 }
 
 /** A party is saved (New party's Make it, the library's Save party): the heads gather into its deck once it is shown, the dialog closes, the party is shown (or the goal asked for). */
-export function savedParty(got, heads, then, team = false) {
+export function savedParty(got, heads, then) {
   for (const note of got.notes || []) toast(note);       // an agent of the project's own that the party carries stays as it was
-  if (team) { closeDialog(); track.value = got.slug; return; }          // the Team party (spec 92 §3): its Board is Operations' list, shown in the field; it has no goals to open and no heads to gather
   if (heads.length) gatherWaits(got.slug, heads);        // the heads gather into the party's deck once it is shown (arena/goaltabs.js)
   closeDialog();
   track.value = got.slug;

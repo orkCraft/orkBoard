@@ -11,11 +11,10 @@ import { html, cls } from "../html.js";
 import { Icon, NEED_ICONS } from "../orkui.js";
 import { say, toast } from "../link.js";
 import { board, PRIORITY_WORDS } from "./store.js";
-import { RulesProposal } from "./ops.js";
 import { act as run, showIdea, showPlan, showPick } from "../shell/store.js";
 import { openDialog } from "../shell/modals.js";
 
-const KIND_WORDS = { goal: "A party asks", asks: "A spec asks", plan: "A plan waits for you", change: "A plan change waits for you", todo: "A to-do", failed: "Failed", pick: "Pick one", proposal: "A proposal", party: "A proposal", op: "At your check", op_failed: "Failed", op_rules: "Rules to take" };
+const KIND_WORDS = { goal: "A party asks", asks: "A spec asks", plan: "A plan waits for you", change: "A plan change waits for you", todo: "A to-do", failed: "Failed", pick: "Pick one", proposal: "A proposal", party: "A proposal" };
 
 function Proposal({ n }) {
   const g = board.value.tracks.find((t) => t.slug === n.goal);
@@ -61,19 +60,8 @@ function PartyProposal({ n }) {
     </div></li>`;
 }
 
-/** Operations' rows (spec 38 §8) belong to no goal and no project: they show whichever goal is chosen. */
-const isOp = (n) => n.kind === "op" || n.kind === "op_failed" || n.kind === "op_rules";
-
-function OpRules({ n }) {
-  return html`<li class="board-need board-proposal" data-kind="op_rules" data-template=${n.template}>
-    <span class="board-need__icon"><${Icon} name=${NEED_ICONS.op_rules} /></span>
-    <div class="board-need__text"><b>${n.title}</b><span class="ok-tone-muted board-need__kind">${KIND_WORDS.op_rules}</span>
-      <${RulesProposal} template=${n.template} title=${n.title} lines=${n.lines || [n.text]} /></div></li>`;
-}
-
 function open(n) {
-  if (n.kind === "op" || n.kind === "op_failed") openDialog("opcheck", { op: n.op });
-  else if (n.kind === "goal") openDialog("ask", { slug: n.goal, goal: true, title: n.title });
+  if (n.kind === "goal") openDialog("ask", { slug: n.goal, goal: true, title: n.title });
   else if (n.kind === "asks") openDialog("ask", { slug: n.idea, title: n.title });
   else if (n.kind === "todo") openDialog("todo", { idea: n.idea, todo: n.todo });
   else if (n.kind === "plan" || n.kind === "change") showPlan(n.idea, "", { via: "needs" });
@@ -84,7 +72,7 @@ function open(n) {
 // -- Later: a row put away on this computer for a few hours (as the phone's, its own) ---------------------------------
 const LATER = "orkboard.later";                       // {row key: until}
 const LATER_MS = 4 * 3600 * 1000;
-const keyOf = (n) => `${n.kind}:${n.idea || n.goal || n.op || n.template || ""}:${n.text || ""}`;
+const keyOf = (n) => `${n.kind}:${n.idea || n.goal || ""}:${n.text || ""}`;
 const laterRev = signal(0);                           // a row put away: drawn again
 const laterAll = () => { try { return JSON.parse(localStorage.getItem(LATER)) || {}; } catch { return {}; } };
 const isLater = (n) => (laterAll()[keyOf(n)] || 0) > Date.now();
@@ -97,7 +85,7 @@ function putAway(n) {
 }
 
 const goalTitle = (slug) => (board.value?.tracks || []).find((t) => t.slug === slug)?.title || "";
-const kindLine = (n) => [KIND_WORDS[n.kind], !isOp(n) && n.goal && n.goal !== "general" ? goalTitle(n.goal) : ""].filter(Boolean).join(" · ");
+const kindLine = (n) => [KIND_WORDS[n.kind], n.goal && n.goal !== "general" ? goalTitle(n.goal) : ""].filter(Boolean).join(" · ");
 
 /** A row's questions as `asked` says them; a row without it has its plain lines, no choices. */
 const askedOf = (n) => (n.asked?.length ? n.asked : (n.questions?.length ? n.questions : [n.text]).filter(Boolean).map((ask) => ({ ask, choices: [], pick: null, why: "" }))).slice(0, 3);
@@ -130,29 +118,31 @@ function Quick({ n }) {
 
 function Row({ n }) {
   if (n.kind === "proposal") return html`<${Proposal} n=${n} />`;
-  if (n.kind === "op_rules") return html`<${OpRules} n=${n} />`;
   if (n.kind === "party") return html`<${PartyProposal} n=${n} />`;
   if (n.kind === "goal" || n.kind === "asks") return html`<${Quick} n=${n} />`;
   return html`<li class="board-need-row">
     <button class="board-need" data-kind=${n.kind} data-priority=${n.priority} onClick=${() => open(n)}>
       <span class="board-need__icon"><${Icon} name=${NEED_ICONS[n.kind] || "flag"} /></span>
       <span class="board-need__text"><b>${n.title}</b><span class="ok-tone-muted board-need__kind">${kindLine(n)}</span>
-        <span class="ok-tone-muted">${isOp(n) ? n.text : say(n.text)}</span></span></button>
+        <span class="ok-tone-muted">${say(n.text)}</span></span></button>
     <button class="ork-btn board-need__later" aria-label=${`Later: ${n.title}`} onClick=${() => putAway(n)}>Later</button></li>`;
 }
 
-const rowKey = (n) => n.kind + (n.op || n.idea || n.goal || n.template || "") + (n.todo?.id || "");
+const rowKey = (n) => n.kind + (n.idea || n.goal || "") + (n.todo?.id || "");
+
+const OP_ROWS = ["op", "op_failed", "op_rules"];      // Operations' rows: the desktop draws none of them (spec 98 §1)
+const shownRow = (n) => !OP_ROWS.includes(n.kind);
 
 /** How many rows wait on the person now (proposals, a party's among them, and the ones put away Later, aside): the Needs you tab says it. */
 export function needsCount() {
   void laterRev.value;
-  return (board.value?.needs_you || []).filter((n) => n.kind !== "proposal" && n.kind !== "op_rules" && n.kind !== "party" && !isLater(n)).length;
+  return (board.value?.needs_you || []).filter((n) => shownRow(n) && n.kind !== "proposal" && n.kind !== "party" && !isLater(n)).length;
 }
 
 export function Today() {
   void laterRev.value;
   const [showLater, setShowLater] = useState(false);
-  const all = board.value.needs_you || [];
+  const all = (board.value.needs_you || []).filter(shownRow);
   const list = all.filter((n) => !isLater(n)), away = all.filter(isLater);
   return html`<section class="board-today" aria-label="Needs you">
     ${list.length ? html`<ul class="board-list">${list.map((n) => html`<${Row} key=${rowKey(n)} n=${n} />`)}</ul>`

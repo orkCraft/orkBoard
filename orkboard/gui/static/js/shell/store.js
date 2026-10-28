@@ -1,5 +1,5 @@
 // The v1 shell's state (docs/specs/33-v1-shell.md §5–§7): what the host last said of the board (js/board/store.js), of
-// Review and of Agents, the Map, the gate and today's events, and the drawer's tabs (spec 39 §3, spec 49 §9; the active one is
+// Review, the Map, the gate and today's events, and the drawer's tabs (spec 39 §3, spec 49 §9; the active one is
 // `preview`, and the drawer is out while `drawerOpen`). A refresh runs when the town says the ideas changed and every 10 s while
 // a model or a task runs; the open task's log is read again every 5 s while it runs.
 import { signal, batch } from "@preact/signals";
@@ -7,7 +7,7 @@ import { command, toast } from "../link.js";
 import { ask, board, opened, page, BUSY } from "../board/store.js";
 import { openDialog } from "./modals.js";
 
-export const preview = signal(null);       // the active tab's thing, null with no tab: {kind: "idea"|"plan"|"task"|"result"|"goal"|"pick"|"doc"|"file"|"gitdiff"|"gate"|"agents"|"files"|"canvas" (spec 78: path is its key, title)|"asset" (spec 88: path is its id)|"part" (spec 89: path, slug its party)|"link" (spec 90 §6.7: path "<from>><to>", slug its party, title), slug?, task?, todo?, path?}
+export const preview = signal(null);       // the active tab's thing, null with no tab: {kind: "idea"|"plan"|"task"|"result"|"goal"|"pick"|"doc"|"file"|"gitdiff"|"gate"|"files"|"asset" (spec 88: path is its id)|"part" (spec 89: path, slug its party)|"link" (spec 90 §6.7: path "<from>><to>", slug its party, title), slug?, task?, todo?, path?}
 export const review = signal(null);        // ideas.review_list
 export const agents = signal(null);        // ideas.agents
 export const detail = signal(null);        // the preview's own data: {task} (ideas.task) · {task, diff, spend} (a result; spend: ideas.spend of its idea) · {goal} · {doc}
@@ -30,9 +30,9 @@ export const flagsData = signal(null);     // ideas.flags: the goals' flags (`go
 export const aboutAt = signal("");         // the section of About this party to scroll to when it opens ("flags": Its flags); "" for the top
 export const mapFolded = signal([]);       // the folds kept with the tabs (the Flags fold)
 
-const KINDS = ["idea", "plan", "task", "result", "goal", "pick", "doc", "file", "gitdiff", "gate", "agents", "files", "canvas", "asset", "part", "link"];
+const KINDS = ["idea", "plan", "task", "result", "goal", "pick", "doc", "file", "gitdiff", "gate", "files", "asset", "part", "link"];
 const KIND_WORDS ={ idea: "Goal", plan: "Plan", task: "Task", result: "Code", goal: "Party", pick: "Pick one", doc: "Document", file: "File", gitdiff: "Changes",
-  gate: "Gate", agents: "Agents", files: "Files", canvas: "Canvas", asset: "Asset", part: "Part", link: "Link" };
+  gate: "Gate", files: "Files", asset: "Asset", part: "Part", link: "Link" };
 export const kindWords = (kind) => KIND_WORDS[kind] || "";
 export const tabId = (p) => `${p.kind}:${p.slug || ""}:${p.task || ""}:${p.path || ""}`;
 
@@ -269,9 +269,9 @@ export function show(p, opts = {}) {
 }
 
 function showNow(p, { keep = false, via = "" } = {}) {
-  if (p.kind === "agents" || p.kind === "files") logOpened("tab", p.kind, via);
+  if (p.kind === "files") logOpened("tab", p.kind, via);
   else if (p.kind === "gate") logOpened("gate", "", via);
-  else if (!["doc", "file", "gitdiff", "canvas", "asset", "part", "link"].includes(p.kind)) logOpened(p.kind === "goal" ? "idea" : p.kind === "plan" && p.todo ? "todo" : p.kind,
+  else if (!["doc", "file", "gitdiff", "asset", "part", "link"].includes(p.kind)) logOpened(p.kind === "goal" ? "idea" : p.kind === "plan" && p.todo ? "todo" : p.kind,
     p.kind === "goal" ? `goal:${p.slug}` : p.task ? `${p.slug}/${p.task}` : p.todo ? `${p.slug}/${p.todo}` : p.slug, via);
   const id = tabId(p);
   const list = tabs.value;
@@ -302,7 +302,6 @@ export const showGitDiff = (path, o) => show({ kind: "gitdiff", path }, o);
 export const showResult = (slug, task, o) => show({ kind: "result", slug, task }, o);
 export const showPick = (slug, task, o) => show({ kind: "pick", slug, task }, o);
 export const showGate = (o) => show({ kind: "gate" }, o);
-export const showAgents = (o) => show({ kind: "agents" }, { keep: true, ...o });      // the panes are kept: a file or a task opened from them is a tab of its own
 export const showFiles = (o) => show({ kind: "files" }, { keep: true, ...o });
 
 /** Something a model or a task does now: the shell looks again every 10 s. */

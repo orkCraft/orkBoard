@@ -7,9 +7,9 @@ import { board } from "./store.js";
 import { act } from "../shell/store.js";
 
 export const TARGETS = [
-  ["thrift", "Thrift", "lighter models, less reasoning, no proposals at night"],
+  ["thrift", "Thrift", "lighter models, less reasoning"],
   ["balance", "Balance", "the default: each step on the tier it needs"],
-  ["quality", "Quality", "heavier models, more reasoning, three proposals a night"],
+  ["quality", "Quality", "heavier models, more reasoning"],
 ];
 
 export const TARGET_LABEL = "A party with no size of its own works as";

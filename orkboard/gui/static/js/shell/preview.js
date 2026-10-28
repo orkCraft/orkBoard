@@ -1,9 +1,9 @@
 // The drawer's body (docs/specs/33-v1-shell.md §6, spec 39 §3, spec 49 §9): tabs, one per thing opened: an idea's spec (29a's
 // sections view), an idea's plan (scrolled to a to-do, said what it unblocks), a task (its brief, state and log), a result's code
 // (commits, then the files changed, each patch folded), a goal, a pick (its variants large, a note: shell/pickview.js), a document, a file, a diff,
-// the gate's screen, Agents, Files, a canvas's file (spec 78), an asset (spec 88), a part of System (spec 89) and a link between two containers (its routes and events, spec 90 §6.7) — the window's right column (docs/specs/90-what-the-first-look-said.md §2). A result's actions stay pinned at its foot. A goal of Ideation is a pitch: its page's `pitch` shows its own screen (pitchview.js).
+// the gate's screen, Files, an asset (spec 88), a part of System (spec 89) and a link between two containers (its routes and events, spec 90 §6.7) — the window's right column (docs/specs/90-what-the-first-look-said.md §2). A result's actions stay pinned at its foot. A goal of Ideation is a pitch: its page's `pitch` shows its own screen (pitchview.js).
 import { useEffect, useRef, useState } from "preact/hooks";
-import { html, cls } from "../html.js";
+import { html } from "../html.js";
 import { Sign, Who } from "../orkui.js";
 import { ErrorLine } from "./errors.js";
 import { board, page, holdWords, heldByYou } from "../board/store.js";
@@ -16,9 +16,7 @@ import { GoalView } from "./goalview.js";
 import { File } from "./diffview.js";
 import { FileView, FilesPane } from "./files.js";
 import { GitDiffView } from "./gitpane.js";
-import { AgentsPane } from "./agents.js";
 import { GateView } from "../arena/gate.js";
-import { CanvasView } from "../arena/canvases.js";
 import { AssetView } from "../arena/assets.js";
 import { PartView } from "../arena/systemmap.js";
 import { LinkView } from "../arena/systemarch.js";
@@ -125,9 +123,7 @@ function titleOf(p, d, pg) {
   if (p.kind === "pick") return rowOf(board.value?.needs_you, p.slug, p.task)?.title || "";
   if (p.kind === "doc" || p.kind === "file" || p.kind === "gitdiff") return p.path;
   if (p.kind === "gate") return "dev → main";
-  if (p.kind === "agents") return "Agents";
   if (p.kind === "files") return "Files";
-  if (p.kind === "canvas") return p.title || "Canvas";
   if (p.kind === "asset" || p.kind === "part") return p.title || p.path.split("/").pop() || p.path;
   if (p.kind === "link") return p.title || p.path.replace(">", " → ");
   return pg?.title || "";
@@ -143,7 +139,7 @@ export function Preview() {
   useEffect(() => { if (p && dirty) keepTab(id); }, [id, dirty]);                                 // an edit in the passing tab keeps it
   return html`<section class="shell-preview" aria-label="Preview">
     <${TabStrip} />
-    <div class=${cls("shell-preview__body", { "is-pane": p?.kind === "agents" })}>
+    <div class="shell-preview__body">
       ${!p ? ""
         : gone ? html`<div class="shell-empty"><p>${gone}</p><p><button class="ork-btn" onClick=${() => closePreview()}>Close</button></p></div>`
         : p.kind === "idea" ? (pg ? (pg.pitch ? html`<${PitchView} pg=${pg} />` : html`<${IdeaView} p=${pg} />`) : html`<p class="ok-tone-muted">Opening…</p>`)
@@ -154,9 +150,7 @@ export function Preview() {
         : p.kind === "file" ? html`<${FileView} path=${p.path} />`
         : p.kind === "gitdiff" ? html`<${GitDiffView} path=${p.path} />`
         : p.kind === "gate" ? html`<${GateView} />`
-        : p.kind === "agents" ? html`<${AgentsPane} />`
         : p.kind === "files" ? html`<${FilesPane} />`
-        : p.kind === "canvas" ? html`<${CanvasView} p=${p} />`
         : p.kind === "asset" ? html`<${AssetView} p=${p} />`
         : p.kind === "part" ? html`<${PartView} p=${p} />`
         : p.kind === "link" ? html`<${LinkView} p=${p} />`

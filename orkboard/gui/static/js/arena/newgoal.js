@@ -1,6 +1,6 @@
 // New goal at the Orkmaster (docs/specs/73-a-lighter-column.md §4, decisions §88): the **+** in the project line, between the Orkmaster's head and the project switcher. A press deals *Your own
 // goal* and the goal types — the party shown's first, then the other parties' of the project — as the project's New goal does (spec 70 §4), and New goal opens with that party shown picked
-// (*Its party*: the others are its chips, asked of `ideas.party_for` when a type is picked). On the project's level, or in Operations (no party shown), it is spec 70 §4: no party at first.
+// (*Its party*: the others are its chips, asked of `ideas.party_for` when a type is picked). On the project's level, or with no party shown, it is spec 70 §4: no party at first.
 // A host from before spec 70 (`ideas.map` has no `project`) has no Orkmaster to suggest: the + deals the shown party's own types and New goal is that party's, as its pile was.
 // A host with no types opens New goal at once.
 // Spec 91 §8: with an Orkmaster this + is gone — New goal is a row of the Orkmaster's level (projectrows.js), the one way in; partylist.js draws this + only for a host with no Orkmaster.
@@ -14,7 +14,7 @@ import { TypesSpread } from "./types.js";
 import { projectOn } from "./goaltabs.js";
 import { typesFirst } from "./projectwords.js";
 
-/** `want`: what the column shows (a party's slug, OPS or PROJECT). */
+/** `want`: what the column shows (a party's slug or PROJECT). */
 export function NewGoalPlus({ want }) {
   const [from, setFrom] = useState(null), button = useRef();
   const goals = (mapData.value?.goals || []).filter((g) => g.slug !== "general");

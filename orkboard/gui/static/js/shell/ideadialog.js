@@ -6,15 +6,14 @@
 // **By its type** (docs/specs/52-goal-types.md §4.2, §4.3; one field since spec 83): the type's sign and name in place of *Your own goal*, the party fixed (a type is its leader's), *The goal*
 // (one box, its first line its title), the type's asks (one line each, none required), **Refs** when the type has them (*Links*; *Pictures you like*: a file, a paste or a drop,
 // sent as `photos`), the lens (the type's first), **the join line** (arena/types.js: who joins, or a swap) and the priority. *Add the goal* sends `type`, `asks`
-// and, when the join line is ticked, `join`; a goal put back never brings anyone. **The night** (spec 83): there is no night box; Low work goes at night only on the person's one
-// standing word (`night_low`), asked once after the first Low goal (nightask.js) and kept in Settings.
-// **In Ideation** (docs/specs/65-ideation.md §8) a goal is a pitch: one box, the lens, **Judge now** · **Tonight** · **Hold** (`PitchGoal`).
+// and, when the join line is ticked, `join`; a goal put back never brings anyone.
+// **In Ideation** (docs/specs/65-ideation.md §8) a goal is a pitch: one box, the lens, **Hold** (`PitchGoal`).
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html } from "../html.js";
 import { say, toast } from "../link.js";
-import { board, goalList, track, PRIORITY_WORDS, PROJECT } from "../board/store.js";
+import { goalList, track, PRIORITY_WORDS, PROJECT } from "../board/store.js";
 import { act, mapData } from "./store.js";
-import { Modal, closeDialog, openDialog } from "./modals.js";
+import { Modal, closeDialog } from "./modals.js";
 import { Lens, lensFirst, lensValue, noLens, useLenses } from "./lens.js";
 import { Elem, Sign } from "../orkui.js";
 import { nextElement } from "../arena/goalwords.js";
@@ -22,11 +21,7 @@ import { JoinLine, joinSet, joinStart, joinValue } from "../arena/types.js";
 import { isIdeation } from "../arena/pitchwords.js";
 import { GoesIn } from "./release.js";
 import { ItsParty, usePartyFor } from "../arena/projectparty.js";
-import { askAfterLow, nightOff, nightUnset } from "./nightask.js";
 import { MAX_PICTURES, PICTURE_TYPES, shrink } from "../board/pictures.js";
-
-/** The line under Priority (spec 83 §4): what Low does, as the standing word says. */
-const lowLine = () => `Low: ${board.value?.night_low === true ? "runs tonight" : "runs after the other priorities"}.`;
 
 const REFS = "refs";                        // realm/goal_types.py REFS: the id of Refs' links among a goal's asks
 
@@ -61,7 +56,6 @@ function BlankGoal({ goal: first = "", project = false, shown: at = "", said = "
     setBusy(false);
     if (!got?.slug) return;
     closeDialog();
-    askAfterLow(priority);                    // the first Low goal asks whether Low work may run at night (spec 83 §3)
   };
   const close = async () => {                 // closed with text in it: kept on the party, not started
     const t = text.trim();
@@ -90,16 +84,15 @@ function BlankGoal({ goal: first = "", project = false, shown: at = "", said = "
       <label class="shell-field"><span class="ok-font-label">Priority</span>
         <select class="ork-field" aria-label="Priority" value=${priority} onChange=${(e) => setMine(e.target.value)}>
           ${Object.entries(PRIORITY_WORDS).map(([id, name]) => html`<option key=${id} value=${id}>${name}</option>`)}</select></label>
-      <p class="ok-font-status ok-tone-muted" data-night="priority">${say(`High and Normal: the Taskmaster drafts it at once. ${lowLine()} Closing this with text in it keeps it on the party, not started.`)}</p>
+      <p class="ok-font-status ok-tone-muted">${say(`High and Normal: the Taskmaster drafts it at once. Closing this with text in it keeps it on the party, not started.`)}</p>
     </div>
   <//>`;
 }
 
 const PITCH_CHARS = 2000;                   // realm/pitches.py PITCH_CHARS: a pitch's words
 
-/** New goal in Ideation (docs/specs/65-ideation.md §8): a pitch, one box (*What is the pitch?*), the lens a tap away, then **Judge now** (`ideas.add` at once: the
- *  four views read it now), **Tonight** (`night`, the goal Low; asked first when the Board has not been told, not drawn after *No, by day*) or **Hold** (`hold`: kept till the person judges it). No type, no asks, no priority. Closed with words in it, it is
- *  kept on the party, not started (`hold`), as any goal. The text, the party and the lens are BlankGoal's, so a party picked in its select moves the words over. */
+/** New goal in Ideation (docs/specs/65-ideation.md §8): a pitch, one box (*What is the pitch?*), the lens a tap away, then **Hold** (`hold`: kept till the person judges it).
+ *  No type, no asks, no priority. Closed with words in it, it is kept on the party, not started (`hold`), as any goal. The text, the party and the lens are BlankGoal's, so a party picked in its select moves the words over. */
 function PitchGoal({ parties, party, setParty, text, setText, info, lens, setLens, field = null }) {
   const [busy, setBusy] = useState(false);
   const g = parties.find((x) => x.slug === party);
@@ -119,26 +112,15 @@ function PitchGoal({ parties, party, setParty, text, setText, info, lens, setLen
     closeDialog();
     if (text.trim() && party) await act("ideas.add", args({ hold: true }));
   };
-  const tonight = () => {                     // Tonight is Low work's: asked first when the Board has not been told; *No, by day* keeps the pitch instead
-    const low = { priority: "low", night: true };
-    if (!nightUnset()) { send(low); return; }
-    const kept = args({ hold: true }), tonightArgs = args(low);
-    openDialog("night-ask", { after: async (allow) => {
-      const got = await act("ideas.add", allow ? tonightArgs : kept);
-      if (got?.slug && !allow) toast("Kept, not started: Low work runs by day.");
-    } });
-  };
   const off = !text.trim() || !party || busy;
   return html`<${Modal} title="New goal" onClose=${close} wide=${(info?.lenses || []).length > 1}
-    foot=${html`<button type="button" class="ork-btn" disabled=${off} title="Kept as it is: it is judged when you say" onClick=${() => send({ hold: true })}>Hold</button>
-      ${!nightOff() && html`<button type="button" class="ork-btn" disabled=${off} title="The night judges it, before any other work" onClick=${tonight}>Tonight</button>`}
-      <button type="button" class="ork-btn primary" disabled=${off} title=${`The four views read it now, then the Skeptic and ${lead}`} onClick=${() => send({})}>Judge now</button>`}>
+    foot=${html`<button type="button" class="ork-btn" disabled=${off} title="Kept as it is: it is judged when you say" onClick=${() => send({ hold: true })}>Hold</button>`}>
     <div class="shell-form arena-pitchform" data-party=${party}>
       <div class="shell-blank"><${Sign} name="target" big=${true} /><b>A pitch</b></div>
       <label class="shell-field"><span class="ok-font-label">What is the pitch?</span>
         <textarea class="ork-field" rows="5" autofocus value=${text} maxlength=${PITCH_CHARS} aria-label="What is the pitch?"
           placeholder="In a few words or a few lines: what, and for whom" onInput=${(e) => setText(e.target.value)}
-          onKeyDown=${(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) { e.preventDefault(); send({}); } }}></textarea></label>
+          ></textarea></label>
       ${field || html`<label class="shell-field"><span class="ok-font-label">Belongs to party</span>
         <select class="ork-field" aria-label="Party" value=${party} onChange=${(e) => setParty(e.target.value)}>
           ${parties.map((x) => html`<option key=${x.slug} value=${x.slug}>${x.title}</option>`)}</select></label>`}
@@ -221,7 +203,6 @@ function TypedGoal({ goal: first, type: t0, project = false, shown: at = "", sai
     setBusy(false);
     if (!got?.slug) return;
     closeDialog();
-    askAfterLow(priority);
     if (got.joined?.add) {
       const name = (t.missing || []).find((m) => m.agent === got.joined.add)?.name || got.joined.add;
       toast(`Added: ${name} joined the party; ${leader} drafts it now.`);
@@ -254,7 +235,7 @@ function TypedGoal({ goal: first, type: t0, project = false, shown: at = "", sai
       <label class="shell-field"><span class="ok-font-label">Priority</span>
         <select class="ork-field" aria-label="Priority" value=${priority} onChange=${(e) => setMine(e.target.value)}>
           ${Object.entries(PRIORITY_WORDS).map(([id, name]) => html`<option key=${id} value=${id}>${name}</option>`)}</select></label>
-      <p class="ok-font-status ok-tone-muted" data-night="priority">High and Normal: ${leader} drafts it at once. ${lowLine()} Closing this with words in it keeps it on the party, not started, and no one joins.</p>
+      <p class="ok-font-status ok-tone-muted">High and Normal: ${leader} drafts it at once. Closing this with words in it keeps it on the party, not started, and no one joins.</p>
     </div>
   <//>`;
 }

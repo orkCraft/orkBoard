@@ -1,5 +1,5 @@
 // Two parties' goals that change the same thing, and a goal that waits for another party's (docs/specs/71-orkmaster-keeps-parties-apart.md §6, §8, decisions §86), in words: pure functions over the
-// Needs you row of kind `collide`, the map node's `waits_for` and `project.collisions`. A host from before spec 71 sends none of them, and every function here says nothing then. No signal, no template.
+// Needs you row of kind `collide`, the map node's `waits_for`. A host from before spec 71 sends none of them, and every function here says nothing then. No signal, no template.
 // The code's goal is a party and its idea is a goal; a person reads *party* and *goal*.
 
 export const KIND = "Orkmaster asks";
@@ -34,12 +34,3 @@ export function waitsForWords(n) {
   return w.length ? `waits for ${w.map((x) => `${x.party_name || x.party} · ${x.title}`).join(", ")}` : "";
 }
 
-/** The links the Orkmaster draws on the project's level: [{key, from, to, kind}], a collision (`collide`: between its two decks, no direction) for each open one, and a wait (`wait`: from the goal waited
- *  for to the one that waits). Only between goals the map has; one named twice is drawn once. */
-export function orkLinks(collisions, nodes) {
-  const party = new Map(nodes.map((n) => [n.slug, n.goal])), seen = new Set(), out = [];
-  const add = (key, from, to, kind) => { if (!seen.has(key) && party.has(from) && party.has(to) && from !== to) { seen.add(key); out.push({ key, from, to, kind }); } };
-  for (const c of collisions || []) add(`collide:${c.id}`, c.a, c.b, "collide");
-  for (const n of nodes) for (const w of waitsOf(n)) add(`wait:${w.goal}>${n.slug}`, w.goal, n.slug, "wait");
-  return out;
-}

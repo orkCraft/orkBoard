@@ -3,7 +3,7 @@
 // again: the newest `at` seen is kept per project (`localStorage` `orkboard.flags.goals.<project>`), written when the line first stands. A goal's row in
 // the Flags fold is lit once. A device with no mark yet (the first start after this part) says nothing of the flags raised before.
 // When the line stands, a raise waits (docs/specs/64-flags-raised.md): the new goals' elements travel from the gate to the line (partyline.js `FlagLine`), where the first
-// six stay in a row; the box they travel from is the merge's press (gate.js keeps it for 10 s), else the gate's quiet line under the project's line (spec 90 §2.3).
+// six stay in a row; the box they travel from is the merge's press (gate.js keeps it for 10 s), else the flag line's own place.
 import { batch, signal } from "@preact/signals";
 import { lookKey, mapData } from "../shell/store.js";
 
@@ -28,15 +28,6 @@ export function mergePressed(r) {
 export function mergeRefused() {
   merged = null;
 }
-/** The gate's place: its quiet line (gate.js `GateLine`), when it is on screen and nothing covers it (the element at its centre is it); else null. Read when the line is drawn. */
-export function gateButton() {
-  const b = document.querySelector(".arena-gateline__main"), r = b?.getBoundingClientRect();
-  if (!r || !r.width || !r.height) return null;
-  const x = r.left + r.width / 2, y = r.top + r.height / 2;
-  if (x < 0 || y < 0 || x > innerWidth || y > innerHeight) return null;
-  return b.contains(document.elementFromPoint(x, y)) ? box(r) : null;
-}
-
 /** The goals just raised wait to travel to the line, from the box of a merge pressed a moment ago (once: the next line does not take it again). Dropped after 6 s. */
 function raiseWaits(goals) {
   clearTimeout(raiseTimer);

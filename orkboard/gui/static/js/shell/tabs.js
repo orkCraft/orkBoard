@@ -5,7 +5,7 @@ import { html, cls } from "../html.js";
 import { Icon } from "../orkui.js";
 import { tabs, active, editing, activate, closeTab, keepTab, hideDrawer, kindWords } from "./store.js";
 
-const NAMES = { gate: "dev → main", agents: "Agents", files: "Files" };
+const NAMES = { gate: "dev → main", files: "Files" };
 const fallback = (p) => NAMES[p.kind] || p.path || p.slug || "…";
 
 export function TabStrip() {

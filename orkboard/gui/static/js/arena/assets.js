@@ -1,5 +1,5 @@
 // The project's Assets (docs/specs/88-assets-and-play.md §6, decisions §104.11, §105.3): the project's own files, read from dev's tree (`ideas.assets`), laid out on the table as the field's cards, the kinds as
-// sections one under another (docs/specs/90-what-the-first-look-said.md §3) — Screens, Art and icons, Sound, Music, Clips, Fonts, the order of §0, then the canvases (canvases.js, spec 90 §2.3) —, a section's name
+// sections one under another (docs/specs/90-what-the-first-look-said.md §3) — Screens, Art and icons, Sound, Music, Clips, Fonts, the order of §0 —, a section's name
 // over its cards and its cards wrapping across the whole width, a folder of more than six of one kind a stack (×n, a press opens it). A card's face is the thing itself: art and a screen drawn whole
 // (contained, crisp when it is smaller than the card), a sound or music its name over orkUI's *sound* sign and its length, a clip its first frame (else the *film* sign), a font its name set in it. Its foot is its name
 // and, when a goal changed it last, *Changed by <goal>* with the goal's element. A press opens the file in the window's right column (spec 90 §2, a tab of kind `asset`, never over the window): art at its size up to
@@ -16,11 +16,9 @@ import { mapData, preview, show } from "../shell/store.js";
 import { reducedMotion } from "./motion.js";
 import { Picture, Player } from "./picks.js";
 import { isPixel, labelOf, lengthWords } from "./pickwords.js";
-import { CanvasSection, useCanvases } from "./canvases.js";
 
 /** The last answer of `ideas.assets` the page read: a file opened in the right column is found in it. */
 export const assetsDoc = signal(null);
-export const CANVASES = "Canvases";
 
 /** The kinds in the order of the sections (spec 88 §0): [id, the section's word]. */
 export const KINDS = [["screen", "Screens"], ["art", "Art and icons"], ["sound", "Sound"], ["music", "Music"], ["clip", "Clips"], ["font", "Fonts"]];
@@ -251,7 +249,7 @@ function effects(reveal) {
 const open = (a) => show({ kind: "asset", path: a.id, title: a.name }, { via: "assets" });
 
 export function Assets() {
-  const { doc, err, reveal } = useAssets(), canvas = useCanvases();
+  const { doc, err, reveal } = useAssets();
   const [kind, setKind] = useState(""), [goal, setGoal] = useState(""), [openStacks, setOpenStacks] = useState(() => new Set());
   if (err && !doc) return html`<div class="assets" data-state="failed"><p class="arena-cap assets-note">${err}</p></div>`;
   if (!doc) return html`<div class="assets" data-state="reading"><p class="arena-cap assets-note"><span class="ork-busy"></span></p></div>`;
@@ -259,22 +257,19 @@ export function Assets() {
   const used = new Set(doc.assets.map((a) => a.goal).filter(Boolean)), goalIds = Object.keys(goals).filter((g) => used.has(g));
   const pick = (r) => (!kind || r.kind === kind) && (!goal || r.goal === goal);
   const shown = doc.assets.filter(pick), gone = reveal ? reveal.removed.filter(pick) : [];
-  const anyCanvas = canvas.canvases.length + canvas.seen.length > 0;
-  const has = (k) => (k === "canvas" ? anyCanvas : doc.assets.some((a) => a.kind === k));
-  const pickCanvas = (c) => (!kind || kind === "canvas") && (!goal || c.idea === goal);
-  const canvases = canvas.canvases.filter(pickCanvas), seen = canvas.seen.filter(pickCanvas);
+  const has = (k) => doc.assets.some((a) => a.kind === k);
   const toggle = (k) => setOpenStacks((s) => { const n = new Set(s); n.has(k) ? n.delete(k) : n.add(k); return n; });
   const secs = KINDS.map(([id, word]) => ({ id, word, list: shown.filter((a) => a.kind === id), gone: gone.filter((r) => r.kind === id) })).filter((c) => c.list.length || c.gone.length);
-  const any = secs.length > 0 || canvases.length + seen.length > 0;
+  const any = secs.length > 0;
   return html`<div class="assets" data-state="shown">
     <div class="assets-bar">
       <div class="assets-kinds" role="group" aria-label="Kinds">
-        ${[...KINDS, ["canvas", CANVASES]].filter(([id]) => has(id)).map(([id, word]) => html`<button type="button" key=${id} class="ork-btn" data-kind=${id} aria-pressed=${String(kind === id)} onClick=${() => setKind(kind === id ? "" : id)}>${word}</button>`)}
+        ${KINDS.filter(([id]) => has(id)).map(([id, word]) => html`<button type="button" key=${id} class="ork-btn" data-kind=${id} aria-pressed=${String(kind === id)} onClick=${() => setKind(kind === id ? "" : id)}>${word}</button>`)}
       </div>
       ${goalIds.length > 0 && html`<div class="ork-select assets-goals"><select class="ork-field" aria-label="Goal" value=${goal} onChange=${(e) => setGoal(e.target.value)}>
         <option value="">${ALL_GOALS}</option>${goalIds.map((g) => html`<option key=${g} value=${g} selected=${g === goal}>${goals[g].title}</option>`)}</select></div>`}
     </div>
-    ${doc.assets.length === 0 && !anyCanvas ? html`<div class="assets-none"><p class="assets-none__title">${NOTHING}</p><p class="arena-cap">${NOTHING_HOW}</p></div>`
+    ${doc.assets.length === 0 ? html`<div class="assets-none"><p class="assets-none__title">${NOTHING}</p><p class="arena-cap">${NOTHING_HOW}</p></div>`
       : !any ? html`<div class="assets-none"><p class="assets-none__title">${NOTHING}</p></div>` : html`
       <div class="assets-body ork-table"><div class="assets-secs">
         ${secs.map((c) => html`<section key=${c.id} class="assets-sec" data-kind=${c.id} aria-label=${c.word}>
@@ -286,7 +281,6 @@ export function Assets() {
             ${c.gone.map((r) => html`<${Ghost} key=${`gone:${r.id}`} r=${r} />`)}
           </div>
         </section>`)}
-        <${CanvasSection} list=${canvases} seen=${seen} done=${canvas.done} />
       </div></div>`}
   </div>`;
 }

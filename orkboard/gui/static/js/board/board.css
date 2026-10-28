@@ -129,27 +129,6 @@
 .board-stages__task { display: inline-flex; flex-wrap: wrap; gap: var(--ork-2); align-items: baseline; }
 .board-stages__state { min-width: 0; text-transform: none; }
 
-/* -- Spec 38: Operations --------------------------------------------------------------------------------------------- */
-.board-ops, .board-ops__sec { display: flex; flex-direction: column; gap: var(--ork-4); }
-.board-ops > .board-sub { display: flex; align-items: center; gap: var(--ork-4); }
-.board-ops__gear { margin-left: auto; }
-.board-ops .board-sub { margin: var(--ork-4) 0 0; }
-.board-op { display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3) var(--ork-5); list-style: none;
-  background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame); clip-path: var(--ork-notch); overflow-wrap: anywhere; }
-.board-op[data-state="failed"] { border-color: var(--ork-danger); }
-.board-op__title { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--ork-4); min-width: 0; }
-.board-op-rules { display: flex; flex-direction: column; gap: var(--ork-4); }
-.board-op-lines { margin: 0; padding-left: 1.2em; }
-.board-newmenu { position: relative; }
-.board-newmenu .board-target__menu { left: auto; right: auto; top: 100%; min-width: 240px; font: var(--ork-type-body); text-transform: none; letter-spacing: normal; }   /* it opens from a heading: its words are a person's, not the heading's */
-.board-newmenu__off { cursor: default; opacity: .8; }
-.board-doubts { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-2); color: var(--ork-alert); }
-.board-found { margin: 0; display: flex; flex-direction: column; gap: var(--ork-2); }
-.board-found > div { display: flex; gap: var(--ork-4); }
-.board-found dt { flex: none; min-width: 7em; color: var(--ork-ink-muted); }
-.board-found dd { margin: 0; overflow-wrap: anywhere; }
-.board-num { width: 5em; }
-
 /* The cards at the top of Waits for your look (spec 42 §1.4, spec 49 §5.5): they cover nothing and take their place in the column; the Map's foot (Flags, Last week) is under the results. */
 .away { flex: none; display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; }
 .away__title { margin: 0; font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
@@ -185,5 +164,3 @@
 .board-goal__progress { display: flex; align-items: center; gap: var(--ork-3); color: var(--ork-ink-muted); }
 .board-check__skip { align-self: flex-start; font: var(--ork-type-caption); }
 
-/* A template's way to going by itself (spec 42 §5): its pips and the words beside them. */
-.board-op__way { display: inline-flex; align-items: center; gap: var(--ork-3); }

@@ -1,5 +1,5 @@
 // What waits for you (docs/specs/49-one-window.md §6, docs/specs/54-one-hand.md §2–§3): the bottom row. Every stop of the project — a plan ready, a question, a
-// proposal, a to-do, a failure, a pick, Operations', a result to look at and *n goals ready for main* (docs/specs/90-what-the-first-look-said.md §2.3) — each a framed item standing in a fan along the bottom edge, only its top showing, the most urgent in the middle
+// proposal, a to-do, a failure, a pick, a result to look at and *n goals ready for main* (docs/specs/90-what-the-first-look-said.md §2.3) — each a framed item standing in a fan along the bottom edge, only its top showing, the most urgent in the middle
 // (arenawords.js `laidOut`; a to-do the last of all, spec 87 §4.3); one of another party says its party. Hovering or focusing one raises it whole, with its quick answers and a way out that needs nothing
 // from the person (*Let … decide*, *Describe it instead*, *Go without it*, *Let … choose*). A press answers; a click outside the buttons opens it in the drawer. A *Pick one*
 // (docs/specs/51-pick-one.md §6) holds its variants as small tiles, two by two (picks.js): a press on a strip picks one, *Take B* answers
@@ -10,13 +10,12 @@
 // (docs/specs/58-stop-and-its-task.md: `aboutOf`); an answered stop fades where it stands, in the frame its task changes (motion.js `useLeaving`).
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
-import { Head, Icon, Sign } from "../orkui.js";
+import { Head, Sign } from "../orkui.js";
 import { say, toast } from "../link.js";
 import { act, showIdea, showPlan, showTask, showGoal, showResult, showPick, showGate, needsFocus } from "../shell/store.js";
 import { ResultActions } from "../shell/review.js";
 import { openDialog } from "../shell/modals.js";
 import { TodoWays, named } from "../shell/tododialog.js";
-import { run as runOp } from "../board/ops.js";
 import { board, track } from "../board/store.js";
 import { lookTick } from "../shell/store.js";
 import { reducedMotion, useHeld, useLeaving } from "./motion.js";
@@ -44,9 +43,9 @@ async function startPlan(e, slug, name, args) {
 }
 
 /** What a stop is about on the field (spec 58 §1): {task: "<goal>/<task>"} for a failed task, a pick and a result, {idea: "<goal>"} for a plan, a plan change, a question, a proposal and a to-do (the goal's cards,
- *  its Planning card), null for a stop of another party, Operations', and a party's own (it has no card here). */
+ *  its Planning card), null for a stop of another party, and a party's own (it has no card here). */
 export function aboutOf(s) {
-  if (s.other || s.party?.ops) return null;
+  if (s.other) return null;
   const row = s.row;
   if (s.kind === "failed" && s.node && s.task) return { task: `${s.node.slug}/${s.task.id}` };
   if (s.kind === "pick" && row?.slug) return { task: `${row.slug}/${row.task}` };
@@ -106,8 +105,8 @@ function Answers({ s, g, see }) {
   if (s.kind === "pick") return html`<${PickAnswers} s=${s} see=${see} />`;
   const row = s.row, n = s.node, slug = row?.idea || n?.slug || "";
   if (s.kind === "plan") {
-    const night = n?.start_at === "night", miss = row?.missing || [];
-    if (miss.length && !night) {
+    const miss = row?.missing || [];
+    if (miss.length) {
       const m = miss[0];
       const join = async (e) => { const got = await startPlan(e, slug, "ideas.start", { slug, join: { add: m.agent }, via: "hand" }); if (got) toast(`${m.name} joined the party; the work started.`); };
       const without = (e) => startPlan(e, slug, "ideas.start", { slug, via: "hand" });
@@ -116,8 +115,7 @@ function Answers({ s, g, see }) {
         : html`<button type="button" class="ork-btn primary arena-hc__q" title="Passes the plan as it is; the Grunt does that work" onClick=${without}>Start without</button>
           <button type="button" class="ork-btn arena-hc__q" title="Change a member of the party" onClick=${() => { see(); openDialog("goal", { slug: row.goal || g?.slug }); }}>Edit the party</button>`;
     }
-    return html`${night ? html`<button type="button" class="ork-btn primary arena-hc__q" title="Starts it now, not tonight" onClick=${(e) => startPlan(e, slug, "ideas.start_now", { slug, via: "hand" })}>Start now</button>`
-      : html`<button type="button" class="ork-btn primary arena-hc__q" title="Passes the plan; the work starts" onClick=${(e) => startPlan(e, slug, "ideas.start", { slug, via: "hand" })}>Start the work</button>`}
+    return html`<button type="button" class="ork-btn primary arena-hc__q" title="Passes the plan; the work starts" onClick=${(e) => startPlan(e, slug, "ideas.start", { slug, via: "hand" })}>Start the work</button>
       <button type="button" class="ork-btn arena-hc__q" title="The plan in the drawer" onClick=${() => { see(); showPlan(slug, "", { via: "hand" }); }}>Open the plan</button>`;
   }
   if (s.kind === "change") {
@@ -172,12 +170,7 @@ function Answers({ s, g, see }) {
   }
   if (s.kind === "collide") return html`<${CollideAnswers} s=${s} />`;
   if (s.kind === "sign_in") return html`<${SignInButton} harness=${row.harness} tool=${row.tool} />`;   // the tool's own sign-in (spec 45 §7): the work goes on by itself once it is signed in                         // the Orkmaster asks (spec 71): each answer says what happens
-  if (s.kind === "op_rules") {
-    const template = row.template;
-    return html`<${Decline} s=${s} yes=${["Take", "Take the rules"]} ask=${["No", "No rules"]} sure="Decline the rules" take=${() => runOp("ops.rules_answer", { template, take: true })}
-      go=${(reason) => runOp("ops.rules_answer", { template, take: false, ...(reason ? { reason } : {}) })} />`;
-  }
-  return html`<button type="button" class="ork-btn arena-hc__q" onClick=${() => { see(); openDialog("opcheck", { op: row.op }); }}>Open…</button>`;
+  return null;
 }
 
 /** What a click outside the buttons opens. */
@@ -193,12 +186,11 @@ function open(s) {
   else if (s.kind === "pitch" || s.kind === "collide") showIdea(row.idea, via);
   else if (s.kind === "sign_in") signIn(row.harness);
   else if (s.kind === "gate") showGate(via);
-  else openDialog("opcheck", { op: row.op });
 }
 
 /** A stop of another party opens there (spec 54 §2.2): that party is shown first, as a pick of it in the parties' list; a quick answer acts in place. */
 const toParty = (s) => {
-  if (!s.other || s.party.away) return;                                  // Operations' stops while the Team party is in another project: they answer in place, there is no field of theirs here (spec 92 §3)
+  if (!s.other) return;
   closeSpread();
   leaveParty();
   track.value = s.party.slug;
@@ -260,7 +252,7 @@ function Stop({ s, g, place, of, rise = "" }) {
       <span class="arena-hc__top">${s.gem !== "" && html`<span class=${cls("ork-gem", { danger: s.tone === "danger" })} title=${s.gemTip}>${typeof s.gem === "object" ? html`<${Sign} name=${s.gem.sign} />` : s.gem}</span>`}
         <span class=${cls("arena-hc__kind", { "is-no": s.tone === "danger" })}>${s.label}</span>
         ${s.small && s.head && html`<span class="arena-hc__who" title=${s.whoTip}><${Head} race=${s.head.race} tier=${s.head.tier} small=${s.kind === "collide"} /></span>`}</span>
-      ${other && html`<span class="arena-hc__party" title=${p.ops ? p.name : `${p.name} · led by ${p.lead}`}>${p.ops ? html`<${Icon} name="sliders" />` : p.head && html`<${Head} race=${p.head.race} tier=${p.head.tier} />`}</span>`}
+      ${other && html`<span class="arena-hc__party" title=${`${p.name} · led by ${p.lead}`}>${p.head && html`<${Head} race=${p.head.race} tier=${p.head.tier} />`}</span>`}
       ${!s.small && html`<span class="arena-art">${s.head && html`<${Head} race=${s.head.race} tier=${s.head.tier} size="mid" />`}</span>`}
       ${!pick && s.kind !== "collide" && html`<span class="arena-banner">${other ? `${p.name} · ${s.title}` : s.title}</span><span class="arena-hc__text" title=${s.text}>${s.text}</span>`}
       ${s.why && html`<span class="arena-hc__note" title=${s.why}>${s.why}</span>`}

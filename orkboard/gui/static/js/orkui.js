@@ -24,12 +24,6 @@ export function Elem({ name = "", big = false, dim = false }) {
   return html`<span class=${`ork-elem ${name || "dust"}${big ? " big" : ""}${dim || !name ? " dim" : ""}`} aria-hidden="true"></span>`;
 }
 
-/** A goal's moon (orkUI's moons/, spec 74 §6): its tasks merged of its tasks, new, crescent, half, gibbous or full, 14 x 14 (`big` 28 x 28). Shown, never named:
- *  `aria-hidden`; its words (*working 3/7*) are beside it. */
-export function Moon({ phase, big = false }) {
-  return html`<span class=${`ork-moon ${phase}${big ? " big" : ""}`} aria-hidden="true"></span>`;
-}
-
 /** orkUI's chevron: down (a menu, an open fold), up, right (a closed fold) or left. */
 export function Chev({ dir = "down" }) {
   return html`<i class=${`ork-chev${dir === "down" ? "" : ` ${dir}`}`} aria-hidden="true"></i>`;
@@ -69,8 +63,7 @@ export function TabMark({ tab }) {
 }
 
 /** What needs the person, by kind, as orkUI's icon (Needs you, desktop and phone alike). */
-export const NEED_ICONS = { goal: "flag", asks: "warning-diamond", plan: "list-box", todo: "checkbox", failed: "square-alert", proposal: "lightbulb",
-  op: "checkbox", op_failed: "square-alert", op_rules: "sliders" };
+export const NEED_ICONS = { goal: "flag", asks: "warning-diamond", plan: "list-box", todo: "checkbox", failed: "square-alert", proposal: "lightbulb" };
 
 // The words of a head, as realm/lexicon.py says them (tier.*, race.*, craft.*; tests/test_design_system.py keeps them so).
 export const TIER_WORDS = { elder: "Veteran", warrior: "Seasoned", laborer: "Novice" };

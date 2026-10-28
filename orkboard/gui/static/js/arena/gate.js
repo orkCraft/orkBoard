@@ -1,22 +1,13 @@
 // The gate (docs/specs/49-one-window.md §5.6, docs/specs/90-what-the-first-look-said.md §2.3, decisions §104.9): what dev holds that main lacks is **one card in the hand** for the batch,
-// *n goals ready for main*, its answer *Merge into main* (arenawords.js `gateStop`, stops.js), and a quiet line under the project's line in the left column (`GateLine`): *n goals in dev wait for
-// main* (*main is up to date* when nothing waits; none when dev and main are one branch) and *results go into dev ⌄* (spec 50 §3.1). A press on the line, or on the card outside its button, opens
-// the gate's screen in the right column: the goals listed under *In dev, not in main* with their goals, the commits and files counts, and the one press that merges.
+// *n goals ready for main*, its answer *Merge into main* (arenawords.js `gateStop`, stops.js). A press on the card outside its button opens the gate's screen in the right column
+// (`GateView`): the goals listed under *In dev, not in main* with their goals, the commits and files counts, and the one press that merges.
 // The press that merges keeps its box for 10 s (flags.js): the flags it raises travel from there to the flag line (docs/specs/64-flags-raised.md).
-import { html, cls } from "../html.js";
-import { Chev, Sign } from "../orkui.js";
+import { html } from "../html.js";
+import { Sign } from "../orkui.js";
 import { toast } from "../link.js";
-import { act, showGate, gateData, mapData, review } from "../shell/store.js";
-import { openDialog } from "../shell/modals.js";
+import { act, gateData, mapData } from "../shell/store.js";
 import { gateOf, plural } from "./arenawords.js";
 import { mergePressed, mergeRefused } from "./flags.js";
-
-/** *results go into dev ⌄*: the branch the results merge into (spec 50 §3.1); a press opens the same dialog as the results' own *Merge into*. */
-function IntoLine() {
-  const into = review.value?.into;
-  if (!into) return null;
-  return html`<button type="button" class="arena-into" aria-haspopup="dialog" title="The branch a result merges into: change it" onClick=${() => openDialog("into")}><span>results go into <b>${into}</b></span><${Chev} /></button>`;
-}
 
 /** The gate's command (spec 49 §5.6, as the gate's screen has it): merge dev into main. `e`: the press, whose box the flags it raises travel from. */
 export async function mergeGate(e) {
@@ -25,16 +16,6 @@ export async function mergeGate(e) {
   if (!got) mergeRefused();
   if (got?.note) toast(got.note, "warning");
   return got;
-}
-
-/** The quiet line under the project's line (spec 90 §2.3): what waits for main, and where the results go. Never a button that merges: that is the hand's card. */
-export function GateLine() {
-  const gate = gateOf(gateData.value);
-  if (!gate && !review.value?.into) return null;
-  return html`<div class=${cls("arena-gateline", { "is-off": !gate || gate.off })}>
-    ${gate && html`<button type="button" class="arena-gateline__main" title="What dev holds that main lacks: the gate's screen" onClick=${() => showGate({ via: "gate" })}>${gate.words}</button>`}
-    <${IntoLine} />
-  </div>`;
 }
 
 export function GateView() {

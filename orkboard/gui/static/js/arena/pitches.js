@@ -1,5 +1,5 @@
 // Ideation's line (docs/specs/65-ideation.md §8, decisions §78): a party the Investor leads has pitches, not goals to build, so its field and its left
-// column say them by state instead of the tasks' stacks. The left column: *Judging* (and the ones that failed), *Judged*, then *New · n* (with *Judge now* at its right), *Sent · n*, *Passed · n*
+// column say them by state instead of the tasks' stacks. The left column: *Judging* (and the ones that failed), *Judged*, then *New · n*, *Sent · n*, *Passed · n*
 // folded as rows (foldrow.js, spec 73 §3), each pitch a one-line row (a goal's, spec 73 §1) that opens its screen (shell/pitchview.js). The field: under the party row (its four views, then the Skeptic), a line per pitch
 // across the same columns — under each view its head, lit as that view answers (each lit once as it comes), under the Skeptic the decision's word
 // (*Invest* · *Reshape* · *Pass*) — in *Judging*, *Judged*, *New* and *Sent*. The words are pitchwords.js's.
@@ -22,22 +22,22 @@ function PitchRow({ n }) {
   const el = elementOf(n), mark = pitchMark(n), words = pitchWords(n);
   return html`<div class="arena-goal arena-pitchrow" data-slug=${n.slug} data-state=${n.pitch?.state || n.state}>
     <button type="button" class="arena-goal__main" title=${`${n.title} · ${words}`} aria-label=${`${n.title}: ${words}`} onClick=${() => open(n)}>
-      <${Elem} name=${el.name} dim=${el.dim} /><span class="arena-goal__type is-none" aria-hidden="true"></span>
+      <${Elem} name=${el.name} dim=${el.dim} />
       <span class="arena-goal__title">${n.short || n.title}</span>
       <span class=${cls("arena-goal__mark", TONES[mark.tone])} title=${mark.label || undefined}>${mark.sign && html`<${Sign} name=${mark.sign} />`}</span>
     </button>
   </div>`;
 }
 
-/** A fold of the left column, a row: *New · n* (with *Judge now* at its right), *Sent · n*, *Passed · n*. */
-function Fold({ name, list, on, cls: kind, aside = null }) {
-  if (!list.length && !aside) return null;
-  return html`<${FoldRow} word=${name} n=${list.length} open=${on.value} toggle=${() => { on.value = !on.value; }} kind=${kind}>${aside}<//>
+/** A fold of the left column, a row: *New · n*, *Sent · n*, *Passed · n*. */
+function Fold({ name, list, on, cls: kind }) {
+  if (!list.length) return null;
+  return html`<${FoldRow} word=${name} n=${list.length} open=${on.value} toggle=${() => { on.value = !on.value; }} kind=${kind} />
     ${on.value && list.map((n) => html`<${PitchRow} key=${n.slug} n=${n} />`)}`;
 }
 
-/** The left column's list for Ideation: the pitches being judged, the judged ones, then New (with `power`, *Judge now*), Sent and Passed folded. */
-export function PitchGoals({ nodes, power = null }) {
+/** The left column's list for Ideation: the pitches being judged, the judged ones, then New, Sent and Passed folded. */
+export function PitchGoals({ nodes }) {
   const l = pitchLists(nodes);
   return html`<div class="arena-deck">
     ${l.judging.length > 0 && html`<h3 class="arena-sec">Judging</h3>`}
@@ -45,7 +45,7 @@ export function PitchGoals({ nodes, power = null }) {
     <h3 class="arena-sec">Judged</h3>
     ${!l.judged.length && html`<p class="arena-cap">No pitch waits for you. A new pitch starts at New goal.</p>`}
     ${l.judged.map((n) => html`<${PitchRow} key=${n.slug} n=${n} />`)}
-    <${Fold} name="New" list=${l.raw} on=${rawOpen} cls="arena-raw" aside=${power} />
+    <${Fold} name="New" list=${l.raw} on=${rawOpen} cls="arena-raw" />
     <${Fold} name="Sent" list=${l.sent} on=${sentOpen} cls="arena-sent" />
     <${Fold} name="Passed" list=${l.passed} on=${flagsOpen} cls="arena-passed" />
   </div>`;

@@ -1,5 +1,5 @@
 // The project's level (docs/specs/70-orkmaster-and-the-project.md §2–§3, decisions §85): a press on the Orkmaster in the project's line shows the whole of the project in place of one party —
-// a column for each party in the Board's order (Operations is not one), its head (the leader's head, its name, *k/n*; a press opens that party) on the canvas, under the heads the table
+// a column for each party in the Board's order, its head (the leader's head, its name, *k/n*; a press opens that party) on the canvas, under the heads the table
 // (orkUI's `.ork-table`, as the party's field: docs/specs/79-the-project-on-the-table.md) with each party's goals as the field's cards (5:7: the goal's element, its type's sign, its type, its title,
 // its state's words) grouped *Planning*, *At work*, *Waits for main*, then *Flags (n)* folded. A press on a card opens the goal's screen in the drawer.
 // Wider than the field the columns scroll sideways and the heads stay. Hovering or focusing a deck draws, with arrows.js, a link to each deck its route names in another column (the pitch it came from,
@@ -16,11 +16,9 @@ import { elementOf, goalMark } from "./goalwords.js";
 import { pitchMark } from "./pitchwords.js";
 import { typeSign } from "./stacks.js";
 import { ArrowLines, segment } from "./arrows.js";
-import { reducedMotion } from "./motion.js";
 import { PartyList, show } from "./partylist.js";
 import { PartyMenu } from "./partymenu.js";
 import { ProjectRows } from "./projectrows.js";
-import { orkLinks } from "./collidewords.js";
 import { GROUPS, PARTIES_WORDS, TABS, THE_PROJECT, deckCount, decksOf, emptyWords, linksOf } from "./projectwords.js";
 import { AssetsAndFiles } from "./assetsfiles.js";
 import { Play } from "./play.js";
@@ -70,12 +68,8 @@ function Column({ g, nodes, lit, setLit }) {
   </section>`;
 }
 
-const LEAVE_MS = 420;                                         // a collision that was answered crumbles this long (arena.css `arena-crumble`)
-const seen = () => !reducedMotion() && !document.hidden;      // motion plays only while the page is seen and the person has not asked for none
-
-/** The links on the level, in the host's coordinates: the Orkmaster's (spec 71 §6: a collision, in the signal's colour, between its two decks while its stop is open; a wait, an arrow from the goal waited for), always;
- *  and the lit deck's route (the two decks' boxes joined by an arrow, from the earlier step to the later). `collisions`: `project.collisions`. */
-function useLinks(host, nodes, lit, collisions) {
+/** The lit deck's route on the level, in the host's coordinates: the two decks' boxes joined by an arrow, from the earlier step to the later; nothing at rest. */
+function useLinks(host, nodes, lit) {
   const [lines, setLines] = useState([]);
   const [size, setSize] = useState(0);
   useLayoutEffect(() => {
@@ -85,31 +79,24 @@ function useLinks(host, nodes, lit, collisions) {
     watch.observe(el);
     return () => watch.disconnect();
   }, []);
-  const was = useRef([]);                                     // the lines drawn last: a collision that went is kept as they were
   useLayoutEffect(() => {
-    const el = host.current, mine = [...orkLinks(collisions, nodes), ...(lit ? linksOf(nodes).filter((l) => l.from === lit || l.to === lit) : [])];
+    const el = host.current, mine = lit ? linksOf(nodes).filter((l) => l.from === lit || l.to === lit) : [];
     const base = el?.getBoundingClientRect(), box = (slug) => {
       const x = el.querySelector(`.arena-pdeck[data-slug="${CSS.escape(slug)}"]`);
       if (!x) return null;
       const r = x.getBoundingClientRect();
       return { x: r.left - base.left, y: r.top - base.top, w: r.width, h: r.height };
     };
-    const next = !el ? [] : mine.map((l) => [l, box(l.from), box(l.to)]).filter(([, a, b]) => a && b).map(([l, a, b]) => { const g = segment(l.key, a, b); return { ...g, ...(l.kind === "collide" ? { x2: g.tip.x, y2: g.tip.y } : {}), kind: l.kind || "" }; });          // a collision has no head: its line goes to the deck
-    const open = new Set((collisions || []).map((c) => `collide:${c.id}`)), now = Date.now();
-    const out = was.current.filter((l) => l.leaving && l.until > now);              // a collision answered or withdrawn while the page is seen crumbles for LEAVE_MS (spec 74 §3); one the filter hid, or the first read, never
-    if (seen()) for (const l of was.current) if (l.kind === "collide" && !l.leaving && !open.has(l.key) && !next.some((x) => x.key === l.key)) out.push({ ...l, leaving: true, until: now + LEAVE_MS });
-    const all = [...next, ...out.filter((l) => !next.some((x) => x.key === l.key))];
-    was.current = all;
-    setLines((cur) => (!cur.length && !all.length ? cur : all));
-    if (out.length) setTimeout(() => { was.current = was.current.filter((l) => !l.leaving || l.until > Date.now()); setLines((cur) => cur.filter((l) => !l.leaving || l.until > Date.now())); }, LEAVE_MS + 30);
-  }, [lit, nodes, collisions, size]);
+    const next = !el ? [] : mine.map((l) => [l, box(l.from), box(l.to)]).filter(([, a, b]) => a && b).map(([l, a, b]) => ({ ...segment(l.key, a, b), kind: "" }));
+    setLines((cur) => (!cur.length && !next.length ? cur : next));
+  }, [lit, nodes, size]);
   return lines;
 }
 
 /** The Field tab: the project's level (spec 79): the Orkmaster's two rows (spec 91 §8), the parties as columns of the goals' cards. */
 function Field({ m, parties }) {
   const [lit, setLit] = useState(""), host = useRef();
-  const lines = useLinks(host, m.nodes || [], lit, m.project?.collisions);
+  const lines = useLinks(host, m.nodes || [], lit);
   return html`<${ProjectRows} ork=${m.project?.orkmaster} deal=${m.project?.deal || []} />
     <section class="arena-project__body" aria-label=${THE_PROJECT}>
       <div class="arena-project__grid">
@@ -138,9 +125,9 @@ function Tabs({ tab, setTab }) {
   </div>`;
 }
 
-/** The project's level: the field in place of a party's, with its Assets and Play (spec 88). `stops`: the one hand's, as Operations' field has it. */
+/** The project's level: the field in place of a party's, with its Assets and Play (spec 88). `stops`: the one hand's. */
 export function Project({ m, stops }) {
-  const parties = goalsOf(m, goalList().map((x) => x.slug)).filter((g) => !g.ops), [tab, setTab] = useState("field");        // the Team party holds Operations, not goals: no column (spec 92 §3)
+  const parties = goalsOf(m, goalList().map((x) => x.slug)), [tab, setTab] = useState("field");
   return html`<div class="arena arena-project" data-goal=${PROJECT}>
     <${PartyList} />
     <div class="arena-ops__main arena-project__main">

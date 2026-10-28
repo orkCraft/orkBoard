@@ -7,10 +7,9 @@ import { html } from "../html.js";
 import { Sign } from "../orkui.js";
 import { cards, closeCard } from "../shell/look.js";
 import { showIdea, showGoal, showNeeds, logOpened } from "../shell/store.js";
-import { Modal, closeDialog, openDialog } from "../shell/modals.js";
-import { ask, goalList, track } from "./store.js";
+import { Modal, closeDialog } from "../shell/modals.js";
+import { ask } from "./store.js";
 import { pctOf } from "../spend.js";
-import { PRODUCT } from "../link.js";
 
 const SHOWN = 5;                                     // ideas named under the results, then *and 3 more*
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
@@ -23,13 +22,6 @@ export function resultsWords(m, into) {
   const n = m.tasks, f = m.first_time;
   if (n === 1) return `1 result in ${into}${f ? ", the first time" : ""}`;
   return `${n} results in ${into}${f ? `, ${f} the first time` : ""}`;
-}
-
-/** *The night: drafted 2 goals, started 1 plan, read 1 party again, proposed 2 goals*: only the parts above 0. */
-export function nightWords(night) {
-  const parts = [night.drafted && `drafted ${plural(night.drafted, "goal", "goals")}`, night.started && `started ${plural(night.started, "plan", "plans")}`,
-    night.refreshed && `read ${plural(night.refreshed, "party", "parties")} again`, night.proposed && `proposed ${plural(night.proposed, "goal", "goals")}`].filter(Boolean);
-  return parts.length ? `The night: ${parts.join(", ")}` : "";
 }
 
 /** *Waits for you: 1 answer, 3 results to check*, else *Nothing waits for you*. */
@@ -54,11 +46,9 @@ function Recap({ r }) {
     ${m.tasks > 0 && html`<p class="away__merged">${resultsWords(m, r.into || "dev")}</p>
       ${m.ideas.length > 0 && html`<p class="away__ideas">${joined(m.ideas.slice(0, SHOWN).map((i) => html`${link(i)}${i.done ? " · done" : ""}`))}${m.ideas.length > SHOWN ? ` and ${m.ideas.length - SHOWN} more` : ""}</p>`}`}
     ${(r.flags || []).map((f) => html`<div key=${f.goal}>${flagLine(f)}</div>`)}
-    ${r.night && html`<p class="away__night">${nightWords(r.night)}</p>`}
     ${(r.proposed || []).length > 0 && html`<p class="away__proposed">Proposed for you: ${joined(r.proposed.map((i) => html`<button key=${i.slug} type="button" class="board-link" onClick=${showNeeds}>${i.short}</button>`))}</p>`}
     ${(r.failed || []).length > 0 && html`<p class="away__failed ok-tone-error">Failed: ${joined(r.failed.map((f) => html`<button key=${f.slug + f.task} type="button" class="board-link" onClick=${() => showIdea(f.slug, { via: "recap" })}>${f.short} · ${f.task}</button>`), "; ")}</p>`}
     ${r.usd > 0 && html`<p class="away__usd ok-tone-muted">${usdWords(r.usd)}</p>`}
-    ${r.nights >= 2 && html`<p class="away__streak">${r.nights} nights in a row with work done.</p>`}
     <p class="away__waits"><button type="button" class="board-link" onClick=${showNeeds}>${waitsWords(r.waits || { you: 0, review: 0 })}</button></p>
   </div>`;
 }
@@ -106,8 +96,6 @@ function Week({ w }) {
     const left = w.answers.decided ? `; ${w.answers.decided} ${w.answers.decided === 1 ? "card" : "cards"} left to the Taskmaster` : "";
     lines.push(html`<p class="away__answers">Questions: ${w.answers.recommended} of ${w.answers.answers} answers were the recommended one${left}</p>`);
   }
-  const nights = weekNights(w.nights);
-  if (nights) lines.push(html`<p class="away__nights">${nights.replace("The last 7 nights", "Nights")}${w.streak >= 2 ? ` · ${w.streak} in a row` : ""}</p>`);
   return html`<div class="away__lines">${lines.length ? lines : html`<p class="ok-tone-muted">Nothing was merged or finished.</p>`}</div>`;
 }
 
@@ -125,15 +113,13 @@ export function Cards() {
   </section>`;
 }
 
-/** *≈$46 of work at API prices in this project, ≈$3 in Operations: not your bill*: a part that is null (or nothing) is left out. */
+/** *≈$46 of work at API prices in this project: not your bill*; "" with none. */
 export function weekMoney(w) {
   const dollars = (usd) => `≈$${usd < 1 ? usd.toFixed(2) : Math.round(usd)}`;
-  const mine = w.usd > 0 ? w.usd : 0, ops = w.ops_usd > 0 ? w.ops_usd : 0;
-  if (!mine && !ops) return "";
-  if (pctOf(mine || ops)) return mine && ops ? `≈${pctOf(mine)} of work in this project, ≈${pctOf(ops)} in Operations: an estimate`
-    : `≈${pctOf(mine || ops)} of work in ${mine ? "this project" : "Operations"}: an estimate`;
-  if (mine && ops) return `${dollars(mine)} of work at API prices in this project, ${dollars(ops)} in Operations: not your bill`;
-  return `${dollars(mine || ops)} of work at API prices in ${mine ? "this project" : "Operations"}: not your bill`;
+  const mine = w.usd > 0 ? w.usd : 0;
+  if (!mine) return "";
+  if (pctOf(mine)) return `≈${pctOf(mine)} of work in this project: an estimate`;
+  return `${dollars(mine)} of work at API prices in this project: not your bill`;
 }
 
 /** *12 results in dev, 10 the first time · ≈$3.84 a result*. */
@@ -142,18 +128,12 @@ export function weekResults(w) {
   return `${resultsWords({ tasks: w.merged, first_time: w.first_time }, w.into || "dev")}${w.usd_per_merged != null ? ` · ≈${pctOf(w.usd_per_merged) || `$${w.usd_per_merged.toFixed(2)}`} a result` : ""}`;
 }
 
-/** *The last 7 nights: 4 with work done, 2 with none, 1 Orkline was not running*: parts at 0 left out. */
-export function weekNights(n) {
-  const parts = [n.worked && `${n.worked} with work done`, n.idle && `${n.idle} with none`, n.off && `${n.off} ${PRODUCT} was not running`].filter(Boolean);
-  return parts.length ? `The last 7 nights: ${parts.join(", ")}` : "";
-}
-
 /** *The week: 55 % left with 2 days to go: Low work starts by day*; "" with no week read (spec 44 §5). */
 export function weekPace(w) {
   if (!w?.week) return "";
   const { left, rest, pace } = w.week;
   const days = Math.max(1, Math.ceil(rest * 7 - 1e-9));
-  const does = { ahead: "Low work starts by day", even: "Low work waits for the night", behind: "Low work waits until the week comes back" }[pace] || "";
+  const does = { behind: "Low work waits until the week comes back" }[pace] || "";
   return `The week: ${Math.round(left * 100)} % left with ${days} ${days === 1 ? "day" : "days"} to go${does ? `: ${does}` : ""}`;
 }
 
@@ -161,17 +141,12 @@ export function weekPace(w) {
 export function WeekDialog() {
   const [w, setW] = useState(null);
   useEffect(() => { ask("ideas.week_work").then((got) => { if (got) setW(got); }); logOpened("week", "this"); }, []);
-  const newGoal = () => { closeDialog(); if (goalList().length) openDialog("idea", track.value ? { goal: track.value } : {}); else openDialog("goal", { then: "idea" }); };
   return html`<${Modal} title="This week" onClose=${closeDialog} foot=${html`<button type="button" class="ork-btn" onClick=${closeDialog}>Close</button>`}>
     ${!w ? html`<p class="ok-tone-muted">Reading the week…</p>` : html`<div class="week">
       ${weekMoney(w) && html`<p class="week__usd">${weekMoney(w)}</p>`}
       <p class="week__results">${weekResults(w)}</p>
-      ${weekNights(w.nights) && html`<p class="week__nights">${weekNights(w.nights)}</p>`}
       ${weekPace(w) && html`<p class="week__pace">${weekPace(w)}</p>`}
       ${w.last_unused != null && html`<p class="week__unused">Last week ended with ${Math.round(w.last_unused * 100)} % unused</p>`}
-      ${w.streak >= 2 && html`<p class="week__streak">${w.streak} nights in a row</p>`}
-      ${w.night_on && (w.tonight > 0 ? html`<p class="week__tonight">Tonight: ${w.tonight} wait</p>`
-        : html`<p class="week__tonight">Nothing waits for tonight · <button type="button" class="board-link" onClick=${newGoal}>New goal</button></p>`)}
     </div>`}
   <//>`;
 }

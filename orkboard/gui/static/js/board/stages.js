@@ -6,7 +6,7 @@ import { Sign, WhoHead } from "../orkui.js";
 
 const WORDS = { merged: "merged", running: "working", testing: "working", held: "held", failed: "failed", review: "at Review",
   waiting: "waiting", ready: "queued" };
-const MARKS = { merged: "check", running: "work", testing: "work", held: "night", failed: "cross" };         // orkUI's signs; a task at Review or waiting has its words only
+const MARKS = { merged: "check", running: "work", testing: "work", failed: "cross" };         // orkUI's signs; a task at Review, held or waiting has its words only
 
 /** The waves of a Stages text: [[{id, text}]] — one array per line, one entry per task. */
 export function waves(text) {

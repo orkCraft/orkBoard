@@ -3,7 +3,7 @@
 // neighbours) draw what these say. The backend writes no words: the member's state, a task's foot and a stop's text are said here.
 import { leftToDo, TASK_STATE } from "../board/maplayout.js";
 import { memberWords, soFarWords, todayWords } from "../board/mapstage.js";
-import { holdWords, hhmm, OPS } from "../board/store.js";
+import { holdWords, hhmm } from "../board/store.js";
 import { TIER_WORDS, RACE_WORDS } from "../orkui.js";
 import { kindCount } from "./pickwords.js";
 import { pctOf, pctRange, pctDelta, rated, SHARE_TIP } from "../spend.js";
@@ -27,12 +27,10 @@ export function waitsWords(w) {
   if (!w) return "";
   const who = w.title || w.ref || "another goal";
   return { idea: `waits for ${who}`, files: `same files as ${who}`, limits: `waits for limits${after(w.until)}`, reserve: w.title || `Waits for your reserve${w.until ? `: kept for you until ${hhmm(w.until)}` : ""}`,
-    night: "tonight", stopped: "stopped", week: w.title || `waits: the week is behind${w.until ? ` · until ${dayAt(w.until)}` : ""}`,
+    stopped: "stopped", week: w.title || `waits: the week is behind${w.until ? ` · until ${dayAt(w.until)}` : ""}`,
     sign_in: `waits: ${w.tool || w.title || "the tool"}'s sign-in` }[w.kind] || "";
 }
 
-/** *tonight*, or the Board's own night work: *tonight, or sooner if the week has room* (spec 44 §2); `starts` for a plan that starts tonight. */
-export const tonightWords = (n, starts = false) => `${starts ? "starts " : ""}tonight${n.night_by === "board" ? ", or sooner if the week has room" : ""}`;
 export const money = (n) => pctOf(n) || `$${n < 10 ? Number(n).toFixed(2) : Math.round(n)}`;
 const round2 = (n) => Math.round(n * 100) / 100;
 /** *$1–2*: a plan's price, from `plan_estimate`; "" with none. */
@@ -51,7 +49,7 @@ export function sinceWords(iso, now = Date.now()) {
 /** The map's goals in the Board's order (`order`: the Board's goal slugs, by priority); a goal the Board does not list goes last. */
 export function goalsOf(map, order = []) {
   const goals = map?.goals || [], at = (g) => (order.includes(g.slug) ? order.indexOf(g.slug) : order.length);
-  return [...goals].sort((a, b) => at(a) - at(b));
+  return [...goals].filter((g) => !g.ops).sort((a, b) => at(a) - at(b));       // the Team party holds Operations, not goals (spec 92 §3): the desktop has none
 }
 
 export const nodesOf = (map, slug) => (map?.nodes || []).filter((n) => n.goal === slug);
@@ -79,7 +77,6 @@ export function planningOf(g, nodes, leader) {
     if (n.state === "reading") return `${lead} is reading`;
     if (n.state === "planning") return `${lead} is planning`;
     if (n.waits?.kind === "week" || n.waits?.kind === "sign_in") return waitsWords(n.waits);
-    if (n.state === "plan" && n.start_at === "night") return tonightWords(n, true);
     if (n.state === "ready") return `ready · ${lead} plans it next`;
     return n.state;
   };
@@ -91,15 +88,8 @@ export function planningOf(g, nodes, leader) {
   const mine = nodes.filter((n) => n.stage === "planning");
   const rows = mine.filter((n) => n.state !== "raw").map(row);
   const raw = mine.filter((n) => n.state === "raw").map((n) => ({ slug: n.slug, title: n.short || n.title, full: n.title, node: n, kind: "idea", stop: false, busy: false,
-    mark: "", cost: "", words: n.waits?.kind === "week" || n.waits?.kind === "sign_in" ? waitsWords(n.waits) : n.queue === "hold" ? "stopped" : n.queue === "night" ? tonightWords(n) : `new · ${lead} reads it later` }));
+    mark: "", cost: "", words: n.waits?.kind === "week" || n.waits?.kind === "sign_in" ? waitsWords(n.waits) : n.queue === "hold" ? "stopped" : `new · ${lead} reads it later` }));
   return { rows: [...rows.filter((r) => r.stop), ...rows.filter((r) => !r.stop)], raw };
-}
-
-/** *Process now · 2 new goals* / *no new goal*, the goal it reads and its tooltip (spec 49 §4.4). */
-export function powerOf(raw, lead) {
-  const first = raw[0];
-  return { slug: first?.slug || "", off: !first, words: first ? plural(raw.length, "new goal", "new goals") : "no new goal",
-    tip: first ? `${lead} reads “${first.full}” now` : "No new goal to read" };
 }
 
 // -- the party -----------------------------------------------------------------------------------------------------------------------
@@ -210,13 +200,13 @@ export function nowOf(m, col, planning, isLead) {
     const next = stops.length > 1 ? line(`${stops.length} wait for you`) : stops.length === 1 && busy ? line(`${stops[0].words}: “${stops[0].title}”`) : line("");
     return { now, next };
   }
-  const run = col.filter((x) => RUN.includes(x.t.state)), failed = col.find((x) => x.t.state === "failed"), held = col.find((x) => x.t.state === "held");
+  const run = col.filter((x) => RUN.includes(x.t.state)), failed = col.find((x) => x.t.state === "failed");
   const picking = col.find((x) => x.t.state === "picking");
   const nx = col.find((x) => x.t.state === "ready" || x.t.state === "waiting"), rv = col.filter((x) => x.t.state === "review").length;
   const name = (x) => x.t.short || x.t.title, min = (x) => sinceWords(x.t.started);
   const now = run.length ? line(`${name(run[0])}${min(run[0]) ? ` · ${min(run[0])}` : ""}`, "work") : failed ? line(name(failed), "cross") : picking ? line(`asks you to pick: ${name(picking)}`, "alert")
     : nx ? line(`next: ${name(nx)}`) : rv ? line(`${rv} in Review`) : line("");
-  const next = failed && run.length ? line(name(failed), "cross") : picking && run.length ? line(`asks you to pick: ${name(picking)}`, "alert") : held ? line(`tonight: ${name(held)}`) : rv && run.length ? line(`${rv} in Review`)
+  const next = failed && run.length ? line(name(failed), "cross") : picking && run.length ? line(`asks you to pick: ${name(picking)}`, "alert") : rv && run.length ? line(`${rv} in Review`)
     : nx && run.length ? line(`next: ${name(nx)}`) : line("");
   return { now, next };
 }
@@ -231,11 +221,10 @@ export function memberView(m, stats, line, race) {
 }
 
 /** The sign on a member's head (spec 49 §5.2, orkUI's signs): cross on the danger ground for a failure, alert on the alert ground for another stop, work while at
- *  work, night (the clock) tonight; null when next or free. `mark` is the sign's name. */
+ *  work; null when next or free. `mark` is the sign's name. */
 export function signOf(m) {
   if (m.state === "needs") return m.why === "failed" ? { mark: "cross", tone: "danger" } : { mark: "alert", tone: "alert" };
   if (m.state === "work") return { mark: "work", tone: "" };
-  if (m.state === "tonight") return { mark: "night", tone: "" };
   return null;
 }
 
@@ -255,27 +244,25 @@ export function afterWords(t, n) {
   return names.length ? `after ${names.join(", ")}` : "";
 }
 
-/** Why a held task is held (spec 82 §3): {kind, word, sign}. `kind`: window · night · sign_in · week · files · "" (not known); `word` is what the foot says after *held:*,
- *  `sign` the sign before it. A task held for the tool's window or the person's reserve is *window*; for tonight, *night*. */
+/** Why a held task is held (spec 82 §3): {kind, word, sign}. `kind`: window · sign_in · week · files · "" (not known); `word` is what the foot says after *held:*,
+ *  `sign` the sign before it. A task held for the tool's window or the person's reserve is *window*. */
 export function heldOf(t, n) {
   const note = String(t.note || ""), w = n?.waits?.kind || "";
   if (t.held_for === "sign_in" || w === "sign_in") return { kind: "sign_in", word: "sign in", sign: "alert" };
-  if (w === "night") return { kind: "night", word: "tonight", sign: "night" };
   if (w === "week" || note.startsWith("week")) return { kind: "week", word: "week", sign: "pause" };
   if (w === "files" || /^files/.test(note)) return { kind: "files", word: "", sign: "before" };
   if (w === "limits" || w === "reserve" || note.startsWith("reserve") || /^after \d\d:\d\d/.test(note) || n?.held_until) return { kind: "window", word: "window", sign: "pause" };
   return { kind: "", word: "", sign: "pause" };
 }
 
-/** A held task's long words (its tooltip): *tonight · after 01:00*, *waits for limits · after 14:20*, *waits: the week is behind*. */
+/** A held task's long words (its tooltip): *waits for limits · after 14:20*, *waits: the week is behind*. */
 export function heldWords(t, n) {
-  if (n?.waits?.kind === "night") return `tonight${n.waits.until ? ` · after ${hhmm(n.waits.until)}` : ""}`;
   if (n?.waits?.kind === "week") return waitsWords(n.waits);
   if (t.held_for === "sign_in" || n?.waits?.kind === "sign_in") return waitsWords(n?.waits?.kind === "sign_in" ? n.waits : { kind: "sign_in" });   // held for its tool's sign-in (spec 45 §7)
   return holdWords(t.note, n?.waits?.title, t.why) || "held";
 }
 
-/** A task's foot: its state in words (*working 4 min*, *in Review*, *after Challenge store*, *held: tonight*, *failed*). */
+/** A task's foot: its state in words (*working 4 min*, *in Review*, *after Challenge store*, *held: window*, *failed*). */
 export function taskFoot(t, n) {
   if (t.state === "running") return `working${sinceWords(t.started) ? ` ${sinceWords(t.started)}` : ""}`;
   if (t.state === "testing") return "testing";
@@ -290,8 +277,8 @@ export function taskFoot(t, n) {
   if (t.state === "ready") return t.note || "next";
   return TASK_STATE[t.state] || t.state;
 }
-/** The sign at a card's top right: work, cross, night (a hold for tonight); "" for the rest. */
-export const taskMark = (t, n) => (RUN.includes(t.state) ? "work" : t.state === "failed" ? "cross" : t.state === "held" && n?.waits?.kind === "night" ? "night" : "");
+/** The sign at a card's top right: work, cross; "" for the rest. */
+export const taskMark = (t) => (RUN.includes(t.state) ? "work" : t.state === "failed" ? "cross" : "");
 
 /** The tasks that wait for `src` (they list it in `after`), in the same goal, not done. */
 export function waitersOf(n, src) {
@@ -358,15 +345,14 @@ export function limitLine(l, reserve, resetOf) {
   const reset = tight ? resetOf(tight.reset) : "";
   const cells = Array.from({ length: 10 }, (_, i) => (i < on - kept ? "on" : i < on ? "kept" : ""));
   return { provider: l.provider, name: l.name, read: true, cells, kept, pct: pct(l.left), reset: reset ? `${l.name} ${reset}` : "",
-    tip: `${l.name}: ${pct(l.left)} left${kept ? `, ${Math.round(share * 100)} % of it kept for ${reserve.night ? "the morning" : "tonight"}` : ""}${reset ? ` · ${reset}` : ""}` };
+    tip: `${l.name}: ${pct(l.left)} left${kept ? `, ${Math.round(share * 100)} % of it kept back` : ""}${reset ? ` · ${reset}` : ""}` };
 }
 
 // -- the stops: the bottom row (§6) -------------------------------------------------------------------------------------------------
 
 export const KIND_WORD = { plan: "Plan ready", change: "Plan change", asks: "Asks you", goal: "Asks you", proposal: "Proposed", party: "Proposed", todo: "A to-do", failed: "Failed",
-  pick: "Pick one", op: "At your check", op_failed: "Failed", op_rules: "Rules to take", pitch: "Pitch judged", collide: "Orkmaster asks", sign_in: "Sign in", gate: "Ready for main" };
-export const isOp = (n) => n.kind === "op" || n.kind === "op_failed" || n.kind === "op_rules";
-const GEM = { plan: "", change: "", asks: "?", goal: "?", proposal: "—", party: "—", todo: "·", failed: { sign: "cross" }, pick: "", op: "·", op_failed: { sign: "cross" }, op_rules: "—", pitch: "", collide: "", sign_in: { sign: "alert" } };
+  pick: "Pick one", pitch: "Pitch judged", collide: "Orkmaster asks", sign_in: "Sign in", gate: "Ready for main" };
+const GEM = { plan: "", change: "", asks: "?", goal: "?", proposal: "—", party: "—", todo: "·", failed: { sign: "cross" }, pick: "", pitch: "", collide: "", sign_in: { sign: "alert" } };
 
 /** What a plan change adds to the price, for the stop's gem (spec 62 §6.2): *+$0.40–1.20*, *−$0.13–0.38* when it saves (the real minus sign), said as a goal's price is (cents under $1,
  *  else whole dollars); "" for a change of nothing. One that may add or save says both ends: *−$0.10 to +$0.30*. */
@@ -408,7 +394,7 @@ export function stopsOf(needs, g, nodes, ork = null) {
   const out = [];
   const taskItem = (n, t) => ({ key: `failed/${n.slug}/${t.id}`, kind: "failed", row: null, node: n, task: t, label: KIND_WORD.failed, gem: { sign: "cross" }, tone: "danger",
     gemTip: "It failed", head: t.head || null, small: true, whoTip: `${t.by.name}’s task`, title: t.short || t.title, full: t.title, text: t.error || "It failed" });
-  for (const row of needs.filter((x) => !isOp(x) && x.goal === g?.slug)) {
+  for (const row of needs.filter((x) => x.goal === g?.slug)) {
     const n = byIdea[row.idea] || null;
     if (row.kind === "failed" && n && failedTasks(n).length) {
       for (const t of failedTasks(n)) if (!done.has(`${n.slug}/${t.id}`)) { done.add(`${n.slug}/${t.id}`); out.push(taskItem(n, t)); }
@@ -456,20 +442,13 @@ export function signInStopsOf(needs, shown) {
   return needs.filter((row) => row.kind === "sign_in").map((row) => ({ key: `sign_in/${row.harness}`, kind: "sign_in", row, node: null, task: null, label: KIND_WORD.sign_in,
     gem: GEM.sign_in, tone: "alert", gemTip: "Its work waits for it", head: null, small: false, whoTip: "", title: row.tool || row.title, full: row.tool || row.title,
     text: `${row.text}${row.waiting ? ` ${row.waiting} ${row.waiting === 1 ? "task waits" : "tasks wait"} for it.` : ""}`,
-    g: null, party: { slug: shown, name: "", head: null, lead: "", ops: false }, other: false }));
-}
-
-/** Operations' stops: its rows (op, op_failed, op_rules) in the host's order. */
-export function opStopsOf(needs) {
-  return needs.filter(isOp).map((row) => ({ key: `${row.kind}/${row.op || row.template}`, kind: row.kind, row, node: null, task: null, label: KIND_WORD[row.kind],
-    gem: GEM[row.kind], tone: row.kind === "op_failed" ? "danger" : "alert", gemTip: "", head: null, small: false, whoTip: "", title: row.title,
-    full: row.title, text: row.kind === "op_rules" ? (row.lines || [row.text]).join(" · ") : row.text }));
+    g: null, party: { slug: shown, name: "", head: null, lead: "" }, other: false }));
 }
 
 // -- one hand (spec 54 §2) ---------------------------------------------------------------------------------------------------------
 
 /** How urgent a kind of stop is (§2.3): 0 red (a failure), 1 what holds work back, 2 what does not, 3 the results to look at. */
-const URGENCY = { failed: 0, op_failed: 0, plan: 1, change: 1, asks: 1, goal: 1, todo: 1, pick: 1, op: 1, proposal: 2, party: 2, op_rules: 2, pitch: 2, collide: 1, sign_in: 1, gate: 2, result: 3 };
+const URGENCY = { failed: 0, plan: 1, change: 1, asks: 1, goal: 1, todo: 1, pick: 1, proposal: 2, party: 2, pitch: 2, collide: 1, sign_in: 1, gate: 2, result: 3 };
 export const urgencyOf = (s) => URGENCY[s.kind] ?? 1;
 const ageOf = (s) => String(s.row?.at || s.task?.finished || s.task?.started || s.result?.finished || "9999");
 
@@ -478,12 +457,10 @@ export function byUrgency(stops) {
   return stops.map((s, i) => [s, i]).sort(([a, i], [b, j]) => urgencyOf(a) - urgencyOf(b) || ageOf(a).localeCompare(ageOf(b)) || i - j).map(([s]) => s);
 }
 
-/** Each stop of a party (`g`; null for Operations) with the party it belongs to — its name, leader (head and name) — and whether it is another party's than the one shown. Operations' are the Team party's
- *  once the person has one (`team`, the snapshot's `ops_team`: spec 92 §3): its slug when it is in this project, so they are not another party's while it is shown. */
-function inParty(stops, g, shown, team = null) {
-  const party = g ? { slug: g.slug, name: g.short || g.title, head: g.leader?.head || null, lead: g.leader?.name || "Taskmaster", ops: false }
-    : { slug: team?.here ? team.party : OPS, name: team ? "Team" : "Operations", head: null, lead: "Taskmaster", ops: true, away: Boolean(team && !team.here) };
-  return stops.map((s) => ({ ...s, g: g || null, party, other: party.slug !== shown }));
+/** Each stop of a party (`g`) with the party it belongs to — its name, leader (head and name) — and whether it is another party's than the one shown. */
+function inParty(stops, g, shown) {
+  const party = { slug: g.slug, name: g.short || g.title, head: g.leader?.head || null, lead: g.leader?.name || "Taskmaster" };
+  return stops.map((s) => ({ ...s, g, party, other: party.slug !== shown }));
 }
 
 /** *n goals ready for main* (docs/specs/90-what-the-first-look-said.md §2.3, decisions §104.9): what dev holds that main lacks, one card for the batch, its answer *Merge into main*; none when nothing
@@ -496,19 +473,18 @@ export function gateStop(gate, shown, ork = null) {
   return { key: "gate", kind: "gate", row: null, node: null, task: null, gate, label: `${gate.into} → ${gate.main}`, gem: "", tone: "", gemTip: "", small: false, whoTip: "",
     head: ork ? { race: ork.race || "peon", tier: ork.tier || "crown" } : null, title, full: title,
     text: n ? gate.ideas.map((i) => i.title).join(" · ") : plural(gate.files, "file", "files"),
-    g: null, party: { slug: shown, name: "", head: null, lead: "", ops: false }, other: false };
+    g: null, party: { slug: shown, name: "", head: null, lead: "" }, other: false };
 }
 
-/** Every stop of the project (§2.1): each party's Needs you rows, failed tasks and Pick one, then Operations'; `keep(partySlug, stop)` is the filter (only the picked goals'),
+/** Every stop of the project (§2.1): each party's Needs you rows, failed tasks and Pick one, then the tools' sign-ins; `keep(partySlug, stop)` is the filter (only the picked goals'),
  *  the party shown's results join them when `withResults` (spec 90 §2.3: always on the desktop's party), and the gate's batch when `gate` (`ideas.gate`) has one. In urgency's order (§2.3). */
-export function handOf({ map, needs, order, shown, keep, withResults = false, ops = true, gate = null, team = null }) {
+export function handOf({ map, needs, order, shown, keep, withResults = false, gate = null }) {
   const out = [];
   for (const g of goalsOf(map, order)) {
     const nodes = nodesOf(map, g.slug), mine = stopsOf(needs, g, nodes, map?.project?.orkmaster || null);
     if (withResults && g.slug === shown) mine.push(...resultsOf(nodes).map((r) => resultStop(r, nodes)));
     out.push(...inParty(mine.filter((s) => keep(g.slug, s)), g, shown));
   }
-  if (ops) out.push(...inParty(opStopsOf(needs), null, shown, team));
   out.push(...signInStopsOf(needs, shown));
   const ready = gate ? gateStop(gate, shown, map?.project?.orkmaster || null) : null;
   if (ready) out.push(ready);

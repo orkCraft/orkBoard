@@ -1,5 +1,5 @@
 // Why nothing is at work (docs/specs/82-the-field-at-a-glance.md §3): when no task of the party is running or testing, one line over the table says why, the first that
-// holds of — results at Review wait for the person's look, the tool's window is spent, the night, a sign-in —, else no line. Pure words in `idleOf`; `IdleLine` draws it.
+// holds of — results at Review wait for the person's look, the tool's window is spent, a sign-in —, else no line. Pure words in `idleOf`; `IdleLine` draws it.
 import { html } from "../html.js";
 import { town } from "../link.js";
 import { hhmm } from "../board/store.js";
@@ -24,8 +24,6 @@ export function idleOf(nodes, limits = []) {
     const w = windowOf(limits, window.n.waits?.until || window.n.held_until);
     return `Nothing at work: ${w.name}’s window is ${w.used == null ? "spent" : `at ${w.used} %`}${w.back ? `, back at ${w.back}` : ""}`;
   }
-  const night = held.find((x) => x.h.kind === "night");
-  if (night) return `Nothing at work: held for tonight${night.n.waits?.until ? ` (${hhmm(night.n.waits.until)})` : ""}`;
   const sign = held.find((x) => x.h.kind === "sign_in");
   if (sign) return `Nothing at work: ${sign.n.waits?.tool || sign.n.waits?.title || "the tool"} waits for its sign-in`;
   return "";

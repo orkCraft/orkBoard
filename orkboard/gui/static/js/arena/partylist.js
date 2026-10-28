@@ -1,14 +1,14 @@
 // The parties in the left column (docs/specs/69-parties-in-the-column.md, decisions §84; it was the party's deck, spec 52 §3, and the parties' spread): from the top the
 // project switcher (shell/projects.js, as wide as the column), then a heading for each party in the Board's order — its leader's head, its whole name (two lines, then cut,
 // the title whole), *k/n*, the work sign while it is at work and, on a closed party, one sign for the stops that wait in it where they cannot be seen (! , ✗ when one failed:
-// §65.2) —, Operations when the project has them, then *+ New party*. One party is open, the one the board shows, with its body under its heading (`body`: goals.js `Left`); the open heading
+// §65.2) —, then *+ New party*. One party is open, the one the board shows, with its body under its heading (`body`: goals.js `Left`); the open heading
 // is its leader's (spec 73 §2): the leader's head, the party's name and *<leader> leads* under it, the work sign and *k/n*, no row of the leader's in the body. New goal and New party are the Orkmaster's two rows on the project's level (projectrows.js, spec 91 §8): with an Orkmaster the project's line holds no +; a host from before spec 70 (none) keeps the **+** of New goal (newgoal.js).
 // a press on a closed heading shows that party (the party switch: the board redraws in place, the party kept per device), a press on the open one shows only its leader's work, or everyone's again (the leader's row did, spec 73 §2). ↑ and ↓ move between
 // the headings. A party's menu (partymenu.js: a right click on its heading or its …, spec 90 §5) has *About this party*, *Edit the party*, *Remove party…*. A switch says `ideas.shown` (spec 68 §7.9). A new party saved gathers its seats' heads onto its heading's head (spec 63 §3, goaltabs.js `gatherInto`). The column scrolls under the project's line.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Head, Icon, Sign } from "../orkui.js";
-import { track, OPS, PROJECT } from "../board/store.js";
+import { track, PROJECT } from "../board/store.js";
 import { keepGoal } from "../board/tracks.js";
 import { mapData } from "../shell/store.js";
 import { command } from "../link.js";
@@ -18,19 +18,18 @@ import { clearPicks, dropGather, gather, leaveParty, picks, solo } from "./arena
 import { reducedMotion } from "./motion.js";
 import { countTip, countWords, plural } from "./arenawords.js";
 import { gatherInto, partiesOf, shownOf } from "./goaltabs.js";
-import { GateLine } from "./gate.js";
 import { NewGoalPlus } from "./newgoal.js";
 import { THE_PROJECT } from "./projectwords.js";
 import { PartyMenu } from "./partymenu.js";
 
 let scrolled = 0;                                       // the column's scroll, kept across the redraw a switch makes (the party is keyed, the list is drawn again)
 
-/** Shows another party (or Operations, or the project's level): what was hovered or opened on the last one goes, the picks stay with their party. */
+/** Shows another party (or the project's level): what was hovered or opened on the last one goes, the picks stay with their party. */
 export function show(slug, want) {
   if (slug === want) return;
   leaveParty();
   track.value = slug;
-  if (slug !== OPS && want && want !== OPS) command("ideas.shown", { party: slug, from: want }).catch(() => {});      // counted by the host (spec 68 §4, §7.9): fire and forget, never waited for, never a toast of its own
+  if (want) command("ideas.shown", { party: slug, from: want }).catch(() => {});      // counted by the host (spec 68 §4, §7.9): fire and forget, never waited for, never a toast of its own
 }
 
 /** What waits in a closed party, as one sign: ✗ in the danger colour when one failed, else !; its title says how many. */
@@ -46,15 +45,15 @@ const leaderOf = (g) => g.leader?.name || (g.party || []).find((m) => m.band ===
 function Heading({ x, open, want }) {
   const { g, nodes, working } = x, name = g.short || g.title, stops = open ? 0 : x.stops, leads = `${leaderOf(g)} leads`;
   const lead = g.leader?.slug || "taskmaster", alone = open && solo.value === lead;        // the open heading is its leader's: a press shows only its work (spec 73 §2)
-  const press = () => (open ? (g.ops ? null : (solo.value = alone ? "" : lead)) : show(g.slug, want));        // the Team party has no work of a leader's to show alone: its Board is Operations.
+  const press = () => (open ? (solo.value = alone ? "" : lead) : show(g.slug, want));
   return html`<button type="button" class=${cls("arena-phead", { "is-open": open })} data-goal=${g.slug} data-state=${open ? "open" : "closed"} aria-expanded=${open} aria-current=${open ? "true" : undefined}
       aria-pressed=${open ? String(alone) : undefined}
-      title=${open ? `${name} · ${leads}${g.ops ? "" : ` · ${countTip(g, nodes)}`}` : `Open ${name}`} onClick=${press}>
+      title=${open ? `${name} · ${leads} · ${countTip(g, nodes)}` : `Open ${name}`} onClick=${press}>
     <span class="arena-plist__head">${g.leader?.head ? html`<${Head} race=${g.leader.head.race} tier=${g.leader.head.tier} />` : null}</span>
     ${open ? html`<span class="arena-phead__who"><span class="arena-phead__name" title=${g.title}>${name}</span><span class="arena-phead__leads">${leads}</span></span>`
       : html`<span class="arena-phead__name" title=${g.title}>${name}</span>`}
     ${working && html`<span class="arena-phead__work"><${Sign} name="work" label="at work" /></span>`}
-    ${!g.ops && html`<span class="arena-phead__count" title=${countTip(g, nodes)}>${countWords(g, nodes)}</span>`}
+    <span class="arena-phead__count" title=${countTip(g, nodes)}>${countWords(g, nodes)}</span>
     <${WaitSign} n=${stops} failed=${x.failed} name=${name} />
   </button>`;
 }
@@ -106,30 +105,20 @@ function AtWork({ x, want }) {
   </div>`;
 }
 
-function OpsHeading({ ps, open, want }) {
-  const n = open ? 0 : ps.opStops;
-  return html`<button type="button" class=${cls("arena-phead", { "is-open": open })} data-goal=${OPS} data-state=${open ? "open" : "closed"} aria-expanded=${open} aria-current=${open ? "true" : undefined}
-      title=${open ? "Operations is open" : "Open Operations"} onClick=${() => show(OPS, want)}>
-    <span class="arena-plist__head arena-plist__icon"><${Icon} name="sliders" /></span>
-    <span class="arena-phead__name">Operations</span>
-    <${WaitSign} n=${n} failed=${ps.opFailed} name="Operations" />
-  </button>`;
-}
-
 /** The Orkmaster in the project's line (spec 70 §2.1): its head, a button *The project*, pressed while the project's level is shown. Only a host that has the level draws it. */
 function Orkmaster({ ork, open, want }) {
   return html`<button type="button" class=${cls("arena-ork", { "is-open": open })} data-goal=${PROJECT} data-state=${open ? "open" : "closed"} aria-pressed=${open} title=${THE_PROJECT}
       aria-label=${THE_PROJECT} onClick=${() => show(PROJECT, want)}><${Head} race=${ork.race || "peon"} tier=${ork.tier || "crown"} /></button>`;
 }
 
-/** The left column: the project's line, the parties, Operations, *+ New party*; `body` is the open party's, drawn under its heading. */
+/** The left column: the project's line, the parties, *+ New party*; `body` is the open party's, drawn under its heading. */
 export function PartyList({ body = null }) {
   const m = mapData.value, root = useRef(), list = useRef();
   const ps = partiesOf(), goals = ps.goals.map((x) => x.g);
   const want = m ? shownOf(goals, track.value) : track.value;
   // The party shown is `want`; `track` follows it only to start (a pick that no list has yet, a party just saved, shows the kept one until it does).
   useEffect(() => { if (m && !track.value && want) track.value = want; }, [m, want]);
-  useEffect(() => { if (m && want && want !== OPS && want === track.value) keepGoal(want); }, [m, want, track.value]);
+  useEffect(() => { if (m && want && want === track.value) keepGoal(want); }, [m, want, track.value]);
   const waiting = gather.value, modal = dialog.value;
   useEffect(() => {                         // a new party was saved: its heads gather onto its heading's head, in the first render that shows it once the dialog has closed (spec 63 §3.2)
     if (!waiting || waiting.party !== want || modal) return;
@@ -150,14 +139,11 @@ export function PartyList({ body = null }) {
   return html`<aside class="arena-left" aria-label="Parties" ref=${root} onKeyDown=${move}>
     <div class=${cls("arena-left__proj", { "has-ork": !!ork, "is-open": level && !!ork })}>
       ${ork && html`<${Orkmaster} ork=${ork} open=${level} want=${want} />`}${!ork && html`<${NewGoalPlus} want=${want} />`}<${ProjectSwitcher} /></div>
-    <${GateLine} />
     <div class="arena-plist" ref=${list} onScroll=${(e) => { scrolled = e.currentTarget.scrollTop; }}>
       ${ps.goals.map((x) => html`<section key=${x.g.slug} class=${cls("arena-party", { "is-open": open(x.g.slug) })}>
-        <${PartyMenu} slug=${x.g.slug} name=${x.g.short || x.g.title} ops=${!!x.g.ops}><${Heading} x=${x} open=${open(x.g.slug)} want=${want} /><//>
+        <${PartyMenu} slug=${x.g.slug} name=${x.g.short || x.g.title}><${Heading} x=${x} open=${open(x.g.slug)} want=${want} /><//>
         ${open(x.g.slug) ? body : html`<${AtWork} x=${x} want=${want} />`}
       </section>`)}
-      ${ps.ops && html`<section class=${cls("arena-party", { "is-open": want === OPS })}><${OpsHeading} ps=${ps} open=${want === OPS} want=${want} />
-        <button type="button" class="arena-pmake" title="Operations stay yours, in every project: a Team party is the way to them, put in the project you choose" onClick=${() => openDialog("goal", { preset: "team" })}>Make it a Team party</button></section>`}
       <button type="button" class="arena-pnew" title="One of yours, or its leader, builders and checkers from the library" onClick=${() => openDialog("goal")}>
         <span class="arena-plist__head arena-plist__icon"><${Icon} name="plus" /></span><span class="arena-phead__name">New party</span></button>
     </div>

@@ -1,5 +1,5 @@
 // A fold of the left column as one 28 px row (docs/specs/73-a-lighter-column.md §3): orkUI's chevron (› folded, ⌄ open), the word in the pixel face's small caps as the groups'
-// headings are, the count in the text face, and at its right what the row offers (*Process now*, *k wait for main*). Shared by the party's body (goals.js) and Ideation's (pitches.js).
+// headings are, the count in the text face, and at its right what the row offers (*k wait for main*). Shared by the party's body (goals.js) and Ideation's (pitches.js).
 import { html, cls } from "../html.js";
 import { Chev } from "../orkui.js";
 
