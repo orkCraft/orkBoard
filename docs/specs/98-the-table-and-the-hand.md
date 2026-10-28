@@ -12,7 +12,7 @@ the lead writes before they start); **E after C and D**. **C, D and E only after
 **What it is, and is not:** what goes first (§131's list, *Agents*, Operations in the window); then the window as two
 parts: the tabs (the Orkmaster's first, a tab a party, **+**, the limits, *Stop all*), the pane (the Board under the
 tabs, Tech's *System* as read today, a party's header and its seats' popovers, one thing opened over the pane), the hand
-(the blank card, the deck, the stacks of today's stops by goal, Release's card, the discard, the cost's frame), the goal
+(the blank card, the deck, the stacks of today's stops by goal, the discard with what is ready for main, the cost's frame), the goal
 picked, a goal's signs, the cards' answers to the hand (§149.1), at the wide and the narrow width (spec 94 §1). Not: the
 route card, *Talk*, *Confirm and start*, forks, the project's questions, a question as a card of choices with a pick,
 the one place of the parties, the races by party (specs 99, 100); the other maps, picking and the box (S3); Play of a
@@ -25,7 +25,7 @@ slice). Until spec 100, a party is made and edited by today's form, opened over 
 | **A. What goes** | §1 | see §1's table (the faces, the host commands and the tests of §131's list, *Agents* and Operations) |
 | **B. The host** | §2 | `gui/ideas_board.py` (a result seen; a goal's place), `realm/board_map.py` (a node's `place` and `seen`), `realm/ideas.py` (`seen_at` in an idea's state), `realm/lexicon.py` (§2.4's words); `tests/test_board_map.py`, `tests/test_ideas.py`, `tests/test_lexicon.py`, `tests/test_gui_ideas.py` (or the file that tests `ideas.board`) |
 | **C. The table** | §3, §5, §6 | new `static/js/table/` (`table.js`, `tabs.js`, `header.js`, `seatpop.js`, `boardmap.js`, `pane.js`, `over.js`'s places, `card.js`, `table.css`); `static/js/arena/systemarch.js` and `systemmap.js` read only (imported as they are); new `tests/test_table_desktop_browser.py` |
-| **D. The hand** | §4, §5, §6 | new `static/js/hand/` (`hand.js`, `blank.js`, `deck.js`, `stacks.js`, `stopcard.js`, `releasecard.js`, `discard.js`, `cost.js`, `hand.css`); `static/js/arena/stops.js`'s answering parts read only; new `tests/test_hand_desktop_browser.py` |
+| **D. The hand** | §4, §5, §6 | new `static/js/hand/` (`hand.js`, `blank.js`, `deck.js`, `stacks.js`, `stopcard.js`, `discard.js`, `cost.js`, `hand.css`); `static/js/arena/stops.js`'s answering parts read only; new `tests/test_hand_desktop_browser.py` |
 | **E. The window** | §7 | `static/js/shell/shell.js` (the frame in place of the top bar, the arena and the drawer), `static/board.js`, the modules no longer imported (removed), `static/js/shell/modals.js` and every `openDialog` caller left (each moved over the pane or into the hand), `tests/test_design_system.py` (`SHEETS`), `tests/test_gui_wording.py`, `tests/test_architecture.py` if it names a removed file; the desktop browser tests of the removed faces removed or moved to the frame |
 
 ## 0. The words and the seams
@@ -149,17 +149,18 @@ From left to right, along the window's foot, under everything opened:
    face down; a stack pressed fans out in place and picks its goal. The stacks lie by their top card's urgency (money
    and failures, then what the work waits for, then the rest: today's `byUrgency`). A stop of no goal (a sign-in) is a
    stack of its own. A card of another party says its party.
-4. **Release's card** (§137.5): *n goals ready for main* (today's gate), the lich's head on it; pressed, it lifts with
-   its goals and **To main** (today's merge into main, by code). It is not there when nothing waits for main.
-5. **The discard** (§145.4): the last goal done face up (*done*, its element, its name), the others' backs under it;
-   *Done* on hover. Pressed, it opens over the pane (`discard`): the goals done and not seen; a goal pressed opens its
-   *Result* (today's result: what it made, its commits) and sends `ideas.seen`, and it leaves the discard.
+4. (Release's card is the discard's since §159: 5.)
+5. **The discard** (§145.4, §159): the last goal done face up (*done*, its element, its name), the others' backs under
+   it; *Done* on hover. While dev holds goals main lacks (today's gate), its top card carries the lich's head and *n ready
+   for main*; with nothing done to see, that line alone on its back. Pressed, it opens over the pane (`discard`): the
+   goals done and not seen (a goal pressed opens its *Result*, today's result, and sends `ideas.seen`; it leaves the
+   discard), and *Ready for main* with **To main** (today's merge into main, by code).
 6. **A card lifted** (§104.5, §144.3): its answers on it, the cards of the table it is about raised a little (today's
    `aboutOf`), *Put it back* lowers it.
 7. **A card that spends** carries its share in orkUI's gem at its bottom left (*4%*, §144.2), its words on the card
    (*about 4% of Claude's week*): a plan's *Start*, a failure's *Retry*, *Start now*. A card that spends nothing has none.
 8. A part comes when it has something to hold (§132.1, §145.8): no deck with nothing in line, no discard with nothing
-   done, no Release's card with nothing ready.
+   done and nothing ready for main.
 
 ## 5. A goal picked, and its signs (C, D; §110.1, §138.4, §139, §145.5, §145.7)
 1. A goal is picked by its stack, any of its cards on the table (its other cards lit), or a goal in the opened deck or
@@ -199,7 +200,7 @@ Tech's *System*; another party's tab its header alone; a card lifted and lowered
 over the pane, its title, **←** back to the card lit; no sideways scroll at 390. D: the blank card's send, its address
 by the tab and by *@*, a pasted picture, the large blank card with no goal; the deck's edges and moon, its list over
 the pane with the search, a drag; stacks by goal, the urgent first, a stop answered from its card, a stack fanned;
-Release's card and *To main*; the discard, a result opened and seen; the cost's gem on a card that spends and none on
+the discard's *n ready for main* and *To main* over the pane; a result opened and seen; the cost's gem on a card that spends and none on
 one that does not; no part with nothing to hold; nothing moving under reduced motion. E: no top bar, left column,
 drawer or dialog in the page; every place reached over the pane; the keyboard. The critical tests
 (`tests/test_architecture.py`, `tests/test_board_alone.py`, `tests/test_updates.py`), each part's files' tests and the

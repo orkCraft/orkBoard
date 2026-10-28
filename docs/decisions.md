@@ -3165,3 +3165,19 @@ with it):
 8. **When**: the bug's Talk with *Talk* in the first slice (§136.12); the races by party with the first slice's parties
    and §148's orkUI release (0.15.0), as §154.5 and §155.7; the gallery apart from the slices.
 The owner's call.
+
+## 159. Release's card is the discard's: the goals done and those ready for main are one pile at the hand's right (28 October, the owner)
+
+Why: the owner, on S1's mockup (spec 98): *the bottom part with the cards is getting too complicated.* The hand held the
+blank card, the deck, the stacks, Release's card and the discard; Release's card (*n goals ready for main*, §137.5) and
+the discard (the goals done and not yet seen, §145.4) are both the goals whose work is done, one waiting for the
+person's look, the other for *To main*, side by side at the hand's right. So (this changes §137.5 and §145.4):
+1. **Release's card goes into the discard**: the discard's top card, the last goal done face up, carries Release's
+   leader's head (the lich) and *n ready for main* under it while dev holds goals that main lacks; with nothing ready,
+   the discard is as before; with nothing done to see and goals ready, the discard is that line alone on its back.
+2. **Pressed, the discard opens over the pane** (§142) as two parts: the goals done and not yet seen (a goal pressed
+   opens its *Result*, then it leaves for the history, §130.1), and **Ready for main**, Release's map's goals with
+   **To main** (§137.4), as Release's tab shows them.
+3. The hand from left to right: the blank card, the deck, the stacks, the discard. Release keeps its tab and its map
+   (§137.3); *Release a version* is unchanged (§137.4).
+The owner's call.

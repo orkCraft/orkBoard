@@ -4,7 +4,7 @@ The owner and the PM, 27 October. `docs/decisions.md` is a log: from §104 to §
 hours before (§134 changes §133, §138 changes §136, §145 turns §104.0's frame round). This spec is that log read as one
 window, with no deltas, so that a slice's spec is written from it and not from forty entries. **Builds:** nothing by
 itself; each slice's spec builds a part of it. **When a decision after §146 changes the window, this spec is changed in
-the same commit**; where it and a decision differ, the decision is right and this spec is fixed. Read up to §158.
+the same commit**; where it and a decision differ, the decision is right and this spec is fixed. Read up to §159.
 
 **What it is, and is not:** the window as it will be, each part with the decisions it rests on. Not: how it is built
 (files, tests: the slices' specs), the phone's frame (spec 94), the engine's calls beyond what the person sees.
@@ -87,9 +87,11 @@ From left to right (§145.3–§145.4, §121.2, §137.5):
    answered with one press and the next under it, the answers sent together after the last; *Let … decide* answers the
    rest with the picks; together they open over the pane (§153.5–§153.6). **The project's questions** (§153.1) are a
    stack of no goal's among the others, its leader's head on it, holding nothing back (§157.1).
-4. **Release's card** *n goals ready for main*, its leader's head on it; pressed, it opens Release's tab (§137.5).
-5. **The discard**: the goals done and not yet seen, the last face up. Pressed, it opens them over the pane; a goal's
-   *Result* opened, the goal leaves for the history (§130.1).
+4. **The discard** (§145.4, §159): the goals done and not yet seen, the last face up; while dev holds goals main lacks,
+   its top card carries Release's leader's head and *n ready for main* (Release's card is the discard's, §159).
+   Pressed, it opens over the pane: the goals done and not seen (a goal's *Result* opened, the goal leaves for the
+   history, §130.1), and *Ready for main* with **To main** (§137.4).
+5. (Release's card was here: §159 put it into the discard.)
 6. **A card is lifted** with its answers on it while the pane shows the map it is about, each answer's change drawn
    there (§104.5, §104.8); the lanes or cards it is about rise a little (§144.3); *Put it back* lowers it.
 7. **A card that spends** carries its share of the limits in a small frame at its bottom left (*4%*), its words on the
