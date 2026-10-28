@@ -2921,42 +2921,72 @@ only while picking, never against a touch screen's scroll, and never pinning a w
    staying the idea's marks.
 The owner's call.
 
-## 153. What a party asks of the project: Product at the start, each other leader at its party's first goal, inside the draft's three; a question is a card of up to four choices and *Other…*; a goal's questions a stack, one a card (28 October, the owner and the PM)
+## 153. What a party asks of the project: Product at the start, each other leader at its party's first goal, inside a goal's three; a question is a card of up to four choices and *Other…*; a goal's questions a stack, one a card (28 October, the owner and the PM)
 
 Why: the owner asked whether each party's leader interviews the person about the project when it is first opened (what
 it is for, whom, what hurts them). None does: the first start reads the project's files (spec 75, no model) and asks one
-line only of an empty folder (*What is this project for?*); a leader asks at most three questions a goal, at its draft
-(`MAX_QUESTIONS`, §49's one round); whom it is for and what hurts them are kept only when the person writes them in the
-Pain lens (`segments.json`). An interview of every leader at the start is too much: the parties are picked together at
-the first start (§151.5), and four parties at two or three questions each is about twelve before any work. And the
-cards in the hand are there so the person writes less: an answer should be one press, picked from what the project
-already says. So (this makes spec 75 §2, spec 85 §1 and §141's questions precise):
+line only of an empty folder (*What is this project for?*); a leader asks at most three questions a goal, in *Talk*
+(§121.2: two rounds at most); whom it is for and what hurts them are pinned only when the person puts them on Product's
+map (§134.2). An interview of every leader at the start is too much: the parties are picked together at the first start
+(§151.5), and four parties at two or three questions each is about twelve before any work. And the cards in the hand are
+there so the person writes less: an answer should be one press, picked from what the project already says. So (this
+makes spec 75 §2, spec 85 §1, §121.2, §132.4–§132.5 and §138.2 precise):
 1. **At the start only Product asks** of the project: two or three cards, *whom it is for*, *what hurts them*, *what it
    leaves out*, each only where the project's files (the README, the docs) do not say it; where they do, the leader's
-   reading is the card's pick, one press to confirm. With no Product party, the Orkmaster's one line (*What is this
-   project for?*) stands, as for an empty folder. The other leaders are quiet at the start.
-2. **Every other leader asks of the project at its party's first goal**, once in its party's life: Tech of the
-   architecture and the stack, Design of the mood and the references (spec 85), Marketing of the channels and the
-   tone. **Inside the draft's three, never beside them**: the goal's own questions and the project's share the three
-   places. A small first goal (a bug) gets only the project question it cannot be done without; the rest wait for the
-   party's next goals. A leader asks nothing the repository answers: Tech of a codebase reads its stack and containers
+   reading is the card's pick, one press to confirm. **In a game Game design asks them** (§122.5: a game's first parties
+   have no Product); with neither, the Orkmaster's one line (*What is this project for?*) stands, as for an empty folder.
+   The other leaders are quiet at the start.
+2. **Product's cards are dealt after *Start*** (§132.2), as one stack of no goal's, its leader's head on it, beside the
+   blank card and Release's card (§121.2's two such cards become three). **They hold nothing back**: the blank card is
+   written and the first goal sent with them unanswered, its route card coming first as §138.2 says; unanswered, they
+   stay in the hand until answered or let go (*Let … decide*). §132.5's one line reads on them *Pick an answer: the
+   leader keeps it for the project*.
+3. **Every other leader asks of the project at its party's first goal** (the first goal whose route has its party), once
+   in its party's life, in that goal's first round of *Talk*: Tech of the architecture and the stack, Design of the mood
+   and the references (spec 85), Marketing of the channels and the tone. **Inside the goal's three, never beside them**:
+   the goal's own questions and the project's of every leader on its route share the three places (§121.2). A small
+   first goal (a bug) gets only the project question it cannot be done without; the rest wait for the party's next
+   goals. A leader asks nothing the repository answers: Tech of a codebase reads its stack and containers
    (`realm/system_overview.py`) and asks only what the code cannot say (where it runs, what it must not use); from
-   scratch only in an empty folder.
-3. **What is answered is the project's**, kept beside the segments (`<state_dir>/`), read into every party's prompts,
-   never asked again; Product's whom and what hurts fill the Pain lens. A fact a leader reads from the files is kept
-   the same way, without a question. The answers are read and changed where the party is (*About this party*) and the
-   project's at the Orkmaster's; a change applies from the next goal.
-4. **A question is a card of up to four choices and *Other…***: two to four real choices (`CHOICES`), never padded to
+   scratch only in an empty folder. Release asks nothing of the project (§137.1: no step of a goal's route).
+4. **What is answered is the project's**, kept beside the segments (`<state_dir>/`), read into every party's prompts,
+   never asked again; Product's whom and what hurts become the segments and pains of Product's map (§134.2). A fact a
+   leader reads from the files is kept the same way, without a question. The answers are read and changed in the one
+   place of the parties (§151.5), at the right under the leader's row; a change applies from the next goal.
+5. **A question is a card of up to four choices and *Other…***: two to four real choices (`CHOICES`), never padded to
    four; one picked for the person (●), with its why. The choices come from what the project holds, not from what is
    common: Tech's first is the stack it found, with where it saw it; Product's are the segments and pains kept and the
-   README's. ***Other…*** (it replaces *Open…* on a question's card) opens the field with the picked answer already in
-   it, so the person edits rather than writes.
-5. **A goal's questions are a stack, one question a card**, never several on one card (a card is one decision; three
-   questions of four choices are a form, unreadable on the phone, and a single *Send* under picks made for the person is
-   pressed unread). The top card is answered with one press and the next is under it; the answers go together after
-   the last (the Taskmaster reads them at once, as today). The stack's depth shows as its thickness, never as a count
-   (*1/3*, §145). On the stack, *Let … decide* answers the rest with the picks; the goal's questions in one form stay
-   a press away for whoever wants them together.
-6. **When**: with the drafts' prompts and the hand's question card, after the first slice (§136.12); the stack on the
-   phone with the hand there.
+   README's. ***Other…*** (it replaces *Open…* on a question's card) opens the field on the card, with the picked answer
+   already in it, so the person edits rather than writes.
+6. **A goal's questions are a stack, one question a card** (§121.2's stack a goal), never several on one card (a card is
+   one decision; three questions of four choices are a form, unreadable on the phone, and a single *Send* under picks
+   made for the person is pressed unread). The top card is answered with one press and the next is under it; the
+   answers go together after the last (the leaders read them at once, as today). The stack's depth shows as its edges,
+   never as a count (*1/3*, §121.2, §145). On the stack, *Let … decide* answers the rest with the picks; the goal's
+   questions together open over the pane (§142), never as a dialog (§127.1), for whoever wants them so.
+7. **When**: with *Talk*'s questions and the hand in the first slice (§136.12); the stack on the phone with the phone's
+   one page (§128, §150.6).
+The owner's call.
+
+## 154. Product's party is the knights, Release's the undead: a lich leads it, skeletons are its hands; Orkboard draws six races (28 October, the owner)
+
+Why: read again after §153, §148.8 keeps four races in Orkboard's copy (the ork, the elf, the goblin, the gnome) and
+leaves the knight, the lich and the skeleton to Orkline, while Product's leader is drawn a lich (`realm/roles.py`
+`RACES`: *a lich for now*) and Release's a skeleton (`realm/library.py`); Release is in every project (§137.1) and
+Product asks first (§153.1), so the first heads the person meets would have none. The owner: the undead are no
+product's face, and a product wants more magic; the knights are already drawn in orkUI, and the undead suit the keepers
+of what is out. So (this changes §148.8 and makes §53 precise):
+1. **Product is the knights**: its craft's race is the knight (`RACES["product"]`), every product role, its leader too,
+   wearing its tier's gear as every head (§53).
+2. **Release is the undead**: its leader, the Release manager, a **lich**; every other seat of Release's squad (its
+   engineer, its notes, its checker, §151.6) a **skeleton**, whatever their crafts elsewhere: in Release the race says
+   the party, the lich who leads it. A role of Release's put in another party wears its craft's race there.
+3. **Orkboard draws six races** (§148.8 changed): the ork, the elf, the goblin, the gnome, the knight and the undead
+   (the lich and the skeleton); orkUI's copy keeps all three heads at every tier (they are there today), drawn anew on
+   §149.4's 16 grid with the others, each read by its silhouette (the knight's helm and plume, the lich's crowned skull
+   and hood, the skeleton's bare skull), never by colour (§53.5).
+4. **The words**: CLAUDE.md's *an agent's craft is its race* gains *a knight leads the product, the undead release it*;
+   the races' names stay code (`knight`, `lich`, `skeleton`), the interface says a role's name, never its race.
+5. **When**: with §148's orkUI release (0.15.0) for the heads; `RACES` and the library's races with the first slice's
+   parties (§136.12).
 The owner's call.
