@@ -16,9 +16,12 @@ import { goalOfStop } from "./data.js";
 import { liftKey } from "./state.js";
 import { leans } from "./motion.js";
 import { useAbout } from "./about.js";
+import { wayOf } from "./ways.js";
 
 /** The action's sign of a stop and its tone: the alert of a failure and of a sign-in, the question of a question, the check (or cross) of a result, else the sign of what is asked (a plan's page, a pick's picture, a to-do's flag). */
 export function actionOf(s) {
+  const w = wayOf(s.kind);
+  if (w?.sign) return { sign: w.sign, tone: w.tone || "" };           // a goal's way's card (spec 100): its part's sign
   if (s.kind === "failed") return { sign: "alert", tone: "danger" };
   if (s.kind === "sign_in") return { sign: "alert", tone: "alert" };
   if (s.kind === "result") return { sign: s.gem?.sign || "check", tone: s.gem?.sign === "cross" ? "danger" : "ok" };
@@ -83,13 +86,13 @@ export function Lifted({ s, anchor }) {
     return () => window.removeEventListener("resize", place);
   }, [s.key, anchor]);
   useEffect(() => { box.current?.focus({ preventScroll: true }); }, [s.key]);
-  const tone = s.tone === "danger" ? "danger" : s.tone === "alert" ? "alert" : "";
+  const tone = s.tone === "danger" ? "danger" : s.tone === "alert" ? "alert" : "", Way = wayOf(s.kind)?.Lifted;
   return html`<aside ref=${box} class=${cls("ork-frame hand-lifted", tone)} role="dialog" tabindex="-1" aria-label=${`Lifted: ${labelOf(s)}`} data-key=${s.key} data-kind=${s.kind}
       style=${left != null ? `left:${left}px` : undefined}>
     <div class="hand-lifted__top"><${ElemOf} s=${s} /><p class="cap hand-lifted__title">${partyWords(s)}${s.title || s.full}</p>${head && html`<${Head} race=${head.race} tier=${head.tier} size="mid" />`}</div>
     <p class="cap hand-lifted__kind"><${Mark} s=${s} /> ${s.label}</p>
-    <${Body} s=${s} />
-    <div class="hand-answers" role="group" aria-label="Answers"><${Answers} s=${s} /></div>
+    ${Way ? html`<${Way} s=${s} close=${lower} />` : html`<${Body} s=${s} />
+    <div class="hand-answers" role="group" aria-label="Answers"><${Answers} s=${s} /></div>`}
     <${Spend} cost=${cost} />
     <button type="button" class="ork-btn hand-put" onClick=${lower}>Put it back</button>
   </aside>`;

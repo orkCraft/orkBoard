@@ -11,6 +11,7 @@ import { Tabs } from "./tabs.js";
 import { Pane, back } from "./pane.js";
 import { litKey, elOf, mineKey, useLowering } from "./card.js";
 import { openTabOf, partiesNow } from "./data.js";
+import "./wayparts.js";                                   // the goal's way's pages over the pane (spec 100)
 
 const NARROW = "(max-width: 759px)";                       // spec 94: the phone's width is the narrow one
 const FIT = 150;                                            // a tab keeps its name while its lane is at least this wide (the lanes are the frame's `--cols`)

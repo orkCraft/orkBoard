@@ -18,6 +18,7 @@ import { Lifted } from "./stopcard.js";
 import { StopFace } from "./stopface.js";
 import { Stacks } from "./stacks.js";
 import { fieldOpen, stopKeyOf } from "./state.js";
+import "./wayparts.js";                                   // the goal's way's cards (spec 100)
 
 // The faces of what the hand opens over the pane; the table draws whichever `faceOf(kind)` has.
 drawn("discard", DiscardView);
