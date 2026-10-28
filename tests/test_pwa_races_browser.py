@@ -6,11 +6,43 @@ from __future__ import annotations
 
 import pytest
 
+from orkboard.realm import roles
 from tests.test_pwa_shell_browser import NO_SCROLL, WAIT_MS, _agents, _called, _menu, _phone, _shot  # noqa: F401
-from tests.test_races_browser import MINE, _heads
 
 pytest.importorskip("playwright.async_api")
 pytestmark = pytest.mark.browser
+
+# The desktop's Agents page went (spec 98 A); its stub's roles and heads stay here for the phone's.
+MINE = {"layout": {"slug": "layout", "name": "Layout", "model": "elder", "max_parallel": 1, "instruction": "", "builtin": False, "craft": "design"},
+        "seer": {"slug": "seer", "name": "Seer", "model": "", "max_parallel": 2, "instruction": "", "builtin": False, "craft": "data"},
+        "herald": {"slug": "herald", "name": "Herald", "model": "laborer", "max_parallel": 1, "instruction": "", "builtin": False, "craft": "marketing"}}
+BUILTIN = {"taskmaster": {"model": "elder", "craft": "engineering"}, "grunt": {"model": "", "craft": "engineering"}}
+
+
+def _crafts(target="balance"):
+    models = ["", *roles.TIERS]
+    return [{"craft": c, "label": roles.CRAFT_LABELS[c], "race": roles.RACES[c], "heads": {m: roles.head_tier(m, target) for m in models}}
+            for c in roles.CRAFTS]
+
+
+def _heads(name, got, all_roles, a=None):
+    """What the host adds to a stub's answer: each role's head and craft, each chip's head, the crafts (realm/roles.py)."""
+    def role_of(slug):
+        return {**BUILTIN.get(slug, {}), **all_roles.get(slug, {})} or BUILTIN["grunt"]
+    if name == "ideas.agents":
+        for b in got["roles"]:
+            b["head"] = roles.head(role_of(b["role"]), "balance")
+            for c in b.get("chips") or []:
+                if "task" in c:
+                    c["head"] = roles.head(role_of(c.get("role") or b["role"]), "balance", c.get("tier") or "warrior")
+    if name == "ideas.roles":
+        for r in got["roles"]:
+            r["craft"] = role_of(r["slug"]).get("craft", "engineering")
+            r["head"] = roles.head(role_of(r["slug"]), "balance")
+        got["crafts"] = _crafts()
+    if name == "ideas.role_save" and a and a.get("craft"):
+        all_roles[got["slug"]]["craft"] = a["craft"]
+    return got
 
 
 def _with_heads(stub):
@@ -43,7 +75,7 @@ async def test_agents_wear_their_races_the_cards_their_runners_and_the_button_is
         assert (await agents.locator(".role[data-slug=seer] .role-head").get_attribute("aria-label")).startswith("Seer: a goblin, Data, Seasoned; up to 2 at once")
         card = agents.locator(".role[data-role=grunt] .chip").first
         assert await card.locator("img.ork-race__head").get_attribute("src") == "races/peon-warrior.png"
-        assert (await card.locator("img.ork-race__head").bounding_box())["width"] == 12              # an accent: a cell a pixel
+        assert (await card.locator("img.ork-race__head").bounding_box())["width"] == 24              # a head is drawn at 24 × 22, never at 12 (decisions §161)
         assert await _drawn(page, "img.ork-race__head")
         assert await page.evaluate(NO_SCROLL)
         await _shot(page, "phone-agents-races-390x844")

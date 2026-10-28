@@ -5,10 +5,12 @@ from __future__ import annotations
 import pytest
 
 from tests.test_pwa_shell_browser import WAIT_MS, _agents, _phone  # noqa: F401
-from tests.test_spend_share_browser import RATE, TIP
 
 pytest.importorskip("playwright.async_api")
 pytestmark = pytest.mark.browser
+
+RATE = {"tool": "claude", "window": "5h", "usd_per_pct": 0.05, "windows": 3}   # the desktop's test went (spec 98 A)
+TIP = "An estimate: its cost at API prices over what 1 % of Claude's five-hour window has cost on this machine"
 from playwright.async_api import expect  # noqa: E402
 
 
