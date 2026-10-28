@@ -194,3 +194,28 @@ def test_the_start_files_leave_the_decisions_file_out_in_any_case_of_its_name(tm
     (tmp_path / "docs").mkdir()
     (tmp_path / "docs" / "Decisions.MD").write_text("## 1. x", encoding="utf-8")
     assert project_facts.start_files(tmp_path) == [{"path": "README.markdown", "text": "Readme in markdown."}]
+
+
+# -- spec 100 F: a fact dropped (the person's empty text) ------------------------------------------------------------------------------
+
+def test_a_fact_dropped_leaves_the_partys_list_and_the_others_alone(sd):
+    project_facts.keep(sd, "tech", "stack", "Plain Python", "person")
+    project_facts.keep(sd, "tech", "runs_on", "Node 20", "read")
+    project_facts.keep(sd, "design", "look", "Dark", "person")
+    assert project_facts.drop(sd, "tech", "stack") is True
+    assert [f["key"] for f in project_facts.of(sd, "tech")] == ["runs_on"] and [f["key"] for f in project_facts.of(sd, "design")] == ["look"]
+    assert project_facts.drop(sd, "tech", "stack") is False and project_facts.drop(sd, "nobody", "stack") is False         # nothing to drop is not an error
+    assert project_facts.drop(sd, "tech", "runs_on") and "tech" not in json.loads((sd / "facts.json").read_text())["party"]   # a party with none is not kept empty
+    assert "stack" not in project_facts.answered(sd)                                                                         # a dropped fact may be asked again
+    project_facts.keep(sd, "tech", "stack", "Rust", "read")                                                                  # … and kept again, even by a reading
+    assert project_facts.of(sd, "tech")[0]["text"] == "Rust"
+
+
+def test_a_common_fact_dropped_leaves_the_core_unless_another_party_keeps_it(sd):
+    project_facts.keep(sd, "product", "for_whom", "Friends at one TV", "person")
+    project_facts.keep(sd, "tech", "for_whom", "Players", "read")
+    assert project_facts.drop(sd, "product", "for_whom")
+    assert project_facts.common(sd) == "Whom it is for: Players"                         # tech still keeps it: the core takes that one
+    assert json.loads((sd / "facts.json").read_text())["common_by"]["for_whom"]["by"] == "read"
+    assert project_facts.drop(sd, "tech", "for_whom")
+    assert project_facts.common(sd) == "" and json.loads((sd / "facts.json").read_text())["common_by"] == {}

@@ -303,11 +303,19 @@ def cost_of(root: Path, state_dir: Path, st: dict, settings: dict | None = None)
                 reproduces=bool(how.get("reproduces")))
 
 
+def type_id(st: dict) -> str:
+    """The goal's type id: its state's `type` (the catalog's id, an old key as `goal_types.get` reads it), else the kind its line was routed as; "" with none."""
+    t = goal_types.get(st.get("type")) or goal_types.get((st.get("route_how") or {}).get("kind"))
+    return t.id if t is not None else ""
+
+
 def rows(root: Path, state_dir: Path, i: dict, st: dict, ctx: dict | None = None, settings: dict | None = None) -> list[dict]:
     """The Needs you rows a goal on its route has, as `board_map.idea_needs` adds them: the `route` row of a goal `routed` that waits for the person (not one
     put off with *Later, by itself*), and the `start` row of a goal whose route grew since the person said Talk (§136.2). Each is data; the face words it.
 
-        {kind: "route", idea, route: [{party, leader, head}], cost: {calls, usd_low, usd_high}, place, short, reproduces, low, offer: [party], text}
+        {kind: "route", idea, route: [{party, leader, head}], cost: {calls, usd_low, usd_high}, place, short, reproduces, low, offer: [party], type, text}
+
+    `type` is the goal's type id (`bug`, `tidy`, `balance`, …: the state's `type`, else the kind its line was routed as), "" with none, so a short goal that is no bug is worded as its own.
         {kind: "start", idea, cost, was, text}
     """
     state, how = st.get("state"), st.get("route_how") or {}
@@ -319,7 +327,7 @@ def rows(root: Path, state_dir: Path, i: dict, st: dict, ctx: dict | None = None
         names = [(ideas.track_page(root, s["party"]).title or s["party"]) for s in steps]
         return [{"kind": "route", "idea": i["slug"], "route": steps, "cost": cost_of(root, state_dir, st, settings),
                  "place": ctx["order"].get(i["slug"], 0), "short": bool(how.get("short")), "reproduces": bool(how.get("reproduces")),
-                 "low": bool(ctx["low"]), "offer": list(how.get("offer") or []), "text": "Route: " + ", then ".join(names)}]
+                 "low": bool(ctx["low"]), "offer": list(how.get("offer") or []), "type": type_id(st), "text": "Route: " + ", then ".join(names)}]
     if state in ("talk", "decided", "sections") and how.get("changed") and isinstance(how.get("said"), dict):
         return [{"kind": "start", "idea": i["slug"], "cost": cost_of(root, state_dir, st, settings), "was": how["said"],
                  "text": "A step was added to the route"}]

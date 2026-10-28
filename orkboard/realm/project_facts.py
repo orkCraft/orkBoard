@@ -4,6 +4,7 @@ project, and what was read from its files, each with the party it belongs to, ke
     project_facts.keep(state_dir, "product", "for_whom", "Players of party games", "person")   # an answer or a fact kept (`by`: person | read)
     project_facts.common(state_dir)                    # the common core as text: whom it is for, what hurts them, what it leaves out (~600 chars)
     project_facts.of(state_dir, "tech")                # one party's facts: [{key, text, by, at}]
+    project_facts.drop(state_dir, "tech", "stack")     # a fact dropped (the person's empty text): True when there was one
     project_facts.for_call(state_dir, "tech", route)   # a leader's: the common core, its party's, another party's only when the route has it
     project_facts.answered(state_dir)                  # the keys answered or read, so a question is never asked again
     project_facts.start_files(root)                    # the README and docs/'s top level, chosen by code, for Product's reading at the start
@@ -94,6 +95,26 @@ def keep(state_dir: Path, party: str, key: str, text: str, by: str) -> None:
             got["common"][key] = text
             got["common_by"][key] = {"by": by, "at": at}
         ideas._write_json(_file(state_dir), got)
+
+
+def drop(state_dir: Path, party: str, key: str) -> bool:
+    """The fact `key` of `party` dropped (the person's *From the next goal*, an empty text); True when there was one. A common key (`COMMON_KEYS`) leaves the common core
+    too, unless another party still keeps it: then the core takes that one's text (the latest kept). The same key may be kept again (even by a reading) afterwards."""
+    with ideas.LOCK:
+        got = _read(state_dir)
+        rows = got["party"].get(party, [])
+        if not any(r["key"] == key for r in rows):
+            return False
+        got["party"][party] = [r for r in rows if r["key"] != key]
+        if key in COMMON_KEYS:
+            left = sorted((r for rs in got["party"].values() for r in rs if r["key"] == key), key=lambda r: r["at"])
+            if left:
+                got["common"][key], got["common_by"][key] = left[-1]["text"], {"by": left[-1]["by"], "at": left[-1]["at"]}
+            else:
+                got["common"].pop(key, None)
+                got["common_by"].pop(key, None)
+        ideas._write_json(_file(state_dir), {**got, "party": {p: rs for p, rs in got["party"].items() if rs}})
+        return True
 
 
 def of(state_dir: Path, party: str) -> list[dict]:

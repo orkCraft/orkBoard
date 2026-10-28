@@ -6,11 +6,15 @@ model, and says an empty folder, a mobile app, a web app, a backend, a game, dat
     scan(root)                    # the same with the facts the recipes ask (`facts`: {"sql": n, "files": n, "pictures": n, ...})
     WORDS["mobile"]               # "a mobile app": the kind as the interface says it
     in_words(["ios/", "android/"])  # "ios/ and android/ are here"
+    kept(state_dir)               # the kind the person corrected it to ("" when they did not): `<state_dir>/project.json` `kind`
+    keep(state_dir, "game")       # …kept (ValueError for a kind that is none); `read` and `read_full` give it before the files from then on
 
 Only names and counts are read: never a file's contents, but `package.json`'s dependencies' names. At most `LIMIT` entries are walked, the
 top level first (a folder at a time, breadth first); `.git` and every dot folder are skipped (so the Board's own `.orkcraft/` is), and so are
 the Wiki's pages (`pages/tracks/`, `pages/ideas/`) and the folders that hold other people's code (`node_modules/`, `__pycache__/`, `Pods/`).
-In this order, the first that holds: empty · mobile · game · web · backend · data · wiki · design · texts · code. No model, no write.
+In this order, the first that holds: empty · mobile · game · web · backend · data · wiki · design · texts · code. No model; the only write is `keep`, the person's correction.
+A kind the person kept (spec 100 §5b) is read before the files: `read_full` gives it with no signs (`kept: true`), the facts still the folder's, but for `empty`, which has no code
+to count. The state is `<root>/.orkcraft` unless `read_full` is given another.
 """
 from __future__ import annotations
 
@@ -20,7 +24,10 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from orkboard.realm import ideas
+
 LIMIT = 2_000                                # entries walked, files and folders together
+FILE = "project.json"                        # in the state folder, with the stage's (realm/project_stage.py): the key `kind` is the person's correction
 KINDS = ("empty", "mobile", "game", "web", "backend", "data", "wiki", "design", "texts", "code")
 WORDS = {"empty": "an empty folder", "mobile": "a mobile app", "web": "a web app", "backend": "a backend", "game": "a game",
          "data": "data work", "wiki": "a team's wiki", "design": "a designer's folder", "texts": "texts", "code": "code"}
@@ -208,15 +215,33 @@ def read(root: Path, fresh: bool = False) -> dict[str, Any]:
     return {"kind": full["kind"], "signs": list(full["signs"])}
 
 
-def read_full(root: Path, fresh: bool = False) -> dict[str, Any]:
+def kept(state_dir: Path) -> str:
+    """The kind the person set in `<state_dir>/project.json`, "" when none (or not one of KINDS)."""
+    got = (ideas._json(Path(state_dir) / FILE) or {}).get("kind")
+    return got if got in KINDS else ""
+
+
+def keep(state_dir: Path, kind: str) -> str:
+    """The person's correction kept in `<state_dir>/project.json` (`kind`), the file's other keys left as they are. ValueError for a kind that is none: *A kind is one of …*."""
+    if kind not in KINDS:
+        raise ValueError("A kind is one of " + ", ".join(KINDS))
+    with ideas.LOCK:
+        ideas._write_json(Path(state_dir) / FILE, {**(ideas._json(Path(state_dir) / FILE) or {}), "kind": kind})
+    return kind
+
+
+def read_full(root: Path, fresh: bool = False, state_dir: Path | None = None) -> dict[str, Any]:
+    """`{"kind", "signs", "facts"}`; the kind the person kept (`kept`) wins over the files, with no signs and `kept: True`. The folder's own read is cached as `read` says."""
     key = str(Path(root))
     stamp = _stamp(Path(root))
     got = _cache.get(key)
-    if got is not None and got[0] == stamp and not fresh:
+    if got is None or got[0] != stamp or fresh:
+        got = _cache[key] = (stamp, scan(Path(root)))
+    mine = kept(state_dir if state_dir is not None else Path(root) / ".orkcraft")
+    if not mine:
         return got[1]
-    out = scan(Path(root))
-    _cache[key] = (stamp, out)
-    return out
+    facts = {**got[1]["facts"], "code": 0} if mine == "empty" else got[1]["facts"]
+    return {"kind": mine, "signs": [], "facts": facts, "kept": True}
 
 
 def words(kind: str) -> str:

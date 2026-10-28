@@ -178,7 +178,8 @@ def test_the_route_row_is_data_with_its_cost_place_and_flags(project):
     st = ideas.state(state, slug)
     ctx = {"order": {slug: 3}, "low": True}
     (row,) = goal_route.rows(root, state, i, st, ctx)
-    assert set(row) == {"kind", "idea", "route", "cost", "place", "short", "reproduces", "low", "offer", "text"}
+    assert set(row) == {"kind", "idea", "route", "cost", "place", "short", "reproduces", "low", "offer", "type", "text"}
+    assert row["type"] == "feature"                                                                          # no type kept: the kind its line was routed as
     assert row["kind"] == "route" and row["idea"] == slug and row["place"] == 3 and row["low"] is True and row["short"] is False and row["offer"] == []
     (step,) = row["route"]
     assert step["party"] == p["tech"] and step["leader"] == "architect" and set(step["head"]) == {"craft", "race", "tier"}
@@ -186,6 +187,21 @@ def test_the_route_row_is_data_with_its_cost_place_and_flags(project):
     assert goal_route.rows(root, state, i, {**st, "held_until": "2026-10-28T14:00:00"}, ctx) == []         # put off with Later, by itself: nothing to decide
     assert goal_route.rows(root, state, i, {**st, "route": []}, ctx) == []                                   # still waiting for the call
     assert goal_route.rows(root, state, i, {**st, "state": "working"}, ctx) == []
+
+
+def test_the_route_row_carries_the_goals_type_its_states_else_the_kind_its_line_was_routed_as(project):
+    root, state, p = project
+    slug = _routed(project)
+    (i,) = [x for x in ideas.ideas(root) if x["slug"] == slug]
+    st = ideas.state(state, slug)
+    ctx = {"order": {slug: 1}, "low": False}
+    (row,) = goal_route.rows(root, state, i, {**st, "type": "tidy", "route_how": {**st["route_how"], "kind": "bug"}}, ctx)
+    assert row["type"] == "tidy"                                                         # the goal's own type wins
+    (row,) = goal_route.rows(root, state, i, {**st, "type": "", "route_how": {**st["route_how"], "kind": "balance"}}, ctx)
+    assert row["type"] == "balance"                                                      # else the kind its line was routed as
+    (row,) = goal_route.rows(root, state, i, {**st, "type": "", "route_how": {**st["route_how"], "kind": ""}}, ctx)
+    assert row["type"] == ""
+    assert goal_route.type_id({"type": "product-designer/logo"}) == "logo" and goal_route.type_id({"type": "nonsense"}) == ""    # an old key reads, an unknown one is none
 
 
 def test_the_start_row_has_the_new_cost_and_the_old_beside_it_only_after_talk_and_a_changed_route(project):

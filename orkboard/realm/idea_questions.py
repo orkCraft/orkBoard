@@ -10,6 +10,7 @@ the one it recommends and why — taken strictly from the model's answer, kept i
     idea_questions.tally(lines, answers)   # how the person answered: picked, recommended, typed
     idea_questions.card(raw, id=, by=, leader=, project=)   # a leader's question as a hand's card (spec 99 §5.2): {id, by, leader, q, choices, pick, why, project}
     idea_questions.record(state_dir, slug) / save_record(…)  # what a goal's Talk keeps beside its state (talk.json: the cards waiting, the answers, the defaults, the cause)
+    idea_questions.talk_of(state_dir, slug)                  # …read as data for the stances' *More*: {mode, round, done, stances: [{…, questions: [..]}], cause}
 
 The page is the memory: the line says the pick too (in bold), so the person reading the page sees it. No face, no model.
 """
@@ -183,3 +184,40 @@ def save_record(state_dir, slug: str, rec: dict) -> dict:
     with ideas.LOCK:
         ideas._write_json(ideas.state_folder(state_dir, slug) / TALK_FILE, rec)
     return rec
+
+
+def _asked(c: dict, state: str) -> dict:
+    """A question as the Talk read says it: the card's `id`, `q`, `choices`, `pick`, `why`, `project`, its `state` ("waiting", "answered" or "closed": left to its leader's
+    pick) and, once answered or closed, its `answer` and `round`; an answered one also its `how` ("pick", "text" or "decide")."""
+    pick = c.get("pick")
+    out = {"id": str(c.get("id") or ""), "q": str(c.get("q") or ""), "choices": [str(x) for x in c.get("choices") or []],
+           "pick": pick if isinstance(pick, int) and not isinstance(pick, bool) else None, "why": str(c.get("why") or ""), "project": bool(c.get("project")), "state": state}
+    if state != "waiting":
+        out["answer"] = str(c.get("answer") or "")
+        out["round"] = 2 if c.get("round") == 2 else 1
+    if state == "answered":
+        out["how"] = str(c.get("how") or "pick")
+    return out
+
+
+def talk_of(state_dir, slug: str) -> dict:
+    """A goal's Talk as it is kept, as data, never words: `{mode: "talk"|"bug"|"", round, done, stances: [{party, leader, stance, for, against, questions}], cause}`. Each
+    stance holds its party's questions: those the person answered (`state` "answered": `answer`, `how`, `round`), those left to the leaders' picks ("closed": `answer`) and
+    those waiting ("waiting"). `cause` is a bug's guess, `{text, where, by, pending, confirmed}`, None with none. A Talk not begun (or taken back) is `{mode: "", round: 1,
+    done: false, stances: [], cause: None}`; a question of a party with no stance (a bug's) lies under a stance of its own with no words."""
+    rec = record(state_dir, slug)
+    asked: dict[str, list[dict]] = {}
+    for key, state in (("answers", "answered"), ("defaults", "closed"), ("waiting", "waiting")):
+        for c in rec.get(key) or []:
+            if isinstance(c, dict):
+                asked.setdefault(str(c.get("by") or ""), []).append(_asked(c, state))
+    stances = [{"party": str(s.get("party") or ""), "leader": str(s.get("leader") or ""), "stance": str(s.get("stance") or ""), "for": str(s.get("for") or ""),
+                "against": str(s.get("against") or "")} for s in rec.get("stances") or [] if isinstance(s, dict)]
+    stances += [{"party": p, "leader": "", "stance": "", "for": "", "against": ""} for p in asked if p not in {s["party"] for s in stances}]
+    for s in stances:
+        s["questions"] = asked.get(s["party"], [])
+    c = rec.get("cause") if isinstance(rec.get("cause"), dict) and rec.get("cause") else None
+    cause = None if c is None else {"text": str(c.get("text") or ""), "where": [str(w) for w in c.get("where") or []], "by": str(c.get("by") or ""),
+                                    "pending": bool(c.get("pending")), "confirmed": bool(c.get("confirmed"))}
+    return {"mode": rec.get("mode") if rec.get("mode") in ("talk", "bug") else "", "round": 2 if rec.get("round") == 2 else 1, "done": bool(rec.get("done")),
+            "stances": stances, "cause": cause}

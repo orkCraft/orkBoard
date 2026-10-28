@@ -111,7 +111,7 @@ def test_it_reads_names_and_a_package_jsons_dependencies_only(tmp_path, monkeypa
         return real(self, *a, **k)
     monkeypatch.setattr(Path, "read_text", spy)
     assert project_kind.read(root, fresh=True)["kind"] == "web"
-    assert opened == ["package.json"]
+    assert [n for n in opened if n != "project.json"] == ["package.json"]                      # the Board's own state (the kind the person kept) is not the project's file
 
 
 def test_the_walk_stops_at_two_thousand_entries_and_skips_git_dot_folders_and_the_boards_pages(tmp_path, monkeypatch):
@@ -174,3 +174,44 @@ def test_the_words_are_the_specs():
     assert project_kind.in_words(["ios/", "android/"]) == "ios/ and android/ are here"
     assert project_kind.in_words(["pubspec.yaml"]) == "pubspec.yaml is here" and project_kind.in_words([]) == ""
     assert project_kind.in_words(["a", "b", "c"]) == "a, b and c are here"
+
+
+# -- spec 100 F: the person's correction of the kind, read before the files ---------------------------------------------------------------
+
+def test_a_kind_the_person_kept_is_read_before_the_files_with_the_rest_of_project_json_left_as_it_is(tmp_path):
+    root = make(tmp_path / "p", "package.json", "src/app.py", **{".orkcraft/project.json": json.dumps({"stage": "live", "decisions": "d.md"})})
+    state = root / ".orkcraft"
+    before = project_kind.read(root, fresh=True)["kind"]
+    assert project_kind.kept(state) == "" and before == "code"                     # the files' own reading (a source file, no web sign)
+    assert project_kind.keep(state, "game") == "game"
+    assert json.loads((state / "project.json").read_text()) == {"stage": "live", "decisions": "d.md", "kind": "game"}
+    assert project_kind.kept(state) == "game"
+    assert project_kind.read(root) == {"kind": "game", "signs": []}                         # with no `fresh`, and the files unchanged: the person's word first
+    assert project_kind.read(root, fresh=True) == {"kind": "game", "signs": []}
+    full = project_kind.read_full(root)
+    assert full["kind"] == "game" and full["kept"] is True and full["facts"]["code"] >= 1
+    (state / "project.json").write_text(json.dumps({"stage": "live"}))                       # the key gone: the files again
+    assert project_kind.read(root, fresh=True)["kind"] == before and "kept" not in project_kind.read_full(root)
+
+
+def test_a_kind_that_is_none_is_refused_and_a_state_with_a_bad_kind_reads_as_none(tmp_path):
+    state = tmp_path / "state"
+    for bad in ("", "castle", None, 3, "Game"):
+        with pytest.raises(ValueError, match="A kind is one of empty, mobile, game"):
+            project_kind.keep(state, bad)
+    assert not (state / "project.json").exists()
+    state.mkdir()
+    (state / "project.json").write_text(json.dumps({"kind": "castle"}))
+    assert project_kind.kept(state) == ""
+    (state / "project.json").write_text("not json")
+    assert project_kind.kept(state) == ""
+
+
+def test_the_kept_kind_reaches_the_stage(tmp_path):
+    from orkboard.realm import project_stage
+    root = make(tmp_path / "p", "src/app.py")
+    assert project_stage.read(root) == "being_made"
+    project_kind.keep(root / ".orkcraft", "empty")                                         # the person says it is a bare folder: no code to count
+    assert project_kind.read_full(root)["kind"] == "empty" and project_stage.read(root) == "idea"
+    project_kind.keep(root / ".orkcraft", "mobile")
+    assert project_stage.read(root) == "being_made" and project_kind.read(root)["kind"] == "mobile"
