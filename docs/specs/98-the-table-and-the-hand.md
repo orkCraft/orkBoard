@@ -1,5 +1,8 @@
 # Spec 98 — The table and the hand: the window's frame on today's engine
 
+**Changed since** (decisions §167, built by spec 101): the Board's and the hand's cards' face, a goal a cascade in its
+lane, the hand under the lanes, no deck (the line in the first lane), the first tab the project's. Read §3–§4 with it.
+
 The owner and the PM, 28 October (decisions §104.0, §131, §136.11–§136.12, §142–§145, §147.1; spec 95 §1–§4, §5.1, §8.1,
 §9–§10; spec 94 §1). The first slice of spec 95 cut to **what proves the frame** (spec 95 §11's *Asked*, settled here):
 the window made of the table and the hand, drawn over the engine as it is today. What a goal's way adds to it (the route

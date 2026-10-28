@@ -1,11 +1,15 @@
 # Spec 100 — A goal's way as cards: the route card, Talk's questions, the decision, a fork, a bug's cause, the project's questions, the one place of the parties
 
 The owner and the PM, 28 October (decisions §117, §118, §121.2, §133, §134.5, §136.2, §140, §147, §151.5, §153,
-§156.6, §158.1–§158.3, §159, §160; spec 95 §4.2, §5.2–§5.3, §6.3–§6.6; the mockup `docs/mockups/s2b/`). The faces of
+§156.6, §158.1–§158.3, §159, §160, §167; spec 95 §4.2, §5.2–§5.3, §6.3–§6.6; the mockup `docs/mockups/s2b/`). The faces of
 spec 99's way, drawn on spec 98's frame (the table and the hand) with spec 99's Needs you rows. **Builds:** a cheaper
 model, each part reviewed by Claude · **Review:** full · P0. **A, B, C and D at once** (they share no file); **E after
 them**. **Only after the owner's yes on the S2b mockup**, after spec 98 D and E (the hand and the window) and the spec 99
 part each face reads (A: spec 99 C; B: D and G; C: E; D: A).
+
+**Every card here wears spec 101's face** (decisions §167.1: the element at the left of its header, its name
+left-aligned, a low window with its one sign and the asker's head in its corner, the label row with the gem at its
+right) and **lies in the hand under the lane of who asks** (§167.7, spec 101 D); no deck (§167.5). After spec 101.
 
 **What it is, and is not:** a card face and its lifted state for each new row (`route`, `start`, `talk`, `cause`,
 `decision`, `fork`, `project_q`), a goal's stack of questions answered one card a press, the phase's page on the pane
@@ -33,21 +37,25 @@ Dryad*, *Sprite Dryad*, *Uptime Imp*, *Event Imp*, *Growth Hack Gnome*, *Release
 row of the one place of the parties; elsewhere a party says its name, a seat its role.
 
 ## 1. The route card (A; §133.1, §136.2, §140.2–§140.3, §147.4, §156.6, §158.2)
-The `route` row is a card of the goal's stack (spec 98 §4.2): its face the goal's element and name, its leader's head,
-the gem of its cost. **Lifted**: the route as the leaders' heads in order with a small × at each one's corner (a press
+The `route` row is a card of the goal's stack under the first lane (spec 101 D): its face the goal's element and
+name, the route's sign in its window with the Orkmaster's head in its corner, the gem of its cost in its label row. **Lifted**: the route as the leaders' heads in order with a small × at each one's corner (a press
 on a head opens its popover, §140.2), a **+** offering the project's parties but Release (and the `offer`ed ones
 first, *touches its map*), the route in words (*Game design, then Art, then Tech*), the cost (gem and words), its place
-(*3rd in line*), and one act: **Talk** (with **Later, by itself** beside it only when `low`). An edit sends
+(*3rd in line*), and one act: **Talk** (with **Later, by itself** beside it only when `low`, laying the goal in the
+first lane's *In line*, §167.5). An edit sends
 `ideas.route_set`, the cost said again from the answer. **A bug**: *Tech alone: finding the cause* and **Talk**; when
 `reproduces`, *Tech alone: the report has a failing test*, **Start** and *The long way* (a quiet link, `ideas.talk`).
 The route's parties carry a dot on their tabs while the goal is picked (E). The **`start`** row: its card says the new
 cost with the old one beside it, struck, and **Start**.
 
 ## 2. Talk's questions and a bug's cause (B; §121.2, §153.5–§153.6, §158.1)
-1. **A question is a card**: its face the question (two lines), its leader's head; **lifted**, the question, two to four
-   choices (the pick marked ✓ with its why under it), *Other…* (the field opened on the card with the pick's words in
-   it), *Put it back*. A press on a choice answers it at once: the card is played off and the next of the stack is on
-   top; the answers go together after the last (`ideas.talk_answer`). At the stack's foot, while lifted, *Let <leader>
+1. **A question is a card**: its face the question's sign (`question`, orkUI 0.15.5) with its leader's head in the
+   window's corner, the question at its foot (two lines), under its leader's lane; **lifted, its choices are dealt as
+   cards over the pane** (*Choose a card*, §167.2): the question as a banner over the row, two to four choice cards (each
+   its name in the header, a choice of a look its preview in the window, the leader's pick raised with its why at its
+   foot, a choice that spends more its gem), *Other…* a blank card with **+** (the field opened on it with the pick's
+   words), *Put it back*. A press on a choice card answers it at once: the card is played off and the next of the stack is on
+   top; the answers go together after the last (`ideas.talk_answer`). Under the row, a quiet button, *Let <leader>
    decide* (the rest answered with the picks, `decide: true`). The stack's edges hint how many are left (never a count).
    With the stack lifted, **the questions together** open over the pane (`talk`) for whoever wants them so.
 2. **The stances on the pane** (`talkpage.js`): while a goal is at *Talk* and picked, the pane (the Orkmaster's tab for
@@ -64,8 +72,9 @@ cost with the old one beside it, struck, and **Start**.
 1. **The decision's card**: its face *Decision <n>* and the goal's element; lifted, its title, *Why* and its numbered
    points (the Orkmaster's words), an *Edit* that opens the text as a field on the card (sent as `text`), and one button
    **Confirm and start** (`ideas.confirm`). No gem: it spends nothing new.
-2. **A fork**: its face *<A> and <B> disagree* and both leaders' heads; lifted, the two sides, each its leader's head,
-   what it says and its why, a press on a side answering (`ideas.fork_answer`), *Other…*. While it is lifted, the pane
+2. **A fork**: its face *<A> and <B> disagree*, under the first lane; lifted, the two sides dealt as two choice cards
+   (§167.2), each its leader's head in its window, what it says in its header and its why at its foot, a press on a
+   side answering (`ideas.fork_answer`), *Other…* the blank card. While it is lifted, the pane
    shows the goal's *Spec* page with the two sections' disagreeing lines lit (`specpage.js`: the common part, then the
    sections each with its leader's head, its *Done when* at the left and its *Will be* named at the right).
 

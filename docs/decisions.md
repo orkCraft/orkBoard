@@ -3298,3 +3298,49 @@ makes §163.1 precise):
    heads' edges 3.03 at least, at least 20 CIE76 from `ice` and `void`).
 2. In orkUI 0.15.4, then copied here (spec 96).
 The owner's call.
+
+## 167. The cards read as a card game's, a goal lies as a cascade in its party's lane, the hand lies under the lanes, the deck goes into the first lane (28 October, the owner and the PM)
+
+Why: the owner, after five rounds of `docs/mockups/cards/` (drawn on a card game's anatomy at the owner's ask): the
+cards' face said too little at a glance and too much at once (a bright sign on black, a head on every card, the cost
+and the element fighting the name), a goal's tasks were scattered over its lane, and the hand read apart from the
+table. And the deck hid what waits behind a back. So (this changes §104.2 for the Board's and the hand's cards, §136.1's
+hourglass, §144.1's members' heads and §144.2's cost place, §145.2, §153.5's lifted question, §160.1–§160.4, and
+§2.1's tab name):
+1. **A card's face** (the Board's tasks, the hand's cards, a question's choices): **its header** the goal's element at
+   the left, bare (no frame), then its name left-aligned, up to three lines; **its window** low (its sign's height and a
+   little room, the card's own fill, a hairline), one sign at the signs' big size, toned down: on the Board the task's
+   type; in the hand the action's sign (the alert, the question, *done*) with the head of who asks (its leader) small in
+   its corner; a choice of a look its preview; **its label row** the stage's small sign and word on the Board, the party's
+   name in the hand, and at its right the gem when it spends; **its foot** in the hand the question or the line; on the
+   Board none (the goal's strip says it). **No head on a Board's card**: who works is on its back and in its party's
+   header. Other maps' cards (System, the screens, the loop, the assets) keep §104.2 until their slices.
+2. **A question is chosen as a card** (*Choose a card*): lifted, its choices are dealt over the pane in a row under the
+   question, the leader's pick raised with its why at its foot; a choice that spends more carries its gem; *Other…* is a
+   blank card with **+**; *Let <leader> decide* a quiet button under the row; a stack's questions follow one a press as
+   before (§153.5–§153.6).
+3. **orkUI draws the sign `question`** (0.15.5, a question mark on the signs' grid), never `target`.
+4. **A goal on the Board is a cascade in its party's lane**: a thin strip with its element and name, its tasks laid as
+   a solitaire's cascade, the front one whole (a failed check first, then *Checking*, *Doing*, *Planning*), the others
+   as strips of their name and stage's sign; no count, the strips say how many. Collapsed, but **the picked goal's
+   cascade unfolds** into whole cards; a strip pressed lifts its task. The cascades of a lane in the hand's order; a goal
+   in two lanes at once has its strip in both, lit together when picked.
+5. **No deck**: the goals in line lie on the table, the first lane's last cascade *In line*, in the Orkmaster's order, a
+   goal dragged to move it, the moon on one that waits for the reset. **A goal is on the table, in the hand or in the
+   discard**; *Later, by itself* lays it in line. Under the first lane the hand holds the **+** card (a new goal) and the
+   Orkmaster's stacks.
+6. **The first tab is the project's**: its name with the crowned head (*Party game*); its lane holds what is the whole
+   project's (routing, Talk, decisions, joining, the line). The Orkmaster is named where it speaks (*through the
+   Orkmaster*, its cards).
+7. **The hand lies under the lanes**: a goal's stack under the lane of who asks (a failure its party's, a leader's
+   question its party's; what is the whole goal's, the route, Talk of several leaders, the decision, a fork, under the
+   first); a goal's cards from one party one stack; two goals under one lane fan within its width, the urgent in front,
+   those behind their edge and element only, rising on hover or a press; a picked goal's stacks lit alike; **the discard
+   under Release's lane**. Every lane one width, a card and a quarter (room for a fan); when they don't fit they narrow
+   to a card's width and the fans tighten, never a sideways scroll. Urgency reads by the frame's colour and what is in
+   front.
+8. **The hand shows its cards' upper part** (the header and the window); the rest lies under the window's edge, a card
+   rising whole on hover, on focus or a tap, a press lifting it.
+9. **At the narrow width** the hand is a free row in the lanes' order (the first lane's first, the discard last); a goal
+   on the Board one token with its stack's edges, a press opening its tasks.
+The owner's call.

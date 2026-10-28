@@ -115,7 +115,8 @@ def test_orkboards_own_sheets_carry_no_colour_no_font_and_no_corner_of_their_own
         assert "[data-look=\"camp\"]" not in css and "[data-theme" not in css, path.name
         legacy = set(re.findall(r"var\((--(?!ork-)[\w-]+)", css)) - {"--agents-h", "--sec", "--role", "--tabs",
                                                                    "--rot", "--dy", "--z", "--ov", "--cols",   # spec 49: a fan's turn, rise, order and overlap; the columns
-                                                                   "--dx", "--s", "--delay"}                    # spec 57: a dealt card's travel (--dy as the fan's), scale and delay
+                                                                   "--dx", "--s", "--delay",                    # spec 57: a dealt card's travel (--dy as the fan's), scale and delay
+                                                                   "--lanes", "--card-w", "--col-w"}            # decisions §167.7: the lanes, a card's and a lane's width
         assert not legacy, (path.name, legacy)
 
 

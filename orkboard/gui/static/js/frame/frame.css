@@ -1,5 +1,7 @@
 /* The window as two parts (docs/specs/98-the-table-and-the-hand.md §7): the table over the hand, the hand at the foot under
    everything opened (decisions §142.6). Layout only: every colour, face and corner is orkUI's. */
-.frame { display: grid; grid-template-rows: minmax(0, 1fr) auto; height: 100vh; height: 100dvh; min-width: 0; background: var(--ork-canvas); }
+.frame { --card-w: 144px; --col-w: calc(var(--card-w) * 1.25);      /* a lane a card and a quarter wide, room for a fan (decisions §167.7) */
+  --cols: repeat(var(--lanes, 5), minmax(0, var(--col-w))) minmax(280px, 1fr);   /* the lanes, then the tabs' end; lanes narrow when they don't fit, never a sideways scroll */
+  display: grid; grid-template-rows: minmax(0, 1fr) auto; height: 100vh; height: 100dvh; min-width: 0; background: var(--ork-canvas); }
 .frame-table { min-height: 0; min-width: 0; overflow: hidden; }
 .frame-hand { min-width: 0; }

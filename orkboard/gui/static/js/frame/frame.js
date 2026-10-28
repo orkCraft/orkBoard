@@ -3,6 +3,7 @@
 import { html } from "../html.js";
 import { Table } from "../table/table.js";
 import { Hand } from "../hand/hand.js";
+import { partiesNow } from "../table/data.js";
 
 const sheets = ["./frame.css", "../table/table.css", "../hand/hand.css"].map((p) => new URL(p, import.meta.url).href);
 if (typeof document !== "undefined") {
@@ -16,8 +17,9 @@ if (typeof document !== "undefined") {
   }
 }
 
+// One grid for the tabs, the Board and the hand (decisions §167.7): `--lanes` columns of one width, the first the project's, then a party's each, then the tabs' end.
 export function Frame() {
-  return html`<div class="frame" data-frame="1">
+  return html`<div class="frame" data-frame="1" style=${`--lanes:${partiesNow().length + 1}`}>
     <div class="frame-table"><${Table} /></div>
     <div class="frame-hand"><${Hand} /></div>
   </div>`;

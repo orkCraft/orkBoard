@@ -4,14 +4,14 @@ The owner and the PM, 27 October. `docs/decisions.md` is a log: from §104 to §
 hours before (§134 changes §133, §138 changes §136, §145 turns §104.0's frame round). This spec is that log read as one
 window, with no deltas, so that a slice's spec is written from it and not from forty entries. **Builds:** nothing by
 itself; each slice's spec builds a part of it. **When a decision after §146 changes the window, this spec is changed in
-the same commit**; where it and a decision differ, the decision is right and this spec is fixed. Read up to §166.
+the same commit**; where it and a decision differ, the decision is right and this spec is fixed. Read up to §167.
 
 **What it is, and is not:** the window as it will be, each part with the decisions it rests on. Not: how it is built
 (files, tests: the slices' specs), the phone's frame (spec 94), the engine's calls beyond what the person sees.
 
 ## 1. The frame
 1. **Two parts** (§145.1): **the table** (the leaders' tabs and the pane: what and why, through whose eyes) and **the
-   hand** at its foot (what the person decides, and where the goals wait). No top bar (§126.1), no left column (§145),
+   hand** at its foot, under the table's lanes (what the person decides, §167.7). No top bar (§126.1), no left column (§145),
    no right column (§120), no drawer (§104.8), no dialog (§127.1), no temporary tab (§142).
 2. **The roles** (§104.0): the Orkmaster says what is done and who does it; a party's leader says how, what changes and
    why; a member does, and asks only its leader. A member's question reaches the person only as its leader's fork.
@@ -20,14 +20,16 @@ the same commit**; where it and a decision differ, the decision is right and thi
 4. **No count anywhere** (§67): a stack's edges hint how many (five at most).
 
 ## 2. The tabs
-1. **The Orkmaster's tab first**, the project's name on it (*Orkmaster · Party game*); its **…** holds the projects'
-   switcher, *Settings*, the history and the files (§145.6, §138.5, §147.1). Its header: its AI tool alone, its
+1. **The project's tab first**, its name with the crowned head (*Party game*, §167.6): its lane is the whole project's
+   (routing, Talk, decisions, joining, the goals in line); the pane's title names the Orkmaster (*through the
+   Orkmaster*). Its **…** holds the projects' switcher, *Settings*, the history and the files (§145.6, §138.5, §147.1). Its header: its AI tool alone, its
    tier always the cheaper, said in its popover (§140.1).
 2. **Then a tab a party**, its leader's head and the party's name (§110.3); more than fit, the heads alone, the name on
    hover and in the pane's title. A picked goal's route puts a dot on its parties' tabs, its step's in its element.
 3. **At the tabs' end**: **+** (*New party*), the AI tools' limits as chips (a press: what used them, §107.1) and **Stop
    all** (§126.1).
-4. **A tab is its column's head on the Board** (§143): while the Board is shown the tabs take their columns' widths.
+4. **A tab is its column's head on the Board** (§143): the tabs, the Board's lanes and the hand share one grid, every
+   lane a card and a quarter wide, narrowing to a card's width when they don't fit (§167.7).
 5. **A party's header is its name, its squad and its size** (§134.3, §151.3): the squad's heads at 24 px grouped
    *Leads* | *Does* | *Checks* (at most seven), each with its tier's gear and its AI tool's mark, turned while it works,
    the leader its race's higher form (§155); the size in one word beside them.
@@ -40,7 +42,7 @@ the same commit**; where it and a decision differ, the decision is right and thi
 
    | tab | its map | read from |
    |---|---|---|
-   | Orkmaster | **Board**: a column a party under its tab, its tasks at work as cards with their member's head; the Orkmaster's own column its routing and joining (§143) | the Board |
+   | the project's | **Board**: a lane a party under its tab, a goal a cascade of its tasks in its lane, the picked goal's unfolded (§167.4); the first lane its routing, Talk, decisions, joining and the goals *In line* (§143, §167.5) | the Board |
    | Tech | **System**: the containers first, their named links (*commands: 40 · starts*), a container pressed opens its parts in layers (§112.1–§112.4); a part's files on its back (§136.3); a container's command, port and last lines (§136.7) | the code, no model |
    | Design | **the screens along their flow**, their pictures as cards, a band at the foot of what they use (logo, icons, fonts) (§112.7, §136.3) | pictures, routes |
    | Product | **the same map as Design's**, its pains pinned to screens and steps, a segment as a filter (§134.2) | the same, `segments.json` |
@@ -50,7 +52,7 @@ the same commit**; where it and a decision differ, the decision is right and thi
 
    A party with nothing to read is its header alone (§112.9). A kind whose craft has no party lies on Design's band,
    else among System's files, else in the Orkmaster's **…** (§136.3, §138.5).
-2. **A map is cards on the table** (§104.2): 128 × 180 on the desktop, its name up to four lines, its goal's element top
+2. **A map is cards on the table** (§104.2; the Board's cards are §167.1's, below): 128 × 180 on the desktop, its name up to four lines, its goal's element top
    left, its kind's sign top right. What happens is a motion (§89): new is dealt, changed is sealed with its goal's
    element, gone crumbles, promised is a ghost, at work turns with its member's head. A changed card says **who decided
    it**: the person, the leader, or a member alone (the last in the signal's colour) (§112.6). **Another party's change
@@ -71,46 +73,50 @@ the same commit**; where it and a decision differ, the decision is right and thi
    on its mark, §126.4), **▶ Play** (§136.3).
 
 ## 4. The hand
-Three places, from left to right (§160, §145.3–§145.4, §121.2, §159):
-1. **The deck, with the new goal's card drawn off it** (§160.1–§160.4): the + card lies a little off the deck, face
-   up; pressed (or typing with nothing focused) it grows into **the field** over the hand (§116.2, §124): Enter sends,
-   Shift+Enter a new line; a picture pasted goes with it; a microphone writes the words into it, never sends (§125). No
-   priority, no kind. **Addressed to a party** by *@Tech* in the text, or by the party's tab being open (*→ Tech ×*, one
-   press takes it off); on the Orkmaster's tab it is general. An addressed idea puts its party's map in **picking**,
-   always seen: *Pick a part to point at it* · *Stop picking*; any card of that map is pinned to the field as a mark
-   (§141, §140.4; spec 94 §1.5), one by a press or several by a box as Warcraft's units (§152; a whole group pinned as the
-   group). **The deck** is the goals in line (not started; waiting for the reset under the moon): its top back carries
-   the element of the first goal in line as a seal, and the moon when it waits (§160.3). Pressed, it fans out in a row
-   over the hand: the + card, then the goals in line in the Orkmaster's order; a goal is moved by dragging, a press
-   picks it; past about seven, *All · search* opens them over the pane (§160.4).
-2. **The stacks**, one a goal that asks the person (§121.2): its most urgent card face up; a stack pressed fans out in
-   place and picks its goal. The stacks lie by their top card's urgency: money and failures, then a question the work
-   waits for, then the rest. **A question is a card** of two to four choices and *Other…* (the field opened with the
-   picked answer in it), one picked for the person with its why; a goal's questions are its stack, one a card, the top
-   answered with one press and the next under it, the answers sent together after the last; *Let … decide* answers the
-   rest with the picks; together they open over the pane (§153.5–§153.6). **The project's questions** (§153.1) are a
-   stack of no goal's among the others, its leader's head on it, holding nothing back (§157.1).
-3. **The discard** (§145.4, §159): the goals done and not yet seen, the last face up; while dev holds goals main lacks,
-   its top card carries Release's leader's head and *n ready for main*. Pressed, it opens over the pane: the goals done
-   and not seen (a goal's *Result* opened, the goal leaves for the history, §130.1), and *Ready for main* with **To
-   main** (§137.4); no act on main lies on the pile (§160.5).
-4. **Every card of the hand has one size**; its face its sign or element, its name, its leader's head and, when it
-   spends, its gem (*4%*). **A card is lifted** with its answers on it while the pane shows the map it is about, each
-   answer's change drawn there (§104.5, §104.8), its cost's words there (*about 4% of Claude's week*, §160.6); the lanes
-   or cards it is about rise a little (§144.3); *Put it back* lowers it. A card that spends nothing carries no gem.
+**Under the table's lanes** (§167.5, §167.7, §145.3–§145.4, §121.2, §159), a card under the lane it is about:
+1. **The + card under the first lane** (§160.2, §167.5): pressed (or typing with nothing focused) it grows into **the
+   field** over the hand (§116.2, §124): Enter sends, Shift+Enter a new line; a picture pasted goes with it; a
+   microphone writes the words into it, never sends (§125). No priority, no kind. **Addressed to a party** by *@Tech* in
+   the text, or by the party's tab being open (*→ Tech ×*, one press takes it off); on the project's tab it is general.
+   An addressed idea puts its party's map in **picking**, always seen: *Pick a part to point at it* · *Stop picking*;
+   any card of that map is pinned to the field as a mark (§141, §140.4; spec 94 §1.5), one by a press or several by a
+   box as Warcraft's units (§152; a whole group pinned as the group). **No deck**: the goals in line lie in the first
+   lane's *In line* (§167.5).
+2. **The stacks**, one a goal and a lane that asks the person (§121.2, §167.7): under the lane of who asks (a failure
+   its party's, a leader's question its party's; the route, Talk of several leaders, the decision and a fork under the
+   first lane, fanned beside the + card); a goal's cards from one party one stack, its most urgent card in front; two
+   goals under one lane fan within its width, the urgent in front, those behind their edge and element only, rising on
+   hover or a press; a stack pressed picks its goal, its stacks lit alike. **A question is a card** of two to four
+   choices, one picked for the person with its why; lifted, **its choices are dealt as cards over the pane** (*Choose a
+   card*, §167.2): the pick raised, a choice that spends more with its gem, *Other…* a blank card with **+** (the field
+   opened with the pick's words), *Let … decide* a quiet button answering the rest with the picks; a goal's questions
+   are its stack, answered one a press, the answers sent together after the last (§153.5–§153.6). **The project's
+   questions** (§153.1) are a stack of no goal's under their leader's lane, holding nothing back (§157.1).
+3. **The discard under Release's lane** (§145.4, §159, §167.7): the goals done and not yet seen, the last face up; while
+   dev holds goals main lacks, its top card carries Release's leader's head and *n ready for main*. Pressed, it opens
+   over the pane: the goals done and not seen (a goal's *Result* opened, the goal leaves for the history, §130.1), and
+   *Ready for main* with **To main** (§137.4); no act on main lies on the pile (§160.5).
+4. **A card's face** (§167.1): the element at the left of its header, its name left-aligned (three lines at most); a
+   low window with one toned-down sign (the action's: the alert, the question, *done*) and the head of who asks small
+   in its corner; its label row the party's name and, when it spends, its gem at the right; its foot the question or
+   the line. **The hand shows the cards' upper part** (§167.8), a card rising whole on hover, focus or a tap. **A card
+   is lifted** with its answers on it while the pane shows the map it is about, each answer's change drawn there
+   (§104.5, §104.8), its cost's words there (*about 4% of Claude's week*, §160.6); the lanes or cards it is about rise
+   a little (§144.3); *Put it back* lowers it. A card that spends nothing carries no gem.
 5. **The hand stays under everything opened** (§142.6).
 
 ## 5. A goal's life
-1. **Four places** (§145.2): the deck, the hand, the table, the discard. Its signs are its places': the moon in the
-   deck; the leader's head (it works) and the alert (it failed) on its cards on the table and its stack; *done* in the
-   discard (§145.7). The hourglass is a card a member works on where no head stands (§136.1).
+1. **Three places** (§145.2, §167.5): the table (in line in the first lane, or at work in its party's), the hand, the
+   discard. Its signs are its places': the moon on it in line while it waits for the reset; its task's type and stage
+   on its cards on the table, the alert when it failed; the action's sign and its leader's head on its stack; *done* in
+   the discard (§145.7, §167.1).
 2. **The phases as the person reads them** (§147.2): **Talk** → **Spec** → **Work** → **Done** (the engine keeps
    *Idea* and *Decided* as its own states, §118.1).
    - **Talk** opens with **the route card** (§133.1, §138.2), once the Orkmaster has routed the idea sent from the blank
      card (code or the cheaper tier): the leaders' heads in order (a head's × takes it off, **+** adds any party but
      Release, §140.2–§140.3; a party whose map the goal's change touches is offered on it, §156.6), the cost, its
      place (*3rd in line*, §138.3), and **Talk**; **Later, by itself** beside it only when the limits run low
-     (§147.4), putting it in the deck. No call before that press. Then the route's leaders answer short on the cheaper
+     (§147.4), laying it in line (§167.5). No call before that press. Then the route's leaders answer short on the cheaper
      tier (a stance, for and against, questions); at its party's first goal a leader's questions about the project
      share the goal's three (§153.3); the person answers in the hand, two rounds at most; the questions left take
      their leaders' defaults (§118.1, §121.2). **Talk closes with the
@@ -178,7 +184,7 @@ goal, the + card lies large in the pane's middle with two or three examples read
 to the hand and the route card is dealt beside it. **The project's questions** are dealt after **Start** as one stack
 (§153.1–§153.2, §157.1): Product's (whom it is for, what hurts them, what it leaves out), Game design's in a game, the
 Orkmaster's *What is this project for?* with neither; each only where the project's files do not say it, the leader's
-reading picked where they do; the other leaders are quiet at the start. The deck comes with the first goal in line, the
+reading picked where they do; the other leaders are quiet at the start. *In line* comes with the first goal in line, the
 discard with the first goal done. One line, once: under the first card with answers, *Pick an answer: the leader writes
 it into the spec* (on the project's questions, *the leader keeps it for the project*). No tour, no *Skip*.
 
@@ -187,7 +193,7 @@ it into the spec* (on the project's questions, *the leader keeps it for the proj
    Board's columns a head's width with tokens, §143.4) and the hand at the foot; what opens over the pane is a screen;
    **←** is the browser's back; *Stop all* at the end of the row of heads, the limits' chips in the Orkmaster's **…**.
    **A phone on its side is the table** (§150): a low window (under 500 px high) keeps the wide layout made compact,
-   the hand a fan of overlapping cards, the deck and the discard at its ends; nothing locks the orientation.
+   the hand a fan of overlapping cards, the + card and the discard at its ends; nothing locks the orientation.
 2. **The phone's app is a frame** (spec 94 §4): pairing, the cache, push, the update, what is kept with no signal.
 3. **VS Code** (§146): the Board in an editor tab, or in the side bar at the narrow width; reads open in the editor.
 
@@ -201,7 +207,7 @@ icons drawn at the signs' weight; the AI tools' marks in ink; the elements on hu
 never the action's green; six races, each leader its race's higher form (§154.3, §155); the cost in orkUI's gem.
 **The cards answer the hand as Balatro's** (§149): they lean toward the pointer, give when pressed, fly with weight
 when played, fan out when dealt, break into pixel shards when they crumble; still at rest and while read, none of it
-under reduced motion. A hand card face down shows **one back** (a pixel pattern; the deck's top back sealed with the next goal's element, §160.3). The heads are drawn on a
+under reduced motion. A hand card face down shows **one back** (a pixel pattern). The heads are drawn on a
 12 × 11 grid as they always were, told by their faces and colours, the leaders drawn the same way (§161); the detailed art is the marketing's.
 
 ## 10. Gone
@@ -215,7 +221,7 @@ Team and Ideation; *Storyboard* and *Versions*; the measures (§129); Operations
 ## 11. The first slice
 As decided (§136.12, §137.6, §145.10), on the owner's Node party game, done at the owner's yes: **before it** §131's
 list and Agents go; **the slice** is the parties by craft with Release, the stage at the first opening, the route and
-the sections; the table and the hand with the deck and the discard; the Orkmaster's tab (*Board*) and the leaders'
+the sections; the table and the hand with the discard (§167: no deck, the line in the first lane); the Orkmaster's tab (*Board*) and the leaders'
 tabs with their headers and popovers; Tech's *System* as it is read today; the blank card as a message; the phases
 with the route card, *Talk*, *Confirm and start*, the forks and *Start*; the hand by goal; the goal's signs; *To main*
 on Release's map; the words and the closed set of signs; spec 94 §1's rules. **Joined it since**: the squad, the size
@@ -231,8 +237,8 @@ engine, spec 100 its faces: the route card, *Talk*, *Confirm and start*, the for
 of the parties), each at the owner's yes.
 
 ## 12. The words
-`TERMS` gets its one word each with the slice's first spec (§121.1): *table*, *hand*, *deck*, *discard*, *lane*,
-*blank card*, *lifted card*, *route*, *route card*, *step*, *phase* (*Talk*, *Spec*, *Work*, *Done*), *Hold*, *section*, *seat*, *stage*, *map*, *will be*,
+`TERMS` gets its one word each with the slice's first spec (§121.1): *table*, *hand*, *discard*, *lane*,
+*blank card*, *lifted card*, *cascade*, *route*, *route card*, *step*, *phase* (*Talk*, *Spec*, *Work*, *Done*), *Hold*, *section*, *seat*, *stage*, *map*, *will be*,
 *fork*, *out of the contract*, *To main*, *Release a version*, *in line*, *squad*, *size*, *Other…*. A part of a map is not called a *card* where a
-person reads it (spec 70 §0); the deck reads *In line* and the discard *Done* on hover, so the battler's words are never
+person reads it (spec 70 §0); the first lane's line reads *In line* and the discard *Done* on hover, so the battler's words are never
 the only ones.

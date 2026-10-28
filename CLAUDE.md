@@ -20,8 +20,8 @@ other way round**: nothing here imports Orkline's package (`orkcraft`).
   never a picture): the page and the phone are always drawn in it (docs/specs/40-design-system.md). The pixel face is for
   headings and buttons, never for a person's words.
 - **The frame** (decisions §104.0, §145): the window is two parts, the table (the leaders' tabs and the pane: *what and
-  why*, through whose eyes) and the hand (*what the person decides*, with the deck of goals in line and the discard of
-  goals done); a goal is in the deck, the hand, on the table or in the discard. The Orkmaster says what and who, a
+  why*, through whose eyes, the goals in line in its first lane) and the hand (*what the person decides*, under the
+  lanes, with the discard of goals done); a goal is on the table, in the hand or in the discard (decisions §167). The Orkmaster says what and who, a
   party's leader how, what changes and why, a member does (and asks only its leader). New faces keep to it: no left
   column, no drawer, no count of what waits, no question from a member straight to the person.
 - **Orks by their orkish names, everything else by what it does**: the Taskmaster, a Grunt; the Board, Play, Release,
