@@ -97,3 +97,33 @@ path, never outside the root; `found`'s folders and files, its depth, its skips;
 in a fence, a heading with no number); `entry` (found, missing, the last one, cut); `headings` (ten of many, fewer);
 `context`'s text and bound; a large file read from its end. The critical tests (`tests/test_architecture.py`,
 `tests/test_board_alone.py`, `tests/test_updates.py`) and each part's files' tests.
+
+## As built (A)
+
+Files: `realm/harness_claude.py` (`READ_LOCKFILES`, `READ_VENDORED`, `READ_GENERATED`, `READ_DENIED`, `NO_MCP`, `claude_floor`,
+`_claude_read_tools`, `claude_envelope`, `claude_events`, `claude_reads`; `_claude_read` on stream-json), `realm/harnesses.py` (the
+Claude harness's `result` is `claude_result`; `usage_split` and `capped` read through `claude_envelope`; the new names re-exported),
+`realm/call_log.py` (`bounded`, `_reads` on a read line, `session_of` through the envelope, `floor`, `week`, `main`), `core/idea_keeper.py`
+(`ask` inside `call_log.bounded(idea_target.READS.get(step))`). Tests in `tests/test_harnesses.py`, `tests/test_call_log.py`,
+`tests/test_idea_keeper.py`.
+
+- **A keeper read's argv** (Claude Code that lists the flags): `claude -p <prompt> --output-format stream-json --verbose --allowedTools
+  Read,Grep,Glob --disallowedTools Bash,Edit,Write,MultiEdit,NotebookEdit,WebFetch,WebSearch,Read(**/package-lock.json),…,Read(**/DECISIONS.md)
+  --model opus --strict-mcp-config --mcp-config {"mcpServers":{}} --disable-slash-commands --effort … --max-budget-usd … --no-session-persistence`
+  (43 `Read(...)` rules in the one list). A bench run's own MCP configuration takes the empty one's place, and `bare` then names `skills` only.
+- **Decided here:** `capped`'s word scan skips stream-json's `user` events (a file the call read that says *max_budget* is no cap); a stream
+  that never reached its `result` gives empty text, never the raw stream; `bare` on the line is read again from the cached `cli_has` in
+  `record` (the argv is `jobs.py`'s); `reads` is on a line only when the output is a stream (a cassette's single envelope has none, so no
+  `over`), `bound` whenever one is set; a step not in `READS` has no bound.
+- **The measure** (`python -m orkboard.realm.call_log floor <project>`): the Claude `read` lines of purpose `plan`/`sort`, ended well, at most
+  `idea_target.FLOOR_OUT` output tokens, split by `bare`. **The numbers before and after are the owner's to read** on their game after a day
+  on the new floor; they are written here then.
+
+## As built (B)
+
+New `realm/decisions_log.py` and `tests/test_decisions_log.py`, standard library only (`code_map.SKIP` imported). `path` returns an absolute
+`Path` under the root (a chosen path resolving outside it, a symlink out, or the root itself falls back to `DEFAULT`); `found` counts
+`docs/adr` and `doc/adr` as two folders down when ordering; a title is cut at 160 characters with no marker; an entry past `ENTRY_MAX` is
+its first 4,000 characters and the *cut* line; `context` of a file with no numbered heading says *none numbered yet.*; only ``` fences are
+read as fences; an unnumbered `## ` heading ends an entry and is counted by nothing. Read against Orkboard's own `docs/decisions.md`:
+`next_number` 159, `context(root, 156)` 5,738 characters.
