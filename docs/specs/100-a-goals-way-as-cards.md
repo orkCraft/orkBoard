@@ -125,3 +125,24 @@ from its answer; a short one's two cards, **Start** by `ideas.route_start`, *The
 the new cost, the old struck, **Start**); `hand/way.css`. The seam grew: `hand/cost.js` asks a way's `price`, `stopcard.js` a way's `head`.
 **Left (E):** the label words *route* and *start* in `KIND_WORD`; the route row carries no goal type, so a short goal that is no bug is worded as
 one (the row's `type` to add); a party added by **+** goes last.
+
+## As built (B)
+
+A question a card (`hand/questions.js` makes a `talk` row's, a `cause` row's case questions and a `project_q` row's into one stop a question,
+the answers kept and sent together after the last: `ideas.talk_answer`, `ideas.cause_answer`, `ideas.project_answer`); lifted, `hand/choose.js`
+deals its choices over the pane (kind `choose`: `<Choose question choices pick onChoose onOther decide together onBack by element head hint />`,
+a choice `{id, name, why?, gem?, preview?, head?, sign?}`; a part fills the kind by `chooseFor(source, Component)`), the pick raised with its why,
+*Other…* a blank card with +, *Let … decide*, *All the questions*, *Put it back*, the hint once; a refusal deals them again. `hand/causecard.js`
+(*The cause*: the guess, its parts lighting System, **Yes**, **No, it's elsewhere**, **Other…**); `table/talkpage.js` (kind `talk`: the stances,
+*For*, *Against*, *More*; the questions together). The project's stack under its leader's lane. **Decided here:** a goal's Talk lies under the
+first lane (§167.7: the whole goal's), a bug's under Tech's. **Left:** *More* shows only the leader's questions (no command reads `talk.jsonl`);
+the host sends no gem or preview on a question's choices yet; E opens the stances page.
+
+## As built (D)
+
+`table/parties.js` (kind `parties`, `openParties({party?, first?})`): the project's kind read (a field, held in the page: **no host command
+corrects it**), the stages' headings with *The project is here* (`ideas.stage_set`), Release locked, the parties' rows; `table/partyseats2.js`:
+the size's three with their lines and prices, the leader's row with its own name (§164), **Does** and **Checks** (five and two at most, Checks dimmed
+under Lean), a made seat's popover; the foot's price and **Start** (`ideas.goal_save` each, then `ideas.project_ask`) or **Save** (what changed).
+**Left:** the facts kept for a party (no host command reads or changes them: `ideas.project_facts` proposed, drawn only when answered); the kind's
+correction; `table/seatpop.js` says a race word (*Novice ork*) against spec 100 §0; E opens it from the tabs' + and a party's *Edit*.
