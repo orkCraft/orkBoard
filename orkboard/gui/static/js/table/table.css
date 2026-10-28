@@ -55,12 +55,12 @@ button.table-chip { appearance: none; font: inherit; }
 .table-lstrip--all .ork-icon { width: 14px; height: 14px; }
 @media (prefers-reduced-motion: no-preference) { .table-casc--line.is-dragging .table-line-item { transition: transform var(--ork-motion-base) var(--ork-motion-spring); } .table-casc--line.is-dragging .table-line-item[style*="z-index"] { transition: none; } }
 
-/* a task's card (spec 101 §2): its header (the goal's element bare at the left, the name left-aligned in the pixel face, three lines at most), its window (about 70 px, the card's own fill, a hairline, one sign at the big size, toned down
+/* a task's card (spec 101 §2): its header (the goal's element bare at the left, the name left-aligned in the body face (a person's words, §167.1), three lines at most), its window (about 70 px, the card's own fill, a hairline, one sign at the big size, toned down
    in the goal's colour: an opacity on orkUI's token), its label row (the stage's small sign and word; the gem at its right when it spends) */
 .table-card.ork-card { position: relative; display: flex; flex-direction: column; gap: var(--ork-2); box-sizing: border-box; width: 100%; padding: var(--ork-3); flex: none; text-align: left; cursor: pointer; }
-.table-card__head { display: flex; align-items: flex-start; gap: var(--ork-2); min-height: 3lh; font: var(--ork-type-button); }
+.table-card__head { display: flex; align-items: flex-start; gap: var(--ork-2); min-height: 3lh; font: var(--ork-type-body); font-weight: 600; }
 .table-card__head .ork-elem { margin-top: 1px; }
-.table-card__nm { flex: 1; min-width: 0; font: var(--ork-type-button); letter-spacing: var(--ork-type-button-track, 0); text-align: left; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; }
+.table-card__nm { flex: 1; min-width: 0; font: var(--ork-type-body); font-weight: 600; letter-spacing: var(--ork-type-body-track, 0); text-align: left; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; }
 .table-card__win { flex: none; display: flex; align-items: center; justify-content: center; gap: var(--ork-3); box-sizing: border-box; height: 70px; border: var(--ork-line) solid var(--ork-card-frame); color: var(--ork-ink-muted); }
 .table-card__win .ork-sign { opacity: 0.6; }
 .table-card__win.is-meadow { color: var(--ork-elem-meadow); }

@@ -42,7 +42,7 @@
 .hand .hand-card.is-gone { position: absolute; left: 0; top: 0; pointer-events: none; }
 .hand-card__head { display: flex; align-items: flex-start; gap: var(--ork-3); min-width: 0; overflow: hidden; }
 .hand-card__head > .ork-elem { margin-top: 1px; }
-.hand-card__name { flex: 1; min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-button); letter-spacing: var(--ork-type-button-track, 0); }
+.hand-card__name { flex: 1; min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-body); font-weight: 600; letter-spacing: var(--ork-type-body-track, 0); }   /* a person's words: the body face (§167.1) */
 .hand-card__window { position: relative; display: flex; align-items: center; justify-content: center; min-width: 0; border: var(--ork-line) solid var(--ork-card-frame); }
 .hand-card__act, .hand-mark { display: inline-flex; }
 .hand-card__asker { position: absolute; right: var(--ork-2); bottom: var(--ork-1); display: inline-flex; }
@@ -82,7 +82,7 @@
 .hand .hand-done.hand-back.is-on { box-shadow: inset 2px 0 0 var(--ork-ink); }
 .hand-back__ready { display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); padding: var(--ork-3); color: var(--ork-ink-muted); text-align: center; }
 .hand .hand-card.ork-deal { --ork-deal-x: 0px; --ork-deal-y: calc(var(--hc-h) * 0.6); }
-.hand .hand-plus { cursor: pointer; }
+.hand .hand-plus { cursor: pointer; rotate: calc(var(--ork-motion-lean) * -1); border-color: var(--ork-action); color: var(--ork-action); }   /* the + card turned a little, its + and frame the action's green (§167.5) */
 .hand .hand-plus.is-large { width: 180px; height: auto; aspect-ratio: 5 / 7; }
 .hand .hand-plus.is-large > .ork-icon { width: 56px; height: 56px; }
 

@@ -3344,3 +3344,19 @@ hourglass, §144.1's members' heads and §144.2's cost place, §145.2, §153.5's
 9. **At the narrow width** the hand is a free row in the lanes' order (the first lane's first, the discard last); a goal
    on the Board one token with its stack's edges, a press opening its tasks.
 The owner's call.
+
+## 168. The cards' names in the body face; the + card turned and green; a stack and a goal's tasks as a fan (28 October, the owner)
+
+Why: the owner, after spec 101's window: a goal's name is a person's words (CLAUDE.md: the pixel face is for headings
+and buttons); the + card should read as the one to play; and cards laid straight one on another read as a ticket board,
+not as cards. So (this makes §167.1, §167.4, §167.5 and §167.7 precise):
+1. **A card's name is in the body face** (bold), never the pixel face; the pixel face keeps the labels (the stage, the
+   party) and the buttons.
+2. **The + card is turned a little**, its **+** and its frame the action's green; it lies behind the first lane's stacks.
+3. **A hand card's head lies over its sign**, on its lower right corner, the two read as one figure (the mockup's).
+4. **Always a fan, never card on card**: a stack's cards behind the front one turned a few degrees (2° to 4°) and moved
+   a little aside, by turns left and right, three at most seen, a fixed turn a card (no shake on a redraw); a hover
+   opens it a little wider; still under reduced motion. **On the Board** a goal's tasks behind its front card lie the
+   same way, turned less (1° to 3°), showing their edge with the stage's sign and the element only; their names on a
+   hover, which opens the fan, and on the picked goal, which unfolds as before. No strip of names (§167.4's strips go).
+The owner's call.

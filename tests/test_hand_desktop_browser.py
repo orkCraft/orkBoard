@@ -287,8 +287,8 @@ def test_a_stack_lies_under_the_lane_of_who_asks_and_the_plus_card_under_the_fir
         assert lane(pg, 0).locator(".hand-plus").count() == 1 and pg.locator(".hand-plus").count() == 1
         if width == "wide":
             box, plus = lane(pg, 0).bounding_box(), pg.locator(".hand-plus").bounding_box()
-            assert box["x"] - 1 <= plus["x"] and plus["x"] + plus["width"] <= box["x"] + box["width"] + 1, "under the first lane"
-            assert pg.locator(".hand-plus > .ork-icon").evaluate("e => e.getBoundingClientRect().width") == 14, "its + shows on the edge the stacks leave it"
+            assert box["x"] - 12 <= plus["x"] and plus["x"] + plus["width"] <= box["x"] + box["width"] + 12, "under the first lane"   # turned a little (§167.5): its corners reach past the lane by a few pixels
+            assert pg.locator(".hand-plus > .ork-icon").evaluate("e => e.offsetWidth || e.width.baseVal.value") == 14, "its + shows on the edge the stacks leave it"   # its own size (the card is turned)
             pg.locator(".hand-plus").click(position={"x": 5, "y": 20})                              # a press on that edge grows it into the field
             _field(pg)
         shot(pg, f"{width}-first-lane")

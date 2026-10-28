@@ -421,7 +421,7 @@ def test_a_task_card_has_its_header_its_window_with_the_types_sign_and_its_label
     assert nm.inner_text().strip() == "Reset the round timer when a player rejoins"
     assert nm.evaluate("e => getComputedStyle(e).textAlign") in ("left", "start") and nm.evaluate("e => getComputedStyle(e).webkitLineClamp") == "3"        # left-aligned, three lines at most
     pixel = pg.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--ork-font-pixel').split(',')[0].trim().replace(/[\"']/g, '')")
-    assert pixel and pixel in nm.evaluate("e => getComputedStyle(e).fontFamily")                                          # the pixel face
+    assert pixel and pixel not in nm.evaluate("e => getComputedStyle(e).fontFamily")                                      # a person's words: the body face, never the pixel one (CLAUDE.md, the owner)
     win = failed.locator(".table-card__win")
     assert abs(win.bounding_box()["height"] - 70) <= 1                                                                   # about 70 px high
     assert win.locator(".ork-sign.feature.big").count() == 1 and win.locator(".ork-sign").count() == 1                  # one sign at the big size: the goal's type (the task has no kind of its own)
