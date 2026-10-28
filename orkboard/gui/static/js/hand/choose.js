@@ -39,12 +39,22 @@ if (sheet && !document.querySelector(`link[href="${sheet}"]`)) {
   document.head.appendChild(link);
 }
 
-/** The window of a choice: its preview, its head, or its sign. */
-function Window({ c, picked, head }) {
+// A pick's suits (orkUI 0.16 `.ork-tool`): the asking party's race's tool, its four variants by the choice's place, so four cards read as one tool told apart.
+const TOOL = { peon: "drum", shaman: "drum", elf: "bow", dryad: "bow", goblin: "pick", imp: "pick", gnome: "bell", fairy: "bell", knight: "map", unicorn: "map",
+  skeleton: "hourglass", lich: "hourglass" };
+const VARIANTS = { drum: ["gear", "bolt", "spiral", "tusk"], bow: ["round", "flat", "drip", "fan"], pick: ["gem", "coin", "gear", "mushroom"],
+  bell: ["waves", "stars", "note", "hearts"], map: ["cross", "star", "heart", "crown"], hourglass: ["candle", "bone", "gem", "ring"] };
+/** The tool class of the `i`-th choice asked by `head`, "" when its race has none. */
+export const toolOf = (head, i) => { const t = TOOL[String(head?.race || "").split("-")[0]]; return t ? `${t}-${VARIANTS[t][i % 4]}` : ""; };
+
+/** The window of a choice: its preview, its head, its sign, or its suit (the asker's race's tool by its place). */
+function Window({ c, i = 0, picked, head }) {
+  const tool = !c.sign ? toolOf(head, i) : "";
   const own = c.head || null, pre = c.preview;
   return html`<span class="q-card__window">
     ${pre ? (typeof pre === "string" ? html`<img class="q-card__preview" src=${pre} alt="" draggable="false" />` : pre)
       : own ? html`<span class="q-card__fig"><${Head} race=${own.race} tier=${own.tier} size="mid" /></span>`
+      : tool ? html`<span class="q-card__fig"><span class="q-card__sign"><span class=${`ork-tool ${tool}`} aria-hidden="true"></span></span></span>`
       : html`<span class="q-card__fig"><span class="q-card__sign"><${Sign} name=${c.sign || (picked ? "check" : "question")} big=${true} /></span>
         ${head && html`<span class="q-card__asker"><${Head} race=${head.race} tier=${head.tier} /></span>`}</span>`}
     ${pre && own && html`<span class="q-card__asker"><${Head} race=${own.race} tier=${own.tier} /></span>`}
@@ -55,7 +65,7 @@ function ChoiceCard({ c, i, picked, element, by, head, onPress }) {
   return html`<button type="button" class=${cls(`ork-card q-card ork-deal${element ? ` el-${element}` : ""}`, { "is-pick ork-picked": picked })} data-choice=${c.id} data-pick=${picked ? "1" : undefined}
       style=${`--ork-deal-i:${i}`} aria-label=${`${c.name}${picked ? ", the leader’s pick" : ""}${c.gem ? `, about ${c.gem}` : ""}`} title=${c.name} onClick=${onPress} ...${leans}>
     <span class="q-card__head"><${Elem} name=${element || ""} dim=${!element} /><span class="q-card__name">${c.name}</span></span>
-    <${Window} c=${c} picked=${picked} head=${head} />
+    <${Window} c=${c} i=${i} picked=${picked} head=${head} />
     <span class="q-card__label"><span class="q-card__by">${c.by || by || ""}</span>${c.gem && html`<span class="ork-gem share" data-cost=${c.gem}>${c.gem}</span>`}</span>
     <span class="q-card__foot">${c.why || ""}</span>
   </button>`;

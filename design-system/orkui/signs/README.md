@@ -1,6 +1,6 @@
 # orkUI / office / signs
 
-The thirty-nine signs: **every symbol a face draws is orkUI's** (orkBoard's spec 50 §1.6, spec 51 §1 and spec 52 §1 and spec 56 §6 and spec 59 §1, decisions §63.10, §69 and §72). A sign stands beside the
+The forty-one signs: **every symbol a face draws is orkUI's** (orkBoard's spec 50 §1.6, spec 51 §1 and spec 52 §1 and spec 56 §6 and spec 59 §1, decisions §63.10, §69 and §72). A sign stands beside the
 words it explains (a state, a stop, an order), in the colour of that text; it is never the only thing that says it, so the words
 (or a `title`) stay and the sign is `aria-hidden`.
 
@@ -22,22 +22,24 @@ never a being; the thing drawn in brackets):
     screen       a screen (a mirror)
     picture      a picture or an icon (a gem)
     logo         a mark for the product (a seal)
-    target       a pain of someone's (an arrow)
+    target       a pain of someone's (a heart with a plaster)
     flask        an experiment (a beaker)
-    horn         a launch (a bell)
-    chart        a number (standing stones)
+    horn         a launch (a firework rocket)
+    chart        a number (a dial gauge)
     page         a report (a scroll)
     abtest       two versions, one decided by a number (a fork)
     landing      a page that says the product (a signpost)
     post         a post for one channel (a letter)
     tagline      one line that says the product (a quill)
-    mechanic     a rule of the game (a tome)
-    level        a place the player comes to (a hut)
-    balance      numbers weighed against each other (a cairn)
+    mechanic     a rule of the game (a die)
+    level        a place the player comes to (a castle)
+    balance      numbers weighed against each other (a pair of scales)
     character    who someone is, by rank (a crown)
     release      a version packed and sent (a chest)
     store        where the product is sold (a stall)
-    tune         a sound for the game (a drum)
+    tune         a sound for the game (a lyre)
+    compass      a change across modules, shaped before it is written (a drafting compass)
+    steps        a flow and its screens, walked, then built (an elf's curled shoe)
 
 A squad's two columns (orkBoard's decisions §151.9) have a mark each, never a state's sign:
 
@@ -52,7 +54,7 @@ A stop's mark (0.15.5, Orkboard's decisions §167.3), like `alert`, not a goal t
 `sword` and `shield`; and, since 0.15.5, `question`. The goal types' signs stay in this folder for Orkline, which still draws them; orkBoard's copy
 leaves them out.
 
-The twenty-three pictures are also in `../emblems/` (the library), with seven more that no face draws.
+The twenty-five pictures are also in `../emblems/` (the library), with fourteen more that no face draws (seven of them the goal types' pictures before 0.16.0).
 
 `night`: the old name of `moon`, kept for Orkline (`night.svg` is `moon.svg`, `.ork-sign.night` draws the same mask); the window as decided writes `moon`.
 
@@ -72,3 +74,20 @@ file's black is only the shape. `vertical-align: -3px` sets the 14 px box on the
 A sign takes the signal colour of its text (success, danger, alert) or the muted ink, never a colour of its own: colour is a
 signal, and the sign does not add one. A shape is changed here, in the table of `tests/test_orkui.py` and in orkBoard's spec 50
 §1.6 (spec 51 §1 for the media signs, spec 52 §1 and spec 56 §6 for the goal types') together, never in a face.
+
+## The goal types' signs at 28 px: `big/`, 14 x 14 in two tones (0.16.0)
+
+At 14 px a sign is its 7 x 7, two pixels a cell. At 28 px the 7 x 7 would be four pixels a cell, coarser than every other pixel of the
+window (the heads are two pixels a cell), so **each goal type's sign is drawn again at 14 x 14 for 28 px**, the same thing in more detail:
+`big/<name>.svg`, in the same format as a sign (`viewBox="0 0 14 14"`, one path of unit squares, `fill="#000"`). Its source is
+`../../drawings/drawings.json` (`python tools/build_big.py`); the 7 x 7 and the 14 x 14 of one name are the same thing, so a face that
+draws a type's sign at both sizes shows one picture.
+
+A big sign is drawn in **two tones**: its silhouette (`big/<name>.svg`, every pixel) in the colour of the text it stands in, as every
+sign, and its light (`big/<name>-light.svg`, at most half the silhouette's pixels, always inside it) over it, in that same colour
+lightened toward the ink (`color-mix(in srgb, currentColor 45%, var(--ork-ink))`, on `.ork-sign.big::after`). The light is lighter, never
+darker: on the card the darker tone of `lava`, `void` or `dust` falls below 3:1. A sign still adds no colour of its own: in the element's
+colour its light is the element's, lit; in the ink the two tones are one. The other signs (the states, the media, a squad's columns,
+`question`) keep their 7 x 7 at 28 px.
+
+    <span class="ork-sign bug big" aria-hidden="true"></span>      28 x 28: the stag beetle, 14 x 14 in two tones

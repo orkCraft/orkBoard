@@ -202,11 +202,12 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-moon.gibbous::after { -webkit-mask-image: url(moons/gibbous.svg); mask-image: url(moons/gibbous.svg); }
 .ork-moon.full::after { background: var(--ork-ink); -webkit-mask-image: url(moons/disk.svg); mask-image: url(moons/disk.svg); }
 
-/* --- Signs: every symbol a face draws (signs/, thirty-nine 7 x 7 pixel shapes), drawn as a mask in the colour of the text it stands in
-   (`currentColor`). 14 x 14 or 28 x 28, never a size between. -3px sets the 14 px box on the baseline of a 16 px line ---------- */
+/* --- Signs: every symbol a face draws (signs/, forty-one 7 x 7 pixel shapes; the goal types' twenty-five drawn again at 14 x 14 for
+   28 px, signs/big/), drawn as a mask in the colour of the text it stands in (`currentColor`). 14 x 14 or 28 x 28, never a size
+   between. -3px sets the 14 px box on the baseline of a 16 px line ------------------------------------------------------------- */
 .ork-sign { display: inline-block; flex: none; width: 14px; height: 14px; vertical-align: -3px; background: currentColor;
   -webkit-mask-size: 100%; mask-size: 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
-.ork-sign.big { width: 28px; height: 28px; }
+.ork-sign.big { width: 28px; height: 28px; position: relative; }
 .ork-sign.check { -webkit-mask-image: url(signs/check.svg); mask-image: url(signs/check.svg); }
 .ork-sign.cross { -webkit-mask-image: url(signs/cross.svg); mask-image: url(signs/cross.svg); }
 .ork-sign.work { -webkit-mask-image: url(signs/work.svg); mask-image: url(signs/work.svg); }
@@ -244,9 +245,124 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-sign.release { -webkit-mask-image: url(signs/release.svg); mask-image: url(signs/release.svg); }
 .ork-sign.store { -webkit-mask-image: url(signs/store.svg); mask-image: url(signs/store.svg); }
 .ork-sign.tune { -webkit-mask-image: url(signs/tune.svg); mask-image: url(signs/tune.svg); }
+.ork-sign.compass { -webkit-mask-image: url(signs/compass.svg); mask-image: url(signs/compass.svg); }
+.ork-sign.steps { -webkit-mask-image: url(signs/steps.svg); mask-image: url(signs/steps.svg); }
 .ork-sign.sword { -webkit-mask-image: url(signs/sword.svg); mask-image: url(signs/sword.svg); }      /* a squad's Does column, never a state */
 .ork-sign.shield { -webkit-mask-image: url(signs/shield.svg); mask-image: url(signs/shield.svg); }   /* a squad's Checks column, never a state */
 .ork-sign.question { -webkit-mask-image: url(signs/question.svg); mask-image: url(signs/question.svg); }   /* a question the person answers, never a state */
+
+/* A goal type's sign at 28 px (0.16.0): its own 14 x 14 drawing (signs/big/), two pixels a cell as at 14 px, in two tones: the silhouette
+   (signs/big/<name>.svg) in the colour of its text, its light (signs/big/<name>-light.svg) over it, that colour lightened toward the ink.
+   The light lies inside the silhouette, so the sign's own mask holds it. Every other sign at 28 px stays its 7 x 7, four pixels a cell. */
+.ork-sign.big.feature { -webkit-mask-image: url(signs/big/feature.svg); mask-image: url(signs/big/feature.svg); }
+.ork-sign.big.compass { -webkit-mask-image: url(signs/big/compass.svg); mask-image: url(signs/big/compass.svg); }
+.ork-sign.big.bug { -webkit-mask-image: url(signs/big/bug.svg); mask-image: url(signs/big/bug.svg); }
+.ork-sign.big.tidy { -webkit-mask-image: url(signs/big/tidy.svg); mask-image: url(signs/big/tidy.svg); }
+.ork-sign.big.restructure { -webkit-mask-image: url(signs/big/restructure.svg); mask-image: url(signs/big/restructure.svg); }
+.ork-sign.big.screen { -webkit-mask-image: url(signs/big/screen.svg); mask-image: url(signs/big/screen.svg); }
+.ork-sign.big.picture { -webkit-mask-image: url(signs/big/picture.svg); mask-image: url(signs/big/picture.svg); }
+.ork-sign.big.logo { -webkit-mask-image: url(signs/big/logo.svg); mask-image: url(signs/big/logo.svg); }
+.ork-sign.big.target { -webkit-mask-image: url(signs/big/target.svg); mask-image: url(signs/big/target.svg); }
+.ork-sign.big.flask { -webkit-mask-image: url(signs/big/flask.svg); mask-image: url(signs/big/flask.svg); }
+.ork-sign.big.horn { -webkit-mask-image: url(signs/big/horn.svg); mask-image: url(signs/big/horn.svg); }
+.ork-sign.big.chart { -webkit-mask-image: url(signs/big/chart.svg); mask-image: url(signs/big/chart.svg); }
+.ork-sign.big.page { -webkit-mask-image: url(signs/big/page.svg); mask-image: url(signs/big/page.svg); }
+.ork-sign.big.abtest { -webkit-mask-image: url(signs/big/abtest.svg); mask-image: url(signs/big/abtest.svg); }
+.ork-sign.big.landing { -webkit-mask-image: url(signs/big/landing.svg); mask-image: url(signs/big/landing.svg); }
+.ork-sign.big.post { -webkit-mask-image: url(signs/big/post.svg); mask-image: url(signs/big/post.svg); }
+.ork-sign.big.tagline { -webkit-mask-image: url(signs/big/tagline.svg); mask-image: url(signs/big/tagline.svg); }
+.ork-sign.big.mechanic { -webkit-mask-image: url(signs/big/mechanic.svg); mask-image: url(signs/big/mechanic.svg); }
+.ork-sign.big.level { -webkit-mask-image: url(signs/big/level.svg); mask-image: url(signs/big/level.svg); }
+.ork-sign.big.balance { -webkit-mask-image: url(signs/big/balance.svg); mask-image: url(signs/big/balance.svg); }
+.ork-sign.big.character { -webkit-mask-image: url(signs/big/character.svg); mask-image: url(signs/big/character.svg); }
+.ork-sign.big.release { -webkit-mask-image: url(signs/big/release.svg); mask-image: url(signs/big/release.svg); }
+.ork-sign.big.store { -webkit-mask-image: url(signs/big/store.svg); mask-image: url(signs/big/store.svg); }
+.ork-sign.big.tune { -webkit-mask-image: url(signs/big/tune.svg); mask-image: url(signs/big/tune.svg); }
+.ork-sign.big.steps { -webkit-mask-image: url(signs/big/steps.svg); mask-image: url(signs/big/steps.svg); }
+.ork-sign.big:is(.feature, .compass, .bug, .tidy, .restructure, .screen, .picture, .logo, .target, .flask, .horn, .chart, .page, .abtest, .landing, .post, .tagline, .mechanic, .level, .balance, .character, .release, .store, .tune, .steps)::after { content: ""; position: absolute; inset: 0; background: color-mix(in srgb, currentColor 45%, var(--ork-ink));
+  -webkit-mask-size: 100%; mask-size: 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
+.ork-sign.big.feature::after { -webkit-mask-image: url(signs/big/feature-light.svg); mask-image: url(signs/big/feature-light.svg); }
+.ork-sign.big.compass::after { -webkit-mask-image: url(signs/big/compass-light.svg); mask-image: url(signs/big/compass-light.svg); }
+.ork-sign.big.bug::after { -webkit-mask-image: url(signs/big/bug-light.svg); mask-image: url(signs/big/bug-light.svg); }
+.ork-sign.big.tidy::after { -webkit-mask-image: url(signs/big/tidy-light.svg); mask-image: url(signs/big/tidy-light.svg); }
+.ork-sign.big.restructure::after { -webkit-mask-image: url(signs/big/restructure-light.svg); mask-image: url(signs/big/restructure-light.svg); }
+.ork-sign.big.screen::after { -webkit-mask-image: url(signs/big/screen-light.svg); mask-image: url(signs/big/screen-light.svg); }
+.ork-sign.big.picture::after { -webkit-mask-image: url(signs/big/picture-light.svg); mask-image: url(signs/big/picture-light.svg); }
+.ork-sign.big.logo::after { -webkit-mask-image: url(signs/big/logo-light.svg); mask-image: url(signs/big/logo-light.svg); }
+.ork-sign.big.target::after { -webkit-mask-image: url(signs/big/target-light.svg); mask-image: url(signs/big/target-light.svg); }
+.ork-sign.big.flask::after { -webkit-mask-image: url(signs/big/flask-light.svg); mask-image: url(signs/big/flask-light.svg); }
+.ork-sign.big.horn::after { -webkit-mask-image: url(signs/big/horn-light.svg); mask-image: url(signs/big/horn-light.svg); }
+.ork-sign.big.chart::after { -webkit-mask-image: url(signs/big/chart-light.svg); mask-image: url(signs/big/chart-light.svg); }
+.ork-sign.big.page::after { -webkit-mask-image: url(signs/big/page-light.svg); mask-image: url(signs/big/page-light.svg); }
+.ork-sign.big.abtest::after { -webkit-mask-image: url(signs/big/abtest-light.svg); mask-image: url(signs/big/abtest-light.svg); }
+.ork-sign.big.landing::after { -webkit-mask-image: url(signs/big/landing-light.svg); mask-image: url(signs/big/landing-light.svg); }
+.ork-sign.big.post::after { -webkit-mask-image: url(signs/big/post-light.svg); mask-image: url(signs/big/post-light.svg); }
+.ork-sign.big.tagline::after { -webkit-mask-image: url(signs/big/tagline-light.svg); mask-image: url(signs/big/tagline-light.svg); }
+.ork-sign.big.mechanic::after { -webkit-mask-image: url(signs/big/mechanic-light.svg); mask-image: url(signs/big/mechanic-light.svg); }
+.ork-sign.big.level::after { -webkit-mask-image: url(signs/big/level-light.svg); mask-image: url(signs/big/level-light.svg); }
+.ork-sign.big.balance::after { -webkit-mask-image: url(signs/big/balance-light.svg); mask-image: url(signs/big/balance-light.svg); }
+.ork-sign.big.character::after { -webkit-mask-image: url(signs/big/character-light.svg); mask-image: url(signs/big/character-light.svg); }
+.ork-sign.big.release::after { -webkit-mask-image: url(signs/big/release-light.svg); mask-image: url(signs/big/release-light.svg); }
+.ork-sign.big.store::after { -webkit-mask-image: url(signs/big/store-light.svg); mask-image: url(signs/big/store-light.svg); }
+.ork-sign.big.tune::after { -webkit-mask-image: url(signs/big/tune-light.svg); mask-image: url(signs/big/tune-light.svg); }
+.ork-sign.big.steps::after { -webkit-mask-image: url(signs/big/steps-light.svg); mask-image: url(signs/big/steps-light.svg); }
+
+
+/* --- Tools: a race's tool for a pick of four (tools/, 0.16.0): the orks' drum, the elves' bow, the goblins' pick, the gnomes' bell, the
+   knights' map, the skeletons' hourglass, four variants each (one silhouette, one zone that changes). 14 x 14 drawings at 28 px, two
+   pixels a cell, in two tones as a big sign: the silhouette in the colour of its text, its light over it, lightened toward the ink. ---- */
+.ork-tool { display: inline-block; flex: none; position: relative; width: 28px; height: 28px; background: currentColor;
+  -webkit-mask-size: 100%; mask-size: 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
+.ork-tool::after { content: ""; position: absolute; inset: 0; background: color-mix(in srgb, currentColor 45%, var(--ork-ink));
+  -webkit-mask-size: 100%; mask-size: 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
+.ork-tool.drum-gear { -webkit-mask-image: url(tools/drum-gear.svg); mask-image: url(tools/drum-gear.svg); }
+.ork-tool.drum-gear::after { -webkit-mask-image: url(tools/drum-gear-light.svg); mask-image: url(tools/drum-gear-light.svg); }
+.ork-tool.drum-bolt { -webkit-mask-image: url(tools/drum-bolt.svg); mask-image: url(tools/drum-bolt.svg); }
+.ork-tool.drum-bolt::after { -webkit-mask-image: url(tools/drum-bolt-light.svg); mask-image: url(tools/drum-bolt-light.svg); }
+.ork-tool.drum-spiral { -webkit-mask-image: url(tools/drum-spiral.svg); mask-image: url(tools/drum-spiral.svg); }
+.ork-tool.drum-spiral::after { -webkit-mask-image: url(tools/drum-spiral-light.svg); mask-image: url(tools/drum-spiral-light.svg); }
+.ork-tool.drum-tusk { -webkit-mask-image: url(tools/drum-tusk.svg); mask-image: url(tools/drum-tusk.svg); }
+.ork-tool.drum-tusk::after { -webkit-mask-image: url(tools/drum-tusk-light.svg); mask-image: url(tools/drum-tusk-light.svg); }
+.ork-tool.bow-round { -webkit-mask-image: url(tools/bow-round.svg); mask-image: url(tools/bow-round.svg); }
+.ork-tool.bow-round::after { -webkit-mask-image: url(tools/bow-round-light.svg); mask-image: url(tools/bow-round-light.svg); }
+.ork-tool.bow-flat { -webkit-mask-image: url(tools/bow-flat.svg); mask-image: url(tools/bow-flat.svg); }
+.ork-tool.bow-flat::after { -webkit-mask-image: url(tools/bow-flat-light.svg); mask-image: url(tools/bow-flat-light.svg); }
+.ork-tool.bow-drip { -webkit-mask-image: url(tools/bow-drip.svg); mask-image: url(tools/bow-drip.svg); }
+.ork-tool.bow-drip::after { -webkit-mask-image: url(tools/bow-drip-light.svg); mask-image: url(tools/bow-drip-light.svg); }
+.ork-tool.bow-fan { -webkit-mask-image: url(tools/bow-fan.svg); mask-image: url(tools/bow-fan.svg); }
+.ork-tool.bow-fan::after { -webkit-mask-image: url(tools/bow-fan-light.svg); mask-image: url(tools/bow-fan-light.svg); }
+.ork-tool.pick-gem { -webkit-mask-image: url(tools/pick-gem.svg); mask-image: url(tools/pick-gem.svg); }
+.ork-tool.pick-gem::after { -webkit-mask-image: url(tools/pick-gem-light.svg); mask-image: url(tools/pick-gem-light.svg); }
+.ork-tool.pick-coin { -webkit-mask-image: url(tools/pick-coin.svg); mask-image: url(tools/pick-coin.svg); }
+.ork-tool.pick-coin::after { -webkit-mask-image: url(tools/pick-coin-light.svg); mask-image: url(tools/pick-coin-light.svg); }
+.ork-tool.pick-gear { -webkit-mask-image: url(tools/pick-gear.svg); mask-image: url(tools/pick-gear.svg); }
+.ork-tool.pick-gear::after { -webkit-mask-image: url(tools/pick-gear-light.svg); mask-image: url(tools/pick-gear-light.svg); }
+.ork-tool.pick-mushroom { -webkit-mask-image: url(tools/pick-mushroom.svg); mask-image: url(tools/pick-mushroom.svg); }
+.ork-tool.pick-mushroom::after { -webkit-mask-image: url(tools/pick-mushroom-light.svg); mask-image: url(tools/pick-mushroom-light.svg); }
+.ork-tool.bell-waves { -webkit-mask-image: url(tools/bell-waves.svg); mask-image: url(tools/bell-waves.svg); }
+.ork-tool.bell-waves::after { -webkit-mask-image: url(tools/bell-waves-light.svg); mask-image: url(tools/bell-waves-light.svg); }
+.ork-tool.bell-stars { -webkit-mask-image: url(tools/bell-stars.svg); mask-image: url(tools/bell-stars.svg); }
+.ork-tool.bell-stars::after { -webkit-mask-image: url(tools/bell-stars-light.svg); mask-image: url(tools/bell-stars-light.svg); }
+.ork-tool.bell-note { -webkit-mask-image: url(tools/bell-note.svg); mask-image: url(tools/bell-note.svg); }
+.ork-tool.bell-note::after { -webkit-mask-image: url(tools/bell-note-light.svg); mask-image: url(tools/bell-note-light.svg); }
+.ork-tool.bell-hearts { -webkit-mask-image: url(tools/bell-hearts.svg); mask-image: url(tools/bell-hearts.svg); }
+.ork-tool.bell-hearts::after { -webkit-mask-image: url(tools/bell-hearts-light.svg); mask-image: url(tools/bell-hearts-light.svg); }
+.ork-tool.map-cross { -webkit-mask-image: url(tools/map-cross.svg); mask-image: url(tools/map-cross.svg); }
+.ork-tool.map-cross::after { -webkit-mask-image: url(tools/map-cross-light.svg); mask-image: url(tools/map-cross-light.svg); }
+.ork-tool.map-star { -webkit-mask-image: url(tools/map-star.svg); mask-image: url(tools/map-star.svg); }
+.ork-tool.map-star::after { -webkit-mask-image: url(tools/map-star-light.svg); mask-image: url(tools/map-star-light.svg); }
+.ork-tool.map-heart { -webkit-mask-image: url(tools/map-heart.svg); mask-image: url(tools/map-heart.svg); }
+.ork-tool.map-heart::after { -webkit-mask-image: url(tools/map-heart-light.svg); mask-image: url(tools/map-heart-light.svg); }
+.ork-tool.map-crown { -webkit-mask-image: url(tools/map-crown.svg); mask-image: url(tools/map-crown.svg); }
+.ork-tool.map-crown::after { -webkit-mask-image: url(tools/map-crown-light.svg); mask-image: url(tools/map-crown-light.svg); }
+.ork-tool.hourglass-candle { -webkit-mask-image: url(tools/hourglass-candle.svg); mask-image: url(tools/hourglass-candle.svg); }
+.ork-tool.hourglass-candle::after { -webkit-mask-image: url(tools/hourglass-candle-light.svg); mask-image: url(tools/hourglass-candle-light.svg); }
+.ork-tool.hourglass-bone { -webkit-mask-image: url(tools/hourglass-bone.svg); mask-image: url(tools/hourglass-bone.svg); }
+.ork-tool.hourglass-bone::after { -webkit-mask-image: url(tools/hourglass-bone-light.svg); mask-image: url(tools/hourglass-bone-light.svg); }
+.ork-tool.hourglass-gem { -webkit-mask-image: url(tools/hourglass-gem.svg); mask-image: url(tools/hourglass-gem.svg); }
+.ork-tool.hourglass-gem::after { -webkit-mask-image: url(tools/hourglass-gem-light.svg); mask-image: url(tools/hourglass-gem-light.svg); }
+.ork-tool.hourglass-ring { -webkit-mask-image: url(tools/hourglass-ring.svg); mask-image: url(tools/hourglass-ring.svg); }
+.ork-tool.hourglass-ring::after { -webkit-mask-image: url(tools/hourglass-ring-light.svg); mask-image: url(tools/hourglass-ring-light.svg); }
 
 /* --- Dialog, menu, toast ------------------------------------------------------------------------------------------------------- */
 .ork-scrim { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: var(--ork-6); background: var(--ork-scrim); }

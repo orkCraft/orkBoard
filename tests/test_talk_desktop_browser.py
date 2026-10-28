@@ -159,6 +159,7 @@ def test_lifted_its_choices_are_dealt_over_the_pane_a_press_answers_and_the_next
         assert first.locator(".q-card__foot").inner_text().strip() == "One clock: every phone agrees.", "with its why at its foot"
         assert cards.nth(1).locator(".q-card__foot").inner_text().strip() == ""
         assert first.locator(".hand-card__head, .q-card__head .ork-elem.ice").count() == 1, "the goal's element at the left of its header"
+        assert [cards.nth(i).locator(".ork-tool").get_attribute("class") for i in range(2)] == ["ork-tool bow-round", "ork-tool bow-flat"], "each choice its suit: Design's elves' bow, by place (orkUI 0.16)"
         assert cards.nth(2).get_attribute("class").count("q-card--blank") == 1 and cards.nth(2).locator(".ork-icon").count() == 1, "Other… is a blank card with +"
         assert pg.locator(".q-choose__hint").inner_text().strip() == "Pick an answer: the leader writes it into the spec", "the one line, under the first card"
         buttons = [b.inner_text().strip() for b in pg.locator(".q-choose__acts .ork-btn").all()]

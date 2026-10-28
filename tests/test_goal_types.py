@@ -99,15 +99,15 @@ def test_a_type_is_read_by_its_id_and_an_old_key_by_the_one_it_was_and_anything_
 def test_every_sign_is_one_of_orkuis_and_a_type_shares_its_sign_only_with_the_same_thing():
     have = {p.stem for p in (ROOT / "design-system" / "orkui" / "signs").glob("*.svg")}
     assert A0_SIGNS <= have and len(A0_SIGNS) == 23                                       # the twenty-three come with orkUI 0.4.1 (specs 56, 59)
-    assert set(goal_types.SIGNS) == A0_SIGNS | {"text"}                                   # `text` stays spec 51's media tile
+    assert set(goal_types.SIGNS) == A0_SIGNS | {"text", "compass", "steps"}               # `text` stays spec 51's media tile; orkUI 0.16's two kinds of New feature
     assert set(goal_types.SIGNS) <= have
     for t in _all():
         assert t.sign in goal_types.SIGNS and t.sign != "text", t
     by_sign: dict[str, list[str]] = {}
     for t in _all():
         by_sign.setdefault(t.sign, []).append(t.id)
-    assert {s: ids for s, ids in by_sign.items() if len(ids) > 1} == {"feature": ["feature", "shaped-feature", "flow-feature"]}
-    assert set(by_sign) == A0_SIGNS                                           # every sign drawn by a type (spec 56 §1.6)
+    assert {s: ids for s, ids in by_sign.items() if len(ids) > 1} == {}                  # each kind of New feature its own (orkUI 0.16: the wand, the compass, the shoe)
+    assert set(by_sign) == A0_SIGNS | {"compass", "steps"}                    # every sign drawn by a type (spec 56 §1.6)
 
 
 def test_every_need_is_a_known_kind_and_the_ones_with_a_taker_have_one():

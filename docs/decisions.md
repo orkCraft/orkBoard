@@ -3377,3 +3377,15 @@ Why: the owner's answers to the lead's questions after specs 98–101. So:
 7. **Release's leader on Seasoned, the Live crafts proposed Standard** (spec 99 A's picks) stay.
 The owner's call.
 
+## 170. orkUI 0.16 taken: the goal types' big signs in two tones, a pick's suits the asking party's race's tool (28 October, the owner)
+
+Why: the owner made orkUI 0.16.0 (its CHANGELOG): the signs at 28 px were coarse, and the choices of a pick wanted telling apart by
+their shape, with the craft of the race said with a joke. So (this makes §167.1–§167.2 precise):
+1. **A goal type's sign at 28 px** is orkUI's 14 × 14 drawing in two tones (the silhouette in the text's colour, its light over it);
+   the states', the media signs, `sword`, `shield` and `question` keep their 7 × 7. *New feature*'s three kinds have their own
+   signs: the wand (`feature`), the compass (`shaped-feature`), the shoe (`flow-feature`: `steps`).
+2. **A choice's card wears its suit**: the asking party's race's tool (orks a drum, elves a bow, goblins a pick, gnomes a bell,
+   knights a map, skeletons an hourglass), its four variants by the choice's place; a preview or a fork's side's head in its place
+   where there is one.
+The owner's call.
+

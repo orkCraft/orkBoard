@@ -29,7 +29,7 @@ from orkboard.realm import goal_team, idea_spend, ideas, library, roles
 
 LENSES = ("text", "code", "screen", "pain")      # realm/idea_lens.py ORDER
 SIGNS = ("feature", "bug", "tidy", "screen", "picture", "logo", "target", "flask", "horn", "chart", "page", "restructure", "abtest", "landing", "post", "tagline", "text",
-         "mechanic", "level", "balance", "character", "release", "store", "tune")  # orkUI's (spec 52 §1); the last seven are A0's (spec 59 §1.1)
+         "mechanic", "level", "balance", "character", "release", "store", "tune", "compass", "steps")  # orkUI's (spec 52 §1); the seven after text A0's (spec 59 §1.1); compass and steps 0.16's, the two kinds of New feature
 ASK_CHARS = 300                                  # an answer to an ask, the most kept
 REFS = "refs"                                    # the id of Refs' links among a goal's asks
 GONE = ("merged", "dropped")                     # a task no longer to do
@@ -80,7 +80,7 @@ CATALOG: tuple[GoalType, ...] = (
     GoalType("bug", "Fix a bug", "bug", "Something that goes wrong, made right", ("code",), asks=BUG_ASKS, plan=BUG_PLAN),
     GoalType("tidy", "Clean up", "tidy", "The same behaviour in simpler code", ("code",), asks=(IN_THE_WAY,),
              plan="Change nothing a person or a caller sees; the tests stay green."),
-    GoalType("shaped-feature", "New feature", "feature", "A change across modules, shaped before it is written",
+    GoalType("shaped-feature", "New feature", "compass", "A change across modules, shaped before it is written",
              ("architecture",), "code", (Ask("avoid", "Must use or avoid", "a library, a pattern, a module not to touch"),),
              plan="Shape it first: the modules, the steps and what tests each, then the code.", over="feature"),
     GoalType("restructure", "Restructure", "restructure", "Modules split or moved, one job each", ("architecture",), "code",
@@ -96,7 +96,7 @@ CATALOG: tuple[GoalType, ...] = (
              (Ask("says", "What it should say", "three words"),), True,
              "An Artist draws four to pick from (a pick of 4 images); the one picked is put in place at every size the "
              "product uses."),
-    GoalType("flow-feature", "New feature", "feature", "A flow and its screens, then the build", ("uikit",), "screen",
+    GoalType("flow-feature", "New feature", "steps", "A flow and its screens, then the build", ("uikit",), "screen",
              (WHO_USES,), True, "The flow first, then each screen of it, then the build.", "feature"),
     GoalType("pain", "Solve a pain", "target", "The smallest change that takes a pain away", ("research",), lens="pain",
              plan="Say who it is for and the pain; plan the smallest change that shows it gone."),
