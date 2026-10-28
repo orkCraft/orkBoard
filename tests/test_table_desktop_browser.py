@@ -1,0 +1,631 @@
+"""Spec 98 part C, the table (docs/specs/98-the-table-and-the-hand.md §3, §5, §6; mockup docs/mockups/s1/ states 1–4 and 6): the window opened with `?frame=1`, at both widths (`tests/narrow.py`: 1280 × 800, and
+390 × 844 with touch), against a stub host of its own (a project of four parties: Game design, Tech led by the Architect, Art and Release; the Orkmaster reading two goals; tasks at work, one failed; Tech's System).
+
+The tabs in order with the Orkmaster's first, its **…** and its three places over the pane, **+**, the chips, *Stop all*; the Board's columns under their tabs, the same widths, a task card's head, element and name, the Orkmaster's
+own column, a goal picked; a party's header with its groups, a seat's popover and its **Open**, another party's tab its header alone; Tech's System; a card lifted and lowered (Esc, a press away); a file opened over the pane, its
+title, **←** back to the card lit; a form in the pane, never a dialog; no sideways scroll at 390. Screenshots to the directory ORKCRAFT_SHOTS_DIR names when it is set."""
+from __future__ import annotations
+
+import copy
+import json
+import os
+from pathlib import Path
+
+import pytest
+
+pytest.importorskip("playwright.sync_api")
+
+from orkboard.realm import library  # noqa: E402
+from tests import narrow  # noqa: E402
+from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
+
+pytestmark = pytest.mark.browser
+
+SHOP = "/work/shop"
+HEAD = lambda race, tier, craft="engineering": {"craft": craft, "race": race, "tier": tier}  # noqa: E731
+LEADS = {"game": HEAD("knight", "elder", "product"), "tech": HEAD("peon", "elder"), "art": HEAD("elf", "elder", "design"), "release": HEAD("lich", "elder", "product")}
+NAMES = {"game": "Game design", "tech": "Tech", "art": "Art", "release": "Release"}
+MEMBER = {"grunt": ("Grunts", HEAD("peon", "warrior"), "build"), "tester": ("Tester", HEAD("peon", "laborer"), "build"), "reviewer": ("Reviewer", HEAD("peon", "warrior"), "check"),
+          "designer": ("Designer", HEAD("knight", "warrior", "product"), "build"), "artist": ("Artist", HEAD("elf", "warrior", "design"), "build")}
+FILE = "server/lobby.ts"
+LOBBY = "\n".join(f"line {i}" for i in range(1, 30))
+
+
+def task(tid, title, state, who="grunt", band="build", **more):
+    name, head, _ = MEMBER[who]
+    return {"id": tid, "title": title, "short": title, "state": state, "after": [], "tier": "warrior", "head": head, "by": {"slug": who, "name": name}, "band": band, "wave": 1, "row": 1, "tag": "Code",
+            "error": "", "note": "", "round": 1, "cost": None, "made": "", **more}
+
+
+def node(slug, goal, title, state, stage="planning", element="meadow", sign="", tasks=(), **more):
+    return {"slug": slug, "goal": goal, "title": title, "short": title, "state": state, "queue": "", "held_until": "", "start_at": "", "priority": "normal", "size": "M", "risk": "low", "tier": 1,
+            "depends_on": [], "waits_on": [], "waits": None, "needs_you": "", "progress": {"done": 0, "total": len(tasks)}, "done": 0, "of": len(tasks), "tasks": list(tasks), "estimate": None,
+            "plan_estimate": None, "by_itself": False, "folded": False, "updated": "2026-10-28T09:00:00", "stage": stage, "round": 1, "usd": None, "asked": [], "results": [], "checks": [],
+            "element": element, "flag": None, "type": {"sign": sign, "name": sign.title()} if sign else None, "route": [], "place": "table", "asks_you": False, "waits_as": "", "seen": "", **more}
+
+
+def seat(slug, band):
+    name, head, _ = MEMBER[slug]
+    return {"slug": slug, "name": name, "head": head, "band": band, "state": "work" if slug == "grunt" else "free", "why": ""}
+
+
+def party(slug, order, seats=()):
+    name, head = NAMES.get(slug, slug), LEADS.get(slug, LEADS["art"])
+    lead = {"slug": "architect" if slug == "tech" else "taskmaster", "name": "Architect" if slug == "tech" else name, "head": head}
+    return {"slug": slug, "title": name, "short": name, "priority": "normal", "state": "ready", "done_when": [], "ideas": 1, "done": 0, "usd": None, "leader": lead, "size": "standard",
+            "team": [{"slug": s, "name": MEMBER[s][0], "head": MEMBER[s][1], "checks": MEMBER[s][2] == "check", "every": False} for s, _ in seats], "tool": "", "tools": {}, "craft": "engineering",
+            "party": [{**lead, "band": "lead", "state": "free", "why": ""}, *[seat(s, b) for s, b in seats]], "today": {"merged": 0, "usd": 0.0}, "flags": 0, "waits_main": 0, "brief": "", "order": order}
+
+
+def system_doc():
+    part = lambda path, uses=(), used_by=(): {"path": path, "name": path.rsplit("/", 1)[-1], "count": 2, "uses": list(uses), "used_by": list(used_by), "gone": False}  # noqa: E731
+    parts = {p["path"]: p for p in (part("server/index.ts", ["server/lobby.ts"]), part(FILE, [], ["server/index.ts"]), part("server/rooms.ts"), part("client/net.ts"))}
+    cont = lambda path, name, layers: {"path": path, "name": name, "stack": [{"name": "Express", "role": "server"}], "unknown": 0, "ways_in": [], "parts": [p for ly in layers for p in ly["parts"]],
+                                       "layers": layers, "gone": []}  # noqa: E731
+    return {"commit": "a" * 40, "short": "aaaaaaa", "at": "2026-10-28T08:00:00", "ref": "dev", "since": "", "columns": [{"name": "server", "parts": [], "stack": []}], "changed": {}, "uses_changed": [], "goals": {},
+            "overview": {"containers": [cont("server", "server/", [{"role": "doors", "parts": ["server/index.ts"]}, {"role": "data", "parts": [FILE, "server/rooms.ts"]}]),
+                                        cont("client", "client/", [{"role": "face", "parts": ["client/net.ts"]}])],
+                         "shared": [], "links": [{"from": "client", "to": "server", "http": [{"method": "GET", "path": "/rooms", "called_in": "client/net.ts", "answered_in": FILE}], "socket": []}], "parts": parts}}
+
+
+class TableHost:
+    """The page's host as the table reads it: the snapshot, `ideas.map`, `ideas.board`, `ideas.agents`, `ideas.roles`, `ideas.system`, and the commands a thing over the pane asks."""
+
+    def __init__(self, crowd: int = 0):
+        self.log: list[tuple[str, dict]] = []
+        self.ws = None
+        self.rev = 1
+        self.current = SHOP
+        order = ["game", "tech", "art", "release"] + [f"extra{i}" for i in range(crowd)]
+        seats = {"game": [("designer", "build")], "tech": [("grunt", "build"), ("tester", "build"), ("reviewer", "check")], "art": [("artist", "build")], "release": []}
+        self.parties = [party(s, i, seats.get(s, [])) for i, s in enumerate(order)]
+        for p in self.parties:
+            if p["slug"].startswith("extra"):
+                p["title"] = p["short"] = f"Party {p['slug'][5:]}"
+        self.nodes = [
+            node("results", "tech", "Results screen with the round's best answer", "planning", element="dust", sign="screen"),
+            node("timer", "game", "Round timer shows on every phone", "reading", element="meadow", sign="mechanic"),
+            node("rules", "game", "Write the timer's rules: seconds in each phase", "working", "implementation", "meadow", "mechanic",
+                 [task("r1", "Write the timer's rules: seconds in each phase", "running", "designer")]),
+            node("seat", "tech", "Keep the seat when a socket reconnects", "working", "implementation", "ice", "feature",
+                 [task("s1", "Keep the seat when a socket reconnects", "running"), task("s2", "Reset the round timer when a player rejoins", "failed", "tester", error="3 checks failed", made="")],
+                 route=[{"step": "party", "party": "tech", "goal": "seat", "state": "working", "done": 0, "total": 2}, {"step": "moved", "party": "art", "from": "art"}]),
+        ]
+
+    def snapshot(self):
+        return {"t": "state", "state": {
+            "focus": "board", "ideas_rev": self.rev, "look": "office", "project": "shop", "demo": False, "onboarding": False, "words": [], "resources": {}, "orkspaces": [], "buildings": [], "roads": [], "alerts": [],
+            "score": {}, "limits": [{"provider": "claude", "name": "Claude", "left": 0.62, "rows": [{"window": "5h", "left": 0.62, "reset": ""}]},
+                                    {"provider": "codex", "name": "Codex", "left": 0.18, "rows": [{"window": "daily", "left": 0.18, "reset": ""}]}],
+            "reserve": {"share": 0.1, "night": False}, "rate": None, "review_count": 0, "needs_you": 0, "sign_in": [], "hud": {"gold": "$2.40", "show_gold": True, "lumber": "120k"},
+            "projects": {"current": self.current, "recent": [{"path": "/work/old", "name": "old"}], "open": [{"path": SHOP, "name": "shop", "working": 1, "needs_you": 0, "review": 0},
+                                                                                                         {"path": "/work/other", "name": "other", "working": 0, "needs_you": 0, "review": 0}]}}}
+
+    def board(self):
+        tracks = [{"slug": p["slug"], "title": p["title"], "about": "", "criteria": [], "deadline": "", "order": p["order"], "count": 1, "priority": "normal", "metrics": [], "links": [], "summary": "",
+                   "questions": [], "state": "ready", "state_error": "", "team": [t["slug"] for t in p["team"]], "every": [], "leader": p["leader"], "tool": "", "tools": {}, "craft": "engineering"}
+                  for p in self.parties]
+        ideas = [{"slug": n["slug"], "title": n["title"], "track": n["goal"], "order": i, "state": n["state"], "size": "M", "asks": 0, "updated": "x", "talk": [], "priority": "normal", "queue": "",
+                  "held_until": "", "risk": "low", "risk_triggers": [], "depends_on": [], "waits_on": [], "start_at": "", "in_needs_you": False, "progress": n["progress"], "thesis": ""}
+                 for i, n in enumerate(self.nodes)]
+        return {"tracks": tracks, "ideas": ideas, "needs_you": [], "target": "balance", "autostart": True, "review": False, "review_notice": False, "rev": self.rev}
+
+    def handle(self, name, a):
+        self.log.append((name, a))
+        if name == "ideas.map":
+            return {"goals": copy.deepcopy(self.parties), "nodes": copy.deepcopy(self.nodes), "edges": [], "rev": self.rev}
+        if name == "ideas.board":
+            return self.board()
+        if name == "ideas.review_list":
+            return {"into": "dev", "push": False, "branches": ["dev", "main"], "results": []}
+        if name == "ideas.agents":
+            return {"roles": [{"role": s, "name": MEMBER[s][0], "model": "", "max_parallel": 2, "builtin": False, "spend_today": 0, "chips": [], "kinds": ["code"], "usd_task": 0.4, "head": MEMBER[s][1],
+                               "harness": {"id": "claude", "name": "Claude"}, "week": None} for s in MEMBER], "done_today": []}
+        if name == "ideas.roles":
+            return {"roles": [{"slug": s, "name": MEMBER[s][0], "model": "", "max_parallel": 2, "instruction": f"You are the {MEMBER[s][0]}.", "builtin": False, "head": MEMBER[s][1], "spend_today": 0,
+                               "record": None} for s in MEMBER], "kinds": [], "models": [{"id": "", "label": "The task's own tier"}], "library": [x | {"installed": False} for x in library.listed()],
+                    "suggested": library.SUGGESTED, "seats": library.SEATS, "parties": library.parties(), "presets": library.presets(), "stages": library.stages(), "tier_costs": {}}
+        if name == "ideas.gate":
+            return {"into": "dev", "main": "main", "same": True, "commits": 0, "files": 0, "ideas": []}
+        if name == "ideas.today":
+            return {"events": []}
+        if name == "ideas.flags":
+            return {"goals": [], "flags": []}
+        if name == "ideas.system":
+            return system_doc()
+        if name == "ideas.system_part":
+            return {"path": a["path"], "name": a["path"].rsplit("/", 1)[-1], "count": 2, "files": [a["path"], a["path"].replace(".ts", ".test.ts")], "uses": ["server/rooms.ts"], "used_by": ["server/index.ts"],
+                    "gone": False, "kind": "", "since": "", "changes": [], "goals": {}}
+        if name == "ideas.task":
+            return {"id": a["task"], "idea": a["slug"], "idea_title": "Keep the seat", "title": "Keep the seat", "state": "failed" if a["task"] == "s2" else "running", "tier": "warrior", "branch": "ork/s1",
+                    "round": 1, "cost": None, "error": "3 checks failed" if a["task"] == "s2" else "", "brief": "Keep a player's seat when the socket reconnects.", "log": "tests: 3 failed\nfix the timer\n",
+                    "head": MEMBER["grunt"][1], "note": ""}
+        if name == "ideas.diff":
+            return {"commits": [{"sha": "abc1234", "subject": "Keep the seat"}], "files": [{"path": FILE, "added": 3, "removed": 1, "patch": "@@ -1 +1 @@\n-a\n+b\n"}], "truncated": False}
+        if name == "files.tree":
+            return {"entries": [{"name": "server", "path": "server", "dir": True, "secret": False, "ignored": False}, {"name": "README.md", "path": "README.md", "dir": False, "secret": False, "ignored": False}]}
+        if name == "files.read":
+            return {"path": a["path"], "kind": "text", "text": LOBBY, "html": "", "size": len(LOBBY), "mtime": 1.0}
+        if name == "git.status":
+            return {"branch": "dev", "work_branch": "dev", "upstream": "", "ahead": 0, "behind": 0, "files": [], "last": None}
+        if name == "ideas.usage":
+            return {"rows": [], "scopes": ["project"], "window": "5h", "outside": 0, "tokens_only": False}
+        if name == "ideas.tools":
+            return {"main": "claude", "tools": [{"id": "claude", "name": "Claude Code", "installed": True, "signed_in": True, "ready": True, "tiers": True}]}
+        if name == "ideas.parties":
+            return {"parties": []}
+        if name == "ideas.proposals":
+            return {"proposals": []}
+        if name == "projects.use":
+            self.current = a["path"]
+            self.rev += 1
+            return {"ok": True}
+        return {}
+
+    def on_socket(self, ws):
+        self.ws = ws
+        ws.send(json.dumps(self.snapshot()))
+
+        def on_message(raw):
+            m = json.loads(raw)
+            ws.send(json.dumps({"t": "reply", "id": m["id"], "ok": True, "result": self.handle(m["name"], m["args"])}))
+            if m["name"] == "projects.use":
+                ws.send(json.dumps(self.snapshot()))
+        ws.on_message(on_message)
+
+
+def shot(pg, name):
+    d = os.environ.get("ORKCRAFT_SHOTS_DIR")
+    if d:
+        Path(d).mkdir(parents=True, exist_ok=True)
+        pg.wait_for_timeout(450)                                                      # a card has finished turning over
+        pg.screenshot(path=str(Path(d) / name))
+
+
+def watch(pg, errors):
+    """The page's errors: a script error, a console error, a failed request. The hand (js/hand/hand.js) is part D's, built beside this part: until it is there the frame says so with one 404, which is not this part's."""
+    pg.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
+    pg.on("console", lambda m: m.type == "error" and not m.text.startswith("Failed to load resource") and errors.append(f"console: {m.text}"))
+    pg.on("response", lambda r: r.status >= 400 and not r.url.endswith("/js/hand/hand.js") and errors.append(f"{r.status}: {r.url}"))
+
+
+@pytest.fixture(params=narrow.WIDTHS)
+def table(gui, request):
+    """The window opened with `?frame=1` at one of the two widths: `(page, host, width)`; the page's errors are asserted at the end."""
+    server, browser = gui
+    host = TableHost()
+    pg = narrow.page(browser, request.param)
+    errors: list[str] = []
+    pg.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
+    watch(pg, errors)
+    pg.route_web_socket("**/ws*", host.on_socket)
+    pg.goto(f"{server.url}&frame=1")
+    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
+    yield pg, host, request.param
+    narrow.no_sideways(pg)
+    pg.context.close()
+    assert not errors, "\n".join(errors)
+
+
+def wide(w):
+    return w == "wide"
+
+
+def tab(pg, slug):
+    return pg.locator(f'.table-tab[data-tab="{slug}"]')
+
+
+def open_tab(pg, slug):
+    tab(pg, slug).click()
+    pg.locator(f'.table-tab[data-tab="{slug}"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
+
+
+def title(pg):
+    return " ".join(pg.locator(".table-title__pt").text_content().split())
+
+
+def open_menu(pg):
+    pg.get_by_role("button", name="The Orkmaster's menu").click()
+    pg.get_by_role("menu").wait_for(timeout=WAIT_MS)
+
+
+# -- the tabs ----------------------------------------------------------------------------------------------------------------------------------------
+
+def test_the_tabs_in_order_the_orkmasters_first_then_plus_the_chips_and_stop_all(table):
+    pg, host, w = table
+    tabs = pg.locator(".table-tab")
+    assert [t.get_attribute("data-tab") for t in tabs.all()] == ["orkmaster", "game", "tech", "art", "release"]         # the Orkmaster's first, then the Board's order
+    assert tab(pg, "orkmaster").get_attribute("aria-label") == "Orkmaster · shop" and tab(pg, "orkmaster").get_attribute("aria-selected") == "true"
+    assert "peon-crown" in tab(pg, "orkmaster").locator(".ork-race__head").get_attribute("src")                          # its crowned head
+    assert "knight-elder" in tab(pg, "game").locator(".ork-race__head").get_attribute("src")                             # a party's tab wears its leader's head
+    assert tab(pg, "tech").get_attribute("aria-label") == "Tech"                                                         # and its name, said also when only the head is drawn
+    assert pg.get_by_role("button", name="New party").count() == 1 and pg.get_by_role("button", name="Stop all").count() == 1
+    chips = pg.locator(".table-tabs__end .table-chip")
+    if wide(w):
+        assert [c.inner_text().strip() for c in chips.all()] == ["Claude 62% left", "Codex 18% left"]                    # the limits as chips
+        assert chips.first.locator(".ork-mark").count() == 1
+    else:
+        assert chips.count() == 0                                                                                        # under 760 px the limits are in the Orkmaster's …
+        assert tab(pg, "tech").locator(".table-tab__txt").is_hidden()                                                    # the tabs a row of heads
+        assert all(t.bounding_box()["width"] >= 44 and t.bounding_box()["height"] >= 44 for t in tabs.all())             # a press 44 × 44 on a touch screen
+    assert title(pg) == "The whole project · through the Orkmaster"
+    shot(pg, f"table-board-{w}.png")
+
+
+def test_a_tab_is_the_persons_the_open_one_is_kept_and_nothing_switches_it_under_them(table):
+    pg, host, w = table
+    open_tab(pg, "tech")
+    assert title(pg) == "The whole project · through Tech"
+    pg.reload()
+    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    assert tab(pg, "tech").get_attribute("aria-selected") == "true"                                                      # kept for the project on this device
+    tab(pg, "tech").focus()
+    pg.keyboard.press("ArrowLeft")
+    assert tab(pg, "game").get_attribute("aria-selected") == "true"                                                      # the arrows move between tabs
+    pg.keyboard.press("Home")
+    assert tab(pg, "orkmaster").get_attribute("aria-selected") == "true"
+    host.rev += 1
+    host.ws.send(json.dumps(host.snapshot()))                                                                            # the Board changes under them
+    pg.wait_for_timeout(300)
+    assert tab(pg, "orkmaster").get_attribute("aria-selected") == "true"
+
+
+def test_the_orkmasters_menu_has_the_projects_settings_and_files_over_the_pane(table):
+    pg, host, w = table
+    open_menu(pg)
+    menu = pg.get_by_role("menu")
+    assert [i.inner_text().strip() for i in menu.get_by_role("menuitem").all()] == ["Switch project", "Settings", "Files"]
+    if not wide(w):
+        assert [c.inner_text().strip() for c in menu.locator(".table-chip").all()] == ["Claude 62% left", "Codex 18% left"]       # the limits' chips in the Orkmaster's …
+    menu.get_by_role("menuitem", name="Switch project").click()
+    pg.locator('.table-over[data-kind="projects"]').wait_for(timeout=WAIT_MS)
+    assert title(pg) == "Board · Projects" and pg.locator(".table-projects__one").count() == 3                          # the open projects, the recent ones
+    assert pg.locator('[role="dialog"][aria-modal="true"]').count() == 0                                                 # in the pane, never a dialog
+    pg.locator(".table-title__back").click()
+    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    open_menu(pg)
+    pg.get_by_role("menuitem", name="Settings").click()
+    pg.locator('.table-over--form[data-kind="settings"]').wait_for(timeout=WAIT_MS)
+    assert title(pg) == "Board · Settings" and pg.locator('[role="dialog"][aria-modal="true"]').count() == 1               # the form is the old dialog's, lying in the pane (its own role stays)
+    assert pg.locator(".shell-backdrop").evaluate("e => getComputedStyle(e).position") == "static"
+    shot(pg, f"table-settings-{w}.png")
+    pg.get_by_role("button", name="Done").click()                                                                        # the form closes itself: the pane is the Board again
+    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    open_menu(pg)
+    pg.get_by_role("menuitem", name="Files").click()
+    pg.locator('.table-over[data-kind="files"] .shell-tree__row').first.wait_for(timeout=WAIT_MS)
+    pg.keyboard.press("Escape")                                                                                          # Esc goes back
+    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+
+
+def test_plus_opens_new_party_in_the_pane_and_a_chip_opens_what_used_the_tool(table):
+    pg, host, w = table
+    pg.get_by_role("button", name="New party").click()
+    pg.locator('.table-over--form[data-kind="party"]').wait_for(timeout=WAIT_MS)
+    assert title(pg) == "Board · New party" and pg.locator(".shell-modal__head").is_hidden()
+    pg.get_by_role("button", name="Cancel").click()
+    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    if wide(w):
+        pg.locator('.table-chip[data-provider="codex"]').click()
+        pg.locator('.table-over[data-kind="limits"] .arena-usage').wait_for(timeout=WAIT_MS)
+        assert title(pg) == "Board · Codex: what used it"
+        assert ("ideas.usage", {"provider": "codex", "scope": "project"}) in host.log
+    pg.get_by_role("button", name="Stop all").click()
+    for _ in range(40):
+        if ("halt", {}) in host.log:
+            break
+        pg.wait_for_timeout(50)
+    assert ("halt", {}) in host.log
+
+
+# -- the Board under the tabs ----------------------------------------------------------------------------------------------------------------------
+
+def test_the_boards_columns_stand_under_their_tabs_and_a_task_is_a_card_with_its_head_element_and_name(table):
+    pg, host, w = table
+    lanes = pg.locator(".table-lane")
+    assert [l.get_attribute("data-party") for l in lanes.all()[1:5]] == ["game", "tech", "art", "release"]
+    for slug in ("game", "tech", "art", "release"):
+        t, l = tab(pg, slug).bounding_box(), pg.locator(f'.table-lane[data-party="{slug}"]').bounding_box()
+        assert abs(t["x"] - l["x"]) <= 1 and abs(t["width"] - l["width"]) <= 1, slug                                      # a tab is its column's head: the same x, the same width
+    seat = pg.locator('[data-lkey="t:task:seat/s1"]')
+    assert seat.get_attribute("data-state") == "running"
+    assert seat.locator(".ork-elem.ice").count() == 1                                                                    # its goal's element
+    if wide(w):
+        box = seat.bounding_box()
+        assert abs(box["width"] - 128) <= 1 and abs(box["height"] - 180) <= 1                                            # 128 × 180
+        assert "peon-warrior" in seat.locator(".ork-race__head").get_attribute("src")                                    # its member's head
+        assert seat.locator(".table-card__nm").inner_text().strip() == "Keep the seat when a socket reconnects"
+        assert seat.locator(".table-card__cap").inner_text().strip() == "Doing"
+        failed = pg.locator('[data-lkey="t:task:seat/s2"]')
+        assert "fails" in failed.get_attribute("class") and failed.locator(".is-danger .ork-sign.alert").count() == 1     # a failure: the alert sign in the danger colour
+        own = pg.locator('.table-lane--own [data-lkey^="t:orc:"]')                                                     # the Orkmaster's own column: a goal being read or routed, with its crown
+        assert own.count() == 2 and "peon-crown" in own.first.locator(".ork-race__head").get_attribute("src")
+        assert [o.locator(".table-own__word").text_content().strip() for o in own.all()] == ["Reading", "Routing"]
+        assert pg.locator(".table-lane--own").bounding_box()["x"] < pg.locator('.table-lane[data-party="game"]').bounding_box()["x"]
+    else:
+        tok = pg.locator('.table-board[data-tokens="true"] .table-token')                                                # a column a head wide: tokens
+        assert tok.count() == 5 and seat.bounding_box()["width"] <= 46
+        assert "token" in seat.get_attribute("class") and seat.get_attribute("aria-label").startswith("Keep the seat when a socket reconnects")
+    assert pg.locator(".table-card, .table-token").locator("xpath=..").evaluate_all("els => els.every(e => e.scrollWidth <= e.clientWidth + 1)")      # no column scrolls sideways
+
+
+def test_a_card_is_lifted_where_it_lies_and_turns_over_esc_or_a_press_away_lowers_it_one_at_a_time(table):
+    pg, host, w = table
+    seat, other = pg.locator('[data-lkey="t:task:seat/s1"]'), pg.locator('[data-lkey="t:task:seat/s2"]')
+    seat.click()
+    back = pg.locator(".table-back")
+    back.wait_for(timeout=WAIT_MS)
+    assert seat.get_attribute("aria-pressed") == "true" and back.get_attribute("data-lifted") == "t:task:seat/s1"
+    assert "Keep the seat when a socket reconnects" in back.text_content() and "Brief" in back.text_content()
+    pg.wait_for_function("() => document.querySelector('.table-back').innerText.includes('Keep a player')", timeout=WAIT_MS)
+    assert ("ideas.task", {"slug": "seat", "task": "s1"}) in host.log                                                    # its brief, read when it is lifted
+    if wide(w):
+        b, c = back.bounding_box(), seat.bounding_box()
+        assert abs(b["x"] - c["x"]) <= 4 and abs(b["y"] - c["y"]) <= 4                                                    # lifted where it lies
+    else:
+        assert back.bounding_box()["width"] >= 380 and "is-screen" in back.get_attribute("class")                         # a screen at the narrow width
+    shot(pg, f"table-lifted-{w}.png")
+    pg.keyboard.press("Escape")
+    pg.wait_for_selector(".table-back", state="detached", timeout=WAIT_MS)
+    assert seat.get_attribute("aria-pressed") == "false"
+    seat.click()
+    pg.locator(".table-back").wait_for(timeout=WAIT_MS)
+    if wide(w):
+        pg.locator(".table-title").click()                                                                               # a press away
+        pg.wait_for_selector(".table-back", state="detached", timeout=WAIT_MS)
+        seat.click()
+        other.click()                                                                                                    # another card: one at a time
+        pg.wait_for_function("() => document.querySelectorAll('.table-back').length === 1 && document.querySelector('.table-back').dataset.lifted === 't:task:seat/s2'", timeout=WAIT_MS)
+        pg.keyboard.press("Escape")
+    else:
+        pg.get_by_role("button", name="Back").click()
+    pg.wait_for_selector(".table-back", state="detached", timeout=WAIT_MS)
+
+
+def test_open_on_a_task_card_opens_its_log_or_its_task_over_the_pane_and_back_lights_the_card(table):
+    pg, host, w = table
+    failed = pg.locator('[data-lkey="t:task:seat/s2"]')
+    failed.click()
+    pg.locator(".table-back .table-back__open").click()                                                                  # a failure: its lines
+    pg.locator('.table-over[data-kind="log"] .shell-log').wait_for(timeout=WAIT_MS)
+    assert title(pg) == "Board · Reset the round timer when a player rejoins" and "tests: 3 failed" in pg.locator(".shell-log").inner_text()
+    assert pg.locator(".table-board").count() == 0 and pg.locator(".table-back").count() == 0                          # the map is under it, not drawn
+    pg.locator(".table-title__back").click()
+    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    assert "is-lit" in pg.locator('[data-lkey="t:task:seat/s2"]').get_attribute("class")                                 # the card it came from lit
+    pg.locator('[data-lkey="t:task:seat/s1"]').click()
+    pg.locator(".table-back .table-back__open").click()
+    pg.locator('.table-over[data-kind="task"] .shell-facts').wait_for(timeout=WAIT_MS)
+    pg.keyboard.press("Escape")
+    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+
+
+def test_a_goal_picked_through_the_orkmasters_tab_shows_its_tasks_alone(table):
+    pg, host, w = table
+    assert pg.locator("[data-lkey]").count() == 5
+    pick(pg, "seat")
+    pg.wait_for_function("() => document.querySelectorAll('[data-lkey]').length === 2", timeout=WAIT_MS)
+    assert title(pg) == "Keep the seat when a socket reconnects · through the Orkmaster"
+    assert all("is-lit" in c.get_attribute("class") for c in pg.locator("[data-lkey]").all())
+    pick(pg, "")
+    pg.wait_for_function("() => document.querySelectorAll('[data-lkey]').length === 5", timeout=WAIT_MS)
+
+
+def pick(pg, slug):
+    pg.evaluate("slug => import('/static/js/frame/state.js').then((m) => { m.picked.value = slug; })", slug)
+
+
+# -- a party's tab -----------------------------------------------------------------------------------------------------------------------------------
+
+def test_a_partys_header_has_its_squad_in_three_groups_and_a_seat_pressed_opens_its_popover(table):
+    pg, host, w = table
+    open_tab(pg, "tech")
+    head = pg.locator('.table-head[data-party="tech"]')
+    assert head.locator(".table-head__name").text_content().strip() == "Tech"
+    assert [g.locator(".ork-label").text_content().strip() for g in head.locator(".table-group").all()] == ["Leads", "Does", "Checks"]
+    assert [g.locator(".table-seat").count() for g in head.locator(".table-group").all()] == [1, 2, 1]
+    seat = head.locator('.table-seat[data-seat="grunt"]')
+    assert "peon-warrior" in seat.locator(".ork-race__head").get_attribute("src") and "harness-claude-ink" in seat.locator(".ork-mark").get_attribute("src")     # its tier's gear, its tool's mark in ink
+    assert head.locator(".table-size").inner_text().strip() == "Standard"
+    shot(pg, f"table-tech-{w}.png")
+    seat.click()
+    pop = pg.locator(".table-seatpop")
+    pop.wait_for(timeout=WAIT_MS)
+    text = pop.inner_text()
+    for word in ("Grunts", "Role", "What it does", "Its AI tool", "Its tier", "What it costs", "From the next task", "Set", "Take off the seat", "Open"):
+        assert word in text, word
+    assert not wide(w) or pop.bounding_box()["y"] >= head.bounding_box()["y"]
+    if not wide(w):
+        assert pop.bounding_box()["width"] >= 380                                                                        # a sheet at the narrow width
+    pg.get_by_role("button", name="Close").click()
+    assert pg.locator(".table-seatpop").count() == 0
+    seat.click()
+    pg.locator(".table-seatpop").wait_for(timeout=WAIT_MS)
+    pg.keyboard.press("Escape")                                                                                          # Esc closes it
+    assert pg.locator(".table-seatpop").count() == 0
+    seat.click()
+    pg.locator(".table-seatpop").get_by_role("button", name="Open", exact=True).click()
+    pg.locator('.table-over[data-kind="role"]').wait_for(timeout=WAIT_MS)                                                  # the role's text, over the pane
+    assert title(pg) == "System · Grunts" and "You are the Grunts." in pg.locator(".table-over").inner_text()
+    pg.locator(".table-title__back").click()
+    pg.locator(".table-head").wait_for(timeout=WAIT_MS)
+
+
+def test_a_seat_can_be_taken_off_and_its_tool_set_with_undo(table):
+    pg, host, w = table
+    open_tab(pg, "tech")
+    pg.locator('.table-seat[data-seat="tester"]').click()
+    pop = pg.locator(".table-seatpop")
+    pop.get_by_role("button", name="Take off the seat").click()
+    for _ in range(40):
+        if any(n == "ideas.goal_save" for n, _ in host.log):
+            break
+        pg.wait_for_timeout(50)
+    saved = [a for n, a in host.log if n == "ideas.goal_save"][-1]
+    assert saved["slug"] == "tech" and saved["team"] == ["grunt", "reviewer"]                                              # the party works on without it
+    assert pg.locator(".table-seatpop").count() == 0
+
+
+def test_a_party_menu_has_edit_and_remove_party_over_the_pane(table):
+    pg, host, w = table
+    open_tab(pg, "art")
+    assert pg.locator(".table-sys, .table-board").count() == 0                                                           # another party than Tech: its header alone (no map yet)
+    pg.get_by_role("button", name="Art's menu").click()
+    pg.get_by_role("menuitem", name="Edit").click()
+    pg.locator('.table-over--form[data-kind="party"]').wait_for(timeout=WAIT_MS)
+    assert title(pg) == "Art · Edit Art" and pg.get_by_role("button", name="Save party").count() == 1
+    pg.get_by_role("button", name="Remove party").click()                                                                # the Edit form's own button: today's question, in the pane too
+    pg.locator(".shell-modal__text").wait_for(timeout=WAIT_MS)
+    assert "Art has 1 goal" in pg.locator(".shell-modal__text").text_content()
+    assert pg.locator(".shell-backdrop").evaluate("e => getComputedStyle(e).position") == "static"
+    pg.keyboard.press("Escape")
+    pg.locator(".table-head").wait_for(timeout=WAIT_MS)
+
+
+# -- Tech's System -----------------------------------------------------------------------------------------------------------------------------------
+
+def test_techs_tab_is_its_header_and_the_system_and_a_part_pressed_is_lifted_and_opens_a_file(table):
+    pg, host, w = table
+    open_tab(pg, "tech")
+    pg.locator(".table-sys .sys[data-state=shown]").wait_for(timeout=WAIT_MS)
+    assert pg.locator(".sys-tabs").count() == 0                                                                          # one map a tab: no Feature modules
+    assert [c.get_attribute("data-container") for c in pg.locator(".arch-col").all()] == ["server", "client"]
+    part = pg.locator(f'.sys-part[data-part="{FILE}"]')
+    part.scroll_into_view_if_needed()
+    part.click()
+    back = pg.locator(".table-back")
+    back.wait_for(timeout=WAIT_MS)
+    assert back.get_attribute("data-lifted") == f"t:part:tech:{FILE}"
+    back.locator(".sys-side[data-path]").wait_for(timeout=WAIT_MS)
+    assert all(word in back.text_content() for word in ("Files", "Uses", "Used by")) or all(word.lower() in back.text_content().lower() for word in ("files", "uses", "used by"))                                         # today's part pane, on the back
+    assert pg.locator(".shell-drawer").count() == 0
+    shot(pg, f"table-system-lifted-{w}.png")
+    back.get_by_role("button", name="Open").click()
+    pg.locator('.table-over[data-kind="file"] .shell-code').wait_for(timeout=WAIT_MS)
+    assert title(pg) == f"System · {FILE}" and "line 3" in pg.locator(".shell-code").inner_text()                        # a file over the pane, its title says where it came from
+    assert pg.locator(".table-sys").count() == 0 and pg.locator(".table-head").count() == 0                              # the map is under it
+    shot(pg, f"table-file-{w}.png")
+    pg.locator(".table-title__back").click()
+    pg.locator(f'.table-sys .sys-part[data-part="{FILE}"].is-lit').wait_for(timeout=WAIT_MS)                              # the card it came from, lit
+    pg.keyboard.press("Escape")
+    assert pg.locator(".table-head").count() == 1
+    part.click()
+    back.wait_for(timeout=WAIT_MS)
+    pg.keyboard.press("Escape")
+    pg.wait_for_selector(".table-back", state="detached", timeout=WAIT_MS)
+
+
+def test_a_link_between_two_containers_is_lifted_with_its_routes_too(table):
+    pg, host, w = table
+    open_tab(pg, "tech")
+    link = pg.locator(".table-sys .arch-link").first
+    link.wait_for(timeout=WAIT_MS)
+    link.click()
+    back = pg.locator(".table-back")
+    back.wait_for(timeout=WAIT_MS)
+    back.locator(".arch-side").wait_for(timeout=WAIT_MS)
+    assert "/rooms" in back.inner_text()
+    pg.keyboard.press("Escape")
+
+
+def test_esc_goes_back_from_a_file_and_the_browsers_back_does_at_the_narrow_width(table):
+    pg, host, w = table
+    pg.evaluate("() => import('/static/js/frame/state.js').then((m) => m.openOver('file', {path: 'README.md'}, {title: 'Board', key: ''}, 'README.md'))")
+    pg.locator(".table-over .shell-code").wait_for(timeout=WAIT_MS)
+    if wide(w):
+        pg.keyboard.press("Escape")
+    else:
+        pg.go_back()                                                                                                     # ← the browser's back
+    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    assert pg.locator(".table-over").count() == 0
+
+
+def test_with_many_parties_the_tabs_keep_their_heads_and_the_board_lays_tokens(gui):
+    server, browser = gui
+    host = TableHost(crowd=5)
+    pg = narrow.page(browser, "wide")
+    errors: list[str] = []
+    watch(pg, errors)
+    pg.route_web_socket("**/ws*", host.on_socket)
+    pg.goto(f"{server.url}&frame=1")
+    pg.locator(".table-tab").nth(8).wait_for(timeout=WAIT_MS)
+    pg.wait_for_selector('.table[data-compact="true"]', timeout=WAIT_MS)
+    assert tab(pg, "tech").locator(".table-tab__txt").is_hidden() and tab(pg, "tech").get_attribute("aria-label") == "Tech"           # more than fit: the heads alone
+    assert pg.locator('.table-board[data-tokens="true"]').count() == 1
+    narrow.no_sideways(pg)
+    pg.context.close()
+    assert not errors, "\n".join(errors)
+
+
+# -- a goal picked, the project, the keys, the motion, the presses ------------------------------------------------------------------------------------
+
+def test_a_goal_picked_puts_a_dot_on_the_tabs_of_its_route_and_opens_on_its_partys_tab(table):
+    pg, host, w = table
+    assert pg.locator(".table-tab__dot").count() == 0                                                                    # nothing picked: no dot
+    pick(pg, "seat")
+    pg.locator(".table-tab__dot").first.wait_for(timeout=WAIT_MS)
+    assert [t.get_attribute("data-tab") for t in pg.locator(".table-tab:has(.table-tab__dot)").all()] == ["tech", "art"]   # its party's and the party the route passed
+    pick(pg, "")
+    open_tab(pg, "game")
+    pick(pg, "seat")                                                                                                     # picked in the hand, a party's tab open: it opens on its own party's tab
+    pg.locator('.table-tab[data-tab="tech"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
+    assert title(pg) == "Keep the seat when a socket reconnects · through Tech"
+    pick(pg, "")
+    open_tab(pg, "orkmaster")
+    pick(pg, "seat")
+    assert tab(pg, "orkmaster").get_attribute("aria-selected") == "true"                                                 # the Orkmaster's tab stays: its Board shows the tasks alone
+
+
+def test_ctrl_o_opens_a_project_in_the_pane_and_another_project_is_shown_from_its_list(table):
+    pg, host, w = table
+    pg.keyboard.press("Control+o")
+    pg.locator('.table-over--form[data-kind="projects"]').wait_for(timeout=WAIT_MS)
+    assert pg.locator("#open-folder-form").count() == 1 and title(pg) == "Board · Open a project…"
+    assert pg.locator(".shell-backdrop").evaluate("e => getComputedStyle(e).position") == "static"                      # in the pane, not over the page
+    pg.get_by_role("button", name="Cancel").click()
+    pg.locator(".table-board").wait_for(timeout=WAIT_MS)
+    open_menu(pg)
+    pg.get_by_role("menuitem", name="Switch project").click()
+    pg.locator('.table-projects__one[data-path="/work/other"]').click()
+    for _ in range(40):
+        if ("projects.use", {"path": "/work/other"}) in host.log:
+            break
+        pg.wait_for_timeout(50)
+    assert ("projects.use", {"path": "/work/other"}) in host.log
+    pg.locator(".table-board").wait_for(timeout=WAIT_MS)                                                                 # another project: the map again, nothing open
+    assert tab(pg, "orkmaster").get_attribute("aria-label") == "Orkmaster · other"
+
+
+def test_nothing_moves_under_reduced_motion_and_a_card_turns_on_orkuis_tokens_otherwise(table):
+    pg, host, w = table
+    seat = pg.locator('[data-lkey="t:task:seat/s1"]')
+    seat.click()
+    back = pg.locator(".table-back")
+    back.wait_for(timeout=WAIT_MS)
+    assert back.evaluate("e => getComputedStyle(e).animationName") == "table-turn"
+    assert back.evaluate("e => getComputedStyle(e).animationDuration") == "0.25s"                                       # orkUI's sure token
+    pg.keyboard.press("Escape")
+    pg.emulate_media(reduced_motion="reduce")
+    seat.click()
+    pg.locator(".table-back").wait_for(timeout=WAIT_MS)
+    assert pg.locator(".table-back").evaluate("e => getComputedStyle(e).animationName") == "none"
+    assert seat.evaluate("e => getComputedStyle(e).transform") in ("none", "matrix(1, 0, 0, 1, 0, 0)")                   # a card at rest is flat, and lifted too
+    pg.emulate_media(reduced_motion="no-preference")
+
+
+def test_every_press_is_44_by_44_on_a_touch_screen_and_nothing_is_said_only_on_hover(table):
+    pg, host, w = table
+    if wide(w):
+        return
+    open_tab(pg, "tech")
+    pg.locator('.table-seat[data-seat="grunt"]').wait_for(timeout=WAIT_MS)
+    for sel in (".table-tab", ".table-plus", ".table-stop", ".table-play", ".table-menu__btn", ".table-seat"):
+        for el in pg.locator(sel).all():
+            box = el.bounding_box()
+            assert box["width"] >= 43.5 and box["height"] >= 43.5, (sel, box)
+    for el in pg.locator(".table-tab").all():
+        assert el.get_attribute("aria-label") and el.get_attribute("title")                                              # a tab's name is its label too, not only a tooltip
+    pg.locator(".table-tab").nth(3).dispatch_event("pointerdown", {"pointerType": "touch"})                              # a long press says the name
+    pg.locator(".gui-toast").wait_for(timeout=WAIT_MS)
+    assert "Art" in pg.locator(".gui-toast").text_content()

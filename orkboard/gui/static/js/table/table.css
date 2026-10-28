@@ -1,1 +1,157 @@
-/* The table (spec 98 §3, part C): its sheet. Layout only; orkUI draws every colour, face and corner. */
+/* The table (docs/specs/98-the-table-and-the-hand.md §3, §5, §6; mockup docs/mockups/s1/): the leaders' tabs over the pane. Layout only: every colour, face, corner and move is orkUI's (its tokens and its classes:
+   .ork-tab, .ork-head, .ork-card, .ork-leans, .ork-frame, .ork-menu, .ork-chip, .ork-table), the sizes are orkUI's spacing steps and the cards' own 128 x 180. The tabs and the Board's columns read the one `--cols`,
+   so a tab stands over its column (the tabs take their columns' widths while the Board is shown). Under 760 px the tabs are a row of heads and a column a head wide (tokens, no sideways scroll). */
+
+.table { --cols: minmax(0, 1.3fr) repeat(var(--tabs, 4), minmax(0, 1fr)) minmax(0, 2.2fr);
+  display: flex; flex-direction: column; height: 100%; min-width: 0; min-height: 0; background: var(--ork-canvas); color: var(--ork-ink); }
+.table-grow { flex: 1; min-width: 0; }
+.table-clamp { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; overflow-wrap: anywhere; }
+
+/* -- the tabs ------------------------------------------------------------------------------------------------------------------- */
+.table-tabs { flex: none; display: grid; grid-template-columns: var(--cols); padding: 0 var(--ork-4); min-width: 0; }
+.table-tabs__list { display: contents; }
+.table-tab { position: relative; display: flex; align-items: center; gap: var(--ork-4); height: 52px; padding: 0 var(--ork-4); min-width: 0; text-align: left;
+  border-left: var(--ork-line) solid var(--ork-frame); }
+.table-tab__txt { display: flex; flex-direction: column; min-width: 0; }
+.table-tab__main { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.table-tab__sub { font: var(--ork-type-caption); text-transform: none; letter-spacing: 0; color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.table-tab__dot { position: absolute; top: var(--ork-2); right: var(--ork-2); width: 6px; height: 6px; background: var(--ork-ink); }
+.table[data-compact="true"] .table-tab { justify-content: center; padding: 0; }
+.table[data-compact="true"] .table-tab__txt { display: none; }
+.table-tabs__end { display: flex; align-items: center; justify-content: flex-end; gap: var(--ork-3); min-width: 0; padding-left: var(--ork-4); overflow: hidden;
+  border-left: var(--ork-line) solid var(--ork-frame); }
+.table-plus { padding: 0 var(--ork-2); flex: none; }
+.table-chip { cursor: pointer; white-space: nowrap; gap: 0; }
+button.table-chip { appearance: none; font: inherit; }
+.table-chip .ork-mark { margin-right: var(--ork-2); }
+.table-chip.is-warn { color: var(--ork-alert); }
+.table-chip.is-danger { color: var(--ork-danger); }
+.table-chip.is-unread { color: var(--ork-ink-muted); }
+.table-stop { flex: none; }
+.table[data-compact="true"] .table-tabs__end { gap: var(--ork-2); padding-left: var(--ork-2); }
+
+/* -- the pane ------------------------------------------------------------------------------------------------------------------- */
+.table-pane { position: relative; flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; padding: var(--ork-1); box-sizing: border-box; }
+.table-title { flex: none; min-width: 0; padding-right: var(--ork-2); }
+.table-title__pt { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.table-pathcase { text-transform: none; font-family: var(--ork-font-code); }
+.table-play { flex: none; }
+.table-body { position: relative; flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
+
+/* -- the Board: a column a party under its tab ------------------------------------------------------------------------------------ */
+.table-board { flex: 1; min-height: 0; display: grid; grid-template-columns: var(--cols); margin: 0 calc(var(--ork-1) * -1); padding: 0 var(--ork-4); overflow-y: auto; overflow-x: hidden; align-content: stretch; }
+.table-lane { display: flex; flex-direction: column; align-items: center; gap: var(--ork-4); min-width: 0; padding: var(--ork-4) var(--ork-3) var(--ork-5); border-left: var(--ork-line) solid var(--ork-frame); }
+.table-lane--own { align-items: stretch; }
+.table-board__none { margin: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); text-align: center; }
+.table-card.ork-card { position: relative; display: flex; flex-direction: column; gap: var(--ork-2); width: min(128px, 100%); height: 180px; padding: var(--ork-4); flex: none; text-align: left; cursor: pointer; }
+.table-card--own.ork-card { width: 100%; height: auto; min-height: 0; gap: var(--ork-2); }
+.table-own__r1 { display: flex; align-items: flex-start; gap: var(--ork-3); }
+.table-own__nm { flex: 1; min-width: 0; font: var(--ork-type-caption); -webkit-line-clamp: 3; line-clamp: 3; }
+.table-own__r2 { display: flex; align-items: center; gap: var(--ork-2); }
+.table-own__word { color: var(--ork-ink); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
+.table-card__top { display: flex; align-items: center; justify-content: space-between; min-height: 14px; }
+.table-card__type.dim { color: var(--ork-ink-faint); }
+.table-card__type.none { color: var(--ork-ink-muted); }
+.table-card__nm { font: var(--ork-type-body); }
+.table-card__foot { margin-top: auto; display: flex; align-items: center; gap: var(--ork-3); min-width: 0; }
+.table-card__cap { min-width: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.table-card.is-lit, .table-token.is-lit, .table-sys .is-lit { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); }
+.table-card.is-dim { opacity: 0.55; }
+button.table-token { position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); width: var(--ork-tap); height: calc(var(--ork-tap) * 1.3); padding: var(--ork-2); flex: none; cursor: pointer; }
+.table-token .table-card__top { width: 100%; }
+
+/* -- a card lifted where it lies, turned over ------------------------------------------------------------------------------------- */
+.table-back { position: absolute; z-index: 30; left: 0; top: 0; display: flex; flex-direction: column; gap: var(--ork-3); width: min(248px, 100%); max-height: 100%; overflow-y: auto; padding: var(--ork-4); }
+.table-back.is-screen { inset: 0; width: auto; max-height: none; z-index: 40; padding: var(--ork-3) var(--ork-4); }
+.table-back__x { align-self: flex-start; flex: none; }
+.table-back__nm { margin: 0; font: var(--ork-type-caption); font-family: var(--ork-font-code); font-weight: 600; overflow-wrap: anywhere; }
+.table-back__cap, .table-back__muted { margin: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.table-back__sec { display: flex; flex-direction: column; gap: var(--ork-1); font: var(--ork-type-caption); min-width: 0; }
+.table-back__who { display: inline-flex; align-items: center; gap: var(--ork-2); flex-wrap: wrap; }
+.table-back__text { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 9rem; overflow: auto; }
+.table-back__acts { margin-top: auto; display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-3); }
+.table-back__open { align-self: flex-start; }
+.table-back__part { display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; }
+.table-back .sys-side__part, .table-back .sys-change__goal { min-height: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .table-back { animation: table-turn var(--ork-motion-sure) var(--ork-motion-spring) both; }
+  @keyframes table-turn { from { transform: rotate(var(--ork-motion-lean)) scale(var(--ork-motion-press)); opacity: 0.2; } to { transform: none; opacity: 1; } }
+}
+
+/* -- a party's header and its seats ------------------------------------------------------------------------------------------------ */
+.table-head { position: relative; flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-3) var(--ork-6); min-height: 44px; padding: 0 var(--ork-6); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.table-head__name { border: 0; padding: 0; min-height: 0; }
+.table-squad { display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-2) var(--ork-5); min-width: 0; }
+.table-group { display: flex; align-items: center; gap: var(--ork-3); }
+.table-group + .table-group { padding-left: var(--ork-5); border-left: var(--ork-line) solid var(--ork-frame); }
+.table-seats { display: flex; align-items: center; gap: var(--ork-4); }
+.table-seat { appearance: none; position: relative; display: inline-flex; align-items: center; gap: var(--ork-1); padding: var(--ork-1); border: 0; background: none; color: inherit; cursor: pointer; }
+.table-seat:hover, .table-seat.is-on { background: var(--ork-raised); }
+.table-seat:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.table-seat.is-needs { box-shadow: inset 0 -2px 0 var(--ork-alert); }
+.table-menu { position: relative; display: inline-flex; flex: none; }
+.table-menu__list { position: absolute; z-index: 50; right: 0; top: 100%; display: flex; flex-direction: column; max-width: calc(100vw - 2 * var(--ork-4)); }
+.table-menu__item::before { content: none; }
+.table-menu__item.is-danger { color: var(--ork-danger); }
+.table-menu__limits { display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-2) var(--ork-4) var(--ork-3); }
+.table-menu__chips { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
+.table-seatpop { position: absolute; z-index: 40; top: 100%; left: var(--ork-6); display: flex; flex-direction: column; gap: var(--ork-3); width: min(360px, calc(100% - 2 * var(--ork-4))); max-height: 70vh; overflow-y: auto; padding: var(--ork-4); }
+.table-seatpop__top { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-3); }
+.table-seatpop__who { display: flex; align-items: center; gap: var(--ork-3); min-width: 0; }
+.table-seatpop__nm { display: flex; flex-direction: column; min-width: 0; }
+.table-seatpop__muted { color: var(--ork-ink-muted); font: var(--ork-type-caption); margin: 0; }
+.table-seatpop__acts { display: flex; flex-wrap: wrap; gap: var(--ork-3); }
+.table-facts { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: var(--ork-1) var(--ork-4); margin: 0; font: var(--ork-type-caption); }
+.table-facts dt { color: var(--ork-ink-muted); }
+.table-facts dd { margin: 0; overflow-wrap: anywhere; }
+
+/* -- Tech's System, and what is opened over the pane -------------------------------------------------------------------------------- */
+.table-sys { flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; padding-top: var(--ork-2); }
+.table-sys .sys-scroll { overscroll-behavior: contain; }
+.table-empty { padding: var(--ork-6); max-width: 60ch; display: flex; flex-direction: column; gap: var(--ork-3); }
+.table-empty p { margin: 0; }
+.table-over { flex: 1; min-height: 0; min-width: 0; overflow: auto; padding: var(--ork-5) var(--ork-4); box-sizing: border-box; }
+.table-over__muted { color: var(--ork-ink-muted); font: var(--ork-type-caption); margin: 0; }
+.table-over__nm { margin: 0 0 var(--ork-2); font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.table-over__text { max-height: none; }
+.table-over[data-kind="play"] { padding: 0; display: flex; flex-direction: column; overflow: hidden; }
+.table-over[data-kind="play"] > * { flex: 1; min-height: 0; }
+.table-over[data-kind="file"], .table-over[data-kind="diff"] { background: var(--ork-paper); border: var(--ork-line) solid var(--ork-frame); }
+.table-projects { display: flex; flex-direction: column; gap: var(--ork-3); max-width: 60ch; }
+.table-projects__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-2); }
+.table-projects__one { display: flex; align-items: center; gap: var(--ork-4); width: 100%; min-width: 0; }
+.table-projects__nm { font-weight: 600; }
+.table-projects__one .table-over__muted { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.table-projects__acts { display: flex; gap: var(--ork-3); margin: var(--ork-3) 0 0; }
+
+/* a form that was a dialog (Settings, Open a project…, New party, Edit the party, Remove party) lies in the pane: no backdrop, no frame of its own, its title the pane's */
+.table-over--form { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+.table-over--form .shell-backdrop { position: static; inset: auto; z-index: auto; flex: 1; min-height: 0; padding: 0; background: none; align-items: stretch; justify-content: stretch; }
+.table-over--form .shell-modal { flex: 1; width: 100%; max-width: none; max-height: none; min-height: 0; border: 0; clip-path: none; background: none; padding: var(--ork-4); }
+.table-over--form .shell-modal__head { display: none; }
+
+/* -- the narrow width: under 760 px the tabs are heads, a column a head wide, what opens over the pane a screen ------------------------- */
+@media (max-width: 759px) {
+  .table { --cols: minmax(0, calc(var(--ork-tap) + 2px)) repeat(var(--tabs, 4), minmax(0, calc(var(--ork-tap) + 2px))) minmax(0, 1fr); }
+  .table-tabs { padding-left: var(--ork-2); padding-right: var(--ork-2); }
+  .table-tab { height: 48px; min-height: var(--ork-tap); justify-content: center; padding: 0; }
+  .table-tab__txt { display: none; }
+  .table-tabs__end { padding-left: var(--ork-1); gap: var(--ork-1); justify-content: space-between; }
+  .table-stop { padding: 0 var(--ork-3); }
+  .table-title { min-height: var(--ork-tap); padding-left: var(--ork-4); }
+  .table-title__pt { white-space: normal; }
+  .table-play__w { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .table-board { padding: 0 var(--ork-2); }
+  .table-lane { padding: var(--ork-3) 0; gap: var(--ork-3); }
+  .table-head { padding: var(--ork-2) var(--ork-4); }
+  .table-head { position: static; }
+  .table-seatpop { left: 0; right: 0; top: auto; bottom: 0; width: auto; max-height: 80%; }
+  .table-over { padding: var(--ork-4); }
+}
+
+/* a press is at least 44 x 44 on a touch screen (spec 94 §1.3): the drawn thing may be smaller, its target is not */
+@media (pointer: coarse) {
+  .table-tab, .table-seat, .table-menu__btn, .table-plus, .table-stop, .table-play, .table-title__back, .table-chip, .table-back__x { min-width: var(--ork-tap); min-height: var(--ork-tap); }
+  .table-seat { justify-content: center; }
+  .table-menu__item { min-height: var(--ork-tap); }
+}
