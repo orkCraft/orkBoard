@@ -2896,3 +2896,27 @@ was no party since §109.1 though its specialists are in the library, and UA is 
 10. **When**: the squad, the size and the one place of the parties with the first slice (its parties, §136.12);
    the specialists' views with the other maps after it; Marketing and UA in the library and the recipes at any time.
 The owner's call.
+
+## 152. In picking, cards are taken with a box, as Warcraft's units; a box that takes a whole group pins the group (28 October, the owner and the PM)
+
+Why: the owner: an idea addressed to a party could take its cards with a box, as units are taken in Warcraft, not only
+one press a card (§141). A change often touches several places at once (three screens of one flow, two parts of System),
+and orks taking their marks with a box is the reference the window wants (§144). Kept so the box never gets in the way:
+only while picking, never against a touch screen's scroll, and never pinning a whole map card by card. So (this makes
+§141 and spec 94 §1.5 precise):
+1. **Only in picking** (spec 94 §1.5): out of it a drag on a map scrolls it and takes nothing.
+2. **On the desktop** a drag from the table's empty place draws the box; every card it takes is pinned as a mark; Shift
+   and a press adds or takes off one card; a press on a card still toggles that one.
+3. **On a touch screen** a drag is the scroll and stays so: a tap toggles one card; the box is a long press on an empty
+   place, then a drag.
+4. **Seen as Warcraft's, in orkUI's look**: the box a dashed line in the ink; a card taken carries pixel brackets at its
+   corners (as the rings under units taken) and rises a little (*lifted*, §89); no colour (§53.5). The brackets are
+   drawn in orkUI (§148).
+5. **A box that takes a whole group pins the group**: all of a container's parts pin the container (System), all of a
+   flow's step its step (Design), all of a lane's cards that lane; a box over the whole map pins the map (*all of
+   System*), the same as an idea with no mark, and it reads so.
+6. **The marks on the blank card** are chips (a name and ×) wrapping on lines; past five, the first five and *and 3 more*
+   in words, a press showing all.
+7. **It ends as picking ends** (*Stop picking*, Esc, sending the idea, taking off the party's mark), what was taken
+   staying the idea's marks.
+The owner's call.

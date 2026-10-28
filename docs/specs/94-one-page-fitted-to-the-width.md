@@ -41,7 +41,9 @@ outbox keeps. No new concept, so nothing new in `TERMS`; *narrow* and *wide* are
    or its text: a line over the view says **Pick a part to point at it** and **Stop picking**. In picking, a press on a part
    (of System, a screen, a pain) **pins it** to the blank card as a mark (its name and ×) and never lifts it; with the
    mode off, a press lifts it as always (§120.1). **Stop picking**, Esc, sending the idea or taking off **→ Tech** ends it. On a
-   touch screen there is no hover to tell the two presses apart, so the mode is always seen, at both widths.
+   touch screen there is no hover to tell the two presses apart, so the mode is always seen, at both widths. **A box**
+   takes several cards (§152): on the desktop a drag from the table's empty place (Shift and a press for one), on a touch
+   screen a long press then a drag, a drag alone still scrolling; a box that takes a whole group pins the group.
 6. **Each browser test of the slice runs at both widths** (`tests/narrow.py`: 1280 × 800 and 390 × 844 with touch): no
    sideways scroll at 390, every press of §1.1 reaches what the hover showed.
 

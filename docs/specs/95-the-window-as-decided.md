@@ -74,7 +74,8 @@ From left to right (§145.3–§145.4, §121.2, §137.5):
    microphone writes the words into it, never sends (§125). No priority, no kind. **Addressed to a party** by *@Tech* in
    the text, or by the party's tab being open (*→ Tech ×*, one press takes it off); on the Orkmaster's tab it is general.
    An addressed idea puts its party's map in **picking**, always seen: *Pick a part to point at it* · *Stop picking*; any
-   card of that map is pinned to the blank card as a mark (§141, §140.4; spec 94 §1.5).
+   card of that map is pinned to the blank card as a mark (§141, §140.4; spec 94 §1.5), one by a press or several by a
+   box as Warcraft's units (§152; a whole group pinned as the group).
 2. **The deck**: the goals in line (not started; waiting for the reset under the moon). Pressed, it opens over the pane
    as a list in the Orkmaster's order, with a search; a goal not started is moved by dragging; a press picks it.
 3. **The stacks**, one a goal that asks the person (§121.2): its most urgent card face up; a stack pressed fans out in
