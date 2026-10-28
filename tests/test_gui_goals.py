@@ -11,7 +11,7 @@ from pathlib import Path
 import pytest
 
 from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
-from orkboard.realm import event_log, idea_photos, ideas, jobs, roles
+from orkboard.realm import event_log, goal_team, idea_photos, ideas, jobs, roles
 
 NEW_COMMANDS = {"ideas.goal_save", "ideas.goal", "ideas.read_now", "ideas.roles", "ideas.role_save", "ideas.role_drop",
                 "ideas.kind_set", "ideas.doc"}
@@ -367,3 +367,35 @@ def test_the_partys_reading_asks_no_metrics_and_keeps_those_written_before_spec_
     assert host.command("ideas.goal", {"slug": slug})["metrics"][0]["name"] == "weekly installs"
     idea = _add(host, "Dark mode", track=slug)["slug"]
     assert "weekly installs → 50" in host.ideas.keeper.draft_prompt(host.ideas.root(), idea)
+
+
+# -- spec 99 A: parties by craft ---------------------------------------------------------------------------------------------------------------------------------
+
+def test_general_team_and_ideation_are_not_made_and_a_party_of_a_craft_is(host):
+    for bad in ({"title": "General", "about": "x"}, {"title": "Team", "about": "x"}, {"title": "Ideas", "about": "x", "proposal": "ideation"},
+                {"title": "Ideas", "about": "x", "preset": "team"}, {"title": "Ideas", "about": "x", "leader": "investor", "team": []}):
+        with pytest.raises(CommandError, match="General, Team and Ideation are not made any more"):
+            host.command("ideas.goal_save", bad)
+    assert [t for t in ideas.tracks(host.ideas.root(), make=False) if t["slug"] != "general"] == []               # nothing was made
+    slug = host.command("ideas.goal_save", {"title": "Design", "about": "Screens.", "leader": "product-designer", "team": ["ui-kit"], "proposal": "design"})["slug"]
+    assert goal_team.recipe_of(host.ideas.root(), slug) == "design" and goal_team.craft_of(host.ideas.root(), slug) == "design"
+
+
+def test_the_board_row_of_a_party_says_its_craft_its_race_and_its_leaders_higher_form(host):
+    root = host.ideas.root()
+    slug = host.command("ideas.goal_save", {"title": "Tech", "about": "Code.", "leader": "architect", "team": ["grunt"], "proposal": "tech"})["slug"]
+    old = host.command("ideas.goal_save", {"title": "Screens", "about": "Looks.", "craft": "design", "leader": "product-designer", "team": []})["slug"]    # made with no recipe
+    alone = host.command("ideas.goal_save", {"title": "Alone", "about": "x"})["slug"]
+    rows = {g["slug"]: g for g in host.command("ideas.board")["tracks"]}
+    assert (rows[slug]["party_craft"], rows[slug]["race"], rows[slug]["leader"]["head"]["race"]) == ("tech", "peon", "shaman")
+    assert (rows[old]["party_craft"], rows[old]["race"], rows[old]["leader"]["head"]["race"]) == ("design", "elf", "dryad")     # a party made before: its leader's craft
+    assert (rows[alone]["party_craft"], rows[alone]["leader"]["head"]["race"]) == ("", "peon")                          # the Taskmaster's: an ork
+    assert goal_team.craft_of(root, slug) == "tech" and goal_team.craft_of(root, "general") == ""
+
+
+def test_a_squad_of_seven_seats_is_kept_whole_with_a_size_and_an_eighth_is_refused(host):
+    six = ["grunt", "tester", "artist", "seo", "aso", "reviewer"]
+    slug = host.command("ideas.goal_save", {"title": "Tech", "about": "Code.", "leader": "architect", "size": "lean", "proposal": "tech", "team": six})["slug"]
+    assert goal_team.team_of(host.ideas.root(), slug) == six                                                       # six besides the leader: seven seats
+    with pytest.raises(CommandError, match="at most 7 seats"):
+        host.command("ideas.goal_save", {"slug": slug, "team": [*six, "editor"], "leader": "architect"})

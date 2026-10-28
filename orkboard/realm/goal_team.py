@@ -9,10 +9,16 @@ every team and is never in the list.
     for_idea(root, "dark-mode")                                 # the team of the idea's goal; every_for_idea, its every
 
 A goal's party (library.seats_of): one leader — the goal's steps (its reading, its ideas' drafts, answers and plans, and
-accepting the goal) run as it; the Taskmaster when none is picked —, and its builder and its checker (the team): one seat a stage
-of its leader's (spec 87 §5; a party made before keeps the members it was saved with, an edit holds to the seats).
+accepting the goal) run as it; the Taskmaster when none is picked —, and its squad (the team): up to five who do and up to two who check, at most
+`SEATS` seats with the leader (spec 99 §1.3, decisions §151.1; a party made before keeps the members it was saved with, an edit holds to the seats).
+**The squad and the size are apart**: `WAY` says how a task goes in each size (its stages, how many run at once, who checks), `checkers` who checks a
+task, `price_team` the part of the squad a price counts.
 
     leader_of(root, "ship")                                     # "product-manager"; "taskmaster" when none was picked
+    craft_of(root, "ship")                                      # "tech": the party's craft (its recipe's, else its leader's), "" for a party with none
+    head_in(root, "ship", role, "balance")                      # the head a role wears as a seat of that party: its craft's race, its leader's higher form
+    way("standard")                                             # {"stages": ("plan", "do", "check"), "at_once": 2, "checks": "one"}
+    checkers("full", "architect", team, concerned)              # {"by": [who checks a task], "leader": bool, "own_tests": bool}
     seats(team, leader)                                         # the error of a party that has too many in a band, else ""
                                                                 # (Ideation: its four views and the skeptic, or a size's part of them; a view nowhere else)
 
@@ -34,18 +40,18 @@ from pathlib import Path
 
 from orkboard.realm import ideas
 
-SEATS = 5
+SEATS = 7                       # a squad: its leader and six more at most (up to five who do, up to two who check: `library.SEATS`)
 IDEATION_WHOLE = "Ideation reads every pitch from all four sides: its views and the skeptic stay"
 PITCH_ONLY = "The views judge pitches: they are in Ideation only"
 
 
 def clean(team: object) -> list[str]:
-    """The slugs of a team as given: known shapes only, no Taskmaster, each once, at most SEATS."""
+    """The slugs of a team as given: known shapes only, no Taskmaster, each once, at most SEATS less its leader."""
     if not isinstance(team, (list, tuple)):
         raise ValueError("A team is a list of agents")
     got = [str(s).strip() for s in team if re.fullmatch(r"[a-z0-9-]{1,60}", str(s).strip()) and str(s).strip() != "taskmaster"]
-    if len(dict.fromkeys(got)) > SEATS:
-        raise ValueError(f"A team has at most {SEATS} agents")
+    if len(dict.fromkeys(got)) > SEATS - 1:
+        raise ValueError(f"A party has at most {SEATS} seats: its leader and {SEATS - 1} more")
     return list(dict.fromkeys(got))
 
 
@@ -57,9 +63,9 @@ def band_of(slug: str) -> str:
 
 
 def seats(team: list[str], leader: str = "", kept: list[str] | tuple[str, ...] = ()) -> str:
-    """Why a party does not fit its seats ("" when it does): one leader, and at most the builder and the checker its leader's stages
-    give (library.seats_of: one a stage, spec 87 §5). `kept`: the team the party was saved with; a band whose members were all in it is not
-    refused (a party made before keeps its team, and an edit may take members out one at a time)."""
+    """Why a party does not fit its seats ("" when it does): one leader, at most five who do and two who check (library.seats_of; spec 99 §1.3), and at most
+    `SEATS` in all. `kept`: the team the party was saved with; a band whose members were all in it is not refused (a party made before keeps its team, and an
+    edit may take members out one at a time)."""
     from orkboard.realm import library
     if leader and band_of(leader) != "lead":
         return f"{leader} does not lead: pick a leader of the library"
@@ -78,6 +84,8 @@ def seats(team: list[str], leader: str = "", kept: list[str] | tuple[str, ...] =
             return f"A party led by {name} has at most {have[band]} {one}{'' if have[band] == 1 else 's'}"
     if any(band_of(s) == "lead" for s in team):
         return "A leader leads: it is not one of the builders or checkers"
+    if len(set(team)) + 1 > SEATS and not set(team) <= set(kept):
+        return f"A party has at most {SEATS} seats: its leader and {SEATS - 1} more"
     return ""
 
 
@@ -106,6 +114,42 @@ def set_team(root: Path, slug: str, team: list[str], every: list[str] | None = N
 
 
 SIZES = ("lean", "standard", "full")                 # a party's size (spec 75 §3): its Target, for its goals
+
+# How a task goes in each size, apart from the squad (spec 99 §1.3, decisions §151.2): its stages, how many tasks run at once, and who checks.
+WAY = {"lean": {"stages": ("plan", "do"), "at_once": 1, "checks": "none"},                  # no separate check: the doer runs its own tests
+       "standard": {"stages": ("plan", "do", "check"), "at_once": 2, "checks": "one"},      # one checker checks each task
+       "full": {"stages": ("plan", "do", "check"), "at_once": 3, "checks": "every"}}        # every checker the task concerns checks it
+
+
+def way(size: str) -> dict:
+    """How a task goes in a size: `{"stages", "at_once", "checks"}` (`WAY`); ValueError for a size that is none."""
+    if size not in WAY:
+        raise ValueError("A size is lean, standard or full")
+    return dict(WAY[size])
+
+
+def checkers(size: str, leader: str, team: list[str], concerned: list[str] | None = None) -> dict:
+    """Who checks a task in a size (decisions §151.2): `{"by": [slugs], "leader": bool, "own_tests": bool}`. **Lean** no one: `own_tests`, the doer runs its own
+    tests. **Standard** one checker of the squad, the first that the task concerns (`concerned`: the checkers whose check applies, all of them when it is None);
+    **full** every one it concerns. With no checker in the squad, or none that concerns the task, the leader checks (`leader`, said plainly)."""
+    if size not in WAY:
+        raise ValueError("A size is lean, standard or full")
+    if size == "lean":
+        return {"by": [], "leader": False, "own_tests": True}
+    mine = [s for s in team if band_of(s) == "check" and (concerned is None or s in concerned)]
+    if not mine:
+        return {"by": [leader] if leader and leader != "taskmaster" else [], "leader": True, "own_tests": False}
+    return {"by": mine[:1] if size == "standard" else mine, "leader": False, "own_tests": False}
+
+
+def price_team(size: str, team: list[str]) -> list[str]:
+    """The part of a squad a size's price counts (`ideas.party_price` answers a size's price a goal, never a squad's): idle specialists cost nothing, so a price
+    is the leader's steps, the work at what the first who does costs and the checks: none in lean, the first checker's in standard (one checks), the checkers' in full
+    (every one it concerns: a squad has two at most)."""
+    from orkboard.realm import library
+    build = [s for s in team if band_of(s) == "build"][:1]
+    check = [s for s in team if band_of(s) == "check"][:library.SEATS["check"]]
+    return build if size == "lean" else [*build, *check[:1]] if size == "standard" else [*build, *check]
 
 
 def size_of(root: Path, slug: str) -> str:
@@ -272,3 +316,21 @@ def set_recipe(root: Path, slug: str, recipe: str) -> None:
             raise ValueError(f"No party {slug!r}")
         page.set("recipe", recipe)
         ideas._write(Path(root) / ideas.TRACKS / f"{slug}.md", page.text())
+
+
+def craft_of(root: Path, slug: str) -> str:
+    """The party's craft (`roles.PARTY_RACES` has its races): its recipe's when it was made from a craft's, else its leader's (a party made before spec 99 is its
+    leader's craft); "" for a party of the Taskmaster's, Ideation's or the Team's, whose seats wear their roles' own heads."""
+    from orkboard.realm import party_recipes
+    if slug == ideas.GENERAL:
+        return ""
+    return party_recipes.craft_of(recipe_of(root, slug), leader_of(root, slug))
+
+
+def head_in(root: Path, slug: str, r: dict | None, target: str, tiers: dict[str, str] | None = None, task_tier: str = "warrior") -> dict:
+    """The head a role wears as a seat of the party `slug` (spec 99 §1.4): its craft's race, its leader that race's higher form, at the tier its size gave the
+    seat (`tiers`: the party's own when none is given). A party with no craft: the role's own head."""
+    from orkboard.realm import roles
+    r = r or {}
+    seat =seat_role(r, tiers if tiers is not None else tiers_of(root, slug)) or r
+    return roles.head(seat, target, task_tier, craft_of(root, slug), bool(r.get("slug")) and r.get("slug") == leader_of(root, slug))

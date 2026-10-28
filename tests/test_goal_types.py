@@ -174,7 +174,7 @@ def test_a_type_missing_one_agent_is_offered_only_when_the_leader_does_another_p
     pm = _party(root, state, ["grunt"], leader="product-manager")
     rows = {t.id: r for t, r in goal_types.offered(state, root, pm)}
     assert [m["agent"] for m in rows["screen"]] == ["ui-kit"] and [m["agent"] for m in rows["experiment"]] == ["experimenter"]
-    assert set(rows["screen"][0]) == {"kind", "words", "agent", "name", "band", "free", "out"} and rows["screen"][0]["free"] is False    # the Grunt holds the one builder's seat (spec 87 §5)
+    assert set(rows["screen"][0]) == {"kind", "words", "agent", "name", "band", "free", "out"} and rows["screen"][0]["free"] is True    # the Grunt holds one of the five seats (spec 99 §1.3)
     assert rows["pain"] == []                                                                 # the leader's own work: nothing missing
     assert "tagline" not in rows and "icon" not in rows and "store" not in rows               # one agent missing, but beside the leader's own work
     assert "landing" not in rows and "abtest" not in rows                                     # two missing
@@ -210,14 +210,17 @@ def test_the_free_seat_of_a_missing_row_reads_the_leaders_seats(board):
     root, state = board
     held = _party(root, state, ["grunt"], leader="product-designer", title="Held")
     (row,) = goal_types.missing(state, root, held, ("art",))
-    assert row["free"] is False and len(row["out"]) == 1                                       # one builder's seat, for every leader (spec 87 §5)
+    assert row["free"] is True and len(row["out"]) == 1                                        # one of five seats is held, for every leader (spec 99 §1.3)
+    five = _party(root, state, ["grunt", "tester", "ui-kit", "copywriter", "seo"], leader="product-designer", title="Five")
+    (row,) = goal_types.missing(state, root, five, ("art",))
+    assert row["free"] is False and len(row["out"]) == 5                                       # five who do: the band is full
     game = _party(root, state, ["grunt"], leader="game-designer", title="Game")
     (row,) = goal_types.missing(state, root, game, ("art",))
-    assert row["free"] is False
+    assert row["free"] is True
     empty = _party(root, state, [], leader="product-designer", title="Empty")
     (row,) = goal_types.missing(state, root, empty, ("art",))
     assert row["free"] is True and row["out"] == []                                              # nobody in the seat
-    old = _party(root, state, ["grunt", "level-designer", "sound-designer", "artist"], leader="game-designer", title="Old")      # a party made before
+    old = _party(root, state, ["grunt", "level-designer", "sound-designer", "artist", "copywriter"], leader="game-designer", title="Old")      # five who do
     assert goal_types.missing(state, root, old, ("aso",))[0]["free"] is False
 
 
@@ -255,11 +258,11 @@ def test_missing_says_who_would_join_once_each_and_whether_a_seat_is_free(board)
     ship = _party(root, state, ["grunt"], leader="product-designer")
     got = goal_types.missing(state, root, ship, ("uikit", "art", "uikit", "design", "code"))
     assert [(m["kind"], m["agent"], m["name"], m["band"], m["free"]) for m in got] == [
-        ("uikit", "ui-kit", "Design system designer", "build", False), ("art", "artist", "Artist", "build", False)]
+        ("uikit", "ui-kit", "Design system designer", "build", True), ("art", "artist", "Artist", "build", True)]
     assert got[0]["words"] == "UI kit" and got[1]["words"] == "pixel art" and got[1]["out"] == [{"slug": "grunt", "name": "Grunt", "runs": 0}]
-    full = _party(root, state, ["grunt", "tester", "ui-kit"], leader="product-designer", title="Full")
+    full = _party(root, state, ["grunt", "tester", "copywriter", "seo", "ui-kit"], leader="product-designer", title="Full")
     (art,) = goal_types.missing(state, root, full, ("art", "uikit"))
-    assert art["free"] is False and [o["slug"] for o in art["out"]] == ["ui-kit", "tester", "grunt"]       # no runs: the later first
+    assert art["free"] is False and [o["slug"] for o in art["out"]] == ["ui-kit", "seo", "copywriter", "tester", "grunt"]       # no runs: the later first
     assert goal_types.missing(state, root, full, ()) == [] and goal_types.missing(state, root, full, ("bogus",)) == []
 
 
@@ -290,16 +293,16 @@ def test_out_leaves_the_members_with_open_work_out_and_puts_the_fewest_runs_firs
 def test_a_party_not_saved_is_read_from_its_leader_and_team_with_no_open_work_and_no_runs(board, monkeypatch):
     root, state = board
     monkeypatch.setattr(goal_types.idea_spend, "by_role", lambda state_dir, days=7: {"grunt": {"finished": 3}, "tester": {"finished": 1}})
-    team = ["grunt", "tester", "ui-kit"]
+    team = ["grunt", "tester", "copywriter", "seo", "ui-kit"]
     saved = _party(root, state, team, leader="product-designer")
     _goal(root, state, saved, [{"id": "k1", "title": "t", "kind": "uikit", "role": "ui-kit", "state": "running"}])
     p = goal_types.Party.of(state, root, "product-designer", team)
     assert (p.slug, p.leader, p.team, p.craft, p.members) == ("", "product-designer", team, "design", [*team, "product-designer"])
     assert p.team is not team and p.busy() == set() and p.runs("grunt") == 0 and p.runs("tester") == 0
     (art,) = goal_types.missing(state, root, "", ("art",), read=p)
-    assert art["free"] is False and [(o["slug"], o["runs"]) for o in art["out"]] == [("ui-kit", 0), ("tester", 0), ("grunt", 0)]   # none holds, none ran: the later first
+    assert art["free"] is False and [(o["slug"], o["runs"]) for o in art["out"]] == [("ui-kit", 0), ("seo", 0), ("copywriter", 0), ("tester", 0), ("grunt", 0)]   # none holds, none ran: the later first
     (own,) = goal_types.missing(state, root, saved, ("art",))
-    assert [(o["slug"], o["runs"]) for o in own["out"]] == [("tester", 1), ("grunt", 3)]               # the saved party's: ui-kit holds, the week's runs
+    assert [(o["slug"], o["runs"]) for o in own["out"]] == [("seo", 0), ("copywriter", 0), ("tester", 1), ("grunt", 3)]               # the saved party's: ui-kit holds, the week's runs
     alone = goal_types.Party.of(state, root, "", [])
     assert (alone.leader, alone.team, alone.craft) == (roles.TASKMASTER, [], roles.DEFAULT_CRAFT) and alone.fresh == ()
     assert [t.id for t, _r in goal_types.offered(state, root, "", read=alone)] == ["feature", "bug", "tidy"]
@@ -339,7 +342,7 @@ def test_a_plans_missing_read_now_drops_what_a_member_added_since_does_and_a_par
     ship = _party(root, state, ["grunt"], leader="product-designer")
     missed = [{"kind": "art", "agent": "artist"}, {"kind": "uikit", "agent": "ui-kit"}, {"kind": "nope", "agent": "x"}]
     assert [(m["kind"], m["name"], m["free"]) for m in goal_types.still_missing(state, root, ship, missed)] == [
-        ("art", "Artist", False), ("uikit", "Design system designer", False)]
+        ("art", "Artist", True), ("uikit", "Design system designer", True)]
     library.install(state, ["artist"])
     goal_team.set_team(root, ship, ["grunt", "artist"])
     assert [m["kind"] for m in goal_types.still_missing(state, root, ship, missed)] == ["uikit"]

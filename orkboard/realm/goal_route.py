@@ -282,7 +282,7 @@ def _head(state_dir: Path, root: Path, party: str, leader: str, target: str) -> 
     if r is None:
         a = library.get(leader)
         r = {"slug": leader, "craft": a.craft, "race": a.race, "model": a.tier} if a else (roles.role(state_dir, roles.TASKMASTER) or {})
-    return roles.head(goal_team.seat_role(r, goal_team.tiers_of(root, party)) or r, target)
+    return roles.head(goal_team.seat_role(r, goal_team.tiers_of(root, party)) or r, target, party=goal_team.craft_of(root, party), lead=True)      # its party's leader form (spec 99 §1.4)
 
 
 def steps_of(root: Path, state_dir: Path, st: dict, settings: dict | None = None) -> list[dict]:

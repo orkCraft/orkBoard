@@ -182,3 +182,48 @@ def test_the_four_kinds_of_the_art_party_follow_aso_with_their_labels_and_lines(
     assert [roles.KIND_LABELS[k] for k in four] == ["Art direction", "Animation", "Music", "Art check"]
     assert all(roles.KIND_LINES[k] for k in four) and "pixel" not in roles.KIND_LINES["art"]
     assert set(roles.KIND_LABELS) == set(roles.KIND_LINES) == set(kinds)
+
+
+def test_every_seat_of_a_party_wears_its_partys_race_and_its_leader_that_races_higher_form(tmp_path):
+    """Spec 99 §1.4 (decisions §158.4–§158.5, §162): knights for Product and Game design, orks for Tech, elves for Design and Art, goblins for Run and LiveOps, gnomes for
+    Marketing, the undead for Release; the leader the shaman, dryad, imp, fairy, unicorn or lich. A role's own race and craft no longer choose its head in a party."""
+    assert roles.PARTY_RACES == {"product": ("knight", "unicorn"), "game-design": ("knight", "unicorn"), "tech": ("peon", "shaman"), "design": ("elf", "dryad"),
+                                 "art": ("elf", "dryad"), "run": ("goblin", "imp"), "liveops": ("goblin", "imp"), "marketing": ("gnome", "fairy"), "release": ("skeleton", "lich")}
+    grunt = roles.role(tmp_path, "grunt")
+    manager = {"slug": "release-manager", "craft": "product", "race": "skeleton", "model": "warrior"}
+    for party, (members, leader) in roles.PARTY_RACES.items():
+        for tier in roles.TIERS:
+            assert (roles.RACE_FILES / f"{members}-{tier}.png").is_file() and (roles.RACE_FILES / f"{leader}-{tier}.png").is_file(), (party, tier)
+            assert roles.head({**grunt, "model": tier}, "balance", party=party)["race"] == members
+            assert roles.head({**manager, "model": tier}, "balance", party=party, lead=True)["race"] == leader
+    assert roles.head({"slug": "copywriter", "craft": "marketing", "model": "warrior"}, "balance", party="product") == {"craft": "marketing", "race": "knight", "tier": "warrior"}
+    assert roles.head(manager, "balance") == {"craft": "product", "race": "skeleton", "tier": "warrior"}          # alone, as before
+    assert roles.head(manager, "balance", party="") == roles.head(manager, "balance", party="nope")              # a party with no craft: the role's own
+    taskmaster = roles.role(tmp_path, "taskmaster")
+    assert roles.head(taskmaster, "balance", party="tech", lead=True)["race"] == "peon"                         # the Taskmaster and the Orkmaster are orks in any party
+    assert roles.head({"slug": "orkmaster", "model": "warrior"}, "balance", party="release")["race"] == "peon"
+
+
+def test_a_race_whose_file_is_missing_falls_back_to_its_members_race_at_the_tier_and_then_to_the_ork(tmp_path, monkeypatch):
+    files = tmp_path / "races"
+    files.mkdir()
+    for name in ("knight-warrior.png", "peon-warrior.png"):                    # the unicorn is not drawn at this tier, the knight is; the shaman neither
+        (files / name).write_bytes(b"")
+    monkeypatch.setattr(roles, "RACE_FILES", files)
+    assert roles.party_race("product", True, "warrior") == "knight" and roles.party_race("product", False, "warrior") == "knight"
+    assert roles.party_race("tech", True, "warrior") == "peon"                  # the shaman is missing, the ork's is not
+    assert roles.party_race("design", True, "warrior") == "peon"               # neither the dryad nor the elf: the ork's
+    (files / "unicorn-warrior.png").write_bytes(b"")
+    assert roles.party_race("product", True, "warrior") == "unicorn" and roles.party_race("product", False, "warrior") == "knight"
+    assert roles.party_race("product", True, "elder") == "peon"                # no file of that tier at all
+    assert roles.party_race("nope", True, "warrior") == "peon"
+
+
+def test_a_tasks_head_in_a_party_wears_the_partys_race_and_the_leaders_its_higher_form(tmp_path):
+    seer = roles.save(tmp_path, "Seer", "", 1, takes=["research"], craft="data")
+    task = {"kind": "research", "tier": "warrior", "role": seer}
+    assert roles.task_head(tmp_path, task, "balance", party="run", leader="analyst")["race"] == "goblin"
+    assert roles.task_head(tmp_path, task, "balance", party="product")["race"] == "knight"                     # a goblin's role in the knights' party
+    assert roles.task_head(tmp_path, task, "balance", party="product", leader=seer)["race"] == "unicorn"
+    assert roles.task_head(tmp_path, {"kind": "code", "tier": "warrior"}, "balance", party="tech", leader="architect")["race"] == "peon"   # a Grunt is an ork in Tech
+    assert roles.task_head(tmp_path, task, "balance") == {"craft": "data", "race": "goblin", "tier": "warrior"}   # no party: as before

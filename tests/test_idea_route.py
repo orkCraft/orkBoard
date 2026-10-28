@@ -22,6 +22,11 @@ def stub(tier, prompt, effort="", budget=None):
 def party(h, title, preset):
     lead, build, check = next((p[4], p[5], p[6]) for p in library.PRESETS if p[0] == preset)
     craft = next(p[3] for p in library.PRESETS if p[0] == preset)
+    if preset == "ideation":                    # Ideation is no longer made by `ideas.goal_save` (spec 99 §1.1): a party of before, written as it was
+        slug, _new = ideas.save_goal(h.ideas.root(), None, title, title + ".", craft=craft)
+        library.install(h.ideas.state_dir, [lead, *build, *check])
+        goal_team.set_team(h.ideas.root(), slug, [*build, *check], leader=lead)
+        return slug
     slug = h.command("ideas.goal_save", {"title": title, "about": title + ".", "craft": craft, "leader": lead, "team": [*build[:1], *check[:1]], "preset": preset})["slug"]
     library.install(h.ideas.state_dir, [*build, *check])
     goal_team.set_team(h.ideas.root(), slug, [*build, *check])          # the library's whole party: made before a party had one seat a stage (spec 87 §5), its team kept

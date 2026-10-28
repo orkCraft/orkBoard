@@ -73,7 +73,7 @@ def test_goal_save_with_a_team_makes_its_agents_keeps_the_team_and_never_overwri
     _wait(host, slug, goal=True)
     g = next(t for t in host.command("ideas.board")["tracks"] if t["slug"] == slug)
     assert g["team"] == ["ui-kit", "accessibility-reviewer"] and g["leader"]["slug"] == "product-designer"   # the leader leads, not in the team
-    assert g["leader"]["head"]["race"] == "elf" and g["verdict"] is None
+    assert g["leader"]["head"]["race"] == "dryad" and g["verdict"] is None          # the leader of a Design party: the elves' higher form (spec 99 §1.4)
     pd = roles.role(host.ideas.state_dir, "product-designer")
     assert pd["name"] == "Product designer" and pd["craft"] == "design" and pd["model"] == "elder" and pd["takes"] == ["design"]
     assert pd["instruction"] == library.get("product-designer").instruction
@@ -84,10 +84,10 @@ def test_goal_save_with_a_team_makes_its_agents_keeps_the_team_and_never_overwri
     assert roles.role(host.ideas.state_dir, "product-designer")["takes"] == ["design"]
     with pytest.raises(CommandError, match="No agent 'wizard'"):
         host.command("ideas.goal_save", {"about": "x", "team": ["wizard"]})
-    with pytest.raises(CommandError, match="at most 1 builder"):
-        host.command("ideas.goal_save", {"about": "x", "team": ["grunt", "tester"]})
-    with pytest.raises(CommandError, match="at most 1 checker"):
-        host.command("ideas.goal_save", {"about": "x", "team": ["reviewer", "editor"]})
+    with pytest.raises(CommandError, match="at most 5 builders"):
+        host.command("ideas.goal_save", {"about": "x", "team": ["grunt", "tester", "artist", "seo", "aso", "copywriter"]})
+    with pytest.raises(CommandError, match="at most 2 checkers"):
+        host.command("ideas.goal_save", {"about": "x", "team": ["reviewer", "editor", "playtester"]})
     with pytest.raises(CommandError, match="does not lead"):
         host.command("ideas.goal_save", {"about": "x", "leader": "grunt", "team": []})
     with pytest.raises(CommandError, match="A leader leads"):
@@ -400,21 +400,44 @@ def test_the_leaders_preamble_says_it_plans_the_goals_and_no_longer_that_it_acce
     assert "accept" not in voice
 
 
-def test_seats_are_one_a_stage_for_every_leader_and_the_refusal_names_the_leader():
-    """Spec 87 §5: a party's seats are its leader's stages: one builder and one checker with any leader."""
-    four = ["grunt", "artist", "level-designer", "sound-designer"]
+def test_a_party_has_up_to_five_who_do_and_two_who_check_for_every_leader_and_the_refusal_names_the_leader():
+    """Spec 99 §1.3 (decisions §151.1): a squad is its leader, up to five who do and up to two who check, at most seven in all, with any leader."""
+    six = ["grunt", "artist", "level-designer", "sound-designer", "animator", "composer"]
     for leader in ("game-designer", "architect", "growth", ""):
-        assert goal_team.seats(four[:1], leader) == "" and goal_team.seats([four[0], "reviewer"], leader) == "", leader
-    assert goal_team.seats(four[:2], "game-designer") == "A party led by Game designer has at most 1 builder"
-    assert goal_team.seats(four, "architect") == "A party led by Architect has at most 1 builder"
-    assert goal_team.seats(["playtester", "reviewer"], "game-designer") == "A party led by Game designer has at most 1 checker"
-    assert goal_team.seats(["reviewer", "editor"], "growth") == "A party led by Growth has at most 1 checker"
-    assert goal_team.seats(four[:2], "") == "A party led by Taskmaster has at most 1 builder"
-    assert goal_team.SEATS == 5 and goal_team.seats(["playtester"], "game-designer") == ""
+        assert goal_team.seats(six[:5], leader) == "" and goal_team.seats([*six[:5], "reviewer"], leader) == "", leader
+    assert goal_team.seats(six, "game-designer") == "A party led by Game designer has at most 5 builders"
+    assert goal_team.seats(six, "architect") == "A party led by Architect has at most 5 builders"
+    assert goal_team.seats(["playtester", "reviewer", "editor"], "game-designer") == "A party led by Game designer has at most 2 checkers"
+    assert goal_team.seats(["reviewer", "editor"], "growth") == ""
+    assert goal_team.seats(six, "") == "A party led by Taskmaster has at most 5 builders"
+    assert goal_team.SEATS == 7 and goal_team.seats(["playtester"], "game-designer") == ""
+    assert goal_team.seats([*six[:5], "reviewer", "editor"], "architect") == "A party has at most 7 seats: its leader and 6 more"       # the leader counts
+    with pytest.raises(ValueError, match="at most 7 seats"):
+        goal_team.clean([*six, "reviewer"])
+    assert goal_team.clean(six) == six
     # a party made before keeps its team: a band whose members were all saved is not refused, so it can be saved again and lose one at a time
-    assert goal_team.seats(four[:3], "architect", four) == "" and goal_team.seats(four[:2], "architect", four[:3]) == ""
-    assert goal_team.seats([*four[:2], "aso"], "architect", four[:2]) == "A party led by Architect has at most 1 builder"      # a new one is not
+    assert goal_team.seats(six[:3], "architect", six) == "" and goal_team.seats(six[:2], "architect", six[:3]) == ""
+    assert goal_team.seats(six, "architect", six) == ""
     assert goal_team.seats(["reviewer", "editor"], "growth", ["reviewer", "editor"]) == ""
+
+
+def test_a_size_is_how_a_task_goes_apart_from_the_squad_and_with_no_checker_the_leader_checks():
+    """Spec 99 §1.3 (decisions §151.2): lean plan → do, one at once, no separate check; standard plan → do → check, two at once, one checker; full every checker."""
+    assert goal_team.way("lean") == {"stages": ("plan", "do"), "at_once": 1, "checks": "none"}
+    assert goal_team.way("standard") == {"stages": ("plan", "do", "check"), "at_once": 2, "checks": "one"}
+    assert goal_team.way("full") == {"stages": ("plan", "do", "check"), "at_once": 3, "checks": "every"}
+    with pytest.raises(ValueError, match="lean, standard or full"):
+        goal_team.way("huge")
+    squad = ["grunt", "tester", "reviewer", "security-reviewer"]
+    assert goal_team.checkers("lean", "architect", squad) == {"by": [], "leader": False, "own_tests": True}          # the doer runs its own tests
+    assert goal_team.checkers("standard", "architect", squad) == {"by": ["reviewer"], "leader": False, "own_tests": False}
+    assert goal_team.checkers("full", "architect", squad) == {"by": ["reviewer", "security-reviewer"], "leader": False, "own_tests": False}
+    assert goal_team.checkers("full", "architect", squad, ["security-reviewer"])["by"] == ["security-reviewer"]      # every checker the task concerns
+    assert goal_team.checkers("standard", "architect", squad, ["security-reviewer"])["by"] == ["security-reviewer"]
+    assert goal_team.checkers("standard", "architect", ["grunt"]) == {"by": ["architect"], "leader": True, "own_tests": False}     # no checker: the leader
+    assert goal_team.checkers("full", "architect", squad, ["accessibility-reviewer"])["leader"] is True            # none that concerns it
+    assert goal_team.checkers("full", "taskmaster", ["grunt"]) == {"by": [], "leader": True, "own_tests": False}
+    assert goal_team.price_team("lean", squad) == ["grunt"] and goal_team.price_team("standard", squad) == ["grunt", "reviewer"] and goal_team.price_team("full", squad) == ["grunt", "reviewer", "security-reviewer"]
 
 
 def test_a_partys_size_is_kept_on_its_page_and_read_back(host):

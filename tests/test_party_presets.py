@@ -1,12 +1,12 @@
-"""Spec 91 E (docs/specs/91-the-owners-list.md §7, decisions §107.5), the host's part: New party's presets. The stages of each kind of project (Ideation, Concept, Build, Release, LiveOps; Concept,
-Build and LiveOps are `party_recipes.STAGE_RECIPES`, made of the library's agents and fitted to the kind), the crafts and the person's own, each with its leader, its builders and checkers and its three
-sizes; `ideas.party_presets` (no model, nothing written); a stage kept with the party as its recipe, so a Lean party grows back. Code, no model."""
+"""Spec 99 A (docs/specs/99-a-goals-way.md §1, decisions §122.5, §151.5), the host's part: New party's presets. One row a craft of the project's kind (a game's Game design, Tech, Art, Release,
+LiveOps and Marketing; the rest's Product, Design, Tech, Release, Run and Marketing), each under the stage that offers it, with its leader, the roles to tick from, the squad ticked by default and
+its three sizes (the same team in each: the size sets the tiers); the person's own party; `ideas.party_presets` (no model, nothing written); a craft kept with the party as its recipe. Code, no model."""
 from __future__ import annotations
 
 import pytest
 
 from orkboard.gui.board_host import Orkboard
-from orkboard.realm import goal_team, idea_target, ideas, library, party_presets, party_recipes, party_resize, project_kind
+from orkboard.realm import goal_team, idea_target, ideas, library, party_presets, party_recipes, party_resize, project_kind, project_stage
 
 
 @pytest.fixture
@@ -16,97 +16,57 @@ def host(fake_repo):
     yield h
 
 
-STAGE_ROWS = [(k, r) for k, rows in party_recipes.STAGE_RECIPES.items() for r in rows]
-
-
-def test_every_kind_has_a_concept_a_build_and_a_liveops_made_of_the_librarys_agents_that_fit_the_seats():
-    assert set(party_recipes.STAGE_RECIPES) == set(project_kind.KINDS) - {"empty"}                   # an empty folder has code's
-    for kind, rows in party_recipes.STAGE_RECIPES.items():
-        assert [r["id"] for r in rows] == [f"{kind}-concept", f"{kind}-build", f"{kind}-liveops"]
-        assert [r["name"] for r in rows] == ["Concept", "Build", party_recipes.running_name(kind)]            # the project's running: LiveOps for a game, Upkeep for words and files, Run for the rest (spec 92 §1)
-
-
-@pytest.mark.parametrize("kind,recipe", STAGE_ROWS, ids=[r["id"] for _k, r in STAGE_ROWS])
-def test_a_stage_recipe_names_only_the_librarys_agents_and_fits_its_leaders_seats_in_every_size(kind, recipe):
-    for slug in [recipe["leader"], *recipe["build"], *recipe["check"]]:
-        assert library.get(slug) is not None, slug
-    assert library.get(recipe["leader"]).band == "lead" and not library.get(recipe["leader"]).pitch
-    assert all(library.get(s).band == "build" and not library.get(s).pitch for s in recipe["build"])
-    assert all(library.get(s).band == "check" and not library.get(s).pitch for s in recipe["check"])
-    assert recipe["build"] and recipe["check"] and recipe["name"] and recipe["line"] and recipe["because"]
-    assert len(recipe["build"]) + len(recipe["check"]) <= goal_team.SEATS + 3                       # candidates, a size seats one a stage
-    for size in idea_target.SIZES:
-        got = party_recipes.sized(recipe, size)
-        assert goal_team.seats(got["team"], got["leader"]) == "", (recipe["id"], size)
-        assert len(got["team"]) <= goal_team.SEATS
-    assert party_recipes.sized(recipe, "lean")["team"] == [] and party_recipes.sized(recipe, "standard")["team"] == recipe["build"][:1]
-    assert party_recipes.sized(recipe, "full")["team"] == [recipe["build"][0], recipe["check"][0]]
-
-
-def test_the_stage_recipes_are_proposed_to_no_one_but_are_found_by_id_and_kind():
-    proposed = {r["id"] for rows in party_recipes.RECIPES.values() for r in rows}
-    assert not proposed & {r["id"] for _k, r in STAGE_ROWS}
-    assert all(party_recipes.for_kind(k) and not any(r["id"].endswith(("-concept", "-liveops")) for r in party_recipes.for_kind(k)) for k in project_kind.KINDS)
-    assert party_recipes.get("game-build")["leader"] == "game-designer" and party_recipes.get("web-liveops")["leader"] == "architect"
-    assert party_recipes.kind_of("game-build") == "game" and party_recipes.kind_of("game-build", "mobile") == "game" and party_recipes.kind_of("mobile-concept", "mobile") == "mobile"
-    assert party_recipes.get("nothing") is None
-
-
-def test_the_stages_of_a_game_are_the_game_designers_concept_build_and_liveops():
-    game = {r["id"]: r for r in party_recipes.STAGE_RECIPES["game"]}
-    assert (game["game-concept"]["leader"], game["game-concept"]["build"], game["game-concept"]["check"]) == ("game-designer", ["level-designer", "artist"], ["playtester"])
-    assert (game["game-build"]["leader"], game["game-build"]["build"], game["game-build"]["check"]) == ("game-designer", ["grunt", "artist", "sound-designer"], ["playtester", "reviewer"])
-    assert (game["game-liveops"]["leader"], game["game-liveops"]["build"], game["game-liveops"]["check"]) == ("analyst", ["data-engineer", "grunt", "copywriter"], ["data-reviewer"])
-
-
-def test_the_stages_of_a_kind_are_ideation_concept_build_release_liveops_and_an_empty_folder_has_codes():
-    for kind in project_kind.KINDS:
-        rows = party_recipes.stages_of(kind)
-        assert [r["name"] for r in rows] == ["Ideation", "Concept", "Build", "Release", party_recipes.running_name(kind)], kind
-        assert rows[0]["id"] == "ideation" and rows[3]["id"] == "release" and rows[0]["whole"] and rows[3]["whole"]
-    assert [r["id"] for r in party_recipes.stages_of("empty")] == ["ideation", "code-concept", "code-build", "release", "code-liveops"]
-    assert [r["id"] for r in party_recipes.stages_of("mobile")][1:4] == ["mobile-concept", "mobile-build", "release"]
-    assert party_recipes.stages_of("nowhere")[2]["id"] == "code-build"
-
-
-def test_a_concept_is_led_by_the_designer_the_kind_has_and_the_running_by_the_one_who_keeps_it_going():
-    lead = {k: [r["leader"] for r in party_recipes.stages_of(k)] for k in project_kind.KINDS}
-    assert lead["game"] == ["investor", "game-designer", "game-designer", "release-manager", "analyst"]
-    assert lead["mobile"][1] == "product-designer" and lead["web"][1] == "product-designer" and lead["backend"][1] == "architect"
-    assert lead["data"][1:5] == ["analyst", "analyst", "release-manager", "analyst"] and lead["wiki"][1] == "product-manager"
-    assert {k: lead[k][4] for k in lead if k != "empty"} == {"mobile": "product-manager", "web": "architect", "backend": "architect", "code": "architect", "data": "analyst", "game": "analyst",
-                                                              "wiki": "product-manager", "design": "product-designer", "texts": "growth"}
-
-
-# -- the list the dialog reads ------------------------------------------------------------------------------------------------------------------------------------
-
 @pytest.mark.parametrize("kind", project_kind.KINDS)
-def test_the_presets_of_a_kind_are_the_stages_the_crafts_and_the_persons_own_each_with_its_three_sizes(kind):
+def test_the_presets_of_a_kind_are_its_crafts_under_their_stages_and_the_persons_own_each_with_its_three_sizes(kind):
     rows = party_presets.listed(kind)
-    assert [r["group"] for r in rows] == ["stage"] * 5 + ["craft"] * 7 + ["own"]
-    assert [r["name"] for r in rows[5:]] == ["Tech", "Design", "Data", "Marketing", "Product", "Art and sound", "Team", "Your own party"]
-    assert [r["id"] for r in rows[5:]] == ["engineering", "design", "data", "marketing", "product", "art", "team", "mixed"]
-    assert [r["stage"] for r in rows[:5]] == ["ideation", "concept", "build", "release", "liveops"] and all(r["line"] for r in rows)
+    crafts = ["game-design", "tech", "art", "release", "liveops", "marketing"] if kind == "game" else ["product", "design", "tech", "release", "run", "marketing"]
+    assert [r["group"] for r in rows] == ["stage"] * 6 + ["own"] and [r["id"] for r in rows] == [*crafts, "mixed"]
+    assert [r["recipe"] for r in rows[:6]] == crafts and rows[-1]["name"] == "Your own party"
+    assert {r["id"]: r["stage"] for r in rows[:6]} == {c: project_stage.FROM[c] for c in crafts} and all(r["line"] for r in rows)
+    assert "team" not in {r["id"] for r in rows} and "ideation" not in {r["id"] for r in rows}            # Team and Ideation are not offered (decisions §122)
     assert len({r["id"] for r in rows}) == len(rows)
     for r in rows:
         assert library.get(r["leader"]) is not None and set(r["sizes"]) == set(idea_target.SIZES)
         for size, got in r["sizes"].items():
-            assert got == party_recipes.sized({"leader": r["leader"], "build": r["build"], "check": r["check"]}, size)
+            assert got == party_recipes.sized({"leader": r["leader"], "build": r["build"], "check": r["check"], "squad": r["squad"]}, size)
+            assert got["team"] == r["squad"], (kind, r["id"], size)                                      # the squad and the size are apart
             assert goal_team.seats(got["team"], got["leader"]) == "", (kind, r["id"], size)
+        assert r["ops"] is False and r["blocked"] == "" and r["whole"] is False
 
 
-def test_the_craft_presets_are_the_librarys_parties_of_one_craft_and_art_and_sound_and_the_own_party_is_the_taskmaster_alone():
-    rows = {r["id"]: r for r in party_presets.listed("game")}
-    assert rows["engineering"]["name"] == "Tech" and (rows["engineering"]["leader"], rows["engineering"]["build"], rows["engineering"]["check"]) == ("architect", ["grunt", "tester"], ["reviewer"])
-    assert (rows["art"]["name"], rows["art"]["leader"], rows["art"]["build"][:2]) == ("Art and sound", "art-director", ["artist", "sound-designer"])
-    own = rows["mixed"]
-    assert (own["name"], own["line"], own["leader"], own["build"], own["check"]) == ("Your own party", "Start from the Taskmaster and add who you need", "taskmaster", [], [])
+def test_a_row_says_its_stage_its_proposed_size_the_roles_to_tick_and_the_squad_ticked_and_release_is_locked_and_alone():
+    rows = {r["id"]: r for r in party_presets.listed("web")}
+    assert {c: (rows[c]["stage"], rows[c]["size"]) for c in ("product", "design", "tech", "release", "run", "marketing")} == {
+        "product": ("idea", "lean"), "design": ("idea", "lean"), "tech": ("being_made", "standard"), "release": ("idea", "lean"), "run": ("live", "standard"),
+        "marketing": ("live", "standard")}
+    tech = rows["tech"]
+    assert (tech["name"], tech["leader"], tech["build"], tech["check"], tech["squad"], tech["locked"]) == (
+        "Tech", "architect", ["grunt", "tester"], ["reviewer", "security-reviewer"], ["grunt", "tester", "reviewer"], False)
+    release = rows["release"]
+    assert (release["leader"], release["squad"], release["locked"]) == ("release-manager", [], True)
+    assert [release["sizes"][s]["tiers"] for s in idea_target.SIZES] == [{"release-manager": "warrior"}] * 3
+    assert tech["sizes"]["lean"]["tiers"] == {"architect": "warrior", "grunt": "warrior", "tester": "warrior", "reviewer": "warrior"}
+    assert tech["sizes"]["standard"]["tiers"] == {"architect": "elder", "grunt": "warrior"}
+    assert tech["sizes"]["full"]["tiers"] == {"architect": "elder", "grunt": "warrior", "tester": "warrior", "reviewer": "elder"}
+    game = {r["id"]: r for r in party_presets.listed("game")}
+    assert (game["art"]["name"], game["art"]["leader"], game["art"]["build"][:2]) == ("Art", "art-director", ["artist", "sound-designer"])
+    assert (game["game-design"]["name"], game["liveops"]["name"], game["liveops"]["leader"]) == ("Game design", "LiveOps", "analyst")
+
+
+def test_the_own_party_is_the_taskmaster_alone():
+    own = party_presets.listed("code")[-1]
+    assert (own["id"], own["name"], own["line"], own["leader"], own["build"], own["check"]) == (
+        "mixed", "Your own party", "Start from the Taskmaster and add who you need", "taskmaster", [], [])
     assert own["sizes"]["full"]["team"] == [] and own["sizes"]["lean"]["tiers"] == {}                                   # the Taskmaster is no seat
-    assert rows["ideation"]["whole"] and rows["release"]["whole"] and not rows["game-build"]["whole"]
-    assert rows["ideation"]["sizes"]["full"]["team"] == ["product-view", "skeptic"]
-    assert rows["game-build"]["sizes"]["standard"] == {"leader": "game-designer", "team": ["grunt"], "tiers": {"game-designer": "elder", "grunt": "warrior"}, "size": "standard"}
-    assert rows["game-build"]["sizes"]["full"]["tiers"] == {"game-designer": "elder", "grunt": "warrior", "playtester": "elder"}
-    assert rows["game-build"]["sizes"]["lean"]["tiers"] == {"game-designer": "warrior"}
+
+
+def test_a_running_party_carries_the_recurring_goals_of_its_kind_and_team_is_no_row():
+    web = {r["id"]: r for r in party_presets.listed("web")}
+    assert [x["id"] for x in web["run"]["routines"]] and web["run"]["routines"] == party_presets.recurring.listed("web-liveops")
+    game = {r["id"]: r for r in party_presets.listed("game")}
+    assert game["liveops"]["routines"] == party_presets.recurring.listed("game-liveops") and game["tech"]["routines"] == []
+    assert party_presets.team_words("") == "" and party_presets.team_words("here") == "Team is in this project" and party_presets.team_words("Mars") == "Team is in Mars"
+    assert party_presets.listed("web", team_at="Mars", ops=True) == party_presets.listed("web")                         # Team says nothing now
 
 
 # -- the command ---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -114,29 +74,48 @@ def test_the_craft_presets_are_the_librarys_parties_of_one_craft_and_art_and_sou
 def test_ideas_party_presets_answers_for_the_projects_kind_and_writes_nothing(host):
     got = host.command("ideas.party_presets", {})
     assert got["kind"] == {"id": "code", "words": "code"} and got["presets"] == party_presets.listed("code")
-    assert [r["id"] for r in got["presets"][:5]] == ["ideation", "code-concept", "code-build", "release", "code-liveops"]
+    assert [r["id"] for r in got["presets"][:6]] == ["product", "design", "tech", "release", "run", "marketing"]
     assert ideas.tracks(host.root, make=False) == [] or all(t["slug"] == "general" for t in ideas.tracks(host.root, make=False))
 
 
 def test_ideas_party_presets_follows_what_the_folder_is(fake_repo):
     (fake_repo / "project.godot").write_text("", encoding="utf-8")
     got = Orkboard(fake_repo).command("ideas.party_presets", {})
-    assert got["kind"]["id"] == "game" and [r["id"] for r in got["presets"][:5]] == ["ideation", "game-concept", "game-build", "release", "game-liveops"]
+    assert got["kind"]["id"] == "game" and [r["id"] for r in got["presets"][:6]] == ["game-design", "tech", "art", "release", "liveops", "marketing"]
 
 
-def test_a_party_made_from_a_stage_keeps_it_as_its_recipe_and_a_lean_one_grows_back(host):
-    build = party_presets.listed("code")[2]
-    slug = host.command("ideas.goal_save", {"title": "Build", "about": "Code and tests.", "leader": build["leader"], "team": [], "every": [], "size": "lean", "proposal": build["id"]})["slug"]
-    assert goal_team.recipe_of(host.root, slug) == "code-build" and goal_team.team_of(host.root, slug) == []
+def test_a_party_made_from_a_craft_keeps_it_as_its_recipe_and_a_size_never_changes_its_squad(host):
+    tech = next(r for r in party_presets.listed("code") if r["id"] == "tech")
+    slug = host.command("ideas.goal_save", {"title": "Tech", "about": "Code and tests.", "leader": tech["leader"], "team": tech["squad"], "every": [], "size": "lean", "proposal": tech["id"]})["slug"]
+    assert goal_team.recipe_of(host.root, slug) == "tech" and goal_team.team_of(host.root, slug) == ["grunt", "tester", "reviewer"]
+    assert goal_team.craft_of(host.root, slug) == "tech"
+    assert goal_team.tiers_of(host.root, slug) == tech["sizes"]["lean"]["tiers"]
     grown = party_resize.resized(host.root, slug, "full")
-    assert grown["recipe"] == "code-build" and grown["team"] == ["grunt", "reviewer"] and grown["joins"] == ["grunt", "reviewer"]
+    assert grown["recipe"] == "tech" and grown["team"] == ["grunt", "tester", "reviewer"] and grown["joins"] == [] and grown["leaves"] == []
+    assert grown["tiers"] == tech["sizes"]["full"]["tiers"]
     host.command("ideas.goal_save", {"slug": slug, "size": "full"})
-    assert goal_team.team_of(host.root, slug) == ["grunt", "reviewer"] and goal_team.tiers_of(host.root, slug) == {"architect": "elder", "grunt": "warrior", "reviewer": "elder"}
+    assert goal_team.team_of(host.root, slug) == ["grunt", "tester", "reviewer"] and goal_team.tiers_of(host.root, slug) == tech["sizes"]["full"]["tiers"]
 
 
-def test_a_party_made_from_a_preset_saves_the_seats_tools_beside_the_size(host):
-    build = party_presets.listed("game")[2]
-    full = build["sizes"]["full"]
-    slug = host.command("ideas.goal_save", {"title": "Build", "about": "A game.", "leader": full["leader"], "team": full["team"], "every": [], "size": "full", "proposal": build["id"],
+def test_a_party_made_from_a_craft_without_a_size_still_keeps_its_recipe(host):
+    row = next(r for r in party_presets.listed("code") if r["id"] == "design")
+    slug = host.command("ideas.goal_save", {"title": "Design", "about": "Screens.", "leader": row["leader"], "team": row["squad"], "every": [], "proposal": "design"})["slug"]
+    assert goal_team.recipe_of(host.root, slug) == "design" and goal_team.craft_of(host.root, slug) == "design" and goal_team.size_of(host.root, slug) == ""
+
+
+def test_a_party_made_from_a_craft_saves_the_seats_tools_beside_the_size(host):
+    row = next(r for r in party_presets.listed("game") if r["id"] == "tech")
+    full = row["sizes"]["full"]
+    slug = host.command("ideas.goal_save", {"title": "Tech", "about": "A game.", "leader": full["leader"], "team": full["team"], "every": [], "size": "full", "proposal": row["id"],
                                             "tools": {"grunt": "claude"}})["slug"]
-    assert goal_team.team_of(host.root, slug) == ["grunt", "playtester"] and goal_team.tools_of(host.root, slug) == {"grunt": "claude"}
+    assert goal_team.team_of(host.root, slug) == ["grunt", "tester", "reviewer"] and goal_team.tools_of(host.root, slug) == {"grunt": "claude"}
+
+
+def test_a_running_party_made_with_its_recurring_goals_asks_its_kinds_routines(host):
+    run = next(r for r in party_presets.listed("code") if r["id"] == "run")
+    pick = [run["routines"][0]["id"]]
+    got = host.command("ideas.goal_save", {"title": "Run", "about": "Keep it running.", "leader": run["leader"], "team": run["squad"], "every": [], "proposal": "run", "routines": pick})
+    assert goal_team.recipe_of(host.root, got["slug"]) == "run"
+    assert len([i for i in ideas.ideas(host.root, got["slug"])]) == 1                                          # the recurring goal added
+    with pytest.raises(Exception, match="No recurring goal"):
+        host.command("ideas.goal_save", {"title": "Run again", "about": "x", "leader": run["leader"], "team": [], "proposal": "run", "routines": ["nope"]})

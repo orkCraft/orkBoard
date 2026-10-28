@@ -14,11 +14,12 @@ from orkboard.core import idea_keeper
 from orkboard.gui.ideas_args import IdeasError, _device, _opt, _text
 from orkboard.hooks.warder import is_secret
 from orkboard.realm import (event_log, goal_team, goal_types, goal_verdict, harnesses, idea_questions, idea_target, idea_words, ideas, library, own_parties,
-                            party_proposals, party_recipes, party_resize, project_kind, roles)
+                            party_proposals, party_recipes, project_kind, roles)
 
 
 DOC_CHARS = 100_000
 NO_SECRETS = "That file may hold secrets: open it in your own editor"
+UNMADE = "General, Team and Ideation are not made any more: pick a party of the project's crafts"
 HIDDEN_DIRS = (".git", ".orkcraft")           # git's own and the machine's own: never shown
 
 
@@ -38,9 +39,11 @@ class GoalsMixin:
         """A goal as the board lists it: its fields, its state in the keeper's words."""
         st = self.goal_state(g["slug"])
         lead = roles.role(self.state_dir, g.get("leader") or roles.TASKMASTER) or roles.role(self.state_dir, roles.TASKMASTER)
-        return {**g, "race": roles.RACES[g["craft"]], "state": st["state"], "state_error": st["error"], "ideas": g["count"],
-                "leader": {"slug": lead["slug"], "name": lead["name"], "head": roles.head(goal_team.seat_role(lead, goal_team.tiers_of(self.root(False), g["slug"])), idea_target.target_for(self.board_settings(), g))},
-                "party": goal_team.party_of(self.root(False), g["slug"]),
+        root, craft = self.root(False), goal_team.craft_of(self.root(False), g["slug"])
+        return {**g, "race": roles.PARTY_RACES[craft][0] if craft in roles.PARTY_RACES else roles.RACES[g["craft"]], "party_craft": craft,
+                "state": st["state"], "state_error": st["error"], "ideas": g["count"],
+                "leader": {"slug": lead["slug"], "name": lead["name"], "head": goal_team.head_in(root, g["slug"], lead, idea_target.target_for(self.board_settings(), g))},
+                "party": goal_team.party_of(root, g["slug"]),
                 "verdict": goal_verdict.read(self.state_dir, g["slug"])}
 
     def goal(self, args: dict) -> dict:
@@ -91,9 +94,9 @@ class GoalsMixin:
             raise IdeasError("about is not text")
         before = next((t for t in ideas.tracks(self.root(), make=False) if t["slug"] == slug), None) if slug else None
         recipe = _opt(args, "proposal") or _opt(args, "preset")
-        if not slug and recipe == party_recipes.TEAM_ID:
-            self.team_refuse()                                 # one Team party across the person's projects (spec 92 §3)
-        routines = self.routines_asked(args, recipe) if not slug else []        # the running party's recurring goals the person kept (spec 92 §2)
+        if not slug:
+            self._unmade(args, title, recipe)                  # General, Team and Ideation are not made (spec 99 §1.1)
+        routines = self.routines_asked(args, party_recipes.routines_of(recipe, project_kind.read(self.host.repo_root)["kind"])) if not slug else []        # the running party's recurring goals the person kept (spec 92 §2)
         metrics, links = args.get("metrics"), args.get("links")
         if metrics is not None and not isinstance(metrics, list) or links is not None and not isinstance(links, list):
             raise IdeasError("Metrics and links are lists")
@@ -126,13 +129,10 @@ class GoalsMixin:
         if leader is not None and library.get(leader) is None:
             raise IdeasError(f"No agent {leader!r}")
         tool = self._tool_asked(args, slug)
-        sized = self._resized(args, slug, team, leader)          # a size sent for a party of a recipe: the size's team (spec 81 §3)
-        if sized is not None:
-            team, args = sized["team"], {**args, "team": sized["team"], "every": args.get("every") if isinstance(args.get("every"), list) else goal_team.every_of(self.root(), slug)}
         tools = self._tools_asked(args, slug, team, leader)      # each seat's own AI tool (spec 91 §6)
         if slug and ideas.track_page(self.root(False), slug) is not None:
             kept += goal_team.team_of(self.root(False), slug)
-        if why := goal_team.seats(team or [], leader or (goal_team.leader_of(self.root(), slug) if sized is not None else ""), kept):
+        if why := goal_team.seats(team or [], leader or "", kept):          # a size sent changes the tiers, never the squad (spec 99 §1.3)
             raise IdeasError(why)
         size = self._size_asked(args, slug, team)
         got, new = ideas.save_goal(self.root(), slug, title[:ideas.TITLE_CHARS],
@@ -162,14 +162,16 @@ class GoalsMixin:
             self._tiers_kept(got)                           # a party with a size: its seats' tiers follow its team (spec 81 §2)
         if "releases_from" in args:                          # a Release party's sources (spec 68 §3.2)
             self.save_releases_from(got, args["releases_from"])
-        if before is None and (routines or recipe == party_recipes.TEAM_ID):
-            self.running_made(got, recipe, routines, args)       # Team's note and recipe; the recurring goals added (spec 92)
+        if before is None and recipe in party_recipes.CRAFTS and not goal_team.recipe_of(self.root(), got):
+            goal_team.set_recipe(self.root(), got, recipe)       # a party of a craft keeps it: its heads are its craft's race (spec 99 §1.4)
+        if before is None and routines:
+            self.running_made(got, recipe, routines, args)       # the recurring goals added (spec 92)
         g = next(t for t in ideas.tracks(self.root(), make=False) if t["slug"] == got)
         self._ev(event_log.GOAL_SAVED, args, goal=got, new=new, preset=self._preset_kept(args, g), metrics=[m["name"] for m in g["metrics"]], links=g["links"],
                  priority=g["priority"], craft=g["craft"], team=g["team"], every=g["every"], leader=g["leader"] or roles.TASKMASTER,
                  party=goal_team.party_of(self.root(), got), tool=g["tool"], tools=[f"{a}:{t}" for a, t in g["tools"].items()])
-        if (new or before is None or _what_it_says(before) != _what_it_says(g)) and not (before is None and recipe == party_recipes.TEAM_ID):    # the Team party has nothing for the keeper to read
-            self._read_goal(got)                    # a save of its party alone reads nothing again (spec 41 §7)
+        if new or before is None or _what_it_says(before) != _what_it_says(g):
+            self._read_goal(got)                   # a save of its party alone reads nothing again (spec 41 §7)
         self.changed(f"goal:{got}")
         return {"slug": got, **({"notes": notes} if notes else {})}
 
@@ -226,16 +228,12 @@ class GoalsMixin:
         if any(a not in seats for a in mine):
             goal_team.set_tools(root, got, {a: t for a, t in mine.items() if a in seats})
 
-    def _resized(self, args: dict, slug: str | None, team: list[str] | None, leader: str | None) -> dict | None:
-        """A size sent for a party that is there, with no team of its own: the team and tiers the size gives a party of a recipe
-        (realm/party_resize.py); None when there is nothing to change (a library party with no recipe keeps its team: spec 81 §3)."""
-        size = args.get("size")
-        if size not in goal_team.SIZES or not slug or team is not None or ideas.track_page(self.root(False), slug) is None:
-            return None
-        if leader is not None and leader != goal_team.leader_of(self.root(False), slug):
-            return None
-        got = party_resize.resized(self.root(False), slug, size)
-        return got if got["recipe"] and (got["joins"] or got["leaves"]) else None
+    def _unmade(self, args: dict, title: object, recipe: str) -> None:
+        """General, Team and Ideation are never made (spec 99 §1.1, decisions §122): a new party of their recipe, their leader or their name is refused. A party of
+        theirs the project has stays until the person removes it, and is edited as it was."""
+        name = " ".join(str(title or "").split()).lower()
+        if recipe in ("ideation", party_recipes.TEAM_ID) or _opt(args, "leader") == library.INVESTOR or name in (ideas.GENERAL, "team", "ideation"):
+            raise IdeasError(UNMADE)
 
     def _tiers_kept(self, got: str) -> None:
         """The tiers a party's size gives its seats, kept with it (spec 81 §2); none for a party with no size."""

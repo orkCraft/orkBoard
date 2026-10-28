@@ -1,50 +1,42 @@
-"""The presets New party offers (docs/specs/91-the-owners-list.md §7, decisions §107.5): the left half of its dialog.
+"""The parties New party offers (docs/specs/99-a-goals-way.md §1, decisions §122.5, §151.5): the crafts of the project's kind, under the stages that offer them.
 
-    listed("game")      # [{id, name, line, group, stage, craft, recipe, whole, leader, build, check, sizes, routines, ops, blocked}, …]
+    listed("game")      # [{id, name, line, group, stage, craft, recipe, whole, leader, build, check, squad, size, locked, sizes, routines, ops, blocked}, …]
 
-Three groups: **stage** (*By stage of the project*: Ideation, Concept, Build, Release, LiveOps, fitted to the project's kind: `party_recipes.stages_of`),
-**craft** (*By craft*: Tech, Design, Data, Marketing, Product, and Art and sound: the library's parties of one craft) and **own** (*Your own party*:
-the Taskmaster alone). A row says its leader and the builders and checkers most needed first (`build`, `check`: a party has one seat a stage, so a size seats
-the first of each), and `sizes`: `lean` · `standard` · `full` → `{leader, team, tiers, size}` as `party_recipes.sized` gives them, so the dialog shows the seats and
-the tiers of a size before anything is saved. `recipe` is the id the party keeps (`goal_team.recipe_of`) when it is made from the row, "" for a craft's. `whole`: Ideation
-and Release (their seats are their stages whole). `routines`: the recurring goals the party proposes when it is made (`realm/recurring.py`; the project's running stage has them, a game's LiveOps
-too). **Team** (spec 92 §3) is the last of *By craft* for every kind: `ops` is true, it has no seats to fill, and `blocked` says *Team is in <project>* (or *Team is in this project*) when the person
-has one already, for the card to be offered greyed. No face, no model, no write.
+One row a craft of the kind (`party_recipes.for_kind`: a game's Game design, Tech, Art, Release, LiveOps and Marketing; the rest's Product, Design, Tech, Release, Run and
+Marketing), `group` "stage" and `stage` the stage that offers it (`project_stage.FROM`: `idea`, `being_made` or `live`; a face grouping them under the stages' headings
+ticks the stages the project has reached), then the person's own (`group` "own": the Taskmaster alone). A row says its leader, the roles to tick from (`build`
+who do, `check` who check, most needed first), `squad` who is ticked by default, `size` the size it is proposed in, and `sizes`: `lean` · `standard` · `full` →
+`{leader, team, tiers, size, basis}` as `party_recipes.sized` gives them: **the same team in every size** (the squad and the size are apart), so the dialog shows the
+tiers of a size before anything is saved. `recipe` is the id the party keeps (`goal_team.recipe_of`). `locked`: Release, ticked and never unticked (§137.1).
+`routines`: the recurring goals the running party proposes when it is made (`realm/recurring.py`; Run's are its kind's, LiveOps' a game's). General, Team and Ideation
+are not offered (decisions §122); `team_at` and `ops` are kept for the host's call and say nothing now. No face, no model, no write.
 """
 from __future__ import annotations
 
-from orkboard.realm import idea_target, library, party_recipes, recurring
+from orkboard.realm import idea_target, library, party_recipes, project_stage, recurring
 
 OWN = {"id": "mixed", "name": "Your own party", "line": "Start from the Taskmaster and add who you need"}
-CRAFTS = ("engineering", "design", "data", "marketing", "product", "art")        # *By craft*, in the order it is shown (the library's ids)
 
 
 def _row(rid: str, name: str, line: str, group: str, leader: str, build: list[str], check: list[str], stage: str = "", craft: str = "",
-         recipe: str = "", whole: bool = False, ops: bool = False, blocked: str = "") -> dict:
-    sized = {"leader": leader, "build": list(build), "check": list(check)}
-    return {"id": rid, "name": name, "line": line, "group": group, "stage": stage, "craft": craft, "recipe": recipe, "whole": whole,
-            "leader": leader, "build": list(build), "check": list(check), "routines": recurring.listed(recipe), "ops": ops, "blocked": blocked,
-            "sizes": {size: party_recipes.sized(sized, size) for size in idea_target.SIZES}}
+         recipe: str = "", squad: list[str] | None = None, size: str = "", locked: bool = False, routines: str = "") -> dict:
+    asked = {"leader": leader, "build": list(build), "check": list(check), "squad": list(squad or [])}
+    return {"id": rid, "name": name, "line": line, "group": group, "stage": stage, "craft": craft, "recipe": recipe, "whole": False,
+            "leader": leader, "build": list(build), "check": list(check), "squad": list(squad or []), "size": size, "locked": locked,
+            "routines": recurring.listed(routines or recipe), "ops": False, "blocked": "",
+            "sizes": {s: party_recipes.sized(asked, s) for s in idea_target.SIZES}}
 
 
 def team_words(team_at: str) -> str:
-    """Why Team is not offered: "" with no Team party (`team_at` ""), *Team is in this project* ("here"), else *Team is in <project>*."""
+    """Why Team is not made: "" with no Team party (`team_at` ""), *Team is in this project* ("here"), else *Team is in <project>*. A Team party the project has stays."""
     return "" if not team_at else "Team is in this project" if team_at == "here" else f"Team is in {team_at}"
 
 
 def listed(kind: str = "code", team_at: str = "", ops: bool = True) -> list[dict]:
-    """The rows of New party's left half for a kind of project, in the order they are shown: the stages, the crafts (Team last), then the person's own.
-    `team_at`: where the person's Team party is (`ops_team.where`): "" nowhere, "here", or the other project's name. `ops`: the host has Operations (a host with none, Orkline's
-    page, is not offered Team)."""
-    out = [_row(r["id"], r["name"], r["line"], "stage", r["leader"], r["build"], r["check"], stage=s, craft=_craft_of(r["leader"]),
-                recipe=r["id"], whole=r["whole"]) for s, r in zip(party_recipes.STAGES, party_recipes.stages_of(kind))]
-    crafts = {p["id"]: p for p in library.presets()}
-    for cid in CRAFTS:
-        p = crafts[cid]
-        out.append(_row(p["id"], p["name"], p["line"], "craft", p["lead"], p["build"], p["check"], craft=p["craft"]))
-    t = party_recipes.TEAM
-    if ops:
-        out.append(_row(t["id"], t["name"], t["line"], "craft", t["leader"], t["build"], t["check"], craft="product", recipe=t["id"], ops=True, blocked=team_words(team_at)))
+    """The rows of New party's left half for a kind of project, in the order they are shown: the kind's crafts, then the person's own."""
+    out = [_row(r["id"], r["name"], r["line"], "stage", r["leader"], r["build"], r["check"], stage=project_stage.FROM[r["id"]], craft=_craft_of(r["leader"]),
+                recipe=r["id"], squad=party_recipes.squad_of(r), size=project_stage.SIZE[r["id"]], locked=r["id"] == party_recipes.RELEASE,
+                routines=party_recipes.routines_of(r["id"], kind)) for r in party_recipes.for_kind(kind)]
     out.append(_row(OWN["id"], OWN["name"], OWN["line"], "own", "taskmaster", [], [], craft="mixed"))
     return out
 

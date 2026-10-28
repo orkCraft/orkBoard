@@ -476,7 +476,7 @@ def test_a_plan_rows_missing_is_read_against_the_party_now_and_a_node_says_its_t
     def row():
         (got,) = [n for n in board_map.idea_needs(root, state, i, ideas.state(state, slug), ideas.plan(state, slug), []) if n["kind"] == "plan"]
         return got["missing"]
-    assert row() == [{"kind": "art", "words": "pixel art", "agent": "artist", "name": "Artist", "band": "build", "free": False}]        # the Grunt holds the one builder seat (spec 87 §5)
+    assert row() == [{"kind": "art", "words": "pixel art", "agent": "artist", "name": "Artist", "band": "build", "free": True}]        # the Grunt holds one of the five seats (spec 99 §1.3)
     _roles(state, "artist")
     goal_team.set_team(root, g, ["grunt", "artist"])
     assert row() == []                                                                          # the Artist joined since

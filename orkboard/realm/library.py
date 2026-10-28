@@ -306,7 +306,8 @@ LIBRARY: tuple[Agent, ...] = (
 
 BY_ID = {a.id: a for a in LIBRARY}
 SUGGESTED = 2                                # (kept for older faces) the first builders of a party's craft
-SEATS = {"lead": 1, "build": 1, "check": 1}  # a party's seats (older faces): one a stage, for every leader (spec 87 §5; `Stages.seats`)
+SEATS = {"lead": 1, "build": 5, "check": 2}  # a party's squad (spec 99 §1.3): its leader, up to five who do, up to two who check (`Stages.seats`)
+ONE_SEAT = {"lead": 1, "build": 1, "check": 1}  # one a stage: Ideation's (a party made before spec 99 keeps the team it was saved with)
 # The party of each craft starts with: its leader, its builders, its checkers (Mixed: the Taskmaster alone).
 PARTIES = {"engineering": ("architect", ("grunt", "tester"), ("reviewer",)),
            "design": ("product-designer", ("ui-kit", "artist"), ("accessibility-reviewer",)),
@@ -338,20 +339,22 @@ CRAFT_LINES = {"engineering": "Code, tests and the build", "design": "Screens, f
 
 @dataclass(frozen=True)
 class Stages:
-    """A leader's stages (spec 59 §2.3, spec 87 §5): the words of its three steps; each stage has **one seat** (a party's roles are its leader's
-    stages: the leader leads, one builder builds, one checker checks)."""
+    """A leader's stages (spec 59 §2.3): the words of its three steps. A party's **squad** (spec 99 §1.3, decisions §151.1) is its leader, up to five who do
+    and up to two who check, at most seven in all (`SEATS`, `goal_team.SEATS`); Ideation's, whose four views and skeptic are its stages whole (spec 65 §1),
+    is one seat a stage, as it was."""
     lead: str = "Planning"
     build: str = "Implementation"
     check: str = "Checking"
+    squad: bool = True
 
     @property
     def seats(self) -> dict:
-        return {"lead": 1, "build": 1, "check": 1}
+        return dict(SEATS if self.squad else ONE_SEAT)
 
 
 DEFAULT_STAGES = Stages()
 STAGES: dict[str, Stages] = {"game-designer": Stages("Concept", "Build", "Playtest"),
-                             "investor": Stages("Pitch", "Views", "Decision"),
+                             "investor": Stages("Pitch", "Views", "Decision", squad=False),
                              "release-manager": Stages("Gather", "Prepare", "Check")}
 
 

@@ -1,5 +1,5 @@
-"""Spec 92 (docs/specs/92-running-and-the-team.md, decisions §108), the host's part: running the project is a stage party by the project's kind (LiveOps · Run · Upkeep) with recurring goals
-it proposes when it is made, and working with people is one Team party, in one project of the person's choosing, whose Board is their Operations. Code, no model."""
+"""Spec 92 (docs/specs/92-running-and-the-team.md, decisions §108), the host's part, as spec 99 §1 changed it: running the project is the Run party (a game's LiveOps) with the recurring goals of its
+kind it proposes when it is made; the Team party is no longer offered nor made (decisions §122.2), but one the project has stays, in one project of the person's choosing, its Board their Operations. Code, no model."""
 from __future__ import annotations
 
 import datetime as dt
@@ -8,7 +8,7 @@ import time
 import pytest
 
 from orkboard.gui.board_host import Orkboard
-from orkboard.realm import goal_team, ideas, library, ops_team, party_presets, party_recipes, pitches, project_kind, recurring
+from orkboard.realm import goal_team, ideas, library, ops_team, party_presets, party_recipes, party_recipes_before, pitches, project_kind, recurring
 from orkboard.realm import op_runs
 
 RUNNING = [(k, party_recipes.get(f"{k}-liveops")) for k in project_kind.KINDS if k != "empty"]
@@ -22,21 +22,28 @@ def host(fake_repo):
     h.close()
 
 
-def _team(host, **more):
-    team = party_presets.listed("code")[-2]
-    assert team["id"] == "team"
-    return host.command("ideas.goal_save", {"title": "Team", "about": "", "leader": team["leader"], "team": [], "every": [], "size": "standard", "proposal": "team", **more})["slug"]
+def _team(host):
+    """A Team party as it was made before spec 99 (a command no longer makes one): its page, its recipe, and the note of where it is."""
+    slug, _new = ideas.save_goal(host.root, None, "Team", "", craft="product")
+    library.install(host.ideas.state_dir, ["product-manager"])
+    goal_team.set_team(host.root, slug, [], leader="product-manager")
+    goal_team.set_size(host.root, slug, "standard")
+    goal_team.set_recipe(host.root, slug, "team")
+    host.ideas.team_made(slug)
+    return slug
 
 
 # -- the project's running, by the project's kind ------------------------------------------------------------------------------------------------------------------
 
-def test_the_fifth_stage_is_liveops_for_a_game_upkeep_for_words_and_files_and_run_for_the_rest():
-    assert {k: party_recipes.running_name(k) for k in project_kind.KINDS} == {"game": "LiveOps", "wiki": "Upkeep", "design": "Upkeep", "texts": "Upkeep", "mobile": "Run", "web": "Run",
-                                                                              "backend": "Run", "code": "Run", "data": "Run", "empty": "Run"}
-    for kind, recipe in RUNNING:
-        assert recipe["id"] == f"{kind}-liveops" and recipe["name"] == party_recipes.running_name(kind)
-        assert party_recipes.stages_of(kind)[4]["id"] == recipe["id"]
-    assert party_recipes.stages_of("empty")[4]["name"] == "Run" and party_recipes.stages_of("nowhere")[4]["id"] == "code-liveops"
+def test_the_running_party_is_liveops_for_a_game_and_run_for_every_other_kind_and_proposes_its_kinds_recurring_goals():
+    for kind in project_kind.KINDS:
+        want = "liveops" if kind == "game" else "run"
+        assert [r["id"] for r in party_recipes.for_kind(kind) if r["id"] in ("run", "liveops")] == [want]
+        assert party_recipes.routines_of(want, kind) == (f"{kind}-liveops" if want == "run" else "game-liveops")
+    assert party_recipes.get("run")["name"] == "Run" and party_recipes.get("liveops")["name"] == "LiveOps"
+    for kind, recipe in RUNNING:                                                       # the recipes of before are found still, and their names too
+        assert recipe["id"] == f"{kind}-liveops" and recipe["name"] == party_recipes_before.running_name(kind)
+    assert {k: party_recipes_before.running_name(k) for k in project_kind.KINDS}["wiki"] == "Upkeep"
 
 
 @pytest.mark.parametrize("kind,recipe", RUNNING, ids=[f"{k}-liveops" for k, _r in RUNNING])
@@ -66,20 +73,17 @@ def test_the_recurring_goals_the_brief_names_are_proposed_where_they_fit():
     assert [r["every"] for r in recurring.listed("data-liveops")][0] == "day"          # a pipeline is checked every day
 
 
-def test_the_presets_of_a_kind_carry_the_recurring_goals_of_its_running_stage_and_team_is_the_last_craft(host):
+def test_the_presets_of_a_kind_carry_the_recurring_goals_of_its_running_party_and_team_is_no_row(host):
     rows = {r["id"]: r for r in party_presets.listed("wiki")}
-    assert [r["id"] for r in rows["wiki-liveops"]["routines"]] == ["stale", "links", "sources"] and rows["wiki-liveops"]["name"] == "Upkeep"
-    assert rows["wiki-build"]["routines"] == [] and rows["ideation"]["routines"] == [] and rows["engineering"]["routines"] == []
-    team = rows["team"]
-    assert (team["group"], team["name"], team["leader"], team["build"], team["check"], team["ops"], team["blocked"]) == ("craft", "Team", "product-manager", [], [], True, "")
-    assert not any(r["ops"] for r in party_presets.listed("game") if r["id"] != "team")
-    assert all(any(r["id"] == "team" for r in party_presets.listed(k)) for k in project_kind.KINDS)             # on every kind
-    assert library.get(team["leader"]).craft == "product" and goal_team.seats([], team["leader"]) == ""
+    assert [r["id"] for r in rows["run"]["routines"]] == ["stale", "links", "sources"] and rows["run"]["name"] == "Run"        # a wiki's running: the recurring goals of wiki-liveops
+    assert rows["tech"]["routines"] == [] and rows["product"]["routines"] == [] and rows["release"]["routines"] == []
+    assert not any(r["id"] == "team" or r["ops"] for k in project_kind.KINDS for r in party_presets.listed(k))             # Team is not offered on any kind (decisions §122.2)
+    assert [r["id"] for r in party_presets.listed("game")[:6]][4] == "liveops" and party_presets.listed("game")[4]["routines"]
 
 
 # -- the Team party: one, across the person's projects ------------------------------------------------------------------------------------------------------------------
 
-def test_a_team_party_is_made_with_the_recipe_and_the_note_of_where_it_is_and_its_map_row_says_it_is_operations(host, fake_repo):
+def test_a_team_party_the_project_has_keeps_the_recipe_and_the_note_of_where_it_is_and_its_map_row_says_it_is_operations(host, fake_repo):
     assert host.snapshot()["ops_team"] is None
     slug = _team(host)
     assert goal_team.recipe_of(host.root, slug) == "team" and goal_team.leader_of(host.root, slug) == "product-manager" and goal_team.team_of(host.root, slug) == []
@@ -97,24 +101,22 @@ def test_the_team_party_is_not_read_by_the_keeper_and_has_no_goals_of_its_own(ho
     assert ideas.ideas(host.root, slug) == []
 
 
-def test_a_second_team_party_is_refused_and_the_preset_is_offered_greyed(host):
-    _team(host)
-    with pytest.raises(Exception, match="Team is in this project"):
-        _team(host)
-    row = next(r for r in host.command("ideas.party_presets", {})["presets"] if r["id"] == "team")
-    assert row["blocked"] == "Team is in this project"
-    assert host.command("ideas.team", {}) == {"at": "here", "party": next(t["slug"] for t in ideas.tracks(host.root, make=False) if t["slug"] != "general"), "name": host.repo_root.name}
+def test_a_new_team_party_is_refused_whoever_has_one_and_the_one_the_project_has_stays(host):
+    slug = _team(host)
+    with pytest.raises(Exception, match="General, Team and Ideation are not made any more"):
+        host.command("ideas.goal_save", {"title": "Team", "about": "", "leader": "product-manager", "team": [], "every": [], "proposal": "team"})
+    assert not any(r["id"] == "team" for r in host.command("ideas.party_presets", {})["presets"])
+    assert host.command("ideas.team", {}) == {"at": "here", "party": slug, "name": host.repo_root.name}
 
 
-def test_team_in_another_project_is_offered_greyed_there_and_refused(host, tmp_path):
+def test_team_in_another_project_is_said_there_and_not_made_here_either(host, tmp_path):
     other = tmp_path / "elsewhere"
     other.mkdir()
     ops_team.set(op_runs.root(), other, "elsewhere", "team")
     assert host.snapshot()["ops_team"] == {"name": "elsewhere", "party": "team", "here": False}
-    row = next(r for r in host.command("ideas.party_presets", {})["presets"] if r["id"] == "team")
-    assert row["blocked"] == "Team is in elsewhere"
-    with pytest.raises(Exception, match="Team is in elsewhere"):
-        _team(host)
+    assert host.command("ideas.team", {})["at"] == "elsewhere" and not any(r["id"] == "team" for r in host.command("ideas.party_presets", {})["presets"])
+    with pytest.raises(Exception, match="not made any more"):
+        host.command("ideas.goal_save", {"title": "Team", "about": "", "leader": "product-manager", "team": [], "every": [], "proposal": "team"})
     assert not [t for t in ideas.tracks(host.root, make=False) if t["slug"] != "general"]          # nothing was made
 
 
@@ -122,7 +124,7 @@ def test_removing_the_team_party_gives_operations_back_and_a_note_about_a_gone_p
     slug = _team(host)
     host.command("ideas.track_drop", {"slug": slug})
     assert ops_team.get(op_runs.root()) is None and host.snapshot()["ops_team"] is None
-    assert next(r for r in host.command("ideas.party_presets", {})["presets"] if r["id"] == "team")["blocked"] == ""
+    assert host.ideas.team_at() == ""
     gone = tmp_path / "gone"
     gone.mkdir()
     ops_team.set(op_runs.root(), gone, "gone", "team")
@@ -156,8 +158,7 @@ def _idle(host, seconds=5.0):
 
 
 def _run_party(host, picked):
-    run = party_presets.listed("code")[4]
-    assert run["id"] == "code-liveops"
+    run = next(r for r in party_presets.listed("code") if r["id"] == "run")
     full = run["sizes"]["standard"]
     slug = host.command("ideas.goal_save", {"title": "Run", "about": "", "leader": full["leader"], "team": full["team"], "every": [], "size": "standard", "proposal": run["id"], "routines": picked})["slug"]
     _idle(host)
@@ -169,7 +170,7 @@ def test_the_recurring_goals_the_person_kept_are_added_to_the_new_party_with_the
     mine = ideas.ideas(host.root, slug)
     assert sorted(i["title"] for i in mine) == ["Look at the failing builds", "Weekly dependency check"]
     assert {i["title"]: recurring.every_of(host.root, i["slug"]) for i in mine} == {"Look at the failing builds": "week", "Weekly dependency check": "week"}
-    assert goal_team.recipe_of(host.root, slug) == "code-liveops"
+    assert goal_team.recipe_of(host.root, slug) == "run"
     assert "dependencies" in ideas.idea_page(host.root, mine[0]["slug"]).section("Gist") or "dependencies" in ideas.idea_page(host.root, mine[1]["slug"]).section("Gist")
 
 
@@ -270,9 +271,8 @@ def test_a_team_party_removed_by_hand_gives_operations_back_but_a_board_still_be
     assert host.snapshot()["ops_team"] is not None                                              # ...while the Board has no party at all: left alone
 
 
-def test_a_host_with_no_operations_is_not_offered_team(host):
-    assert any(r["id"] == "team" for r in party_presets.listed("code"))
-    assert not any(r["id"] == "team" for r in party_presets.listed("code", ops=False))
+def test_a_host_with_no_operations_says_no_team_and_no_host_is_offered_it(host):
+    assert not any(r["id"] == "team" for r in party_presets.listed("code")) and not any(r["id"] == "team" for r in party_presets.listed("code", ops=False))
     ops, host.ops = host.ops, None                                                                # Orkline's page has none
     try:
         assert host.ideas.team_at() == "" and not any(r["id"] == "team" for r in host.command("ideas.party_presets", {})["presets"])

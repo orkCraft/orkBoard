@@ -2,24 +2,24 @@
 and suggests a goal's party. By rules, with no model; it plans nothing, moves nothing, writes nothing.
 
     ORKMASTER                                   # {"id", "name", "race", "tier"}: the head the faces draw
-    deal(root, state_dir)                       # every preset once, in the order New party shows: [{"id", "why", "n"}]
+    deal(root, state_dir)                       # every craft's party once, in the order New party shows: [{"id", "why", "n"}]
     party_for(state_dir, root, "logo")          # the project's parties but General, each how it fits a goal type: [{party, name, fits, missing}]
     suggested(parties)                          # the slug `party_for`'s answer suggests
     install(state_dir) / role(state_dir)        # its role for a collision's judge (spec 71 §2): `orkmaster`, a warrior, takes no task
-    proposals(root, state_dir, settings, kind, facts, tracks, ideation_first, told)   # the parties the project's kind needs, each in three sizes (spec 75 §4.1)
+    proposals(root, state_dir, settings, kind, facts, tracks, ideation_first, told, stage)   # the parties the project's kind needs, each in three sizes (spec 75 §4.1)
     proposal_ids(kind_id, facts, tracks)        # their ids, the ones the project has last: for the deal (spec 75 §4.3)
 
-`why` of a deal row: `flags_wait` (Release first: no party releases and `n` flags wait), `no_pitches` (Ideation next: no party judges small
-ideas), `have` (the project has one: last), else "". No face, no model, no write.
+`why` of a deal row: `flags_wait` (Release first: no party releases and `n` flags wait), `have` (the project has one: last), else "". Ideation is never dealt nor
+proposed (decisions §122.3), nor are the mixed parties of before (spec 99 §1.1): a deal row is a craft's party. No face, no model, no write.
 """
 from __future__ import annotations
 
 from pathlib import Path
 
-from orkboard.realm import goal_team, goal_types, idea_flag, idea_target, ideas, library, party_price, party_recipes, project_kind, roles
+from orkboard.realm import goal_team, goal_types, idea_flag, idea_target, ideas, library, party_price, party_recipes, project_kind, project_stage, roles
 
 ORKMASTER = {"id": "orkmaster", "name": "Orkmaster", "race": "peon", "tier": "crown"}
-RELEASE, IDEATION = "release", "ideation"       # the presets' ids
+RELEASE = party_recipes.RELEASE                  # the Release party's id
 
 
 def flags_by_party(root: Path, state_dir: Path, tracks: list[dict] | None = None) -> dict[str, int]:
@@ -33,15 +33,14 @@ def flags_by_party(root: Path, state_dir: Path, tracks: list[dict] | None = None
 
 
 def deal(root: Path, state_dir: Path, *, tracks: list[dict] | None = None, flags: dict[str, int] | None = None) -> list[dict]:
-    """Every preset of the library once, as `[{"id", "why", "n"}]` (spec 70 §1.1): Release first when the project has no party the Release
-    manager leads and flags wait (`flags_wait`, `n` their count); Ideation next when no party the Investor leads (`no_pitches`); then the
-    others in the library's order; last, Release and Ideation when the project has one (`have`). `tracks`, `flags` (`flags_by_party`):
-    what the caller has read already."""
+    """Every craft's party once, as `[{"id", "why", "n"}]` (spec 70 §1.1; spec 99 §1.1: the ids are `party_recipes.CRAFTS`', not the mixed presets'): Release first
+    when the project has no party the Release manager leads and flags wait (`flags_wait`, `n` their count); then the others in the crafts' order; last,
+    Release when the project has it (`have`). Ideation is not dealt. `tracks`, `flags` (`flags_by_party`): what the
+    caller has read already."""
     tracks = ideas.tracks(root, make=False) if tracks is None else tracks
-    leaders = {t.get("leader") or "" for t in tracks}
-    has_release, has_pitches = library.RELEASE_MANAGER in leaders, library.INVESTOR in leaders
+    has_release = library.RELEASE_MANAGER in {t.get("leader") or "" for t in tracks}
     n = 0 if has_release else sum((flags_by_party(root, state_dir, tracks) if flags is None else flags).values())
-    ids = [p["id"] for p in library.presets()]
+    ids = list(party_recipes.CRAFTS)
     rows = {i: {"id": i, "why": "", "n": 0} for i in ids}
     head, tail = [], []
     if has_release:
@@ -50,12 +49,6 @@ def deal(root: Path, state_dir: Path, *, tracks: list[dict] | None = None, flags
     elif n > 0:
         rows[RELEASE].update(why="flags_wait", n=n)
         head.append(RELEASE)
-    if has_pitches:
-        rows[IDEATION]["why"] = "have"
-        tail.append(IDEATION)
-    else:
-        rows[IDEATION]["why"] = "no_pitches"
-        head.append(IDEATION)
     rest = [i for i in ids if i not in head and i not in tail]
     return [rows[i] for i in [*head, *rest, *tail]]
 
@@ -132,12 +125,14 @@ BARE_WHY = "nothing here says more"
 TOLD_WHY = "by what you said"
 
 
-def recipes_of(kind_id: str, facts: dict | None, ideation_first: bool = False) -> list[dict]:
-    """The recipes a kind is proposed in order; `ideation_first` (an empty folder read from the person's line) puts Ideation first."""
+def recipes_of(kind_id: str, facts: dict | None, ideation_first: bool = False, stage: str | None = None) -> list[dict]:
+    """The recipes a kind is proposed in order (one craft a party: `party_recipes.for_kind`). `stage` (`project_stage.STAGES`): only the crafts of the stages
+    the project has reached, Release always (spec 99 §1.2); None: all of the kind's. `ideation_first` is kept for the host's call and means nothing: Ideation
+    is never proposed (decisions §122.3)."""
     rows = party_recipes.for_kind(kind_id, facts)
-    if ideation_first:
-        rows = [party_recipes.get(IDEATION), *[r for r in rows if r["id"] != IDEATION]]
-    return rows
+    if stage is None:
+        return rows
+    return [r for r in rows if r["id"] in {c["id"] for c in project_stage.crafts(kind_id, stage)}]
 
 
 def _ordered(rows: list[dict], tracks: list[dict]) -> list[tuple[dict, bool]]:
@@ -146,14 +141,14 @@ def _ordered(rows: list[dict], tracks: list[dict]) -> list[tuple[dict, bool]]:
     return [x for x in got if not x[1]] + [x for x in got if x[1]]
 
 
-def proposal_ids(kind_id: str, facts: dict | None, tracks: list[dict], ideation_first: bool = False) -> list[str]:
+def proposal_ids(kind_id: str, facts: dict | None, tracks: list[dict], ideation_first: bool = False, stage: str | None = None) -> list[str]:
     """The ids of the proposals in the order they are shown, those the project has last (no price, no call)."""
-    return [r["id"] for r, _h in _ordered(recipes_of(kind_id, facts, ideation_first), tracks)]
+    return [r["id"] for r, _h in _ordered(recipes_of(kind_id, facts, ideation_first, stage), tracks)]
 
 
 def deal_first(deal: list[dict], tracks: list[dict], kind_id: str, facts: dict | None) -> list[dict]:
     """The deal (spec 70 §1.1) with the proposals' ids first (spec 75 §4.3): each proposal the project has not is a first row, in the
-    proposals' order, as the deal has it when it is a preset's (`ideation`, `release`, `game`), else `{"id", "why": "proposal", "n": 0}`;
+    proposals' order, as the deal has it (a craft's party: `party_recipes.CRAFTS`), else `{"id", "why": "proposal", "n": 0}`;
     the others follow as they were (the parties the project has still last)."""
     by_id = {r["id"]: r for r in deal}
     head = [by_id.get(r["id"]) or {"id": r["id"], "why": "proposal", "n": 0}
@@ -167,33 +162,38 @@ def _why(recipe: dict, signs: list[str], kind_id: str, told: bool) -> str:
     return f"{seen}: {recipe['because']}"[:WHY_CHARS] if recipe.get("because") else seen[:WHY_CHARS]
 
 
-def _head(state_dir: Path, slug: str, target: str, tiers: dict[str, str] | None = None) -> dict:
+def _head(state_dir: Path, slug: str, target: str, tiers: dict[str, str] | None = None, party: str = "", leader: str = "") -> dict:
     """The head a member wears: its role's when the project has it, else as installing it would make it (a role on its library tier); at
-    the tier the size gives its seat (`tiers`, spec 81 §2) unless the person set its model by hand."""
+    the tier the size gives its seat (`tiers`, spec 81 §2) unless the person set its model by hand. As a seat of the party of craft `party` (spec 99 §1.4)
+    it wears the party's race, the party's `leader` that race's higher form."""
     r = roles.role(state_dir, slug)
     if r is None:
         a = library.get(slug)
         r = {"slug": slug, "craft": a.craft, "race": a.race, "model": a.tier} if a else {}
-    got = roles.head(goal_team.seat_role(r, tiers or {}) or r, target)
+    got = roles.head(goal_team.seat_role(r, tiers or {}) or r, target, party=party, lead=bool(leader) and slug == leader)
     return {"race": got["race"], "tier": got["tier"]}
 
 
 def proposals(root: Path, state_dir: Path, settings: dict, kind: dict, facts: dict | None = None, tracks: list[dict] | None = None,
-              ideation_first: bool = False, told: bool = False) -> list[dict]:
+              ideation_first: bool = False, told: bool = False, stage: str | None = None) -> list[dict]:
     """`ideas.proposals`' list (spec 75 §4.1): a card per recipe of the kind, those the project has last (`have`), each `sizes`: lean ·
-    standard · full with the leader, the team, how many agents, the Target it works as, its price a goal (`low`, `high`) and the members'
-    heads in seat order. `kind`: `{"id", "words", "signs"}`; `told`: the kind was read from the person's line."""
+    standard · full with the leader, the team (the squad: the same in every size), how many agents, the Target it works as, its price a goal (`low`, `high`:
+    a size's price, never a squad's: `goal_team.price_team`) and the members' heads in seat order, each its party's race and the leader's its higher form.
+    A card says its `craft`, the stage that adds it (`from`), the `size` it is proposed in, its `squad` and whether it is `locked` (Release). `kind`:
+    `{"id", "words", "signs"}`; `told`: the kind was read from the person's line; `stage`: only the crafts of the stages reached (`project_stage`), else all."""
     tracks = ideas.tracks(root, make=False) if tracks is None else tracks
     out = []
-    for recipe, have in _ordered(recipes_of(kind["id"], facts, ideation_first), tracks):
+    for recipe, have in _ordered(recipes_of(kind["id"], facts, ideation_first, stage), tracks):
+        craft = recipe.get("craft") or recipe["id"]
         sizes = {}
         for size in idea_target.SIZES:
             party = party_recipes.sized(recipe, size)
             target = idea_target.SIZE_TARGET[size]
-            got = party_price.price(root, state_dir, {**(settings or {}), "target": target}, party["leader"], party["team"], [], tiers=party["tiers"])
+            got = party_price.price(root, state_dir, {**(settings or {}), "target": target}, party["leader"], party["basis"], [], tiers=party["tiers"])
             sizes[size] = {"leader": party["leader"], "team": party["team"], "agents": 1 + len(party["team"]), "target": target,
                            "price": {"low": got["low"], "high": got["high"]},
-                           "tiers": party["tiers"], "heads": [_head(state_dir, s, target, party["tiers"]) for s in [party["leader"], *party["team"]]]}
+                           "tiers": party["tiers"], "heads": [_head(state_dir, s, target, party["tiers"], craft, party["leader"]) for s in [party["leader"], *party["team"]]]}
         out.append({"id": recipe["id"], "name": recipe["name"], "line": recipe["line"], "why": _why(recipe, kind["signs"], kind["id"], told),
-                    "have": have, "sizes": sizes})
+                    "craft": craft, "from": project_stage.FROM.get(craft, "live"), "size": project_stage.SIZE.get(craft, "standard"),
+                    "squad": party_recipes.squad_of(recipe), "locked": craft == party_recipes.RELEASE, "have": have, "sizes": sizes})
     return out

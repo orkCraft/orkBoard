@@ -23,9 +23,10 @@ A role's **craft** is what its work is (decisions §53): engineering, design, da
 head of its race in orkUI (an ork, an elf, a goblin, a gnome: `RACES`), wearing its tier's gear (`head_tier`). Taskmaster
 and Grunt are orks: engineering, always. A file without a craft is engineering.
 
-    head(r, "balance")                     # {"craft": "design", "race": "elf", "tier": "elder"}: the head a role wears (a role's own `race`,
+    head(r, "balance")                     # {"craft": "design", "race": "elf", "tier": "elder"}: the head a role wears alone (a role's own `race`,
                                            # front matter, when orkUI's copy has its head at that tier: spec 68 §1.3)
-    task_head(state_dir, task, "thrift")   # the head of the role a task runs (or will run) as, at the tier it runs at
+    head(r, "balance", party="tech", lead=True)    # …as a seat of a party: its party's race, its leader that race's higher form (`PARTY_RACES`; spec 99 §1.4)
+    task_head(state_dir, task, "thrift")   # the head of the role a task runs (or will run) as, at the tier it runs at; `party=` and `leader=`: as its party's seat
     known(state_dir)                       # (roles by slug, kinds): read once, handed to many task_head calls
 
 No face, no model.
@@ -78,8 +79,15 @@ READ_CHARS = 4000                  # of an instruction written before spec 36, t
 TIERS = ("elder", "warrior", "laborer")
 CRAFTS = ("engineering", "design", "data", "marketing", "product")
 CRAFT_LABELS = {"engineering": "Engineering", "design": "Design", "data": "Data", "marketing": "Marketing", "product": "Product"}
-# orkUI's race ids: ork, elf, goblin, gnome; product is the undead's (a mummy in Orkline 0.2: a lich until orkUI draws one)
+# orkUI's race ids: ork, elf, goblin, gnome; product is the undead's (a mummy in Orkline 0.2: a lich until orkUI draws one). A role alone (the Agents page, a pitch's
+# view) is drawn by its craft; a role in a party is drawn by its party (`PARTY_RACES`).
 RACES = {"engineering": "peon", "design": "elf", "data": "goblin", "marketing": "gnome", "product": "lich"}
+# A party's craft is its race (decisions §53, §158.4–§158.5, §162): every seat of a party wears the party's race, its leader that race's higher form.
+# {party craft: (its members' race, its leader's race)}; the Orkmaster and the Taskmaster are orks (`peon`), a Grunt is an ork in Tech.
+PARTY_RACES = {"product": ("knight", "unicorn"), "game-design": ("knight", "unicorn"), "tech": ("peon", "shaman"), "design": ("elf", "dryad"),
+               "art": ("elf", "dryad"), "run": ("goblin", "imp"), "liveops": ("goblin", "imp"), "marketing": ("gnome", "fairy"),
+               "release": ("skeleton", "lich")}
+NO_PARTY_RACE = ("taskmaster", "orkmaster")             # roles that are orks whatever they run
 # orkUI's copy of the races' heads (design/orkui.py): a role's own race (spec 68 §1.3) is worn only once its file is here.
 RACE_FILES = Path(__file__).resolve().parents[1] / "design" / "system" / "orkui" / "races"
 # What the built-in two are told already, beside the field that adds to it (spec 41 §8): their prompts are Orkboard's own.
@@ -215,6 +223,16 @@ def own_race(race: str, craft: str, tier: str = "elder") -> str:
     if _race(race, None) and tier in TIERS and (RACE_FILES / f"{race}-{tier}.png").is_file():
         return race
     return RACES[craft]
+
+
+def party_race(party: str, lead: bool, tier: str) -> str:
+    """The race a seat of a party is drawn as (`PARTY_RACES`): the leader its race's higher form, the others the race; when orkUI's copy lacks the file at
+    that tier the higher form falls back to its members' race, and that to the ork's. A party that is none: the ork's."""
+    members, leader = PARTY_RACES.get(party, (RACES[DEFAULT_CRAFT],) * 2)
+    for race in ((leader, members) if lead else (members,)):
+        if (RACE_FILES / f"{race}-{tier}.png").is_file():
+            return race
+    return RACES[DEFAULT_CRAFT]
 
 
 def _write(state_dir: Path, r: dict) -> None:
@@ -371,10 +389,14 @@ def head_tier(model: str, target: str, task_tier: str = "warrior") -> str:
     return idea_target.tier_of(idea_target.task_pick(task_tier or "warrior", target, str(model or ""))[0])
 
 
-def head(r: dict, target: str, task_tier: str = "warrior") -> dict:
-    """The head the page draws for a role: {"craft", "race", "tier"} (orkUI races/<race>-<tier>.png)."""
+def head(r: dict, target: str, task_tier: str = "warrior", party: str = "", lead: bool = False) -> dict:
+    """The head the page draws for a role: {"craft", "race", "tier"} (orkUI races/<race>-<tier>.png). As a seat of a party (`party`: its craft, a key of
+    `PARTY_RACES`) it wears the party's race, or its higher form when it leads (`lead`), whatever its own race and craft are (spec 99 §1.4); the Taskmaster
+    and the Orkmaster are orks in any party. Alone, or in a party that has no craft, its own race when orkUI has it, else its craft's."""
     craft = r.get("craft") if r.get("craft") in CRAFTS else DEFAULT_CRAFT
     tier = head_tier(str(r.get("model") or ""), target, task_tier)
+    if party in PARTY_RACES and r.get("slug") not in NO_PARTY_RACE:
+        return {"craft": craft, "race": party_race(party, lead, tier), "tier": tier}
     return {"craft": craft, "race": own_race(str(r.get("race") or ""), craft, tier), "tier": tier}
 
 
@@ -389,14 +411,16 @@ def task_slug(task: dict, read: tuple[dict, dict]) -> str:
     return str(task.get("role") or "") or read[1].get(kind if kind in TASK_KINDS else DEFAULT_KIND, GRUNT)
 
 
-def task_head(state_dir: Path, task: dict, target: str, read: tuple[dict, dict] | None = None, tiers: dict[str, str] | None = None) -> dict:
+def task_head(state_dir: Path, task: dict, target: str, read: tuple[dict, dict] | None = None, tiers: dict[str, str] | None = None,
+              party: str = "", leader: str = "") -> dict:
     """The head of who does a task: the role it ran as (its type's role before it ran), at the tier it ran at (before it
     ran, the tier it will run at: its planned tier shifted by the Target, a role's own model winning). `read`: `known()`; `tiers`: the tiers
-    its party's size gave its seats (spec 81 §2), which the role wears in place of the library's tier it was installed with."""
+    its party's size gave its seats (spec 81 §2), which the role wears in place of the library's tier it was installed with. `party`: the task's party's
+    craft (`goal_team.craft_of`) and `leader` the slug of its leader: the head is its party's race, the leader's its higher form (spec 99 §1.4)."""
     from orkboard.realm import goal_team
     by_slug, _kinds = read = read or known(state_dir)
     r = by_slug.get(task_slug(task, read)) or by_slug.get(GRUNT) or role(state_dir, GRUNT)
-    got = head(goal_team.seat_role(r, tiers or {}), target, str(task.get("tier") or "warrior"))
+    got = head(goal_team.seat_role(r, tiers or {}), target, str(task.get("tier") or "warrior"), party, bool(leader) and r.get("slug") == leader)
     if task.get("ran_tier") in TIERS:
         got["tier"] = task["ran_tier"]
     return got

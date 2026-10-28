@@ -5,7 +5,8 @@
 from __future__ import annotations
 
 from orkboard.gui.ideas_args import IdeasError, _device, _opt, _text
-from orkboard.realm import event_log, goal_team, goal_types, idea_target, ideas, library, own_parties, party_hints, party_price, party_proposals, party_recipes, party_work, releases, roles
+from orkboard.realm import (event_log, goal_team, goal_types, idea_target, ideas, library, own_parties, party_hints, party_price, party_proposals, party_recipes, party_work,
+                            project_kind, project_stage, releases, roles)
 
 
 class PartyMixin:
@@ -40,9 +41,30 @@ class PartyMixin:
         types = [{"id": t.id, "name": t.name, "sign": t.sign, "missing": rows[0]["name"] if rows else ""}
                  for t, rows in goal_types.offered(self.state_dir, self.root(False), "", read=party)]
         ideation = leader == library.INVESTOR                # a pitch's price, no hint about code or checks (spec 65 §3)
-        return {**party_price.price(self.root(False), self.state_dir, self.board_settings(), leader, team, every, size or None,
+        # a size's price a goal, never a squad's (spec 99 §1.3): a specialist idle costs nothing, so a size prices the part of the squad it uses
+        return {**party_price.price(self.root(False), self.state_dir, self.board_settings(), leader, goal_team.price_team(size, team) if size else team, every, size or None,
                                     party_recipes.tiers_for(leader, team, size) if size else None),
+                "way": goal_team.way(size) if size else None,
                 "hints": [] if ideation else party_hints.hints(self.root(False), self.state_dir, craft, leader, team, every), "types": types}
+
+    # -- the project's stage (spec 99 §1.2) -----------------------------------------------------------------------------------------
+
+    def stage(self, args: dict) -> dict:
+        """`ideas.stage {}`: `{stage, read, kept, kind, offered: {idea|being_made|live: [card]}}` (realm/project_stage.py): the stage the project is at (the one the
+        person set, else the one read from the project), the one read, the project's kind, and the crafts offered when it is at each stage (a card: id, name, line,
+        craft, leader, build, check, squad, size, tiers, from, locked). Release is in every stage's, `locked`. It writes nothing."""
+        kind = project_kind.read(self.host.repo_root)["kind"]
+        return {**project_stage.current(self.state_dir, self.host.repo_root), "kind": kind, "offered": project_stage.offered(kind)}
+
+    def stage_set(self, args: dict) -> dict:
+        """`ideas.stage_set {stage}`: the project is at `idea`, `being_made` or `live` (kept in `<state_dir>/project.json`); answers as `ideas.stage` does.
+        Refused: *A stage is idea, being_made or live*."""
+        try:
+            project_stage.keep(self.state_dir, _text(args, "stage", 20))
+        except ValueError as e:
+            raise IdeasError(str(e)) from None
+        self.changed("")
+        return self.stage({})
 
     def save_releases_from(self, party: str, value: object) -> None:
         """`releases_from` of `ideas.goal_save`: the parties a Release party takes its flags from, kept with the party ([] is every party but
@@ -108,3 +130,8 @@ class PartyMixin:
             raise IdeasError(str(e)) from None
         self._ev(event_log.PARTY_DROPPED, args, party=party)
         return {"ok": True}
+
+
+def stage_commands(ideas_: PartyMixin) -> dict:
+    """The project stage's commands by name (`gui/ideas.py` adds them to its table: `**stage_commands(self)`)."""
+    return {"ideas.stage": ideas_.stage, "ideas.stage_set": ideas_.stage_set}

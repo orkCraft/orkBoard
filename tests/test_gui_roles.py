@@ -22,13 +22,13 @@ def test_ideas_roles_answers_the_presets_the_mixed_first_and_the_old_parties_as_
     assert game["build"] == ["grunt", "artist", "level-designer", "sound-designer"] and game["check"] == ["playtester"]
     assert set(game) == {"id", "name", "line", "craft", "race", "mixed", "lead", "build", "check"}
     assert got["parties"]["engineering"] == {"lead": "architect", "build": ["grunt", "tester"], "check": ["reviewer"]}      # by craft, as before
-    assert got["parties"]["game"]["lead"] == "game-designer" and got["seats"] == {"lead": 1, "build": 1, "check": 1}
+    assert got["parties"]["game"]["lead"] == "game-designer" and got["seats"] == {"lead": 1, "build": 5, "check": 2}
 
 
 def test_ideas_roles_answers_every_leaders_stages_and_the_default(host):
     stages = host.command("ideas.roles")["stages"]
-    assert stages["game-designer"] == {"lead": "Concept", "build": "Build", "check": "Playtest", "seats": {"lead": 1, "build": 1, "check": 1}}
-    assert stages["default"]["build"] == "Implementation" and stages["default"]["seats"] == {"lead": 1, "build": 1, "check": 1}
+    assert stages["game-designer"] == {"lead": "Concept", "build": "Build", "check": "Playtest", "seats": {"lead": 1, "build": 5, "check": 2}}
+    assert stages["default"]["build"] == "Implementation" and stages["default"]["seats"] == {"lead": 1, "build": 5, "check": 2}
     assert set(stages) == {a.id for a in library.LIBRARY if a.band == "lead"} | {"default"}
 
 

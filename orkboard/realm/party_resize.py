@@ -1,6 +1,5 @@
-"""A party's change of size (docs/specs/81-a-party-its-tool-and-size.md §3): the size is the team. A party made from a recipe
-(realm/party_recipes.py) takes the size's team and tiers in one save; a party made from the library with no recipe of its own keeps
-its team, and its size sets its seats' tiers and its Target only.
+"""A party's change of size (docs/specs/81-a-party-its-tool-and-size.md §3, changed by spec 99 §1.3): the size is how the work goes, apart from the squad. A size
+sets the seats' tiers and the party's Target; it joins no one and removes no one (`joins` and `leaves` stay for the faces of before, always empty).
 
     recipe_for("architect", ["grunt", "tester"])         # the recipe a party is of: its kept one, else the one its team fits; None for none
     resized(root, "ship", "lean")                        # {"recipe", "size", "team", "tiers", "joins", "leaves"}: what the size would make of it
@@ -43,7 +42,7 @@ def resized(root: Path, slug: str, size: str) -> dict:
         raise ValueError("A size is lean, standard or full")
     leader, team = goal_team.leader_of(root, slug), goal_team.team_of(root, slug)
     recipe = recipe_for(leader, team, goal_team.recipe_of(root, slug))
-    new = list(party_recipes.sized(recipe, size)["team"]) if recipe is not None else list(team)
+    new = list(team)                            # the size is how the work goes, apart from the squad (spec 99 §1.3): it joins no one and removes no one
     return {"recipe": recipe["id"] if recipe is not None else "", "size": size, "team": new,
             "tiers": party_recipes.tiers_for(leader, new, size),
             "joins": [s for s in new if s not in team], "leaves": [s for s in team if s not in new]}

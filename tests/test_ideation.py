@@ -335,8 +335,9 @@ def host(fake_repo):
                                           goal={"summary": "", "questions": []}, draft={"title": "Dark theme", "questions": []})
     h.ship = h.command("ideas.goal_save", {"title": "Ship", "about": "Ship it.", "craft": "engineering", "leader": "architect",
                                            "team": ["grunt", "reviewer"]})["slug"]
-    h.party = h.command("ideas.goal_save", {"title": "Ideas", "about": "Small ideas.", "craft": "product", "leader": "investor",
-                                            "team": TEAM, "preset": "ideation"})["slug"]
+    h.party, _new = ideas.save_goal(h.ideas.root(), None, "Ideas", "Small ideas.", craft="product")      # Ideation is no longer made by a command (spec 99 §1.1): a party of before
+    library.install(h.ideas.state_dir, [library.INVESTOR, *TEAM])
+    goal_team.set_team(h.ideas.root(), h.party, TEAM, leader=library.INVESTOR)
     for g in (h.ship, h.party):
         for _ in range(300):
             if not h.ideas.keeper.busy_goal(g):
@@ -357,8 +358,10 @@ def _events(host, name):
 
 
 def test_the_party_is_made_only_whole_and_a_view_is_refused_elsewhere(host):
-    with pytest.raises(CommandError, match="Ideation reads every pitch from all four sides"):
-        host.command("ideas.goal_save", {"about": "Fewer.", "leader": "investor", "team": TEAM[1:]})
+    with pytest.raises(CommandError, match="Ideation reads every pitch from all four sides"):        # the party the project has is edited whole
+        host.command("ideas.goal_save", {"slug": host.party, "leader": "investor", "team": TEAM[1:]})
+    with pytest.raises(CommandError, match="General, Team and Ideation are not made any more"):     # a new one is not made (spec 99 §1.1)
+        host.command("ideas.goal_save", {"about": "Fewer.", "leader": "investor", "team": TEAM})
     with pytest.raises(CommandError, match="The views judge pitches: they are in Ideation only"):
         host.command("ideas.goal_save", {"about": "Mixed.", "leader": "architect", "team": ["grunt", "market-view"]})
     price = host.command("ideas.party_price", {"leader": "investor", "team": TEAM, "craft": "product"})

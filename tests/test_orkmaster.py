@@ -7,10 +7,10 @@ from pathlib import Path
 import pytest
 
 from orkboard.gui.board_host import CommandError
-from orkboard.realm import event_log, ideas, library, orkmaster
+from orkboard.realm import event_log, ideas, library, orkmaster, party_recipes
 from tests.test_idea_route import events, flag, goal, host, party, wait_party  # noqa: F401  (`host`: the fixture of spec 68's route tests)
 
-PRESETS = [p["id"] for p in library.presets()]
+CRAFTS = list(party_recipes.CRAFTS)
 
 
 @pytest.fixture
@@ -34,11 +34,10 @@ def test_the_orkmaster_is_an_ork_with_a_crown():
     assert (races / "peon-crown.png").is_file() and (races / "peon-crown@2x.png").is_file()   # the copy has the crowned head
 
 
-def test_a_project_with_no_party_is_dealt_ideation_then_the_library_and_release_is_not_first_without_flags(bare):
+def test_a_project_with_no_party_is_dealt_every_crafts_party_and_release_is_not_first_without_flags(bare):
     got = orkmaster.deal(bare.root, bare.state)
-    assert [r["id"] for r in got] == ["ideation", *[i for i in PRESETS if i != "ideation"]] and len(got) == len(PRESETS)
-    assert got[0] == {"id": "ideation", "why": "no_pitches", "n": 0}
-    assert all(r["why"] == "" and r["n"] == 0 for r in got[1:])
+    assert [r["id"] for r in got] == list(party_recipes.CRAFTS) == CRAFTS and len(got) == 9      # one craft a party: no mixed preset, no Ideation (spec 99 §1.1)
+    assert all(r["why"] == "" and r["n"] == 0 for r in got)
 
 
 def test_flags_and_no_release_party_deal_release_first_with_their_count(host):
@@ -47,17 +46,17 @@ def test_flags_and_no_release_party_deal_release_first_with_their_count(host):
         flag(h, goal(h, party_slug, f"Goal {n}"))
     flag(h, goal(h, h.talk, "A pitch's flag"))                                         # Ideation's flags are left out
     got = orkmaster.deal(h.root, h.state)
-    assert rows(got)[:2] == [("release", "flags_wait", 3), ("game", "", 0)] and got[-1] == {"id": "ideation", "why": "have", "n": 0}
-    assert sorted(r["id"] for r in got) == sorted(PRESETS)                             # every preset once
+    assert rows(got)[:2] == [("release", "flags_wait", 3), ("product", "", 0)]
+    assert sorted(r["id"] for r in got) == sorted(CRAFTS)                              # every craft once
 
 
-def test_a_release_party_and_an_ideation_party_are_dealt_last_as_have(host):
+def test_a_release_party_is_dealt_last_as_have(host):
     h = host
     party(h, "Release", "release")
     flag(h, goal(h, h.app, "Flagged"))
     got = orkmaster.deal(h.root, h.state)
-    assert rows(got)[-2:] == [("release", "have", 0), ("ideation", "have", 0)]
-    assert [r["id"] for r in got[:-2]] == [i for i in PRESETS if i not in ("release", "ideation")]
+    assert rows(got)[-1:] == [("release", "have", 0)]
+    assert [r["id"] for r in got[:-1]] == [i for i in CRAFTS if i != "release"]
 
 
 def test_a_goal_type_goes_to_the_party_that_takes_it_whole_then_the_party_that_misses_someone_then_none(host):
@@ -115,11 +114,11 @@ def test_the_map_carries_the_project_counted_from_the_flags_it_read(host):
     h = host
     got = h.command("ideas.map", {})["project"]
     assert got["orkmaster"] == orkmaster.ORKMASTER and got["kind"]["id"] == "code"                  # (the project's kind, spec 75 §4.3)
-    assert rows(got["deal"])[:2] == [("engineering-code", "proposal", 0), ("game", "", 0)] and got["deal"][-1]["why"] == "have"   # (the kind's proposals first)
+    assert [r["id"] for r in got["deal"]][:5] == ["product", "design", "tech", "release", "run"]      # (the kind's proposals first, one craft a party; the website party the project has is Marketing's: last)
     flag(h, goal(h, h.app, "One"))
     flag(h, goal(h, h.web, "Two"))
     got = h.command("ideas.map", {})["project"]
-    assert rows(got["deal"])[:2] == [("engineering-code", "proposal", 0), ("release", "flags_wait", 2)]
+    assert ("release", "flags_wait", 2) in rows(got["deal"]) and [r["id"] for r in got["deal"]][:3] == ["product", "design", "tech"]
     assert got["deal"] == orkmaster.deal_first(orkmaster.deal(h.root, h.state), ideas.tracks(h.root, make=False), "code", {})     # as the realm counts it
     assert h.command("ideas.map", {"goal": h.app})["project"]["deal"] == got["deal"]    # the project's, whatever party the Map is of
 
