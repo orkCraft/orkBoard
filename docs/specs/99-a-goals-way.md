@@ -253,3 +253,15 @@ New `realm/map_text.py` (`system(state_dir, root, since="", pages=None)`, `detai
   paths skipped. `answered` gives the keys already kept, for G.
 - **Not yet: who decided a change** (§112.6) is not stored before E's *Will be*; *Changed since* says the goal, and *by you*
   for the person's own commits. **E adds the deciding party** to those lines once a section's *Will be* is stored.
+
+## As built (F)
+
+`core/idea_night.py` removed (the night's run, queue, starts, refresh, proposals, parties, the week's pace, `decline`). `IdeaKeeper.tick`
+runs held work (`held_until`) and the queue `now` only; `ideas.add` queues `now` or `hold` (`priority: low` is still stored, it queues
+`now`); `idea_target.gate()` holds a plan only for the reserve's reset (an older `start_at: night` read so); the runner's night skip and
+pace went. Kept inert: `ideas.night_allow` (stored, unread, `moved: 0`), `board.night_low`, `reserve.night`, the settings `night` and
+`night_low`, the queue `night` read as `hold`. **Decided here:** `older_night_plans()` hands an older passed plan waiting for the night to
+the runner, its tasks waiting for the reserve's reset; a proposal already waiting is still answered (*Take* drafts at once, *No* drops it,
+no `declined.jsonl`); the events `NIGHT_RUN`, `NIGHT_ALLOWED`, `PROPOSAL_MADE`, `PARTY_PROPOSED` are no longer written (their names
+kept for old logs). Left for later parts: `realm/ideas.py` `queue_of`'s `night` for a raw idea with no queue, `core/idea_task.py`'s dead
+pace helpers, `realm/board_map.py`'s `night` wait kind, `realm/idea_risk.py` `decide`'s unused night.
