@@ -1,6 +1,6 @@
 # orkUI / office / signs
 
-The thirty-eight signs: **every symbol a face draws is orkUI's** (orkBoard's spec 50 §1.6, spec 51 §1 and spec 52 §1 and spec 56 §6 and spec 59 §1, decisions §63.10, §69 and §72). A sign stands beside the
+The thirty-nine signs: **every symbol a face draws is orkUI's** (orkBoard's spec 50 §1.6, spec 51 §1 and spec 52 §1 and spec 56 §6 and spec 59 §1, decisions §63.10, §69 and §72). A sign stands beside the
 words it explains (a state, a stop, an order), in the colour of that text; it is never the only thing that says it, so the words
 (or a `title`) stay and the sign is `aria-hidden`.
 
@@ -43,9 +43,13 @@ A squad's two columns (orkBoard's decisions §151.9) have a mark each, never a s
 
     sword   a squad's *Does* column (a sword)         shield  a squad's *Checks* column (a shield)
 
+A stop's mark (0.15.5, Orkboard's decisions §167.3), like `alert`, not a goal type's:
+
+    question   a question the person answers (a question mark)
+
 **The window as decided draws** (0.15.0): the states of the closed set, `check`, `cross`, `work`, `moon`, `alert`, `flag`;
 `before` and `after`; `play` and `pause`; a map card's kinds, `screen`, `picture`, `sound`, `film`, `text`, `page`, `logo`;
-and `sword` and `shield`. The goal types' signs stay in this folder for Orkline, which still draws them; orkBoard's copy
+`sword` and `shield`; and, since 0.15.5, `question`. The goal types' signs stay in this folder for Orkline, which still draws them; orkBoard's copy
 leaves them out.
 
 The twenty-three pictures are also in `../emblems/` (the library), with seven more that no face draws.

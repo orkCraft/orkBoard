@@ -1,12 +1,12 @@
 {
  "from": "https://github.com/orkCraft/orkUI",
  "look": "office",
- "version": "0.15.4",
- "commit": "0a82f5d95841f48a99e540cfa8755c18c2bbd2a6",
+ "version": "0.15.5",
+ "commit": "b052bb931fdda70c7574143a07d4339fcb4171fe",
  "files": {
   "LICENSE": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
   "NOTICE": "f7290b6993b7685b2fb2d6f07cb722ed8df86907b22213d82d9417246dce7c3e",
-  "README.md": "1acfba57c9616a66e0c1795e9658b35346f51a068603af96a837489131312b62",
+  "README.md": "cd66be17296a5ff84aab46e32b52cc869853bcfbe7c424679da61cc244bf73f6",
   "ascii/ork-asks.txt": "7bb70f760f88ab79087d570aadbfaa16c7b598711e29b62dbfead3b0a8c25011",
   "ascii/ork-asleep.txt": "f89568e0616c880b25ce5a67e73b815e9217eac6eabedabd5c9a0a962b6aabed",
   "ascii/ork-failed.txt": "fdf0fc3553aa01d405a80fa402454f754f413425ef7a00cab652b7f722102e60",
@@ -15,7 +15,7 @@
   "backs/README.md": "5c02c156eb6f05ccabdb2393f9ea9ba0b8bb27e83865b72d5e4127a4d21746b0",
   "backs/back.svg": "05a27ac22eee679b4cafa83db8bf4244c0bfda57b631188b7640eb60e31520e0",
   "backs/ork.svg": "9d4a636c399372d72148a453e3171a805547dd140ce7d398569da7d17505af31",
-  "components.css": "9c9f273cf59bca72aa07978704f6dea4862d50c8b9b922e4b4da41c1622ba85c",
+  "components.css": "ef3bad351c0002177da1cfe98eefd101fa882e7c9574f1b60d2c1c9558a9c151",
   "elements/README.md": "70dafc0852ea0541d17a7a2499bd11e0b130a6e6e92324044a908c3d65e04b83",
   "elements/dust.svg": "7bb13d01f0180fcb053c1118309b567577a8b3e868f98ca472754cd729a14584",
   "elements/ice.svg": "0c32af60459892ce4aa0dad3baa1124001d85fd7fca6402d1239c7e9bce42eb9",
@@ -117,7 +117,7 @@
   "moons/disk.svg": "6ab7300710f22bb9fecda3a7590cb871caae302d655d496e529c86739fd05c49",
   "moons/gibbous.svg": "895b11ff6e23d2994bc4080f113a3338ae5e719e8e7a223c7a8ecb85e9791bf2",
   "moons/half.svg": "f2bcda5039459977691c86add586e3e60cc10073bc71797bef7c37dc32fc5974",
-  "preview.html": "4849aa572552ee1ea959b9da06d43f7d70194005a9aeeab79fda92a89c5f0df6",
+  "preview.html": "ec614451a71010c99225bacabecff675c79bb5bc51686af9fcc2945e03f7bfb9",
   "races/dryad-elder.png": "ba7f9c7e279db56d20b8ce7964f3afbb19d988daada50d56d6d42464588bbaf4",
   "races/dryad-elder@2x.png": "9cfe1eb8d8ce01c046555b79cdeccc979a515306a95800afd400ccccb87c2abc",
   "races/dryad-laborer.png": "ac65b8910d663ae80f796f2441fdeeefeca3d04d93ab3700b046454054192e66",
@@ -192,7 +192,7 @@
   "races/unicorn-laborer@2x.png": "b81f6f0fdfdd387ff6209b269f49b506295b7470186f94da5d23a1c5dac57942",
   "races/unicorn-warrior.png": "325fbb1d8a0197c6284b6faf978c454e201ea7c5555372359ac2f4521f6df350",
   "races/unicorn-warrior@2x.png": "a2401c42a24b555631caba9e050487c86f56d8ef162d322d92fdf366470cbf65",
-  "signs/README.md": "854324cae854205f87f21f5dfb6c2cb7f5cd3a667e4c6a4201eafa275d3c0fc6",
+  "signs/README.md": "5f2e40c9e3fd40aad0c5e543ee870459d243ad1f2b900a643c3a41211905a2cc",
   "signs/abtest.svg": "5cb5ecc6bc8d6e0622c63f7e46666d090f709e933e1b9c15be3edd9a207fdb89",
   "signs/after.svg": "9bdf2ca989f3f6640fbc44b8f62b97b45f63ace0fad910f3f0dffc0ecf4190f4",
   "signs/alert.svg": "ba43e81ca4e5f5adcf5e2872f5325b9ff2b59f85a4d8780fa6737a138f468765",
@@ -219,6 +219,7 @@
   "signs/picture.svg": "b6032f6886a1424c49ef00a8234a58991abb04e0a08894b6adfe63fb76de496b",
   "signs/play.svg": "ad75cbd50ae4039f260331dbff89dfcd235a7679f4e03e1ff9213df06cfe03f2",
   "signs/post.svg": "2c15384c26a2ae3ae6411648a46675ade350429145c0c2f986366db399a82797",
+  "signs/question.svg": "ac5a4efacec8d8d0f052e5b94d5db718f8983e5916d716e3f0b38de3d5b297a4",
   "signs/release.svg": "bffd0e8db86a0f0bcc8497a8b96451892bd7eeb9c3667a2ac1a7ca0f1db8f389",
   "signs/restructure.svg": "422e6fc99cb77c19515cd201cb0d5ee436ee667840eccfed110438603f3c4e5c",
   "signs/screen.svg": "af6dd0d3ee3a0cffc9c5e46c0ac119215135ce4d0a27adfabbc9486217c53154",
@@ -232,7 +233,7 @@
   "signs/tidy.svg": "c4d3ddb46f93d1c604591303a6ac0f5331a3ed11c4ab950682ec88dbf480a9e5",
   "signs/tune.svg": "d5495ca0ded02d133abe41bdf39dc13a6040ed2d8bee9da77810120d944e3653",
   "signs/work.svg": "01a9c27d04c2643eca81f55f190c155f333ed3c7f8e8f31f22d3f054ed0907e3",
-  "tokens.css": "deeb8eb80c0959c5eb067f75224497a7141def76cbb57c42be7859c88d4ffa59",
-  "tokens.json": "92e263b08b4e232edd0a18a9bc5450bdae8fe310b3127797c9a60b3178d74a47"
+  "tokens.css": "eed58ec677aef51fba4bba488f1d11db152a6bf2901e651f112ecca2bdde78c3",
+  "tokens.json": "fab5ed61cb8821e601f4d070300bcac55f16ce95ded065a783f160c9982f1693"
  }
 }

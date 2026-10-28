@@ -202,7 +202,7 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-moon.gibbous::after { -webkit-mask-image: url(moons/gibbous.svg); mask-image: url(moons/gibbous.svg); }
 .ork-moon.full::after { background: var(--ork-ink); -webkit-mask-image: url(moons/disk.svg); mask-image: url(moons/disk.svg); }
 
-/* --- Signs: every symbol a face draws (signs/, thirty-eight 7 x 7 pixel shapes), drawn as a mask in the colour of the text it stands in
+/* --- Signs: every symbol a face draws (signs/, thirty-nine 7 x 7 pixel shapes), drawn as a mask in the colour of the text it stands in
    (`currentColor`). 14 x 14 or 28 x 28, never a size between. -3px sets the 14 px box on the baseline of a 16 px line ---------- */
 .ork-sign { display: inline-block; flex: none; width: 14px; height: 14px; vertical-align: -3px; background: currentColor;
   -webkit-mask-size: 100%; mask-size: 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
@@ -246,6 +246,7 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-sign.tune { -webkit-mask-image: url(signs/tune.svg); mask-image: url(signs/tune.svg); }
 .ork-sign.sword { -webkit-mask-image: url(signs/sword.svg); mask-image: url(signs/sword.svg); }      /* a squad's Does column, never a state */
 .ork-sign.shield { -webkit-mask-image: url(signs/shield.svg); mask-image: url(signs/shield.svg); }   /* a squad's Checks column, never a state */
+.ork-sign.question { -webkit-mask-image: url(signs/question.svg); mask-image: url(signs/question.svg); }   /* a question the person answers, never a state */
 
 /* --- Dialog, menu, toast ------------------------------------------------------------------------------------------------------- */
 .ork-scrim { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: var(--ork-6); background: var(--ork-scrim); }
