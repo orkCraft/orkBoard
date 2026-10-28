@@ -176,3 +176,16 @@ under the fork's banner (*The side you pick stands; the other leaders write thei
 The route row's `type` (the goal's type id); `gui/ideas_facts.py`: `ideas.project_facts {party}`, `ideas.project_fact_set {party, key, text}`
 (empty drops), `ideas.project_kind_set {kind}` (kept in `project.json`, read first by `project_kind.read_full`, reaching the stage and the
 proposals), `ideas.talk_read {idea}` (the Talk kept: stances, questions with their state, the cause). Wired by the lead.
+
+## As built (E)
+
+`KIND_WORD` for the way's kinds (*Route*, *Start*, *Talk*, *The cause*, *Decision* (said *Decision <n>* once), *A fork*, *About the project*); the
+route card worded by the row's `type` (a bug's two cards only for `bug`, *Tech alone: a small clean-up* for `tidy`, *a small change to the
+numbers* for `balance`); the one place of the parties opened by the tabs' **+**, a party's *Edit* and the hand's *Edit the party*, its kind a
+select sending `ideas.project_kind_set`, a made party's facts edited in place (`ideas.project_fact_set`, *Forget*, *From the next goal*); the
+old party form gone (`goalwizard`, `partyform`, `partyseats`, `partypresets`, `partysize`, `partydraft`, `partymodel`, `goaldialog` and what only
+they used; the `party` kind kept for *Remove party*); the phase marks *Talk · Spec · Work · Done* in the pane's title (Talk and Spec open
+their pages); the route's dots from the picked goal's rows too; the stances' *More* from `ideas.talk_read`; no race word in a seat's popover.
+**Decided here:** the first start opens the parties' place by a button on the empty Board (*Choose the parties*), not by itself. **Left:** a
+goal between its decision and its plan shows only its own party's dot (no row carries its route then); the kinds' list is the page's own copy of
+`project_kind.KINDS`; no *add a fact*; the title is *Board · Parties*, not *← Parties*.
