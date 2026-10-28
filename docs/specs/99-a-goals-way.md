@@ -265,3 +265,22 @@ the runner, its tasks waiting for the reserve's reset; a proposal already waitin
 no `declined.jsonl`); the events `NIGHT_RUN`, `NIGHT_ALLOWED`, `PROPOSAL_MADE`, `PARTY_PROPOSED` are no longer written (their names
 kept for old logs). Left for later parts: `realm/ideas.py` `queue_of`'s `night` for a raw idea with no queue, `core/idea_task.py`'s dead
 pace helpers, `realm/board_map.py`'s `night` wait kind, `realm/idea_risk.py` `decide`'s unused night.
+
+## As built (C)
+
+New `realm/goal_route.py` (`route(state_dir, root, text, party, marks)`, `cost`, `shape`, `home`, the rows) and `gui/ideas_route.py`
+(`RouteMixin`: `ideas.route_set`, `ideas.talk`, `ideas.route_later`, `ideas.route_start`; `route_tick` from `Ideas.tick`). The states
+`routed`, `talk`, `decided`, `sections`; `state.route` and `state.route_how` (`by`, `kind`, `failure`, `touched`, `short`,
+`reproduces`, `offer`, `said`, `said_route`, `changed`). The rows `route` (`place` an int, 1-based) and `start` (`cost`, `was`). `TERMS`:
+§10's words, the project's stage as `project_stage` (`stage` is a party's step).
+- **Decided here:** a failure in the report (a `Traceback`, `at …(…:n)`, `FAILED`, `Error:` with a path) makes a goal a bug and sets
+  `reproduces`; tidy and balance goals of one party are offered the short way; a typed goal's parties come from `orkmaster.party_for`
+  per type in the craft order, a type another stands in for searched in its family; **a project with one party routes to it with no
+  call**; the one call (step `route`, cheaper tier, no tools, a $0.03 cap) runs as the `orkmaster` role, and a call that cannot run
+  leaves the goal on the project's first party; Release, Team and Ideation are never steps. Not routed (drafted at once as before): a goal
+  kept on `hold`, a pitch, a goal sent from a pitch, *A release*, and **a recurring goal's round** (`recurring: true` on `ideas.add`,
+  §136.4, set by `gui/ideas_running.py`). `ideas.add` takes `party` as `track`'s alias; with neither (or `general`), the goal is routed and
+  lies in its route's first party. The `start` row is answered by `ideas.start {idea}` (a changed route's new cost said, else the plan's
+  start, as before). `ideas.route_later` only when the reserve holds; `route_tick` talks by itself at the reset.
+- **Seams:** `ideas.talk` calls `keeper.talk(slug)` when the keeper has it (D), else today's draft; `ideas.route_start` calls
+  `keeper.sections(slug)` (E), else today's draft.

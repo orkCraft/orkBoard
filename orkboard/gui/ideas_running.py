@@ -100,7 +100,7 @@ class RunningMixin:
         """Each kept recurring goal added to the new party as the person's New goal is (drafted at once), with its repeat; the slugs."""
         out = []
         for r in routines:
-            got = self.add({"text": recurring.text_of(r), "track": party, "device": args.get("device")})
+            got = self.add({"text": recurring.text_of(r), "track": party, "device": args.get("device"), "recurring": True})
             recurring.set_every(self.root(), got["slug"], r["every"], recurring.text_of(r))
             out.append(got["slug"])
         return out
@@ -140,7 +140,7 @@ class RunningMixin:
             return ""
         try:
             recurring.set_every(root, slug, "")                  # first stopped on the old one, so a failure below never adds a second
-            got = self.add({"text": words, "track": track, "priority": page.get("priority")})
+            got = self.add({"text": words, "track": track, "priority": page.get("priority"), "recurring": True})
             recurring.set_every(root, got["slug"], every, words)
         except Exception as e:                                    # a disk that refuses, a spent window: the repeat goes on from the old goal
             log.info("recurring goal %s did not come back: %s", slug, e)

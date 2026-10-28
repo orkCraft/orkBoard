@@ -42,8 +42,9 @@ class RouteMixin:
 
     def route_plan(self, args: dict, text: str, track: str, pitch: str = "") -> dict | None:
         """Before `ideas.add` adds a goal: its route by code and the party it lies in (`home`: the party it was addressed to, else the first of its
-        route); None for a goal that is drafted at once as before (kept on `hold`, a pitch, a goal sent from a pitch). No write."""
-        if args.get("hold") is True or pitch:
+        route); None for a goal that is drafted at once as before (kept on `hold`, a pitch, a goal sent from a pitch, a recurring goal's
+        round: decided once, it takes no route card, decisions §136.4). No write."""
+        if args.get("hold") is True or args.get("recurring") is True or pitch:
             return None
         root = self.root()
         addressed = bool(track) and track != ideas.GENERAL and args.get("general") is not True

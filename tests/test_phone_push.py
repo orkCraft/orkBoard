@@ -198,7 +198,7 @@ def test_the_words_never_hold_a_questions_text(rig):
 def test_the_kinds_are_the_pages_words():
     page = Path(phone_push.__file__).parent / "static" / "js" / "board" / "today.js"
     table = dict(re.findall(r'(\w+): "([^"]+)"', re.search(r"const KIND_WORDS = \{(.*?)\};", page.read_text(encoding="utf-8")).group(1)))
-    assert {k: table[k] for k in phone_push.KIND_WORDS} == phone_push.KIND_WORDS
+    assert {k: table[k] for k in phone_push.KIND_WORDS if not k.startswith("op")} == {k: v for k, v in phone_push.KIND_WORDS.items() if not k.startswith("op")}   # Operations left the desktop (spec 98 A); the phone keeps its word
     assert phone_push.KIND_WORDS["goal"] == "A party asks"                               # a party's question: spec 50 §0
 
 
