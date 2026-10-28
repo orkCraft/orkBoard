@@ -284,3 +284,20 @@ New `realm/goal_route.py` (`route(state_dir, root, text, party, marks)`, `cost`,
   start, as before). `ideas.route_later` only when the reserve holds; `route_tick` talks by itself at the reset.
 - **Seams:** `ideas.talk` calls `keeper.talk(slug)` when the keeper has it (D), else today's draft; `ideas.route_start` calls
   `keeper.sections(slug)` (E), else today's draft.
+
+## As built (D)
+
+New `core/idea_talk.py` (`TalkMixin`: `talk`, `talk_answer`, `diagnose`, `cause_answer`), `realm/idea_talk_parse.py` (the strict
+parsing, split out at 600 lines), `gui/ideas_talk.py` (`ideas.talk_answer`, `ideas.cause_answer`; the phone may send them);
+`realm/idea_questions.py` `card`, `default_of`, `answer_of`, `record`/`save_record` (`ideas/<slug>/talk.json`: the waiting cards, the
+answers, the defaults, the stances, the cause, the project keys); `board_map.talk_rows` (`talk`, `cause`); the steps `talk_round`
+(cheaper tier, no tools, READS 0, cap $0.08) and `diagnose` (cheaper tier, READS 4, cap $0.20).
+- **Decided here:** a leader asks for a second round in its first (`second_round: true`); *Let … decide* skips it; a leader's
+  `blocks` card goes first among the three, then the route's order; a leader gives at most three goal questions and two project
+  questions (only at its party's first goal, a key not answered); a bug at most three case questions and one blocking project
+  question; `talk_answer` refuses a bug's record (its cards go with `cause_answer`'s `answers`); without `decide` every waiting card
+  must be answered; a leader that does not answer after one retry sends the goal back to its route card; every Talk call runs on the
+  goal's home party's tool and Target. The route card's cost now prices Talk as `talk_round` and a bug's as `diagnose` (the lead's fix),
+  and both steps are the ledger's *spec* stage.
+- **Seams:** `self.decide(slug)` after a Talk's last round (E), `self.sections(slug)` after a bug's cause (E); without them, today's
+  draft. A Talk lost when the process dies leaves the goal at `talk` with no row (a later part's tick).

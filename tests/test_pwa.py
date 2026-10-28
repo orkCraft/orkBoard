@@ -75,7 +75,7 @@ def test_the_app_is_its_own_files_and_nothing_else():
         assert _split(pwa.serve("GET", f"/app/{folder}/README.md"))[0].startswith("HTTP/1.1 404")
     css = _split(pwa.serve("GET", "/app/components.css"))[1].decode()                          # every mask of components.css resolves beside it
     masks = set(re.findall(r"url\(((?:elements|signs)/[a-z]+\.svg)\)", css))
-    assert len(masks) == 41 and masks <= set(pwa.files())                                # five elements, thirty-six signs (orkUI 0.4.1)
+    assert len(masks) == 43 and masks <= set(pwa.files())                                # five elements, thirty-eight signs (orkUI 0.15: moon beside night, sword, shield)
     head, body = _split(pwa.serve("HEAD", "/app/app.css"))
     assert head.startswith("HTTP/1.1 200") and body == b""
 

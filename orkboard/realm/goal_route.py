@@ -235,8 +235,8 @@ def _calls(n: int, short: bool, kind: str, reproduces_: bool) -> list[tuple[str,
     """The calls of a route of `n` parties by rule: `(step, how many, per party)`. The long way: Talk (a call a leader a round), the decision, a section a leader,
     the join (more than one party), a plan a step. The short way: no decision; a bug's Talk is its diagnosis (one call) unless the report holds the failure."""
     if short:
-        return [*([("talk", 1, False)] if kind == "bug" and not reproduces_ else []), ("draft", 1, True), ("plan", 1, True)]
-    return [("talk", TALK_ROUNDS, True), ("route", 1, False), ("draft", 1, True), *([("route", 1, False)] if n > 1 else []), ("plan", 1, True)]
+        return [*([("diagnose", 1, False)] if kind == "bug" and not reproduces_ else []), ("draft", 1, True), ("plan", 1, True)]
+    return [("talk_round", TALK_ROUNDS, True), ("route", 1, False), ("draft", 1, True), *([("route", 1, False)] if n > 1 else []), ("plan", 1, True)]
 
 
 def cost(state_dir: Path, route_: list[dict], short: bool, *, root: Path | None = None, settings: dict | None = None,

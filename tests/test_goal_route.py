@@ -127,10 +127,11 @@ def test_the_cost_counts_calls_by_rule_and_prices_them_from_the_tiers_they_run_o
     one = [goal_route.entry(root, p["tech"])]
     two = [*one, goal_route.entry(root, p["design"])]
     long_one = goal_route.cost(state, one, False, root=root)
-    # balance: Talk (elder 1.0), the decision (the Orkmaster, warrior 0.5), the section (elder 1.0), the plan (elder 1.0), two tasks of a Grunt at its learned cost
+    # balance: Talk (the cheaper tier's talk_round), the decision (the Orkmaster, warrior 0.5), the section (elder 1.0), the plan (elder 1.0), two tasks of a Grunt at its learned cost
     from orkboard.realm import idea_spend
     task = idea_spend.tier_costs(state)[idea_target.tier_of(idea_target.task_pick("warrior", "balance")[0])]
-    base = 1.0 + 0.5 + 1.0 + 1.0 + goal_route.TASKS_PER_STEP * task
+    talk = {"elder": 1.0, "warrior": 0.5, "laborer": 0.1}[idea_target.tier_of(idea_target.keeper_pick("talk_round", "balance", idea_target.TIER_ROLE)[0])]
+    base = talk + 0.5 + 1.0 + 1.0 + goal_route.TASKS_PER_STEP * task
     assert long_one == {"calls": 4, "usd_low": round(base * 0.5, 2), "usd_high": round(base * 1.5, 2)}
     long_two = goal_route.cost(state, two, False, root=root)
     assert long_two["calls"] == 8 and long_two["usd_low"] > long_one["usd_low"] * 1.8             # a call a leader a round, a section each, the join, a plan each
