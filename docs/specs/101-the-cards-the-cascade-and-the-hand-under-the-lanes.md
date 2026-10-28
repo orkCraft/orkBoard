@@ -103,3 +103,30 @@ fanned within a lane, the back one's edge only and its rise; the discard under t
 (the action's sign and the asker's head) and label row (the gem at its right); the half under the edge and its rise on
 hover, focus and tap; a press lifting as today. The critical tests (`tests/test_architecture.py`,
 `tests/test_board_alone.py`, `tests/test_updates.py`), `tests/test_design_system.py`, `tests/test_gui_wording.py`.
+
+## As built (A, B)
+
+orkUI 0.15.5 (`b052bb9`): `office/signs/question.svg` on the 7 grid (a one-pixel hook, its stem and dot on the middle column), the gallery's row,
+the README's own block beside the squad's signs (not a goal type: no emblem), thirty-nine signs; copied here, the phone's worker keeping it.
+
+## As built (C)
+
+`table/card.js` the task card (144 wide: the bare element and the name in its header, a 70 px window with the type's sign at 0.6 on the element's
+token, the stage's sign and word with the gem on a retry; no head, no foot); `table/cascade.js` a goal's 22 px strip over its cascade (front: a
+failed check, any failure, *Checking*, *Doing*, *Planning*, the latest first; only live tasks drawn), the picked goal's unfolded, a goal in two lanes
+lit in both; the line (`lineNow()`) the first lane's last cascade, the first in line the whole card at its foot, *In line*, the moon on one waiting
+for the reset, a drag (and Alt+↑/↓) by `ideas.move`, *All · search* past seven (`line.js`, kind `line`); the first tab the project's name with the
+crowned head (`data-tab` stays `orkmaster`); `--cols`/`--tabs` gone from the table (the frame's grid). At the narrow width a goal one token with
+its edges, a press lifting its front task, its back listing the goal's others. `TERMS`: `deck` folded into `in_line` (`was`), `cascade`.
+**Left:** the first lane grows tall with many routings and scrolls; the line has no drag at the narrow width (its list's arrows do it).
+
+## As built (D)
+
+`hand.js`/`stacks.js` a lane under each tab on the frame's grid, the discard in its last column; `data.js` `laneOf` (the whole goal's rows and a
+party the tabs lack under the first lane), a stack a goal and a lane; two stacks in a lane fan within it (the urgent at the right in front, those
+behind their edge and element only); a card rises on hover, focus and a tap, a press lifts it; the cards half under the window's edge (about 141 px
+shown wide, 91 narrow); `stopcard.js` the face (the action's sign at 0.6, the asker's head in the window's corner, the party and the gem in the
+label row); `deck.js`, `deckrow.js` and the `deck` kind gone. **Decided here:** the + card lies behind the first lane's stacks (its edge a + of its
+own); no fan inside a stack (a lane is too narrow): its top answered, the next comes forward; the toasts lifted over the hand (`hand.css`).
+**Left:** a crowded first lane leaves thin strips; the pixel face on the cards' names (§2, §4.5) against CLAUDE.md's *never for a person's words*,
+for the owner.
