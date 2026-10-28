@@ -3336,7 +3336,7 @@ hourglass, §144.1's members' heads and §144.2's cost place, §145.2, §153.5's
    question its party's; what is the whole goal's, the route, Talk of several leaders, the decision, a fork, under the
    first); a goal's cards from one party one stack; two goals under one lane fan within its width, the urgent in front,
    those behind their edge and element only, rising on hover or a press; a picked goal's stacks lit alike; **the discard
-   under Release's lane**. Every lane one width, a card and a quarter (room for a fan); when they don't fit they narrow
+   under the tabs' end** (the limits' chips and *Stop all*: the owner's, after the mockup), whatever parties there are. Every lane one width, a card and a quarter (room for a fan); when they don't fit they narrow
    to a card's width and the fans tighten, never a sideways scroll. Urgency reads by the frame's colour and what is in
    front.
 8. **The hand shows its cards' upper part** (the header and the window); the rest lies under the window's edge, a card

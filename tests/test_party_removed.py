@@ -128,3 +128,14 @@ def test_readers_still_answer_when_something_names_the_removed_party(host):
         json.dumps(host.command(command, args))
     with pytest.raises(CommandError, match="That party is gone"):
         host.command("ideas.party", {"goal": party})
+
+
+def test_release_is_never_removed(host):
+    from orkboard.realm import goal_team, library
+    root, state = host.ideas.root(), host.ideas.state_dir
+    library.install(state, [library.RELEASE_MANAGER])
+    slug, _new = ideas.save_goal(root, None, "Release", "The one way into main", None, "normal")
+    goal_team.set_team(root, slug, [], leader=library.RELEASE_MANAGER)
+    with pytest.raises(CommandError, match="Release stays in every project: it is the one way into main"):
+        host.command("ideas.track_drop", {"slug": slug})
+    assert slug in [t["slug"] for t in host.command("ideas.board")["tracks"]]

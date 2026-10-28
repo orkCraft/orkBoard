@@ -92,7 +92,7 @@ the same commit**; where it and a decision differ, the decision is right and thi
    opened with the pick's words), *Let … decide* a quiet button answering the rest with the picks; a goal's questions
    are its stack, answered one a press, the answers sent together after the last (§153.5–§153.6). **The project's
    questions** (§153.1) are a stack of no goal's under their leader's lane, holding nothing back (§157.1).
-3. **The discard under Release's lane** (§145.4, §159, §167.7): the goals done and not yet seen, the last face up; while
+3. **The discard under the tabs' end** (§145.4, §159, §167.7: under the limits' chips and *Stop all*): the goals done and not yet seen, the last face up; while
    dev holds goals main lacks, its top card carries Release's leader's head and *n ready for main*. Pressed, it opens
    over the pane: the goals done and not seen (a goal's *Result* opened, the goal leaves for the history, §130.1), and
    *Ready for main* with **To main** (§137.4); no act on main lies on the pile (§160.5).

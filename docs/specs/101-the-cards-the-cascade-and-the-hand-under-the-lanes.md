@@ -21,7 +21,7 @@ face); the engine (no command changes: the line is the goals whose `place` is `d
 | **A. The sign `question`** | §1 | orkUI: `signs/question.svg` (the signs' grid and weight), its README row, the gallery, its tests, `CHANGELOG.md`, the version 0.15.5 |
 | **B. The copy** (the lead) | §1 | `design-system/orkui/**` by `python -m orkboard.design.orkui /home/user/orkUI`; `tests/test_pwa.py`'s count if the phone's worker lists signs |
 | **C. The Board** | §2, §3, §5 | `static/js/table/card.js` (the task card's new face beside today's map card), new `static/js/table/cascade.js` (a goal's strip and cascade, the line's cascade), `table/boardmap.js`, `table/data.js` (`lineNow`, a goal's tasks in front order, the lane a goal lies in), `table/tabs.js` (the first tab the project's), `table/table.js` (`--tabs` goes: the frame's `--lanes`), `table/table.css`, new `table/line.js` (the line over the pane, kind `line`), `realm/lexicon.py` (`TERMS`: `deck` folded into `in_line`, its old spelling in `was`; `cascade`); `tests/test_table_desktop_browser.py`, `tests/test_window_desktop_browser.py` (its tab and deck assertions), `tests/test_lexicon.py`, `tests/test_gui_wording.py` |
-| **D. The hand** | §4, §5 | `static/js/hand/hand.js` (the grid under the lanes), `hand/stacks.js` (a stack under the lane of who asks, a lane's fan), `hand/stopcard.js` and `hand/stopface.js` (the new face), `hand/pluscard.js` (under the first lane, alone), `hand/discard.js` (under Release's lane), `hand/data.js` (`laneOf`), `hand/hand.css` (the half under the edge), `hand/deck.js` and `hand/deckrow.js` removed, `frame/kinds.js` (only `deck` taken out); `tests/test_hand_desktop_browser.py` |
+| **D. The hand** | §4, §5 | `static/js/hand/hand.js` (the grid under the lanes), `hand/stacks.js` (a stack under the lane of who asks, a lane's fan), `hand/stopcard.js` and `hand/stopface.js` (the new face), `hand/pluscard.js` (under the first lane, alone), `hand/discard.js` (under the tabs' end), `hand/data.js` (`laneOf`), `hand/hand.css` (the half under the edge), `hand/deck.js` and `hand/deckrow.js` removed, `frame/kinds.js` (only `deck` taken out); `tests/test_hand_desktop_browser.py` |
 
 ## 0. The words
 *In line* (the first lane's last cascade, its hover); the project's name on the first tab; the stages' words as today
@@ -76,7 +76,8 @@ The task card (`table/card.js`, the Board's only; System's parts keep today's ma
    stack, its most urgent in front, its edges hinting more (five at most, no count). **Two goals under one lane fan
    within its width**: the urgent in front, those behind showing their edge and element only (no words), each rising
    whole on hover or a press; a stack pressed picks its goal; a picked goal's stacks lit alike (`.ork-picked`).
-4. **The discard under Release's lane** (the party whose craft is `release`; the last lane when there is none).
+4. **The discard under the tabs' end** (§167.7: under the limits' chips and *Stop all*, the grid's last column), whatever
+   parties the project has.
 5. **A card's face** (`stopcard.js`, `stopface.js`): the header as the Board's (the element at the left, the name
    left-aligned, three lines at most); the window low with the action's sign (`alert` for a failure, `question` for a
    question, `check` in the discard) and **the asker's head** (its leader, 24 × 22) small in its corner; the label row
@@ -98,7 +99,7 @@ picked goal's unfolded, a strip lifting its task; a goal in two lanes lit in bot
 Orkmaster's order, the moon on a goal waiting for the reset, a drag moving it (`ideas.move`), *All · search* over the
 pane past seven; the first tab the project's name; the tabs and the lanes one width, no sideways scroll; `TERMS`'
 `in_line` with `was` *deck*. D: no deck; the + card under the first lane; a stack under the lane of who asks, two goals
-fanned within a lane, the back one's edge only and its rise; the discard under Release's lane; a card's header, window
+fanned within a lane, the back one's edge only and its rise; the discard under the tabs' end; a card's header, window
 (the action's sign and the asker's head) and label row (the gem at its right); the half under the edge and its rise on
 hover, focus and tap; a press lifting as today. The critical tests (`tests/test_architecture.py`,
 `tests/test_board_alone.py`, `tests/test_updates.py`), `tests/test_design_system.py`, `tests/test_gui_wording.py`.
