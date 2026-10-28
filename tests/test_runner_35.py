@@ -172,3 +172,93 @@ def test_a_held_task_says_whose_limit_how_much_is_left_and_until_when_and_start_
     assert r.plan("demo")["tasks"][0]["state"] == "waiting" and r.plan("demo")["tasks"][0]["held_why"] == ""
     r.tick()
     assert launched == [("demo", "k1")]
+
+
+# -- spec 99 §9: the work by steps -------------------------------------------------------------------------------------------------------
+
+def _by_steps(town, tasks, route=("design", "tech"), slug="demo", **plan):
+    """A passed plan whose tasks are `[(id, step, state)]`, made for `route` (a goal of two steps or more keeps it in its plan)."""
+    plan_of(town, [{"id": i} for i, _s, _st in tasks], slug=slug)
+    path = town.state / "ideas" / slug / "plan.json"
+    data = json.loads(path.read_text())
+    for t, (_i, step, state) in zip(data["tasks"], tasks):
+        t.update(step=step, state=state, party=route[step - 1] if step <= len(route) else "")
+    data.update(passed_by="person", **({"route": [{"party": p, "leader": ""} for p in route]} if len(route) > 1 else {}), **plan)
+    path.write_text(json.dumps(data))
+    (town.state / "ideas" / slug / "state.json").write_text(json.dumps({"state": "working", "route": [{"party": p, "leader": ""} for p in route]}))
+
+
+def _state(town, slug="demo"):
+    return json.loads((town.state / "ideas" / slug / "state.json").read_text())["state"]
+
+
+def test_a_goal_is_not_done_when_a_step_is_merged_and_its_route_has_another_it_waits_for_that_steps_plan(town):
+    _by_steps(town, [("k1", 1, "merged")])
+    r, launched = _runner(town)
+    r.start("demo")
+    assert _state(town) == "working" and r._active == ["demo"] and launched == []
+    r.tick()
+    assert _state(town) == "working" and r._active == ["demo"]                                  # the keeper's clock plans the next step; the runner waits
+    path = town.state / "ideas" / "demo" / "plan.json"
+    data = json.loads(path.read_text())
+    data["tasks"].append({**data["tasks"][0], "id": "k2", "step": 2, "state": "waiting", "after": []})      # the next step's party planned: its task joined the plan
+    path.write_text(json.dumps(data))
+    r.tick()
+    assert launched == [("demo", "k2")] and _state(town) == "working"
+    r._set_task("demo", "k2", state="merged")
+    r.tick()
+    assert _state(town) == "done" and r._active == []                                           # the last step's tasks are in dev
+
+
+def test_a_goal_whose_last_step_is_merged_or_whose_task_failed_or_whose_step_landed_nothing_ends_as_it_always_did(town):
+    _by_steps(town, [("k1", 1, "merged"), ("k2", 2, "merged")])
+    r, _ = _runner(town)
+    r.start("demo")
+    assert _state(town) == "done"
+    _by_steps(town, [("k1", 1, "merged"), ("k2", 1, "waiting")])                                # a failed task: the goal fails, no step follows
+    r, _ = _runner(town)
+    r.start("demo")
+    r._set_task("demo", "k2", state="failed", error="it failed")
+    r._runs.clear()
+    r.tick()
+    assert _state(town) == "failed" and r._active == []
+    _by_steps(town, [("k1", 1, "dropped")])                                                     # everything dropped: nothing landed, nothing follows (the goal waits as before)
+    r, _ = _runner(town)
+    r.start("demo")
+    assert _state(town) == "plan" and r._active == []
+    _by_steps(town, [("k1", 1, "merged")], route=("design",))                                   # a route of one step: done when its tasks are merged
+    r, _ = _runner(town)
+    r.start("demo")
+    assert _state(town) == "done"
+
+
+def test_a_goal_the_keeper_could_not_plan_the_next_step_of_leaves_the_runner_until_start(town):
+    _by_steps(town, [("k1", 1, "merged")])
+    r, launched = _runner(town)
+    r.start("demo")
+    assert r._active == ["demo"]
+    (town.state / "ideas" / "demo" / "state.json").write_text(json.dumps({"state": "failed", "error": "No plan for the next step: x", "route": [{"party": "design"}, {"party": "tech"}]}))
+    r.tick()
+    assert r._active == [] and _state(town) == "failed"
+    r.start("demo")                                                                             # Start: the goal is the runner's again, waiting for the step's plan
+    assert r._active == ["demo"] and _state(town) == "working"
+
+
+def test_a_task_names_what_it_reads_of_its_spec_never_the_whole_page(town):
+    page = town.repo / "pages" / "ideas" / "demo.md"
+    page.parent.mkdir(parents=True)
+    page.write_text("---\nowner: board\n---\n# Dark mode\n\n## Asked\nadd a dark mode\n\n## Gist\nDark mode\n\n## Route\n1. Design\n2. Tech\n\n"
+                    "## Design\n### Why\nBecause.\n\n### Done when\n- A screen\n\n### Will be\nchanged ui/settings\n\n## Tech\n### Why\nTech's why.\n\n### Done when\n- A file\n")
+    plan_of(town, [{"id": "k1"}, {"id": "k2"}])
+    path = town.state / "ideas" / "demo" / "plan.json"
+    data = json.loads(path.read_text())
+    data["tasks"][0]["section"] = "Tech"
+    path.write_text(json.dumps(data))
+    r, _ = _runner(town)
+    plan = r.plan("demo")
+    prompt = r._prompt("demo", plan, plan["tasks"][0])
+    assert "`pages/ideas/demo.md` in this worktree: read the common part (`## Asked`, `## Gist`, `## Route`)" in prompt
+    assert "your party's section `## Tech` whole, and of the other sections (`## Design`) only their `### Done when` and `### Will be`" in prompt
+    assert "Read nothing else of it" in prompt and "Tech's why." not in prompt and "Because." not in prompt          # named, never pasted
+    older = r._prompt("demo", plan, plan["tasks"][1])                                           # a task of a page of before (no section): as it was
+    assert "in this worktree: read it if you need it." in older and "your party's section" not in older

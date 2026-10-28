@@ -190,7 +190,7 @@ went are removed with it (`tests/test_idea_night.py`, `tests/test_night_low.py`)
    *Start* (`start` row, C §4.6) — the cost said on the route card was the whole way's, so nothing unsaid is spent.
 
 ## 8. The project's questions (G; §153.1–§153.4, §156.10, §157.1)
-1. **At the first start** (the parties made: `ideas.party_save` with `first: true`): one call of Product's leader (in
+1. **At the first start** (the parties made: the one place of the parties' *Start*, spec 100 D, sends `ideas.project_ask`): one call of Product's leader (in
    a game Game design's; with neither, none) on the cheaper tier, no tools, given `project_facts.start_files` (B §2.3):
    two or three cards — *whom it is for*, *what hurts them*, *what it leaves out* — each only where the files do not say
    it; where they do, the leader's reading is the card's pick, one press to confirm. With neither party, the Orkmaster's
@@ -355,5 +355,27 @@ the Orkmaster's card, `take`, the record `<state_dir>/project_q.json`), `realm/b
   made*, but `party_save` is the person's *Save party*; the first start's parties are made by `ideas.goal_save`: the face sends `first` where it means it), `ideas.project_ask` is the
   direct way. `project_answer` without `decide` needs every card answered; *Let … decide* keeps the leader's pick `read` and a card with none (the Orkmaster's) is let go.
   Product's *whom* and *hurts* are kept as a segment and its pain only for a Product party.
-- **Not yet:** the face (spec 100); `needs_you`'s count in `ideas.snapshot` (`gui/ideas.py`) still counts the row (it holds nothing back: add `"project_q"` to the kinds it leaves out);
-  an event for the questions or their answers; the decisions file's chosen path (`project.json` `decisions`, E's note).
+- **Wired** by the lead: the keeper's and the host's bases, the two commands in the table, and the row left out of `ideas.snapshot`'s count (it holds nothing
+  back). §8.1's trigger corrected: the face's *Start* in the one place of the parties (spec 100 D) sends `ideas.project_ask` after the parties are saved.
+- **Not yet:** the face (spec 100); an event for the questions or their answers; the decisions file's chosen path (`project.json` `decisions`, E's note).
+
+## As built (H)
+
+`core/idea_plan.py` now holds `PlanMixin` (moved out of `core/idea_keeper.py`, which was past 600 lines): `plan_prompt(root, slug, step)`, `plan_one(slug, was, step)`, `plan_next`, `write_stages`, `assess`. New
+`realm/task_brief.py` (`reading`, `contract`, `note`, `page_of`: what a plan and a task read of a page of the new format). `realm/idea_route.py` gains `way`, `step_of`, `at_step`, `step_done`,
+`steps_left`, `next_step`, `legs_of`, `begin`, `recorded`; `steps` reads a route of two steps or more as one `party` step each (`n`, `of`; done · its state · `waiting`). Tests: `tests/test_idea_steps.py`
+(a goal through the host), `tests/test_idea_keeper.py`, `tests/test_runner_35.py`, `tests/test_idea_route.py`, `tests/test_task_brief.py`.
+- **How a two-step goal goes.** After the join the goal is `ready` and lies in its first step's party; `plan_one` plans that step from its section whole and the others' *Done when* and *Will be*,
+  stamps each task (`step`, `party`, `craft`, `leader`, `section`) and keeps `route` in the plan (only for two steps or more); state `plan`, `on_plan` as today. Once passed (`working`), the
+  runner does not end the goal while `idea_route.steps_left(plan)` (the step's tasks merged or dropped, one merged, and the plan's `route` has another); the keeper's `tick` (`plan_next`) moves
+  the goal into the next step's party, which plans its step (its voice, team, tool and size are the goal's party's, so they are the step's) and **appends** its tasks and to-dos to the passed plan
+  (ids numbered on, the estimate summed); the goal stays `working` and the runner starts them. Done when the last step's tasks are merged. A next step that cannot be planned puts the goal at
+  `failed` with *No plan for the next step: …*, the runner lets it go, and *Start* has the runner take it again (the clock plans the step again).
+- **A task's party** is its step's through the goal lying in it (`party_of_idea`, `size_of_idea` read the page's party), and its head by `roles.task_head` reading the task's own `craft` and `leader`
+  when no `party=` or `leader=` is passed. The brief names the common part, the task's section and the others' contract (`## <heading>`), never pasting them; a task of a page of before reads its
+  spec as it was.
+- **A page of the new format** gets no flat *Stages* and no *Risk:* line: each step's tasks are the *Plan* part of its section; the risk is in the front matter (`risk`, `risk_triggers`).
+- **Left:** the later steps start by themselves (the person's *Start* covers the whole way, and `idea_risk.decide` is read at the first step only); `### Plan` is written when the step is planned, not at *Start*;
+  the runner's write of `plan.json` and the keeper's append are two writes of one file (the keeper's under `ideas.LOCK`, the runner's under its own lock, as a to-do's tick already is); *Re-plan what
+  is left* (`revise`) reads the page as the first section's and the plan as a whole; `idea_checks.status` finds the first task of a check's tag (the first step's); the gui's other callers of
+  `roles.head` for a role alone are unchanged.

@@ -6,7 +6,7 @@ idea straight into its spec, talks a spec through with the person, and turns a s
     keeper.draft(slug)                # an idea → its spec (core/idea_draft.py), then its plan when it asks nothing
     keeper.answer(slug, ["…", "…"])   # the person answers the spec's questions at once: the rest is written, then the plan
     keeper.say(slug, "Why not a toggle?", "Risks")    # an edit of one section, in the background
-    keeper.plan(slug)                 # Re-plan: the page → plan.json, with its estimate
+    keeper.plan(slug)                 # Re-plan: the page → plan.json, with its estimate (the first step's; the next steps are planned by `tick`, core/idea_plan.py)
     keeper.revise(slug)               # Re-plan what is left, after the start: a plan change for the tasks not started (core/idea_revise.py)
     keeper.judge(slug)                # a pitch (a goal of Ideation): its four views, the case against, the Investor's decision (core/idea_judge.py)
     keeper.read_stop(slug)            # this idea's run stops (its own cancel); its queue is `hold`
@@ -23,6 +23,8 @@ idea straight into its spec, talks a spec through with the person, and turns a s
   goes to the ledger (realm/idea_spend.py, spec 36 §1).
 - **Plan**: the page → `plan.json` (at most 8 tasks), its Stages and its risk written by code, the estimate from the
   tiers the tasks will run on, at what the board's last tasks on each cost (spec 36 §6); then `on_plan(slug)` (the face decides whether it starts by itself, spec 35 §5).
+  **By steps** (spec 99 §9, core/idea_plan.py `PlanMixin`): a goal's route is its steps; the first step's party plans its own step (its section whole, of the others only *Done when*
+  and *Will be*); when its tasks are merged in dev `tick` has the next step's party plan its step (`plan_next`), and so on.
 - **The window** (spec 35 §6): in a spent window a call is not made; what runs by itself waits with `held_until`, a
   call the person asks for is refused in plain words.
 
@@ -50,9 +52,9 @@ from orkboard.core.idea_revise import ReviseMixin
 from orkboard.core.idea_sections import SectionsMixin
 from orkboard.core.idea_talk import TalkMixin
 from orkboard.core.idea_project_q import ProjectQMixin
-from orkboard.core.idea_plan import _task, _why, estimate, readiness  # noqa: F401  (the plan's small helpers: the callers and tests use them from here)
-from orkboard.realm import (call_log, collide, event_log, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_look, idea_pick, idea_spend, idea_target, ideas,
-                            releases, roles, status, tool_errors)
+from orkboard.core.idea_plan import PlanMixin, _task, _why, estimate, readiness  # noqa: F401  (the plan's small helpers: the callers and tests use them from here)
+from orkboard.realm import (call_log, event_log, goal_team, idea_change, idea_checks, idea_look, idea_pick, idea_spend, idea_target, ideas,
+                            roles, status, tool_errors)
 from orkboard.realm.idea_words import short_said, title_of
 
 CHANGED = "ideas.changed"          # the bus's topic: slug
@@ -104,7 +106,7 @@ def _iso(at: float) -> str:
     return dt.datetime.fromtimestamp(at).isoformat(timespec="seconds")
 
 
-class IdeaKeeper(SignInMixin, TalkMixin, ProjectQMixin, DecideMixin, SectionsMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
+class IdeaKeeper(SignInMixin, TalkMixin, ProjectQMixin, DecideMixin, SectionsMixin, PlanMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
     def __init__(self, repo_root: Path, state_dir: Path, wiki_root: Callable[[], Path],
                  settings: Callable[[], dict], publish: Callable[[str], None] = lambda slug: None,
                  demo: bool = False, budget_ok: Callable[[], bool] = lambda: True,
@@ -317,6 +319,9 @@ class IdeaKeeper(SignInMixin, TalkMixin, ProjectQMixin, DecideMixin, SectionsMix
             for i in ideas.ideas(self.wiki_root()):
                 slug = i["slug"]
                 st = ideas.state(self.state_dir, slug)
+                if st["state"] == "working" and not st["error"] and not self.busy(slug) and not self.signed_out():
+                    started |= self._quiet(lambda: self.plan_next(slug))      # its step is merged in dev and the route has another: that party plans it (spec 99 §9.1)
+                    continue
                 if self.busy(slug) or (not st["held_until"] and (st["error"] or st["state"] != "raw")):
                     continue
                 if st["held_for"] == "sign_in" and st["held_until"] and not self._release(slug, st, now):
@@ -480,93 +485,6 @@ three lines. {self.reads("talk", [])} You may read the repository (read only).
             ideas.save_state(self.state_dir, slug, state=was)
             raise
         return True
-
-    def plan_prompt(self, root: Path, slug: str) -> str:
-        """§0's `plan` context: Gist, Done when, Out, Risks, Depends on; the goal's Summary."""
-        page = ideas.idea_page(root, slug)
-        goal = next((t for t in ideas.tracks(root, make=False) if t["slug"] == page.get("track")), None)
-        parts = [(n, page.section(n)) for n in ("Gist", "Done when", "Out", "Risks", "Depends on")]
-        parts.append(("Its goal's summary", goal["summary"] if goal else ""))
-        if told := collide.told_of(self.state_dir, slug):
-            parts.append(("The Orkmaster tells you (another party's goal changed what this one rests on)", told))     # spec 71 §3
-        context = idea_target.cut(parts, idea_target.CONTEXT["plan"])
-        touches = [t for t in json.loads(page.get("touches") or "[]") if isinstance(t, str)] if page.get("touches", "").startswith("[") else []
-        kinds = "; ".join(f'"{k}" ({roles.KIND_LINES[k]})' for k in roles.TASK_KINDS)
-        party = goal_team.team_of(root, page.get("track") or ideas.GENERAL)
-        if party:                                    # the leader does the tags it takes when no builder does
-            party = [*party, goal_team.leader_of(root, page.get("track") or ideas.GENERAL)]
-        team = self.team_lines([s for s in dict.fromkeys(party) if s != roles.TASKMASTER])
-        team += idea_look.instruction(self.state_dir, root, slug)                   # a screen's look is picked first, a task may name its screen (spec 85 §2, §3)
-        checks = idea_checks.plan_lines(self.idea_checks(root, slug), self.team_checks(root, slug))
-        return f"""You are the keeper of this project's Task board. This spec goes to work: turn it into a plan. You may
-read the repository (read only) to see what the work touches. {self.reads("plan", touches)}
-{idea_lens.attached(self.state_dir, slug)}{goal_types.prompt_line(self.state_dir, slug)}{releases.prompt_lines(root, self.state_dir, slug)}{checks}
-The spec: {page.title}
-{context}
-Rules:
-- At most {MAX_TASKS} tasks. Each is a brief another Claude session can do alone, in a worktree of the repository:
-  what to change, where, and how it is tested; it names the Done when lines it proves. `after` only where a task
-  needs another's result.
-- Each task's `title` is a name, 60 characters at most, the verb first (e.g. "Spawn enemies from the wave director"):
-  the detail belongs in its brief.
-- Each task's tag (`kind`), the kind of work it is, one of: {kinds}. Ordinary work is "code".{team}
-- A task may end with two to six variants of one kind for the person to pick from instead of a change, only when the spec asks to
-  choose by eye or by ear (a logo, an icon, a sound, a clip, a name or a tagline): give it `"pick": {{"n": 2 to 6, "kind": "image" |
-  "audio" | "video" | "text", "ask": "<the question, one line>", "target": "<the repository path the picked one is written to>"}}`. At
-  most one such task per goal at a time; never for code.
-- Each task's tier, its complexity: "elder" (hard design or a wide change), "warrior" (ordinary code), "laborer"
-  (small, mechanical).
-- To-dos only for what a task cannot start without: a key ("secret": its title is the environment variable's name,
-  e.g. API_KEY), a decision ("choice", with its choices), a yes ("confirm"), steps a person does ("instructions"), a
-  file the person gives ("file": its title says what the file is, e.g. the Firebase config, google-services.json;
-  `accept` the extensions it may have). Any kind may carry `steps` when the person has to do something first. Most
-  plans need none. `for`: the tasks that wait for it.
-
-Answer with one JSON object and nothing else:
-{{"tasks": [{{"id": "k1", "title": "…", "short": "two or three words, 24 characters at most", "brief": "…", "kind": "code",
-             "tier": "warrior", "after": []}}],
- "todos": [{{"id": "t1", "title": "…", "kind": "confirm", "why": "…", "choices": [], "steps": [], "accept": [], "for": ["k1"]}}]}}
-"""
-
-    def plan_one(self, slug: str, was: str = "ready") -> None:
-        """The plan, one shot; its Stages and risk written, its estimate by the tiers the tasks will run on; then
-        whether it starts by itself is the face's (`on_plan`)."""
-        root = self.wiki_root()
-        back = was if was in ("raw", "asks", "ready", "plan", "failed") else "ready"
-        try:
-            text, *_rest = self.ask("plan", self.plan_prompt(root, slug))
-            data = make_plan(slug, self.parse(text), look=idea_look.screen_title(self.state_dir, root, slug))
-            data["tasks"] = idea_checks.with_check_tasks(data["tasks"], self.idea_checks(root, slug), self.team_checks(root, slug), _task)
-            team = goal_team.for_idea(root, slug)
-            if team and (lead := goal_team.leader_of(root, ideas.idea_page(root, slug).get("track") or "")) not in team:
-                team = [*team, lead]                     # the leader does the tags it takes when no builder does
-            track = (ideas.idea_page(root, slug).get("track") or "") if ideas.idea_page(root, slug) is not None else ""
-            lean = goal_team.lean_role(root, track) if track else ""         # a Lean party's leader does it all (spec 81 §2)
-            for t in data["tasks"]:                      # who of the goal's team does it, by its tag (none: the project's)
-                t["role"] = lean or (roles.role_for(self.state_dir, t["kind"], team)["slug"] if team else "")
-            data["missing"] = goal_types.of_plan(self.state_dir, data["tasks"], team, lead) if team else []     # what no one of the party does (spec 52 §2.6)
-            target = self.target()
-            tiers = goal_team.tiers_of(root, track) if track else {}
-            runs = [idea_target.tier_of(idea_target.task_pick(t["tier"], target, str((goal_team.seat_role(self.role_of(t), tiers) or {}).get("model") or ""))[0])
-                    for t in data["tasks"]]
-            data["estimate"] = estimate(data["tasks"], runs, idea_spend.tier_costs(self.state_dir))   # learned (spec 36 §6)
-            ideas.save_plan(self.state_dir, slug, data)
-        except Exception as e:
-            if self.sign_in_held(slug, e, back):             # it waits for the sign-in, then plans again (the clock)
-                self.publish(slug)
-                return
-            stopped = isinstance(e, InterruptedError)
-            ideas.save_state(self.state_dir, slug, state=back, error="" if stopped else f"No plan: {_why(e)}",
-                             **({"queue": "hold"} if stopped else {}))
-            return
-        idea_change.clear(self.state_dir, slug)          # nothing changed since this plan, and a plan change waiting was for the one before (spec 62 §1.4, §3.3)
-        idea_change.drop(self.state_dir, slug)
-        collide.clear_told(self.state_dir, slug)         # what the Orkmaster told it is used (spec 71 §3)
-        self.write_stages(slug, data)
-        self.assess(slug)
-        ideas.save_state(self.state_dir, slug, state="plan", error="", held_until="", held_for="", measure=self.measure())
-        self.publish(slug)
-        self.on_plan(slug)
 
 
 def make_plan(slug: str, answer: dict | None, made_at: str = "", look: str = "") -> dict:

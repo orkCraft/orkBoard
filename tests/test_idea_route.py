@@ -266,3 +266,78 @@ def test_a_goals_page_carries_its_route_too_and_none_for_a_goal_with_only_its_pa
     page = h.command("ideas.page", {"slug": slug})
     assert [s["step"] for s in page["route"]] == ["pitch", "party"] and page["route"][0]["goal"] == src
     assert h.command("ideas.page", {"slug": goal(h, h.app, "Plain")})["route"] == []
+
+
+# -- spec 99 §9: the work by steps, each step history ---------------------------------------------------------------------------------------
+
+def stepped(h, slug, steps, route=None, passed=True):
+    """A goal at work on a route (default: Mobile app, then Website), its plan holding `steps`: [(task id, step, state)]."""
+    route = route or [h.app, h.web]
+    ideas.save_state(h.state, slug, state="working", route=[{"party": p, "leader": ""} for p in route])
+    ideas._write_json(ideas.state_folder(h.state, slug) / "plan.json", {"idea": slug, "todos": [], **({"route": [{"party": p, "leader": ""} for p in route]} if len(route) > 1 else {}),
+                                    **({"passed_at": "2026-10-28T09:00:00"} if passed else {}),
+                                    "tasks": [{"id": i, "title": i.upper(), "state": s, "step": n} for i, n, s in steps]})
+
+
+def test_the_step_a_plan_is_at_and_whether_it_is_done_and_which_follows(host):
+    h = host
+    slug = goal(h, h.app, "Dark mode")
+    stepped(h, slug, [("k1", 1, "merged"), ("k2", 1, "running")])
+    plan = ideas.plan(h.state, slug)
+    assert idea_route.at_step(plan) == 1 and not idea_route.step_done(plan, 1) and idea_route.next_step(plan) is None and not idea_route.steps_left(plan)
+    stepped(h, slug, [("k1", 1, "merged"), ("k2", 1, "merged")])
+    plan = ideas.plan(h.state, slug)
+    assert idea_route.step_done(plan, 1) and idea_route.steps_left(plan) and idea_route.next_step(plan) == {"n": 2, "party": h.web, "leader": ""}
+    assert idea_route.next_step(None) is None and not idea_route.steps_left({**plan, "passed_at": None})                    # a plan not passed has no step after
+    stepped(h, slug, [("k1", 1, "merged"), ("k3", 2, "merged")])
+    plan = ideas.plan(h.state, slug)
+    assert idea_route.at_step(plan) == 2 and idea_route.step_done(plan, 2) and not idea_route.steps_left(plan)                 # the last step: nothing follows
+    stepped(h, slug, [("k1", 1, "dropped"), ("k2", 1, "dropped")])
+    assert not idea_route.step_done(ideas.plan(h.state, slug), 1) and not idea_route.steps_left(ideas.plan(h.state, slug))      # nothing landed
+    stepped(h, slug, [("k1", 1, "merged"), ("k2", 1, "dropped")])
+    assert idea_route.step_done(ideas.plan(h.state, slug), 1)
+    assert idea_route.step_of({"id": "k1"}) == 1 and idea_route.step_of({"step": 3}) == 3 and idea_route.step_of({"step": "2"}) == 1 and idea_route.step_of({"step": True}) == 1
+
+
+def test_a_goals_ways_are_its_route_as_it_stands_a_party_since_removed_left_out(host):
+    h = host
+    slug = goal(h, h.app, "Dark mode")
+    assert idea_route.way(h.root, h.state, slug) == []                                       # a goal routed to nothing works as one step
+    ideas.save_state(h.state, slug, route=[{"party": h.app, "leader": "x"}, {"party": h.web}, {"party": h.web}, {"party": "gone"}, "junk"])
+    assert [r["party"] for r in idea_route.way(h.root, h.state, slug)] == [h.app, h.web]
+    assert idea_route.legs_of({"route": [{"party": "a", "leader": "l"}, {"party": ""}, "x"]}) == [{"party": "a", "leader": "l"}] and idea_route.legs_of(None) == []
+
+
+def test_each_step_is_recorded_as_it_is_planned_and_a_first_step_planned_again_forgets_the_rest(host):
+    h = host
+    slug = goal(h, h.app, "Dark mode")
+    assert idea_route.recorded(h.state, slug) == []
+    idea_route.begin(h.state, slug, 1, h.app, "architect", ["k1", "k2"])
+    idea_route.begin(h.state, slug, 2, h.web, "product-designer", ["k3"])
+    got = idea_route.recorded(h.state, slug)
+    assert [(s["n"], s["party"], s["leader"], s["tasks"]) for s in got] == [(1, h.app, "architect", ["k1", "k2"]), (2, h.web, "product-designer", ["k3"])] and all(s["at"] for s in got)
+    idea_route.begin(h.state, slug, 1, h.app, "architect", ["k1"])                          # planned again before its start: the step after it is forgotten
+    assert [(s["n"], s["tasks"]) for s in idea_route.recorded(h.state, slug)] == [(1, ["k1"])]
+    ideas.save_state(h.state, slug, state="plan")
+    ideas.save_plan(h.state, slug, {"idea": slug, "todos": [], "tasks": [{"id": "k1", "state": "ready"}]})
+    idea_route.move(h.root, h.state, slug, h.web, None, "person")                           # a move keeps the steps recorded beside it
+    assert len(idea_route.moves(h.state, slug)) == 1 and [s["n"] for s in idea_route.recorded(h.state, slug)] == [1]
+
+
+def test_a_route_of_two_steps_or_more_has_a_party_step_for_each_the_ones_done_the_one_at_work_and_the_ones_to_come(host):
+    h = host
+    slug = goal(h, h.app, "Dark mode")
+    stepped(h, slug, [("k1", 1, "running"), ("k2", 1, "merged")])
+    idea_route.begin(h.state, slug, 1, h.app, "", ["k1", "k2"])
+    legs = lambda: [{k: s[k] for k in ("party", "state", "done", "total", "n", "of")} for s in idea_route.route(h.root, h.state, slug)]      # noqa: E731
+    assert legs() == [{"party": h.app, "state": "working", "done": 1, "total": 2, "n": 1, "of": 2}, {"party": h.web, "state": "waiting", "done": 0, "total": 0, "n": 2, "of": 2}]
+    first = idea_route.route(h.root, h.state, slug)[0]
+    assert first["step"] == "party" and first["at"] == idea_route.recorded(h.state, slug)[0]["at"] and first["goal"] == slug
+    stepped(h, slug, [("k1", 1, "merged"), ("k2", 1, "merged")])
+    assert [(s["state"], s["n"]) for s in idea_route.route(h.root, h.state, slug)] == [("done", 1), ("working", 2)]            # the next step's turn, not planned yet
+    stepped(h, slug, [("k1", 1, "merged"), ("k2", 2, "waiting")])
+    ideas.save_state(h.state, slug, state="done")
+    assert [(s["state"], s["done"], s["total"]) for s in idea_route.route(h.root, h.state, slug)] == [("done", 1, 1), ("done", 0, 1)]
+    solo = goal(h, h.app, "One step", state="working", tasks=("merged", "running"))
+    ideas.save_state(h.state, solo, route=[{"party": h.app, "leader": ""}])
+    assert idea_route.route(h.root, h.state, solo) == [] and idea_route.steps(h.root, h.state, solo)[0].get("n") is None                  # a route of one step is today's

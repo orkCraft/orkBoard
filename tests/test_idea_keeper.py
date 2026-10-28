@@ -332,3 +332,187 @@ def test_the_night_is_gone_the_clock_runs_only_what_the_limits_held_and_a_night_
     assert ideas.state(keeper.state, held)["state"] == "asks"
     assert ideas.state(keeper.state, older)["state"] == "raw" and ideas.state(keeper.state, plain)["state"] == "raw"
     assert keeper.at_work() is False
+
+
+# -- spec 99 §9: the work by steps -------------------------------------------------------------------------------------------------------
+
+def _routed(keeper, text="add a dark mode option", parties=(("Design", "product-designer", ["artist"]), ("Tech", "architect", ["grunt"])), state="ready"):
+    """A goal with a route of `parties` ((title, leader, team)): the page in the new format (a section a party, its leader's), the goal in its first step's party, at `state`.
+    Returns (the slug, the parties' slugs)."""
+    from orkboard.realm import goal_team, library, spec_sections
+    slugs = []
+    for title, leader, team in parties:
+        library.install(keeper.state, [s for s in (*team, leader) if library.get(s) is not None])
+        slugs.append(ideas.add_track(keeper.root, title))
+        goal_team.set_team(keeper.root, slugs[-1], list(team), leader=leader)
+    slug = ideas.add_idea(keeper.root, text, slugs[0], state_dir=keeper.state)
+    page = ideas.idea_page(keeper.root, slug)
+    heads = [(title, spec_sections.join({"Why": f"{title}'s why.", "Done when": f"- {title} is done", "Checks": f"- {title} checks",
+                                         "Will be": f"changed {title.lower()}/part — the {title.lower()} part", "Out": f"- {title}'s out", "Risks": f"- {title}'s risk"}))
+             for title, _l, _t in parties]
+    spec_sections.arrange(page, {"Asked": text, "Gist": "Dark mode as a setting", "Route": "1. Design\n2. Tech"}, heads)
+    ideas._write(keeper.root / ideas.IDEAS / f"{slug}.md", page.text())
+    ideas.save_state(keeper.state, slug, state=state, route=[{"party": s, "leader": p[1]} for s, p in zip(slugs, parties)])
+    return slug, slugs
+
+
+def _asked(model, n):
+    return " ".join(model.asked[n]["prompt"].split())
+
+
+def test_the_first_steps_party_plans_its_own_step_from_its_section_whole_and_of_the_others_only_done_when_and_will_be(keeper):
+    slug, (design, tech) = _routed(keeper)
+    keeper.call = model = Model({"tasks": [{"id": "a", "title": "Draw the settings screen", "brief": "Draw it", "kind": "design"}]})
+    keeper.plan(slug)
+    _wait(keeper, slug)
+    prompt = model.asked[0]["prompt"]
+    assert "Your section, Design, whole:" in prompt and "Design's why." in prompt and "Design's risk" in prompt and "changed design/part" in prompt        # its own, whole, its Will be too
+    assert "The section Tech of another party: only its Done when and Will be" in prompt
+    assert "Tech is done" in prompt and "changed tech/part" in prompt                                                                                  # the contract of the other
+    assert "Tech's why." not in prompt and "Tech's out" not in prompt and "Tech's risk" not in prompt and "Tech checks" not in prompt                  # nothing else of it
+    assert "step 1 of 2 of the goal's route" in _asked(model, 0) and "Dark mode as a setting" in prompt
+    plan = ideas.plan(keeper.state, slug)
+    assert ideas.state(keeper.state, slug)["state"] == "plan" and ideas.idea_page(keeper.root, slug).get("track") == design
+    (task,) = plan["tasks"]
+    assert (task["step"], task["party"], task["section"]) == (1, design, "Design") and task["craft"] == "design" and task["leader"] == "product-designer"
+    assert plan["route"] == [{"party": design, "leader": "product-designer"}, {"party": tech, "leader": "architect"}]
+
+
+def test_a_page_of_the_new_format_gets_no_flat_stages_and_no_risk_line_but_its_steps_plan_in_its_section_and_its_risk_in_its_front_matter(keeper):
+    from orkboard.realm import spec_sections
+    slug, _parties = _routed(keeper)
+    keeper.call = Model({"tasks": [{"id": "a", "title": "Draw", "brief": "Draw it", "kind": "design"}, {"id": "b", "title": "Wire", "brief": "Wire it", "after": ["a"]}]})
+    keeper.plan(slug)
+    _wait(keeper, slug)
+    page = ideas.idea_page(keeper.root, slug)
+    names = [n for n, _t in page.sections]
+    assert "Stages" not in names and "Risks" not in names and names[-2:] == ["Design", "Tech"]
+    plan_part = spec_sections.split(page.section("Design"))["Plan"]
+    assert plan_part.startswith("1. k1 Draw (M)") and "2. k2 Wire (M), after k1" in plan_part and "Plan" not in spec_sections.split(page.section("Tech"))
+    assert page.get("risk") in ("low", "medium", "high") and "risk_triggers" in dict(page.meta)
+
+
+def test_a_page_of_before_plans_as_it_always_did_flat_stages_and_a_risk_line(keeper):
+    slug = ideas.add_idea(keeper.root, "export csv", state_dir=keeper.state)
+    ideas.update(keeper.root, slug, {"Gist": "CSV export", "Done when": "- a file", "Out": "- images"})
+    keeper.call = model = Model({"tasks": [{"id": "a", "title": "Writer", "brief": "Write rows"}]})
+    keeper.plan(slug)
+    _wait(keeper, slug)
+    page = ideas.idea_page(keeper.root, slug)
+    assert page.section("Stages").startswith("1. k1 Writer") and page.section("Risks").startswith("Risk:")
+    assert "Your section" not in model.asked[0]["prompt"] and "Done when:\n- a file" in model.asked[0]["prompt"]
+    plan = ideas.plan(keeper.state, slug)
+    assert "route" not in plan and plan["tasks"][0]["step"] == 1 and "section" not in plan["tasks"][0]
+
+
+def test_a_goal_of_one_step_plans_its_section_and_goes_as_today_with_no_route_in_its_plan(keeper):
+    slug, (design,) = _routed(keeper, parties=(("Design", "product-designer", ["artist"]),))
+    keeper.call = model = Model({"tasks": [{"id": "a", "title": "Draw", "brief": "Draw it", "kind": "design"}]})
+    keeper.plan(slug)
+    _wait(keeper, slug)
+    plan = ideas.plan(keeper.state, slug)
+    assert ideas.state(keeper.state, slug)["state"] == "plan" and "route" not in plan and plan["tasks"][0]["party"] == design
+    assert "step 1 of" not in model.asked[0]["prompt"] and "Your section's Will be names the parts of your map" in model.asked[0]["prompt"]
+    assert keeper.next_step(slug) is None and keeper.plan_next(slug) is False
+
+
+def _pass(keeper, slug, **more):
+    ideas.edit_plan(keeper.state, slug, lambda p: p.update(passed_at="2026-10-28T10:00:00", passed_by="person", **more))
+    ideas.save_state(keeper.state, slug, state="working")
+
+
+def _merge(keeper, slug, *ids):
+    def done(p):
+        for t in p["tasks"]:
+            if t["id"] in ids:
+                t.update(state="merged", commit="c" * 40, subjects=[f"{t['title']} landed"])
+    ideas.edit_plan(keeper.state, slug, done)
+
+
+def test_the_next_steps_party_plans_when_the_first_is_merged_in_dev_and_its_tasks_join_the_passed_plan(keeper):
+    from orkboard.realm import idea_route
+    slug, (design, tech) = _routed(keeper)
+    keeper.call = model = Model({"tasks": [{"id": "a", "title": "Draw the screen", "brief": "Draw it", "kind": "design"}], "todos": []},
+                                {"tasks": [{"id": "a", "title": "Build the setting", "brief": "Build it", "kind": "code"}, {"id": "b", "title": "Test it", "brief": "Test", "after": ["a"]}],
+                                 "todos": [{"id": "x", "title": "Confirm the theme", "kind": "confirm", "for": ["b"]}]})
+    keeper.plan(slug)
+    _wait(keeper, slug)
+    assert keeper.next_step(slug) is None                                                         # the plan is not passed yet
+    _pass(keeper, slug)
+    assert keeper.next_step(slug) is None and keeper.tick(time.time()) is False                  # its step is not merged
+    _merge(keeper, slug, "k1")
+    assert keeper.next_step(slug) == {"n": 2, "party": tech, "leader": "architect"}
+    assert keeper.tick(time.time() + 100) is True                                                 # the clock has the next step's party plan it
+    _wait(keeper, slug)
+    st = ideas.state(keeper.state, slug)
+    plan = ideas.plan(keeper.state, slug)
+    assert st["state"] == "working" and st["error"] == "" and ideas.idea_page(keeper.root, slug).get("track") == tech
+    assert [(t["id"], t["step"], t["party"], t["state"]) for t in plan["tasks"]] == [("k1", 1, design, "merged"), ("k2", 2, tech, "ready"), ("k3", 2, tech, "waiting")]
+    assert plan["tasks"][2]["after"] == ["k2"] and [(d["id"], d["for"]) for d in plan["todos"]] == [("t1", ["k3"])]       # numbered on
+    assert plan["tasks"][1]["craft"] == "tech" and plan["tasks"][1]["leader"] == "architect" and plan["tasks"][1]["section"] == "Tech"
+    assert plan["passed_at"] and plan["estimate"]["tasks"] == 3
+    prompt = model.asked[1]["prompt"]
+    assert "Your section, Tech, whole:" in prompt and "Tech's why." in prompt and "Design is done" in prompt and "Design's why." not in prompt
+    assert "Made by the steps before yours (merged in dev)" in prompt and "Draw the screen landed" in prompt and "step 2 of 2 of the goal's route" in _asked(model, 1)
+    assert [(s["n"], s["party"]) for s in idea_route.recorded(keeper.state, slug)] == [(1, design), (2, tech)]
+    page = ideas.idea_page(keeper.root, slug)
+    assert "Plan" in page.parts("Tech") and "Plan" in page.parts("Design")
+    assert keeper.next_step(slug) is None                                                         # the last step: nothing follows
+    assert keeper.tick(time.time() + 200) is False
+
+
+def test_a_next_step_that_cannot_be_planned_puts_the_goal_at_failed_with_why_and_the_clock_does_not_try_again(keeper):
+    slug, _parties = _routed(keeper)
+    keeper.call = Model({"tasks": [{"id": "a", "title": "Draw", "brief": "Draw it"}]}, "no json at all")
+    keeper.plan(slug)
+    _wait(keeper, slug)
+    _pass(keeper, slug)
+    _merge(keeper, slug, "k1")
+    assert keeper.plan_next(slug) is True
+    _wait(keeper, slug)
+    st = ideas.state(keeper.state, slug)
+    assert st["state"] == "failed" and st["error"].startswith("No plan for the next step:") and len(ideas.plan(keeper.state, slug)["tasks"]) == 1
+    assert keeper.tick(time.time() + 100) is False and keeper.plan_next(slug) is False
+
+
+def test_the_clock_plans_no_next_step_while_the_keeper_is_busy_or_the_demo_runs(keeper):
+    slug, _parties = _routed(keeper)
+    keeper.call = Model({"tasks": [{"id": "a", "title": "Draw", "brief": "Draw it"}]})
+    keeper.plan(slug)
+    _wait(keeper, slug)
+    _pass(keeper, slug)
+    _merge(keeper, slug, "k1")
+    keeper.demo = True
+    assert keeper.plan_next(slug) is False and keeper.tick(time.time() + 100) is False
+    keeper.demo = False
+    keeper._busy[slug] = "planning"
+    assert keeper.plan_next(slug) is False
+    keeper._busy.pop(slug)
+    assert keeper.next_step(slug) is not None
+
+
+def test_a_step_whose_tasks_were_all_dropped_landed_nothing_and_no_step_follows(keeper):
+    slug, _parties = _routed(keeper)
+    keeper.call = Model({"tasks": [{"id": "a", "title": "Draw", "brief": "Draw it"}]})
+    keeper.plan(slug)
+    _wait(keeper, slug)
+    _pass(keeper, slug)
+    ideas.edit_plan(keeper.state, slug, lambda p: p["tasks"][0].update(state="dropped"))
+    assert keeper.next_step(slug) is None
+
+
+def test_the_plan_a_leader_makes_for_its_step_is_stamped_so_its_tasks_wear_its_partys_race(keeper):
+    from orkboard.realm import roles
+    slug, (design, tech) = _routed(keeper)
+    keeper.call = Model({"tasks": [{"id": "a", "title": "Draw", "brief": "Draw it", "kind": "design"}]}, {"tasks": [{"id": "a", "title": "Build", "brief": "Build it", "kind": "code"}]})
+    keeper.plan(slug)
+    _wait(keeper, slug)
+    _pass(keeper, slug)
+    _merge(keeper, slug, "k1")
+    keeper.plan_next(slug)
+    _wait(keeper, slug)
+    first, second = ideas.plan(keeper.state, slug)["tasks"]
+    heads = [roles.task_head(keeper.state, t, "balance") for t in (first, second)]
+    assert [h["race"] for h in heads] == ["dryad", "peon"]          # Design's task is its leader's (no builder takes a design tag): its higher form; Tech's a Grunt's: an ork
+    assert roles.task_head(keeper.state, {**second, "role": "architect"}, "balance")["race"] == "shaman"      # its leader's higher form
+    assert roles.task_head(keeper.state, {k: v for k, v in second.items() if k not in ("craft", "leader")}, "balance")["race"] == "peon"

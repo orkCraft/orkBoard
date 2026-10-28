@@ -132,7 +132,7 @@ def test_the_plan_tags_each_task_and_gives_it_to_the_team_member_who_does_that_k
     tasks = host.command("ideas.page", {"slug": slug})["plan"]["tasks"]
     assert [(t["kind"], t["role"]) for t in tasks] == [("design", "product-designer"), ("a11y", "accessibility-reviewer"),
                                                        ("code", "grunt"), ("code", "grunt")]   # an unknown tag is code
-    assert [t["head"]["race"] for t in tasks] == ["elf", "elf", "peon", "peon"]
+    assert [t["head"]["race"] for t in tasks] == ["dryad", "elf", "elf", "elf"]      # a task wears its party's race (spec 99 §9.2): Design's elf, its leader the dryad
     from orkboard.core.idea_runner import IdeaRunner
     assert IdeaRunner._role(host.ideas.keeper, tasks[0])["slug"] == "product-designer"
     assert goal_team.for_idea(host.ideas.root(), slug) == ["grunt", "accessibility-reviewer"]

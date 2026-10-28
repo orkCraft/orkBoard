@@ -7,7 +7,7 @@ import subprocess
 import threading
 from pathlib import Path
 
-from orkboard.realm import gate_config, idea_checks, idea_pick, idea_secrets
+from orkboard.realm import gate_config, idea_checks, idea_pick, idea_secrets, task_brief
 from orkboard.realm.idea_git import BOARD_PAGE, env_name, has_summary, parse_tests, read_secret, spec_paths
 
 
@@ -205,7 +205,7 @@ class TaskMixin:
             f"You do one task of the idea `{slug}` in this repository: a git worktree on branch "
             f"`idea/{slug}/{task.get('id')}`, cut from `{_r().setting(self.settings, 'merge_into') or 'main'}`. "
             "Work only here.",
-            "# The idea\n\n" + (f"Its spec is at `{spec}` in this worktree: read it if you need it."
+            "# The idea\n\n" + (f"Its spec is at `{spec}` in this worktree: " + (self._reading(spec, task) or "read it if you need it.")
                                   + "".join(f" It depends on `{d}`." for d in deps) if spec else "(its spec was not found)"),
             f"# Your task: {task.get('title', '')}\n\n{task.get('brief', '')}",
         ]
@@ -221,6 +221,12 @@ class TaskMixin:
         elif is_pick(task):
             parts.append(pick_ask(task))
         return "\n\n".join(parts)
+
+    def _reading(self, spec: str, task: dict) -> str:
+        """What a task may read of its spec (spec 99 §9.3): for a page of the new format and a task planned for a party's section, the common part, that section whole and
+        of the others only their contract (realm/task_brief.py); "" otherwise: the page is read as it was."""
+        page = task_brief.page_of(self.repo_root, self.state_dir, spec) if task.get("section") else None
+        return task_brief.note(page, str(task.get("section") or "")) if page is not None else ""
 
     @staticmethod
     def _without(plan: dict, task: dict) -> list[str]:

@@ -236,8 +236,8 @@ def test_the_draft_and_the_plan_prompts_hold_the_releases_lines_and_a_goal_that_
     h.ideas.keeper.draft(plain["slug"])
     wait(h, plain["slug"])
     assert prompts and not any("This goal is a release" in p for p in prompts)
-    from orkboard.core import idea_keeper, idea_revise
-    assert "releases" in vars(idea_keeper) and "releases" in vars(idea_revise)
+    from orkboard.core import idea_plan, idea_revise
+    assert "releases" in vars(idea_plan) and "releases" in vars(idea_revise)
 
 
 # -- §3.5: Out ----------------------------------------------------------------------------------------------------------------

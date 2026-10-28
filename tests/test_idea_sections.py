@@ -228,10 +228,14 @@ def test_with_nothing_to_settle_the_plan_follows_and_the_goal_starts_by_itself_a
     assert "Players can pick a theme" in plan and "The theme is one file" in plan                                                  # today's plan reads the new spec's Done when
 
 
-def test_the_plan_of_today_reads_the_first_sections_why_out_and_risks_and_every_sections_done_when(host, parties, model):
+def test_the_first_steps_plan_reads_its_own_section_whole_and_of_the_others_only_done_when_and_will_be(host, parties, model):
+    """Spec 99 §9.1 (H): the plan no longer reads the sections folded as the old page's; the first step's party plans from its section whole."""
     slug = _confirmed(host, parties, model, ("product", "tech"))
     prompt = model.steps("plan")[0]["prompt"]
-    assert "Done when:\n- Players can pick a theme\nTech: The theme is one file" in prompt and "Dark mode as a setting" in prompt
+    assert "Your section, Product, whole:" in prompt and "Product's why." in prompt and "Players can pick a theme" in prompt and "changed src/ui" in prompt
+    assert "The section Tech of another party: only its Done when and Will be" in prompt and "The theme is one file" in prompt and "new src/theme" in prompt
+    assert "Tech's why." not in prompt and "Dark mode as a setting" in prompt
+    assert [t["party"] for t in ideas.plan(host.ideas.state_dir, slug)["tasks"]] == [parties["product"]]
 
 
 def test_a_plan_that_cannot_be_made_leaves_the_spec_ready_as_the_drafts_did(host, parties, model):

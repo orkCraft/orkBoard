@@ -39,7 +39,7 @@ from orkboard.core.idea_session import SessionMixin
 from orkboard.core.idea_review import BACK, STOP_ONE, STOPPED_NOTE, ReviewMixin, RunnerError  # noqa: F401
 from orkboard.core.idea_shot import ShotMixin
 from orkboard.core.idea_task import FINDINGS_ASK, NO_DIFF, NO_FINDINGS, NO_RUN, TaskMixin, is_check, is_pick
-from orkboard.realm import task_commands, event_log, goal_team, goal_types, halt, harnesses, idea_checks, idea_pick, idea_target, project_map, roles, status, tool_errors
+from orkboard.realm import task_commands, event_log, goal_team, goal_types, halt, harnesses, idea_checks, idea_pick, idea_route, idea_target, project_map, roles, status, tool_errors
 from orkboard.realm.idea_git import BOARD_PAGE, CRITICAL_TESTS, Conflict, IdeaGit, env_name, has_summary, parse_tests, read_secret, spec_paths  # noqa: F401
 
 CHANGED = "ideas.changed"          # slug: an idea's state or one of its tasks changed
@@ -305,7 +305,13 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                 if failed is not None or all(t.get("state") in goal_types.GONE for t in tasks):
                     if changed:
                         self._save_tasks(slug, tasks)
-                    if not running:
+                    if not running and failed is None and idea_route.steps_left(plan):
+                        if self._state_of(slug) != "working":        # the keeper could not plan the next step (it put the goal at `failed`): Start goes on from here
+                            self._active.remove(slug)
+                            self._changed(slug)
+                        elif changed:
+                            self._changed(slug)
+                    elif not running:
                         self._finish(slug, failed)
                     elif changed:
                         self._changed(slug)
@@ -442,6 +448,9 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
             elif state != "waiting":
                 t["state"], changed = "waiting", True
         return changed
+
+    def _state_of(self, slug: str) -> str:
+        return str((self._read(self._dir(slug) / "state.json") or {}).get("state") or "")
 
     def _finish(self, slug: str, failed: dict | None) -> None:
         self._active.remove(slug)

@@ -416,8 +416,10 @@ def task_head(state_dir: Path, task: dict, target: str, read: tuple[dict, dict] 
     """The head of who does a task: the role it ran as (its type's role before it ran), at the tier it ran at (before it
     ran, the tier it will run at: its planned tier shifted by the Target, a role's own model winning). `read`: `known()`; `tiers`: the tiers
     its party's size gave its seats (spec 81 §2), which the role wears in place of the library's tier it was installed with. `party`: the task's party's
-    craft (`goal_team.craft_of`) and `leader` the slug of its leader: the head is its party's race, the leader's its higher form (spec 99 §1.4)."""
+    craft (`goal_team.craft_of`) and `leader` the slug of its leader: the head is its party's race, the leader's its higher form (spec 99 §1.4). With neither given, the
+    task's own: a task is planned for its step's party and keeps that party's `craft` and `leader` (spec 99 §9.2, core/idea_plan.py)."""
     from orkboard.realm import goal_team
+    party, leader = party or str(task.get("craft") or ""), leader or str(task.get("leader") or "")
     by_slug, _kinds = read = read or known(state_dir)
     r = by_slug.get(task_slug(task, read)) or by_slug.get(GRUNT) or role(state_dir, GRUNT)
     got = head(goal_team.seat_role(r, tiers or {}), target, str(task.get("tier") or "warrior"), party, bool(leader) and r.get("slug") == leader)
