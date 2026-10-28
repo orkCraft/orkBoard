@@ -322,3 +322,22 @@ doers and two checkers (`library.SEATS`). **Races by party**: `roles.PARTY_RACES
 `ideas_canvases`, `ideas_review`, `ideas_pick`, `ideas_project.party_sizes`: spec 100 or H); `ideas_project`'s proposals not yet passing the stage;
 the lexicon's new races (spec 100); UA's roles (§151.8). **For the owner:** §151.1 says *at most seven (its leader, up to five who do, up to two who
 check)*, which can add up to eight; built as seven in all.
+
+## As built (E)
+
+**Rows**: `decision` `{number, title, text, confirmed, error}` at `decided` (after a failed *Confirm* it stays, `confirmed` and the error, and *Confirm
+and start* asks the sections again without writing twice); `fork` `{id, about, sides: [{party, leader, says, why}], text}` at `sections`, the first open
+one. `ideas.confirm {idea, text?}` → `{ok, number, title, commit, held, path, pages}`, `ideas.fork_answer {idea, side?|text?}` (`gui/ideas_decide.py`).
+**The decision** (`core/idea_decide.py`, step `decide`, the cheaper tier, no tools): `{title, why, points}` worded from the person's words, the route,
+the stances, the answers, the defaults and the file's last ten headings, code numbering it (worded by code when the call fails); *Confirm* appends `## <n>.
+<title> (<day> <Month>, the person and Orkboard)` to the decisions file and commits it with the Board's pages in one commit on dev
+(`BoardTree.edit_file` under the repository's lock, the number read again there; the working copy, uncommitted, when the project has no tree); a
+correction kept as written, its first heading the title, its own `#`/`##` demoted. **The sections** (`core/idea_sections.py`, `realm/spec_sections.py`):
+steps `section_first` (the first leader, the draft's tier) and `section` (the others, the cheaper), reads bounded at six, each `{why, done_when ≤5, checks,
+will_be, out, risks, risk, assumed}` (a bug's *Why* its cause; the unsure under *Defaults*: no *Questions* part is ever written); `join` (the Orkmaster,
+two parties or more) writes *Gist* and up to three forks, never a section's word; a fork's answer under *Decisions*, naming the sections it rewrites, one
+call each. An older page reads as one section of its party. With no fork the goal goes to `ready` and plans as today; after a fork it waits for *Start*
+(`way.json` `wait`). `map_text`'s changes say who decided (the person, the leader, a member alone) on a page with sections. **Left:** `plan_prompt` does
+not read *Will be* yet (H), and today's plan still writes a flat *Stages* and risk line (H); the decisions file's chosen path (`project.json`
+`decisions`) is written by nothing yet (G), so it is `docs/decisions.md`; the entry signs *Orkboard* whatever the host (Orkline's signs the same until
+the host's name is passed).
