@@ -210,3 +210,23 @@ the discard's *n ready for main* and *To main* over the pane; a result opened an
 drawer or dialog in the page; every place reached over the pane; the keyboard. The critical tests
 (`tests/test_architecture.py`, `tests/test_board_alone.py`, `tests/test_updates.py`), each part's files' tests and the
 touched browser tests.
+
+## As built (A)
+
+The desktop's page lost what §1's table says goes (67 files, about 3,500 lines; nothing under `pwa/` nor any host module). **Decided
+here:** the pitch's Ctrl+Enter *judge* went with its button (a raw pitch is judged only by *Try again*: Ideation itself goes, §122.3);
+the week's pace line keeps only *behind*; the limits' tip says *kept back*; `test_running_team_desktop_browser.py` keeps its two
+recurring-goals tests (the feature stays). Left in place: words naming *tonight* in Settings' keep-awake lines and in a few comments,
+`board.js`'s header naming *Agents*, the dead `TabMark` and `taskMark`. The desktop browser tests that asserted what went are cleaned
+in a second commit.
+
+## As built (B)
+
+New `realm/goal_place.py` (`place_of`, read by `board_map.row`, so a node and a row agree) and `tests/test_goal_place.py`. Every node of
+`ideas.map` and row of `ideas.board` carries `place` (`deck` · `hand` · `table` · `discard` · `history`), `asks_you`, `waits_as`
+(`reset` · `held` · `line` · `""`, on a deck goal) and `seen`; today's `waits` dict and the row's `asks` count are as they were.
+`ideas.seen {idea}` (`BoardMixin.seen`) writes `seen_at` once and records `result_seen`; it refuses a goal gone or not done.
+`TERMS` gains the 14 words of §2.4. **Decided here:** a raw goal not in the queue `now` lies in the deck (`held`); `held_until` or a
+plan's `start_at` is `reset`; `line` is a deck goal waiting on another (`waits_on`); a failed goal with no Needs you row lies in the
+deck; pitches `sent`/`passed` are history; `ideas.board` reads the collision rows once and gives each goal its own, so a collision is
+on its row as on its node.
