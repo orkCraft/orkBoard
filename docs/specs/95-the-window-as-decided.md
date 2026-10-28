@@ -4,7 +4,7 @@ The owner and the PM, 27 October. `docs/decisions.md` is a log: from §104 to §
 hours before (§134 changes §133, §138 changes §136, §145 turns §104.0's frame round). This spec is that log read as one
 window, with no deltas, so that a slice's spec is written from it and not from forty entries. **Builds:** nothing by
 itself; each slice's spec builds a part of it. **When a decision after §146 changes the window, this spec is changed in
-the same commit**; where it and a decision differ, the decision is right and this spec is fixed. Read up to §157.
+the same commit**; where it and a decision differ, the decision is right and this spec is fixed. Read up to §158.
 
 **What it is, and is not:** the window as it will be, each part with the decisions it rests on. Not: how it is built
 (files, tests: the slices' specs), the phone's frame (spec 94), the engine's calls beyond what the person sees.
@@ -123,8 +123,10 @@ From left to right (§145.3–§145.4, §121.2, §137.5):
      contract* (§104.9).
    - **Done**: its work in dev (§138.1), its *Result* promised against made; it goes to the discard, and to Release's
      map until *To main*.
-3. **The short way** (§118.2): a bug goes to Tech alone and skips Talk; its route card says so, with
-   **Start** and the long way beside it. A small goal is offered the same.
+3. **The short way** (§118.2, §158.1–§158.3): a bug goes to Tech alone. Its Talk is its diagnosis: one round, at most
+   three questions about its cases and a card of Tech's guess of the cause; no decision is written. A bug that already
+   reproduces (a failure's lines, a stack trace, a failing test) skips it: its route card says so, with **Start** and
+   the long way beside it. A small goal is offered the same.
 4. **A change while it works** is a new idea of the same goal, written with the goal picked, talked only with the
    leaders it touches, decided as an entry that names what it changes; only the tasks whose sections changed are planned
    again (§118.7).
@@ -158,11 +160,12 @@ From left to right (§145.3–§145.4, §121.2, §137.5):
    leader's row, **Does** (a sword) and **Checks** (a shield) of role cards; under the leader's row what it keeps of
    the project, its answers read and changed from the next goal (§153.4); at the foot the cost and **Start** or
    **Save**.
-6. **A party's race is its craft's; its leader is its race's higher form, grown out of the head, never worn** (§53,
-   §154–§155): Tech orks led by an ork shaman, Design elves led by an elf dryad, Marketing gnomes led by a gnome fairy,
-   Product griffins led by a unicorn knight, Release a lich leading skeletons; the tier is the gear every head wears;
-   the crown is the Orkmaster's alone. *Asked*: the leaders of Game design, Art, LiveOps and Run, so no two leaders of
-   one project share a silhouette (§155.2 names none of them).
+6. **A party's race is its party's; its leader is its race's higher form, grown out of the head, never worn** (§53,
+   §154–§155, §158.4–§158.5): every seat wears its party's race, whatever its role's craft. Product, or a game's Game
+   design: griffins led by a unicorn knight; Tech: orks led by an ork shaman; Design, or a game's Art: elves led by an
+   elf dryad; Run, or a game's LiveOps: goblins led by an imp; Marketing: gnomes led by a gnome fairy; Release: a lich
+   leading skeletons. Six parties, six races, so no two leaders of a project share a silhouette; the tier is the gear
+   every head wears; the crown is the Orkmaster's alone. The rest of the cast is the marketing's (§158.6).
 
 ## 7. The first start
 §132, §145.8: the AI tools found and their *Check* (`gui/onboarding.py`); then the Orkmaster's tab alone: *Open a

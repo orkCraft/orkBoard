@@ -3112,3 +3112,56 @@ says *the four crafts' races only*, §148.8, which §154.3 changed). So (this ma
    leaders' forms (§154–§155), what a leader's change shows on another party's map and on the route card (§156.3–§156.6),
    and the first slice with what joined it since §136.12.
 The owner's call.
+
+## 158. A bug's Talk finds its cause; a party's race is its party's, not its role's craft: six parties, six races, six leaders; the rest of the cast is the marketing's (28 October, the owner and the PM)
+
+Why: read after §157, two things were left open. A bug's short way skips Talk (§118.2), yet §153.3 asks a party's
+question about the project *in its first goal's Talk*, and a bug's report is often too vague for its fix to hit its
+cause. And §155.2 names the leaders of Tech, Design, Data, Marketing, Product and Release, while a game's parties are Game
+design, Tech, Art, Release, LiveOps and Marketing, an app's Product, Design, Tech, Release, Run and Marketing
+(§109.1, §122, §151.7): by their leaders' crafts (`realm/library.py`) a game's Game design and Art would both be led by
+elves, a site's Run by a second ork shaman beside Tech's, against §155.3; and Data is no party. More characters would
+make the heads less a sign of their party and cost orkUI a head at every tier, each told apart by its silhouette at
+16 px (§149.4). So (this changes §118.2, §133.1, §147.4, §153.3, §53, §154.2 and §155.2; CLAUDE.md's line on the races
+with it):
+1. **A bug's Talk is its diagnosis**: Tech alone, one round, on the cheaper tier. Its leader reads its map and the parts
+   the report touches, and the failure's lines or a log when there are; it asks at most three questions about the cases
+   (where it happens, its choices read from the map's screens and containers; the steps; what was expected; since which
+   version), each a card of §153.5, and lays **its guess of the cause** as one more card (*I think the lobby's timer is
+   not reset on reconnect: `server/lobby.ts`*), with *Yes*, *No, it's elsewhere* and *Other…*. A question of Tech's about
+   the project (§153.3) rides in the same stack. The cause found is the *Why* of Tech's section.
+2. **A bug that already reproduces skips it**: a failure's lines from the gate, a stack trace or a failing test in the
+   report; its route card keeps **Start** (§133.1, §147.4). Else the route card's one act is **Talk**, said plainly
+   (*Tech alone: finding the cause*).
+3. **A bug writes no decision** (§118.2, §118.7): it does not change what the project is; nothing is committed to the
+   decisions file.
+4. **A party's race is its party's** (§154.2's rule, for every party): every head on a party's seats wears that party's
+   race, whatever its role's craft, and its leader is that race's higher form (§155.1). A role put in another party
+   wears that party's race there; a Grunt is an ork in Tech, its party's race elsewhere; the Orkmaster stays the crowned
+   ork. On the Board a head says its member's party at a glance.
+5. **Six parties a project, six races, six leaders**:
+
+   | in a game | in an app or a site | its race | its leader |
+   |---|---|---|---|
+   | **Game design** | Product | griffins | a unicorn knight |
+   | Tech | Tech | orks | an ork shaman |
+   | **Art** | Design | elves | an elf dryad |
+   | **LiveOps** | **Run** | goblins | an imp |
+   | Marketing | Marketing | gnomes | a gnome fairy |
+   | Release | Release | the undead | a lich, skeletons its hands |
+
+   Game design takes Product's knights: in a game its design is the product (§109.1, §153.1), and a game has no Product
+   party, so two unicorn knights never meet; Art takes the elves (a game has no Design); LiveOps and Run take the goblins
+   (a live project is watched by its numbers, its errors and its incidents), §155.2's *Data* row read as theirs. A
+   project of another kind maps its parties by the same rows: what it makes, its code, its look, its running, its
+   marketing, its release.
+6. **No new characters on the table**: the cast that the heads draw stays these six races and the crowned Orkmaster.
+   **The rest of the cast is the marketing's** (§149.5): large portraits of every race and leader, and a gallery of them
+   with a line each on what they do, for the site, the VS Code marketplace and the README, and at the window's few big
+   moments (the first start, an empty screen); never a card, a tab or a seat. A new face on the table, if the owner
+   ever asks for one, is a form inside a race (§129.3), never a seventh race.
+7. **The words** (CLAUDE.md): *an agent's craft is its race* becomes *a party's craft is its race*; the races' names stay
+   code (`griffin`, `knight`, …), the interface says a role's name, never its race (§154.4).
+8. **When**: the bug's Talk with *Talk* in the first slice (§136.12); the races by party with the first slice's parties
+   and §148's orkUI release (0.15.0), as §154.5 and §155.7; the gallery apart from the slices.
+The owner's call.
