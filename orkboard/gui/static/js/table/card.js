@@ -1,15 +1,16 @@
-// A map's card on the table (docs/specs/98-the-table-and-the-hand.md §3.3, §3.5, §6; decisions §104.2, §120.1): 128 × 180, its goal's element top left, its kind's sign top right, its
-// name up to four lines, at its foot the member's head and what it does. A card is **lifted where it lies** and turns over (`Lifted`): its back the details and **Open**; Esc or a press away lowers it,
-// one at a time. A card leans toward the pointer and rises on orkUI's motion tokens (`.ork-leans`, the page sets `--ork-lean-x/-y`); nothing moves under reduced motion (orkUI's own rule).
-// At the narrow width a column a head wide lays its tasks as tokens (`Token`), and what is lifted is a screen.
+// A card of the Board (docs/specs/101-the-cards-the-cascade-and-the-hand-under-the-lanes.md §2, decisions §167.1; the lifting of docs/specs/98-the-table-and-the-hand.md §3.5, §6, decisions §120.1): 144 wide, its goal's element
+// bare at the left of its header and its name beside it (the pixel face, three lines at most), under it a window (the card's own fill, a hairline) with one sign at the signs' big size, toned down — the task's type —, and its
+// label row: the stage's small sign and word, the gem at its right when it spends. No foot and no head: who works is on its back and in its party's header. A card is **lifted where it lies** and turns over (`Lifted`): its back
+// the details and **Open**; Esc or a press away lowers it, one at a time. A card leans toward the pointer and rises on orkUI's motion tokens (`.ork-leans`, the page sets `--ork-lean-x/-y`); nothing moves under reduced motion
+// (orkUI's own rule). At the narrow width a lane a token wide lays a goal as one token (`Token`) with its stack's edges, and what is lifted is a screen.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
-import { Elem, Head, Sign, WhoHead, headWords } from "../orkui.js";
+import { Elem, Sign, WhoHead, headWords } from "../orkui.js";
 import { lifted, lift, lower, picked, pick, openOver, partKey, linkKey } from "../frame/state.js";
 import { TASK_STATE } from "../board/maplayout.js";
 import { typeTone } from "../arena/goalwords.js";
-import { footWords, doingWords, readTask } from "./data.js";
+import { cascadeOf, footWords, doingWords, readTask, stageOf, typeSignOf, gemOf, STAGES } from "./data.js";
 
 /** The key of the card that was lit on the way back from a thing opened over the pane, "" none (a press or a key puts it out). */
 export const litKey = signal("");
@@ -30,41 +31,57 @@ export const ownKey = (n) => `t:orc:${n.slug}`;
 export { partKey, linkKey };
 export const mineKey = (key) => typeof key === "string" && key.startsWith("t:");
 
-const typeOf = (n) => (n?.type?.sign ? html`<span class=${`table-card__type ${typeTone(n)}`} title=${n.type.name}><${Sign} name=${n.type.sign} /></span>` : null);
+/** What a card of this goal says it is about (the hand's lifted card marks it, hand/about.js): the goal and, for a task, itself. */
+export const aboutTokens = (n, tasks = []) => `idea:${n.slug}${tasks.map((t) => ` task:${n.slug}/${t.id}`).join("")}`;
 
-/** A task at work, as a card in its party's column: the goal's element, the type's sign (the alert sign when it failed or asks), its name, its member's head and what it does. */
-export function TaskCard({ n, t, lit = false, dim = false }) {
-  const key = taskKey(n, t), on = lifted.value === key, bad = t.state === "failed", asks = t.state === "picking";
+/** The stage's small sign (14 px) and its word, as a label row or a strip says it. */
+export function Stage({ stage }) {
+  const s = STAGES[stage] || STAGES.routing;
+  return html`<span class="table-stage"><${Sign} name=${s.sign} />${s.word}</span>`;
+}
+
+/** The card's window: one sign at the signs' big size, in the goal's colour toned down (an opacity on orkUI's token, table.css). `moon`: the moon beside it (a goal that waits for the reset). */
+function Win({ n, sign, moon = false, danger = false }) {
+  return html`<span class=${cls("table-card__win", `is-${typeTone(n)}`, { "is-danger": danger })}>${sign && html`<${Sign} name=${sign} big=${true} />`}${moon && html`<${Sign} name="moon" big=${true} />`}</span>`;
+}
+
+/** A task, as a card in its goal's cascade: the goal's element and the task's name, the type in the window, the stage and, at its right, the gem when it spends. */
+export function TaskCard({ n, t }) {
+  const key = taskKey(n, t), on = lifted.value === key, bad = t.state === "failed", asks = t.state === "picking", gem = gemOf(t);
   const said = `${t.title}, ${n.short || n.title}: ${footWords(t)}`;
-  return html`<button type="button" class=${cls("ork-card ork-leans table-card", { fails: bad, asks, "is-lifted": on, "is-lit": lit || litKey.value === key, "is-dim": dim })} data-lkey=${key} data-goal=${n.slug} data-task=${t.id}
-    data-about=${`idea:${n.slug} task:${n.slug}/${t.id}`} data-state=${t.state} aria-pressed=${String(on)} aria-label=${said} title=${n.title} onClick=${() => lift(on ? "" : key)} ...${leans}>
-    <span class="table-card__top"><${Elem} name=${n.element} dim=${!n.element} />
-      ${bad || asks ? html`<span class=${bad ? "is-danger" : "is-alert"}><${Sign} name="alert" /></span>` : typeOf(n)}</span>
-    <span class="table-card__nm table-clamp" title=${t.title}>${t.short || t.title}</span>
-    <span class="table-card__foot">${t.head ? html`<${WhoHead} head=${t.head} size="mid" />` : t.state === "running" || t.state === "testing" ? html`<span class="ork-busy" title="working"></span>` : null}
-      <span class="table-card__cap">${footWords(t)}</span></span>
+  return html`<button type="button" class=${cls("ork-card ork-leans table-card", { fails: bad, asks, "is-lifted": on, "is-lit": litKey.value === key })} data-lkey=${key} data-goal=${n.slug} data-task=${t.id}
+    data-about=${aboutTokens(n, [t])} data-state=${t.state} data-stage=${stageOf(t)} aria-pressed=${String(on)} aria-label=${said} title=${n.title} onClick=${() => lift(on ? "" : key)} ...${leans}>
+    <span class="table-card__head"><${Elem} name=${n.element} dim=${!n.element} /><span class="table-card__nm" title=${t.title}>${t.short || t.title}</span></span>
+    <${Win} n=${n} sign=${typeSignOf(n, t)} />
+    <span class="table-card__row"><${Stage} stage=${stageOf(t)} />${gem && html`<span class="ork-gem share" data-cost=${gem}>${gem}</span>`}</span>
   </button>`;
 }
 
-/** A goal the Orkmaster reads or routes itself, as a card in its own column: its element, its name, its kind's sign, under it its crown and what it is doing. */
-export function OwnCard({ n, lit = false }) {
+/** A goal the Orkmaster reads, routes or joins itself, as a card in the first lane (under its strip): the same face, its stage *Reading*, *Routing* or *Joining*. */
+export function OwnCard({ n, stage }) {
   const key = ownKey(n), on = lifted.value === key;
-  return html`<button type="button" class=${cls("ork-card ork-leans table-card table-card--own", { "is-lifted": on, "is-lit": lit || litKey.value === key })} data-lkey=${key} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state}
-    aria-pressed=${String(on)} aria-label=${`${n.title}: ${doingWords(n)}`} onClick=${() => lift(on ? "" : key)} ...${leans}>
-    <span class="table-own__r1"><${Elem} name=${n.element} dim=${!n.element || n.state === "reading"} /><span class="table-own__nm table-clamp" title=${n.title}>${n.short || n.title}</span>${typeOf(n)}</span>
-    <span class="table-own__r2"><${Head} race="peon" tier="crown" /><span class="table-own__word">${doingWords(n)}</span></span>
+  return html`<button type="button" class=${cls("ork-card ork-leans table-card table-card--own", { "is-lifted": on, "is-lit": litKey.value === key })} data-lkey=${key} data-goal=${n.slug} data-about=${aboutTokens(n)} data-state=${n.state}
+    data-stage=${stage} aria-pressed=${String(on)} aria-label=${`${n.title}: ${doingWords(n)}`} onClick=${() => lift(on ? "" : key)} ...${leans}>
+    <span class="table-card__head"><${Elem} name=${n.element} dim=${!n.element || n.state === "reading"} /><span class="table-card__nm" title=${n.title}>${n.short || n.title}</span></span>
+    <${Win} n=${n} sign=${n.type?.sign || ""} />
+    <span class="table-card__row"><${Stage} stage=${stage} /></span>
   </button>`;
 }
 
-/** The same at a column a head wide (spec 67): a token with its element and its member's head, its name in the label and the title. */
-export function Token({ n, t = null, lit = false }) {
-  const key = t ? taskKey(n, t) : ownKey(n), on = lifted.value === key, bad = t?.state === "failed";
-  const words = t ? `${t.title}, ${n.short || n.title}: ${footWords(t)}` : `${n.title}: ${doingWords(n)}`;
-  return html`<button type="button" class=${cls("ork-card table-token", { fails: bad, "is-lifted": on, "is-lit": lit || litKey.value === key })} data-lkey=${key} data-goal=${n.slug} data-task=${t?.id} data-about=${t ? `idea:${n.slug} task:${n.slug}/${t.id}` : `idea:${n.slug}`} data-state=${t ? t.state : n.state}
-    aria-pressed=${String(on)} aria-label=${words} title=${words} onClick=${() => lift(on ? "" : key)}>
-    <span class="table-card__top"><${Elem} name=${n.element} dim=${!n.element} />${bad ? html`<span class="is-danger"><${Sign} name="alert" /></span>` : typeOf(n)}</span>
-    ${t ? (t.head ? html`<${WhoHead} head=${t.head} />` : null) : html`<${Head} race="peon" tier="crown" />`}
-  </button>`;
+/** The same at a lane a token wide (spec 101 §5): a goal is one token with its stack's edges — its element, its front task's type and stage —; a press lifts the front task, whose back lists the goal's tasks.
+ *  `tasks`: the goal's tasks, the front one first; none for a goal the Orkmaster does itself (`stage` says what). */
+export function Token({ n, tasks = [], stage = "" }) {
+  const front = tasks[0], key = front ? taskKey(n, front) : ownKey(n), on = lifted.value === key || tasks.some((t) => lifted.value === taskKey(n, t)), bad = tasks.some((t) => t.state === "failed");
+  const st = front ? stageOf(front) : stage, words = front ? `${n.title}: ${footWords(front)}` : `${n.title}: ${doingWords(n)}`;
+  const edges = Math.min(5, Math.max(0, tasks.length - 1));
+  return html`<span class="table-stack" data-n=${edges}>
+    ${Array.from({ length: edges }, (_, k) => html`<i key=${k} class="ork-card table-edge" style=${`--ork-deck-i:${k + 1}`} aria-hidden="true"></i>`)}
+    <button type="button" class=${cls("ork-card table-token", { fails: bad, "is-lifted": on, "is-lit": litKey.value === key, "ork-picked": picked.value === n.slug })} data-lkey=${key} data-goal=${n.slug} data-task=${front?.id}
+      data-about=${aboutTokens(n, tasks)} data-state=${front ? front.state : n.state} data-stage=${st} aria-pressed=${String(on)} aria-label=${words} title=${words} onClick=${() => lift(lifted.value === key ? "" : key)}>
+      <span class="table-card__top"><${Elem} name=${n.element} dim=${!n.element} /><${Sign} name=${(STAGES[st] || STAGES.routing).sign} /></span>
+      <${Win} n=${n} sign=${front ? typeSignOf(n, front) : n.type?.sign || ""} danger=${bad} />
+    </button>
+  </span>`;
 }
 
 // -- a card lifted where it lies -----------------------------------------------------------------------------------------------------
@@ -127,7 +144,7 @@ export function TaskBack({ n, t, mapName }) {
   const from = { title: mapName, key: taskKey(n, t) };
   const open = () => (t.state === "failed" ? openOver("log", { slug: n.slug, task: t.id }, from, t.title)
     : t.state === "review" || t.state === "merged" ? openOver("diff", { slug: n.slug, task: t.id }, from, t.title) : openOver("task", { slug: n.slug, task: t.id }, from, t.title));
-  const error = full?.error || t.error || "";
+  const error = full?.error || t.error || "", mates = cascadeOf(n).filter((x) => x.id !== t.id);
   return html`<h3 class="table-back__nm">${t.title}</h3>
     <p class="table-back__cap">${n.title}</p>
     <${Sec} label="State"><span data-state=${t.state}>${TASK_STATE[t.state] || t.state}${t.note ? ` · ${t.note}` : ""}</span></${Sec}>
@@ -135,6 +152,8 @@ export function TaskBack({ n, t, mapName }) {
     ${error && html`<${Sec} label="What went wrong"><span class="is-danger">${error}</span></${Sec}>`}
     ${full?.brief && html`<${Sec} label="Brief"><span class="table-back__text">${full.brief}</span></${Sec}>`}
     ${t.made && html`<${Sec} label="What it made"><span>${t.made}</span></${Sec}>`}
+    ${mates.length > 0 && html`<${Sec} label="Its tasks"><span class="table-back__tasks">${mates.map((m) => html`<button type="button" key=${m.id} class="ork-btn quiet table-back__task" data-task=${m.id} onClick=${() => lift(taskKey(n, m))}>
+      <${Sign} name=${STAGES[stageOf(m)].sign} /><span>${m.short || m.title}</span></button>`)}</span></${Sec}>`}
     <div class="table-back__acts"><${PickGoal} n=${n} /><button type="button" class="ork-btn table-back__open" onClick=${open}>Open</button></div>`;
 }
 

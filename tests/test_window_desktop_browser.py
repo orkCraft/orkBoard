@@ -27,7 +27,7 @@ class WindowHost(TableHost):
     """The table's project with stops in the hand: a failed task of Tech's goal (about its card), a question of the Game design party's goal the Orkmaster reads, a to-do, and a goal done."""
 
     def __init__(self):
-        super().__init__()
+        super().__init__(rich=False)                                                 # no failed check, no pick, no goal in line: the hand's cards are the ones below
         asked = [{"ask": "Where does the timer run?", "choices": ["Server counts, phones show it", "Each phone counts down alone"], "pick": 0, "why": "One clock.", "by": None, "look": False}]
         todo = {"id": "t9", "title": "EXPORT_KEY", "kind": "secret", "why": "The export needs it", "choices": [], "steps": [], "accept": [], "done": False}
         for n in self.nodes:
@@ -222,7 +222,7 @@ def test_a_new_party_saved_opens_its_tab_and_the_edit_form_says_where_it_came_fr
 
 def test_esc_lowers_a_lifted_card_then_closes_what_is_over_the_pane_then_picks_none(window):
     pg, host, w = window
-    pg.locator('[data-lkey="t:task:seat/s1"]').click()                                                                  # a card of the table lifted, its goal picked from its back
+    pg.locator('[data-lkey="t:task:seat/s2"]').click()                                                                  # a card of the table lifted (the front of its goal's cascade), its goal picked from its back
     pg.get_by_role("button", name="Pick this goal").click()
     assert "Keep the seat" in title(pg)
     open_menu(pg)
@@ -263,7 +263,8 @@ def test_a_hand_card_lifted_raises_its_card_of_the_table(window):
     pg.locator('.hand-card[data-kind="failed"]').click()
     pg.locator(".hand-lifted").wait_for(timeout=WAIT_MS)
     pg.wait_for_function("() => document.querySelector('[data-lkey=\"t:task:seat/s2\"]').classList.contains('is-about')", timeout=WAIT_MS)
-    assert not pg.locator('[data-lkey="t:task:seat/s1"]').evaluate("e => e.classList.contains('is-about')")
+    s1 = pg.locator('[data-lkey="t:task:seat/s1"]')                                                                      # a strip of the same goal (its other task; a token has none): not about the failure
+    assert not s1.count() or not s1.evaluate("e => e.classList.contains('is-about')")
     shot(pg, f"window-lifted-{w}.png")
     pg.keyboard.press("Escape")
     pg.wait_for_function("() => !document.querySelector('[data-lkey=\"t:task:seat/s2\"]').classList.contains('is-about')", timeout=WAIT_MS)

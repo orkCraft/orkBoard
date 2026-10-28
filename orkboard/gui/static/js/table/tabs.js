@@ -1,6 +1,6 @@
-// The tabs (docs/specs/98-the-table-and-the-hand.md §3.1, docs/specs/95-the-window-as-decided.md §2): the Orkmaster's first — its crowned head and *Orkmaster · <project>* —, then a tab a party in the Board's order, its leader's
+// The tabs (docs/specs/98-the-table-and-the-hand.md §3.1, docs/specs/95-the-window-as-decided.md §2, decisions §167.6): the project's first — its crowned head and the project's name (*Party game*) —, then a tab a party in the Board's order, its leader's
 // head and the party's name; at the end **+** (*New party*), the AI tools' limits as chips (a press opens what used them over the pane) and **Stop all**. Under 760 px the tabs are a row of heads, *Stop all* at the end,
-// and the limits are in the Orkmaster's **…** (pane.js). The tabs take the Board's column widths while the Board is shown (table.css `--lanes`). A party's tab carries a dot when the picked goal's route has it.
+// and the limits are in the Orkmaster's **…** (pane.js). The tabs, the Board's lanes and the hand read the frame's one `--cols`, so a tab stands over its lane. A party's tab carries a dot when the picked goal's route has it.
 // The open tab is the person's: nothing here switches it. A name is also said on a long press (nothing only on hover: spec 94 §1.1).
 import { useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
@@ -22,12 +22,12 @@ function usePressName(name) {
   };
 }
 
-function Tab({ slug, on, name, sub = "", head, dot = false, compact, onPick }) {
-  const press = usePressName(sub ? `${name} · ${sub}` : name);
+function Tab({ slug, on, name, head, dot = false, compact, onPick }) {
+  const press = usePressName(name);
   return html`<button type="button" class=${cls("ork-tab table-tab", { "is-compact": compact })} role="tab" id=${`tab-${slug}`} data-tab=${slug} aria-selected=${String(on)} tabindex=${on ? 0 : -1}
-    aria-label=${sub ? `${name} · ${sub}` : name} title=${sub ? `${name} · ${sub}` : name} aria-controls="table-pane" onClick=${onPick} ...${press}>
+    aria-label=${name} title=${name} aria-controls="table-pane" onClick=${onPick} ...${press}>
     ${head ? html`<${Head} race=${head.race} tier=${head.tier} />` : null}
-    <span class="table-tab__txt"><span class="table-tab__main">${name}</span>${sub && html`<span class="table-tab__sub">${sub}</span>`}</span>
+    <span class="table-tab__txt"><span class="table-tab__main">${name}</span></span>
     ${dot && html`<i class="table-tab__dot" role="img" aria-label="On the picked goal's route" title="On the picked goal's route"></i>`}
   </button>`;
 }
@@ -42,7 +42,7 @@ function LimitChip({ l, from }) {
 }
 
 export function Tabs({ parties, current, narrow, compact }) {
-  const project = currentProject.value?.name || "", limits = town.value?.limits || [], route = routeParties(picked.value);
+  const project = currentProject.value?.name || "The project", limits = town.value?.limits || [], route = routeParties(picked.value);
   const from = { title: mapName(current, parties), key: "" };
   const slugs = [ORKMASTER, ...parties.map((g) => g.slug)];
   const keys = (e) => {
@@ -54,7 +54,7 @@ export function Tabs({ parties, current, narrow, compact }) {
   };
   return html`<nav class="table-tabs" aria-label="Parties" data-compact=${String(compact)}>
     <div class="table-tabs__list" role="tablist" aria-label="Parties" onKeyDown=${keys}>
-      <${Tab} slug=${ORKMASTER} on=${current === ORKMASTER} name="Orkmaster" sub=${project} head=${{ race: "peon", tier: "crown" }} compact=${compact} onPick=${() => openTab(ORKMASTER)} />
+      <${Tab} slug=${ORKMASTER} on=${current === ORKMASTER} name=${project} head=${{ race: "peon", tier: "crown" }} compact=${compact} onPick=${() => openTab(ORKMASTER)} />
       ${parties.map((g) => html`<${Tab} key=${g.slug} slug=${g.slug} on=${current === g.slug} name=${nameOf(g)} head=${g.leader?.head} dot=${route.has(g.slug)} compact=${compact} onPick=${() => openTab(g.slug)} />`)}
     </div>
     <div class="table-tabs__end">

@@ -2,12 +2,13 @@
 // (the parties and their goals, the code's goals and ideas), `ideas.agents` and `ideas.roles` (the seats), the snapshot's limits —
 // and the words the table says. No template here. The table draws a party's name, never "goal" or "track" (CLAUDE.md, Wording).
 import { mapData, agents, roles } from "../shell/store.js";
-import { goalList } from "../board/store.js";
-import { goalsOf, nodesOf, atWork, openTasks, partyOf, roleOf, RANK } from "../arena/arenawords.js";
+import { goalList, hhmm } from "../board/store.js";
+import { goalsOf, nodesOf, atWork, openTasks, partyOf, roleOf } from "../arena/arenawords.js";
 import { ORKMASTER } from "../frame/state.js";
 import { ORKUI } from "../orkui.js";
 import { TARGETS } from "../board/target.js";
 import { command, toast } from "../link.js";
+import { pctShort, rated } from "../spend.js";
 
 export const GENERAL = "general";                       // the system's party: it has no tab of its own
 export const WHOLE = "The whole project";
@@ -56,28 +57,86 @@ export function routeParties(picked) {
   return out;
 }
 
-/** The tasks of a party that the Board shows as its column's cards: at work, asking or failed, the one nearest its member first. [{n, t}] */
-export function cardsOf(g, only = "") {
-  const out = [];
-  nodesFor(g).filter((n) => atWork(n) && (!only || n.slug === only)).forEach((n, i) => openTasks(n).forEach((t, j) => {
-    if (LIVE.includes(t.state)) out.push({ n, t, at: i * 1000 + j });
-  }));
-  return out.sort((a, b) => (RANK[a.t.state] ?? 9) - (RANK[b.t.state] ?? 9) || a.at - b.at);
+// -- the Board's cards (docs/specs/101-the-cards-the-cascade-and-the-hand-under-the-lanes.md §2, §3; decisions §167.1, §167.4) -------------------------------------------------
+
+/** The stages a card says on the Board: its small sign and its word. The first lane's are the Orkmaster's (reading, routing, joining); a party's are its tasks'. */
+export const STAGES = {
+  planning: { word: "Planning", sign: "page" }, doing: { word: "Doing", sign: "sword" }, checking: { word: "Checking", sign: "shield" },
+  reading: { word: "Reading", sign: "page" }, routing: { word: "Routing", sign: "page" }, joining: { word: "Joining", sign: "page" },
+};
+
+/** The stage a task is in: a check (the checker's band, or testing) is *Checking*, one being done or failed *Doing*, one that asks the person's pick or waits to start *Planning*. */
+export const stageOf = (t) => (t.band === "check" || t.state === "testing" ? "checking" : t.state === "running" || t.state === "failed" ? "doing" : "planning");
+
+/** Where a task stands in a cascade, the front lowest: a failed check, any failure, *Checking*, *Doing*, *Planning*. */
+const FRONT = { checking: 2, doing: 3, planning: 4 };
+const rankOf = (t) => (t.state === "failed" ? (t.band === "check" ? 0 : 1) : FRONT[stageOf(t)]);
+
+/** A goal's tasks that the Board draws, the front one first: by the rule above, the most recent first among equals (a later task of the plan is a more recent one). */
+export function cascadeOf(n) {
+  return openTasks(n).map((t, i) => ({ t, i })).filter(({ t }) => LIVE.includes(t.state))
+    .sort((a, b) => rankOf(a.t) - rankOf(b.t) || b.i - a.i).map(({ t }) => t);
 }
 
-/** The goals the Orkmaster does itself: read or being routed (`reading`, `planning`), in the Board's order. [{n, g}] */
-export function ownOf(parties, only = "") {
+/** How urgent a goal is in its lane, the hand's order: a failure, then a question, then the rest. */
+const urgencyOf = (n, tasks) => (tasks.some((t) => t.state === "failed") ? 0 : n.asks_you || tasks.some((t) => t.state === "picking") ? 1 : 2);
+
+/** The goals of a party that have tasks at work, in the hand's order (urgency, then their place in the Board): [{n, tasks}], `tasks` front first. */
+export function laneOf(g) {
   const out = [];
-  for (const g of parties) for (const n of nodesFor(g)) if ((n.state === "reading" || n.state === "planning") && (!only || n.slug === only)) out.push({ n, g });
+  nodesFor(g).filter(atWork).forEach((n, i) => { const tasks = cascadeOf(n); if (tasks.length) out.push({ n, tasks, at: urgencyOf(n, tasks) * 1000 + i }); });
+  return out.sort((a, b) => a.at - b.at);
+}
+
+/** The goals the Orkmaster does itself, in the Board's order: being read (`reading`), routed (`planning`), or their sections joined while their party works (`sections`). [{n, g, stage}] */
+const OWN = { reading: "reading", planning: "routing", sections: "joining" };
+export function ownOf(parties) {
+  const out = [];
+  for (const g of parties) for (const n of nodesFor(g)) if (OWN[n.state]) out.push({ n, g, stage: OWN[n.state] });
   return out;
 }
 
 /** What the Orkmaster does with a goal, in a word. */
-export const doingWords = (n) => (n.state === "reading" ? "Reading" : "Routing");
+export const doingWords = (n) => STAGES[OWN[n.state] || "routing"].word;
 
-/** A card's foot caption for a task. */
-export function footWords(t) {
-  return { running: "Doing", testing: "Testing", picking: "Asks you to pick", failed: t.band === "check" ? "Check failed" : "Failed" }[t.state] || t.state;
+/** A task's words for a label: *Doing, failed*. */
+export const footWords = (t) => `${STAGES[stageOf(t)].word}${t.state === "failed" ? ", failed" : t.state === "picking" ? ", asks you to pick" : ""}`;
+
+/** A task's kind as the sign that says it, by the kind (`kind`) or the label the Board carries (`tag`). Code, the default, says nothing: the goal's type does. */
+const KIND_SIGN = { tests: "flask", docs: "text", text: "text", research: "flask", architecture: "restructure", design: "screen", uikit: "screen", a11y: "tune", art: "picture",
+  data: "chart", query: "chart", metrics: "chart", datacheck: "chart", experiment: "abtest", seo: "landing", campaign: "horn", community: "post", security: "target", edit: "text",
+  gamedesign: "mechanic", level: "level", sound: "sound", music: "sound", playtest: "balance", aso: "store", artdirection: "logo", motion: "film", artcheck: "picture" };
+const TAG_KIND = { "Tests": "tests", "Docs": "docs", "Text for people": "text", "Research": "research", "Architecture": "architecture", "Screens and flows": "design", "UI kit": "uikit",
+  "Accessibility": "a11y", "Pixel art": "art", "Data pipelines and tables": "data", "Queries": "query", "Metrics": "metrics", "Data check": "datacheck", "Experiments": "experiment",
+  "Search (SEO)": "seo", "Launch and campaigns": "campaign", "Community": "community", "Security check": "security", "Editing": "edit", "Game design": "gamedesign", "Levels": "level",
+  "Sound": "sound", "Music": "music", "Playtest": "playtest", "Store pages (ASO)": "aso", "Art direction": "artdirection", "Animation": "motion", "Art check": "artcheck" };
+
+/** The sign in a task card's window: its kind's, else its goal's type's, "" with neither. */
+export const typeSignOf = (n, t) => KIND_SIGN[t?.kind || TAG_KIND[t?.tag] || ""] || n?.type?.sign || "";
+
+/** The gem on a card that spends: a task being done again (its round past the first) shows what its last run cost, as a share of the limits or at API prices; "" for a card that spends nothing. */
+export function gemOf(t) {
+  const cost = Number(t?.cost);
+  if (!(t?.round > 1) || !Number.isFinite(cost) || cost <= 0) return "";
+  return rated() ? pctShort(cost).replace(/\s+%$/, "%") : `$${cost < 1 ? cost.toFixed(2) : Math.round(cost)}`;
+}
+
+// -- the goals in line (the first lane's last cascade) --------------------------------------------------------------------------------
+
+export const MANY = 7;                         // the line's cascade shows this many goals, then *All · search*
+
+/** The goals in line, in the Orkmaster's order (the order of the map's nodes): the nodes whose `place` is `deck`; `reset` when one waits for the window's reset. */
+export function lineNow(map = mapData.value) {
+  const parties = Object.fromEntries((map?.goals || []).map((g) => [g.slug, g]));
+  return (map?.nodes || []).filter((n) => n.place === "deck").map((n) => ({
+    slug: n.slug, title: n.short || n.title, full: n.title, element: n.element || "", party: n.goal, partyName: parties[n.goal]?.short || parties[n.goal]?.title || "", type: n.type || null,
+    waits: n.waits_as || "", reset: n.waits_as === "reset", at: n.held_until || n.start_at || "", state: n.state }));
+}
+
+/** Why a goal in line waits, in words: the moon's reset and its hour, held, waiting for a goal; "In line" when it simply waits its turn. */
+export function waitsWords(g) {
+  if (g.reset) return `Waits for the reset${g.at ? `, from ${hhmm(g.at)}` : ""}`;
+  return g.waits === "held" ? "Held" : g.waits === "line" ? "Waits for a goal" : "In line";
 }
 
 // -- a party's seats ---------------------------------------------------------------------------------------------------------------

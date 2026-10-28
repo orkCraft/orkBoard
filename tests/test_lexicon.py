@@ -198,18 +198,31 @@ def test_a_container_is_a_part_that_runs_on_its_own_the_word_of_spec_90():
 
 def test_the_table_and_the_hand_are_the_words_of_spec_98():
     """Spec 98 §2.4: each word of the frame has its key, today's word and no old spelling; each is one line of `TERMS`."""
-    keys = {"table": "table", "hand": "hand", "deck": "deck", "discard": "discard", "lane": "lane", "blank_card": "blank card",
-            "lifted_card": "lifted card", "map": "map", "seat": "seat", "squad": "squad", "size": "size", "in_line": "in line",
+    keys = {"table": "table", "hand": "hand", "discard": "discard", "lane": "lane", "blank_card": "blank card",
+            "lifted_card": "lifted card", "map": "map", "seat": "seat", "squad": "squad", "size": "size",
             "hold": "Hold", "to_main": "To main"}
     rows = {key: (word, was) for key, word, was in lexicon.glossary()}
     for key, word in keys.items():
         assert lexicon.term(key) == word and rows[key] == (word, ""), key
-    assert lexicon.term("deck", many=True) == "decks" and lexicon.term("lane", many=True) == "lanes"
+    assert lexicon.term("lane", many=True) == "lanes"
     from pathlib import Path
     lines = Path(lexicon.__file__).read_text(encoding="utf-8").splitlines()
     for key in keys:
         line = next(l for l in lines if l.lstrip().startswith(f'_t("{key}"'))
         assert "#" in line, key
+
+
+def test_the_deck_is_in_line_and_a_goals_tasks_are_a_cascade_spec_101():
+    """Spec 101 §0 (decisions §167.5): `deck` is folded into `in_line`, its old spelling in `was`; `cascade` is a goal's tasks in its lane. No `deck` term is left; the code keeps `deck` as a place value."""
+    rows = {key: (word, was) for key, word, was in lexicon.glossary()}
+    assert "deck" not in rows
+    assert rows["in_line"] == ("in line", "deck") and rows["cascade"] == ("cascade", "")
+    assert lexicon.term("cascade", many=True) == "cascades"
+    assert lexicon.words("the deck") == "the in line" and lexicon.words("Deck") == "In line"          # an old spelling is said in today's word
+    from pathlib import Path
+    lines = Path(lexicon.__file__).read_text(encoding="utf-8").splitlines()
+    for key in ("in_line", "cascade"):
+        assert "#" in next(l for l in lines if l.lstrip().startswith(f'_t("{key}"')), key
 
 
 def test_the_route_and_the_phases_are_the_words_of_spec_99_c():

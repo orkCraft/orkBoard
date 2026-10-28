@@ -13,8 +13,7 @@ import { litKey, elOf, mineKey, useLowering } from "./card.js";
 import { openTabOf, partiesNow } from "./data.js";
 
 const NARROW = "(max-width: 759px)";                       // spec 94: the phone's width is the narrow one
-const SHARES = { ork: 1.3, tail: 2.2 };                      // the Board's columns, as shares of the width (table.css `--cols`): the Orkmaster's, then a party's 1 each, then the tabs' end
-const FIT = 150;                                            // a party's tab keeps its name while its column is at least this wide
+const FIT = 150;                                            // a tab keeps its name while its lane is at least this wide (the lanes are the frame's `--cols`)
 
 const typing = (el) => !!el && (/^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName) || el.isContentEditable);
 
@@ -30,17 +29,19 @@ function useNarrow() {
   return narrow;
 }
 
-/** The tabs keep only their heads when a column would be narrower than FIT: [ref of the table, compact]. */
+/** The tabs keep only their heads when a lane is narrower than FIT: [ref of the table, compact]. */
 function useCompact(n, narrow) {
   const host = useRef(), [compact, set] = useState(false);
   useLayoutEffect(() => {
     const measure = () => {
-      const w = host.current?.clientWidth || 0;
-      set(narrow || (w > 0 && w / (SHARES.ork + n + SHARES.tail) < FIT));
+      const w = host.current?.querySelector(".table-tab")?.clientWidth || 0;
+      set(narrow || (w > 0 && w < FIT));
     };
     measure();
     const ro = typeof ResizeObserver === "function" ? new ResizeObserver(measure) : null;
     if (host.current) ro?.observe(host.current);
+    const first = host.current?.querySelector(".table-tab");
+    if (first) ro?.observe(first);
     return () => ro?.disconnect();
   }, [n, narrow]);
   return [host, compact];
@@ -90,7 +91,7 @@ export function Table() {
     addEventListener("keydown", off, true);
     return () => { clearInterval(poll); lit?.classList.remove("is-lit"); removeEventListener("pointerdown", off, true); removeEventListener("keydown", off, true); };
   }, [litKey.value]);
-  return html`<div class="table" ref=${host} data-tab=${current} data-narrow=${String(narrow)} data-compact=${String(compact)} style=${`--tabs:${parties.length}`}>
+  return html`<div class="table" ref=${host} data-tab=${current} data-narrow=${String(narrow)} data-compact=${String(compact)}>
     <${Tabs} parties=${parties} current=${current} narrow=${narrow} compact=${compact} />
     <${Pane} parties=${parties} tab=${current} narrow=${narrow} />
   </div>`;

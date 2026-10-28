@@ -1,11 +1,9 @@
-/* The table (docs/specs/98-the-table-and-the-hand.md §3, §5, §6; mockup docs/mockups/s1/): the leaders' tabs over the pane. Layout only: every colour, face, corner and move is orkUI's (its tokens and its classes:
-   .ork-tab, .ork-head, .ork-card, .ork-leans, .ork-frame, .ork-menu, .ork-chip, .ork-table), the sizes are orkUI's spacing steps and the cards' own 128 x 180. The tabs and the Board's columns read the one `--cols`,
-   so a tab stands over its column (the tabs take their columns' widths while the Board is shown). Under 760 px the tabs are a row of heads and a column a head wide (tokens, no sideways scroll). */
+/* The table (docs/specs/98-the-table-and-the-hand.md §3, §5, §6; docs/specs/101-the-cards-the-cascade-and-the-hand-under-the-lanes.md; mockup docs/mockups/cards/): the leaders' tabs over the pane. Layout only: every colour, face, corner and move is orkUI's
+   (its tokens and its classes: .ork-tab, .ork-head, .ork-card, .ork-picked, .ork-leans, .ork-frame, .ork-menu, .ork-chip, .ork-gem, .ork-table), the sizes are orkUI's spacing steps and the cards' own width (frame.css `--card-w`). The tabs, the Board's
+   lanes and the hand read the frame's one `--cols` (every lane `--col-w`, a card and a quarter), so a tab stands over its lane. Under 760 px the tabs are a row of heads and a lane a token wide (tokens, no sideways scroll). */
 
-.table { --cols: minmax(0, 1.3fr) repeat(var(--tabs, 4), minmax(0, 1fr)) minmax(0, 2.2fr);
-  display: flex; flex-direction: column; height: 100%; min-width: 0; min-height: 0; background: var(--ork-canvas); color: var(--ork-ink); }
+.table { display: flex; flex-direction: column; height: 100%; min-width: 0; min-height: 0; background: var(--ork-canvas); color: var(--ork-ink); }
 .table-grow { flex: 1; min-width: 0; }
-.table-clamp { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; overflow-wrap: anywhere; }
 
 /* -- the tabs ------------------------------------------------------------------------------------------------------------------- */
 .table-tabs { flex: none; display: grid; grid-template-columns: var(--cols); padding: 0 var(--ork-4); min-width: 0; }
@@ -14,7 +12,6 @@
   border-left: var(--ork-line) solid var(--ork-frame); }
 .table-tab__txt { display: flex; flex-direction: column; min-width: 0; }
 .table-tab__main { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.table-tab__sub { font: var(--ork-type-caption); text-transform: none; letter-spacing: 0; color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .table-tab__dot { position: absolute; top: var(--ork-2); right: var(--ork-2); width: 6px; height: 6px; background: var(--ork-ink); }
 .table[data-compact="true"] .table-tab { justify-content: center; padding: 0; }
 .table[data-compact="true"] .table-tab__txt { display: none; }
@@ -38,27 +35,71 @@ button.table-chip { appearance: none; font: inherit; }
 .table-play { flex: none; }
 .table-body { position: relative; flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; overflow: hidden; }
 
-/* -- the Board: a column a party under its tab ------------------------------------------------------------------------------------ */
+/* -- the Board: a lane a party under its tab, the first the project's ----------------------------------------------------------------- */
 .table-board { flex: 1; min-height: 0; display: grid; grid-template-columns: var(--cols); margin: 0 calc(var(--ork-1) * -1); padding: 0 var(--ork-4); overflow-y: auto; overflow-x: hidden; align-content: stretch; }
-.table-lane { display: flex; flex-direction: column; align-items: center; gap: var(--ork-4); min-width: 0; padding: var(--ork-4) var(--ork-3) var(--ork-5); border-left: var(--ork-line) solid var(--ork-frame); }
-.table-lane--own { align-items: stretch; }
+.table-lane { display: flex; flex-direction: column; align-items: center; gap: var(--ork-5); min-width: 0; padding: var(--ork-4) var(--ork-2) var(--ork-5); border-left: var(--ork-line) solid var(--ork-frame); }
 .table-board__none { margin: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); text-align: center; }
-.table-card.ork-card { position: relative; display: flex; flex-direction: column; gap: var(--ork-2); width: min(128px, 100%); height: 180px; padding: var(--ork-4); flex: none; text-align: left; cursor: pointer; }
-.table-card--own.ork-card { width: 100%; height: auto; min-height: 0; gap: var(--ork-2); }
-.table-own__r1 { display: flex; align-items: flex-start; gap: var(--ork-3); }
-.table-own__nm { flex: 1; min-width: 0; font: var(--ork-type-caption); -webkit-line-clamp: 3; line-clamp: 3; }
-.table-own__r2 { display: flex; align-items: center; gap: var(--ork-2); }
-.table-own__word { color: var(--ork-ink); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
-.table-card__top { display: flex; align-items: center; justify-content: space-between; min-height: 14px; }
-.table-card__type.dim { color: var(--ork-ink-faint); }
-.table-card__type.none { color: var(--ork-ink-muted); }
-.table-card__nm { font: var(--ork-type-body); }
-.table-card__foot { margin-top: auto; display: flex; align-items: center; gap: var(--ork-3); min-width: 0; }
-.table-card__cap { min-width: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
-.table-card.is-lit, .table-token.is-lit, .table-sys .is-lit { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); }
-.table-card.is-dim { opacity: 0.55; }
-button.table-token { position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); width: var(--ork-tap); height: calc(var(--ork-tap) * 1.3); padding: var(--ork-2); flex: none; cursor: pointer; }
-.table-token .table-card__top { width: 100%; }
+.table-goal { display: flex; flex-direction: column; gap: var(--ork-1); width: min(var(--card-w, 144px), 100%); flex: none; }
+
+/* a goal's strip, a task behind the front one: a line high (22 px), the whole strip a button */
+.table-gstrip.ork-card, .table-tstrip.ork-card { display: flex; align-items: center; gap: var(--ork-2); box-sizing: border-box; width: 100%; height: 22px; min-height: 0; padding: 0 var(--ork-2); flex: none; font: var(--ork-type-caption); }
+.table-gstrip.ork-card { color: var(--ork-ink-muted); }
+.table-gstrip.ork-card.is-on { color: var(--ork-ink); }
+.table-tstrip.ork-card { padding: 0 var(--ork-3); color: var(--ork-ink); }
+.table-gstrip__nm, .table-tstrip__nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+.table-gstrip .ork-sign.moon { margin-left: auto; }
+.table-casc { display: flex; flex-direction: column; gap: var(--ork-1); width: 100%; }
+.table-casc.is-open { gap: var(--ork-2); }
+.table-casc--line { width: min(var(--card-w, 144px), 100%); flex: none; }
+.table-line-item { position: relative; display: block; }
+.table-lstrip--all .ork-icon { width: 14px; height: 14px; }
+@media (prefers-reduced-motion: no-preference) { .table-casc--line.is-dragging .table-line-item { transition: transform var(--ork-motion-base) var(--ork-motion-spring); } .table-casc--line.is-dragging .table-line-item[style*="z-index"] { transition: none; } }
+
+/* a task's card (spec 101 §2): its header (the goal's element bare at the left, the name left-aligned in the pixel face, three lines at most), its window (about 70 px, the card's own fill, a hairline, one sign at the big size, toned down
+   in the goal's colour: an opacity on orkUI's token), its label row (the stage's small sign and word; the gem at its right when it spends) */
+.table-card.ork-card { position: relative; display: flex; flex-direction: column; gap: var(--ork-2); box-sizing: border-box; width: 100%; padding: var(--ork-3); flex: none; text-align: left; cursor: pointer; }
+.table-card__head { display: flex; align-items: flex-start; gap: var(--ork-2); min-height: 3lh; font: var(--ork-type-button); }
+.table-card__head .ork-elem { margin-top: 1px; }
+.table-card__nm { flex: 1; min-width: 0; font: var(--ork-type-button); letter-spacing: var(--ork-type-button-track, 0); text-align: left; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; }
+.table-card__win { flex: none; display: flex; align-items: center; justify-content: center; gap: var(--ork-3); box-sizing: border-box; height: 70px; border: var(--ork-line) solid var(--ork-card-frame); color: var(--ork-ink-muted); }
+.table-card__win .ork-sign { opacity: 0.6; }
+.table-card__win.is-meadow { color: var(--ork-elem-meadow); }
+.table-card__win.is-ice { color: var(--ork-elem-ice); }
+.table-card__win.is-dust { color: var(--ork-elem-dust); }
+.table-card__win.is-void { color: var(--ork-elem-void); }
+.table-card__win.is-lava { color: var(--ork-elem-lava); }
+.table-card__win.is-dim { color: var(--ork-ink-faint); }
+.table-card__win.is-danger { color: var(--ork-danger); }
+.table-card__row { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-3); min-height: 22px; min-width: 0; }
+.table-stage { display: inline-flex; align-items: center; gap: var(--ork-2); min-width: 0; overflow: hidden; white-space: nowrap; color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
+.table-stage .ork-sign { vertical-align: middle; }
+.table-card.is-lit, .table-tstrip.is-lit, .table-token.is-lit, .table-sys .is-lit { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); }
+
+/* the narrow width: a goal one token with its stack's edges (its element, its front task's stage and type) */
+.table-stack { position: relative; isolation: isolate; display: block; flex: none; }
+.table-stack[data-n="1"] { padding-bottom: calc(var(--ork-3) / 2); }
+.table-stack[data-n="2"] { padding-bottom: var(--ork-3); }
+.table-stack[data-n="3"] { padding-bottom: calc(var(--ork-3) * 1.5); }
+.table-stack[data-n="4"] { padding-bottom: calc(var(--ork-3) * 2); }
+.table-stack[data-n="5"] { padding-bottom: calc(var(--ork-3) * 2.5); }
+.table-edge.ork-card { position: absolute; left: 0; right: 0; top: 0; z-index: calc(var(--ork-deck-i, 1) * -1); height: calc(var(--ork-tap) * 1.3); padding: 0; transform: translateY(calc(var(--ork-deck-i, 1) * var(--ork-3) / 2)); pointer-events: none; }
+button.table-token.ork-card { position: relative; display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); box-sizing: border-box; width: var(--ork-tap); height: calc(var(--ork-tap) * 1.3); padding: var(--ork-2); flex: none; cursor: pointer; }
+.table-token .table-card__top { display: flex; align-items: center; justify-content: space-between; width: 100%; min-height: 14px; }
+.table-token .table-card__win { flex: 1; width: 100%; height: auto; border: 0; }
+.table-token--all { align-items: center; justify-content: center; height: var(--ork-tap); }
+.table-line-tokens { display: flex; flex-direction: column; align-items: center; gap: var(--ork-3); }
+
+/* the line over the pane (kind `line`) */
+.table-line { display: flex; flex-direction: column; gap: var(--ork-4); max-width: 880px; min-width: 0; }
+.table-line p, .table-line ul { margin: 0; padding: 0; }
+.table-line__search { display: flex; align-items: center; gap: var(--ork-3); }
+.table-line__search .ork-field { flex: 1; }
+.table-line__rows { display: flex; flex-direction: column; gap: var(--ork-3); list-style: none; }
+.table-line__item { display: flex; align-items: center; gap: var(--ork-2); }
+.table-line__row { display: flex; align-items: center; gap: var(--ork-5); min-height: 56px; flex: 1; min-width: 0; width: 100%; padding: var(--ork-3) var(--ork-5); text-align: left; }
+.table-line__text { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.table-line__sub { color: var(--ork-ink-muted); }
+.table-line__place { display: flex; align-items: center; gap: var(--ork-2); flex: none; color: var(--ork-ink-muted); }
 
 /* -- a card lifted where it lies, turned over ------------------------------------------------------------------------------------- */
 .table-back { position: absolute; z-index: 30; left: 0; top: 0; display: flex; flex-direction: column; gap: var(--ork-3); width: min(248px, 100%); max-height: 100%; overflow-y: auto; padding: var(--ork-4); }
@@ -71,6 +112,8 @@ button.table-token { position: relative; display: flex; flex-direction: column; 
 .table-back__text { white-space: pre-wrap; overflow-wrap: anywhere; max-height: 9rem; overflow: auto; }
 .table-back__acts { margin-top: auto; display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-3); }
 .table-back__open { align-self: flex-start; }
+.table-back__tasks { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ork-1); }
+.table-back__task { display: inline-flex; align-items: center; gap: var(--ork-2); text-align: left; }
 .table-back__part { display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; }
 .table-back .sys-side__part, .table-back .sys-change__goal { min-height: 0; }
 @media (prefers-reduced-motion: no-preference) {
@@ -140,7 +183,7 @@ button.table-token { position: relative; display: flex; flex-direction: column; 
 
 /* -- the narrow width: under 760 px the tabs are heads, a column a head wide, what opens over the pane a screen ------------------------- */
 @media (max-width: 759px) {
-  .table { --cols: minmax(0, calc(var(--ork-tap) + 2px)) repeat(var(--tabs, 4), minmax(0, calc(var(--ork-tap) + 2px))) minmax(0, 1fr); }
+  .table { --cols: repeat(var(--lanes, 5), minmax(0, calc(var(--ork-tap) + 2px))) minmax(0, 1fr); }
   .table-tabs { padding-left: var(--ork-2); padding-right: var(--ork-2); }
   .table-tab { height: 48px; min-height: var(--ork-tap); justify-content: center; padding: 0; }
   .table-tab__txt { display: none; }
@@ -151,6 +194,8 @@ button.table-token { position: relative; display: flex; flex-direction: column; 
   .table-play__w { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .table-board { padding: 0 var(--ork-2); }
   .table-lane { padding: var(--ork-3) 0; gap: var(--ork-3); }
+  .table-line__row { gap: var(--ork-3); padding: var(--ork-3) var(--ork-4); }
+  .table-line__place { display: none; }
   .table-head { padding: var(--ork-2) var(--ork-4); }
   .table-head { position: static; }
   .table-seatpop { left: 0; right: 0; top: auto; bottom: 0; width: auto; max-height: 80%; }

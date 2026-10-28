@@ -1,22 +1,26 @@
-// The Orkmaster's tab is the Board (docs/specs/98-the-table-and-the-hand.md §3.3, decisions §143): a column a party, each standing under its party's tab — the tabs take their columns' widths while the Board is
-// shown, in the same order, and the Board has no header of its own (both read the one `--lanes` of table.css). A column's cards are its tasks at work (running, testing, picking, a failure), each with its member's
-// head, its goal's element top left, its name up to four lines. The Orkmaster's own column, under its tab, holds what it does itself: a goal being read or routed, as a card with its crown. A column narrower than a
-// card lays its tasks as tokens (spec 67), and a column a head wide at the narrow width does too: no sideways scroll. A goal picked: its tasks alone (§136.10).
+// The project's tab is the Board (docs/specs/101-the-cards-the-cascade-and-the-hand-under-the-lanes.md §3, docs/specs/98-the-table-and-the-hand.md §3.3, decisions §143, §167.4–§167.6): the first lane is the whole project's — the goals the
+// Orkmaster reads, routes or joins, each a card under its strip, and last the line (*In line*) —, then a lane a party, each standing under its party's tab: the tabs and the lanes read the one `--cols` of the frame, so a tab stands
+// exactly over its lane. A party's lane holds its goals as cascades (cascade.js): a strip, its tasks behind the front one, the picked goal's unfolded; the lanes in the hand's order (a failure, a question, the rest). A lane narrower than a
+// card lays a goal as one token with its stack's edges (spec 101 §5); no sideways scroll.
 import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html } from "../html.js";
 import { picked } from "../frame/state.js";
-import { cardsOf, nameOf, ownOf } from "./data.js";
-import { OwnCard, TaskCard, Token } from "./card.js";
+import { currentProject } from "../shell/projects.js";
+import { laneOf, lineNow, nameOf, ownOf } from "./data.js";
+import { GoalBlock, Line, OwnBlock } from "./cascade.js";
+import "./line.js";
 
-const CARD_W = 128;                                                 // a card; a lane narrower than this (with its gutters) lays tokens
+const CARD_W = 144;                                                 // a card (frame.css `--card-w`); a lane whose room is narrower than this lays tokens
 
-/** Whether the first party's column is narrower than a card: the lanes' widths are the tabs' (table.css), measured here once they are laid out. */
+/** Whether the first lane's room is narrower than a card: the lanes' widths are the frame's (frame.css `--cols`), measured here once they are laid out. */
 function useTokens(host, narrow) {
   const [tokens, setTokens] = useState(narrow);
   useLayoutEffect(() => {
     const measure = () => {
-      const lane = host.current?.querySelector(".table-lane[data-party]") || host.current?.querySelector(".table-lane--own");
-      setTokens(narrow || (!!lane && lane.clientWidth < CARD_W + 16));
+      const lane = host.current?.querySelector(".table-lane");
+      let room = lane ? lane.clientWidth : CARD_W;
+      if (lane) { const s = getComputedStyle(lane); room -= parseFloat(s.paddingLeft) + parseFloat(s.paddingRight); }
+      setTokens(narrow || room < CARD_W - 1);
     };
     measure();
     const ro = typeof ResizeObserver === "function" ? new ResizeObserver(measure) : null;
@@ -27,16 +31,17 @@ function useTokens(host, narrow) {
 }
 
 export function BoardMap({ parties, narrow }) {
-  const host = useRef(), only = picked.value, tokens = useTokens(host, narrow);
-  const own = ownOf(parties, only), columns = parties.map((g) => ({ g, cards: cardsOf(g, only) }));
-  const none = !own.length && columns.every((c) => !c.cards.length);
+  const host = useRef(), tokens = useTokens(host, narrow), only = picked.value;
+  const own = ownOf(parties), line = lineNow(), lanes = parties.map((g) => ({ g, goals: laneOf(g) }));
+  const none = !own.length && !line.length && lanes.every((l) => !l.goals.length);
   return html`<div class="table-board" ref=${host} data-tokens=${String(tokens)} data-picked=${only || undefined}>
-    <div class="table-lane table-lane--own" role="group" aria-label="The Orkmaster">
-      ${own.map(({ n }) => (tokens ? html`<${Token} key=${n.slug} n=${n} lit=${!!only} />` : html`<${OwnCard} key=${n.slug} n=${n} lit=${!!only} />`))}
+    <div class="table-lane table-lane--first" data-lane="first" role="group" aria-label=${currentProject.value?.name || "The project"}>
+      ${own.map(({ n, stage }) => html`<${OwnBlock} key=${n.slug} n=${n} stage=${stage} tokens=${tokens} />`)}
+      <${Line} line=${line} tokens=${tokens} />
     </div>
-    ${columns.map(({ g, cards }) => html`<div key=${g.slug} class="table-lane" data-party=${g.slug} role="group" aria-label=${nameOf(g)}>
-      ${cards.map(({ n, t }) => (tokens ? html`<${Token} key=${`${n.slug}/${t.id}`} n=${n} t=${t} lit=${!!only} />` : html`<${TaskCard} key=${`${n.slug}/${t.id}`} n=${n} t=${t} lit=${!!only} />`))}
+    ${lanes.map(({ g, goals }) => html`<div key=${g.slug} class="table-lane" data-party=${g.slug} role="group" aria-label=${nameOf(g)}>
+      ${goals.map(({ n, tasks }) => html`<${GoalBlock} key=${n.slug} n=${n} tasks=${tasks} tokens=${tokens} />`)}
     </div>`)}
-    <div class="table-lane table-lane--free">${none && html`<p class="table-board__none">${only ? "Nothing of this goal is at work" : "Nothing is at work"}</p>`}</div>
+    <div class="table-lane table-lane--free">${none && html`<p class="table-board__none">Nothing is at work</p>`}</div>
   </div>`;
 }

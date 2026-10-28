@@ -216,18 +216,18 @@ TERMS: tuple[Term, ...] = (
     _t("scribble", "note", "notes", "scribble", "scribbles"),       # a goal or a note on the board
     # The table and the hand (docs/specs/98-the-table-and-the-hand.md §0.1, §2.4; decisions §145): the window's two parts
     _t("table", "table"),                                          # the window's upper part: the leaders' tabs and the pane under them (what and why, through whose eyes)
-    _t("hand", "hand"),                                            # the window's lower part: what the person decides, with the deck, the stacks of stops and the discard
-    _t("deck", "deck", "decks"),                                   # the goals in line, not started (read *In line*); the one back, its top sealed with the first goal's element
+    _t("hand", "hand"),                                            # the window's lower part: what the person decides, under the lanes, with the stacks of stops and the discard
     _t("discard", "discard"),                                      # the goals done and not yet seen, and what is ready for main (read *Done*)
     _t("lane", "lane", "lanes"),                                   # a party's column on the Board under its tab
-    _t("blank_card", "blank card", "blank cards"),                 # the + card lying off the deck, and the field it grows into: *Write a goal…*
+    _t("blank_card", "blank card", "blank cards"),                 # the + card alone under the first lane, and the field it grows into: *Write a goal…*
     _t("lifted_card", "lifted card", "lifted cards"),              # a card pressed and raised over the pane, with its answers and *Put it back*
     _t("map", "map", "maps"),                                      # what a party's tab shows under its header: Tech's is *System* (a part of it is never called a card)
     _t("seat", "seat", "seats"),                                   # one place in a party: its leader's, a builder's, a checker's; a head sits in it
     _t("squad", "squad", "squads"),                                # a party's seats together, grouped *Leads* | *Does* | *Checks*
     _t("size", "size", "sizes"),                                   # how large a party is, in one word: lean, standard or full (the Target's, spec 75)
-    _t("in_line", "in line"),                                      # a goal not started, waiting its turn in the deck (*3rd in line*)
-    _t("hold", "Hold"),                                            # keep a goal in the deck: nothing reads it until the person says (the queue `hold`; a raw `night` reads so)
+    _t("in_line", "in line", "", "deck", "decks"),                 # a goal not started, waiting its turn: the first lane's last cascade (decisions §167.5; it was the *deck*, whose place value `deck` the code keeps)
+    _t("cascade", "cascade", "cascades"),                          # a goal's tasks laid in its party's lane, the front one whole and the others as strips (decisions §167.4)
+    _t("hold", "Hold"),                                            # keep a goal in line: nothing reads it until the person says (the queue `hold`; a raw `night` reads so)
     # A goal's way (docs/specs/99-a-goals-way.md §10; decisions §117, §118, §121.1): the words of the route, Talk, the decision and the spec, each once
     _t("route", "route", "routes"),                                # the parties that write a goal's spec and do its work, in order; the Orkmaster routes a goal, never a job title
     _t("route_card", "route card", "route cards"),                 # a goal's first card: its route, the cost said before, its place in line, and Talk (the `route` row)
