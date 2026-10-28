@@ -4,7 +4,7 @@ The owner and the PM, 27 October. `docs/decisions.md` is a log: from §104 to §
 hours before (§134 changes §133, §138 changes §136, §145 turns §104.0's frame round). This spec is that log read as one
 window, with no deltas, so that a slice's spec is written from it and not from forty entries. **Builds:** nothing by
 itself; each slice's spec builds a part of it. **When a decision after §146 changes the window, this spec is changed in
-the same commit**; where it and a decision differ, the decision is right and this spec is fixed. Read up to §162.
+the same commit**; where it and a decision differ, the decision is right and this spec is fixed. Read up to §163.
 
 **What it is, and is not:** the window as it will be, each part with the decisions it rests on. Not: how it is built
 (files, tests: the slices' specs), the phone's frame (spec 94), the engine's calls beyond what the person sees.
@@ -196,7 +196,7 @@ The closed set, kept in orkUI (§127.3): **signs** — the goal's element, the s
 the moon, *done*; the heads are accents, the cost's frame a number's place. **Motions** — dealt (and played, from the
 hand to a lane), sealed, crumbled, ghost, turned, lifted, the microphone's pulse. A new thing takes one of them or
 replaces one. Under reduced motion each is still.
-**The look** (§106, §115, §148): orkUI's office in the half-tint warm (0.14.0's greys); the moon one sign only; the
+**The look** (§106, §115, §148, §163): orkUI's office in the half-tint warm (0.14.0's greys), the cards on their own neutral soft fill a step lighter; the moon one sign only; the
 icons drawn at the signs' weight; the AI tools' marks in ink; the elements on hues no signal has; a head at its own 24 × 22 (or 48 × 44, §161),
 never the action's green; six races, each leader its race's higher form (§154.3, §155); the cost in orkUI's gem.
 **The cards answer the hand as Balatro's** (§149): they lean toward the pointer, give when pressed, fly with weight

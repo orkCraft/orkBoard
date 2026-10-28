@@ -3244,3 +3244,19 @@ unicorn knight, whose horn is one spike at its brow. So (this changes §155.2 an
 4. **The ork shaman without the war paint**: its face is the ork's, its marks its horns and braids, its skin the deeper
    green (§155.2).
 The owner's call.
+
+## 163. A card is neutral on the warm table: the cards' own fill and frame, soft greys a step lighter (28 October, the owner)
+
+Why: a card on the table differed from it by its fill only 1.17:1 (`raised` on `table`), so the cards read as windows,
+not things on a table. Three ways were laid side by side on one window (orkUI's `docs/compare/cards.html`): A, the table
+warm and the cards soft; B, the table soft and the cards warm; C, as it was with the card a step lighter. The owner took
+A. So (this makes §115, §148.1 and §149.3 precise):
+1. **The cards have their own fill and frame**, two tokens of orkUI's (`card`, `card-frame`): neutral soft greys a step
+   lighter than the half-tint `raised` (about `#2e2e2e`, its frame about `#3c3c3c`; measured in orkUI). Every card is
+   drawn on them: a map's cards, the hand's cards, the lifted card, the backs and the deck's + card. The grounds, the
+   panels, the tabs and the table stay the half-tint warm.
+2. **What lies on a card holds its measures on the card's fill**: text AA (the faint ink a step lighter where it falls
+   short), every sign, element and signal 3:1, every head's edge 3:1 (the few head colours that fall short a step lighter,
+   as 0.12.0 did), the card's chroma below every element's (its greyness is no signal).
+3. In orkUI's 0.15.x, with §162's heads, then copied here once (spec 96).
+The owner's call.
