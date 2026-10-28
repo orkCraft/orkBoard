@@ -35,11 +35,8 @@ def host(fake_repo) -> Orkboard:
     git(fake_repo, "commit", "-q", "-m", "a game")
     git(fake_repo, "branch", "dev")
     h = Orkboard(fake_repo)
-    if not isinstance(h.ideas.keeper, KeeperLoop):                            # wired by the lead: the keeper's bases, the host's and its table
-        h.ideas.keeper.__class__ = type("KeeperWithLoop", (KeeperLoop, type(h.ideas.keeper)), {})
-    if not isinstance(h.ideas, GuiLoop):
-        h.ideas.__class__ = type("IdeasWithLoop", (GuiLoop, type(h.ideas)), {})
-    h.commands.update(loop_commands(h.ideas))
+    assert isinstance(h.ideas.keeper, KeeperLoop) and isinstance(h.ideas, GuiLoop)      # wired: the keeper's bases, the host's and its table
+    assert set(loop_commands(h.ideas)) <= set(h.commands)
     yield h
     sys.modules.pop("orkboard.core.idea_runner", None)
 

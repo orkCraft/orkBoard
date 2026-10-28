@@ -252,5 +252,11 @@ def detail(state_dir: Path, root: Path, parts: list[str]) -> str:
 
 
 def of(party: str, state_dir: Path, root: Path, since: str = "", pages: Path | None = None) -> str | None:
-    """The map of `party` as text: System for Tech; the other maps' texts come with their parties (spec 99 S3), so a party with none is given none."""
-    return system(state_dir, root, since, pages) if party == TECH else None
+    """The map of `party` (its craft: `goal_team.craft_of`) as text: System for Tech, the loop for Game design, the other maps' texts as their parts
+    come (spec 102 §4); a party with none is given none."""
+    if party == TECH:
+        return system(state_dir, root, since, pages)
+    if party == "game-design":
+        from orkboard.realm import loop
+        return loop.text(state_dir, root, since)
+    return None
