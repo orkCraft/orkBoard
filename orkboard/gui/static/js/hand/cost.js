@@ -5,6 +5,7 @@
 import { html } from "../html.js";
 import { town } from "../link.js";
 import { pctRange, pctShort, rated } from "../spend.js";
+import { wayOf } from "./ways.js";
 
 const num = (n, cents) => (cents ? Number(n).toFixed(2) : String(Math.round(n)));
 const usdRange = (low, high) => {
@@ -34,6 +35,8 @@ function gemOf(low, high) {
 
 /** Where a stop's price is: a plan's estimate, a plan change's range, a failed task's last cost. `{low, high, saves}` in dollars, null for a card that spends nothing. */
 export function priceOf(s) {
+  const registered = wayOf(s.kind);
+  if (registered?.price) return registered.price(s);                         // a goal's way's card says its own price (spec 100: the route's)
   const n = s.node, row = s.row;
   if (s.kind === "plan") {
     const e = n?.plan_estimate || n?.estimate;

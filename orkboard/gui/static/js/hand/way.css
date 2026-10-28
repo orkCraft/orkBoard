@@ -1,0 +1,41 @@
+/* A goal's way in the hand (docs/specs/100 §1, part A): the lifted route card and start card. Layout only; every colour, face, corner and motion is orkUI's. The plain cost line the lifted card adds at its
+   foot (stopcard.js `Spend`) is drawn here, above the act, so it hides. */
+
+.hand-lifted[data-kind="route"] > .hand-spend, .hand-lifted[data-kind="start"] > .hand-spend { display: none; }
+.hand-way { display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; }
+.hand-way p { margin: 0; }
+.hand-way__words { overflow-wrap: anywhere; }
+.hand-way__place { color: var(--ork-ink-muted); }
+.hand-way__acts { margin-top: var(--ork-1); }
+.hand-way__was { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3); color: var(--ork-ink-muted); }
+.hand-way__old { text-decoration: line-through; }
+.hand-way__old .hand-spend { display: inline-flex; flex-wrap: wrap; }
+.hand-way__old .hand-spend__words, .hand-way__old .ork-gem { text-decoration: line-through; }   /* a flex child does not inherit its parent's line */
+
+/* the route: the leaders' heads in order, each with its × at the corner, then the + */
+.hand-route { display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; }
+.hand-route__steps { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-4); margin: 0; padding: 0; list-style: none; }
+.hand-route__step { position: relative; display: inline-flex; align-items: flex-start; }
+.hand-route__head { appearance: none; display: inline-flex; align-items: center; justify-content: center; min-width: 40px; min-height: 40px; padding: var(--ork-1); border: 0; background: none; color: inherit; cursor: pointer; }
+span.hand-route__head { cursor: default; }
+.hand-route__head:hover, .hand-route__head.is-on { background: var(--ork-raised); }
+.hand-route__head:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.hand-route__off { position: absolute; top: -6px; right: -10px; min-width: 18px; min-height: 18px; width: 18px; height: 18px; padding: 0; }
+.hand-route__off .ork-icon { width: 14px; height: 14px; }
+.hand-route__add { min-width: 40px; min-height: 40px; padding: 0; }
+.hand-route__add .ork-icon { width: 21px; height: 21px; }
+.hand-route__menu { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; }
+.hand-route__pick { display: flex; align-items: center; justify-content: flex-start; gap: var(--ork-3); width: 100%; min-width: 0; text-align: left; }
+.hand-route__pick-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hand-route__touches { flex: none; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.hand-route__pop { min-width: 0; }
+.hand-route__pop .table-seatpop { position: static; width: auto; max-height: none; overflow: visible; }
+
+/* a press is 44 x 44 under a touch pointer: the × lies beside its head then, not over its corner */
+@media (pointer: coarse) {
+  .hand-route__head, .hand-route__add { min-width: var(--ork-tap); min-height: var(--ork-tap); }
+  .hand-route__steps { gap: var(--ork-3); }
+  .hand-route__step { align-items: center; }
+  .hand-route__off { position: relative; top: auto; right: auto; width: var(--ork-tap); height: var(--ork-tap); min-width: var(--ork-tap); min-height: var(--ork-tap); }
+  .hand-route__pick { min-height: var(--ork-tap); }
+}

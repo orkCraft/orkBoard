@@ -952,10 +952,10 @@ def test_a_pick_a_sign_in_and_a_card_of_an_unknown_kind_are_cards_of_the_hand_to
         _stack(pg, "look").wait_for(timeout=WAIT_MS)
         assert _stack(pg, "sign_in/claude").count() == 1 and _stack(pg, "fresh").count() == 1                      # a stop of no goal is a stack of its own; the route card lies with its goal
         assert _stack(pg, "sign_in/claude").evaluate("e => e.closest('.hand-lane').dataset.lane") == "0" and _stack(pg, "fresh").evaluate("e => e.closest('.hand-lane').dataset.lane") == "0"   # both under the first lane
-        _press(pg, "fresh")                                                                                       # an unknown kind: a plain card, its text, a press lifts it
+        _press(pg, "fresh")                                                                                       # the route card (spec 100 A: tests/test_route_card_desktop_browser.py): a press lifts it
         lifted = pg.locator(".hand-lifted")
         lifted.wait_for(timeout=WAIT_MS)
-        assert "Goes to Tech, by code" in lifted.inner_text() and lifted.get_by_role("button", name="Put it back").count() == 1 and lifted.locator(".hand-spend").count() == 0
+        assert lifted.get_by_role("button", name="Talk").count() == 1 and lifted.get_by_role("button", name="Put it back").count() == 1
         lifted.get_by_role("button", name="Put it back").click()
         _press(pg, "sign_in/claude")
         pg.locator(".hand-lifted").get_by_role("button", name="Sign in").wait_for(timeout=WAIT_MS)
