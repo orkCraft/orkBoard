@@ -1,1 +1,171 @@
-/* The hand (spec 98 §4, part D): its sheet. Layout only; orkUI draws every colour, face and corner. */
+/* The hand (docs/specs/98-the-table-and-the-hand.md §4–§6, part D): its sheet. Layout only. Every colour, face, corner and motion is orkUI's (tokens.css, components.css:
+   `.ork-card`, `.ork-card-back` and its seal, `.ork-plus`, `.ork-deck`, `.ork-gem`, `.ork-leans`, `.ork-deal`, `.ork-fan`, `.ork-crumble`); a size is a whole number of orkUI's
+   pixels (a card 120 x 168 is 8 px a cell, 60 x 84 is 4 px a cell). Nothing here moves on its own: a card at rest is flat, and under reduced motion nothing moves at all. */
+
+.hand p, .hand ul, .hand h2, .hand-list p, .hand-list ul, .hand-discardview p, .hand-discardview ul, .hand-discardview h2, .hand-result p, .hand-result ul, .hand-result h2, .hand-result h3,
+.hand-stopface p, .hand-stopface ul, .hand-stopface h2, .hand-stopface h3 { margin: 0; padding: 0; }
+
+/* ---------- the hand: three places along the window's foot ---------- */
+.hand { position: relative; z-index: 2; min-width: 0; background: var(--ork-canvas); border-top: var(--ork-line) solid var(--ork-frame); }
+.hand[data-empty] { border-top: 0; }
+.hand-places { display: flex; align-items: flex-start; gap: var(--ork-6); min-width: 0; padding: var(--ork-6) var(--ork-6) var(--ork-5); }
+.hand-end { flex: none; }
+.hand-end--deck { padding: 0 calc(var(--ork-3) * 5 / 2) calc(var(--ork-3) * 5 / 2) 104px; }
+.hand-end--discard { margin-left: auto; padding: 0 calc(var(--ork-3) * 3 / 2) calc(var(--ork-3) * 3 / 2) 0; }
+.hand-mid { flex: 1 1 0; min-width: 0; overflow-x: auto; overflow-y: hidden; margin: calc(var(--ork-5) * -1) 0; padding: var(--ork-5) 0; }
+.hand-stacks { display: flex; align-items: flex-start; gap: var(--ork-6); width: max-content; min-height: 168px; }
+
+/* one size: every card of the hand (orkUI's card, its back and the + card) is the same width; a back is 5 : 7, so the height follows */
+.hand .hand-card, .hand .hand-back, .hand .hand-plus { width: 120px; flex: none; box-sizing: border-box; }
+.hand .hand-card { position: relative; display: flex; flex-direction: column; gap: var(--ork-2); height: 168px; padding: var(--ork-4); text-align: left; cursor: pointer; }
+.hand .hand-card.is-slot { border-style: dashed; border-color: var(--ork-edge); background: none; box-shadow: none; }
+.hand .hand-card.is-slot > * { visibility: hidden; }
+.hand .hand-card.is-gone { position: absolute; left: 0; top: 0; pointer-events: none; }
+.hand .hand-card--stop { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "mark party" "name name" "gem head";
+  align-items: start; column-gap: var(--ork-2); row-gap: var(--ork-2); }
+.hand-card__mark { grid-area: mark; display: inline-flex; align-items: center; min-height: 14px; }
+.hand-card--stop .hand-card__party { grid-area: party; justify-self: end; max-width: 100%; }
+.hand-card--stop .hand-card__name { grid-area: name; align-self: start; }
+.hand-card__gem { grid-area: gem; align-self: end; justify-self: start; min-width: 0; }
+.hand-card__head { grid-area: head; align-self: end; justify-self: end; display: inline-flex; }
+.hand-card__top { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-2); min-height: 14px; min-width: 0; }
+.hand-card__party { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.hand-card__name { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-caption); }
+.hand-card__foot { display: flex; align-items: center; gap: var(--ork-3); min-width: 0; margin-top: auto; }
+.hand-card__grow { flex: 1; }
+.hand-card__ready, .hand-card__wait { color: var(--ork-ink-muted); font: var(--ork-type-caption); min-width: 0; }
+.hand-card__wait { display: inline-flex; align-items: center; gap: var(--ork-2); }
+
+/* the signals' colours: the three tones of orkUI's tokens */
+.hand .is-danger, .hand-stopface .is-danger { color: var(--ork-danger); }
+.hand .is-alert, .hand-stopface .is-alert { color: var(--ork-alert); }
+.hand .is-ok, .hand-stopface .is-ok, .hand-drow .is-ok { color: var(--ork-success); }
+
+/* the deck, the stacks and the discard are orkUI's pile: a back's edges, then the top */
+.hand-deck, .hand-stack { flex: none; }
+.hand-stack { padding: 0 calc(var(--ork-3) * 3 / 2) calc(var(--ork-3) * 3 / 2) 0; }
+.hand-stack.is-fanned { display: flex; align-items: flex-start; gap: var(--ork-2); padding: 0; }
+.hand-fan__card { flex: none; pointer-events: auto; }
+.hand-back { cursor: default; padding: 0; }
+.hand .hand-deckback { cursor: pointer; transition: transform var(--ork-motion-base) var(--ork-motion-spring); }
+.hand .hand-deckback:hover { transform: translateY(calc(var(--ork-motion-rise) * -1)); }
+.hand .hand-deckback:active { transform: scale(var(--ork-motion-press)); transition-duration: var(--ork-motion-quick); transition-timing-function: var(--ork-motion-ease); }
+.hand .hand-deckback:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.hand .hand-deckback.is-on { box-shadow: inset 2px 0 0 var(--ork-ink); }
+.hand-back__ready { display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); padding: var(--ork-3); color: var(--ork-ink-muted); text-align: center; }
+.hand-deck.is-alone { display: block; }
+.hand-end--deck:has(.is-alone) { padding-left: 0; }
+.hand .hand-plus { cursor: pointer; }
+.hand .hand-plus.is-large { width: 180px; }
+.hand .hand-plus.is-large > .ork-icon { width: 56px; height: 56px; }
+
+/* the field the + card grows into */
+.hand .hand-field { position: absolute; left: var(--ork-6); bottom: calc(100% - 104px); z-index: 30; display: flex; flex-direction: column; gap: var(--ork-3); width: 272px; min-height: 200px;
+  padding: var(--ork-4); background: var(--ork-raised); border-color: var(--ork-ink); }
+.hand .hand-field.is-middle { position: static; width: min(360px, 100%); pointer-events: auto; }
+.hand-field__chips { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
+.hand-chip { display: inline-flex; align-items: center; gap: var(--ork-2); white-space: nowrap; }
+.hand-chip__off { padding: 0; min-width: 24px; }
+.hand-pic { position: relative; display: inline-flex; align-items: center; gap: var(--ork-1); }
+.hand-pic img { display: block; width: 36px; height: 36px; object-fit: cover; image-rendering: auto; }
+.hand .hand-field .hand-field__text { flex: 1; height: auto; min-height: 88px; resize: none; padding: var(--ork-3); font: var(--ork-type-body); }
+.hand-field__row { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-3); flex-wrap: wrap; }
+.hand-field__hint { flex: 1 1 100%; color: var(--ork-ink-muted); }
+
+/* the deck's row, over the hand */
+.hand .hand-row { position: absolute; left: var(--ork-6); right: var(--ork-6); bottom: calc(100% - var(--ork-8)); z-index: 40; display: flex; align-items: flex-end; gap: var(--ork-2);
+  padding: var(--ork-8) 0 var(--ork-4); overflow-x: auto; overflow-y: hidden; pointer-events: none; }
+.hand-line.is-dragged { z-index: 3; cursor: grabbing; transition: none; }
+.hand-grip { display: grid; grid-template-columns: repeat(2, 4px); gap: var(--ork-1); flex: none; padding: var(--ork-2); cursor: grab; touch-action: none; }
+.hand-grip i { display: block; width: 4px; height: 4px; background: var(--ork-edge); }
+.hand-line:hover .hand-grip i, .hand-line:focus-visible .hand-grip i, .hand-line.is-dragged .hand-grip i { background: var(--ork-ink); }
+.hand .hand-all { align-items: center; justify-content: center; gap: var(--ork-3); }
+.hand .hand-all > .ork-icon { width: 28px; height: 28px; }
+
+/* a card lifted over the pane's foot */
+.hand .hand-lifted { position: absolute; left: var(--ork-6); bottom: calc(100% + var(--ork-4)); z-index: 60; display: flex; flex-direction: column; gap: var(--ork-3); width: 304px; max-height: min(560px, calc(100dvh - 232px));
+  overflow-y: auto; padding: var(--ork-4); }
+.hand-lifted:focus-visible { outline: 0; }
+.hand-lifted__top { display: flex; align-items: flex-start; gap: var(--ork-3); }
+.hand-lifted__title { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.hand-lifted__kind, .hand-lifted__why { color: var(--ork-ink-muted); }
+.hand-lifted__text { overflow-wrap: anywhere; }
+.hand-goals { display: flex; flex-direction: column; gap: var(--ork-1); font: var(--ork-type-caption); }
+.hand-answers { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2); }
+.hand-answers .ork-btn { max-width: 100%; }
+.hand-why { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2); width: 100%; }
+.hand-why .ork-field { flex: 1 1 160px; }
+.hand-spend { display: flex; align-items: center; gap: var(--ork-3); }
+.hand-spend__words { min-width: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.hand-put { align-self: flex-start; }
+
+/* with no goal at all: the + card large in the pane's middle (it lies over the table's box) */
+.hand-middle { position: fixed; z-index: 20; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--ork-5); pointer-events: none; }
+.hand-middle > * { pointer-events: auto; }
+
+/* what the hand opens over the pane: the line, the discard, a result, a stop */
+.hand-list, .hand-discardview, .hand-result, .hand-stopface { display: flex; flex-direction: column; gap: var(--ork-4); max-width: 880px; min-width: 0; }
+.hand-list__search { display: flex; align-items: center; gap: var(--ork-3); }
+.hand-list__search .ork-field { flex: 1; }
+.hand-list__rows, .hand-rows { display: flex; flex-direction: column; gap: var(--ork-3); list-style: none; margin: 0; padding: 0; }
+.hand-list__item { display: flex; align-items: center; gap: var(--ork-2); }
+.hand-list__row, .hand-drow { display: flex; align-items: center; gap: var(--ork-5); min-height: 56px; width: 100%; padding: var(--ork-3) var(--ork-5); text-align: left; }
+.hand-list__row { flex: 1; min-width: 0; }
+.hand-list__text, .hand-drow__text { display: flex; flex: 1; flex-direction: column; min-width: 0; }
+.hand-list__sub { color: var(--ork-ink-muted); }
+.hand-list__place, .hand-drow__place { display: flex; align-items: center; gap: var(--ork-2); flex: none; color: var(--ork-ink-muted); }
+.hand-drow__type { display: inline-flex; flex: none; color: var(--ork-ink); }
+.hand-part { display: flex; flex-direction: column; gap: var(--ork-3); }
+.hand-part__head { display: flex; align-items: center; gap: var(--ork-4); min-height: 32px; }
+.hand-part__title { flex: 1; }
+.hand-tick { display: inline-flex; align-items: center; justify-content: center; flex: none; width: 24px; height: 24px; border: var(--ork-line) solid var(--ork-edge); }
+.hand-tick .ork-sign { color: var(--ork-success); }
+.hand-result__head, .hand-stopface__head { display: flex; align-items: center; gap: var(--ork-4); }
+.hand-result__title, .hand-stopface__title { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); overflow-wrap: anywhere; }
+.hand-stopface__titles { flex: 1; min-width: 0; }
+.hand-stopface__choices, .hand-stopface__tasks, .hand-result__made { display: flex; flex-direction: column; gap: var(--ork-2); list-style: none; margin: 0; padding: 0; }
+.hand-stopface__tasks li, .hand-result__made li { display: flex; flex-direction: column; }
+.hand-stopface__choices .is-picked { color: var(--ork-ink); }
+.hand-result__foot { margin-top: var(--ork-4); }
+
+/* the cards of the table a lifted card of the hand is about rise a little (about.js; the table marks its cards with `data-about`) */
+.frame-table .is-about { transform: translateY(calc(var(--ork-motion-rise) * -2)); box-shadow: 0 var(--ork-motion-rise) 0 var(--ork-scrim); transition: transform var(--ork-motion-base) var(--ork-motion-spring); }
+
+/* the narrow width (spec 94 §1): the deck with its + card and the discard at the ends, the stacks between, scrolled sideways inside the hand alone */
+@media (max-width: 759.98px) {
+  .hand-places { gap: var(--ork-3); padding: var(--ork-4) var(--ork-4) calc(var(--ork-4) + env(safe-area-inset-bottom, 0px)); }
+  .hand-end--deck { padding: 0 calc(var(--ork-3) * 5 / 2) calc(var(--ork-3) * 5 / 2) 52px; }
+  .hand-mid { margin: calc(var(--ork-4) * -1) 0; padding: var(--ork-4) 0; }
+  .hand-stacks { gap: var(--ork-4); min-height: 84px; }
+  .hand .hand-card, .hand .hand-back, .hand .hand-plus { width: 60px; }
+  .hand .hand-card { height: 84px; padding: var(--ork-2); gap: var(--ork-1); }
+  .hand .hand-plus.is-large { width: 120px; }
+  .hand .hand-card--stop { grid-template-areas: "mark head" "name name" "gem gem"; column-gap: var(--ork-1); row-gap: var(--ork-1); }
+  .hand-card__party { display: none; }
+  .hand .hand-card .ork-race__head { width: 24px; height: 22px; }
+  .hand .hand-card .ork-gem { height: 20px; min-width: 0; padding: 0 var(--ork-2); }
+  .hand-card__name { line-height: 16px; }
+  .hand-card__foot { gap: var(--ork-1); }
+  .hand-card__ready, .hand-card__wait .cap { display: none; }
+  .hand-back__ready { padding: var(--ork-1); }
+  .hand .hand-all > .ork-icon { width: 21px; height: 21px; }
+  .hand .hand-all .body { font: var(--ork-type-caption); text-align: center; }
+  .hand .hand-field { left: var(--ork-4); right: var(--ork-4); width: auto; bottom: calc(100% - 64px); }
+  .hand .hand-row { left: var(--ork-4); right: var(--ork-4); bottom: calc(100% - var(--ork-6)); padding-top: var(--ork-6); }
+  .hand .hand-lifted { left: var(--ork-4) !important; right: var(--ork-4); width: auto; max-height: calc(100dvh - 200px); }
+  .hand-list__row, .hand-drow { gap: var(--ork-3); padding: var(--ork-3) var(--ork-4); }
+  .hand-list__place, .hand-drow__place { display: none; }
+}
+
+/* a press is 44 x 44 under a touch pointer; a drag handle is always drawn (nothing is only on hover) */
+@media (pointer: coarse) {
+  .hand-chip__off { min-width: var(--ork-tap); min-height: var(--ork-tap); display: inline-flex; align-items: center; justify-content: center; }
+  .hand-grip { position: relative; }
+  .hand-grip::after { content: ""; position: absolute; inset: -15px; }      /* the handle is small on a small card; its press is 44 x 44 all the same */
+}
+
+/* none of it moves under reduced motion: a card is marked by its edge instead */
+@media (prefers-reduced-motion: reduce) {
+  .hand .hand-deckback, .hand .hand-deckback:hover, .hand .hand-deckback:active { transform: none; transition: none; }
+  .frame-table .is-about { transform: none; transition: none; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+}
