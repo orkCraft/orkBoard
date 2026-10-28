@@ -22,7 +22,7 @@ edit by hand (`orkui.problems()` stays empty). **Left out** (`orkui.SKIP`, so th
 phone until spec 94 E: `moons/` and the goal types' signs.
 
 ## 2. The page on it (D)
-1. **Heads** (§161): the heads keep their 24 × 22 drawing (`race_png` as today), the new races (griffin, shaman, dryad,
+1. **Heads** (§161): the heads keep their 24 × 22 drawing (`race_png` as today), the new races (shaman, dryad, unicorn,
    imp, fairy) at the same sizes; a head is drawn at 24 × 22 or 48 × 44, never at 12 × 11 (`.ork-race__head.small` no
    longer written).
 2. **Signs**: the page writes `moon` where it wrote `night` (orkUI keeps `night` as its alias for Orkline and the
