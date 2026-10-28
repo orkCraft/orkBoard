@@ -95,7 +95,7 @@ def test_new_party_is_presets_on_the_left_and_the_team_by_seats_on_the_right(des
         ("ideation", "Ideation"), ("mobile-concept", "Concept"), ("mobile-build", "Build"), ("release", "Release"), ("mobile-liveops", "Run")]
     assert all(c.locator("small").first.inner_text() for c in stages.all())                                                       # a line each
     crafts = left.get_by_role("region", name="By craft").locator(".shell-preset")
-    assert [c.locator("b").text_content() for c in crafts.all()] == ["Tech", "Design", "Data", "Marketing", "Product", "Art and sound", "Team"]
+    assert [c.locator("b").text_content() for c in crafts.all()] == ["Tech", "Design", "Data", "Marketing", "Product", "Art and sound"]
     own = left.get_by_role("region", name="Your own party").locator(".shell-preset")
     assert own.locator("b").text_content() == "Your own party" and own.locator("small").inner_text() == "Start from the Taskmaster and add who you need"
     pressed = [c.get_attribute("data-craft") for c in dlg.locator(".shell-preset[aria-pressed=true]").all()]

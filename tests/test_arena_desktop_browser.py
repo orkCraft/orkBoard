@@ -241,10 +241,8 @@ def test_the_regions_in_their_order_and_sizes_at_1440_by_900_with_no_page_scroll
         pg.screenshot(path=str(SHOTS / "desktop-one-window-1440x900.png"))
 
 
-def test_the_parties_list_their_headings_the_count_operations_and_the_pick_kept(gui):
+def test_the_parties_list_their_headings_the_count_and_the_pick_kept(gui):
     host = ArenaHost()
-    host.ops = True
-    host.extra_needs = [{"kind": "op", "op": "r1", "title": "Weekly report", "text": "Waits at your check", "goal": "", "idea": "", "priority": "normal", "blocks": False, "at": "x"}]
     pg, host, errors = _open(gui, host=host, ready=".arena-phead")
     try:
         col = _parties(pg)
@@ -256,28 +254,17 @@ def test_the_parties_list_their_headings_the_count_operations_and_the_pick_kept(
         assert top.locator(".ork-meter").count() == 0 and "%" not in top.inner_text()                          # a party has no end: no meter, no %
         assert top.locator(".arena-phead__work .ork-sign.work").count() == 1                                   # at work: orkUI's sign
         assert col.locator(".arena-phead .ork-count").count() == 0                                                          # no count of stops anywhere (spec 54 §2.4)
-        assert [c.get_attribute("data-goal") for c in heads.all()] == ["passkey", "pricing", "weekly", "@operations"]      # the Board's order: priority, then the person's; + New party after
+        assert [c.get_attribute("data-goal") for c in heads.all()] == ["passkey", "pricing", "weekly"]      # the Board's order: priority, then the person's; + New party after
         assert top.get_attribute("aria-current") == "true" and top.get_attribute("aria-expanded") == "true" and top.get_attribute("title") == "Sign in with a passkey · Taskmaster leads · 2 of 11 goals done"
         assert top.locator(".arena-phead__stop").count() == 0                                                  # the open party's stops lie in the hand: no sign
         assert heads.nth(1).locator(".arena-phead__stop").count() == 0 and "1/1" in heads.nth(1).inner_text()   # no stop: no sign
-        stop = heads.nth(3).locator(".arena-phead__stop")
-        assert stop.count() == 1 and stop.get_attribute("title") == "1 waits in Operations"                    # Operations' row: a sign where the count was
-        heads.nth(3).click()
-        pg.locator(".arena-ops").wait_for(timeout=WAIT_MS)                                                    # Operations: its view in the field, its rows below
-        assert pg.locator(".arena-hc[data-kind=op]").count() == 1 and pg.locator(".arena-hc").count() == 6 and pg.locator(".arena-phead .ork-count").count() == 0   # the passkey party's lie in the hand too, and the gate's card
         _show_goal(pg, "passkey")
         pg.reload()                                                                                         # the pick is kept per device
         pg.locator(".arena[data-goal=passkey]").wait_for(timeout=WAIT_MS)
         _show_goal(pg, "pricing")
         pg.reload()
         pg.locator(".arena[data-goal=pricing]").wait_for(timeout=WAIT_MS)
-        into = pg.get_by_role("button", name=re.compile("results go into"))                                    # the results' branch: the gate's quiet line, under the project's line (spec 90 §2.3)
-        assert into.is_visible() and into.inner_text().strip() == "results go into dev" and into.evaluate("e => e.closest('.arena-left .arena-gateline') !== null")
-        assert box(pg, ".arena-into")["y"] > box(pg, ".arena-gateline__main")["y"] + box(pg, ".arena-gateline__main")["height"] - 1
-        into.click()                                                                                          # the same dialog as the results' own Merge into
-        assert pg.get_by_role("dialog", name=re.compile("Merge into")).is_visible()
-        pg.keyboard.press("Escape")
-        plus = _parties(pg).locator(".arena-pnew")                                                            # the last line, after Operations: its dialog (spec 50 §3.7)
+        plus = _parties(pg).locator(".arena-pnew")                                                            # the last line: its dialog (spec 50 §3.7)
         assert plus.get_attribute("title").startswith("One of yours") and plus.locator(".ork-icon").count() == 1
         plus.click()
         pg.get_by_role("dialog", name="New party").wait_for(timeout=WAIT_MS)
@@ -397,8 +384,7 @@ def test_the_columns_hold_rows_by_phase_the_merged_count_and_what_waits_for_a_ta
     assert "failed" in failed.inner_text() and "You changed no file" in failed.get_attribute("title") and failed.locator(".ork-sign.cross").count() == 0   # the error in its tooltip
     assert "is-fail" in failed.locator("xpath=..").get_attribute("class")                                      # a failed stack has the danger edge
     held = pg.locator(".arena-stack[data-agent=screens] .arena-task[data-state=held]")
-    assert "held: tonight" in held.inner_text() and held.locator(".ork-sign.night").count() == 1 and "is-held" in held.get_attribute("class") and "is-wait" not in held.get_attribute("class")      # a hold for tonight: said by the foot with its sign (spec 82 §3)
-    assert "tonight · after 01:00" in held.get_attribute("title")                                               # and the time in its tooltip
+    assert "is-held" in held.get_attribute("class") and "is-wait" not in held.get_attribute("class")           # a hold: said by the foot (spec 82 §3; the night's words went, spec 98 A)
     assert column.locator(".arena-stk[data-goal=register] .arena-stk__n").inner_text() == "×2"                  # a stack of two: ×n on its corner
     pg.locator(".arena-task[data-key='register/k5']").hover()                                                  # hovering a card says what waits for it and what it waits for
     assert "1 waits for it" in pg.locator(".arena-task[data-key='register/k5']").inner_text()                   # k4 waits for k5
@@ -465,10 +451,9 @@ def test_a_result_to_look_at_is_the_hands_card_with_reviews_answers_and_no_alert
 
 def test_the_gates_card_its_screen_and_the_one_press_that_merges_dev_into_main(arena):
     pg, host = arena
-    line = pg.locator(".arena-gateline")
-    assert "2 goals in dev wait for main" in line.inner_text() and pg.locator(".arena-gate__btn").count() == 0
-    line.locator(".arena-gateline__main").click()
-    assert _sent(pg, host, ("ideas.log", {"event": "opened", "what": "gate", "ref": "", "device": "desktop", "via": "gate"}))
+    assert pg.locator(".arena-gate__btn").count() == 0 and pg.locator(".arena-gateline").count() == 0       # no quiet line of the gate (spec 98 A): its card in the hand is its place
+    _stop(pg, "gate").locator(".arena-hc__open").click()
+    assert _sent(pg, host, ("ideas.log", {"event": "opened", "what": "gate", "ref": "", "device": "desktop", "via": "hand"}))
     view = _drawer(pg).locator(".arena-gateview")
     view.wait_for(timeout=WAIT_MS)
     assert "dev → main" in view.inner_text() and "2 goals in dev wait for main" in view.inner_text() and "In dev, not in main" in view.text_content()
@@ -482,10 +467,6 @@ def test_the_gates_card_its_screen_and_the_one_press_that_merges_dev_into_main(a
     pg.get_by_text("main has every goal of dev").wait_for(timeout=WAIT_MS)                                      # after: the right column says so, the button is off
     assert view.get_by_role("button", name="Merge dev into main").is_disabled()
     pg.locator(".arena-hc[data-kind=gate]").wait_for(state="detached", timeout=WAIT_MS)
-    assert "main is up to date" in line.inner_text()
-    host.gate_doc.update(same=True)                                                                           # one branch: no gate to draw
-    host.bump({})
-    pg.wait_for_function("() => !document.querySelector('.arena-gateline__main')", timeout=WAIT_MS)
 
 
 def test_what_waits_for_you_a_fan_raised_on_hover_and_focus_each_kind_and_its_quick_answers(arena):
@@ -548,16 +529,13 @@ def test_what_waits_for_you_a_fan_raised_on_hover_and_focus_each_kind_and_its_qu
     assert hand.get_by_role("button", name="Plan ready: Recovery codes").count() == 1
 
 
-def test_a_plan_held_for_the_night_starts_now_and_a_to_do_opens_its_dialog(gui):
+def test_a_to_do_opens_its_dialog(gui):
     host = ArenaHost()
-    host.nodes[3]["start_at"] = "night"
     host.extra_needs = [{"kind": "todo", "idea": "recovery", "goal": "passkey", "title": "Recovery codes", "text": "SMTP_KEY", "priority": "high", "blocks": False, "at": "x",
                          "todo": {"id": "t1", "title": "SMTP_KEY", "kind": "secret", "why": "to send the codes", "choices": [], "steps": [], "accept": [], "done": False}}]
     pg, host, errors = _open(gui, host=host, ready=".arena-phead")
     try:
         pg.locator(".arena[data-goal=passkey]").wait_for(timeout=WAIT_MS)
-        _stop(pg, "plan").get_by_role("button", name="Start now").click()
-        assert _sent(pg, host, ("ideas.start_now", {"slug": "recovery", "via": "hand"}))
         todo = _stop(pg, "todo")
         assert todo.locator(".ork-gem").inner_text() == "·" and "SMTP_KEY" in todo.inner_text()
         todo.get_by_role("button", name="Open…").click()
@@ -601,16 +579,16 @@ def test_the_strip_marks_the_day_of_the_goal_and_a_click_opens_what_it_says(gui)
     assert not errors, "\n".join(errors)
 
 
-def test_the_limits_inside_the_night_window_say_the_morning(gui):
+def test_the_reserve_is_kept_back_in_hatched_crystals_and_is_claudes_only(gui):
     host = ArenaHost()
-    host.reserve = {"share": 0.2, "night": True}
+    host.reserve = {"share": 0.2}
     pg, host, errors = _open(gui, host=host, ready=".arena-phead")
     try:
         pg.locator(".shell-top__chip", has_text="Claude").click()                                                   # a chip opens its tool's panel (spec 91 §1)
         limits = pg.get_by_role("region", name=re.compile("^What is left of Claude"))
         claude = limits.locator(".arena-limit[data-provider=claude]")
         assert claude.locator(".ork-crystals i.kept").count() == 2 and claude.locator(".ork-crystals i.on").count() == 4
-        assert "kept for the morning" in claude.get_attribute("title")
+        assert "20 % of it kept back" in claude.get_attribute("title")
         pg.locator(".shell-top__chip", has_text="Codex").click()
         codex = pg.get_by_role("region", name=re.compile("^What is left of Codex")).locator(".arena-limit[data-provider=codex]")
         assert codex.locator(".ork-crystals i.kept").count() == 0                                                    # the reserve is Claude's only
@@ -621,7 +599,7 @@ def test_the_limits_inside_the_night_window_say_the_morning(gui):
     assert not errors, "\n".join(errors)
 
 
-def test_the_right_column_opens_on_a_click_pushes_the_pane_keeps_its_tabs_on_esc_and_holds_agents_and_files(gui):
+def test_the_right_column_opens_on_a_click_pushes_the_pane_keeps_its_tabs_on_esc_and_holds_files(gui):
     from tests.test_map_desktop_browser import MapHost
     pg, host, errors = _open(gui, host=MapHost(), ready=".arena-phead")
     try:
@@ -634,15 +612,13 @@ def test_the_right_column_opens_on_a_click_pushes_the_pane_keeps_its_tabs_on_esc
         assert drawer.evaluate("e => getComputedStyle(e).borderLeftStyle") == "double"
         arena = box(pg, ".shell-main > .arena")
         assert abs(arena["x"] + arena["width"] - bb["x"]) <= 1                                                          # the pane pushed, never covered
-        open_pane(pg, "agents")
-        assert "Add agent" in drawer.inner_text() and drawer.get_by_role("tab").count() == 2                        # Agents: today's pane, in a tab of the drawer
         open_pane(pg, "files")
         pg.locator(".shell-tree__row", has_text="notes.txt").wait_for(timeout=WAIT_MS)
-        assert drawer.get_by_role("tab").count() == 3
+        assert drawer.get_by_role("tab").count() == 2
         pg.keyboard.press("Escape")
         pg.locator(".shell-drawer").wait_for(state="detached", timeout=WAIT_MS)
-        open_pane(pg, "agents")
-        assert _drawer(pg).get_by_role("tab").count() == 3                                                         # its tabs are kept
+        open_pane(pg, "files")
+        assert _drawer(pg).get_by_role("tab").count() == 2                                                         # its tabs are kept
         pg.get_by_role("button", name="Close the right column").click()
         pg.locator(".shell-drawer").wait_for(state="detached", timeout=WAIT_MS)
     finally:

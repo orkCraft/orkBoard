@@ -131,19 +131,16 @@ def test_nothing_at_work_the_results_at_review_wait_for_a_look(field):
     assert pg.locator(".arena-idle").evaluate("e => getComputedStyle(e).color") == pg.locator(".arena-cap").first.evaluate("e => getComputedStyle(e).color")      # quiet
 
 
-def test_nothing_at_work_the_tools_window_the_night_and_a_sign_in(field):
+def test_nothing_at_work_the_tools_window_and_a_sign_in(field):
     pg, host = field
     host.limits[0]["left"] = 0.05
     host.limits[0]["rows"][0]["reset"] = "2099-01-01T14:20"
     held = lambda note="", **more: [pip("k1", "Challenge store", "held") | {"note": note, **more}, pip("k2", "Credential table", "waiting", ["k1"], 2)]      # noqa: E731
     window = {"kind": "limits", "ref": "", "title": "", "until": "2099-01-01T14:20"}
     assert say(pg, host, held("after 14:20"), "Nothing at work: Claude’s window is at 95 %, back at 14:20", waits=window)
-    night = {"kind": "night", "ref": "", "title": "", "until": "2099-01-01T01:00"}
-    assert say(pg, host, held(), "Nothing at work: held for tonight (01:00)", waits=night)
-    assert say(pg, host, held(), "Nothing at work: held for tonight", waits=night | {"until": ""})
     sign = {"kind": "sign_in", "ref": "codex", "title": "Codex", "tool": "Codex", "until": ""}
     assert say(pg, host, held(held_for="sign_in"), "Nothing at work: Codex waits for its sign-in", waits=sign)
     a_week = {"kind": "week", "ref": "", "title": "", "until": "2099-01-05T09:00"}
-    assert say(pg, host, held("week · after 09:00"), "", waits=a_week) == ""                             # not one of the four: no line
+    assert say(pg, host, held("week · after 09:00"), "", waits=a_week) == ""                             # not one of the three: no line
     assert say(pg, host, [pip("k1", "Challenge store", "ready"), pip("k2", "Credential table", "waiting", ["k1"], 2)], "", waits=None) == ""        # nothing known: no line
     assert say(pg, host, held(held_for="sign_in") + [pip("k3", "Register endpoint", "running", by="screens")], "", waits=sign) == ""              # something runs: no line

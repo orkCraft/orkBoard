@@ -1,7 +1,7 @@
 """Spec 55, the desktop (docs/specs/55-type-top-right.md §1–§4): Chromium at 1 440 × 900 against the one window's stub host with a party whose goals are given a type (the way of
 tests/test_goal_types_desktop_browser.py). A card's top row holds its goal's element left and its goal's type's sign right (14 × 14, the element's colour, faint while the element is drawn
 dim); no card has a state sign in its top row, a failure keeps its danger edge and its danger foot; the goal line is the name alone; a Planning card says its type's name or *Planning*;
-a goal with no type has no type node; no stop along the bottom wears a type; the goals' list wears the type's sign in its goal's colour."""
+a goal with no type has no type node; no stop along the bottom wears a type (the goals' list's type sign went, spec 98 A)."""
 from __future__ import annotations
 
 import re
@@ -73,7 +73,7 @@ def test_a_planning_card_says_its_type_or_planning_a_dim_goals_type_is_faint_and
     pg.keyboard.press("Escape")
 
 
-def test_a_spreads_cards_keep_the_type_top_right_and_the_goals_list_draws_the_type_in_its_goals_colour(typed):
+def test_a_spreads_cards_keep_the_type_top_right(typed):
     pg, host = typed
     _give(host)
     pg.locator(".arena-stack[data-agent=backend] .arena-phase[data-row=now] .arena-stk[data-goal=register] .arena-task").click()
@@ -88,8 +88,4 @@ def test_a_spreads_cards_keep_the_type_top_right_and_the_goals_list_draws_the_ty
         assert elem["x"] < phase["x"] < sign["x"] and c.locator(".arena-task__mark").count() == 0 and c.locator(".arena-task__goal .ork-sign").count() == 0
     pg.keyboard.press("Escape")
     spread.wait_for(state="hidden", timeout=WAIT_MS)
-    row = pg.locator(".arena-goal[data-slug=register]")
-    row.locator(".arena-goal__type .ork-sign.bug").wait_for(timeout=WAIT_MS)
-    assert row.locator(".arena-goal__type .ork-sign").evaluate(BG) == row.locator(".ork-elem").evaluate(BG) == pg.evaluate(PROBE, "--ork-elem-meadow")
-    assert row.locator(".arena-goal__type").bounding_box()["x"] < row.locator(".arena-goal__title").bounding_box()["x"]                  # the list keeps its place: before the title
-    assert pg.locator(".arena-goal[data-slug=pagewords] .arena-goal__type .ork-sign").count() == 0
+    assert pg.locator(".arena-goal__type").count() == 0                                                                                  # the goals list draws no type (spec 98 A)

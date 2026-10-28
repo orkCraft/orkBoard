@@ -310,13 +310,6 @@ def test_a_party_switch_says_ideas_shown_fire_and_forget_and_only_a_switch(route
     pg.locator('.arena-phead[data-goal="weekly"]').click()
     pg.locator('.arena[data-goal="weekly"]').wait_for(timeout=WAIT_MS)
     assert _calls(pg, host, "ideas.shown", at_least=2) == [{"party": "pricing", "from": "passkey"}, {"party": "weekly", "from": "pricing"}]
-    host.ops = True
-    host.bump({})
-    pg.locator('.arena-phead[data-goal="@operations"]').click()                                              # Operations is not a party: not counted
-    pg.locator(".arena-ops").wait_for(timeout=WAIT_MS)
-    pg.locator('.arena-phead[data-goal="passkey"]').click()
-    pg.locator('.arena[data-goal="passkey"]').wait_for(timeout=WAIT_MS)
-    assert len(_calls(pg, host, "ideas.shown", at_least=2)) == 2
 
 
 def test_the_skeletons_head_is_drawn_from_the_hosts_race_in_the_column_and_in_new_party(routed):

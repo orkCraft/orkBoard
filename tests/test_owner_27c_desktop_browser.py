@@ -1,4 +1,4 @@
-"""The owner's 26 October afternoon, on the desktop (Chromium at 1 440 × 900): a held task says what is happening and has Start now (the plan's row, the task's screen, the Agents' chip);
+"""The owner's 26 October afternoon, on the desktop (Chromium at 1 440 × 900): a held task says what is happening and has Start now (the plan's row, the task's screen);
 what is under a party in the left column is one step in, with a guide, and the party's row stays flush; the Orkmaster's tab is *Board* like a party's, and its board lies in the pane
 the right column pushes in (decisions §105.2), as a party's does."""
 from __future__ import annotations
@@ -9,7 +9,7 @@ pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_project_desktop_browser import ProjectHost, _project  # noqa: E402
-from tests.test_shell_browser import StubHost, _agents, _calls, _open, _open_goal, _parties  # noqa: E402
+from tests.test_shell_browser import StubHost, _calls, _open, _open_goal, _parties  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -52,11 +52,9 @@ def test_a_held_task_a_window_holds_has_no_start_now(gui):
     assert not errors, "\n".join(errors)
 
 
-def test_a_held_tasks_screen_and_chip_say_the_same_and_the_screen_has_start_now(held):
+def test_a_held_tasks_screen_says_whose_limit_and_has_start_now(held):
     pg, host = held
-    chip = _agents(pg).locator(".shell-chip", has_text="Write the notes")
-    assert WHY in chip.inner_text()
-    chip.click()
+    pg.evaluate("import('/static/js/shell/store.js').then((m) => m.showTask('sync', 'k5'))")                    # (the Agents' chip that opened it went, spec 98 A)
     state = pg.locator(".shell-drawer .shell-facts dd[data-state=held]")
     state.wait_for(timeout=WAIT_MS)
     assert WHY in state.inner_text()
@@ -87,7 +85,7 @@ def test_what_is_under_a_party_is_one_step_in_with_a_guide_and_the_party_row_is_
     body = pg.locator(".arena-party.is-open .arena-pbody").bounding_box()
     name = head.locator(".arena-phead__who").bounding_box()
     assert body["x"] - box["x"] == 32                                                                                   # a head's width (24) and its gap (8)
-    for sel in (".arena-sec", ".arena-goal__main", ".arena-frow", ".arena-power"):                                      # its labels, goals, the folds, Process now
+    for sel in (".arena-sec", ".arena-goal__main", ".arena-frow"):                                      # its labels, goals, the folds
         got = pg.locator(f".arena-pbody {sel}")
         assert got.count() >= 1, sel
         for i in range(got.count()):

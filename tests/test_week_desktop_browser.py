@@ -1,5 +1,5 @@
 """Spec 42 F on the desktop (docs/specs/42-coming-back.md §6, Tests → F): today's spend in the top bar is a button that opens This week
-with its lines in order; *Nothing waits for tonight* and New goal; no night, no tonight line."""
+with its lines in order (the nights, the streak and the tonight line went, spec 98 A)."""
 from __future__ import annotations
 
 import pytest
@@ -7,7 +7,7 @@ import pytest
 pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_shell_browser import StubHost, _agents, _open, _sent  # noqa: E402
+from tests.test_shell_browser import StubHost, _open, _sent  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -47,25 +47,20 @@ def _show(gui, host):
 
 def test_todays_spend_opens_this_week_with_its_lines_in_order(gui):
     pg, host, errors = _show(gui, WeekHost())
-    assert _lines(pg) == ["≈$46 of work at API prices in this project, ≈$3 in Operations: not your bill",
-                          "12 results in dev, 10 the first time · ≈$3.84 a result",
-                          "The last 7 nights: 4 with work done, 2 with none, 1 Orkline was not running",
-                          "Nothing waits for tonight · New goal"]
+    assert _lines(pg) == ["≈$46 of work at API prices in this project: not your bill",
+                          "12 results in dev, 10 the first time · ≈$3.84 a result"]
     assert _sent(pg, host, ("ideas.log", {"event": "opened", "what": "week", "ref": "this", "device": "desktop"}))
-    pg.get_by_role("dialog", name="This week").get_by_role("button", name="New goal").click()
-    pg.get_by_role("dialog", name="New goal").wait_for(timeout=WAIT_MS)                              # it opens New goal
     pg.close()
     assert not errors, "\n".join(errors)
 
 
-def test_tonight_says_how_many_wait_and_a_null_part_a_missing_price_and_no_night_are_left_out(gui):
+def test_a_null_part_and_a_missing_price_are_left_out(gui):
     host = WeekHost()
-    host.week.update(tonight=2, ops_usd=None, usd_per_merged=None, nights={"worked": 0, "idle": 7, "off": 0})
+    host.week.update(ops_usd=None, usd_per_merged=None)
     pg, host, errors = _show(gui, host)
-    assert _lines(pg) == ["≈$46 of work at API prices in this project: not your bill", "12 results in dev, 10 the first time",
-                          "The last 7 nights: 7 with none", "Tonight: 2 wait"]
+    assert _lines(pg) == ["≈$46 of work at API prices in this project: not your bill", "12 results in dev, 10 the first time"]
     pg.keyboard.press("Escape")
-    host.week.update(night_on=False, usd=None, ops_usd=None, merged=0, first_time=0, nights={"worked": 0, "idle": 0, "off": 0})
+    host.week.update(usd=None, ops_usd=None, merged=0, first_time=0)
     _spend(pg).click()
     pg.get_by_role("dialog", name="This week").locator(".week").wait_for(timeout=WAIT_MS)
     assert _lines(pg) == ["No results in dev in the last 7 days"]
@@ -75,19 +70,19 @@ def test_tonight_says_how_many_wait_and_a_null_part_a_missing_price_and_no_night
 
 # -- spec 44 B: the week's pace ---------------------------------------------------------------------------------------
 
-def test_the_week_line_says_what_low_work_does_and_last_weeks_unused_share(gui):
+def test_the_week_line_says_when_low_work_waits_and_last_weeks_unused_share(gui):
     host = WeekHost()
     host.week.update(week={"left": 0.55, "rest": 2 / 7, "pace": "ahead", "reset": 0}, last_unused=0.3)
     pg, host, errors = _show(gui, host)
     lines = _lines(pg)
-    assert lines[-3:-1] == ["The week: 55 % left with 2 days to go: Low work starts by day", "Last week ended with 30 % unused"]
+    assert lines[-2:] == ["The week: 55 % left with 2 days to go", "Last week ended with 30 % unused"]       # ahead: Low work starts by day went with the night (spec 98 A)
     pg.keyboard.press("Escape")
-    for pace, words in (("even", "Low work waits for the night"), ("behind", "Low work waits until the week comes back")):
+    for pace, words in (("even", ""), ("behind", ": Low work waits until the week comes back")):
         host.week.update(week={"left": 0.2, "rest": 1 / 7, "pace": pace, "reset": 0}, last_unused=None)
         _spend(pg).click()
         pg.get_by_role("dialog", name="This week").locator(".week").wait_for(timeout=WAIT_MS)
         got = _lines(pg)
-        assert f"The week: 20 % left with 1 day to go: {words}" in got and not [x for x in got if x.startswith("Last week ended")]
+        assert f"The week: 20 % left with 1 day to go{words}" in got and not [x for x in got if x.startswith("Last week ended")]
         pg.keyboard.press("Escape")
     host.week.update(week=None)
     _spend(pg).click()
@@ -97,15 +92,13 @@ def test_the_week_line_says_what_low_work_does_and_last_weeks_unused_share(gui):
     assert not errors, "\n".join(errors)
 
 
-def test_a_boards_own_night_work_reads_or_sooner_and_a_held_wait_says_until_when(gui):
+def test_a_held_week_wait_says_until_when(gui):
     pg, host, errors = _open(gui, host=StubHost())
     got = pg.evaluate("""async () => {
       const base = document.querySelector('link[href$="shell.css"]').href.replace('shell/shell.css', 'arena/');
       const m = await import(base + 'arenawords.js');
-      return [m.tonightWords({ night_by: "board" }), m.tonightWords({ night_by: "person" }), m.tonightWords({ night_by: "board" }, true), m.tonightWords({}, true),
-        m.waitsWords({ kind: "week", until: "2026-10-26T09:00" })]; }""")
-    assert got[:4] == ["tonight, or sooner if the week has room", "tonight", "starts tonight, or sooner if the week has room", "starts tonight"]
-    assert got[4] == "waits: the week is behind · until Mon 09:00"
+      return m.waitsWords({ kind: "week", until: "2026-10-26T09:00" }); }""")
+    assert got == "waits: the week is behind · until Mon 09:00"
     pg.close()
     assert not errors, "\n".join(errors)
 
@@ -164,8 +157,7 @@ def test_the_first_look_of_a_new_week_shows_last_weeks_card_with_its_lines_then_
         "23 results in dev, 19 the first time (83 %; the week before 71 %)", "≈$2.66 a result (the week before ≈$3.10)",
         "Parties: Offline mode, 3 goals done · Billing, 1", "Flags: Offline mode, met",
         "Cost the most: Offline mode, ≈$12 · Fastest from goal to dev: Export CSV, 42 min",
-        "Questions: 9 of 12 answers were the recommended one; 2 cards left to the Taskmaster",
-        "Nights: 5 with work done, 2 with none"]
+        "Questions: 9 of 12 answers were the recommended one; 2 cards left to the Taskmaster"]
     assert pg.get_by_label("While you were away").count() == 0                                         # the week's card comes first
     assert _sent(pg, host, ("ideas.log", {"event": "opened", "what": "week", "ref": "2026-W42", "device": "desktop"}))
     assert json.loads(pg.evaluate(f"JSON.stringify(localStorage.getItem({json.dumps(WEEK_KEY)}))")) == _iso(7)
@@ -222,8 +214,7 @@ def test_the_maps_last_week_link_shows_the_card_any_time_and_logs_via_map(gui):
     _last_week(pg)
     card = pg.get_by_label("Last week")
     card.wait_for(timeout=WAIT_MS)
-    assert [" ".join(p.text_content().split()) for p in card.locator(".away__lines p").all()] == ["23 results in dev, 19 the first time (83 %)",
-                                                                                                    "Nights: 5 with work done, 2 with none"]
+    assert [" ".join(p.text_content().split()) for p in card.locator(".away__lines p").all()] == ["23 results in dev, 19 the first time (83 %)"]
     assert _sent(pg, host, ("ideas.log", {"event": "opened", "what": "week", "ref": "2026-W42", "device": "desktop", "via": "map"}))
     card.get_by_role("button", name="Close").click()
     host.last = {**host.last, "empty": True, "merged": 0, "first_time": 0, "nights": {"worked": 0, "idle": 0, "off": 0}}
@@ -233,36 +224,10 @@ def test_the_maps_last_week_link_shows_the_card_any_time_and_logs_via_map(gui):
     assert not errors, "\n".join(errors)
 
 
-def test_nights_in_a_row_is_line_four_of_this_week_from_two_and_after_the_nights_of_last_week_spec_42_h(gui):
-    host = WeekHost()
-    host.week.update(streak=5)
-    pg, host, errors = _show(gui, host)
-    assert _lines(pg)[2:4] == ["The last 7 nights: 4 with work done, 2 with none, 1 Orkline was not running", "5 nights in a row"]
-    pg.keyboard.press("Escape")
-    host.week.update(streak=1)
-    _spend(pg).click()
-    pg.get_by_role("dialog", name="This week").locator(".week").wait_for(timeout=WAIT_MS)
-    assert not [x for x in _lines(pg) if "in a row" in x]
-    pg.close()
-    host = LastHost()
-    host.last = {**LAST, "streak": 5}
-    pg, host, errors2 = _open_map(gui, host, init=_seed(_iso(14)), ready=".arena-phead")
-    card = pg.get_by_label("Last week")
-    card.wait_for(timeout=WAIT_MS)
-    assert [" ".join(p.text_content().split()) for p in card.locator(".away__lines p").all()][-1] == "Nights: 5 with work done, 2 with none · 5 in a row"
-    pg.close()
-    assert not errors and not errors2
-
-
 # -- spec 44 fix-ups ---------------------------------------------------------------------------------------------------
 
-def test_a_chip_of_a_task_the_pace_started_says_the_week_has_room_and_a_week_wait_without_a_time_says_none(gui):
-    host = StubHost()
-    host.chip_extra = {"k3": {"pace": True}}
-    pg, host, errors = _open(gui, host=host)
-    chips = _agents(pg).locator(".shell-chip")
-    assert "by itself: the week has room" in chips.filter(has_text="Retry on a lost signal").inner_text()
-    assert "the week has room" not in chips.filter(has_text="Add the queue").inner_text()
+def test_a_week_wait_without_a_time_says_none(gui):
+    pg, host, errors = _open(gui, host=StubHost())              # (the Agents' chip of a task the pace started went, spec 98 A)
     words = pg.evaluate("""async () => {
       const base = document.querySelector('link[href$="shell.css"]').href.replace('shell/shell.css', 'arena/');
       const m = await import(base + 'arenawords.js');

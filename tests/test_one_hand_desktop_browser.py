@@ -1,5 +1,5 @@
 """One hand on the desktop (docs/specs/54-one-hand.md §2–§4, part C), in a real browser at 1 440 × 900 against the arena's stub host: the bottom row holds every
-party's and Operations' stops, the most urgent in the middle, a stop of another party says its party and opens there, no count anywhere (the parties' spread
+party's stops (Operations' went, spec 98 A), the most urgent in the middle, a stop of another party says its party and opens there, no count anywhere (the parties' spread
 wears a dot), a way out on every stop (*Let … decide*, *Describe it instead*, *Go without it*, *Let … choose*) on the raised stop and in the to-do dialog."""
 from __future__ import annotations
 
@@ -25,19 +25,15 @@ def row(kind, **more):
 
 
 class OneHostOne(ArenaHost):
-    """The passkey party shown, a second party (Pricing page) with a to-do and a third (Weekly report email) with a question of its own, and Operations with a
-    failed operation and one at the person's check: eight stops in all."""
+    """The passkey party shown, a second party (Pricing page) with a to-do and a third (Weekly report email) with a question of its own: six stops in all."""
 
     def __init__(self):
         super().__init__()
-        self.ops = True
         self.extra_needs = [
             row("todo", goal="pricing", idea="prices", title="Prices from the billing settings", text="Reference picture", at="2026-10-16T09:00:00",
                 todo=todo("t9", "Reference picture", "file", accept=["png"])),
             row("goal", goal="weekly", title="Weekly report email", text="Which day?", at="2026-10-17T09:00:00", questions=["Which day?"],
-                asked=[{"ask": "Which day?", "choices": ["Monday", "Friday"], "pick": 0, "why": "", "by": None}]),
-            row("op", goal="", op="r1", title="Weekly report", text="Waits at your check", at="2026-10-17T10:00:00"),
-            row("op_failed", goal="", op="r2", title="Nightly export", text="It failed", at="2026-10-19T09:00:00")]
+                asked=[{"ask": "Which day?", "choices": ["Monday", "Friday"], "pick": 0, "why": "", "by": None}])]
 
 
 def _hand(pg):
@@ -51,18 +47,17 @@ def test_the_bottom_row_holds_every_stop_of_the_project_the_most_urgent_in_the_m
         cards.first.wait_for(timeout=WAIT_MS)
         # urgency's order is the page's (the keys', a screen reader's): red first, then what holds work back, then what does not; the oldest first in a group
         assert [(c.get_attribute("data-kind"), c.get_attribute("data-party")) for c in cards.all()] == [
-            ("op_failed", "@operations"), ("failed", "passkey"),
-            ("goal", "weekly"), ("op", "@operations"), ("plan", "passkey"), ("asks", "passkey"),
+            ("failed", "passkey"), ("goal", "weekly"), ("plan", "passkey"), ("asks", "passkey"),
             ("proposal", "passkey"), ("todo", "pricing")]                                                               # a to-do lies last of all (spec 87 §4.3)
         # laid out from the middle: the most urgent in it, the next to its right, the next to its left, and so outward
         by_x = sorted(cards.all(), key=lambda c: c.bounding_box()["x"])
-        assert [c.get_attribute("data-kind") for c in by_x] == ["proposal", "plan", "goal", "op_failed", "failed", "op", "asks", "todo"]
+        assert [c.get_attribute("data-kind") for c in by_x] == ["proposal", "plan", "failed", "goal", "asks", "todo"]
         middle = pg.locator(".arena-hand").bounding_box()
-        first = pg.locator('.arena-hc[data-kind="op_failed"]').bounding_box()
+        first = pg.locator('.arena-hc[data-kind="failed"]').bounding_box()
         assert abs((first["x"] + first["width"] / 2) - (middle["x"] + middle["width"] / 2)) <= 100                 # in the middle, give or take half a card
         hand = pg.locator(".arena-hand").bounding_box()
         assert all(hand["x"] <= b["x"] + b["width"] / 2 <= hand["x"] + hand["width"] for b in (c.bounding_box() for c in cards.all()))              # all of them fit
-        # the party's own stops say nothing of a party; another party's say it, with its leader's small head (Operations': its sliders)
+        # the party's own stops say nothing of a party; another party's say it, with its leader's small head
         for c in cards.all():
             other = c.get_attribute("data-party") != "passkey"
             assert ("is-other" in c.get_attribute("class")) == other and c.locator(".arena-hc__party").count() == int(other)
@@ -70,15 +65,8 @@ def test_the_bottom_row_holds_every_stop_of_the_project_the_most_urgent_in_the_m
         assert pricing.locator(".arena-hc__party .ork-race__head").count() == 1
         assert pricing.locator(".arena-banner").inner_text() == "Pricing page · Prices from the billing settings"
         assert pricing.locator(".arena-hc__open").get_attribute("aria-label") == "A to-do in Pricing page: Prices from the billing settings"
-        op = pg.locator('.arena-hc[data-kind="op"]')
-        assert op.locator(".arena-hc__party .ork-icon").count() == 1 and op.locator(".arena-banner").inner_text() == "Operations · Weekly report"
         assert pg.locator('.arena-hc[data-kind="plan"] .arena-banner').inner_text() == "Recovery codes"           # the party shown: its goal alone
         assert pg.get_by_text("Nothing waits for you").count() == 0
-        # Operations shown: the same hand, now its own and the parties' for others
-        _parties(pg).locator('.arena-phead[data-goal="@operations"]').click()
-        pg.locator(".arena-ops").wait_for(timeout=WAIT_MS)
-        assert _hand(pg).count() == 8 and pg.locator(".arena-hc.is-other").count() == 6
-        assert pg.locator('.arena-hc[data-kind="op"]').get_attribute("class").count("is-other") == 0
     finally:
         pg.close()
     assert not errors, "\n".join(errors)
@@ -106,18 +94,15 @@ def test_open_on_a_stop_of_another_party_shows_that_party_first_and_a_quick_answ
     assert not errors, "\n".join(errors)
 
 
-def test_no_count_on_the_parties_and_a_sign_on_a_closed_heading_red_when_one_failed(gui):
+def test_no_count_on_the_parties_and_a_sign_on_a_closed_heading(gui):
     pg, host, errors = _open(gui, host=OneHostOne(), ready=".arena[data-goal=passkey]")
     try:
         col = _parties(pg)
         assert col.locator(".arena-phead .ork-count").count() == 0
         sign = lambda goal: col.locator(f'.arena-phead[data-goal="{goal}"] .arena-phead__stop')                  # noqa: E731
         assert sign("passkey").count() == 0                                                                        # the party shown: its stops lie in the hand
-        assert sign("pricing").count() == 1 and sign("weekly").count() == 1 and sign("@operations").count() == 1
-        assert "is-danger" not in sign("pricing").get_attribute("class") and "is-danger" in sign("@operations").get_attribute("class")      # a failed operation: red
-        assert sign("pricing").locator(".ork-sign.alert").count() == 1 and sign("@operations").locator(".ork-sign.cross").count() == 1
-        colours = {g: sign(g).evaluate("e => getComputedStyle(e).color") for g in ("pricing", "@operations")}
-        assert colours["pricing"] != colours["@operations"]
+        assert sign("pricing").count() == 1 and sign("weekly").count() == 1
+        assert "is-danger" not in sign("pricing").get_attribute("class") and sign("pricing").locator(".ork-sign.alert").count() == 1
         assert sign("pricing").get_attribute("title") == "1 waits in Pricing page"
         assert col.locator('.arena-phead[data-goal="pricing"]').get_attribute("title") == "Open Pricing page"
     finally:

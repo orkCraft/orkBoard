@@ -191,7 +191,7 @@ def test_the_goals_list_has_at_work_planning_new_and_flags_with_their_elements_l
     assert fold.get_attribute("aria-expanded") == "false" and goals.locator(".arena-goal[data-slug=magic]").count() == 0
     fold.click()
     magic, log = goals.locator(".arena-goal[data-slug=magic]"), goals.locator(".arena-goal[data-slug=log]")
-    assert "tonight" in _said(magic) and "new · Taskmaster reads it later" in _said(log)
+    assert "new · Taskmaster reads it later" in _said(magic) and "new · Taskmaster reads it later" in _said(log)
     assert magic.locator(".ork-elem.dim").count() == 1 and log.locator(".ork-elem.void.dim").count() == 1      # a goal not yet read: its element dim
     log.locator(".arena-goal__main").click()                                                                   # a new goal has no task to pick: a press opens it
     assert _sent(pg, host, ("ideas.log", {"event": "opened", "what": "idea", "ref": "log", "device": "desktop", "via": "map"}))
@@ -202,13 +202,9 @@ def test_the_goals_list_has_at_work_planning_new_and_flags_with_their_elements_l
     rows_ = goals.locator(".arena-flags__list li")
     assert _text(rows_.nth(0)) == "Where the credentials in dev · waits for main" and rows_.nth(0).locator(".ork-sign.check").count() == 1      # waits for main: a check
     assert _text(rows_.nth(1)) == "Passkey button 14 Oct · ≈$2.10 · 4 of 4 first time" and rows_.nth(1).locator(".ork-sign.flag").count() == 1  # a flag: the goal, the day, the price, first time
-    power = pg.get_by_role("button", name="Process now")
-    assert power.inner_text() == "Process now" and goals.get_by_role("button", name="New · 2").count() == 1 and power.get_attribute("title") == "Taskmaster reads “Magic link if the passkey fails” now"
-    power.click()
-    assert _sent(pg, host, ("ideas.queue", {"slug": "magic", "queue": "now", "via": "party"}))
+    assert goals.get_by_role("button", name="New · 2").count() == 1 and pg.get_by_role("button", name="Process now").count() == 0       # (no Process now: spec 98 A)
     _show_goal(pg, "weekly")
     assert pg.get_by_text("Nothing in Planning. A new goal starts here.").is_visible()                         # empty
-    assert pg.get_by_role("button", name="Process now").is_disabled() and pg.get_by_role("button", name="Process now").get_attribute("title") == "No new goal to read"
     assert goals.get_by_role("button", name=re.compile("^Flags")).count() == 0 and goals.get_by_role("button", name=re.compile("^New")).count() == 1       # nothing done: no Flags fold
 
 
@@ -225,7 +221,7 @@ def test_the_flags_fold_shows_the_newest_ten_and_then_all_of_them(arena):
 
 # -- the filter (§3.5) -------------------------------------------------------------------------------------------------------------------
 
-def test_a_press_picks_a_goal_a_second_press_opens_it_a_hover_peeks_show_all_and_esc_clear_it(arena):
+def test_a_press_picks_a_goal_a_second_press_opens_it_show_all_and_esc_clear_it(arena):
     pg, host = arena
     register, cookie = pg.locator(".arena-goal[data-slug=register] .arena-goal__main"), pg.locator(".arena-goal[data-slug=cookie] .arena-goal__main")
     assert register.get_attribute("aria-pressed") == "false" and pg.get_by_role("button", name="Show all").count() == 0
@@ -240,13 +236,6 @@ def test_a_press_picks_a_goal_a_second_press_opens_it_a_hover_peeks_show_all_and
     pg.get_by_role("button", name="Close the right column").click()
     pg.get_by_role("button", name="Show all").click()                                                         # Show all takes it out
     assert register.get_attribute("aria-pressed") == "false" and pg.get_by_role("button", name="Show all").count() == 0
-    pg.mouse.move(150, 780)                                                                                   # (the pointer on the row would peek it)
-    pg.wait_for_function("() => document.querySelectorAll('.arena-stack .arena-task').length >= 8", timeout=WAIT_MS)
-    pg.mouse.move(5, 5)
-    cookie.hover()                                                                                            # a hover peeks: only that goal's cards, nothing kept
-    _settled(pg, ["cookie"])
-    assert _keys(pg, "backend") == ["cookie/f1"] and _keys(pg, "screens") == ["cookie/f2"]
-    assert cookie.get_attribute("aria-pressed") == "false" and pg.get_by_role("button", name="Show all").count() == 0
     pg.mouse.move(150, 780)
     pg.wait_for_function("() => document.querySelectorAll('.arena-stack .arena-task').length >= 8", timeout=WAIT_MS)
     register.click()

@@ -1,6 +1,6 @@
 """Spec 64, the desktop (docs/specs/64-flags-raised.md §1–§3; Tests → B): Chromium at 1 440 × 900 against the one window's stub host (tests/test_arena_desktop_browser.py) whose gate's merge raises
-the flags of two goals. When the flag line first stands, its goals' elements travel from the merge's press (else the gate's quiet line) to a row after its flag, six at most, then the flag is raised
-and the line lit once; with no gate on screen nothing travels and the flag is still raised; under reduced motion and on a hidden page the row is drawn still."""
+the flags of two goals. When the flag line first stands, its goals' elements travel from the merge's press (else the flag line's own place, spec 98 §1: the gate's quiet line went) to a row after its flag, six at most, then the flag is raised
+and the line lit once; under reduced motion and on a hidden page the row is drawn still."""
 from __future__ import annotations
 
 import pytest
@@ -10,7 +10,7 @@ pytest.importorskip("playwright.sync_api")
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_arena_desktop_browser import ArenaHost  # noqa: E402
 from tests.test_map_desktop_browser import node  # noqa: E402
-from tests.test_shell_browser import _drawer, _sent  # noqa: E402
+from tests.test_shell_browser import _drawer, _sent, _stop  # noqa: E402
 
 pytestmark = pytest.mark.browser
 
@@ -73,7 +73,7 @@ def _scene(gui, host, **page):
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
     pg.locator(".arena[data-goal=passkey]").wait_for(timeout=WAIT_MS)
-    pg.locator(".arena-gateline__main").wait_for(timeout=WAIT_MS)
+    pg.locator(".arena-hc[data-kind=gate]").wait_for(timeout=WAIT_MS)
     pg.wait_for_function("() => Object.keys(localStorage).some((k) => k.startsWith('orkboard.flags.goals.'))", timeout=WAIT_MS)       # this device has looked: what comes now is new
     return pg, errors
 
@@ -96,11 +96,17 @@ def raising_many(gui):
     assert not errors, "\n".join(errors)
 
 
-def _merge(pg, host):
-    """The gate's screen is opened and its one press is made: returns the box of the press, as it is then."""
-    pg.locator(".arena-gateline__main").click()
+def _open_gate(pg):
+    """The gate's screen is opened from its card in the hand (the quiet line is gone): returns the screen."""
+    _stop(pg, "gate").locator(".arena-hc__open").click()
     view = _drawer(pg).locator(".arena-gateview")
     view.wait_for(timeout=WAIT_MS)
+    return view
+
+
+def _merge(pg, host):
+    """The gate's screen is opened and its one press is made: returns the box of the press, as it is then."""
+    view = _open_gate(pg)
     button = view.get_by_role("button", name="Merge dev into main")
     box = button.bounding_box()
     pg.evaluate(RECORD)
@@ -203,16 +209,16 @@ def test_eight_flags_six_elements_travel_and_stay_in_the_row_and_the_words_say_t
     assert " ".join(pg.locator(".arena-flagline").inner_text().split()) == f"8 flags raised · {a}, {b} and 6 more are in main"      # the rest, in today's words (k = n − 2)
 
 
-def test_the_gates_line_is_where_they_travel_from_when_nothing_was_pressed(raising):
+def test_the_flag_lines_own_place_is_where_they_travel_from_when_nothing_was_pressed(raising):
     pg, host = raising
     pg.evaluate(RECORD)
     host.raise_flags()                                                                                    # raised from another device: no press here
     host.bump({})
     pg.wait_for_function("() => window.__fly.copies.length === 2", timeout=WAIT_MS)
-    button = pg.locator(".arena-gateline__main").bounding_box()                                                # (the line has pushed the field down: it is read where it stands now)
-    bx, by = _centre(button)
+    line = pg.locator(".arena-flagline").bounding_box()
+    lx, ly = _centre(line)
     for c in _fly(pg)["copies"]:
-        assert abs(c["centre"][0] - bx) <= 3 and abs(c["centre"][1] - by) <= 3 and abs(c["width"] - button["height"]) <= 2
+        assert abs(c["centre"][0] - lx) <= 3 and abs(c["centre"][1] - ly) <= 3 and abs(c["width"] - line["height"]) <= 2
     _over(pg)
     assert _elements(pg) == [["meadow"], ["ice"]]
 
@@ -227,50 +233,16 @@ def test_a_merge_pressed_more_than_ten_seconds_ago_is_not_where_they_travel_from
     host.raise_flags()
     host.bump({})
     pg.wait_for_function("() => window.__fly.copies.length === 2", timeout=WAIT_MS)
-    button = pg.locator(".arena-gateline__main").bounding_box()
+    line = pg.locator(".arena-flagline").bounding_box()
     c = _fly(pg)["copies"][0]
-    assert abs(c["centre"][0] - _centre(button)[0]) <= 3 and abs(c["centre"][1] - _centre(button)[1]) <= 3       # the gate's line, not the press
+    assert abs(c["centre"][0] - _centre(line)[0]) <= 3 and abs(c["centre"][1] - _centre(line)[1]) <= 3       # the flag line's own place, not the press
     assert abs(c["centre"][0] - _centre(press)[0]) > 20 or abs(c["centre"][1] - _centre(press)[1]) > 20
     _over(pg)
 
 
-def test_a_gate_covered_is_not_a_place_to_travel_from_but_the_flag_is_still_raised(raising):
-    pg, host = raising
-    pg.evaluate("""() => { const d = document.createElement('div'); d.id = 'cover';
-      Object.assign(d.style, { position: 'fixed', left: '0', top: '0', width: '400px', height: '100vh', zIndex: '100' }); document.body.append(d); }""")     # something over the gate's line (never the right column: spec 90 §2.1)
-    button = pg.locator(".arena-gateline__main").bounding_box()
-    assert pg.evaluate("([x, y]) => document.elementFromPoint(x, y).closest('.arena-gateline__main') === null", list(_centre(button)))
-    pg.evaluate(RECORD)
-    host.raise_flags()
-    host.bump({})
-    pg.locator(".arena-flagline").wait_for(timeout=WAIT_MS)
-    pg.wait_for_function("() => window.__fly.starts.some(([n]) => n === 'arena-raise') && window.__fly.starts.some(([n]) => n === 'arena-lit')", timeout=WAIT_MS)
-    _over(pg)
-    assert _fly(pg)["copies"] == [] and not [s for s in _starts(pg) if s.startswith("arena-fly")]        # nothing travelled
-    assert _elements(pg) == [["meadow"], ["ice"]]                                                       # the row is drawn
-
-
-def test_with_no_gate_on_screen_nothing_travels_and_the_flag_is_still_raised(raising):
-    pg, host = raising
-    host.gate_doc.update(same=True)                                                                       # one branch: no gate to draw
-    host.bump({})
-    pg.wait_for_function("() => !document.querySelector('.arena-gateline__main')", timeout=WAIT_MS)
-    pg.evaluate(RECORD)
-    host.raise_flags()
-    host.bump({})
-    pg.locator(".arena-flagline").wait_for(timeout=WAIT_MS)
-    assert pg.locator(".arena-flagline__el").evaluate_all("els => els.map((e) => getComputedStyle(e).visibility)") == ["visible", "visible"]     # the row is there at once
-    pg.wait_for_function("() => window.__fly.starts.some(([n]) => n === 'arena-raise') && window.__fly.starts.some(([n]) => n === 'arena-lit')", timeout=WAIT_MS)
-    _over(pg)
-    assert _fly(pg)["copies"] == [] and not [s for s in _starts(pg) if s.startswith("arena-fly")]
-    assert _elements(pg) == [["meadow"], ["ice"]]
-
-
 def test_closing_the_line_while_they_travel_takes_the_copies_away(raising):
     pg, host = raising
-    pg.locator(".arena-gateline__main").click()
-    view = _drawer(pg).locator(".arena-gateview")
-    view.wait_for(timeout=WAIT_MS)
+    view = _open_gate(pg)
     pg.evaluate(RECORD)
     pg.evaluate("window.__fly.close = true")                                                              # the line is closed in the frame the first copy is drawn
     view.get_by_role("button", name="Merge dev into main").click()

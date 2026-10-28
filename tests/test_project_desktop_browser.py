@@ -371,7 +371,7 @@ def test_your_own_goal_on_the_level_says_any_party_with_ideation_last_and_a_pitc
     form.locator(".arena-itsparty__chip").first.wait_for(timeout=WAIT_MS)
     form.locator('.arena-itsparty__chip[data-party="ideas"]').click()                                                    # Ideation: a pitch
     form.get_by_label("What is the pitch?").fill("A pitch for dark mode")
-    form.get_by_role("button", name="Judge now").click()
+    form.get_by_role("button", name="Hold").click()                                                                      # (a pitch has no Judge now in the window: spec 98 A)
     sent = _calls(pg, host, "ideas.add", at_least=2)[-1]
     assert sent["track"] == "ideas" and sent["text"] == "A pitch for dark mode"
 

@@ -1,8 +1,8 @@
 """Spec 69 B on the desktop (docs/specs/69-parties-in-the-column.md §1–§5; decisions §84), in a real browser at 1 440 × 900 against the one window's stub host
 (tests/test_arena_desktop_browser.py): the left column is the list of the parties — the project's line at its top (and not in the top bar), a heading for
-each party in the Board's order, Operations, then + New party —; the open party (the one shown) is its leader's heading (spec 73) with its goals and the New and Flags rows under it; a heading's head, name (two lines, then cut, the title whole), k/n and the sign of the stops that wait in a closed party;
+each party in the Board's order, then + New party —; the open party (the one shown) is its leader's heading (spec 73) with its goals and the New and Flags rows under it; a heading's head, name (two lines, then cut, the title whole), k/n and the sign of the stops that wait in a closed party;
 a press on a closed heading shows that party, a press on the open one changes nothing; the keys; the column scrolls under the project's line; Ideation's
-body; Operations; and the new party's heads gathering onto its heading's head. Screenshots to docs/design/img/v1/ when ORKCRAFT_SHOTS is set."""
+body; and the new party's heads gathering onto its heading's head. Screenshots to docs/design/img/v1/ when ORKCRAFT_SHOTS is set."""
 from __future__ import annotations
 
 import os
@@ -26,16 +26,14 @@ SHOP = "/work/shop"
 
 
 class ListHost(ArenaHost):
-    """The passkey party (a failed task and more), Pricing page with a long name and a to-do waiting, Weekly report email, and Operations with a failed run."""
+    """The passkey party (a failed task and more), Pricing page with a long name and a to-do waiting, Weekly report email."""
 
     def __init__(self):
         super().__init__()
-        self.ops = True
         self.goals["pricing"]["title"] = LONG
         self.extra_needs = [
             row("todo", goal="pricing", idea="prices", title="Prices from the billing settings", text="Reference picture", at="2026-10-16T09:00:00",
-                todo=todo("t9", "Reference picture", "file", accept=["png"])),
-            row("op_failed", goal="", op="r2", title="Nightly export", text="It failed", at="2026-10-19T09:00:00")]
+                todo=todo("t9", "Reference picture", "file", accept=["png"]))]
 
     def snapshot(self):
         snap = super().snapshot()
@@ -60,14 +58,14 @@ def _shown(pg, slug):
     _settle(pg)
 
 
-def test_the_parties_are_listed_in_the_boards_order_then_operations_then_new_party(listed):
+def test_the_parties_are_listed_in_the_boards_order_then_new_party(listed):
     pg, host = listed
     heads = _heads(pg)
-    assert [h.get_attribute("data-goal") for h in heads.all()] == ["passkey", "pricing", "weekly", "@operations"]
+    assert [h.get_attribute("data-goal") for h in heads.all()] == ["passkey", "pricing", "weekly"]
     plus = pg.locator(".arena-pnew")
     assert plus.count() == 1 and plus.inner_text().strip() == "New party" and plus.get_attribute("title").startswith("One of yours")
     ys = [h.bounding_box()["y"] for h in heads.all()] + [plus.bounding_box()["y"]]
-    assert ys == sorted(ys) and len(set(ys)) == 5                                                       # one under the other, + New party last
+    assert ys == sorted(ys) and len(set(ys)) == 4                                                       # one under the other, + New party last
     assert pg.get_by_role("complementary", name="Parties").count() == 1 and box(pg, ".arena-left")["width"] == 248
     assert all(h.bounding_box()["height"] >= 40 for h in heads.all())
     assert pg.locator(".arena-ptop, .arena-hero, .arena-deck__card, .arena-spread").count() == 0       # the deck, the spread and the big card are gone
@@ -94,7 +92,7 @@ def test_the_project_switcher_heads_the_column_as_wide_as_it_and_is_not_in_the_t
     menu.wait_for(state="detached", timeout=WAIT_MS)
 
 
-def test_the_open_party_has_its_leader_process_now_its_goals_and_the_pile_under_its_heading(listed):
+def test_the_open_party_has_its_leader_its_goals_and_the_pile_under_its_heading(listed):
     pg, host = listed
     head = pg.locator(OPEN)
     assert head.get_attribute("data-goal") == "passkey" and head.get_attribute("aria-expanded") == "true" and head.get_attribute("title") == "Sign in with a passkey · Taskmaster leads · 2 of 11 goals done"
@@ -103,8 +101,7 @@ def test_the_open_party_has_its_leader_process_now_its_goals_and_the_pile_under_
     assert body.count() == 1 and _parties(pg).locator(".arena-pbody").count() == 1                      # none under a closed heading
     assert head.locator(".ork-race__head").count() == 1 and head.locator(".arena-plist__head").bounding_box()["width"] == 24
     assert head.locator(".arena-phead__leads").inner_text().strip() == "Taskmaster leads" and body.locator(".arena-lead, .arena-member").count() == 0       # its leader is its heading: no row of its own
-    power = body.get_by_role("button", name="Process now", exact=False)
-    assert power.count() == 1 and body.locator(".arena-hero, .arena-hero__edge").count() == 0 and power.locator("xpath=ancestor::*[contains(@class, 'arena-frow')]").count() == 1      # Process now: in the New row
+    assert body.locator(".arena-hero, .arena-hero__edge").count() == 0 and body.get_by_role("button", name="Process now", exact=False).count() == 0      # (no Process now: spec 98 A)
     ys = {k: body.locator(sel).first.bounding_box()["y"] for k, sel in (("goals", ".arena-goals"), ("new", '.arena-frow[data-fold="new"]'), ("flags", '.arena-frow[data-fold="flags"]'))}
     assert box(pg, OPEN)["y"] < ys["goals"] < ys["new"] < ys["flags"]
     assert body.locator(".arena-goals .arena-goal").count() >= 5 and body.locator(".arena-sec", has_text="Planning").count() == 1
@@ -133,10 +130,8 @@ def test_a_closed_party_with_a_stop_wears_one_sign_a_failed_one_in_the_danger_co
     assert sign("pricing").count() == 1 and sign("pricing").get_attribute("title") == "1 waits in Pricing page and the billing settings for every plan of the whole shop, with the yearly discounts and the receipts"
     assert sign("pricing").locator(".ork-sign.alert").count() == 1 and "is-danger" not in sign("pricing").get_attribute("class")
     assert sign("weekly").count() == 0                                                                  # nothing waits: no sign
-    assert sign("@operations").count() == 1 and "is-danger" in sign("@operations").get_attribute("class") and sign("@operations").locator(".ork-sign.cross").count() == 1
-    danger = pg.evaluate("(() => { const d = document.createElement('span'); d.style.color = 'var(--ork-danger)'; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; })()")
     alert = pg.evaluate("(() => { const d = document.createElement('span'); d.style.color = 'var(--ork-alert)'; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; })()")
-    assert sign("@operations").evaluate("e => getComputedStyle(e).color") == danger and sign("pricing").evaluate("e => getComputedStyle(e).color") == alert
+    assert sign("pricing").evaluate("e => getComputedStyle(e).color") == alert
     pg.locator('.arena-phead[data-goal="pricing"]').click()                                             # shown: its stops are seen below, the sign goes; the passkey party's failure comes
     _shown(pg, "pricing")
     assert sign("pricing").count() == 0
@@ -169,11 +164,9 @@ def test_the_headings_are_in_the_tab_order_the_arrows_move_between_them_and_ente
     pg.keyboard.press("ArrowDown")
     assert pg.evaluate("document.activeElement.dataset.goal") == "pricing"
     pg.keyboard.press("ArrowDown")
-    pg.keyboard.press("ArrowDown")
-    assert pg.evaluate("document.activeElement.dataset.goal") == "@operations"
+    assert pg.evaluate("document.activeElement.dataset.goal") == "weekly"
     pg.keyboard.press("ArrowDown")
     assert pg.evaluate("document.activeElement.classList.contains('arena-pnew')")                       # + New party closes the list
-    pg.keyboard.press("ArrowUp")
     pg.keyboard.press("ArrowUp")
     pg.keyboard.press("ArrowUp")
     assert pg.evaluate("document.activeElement.dataset.goal") == "pricing"
@@ -201,30 +194,18 @@ def test_the_column_scrolls_on_its_own_under_the_projects_line_and_the_page_does
     assert not errors, "\n".join(errors)
 
 
-def test_ideations_body_has_judge_now_and_its_pitches(gui):
+def test_ideations_body_has_its_pitches(gui):
     pg, host, errors = _open(gui, host=IdeationHost(), ready=".arena-phead")
     try:
         _show_goal(pg, IDEAS)
         body = pg.locator(".arena-party.is-open .arena-pbody")
         assert pg.locator(OPEN).get_attribute("data-goal") == IDEAS
-        assert body.get_by_role("button", name="Judge now", exact=False).count() == 1 and body.get_by_role("button", name="Process now").count() == 0
+        assert body.get_by_role("button", name="Judge now", exact=False).count() == 0 and body.get_by_role("button", name="Process now").count() == 0       # (neither: spec 98 A)
         assert body.locator(".arena-lead, .arena-member").count() == 0 and body.locator(".arena-goals").get_attribute("aria-label") == "Pitches"
         assert pg.locator(OPEN + " .arena-phead__leads").inner_text().strip() == "Investor leads" and body.locator(".arena-new__words").count() == 0
     finally:
         pg.close()
     assert not errors, "\n".join(errors)
-
-
-def test_operations_is_a_heading_with_its_icon_no_count_and_shows_operations(listed):
-    pg, host = listed
-    ops = pg.locator('.arena-phead[data-goal="@operations"]')
-    assert ops.locator(".ork-icon").count() == 1 and ops.locator(".arena-phead__count, .ork-race__head").count() == 0 and ops.inner_text().strip() == "Operations"
-    ops.click()
-    pg.locator(".arena-ops").wait_for(timeout=WAIT_MS)
-    assert pg.locator(OPEN).get_attribute("data-goal") == "@operations" and pg.locator(".arena-pbody").count() == 0
-    assert pg.locator(".board-ops").is_visible() and pg.locator(".arena-left__proj .shell-proj__btn").is_visible() and _heads(pg).count() == 4     # the list stays
-    pg.locator('.arena-phead[data-goal="passkey"]').click()
-    _shown(pg, "passkey")
 
 
 def test_a_new_partys_heads_gather_onto_its_headings_head(gui):

@@ -1,8 +1,8 @@
 """Spec 73 part B on the desktop (docs/specs/73-a-lighter-column.md §0–§4, §6 B; decisions §88), in a real browser at 1 440 × 900 against the project test's stub host (Passkey with eight new goals and four
-flags, one of them waiting for main; Ideation; Website; Release; the host's `project` block and `ideas.party_for`): a goal's row is one line (28 px: its element, its type's sign, its title, one state's sign; no pile, no
+flags, one of them waiting for main; Ideation; Website; Release; the host's `project` block and `ideas.party_for`): a goal's row is one line (28 px: its element, its title, one state's sign — its type's sign went, spec 98 A; no pile, no
 ›; what its second line said is in its title); a press picks it, a second press opens its screen (Enter, Enter again); the open party's heading says *Taskmaster leads* and the column has no leader row, no *Goals n*;
-*New · 8* with *Process now*, *Flags · 4* with *1 waits for main*, each one 28 px row; the 2 px rule under the open party; no + in the project line: New goal is the Orkmaster's row (spec 91 §8), its *More kinds…* deals the party picked's types first and New goal opens with it picked;
-no New goal pile in the column; Ideation's rows and *Judge now*; a host from before spec 70. Screenshots to the directory ORKCRAFT_SHOTS_DIR names when it is set."""
+*New · 8* (its *Process now* went, spec 98 A), *Flags · 4* with *1 waits for main*, each one 28 px row; the 2 px rule under the open party; no + in the project line: New goal is the Orkmaster's row (spec 91 §8), its *More kinds…* deals the party picked's types first and New goal opens with it picked;
+no New goal pile in the column; Ideation's rows; a host from before spec 70. Screenshots to the directory ORKCRAFT_SHOTS_DIR names when it is set."""
 from __future__ import annotations
 
 import pytest
@@ -61,7 +61,7 @@ def _preview(pg, title):
 
 # -- a goal is one line ---------------------------------------------------------------------------------------------------------------------------------
 
-def test_a_goal_is_one_line_of_28_px_with_its_element_its_type_its_title_and_its_state_and_nothing_else(lighter):
+def test_a_goal_is_one_line_of_28_px_with_its_element_its_title_and_its_state_and_nothing_else(lighter):
     pg, host = lighter
     col = pg.locator(".arena-left").bounding_box()
     row = _row(pg, "register")
@@ -69,9 +69,7 @@ def test_a_goal_is_one_line_of_28_px_with_its_element_its_type_its_title_and_its
     assert main.bounding_box()["height"] == 28 and row.bounding_box()["height"] == 28
     elem = row.locator(".ork-elem").bounding_box()
     assert elem["x"] - col["x"] == 12 + 32 and elem["width"] == 12 and elem["height"] == 12                                           # 12 px in from the party body, which is one step (32 px) in from the column's edge (the owner, 26 October), orkUI's element at 12 px
-    kind = row.locator(".arena-goal__type")
-    assert kind.locator(".ork-sign.bug").count() == 1 and kind.bounding_box()["width"] == 12                                      # its type's sign, in its goal's colour
-    assert kind.evaluate("e => getComputedStyle(e).color") == row.locator(".ork-elem").evaluate("e => getComputedStyle(e).backgroundColor")
+    assert row.locator(".arena-goal__type").count() == 0                                                                           # no sign of its type on the row (spec 98 A)
     title = row.locator(".arena-goal__title")
     assert title.inner_text() == "WebAuthn register" and title.evaluate("e => getComputedStyle(e).textOverflow + getComputedStyle(e).whiteSpace") == "ellipsisnowrap"
     mark = row.locator(".arena-goal__mark")
@@ -83,16 +81,13 @@ def test_a_goal_is_one_line_of_28_px_with_its_element_its_type_its_title_and_its
     assert right - (mark.bounding_box()["x"] + mark.bounding_box()["width"]) >= 8                                               # the state's sign at its right
 
 
-def test_a_goal_with_no_type_keeps_the_space_and_a_planned_one_has_no_state_sign(lighter):
+def test_a_planned_goal_has_no_state_sign_and_the_titles_line_up(lighter):
     pg, host = lighter
     plain, typed = _row(pg, "signin"), _row(pg, "register")
-    none = plain.locator(".arena-goal__type")
-    assert none.count() == 1 and none.locator(".ork-sign").count() == 0 and none.bounding_box()["width"] == 12                        # no sign, the space kept
     assert plain.locator(".arena-goal__title").bounding_box()["x"] == typed.locator(".arena-goal__title").bounding_box()["x"]        # the titles line up
     planned = _row(pg, "planned")
     assert planned.count() == 1 and planned.locator(".arena-goal__mark").bounding_box()["width"] == 12 and planned.locator(".arena-goal__mark .ork-sign").count() == 0       # only planned: nothing
     assert _row(pg, "recovery").locator(".arena-goal__mark .ork-sign.alert").count() == 1                                              # a goal that asks you: its sign
-    assert _row(pg, "recovery").locator(".arena-goal__type .ork-sign.feature").count() == 1
     assert _row(pg, "signin").locator(".arena-goal__main").evaluate("e => e.scrollWidth <= e.clientWidth + 1")                      # a row never grows past the column
 
 
@@ -144,7 +139,7 @@ def test_the_open_heading_is_its_leader_taskmaster_leads_and_the_column_has_no_l
     body = pg.locator(".arena-pbody").bounding_box()
     assert 0 <= body["y"] - (head.bounding_box()["y"] + head.bounding_box()["height"]) <= 1                                               # the groups come directly under it
     assert [t.strip().lower() for t in pg.locator(".arena-pbody .arena-sec").all_text_contents()] == ["at work", "planning"]
-    assert pg.get_by_role("button", name="Process now", exact=False).count() == 1 and pg.locator(".arena-left .arena-frow .arena-power").count() == 1      # Process now is only the New row's
+    assert pg.get_by_role("button", name="Process now", exact=False).count() == 0 and pg.locator(".arena-left .arena-power").count() == 0      # no Process now (spec 98 A)
 
 
 def test_a_closed_party_heading_is_unchanged_and_the_open_party_ends_in_a_2_px_rule_in_the_frames_colour(lighter):
@@ -161,7 +156,7 @@ def test_a_closed_party_heading_is_unchanged_and_the_open_party_ends_in_a_2_px_r
 
 # -- New and Flags are rows -----------------------------------------------------------------------------------------------------------------------------
 
-def test_new_is_a_folded_28_px_row_with_process_now_at_its_right_and_the_goals_unfold_below_it(lighter):
+def test_new_is_a_folded_28_px_row_and_the_goals_unfold_below_it(lighter):
     pg, host = lighter
     row = _fold(pg, "new")
     assert row.bounding_box()["height"] == 28
@@ -170,13 +165,6 @@ def test_new_is_a_folded_28_px_row_with_process_now_at_its_right_and_the_goals_u
     assert toggle.locator(".arena-frow__word").evaluate("e => getComputedStyle(e).textTransform") == "uppercase"                           # the pixel face's small caps, as the groups
     assert toggle.locator(".arena-frow__n").inner_text().strip() == "· 8"
     assert pg.locator(".arena-goal[data-slug^=raw]").count() == 0
-    power = row.get_by_role("button", name="Process now")
-    assert power.inner_text().strip() == "Process now" and power.is_enabled()                                                             # its words without the count
-    assert power.bounding_box()["x"] > toggle.locator(".arena-frow__word").bounding_box()["x"] and power.bounding_box()["height"] == 22
-    assert power.get_attribute("title").startswith("Taskmaster reads “")
-    power.click()
-    sent = _calls(pg, host, "ideas.queue")[-1]
-    assert sent["queue"] == "now" and sent["via"] == "party" and sent["slug"]
     toggle.click()
     assert toggle.get_attribute("aria-expanded") == "true" and toggle.locator(".ork-chev").get_attribute("class") == "ork-chev"       # ⌄ when open
     rows = pg.locator(".arena-pbody .arena-goal")
@@ -211,7 +199,7 @@ def test_new_and_flags_come_after_planning_in_that_order(lighter):
     assert ys == sorted(ys) and len(set(ys)) == 4                                                                                      # Planning, New, Flags, then the closed parties
 
 
-def test_a_party_with_nothing_new_still_has_the_new_row_with_process_now_disabled(gui):
+def test_a_party_with_nothing_new_still_has_the_new_row(gui):
     class Quiet(LighterHost):
         def __init__(self):
             super().__init__()
@@ -219,7 +207,7 @@ def test_a_party_with_nothing_new_still_has_the_new_row_with_process_now_disable
     pg, host, errors = _open(gui, host=Quiet(), ready=".arena[data-goal=passkey]")
     _show_goal(pg, "passkey")
     row = _fold(pg, "new")
-    assert row.locator(".arena-frow__main").get_attribute("aria-label") == "New · 0" and row.get_by_role("button", name="Process now").is_disabled()
+    assert row.locator(".arena-frow__main").get_attribute("aria-label") == "New · 0"
     pg.close()
     assert not errors, "\n".join(errors)
 
@@ -323,7 +311,7 @@ def test_a_host_from_before_spec_70_has_the_plus_28_px_and_notched_and_new_goal_
 
 # -- Ideation ---------------------------------------------------------------------------------------------------------------------------------------------
 
-def test_ideations_rows_are_one_line_too_with_judge_now_in_the_new_row(gui):
+def test_ideations_rows_are_one_line_too(gui):
     class Lab(LighterHost):
         def __init__(self):
             super().__init__()
@@ -341,8 +329,6 @@ def test_ideations_rows_are_one_line_too_with_judge_now_in_the_new_row(gui):
     assert " · " in row.locator("button").get_attribute("title")                                                                           # its line is in its title
     new = _fold(pg, "new")
     assert new.bounding_box()["height"] == 28 and new.locator(".arena-frow__main").get_attribute("aria-label") == "New · 1"
-    judge = new.get_by_role("button", name="Judge now")
-    assert judge.inner_text().strip() == "Judge now" and judge.is_enabled() and judge.get_attribute("title").startswith("Investor and the four views judge")
     assert pg.get_by_role("button", name="Process now").count() == 0
     assert _fold(pg, "sent").locator(".arena-frow__main").get_attribute("aria-expanded") == "true" and _fold(pg, "sent").bounding_box()["height"] == 28      # Sent is a row too
     pg.close()

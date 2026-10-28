@@ -1,6 +1,6 @@
 """Moments of magic on the desktop (docs/specs/74-moments-of-magic.md §1–§5, decisions §89), in a real browser at 1 440 × 900 against the one window's stub host
 (tests/test_arena_decks_desktop_browser.py): a result answered leaves the hand as a stop does (spec 90 §2.3: Waits for your look and its seal are gone), a sent-back one's task in the field,
-a collision's line that crumbles when it is answered (none under reduced motion, none on the first read), the empty Board's stars and its line of words, and a Board
+the empty Board's stars and its line of words, and a Board
 with a party that has no stars."""
 from __future__ import annotations
 
@@ -10,7 +10,6 @@ pytest.importorskip("playwright.sync_api")
 
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 from tests.test_arena_desktop_browser import ArenaHost, arena  # noqa: E402,F401  (fixture)
-from tests.test_collide_desktop_browser import PAIR, CollideHost, _open_host, _project  # noqa: E402
 from tests.test_shell_browser import _open  # noqa: E402
 
 pytestmark = pytest.mark.browser
@@ -56,47 +55,6 @@ def test_nothing_plays_under_reduced_motion_a_result_just_goes(arena):
     host.leave("ideas.merge", {"slug": "register", "task": "k1"})
     pg.locator(f'.arena-hc[data-key="{KEY}"]').wait_for(state="detached", timeout=WAIT_MS)
     assert all(x["name"] == "none" for x in pg.evaluate("() => window.__left"))
-
-
-# -- a collision that crumbles (§3) -----------------------------------------------------------------------------------------------------------
-
-def _collide_project(gui, reduced=False):
-    pg, host, errors = _open_host(gui, CollideHost())
-    if reduced:
-        pg.emulate_media(reduced_motion="reduce")
-    pg.locator(".arena-hc[data-kind=collide]").first.wait_for(timeout=WAIT_MS)
-    _project(pg)
-    pg.wait_for_function("() => document.querySelectorAll('.arena-arrow[data-kind=collide]').length === 2", timeout=WAIT_MS)
-    pg.evaluate("""() => { window.__crumbled = []; new MutationObserver(() => { for (const g of document.querySelectorAll('.arena-arrow.is-leaving')) {
-      if (window.__crumbled.some((x) => x.edge === g.dataset.edge)) continue;
-      const c = getComputedStyle(g.querySelector('line'));
-      window.__crumbled.push({ edge: g.dataset.edge, name: c.animationName, dur: c.animationDuration, fn: c.animationTimingFunction }); } }).observe(document.body, { subtree: true, childList: true, attributes: true }); }""")
-    return pg, host, errors
-
-
-def test_an_answered_collision_keeps_its_line_for_a_moment_as_it_crumbles_then_it_is_gone(gui):
-    pg, host, errors = _collide_project(gui)
-    assert pg.locator(".arena-arrow.is-leaving").count() == 0                                                  # none on the first read, none while it is open
-    host.handle("ideas.collide_answer", {"id": PAIR, "answer": "leave"})
-    pg.wait_for_function("(e) => window.__crumbled.some((x) => x.edge === e)", arg=f"collide:{PAIR}", timeout=WAIT_MS)
-    crumb = next(x for x in pg.evaluate("() => window.__crumbled") if x["edge"] == f"collide:{PAIR}")
-    assert crumb["name"] == "arena-crumble" and crumb["dur"] == "0.42s" and crumb["fn"] == "steps(3)"
-    assert pg.locator('.arena-arrow[data-kind="collide"]:not(.is-leaving)').count() == 1                        # the other collision stays open and never moves
-    assert pg.locator('.arena-arrow[data-kind="collide"]:not(.is-leaving) line').evaluate("e => getComputedStyle(e).animationName") == "arena-draw"
-    pg.locator(f'.arena-arrow[data-edge="collide:{PAIR}"]').wait_for(state="detached", timeout=WAIT_MS)       # then it is gone
-    pg.wait_for_timeout(600)
-    assert pg.locator(".arena-arrow.is-leaving").count() == 0 and pg.locator('.arena-arrow[data-kind="collide"]').count() == 1
-    pg.close()
-    assert not errors, "\n".join(errors)
-
-
-def test_under_reduced_motion_an_answered_collision_goes_at_once(gui):
-    pg, host, errors = _collide_project(gui, reduced=True)
-    host.handle("ideas.collide_answer", {"id": PAIR, "answer": "leave"})
-    pg.locator(f'.arena-arrow[data-edge="collide:{PAIR}"]').wait_for(state="detached", timeout=WAIT_MS)
-    assert pg.evaluate("() => window.__crumbled.length") == 0
-    pg.close()
-    assert not errors, "\n".join(errors)
 
 
 # -- the empty Board in the void (§4, §5) -----------------------------------------------------------------------------------------------------

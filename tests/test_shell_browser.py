@@ -596,13 +596,6 @@ def _drawer(pg):
     return pg.locator(".shell-drawer")
 
 
-def _agents(pg):
-    """Agents in the drawer (the top bar's button)."""
-    open_pane(pg, "agents")
-    pg.locator(".shell-agents").wait_for(timeout=WAIT_MS)
-    return pg.locator(".shell-agents")
-
-
 def _new_ideas(pg):
     """The goals list's *New · n* row, its fold open: its rows (a goal is a row of the list: `.arena-goal`)."""
     fold = pg.locator(".arena-raw .arena-frow__main")
@@ -722,8 +715,8 @@ def test_the_tools_limits_are_chips_whose_panel_has_their_diamonds_and_the_reser
     claude = limits.locator(".arena-limit")
     assert claude.count() == 1 and claude.get_attribute("data-provider") == "claude"                       # one tool's line, not every tool's
     assert "62 %" in claude.inner_text() and claude.locator(".ork-crystals i").count() == 10
-    assert claude.locator(".ork-crystals i.on").count() == 5 and claude.locator(".ork-crystals i.kept").count() == 1      # 6 left, 1 kept for tonight
-    assert claude.get_attribute("title") == "Claude: 62 % left, 10 % of it kept for tonight · resets at 18:00"
+    assert claude.locator(".ork-crystals i.on").count() == 5 and claude.locator(".ork-crystals i.kept").count() == 1      # 6 left, 1 kept back
+    assert claude.get_attribute("title") == "Claude: 62 % left, 10 % of it kept back · resets at 18:00"
     assert "Claude resets at 18:00" in limits.inner_text()
     usage = limits.locator(".arena-usage")                                                                 # what used it (B's rows)
     usage.locator(".arena-usage__row").first.wait_for(timeout=WAIT_MS)
@@ -759,12 +752,12 @@ def test_a_click_on_an_idea_a_todo_a_chip_and_a_result_opens_the_right_preview(s
     assert "plan" in pg.locator(".shell-drawer .shell-tabstrip").inner_text().lower() and pg.get_by_role("tab", name="Plan", exact=False).count() == 1
     assert _sent(pg, host, ("ideas.log", {"event": "opened", "what": "todo", "ref": "sync/t1", "device": "desktop"}))
 
-    _agents(pg)                                                                   # a chip in Agents → the task: brief, log, Stop
-    pg.locator(".shell-chip", has_text="Retry on a lost signal").click()
+    pg.get_by_role("button", name="Close the right column").click()
+    pg.locator(".arena-task[data-task=k3]").click()                               # a task of the field → the task: brief, log, Stop (the Agents' chip that did went, spec 98 A)
     pg.locator(".shell-task").wait_for(timeout=WAIT_MS)
     text = pg.locator(".shell-task").inner_text()
     assert "Brief of Retry on a lost signal" in text and "reading sync.py" in text and "idea/sync/k3" in text and "working" in text
-    assert _sent(pg, host, ("ideas.log", {"event": "opened", "what": "task", "ref": "sync/k3", "device": "desktop", "via": "agents"}))
+    assert _sent(pg, host, ("ideas.log", {"event": "opened", "what": "task", "ref": "sync/k3", "device": "desktop", "via": "map"}))
     pg.get_by_role("button", name="Stop", exact=True).click()
     assert _sent(pg, host, ("ideas.stop_task", {"slug": "sync", "task": "k3"}))
 
@@ -818,7 +811,7 @@ def test_merge_is_off_on_red_with_its_reason_and_send_back_needs_a_line(shell):
     pg.locator('.arena-hc__open[aria-label="To look at: Add the queue"]').wait_for(state="detached", timeout=WAIT_MS)      # it fades once, then it is gone
 
 
-def test_drop_asks_first_and_merge_into_changes_the_branch(shell):
+def test_drop_asks_first(shell):
     pg, host = shell
     card = _look_card(pg, "Add the queue")
     card.get_by_role("button", name="Drop…").click()
@@ -826,13 +819,6 @@ def test_drop_asks_first_and_merge_into_changes_the_branch(shell):
     pg.get_by_role("dialog").get_by_role("button", name="Keep it").click()
     assert pg.get_by_role("dialog").count() == 0 and ("ideas.drop_task", {"slug": "sync", "task": "k2"}) not in host.log
     assert card.get_by_role("button", name="Drop…").evaluate("e => e === document.activeElement")     # the focus went back
-    pg.locator("button.arena-into").click()
-    assert pg.get_by_role("menuitemradio").count() == 2
-    pg.get_by_role("menuitem", name="New branch…").click()
-    pg.get_by_label("Name of the new branch").fill("next")
-    pg.get_by_role("button", name="Make it").click()
-    assert _sent(pg, host, ("ideas.into", {"branch": "next"}))
-    pg.locator("button.arena-into").wait_for(timeout=WAIT_MS)
 
 
 def test_esc_puts_the_drawer_away_and_keeps_its_tabs(shell):
@@ -848,7 +834,6 @@ def test_esc_puts_the_drawer_away_and_keeps_its_tabs(shell):
 
 def test_a_new_goal_comes_from_the_pile_and_lists_with_its_state_in_words(shell):
     pg, host = shell
-    assert "starts tonight" in _said(_goal_row(pg, "Dark mode"))
     dlg = _new_goal(pg)
     dlg.get_by_label("Your goal").fill("Offline sync")
     dlg.get_by_role("button", name="Add the goal").click()
@@ -1104,12 +1089,12 @@ def test_the_target_is_in_settings_not_the_top_bar_and_sets_the_boards_one_targe
     field.get_by_role("radio", name="Thrift").click()
     pg.wait_for_function("() => document.querySelector('[data-settings=target] [data-value=thrift]')?.getAttribute('aria-checked') === 'true'", timeout=WAIT_MS)
     assert _sent(pg, host, ("ideas.board_set", {"target": "thrift"}))
-    assert "lighter models, less reasoning, no proposals at night" in field.inner_text()
+    assert "lighter models, less reasoning" in field.inner_text() and "at night" not in field.inner_text()       # (the night went, spec 98 A)
     if os.environ.get("ORKCRAFT_SHOTS"):
         pg.screenshot(path=str(SHOTS / "desktop-board-target-1440x900.png"))
 
 
-def test_a_high_goal_shows_a_sign_of_work_and_stop_leaves_it_stopped_a_low_one_waits_for_tonight(shell):
+def test_a_high_goal_shows_a_sign_of_work_and_stop_leaves_it_stopped(shell):
     pg, host = shell
     dlg = _new_goal(pg)
     dlg.get_by_label("Your goal").fill("Fast one")
@@ -1126,12 +1111,7 @@ def test_a_high_goal_shows_a_sign_of_work_and_stop_leaves_it_stopped_a_low_one_w
     row = _new_ideas(pg).filter(has_text="Fast one")                                                  # stopped: a new one again, under New (n)
     row.wait_for(timeout=WAIT_MS)
     assert "stopped" in _said(row) and row.locator(".ork-sign.work").count() == 0
-    low = _new_ideas(pg).filter(has_text="Offline mode")                                              # a Low one: tonight
-    assert "tonight" in _said(low)
-    power = pg.locator(".arena-left").get_by_role("button", name="Process now")                       # Process now reads the first new goal
-    assert power.is_enabled() and power.inner_text() == "Process now" and pg.locator(".arena-raw .arena-frow__main").get_attribute("aria-label") == "New · 2"
-    power.click()
-    assert _sent(pg, host, ("ideas.queue", {"slug": "offline", "queue": "now", "via": "party"}))
+    assert pg.locator(".arena-raw .arena-frow__main").get_attribute("aria-label") == "New · 2" and pg.get_by_role("button", name="Process now").count() == 0       # (no Process now: spec 98 A)
     _open_goal(pg, "Fast one")                                                                        # Delete asks first
     drawer = _drawer(pg)
     drawer.get_by_role("button", name="Delete goal").click()
@@ -1359,17 +1339,14 @@ def test_a_file_todo_shows_its_steps_and_uploads_the_file_and_a_secret_shows_its
     assert "larger than 5 MB" in dlg.inner_text() and dlg.get_by_role("button", name="Send the file").is_disabled()
 
 
-def test_the_gear_holds_start_plans_by_themselves_and_the_night(shell):
+def test_the_gear_holds_start_plans_by_themselves(shell):
     pg, host = shell
     pg.get_by_role("button", name="Settings").click()
     dlg = pg.get_by_role("dialog", name="Settings")
     box_ = dlg.get_by_role("checkbox", name="Start plans by themselves")
-    assert box_.is_checked() and dlg.get_by_label("Night from").input_value() == "01:00" and dlg.get_by_label("Night to").input_value() == "07:00"
+    assert box_.is_checked() and dlg.get_by_label("Night from").count() == 0 and dlg.get_by_label("Night to").count() == 0       # (no night's window: spec 98 A)
     dlg.get_by_text("Start plans by themselves").click()
     assert _sent(pg, host, ("ideas.board_set", {"autostart": False}))
-    dlg.get_by_label("Night from").fill("23:30")
-    dlg.get_by_label("Night from").blur()
-    assert _sent(pg, host, ("ideas.board_set", {"night": "23:30-07:00"}))
 
 
 def test_the_gear_holds_the_switch_a_result_that_holds_lands_in_dev_by_itself(shell):
@@ -1395,68 +1372,12 @@ def test_the_move_of_review_to_off_is_said_once_in_the_window(gui):
     assert not errors, "\n".join(errors)
 
 
-def test_agents_chips_say_by_itself_tonight_and_why_a_task_is_held(shell):
-    pg, host = shell
-    _agents(pg)
-    chips = pg.locator(".shell-agents .shell-chip")
-    k3 = chips.filter(has_text="Retry on a lost signal")
-    assert "by itself" in k3.inner_text() and "working" in k3.inner_text().lower()
-    assert "by itself" not in chips.filter(has_text="Add the queue").inner_text()
-    night = chips.filter(has_text="Dark palette")
-    assert "tonight" in night.inner_text().lower()
-    held = chips.filter(has_text="Write the notes")
-    assert "waits for your reserve: kept for you until 18:00" in held.inner_text().lower()
-    files = chips.filter(has_text="Write the export")
-    assert "waits for sync ideas between the phone and the town · same files" in files.inner_text().lower()
-    assert files.count() == 1                                                                         # after the wait: beside
-    if os.environ.get("ORKCRAFT_SHOTS"):
-        pg.screenshot(path=str(SHOTS / "desktop-agents-chips-1440x900.png"))
-
-
-def test_agents_add_an_agent_edit_it_and_give_it_a_task_type(shell):
-    pg, host = shell
-    agents = _agents(pg)
-    assert "taskmaster" in agents.inner_text().lower() and "task types" not in agents.inner_text().lower()      # spec 36 §5: a monitor
-    agents.get_by_role("button", name="+ Add agent").click()
-    pg.get_by_role("dialog", name="Add an agent").get_by_role("button", name="Your own").click()
-    dlg = pg.get_by_role("dialog", name="Add agent")
-    dlg.get_by_label("Name").fill("Docs scribe")
-    dlg.get_by_label("Model").select_option("laborer")
-    dlg.get_by_label("At most at once").select_option("3")
-    dlg.get_by_label("Instruction").fill("Write plainly.")
-    dlg.get_by_role("button", name="Save agent").click()
-    pg.locator(".shell-role[data-slug='docs-scribe']").wait_for(timeout=WAIT_MS)
-    assert _sent(pg, host, ("ideas.role_save", {"name": "Docs scribe", "model": "laborer", "max_parallel": 3, "instruction": "Write plainly.", "kinds": [], "craft": "engineering"}))
-    pg.get_by_role("button", name="Edit Docs scribe").click()                                       # a type given in its dialog (Takes)
-    pg.get_by_role("dialog", name="Edit agent").get_by_label("Docs").check()
-    pg.get_by_role("button", name="Save agent").click()
-    pg.get_by_role("dialog").wait_for(state="detached", timeout=WAIT_MS)
-    assert _sent(pg, host, ("ideas.role_save", {"slug": "docs-scribe", "name": "Docs scribe", "model": "laborer", "max_parallel": 3, "instruction": "Write plainly.", "kinds": ["docs"], "craft": "engineering"}))
-    pg.get_by_role("button", name="Edit Docs scribe").click()                                        # Edit, then Delete says what moves back
-    dlg = pg.get_by_role("dialog", name="Edit agent")
-    assert dlg.get_by_label("Instruction").input_value() == "Write plainly."
-    dlg.get_by_role("button", name="Delete…").click()
-    assert "back to Grunt" in dlg.inner_text() and "docs" in dlg.inner_text().lower()
-    dlg.get_by_role("button", name="Delete agent").click()
-    pg.locator(".shell-role[data-slug='docs-scribe']").wait_for(state="detached", timeout=WAIT_MS)
-    pg.get_by_role("button", name="Edit Taskmaster").click()                                         # the built-ins: edit, never delete
-    builtin = pg.get_by_role("dialog", name="Edit agent")
-    builtin.get_by_label("Name").wait_for(timeout=WAIT_MS)
-    assert builtin.get_by_label("Name").input_value() == "Taskmaster" and builtin.get_by_role("button", name="Delete…").count() == 0
-    if os.environ.get("ORKCRAFT_SHOTS"):
-        pg.keyboard.press("Escape")
-        pg.wait_for_function("() => !document.querySelector('[role=dialog]')", timeout=WAIT_MS)
-        pg.screenshot(path=str(SHOTS / "desktop-agents-1440x900.png"))
-
-
 def test_every_dialog_has_a_dimmed_backdrop_an_opaque_panel_and_closes_on_esc(shell):
     pg, host = shell
     opens = [("New party", lambda: _new_party(pg)),
              ("New goal", lambda: _new_goal(pg)),
              ("Settings", lambda: pg.get_by_role("button", name="Settings").click()),
-             ("Merge into", lambda: pg.locator("button.arena-into").click()),
-             ("Drop this result?", lambda: _look_card(pg, "Add the queue").get_by_role("button", name="Drop…").click()),
-             ("Add an agent", lambda: (_agents(pg), pg.get_by_role("button", name="+ Add agent").click()))]
+             ("Drop this result?", lambda: _look_card(pg, "Add the queue").get_by_role("button", name="Drop…").click())]
     for name, opener in opens:
         opener()
         dlg = pg.get_by_role("dialog", name=name)
@@ -1515,60 +1436,6 @@ def test_the_stops_are_not_counted_a_closed_party_with_one_wears_a_sign_on_its_h
     assert dot.count() == 1 and "is-danger" not in dot.get_attribute("class") and dot.get_attribute("title") == "3 wait in Ship sync"
     colour = dot.evaluate("e => getComputedStyle(e).color")
     assert colour == pg.evaluate("(() => { const d = document.createElement('span'); d.style.color = 'var(--ork-alert)'; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; })()")
-
-
-def test_an_agent_is_one_line_with_its_head_its_name_how_many_and_what_a_task_costs(shell):
-    pg, host = shell
-    host.usd_task = {"grunt": 0.4}
-    host.bump({})
-    agents = _agents(pg)
-    line = agents.locator(".shell-role[data-role=grunt] .shell-role__head")
-    pg.wait_for_function("() => document.querySelector('.shell-role[data-role=grunt] .shell-role__head')?.getAttribute('aria-label')?.includes('$0.40')", timeout=WAIT_MS)
-    assert line.get_attribute("aria-label") == "Grunts: an ork, Engineering, Seasoned; up to 8 at once; about $0.40 a task"
-    assert " ".join(line.inner_text().split()).startswith("Grunts ×8 ≈ $0.40 a task Edit") and line.locator("img").count() == 1
-    assert line.locator(".shell-role__week").inner_text() == "≈$1.25 today"                                 # its day, muted under the line
-    assert "up to" not in line.inner_text() and "By Target" not in line.inner_text() and "tasks the first time" not in line.inner_text()
-    tm = agents.locator(".shell-role[data-role=taskmaster] .shell-role__head")                       # its cost is its steps: no ×N, no cost of a task
-    assert "×" not in tm.inner_text() and "a task" not in tm.inner_text()
-
-
-def test_an_agent_chip_shows_its_short_name_on_two_lines_with_the_title_in_its_label(shell):
-    pg, host = shell
-    host.chip_extra = {"k3": {"short": "Retry offline", "idea_short": "Sync"}}
-    host.bump({})
-    _agents(pg)
-    chip = pg.locator(".shell-chip", has_text="Retry offline")
-    chip.wait_for(timeout=WAIT_MS)
-    assert chip.get_attribute("title") == "Retry on a lost signal" and "Retry on a lost signal" in chip.get_attribute("aria-label")
-    assert "Sync" in chip.locator(".shell-chip__idea").inner_text() and "Sync ideas between" not in chip.inner_text()
-    assert chip.locator(".shell-chip__name").evaluate("e => getComputedStyle(e).webkitLineClamp") == "2"
-
-
-def test_add_agent_opens_two_ways_from_the_library_and_your_own_and_the_built_in_two_show_what_they_are_told(shell):
-    pg, host = shell
-    _agents(pg).get_by_role("button", name="+ Add agent").click()
-    choose = pg.get_by_role("dialog", name="Add an agent")
-    choose.wait_for(timeout=WAIT_MS)
-    assert choose.locator(".shell-library__row").count() > 5 and choose.get_by_role("button", name="Add Taskmaster").count() == 0   # the project's own are not offered
-    row = choose.get_by_role("button", name="Add Copywriter")
-    assert "Marketing" in row.inner_text() and row.locator("img").count() == 1                       # its head, name, craft and what it takes
-    row.click()
-    assert _sent(pg, host, ("ideas.role_add", {"id": "copywriter"}))
-    pg.locator(".shell-role[data-slug='copywriter']").wait_for(timeout=WAIT_MS)
-    pg.locator(".shell-agents").get_by_role("button", name="+ Add agent").click()                    # added: no longer offered
-    choose.wait_for(timeout=WAIT_MS)
-    assert choose.get_by_role("button", name="Add Copywriter").count() == 0
-    choose.get_by_role("button", name="Your own").click()
-    assert pg.get_by_role("dialog", name="Add agent").get_by_label("Name").is_visible()              # today's form
-    assert pg.get_by_role("dialog", name="Add agent").locator(".shell-told").count() == 0
-    pg.keyboard.press("Escape")
-    pg.get_by_role("button", name="Edit Taskmaster").click()
-    dlg = pg.get_by_role("dialog", name="Edit agent")
-    told = dlg.locator(".shell-told")
-    assert told.get_attribute("open") is None and "What it is told already" in told.inner_text()      # folded
-    told.locator("summary").click()
-    assert "The Taskmaster reads each step's prompt." in told.inner_text() and told.locator("textarea, input").count() == 0    # read only
-    assert dlg.get_by_label("Added to what it is told").is_visible()
 
 
 def test_about_this_party_has_what_the_party_did_closed_at_first_and_read_when_opened(shell):

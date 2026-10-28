@@ -71,13 +71,10 @@ def test_a_held_card_says_its_reason_with_its_sign_and_a_waiting_card_is_not_das
     held, waiting = card(pg, "cookie/f2"), card(pg, "register/k5")
     assert "is-held" in held.get_attribute("class") and "is-wait" not in held.get_attribute("class")
     assert held.evaluate("e => getComputedStyle(e).borderTopStyle") == "dashed"                          # the dashed edge
-    assert " ".join(held.locator(".arena-task__foot").inner_text().split()) == "held: tonight" and held.locator(".arena-task__foot .ork-sign.night").count() == 1
-    assert "tonight · after 01:00" in held.get_attribute("title")                                        # the time is in its tooltip
     assert "is-wait" in waiting.get_attribute("class") and "is-held" not in waiting.get_attribute("class")
     assert waiting.evaluate("e => getComputedStyle(e).borderTopStyle") == "solid"                        # a waiting card lies lower and is not drawn as a held one
     assert waiting.locator(".arena-task__foot .ork-sign.before").count() == 1 and waiting.locator(".arena-task__foot .ork-sign.night, .arena-task__foot .ork-sign.pause").count() == 0
     reasons = [({"kind": "limits", "ref": "", "title": "", "until": "2099-01-01T14:20"}, "after 14:20", {}, "held: window", "pause"),
-               ({"kind": "night", "ref": "", "title": "", "until": ""}, "", {}, "held: tonight", "night"),
                ({"kind": "sign_in", "ref": "codex", "title": "Codex", "tool": "Codex", "until": ""}, "", {"held_for": "sign_in"}, "held: sign in", "alert"),
                ({"kind": "week", "ref": "", "title": "", "until": "2099-01-05T09:00"}, "week · after 09:00", {}, "held: week", "pause")]
     for waits, note, more, words, sign in reasons:

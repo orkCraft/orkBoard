@@ -459,7 +459,7 @@ def test_the_top_bar_has_no_target_and_settings_has_it_under_a_party_with_no_siz
     field.get_by_role("radio", name="Quality").click()
     assert _calls(pg, host, "ideas.board_set")[-1] == {"target": "quality"}
     pg.wait_for_function("() => document.querySelector('[data-settings=target] [data-value=quality]')?.getAttribute('aria-checked') === 'true'", timeout=WAIT_MS)
-    assert "heavier models, more reasoning, three proposals a night" in field.inner_text()
+    assert "heavier models, more reasoning" in field.inner_text() and "proposals a night" not in field.inner_text()       # (the night went, spec 98 A)
 
 
 # -- an older host --------------------------------------------------------------------------------------------------------------------------------------------

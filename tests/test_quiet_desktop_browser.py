@@ -81,7 +81,7 @@ def test_a_to_do_lies_last_in_the_hand_after_the_questions_the_plans_and_the_fai
         cards.first.wait_for(timeout=WAIT_MS)
         kinds = [c.get_attribute("data-kind") for c in cards.all()]
         assert kinds[-1] == "todo" and kinds.count("todo") == 1                                                 # last of all
-        assert kinds[:-1] == ["op_failed", "failed", "goal", "op", "plan", "asks", "proposal"]                  # the others as they were: urgency's order
+        assert kinds[:-1] == ["failed", "goal", "plan", "asks", "proposal"]                  # the others as they were: urgency's order
         by_x = sorted(cards.all(), key=lambda c: c.bounding_box()["x"])
         assert by_x[0].get_attribute("data-kind") == "proposal" and by_x[-1].get_attribute("data-kind") == "todo"       # the outermost of the fan, to its right
         assert pg.locator('.arena-hc[data-kind="todo"]').get_attribute("data-party") == "pricing"

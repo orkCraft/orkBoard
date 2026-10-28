@@ -1,6 +1,6 @@
 """Spec 65 B on the desktop (docs/specs/65-ideation.md §8, §9 → B), in a real browser at 1 440 × 900 against the one window's stub host with an Ideation
 party: New party offers Ideation and no seat change in it (the pitch agents never offered to another party); New goal in Ideation is one box, its lens,
-Judge now · Tonight · Hold; its line on the field and in the left column (judging with the views' heads lit one by one, judged with the answer's word, sent
+Hold (Judge now and Tonight went, spec 98 A); its line on the field and in the left column (judging with the views' heads lit one by one, judged with the answer's word, sent
 naming its goal, Passed (n) folded; Pitch, Views, Decision); a pitch's screen (the four views, the case against, the decision) with Send to <party>,
 Change and judge again, Pass and Drop; Needs you's pitch opens it. Screenshots to docs/design/img/v1/ when ORKCRAFT_SHOTS is set."""
 from __future__ import annotations
@@ -226,7 +226,7 @@ def test_edit_the_party_of_ideation_offers_no_seat_change(lab):
 
 # -- New goal in Ideation (§8)--------------------------------------------------------------------------------------------------------
 
-def test_new_goal_in_ideation_is_one_box_and_judge_now_tonight_or_hold(lab):
+def test_new_goal_in_ideation_is_one_box_and_hold(lab):
     pg, host = lab
     assert pg.locator(".arena-new__words").count() == 0
     pg.locator(".arena-left__proj").get_by_role("button", name="New goal").click()
@@ -234,24 +234,17 @@ def test_new_goal_in_ideation_is_one_box_and_judge_now_tonight_or_hold(lab):
     dlg.wait_for(timeout=WAIT_MS)
     assert dlg.get_by_label("What is the pitch?").count() == 1 and dlg.locator("textarea").count() == 1
     assert dlg.get_by_label("Priority").count() == 0 and dlg.locator("[data-ask]").count() == 0 and dlg.locator(".arena-type__head, .arena-typed").count() == 0
-    assert [b.inner_text() for b in dlg.locator(".shell-modal__foot button").all()] == ["Hold", "Tonight", "Judge now"]
+    assert [b.inner_text() for b in dlg.locator(".shell-modal__foot button").all()] == ["Hold"]
     dlg.get_by_label("What is the pitch?").fill("Offline notes for travellers")
     _shot(pg, "ideation-new-goal.png")
     dlg.get_by_role("button", name="Hold").click()
     got = _calls(pg, host, "ideas.add")[-1]
     assert got["hold"] is True and got["track"] == PARTY and "type" not in got and "night" not in got
-    _new_and_judge(pg, "Share a note by link")
-    got = _calls(pg, host, "ideas.add", at_least=2)[-1]
-    assert got["text"] == "Share a note by link" and "hold" not in got and "night" not in got and got["priority"] != "low"
 
 
-def _new_and_judge(pg, text):
-    pg.locator(".arena-left__proj").get_by_role("button", name="New goal").click()
-    dlg = pg.get_by_role("dialog", name="New goal")
-    dlg.wait_for(timeout=WAIT_MS)
-    dlg.get_by_label("What is the pitch?").fill(text)
-    dlg.get_by_role("button", name="Judge now").click()
-    dlg.wait_for(state="detached", timeout=WAIT_MS)
+def _judging(host, text):
+    """A pitch the host is judging (the window no longer has a Judge now of its own: the host's call is made as the phone makes it)."""
+    host.handle("ideas.add", {"text": text, "track": PARTY})
 
 
 # -- the line on the field (§8) ------------------------------------------------------------------------------------------------------
@@ -259,8 +252,8 @@ def _new_and_judge(pg, text):
 def test_a_pitch_judging_lights_the_views_one_by_one_then_says_its_answer(lab):
     pg, host = lab
     assert [h.text_content() for h in pg.locator(".arena-pitches .arena-cols__head .arena-lbl:not(.is-blank)").all()] == ["Views", "Decision"]
-    assert pg.locator('.arena-phead[aria-current=true] .arena-phead__count').count() == 1 and pg.locator(".arena-raw .arena-power").inner_text() == "Judge now"
-    _new_and_judge(pg, "Share a note by link")
+    assert pg.locator('.arena-phead[aria-current=true] .arena-phead__count').count() == 1
+    _judging(host, "Share a note by link")
     line = pg.locator('.arena-pitch[data-slug="share-a-note"]')
     line.wait_for(timeout=WAIT_MS)
     assert line.get_attribute("data-state") == "judging" and "judging · 0 of 4 views" in line.inner_text()

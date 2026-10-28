@@ -1,7 +1,7 @@
 """Spec 71 part B on the desktop (docs/specs/71-orkmaster-keeps-parties-apart.md §6, §7 "B", §8; decisions §86): Chromium at 1 440 × 900 against the project test's stub host with the shapes of §8 — a Needs you row
 of kind `collide` (by a plan made, and by a spec changed), `ideas.collide_answer`, a node's `waits_for` and `project.collisions`. The hand's stop (the Orkmaster's head, *Orkmaster asks*, its two goals with their
-parties, the why, its answers as buttons that say what happens; each answer sends its call; a by-change stop offers *Re-plan it* and *Leave it*); the project's level (an open collision is a plain link in the signal's
-colour between its two decks, a wait a link with the arrow); a goal's row (*waits for <party> · <goal>* in its title, orkUI's before sign, a press on the sign opens that goal's party with it picked); a host from
+parties, the why, its answers as buttons that say what happens; each answer sends its call; a by-change stop offers *Re-plan it* and *Leave it*); the project's level (a wait across parties wears the before sign on its
+deck; the link lines of collisions and waits went, spec 98 A); a goal's row (*waits for <party> · <goal>* in its title, orkUI's before sign, a press on the sign opens that goal's party with it picked); a host from
 before spec 71 keeps today's face. Screenshots to the directory ORKCRAFT_SHOTS_DIR names when it is set."""
 from __future__ import annotations
 
@@ -148,37 +148,6 @@ def test_a_press_on_one_of_the_two_goals_opens_it_and_a_press_on_the_stop_opens_
     assert pg.locator(".arena-hc[data-kind=collide]").count() == 2                                                                  # opening answers nothing
 
 
-# -- the project's level ------------------------------------------------------------------------------------------------------------------------------------
-
-def test_an_open_collision_is_a_plain_link_between_its_two_decks_in_the_signals_colour(collide):
-    pg, host = collide
-    _project(pg)
-    links = pg.locator('.arena-arrow[data-kind="collide"]')
-    pg.wait_for_function("() => document.querySelectorAll('.arena-arrow[data-kind=collide]').length === 2", timeout=WAIT_MS)
-    assert {l.get_attribute("data-edge") for l in links.all()} == {f"collide:{PAIR}", f"collide:{CHANGED}"}
-    alert = pg.evaluate("() => { const i = document.createElement('i'); i.style.color = 'var(--ork-alert)'; document.body.append(i); const c = getComputedStyle(i).color; i.remove(); return c; }")
-    first = links.first
-    assert first.locator("line").evaluate("e => getComputedStyle(e).stroke") == alert and first.locator("polygon").evaluate("e => getComputedStyle(e).display") == "none"      # no direction
-    box = pg.evaluate("""() => { const l = document.querySelector('.arena-arrow[data-edge="collide:pagewords|landing"] line'), r = (s) => document.querySelector(`.arena-pdeck[data-slug="${s}"]`).getBoundingClientRect(),
-      h = document.querySelector('.arena-project__cols').getBoundingClientRect(), a = r('pagewords'), b = r('landing'), x1 = +l.getAttribute('x1') + h.left, y1 = +l.getAttribute('y1') + h.top,
-      x2 = +l.getAttribute('x2') + h.left, y2 = +l.getAttribute('y2') + h.top, on = (x, y, d) => x >= d.left - 2 && x <= d.right + 2 && y >= d.top - 2 && y <= d.bottom + 2;
-      return [on(x1, y1, a) || on(x1, y1, b), on(x2, y2, a) || on(x2, y2, b)]; }""")
-    assert box == [True, True]                                                                                                       # each end on a deck
-    shot(pg, "desk-collide-project.png")
-
-
-def test_a_wait_is_a_link_with_the_arrow_from_the_goal_waited_for_and_an_answered_collision_leaves(collide):
-    pg, host = collide
-    _raise(pg, "landing").get_by_role("button", name=f"Words of the sign-in page first: {BY_PLAN['text']}").click()
-    assert _sent(pg, host, ("ideas.collide_answer", {"id": PAIR, "answer": "first:pagewords"}))
-    _project(pg)
-    pg.wait_for_function("() => document.querySelectorAll('.arena-arrow[data-kind=wait]').length === 1", timeout=WAIT_MS)
-    wait = pg.locator('.arena-arrow[data-kind="wait"]')
-    assert wait.get_attribute("data-edge") == "wait:pagewords>landing" and wait.locator("polygon").evaluate("e => getComputedStyle(e).display") != "none"      # the arrow
-    assert wait.locator("line").evaluate("e => getComputedStyle(e).stroke") != pg.locator('.arena-arrow[data-kind="collide"] line').evaluate("e => getComputedStyle(e).stroke")
-    assert pg.locator(f'.arena-arrow[data-edge="collide:{PAIR}"]').count() == 0                                                     # answered: no longer a collision
-
-
 # -- a goal's row -------------------------------------------------------------------------------------------------------------------------------------------
 
 def _website(pg):
@@ -207,11 +176,10 @@ def test_a_goal_that_waits_has_the_before_sign_and_its_words_in_its_title_and_th
     assert not errors, "\n".join(errors)
 
 
-def test_a_wait_across_parties_is_a_link_with_the_arrow_on_the_level_from_the_start(gui):
+def test_a_wait_across_parties_shows_on_the_level_by_the_before_sign_on_its_deck_from_the_start(gui):
     pg, host, errors = _open_host(gui, CollideHost(waits=True, change=False))
     try:
         _project(pg)
-        pg.wait_for_function("() => document.querySelectorAll('.arena-arrow[data-kind=wait]').length === 1", timeout=WAIT_MS)
         deck = pg.locator('.arena-pdeck[data-slug="landing"]')
         assert deck.locator(".ork-sign.before").count() == 1                                                                         # the deck wears the same sign as the row
     finally:

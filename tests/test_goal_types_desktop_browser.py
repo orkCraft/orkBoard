@@ -124,17 +124,14 @@ def test_the_top_bar_has_no_parties_and_the_left_column_lists_them_over_the_open
 
 def test_the_headings_list_the_parties_a_press_shows_one_and_the_keys_move(typed):
     pg, host = typed
-    host.ops = True
-    host.bump({})
-    pg.locator('.arena-phead[data-goal="@operations"]').wait_for(timeout=WAIT_MS)
     col = _parties(pg)
     heads = col.locator(".arena-phead")
-    assert [c.get_attribute("data-goal") for c in heads.all()] == ["passkey", "pricing", "weekly", "@operations"]
+    assert [c.get_attribute("data-goal") for c in heads.all()] == ["passkey", "pricing", "weekly"]
     shown = col.locator('.arena-phead[aria-current=true]')
     assert shown.get_attribute("data-goal") == "passkey" and col.locator(".arena-lead, .arena-left .arena-member").count() == 0
     assert shown.locator(".ork-race__head").count() == 1 and box(pg, '.arena-phead[aria-current=true] .ork-race__head')["width"] == 24
     assert "2/11" in shown.inner_text() and shown.locator(".ork-count").count() == 0 and shown.locator(".ork-sign.work").count() == 1
-    assert heads.nth(3).locator(".ork-icon").count() == 1 and "New party" in col.locator(".arena-pnew").inner_text()
+    assert "New party" in col.locator(".arena-pnew").inner_text()
     shown.focus()
     pg.keyboard.press("ArrowDown")
     assert pg.evaluate("document.activeElement.dataset.goal") == "pricing"
@@ -144,8 +141,6 @@ def test_the_headings_list_the_parties_a_press_shows_one_and_the_keys_move(typed
     pg.keyboard.press("Enter")                                                                                         # Enter presses: Pricing page is shown
     pg.locator(".arena[data-goal=pricing]").wait_for(timeout=WAIT_MS)
     assert pg.locator('.arena-phead[aria-current=true] .arena-phead__name').inner_text() == "Pricing page"
-    _show_goal(pg, "@operations")
-    assert pg.locator('.arena-phead[aria-current=true]').get_attribute("data-goal") == "@operations"
     _show_goal(pg, "passkey")
     pg.locator(".arena-pnew").click()
     pg.get_by_role("dialog", name="New party").wait_for(timeout=WAIT_MS)
@@ -344,17 +339,16 @@ def test_a_plan_that_misses_someone_with_no_free_seat_offers_edit_the_party_and_
 
 # -- a stop marked once; a goal's type sign (§4.5, §4.6) -----------------------------------------------------------------------------
 
-def test_a_stop_is_marked_once_by_its_sign_and_a_goal_of_a_type_shows_its_sign(typed):
+def test_a_stop_is_marked_once_by_its_sign_and_a_goal_of_a_type_shows_none_on_its_row(typed):
     pg, host = typed
     host.node_of("recovery")["type"] = {"id": "icon", "name": "New icon", "sign": "picture"}
     host.bump({})
     row = pg.locator(".arena-goal[data-slug=recovery]")
-    row.locator(".arena-goal__type .ork-sign.picture").wait_for(timeout=WAIT_MS)
-    assert row.locator(".arena-goal__type").evaluate("e => getComputedStyle(e).color") != _alert(pg)
+    row.locator(".arena-goal__mark .ork-sign.alert").wait_for(timeout=WAIT_MS)
+    assert row.locator(".arena-goal__type").count() == 0                                                               # a goal's type has no sign on its row (spec 98 A)
     assert row.locator(".arena-goal__mark .ork-sign.alert").count() == 1
     assert row.locator(".arena-goal__main").evaluate("e => getComputedStyle(e).boxShadow") == "none"                    # no alert edge
     assert row.locator(".arena-goal__line").count() == 0 and row.inner_text().strip() == row.locator(".arena-goal__title").inner_text().strip()      # no alert words: no words but its title
-    assert pg.locator(".arena-goal[data-slug=register] .arena-goal__type .ork-sign").count() == 0                       # a goal with no type: no sign (the space is kept)
     failed = pg.locator(".arena-task[data-task=f1]")
     assert failed.evaluate("e => getComputedStyle(e).borderTopColor") == pg.evaluate(
         "(() => { const d = document.createElement('span'); d.style.color = 'var(--ork-danger)'; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; })()")
