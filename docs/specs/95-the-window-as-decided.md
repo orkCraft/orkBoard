@@ -4,7 +4,7 @@ The owner and the PM, 27 October. `docs/decisions.md` is a log: from §104 to §
 hours before (§134 changes §133, §138 changes §136, §145 turns §104.0's frame round). This spec is that log read as one
 window, with no deltas, so that a slice's spec is written from it and not from forty entries. **Builds:** nothing by
 itself; each slice's spec builds a part of it. **When a decision after §146 changes the window, this spec is changed in
-the same commit**; where it and a decision differ, the decision is right and this spec is fixed. Read up to §161.
+the same commit**; where it and a decision differ, the decision is right and this spec is fixed. Read up to §162.
 
 **What it is, and is not:** the window as it will be, each part with the decisions it rests on. Not: how it is built
 (files, tests: the slices' specs), the phone's frame (spec 94), the engine's calls beyond what the person sees.
@@ -166,7 +166,7 @@ Three places, from left to right (§160, §145.3–§145.4, §121.2, §159):
    **Save**.
 6. **A party's race is its party's; its leader is its race's higher form, grown out of the head, never worn** (§53,
    §154–§155, §158.4–§158.5): every seat wears its party's race, whatever its role's craft. Product, or a game's Game
-   design: griffins led by a unicorn knight; Tech: orks led by an ork shaman; Design, or a game's Art: elves led by an
+   design: knights led by a golden unicorn knight with an angel's wings (§162); Tech: orks led by an ork shaman; Design, or a game's Art: elves led by an
    elf dryad; Run, or a game's LiveOps: goblins led by an imp; Marketing: gnomes led by a gnome fairy; Release: a lich
    leading skeletons. Six parties, six races, so no two leaders of a project share a head; the tier is the gear
    every head wears; the crown is the Orkmaster's alone. The rest of the cast is the marketing's (§158.6).
@@ -202,7 +202,7 @@ never the action's green; six races, each leader its race's higher form (§154.3
 **The cards answer the hand as Balatro's** (§149): they lean toward the pointer, give when pressed, fly with weight
 when played, fan out when dealt, break into pixel shards when they crumble; still at rest and while read, none of it
 under reduced motion. A hand card face down shows **one back** (a pixel pattern; the deck's top back sealed with the next goal's element, §160.3). The heads are drawn on a
-12 × 11 grid as they always were, told by their faces and colours, the leaders and the griffin drawn the same way (§161); the detailed art is the marketing's.
+12 × 11 grid as they always were, told by their faces and colours, the leaders drawn the same way (§161); the detailed art is the marketing's.
 
 ## 10. Gone
 The top bar; the left column, its groups and *The whole project* row; the right column; the drawer; the dialogs; the

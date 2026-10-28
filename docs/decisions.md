@@ -3228,3 +3228,19 @@ of the heads the window had. So (this changes §148.7, §149.4 and §155.1–§1
 4. The 16 × 16 heads are not drawn by the window; a second pass at the heads, if the owner asks for one, starts from
    these.
 The owner's call.
+
+## 162. Product's party is the knights again, led by a golden unicorn knight with an angel's wings; the shaman without the war paint (28 October, the owner)
+
+Why: the owner, on orkUI 0.15.2's heads (§161): *the heads are good; the problem is the griffins.* A griffin among the
+humanoid heads reads as an animal in a row of people; the knights were Product's race before §155.4, and every other
+leader carries a mark at its sides (the shaman's horns, the dryad's antlers, the imp's wings, the fairy's wings) but the
+unicorn knight, whose horn is one spike at its brow. So (this changes §155.2 and §155.4; §158.5's table reads so):
+1. **Product's members, and a game's Game design's, are knights** (`knight`, as drawn), wearing their tier's gear as
+   every head.
+2. **Their leader is a golden unicorn knight with an angel's wings** (`unicorn`): the knight's helm in gold, one horn
+   off the visor's brow, and white feathered wings at the head's sides, so every leader carries its mark at its sides.
+   The gold is the knight's armour, never a signal's yellow (§53.5: at least 20 CIE76 from `alert` and `warning`).
+3. **The griffin is no head of the window**: it is not drawn by orkUI's office look.
+4. **The ork shaman without the war paint**: its face is the ork's, its marks its horns and braids, its skin the deeper
+   green (§155.2).
+The owner's call.

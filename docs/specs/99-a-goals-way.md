@@ -61,10 +61,10 @@ finding the cause*; *Yes*, *No, it's elsewhere*; *in line*. `TERMS` (C, §10).
    default (today's `tiers_for`), never the squad; with no checker in the squad, the leader checks. `ideas.party_price`
    answers a size's price a goal, never a squad's.
 4. **Races by party** (§158.4–§158.5; `roles.RACES` by party, `roles.head` by the seat's party): every seat wears its
-   party's race, its leader that race's higher form — Game design or Product: `griffin`, leader `knight`; Tech: `peon`,
+   party's race, its leader that race's higher form — Game design or Product: `knight`, leader `unicorn` (§162); Tech: `peon`,
    leader `shaman`; Art or Design: `elf`, leader `dryad`; LiveOps or Run: `goblin`, leader `imp`; Marketing: `gnome`,
    leader `fairy`; Release: `skeleton`, leader `lich`; the Orkmaster `peon-crown`. A role's own `race` (`library.Agent`)
-   and its craft no longer choose its head; `task_head` follows its task's party. The heads' files are orkUI 0.15.0's
+   and its craft no longer choose its head; `task_head` follows its task's party. The heads' files are orkUI 0.15.x's
    (spec 96); a race whose file is missing falls back to its members' race at the tier.
 
 ## 2. A leader's map, the project's facts (B; §156.1–§156.2, §156.7, §156.10)
