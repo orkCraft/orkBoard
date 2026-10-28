@@ -115,3 +115,13 @@ dimmed *Checks*, at most five and two seats, the leader's row and its facts, *St
 the phase marks, the dots, no import of the old form. The critical tests (`tests/test_architecture.py`,
 `tests/test_board_alone.py`, `tests/test_updates.py`), `tests/test_gui_wording.py`, `tests/test_design_system.py` and
 each part's browser tests.
+
+## As built (A)
+
+`hand/routecard.js` (`way("route")`: the sign `after`, the Orkmaster's crowned head, the gem by `price`; lifted: the leaders' heads in order with
+their ×, a head's `SeatPop` in place, **+** of the parties off the route but Release (the offered first, *touches its map*), the route in words,
+the cost's gem and words, *n-th in line*, **Talk**, **Later, by itself** when `low` (`ideas.route_later`), an edit by `ideas.route_set` said again
+from its answer; a short one's two cards, **Start** by `ideas.route_start`, *The long way* by `ideas.talk`); `hand/startcard.js` (`way("start")`:
+the new cost, the old struck, **Start**); `hand/way.css`. The seam grew: `hand/cost.js` asks a way's `price`, `stopcard.js` a way's `head`.
+**Left (E):** the label words *route* and *start* in `KIND_WORD`; the route row carries no goal type, so a short goal that is no bug is worded as
+one (the row's `type` to add); a party added by **+** goes last.
