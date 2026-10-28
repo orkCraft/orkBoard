@@ -159,3 +159,20 @@ the size's three with their lines and prices, the leader's row with its own name
 under Lean), a made seat's popover; the foot's price and **Start** (`ideas.goal_save` each, then `ideas.project_ask`) or **Save** (what changed).
 **Left:** the facts kept for a party (no host command reads or changes them: `ideas.project_facts` proposed, drawn only when answered); the kind's
 correction; `table/seatpop.js` says a race word (*Novice ork*) against spec 100 §0; E opens it from the tabs' + and a party's *Edit*.
+
+## As built (C)
+
+`hand/decisioncard.js` (`way("decision")`: the sign `page`, the Orkmaster's head, *Decision <n>* at its foot, no gem; lifted: *Why*, the numbered
+points, **Edit** (the entry as a field, sent as `text` only when changed), **Confirm and start**; after a failed confirm the error and the button
+asking the sections again); `hand/forkcard.js` (`way("fork")`: the sign `question`, the first side's leader's head; lifted, the sides dealt by
+`Choose` (`chooseFor("fork")`), each its leader's head, what it says, its why, its party; **Other…** as `text`; the next fork in its place) with the
+goal's *Spec* page beside them; `table/specpage.js` (kind `spec`, `ideas.page`: the common part, a section a party with its head, *Done when* left,
+*Will be* right; the sides' sections lit, and their lines sharing the side's words). The seam grew: a way's `foot`, a choice's own `by`.
+**Left:** the fork's face carries one head; the page's *Will be* reader is a port of `realm/spec_sections.py` (change both together); a hint
+under the fork's banner (*The side you pick stands; the other leaders write their sections again*) said here.
+
+## As built (F)
+
+The route row's `type` (the goal's type id); `gui/ideas_facts.py`: `ideas.project_facts {party}`, `ideas.project_fact_set {party, key, text}`
+(empty drops), `ideas.project_kind_set {kind}` (kept in `project.json`, read first by `project_kind.read_full`, reaching the stage and the
+proposals), `ideas.talk_read {idea}` (the Talk kept: stances, questions with their state, the cause). Wired by the lead.
