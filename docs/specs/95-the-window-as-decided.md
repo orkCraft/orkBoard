@@ -28,11 +28,12 @@ the same commit**; where it and a decision differ, the decision is right and thi
 3. **At the tabs' end**: **+** (*New party*), the AI tools' limits as chips (a press: what used them, §107.1) and **Stop
    all** (§126.1).
 4. **A tab is its column's head on the Board** (§143): while the Board is shown the tabs take their columns' widths.
-5. **A party's header is its name and its squad** (§134.3): a seat each (*Leads*, *Does*, *Checks*, at most three), the
-   member's head with its tier's gear, its AI tool under it, turned while it works; an empty seat a ghost (*+ Checker*).
+5. **A party's header is its name, its squad and its size** (§134.3, §151.3): the squad's heads at 24 px grouped
+   *Leads* | *Does* | *Checks* (at most seven), each with its tier's gear and its AI tool's mark, turned while it works;
+   the size in one word beside them.
    A head pressed opens its popover (§110.7): its role, what the party does, its AI tool, its tier and what it costs,
-   *From the next task*, *Set* with *Undo*, *Take off the seat*, the role's text (§136.11). A party's menu (**…**):
-   change the leader, remove the party (§97, as a card in the hand, §127.1).
+   *From the next task*, *Set* with *Undo*, *Take off the seat*, the role's text (§136.11), **Open its view** (§151.4).
+   A party's menu (**…**): *Edit* (§151.5), change the leader, remove the party (§97, as a card in the hand, §127.1).
 
 ## 3. The pane: one map a tab
 1. **Every tab shows one map** (§134.2, §135.1); no segmented control. The maps:
@@ -130,13 +131,22 @@ From left to right (§145.3–§145.4, §121.2, §137.5):
    fix for production); **Release a version** is the goal *A release*, its cost said before. The gate's checks run on it.
 
 ## 6. Parties
-1. **One craft, one map** (§109.1). A game: Game design, Tech, Art, Release, LiveOps. An app or a site: Product,
-   Design, Tech, Release, Run. **Release is in every project** and cannot be removed (§137.1); General, Team and
-   Ideation are no parties (§122).
+1. **One craft, one map** (§109.1). A game: Game design, Tech, Art, Release, LiveOps, Marketing. An app or a site:
+   Product, Design, Tech, Release, Run, Marketing. **Release is in every project** and cannot be removed (§137.1);
+   **Marketing** comes at *Live*, led by Growth, with ASO and UA (§151.7–§151.8); General, Team and Ideation are no
+   parties (§122). Marketing's map is the way people come: the channels → the store page or the site → the install →
+   the first session.
 2. **The project's stage chooses the crafts** (§122.5): *Idea*, *Being made*, *Live*.
-3. **A party's size is its seats** (§104.1): **Lean** the leader alone, **Standard** the leader and its builder,
-   **Full** the leader, its builder and its checker.
-4. **New party** opens over the pane: the crafts the stage needs, each ticked with its size and squad (§116.1, §127.1).
+3. **The squad is who the party has; the size is how the work goes** (§151.1–§151.2): the squad the specialists
+   picked from the craft's cards (at most seven: a leader, up to five who do, up to two who check), a task given to the
+   one it is for; the size **Lean** (plan → do, one at once), **Standard** (plan → do → one check, two at once) or
+   **Full** (plan → do → every checker it concerns, three at once), its cost said on it. Release: its leader, Lean.
+4. **A specialist's view is marks on its party's map** (§151.4): its head and the alert on the cards it speaks of;
+   **Open its view** from its popover opens the whole of it over the pane. Never a tab or a switch.
+5. **One place makes and edits the parties** (§151.5), over the pane: at the left the project's kind and the parties
+   under the stages' headings (the project's stage picked on its heading, Release locked); at the right the size, the
+   leader's row, **Does** (a sword) and **Checks** (a shield) of role cards; at the foot the cost and **Start** or
+   **Save**.
 
 ## 7. The first start
 §132, §145.8: the AI tools found and their *Check* (`gui/onboarding.py`); then the Orkmaster's tab alone: *Open a

@@ -2831,3 +2831,68 @@ half the 390 px above the keyboard. So (this makes spec 94 §3.1 and §6 precise
    phone on its side shows it.
 6. **When**: with the phone's one page (§128, spec 94), after the first slice.
 The owner's call.
+
+## 151. A party's squad is who it has, its size how the work goes; a specialist's view is marks on its party's map; one place makes and edits the parties; Marketing comes back with UA (28 October, the owner and the PM)
+
+Why: the owner asked to bring the lenses back as the squad's members' (an ASO and a UA specialist in marketing, an
+accessibility check beside a designer). As tabs or screens a member that would be §134.2's segmented control again, and
+the window would grow with the squad; as marks on the one map it is not. And the library already has the specialists
+(`realm/library.py`: an Art director's Artist, Animator, Icon artist, Sound designer, Composer and Art reviewer; Tech's
+Grunt, Tester, Reviewer and Security reviewer), more than §104.1's three seats (one a stage) hold, while a specialist
+idle costs nothing: what a party spends is how many of its tasks run at once and how many stages each goes through. A
+squad chosen by its cards is what the person understands (no Composer, no music); the size is what it costs. Marketing
+was no party since §109.1 though its specialists are in the library, and UA is not. So (this changes §98, §104.1,
+§107.5–§107.6, §110.6, §116.1, §127.1, §137.1 and §122.5; made with spec 95):
+1. **The squad is who the party has**: the specialists the person picks from its craft's cards, at most seven (its
+   leader, up to five who do, up to two who check). The leader gives each task to the one it is for (the music to the
+   Composer) and each check to the checker it concerns; a task no one in the squad can do is said in *Talk* (*No
+   composer in the squad*), never given to someone else.
+2. **The size is how the work goes**, apart from the squad:
+
+   | size | a task's stages | at once | |
+   |---|---|---|---|
+   | **Lean** | plan → do | 1 | no separate check: the doer runs its own tests |
+   | **Standard** | plan → do → check | 2 | one checker checks each task |
+   | **Full** | plan → do → check by every checker it concerns | 3 | the Reviewer and Security on code, Accessibility on screens |
+
+   With no checker in the squad, the leader checks, said plainly. The cost is said on the size (*about 3% of Claude's
+   week a goal*), never on the squad. A size sets the seats' tiers by default; each is changed in its popover (§110.7).
+   When the limits run low the Orkmaster lowers *at once* by itself and says so.
+3. **A party's header**: its squad's heads at 24 px grouped *Leads* | *Does* | *Checks*, turned while they work, and its
+   size in one word beside them.
+4. **A specialist's view is marks on its party's map**, never a tab, a screen or a switch: the specialist's small head
+   and, when something is wrong, the alert on the cards it has something to say about; the lifted card's back lists what
+   each said; **Open its view** in its popover opens its whole view over the pane (§142): Accessibility's report by
+   screen, ASO's store page, Security's parts at risk, the Tester's cover on System's parts. A specialist with nothing to
+   read in the project works with no view until there is (§112.9).
+5. **One place makes and edits the parties**, over the pane (§142), from the first start (§116.1), the tabs' **+** and a
+   party's **…** (*Edit*):
+   - **at the left**, the project's kind as a list read from the project (*Read from the project: a Node game*, to be
+     corrected), and under it the parties, **under the project's stages as their headings** (*Idea*, *Being made*,
+     *Live*); the stage the project is at is picked on its heading (*The project is here*), and the parties of the
+     stages reached come ticked. A party is ticked or unticked, and pressed it opens at the right. **Release** is ticked
+     and locked (*the one way into main*, §137.1);
+   - **at the right**, the size (*Lean · Standard · Full*) with what it means and costs at its left; under it the
+     leader's row (its head, its name, its map in one line, *Map: System, the code's containers and their links*, its AI
+     tool and tier); under it two columns, **Does** under a sword and **Checks** under a shield, of the craft's role cards
+     (a head, a name, its tool's mark, its tier's gear), each ticked or not, a press opening the same popover as the
+     header's (§110.7). The size shows on the columns: under **Lean** *Checks* is dimmed (*No separate check: the doer
+     runs its own tests*), under **Standard** *One checker checks each task*, under **Full** *Every checker a task
+     concerns*;
+   - **at its foot**, what the ticked parties cost together (*These parties: about 9% of Claude's week a goal*) and one
+     **Start** (the first time) or **Save**: *From the next task*, a task at work finishing as it was.
+   At the narrow width the left is a screen and the right the next. *New party* and *Edit the party* are this one place.
+6. **Release's squad** is its leader, its size **Lean**, its tier the cheaper (§137.1 said so).
+7. **Marketing comes back as a party**, offered at the *Live* stage (§122.5): led by **Growth**; its squad from **ASO**,
+   **UA**, **Copywriter**, **SEO** and **Community**, checked by the **Editor**. **ASO is Marketing's**: Release keeps
+   the version (its engineer, its notes, its checker); a project with no Marketing may put ASO in Release's squad.
+   **Marketing's map is the way people come**: the channels → the store page or the site → the install → the first
+   session, UA's on the channels, ASO's on the store page, read from what the project holds (a store's metadata files,
+   such as `fastlane/metadata`; the site's pages; the analytics when there are), else waiting (§112.9).
+8. **UA joins the library**: *Buys the installs: the campaigns, the networks, what an install costs*, a gnome (§53:
+   a gnome markets); its view reads the ad networks once they are connected, until then it works with none.
+9. **The sword and the shield** are drawn in orkUI on the signs' grid (§148.3), as the columns' marks, not as signs of a
+   state (§127.3).
+10. **When**: the squad, the size and the one place of the parties with the first slice (its parties, §136.12);
+   the specialists' views with the other maps after it; Marketing and UA in the library and the recipes at any time.
+The owner's call.
