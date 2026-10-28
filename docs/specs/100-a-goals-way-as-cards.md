@@ -28,7 +28,9 @@ line*; *Other…*; *Let <leader> decide*; *Yes*, *No, it's elsewhere*; *Confirm 
 disagree*; *Pick an answer: the leader writes it into the spec* (once, under the first card with answers; on the
 project's questions *the leader keeps it for the project*); *Read from the project: <kind>*; *The project is here*;
 *the one way into main*; *Lean*, *Standard*, *Full* and each one's line; *Does*, *Checks*; *These parties: about n% of
-<tool>'s week a goal*; *Start* (the first time), *Save*. No word of a race; a party says its name, a seat its role.
+<tool>'s week a goal*; *Start* (the first time), *Save*. No word of a race but the leaders' names of §164 (*Angel Invest Knight*, *Dungeon Master Knight*, *Sh.man*, *Pixel-Perfect
+Dryad*, *Sprite Dryad*, *Uptime Imp*, *Event Imp*, *Growth Hack Gnome*, *Release Night King*), said only on the leader's
+row of the one place of the parties; elsewhere a party says its name, a seat its role.
 
 ## 1. The route card (A; §133.1, §136.2, §140.2–§140.3, §147.4, §156.6, §158.2)
 The `route` row is a card of the goal's stack (spec 98 §4.2): its face the goal's element and name, its leader's head,
@@ -74,7 +76,7 @@ Over the pane (`parties`), from the first start, the tabs' **+** and a party's *
   the stages reached ticked; **Release** under *In every project*, ticked and locked (*the one way into main*); each
   party a row with its leader's head (its party's race, §158.5), ticked or not, pressed to open it at the right;
 - **at the right**, the size (*Lean · Standard · Full*, each with its line and its price a goal, `ideas.party_price`),
-  the leader's row (its head, its role, *Map: <its map in one line>*, its AI tool's mark in ink and its tier), then two
+  the leader's row (its head, its name of its own beside its role, §164: *Sh.man · Architect*, *Map: <its map in one line>*, its AI tool's mark in ink and its tier), then two
   columns, **Does** under orkUI's sword and **Checks** under its shield, of the craft's role cards (head, role, tool's
   mark, tier's gear), each ticked or not (at most five *Does*, two *Checks*), a press opening the seat's popover (spec
   98 §3.4); under *Lean* the *Checks* column dimmed (*No separate check: the doer runs its own tests*), under *Standard*

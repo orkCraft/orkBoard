@@ -3260,3 +3260,18 @@ A. So (this makes §115, §148.1 and §149.3 precise):
    as 0.12.0 did), the card's chroma below every element's (its greyness is no signal).
 3. In orkUI's 0.15.x, with §162's heads, then copied here once (spec 96).
 The owner's call.
+
+## 164. The leaders have names of their own, said only where a party is made and edited (28 October, the owner)
+
+Why: the owner: the leaders' higher forms (§155, §162) are characters; a name of their own gives each a little life where
+the person chooses its party, without noise where the work is read. §154.4 and §158.7 say a role's name and never a race
+in the interface; these names are the one place where a race's word is said. So (this makes §151.5 precise and is the
+one exception to §154.4 and §158.7):
+1. **The names**: the Orkmaster stays *Orkmaster*; Product's leader *Angel Invest Knight*, a game's Game design's
+   *Dungeon Master Knight*; Tech's *Sh.man*; Design's *Pixel-Perfect Dryad*, a game's Art's *Sprite Dryad*; Run's *Uptime
+   Imp*, a game's LiveOps' *Event Imp*; Marketing's *Growth Hack Gnome*; Release's *Release Night King*.
+2. **Said only in the one place of the parties** (§151.5), on the leader's row of the party picked at the right, beside
+   its role (*Sh.man · Architect*). Everywhere else (the tabs, the cards, the popovers, the words of the cards) a leader
+   is its role, as before.
+3. They are words of the interface, written where the face writes them; code, keys and files keep their names.
+The owner's call.

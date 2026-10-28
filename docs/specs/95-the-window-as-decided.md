@@ -4,7 +4,7 @@ The owner and the PM, 27 October. `docs/decisions.md` is a log: from §104 to §
 hours before (§134 changes §133, §138 changes §136, §145 turns §104.0's frame round). This spec is that log read as one
 window, with no deltas, so that a slice's spec is written from it and not from forty entries. **Builds:** nothing by
 itself; each slice's spec builds a part of it. **When a decision after §146 changes the window, this spec is changed in
-the same commit**; where it and a decision differ, the decision is right and this spec is fixed. Read up to §163.
+the same commit**; where it and a decision differ, the decision is right and this spec is fixed. Read up to §164.
 
 **What it is, and is not:** the window as it will be, each part with the decisions it rests on. Not: how it is built
 (files, tests: the slices' specs), the phone's frame (spec 94), the engine's calls beyond what the person sees.
@@ -161,7 +161,7 @@ Three places, from left to right (§160, §145.3–§145.4, §121.2, §159):
    **Open its view** from its popover opens the whole of it over the pane. Never a tab or a switch.
 5. **One place makes and edits the parties** (§151.5), over the pane: at the left the project's kind and the parties
    under the stages' headings (the project's stage picked on its heading, Release locked); at the right the size, the
-   leader's row, **Does** (a sword) and **Checks** (a shield) of role cards; under the leader's row what it keeps of
+   leader's row (its name of its own, §164, beside its role), **Does** (a sword) and **Checks** (a shield) of role cards; under the leader's row what it keeps of
    the project, its answers read and changed from the next goal (§153.4); at the foot the cost and **Start** or
    **Save**.
 6. **A party's race is its party's; its leader is its race's higher form, grown out of the head, never worn** (§53,
