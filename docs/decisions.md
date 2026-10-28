@@ -2983,10 +2983,50 @@ of what is out. So (this changes §148.8 and makes §53 precise):
    the party, the lich who leads it. A role of Release's put in another party wears its craft's race there.
 3. **Orkboard draws six races** (§148.8 changed): the ork, the elf, the goblin, the gnome, the knight and the undead
    (the lich and the skeleton); orkUI's copy keeps all three heads at every tier (they are there today), drawn anew on
-   §149.4's 16 grid with the others, each read by its silhouette (the knight's helm and plume, the lich's crowned skull
-   and hood, the skeleton's bare skull), never by colour (§53.5).
+   §149.4's 16 grid with the others, each read by its silhouette (the knight's helm, the lich's sunken face and jaw, never a
+   crown: the crown is the Orkmaster's alone; the skeleton's bare skull), never by colour (§53.5).
 4. **The words**: CLAUDE.md's *an agent's craft is its race* gains *a knight leads the product, the undead release it*;
    the races' names stay code (`knight`, `lich`, `skeleton`), the interface says a role's name, never its race.
 5. **When**: with §148's orkUI release (0.15.0) for the heads; `RACES` and the library's races with the first slice's
    parties (§136.12).
+The owner's call.
+
+## 155. A party's leader is its race's higher form, grown, not worn: the tier is what a head wears, the leader what grows out of it; Product's members are griffins (28 October, the owner and the PM)
+
+Why: the owner liked Release's lich and skeletons (§154.2) and asked for the same in every party, so its leader stands
+out by its silhouette. On a 16 px head (§148.7, §149.4) the tier is already the gear on top (the laborer's cap, the
+warrior's helm, the elder's hood); a leader marked by another hat would merge with it. The lich and the skeleton work
+because the creature changes, not the hat. Kept within the races of §154.3 (no new people beside them), the crown the
+Orkmaster's alone, colour a signal (§53.5). So (this changes §154.1 and §154.3, and makes §53 and §149.4 precise):
+1. **The tier is what a head wears; the leader is what grows out of it.** A party's leader (its *Leads* seat, §151.1)
+   is drawn as its race's higher form; its mark grows **outside the gear's outline** (at the sides, from the temples,
+   off the brow), never under or in place of the tier's gear, which the leader wears as every head (§53).
+2. **The leaders and their parties**:
+
+   | party | its members | its leader | the leader's mark |
+   |---|---|---|---|
+   | Tech | orks | **an ork shaman** | ram's horns curling down at the sides, braids with bone beads; war paint under the eyes; its skin a deeper green than the orks' |
+   | Design | elves | **an elf dryad** | a stag's antlers rising from the temples, framing the gear |
+   | Data | goblins | **an imp** | a goblin with small horns and small dark bat's wings low behind the ears; its skin a dark red-brown |
+   | Marketing | gnomes | **a gnome fairy** | the bearded gnome with large light round wings rising over the shoulders |
+   | Product | **griffins** | **a unicorn knight** | the knight's helm with a unicorn's horn off the visor's brow, slanting out of the gear's outline |
+   | Release | skeletons | **a lich** | as it is (§154.2) |
+
+   The Orkmaster stays the crowned ork (`peon-crown`), above every party.
+3. **Kept apart on 16 px**: the shaman's horns curl down, the dryad's antlers branch up, the imp's horns are a small
+   pair, the knight's horn is one slanting spike, so four marks of the head never read as one; the imp's wings are small,
+   dark and low, the fairy's large, light and high. **The silhouette carries the leader**: the war paint, the shaman's
+   green and the imp's red-brown are accents (§149.4: never by small coloured details). The imp's red-brown is lava's
+   warm red-brown (§148.5), never the danger's red; the shaman's green deeper and darker than the orks', never the
+   action's green (§148.6).
+4. **Product's members are griffins** (§154.1 changed): a beak and a feathered crest, no horn, so the horn is the
+   leader's alone; the knight is Product's leader only. A griffin reads at 16 px where a horse's head from the front
+   does not.
+5. **The names stay code** (§154.4): `shaman`, `dryad`, `imp`, `fairy`, `griffin`, beside `peon`, `elf`, `goblin`,
+   `gnome`, `knight` (drawn with the horn), `lich`, `skeleton`; the interface says a role's name, never its race.
+   CLAUDE.md's line on the races says it.
+6. **Made in orkUI first** (CLAUDE.md): the six leaders drawn first at 16 px in one row, read side by side and without
+   colour, before their tiers are drawn; then every head of every tier at 1x and @2x.
+7. **When**: with §148's orkUI release (0.15.0), the heads redrawn on the 16 grid with the others (§149.4); the roles'
+   races (`realm/roles.py` `RACES`, the leader's form by its seat) with the first slice's parties (§136.12).
 The owner's call.

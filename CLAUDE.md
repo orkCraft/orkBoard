@@ -58,7 +58,8 @@ other way round**: nothing here imports Orkline's package (`orkcraft`).
   here; a change to the look is made in orkUI, then copied (`python -m orkboard.design.orkui <orkUI>`). Orkboard's sheets
   read orkUI's tokens and carry no colour, font or corner of their own (`tests/test_design_system.py`).
 - **An agent's craft is its race** (decisions §53): an ork engineers, an elf designs, a goblin minds the data, a gnome
-  markets, a knight leads the product, the undead release it (a lich leads Release, skeletons are its hands, decisions §154);
+  markets, a griffin makes the product, a skeleton releases it; a party's leader is its race's higher form, its mark grown
+  out of the head (an ork shaman, an elf dryad, an imp, a gnome fairy, a unicorn knight, a lich: decisions §154, §155);
   its tier is the gear on its head. Taskmaster and the Grunts are orks.
 - **The licence is Apache-2.0** (decisions §96), the extension's too; the names and the ork mark are not licensed
   (`NOTICE`). A file copied from another project comes unchanged, its licence beside it and a line in `NOTICE`
