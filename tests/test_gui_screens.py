@@ -46,9 +46,7 @@ def host(fake_repo) -> Orkboard:
     git(fake_repo, "checkout", "-q", "-b", "dev")
     commit(fake_repo, APP)
     h = Orkboard(fake_repo)
-    if not isinstance(h.ideas, ScreensMixin):                                # wired by the lead: the host's bases and its table
-        h.ideas.__class__ = type("IdeasWithScreens", (ScreensMixin, type(h.ideas)), {})
-        h.commands.update(screens_commands(h.ideas))
+    assert isinstance(h.ideas, ScreensMixin) and set(screens_commands(h.ideas)) <= set(h.commands)      # wired: the host's bases and its table
     yield h
     sys.modules.pop("orkboard.core.idea_runner", None)
 
@@ -105,8 +103,6 @@ def test_a_pin_is_refused_for_a_pain_or_a_screen_that_is_gone_in_plain_words(hos
 def test_a_project_with_no_screen_answers_none_and_no_pin_holds(fake_repo):
     git(fake_repo, "checkout", "-q", "-b", "dev")
     h = Orkboard(fake_repo)
-    h.ideas.__class__ = type("IdeasWithScreens", (ScreensMixin, type(h.ideas)), {})
-    h.commands.update(screens_commands(h.ideas))
     got = h.command("ideas.screens", {})
     assert got["screens"] == [] and got["links"] == [] and got["steps"] == [] and got["entry"] == "" and got["segments"] == []
     idea_lens.keep_segment(h.ideas.state_dir, "Shop owners", "Orders get lost")

@@ -114,7 +114,9 @@ def test_each_craft_has_its_map_as_text(game):
     assert map_text.of("art", state(game), game) == art_map.text(state(game), game)
     assert map_text.of("release", state(game), game) == release_map.text(state(game), game)
     assert map_text.of("marketing", state(game), game) == way_map.text(state(game), game)
-    assert all(map_text.of(p, state(game), game) is None for p in ("design", "product", "nobody"))          # Design's and Product's with spec 102 A
+    from orkboard.realm import screen_map
+    assert map_text.of("design", state(game), game) == map_text.of("product", state(game), game) == screen_map.text(state(game), game)
+    assert map_text.of("nobody", state(game), game) is None
 
 
 # -- §2.1 changed since the party's last call ------------------------------------------------------------------------------------------
