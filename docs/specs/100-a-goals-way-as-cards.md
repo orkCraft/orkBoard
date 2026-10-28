@@ -103,6 +103,19 @@ over the pane; the pane's title carries the picked goal's phase marks *Talk · S
 marked, a past one opened by a press (§126.4); the route's dots on the tabs. Today's party form (`goalwizard.js` and its
 modules) goes once nothing imports it: *New party* and *Edit* are D's.
 
+## 5b. The host's few (F; found by A, B, D)
+| part | builds | files (and their tests) |
+|---|---|---|
+| **F. The host's few** | §5b | `realm/goal_route.py` (the route row's `type`), new `gui/ideas_facts.py` (wired by the lead), `realm/project_facts.py`, `realm/project_kind.py` (the kind kept), `core/idea_talk.py` or `realm/idea_questions.py` (the talk read); `tests/test_goal_route.py`, new `tests/test_gui_facts.py`, `tests/test_project_facts.py`, `tests/test_project_kind.py` |
+
+1. **The route row carries the goal's type** (`type`: `bug`, `tidy`, `balance`, …), so a short goal that is no bug is worded as its own.
+2. **`ideas.project_facts {party}`** → `{facts: [{key, text, by}]}` (the facts kept for that party's calls, `project_facts.for_call`'s
+   source), and **`ideas.project_fact_set {party, key, text}`** (*From the next goal*; an empty text drops it).
+3. **`ideas.project_kind_set {kind}`**: the person's correction of the kind read from the project, kept in `project.json` (`kind`), read
+   before the files from then on (`project_kind.read_full` honours it).
+4. **`ideas.talk_read {idea}`** → the goal's Talk as kept (`talk.json`/`talk.jsonl`: each leader's stance, its for and against, its
+   questions), for the stances' *More*.
+
 ## 6. Tests
 Each at both widths (`tests/narrow.py`) against a stub host answering spec 99's rows and commands. A: the route card's
 face and lifted state, a head's × and its popover, **+** with no Release and the offered parties first, the cost said
