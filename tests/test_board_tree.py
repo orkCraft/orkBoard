@@ -173,6 +173,37 @@ def test_the_host_says_board_held_when_the_person_has_changes_in_those_files(fak
     assert "uncommitted" in e["why"]
 
 
+def test_a_file_of_the_project_is_edited_under_the_lock_and_committed_with_the_pages_in_one_commit(repo):
+    """Spec 99 E §6.2: a goal's decision is the project's decisions file, edited as the work branch holds it and committed with the Board's pages, nothing else of the tree."""
+    t = _tree(repo)
+    _page(t, "a.md")
+    (t.path / "stray.txt").write_text("not a page\n")
+    seen = []
+    got = t.edit_file("docs/decisions.md", lambda old: seen.append(old) or "# Decisions\n\n## 1. One\n", lambda: "board: decision 1 — One")
+    assert seen == [""] and got["commit"] and got["held"] == "" and git(repo, "rev-parse", "dev") == got["commit"]
+    assert git(repo, "show", "--name-only", "--format=%an|%s", "dev").splitlines() == ["Orkline board|board: decision 1 — One", "", "docs/decisions.md", f"{WIKI}/pages/ideas/a.md"]
+    assert not (repo / "docs").exists() and (t.path / "stray.txt").exists()                      # the person's tree is not touched; a stray file is not taken
+    got = t.edit_file("docs/decisions.md", lambda old: old + "\n## 2. Two\n", "board: decision 2")
+    assert git(repo, "show", "dev:docs/decisions.md").endswith("## 2. Two") and git(repo, "log", "-1", "--format=%s", "dev") == "board: decision 2" and got["held"] == ""
+
+
+def test_the_files_edit_reads_the_branch_as_it_moved_and_refuses_a_path_outside_the_project(repo):
+    t = _tree(repo)
+    other = repo.parent / "other"
+    git(repo, "worktree", "add", "-q", "--detach", str(other), "dev")
+    (other / "docs").mkdir()
+    (other / "docs" / "decisions.md").write_text("# Decisions\n\n## 5. Five\n")
+    git(other, "add", "-A")
+    git(other, "-c", "user.name=T", "-c", "user.email=t@x", "commit", "-qm", "five")
+    git(repo, "branch", "-f", "dev", git(other, "rev-parse", "HEAD"))                          # dev moved under the tree (a task landed)
+    seen = []
+    t.edit_file("docs/decisions.md", lambda old: seen.append(old) or old + "\n## 6. Six\n", "board: decision 6")
+    assert seen == ["# Decisions\n\n## 5. Five\n"] and git(repo, "show", "dev:docs/decisions.md").endswith("## 6. Six")
+    for bad in ("../outside.md", "/etc/passwd", "."):
+        with pytest.raises(RuntimeError, match="outside the project"):
+            t.edit_file(bad, lambda old: "x", "no")
+
+
 def test_the_clock_alone_makes_no_tree_and_no_branch(fake_repo):
     host = Orkboard(fake_repo)
     host.ideas.keeper._tick_at = float("-inf")

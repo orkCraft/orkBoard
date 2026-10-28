@@ -233,3 +233,18 @@ def test_talks_steps_are_the_cheaper_tier_the_rounds_with_no_tools_and_no_reads_
     assert idea_target.CONTEXT["talk_round"] >= 5_000 and idea_target.CONTEXT["diagnose"] >= idea_target.CONTEXT["talk_round"]       # a map's text (3,000) and the facts fit
     assert idea_target.CAPS["talk_round"] <= idea_target.CAPS["diagnose"] <= 0.25
     assert idea_target.budget("talk_round", "balance") == 0.15 and idea_target.budget("diagnose", "balance") == 0.2        # never under 1.5 floors (a warrior's call costs $0.10)
+
+
+def test_the_decision_and_the_sections_steps_the_orkmasters_on_the_cheaper_tier_and_the_leaders_reading_a_few_files():
+    """Spec 99 §6–§7: `decide` and `join` are the Orkmaster's (the cheaper tier, no reads); `section_first` is the first step's leader on its party's tier as the draft is, `section` the
+    others' on the cheaper one; both read as many files as the draft does."""
+    for step in ("decide", "section_first", "section", "join"):
+        assert step in idea_target.STEPS and step in idea_target.MATRIX and step in idea_target.CONTEXT and step in idea_target.READS and step in idea_target.CAPS
+    for target in idea_target.TARGETS:
+        assert idea_target.pick("decide", target) == idea_target.pick("join", target) == idea_target.pick("route", target)
+        assert idea_target.pick("section_first", target) == idea_target.pick("draft", target)
+        assert idea_target.pick("section", target) == idea_target.pick("diagnose", target) and idea_target.tier_of(idea_target.pick("section", target)[0]) != "elder"
+    assert idea_target.READS["decide"] == idea_target.READS["join"] == 0 and idea_target.READS["section"] == idea_target.READS["section_first"] == idea_target.READS["draft"]
+    assert idea_target.CONTEXT["section"] >= idea_target.CONTEXT["decide"] and idea_target.budget("section_first", "balance") >= idea_target.budget("section", "balance")
+    from orkboard.realm import idea_spend
+    assert all(idea_spend.STEP_STAGE[s] == "spec" for s in ("decide", "section_first", "section", "join"))

@@ -17,7 +17,7 @@ from __future__ import annotations
 import subprocess
 from pathlib import Path
 
-from orkboard.realm import ideas, project_map
+from orkboard.realm import ideas, project_map, spec_sections
 
 REF = "dev"
 LIMIT = 3000                     # the map's text, at most (the changes after it have their own bound)
@@ -172,9 +172,27 @@ def _goal(slug: str, pages: Path | None, cache: dict[str, str]) -> str:
     return cache[slug]
 
 
+WHO = {"person": "the person", "leader": "the leader", "member": "a member alone"}
+
+
+def _by(slug: str, part: str, pages: Path | None, cache: dict[str, object]) -> str:
+    """*, decided by the person* · *the leader* · *a member alone* (decisions §112.6; spec 99 §7.4): read from the goal's sections, whose *Will be* names the part, and the forks the
+    person answered (`spec_sections.decided_by`). Nothing for a person's own commit or a goal whose page is of before (it has no *Will be*)."""
+    if not slug or pages is None:
+        return ""
+    if slug not in cache:
+        try:
+            cache[slug] = ideas.idea_page(Path(pages), slug)
+        except (OSError, ValueError):
+            cache[slug] = None
+    page = cache[slug]
+    who = WHO.get(spec_sections.decided_by(page, part)) if page is not None else None
+    return f", decided by {who}" if who else ""
+
+
 def _changed(state_dir: Path, root: Path, since: str, pages: Path | None) -> str:
     """*Changed since your last call*: each part new, changed or gone and each use new or gone, with the goal that made it (`by you` for the
-    person's own). Who decided it is not read: nothing stored says (spec 99 §2.1, decisions §112.6)."""
+    person's own) and who decided it (spec 99 §7.4: `_by`, once a goal's section has its *Will be*)."""
     head = "Changed since your last call"
     try:
         got = project_map.changed(state_dir, Path(root), since, REF)
@@ -183,10 +201,11 @@ def _changed(state_dir: Path, root: Path, since: str, pages: Path | None) -> str
     if not got["since"]:
         return f"{head}: not known (no map was kept at that commit)."
     cache: dict[str, str] = {}
+    seen: dict[str, object] = {}
     order = {"new": 0, "changed": 1, "gone": 2}
-    rows = [f"- {c['kind']} part {p} ({_goal(c['goal'], pages, cache)})"
+    rows = [f"- {c['kind']} part {p} ({_goal(c['goal'], pages, cache)}{_by(c['goal'], p, pages, seen)})"
             for p, c in sorted(got["parts"].items(), key=lambda kv: (order.get(kv[1]["kind"], 3), kv[0]))]
-    rows += [f"- {u['kind']} use {u['from']} to {u['to']} ({_goal(u['goal'], pages, cache)})"
+    rows += [f"- {u['kind']} use {u['from']} to {u['to']} ({_goal(u['goal'], pages, cache)}{_by(u['goal'], u['from'], pages, seen)})"
              for u in sorted(got["uses"], key=lambda u: (u["kind"] != "new", u["from"], u["to"]))]
     if not rows:
         return f"{head}: nothing."

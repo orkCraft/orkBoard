@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
-from orkboard.realm import board_map, event_log, goal_team, idea_change, idea_questions, idea_spend, ideas, library, map_party
+from orkboard.realm import board_map, event_log, goal_team, idea_change, idea_questions, idea_spend, ideas, library, map_party, spec_sections
 
 
 @pytest.fixture
@@ -671,6 +671,33 @@ def test_the_route_and_start_rows_are_needs_you_of_a_goal_on_its_way_and_a_node_
     rows = {r["kind"]: r for r in host.command("ideas.board")["needs_you"] if r["idea"] in (a, b)}
     assert rows["route"]["place"] == 1 and rows["start"]["was"] == {"calls": 4, "usd_low": 1.0, "usd_high": 3.0} and rows["start"]["cost"]["calls"] > 0
     assert [r["state"] for r in host.command("ideas.board")["ideas"] if r["slug"] == c] == ["decided"]
+
+
+def test_the_decision_and_fork_rows_are_the_wording_to_confirm_and_the_first_disagreement_open_and_a_node_names_them(host):
+    """Spec 99 §6–§7: `decision` {number, title, text, confirmed, error} on a goal `decided`; `fork` {id, about, sides} on a goal at `sections` while one is open."""
+    root, state = _board(host)
+    g = _goal(root, "Way")
+    assert board_map.NEEDS[:6] == ("route", "start", "talk", "cause", "decision", "fork")
+    route = [{"party": g, "leader": "taskmaster"}]
+    a = _idea(root, state, g, "Decided", "decided", route=route)
+    b = _idea(root, state, g, "Forked", "sections", route=route)
+    c = _idea(root, state, g, "Writing", "sections", route=route)
+    d = _idea(root, state, g, "Being worded", "decided", route=route)
+    sides = [{"party": g, "leader": "architect", "says": "Ten waves", "why": "the pace"}, {"party": "art", "leader": "artist", "says": "Six waves", "why": "the budget"}]
+    spec_sections.save_record(state, a, {"decision": {"title": "Dark mode", "text": "Why: x.\n\n1. One", "number": 12, "confirmed": False}})
+    spec_sections.save_record(state, b, {"forks": [{"id": "f1", "about": "Done", "sides": sides, "status": "answered"}, {"id": "f2", "about": "Waves", "sides": sides, "status": "open"}]})
+    spec_sections.save_record(state, c, {"forks": [{"id": "f1", "about": "Done", "sides": sides, "status": "answered"}]})
+    got = host.command("ideas.map", {})
+    n = {x["slug"]: x for x in got["nodes"]}
+    assert (n[a]["needs_you"], n[b]["needs_you"], n[c]["needs_you"], n[d]["needs_you"]) == ("decision", "fork", "", "")           # nothing waits for the person where nothing was worded or no fork is open
+    rows = {r["idea"]: r for r in host.command("ideas.board")["needs_you"] if r["kind"] in ("decision", "fork")}
+    assert set(rows) == {a, b} and rows[a]["kind"] == "decision" and rows[b]["kind"] == "fork"
+    assert (rows[a]["number"], rows[a]["title"], rows[a]["text"], rows[a]["confirmed"], rows[a]["error"]) == (12, "Dark mode", "Why: x.\n\n1. One", False, "")
+    assert (rows[b]["id"], rows[b]["about"], rows[b]["sides"], rows[b]["text"]) == ("f2", "Waves", sides, "Waves")                  # the first fork open, in the order the join found them
+    ideas.save_state(state, a, error="The sections failed: x")
+    spec_sections.save_record(state, a, {"decision": {"title": "Dark mode", "text": "t", "number": 12, "confirmed": True}})
+    row = next(r for r in host.command("ideas.board")["needs_you"] if r["idea"] == a and r["kind"] == "decision")
+    assert row["confirmed"] is True and row["error"] == "The sections failed: x"
 
 
 def _cards(party, n=3):

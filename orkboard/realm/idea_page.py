@@ -15,6 +15,7 @@ import re
 import unicodedata
 
 SECTIONS = ("Gist", "Why", "Done when", "Out", "Risks", "Depends on", "Stages", "Open questions", "Decisions")   # spec 35 §3
+FOLDED = ("Why", "Done when", "Out", "Risks")      # the old sections a page of the new format answers for (spec 99 §7.1: realm/spec_sections.py)
 SECTION_CHARS = 20_000           # of a section, the most a write keeps
 _FENCE = re.compile(r"\A---\n(.*?)\n---\n?", re.S)
 _HEADING = re.compile(r"^(#{1,2})[ \t]+(.+?)[ \t]*#*[ \t]*$", re.M)
@@ -46,7 +47,18 @@ class Page:
         self.meta.append((key, value))
 
     def section(self, name: str) -> str:
-        return next((t for n, t in self.sections if n.lower() == name.lower()), "")
+        """A section's text. A page of the new format (a section a party: realm/spec_sections.py) answers for an old section it lacks (Why, Done when, Out, Risks) with
+        its first section's, so what reads the old names (today's plan) reads the new page."""
+        got = next((t for n, t in self.sections if n.lower() == name.lower()), "")
+        if got.strip() or name not in FOLDED:
+            return got
+        from orkboard.realm import spec_sections
+        return spec_sections.folded(self, name) or got
+
+    def parts(self, name: str) -> dict[str, str]:
+        """The `###` parts of a section a party has (*Why*, *Done when*, *Will be* …), by name; {} for a section with none."""
+        from orkboard.realm import spec_sections
+        return {k: v for k, v in spec_sections.split(self.section(name)).items() if k}
 
     def set_section(self, name: str, text: str, order: tuple[str, ...] = SECTIONS) -> None:
         text = clean_text(text)

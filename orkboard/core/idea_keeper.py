@@ -40,12 +40,14 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
+from orkboard.core.idea_decide import DecideMixin
 from orkboard.core.idea_draft import DraftMixin
 from orkboard.core.idea_sign_in import SignInMixin
 from orkboard.core.idea_goals import GoalMixin
 from orkboard.core.idea_judge import JudgeMixin
 from orkboard.core.idea_lead import LeadMixin
 from orkboard.core.idea_revise import ReviseMixin
+from orkboard.core.idea_sections import SectionsMixin
 from orkboard.core.idea_talk import TalkMixin
 from orkboard.core.idea_plan import _task, _why, estimate, readiness  # noqa: F401  (the plan's small helpers: the callers and tests use them from here)
 from orkboard.realm import (call_log, collide, event_log, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_look, idea_pick, idea_spend, idea_target, ideas,
@@ -101,7 +103,7 @@ def _iso(at: float) -> str:
     return dt.datetime.fromtimestamp(at).isoformat(timespec="seconds")
 
 
-class IdeaKeeper(SignInMixin, TalkMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
+class IdeaKeeper(SignInMixin, TalkMixin, DecideMixin, SectionsMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
     def __init__(self, repo_root: Path, state_dir: Path, wiki_root: Callable[[], Path],
                  settings: Callable[[], dict], publish: Callable[[str], None] = lambda slug: None,
                  demo: bool = False, budget_ok: Callable[[], bool] = lambda: True,

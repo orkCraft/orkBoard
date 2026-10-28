@@ -265,7 +265,7 @@ def test_the_facts_text_keeps_the_answer_whole():
 
 # -- the answers, a second round, the defaults, the decision's seam -----------------------------------------------------------------------
 
-def test_the_answers_are_taken_together_pick_or_text_or_decide_and_a_question_not_asked_is_refused(host, parties, model):
+def test_the_answers_are_taken_together_pick_or_text_or_decide_and_a_question_not_asked_is_refused(host, parties, model, monkeypatch):
     _round_one(model, parties, per=2)
     slug = _talk(host, parties, ["product", "design"])
     cards = _row(host, slug, "talk")["questions"]
@@ -279,7 +279,7 @@ def test_the_answers_are_taken_together_pick_or_text_or_decide_and_a_question_no
         k.talk_answer(slug, [], False)
     assert _row(host, slug, "talk") is not None                                                                       # nothing was taken
     sent = []
-    k.draft = lambda s, person=False: sent.append(s) or True                                                           # today's draft takes the goal on (E's seam is not built)
+    monkeypatch.setattr(k, "decide", lambda s: sent.append(s))                                                         # E's seam: the decision is worded after the last answer
     k.talk_answer(slug, [{"id": cards[0]["id"], "pick": 1}, {"id": cards[1]["id"], "text": " my own  words "}, {"id": cards[2]["id"], "pick": 9, "text": ""}], decide=True)
     rec = idea_questions.record(host.ideas.state_dir, slug)
     assert [(a["id"], a["answer"], a["how"]) for a in rec["answers"]] == [(cards[0]["id"], "B", "pick"), (cards[1]["id"], "my own words", "text"), (cards[2]["id"], "A", "decide")]
@@ -289,20 +289,21 @@ def test_the_answers_are_taken_together_pick_or_text_or_decide_and_a_question_no
     assert _row(host, slug, "talk") is None
 
 
-def test_after_the_last_round_the_goal_waits_for_the_decision_the_seam_is_e_when_the_keeper_has_it_else_today_draft(host, parties, model, monkeypatch):
+def test_after_the_last_round_the_goal_waits_for_the_decision_which_is_e_s_and_no_draft_is_made(host, parties, model, monkeypatch):
     _round_one(model, parties)
     slug = _talk(host, parties, ["tech"])
     cards = _row(host, slug, "talk")["questions"]
     went = []
-    monkeypatch.setattr(host.ideas.keeper, "decide", lambda s: went.append((s, _state(host, s)["state"])), raising=False)       # part E's seam
+    monkeypatch.setattr(host.ideas.keeper, "decide", lambda s: went.append((s, _state(host, s)["state"])))              # part E's seam, as the keeper calls it
     host.command("ideas.talk_answer", {"idea": slug, "answers": [{"id": cards[0]["id"], "pick": 0}]})
     assert went == [(slug, "talk")] and _state(host, slug)["state"] == "talk"
     other = _talk(host, parties, ["tech"], "add a light mode option")
-    monkeypatch.delattr(host.ideas.keeper, "decide")
-    model.said[("draft", "")] = {"title": "A goal", "questions": []}
+    monkeypatch.undo()                                                                                                  # the keeper's own `decide`
+    model.said[("decide", "")] = {"title": "Light mode", "why": "People read at night.", "points": ["Tech adds a light theme.", "It is off by default."]}
     host.command("ideas.talk_answer", {"idea": other, "answers": [], "decide": True})
     _wait(host, other)
-    assert any(c["step"] == "draft" for c in model.calls) and _state(host, other)["state"] in ("ready", "asks", "plan", "reading", "planning")      # it still moves
+    assert not any(c["step"] == "draft" for c in model.calls) and [c["step"] for c in model.calls].count("decide") == 1
+    assert _state(host, other)["state"] == "decided" and _row(host, other, "decision")["title"] == "Light mode"
 
 
 def test_a_goal_with_nothing_to_ask_goes_straight_on_to_the_decision(host, parties, model, monkeypatch):
@@ -493,13 +494,14 @@ def test_a_second_guess_that_cannot_be_had_leaves_the_persons_words(host, partie
     assert went == [slug] and idea_questions.record(host.ideas.state_dir, slug)["cause"]["text"] == "in the config"
 
 
-def test_a_bug_never_writes_a_decision_and_without_e_the_goal_still_moves_by_todays_draft(host, parties, model):
+def test_a_bug_never_writes_a_decision_its_cause_goes_to_the_sections_and_no_draft_is_made(host, parties, model):
     slug = _bug(host, parties, model)
-    model.said[("draft", "")] = {"title": "A goal", "questions": []}
+    model.said[("section_first", "")] = {"why": "x", "done_when": ["the bug is gone"], "will_be": ["changed src"], "risk": "low"}
     host.command("ideas.cause_answer", {"idea": slug, "yes": True})
     _wait(host, slug)
-    assert not hasattr(host.ideas.keeper, "decide") and idea_questions.record(host.ideas.state_dir, slug)["mode"] == "bug"       # the decision is E's, and a bug has none
-    assert any(c["step"] == "draft" for c in model.calls) and not any(c["step"] in ("decide", "talk_round") for c in model.calls)
+    assert idea_questions.record(host.ideas.state_dir, slug)["mode"] == "bug"
+    steps = [c["step"] for c in model.calls]
+    assert "section_first" in steps and not any(x in steps for x in ("decide", "talk_round", "draft"))                       # a bug has no decision; E's sections follow its cause
 
 
 def test_a_bug_asks_the_project_question_it_cannot_be_done_without_at_techs_first_goal_and_no_other(host, parties, model):

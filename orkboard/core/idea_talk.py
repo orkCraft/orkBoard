@@ -20,8 +20,8 @@ once, each as itself, and what they ask of the person is a stack of cards; a bug
   words asks one more guess, once. **No decision is written** (§158.3): the cause found, the goal goes to its sections.
 - **What is kept**: the cards waiting, the answers, the defaults, the stances and the cause in `ideas/<slug>/talk.json` (`idea_questions.record`; the rows
   are `board_map.talk_rows`); the talk itself in `talk.jsonl` (`ideas.add_turn`), never read back into a model beyond a round's own answers.
-- **The seams**: after the last round the goal waits for the decision, E's `self.decide(slug)`; after a bug's cause, E's `self.sections(slug)`. Until they are
-  built, today's draft takes the goal on, so it still moves.
+- **The seams**: after the last round the goal waits for the decision, E's `self.decide(slug)` (core/idea_decide.py); after a bug's cause, E's `self.sections(slug)`
+  (core/idea_sections.py).
 
 A call that fails goes back to the route card (`routed`) with its error; a Talk lost with the process leaves the goal at `talk` with no row. `self` has the
 keeper's `ask`, `_tried`, `_claim`, `_run`, `_may_run`, `refuse_spent`, `window_until`, `role_as`, `is_pitch`, `wiki_root`, `state_dir`, `repo_root`, `_tls`.
@@ -112,17 +112,14 @@ class TalkMixin:
         threading.Thread(target=go, daemon=True, name="idea-talk").start()
 
     def _on(self, slug: str, way: str) -> None:
-        """The goal goes on after Talk: `decide` (E, §6) for a talk, `sections` (E, §7) for a bug's cause; until they are built, today's draft takes it on."""
+        """The goal goes on after Talk: `decide` (E, §6: core/idea_decide.py) for a talk, `sections` (E, §7: core/idea_sections.py) for a bug's cause. Both words their own state;
+        a goal they refuse (a window spent, the keeper busy) keeps the error they saved."""
         kw = _kw()
         try:
             if way == "sections":
                 ideas.save_state(self.state_dir, slug, state="sections", error="")
-            go = getattr(self, way, None)
-            if callable(go):
-                go(slug)
-                return
-            ideas.save_state(self.state_dir, slug, state="raw", queue="now", error="")
-            self.draft(slug)
+            getattr(self, way)(slug)
+            return
         except kw.KeeperError as e:
             ideas.save_state(self.state_dir, slug, error=str(e))
         self.publish(slug)

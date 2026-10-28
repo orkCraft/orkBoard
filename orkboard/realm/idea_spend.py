@@ -29,7 +29,7 @@ from typing import Any, Callable
 
 STAGES = ("goal", "spec", "plan", "work", "rework", "dropped")
 ENDED = ("merged", "failed", "dropped")        # the states a task that ended is in
-STEP_STAGE = {"goal": "goal", "refresh": "goal", "draft": "spec", "answer": "spec", "talk": "spec", "talk_round": "spec", "diagnose": "spec", "plan": "plan",
+STEP_STAGE = {"goal": "goal", "refresh": "goal", "draft": "spec", "answer": "spec", "talk": "spec", "talk_round": "spec", "diagnose": "spec", "decide": "spec", "section_first": "spec", "section": "spec", "join": "spec", "plan": "plan",
               "pitch_view": "spec", "pitch_case": "spec", "pitch_decide": "spec", "collide": "plan"}     # a pitch's judging is its spec's stage (spec 65 §3)
 TOKEN_KEYS = ("in", "out", "cache_read", "cache_write")
 FILE = "spend.jsonl"

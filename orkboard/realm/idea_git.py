@@ -531,9 +531,10 @@ class BoardTree:
     def due(self, now: float) -> bool:
         return self._since is not None and now - self._since >= COMMIT_AFTER_S
 
-    def flush(self, now: float = 0.0, force: bool = False, message: str = "") -> dict | None:
+    def flush(self, now: float = 0.0, force: bool = False, message: str = "", files: tuple[str, ...] = ()) -> dict | None:
         """Commit the Board's pages when due (or `force`) and fast-forward the work branch: {"commit", "pages", "what",
-        "held"} (commit "" when nothing changed), None when nothing was due."""
+        "held"} (commit "" when nothing changed), None when nothing was due. `files`: paths from the repository's root the commit may hold besides the pages
+        (a goal's decision: the project's decisions file, nothing else)."""
         if not self.exists() or not (force or self.due(now)):
             return None
         title, what = self._notes[0] if self._notes else ("the Board", "edited")
@@ -541,8 +542,8 @@ class BoardTree:
         out = {"commit": "", "pages": 0, "what": what, "held": ""}
         with self.git.lock:
             folders = [p for p in self.pages() if (self.path / p).is_dir()]
-            if folders:
-                _git(self.path, "add", "-A", "--", *folders)
+            if folders or files:
+                _git(self.path, "add", "-A", "--", *folders, *files)
             staged = [f for f in _git(self.path, "diff", "--cached", "--name-only").stdout.splitlines() if f.strip()]
             if staged:
                 _ok(_git(self.path, "-c", f"user.name={BOARD_NAME}", "-c", f"user.email={BOARD_EMAIL}", "commit", "-q",
@@ -550,6 +551,21 @@ class BoardTree:
                 out.update(commit=self.git.head(self.path), pages=len(staged))
             out["held"] = self.land()
         return out
+
+    def edit_file(self, rel: str, edit, message: str) -> dict:
+        """A file of the project (its decisions file: spec 99 §6.2) changed in the tree and committed with the pages in one commit, the work branch moved: `edit(old
+        text)` is called under the repository's lock with the file as the tree's branch holds it ("" when it is missing) and answers its new text, so a number read in it
+        is the branch's own at the commit. Returns `flush`'s answer. RuntimeError for a path outside the repository."""
+        base = self.path.resolve()
+        path = (base / rel).resolve()
+        if path == base or not path.is_relative_to(base):
+            raise RuntimeError(f"{rel!r} is outside the project")
+        with self.git.lock:
+            self.follow()
+            old = path.read_text("utf-8", errors="replace") if path.is_file() else ""
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(edit(old), "utf-8")
+            return self.flush(force=True, message=message() if callable(message) else message, files=(path.relative_to(base).as_posix(),)) or {}
 
     def land(self) -> str:
         """The work branch fast-forwarded to the tree: "" when it moved (or had nothing to take), else why it is held."""

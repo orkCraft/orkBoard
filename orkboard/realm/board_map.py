@@ -15,10 +15,10 @@ from pathlib import Path
 from typing import Any, Callable
 
 from orkboard.realm import (collide, goal_flags, goal_place, goal_route, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_checks, idea_flag, idea_pick, idea_questions, idea_shots,
-                            idea_risk, idea_spend, idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles, tool_errors)
+                            idea_risk, idea_spend, idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles, spec_sections, tool_errors)
 from orkboard.realm.idea_words import short_of
 
-NEEDS = ("route", "start", "talk", "cause", "asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71; a route and a step added after Talk: spec 99 §4; Talk's cards and a bug's cause: §5)
+NEEDS = ("route", "start", "talk", "cause", "decision", "fork", "asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71; a route and a step added after Talk: spec 99 §4; Talk's cards and a bug's cause: §5; the decision to confirm and a fork to settle: §6, §7)
 _HELD_FILES = re.compile(r"^files(?: beside)? · (.+)$")
 _AFTER = re.compile(r"after (\d{1,2}:\d{2})")
 SIGN_IN_TOOL = "claude"          # what the Board runs by itself runs on Claude (core/idea_runner.py `HARNESS`)
@@ -76,6 +76,27 @@ def talk_rows(state_dir: Path, slug: str) -> list[dict]:
              "questions": cards, "text": cards[0]["q"]}]
 
 
+def way_rows(state_dir: Path, slug: str, st: dict) -> list[dict]:
+    """The Needs you rows of a goal after Talk (spec 99 §6–§7; core/idea_decide.py and core/idea_sections.py keep what they show, `spec_sections.record`):
+
+        {kind: "decision", number, title, text, confirmed, error}              # the Orkmaster's wording of what was decided, for *Confirm and start*; `confirmed` with an `error`:
+                                                                              #   the entry is in the file and the sections failed (*Confirm and start* asks them again)
+        {kind: "fork", id, about, sides: [{party, leader, says, why}], text}   # what two sections disagree on, the first fork open; answered by a side or the person's words
+
+    `number` is the next one when the Orkmaster worded it (read again at the commit). None while a call runs (nothing waits then)."""
+    way = spec_sections.record(state_dir, slug)
+    d = way.get("decision") if isinstance(way.get("decision"), dict) else None
+    if st["state"] == "decided" and d:
+        return [{"kind": "decision", "number": int(d.get("number") or 0), "title": str(d.get("title") or ""), "text": str(d.get("text") or ""),
+                 "confirmed": bool(d.get("confirmed")), "error": str(st.get("error") or "")}]
+    if st["state"] == "sections":
+        f = next((f for f in way.get("forks") or [] if isinstance(f, dict) and f.get("status") == "open"), None)
+        if f:
+            return [{"kind": "fork", "id": str(f.get("id") or ""), "about": str(f.get("about") or ""), "sides": [dict(s) for s in f.get("sides") or [] if isinstance(s, dict)],
+                     "text": str(f.get("about") or "")}]
+    return []
+
+
 def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None, asks: list[str], at: str | None = None, *,
                line: dict | None = None, settings: dict | None = None) -> list[dict]:
     """What of one idea needs the person (spec 35 §10): its route (spec 99 §4) and the step added to it after Talk, its questions, its plan waiting, the leader's plan change waiting (spec 62),
@@ -88,6 +109,8 @@ def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None
     out = [{**base, **n} for n in goal_route.rows(root, state_dir, i, st, line, settings)] if state in goal_route.ROUTE_STATES else []
     if state == "talk":
         out += [{**base, **n} for n in talk_rows(state_dir, slug)]
+    if state in ("decided", "sections"):
+        out += [{**base, **n} for n in way_rows(state_dir, slug, st)]
     if state == "asks":
         looks = st.get("asks_look") if isinstance(st.get("asks_look"), int) and not isinstance(st.get("asks_look"), bool) else 0
         asked = [{**idea_questions.parse(q), "look": n < looks} for n, q in enumerate(asks[:5])]          # the first ones are of the look (spec 85 §1)

@@ -167,3 +167,25 @@ def test_detail_adds_1500_characters_at_most(repo):
     many(repo, 120)
     got = map_text.detail(state(repo), repo, [f"pkg/part{n:04d}" for n in range(120)])
     assert 0 < len(got) <= map_text.DETAIL and "more parts" in got.splitlines()[-1]
+
+
+# -- §7.4 who decided a change ------------------------------------------------------------------------------------------------------------
+
+def test_a_change_says_who_decided_it_from_the_goals_sections_the_leader_the_person_by_a_fork_or_a_member_alone(game):
+    pages = game / "board"
+    (pages / ideas.IDEAS).mkdir(parents=True)
+    tech = "### Why\nx\n\n### Done when\n- y\n\n### Will be\n- new client/src/theme — the dark theme"
+    (pages / ideas.IDEAS / "dark-mode.md").write_text(f"---\nowner: board\n---\n# Dark mode\n\n## Gist\ng\n\n## Tech\n{tech}\n")
+    (pages / ideas.IDEAS / "waves.md").write_text(f"---\nowner: board\n---\n# Waves\n\n## Decisions\n- 2026-10-28: Fork — waves: six [sections: Tech]\n\n## Tech\n{tech.replace('client/src/theme', 'server/src/db')}\n")
+    (pages / ideas.IDEAS / "old.md").write_text("---\nowner: board\n---\n# Old\n\n## Gist\ng\n\n## Why\nw\n")
+    seen = git(game, "rev-parse", "dev")
+    map_text.system(state(game), game)
+    land(game, "dark-mode", "k1", {"client/src/theme/dark.ts": "export const dark = true;\n"})
+    land(game, "waves", "k1", {"server/src/db/store.ts": "export const save = (x) => [x];\n"})
+    land(game, "old", "k1", {"client/src/net/api.ts": "export const x = 1;\n"})
+    land(game, "dark-mode", "k2", {"client/src/views/extra.ts": "export const e = 1;\n"})          # a part nobody promised: a member alone
+    text = map_text.system(state(game), game, seen, pages)
+    assert '- new part client/src/theme (goal dark-mode "Dark mode", decided by the leader)' in text
+    assert '- changed part server/src/db (goal waves "Waves", decided by the person)' in text
+    assert '- changed part client/src/net (goal old "Old")' in text                                   # a page of before has no Will be: nothing said
+    assert '(goal dark-mode "Dark mode", decided by a member alone)' in text
