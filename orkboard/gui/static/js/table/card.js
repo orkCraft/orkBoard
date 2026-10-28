@@ -1,6 +1,6 @@
 // A card of the Board (docs/specs/101-the-cards-the-cascade-and-the-hand-under-the-lanes.md §2, decisions §167.1; the lifting of docs/specs/98-the-table-and-the-hand.md §3.5, §6, decisions §120.1): 144 wide, its goal's element
 // bare at the left of its header and its name beside it (the pixel face, three lines at most), under it a window (the card's own fill, a hairline) with one sign at the signs' big size, toned down — the task's type —, and its
-// label row: the stage's small sign and word, the gem at its right when it spends. No foot and no head: who works is on its back and in its party's header. A card is **lifted where it lies** and turns over (`Lifted`): its back
+// label row: the stage's small sign and word, the gem at its right when it spends. The tasks behind the front one lie as a fan (`fanOf`, `TaskEdge`). No foot and no head: who works is on its back and in its party's header. A card is **lifted where it lies** and turns over (`Lifted`): its back
 // the details and **Open**; Esc or a press away lowers it, one at a time. A card leans toward the pointer and rises on orkUI's motion tokens (`.ork-leans`, the page sets `--ork-lean-x/-y`); nothing moves under reduced motion
 // (orkUI's own rule). At the narrow width a lane a token wide lays a goal as one token (`Token`) with its stack's edges, and what is lifted is a screen.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
@@ -55,6 +55,35 @@ export function TaskCard({ n, t }) {
     <${Win} n=${n} sign=${typeSignOf(n, t)} />
     <span class="table-card__row"><${Stage} stage=${stageOf(t)} />${gem && html`<span class="ork-gem share" data-cost=${gem}>${gem}</span>`}</span>
   </button>`;
+}
+
+// -- the fan: the cards behind the front one (spec 101 §7.2, decisions §168.4) ------------------------------------------------------------
+
+/** How many cards behind the front one are drawn on a goal's fan (the rest wait for the goal to be picked, which unfolds them all). */
+export const BEHIND = 5;
+const SEEN = 3, PEEK = 20, OPEN = 30, HINT = 5;                  // three edges with their sign, the next only a hint; an edge's height at rest and opened, a hint's
+const TURNS = [2, -1.5, 2.5, -1, 1.5, -2.5], ASIDE = [3, -4, 4, -2, 3, -3];      // a turn (degrees) and a push aside (px) by the card's place from the front: fixed, never random, so a redraw shakes nothing
+
+/** The layout of a fan of `count` cards behind the front one, the farthest first: for each its slot's style (`--dy` its top at rest, `--ov` opened, `--rot` and `--dx` its turn and push aside by its place from the front, `--z`
+ *  its order) and whether it is only a hint; and the fan's own heights (`--of` at rest, `--span` opened). */
+export function fanOf(count) {
+  let at = 0, open = 0;
+  const cards = [];
+  for (let j = 0; j < count; j++) {
+    const place = count - j - 1, seen = place < SEEN;
+    cards.push({ hint: !seen, style: `--dy:${at}px;--ov:${open}px;--rot:${TURNS[place % TURNS.length]}deg;--dx:${ASIDE[place % ASIDE.length]}px;--z:${j + 1}` });
+    at += seen ? PEEK : HINT;
+    open += seen ? OPEN : HINT;
+  }
+  return { cards, style: `--of:${at}px;--span:${open}px` };
+}
+
+/** A task behind the front one, as its edge on the goal's fan: the goal's element and the stage's small sign, no name until the fan is opened by a hover or the focus; a press lifts the task. */
+export function TaskEdge({ n, t, hint = false }) {
+  const key = taskKey(n, t), on = lifted.value === key, bad = t.state === "failed", asks = t.state === "picking";
+  return html`<button type="button" class=${cls("ork-card table-fan__card table-tedge", { fails: bad, asks, "is-lifted": on, "is-lit": litKey.value === key, "is-hint": hint })} data-lkey=${key} data-goal=${n.slug} data-task=${t.id}
+    data-about=${aboutTokens(n, [t])} data-state=${t.state} data-stage=${stageOf(t)} aria-pressed=${String(on)} aria-label=${`${t.title}: ${STAGES[stageOf(t)].word}${bad ? ", failed" : ""}`} title=${t.title}
+    onClick=${() => lift(on ? "" : key)}><${Elem} name=${n.element} dim=${!n.element} /><span class="table-fan__nm">${t.short || t.title}</span><${Sign} name=${STAGES[stageOf(t)].sign} /></button>`;
 }
 
 /** A goal the Orkmaster reads, routes or joins itself, as a card in the first lane (under its strip): the same face, its stage *Reading*, *Routing* or *Joining*. */

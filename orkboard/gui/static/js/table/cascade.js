@@ -1,14 +1,15 @@
-// A goal's cascade and the line (docs/specs/101-the-cards-the-cascade-and-the-hand-under-the-lanes.md §3, decisions §167.4–§167.5): in a party's lane a goal is a thin strip (its element, its name on one line, the whole strip a button that
-// picks the goal) over its tasks laid as a solitaire's cascade — the front one whole, the others as strips above it (the stage's small sign and the task's name, each a button that lifts its task). Collapsed always but the picked goal's,
-// which unfolds into whole cards in the same order. A goal in two lanes at once has its strip in both, lit alike (orkUI's `.ork-picked`). The first lane's last cascade is **the line**: the goals in line (`lineNow()`), the front one
-// the next to start, whole, the others strips above it; a strip pressed picks its goal, a goal dragged among them moves it (`ideas.move`, line.js), past about seven *All · search* opens the whole line over the pane (kind `line`).
+// A goal's cascade and the line (docs/specs/101-the-cards-the-cascade-and-the-hand-under-the-lanes.md §3, §7.2, decisions §167.4–§167.5, §168.4): in a party's lane a goal is a thin strip (its element, its name on one line, the whole strip a button
+// that picks the goal) over its tasks: the front one whole, the others behind it as a fan — turned 1° to 3° and pushed a few px aside by turns, by their place (never random), their edges the goal's element and the stage's small sign, no
+// names; a hover or the focus opens the fan a little and the names are read; a press on a card behind lifts that task. Collapsed always but the picked goal's, which unfolds into whole cards in the same order. A goal in two lanes at once has
+// its strip in both, lit alike (orkUI's `.ork-picked`). The first lane's last cascade is **the line**: the goals in line (`lineNow()`), the front one the next to start, whole, the others a fan behind it; an edge pressed picks its goal, a goal
+// dragged among them moves it (`ideas.move`, line.js), past about seven *All · search* opens the whole line over the pane (kind `line`).
 // A drag starts from the goal with a mouse; Alt+↑ and Alt+↓ move the goal that has the focus, so no move needs a pointer (and the list over the pane has its arrows).
 import { useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Icon, Sign } from "../orkui.js";
-import { lifted, lift, openOver, pick, picked } from "../frame/state.js";
-import { MANY, STAGES, stageOf, waitsWords } from "./data.js";
-import { TaskCard, OwnCard, Token, aboutTokens, leans, litKey, taskKey } from "./card.js";
+import { openOver, pick, picked } from "../frame/state.js";
+import { MANY, waitsWords } from "./data.js";
+import { TaskCard, TaskEdge, OwnCard, Token, BEHIND, aboutTokens, fanOf, leans } from "./card.js";
 import { moveGoal, neighbour } from "./line.js";
 
 const THRESHOLD = 6;                                               // px a pointer moves before a press is a drag
@@ -20,20 +21,14 @@ export function GoalStrip({ n }) {
     aria-label=${n.title} title=${n.title} onClick=${() => pick(n.slug)}><${Elem} name=${n.element} dim=${!n.element} /><span class="table-gstrip__nm">${n.short || n.title}</span></button>`;
 }
 
-/** A task behind the front one: the stage's small sign and its name; a press lifts it. */
-export function TaskStrip({ n, t }) {
-  const key = taskKey(n, t), on = lifted.value === key, bad = t.state === "failed", asks = t.state === "picking";
-  return html`<button type="button" class=${cls("ork-card table-tstrip", { fails: bad, asks, "is-lifted": on, "is-lit": litKey.value === key })} data-lkey=${key} data-goal=${n.slug} data-task=${t.id}
-    data-about=${aboutTokens(n, [t])} data-state=${t.state} data-stage=${stageOf(t)} aria-pressed=${String(on)} aria-label=${`${t.title}: ${STAGES[stageOf(t)].word}${bad ? ", failed" : ""}`} title=${t.title}
-    onClick=${() => lift(on ? "" : key)}><${Sign} name=${STAGES[stageOf(t)].sign} /><span class="table-tstrip__nm">${t.short || t.title}</span></button>`;
-}
-
-/** A goal's tasks, the front one first: collapsed, the others as strips above the whole front one (the nearest the front the next in turn); the picked goal's unfolded into whole cards in the same order. */
+/** A goal's tasks, the front one first: collapsed, the front one whole and the others behind it as a fan (turned a little, their edges the element and the stage's sign, the nearest to the front the next in turn; hover or focus opens it and
+ *  reads their names); the picked goal's unfolded into whole cards in the same order. */
 export function Cascade({ n, tasks }) {
-  const open = picked.value === n.slug, rest = tasks.slice(1).reverse();
+  const open = picked.value === n.slug, behind = tasks.slice(1, 1 + BEHIND).reverse(), fan = fanOf(behind.length);
   return html`<div class=${cls("table-casc", { "is-open": open })} data-goal=${n.slug} data-open=${String(open)}>
     ${open ? [...tasks].reverse().map((t) => html`<${TaskCard} key=${t.id} n=${n} t=${t} />`)
-      : html`${rest.map((t) => html`<${TaskStrip} key=${t.id} n=${n} t=${t} />`)}<${TaskCard} key=${tasks[0].id} n=${n} t=${tasks[0]} />`}
+      : html`${behind.length > 0 && html`<div class="table-fan" style=${fan.style}>${behind.map((t, j) => html`<div key=${t.id} class="table-fan__slot" style=${fan.cards[j].style}><${TaskEdge} n=${n} t=${t} hint=${fan.cards[j].hint} /></div>`)}</div>`}
+        <${TaskCard} key=${tasks[0].id} n=${n} t=${tasks[0]} />`}
   </div>`;
 }
 
@@ -68,10 +63,11 @@ function LineCard({ g, grip }) {
   </button>`;
 }
 
-function LineStrip({ g, grip }) {
+/** A goal in line behind the front one, as its edge on the fan: its element (and the moon when it waits for the reset), its name read once the fan is opened. */
+function LineEdge({ g, grip, hint }) {
   const on = picked.value === g.slug;
-  return html`<button type="button" class=${cls("ork-card table-gstrip table-lstrip", { "ork-picked": on, "is-on": on })} data-line-item="1" data-slug=${g.slug} data-party=${g.party} data-about=${`idea:${g.slug}`}
-    aria-label=${wordsOf(g)} title=${wordsOf(g)} ...${grip}><${Elem} name=${g.element} dim=${!g.element} /><span class="table-gstrip__nm">${g.title}</span>${moon(g)}</button>`;
+  return html`<button type="button" class=${cls("ork-card table-fan__card table-ledge", { "ork-picked": on, "is-on": on, "is-hint": hint })} data-line-item="1" data-slug=${g.slug} data-party=${g.party} data-about=${`idea:${g.slug}`}
+    aria-label=${wordsOf(g)} title=${wordsOf(g)} ...${grip}><${Elem} name=${g.element} dim=${!g.element} /><span class="table-fan__nm">${g.title}</span>${moon(g)}</button>`;
 }
 
 const openLine = () => openOver("line", {}, { title: "Board", key: "" }, "In line");
@@ -96,18 +92,18 @@ export function Line({ line, tokens }) {
   if (tokens) return html`<${LineTokens} shown=${shown} />`;
   const begin = (g) => (e) => {
     if (e.button > 0 || e.pointerType === "touch" || !box.current) return;
-    const els = [...box.current.querySelectorAll("[data-line-item]")], rects = els.map((el) => el.getBoundingClientRect()), i = els.findIndex((el) => el.dataset.slug === g.slug);
-    const gap = parseFloat(getComputedStyle(box.current).rowGap) || 0, from = { x: e.clientX, y: e.clientY, id: e.pointerId, live: false };
-    const target = (dy) => {
-      const centre = rects[i].top + rects[i].height / 2 + dy;
-      return Math.max(0, Math.min(shown.length - 1, rects.filter((r, k) => k !== i && r.top + r.height / 2 < centre).length));
+    const els = [...box.current.querySelectorAll("[data-line-item]")], i = els.findIndex((el) => el.dataset.slug === g.slug);
+    const tops = els.map((el) => el.parentElement.getBoundingClientRect().top), from = { x: e.clientX, y: e.clientY, id: e.pointerId, live: false };
+    const target = (dy) => {                                           // the slot whose top the dragged card's top has reached (a fan's slots overlap: their tops tell the order)
+      const at = tops[i] + dy;
+      return Math.max(0, Math.min(shown.length - 1, tops.filter((t, k) => k !== i && t < at).length));
     };
     const move = (m) => {
       if (m.pointerId !== from.id) return;
       const dy = m.clientY - from.y;
       if (!from.live && Math.abs(dy) < THRESHOLD && Math.abs(m.clientX - from.x) < THRESHOLD) return;
       from.live = true;
-      setDrag({ slug: g.slug, dy, i, to: target(dy), step: rects[i].height + gap });
+      setDrag({ slug: g.slug, dy, i, to: target(dy), tops });
     };
     const end = (m) => {
       if (m.pointerId !== from.id) return;
@@ -123,9 +119,9 @@ export function Line({ line, tokens }) {
   };
   const shift = (v) => {
     if (!drag) return undefined;
-    if (v === drag.i) return `transform:translateY(${drag.dy}px);z-index:3;position:relative`;
-    if (drag.i < drag.to && v > drag.i && v <= drag.to) return `transform:translateY(${-drag.step}px)`;
-    if (drag.i > drag.to && v < drag.i && v >= drag.to) return `transform:translateY(${drag.step}px)`;
+    if (v === drag.i) return `transform:translateY(${drag.dy}px);z-index:30`;
+    if (drag.i < drag.to && v > drag.i && v <= drag.to) return `transform:translateY(${drag.tops[v - 1] - drag.tops[v]}px)`;      // each takes the slot before it
+    if (drag.i > drag.to && v < drag.i && v >= drag.to) return `transform:translateY(${drag.tops[v + 1] - drag.tops[v]}px)`;      // or the slot after it
     return undefined;
   };
   const key = (g) => (e) => {
@@ -135,8 +131,10 @@ export function Line({ line, tokens }) {
     if (to >= 0) moveGoal(line, g.slug, to);
   };
   const grip = (g) => ({ onPointerDown: begin(g), onKeyDown: key(g), onClick: () => { if (!still.current) pick(g.slug); }, ...(drag ? {} : leans) });
+  const behind = ord.slice(0, -1), front = ord[ord.length - 1], fan = fanOf(behind.length);
   return html`<div ref=${box} class=${cls("table-casc table-casc--line", { "is-dragging": !!drag })} role="group" aria-label="In line. Alt and the up and down arrows move a goal.">
     ${more && html`<button type="button" class="ork-card table-gstrip table-lstrip table-lstrip--all" aria-label="All goals in line, with a search" onClick=${openLine}><${Icon} name="search" /><span class="table-gstrip__nm">All · search</span></button>`}
-    ${ord.map((g, v) => html`<div key=${g.slug} class="table-line-item" style=${shift(v)}>${v === ord.length - 1 ? html`<${LineCard} g=${g} grip=${grip(g)} />` : html`<${LineStrip} g=${g} grip=${grip(g)} />`}</div>`)}
+    ${behind.length > 0 && html`<div class="table-fan" style=${fan.style}>${behind.map((g, v) => html`<div key=${g.slug} class="table-line-item table-fan__slot" style=${`${fan.cards[v].style};${shift(v) || ""}`}><${LineEdge} g=${g} grip=${grip(g)} hint=${fan.cards[v].hint} /></div>`)}</div>`}
+    <div key=${front.slug} class="table-line-item" style=${shift(ord.length - 1)}><${LineCard} g=${front} grip=${grip(front)} /></div>
   </div>`;
 }

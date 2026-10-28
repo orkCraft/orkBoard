@@ -41,16 +41,34 @@ button.table-chip { appearance: none; font: inherit; }
 .table-board__none { margin: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); text-align: center; }
 .table-goal { display: flex; flex-direction: column; gap: var(--ork-1); width: min(var(--card-w, 144px), 100%); flex: none; }
 
-/* a goal's strip, a task behind the front one: a line high (22 px), the whole strip a button */
-.table-gstrip.ork-card, .table-tstrip.ork-card { display: flex; align-items: center; gap: var(--ork-2); box-sizing: border-box; width: 100%; height: 22px; min-height: 0; padding: 0 var(--ork-2); flex: none; font: var(--ork-type-caption); }
-.table-gstrip.ork-card { color: var(--ork-ink-muted); }
+/* a goal's strip: a line high (22 px), the whole strip a button */
+.table-gstrip.ork-card { display: flex; align-items: center; gap: var(--ork-2); box-sizing: border-box; width: 100%; height: 22px; min-height: 0; padding: 0 var(--ork-2); flex: none; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .table-gstrip.ork-card.is-on { color: var(--ork-ink); }
-.table-tstrip.ork-card { padding: 0 var(--ork-3); color: var(--ork-ink); }
-.table-gstrip__nm, .table-tstrip__nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
+.table-gstrip__nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; }
 .table-gstrip .ork-sign.moon { margin-left: auto; }
-.table-casc { display: flex; flex-direction: column; gap: var(--ork-1); width: 100%; }
+.table-casc { position: relative; isolation: isolate; display: flex; flex-direction: column; gap: var(--ork-1); width: 100%; }
 .table-casc.is-open { gap: var(--ork-2); }
 .table-casc--line { width: min(var(--card-w, 144px), 100%); flex: none; }
+/* the fan (spec 101 §7.2, decisions §168.4): the cards behind the front one lie above it, each its slot (`--dy` its top at rest, `--ov` opened, `--of` and `--span` the fan's height at rest and opened), turned by `--rot` and pushed aside by `--dx` (a
+   fixed turn by the card's place from the front, 1° to 3°, never random), the nearer to the front the higher in order (`--z`). An edge shows the goal's element and the stage's small sign only; a hover or the focus opens the fan a little
+   and the names are read. The turns are still under reduced motion (a turn is not a motion); only the opening glides. */
+.table-fan { position: relative; flex: none; height: var(--of); margin-top: var(--ork-2); }
+.table-fan > .table-fan__slot { position: absolute; left: 0; right: 0; top: var(--dy); height: 56px; z-index: var(--z); }
+.table-fan:hover > .table-fan__slot, .table-fan:focus-within > .table-fan__slot, .table-casc--line.is-dragging .table-fan > .table-fan__slot { top: var(--ov); }
+.table-fan:hover, .table-fan:focus-within, .table-casc--line.is-dragging .table-fan { height: var(--span); }
+.table-fan__card.ork-card { display: flex; align-items: flex-start; gap: var(--ork-2); box-sizing: border-box; width: 100%; height: 100%; padding: var(--ork-1) var(--ork-3) 0; overflow: hidden; text-align: left; font: var(--ork-type-caption);
+  transform: translateX(var(--dx)) rotate(var(--rot)); transform-origin: 50% 0; }
+.table-fan__card .ork-elem, .table-fan__card .ork-sign { flex: none; margin-top: 1px; }
+.table-fan__card .ork-sign:last-child { margin-left: auto; }
+.table-fan__nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--ork-type-body); font-weight: 600; line-height: 16px; color: var(--ork-ink); opacity: 0; }
+.table-fan:hover .table-fan__nm, .table-fan:focus-within .table-fan__nm, .table-casc--line.is-dragging .table-fan__nm { opacity: 1; }
+.table-fan__card.is-hint > * { visibility: hidden; }
+.table-casc:not(.is-open) > .table-card, .table-casc--line > .table-line-item:last-child { z-index: 10; }
+@media (prefers-reduced-motion: no-preference) {
+  .table-fan { transition: height var(--ork-motion-base) var(--ork-motion-ease); }
+  .table-fan__slot { transition: top var(--ork-motion-base) var(--ork-motion-ease); }
+  .table-fan__nm { transition: opacity var(--ork-motion-base) var(--ork-motion-ease); }
+}
 .table-line-item { position: relative; display: block; }
 .table-lstrip--all .ork-icon { width: 14px; height: 14px; }
 @media (prefers-reduced-motion: no-preference) { .table-casc--line.is-dragging .table-line-item { transition: transform var(--ork-motion-base) var(--ork-motion-spring); } .table-casc--line.is-dragging .table-line-item[style*="z-index"] { transition: none; } }
@@ -73,7 +91,7 @@ button.table-chip { appearance: none; font: inherit; }
 .table-card__row { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-3); min-height: 22px; min-width: 0; }
 .table-stage { display: inline-flex; align-items: center; gap: var(--ork-2); min-width: 0; overflow: hidden; white-space: nowrap; color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
 .table-stage .ork-sign { vertical-align: middle; }
-.table-card.is-lit, .table-tstrip.is-lit, .table-token.is-lit, .table-sys .is-lit { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); }
+.table-card.is-lit, .table-tedge.is-lit, .table-token.is-lit, .table-sys .is-lit { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); }
 
 /* the narrow width: a goal one token with its stack's edges (its element, its front task's stage and type) */
 .table-stack { position: relative; isolation: isolate; display: block; flex: none; }

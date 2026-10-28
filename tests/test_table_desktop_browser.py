@@ -1,9 +1,9 @@
-"""Spec 98 part C, the table (docs/specs/98-the-table-and-the-hand.md §3, §5, §6; mockup docs/mockups/s1/ states 1–4 and 6), re-faced by spec 101 part C (the Board's cards, a goal's cascade, the line in the first lane, the project's tab): the window (the
+"""Spec 98 part C, the table (docs/specs/98-the-table-and-the-hand.md §3, §5, §6; mockup docs/mockups/s1/ states 1–4 and 6), re-faced by spec 101 part C (the Board's cards, a goal's cascade, the line in the first lane, the project's tab) and part F (a goal's tasks behind its front card lie as a fan): the window (the
 page, spec 98 E), at both widths (`tests/narrow.py`: 1280 × 800, and 390 × 844 with touch), against a stub host of its own (a project of four parties: Game design, Tech led by the Architect, Art and Release; the Orkmaster reading two goals,
 routing one and joining one; tasks at work, failures, a check; three goals in line; Tech's System).
 
 The tabs in order with the project's first (its name), its **…** and its three places over the pane, **+**, the chips, *Stop all*; the Board's lanes under their tabs, the same widths; a task card's header, window and label row, a goal's strip and
-cascade (its front by the rule, collapsed, the picked goal's unfolded, a strip lifting its task, a goal in two lanes lit in both); the first lane's cards and the line (the Orkmaster's order, the moon, a drag, *All · search*); a party's header with its
+cascade (its front by the rule, the others a fan behind it with a fixed turn by place, opened by a hover, an edge lifting its task, the picked goal's unfolded, a goal in two lanes lit in both); the first lane's cards and the line (the Orkmaster's order, the moon, a drag, *All · search*); a party's header with its
 groups, a seat's popover and its **Open**, another party's tab its header alone; Tech's System; a card lifted and lowered (Esc, a press away); a file opened over the pane, its title, **←** back to the card lit; a form in the pane, never a dialog; no
 sideways scroll at 390. Screenshots to the directory ORKCRAFT_SHOTS_DIR names when it is set."""
 from __future__ import annotations
@@ -439,35 +439,67 @@ def test_a_task_card_has_its_header_its_window_with_the_types_sign_and_its_label
     shot(pg, f"table-cards-{w}.png")
 
 
-def test_a_goal_is_a_strip_over_its_cascade_the_front_by_the_rule_and_the_others_strips(table):
+def test_a_goal_is_a_strip_over_its_cascade_the_front_by_the_rule_and_the_others_a_fan_behind_it(table):
     pg, host, w = table
     if not wide(w):
         assert pg.locator(".table-casc").count() == 0 and pg.locator(".table-gstrip").count() == 0 and pg.locator(".table-stack").count() >= 4      # a goal one token with its stack's edges
         return
     seat = pg.locator('.table-casc[data-goal="seat"]')
-    assert keys(pg, '.table-casc[data-goal="seat"]') == ["t:task:seat/s1", "t:task:seat/s2"]                              # the strips first, the front last
-    assert pg.locator('[data-lkey="t:task:seat/s1"]').evaluate("e => e.classList.contains('table-tstrip')") and pg.locator('[data-lkey="t:task:seat/s2"]').evaluate("e => e.classList.contains('table-card')")
+    assert keys(pg, '.table-casc[data-goal="seat"]') == ["t:task:seat/s1", "t:task:seat/s2"]                              # the fan first, the front last
+    assert pg.locator('[data-lkey="t:task:seat/s1"]').evaluate("e => e.classList.contains('table-tedge')") and pg.locator('[data-lkey="t:task:seat/s2"]').evaluate("e => e.classList.contains('table-card')")
     assert keys(pg, '.table-casc[data-goal="recheck"]') == ["t:task:recheck/c1", "t:task:recheck/c2"]                    # a failed check is the front, before a task being done
     assert keys(pg, '.table-casc[data-goal="bar"]') == ["t:task:bar/a3", "t:task:bar/a1", "t:task:bar/a2"]               # Checking in front, then Doing, then Planning at the top
     bar = pg.locator('.table-casc[data-goal="bar"]')
     assert [e.get_attribute("data-stage") for e in bar.locator("[data-lkey]").all()] == ["planning", "doing", "checking"]
-    assert bar.locator(".table-tstrip").count() == 2 and bar.locator(".table-card").count() == 1 and bar.get_attribute("data-open") == "false"                  # collapsed: nothing is picked
-    strip = pg.locator('[data-lkey="t:task:bar/a1"]')
-    assert abs(strip.bounding_box()["height"] - 22) <= 1 and strip.locator(".ork-sign.sword").count() == 1 and "Draw the bar" in strip.inner_text()          # about 22 px: the stage's small sign and the name
+    assert bar.locator(".table-tedge").count() == 2 and bar.locator(".table-card").count() == 1 and bar.get_attribute("data-open") == "false"                  # collapsed: nothing is picked
+    edge = pg.locator('[data-lkey="t:task:bar/a1"]')
+    assert edge.locator(".ork-sign.sword").count() == 1 and edge.locator(".ork-elem.void").count() == 1 and edge.locator(".ork-sign").count() == 1             # the stage's small sign and the goal's element
+    assert edge.evaluate("e => getComputedStyle(e.querySelector('.table-fan__nm')).opacity") == "0" and edge.get_attribute("title") == "Draw the bar"       # no name at rest (it is the edge's label for a screen reader)
     assert "asks" in pg.locator('[data-lkey="t:task:bar/a3"]').get_attribute("class")                                    # a pick asked for: orkUI's alert frame
     gs = pg.locator('.table-lane[data-party="tech"] > .table-goal .table-gstrip')
     assert [g.get_attribute("data-goal") for g in gs.all()] == ["seat", "recheck", "calm"]                                # the hand's order: the failures first, a goal with nothing wrong last (though it is first on the Board)
     top = pg.locator('.table-lane[data-party="tech"] .table-goal').first
     assert abs(top.locator(".table-gstrip").bounding_box()["height"] - 22) <= 1 and top.locator(".table-gstrip .ork-elem.ice").count() == 1
     assert "Keep the seat" in top.locator(".table-gstrip").inner_text() and top.locator(".table-gstrip").evaluate("e => e.tagName") == "BUTTON"
-    assert seat.locator(".table-tstrip").count() == 1
+    assert seat.locator(".table-tedge").count() == 1 and pg.locator(".table-tstrip").count() == 0                         # no strip of names
     shot(pg, f"table-cascade-{w}.png")
+    open_fan(pg, "t:task:bar/a1")
+    shot(pg, f"table-fan-open-{w}.png")
 
 
-def test_a_strip_lifts_its_task_and_a_goals_strip_picks_the_goal(table):
+def test_a_goals_tasks_lie_as_a_fan_turned_one_to_three_degrees_by_their_place_and_a_hover_opens_it(table):
+    pg, host, w = table
+    if not wide(w):
+        assert pg.locator(".table-fan").count() == 0                                                                      # a goal one token with its edges
+        return
+    turn = lambda key: pg.locator(f'[data-lkey="{key}"]').evaluate("e => { const m = new DOMMatrix(getComputedStyle(e).transform); return [Math.atan2(m.b, m.a) * 180 / Math.PI, m.e]; }")  # noqa: E731
+    at_rest = {k: turn(k) for k in ("t:task:bar/a1", "t:task:bar/a3", "t:task:recheck/c1", "t:task:seat/s1")}              # bar: a2 in front, a1 behind it, a3 farthest
+    for key, (deg, aside) in at_rest.items():
+        assert 1 <= abs(deg) <= 3 and 2 <= abs(aside) <= 5, (key, deg, aside)                                             # turned 1° to 3°, moved a few px aside
+    assert at_rest["t:task:seat/s1"] == at_rest["t:task:recheck/c1"] == at_rest["t:task:bar/a1"]                          # a fixed turn by the place from the front, never by the goal
+    assert at_rest["t:task:bar/a1"][0] * at_rest["t:task:bar/a3"][0] < 0 and at_rest["t:task:bar/a1"][1] * at_rest["t:task:bar/a3"][1] < 0       # by turns left and right
+    assert pg.locator('[data-lkey="t:task:seat/s2"]').evaluate("e => getComputedStyle(e).transform") in ("none", "matrix(1, 0, 0, 1, 0, 0)")      # the front card lies straight
+    edge = pg.locator('[data-lkey="t:task:bar/a1"]')
+    fan = pg.locator('.table-fan:has([data-lkey="t:task:bar/a1"])')
+    closed = fan.bounding_box()["height"]
+    open_fan(pg, "t:task:bar/a1")                                                                                         # a hover opens the fan a little
+    assert fan.bounding_box()["height"] > closed + 10 and fan.bounding_box()["height"] < closed + 60
+    assert edge.evaluate("e => getComputedStyle(e.querySelector('.table-fan__nm')).opacity") == "1" and "Draw the bar" in edge.inner_text()      # and the names are read
+    assert turn("t:task:bar/a1") == at_rest["t:task:bar/a1"]                                                              # the turn is the same open
+    pg.mouse.move(5, 5)
+    pg.wait_for_function("(k) => getComputedStyle(document.querySelector(`[data-lkey=\"${k}\"] .table-fan__nm`)).opacity === '0'", arg="t:task:bar/a1", timeout=WAIT_MS)       # the pointer away: closed again
+    edge.focus()                                                                                                         # the focus opens it too
+    pg.wait_for_function("(k) => getComputedStyle(document.querySelector(`[data-lkey=\"${k}\"] .table-fan__nm`)).opacity === '1'", arg="t:task:bar/a1", timeout=WAIT_MS)
+    pg.emulate_media(reduced_motion="reduce")
+    assert turn("t:task:bar/a1") == at_rest["t:task:bar/a1"]                                                              # the turns are still under reduced motion
+    assert pg.locator('.table-fan__slot').first.evaluate("e => getComputedStyle(e).transitionDuration") == "0s"          # and nothing glides
+    pg.emulate_media(reduced_motion="no-preference")
+
+
+def test_an_edge_lifts_its_task_and_a_goals_strip_picks_the_goal(table):
     pg, host, w = table
     if wide(w):
-        pg.locator('[data-lkey="t:task:bar/a1"]').click()                                                                 # a strip pressed lifts its task
+        edge_click(pg, "t:task:bar/a1")                                                                                   # a card behind the front one, pressed on its edge, lifts its task
         back = pg.locator(".table-back")
         back.wait_for(timeout=WAIT_MS)
         assert back.get_attribute("data-lifted") == "t:task:bar/a1" and "Draw the bar" in back.text_content()
@@ -501,11 +533,11 @@ def test_a_goal_picked_unfolds_its_cascade_and_is_lit_in_both_its_lanes_the_othe
     assert pg.locator('.table-lane[data-lane="first"] .ork-picked').count() == 1 and pg.locator('.table-lane[data-party="art"] .ork-picked').count() == 1
     if wide(w):
         bar = pg.locator('.table-casc[data-goal="bar"]')
-        assert bar.get_attribute("data-open") == "true" and bar.locator(".table-card").count() == 3 and bar.locator(".table-tstrip").count() == 0       # unfolded into whole cards
+        assert bar.get_attribute("data-open") == "true" and bar.locator(".table-card").count() == 3 and bar.locator(".table-tedge").count() == 0 and pg.locator('.table-casc[data-goal="bar"] .table-fan').count() == 0       # unfolded into whole cards, no fan
         assert keys(pg, '.table-casc[data-goal="bar"]') == ["t:task:bar/a3", "t:task:bar/a1", "t:task:bar/a2"]               # in the same order
         assert bar.locator('[data-lkey="t:task:bar/a1"] .ork-sign.picture').count() == 1                                  # a task of a kind of its own: its kind's sign, not the goal's
         assert pg.locator('.table-casc[data-goal="seat"]').get_attribute("data-open") == "false"                          # the others stay collapsed
-        assert pg.locator('.table-casc[data-goal="seat"] .table-tstrip').count() == 1
+        assert pg.locator('.table-casc[data-goal="seat"] .table-tedge').count() == 1
         assert pg.locator('.table-lane[data-lane="first"] .table-gstrip.ork-picked').evaluate("e => e.getAttribute('aria-pressed')") == "true"
     shot(pg, f"table-picked-{w}.png")
     pick(pg, "")
@@ -534,6 +566,21 @@ def test_the_first_lane_holds_what_is_the_whole_projects_the_goals_read_routed_a
     pg.wait_for_selector(".table-back", state="detached", timeout=WAIT_MS)
 
 
+def open_fan(pg, key):
+    """Hover the fan the card `key` lies on and wait for it to be open: the card's visible edge is then its top 30 px."""
+    fan = pg.locator(f'.table-fan:has([data-lkey="{key}"])')
+    fan.hover(position={"x": 70, "y": 3})
+    pg.wait_for_function("(k) => { const f = document.querySelector(`.table-fan:has([data-lkey=\"${k}\"])`); return Math.abs(f.offsetHeight - parseFloat(getComputedStyle(f).getPropertyValue('--span'))) < 1; }", arg=key, timeout=WAIT_MS)
+    pg.wait_for_timeout(300)                                                                                              # the slots have glided
+    return fan
+
+
+def edge_click(pg, key):
+    """A press on the visible edge of a card behind the front one (the middle of its box lies under the cards in front)."""
+    open_fan(pg, key)
+    pg.locator(f'[data-lkey="{key}"]').click(position={"x": 40, "y": 8})
+
+
 def line_slugs(pg):
     return [e.get_attribute("data-slug") for e in pg.locator(".table-lane[data-lane='first'] [data-line-item], .table-lane[data-lane='first'] .table-line-tokens .table-token[data-slug]").all()]
 
@@ -546,16 +593,21 @@ def test_the_line_is_the_first_lanes_last_cascade_in_the_orkmasters_order_with_t
         assert front.get_attribute("data-slug") == "ln1" and abs(front.bounding_box()["width"] - 144) <= 1
         assert front.locator(".ork-elem.dust").count() == 1 and "Chat in the lobby" in front.locator(".table-card__nm").inner_text()      # its element, its name
         assert front.locator(".table-card__win .ork-sign.feature").count() == 1 and front.locator(".table-card__row").inner_text().strip().lower() == "in line"
-        strip = pg.locator('.table-lstrip[data-slug="ln2"]')
-        assert abs(strip.bounding_box()["height"] - 22) <= 1 and "Round music" in strip.inner_text()
-        moon = strip.locator(".ork-sign.moon")
+        edge = pg.locator('.table-ledge[data-slug="ln2"]')
+        assert edge.locator(".ork-elem.ice").count() == 1 and edge.evaluate("e => getComputedStyle(e.querySelector('.table-fan__nm')).opacity") == "0"      # the goal's element, its name read only on a hover
+        assert pg.locator(".table-casc--line .table-fan").count() == 1 and edge.evaluate("e => getComputedStyle(e).transform") != "none"                                # a fan behind the front one, turned
+        moon = edge.locator(".ork-sign.moon")
         assert moon.count() == 1 and moon.get_attribute("title") == "Waits for the reset, from 06:00"                       # the moon, its hour on hover
-        assert pg.locator('.table-lstrip[data-slug="ln3"] .ork-sign.moon').count() == 0 and front.locator(".ork-sign.moon").count() == 0
-        pg.locator('.table-lstrip[data-slug="ln3"]').click()                                                              # a strip pressed picks its goal
-        pg.wait_for_function("() => document.querySelector('.table-lstrip[data-slug=\"ln3\"]').classList.contains('ork-picked')", timeout=WAIT_MS)
+        assert pg.locator('.table-ledge[data-slug="ln3"] .ork-sign.moon').count() == 0 and front.locator(".ork-sign.moon").count() == 0
+        pg.locator(".table-casc--line .table-fan").hover(position={"x": 70, "y": 3})                                          # the fan opens
+        pg.wait_for_timeout(400)
+        assert "Round music" in edge.inner_text() and edge.evaluate("e => getComputedStyle(e.querySelector('.table-fan__nm')).opacity") == "1"
+        shot(pg, f"table-line-fan-{w}.png")
+        pg.locator('.table-ledge[data-slug="ln3"]').click(position={"x": 40, "y": 8})                                        # an edge pressed picks its goal
+        pg.wait_for_function("() => document.querySelector('.table-ledge[data-slug=\"ln3\"]').classList.contains('ork-picked')", timeout=WAIT_MS)
         assert title(pg) == "A banner for the lobby · through the Orkmaster"
-        pg.locator('.table-lstrip[data-slug="ln3"]').click()
-        pg.wait_for_function("() => !document.querySelector('.table-lstrip[data-slug=\"ln3\"]').classList.contains('ork-picked')", timeout=WAIT_MS)
+        pg.locator('.table-ledge[data-slug="ln3"]').click(position={"x": 40, "y": 8})
+        pg.wait_for_function("() => !document.querySelector('.table-ledge[data-slug=\"ln3\"]').classList.contains('ork-picked')", timeout=WAIT_MS)
         pg.locator(".table-board").evaluate("e => { e.scrollTop = e.scrollHeight; }")
         shot(pg, f"table-line-{w}.png")
     else:
@@ -577,10 +629,12 @@ def test_a_goal_dragged_among_the_line_moves_with_ideas_move_and_a_drop_among_ot
 
     def drag(slug, onto):
         pg.locator(".table-board").evaluate("e => { e.scrollTop = e.scrollHeight; }")                                    # the line is the first lane's last cascade
+        pg.locator(".table-casc--line .table-fan").hover(position={"x": 70, "y": 3})
+        pg.wait_for_timeout(400)                                                                                         # the fan is open: an edge is its top 30 px
         a, b = pg.locator(f'[data-line-item][data-slug="{slug}"]').bounding_box(), pg.locator(f'[data-line-item][data-slug="{onto}"]').bounding_box()
-        pg.mouse.move(a["x"] + a["width"] / 2, a["y"] + a["height"] / 2)
+        pg.mouse.move(a["x"] + a["width"] / 2, a["y"] + 8)
         pg.mouse.down()
-        pg.mouse.move(a["x"] + a["width"] / 2, a["y"] + a["height"] / 2 + 12, steps=4)
+        pg.mouse.move(a["x"] + a["width"] / 2, a["y"] + 20, steps=4)
         pg.mouse.move(b["x"] + b["width"] / 2, b["y"] + b["height"] - 4, steps=8)
         pg.wait_for_selector(".table-casc--line.is-dragging", timeout=WAIT_MS)                                           # the cascade shows the drag
         pg.mouse.up()
@@ -907,6 +961,8 @@ def test_nothing_moves_under_reduced_motion_and_a_card_turns_on_orkuis_tokens_ot
     pg.locator(".table-back").wait_for(timeout=WAIT_MS)
     assert pg.locator(".table-back").evaluate("e => getComputedStyle(e).animationName") == "none"
     assert seat.evaluate("e => getComputedStyle(e).transform") in ("none", "matrix(1, 0, 0, 1, 0, 0)")                   # a card at rest is flat, and lifted too
+    if wide(w):
+        assert pg.locator('[data-lkey="t:task:seat/s1"]').evaluate("e => getComputedStyle(e).transform") not in ("none", "matrix(1, 0, 0, 1, 0, 0)")      # a card of the fan stays turned (a turn is not a motion)
     pg.emulate_media(reduced_motion="no-preference")
 
 
