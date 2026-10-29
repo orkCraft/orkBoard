@@ -33,6 +33,11 @@ SHORT = ("cause", "report", "legacy", "legacy-report", "tidy", "balance")       
 TYPES = {"cause": "bug", "report": "bug", "tidy": "tidy", "balance": "balance"}               # the goal type the row carries
 
 
+JOBS = [{"id": "get-everyone-in", "when": "I start a game night", "want": "get everyone into the lobby fast", "so": "begin before people drift off", "segment": "Hosts"},
+        {"id": "play-again", "when": "a round ends", "want": "play again with the same group", "so": "keep the night going", "segment": "Hosts"},
+        {"id": "jump-in", "when": "I join late", "want": "see where the round is", "so": "jump in without asking", "segment": "Players"}]
+
+
 def steps(parties):
     return [{"party": p, "leader": f"{p}-lead", "head": head(RACES[p][0], RACES[p][1])} for p in parties]
 
@@ -51,8 +56,11 @@ class RouteHost(HandHost):
         self.parties[3]["leader"]["slug"] = "release-manager"
         self.scenario, self.low = scenario, low
         title = "Players can't rejoin a room" if scenario in ("cause", "report", "legacy", "legacy-report") else "Clean up the lobby code" if scenario == "tidy" else "A team-vs-team round"
-        self.nodes = [node("fresh", "tech", title, "hand", state="routed", element="ice")]
+        self.goal = "product" if scenario.startswith("serves") else "tech"                   # the party the goal is of
+        self.nodes = [node("fresh", self.goal, title, "hand", state="routed", element="ice")]
         self.route = ["tech"] if scenario in SHORT else ["product", "design", "tech"]
+        self.jobs = JOBS if scenario != "serves-none" else []
+        self.attached = "play-again" if scenario == "serves-kept" else ""
         self.needs = [self.row()]
 
     def row(self):
@@ -61,10 +69,17 @@ class RouteHost(HandHost):
         short, more = self.scenario in SHORT, {}
         if self.scenario != "legacy":
             more["type"] = TYPES.get(self.scenario, "feature")
-        return need("route", "tech", "fresh", self.nodes[0]["title"], "Route: " + ", then ".join(self.route), route=steps(self.route), cost=cost_of(len(self.route)), place=3, short=short,
+        return need("route", self.goal, "fresh", self.nodes[0]["title"], "Route: " + ", then ".join(self.route), route=steps(self.route), cost=cost_of(len(self.route)), place=3, short=short,
                     reproduces=self.scenario in ("report", "legacy-report"), low=self.low, offer=["product"], **more)
 
     def handle(self, name, a):
+        if name == "ideas.tree":
+            self.log.append((name, a))
+            return self.tree()
+        if name == "ideas.tree_attach":
+            self.log.append((name, a))
+            self.attached = a["job"]
+            return {"ok": True, "serves": self.tree()["serves"]}
         if name == "ideas.route_set":
             self.log.append((name, a))
             self.route = list(a["route"])
@@ -77,8 +92,15 @@ class RouteHost(HandHost):
             return self.bump({"ok": True})
         return super().handle(name, a)
 
+    def tree(self):
+        return {"outcomes": [], "jobs": self.jobs, "serves": [{"job": self.attached, "goal": "fresh", "title": "A team-vs-team round", "element": "ice", "place": "line"}] if self.attached else [],
+                "tests": [], "proposing": False, "status": "", "party": "product"}
+
     def map_doc(self):
-        return {**super().map_doc(), "project": {"orkmaster": {"race": "peon", "tier": "crown"}}}
+        doc = super().map_doc()
+        for g in doc["goals"]:
+            g["party_craft"] = "product" if g["slug"] == "product" else None
+        return {**doc, "project": {"orkmaster": {"race": "peon", "tier": "crown"}}}
 
 
 def open_route(gui, host, width):
@@ -338,3 +360,59 @@ def test_the_cards_kind_is_said_in_plain_words(gui, width):
         finally:
             pg.close()
         assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_a_goal_of_a_product_party_says_what_job_it_serves_with_a_choice_of_the_jobs_and_none_chosen_none_attached(gui, width):
+    host = RouteHost("serves")
+    pg, log = open_route(gui, host, width)
+    try:
+        lifted = lift(pg)
+        serves = lifted.locator(".hand-way__serves")
+        serves.wait_for(timeout=WAIT_MS)
+        assert serves.locator(".cap").inner_text() == "Serves:"
+        select = serves.get_by_label("Serves")
+        assert select.input_value() == "" and select.locator("option:checked").inner_text() == "No job", "none chosen, none attached"
+        assert select.locator("option").all_text_contents() == ["No job", "get everyone into the lobby fast", "play again with the same group", "see where the round is"]
+        assert _calls(pg, host, "ideas.tree_attach", ms=300) == []
+        fits(pg)
+        shot(pg, f"{width}-route-serves")
+        select.select_option("play-again")
+        assert _calls(pg, host, "ideas.tree_attach")[-1] == {"job": "play-again", "goal": "fresh"}
+        pg.wait_for_function("() => document.querySelector('.hand-way__serves select').value === 'play-again'", timeout=WAIT_MS)
+        assert pg.locator(".hand-lifted").count() == 1, "the card stays lifted"
+        select.select_option("")
+        assert _calls(pg, host, "ideas.tree_attach", at_least=2)[-1] == {"job": "", "goal": "fresh"}, "an empty job takes it off"
+        fits(pg)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_the_job_a_goal_already_serves_is_the_one_shown(gui, width):
+    host = RouteHost("serves-kept")
+    pg, log = open_route(gui, host, width)
+    try:
+        select = lift(pg).get_by_label("Serves")
+        select.wait_for(timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelector('.hand-way__serves select').value === 'play-again'", timeout=WAIT_MS)
+        assert select.locator("option:checked").inner_text() == "play again with the same group"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("scenario", ["route", "serves-none"])
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_no_serves_for_a_goal_of_another_craft_or_with_no_job_kept(gui, width, scenario):
+    host = RouteHost(scenario)
+    pg, log = open_route(gui, host, width)
+    try:
+        lifted = lift(pg)
+        pg.wait_for_timeout(400)
+        assert lifted.locator(".hand-way__serves").count() == 0
+        assert [n for n, _ in host.log if n == "ideas.tree"] == (["ideas.tree"] if scenario == "serves-none" else []), "a goal of another craft never asks for the tree"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)

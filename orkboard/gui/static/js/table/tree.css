@@ -1,0 +1,53 @@
+/* Product's map, the opportunity solution tree (docs/specs/102-the-other-maps-and-picking-on-them.md §8.4, decisions §175.1; mockup docs/mockups/s3/ state 2). Layout only: every colour, face, corner and move is orkUI's
+   (its tokens and classes: .ork-card, .ork-frame, .ork-label, .ork-btn, .ork-field, .ork-sign, .ork-elem), the sizes its spacing steps. The cards are the maps' (maps.css `.mp-card`). The outcome is a banner; the jobs lie
+   in a row of equal columns (up to five, else two rows) joined to it by lines in the frame's colour; a goal under a job, an experiment under a goal on a rail. At the narrow width (`.is-narrow`) the columns stack and
+   the lines go; nothing scrolls sideways. */
+
+.tr-tree { display: flex; flex-direction: column; gap: 0; min-width: 0; }
+.tr-note { align-self: flex-end; margin-bottom: var(--ork-3); }
+
+/* the outcome */
+.tr-banner { display: flex; align-items: center; gap: var(--ork-5); min-height: 56px; padding: var(--ork-3) var(--ork-5); background: var(--ork-card); box-sizing: border-box; min-width: 0; }
+.tr-banner__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: var(--ork-1); }
+.tr-banner__t { margin: 0; font: var(--ork-type-body); font-weight: 600; font-size: 16px; line-height: 22px; overflow-wrap: anywhere; }
+.tr-banner.is-editing { align-items: stretch; flex-direction: column; gap: var(--ork-3); }
+.tr-banner.is-editing .tr-banner__body { gap: var(--ork-3); }
+.tr-add { align-self: flex-start; }
+
+/* the lines: a stub down from the banner, a bus over the columns, a stub into each job */
+.tr-tier { display: flex; flex-direction: column; min-width: 0; }
+.tr-stub { display: block; align-self: center; width: var(--ork-line); height: var(--ork-5); background: var(--ork-edge); }
+.tr-row { display: grid; grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr)); gap: var(--ork-5); align-items: start; min-width: 0; }
+.tr-col { position: relative; display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; padding-top: var(--ork-5); }
+.tr-col::before { content: ""; position: absolute; left: 50%; top: 0; width: var(--ork-line); height: var(--ork-5); background: var(--ork-edge); }
+.tr-col::after { content: ""; position: absolute; top: 0; left: calc(var(--ork-5) / -2); right: calc(var(--ork-5) / -2); height: var(--ork-line); background: var(--ork-edge); }
+.tr-col:first-child::after { left: 50%; }
+.tr-col:last-child::after { right: 50%; }
+.tr-col:only-child::after { display: none; }
+.tr-tier + .tr-tier { margin-top: var(--ork-5); }
+
+/* a job */
+.mp-card.ork-card.tr-job { cursor: default; gap: var(--ork-3); }
+.tr-job__top { margin-top: 0; }
+.tr-segment { flex: 1; }
+.tr-job__s { margin: 0; font: var(--ork-type-body); overflow-wrap: anywhere; }
+.tr-k { color: var(--ork-ink-muted); font-weight: 600; }
+.tr-form textarea.ork-field { min-height: calc(var(--ork-control) * 1.5); }
+
+/* the goals under it */
+.tr-goals { display: flex; flex-direction: column; gap: var(--ork-4); min-width: 0; }
+.tr-branch { display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; }
+.tr-tests { display: flex; flex-direction: column; gap: var(--ork-3); margin-left: var(--ork-4); padding-left: var(--ork-4); border-left: var(--ork-line) solid var(--ork-edge); min-width: 0; }
+.tr-goal .mp-win { height: 32px; }
+.tr-place { display: inline-flex; align-items: center; gap: var(--ork-2); }
+.mp-card.ork-card.tr-nogoal { flex-direction: row; align-items: center; justify-content: space-between; gap: var(--ork-4); cursor: default; }
+.tr-write { color: var(--ork-action); flex: none; }
+@media (pointer: coarse) { .tr-write { min-width: var(--ork-tap); min-height: var(--ork-tap); } .tr-job__top .ork-btn { min-height: var(--ork-tap); } }
+
+/* the narrow width: the columns stack, one under another, a rule between */
+.tr.is-narrow .tr-stub, .tr.is-narrow .tr-col::before, .tr.is-narrow .tr-col::after { display: none; }
+.tr.is-narrow .tr-row { grid-template-columns: minmax(0, 1fr); gap: var(--ork-5); }
+.tr.is-narrow .tr-col { padding-top: 0; }
+.tr.is-narrow .tr-col + .tr-col { padding-top: var(--ork-5); border-top: var(--ork-line) solid var(--ork-frame); }
+.tr.is-narrow .tr-tier { margin-top: var(--ork-5); }
+.tr.is-narrow .tr-tier + .tr-tier { padding-top: var(--ork-5); border-top: var(--ork-line) solid var(--ork-frame); }

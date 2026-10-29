@@ -4,11 +4,11 @@
 // the project's parties but Release (those the goal's marks touch first), the route in words, the cost (the gem and its words, said again from the answer of an edit), its place in line, and its one act: **Talk**
 // (with **Later, by itself** only when the limits run low). A bug is Tech alone: *finding the cause* with **Talk**, or, when its report holds a failing test, **Start** with *The long way* beside it; another short goal (the row's `type`: a clean-up, a balance pass) says *<Party> alone* and its own line, with **Talk**.
 // Registers itself with ways.js (`route`); startcard.js (the `start` row) reads the same helpers. The sheet is way.css, linked as hand.css is (frame/frame.js).
-import { useLayoutEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
 import { Head, Icon } from "../orkui.js";
-import { toast } from "../link.js";
+import { command, toast } from "../link.js";
 import { act, mapData } from "../shell/store.js";
 import { SeatPop } from "../table/seatpop.js";
 import { groupsOf, nameOf, partiesNow } from "../table/data.js";
@@ -151,6 +151,41 @@ function aloneWords(v) {
   return `${who}: ${isBug(v) ? (v.reproduces ? "the report has a failing test" : "finding the cause") : SMALL[v.type] || "a small change"}`;
 }
 
+/** The craft whose map is the opportunity tree (spec 102 §8.3). */
+const PRODUCT = "product";
+
+/** *Serves: <job>* (spec 102 §8.3, decisions §172.2): for a goal of a party whose craft is product, the jobs of Product's opportunity tree to choose from (`ideas.tree`); the choice is kept at once
+ *  (`ideas.tree_attach {job, goal}`, an empty job takes it off), none chosen none attached. With no job kept, nothing is offered. */
+function Serves({ idea, busy }) {
+  const [tree, setTree] = useState(null), [job, setJob] = useState(""), [wait, setWait] = useState(false);
+  useEffect(() => {
+    let live = true;
+    command("ideas.tree", {}, true).then((r) => {
+      if (!live || !r) return;
+      setTree(r);
+      setJob((r.serves || []).find((x) => x.goal === idea)?.job || "");
+    }).catch(() => {});
+    return () => { live = false; };
+  }, [idea]);
+  const jobs = tree?.jobs || [];
+  if (!jobs.length) return null;
+  const choose = async (e) => {
+    const next = e.currentTarget.value, was = job;
+    setJob(next);
+    setWait(true);
+    const got = await act("ideas.tree_attach", { job: next, goal: idea });
+    setWait(false);
+    if (!got) setJob(was);                                              // refused: the host said why in a toast, the choice stays as it was
+  };
+  return html`<label class="hand-way__serves">
+    <span class="cap">Serves:</span>
+    <span class="ork-select"><select class="ork-field" name="serves" aria-label="Serves" value=${job} disabled=${busy || wait} onChange=${choose}>
+      <option value="" selected=${!job}>No job</option>
+      ${jobs.map((j) => html`<option key=${j.id} value=${j.id} selected=${j.id === job}>${j.want}</option>`)}
+    </select></span>
+  </label>`;
+}
+
 /** The route card lifted (in place of the plain answers; stopcard.js adds *Put it back*). */
 export function RouteLifted({ s, close }) {
   const v = viewOf(s), idea = s.row.idea, [busy, setBusy] = useState(false), steps = v.route || [];
@@ -172,6 +207,7 @@ export function RouteLifted({ s, close }) {
     <${Steps} s=${s} v=${v} busy=${busy} send=${send} />
     ${short ? html`<p class="body hand-way__words">${aloneWords(v)}</p>`
       : html`<p class="body hand-way__words">${routeWords(steps)}</p>`}
+    ${partyBy(s.row.goal)?.party_craft === PRODUCT && html`<${Serves} idea=${idea} busy=${busy} />`}
     <${CostLine} cost=${v.cost} />
     ${v.place > 0 && html`<p class="cap hand-way__place">${ordinal(v.place)} in line</p>`}
     <div class="hand-answers hand-way__acts" role="group" aria-label="Answers">
