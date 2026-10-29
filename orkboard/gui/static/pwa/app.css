@@ -975,9 +975,6 @@ dialog.sheet.top { margin: 0 0 auto; border-top: 0; border-bottom: var(--ork-dou
 .where-row__body b { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .where-new { all: unset; box-sizing: border-box; cursor: pointer; display: flex; flex-direction: column; gap: var(--ork-1); min-height: 52px; margin-top: var(--ork-3); padding: var(--ork-3) var(--ork-4);
   border: var(--ork-line) dashed var(--ork-edge); color: var(--ork-ink); }
-.where-make { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; min-height: var(--ork-tap); margin-left: calc(var(--ork-4) + 24px + var(--ork-4)); padding: 0 var(--ork-4);
-  color: var(--ork-action); font: var(--ork-type-caption); text-decoration: underline; text-underline-offset: 3px; }          /* spec 92 §3: the line under Operations' row while the person has no Team party */
-.where-make:focus-visible { box-shadow: inset 0 0 0 2px var(--ork-ink); }
 .projects-block h3 { margin: var(--ork-6) 0 var(--ork-3); }
 .goals__about { all: unset; box-sizing: border-box; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: var(--ork-4); min-height: var(--ork-tap); width: 100%; color: var(--ork-ink); }
 .party-about { display: flex; flex-direction: column; gap: var(--ork-2); }
