@@ -12,6 +12,7 @@ import { TASK_STATE } from "../board/maplayout.js";
 import { typeTone } from "../arena/goalwords.js";
 import { GoalMenu } from "./dropgoal.js";
 import { aliveState, useChanged, useWorked, workedWords } from "./worktime.js";
+import { ConcernsBack } from "./concerns.js";                       // a marked card's back lists its leader's concerns (spec 108 B)
 import { cascadeOf, footWords, doingWords, readTask, stageOf, typeSignOf, gemOf, STAGES } from "./data.js";
 
 /** The key of the card that was lit on the way back from a thing opened over the pane, "" none (a press or a key puts it out). */
@@ -132,7 +133,8 @@ export function elOf(key) {
 function place(el, host, back) {
   if (!el || !host || !back) return;
   const h = host.getBoundingClientRect(), c = el.getBoundingClientRect(), w = back.offsetWidth, t = back.offsetHeight;
-  const left = Math.max(0, Math.min(c.left - h.left, h.width - w)), top = Math.max(0, Math.min(c.top - h.top, h.height - t));
+  const strip = host.querySelector(":scope > .cn-strip"), floor = strip ? Math.max(0, strip.getBoundingClientRect().bottom - h.top) : 0;       // a leader's strip (concerns.js) stays pressable above the back
+  const left = Math.max(0, Math.min(c.left - h.left, h.width - w)), top = Math.max(floor, Math.min(c.top - h.top, h.height - t));
   back.style.left = `${left}px`;
   back.style.top = `${top}px`;
 }
@@ -152,6 +154,7 @@ export function Lifted({ host, name, narrow, children }) {
   return html`<aside class=${cls("ork-frame table-back", { "is-screen": narrow })} ref=${back} aria-label=${`${name}, turned over`} data-lifted=${key} role="dialog" aria-modal="false">
     ${narrow && html`<button type="button" class="ork-btn quiet table-back__x" aria-label="Back" onClick=${() => lower()}><svg class="ork-icon g7" aria-hidden="true"><use href="/ds/orkui/icons/icons.svg#arrow-left" /></svg></button>`}
     ${children}
+    <${ConcernsBack} el=${elOf(key)} />
   </aside>`;
 }
 
