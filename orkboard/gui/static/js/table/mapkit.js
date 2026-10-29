@@ -78,15 +78,15 @@ export function Win({ tone = "", tall = false, pic = false, children }) {
 
 /** A map's card, in §167.1's face. `element`: the goal's element that changed it, "" none (no element is drawn); `name`: its words (`code`: a path, in the code face); `row`: its label row's word at the left (`rowCode`
  *  in the code face), `gem` and `mark` (a head) at its right; `foot`: a line under the row; `group`: the lane or step it lies in, for picking; `style`: a place on the map. `children`: its window. A press anywhere on it lifts it; the name is the
- *  button the keyboard reaches. */
-export function MapCard({ map, id, name, element = "", row = null, rowCode = false, gem = "", mark = null, foot = null, code = false, group = "", ghost = false, className = "", style = undefined, children }) {
+ *  button the keyboard reaches. `compact`: a small card that is its name and a `foot` only (a step on its ring, a currency): no window and no label row. */
+export function MapCard({ map, id, name, element = "", row = null, rowCode = false, gem = "", mark = null, foot = null, code = false, group = "", ghost = false, compact = false, className = "", style = undefined, children }) {
   const key = keyOf(map, id), on = lifted.value === key;
   const press = (e) => { if (e.target.closest?.("[data-nopress]")) return; lift(on ? "" : key); };
   return html`<${Pickable} map=${map} id=${id} name=${name} group=${group}>
     <article class=${cls(`ork-card ork-leans mp-card ${className}`, { "is-lifted": on, "is-lit": litKey.value === key, "is-ghost": ghost })} data-lkey=${key} data-id=${id} data-map=${map} style=${style} onClick=${press} ...${leans}>
       <h3 class="mp-card__head">${element && html`<${Elem} name=${element} />`}<button type="button" class=${cls("mp-card__nm", { "is-code": code })} aria-pressed=${String(on)} title=${name}>${name}</button></h3>
-      ${children}
-      <div class="mp-card__row"><span class=${cls("mp-card__l", { "is-code": rowCode })} title=${typeof row === "string" ? row : undefined}>${row}</span>${(gem || mark) && html`<span class="mp-card__r">${gem && html`<span class="ork-gem">${gem}</span>`}${mark}</span>`}</div>
+      ${!compact && children}
+      ${!compact && html`<div class="mp-card__row"><span class=${cls("mp-card__l", { "is-code": rowCode })} title=${typeof row === "string" ? row : undefined}>${row}</span>${(gem || mark) && html`<span class="mp-card__r">${gem && html`<span class="ork-gem">${gem}</span>`}${mark}</span>`}</div>`}
       ${foot}
     </article>
   </${Pickable}>`;

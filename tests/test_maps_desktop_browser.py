@@ -49,13 +49,31 @@ def asset(path, kind, goal="", change="", **more):
             "folder": path.rpartition("/")[0] + "/" if "/" in path else "./", "url": more.pop("url", picture("#888")), **more}
 
 
-LOOP = [
-    {"id": "join-a-match", "name": "Join a match", "line": "Friends meet in a lobby and each picks a hero.", "rests_on": ["config/balance.ts", "levels/arena-1.json"], "by": "leader", "at": "2026-10-28T08:00:00"},
-    {"id": "hold-the-tower", "name": "Hold the tower", "line": "Ninety seconds to keep your tower standing.", "rests_on": ["config/balance.ts"], "by": "person", "at": "2026-10-28T08:30:00"},
-    {"id": "score-the-round", "name": "Score the round", "line": "The last tower standing earns the most coins.", "rests_on": [], "by": "leader", "at": "2026-10-28T08:00:00"},
-    {"id": "spend-the-coins", "name": "Spend the coins", "line": "Coins buy a new hero or a tower skin.", "rests_on": ["config/shop.ts"], "by": "leader", "at": "2026-10-28T08:00:00"},
-    {"id": "open-a-new-arena", "name": "Open a new arena", "line": "Every fifth win opens the next arena.", "rests_on": ["levels/"], "by": "leader", "at": "2026-10-28T08:00:00"},
-]
+def step(sid, name, line, feel, intensity, gives=(), takes=(), rests_on=(), by="leader"):
+    return {"id": sid, "name": name, "line": line, "feel": feel, "intensity": intensity, "gives": list(gives), "takes": list(takes), "rests_on": list(rests_on), "by": by, "at": "2026-10-28T08:00:00"}
+
+
+LOOP = {
+    "version": 2, "by": "leader", "at": "2026-10-28T08:30:00",
+    "loops": [
+        {"id": "core", "span": "core", "name": "Hold the tower", "line": "What a player repeats every round.", "feeds": "session", "steps": [
+            step("join-a-match", "Join a match", "Friends meet in a lobby and each picks a hero.", "fellowship", 2, rests_on=["config/balance.ts", "levels/arena-1.json"]),
+            step("hold-the-tower", "Hold the tower", "Ninety seconds to keep your tower standing.", "challenge", 5, rests_on=["config/balance.ts"], by="person"),
+            step("score-the-round", "Score the round", "The last tower standing earns the most coins.", "fantasy", 3, gives=["coins"])]},
+        {"id": "session", "span": "session", "name": "A night of matches", "line": "Rounds played back to back with friends.", "feeds": "meta", "steps": [
+            step("spend-the-coins", "Spend the coins", "Coins buy a new hero or a tower skin.", "expression", 2, takes=["coins"], rests_on=["config/shop.ts"]),
+            step("pick-a-hero", "Pick a hero", "Each hero holds a tower another way.", "discovery", 3),
+            step("rematch", "Rematch", "The losers ask for one more round.", "challenge", 4)]},
+        {"id": "meta", "span": "meta", "name": "The season", "line": "What brings a player back across weeks.", "feeds": "", "steps": [
+            step("open-a-new-arena", "Open a new arena", "Every fifth win opens the next arena.", "discovery", 3, rests_on=["levels/"]),
+            step("climb-the-ladder", "Climb the ladder", "Wins move the player up a ranked ladder.", "challenge", 4, gives=["gems"]),
+            step("show-off", "Show off", "A rank badge sits beside the player's name.", "expression", 2)]}],
+    "currencies": [{"id": "coins", "name": "Coins", "kind": "soft", "line": "Earned in every round."}, {"id": "gems", "name": "Gems", "kind": "hard", "line": "Earned on the ladder."}],
+    "hooks": [{"when": "D1", "line": "A new hero is free on the first night."}, {"when": "D7", "line": "The season's first ladder reset."}],
+}
+EMPTY = {"version": 2, "loops": [], "currencies": [], "hooks": [], "by": "", "at": ""}
+FINDINGS = ["Gems is only earned: it will pile up"]
+STEPS = ["Join a match", "Hold the tower", "Score the round", "Spend the coins", "Pick a hero", "Rematch", "Open a new arena", "Climb the ladder", "Show off"]
 
 
 class Refused(Exception):
@@ -102,16 +120,19 @@ class MapsHost(TableHost):
     def handle(self, name, a):
         if name == "ideas.loop":
             self.log.append((name, a))
-            return {"cards": json.loads(json.dumps(self.loop)), "proposing": False, "status": "", "party": "game"}
+            return {**json.loads(json.dumps(self.loop)), "findings": FINDINGS if self.loop["loops"] else [], "proposing": False, "status": "", "party": "game"}
         if name == "ideas.loop_set":
             self.log.append((name, a))
-            self.loop = [{**c, "by": "person"} for c in a["cards"]]
+            self.loop = {**self.loop, "loops": [{**lp, "id": lp["span"], "steps": [{**s, "by": "person", "at": "2026-10-29T08:00:00"} for s in lp["steps"]]} for lp in a["loops"]], "currencies": a["currencies"], "hooks": a["hooks"], "by": "person"}
             self.rev += 1
-            return {"ok": True, "cards": self.loop, "dropped": []}
+            return {"ok": True, **self.loop, "findings": FINDINGS, "dropped": []}
         if name == "ideas.loop_propose":
             self.log.append((name, a))
             if self.proposal.get("asked"):
+                was = {k: v for k, v in self.loop.items() if k != "was"}
                 self.loop = json.loads(json.dumps(LOOP))
+                if was["loops"] and was["by"] == "person":
+                    self.loop["was"] = was
                 self.rev += 1
             return {"ok": True, **self.proposal}
         if name == "ideas.art_map":
@@ -191,41 +212,132 @@ def names(pg, sel=".mp-card"):
     return [n.strip() for n in pg.locator(f"{sel} .mp-card__nm").all_text_contents()]
 
 
-# -- the loop ------------------------------------------------------------------------------------------------------------------------------------------
+# -- the loops -----------------------------------------------------------------------------------------------------------------------------------------
 
-def test_the_loop_is_its_cards_on_a_ring_with_chevrons_or_two_a_line_at_the_narrow_width(maps):
+def steps_of(pg):
+    return names(pg, ".mp-st")
+
+
+def centre(box):
+    return box["x"] + box["width"] / 2, box["y"] + box["height"] / 2
+
+
+def test_the_loops_lie_as_rings_one_in_another_the_core_inside_or_as_lists_at_the_narrow_width(maps):
     pg, host, w = maps
     go(pg, "game")
-    pg.locator(".mp-card").first.wait_for(timeout=WAIT_MS)
-    assert title(pg) == "The whole project · through Game design" and names(pg) == ["Join a match", "Hold the tower", "Score the round", "Spend the coins", "Open a new arena"]
+    pg.locator(".mp-st").first.wait_for(timeout=WAIT_MS)
+    assert title(pg) == "The whole project · through Game design" and steps_of(pg) == STEPS
     first, mine = card(pg, "join-a-match"), card(pg, "hold-the-tower")
     assert first.locator(".ork-elem").count() == 0                                                                       # no goal changed it: no element
-    assert first.locator(".mp-win .ork-sign.big.mechanic").count() == 1 and first.locator(".mp-card__nm").evaluate("e => getComputedStyle(e).fontFamily").lower().count("pixel") == 0
-    assert mine.locator(".mp-card__foot").inner_text() == "Ninety seconds to keep your tower standing."
+    assert first.locator(".mp-st__meta > span").first.inner_text() == "fellowship" and first.locator(".mp-pips i.d").count() == 2 and mine.locator(".mp-pips i.d").count() == 5      # its feeling, its intensity drawn
     if wide(w):
-        assert pg.locator(".mp-ring").count() == 1 and pg.locator(".mp-ring__chev").count() == 5 and pg.locator(".mp-ring__line ellipse").count() == 1
-        assert first.locator(".mp-card__l").text_content() == "Proposed by Game design" and first.locator(".ork-race__head").count() == 1      # its party, its leader's head at the right
-        assert mine.locator(".mp-card__l").text_content() == "Yours" and mine.locator(".ork-race__head").count() == 0
-        ring, boxes = pg.locator(".mp-ring").bounding_box(), [card(pg, c["id"]).bounding_box() for c in LOOP]
-        assert all(b["x"] >= ring["x"] - 1 and b["x"] + b["width"] <= ring["x"] + ring["width"] + 1 for b in boxes)                  # all inside the ring's width
-        assert boxes[0]["y"] < boxes[2]["y"] and abs((boxes[0]["x"] + boxes[0]["width"] / 2) - (ring["x"] + ring["width"] / 2)) < 4     # the first at the top, clockwise
-        assert pg.locator(".mp-ring__mid").inner_text().replace("\n", " ").endswith("Five steps, round and round")
+        assert pg.locator(".mp-rings").count() == 1 and pg.locator(".mp-ring").count() == 3 and pg.locator(".mp-rings__line ellipse").count() == 3
+        tags = [t.replace("\n", " ").lower() for t in pg.locator(".mp-ring__tag").all_inner_texts()]
+        assert tags[0] == "core · seconds hold the tower" and "feeds the session loop" in pg.locator(".mp-ring__tag").first.get_attribute("title")
+        assert tags[1].startswith("session · minutes a night of matches") and tags[2].startswith("meta · days and weeks the season")       # each ring: its span and its name
+        assert pg.locator(".mp-ring__chev").count() == 6 and pg.locator(".mp-ring[data-span=\"core\"] .mp-st").count() == 3
+        ring = pg.locator(".mp-rings").bounding_box()
+        cx, cy = centre(ring)
+        far = {}
+        for span, ids in (("core", ["join-a-match", "hold-the-tower", "score-the-round"]), ("session", ["spend-the-coins", "pick-a-hero", "rematch"]), ("meta", ["open-a-new-arena", "climb-the-ladder", "show-off"])):
+            boxes = [card(pg, i).bounding_box() for i in ids]
+            assert all(b["x"] >= ring["x"] - 1 and b["x"] + b["width"] <= ring["x"] + ring["width"] + 1 for b in boxes)                  # inside the rings' width
+            far[span] = sum(((centre(b)[0] - cx) ** 2 + (centre(b)[1] - cy) ** 2) ** 0.5 for b in boxes) / len(boxes)
+        assert far["core"] < far["session"] < far["meta"]                                                                   # the core inside, the meta outside
+        every = [card(pg, i).bounding_box() for i in ("join-a-match", "hold-the-tower", "score-the-round", "spend-the-coins", "pick-a-hero", "rematch", "open-a-new-arena", "climb-the-ladder", "show-off")]
+        for a in range(len(every)):                                                                                          # no step lies on another
+            for b in range(a + 1, len(every)):
+                p, q = every[a], every[b]
+                assert p["x"] + p["width"] <= q["x"] + 1 or q["x"] + q["width"] <= p["x"] + 1 or p["y"] + p["height"] <= q["y"] + 1 or q["y"] + q["height"] <= p["y"] + 1, (a, b)
     else:
-        assert pg.locator(".mp-ring").count() == 0 and first.locator(".mp-card__l").text_content() == "1 of 5"
-        a, b = first.bounding_box(), mine.bounding_box()
-        assert abs(a["y"] - b["y"]) < 2 and b["x"] > a["x"] + a["width"] - 1                                               # two a line
-        assert "Proposed by Game design" in first.inner_text() and "Yours" in mine.inner_text()
+        assert pg.locator(".mp-rings").count() == 0 and pg.locator(".mp-ll").count() == 3                                  # the loops as lists
+        assert pg.locator('.mp-ll[data-span="core"] .ork-label').inner_text().lower() == "core · seconds"
+        assert pg.locator('.mp-ll[data-span="session"] .mp-st').count() == 3 and "Hold the tower" in pg.locator('.mp-ll[data-span="core"]').inner_text()
+        assert "Ninety seconds to keep your tower standing." in mine.inner_text()                                           # a step in a list says its line
     shot(pg, f"maps-loop-{w}.png")
 
 
-def test_a_loop_card_lifted_shows_what_it_rests_on_and_a_file_opens_over_the_pane_then_back_lights_the_card(maps):
+def test_the_economy_the_feeling_and_what_the_loop_says(maps):
+    pg, host, w = maps
+    go(pg, "game")
+    pg.locator(".mp-st").first.wait_for(timeout=WAIT_MS)
+    says = pg.locator(".mp-says__line")                                                                                      # above: one alert line a finding
+    assert says.all_inner_texts() == FINDINGS and says.first.get_attribute("data-tone") == "alert" and says.first.locator(".ork-sign.alert").count() == 1
+    coins, gems = pg.locator('.mp-eco__row[data-currency="coins"]'), pg.locator('.mp-eco__row[data-currency="gems"]')      # the economy: what gives it, it, what takes it
+    assert pg.locator(".mp-eco__row").count() == 2 and coins.locator(".mp-card__nm").inner_text() == "Coins" and gems.locator(".mp-card__nm").inner_text() == "Gems"
+    assert coins.locator(".mp-eco__side.is-in li").all_inner_texts() == ["Score the round"] and coins.locator(".mp-eco__side.is-out li").all_inner_texts() == ["Spend the coins"]
+    assert gems.locator(".mp-eco__side.is-in li").all_inner_texts() == ["Climb the ladder"] and gems.locator(".mp-eco__side.is-out .mp-eco__none").inner_text() == "nothing"
+    hooks = pg.locator(".mp-hooks__list li")                                                                                 # why a player comes back
+    assert hooks.count() == 2 and [h.locator(".mp-hooks__when").inner_text() for h in hooks.all()] == ["D1", "D7"] and "A new hero is free" in hooks.first.inner_text()
+    feel = pg.locator(".mp-feel")                                                                                            # the feeling: the session loop's steps, each point its feeling's word
+    assert "a night of matches (session)" in feel.locator(".ork-label").inner_text().lower() and pg.locator(".mp-feel__pt").count() == 3
+    assert [p.get_attribute("data-feel") for p in pg.locator(".mp-feel__pt").all()] == ["expression", "discovery", "challenge"]
+    assert [p.get_attribute("data-intensity") for p in pg.locator(".mp-feel__pt").all()] == ["2", "3", "4"] and [t.text_content() for t in feel.locator(".mp-feel__word").all()] == ["expression", "discovery", "challenge"]
+    d = feel.locator(".mp-feel__line").get_attribute("d")
+    assert d.startswith("M ") and d.count("H") >= 3 and d.count("V") == 2                                                    # a stepped line: across, then up or down
+    ys = [float(p.locator(".mp-feel__dot").get_attribute("y")) for p in pg.locator(".mp-feel__pt").all()]
+    assert ys[0] > ys[1] > ys[2]                                                                                             # the more intense, the higher
+    if wide(w):
+        rings, eco, box = pg.locator(".mp-rings").bounding_box(), pg.locator(".mp-eco").bounding_box(), pg.locator(".mp-feel").bounding_box()
+        assert eco["x"] >= rings["x"] + rings["width"] - 1 and box["y"] >= rings["y"] + rings["height"] - 1                  # the economy at the right, the feeling under the rings
+    else:
+        lists, eco, box = pg.locator(".mp-lists").bounding_box(), pg.locator(".mp-eco").bounding_box(), pg.locator(".mp-feel").bounding_box()
+        assert eco["y"] >= lists["y"] + lists["height"] - 1 and box["y"] >= eco["y"] + eco["height"] - 1                      # under the lists: the economy, then the feeling
+    feel.locator('.mp-feel__pt[data-feel="discovery"]').click()                                                              # a press on a point lifts its step
+    back = lifted(pg)
+    back.wait_for(timeout=WAIT_MS)
+    assert back.get_attribute("data-lifted") == "t:map:game-design:pick-a-hero"
+    shot(pg, f"maps-loop-economy-{w}.png")
+
+
+def test_the_feeling_is_the_core_loops_when_there_is_no_session_loop(maps):
+    pg, host, w = maps
+    host.loop["loops"] = [lp for lp in host.loop["loops"] if lp["span"] != "session"]
+    host.rev += 1
+    host.ws.send(json.dumps(host.snapshot()))
+    go(pg, "game")
+    pg.locator(".mp-feel__pt").first.wait_for(timeout=WAIT_MS)
+    assert [p.get_attribute("data-feel") for p in pg.locator(".mp-feel__pt").all()] == ["fellowship", "challenge", "fantasy"] and pg.locator(".mp-ring").count() == (2 if wide(w) else 0) and pg.locator(".mp-ll").count() == (0 if wide(w) else 2)
+
+
+def test_a_pixel_dot_steps_round_the_core_ring_while_a_task_of_the_party_runs_and_not_under_reduced_motion(maps):
+    pg, host, w = maps
+    go(pg, "game")
+    pg.locator(".mp-st").first.wait_for(timeout=WAIT_MS)
+    if not wide(w):
+        assert pg.locator(".mp-orbit").count() == 0                                                                          # lists have no ring to go round
+        return
+    dot = pg.locator(".mp-orbit")
+    dot.wait_for(timeout=WAIT_MS)
+    css = dot.evaluate("e => { const s = getComputedStyle(e); return [s.animationName, s.animationTimingFunction, s.offsetPath, s.display]; }")
+    assert css[0] == "mp-orbit" and css[1].startswith("steps(28") and css[2].startswith("path(") and css[3] != "none"           # stepped, never gliding
+    before = dot.bounding_box()
+    pg.wait_for_function("(b) => { const r = document.querySelector('.mp-orbit').getBoundingClientRect(); return Math.abs(r.x - b.x) + Math.abs(r.y - b.y) > 4; }", arg=before, timeout=WAIT_MS)      # it goes round
+    ring = pg.locator(".mp-rings").bounding_box()
+    r = dot.bounding_box()
+    assert ring["x"] <= r["x"] <= ring["x"] + ring["width"] and ring["y"] <= r["y"] <= ring["y"] + ring["height"]
+    pg.emulate_media(reduced_motion="reduce")
+    assert dot.evaluate("e => getComputedStyle(e).display") == "none"                                                        # off under reduced motion
+    pg.emulate_media(reduced_motion="no-preference")
+    for n in host.nodes:                                                                                                       # nothing at work: nothing alive moves
+        for t in n.get("tasks", []):
+            if n["goal"] == "game" and t["state"] == "running":
+                t["state"] = "done"
+    host.rev += 1
+    host.ws.send(json.dumps(host.snapshot()))
+    pg.wait_for_selector(".mp-orbit", state="detached", timeout=WAIT_MS)
+
+
+def test_a_step_lifted_shows_its_line_feeling_intensity_and_what_it_gives_or_takes_and_a_file_opens_over_the_pane_then_back_lights_the_card(maps):
     pg, host, w = maps
     go(pg, "game")
     card(pg, "join-a-match").locator(".mp-card__nm").click()
     back = lifted(pg)
     back.wait_for(timeout=WAIT_MS)
     assert back.get_attribute("data-lifted") == "t:map:game-design:join-a-match" and card(pg, "join-a-match").get_attribute("data-lkey") == "t:map:game-design:join-a-match"
-    assert "Friends meet in a lobby" in back.inner_text() and "Proposed by Game design" in back.inner_text()
+    text = back.inner_text()
+    assert "Friends meet in a lobby" in text and "Proposed by Game design" in text and "Fellowship" in text and "being with others" in text and "easy" in text      # its line, who keeps it, its feeling, its intensity
+    assert "It gives nothing" in text and "It takes nothing" in text and back.locator(".mp-pips i.d").count() == 2
     assert [b.inner_text() for b in back.locator(".mp-file").all()] == ["config/balance.ts", "levels/arena-1.json"]
     shot(pg, f"maps-loop-lifted-{w}.png")
     back.locator(".mp-file").first.click()
@@ -238,10 +350,15 @@ def test_a_loop_card_lifted_shows_what_it_rests_on_and_a_file_opens_over_the_pan
     pg.keyboard.press("Escape")
     pg.wait_for_selector(".table-back", state="detached", timeout=WAIT_MS)
     card(pg, "score-the-round").locator(".mp-card__nm").click()
-    assert "It rests on no file yet" in lifted(pg).inner_text()                                                         # a card that rests on nothing says so
+    text = lifted(pg).inner_text()
+    assert "It rests on no file yet" in text and "Coins" in text and "It gives nothing" not in text                         # what it gives is the currency's name
+    pg.keyboard.press("Escape")
+    pg.wait_for_selector(".table-back", state="detached", timeout=WAIT_MS)
+    card(pg, "hold-the-tower").locator(".mp-card__nm").click()
+    assert "Yours" in lifted(pg).inner_text()
 
 
-def test_edit_keeps_the_cards_name_line_and_files_through_loop_set(maps):
+def test_edit_keeps_the_steps_name_line_feeling_intensity_and_files_through_loop_set(maps):
     pg, host, w = maps
     go(pg, "game")
     card(pg, "spend-the-coins").locator(".mp-card__nm").click()
@@ -249,27 +366,62 @@ def test_edit_keeps_the_cards_name_line_and_files_through_loop_set(maps):
     back.get_by_role("button", name="Edit").click()
     back.locator('input[name="name"]').fill("Buy a hero")
     back.locator('textarea[name="line"]').fill("Coins buy a hero.")
+    back.locator('select[name="feel"]').select_option("fantasy")
+    back.locator('select[name="intensity"]').select_option("4")
     back.locator('textarea[name="files"]').fill("config/shop.ts\nlevels/")
     shot(pg, f"maps-loop-edit-{w}.png")
     back.get_by_role("button", name="Save").click()
-    pg.wait_for_function("() => [...document.querySelectorAll('.mp-card__nm')].some((e) => e.textContent.trim() === 'Buy a hero')", timeout=WAIT_MS)
-    sent = [a for n, a in host.log if n == "ideas.loop_set"]
-    assert len(sent) == 1 and [c["name"] for c in sent[0]["cards"]] == ["Join a match", "Hold the tower", "Score the round", "Buy a hero", "Open a new arena"]
-    assert sent[0]["cards"][3] == {"id": "spend-the-coins", "name": "Buy a hero", "line": "Coins buy a hero.", "rests_on": ["config/shop.ts", "levels/"]}
-    assert card(pg, "spend-the-coins").locator(".mp-card__nm").text_content().strip() == "Buy a hero"
+    pg.wait_for_function("() => [...document.querySelectorAll('.mp-st .mp-card__nm')].some((e) => e.textContent.trim() === 'Buy a hero')", timeout=WAIT_MS)
+    (sent,) = [a for n, a in host.log if n == "ideas.loop_set"]
+    assert [lp["span"] for lp in sent["loops"]] == ["core", "session", "meta"] and [s["name"] for lp in sent["loops"] for s in lp["steps"]] == [
+        "Join a match", "Hold the tower", "Score the round", "Buy a hero", "Pick a hero", "Rematch", "Open a new arena", "Climb the ladder", "Show off"]
+    assert sent["loops"][1]["steps"][0] == {"id": "spend-the-coins", "name": "Buy a hero", "line": "Coins buy a hero.", "feel": "fantasy", "intensity": 4, "gives": [], "takes": ["coins"], "rests_on": ["config/shop.ts", "levels/"]}
+    assert [c["id"] for c in sent["currencies"]] == ["coins", "gems"] and [h["when"] for h in sent["hooks"]] == ["D1", "D7"]          # the rest is sent as it was
+    assert card(pg, "spend-the-coins").locator(".mp-card__nm").text_content().strip() == "Buy a hero" and card(pg, "spend-the-coins").locator(".mp-st__meta > span").first.inner_text() == "fantasy"
+
+
+def test_a_currency_is_renamed_in_place(maps):
+    pg, host, w = maps
+    go(pg, "game")
+    card(pg, "cur:coins").locator(".mp-card__nm").click()
+    back = lifted(pg)
+    assert back.get_attribute("data-lifted") == "t:map:game-design:cur:coins" and "Score the round" in back.inner_text() and "Spend the coins" in back.inner_text()
+    back.get_by_role("button", name="Edit").click()
+    back.locator('input[name="name"]').fill("Gold")
+    back.get_by_role("button", name="Save").click()
+    pg.wait_for_function("() => document.querySelector('.mp-eco__row[data-currency=\"coins\"] .mp-card__nm')?.textContent.trim() === 'Gold'", timeout=WAIT_MS)
+    (sent,) = [a for n, a in host.log if n == "ideas.loop_set"]
+    assert sent["currencies"][0] == {"id": "coins", "name": "Gold", "kind": "soft", "line": "Earned in every round."} and sent["loops"][0]["steps"][2]["gives"] == ["coins"]      # its id stays: what gives it still does
+
+
+def test_propose_again_asks_the_leader_once_more_and_the_persons_version_is_said_to_be_kept_aside(maps):
+    pg, host, w = maps
+    go(pg, "game")
+    pg.locator(".mp-st").first.wait_for(timeout=WAIT_MS)
+    assert pg.get_by_role("button", name="Propose again").count() == 1 and pg.locator(".mp-bar .mp-cap").count() == 0
+    host.loop["by"] = "person"
+    host.rev += 1
+    host.ws.send(json.dumps(host.snapshot()))
+    pg.get_by_role("button", name="Propose again").click()
+    pg.locator(".mp-bar .mp-cap").wait_for(timeout=WAIT_MS)
+    assert [a for n, a in host.log if n == "ideas.loop_propose"] == [{"again": True}] and "kept aside" in pg.locator(".mp-bar .mp-cap").inner_text()
+    host.proposal = {"asked": False, "why": "Game design has no tool to ask"}
+    pg.get_by_role("button", name="Propose again").click()
+    pg.get_by_role("alert").wait_for(timeout=WAIT_MS)
+    assert pg.get_by_role("alert").inner_text() == "Game design has no tool to ask"
 
 
 def test_with_no_loop_kept_the_map_says_so_and_propose_asks_once(maps):
     pg, host, w = maps
-    host.loop = []
+    host.loop = json.loads(json.dumps(EMPTY))
     go(pg, "game")
     pg.locator(".mp-nothing").wait_for(timeout=WAIT_MS)
-    assert "Nothing to read yet: the game's configs" in pg.locator(".mp-nothing").inner_text() and pg.locator(".mp-card").count() == 0
+    assert "Nothing to read yet: the game's configs" in pg.locator(".mp-nothing").inner_text() and pg.locator(".mp-card").count() == 0 and pg.get_by_role("button", name="Propose again").count() == 0
     shot(pg, f"maps-loop-none-{w}.png")
     pg.get_by_role("button", name="Propose").click()
-    pg.locator(".mp-card").first.wait_for(timeout=WAIT_MS)
-    assert [a for n, a in host.log if n == "ideas.loop_propose"] == [{}] and len(names(pg)) == 5
-    host.loop = []
+    pg.locator(".mp-st").first.wait_for(timeout=WAIT_MS)
+    assert [a for n, a in host.log if n == "ideas.loop_propose"] == [{}] and len(steps_of(pg)) == 9
+    host.loop = json.loads(json.dumps(EMPTY))
     host.proposal = {"asked": False, "why": "Game design has no tool to ask"}
     host.rev += 1
     host.ws.send(json.dumps(host.snapshot()))
