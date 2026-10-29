@@ -88,7 +88,7 @@ def proposing(monkeypatch, *, kind=KIND, proposals=MOBILE, ask=False, deal="have
                 if g["slug"] == a.get("slug") and a.get("size"):
                     g["size"] = a["size"]
             return r
-        return {**got, "ideas.proposals": proposals_, "ideas.goal_save": goal_save, **({"ideas.party_presets": presets_} if kind else {})}
+        return {**got, "ideas.proposals": proposals_, "ideas.goal_save": goal_save, "ideas.party_presets": presets_ if kind else (lambda a: {"error": "No command ideas.party_presets"})}      # no `kind`: a host that has no presets of the kind
     monkeypatch.setattr(Stub, "commands", commands)
 
 
@@ -114,19 +114,19 @@ async def test_new_party_opens_on_the_projects_presets_with_a_three_way_switch_a
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
         assert norm(await sheet.locator(".presets__kind").inner_text()) == "For a mobile app: the Orkmaster knows what this project is"      # what the Orkmaster read
-        assert [await c.get_attribute("data-preset") for c in await sheet.locator(".preset-group.is-stage .preset-tile").all()] == ["ideation", "mobile-concept", "mobile-build", "release", "mobile-liveops"]
+        assert [await c.get_attribute("data-preset") for c in await sheet.locator(".preset-group.is-stage .preset-tile").all()] == ["product", "design", "tech", "release", "run", "marketing"]      # one party a craft, in the stage that offers it (spec 99 §1, decisions §122.5, §151.5)
         assert await sheet.locator(".prop, .props__top").count() == 0 and calls(stub, "ideas.proposals") == []                                  # no proposals here: they are the deal's
         group = sheet.get_by_role("radiogroup", name="Size")
         assert [norm(await b.inner_text()) for b in await group.get_by_role("radio").all()] == ["Lean", "Standard", "Full"]
         assert await group.get_by_role("radio", name="Standard").get_attribute("aria-checked") == "true"                           # Standard picked
         assert await group.locator("button.ork-btn").count() == 3                                                                   # orkUI's buttons
-        assert (await _seats(sheet, "lead"), await _seats(sheet, "build"), await _seats(sheet, "check")) == (["product-manager"], ["grunt"], [])
-        assert norm(await sheet.locator(".size-says").inner_text()).startswith("2 agents: the leader Veteran, the rest Seasoned")
+        assert (await _seats(sheet, "lead"), await _seats(sheet, "build"), await _seats(sheet, "check")) == (["architect"], ["grunt", "tester"], [])                  # Tech is the party of the stage Being made, picked at the opening; seats are five who do, two who check (spec 99 §1.3, decisions §151.1)
+        assert norm(await sheet.locator(".size-says").inner_text()).startswith("3 agents: the leader Veteran, the rest Seasoned")
         await group.get_by_role("radio", name="Lean").click()
         assert await _seats(sheet, "build") == [] and norm(await sheet.locator(".size-says").inner_text()).startswith("One agent, Seasoned · works as thrift")
         assert await group.get_by_role("radio", name="Lean").get_attribute("aria-checked") == "true" and await group.get_by_role("radio", name="Standard").get_attribute("aria-checked") == "false"
         await group.get_by_role("radio", name="Full").click()
-        assert (await _seats(sheet, "build"), await _seats(sheet, "check")) == (["grunt"], ["reviewer"]) and norm(await sheet.locator(".size-says").inner_text()).startswith("3 agents, Seasoned and up · works as quality")
+        assert (await _seats(sheet, "build"), await _seats(sheet, "check")) == (["grunt", "tester"], ["reviewer", "security-reviewer"]) and norm(await sheet.locator(".size-says").inner_text()).startswith("5 agents, Seasoned and up · works as quality")
         await page.wait_for_function("() => document.querySelector('.party-price')?.textContent.includes('$')", timeout=WAIT_MS)
         for _ in range(60):                                                                                                         # asked 300 ms after the pick
             if calls(stub, "ideas.party_price")[-1].get("size") == "full":
@@ -147,13 +147,13 @@ async def test_save_party_saves_the_party_with_its_leader_its_team_and_size_and_
     proposing(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
-        await sheet.locator('.preset-tile[data-preset="mobile-concept"]').click()
+        await sheet.locator('.preset-tile[data-preset="design"]').click()
         await sheet.get_by_role("radiogroup", name="Size").get_by_role("radio", name="Full").click()
         await sheet.get_by_label("What it is for").fill("How the app looks before it is built.")
         await sheet.get_by_role("button", name="Save party").click()
         assert await _called(stub, "ideas.goal_save")
         sent = calls(stub, "ideas.goal_save")[-1]
-        assert sent["about"] == "How the app looks before it is built." and sent["leader"] == "product-designer" and sent["size"] == "full" and sent["proposal"] == "mobile-concept"
+        assert sent["about"] == "How the app looks before it is built." and sent["leader"] == "product-designer" and sent["size"] == "full" and sent["proposal"] == "design"
         assert sent["team"][0] == "ui-kit" and "title" not in sent and sent["priority"] == "normal"                               # the person's words, not the stage's name
         await sheet.wait_for(state="hidden", timeout=WAIT_MS)
 
@@ -168,7 +168,7 @@ async def test_save_party_opens_the_party_and_a_lean_party_is_its_leader_alone(f
         await sheet.get_by_role("button", name="Save party").click()
         assert await _called(stub, "ideas.goal_save")
         sent = calls(stub, "ideas.goal_save")[-1]
-        assert sent["about"] == "The first build." and sent["size"] == "lean" and sent["team"] == [] and sent["proposal"] == "mobile-build" and "title" not in sent
+        assert sent["about"] == "The first build." and sent["size"] == "lean" and sent["team"] == [] and sent["proposal"] == "tech" and "title" not in sent
         await sheet.wait_for(state="hidden", timeout=WAIT_MS)
         screen = page.locator("section.screen:not([hidden])")                                                                        # the party's own screen opens
         await screen.wait_for(timeout=WAIT_MS * 2)
@@ -192,7 +192,7 @@ async def test_every_target_of_new_party_is_44_px_and_the_page_does_not_scroll_s
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
         boxes = await sheet.locator(".size-pick, .preset-tile, .pseat__x, .pseat.is-empty, .ork-btn.primary").evaluate_all("(els) => els.map((e) => { const r = e.getBoundingClientRect(); return [r.width, r.height, r.left, r.right]; })")
-        assert len(boxes) == 3 + 13 + 2 + 1 + 1                                                                                    # three sizes, the thirteen tiles (Team among them), × of two seats, a free seat, Save party
+        assert len(boxes) == 3 + 7 + 3 + 5 + 1                                                                                     # three sizes, the seven tiles (six crafts and the person's own), × of three seats, five free seats (of 5 who do and 2 who check, Tech's two builders in), Save party
         assert all(round(w) >= 44 and round(h) >= 44 and left >= 0 and right <= 390 for w, h, left, right in boxes)
         assert await page.evaluate(NO_SCROLL)
 
@@ -205,7 +205,7 @@ async def test_an_empty_project_has_ideations_stage_and_the_stages_of_code_and_a
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
         assert norm(await sheet.locator(".presets__kind").inner_text()) == "For an empty folder: the Orkmaster knows what this project is"
-        assert [await c.get_attribute("data-preset") for c in await sheet.locator(".preset-group.is-stage .preset-tile").all()] == ["ideation", "code-concept", "code-build", "release", "code-liveops"]
+        assert [await c.get_attribute("data-preset") for c in await sheet.locator(".preset-group.is-stage .preset-tile").all()] == ["product", "design", "tech", "release", "run", "marketing"]       # a folder of no kind has the code's crafts (spec 99 §1: any other kind by the same rows)
         assert await sheet.get_by_label("What is this project for?").count() == 0 and not [c for c in calls(stub, "ideas.proposals") if c.get("about")]      # no line is asked of the person here
         await _shot_to(page, "phone-proposals-empty")
         assert await page.evaluate(NO_SCROLL)
@@ -246,8 +246,8 @@ async def test_a_preset_pressed_asks_no_second_question(fake_repo, monkeypatch):
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _new_party(page)
         await sheet.get_by_label("What it is for").fill("a party of my own")
-        await sheet.locator('.preset-tile[data-preset="mobile-liveops"]').click()
-        await sheet.locator('.preset-tile[data-preset="mobile-liveops"][aria-pressed="true"]').wait_for(timeout=WAIT_MS)
+        await sheet.locator('.preset-tile[data-preset="run"]').click()
+        await sheet.locator('.preset-tile[data-preset="run"][aria-pressed="true"]').wait_for(timeout=WAIT_MS)
         assert await sheet.get_by_label("What it is for").input_value() == "a party of my own" and await sheet.get_by_role("button", name="Save party").is_enabled()
         assert not calls(stub, "ideas.goal_save")
 

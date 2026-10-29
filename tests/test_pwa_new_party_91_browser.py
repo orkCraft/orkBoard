@@ -1,6 +1,6 @@
 """Spec 91 part E on the phone (docs/specs/91-the-owners-list.md §7, decisions §107.5): Chromium at 390 × 844 against the proposals test's stub host with `ideas.party_presets` (the real presets of a mobile
 app, from realm/party_presets.py) and `ideas.tools` with `makes`. New party is one sheet, the two halves of the desktop's dialog one step under the other: the presets first (*By stage of the project*,
-*By craft*, *Your own party*), then the name, the size and the team by seats (*Leads*, *Does*, *Checks*). A preset pressed fills the bands; a size changes the seats and their tiers at once; a seat is taken out
+*Your own party*: one party a craft, offered by its stage, since spec 99 §1), then the name, the size and the team by seats (*Leads*, *Does*, *Checks*). A preset pressed fills the bands; a size changes the seats and their tiers at once; a seat is taken out
 and another put in from the band's sheet; a seat's AI tool is picked from groups that say what the role needs and why a tool cannot; Save party sends `tools`. Targets 44 px, no sideways scroll,
 the service worker's version."""
 from __future__ import annotations
@@ -84,26 +84,26 @@ async def test_new_party_is_the_presets_first_and_then_the_team_by_seats_in_one_
         sheet = await new_party(page)
         assert calls(stub, "ideas.party_presets") == [{}] and not calls(stub, "ideas.goal_save")
         nav = sheet.get_by_role("navigation", name="Presets")
-        assert [await h.text_content() for h in await nav.locator("h4").all()] == ["By stage of the project", "By craft", "Your own party"]
+        assert [await h.text_content() for h in await nav.locator("h4").all()] == ["By stage of the project", "Your own party"]                  # no *By craft*: the crafts are the stages' parties (spec 99 §1, decisions §122.5, §151.5)
         assert norm(await nav.locator(".presets__kind").inner_text()) == "For a mobile app: the Orkmaster knows what this project is"
         stages = nav.get_by_role("region", name="By stage of the project").locator(".preset-tile")
-        assert [await c.get_attribute("data-preset") for c in await stages.all()] == ["ideation", "mobile-concept", "mobile-build", "release", "mobile-liveops"]
-        assert [norm(await c.locator("b").text_content()) for c in await nav.get_by_role("region", name="By craft").locator(".preset-tile").all()] == ["Tech", "Design", "Data", "Marketing", "Product", "Art and sound", "Team"]
+        assert [await c.get_attribute("data-preset") for c in await stages.all()] == ["product", "design", "tech", "release", "run", "marketing"]
+        assert [norm(await c.locator("b").text_content()) for c in await stages.all()] == ["Product", "Design", "Tech", "Release", "Run", "Marketing"]
         own = nav.get_by_role("region", name="Your own party").locator(".preset-tile")
         assert norm(await own.locator("b").text_content()) == "Your own party" and norm(await own.locator("small").text_content()) == "Start from the Taskmaster and add who you need"
-        assert [await c.get_attribute("data-preset") for c in await sheet.locator('.preset-tile[aria-pressed="true"]').all()] == ["mobile-build"]       # the project's Build is where it opens
-        assert await sheet.get_by_label("Name", exact=True).input_value() == "" and await sheet.get_by_label("Name", exact=True).get_attribute("placeholder") == "Build"
+        assert [await c.get_attribute("data-preset") for c in await sheet.locator('.preset-tile[aria-pressed="true"]').all()] == ["tech"]       # the stage *Being made*'s party, Tech, is where it opens
+        assert await sheet.get_by_label("Name", exact=True).input_value() == "" and await sheet.get_by_label("Name", exact=True).get_attribute("placeholder") == "Tech"
         group = sheet.get_by_role("radiogroup", name="Size")
         assert [norm(await b.inner_text()) for b in await group.get_by_role("radio").all()] == ["Lean", "Standard", "Full"]
         assert await group.get_by_role("radio", name="Standard").get_attribute("aria-checked") == "true"
-        assert norm(await sheet.locator(".size-says").inner_text()).startswith("2 agents: the leader Veteran, the rest Seasoned")
-        assert [await sheet.locator(f'[data-seats="{b}"]').inner_text() for b in ("lead", "build", "check")] == ["1 of 1 seats", "1 of 1 seats", "0 of 1 seats"]
+        assert norm(await sheet.locator(".size-says").inner_text()).startswith("3 agents: the leader Veteran, the rest Seasoned")
+        assert [await sheet.locator(f'[data-seats="{b}"]').inner_text() for b in ("lead", "build", "check")] == ["1 of 1 seats", "2 of 5 seats", "0 of 2 seats"]        # a squad of up to seven (spec 99 §1.3, decisions §151.1)
         assert [await sheet.get_by_role("region", name=b).locator("h3").text_content() for b in ("Leads", "Does", "Checks")] == ["Leads", "Does", "Checks"]
-        assert (await seats(sheet, "lead"), await seats(sheet, "build"), await seats(sheet, "check")) == (["product-manager"], ["grunt"], [])
-        assert norm(await sheet.locator('[data-free="check"]').inner_text()).endswith("Add a checker")
-        assert norm(await sheet.locator('[data-foot="agents"]').inner_text()) == "2 agents · a task goes to the one who does its kind of work, the Grunt fills in"
+        assert (await seats(sheet, "lead"), await seats(sheet, "build"), await seats(sheet, "check")) == (["architect"], ["grunt", "tester"], [])
+        assert norm(await sheet.locator('[data-free="check"]').first.inner_text()).endswith("Add a checker")
+        assert norm(await sheet.locator('[data-foot="agents"]').inner_text()) == "3 agents · a task goes to the one who does its kind of work, the Grunt fills in"
         assert await sheet.get_by_role("button", name="Save party").is_enabled()
-        for locator in (sheet.locator(".preset-tile").first, sheet.locator(".pseat__x").first, sheet.locator('[data-seat-tool="grunt"]'), sheet.locator('[data-free="check"]'),
+        for locator in (sheet.locator(".preset-tile").first, sheet.locator(".pseat__x").first, sheet.locator('[data-seat-tool="grunt"]'), sheet.locator('[data-free="check"]').first,
                         group.get_by_role("radio", name="Lean"), sheet.get_by_role("button", name="Save party")):
             box = await locator.bounding_box()
             assert box["height"] >= 44 and box["x"] >= 0 and box["x"] + box["width"] <= 390, await locator.inner_html()
@@ -118,44 +118,44 @@ async def test_a_stage_preset_fills_the_bands_a_size_changes_seats_and_tiers_at_
     with_presets(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await new_party(page)
-        await press(sheet, "mobile-concept")
-        assert await sheet.locator('.preset-tile[aria-pressed="true"]').get_attribute("data-preset") == "mobile-concept"
-        assert (await seats(sheet, "lead"), await seats(sheet, "build")) == (["product-designer"], ["ui-kit"]) and await sheet.get_by_label("Name", exact=True).get_attribute("placeholder") == "Concept"
-        await sheet.get_by_label("Name", exact=True).fill("Our first look")
         await press(sheet, "design")
-        assert await seats(sheet, "lead") == ["product-designer"] and await sheet.get_by_label("Name", exact=True).input_value() == "Our first look"       # a name the person typed stays
-        await press(sheet, "mobile-build")
+        assert await sheet.locator('.preset-tile[aria-pressed="true"]').get_attribute("data-preset") == "design"
+        assert (await seats(sheet, "lead"), await seats(sheet, "build")) == (["product-designer"], ["ui-kit", "artist", "copywriter"]) and await sheet.get_by_label("Name", exact=True).get_attribute("placeholder") == "Design"
+        await sheet.get_by_label("Name", exact=True).fill("Our first look")
+        await press(sheet, "product")
+        assert await seats(sheet, "lead") == ["product-manager"] and await sheet.get_by_label("Name", exact=True).input_value() == "Our first look"       # a name the person typed stays
+        await press(sheet, "tech")
         await size(sheet, "Full")
-        assert (await seats(sheet, "build"), await seats(sheet, "check")) == (["grunt"], ["reviewer"])
-        assert (await tier(sheet, "product-manager"), await tier(sheet, "grunt"), await tier(sheet, "reviewer")) == ("elder", "warrior", "elder")
-        assert norm(await sheet.locator(".size-says").inner_text()).startswith("3 agents, Seasoned and up") and norm(await sheet.locator('[data-foot="agents"]').inner_text()).startswith("3 agents ·")
+        assert (await seats(sheet, "build"), await seats(sheet, "check")) == (["grunt", "tester"], ["reviewer", "security-reviewer"])
+        assert (await tier(sheet, "architect"), await tier(sheet, "grunt"), await tier(sheet, "reviewer")) == ("elder", "warrior", "elder")
+        assert norm(await sheet.locator(".size-says").inner_text()).startswith("5 agents, Seasoned and up") and norm(await sheet.locator('[data-foot="agents"]').inner_text()).startswith("5 agents ·")
         await size(sheet, "Lean")
-        assert (await seats(sheet, "build"), await seats(sheet, "check")) == ([], []) and await tier(sheet, "product-manager") == "warrior"
+        assert (await seats(sheet, "build"), await seats(sheet, "check")) == ([], []) and await tier(sheet, "architect") == "warrior"
         assert norm(await sheet.locator(".size-says").inner_text()).startswith("One agent, Seasoned")
         await size(sheet, "Standard")
-        assert await seats(sheet, "build") == ["grunt"] and await tier(sheet, "product-manager") == "elder" and await tier(sheet, "grunt") == "warrior"
+        assert await seats(sheet, "build") == ["grunt", "tester"] and await tier(sheet, "architect") == "elder" and await tier(sheet, "grunt") == "warrior"
         # take Grunt out, put another in from the band's sheet
         await sheet.get_by_role("button", name="Remove Grunt from the party").click()
-        assert await seats(sheet, "build") == [] and await sheet.locator(".preset-tile[aria-pressed=true]").count() == 0
-        await sheet.locator('[data-free="build"]').click()
+        assert await seats(sheet, "build") == ["tester"] and await sheet.locator(".preset-tile[aria-pressed=true]").count() == 0
+        await sheet.locator('[data-free="build"]').first.click()
         roles_sheet = page.get_by_role("dialog", name="Add a member")
         await roles_sheet.wait_for(timeout=WAIT_MS)
         rows = roles_sheet.locator(".team-row")
         assert 1 <= await rows.count() <= 6 and await roles_sheet.get_by_role("button", name="More roles").count() == 1
-        assert [await r.get_attribute("data-agent") for r in (await rows.all())[:3]] == ["grunt", "ui-kit", "artist"]
-        assert await roles_sheet.locator('[data-agent="product-manager"]').count() == 0
+        assert [await r.get_attribute("data-agent") for r in (await rows.all())[:1]] == ["grunt"]                                # the preset's candidates first
+        assert await roles_sheet.locator('[data-agent="architect"]').count() == 0 and await roles_sheet.locator('[data-agent="tester"]').count() == 0     # the leader and the seated are not offered
         assert norm(await roles_sheet.locator('[data-agent="artist"] .pseat__needs').inner_text()) == "needs pictures"
         await roles_sheet.locator('[data-agent="artist"]').click()
-        assert await seats(sheet, "build") == ["artist"] and await sheet.locator('[data-free="build"]').count() == 0
+        assert await seats(sheet, "build") == ["tester", "artist"] and await sheet.locator('[data-free="build"]').count() == 3        # of five seats
         assert norm(await sheet.locator('.pseat[data-seat="artist"] .pseat__needs').inner_text()) == "needs pictures"
-        await sheet.locator('[data-free="check"]').click()
+        await sheet.locator('[data-free="check"]').first.click()
         checks_sheet = page.get_by_role("dialog", name="Add a checker")
         await checks_sheet.locator('[data-agent="accessibility-reviewer"]').click()
         assert await seats(sheet, "check") == ["accessibility-reviewer"]
         await size(sheet, "Lean")
         await size(sheet, "Full")
-        assert (await seats(sheet, "build"), await seats(sheet, "check")) == (["artist"], ["accessibility-reviewer"])         # the seats the person chose come back with the size
-        await sheet.get_by_role("button", name="Remove Product manager from the party").click()
+        assert (await seats(sheet, "build"), await seats(sheet, "check")) == (["tester", "artist"], ["accessibility-reviewer"])         # the seats the person chose come back with the size
+        await sheet.get_by_role("button", name="Remove Architect from the party").click()
         assert await seats(sheet, "lead") == ["taskmaster"]
         await press(sheet, "mixed")
         assert (await seats(sheet, "lead"), await seats(sheet, "build"), await seats(sheet, "check")) == (["taskmaster"], [], []) and await sheet.locator('[data-free="lead"]').count() == 1
@@ -169,7 +169,8 @@ async def test_the_artists_tool_is_antigravity_the_picker_groups_the_reasons_and
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await new_party(page)
         await sheet.get_by_role("button", name="Remove Grunt from the party").click()
-        await sheet.locator('[data-free="build"]').click()
+        await sheet.get_by_role("button", name="Remove Tester from the party").click()                                          # the Artist is the first who does: Seasoned, as a size gives it
+        await sheet.locator('[data-free="build"]').first.click()
         await page.get_by_role("dialog", name="Add a member").locator('[data-agent="artist"]').click()
         btn = sheet.locator('[data-seat-tool="artist"]')
         assert norm(await btn.inner_text()) == "Party's tool · Claude Code" and await btn.get_attribute("aria-label") == "Its AI tool for Artist: Party's tool · Claude Code"
@@ -197,7 +198,7 @@ async def test_the_artists_tool_is_antigravity_the_picker_groups_the_reasons_and
         await sheet.get_by_role("button", name="Save party").click()
         await _called(stub, "ideas.goal_save")
         sent = calls(stub, "ideas.goal_save")[-1]
-        assert sent["leader"] == "product-manager" and sent["team"] == ["artist"] and sent["size"] == "standard" and sent["tools"] == {"artist": "agy"} and "tool" not in sent
+        assert sent["leader"] == "architect" and sent["team"] == ["artist"] and sent["size"] == "standard" and sent["tools"] == {"artist": "agy"} and "tool" not in sent
 
 
 async def _called(stub, name, n=1):
@@ -214,7 +215,7 @@ async def test_a_role_that_needs_sound_has_no_tool_that_can_and_every_tool_may_s
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await new_party(page)
         await sheet.get_by_role("button", name="Remove Grunt from the party").click()
-        await sheet.locator('[data-free="build"]').click()
+        await sheet.locator('[data-free="build"]').first.click()
         roles_sheet = page.get_by_role("dialog", name="Add a member")
         await roles_sheet.get_by_role("button", name="More roles").click()
         await roles_sheet.locator('[data-agent="sound-designer"]').click()
@@ -239,7 +240,7 @@ async def test_save_party_sends_the_leader_the_team_the_size_the_partys_tool_and
     with_presets(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await new_party(page)
-        await press(sheet, "mobile-concept")
+        await press(sheet, "design")
         await size(sheet, "Full")
         await sheet.locator('[data-sec="tool"] select').select_option("codex")
         await sheet.locator('[data-seat-tool="ui-kit"]').click()
@@ -250,8 +251,8 @@ async def test_save_party_sends_the_leader_the_team_the_size_the_partys_tool_and
         await sheet.get_by_role("button", name="Save party").click()
         await _called(stub, "ideas.goal_save")
         sent = calls(stub, "ideas.goal_save")[-1]
-        assert "title" not in sent and sent["about"] == "Draw the app before it is built." and sent["leader"] == "product-designer" and sent["team"] == ["ui-kit", "accessibility-reviewer"]
-        assert sent["size"] == "full" and sent["tool"] == "codex" and sent["proposal"] == "mobile-concept" and "tools" not in sent and sent["priority"] == "normal"
+        assert "title" not in sent and sent["about"] == "Draw the app before it is built." and sent["leader"] == "product-designer" and sent["team"] == ["ui-kit", "artist", "copywriter", "accessibility-reviewer"]
+        assert sent["size"] == "full" and sent["tool"] == "codex" and sent["proposal"] == "design" and "tools" not in sent and sent["priority"] == "normal"
 
 
 @pytest.mark.asyncio
@@ -284,13 +285,13 @@ async def test_a_preset_pressed_and_nothing_typed_is_saved_under_the_presets_nam
     with_presets(monkeypatch, refuse="held by the test")                                       # a save is recorded and refused: the stub makes no slug of a party with no words
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await new_party(page)
-        await press(sheet, "mobile-concept")
+        await press(sheet, "design")
         save = sheet.get_by_role("button", name="Save party")
         assert await save.is_enabled()                                                          # a preset is a name already
         await save.click()
         await _called(stub, "ideas.goal_save")
         sent = calls(stub, "ideas.goal_save")[-1]
-        assert sent["title"] == "Concept" and sent["about"] == "" and sent["leader"] == "product-designer" and sent["proposal"] == "mobile-concept"
+        assert sent["title"] == "Design" and sent["about"] == "" and sent["leader"] == "product-designer" and sent["proposal"] == "design"
         await sheet.get_by_label("What it is for").fill("Screens first.")
         await save.click()
         await _called(stub, "ideas.goal_save", 2)

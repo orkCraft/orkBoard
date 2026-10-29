@@ -1,5 +1,5 @@
 """Spec 65 part C, the phone (docs/specs/65-ideation.md §8, §9 "C"; decisions §78): Chromium at 390 × 844 against the scene of tests/test_pwa_arena_browser.py with an Ideation party beside
-the passkey one. New party offers Ideation, whose seats stay (no Change) and whose six agents no other party is offered; New goal in Ideation is one box (*What is the pitch?*) with *Hold* · *Tonight* ·
+the passkey one. New party no longer offers Ideation (decisions §122.3, spec 99 §1) and no other party is offered its six agents; New goal in Ideation is one box (*What is the pitch?*) with *Hold* · *Tonight* ·
 *Judge now*, no priority, no type; Ideation's field holds its pitches by its three stages (*Pitch*, *Views*, *Decision*), the views' heads lit one by one as each answers, the answer's word, the sent one
 naming its goal and *Passed (n)* folded; a pitch's sheet (the pitch, four views one under another, the case against, the decision) with Send to <party>, Change and judge again, Pass, Drop, Try again,
 Judge again, Judge now; a party of the library the project lacks opens New party with it; Needs you's `pitch` row opens the pitch's sheet. No horizontal scroll anywhere; `sw.js` v73."""
@@ -218,38 +218,16 @@ async def _open(page, slug):
 
 
 @pytest.mark.asyncio
-async def test_new_party_offers_ideation_whose_seats_stay_and_whose_agents_no_other_party_is_offered(fake_repo, monkeypatch):
-    hosted(monkeypatch)
-    async with _phone(fake_repo, monkeypatch) as (stub, page):
-        await _new_goal(page)
-        sheet = page.get_by_role("dialog", name="New party")
-        await sheet.locator('.preset-tile[data-preset="ideation"]').click()
-        seats = {b: [await x.get_attribute("data-seat") for x in await sheet.locator(f'.pband[data-band="{b}"] .pseat[data-seat]').all()] for b in ("lead", "build", "check")}
-        assert seats == {"lead": ["investor"], "build": ["product-view", "market-view", "tech-view", "design-view"], "check": ["skeptic"]}      # Leads Investor · Does the four views · Checks Skeptic
-        assert await sheet.locator("[data-free]").count() == 0 and await sheet.locator('.pseat [data-act="remove"]').count() == 0                  # its seats stay: none free, none to take out
-        assert await sheet.locator('.party-checks [data-change="checks"]').count() == 0
-        assert "its views and the skeptic stay" in await sheet.locator('[data-sec="ideation"]').inner_text()
-        await sheet.locator(".party-price").filter(has_text="a pitch").wait_for(timeout=WAIT_MS)
-        assert await sheet.locator(".party-takes").count() == 0                                    # a pitch has no goal type
-        await _shot_to(page, "ideation-new-party")
-        assert await page.evaluate(NO_SCROLL)
-        await sheet.get_by_label("What it is for").fill("Small ideas for the app.")
-        await sheet.get_by_role("button", name="Save party").click()
-        assert await _called(stub, "ideas.goal_save", {"about": "Small ideas for the app.", "craft": "product", "leader": "investor", "priority": "normal", "preset": "ideation",
-                                                       "team": ["product-view", "market-view", "tech-view", "design-view", "skeptic"], "every": []})
-
-
-@pytest.mark.asyncio
 async def test_no_other_party_is_offered_the_pitch_agents(fake_repo, monkeypatch):
     hosted(monkeypatch)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         await _new_goal(page)
         sheet = page.get_by_role("dialog", name="New party")
-        await sheet.locator('.preset-tile[data-preset="code-build"]').click()
+        await sheet.locator('.preset-tile[data-preset="tech"]').click()      # any party that is offered (Ideation is not: decisions §122.3, spec 99 §1)
         await sheet.locator(".pseat[data-seat]").first.wait_for(timeout=WAIT_MS)
         for band in ("lead", "build", "check"):
             await sheet.locator(f'.pband[data-band="{band}"] .pseat[data-seat] [data-act="remove"]').first.click()                     # the seat is free: its list of roles
-            await sheet.locator(f'[data-free="{band}"]').click()
+            await sheet.locator(f'[data-free="{band}"]').first.click()
             lists = page.locator("dialog[open] .seat-list")
             await lists.locator(".team-row").first.wait_for(timeout=WAIT_MS)
             if await lists.locator('[data-act="more-roles"]').count():

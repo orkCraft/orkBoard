@@ -91,9 +91,7 @@ export function makeWhere(core, ctx) {
     list.replaceChildren(...[projectRow(), ...p.list.flatMap((c) => [rowOf(c, c.slug === p.shown), c.slug === p.shown ? null : workLine(c)]),
       p.ops ? h("button", { class: `where-row${opsOn ? " is-on" : ""}`, type: "button", "aria-current": opsOn ? "true" : null, "data-goal": OPS_VIEW,
         "aria-label": `Operations${p.ops.stops ? `${p.ops.failed ? ", a stop failed" : ""}, something waits for you` : ""}`, onclick: () => { sh.close(); core.pickOps(); } },
-      h("span", { class: "where-row__head" }), h("span", { class: "where-row__body" }, h("b", {}, "Operations")), dot(p.ops.stops, p.ops.failed)) : null,
-      p.ops ? h("button", { class: "where-make", type: "button", "data-act": "make-team", title: "Operations stay yours, in every project: a Team party is the way to them, put in the project you choose",
-        onclick: () => { sh.close(); core.newParty("team"); } }, "Make it a Team party") : null].filter(Boolean));
+      h("span", { class: "where-row__head" }), h("span", { class: "where-row__body" }, h("b", {}, "Operations")), dot(p.ops.stops, p.ops.failed)) : null].filter(Boolean));      // no *Make it a Team party*: Team goes for now (decisions §122.2)
     if (!p.list.length && !p.ops) list.replaceChildren(...[projectRow(), h("p", { class: "muted" }, "No parties yet.")].filter(Boolean));
   }
   function openParties() { drawList(); sh.open(); }
