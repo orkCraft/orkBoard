@@ -37,6 +37,13 @@ class ConcernsMixin:
             rec["status"] = ""
         return {**rec, **store.counts(rec)}
 
+    def _concern_reply(self, party: str, **more) -> dict:
+        """Every concern command answers with the whole record as `ideas.concerns` does (the page keeps what it is answered: spec 108 §2.5), and `more`."""
+        root = self.root(make=False)
+        craft = map_parts.craft_of(root, party)
+        return {"party": party, "map": map_parts.MAPS.get(craft, ""), "leader": goal_team.leader_of(root, party), "has_map": craft in map_parts.MAPS,
+                **self._concern_record(party), **more}
+
     def concerns_counts(self, party: str) -> dict:
         """The party's row in the snapshot: `{alerts, notes, status}`."""
         try:
@@ -67,9 +74,9 @@ class ConcernsMixin:
         try:
             asked = self.keeper.concerns(party, "again")
         except KeeperError as e:                                      # the keeper's refusals are plain words; none fails the caller
-            return {"ok": True, "asked": False, "why": str(e)}
+            return self._concern_reply(party, ok=True, asked=False, why=str(e))
         self.changed("")
-        return {"ok": True, "asked": asked}
+        return self._concern_reply(party, ok=True, asked=asked)
 
     def _concern(self, args: dict) -> tuple[str, dict]:
         party = self._concern_party(args)
@@ -86,8 +93,7 @@ class ConcernsMixin:
         store.dismiss(self.state_dir, party, found["id"], store.part_hash(text, part))
         self._ev(event_log.CONCERN_DISMISSED, args, party=party, level=found["level"])
         self.changed("")
-        rec = self._concern_record(party)
-        return {"ok": True, "concerns": rec["concerns"], "alerts": rec["alerts"], "notes": rec["notes"]}
+        return self._concern_reply(party, ok=True)
 
     def concern_goal(self, args: dict) -> dict:
         party, found = self._concern(args)
@@ -102,8 +108,7 @@ class ConcernsMixin:
         store.made_goal(self.state_dir, party, found["id"], made["slug"])
         self._ev(event_log.CONCERN_GOAL, args, party=party, level=found["level"], idea=made["slug"])
         self.changed("")
-        rec = self._concern_record(party)
-        return {"ok": True, "idea": made["slug"], "type": made.get("type", ""), "concerns": rec["concerns"], "alerts": rec["alerts"], "notes": rec["notes"]}
+        return self._concern_reply(party, ok=True, idea=made["slug"], type=made.get("type", ""))
 
 
 def concerns_commands(ideas_: Any) -> dict:

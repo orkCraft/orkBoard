@@ -244,7 +244,8 @@ def test_no_call_for_a_party_nobody_opens_or_that_has_no_map(host, design, model
     assert model.looks == [] and host.command("ideas.map", {})["goals"]                              # the Board is read, no look is made
     got = host.command("ideas.concerns", {"party": plain})
     assert got["has_map"] is False and got["map"] == "" and got["concerns"] == [] and got["status"] == "" and model.looks == []
-    assert host.command("ideas.concerns_again", {"party": plain}) == {"ok": True, "asked": False, "why": "There is nothing on this map to look at yet"} and model.looks == []
+    again = host.command("ideas.concerns_again", {"party": plain})        # the whole record, as every concern command answers (spec 108 §2.5)
+    assert (again["ok"], again["asked"], again["why"], again["concerns"]) == (True, False, "There is nothing on this map to look at yet", []) and model.looks == []
 
 
 def test_a_party_whose_map_has_nothing_to_look_at_yet_is_not_looked_at(host, model):
@@ -257,7 +258,8 @@ def test_the_first_opening_asks_the_second_does_not_and_again_does(host, design,
     _look(host, design)
     _look(host, design)
     assert len(model.looks) == 1, "the map did not change"
-    assert host.command("ideas.concerns_again", {"party": design}) == {"ok": True, "asked": True}
+    again = host.command("ideas.concerns_again", {"party": design})
+    assert (again["ok"], again["asked"], again["party"]) == (True, True, design) and isinstance(again["concerns"], list)
     _wait(host, design)
     assert len(model.looks) == 2
     rows = [r for r in event_log.read(host.ideas.keeper.repo_root) if r["event"] == event_log.CONCERNS_MADE]
