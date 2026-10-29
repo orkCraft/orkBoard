@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orkboard phone upright, mockup</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* Spec 103 A (decisions §174.1–§174.2) with what §175–§177 added since: the phone upright, the hand first with the top card's
+   context above it, the potions and the default's frame, the Orkmaster's line, the card *Go on paid?*, and the Board's own
+   screen with the discard and the portal. orkUI's classes and tokens only; this page's own layout until it is built. */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; background: var(--ork-canvas); color: var(--ork-ink); }
+p, h1, h2, ul { margin: 0; padding: 0; }
+ul { list-style: none; }
+button { margin: 0; color: inherit; }
+img { display: block; }
+.mute { color: var(--ork-ink-muted); }
+.cap { font: var(--ork-type-caption); }
+.body { font: var(--ork-type-body); }
+
+.mk-bar { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3) var(--ork-6);
+  padding: var(--ork-4) var(--ork-6); background: var(--ork-canvas); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.mk-line { max-width: 110ch; padding: var(--ork-4) var(--ork-6) 0; font: var(--ork-type-body); }
+.mk-main { display: flex; flex-wrap: wrap; gap: var(--ork-8); padding: var(--ork-6); }
+.mk-st { display: flex; flex-direction: column; gap: var(--ork-3); width: 390px; max-width: 100%; }
+.mk-st h2 { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.mk-st > p { font: var(--ork-type-caption); color: var(--ork-ink-muted); min-height: 48px; }
+@media (max-width: 440px) { .mk-main { padding: var(--ork-4); } }
+
+/* the phone: 390 x 844, the notch's and the home bar's safe areas kept clear */
+.ph { position: relative; width: 390px; height: 844px; max-width: 100%; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--ork-table); border: var(--ork-line) solid var(--ork-frame); }
+.sb { flex: none; height: 47px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.hb { flex: none; height: 34px; display: flex; align-items: center; justify-content: center; }
+.hb::after { content: ""; width: 134px; height: 5px; background: var(--ork-ink-faint); }
+
+/* the Orkmaster's line (spec 105 D.3), at the screen's top when the work moved on */
+.say { flex: none; display: flex; align-items: center; gap: var(--ork-3); padding: var(--ork-2) var(--ork-2) var(--ork-2) var(--ork-4);
+  border-bottom: var(--ork-line) solid var(--ork-frame); background: var(--ork-panel); font: var(--ork-type-body); }
+.say p { flex: 1; min-width: 0; }
+.x .ork-icon { width: 21px; height: 21px; }
+.x { width: 44px; height: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+
+/* the top card's context (§174.1): who, which goal, why, the pick, what waits; at most a quarter of the screen */
+.ctx { flex: none; display: flex; flex-direction: column; gap: var(--ork-2); max-height: 211px; padding: var(--ork-3) var(--ork-4) var(--ork-4); }
+.ctx-who { display: flex; align-items: center; gap: var(--ork-3); min-height: 44px; }
+.ctx-who .ork-race { flex: 1; min-width: 0; font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.ctx-goal { display: flex; align-items: center; gap: var(--ork-3); font: var(--ork-type-body); font-weight: 600; }
+.ctx-goal .ork-sign { color: var(--ork-ink-muted); }
+.ctx-why { font: var(--ork-type-body); }
+.ctx-rec, .ctx-wait { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.ctx-wait { display: flex; align-items: center; gap: var(--ork-2); }
+.ctx-wait .ork-sign { color: var(--ork-alert); }
+.board-btn { height: 44px; }
+.ctx-pots { display: flex; justify-content: flex-end; }
+
+/* the stack: one question a card, its depth its edges (§153.6) */
+.stk { position: relative; flex: 1; min-height: 0; margin: 0 var(--ork-4); }
+.stk > .ork-card-back { position: absolute; left: 0; right: 0; top: 0; bottom: var(--ork-2); aspect-ratio: auto; }
+.stk > .ork-card-back.b1 { transform: translate(6px, 4px) rotate(1.4deg); }
+.stk > .ork-card-back.b2 { transform: translate(-5px, 6px) rotate(-1.2deg); }
+.qc { position: absolute; inset: 0 0 var(--ork-2); display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4);
+  transform: rotate(-0.6deg); border-color: var(--ork-alert); }
+.qc-h { display: flex; align-items: flex-start; gap: var(--ork-3); }
+.qc-h .ork-elem { margin-top: 4px; }
+.qc-nm { flex: 1; min-width: 0; font: var(--ork-type-body); font-size: 18px; line-height: 24px; font-weight: 600; }
+.qc-win { position: relative; flex: none; height: 52px; display: flex; align-items: center; justify-content: center;
+  border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-card); }
+.qc-win .ork-sign.big { color: var(--ork-alert); }
+.qc-win .ork-race__head { position: absolute; right: var(--ork-4); bottom: -10px; }
+.qc-lab { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-3); min-height: 22px;
+  font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.qc-body { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; display: flex; flex-direction: column; gap: var(--ork-3); }
+.qc-foot { flex: none; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+
+/* the choices, dealt on the card (choose.js's cards, the narrow width's 2 x 2) */
+.chs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ork-3); }
+.ch { display: flex; flex-direction: column; gap: var(--ork-1); min-height: 92px; padding: var(--ork-3); }
+.ch .n { font: var(--ork-type-body); font-weight: 600; }
+.ch .ork-gem { align-self: flex-start; }
+.ch .w { font: var(--ork-type-caption); color: var(--ork-ink-muted); margin-top: auto; }
+.ch.pick { transform: translateY(-4px); border-color: var(--ork-ink); }
+.ch.other { border-style: dashed; background: none; color: var(--ork-ink-muted); align-items: center; justify-content: center; }
+.btns { display: flex; flex-direction: column; gap: var(--ork-3); }
+.btns .ork-btn { height: 44px; width: 100%; justify-content: center; }
+.decide { align-self: center; height: 44px; }
+
+/* the foot: the blank card with the microphone, the potions flush right (§176.2, §177.1) */
+.foot { flex: none; display: flex; align-items: flex-end; gap: var(--ork-4); padding: var(--ork-4) 0 0 var(--ork-4); }
+button.ork-card.plus, .plus { position: relative; width: 80px; height: 112px; flex: none; display: flex; align-items: center; justify-content: center; border-color: var(--ork-action);
+  transform: rotate(calc(var(--ork-motion-lean) * -0.5)); }
+.plus .ork-icon { width: 28px; height: 28px; color: var(--ork-action); }
+.plus .mic { position: absolute; left: 50%; bottom: var(--ork-2); transform: translateX(-50%); width: 44px; height: 32px; display: flex; align-items: center; justify-content: center; }
+.plus .mic .ork-icon { width: 21px; height: 21px; color: var(--ork-ink-muted); }
+.pools { margin-left: auto; display: grid; grid-template-columns: repeat(var(--c, 2), 52px); gap: var(--ork-1) var(--ork-2); }
+.pools.row { margin: 0; grid-template-columns: repeat(var(--c, 4), 44px); }
+.pool { position: relative; width: 100%; border: 2px solid transparent; background: none; padding: var(--ork-1) 0; display: flex; flex-direction: column; align-items: center;
+  gap: var(--ork-1); cursor: pointer; --pc: var(--ork-ink); }
+.pool .pct { color: var(--pc); font: var(--ork-type-caption); font-size: 12px; line-height: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pool.low { --pc: var(--ork-alert); }
+.pool.crit { --pc: var(--ork-danger); }
+.pool.is-default { border-color: var(--ork-ink); clip-path: var(--ork-notch); background: var(--ork-panel); }
+.pool.was::before { content: ""; position: absolute; inset: -2px; border: 2px dashed var(--ork-ink-faint); pointer-events: none; }
+.pools.row .pool { padding: 0; }
+.pools.row .ork-mark { width: 16px; height: 16px; }
+
+/* the empty hand: the blank card takes the screen */
+.mid { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--ork-4); }
+button.ork-card.plus.big { width: 200px; height: 280px; }
+.plus.big .ork-icon { width: 42px; height: 42px; }
+.plus.big .mic { width: 56px; height: 44px; bottom: var(--ork-4); }
+.mid-top { flex: none; display: flex; justify-content: flex-end; padding: var(--ork-3) var(--ork-4) 0; }
+
+/* the Board's screen upright (§174.2 in a browser: spec 94 §3's tokens) */
+.bt { flex: none; display: flex; align-items: center; gap: var(--ork-2); min-height: 48px; padding: 0 var(--ork-2); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.bt .t { flex: 1; min-width: 0; font: var(--ork-type-body); font-weight: 600; }
+.ntabs { flex: none; display: grid; grid-template-columns: repeat(5, 48px) minmax(0, 1fr); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.ntabs .ork-tab { height: 48px; padding: 0; display: flex; align-items: center; justify-content: center; border-left: var(--ork-line) solid var(--ork-frame); }
+.ntabs .ork-tab:first-child { border-left: 0; }
+.ntabs .end { display: flex; align-items: center; justify-content: flex-end; padding-right: var(--ork-2); border-left: var(--ork-line) solid var(--ork-frame); }
+.nb { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(5, 48px) minmax(0, 1fr); }
+.nl { display: flex; flex-direction: column; align-items: center; gap: var(--ork-3); padding-top: var(--ork-4); border-left: var(--ork-line) solid var(--ork-frame); }
+.nl:first-child { border-left: 0; }
+.tok { width: 38px; height: 54px; padding: var(--ork-1); display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); }
+.tok .ork-sign.big { transform: scale(0.8); color: var(--ork-ink-muted); }
+.tok.asks { border-color: var(--ork-alert); }
+.tok.asks .ork-sign.big { color: var(--ork-alert); }
+.rn { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: var(--ork-2); padding: var(--ork-3) var(--ork-2) var(--ork-4); text-align: center;
+  border-left: var(--ork-line) solid var(--ork-frame); }
+.gline { font: var(--ork-type-caption); }
+.glab { font: var(--ork-type-heading); font-size: 12px; line-height: 16px; text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.dlab { font: var(--ork-type-heading); font-size: 12px; line-height: 16px; text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); }
+.pile { position: relative; width: 80px; height: 112px; }
+.pile > * { position: absolute; inset: 0; }
+.pile > .ork-card-back.b1 { transform: translate(6px, 2px) rotate(5deg); }
+.pile > .done { padding: var(--ork-2); display: flex; flex-direction: column; gap: var(--ork-1); }
+.pile > .done .n { font: var(--ork-type-caption); font-weight: 600; }
+.pile > .done .ork-sign { color: var(--ork-success); }
+.rdy { display: flex; gap: var(--ork-2); }
+button.ork-card.rdy-c, .rdy .ork-card { width: 64px; height: 90px; padding: var(--ork-2); font: var(--ork-type-caption); font-weight: 600; }
+.ptitle { flex: none; display: flex; align-items: center; min-height: 44px; padding: 0 var(--ork-4); font: var(--ork-type-body); border-bottom: var(--ork-line) solid var(--ork-frame); }
+</style>
+</head>
+<body>
+<header class="mk-bar"><span class="ork-label">Orkboard · the phone upright · spec 103 A with §175–§177</span></header>
+<p class="mk-line">The hand first, the top card's context above it (decisions §174.1), with what the desktop gained since: the potions and the default's frame (§176.2, §177.1), the Orkmaster's line (§177.2), the card <i>Go on paid?</i> (§177.3), the discard and the portal on the Board's screen (§176.3, §177.4). 390 × 844, iPhone 15. Each state answers one of the questions sent with it; where a question has two ways, the second is drawn too (1b).</p>
+<main class="mk-main">
+
+<!-- 1 · a question on top -->
+<section class="mk-st">
+  <h2>1 · A question on top</h2>
+  <p>Context: whose, which goal, why, the pick, what waits. The choices dealt on the card. The potions at the foot, right of the blank card, the default framed (two rows of two for four tools).</p>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+    <div class="ctx">
+      <div class="ctx-who">
+        <span class="ork-race"><img class="ork-race__head" src="../../../design-system/orkui/races/shaman-elder.png" srcset="../../../design-system/orkui/races/shaman-elder@2x.png 2x" alt=""><span class="ork-race__word">Tech</span></span>
+        <button class="ork-btn board-btn" aria-label="The Board">The Board</button>
+      </div>
+      <div class="ctx-goal"><span class="ork-elem dust" aria-hidden="true"></span><span class="ork-sign feature" aria-hidden="true"></span><span>Sign-in</span></div>
+      <p class="ctx-why">A new player meets it before the lobby, so it decides what the lobby needs from them.</p>
+      <p class="ctx-rec">Recommended: Email link</p>
+      <p class="ctx-wait"><span class="ork-sign alert" aria-hidden="true"></span>Grunt waits for your answer</p>
+    </div>
+    <div class="stk">
+      <div class="ork-card-back b2"></div><div class="ork-card-back b1"></div>
+      <article class="ork-card qc el-dust" aria-label="Which sign-in first?">
+        <div class="qc-h"><span class="ork-elem dust" aria-hidden="true"></span><span class="qc-nm">Which sign-in first?</span></div>
+        <div class="qc-win"><span class="ork-sign big question" aria-hidden="true"></span><img class="ork-race__head" src="../../../design-system/orkui/races/shaman-elder.png" srcset="../../../design-system/orkui/races/shaman-elder@2x.png 2x" alt=""></div>
+        <div class="qc-lab"><span>Tech</span></div>
+        <div class="qc-body">
+          <div class="chs">
+            <button class="ork-card ch pick"><span class="n">Email link</span><span class="w">Fewest steps for a new player</span></button>
+            <button class="ork-card ch"><span class="n">Passkey</span></button>
+            <button class="ork-card ch"><span class="n">Google</span><span class="ork-gem share">3%</span></button>
+            <button class="ork-card ch other"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg><span class="n">Other…</span></button>
+          </div>
+          <button class="ork-btn quiet decide">Let Tech decide</button>
+        </div>
+        <p class="qc-foot">Pick an answer: the leader writes it into the spec</p>
+      </article>
+    </div>
+    <div class="foot">
+      <button class="ork-card plus" aria-label="New goal"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg><span class="mic"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#mic"/></svg></span></button>
+      <div class="pools" style="--c:2">
+        <button class="pool is-default" title="Claude Code: 62% of the week left, the default"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-claude.png" srcset="../../../design-system/orkui/marks/harness-claude@2x.png 2x" alt=""><span class="ork-potion small" style="--ork-potion-left:.62;--ork-potion-spend:.04"></span><span class="pct">62%</span></button>
+        <button class="pool" title="Antigravity: 80% of the day left"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-agy.png" srcset="../../../design-system/orkui/marks/harness-agy@2x.png 2x" alt=""><span class="ork-potion small" style="--ork-potion-left:.8"></span><span class="pct">80%</span></button>
+        <button class="pool" title="Codex: 41% of the week left"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-codex.png" srcset="../../../design-system/orkui/marks/harness-codex@2x.png 2x" alt=""><span class="ork-potion small" style="--ork-potion-left:.41"></span><span class="pct">41%</span></button>
+        <button class="pool low" title="Cursor: 18% of the month left"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-cursor.png" srcset="../../../design-system/orkui/marks/harness-cursor@2x.png 2x" alt=""><span class="ork-potion small is-warn" style="--ork-potion-left:.18"></span><span class="pct">18%</span></button>
+      </div>
+    </div>
+    <div class="hb"></div>
+  </div>
+</section>
+
+<!-- 1b · the potions in the context's row -->
+<section class="mk-st">
+  <h2>1b · Potions at the top</h2>
+  <p>The other way for question 2: the potions one row under the context, small, the foot only the blank card; the card gets the foot's height.</p>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+    <div class="ctx" style="max-height:none">
+      <div class="ctx-who">
+        <span class="ork-race"><img class="ork-race__head" src="../../../design-system/orkui/races/shaman-elder.png" srcset="../../../design-system/orkui/races/shaman-elder@2x.png 2x" alt=""><span class="ork-race__word">Tech</span></span>
+        <button class="ork-btn board-btn">The Board</button>
+      </div>
+      <div class="ctx-goal"><span class="ork-elem dust" aria-hidden="true"></span><span class="ork-sign feature" aria-hidden="true"></span><span>Sign-in</span></div>
+      <p class="ctx-why">A new player meets it before the lobby, so it decides what the lobby needs from them.</p>
+      <p class="ctx-wait"><span class="ork-sign alert" aria-hidden="true"></span>Grunt waits for your answer</p>
+      <div class="ctx-pots"><div class="pools row" style="--c:4">
+        <button class="pool is-default" title="Claude Code: 62% of the week left, the default"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-claude.png" alt=""><span class="ork-potion small" style="--ork-potion-left:.62"></span><span class="pct">62%</span></button>
+        <button class="pool"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-agy.png" alt=""><span class="ork-potion small" style="--ork-potion-left:.8"></span><span class="pct">80%</span></button>
+        <button class="pool"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-codex.png" alt=""><span class="ork-potion small" style="--ork-potion-left:.41"></span><span class="pct">41%</span></button>
+        <button class="pool low"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-cursor.png" alt=""><span class="ork-potion small is-warn" style="--ork-potion-left:.18"></span><span class="pct">18%</span></button>
+      </div></div>
+    </div>
+    <div class="stk">
+      <div class="ork-card-back b2"></div><div class="ork-card-back b1"></div>
+      <article class="ork-card qc el-dust">
+        <div class="qc-h"><span class="ork-elem dust" aria-hidden="true"></span><span class="qc-nm">Which sign-in first?</span></div>
+        <div class="qc-win"><span class="ork-sign big question" aria-hidden="true"></span><img class="ork-race__head" src="../../../design-system/orkui/races/shaman-elder.png" alt=""></div>
+        <div class="qc-body">
+          <div class="chs">
+            <button class="ork-card ch pick"><span class="n">Email link</span><span class="w">Fewest steps for a new player</span></button>
+            <button class="ork-card ch"><span class="n">Passkey</span></button>
+            <button class="ork-card ch"><span class="n">Google</span></button>
+            <button class="ork-card ch other"><span class="n">Other…</span></button>
+          </div>
+          <button class="ork-btn quiet decide">Let Tech decide</button>
+        </div>
+      </article>
+    </div>
+    <div class="foot" style="padding-right:var(--ork-4)">
+      <button class="ork-card plus" style="width:100%;height:56px;transform:none" aria-label="New goal"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg><span class="mic" style="left:auto;right:var(--ork-2);bottom:12px;transform:none"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#mic"/></svg></span></button>
+    </div>
+    <div class="hb"></div>
+  </div>
+</section>
+
+<!-- 2 · the work moved on -->
+<section class="mk-st">
+  <h2>2 · The work moved on</h2>
+  <p>Claude ran dry: the frame slid to Codex (dashed where it was), the Orkmaster's line at the screen's top until put away. Another leader's question on top.</p>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+    <div class="say" role="status"><img class="ork-race__head" src="../../../design-system/orkui/races/peon-crown.png" srcset="../../../design-system/orkui/races/peon-crown@2x.png 2x" alt=""><p>Claude Code is out until Thu 18:00: the work goes on with Codex.</p><button class="ork-btn quiet x" aria-label="Dismiss"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#close"/></svg></button></div>
+    <div class="ctx">
+      <div class="ctx-who">
+        <span class="ork-race"><img class="ork-race__head" src="../../../design-system/orkui/races/dryad-elder.png" srcset="../../../design-system/orkui/races/dryad-elder@2x.png 2x" alt=""><span class="ork-race__word">Art</span></span>
+        <button class="ork-btn board-btn">The Board</button>
+      </div>
+      <div class="ctx-goal"><span class="ork-elem meadow" aria-hidden="true"></span><span class="ork-sign screen" aria-hidden="true"></span><span>Lobby</span></div>
+      <p class="ctx-why">The lobby is the first screen with the game's colours on it.</p>
+      <p class="ctx-rec">Recommended: Dusk</p>
+    </div>
+    <div class="stk">
+      <div class="ork-card-back b1"></div>
+      <article class="ork-card qc el-meadow">
+        <div class="qc-h"><span class="ork-elem meadow" aria-hidden="true"></span><span class="qc-nm">Which palette for the lobby?</span></div>
+        <div class="qc-win"><span class="ork-sign big question" aria-hidden="true"></span><img class="ork-race__head" src="../../../design-system/orkui/races/dryad-elder.png" alt=""></div>
+        <div class="qc-lab"><span>Art</span></div>
+        <div class="qc-body">
+          <div class="chs">
+            <button class="ork-card ch pick"><span class="n">Dusk</span><span class="w">Reads on a phone at night</span></button>
+            <button class="ork-card ch"><span class="n">Meadow</span></button>
+            <button class="ork-card ch"><span class="n">Ember</span></button>
+            <button class="ork-card ch other"><span class="n">Other…</span></button>
+          </div>
+          <button class="ork-btn quiet decide">Let Art decide</button>
+        </div>
+      </article>
+    </div>
+    <div class="foot">
+      <button class="ork-card plus" aria-label="New goal"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg><span class="mic"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#mic"/></svg></span></button>
+      <div class="pools" style="--c:2">
+        <button class="pool crit was" title="Claude Code: 0% of the week left"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-claude.png" alt=""><span class="ork-potion small is-danger" style="--ork-potion-left:0"></span><span class="pct">0%</span></button>
+        <button class="pool" title="Antigravity: 80% of the day left"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-agy.png" alt=""><span class="ork-potion small" style="--ork-potion-left:.8"></span><span class="pct">80%</span></button>
+        <button class="pool is-default" title="Codex: 41% of the week left, the default"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-codex.png" alt=""><span class="ork-potion small" style="--ork-potion-left:.41"></span><span class="pct">41%</span></button>
+        <button class="pool low"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-cursor.png" alt=""><span class="ork-potion small is-warn" style="--ork-potion-left:.18"></span><span class="pct">18%</span></button>
+      </div>
+    </div>
+    <div class="hb"></div>
+  </div>
+</section>
+
+<!-- 3 · go on paid -->
+<section class="mk-st">
+  <h2>3 · Go on paid?</h2>
+  <p>Every subscription dry: the Orkmaster's card on top. The context says the project, no goal and no pick; the answers are buttons, never a pick sent from a notification.</p>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+    <div class="ctx">
+      <div class="ctx-who">
+        <span class="ork-race"><img class="ork-race__head" src="../../../design-system/orkui/races/peon-crown.png" srcset="../../../design-system/orkui/races/peon-crown@2x.png 2x" alt=""><span class="ork-race__word">Orkmaster · Party game</span></span>
+        <button class="ork-btn board-btn">The Board</button>
+      </div>
+      <p class="ctx-why">Every subscription is out until Thu 18:00.</p>
+      <p class="ctx-wait"><span class="ork-sign alert" aria-hidden="true"></span>The work waits for your answer</p>
+    </div>
+    <div class="stk">
+      <article class="ork-card qc">
+        <div class="qc-h"><span class="qc-nm">Go on paid?</span></div>
+        <div class="qc-win"><span class="ork-sign big alert" aria-hidden="true"></span><img class="ork-race__head" src="../../../design-system/orkui/races/peon-crown.png" alt=""></div>
+        <div class="qc-lab"><span>Orkmaster</span><span class="ork-gem">$0.40</span></div>
+        <div class="qc-body">
+          <p class="body">Every subscription is out until Thu 18:00. Go on with Claude Code paid by its API, about $0.40 a task, or wait.</p>
+          <div class="btns" style="margin-top:auto">
+            <button class="ork-btn">Go on, paid</button>
+            <button class="ork-btn">Wait for Thu 18:00</button>
+          </div>
+        </div>
+        <p class="qc-foot">Holds until the next reset</p>
+      </article>
+    </div>
+    <div class="foot">
+      <button class="ork-card plus" aria-label="New goal"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg><span class="mic"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#mic"/></svg></span></button>
+      <div class="pools" style="--c:2">
+        <button class="pool crit is-default"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-claude.png" alt=""><span class="ork-potion small is-danger" style="--ork-potion-left:0"></span><span class="pct">0%</span></button>
+        <button class="pool crit"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-agy.png" alt=""><span class="ork-potion small is-danger" style="--ork-potion-left:0"></span><span class="pct">0%</span></button>
+        <button class="pool crit"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-codex.png" alt=""><span class="ork-potion small is-danger" style="--ork-potion-left:.02"></span><span class="pct">2%</span></button>
+        <button class="pool crit"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-cursor.png" alt=""><span class="ork-potion small is-danger" style="--ork-potion-left:0"></span><span class="pct">0%</span></button>
+      </div>
+    </div>
+    <div class="hb"></div>
+  </div>
+</section>
+
+<!-- 4 · the hand empty -->
+<section class="mk-st">
+  <h2>4 · Nothing in the hand</h2>
+  <p>No context: the blank card takes the screen, the microphone at its foot. <i>The Board</i> stays at the top right; the potions stay at the foot.</p>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+    <div class="mid-top"><button class="ork-btn board-btn">The Board</button></div>
+    <div class="mid">
+      <button class="ork-card plus big" aria-label="New goal"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg><span class="mic"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#mic"/></svg></span></button>
+    </div>
+    <div class="foot" style="padding-left:0">
+      <div class="pools" style="--c:2">
+        <button class="pool is-default"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-claude.png" alt=""><span class="ork-potion small" style="--ork-potion-left:.62"></span><span class="pct">62%</span></button>
+        <button class="pool"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-agy.png" alt=""><span class="ork-potion small" style="--ork-potion-left:.8"></span><span class="pct">80%</span></button>
+        <button class="pool"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-codex.png" alt=""><span class="ork-potion small" style="--ork-potion-left:.41"></span><span class="pct">41%</span></button>
+        <button class="pool low"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-cursor.png" alt=""><span class="ork-potion small is-warn" style="--ork-potion-left:.18"></span><span class="pct">18%</span></button>
+      </div>
+    </div>
+    <div class="hb"></div>
+  </div>
+</section>
+
+<!-- 5 · the Board's screen upright, with the portal -->
+<section class="mk-st">
+  <h2>5 · The Board, upright</h2>
+  <p>In a browser <i>The Board</i> opens upright (in the app it turns the phone first). The row of heads, the lanes as tokens, the discard at the lanes' end; a goal ready for main pressed opens the small portal over the pile.</p>
+  <div class="ph">
+    <div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div>
+    <div class="bt"><button class="ork-btn quiet x" aria-label="Back to the hand"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#arrow-left"/></svg></button><span class="t">Orkmaster · Party game</span><span class="cap mute">As of 9:41.</span></div>
+    <nav class="ntabs" aria-label="Parties">
+      <button class="ork-tab" aria-selected="true" aria-label="Orkmaster"><img class="ork-race__head" src="../../../design-system/orkui/races/peon-crown.png" srcset="../../../design-system/orkui/races/peon-crown@2x.png 2x" alt=""></button>
+      <button class="ork-tab" aria-label="Product"><img class="ork-race__head" src="../../../design-system/orkui/races/unicorn-elder.png" srcset="../../../design-system/orkui/races/unicorn-elder@2x.png 2x" alt=""></button>
+      <button class="ork-tab" aria-label="Tech"><img class="ork-race__head" src="../../../design-system/orkui/races/shaman-elder.png" srcset="../../../design-system/orkui/races/shaman-elder@2x.png 2x" alt=""></button>
+      <button class="ork-tab" aria-label="Art"><img class="ork-race__head" src="../../../design-system/orkui/races/dryad-elder.png" srcset="../../../design-system/orkui/races/dryad-elder@2x.png 2x" alt=""></button>
+      <button class="ork-tab" aria-label="Release"><img class="ork-race__head" src="../../../design-system/orkui/races/lich-elder.png" srcset="../../../design-system/orkui/races/lich-elder@2x.png 2x" alt=""></button>
+      <div class="end"><button class="ork-btn danger" style="height:36px;padding:0 var(--ork-3)">Stop all</button></div>
+    </nav>
+    <div class="ptitle">The Board</div>
+    <div class="nb">
+      <div class="nl"><div class="ork-card tok"><span class="ork-elem ice"></span><span class="ork-sign big moon"></span></div><div class="ork-card tok"><span class="ork-elem lava"></span><span class="ork-sign big moon"></span></div></div>
+      <div class="nl"><div class="ork-card tok"><span class="ork-elem void"></span><span class="ork-sign big work"></span></div></div>
+      <div class="nl"><div class="ork-card tok asks"><span class="ork-elem dust"></span><span class="ork-sign big alert"></span></div><div class="ork-card tok"><span class="ork-elem dust"></span><span class="ork-sign big work"></span></div></div>
+      <div class="nl"><div class="ork-card tok asks"><span class="ork-elem meadow"></span><span class="ork-sign big alert"></span></div></div>
+      <div class="nl"></div>
+      <div class="rn">
+        <p class="gline">Into main: Lobby, and Reconnect it stands on</p>
+        <span class="glab">Main</span>
+        <span class="ork-portal small" aria-hidden="true"></span>
+        <p class="cap">Tap the portal to send it to main</p>
+        <div class="rdy"><button class="ork-card rdy-c ork-picked">Lobby</button></div>
+        <span class="dlab">Discard</span>
+        <div class="pile"><div class="ork-card-back b1"></div><div class="ork-card done"><span class="ork-elem ice"></span><span class="n">Reconnect</span><span class="ork-sign check"></span></div></div>
+      </div>
+    </div>
+    <div class="hb"></div>
+  </div>
+</section>
+
+</main>
+</body>
+</html>
