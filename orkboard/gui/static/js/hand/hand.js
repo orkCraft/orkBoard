@@ -3,6 +3,7 @@
 // the mana's potions, flush against the window's edge (mana.js: spec 104 B). The discard of the goals done lies on the table, not here (table/discard.js: spec 104 C). No deck: the goals in line lie on the table. A card shows its header and its window; the rest lies under the window's edge until it rises (hand.css). A card pressed is lifted
 // over the pane's foot with its answers and its cost's words; the cards of the table it is about rise (about.js). With no
 // goal at all the + card lies large in the pane's middle. What is opened over the pane (`result`, `stop`) is drawn by the faces registered below (frame/kinds.js).
+// Upright on a touch phone (frame/upright.js, docs/specs/103 §1) the hand is the whole first screen instead (upright.js): the tools' row, the top card's context, one stack with its answers on the top card, the blank card at the foot.
 // Under the table: frame.js draws `Hand` under `Table`. Keyboard: a key typed with nothing focused opens the field; Esc closes the field and lowers a lifted card.
 import { useEffect, useRef } from "preact/hooks";
 import { html } from "../html.js";
@@ -10,6 +11,7 @@ import { board } from "../board/store.js";
 import { mapData } from "../shell/store.js";
 import { drawn } from "../frame/kinds.js";
 import { lifted, lower, tab } from "../frame/state.js";
+import { uprightNow } from "../frame/upright.js";
 import { partiesOf, stacksOf, stopByKey, stopsOfProject } from "./data.js";
 import { Mana } from "./mana.js";
 import { Field, Middle, PlusCard, closeField, openField } from "./pluscard.js";
@@ -17,6 +19,7 @@ import { ResultFace } from "./resultface.js";
 import { Lifted } from "./stopcard.js";
 import { StopFace } from "./stopface.js";
 import { Stacks } from "./stacks.js";
+import { Upright } from "./upright.js";
 import { fieldOpen, stopKeyOf } from "./state.js";
 import "./wayparts.js";                                   // the goal's way's cards (spec 100)
 
@@ -33,7 +36,7 @@ function useKeys(root) {
     const away = (e) => {
       const t = e.target;
       if (!root.current || aloud(t)) return;
-      if (fieldOpen.value && !t.closest?.(".hand-field, .hand-plus, [data-picking]")) closeField();           // a press on the map in picking is the pick's (table/picking.js)
+      if (fieldOpen.value && !t.closest?.(".hand-field, .hand-plus, .up-mic, [data-picking]")) closeField();           // a press on the map in picking is the pick's (table/picking.js)
       if (stopKeyOf(lifted.value) && !t.closest?.(".hand-lifted, .hand-card")) lower();
     };
     const key = (e) => {
@@ -65,6 +68,7 @@ export function Hand() {
   if (!map) return null;
   const none = !(map.nodes || []).length, parties = partiesOf(map).length > 0, middle = none && parties && !stacks.length;      // no goal at all and nothing asked: the + card lies large in the pane
   const plus = () => { lower(); fieldOpen.value = true; };
+  if (uprightNow.value) return html`<${Upright} root=${root} stacks=${stacks} plus=${plus} />`;                  // a touch phone upright: the hand is the first screen (upright.js)
   const anchor = key ? root.current?.querySelector(`.hand-places .hand-card[data-key="${CSS.escape(key)}"]`) : null;
   return html`<footer ref=${root} class="hand" aria-label="The hand" data-empty=${middle ? "1" : undefined}>
     ${!middle && html`<div class="hand-places"><div class="hand-row">

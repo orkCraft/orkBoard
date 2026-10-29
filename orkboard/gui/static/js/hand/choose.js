@@ -61,7 +61,7 @@ function Window({ c, i = 0, picked, head }) {
   </span>`;
 }
 
-function ChoiceCard({ c, i, picked, element, by, head, onPress }) {
+export function ChoiceCard({ c, i, picked, element, by, head, onPress }) {
   return html`<button type="button" class=${cls(`ork-card q-card ork-deal${element ? ` el-${element}` : ""}`, { "is-pick ork-picked": picked })} data-choice=${c.id} data-pick=${picked ? "1" : undefined}
       style=${`--ork-deal-i:${i}`} aria-label=${`${c.name}${picked ? ", the leader’s pick" : ""}${c.gem ? `, about ${c.gem}` : ""}`} title=${c.name} onClick=${onPress} ...${leans}>
     <span class="q-card__head"><${Elem} name=${element || ""} dim=${!element} /><span class="q-card__name">${c.name}</span></span>
@@ -72,7 +72,7 @@ function ChoiceCard({ c, i, picked, element, by, head, onPress }) {
 }
 
 /** *Other…*: a blank card with +; pressed, the field opened on it with the pick's words. */
-function OtherCard({ i, seed, onOther }) {
+export function OtherCard({ i, seed, onOther }) {
   const [open, setOpen] = useState(false), [text, setText] = useState(seed), box = useRef();
   useEffect(() => { if (open) box.current?.focus({ preventScroll: true }); }, [open]);
   const send = () => { const said = text.trim(); if (said) onOther(said); };

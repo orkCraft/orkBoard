@@ -4,8 +4,12 @@ import { html } from "../html.js";
 import { Table } from "../table/table.js";
 import { Hand } from "../hand/hand.js";
 import { partiesNow } from "../table/data.js";
+import { over } from "./state.js";
+import { uprightNow } from "./upright.js";
 
-const sheets = ["./frame.css", "../table/table.css", "../table/discard.css", "../table/portal.css", "../table/notice.css", "../hand/hand.css", "../hand/mana.css"].map((p) => new URL(p, import.meta.url).href);
+export { onTurn, showBoard } from "./upright.js";           // the native frame turns the phone to its side for *The Board* (spec 103 §4.4): `onTurn(fn)`; a browser says so (frame/upright.js)
+
+const sheets = ["./frame.css", "../table/table.css", "../table/discard.css", "../table/portal.css", "../table/notice.css", "../hand/hand.css", "../hand/mana.css", "../hand/upright.css"].map((p) => new URL(p, import.meta.url).href);
 if (typeof document !== "undefined") {
   for (const href of sheets) {
     if (!document.querySelector(`link[href="${href}"]`)) {
@@ -17,9 +21,10 @@ if (typeof document !== "undefined") {
   }
 }
 
+// A touch phone upright (frame/upright.js) shows the hand as its first screen and the table only as a thing opened over the pane (a limit's story, a goal's way, the settings): `data-upright`, `data-over` (upright.css).
 // One grid for the tabs, the Board and the hand (decisions §167.7): `--lanes` columns of one width, the first the project's, then a party's each, then the tabs' end.
 export function Frame() {
-  return html`<div class="frame" data-frame="1" style=${`--lanes:${partiesNow().length + 1}`}>
+  return html`<div class="frame" data-frame="1" data-upright=${uprightNow.value ? "1" : undefined} data-over=${uprightNow.value && over.value ? "1" : undefined} style=${`--lanes:${partiesNow().length + 1}`}>
     <div class="frame-table"><${Table} /></div>
     <div class="frame-hand"><${Hand} /></div>
   </div>`;

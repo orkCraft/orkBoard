@@ -8,6 +8,8 @@
 // panel), and its words add *, the default*. On the project's tab it is the tool now (`town.mana.now`, else the Main tool, else the first); on a party's tab the tool the party is set to when it has one, else the same. One frame
 // element slides between the places (a transform, `--ork-motion-base`; not under reduced motion); every potion keeps a transparent border of the frame's width, so nothing shifts. While going on paid holds (`town.mana.paid`)
 // the tool billed by its API is a slot after the potions: its mark, orkUI's coins, *API* and the price under it, and the frame on it.
+// Upright on a touch phone (docs/specs/103 §1.2.5, decisions §179.1) the tools are `Tools`: each its coloured mark with its share under it, no bottle, a 44 px target, in one row no taller than *The Board*; the default framed (on the hand's screen
+// the tool now, else the Main tool: §178.3), its words the potion's.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Icon, ORKUI } from "../orkui.js";
@@ -114,6 +116,39 @@ function useFrame(box, frame, key, deps) {
     wrap.querySelectorAll(".hand-pot").forEach((p) => ro.observe(p));
     return () => ro.disconnect();
   }, [key, ...deps]);
+}
+
+/** One tool upright on a touch phone: its mark with its share under it (the share in the warn or the danger colour as it runs low), no bottle; its words are the potion's. */
+function Tool({ l, from, framed }) {
+  const p = potionOf(l, null, framed);
+  return html`<button type="button" class=${cls("hand-pot hand-pot--tool", `is-${p.level}`, { "is-default": framed })} data-provider=${l.provider} data-level=${p.level} data-default=${framed ? "1" : undefined}
+      title=${p.words} aria-label=${p.words} onClick=${() => openOver("limits", { provider: l.provider }, from, `${l.name}: what used it`)}>
+    <${Who} l=${l} /><span class="hand-pot__share">${p.share}</span>
+  </button>`;
+}
+
+/** The paid slot upright: the tool's mark with *API* under it (its words say the price and until when). */
+function PaidTool({ paid, from, framed }) {
+  const words = paidWordsOf(paid, framed);
+  return html`<button type="button" class=${cls("hand-pot hand-pot--tool hand-pot--paid", { "is-default": framed })} data-provider=${paid.tool} data-paid="1" data-default=${framed ? "1" : undefined} title=${words} aria-label=${words}
+      onClick=${() => openOver("limits", { provider: paid.tool }, from, `${paid.name}: what used it`)}><${Who} l=${{ provider: paid.tool, name: paid.name }} /><span class="hand-pot__share">API</span></button>`;
+}
+
+/** The AI tools' row upright on a touch phone (spec 103 §1.2.5): a mark and a share each, the default framed (the frame slides as on the desktop). A press opens what used it over the pane. */
+export function Tools() {
+  const box = useRef(), frame = useRef(), limits = town.value?.limits || [], mana = town.value?.mana || null, paid = mana?.paid || null;
+  const slots = PLACES - (paid ? 1 : 0), over = limits.length > slots, shown = over ? limits.slice(0, slots - 1) : limits, more = limits.length - shown.length;
+  const key = framedOf({ limits, mana, open: ORKMASTER, parties: [], shown }), places = shown.length + (over ? 1 : 0) + (paid ? 1 : 0);
+  useFrame(box, frame, key, [places]);
+  if (!limits.length && !paid) return null;
+  const from = { title: "", key: "" };                                                  // the Board is not reached upright: the opened place says its own title
+  return html`<div class="hand-mana hand-mana--tools" ref=${box} role="group" aria-label="What is left of your AI tools" data-n=${places} data-default=${key || undefined}>
+    <span class="hand-mana__frame" ref=${frame} aria-hidden="true" hidden></span>
+    ${shown.map((l) => html`<${Tool} key=${l.provider} l=${l} from=${from} framed=${key === l.provider} />`)}
+    ${over && html`<button type="button" class="hand-pot hand-pot--more" title=${`${more} more tools: what is left of them`} aria-label=${`${more} more tools: what is left of them`}
+      onClick=${() => openOver("limits", {}, from, "What is left of your AI tools")}><span class="hand-pot__initial" aria-hidden="true">+${more}</span></button>`}
+    ${paid && html`<${PaidTool} key="paid" paid=${paid} from=${from} framed=${key === "paid"} />`}
+  </div>`;
 }
 
 /** The potions. `lifted`: the stop now lifted in the hand, whose cost names the tool it takes from. */
