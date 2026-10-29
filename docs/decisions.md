@@ -3491,3 +3491,34 @@ cards already carry their cost as a battler's mana (§144.2), so the pool they d
 3. Drawn in orkUI first (the pool's frame and fill, §127.3), then here; until orkUI draws it, the page's own layout with orkUI's tokens.
 The owner's call.
 
+
+## 176. The mana is blue, the potions lie flush right; the discard lies on the table; a lifted card is a card (29 October, the owner)
+
+Why: the owner's yes on `docs/mockups/mana/` (the potion, flush against the window's right edge, six tools in two rows of
+three, each tool's mark in its own colour), and three more: *when the flask is full make the mana blue, a nod to it, only
+not bright so it does not pull the eye*; *there is room at the right now: the discard could go onto the table, out of the
+hand, and give the cards more room below*; *a lifted card should still have a card's shape, not a panel or a dialog: it
+appears as a card and may cover the cards under it*. A pool coloured only when it runs low says nothing while it is fine;
+a card game's discard lies on the table by its player's zone; and the cards are the window's one metaphor, so the card a
+person reads and answers is a card too. So (this changes §175.2's *ink mark* and *beside the discard*, §167's and §145.4's
+discard in the hand, spec 101 §4.4–§4.5, spec 96 §2.3's monochrome marks, and CLAUDE.md's frame line):
+1. **A tool's pool is a potion** (a round bottle with a neck and a cork, orkUI's pixel grid), its liquid filled by its share
+   left. **The liquid is the mana's blue while the tool has room**, a dim, desaturated blue near the muted ink's brightness
+   (orkUI's new `--ork-mana`), the warning's colour at the warning's level and the danger's at the danger's (`levelOf`, the
+   levels the chips had). Blue here is a signal (*there is room to spend*), so it keeps orkUI's rule that colour is a signal (spec 40).
+2. **The potions lie flush against the window's right edge** at the hand's end: up to three in a row, four to six in two
+   rows of three; **each tool's mark above its potion in its own colour** (`marks/harness-<id>.png`: Claude's orange,
+   Codex's green): the mark says who, the liquid how much. The share in words under it and for a screen reader; a press
+   opens what used it over the pane, as the chips did. A lifted card that spends shows its share hatched off its tool's top.
+3. **The discard lies on the table**, at its last column's foot, at the right, on every tab (on a party's tab the party's
+   map ends above it); the hand keeps the + card, the stacks and the potions, and the width the discard had goes to the
+   stacks. What the pile is and opens is §145.4's and §160.5's, unchanged. **A goal is on the table, in the hand or in the
+   discard**, which now lies on the table.
+4. **A lifted card is a card**: the hand card's frame and anatomy (element, name, the window with the action's sign and the
+   asker's head, the party and the gem, the foot) at about twice the hand card's width, in its proportions, turned a degree
+   or two as a card held up, its foot on the hand's line where its stack lies, over the cards beside it and the lanes'
+   foot. What the panel held (the text, the answers, the cost's words, *Put it back*, a goal's way's own body) is the card's
+   body between its window and its foot; a body longer than the card scrolls inside it, and the card never grows wider. At
+   the narrow width it is the screen's width less the gutters, rising from the hand.
+5. Drawn in orkUI first (the potion and `--ork-mana`, §127.3), then here (spec 104).
+The owner's call.
