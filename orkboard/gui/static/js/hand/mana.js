@@ -8,7 +8,7 @@
 // panel), and its words add *, the default*. On the project's tab it is the tool now (`town.mana.now`, else the Main tool, else the first); on a party's tab the tool the party is set to when it has one, else the same. One frame
 // element slides between the places (a transform, `--ork-motion-base`; not under reduced motion); every potion keeps a transparent border of the frame's width, so nothing shifts. While going on paid holds (`town.mana.paid`)
 // the tool billed by its API is a slot after the potions: its mark, orkUI's coins, *API* and the price under it, and the frame on it.
-// Upright on a touch phone (docs/specs/103 §1.2.5, decisions §179.1) the tools are `Tools`: each its coloured mark with its share under it, no bottle, a 44 px target, in one row no taller than *The Board*; the default framed (on the hand's screen
+// Upright on a touch phone (docs/specs/103 §1.2.5, decisions §179.1) the tools are `Tools`: each its coloured mark with its share under it, no bottle, a 44 px target, in one row no taller than the …; the default framed (on the hand's screen
 // the tool now, else the Main tool: §178.3), its words the potion's.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";

@@ -1,5 +1,5 @@
-/* The hand upright (docs/specs/103-the-phones-app-a-native-frame.md §1, decisions §174.1, §178, §179; the mockup docs/mockups/phone/ v4): a narrow window under a touch pointer, the hand its whole first screen. Layout only: every colour, face and corner is orkUI's.
-   frame/upright.js says when (`(max-width: 759.98px) and (pointer: coarse)`); the frame carries it as `data-upright`, and `data-over` while a thing is open over the pane (a limit's story, a goal's way, Settings): the table's pane then takes the screen,
+/* The hand on a phone (docs/specs/103-the-phones-app-a-native-frame.md §1, decisions §174.1, §178, §179, §180; the mockups docs/mockups/phone/hand.html and portal.html): a touch window, narrow or low, the hand its whole screen. Layout only: every colour, face and corner is orkUI's.
+   frame/upright.js says when (`pointer: coarse` and narrow or low); the frame carries it as `data-upright`, and `data-over` while a thing is open over the pane (a limit's story, a goal's way, Settings): the table's pane then takes the screen,
    its row of heads gone, and ← comes back to the hand. A narrow window with a fine pointer keeps the table over the hand (frame.css, table.css, hand.css). */
 
 .frame[data-upright] { display: flex; flex-direction: column; }
@@ -18,11 +18,6 @@
 .hand-up .hand-pot--tool .ork-mark { width: 16px; height: 16px; }
 .hand-up .hand-pot--tool .hand-pot__share { font-size: 12px; line-height: 14px; }
 .hand-up .hand-pot--more { height: var(--ork-tap); min-width: var(--ork-tap); padding: 0; }
-.up-board { flex: none; min-width: var(--ork-tap); min-height: var(--ork-tap); }
-
-/* in a browser, *The Board* upright says the phone is to be turned by hand: a status line over the screen, not a dialog */
-.hand-up .up-turn { position: absolute; z-index: 5; left: var(--ork-4); right: var(--ork-4); top: calc(var(--ork-tap) + var(--ork-6)); margin: 0; padding: var(--ork-3) var(--ork-4); background: var(--ork-raised);
-  border: var(--ork-line) solid var(--ork-edge); font: var(--ork-type-body); color: var(--ork-ink); }
 
 /* the top card's context: at most a quarter of the screen, its own scroll past that; a press opens the goal's way */
 .up-ctx { flex: none; box-sizing: border-box; width: 100%; max-height: 25dvh; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; align-items: stretch; gap: var(--ork-2);
@@ -39,17 +34,40 @@ button.up-ctx:focus-visible { outline: var(--ork-1) solid var(--ork-ink); outlin
 .up-ctx__wait { display: flex; align-items: center; gap: var(--ork-2); }
 .up-ctx__wait .ork-sign { flex: none; color: var(--ork-alert); }
 
-/* the one stack: the top card full width less the gutters, its answers on it; the backs under it show their edges only */
-.up-stack { position: relative; flex: 1 1 0; min-height: 0; margin: 0 var(--ork-4); }
-.up-edge { position: absolute; left: 0; right: 0; top: 0; bottom: var(--ork-2); aspect-ratio: auto; pointer-events: none;
+/* ONE goal's cards: the top card about 68% of the screen wide, centred, turned a degree, its answers inside; the backs of the goal's other cards show their edges under it. The deck lies under the thumb, so the stack stops above it. */
+.up-stack { position: relative; flex: 1 1 0; min-height: 0; margin: 0 0 88px; touch-action: pan-y; }
+.up-edge { position: absolute; left: 50%; width: 68%; max-width: 420px; top: 0; bottom: var(--ork-2); aspect-ratio: auto; pointer-events: none; translate: -50% 0;
   transform: translate(calc(var(--dx, 0) * 0.6px), calc(var(--ork-deck-i, 1) * 3px)) rotate(calc(var(--rot, 0) * 0.4deg)); }
-.hand .hand-lifted.hand-lifted--up { --hc-head: auto; --hc-window: 52px; position: absolute; inset: 0 0 var(--ork-2) 0; left: 0 !important; right: 0; bottom: var(--ork-2); width: auto; height: auto; min-height: 0; max-height: none;
-  rotate: calc(var(--ork-motion-lean) * -0.1); transform-origin: 50% 50%; }
+.hand .hand-lifted.hand-lifted--up { --hc-head: auto; --hc-window: 52px; position: absolute; top: 0; bottom: var(--ork-2); left: 50% !important; right: auto; width: 68%; max-width: 420px; height: auto; min-height: 0; max-height: none; translate: -50% 0;
+  rotate: -1deg; transform-origin: 50% 50%; z-index: 1; }
 .hand-lifted--up .hand-lifted__body { padding-bottom: var(--ork-1); }
 .hand-lifted--up .hand-answers { flex-direction: column; align-items: stretch; }
 .hand-lifted--up .hand-answers .ork-btn, .hand-lifted--up .hand-lifted__body > .ork-btn { min-height: var(--ork-tap); justify-content: center; }
 .hand-lifted--up .hand-way__acts { flex-direction: column; align-items: stretch; }
 .hand-lifted--up .hand-way__acts .ork-btn { min-height: var(--ork-tap); justify-content: center; }
+
+/* the arrows at the two sides of the context (each a 44 px target: the neighbour goal's leader head and element) and *Spec* under it */
+.up-navrow { flex: none; display: flex; align-items: flex-start; gap: var(--ork-1); padding: 0 var(--ork-2); }
+.up-navmid { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: stretch; }
+.up-nav { flex: none; box-sizing: border-box; width: var(--ork-tap); min-width: var(--ork-tap); height: var(--ork-tap); padding: 0; margin-top: var(--ork-2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; }
+.up-nav:disabled { visibility: hidden; }
+.up-nav .ork-icon { width: 16px; height: 16px; }
+.up-nav__who { display: flex; align-items: center; gap: 2px; pointer-events: none; }
+.up-nav__who .ork-elem { width: 12px; height: 12px; }
+.up-spec { align-self: flex-start; min-height: var(--ork-tap); margin: 0 var(--ork-3); max-width: calc(100% - 2 * var(--ork-3)); text-align: left; }
+
+/* the … menu's rows and the project's name over them */
+.hand-up .table-menu__btn { min-width: var(--ork-tap); min-height: var(--ork-tap); }
+.hand-up .table-menu__item { min-height: var(--ork-tap); }
+.up-menu__project { margin: 0; padding: var(--ork-3) var(--ork-4); font: var(--ork-type-body); font-weight: 600; border-bottom: var(--ork-line) solid var(--ork-frame); overflow-wrap: anywhere; }
+
+/* a goal ready for main: the portal on the card's body */
+.hand-ready__body { align-items: center; justify-content: center; text-align: center; gap: var(--ork-3); }
+.hand-ready__line { margin: 0; overflow-wrap: anywhere; }
+.hand-ready__label { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.hand-ready__hint { margin: 0; color: var(--ork-ink-muted); }
+.hand-ready__sealed { margin: 0; min-height: 0; color: var(--ork-danger); font: var(--ork-type-body); font-weight: 600; overflow-wrap: anywhere; }
+.hand-ready__later { margin-top: auto; min-height: var(--ork-tap); }
 
 /* a question's choices on the card (choose.js's cards, two by two): the name and the leader's pick raised; the window and the label are the card's own */
 .q-here { width: 100%; align-items: stretch; gap: var(--ork-3); }
@@ -64,15 +82,32 @@ button.up-ctx:focus-visible { outline: var(--ork-1) solid var(--ork-ink); outlin
 .q-here .q-choose__acts { justify-content: center; }
 .q-here .q-choose__acts .ork-btn { min-height: var(--ork-tap); }
 
-/* the blank card at the foot, full width, the microphone on it; with nothing in the hand it lies large in the middle */
-.up-foot { flex: none; padding: var(--ork-4) var(--ork-4) var(--ork-4); }
-.up-blank { position: relative; }
-.hand-up .up-blank .hand-plus { width: 100%; height: 56px; aspect-ratio: auto; rotate: 0deg; }
-.up-mic { position: absolute; right: var(--ork-1); top: 50%; transform: translateY(-50%); min-width: var(--ork-tap); min-height: var(--ork-tap); display: inline-flex; align-items: center; justify-content: center; }
+/* New goal: the green deck under the thumb (the old phone's button, pwa/shell-fab.js): two edges behind a back with the plus in the action colour */
+.up-deck { all: unset; box-sizing: border-box; cursor: pointer; position: fixed; z-index: 30; right: var(--ork-4); bottom: calc(var(--ork-3) + env(safe-area-inset-bottom, 0px)); width: 60px; height: 80px; }
+.up-deck__edge { position: absolute; width: 56px; height: 76px; box-sizing: border-box; background: var(--ork-canvas); border: var(--ork-line) solid var(--ork-action); clip-path: var(--ork-notch); }
+.up-deck__edge.e1 { right: 2px; top: 2px; }
+.up-deck__edge.e2 { right: 0; top: 0; }
+.up-deck__back { position: absolute; left: 0; bottom: 0; z-index: 1; width: 56px; height: 76px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; color: var(--ork-action); background: var(--ork-card);
+  border: 2px solid var(--ork-action); clip-path: var(--ork-notch); }
+.up-deck__back .ork-icon { width: 28px; height: 28px; }
+.up-deck:active .up-deck__back { background: var(--ork-action); color: var(--ork-on-ink); }
+.up-deck:focus-visible .up-deck__back { box-shadow: inset 0 0 0 2px var(--ork-ink); }
+
+/* the field over the keyboard, the microphone in its corner */
+.up-field { position: fixed; z-index: 40; left: 0; right: 0; bottom: 0; padding: var(--ork-3) var(--ork-4) calc(var(--ork-3) + env(safe-area-inset-bottom, 0px)); background: var(--ork-canvas); }
+.up-field .hand-field { position: static; box-sizing: border-box; width: 100%; max-width: none; }
+.up-mic { position: absolute; right: var(--ork-5); top: var(--ork-5); min-width: var(--ork-tap); min-height: var(--ork-tap); display: inline-flex; align-items: center; justify-content: center; }
 .up-mic.is-on { color: var(--ork-alert); }
 .up-mid { flex: 1 1 0; min-height: 0; display: flex; align-items: center; justify-content: center; padding: var(--ork-4); }
-.hand-up .up-blank.is-big { width: min(200px, 56vw); }
-.hand-up .up-blank.is-big .hand-plus { height: min(280px, 40dvh); }
-.hand-up .up-blank.is-big .up-mic { left: 50%; right: auto; top: auto; bottom: var(--ork-2); transform: translateX(-50%); }
-.hand-up .hand-field { position: static; box-sizing: border-box; width: 100%; }
-.up-mid .hand-field { max-width: 360px; }
+.up-none { margin: 0; text-align: center; font: var(--ork-type-body); color: var(--ork-ink-muted); }
+
+.up-body { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
+
+/* a phone on its side (a low window): the arrows and the context at the left, the goal's card at the right beside them, clear of the deck */
+@media (max-height: 499.98px) {
+  .up-body { flex-direction: row; }
+  .up-body > .up-navrow { flex: 1 1 0; min-width: 0; min-height: 0; overflow-y: auto; }
+  .up-body > .up-stack { flex: 1 1 0; min-width: 0; margin: 0 76px var(--ork-2) var(--ork-2); }
+  .hand-up .up-edge, .hand .hand-lifted.hand-lifted--up { width: 96%; max-width: none; }
+  .up-ctx { max-height: none; }
+}

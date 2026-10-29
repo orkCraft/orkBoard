@@ -12,6 +12,7 @@ import { toast } from "../link.js";
 import { ask } from "../board/store.js";
 import { mapData, refreshShell } from "../shell/store.js";
 import { over } from "../frame/state.js";
+import { uprightNow } from "../frame/upright.js";
 import { readyOf } from "../hand/data.js";
 import { reduced, leans } from "../hand/motion.js";
 
@@ -20,11 +21,11 @@ const NARROW = "(max-width: 759.98px)";
 export const GO_MS = 260;                                  // the card's travel into the portal (portal.css `portal-go`)
 
 const chosen = signal("");                                 // the goal chosen (its slug), "" while the portal is closed
-const plan = signal(null);                                 // what `ideas.to_main_plan` said of it: {slug, state: "wait" | "ok" | "fail", goals, titles, sealed, files}
+export const plan = signal(null);                                 // what `ideas.to_main_plan` said of it: {slug, state: "wait" | "ok" | "fail", goals, titles, sealed, files}
 const taking = signal(false);                              // a card is held over the portal
-const going = signal("");                                  // the goal whose card is going in
-const first = signal(false);                               // the first time the portal opens on this device
-const echo = signal(0);                                    // a press on a sealed portal says its reason again
+export const going = signal("");                                  // the goal whose card is going in
+export const first = signal(false);                               // the first time the portal opens on this device
+export const echo = signal(0);                                    // a press on a sealed portal says its reason again
 let planning = Promise.resolve(), said = false;
 
 const readSeen = () => { try { return !!localStorage.getItem(SEEN_KEY); } catch { return false; } };
@@ -34,7 +35,7 @@ const writeSeen = () => { try { localStorage.setItem(SEEN_KEY, "1"); } catch { /
 export const joined = (names) => (names.length < 2 ? names.join("") : `${names.slice(0, -1).join(", ")} and ${names.at(-1)}`);
 
 const titleOf = (slug, p) => p?.titles?.[slug] || (readyOf()?.goals || []).find((g) => g.slug === slug)?.title || slug;
-const namesOf = (p, slug) => ((p?.goals?.length ? p.goals : [slug]).map((s) => titleOf(s, p)));
+export const namesOf = (p, slug) => ((p?.goals?.length ? p.goals : [slug]).map((s) => titleOf(s, p)));
 
 /** *Into main: Lobby*, *Into main: Lobby, and Reconnect it stands on*, with more names joined in plain English. */
 export function lineOf(p, slug, main = "main") {
@@ -50,7 +51,7 @@ export function labelOf(p, slug, main = "main") {
   return `Send ${joined(namesOf(p, slug))} to ${main}`;
 }
 
-const reasonOf = (p) => (p?.state === "fail" ? "What goes to main could not be checked" : p?.sealed || "");
+export const reasonOf = (p) => (p?.state === "fail" ? "What goes to main could not be checked" : p?.sealed || "");
 
 /** Chooses a goal and opens the portal for it: the plan is asked once. A goal already chosen keeps its plan. */
 export function choose(slug) {
@@ -107,8 +108,12 @@ function useNarrow() {
   return narrow;
 }
 
-/** The portal, above the pile in the table's right column; nothing while no goal is chosen. */
+/** The portal, above the pile in the table's right column; nothing while no goal is chosen, and none on a phone (hand/readycard.js lays it on the goal's card there). */
 export function Portal() {
+  return uprightNow.value ? null : html`<${PortalDoor} />`;
+}
+
+function PortalDoor() {
   const slug = chosen.value, p = plan.value, narrow = useNarrow(), door = useRef(), r = readyOf();
   const here = !!slug && (r?.goals || []).some((g) => g.slug === slug);
   useEffect(() => { if (slug && !here) close(); }, [slug, here]);                          // the goal left the ready goals (sent, or the gate changed): the portal closes
