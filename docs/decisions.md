@@ -3601,4 +3601,8 @@ So (this changes §178.2 and spec 103 §1.2.5 and §2.1; the desktop's potions, 
    sign and its short name, in the lanes' order, one row that scrolls sideways if it must; a press picks the goal (§145.5) and
    lights its cards.
 3. Drawn in `docs/mockups/phone/` v4.
+4. Later the same day, the owner: **on its side a token is the task's type's sign in its goal's element's colour** (as the
+   desktop's map cards tone a window's sign, spec 101), and **the legend says the same**: each goal its type's sign in its
+   element's colour, then its short name. So the colour says which goal, the sign what the task is; a task that asks keeps the
+   alert's frame (the token's edge), a goal waiting for the reset the moon beside its name in the legend.
 The owner's call.

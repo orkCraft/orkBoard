@@ -71,8 +71,10 @@ runs (§6); the stores' listing and its pictures (§150.5, the marketing's).
 1. **A low window under `pointer: coarse`** (under 500 CSS px of height, 760 or more of width): the table compact as §150.2
    says, **without the hand**: no fan, no blank card; the table takes the whole height. **The discard and the portal stay**
    on the table (§178.7; spec 104 C, spec 105 F): the pile at the last column's foot, the portal over it. **The foot is the
-   goals' legend** (§179.2): each goal on the table its element, its type's sign and its short name, in the lanes' order, one
-   row (sideways scroll if it must), 44 px targets; a press picks the goal and lights its cards.
+   goals' legend** (§179.2, §179.4): each goal on the table its type's sign in its element's colour and its short name (the
+   moon beside it while it waits for the reset), in the lanes' order, one row (sideways scroll if it must), 44 px targets; a
+   press picks the goal and lights its cards. **A token** on its side is its task's type's sign in its goal's element's
+   colour; a task that asks keeps the alert's edge.
 2. **A stop's sign on a head** (✗ or !, spec 53 §1.2) is a press: it opens that stop's card over the table, answered there as
    in the hand; the card closes and the table stays. Nothing else of the hand is reachable on its side.
 3. **A low window with a fine pointer** (a laptop's split screen) keeps §150.2's fan, unchanged.
