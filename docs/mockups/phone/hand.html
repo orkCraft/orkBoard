@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orkboard phone upright, mockup</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* Spec 103 A (decisions §174.1–§174.2) with what §175–§177 added since: the phone upright, the hand first with the top card's
+   context above it, the potions and the default's frame, the Orkmaster's line, the card *Go on paid?*, and the Board's own
+   screen with the discard and the portal. orkUI's classes and tokens only; this page's own layout until it is built. */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; background: var(--ork-canvas); color: var(--ork-ink); }
+p, h1, h2, ul { margin: 0; padding: 0; }
+ul { list-style: none; }
+button { margin: 0; color: inherit; }
+img { display: block; }
+.mute { color: var(--ork-ink-muted); }
+.cap { font: var(--ork-type-caption); }
+.body { font: var(--ork-type-body); }
+
+.mk-bar { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3) var(--ork-6);
+  padding: var(--ork-4) var(--ork-6); background: var(--ork-canvas); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.mk-line { max-width: 110ch; padding: var(--ork-4) var(--ork-6) 0; font: var(--ork-type-body); }
+.mk-main { display: flex; flex-wrap: wrap; gap: var(--ork-8); padding: var(--ork-6); }
+.mk-st { display: flex; flex-direction: column; gap: var(--ork-3); width: 390px; max-width: 100%; }
+.mk-st h2 { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.mk-st > p { font: var(--ork-type-caption); color: var(--ork-ink-muted); min-height: 48px; }
+@media (max-width: 440px) { .mk-main { padding: var(--ork-4); } }
+
+/* the phone: 390 x 844, the notch's and the home bar's safe areas kept clear */
+.ph { position: relative; width: 390px; height: 844px; max-width: 100%; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--ork-table); border: var(--ork-line) solid var(--ork-frame); }
+.sb { flex: none; height: 47px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.hb { flex: none; height: 34px; display: flex; align-items: center; justify-content: center; }
+.hb::after { content: ""; width: 134px; height: 5px; background: var(--ork-ink-faint); }
+
+/* the Orkmaster's line (spec 105 D.3), at the screen's top when the work moved on */
+.say { flex: none; display: flex; align-items: center; gap: var(--ork-3); padding: var(--ork-2) var(--ork-2) var(--ork-2) var(--ork-4);
+  border-bottom: var(--ork-line) solid var(--ork-frame); background: var(--ork-panel); font: var(--ork-type-body); }
+.say p { flex: 1; min-width: 0; }
+.x .ork-icon { width: 21px; height: 21px; }
+.x { width: 44px; height: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+
+/* the top card's context (§174.1): who, which goal, why, the pick, what waits; at most a quarter of the screen */
+.ctx { flex: none; display: flex; flex-direction: column; gap: var(--ork-2); max-height: 211px; padding: var(--ork-3) var(--ork-4) var(--ork-4); }
+.ctx-who { display: flex; align-items: center; gap: var(--ork-3); min-height: 44px; }
+.ctx-who .ork-race { flex: 1; min-width: 0; font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.ctx-goal { display: flex; align-items: center; gap: var(--ork-3); font: var(--ork-type-body); font-weight: 600; }
+.ctx-goal .ork-sign { color: var(--ork-ink-muted); }
+.ctx-why { font: var(--ork-type-body); }
+.ctx-rec, .ctx-wait { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.ctx-wait { display: flex; align-items: center; gap: var(--ork-2); }
+.ctx-wait .ork-sign { color: var(--ork-alert); }
+.board-btn { height: 44px; }
+.ctx-pots { display: flex; justify-content: flex-end; }
+
+/* the stack: one question a card, its depth its edges (§153.6) */
+.stk { position: relative; flex: 1; min-height: 0; margin: 0 var(--ork-4); }
+.stk > .ork-card-back { position: absolute; left: 0; right: 0; top: 0; bottom: var(--ork-2); aspect-ratio: auto; }
+.stk > .ork-card-back.b1 { transform: translate(6px, 4px) rotate(1.4deg); }
+.stk > .ork-card-back.b2 { transform: translate(-5px, 6px) rotate(-1.2deg); }
+.qc { position: absolute; inset: 0 0 var(--ork-2); display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4);
+  transform: rotate(-0.6deg); border-color: var(--ork-alert); }
+.qc-h { display: flex; align-items: flex-start; gap: var(--ork-3); }
+.qc-h .ork-elem { margin-top: 4px; }
+.qc-nm { flex: 1; min-width: 0; font: var(--ork-type-body); font-size: 18px; line-height: 24px; font-weight: 600; }
+.qc-win { position: relative; flex: none; height: 52px; display: flex; align-items: center; justify-content: center;
+  border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-card); }
+.qc-win .ork-sign.big { color: var(--ork-alert); }
+.qc-win .ork-race__head { position: absolute; right: var(--ork-4); bottom: -10px; }
+.qc-lab { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-3); min-height: 22px;
+  font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.qc-body { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; display: flex; flex-direction: column; gap: var(--ork-3); }
+.qc-foot { flex: none; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+
+/* the choices, dealt on the card (choose.js's cards, the narrow width's 2 x 2) */
+.chs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ork-3); }
+.ch { display: flex; flex-direction: column; gap: var(--ork-1); min-height: 92px; padding: var(--ork-3); }
+.ch .n { font: var(--ork-type-body); font-weight: 600; }
+.ch .ork-gem { align-self: flex-start; }
+.ch .w { font: var(--ork-type-caption); color: var(--ork-ink-muted); margin-top: auto; }
+.ch.pick { transform: translateY(-4px); border-color: var(--ork-ink); }
+.ch.other { border-style: dashed; background: none; color: var(--ork-ink-muted); align-items: center; justify-content: center; }
+.btns { display: flex; flex-direction: column; gap: var(--ork-3); }
+.btns .ork-btn { height: 44px; width: 100%; justify-content: center; }
+.decide { align-self: center; height: 44px; }
+
+/* the foot: the blank card with the microphone, the potions flush right (§176.2, §177.1) */
+.foot { flex: none; display: flex; align-items: flex-end; gap: var(--ork-4); padding: var(--ork-4) 0 0 var(--ork-4); }
+button.ork-card.plus, .plus { position: relative; width: 80px; height: 112px; flex: none; display: flex; align-items: center; justify-content: center; border-color: var(--ork-action);
+  transform: rotate(calc(var(--ork-motion-lean) * -0.5)); }
+.plus .ork-icon { width: 28px; height: 28px; color: var(--ork-action); }
+.plus .mic { position: absolute; left: 50%; bottom: var(--ork-2); transform: translateX(-50%); width: 44px; height: 32px; display: flex; align-items: center; justify-content: center; }
+.plus .mic .ork-icon { width: 21px; height: 21px; color: var(--ork-ink-muted); }
+.pools { margin-left: auto; display: grid; grid-template-columns: repeat(var(--c, 2), 52px); gap: var(--ork-1) var(--ork-2); }
+.pools.row { margin: 0; grid-template-columns: repeat(var(--c, 4), 44px); }
+.pool { position: relative; width: 100%; border: 2px solid transparent; background: none; padding: var(--ork-1) 0; display: flex; flex-direction: column; align-items: center;
+  gap: var(--ork-1); cursor: pointer; --pc: var(--ork-ink); }
+.pool .pct { color: var(--pc); font: var(--ork-type-caption); font-size: 12px; line-height: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pool.low { --pc: var(--ork-alert); }
+.pool.crit { --pc: var(--ork-danger); }
+.pool.is-default { border-color: var(--ork-ink); clip-path: var(--ork-notch); background: var(--ork-panel); }
+.pool.was::before { content: ""; position: absolute; inset: -2px; border: 2px dashed var(--ork-ink-faint); pointer-events: none; }
+.pools.row .pool { padding: 0; }
+.pools.row .ork-mark { width: 16px; height: 16px; }
+
+/* the empty hand: the blank card takes the screen */
+.mid { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--ork-4); }
+button.ork-card.plus.big { width: 200px; height: 280px; }
+.plus.big .ork-icon { width: 42px; height: 42px; }
+.plus.big .mic { width: 56px; height: 44px; bottom: var(--ork-4); }
+.mid-top { flex: none; display: flex; justify-content: flex-end; padding: var(--ork-3) var(--ork-4) 0; }
+
+/* the Board's screen upright (§174.2 in a browser: spec 94 §3's tokens) */
+.bt { flex: none; display: flex; align-items: center; gap: var(--ork-2); min-height: 48px; padding: 0 var(--ork-2); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.bt .t { flex: 1; min-width: 0; font: var(--ork-type-body); font-weight: 600; }
+.ntabs { flex: none; display: grid; grid-template-columns: repeat(5, 48px) minmax(0, 1fr); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.ntabs .ork-tab { height: 48px; padding: 0; display: flex; align-items: center; justify-content: center; border-left: var(--ork-line) solid var(--ork-frame); }
+.ntabs .ork-tab:first-child { border-left: 0; }
+.ntabs .end { display: flex; align-items: center; justify-content: flex-end; padding-right: var(--ork-2); border-left: var(--ork-line) solid var(--ork-frame); }
+.nb { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(5, 48px) minmax(0, 1fr); }
+.nl { display: flex; flex-direction: column; align-items: center; gap: var(--ork-3); padding-top: var(--ork-4); border-left: var(--ork-line) solid var(--ork-frame); }
+.nl:first-child { border-left: 0; }
+.tok { width: 38px; height: 54px; padding: var(--ork-1); display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); }
+.tok .ork-sign.big { transform: scale(0.8); color: var(--ork-ink-muted); }
+.tok.asks { border-color: var(--ork-alert); }
+.tok.asks .ork-sign.big { color: var(--ork-alert); }
+.rn { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: var(--ork-2); padding: var(--ork-3) var(--ork-2) var(--ork-4); text-align: center;
+  border-left: var(--ork-line) solid var(--ork-frame); }
+.gline { font: var(--ork-type-caption); }
+.glab { font: var(--ork-type-heading); font-size: 12px; line-height: 16px; text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.dlab { font: var(--ork-type-heading); font-size: 12px; line-height: 16px; text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); }
+.pile { position: relative; width: 80px; height: 112px; }
+.pile > * { position: absolute; inset: 0; }
+.pile > .ork-card-back.b1 { transform: translate(6px, 2px) rotate(5deg); }
+.pile > .done { padding: var(--ork-2); display: flex; flex-direction: column; gap: var(--ork-1); }
+.pile > .done .n { font: var(--ork-type-caption); font-weight: 600; }
+.pile > .done .ork-sign { color: var(--ork-success); }
+.rdy { display: flex; gap: var(--ork-2); }
+button.ork-card.rdy-c, .rdy .ork-card { width: 64px; height: 90px; padding: var(--ork-2); font: var(--ork-type-caption); font-weight: 600; }
+.ptitle { flex: none; display: flex; align-items: center; min-height: 44px; padding: 0 var(--ork-4); font: var(--ork-type-body); border-bottom: var(--ork-line) solid var(--ork-frame); }
+
+/* v2 (decisions §178): the potions' row at the top, left of The Board; the foot the blank card alone; the Board only on its side */
+.top { flex: none; display: flex; align-items: center; justify-content: flex-end; gap: var(--ork-2); padding: var(--ork-2) var(--ork-4) 0; }
+.top .pools.row { margin-right: auto; }
+.foot2 { flex: none; padding: var(--ork-4) var(--ork-4) 0; }
+button.ork-card.plus.wide { width: 100%; height: 56px; transform: none; }
+.plus.wide .mic { left: auto; right: var(--ork-2); bottom: 12px; transform: none; }
+.ph.side { width: 844px; height: 390px; flex-direction: row; }
+.ph.side .safe { flex: none; width: 47px; }
+.ph.side .main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.ph.side .ntabs { grid-template-columns: repeat(5, 120px) minmax(0, 1fr); }
+.ph.side .ntabs .ork-tab { justify-content: flex-start; gap: var(--ork-2); padding: 0 var(--ork-3); font: var(--ork-type-caption); text-transform: none; letter-spacing: 0; }
+.ph.side .nb { grid-template-columns: repeat(5, 120px) minmax(0, 1fr); }
+.ph.side .nl { flex-direction: row; flex-wrap: wrap; align-content: flex-start; justify-content: center; gap: var(--ork-2); padding: var(--ork-3) var(--ork-2); }
+.ph.side .rn { flex-direction: row; align-items: flex-end; justify-content: flex-end; gap: var(--ork-3); padding: var(--ork-2) var(--ork-3) var(--ork-3); }
+.ph.side .rn .col { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); text-align: center; }
+.mk-st.wide { width: 844px; }
+.turn { position: absolute; left: var(--ork-4); right: var(--ork-4); top: 112px; z-index: 5; display: flex; align-items: center; gap: var(--ork-3); padding: var(--ork-3) var(--ork-4);
+  background: var(--ork-raised); border: var(--ork-line) solid var(--ork-edge); font: var(--ork-type-body); }
+
+/* v3: the row at The Board's height, three ways */
+.top3 { flex: none; display: flex; align-items: center; gap: var(--ork-2); padding: var(--ork-2) var(--ork-4) 0; }
+.top3 .tools { display: flex; gap: var(--ork-1); margin-right: auto; }
+.t3 { position: relative; height: 44px; min-width: 52px; padding: 0 var(--ork-2); display: flex; align-items: center; justify-content: center; gap: var(--ork-2);
+  border: 2px solid transparent; background: none; color: var(--ork-ink); cursor: pointer; --pc: var(--ork-ink); }
+.t3.is-default { border-color: var(--ork-ink); clip-path: var(--ork-notch); background: var(--ork-panel); }
+.t3.low { --pc: var(--ork-alert); } .t3.crit { --pc: var(--ork-danger); }
+.t3 .col { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.t3 .pct { color: var(--pc); font: var(--ork-type-caption); font-size: 12px; line-height: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.t3 .dia { width: 10px; height: 10px; flex: none; clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); background: var(--ork-mana); }
+.t3.low .dia { background: var(--ork-alert); } .t3.crit .dia { background: var(--ork-danger); }
+.t3 .ork-potion.small { --_c: 2px; }
+.ph.crop { height: auto; padding-bottom: var(--ork-4); }
+.v3row { display: flex; flex-direction: column; gap: var(--ork-2); }
+.v3row .lab { font: var(--ork-type-caption); color: var(--ork-ink-muted); padding: 0 var(--ork-4); }
+.legend { flex: none; display: flex; align-items: center; gap: var(--ork-2); height: 52px; padding: 0 var(--ork-3); border-top: var(--ork-line) solid var(--ork-frame); background: var(--ork-canvas); overflow-x: auto; scrollbar-width: none; }
+.lg { flex: none; height: 44px; display: inline-flex; align-items: center; gap: var(--ork-2); padding: 0 var(--ork-3); border: var(--ork-line) solid var(--ork-frame); background: none; color: var(--ork-ink); font: var(--ork-type-caption); cursor: pointer; }
+.lg .ork-sign { color: var(--ork-ink-muted); }
+.ork-sign.el-dust { color: var(--ork-elem-dust); } .ork-sign.el-ice { color: var(--ork-elem-ice); } .ork-sign.el-meadow { color: var(--ork-elem-meadow); }
+.ork-sign.el-void { color: var(--ork-elem-void); } .ork-sign.el-lava { color: var(--ork-elem-lava); }
+.tok .ork-sign.big.el-dust, .lg .ork-sign.el-dust { color: var(--ork-elem-dust); } .tok .ork-sign.big.el-ice, .lg .ork-sign.el-ice { color: var(--ork-elem-ice); }
+.tok .ork-sign.big.el-meadow, .lg .ork-sign.el-meadow { color: var(--ork-elem-meadow); } .tok .ork-sign.big.el-void, .lg .ork-sign.el-void { color: var(--ork-elem-void); }
+.tok .ork-sign.big.el-lava, .lg .ork-sign.el-lava { color: var(--ork-elem-lava); }
+.tok { justify-content: center; } .tok .ork-sign.tsign { width: 21px; height: 21px; }
+.ph.side .tok { width: 52px; height: 72px; } .ph.side .tok .ork-sign.tsign { width: 28px; height: 28px; } .lg .ork-sign.moon { color: var(--ork-ink-muted); }
+.ph.side .rn.rn2 { align-items: flex-end; gap: var(--ork-2); padding: var(--ork-1) var(--ork-2) var(--ork-2); }
+.rn2 .col.left { justify-content: flex-end; width: 88px; padding-bottom: 0; }
+.rn2 .col.right { width: 112px; gap: 2px; }
+.rn2 .gline { font-size: 11px; line-height: 13px; }
+
+.top3 { flex: none; display: flex; align-items: center; gap: var(--ork-2); padding: var(--ork-2) var(--ork-4) 0; }
+.top3 .tools { display: flex; gap: var(--ork-1); margin-right: auto; }
+.t3 { position: relative; height: 44px; min-width: 52px; padding: 0 var(--ork-2); display: flex; align-items: center; justify-content: center; border: 2px solid transparent; background: none; color: var(--ork-ink); --pc: var(--ork-ink); }
+.t3.is-default { border-color: var(--ork-ink); clip-path: var(--ork-notch); background: var(--ork-panel); }
+.t3.low { --pc: var(--ork-alert); } .t3.crit { --pc: var(--ork-danger); }
+.t3 .col { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.t3 .pct { color: var(--pc); font: var(--ork-type-caption); font-size: 12px; line-height: 14px; font-weight: 600; }
+.more { width: 44px; height: 44px; padding: 0; justify-content: center; }
+.foot2 { flex: none; padding: var(--ork-4) var(--ork-4) 0; }
+button.ork-card.plus.wide { width: 100%; height: 56px; transform: none; }
+.plus.wide .mic { left: auto; right: var(--ork-2); bottom: 12px; transform: none; }
+.rc { border-color: var(--ork-card-frame); }
+.portal-body { align-items: center; justify-content: center; text-align: center; gap: var(--ork-3); }
+.pbtn { appearance: none; border: 0; background: none; padding: var(--ork-2); cursor: pointer; }
+.pbtn:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.glab { font: var(--ork-type-heading); font-size: 14px; letter-spacing: var(--ork-type-heading-track); text-transform: var(--ork-type-heading-case); }
+.reason { color: var(--ork-danger); font: var(--ork-type-body); font-weight: 600; }
+.later { height: 44px; margin-top: auto; }
+.menu { position: absolute; right: var(--ork-4); top: 104px; z-index: 6; width: 220px; display: flex; flex-direction: column; padding: var(--ork-1); background: var(--ork-raised); border: var(--ork-line) solid var(--ork-edge); }
+.mrow { height: 44px; text-align: left; padding: 0 var(--ork-4); border: 0; background: none; color: var(--ork-ink); font: var(--ork-type-body); }
+.mrow.danger { color: var(--ork-danger); } .mrow.proj { font-weight: 600; border-bottom: var(--ork-line) solid var(--ork-frame); }
+
+.stage { position: relative; flex: 1; min-height: 0; overflow: hidden; }
+.lift { position: absolute; left: 50%; top: var(--ork-2); width: 264px; height: 400px; transform: translateX(-50%) rotate(-0.8deg); z-index: 3; }
+.lift .qc { position: absolute; inset: 0; box-shadow: 0 var(--ork-motion-rise) 0 var(--ork-scrim); }
+.lift .chs { gap: var(--ork-2); } .lift .ch { min-height: 76px; padding: var(--ork-2); }
+.lift .qc-nm { font-size: 16px; line-height: 22px; }
+.fan { position: absolute; left: calc(50% - 36px); bottom: -84px; width: 0; height: 0; z-index: 2; }
+.fc { position: absolute; left: -60px; bottom: 0; width: 120px; height: 168px; padding: var(--ork-2); display: flex; flex-direction: column; gap: var(--ork-2);
+  transform-origin: 50% 160%; transform: translateX(var(--x)) rotate(var(--a)); }
+.fc-h { display: flex; gap: var(--ork-2); align-items: flex-start; } .fc-h .ork-elem { margin-top: 3px; }
+.fc-n { font: var(--ork-type-caption); font-weight: 600; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+.fc-w { height: 40px; display: flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-card-frame); }
+.fc-w .ork-sign.big { color: var(--ork-ink-muted); }
+.deckfab { all: unset; box-sizing: border-box; cursor: pointer; position: absolute; right: var(--ork-4); bottom: var(--ork-3); z-index: 5; width: 60px; height: 80px; }
+.deckfab i { position: absolute; width: 56px; height: 76px; box-sizing: border-box; background: var(--ork-canvas); border: var(--ork-line) solid var(--ork-action); clip-path: var(--ork-notch); }
+.deckfab .e1 { right: 2px; top: 2px; } .deckfab .e2 { right: 0; top: 0; }
+.deckfab .back { position: absolute; left: 0; bottom: 0; width: 56px; height: 76px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; z-index: 1;
+  color: var(--ork-action); background: var(--ork-card); border: 2px solid var(--ork-action); clip-path: var(--ork-notch); }
+.deckfab .back .ork-icon { width: 28px; height: 28px; }
+.deckfab:focus-visible .back { box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.none { position: absolute; left: 0; right: 0; top: 40%; text-align: center; }
+</style>
+</head>
+<body>
+<header class="mk-bar"><span class="ork-label">Orkboard · the phone · the hand · v1</span></header>
+<p class="mk-line">The owner on the hand: the top card narrower and a little shorter, the rest of the hand a fan under it, <i>New goal</i> the green deck under the thumb (the old phone's button, spec 50 §6.7). 390 × 844 (iPhone 15). The goals are a stand-in project's.</p>
+<main class="mk-main">
+<section class="mk-st"><h2>1 · A question on top</h2><p>The top card about a quarter narrower (264 of 358 px) and a little shorter; under it the rest of the hand in a fan, their heads showing (a press lifts one to the top). <i>New goal</i> is the green deck under the thumb.</p><div class="ph"><div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div><div class="top3"><div class="tools"><button class="t3 is-default" aria-label="Claude Code: 62% left"><span class="col"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-claude.png" srcset="../../../design-system/orkui/marks/harness-claude@2x.png 2x" alt=""><span class="pct">62%</span></span></button><button class="t3" aria-label="Antigravity: 80% left"><span class="col"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-agy.png" srcset="../../../design-system/orkui/marks/harness-agy@2x.png 2x" alt=""><span class="pct">80%</span></span></button><button class="t3" aria-label="Codex: 41% left"><span class="col"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-codex.png" srcset="../../../design-system/orkui/marks/harness-codex@2x.png 2x" alt=""><span class="pct">41%</span></span></button><button class="t3 low" aria-label="Cursor: 18% left"><span class="col"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-cursor.png" srcset="../../../design-system/orkui/marks/harness-cursor@2x.png 2x" alt=""><span class="pct">18%</span></span></button></div><button class="ork-btn more" aria-label="More" aria-expanded="false"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#more-horizontal"/></svg></button></div><div class="ctx"><div class="ctx-who"><span class="ork-race"><img class="ork-race__head" src="../../../design-system/orkui/races/shaman-elder.png" srcset="../../../design-system/orkui/races/shaman-elder@2x.png 2x" alt=""><span class="ork-race__word">Tech</span></span></div><div class="ctx-goal"><span class="ork-elem dust"></span><span class="ork-sign feature"></span><span>Sign-in</span></div><p class="ctx-why">A new player meets it before the lobby, so it decides what the lobby needs from them.</p><p class="ctx-rec">Recommended: Email link</p><p class="ctx-wait"><span class="ork-sign alert" aria-hidden="true"></span>Grunt waits for your answer</p></div><div class="stage"><div class="lift"><article class="ork-card qc el-dust"><div class="qc-h"><span class="ork-elem dust"></span><span class="qc-nm">Which sign-in first?</span></div>
+<div class="qc-win"><span class="ork-sign big question"></span><img class="ork-race__head" src="../../../design-system/orkui/races/shaman-elder.png" srcset="../../../design-system/orkui/races/shaman-elder@2x.png 2x" alt=""></div><div class="qc-lab"><span>Tech</span></div>
+<div class="qc-body"><div class="chs"><button class="ork-card ch pick"><span class="n">Email link</span><span class=w>Fewest steps for a new player</span></button><button class="ork-card ch"><span class="n">Passkey</span></button><button class="ork-card ch"><span class="n">Google</span></button><button class="ork-card ch other"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg><span class="n">Other…</span></button></div><button class="ork-btn quiet decide">Let Tech decide</button></div></article></div><div class="fan" aria-label="The hand"><div class="ork-card fc el-meadow" style="--a:-7.0deg;--x:-84.0px"><div class="fc-h"><span class="ork-elem meadow"></span><span class="fc-n">Which palette for the lobby?</span></div><div class="fc-w"><span class="ork-sign big question"></span></div></div><div class="ork-card fc el-void" style="--a:0.0deg;--x:0.0px"><div class="fc-h"><span class="ork-elem void"></span><span class="fc-n">Plan ready</span></div><div class="fc-w"><span class="ork-sign big check"></span></div></div><div class="ork-card fc el-meadow" style="--a:7.0deg;--x:84.0px"><div class="fc-h"><span class="ork-elem meadow"></span><span class="fc-n">Lobby is ready for main</span></div><div class="fc-w"><span class="ork-sign big release"></span></div></div></div><button class="deckfab" aria-label="New goal"><i class="e2"></i><i class="e1"></i><span class="back"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg></span></button></div><div class="hb"></div></div></section>
+<section class="mk-st"><h2>2 · Go on paid?</h2><p>The same shape for the Orkmaster's card; two cards left in the fan.</p><div class="ph"><div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div><div class="top3"><div class="tools"><button class="t3 crit is-default" aria-label="Claude Code: 0% left"><span class="col"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-claude.png" srcset="../../../design-system/orkui/marks/harness-claude@2x.png 2x" alt=""><span class="pct">0%</span></span></button><button class="t3 crit" aria-label="Antigravity: 0% left"><span class="col"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-agy.png" srcset="../../../design-system/orkui/marks/harness-agy@2x.png 2x" alt=""><span class="pct">0%</span></span></button><button class="t3 crit" aria-label="Codex: 2% left"><span class="col"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-codex.png" srcset="../../../design-system/orkui/marks/harness-codex@2x.png 2x" alt=""><span class="pct">2%</span></span></button><button class="t3 crit" aria-label="Cursor: 0% left"><span class="col"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-cursor.png" srcset="../../../design-system/orkui/marks/harness-cursor@2x.png 2x" alt=""><span class="pct">0%</span></span></button></div><button class="ork-btn more" aria-label="More" aria-expanded="false"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#more-horizontal"/></svg></button></div><div class="ctx"><div class="ctx-who"><span class="ork-race"><img class="ork-race__head" src="../../../design-system/orkui/races/peon-crown.png" srcset="../../../design-system/orkui/races/peon-crown@2x.png 2x" alt=""><span class="ork-race__word">Orkmaster · Party game</span></span></div><p class="ctx-why">Every subscription is out until Thu 18:00.</p><p class="ctx-wait"><span class="ork-sign alert" aria-hidden="true"></span>The work waits for your answer</p></div><div class="stage"><div class="lift"><article class="ork-card qc"><div class="qc-h"><span class="qc-nm">Go on paid?</span></div>
+<div class="qc-win"><span class="ork-sign big alert"></span><img class="ork-race__head" src="../../../design-system/orkui/races/peon-crown.png" srcset="../../../design-system/orkui/races/peon-crown@2x.png 2x" alt=""></div><div class="qc-lab"><span>Orkmaster</span><span class="ork-gem">$0.40</span></div>
+<div class="qc-body"><p class="body">Every subscription is out until Thu 18:00. Go on with Claude Code paid by its API, about $0.40 a task, or wait.</p>
+<div class="btns" style="margin-top:auto"><button class="ork-btn">Go on, paid</button><button class="ork-btn">Wait for Thu 18:00</button></div></div>
+<p class="qc-foot">Holds until the next reset</p></article></div><div class="fan" aria-label="The hand"><div class="ork-card fc el-meadow" style="--a:-3.5deg;--x:-42.0px"><div class="fc-h"><span class="ork-elem meadow"></span><span class="fc-n">Which palette for the lobby?</span></div><div class="fc-w"><span class="ork-sign big question"></span></div></div><div class="ork-card fc el-void" style="--a:3.5deg;--x:42.0px"><div class="fc-h"><span class="ork-elem void"></span><span class="fc-n">Plan ready</span></div><div class="fc-w"><span class="ork-sign big check"></span></div></div></div><button class="deckfab" aria-label="New goal"><i class="e2"></i><i class="e1"></i><span class="back"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg></span></button></div><div class="hb"></div></div></section>
+<section class="mk-st"><h2>3 · The last card</h2><p>One card left: no fan under it.</p><div class="ph"><div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div><div class="top3"><div class="tools"><button class="t3 is-default" aria-label="Claude Code: 62% left"><span class="col"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-claude.png" srcset="../../../design-system/orkui/marks/harness-claude@2x.png 2x" alt=""><span class="pct">62%</span></span></button><button class="t3" aria-label="Antigravity: 80% left"><span class="col"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-agy.png" srcset="../../../design-system/orkui/marks/harness-agy@2x.png 2x" alt=""><span class="pct">80%</span></span></button><button class="t3" aria-label="Codex: 41% left"><span class="col"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-codex.png" srcset="../../../design-system/orkui/marks/harness-codex@2x.png 2x" alt=""><span class="pct">41%</span></span></button><button class="t3 low" aria-label="Cursor: 18% left"><span class="col"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-cursor.png" srcset="../../../design-system/orkui/marks/harness-cursor@2x.png 2x" alt=""><span class="pct">18%</span></span></button></div><button class="ork-btn more" aria-label="More" aria-expanded="false"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#more-horizontal"/></svg></button></div><div class="ctx"><div class="ctx-who"><span class="ork-race"><img class="ork-race__head" src="../../../design-system/orkui/races/dryad-elder.png" srcset="../../../design-system/orkui/races/dryad-elder@2x.png 2x" alt=""><span class="ork-race__word">Art</span></span></div><div class="ctx-goal"><span class="ork-elem meadow"></span><span class="ork-sign screen"></span><span>Lobby</span></div><p class="ctx-why">The lobby is the first screen with the game's colours on it.</p><p class="ctx-rec">Recommended: Dusk</p></div><div class="stage"><div class="lift"><article class="ork-card qc el-meadow"><div class="qc-h"><span class="ork-elem meadow"></span><span class="qc-nm">Which palette for the lobby?</span></div>
+<div class="qc-win"><span class="ork-sign big question"></span><img class="ork-race__head" src="../../../design-system/orkui/races/dryad-elder.png" srcset="../../../design-system/orkui/races/dryad-elder@2x.png 2x" alt=""></div><div class="qc-lab"><span>Art</span></div>
+<div class="qc-body"><div class="chs"><button class="ork-card ch pick"><span class="n">Dusk</span><span class=w>Reads on a phone at night</span></button><button class="ork-card ch"><span class="n">Meadow</span></button><button class="ork-card ch"><span class="n">Ember</span></button><button class="ork-card ch other"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg><span class="n">Other…</span></button></div><button class="ork-btn quiet decide">Let Art decide</button></div></article></div><button class="deckfab" aria-label="New goal"><i class="e2"></i><i class="e1"></i><span class="back"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg></span></button></div><div class="hb"></div></div></section>
+<section class="mk-st"><h2>4 · Nothing in the hand</h2><p>No card: the table's cloth and the deck under the thumb. Its press opens the field over the keyboard, the microphone in it.</p><div class="ph"><div class="sb"><span>9:41</span><span>●●● 5G ▮</span></div><div class="top3"><div class="tools"><button class="t3 is-default" aria-label="Claude Code: 62% left"><span class="col"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-claude.png" srcset="../../../design-system/orkui/marks/harness-claude@2x.png 2x" alt=""><span class="pct">62%</span></span></button><button class="t3" aria-label="Antigravity: 80% left"><span class="col"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-agy.png" srcset="../../../design-system/orkui/marks/harness-agy@2x.png 2x" alt=""><span class="pct">80%</span></span></button><button class="t3" aria-label="Codex: 41% left"><span class="col"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-codex.png" srcset="../../../design-system/orkui/marks/harness-codex@2x.png 2x" alt=""><span class="pct">41%</span></span></button><button class="t3 low" aria-label="Cursor: 18% left"><span class="col"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-cursor.png" srcset="../../../design-system/orkui/marks/harness-cursor@2x.png 2x" alt=""><span class="pct">18%</span></span></button></div><button class="ork-btn more" aria-label="More" aria-expanded="false"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#more-horizontal"/></svg></button></div><div class="stage"><p class="none cap mute">Nothing waits for you.</p><button class="deckfab" aria-label="New goal"><i class="e2"></i><i class="e1"></i><span class="back"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg></span></button></div><div class="hb"></div></div></section>
+</main>
+</body>
+</html>
