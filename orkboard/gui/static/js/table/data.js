@@ -117,9 +117,10 @@ export const doingWords = (n) => STAGES[OWN[n.state] || "routing"].word;
 export const footWords = (t) => `${STAGES[stageOf(t)].word}${t.state === "failed" ? ", failed" : t.state === "picking" ? ", asks you to pick" : ""}`;
 
 /** A task's kind as the sign that says it, by the kind (`kind`) or the label the Board carries (`tag`). Code, the default, says nothing: the goal's type does. */
-const KIND_SIGN = { tests: "flask", docs: "text", text: "text", research: "flask", architecture: "restructure", design: "screen", uikit: "screen", a11y: "tune", art: "picture",
-  data: "chart", query: "chart", metrics: "chart", datacheck: "chart", experiment: "abtest", seo: "landing", campaign: "horn", community: "post", security: "target", edit: "text",
-  gamedesign: "mechanic", level: "level", sound: "sound", music: "sound", playtest: "balance", aso: "store", artdirection: "logo", motion: "film", artcheck: "picture" };
+// A task's kind to a goal type's sign, every one drawn at 14 x 14 in two tones (orkUI 0.16, decisions §170.1): the window shows the big drawing, never a 7 x 7 at four pixels a cell.
+const KIND_SIGN = { tests: "flask", docs: "page", text: "tagline", research: "flask", architecture: "restructure", design: "screen", uikit: "screen", a11y: "steps", art: "picture",
+  data: "chart", query: "chart", metrics: "chart", datacheck: "chart", experiment: "abtest", seo: "landing", campaign: "horn", community: "post", security: "logo", edit: "tagline",
+  gamedesign: "mechanic", level: "level", sound: "tune", music: "tune", playtest: "balance", aso: "store", artdirection: "character", motion: "picture", artcheck: "picture" };
 const TAG_KIND = { "Tests": "tests", "Docs": "docs", "Text for people": "text", "Research": "research", "Architecture": "architecture", "Screens and flows": "design", "UI kit": "uikit",
   "Accessibility": "a11y", "Pixel art": "art", "Data pipelines and tables": "data", "Queries": "query", "Metrics": "metrics", "Data check": "datacheck", "Experiments": "experiment",
   "Search (SEO)": "seo", "Launch and campaigns": "campaign", "Community": "community", "Security check": "security", "Editing": "edit", "Game design": "gamedesign", "Levels": "level",

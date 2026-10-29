@@ -147,3 +147,14 @@ def test_the_field_is_orkuis_table_its_wood_a_surface_and_never_a_mark():
     assert re.search(r'<section class="table-pane ork-table"', pane)           # spec 98 §3: the table starts at the pane's top, the Board and what is opened over it on its wood
     sheets = "".join(p.read_text(encoding="utf-8") for p in SHEETS)
     assert "--ork-table" not in sheets                                            # only orkUI's .ork-table draws the wood
+
+
+def test_a_task_cards_sign_is_one_of_orkuis_two_tone_drawings():
+    """Decisions §170.1: a task card's window draws its kind's sign at 28 px, so every kind's sign has its 14 x 14 drawing in two tones."""
+    import re
+    data = (STATIC / "js" / "table" / "data.js").read_text(encoding="utf-8")
+    table = re.search(r"const KIND_SIGN = \{(.*?)\};", data, re.S).group(1)
+    signs = set(re.findall(r'\w+: "([a-z]+)"', table))
+    from pathlib import Path
+    big = Path(__file__).resolve().parents[1] / "design-system" / "orkui" / "signs" / "big"
+    assert signs and all((big / f"{s}.svg").is_file() and (big / f"{s}-light.svg").is_file() for s in signs), sorted(s for s in signs if not (big / f"{s}.svg").is_file())
