@@ -3,7 +3,7 @@
 // the mana's potions, flush against the window's edge (mana.js: spec 104 B). The discard of the goals done lies on the table, not here (table/discard.js: spec 104 C). No deck: the goals in line lie on the table. A card shows its header and its window; the rest lies under the window's edge until it rises (hand.css). A card pressed is lifted
 // over the pane's foot with its answers and its cost's words; the cards of the table it is about rise (about.js). With no
 // goal at all the + card lies large in the pane's middle. What is opened over the pane (`result`, `stop`) is drawn by the faces registered below (frame/kinds.js).
-// Upright on a touch phone (frame/upright.js, docs/specs/103 §1) the hand is the whole first screen instead (upright.js): the tools' row, the top card's context, one stack with its answers on the top card, the blank card at the foot.
+// On a touch phone (frame/upright.js, docs/specs/103 §1, decisions §180) the hand is the whole screen instead (upright.js): the tools' row and the …, the top card's context between the arrows, one goal's cards, the green deck for a new goal.
 // Under the table: frame.js draws `Hand` under `Table`. Keyboard: a key typed with nothing focused opens the field; Esc closes the field and lowers a lifted card.
 import { useEffect, useRef } from "preact/hooks";
 import { html } from "../html.js";

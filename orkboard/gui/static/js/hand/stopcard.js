@@ -61,6 +61,9 @@ export function StopCard({ s, lit = false, slot = false, top = false, dealt = nu
   </button>`;
 }
 
+/** A card's name upright on a phone: a question card is called by the question itself (the goal's name is in the context above it), any other by its title. */
+export const upName = (s) => (s.card ? s.full : s.title || s.full);
+
 /** The stop's own lines on a lifted card: its text, what it waits for, the goals of a collision, the pick's tiles. */
 function Body({ s }) {
   return html`${s.kind === "collide" && html`<ul class="hand-goals" aria-label="The goals">${goalsOfRow(s.row).map((g) => html`<li key=${g.idea}>${goalLine(g)}</li>`)}</ul>`}
@@ -94,7 +97,7 @@ export function Lifted({ s, anchor, inline = false }) {
   return html`<aside ref=${box} class=${cls(`ork-card hand-card hand-card--stop hand-card--big hand-lifted${inline ? " hand-lifted--up" : ""}${element ? ` el-${element}` : ""}`, tone, { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed" })}
       role="dialog" tabindex="-1" aria-label=${`Lifted: ${labelOf(s)}`} data-key=${s.key} data-kind=${s.kind}
       style=${at ? `left:${at.left}px;--hc-lean:${at.lean}` : undefined}>
-    <span class="hand-card__head"><${ElemOf} s=${s} /><span class="hand-card__name hand-lifted__title">${s.title || s.full}</span></span>
+    <span class="hand-card__head"><${ElemOf} s=${s} /><span class="hand-card__name hand-lifted__title">${inline ? upName(s) : s.title || s.full}</span></span>
     <span class="hand-card__window"><span class="hand-card__fig"><span class="hand-card__act"><${Mark} s=${s} big=${true} /></span>${head ? html`<span class="hand-card__asker"><${Head} race=${head.race} tier=${head.tier} /></span>` : null}</span></span>
     <span class="hand-card__label"><span class="hand-card__party">${s.party?.name || s.label}</span><span class="hand-card__gem"><${Gem} cost=${cost} /></span></span>
     <div class="hand-lifted__body">

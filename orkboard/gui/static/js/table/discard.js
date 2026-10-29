@@ -19,7 +19,7 @@ const LICH = { race: "lich", tier: "elder" };
 const EDGES = 3;
 
 /** The Release leader's head, the lich's (decisions §158); the lich elder with no such party. */
-function lichOf() {
+export function lichOf() {
   const g = (mapData.value?.goals || []).find((x) => x.leader?.head?.race === "lich");
   return g?.leader?.head || LICH;
 }
