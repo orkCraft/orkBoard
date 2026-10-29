@@ -3394,7 +3394,9 @@ The owner's call.
 Why: the owner's yes on `docs/mockups/s3/` (the other maps and picking on them), and *use the new pictures for the tasks' cards*. So:
 1. **S3's faces are built as `docs/mockups/s3/` draws them** (spec 102 §5–§6): every map's cards wear §167.1's face (System's parts
    too: the path as the name, its sign in the window, the layer's word in the label row); a card that changed since its leader's
-   last call carries the gem *new*; a card no goal changed carries no element; the pane's title *<Party> · <its map>*.
+   last call carries the gem *new*; a card no goal changed carries no element; the map's name (*Screens*, *Loop*, …) where a thing
+   opened over it says where it came from (*← Screens · Lobby*), the pane's title keeping its two axes (spec 95 §1.3: *The whole
+   project · through Design*).
 2. **A task card's window is always a two-tone drawing** (§170.1): every task kind maps to one of orkUI's twenty-five big
    drawings (docs a scroll, text a quill, sound and music a lyre, accessibility the shoe, security the seal, art direction the
    crown, animation a picture); a 7 × 7 never stands at 28 px on a card.

@@ -19,5 +19,5 @@ export const mapOf = (g) => (craftOf(g) === "tech" ? null : MAPS[craftOf(g)] || 
 let wrap = ({ children }) => children;
 /** Part F sets how a pickable card is drawn: `({map, id, name, group, children}) => html`. */
 export function pickWith(fn) { wrap = fn; }
-/** A card of a map that an addressed idea may pin: `map` the map's id (its craft), `id` the card's, `name` its words, `group` the group it belongs to. */
+/** A card of a map that a goal addressed to the party may pin: `map` the map's id (its craft), `id` the card's, `name` its words, `group` the group it belongs to. */
 export const Pickable = (props) => html`${wrap(props)}`;
