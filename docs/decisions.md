@@ -3606,3 +3606,25 @@ So (this changes §178.2 and spec 103 §1.2.5 and §2.1; the desktop's potions, 
    element's colour, then its short name. So the colour says which goal, the sign what the task is; a task that asks keeps the
    alert's frame (the token's edge), a goal waiting for the reset the moon beside its name in the legend.
 The owner's call.
+
+## 180. The phone is the hand alone: no Board on it for now; the portal is a card of the hand; the top card narrower over a fan; New goal the green deck under the thumb; **…** for the rest (29 October, the owner)
+
+Why: the owner asked, as product, whether a phone needs the Board at all. The phone is the quick answer (§150); on the Board
+a phone can do two things, answer a stop and send a goal to main, and both can lie in the hand. The Board on its side costs
+a layout of its own, the frame's turning and a browser's *turn the phone*, for a look the desktop already gives. The
+owner's yes on `docs/mockups/phone/portal.html` and `docs/mockups/phone/hand.html` (v1). So (this changes §174.2–§174.3,
+§178.7, §179.2–§179.4 and spec 103 §1.4 and §2; the desktop is unchanged):
+1. **No Board on a phone for now** (under `pointer: coarse`, upright or on its side): spec 103 B is not built; on its side
+   a phone shows the hand as upright. Asked again after the owner has lived with the phone a week.
+2. **A goal ready for main is a card of the hand**, Release's (the lich asks): its context says what is done and that its
+   checks are green; **the portal lies on the card** with its line (*Into main: Lobby, and Reconnect it stands on*); a press
+   on the portal sends it (`ideas.to_main`); sealed with its reason as on the desktop (spec 105 F); *Later* puts it back
+   in the discard. The first time the portal shimmers and says *Tap the portal to send it to main*.
+3. **The top card is about a quarter narrower than the screen** (264 of 390 px) and a little shorter, turned a degree;
+   **the rest of the hand lies in a fan under it**, their heads showing from under the screen's foot (element and name); a
+   press on one lifts it to the top. One card left: no fan.
+4. **New goal is the green deck under the thumb** (the old phone's button, spec 50 §6.7, a little larger): bottom right,
+   over everything; a press opens the field over the keyboard with the microphone in it. With nothing in the hand: the
+   line *Nothing waits for you.* and the deck.
+5. **The top row's *The Board* becomes **…***: Stop all, the project and the projects' switcher, Settings.
+The owner's call.

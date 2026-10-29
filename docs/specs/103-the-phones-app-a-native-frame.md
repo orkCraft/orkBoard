@@ -5,7 +5,7 @@ after spec 94 holds on the owner's phone. **Builds:** Claude · **Review:** full
 share no file but the narrow width's signal, which A reads and B does not change), **C at once with them** (the relay: no
 file of Orkboard's), **then D** (the native frame, on A–C), **then E and F at once** (the widgets; the host's words).
 
-**Changed by decisions §178 and §179** (the owner's answers to `docs/mockups/phone/` v1): spec 94 B–E are built first and the phone
+**Changed by decisions §178–§180** (§180: the phone is the hand alone, no Board on it for now, part B not built; the portal a card of the hand; the top card narrower over a fan of the rest; *New goal* the green deck under the thumb; *…* in the top row for Stop all, the projects and Settings; the mockups `docs/mockups/phone/hand.html` and `portal.html`) (the owner's answers to `docs/mockups/phone/` v1): spec 94 B–E are built first and the phone
 becomes the page (§178.1); upright the potions stand in one row at the top, left of *The Board*, the frame on the tool the
 work goes to (§1.2.5); the Orkmaster's line at the screen's top (§1.6); *Go on paid?* is a card of the hand (§1.7, §5.4); one
 stack (§1.1); the Board on a phone only on its side, with the discard and the portal (§1.4, §2.1); the portal merges from the
