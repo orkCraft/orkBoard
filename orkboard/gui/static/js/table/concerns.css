@@ -1,5 +1,5 @@
 /* Concerns on a party's map (docs/specs/108-a-leader-says-no-and-shows-where-it-hurts.md §3, decisions §183.5). orkUI's tokens and pieces only: the alert sign in `--ork-alert`, a dot in the muted ink, the leader's small head, `.ork-busy`,
-   `.ork-btn`. A mark is not drawn by a map: concerns.js gives a card that has concerns a slot (`.cn-slot`) of its own. */
+   `.ork-btn`, `.ork-chip`. A mark is not drawn by a map: concerns.js gives a card that has concerns a slot (`.cn-slot`) of its own. */
 
 /* the strip over the map, under the party's header */
 .cn-strip { flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-3) var(--ork-4); min-height: 36px; padding: 0 var(--ork-6); border-bottom: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-body); }
@@ -8,6 +8,17 @@
 .cn-strip__counts { padding: 0 var(--ork-1); color: var(--ork-ink); }
 .cn-strip__grow { flex: 1; min-width: 0; }
 .table-body:is([data-end="side"], [data-end="over"]) > .cn-strip { margin-right: calc(var(--table-end-w) * -1); }          /* like the party's header, the strip keeps the pane's whole width */
+
+/* the aspects the leader looks at (spec 109 §4): a row under the strip's line, wrapping at the narrow width; orkUI's chips, the state's small mark then the name; no count, nothing moves */
+.cn-aspects { flex: 1 0 100%; display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-2) var(--ork-3); padding: var(--ork-2) 0; min-width: 0; }
+.cn-aspects__short { color: var(--ork-ink-muted); font: var(--ork-type-caption); margin-right: var(--ork-2); overflow-wrap: anywhere; }
+.cn-aspects .cn-aspect { gap: var(--ork-2); max-width: 100%; min-width: 0; cursor: default; }
+.cn-aspects button.cn-aspect { cursor: pointer; }
+button.cn-aspect:focus-visible { outline: 0; clip-path: none; box-shadow: 0 0 0 2px var(--ork-ink); }
+.cn-aspect[data-state="alert"] > .ork-sign { color: var(--ork-alert); }
+.cn-aspect[data-state="note"] > .cn-dot, .cn-aspect[data-state="hint"] > .cn-hint, .cn-aspect[data-state="unlooked"] { color: var(--ork-ink-muted); }
+.cn-aspect[data-state="clear"] > .ork-sign { color: var(--ork-ink); }
+.cn-hint { display: inline-block; flex: none; box-sizing: border-box; width: 6px; height: 6px; border: var(--ork-line) solid currentColor; background: none; }          /* a hollow square: code noticed it, the leader let it be */
 
 /* a card with a concern: its slot at the top right, over the card's head; a press on it is a press on the card */
 [data-cn-host] { position: relative; }
@@ -46,6 +57,8 @@
 @media (pointer: coarse), (max-width: 759.98px) {
   .cn-strip { padding: 0 var(--ork-4); gap: var(--ork-2) var(--ork-3); min-height: var(--ork-tap); font: var(--ork-type-caption); }
   .cn-strip .ork-btn, .cn-item .ork-btn { min-height: var(--ork-tap); }
+  .cn-aspects .cn-aspect { height: auto; min-height: var(--ork-chip); }
+  .cn-aspects button.cn-aspect { min-height: var(--ork-tap); }
   .cn-mark.is-made { min-width: var(--ork-tap); min-height: var(--ork-tap); justify-content: center; }
 }
 @media (max-width: 759.98px) { .table-body:is([data-end="side"], [data-end="over"]) > .cn-strip { margin-right: 0; } }
