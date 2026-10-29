@@ -12,7 +12,7 @@ import pytest
 from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
 from orkboard.realm import event_log, goal_team, idea_questions, ideas, library
 
-TALK_COMMANDS = {"ideas.talk_answer", "ideas.cause_answer"}
+TALK_COMMANDS = {"ideas.talk_answer", "ideas.cause_answer", "ideas.objection"}
 
 
 @pytest.fixture
@@ -91,6 +91,14 @@ def test_the_arguments_are_checked_in_plain_words(host, tech, model):
         host.command("ideas.cause_answer", {"idea": slug, "yes": False, "text": 3})
     with pytest.raises(CommandError, match="asks nothing now"):
         host.command("ideas.cause_answer", {"idea": slug, "yes": True})
+    with pytest.raises(CommandError, match="party is missing"):
+        host.command("ideas.objection", {"idea": slug, "answer": "go"})                                  # a leader's no (spec 108 §4.3)
+    with pytest.raises(CommandError, match="answer is missing"):
+        host.command("ideas.objection", {"idea": slug, "party": tech})
+    with pytest.raises(CommandError, match="That goal is gone"):
+        host.command("ideas.objection", {"idea": "nobody", "party": tech, "answer": "go"})
+    with pytest.raises(CommandError, match="no objection to answer"):
+        host.command("ideas.objection", {"idea": slug, "party": tech, "answer": "go"})
     assert model == [] and _state(host, slug)["state"] == "routed"
 
 

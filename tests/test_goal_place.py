@@ -207,6 +207,7 @@ def test_a_goal_at_talk_with_a_row_waiting_is_on_the_table_and_asks_you_and_with
     assert _is(_of("talk"), "table") and _is(_of("talk", ["talk"]), "table", True) and _is(_of("talk", ["cause"]), "table", True)
     assert _is(_of("talk", ["talk", "start"]), "table", True) and _is(_of("decided"), "table")
     assert _is(_of("talk", ["talk"], held_until="2026-10-29T08:00:00"), "table", True)         # a Talk that is answered is never put in the deck
+    assert _is(_of("talk", ["objection"]), "table", True) and _is(_of("talk", ["talk", "objection"]), "table", True)         # a leader's no (spec 108 §4.3): the same place, asking
 
 
 def test_a_goal_at_talk_with_cards_waiting_is_a_node_and_a_row_that_ask_you(host):
