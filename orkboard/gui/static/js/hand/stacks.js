@@ -1,7 +1,6 @@
 // The stacks (docs/specs/101 §4.3, decisions §167.7; docs/specs/98-the-table-and-the-hand.md §4.2, decisions §121.2): one a goal and a lane that has Needs you rows, under the lane of who asks (data.js `laneOf`), its most
 // urgent card face up and the cards under it face down (orkUI's backs laid as a fan, five edges at most, never a number), the stacks in the order of their top cards' urgency (data.js `stacksOf`). Two goals under one lane fan within its
-// width: the urgent in front at the lane's right, those behind it to the left, showing their edge and their element only, each rising whole on hover, on focus or on a tap (hand.css); the first lane's last card is the +
-// card. A stack pressed picks its goal and lifts its top card (stopcard.js), answered one a press; a picked goal's stacks are lit alike (`.ork-picked`). A card that comes is dealt, a card that goes crumbles where it lay,
+// width: the urgent in front at the lane's right, those behind it to the left, showing their edge and their element only, each rising whole on hover, on focus or on a tap (hand.css); the + card lies whole at the first lane's left end, not in its fan. A stack pressed picks its goal and lifts its top card (stopcard.js), answered one a press; a picked goal's stacks are lit alike (`.ork-picked`). A card that comes is dealt, a card that goes crumbles where it lay,
 // none of it under reduced motion (motion.js).
 import { html, cls } from "../html.js";
 import { lift, lower, lifted, pick, picked } from "../frame/state.js";
@@ -45,17 +44,18 @@ function Slot({ at, of, z, behind = false, plus = false, children }) {
   return html`<div class=${cls("hand-slot", { "is-behind": behind, "is-plus": plus })} style=${`--at:${at};--of:${of};--z:${z}`} data-at=${at}>${children}</div>`;
 }
 
-/** The lanes of the hand, one under each tab of the Board (the first the project's), each a fan of its stacks (the most urgent in front); `plus`: the + card, last of the first lane's fan. */
+/** The lanes of the hand, one under each tab of the Board (the first the project's), each a fan of its stacks (the most urgent in front); `plus`: the + card, which lies whole at the first lane's left end, never in its fan
+ *  (spec 107 §13.2, decisions §182.4): the first lane's stacks fan to its right (hand.css gives the lane the room when it has any). */
 export function Stacks({ stacks, plus }) {
   const parties = partiesNow(), count = parties.length + 1, items = useGone(stacks, (st) => st.key), dealt = useDealt(stacks.flatMap((st) => st.cards.map((s) => s.key)));
   const lanes = Array.from({ length: count }, () => []);
   for (const it of items) lanes[Math.min(it.item.lane || 0, count - 1)].push(it);
   return lanes.map((list, i) => {
-    const extra = i === 0 && plus ? 1 : 0, m = list.length + extra, solo = m === 1;
+    const m = list.length, solo = m === 1;
     const place = (k) => ({ at: solo ? 1 : m - 1 - k, of: solo ? 2 : m - 1, z: m - k, behind: !solo && k > 0 });
     return html`<div key=${i} class="hand-lane" data-lane=${i} role="group" aria-label=${i === 0 ? "The project’s lane" : `${nameOf(parties[i - 1])}’s lane`}>
+      ${i === 0 && plus ? html`<${Slot} key="plus" plus=${true} at=${0} of=${1} z=${m + 2}>${plus}<//>` : null}
       ${list.map(({ item: st, gone }, k) => html`<${Slot} key=${st.key} ...${place(k)}><${Stack} stack=${st} dealt=${dealt} ghost=${gone} /><//>`)}
-      ${extra ? html`<${Slot} key="plus" plus=${true} ...${place(list.length)}>${plus}<//>` : null}
     </div>`;
   });
 }

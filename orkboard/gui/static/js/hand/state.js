@@ -7,6 +7,7 @@ import { ORKMASTER } from "../frame/state.js";
 export const fieldOpen = signal(false);        // the + card has grown into the field
 export const fieldText = signal("");           // what was written, kept when the field closes (Esc, a press away)
 export const fieldPhotos = signal([]);         // the pictures pasted, as data URLs (board/pictures.js `shrink`)
+export const fieldType = signal(null);        // the goal type taken with @ (mention.js): {id, name, sign, party}; sent as `type` while the goal is addressed to that party
 export const fieldOff = signal("");            // the tab whose address the person took off (*→ Tech ×*): the goal is then general
 
 export const HAND = "hand:";

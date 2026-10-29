@@ -286,13 +286,15 @@ def test_a_stack_lies_under_the_lane_of_who_asks_and_the_plus_card_under_the_fir
         assert stacks_in(pg, 3) == ["theme@3"] and stacks_in(pg, 4) == []                            # Product's; Release asks nothing
         assert sorted(stacks_in(pg, 0)) == ["fresh@0", "sign_in/claude@0"]                           # what is the whole goal's (the route) and a tool's sign-in lie under the first lane
         first = lane(pg, 0).locator(".hand-slot")
-        assert first.count() == 3 and "is-plus" in first.last.get_attribute("class"), "the + card with them: the last of the first lane's fan"
+        assert first.count() == 3 and "is-plus" in first.first.get_attribute("class"), "the + card with them: first in the lane, at its left end, not in its fan"
         assert lane(pg, 0).locator(".hand-plus").count() == 1 and pg.locator(".hand-plus").count() == 1
         if width == "wide":
             box, plus = lane(pg, 0).bounding_box(), pg.locator(".hand-plus").bounding_box()
             assert box["x"] - 12 <= plus["x"] and plus["x"] + plus["width"] <= box["x"] + box["width"] + 12, "under the first lane"   # turned a little (§167.5): its corners reach past the lane by a few pixels
-            assert pg.locator(".hand-plus > .ork-icon").evaluate("e => e.offsetWidth || e.width.baseVal.value") == 14, "its + shows on the edge the stacks leave it"   # its own size (the card is turned)
-            pg.locator(".hand-plus").click(position={"x": 5, "y": 20})                              # a press on that edge grows it into the field
+            assert pg.locator(".hand-plus > .ork-icon").evaluate("e => e.offsetWidth || e.width.baseVal.value") == 42, "its + is a large pixel glyph (spec 107 §13)"   # its own size (the card is turned)
+            stack = lane(pg, 0).locator(".hand-stack").first.bounding_box()
+            assert plus["x"] + plus["width"] <= stack["x"] + 6, "the first lane's stacks fan to its right: nothing lies over it"
+            pg.locator(".hand-plus").click()                                                         # a press grows it into the field
             _field(pg)
         shot(pg, f"{width}-first-lane")
         for i, goals in ((1, {"timer", "export"}), (2, {"look", "phones", "words"}), (3, {"theme"})):          # no card of one party's lane lies under another's
@@ -449,7 +451,7 @@ def test_no_part_with_nothing_to_hold(gui, width):
     pg, host, log = open_hand(gui, host=HandHost(bare=True), width=width)
     try:
         pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
-        assert pg.locator(".hand-plus").count() == 1 and lane(pg, 0).locator(".hand-slot").count() == 1 and lane(pg, 0).locator(".hand-slot").get_attribute("data-at") == "1"   # the + card alone under the first lane, in its middle
+        assert pg.locator(".hand-plus").count() == 1 and lane(pg, 0).locator(".hand-slot").count() == 1 and lane(pg, 0).locator(".hand-slot").get_attribute("data-at") == "0"   # the + card alone at the first lane's left end
         assert pg.locator(".hand-done").count() == 0                                                                    # nothing done, nothing ready for main: no discard
         shot(pg, f"{width}-bare")
     finally:
@@ -959,9 +961,14 @@ def test_a_pick_a_sign_in_and_a_card_of_an_unknown_kind_are_cards_of_the_hand_to
         lifted.wait_for(timeout=WAIT_MS)
         assert lifted.get_by_role("button", name="Talk").count() == 1 and lifted.get_by_role("button", name="Put it back").count() == 1
         lifted.get_by_role("button", name="Put it back").click()
+        pg.mouse.move(pg.viewport_size["width"] / 2, 20)                                                         # the pointer off the cards: one under it would rise over its neighbour's edge
+        pg.wait_for_timeout(400)
         _press(pg, "sign_in/claude")
         pg.locator(".hand-lifted").get_by_role("button", name="Sign in").wait_for(timeout=WAIT_MS)
         pg.keyboard.press("Escape")
+        pg.evaluate("() => document.activeElement.blur()")                                                         # the card that had the focus lies risen, whole, over its neighbours
+        pg.mouse.move(pg.viewport_size["width"] / 2, 20)
+        pg.wait_for_timeout(400)
         _press(pg, "look")                                                                                        # a pick: its variants as small tiles, *Take B* once one is picked
         lifted = pg.locator(".hand-lifted")
         lifted.locator(".pick-tile").first.wait_for(timeout=WAIT_MS)
