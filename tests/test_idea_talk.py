@@ -49,6 +49,7 @@ class Model:
 
     def __init__(self, host):
         self.host, self.calls, self.said, self.lock = host, [], {}, threading.Lock()
+        self.gate = None                                         # a Barrier: every call waits here until all of a round's are in (no clock needed to see them overlap)
         host.ideas.keeper.call = self
 
     def __call__(self, tier, prompt, effort="", budget=None):
@@ -57,7 +58,13 @@ class Model:
                "party": getattr(k._tls, "party", ""), "thread": threading.current_thread().name, "at": time.monotonic()}
         with self.lock:
             self.calls.append(row)
-        time.sleep(0.15)                                         # long enough for the calls of a round to overlap
+        if self.gate is not None:
+            try:
+                self.gate.wait(10)                               # returns only once every call of the round has begun; a round that calls one leader after another times out
+            except threading.BrokenBarrierError:
+                pass
+        else:
+            time.sleep(0.15)
         row["end"] = time.monotonic()
         answer = self.said.get((row["step"], row["party"])) or self.said.get((row["step"], ""))
         if callable(answer):
@@ -110,6 +117,7 @@ def _round_one(model, parties, per=1, **extra):
 
 def test_one_call_a_leader_at_once_on_the_cheaper_tier_with_no_tools_and_each_in_its_voice(host, parties, model):
     _round_one(model, parties)
+    model.gate = threading.Barrier(3)                                                                                  # three leaders: none answers before all three have begun
     slug = _talk(host, parties, ["product", "design", "tech"])
     calls = model.steps("talk_round")
     assert sorted(c["party"] for c in calls) == sorted(parties[w] for w in ("product", "design", "tech")) and len(model.calls) == 3
