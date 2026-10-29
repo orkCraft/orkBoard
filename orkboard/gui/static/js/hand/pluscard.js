@@ -7,11 +7,11 @@ import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Icon } from "../orkui.js";
 import { toast } from "../link.js";
-import { act, mapData } from "../shell/store.js";
+import { act } from "../shell/store.js";
 import { MAX_PICTURES, PICTURE_TYPES, shrink } from "../board/pictures.js";
 import { tab } from "../frame/state.js";
-import { partiesOf, partyCard } from "./data.js";
-import { addressOf, fieldOff, fieldOpen, fieldPhotos, fieldText, withoutAddress } from "./state.js";
+import { fieldOff, fieldOpen, fieldPhotos, fieldText, withoutAddress } from "./state.js";
+import { MarkChips, addressNow, marks, marksToSend, resetMarks } from "../table/picking.js";       // picking on the addressed party's map (spec 102 §6): its marks lie on the field as chips
 import { leans } from "./motion.js";
 
 /** The + card. `large`: the card in the pane's middle, with no goal at all. */
@@ -30,10 +30,7 @@ async function addPictures(files) {
 }
 
 /** Where the goal in the field goes now: the party its text names, else the open tab's (unless taken off), else none. */
-export function useAddress() {
-  const parties = partiesOf(mapData.value).map(partyCard);
-  return addressOf(fieldText.value, tab.value, fieldOff.value, parties);
-}
+export const useAddress = addressNow;
 
 export function closeField() { fieldOpen.value = false; }
 export function openField(first = "") {
@@ -54,10 +51,11 @@ export function Field({ middle = false }) {
     const text = withoutAddress(fieldText.value, address.by === "text" ? address.name : "");
     if (!text || busy) return;
     setBusy(true);
-    const got = await act("ideas.add", { text, ...(address.party ? { party: address.party } : {}), ...(fieldPhotos.value.length ? { photos: fieldPhotos.value } : {}) });
+    const sent = marksToSend();
+    const got = await act("ideas.add", { text, ...(address.party ? { party: address.party } : {}), ...(fieldPhotos.value.length ? { photos: fieldPhotos.value } : {}), ...(sent.length ? { marks: sent } : {}) });
     setBusy(false);
     if (!got) return;                                                                 // refused: the host said why in a toast, the words stay
-    fieldText.value = ""; fieldPhotos.value = []; fieldOpen.value = false;
+    fieldText.value = ""; fieldPhotos.value = []; resetMarks(); fieldOpen.value = false;
     toast(address.party ? `Sent to ${address.name}.` : "Sent: the Orkmaster finds its party in a moment.");
   };
   const off = () => { if (address.by === "text") fieldText.value = withoutAddress(fieldText.value, address.name); else fieldOff.value = tab.value; area.current?.focus(); };
@@ -72,9 +70,10 @@ export function Field({ middle = false }) {
   const photos = fieldPhotos.value;
   return html`<div class=${cls("ork-card hand-field", { "is-middle": middle })} role="group" aria-label="The new goal’s card, grown into the field"
       onDragOver=${(e) => e.preventDefault()} onDrop=${(e) => { e.preventDefault(); addPictures([...(e.dataTransfer?.files || [])]); }}>
-    ${(address.name || photos.length > 0) && html`<div class="hand-field__chips">
+    ${(address.name || photos.length > 0 || marks.value.length > 0) && html`<div class="hand-field__chips">
       ${address.name && html`<span class="ork-chip hand-chip" data-by=${address.by}><${Icon} name="arrow-right" />${address.name}
         <button type="button" class="ork-btn quiet hand-chip__off" aria-label=${`Take off ${address.name}`} title=${`Take off ${address.name}`} onClick=${off}><${Icon} name="close" /></button></span>`}
+      <${MarkChips} />
       ${photos.map((url, i) => html`<span key=${i} class="hand-pic"><img src=${url} alt=${`Picture ${i + 1}`} draggable="false" />
         <button type="button" class="ork-btn quiet hand-chip__off" aria-label=${`Remove picture ${i + 1}`} onClick=${() => { fieldPhotos.value = photos.filter((_, k) => k !== i); }}><${Icon} name="close" /></button></span>`)}
     </div>`}

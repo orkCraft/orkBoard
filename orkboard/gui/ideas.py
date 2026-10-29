@@ -373,7 +373,8 @@ class Ideas(FactsMixin, LoopFace, MapsMixin, ScreensMixin, RouteMixin, TalkMixin
         """An idea: a text, its party (`track`, or `party`; none, or General, and the Orkmaster routes it by code) and a priority (default the party's). It makes
         **no model call** (spec 99 §4): it waits as `routed` with its route until `ideas.talk` (gui/ideas_route.py); only a goal kept on `hold`, a pitch, a
         release or a goal sent from a pitch is drafted at once, whatever its priority (spec 99 §3: the night is gone, so there is no `night` and
-        Low waits for nothing). `marks`: the parts of System the goal points at (they offer Tech on its route). `photos`
+        Low waits for nothing). `marks`: the places of its party's map the goal points at, `[{map, id, name, group?}]` or `[{map, group, name}]` (spec 102 §6): kept in its state as `marks`
+        (realm/idea_lens.py `clean_marks`), read into its calls' prompts (`idea_lens.attached`), and the parts of System among them offer Tech on its route. `photos`
         (the phone's, base64) are kept beside it for the Taskmaster to read (realm/idea_photos.py), and `lens`, what the
         person pointed at with the lens of the goal's party (realm/idea_lens.py). Spec 52 §2.3: `type` (one of the party's
         leader's), its `asks` (written after the text) and `join` (who joins the party first: gui/ideas_types.py). `hold`: kept, nothing
@@ -397,6 +398,7 @@ class Ideas(FactsMixin, LoopFace, MapsMixin, ScreensMixin, RouteMixin, TalkMixin
         except ValueError as e:
             raise IdeasError(str(e)) from None
         pointed = self._lens_args(args)
+        picked = idea_lens.clean_marks(args.get("marks"))       # spec 102 §6: the places of the party's map it points at, kept in its state as `marks`, read into its calls (idea_lens.attached)
         typed = self.typed(args, track, goals[track]["title"])
         rel = self.release_args(args, track, typed)          # a release's version and what goes in, checked before the goal exists (spec 68 §3)
         routed = None if typed["key"] == "release" else routed
@@ -417,6 +419,8 @@ class Ideas(FactsMixin, LoopFace, MapsMixin, ScreensMixin, RouteMixin, TalkMixin
         for raw in photos:
             idea_photos.put(self.state_dir, slug, raw)
         idea_lens.save(self.state_dir, slug, pointed or (idea_lens.read(self.state_dir, pitch) if pitch else []))
+        if picked:
+            ideas.save_state(self.state_dir, slug, marks=picked)
         element = self.element_for(slug, pitch)    # the mark of every card of it (spec 50 §2.3); a sent pitch's, where it is free (spec 68 §2.3)
         ideas.add_turn(self.state_dir, slug, "you", self.with_asks(text, typed), "Gist")     # the person's own words, kept
         self._ev(event_log.IDEA_ADDED, args, idea=slug, track=track, chars=len(text), now=queue == "now",

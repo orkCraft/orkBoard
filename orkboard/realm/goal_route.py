@@ -89,11 +89,11 @@ def reproduces(text: object) -> bool:
 
 
 def _touches_system(marks: Iterable[Any] | None) -> bool:
-    """The goal's marks point at System's parts (a mark is a part's id, or `{kind, part}`; a mark of another kind is not System's)."""
+    """The goal's marks point at System's parts (a mark is a part's id, or `{kind, part}`, or what picking on a map sends, `{map, id | group, name}`; a mark of another kind or map is not System's)."""
     for m in marks or ():
         if isinstance(m, str) and m.strip():
             return True
-        if isinstance(m, dict) and str(m.get("kind") or "system") == "system" and str(m.get("part") or m.get("id") or m.get("path") or "").strip():
+        if isinstance(m, dict) and str(m.get("kind") or m.get("map") or "system") == "system" and str(m.get("part") or m.get("id") or m.get("path") or m.get("group") or "").strip():
             return True
     return False
 

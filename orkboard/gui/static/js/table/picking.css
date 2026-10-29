@@ -1,0 +1,29 @@
+/* Picking on a party's map (docs/specs/102-the-other-maps-and-picking-on-them.md §6, decisions §152, docs/mockups/s3/ state 7). orkUI's tokens and classes only: `.ork-picked` (the brackets), `.ork-box` (the dashed line
+   in the ink), `.ork-chip`, `.ork-btn`. A card is not drawn by this sheet; the marked ones get `.ork-picked` and `.pick-lifted` from picking.js. */
+
+/* the strip over the map */
+.pick-strip { flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-3) var(--ork-5); min-height: 36px; padding: 0 var(--ork-6); border-bottom: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-body); }
+.pick-strip__say { color: var(--ork-ink); }
+.pick-strip__grow { flex: 1; min-width: 0; }
+.pick-strip__open { padding: 0; text-decoration: underline; }
+
+/* the map in picking: a press is a pick, the text is not selected, the box is the drag */
+.pick-host[data-picking] { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+.pick-host[data-picking] [data-pick-id] { cursor: pointer; }
+.pick-lifted { transform: translateY(calc(var(--ork-motion-rise) * -1)); transition: transform var(--ork-motion-quick) var(--ork-motion-ease); }
+.pick-host[data-picking] [data-pick-id].ork-picked { z-index: 1; }
+
+/* the box: fixed to the window, over the table, never taking a press itself */
+.ork-box.pick-box { position: fixed; z-index: 40; }
+
+/* the marks as chips on the field: a path is code, a group the folder's name */
+.pick-chip { text-transform: none; letter-spacing: 0; font-family: var(--ork-font-code); font-weight: 400; max-width: 100%; }
+.pick-chip__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pick-more { padding: 0 var(--ork-2); height: var(--ork-chip); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+
+@media (max-width: 759px) {
+  .pick-strip { min-height: var(--ork-tap); padding: 0 var(--ork-4); gap: var(--ork-3); font: var(--ork-type-caption); }
+  .pick-strip .ork-btn { min-height: var(--ork-tap); }
+  .pick-more { min-height: var(--ork-tap); }
+}
+@media (prefers-reduced-motion: reduce) { .pick-lifted { transition: none; } }

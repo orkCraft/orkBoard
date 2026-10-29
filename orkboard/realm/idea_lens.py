@@ -7,7 +7,8 @@ a lens no one in the party has is not offered.
     lenses(state_dir, root, "ship")      # {"lenses": [{"id": "text"}, {"id": "code", "by": "Architect", ...}], "default": "code"}
     clean(state_dir, [{"kind": "pain", "segment": "Shop owners", "pain": "Orders get lost"}])   # checked, a screen kept
     save(state_dir, "dark-mode", got); read(state_dir, "dark-mode")
-    attached(state_dir, "dark-mode")     # for a keeper's prompt: the photos, then what the lens pointed at
+    attached(state_dir, "dark-mode")     # for a keeper's prompt: the photos, then what the lens pointed at, then the marks picked on the party's map
+    clean_marks([{"map": "system", "id": "server/lobby.ts", "name": "server/lobby.ts", "group": "server"}])    # spec 102 §6: what picking sent with the idea
 
 Kept beside the idea's state (`<state_dir>/ideas/<slug>/lens.json`). A screen is kept for the project
 (`<state_dir>/screens/`), so the next idea picks it again; a segment and its pains too (`<state_dir>/segments.json`); a pain may be pinned to a screen or a step of Design's map (`keep_segment`'s `on`, spec 102 §1.3),
@@ -28,6 +29,7 @@ ORDER = ("text", "code", "screen", "pain")
 MAX_ATTACHED = 4
 MAX_PATHS = 12
 MAX_MARKS = 8
+MAX_PICKS = 40                # the marks an idea addressed to a party carries (spec 102 §6)
 MAX_SEGMENTS = 40
 MAX_PAINS = 20
 PLACE = 80                    # a pain's place: the id of a screen or a step (realm/screen_map.py), at most
@@ -161,6 +163,29 @@ def _unit(v: object) -> float:
     return round(min(1.0, max(0.0, x)), 4)
 
 
+def clean_marks(raw: object) -> list[dict]:
+    """The marks picking on a party's map sent with an idea (spec 102 §6, decisions §141, §152): a card `{map, id, name, group?}` or a whole group `{map, group, name}`, at most
+    MAX_PICKS, each once, in the order given. The whole map (`all`) reads as no mark and is left out; so is anything else that is not a mark."""
+    out: list[dict] = []
+    seen: set[tuple[str, str, str]] = set()
+    for m in raw if isinstance(raw, list) else []:
+        if not isinstance(m, dict) or m.get("all"):
+            continue
+        where, card, group = _words(m.get("map"), 40), _words(m.get("id"), 300), _words(m.get("group"), 300)
+        if not where or not (card or group) or (where, card, group) in seen:
+            continue
+        seen.add((where, card, group))
+        mark = {"map": where, "name": _words(m.get("name"), 120) or card or group}
+        if card:
+            mark["id"] = card
+        if group:
+            mark["group"] = group
+        out.append(mark)
+        if len(out) >= MAX_PICKS:
+            break
+    return out
+
+
 def _path_ok(root: Path, rel: str) -> bool:
     p = Path(rel)
     if p.is_absolute() or ".." in p.parts or any(x in HIDDEN for x in p.parts) or is_secret(rel):
@@ -260,6 +285,15 @@ def prompt_lines(state_dir: Path, slug: str) -> str:
     return ("The person pointed with the lens of the goal's party; keep to it:\n" + "\n".join(rows) + "\n") if rows else ""
 
 
+def marks_lines(state_dir: Path, slug: str) -> str:
+    """For a keeper's prompt: the places of the party's map the person pointed at when the idea was written (spec 102 §6; "" with none)."""
+    by: dict[str, list[str]] = {}
+    for m in ideas.state(state_dir, slug).get("marks") or []:
+        by.setdefault(m["map"], []).append(m["id"] if m.get("id") else f"everything in {m['name']}")
+    rows = [f"- On the {where} map: {', '.join(names)}" for where, names in by.items()]
+    return ("The person pointed at these places of the project's maps (look at them first):\n" + "\n".join(rows) + "\n") if rows else ""
+
+
 def attached(state_dir: Path, slug: str) -> str:
-    """Everything that came with the idea's text, for a keeper's prompt: its photos, then what the lens pointed at."""
-    return idea_photos.prompt_lines(state_dir, slug) + prompt_lines(state_dir, slug)
+    """Everything that came with the idea's text, for a keeper's prompt: its photos, then what the lens pointed at, then the marks on the party's map."""
+    return idea_photos.prompt_lines(state_dir, slug) + prompt_lines(state_dir, slug) + marks_lines(state_dir, slug)

@@ -34,7 +34,7 @@ function useKeys(root) {
     const away = (e) => {
       const t = e.target;
       if (!root.current || aloud(t)) return;
-      if (fieldOpen.value && !t.closest?.(".hand-field, .hand-plus")) closeField();
+      if (fieldOpen.value && !t.closest?.(".hand-field, .hand-plus, [data-picking]")) closeField();           // a press on the map in picking is the pick's (table/picking.js)
       if (stopKeyOf(lifted.value) && !t.closest?.(".hand-lifted, .hand-card")) lower();
     };
     const key = (e) => {

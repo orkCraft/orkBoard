@@ -541,6 +541,7 @@ STATE_DEFAULT = {"state": "raw", "session": "", "session_at": "", "context": 0, 
                  "changed": [],                       # the plan-making sections written since its plan (realm/idea_change.py, spec 62 §1): never changed in place
                  "seen_at": "",                       # when a done goal's result was seen (ISO; ideas.seen, spec 98 §2.2): "" until then
                  "route": [],                         # the parties that write its spec and do its work, in order: [{party, leader}] (realm/goal_route.py, spec 99 §4)
+                 "marks": [],                         # the places of its party's map it points at: [{map, id, name, group?}] and [{map, group, name}] (spec 102 §6; realm/idea_lens.py `clean_marks`), kept by ideas.add
                  "route_how": {},                     # how it was routed and what the person was told of it: by, kind, short, reproduces, offer, said, said_route, changed
                  "from_pitch": ""}                    # the pitch it was sent from (spec 65 §5): its views and decision go to its draft
 
