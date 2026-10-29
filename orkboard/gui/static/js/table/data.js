@@ -39,10 +39,11 @@ export function lookedAt(picked) {
 export const paneTitle = (picked, tab, parties) => `${lookedAt(picked)} · ${throughWords(tab, parties)}`;
 
 /** The name of the map a tab shows, where a thing opened over it says it came from (*← System · server/lobby.ts*). */
+const MAP_NAMES = { tech: "System", design: "Screens", product: "Screens", "game-design": "Loop", art: "Assets", release: "Dev and main", marketing: "The way in" };   // spec 102 §0
 export function mapName(tab, parties) {
   if (tab === ORKMASTER) return "Board";
   const g = parties.find((x) => x.slug === tab);
-  return g && leadsSystem(g) ? "System" : nameOf(g) || tab;
+  return g && leadsSystem(g) ? "System" : MAP_NAMES[g?.party_craft] || nameOf(g) || tab;
 }
 
 /** Tech's map is the System: the party the Architect leads (systemmap.js `leadsSystem`). */
