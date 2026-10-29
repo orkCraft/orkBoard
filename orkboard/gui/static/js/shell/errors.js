@@ -7,16 +7,29 @@
 import { signal } from "@preact/signals";
 import { html } from "../html.js";
 import { command, copyText, toast } from "../link.js";
+import { recentErrors } from "../crashes.js";
+import { over, tab } from "../frame/state.js";
 import { SignInButton, entryFor } from "./signin.js";
 
 const CHARS = 20000;
 const LINE = "p, li, td, th, dt, dd, h1, h2, h3, h4, label, button, a, pre, code, summary, [role=alert], [role=status], .ok-toast";
 const ERROR = "[role=alert], .ok-tone-error, .ok-toast.is-error, .warn";
 
-/** The day's logs (or the last `days`) saved with `said`, the words on the screen; then where, with Show. */
+/** What the window says of itself to the logs (gui/logs_save.py `page_of`, docs/specs/107-what-the-owners-day-said.md §2.4): its size, the
+ *  face (`vscode` in an editor's panel, `app` in the app's window), the open tab, what lies over the pane, the System's lens when it is
+ *  open and the page's last errors. */
+export function pageState() {
+  try {
+    return { w: innerWidth, h: innerHeight, dpr: devicePixelRatio, face: window.parent !== window ? "vscode" : inWindow() ? "app" : "desktop",
+      tab: tab.value || "", over: over.value?.kind || "", lens: document.querySelector(".sys-tabs [role=tab][aria-selected=true]")?.dataset.tab || "",
+      errors: recentErrors() };
+  } catch { return {}; }
+}
+
+/** The day's logs (or the last `days`) saved with `said`, the words on the screen, and the page's state; then where, with Show. */
 export async function saveLogs(said = "", days = 1) {
   let got;
-  try { got = await command("logs.save", { said: String(said || "").slice(0, CHARS), days }); } catch { got = null; }
+  try { got = await command("logs.save", { said: String(said || "").slice(0, CHARS), days, page: pageState() }); } catch { got = null; }
   if (!got || got.error) { toast(got?.error || "The logs could not be saved", "error"); return null; }
   toast(`Logs saved: ${got.path}`, "information", "", 12, null, [
     { label: "Show", run: () => command("logs.show", { path: got.path }).then((r) => r?.error && toast(r.error, "error")).catch(() => {}) },

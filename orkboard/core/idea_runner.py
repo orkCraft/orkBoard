@@ -187,7 +187,9 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
             self._emit(event_log.TASK_STATE, idea=slug, task=tid, state=new, was=old, round=int(t.get("round") or 1),
                        tier=t.get("tier") or "", role=t.get("role") or "", seconds=round(now - since, 1) if since else None, tokens=t.get("tokens"),
                        cost=t.get("cost"), ran_tier=t.get("ran_tier") or "", effort=t.get("effort") or "",
-                       tool=t.get("tool") or "", model=t.get("model") or "", **check)
+                       tool=t.get("tool") or "", model=t.get("model") or "", **check,
+                       **({"ran_why": idea_target.ran_why(t.get("tier") or "", t.get("ran_tier") or "", *self._picks(t, slug))} if new == "running" else {}),
+                       **({"error": str(t["error"])[:600]} if t.get("error") and new in ("failed", "review") else {}))     # (spec 107 §2.3)
             if new == "review":
                 tests, diff = t.get("tests") or {}, t.get("diff") or {}
                 self._emit(event_log.RESULT_READY, idea=slug, task=tid, round=int(t.get("round") or 1), passed=tests.get("passed"),
@@ -386,10 +388,14 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
     def ran_on(self, task: dict, slug: str = "") -> tuple[str, str]:
         """(the model or tier a task runs on, its effort): the Target's shift of its tier, a role's own model winning. The Target is its idea's
         party's size's (spec 75 §3), else the setting's."""
+        target, _, model = self._picks(task, slug)
+        return idea_target.task_pick(str(task.get("tier") or "warrior"), target, model)
+
+    def _picks(self, task: dict, slug: str) -> tuple[str, str, str]:
+        """(the Target, the party's size, the seat's own model) a task's tier is picked by."""
         size = self.size_of(slug) if slug and self.size_of is not None else ""
         seat = goal_team.seat_role(self._role(task), self.party(slug).get("tiers") or {})          # the tier its size gave this seat (spec 81 §2)
-        return idea_target.task_pick(str(task.get("tier") or "warrior"), idea_target.target_for(self.board(), size or None),
-                                     str((seat or {}).get("model") or ""))
+        return idea_target.target_for(self.board(), size or None), size, str((seat or {}).get("model") or "")
 
     def party(self, slug: str) -> dict:
         """The idea's party's `{"tool", "tiers"}` as the host says them (spec 81); {} with none."""

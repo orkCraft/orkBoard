@@ -180,3 +180,16 @@ def test_a_result_seen_is_an_event_of_spec_98(tmp_path):
     assert event_log.RESULT_SEEN == "result_seen" and event_log.RESULT_SEEN in event_log.EVENTS
     event_log.record(tmp_path, event_log.RESULT_SEEN, idea="a-goal", device="desktop")
     assert event_log.counts(tmp_path)["result_seen"] == 1 and len(set(event_log.EVENTS)) == len(event_log.EVENTS)
+
+
+def test_a_refused_command_and_a_red_toast_are_the_events_of_spec_107(tmp_path):
+    """Spec 107 §2.1, §2.2: what the host refused (its name, what it said, who asked, whether it broke) and what was shown red."""
+    for name, value in (("COMMAND_REFUSED", "command_refused"), ("ERROR_SHOWN", "error_shown")):
+        assert getattr(event_log, name) == value and value in event_log.EVENTS
+    assert len(set(event_log.EVENTS)) == len(event_log.EVENTS)
+    event_log.record(tmp_path, event_log.COMMAND_REFUSED, command="ideas.add", error="x" * 5000, device="phone", kind="broken")
+    event_log.record(tmp_path, event_log.ERROR_SHOWN, title="Town clock", text="KeyError: 'x'")
+    refused, shown = event_log.read(tmp_path)
+    assert (refused["command"], refused["device"], refused["kind"], len(refused["error"])) == ("ideas.add", "phone", "broken", event_log.TEXT_MAX)
+    assert (shown["title"], shown["text"]) == ("Town clock", "KeyError: 'x'")
+    assert event_log.counts(tmp_path)["command_refused"] == 1 and event_log.counts(tmp_path)["error_shown"] == 1

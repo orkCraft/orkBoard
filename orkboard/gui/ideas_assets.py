@@ -195,7 +195,7 @@ class Play:
                     return self._failed(began, stop, NO_PAGE if tried else "did not open", ports=tried)
                 self._alive_at = time.monotonic()
                 self._set("playing", port=port, url=idea_shot.url_of(port, path))
-                self._emit(event_log.PLAY_STARTED, seconds=round(time.monotonic() - began, 1), ok=True, why="")
+                self._emit(event_log.PLAY_STARTED, seconds=round(time.monotonic() - began, 1), ok=True, why="", command=command, url=self.url)
                 stop.wait()
             self._remove()
             self._emit(event_log.PLAY_STOPPED, why=self._why or "stopped")
@@ -209,7 +209,8 @@ class Play:
         if stop.is_set():
             self._emit(event_log.PLAY_STOPPED, why=self._why or "stopped")
             return self._set("", url="", port=None)
-        self._emit(event_log.PLAY_STARTED, seconds=round(time.monotonic() - began, 1), ok=False, why=why)
+        self._emit(event_log.PLAY_STARTED, seconds=round(time.monotonic() - began, 1), ok=False, why=why, command=self.command, url="",
+                   tail="\n".join(self.tail)[-600:])                  # what the command printed, for whoever reads the day (spec 107 §2)
         self._set("failed", error=why, none=none, url="", port=None, ports=list(ports or []))
 
     def _git(self, *args: str) -> subprocess.CompletedProcess:
