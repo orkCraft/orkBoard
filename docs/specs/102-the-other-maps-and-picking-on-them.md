@@ -131,3 +131,30 @@ and *Since*; the way in's four steps and what each reads; each text. The lead: `
 at both widths, a card lifted, no sideways scroll; the pains' filter and pin. F: a press, a box, Shift, a touch's long
 press, a whole group, the chips and *and n more*, the marks sent with `ideas.add`. The critical tests
 (`tests/test_architecture.py`, `tests/test_board_alone.py`, `tests/test_updates.py`) and each part's.
+
+## As built
+
+- **A** (bf04c76, 93ee266): Design's screens read from dev's tree and a pain's place (`realm/screen_map.py`,
+  `screen_routes`); `ideas.screens`, `ideas.pain_pin`; Design's and Product's maps as text in their leaders' calls.
+- **B** (cfde943, a656432): the loop (`realm/loop.py`: its cards kept, their files checked against dev, the configs chosen by
+  code); Game design's leader proposes it once (`core/idea_loop.py`, step `loop`); `ideas.loop`, `ideas.loop_set`,
+  `ideas.loop_propose`. `map_text.of(craft, …)` dispatches a party's map text by its craft.
+- **C** (d7e5dcc, 62611a7): `art_map`, `release_map`, `way_map` and `ideas.art_map`, `ideas.release_map`, `ideas.way_map`; their
+  texts in every leader's call by its craft.
+- **The seam** (8e6956a): `table/maps.js` `mapFor(craft, C)`, `craftOf(g)`, `mapOf`, `Pickable`; the parts loaded by
+  `table/mapparts.js`; a goal on the map carries its party's craft (`party_craft`).
+- **D** (f5e526f, 708281b): Design's screens along their flow with the pains pinned (filter, drag to pin); §171.1 the pane's
+  title keeps its two axes, and what opens over a map names the map it came from.
+- **E** (2912ca3): the loop as a ring of cards (Propose, Edit), Art's lanes of assets with players and variants, dev and main
+  with goals ticked to main and **To main**, the way in's four steps (`maps.css`, `mapkit.js`).
+- **F** (68a369d): picking on a party's map (the strip, the box, the marks as chips); `ideas.add` keeps `marks`, read into the
+  prompts (`idea_lens.marks_lines`).
+- **G** (834139a, 0554014): the opportunity tree (`realm/opportunity_tree.py`: outcomes, jobs, the goals that serve them, the
+  experiments that test them); Product's leader proposes it once (`core/idea_tree.py`, step `tree`); `ideas.tree`,
+  `ideas.tree_set`, `ideas.tree_attach`, `ideas.tree_propose`; Product's map text is the tree.
+- **H** (4258424): the tree's face (`table/treemap.js`, `tree.css`): the outcome a banner, the jobs columns with their goals and
+  experiments, Edit, **+** writing a goal for an empty job, Propose; the route card's *Serves* choice for a Product goal.
+- **Not yet**: To main merges dev whole (no per-goal merge command); no gate checks or *Since* rows' data on dev and main; no
+  *changed* flag for a screen's *new* gem; the loop has no add or remove of a card; the tree has no first tree written by
+  hand (only Propose) and no attaching an experiment from the face; the phone's offline set lacks the big signs and the tools
+  (S5).
