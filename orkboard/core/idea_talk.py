@@ -35,7 +35,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable
 
-from orkboard.realm import event_log, goal_line, goal_team, idea_objections, idea_questions, idea_target, ideas, map_text, project_facts, roles
+from orkboard.realm import concerns, event_log, goal_line, goal_team, idea_objections, idea_questions, idea_target, ideas, map_text, project_facts, roles
 from orkboard.realm.idea_talk_parse import (CAUSE_CHARS, LINE, MAX_GOAL, MAX_PROJECT, WHERE, clean_diagnosis, clean_round, fact_text, failure_lines, pick_three,
                                             said_lines, touched, total)
 
@@ -198,8 +198,11 @@ class TalkMixin:
             return []
 
     def concerns_text(self, party: str) -> str:
-        """The seam of spec 108 A: the concerns the party's leader has on its own map, as the text a round adds to its context (*Your concerns on your map*). None are kept yet."""
-        return ""
+        """The concerns the party's leader has on its own map (spec 108 A, `realm/concerns.py`), as the text a round adds to its context (*Your concerns on your map*); "" with none."""
+        try:
+            return concerns.text(concerns.read(self.state_dir, party))
+        except Exception:                            # a record that cannot be read never stops a Talk
+            return ""
 
     def round_prompt(self, slug: str, entry: dict, route: list[dict], rnd: int, said: str, first: bool, known: set[str], line: list[dict] | None = None) -> str:
         """What a leader is told in a round (after its voice, which `ask` puts first), in order: the task and the rules (no file is read), then the context cut to
