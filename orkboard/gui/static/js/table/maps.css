@@ -51,15 +51,63 @@ video.mp-pic { position: absolute; left: 0; top: 0; width: 100%; height: 100%; m
 .mp-tick .ork-sign { color: var(--ork-success); }
 .mp-tick.is-off .ork-sign { visibility: hidden; }
 
-/* -- the loop: a ring, or two a line --------------------------------------------------------------------------------------------- */
-.mp-ring-host { min-width: 0; }
-.mp-ring { position: relative; width: 100%; }
-.mp-ring__line { position: absolute; left: 0; top: 0; pointer-events: none; }
-.mp-ring__line ellipse { fill: none; stroke: var(--ork-frame); stroke-width: 2; stroke-dasharray: 8 6; }
-.mp-ring__chev { position: absolute; margin: 0; transform: translate(-50%, -50%); color: var(--ork-ink); }
-.mp-ring__mid { position: absolute; display: flex; flex-direction: column; align-items: center; gap: var(--ork-3); transform: translate(-50%, -50%); text-align: center; color: var(--ork-ink-muted); }
-.mp-slot { position: absolute; width: 256px; transform: translate(-50%, -50%); }
-.mp-loop .mp-win { height: 36px; }
+/* -- the loops: rings one in another, the economy at the right, the feeling under (spec 107 §14) ------------------------------------------ */
+.mp-loopwrap { display: flex; flex-direction: column; gap: var(--ork-4); min-width: 0; }
+.mp-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--ork-3) var(--ork-5); }
+.mp-bar__r { display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-3) var(--ork-4); }
+.mp-says { display: flex; flex-direction: column; gap: var(--ork-2); margin: 0; padding: 0; list-style: none; }
+.mp-says__line { display: flex; align-items: flex-start; gap: var(--ork-3); padding: var(--ork-2) var(--ork-4); border-left: var(--ork-double) solid var(--ork-alert); background: var(--ork-panel); font: var(--ork-type-body); overflow-wrap: anywhere; }
+.mp-says__line .ork-sign { flex: none; color: var(--ork-alert); margin-top: 2px; }
+.mp-loopbody { display: flex; flex-direction: column; gap: var(--ork-5); min-width: 0; }
+.mp-loopbody.is-side { display: grid; grid-template-columns: minmax(0, 1fr) 280px; gap: var(--ork-6); align-items: start; }
+.mp-loopmain { display: flex; flex-direction: column; gap: var(--ork-5); min-width: 0; }
+.mp-rings { position: relative; width: 100%; }
+.mp-rings__line { position: absolute; left: 0; top: 0; pointer-events: none; }
+.mp-rings__line ellipse { fill: none; stroke: var(--ork-frame); stroke-width: 2; stroke-dasharray: 8 6; }
+.mp-ring__chev { position: absolute; margin: 0; transform: translate(-50%, -50%); color: var(--ork-ink-muted); }
+.mp-ring__tag { position: absolute; display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); box-sizing: border-box; width: max-content; max-width: 208px; padding: var(--ork-1) var(--ork-2); transform: translate(-50%, -50%); text-align: center; background: var(--ork-canvas); z-index: 1; }
+.mp-ring__tag.is-mid { background: none; max-width: 132px; }
+.mp-ring__tag .ork-label { color: var(--ork-ink-muted); }
+.mp-ring__nm { font: var(--ork-type-body); font-weight: 600; overflow-wrap: anywhere; }
+.mp-slot { position: absolute; transform: translate(-50%, -50%); }
+.mp-st.mp-card.ork-card { display: flex; flex-direction: column; gap: var(--ork-1); padding: var(--ork-2) var(--ork-3); }
+.mp-st .mp-card__head { min-height: 0; }
+.mp-st .mp-card__nm { font: var(--ork-type-caption); font-weight: 600; -webkit-line-clamp: 2; line-clamp: 2; }
+.mp-st__meta { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-2); min-width: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.mp-st__meta > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mp-st__feel { font: var(--ork-type-body); overflow-wrap: anywhere; }
+.mp-pips { flex: none; gap: 2px; }
+.mp-pips > i { width: 6px; height: 6px; }
+.mp-back__cur { font: var(--ork-type-body); overflow-wrap: anywhere; }
+.mp-orbit { position: absolute; left: 0; top: 0; width: 8px; height: 8px; background: var(--ork-ink); offset-rotate: 0deg; z-index: 2; pointer-events: none; }
+@media (prefers-reduced-motion: no-preference) { .mp-orbit { animation: mp-orbit 8s steps(28) infinite; } }
+@media (prefers-reduced-motion: reduce) { .mp-orbit { display: none; } }
+@keyframes mp-orbit { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+.mp-lists { display: flex; flex-direction: column; gap: var(--ork-5); }
+.mp-ll { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; padding-left: var(--ork-4); border-left: var(--ork-line) dashed var(--ork-frame); }
+.mp-ll__nm { margin: 0; font: var(--ork-type-body); font-weight: 600; }
+.mp-ll__steps { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ork-3); align-items: start; margin-top: var(--ork-1); }
+.mp-st.is-narrow .mp-card__foot { min-height: 0; }
+.mp-eco, .mp-feel { display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; }
+.mp-eco__row { display: grid; grid-template-columns: minmax(0, 1fr) auto 88px auto minmax(0, 1fr); align-items: center; gap: var(--ork-2); padding: var(--ork-3) 0; border-top: var(--ork-line) solid var(--ork-frame); }
+.mp-eco__side { display: flex; flex-direction: column; gap: var(--ork-1); min-width: 0; font: var(--ork-type-caption); }
+.mp-eco__side.is-in { text-align: right; align-items: flex-end; }
+.mp-eco__list { display: flex; flex-direction: column; gap: 2px; margin: 0; padding: 0; list-style: none; overflow-wrap: anywhere; }
+.mp-eco__none { color: var(--ork-alert); }
+.mp-eco .ork-chev { color: var(--ork-ink-muted); }
+.mp-cur.mp-card.ork-card { padding: var(--ork-2); }
+.mp-hooks { display: flex; flex-direction: column; gap: var(--ork-2); padding-top: var(--ork-3); border-top: var(--ork-line) solid var(--ork-frame); }
+.mp-hooks__list { display: flex; flex-direction: column; gap: var(--ork-2); margin: 0; padding: 0; list-style: none; font: var(--ork-type-caption); }
+.mp-hooks__list li { display: flex; align-items: baseline; gap: var(--ork-3); overflow-wrap: anywhere; }
+.mp-hooks__when { flex: none; min-width: 28px; font: var(--ork-type-label); }
+.mp-feel__svg { display: block; max-width: 100%; overflow: visible; }
+.mp-feel__grid { stroke: var(--ork-frame); stroke-width: 1; stroke-dasharray: 2 4; }
+.mp-feel__line { fill: none; stroke: var(--ork-ink); stroke-width: 2; }
+.mp-feel__dot { fill: var(--ork-ink); }
+.mp-feel__pt { cursor: pointer; }
+.mp-feel__pt:hover .mp-feel__dot { fill: var(--ork-ink-muted); }
+.mp-feel__word, .mp-feel__axis { fill: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.mp-feel__axis { fill: var(--ork-ink-faint); }
 .mp-propose { display: flex; flex-direction: column; gap: var(--ork-4); max-width: 560px; }
 
 /* -- Art: the kinds as lanes ----------------------------------------------------------------------------------------------------- */
