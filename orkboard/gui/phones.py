@@ -463,6 +463,10 @@ class Listener:
             return {"t": "reply", "id": cid, "ok": False, "error": str(e)}
         except Exception as e:                       # a broken command never closes the phone
             return {"t": "reply", "id": cid, "ok": False, "error": f"{type(e).__name__}: {e}"}
+        if name == "mobile.hello" and isinstance(result, dict) and isinstance(result.get("commands"), list):
+            # What this phone may send, not what the host has (spec 94 §2.2): a face whose command is not here is not drawn.
+            result = {**result, "commands": [c for c in result["commands"]
+                                             if face.allowed(self.host, c, {"path": "x.md"} if c == "files.read" else {})]}
         if name == "halt":
             self.host.town.toast(f"Stop all came from the phone {phone.name}", title="Stop all", severity="warning")
         return {"t": "reply", "id": cid, "ok": True, "result": result}

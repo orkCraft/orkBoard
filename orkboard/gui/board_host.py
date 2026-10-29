@@ -360,17 +360,21 @@ class Orkboard:
                 "update": self.updates.snapshot(), "update_policy": self.machine.updates, "version": __version__,
                 "usage_ask": self.usage.should_ask()}
 
+    # What the page reads of the snapshot and a phone has no use for: the computer's own (spec 94 §2.3).
+    COMPUTER_ONLY = ("onboarding", "sign_in", "repo", "usage_ask", "update_policy")
+
     def phone_snapshot(self) -> dict[str, Any]:
-        """The snapshot as a phone gets it; `rev` names its content (gui/phones.py sends it again only when it moved), the
-        reserve (spec 49 §2.3) among it."""
+        """The snapshot as a phone gets it (spec 94 §2.3): the page's own (`snapshot()`: the Board's counts, the limits, the mana
+        with `paid`, the reserve, the projects) less the computer's (`COMPUTER_ONLY`: the onboarding, the sign-ins' flows, the
+        repository's path); `rev` names its content (gui/phones.py sends it again only when it moved). The old phone face
+        reads `v`, `project`, `look`, `sleep`, the counts, `hud` and `update`, which stay."""
         s = self.snapshot()
         root = self.repo_root
-        out = {"v": 1, "project": root.name if root is not None else "", "focus": "board", "look": "office",
-               "sleep": self.keep_awake.phone_line(),
-               **{k: s[k] for k in ("ideas_rev", "ops_rev", "ops_team", "needs_you", "idea_states", "review_count", "review_results",
-                                    "limits", "reserve", "rate")},
+        out = {**{k: v for k, v in s.items() if k not in self.COMPUTER_ONLY},
+               "v": 1, "project": root.name if root is not None else "", "focus": "board", "look": "office",
+               "sleep": self.keep_awake.phone_line(), "hud": dict(s["hud"]), "version": __version__,
                "canvases_new": int(s.get("canvases_new") or 0), "canvases_rev": int(s.get("canvases_rev") or 0),   # spec 78 §4
-               "hud": dict(s["hud"]), "version": __version__, "update": self._phone_update(s["update"])}
+               "update": self._phone_update(s["update"])}
         out["rev"] = hashlib.sha256(json.dumps(out, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:16]
         return out
 
@@ -382,7 +386,7 @@ class Orkboard:
             return None
         notes = u["critical_notes"] if u.get("critical") else u.get("notes") or []
         return {"version": u["version"], "current": u["current"], "critical": bool(u.get("critical")),
-                "major": bool(u.get("major")), "notes": list(notes)[:3], "can": bool(u.get("can")), "how": u.get("how", ""),
+                "major": bool(u.get("major")), "notes": list(notes)[:3], "critical_notes": list(notes)[:3], "can": bool(u.get("can")), "how": u.get("how", ""),
                 "state": u.get("state", "idle"), "error": "\n".join(str(u.get("error") or "").splitlines()[-6:])}
 
     def _hello(self, args: dict) -> dict[str, Any]:
