@@ -129,6 +129,38 @@ def _one(root: Path, commit: str, path: str) -> tuple[str, int] | None:
     return None
 
 
+# -- the project's logo (docs/specs/107-what-the-owners-day-said.md §9.2): Play's start screen -------------------------------------------
+
+LOGO = re.compile(r"^(?:logo|icon|emblem|brand|app-icon|favicon)(?:[-_.@][^/]*)?\.(svg|png|webp)$", re.I)
+
+
+def logo(root: Path, ref: str = "") -> str:
+    """The project's logo, a path relative to `root` ("" when it has none): a tracked image (`git ls-files`; with `ref`, the files of that commit's tree) whose name is `logo`, `icon`, `emblem`, `brand`,
+    `app-icon` or `favicon`, a `-`, `_`, `.` or `@` and more after it allowed (`logo-dark.svg`, `icon@2x.png`). An `.svg` first, else the largest `.png` or `.webp`; among equals the path nearest the root."""
+    root = Path(root)
+    sizes: dict[str, int] = {}
+    if ref:
+        sizes = {p: size for p, (_, size) in tree(root, ref).items()}
+    else:
+        try:
+            got = _git(root, "ls-files", "-z")
+        except (OSError, subprocess.SubprocessError):
+            return ""
+        for path in got.stdout.split("\0") if got.returncode == 0 else []:
+            if path and allowed(path) and LOGO.match(path.rsplit("/", 1)[-1]):
+                try:
+                    if (root / path).is_file() and not (root / path).is_symlink():
+                        sizes[path] = (root / path).stat().st_size
+                except OSError:
+                    continue
+    found = [(p, s) for p, s in sizes.items() if LOGO.match(p.rsplit("/", 1)[-1]) and 0 < s <= MAX_BYTES]
+    vectors = sorted((p for p, _ in found if ext_of(p) == "svg"), key=lambda p: (p.count("/"), len(p), p))
+    if vectors:
+        return vectors[0]
+    pixels = sorted(found, key=lambda x: (-x[1], x[0].count("/"), len(x[0]), x[0]))
+    return pixels[0][0] if pixels else ""
+
+
 # -- the cache: <state_dir>/assets-before/<commit>/<path> --------------------------------------------------------------
 
 def cache_root(state_dir: Path) -> Path:

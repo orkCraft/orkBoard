@@ -84,8 +84,7 @@ function Title({ parties, tab, narrow }) {
   const o = over.value, where = o?.from?.title || "", code = o && (o.kind === "file" || (o.kind === "diff" && o.props?.path));
   const play = () => { if (o?.kind !== "play") openOver("play", {}, o?.from || { title: mapName(tab, parties), key: "" }, "Play"); };
   const limits = town.value?.limits || [], from = { title: mapName(tab, parties), key: "" };
-  const items = [["Switch project", () => openOver("projects", {}, from, "Projects"), false, "list-box"], ["Settings", () => openOver("settings", {}, from, "Settings"), false, "sliders"],
-    ["Files", () => openOver("files", {}, from, "Files"), false, "folder"]];
+  const items = [["Settings", () => openOver("settings", {}, from, "Settings"), false, "sliders"], ["Files", () => openOver("files", {}, from, "Files"), false, "folder"]];   // Switch project is the ▾ after the project's name (tabs.js, spec 107 §8.2)
   return html`<header class="ork-head table-title">
     ${o && html`<button type="button" class="ork-btn quiet table-title__back" aria-label="Back" title="Back" onClick=${back}><${Icon} name="arrow-left" /></button>`}
     <span class="table-title__pt" data-title>${o ? html`${where && html`${where} · `}<span class=${code ? "table-pathcase" : undefined}>${o.title}</span>` : paneTitle(picked.value, tab, parties)}</span>

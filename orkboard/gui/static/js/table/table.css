@@ -235,3 +235,19 @@ button.table-token.ork-card { position: relative; display: flex; flex-direction:
   .table-seat { justify-content: center; }
   .table-menu__item { min-height: var(--ork-tap); }
 }
+
+/* -- spec 107 H: + Party, the project ▾, a party's leader head stepping while it works (docs/specs/107-what-the-owners-day-said.md §8) ---------------------------------------------------- */
+.table-tabcell { position: relative; display: flex; min-width: 0; }
+.table-tabcell > .table-tab { flex: 1; }
+.table-tab.has-switch { padding-right: var(--ork-8); }
+.ork-btn.table-switch { position: absolute; right: var(--ork-1); top: 50%; transform: translateY(-50%); width: 28px; min-width: 28px; height: 28px; min-height: 28px; padding: 0; text-decoration: none; }
+.table[data-compact="true"] .table-tab.has-switch { justify-content: flex-start; padding: 0 0 0 var(--ork-2); }
+.table[data-compact="true"] .ork-btn.table-switch { right: 0; width: 18px; min-width: 18px; }
+.table[data-compact="true"] .table-switch .ork-icon { --ork-icon: 14px; }
+.table-plus { padding: 0 var(--ork-3); gap: var(--ork-2); white-space: nowrap; }
+.table[data-compact="true"] .table-plus { padding: 0 var(--ork-2); }
+.table[data-compact="true"] .table-plus__w { display: none; }                  /* a row of heads: the + alone, *New party* is still its label */
+.table-tab[data-working] .ork-race__head { animation: table-tab-step 1.2s steps(2) infinite; }
+@keyframes table-tab-step { 0% { transform: translateY(0); } 50% { transform: translateY(-1px); } 100% { transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { .table-tab[data-working] .ork-race__head { animation: none; } }
+@media (pointer: coarse) { .table .ork-btn.table-switch, .table[data-compact="true"] .ork-btn.table-switch { width: var(--ork-tap); min-width: var(--ork-tap); height: var(--ork-tap); min-height: var(--ork-tap); } }

@@ -271,3 +271,44 @@ def test_ideas_assets_answers_the_assets_signed_with_what_changed_and_the_goals(
                 assert "not one of the project's assets" in str(e)
     finally:
         host.close()
+
+
+# -- the project's logo (spec 107 §9.2) ----------------------------------------------------------------------------------------
+
+SVG = b"<svg xmlns='http://www.w3.org/2000/svg'/>"
+
+
+def test_the_logo_is_the_svg_before_any_png_else_the_largest_png_or_webp(repo):
+    assert assets.logo(repo) == ""                                                                   # nothing in the project yet
+    put(repo, {"README.md": b"x", "art/hero.png": PNG, "logos.png": PNG})                            # not named for one
+    assert assets.logo(repo) == ""
+    put(repo, {"icon.png": pf.png(16, 16), "web/logo@2x.png": pf.png(64, 64), "brand-mark.webp": b"RIFFxxxxWEBPVP8 " + b"\0" * 8})
+    assert assets.logo(repo) == "web/logo@2x.png"                                                    # the largest, by its bytes
+    put(repo, {"docs/favicon.svg": SVG})
+    assert assets.logo(repo) == "docs/favicon.svg"                                                   # an svg first, whatever the pictures' size
+    put(repo, {"logo.svg": SVG, "logo-dark.svg": SVG})
+    assert assets.logo(repo) == "logo.svg"                                                           # among svgs the path nearest the root
+
+
+def test_the_logos_names_are_the_six_words_with_an_optional_suffix():
+    for name in ("logo", "icon", "emblem", "brand", "app-icon", "favicon"):
+        for suffix in ("", "-dark", "_big", ".dark", "@2x"):
+            assert assets.LOGO.match(f"{name}{suffix}.png"), (name, suffix)
+    for name in ("logos.png", "iconic.png", "my-logo.png", "logo.txt", "logo", "a-icon.svg", "icons.svg"):
+        assert not assets.LOGO.match(name), name
+
+
+def test_the_logo_ignores_files_git_does_not_track_and_those_an_asset_never_is(repo):
+    put(repo, {"node_modules/pkg/logo.svg": SVG, ".github/logo.svg": SVG})
+    assert assets.logo(repo) == ""                                                                   # a skipped folder and a hidden one are no one's logo
+    (repo / "logo.svg").write_bytes(SVG)                                                             # written, never added
+    assert assets.logo(repo) == ""
+    git(repo, "add", "logo.svg")
+    assert assets.logo(repo) == "logo.svg"
+
+
+def test_the_logo_of_a_commit_is_read_from_its_tree_not_the_working_tree(repo):
+    first = put(repo, {"icon.png": PNG})
+    second = put(repo, {"logo.svg": SVG})
+    assert assets.logo(repo, first) == "icon.png" and assets.logo(repo, second) == "logo.svg"
+    assert assets.logo(repo, "HEAD") == ""                                                           # only a full commit names a tree

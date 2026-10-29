@@ -1,14 +1,16 @@
 // A box that scrolls says so where scrollbars are overlay (macOS, phones, headless) and show only while
-// scrolling: its edge that has more fades (`.gui-scrolls[data-more]`, layout.css), in both looks (ui.md U03).
+// scrolling: its edge that has more fades (`.gui-scrolls[data-more]`, page.css), in both looks (ui.md U03).
 // A box with nothing more to show has no fade, and the fade at the bottom goes once it is scrolled to its end.
+// Sideways too (docs/specs/107-what-the-owners-day-said.md §6.2): the System, scaled to its smallest, scrolls left and right.
 import { useEffect, useRef } from "preact/hooks";
 
 const EDGE_PX = 2;               // within this of the end counts as the end (fractional scroll positions)
 
-/** What `el` has beyond its edges: "above", "below", "above below" or "". */
+/** What `el` has beyond its edges: "above", "below", "left", "right", two or more of them in that order ("above below", "left right") or "". */
 export function moreOf(el) {
   const above = el.scrollTop > EDGE_PX, below = el.scrollTop + el.clientHeight < el.scrollHeight - EDGE_PX;
-  return [above && "above", below && "below"].filter(Boolean).join(" ");
+  const left = el.scrollLeft > EDGE_PX, right = el.scrollLeft + el.clientWidth < el.scrollWidth - EDGE_PX;
+  return [above && "above", below && "below", left && "left", right && "right"].filter(Boolean).join(" ");
 }
 
 /** Keeps `ref.current`'s `data-more` true as it scrolls, resizes or its content changes — also when the box
