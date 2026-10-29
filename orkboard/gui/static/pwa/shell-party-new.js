@@ -164,12 +164,12 @@ export function makeNewGoal(core) {
     seats.el, about_team, routines.el, price, checks, releasesFrom.el,
     h("p", { class: "muted hint" }, "The leader reads it and writes the title and the summary."), left);
 
-  /** The preset to open on: the one asked for by id, a proposal of the deal (`proposal:<id>`), else the project's Build (a craft's Tech for an older host). */
+  /** The preset to open on: the one asked for by id, a proposal of the deal (`proposal:<id>`), else the project's Tech (spec 99 §1: the party that builds it; Build for a host of before, a craft's Tech for an older one). */
   async function opening(presetId) {
     const wanted = presetId.startsWith(PROPOSAL) ? presetId.slice(PROPOSAL.length) : "", ask = wanted || presetId, list = core.st.partyPresets.presets;
     let pick = list.find((p) => p.id === ask || (wanted && p.recipe === wanted)) || (presetId && !wanted ? libraryPreset(core, presetId) : null);
     if (!pick && wanted) { const got = core.st.proposed || await loadProposals(core); const p = got?.proposals?.find((x) => x.id === wanted); pick = p ? fromProposal(core, p) : null; }
-    return pick || list.find((p) => p.stage === "build") || list.find((p) => p.id === "engineering") || null;
+    return pick || list.find((p) => p.stage === "build") || list.find((p) => p.id === "tech") || list.find((p) => p.id === "engineering") || null;
   }
 
   return {

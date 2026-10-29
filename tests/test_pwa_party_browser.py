@@ -64,9 +64,9 @@ async def test_new_party_says_the_price_asks_again_300_ms_after_a_seat_and_each_
         await sheet.locator('[data-free="lead"]').click()
         await page.get_by_role("dialog", name="Choose a leader").locator('[data-agent="analyst"]').click()
         await sheet.get_by_role("button", name="Remove Design system designer from the party").click()
-        await sheet.locator('[data-free="build"]').click()
+        await sheet.locator('[data-free="build"]').first.click()                             # the Design party seats up to five who do (decisions §151.1, §169.2): a seat is free
         await page.get_by_role("dialog", name="Add a member").locator('[data-act="more-roles"]').click()
-        await page.get_by_role("dialog", name="Add a member").locator('[data-agent="copywriter"]').click()
+        await page.get_by_role("dialog", name="Add a member").locator('[data-agent="seo"]').click()
         for _ in range(100):                                                                 # the last change is asked 300 ms after it
             if asked()[-1]["leader"] == "analyst" and len(asked()) > before:
                 break
@@ -78,7 +78,7 @@ async def test_new_party_says_the_price_asks_again_300_ms_after_a_seat_and_each_
         mark = sheet.locator('.pseat[data-seat="accessibility-reviewer"] .check-badge')
         assert await mark.text_content() == "checks"                                            # a checker's mark, as the desktop's
         await sheet.get_by_role("button", name="Remove Accessibility reviewer from the party").click()
-        await sheet.locator('[data-free="check"]').click()
+        await sheet.locator('[data-free="check"]').first.click()                             # two seats to check: both free
         assert await page.get_by_role("dialog", name="Add a checker").locator('[data-agent="reviewer"] .check-badge').text_content() == "checks"
         await page.get_by_role("dialog", name="Add a checker").locator('[data-agent="reviewer"]').click()
         block = sheet.get_by_role("group", name="Checks")
@@ -126,7 +126,8 @@ LIT = """
     .observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ["class"] }));
 })();
 """
-LONG = ["New feature", "Fix a bug", "Clean up", "Solve a pain", "New screen (needs Design system designer)", "Try an experiment (needs Experimenter)", "Write the launch (needs Copywriter)"]      # the Mobile app's: its first builder, first checker
+LONG = ["New feature", "Fix a bug", "Clean up", "New icon", "New logo", "Solve a pain", "New character", "Store listing", "A release",
+        "New screen (needs Design system designer)", "Try an experiment (needs Experimenter)", "Write the launch (needs Copywriter)"]      # the Mobile app's: its three who do and its two who check, a squad (decisions §151.1, §169.2)
 BEFORE_PRICE = "e => { const l = e.querySelector('.party-takes'), p = e.querySelector('.party-price-box'); return Boolean(p.compareDocumentPosition(l) & Node.DOCUMENT_POSITION_FOLLOWING) && l.parentElement === p.parentElement; }"
 
 
@@ -165,15 +166,15 @@ async def test_new_party_says_what_it_can_take_under_the_price_three_lines_at_mo
         sheet = await _sheet(page)
         await sheet.locator('.preset-tile[data-preset="mobile-app"]').click()
         line = await _takes(sheet, "pain")
-        assert said(await line.inner_text()).startswith("It can take: New feature · Fix a bug · Clean up · Solve a pain")
+        assert said(await line.inner_text()).startswith("It can take: New feature · Fix a bug · Clean up · New icon")
         shown = await line.locator(".take").count()
         more = line.locator(".take-more")
         assert 3 <= shown < len(LONG) and said(await more.inner_text()) == f"and {len(LONG) - shown} more"           # what does not fit ends with *and k more*
         assert await more.get_attribute("title") == ", ".join(LONG)                                                   # its title lists all
-        game = sheet.locator('.preset-tile[data-preset="game"]')                                                      # the Game (a seat a stage): five types, none missing anyone
+        game = sheet.locator('.preset-tile[data-preset="game"]')                                                      # the Game (a squad of its own): ten types, none missing anyone
         await game.click()
         line = await _takes(sheet, "mechanic")
-        assert said(await line.inner_text()) == "It can take: New feature · Fix a bug · Clean up · New mechanic · Balance pass"
+        assert said(await line.inner_text()) == "It can take: New feature · Fix a bug · Clean up · New icon · New logo · New mechanic · New level · New character · Balance pass · New sound"
         assert await line.locator(".take-with").count() == 0 and await line.locator(".is-missing").count() == 0 and await line.locator(".take-more").count() == 0
         await sheet.locator('.preset-tile[data-preset="mobile-app"]').click()
         line = await _takes(sheet, "pain")
@@ -194,9 +195,9 @@ async def test_a_type_that_needs_someone_follows_with_one_more_and_says_who(fake
     typed(monkeypatch, fake_repo)
     async with _phone(fake_repo, monkeypatch) as (stub, page):
         sheet = await _sheet(page)
-        await sheet.locator('.preset-tile[data-preset="data"]').click()
+        await sheet.locator('.preset-tile[data-preset="run"]').click()                                                # Run is led by the Analyst (decisions §122.5; the Data party of before is gone)
         line = await _takes(sheet, "abtest")
-        assert said(await line.inner_text()) == "It can take: A new metric, with one more: An A/B test (needs Experimenter)"
+        assert said(await line.inner_text()) == "It can take: New feature · Fix a bug · Clean up · A new metric, with one more: An A/B test (needs Experimenter)"
         assert await line.locator(".take-with").inner_text() == "with one more:" and await line.locator(".take.is-missing").count() == 1
         assert await line.locator(".take-more").count() == 0                                                          # it fits: no *and k more*
         await sheet.locator('.preset-tile[data-preset="mobile-app"]').click()                                         # a long list: the types that miss someone fall in *and k more*, titled whole
@@ -254,14 +255,15 @@ async def test_a_seat_that_opens_a_type_lights_it_once_the_first_answers_light_n
         await page.wait_for_timeout(700)
         assert await page.evaluate("window.__lit") == []                                    # nothing is lit by the first answers
         await sheet.locator('.preset-tile[data-preset="website"]').click()
-        await _takes(sheet, "bug")
+        await _takes(sheet, "tagline")                                                      # the Website seats its Copywriter (a squad, decisions §151.1, §169.2): A tagline is offered at once
         await page.wait_for_timeout(300)
         await page.evaluate("window.__lit.length = 0")
-        await sheet.get_by_role("button", name="Remove Grunt from the party").click()
-        assert await page.evaluate("window.__lit") == []
-        await sheet.locator('[data-free="build"]').click()
-        await page.get_by_role("dialog", name="Add a member").locator('[data-act="more-roles"]').click()
-        await page.get_by_role("dialog", name="Add a member").locator('[data-agent="copywriter"]').click()          # the one builder's seat is the Copywriter's: A tagline opens
+        await sheet.get_by_role("button", name="Remove Copywriter from the party").click()
+        await sheet.locator('.party-takes .take[data-type="tagline"]').wait_for(state="detached", timeout=WAIT_MS)
+        await page.wait_for_timeout(300)
+        assert await page.evaluate("window.__lit") == []                                    # a type that went lights nothing
+        await sheet.locator('[data-free="build"]').first.click()
+        await page.get_by_role("dialog", name="Add a member").locator('[data-agent="copywriter"]').click()          # a seat is the Copywriter's again: A tagline opens
         await _takes(sheet, "tagline")
         if reduced:
             await page.wait_for_timeout(500)
@@ -273,7 +275,7 @@ async def test_a_seat_that_opens_a_type_lights_it_once_the_first_answers_light_n
         await sheet.get_by_label("Name").fill("Taglines")                                   # a redraw for another reason does not light it again
         await page.wait_for_timeout(900)
         lit = await page.evaluate("window.__lit")
-        assert [(l["type"], l["name"], l["duration"], l["timing"]) for l in lit] == [("tagline", "reward", "0.6s", "steps(4)")]      # the one the seat opened, once, the quiet reward's look
+        assert sorted((l["type"], l["name"], l["duration"], l["timing"]) for l in lit) == [("landing", "reward", "0.6s", "steps(4)"), ("tagline", "reward", "0.6s", "steps(4)")]      # the two the seat opened (the SEO is there for the landing page), once each, the quiet reward's look
         assert await sheet.locator(".party-takes .is-reward").count() == 0                  # and it is over (0.6 s)
 
 
