@@ -73,7 +73,7 @@ def test_techs_parts_are_the_systems_part_paths(host):
 def test_game_designs_parts_are_the_loops_steps_and_currencies_as_the_map_stamps_them(host):
     game = _party(host, "Game design", "game-designer", "game-design")
     assert host.command("ideas.pickables", {"party": game}) == {"party": game, "map": "game-design", "parts": []}
-    loop.keep(host.ideas.state_dir, Path(host.ideas.host.repo_root), [{"name": n, "line": "A line", "rests_on": []} for n in ("Spawn", "Fight", "Loot", "Upgrade")], "person")
+    loop.keep(host.ideas.state_dir, Path(host.ideas.host.repo_root), {"cards": [{"name": n, "line": "A line", "rests_on": []} for n in ("Spawn", "Fight", "Loot", "Upgrade")]}, "person")
     steps = [st for lp in host.command("ideas.loop", {})["loops"] for st in lp["steps"]]       # a first version reads as one core loop
     got = host.command("ideas.pickables", {"party": game})
     assert [(p["id"], p["name"], p["map"]) for p in got["parts"]] == [(st["id"], st["name"], "game-design") for st in steps]
