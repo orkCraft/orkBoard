@@ -3560,3 +3560,30 @@ view, §175.2 and §176.2, and spec 98 §2.3's *Switch* as the only way on):
    the person started, and a keeper's step, stay on the Main tool and may spend the reserve, and move on only when a window
    is spent (this makes 2 precise).
 The owner's call.
+
+## 178. The phone is the page first, then the native frame; upright the hand with the potions in its top row; the Board only on its side, with the discard and the portal (29 October, the owner)
+
+Why: read against §175–§177, spec 103 was written before the mana, the frame, the Orkmaster's line, the card *Go on paid?*
+and the portal, and the phone's own face (`pwa/board-app.js`, `pwa/shell-*.js`) knows none of them; spec 94's B–E, which
+make the phone a frame round the one page, are not built, while the page's narrow width already draws all of them. The
+owner's answers to the questions sent with `docs/mockups/phone/` (v1). So (this changes §174.1–§174.3, spec 103 §1.4 and §2,
+spec 94 §3.2 for a phone, and makes spec 105 As built C's *the phone has no card for it* go):
+1. **Spec 94 B–E first**, then spec 103: the phone becomes the page at the narrow width, and its own face is removed; it is
+   not patched with what the desktop gained. What the phone lacks today (`mana` in its snapshot, the paid card, the potions'
+   and the portal's files in its cache) comes with the page.
+2. **Upright, the potions stand in one row at the top**, left of *The Board*, at orkUI's `.small`, over the top card's
+   context; the default framed. The foot is the blank card alone. With nothing in the hand they keep that row.
+3. **The frame follows the work**, not a tab, on the hand's screen: `town.mana.now` (the Main tool when it has room); on the
+   Board's screen it follows the open tab as on the desktop (§177.1).
+4. **The Orkmaster's line** is a strip at the screen's top, over the context, until put away (spec 105 D.3).
+5. **Go on paid?** is a card in the hand like the others: its context the Orkmaster's crowned head and the project's name,
+   no goal and no pick, *The work waits for your answer*; its row counts in `needs_you` and is pushed; its notification has
+   *Open* only, never *Take the pick*: money is spent from the card, on the screen.
+6. **One stack in the hand**, in Needs you's order: a goal's cards together, the next goal's under them; its depth its edges.
+7. **The Board on a phone only on its side**: no upright Board under `pointer: coarse`. *The Board* turns the phone in the
+   native app; in a browser, where nothing turns it, it says *Turn the phone on its side to see the Board*. On its side the
+   table keeps **the discard and the portal** (§176.3, §177.4: the discard lies on the table now), without the hand. A narrow
+   window with a fine pointer (a desktop's, VS Code's side bar) keeps spec 94 §3's upright table.
+8. **Merging into main from the phone is allowed** (the portal, `ideas.to_main`; spec 37 §8's *no git from the phone* keeps
+   the Files pane's git and the terminal off the phone, not the Board's own merge).
+The owner's call.
