@@ -1,0 +1,35 @@
+/* The portal to main (docs/specs/105-the-default-tool-moving-on-and-the-portal.md §6, decisions §177.4; mockup docs/mockups/portals/): layout only. The portal itself is orkUI's `.ork-portal` (its drawing, its states `is-taking`, `is-sealed`,
+   `is-new`, its size `small`); every colour, face and move is orkUI's. It opens above the pile in the table's right column (`.table-end`), the line over it and the pixel-face label *Main*; the sealed reason lies under it in the danger
+   colour. The goals ready for main are cards in the discard's view, the hand card's anatomy at the hand's size on each width (80 px wide at the narrow one, as the pile is): the card's own rules are the hand's (hand.css),
+   copied here for the view (they are scoped to the hand and the table's end there). */
+
+.portal-host { display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); align-self: flex-end; width: calc(var(--hc-w) + var(--ork-8)); margin-bottom: var(--ork-3); text-align: center; }
+.portal__line { margin: 0; color: var(--ork-ink); font: var(--ork-type-caption); overflow-wrap: anywhere; }
+.portal__label { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); }
+.portal-host .ork-portal { cursor: pointer; }
+.portal-host .ork-portal[aria-disabled="true"] { cursor: progress; }
+.portal-host .ork-portal.is-sealed { cursor: not-allowed; }
+.portal__hint { margin: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); overflow-wrap: anywhere; }
+.portal__sealed { margin: 0; color: var(--ork-danger); font: var(--ork-type-caption); overflow-wrap: anywhere; }
+.portal__sealed:empty { display: none; }
+
+.portal-cards { display: flex; flex-wrap: wrap; gap: var(--ork-4); list-style: none; margin: 0; padding: var(--ork-2) 0; }
+@media (min-width: 760px) {
+  .portal-cards { --hc-w: 144px; --hc-h: calc(144px * 7 / 5); --hc-pad: var(--ork-3); --hc-gap: var(--ork-2); --hc-head: 60px; --hc-window: 70px; --hc-label: 24px; }
+}
+.portal-cards > li { width: var(--hc-w); height: var(--hc-h); flex: none; }
+.portal-cards .hand-card { box-sizing: border-box; width: 100%; height: var(--hc-h); aspect-ratio: auto; position: relative; display: grid; grid-template-rows: var(--hc-head) var(--hc-window) var(--hc-label) minmax(0, 1fr);
+  gap: var(--hc-gap); padding: var(--hc-pad); text-align: left; cursor: pointer; }
+.portal-cards .hand-card .hand-mark { color: var(--ork-ink-muted); }
+.portal-cards .hand-card .hand-mark.is-ok { color: var(--ork-success); }
+.portal-cards .hand-card .hand-mark .ork-sign { opacity: 0.85; }
+.portal-cards .hand-card__label { justify-content: space-between; }
+.portal-cards .hand-card.is-going { z-index: 3; pointer-events: none; animation: portal-go var(--ork-motion-sure) ease-in forwards; }
+@keyframes portal-go { to { transform: translate(var(--dx, 0), var(--dy, 0)) scale(0.2); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .portal-cards .hand-card.is-going { animation: none; opacity: 0; } }
+
+/* the narrow width: the pile is 80 px wide at the lanes' end and the portal opens above it (orkUI's `small`, 104 px); the view keeps to the left of that column while the portal is open */
+@media (max-width: 759.98px) {
+  .portal-host { width: 136px; gap: var(--ork-1); margin-bottom: var(--ork-2); }
+  .table-body:has(.portal-host) .hand-discardview { padding-right: calc(136px + var(--ork-3)); }
+}

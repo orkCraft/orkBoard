@@ -874,7 +874,7 @@ def test_the_discard_shows_the_last_goal_done_and_what_is_ready_for_main_and_ope
         box.locator(".hand-discardview").wait_for(timeout=WAIT_MS)
         assert box.get_by_role("region", name="Done, not yet seen").locator(".hand-drow").count() == 2                            # the goal seen is in the history, not here
         ready = box.get_by_role("region", name="Ready for main")
-        assert ready.locator(".hand-drow").count() == 2 and ready.get_by_role("button", name="To main").count() == 1
+        assert ready.locator("[data-portal-card]").count() == 2 and ready.get_by_role("button", name="To main").count() == 1
         shot(pg, f"{width}-discard-over-the-pane")
         ready.get_by_role("button", name="To main").click()                                                                        # today's merge into main, by code
         assert _sent(pg, host, ("ideas.gate_merge", {}))

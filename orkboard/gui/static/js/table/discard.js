@@ -2,7 +2,7 @@
 // the lanes), the hand card's size, with the word *Discard* above it, on every tab. It was the hand's (hand/discard.js); the hand imports nothing of it. Its sheet is discard.css (the card's anatomy and sizes are the hand's, hand.css).
 // The last goal done lies face up on a card's face (its element and name in the header, the check in the window, *Done* in the label row) with the backs of the others under it; while dev holds goals main lacks (the gate), its
 // window carries the lich's head and its foot *n goals ready for main*; with nothing done to see, that line alone is on its back. Pressed, it opens over the pane (`discard`): the goals done and not yet seen (a goal pressed opens
-// its Result and tells the host it was seen, `ideas.seen`, and it leaves the discard), and *Ready for main* with **To main** (today's merge into main, by code). No act on main lies on the pile (§160.5): the pile only shows and opens.
+// its Result and tells the host it was seen, `ideas.seen`, and it leaves the discard), and *Ready for main*: each goal ready is a card (table/portal.js, spec 105 F: pressed or dragged it opens the portal over the pile, which sends that goal alone to main) and **To main** (dev whole, for a person's own commits, by code). No act on main lies on the pile (§160.5): the pile only shows and opens.
 // No part with nothing done and nothing ready for main.
 import { useState } from "preact/hooks";
 import { html, cls } from "../html.js";
@@ -13,6 +13,7 @@ import { closeOver, openOver, over } from "../frame/state.js";
 import { drawn } from "../frame/kinds.js";
 import { doneOf, readyOf, readyWords } from "../hand/data.js";
 import { leans } from "../hand/motion.js";
+import { Portal, ReadyCards } from "./portal.js";
 
 const LICH = { race: "lich", tier: "elder" };
 const EDGES = 3;
@@ -57,7 +58,6 @@ export function Discard() {
 /** *Done, not yet seen* and *Ready for main*, over the pane. */
 export function DiscardView() {
   const done = doneOf(), ready = readyOf(), [busy, setBusy] = useState(false);
-  const nodes = Object.fromEntries((mapData.value?.nodes || []).map((n) => [n.slug, n]));
   const merge = async (e) => { setBusy(true); await mergeGate(e); setBusy(false); };
   return html`<div class="hand-discardview">
     ${!done.length && !ready && html`<p class="ok-tone-muted">Nothing is done and waiting, and nothing waits for main.</p>`}
@@ -70,9 +70,7 @@ export function DiscardView() {
     ${ready && html`<section class="hand-part" aria-label="Ready for main">
       <div class="hand-part__head"><${Head} race=${lichOf().race} tier=${lichOf().tier} /><h2 class="ork-label hand-part__title">Ready for ${ready.main}</h2>
         <button type="button" class="ork-btn primary" disabled=${busy} title=${`Merges ${ready.into} into ${ready.main}: nothing reaches ${ready.main} without you`} onClick=${merge}>To ${ready.main}</button></div>
-      ${ready.goals.length > 0 ? html`<ul class="hand-rows">${ready.goals.map((i) => html`<li key=${i.slug} class="ork-row hand-drow"><span class="hand-tick" aria-label="Ticked"><${Sign} name="check" /></span>
-        <${Elem} name=${nodes[i.slug]?.element || ""} dim=${!nodes[i.slug]?.element} /><span class="hand-drow__text"><span class="body">${i.title}</span></span>
-        ${nodes[i.slug]?.type?.sign && html`<span class="hand-drow__type" title=${nodes[i.slug].type.name}><${Sign} name=${nodes[i.slug].type.sign} /></span>`}</li>`)}</ul>`
+      ${ready.goals.length > 0 ? html`<${ReadyCards} goals=${ready.goals} main=${ready.main} />`
         : html`<p class="cap">${readyWords(ready)}: commits that belong to no goal.</p>`}
       <p class="cap">Nothing reaches ${ready.main} without you.</p></section>`}
   </div>`;
@@ -81,7 +79,7 @@ export function DiscardView() {
 /** The pile's place on the table: the last column's foot, the word *Discard* above the pile (discard.css); nothing with nothing done and nothing ready for main. */
 export function DiscardEnd() {
   if (!hasDiscard()) return null;
-  return html`<div class="table-end" data-end="discard"><span class="table-end__label">Discard</span><${Discard} /></div>`;
+  return html`<div class="table-end" data-end="discard"><${Portal} /><span class="table-end__label">Discard</span><${Discard} /></div>`;
 }
 
 drawn("discard", DiscardView);

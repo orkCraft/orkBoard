@@ -193,3 +193,33 @@ What it is, and what differs from §5 or is not said there:
   with no reset). Its stop is `arenawords.js` `paidStopsOf` (a goal-free stop, as `signInStopsOf`: no party, `laneOf` puts `paid` under the first lane with the whole goal's kinds), its words `paidWords` / `untilWords`.
   The phone draws no card for it yet.
 - Tests: `tests/test_paid.py`, `tests/test_paid_card_browser.py` (the face, the lifted words, both answers, an unknown cost, no reset, the lane, at both widths).
+
+## As built F (the portal)
+
+Built in `gui/static/js/table/portal.js` and `portal.css` (new; the sheet is loaded with the table's, `frame/frame.js`), `table/discard.js` (`DiscardView` draws `ReadyCards`, `DiscardEnd` draws `Portal`). Tests: `tests/test_portal_browser.py` (new, 17 at the two
+widths), and `tests/test_hand_desktop_browser.py`'s discard test now counts the ready cards. Screenshots with `PORTAL_SHOTS=<dir>`.
+
+What it is, and what differs from §6 or is not said there:
+
+- **Each goal ready for main is a card** (`ReadyCards`, `[data-portal-card]`): the pile's top card drawn the same (the goal's element and name, the check in its window, *Done*, *Ready for main*), `ork-leans`, a button with `aria-pressed`. It is the hand
+  card's size on each width (144 x 202; at the narrow width 80 x 112, as the pile is), so `portal.css` copies the hand card's grid for the view (hand.css scopes it to the hand and the table's end). The cards do not wear `hand-done`: that class is the pile's (tests find the pile by it).
+  The old rows of the ready goals (tick, element, name, type sign) are gone. **To main** (dev whole), *Done, not yet seen* and the line *Nothing reaches main without you.* are as they were.
+- **Choosing**: `choose(slug)` by a press (`click`) or `dragstart` (HTML5 drag, desktop; the press path needs nothing else, so touch uses it). A card chosen wears orkUI's `ork-picked` brackets (the mockup's *taken*). Pressing the chosen card again only moves the focus to the portal
+  (so Enter on it never un-chooses). The focus goes to the portal when a goal is chosen, by press or key.
+- **The plan is asked once** when a goal is chosen (`ideas.to_main_plan {idea}`), kept in a signal until the portal closes; while it is asked the portal says *Checking Lobby…*, its aria-label *Checking what goes to main*, and is `aria-disabled` (a press waits for the plan, then plays or says the reason).
+  A plan that failed (the host's error is toasted by `ask`) seals the portal with *What goes to main could not be checked*.
+- **The line** (`lineOf`): *Into main: Lobby*; with goals it stands on, `, and ` + the others joined (`joined`: *A*, *A and B*, *A, B and C*) + ` it stands on`. Names are the plan's `titles`, the ready goal's title if it has none. The aria-label (`labelOf`) is *Send Lobby and Reconnect to main*, or *Sealed: <reason>*.
+- **Where it lies**: first child of `.table-end` (the pile's place), the host `.portal-host` (line, the pixel-face label *Main*, orkUI's `<button class="ork-portal">`, the first-time line, the reason) right-aligned above the *Discard* label, wider than the pile by one gutter, growing upward. At the narrow
+  width the portal is `small` (104 x 112; `useNarrow` on `(max-width: 759.98px)`), and, while it is open, the view keeps a column's width free at its right (`.table-body:has(.portal-host) .hand-discardview`), so the cards (80 px there) and the done list stay visible beside the portal
+  and the pile instead of under them.
+- **Playing**: a press on the portal, a drop on it, Enter or Space (it is a button) call `play()`: `ideas.to_main {idea}`; the host's error is toasted by `ask` and nothing else changes (the portal stays open for another try); `note`, when it has one, is a warning toast as `mergeGate`'s is.
+  On success the card goes into the portal (`is-going`: scale to 0.2 and fade to the portal's centre over `--ork-motion-sure`, its travel set in `--dx`/`--dy`; off under reduced motion, where the card just leaves), then the portal closes and `refreshShell()` reads `ideas.gate`, which no longer lists the goals sent.
+  A goal that leaves the ready goals for any reason closes the portal; so does closing the view.
+- **Taking**: `dragenter`/`dragover` on the portal while a goal is chosen sets `is-taking` (a drop or `dragleave`/`dragend` takes it off); orkUI's `is-sealed` wins over it. A drop on a sealed portal says the reason and plays nothing.
+- **Sealed**: `is-sealed`, the reason *Sealed: <reason>* under it in `--ork-danger` in a `role="status" aria-live="polite"` line; a press says it again (the line's text node is replaced, so a screen reader reads it again) and sends nothing. No first-time line over a sealed portal.
+- **The first time**: `localStorage` `orkboard.portal.seen` (the page's `orkboard.` prefix), read and written in try/catch; it is written when the portal first opens, and a module flag keeps a device that keeps nothing to once a page load. While the portal stays open the portal shimmers (`is-new`) and says
+  *Drag a goal done into the portal to send it to main*, at the narrow width *Tap the portal to send it to main*; closed and opened again, neither.
+- **Esc and a press away**: while a goal is chosen, `Escape` (a listener on `document`, before the table's on `window`) closes the portal and `preventDefault`s so the view stays; a press (`pointerdown`, capture) outside the portal and the cards does the same. A listener that outlives its portal by a frame
+  checks the choice first (an early version swallowed the next Esc, which goes back from the view). A second Esc goes back as before.
+- **Not done / to know**: the drag's `is-taking` is tested on desktop only (a touch screen sends no HTML5 drag; its path is the press). The card's travel is not asserted in a test (reduced motion off or on, the end state is).
+  `tests/test_architecture.py::test_orkboard_starts_alone` fails in this worktree for a reason outside this part: its subprocess imports `orkboard` through the editable install, which is the main checkout, and the main checkout holds other builders' not yet committed `realm/paid.py`, `realm/tool_now.py` and `gui/ideas_mana.py`.
