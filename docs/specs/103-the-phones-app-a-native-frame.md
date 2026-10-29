@@ -74,7 +74,8 @@ runs (§6); the stores' listing and its pictures (§150.5, the marketing's).
    goals' legend** (§179.2, §179.4): each goal on the table its type's sign in its element's colour and its short name (the
    moon beside it while it waits for the reset), in the lanes' order, one row (sideways scroll if it must), 44 px targets; a
    press picks the goal and lights its cards. **A token** on its side is its task's type's sign in its goal's element's
-   colour; a task that asks keeps the alert's edge.
+   colour (the sign 28 px on a 52 × 72 card, two to a lane: the owner, `docs/mockups/phone/` v6); a task that asks keeps the
+   alert's edge.
 2. **A stop's sign on a head** (✗ or !, spec 53 §1.2) is a press: it opens that stop's card over the table, answered there as
    in the hand; the card closes and the table stays. Nothing else of the hand is reachable on its side.
 3. **A low window with a fine pointer** (a laptop's split screen) keeps §150.2's fan, unchanged.
