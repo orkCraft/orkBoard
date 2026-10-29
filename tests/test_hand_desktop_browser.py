@@ -841,8 +841,8 @@ def test_open_on_a_lifted_card_opens_the_stop_over_the_pane_and_it_goes_back_whe
         box = pane(pg)
         box.locator(".hand-stopface").wait_for(timeout=WAIT_MS)
         box.get_by_text("the reset test failed", exact=False).first.wait_for(timeout=WAIT_MS)
-        box.locator(".shell-log").wait_for(timeout=WAIT_MS)
-        assert "reset the clock" in box.inner_text().lower() and "== round 1" in box.locator(".shell-log").inner_text()          # the task, its error and its log
+        box.locator(".shell-logview").wait_for(timeout=WAIT_MS)
+        assert "reset the clock" in box.inner_text().lower() and "== round 1" in box.locator(".shell-logview").inner_text()          # the task, its error and its log
         assert box.get_by_role("button", name="Start again").count() == 1 and box.locator(".hand-spend__words").inner_text() == "about 4% of Claude's week"
         shot(pg, "wide-stop-over-the-pane")
         host.needs = [n for n in host.needs if n["idea"] != "timer"]

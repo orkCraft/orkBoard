@@ -411,6 +411,14 @@ def env_name(title: str) -> str:
     return next((n for n in names if "_" in n), names[0] if names else "")
 
 
+_ANSI = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)")      # a terminal's colour and cursor codes (CSI), a title or link (OSC)
+
+
+def plain(text: str) -> str:
+    """`text` as a person reads it: a terminal's escape codes out (a log is read in the page, which draws none)."""
+    return _ANSI.sub("", text or "")
+
+
 _SUMMARY = re.compile(r"(\d+) (passed|failed|error|errors)\b")
 _FAILED_LINE = re.compile(r"^(?:FAILED|ERROR) (\S+)")
 
@@ -424,7 +432,7 @@ def parse_tests(output: str, keep_lines: int = 40) -> dict:
     """The gate's run in the shape Review shows: pytest's summary line (`2 failed, 18 passed in 1.2s`) gives the
     counts, its `FAILED path::name` lines the names (at most 20). A run without pytest's summary counts nothing."""
     passed = failed = 0
-    lines = (output or "").splitlines()
+    lines = plain(output).splitlines()
     for ln in reversed(lines):
         found = _SUMMARY.findall(ln)
         if found and (" in " in ln or ln.strip().startswith("=")):

@@ -729,8 +729,8 @@ def test_open_on_a_task_card_opens_its_log_or_its_task_over_the_pane_and_back_li
     failed = pg.locator('[data-lkey="t:task:seat/s2"]')
     failed.click()
     pg.locator(".table-back .table-back__open").click()                                                                  # a failure: its lines
-    pg.locator('.table-over[data-kind="log"] .shell-log').wait_for(timeout=WAIT_MS)
-    assert title(pg) == "Board · Reset the round timer when a player rejoins" and "tests: 3 failed" in pg.locator(".shell-log").inner_text()
+    pg.locator('.table-over[data-kind="log"] .shell-logview').wait_for(timeout=WAIT_MS)
+    assert title(pg) == "Board · Reset the round timer when a player rejoins" and "tests: 3 failed" in pg.locator(".shell-logview").inner_text()
     assert pg.locator(".table-board").count() == 0 and pg.locator(".table-back").count() == 0                          # the map is under it, not drawn
     pg.locator(".table-title__back").click()
     pg.locator(".table-board").wait_for(timeout=WAIT_MS)

@@ -4,10 +4,10 @@ Copyright 2026 Vadim Sidoryk
 This product is licensed under the Apache License, Version 2.0 (LICENSE). It began as a part of Orkline, by the same
 author.
 
-The names Orkboard, Orkline, OrkWiki, OrkWatch, OrkMine, orkUI, orkCraft and orkWorks, and the ork mark (the pixel ork
-in design-system/logo/, which is also the VS Code extension's icon), are not licensed: the Apache License grants no
-right to use them as trade names or marks (its section 6). A fork may say it comes from Orkboard, and goes by a name and
-a mark of its own.
+The names Orkboard, Orkline, OrkWiki, OrkWatch, OrkMine, orkUI, orkCraft and orkWorks, and the marks (Orkboard's, the
+crowned ork head in design-system/logo/orkboard/, which is also the VS Code extension's icon, and the pixel ork of
+Orkline in design-system/logo/), are not licensed: the Apache License grants no right to use them as trade names or
+marks (its section 6). A fork may say it comes from Orkboard, and goes by a name and a mark of its own.
 
 This product bundles the following, each under its own licence:
 

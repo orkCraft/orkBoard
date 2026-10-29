@@ -39,7 +39,7 @@ from typing import Any, Callable
 from urllib.parse import parse_qs, quote, urlsplit
 
 from orkboard import brand
-from orkboard.design import tokens
+from orkboard.design import logo, tokens
 from orkboard.gui import tailnet
 
 ROOT = Path(__file__).resolve().parent / "static" / "pwa"
@@ -68,6 +68,7 @@ def files() -> dict[str, Path]:
     its race heads under races/, its marks under marks/, its elements under elements/, its moons under moons/, its signs under signs/ and its pixel icons as icons/icons.svg: the same look as the desktop's, from one place
     (docs/specs/40-design-system.md). Orkboard's phone is the shell alone (spec 37 §4): no camp file, no sprite but the heads and the marks."""
     own = {p.name: p for p in sorted(ROOT.iterdir()) if p.is_file() and p.suffix in TYPES}
+    own |= {name: path for name in logo.PHONE if (path := logo.phone_icon(name))}      # Orkboard's mark, not Orkline's ork (spec 107 §12)
     styles = {name: tokens.ORKUI / name for name in STYLES}
     faces = {f"fonts/{p.name}": p for p in sorted(FONTS.iterdir()) if p.suffix == ".woff2"}
     heads = {f"races/{p.name}": p for p in sorted(RACES.iterdir()) if p.suffix == ".png"}

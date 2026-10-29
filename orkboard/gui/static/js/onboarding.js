@@ -563,7 +563,7 @@ export function Onboarding() {
   if (o.step === "raising") return o.raising ? html`<${Raising} o=${o} />` : null;
   const Step = STEPS[o.step];
   return html`<div class="gui-onb" role="dialog" aria-modal="true" aria-label=${say("Setting up")}>
-    <div class="gui-onb__brand"><img src="/ds/logo/orkcraft-dark.svg" alt=${PRODUCT} onError=${(e) => { e.target.replaceWith(document.createTextNode(PRODUCT)); }} /></div>
+    <div class="gui-onb__brand"><img src=${PRODUCT === "Orkboard" ? "/ds/logo/orkboard/mark.svg" : "/ds/logo/orkcraft-dark.svg"} alt=${PRODUCT} onError=${(e) => { e.target.replaceWith(document.createTextNode(PRODUCT)); }} />${PRODUCT === "Orkboard" && html`<span class="gui-onb__name">${PRODUCT}</span>`}</div>
     ${Step && html`<${Step} o=${o} />`}
     <${SignIn} />
   </div>`;

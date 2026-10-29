@@ -311,7 +311,7 @@ async def test_a_host_without_the_command_has_the_librarys_stages_and_crafts(fak
 def test_the_service_workers_version_and_its_files():
     from orkboard.gui import pwa
     sw = (pwa.ROOT / "sw.js").read_text(encoding="utf-8")
-    assert 'const CACHE = "orkcraft-app-v102"' in sw
+    assert 'const CACHE = "orkcraft-app-v103"' in sw
     for name in ("shell-party-new.js", "shell-party-presets.js", "shell-party-seats.js", "shell-party-model.js", "shell-seat-tool.js", "party.css"):
         assert f'"{name}"' in sw and (pwa.ROOT / name).is_file()
     assert '<link rel="stylesheet" href="party.css">' in (pwa.ROOT / "index.html").read_text(encoding="utf-8")
