@@ -10,6 +10,8 @@ import { Elem, Sign, WhoHead, headWords } from "../orkui.js";
 import { lifted, lift, lower, picked, pick, openOver, partKey, linkKey } from "../frame/state.js";
 import { TASK_STATE } from "../board/maplayout.js";
 import { typeTone } from "../arena/goalwords.js";
+import { GoalMenu } from "./dropgoal.js";
+import { aliveState, useChanged, useWorked, workedWords } from "./worktime.js";
 import { cascadeOf, footWords, doingWords, readTask, stageOf, typeSignOf, gemOf, STAGES } from "./data.js";
 
 /** The key of the card that was lit on the way back from a thing opened over the pane, "" none (a press or a key puts it out). */
@@ -35,9 +37,9 @@ export const mineKey = (key) => typeof key === "string" && key.startsWith("t:");
 export const aboutTokens = (n, tasks = []) => `idea:${n.slug}${tasks.map((t) => ` task:${n.slug}/${t.id}`).join("")}`;
 
 /** The stage's small sign (14 px) and its word, as a label row or a strip says it. */
-export function Stage({ stage }) {
+export function Stage({ stage, worked = -1 }) {
   const s = STAGES[stage] || STAGES.routing;
-  return html`<span class="table-stage"><${Sign} name=${s.sign} />${s.word}</span>`;
+  return html`<span class=${cls("table-stage", { "is-timed": worked >= 0 })}><${Sign} name=${s.sign} /><span class="table-stage__w">${worked >= 0 ? `${s.word} · ${workedWords(worked)}` : s.word}</span></span>`;
 }
 
 /** The card's window: one sign at the signs' big size, in the goal's colour toned down (an opacity on orkUI's token, table.css). `moon`: the moon beside it (a goal that waits for the reset). */
@@ -45,15 +47,16 @@ function Win({ n, sign, moon = false, danger = false }) {
   return html`<span class=${cls("table-card__win", `is-${typeTone(n)}`, { "is-danger": danger })}>${sign && (sign.startsWith("tool:") ? html`<span class=${`ork-tool ${sign.slice(5)}`} aria-hidden="true"></span>` : html`<${Sign} name=${sign} big=${true} />`)}${moon && html`<${Sign} name="moon" big=${true} />`}</span>`;
 }
 
-/** A task, as a card in its goal's cascade: the goal's element and the task's name, the type in the window, the stage and, at its right, the gem when it spends. */
+/** A task, as a card in its goal's cascade: the goal's element and the task's name, the type in the window, the stage and, at its right, the gem when it spends. A task at work moves and says the time it has worked; a card whose state
+ *  changed flashes its frame once (spec 107 §7, table.css; none of it under reduced motion, the time still ticks). */
 export function TaskCard({ n, t }) {
   const key = taskKey(n, t), on = lifted.value === key, bad = t.state === "failed", asks = t.state === "picking", gem = gemOf(t);
-  const said = `${t.title}, ${n.short || n.title}: ${footWords(t)}`;
-  return html`<button type="button" class=${cls("ork-card ork-leans table-card", { fails: bad, asks, "is-lifted": on, "is-lit": litKey.value === key })} data-lkey=${key} data-goal=${n.slug} data-task=${t.id}
+  const said = `${t.title}, ${n.short || n.title}: ${footWords(t)}`, worked = useWorked(t.started, aliveState(t.state)), changed = useChanged(t.state);
+  return html`<button type="button" class=${cls("ork-card ork-leans table-card", { fails: bad, asks, "is-lifted": on, "is-lit": litKey.value === key, "is-changed": changed })} data-lkey=${key} data-goal=${n.slug} data-task=${t.id}
     data-about=${aboutTokens(n, [t])} data-state=${t.state} data-stage=${stageOf(t)} aria-pressed=${String(on)} aria-label=${said} title=${n.title} onClick=${() => lift(on ? "" : key)} ...${leans}>
     <span class="table-card__head"><${Elem} name=${n.element} dim=${!n.element} /><span class="table-card__nm" title=${t.title}>${t.short || t.title}</span></span>
     <${Win} n=${n} sign=${typeSignOf(n, t)} />
-    <span class="table-card__row"><${Stage} stage=${stageOf(t)} />${gem && html`<span class="ork-gem share" data-cost=${gem}>${gem}</span>`}</span>
+    <span class="table-card__row"><${Stage} stage=${stageOf(t)} worked=${worked} />${gem &&html`<span class="ork-gem share" data-cost=${gem}>${gem}</span>`}</span>
   </button>`;
 }
 
@@ -186,11 +189,15 @@ export function TaskBack({ n, t, mapName }) {
     <div class="table-back__acts"><${PickGoal} n=${n} /><button type="button" class="ork-btn table-back__open" onClick=${open}>Open</button></div>`;
 }
 
-/** The back of a goal the Orkmaster reads or routes. */
+/** What the Orkmaster does with a goal on its lane, said on the card's back. */
+const OWN_CAP = { reading: "The Orkmaster is reading it.", routed: "The Orkmaster has routed it: it waits for your Talk.", talk: "Its leaders are talking it over.", decided: "It is decided: its sections come next.",
+  sections: "The Orkmaster is joining its sections." };
+
+/** The back of a goal the Orkmaster reads, routes or waits on. **…** drops the goal (dropgoal.js). */
 export function OwnBack({ n }) {
   return html`<h3 class="table-back__nm">${n.title}</h3>
-    <p class="table-back__cap">${n.state === "reading" ? "The Orkmaster is reading it." : "The Orkmaster is routing it: which party does what."}</p>
-    <div class="table-back__acts"><${PickGoal} n=${n} /></div>`;
+    <p class="table-back__cap">${OWN_CAP[n.state] || "The Orkmaster is routing it: which party does what."}</p>
+    <div class="table-back__acts"><${PickGoal} n=${n} /><${GoalMenu} slug=${n.slug} where="inline" /></div>`;
 }
 
 /** Esc lowers a lifted card; a press away does too (one at a time, never over what it is about). Kept while a card of the table is lifted. */

@@ -78,6 +78,7 @@ export const phaseOf = (picked) => PHASE_OF[(mapData.value?.nodes || []).find((x
 export const STAGES = {
   planning: { word: "Planning", sign: "page" }, doing: { word: "Doing", sign: "sword" }, checking: { word: "Checking", sign: "shield" },
   reading: { word: "Reading", sign: "page" }, routing: { word: "Routing", sign: "page" }, joining: { word: "Joining", sign: "page" },
+  routed: { word: "Routed", sign: "page" }, talking: { word: "Talking", sign: "page" }, decided: { word: "Decided", sign: "page" },
 };
 
 /** The stage a task is in: a check (the checker's band, or testing) is *Checking*, one being done or failed *Doing*, one that asks the person's pick or waits to start *Planning*. */
@@ -103,11 +104,19 @@ export function laneOf(g) {
   return out.sort((a, b) => a.at - b.at);
 }
 
-/** The goals the Orkmaster does itself, in the Board's order: being read (`reading`), routed (`planning`), or their sections joined while their party works (`sections`). [{n, g, stage}] */
-const OWN = { reading: "reading", planning: "routing", sections: "joining" };
+/** The goals the Orkmaster does itself, in the Board's order: being read (`reading`), routed (`planning`), or their sections joined while their party works (`sections`) — and, from the moment it is sent (spec 107 §5), every goal
+ *  on the table whose route has no party at work yet: routed and waiting for Talk (`routed`), in Talk (`talk`), decided (`decided`). A goal whose party has tasks at work lies in that party's lane, not here. [{n, g, stage}] */
+const OWN = { reading: "reading", planning: "routing", sections: "joining", routed: "routed", talk: "talking", decided: "decided" };
+const BEFORE_WORK = ["routed", "talk", "decided"];
 export function ownOf(parties) {
   const out = [];
-  for (const g of parties) for (const n of nodesFor(g)) if (OWN[n.state]) out.push({ n, g, stage: OWN[n.state] });
+  for (const g of parties) {
+    for (const n of nodesFor(g)) {
+      if (!OWN[n.state]) continue;
+      if (BEFORE_WORK.includes(n.state) && (n.place !== "table" || cascadeOf(n).length)) continue;
+      out.push({ n, g, stage: OWN[n.state] });
+    }
+  }
   return out;
 }
 

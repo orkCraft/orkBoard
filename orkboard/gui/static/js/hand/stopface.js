@@ -10,7 +10,8 @@ import { PickView } from "../shell/pickview.js";
 import { LogView, happened } from "../shell/logview.js";
 import { askedOf } from "../arena/arenawords.js";
 import { TASK_STATE } from "../board/maplayout.js";
-import { stopsOfProject } from "./data.js";
+import { GoalMenu } from "../table/dropgoal.js";
+import { goalOfStop, stopsOfProject } from "./data.js";
 import { Answers } from "./answers.js";
 import { AskForm } from "./askform.js";
 import { TodoForm } from "./todoform.js";
@@ -36,7 +37,7 @@ export function StopFace({ props }) {
   const ran = log?.tests, said = log && happened({ error: log.error || s.task?.error, tests: ran, red: !!ran && (ran.failed > 0 || ran.green === false) }), cost = costOf(s), head = s.head || s.party?.head, tasks = s.kind === "plan" || s.kind === "failed" ? (s.node?.tasks || []).filter((t) => t.state !== "dropped") : [];
   return html`<article class="hand-stopface" data-key=${s.key} data-kind=${s.kind} aria-label=${labelOf(s)}>
     <header class="hand-stopface__head"><${ElemOf} s=${s} /><div class="hand-stopface__titles"><p class="cap"><${Mark} s=${s} /> ${s.label}${s.other && s.party?.name ? ` · ${s.party.name}` : ""}</p>
-      <h2 class="hand-stopface__title">${s.full}</h2></div>${head && html`<${Head} race=${head.race} tier=${head.tier} size="big" />`}</header>
+      <h2 class="hand-stopface__title">${s.full}</h2></div>${head && html`<${Head} race=${head.race} tier=${head.tier} size="big" />`}${goalOfStop(s) && html`<${GoalMenu} slug=${goalOfStop(s)} where="head" />`}</header>
     ${s.kind === "pick" ? html`<${PickView} p=${{ slug: s.row.slug, task: s.row.task }} />` : html`
       ${s.text && html`<p class="body hand-stopface__text">${s.text}</p>`}
       ${s.why && html`<p class="cap">${s.why}</p>`}

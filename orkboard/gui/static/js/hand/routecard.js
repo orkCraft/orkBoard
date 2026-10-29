@@ -11,6 +11,7 @@ import { Head, Icon } from "../orkui.js";
 import { command, toast } from "../link.js";
 import { act, mapData } from "../shell/store.js";
 import { SeatPop } from "../table/seatpop.js";
+import { GoalMenu } from "../table/dropgoal.js";
 import { groupsOf, nameOf, partiesNow } from "../table/data.js";
 import { Gem, costOf } from "./cost.js";
 import { way } from "./ways.js";
@@ -216,6 +217,7 @@ export function RouteLifted({ s, close }) {
         : html`<button type="button" class="ork-btn primary" disabled=${busy} title="The leaders answer in short; nothing is made yet" onClick=${talk}>Talk</button>
           ${v.low && html`<button type="button" class="ork-btn" disabled=${busy} title="The limits run low: it waits in line and talks by itself after they reset" onClick=${later}>Later, by itself</button>`}`}
     </div>
+    <div class="hand-way__more"><${GoalMenu} slug=${idea} where="inline" /></div>
   </div>`;
 }
 
