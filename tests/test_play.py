@@ -148,6 +148,8 @@ def test_a_command_preview_runs_in_the_worktree_bound_to_the_machines_own_addres
     got = settle(host)
     assert got["state"] == "playing" and got["url"].startswith("http://127.0.0.1:") and got["url"].endswith("/page.html")
     assert "from the command" in fetch(got["url"])
+    started = events(repo, event_log.PLAY_STARTED)[-1]                        # spec 107 §2: what it ran and the page it opened
+    assert started["command"] == f"{sys.executable} serve.py" and started["url"] == got["url"]
 
 
 def test_no_preview_or_one_that_never_opens_says_why_and_leaves_no_worktree(host, repo, monkeypatch):
@@ -303,6 +305,9 @@ def test_a_failure_carries_the_commands_last_30_lines_without_colour_codes(host,
     tail = got["tail"]
     assert len(tail) == idea_shot.TAIL_LINES == 30 and tail[0] == "line 11" and tail[-1] == "error: the build broke here"
     assert not any("\x1b" in line for line in tail)
+    failed = events(repo, event_log.PLAY_STARTED)[-1]                          # spec 107 §2: the command and its last output are in the day's log too
+    assert failed["ok"] is False and failed["command"] == f"{sys.executable} fails.py" and failed["url"] == ""
+    assert failed["tail"].endswith("error: the build broke here") and len(failed["tail"]) <= 600
     assert host.command("ideas.play", {"peek": True}) == got                                                       # it stays said until Play is pressed again
     assert not (state / "play").exists()
 
