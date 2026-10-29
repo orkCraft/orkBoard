@@ -665,7 +665,7 @@ def test_the_route_and_start_rows_are_needs_you_of_a_goal_on_its_way_and_a_node_
     c = _idea(root, state, g, "Talked quietly", "decided", route=route, route_how={"said": {"calls": 4}, "changed": False})
     got = host.command("ideas.map", {})
     n = {x["slug"]: x for x in got["nodes"]}
-    assert (n[a]["needs_you"], n[a]["place"], n[a]["asks_you"]) == ("route", "hand", False)
+    assert (n[a]["needs_you"], n[a]["place"], n[a]["asks_you"]) == ("route", "table", True)
     assert (n[b]["needs_you"], n[b]["place"], n[b]["asks_you"]) == ("start", "table", True)
     assert (n[c]["needs_you"], n[c]["place"], n[c]["asks_you"]) == ("", "table", False)
     rows = {r["kind"]: r for r in host.command("ideas.board")["needs_you"] if r["idea"] in (a, b)}
@@ -694,7 +694,7 @@ def test_the_decision_and_fork_rows_are_the_wording_to_confirm_and_the_first_dis
     """Spec 99 §6–§7: `decision` {number, title, text, confirmed, error} on a goal `decided`; `fork` {id, about, sides} on a goal at `sections` while one is open."""
     root, state = _board(host)
     g = _goal(root, "Way")
-    assert board_map.NEEDS[:6] == ("route", "start", "talk", "cause", "decision", "fork")
+    assert board_map.NEEDS[:7] == ("route", "start", "talk", "objection", "cause", "decision", "fork")      # a leader's no between Talk and the decision (spec 108 §4.3)
     route = [{"party": g, "leader": "taskmaster"}]
     a = _idea(root, state, g, "Decided", "decided", route=route)
     b = _idea(root, state, g, "Forked", "sections", route=route)
@@ -726,7 +726,7 @@ def test_the_talk_and_cause_rows_are_the_stances_with_the_cards_and_the_guess_wi
     """Spec 99 §5.3–§5.4: `talk` {round, stances, questions: [card]} and `cause` {cause, where, q: [card]} sit on a goal at Talk while something waits; none while the leaders are heard."""
     root, state = _board(host)
     g = _goal(root, "Way")
-    assert board_map.NEEDS[:4] == ("route", "start", "talk", "cause")
+    assert board_map.NEEDS[:5] == ("route", "start", "talk", "objection", "cause")
     route = [{"party": g, "leader": "taskmaster"}]
     stances = [{"party": g, "leader": "taskmaster", "stance": "For it", "for": "Players want it", "against": "Costs a week"}]
     a = _idea(root, state, g, "A talk", "talk", route=route)

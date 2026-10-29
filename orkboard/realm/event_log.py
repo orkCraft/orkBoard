@@ -50,7 +50,7 @@ CART_MOVED = "cart_moved"         # source, target, title: a cart delivered alon
 LOOKED = "look"                   # started, seconds: the GUI in front of the person (looks a day, their length)
 
 # The board (docs/specs/33-v1-shell.md §9): every action of the v1 shell, for the day's analysis. `device` is "desktop" or "phone".
-IDEA_ADDED = "idea_added"         # idea, track, chars, now (the keeper reads it at once), priority, queue, photos (how many came with it), lens (the kinds pointed at), device,
+IDEA_ADDED = "idea_added"         # idea, track, chars, now (the keeper reads it at once), priority, queue, photos (how many came with it), files (how many `@path` it named, spec 107 K), lens (the kinds pointed at), device,
 #                                    type (its goal type's id, else ""), asks (how many answered), refs (how many pictures were Refs'), joined (the agent, else ""), out (the member, else "") (spec 52 §2.7),
 #                                    offered (how many types the party offered), near (how many of them with someone missing) (spec 59 §5)
 IDEA_SAID = "idea_said"           # idea, section, chars, text, device (the person's turn to the Taskmaster)
@@ -63,11 +63,14 @@ IDEA_QUEUED = "idea_queued"       # idea, queue ("now" · "night"), device, via 
 RESULT_SEEN = "result_seen"       # idea, device: a done goal's result opened from the discard, the goal in the history (spec 98 §2.2)
 TODO_DONE = "todo_done"           # idea, todo, kind, device, seconds since the plan, skipped (gone without it), words (a file described instead) (a secret's value never; spec 54 §1.3)
 TASK_STATE = "task_state"         # idea, task, state (waiting · ready · held · running · testing · picking · review · merged · failed · dropped: the person's Drop), was, round, tier, role, seconds in the previous state, tokens, cost, ran_tier, effort,
-#                                    check (true: a check task's), clean (true: a check that found nothing, merged with no commit; spec 43 §1.3)
+#                                    check (true: a check task's), clean (true: a check that found nothing, merged with no commit; spec 43 §1.3),
+#                                    ran_why (running only: why it ran on another tier than planned, else ""; spec 107 §2.3), error (failed, or review with one: its words, cut at 600)
 CHECK_DONE = "check_done"         # idea, task, by (the checker's slug), found, fixed, left, round, cost: a round of a check task ended with findings read
-RESULT_READY = "result_ready"     # idea, task, round, passed, failed, files, added, removed, cost, role
-RESULT_DECIDED = "result_decided"  # idea, task, round, decision, why, into, pushed, conflict, device, seconds from result_ready,
-#                                    dear (on a merge: the person said it cost too much for this, spec 36 §4)
+RESULT_READY = "result_ready"     # idea, task, round, passed, failed, files, added, removed, cost, role, exit (the gate's), verdict (green · red · could_not_run · docs · nothing: spec 107 §1.2)
+GATE_RAN = "gate_ran"             # idea, task, round, attempt, command, exit, seconds, verdict (as result_ready's), missing (what a run that could not run found missing, else ""),
+#                                    linked (how many dependency folders lay linked in the worktree): one per try of the gate (spec 107 §1.2)
+RESULT_DECIDED = "result_decided"  # idea, task, round, decision (merge · back · fix · drop · install · test again), why, why_kind (on a send back: "suggested" the line the face wrote · "typed", spec 107 §1.4), into, pushed, conflict, device,
+#                                    seconds from result_ready, dear (on a merge: the person said it cost too much for this, spec 36 §4)
 TASK_STOPPED = "task_stopped"     # idea, task, device
 TASK_SKIPPED = "task_skipped"     # idea, task, device: a task taken out of its plan before it ran (a check skipped)
 CHECK_SKIPPED = "check_skipped"   # idea, by (the checker), skipped (false: taken again), task ("" before a plan), usd (what it spares), device
@@ -81,7 +84,7 @@ IDEA_FLAGGED = "idea_flagged"   # idea, goal (its party), by ("gate" · "done"),
 OPENED = "opened"                 # what (idea · plan · todo · task · result · tab · map · recap · flag · week · push · party · gate · today · pick), ref, via (map · board · needs · agents · review · recap · week · flags · push · hand · front · party · today · gate; old lines ""), device
 CANVAS_MADE = "canvas_made"       # tool (claude · codex · agy), kind (design · slides · document · page · picture), task ("" outside a task) (spec 78 §2)
 SHOT_TAKEN = "shot_taken"         # idea, task, ok, why ("" · no preview · no page · no browser · no picture), seconds, round (spec 85 §3: the picture of what a task changed)
-PLAY_STARTED = "play_started"     # seconds, ok, why ("" · no preview · did not open · nopage · could not make its worktree: …) (spec 88 §5: the project's preview of dev opened in Play)
+PLAY_STARTED = "play_started"     # seconds, ok, why ("" · no preview · did not open · nopage · could not make its worktree: …), command (what the preview ran, else ""), url (the page it opened, else ""), tail (a failed start: the command's last output, cut at 600) (spec 88 §5: the project's preview of dev opened in Play; spec 107 §2)
 PLAY_STOPPED = "play_stopped"     # why (stopped · idle · closed · quit · again · exited) (spec 88 §5)
 MAP_OPENED = "map_opened"         # lens (system), party, parts, changed (parts marked), hours (since the device's last look; None for none), device (spec 89 §4: a leader's map opened)
 MAP_PART_PRESSED = "map_part_pressed"   # lens, party, changed (its change since the last look: new · changed · gone · ""), goals (n), device (spec 89 §4)
@@ -191,15 +194,22 @@ PAID_ANSWERED = "paid_answered"   # tool, yes (go on, paid) or no (wait), device
 BOARD_ASKED = "board_asked"       # party (its slug, or "orkmaster"), chars, text (the question, cut at 300), ok (it was answered), seconds, step, prompt_chars, tokens, cost
 ASK_MADE_GOAL = "ask_made_goal"   # party ("" for the Orkmaster's tab), device: *Make it a goal* pressed under an answer
 
+# Spec 107 §2 (decisions §182.2): what the logs lacked of a day. A command the host refused, and an error the person was shown.
+COMMAND_REFUSED = "command_refused"   # command, error (cut at TEXT_MAX), device (desktop · phone), kind ("refused": the host said no · "broken": it raised); never the arguments
+ERROR_SHOWN = "error_shown"       # title, text: a toast of severity error the person was shown
+# Spec 108 C (decisions §183.1–§183.3): a leader's verdict in Talk, and the person's answer to its no (never a word of theirs or of the leader's).
+LEADER_OBJECTED = "leader_objected"          # idea, party, verdict ("doubt" or "no"), has_instead (it named a smaller or other goal that would serve)
+OBJECTION_ANSWERED = "objection_answered"    # idea, party, answer ("drop", "smaller", "later" or "go": the person went on anyway)
+
 EVENTS = (ASKED, ASSUMED, ANSWERED, STOPPED, WAIT_SKIPPED, HELD_AT_WORK, CAMP_LEFT, CAMP_BACK, QUEST_STARTED,
           QUEST_DONE, QUEST_SKIPPED, BUILT, CART_MOVED, LOOKED, IDEA_ADDED, IDEA_SAID, KEEPER_STATE, PLAN_MADE, PLAN_PASSED,
-          TODO_DONE, TASK_STATE, CHECK_DONE, RESULT_READY, RESULT_DECIDED, TASK_STOPPED, TASK_SKIPPED, CHECK_SKIPPED, STOP_ALL, INTO_CHANGED, GATE_MERGED, GOAL_TO_MAIN, IDEA_FLAGGED, PICK_ASKED, PICK_ANSWERED, OPENED, LIMITS_READ, GOAL_SAVED, GOAL_READ, GOAL_ACCEPTED, ROLE_SAVED,
+          TODO_DONE, TASK_STATE, CHECK_DONE, RESULT_READY, GATE_RAN, RESULT_DECIDED, TASK_STOPPED, TASK_SKIPPED, CHECK_SKIPPED, STOP_ALL, INTO_CHANGED, GATE_MERGED, GOAL_TO_MAIN, IDEA_FLAGGED, PICK_ASKED, PICK_ANSWERED, OPENED, LIMITS_READ, GOAL_SAVED, GOAL_READ, GOAL_ACCEPTED, ROLE_SAVED,
           ROLE_DROPPED, KIND_SET, BOARD_SET, IDEA_DRAFTED, KEEPER_STOPPED, NIGHT_RUN, PROPOSAL_MADE, PROPOSAL_ANSWERED,
           IDEA_ANSWERED, GOAL_ANSWERED, PLAN_STARTED_NOW, IDEA_QUEUED, RESULT_SEEN, BOARD_COMMITTED, BOARD_HELD, PROJECT_OPENED, PROJECT_CLOSED, FILE_SAVED, GIT_COMMITTED,
           GIT_PUSHED, OP_ADDED, OP_PREPARED, OP_CHECKED, OP_DONE, OP_FAILED, OP_DROPPED, OP_NOT_RIGHT, OP_LEARNED,
           OP_RULES_ANSWERED, OP_TRUST, OP_KEPT, OP_FORGOT, OP_STANDING, PUSH_SET, PUSH_SENT, PARTY_PROPOSED, PARTY_ANSWERED, PARTY_SAVED, PARTY_DROPPED, PARTY_REMOVED, NIGHT_ALLOWED, WEEK_RESET, IDEA_EDITED, PLAN_REVISED, PLAN_CHANGE_ANSWERED,
           PITCH_JUDGED, PITCH_SENT, PITCH_PASSED, PITCH_AGAIN, IDEA_MOVED, RELEASE_MADE, RELEASE_OUT, PARTY_SHOWN, COLLIDE_FOUND, COLLIDE_ANSWERED,
-          PROPOSALS_SHOWN, PROPOSAL_TAKEN, PARTY_RESIZED, CANVAS_MADE, CANVAS_SEEN, SHOT_TAKEN, PLAY_STARTED, PLAY_STOPPED, MAP_OPENED, MAP_PART_PRESSED, MAP_SNAPSHOT_FAILED, SIGN_IN_NEEDED, SIGNED_IN, SIGN_IN_FAILED, TOOL_MOVED, PAID_ANSWERED, BOARD_ASKED, ASK_MADE_GOAL)
+          PROPOSALS_SHOWN, PROPOSAL_TAKEN, PARTY_RESIZED, CANVAS_MADE, CANVAS_SEEN, SHOT_TAKEN, PLAY_STARTED, PLAY_STOPPED, MAP_OPENED, MAP_PART_PRESSED, MAP_SNAPSHOT_FAILED, SIGN_IN_NEEDED, SIGNED_IN, SIGN_IN_FAILED, TOOL_MOVED, PAID_ANSWERED, BOARD_ASKED, ASK_MADE_GOAL, COMMAND_REFUSED, ERROR_SHOWN, LEADER_OBJECTED, OBJECTION_ANSWERED)
 
 _LOCK = threading.Lock()
 

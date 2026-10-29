@@ -4,6 +4,8 @@ opened in the system's app.
     files = Files(projects)
     host.commands.update(files.commands())   # files.tree, files.read, files.write, files.reveal
 
+`files.find` (spec 107 K) answers the `@` of New goal's field with the files and folders matching what was typed.
+
 Nothing leaves the project (a `..`, a link out); `.git/` and `.orkcraft/` are never shown, read or written; what may
 hold a secret (the Warder's `is_secret`: `.env*`, keys, certificates, credentials) is listed but never read or
 written: *open it in your own editor*. A Board page (`pages/ideas/`, `pages/tracks/`) opens on the Board, which
@@ -16,6 +18,7 @@ import os
 import subprocess
 import sys
 import tempfile
+import time
 from pathlib import Path
 from typing import Any, Callable
 
@@ -31,6 +34,10 @@ LARGE = 1024 * 1024                  # a file over this is not read: its size an
 SNIFF = 8192                         # the bytes looked at for a NUL (a binary file)
 MARKDOWN = (".md", ".markdown", ".mdown", ".mkd")
 TREE_MAX = 5000                      # the entries one folder lists at most
+FIND_MAX = 20                        # the files `files.find` answers with at most
+FIND_KEEP = 3.0                      # seconds the project's list of files is kept (monotonic)
+PILES = ("node_modules", "__pycache__", ".venv", "venv")      # a folder with no git is walked without these
+_LISTED: dict[Path, tuple[float, list[str]]] = {}
 CHANGED = "changed on disk: reload"
 
 
@@ -112,6 +119,26 @@ class Files:
             rows = [r for r in rows if r["path"] not in hidden]
         rows.sort(key=lambda r: (not r["dir"], r["name"].lower()))
         return {"entries": rows}
+
+    # -- finding (@ in New goal, spec 107 K) -----------------------------------------------------------------
+
+    def find(self, args: dict) -> dict:
+        """The files and folders of the project that match `q` as a subsequence of their path, a match in the name before one in the path, the shallow before the deep;
+        at most `limit` (20). The tracked and the untracked-but-not-ignored files (`git ls-files -co --exclude-standard`; a folder with no git is walked) and their folders (a path
+        ends with `/`). `.git/` and `.orkcraft/` never, a name that may hold a secret never, a name with a space not (`@path` ends at a space)."""
+        root = self._root()
+        q = str(args.get("q") or "").strip().lower()[:200]
+        try:
+            limit = max(1, min(FIND_MAX, int(args.get("limit") or FIND_MAX)))
+        except (TypeError, ValueError):
+            limit = FIND_MAX
+        ranked = []
+        for path in _listed(root):
+            rank = _rank(q, path)
+            if rank is not None:
+                ranked.append((rank, path))
+        ranked.sort()
+        return {"entries": [{"path": p, "name": p.rstrip("/").rsplit("/", 1)[-1], "dir": p.endswith("/")} for _, p in ranked[:limit]]}
 
     # -- one file --------------------------------------------------------------------------------------------
 
@@ -212,8 +239,70 @@ class Files:
         return self.background.start(project, "reveal", "open", work)
 
     def commands(self) -> dict[str, Callable[[dict], Any]]:
-        return {"files.tree": self.tree, "files.read": self.read, "files.write": self.write,
+        return {"files.tree": self.tree, "files.find": self.find, "files.read": self.read, "files.write": self.write,
                 "files.reveal": self.reveal}
+
+
+def _listed(root: Path) -> list[str]:
+    """Every file the project holds that git does not ignore, and their folders (with a `/`), for `files.find`; kept for a few seconds (a field asks on each pause in typing)."""
+    now = time.monotonic()
+    kept = _LISTED.get(root)
+    if kept and now - kept[0] < FIND_KEEP:
+        return kept[1]
+    files: list[str] = []
+    has_git = (root / ".git").exists()
+    if has_git:
+        try:
+            done = subprocess.run(["git", "ls-files", "-co", "--exclude-standard", "-z"], cwd=root, capture_output=True, text=True, timeout=20)
+            files = [f for f in done.stdout.split("\0") if f] if done.returncode == 0 else []
+        except (OSError, subprocess.SubprocessError):
+            files = []
+    else:                                                             # no git here: a walk that skips the hidden state and what is always a pile
+        for here, dirs, names in os.walk(root):
+            dirs[:] = [d for d in dirs if d not in HIDDEN_DIRS and d not in PILES]
+            base = Path(here).relative_to(root).as_posix()
+            files += [n if base == "." else f"{base}/{n}" for n in names]
+            if len(files) > TREE_MAX * 4:
+                break
+    seen: set[str] = set()
+    out: list[str] = []
+    for f in files:
+        parts = f.split("/")
+        if any(p in HIDDEN_DIRS for p in parts) or any(c.isspace() for c in f) or is_secret(f):
+            continue
+        for i in range(1, len(parts)):                                 # its folders, shallow first
+            d = "/".join(parts[:i]) + "/"
+            if d not in seen:
+                seen.add(d)
+                out.append(d)
+        out.append(f)
+    _LISTED[root] = (now, out)
+    return out
+
+
+def _rank(q: str, path: str):
+    """How well `path` matches `q` (smaller is better), None for no match: a name that starts with it, then one that holds it, then a subsequence of the name, then of the path; the shallow before the deep."""
+    low = path.lower()
+    name = low.rstrip("/").rsplit("/", 1)[-1]
+    depth = low.rstrip("/").count("/")
+    if not q:
+        return (4, depth, 0, low)
+    if name.startswith(q):
+        kind = 0
+    elif q in name:
+        kind = 1
+    elif _subsequence(q, name):
+        kind = 2
+    elif _subsequence(q, low):
+        kind = 3
+    else:
+        return None
+    return (kind, depth, len(low), low)
+
+
+def _subsequence(q: str, text: str) -> bool:
+    it = iter(text)
+    return all(c in it for c in q)
 
 
 def _ignored(root: Path, paths: list[str]) -> set[str]:

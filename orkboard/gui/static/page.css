@@ -8,9 +8,14 @@ button { color: inherit; }
 .gui { height: 100%; }
 .gui-loading { display: grid; place-items: center; height: 100%; color: var(--ork-ink-muted); }
 .gui-link { border: 0; background: none; padding: 0; color: inherit; font: inherit; cursor: pointer; }
-.gui-scrolls[data-more="below"] { mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent); }
-.gui-scrolls[data-more="above"] { mask-image: linear-gradient(to top, #000 calc(100% - 40px), transparent); }
-.gui-scrolls[data-more="above below"] { mask-image: linear-gradient(to bottom, transparent, #000 40px, #000 calc(100% - 40px), transparent); }
+/* a box that has more beyond an edge fades that edge: the vertical and the sideways cue are two layers of one mask, each whole where it has nothing more (js/scrollcue.js) */
+.gui-scrolls[data-more]:not([data-more=""]) { mask-image: var(--cue-v, linear-gradient(black, black)), var(--cue-h, linear-gradient(black, black)); -webkit-mask-composite: source-in; mask-composite: intersect; }
+.gui-scrolls[data-more~="below"] { --cue-v: linear-gradient(to bottom, black calc(100% - 40px), transparent); }
+.gui-scrolls[data-more~="above"] { --cue-v: linear-gradient(to top, black calc(100% - 40px), transparent); }
+.gui-scrolls[data-more~="above"][data-more~="below"] { --cue-v: linear-gradient(to bottom, transparent, black 40px, black calc(100% - 40px), transparent); }
+.gui-scrolls[data-more~="right"] { --cue-h: linear-gradient(to right, black calc(100% - 40px), transparent); }
+.gui-scrolls[data-more~="left"] { --cue-h: linear-gradient(to left, black calc(100% - 40px), transparent); }
+.gui-scrolls[data-more~="left"][data-more~="right"] { --cue-h: linear-gradient(to right, transparent, black 40px, black calc(100% - 40px), transparent); }
 code, pre, kbd { font-family: var(--ork-font-code); }
 /* orkUI's own icons (close, plus, play, the chevrons, … drawn on the signs' 7 grid, js/orkui.js `Icon`) are whole pixels at 14, 21 or 28, never at
    the icon token's 24: a sheet sets 14 or 28 where it wants them, and the rest is 21. */
@@ -85,7 +90,9 @@ body:has(.gui-toast) .gui-modal .gui-dialog { max-height: calc(100vh - 2 * var(-
 /* -- the first screen (js/onboarding.js, Orkboard's step: the AI tools found) --------------------------------------------- */
 .gui-onb { position: fixed; inset: 0; z-index: 30; overflow: auto; display: flex; flex-direction: column; align-items: center; gap: var(--ork-6);
   padding: var(--ork-8) var(--ork-6); box-sizing: border-box; background: var(--ork-canvas); color: var(--ork-ink); }
+.gui-onb__brand { display: flex; align-items: center; gap: var(--ork-4); }
 .gui-onb__brand img { height: 32px; display: block; }
+.gui-onb__name { font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); }
 .gui-onb__card { width: min(880px, 100%); box-sizing: border-box; display: flex; flex-direction: column; gap: var(--ork-6); padding: var(--ork-8);
   background: var(--ork-panel); border: var(--ork-double) double var(--ork-edge); clip-path: var(--ork-notch); }
 .gui-onb__head { display: flex; flex-direction: column; gap: var(--ork-3); }

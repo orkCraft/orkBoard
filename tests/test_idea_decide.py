@@ -13,7 +13,7 @@ import time
 import pytest
 
 from orkboard.core import idea_keeper
-from orkboard.core.idea_decide import body_of, clean_decision, corrected, demote, entry_of, worded
+from orkboard.core.idea_decide import body_of, clean_decision, corrected, demote, entry_of, named, worded
 from orkboard.gui.board_host import Orkboard
 from orkboard.realm import decisions_log, goal_team, idea_questions, idea_target, ideas, library, spec_sections
 
@@ -295,3 +295,65 @@ def test_a_bug_and_a_recurring_round_are_never_decided(host, parties, model):
     slug = host.command("ideas.add", {"text": "every week review the logs", "track": parties["tech"], "recurring": True})["slug"]
     assert _state(host, slug)["state"] != "decided" and spec_sections.record(host.ideas.state_dir, slug) == {}
     assert idea_questions.record(host.ideas.state_dir, slug) == {}
+
+
+# -- the leaders the person overruled (spec 108 §4.4, decisions §183.3) ---------------------------------------------------------------------------
+
+NO = {"verdict": "no", "why": "It adds a third caller to server/ws", "instead": "Only the setting"}
+
+
+def _overruled(host, parties, model, answer=DECISION, **said):
+    """A goal whose Tech said `said` (a verdict) in Talk and the person went on anyway: the decision is worded and waits."""
+    model.said[("talk_round", parties["tech"])] = {"stance": "tech stance", "for": "tech for", "against": "tech against", "second_round": False, "questions": [], **said}
+    model.said[("decide", "")] = answer
+    slug = host.command("ideas.add", {"text": "add a dark mode option", "track": parties["tech"]})["slug"]
+    host.command("ideas.route_set", {"idea": slug, "route": [parties["tech"]]})
+    host.command("ideas.talk", {"idea": slug})
+    for _ in range(1000):
+        if _row(host, slug, "objection") or _row(host, slug, "decision"):
+            break
+        time.sleep(0.01)
+    if said.get("verdict") == "no":
+        assert _state(host, slug)["state"] == "talk" and model.steps("decide") == []                                  # the decision waits for the person's answer
+        host.command("ideas.objection", {"idea": slug, "party": parties["tech"], "answer": "go"})
+    _until(host, slug, "decided")
+    return slug
+
+
+def test_named_puts_each_line_among_the_points_word_for_word_and_the_orkmasters_last_points_make_room():
+    got = {"title": "T", "why": "W", "points": [f"p{n}" for n in range(8)]}
+    lines = ["Against A: x", "Doubt from B: y"]
+    out = named(got, lines)
+    assert out["points"] == [*got["points"][:6], *lines] and out["title"] == "T" and named(out, lines) == out                 # at most eight; said once
+    assert named(got, []) is got
+    assert named({"title": "T", "why": "W", "points": ["a", "Against A: x"]}, lines)["points"] == ["a", "Against A: x", "Doubt from B: y"]        # one the Orkmaster wrote stays
+    assert named({"title": "T", "why": "W", "points": ["a", "b"]}, ["Against " + "A" * 400])["points"][-1] == ("Against " + "A" * 400)[:300]
+
+
+def test_the_decision_is_given_each_no_the_person_overruled_and_its_entry_says_it(host, parties, model):
+    slug = _overruled(host, parties, model, **NO)
+    name = host.ideas.keeper._name("architect")
+    line = f"Against {name}: It adds a third caller to server/ws"
+    prompt = model.steps("decide")[0]["prompt"]
+    assert "Leaders the person overruled, and those who doubted" in prompt and f"- {line}" in prompt and "word for word" in prompt
+    text = _row(host, slug, "decision")["text"]
+    assert f"4. {line}" in text.split("\n") and "1. Product asks for a setting, off by default." in text          # the Orkmaster's points stay, the overruled is added
+    host.ideas.keeper.sections = lambda s: None
+    host.command("ideas.confirm", {"idea": slug})
+    entry = git(host.repo_root, "show", "dev:docs/decisions.md")
+    assert f"4. {line}\n" in entry + "\n"                                                                              # and it is in the file the entry is appended to
+
+
+def test_a_doubt_is_in_the_entry_too_and_a_goal_nobody_doubted_has_neither(host, parties, model):
+    slug = _overruled(host, parties, model, verdict="doubt", why="Only if the theme file stays one")
+    assert f"Doubt from {host.ideas.keeper._name('architect')}: Only if the theme file stays one" in _row(host, slug, "decision")["text"]
+    assert "Doubt from" in model.steps("decide")[0]["prompt"]
+    plain = _overruled(host, parties, model)
+    assert "Against" not in _row(host, plain, "decision")["text"] and "Doubt from" not in _row(host, plain, "decision")["text"]
+    assert "overruled" not in model.steps("decide")[-1]["prompt"]                                                      # no line, no rule about lines
+
+
+def test_a_decision_the_orkmaster_could_not_word_names_the_overruled_as_well(host, parties, model):
+    slug = _overruled(host, parties, model, answer="I am sorry, I cannot", **NO)
+    d = spec_sections.record(host.ideas.state_dir, slug)["decision"]
+    assert d["by"] == "code" and f"Against {host.ideas.keeper._name('architect')}: It adds a third caller to server/ws" in d["text"]

@@ -25,10 +25,11 @@ import re
 import subprocess
 import sys
 import threading
+import time
 from pathlib import Path
 from typing import NamedTuple
 
-from orkboard.realm import dep_links, gate_config, jobs, worktrees
+from orkboard.realm import dep_links, gate_config, gate_env, jobs, worktrees
 
 GIT_TIMEOUT_S = 60
 PUSH_TIMEOUT_S = 120
@@ -82,12 +83,16 @@ def test_files(touched: list[str], root: Path) -> list[str]:
 
 
 class GateRun(NamedTuple):
-    """What the gate did: `ran` is False when it found nothing to run (never green), `code` the command's exit code."""
+    """What the gate did: `ran` is False when it found nothing to run (never green), `code` the command's exit code, `seconds` its time, `env` why a red run
+    could not test anything (realm/gate_env.py, "" when it did), `docs` that a derived gate was not run: the task changed only documents (spec 107 §1.2)."""
     ok: bool
     out: str
     ran: bool = True
     command: str = ""
     code: int | None = None
+    seconds: float = 0.0
+    env: str = ""
+    docs: bool = False
 
 
 class IdeaGit:
@@ -176,10 +181,12 @@ class IdeaGit:
                  timeout_s: int = jobs.TEST_TIMEOUT_S) -> GateRun:
         """The gate (spec 37 §5): the repository's `[gate]` in orkcraft.toml, else pytest on the critical tests and the
         touched modules'. Nothing to run is `ran=False`, never a pass; the whole run is `out` (the command, then its
-        output up to GATE_KEEP)."""
-        gate = gate_config.read(self.root)
+        output up to GATE_KEEP). The project's own gate is not run for a task that changed only documents (`docs`)."""
+        gate, touched, began = gate_config.read(self.root), self.touched(path, base), time.monotonic()
         note = f"\n! {gate.error}" if gate.error else ""
-        files = gate_config.gate_files(gate, self.touched(path, base), path)
+        files = gate_config.gate_files(gate, touched, path)
+        if gate.derived and gate_config.docs_only(touched):
+            return GateRun(True, f"no tests ran: the task changed only documents{note}", False, docs=True)
         if gate.custom:
             line = gate_config.command(gate, files)
             argv = gate_config.test_argv(line) if line else []
@@ -195,7 +202,8 @@ class IdeaGit:
             proc = subprocess.Popen(argv, cwd=path, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                                     start_new_session=True, env={**os.environ, "PYTHONDONTWRITEBYTECODE": "1"})
         except OSError as e:
-            return GateRun(False, f"$ {line}\n{argv[0]} could not start: {e}{note}", True, line, 127)
+            return GateRun(False, f"$ {line}\n{argv[0]} could not start: {e}{note}", True, line, 127, round(time.monotonic() - began, 1),
+                           gate_env.NOT_INSTALLED.format(what=f"`{argv[0]}` is"))
         out_box: list[str] = []
         reader = threading.Thread(target=lambda: out_box.append(proc.stdout.read() if proc.stdout else ""),
                                   daemon=True)
@@ -203,7 +211,8 @@ class IdeaGit:
         jobs._wait(proc, cancel, timeout_s, "ideas/gate")
         reader.join(5)
         out = out_box[0] if out_box else ""
-        return GateRun(proc.returncode == 0, f"$ {line}\n{out[-GATE_KEEP:]}{note}", True, line, proc.returncode)
+        return GateRun(proc.returncode == 0, f"$ {line}\n{out[-GATE_KEEP:]}{note}", True, line, proc.returncode, round(time.monotonic() - began, 1),
+                       gate_env.could_not_run(out, proc.returncode))
 
     def python(self) -> str:
         """The repository's own Python when it has one (`.venv`, where its test tools are), else Orkline's."""
@@ -411,6 +420,14 @@ def env_name(title: str) -> str:
     return next((n for n in names if "_" in n), names[0] if names else "")
 
 
+_ANSI = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)")      # a terminal's colour and cursor codes (CSI), a title or link (OSC)
+
+
+def plain(text: str) -> str:
+    """`text` as a person reads it: a terminal's escape codes out (a log is read in the page, which draws none)."""
+    return _ANSI.sub("", text or "")
+
+
 _SUMMARY = re.compile(r"(\d+) (passed|failed|error|errors)\b")
 _FAILED_LINE = re.compile(r"^(?:FAILED|ERROR) (\S+)")
 
@@ -424,7 +441,7 @@ def parse_tests(output: str, keep_lines: int = 40) -> dict:
     """The gate's run in the shape Review shows: pytest's summary line (`2 failed, 18 passed in 1.2s`) gives the
     counts, its `FAILED path::name` lines the names (at most 20). A run without pytest's summary counts nothing."""
     passed = failed = 0
-    lines = (output or "").splitlines()
+    lines = plain(output).splitlines()
     for ln in reversed(lines):
         found = _SUMMARY.findall(ln)
         if found and (" in " in ln or ln.strip().startswith("=")):

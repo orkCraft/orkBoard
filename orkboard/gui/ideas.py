@@ -49,7 +49,7 @@ from typing import Any, Callable
 
 from orkboard import settings
 from orkboard.core import idea_keeper
-from orkboard.realm import board_ask, board_map, event_log, idea_checks, idea_lens, idea_photos, idea_route, idea_secrets, idea_target, ideas, party_recipes, pitches, recurring, wiki
+from orkboard.realm import board_ask, board_map, event_log, goal_mentions, idea_checks, idea_lens, idea_photos, idea_route, idea_secrets, idea_target, ideas, party_recipes, pitches, recurring, wiki
 from orkboard.gui.ideas_args import VIA, IdeasError, _device, _opt, _text
 from orkboard.gui.ideas_board import BoardMixin
 from orkboard.gui.ideas_assets import AssetsMixin, asset_commands
@@ -61,6 +61,7 @@ from orkboard.gui.ideas_goals import GoalsMixin
 from orkboard.gui.ideas_map import MapMixin
 from orkboard.gui.ideas_party import PartyMixin, stage_commands
 from orkboard.gui.ideas_pick import PickMixin
+from orkboard.gui.ideas_pickables import PickablesMixin, pickables_commands
 from orkboard.gui.ideas_pitch import PitchMixin
 from orkboard.gui.ideas_project import ProjectMixin
 from orkboard.gui.ideas_recap import RecapMixin
@@ -120,7 +121,7 @@ class _Hop:
         self.host.call(lambda: self.host.publish(topic, **data))
 
 
-class Ideas(FactsMixin, LoopFace, TreeFace, MapsMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, AskFace, DecideMixin, LensMixin, LimitsMixin, ManaMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
+class Ideas(FactsMixin, LoopFace, TreeFace, MapsMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, AskFace, DecideMixin, LensMixin, LimitsMixin, ManaMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PickablesMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
             TypesMixin, CanvasesMixin, AssetsMixin, SystemMixin, BoardMixin):
     def __init__(self, host) -> None:
         """`host`: what the Board needs of whoever runs it, a `gui/board_host.py` `BoardHost` (spec 37 §4): Orkline's
@@ -386,7 +387,7 @@ class Ideas(FactsMixin, LoopFace, TreeFace, MapsMixin, ScreensMixin, RouteMixin,
         person pointed at with the lens of the goal's party (realm/idea_lens.py). Spec 52 §2.3: `type` (one of the party's
         leader's), its `asks` (written after the text) and `join` (who joins the party first: gui/ideas_types.py). `hold`: kept, nothing
         drafts it till the person does. Spec 65: in Ideation it is a pitch (at most 2 000 characters), judged; `pitch`: the one it is sent from."""
-        text = _text(args, "text", ideas.SECTION_CHARS)
+        text, files = goal_mentions.files(Path(self.host.repo_root), _text(args, "text", ideas.SECTION_CHARS))      # spec 107 K: each `@path` that exists is the path in backticks, before the route reads it
         track = _opt(args, "track") or _opt(args, "party")
         goals = {t["slug"]: t for t in ideas.tracks(self.root(), make=False)}
         routed = self.route_plan(args, text, track, pitch)      # spec 99 §4 (gui/ideas_route.py): its route by code, no call; None: drafted at once as before
@@ -431,7 +432,7 @@ class Ideas(FactsMixin, LoopFace, TreeFace, MapsMixin, ScreensMixin, RouteMixin,
         element = self.element_for(slug, pitch)    # the mark of every card of it (spec 50 §2.3); a sent pitch's, where it is free (spec 68 §2.3)
         ideas.add_turn(self.state_dir, slug, "you", self.with_asks(text, typed), "Gist")     # the person's own words, kept
         self._ev(event_log.IDEA_ADDED, args, idea=slug, track=track, chars=len(text), now=queue == "now",
-                 priority=priority, queue=queue, photos=len(photos), lens=[a["kind"] for a in pointed], type=typed["key"],
+                 priority=priority, queue=queue, photos=len(photos), files=files, lens=[a["kind"] for a in pointed], type=typed["key"],
                  asks=typed["answered"], refs=len(photos) if typed["type"] and typed["type"].refs else 0,
                  joined=(joined or {}).get("add", ""), out=(joined or {}).get("out", ""))
         out = {"slug": slug, "queue": queue, "element": element, "type": typed["key"], "joined": joined}
@@ -642,7 +643,7 @@ class Ideas(FactsMixin, LoopFace, TreeFace, MapsMixin, ScreensMixin, RouteMixin,
                  "ideas.move": self.move, "ideas.edit": self.edit, "ideas.track_add": self.track_add,
                  "ideas.track_set": self.track_set, "ideas.track_drop": self.track_drop, "ideas.todo": self.todo, "ideas.drop": self.drop,
                  "ideas.stop": self.stop, "ideas.review_list": self.review_list, "ideas.diff": self.diff,
-                 "ideas.merge": self.merge, "ideas.back": self.back, "ideas.drop_task": self.drop_task,
+                 "ideas.merge": self.merge, "ideas.back": self.back, "ideas.regate": self.regate, "ideas.drop_task": self.drop_task,
                  "ideas.stop_task": self.stop_task, "ideas.agents": self.agents, "ideas.task": self.task,
                  "ideas.into": self.into, "ideas.log": self.log, "ideas.logs": self.logs, "ideas.goal_save": self.goal_save,
                  "ideas.words": self.words, "ideas.goal_accept": self.goal_accept,
@@ -658,6 +659,6 @@ class Ideas(FactsMixin, LoopFace, TreeFace, MapsMixin, ScreensMixin, RouteMixin,
                       "ideas.pitch_pass": self.pitch_pass,
                       "ideas.release_out": self.release_out, "ideas.release_candidates": self.release_candidates, "ideas.shown": self.shown,
                       "ideas.party_for": self.party_for, "ideas.kind_for": self.kind_for, "ideas.collide_answer": self.collide_answer,
-                      "ideas.repeat": self.repeat, "ideas.team": self.team, "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, "ideas.party_presets": self.party_presets, **canvas_commands(self), **asset_commands(self), **system_commands(self), **usage_commands(self), **mana_commands(self), **route_commands(self), **talk_commands(self), **decide_commands(self), **stage_commands(self), **project_q_commands(self), **ask_commands(self), **facts_commands(self), **loop_commands(self), **maps_commands(self), **screens_commands(self), **tree_commands(self), **gate_commands(self)})
+                      "ideas.repeat": self.repeat, "ideas.team": self.team, "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, "ideas.party_presets": self.party_presets, **canvas_commands(self), **asset_commands(self), **system_commands(self), **usage_commands(self), **mana_commands(self), **route_commands(self), **talk_commands(self), **decide_commands(self), **stage_commands(self), **project_q_commands(self), **ask_commands(self), **facts_commands(self), **loop_commands(self), **maps_commands(self), **screens_commands(self), **pickables_commands(self), **tree_commands(self), **gate_commands(self)})
         return {name: guarded(name, fn) for name, fn in table.items()}
 

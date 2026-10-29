@@ -357,6 +357,8 @@ def rig(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     for name in ("test_architecture.py", "test_cli.py", "test_updates.py"):
         (repo / "tests" / name).write_text("def test_ok():\n    assert True\n")
     (repo / "conftest.py").write_text("")
+    # The project's own gate, written down: a task that changed only documents runs no derived gate (spec 107 §1.2), and its stub writes a `.txt`.
+    (repo / "orkcraft.toml").write_text('[gate]\nalways = ["tests/test_architecture.py", "tests/test_cli.py", "tests/test_updates.py"]\n')
     git(repo, "add", "-A")
     git(repo, "commit", "-m", "start")
     bindir = tmp_path / "bin"
@@ -447,7 +449,7 @@ def test_a_task_that_makes_variants_waits_picking_with_its_files_in_the_state_fo
     # the worktree is as it was cut: no variants, no manifest, nothing the session did besides, and the branch has no commit
     path = rig.state / "worktrees"
     tree = next(path.iterdir())
-    assert sorted(p.name for p in tree.iterdir() if not p.name.startswith(".git")) == ["conftest.py", "tests"]
+    assert sorted(p.name for p in tree.iterdir() if not p.name.startswith(".git")) == ["conftest.py", "orkcraft.toml", "tests"]
     assert not (tree / "stray.txt").exists() and not (tree / ".orkcraft-pick").exists() and not (tree / ".orkcraft-pick.json").exists()
     assert git(tree, "rev-parse", "HEAD") == git(rig.repo, "rev-parse", "main") and git(rig.repo, "rev-parse", "main") == task["base"]
     assert tasks_of(rig)["k2"]["state"] == "waiting"                       # what waits for it waits

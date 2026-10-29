@@ -39,6 +39,7 @@ def test_the_prompt_names_orkboards_critical_tests_only_for_a_project_that_has_t
 
 def test_the_prompt_names_a_node_projects_npm_test(town):
     shutil.rmtree(town.repo / "tests")
+    (town.repo / "orkcraft.toml").unlink()                       # no gate written: the project's own is derived
     (town.repo / "server").mkdir()
     (town.repo / "server" / "package.json").write_text(json.dumps({"scripts": {"test": "node --test"}}))
     prompt = _prompt(town)
@@ -54,6 +55,7 @@ def test_the_prompt_names_the_run_of_the_projects_own_file(town):
 
 def test_the_prompt_says_a_project_with_no_tests_waits_for_a_look(town):
     shutil.rmtree(town.repo / "tests")
+    (town.repo / "orkcraft.toml").unlink()                       # no gate written: the project's own is derived
     prompt = _prompt(town)
     assert "This project has no tests" in prompt and "waits for a person's look" in prompt
     assert "pytest" not in prompt and "the gate runs" not in prompt

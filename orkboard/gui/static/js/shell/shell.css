@@ -21,6 +21,7 @@
 .shell-facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .shell-facts .is-success { color: var(--ork-success); }
 .shell-facts .is-danger { color: var(--ork-danger); }
+.shell-facts .is-alert { color: var(--ork-alert); }
 .shell-facts .is-muted { color: var(--ork-ink-muted); }
 .shell-own-parties { display: flex; flex-direction: column; gap: var(--ork-3); margin: 0 0 var(--ork-5); }
 .shell-own-parties h3 { margin: 0; }
@@ -63,6 +64,16 @@
 .shell-patch, .shell-log { margin: 0; padding: var(--ork-3) var(--ork-4); overflow: auto; max-height: 420px; font: var(--ork-type-body); font-family: var(--ork-font-code); background: var(--ork-panel);
   border: var(--ork-line) solid var(--ork-frame); }
 .shell-log { max-height: 320px; white-space: pre-wrap; overflow-wrap: anywhere; }
+/* a log one reads (spec 107 §3): sections at the `== ` lines, a round's folded, opened at its foot */
+.shell-logview { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; }
+.shell-logview__bar { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-4); }
+.shell-logview__body { box-sizing: border-box; overflow-anchor: none; max-height: min(60vh, 640px); overflow: auto; padding: var(--ork-3) var(--ork-4); background: var(--ork-panel); color: var(--ork-ink);
+  border: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-body); font-family: var(--ork-font-code); line-height: 1.5; }
+.shell-logview pre { margin: 0; font: inherit; white-space: pre-wrap; overflow-wrap: anywhere; }
+.shell-logview__sec + .shell-logview__sec, .shell-logview pre + .shell-logview__sec { margin-top: var(--ork-3); }
+.shell-logview summary { padding: 0 var(--ork-3); background: var(--ork-raised); color: var(--ork-ink-muted); cursor: pointer; overflow-wrap: anywhere; }
+.shell-logview details[open] > summary { color: var(--ork-ink); }
+.shell-logview details[open] > summary + pre { margin-top: var(--ork-2); }
 .shell-patch__line { display: block; white-space: pre; }
 .shell-patch__line.is-hunk { color: var(--ork-ink-muted); }
 .shell-task { display: flex; flex-direction: column; gap: var(--ork-4); }

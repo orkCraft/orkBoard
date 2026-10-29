@@ -49,6 +49,20 @@ def test_a_task_runs_on_the_targets_tier_with_its_tool_and_model_recorded(town):
     assert task["tool"] == "claude" and "haiku" in task["model"] and task["tier"] == "warrior"
     (e,) = [x for x in event_log.read(town.repo) if x["event"] == "task_state" and x["state"] == "running"]
     assert (e["ran_tier"], e["effort"], e["tool"]) == ("laborer", "low", "claude") and "haiku" in e["model"]
+    assert e["ran_why"] == "target thrift"                                      # spec 107 §2.3: it ran lighter than planned, and says why
+
+
+def test_a_task_on_its_own_tier_says_no_reason_and_a_failed_one_its_error_spec_107(town):
+    plan_of(town, [{"id": "k1", "tier": "warrior"}])
+    r, _ = _runner(town)
+    r.start("demo")
+    r._set_task("demo", "k1", state="failed", error="sh: vitest: command not found " + "x" * 900)
+    running, failed = [x for x in event_log.read(town.repo) if x["event"] == "task_state" and x["state"] in ("running", "failed")]
+    assert running["ran_why"] == "" and "error" not in running
+    assert failed["error"].startswith("sh: vitest: command not found") and len(failed["error"]) == 600
+    assert idea_target.ran_why("elder", "warrior", "balance", "standard") == "target balance (standard party)"
+    assert idea_target.ran_why("elder", "warrior", "balance", "", "sonnet") == "role model sonnet"
+    assert idea_target.ran_why("", "warrior", "balance") == ""
 
 
 def test_a_plan_of_before_the_night_went_waits_for_the_reserve_as_one_the_board_passed_and_never_for_a_window(town):

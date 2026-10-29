@@ -15,10 +15,10 @@ from pathlib import Path
 from typing import Any, Callable
 
 from orkboard.realm import (board_rows, collide, goal_flags, goal_place, goal_route, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_checks, idea_flag, idea_pick, idea_questions, idea_shots,
-                            idea_risk, idea_spend, idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles, spec_sections, tool_errors)
+                            idea_objections, idea_risk, idea_spend, idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles, spec_sections, tool_errors)
 from orkboard.realm.idea_words import short_of
 
-NEEDS = ("route", "start", "talk", "cause", "decision", "fork", "asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71; a route and a step added after Talk: spec 99 §4; Talk's cards and a bug's cause: §5; the decision to confirm and a fork to settle: §6, §7)
+NEEDS = ("route", "start", "talk", "objection", "cause", "decision", "fork", "asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71; a route and a step added after Talk: spec 99 §4; Talk's cards and a bug's cause: §5; a leader's no in Talk: spec 108 §4; the decision to confirm and a fork to settle: §6, §7)
 _HELD_FILES = re.compile(r"^files(?: beside)? · (.+)$")
 _AFTER = re.compile(r"after (\d{1,2}:\d{2})")
 SIGN_IN_TOOL = "claude"          # what the Board runs by itself runs on Claude (core/idea_runner.py `HARNESS`)
@@ -61,6 +61,9 @@ def talk_rows(state_dir: Path, slug: str) -> list[dict]:
 
         {kind: "talk", round: 1|2, stances: [{party, leader, stance, for, against}], questions: [card], text}      # the leaders' stances and the stack of cards
         {kind: "cause", cause, where: [path], q: [card], text}                                                       # a bug's diagnosis: the guess of the cause, the case questions
+
+    A leader's no is a row of its own (`idea_objections.open_rows`: one a leader, in the route's order, until it is answered; spec 108 §4.3):
+    `{kind: "objection", party, leader, why, instead, after, after_title, answers, text}`.
 
     `card` is `idea_questions.card`'s `{id, by, leader, q, choices, pick, why, project}`. None while the leaders are being heard (nothing waits then)."""
     rec = idea_questions.record(state_dir, slug)
@@ -110,6 +113,7 @@ def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None
     out += [{**base, **n} for n in goal_route.step_rows(root, i, st, plan)]      # a later step planned and held for the person's Start (decisions §169.3)
     if state == "talk":
         out += [{**base, **n} for n in talk_rows(state_dir, slug)]
+        out += [{**base, **n} for n in idea_objections.open_rows(root, state_dir, slug, idea_questions.record(state_dir, slug))]      # a leader's no, before the decision (spec 108 §4.3)
     if state in ("decided", "sections"):
         out += [{**base, **n} for n in way_rows(state_dir, slug, st)]
     if state == "asks":

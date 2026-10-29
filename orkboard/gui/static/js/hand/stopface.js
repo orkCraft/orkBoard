@@ -7,9 +7,11 @@ import { Elem, Head } from "../orkui.js";
 import { command } from "../link.js";
 import { closeOver } from "../frame/state.js";
 import { PickView } from "../shell/pickview.js";
+import { LogView, happened } from "../shell/logview.js";
 import { askedOf } from "../arena/arenawords.js";
 import { TASK_STATE } from "../board/maplayout.js";
-import { stopsOfProject } from "./data.js";
+import { GoalMenu } from "../table/dropgoal.js";
+import { goalOfStop, stopsOfProject } from "./data.js";
 import { Answers } from "./answers.js";
 import { AskForm } from "./askform.js";
 import { TodoForm } from "./todoform.js";
@@ -32,10 +34,10 @@ export function StopFace({ props }) {
   const s = stopsOfProject().find((x) => x.key === props?.key) || null, log = useLog(s);
   useEffect(() => { if (!s) closeOver(); }, [!s]);
   if (!s) return html`<p class="ok-tone-muted">That card is answered.</p>`;
-  const cost = costOf(s), head = s.head || s.party?.head, tasks = s.kind === "plan" || s.kind === "failed" ? (s.node?.tasks || []).filter((t) => t.state !== "dropped") : [];
+  const ran = log?.tests, said = log && happened({ error: log.error || s.task?.error, tests: ran, red: !!ran && (ran.failed > 0 || ran.green === false) }), cost = costOf(s), head = s.head || s.party?.head, tasks = s.kind === "plan" || s.kind === "failed" ? (s.node?.tasks || []).filter((t) => t.state !== "dropped") : [];
   return html`<article class="hand-stopface" data-key=${s.key} data-kind=${s.kind} aria-label=${labelOf(s)}>
     <header class="hand-stopface__head"><${ElemOf} s=${s} /><div class="hand-stopface__titles"><p class="cap"><${Mark} s=${s} /> ${s.label}${s.other && s.party?.name ? ` · ${s.party.name}` : ""}</p>
-      <h2 class="hand-stopface__title">${s.full}</h2></div>${head && html`<${Head} race=${head.race} tier=${head.tier} size="big" />`}</header>
+      <h2 class="hand-stopface__title">${s.full}</h2></div>${head && html`<${Head} race=${head.race} tier=${head.tier} size="big" />`}${goalOfStop(s) && html`<${GoalMenu} slug=${goalOfStop(s)} where="head" />`}</header>
     ${s.kind === "pick" ? html`<${PickView} p=${{ slug: s.row.slug, task: s.row.task }} />` : html`
       ${s.text && html`<p class="body hand-stopface__text">${s.text}</p>`}
       ${s.why && html`<p class="cap">${s.why}</p>`}
@@ -44,7 +46,7 @@ export function StopFace({ props }) {
       ${s.kind === "todo" && html`<${TodoForm} idea=${s.row.idea} todo=${s.row.todo} lead=${s.party.lead} done=${closeOver} />`}
       ${tasks.length > 0 && html`<h3 class="board-sub">Tasks</h3><ul class="hand-stopface__tasks">${tasks.map((t) => html`<li key=${t.id} data-state=${t.state}>
         <span class="body">${t.title}</span><span class="cap">${t.by?.name || ""} · ${TASK_STATE[t.state] || t.state}${t.error ? ` · ${t.error}` : ""}</span></li>`)}</ul>`}
-      ${log && html`<h3 class="board-sub">Log</h3><pre class="shell-log" aria-label="Log">${log.log || "Nothing logged yet."}</pre>`}
+      ${log && html`${said && said !== s.text && html`<p class="body hand-stopface__said">${said}</p>`}<${LogView} text=${log.log} label="Log" />`}
       <div class="hand-answers" role="group" aria-label="Answers"><${Answers} s=${s} here=${true} /></div>
       <${Spend} cost=${cost} />`}
   </article>`;

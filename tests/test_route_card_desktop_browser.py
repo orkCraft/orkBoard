@@ -57,7 +57,7 @@ class RouteHost(HandHost):
         self.scenario, self.low = scenario, low
         title = "Players can't rejoin a room" if scenario in ("cause", "report", "legacy", "legacy-report") else "Clean up the lobby code" if scenario == "tidy" else "A team-vs-team round"
         self.goal = "product" if scenario.startswith("serves") else "tech"                   # the party the goal is of
-        self.nodes = [node("fresh", self.goal, title, "hand", state="routed", element="ice")]
+        self.nodes = [node("fresh", self.goal, title, "table", state="routed", element="ice", asks_you=True)]
         self.route = ["tech"] if scenario in SHORT else ["product", "design", "tech"]
         self.jobs = JOBS if scenario != "serves-none" else []
         self.attached = "play-again" if scenario == "serves-kept" else ""

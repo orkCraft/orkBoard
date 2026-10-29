@@ -20,6 +20,7 @@ from typing import Any, Callable
 
 from orkboard import settings
 from orkboard.core import bus as b
+from orkboard.gui import command_log
 from orkboard.gui.board_host import BoardHost, BoardLogs
 from orkboard.gui.ideas_args import IdeasError, _device, _str
 from orkboard.realm import event_log, project_folder
@@ -50,7 +51,9 @@ class Project:
         """The host's toast; with more than one project open it names its project."""
         if len(self.host.projects.open_ones) > 1:
             title = f"{self.name} · {title}" if title else self.name
-        self.host.toast(message, title=title, severity=severity, timeout=timeout, kind=kind)
+        if severity == "error" and not self.host.demo:
+            command_log.error_shown(self.root, title, message)          # in its own log, whichever project is shown (spec 107 §2.2)
+        self.host.toast(message, title=title, severity=severity, timeout=timeout, kind=kind, logged=True)
 
     def counts(self) -> dict[str, int]:
         """What the switcher says of it: its ideas at work, what needs the person, the results at Review."""

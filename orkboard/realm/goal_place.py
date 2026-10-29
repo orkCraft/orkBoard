@@ -1,7 +1,7 @@
 """Where a goal lies in the window (docs/specs/98-the-table-and-the-hand.md §2.1; decisions §145.2): in the **deck** (not
 started, asking nothing), the **hand** (not at work, and a Needs you row waits for the person), on the **table** (the
-Orkmaster reads or plans it, or it is at work) or in the **discard** (done, its result not seen) and the **history** (done
-and seen). Pure code on what the Board's row already holds: the faces draw it, nothing here words anything.
+Orkmaster reads or plans it, it is routed and waits for Talk, or it is at work) or in the **discard** (done, its result not seen)
+and the **history** (done and seen). Pure code on what the Board's row already holds: the faces draw it, nothing here words anything.
 
     place_of(row, kinds, passed=False, picking=False, seen="")
         -> {"place": "deck" | "hand" | "table" | "discard" | "history",
@@ -52,8 +52,8 @@ def place_of(row: dict, kinds: Iterable[str], *, passed: bool = False, picking: 
         if row.get("start_at"):                                    # a plan that starts later waits for the reset
             return hand if kinds - {"plan"} else _deck(row, "reset")
         return table if passed or not kinds else hand
-    if state == "routed":                                          # a goal routed waits for the person's Talk; put off with *Later, by itself* it waits in the deck (spec 99 §4)
-        return _deck(row, "reset") if row.get("held_until") else hand
+    if state == "routed":                                          # a goal routed lies on the Orkmaster's lane at once and asks for the person's Talk (its route card is in the hand too); put off with *Later, by itself* it waits in the deck (spec 99 §4, spec 107 §5)
+        return _deck(row, "reset") if row.get("held_until") else {"place": "table", "asks_you": True, "waits_as": ""}
     if state in _WAY:                                              # Talk, the decision, the sections: on the table, asking when a row waits (Talk's cards: `talk`, a bug's `cause`: spec 99 §5)
         return table
     if state in _ASKING:

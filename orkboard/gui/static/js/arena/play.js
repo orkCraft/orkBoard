@@ -6,6 +6,8 @@
 // fades in and out in a slow loop (2.4 s, in steps; still under reduced motion), and under it, in the faint ink, one line says the stage — *Making its worktree*, *Starting <command>*, *Waiting for a page on :<port>* — with
 // the seconds counting up (`since` from the host, local time after it); when the page has answered (`playing`) the name fades in steps and the frame comes up from the black — an `iframe` is never drawn before that; under reduced
 // motion, no steps. A build that did not start says why and shows the command's last lines (`tail`) in a quiet box that scrolls; a build whose port gives no page (`why: "nopage"`) says so with the ports it tried and *Stop the build*.
+// With a logo in the project (`b.logo`, realm/assets.py `logo`: its `logo.svg`, `icon.png`, …) the start screen is the logo instead of the name (docs/specs/107-what-the-owners-day-said.md §9.2): 128 px tall, up in six steps, two blinks, then the
+// name under it, a light band sweeping across it every 2.4 s while it starts (play.css; none under reduced motion). *Full screen* in the bar lays the stage over the screen (Esc leaves).
 // The build is the machine's own address (127.0.0.1): the phone has no Play.
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
@@ -14,6 +16,7 @@ import { command } from "../link.js";
 import { projectList } from "../shell/projects.js";
 
 export const OPEN = "Open the build", STARTING = "Starting the build…", STOP = "Stop the build";
+export const FULL = "Full screen";
 export const NOTHING = "Nothing here yet";
 export const NOTHING_HOW = "Say how the project opens in .orkcraft/checks.toml: preview = \"npm run dev\", or keep an index.html at its root";
 export const SANDBOX = "allow-scripts allow-same-origin allow-pointer-lock";
@@ -74,9 +77,18 @@ function StageLine({ b }) {
   return html`<p class="play-starting" role="status"><span class="play-stage-words">${words}</span> <span class="play-secs" aria-hidden="true">${secondsWords(secs)}</span></p>`;
 }
 
-/** The black pane with the project's name: `fading` once the page answered (the name goes in steps over the frame under it). */
+/** The project's logo, 128 px tall (a picture under 64 px wide stays in whole pixels), a light band laid over it masked by its own shape. */
+function Logo({ src }) {
+  const [pixel, setPixel] = useState(false), mask = `url("${src}")`;
+  const loaded = (e) => { const w = e.currentTarget.naturalWidth; if (!/\.svg(\?|$)/i.test(src) && w > 0 && w < 64) setPixel(true); };
+  return html`<span class="play-logo"><img class=${cls("play-logo__img", { "is-pixel": pixel })} src=${src} alt="" height="128" draggable="false" onLoad=${loaded} />
+    <span class="play-logo__sweep" aria-hidden="true" style=${`-webkit-mask-image:${mask};mask-image:${mask}`}></span></span>`;
+}
+
+/** The black pane with the project's logo, else its name: `fading` once the page answered (it goes in steps over the frame under it). */
 function Intro({ name, fading, done, b }) {
-  return html`<div class=${cls("play-intro", { "is-fading": fading })} aria-hidden=${fading ? "true" : undefined} onAnimationEnd=${(e) => { if (fading && e.animationName === "play-intro-out") done(); }}>
+  return html`<div class=${cls("play-intro", { "is-fading": fading, "has-logo": !!b.logo })} aria-hidden=${fading ? "true" : undefined} onAnimationEnd=${(e) => { if (fading && e.animationName === "play-intro-out") done(); }}>
+    ${b.logo && html`<${Logo} src=${b.logo} />`}
     <h2 class="play-title">${name}</h2>
     ${!fading && html`<${StageLine} b=${b} />`}
   </div>`;
@@ -91,7 +103,8 @@ function Tail({ lines }) {
 }
 
 export function Play() {
-  const { b, open, stop } = useBuild(), name = projectName();
+  const { b, open, stop } = useBuild(), name = projectName(), stage = useRef(null);
+  const full = () => { try { stage.current?.requestFullscreen?.()?.catch?.(() => {}); } catch { /* the browser would not */ } };
   const came = useRef(false), [gone, setGone] = useState(false);
   if (b.state === "starting") came.current = true;
   else if (b.state !== "playing") came.current = false;
@@ -112,9 +125,10 @@ export function Play() {
         ${moved && html`<span class="arena-cap play-moved">dev is at ${String(b.dev).slice(0, 7)} now</span>`}
         <span class="arena-spacer"></span>
         ${moved && html`<button type="button" class="ork-btn" onClick=${() => open(true)}>${OPEN}</button>`}
+        <button type="button" class="ork-btn play-full" title="Fill the screen with it: Esc leaves" onClick=${full}>${FULL}</button>
         <button type="button" class="ork-btn" onClick=${stop}>${STOP}</button>
       </div>
-      <div class=${cls("play-stage", { "is-rising": intro })}>
+      <div class=${cls("play-stage", { "is-rising": intro })} ref=${stage}>
         <iframe class="play-frame" src=${b.url} title="Play" sandbox=${SANDBOX} allow="autoplay; fullscreen; gamepad"></iframe>
         ${intro && html`<${Intro} name=${name} fading=${true} done=${() => setGone(true)} />`}
       </div>

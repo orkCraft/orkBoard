@@ -17,6 +17,7 @@ export function testsWords(r) {
   const t = r.tests, all = t.passed + t.failed;
   if (t.none) return { mark: "", text: "no tests in this project", names: [], tone: "muted" };      // the project has none (spec 86 §3): it waits for your look
   if (t.ran === false) return { mark: "", text: "no tests ran", names: [], tone: "muted" };
+  if (t.env) return { mark: "", text: "could not run", names: [], tone: "alert" };      // it tested nothing (a command or a package is not installed, spec 107 §1): not red, not green
   if (t.passed == null && t.failed == null) {          // a command that is not pytest: its exit code speaks
     const failed = isRed(r), code = t.exit ?? (failed ? 1 : 0);
     return failed ? { mark: "cross", text: `failed (exit ${code})`, names: [], tone: "danger" } : { mark: "check", text: `passed (exit ${code})`, names: [], tone: "success" };
@@ -27,8 +28,15 @@ export function testsWords(r) {
 }
 export const changesWords = (d) => `${d.files} file${d.files === 1 ? "" : "s"}, +${d.added} −${d.removed}`;
 
-/** Why Merge is off, or "": red tests, a conflict, or both. */
+export const NO_INSTALL = "Sending it back would not help: the task cannot install anything.";
+export const SAME_FAILURE = "The last fix changed nothing: the tests failed the same way.";
+/** What *Install and test again* does, for its title: each folder's command, then the tests (`tests.install`: [{dir, command}]). */
+export const installWords = (rows) => `Runs ${rows.map((x) => `\`${x.command}\` in ${x.dir === "." ? "the project's folder" : x.dir}`).join(", then ")} in your project, then the tests again`;
+export const TEST_AGAIN_TIP = "Runs the tests again: install what they need in your project first";
+
+/** Why Merge is off, or "": red tests (or, when they could not run, why), a conflict, or both. */
 export function mergeReason(r, into) {
+  if (r.tests.env) return [r.tests.env, r.conflict].filter(Boolean).join(" · ");
   const why = [];
   if (isRed(r)) why.push("Its tests are red");
   if (r.conflict) why.push(r.conflict);
@@ -37,6 +45,7 @@ export function mergeReason(r, into) {
 
 export function fixLine(r, into) {
   if (r.conflict) return `Resolve the conflict with ${into}`;
+  if (r.tests.same || r.tests.env) return "";          // the same failure again: a line that says something new (spec 107 §1.4); a gate that could not run: nothing the code can mend
   if (isRed(r)) return `Fix the failing tests${r.tests.failing?.[0] ? `: ${r.tests.failing[0]}` : ""}`;
   return "";
 }
@@ -74,8 +83,9 @@ export function ResultActions({ r, pinned = false }) {
   const [working, setWorking] = useState(false);
   const [dropping, setDropping] = useState(false);   // Drop… asked in the card: *Drop this result?*
   const reason = mergeReason(r, into), fix = isRed(r) || !!r.conflict, place = placeOnly(r), check = r.check && leftOf(r).length > 0 && !place;
-  const key = { slug: r.idea, task: r.task };
-  const fixThem = async () => { setWorking(true); const got = await act("ideas.back", { ...key, why: fixThemWhy(r) }); setWorking(false); if (got?.ok) done(); };
+  const key = { slug: r.idea, task: r.task }, env = !!r.tests.env, rows = r.tests.install || [], same = !!r.tests.same && !env;
+  const fixThem = async () => { setWorking(true); const got = await act("ideas.back", { ...key, why: fixThemWhy(r), suggested: true }); setWorking(false); if (got?.ok) done(); };
+  const regate = async () => { setWorking(true); const got = await act("ideas.regate", { ...key, install: rows.length > 0 }); setWorking(false); if (got?.ok) done(); };
   const done = () => { const o = over.value; if (o?.kind === "result" && o.props?.idea === r.idea && o.props?.task === r.task) closeOver(); };     // the result over the pane goes with its answer
   const drop = async () => { const got = await act("ideas.drop_task", { slug: r.idea, task: r.task }); if (got?.ok) { setDropping(false); done(); } };
   const merge = async () => { setWorking(true); const got = await act("ideas.merge", r.over ? { ...key, dear: true } : key);   // dear: it cost more than its plan said (only logged)
@@ -84,13 +94,17 @@ export function ResultActions({ r, pinned = false }) {
     e.preventDefault();
     if (!line.trim()) return;
     setWorking(true);
-    const got = await act("ideas.back", { ...key, why: line.trim() });
+    const got = await act("ideas.back", { ...key, why: line.trim(), ...(line.trim() === fixLine(r, into) ? { suggested: true } : {}) });
     setWorking(false);
     if (got?.ok) { setLine(null); done(); }
   };
   return html`<div class=${cls("shell-actions", { "is-pinned": pinned })} onClick=${(e) => e.stopPropagation()}>
     <div class="shell-actions__main">
-      ${place ? html`<button class="ork-btn primary" disabled=${!!reason || working} title=${reason || (r.diff.files ? `Merge into ${into}` : "Nothing is merged")}
+      ${env ? html`<button class="ork-btn primary" disabled=${working} title=${rows.length ? installWords(rows) : TEST_AGAIN_TIP} data-act="regate"
+          onClick=${regate}>${rows.length ? "Install and test again" : "Test again"}</button>
+        <button class="ork-btn" disabled title=${reason}>Merge into ${into}</button>
+        <button class="ork-btn" aria-expanded=${line !== null} onClick=${() => setLine(line === null ? fixLine(r, into) : null)}>Fix</button>`
+        : place ? html`<button class="ork-btn primary" disabled=${!!reason || working} title=${reason || (r.diff.files ? `Merge into ${into}` : "Nothing is merged")}
           onClick=${merge}>${r.diff.files ? `Merge into ${into}` : "Leave them"}</button>`
         : check ? html`<button class="ork-btn primary" disabled=${working} onClick=${fixThem}>Fix them</button>
         <button class="ork-btn" disabled=${!!reason || working} title=${reason || (r.diff.files ? `Merge the fixes into ${into}` : "Nothing is merged")}
@@ -104,7 +118,9 @@ export function ResultActions({ r, pinned = false }) {
       <p class="shell-actions__why"><b>Drop this result?</b> ${r.title} will not be merged. Its worktree goes; its branch stays.</p>
       <div class="shell-actions__main"><button type="button" class="ork-btn" onClick=${() => setDropping(false)}>Keep it</button>
         <button type="button" class="ork-btn danger" onClick=${drop}>Drop it</button></div></div>`}
-    ${reason && html`<p class="shell-actions__why ok-tone-error" role="status">${reason}</p>`}
+    ${reason && html`<p class=${cls("shell-actions__why", env ? "ok-tone-fire" : "ok-tone-error")} role="status" data-env=${env ? "true" : undefined}>${reason}</p>`}
+    ${env && html`<p class="shell-actions__why ok-tone-muted" data-no-install="true" role="status">${NO_INSTALL}</p>`}
+    ${same && html`<p class="shell-actions__why ok-tone-muted" data-same="true" role="status">${SAME_FAILURE}</p>`}
     ${place && html`<p class="shell-actions__why ok-tone-muted" data-place="true" role="status">${PLACE_LINE}</p>`}
     ${!check && !place && line !== null && html`<form class="shell-actions__line" onSubmit=${back}>
       <input class="ork-field" autofocus value=${line} aria-label=${fix ? "What to fix, in one line" : "Why you send it back, in one line"}

@@ -43,6 +43,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 import mimetypes
 import secrets
 import threading
@@ -57,10 +58,11 @@ from websockets.exceptions import ConnectionClosed
 from websockets.http11 import Request, Response
 
 from orkboard import __version__, brand
-from orkboard.design import tokens
-from orkboard.gui import media, phones, pwa
+from orkboard.design import logo, tokens
+from orkboard.gui import command_log, media, phones, pwa
 from orkboard.gui.board_host import CommandError
 
+log = logging.getLogger(__name__)
 STATIC = Path(__file__).with_name("static")
 TICK_S = 1.0
 FLUSH_S = 0.05
@@ -144,7 +146,9 @@ class Server:
             return None
 
     def capture(self, e: BaseException, where: str, **kw) -> None:
-        """An error the server caught, to the host's crash reports (Orkline's, core/crashes.py), when it keeps them."""
+        """An error the server caught, to the host's crash reports (core/crashes.py), when it keeps them, and with its traceback to the
+        server's log (gui/server_log.py)."""
+        log.error("%s caught in %s%s", type(e).__name__, where, f" ({kw['command']})" if kw.get("command") else "", exc_info=e)
         capture = getattr(self.host, "capture", None)
         if capture is not None:
             capture(e, where, **kw)
@@ -202,8 +206,8 @@ class Server:
         if parts.path in ("/", "/index.html"):
             page = preview / "index.html" if preview is not None and (preview / "index.html").is_file() else None
             return _response(HTTPStatus.OK, page.read_bytes() if page else self.page(), "text/html; charset=utf-8")
-        if parts.path == "/favicon.ico":                  # the ork mark (design-system/logo)
-            return _response(HTTPStatus.OK, (tokens.SYSTEM / "logo" / "favicon.ico").read_bytes(), "image/x-icon")
+        if parts.path == "/favicon.ico":                  # Orkboard's mark, else the ork mark of Orkline (design/logo.py)
+            return _response(HTTPStatus.OK, logo.favicon().read_bytes(), "image/x-icon")
         if parts.path == "/roles.css":
             return _response(HTTPStatus.OK, tokens.roles_css().encode(), "text/css; charset=utf-8")
         target = resolve(parts.path, preview)
@@ -342,10 +346,12 @@ class Server:
                 result = self.host.command(name, args)
             return {"t": "reply", "id": cid, "ok": True, "result": result}
         except CommandError as e:
+            command_log.refused(self.host, str(msg.get("name", "")), str(e))
             return {"t": "reply", "id": cid, "ok": False, "error": str(e)}
         except Exception as e:                            # a broken command never closes the page
             known = str(msg.get("name", ""))
             self.capture(e, "command", command=known if known in self.host.commands else "")
+            command_log.refused(self.host, known, f"{type(e).__name__}: {e}", broken=True)
             return {"t": "reply", "id": cid, "ok": False, "error": f"{type(e).__name__}: {e}"}
 
     def _send_all(self, msg: dict) -> None:

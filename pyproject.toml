@@ -30,7 +30,8 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "pytest-asyncio>=1.0", "pytest-xdist>=3", "cryptography>=41", "segno>=1.5", "websockets>=13.0"]
+dev = ["pytest>=8", "pytest-asyncio>=1.0", "pytest-xdist>=3", "cryptography>=41", "segno>=1.5", "websockets>=13.0",
+       "pillow>=10"]       # design/mark.py draws Orkboard's mark again (a dev tool, never imported when Orkboard runs)
 browser = ["playwright>=1.45"]              # the browser tests (pytest -m browser)
 # the window of its own elsewhere than a Mac (without it Orkboard opens in the browser); a phone's TLS certificate
 # (gui/phone_tls.py)

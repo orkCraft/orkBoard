@@ -244,5 +244,5 @@ def test_the_rows_sit_on_the_boards_needs_you_of_a_goal_and_a_node_names_them(pr
     assert "route" in board_map.NEEDS and "start" in board_map.NEEDS
     got = board_map.build(root, state, {}, [], dt.datetime(2026, 10, 28, 12, 0).timestamp(), rev=0)
     node = next(n for n in got["nodes"] if n["slug"] == slug)
-    assert node["needs_you"] == "route" and node["place"] == "hand" and node["asks_you"] is False and node["state"] == "routed"
+    assert node["needs_you"] == "route" and node["place"] == "table" and node["asks_you"] is True and node["state"] == "routed"
     json.dumps(got)                                                                                          # all data

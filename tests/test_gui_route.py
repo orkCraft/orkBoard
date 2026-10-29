@@ -92,11 +92,11 @@ def test_a_goal_sent_makes_no_call_and_waits_routed_with_its_route_row(host, par
     assert row["route"][0]["party"] == parties["tech"] and row["place"] == 1 and row["short"] is False and row["low"] is False
     assert row["cost"]["calls"] == 4 and row["goal"] == parties["tech"] and row["blocks"] is False
     node = next(i for i in host.command("ideas.board")["ideas"] if i["slug"] == slug)
-    assert node["state"] == "routed" and node["place"] == "hand" and node["asks_you"] is False
+    assert node["state"] == "routed" and node["place"] == "table" and node["asks_you"] is True
     page = host.command("ideas.page", {"slug": slug})
     assert page["state"] == "routed" and page["busy"] is False
     mapped = next(n for n in host.command("ideas.map", {})["nodes"] if n["slug"] == slug)
-    assert mapped["needs_you"] == "route" and mapped["place"] == "hand"
+    assert mapped["needs_you"] == "route" and mapped["place"] == "table"
     assert host.ideas.snapshot()["needs_you"] == 1
 
 

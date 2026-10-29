@@ -1,6 +1,7 @@
-// Motion says what changed, never decorates (docs/specs/49-one-window.md §11). Each in steps or a short ease-out, none under
+// Motion says what changed, and what is alive; it never decorates (docs/specs/49-one-window.md §11, amended by docs/specs/107 §7, decisions §182.7: an ork at work moves; nothing that waits does). Each in steps or a short ease-out, none under
 // `prefers-reduced-motion`, none on the first read of a goal, none for what changed while the page was hidden. Ticking words and counts
-// never move.
+// never move. What is alive is the task card's (table/work.css): a task at work steps its drawing a pixel and a dotted line marches along its foot, a card whose state changed flashes its frame twice once; the time it
+// has worked ticks, under reduced motion too (table/worktime.js).
 //   a task appears      the field did not have it a moment ago: it rises into its place from below, the side of the person (`.is-drawn`, ≤ 0.36 s)
 //   the deal           a plan started by a press in the hand (spec 57): its new cards travel from the stop's box to their places instead of rising (`.is-dealt`,
 //                       0.30 s in steps, 35 ms apart, six at most; the rest rise); one of the three moments that travel (decisions §76.3)

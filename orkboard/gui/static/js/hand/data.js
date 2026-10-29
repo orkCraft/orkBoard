@@ -61,7 +61,7 @@ export function stackKey(s) {
 }
 
 /** What is the whole goal's, not one party's: the route, Talk of several leaders, the decision, a fork, the Orkmaster's collision (docs/specs/101 §4.2) and its *Go on paid?* (docs/specs/105 §3): they lie under the first lane. */
-const WHOLE = new Set(["route", "talk", "decision", "fork", "collide", "paid"]);
+const WHOLE = new Set(["route", "talk", "objection", "decision", "fork", "collide", "paid"]);
 
 /** The lane a row lies under (docs/specs/101 §4.3): 0 the first (the project's), else 1 + the place of its party among the tabs' parties (table/data.js `partiesNow`, the order of the lanes after the first).
  *  A failure lies under its task's party, a party's question under its party, the project's questions (no goal of their own) under their leader's party; what is the whole goal's, a sign-in and a row

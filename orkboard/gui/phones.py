@@ -49,7 +49,7 @@ from websockets.http11 import Request
 from websockets.server import ServerProtocol
 
 from orkboard import env
-from orkboard.gui import phone_http, phone_tls, pwa, tailnet
+from orkboard.gui import command_log, phone_http, phone_tls, pwa, tailnet
 from orkboard.gui.board_host import CommandError
 from orkboard.gui.pairing import Bucket, PairError, Pairing, clean_name
 from orkboard.gui.phone_http import (
@@ -455,13 +455,18 @@ class Listener:
             return {"t": "reply", "id": cid, "ok": False, "error": "Arguments are an object"}
         face = self.host.phone_face
         if not face.allowed(self.host, name, args):
+            command_log.refused(self.host, name, f"Not from a phone: {name}", "phone")
             return {"t": "reply", "id": cid, "ok": False, "error": f"Not from a phone: {name}"}
         self.pairing.seen(phone.id)
         try:
             result = self.host.command(name, face.guard(name, args, {"id": phone.id, "name": phone.name}))
         except CommandError as e:
+            command_log.refused(self.host, name, str(e), "phone")
             return {"t": "reply", "id": cid, "ok": False, "error": str(e)}
         except Exception as e:                       # a broken command never closes the phone
+            if (capture := getattr(self.host, "capture", None)) is not None:
+                capture(e, "command", command=name if name in self.host.commands else "")
+            command_log.refused(self.host, name, f"{type(e).__name__}: {e}", "phone", broken=True)
             return {"t": "reply", "id": cid, "ok": False, "error": f"{type(e).__name__}: {e}"}
         if name == "mobile.hello" and isinstance(result, dict) and isinstance(result.get("commands"), list):
             # What this phone may send, not what the host has (spec 94 §2.2): a face whose command is not here is not drawn.

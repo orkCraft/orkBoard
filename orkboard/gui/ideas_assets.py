@@ -6,6 +6,9 @@ made of, seen and touched, and its own preview of dev. Read from the files, git 
     ideas.play {fresh?, peek?}        # the project's preview of dev's head on 127.0.0.1: starting {stage, command, ports, since} → playing {url, commit} or failed {error, tail}
     ideas.play_stop {}                # it stops and its worktree goes
 
+While it starts and plays, `logo` is the address of the project's logo in dev's head (realm/assets.py `logo`, served as an asset of that commit), "" with none:
+Play's start screen shows it (docs/specs/107-what-the-owners-day-said.md §9.2).
+
 **Play** opens the preview core/idea_shot.py opens for a picture (`preview_of`, `opened`: checks.toml's `preview`, a static `index.html`,
 the package's `dev|preview|start` script) in a worktree of dev's head, `<state_dir>/play/` (its dependencies linked as a task's are,
 realm/dep_links.py), on a port of its own on the machine's own address. While it starts it says its **stage** (spec 91 §5): `worktree` (making it), `command` (the command started, `command` as words:
@@ -63,6 +66,7 @@ class Play:
         self._stop = threading.Event()
         self._why = ""
         self.state, self.commit, self.url, self.error, self.none = "", "", "", "", False
+        self.logo = ""                                   # the project's logo in dev's head, the address its start screen shows (spec 107 §9.2); "" when it has none
         self.ports: list[int] = []                       # the ports asked so far (stage `page`); a start that gave no page (`nopage`): the ports it asked (spec 90 §1)
         self.stage, self.command = "", ""                # while it starts: worktree · command · page (spec 91 §5), and the command as words
         self.tail: list[str] = []                        # the command's output, its last lines (`idea_shot.opened`'s `tail`)
@@ -75,10 +79,10 @@ class Play:
 
     def answer(self, ref: str) -> dict:
         if self.state == "playing":
-            return {"state": "playing", "url": self.url, "commit": self.commit, "short": self.commit[:7], "dev": commit_goal.head(self.root, ref)}
+            return {"state": "playing", "url": self.url, "commit": self.commit, "short": self.commit[:7], "dev": commit_goal.head(self.root, ref), "logo": self.logo}
         if self.state == "starting":
             return {"state": "starting", "commit": self.commit, "short": self.commit[:7], "stage": self.stage, "command": self.command,
-                    "ports": list(self.ports), "since": round(max(0.0, time.monotonic() - self.began), 1)}
+                    "ports": list(self.ports), "since": round(max(0.0, time.monotonic() - self.began), 1), "logo": self.logo}
         if self.state == "failed":
             if self.error == NO_PAGE:
                 return {"state": "failed", "why": NO_PAGE, "error": NO_PAGE_WORDS, "ports": list(self.ports), "tail": list(self.tail)}
@@ -107,10 +111,19 @@ class Play:
         with self._lock:
             self._stop = threading.Event()
             self.state, self.commit, self.url, self.error, self.none, self.port, self._why = "starting", tip, "", "", False, None, ""
+            self.logo = self._logo_of(tip)
             self.ports, self.tail, self.stage, self.command, self.began = [], [], "worktree", "", time.monotonic()
             self._thread =threading.Thread(target=self._run, args=(tip, self._stop), name="play", daemon=True)
             self._thread.start()
         return self.answer(ref)
+
+    def _logo_of(self, tip: str) -> str:
+        """The signed address of the project's logo in `tip`'s tree (realm/assets.py `logo`), served as an asset of that commit; "" when it has none."""
+        try:
+            path = assets.logo(self.root, tip)
+            return media.asset_url(tip, path) if path else ""
+        except (OSError, subprocess.SubprocessError, ValueError):
+            return ""
 
     def stop(self, why: str, wait: bool = False) -> bool:
         """Tells it to stop (`why`: stopped · idle · closed · quit · again · exited) and answers at once: its thread kills the preview and
@@ -182,7 +195,7 @@ class Play:
                     return self._failed(began, stop, NO_PAGE if tried else "did not open", ports=tried)
                 self._alive_at = time.monotonic()
                 self._set("playing", port=port, url=idea_shot.url_of(port, path))
-                self._emit(event_log.PLAY_STARTED, seconds=round(time.monotonic() - began, 1), ok=True, why="")
+                self._emit(event_log.PLAY_STARTED, seconds=round(time.monotonic() - began, 1), ok=True, why="", command=command, url=self.url)
                 stop.wait()
             self._remove()
             self._emit(event_log.PLAY_STOPPED, why=self._why or "stopped")
@@ -196,7 +209,8 @@ class Play:
         if stop.is_set():
             self._emit(event_log.PLAY_STOPPED, why=self._why or "stopped")
             return self._set("", url="", port=None)
-        self._emit(event_log.PLAY_STARTED, seconds=round(time.monotonic() - began, 1), ok=False, why=why)
+        self._emit(event_log.PLAY_STARTED, seconds=round(time.monotonic() - began, 1), ok=False, why=why, command=self.command, url="",
+                   tail="\n".join(self.tail)[-600:])                  # what the command printed, for whoever reads the day (spec 107 §2)
         self._set("failed", error=why, none=none, url="", port=None, ports=list(ports or []))
 
     def _git(self, *args: str) -> subprocess.CompletedProcess:

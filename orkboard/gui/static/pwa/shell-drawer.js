@@ -34,7 +34,7 @@ export function makeSettings(core, ctx, drawer, limits) {
     if (!got?.data) return;
     const bytes = Uint8Array.from(atob(got.data), (c) => c.charCodeAt(0));
     const url = URL.createObjectURL(new Blob([bytes], { type: "application/zip" }));
-    const a = h("a", { href: url, download: got.name || "orkline-logs.zip" });
+    const a = h("a", { href: url, download: got.name || `${PRODUCT.toLowerCase()}-logs.zip` });
     document.body.append(a);
     a.click();
     a.remove();

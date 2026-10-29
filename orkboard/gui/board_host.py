@@ -28,7 +28,7 @@ from orkboard.core import bus as b
 from orkboard.core import crashes, treasury, updates as core_updates, usage
 from orkboard.core.board_limits import BoardLimits
 from orkboard.core.sign_ins import SignInError, SignIns
-from orkboard.gui import board_cli
+from orkboard.gui import board_cli, command_log
 from orkboard.realm import analytics, board_map, call_log, day_log, event_log, halt, idea_target, tool_now
 from orkboard.sources import telemetry, window_rate
 
@@ -305,8 +305,16 @@ class Orkboard:
     # -- the host's thread and its bus ---------------------------------------------------------------------
 
     def toast(self, message: str, title: str = "", severity: str = "information", timeout: float | None = None,
-              kind: str = "") -> None:
+              kind: str = "", logged: bool = False) -> None:
+        """A toast for the page. A red one is written in the shown project's log (spec 107 §2.2), unless the project that raised it
+        already did (`logged`, gui/board_projects.py)."""
+        if severity == "error" and not logged and not self.demo:
+            command_log.error_shown(self.repo_root, title, message)
         self.bus.publish(b.TOAST, message=message, title=title, severity=severity, timeout=timeout, kind=kind)
+
+    def capture(self, e: BaseException, where: str, **kw: Any) -> None:
+        """An error the server caught (gui/server.py `capture`): this run's crash reporter writes its traceback to `~/.orkcraft/crashes/`."""
+        self.crashes.capture(e, where, **kw)
 
     def _event(self, event: b.Event) -> None:
         if event.topic == b.TOAST:
@@ -607,8 +615,9 @@ def run(repo_root: Path | None, browser: bool = False, port: int = 0, demo: bool
     """Orkboard on `repo_root` (None: the start screen), the projects open when it last closed opened again, until
     its window closes (`serve`: until the editor that started it goes away); `core.updates.RESTART` when it closed on
     an update it installed."""
-    from orkboard.gui import extension, folder_dialog, mac_app
+    from orkboard.gui import extension, folder_dialog, mac_app, server_log
     from orkboard.gui.server import Server
+    server_log.install(demo=demo)                   # its own log in ~/.orkcraft/logs, whichever way it was launched (spec 107 §2.4)
     host = Orkboard(repo_root, demo=demo, restore=True)
     host.opened()
     server = Server(host, port)

@@ -216,6 +216,14 @@ def task_pick(tier: str, target: str, role_model: str = "") -> tuple[str, str]:
     return (role_model or shifted), effort
 
 
+def ran_why(tier: str, ran_tier: str, target: str, size: str = "", role_model: str = "") -> str:
+    """Why a task ran on another tier than the one planned for it (spec 107 §2.3), for its `task_state` line: the seat's own model,
+    else the Target (and the party's size that gave it); "" when it ran on its own tier."""
+    if (tier or "warrior") == ran_tier:
+        return ""
+    return f"role model {role_model}" if role_model else f"target {target}" + (f" ({size} party)" if size else "")
+
+
 def tier_of(model: str) -> str:
     """The tier a model or tier counts as in an estimate (a model the tables do not know: warrior)."""
     if model in plans.tiers.TIERS:

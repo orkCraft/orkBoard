@@ -1,5 +1,5 @@
-// The tabs (docs/specs/98-the-table-and-the-hand.md §3.1, docs/specs/95-the-window-as-decided.md §2, decisions §167.6): the project's first — its crowned head and the project's name (*Party game*) —, then a tab a party in the Board's order, its leader's
-// head and the party's name; at the end **+** (*New party*) and **Stop all**; the AI tools' limits are the hand's mana (hand/mana.js, spec 104 B). Under 760 px the tabs are a row of heads, *Stop all* at the end,
+// The tabs (docs/specs/98-the-table-and-the-hand.md §3.1, docs/specs/95-the-window-as-decided.md §2, decisions §167.6): the project's first — its crowned head and the project's name (*Party game*), then **▾** (*Switch project*, spec 107 §8.2) —, then a tab a party in the Board's order, its leader's
+// head and the party's name (the head steps while one of its tasks runs: `data-working`, spec 107 §8.3); at the end **+ Party** (*New party*) and **Stop all**; the AI tools' limits are the hand's mana (hand/mana.js, spec 104 B). Under 760 px the tabs are a row of heads, *Stop all* at the end,
 // and the limits are in the Orkmaster's **…** as chips (pane.js) and in the hand as small potions. The tabs, the Board's lanes and the hand read the frame's one `--cols`, so a tab stands over its lane. A party's tab carries a dot when the picked goal's route has it.
 // The open tab is the person's: nothing here switches it. A name is also said on a long press (nothing only on hover: spec 94 §1.1).
 import { useRef } from "preact/hooks";
@@ -9,7 +9,7 @@ import { command, toast } from "../link.js";
 import { ORKMASTER, openTab, openOver, picked } from "../frame/state.js";
 import { currentProject } from "../shell/projects.js";
 import { levelOf, windowOf } from "../arena/limits.js";
-import { nameOf, routeParties, MARKED, markSrc, mapName } from "./data.js";
+import { nameOf, routeParties, MARKED, markSrc, mapName, laneOf } from "./data.js";
 import { openParties } from "./parties.js";
 
 const LONG_MS = 500;
@@ -23,9 +23,12 @@ function usePressName(name) {
   };
 }
 
-function Tab({ slug, on, name, head, dot = false, compact, onPick }) {
+/** A party has an ork at work: one of its goals has a task running or being tested (a task that asks or has failed is not at work). */
+export const isWorking = (g) => laneOf(g).some(({ tasks }) => tasks.some((t) => t.state === "running" || t.state === "testing"));
+
+function Tab({ slug, on, name, head, dot = false, working = false, switcher = false, compact, onPick }) {
   const press = usePressName(name);
-  return html`<button type="button" class=${cls("ork-tab table-tab", { "is-compact": compact })} role="tab" id=${`tab-${slug}`} data-tab=${slug} aria-selected=${String(on)} tabindex=${on ? 0 : -1}
+  return html`<button type="button" class=${cls("ork-tab table-tab", { "is-compact": compact, "has-switch": switcher })} role="tab" id=${`tab-${slug}`} data-tab=${slug} data-working=${working ? "" : undefined} aria-selected=${String(on)} tabindex=${on ? 0 : -1}
     aria-label=${name} title=${name} aria-controls="table-pane" onClick=${onPick} ...${press}>
     ${head ? html`<${Head} race=${head.race} tier=${head.tier} />` : null}
     <span class="table-tab__txt"><span class="table-tab__main">${name}</span></span>
@@ -55,11 +58,14 @@ export function Tabs({ parties, current, narrow, compact }) {
   };
   return html`<nav class="table-tabs" aria-label="Parties" data-compact=${String(compact)}>
     <div class="table-tabs__list" role="tablist" aria-label="Parties" onKeyDown=${keys}>
-      <${Tab} slug=${ORKMASTER} on=${current === ORKMASTER} name=${project} head=${{ race: "peon", tier: "crown" }} compact=${compact} onPick=${() => openTab(ORKMASTER)} />
-      ${parties.map((g) => html`<${Tab} key=${g.slug} slug=${g.slug} on=${current === g.slug} name=${nameOf(g)} head=${g.leader?.head} dot=${route.has(g.slug)} compact=${compact} onPick=${() => openTab(g.slug)} />`)}
+      <div class="table-tabcell" role="presentation">
+        <${Tab} slug=${ORKMASTER} on=${current === ORKMASTER} name=${project} head=${{ race: "peon", tier: "crown" }} switcher=${true} compact=${compact} onPick=${() => openTab(ORKMASTER)} />
+        <button type="button" class="ork-btn quiet table-switch" aria-label="Switch project" title="Switch project" onClick=${() => openOver("projects", {}, from, "Projects")}><${Icon} name="chevron-down" /></button>
+      </div>
+      ${parties.map((g) => html`<${Tab} key=${g.slug} slug=${g.slug} on=${current === g.slug} name=${nameOf(g)} head=${g.leader?.head} dot=${route.has(g.slug)} working=${isWorking(g)} compact=${compact} onPick=${() => openTab(g.slug)} />`)}
     </div>
     <div class="table-tabs__end">
-      <button type="button" class="ork-btn table-plus" aria-label="New party" title="New party" onClick=${() => openParties({}, from)}><${Icon} name="plus" /></button>
+      <button type="button" class="ork-btn table-plus" aria-label="New party" title="New party" onClick=${() => openParties({}, from)}><${Icon} name="plus" /><span class="table-plus__w">Party</span></button>
       <button type="button" class="ork-btn danger table-stop" title="Stop every ork, script and browser at once" onClick=${() => command("halt").catch(() => {})}>Stop all</button>
     </div>
   </nav>`;

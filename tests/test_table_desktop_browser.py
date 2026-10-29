@@ -297,6 +297,9 @@ def test_the_tabs_in_order_the_projects_first_then_plus_and_stop_all(table):
     assert "knight-elder" in tab(pg, "game").locator(".ork-race__head").get_attribute("src")                             # a party's tab wears its leader's head
     assert tab(pg, "tech").get_attribute("aria-label") == "Tech"                                                         # and its name, said also when only the head is drawn
     assert pg.get_by_role("button", name="New party").count() == 1 and pg.get_by_role("button", name="Stop all").count() == 1
+    plus = pg.locator(".table-tabs__end .table-plus")
+    assert " ".join(plus.inner_text().split()) == ("Party" if wide(w) else "") and "primary" not in plus.get_attribute("class")                # spec 107 §8.1: + Party, green is New goal's
+    assert pg.get_by_role("button", name="Switch project").count() == 1                                                  # the ▾ after the project's name, its own button
     assert pg.locator(".table-tabs__end .table-chip").count() == 0 and pg.locator(".table-tabs__end button").count() == 2                  # the tabs' end keeps + and Stop all: the limits are the hand's potions (spec 104 B)
     if not wide(w):
         assert tab(pg, "tech").locator(".table-tab__txt").is_hidden()                                                    # the tabs a row of heads
@@ -324,14 +327,16 @@ def test_a_tab_is_the_persons_the_open_one_is_kept_and_nothing_switches_it_under
     assert tab(pg, "orkmaster").get_attribute("aria-selected") == "true"
 
 
-def test_the_orkmasters_menu_has_the_projects_settings_and_files_over_the_pane(table):
+def test_the_orkmasters_menu_has_settings_and_files_and_the_projects_are_the_arrow_after_the_name(table):
+    """Spec 107 §8.2: *Switch project* left the Orkmaster's **…** for the **▾** after the project's name."""
     pg, host, w = table
     open_menu(pg)
     menu = pg.get_by_role("menu")
-    assert [i.inner_text().strip() for i in menu.get_by_role("menuitem").all()] == ["Switch project", "Settings", "Files"]
+    assert [i.inner_text().strip() for i in menu.get_by_role("menuitem").all()] == ["Settings", "Files"]
     if not wide(w):
         assert [c.inner_text().strip() for c in menu.locator(".table-chip").all()] == ["Claude 62% left", "Codex 18% left"]       # the limits' chips in the Orkmaster's …
-    menu.get_by_role("menuitem", name="Switch project").click()
+    pg.keyboard.press("Escape")
+    pg.get_by_role("button", name="Switch project").click()
     pg.locator('.table-over[data-kind="projects"]').wait_for(timeout=WAIT_MS)
     assert title(pg) == "Board · Projects" and pg.locator(".table-projects__one").count() == 3                          # the open projects, the recent ones
     assert pg.locator('[role="dialog"][aria-modal="true"]').count() == 0                                                 # in the pane, never a dialog
@@ -729,8 +734,8 @@ def test_open_on_a_task_card_opens_its_log_or_its_task_over_the_pane_and_back_li
     failed = pg.locator('[data-lkey="t:task:seat/s2"]')
     failed.click()
     pg.locator(".table-back .table-back__open").click()                                                                  # a failure: its lines
-    pg.locator('.table-over[data-kind="log"] .shell-log').wait_for(timeout=WAIT_MS)
-    assert title(pg) == "Board · Reset the round timer when a player rejoins" and "tests: 3 failed" in pg.locator(".shell-log").inner_text()
+    pg.locator('.table-over[data-kind="log"] .shell-logview').wait_for(timeout=WAIT_MS)
+    assert title(pg) == "Board · Reset the round timer when a player rejoins" and "tests: 3 failed" in pg.locator(".shell-logview").inner_text()
     assert pg.locator(".table-board").count() == 0 and pg.locator(".table-back").count() == 0                          # the map is under it, not drawn
     pg.locator(".table-title__back").click()
     pg.locator(".table-board").wait_for(timeout=WAIT_MS)
@@ -1071,8 +1076,7 @@ def test_ctrl_o_opens_a_project_in_the_pane_and_another_project_is_shown_from_it
     assert pg.locator(".shell-backdrop").count() == 0 and pg.locator("[aria-modal]").count() == 0                       # in the pane, not over the page
     pg.get_by_role("button", name="Cancel").click()
     pg.locator(".table-board").wait_for(timeout=WAIT_MS)
-    open_menu(pg)
-    pg.get_by_role("menuitem", name="Switch project").click()
+    pg.get_by_role("button", name="Switch project").click()
     pg.locator('.table-projects__one[data-path="/work/other"]').click()
     for _ in range(40):
         if ("projects.use", {"path": "/work/other"}) in host.log:
@@ -1116,7 +1120,7 @@ def test_every_press_is_44_by_44_on_a_touch_screen_and_nothing_is_said_only_on_h
     pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
     open_tab(pg, "tech")
     pg.locator('.table-seat[data-seat="grunt"]').wait_for(timeout=WAIT_MS)
-    for sel in (".table-tab", ".table-plus", ".table-stop", ".table-play", ".table-menu__btn", ".table-seat"):
+    for sel in (".table-tab", ".table-plus", ".table-stop", ".table-play", ".table-menu__btn", ".table-seat", ".table-switch"):
         for el in pg.locator(sel).all():
             box = el.bounding_box()
             assert box["width"] >= 43.5 and box["height"] >= 43.5, (sel, box)
