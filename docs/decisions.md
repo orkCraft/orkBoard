@@ -3522,3 +3522,33 @@ discard in the hand, spec 101 §4.4–§4.5, spec 96 §2.3's monochrome marks, a
    the narrow width it is the screen's width less the gutters, rising from the hand.
 5. Drawn in orkUI first (the potion and `--ork-mana`, §127.3), then here (spec 104).
 The owner's call.
+
+## 177. The default tool is the potion in the frame, and work goes on with the next when it runs dry; a goal is sent to main through a portal (29 October, the owner)
+
+Why: the owner: *mark the default harness's potion, and when the default runs out every harness moves on to the next, so
+the mark is seen to move*; and *make merging a portal: the cards are dropped into a portal that appears, at most two, main
+or dev and a person's own branch*. The fear of a person on a subscription is that the work stops when its limit does, and
+today it does: a failed tool only offers *Switch* (`tool_errors.report`). And the merge into main is the window's weightiest
+act, done by a link in the discard's view, the one act no card plays. So (this changes §160.5's *To main* in the discard's
+view, §175.2 and §176.2, and spec 98 §2.3's *Switch* as the only way on):
+1. **The default tool's potion is framed**, a hotbar's chosen slot, in the ink (a choice, not a signal). **The frame follows
+   the open tab**: on the project's tab the machine's main tool (`machine.main_tool`), on a party's tab that party's tool.
+   The potions' order left to right is the order work moves on in.
+2. **When the default tool runs dry** (at its reserve where it has one, Claude's), the work moves on to the next potion
+   that has room **between tasks, never inside one**; the frame slides to it and the Orkmaster says it in one line (*Claude
+   Code is out until Thu 18:00: the work goes on with Codex*). A party or a role set to its own tool on purpose (spec 49)
+   waits and says what it waits for instead of moving on. **Only between subscriptions** (`billing: "subscription"`).
+3. **When every subscription is dry**, the Orkmaster asks with a card in the hand under the first lane: *every
+   subscription is out until <the soonest reset>; go on with <the tool paid by its API> at about <its cost> a task, or
+   wait*, its answers **Go on, paid** and **Wait for <the reset>**; nothing is spent by a tool paid per token without that
+   yes, and the yes holds until the next reset, said on the card.
+4. **A goal is sent to main through a portal**: pressing (or starting to drag) a goal in the discard that is ready for main
+   opens the portal on the table's right, above the discard; a goal dropped or pressed into it is merged into main. The
+   portal says before it acts what goes (*Into main: Lobby, and Reconnect it stands on*), and is **sealed** with its reason
+   while the gate holds the goal (a check red, a conflict). Pressing works as dragging does, and the keyboard too. The first
+   time, the portal shimmers once with the line *Drag a goal done into the portal to send it to main*.
+5. **One portal for now, main's.** A second, a person's own branch, comes with more people on one project.
+6. A goal goes to main on its own: its commits from dev, with the goals it stands on that main lacks (said on the portal),
+   so the per-goal merge (spec 102's *To main merges dev whole*) is built with it.
+7. Drawn first (`docs/mockups/portals/`), built after the owner's yes.
+The owner's call.
