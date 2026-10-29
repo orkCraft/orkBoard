@@ -5,7 +5,7 @@ after spec 94 holds on the owner's phone. **Builds:** Claude · **Review:** full
 share no file but the narrow width's signal, which A reads and B does not change), **C at once with them** (the relay: no
 file of Orkboard's), **then D** (the native frame, on A–C), **then E and F at once** (the widgets; the host's words).
 
-**Changed by decisions §178** (the owner's answers to `docs/mockups/phone/` v1): spec 94 B–E are built first and the phone
+**Changed by decisions §178 and §179** (the owner's answers to `docs/mockups/phone/` v1): spec 94 B–E are built first and the phone
 becomes the page (§178.1); upright the potions stand in one row at the top, left of *The Board*, the frame on the tool the
 work goes to (§1.2.5); the Orkmaster's line at the screen's top (§1.6); *Go on paid?* is a card of the hand (§1.7, §5.4); one
 stack (§1.1); the Board on a phone only on its side, with the discard and the portal (§1.4, §2.1); the portal merges from the
@@ -49,8 +49,9 @@ runs (§6); the stores' listing and its pictures (§150.5, the marketing's).
       pixel face. No `why`, no line: never a filler.
    3. **The leader's pick**: *Recommended: <pick>* when the card has one.
    4. **What waits on it**: *<member> waits for your answer* when the card `blocks`; nothing when it does not. No number.
-   5. **The potions** (§178.2): one row at the context's top, left of *The Board*, orkUI's `.ork-potion.small` under each
-      tool's mark with its share under it (`hand/mana.js`, the row's own layout at the narrow width under `pointer: coarse`);
+   5. **The tools** (§178.2, §179.1): one row at the top, left of *The Board* and no taller than it: each tool its mark with
+      its share under it (*62%*, `levelOf`'s colours), **no bottle**, a 44 px target (`hand/mana.js`, the row's own layout
+      at the narrow width under `pointer: coarse`);
       the frame on `town.mana.now`, else the Main tool (§178.3), sliding as on the desktop; the paid slot after them while a
       yes holds. A press opens what used it, as on the desktop. With the hand empty the row stays, *The Board* beside it.
    A press on the context opens the goal's way over the pane (§142); **←** comes back to the same card.
@@ -69,7 +70,9 @@ runs (§6); the stores' listing and its pictures (§150.5, the marketing's).
 ## 2. On its side, the table without the hand (B; §174.3)
 1. **A low window under `pointer: coarse`** (under 500 CSS px of height, 760 or more of width): the table compact as §150.2
    says, **without the hand**: no fan, no blank card; the table takes the whole height. **The discard and the portal stay**
-   on the table (§178.7; spec 104 C, spec 105 F): the pile at the last column's foot, the portal over it.
+   on the table (§178.7; spec 104 C, spec 105 F): the pile at the last column's foot, the portal over it. **The foot is the
+   goals' legend** (§179.2): each goal on the table its element, its type's sign and its short name, in the lanes' order, one
+   row (sideways scroll if it must), 44 px targets; a press picks the goal and lights its cards.
 2. **A stop's sign on a head** (✗ or !, spec 53 §1.2) is a press: it opens that stop's card over the table, answered there as
    in the hand; the card closes and the table stays. Nothing else of the hand is reachable on its side.
 3. **A low window with a fine pointer** (a laptop's split screen) keeps §150.2's fan, unchanged.

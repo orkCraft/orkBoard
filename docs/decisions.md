@@ -3587,3 +3587,18 @@ spec 94 §3.2 for a phone, and makes spec 105 As built C's *the phone has no car
 8. **Merging into main from the phone is allowed** (the portal, `ideas.to_main`; spec 37 §8's *no git from the phone* keeps
    the Files pane's git and the terminal off the phone, not the Board's own merge).
 The owner's call.
+
+## 179. Upright the tools are their marks and shares, as tall as *The Board*; on its side the Board's foot is the goals' legend (29 October, the owner)
+
+Why: the owner on `docs/mockups/phone/` v3: the potions' row should be no taller than *The Board*, the bottles simplified or
+gone; and on its side, *since there are no cards in the hand at the bottom now, show the goals' legend: a sign, what goal it
+is*. A phone on its side shows the goals as tokens a lane wide (§143.4), whose element and sign say nothing without a name.
+So (this changes §178.2 and spec 103 §1.2.5 and §2.1; the desktop's potions, §176, are unchanged):
+1. **Upright, each AI tool is its mark with its share under it** (*62%*, the warning's and the danger's colour as it runs
+   low, `levelOf`), no bottle, in one row at the top left of *The Board*, each a 44 px target, the row no taller than *The
+   Board*; the default framed (§177.1, §178.3), its words as the potion's.
+2. **On its side the table's foot is the goals' legend**, where the hand was: each goal on the table its element, its type's
+   sign and its short name, in the lanes' order, one row that scrolls sideways if it must; a press picks the goal (§145.5) and
+   lights its cards.
+3. Drawn in `docs/mockups/phone/` v4.
+The owner's call.
