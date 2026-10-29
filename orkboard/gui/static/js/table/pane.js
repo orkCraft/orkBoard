@@ -11,6 +11,8 @@ import { KINDS, faceOf } from "../frame/kinds.js";
 import { mapData, leaving } from "../shell/store.js";
 import { PHASES, leadsSystem, mapName, paneTitle, phaseOf } from "./data.js";
 import { BoardMap } from "./boardmap.js";
+import { mapOf } from "./maps.js";
+import "./mapparts.js";                                     // the parties' maps (spec 102)
 import { Header } from "./header.js";
 import { SystemPane, PartBack, LinkBack } from "./syspane.js";
 import { Lifted, OwnBack, TaskBack, litKey, mineKey } from "./card.js";
@@ -102,7 +104,7 @@ export function Pane({ parties, tab, narrow }) {
           ${!parties.length && html`<div class="table-empty"><p>No parties yet</p>
             <p class="table-over__muted">Make a party, then write it a goal in plain words. Its orks do the work; you look at it before it goes in.</p>
             <p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`}`
-        : g ? html`<${Header} key=${g.slug} g=${g} from=${from} />${leadsSystem(g) ? html`<${SystemPane} key=${g.slug} g=${g} />` : null}` : null}
+        : g ? html`<${Header} key=${g.slug} g=${g} from=${from} />${leadsSystem(g) ? html`<${SystemPane} key=${g.slug} g=${g} />` : mapOf(g) ? html`<${mapOf(g)} key=${g.slug} g=${g} narrow=${narrow} />` : null}` : null}
       ${shown && html`<${Lifted} host=${body} name=${shown[0]} narrow=${narrow}>${shown[1]}</${Lifted}>`}
     </div>
   </section>`;

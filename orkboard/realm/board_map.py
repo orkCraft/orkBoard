@@ -412,6 +412,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
         verdict = goal_verdict.read(state_dir, g["slug"])
         goals.append({"slug": g["slug"], "title": g["title"], "short": g["short"], "priority": g["priority"], "state": gst["state"],
                       "craft": g.get("craft") or roles.DEFAULT_CRAFT, "race": roles.RACES.get(g.get("craft"), "peon"), "team": team,
+                      "party_craft": goal_team.craft_of(root, g["slug"]),           # the party's craft (spec 99 §1): which map its tab shows (spec 102 §4)
                       "leader": {"slug": lead["slug"], "name": lead["name"], "head": roles.head(goal_team.seat_role(lead, tiers), target)} if lead else None,
                       "size": g.get("size") or "",                                  # the party's size (spec 75 §3): lean · standard · full, "" with none
                       "tool": g.get("tool") or "",                                  # the party's AI tool (spec 81): a harnesses id, "" the Main tool
