@@ -3666,3 +3666,36 @@ decided), and every question asked is a sign of what the table does not show by 
    that repeats is work for the table, not for the answer. If few are asked and none become goals, the line goes.
 8. **The desktop only for now**; the phone is asked again with §180.1.
 The owner's call.
+
+## 182. A gate that cannot run is not red; the logs say the whole day; twelve looks of the owner's day (29 October, the owner)
+
+Why: the owner, after a day on a Node game, *errors all the time, I could not take one card to its end*, with the day's
+logs and twelve notes on the window. The logs: every result came red from `sh: vitest: command not found` (a folder never
+installed, a task that may not install), and was sent back five times with the line the face wrote. Spec 107 builds it.
+1. **A gate that could not run is not red** (spec 107 A): a command not found, a package not installed, says so in words;
+   it is never sent to the session (it cannot install), and Review offers **Install and test again** (Orkboard installs
+   in the main checkout by the folder's lock, on the person's press) or **Test again**. A task that changed only documents
+   runs no derived gate and waits for a look. A send back that changed nothing and failed the same way says so, and Fix
+   opens empty.
+2. **The logs say the whole day** (B): what was refused and what was shown red are events; the crashes, the server's own
+   log, the project's gate and installs and the page's state go into the zip; a lower tier says why.
+3. **A goal is dropped from its card** (D): **…** on a goal's cards, *Drop this goal…*, asked in place.
+4. **A goal sent lies in the Orkmaster's lane at once** (E); **New goal is never under another card** (M 2).
+5. **The System fits the pane** (F), down to half its size, then it scrolls with its cues.
+6. **A log one reads** (C): sections, the prompts folded, its end first, the line of what happened above it.
+7. **What works moves** (G): spec 49 §11's *motion says what changed* gains *and what is alive*: an ork at work moves, the
+   time it has worked ticks; nothing that waits moves.
+8. **+ Party** says its word (H); not green: green is New goal's (§180.4).
+9. **The game's loops** (N): loops in loops (core, session, meta), the currencies with what gives and takes them, the
+   feeling of each step (MDA's eight) and its intensity, why a player comes back, and what the loop says by code.
+10. **The project's name has a ▾** (H) that opens the projects; *Switch project* leaves the Orkmaster's **…** (the phone
+    keeps it).
+11. **Play** (I): its sheet, lost with `assets.css`, is back; the start screen shows the product's logo when the project has
+    one, coming up in steps with a sweep and two blinks, a console's start; full screen.
+12. **Save logs is a button by the mana** (J): orkUI's bug under its magnifier, with an optional line of what went wrong.
+13. **@ in New goal** (K) offers the parties and the project's files.
+14. **The crowned ork is Orkboard's mark** (L, §91): favicon, the phone's icons, the Dock, VS Code, onboarding; Orkline
+    keeps its own.
+15. **New goal's card is worth looking at** (M): a double green frame with pixel corners and a fine hatch, a sweep on hover,
+    in orkUI's pieces; offered to orkUI as `.ork-deck.is-main`.
+The owner's call.
