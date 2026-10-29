@@ -3429,5 +3429,6 @@ and §171.2 precise):
    quill, the stall; the knights the die, the castle, the crown, the heart, the fork; the undead the chest.
 2. **Else it draws that race's tool** (the drum, the bow, the pick, the bell, the map, the hourglass), its variant by the task's kind,
    so one kind is one variant.
+3. **A drawing for every kind in every race's way** (about 180) **is for later**, the owner's: until then 1 and 2 hold.
 The owner's call.
 
