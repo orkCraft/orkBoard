@@ -344,7 +344,7 @@ class Orkboard:
         _quota, _level, show_gold = treasury.quota(self.machine, self.limits())
         board = self.ideas.snapshot() if self.ideas is not None else {
             "focus": "board", "ideas_rev": 0, "needs_you": 0, "idea_states": [], "review_count": 0,
-            "review_results": [], "limits": [], "mana": self._mana(), "reserve": {"share": idea_target.reserve({}, False), "night": False}}
+            "review_results": [], "limits": [], "mana": self._mana(), "ask": None, "reserve": {"share": idea_target.reserve({}, False), "night": False}}
         try:
             ops_needs = self.ops.count()
         except Exception:                      # Operations never breaks the snapshot
@@ -361,7 +361,7 @@ class Orkboard:
                 "usage_ask": self.usage.should_ask()}
 
     # What the page reads of the snapshot and a phone has no use for: the computer's own (spec 94 §2.3).
-    COMPUTER_ONLY = ("onboarding", "sign_in", "repo", "usage_ask", "update_policy")
+    COMPUTER_ONLY = ("onboarding", "sign_in", "repo", "usage_ask", "update_policy", "ask")      # "ask": the quick question is the desktop's for now (spec 106, decisions §181.8)
 
     def phone_snapshot(self) -> dict[str, Any]:
         """The snapshot as a phone gets it (spec 94 §2.3): the page's own (`snapshot()`: the Board's counts, the limits, the mana

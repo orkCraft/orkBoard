@@ -81,7 +81,8 @@ def test_the_snapshot_holds_only_what_the_shell_reads(host):
                          "update_policy", "version", "usage_ask",          # Settings → Updates, the first screen's ask
                          "canvases_new", "canvases_rev",                   # spec 78 §3: the Canvases row
                          "sign_in",                                        # spec 45: a tool's own sign-in
-                         "mana"}                                           # spec 105 §2.5: the tool now, beside the limits
+                         "mana",                                           # spec 105 §2.5: the tool now, beside the limits
+                         "ask"}                                            # spec 106 §2: the quick question kept, None when there is none
     assert set(snap["reserve"]) == {"share", "night"}                                  # spec 49 §2.3
     assert snap["rate"] is None                                                      # no window learnt yet (decisions §82)
     assert snap["projects"] == host.command("projects.list")                         # the switcher (spec 37 §8)
