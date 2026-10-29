@@ -1,0 +1,146 @@
+/* The maps of spec 102 part E (docs/specs/102-the-other-maps-and-picking-on-them.md §5.3–§5.6; decisions §167.1, §171.1; mockup docs/mockups/s3/ states 3–6): the loop, Art's assets, dev and main, the way in. Layout only: every colour, face,
+   corner and move is orkUI's (its tokens and classes: .ork-card, .ork-leans, .ork-frame, .ork-gem, .ork-label, .ork-chev, .ork-sign, .ork-elem, .ork-btn, .ork-field), the sizes its spacing steps. A map's card is §167.1's face at the
+   maps' size: the goal's element bare at the left of its header (none when no goal changed it), its name in the body face, a low window with its picture or its two-tone big sign, a label row with the gem at its right where the data
+   says. Under 760 px the loop, the lanes and the steps lie in one or two columns; nothing scrolls sideways. */
+
+.mp { position: relative; flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; }
+.mp-scroll { flex: 1; min-height: 0; min-width: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: contain; padding: var(--ork-5) var(--ork-6); }
+.mp-grow { flex: 1; min-width: 0; }
+.mp-cap { margin: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.mp-code { font-family: var(--ork-font-code); font-size: 12px; line-height: 16px; overflow-wrap: anywhere; }
+.mp-err { margin: 0; color: var(--ork-danger); font: var(--ork-type-caption); }
+.mp-quiet { margin: 0; color: var(--ork-ink-muted); font: var(--ork-type-body); }
+.mp-by { display: flex; align-items: center; gap: var(--ork-2); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.mp-acts { display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-4); margin-top: auto; }
+.mp-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ork-4); align-items: start; }
+.mp-more { color: var(--ork-ink-faint); font: var(--ork-type-caption); }
+button.mp-more { align-self: flex-start; padding: 0; min-height: 28px; }
+
+/* -- a card: header, window, label row, foot ------------------------------------------------------------------------------------- */
+.mp-card.ork-card { position: relative; display: flex; flex-direction: column; gap: var(--ork-2); box-sizing: border-box; width: 100%; padding: var(--ork-4); flex: none; text-align: left; cursor: pointer; }
+.mp-card__head { display: flex; align-items: flex-start; gap: var(--ork-3); min-height: 20px; margin: 0; }
+.mp-card__head .ork-elem { margin-top: 3px; }
+.mp-card__nm { appearance: none; background: none; border: 0; padding: 0; margin: 0; color: inherit; cursor: pointer; flex: 1; min-width: 0; text-align: left; font: var(--ork-type-body); font-weight: 600; text-transform: none; letter-spacing: 0;
+  overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
+.mp-card__nm.is-code { font-family: var(--ork-font-code); font-size: 12px; line-height: 16px; padding-top: 2px; }
+.mp-win { position: relative; display: flex; align-items: center; justify-content: center; gap: var(--ork-4); box-sizing: border-box; height: 44px; flex: none; overflow: hidden;
+  border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-card); }
+.mp-win.is-tall { height: 72px; }
+.mp-win.is-pic { padding: var(--ork-2); }
+.mp-win .ork-sign.big { color: var(--ork-ink-muted); opacity: 0.85; }
+.mp-win.is-meadow .ork-sign.big { color: var(--ork-elem-meadow); opacity: 0.75; }
+.mp-win.is-ice .ork-sign.big { color: var(--ork-elem-ice); opacity: 0.75; }
+.mp-win.is-dust .ork-sign.big { color: var(--ork-elem-dust); opacity: 0.75; }
+.mp-win.is-void .ork-sign.big { color: var(--ork-elem-void); opacity: 0.75; }
+.mp-win.is-lava .ork-sign.big { color: var(--ork-elem-lava); opacity: 0.75; }
+.mp-pic { display: block; max-width: 100%; max-height: 100%; object-fit: contain; }
+.mp-pic.is-pixel { image-rendering: pixelated; }
+video.mp-pic { position: absolute; left: 0; top: 0; width: 100%; height: 100%; max-width: none; max-height: none; object-fit: cover; opacity: 0.55; }
+.mp-play { position: relative; z-index: 1; height: 28px; min-width: 28px; padding: 0 var(--ork-3); }
+.mp-play.is-on { background: var(--ork-ink); color: var(--ork-on-ink); }
+.mp-card__row { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-3); min-height: 22px; min-width: 0; margin-top: auto; }
+.mp-card__l { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
+.mp-card__l.is-code { text-transform: none; letter-spacing: 0; font-family: var(--ork-font-code); font-weight: 400; font-size: 12px; }
+.mp-card__r { display: flex; align-items: center; gap: var(--ork-2); flex: none; }
+.mp-card__foot { margin: 0; min-height: 32px; color: var(--ork-ink-muted); font: var(--ork-type-caption); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+.mp-card__foot.is-three { -webkit-line-clamp: 3; line-clamp: 3; min-height: 0; }
+.mp-card.is-ghost { border-style: dashed; border-color: var(--ork-edge); background: none; color: var(--ork-ink-muted); }
+.mp-card.is-ghost .mp-win { background: none; border-style: dashed; }
+.mp-card.is-lit { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); }
+.mp-tick { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex: none; border: var(--ork-line) solid var(--ork-edge); }
+.mp-tick .ork-sign { color: var(--ork-success); }
+.mp-tick.is-off .ork-sign { visibility: hidden; }
+
+/* -- the loop: a ring, or two a line --------------------------------------------------------------------------------------------- */
+.mp-ring-host { min-width: 0; }
+.mp-ring { position: relative; width: 100%; }
+.mp-ring__line { position: absolute; left: 0; top: 0; pointer-events: none; }
+.mp-ring__line ellipse { fill: none; stroke: var(--ork-frame); stroke-width: 2; stroke-dasharray: 8 6; }
+.mp-ring__chev { position: absolute; margin: 0; transform: translate(-50%, -50%); color: var(--ork-ink); }
+.mp-ring__mid { position: absolute; display: flex; flex-direction: column; align-items: center; gap: var(--ork-3); transform: translate(-50%, -50%); text-align: center; color: var(--ork-ink-muted); }
+.mp-slot { position: absolute; width: 256px; transform: translate(-50%, -50%); }
+.mp-loop .mp-win { height: 36px; }
+.mp-propose { display: flex; flex-direction: column; gap: var(--ork-4); max-width: 560px; }
+
+/* -- Art: the kinds as lanes ----------------------------------------------------------------------------------------------------- */
+.mp-lanes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--ork-6) 0; align-items: start; }
+.mp-lane { display: flex; flex-direction: column; gap: var(--ork-4); min-width: 0; padding: 0 var(--ork-4); border-left: var(--ork-line) solid var(--ork-frame); }
+.mp-lane:nth-child(4n + 1) { padding-left: 0; border-left: 0; }
+.mp-lane__head { display: flex; flex-direction: column; gap: var(--ork-1); min-height: 38px; }
+.mp-lane__cards { display: flex; flex-direction: column; gap: var(--ork-4); }
+.mp-lane__cards .mp-card.ork-card { max-width: 224px; }
+
+/* -- a card lifted: over the card where it lies ------------------------------------------------------------------------------------ */
+.mp-lift { display: contents; }
+.mp-lift.is-wide > .table-back { width: min(432px, 100%); }
+.mp-back__top { display: flex; align-items: flex-start; gap: var(--ork-3); }
+.mp-back__top .ork-elem { margin-top: 4px; }
+.mp-back__nm { margin: 0; min-width: 0; font: var(--ork-type-body); font-weight: 600; font-size: 16px; line-height: 22px; overflow-wrap: anywhere; }
+.mp-back__nm.is-code { font-family: var(--ork-font-code); font-size: 14px; }
+.mp-back__line { margin: 0; font: var(--ork-type-body); overflow-wrap: anywhere; }
+.mp-lift > .table-back > * { flex: none; }
+.mp-back__body { display: grid; grid-template-columns: 176px minmax(0, 1fr); gap: var(--ork-4); }
+.mp-back__body.is-media { grid-template-columns: minmax(0, 1fr); }
+.mp-back__facts { display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; }
+.mp-big { box-sizing: border-box; width: 176px; height: 176px; display: flex; align-items: center; justify-content: center; padding: var(--ork-3); border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-card); }
+.mp-big .mp-pic { width: 100%; height: 100%; }
+.is-media > .mp-big { width: 100%; height: auto; min-height: 96px; }
+.mp-sound { display: flex; align-items: center; gap: var(--ork-4); width: 100%; min-width: 0; }
+.mp-sound .ork-sign { color: var(--ork-ink-muted); }
+.mp-media { display: block; width: 100%; min-width: 0; max-height: 240px; }
+.mp-sec { display: flex; flex-direction: column; gap: var(--ork-1); font: var(--ork-type-caption); min-width: 0; }
+.mp-list { display: flex; flex-direction: column; gap: var(--ork-1); margin: 0; padding: 0; list-style: none; }
+.mp-list li { display: flex; align-items: center; gap: var(--ork-2); min-width: 0; }
+.mp-sec button.ork-btn.quiet, button.ork-btn.mp-file { height: auto; min-height: 20px; padding: 0; justify-content: flex-start; text-align: left; font: var(--ork-type-caption); font-family: var(--ork-font-code); font-size: 12px;
+  text-transform: none; white-space: normal; overflow-wrap: anywhere; }
+@media (pointer: coarse) { .mp-sec button.ork-btn.quiet, button.ork-btn.mp-file, button.mp-more { min-height: var(--ork-tap); } }
+.mp-form { display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; }
+.mp-form textarea.ork-field { min-height: calc(var(--ork-control) * 2); }
+.mp-variants { display: flex; flex-wrap: wrap; gap: var(--ork-4); }
+.mp-variant.ork-card { display: flex; flex-direction: column; gap: var(--ork-2); box-sizing: border-box; width: 88px; margin: 0; padding: var(--ork-2); }
+.mp-variant .mp-win { height: 64px; }
+.mp-variant .mp-cap { padding: 0 var(--ork-1); overflow-wrap: anywhere; }
+
+/* -- Release: dev against main ----------------------------------------------------------------------------------------------------- */
+.mp-dev { display: flex; flex-direction: column; gap: var(--ork-5); max-width: 940px; min-height: 100%; }
+.mp-dev__head { display: flex; align-items: baseline; flex-wrap: wrap; gap: var(--ork-4); }
+.mp-goals { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--ork-5); }
+.mp-goal.ork-card { width: 204px; }
+.mp-foot { margin-top: auto; display: flex; flex-direction: column; gap: var(--ork-6); }
+.mp-tomain { display: flex; flex-direction: column; gap: var(--ork-3); }
+.mp-tomain .ork-label .ork-sign { margin-right: var(--ork-2); }
+.mp-tomain__box { display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-4) var(--ork-6); padding: var(--ork-4) var(--ork-5); }
+.mp-tomain__go { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ork-2); min-width: 0; max-width: 100%; }
+.mp-checks { display: flex; flex-wrap: wrap; gap: var(--ork-2) var(--ork-6); margin: 0; padding: 0; list-style: none; min-width: 0; font: var(--ork-type-caption); }
+.mp-checks li { display: flex; align-items: center; gap: var(--ork-2); }
+.mp-ok { color: var(--ork-success); }
+.mp-bad { color: var(--ork-danger); }
+.mp-since { display: flex; flex-direction: column; gap: var(--ork-2); color: var(--ork-ink-faint); }
+.mp-since .ork-label, .mp-since .mp-cap { color: var(--ork-ink-faint); }
+
+/* -- Marketing: the way in as four steps -------------------------------------------------------------------------------------------- */
+.mp-way { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--ork-8); align-items: start; }
+.mp-step { display: flex; flex-direction: column; gap: var(--ork-4); min-width: 0; }
+.mp-step__head { display: flex; align-items: center; gap: var(--ork-3); min-height: 20px; }
+.mp-step__chev { margin: 0; color: var(--ork-ink-muted); }
+.mp-nothing { display: flex; flex-direction: column; justify-content: center; gap: var(--ork-3); box-sizing: border-box; min-height: 140px; padding: var(--ork-5); border: var(--ork-line) dashed var(--ork-edge); color: var(--ork-ink-muted); font: var(--ork-type-body); }
+.mp-nothing p { margin: 0; }
+.mp-nothing .mp-code { overflow-wrap: anywhere; }
+
+/* -- the narrow width: one or two columns, cards a little closer ----------------------------------------------------------------------- */
+@media (max-width: 759px) {
+  .mp-scroll { padding: var(--ork-4); }
+  .mp-card.ork-card { padding: var(--ork-3); }
+  .mp-lanes { grid-template-columns: minmax(0, 1fr); gap: var(--ork-5); }
+  .mp-lane, .mp-lane:nth-child(4n + 1) { padding: 0; border-left: 0; }
+  .mp-lane__cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: var(--ork-4); }
+  .mp-lane__cards .mp-card.ork-card { max-width: none; }
+  .mp-goals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ork-4); }
+  .mp-goal.ork-card { width: 100%; }
+  .mp-way { grid-template-columns: minmax(0, 1fr); gap: var(--ork-5); }
+  .mp-step__chev { display: none; }
+  .mp-nothing { min-height: 72px; padding: var(--ork-4); }
+  .mp-tomain__box { align-items: stretch; flex-direction: column; }
+  .mp-back__body { grid-template-columns: minmax(0, 1fr); }
+  .mp-big { width: 100%; height: auto; min-height: 176px; }
+}
