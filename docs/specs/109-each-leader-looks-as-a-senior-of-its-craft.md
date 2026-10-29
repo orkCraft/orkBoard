@@ -26,7 +26,7 @@ aspects, each with questions and signals. That frame is what this spec gives eac
 | **Product · Tree** | Torres' **opportunity solution tree**: an outcome, jobs (JTBD's sentence), the goals serving them, experiments; hints: an unserved job, pains piling | **OST** (outcome → opportunities → solutions → assumption tests); **JTBD**; **RICE/ICE** prioritisation; assumption mapping (desirable, viable, feasible, usable); North Star and its input metrics | an outcome that is no number passes; bets built with no test pass; goals in line that serve no job pass | aspects *Outcome, Opportunities, Evidence, Focus*; hints `vague_outcome` (the outcome holds no number), `no_evidence` (a job served by two goals or more and no experiment), `off_tree` (goals in line of the project that serve no job) | a RICE score per goal (asks the person for numbers we do not have; the leader weighs in words in Talk, spec 108 §4) |
 | **Game design · Loop** | core, session, meta loops; each step's feeling (MDA's eight) and intensity; currencies; hooks D1, D7, D30; findings: no source, piles up, rewards nothing, unfed, flat | **MDA** and LeBlanc's eight kinds of fun; **core/session/meta loops**; **economy as sources and sinks** (Machinations); **flow** (Csikszentmihalyi: challenge rising with rests); retention hooks D1/D7/D30; design pillars | spikes in intensity pass; a missing first-day hook passes; a step resting on no file passes | aspects *Core loop, Economy, Pacing and flow, Retention, Grounded*; the findings by kind; hints `spike` (two neighbouring steps three or more apart), `no_hook` (no D1 hook), `unground` (a step that rests on no file) | player-type models (Bartle, Quantic Foundry: they need a player survey); design pillars as a record (the loop's line says the aim) |
 | **Art · Assets** | lanes by kind, variants under the pick; no hint | an **art bible** (style, palette, a grid of sizes); the **asset pipeline** (names, folders, used or not); a **budget** (size per file and per kind); audio loudness (LUFS) | nothing by code at all | aspects *Style, Pipeline, Budget, Sound*; hints `mixed_sizes` (a folder of pictures with four sizes or more), `naming` (a name with a space or capitals among lower-case names), `heavy` (a picture or sound of 1 MB or more), `unused` (an asset no source file names) | loudness by code (needs decoding); palette extraction (needs pixels: Design's pictures are read by the model) |
-| **Release · Dev and main** | goals in dev not in main, ticked; *To main*; *Since <version>*; no hint | **DORA's four keys** (deployment frequency, lead time for changes, change failure rate, time to restore); small batches; a **release-readiness** checklist (go/no-go); **semantic versioning**; *Keep a Changelog* | nothing by code at all | aspects *Batch size, Lead time, Readiness, Change failure*; hints `big_batch` (eight goals or sixty files or more wait), `stale` (a goal waiting seven days or more), `unticked` (a goal left out), `no_changelog` (dev holds no changelog), `reverts` (reverts in dev since main) | time to restore (needs incidents we do not record; Run's later map) |
+| **Release · Dev and main** | goals in dev not in main, ticked; *To main*; *Since <version>*; no hint | **DORA's four keys** (deployment frequency, lead time for changes, change failure rate, time to restore); small batches; a **release-readiness** checklist (go/no-go); **semantic versioning**; *Keep a Changelog* | nothing by code at all | aspects *Batch size, Lead time, Readiness, Change failure*; hints `big_batch` (eight goals or sixty files or more wait), `stale` (a goal waiting seven days or more), `no_changelog` (dev holds no changelog), `reverts` (reverts in dev since main) | time to restore (needs incidents we do not record; Run's later map) |
 | **Marketing · The way in** | channels → the store or the site → the install → the first session; no hint | **AARRR** (acquisition, activation, retention, referral, revenue); **ASO** (App Store title 30 characters, Google Play short description 80, screenshots); **positioning** (Dunford: alternatives, what is unique, value, who, the category); the Bullseye's channels | the way stops at the first session: retention, referral and revenue are never asked; nothing by code | aspects *Acquisition, Store page, Activation, Retention, Referral, Revenue* (AARRR with ASO in its store step); hints `no_channel`, `aso_title`, `aso_short`, `no_shots`, `no_onboarding`, `no_return` (no notification or push in the code), `no_share`, `no_revenue` (no purchase or payment library) | positioning as a record (a later map: it is the person's words, not the code's); the funnel's numbers (no analytics are read) |
 | **Run, LiveOps** | no map | **Google SRE**: SLOs and error budgets, the four golden signals (latency, traffic, errors, saturation), runbooks, on-call; LiveOps: an events calendar, KPIs (DAU, retention, ARPDAU), remote config | no map, so no look | their rubric judges in Talk (§2.4) | the map of services and their SLOs, the events calendar: a later spec (§5) |
 
@@ -84,7 +84,7 @@ lens_rubrics.scorecard(craft, rec)               # [{id, name, ask, state, n, hi
 - **release** · *DORA · readiness · semver* · framework: *DORA's four keys (how often, how fast, how often it fails, how fast
   it recovers), small batches, a release-readiness checklist and semantic versioning* — `batch` *Batch size* (Is what waits
   for main small enough to ship and to take back?; `big_batch`) · `lead_time` *Lead time* (How long has done work waited for
-  main?; `stale`) · `readiness` *Readiness* (Is each goal ticked, the changelog written, the version said?; `unticked`,
+  main?; `stale`) · `readiness` *Readiness* (Is the changelog written and the version said?;
   `no_changelog`) · `failure` *Change failure* (How often must a change be reverted or fixed again?; `reverts`).
 - **marketing** · *AARRR · ASO · positioning* · framework: *AARRR (acquisition, activation, retention, referral, revenue),
   app store optimisation, and April Dunford's positioning* — `acquisition` *Acquisition* (Where do people first hear of
@@ -166,8 +166,7 @@ are a line in plain English for a model, as today's.
   `UNUSED_NAMES` (200) names asked, the project's `code_map` source kinds and `.json`, `.html`, `.css`).
 - **Release** (`map_signals_crafts.release(state_dir, root, pages)`, from `release_map.read`): `big_batch` (`on` ""):
   `BATCH_GOALS` (8) goals or more, or `BATCH_FILES` (60) files or more, wait for main; `stale`: a goal whose commit is
-  `STALE_DAYS` (7) days old or more (its commit's time, `git log -1 --format=%ct`); `unticked`: a goal not ticked; 
-  `no_changelog` (`on` ""): dev holds no `CHANGELOG*`, `CHANGES*`, `HISTORY*` or `NEWS*` at its top while goals wait;
+  `STALE_DAYS` (7) days old or more (its commit's time, `git log -1 --format=%ct`); `no_changelog` (`on` ""): dev holds no `CHANGELOG*`, `CHANGES*`, `HISTORY*` or `NEWS*` at its top while goals wait;
   `reverts` (`on` ""): commits in dev and not in main whose subject begins `Revert` (*2 changes waiting for main were
   reverts: …*).
 - **Marketing** (`map_signals_crafts.marketing(state_dir, root, ref)`, from `way_map.read` and the tree's names; files'
@@ -222,3 +221,19 @@ a vague outcome, a job with two goals and no experiment, a spike, no D1, an ungr
 unused asset, a stale goal, a revert, no changelog, a long store title, no revenue library), and none where it does not
 hold. C: the row at both widths in each state, a press stepping through an aspect's cards, the back naming the aspect, no
 row for a record without `rubric`, no sideways scroll.
+
+## As built
+
+- **A** (c05ca3a): `realm/lens_rubrics.py` (the nine crafts' rubrics, `aspect_of`, `prompt_lines`, `scorecard`); a concern's `aspect`,
+  the record's `hints`; the look's prompt carries the rubric; `rubric` on every concern command; Talk's `lens` names the
+  framework; `aspect` in `TERMS`.
+- **B**: every kind of §3 but `unticked` (dropped: Release's ticks live only on the face, nothing records them, so it could
+  never fire); `realm/map_signals_crafts.py` for Art, Release and Marketing; `loop.findings_kinds`. Narrower than §3 says, to
+  keep the hints true: `no_return` and `no_share` match *notification*, *streak*, *daily reward*, a `push` that is no call,
+  `navigator.share`, *invite*, *referral*, *share* as a word (a bare *push* or *share* is in nearly every file); `no_shots`
+  accepts a `screenshots` folder anywhere (fastlane keeps it beside `metadata`); a screen's file shared by several screens
+  or past `SCREEN_BYTES` is not judged; `unused` is not said where git cannot answer. A test keeps the rubrics and the
+  emitted kinds the same set.
+- **C** (9a71efe): the aspects as chips on the strip, each in its state, a press stepping through its cards; *Alert · <aspect>*
+  on a card's back; no row for a record without `rubric`.
+- **Not yet**: §5; at the narrow width the row takes two lines over the map.

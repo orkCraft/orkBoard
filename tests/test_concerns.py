@@ -267,7 +267,7 @@ def test_every_concern_command_carries_the_rubric_with_the_scorecard_and_none_fo
     assert first["rubric"]["framework"] == r["framework"] and first["rubric"]["short"] == "Nielsen · WCAG 2.2"
     card = {a["id"]: a for a in first["rubric"]["aspects"]}
     assert list(card) == [a["id"] for a in r["aspects"]] and (card["flow"]["state"], card["flow"]["n"]) == ("alert", 1) and (card["seen"]["state"], card["seen"]["n"]) == ("note", 1)
-    assert card["status"]["state"] == "clear" and card["flow"]["name"] == "The way through" and card["flow"]["ask"] == r["aspects"][0]["ask"]
+    assert card["consistency"]["state"] == "clear" and card["flow"]["name"] == "The way through" and card["flow"]["ask"] == r["aspects"][0]["ask"]
     assert first["rubric"]["aspects"] == lens_rubrics.scorecard("design", store.read(host.ideas.state_dir, design))
     made = host.command("ideas.concern_goal", {"party": design, "id": first["concerns"][0]["id"]})
     assert {a["id"]: a["state"] for a in made["rubric"]["aspects"]}["flow"] == "hint", "a goal was made: the concern is not open, code's hint stays"

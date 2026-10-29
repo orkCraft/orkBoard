@@ -248,6 +248,26 @@ def test_the_loop_says_what_is_wrong_by_code_in_the_words_of_the_spec(game):
     assert loop.findings(loop.keep(s, game, skip, "leader")[0]) == ["The core loop's feeling is flat"]            # a core with no session loop feeds the meta loop
 
 
+def test_the_findings_by_kind_say_what_the_findings_say_with_the_rule_that_said_it(game):
+    s = state(game)
+    first = lambda d, n=0: d["loops"][n]["steps"][0]["id"]                                                       # noqa: E731
+    got = loop.keep(s, game, rich(), "leader")[0]
+    assert loop.findings_kinds(got) == [] and loop.findings_kinds({}) == [] and loop.findings_kinds({"loops": [], "currencies": []}) == []
+    gold_only = whole(one("core", card("Aim", gives=["gold"]), card("Shoot"), card("Rest")), currencies=[GOLD])
+    got = loop.keep(s, game, gold_only, "leader")[0]
+    assert loop.findings_kinds(got) == [("cur:gold", "pile_up", "Gold is only earned: it will pile up")]
+    nobody = whole(one("core", card("Aim", takes=["gold"]), card("Shoot"), card("Rest")), currencies=[GOLD])
+    got = loop.keep(s, game, nobody, "leader")[0]
+    assert loop.findings_kinds(got) == [("cur:gold", "no_source", "Nothing gives Gold"), (first(got), "no_reward", "The core loop rewards nothing")]
+    unfed = rich()
+    unfed["loops"][1]["feeds"] = ""
+    unfed["loops"][1]["steps"] = [{**c, "intensity": 4} for c in unfed["loops"][1]["steps"]]
+    got = loop.keep(s, game, unfed, "leader")[0]
+    assert loop.findings_kinds(got) == [(first(got, 2), "unfed", "Nothing feeds the meta loop"), (first(got, 1), "flat", "The session loop's feeling is flat")]
+    for data in (got, loop.keep(s, game, nobody, "leader")[0], {}):                                              # findings_on and findings are read from it
+        assert loop.findings_on(data) == [(on, w) for on, _k, w in loop.findings_kinds(data)] and loop.findings(data) == [w for _on, _k, w in loop.findings_kinds(data)]
+
+
 # -- the leader's answer, strictly -------------------------------------------------------------------------------------------------
 
 def test_the_leaders_answer_is_loops_currencies_and_hooks_clamped_to_the_limits(game):

@@ -13,7 +13,7 @@ KINDS = {                        # the hints of code each craft has (spec 109 §
     "product": ("unserved", "pains", "pain_loose", "vague_outcome", "no_evidence", "off_tree"),
     "game-design": ("no_source", "pile_up", "no_reward", "unfed", "flat", "spike", "no_hook", "unground"),
     "art": ("mixed_sizes", "naming", "heavy", "unused"),
-    "release": ("big_batch", "stale", "unticked", "no_changelog", "reverts"),
+    "release": ("big_batch", "stale", "no_changelog", "reverts"),
     "marketing": ("no_channel", "aso_title", "aso_short", "no_shots", "no_onboarding", "no_return", "no_share", "no_revenue"),
     "run": (), "liveops": (),
 }
@@ -115,3 +115,19 @@ def test_the_lens_in_talk_ends_with_the_framework_of_a_craft_that_has_a_rubric()
     assert idea_objections.lens("tech").startswith("the architecture on your map: ") and "C4's containers and parts" in idea_objections.lens("tech") and "hotspots" in idea_objections.lens("tech")
     assert idea_objections.lens("run").startswith("what is live:") and "SLOs and error budgets" in idea_objections.lens("run")
     assert idea_objections.lens("nowhere") == "what your party keeps" and idea_objections.lens("") == "what your party keeps", "a craft with no rubric is as it was"
+
+
+LOOP_KINDS = {"no_source", "pile_up", "no_reward", "unfed", "flat"}          # loop.findings_kinds'
+MARKETING_KINDS = {"no_channel", "aso_title", "aso_short", "no_shots", "no_onboarding", "no_return", "no_share", "no_revenue"}   # map_signals_crafts.marketing's, built from a table
+
+
+def test_every_kind_the_signals_emit_is_in_one_aspect_and_every_aspects_kind_is_emitted():
+    """The hints of code (`realm/map_signals.py`, `realm/map_signals_crafts.py`, the loop's findings) and the rubrics name the same kinds (spec 109 §2.1)."""
+    import re
+    from pathlib import Path
+    root = Path(rubrics.__file__).parent
+    text = "".join((root / n).read_text(encoding="utf-8") for n in ("map_signals.py", "map_signals_crafts.py"))
+    assert all(f'"{k}"' in text for k in MARKETING_KINDS) and all(f'"{k}"' in (root / "loop.py").read_text(encoding="utf-8") for k in LOOP_KINDS)
+    emitted = set(re.findall(r'"kind": "([a-z_0-9]+)"', text)) | MARKETING_KINDS | LOOP_KINDS
+    named = {k for craft in rubrics.RUBRICS for a in rubrics.RUBRICS[craft]["aspects"] for k in a["signals"]}
+    assert emitted == named, (sorted(emitted - named), sorted(named - emitted))

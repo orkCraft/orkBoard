@@ -59,7 +59,7 @@ RUBRICS = {
                 "short": "DORA · readiness · semver",
                 "aspects": (_a("batch", "Batch size", "Is what waits for main small enough to ship and to take back?", "big_batch"),
                             _a("lead_time", "Lead time", "How long has done work waited for main?", "stale"),
-                            _a("readiness", "Readiness", "Is each goal ticked, the changelog written, the version said?", "unticked", "no_changelog"),
+                            _a("readiness", "Readiness", "Is the changelog written and the version said?", "no_changelog"),
                             _a("failure", "Change failure", "How often must a change be reverted or fixed again?", "reverts"))},
     "marketing": {"framework": "AARRR (acquisition, activation, retention, referral, revenue), app store optimisation, and April Dunford's positioning",
                   "short": "AARRR · ASO · positioning",

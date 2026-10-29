@@ -1,5 +1,6 @@
-"""Spec 108 A (docs/specs/108-a-leader-says-no-and-shows-where-it-hurts.md §2.2): `realm/map_signals.py`, what a party's map says is wrong by code, each hint grounded in what the map holds. Real git
-repositories with real commits (churn needs them); no model."""
+"""Spec 108 A (docs/specs/108-a-leader-says-no-and-shows-where-it-hurts.md §2.2), spec 109 B (docs/specs/109-each-leader-looks-as-a-senior-of-its-craft.md §3): `realm/map_signals.py`, what a party's
+map says is wrong by code, each hint grounded in what the map holds: Tech's hotspot and unstable part, Design's screens with no states or a lapse of accessibility, Product's vague outcome, job with no
+evidence and goals off the tree, Game design's findings by kind, spike, missing D1 hook and step that rests on no file. Real git repositories with real commits (churn needs them); no model."""
 from __future__ import annotations
 
 import json
@@ -11,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.realm import idea_lens, ideas, loop, map_parts, map_signals, opportunity_tree as tree
+from orkboard.realm import idea_lens, ideas, loop, map_parts, map_signals, map_signals_crafts, opportunity_tree as tree
 
 PNG = b"\x89PNG\r\n\x1a\n" + struct.pack(">I", 13) + b"IHDR" + struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0) + b"\x00" * 4 + struct.pack(">I", 0) + b"IEND" + b"\x00" * 4
 
@@ -116,6 +117,34 @@ def test_churn_older_than_a_month_does_not_count(repo, tmp_path):
     assert tech(repo, tmp_path) == []
 
 
+def test_a_part_changed_often_that_holds_a_long_file_is_a_hotspot(repo, tmp_path):
+    body = lambda n: "x = 1\n" * (map_signals.HOT_LINES - 1) + f"n = {n}\n"                                  # noqa: E731
+    put(repo, {"hot/rooms.py": body(0), "short/small.py": "n = 0\n", "long/still.py": body(0)}, old=True)
+    for n in range(1, map_signals.HOT_TIMES + 1):
+        put(repo, {"hot/rooms.py": body(n), "short/small.py": f"n = {n}\n"}, f"hot {n}")
+    for n in range(1, map_signals.HOT_TIMES):
+        put(repo, {"long/still.py": body(n)}, f"long {n}")
+    got = tech(repo, tmp_path)
+    assert kinds(got) == {"hotspot": ["hot"]}, "short is changed as often but small; long is big but changed one time too few"
+    assert got[0]["words"] == f"hot changed {map_signals.HOT_TIMES} times in the last {map_signals.CHURN_DAYS} days and holds rooms.py of {map_signals.HOT_LINES} lines"
+    assert {s["on"] for s in got} <= {p["id"] for p in map_parts.parts(tmp_path / "state", repo, "tech")}
+
+
+def test_a_part_many_stand_on_that_itself_uses_many_is_unstable(repo, tmp_path):
+    libs = {f"lib{n}/x.py": "Y = 1\n" for n in range(9)}
+    put(repo, {"lobby/l.py": "".join(f"import lib{n}.x\n" for n in range(9)), **libs, **{f"user{n}/m.py": "import lobby.l\n" for n in range(map_signals.UNSTABLE_IN + 1)}}, old=True)
+    got = tech(repo, tmp_path)
+    assert kinds(got) == {"unstable": ["lobby"]}
+    assert got[0]["words"] == "lobby is used by 5 parts and itself uses 9: what many stand on keeps changing with what it uses"
+
+
+def test_a_part_used_by_four_that_uses_few_or_one_used_by_three_is_not_unstable(repo, tmp_path):
+    put(repo, {"core/base.py": "".join(f"import lib{n}.x\n" for n in range(6)), **{f"lib{n}/x.py": "Y = 1\n" for n in range(6)},
+               **{f"user{n}/m.py": "import core.base\n" for n in range(5)}, "mid/m.py": "".join(f"import lib{n}.x\n" for n in range(9)) + "", **{f"lib{n}/x.py": "Y = 1\n" for n in range(9)},
+               **{f"low{n}/m.py": "import mid.m\n" for n in range(map_signals.UNSTABLE_IN - 1)}}, old=True)
+    assert "unstable" not in kinds(tech(repo, tmp_path)), "core: 6 / (6 + 5) is under 0.6; mid: used by only 3"
+
+
 def test_cycles_alone(repo):
     assert map_signals.cycles({"a": ["b"], "b": ["c"], "c": ["a"], "d": ["a"], "e": []}) == [["a", "b", "c"]]
     assert map_signals.cycles({"a": ["b"], "b": []}) == [] and map_signals.cycles({"a": ["a"]}) == []
@@ -137,8 +166,8 @@ def test_the_loops_findings_each_on_the_part_it_names(repo, tmp_path):
         "currencies": [{"id": "gold", "name": "Gold", "kind": "soft", "line": "Coins"}, {"id": "gems", "name": "Gems", "kind": "hard", "line": "Rare"}]}, "person")
     got = map_signals.signals(state, repo, "game-design")
     ids = {p["id"] for p in map_parts.parts(state, repo, "game-design")}
-    assert {s["on"] for s in got} <= ids and {s["kind"] for s in got} == {"loop"}
-    assert [(s["on"], s["words"]) for s in got] == [("cur:gold", "Gold is only earned: it will pile up"), ("cur:gems", "Nothing gives Gems")]
+    assert {s["on"] for s in got} <= ids and [s["kind"] for s in got] == ["pile_up", "no_source", "no_hook"]
+    assert [(s["on"], s["kind"], s["words"]) for s in got if s["kind"] != "no_hook"] == [("cur:gold", "pile_up", "Gold is only earned: it will pile up"), ("cur:gems", "no_source", "Nothing gives Gems")]
     assert [w for _on, w in loop.findings_on(loop.read(state))] == loop.findings(loop.read(state))
     assert map_signals.signals(tmp_path / "none", repo, "game-design") == []
 
@@ -152,6 +181,23 @@ def test_a_flat_loop_and_a_loop_that_rewards_nothing_are_on_the_loops_first_step
     first = loop.read(state)["loops"][0]["steps"][0]["id"]
     assert ("cur:gold", "Nothing gives Gold") in [(s["on"], s["words"]) for s in got]
     assert (first, "The core loop rewards nothing") in [(s["on"], s["words"]) for s in got] and (first, "The core loop's feeling is flat") in [(s["on"], s["words"]) for s in got]
+
+
+def test_a_spike_a_missing_first_day_hook_and_a_step_that_rests_on_no_file(repo, tmp_path):
+    put(repo, {"config/waves.yml": "waves: 3\n"})
+    state = tmp_path / "state"
+    card = lambda name, n, **more: {"name": name, "line": "A line", "intensity": n, **more}                       # noqa: E731
+    wave = loop.keep(state, repo, {"loops": [{"span": "core", "name": "Fight", "line": "A line", "steps": [
+        card("Aim", 2, rests_on=["config/waves.yml"]), card("Shoot", 5), card("Rest", 4)]}], "currencies": []}, "person")[0]
+    ids = [s["id"] for s in wave["loops"][0]["steps"]]
+    got = map_signals.signals(state, repo, "game-design")
+    assert [(s["on"], s["kind"]) for s in got] == [(ids[1], "spike"), (ids[0], "no_hook"), (ids[1], "unground"), (ids[2], "unground")]
+    assert got[0]["words"] == "The core loop jumps from intensity 2 at Aim to 5 at Shoot" and got[1]["words"] == "No hook says why a player comes back on the first day (D1)"
+    assert got[2]["words"] == "The step Shoot of the core loop rests on no file, though others of it do"
+    assert {s["on"] for s in got} <= {p["id"] for p in map_parts.parts(state, repo, "game-design")}
+    calm = loop.keep(state, repo, {"loops": [{"span": "core", "name": "Fight", "line": "A line", "steps": [card("Aim", 2), card("Shoot", 4), card("Rest", 3)]}], "currencies": [],
+                                   "hooks": [{"when": "D1", "line": "A new weapon on the second day"}]}, "person")[0]
+    assert map_signals.signals(state, repo, "game-design") == [] and calm["hooks"], "a step of 2 after 4 is no spike, D1 is said, no step rests on a file"
 
 
 # -- Design -------------------------------------------------------------------------------------------------------------------------------
@@ -179,6 +225,33 @@ def test_a_screen_nothing_leads_to_one_that_leads_nowhere_and_one_with_no_pictur
     assert set(found["no_picture"]) == {"home", "mid", "cart", "done", "about"} and {s["on"] for s in got} <= ids
     idea_lens.keep_screen(state, PNG, "Cart")
     assert "cart" not in kinds(map_signals.signals(state, repo, "design"))["no_picture"]
+
+
+def test_a_screen_that_names_no_state_and_one_a_keyboard_or_a_reader_would_stumble_on(repo, tmp_path):
+    put(repo, {**APP,
+               "src/Home.jsx": 'export default () => { if (loading) return <Spinner />; return <><img src="a.png" /><Link to="/mid">Mid</Link><Link to="/cart">Cart</Link></>; };\n',
+               "src/Mid.jsx": "export default () => <div onClick={() => go()}>Next</div>;\n",
+               "src/Cart.jsx": 'export default () => { try { return <><input type="text" /><Link to="/done">Done</Link></>; } catch (error) { return null; } };\n',
+               "src/Done.jsx": 'const empty = true;\nexport default () => <><img alt="" src="a.png" onLoad={() => a > b} /><div onClick={f} role="button" /><input id="q" /><input type="hidden" />'
+                               '<input {...props} /><span {...rest} onClick={f} /></>;\n'})
+    state = tmp_path / "state"
+    got = map_signals.signals(state, repo, "design")
+    found = kinds(got)
+    assert found["no_states"] == ["mid", "about"] and found["a11y"] == ["home", "mid", "cart"]
+    words = {s["on"]: s["words"] for s in got if s["kind"] == "a11y"}
+    assert words == {"home": "Home (/): an image with no alt text", "mid": "Mid (/mid): a press on a div with no role", "cart": "Cart (/cart): an input with no label"}
+    assert next(s for s in got if s["kind"] == "no_states")["words"] == "The screen Mid (/mid) says nothing of loading, error or empty states"
+    assert {s["on"] for s in got} <= {p["id"] for p in map_parts.parts(state, repo, "design")}
+
+
+def test_a_file_that_several_screens_share_or_one_too_large_says_nothing_of_any_screen(repo, tmp_path):
+    put(repo, {"package.json": json.dumps({"dependencies": {"react-router-dom": "6"}}),
+               "src/App.jsx": 'import { Routes, Route } from "react-router-dom";\nimport A from "./A";\nimport B from "./B";\nimport S from "./Shared";\n'
+                              'export default () => <Routes><Route path="/" element={<A />} /><Route path="/b" element={<B />} /><Route path="/c" element={<S />} /><Route path="/d" element={<S />} /></Routes>;\n',
+               "src/A.jsx": "<img />\n" + "x" * map_signals.SCREEN_BYTES, "src/B.jsx": "<img />\n", "src/Shared.jsx": "<img />\n"})
+    got = map_signals.signals(tmp_path / "state", repo, "design")
+    assert kinds(got)["a11y"] == ["b"], "A is over 200 KB, C and D share a file: none is read"
+    assert kinds(got)["no_states"] == ["b"]
 
 
 def test_at_most_twenty_signals(repo, tmp_path):
@@ -222,9 +295,40 @@ def test_a_job_no_goal_serves_pains_piled_on_a_screen_and_pains_pinned_to_nothin
     assert {s["on"] for s in got if s["kind"] == "unserved"} <= {p["id"] for p in map_parts.parts(state, repo, "product", pages)}
 
 
-# -- the rest -----------------------------------------------------------------------------------------------------------------------------
+def test_an_outcome_with_no_number_a_job_with_two_goals_and_no_experiment_and_goals_in_line_off_the_tree(repo, tmp_path):
+    put(repo, APP)
+    state, pages = repo / ".orkcraft", tmp_path / "pages"
+    tree.keep(state, [{"text": "Make sketching easy"}, {"text": "Cut the time to a first sketch to 2 minutes"}],
+              [{"when": "I start", "want": w, "so": "judge it", "segment": "founders"} for w in ("see a sketch", "share it", "compare two")], "person")
+    jobs = [j["id"] for j in tree.read(state)["jobs"]]
+    goals = [ideas.add_idea(pages, f"Goal number {n}", "general", state) for n in range(6)]
+    for g in goals[:2]:
+        tree.attach(state, jobs[0], g)
+    tree.attach(state, jobs[1], goals[2])
+    got = map_signals.signals(state, repo, "product", pages)
+    found = kinds(got)
+    assert found["vague_outcome"] == [""] and found["no_evidence"] == [jobs[0]] and found["off_tree"] == [""]
+    assert next(s for s in got if s["kind"] == "vague_outcome")["words"].endswith("Make sketching easy")
+    assert next(s for s in got if s["kind"] == "no_evidence")["words"] == "2 goals serve the job see a sketch and no experiment tests any of them"
+    assert next(s for s in got if s["kind"] == "off_tree")["words"].startswith("3 goals in line serve no job: ") and {s["on"] for s in got} <= {p["id"] for p in map_parts.parts(state, repo, "product", pages)} | {""}
+    tree.test(state, goals[0], goals[3])                                                                     # an experiment tests one of the two goals: evidence
+    assert "no_evidence" not in kinds(map_signals.signals(state, repo, "product", pages))
+    assert "off_tree" not in kinds(map_signals.signals(state, repo, "product")), "off_tree needs the Board's pages"
+    tree.attach(state, jobs[2], goals[4])
+    assert "off_tree" not in kinds(map_signals.signals(state, repo, "product", pages)), "two goals off the tree are under OFF_TREE"
 
-def test_art_release_and_marketing_have_none_by_code_yet(repo, tmp_path):
+
+# -- the rest ---------------------------------------------------------------------------------------------------------------------------
+
+def test_a_craft_with_no_map_has_none_by_code(repo, tmp_path):
     put(repo, {"assets/hero.png": "png", "marketing/launch.md": "# Launch\n"})
-    for craft in ("art", "release", "marketing", "run", "liveops", ""):
+    for craft in ("run", "liveops", ""):
         assert map_signals.signals(tmp_path / "state", repo, craft) == []
+
+
+def test_art_release_and_marketing_are_read_by_the_crafts_module(repo, tmp_path):
+    put(repo, {"assets/hero.png": "png", "marketing/launch.md": "# Launch\n"})
+    got = map_signals.signals(tmp_path / "state", repo, "marketing")
+    assert got == map_signals_crafts.marketing(tmp_path / "state", repo) and {"no_onboarding", "no_return", "no_share", "no_revenue"} <= {s["kind"] for s in got}
+    assert map_signals.signals(tmp_path / "state", repo, "art") == map_signals_crafts.art(tmp_path / "state", repo)
+    assert map_signals.signals(tmp_path / "state", repo, "release") == map_signals_crafts.release(tmp_path / "state", repo) == []      # dev and main are one branch here
