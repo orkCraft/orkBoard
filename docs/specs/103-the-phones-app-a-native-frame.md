@@ -70,7 +70,7 @@ runs (§6); the stores' listing and its pictures (§150.5, the marketing's).
 ## 2. On its side, the table without the hand (B; §174.3)
 1. **A low window under `pointer: coarse`** (under 500 CSS px of height, 760 or more of width): the table compact as §150.2
    says, **without the hand**: no fan, no blank card; the table takes the whole height. **The discard and the portal stay**
-   on the table (§178.7; spec 104 C, spec 105 F): the pile at the last column's foot, the portal over it. **The foot is the
+   on the table (§178.7; spec 104 C, spec 105 F): the pile at the last column's foot, a goal ready for main a card above it, and the portal **right of them** at the table's right edge, its line over it (the owner, `docs/mockups/phone/` v7). **The foot is the
    goals' legend** (§179.2, §179.4): each goal on the table its type's sign in its element's colour and its short name (the
    moon beside it while it waits for the reset), in the lanes' order, one row (sideways scroll if it must), 44 px targets; a
    press picks the goal and lights its cards. **A token** on its side is its task's type's sign in its goal's element's
