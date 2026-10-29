@@ -1,7 +1,7 @@
 # Spec 102 — The other maps and picking on them: Design's screens along their flow, Product's pains on them, Game design's loop, Art's assets, Release's dev against main, Marketing's way in; a party's map in picking
 
 The owner and the PM, 28 October (decisions §112.6–§112.9, §134.2, §135.3–§135.4, §137.3, §141, §151.7, §152, §156.1–§156.2,
-§167.1, §169.1, §170; spec 95 §3.1–§3.4; spec 99 §2 and its "As built (B)"). The slice after S1 and S2b, taken (§169.1): **S3**,
+§167.1, §172, §169.1, §170; spec 95 §3.1–§3.4; spec 99 §2 and its "As built (B)"). The slice after S1 and S2b, taken (§169.1): **S3**,
 each party's one map on its tab and in its leader's calls, and an idea addressed to a party pinning that map's cards. **Builds:**
 a cheaper model, each part reviewed by Claude · **Review:** full · P0. **A, B and C at once** (the engine; they share no file),
 **then the mockup** (`docs/mockups/s3/`) at the owner's yes, **then D, E and F at once** (the faces, on the lead's seam:
@@ -21,6 +21,8 @@ goals (S6).
 | **(the lead)** | §4 | `realm/map_text.py` `of` (each party's text from A–C), `gui/ideas.py` (the commands' tables), `table/maps.js` (the seam: a map's face by its party's craft; `Pickable`) |
 | **D. Design's and Product's map** | §5.1–§5.2 | new `table/screensmap.js`, new `table/screens.css`; new `tests/test_screens_desktop_browser.py` |
 | **E. The loop, Art's, Release's, the way in** | §5.3–§5.6 | new `table/loopmap.js`, `table/artmap.js`, `table/releasemap.js`, `table/waymap.js`, new `table/maps.css`; new `tests/test_maps_desktop_browser.py` |
+| **G. The tree** | §8 | new `realm/opportunity_tree.py` (the outcome, the jobs, their goals and experiments, kept; its text), new `core/idea_tree.py` (the first proposal: one call), new `gui/ideas_tree.py` (`ideas.tree`, `ideas.tree_set`, `ideas.tree_propose`, `ideas.tree_attach`); new `tests/test_opportunity_tree.py`, `tests/test_gui_tree.py` |
+| **H. The tree's face** | §8 | new `table/treemap.js`, new `table/tree.css`; new `tests/test_tree_desktop_browser.py` (after the mockup's yes) |
 | **F. Picking** | §6 | `table/maps.js`'s `Pickable` filled, new `table/picking.js` (the box, the brackets, the groups), `hand/pluscard.js` (the marks as chips), `table/syspane.js` (System's cards pickable); `gui/ideas.py` `add` takes `marks` (the lead wires); new `tests/test_picking_desktop_browser.py` |
 
 ## 0. The words
@@ -102,6 +104,24 @@ drag draws the box; a box that takes a whole group pins the group (a container's
 step, a lane's cards the lane, the whole map *all of <map>*, read as no mark). The marks lie on the field as chips (a name
 and ×), past five the first five and *and n more*. Picking ends with *Stop picking*, Esc, sending, or the party's mark taken
 off. `ideas.add` takes `marks: [{map, id, name, group?}]`, kept with the idea and read into its route's calls.
+
+## 8. Product's map: the opportunity solution tree (G, H; decisions §172)
+1. **The record** (`<state_dir>/tree.json`): `{outcomes: [{id, text}] (one or two), jobs: [{id, when, want, so, segment, by, at}] (three
+   to seven), serves: [{job, goal}], tests: [{goal, experiment}]}`; `ideas.tree {}` (with each served goal's title, element, place),
+   `ideas.tree_set {outcomes?, jobs?}` (the person's: `by: "person"`), `ideas.tree_attach {job, goal}` / `{goal, experiment}` (empty
+   `job` detaches), `ideas.tree_propose {}` (once, as the loop's: one call of the party whose craft is `product`, no tools, the
+   cheaper tier, a new step `tree`, given `project_facts.start_files` and the project's answers (`project_facts.for_call` common
+   core), four parts parsed strictly, kept `by: "leader"`).
+2. **Its text** (`opportunity_tree.text`): the outcome, then each job as its sentence with its segment and the goals that serve it
+   (title and place: in line, at work, done), the jobs no goal serves named; bounded and byte-identical as the others; Product's
+   calls carry it (`map_text.of("product")`).
+3. **A goal from Product's tab** is offered under a job: the route card's lifted face shows *Serves: <job>* with a choice of the
+   jobs (`ideas.tree_attach`); none chosen, none attached.
+4. **The face** (H, after the mockup's yes): the outcome as a banner at the top; the jobs as columns under it, each its sentence
+   and segment; the goals that serve it as the Board's goal cards under it (a press picks the goal), its experiments under a goal;
+   an empty job's column says *No goal serves this yet* with **+** writing a goal for it; *Edit* on a job and the outcome.
+5. **Design's map takes the pains** (§1.3, §5.2): pinned under its screens and steps, the segment a filter over it; Product's tab
+   no longer shows the screens.
 
 ## 7. Tests
 A: the routes of each router read; the folders' screens; the flow's links and steps; a pain pinned; the text bounded and the

@@ -3400,3 +3400,21 @@ Why: the owner's yes on `docs/mockups/s3/` (the other maps and picking on them),
    crown, animation a picture); a 7 × 7 never stands at 28 px on a card.
 The owner's call.
 
+## 172. Product's map is an opportunity solution tree, its opportunities the users' jobs to be done; the pains along the journey are Design's (29 October, the owner and the PM)
+
+Why: the owner: Product's map was meant to be the users' jobs to be done, not the pains met along the journey (those fit Design's
+screens); and asked the PM to pick a discovery framework for the case. The PM's pick: Teresa Torres' opportunity solution tree,
+its opportunities written as jobs to be done: its lowest tier already exists (the goals on the Board), so Product sees which goal
+serves which job and which job none serves; a job map (Ulwick's steps) alone links to no goal, a Lean Canvas is still and of the
+business, a story map would be Design's screens again. So (this changes §112.7's and §134.2's *Product looks at the same map*):
+1. **Product's map is the tree**: at its top **the outcome** (one or two numbers the project means to move, said plainly); under it
+   **the opportunities**, three to seven, each a job *When <situation>, I want to <motive>, so I can <outcome>* with its segment;
+   under each **the goals that serve it** (the Board's, by their slugs) and under a goal **its experiments** (the goals of type
+   *Try an experiment* that test it). A job no goal serves is seen empty.
+2. **Kept as the loop is** (§112.8): the person and Product's leader keep it; its first proposal one call of Product's leader with
+   no tools on the cheaper tier, given the project's files chosen by code and the project's answers (§153: whom it is for, what
+   hurts them, what it leaves out); its text in Product's every call (§156.1); a goal written from Product's tab is offered under a
+   job.
+3. **The pains along the journey are Design's**: pinned to its screens and steps, the segment a filter over Design's map.
+The owner's call.
+
