@@ -70,17 +70,21 @@ def test_techs_parts_are_the_systems_part_paths(host):
     assert [p["id"] for p in host.command("ideas.pickables", {"party": tech, "q": "ui"})["parts"]] == ["src/ui"]
 
 
-def test_game_designs_parts_are_the_loops_cards_in_both_versions(host):
+def test_game_designs_parts_are_the_loops_steps_and_currencies_as_the_map_stamps_them(host):
     game = _party(host, "Game design", "game-designer", "game-design")
     assert host.command("ideas.pickables", {"party": game}) == {"party": game, "map": "game-design", "parts": []}
     loop.keep(host.ideas.state_dir, Path(host.ideas.host.repo_root), [{"name": n, "line": "A line", "rests_on": []} for n in ("Spawn", "Fight", "Loot", "Upgrade")], "person")
-    cards = host.command("ideas.loop", {})["cards"]
+    steps = [st for lp in host.command("ideas.loop", {})["loops"] for st in lp["steps"]]       # a first version reads as one core loop
     got = host.command("ideas.pickables", {"party": game})
-    assert [(p["id"], p["name"], p["map"]) for p in got["parts"]] == [(c["id"], c["name"], "game-design") for c in cards]
-    assert [p["id"] for p in host.command("ideas.pickables", {"party": game, "q": "loo"})["parts"]] == ["loot"]
-    (Path(host.ideas.state_dir) / loop.FILE).write_text(json.dumps({"version": 2, "loops": [{"id": "core", "span": "core", "steps": [{"id": "hit", "name": "Hit"}, {"nope": 1}, "x"]}, 5],
-                                                                    "currencies": [{"id": "gold", "name": "Gold"}, {"id": 3}]}), encoding="utf-8")
-    assert loop_parts(host.ideas.state_dir) == [{"id": "hit", "name": "Hit", "group": "core"}, {"id": "gold", "name": "Gold", "group": "currencies"}]
+    assert [(p["id"], p["name"], p["map"]) for p in got["parts"]] == [(st["id"], st["name"], "game-design") for st in steps]
+    assert [p["name"] for p in host.command("ideas.pickables", {"party": game, "q": "loo"})["parts"]] == ["Loot"]
+    loop.keep(host.ideas.state_dir, Path(host.ideas.host.repo_root), {"loops": [{"span": "core", "name": "Fight", "line": "A line", "steps": [
+        {"name": n, "line": "A line", "gives": ["gold"] if n == "Hit" else [], "takes": ["gold"] if n == "Buy" else []} for n in ("Hit", "Dodge", "Buy")]}],
+        "currencies": [{"id": "gold", "name": "Gold", "kind": "soft", "line": "Coins"}]}, "person")
+    parts = loop_parts(host.ideas.state_dir)
+    assert [p["name"] for p in parts] == ["Hit", "Dodge", "Buy", "Gold"]
+    assert parts[-1] == {"id": "cur:gold", "name": "Gold", "group": "economy"}          # loopparts.js stamps a currency `cur:<id>`, a step its own id
+    assert {p["group"] for p in parts[:-1]} == {"loop"}
 
 
 def test_a_party_with_no_map_or_that_is_gone(host):

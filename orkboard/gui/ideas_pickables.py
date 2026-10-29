@@ -27,31 +27,12 @@ def _sub(q: str, text: str) -> bool:
     return all(c in it for c in q)
 
 
-def _strs(row: object, *keys: str) -> str:
-    """The first of `keys` that holds words in `row` (a dict of a file that is not trusted)."""
-    for k in keys:
-        v = row.get(k) if isinstance(row, dict) else None
-        if isinstance(v, str) and v.strip():
-            return v.strip()[:120]
-    return ""
-
-
 def loop_parts(state_dir: Path) -> list[dict]:
-    """The loop's cards (first version) and, in the second, the steps of every loop and every currency: `{id, name, group}`."""
-    got = ideas._json(Path(state_dir) / loop.FILE)
-    rec = got if isinstance(got, dict) else {}
-    out: list[dict] = []
-    for c in rec.get("cards") if isinstance(rec.get("cards"), list) else []:
-        if _strs(c, "id") and _strs(c, "name"):
-            out.append({"id": _strs(c, "id"), "name": _strs(c, "name"), "group": "loop"})
-    for lp in rec.get("loops") if isinstance(rec.get("loops"), list) else []:
-        for st in lp.get("steps") if isinstance(lp, dict) and isinstance(lp.get("steps"), list) else []:
-            if _strs(st, "id") and _strs(st, "name"):
-                out.append({"id": _strs(st, "id"), "name": _strs(st, "name"), "group": _strs(lp, "id", "span")})
-    for cur in rec.get("currencies") if isinstance(rec.get("currencies"), list) else []:
-        if _strs(cur, "id") and _strs(cur, "name"):
-            out.append({"id": _strs(cur, "id"), "name": _strs(cur, "name"), "group": "currencies"})
-    return out
+    """The loop's parts as its map stamps them (`table/loopparts.js`): every loop's steps (their `id`, group `loop`), then every currency (`cur:<id>`,
+    group `economy`), read through `loop.read`, so a first version reads as its one core loop. `{id, name, group}`."""
+    got = loop.read(Path(state_dir))
+    out = [{"id": st["id"], "name": st["name"], "group": "loop"} for lp in got.get("loops") or [] for st in lp.get("steps") or [] if st.get("id") and st.get("name")]
+    return out + [{"id": f"cur:{c['id']}", "name": c["name"], "group": "economy"} for c in got.get("currencies") or [] if c.get("id") and c.get("name")]
 
 
 class PickablesMixin:
