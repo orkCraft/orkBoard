@@ -1,0 +1,51 @@
+/* Concerns on a party's map (docs/specs/108-a-leader-says-no-and-shows-where-it-hurts.md §3, decisions §183.5). orkUI's tokens and pieces only: the alert sign in `--ork-alert`, a dot in the muted ink, the leader's small head, `.ork-busy`,
+   `.ork-btn`. A mark is not drawn by a map: concerns.js gives a card that has concerns a slot (`.cn-slot`) of its own. */
+
+/* the strip over the map, under the party's header */
+.cn-strip { flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-3) var(--ork-4); min-height: 36px; padding: 0 var(--ork-6); border-bottom: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-body); }
+.cn-strip__say { color: var(--ork-ink); display: inline-flex; align-items: center; gap: var(--ork-3); }
+.cn-strip[data-concerns="failed"] .cn-strip__say { color: var(--ork-alert); }
+.cn-strip__counts { padding: 0 var(--ork-1); color: var(--ork-ink); }
+.cn-strip__grow { flex: 1; min-width: 0; }
+.table-body:is([data-end="side"], [data-end="over"]) > .cn-strip { margin-right: calc(var(--table-end-w) * -1); }          /* like the party's header, the strip keeps the pane's whole width */
+
+/* a card with a concern: its slot at the top right, over the card's head; a press on it is a press on the card */
+[data-cn-host] { position: relative; }
+.cn-slot { position: absolute; top: var(--ork-1); right: var(--ork-2); z-index: 2; display: inline-flex; align-items: center; pointer-events: none; }
+.cn-mark { display: inline-flex; align-items: center; gap: var(--ork-1); padding: 0; margin: 0; border: 0; background: none; color: var(--ork-alert); font: inherit; }
+.cn-mark[data-level="note"] { color: var(--ork-ink-muted); }
+.cn-dot { display: inline-block; flex: none; width: 6px; height: 6px; background: currentColor; }
+
+/* made into a goal: the mark is a link to it, in its element's colour */
+.cn-mark.is-made { pointer-events: auto; cursor: pointer; }
+.cn-mark.is-made[data-elem="meadow"] { color: var(--ork-elem-meadow); }
+.cn-mark.is-made[data-elem="ice"] { color: var(--ork-elem-ice); }
+.cn-mark.is-made[data-elem="dust"] { color: var(--ork-elem-dust); }
+.cn-mark.is-made[data-elem="void"] { color: var(--ork-elem-void); }
+.cn-mark.is-made[data-elem="lava"] { color: var(--ork-elem-lava); }
+.cn-mark.is-made:focus-visible { outline: 0; box-shadow: 0 0 0 2px var(--ork-ink); }
+
+/* the card's head leaves room for the mark */
+[data-concern="alert"] > .mp-card__head { padding-right: 44px; }
+[data-concern="note"] > .mp-card__head { padding-right: 14px; }
+
+/* while a map is in picking a press is a pick: the marks take none */
+.pick-host[data-picking] .cn-mark { pointer-events: none; }
+
+/* the card's back: each concern, then its two answers */
+.cn-back { gap: var(--ork-3); }
+.cn-item { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; padding-top: var(--ork-3); border-top: var(--ork-line) solid var(--ork-frame); }
+.cn-item__what { margin: 0; display: flex; align-items: flex-start; gap: var(--ork-2); font: var(--ork-type-body); overflow-wrap: anywhere; }
+.cn-item__what > .ork-sign, .cn-item__what > .cn-dot { margin-top: var(--ork-1); }
+.cn-item[data-level="alert"] > .cn-item__what > .ork-sign { color: var(--ork-alert); }
+.cn-item[data-level="note"] > .cn-item__what > .cn-dot { color: var(--ork-ink-muted); }
+.cn-item__why, .cn-item__fix { margin: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); overflow-wrap: anywhere; }
+.cn-item__acts { margin-top: var(--ork-1); }
+
+/* on a touch screen, or a window as narrow as a phone: every target 44 px */
+@media (pointer: coarse), (max-width: 759.98px) {
+  .cn-strip { padding: 0 var(--ork-4); gap: var(--ork-2) var(--ork-3); min-height: var(--ork-tap); font: var(--ork-type-caption); }
+  .cn-strip .ork-btn, .cn-item .ork-btn { min-height: var(--ork-tap); }
+  .cn-mark.is-made { min-width: var(--ork-tap); min-height: var(--ork-tap); justify-content: center; }
+}
+@media (max-width: 759.98px) { .table-body:is([data-end="side"], [data-end="over"]) > .cn-strip { margin-right: 0; } }

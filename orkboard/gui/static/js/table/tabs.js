@@ -4,13 +4,14 @@
 // The open tab is the person's: nothing here switches it. A name is also said on a long press (nothing only on hover: spec 94 §1.1).
 import { useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
-import { Head, Icon } from "../orkui.js";
+import { Head, Icon, Sign } from "../orkui.js";
 import { command, toast } from "../link.js";
 import { ORKMASTER, openTab, openOver, picked } from "../frame/state.js";
 import { currentProject } from "../shell/projects.js";
 import { levelOf, windowOf } from "../arena/limits.js";
 import { nameOf, routeParties, MARKED, markSrc, mapName, laneOf } from "./data.js";
 import { openParties } from "./parties.js";
+import { hasAlert, theLeader } from "./concerns.js";
 
 const LONG_MS = 500;
 
@@ -26,13 +27,14 @@ function usePressName(name) {
 /** A party has an ork at work: one of its goals has a task running or being tested (a task that asks or has failed is not at work). */
 export const isWorking = (g) => laneOf(g).some(({ tasks }) => tasks.some((t) => t.state === "running" || t.state === "testing"));
 
-function Tab({ slug, on, name, head, dot = false, working = false, switcher = false, compact, onPick }) {
+function Tab({ slug, on, name, head, dot = false, working = false, alert = "", switcher = false, compact, onPick }) {
   const press = usePressName(name);
   return html`<button type="button" class=${cls("ork-tab table-tab", { "is-compact": compact, "has-switch": switcher })} role="tab" id=${`tab-${slug}`} data-tab=${slug} data-working=${working ? "" : undefined} aria-selected=${String(on)} tabindex=${on ? 0 : -1}
     aria-label=${name} title=${name} aria-controls="table-pane" onClick=${onPick} ...${press}>
     ${head ? html`<${Head} race=${head.race} tier=${head.tier} />` : null}
     <span class="table-tab__txt"><span class="table-tab__main">${name}</span></span>
     ${dot && html`<i class="table-tab__dot" role="img" aria-label="On the picked goal's route" title="On the picked goal's route"></i>`}
+    ${alert && html`<span class="table-tab__alert" role="img" aria-label=${alert} title=${alert}><${Sign} name="alert" /></span>`}
   </button>`;
 }
 
@@ -62,7 +64,7 @@ export function Tabs({ parties, current, narrow, compact }) {
         <${Tab} slug=${ORKMASTER} on=${current === ORKMASTER} name=${project} head=${{ race: "peon", tier: "crown" }} switcher=${true} compact=${compact} onPick=${() => openTab(ORKMASTER)} />
         <button type="button" class="ork-btn quiet table-switch" aria-label="Switch project" title="Switch project" onClick=${() => openOver("projects", {}, from, "Projects")}><${Icon} name="chevron-down" /></button>
       </div>
-      ${parties.map((g) => html`<${Tab} key=${g.slug} slug=${g.slug} on=${current === g.slug} name=${nameOf(g)} head=${g.leader?.head} dot=${route.has(g.slug)} working=${isWorking(g)} compact=${compact} onPick=${() => openTab(g.slug)} />`)}
+      ${parties.map((g) => html`<${Tab} key=${g.slug} slug=${g.slug} on=${current === g.slug} name=${nameOf(g)} head=${g.leader?.head} dot=${route.has(g.slug)} working=${isWorking(g)} alert=${hasAlert(g) ? `${theLeader(g.leader?.name)} has an alert on the map` : ""} compact=${compact} onPick=${() => openTab(g.slug)} />`)}
     </div>
     <div class="table-tabs__end">
       <button type="button" class="ork-btn table-plus" aria-label="New party" title="New party" onClick=${() => openParties({}, from)}><${Icon} name="plus" /><span class="table-plus__w">Party</span></button>

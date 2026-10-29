@@ -13,6 +13,8 @@
 .table-tab__txt { display: flex; flex-direction: column; min-width: 0; }
 .table-tab__main { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .table-tab__dot { position: absolute; top: var(--ork-2); right: var(--ork-2); width: 6px; height: 6px; background: var(--ork-ink); }
+/* a party whose map has an alert (concerns.js `hasAlert`): orkUI's alert sign in the alert tone at the tab's foot, no count (decisions §145.3) */
+.table-tab__alert { position: absolute; right: var(--ork-2); bottom: var(--ork-2); display: inline-flex; color: var(--ork-alert); pointer-events: none; }
 .table[data-compact="true"] .table-tab { justify-content: center; padding: 0; }
 .table[data-compact="true"] .table-tab__txt { display: none; }
 .table-tabs__end { display: flex; align-items: center; justify-content: flex-end; gap: var(--ork-3); min-width: 0; padding-left: var(--ork-4); overflow: hidden;
