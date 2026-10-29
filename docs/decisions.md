@@ -3702,3 +3702,31 @@ installed, a task that may not install), and was sent back five times with the l
 15. **New goal's card is worth looking at** (M): a double green frame with pixel corners and a fine hatch, a sweep on hover,
     in orkUI's pieces; offered to orkUI as `.ork-deck.is-main`.
 The owner's call.
+
+## 183. A leader says no, and shows where it hurts: objections in Talk, concerns on every map (29 October, the owner)
+
+Why: the owner: *the agents must not agree to every decision of the person: Product really prioritises and says no, this
+is not needed, because…; Tech says it makes the architecture worse. And not only the Architect: any leader looks at its
+own map and lights the problems, in the design, accessibility, the game's loop or anything else.* Talk had `against` that
+changed nothing; no map said where it hurt (§151.4's marks were left to S4 and never built). Spec 108 builds it.
+1. **A leader's round in Talk gives a verdict**: go, doubt or no, with why and, when it can, a smaller or other goal that
+   would serve. A no rests on a part, a goal in line or a fact; a no without one is not a no.
+2. **The prompt says the leader is not there to agree**: each judges by what its party answers for (Product by value
+   against the goals in line, which it is given; Tech by the architecture; Design by the people's way; Game design by the
+   loop and its economy).
+3. **A no is a card in the hand**: *Drop the goal*, *Do the smaller one*, *Not now* (Product's, after the goal it named),
+   *Go on anyway*. The person still decides, but overrules out loud: the decision's entry names who was overruled and why.
+4. **Every party's leader has concerns on its own map**: what is wrong or at risk in a part, why, what would fix it,
+   *alert* or *note*, at most seven. Code gives it signals (System's coupling, cycles, size, churn without tests; the loop's
+   findings; screens nothing leads to; pains piling on a screen); the leader judges, drops what does not matter and adds
+   what it sees. Design looks at the pictures of the screens changed, so it can speak of contrast and touch targets.
+5. **A concern is a mark on the map's card** (**!** for an alert, a dot for a note, the leader's small head), a strip
+   with the counts and *Ask again*, the card's back with *Make it a goal* and *Not a problem*; a party's tab shows **!**
+   when its map has an alert. A concern dismissed is not raised again unless its part changes.
+6. **Looked at when the person opens the map** and it changed since a look a day old or more, or on *Ask again*; never for
+   a party nobody opens; the cheaper tier.
+7. **The word is *concern*** (`TERMS`), not *flag* nor *finding*.
+8. **Measured**: how many concerns become goals or are dismissed; how often a no is overruled (more than four in five: the
+   rule's words are softened).
+9. **Later**: specialists' concerns on the same rails (§151.4), the phone.
+The owner's call.
