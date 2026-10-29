@@ -694,7 +694,7 @@ def test_the_decision_and_fork_rows_are_the_wording_to_confirm_and_the_first_dis
     """Spec 99 §6–§7: `decision` {number, title, text, confirmed, error} on a goal `decided`; `fork` {id, about, sides} on a goal at `sections` while one is open."""
     root, state = _board(host)
     g = _goal(root, "Way")
-    assert board_map.NEEDS[:6] == ("route", "start", "talk", "cause", "decision", "fork")
+    assert board_map.NEEDS[:7] == ("route", "start", "talk", "objection", "cause", "decision", "fork")      # a leader's no between Talk and the decision (spec 108 §4.3)
     route = [{"party": g, "leader": "taskmaster"}]
     a = _idea(root, state, g, "Decided", "decided", route=route)
     b = _idea(root, state, g, "Forked", "sections", route=route)
@@ -726,7 +726,7 @@ def test_the_talk_and_cause_rows_are_the_stances_with_the_cards_and_the_guess_wi
     """Spec 99 §5.3–§5.4: `talk` {round, stances, questions: [card]} and `cause` {cause, where, q: [card]} sit on a goal at Talk while something waits; none while the leaders are heard."""
     root, state = _board(host)
     g = _goal(root, "Way")
-    assert board_map.NEEDS[:4] == ("route", "start", "talk", "cause")
+    assert board_map.NEEDS[:5] == ("route", "start", "talk", "objection", "cause")
     route = [{"party": g, "leader": "taskmaster"}]
     stances = [{"party": g, "leader": "taskmaster", "stance": "For it", "for": "Players want it", "against": "Costs a week"}]
     a = _idea(root, state, g, "A talk", "talk", route=route)
