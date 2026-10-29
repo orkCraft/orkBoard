@@ -199,7 +199,8 @@ async def test_a_paired_phone_reads_the_compact_town_and_sends_only_what_a_phone
 
         async with connect(_ws_url(server), ssl=_pinned(), additional_headers=auth) as ws:
             first = json.loads(await asyncio.wait_for(ws.recv(), 5))
-            assert first["t"] == "state" and first["state"]["v"] == phones.API and "projects" not in first["state"]
+            assert first["t"] == "state" and first["state"]["v"] == phones.API and "projects" in first["state"]
+            assert not set(Orkboard.COMPUTER_ONLY) & set(first["state"])        # the computer's own stay on the computer
 
             async def cmd(i, name, args=None):
                 await ws.send(json.dumps({"t": "cmd", "id": i, "name": name, "args": args or {}}))
@@ -210,6 +211,10 @@ async def test_a_paired_phone_reads_the_compact_town_and_sends_only_what_a_phone
 
             hello = await cmd(1, "mobile.hello")
             assert hello["ok"] and hello["result"]["api"] == phones.API
+            said = set(hello["result"]["commands"])                    # what this phone may send, not what the host has
+            assert {"ideas.board", "halt", "projects.use"} <= said and "files.read" in said
+            assert not {"phones.pair", "git.status", "tools.sign_in", "onboarding.skip"} & said
+            assert all(BoardPhone.allowed(server.host, c, {"path": "x.md"}) for c in said)
             same = await cmd(2, "mobile.snapshot", {"since": first["state"]["rev"]})
             assert same["result"]["same"] is True
             for i, name in enumerate(("term.input", "town.build", "watch", "term.attach", "phones.pair",
@@ -625,3 +630,19 @@ async def test_a_phone_with_its_socket_open_is_known_and_its_push_commands_carry
     finally:
         server.stop()
         await asyncio.wait_for(task, 10)
+
+
+def test_the_phones_snapshot_is_the_pages_less_the_computers_own(fake_repo):
+    """Spec 94 §2.3: the snapshot() Board, the projects, the limits, the mana with `paid` and the update; not the
+    onboarding, the sign-ins' flows, the repository's path or the usage ask; the fields the old phone face reads stay."""
+    host = Orkboard(fake_repo)
+    full, snap = host.snapshot(), BoardPhone.phone_snapshot(host)
+    assert {"onboarding", "sign_in", "repo", "usage_ask", "update_policy"} <= set(full)
+    assert not set(Orkboard.COMPUTER_ONLY) & set(snap)
+    for key in ("projects", "mana", "limits", "reserve", "hud", "rate", "needs_you", "ideas_rev", "ops_rev", "ops_team", "idea_states",
+                "review_count", "review_results", "canvases_new", "canvases_rev", "focus", "update", "version"):
+        assert key in snap, key
+    assert "paid" in snap["mana"]
+    for key in ("v", "project", "look", "sleep", "rev"):                  # what pwa/board-app.js and shell-*.js read
+        assert key in snap, key
+    assert snap["project"] == fake_repo.name and snap["rev"] == BoardPhone.phone_snapshot(host)["rev"]

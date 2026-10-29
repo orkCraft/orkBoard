@@ -115,3 +115,34 @@ outbox keeps. No new concept, so nothing new in `TERMS`; *narrow* and *wide* are
 
 ## 6. Asked again later
 Side by side on a wide tablet (§120.4); Orkline's phone on the same page (§121). A phone on its side is decided (§150).
+
+## As built B (the paired link)
+
+Built in `orkboard/gui/static/js/link.js` (changed), `js/linkpaired.js` (new), `gui/board_host.py` (`phone_snapshot`, `COMPUTER_ONLY`, `_phone_update`) and
+`gui/phones.py` (`mobile.hello`). Tests: `tests/test_phones.py` (the snapshot's fields, `hello`'s commands), `tests/test_link_paired_browser.py` (new, both widths of
+`tests/narrow.py`). Decisions §178.1 puts B–E before spec 103. The phone's old face (`pwa/board-app.js`, `pwa/util.js`, `pwa/shell-*.js`) is **untouched** and works on its own copy.
+
+What it is, and what differs from §2 or is not said there:
+
+- **`link.js` picks its way.** On the computer nothing changed. `pairWith(device)` (the frame calls it, §4.2; `device` is `{id, token, name}`, default the stored one) makes the link paired, and `connect()`, `command()` then go by
+  `js/linkpaired.js`; it returns `{opened(fn), news(fn), close(), unpair()}` for the frame's push renewal and unpairing. `isPaired()` says which. New in `link.js` for every face: `deliver(name, args, label)`
+  (on the computer a command; paired with no signal it is kept and sent later, `{ok, kept}`), `can(name)` and the signal `allowed`, `stale`, `offlineLine`, `waiting`, `forgotten`, and the constant `SENT_WHEN`.
+- **`linkpaired.js`** is the phone's protocol moved: `wss://<host>/ws`, subprotocols `orkcraft.v1` and `bearer.<token>`, `state` into `town`, a command and its `reply`, `news` (a toast, the OS notification when the page is hidden,
+  the vibration), reconnect with back-off (1 s doubling to 30 s) and on `visibilitychange`, a close with code 1008 = *forgotten* (the pairing, the kept snapshot and the outbox wiped, `forgotten` says *The board forgot this phone. Pair it again to use it.*).
+  Its `kept` (the last snapshot), `outbox` (claimed before it is sent, restored if the signal goes again: never sent twice) and `store` are **copies** of `pwa/util.js`'s, on the **same `localStorage` keys** (`orkcraft.town`,
+  `orkcraft.outbox`, `orkcraft.device`, `orkcraft.orkspace`), so the old face and the new share one pairing and one outbox while both exist; spec 94 E removes the old copy. Sent items are toasted *Sent: …* (the old *flash*).
+- **What a phone may not do** (§2.2): `mobile.hello`'s `commands` was every command of the host; `phones.py` now answers it with **only those `BoardPhone.allowed`** (`files.read` counted: any `.md`). The paired link reads it once
+  per socket into `allowed`; `can(name)` is true for everything on the computer. `BoardPhone.allowed` stays the guard. **No face hides anything yet** (not asked in B). Part C/E must use `can()` for: the **…**/Settings menu's computer-only rows
+  (`js/settings.js`, `js/phones.js`: *Pair a phone*; `js/accounts.js`, `js/onboarding.js`, sign-in), the Files pane and its Git section (`js/shell` files/git places), the terminal and editor, `js/settings.js`'s writes (`settings.*`,
+  `tools.*`), Play where `ideas.play` is not among them (§3.7), and the project switcher's *Open folder* (`projects.open`; only `projects.use` and `projects.list` are a phone's).
+- **No signal** (§2.4): the last snapshot is drawn from the phone's storage at once (`stale` true, `offlineLine` *As of 14:02. Connecting…* / *The board went away: trying again…* / *Cannot reach the board: is it running, and Tailscale on?*;
+  the clock is the phone's locale's); the first `state` clears both. The faces still have to **grey and make inert** what `stale` says and to draw `offlineLine` on the Orkmaster's tab (§145.6) and `waiting`'s items, each marked
+  *Sent when the computer answers*, in the hand: that is part C. Nothing is drawn differently on the computer. A face gives an answer or an idea with `deliver()`; `command()` with no socket still rejects as `offline` (toast *Not connected to the town*).
+- **`phone_snapshot`** (§2.3) is now `snapshot()` less `Orkboard.COMPUTER_ONLY` = `onboarding`, `sign_in`, `repo`, `usage_ask`, `update_policy`, plus the old phone's own fields (`v`, `project`, `look`, `sleep`, `version`, `hud`,
+  `canvases_*`), with its `rev` as before. So it now carries **`projects`** (`projects.list`: the shown project, the open ones with their paths, the recent ones), **`mana`** (spec 105 B/D, `paid` among it), the `reserve`, `rate`, the Board's counts,
+  `ops_rev`, `ops_team`, `focus`. `update` keeps `_phone_update`'s shape (the old bar reads it) with `critical_notes` added, which `js/shell/update.js` reads. The page's `sign_in` rows reach the phone as *Needs you* rows only (counted in `needs_you` as before).
+  `repo`'s path is gone; the `projects` rows still hold the folders' paths (`projects.use` takes one) and `project` the shown folder's name. `tests/test_phones.py`'s old `"projects" not in first["state"]` is now its opposite.
+- **Not done / to know**: the snapshot is bigger (the rev changes more often, e.g. with the projects' counts and the mana's `until`); `PUSH_S` still limits it to one push in 2 s. The page's other keys (`words`, `buildings`, `google`,
+  `motions`, from Orkline) are not in an Orkboard snapshot on either way. `gui/board_host.py` is 688 lines (it was 684; over the 600 line rule before this part), and wants a split. **The Python browser test could not run here**
+  (Playwright for Python is not installed, so `tests/test_link_paired_browser.py` skips); the same checks were run at both widths with the preinstalled Node Playwright against the real `phone_snapshot` and passed, so the file is untried as Python.
+  The phone listener's TLS socket is not driven by the browser test (its stand-in is `route_web_socket`); `tests/test_phones.py` covers the listener with the real protocol.

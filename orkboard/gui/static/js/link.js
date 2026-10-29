@@ -2,6 +2,21 @@
 // The host sends a fresh snapshot whenever the town changes (gui/server.py); signals redraw only
 // what read the parts that changed.
 import { signal } from "@preact/signals";
+import { makePaired, allowedCommands, status as pairedStatus, stale as pairedStale, waiting as pairedWaiting, forgotten as pairedForgotten, SENT_WHEN } from "./linkpaired.js";
+
+// One link, two ways (docs/specs/94 §2): on the computer the local socket below, or paired (`pairWith`, which the phone's frame
+// calls before `connect`) the phone's socket in js/linkpaired.js. Nothing else in the page knows which.
+export { SENT_WHEN };
+/** The commands a paired phone may send (null on the computer: all); `can(name)` is whether a face may offer one. */
+export const allowed = allowedCommands;
+export const can = (name) => allowedCommands.value === null || allowedCommands.value.has(name);
+/** Paired and with no signal: the line to say ("As of 14:02. …"), and whether the snapshot drawn is the kept one (grey it, act on none of it). */
+export const offlineLine = pairedStatus;
+export const stale = pairedStale;
+/** Paired: what was given with no signal and waits [{key, name, label, at}]; each is marked `SENT_WHEN` where it is drawn. */
+export const waiting = pairedWaiting;
+/** Paired: why the phone must be paired again ("" while it is). */
+export const forgotten = pairedForgotten;
 
 export const town = signal(null);          // the last snapshot (gui/state.py), null until the first
 export const online = signal(false);
@@ -16,6 +31,23 @@ const pending = new Map();
 const terminals = new Map();               // session key → (kind, bytes) => void: who draws its frames                 // command id → {resolve, reject}
 let socket = null;
 let nextId = 1;
+let paired = null;                         // the paired link (js/linkpaired.js) once the frame says so
+
+/** The frame says this page is paired (spec 94 §4): `connect()` and `command()` then go by the phone's socket. Returns it
+ *  ({opened(fn), news(fn), close(), unpair()}) for the frame's push and unpairing. */
+export function pairWith(device) {
+  paired = makePaired({ town, online, toast, product: PRODUCT }, device);
+  return paired;
+}
+/** Whether this page is paired (a phone's) and not on the computer. */
+export const isPaired = () => paired !== null;
+
+/** Give something that must not be lost: an answer, an idea. Sent now; paired with no signal it is kept on the phone and
+ *  sent when the computer answers (`{ok, kept}`). On the computer it is a command. */
+export function deliver(name, args, label = name) {
+  if (paired) return paired.deliver(name, args, label);
+  return command(name, args).then((result) => ({ ok: true, result }), (e) => ({ ok: false, error: e.message }));
+}
 
 const TOAST_S = { information: 5, warning: 8, error: 10 };
 
@@ -77,6 +109,7 @@ export function act(id, name, args = {}) {
 
 /** Send a command to the host; resolves with its result, rejects with its error (also toasted, unless `quiet`: the caller says it itself). */
 export function command(name, args = {}, quiet = false) {
+  if (paired) return paired.command(name, args, quiet);
   return new Promise((resolve, reject) => {
     if (!socket || socket.readyState !== WebSocket.OPEN) {
       toast("Not connected to the town", "error");
@@ -132,6 +165,7 @@ function receive(msg) {
 }
 
 export function connect() {
+  if (paired) { paired.connect(); return; }
   const ws = new WebSocket(`ws://${location.host}/ws?t=${encodeURIComponent(TOKEN)}`);
   ws.onopen = () => { socket = ws; online.value = true; };
   ws.binaryType = "arraybuffer";
