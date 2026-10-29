@@ -149,8 +149,12 @@ def test_a_press_that_opened_a_dialog_opens_a_place_over_the_pane_never_a_dialog
 
 def test_every_place_is_reached_over_the_pane(window):
     pg, host, w = window
-    # the Orkmaster's …: the projects, Settings, Files
-    for word, kind in (("Switch project", "projects"), ("Settings", "settings"), ("Files", "files")):
+    # the ▾ after the project's name: the projects (spec 107 §8.2); the Orkmaster's …: Settings, Files
+    pg.get_by_role("button", name="Switch project").click()
+    over(pg, "projects")
+    nothing_modal(pg)
+    back(pg)
+    for word, kind in (("Settings", "settings"), ("Files", "files")):
         open_menu(pg)
         pg.get_by_role("menuitem", name=word).click()
         over(pg, kind)

@@ -2,6 +2,7 @@
    words and labels. The arena itself, its left column, its fan and its flags went with spec 98 E. In orkUI's office look (design-system/orkui): its tokens and components only, no raw colour, nothing round. */
 @import "./systemmap.css";
 @import "./limits.css";
+@import "./play.css";
 .arena-spacer { flex: 1; }
 .arena-muted { color: var(--ork-ink-muted); }
 .arena-cap { font: var(--ork-type-caption); color: var(--ork-ink-muted); margin: 0; }

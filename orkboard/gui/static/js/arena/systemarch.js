@@ -7,12 +7,15 @@
 // 128 x 180, or 96 x 134 (5:7, the name in three lines, *Uses k · Used by m* in the title) when the table is crowded: more than four columns or more than twenty parts. Spec 89's reveal and marks apply to
 // the parts inside the containers and the shared ones: the reveal is played once by `Lens` for both views, System and Feature modules (systemmap.js `Modules`); a container's parts gone since the last look
 // lie in a last row of their own to crumble. `overview` null (a snapshot of a host from before spec 90): *Reading the project…*, and Feature modules still works.
+// The whole is drawn at its natural size and scaled to the pane's width (sysfit.js: spec 107 §6; the arrows are measured in the unscaled box); *Fit* and *100 %* in its corner.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Icon } from "../orkui.js";
 import { command } from "../link.js";
 import { lift, lifted, lower, linkKey } from "../frame/state.js";
 import { ArrowLines } from "./arrows.js";
+import { useScrollCue } from "../scrollcue.js";
+import { FitButtons, useFit, usePan } from "./sysfit.js";
 import { COULD_NOT, DONE, Modules, NOTHING, Part, READING, SysBar, dealsOf, liftedPart, openPart, orderOf, phaseOf, shownSys, useReveal } from "./systemmap.js";
 
 // -- the words (spec 90 §0) ---------------------------------------------------------------------------------------------------------------------------------------------------
@@ -64,15 +67,15 @@ export function planOf(ov) {
 }
 
 /** The links' arrows over the table `host`: each from the top of its `from` container's column up into its lane, across, down into the top of its `to`'s; the shortest span in the lowest lane. Each
- *  carries its name's place (`at`) on the middle of its lane. */
-function arrowsOf(host, links) {
+ *  carries its name's place (`at`) on the middle of its lane. `scale`: the host is drawn scaled by it, so what is measured is divided by it. */
+function arrowsOf(host, links, scale = 1) {
   if (!host || !links.length) return [];
   const origin = host.getBoundingClientRect();
   const box = (id) => {
     const el = host.querySelector(`.arch-col[data-container="${CSS.escape(id)}"]`);
     if (!el) return null;
     const r = el.getBoundingClientRect();
-    return { x: r.left - origin.left, y: r.top - origin.top, w: r.width };
+    return { x: (r.left - origin.left) / scale, y: (r.top - origin.top) / scale, w: r.width / scale };
   };
   const items = links.map((l) => ({ l, a: box(l.from), b: box(l.to) })).filter((x) => x.a && x.b && x.l.from !== x.l.to);
   items.sort((p, q) => Math.abs(p.a.x - p.b.x) - Math.abs(q.a.x - q.b.x));
@@ -111,23 +114,21 @@ function Head({ c }) {
 
 /** System: the containers as columns on the table, the shared parts between those they serve, the links as arrows named on them. */
 export function Architecture({ doc, order, step, pick, party }) {
-  const ov = doc.overview, host = useRef(), [arrows, setArrows] = useState([]), [hover, setHover] = useState("");
+  const ov = doc.overview, host = useRef(), scroller = useRef(), [arrows, setArrows] = useState([]), [hover, setHover] = useState("");
   const shownPart = liftedPart(party), linkHead = `t:link:${party}:`, shownLink = lifted.value.startsWith(linkHead) ? lifted.value.slice(linkHead.length) : "";
   const cols = planOf(ov), links = ov.links || [];
   const parts = ov.parts || {};
   const count = cols.reduce((k, col) => k + (col.kind === "shared" ? col.parts.length : col.rows.reduce((j, r) => j + r.parts.length, 0)), 0);
   const small = cols.length > CROWDED_COLS || count > CROWDED_PARTS;
-  const draw = () => {
-    const next = arrowsOf(host.current, links);
+  const draw = (f = 1) => {
+    const next = arrowsOf(host.current, links, f);
     setArrows((was) => (JSON.stringify(was.map((a) => a.points)) === JSON.stringify(next.map((a) => a.points)) ? was : next));
   };
-  useLayoutEffect(draw, [ov, small]);
-  useEffect(() => {
-    if (!host.current || typeof ResizeObserver !== "function") return undefined;
-    const ro = new ResizeObserver(() => draw());
-    ro.observe(host.current);
-    return () => ro.disconnect();
-  }, [ov]);
+  const there = (ov.containers || []).length > 0;
+  const fit = useFit(scroller, host, draw, [ov, small, there]);
+  useLayoutEffect(() => draw(fit.scale()), [ov, small]);
+  useScrollCue(scroller);
+  usePan(scroller, [there]);
   if (!(ov.containers || []).length) return html`<div class="sys-main"><div class="assets-none"><p class="assets-none__title">${NOTHING}</p></div></div>`;
   const goals = doc.goals || {}, gindex = new Map(order.map((o, i) => [o.goal, i])), deals = dealsOf(doc, order);
   const lit = new Set(hover ? [...(parts[hover]?.uses || []), ...(parts[hover]?.used_by || [])] : []);
@@ -146,8 +147,9 @@ export function Architecture({ doc, order, step, pick, party }) {
     else lift(linkKey(party, key));
   };
   return html`<div class="sys-main">
-    <div class="sys-scroll">
-      <div class=${cls("arch", { "is-small": small })} ref=${host} data-size=${small ? "small" : "full"}>
+    <div class="sys-scroll gui-scrolls" ref=${scroller}>
+      <div class="arch-fit" style=${fit.w ? `width:${(fit.w * fit.f).toFixed(1)}px;height:${(fit.h * fit.f).toFixed(1)}px` : undefined}>
+      <div class=${cls("arch", { "is-small": small })} ref=${host} data-size=${small ? "small" : "full"} data-scale=${fit.f.toFixed(3)} style=${fit.f < 1 ? `transform:scale(${fit.f})` : undefined}>
         <div class="arch-lanes" style=${`height:${links.length * LANE + 8}px`} aria-hidden="true"></div>
         <div class="arch-cols">
           ${cols.map((col) => (col.kind === "shared" ? html`<section key=${`shared:${col.serves.join(",")}`} class="arch-col arch-shared" data-shared=${col.serves.join(",")} aria-label=${SHARED}>
@@ -167,7 +169,9 @@ export function Architecture({ doc, order, step, pick, party }) {
           aria-pressed=${String(shownLink === a.key)} aria-label=${`${names[a.link.from] || a.link.from} → ${names[a.link.to] || a.link.to}: ${linkWords(a.link)}`}
           onClick=${() => openLink(a.link)}>${linkWords(a.link)}</button>`)}
       </div>
+      </div>
     </div>
+    <${FitButtons} mode=${fit.mode} setMode=${fit.setMode} />
   </div>`;
 }
 

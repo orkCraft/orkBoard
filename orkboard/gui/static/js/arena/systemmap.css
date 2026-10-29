@@ -79,7 +79,17 @@
 .sys-change__made { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .sys-change__made b { color: var(--ork-ink); font-weight: 600; }
 /* -- System: the containers as columns on the table (docs/specs/90-what-the-first-look-said.md §6.7, systemarch.js) ------------------------------------ */
-.arch { position: relative; width: max-content; min-width: 100%; box-sizing: border-box; padding: var(--ork-2) var(--ork-8) var(--ork-8) var(--ork-6); }
+/* fitted to the pane (systemarch.js, sysfit.js, spec 107 §6): .arch is drawn at its natural size and scaled from its top left; .arch-fit takes the scaled size, so the scroller scrolls what is seen */
+.arch-fit { position: relative; flex: none; }
+.arch { position: relative; width: max-content; box-sizing: border-box; padding: var(--ork-2) var(--ork-8) var(--ork-8) var(--ork-6); transform-origin: 0 0; }
+.sys-scroll[data-more] { scrollbar-gutter: stable; }
+.sys-scroll[data-more]:not([data-more=""]) { cursor: grab; }
+.sys-scroll[data-panning] { cursor: grabbing; user-select: none; }
+.sys-scroll[data-panning] .arch { pointer-events: none; }
+/* Fit and 100 % in the System's corner */
+.arch-zoom { position: absolute; right: var(--ork-4); bottom: var(--ork-4); z-index: 30; display: flex; gap: var(--ork-1); }
+.arch-zoom__btn[aria-pressed="true"] { --_bg: var(--ork-ink); --_fg: var(--ork-on-ink); --_bd: var(--ork-ink); }
+@media (pointer: coarse) { .arch-zoom__btn { min-width: 44px; min-height: 44px; } }
 .arch-cols { display: flex; align-items: flex-start; column-gap: calc(2 * var(--ork-8)); }
 .arch-col { flex: none; display: flex; flex-direction: column; gap: var(--ork-6); min-width: 208px; }
 .arch-col.is-bare { min-width: 160px; }
