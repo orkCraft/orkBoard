@@ -3434,3 +3434,45 @@ and §171.2 precise):
 3. **A drawing for every kind in every race's way** (about 180) **is for later**, the owner's: until then 1 and 2 hold.
 The owner's call.
 
+
+## 174. The phone's app a native frame: upright it is the hand with the top card's context above, on its side the table without the hand; push through a relay that reads nothing, an answer from the notification, widgets (29 October, the owner)
+
+Why: the owner: the phone should be a real app (Capacitor), with notifications and widgets; upright its first screen the
+answers to the cards and a new goal, the Board by parties a screen of its own on its side, with no hand; and the top card's
+question with more of its context, at the screen's top. §150 already keeps upright for the quick answer and the side for the
+table, and §128 makes the phone's app a frame round the one page, as `vscode/` is the desktop's; but in an installed web app
+an iPhone neither locks a screen's orientation nor answers from a notification, and has no widget. A native frame can, and
+draws nothing of the Board itself. A native app's push goes through Apple's and Google's services (APNs, FCM), whose keys
+cannot be handed to every person's computer, so it needs a server of ours, which spec 42 §3 did without. So (this changes
+§150.2–§150.3 and spec 42 §3.1's words, and makes §128.1, §145 and spec 94 §3–§4 precise):
+1. **Upright, the narrow width's first screen is the hand** (the stack of cards, one question a card, §153.6; the blank card
+   with the microphone at its foot), and **above it the top card's context**: whose question it is (its leader's head, its
+   party), which goal (its element, its type's sign, its short name), why it is asked (the question's `why`, one line), what
+   the leader recommends and that work waits on it (`blocks`), never a count. A press on it opens the goal's way over the
+   pane (§142). It is the table's what and why for the one card in hand: §145's two parts, the table's a slice. With nothing
+   in the hand the blank card takes the screen.
+2. **The table at the narrow width is its own screen**, opened from the hand's top (*The Board*); in the native app that
+   press turns the screen to its side (the one screen that asks an orientation, so a phone with its rotation locked still
+   reaches the table); in a browser it opens upright, spec 94 §3's tokens.
+3. **On its side a phone is the table without the hand** (a low window, §150.2, under `pointer: coarse`): no fan, no blank
+   card; a stop's sign on a head opens its card over the table, answered there, so a stop is never a reason to turn the
+   phone back. A low window with a fine pointer (a laptop's split screen) keeps §150.2's fan. A goal is written upright.
+4. **The native frame** (Capacitor, `mobile/`): pairing by the QR with the computer's certificate pinned from it, the page
+   carried in the app (never loaded from the computer), push, the arrival from a notification, the widgets' data, the
+   orientation. Like `vscode/` it draws nothing of the Board; the PWA stays for whoever does not install the app.
+5. **Push through the relay**, a server of ours that reads nothing: it takes a Web Push request as a push service does (the
+   message sealed to the device, RFC 8291; signed by the paired computer, VAPID), checks the signature against the key the
+   device registered, and passes the sealed bytes to APNs or FCM; the phone opens them (on iOS a Notification Service
+   Extension). It keeps no message and logs none; the computer's `gui/web_push.py` is unchanged, the device's endpoint is the
+   relay's. What goes and when stays the computer's (spec 42 §3.1). Settings say plainly that notifications to the app go
+   through Orkboard's relay, sealed.
+6. **A notification says the card**: its leader and party, the goal's short name and the question's first line, and its
+   two actions *Take the pick* (the leader's recommended answer, sent from the notification) and *Open*. The lock screen's
+   previews are the phone's own setting. **No number anywhere**: no count in a notification's words, no badge on the app's
+   icon (Android a dot), so spec 42 §3.1's *3 wait for your answer* goes.
+7. **Widgets**, native (WidgetKit, Android's Glance), from the top card the app keeps: small, the leader's head, the goal's
+   short name and the alert sign, else *New goal*; medium, the top card with *Take the pick* and *Open*; on the lock screen,
+   *New goal* with the microphone. Never a count.
+8. **When**: S5, after spec 94 holds on the owner's phone; iOS first, then Android. A Live Activity while Play runs is
+   asked again later.
+The owner's call.
