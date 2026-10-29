@@ -57,7 +57,7 @@ from websockets.exceptions import ConnectionClosed
 from websockets.http11 import Request, Response
 
 from orkboard import __version__, brand
-from orkboard.design import tokens
+from orkboard.design import logo, tokens
 from orkboard.gui import media, phones, pwa
 from orkboard.gui.board_host import CommandError
 
@@ -202,8 +202,8 @@ class Server:
         if parts.path in ("/", "/index.html"):
             page = preview / "index.html" if preview is not None and (preview / "index.html").is_file() else None
             return _response(HTTPStatus.OK, page.read_bytes() if page else self.page(), "text/html; charset=utf-8")
-        if parts.path == "/favicon.ico":                  # the ork mark (design-system/logo)
-            return _response(HTTPStatus.OK, (tokens.SYSTEM / "logo" / "favicon.ico").read_bytes(), "image/x-icon")
+        if parts.path == "/favicon.ico":                  # Orkboard's mark, else the ork mark of Orkline (design/logo.py)
+            return _response(HTTPStatus.OK, logo.favicon().read_bytes(), "image/x-icon")
         if parts.path == "/roles.css":
             return _response(HTTPStatus.OK, tokens.roles_css().encode(), "text/css; charset=utf-8")
         target = resolve(parts.path, preview)

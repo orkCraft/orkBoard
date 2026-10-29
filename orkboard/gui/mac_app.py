@@ -21,11 +21,12 @@ import sys
 from pathlib import Path
 
 from orkboard import __version__
+from orkboard.design import logo
 
 NAME = "Orkboard"
 BUNDLE_ID = "works.ork.orkboard"
 INSTALL = "orkboard[gui] @ git+https://github.com/orkWorks/orkBoard"
-ICON = Path(__file__).resolve().parent / "static" / "pwa" / "icon-512.png"
+ICON = logo.BOARD / "icon-512.png"         # the Mac app is Orkboard's (NAME), so its icon is the crowned mark, whoever else runs these modules
 # Where an AI tool keeps its sign-in, when the terminal sets it: the app gets the same (Claude Code's sign-in is kept per
 # CLAUDE_CONFIG_DIR, its Keychain entry too, so without it an app opened from the Dock finds none). Never a key.
 KEPT = ("CLAUDE_CONFIG_DIR", "CODEX_HOME")

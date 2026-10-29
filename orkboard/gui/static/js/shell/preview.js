@@ -1,9 +1,10 @@
 // The views the drawer had that the pane keeps (docs/specs/33-v1-shell.md §6, spec 39 §3; docs/specs/98-the-table-and-the-hand.md §7): a task's state, brief and log (`Task`, drawn over the map by table/over.js) and the money of a goal so far
 // (`spendWords`, read by hand/resultface.js, which draws a result's tests, changes, commits and files with the answers of Review at its foot). The drawer itself is gone.
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useState } from "preact/hooks";
 import { html } from "../html.js";
 import { Who } from "../orkui.js";
 import { ErrorLine } from "./errors.js";
+import { LogView } from "./logview.js";
 import { holdWords, heldByYou } from "../board/store.js";
 import { TASK_STATE } from "../board/maplayout.js";
 import { act } from "./store.js";
@@ -24,8 +25,6 @@ function FailedActions({ t }) {
 /** A task: its state, its goal, who does it, its brief and its log (`d.task`, `ideas.task`; the caller reads it again while it runs). `log`: the log first (a failure's lines). */
 export function Task({ d, log = false }) {
   const t = d?.task;
-  const ref = useRef();
-  useEffect(() => { if (ref.current) ref.current.scrollTop = ref.current.scrollHeight; }, [t?.log]);
   if (!t) return html`<p class="ok-tone-muted">Opening…</p>`;
   const live = t.state === "running" || t.state === "testing";
   const facts = html`<dl class="shell-facts">
@@ -36,7 +35,7 @@ export function Task({ d, log = false }) {
       <dt>Round</dt><dd>${t.round || 1}</dd>
       <dt>Spend</dt><dd>${t.cost != null ? (pctOf(t.cost) ? `≈${pctOf(t.cost)}` : `$${t.cost.toFixed(2)}`) : "—"}</dd>
     </dl>`;
-  const lines = html`<h3 class="board-sub">Log</h3><pre class="shell-log" ref=${ref} aria-label="Log">${t.log || "Nothing logged yet."}</pre>`;
+  const lines = html`<${LogView} text=${t.log} label="Log" />`;
   return html`<div class="shell-task" data-kind=${log ? "log" : "task"}>
     ${log ? lines : facts}
     ${t.error && html`<${ErrorLine} text=${t.error} />`}

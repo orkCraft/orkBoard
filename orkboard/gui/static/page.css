@@ -85,7 +85,9 @@ body:has(.gui-toast) .gui-modal .gui-dialog { max-height: calc(100vh - 2 * var(-
 /* -- the first screen (js/onboarding.js, Orkboard's step: the AI tools found) --------------------------------------------- */
 .gui-onb { position: fixed; inset: 0; z-index: 30; overflow: auto; display: flex; flex-direction: column; align-items: center; gap: var(--ork-6);
   padding: var(--ork-8) var(--ork-6); box-sizing: border-box; background: var(--ork-canvas); color: var(--ork-ink); }
+.gui-onb__brand { display: flex; align-items: center; gap: var(--ork-4); }
 .gui-onb__brand img { height: 32px; display: block; }
+.gui-onb__name { font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); }
 .gui-onb__card { width: min(880px, 100%); box-sizing: border-box; display: flex; flex-direction: column; gap: var(--ork-6); padding: var(--ork-8);
   background: var(--ork-panel); border: var(--ork-double) double var(--ork-edge); clip-path: var(--ork-notch); }
 .gui-onb__head { display: flex; flex-direction: column; gap: var(--ork-3); }

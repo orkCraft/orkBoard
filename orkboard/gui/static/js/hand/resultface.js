@@ -8,6 +8,7 @@ import { ask } from "../board/store.js";
 import { mapData, review } from "../shell/store.js";
 import { ResultActions, Found, testsWords, changesWords, isRed } from "../shell/review.js";
 import { File } from "../shell/diffview.js";
+import { LogView, happened } from "../shell/logview.js";
 import { spendWords } from "../shell/preview.js";
 import { pctShort } from "../spend.js";
 import { partyBy } from "./data.js";
@@ -36,7 +37,8 @@ function TaskResult({ idea, task }) {
         ${shot?.url && html`<span class="arena-result__shot"><img src=${shot.url} alt=${`What “${r.title}” looks like`} draggable="false" style=${shot.w && shot.h ? `aspect-ratio:${shot.w} / ${shot.h}` : undefined} /></span>`}
         ${r.conflict && html`<p class="ok-tone-error">⚠ ${r.conflict}</p>`}
         <${Found} r=${r} />
-        ${isRed(r) && r.tests.tail && html`<details class="shell-file"><summary>What the tests said</summary><pre class="shell-log">${r.tests.tail}</pre></details>`}`
+        ${isRed(r) && html`<p class="body hand-result__said">${happened({ tests: r.tests, red: true })}</p>`}
+        ${isRed(r) && r.tests.tail && html`<${LogView} text=${r.tests.tail} label="What the tests said" />`}`
       : html`<p class="ok-tone-muted">This result is no longer waiting at Review.</p>`}
     ${!diff ? html`<p class="ok-tone-muted">Reading the code…</p>` : html`
       <h3 class="board-sub">Commits</h3>

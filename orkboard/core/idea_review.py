@@ -19,6 +19,7 @@ from orkboard.core.idea_plan import _task, estimate
 from orkboard.core.idea_task import is_check
 from orkboard.realm import idea_change, idea_spend, idea_target, project_map
 from orkboard.realm.goal_types import DROPPED
+from orkboard.realm.idea_git import plain
 
 STOP_ONE = "stop-one"                # a Run's `why` when one task is stopped (stop_task)
 STOPPED_NOTE = "stopped by you"      # a task stopped on its own waits as `ready` with this note until Start
@@ -345,4 +346,4 @@ class ReviewMixin:
             text = self._log_path(slug, tid).read_text(encoding="utf-8", errors="replace")
         except OSError:
             return ""
-        return "".join(text.splitlines(keepends=True)[-lines:])
+        return plain("".join(text.splitlines(keepends=True)[-lines:]))
