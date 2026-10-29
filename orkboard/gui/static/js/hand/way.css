@@ -48,3 +48,6 @@ span.hand-route__head { cursor: default; }
 .hand-way__why { display: flex; flex-direction: column; gap: var(--ork-1); }
 .hand-way__points { margin: 0; padding-left: var(--ork-6); display: flex; flex-direction: column; gap: var(--ork-2); overflow-wrap: anywhere; }
 .hand-way__entry { width: 100%; box-sizing: border-box; min-height: 200px; resize: vertical; font: var(--ork-type-body); }
+
+/* a leader's no lifted (docs/specs/108 §4.3): who says it, its why, the smaller goal it would do */
+.hand-way__instead { color: var(--ork-ink-muted); overflow-wrap: anywhere; }

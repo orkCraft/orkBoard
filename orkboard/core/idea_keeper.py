@@ -50,6 +50,7 @@ from orkboard.core.idea_judge import JudgeMixin
 from orkboard.core.idea_lead import LeadMixin
 from orkboard.core.idea_revise import ReviseMixin
 from orkboard.core.idea_sections import SectionsMixin
+from orkboard.core.idea_objection import ObjectionMixin
 from orkboard.core.idea_talk import TalkMixin
 from orkboard.core.idea_project_q import ProjectQMixin
 from orkboard.core.idea_ask import AskMixin
@@ -109,7 +110,7 @@ def _iso(at: float) -> str:
     return dt.datetime.fromtimestamp(at).isoformat(timespec="seconds")
 
 
-class IdeaKeeper(SignInMixin, TalkMixin, ProjectQMixin, AskMixin, LoopMixin, TreeMixin, DecideMixin, SectionsMixin, PlanMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
+class IdeaKeeper(SignInMixin, TalkMixin, ObjectionMixin, ProjectQMixin, AskMixin, LoopMixin, TreeMixin, DecideMixin, SectionsMixin, PlanMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
     def __init__(self, repo_root: Path, state_dir: Path, wiki_root: Callable[[], Path],
                  settings: Callable[[], dict], publish: Callable[[str], None] = lambda slug: None,
                  demo: bool = False, budget_ok: Callable[[], bool] = lambda: True,

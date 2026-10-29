@@ -1,7 +1,7 @@
 """A leader's answer in Talk, taken strictly (docs/specs/99-a-goals-way.md §5; decisions §121.2, §153.3, §153.5, §158.1): the model's answer is untrusted, so what a
 round or a bug's diagnosis keeps is what these functions let through. Pure code, no model, no face; `core/idea_talk.py` calls them.
 
-    clean_round(answer, party, leader, rnd, first, known)     # {stance, for, against, cards: [(card, blocks, key)], more}, or None; the second round has no stance
+    clean_round(answer, party, leader, rnd, first, known, line)     # {stance, for, against, verdict, why, instead, after, cards: [(card, blocks, key)], more}, or None; the second round has no stance or verdict
     pick_three(pool)                                          # the Orkmaster's rule for the three of all the leaders' cards: (chosen, closed)
     clean_diagnosis(answer, party, leader, root, first, known, again=False)    # a bug's {cause, where: [path], cards}, or None
     touched(root, text, limit) / failure_lines(text)          # the files a report names; its failure's lines
@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 from orkboard.hooks.warder import is_secret
 from orkboard.realm import idea_questions, project_facts
@@ -66,14 +66,27 @@ def _cards(raw: object, party: str, leader: str, prefix: str, limit: int, projec
     return out
 
 
-def clean_round(answer: object, party: str, leader: str, rnd: int, first: bool, known: set[str]) -> dict | None:
-    """One leader's answer to a round, strictly: `{stance, for, against, cards: [(card, blocks, key)], more}`; None when it is no object, or says no stance in the
-    first round. The second round has no stance and no question about the project; `more` is the leader asking for a second round (the first round's)."""
+def clean_verdict(answer: dict, line: Iterable[str] = ()) -> dict:
+    """A leader's verdict on the goal (spec 108 §4.1), strictly: `{verdict: go|doubt|no, why, instead, after}`. A `doubt` or a `no` needs its `why` (one line): without it the
+    leader said nothing against the goal and the verdict reads as `go`. `instead` (a smaller or other goal that would serve) is kept with a doubt or a no; `after`, the goal in `line`
+    (the slugs the leader was given) a `no` says should come first, with a `no` only and only one of those."""
+    verdict = str(answer.get("verdict") or "").strip().lower() if isinstance(answer.get("verdict"), str) else ""
+    why = _line(answer.get("why"))
+    if verdict not in ("doubt", "no") or not why:
+        return {"verdict": "go", "why": "", "instead": "", "after": ""}
+    after = answer.get("after").strip() if isinstance(answer.get("after"), str) else ""
+    return {"verdict": verdict, "why": why, "instead": _line(answer.get("instead")), "after": after if verdict == "no" and after in set(line) else ""}
+
+
+def clean_round(answer: object, party: str, leader: str, rnd: int, first: bool, known: set[str], line: Iterable[str] = ()) -> dict | None:
+    """One leader's answer to a round, strictly: `{stance, for, against, verdict, why, instead, after, cards: [(card, blocks, key)], more}`; None when it is no object, or says no
+    stance in the first round. The second round has no stance, no verdict and no question about the project; `more` is the leader asking for a second round (the first round's).
+    `line`: the slugs of the goals in line the leader was given (a `no` may name one as `after`)."""
     if not isinstance(answer, dict):
         return None
-    out: dict[str, Any] = {"stance": "", "for": "", "against": "", "more": rnd == 1 and answer.get("second_round") is True}
+    out: dict[str, Any] = {"stance": "", "for": "", "against": "", "verdict": "go", "why": "", "instead": "", "after": "", "more": rnd == 1 and answer.get("second_round") is True}
     if rnd == 1:
-        out.update({"stance": _line(answer.get("stance")), "for": _line(answer.get("for")), "against": _line(answer.get("against"))})
+        out.update({"stance": _line(answer.get("stance")), "for": _line(answer.get("for")), "against": _line(answer.get("against")), **clean_verdict(answer, line)})
         if not out["stance"]:
             return None
     cards = _cards(answer.get("questions"), party, leader, f"r{rnd}-{party}", MAX_GOAL)
