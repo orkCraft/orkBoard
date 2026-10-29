@@ -19,6 +19,7 @@ from orkboard import schedule, settings
 from orkboard.gui import web_push
 from orkboard.gui.ideas_recap import RECAP_DAYS
 from orkboard.realm import board_recap, event_log
+from orkboard.realm.idea_target import when_words
 from orkboard.realm.idea_words import short_of
 from orkboard import brand
 
@@ -27,6 +28,10 @@ PUSH_GAP_S = 900.0
 MORNING_H = 3                                   # the morning is the first tick within this many hours after the quiet hours end
 KIND_WORDS = {"goal": "A party asks", "asks": "A spec asks", "plan": "A plan waits for you", "change": "A plan change waits for you", "todo": "A to-do", "failed": "Failed",
               "op": "At your check", "op_failed": "Failed"}      # js/board/today.js KIND_WORDS, the kinds that wait for an answer
+
+
+PAID_TITLE = "Orkmaster asks"          # the Orkmaster's *Go on paid?* (decisions §178.5; spec 105 C): a card of the hand, pushed with *Open* only, never a pick
+PAID_WORDS = "Go on paid? Every subscription is out{until}."
 
 
 PICK_WORDS = "{member} asks you to pick one"      # a task that made variants waits for the person's pick (spec 51 §2.4): a pick that waits is an answer that waits
@@ -77,8 +82,8 @@ class Pusher:
         except Exception:
             return n
 
-    def _first(self) -> tuple[str, str] | None:
-        """(kind's words, short name) of the first row of the shown project's Needs you that waits for an answer."""
+    def _first_row(self) -> dict | None:
+        """The first row of the shown project's Needs you that waits for an answer."""
         ideas = self.host.ideas
         rows: list[dict] = []
         try:
@@ -86,10 +91,35 @@ class Pusher:
             rows += self.host.ops.needs()
         except Exception:
             pass
-        row = next((n for n in rows if n.get("kind") in KIND_WORDS or n.get("kind") == "pick"), None)
+        return next((n for n in rows if n.get("kind") in KIND_WORDS or n.get("kind") in ("pick", "paid")), None)
+
+    @staticmethod
+    def paid_words(row: dict) -> str:
+        """*Go on paid? Every subscription is out until Thu 18:00.*; no time when the row has no `until`. No count, no tool's name."""
+        until = ""
+        try:
+            at = dt.datetime.fromisoformat(str(row["until"])).timestamp()
+            until = f" until {when_words(at, dt.datetime.now().timestamp())}"
+        except (KeyError, TypeError, ValueError):
+            pass
+        return PAID_WORDS.format(until=until)
+
+    def _first(self) -> tuple[str, str] | None:
+        """(kind's words, short name) of the first row of the shown project's Needs you that waits for an answer."""
+        row = self._first_row()
+        if row and row["kind"] == "paid":
+            return PAID_TITLE, ""
         if row and row["kind"] == "pick":                           # said by who asks: the member the task ran as, no title
             return PICK_WORDS.format(member=str((row.get("by") or {}).get("name") or "A member")), ""
         return (KIND_WORDS[row["kind"]], short_of(str(row.get("title") or ""))) if row else None
+
+    def message_needs(self, waiting: int) -> dict:
+        """The push of an answer that waits. The Orkmaster's *Go on paid?* first in line says itself, with no number and no pick (`card.pick` None:
+        money is spent from the card on the screen, so the notification has *Open* only)."""
+        row = self._first_row()
+        if row and row["kind"] == "paid":
+            return {"title": PAID_TITLE, "body": self.paid_words(row), "tag": "needs", "badge": waiting, "url": "./#needs", "card": {"id": "paid", "goal": None, "pick": None}}
+        return {"title": brand.name(), "body": self.words_needs(waiting), "tag": "needs", "badge": waiting, "url": "./#needs"}
 
     def words_needs(self, waiting: int) -> str:
         first = self._first()
@@ -154,8 +184,7 @@ class Pusher:
                 continue
             if waiting > self._told[did] and self._free(did, "needs", now):
                 self._told[did] = waiting
-                out.setdefault("needs", []).append((d, {"title": brand.name(), "body": self.words_needs(waiting), "tag": "needs",
-                                                         "badge": waiting, "url": "./#needs"}))
+                out.setdefault("needs", []).append((d, self.message_needs(waiting)))
             elif self._morning_due(d, machine, now):
                 since = max(board_recap.when(d.get("seen")) or now, now - dt.timedelta(days=RECAP_DAYS))      # as `ideas.recap` caps it
                 body = self.morning(since, now, waiting)

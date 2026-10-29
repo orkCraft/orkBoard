@@ -181,7 +181,7 @@ What it is, and what differs from §5 or is not said there:
   until (None once the reset has come: it ended), `waiting(state_dir, at)` that a no has not ended; with no reset known an answer holds the five-hour window (`tool_now.PAID_HOLD_S`). `row(state_dir, machine, got, usd_task, at)`
   is `[]` or the goal-free row `{kind: "paid", tool, name, until, usd_task, text: "Go on paid?", blocks: true, priority: "high", at}` (`until` an ISO local time or None); it is asked when `now` is None, a tool turned on
   is billed by its API (`tool_now.api_tool`: the first in the order), no yes holds and no no waits. It is laid in Needs you by `gui/ideas_board.py` (`Ideas.paid_rows`, none in the demo), after the other goal-free
-  rows. It is **not counted** in `needs_you`'s number (as `project_q`): the phone has no card for it, and a push for something it cannot answer would be a dead end.
+  rows. It was **not counted** in `needs_you`'s number at first (see *Changed since* below).
 - `usd_task` (`Ideas.usd_task_of(tool)`): the mean of the Board's last ten priced tasks that ended on that tool (`task.tool`), else the Grunt's `usd_task` the seats show (`ideas_roles._usd_task`); None while nothing is priced.
 - `ideas.paid {yes: bool}` (`gui/ideas_mana.py`, in the command table, the phone may call it): refused (*Nothing asks to go on paid now*) while `now` is not None or no tool is billed by its API; else it keeps the answer
   (`paid.answer`, until `until`, the soonest reset), logs `paid_answered {tool, yes}`, ticks `mana_tick` (so a yes is `TOOL_MOVED` at once) and answers `{ok, tool, name, until}`. **Nothing is run by a tool billed by its API
@@ -193,6 +193,8 @@ What it is, and what differs from §5 or is not said there:
   with no reset). Its stop is `arenawords.js` `paidStopsOf` (a goal-free stop, as `signInStopsOf`: no party, `laneOf` puts `paid` under the first lane with the whole goal's kinds), its words `paidWords` / `untilWords`.
   The phone draws no card for it yet.
 - Tests: `tests/test_paid.py`, `tests/test_paid_card_browser.py` (the face, the lifted words, both answers, an unknown cost, no reset, the lane, at both widths).
+
+**Changed since (decisions §178.5).** The phone is to draw *Go on paid?* as a card of the hand, so the row is no longer left out: it **counts in `needs_you`** (`Ideas.snapshot`, which the badge, the projects' counts and the push read; `project_q` and the other kinds left out keep their rule, which `paid` no longer shares) and it **is pushed** like an answer that waits (`gui/phone_push.py`, `Pusher.message_needs`): title *Orkmaster asks*, body *Go on paid? Every subscription is out until Thu 18:00.* (the row's `until` through `idea_target.when_words`; no time when `until` is None; no number, no tool's name), once per tag gap like the other pushes, with `card: {id: "paid", goal: null, pick: null}`: no pick, so its notification has *Open* only, never *Take the pick* (money is spent from the card on the screen). Tests: `tests/test_paid.py`, `tests/test_phone_push.py`.
 
 ## As built F (the portal)
 

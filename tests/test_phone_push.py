@@ -300,3 +300,39 @@ def test_the_morning_counts_a_goals_flag_beside_a_partys_old_one_spec_50(rig):
     rig.pairing.set_push(rig.device, SUB)                                                       # the day is not checked yet
     msg = rig.tick(at(8, 45, DAY + dt.timedelta(days=1)))[-1]                                # the sent list: the day's second morning
     assert msg["body"].startswith("While you were away: 3 flags raised")
+
+
+# -- the Orkmaster's Go on paid? (decisions §178.5; spec 105 C) -----------------------------------------------------
+
+
+def _go_dry(rig, hours=5):
+    """Every subscription out, an API tool on: the Orkmaster's row `paid` (realm/paid.py)."""
+    from orkboard.sources.limits import Limit
+    m = settings.MachineSettings()
+    for t, billing in (("claude", "subscription"), ("codex", "api")):
+        m.tools[t] = settings.ToolChoice(enabled=True, billing=billing)
+    rig.host.machine = m
+    reset = dt.datetime.now() + dt.timedelta(hours=hours)
+    rig.host.limits.rows = [Limit("claude", "", "session", 0.0, reset)]
+    rig.host.ideas.rev += 1
+    return reset
+
+
+def test_go_on_paid_counts_and_is_pushed_once_per_gap_with_its_own_words_and_no_pick(rig):
+    rig.tick(at(12, 0))                                                        # the first tick only learns what waits (nothing)
+    reset = _go_dry(rig)
+    assert rig.host.ideas.snapshot()["needs_you"] == 1                          # it counts
+    (msg,) = rig.tick(at(12, 1))
+    when = phone_push.when_words(reset.timestamp(), dt.datetime.now().timestamp())
+    assert msg == {"title": "Orkmaster asks", "body": f"Go on paid? Every subscription is out until {when}.", "tag": "needs", "badge": 1, "url": "./#needs",
+                   "card": {"id": "paid", "goal": None, "pick": None}}          # Open only: no pick to take
+    assert not any(ch.isdigit() for ch in msg["body"].replace(when, ""))        # no number in the words
+    rig.tick(at(12, 10))
+    rig.host.ideas.rev += 1
+    rig.tick(at(12, 20))
+    assert len(rig.sent) == 1                                                  # the same question is no news again within the gap
+
+
+def test_go_on_paid_without_a_reset_says_no_time():
+    assert phone_push.Pusher.paid_words({"until": None}) == "Go on paid? Every subscription is out."
+    assert phone_push.Pusher.paid_words({}) == "Go on paid? Every subscription is out."

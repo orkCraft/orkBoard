@@ -50,7 +50,7 @@ def test_the_row_when_every_subscription_is_dry_and_an_api_tool_is_on(host):
     assert row["until"] == dt.datetime.fromtimestamp(AT + 5 * H).isoformat(timespec="minutes")
     assert row["usd_task"] is None or row["usd_task"] > 0
     assert host.snapshot()["mana"]["now"] is None                     # the work holds meanwhile
-    assert host.snapshot()["needs_you"] == 0                          # the page's own: it is no count of what waits
+    assert host.snapshot()["needs_you"] == 1                          # a card of the hand like the others: it counts (decisions §178.5)
 
 
 def test_no_row_without_an_api_tool_or_while_a_subscription_has_room(host):
@@ -106,6 +106,7 @@ def test_a_yes_keeps_the_work_going_with_the_api_tool_until_the_reset(host):
 def test_a_wait_is_not_asked_again_before_the_reset(host):
     assert host.command("ideas.paid", {"yes": False})["ok"] is True
     assert rows(host) == []
+    assert host.snapshot()["needs_you"] == 0                          # answered: no longer counted
     mana = host.snapshot()["mana"]
     assert mana["paid"] is None                                        # a wait is no paid work: no slot
     assert mana["now"] is None and host.ideas.runner(need=True).tool_of("demo", {"id": "k1", "kind": "code"}) == "claude"

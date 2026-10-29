@@ -319,7 +319,7 @@ class Ideas(FactsMixin, LoopFace, TreeFace, MapsMixin, ScreensMixin, RouteMixin,
             try:
                 b = self.board(make=False)       # reads only: no tree is made for a snapshot
                 waiting = self.results()
-                data = {"needs_you": sum(1 for n in b["needs_you"] if n["kind"] not in ("proposal", "party", "pitch", "project_q", "paid")),     # a judged pitch holds nothing (spec 65 §5), nor the project's questions (spec 99 §8.2); the Orkmaster's *Go on paid?* is the page's (spec 105 §3)
+                data = {"needs_you": sum(1 for n in b["needs_you"] if n["kind"] not in ("proposal", "party", "pitch", "project_q")),     # a judged pitch holds nothing (spec 65 §5), nor the project's questions (spec 99 §8.2); the Orkmaster's *Go on paid?* is a card of the hand and counts (decisions §178.5)
                         "idea_states": [{"slug": i["slug"], "title": i["title"], "state": i["state"]} for i in b["ideas"]],
                         "review_count": len(waiting),
                         "review_results": [{k: r[k] for k in ("idea", "task", "title")} for r in waiting]}
