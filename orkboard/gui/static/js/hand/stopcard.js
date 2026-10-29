@@ -72,11 +72,13 @@ function Body({ s }) {
 
 /** A card lifted over the pane's foot (docs/specs/104 §5, decisions §176.4): the hand card grown to twice its width, held up a degree or two, its foot on the hand's line where its stack lies. Its anatomy is the hand card's (the
  * element and name, the window with the action's sign and the asker's head, the party and the gem); between the window and the foot its body holds the stop's lines, its answers (or a goal's way's own body), its cost's words and
- * *Put it back*, and scrolls inside when the card reaches its most height; its foot says what the card is. `anchor`: the element of the card it lies for (its left edge is the lifted card's, its side the card's lean). */
-export function Lifted({ s, anchor }) {
+ * *Put it back*, and scrolls inside when the card reaches its most height; its foot says what the card is. `anchor`: the element of the card it lies for (its left edge is the lifted card's, its side the card's lean).
+ * `inline` (upright on a touch phone, hand/upright.js): the top of the one stack, drawn in its place with its answers on it, nothing to put back. */
+export function Lifted({ s, anchor, inline = false }) {
   const box = useRef(), [at, setAt] = useState(null), cost = costOf(s), head = headOf(s), element = s.node?.element || "";
-  useAbout(s);
+  useAbout(inline ? null : s);
   useLayoutEffect(() => {                                              // over its stack, kept inside the hand's width; it leans toward the side of the hand its stack lies on
+    if (inline) return undefined;                                      // upright on a touch phone the card is the stack's top, in its place (hand/upright.js)
     const place = () => {
       const hand = box.current?.parentElement, a = anchor?.isConnected ? anchor.getBoundingClientRect() : null;
       if (!hand || !a) { setAt(null); return; }
@@ -86,10 +88,10 @@ export function Lifted({ s, anchor }) {
     place();
     window.addEventListener("resize", place);
     return () => window.removeEventListener("resize", place);
-  }, [s.key, anchor]);
-  useEffect(() => { box.current?.focus({ preventScroll: true }); }, [s.key]);
+  }, [s.key, anchor, inline]);
+  useEffect(() => { if (!inline) box.current?.focus({ preventScroll: true }); }, [s.key]);
   const tone = s.tone === "danger" ? "danger" : s.tone === "alert" ? "alert" : "", Way = wayOf(s.kind)?.Lifted;
-  return html`<aside ref=${box} class=${cls(`ork-card hand-card hand-card--stop hand-card--big hand-lifted${element ? ` el-${element}` : ""}`, tone, { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed" })}
+  return html`<aside ref=${box} class=${cls(`ork-card hand-card hand-card--stop hand-card--big hand-lifted${inline ? " hand-lifted--up" : ""}${element ? ` el-${element}` : ""}`, tone, { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed" })}
       role="dialog" tabindex="-1" aria-label=${`Lifted: ${labelOf(s)}`} data-key=${s.key} data-kind=${s.kind}
       style=${at ? `left:${at.left}px;--hc-lean:${at.lean}` : undefined}>
     <span class="hand-card__head"><${ElemOf} s=${s} /><span class="hand-card__name hand-lifted__title">${s.title || s.full}</span></span>
@@ -99,7 +101,7 @@ export function Lifted({ s, anchor }) {
       ${Way ? html`<${Way} s=${s} close=${lower} />` : html`<${Body} s=${s} />
       <div class="hand-answers" role="group" aria-label="Answers"><${Answers} s=${s} /></div>`}
       <${Spend} cost=${cost} />
-      <button type="button" class="ork-btn hand-put" onClick=${lower}>Put it back</button>
+      ${!inline && html`<button type="button" class="ork-btn hand-put" onClick=${lower}>Put it back</button>`}
     </div>
     <span class="hand-card__foot hand-lifted__kind">${s.label}</span>
   </aside>`;
