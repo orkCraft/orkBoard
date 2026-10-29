@@ -176,6 +176,7 @@ TERMS: tuple[Term, ...] = (
     _t("lens", "lens", "lenses"),                                  # what a new goal points at, the party's way: code, a screen, a pain (realm/idea_lens.py)
     _t("segment", "segment", "segments"),                          # whom a goal is for, a product manager's lens
     _t("task_kind", "task type", "task types"),                    # code · tests · docs · text for people · research
+    _t("ask", "Ask"),                                              # the line on the open tab and its button: a quick question about the project, answered once, never a card (spec 106)
     _t("board_map", "Map"),                                        # a project's parties, goals and tasks on one screen (spec 39; not the camp's War Map)
     _t("stage", "stage", "stages"),                                # a party's step a goal goes through, one a band; its leader words them (Concept, Build, Playtest for a Game designer; Planning, Implementation, Checking by default; spec 48, spec 59 §3)
     _t("wave", "wave", "waves"),                                   # a task's depth in its plan by `after`: a column of the Map's goal (spec 48)
