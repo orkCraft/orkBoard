@@ -169,7 +169,7 @@ export function makeNewGoal(core) {
     const wanted = presetId.startsWith(PROPOSAL) ? presetId.slice(PROPOSAL.length) : "", ask = wanted || presetId, list = core.st.partyPresets.presets;
     let pick = list.find((p) => p.id === ask || (wanted && p.recipe === wanted)) || (presetId && !wanted ? libraryPreset(core, presetId) : null);
     if (!pick && wanted) { const got = core.st.proposed || await loadProposals(core); const p = got?.proposals?.find((x) => x.id === wanted); pick = p ? fromProposal(core, p) : null; }
-    return pick || list.find((p) => p.stage === "being_made") || list.find((p) => p.id === "tech") || list.find((p) => p.stage === "build") || list.find((p) => p.id === "engineering") || null;
+    return pick || list.find((p) => p.id === "tech") || list.find((p) => p.stage === "being_made") || list.find((p) => p.stage === "build") || list.find((p) => p.id === "engineering") || null;
   }
 
   return {
