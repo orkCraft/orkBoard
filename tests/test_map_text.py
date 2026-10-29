@@ -115,7 +115,9 @@ def test_each_craft_has_its_map_as_text(game):
     assert map_text.of("release", state(game), game) == release_map.text(state(game), game)
     assert map_text.of("marketing", state(game), game) == way_map.text(state(game), game)
     from orkboard.realm import screen_map
-    assert map_text.of("design", state(game), game) == map_text.of("product", state(game), game) == screen_map.text(state(game), game)
+    from orkboard.realm import opportunity_tree
+    assert map_text.of("design", state(game), game) == screen_map.text(state(game), game)
+    assert map_text.of("product", state(game), game) == opportunity_tree.text(state(game), game)          # decisions §172
     assert map_text.of("nobody", state(game), game) is None
 
 

@@ -256,9 +256,12 @@ def of(party: str, state_dir: Path, root: Path, since: str = "", pages: Path | N
     come (spec 102 §4); a party with none is given none."""
     if party == TECH:
         return system(state_dir, root, since, pages)
-    if party in ("design", "product"):
+    if party == "design":
         from orkboard.realm import screen_map
         return screen_map.text(state_dir, root, since)
+    if party == "product":
+        from orkboard.realm import opportunity_tree
+        return opportunity_tree.text(state_dir, root, since, pages)
     if party == "game-design":
         from orkboard.realm import loop
         return loop.text(state_dir, root, since)

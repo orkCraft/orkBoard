@@ -3476,3 +3476,18 @@ cannot be handed to every person's computer, so it needs a server of ours, which
 8. **When**: S5, after spec 94 holds on the owner's phone; iOS first, then Android. A Live Activity while Play runs is
    asked again later.
 The owner's call.
+
+## 175. The tree as drawn; the AI tools' limits move to the hand as its mana (29 October, the owner)
+
+Why: the owner's yes on Product's opportunity tree as `docs/mockups/s3/` draws it, and: *the limits should move down to the
+hand and look more like mana: there is no room at the top* (with six or seven parties the tabs' end clipped its chips). The
+cards already carry their cost as a battler's mana (§144.2), so the pool they draw from belongs beside them. So (this changes
+§2.3's chips at the tabs' end, §107.1 and §144.2's *the limits' chips read as what is left to spend*):
+1. **Product's map is the tree as the mockup draws it** (spec 102 §8.4): the face is built (H).
+2. **The limits are the hand's mana**, under the tabs' end beside the discard: each AI tool a pool with its ink mark, filled by
+   its share left (the signal's colour as it runs low), its words on hover and for a screen reader (*Claude Code: 62 % of the week
+   left*); a press opens what used it over the pane, as the chips did. A card lifted that spends shows its gem's share taken out of
+   its tool's pool. The tabs' end keeps **+** and **Stop all**.
+3. Drawn in orkUI first (the pool's frame and fill, §127.3), then here; until orkUI draws it, the page's own layout with orkUI's tokens.
+The owner's call.
+
