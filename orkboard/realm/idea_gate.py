@@ -2,7 +2,8 @@
 decisions §49.5). Git reads and the merge, no face.
 
     shas, files = idea_gate.waiting(git, "dev", "main")      # `git rev-list main..dev` (newest first), the files `main...dev` changes
-    idea_gate.ideas_in(shas, rows)                           # the ideas with a merged task whose `commit` is among them
+    shas, files = idea_gate.waiting_by_patch(git, "dev", "main")   # … less what main holds by patch id (a goal sent alone: realm/goal_main.py)
+    idea_gate.ideas_in(shas, rows)                          # the ideas with a merged task whose `commit` is among them
     idea_gate.all_in(git, shas, "main")                      # every sha is in main already (a goal's flag, spec 50 §2.2)
     got = idea_gate.merge(git, "dev", "main", push=True)     # main moved to dev's work: {"commit", "how", "commits", "files", "note", "pushed"}
 
@@ -59,6 +60,47 @@ def waiting(git: IdeaGit, into: str, main: str) -> tuple[list[str], int]:
     return shas, sum(1 for n in names if n)
 
 
+def cherry(git: IdeaGit, into: str, main: str) -> tuple[list[str], set[str]]:
+    """(the commits `into` holds that `main` lacks by patch id, oldest first; the commits of `into` main holds under another sha): `git
+    cherry`, which tells a commit by what it changes, never by its sha. A commit already behind `main` is in neither."""
+    if not all(worktrees.branch_exists(git.root, b) for b in (into, main)):
+        return [], set()
+    pending: list[str] = []
+    equal: set[str] = set()
+    for line in _git(git.root, "cherry", _ref(main), _ref(into)).stdout.splitlines():
+        mark, _, sha = line.partition(" ")
+        sha = sha.strip()
+        if _SHA.fullmatch(sha):
+            if mark == "+":
+                pending.append(sha)
+            else:
+                equal.add(sha)
+    return pending, equal
+
+
+def _count_files(git: IdeaGit, shas: list[str]) -> int:
+    """The files these commits change, each once."""
+    names: set[str] = set()
+    for at in range(0, len(shas), 200):
+        out = _git(git.root, "-c", "core.quotePath=false", "log", "--no-walk=unsorted", "--no-renames", "--name-only", "--format=",
+                   *shas[at:at + 200], "--").stdout
+        names.update(n for n in out.splitlines() if n)
+    return len(names)
+
+
+def waiting_by_patch(git: IdeaGit, into: str, main: str) -> tuple[list[str], int]:
+    """`waiting`, less the commits main holds by patch id (a goal sent to main on its own is cherry-picked, so main holds it under new
+    shas): the commits newest first, and the files they change. Where main is behind `into` (nothing was picked) it is `waiting`'s."""
+    shas, files = waiting(git, into, main)
+    if not shas or _git(git.root, "merge-base", "--is-ancestor", _ref(main), _ref(into)).returncode == 0:
+        return shas, files
+    pending = set(cherry(git, into, main)[0])
+    kept = [s for s in shas if s in pending]
+    if len(kept) == len(shas):
+        return shas, files
+    return kept, _count_files(git, kept) if kept else 0
+
+
 def ideas_in(shas: Iterable[str], rows: Iterable[tuple[str, str, str, list[dict]]]) -> list[dict]:
     """`rows`: (slug, title, goal, tasks) of each idea in the Board's order. The ideas with a merged task whose `commit`
     is among `shas`, each `{slug, title, goal, tasks}` with the count of such tasks."""
@@ -89,7 +131,7 @@ def merge(git: IdeaGit, into: str, main: str, push: bool = False) -> dict[str, A
     with git.lock:
         if same(into, main):
             raise GateRefused(refusal_same(into, main))
-        shas, files = waiting(git, into, main)
+        shas, files = waiting_by_patch(git, into, main)
         if not shas:
             raise GateRefused(f"Nothing in {into} waits for {main}")
         old, new = (_ok(_git(git.root, "rev-parse", _ref(b))) for b in (main, into))

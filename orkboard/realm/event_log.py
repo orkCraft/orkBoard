@@ -74,6 +74,7 @@ CHECK_SKIPPED = "check_skipped"   # idea, by (the checker), skipped (false: take
 STOP_ALL = "stop_all"             # count, device
 INTO_CHANGED = "into_changed"     # branch, push, device
 GATE_MERGED = "gate_merged"       # commits, ideas, files (what dev held that main lacked), how ("fast-forward" · "merge"), pushed, into, main, device (spec 49 §2.1: dev merged into main)
+GOAL_TO_MAIN = "goal_to_main"     # idea, goals (the slugs it took into main: it and what it stood on), commits, files, pushed, into, main, device (spec 105 §5: a goal sent to main on its own)
 PICK_ASKED = "pick_asked"         # idea, task, n, media (image · audio · video · text), round (spec 51 §2.4: a task left variants for the person to pick from)
 PICK_ANSWERED = "pick_answered"   # idea, task, key (the variant's letter; null: none of them, new ones asked), note_chars, via (hand · front · drawer · screen; else idea), seconds from pick_asked, device, round (the round that was answered)
 IDEA_FLAGGED = "idea_flagged"   # idea, goal (its party), by ("gate" · "done"), tasks, first_time, usd, days (spec 50 §2.2: a goal raised its flag in main)
@@ -184,7 +185,7 @@ SIGN_IN_FAILED = "sign_in_failed"   # harness, why (timeout · cancelled · refu
 
 EVENTS = (ASKED, ASSUMED, ANSWERED, STOPPED, WAIT_SKIPPED, HELD_AT_WORK, CAMP_LEFT, CAMP_BACK, QUEST_STARTED,
           QUEST_DONE, QUEST_SKIPPED, BUILT, CART_MOVED, LOOKED, IDEA_ADDED, IDEA_SAID, KEEPER_STATE, PLAN_MADE, PLAN_PASSED,
-          TODO_DONE, TASK_STATE, CHECK_DONE, RESULT_READY, RESULT_DECIDED, TASK_STOPPED, TASK_SKIPPED, CHECK_SKIPPED, STOP_ALL, INTO_CHANGED, GATE_MERGED, IDEA_FLAGGED, PICK_ASKED, PICK_ANSWERED, OPENED, LIMITS_READ, GOAL_SAVED, GOAL_READ, GOAL_ACCEPTED, ROLE_SAVED,
+          TODO_DONE, TASK_STATE, CHECK_DONE, RESULT_READY, RESULT_DECIDED, TASK_STOPPED, TASK_SKIPPED, CHECK_SKIPPED, STOP_ALL, INTO_CHANGED, GATE_MERGED, GOAL_TO_MAIN, IDEA_FLAGGED, PICK_ASKED, PICK_ANSWERED, OPENED, LIMITS_READ, GOAL_SAVED, GOAL_READ, GOAL_ACCEPTED, ROLE_SAVED,
           ROLE_DROPPED, KIND_SET, BOARD_SET, IDEA_DRAFTED, KEEPER_STOPPED, NIGHT_RUN, PROPOSAL_MADE, PROPOSAL_ANSWERED,
           IDEA_ANSWERED, GOAL_ANSWERED, PLAN_STARTED_NOW, IDEA_QUEUED, RESULT_SEEN, BOARD_COMMITTED, BOARD_HELD, PROJECT_OPENED, PROJECT_CLOSED, FILE_SAVED, GIT_COMMITTED,
           GIT_PUSHED, OP_ADDED, OP_PREPARED, OP_CHECKED, OP_DONE, OP_FAILED, OP_DROPPED, OP_NOT_RIGHT, OP_LEARNED,

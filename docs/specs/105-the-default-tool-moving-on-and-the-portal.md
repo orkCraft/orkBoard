@@ -121,3 +121,30 @@ orkUI 0.18.0 (orkUI fd49708): `--ork-portal` `#b27bf6`, `--ork-portal-hi` `#d5a8
 `.ork-portal` drawn in `box-shadow` pixels from `office/portal/portal.json` (`::before` the ring, panel, eye and sparks;
 `::after` the swirl alone, turning in `steps(4)` over 6 s); `is-taking`, `is-sealed` (wins over taking), `is-new`, `small`;
 a `<button class="ork-portal">` works too. Needs Chromium 111, Firefox 113, Safari 16.2.
+
+## As built E (a goal to main on its own)
+
+Built in `orkboard/realm/goal_main.py` (new, no face), `realm/idea_gate.py` (`cherry`, `waiting_by_patch`), `gui/ideas_gate.py` (`ideas.to_main_plan`, `ideas.to_main`, registered by `gate_commands` in
+`gui/ideas.py`) and `realm/event_log.py` (`goal_to_main`). Tests: `tests/test_goal_main.py` (new, a real git repo), and the command set in `tests/test_gui_ideas.py`.
+
+What it is, and what differs from §5 or is not said there:
+
+- **Signatures take what the page knows.** `plan(repo, state_dir, slug, *, root=None, into="dev", main="")` and `merge(repo, state_dir, slug, push=False, *, root=None, into="dev", main="")`: `root` is where the Board's pages are
+  (a goal's short title as the page names it, `ideas.ideas()`'s `short`, and its `depends_on`; without it a goal is named by its slug and stands on nothing), `into` is the branch results land in, `main` the default branch when empty.
+  `plan` answers `{goals, commits, sealed, titles, files}` (`titles` is `{slug: short title}`, `files` the count the picks change); `goals` is the goal first, then what it stands on. `ideas.to_main_plan` adds `idea`, `into`, `main`.
+  `merge` answers `{commit, goals, commits, files, note, pushed}` and raises `GoalRefused` (a `RuntimeError`, as the gate's `GateRefused`); the command turns it into the words of an `IdeasError`.
+- **The goal's commits** are `commit_goal.index`'s (each task's `commit` and its `len(subjects)-1` ancestors) that `git cherry main dev` marks `+`, in dev's order, so the person's own commits and the Board's pages between them are never picked.
+- **What it stands on**: its `depends_on`, deeply, and any goal with a pending commit **before** one of the goal's commits that changed a file the same (the first-touch of each file per goal, one `git log --name-only`), and so on through what those stand on.
+  A goal main has already is left out (flag raised, or done with no pending commit). A goal the Board lost is nothing to stand on.
+- **Sealed**, in this order: no gate (dev is main); a goal of the plan not done (*Lobby is not done yet*: no plan, or a task not dropped and not merged; the goal first, then what it stands on); nothing to send (*Lobby is in main already*,
+  or *Lobby has nothing to send to main* for a goal of checks); main behind its origin (*main is behind origin/main: pull it first*: only what is fetched, `refs/remotes/origin/main`, is read); a pick that does not apply
+  (*Lobby does not apply to main cleanly: player.ts*, the goal that owns the commit that failed), tried in the `gate-main-try` worktree, detached at main, always removed. A pick that comes out empty (main has it under another patch) is skipped.
+- **The merge** picks in `gate-main` (detached at main, `-c user.name=Orkline` as the gate; the author stays), then `IdeaGit._fast_forward` moves main (a checked-out main moves with `merge --ff-only` and is refused with its files when they
+  are changed), pushes when `ideas.push` holds, as `gate_merge` does. Under the repository's lock; dev is not moved.
+- **Flags**: after it, each goal of the plan that is done and has none, all of whose tasks' commits are in main **by patch id** (`goal_main.in_main`: `cherry`'s `-` or an ancestor), gets `gate`'s flag (`_flag_after_goal`).
+- **The gate by patch id**: `ideas.gate` counts `waiting_by_patch` (`rev-list main..dev`, less what `git cherry` calls equal; the files of what is left). Where main is an ancestor of dev (nothing was picked) it is `waiting`'s answer with no `cherry`.
+  `idea_gate.merge` (dev whole) takes the same list, so a dev fully picked says *Nothing in dev waits for main*.
+- **Logged** as `goal_to_main` `{idea, goals, commits, files, pushed, into, main, device}` (the Today strip shows the flags it raises as it does for the gate).
+- **Not done / to know**: merging dev whole after a goal went alone is a three-way merge of two histories that hold the same patches; it is clean where dev changed nothing later on those files, and may conflict where it did
+  (the gate then says *merge main into dev first*). Dependencies of a different kind than `depends_on` and shared files (a person's own commit between two tasks that the goal needs) are found only by the trial's conflict.
+  `ideas.to_main_plan` runs a trial worktree on every call (a few hundred ms on a small repository); Part F should ask once when the portal opens.

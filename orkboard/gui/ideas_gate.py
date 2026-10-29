@@ -1,5 +1,6 @@
 """The gate (docs/specs/49-one-window.md §2.1) as `gui/ideas.py`'s `Ideas` has it: `ideas.gate`, what dev holds that main
-lacks, and `ideas.gate_merge`, the one press that merges dev into main (realm/idea_gate.py). `dev` is the branch results
+lacks (less what main holds by patch id), and `ideas.gate_merge`, the one press that merges dev into main (realm/idea_gate.py). A goal goes
+to main on its own through `ideas.to_main_plan` and `ideas.to_main` (realm/goal_main.py, spec 105 §5). `dev` is the branch results
 merge into (`ideas.into`), `main` the repository's default branch. Results still land in dev one by one; nothing reaches
 main but through this press. Spec 50 §2.2: a goal raises its flag (realm/idea_flag.py) when this press takes it into main, or when it is done where there is
 no gate. Split from ideas.py to keep it under ~600 lines.
@@ -7,10 +8,11 @@ no gate. Split from ideas.py to keep it under ~600 lines.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 from orkboard import settings
-from orkboard.gui.ideas_args import IdeasError
-from orkboard.realm import event_log, idea_flag, idea_gate, ideas
+from orkboard.gui.ideas_args import IdeasError, _text
+from orkboard.realm import event_log, goal_main, idea_flag, idea_gate, ideas
 from orkboard.realm.idea_git import IdeaGit
 
 
@@ -41,7 +43,7 @@ class GateMixin:
         if out["same"]:
             return out
         try:
-            shas, files = idea_gate.waiting(git, into, main)
+            shas, files = idea_gate.waiting_by_patch(git, into, main)      # a goal sent alone is not counted again
         except Exception:                       # a repository git cannot read: nothing waits that the Board can see
             return out
         return {**out, "commits": len(shas), "files": files, "ideas": self._gate_ideas(shas)}
@@ -63,6 +65,48 @@ class GateMixin:
         self._flag_after_gate(brought, got["commit"], git, main)
         self.changed("")
         return {"ok": True, "commit": got["commit"], "note": got["note"]}
+
+    # -- a goal to main on its own (spec 105 §5) ------------------------------------------------------------
+
+    def _to_main_args(self, args: dict) -> tuple[str, dict]:
+        slug = _text(args, "idea", 100)
+        git = IdeaGit(Path(self.host.repo_root))
+        return slug, {"root": self.root(False), "into": self._into(), "main": self._gate_main(git)}
+
+    def to_main_plan(self, args: dict) -> dict:
+        """`{idea}`: what sending the goal to main takes, before anything moves. `{idea, goals, titles, commits, files, sealed, into, main}`:
+        `goals` the goal first and then the goals it stands on that main lacks, `titles` their short titles, `commits` the shas in the
+        order they go, `sealed` the reason in words (None when it can go)."""
+        slug, where = self._to_main_args(args)
+        got = goal_main.plan(Path(self.host.repo_root), self.state_dir, slug, **where)
+        return {"idea": slug, **got, "into": where["into"], "main": where["main"]}
+
+    def to_main(self, args: dict) -> dict:
+        """`{idea}`: the goal's commits (and its dependencies') cherry-picked onto main, pushed when the project pushes after merging.
+        `{ok, commit, goals, note}`; a sealed goal is refused in words."""
+        slug, where = self._to_main_args(args)
+        push = bool(self.settings_now().get("push", settings.IDEAS["push"]))
+        git = IdeaGit(Path(self.host.repo_root))
+        try:
+            got = goal_main.merge(Path(self.host.repo_root), self.state_dir, slug, push, **where)
+        except RuntimeError as e:               # a refusal (GoalRefused) or git's own words
+            raise IdeasError(" ".join(str(e).split())[:300] or "The merge failed") from None
+        self._ev(event_log.GOAL_TO_MAIN, args, idea=slug, goals=got["goals"], commits=len(got["commits"]), files=got["files"],
+                 pushed=got["pushed"], into=where["into"], main=where["main"])
+        self._flag_after_goal(got["goals"], got["commit"], git, where["into"], where["main"])
+        self.changed("")
+        return {"ok": True, "commit": got["commit"], "goals": got["goals"], "note": got["note"]}
+
+    def _flag_after_goal(self, goals: list[str], commit: str, git: IdeaGit, into: str, main: str) -> None:
+        """After the pick: each goal it took that is done and has no flag, all of whose commits are in main now (by patch id: a pick is a
+        new commit). A flag never troubles the merge."""
+        for slug in goals:
+            try:
+                if ideas.state(self.state_dir, slug)["state"] == "done" and idea_flag.flag_of(self.state_dir, slug) is None \
+                        and goal_main.in_main(git, idea_flag.commits_of(self.state_dir, slug), into, main):
+                    self._raise_flag(slug, "gate", commit)
+            except Exception:
+                pass
 
     # -- a goal's flag (spec 50 §2.2) ---------------------------------------------------------------------------
 
@@ -103,3 +147,8 @@ class GateMixin:
                 self._raise_flag(slug, "done", commits[-1] if commits else "")
         except Exception:
             pass
+
+
+def gate_commands(ideas_: Any) -> dict:
+    """The goal-to-main commands by name (`gui/ideas.py` adds them to its table: `**gate_commands(self)`)."""
+    return {"ideas.to_main_plan": ideas_.to_main_plan, "ideas.to_main": ideas_.to_main}
