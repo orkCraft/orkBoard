@@ -5,7 +5,7 @@ import { Table } from "../table/table.js";
 import { Hand } from "../hand/hand.js";
 import { partiesNow } from "../table/data.js";
 
-const sheets = ["./frame.css", "../table/table.css", "../hand/hand.css", "../hand/mana.css"].map((p) => new URL(p, import.meta.url).href);
+const sheets = ["./frame.css", "../table/table.css", "../table/discard.css", "../hand/hand.css", "../hand/mana.css"].map((p) => new URL(p, import.meta.url).href);
 if (typeof document !== "undefined") {
   for (const href of sheets) {
     if (!document.querySelector(`link[href="${href}"]`)) {

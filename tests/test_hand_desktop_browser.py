@@ -1,6 +1,6 @@
 """The hand of the new window (docs/specs/101-the-cards-the-cascade-and-the-hand-under-the-lanes.md §4–§6, part D; docs/specs/98-the-table-and-the-hand.md §4–§6), in a real browser against a stub host, the
 window (the page, spec 98 E), at the two widths of `tests/narrow.py` (1280 × 800 and 390 × 844 with touch): the hand under the lanes (no deck; the + card under the first lane; a stack under the lane of who asks; two goals
-under one lane fanned within its width, the back one's edge only and its rise; the discard under the tabs' end), a card's face (the header with its element, the window with the action's sign and the asker's head, the label row
+under one lane fanned within its width, the back one's edge only and its rise; the discard lies on the table, spec 104 C), a card's face (the header with its element, the window with the action's sign and the asker's head, the label row
 with the gem at its right, the foot), the half under the window's edge and its rise on hover, focus and tap, a press lifting it as before (its answers, its cost's words, *Put it back*), the + card and the field it grows into
 (a press, a key typed, Enter, Shift+Enter, Esc, the address by the tab and by *@*, a pasted picture, the large card with no goal), the discard (*n ready for main*, *To main*, a result opened and seen), one card size, the gem
 only where a card spends, no part with nothing to hold, nothing moving under reduced motion. The table (part C) draws what is opened over the pane; here the faces the hand registered are drawn by the test itself into a box
@@ -229,7 +229,7 @@ def test_the_hand_lies_under_the_lanes_one_size_half_under_the_edge_and_nothing_
         size = pg.viewport_size
         assert pg.locator(".hand-deckback, .hand-deck, .hand-end--deck").count() == 0, "no deck: the goals in line lie on the table"
         assert pg.evaluate("() => import('/static/js/frame/kinds.js').then((m) => 'deck' in m.KINDS)") is False
-        assert pg.locator(".hand-lane").count() == 5 and pg.locator(".hand-end").count() == 1, "a lane under each tab (the project's first, four parties) and the discard's place"
+        assert pg.locator(".hand-lane").count() == 5 and pg.locator(".hand-end").count() == 1, "a lane under each tab (the project's first, four parties) and the mana's place"
         sizes = set(map(tuple, pg.evaluate("() => [...document.querySelectorAll('.hand .hand-card, .hand .hand-back:not(.edge), .hand .hand-plus')].map((e) => [e.offsetWidth, e.offsetHeight])")))
         assert len(sizes) == 1, f"one card size, got {sizes}"
         assert sizes == ({(144, 202)} if width == "wide" else {(80, 112)}), sizes
@@ -244,12 +244,13 @@ def test_the_hand_lies_under_the_lanes_one_size_half_under_the_edge_and_nothing_
             assert len(cols) == 6 and len(set(cols[:5])) == 1 and cols[0] == 180, f"every lane one width, a card and a quarter, then the tabs' end: {cols}"
             boxes = [lane(pg, i).bounding_box() for i in range(5)]
             assert all(abs(boxes[i + 1]["x"] - (boxes[i]["x"] + boxes[i]["width"])) <= 1 for i in range(4)), "the lanes are side by side on the grid"
-            done, end = pg.locator(".hand-done").bounding_box(), pg.locator(".hand-end").bounding_box()
             mana = pg.locator(".hand-mana").bounding_box()
-            assert end["x"] >= boxes[4]["x"] + boxes[4]["width"] - 1 and done["x"] + done["width"] <= mana["x"] and abs(mana["x"] + mana["width"] - size["width"]) <= 1, "the discard under the tabs' end, the mana right of it flush against the edge"
+            assert abs(mana["x"] + mana["width"] - size["width"]) <= 1 and pg.locator(".hand .hand-done, .hand .table-discard").count() == 0, "the mana flush against the edge at the hand's end, no discard in the hand (it lies on the table)"
+            done = pg.locator(".table-end .hand-done").bounding_box()
+            assert done["x"] >= boxes[4]["x"] + boxes[4]["width"] - 1 and done["y"] + done["height"] <= hand["y"] + 1, "the discard on the table, in the last column right of the lanes, above the hand"
         else:
-            slots = sorted(pg.locator(".hand-slot, .hand-end > .hand-discard").evaluate_all("els => els.map((e) => [e.classList.contains('is-plus') ? 'plus' : e.classList.contains('hand-discard') ? 'end' : 'stack', e.getBoundingClientRect().x])"), key=lambda t: t[1])
-            assert slots[0][0] == "plus" and slots[-1][0] == "end", "a free row in the lanes' order: the + card first, the discard last (the mana after it, mana.css)"
+            slots = sorted(pg.locator(".hand-slot, .hand-mana").evaluate_all("els => els.map((e) => [e.classList.contains('is-plus') ? 'plus' : e.classList.contains('hand-mana') ? 'mana' : 'stack', e.getBoundingClientRect().x])"), key=lambda t: t[1])
+            assert slots[0][0] == "plus" and slots[-1][0] == "mana" and pg.locator(".hand .hand-done").count() == 0, "a free row in the lanes' order: the + card first, the mana last; the discard is not in it"
             assert all(b["width"] >= 44 and b["height"] >= 44 for b in card_boxes(pg)), "a press is 44 x 44 on touch"
         narrow.no_sideways(pg)
         assert pg.locator(".hand-row").evaluate("e => e.scrollWidth <= e.clientWidth + 1")
@@ -350,18 +351,17 @@ def test_two_goals_under_one_lane_fan_within_its_width_the_back_ones_edge_only_a
     assert not log, "\n".join(log)
 
 
-def test_a_tap_raises_a_card_whole_at_the_narrow_width(gui):
+def test_a_tap_on_the_discard_opens_it_over_the_pane_at_the_narrow_width(gui):
     pg, host, log = open_hand(gui, width="narrow")
     try:
-        done = pg.locator(".hand-done")
+        done = pg.locator(".table-end .hand-done")
         done.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(900)
-        slot = pg.locator(".hand-discard")
-        y0, b = slot.bounding_box()["y"], done.bounding_box()
+        b = done.bounding_box()
         pg.touchscreen.tap(b["x"] + b["width"] / 2, b["y"] + 30)
-        pg.wait_for_timeout(500)
-        assert pg.evaluate("() => document.activeElement?.classList.contains('hand-done')") and slot.bounding_box()["y"] <= y0 - 25     # the tap focused it: it rose
-        shot(pg, "narrow-tap-risen")
+        pg.wait_for_function("() => import('/static/js/frame/state.js').then((m) => m.over.value?.kind === 'discard')", timeout=WAIT_MS)
+        assert pg.evaluate("() => document.activeElement?.classList.contains('hand-done')")
+        shot(pg, "narrow-tap-discard")
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -866,11 +866,11 @@ def test_the_discard_shows_the_last_goal_done_and_what_is_ready_for_main_and_ope
         assert done.locator(".ork-race__head").count() == 1 and "Done" in done.get_attribute("aria-label") and "2 goals ready for main" in done.get_attribute("aria-label")
         if width == "wide":
             assert "2 goals ready for main" in done.inner_text()
-        assert pg.locator(".hand-discard > .ork-card-back.edge").count() == 1                                                    # the other goal's back under it
+        assert pg.locator(".table-discard > .ork-card-back.edge").count() == 1                                                    # the other goal's back under it
         done.click()
         over = sig(pg, "frame/state.js", "over")
         assert over["kind"] == "discard" and "is-on" in done.get_attribute("class")
-        box = pane(pg)
+        box = pg.locator("#table-pane")
         box.locator(".hand-discardview").wait_for(timeout=WAIT_MS)
         assert box.get_by_role("region", name="Done, not yet seen").locator(".hand-drow").count() == 2                            # the goal seen is in the history, not here
         ready = box.get_by_role("region", name="Ready for main")
@@ -890,7 +890,7 @@ def test_a_goal_pressed_in_the_discard_opens_its_result_is_seen_and_leaves_the_d
     pg, host, log = open_hand(gui)
     try:
         pg.locator(".hand-done").click()
-        box = pane(pg)
+        box = pg.locator("#table-pane")
         box.get_by_role("region", name="Done, not yet seen").locator('.hand-drow[data-slug="codes"]').click()
         over = sig(pg, "frame/state.js", "over")
         assert over["kind"] == "result" and over["props"] == {"idea": "codes"}

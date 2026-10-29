@@ -21,6 +21,7 @@ import { LimitChip } from "./tabs.js";
 import { Menu } from "./menu.js";
 import { isForm } from "./over.js";
 import { openParties } from "./parties.js";
+import { DiscardEnd } from "./discard.js";                // the discard at the last column's foot (spec 104 C)
 
 /** ← or Esc: the map as it was left, the card the thing came from lit. */
 export function back() {
@@ -100,13 +101,14 @@ export function Pane({ parties, tab, narrow }) {
   const from = { title: mapName(tab, parties), key: "" };
   return html`<section class="table-pane ork-table" id="table-pane" role="tabpanel" aria-labelledby=${`tab-${tab}`}>
     <${Title} parties=${parties} tab=${tab} narrow=${narrow} />
-    <div class="table-body" ref=${body}>
+    <div class="table-body" ref=${body} data-end=${o && o.kind !== "discard" ? "over" : o || tab !== ORKMASTER ? "side" : "board"}>
       ${o ? html`<${Over} />` : tab === ORKMASTER ? html`<${PickStrip} tab=${tab} /><${BoardMap} parties=${parties} narrow=${narrow} />
           ${!parties.length && html`<div class="table-empty"><p>No parties yet</p>
             <p class="table-over__muted">Make a party, then write it a goal in plain words. Its orks do the work; you look at it before it goes in.</p>
             <p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`}`
         : g ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${PickStrip} tab=${tab} /><${PickHost} key=${g.slug} g=${g}>${leadsSystem(g) ? html`<${SystemPane} key=${g.slug} g=${g} />` : mapOf(g) ? html`<${mapOf(g)} key=${g.slug} g=${g} narrow=${narrow} />` : null}<//>` : null}
       ${shown && html`<${Lifted} host=${body} name=${shown[0]} narrow=${narrow}>${shown[1]}</${Lifted}>`}
+      <${DiscardEnd} />
     </div>
   </section>`;
 }

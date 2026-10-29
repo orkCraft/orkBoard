@@ -1,4 +1,5 @@
-// The discard (docs/specs/101 §4.4, docs/specs/98-the-table-and-the-hand.md §4.3, decisions §145.4, §159, §167.7): under the tabs' end (the limits' chips and *Stop all*), at the grid's last column, whatever parties the project has.
+// The discard (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §4, decisions §176.3; docs/specs/101 §4.4, decisions §145.4, §159, §167.7): it lies on the table, at the foot of its last column (the one right of
+// the lanes), the hand card's size, with the word *Discard* above it, on every tab. It was the hand's (hand/discard.js); the hand imports nothing of it. Its sheet is discard.css (the card's anatomy and sizes are the hand's, hand.css).
 // The last goal done lies face up on a card's face (its element and name in the header, the check in the window, *Done* in the label row) with the backs of the others under it; while dev holds goals main lacks (the gate), its
 // window carries the lich's head and its foot *n goals ready for main*; with nothing done to see, that line alone is on its back. Pressed, it opens over the pane (`discard`): the goals done and not yet seen (a goal pressed opens
 // its Result and tells the host it was seen, `ideas.seen`, and it leaves the discard), and *Ready for main* with **To main** (today's merge into main, by code). No act on main lies on the pile (§160.5): the pile only shows and opens.
@@ -9,8 +10,9 @@ import { Elem, Head, Sign } from "../orkui.js";
 import { act, mapData } from "../shell/store.js";
 import { mergeGate } from "../arena/gate.js";
 import { closeOver, openOver, over } from "../frame/state.js";
-import { doneOf, readyOf, readyWords } from "./data.js";
-import { leans } from "./motion.js";
+import { drawn } from "../frame/kinds.js";
+import { doneOf, readyOf, readyWords } from "../hand/data.js";
+import { leans } from "../hand/motion.js";
 
 const LICH = { race: "lich", tier: "elder" };
 const EDGES = 3;
@@ -27,7 +29,10 @@ export async function seeResult(g) {
   await act("ideas.seen", { idea: g.slug });
 }
 
-/** The pile at the hand's right end. */
+/** Whether there is a pile: a goal done, or goals ready for main. */
+export const hasDiscard = () => doneOf().length > 0 || !!readyOf();
+
+/** The pile: the last goal done, the backs under it, the lich's head and what is ready for main. */
 export function Discard() {
   const done = doneOf(), ready = readyOf();
   if (!done.length && !ready) return null;
@@ -35,7 +40,7 @@ export function Discard() {
   const press = () => { if (lit) closeOver(); else openOver("discard", {}, null, "Done"); };
   const label = `Done${top ? `: ${top.full}` : ""}${words ? `. ${words}` : ""}`;
   const lich = lichOf();
-  return html`<div class="ork-deck hand-discard" data-n=${under} title="Done">
+  return html`<div class="ork-deck table-discard" data-n=${under} title="Done">
     ${Array.from({ length: under }, (_, k) => under - k).map((i) => html`<i key=${i} class="ork-card-back edge hand-back" style=${`--ork-deck-i:${i}`} aria-hidden="true"></i>`)}
     ${top ? html`<button type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop hand-done${top.element ? ` el-${top.element}` : ""}`, { "is-on": lit })} aria-label=${label} aria-expanded=${lit ? "true" : "false"} onClick=${press} ...${leans}>
         <span class="hand-card__head"><${Elem} name=${top.element} dim=${!top.element} /><span class="hand-card__name">${top.title}</span></span>
@@ -72,3 +77,11 @@ export function DiscardView() {
       <p class="cap">Nothing reaches ${ready.main} without you.</p></section>`}
   </div>`;
 }
+
+/** The pile's place on the table: the last column's foot, the word *Discard* above the pile (discard.css); nothing with nothing done and nothing ready for main. */
+export function DiscardEnd() {
+  if (!hasDiscard()) return null;
+  return html`<div class="table-end" data-end="discard"><span class="table-end__label">Discard</span><${Discard} /></div>`;
+}
+
+drawn("discard", DiscardView);

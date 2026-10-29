@@ -6,38 +6,34 @@
 .hand-stopface p, .hand-stopface ul, .hand-stopface h2, .hand-stopface h3, .hand-list p, .hand-list ul, .hand-list h2 { margin: 0; padding: 0; }
 
 /* ---------- the hand: under the lanes, on the grid the tabs and the Board stand on (the frame's --cols) ---------- */
-.hand { --hc-w: var(--card-w, 144px); --hc-pad: var(--ork-3); --hc-gap: var(--ork-2); --hc-head: 48px; --hc-window: 70px; --hc-label: 24px; --hc-top: var(--ork-4); --hc-edge: 12px; --hc-tight: 28px;
+.hand, .table-end, .table-body { --hc-w: var(--card-w, 144px); --hc-pad: var(--ork-3); --hc-gap: var(--ork-2); --hc-head: 48px; --hc-window: 70px; --hc-label: 24px; --hc-top: var(--ork-4); --hc-edge: 12px; --hc-tight: 28px;
   --hc-h: calc(var(--hc-w) * 7 / 5);                                                                       /* a card, 5 : 7 */
   --hc-shown: calc(var(--hc-pad) + var(--hc-head) + var(--hc-gap) + var(--hc-window) + var(--hc-gap));      /* what shows above the window's edge: the header and the window */
   --hc-rise: calc(var(--hc-h) - var(--hc-shown));                                                          /* what a card rises to show whole */
-  --hc-room: calc(var(--hc-rise) + var(--ork-4));                                                          /* the room above the hand a risen card lies in */
-  position: relative; z-index: 2; min-width: 0; background: var(--ork-canvas); border-top: var(--ork-line) solid var(--ork-frame); padding-bottom: env(safe-area-inset-bottom, 0px); }
-@media (max-width: 1023px) { .hand { --hc-head: 60px; } }                                                  /* the phone's type is a size up (tokens.css): three lines of 20 px */
+  --hc-room: calc(var(--hc-rise) + var(--ork-4)); }                                                        /* the room above the hand a risen card lies in */
+/* the discard on the table (table/discard.js) is a card of the hand's size: it reads the same sizes */
+.hand { position: relative; z-index: 2; min-width: 0; background: var(--ork-canvas); border-top: var(--ork-line) solid var(--ork-frame); padding-bottom: env(safe-area-inset-bottom, 0px); }
+@media (max-width: 1023px) { .hand, .table-end, .table-body { --hc-head: 60px; } }                                                  /* the phone's type is a size up (tokens.css): three lines of 20 px */
 .hand[data-empty] { border-top: 0; }
 /* the cards' lower half lies under the window's edge: the places are clipped at the hand's height, with the room above for a card to rise into (it overlies the table's foot, nothing else there takes the pointer) */
 .hand-places { box-sizing: border-box; margin-top: calc(var(--hc-room) * -1); height: calc(var(--hc-room) + var(--hc-top) + var(--hc-shown)); overflow: clip; pointer-events: none; }
 .hand-row { box-sizing: border-box; display: grid; grid-template-columns: var(--cols); height: 100%; padding: calc(var(--hc-room) + var(--hc-top)) 0 0 var(--ork-4); min-width: 0; }      /* no gutter at the right: the mana lies flush against the window's edge (mana.css) */
 .hand-lane { position: relative; height: var(--hc-h); min-width: 0; container-type: inline-size; --span: max(0px, calc(100cqw - var(--hc-w) - var(--hc-edge))); }
-.hand-end { display: flex; justify-content: flex-end; align-items: flex-start; gap: var(--ork-4); min-width: 0; }
-.hand-end > .hand-discard { margin-right: var(--hc-edge); }
+.hand-end { display: flex; justify-content: flex-end; align-items: flex-start; gap: var(--ork-4); min-width: 0; }      /* holds the mana alone (mana.css) */
 
 /* a place along a lane's fan: the front at the lane's right, those behind it to the left, showing their left edge (the element); one card alone is in the lane's middle */
 .hand-slot { position: absolute; top: 0; left: calc(var(--span) * var(--at) / var(--of)); width: min(var(--hc-w), 100cqw); z-index: var(--z); pointer-events: auto;
   transition: transform var(--ork-motion-base) var(--ork-motion-spring); }
-.hand-end > .hand-discard { pointer-events: auto; flex: none; width: var(--hc-w); }
 .hand-slot:hover, .hand-slot:focus-within, .hand-slot.is-risen { z-index: 40; transform: translateY(calc(var(--hc-rise) * -1)); }       /* a card rises whole on hover, on keyboard focus and on a tap (a tap focuses it) */
 .hand-slot:has(.is-slot):hover, .hand-slot:has(.is-slot):focus-within { transform: none; }                                                  /* a card lifted leaves a slot where it lay */
-.hand-end:hover, .hand-end:focus-within { position: relative; z-index: 40; }
-.hand-end .hand-discard { transition: transform var(--ork-motion-base) var(--ork-motion-spring); }
-.hand-end .hand-discard:hover, .hand-end .hand-discard:focus-within { transform: translateY(calc(var(--hc-rise) * -1)); }
 /* a card behind another shows its edge and its element only, no words, until it rises */
 .hand-slot.is-behind:not(:hover):not(:focus-within) .hand-card > :not(.hand-card__head):not(.ork-crumble), .hand-slot.is-behind:not(:hover):not(:focus-within) .hand-card__name { visibility: hidden; }
 .hand-slot.is-plus.is-behind .hand-plus { place-items: start start; padding: var(--hc-pad); }
 .hand-slot.is-plus.is-behind .hand-plus > .ork-icon { width: 14px; height: 14px; }
 
 /* one size: every card of the hand (orkUI's card, its back and the + card) is the frame's card width, 5 : 7; its face the card game's anatomy (decisions §167.1) */
-.hand .hand-card, .hand .hand-back, .hand .hand-plus { box-sizing: border-box; width: 100%; height: var(--hc-h); aspect-ratio: auto; flex: none; }
-.hand .hand-card { position: relative; display: grid; grid-template-rows: var(--hc-head) var(--hc-window) var(--hc-label) minmax(0, 1fr); gap: var(--hc-gap); padding: var(--hc-pad); text-align: left; cursor: pointer; }
+.hand .hand-card, .hand .hand-back, .hand .hand-plus, .table-end .hand-card, .table-end .hand-back { box-sizing: border-box; width: 100%; height: var(--hc-h); aspect-ratio: auto; flex: none; }
+.hand .hand-card, .table-end .hand-card { position: relative; display: grid; grid-template-rows: var(--hc-head) var(--hc-window) var(--hc-label) minmax(0, 1fr); gap: var(--hc-gap); padding: var(--hc-pad); text-align: left; cursor: pointer; }
 .hand .hand-card.is-slot { border-style: dashed; border-color: var(--ork-edge); background: none; box-shadow: none; }
 .hand .hand-card.is-slot > * { visibility: hidden; }
 .hand .hand-card.is-gone { position: absolute; left: 0; top: 0; pointer-events: none; }
@@ -79,14 +75,14 @@
 .hand .is-ok, .hand-stopface .is-ok, .hand-lifted .is-ok, .hand-drow .is-ok { color: var(--ork-success); }
 
 /* a stack is orkUI's pile: a back's edges, then the top; a card that comes is dealt from under the window's edge */
-.hand-stack, .hand-discard { display: grid; grid-template-columns: minmax(0, 1fr); width: 100%; }
+.hand-stack, .table-discard { display: grid; grid-template-columns: minmax(0, 1fr); width: 100%; }
 .hand-back { cursor: default; padding: 0; }
 /* a stack's cards behind its front one lie as a fan (spec 101 §7.1, decisions §168.4): each turned 2 to 4 degrees and stepped 6 to 10 px aside, by turns right and left (--dx and --rot, set by place in stacks.js, never random), three at most
    seen and the edges hint at more up to five. A hover or focus opens it a little wider. A turn is a place, not a motion: it stands still under reduced motion */
 .hand .hand-stack > .hand-back.edge { transform: translate(calc(var(--dx, 0) * 1px), 0) rotate(calc(var(--rot, 0) * 1deg)); transform-origin: 50% 50%; transition: transform var(--ork-motion-base) var(--ork-motion-spring); }
 .hand-slot:hover .hand-stack > .hand-back.edge, .hand-slot:focus-within .hand-stack > .hand-back.edge { transform: translate(calc(var(--dx, 0) * 1.6px), 0) rotate(calc(var(--rot, 0) * 1.3deg)); }
-.hand .hand-done.hand-back { cursor: pointer; }
-.hand .hand-done.hand-back.is-on { box-shadow: inset 2px 0 0 var(--ork-ink); }
+.hand .hand-done.hand-back, .table-end .hand-done.hand-back { cursor: pointer; }
+.hand .hand-done.hand-back.is-on, .table-end .hand-done.hand-back.is-on { box-shadow: inset 2px 0 0 var(--ork-ink); }
 .hand-back__ready { display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); padding: var(--ork-3); color: var(--ork-ink-muted); text-align: center; }
 .hand .hand-card.ork-deal { --ork-deal-x: 0px; --ork-deal-y: calc(var(--hc-h) * 0.6); }
 .hand .hand-plus { cursor: pointer; rotate: calc(var(--ork-motion-lean) * -1); border-color: var(--ork-action); color: var(--ork-action); }   /* the + card turned a little, its + and frame the action's green (§167.5) */
@@ -162,18 +158,17 @@
 /* the cards of the table a lifted card of the hand is about rise a little (about.js; the table marks its cards with `data-about`) */
 .frame-table .is-about { transform: translateY(calc(var(--ork-motion-rise) * -2)); box-shadow: 0 var(--ork-motion-rise) 0 var(--ork-scrim); transition: transform var(--ork-motion-base) var(--ork-motion-spring); }
 
-/* the narrow width (docs/specs/101 §5): the hand is a free row in the lanes' order (the + card first, the stacks, the discard last), its cards at the narrow size, half under the edge as on the desktop; the cards tighten
+/* the narrow width (docs/specs/101 §5): the hand is a free row in the lanes' order (the + card first, the stacks, the mana last), its cards at the narrow size, half under the edge as on the desktop; the cards tighten
    to their left edges when they do not fit, never a sideways scroll */
 @media (max-width: 759.98px) {
-  .hand { --hc-w: 80px; --hc-pad: var(--ork-1); --hc-gap: var(--ork-1); --hc-head: 44px; --hc-window: 32px; --hc-label: 22px; --hc-edge: 6px; }
+  .hand, .table-end, .table-body { --hc-w: 80px; --hc-pad: var(--ork-1); --hc-gap: var(--ork-1); --hc-head: 44px; --hc-window: 32px; --hc-label: 22px; --hc-edge: 6px; }
   .hand-row { display: flex; align-items: flex-start; padding-left: var(--ork-4); padding-right: 0; }
-  .hand-row::after { content: ""; order: 100; flex: none; width: calc(var(--hc-w) - var(--hc-tight)); }
+  .hand-row::after { content: ""; order: 100; flex: none; width: calc(var(--hc-w) - var(--hc-tight)); }            /* the last card of the row lies out past its place by what the cards tighten: room for it before the mana */
   .hand-lane { display: contents; }
   .hand-slot { position: relative; left: auto; top: auto; z-index: auto; flex: 0 1 var(--hc-w); min-width: var(--hc-tight); width: auto; height: var(--hc-h); }
-  .hand .hand-slot > *, .hand-end > .hand-discard { width: var(--hc-w); }
+  .hand .hand-slot > * { width: var(--hc-w); }
   .hand-slot.is-plus { order: -1; }
-  .hand-end { display: contents; }                                                                            /* the discard and the mana (mana.css) are places of the row */
-  .hand-end > .hand-discard { order: 99; flex: none; margin-right: calc(var(--hc-tight) - var(--hc-w)); }            /* the pile takes the least a card shows of the row; the rest lies over the row's spacer (::after) */
+  .hand-end { display: contents; }                                                                            /* the mana (mana.css) is the row's last place */
   .hand-slot.is-behind .hand-card > :not(.hand-card__head), .hand-slot.is-behind .hand-card__name { visibility: visible; }
   .hand-card__head { gap: var(--ork-2); }
   .hand-card__name { font: var(--ork-type-caption); -webkit-line-clamp: 2; line-clamp: 2; }
@@ -203,6 +198,6 @@
 
 /* none of it moves under reduced motion: a card is marked by its edge instead; a card risen shows its whole face at once, without the spring */
 @media (prefers-reduced-motion: reduce) {
-  .hand-slot, .hand-end .hand-discard, .hand .hand-stack > .hand-back.edge { transition: none; }
+  .hand-slot, .hand .hand-stack > .hand-back.edge { transition: none; }
   .frame-table .is-about { transform: none; transition: none; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 }

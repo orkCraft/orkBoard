@@ -141,3 +141,29 @@ Built in `orkboard/gui/static/js/hand/mana.js` and `hand/mana.css` (loaded by `f
   `--hc-cap` and `--hc-pots` are the hand's own sizes (named in `tests/test_design_system.py` with the others).
 - **A hand with no goal at all** (the + card large in the pane's middle, no row) shows the potions alone at its right end (`.hand-mana-only`), so the limits are not lost on a project's first day.
 - **Not done here** (C and D): the discard stays in `.hand-end`, beside the potions; a lifted card is still the panel.
+
+## As built C (the discard on the table)
+
+Built in `orkboard/gui/static/js/table/discard.js` (moved with `git mv` from `hand/discard.js`: `Discard`, `DiscardView`, `seeResult`, the `discard` face registered with `drawn`, and `DiscardEnd`, the pile with its word) and
+`table/discard.css` (loaded by `frame/frame.js` with the other sheets); `frame/kinds.js` now says the `discard` kind is the table's. `table/pane.js` draws `<DiscardEnd />` last in `.table-body`. The hand imports nothing of it; `.hand-end`
+holds `Mana` alone. Tests: `tests/test_discard_table_browser.py` (new), and `tests/test_hand_desktop_browser.py` where it expected the pile in the hand.
+
+What it is, and what differs from §4 or is not said there:
+
+- **The pile is what it was** (spec 101 §4.4): same markup and behaviour, its root `.table-discard` (was `.hand-discard`), its card `.hand-card.hand-done` (the hand card's anatomy classes stay, so `.hand-done` is still the hook), the lich's
+  head, *n goals ready for main*, `ideas.seen` through `seeResult`, `leans` and orkUI's rise on hover (the old `translateY(--hc-rise)` went with the hand's half-hidden cards: a pile on the table lies whole), nothing drawn with nothing
+  done and nothing ready for main.
+- **Its place: `.table-end`**, an absolutely placed column at the foot of `.table-body` (`right: --ork-8`, `bottom: --ork-4`), the word *Discard* (`--ork-type-heading`, the pixel face, muted) above the pile, the pile the hand card's size
+  (`--hc-w`: 144 × 202, 80 × 112 narrow). hand.css's `.hand` size block is shared with `.table-end` and `.table-body` (one card size; `.hand .hand-card`'s box and grid rules name `.table-end .hand-card` too). z-index 1, under the hand's 2,
+  so a card lifted from the hand stands over it where they meet (tested at the narrow width, where the lifted card spans the screen).
+- **A party's tab has no last grid column**, only a header and its map the pane's whole width (the lanes are the Orkmaster's tab alone; the spec's *the column holds the party's map* is the mockup's, not the code's). So `.table-body` carries
+  `data-end`: **`board`** (the project's tab: the last grid column is empty, the pile lies over its foot and takes no width, so the lanes stay under their tabs), **`side`** (a party's tab) and **`over`** (anything opened over the pane): on the
+  desktop the body takes a column's width of padding at the right (`--table-end-w`, a card and `--ork-8` a side), the party's header and the pick strip keep the whole width (`margin-right: -width`), and the map scrolls as it did in what is left; at
+  the narrow width the body takes the pile's height of padding at the foot instead (`--table-end-h`), so a map ends above the pile. Tech's System map, which draws its own `.table-sys`, is treated the same.
+- **Over the pane at the narrow width** (a screen): no pile over it (`data-end="over"`, `display: none`; ← closes), except the `discard` face's own, which keeps the pile (`data-end="side"`) so a second press closes it as before. On the
+  desktop the pile stays over every face, at its column.
+- **The width the pile had** was only a card's width reserved in `.hand-end` (and `margin-right: --hc-edge`), now gone; the lanes' widths are the frame's `--cols` and are not changed, so the stacks' fans are as wide as they were
+  (the spec's *goes to the stacks* is the room the hand's last column no longer holds). At the narrow width the row's `::after` spacer stays: it is the room for the last card, which lies out past its place by what the cards tighten, before the potions.
+- **Tests**: the pile in the project's last column at its foot, right-aligned, the hand card's size, the word above it, none in the hand and `.hand-end` holding the mana alone; on a party's tab the map ends beside it (above it at 390), still scrolls,
+  and the header keeps its width; Tech's tab; press opens the face over the pane and closes it; nothing done and nothing ready is no pile, ready alone is a back; lean and rise; `seeResult`; a lifted card over the pile. The old
+  narrow *a tap raises the pile* test is now *a tap opens the discard*, and the discard tests read the table's own pane instead of the test's box (the box would cover the pile).

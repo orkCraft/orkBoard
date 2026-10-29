@@ -1,0 +1,28 @@
+/* The discard on the table (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §4, decisions §176.3; mockup docs/mockups/mana/): the pile of goals done lies at the foot of the table's last column (the frame's `--cols` last track, right of
+   the lanes), aligned right, a hand card's size (`--hc-w`, the sizes hand.css gives `.table-end` too), with the pixel-face word *Discard* above it, on every tab. Layout only: every colour, face, corner and move is orkUI's (`.ork-deck`,
+   `.ork-card`, `.ork-card-back`, `.ork-leans`, `.ork-label`'s heading face); the card's anatomy is the hand's (hand.css `.hand-card__*`).
+   - The project's tab: the last column is empty, so the pile is laid over its foot and takes no width (the lanes stay under their tabs).
+   - A party's tab (and what is opened over the pane): the map takes the rest (`data-end` "side" and "over" leave a column's width at its right, the map scrolls as it did); the pile's column is empty above the pile.
+   - Under 760 px the pile is 80 px wide at the lanes' end; a screen opened over the pane (what the narrow width makes of it) has no pile over it, except the discard's own, which keeps it to press again; a party's map ends above it.
+   The hand (z-index 2) stands over it, so a card lifted from the hand lies above the pile where they meet. */
+
+.table-body { --table-end-w: calc(var(--hc-w) + var(--ork-8) * 2); --table-end-h: calc(var(--hc-h) + var(--ork-8) + var(--ork-6)); }
+.table-end { position: absolute; z-index: 1; right: var(--ork-8); bottom: var(--ork-4); display: flex; flex-direction: column; align-items: flex-start; gap: var(--ork-3); width: var(--hc-w); }
+.table-end__label { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); }
+.table-discard { width: var(--hc-w); height: var(--hc-h); flex: none; }
+.table-end .hand-card.hand-done { cursor: pointer; }
+.table-end .hand-card .hand-mark { color: var(--ork-ink-muted); }
+.table-end .hand-card .hand-mark.is-ok { color: var(--ork-success); }
+.table-end .hand-card .hand-mark .ork-sign { opacity: 0.85; }
+.table-end .hand-card .is-ok { color: var(--ork-success); }
+
+.table-body:is([data-end="side"], [data-end="over"]) { padding-right: var(--table-end-w); }
+.table-body:is([data-end="side"], [data-end="over"]) > :is(.table-head, .pick-strip) { margin-right: calc(var(--table-end-w) * -1); }          /* the party's header and the pick strip keep the pane's whole width */
+
+@media (max-width: 759.98px) {
+  .table-end { right: var(--ork-4); gap: var(--ork-2); }
+  .table-body:is([data-end="side"], [data-end="over"]) { padding-right: 0; }
+  .table-body:is([data-end="side"], [data-end="over"]) > :is(.table-head, .pick-strip) { margin-right: 0; }
+  .table-body[data-end="side"] { padding-bottom: var(--table-end-h); }
+  .table-body[data-end="over"] > .table-end { display: none; }
+}
