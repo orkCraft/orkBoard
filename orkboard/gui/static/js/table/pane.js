@@ -22,6 +22,7 @@ import { Menu } from "./menu.js";
 import { isForm } from "./over.js";
 import { openParties } from "./parties.js";
 import { DiscardEnd } from "./discard.js";                // the discard at the last column's foot (spec 104 C)
+import { Notice } from "./notice.js";                    // the Orkmaster's line when the work moved to another tool (spec 105 D)
 
 /** ← or Esc: the map as it was left, the card the thing came from lit. */
 export function back() {
@@ -101,6 +102,7 @@ export function Pane({ parties, tab, narrow }) {
   const from = { title: mapName(tab, parties), key: "" };
   return html`<section class="table-pane ork-table" id="table-pane" role="tabpanel" aria-labelledby=${`tab-${tab}`}>
     <${Title} parties=${parties} tab=${tab} narrow=${narrow} />
+    ${!o && html`<${Notice} />`}
     <div class="table-body" ref=${body} data-end=${o && o.kind !== "discard" ? "over" : o || tab !== ORKMASTER ? "side" : "board"}>
       ${o ? html`<${Over} />` : tab === ORKMASTER ? html`<${PickStrip} tab=${tab} /><${BoardMap} parties=${parties} narrow=${narrow} />
           ${!parties.length && html`<div class="table-empty"><p>No parties yet</p>

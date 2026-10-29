@@ -53,7 +53,7 @@ def test_two_tools_are_two_potions_in_one_row_in_the_chips_order_flush_against_t
         p = pots(pg)
         pg.wait_for_timeout(500)
         assert [b.get_attribute("data-provider") for b in p.all()] == ["claude", "codex"]                                      # one potion a tool, in the chips' order
-        assert [b.get_attribute("aria-label") for b in p.all()] == ["Claude Code: 62% of the week left", "Codex: 18% of the week left"]
+        assert [b.get_attribute("aria-label") for b in p.all()] == ["Claude Code: 62% of the week left, the default", "Codex: 18% of the week left"]
         assert [b.get_attribute("title") for b in p.all()] == [b.get_attribute("aria-label") for b in p.all()]                  # the chip's words, as title and for a screen reader
         assert [b.locator(".hand-pot__share").inner_text() for b in p.all()] == ["62%", "18%"]
         small = width == "narrow"
@@ -233,6 +233,213 @@ def test_with_no_goal_at_all_the_potions_still_lie_at_the_hands_right_end(gui):
         box = pg.locator(".hand-mana").bounding_box()
         assert p.count() == 2 and box["x"] + box["width"] == pytest.approx(pg.viewport_size["width"], abs=1) and box["y"] + box["height"] <= pg.viewport_size["height"] + 1
         shot(pg, "wide-empty")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+# -- the default's frame (docs/specs/105 §4.1–§4.2, decisions §177.1) ---------------------------------------------------------------------------
+
+def mana_of(main="claude", now="", paid=None, moved=None, until=None):
+    return {"main": main, "now": main if now == "" else now, "until": until, "moved": moved, "paid": paid}
+
+
+PAID = {"tool": "agy", "name": "Antigravity", "until": "2026-10-29T18:00", "usd_task": 0.4}
+
+
+def open_default(gui, limits, mana, width="wide", pinned=None):
+    host = HandHost()
+    host.limits, host.mana = limits, mana
+    for slug, provider in (pinned or {}).items():
+        next(p for p in host.parties if p["slug"] == slug)["tool"] = provider
+    return open_hand(gui, host, width)
+
+
+def box(loc):
+    return loc.bounding_box()
+
+
+def same_box(a, b, tol=1):
+    return all(abs(a[k] - b[k]) <= tol for k in ("x", "y", "width", "height"))
+
+
+def framed_on(pg):
+    """The provider (or "paid") the frame lies on: the one place whose box the frame's box is, and the one `data-default` says."""
+    pg.wait_for_timeout(450)                                                                                                    # the slide is over
+    frame = pg.locator(".hand-mana__frame")
+    assert not frame.evaluate("e => e.hidden")
+    on = pg.locator('.hand-mana [data-default="1"]')
+    assert on.count() == 1
+    assert same_box(box(frame), box(on)), (box(frame), box(on))
+    return "paid" if on.get_attribute("data-paid") else on.get_attribute("data-provider")
+
+
+def settle(pg, host):
+    host.bump({})
+    pg.wait_for_timeout(100)
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_the_frame_is_on_the_tool_now_on_the_projects_tab_with_its_words(gui, width):
+    pg, host, log = open_default(gui, TWO, mana_of("claude", "codex", until="2026-10-29T18:00"), width)
+    try:
+        p = pots(pg)
+        assert framed_on(pg) == "codex"
+        assert p.nth(1).get_attribute("aria-label") == "Codex: 18% of the week left, the default" and p.nth(1).get_attribute("title") == p.nth(1).get_attribute("aria-label")
+        assert p.nth(0).get_attribute("aria-label") == "Claude Code: 62% of the week left" and p.nth(0).get_attribute("data-default") is None
+        assert pg.locator('.hand-mana [data-default="1"]').count() == 1                                                          # one place is framed
+        assert pg.locator(".hand-mana__frame").evaluate("e => getComputedStyle(e).clipPath") != "none"                           # orkUI's notch
+        assert pg.locator(".hand-mana__frame").evaluate("e => getComputedStyle(e).borderTopWidth") == "2px"
+        shot(pg, f"{width}-default-moved")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_frame_is_on_the_main_tool_with_nothing_said_and_on_the_first_with_no_mana_at_all(gui):
+    pg, host, log = open_default(gui, TWO, mana_of("codex"))
+    try:
+        pots(pg)
+        assert framed_on(pg) == "codex"                                                                                          # now = main: the Main tool
+        host.mana = {**mana_of("claude"), "now": None}                                                                           # every tool is out: the Main tool keeps the frame
+        settle(pg, host)
+        assert framed_on(pg) == "claude"
+        host.mana = None
+        settle(pg, host)
+        assert framed_on(pg) == "claude"                                                                                         # the host says nothing: the first
+        host.mana = mana_of("", None)
+        settle(pg, host)
+        assert framed_on(pg) == "claude"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_partys_tab_frames_its_own_tool_and_the_tool_now_when_it_has_none(gui):
+    pg, host, log = open_default(gui, SIX, mana_of("claude", "agy"), pinned={"design": "codex"})
+    try:
+        pots(pg)
+        assert framed_on(pg) == "agy"                                                                                            # the project's tab: the tool now
+        pg.locator('[data-tab="design"]').click()
+        assert framed_on(pg) == "codex"                                                                                          # a party set to Codex on purpose
+        assert pg.locator('.hand-pot[data-provider="codex"]').get_attribute("aria-label").endswith(", the default")
+        shot(pg, "wide-default-pinned")
+        pg.locator('[data-tab="tech"]').click()
+        assert framed_on(pg) == "agy"                                                                                            # a party that follows: the tool now
+        pg.locator('[data-tab="orkmaster"]').click()
+        assert framed_on(pg) == "agy"
+        host.mana = mana_of("claude", "claude")                                                                                  # the Main tool is back: every following tab goes with it
+        settle(pg, host)
+        assert framed_on(pg) == "claude"
+        pg.locator('[data-tab="design"]').click()
+        assert framed_on(pg) == "codex"                                                                                          # a pinned tool is never moved
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_frame_slides_between_places_and_nothing_shifts(gui):
+    pg, host, log = open_default(gui, SIX, mana_of("claude", "claude"))
+    try:
+        p = pots(pg)
+        assert framed_on(pg) == "claude"
+        before = [box(b) for b in p.all()]
+        borders = p.evaluate_all("els => els.map(e => { const s = getComputedStyle(e); return [s.borderTopWidth, s.borderTopColor, s.borderTopStyle]; })")
+        assert all(b[0] == "2px" and b[1] == "rgba(0, 0, 0, 0)" and b[2] == "solid" for b in borders), borders               # every potion keeps a transparent border of the frame's width
+        frame = pg.locator(".hand-mana__frame")
+        assert frame.evaluate("e => getComputedStyle(e).transitionProperty") == "transform" and frame.evaluate("e => getComputedStyle(e).transitionDuration") == "0.18s"      # --ork-motion-base
+        host.mana = mana_of("claude", "agy")
+        settle(pg, host)
+        assert frame.evaluate("e => getComputedStyle(e).transform").startswith("matrix")
+        assert framed_on(pg) == "agy"
+        assert [box(b) for b in p.all()] == before                                                                               # no potion moved
+        assert same_box(box(frame), box(p.nth(2)))
+        shot(pg, "wide-default-slid")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_frame_does_not_slide_under_reduced_motion(gui):
+    server, browser = gui
+    host = HandHost()
+    host.limits, host.mana = TWO, mana_of("claude", "claude")
+    pg = narrow.context(browser, "wide").new_page()
+    pg.emulate_media(reduced_motion="reduce")
+    log: list[str] = []
+    pg.on("pageerror", lambda e: log.append(f"pageerror: {e}"))
+    pg.route_web_socket("**/ws*", host.on_socket)
+    pg.goto(server.url)
+    try:
+        pots(pg)
+        assert framed_on(pg) == "claude"
+        assert pg.locator(".hand-mana__frame").evaluate("e => getComputedStyle(e).transitionDuration") == "0s"
+        host.mana = mana_of("claude", "codex")
+        settle(pg, host)
+        assert framed_on(pg) == "codex"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_lifted_card_keeps_the_frame_and_says_the_default_before_what_it_spends(gui):
+    pg, host, log = open_default(gui, TWO, mana_of("claude", "claude"))
+    try:
+        p = pots(pg)
+        _stack(pg, "export").wait_for(timeout=WAIT_MS)
+        _press(pg, "export")
+        pg.locator(".hand-lifted").wait_for(timeout=WAIT_MS)
+        pg.wait_for_timeout(300)
+        assert p.nth(0).get_attribute("aria-label") == "Claude Code: 62% of the week left, the default. This card takes about 4% of it"
+        assert framed_on(pg) == "claude"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_while_going_on_paid_holds_the_paid_tool_is_a_slot_after_the_potions_with_the_frame(gui, width):
+    limits = [tool("claude", "Claude Code", 0.0), tool("codex", "Codex", 0.0), tool("cursor", "Cursor", 0.0), tool("hermes", "Hermes", 0.0)]
+    pg, host, log = open_default(gui, limits, mana_of("claude", "agy", paid=PAID), width)
+    try:
+        p = pots(pg)
+        pg.wait_for_timeout(300)
+        assert [b.get_attribute("data-provider") for b in p.all()] == ["claude", "codex", "cursor", "hermes", "agy"]            # the paid tool after the potions
+        slot = pg.locator(".hand-pot--paid")
+        assert slot.count() == 1 and slot.get_attribute("data-paid") == "1"
+        assert slot.locator("use").get_attribute("href").endswith("/icons/icons.svg#coins")                                      # orkUI's coins
+        assert slot.locator(".ork-potion").count() == 0 and slot.locator(".hand-pot__share").inner_text() == "API"
+        assert slot.locator(".hand-pot__sub").inner_text() == "≈$0.40"
+        words = slot.get_attribute("aria-label")
+        assert words.startswith("Antigravity paid by its API: no limit, about $0.40 a task, going on until ") and words.endswith(", the default") and slot.get_attribute("title") == words
+        assert framed_on(pg) == "paid"
+        assert pg.locator('.hand-mana [data-default="1"]').count() == 1 and p.nth(0).get_attribute("data-default") is None       # the frame is on it, no potion has it
+        shot(pg, f"{width}-default-paid")
+        boxes = [box(b) for b in p.all()]
+        assert boxes[4]["y"] > boxes[0]["y"] + 40 and boxes[4]["x"] >= boxes[3]["x"] - 1                                         # five places: two rows of three, the slot in the second
+        mana, hand = pg.locator(".hand-mana").bounding_box(), pg.locator(".hand").bounding_box()
+        assert mana["y"] + mana["height"] <= hand["y"] + hand["height"] + 1 and mana["x"] + mana["width"] == pytest.approx(pg.viewport_size["width"], abs=1)
+        narrow.no_sideways(pg)
+        slot.click()
+        pg.locator('.table-over[data-kind="limits"]').wait_for(timeout=WAIT_MS)
+        assert sig(pg, "frame/state.js", "over")["props"] == {"provider": "agy"}
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_paid_slot_with_no_known_cost_says_so_and_has_no_price(gui):
+    pg, host, log = open_default(gui, TWO, mana_of("claude", "agy", paid={**PAID, "usd_task": None, "until": None}))
+    try:
+        pots(pg)
+        slot = pg.locator(".hand-pot--paid")
+        assert slot.count() == 1 and slot.locator(".hand-pot__sub").count() == 0
+        assert slot.get_attribute("aria-label") == "Antigravity paid by its API: no limit, its cost is not known yet, the default"
+        assert framed_on(pg) == "paid"
+        host.mana = mana_of("claude", "claude")                                                                                  # the yes ended with the reset: the slot goes, the frame goes back
+        settle(pg, host)
+        pg.wait_for_function("() => !document.querySelector('.hand-pot--paid')")
+        assert framed_on(pg) == "claude"
     finally:
         pg.close()
     assert not log, "\n".join(log)

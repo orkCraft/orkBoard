@@ -223,3 +223,32 @@ What it is, and what differs from §6 or is not said there:
   checks the choice first (an early version swallowed the next Esc, which goes back from the view). A second Esc goes back as before.
 - **Not done / to know**: the drag's `is-taking` is tested on desktop only (a touch screen sends no HTML5 drag; its path is the press). The card's travel is not asserted in a test (reduced motion off or on, the end state is).
   `tests/test_architecture.py::test_orkboard_starts_alone` fails in this worktree for a reason outside this part: its subprocess imports `orkboard` through the editable install, which is the main checkout, and the main checkout holds other builders' not yet committed `realm/paid.py`, `realm/tool_now.py` and `gui/ideas_mana.py`.
+
+## As built D (the face: the frame and the line)
+
+Built in `orkboard/gui/static/js/hand/mana.js` and `hand/mana.css` (the frame and the paid slot), `table/notice.js` and `table/notice.css` (the Orkmaster's line, drawn by `table/pane.js` under the title, the sheet loaded by `frame/frame.js`),
+and `gui/ideas_mana.py` (`paid` in `town.mana`). Tests: `tests/test_hand_mana_browser.py` (extended), `tests/test_mana_notice_browser.py` (new), `tests/test_paid.py` (the field).
+
+- **The frame** is one element, `.hand-mana__frame`, behind the potions (`z-index` 0, the potions 1), moved to the framed place with `transform: translate()` and sized to it (mana.js `useFrame`, on a `ResizeObserver` too, so a
+  resize or a narrow width keeps it on its place). orkUI's tokens only: `--ork-ink` on a `--ork-1` (2 px) border, `--ork-notch` (the same corner cut orkUI's `.ork-frame` has; orkUI has no class for a chosen slot, the mockup's
+  `border-color` + `clip-path: var(--ork-notch)` is what is used) on `--ork-panel`. **Every potion has a transparent `--ork-1` border** (`background-clip: padding-box`, so its hover colour stays inside), so the frame's arrival moves
+  nothing (tested: every potion's box is the same before and after a move). The slide is `transform var(--ork-motion-base) var(--ork-motion-ease)` (0.18 s), switched on only after the first placement (`data-placed`, two animation
+  frames later) so the page never slides in from the corner, and off under `prefers-reduced-motion`. The potions' height budget (`--hc-pots`) counts the border (`--ork-1 * 6`).
+- **Who is framed** (`framedOf`, exported): the open tab's work goes to `g.tool` of the party when it has one (a pinned tool: it is never moved), else `town.mana.now`, else `town.mana.main`, else the first potion. The project's tab
+  has no pin. A tool the places do not show (hidden behind *+n*) has no frame. `data-default="1"` is on the framed place (and `is-default`), `data-default` on `.hand-mana` names it (`paid` or the provider). The framed potion's
+  `aria-label` and `title` add *, the default* right after what is left (*Claude Code: 62% of the week left, the default*, and with a lifted card that spends: *…, the default. This card takes about 4% of it*). With no `town.mana`
+  at all (an old host) the first potion is framed, so `tests/test_hand_mana_browser.py`'s first test now expects it.
+- **The paid slot**: the snapshot did not say it (`town.mana.now` is the API tool only while a yes holds, but the page cannot tell which tool is billed by its API), so **`town.mana.paid` was added**: `{tool, name, until, usd_task} | null`
+  (`ideas_mana.py` `_mana_paid`: a yes holds, the tool now is the first tool billed by its API and is not the Main tool; `until` the yes's end, an ISO local time; `usd_task` `usd_task_of(tool)`, None while nothing is priced). The no-project
+  snapshot says `paid: null` too. The slot is a `.hand-pot.hand-pot--paid` after the potions: the tool's coloured mark, orkUI's `coins` icon (`icons/icons.svg#coins`, a pixelarticon at its 24 px) in a dashed box where the bottle
+  would stand, *API*, and *≈$0.40* under it (muted, none while the cost is not known); the frame is on it while the work goes to that tool. Its words: *Codex paid by its API: no limit, about $0.40 a task, going on until Thu 18:00, the
+  default* (*its cost is not known yet* with no price). A press opens what used it over the pane, as a potion does. It takes one of the six places (a seventh item makes the first four tools and *+n*), and with the price line the second
+  row is one caption taller (`--hc-pots` grows by `--hc-cap` and the gap while `[data-paid]`).
+- **The line** (`table/notice.js` `Notice`): a `role="status"` strip `.table-notice` between the pane's title and the map, **on every tab** when nothing is opened over the pane (the Orkmaster speaks to the whole project; a thing opened
+  over the pane has its own title and no strip): the Orkmaster's crowned head (`Head race="peon" tier="crown"`), `moved.line` in the body face (`--ork-type-body`), a close button (*Dismiss*, orkUI's `close` icon, 44 px on the phone).
+  Shown while `moved.line` is not empty (every tool out says no line: the card asks instead) and `moved.at` is later than what this viewer put away and less than a day ago (`lineOf`, exported). A press puts it away: `localStorage`
+  `orkboard.mana.seen` = `{<project path>: <at>}` in try/catch (without it the line goes for the run only); a move with a later `at` shows again, an older one stays away. A timer takes it away when the day runs out while the page is
+  open. Not a toast.
+- **Not as the spec says / to know**: the spec's *(else the Main tool)* for the project's tab and *its pinned tool … else `town.mana.now`* for a party's are kept, and the first potion is the last fallback only. The phone's
+  snapshot has no `mana` yet (As built B), so the phone shows no frame and no line. The portal's and the discard's own face (part F) are not touched. Looked at: 1280×800 and 390×844, the project's tab framed on the Main tool and on
+  Codex after a move (with the line), a party's tab with a pinned tool, the slide (the frame on Antigravity), the paid slot (wide and narrow).

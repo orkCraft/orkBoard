@@ -424,7 +424,7 @@ class Orkboard:
     def _mana(self) -> dict[str, Any]:
         """The tool now with no project open: the Main tool, nothing moved (a Board's own is `Ideas.mana`)."""
         main = settings.main_tool(self.machine)
-        return {"main": main, "now": main, "until": None, "moved": None}
+        return {"main": main, "now": main, "until": None, "moved": None, "paid": None}
 
     def _follow_main(self) -> None:
         """The machine's tool now, kept for what has no Board to ask (a step that says `main`, the tiers: realm/tool_now.py `following`): the quota's last read, no project's

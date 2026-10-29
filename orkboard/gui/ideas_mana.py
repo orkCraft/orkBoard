@@ -3,7 +3,7 @@ when the Main tool is out (realm/tool_now.py), said once when it moves, and the 
 
     ideas.tool_now()        # {main, now, until, moved_from} (realm/tool_now.py `now`) for this Board: the machine's tools, the quota's last read, this Board's yes to go on paid
     ideas.follow()          # the tool now: what the runner and the keeper fall to where they fell to the Main tool
-    ideas.mana()            # the snapshot's `mana`: {main, now, until, moved: {from, to, until, at, line} | None}
+    ideas.mana()            # the snapshot's `mana`: {main, now, until, moved: {from, to, until, at, line} | None, paid: {tool, name, until, usd_task} | None}
     ideas.mana_tick()       # from the clock: a change of the tool now is published (`bus.TOOL_MOVED`, once) and logged (`tool_moved`)
     ideas.paid_rows()       # [] or the row {kind: "paid", tool, name, until, usd_task, …} in Needs you (realm/paid.py)
     ideas.paid {yes: bool}  # the person's answer: the yes holds until the reset and the work goes on with the tool billed by its API; a no is not asked again before it
@@ -46,10 +46,21 @@ class ManaMixin:
         return self.tool_now(reserve=reserve)["now"]
 
     def mana(self, at: float | None = None) -> dict[str, Any]:
-        """`{main, now, until, moved}` for the snapshot: `until` is when the Main tool is back (ISO, local) while the work is on another; `moved`, the last change this run
-        has seen, `{from, to, until, at, line}` (`to` None while every tool is out; `line` the Orkmaster's words, "" then), else None."""
+        """`{main, now, until, moved, paid}` for the snapshot: `until` is when the Main tool is back (ISO, local) while the work is on another; `moved`, the last change this run
+        has seen, `{from, to, until, at, line}` (`to` None while every tool is out; `line` the Orkmaster's words, "" then), else None; `paid`, while a yes to go on paid holds and the
+        work is on that tool, `{tool, name, until, usd_task}` (`until` the yes's end, `usd_task` about what a task costs there or None), else None: the hand's slot after the potions
+        (docs/specs/105 §4.2)."""
+        at = time.time() if at is None else at
         got = self.tool_now(at)
-        return {"main": got["main"], "now": got["now"], "until": _iso(got["until"]) if got["now"] != got["main"] else None, "moved": self._mana_moved}
+        return {"main": got["main"], "now": got["now"], "until": _iso(got["until"]) if got["now"] != got["main"] else None, "moved": self._mana_moved, "paid": self._mana_paid(got, at)}
+
+    def _mana_paid(self, got: dict, at: float) -> dict | None:
+        machine = getattr(self.host, "machine", None)
+        held = paid.until(self.state_dir, at)
+        tool = tool_now.api_tool(machine) if machine is not None else None
+        if held is None or tool is None or got["now"] != tool or got["main"] == tool:
+            return None
+        return {"tool": tool, "name": harnesses.title(tool), "until": _iso(held), "usd_task": self.usd_task_of(tool)}
 
     def mana_tick(self, at: float | None = None) -> None:
         """From the clock: when the tool now changed since the last tick, once: `bus.TOOL_MOVED {from, to, until}`, the Orkmaster's line kept in `moved`, and `tool_moved` in the event log.

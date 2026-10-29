@@ -186,7 +186,7 @@ class StubHost:
         return {"t": "state", "state": {
             "focus": "board", "ideas_rev": self.rev, "look": self.look, "project": "orkline", "demo": False, "onboarding": self.onboarding or False,
             "words": [], "resources": {}, "orkspaces": [], "buildings": [], "roads": [], "alerts": [], "score": {},
-            "limits": self.limits, "reserve": self.reserve, "rate": self.rate, "review_count": len(self.results()), "needs_you": 1, "sign_in": json.loads(json.dumps(self.sign_in)),
+            "limits": self.limits, **({"mana": self.mana} if getattr(self, "mana", None) is not None else {}), "reserve": self.reserve, "rate": self.rate, "review_count": len(self.results()), "needs_you": 1, "sign_in": json.loads(json.dumps(self.sign_in)),
             "hud": {"gold": "$2.40", "show_gold": True, "lumber": "120k"}}}
 
     def page(self, slug):

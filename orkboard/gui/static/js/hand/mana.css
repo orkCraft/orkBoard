@@ -1,13 +1,26 @@
 /* The mana (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §3, decisions §176.2): the AI tools' potions at the hand's right end, flush against the window's edge. Layout only: the bottle, its liquid and
    the blue are orkUI's (`.ork-potion`, `--ork-mana`); the share's colour is the signals' tokens. One to three potions in one row, four in two rows of two, five or six in two rows of three (the small size), the narrow width's all small. */
 
-.hand-mana { display: grid; grid-auto-flow: column; align-items: start; justify-items: center; flex: none; pointer-events: auto; }
+.hand-mana { position: relative; display: grid; grid-auto-flow: column; align-items: start; justify-items: center; flex: none; pointer-events: auto; }
 .hand-mana[data-rows="2"] { grid-auto-flow: row; grid-template-columns: repeat(3, auto); }
 .hand-mana[data-rows="2"][data-n="4"] { grid-template-columns: repeat(2, auto); }                                    /* four: two rows of two (decisions §177.8) */
-.hand-pot { appearance: none; border: 0; background: none; margin: 0; color: var(--ork-ink); font: var(--ork-type-caption); cursor: pointer; padding: var(--ork-1) var(--ork-2);
+.hand-pot { appearance: none; position: relative; z-index: 1; border: var(--ork-1) solid transparent; background: none; background-clip: padding-box; margin: 0; color: var(--ork-ink); font: var(--ork-type-caption); cursor: pointer; padding: var(--ork-1) var(--ork-2);
   min-width: 44px; display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); }
-.hand-pot:hover { background: var(--ork-raised); }
+.hand-pot:hover { background: var(--ork-raised); background-clip: padding-box; }
 .hand-pot:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.hand-pot.is-default:hover { background: none; }
+.hand-pot.is-default:focus-visible { outline: var(--ork-1) solid var(--ork-ink); outline-offset: var(--ork-1); box-shadow: none; }
+
+/* the default (spec 105 D, decisions §177.1): a hotbar's chosen slot. One frame element behind the potions, moved to the chosen place by a transform (mana.js sets it): orkUI's ink on the edge, its corner notch, on the panel.
+   Every potion keeps a transparent border of the same width, so the frame's arrival moves nothing; the slide is --ork-motion-base and is not made under reduced motion. */
+.hand-mana__frame { position: absolute; left: 0; top: 0; z-index: 0; box-sizing: border-box; pointer-events: none; border: var(--ork-1) solid var(--ork-ink); background: var(--ork-panel); clip-path: var(--ork-notch); }
+.hand-mana__frame[hidden] { display: none; }
+.hand-mana__frame[data-placed] { transition: transform var(--ork-motion-base) var(--ork-motion-ease); }
+@media (prefers-reduced-motion: reduce) { .hand-mana__frame[data-placed] { transition: none; } }
+
+/* the paid slot: the tool billed by its API has no limit to pour, so orkUI's coins stand where the potion would, then *API* and the price under it */
+.hand-pot__coins { display: flex; align-items: center; justify-content: center; box-sizing: border-box; width: 28px; height: 36px; border: var(--ork-line) dashed var(--ork-edge); color: var(--ork-ink-muted); }
+.hand-pot__sub { color: var(--ork-ink-muted); font: var(--ork-type-caption); white-space: nowrap; }
 .hand-pot .ork-mark { display: block; }
 .hand-pot__initial { display: block; height: 16px; color: var(--ork-ink-muted); font: var(--ork-type-body); font-weight: 600; line-height: 16px; }
 .hand-pot__share { color: var(--ork-ink); font: var(--ork-type-caption); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: center; }
@@ -20,8 +33,9 @@
 
 /* the hand's height is the cards': two rows of potions (four tools and more) lie in it when they fit, and when they do not the hand grows by what they need and no more (spec 104 §3.4): a potion is its padding, the mark,
    the bottle at the small size (36 px) and the share's line */
-.hand { --hc-cap: 16px; --hc-pots: calc(2 * (var(--ork-1) * 4 + 16px + 36px + var(--hc-cap))); }
+.hand { --hc-cap: 16px; --hc-pots: calc(2 * (var(--ork-1) * 6 + 16px + 36px + var(--hc-cap))); }
 @media (max-width: 1023px) { .hand { --hc-cap: 18px; } }
+.hand:has(.hand-mana[data-rows="2"][data-paid]) { --hc-pots: calc(2 * (var(--ork-1) * 6 + 16px + 36px + var(--hc-cap)) + var(--hc-cap) + var(--ork-1)); }      /* the paid slot's price is a second line under *API* */
 .hand:has(.hand-mana[data-rows="2"]) .hand-places { height: max(calc(var(--hc-room) + var(--hc-top) + var(--hc-shown)), calc(var(--hc-room) + var(--hc-top) + var(--hc-pots))); }
 
 /* a hand with no goal at all has no cards: its potions lie alone at the right end */

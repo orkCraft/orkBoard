@@ -90,6 +90,9 @@ def test_a_yes_keeps_the_work_going_with_the_api_tool_until_the_reset(host):
     assert runner.tool_of("demo", task) == "codex"                     # the next task starts on it
     mana = host.snapshot()["mana"]
     assert mana["now"] == "codex" and mana["main"] == "claude"
+    assert mana["paid"]["tool"] == "codex" and mana["paid"]["name"] == "Codex" and mana["paid"]["until"] == got["until"]      # the hand's slot after the potions (spec 105 D)
+    assert mana["paid"]["usd_task"] is None or mana["paid"]["usd_task"] > 0
+    json.dumps(mana)
     assert host.moves == [{"from": "claude", "to": "codex", "until": pytest.approx(AT + 5 * H, abs=1)}]
     kept = json.loads((host.ideas.state_dir / "paid.json").read_text())
     assert list(kept) == ["paid_until"] and kept["paid_until"] == pytest.approx(AT + 5 * H, abs=1)
@@ -104,6 +107,7 @@ def test_a_wait_is_not_asked_again_before_the_reset(host):
     assert host.command("ideas.paid", {"yes": False})["ok"] is True
     assert rows(host) == []
     mana = host.snapshot()["mana"]
+    assert mana["paid"] is None                                        # a wait is no paid work: no slot
     assert mana["now"] is None and host.ideas.runner(need=True).tool_of("demo", {"id": "k1", "kind": "code"}) == "claude"
     kept = json.loads((host.ideas.state_dir / "paid.json").read_text())
     assert list(kept) == ["paid_wait"] and kept["paid_wait"] == pytest.approx(AT + 5 * H, abs=1)
