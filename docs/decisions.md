@@ -3693,7 +3693,10 @@ installed, a task that may not install), and was sent back five times with the l
 11. **Play** (I): its sheet, lost with `assets.css`, is back; the start screen shows the product's logo when the project has
     one, coming up in steps with a sweep and two blinks, a console's start; full screen.
 12. **Save logs is a button by the mana** (J): orkUI's bug under its magnifier, with an optional line of what went wrong.
-13. **@ in New goal** (K) offers the parties and the project's files.
+13. **@ in New goal** (K) offers the parties and the project's files; a party taken, it offers at once **what that party can
+    do** (its goal types: the goal takes that type) and **what it already has** (its map's parts: screens, System's parts, the
+    game's loops: they become the goal's marks), and *@mech* finds *New mechanic · Game design*: who, then what, then on what
+    (the owner's second note).
 14. **The crowned ork is Orkboard's mark** (L, §91): favicon, the phone's icons, the Dock, VS Code, onboarding; Orkline
     keeps its own.
 15. **New goal's card is worth looking at** (M): a double green frame with pixel corners and a fine hatch, a sweep on hover,

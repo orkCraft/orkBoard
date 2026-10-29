@@ -209,6 +209,18 @@ waits does** (§182.7).
    --exclude-standard`) and their folders, matched as a subsequence of the path, a name match first; ≤ 20.
 3. A file taken is written `@path/to/file`. `ideas.add` (`realm/goal_mentions.py`) turns each `@path` that exists into
    `` `path` `` in the goal's text (so the route's `_PATH` and the leaders read it), `idea_added` gains `files` (how many).
+4. **Who, then what, then on what** (§182.13, the owner's second note): once a party is taken (`@Game design `), the list
+   goes on at once with that party's second step, filtered by what is typed after it:
+   - **What it can do**: its goal types (`mapData` goals' `types`, spec 59 §4.5: the most used first), each its sign and
+     name (*New mechanic*, *Balance pass*). Taking one makes the goal that type: a chip *◆ New mechanic ×* on the field,
+     `type` sent with `ideas.add` (as the phone sends it); one type at most, never a word in the text.
+   - **What it already has**: the parts of its map (Design's screens, System's parts for Tech, the game's loops' steps and
+     currencies for Game design; any map that stamps `data-pick-*`), the same `{map, id, name}` picking takes (spec 102
+     §6): taking one adds it to the goal's marks, a chip as a picked part's.
+   - At the first `@`, a word that names no party but a type (*@mech*) offers *New mechanic · Game design*: taking it takes
+     the party and the type together. Backspace on an empty second step goes back to the parties. Nothing of it is needed:
+     Enter on the text alone sends as today.
+   - The parts come from `ideas.pickables {party, q}` (new, `gui/`): the same ids the maps stamp, ≤ 30.
 
 ## 12. Part L: the crowned ork is Orkboard's mark
 
