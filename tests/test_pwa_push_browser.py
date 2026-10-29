@@ -113,7 +113,7 @@ async def test_the_computers_refusal_and_the_phones_are_said_in_words(fake_repo,
     async with _phone(fake_repo, monkeypatch, init=fake(answer="denied")) as (stub, page):
         drawer, row = await _row(page)
         await row.get_by_role("button", name="Notify this phone").click()
-        await row.get_by_text("Notifications are off for Orkline in this phone’s settings").wait_for(timeout=WAIT_MS)
+        await row.get_by_text("Notifications are off for Orkboard in this phone’s settings").wait_for(timeout=WAIT_MS)   # the phone says Orkboard (decisions §95.3)
         assert not any(c[0] == "mobile.push_key" for c in stub.calls)
 
 
@@ -123,11 +123,11 @@ async def test_without_push_an_iphone_is_told_the_home_screen_and_another_browse
     iphone = "Object.defineProperty(navigator, 'userAgent', {get: () => 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X)'});"
     async with _phone(fake_repo, monkeypatch, init=gone + iphone) as (stub, page):
         drawer, row = await _row(page)
-        assert "Add Orkline to the Home Screen to get notifications here" in await row.inner_text()
+        assert "Add Orkboard to the Home Screen to get notifications here" in await row.inner_text()
         assert await row.get_by_role("button").count() == 0
     async with _phone(fake_repo, monkeypatch, init=gone) as (stub, page):
         drawer, row = await _row(page)
-        assert "This browser cannot show notifications from Orkline" in await row.inner_text()
+        assert "This browser cannot show notifications from Orkboard" in await row.inner_text()
 
 
 @pytest.mark.asyncio

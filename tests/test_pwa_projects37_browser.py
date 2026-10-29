@@ -72,7 +72,7 @@ async def test_a_linked_spec_opens_read_only_rendered_with_no_edit_or_git_contro
         await _pick_goal(page, "ship")
         await _open_party(page, "Ship v1")
         await page.locator(".screen").get_by_role("button", name=SPEC).click()
-        doc = page.locator(".screen .md.doc")
+        doc = page.locator(".screen .ork-read.doc")                                                    # orkUI's reading page (design-system/orkui README, `.ork-read`)
         await doc.wait_for(timeout=WAIT_MS)
         assert await doc.locator("h1").inner_text() == "Board and line" and await doc.locator("strong").inner_text() == "phone"
         screen = page.locator(".screen")

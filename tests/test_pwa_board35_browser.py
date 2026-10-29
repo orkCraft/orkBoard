@@ -381,7 +381,7 @@ async def test_the_create_button_floats_over_the_field_s_bottom_right_and_limits
         await page.keyboard.press("Escape")
         await _new_goal(page)
         sheet = page.get_by_role("dialog", name="New party")
-        await sheet.locator('.craft-tile[data-craft="data"]').click()
+        await sheet.locator('.craft-tile[data-craft="design"]').click()                                       # (a party of the stage list: spec 99 §1 offers no Data party)
         assert "What is left: Claude 62 % · Antigravity 15 %" in await sheet.locator(".limits-note").inner_text()
         await page.keyboard.press("Escape")
         await _open_idea(page, "Offline mode")

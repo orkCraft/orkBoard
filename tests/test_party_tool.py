@@ -5,6 +5,7 @@ tasks going to the leader, a resize by a recipe with who joins and leaves, a mem
 from __future__ import annotations
 
 import json
+import time
 from types import SimpleNamespace
 
 import pytest
@@ -203,6 +204,11 @@ def test_the_keeper_runs_a_goals_steps_on_its_partys_tool_and_a_step_of_no_goal_
     keeper._spent("draft", ("warrior", "medium"), None, 10, 0.1)
     keeper._tls.key = keeper._tls.slug = idea
     keeper._spent("draft", ("warrior", "medium"), None, 10, 0.1)
+    for _ in range(1000):                                                                                    # the party's own reading (started by the save) writes its codex line in the background:
+        if not keeper.busy_goal(codex):                                                                       # read the ledger once it has, not after a guessed time
+            break
+        time.sleep(0.01)
+    assert not keeper.busy_goal(codex)
     lines = [json.loads(ln) for f in h.state.rglob("spend*.jsonl") for ln in f.read_text(encoding="utf-8").splitlines() if ln.strip()]
     assert {ln.get("harness") or ln.get("tool") for ln in lines} >= {"codex", "claude"}
 

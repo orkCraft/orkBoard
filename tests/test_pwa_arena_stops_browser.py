@@ -182,12 +182,13 @@ async def test_the_create_button_is_a_face_down_deck_that_opens_new_goal_and_not
         await page.get_by_role("dialog", name="New party").wait_for(timeout=WAIT_MS)
         await page.keyboard.press("Escape")
         about = await _about(page)                                                                     # Add to the party: About this party's, beside Edit the party
-        assert "the party is full: change a member" in await about.locator(".party-about__seats").inner_text()
+        assert "3 free seats in this party" in await about.locator(".party-about__seats").inner_text()     # a squad: up to five who do, two who check (§151.1, spec 99 §1.3); 2 + 2 are taken
         await about.get_by_role("button", name="Add to the party").click()
         assert await _called(stub, "ideas.goal", {"slug": "passkey"})
         await page.get_by_role("dialog", name="The party").wait_for(timeout=WAIT_MS)                    # the party's seats
         await page.keyboard.press("Escape")
-        SCENE["map"]["goals"][0]["party"].append(member({"slug": "extra", "name": "Extra"}, "build", OWN))        # three builders: the seats are full
+        for slug in ("extra", "more", "third"):                                                         # five builders and two checkers: the seats are full
+            SCENE["map"]["goals"][0]["party"].append(member({"slug": slug, "name": slug.title()}, "build", OWN))
         stub.bump({})
         await page.locator(".colname").nth(2).wait_for(timeout=WAIT_MS * 2)
         about = await _about(page)
