@@ -167,3 +167,7 @@ What it is, and what differs from §4 or is not said there:
 - **Tests**: the pile in the project's last column at its foot, right-aligned, the hand card's size, the word above it, none in the hand and `.hand-end` holding the mana alone; on a party's tab the map ends beside it (above it at 390), still scrolls,
   and the header keeps its width; Tech's tab; press opens the face over the pane and closes it; nothing done and nothing ready is no pile, ready alone is a back; lean and rise; `seeResult`; a lifted card over the pile. The old
   narrow *a tap raises the pile* test is now *a tap opens the discard*, and the discard tests read the table's own pane instead of the test's box (the box would cover the pile).
+
+## Changed since
+
+- Four tools stand two rows of two (decisions §177.8): `hand/mana.css` `[data-n="4"]`, `tests/test_hand_mana_browser.py`.

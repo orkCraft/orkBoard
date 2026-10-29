@@ -1,8 +1,9 @@
 /* The mana (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §3, decisions §176.2): the AI tools' potions at the hand's right end, flush against the window's edge. Layout only: the bottle, its liquid and
-   the blue are orkUI's (`.ork-potion`, `--ork-mana`); the share's colour is the signals' tokens. One to three potions in one row, four to six in two rows of three (the small size), the narrow width's all small. */
+   the blue are orkUI's (`.ork-potion`, `--ork-mana`); the share's colour is the signals' tokens. One to three potions in one row, four in two rows of two, five or six in two rows of three (the small size), the narrow width's all small. */
 
 .hand-mana { display: grid; grid-auto-flow: column; align-items: start; justify-items: center; flex: none; pointer-events: auto; }
 .hand-mana[data-rows="2"] { grid-auto-flow: row; grid-template-columns: repeat(3, auto); }
+.hand-mana[data-rows="2"][data-n="4"] { grid-template-columns: repeat(2, auto); }                                    /* four: two rows of two (decisions §177.8) */
 .hand-pot { appearance: none; border: 0; background: none; margin: 0; color: var(--ork-ink); font: var(--ork-type-caption); cursor: pointer; padding: var(--ork-1) var(--ork-2);
   min-width: 44px; display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); }
 .hand-pot:hover { background: var(--ork-raised); }

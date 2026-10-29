@@ -3551,4 +3551,6 @@ view, §175.2 and §176.2, and spec 98 §2.3's *Switch* as the only way on):
 6. A goal goes to main on its own: its commits from dev, with the goals it stands on that main lacks (said on the portal),
    so the per-goal merge (spec 102's *To main merges dev whole*) is built with it.
 7. Drawn first (`docs/mockups/portals/`), built after the owner's yes.
+8. Later the same day, the owner: **the portal is round and magical, never a door**; and **four tools stand two rows of
+   two** (five and six two rows of three; this makes §176.2 precise).
 The owner's call.

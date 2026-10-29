@@ -1,5 +1,5 @@
 """The mana in the hand (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §3, §7; decisions §175.2, §176.1–§176.2), in a real browser against a stub host, at the two widths of `tests/narrow.py`: the AI tools' limits
-as potions at the hand's right end, flush against the window's edge: one potion a tool in the chips' order, one row of up to three at the default size and two rows of three small ones for four to six, the first five and a
+as potions at the hand's right end, flush against the window's edge: one potion a tool in the chips' order, one row of up to three at the default size and two rows of two small ones for four and of three for five or six, the first five and a
 *+n* for more, each tool's mark in its own colour above it and its share under it, the chip's words on the button, a press opening what used the tool over the pane, a tool not read an empty potion with *?*, a card lifted
 that spends hatching its share off its tool's potion; the tabs' end holds no chip. Screenshots to $MANA_SHOTS when it is set."""
 from __future__ import annotations
@@ -89,7 +89,23 @@ def test_the_tabs_end_keeps_plus_and_stop_all_and_no_chip(gui):
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_four_to_six_tools_are_two_rows_of_three_small_potions(gui, width):
+def test_four_tools_are_two_rows_of_two_small_potions(gui, width):
+    pg, host, log = open_mana(gui, SIX[:4], width)
+    try:
+        p = pots(pg)
+        pg.wait_for_timeout(500)
+        assert p.count() == 4
+        boxes = [b.bounding_box() for b in p.all()]
+        assert boxes[0]["y"] == boxes[1]["y"] and boxes[2]["y"] == boxes[3]["y"] and boxes[2]["y"] > boxes[0]["y"] + 40           # two rows of two (decisions §177.8)
+        assert boxes[0]["x"] < boxes[1]["x"] and boxes[0]["x"] == pytest.approx(boxes[2]["x"], abs=1) and boxes[1]["x"] == pytest.approx(boxes[3]["x"], abs=1)
+        assert all("small" in b.locator(".ork-potion").get_attribute("class").split() for b in p.all())
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_five_or_six_tools_are_two_rows_of_three_small_potions(gui, width):
     pg, host, log = open_mana(gui, SIX, width)
     try:
         p = pots(pg)

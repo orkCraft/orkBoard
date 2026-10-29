@@ -1,6 +1,6 @@
 // The mana (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §3, decisions §175.2, §176.1–§176.2): the AI tools' limits as potions at the hand's right end, flush against the window's edge.
 // One potion (orkUI's `.ork-potion`) a tool, in the order the chips had: above it the tool's mark in its own colour (the tool's initial in the body face with no mark), under it the share left, in the warn or the danger colour at
-// those levels (`levelOf`). One to three tools lie in one row at the default size; four to six in two rows of three, small; more than six: the first five and a sixth place *+n* that opens all of them over the pane. At the narrow
+// those levels (`levelOf`). One to three tools lie in one row at the default size; four in two rows of two and five or six in two rows of three, small (decisions §177.8); more than six: the first five and a sixth place *+n* that opens all of them over the pane. At the narrow
 // width (under 760 px, spec 94) every potion is small.
 // A potion is a button, its words the chip's (*Claude Code: 62% of the week left*, `windowOf`); a press opens what used it over the pane, as the chip did. A tool whose limits were not read is an empty potion with *?*.
 // A card lifted that spends (`costOf`) hatches its share off its tool's top, and the share reads `62% −4%`. The words are said on the control, the potion itself is `aria-hidden` (orkUI's potion/README.md).
