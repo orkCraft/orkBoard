@@ -263,9 +263,8 @@ async def test_new_partys_tiles_are_the_projects_stages_then_the_crafts_with_no_
         sheet = page.get_by_role("dialog", name="New party")
         await sheet.locator(".preset-tile").first.wait_for(timeout=WAIT_MS)
         ids = [await t.get_attribute("data-preset") for t in await sheet.locator(".preset-tile").all()]
-        assert ids[:5] == ["ideation", "code-concept", "code-build", "release", "code-liveops"]                          # the project's stages in its order (spec 91 §7), no longer the deal's
-        assert ids[5:11] == ["engineering", "design", "data", "marketing", "product", "art"] and ids[-1] == "mixed"       # then the crafts, then the person's own
-        assert [norm(await g.get_attribute("aria-label")) for g in await sheet.locator(".preset-group").all()] == ["By stage of the project", "By craft", "Your own party"]
+        assert ids == ["product", "design", "tech", "release", "run", "marketing", "mixed"]                              # one party a craft of the project's kind, offered by its stage (spec 99 §1, decisions §122.5, §151.5), then the person's own
+        assert [norm(await g.get_attribute("aria-label")) for g in await sheet.locator(".preset-group").all()] == ["By stage of the project", "Your own party"]     # no crafts group: the crafts are the stage's parties
         assert await sheet.locator(".preset-why").count() == 0                                                            # the deal's why is the Orkmaster's now (spec 91 §8, part F)
         assert await sheet.locator('.preset-tile[data-preset="release"]').get_attribute("aria-pressed") in ("false", None)
         assert await page.evaluate(NO_SCROLL)
@@ -279,7 +278,7 @@ async def test_an_older_host_keeps_new_partys_tiles_as_they_were(fake_repo, monk
         sheet = page.get_by_role("dialog", name="New party")
         await sheet.locator(".preset-tile").first.wait_for(timeout=WAIT_MS)
         ids = [await t.get_attribute("data-preset") for t in await sheet.locator(".preset-tile").all()]
-        assert ids[:5] == ["ideation", "code-concept", "code-build", "release", "code-liveops"] and await sheet.locator(".preset-why").count() == 0
+        assert ids == ["product", "design", "tech", "release", "run", "marketing", "mixed"] and await sheet.locator(".preset-why").count() == 0     # a project of code by default: spec 99 §1
 
 
 # -- New goal from the project -------------------------------------------------------------------------------------------------------------------------

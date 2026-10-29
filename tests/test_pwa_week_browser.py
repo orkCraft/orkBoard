@@ -54,7 +54,7 @@ async def test_the_spend_row_opens_this_week_with_its_lines_in_order_and_new_goa
         lines = [" ".join(t.split()) for t in await sheet.locator(".week p").all_text_contents()]
         assert lines == ["≈$46 of work at API prices in this project, ≈$3 in Operations: not your bill",
                          "12 results in dev, 10 the first time · ≈$3.84 a result",
-                         "The last 7 nights: 4 with work done, 2 with none, 1 Orkline was not running", "Nothing waits for tonight · New goal"]
+                         "The last 7 nights: 4 with work done, 2 with none, 1 Orkboard was not running", "Nothing waits for tonight · New goal"]
         assert await _called(stub, "ideas.log", {"event": "opened", "what": "week", "ref": "this", "device": "phone"})
         assert await page.evaluate(NO_SCROLL)
         await sheet.get_by_role("button", name="New goal").click()
@@ -99,7 +99,14 @@ import json  # noqa: E402
 
 from tests.test_pwa_recap_browser import RECAP  # noqa: E402
 
-LAST = {"week": "2026-W42", "from": "2026-10-12", "to": "2026-10-18", "into": "dev", "merged": 23, "first_time": 19, "usd": 61.2, "usd_per_merged": 2.66,
+def _iso(days_ago):
+    year, week, _d = (dt.date.today() - dt.timedelta(days=days_ago)).isocalendar()
+    return f"{year}-W{week:02d}"
+
+
+# The week the host answers is the ISO week before today's, whenever the test runs: a fixed "2026-W42" was last week only in W43, and the card
+# is shown only when the phone kept an older week than the one answered. Its from/to days are what the card's title reads.
+LAST = {"week": _iso(7), "from": "2026-10-12", "to": "2026-10-18", "into": "dev", "merged": 23, "first_time": 19, "usd": 61.2, "usd_per_merged": 2.66,
         "before": {"merged": 14, "first_time": 10, "usd_per_merged": 3.1},
         "goals": [{"goal": "general", "short": "Offline mode", "title": "Offline mode", "done": 3}, {"goal": "ship", "short": "Billing", "title": "Billing", "done": 1}],
         "flags": [{"goal": "general", "short": "Offline mode", "title": "Offline mode", "met": True, "by": "Product manager"}],
@@ -127,11 +134,6 @@ def _last(monkeypatch):
     monkeypatch.setattr(Stub, "commands", commands)
 
 
-def _iso(days_ago):
-    year, week, _d = (dt.date.today() - dt.timedelta(days=days_ago)).isocalendar()
-    return f"{year}-W{week:02d}"
-
-
 def _seed(repo, week=None, look_hours=None):
     out = ""
     if week:
@@ -155,7 +157,7 @@ async def test_the_first_look_of_a_new_week_shows_last_weeks_card_then_the_recap
             "Cost the most: Offline mode, ≈$12 · Fastest from goal to dev: Export CSV, 42 min",
             "Questions: 9 of 12 answers were the recommended one; 2 cards left to the Taskmaster", "Nights: 5 with work done, 2 with none"]
         assert await page.get_by_label("While you were away").count() == 0                          # the week's card first
-        assert await _called(stub, "ideas.log", {"event": "opened", "what": "week", "ref": "2026-W42", "device": "phone"})
+        assert await _called(stub, "ideas.log", {"event": "opened", "what": "week", "ref": _iso(7), "device": "phone"})
         assert await page.evaluate(NO_SCROLL)
         recap_logs = lambda: [c for c in stub.calls if c[0] == "ideas.log" and c[1].get("what") == "recap"]   # noqa: E731
         await card.get_by_role("button", name="Close").click()
@@ -188,7 +190,7 @@ async def test_no_key_writes_it_and_the_drawers_row_shows_the_card_any_time(fake
         await drawer.get_by_role("button", name="Last week", exact=True).click()
         card = page.get_by_label("Last week")
         await card.wait_for(timeout=WAIT_MS)
-        assert await _called(stub, "ideas.log", {"event": "opened", "what": "week", "ref": "2026-W42", "device": "phone", "via": "map"})
+        assert await _called(stub, "ideas.log", {"event": "opened", "what": "week", "ref": _iso(7), "device": "phone", "via": "map"})
         await card.get_by_role("button", name="Close").click()
         await card.wait_for(state="detached", timeout=WAIT_MS)                                       # (gone once the sheet has closed)
 
@@ -204,7 +206,7 @@ async def test_nights_in_a_row_in_this_week_and_last_week_from_two_spec_42_h(fak
         await card.get_by_role("button", name="Close").click()
         sheet = await _sheet(page)
         lines = [" ".join(t.split()) for t in await sheet.locator(".week p").all_text_contents()]
-        assert lines[2:4] == ["The last 7 nights: 4 with work done, 2 with none, 1 Orkline was not running", "5 nights in a row"]
+        assert lines[2:4] == ["The last 7 nights: 4 with work done, 2 with none, 1 Orkboard was not running", "5 nights in a row"]
         await sheet.get_by_role("button", name="Close").click()
         ANSWER.update(streak=1)
         sheet = await _sheet(page)

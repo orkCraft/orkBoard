@@ -250,11 +250,15 @@ def test_two_hundred_ideas_build_in_under_200_ms_and_nothing_is_written_or_start
         raise AssertionError("the Map starts no process")
     monkeypatch.setattr(subprocess, "Popen", no)
     monkeypatch.setattr(subprocess, "run", no)
+    # The best of many reads, stopping at the first one in budget: a quiet machine builds it in ~0.14 s, one busy with other tests' processes
+    # takes 0.3 s or more at times (the scheduler, not the code); a build that is really slower (10x: 1.4 s) never has a read in budget.
     best = 9.0
-    for _ in range(3):
+    for _ in range(25):
         began = time.perf_counter()
         got = board_map.build(root, state, {}, [], time.time(), rev=0)
         best = min(best, time.perf_counter() - began)
+        if best < 0.2:
+            break
     assert len(got["nodes"]) == 200 and best < 0.2
     assert before == sorted((p, p.stat().st_mtime_ns) for p in list(root.rglob("*")) + list(state.rglob("*")) if p.is_file())
 

@@ -305,6 +305,9 @@ def test_the_start_moves_from_the_worktree_to_the_command_to_the_page_to_playing
         assert page["command"] == command["command"] and len(page["ports"]) >= 1 and all(isinstance(p, int) for p in page["ports"])
         assert worktree["since"] <= command["since"] <= page["since"] and page["since"] >= 1.0                   # seconds since the start
         assert playing["url"].startswith("http://127.0.0.1:") and "built" in fetch(playing["url"])
+        until = time.monotonic() + 10                                                                             # the bus is told after the state is: wait for its last word
+        while time.monotonic() < until and not any((p.get("stage") or p["state"]) == "playing" for p in published):
+            time.sleep(0.05)
         stages = [p.get("stage") or p["state"] for p in published]                                                # the bus is told of each change
         assert [s for i, s in enumerate(stages) if i == 0 or s != stages[i - 1]][:3] == ["command", "page", "playing"]
         assert stages.count("command") == 1 and stages.count("page") == 1                                         # not on every look at the ports

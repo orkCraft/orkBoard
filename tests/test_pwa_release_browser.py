@@ -58,7 +58,7 @@ async def test_release_is_a_stage_tile_its_heads_are_the_hosts_races_and_it_show
         tiles = sheet.locator(".preset-tile")
         await tiles.first.wait_for(timeout=WAIT_MS)
         ids = [await t.get_attribute("data-preset") for t in await tiles.all()]
-        assert ids[:5] == ["ideation", "code-concept", "code-build", "release", "code-liveops"] and ids.index("release") == 3        # Release is the project's fourth stage (spec 91 §7)
+        assert ids[:6] == ["product", "design", "tech", "release", "run", "marketing"] and ids.index("release") == 3        # Release is in every project, its party the fourth of the crafts (spec 99 §1, decisions §137.1)
         tile = sheet.locator('.preset-tile[data-preset="release"]')
         assert "A version out: what goes in, its notes, the stores' list" in await tile.inner_text()
         heads = await tile.locator("img.ork-race__head").evaluate_all("(is) => is.map((i) => i.getAttribute('src'))")
@@ -71,7 +71,7 @@ async def test_release_is_a_stage_tile_its_heads_are_the_hosts_races_and_it_show
         assert [norm(await r.inner_text()) for r in await box.locator(".releasesfrom__row").all()] == ["Passkey", "Website"]        # not Ideation, not General
         assert await box.locator("input:checked").count() == 2
         assert "Every party but Ideation" in await box.inner_text()
-        await sheet.locator('.preset-tile[data-preset="code-build"]').click()
+        await sheet.locator('.preset-tile[data-preset="tech"]').click()
         await box.wait_for(state="hidden", timeout=WAIT_MS)
         await tile.click()
         await box.wait_for(timeout=WAIT_MS)

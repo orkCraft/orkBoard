@@ -46,7 +46,13 @@ class MentionHost(HandHost):
 
 def _open_field(pg):
     _plus(pg).wait_for(timeout=WAIT_MS)
-    _plus(pg).click(position={"x": 8, "y": 60})
+    for _ in range(3):                                   # a press while the hand is still being dealt (a loaded machine) may land before the card is there: press again
+        _plus(pg).click(position={"x": 8, "y": 60})
+        try:
+            pg.locator(".hand-field").wait_for(timeout=WAIT_MS // 3)
+            break
+        except Exception:
+            continue
     return _field(pg)
 
 

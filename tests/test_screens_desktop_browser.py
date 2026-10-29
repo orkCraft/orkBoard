@@ -289,7 +289,9 @@ def test_a_pain_dragged_onto_another_screen_pins_it_there(screens):
     pg, host, w = screens
     if not wide(w):
         pytest.skip("a touch screen presses the pain and then the screen")
-    pain = pg.locator('.scr-pain[data-pain="Too many taps to set up"]').bounding_box()
+    pain = pg.locator('.scr-pain[data-pain="Too many taps to set up"]')
+    pain.scroll_into_view_if_needed()                                                                               # the hand lies over the foot of the window (decisions §104.0): a pain below the map's scroll area is under it
+    pain = pain.bounding_box()
     pg.mouse.move(pain["x"] + 20, pain["y"] + 20)
     pg.mouse.down()
     pg.mouse.move(pain["x"] + 40, pain["y"] + 40, steps=4)

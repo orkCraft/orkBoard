@@ -115,7 +115,7 @@ async def test_the_tool_picked_goes_with_save_party_and_the_main_tool_sends_none
         await sheet.get_by_role("button", name="Save party").click()
         assert await _called(stub, "ideas.goal_save")
         sent = calls(stub, "ideas.goal_save")[-1]
-        assert sent["tool"] == "codex" and sent["size"] == "standard" and sent["about"] == "Mobile app: features" and sent["team"] == ["grunt"]
+        assert sent["tool"] == "codex" and sent["size"] == "standard" and sent["about"] == "Mobile app: features" and sent["team"] == ["grunt", "tester"]       # Standard seats the builders of the Tech party, up to five (decisions §151.1, §169.2; one before)
         await sheet.wait_for(state="hidden", timeout=WAIT_MS)
         stub.calls.clear()
         sheet = await _new_party(page)                                                                                         # the Main tool picked again sends none

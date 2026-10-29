@@ -153,8 +153,9 @@ async def test_inside_a_group_the_oldest_comes_first_and_a_failure_of_any_party_
         await page.wait_for_timeout(400)
         labels = [x[1] for x in await page.evaluate(LEFTS)]                                                                                                  # (the page's order)
         assert labels[:3] == ["Failed: Fix the build (Tech)", "Failed: Secure cookie flags", "Failed: New Jira task (Operations)"]                           # red first, the oldest first
-        assert labels[3] == "At your check: New Jira task (Operations)" and labels[4] == "A to-do: Reference picture (Tech)" and labels[-4:-2] == ["Proposed: Words of the sign-in page", "Proposed: New Jira task (Operations)"]
-        assert labels[-2:] == ["To look at: Challenge store", "To look at: Words on the screens"]
+        assert labels[3] == "At your check: New Jira task (Operations)" and labels[4] == "Asks you: Log format (Tech)" and labels[-7:-5] == ["Proposed: Words of the sign-in page", "Proposed: New Jira task (Operations)"]
+        assert labels[-5:-3] == ["To look at: Challenge store", "To look at: Words on the screens"]
+        assert labels[-3:] == ["A to-do: Reference picture (Tech)", "A to-do: Pick a palette (Tech)", "A to-do: The API key (Tech)"]            # a to-do lies last of all, the results too (spec 87 §4.3, decisions §104.9)
         row = [x[1] for x in sorted(await page.evaluate(LEFTS), key=lambda x: x[2])]
         assert row[6] == labels[0] and row[7] == labels[1] and row[5] == labels[2]                                                                           # n = 14: places 6, 7, 5 are the first three
 
