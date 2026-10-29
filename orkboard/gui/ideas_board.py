@@ -144,7 +144,7 @@ class BoardMixin:
             mine = self._idea_needs(i, st, plan, asks, root)
             needs += mine
             rows.append(board_map.row(root, self.state_dir, i, st, plan, page, asks, states, mine + by_idea.get(slug, [])))      # …on its goal's place too (spec 98 §2.1)
-        needs += asked + board_rows.rows(self.state_dir)         # the stacks of no goal's: the project's questions (spec 99 §8.2)
+        needs += asked + board_rows.rows(self.state_dir) + self.paid_rows()         # the stacks of no goal's: the project's questions (spec 99 §8.2), the Orkmaster's *Go on paid?* (spec 105 §3)
         return {"tracks": goals, "ideas": rows, "needs_you": sort_needs(needs), **self.board_settings(),
                 "rev": self.rev, "demo": bool(self.host.demo)}
 

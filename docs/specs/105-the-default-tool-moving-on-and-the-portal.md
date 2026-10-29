@@ -148,3 +148,46 @@ What it is, and what differs from §5 or is not said there:
 - **Not done / to know**: merging dev whole after a goal went alone is a three-way merge of two histories that hold the same patches; it is clean where dev changed nothing later on those files, and may conflict where it did
   (the gate then says *merge main into dev first*). Dependencies of a different kind than `depends_on` and shared files (a person's own commit between two tasks that the goal needs) are found only by the trial's conflict.
   `ideas.to_main_plan` runs a trial worktree on every call (a few hundred ms on a small repository); Part F should ask once when the portal opens.
+
+## As built B (engine: the tool now and moving on)
+
+- `settings.tool_order(machine)` is the order (the enabled tools in `machine.tools`' order, which is the registry's: Claude Code, Antigravity, Codex, …); `town.limits` keeps its own sort (`harnesses.ids()`), the same order.
+- `realm/tool_now.py` (no face): `now(machine, limits, at, paid_until=None, board=None) -> {main, now, until, moved_from}`. `limits` are **the quota readers' rows** (`sources.limits.Limit`, what `status.reset_of`
+  reads), not `town.limits`' dicts. `board` is the Board's settings, **added to the spec's signature**: given, a tool at its reserve (`idea_target.reserve_held`) has no room either; without it only the windows
+  count (`status.reset_of(…, NEARLY)`). `now` is the Main tool while it has room; else the next tool **after the Main tool in the order, round again**, that has room and is billed by subscription; else, while
+  `paid_until` is in the future, the first tool in the order billed by its API; else None. `until` is when the Main tool is back (the latest of its windows' resets, else its reserve's) while the work is on
+  another tool, and the soonest reset among the subscriptions while `now` is None; `moved_from` the Main tool while the work is elsewhere. A tool with no limits read has room; a Main tool billed by its API
+  never runs dry (the person chose it). `tool_now.line(main, to, until, at)` is the Orkmaster's words (*Claude Code is out until Thu 18:00: the work goes on with Codex.*, *Claude Code is back: the work goes on
+  with it.*; "" while every tool is out, the card asks instead); the time is `idea_target.when_words` (*18:00* today, else *Thu 18:00*, as the held tasks' lines say it).
+- **Who follows it.** `IdeaRunner(follow=…)` and `IdeaKeeper(follow=…)` take a callable returning the tool now (the Board's `Ideas.follow`); `IdeaRunner.tool_of`'s and `IdeaKeeper.tool_now`'s last step is
+  `follow() or Main tool` (an error or None: the Main tool, so a host that cannot say changes nothing). The runner's `pinned_tool(slug, task)` is the seat's, else the party's tool ("" follows); a pinned
+  tool is never moved, and its window hold now says what it waits for (`held_why`: *Waits for Codex's limit until Thu 18:00: Codex is set for it on purpose, so the work does not move on.*; the page's `holdWords`
+  says it, desktop and phone). `tiers.tool_of` and `tool_run.resolve` (`""`/`"main"`) have no host to ask, so they read `tool_now.following(main)`, the machine's tool now that `Orkboard.tick` keeps
+  (`tool_now.keep`; the machine's, without a Board's yes to go on paid, and the reserve not counted). Resolved where a task or step starts, as ever; a run that hits its limit mid-run holds (`Held`) and its next start resolves again.
+- **Said once** (`gui/ideas_mana.py`, a mixin of `Ideas`): `Ideas.mana_tick()` on the Board's clock compares the tool now with the last tick's and, on a change, publishes `bus.TOOL_MOVED {from, to, until}` on the
+  **project's bus** (each open project is a Board with its own bus and its own yes to go on paid, so the one a person has open says it), keeps `moved` and logs `tool_moved` (`from`, `to`, `until`; `to` "" while every
+  tool is out). The Main tool changed in Settings is no move; a Board that starts with its Main tool already out has moved. `town.mana = {main, now, until, moved}` is in `Ideas.snapshot` (and the no-project snapshot,
+  nothing moved), next to `limits`: `until` an ISO local time while the work is on another tool, `moved = {from, to, until, at, line} | null` (`line` the Orkmaster's words, for part D). Not in the phone's snapshot.
+- Where the spec's model was wrong: (1) the reserve is the **plan's** in the runner (`idea_target.gate` holds only a plan passed by itself), but the tool now is the machine's: with `board` given, Claude at its reserve
+  moves a plan the person started by hand to the next tool too, where before it ran on Claude's reserve; (2) a step that says `main` has no host (`tiers`, `tool_run`), hence the kept read; (3) the keeper's call
+  keeps the tool it ran on for its ledger line (`_tls.tool`, set in `_claude`), so a call that began on Claude and ended after the move is still booked to Claude.
+- Tests: `tests/test_tool_now.py`; `tests/conftest.py` clears the kept read for every test; `tests/test_board_alone.py` knows `mana` in the snapshot.
+
+## As built C (engine and the hand: going on paid)
+
+- `realm/paid.py` (no face): `<state_dir>/paid.json` is `{"paid_until": epoch}` or `{"paid_wait": epoch}` (an answer replaces the other), each the reset the card named. `until(state_dir, at)` is what a yes holds
+  until (None once the reset has come: it ended), `waiting(state_dir, at)` that a no has not ended; with no reset known an answer holds the five-hour window (`tool_now.PAID_HOLD_S`). `row(state_dir, machine, got, usd_task, at)`
+  is `[]` or the goal-free row `{kind: "paid", tool, name, until, usd_task, text: "Go on paid?", blocks: true, priority: "high", at}` (`until` an ISO local time or None); it is asked when `now` is None, a tool turned on
+  is billed by its API (`tool_now.api_tool`: the first in the order), no yes holds and no no waits. It is laid in Needs you by `gui/ideas_board.py` (`Ideas.paid_rows`, none in the demo), after the other goal-free
+  rows. It is **not counted** in `needs_you`'s number (as `project_q`): the phone has no card for it, and a push for something it cannot answer would be a dead end.
+- `usd_task` (`Ideas.usd_task_of(tool)`): the mean of the Board's last ten priced tasks that ended on that tool (`task.tool`), else the Grunt's `usd_task` the seats show (`ideas_roles._usd_task`); None while nothing is priced.
+- `ideas.paid {yes: bool}` (`gui/ideas_mana.py`, in the command table, the phone may call it): refused (*Nothing asks to go on paid now*) while `now` is not None or no tool is billed by its API; else it keeps the answer
+  (`paid.answer`, until `until`, the soonest reset), logs `paid_answered {tool, yes}`, ticks `mana_tick` (so a yes is `TOOL_MOVED` at once) and answers `{ok, tool, name, until}`. **Nothing is run by a tool billed by its API
+  without the yes**: `tool_now.now` picks one only while `paid_until` holds, and the runner's `tool_of` is the Main tool (held by its window) until then.
+- The card: `hand/paidcard.js` registers the way `paid` (`wayparts.js` loads it): the sign **alert** (orkUI has no coins sign among its 41), the Orkmaster's crowned head (`orkHead`), the name *Go on paid?*, the foot
+  *Holds until the next reset*, the gem the price in dollars. The gem needed a hook the spec did not name: `way(kind, {cost})` (`hand/cost.js` `costOf`), because `price` would be turned into a share of the tool's
+  window once a rate is learnt, and a tool billed by its API has none; with no `usd_task` there is no gem. Lifted: *Every subscription is out until Thu 18:00. Go on with Claude Code paid by its API, about $0.40 a
+  task, or wait.* (*its cost is not known yet*; no time when no reset is known; a reset of today says its hour only), the answers **Go on, paid** (`ideas.paid {yes: true}`) and **Wait for Thu 18:00** (`{yes: false}`; *Wait*
+  with no reset). Its stop is `arenawords.js` `paidStopsOf` (a goal-free stop, as `signInStopsOf`: no party, `laneOf` puts `paid` under the first lane with the whole goal's kinds), its words `paidWords` / `untilWords`.
+  The phone draws no card for it yet.
+- Tests: `tests/test_paid.py`, `tests/test_paid_card_browser.py` (the face, the lifted words, both answers, an unknown cost, no reset, the lane, at both widths).

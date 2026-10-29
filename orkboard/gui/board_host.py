@@ -29,7 +29,7 @@ from orkboard.core import crashes, treasury, updates as core_updates, usage
 from orkboard.core.board_limits import BoardLimits
 from orkboard.core.sign_ins import SignInError, SignIns
 from orkboard.gui import board_cli
-from orkboard.realm import analytics, board_map, call_log, day_log, event_log, halt, idea_target
+from orkboard.realm import analytics, board_map, call_log, day_log, event_log, halt, idea_target, tool_now
 from orkboard.sources import telemetry, window_rate
 
 TELEMETRY_REFRESH_S = 5.0       # as Orkline's host: this run's spend read again
@@ -344,7 +344,7 @@ class Orkboard:
         _quota, _level, show_gold = treasury.quota(self.machine, self.limits())
         board = self.ideas.snapshot() if self.ideas is not None else {
             "focus": "board", "ideas_rev": 0, "needs_you": 0, "idea_states": [], "review_count": 0,
-            "review_results": [], "limits": [], "reserve": {"share": idea_target.reserve({}, False), "night": False}}
+            "review_results": [], "limits": [], "mana": self._mana(), "reserve": {"share": idea_target.reserve({}, False), "night": False}}
         try:
             ops_needs = self.ops.count()
         except Exception:                      # Operations never breaks the snapshot
@@ -412,6 +412,7 @@ class Orkboard:
             except OSError:
                 pass
         self.limits.tick(now)
+        self._follow_main()
         self.updates.tick(now)
         self.usage.tick(now)
         self.projects.tick(now)           # every open project's Board: showing another stops nothing
@@ -419,6 +420,19 @@ class Orkboard:
         self.pusher.tick()
         self.keep_awake.tick(now)
         self.sign_ins.tick()
+
+    def _mana(self) -> dict[str, Any]:
+        """The tool now with no project open: the Main tool, nothing moved (a Board's own is `Ideas.mana`)."""
+        main = settings.main_tool(self.machine)
+        return {"main": main, "now": main, "until": None, "moved": None}
+
+    def _follow_main(self) -> None:
+        """The machine's tool now, kept for what has no Board to ask (a step that says `main`, the tiers: realm/tool_now.py `following`): the quota's last read, no project's
+        yes to go on paid."""
+        try:
+            tool_now.keep(tool_now.now(self.machine, self.limits(), time.time()))
+        except Exception:                         # a read that fails leaves the work on the Main tool
+            tool_now.keep(None)
 
     def attach_phones(self, listener: Any) -> None:
         """The phone listener (gui/phones.py) made: the pusher reads its devices and its open sockets."""

@@ -60,7 +60,7 @@ export function items(text) {
 export function holdWords(note, title = "", why = "") {
   const n = String(note || "");
   let m;
-  if (why && /^(reserve|week)/.test(n)) return why;
+  if (why && /^(reserve|week|after )/.test(n)) return why;           // a window hold has a sentence only for a tool set on purpose (spec 105 §2.3: it is never moved)
   if ((m = /^reserve · after (.+)$/.exec(n))) return `Waits for your reserve: kept for you until ${m[1]}`;
   if ((m = /^week · after (.+)$/.exec(n))) return `Waits for the week's pace until ${m[1]}`;
   if ((m = /^after (\d\d:\d\d)$/.exec(n))) return `waits for limits · after ${m[1]}`;

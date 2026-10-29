@@ -4,7 +4,7 @@
 // A node's `place` is the host's (realm/goal_place.py); nothing here decides where a goal lies.
 import { board, goalList } from "../board/store.js";
 import { gateData, mapData } from "../shell/store.js";
-import { byUrgency, gateOf, goalsOf, nodesOf, resultStop, resultsOf, signInStopsOf, stopsOf, todoLast } from "../arena/arenawords.js";
+import { byUrgency, gateOf, goalsOf, nodesOf, paidStopsOf, resultStop, resultsOf, signInStopsOf, stopsOf, todoLast } from "../arena/arenawords.js";
 import { ORKMASTER } from "../frame/state.js";
 import { partiesNow } from "../table/data.js";
 import { projectStops, questionStops } from "./questions.js";
@@ -49,7 +49,7 @@ export function stopsOfProject(map = mapData.value, needs = board.value?.needs_y
     const mine = [...stopsOf(needs, g, nodes, ork), ...resultsOf(nodes).map((r) => resultStop(r, nodes))];
     out.push(...mine.flatMap((s) => questionStops({ ...s, g, party, other: open !== ORKMASTER && open !== party.slug }, ctx)));      // a Talk's and a bug's questions: one card a question (questions.js)
   }
-  out.push(...signInStopsOf(needs, open));
+  out.push(...signInStopsOf(needs, open), ...paidStopsOf(needs, open, ork));
   return [...todoLast(byUrgency(out)), ...projectStops(needs, { ...ctx, goal: (slug) => partiesOf(map).find((g) => g.slug === slug) || null, ork })];          // the project's questions hold nothing back: after the others, under their leader's party's lane
 }
 
@@ -60,8 +60,8 @@ export function stackKey(s) {
   return goal || (s.kind === "sign_in" ? s.key : s.row?.goal ? `party:${s.row.goal}` : s.key);
 }
 
-/** What is the whole goal's, not one party's: the route, Talk of several leaders, the decision, a fork, and the Orkmaster's collision (docs/specs/101 §4.2): they lie under the first lane. */
-const WHOLE = new Set(["route", "talk", "decision", "fork", "collide"]);
+/** What is the whole goal's, not one party's: the route, Talk of several leaders, the decision, a fork, the Orkmaster's collision (docs/specs/101 §4.2) and its *Go on paid?* (docs/specs/105 §3): they lie under the first lane. */
+const WHOLE = new Set(["route", "talk", "decision", "fork", "collide", "paid"]);
 
 /** The lane a row lies under (docs/specs/101 §4.3): 0 the first (the project's), else 1 + the place of its party among the tabs' parties (table/data.js `partiesNow`, the order of the lanes after the first).
  *  A failure lies under its task's party, a party's question under its party, the project's questions (no goal of their own) under their leader's party; what is the whole goal's, a sign-in and a row

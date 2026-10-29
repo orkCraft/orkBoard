@@ -20,7 +20,7 @@ export function hhmm(iso) {
  *  `idea`: the title of the idea it waits for, when it is known (`waits_title`); `why`: the host's own sentence for a hold by the reserve or the week. */
 export function heldWords(note, idea = "", why = "") {
   const n = String(note || "");
-  if (why && /^(reserve|week)/.test(n)) return why;           // the host's sentence: the tool, its share, until when
+  if (why && /^(reserve|week|after )/.test(n)) return why;     // the host's sentence: the tool, its share, until when (a window hold has one only for a tool set on purpose: it is never moved)
   let m = n.match(/^reserve · after (.+)$/);
   if (m) return `Waits for your reserve: kept for you until ${m[1]}`;
   m = n.match(/^week · after (.+)$/);

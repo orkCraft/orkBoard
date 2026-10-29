@@ -353,3 +353,6 @@ def _when(at: float, now: float) -> str:
     """*12:00* today, else *Mon 09:00*."""
     d, today = dt.datetime.fromtimestamp(at), dt.datetime.fromtimestamp(now).date()
     return f"{d:%H:%M}" if d.date() == today else f"{d:%a %H:%M}"
+
+
+when_words = _when                  # for the words of a reset elsewhere (realm/tool_now.py)

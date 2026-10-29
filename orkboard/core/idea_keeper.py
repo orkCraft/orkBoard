@@ -114,11 +114,13 @@ class IdeaKeeper(SignInMixin, TalkMixin, ProjectQMixin, LoopMixin, TreeMixin, De
                  demo: bool = False, budget_ok: Callable[[], bool] = lambda: True,
                  taskmaster: Callable[[], str] | None = None, limits: Callable[[], list] | None = None,
                  on_plan: Callable[[str], None] | None = None,
-                 events: bool = True, sign_ins: Any = None) -> None:
+                 events: bool = True, sign_ins: Any = None, follow: Callable[[], str | None] | None = None) -> None:
         """`sign_ins`: the host's sign-ins (core/sign_ins.py): what runs by itself waits while Claude Code needs its
         sign-in (`held_for` "sign_in", spec 45 §6). `limits`: the quota readers' last read (spent windows hold the keeper); `on_plan(slug)`: a plan was made
-        or its risk changed (the face's autostart); `events`: the keeper's own events go to the local event log (spec 35 §12)."""
+        or its risk changed (the face's autostart); `events`: the keeper's own events go to the local event log (spec 35 §12).
+        `follow()`: the tool now (spec 105 §2, realm/tool_now.py): where a step that follows the Main tool goes when the Main tool is out; None, or no `follow`: the Main tool."""
         self.repo_root, self.state_dir = Path(repo_root), Path(state_dir)
+        self.follow = follow
         self.taskmaster = taskmaster or (lambda: (roles.role(self.state_dir, roles.TASKMASTER) or {}).get("model") or "elder")
         self._again: set[str] = set()                # a busy key asked again while it ran
         self.wiki_root, self.settings, self.publish = wiki_root, settings, publish
@@ -141,6 +143,7 @@ class IdeaKeeper(SignInMixin, TalkMixin, ProjectQMixin, LoopMixin, TreeMixin, De
         from orkboard.realm import harnesses, jobs
         from orkboard.sources import telemetry
         tool = self.tool_now()
+        self._tls.tool = tool                                                  # the call's tool, for its ledger line even if the tool now moves while it runs
         h = harnesses.get(tool)
         purpose = {"laborer": "sort", "elder": "plan"}.get(tier, "plan")      # the Taskmaster's own model is a plan
         cancel = getattr(self._tls, "cancel", None) or self.cancel
@@ -152,15 +155,19 @@ class IdeaKeeper(SignInMixin, TalkMixin, ProjectQMixin, LoopMixin, TreeMixin, De
         return got
 
     def tool_now(self) -> str:
-        """The AI tool the running step goes to: its goal's leader's seat's, else its party's, else the Main tool (spec 81 §1.2, spec 91 §6); a step
-        of no goal's, the Main tool."""
+        """The AI tool the running step goes to: its goal's leader's seat's, else its party's (set on purpose, never moved), else the Main tool, or the tool
+        now while the Main tool is out (spec 81 §1.2, spec 91 §6, spec 105 §2.3); a step of no goal's, the same."""
         from orkboard.realm import harnesses
         goal = self.goal_of_key(getattr(self._tls, "key", "") or getattr(self._tls, "slug", "") or "")
         tool = goal_team.tool_for(self.wiki_root(), goal, goal_team.leader_of(self.wiki_root(), goal)) if goal else ""
         if harnesses.get(tool) is not None:
             return tool
         from orkboard import settings as machine
-        return machine.main_tool() or HARNESS
+        main = machine.main_tool() or HARNESS
+        try:
+            return (self.follow() if self.follow is not None else None) or main
+        except Exception:                              # a host that cannot say leaves the step on the Main tool
+            return main
 
     def target(self) -> str:
         """The Target the running step works at: its goal's party's size, else the setting (spec 75 §3); a step of no goal's, the setting."""
@@ -187,6 +194,7 @@ class IdeaKeeper(SignInMixin, TalkMixin, ProjectQMixin, LoopMixin, TreeMixin, De
         elif told := str((roles.role(self.state_dir, roles.TASKMASTER) or {}).get("instruction") or "").strip():
             prompt = f"{told}\n\n{prompt}"            # the person's words for the Taskmaster (spec 41 §8)
         self._tls.picked, self._tls.tools, self._tls.usage, self._tls.capped, self._tls.as_role = got, tools, None, False, as_role
+        self._tls.tool = ""                                                    # set by the call that runs (`_claude`), read by its ledger line
         self._tls.measure = {"step": step, "prompt_chars": len(prompt), "tokens": None, "cost": None}
         try:
             with call_log.bounded(idea_target.READS.get(step)):       # the files its prompt names: its line says if it read more
@@ -209,7 +217,7 @@ class IdeaKeeper(SignInMixin, TalkMixin, ProjectQMixin, LoopMixin, TreeMixin, De
     def _spent(self, step: str, got: tuple[str, str], usage: Any, tokens: Any, cost: Any) -> None:
         """The call's line in the ledger (spec 36 §1): its idea's, its goal's, or the board's own."""
         from orkboard.realm import harnesses
-        tool = self.tool_now()
+        tool = getattr(self._tls, "tool", "") or self.tool_now()             # the tool the call ran on, not the tool now
         h, tier = harnesses.get(tool), idea_target.tier_of(got[0])
         key = getattr(self._tls, "key", "") or getattr(self._tls, "slug", "") or ""
         where = {} if step == "kind" else ({"goal": key[5:]} if key.startswith("goal:") else {"idea": key})

@@ -78,6 +78,7 @@ from orkboard.gui.ideas_screens import ScreensMixin, screens_commands
 from orkboard.gui.ideas_revise import ReviseMixin
 from orkboard.gui.ideas_lens import LensMixin
 from orkboard.gui.ideas_limits import LimitsMixin
+from orkboard.gui.ideas_mana import ManaMixin, mana_commands
 from orkboard.gui.ideas_usage import usage_commands
 from orkboard.gui.ideas_roles import RolesMixin
 from orkboard.gui.ideas_track import TrackMixin
@@ -118,7 +119,7 @@ class _Hop:
         self.host.call(lambda: self.host.publish(topic, **data))
 
 
-class Ideas(FactsMixin, LoopFace, TreeFace, MapsMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, DecideMixin, LensMixin, LimitsMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
+class Ideas(FactsMixin, LoopFace, TreeFace, MapsMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, DecideMixin, LensMixin, LimitsMixin, ManaMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
             TypesMixin, CanvasesMixin, AssetsMixin, SystemMixin, BoardMixin):
     def __init__(self, host) -> None:
         """`host`: what the Board needs of whoever runs it, a `gui/board_host.py` `BoardHost` (spec 37 §4): Orkline's
@@ -141,7 +142,7 @@ class Ideas(FactsMixin, LoopFace, TreeFace, MapsMixin, ScreensMixin, RouteMixin,
             self.host.repo_root, self.state_dir, self.keeper_root, self.settings_now, self._publish,
             demo=bool(self.host.demo), budget_ok=lambda: self.host.budget_ok(), limits=lambda: list(self.host.limits() or []),
             on_plan=self._on_plan, events=not self.host.demo,
-            sign_ins=getattr(self.host, "sign_ins", None))
+            sign_ins=getattr(self.host, "sign_ins", None), follow=self.follow)
         self.keeper.index_root = self.wiki
         self.host.bus.subscribe(idea_keeper.CHANGED, self._changed)
 
@@ -251,7 +252,7 @@ class Ideas(FactsMixin, LoopFace, TreeFace, MapsMixin, ScreensMixin, RouteMixin,
                 self._runner = IdeaRunner(self.host.repo_root, self.state_dir, _Settings(self.host), _Hop(self.host),
                                           events=not self.host.demo, on_held=lambda: self.log_limits(force=True),
                                           rank=self.rank, size_of=self.size_of_idea, party_of=self.party_of_idea,
-                                          sign_ins=getattr(self.host, "sign_ins", None))
+                                          sign_ins=getattr(self.host, "sign_ins", None), follow=self.follow)
             except ImportError:
                 self._runner_error = "The runner is not in this build yet: plans cannot start"
             except Exception as e:              # a runner that cannot start never stops the board
@@ -279,6 +280,10 @@ class Ideas(FactsMixin, LoopFace, TreeFace, MapsMixin, ScreensMixin, RouteMixin,
                     runner.tick()
                 except Exception as e:
                     self.host.toast(f"{type(e).__name__}: {e}", title="The runner", severity="error")
+        try:
+            self.mana_tick()                    # the tool now changed: said once (spec 105 §2.5)
+        except Exception as e:                  # a tool that cannot be read never stops the clock
+            self.host.toast(f"{type(e).__name__}: {e}", title="The tools", severity="error")
         self.route_tick(now)                    # a route waiting for its call, a goal put off to the reset (spec 99 §4)
         self.routines_tick(now)                 # a recurring goal that was done a period ago comes back (spec 92 §2)
         self.canvas_tick(now)                   # what the AI tools drew outside the code (spec 78)
@@ -314,7 +319,7 @@ class Ideas(FactsMixin, LoopFace, TreeFace, MapsMixin, ScreensMixin, RouteMixin,
             try:
                 b = self.board(make=False)       # reads only: no tree is made for a snapshot
                 waiting = self.results()
-                data = {"needs_you": sum(1 for n in b["needs_you"] if n["kind"] not in ("proposal", "party", "pitch", "project_q")),     # a judged pitch holds nothing (spec 65 §5), nor the project's questions (spec 99 §8.2)
+                data = {"needs_you": sum(1 for n in b["needs_you"] if n["kind"] not in ("proposal", "party", "pitch", "project_q", "paid")),     # a judged pitch holds nothing (spec 65 §5), nor the project's questions (spec 99 §8.2); the Orkmaster's *Go on paid?* is the page's (spec 105 §3)
                         "idea_states": [{"slug": i["slug"], "title": i["title"], "state": i["state"]} for i in b["ideas"]],
                         "review_count": len(waiting),
                         "review_results": [{k: r[k] for k in ("idea", "task", "title")} for r in waiting]}
@@ -322,7 +327,7 @@ class Ideas(FactsMixin, LoopFace, TreeFace, MapsMixin, ScreensMixin, RouteMixin,
                 data = {"needs_you": 0, "idea_states": [], "review_count": 0, "review_results": []}
             self._cache = (self.rev, now, data)
         return {"focus": focus_of(self.host.machine), "ideas_rev": self.rev, **self._cache[2],
-                "limits": self.limits(), "reserve": self.reserve(), "canvases_new": self.canvas_store.new_count(),
+                "limits": self.limits(), "mana": self.mana(), "reserve": self.reserve(), "canvases_new": self.canvas_store.new_count(),
                 "canvases_rev": self.canvas_store.rev}
 
     def reserve(self) -> dict[str, Any]:
@@ -652,6 +657,6 @@ class Ideas(FactsMixin, LoopFace, TreeFace, MapsMixin, ScreensMixin, RouteMixin,
                       "ideas.pitch_pass": self.pitch_pass,
                       "ideas.release_out": self.release_out, "ideas.release_candidates": self.release_candidates, "ideas.shown": self.shown,
                       "ideas.party_for": self.party_for, "ideas.kind_for": self.kind_for, "ideas.collide_answer": self.collide_answer,
-                      "ideas.repeat": self.repeat, "ideas.team": self.team, "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, "ideas.party_presets": self.party_presets, **canvas_commands(self), **asset_commands(self), **system_commands(self), **usage_commands(self), **route_commands(self), **talk_commands(self), **decide_commands(self), **stage_commands(self), **project_q_commands(self), **facts_commands(self), **loop_commands(self), **maps_commands(self), **screens_commands(self), **tree_commands(self), **gate_commands(self)})
+                      "ideas.repeat": self.repeat, "ideas.team": self.team, "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, "ideas.party_presets": self.party_presets, **canvas_commands(self), **asset_commands(self), **system_commands(self), **usage_commands(self), **mana_commands(self), **route_commands(self), **talk_commands(self), **decide_commands(self), **stage_commands(self), **project_q_commands(self), **facts_commands(self), **loop_commands(self), **maps_commands(self), **screens_commands(self), **tree_commands(self), **gate_commands(self)})
         return {name: guarded(name, fn) for name, fn in table.items()}
 

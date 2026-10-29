@@ -54,6 +54,8 @@ export function priceOf(s) {
 
 /** `{gem, words, share, saves, tool, spend, taken}` of a stop that spends, null of one that does not. */
 export function costOf(s) {
+  const own = wayOf(s.kind)?.cost;                                         // a card paid by an API says its own price in dollars, never a share of a window (spec 105 §3)
+  if (own) return own(s);
   const p = priceOf(s);
   if (!p) return null;
   const gem = gemOf(Math.min(p.low, p.high), Math.max(p.low, p.high));

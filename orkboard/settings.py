@@ -522,6 +522,13 @@ def main_tool(machine: MachineSettings | None = None) -> str:
     return harnesses.main([t for t, c in machine.tools.items() if c.enabled], machine.main_tool) or "claude"
 
 
+def tool_order(machine: MachineSettings | None = None) -> list[str]:
+    """The AI tools turned on, in the order of `machine.tools` (the registry's): the potions' order left to right, and the order the work
+    moves on in when the Main tool is dry (docs/specs/105 §2.1, realm/tool_now.py). Read from disk when not given."""
+    machine = machine or cached()
+    return [t for t, c in machine.tools.items() if c.enabled]
+
+
 def preset_role(role_id: str, file: Path | None = None, kin: str = "") -> bool:
     """`orkcraft --role`: the role the landing page was told, kept for the onboarding to open on.
     `kin`: the page named a class with two roles (gnome), so the GUI's onboarding asks which of the two.

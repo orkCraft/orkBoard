@@ -126,6 +126,15 @@ def fresh_halt_registry():
     halt.reset()
 
 
+@pytest.fixture(autouse=True)
+def fresh_tool_now():
+    """The tool now the host last kept (realm/tool_now.py `keep`) is process-wide: every test starts with none, so `main` follows the Main tool."""
+    from orkboard.realm import tool_now
+    tool_now.keep(None)
+    yield
+    tool_now.keep(None)
+
+
 @pytest.fixture
 def codex_limits(monkeypatch):
     """`codex_limits(billing=...)`: the real `fetch_limits`, with claude and agy answering a sample and

@@ -18,17 +18,17 @@ from pathlib import Path
 from typing import Callable
 
 from orkboard import settings
-from orkboard.realm import call_log, halt, harnesses, tool_errors
+from orkboard.realm import call_log, halt, harnesses, tool_errors, tool_now
 from orkboard.sources import telemetry
 
 CALL_TIMEOUT_S = 240            # one answer of a tool (`ask`)
 
 
 def resolve(harness: str) -> str:
-    """A step's tool as it runs: `main` (or nothing) is the machine's main tool."""
+    """A step's tool as it runs: `main` (or nothing) follows the machine's main tool, the tool now while it is out (docs/specs/105 §2.3)."""
     if harness and harness != harnesses.MAIN:
         return harness
-    return settings.main_tool()
+    return tool_now.following(settings.main_tool())
 
 
 def harness_stdin(harness: str, prompt: str) -> str | None:

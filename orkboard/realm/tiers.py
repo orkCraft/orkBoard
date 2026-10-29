@@ -30,11 +30,13 @@ def model_label(model: str) -> str:
 
 
 def tool_of(step: dict) -> str:
-    """The tool a step runs on: `main` (or none) is the machine's main tool, as it is now."""
+    """The tool a step runs on: `main` (or none) follows the machine's main tool, the tool now while it is out (docs/specs/105 §2.3, realm/tool_now.py); any
+    other id was set on purpose and is never moved."""
     harness = str(step.get("harness") or "")
     if harness in ("", harnesses.MAIN):
         from orkboard import settings
-        return settings.main_tool()
+        from orkboard.realm import tool_now
+        return tool_now.following(settings.main_tool())
     return harness
 
 

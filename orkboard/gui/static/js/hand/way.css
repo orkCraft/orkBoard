@@ -1,7 +1,7 @@
 /* A goal's way in the hand (docs/specs/100 §1, part A): the lifted route card and start card. Layout only; every colour, face, corner and motion is orkUI's. The plain cost line the lifted card adds at its
    foot (stopcard.js `Spend`) is drawn here, above the act, so it hides. */
 
-.hand-lifted[data-kind="route"] .hand-lifted__body > .hand-spend, .hand-lifted[data-kind="start"] .hand-lifted__body > .hand-spend { display: none; }
+.hand-lifted[data-kind="route"] .hand-lifted__body > .hand-spend, .hand-lifted[data-kind="start"] .hand-lifted__body > .hand-spend, .hand-lifted[data-kind="paid"] .hand-lifted__body > .hand-spend { display: none; }
 .hand-way { display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; }
 .hand-way p { margin: 0; }
 .hand-way__words { overflow-wrap: anywhere; }

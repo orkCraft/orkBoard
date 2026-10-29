@@ -39,7 +39,7 @@ from orkboard.core.idea_session import SessionMixin
 from orkboard.core.idea_review import BACK, STOP_ONE, STOPPED_NOTE, ReviewMixin, RunnerError  # noqa: F401
 from orkboard.core.idea_shot import ShotMixin
 from orkboard.core.idea_task import FINDINGS_ASK, NO_DIFF, NO_FINDINGS, NO_RUN, TaskMixin, is_check, is_pick
-from orkboard.realm import task_commands, event_log, goal_team, goal_types, halt, harnesses, idea_checks, idea_pick, idea_route, idea_target, project_map, roles, status, tool_errors
+from orkboard.realm import task_commands, event_log, goal_team, goal_types, halt, harnesses, idea_checks, idea_pick, idea_route, idea_target, project_map, roles, status, tool_errors, tool_now
 from orkboard.realm.idea_git import BOARD_PAGE, CRITICAL_TESTS, Conflict, IdeaGit, env_name, has_summary, parse_tests, read_secret, spec_paths  # noqa: F401
 
 CHANGED = "ideas.changed"          # slug: an idea's state or one of its tasks changed
@@ -110,13 +110,14 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                  limits: Callable[[], list] | None = None, events: bool = True,
                  on_held: Callable[[], None] | None = None, rank: Callable[[str], Any] | None = None,
                  size_of: Callable[[str], str] | None = None, sign_ins: Any = None,
-                 party_of: Callable[[str], dict] | None = None) -> None:
+                 party_of: Callable[[str], dict] | None = None, follow: Callable[[], str | None] | None = None) -> None:
         """`limits`: the quota readers' last read (the town's `limits`); without it the runner reads it itself.
         `events`: write the task's events to the local event log (spec 33 §9); `on_held`: a task was held (the limits are read);
         `rank(slug)`: the idea's place (its priority, then the person's order): the ideas are served in that order.
         `size_of(slug)`: the size of the idea's party (spec 75 §3: lean, standard, full, else ""): its tasks work at that size's Target.
         `sign_ins`: the host's sign-ins (core/sign_ins.py): a task whose tool is not signed in is held for it, not failed.
-        `party_of(slug)`: the idea's party's `{"tool", "tiers"}` (spec 81): the tool its tasks run on (none: the Main tool) and the tiers its size gave its seats."""
+        `party_of(slug)`: the idea's party's `{"tool", "tiers"}` (spec 81): the tool its tasks run on (none: the Main tool) and the tiers its size gave its seats.
+        `follow()`: the tool now (spec 105 §2, realm/tool_now.py): where a task that follows the Main tool goes when the Main tool is out; None, or no `follow`: the Main tool."""
         self.repo_root, self.state_dir = Path(repo_root), Path(state_dir)
         self.settings, self.bus = settings, bus
         self.git = IdeaGit(self.repo_root)
@@ -130,6 +131,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
         self._until: dict[tuple[str, str], float] = {}
         self.events, self.on_held, self.rank, self.size_of, self.sign_ins = events, on_held, rank, size_of, sign_ins
         self.party_of = party_of
+        self.follow = follow
         self._since: dict[tuple[str, str], float] = {}     # when a task entered the state it is in (the event log)
         self._tls = threading.local()                       # Merge's `dear`, on the thread that merges
         self._resume_working()
@@ -337,8 +339,10 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                     until = status.reset_of(limits, tool, now, status.NEARLY)
                     if until is not None or gate is not None:     # the window, else the person's reserve (§6)
                         by = "" if until is not None else "reserve"
+                        pinned = until is not None and bool(self.pinned_tool(slug, t))       # a tool set on purpose is never moved: its hold says what it waits for (spec 105 §2.3)
                         self._hold(slug, t, until if until is not None else gate, f"{by} · " if by else "",
-                                   idea_target.hold_line(limits, tool, by, gate, now) if by else "")
+                                   idea_target.hold_line(limits, tool, by, gate, now) if by
+                                   else tool_now.pinned_line(tool, until, now) if pinned else "")
                     elif self.signed_out(tool):                   # its tool needs a sign-in: held for it (spec 45 §6)
                         self._hold_sign_in(t, "", tool)
                     else:
@@ -393,17 +397,28 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
         except Exception:                               # a party the host cannot read leaves the work as it was
             return {}
 
-    def tool_of(self, slug: str, task: dict | None = None) -> str:
-        """The AI tool an idea's tasks run on: its party's, else the Main tool (spec 81 §1.2); a `task` runs on its taker's seat's own tool
-        first (spec 91 §6: `goal_team.tool_for`, as the host says it in `party()`)."""
+    def pinned_tool(self, slug: str, task: dict | None = None) -> str:
+        """The tool set on purpose for a task: its taker's seat's own, else its party's (spec 81 §1.2, spec 91 §6: `goal_team.tool_for`, as the host says it in
+        `party()`); "" when it follows the Main tool. Such a tool is never moved (spec 105 §2.3)."""
         party = self.party(slug)
         for tool in (str((party.get("tools") or {}).get(self._role(task)["slug"]) or "") if task else "", str(party.get("tool") or "")):
             if harnesses.get(tool) is not None:
                 return tool
+        return ""
+
+    def tool_of(self, slug: str, task: dict | None = None) -> str:
+        """The AI tool an idea's tasks run on: the one set on purpose (`pinned_tool`), else the Main tool, or the tool now while the Main tool is out
+        (spec 105 §2.3: `follow`). A task is resolved where it starts, never inside a run."""
+        if tool := self.pinned_tool(slug, task):
+            return tool
         if self.party_of is None:                       # a runner with no host to say the parties (its tests, a bare run): Claude, as before
             return HARNESS
         from orkboard import settings as machine
-        return machine.main_tool()
+        main = machine.main_tool()
+        try:
+            return (self.follow() if self.follow is not None else None) or main
+        except Exception:                               # a host that cannot say leaves the work on the Main tool
+            return main
 
     def _running_as(self, slug: str) -> int:
         return sum(1 for r in self._runs.values() if r.role == slug)

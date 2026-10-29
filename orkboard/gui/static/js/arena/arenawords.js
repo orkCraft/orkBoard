@@ -352,8 +352,8 @@ export function limitLine(l, reserve, resetOf) {
 
 export const KIND_WORD = { plan: "Plan ready", change: "Plan change", asks: "Asks you", goal: "Asks you", proposal: "Proposed", party: "Proposed", todo: "A to-do", failed: "Failed",
   pick: "Pick one", pitch: "Pitch judged", collide: "Orkmaster asks", sign_in: "Sign in", gate: "Ready for main",
-  route: "Route", start: "Start", talk: "Talk", cause: "The cause", decision: "Decision", fork: "A fork", project_q: "About the project" };       // a goal's way (spec 100): what the card is, in plain words (a question's own label is "Question")
-const GEM = { plan: "", change: "", asks: "?", goal: "?", proposal: "—", party: "—", todo: "·", failed: { sign: "cross" }, pick: "", pitch: "", collide: "", sign_in: { sign: "alert" } };
+  route: "Route", start: "Start", talk: "Talk", cause: "The cause", decision: "Decision", fork: "A fork", project_q: "About the project", paid: "Orkmaster asks" };       // a goal's way (spec 100): what the card is, in plain words (a question's own label is "Question")
+const GEM = { plan: "", change: "", asks: "?", goal: "?", proposal: "—", party: "—", todo: "·", failed: { sign: "cross" }, pick: "", pitch: "", collide: "", sign_in: { sign: "alert" }, paid: "" };
 
 /** What a plan change adds to the price, for the stop's gem (spec 62 §6.2): *+$0.40–1.20*, *−$0.13–0.38* when it saves (the real minus sign), said as a goal's price is (cents under $1,
  *  else whole dollars); "" for a change of nothing. One that may add or save says both ends: *−$0.10 to +$0.30*. */
@@ -447,10 +447,32 @@ export function signInStopsOf(needs, shown) {
     g: null, party: { slug: shown, name: "", head: null, lead: "" }, other: false }));
 }
 
+/** *18:00* when it is today, else *Thu 18:00*, from a local `YYYY-MM-DDTHH:MM` (a reset, as the host says it); "" when it does not read. */
+export function untilWords(iso, now = new Date()) {
+  const d = new Date(iso);
+  if (!iso || Number.isNaN(d.getTime())) return "";
+  return d.toDateString() === now.toDateString() ? hhmm(iso) : dayAt(iso);
+}
+
+/** What the Orkmaster's row `paid` says (docs/specs/105 §3): *Every subscription is out until Thu 18:00. Go on with Claude Code paid by its API, about $0.40 a task, or wait.*; with no cost known, *its cost is not known yet*. */
+export function paidWords(row) {
+  const until = untilWords(row?.until), usd = Number(row?.usd_task);
+  const price = row?.usd_task != null && Number.isFinite(usd) ? `about $${usd.toFixed(2)} a task` : "its cost is not known yet";
+  return `${until ? `Every subscription is out until ${until}.` : "Every subscription is out."} Go on with ${row?.name || row?.tool || "the next tool"} paid by its API, ${price}, or wait.`;
+}
+
+/** The Orkmaster's *Go on paid?* (docs/specs/105 §3): a goal-free row, one stop of no party (it holds every party's work), under the first lane (hand/data.js `laneOf`); its asker the Orkmaster's crowned head. */
+export function paidStopsOf(needs, shown, ork = null) {
+  const head = ork ? { race: ork.race || "peon", tier: ork.tier || "crown" } : null;
+  return needs.filter((row) => row.kind === "paid").map((row) => ({ key: "paid", kind: "paid", row, node: null, task: null, label: KIND_WORD.paid, gem: GEM.paid, tone: "alert",
+    gemTip: "About what a task costs, paid by the tool’s API", head, small: false, whoTip: "asked by the Orkmaster", title: "Go on paid?", full: "Go on paid?", text: paidWords(row), why: "",
+    g: null, party: { slug: shown, name: "", head, lead: "Orkmaster" }, other: false }));
+}
+
 // -- one hand (spec 54 §2) ---------------------------------------------------------------------------------------------------------
 
 /** How urgent a kind of stop is (§2.3): 0 red (a failure), 1 what holds work back, 2 what does not, 3 the results to look at. */
-const URGENCY = { failed: 0, plan: 1, change: 1, asks: 1, goal: 1, todo: 1, pick: 1, proposal: 2, party: 2, pitch: 2, collide: 1, sign_in: 1, gate: 2, result: 3 };
+const URGENCY = { failed: 0, plan: 1, change: 1, asks: 1, goal: 1, todo: 1, pick: 1, proposal: 2, party: 2, pitch: 2, collide: 1, sign_in: 1, paid: 1, gate: 2, result: 3 };
 export const urgencyOf = (s) => URGENCY[s.kind] ?? 1;
 const ageOf = (s) => String(s.row?.at || s.task?.finished || s.task?.started || s.result?.finished || "9999");
 
