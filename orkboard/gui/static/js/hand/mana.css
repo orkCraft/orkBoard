@@ -38,12 +38,22 @@
 .hand:has(.hand-mana[data-rows="2"][data-paid]) { --hc-pots: calc(2 * (var(--ork-1) * 6 + 16px + 36px + var(--hc-cap)) + var(--hc-cap) + var(--ork-1)); }      /* the paid slot's price is a second line under *API* */
 .hand:has(.hand-mana[data-rows="2"]) .hand-places { height: max(calc(var(--hc-room) + var(--hc-top) + var(--hc-shown)), calc(var(--hc-room) + var(--hc-top) + var(--hc-pots))); }
 
+/* the bug under the glass (spec 107 §10, hand/logsbtn.js): a quiet button before the mana, orkUI's sign `bug` and its icon `search` laid over its lower right; its panel is a small orkUI menu over it (fixed: the hand's places are clipped) */
+.hand-logs { position: relative; flex: none; pointer-events: auto; display: inline-flex; align-items: center; justify-content: center; min-width: 32px; min-height: 32px; padding: var(--ork-1); }
+.hand-logs__pic { position: relative; display: inline-flex; }
+.hand-logs__pic > .ork-icon { position: absolute; right: -4px; bottom: -4px; width: 14px; height: 14px; color: var(--ork-ink);
+  filter: drop-shadow(1px 0 0 var(--ork-canvas)) drop-shadow(-1px 0 0 var(--ork-canvas)) drop-shadow(0 1px 0 var(--ork-canvas)) drop-shadow(0 -1px 0 var(--ork-canvas)); }      /* a pixel of the canvas around it, so it reads over the bug */
+.hand-logs__panel { position: fixed; pointer-events: auto; z-index: 70; display: flex; flex-direction: column; gap: var(--ork-3); width: 280px; max-width: calc(100vw - 16px); padding: var(--ork-3); }
+.hand-logs__label { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+
 /* a hand with no goal at all has no cards: its potions lie alone at the right end */
 .hand-mana-only { display: flex; justify-content: flex-end; }
 .hand-mana-only:empty { display: none; }
 
-@media (pointer: coarse) { .hand-pot { min-width: var(--ork-tap); } }
+@media (pointer: coarse) { .hand-pot { min-width: var(--ork-tap); } .hand-logs { min-width: var(--ork-tap); min-height: var(--ork-tap); } }
 @media (max-width: 759.98px) {
+  .hand-mana-only .hand-logs { display: inline-flex; }
+  .hand-logs { display: none; }                                                                              /* no room beside New goal, the stacks and the potions at this width: Settings saves the logs too */
   .hand-mana { order: 101; margin-left: auto; }
   .hand-pot { min-width: 0; }                                                                                /* the cards of the row tighten for them: a potion is as wide as its share (tall past 44) */
 }

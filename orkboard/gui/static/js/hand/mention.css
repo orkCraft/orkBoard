@@ -1,0 +1,11 @@
+/* The @ list of New goal's field (docs/specs/107-what-the-owners-day-said.md §11, hand/mention.js): orkUI's panel (its double frame and notch, `.ork-menu`'s) over the field's top edge, at most eight rows. Layout only; colours,
+   faces and the frame are orkUI's tokens. */
+.hand-mention { position: absolute; left: 0; right: 0; bottom: calc(100% + var(--ork-2)); z-index: 5; margin: 0; padding: var(--ork-2); list-style: none; box-sizing: border-box; max-height: calc(8 * var(--ork-row) + var(--ork-4));
+  overflow: hidden; background: var(--ork-panel); color: var(--ork-ink); border: var(--ork-double) double var(--ork-edge); clip-path: var(--ork-notch); }
+.ork-card.hand-field { clip-path: polygon(0 -100vh, 100% -100vh, 100% calc(100% - var(--ork-notch-size)), calc(100% - var(--ork-notch-size)) 100%, var(--ork-notch-size) 100%, 0 calc(100% - var(--ork-notch-size))); }      /* orkUI's notch at the card's foot; its top lets the list above it show */
+.hand-mention__row { display: flex; align-items: center; gap: var(--ork-3); min-height: var(--ork-row); padding: 0 var(--ork-3); cursor: pointer; min-width: 0; }
+.hand-mention__row.is-on { background: var(--ork-raised); box-shadow: inset 2px 0 0 var(--ork-ink); }
+.hand-mention__name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--ork-type-body); }
+.hand-mention__name.is-code { font-family: var(--ork-font-code); }
+.hand-mention__note { flex: none; max-width: 45%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+@media (pointer: coarse) { .hand-mention__row { min-height: var(--ork-tap); } }

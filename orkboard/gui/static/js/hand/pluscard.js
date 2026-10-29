@@ -1,18 +1,22 @@
-// The + card and the field it grows into (docs/specs/101 §4.2, docs/specs/98-the-table-and-the-hand.md §4.1, decisions §160.2, §167.5): the new goal's card lies under the first lane, face up, a + on its face, alone (no deck) or the last of the Orkmaster's fan, where its edge shows the +.
+// The + card and the field it grows into (docs/specs/101 §4.2, docs/specs/98-the-table-and-the-hand.md §4.1, decisions §160.2, §167.5): the new goal's card lies at the first lane's left end, whole and face up, a + on its face, in its own frame (hand.css, spec 107 §13): the Orkmaster's stacks fan to its right, nothing lies over it.
 // Pressed (or a key typed with nothing focused), it grows into the field over the hand: one field, *Write a goal…*. Enter sends, Shift+Enter is a new line, a picture pasted goes with
 // it (`photos`, as the old New goal took them), Esc or a press away closes it and keeps its text. No priority, no kind. On a party's tab it is addressed to that party (*→ Tech ×*,
 // one press takes it off); *@Tech* in the text addresses it too; on the Orkmaster's tab it is general and the Orkmaster routes it by code (`ideas.add` with no party). The page has no
-// microphone, so the field has none. While there is no goal at all, the + card lies large in the pane's middle.
+// microphone, so the field has none. While there is no goal at all, the + card lies large in the pane's middle. *@* in the text offers a party, a file or a folder, and a party's goal types and map parts (mention.js, spec 107 §11): a type
+// taken is a chip and `type` of `ideas.add`, a part a mark as picking's.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
-import { Icon } from "../orkui.js";
+import { Icon, Sign } from "../orkui.js";
 import { toast } from "../link.js";
 import { act } from "../shell/store.js";
 import { MAX_PICTURES, PICTURE_TYPES, shrink } from "../board/pictures.js";
 import { tab } from "../frame/state.js";
-import { fieldOff, fieldOpen, fieldPhotos, fieldText, withoutAddress } from "./state.js";
+import { fieldOff, fieldOpen, fieldPhotos, fieldText, fieldType, withoutAddress } from "./state.js";
+import { partiesOf, partyCard } from "./data.js";
 import { MarkChips, addressNow, marks, marksToSend, resetMarks } from "../table/picking.js";       // picking on the addressed party's map (spec 102 §6): its marks lie on the field as chips
 import { leans } from "./motion.js";
+import { MentionList, useMention } from "./mention.js";
+import { mapData } from "../shell/store.js";
 
 /** The + card. `large`: the card in the pane's middle, with no goal at all. */
 export function PlusCard({ large = false, onPress }) {
@@ -41,6 +45,8 @@ export function openField(first = "") {
 /** The field the + card grew into. `middle`: it grows in the pane's middle (no goal at all), else over the hand. */
 export function Field({ middle = false }) {
   const area = useRef(), file = useRef(), [busy, setBusy] = useState(false), address = useAddress();
+  const mention = useMention(area, partiesOf(mapData.value).map((g) => ({ ...partyCard(g), types: g.types || [] })));
+  const taken = fieldType.value && fieldType.value.party === address.party ? fieldType.value : null;     // the type taken with @ stays the goal's while it goes to the party it was taken from
   useEffect(() => {                                                                   // opened: the caret at the end of what was kept
     const el = area.current;
     if (!el) return;
@@ -52,14 +58,15 @@ export function Field({ middle = false }) {
     if (!text || busy) return;
     setBusy(true);
     const sent = marksToSend();
-    const got = await act("ideas.add", { text, ...(address.party ? { party: address.party } : {}), ...(fieldPhotos.value.length ? { photos: fieldPhotos.value } : {}), ...(sent.length ? { marks: sent } : {}) });
+    const got = await act("ideas.add", { text, ...(address.party ? { party: address.party } : {}), ...(taken ? { type: taken.id } : {}), ...(fieldPhotos.value.length ? { photos: fieldPhotos.value } : {}), ...(sent.length ? { marks: sent } : {}) });
     setBusy(false);
     if (!got) return;                                                                 // refused: the host said why in a toast, the words stay
-    fieldText.value = ""; fieldPhotos.value = []; resetMarks(); fieldOpen.value = false;
+    fieldText.value = ""; fieldPhotos.value = []; resetMarks(); fieldType.value = null; fieldOpen.value = false;
     toast(address.party ? `Sent to ${address.name}.` : "Sent: the Orkmaster finds its party in a moment.");
   };
   const off = () => { if (address.by === "text") fieldText.value = withoutAddress(fieldText.value, address.name); else fieldOff.value = tab.value; area.current?.focus(); };
   const key = (e) => {
+    if (mention.onKey(e)) return;                                                     // the @ list took it (↑ ↓ Enter Tab Esc)
     if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); closeField(); return; }
     if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); }
   };
@@ -70,15 +77,18 @@ export function Field({ middle = false }) {
   const photos = fieldPhotos.value;
   return html`<div class=${cls("ork-card hand-field", { "is-middle": middle })} role="group" aria-label="The new goal’s card, grown into the field"
       onDragOver=${(e) => e.preventDefault()} onDrop=${(e) => { e.preventDefault(); addPictures([...(e.dataTransfer?.files || [])]); }}>
-    ${(address.name || photos.length > 0 || marks.value.length > 0) && html`<div class="hand-field__chips">
+    ${(address.name || taken || photos.length > 0 || marks.value.length > 0) && html`<div class="hand-field__chips">
       ${address.name && html`<span class="ork-chip hand-chip" data-by=${address.by}><${Icon} name="arrow-right" />${address.name}
         <button type="button" class="ork-btn quiet hand-chip__off" aria-label=${`Take off ${address.name}`} title=${`Take off ${address.name}`} onClick=${off}><${Icon} name="close" /></button></span>`}
+      ${taken && html`<span class="ork-chip hand-chip" data-type=${taken.id}><${Sign} name=${taken.sign} />${taken.name}
+        <button type="button" class="ork-btn quiet hand-chip__off" aria-label=${`Take ${taken.name} off`} title=${`Take ${taken.name} off`} onClick=${() => { fieldType.value = null; area.current?.focus(); }}><${Icon} name="close" /></button></span>`}
       <${MarkChips} />
       ${photos.map((url, i) => html`<span key=${i} class="hand-pic"><img src=${url} alt=${`Picture ${i + 1}`} draggable="false" />
         <button type="button" class="ork-btn quiet hand-chip__off" aria-label=${`Remove picture ${i + 1}`} onClick=${() => { fieldPhotos.value = photos.filter((_, k) => k !== i); }}><${Icon} name="close" /></button></span>`)}
     </div>`}
     <textarea ref=${area} class="ork-field hand-field__text" aria-label="Write a goal" placeholder="Write a goal…" rows="3" value=${fieldText.value}
-      onInput=${(e) => { fieldText.value = e.currentTarget.value; }} onKeyDown=${key} onPaste=${paste}></textarea>
+      onInput=${(e) => { fieldText.value = e.currentTarget.value; mention.look(); }} onKeyDown=${key} onKeyUp=${mention.look} onClick=${mention.look} onFocus=${mention.look} onPaste=${paste}></textarea>
+    <${MentionList} ...${mention} />
     <div class="hand-field__row">
       <span class="cap hand-field__hint">Enter sends · Shift+Enter a new line</span>
       <button type="button" class="ork-btn quiet" disabled=${photos.length >= MAX_PICTURES} onClick=${() => file.current?.click()}>Add a picture</button>

@@ -50,7 +50,7 @@ CART_MOVED = "cart_moved"         # source, target, title: a cart delivered alon
 LOOKED = "look"                   # started, seconds: the GUI in front of the person (looks a day, their length)
 
 # The board (docs/specs/33-v1-shell.md §9): every action of the v1 shell, for the day's analysis. `device` is "desktop" or "phone".
-IDEA_ADDED = "idea_added"         # idea, track, chars, now (the keeper reads it at once), priority, queue, photos (how many came with it), lens (the kinds pointed at), device,
+IDEA_ADDED = "idea_added"         # idea, track, chars, now (the keeper reads it at once), priority, queue, photos (how many came with it), files (how many `@path` it named, spec 107 K), lens (the kinds pointed at), device,
 #                                    type (its goal type's id, else ""), asks (how many answered), refs (how many pictures were Refs'), joined (the agent, else ""), out (the member, else "") (spec 52 §2.7),
 #                                    offered (how many types the party offered), near (how many of them with someone missing) (spec 59 §5)
 IDEA_SAID = "idea_said"           # idea, section, chars, text, device (the person's turn to the Taskmaster)
