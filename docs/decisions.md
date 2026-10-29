@@ -3627,4 +3627,12 @@ owner's yes on `docs/mockups/phone/portal.html` and `docs/mockups/phone/hand.htm
    over everything; a press opens the field over the keyboard with the microphone in it. With nothing in the hand: the
    line *Nothing waits for you.* and the deck.
 5. **The top row's *The Board* becomes **…***: Stop all, the project and the projects' switcher, Settings.
+6. Later the same day, the owner: **one goal a screen**, not a fan of every card: the top card is that goal's, under it only
+   its other cards as edges (its depth, no count). **Arrows ← → at the top** switch to the previous or next goal in Needs
+   you's order (a sideways swipe on the card too, never from the screen's edge); *Go on paid?*, a project question and each
+   goal ready for main are entries of their own. **On an arrow the neighbour's leader head and its goal's element**, never a
+   number (the owner chose this over a count of what waits beyond it, which would break §145.3 and §174.1). Answering a
+   goal's last card moves to the next goal. This replaces 3's fan.
+7. **A *Spec* button under the context** opens the goal's way on its Spec tab; while no spec is written it says *The spec is
+   written after your answers* and opens its questions.
 The owner's call.
