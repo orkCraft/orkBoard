@@ -3636,3 +3636,33 @@ owner's yes on `docs/mockups/phone/portal.html` and `docs/mockups/phone/hand.htm
 7. **A *Spec* button under the context** opens the goal's way on its Spec tab; while no spec is written it says *The spec is
    written after your answers* and opens its questions.
 The owner's call.
+
+## 181. A quick question is asked, not played: one line on the open tab, answered once by whom the tab looks through, reading only; a question that hides work becomes a goal by one press (29 October, the owner and the PM)
+
+Why: the owner, as product: *what if I have no idea and no task, only a quick question about the project; how is it
+played (not as a card), and is it worth it?* A card is what the person decides or plays (§104.0, §167): it has a phase,
+lies on the table, in the hand or in the discard and spends mana. A question has none of that: it changes nothing and
+needs no life. Played as a card it would fill the hand with one-off things and blur *the hand is what you decide*. Not
+having it sends the person to a terminal for what only Orkboard knows (where a goal is, why a party chose its way, what was
+decided), and every question asked is a sign of what the table does not show by itself. So (spec 106):
+1. **A question is a read, not a card**: no phase, never in the hand or the discard, no count of what waits; **its
+   answer never changes anything** (the call has no tools and reads no file).
+2. **It is asked through whose eyes the tab looks** (§104.0): on the Orkmaster's tab the Orkmaster answers *what and who*
+   (where a goal is, who does it, why it is in that place in line), from the Board as text; on a party's tab its leader
+   answers *how and why*, from its map as text (§156.1) and its party's goals. One line at the top of the pane, *Ask the
+   Orkmaster…* or *Ask the <its leader's role>…* (§164.2: a leader is its role there); never a chat, a column or a drawer.
+3. **One question at a time, one answer**: the answer lies under the line on its own tab, with the leader's head and up to
+   four sources (a decision, a goal, a part of the map); × or a new question puts it away. No history.
+4. **One call on the cheaper tier** (as Talk's round), no tools, its cost in the asking party's ledger (the Orkmaster's in
+   the Board's own), refused in plain words as a talk is (the demo, a spent window, one already being answered); Stop all
+   stops it.
+5. **A question that hides work becomes a goal by one press**: when the answer names a goal it suggests, ***Make it a
+   goal*** under it opens the new goal's field with that line written, addressed to the tab's party as the field always
+   is; the person sends it or not.
+6. **Only what Orkboard knows**: a question about the code at large is Claude Code's (beside it in VS Code); the call is
+   told to say so in a line rather than guess.
+7. **Measured from the first day**: each question (its party, its words cut short, its cost, whether it answered) and
+   each *Make it a goal*; after a week of use, how many were asked, how many became goals and which repeat. A question
+   that repeats is work for the table, not for the answer. If few are asked and none become goals, the line goes.
+8. **The desktop only for now**; the phone is asked again with §180.1.
+The owner's call.
