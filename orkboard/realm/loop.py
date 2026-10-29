@@ -7,6 +7,7 @@ its currencies and why a player comes back, which the person and Game design's l
     loop.keep(state_dir, root, data, by)           # replaced whole → (kept, dropped): `data` is {loops, currencies, hooks} (or v1's {cards}); limits below; a `rests_on` path only where dev's tree has it
     loop.parse(answer, root)                       # the leader's answer, strictly but clamped to the limits → {loops, currencies, hooks} or None
     loop.findings(data)                            # what the loop says, by code: [str] (a currency nothing takes, one nothing gives, a loop that rewards nothing, a span nothing feeds, a flat feeling)
+    loop.findings_on(data)                         # the same with the part each is on (spec 108 §2.2): [(id, str)], `cur:<id>` for a currency, a loop's first step for a loop
     loop.config_files(root)                        # the project's configs by name, chosen by code from dev's tree: balance*, config/, levels/, *.config.*; bounded
     loop.heads(root, paths)                        # {path: its first lines} of the first few of them, bounded
     loop.text(state_dir, root, since="")           # the loops as text for a leader's call (~3,000 characters); None when none is kept
@@ -382,24 +383,31 @@ def parse(answer: object, root: Path) -> dict | None:
     return clean
 
 
-def findings(data: dict) -> list[str]:
-    """What the loop says, by code, in the order it matters: a currency nothing gives, or nothing takes (it will pile up); a loop no step of which gives anything (where there are currencies); a span
-    nothing feeds; a loop whose feeling is flat (all one intensity, where a feeling is said)."""
+def findings_on(data: dict) -> list[tuple[str, str]]:
+    """`findings` with the part of the map each is about, as the map stamps its cards (`realm/map_parts.py`): `[(id, words)]`; a currency finding is on `cur:<id>`, a loop's on its first step."""
     loops, currencies = data.get("loops") or [], data.get("currencies") or []
     steps = [s for lp in loops for s in lp["steps"]]
     gives, takes = {c for s in steps for c in s["gives"]}, {c for s in steps for c in s["takes"]}
-    out = []
+    first = {lp["span"]: lp["steps"][0]["id"] for lp in loops if lp["steps"]}
+    out: list[tuple[str, str]] = []
     for c in currencies:
         if c["id"] not in gives:
-            out.append(f"Nothing gives {c['name']}")
+            out.append((f"cur:{c['id']}", f"Nothing gives {c['name']}"))
         elif c["id"] not in takes:
-            out.append(f"{c['name']} is only earned: it will pile up")
+            out.append((f"cur:{c['id']}", f"{c['name']} is only earned: it will pile up"))
     if currencies:
-        out += [f"The {lp['span']} loop rewards nothing" for lp in loops if not any(s["gives"] for s in lp["steps"])]
+        out += [(first[lp["span"]], f"The {lp['span']} loop rewards nothing") for lp in loops if lp["span"] in first and not any(s["gives"] for s in lp["steps"])]
     fed = {lp["feeds"] for lp in loops}
-    out += [f"Nothing feeds the {lp['span']} loop" for lp in loops if lp["span"] != "core" and lp["span"] not in fed]
-    out += [f"The {lp['span']} loop's feeling is flat" for lp in loops if any(s["feel"] for s in lp["steps"]) and len({s["intensity"] for s in lp["steps"]}) == 1]
+    out += [(first[lp["span"]], f"Nothing feeds the {lp['span']} loop") for lp in loops if lp["span"] in first and lp["span"] != "core" and lp["span"] not in fed]
+    out += [(first[lp["span"]], f"The {lp['span']} loop's feeling is flat") for lp in loops
+            if lp["span"] in first and any(s["feel"] for s in lp["steps"]) and len({s["intensity"] for s in lp["steps"]}) == 1]
     return out
+
+
+def findings(data: dict) -> list[str]:
+    """What the loop says, by code, in the order it matters: a currency nothing gives, or nothing takes (it will pile up); a loop no step of which gives anything (where there are currencies); a span
+    nothing feeds; a loop whose feeling is flat (all one intensity, where a feeling is said)."""
+    return [words for _on, words in findings_on(data)]
 
 
 def proposal(state_dir: Path) -> dict:

@@ -54,6 +54,7 @@ from orkboard.core.idea_objection import ObjectionMixin
 from orkboard.core.idea_talk import TalkMixin
 from orkboard.core.idea_project_q import ProjectQMixin
 from orkboard.core.idea_ask import AskMixin
+from orkboard.core.idea_concerns import ConcernsMixin
 from orkboard.core.idea_loop import LoopMixin
 from orkboard.core.idea_tree import TreeMixin
 from orkboard.core.idea_plan import PlanMixin, _task, _why, estimate, readiness  # noqa: F401  (the plan's small helpers: the callers and tests use them from here)
@@ -110,7 +111,7 @@ def _iso(at: float) -> str:
     return dt.datetime.fromtimestamp(at).isoformat(timespec="seconds")
 
 
-class IdeaKeeper(SignInMixin, TalkMixin, ObjectionMixin, ProjectQMixin, AskMixin, LoopMixin, TreeMixin, DecideMixin, SectionsMixin, PlanMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
+class IdeaKeeper(SignInMixin, TalkMixin, ObjectionMixin, ProjectQMixin, AskMixin, LoopMixin, TreeMixin, ConcernsMixin, DecideMixin, SectionsMixin, PlanMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
     def __init__(self, repo_root: Path, state_dir: Path, wiki_root: Callable[[], Path],
                  settings: Callable[[], dict], publish: Callable[[str], None] = lambda slug: None,
                  demo: bool = False, budget_ok: Callable[[], bool] = lambda: True,
@@ -182,10 +183,11 @@ class IdeaKeeper(SignInMixin, TalkMixin, ObjectionMixin, ProjectQMixin, AskMixin
         lead = self.leader()
         return idea_target.keeper_pick(step, self.target(), (lead.get("model") or idea_target.TIER_ROLE) if lead else self.taskmaster())
 
-    def ask(self, step: str, prompt: str, tools: bool = True, as_role: str = "") -> tuple[str, Any, Any, str]:
+    def ask(self, step: str, prompt: str, tools: bool = True, as_role: str = "", reads: int | None = None) -> tuple[str, Any, Any, str]:
         """One model call on a step, measured; a run stopped meanwhile (its own cancel or Stop all) raises
         InterruptedError; one that ran out of its budget with nothing to use raises KeeperError with BUDGET_LINE.
-        `as_role`: a role's slug the call speaks as, not the goal's leader (a pitch's views: core/idea_judge.py)."""
+        `as_role`: a role's slug the call speaks as, not the goal's leader (a pitch's views: core/idea_judge.py).
+        `reads`: how many files it may read when the step's own count is not the call's (`idea_target.reads_of`)."""
         got = self.pick_as(step, as_role) if as_role else self.pick(step)
         if got is None:
             raise KeeperError(f"The Target {self.target()} makes no {step} call")
@@ -199,7 +201,7 @@ class IdeaKeeper(SignInMixin, TalkMixin, ObjectionMixin, ProjectQMixin, AskMixin
         self._tls.tool = ""                                                    # set by the call that runs (`_claude`), read by its ledger line
         self._tls.measure = {"step": step, "prompt_chars": len(prompt), "tokens": None, "cost": None}
         try:
-            with call_log.bounded(idea_target.READS.get(step)):       # the files its prompt names: its line says if it read more
+            with call_log.bounded(idea_target.READS.get(step) if reads is None else reads):       # the files its prompt names: its line says if it read more
                 text, cost, tokens, session = self.call(got[0], prompt, got[1], idea_target.budget(step, self.target()))
         except Exception as e:
             if "budget" in str(e).lower() and not isinstance(e, InterruptedError):
@@ -241,9 +243,9 @@ class IdeaKeeper(SignInMixin, TalkMixin, ObjectionMixin, ProjectQMixin, AskMixin
         """The last call's measure on this thread (spec 35 §0): step, prompt_chars, tokens, cost."""
         return dict(getattr(self._tls, "measure", None) or {"step": "", "prompt_chars": 0, "tokens": None, "cost": None})
 
-    def reads(self, step: str, files: list[str]) -> str:
-        """Bounded reading (§0): the files to start from and how many it may read."""
-        n = idea_target.READS.get(step, 0)
+    def reads(self, step: str, files: list[str], n: int | None = None) -> str:
+        """Bounded reading (§0): the files to start from and how many it may read (`n`: when the call's is not the step's)."""
+        n = idea_target.READS.get(step, 0) if n is None else n
         if not n:
             return "Read no file: answer from what is here."
         start = ", ".join(files[:n]) if files else "none named"

@@ -4,11 +4,9 @@
 
 A part is what picking takes (docs/specs/102-the-other-maps-and-picking-on-them.md §6): `{map, id, name}` with the very ids the map stamps as `data-pick-map` and
 `data-pick-id` (`js/table/picking.js`), so a part taken in the list is the same mark as a card pressed on the map, and sent as one. `label` is what the list shows.
-The maps read, as their faces read them (no model, nothing written):
-- Tech's System (a party the Architect leads): `system`, a part's path is its id and its name (`syspane.js` `stampParts`), from the snapshot at the merge branch's head;
-- Design's screens: `screens`, a screen's id (`screens` of `realm/screen_map.py`) and each step's `step:<n>` named *Step n*;
-- Game design's loop: `game-design`, the steps of the loop kept (`loop.json`) and, in a loop of the second version, its loops' steps and its currencies, read defensively.
-Another party's map has no parts to offer yet: `parts: []`. The host returns keys and data, never interface words.
+The parts are read by `realm/map_parts.py` (spec 108 §2.1: its logic moved there from here), as the maps' faces stamp them: Tech's System (a party the Architect leads), Design's screens and
+steps, Game design's loops' steps and currencies, Product's jobs and goals, Art's assets, Release's goals and Marketing's files of the way in; a party with no map has `parts: []`.
+The host returns keys and data, never interface words.
 """
 from __future__ import annotations
 
@@ -16,23 +14,15 @@ from pathlib import Path
 from typing import Any
 
 from orkboard.gui.ideas_args import IdeasError, _opt, _str
-from orkboard.realm import goal_team, ideas, loop, project_map, screen_map
+from orkboard.realm import ideas, map_parts
+from orkboard.realm.map_parts import loop_parts  # noqa: F401  (it moved to realm/map_parts.py; the tests read it from here)
 
 MAX_PARTS = 30
-ARCHITECT = "architect"
 
 
 def _sub(q: str, text: str) -> bool:
     it = iter(text.lower())
     return all(c in it for c in q)
-
-
-def loop_parts(state_dir: Path) -> list[dict]:
-    """The loop's parts as its map stamps them (`table/loopparts.js`): every loop's steps (their `id`, group `loop`), then every currency (`cur:<id>`,
-    group `economy`), read through `loop.read`, so a first version reads as its one core loop. `{id, name, group}`."""
-    got = loop.read(Path(state_dir))
-    out = [{"id": st["id"], "name": st["name"], "group": "loop"} for lp in got.get("loops") or [] for st in lp.get("steps") or [] if st.get("id") and st.get("name")]
-    return out + [{"id": f"cur:{c['id']}", "name": c["name"], "group": "economy"} for c in got.get("currencies") or [] if c.get("id") and c.get("name")]
 
 
 class PickablesMixin:
@@ -41,17 +31,10 @@ class PickablesMixin:
     def _party_parts(self, party: str) -> tuple[str, list[dict]]:
         """(the map's id, its parts) of `party`'s map."""
         root = self.root(make=False)
-        if goal_team.leader_of(root, party) == ARCHITECT:
-            snap = project_map.ensure(self.state_dir, Path(self.host.repo_root), self._ref())
-            return "system", [{"id": p["path"], "name": p["path"], "label": p["path"].rsplit("/", 1)[-1] or p["path"]} for p in (snap or {}).get("parts") or [] if p.get("path")]
-        craft = goal_team.craft_of(root, party)
-        if craft == "design":
-            got = screen_map.read(self.state_dir, Path(self.host.repo_root))
-            steps = [{"id": screen_map.step_id(n), "name": f"Step {n}", "label": f"Step {n}"} for n in range(1, len(got["steps"]) + 1)]
-            return "screens", steps + [{"id": s["id"], "name": s["name"], "label": s["name"]} for s in got["screens"]]
-        if craft == "game-design":
-            return "game-design", [{**p, "label": p["name"]} for p in loop_parts(self.state_dir)]
-        return craft, []
+        craft = map_parts.craft_of(root, party)
+        got = map_parts.parts(self.state_dir, Path(self.host.repo_root), craft, root, self._ref())
+        label = (lambda p: p["name"].rsplit("/", 1)[-1] or p["name"]) if craft == "tech" else (lambda p: p["name"])        # a System part is shown by its folder's name
+        return map_parts.MAPS.get(craft) or craft, [{**{k: v for k, v in p.items() if k != "map"}, "label": label(p)} for p in got]
 
     def pickables(self, args: dict) -> dict:
         party = _str(args, "party", 100).strip()

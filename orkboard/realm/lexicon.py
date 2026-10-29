@@ -223,7 +223,8 @@ TERMS: tuple[Term, ...] = (
     _t("blank_card", "blank card", "blank cards"),                 # the + card alone under the first lane, and the field it grows into: *Write a goal…*
     _t("lifted_card", "lifted card", "lifted cards"),              # a card pressed and raised over the pane, with its answers and *Put it back*
     _t("map", "map", "maps"),                                      # what a party's tab shows under its header: Tech's is *System* (a part of it is never called a card)
-    _t("seat", "seat", "seats"),                                   # one place in a party: its leader's, a builder's, a checker's; a head sits in it
+    _t("concern", "concern", "concerns"),                          # what a party's leader says is wrong or at risk in one part of its map, with why and what would fix it (spec 108, decisions §183.7); not a flag, not a finding
+    _t("seat", "seat", "seats"),                                  # one place in a party: its leader's, a builder's, a checker's; a head sits in it
     _t("squad", "squad", "squads"),                                # a party's seats together, grouped *Leads* | *Does* | *Checks*
     _t("size", "size", "sizes"),                                   # how large a party is, in one word: lean, standard or full (the Target's, spec 75)
     _t("in_line", "in line", "", "deck", "decks"),                 # a goal not started, waiting its turn: the first lane's last cascade (decisions §167.5; it was the *deck*, whose place value `deck` the code keeps)

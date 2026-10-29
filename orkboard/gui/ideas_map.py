@@ -47,6 +47,7 @@ class MapMixin:
         for g in got["goals"]:
             g["types"] = self.types_of(root, g["slug"], [n["slug"] for n in got["nodes"] if n["goal"] == g["slug"]])
             g["stages"] = self.stages_of(root, g["slug"])
+            g["concerns"] = self.concerns_counts(g["slug"])                              # its leader's concerns on its map, for its tab (spec 108 §2.5)
             g["ops"] = goal_team.recipe_of(root, g["slug"]) == party_recipes.TEAM_ID         # the Team party: its Board is the person's Operations (spec 92 §3)
         got["project"] = self.project_of(root, got, goal)
         return got
