@@ -66,9 +66,11 @@ TASK_STATE = "task_state"         # idea, task, state (waiting · ready · held 
 #                                    check (true: a check task's), clean (true: a check that found nothing, merged with no commit; spec 43 §1.3),
 #                                    ran_why (running only: why it ran on another tier than planned, else ""; spec 107 §2.3), error (failed, or review with one: its words, cut at 600)
 CHECK_DONE = "check_done"         # idea, task, by (the checker's slug), found, fixed, left, round, cost: a round of a check task ended with findings read
-RESULT_READY = "result_ready"     # idea, task, round, passed, failed, files, added, removed, cost, role
-RESULT_DECIDED = "result_decided"  # idea, task, round, decision, why, into, pushed, conflict, device, seconds from result_ready,
-#                                    dear (on a merge: the person said it cost too much for this, spec 36 §4)
+RESULT_READY = "result_ready"     # idea, task, round, passed, failed, files, added, removed, cost, role, exit (the gate's), verdict (green · red · could_not_run · docs · nothing: spec 107 §1.2)
+GATE_RAN = "gate_ran"             # idea, task, round, attempt, command, exit, seconds, verdict (as result_ready's), missing (what a run that could not run found missing, else ""),
+#                                    linked (how many dependency folders lay linked in the worktree): one per try of the gate (spec 107 §1.2)
+RESULT_DECIDED = "result_decided"  # idea, task, round, decision (merge · back · fix · drop · install · test again), why, why_kind (on a send back: "suggested" the line the face wrote · "typed", spec 107 §1.4), into, pushed, conflict, device,
+#                                    seconds from result_ready, dear (on a merge: the person said it cost too much for this, spec 36 §4)
 TASK_STOPPED = "task_stopped"     # idea, task, device
 TASK_SKIPPED = "task_skipped"     # idea, task, device: a task taken out of its plan before it ran (a check skipped)
 CHECK_SKIPPED = "check_skipped"   # idea, by (the checker), skipped (false: taken again), task ("" before a plan), usd (what it spares), device
@@ -201,7 +203,7 @@ OBJECTION_ANSWERED = "objection_answered"    # idea, party, answer ("drop", "sma
 
 EVENTS = (ASKED, ASSUMED, ANSWERED, STOPPED, WAIT_SKIPPED, HELD_AT_WORK, CAMP_LEFT, CAMP_BACK, QUEST_STARTED,
           QUEST_DONE, QUEST_SKIPPED, BUILT, CART_MOVED, LOOKED, IDEA_ADDED, IDEA_SAID, KEEPER_STATE, PLAN_MADE, PLAN_PASSED,
-          TODO_DONE, TASK_STATE, CHECK_DONE, RESULT_READY, RESULT_DECIDED, TASK_STOPPED, TASK_SKIPPED, CHECK_SKIPPED, STOP_ALL, INTO_CHANGED, GATE_MERGED, GOAL_TO_MAIN, IDEA_FLAGGED, PICK_ASKED, PICK_ANSWERED, OPENED, LIMITS_READ, GOAL_SAVED, GOAL_READ, GOAL_ACCEPTED, ROLE_SAVED,
+          TODO_DONE, TASK_STATE, CHECK_DONE, RESULT_READY, GATE_RAN, RESULT_DECIDED, TASK_STOPPED, TASK_SKIPPED, CHECK_SKIPPED, STOP_ALL, INTO_CHANGED, GATE_MERGED, GOAL_TO_MAIN, IDEA_FLAGGED, PICK_ASKED, PICK_ANSWERED, OPENED, LIMITS_READ, GOAL_SAVED, GOAL_READ, GOAL_ACCEPTED, ROLE_SAVED,
           ROLE_DROPPED, KIND_SET, BOARD_SET, IDEA_DRAFTED, KEEPER_STOPPED, NIGHT_RUN, PROPOSAL_MADE, PROPOSAL_ANSWERED,
           IDEA_ANSWERED, GOAL_ANSWERED, PLAN_STARTED_NOW, IDEA_QUEUED, RESULT_SEEN, BOARD_COMMITTED, BOARD_HELD, PROJECT_OPENED, PROJECT_CLOSED, FILE_SAVED, GIT_COMMITTED,
           GIT_PUSHED, OP_ADDED, OP_PREPARED, OP_CHECKED, OP_DONE, OP_FAILED, OP_DROPPED, OP_NOT_RIGHT, OP_LEARNED,

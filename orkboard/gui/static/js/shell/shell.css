@@ -21,6 +21,7 @@
 .shell-facts dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
 .shell-facts .is-success { color: var(--ork-success); }
 .shell-facts .is-danger { color: var(--ork-danger); }
+.shell-facts .is-alert { color: var(--ork-alert); }
 .shell-facts .is-muted { color: var(--ork-ink-muted); }
 .shell-own-parties { display: flex; flex-direction: column; gap: var(--ork-3); margin: 0 0 var(--ork-5); }
 .shell-own-parties h3 { margin: 0; }

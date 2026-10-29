@@ -173,34 +173,6 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
         if self.events:
             event_log.record(self.repo_root, event, **fields)
 
-    def _note(self, slug: str, was: dict, tasks: list[dict]) -> None:
-        """The event log's lines for the tasks whose state changed (spec 33 §9): `task_state`, and `result_ready` at Review."""
-        now = time.time()
-        for t in tasks:
-            tid, new, old = t.get("id"), t.get("state"), was.get(t.get("id"))
-            if new == old or old is None:
-                continue
-            since = self._since.get((slug, tid))
-            self._since[(slug, tid)] = now
-            check = ({"check": True, **({"clean": True} if new == "merged" and t.get("note") == "clean" else {})}
-                     if is_check(t) else {})            # a check task's lines say so; a clean one is no result (spec 43 §1.3)
-            self._emit(event_log.TASK_STATE, idea=slug, task=tid, state=new, was=old, round=int(t.get("round") or 1),
-                       tier=t.get("tier") or "", role=t.get("role") or "", seconds=round(now - since, 1) if since else None, tokens=t.get("tokens"),
-                       cost=t.get("cost"), ran_tier=t.get("ran_tier") or "", effort=t.get("effort") or "",
-                       tool=t.get("tool") or "", model=t.get("model") or "", **check,
-                       **({"ran_why": idea_target.ran_why(t.get("tier") or "", t.get("ran_tier") or "", *self._picks(t, slug))} if new == "running" else {}),
-                       **({"error": str(t["error"])[:600]} if t.get("error") and new in ("failed", "review") else {}))     # (spec 107 §2.3)
-            if new == "review":
-                tests, diff = t.get("tests") or {}, t.get("diff") or {}
-                self._emit(event_log.RESULT_READY, idea=slug, task=tid, round=int(t.get("round") or 1), passed=tests.get("passed"),
-                           failed=tests.get("failed"), files=diff.get("files"), added=diff.get("added"),
-                           removed=diff.get("removed"), cost=t.get("cost"), role=t.get("role") or "")
-            if new == "held" and self.on_held is not None:
-                try:
-                    self.on_held()
-                except Exception:               # a log never stops the work
-                    pass
-
     def _set_task(self, slug: str, task_id: str, **fields: Any) -> None:
         with self._lock:
             plan = self.plan(slug)
@@ -526,7 +498,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
             h = harnesses.need(tool)
             run, effort = self.ran_on(task, slug)
             model = h.pick(run)                          # the role's model, else the tier the Target gives
-            rnd = int(task.get("round") or 1)
+            rnd, sent_from = int(task.get("round") or 1), ""
             if again is None:
                 self.git.ensure_branch(base)
                 path, branch = self.git.prepare(slug, tid, base)
@@ -538,17 +510,21 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                 start_sha = str(task.get("base") or "") or self.git.head(path)
                 spent.update(cost=task.get("cost"), tokens=task.get("tokens"))
                 prompt, resume = self._again_prompt(slug, plan, task, again, base, path, start_sha)     # past 150 k tokens: a fresh session (spec 86 §4)
-                if is_check(task):
+                sent_from = self._sent_from(again, path)         # a send back that changes nothing and fails the same way says so (spec 107 §1.4)
+                if is_check(task) and not again.get("regate"):
                     before = [f for f in task.get("findings") or [] if isinstance(f, dict)]       # the round before's, to tell a round that found the same
                     self._set_task(slug, tid, findings=None)       # replaced by this round's
-            if again is not None and again.get("taken"):           # a variant was picked and committed (spec 51 §2.3): the gate goes on from there
+            if again is not None and (again.get("taken") or again.get("regate")):     # a variant was picked and committed (spec 51 §2.3), or only the tests run again (spec 107 §1.3): no session
                 session = resume
+                if again.get("regate") and self._regate(slug, tid, task, path, again, cancel, env):
+                    return
             else:
                 self._log(slug, tid, f"== round {rnd} · {now_iso()} · {model}\n{task_commands.line(task_commands.allowed(self.repo_root, task))}\n{prompt}\n", env)
                 session = self._session(slug, tid, path, cancel, model, env, prompt, resume, spent, effort)
                 if is_pick(task) and (again is None or again.get("pick")) and self._variants(slug, tid, task, path, start_sha, rnd):
                     return                                        # it ends with variants for the person, not with a change (spec 51 §2.2)
-            check_task, findings, changed = is_check(task), None, True
+            check_task, changed = is_check(task), True
+            findings = task.get("findings") if again is not None and again.get("regate") else None        # the tests again: its findings stay
             problem, out = None, ""
             for attempt in (1, 2):
                 self._set_task(slug, tid, state="testing")
@@ -560,7 +536,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                 else:
                     problem, out = self._check(path, start_sha, cancel, str(task.get("title") or ""))
                 self._log(slug, tid, f"== the gate, try {attempt}\n{out or problem}\n", env)
-                if problem is None:
+                if self._gate_ran(slug, tid, path, rnd, attempt) or problem is None:     # it could not run: no session can mend that, the person decides (spec 107 §1.2)
                     break
                 if attempt == 2:
                     if check_task and not changed and findings is None:
@@ -590,6 +566,8 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                 tests, diff = dict(NO_RUN), dict(NO_DIFF)
             else:
                 tests = self._tests_of(path, out, problem)
+                if sent_from and self._same(path, sent_from, task, tests):
+                    tests["same"] = True
                 diff = self.git.stats(path, start_sha)
                 self.shoot(slug, tid, path, start_sha, rnd)                  # a picture of what changed, when people see it (spec 85 §3)
             look = self.look_reason(slug, tests, left, [] if check_task and not changed else self.git.touched(path, start_sha),
@@ -597,7 +575,7 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
                                     looked=bool(self._task(slug, tid).get("picked")))              # a variant the person picked was looked at (§49.6)
             if look:
                 self._set_task(slug, tid, state="review", tests=tests, diff=diff, conflict="", finished=now_iso(), look=look,
-                               error="" if problem is None else "the tests are red", note=note)
+                               error="" if problem is None else "the tests could not run" if tests.get("env") else "the tests are red", note=note)
                 self._log(slug, tid, f"== at Review · {now_iso()}\n", env)
                 return
             commit, subjects, note = self.git.land(path, branch, base, bool(setting(self.settings, "push")))

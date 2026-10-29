@@ -40,6 +40,7 @@ class Gate:
     timeout_min: float | None = None               # None = the caller's default
     error: str = field(default="", compare=False)  # a bad file, in words
     none: bool = False                             # the project has no tests at all: nothing to run (`derive`)
+    derived: bool = field(default=False, compare=False)   # the project's own gate (`derive`), not one its `orkcraft.toml` wrote (spec 107 §1.2)
 
     @property
     def custom(self) -> bool:
@@ -93,6 +94,14 @@ def has_test(script: str) -> bool:
     return bool(script.strip()) and not _NO_TEST.search(script)
 
 
+DOCUMENTS = (".md", ".mdx", ".markdown", ".txt", ".rst", ".adoc")
+
+
+def docs_only(files: list[str]) -> bool:
+    """Every file is a document (`DOCUMENTS`), and there is one: a task that changed only those has nothing a derived gate could test (spec 107 §1.2)."""
+    return bool(files) and all(Path(f).suffix.lower() in DOCUMENTS for f in files)
+
+
 def derive(root: Path) -> Gate:
     """The project's own gate, when it names none (spec 86 §3): Orkboard's way (its critical tests that exist, run by pytest on
     them and on the touched modules' tests) when the project has those files; else `npm test` (in each folder with a
@@ -101,16 +110,16 @@ def derive(root: Path) -> Gate:
     root = Path(root)
     critical = tuple(f for f in CRITICAL_TESTS if (root / f).is_file())
     if critical:
-        return Gate(always=critical)
+        return Gate(always=critical, derived=True)
     folders = [f for f in package_dirs(root) if has_test(scripts_of(f).get("test", ""))][:MAX_FOLDERS]
     if folders:
         runs = ["npm test" if f == root else f"npm test --prefix {shlex.quote(f.relative_to(root).as_posix())}" for f in folders]
-        return Gate(run=" && ".join(runs), always=())
+        return Gate(run=" && ".join(runs), always=(), derived=True)
     for marker, run in ((("pyproject.toml", "tests"), "python -m pytest -q"), (("go.mod",), "go test ./..."),
                         (("Cargo.toml",), "cargo test")):
         if any((root / m).exists() for m in marker):
-            return Gate(run=run, always=())
-    return Gate(always=(), none=True)
+            return Gate(run=run, always=(), derived=True)
+    return Gate(always=(), none=True, derived=True)
 
 
 def read(repo_root: Path) -> Gate:

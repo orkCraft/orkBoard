@@ -23,6 +23,7 @@ MEDIA = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif", ".bmp", ".ico", ".sv
          ".mp4", ".webm", ".mov", ".mkv", ".avi", ".m4v"}      # images, sound and video: judged one by one (decisions §49.6)
 NO_TESTS, NOT_RUN, RED, LEFT, PICTURES, ASKED = ("no tests in this project", "tests did not run", "the tests are red", "findings left",
                                                   "holds pictures", "you asked to look at each result")
+COULD_NOT_RUN, DOCS = "the tests could not run", "it changes only documents"       # spec 107 §1.2: a gate that tested nothing; a task that changed only documents
 _BRIEF_PATH = re.compile(r"`([A-Za-z0-9_./-]+)`")
 SCAN_FILES = 200
 
@@ -96,14 +97,18 @@ class LandingMixin:
     def look_reason(self, slug: str, tests: dict, left: int, files: list[str], red: bool = False, gated: bool = True,
                     looked: bool = False) -> str:
         """"" when the result lands in dev by itself; else why it waits for the person's look, the first that holds: no tests in this
-        project (the gate is `none`), the tests did not run, the tests are red, findings left, `touches <path>` of a risk path its goal's
+        project (the gate is `none`), it changes only documents, the tests did not run, the tests could not run, the tests are red, findings left, `touches <path>` of a risk path its goal's
         risk left out, it holds pictures, you asked to look at each result (`ideas.review`). `gated`: False for a check that changed no file,
         which has no tests to speak of. `looked`: the person picked the variant it holds (a pick, §49.6), so its pictures were seen."""
         r = _r()
         if gated and tests.get("none"):
             return NO_TESTS
+        if gated and tests.get("docs"):
+            return DOCS
         if gated and not tests.get("ran"):
             return NOT_RUN
+        if gated and tests.get("env"):
+            return COULD_NOT_RUN
         if gated and (red or tests.get("green") is False):
             return RED
         if left:

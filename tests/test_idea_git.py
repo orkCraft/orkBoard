@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import threading
 from pathlib import Path
 
 import pytest
@@ -232,3 +233,57 @@ def test_the_links_go_with_the_worktree_and_leave_the_main_checkout_whole(repo):
     again, _ = g.prepare("demo", "k1", "main")                                     # a second try links again, once
     assert (again / "node_modules").is_symlink()
     assert (repo / ".git" / "info" / "exclude").read_text().split().count("node_modules") == 1
+
+
+# -- spec 107 §1.2: documents only, a run that could not run -----------------------------------------------------------
+
+def toml(root: Path, text: str) -> None:
+    (root / "orkcraft.toml").write_text(text, encoding="utf-8")
+
+
+def gate_on(repo: Path):
+    """A task worktree with one commit; `gate_run` on it."""
+    g = IdeaGit(repo)
+    path, _ = g.prepare("demo", "k1", "main")
+    commit_in(path, "b.dat", "b\n")
+    return g.gate_run(path, "main", threading.Event())
+
+
+def test_a_task_that_changed_only_documents_runs_no_derived_gate(repo):
+    (repo / "pyproject.toml").write_text("[project]\nname = 'x'\n")
+    git(repo, "add", "-A")
+    git(repo, "commit", "-m", "py")
+    g = IdeaGit(repo)
+    path, _ = g.prepare("demo", "k1", "main")
+    commit_in(path, "docs.md", "# notes\n")
+    run = g.gate_run(path, "main", threading.Event())
+    assert (run.ok, run.ran, run.docs, run.command, run.env) == (True, False, True, "", "")
+    assert run.out == "no tests ran: the task changed only documents"
+    commit_in(path, "code.py", "x = 1\n")                                             # a file that is not a document: the gate runs
+    run = g.gate_run(path, "main", threading.Event(), timeout_s=120)
+    assert run.ran is True and run.docs is False and run.command.startswith("python -m pytest")
+
+
+def test_a_gate_the_project_wrote_runs_as_written_for_documents_too(repo):
+    toml(repo, '[gate]\nrun = "echo ran-as-written"\n')
+    g = IdeaGit(repo)
+    path, _ = g.prepare("demo", "k1", "main")
+    commit_in(path, "docs.md", "# notes\n")
+    run = g.gate_run(path, "main", threading.Event())
+    assert run.ran and run.ok and run.docs is False and "ran-as-written" in run.out and run.env == "" and run.seconds >= 0
+
+
+def test_a_run_that_found_a_command_missing_says_so_and_a_red_one_does_not(repo):
+    toml(repo, '[gate]\nrun = "sh -c \'nonexistent-tool-xyz\'"\n')
+    run = gate_on(repo)
+    assert run.ok is False and run.ran is True and run.code == 127 and run.docs is False
+    assert run.env == "The tests could not run: `nonexistent-tool-xyz` is not installed." and run.seconds >= 0
+    toml(repo, '[gate]\nrun = "sh -c \'echo 1 failed; exit 1\'"\n')
+    red = gate_on(repo)
+    assert red.ok is False and red.code == 1 and red.env == ""
+
+
+def test_a_command_that_cannot_start_could_not_run(repo):
+    toml(repo, '[gate]\nrun = "nonexistent-tool-xyz --go"\n')
+    run = gate_on(repo)
+    assert run.ok is False and run.code == 127 and "`nonexistent-tool-xyz`" in run.env
