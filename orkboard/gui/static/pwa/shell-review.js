@@ -15,6 +15,7 @@ export function testsWords(r) {
   const t = r.tests, all = t.passed + t.failed;
   if (t.none) return { mark: "", text: "no tests in this project", names: [], tone: "muted" };      // the project has none (spec 86 §3): it waits for your look
   if (t.ran === false) return { mark: "", text: "no tests ran", names: [], tone: "muted" };
+  if (t.env) return { mark: "", text: "could not run", names: [], tone: "alert" };      // it tested nothing (a command or a package is not installed, spec 107 §1): not red, not green
   if (t.passed == null && t.failed == null) {          // a command that is not pytest: its exit code speaks
     const failed = isRed(r), code = t.exit ?? (failed ? 1 : 0);
     return failed ? { mark: "cross", text: `failed (exit ${code})`, names: [], tone: "danger" } : { mark: "check", text: `passed (exit ${code})`, names: [], tone: "success" };
@@ -25,8 +26,15 @@ export function testsWords(r) {
 }
 export const changesWords = (d) => `${d.files} file${d.files === 1 ? "" : "s"}, +${d.added} −${d.removed}`;
 
-/** Why Merge is off, or "": red tests, a conflict, or both. */
+export const NO_INSTALL = "Sending it back would not help: the task cannot install anything.";
+export const SAME_FAILURE = "The last fix changed nothing: the tests failed the same way.";
+/** What *Install and test again* does, for its title: each folder's command, then the tests (`tests.install`: [{dir, command}]). */
+export const installWords = (rows) => `Runs ${rows.map((x) => `\`${x.command}\` in ${x.dir === "." ? "the project's folder" : x.dir}`).join(", then ")} in your project, then the tests again`;
+export const TEST_AGAIN_TIP = "Runs the tests again: install what they need in your project first";
+
+/** Why Merge is off, or "": red tests (or, when they could not run, why), a conflict, or both. */
 export function mergeReason(r) {
+  if (r.tests.env) return [r.tests.env, r.conflict].filter(Boolean).join(" · ");
   const why = [];
   if (isRed(r)) why.push("Its tests are red");
   if (r.conflict) why.push(r.conflict);
@@ -35,6 +43,7 @@ export function mergeReason(r) {
 
 export function fixLine(r, into) {
   if (r.conflict) return `Resolve the conflict with ${into}`;
+  if (r.tests.same || r.tests.env) return "";          // the same failure again: a line that says something new (spec 107 §1.4); a gate that could not run: nothing the code can mend
   if (isRed(r)) return `Fix the failing tests${r.tests.failing?.[0] ? `: ${r.tests.failing[0]}` : ""}`;
   return "";
 }
@@ -118,15 +127,18 @@ export function resultActions(core, r, done = () => {}) {
   const mine = halfOf(r);
   const into = core.st.review?.into || "dev";
   const reason = mergeReason(r), fix = isRed(r) || Boolean(r.conflict), place = placeOnly(r), check = Boolean(r.check) && leftOf(r).length > 0 && !place;
-  const key = { slug: r.idea, task: r.task };
-  const merge = h("button", { class: `ork-btn ${check ? "" : "primary "}big`, type: "button", disabled: Boolean(reason),
+  const key = { slug: r.idea, task: r.task }, env = Boolean(r.tests.env), rows = r.tests.install || [], same = Boolean(r.tests.same) && !env;
+  const regate = h("button", { class: "ork-btn primary big", type: "button", "data-act": "regate", title: rows.length ? installWords(rows) : TEST_AGAIN_TIP }, rows.length ? "Install and test again" : "Test again");
+  const merge = h("button", { class: `ork-btn ${check || env ? "" : "primary "}big`, type: "button", disabled: Boolean(reason),
     title: reason || (check ? (r.diff.files ? `Merge the fixes into ${into}` : "Nothing is merged") : null) },
   check || (place && !r.diff.files) ? "Leave them" : `Merge into ${into}`);
   const placeLine = place ? h("p", { class: "muted why place", "data-place": "true", role: "status" }, PLACE_LINE) : null;
   const fixThem = h("button", { class: "ork-btn primary big", type: "button" }, "Fix them");
   const back = h("button", { class: "ork-btn", type: "button", "aria-expanded": "false" }, fix ? "Fix" : "Send back");
   const drop = h("button", { class: "linkish", type: "button" }, "Drop…");
-  const why = reason ? h("p", { class: "warn why", role: "status" }, reason) : null;
+  const why = reason ? h("p", { class: "warn why", role: "status", ...(env ? { "data-env": "true" } : {}) }, reason) : null;
+  const more = env ? h("p", { class: "muted why", "data-no-install": "true", role: "status" }, NO_INSTALL)
+    : same ? h("p", { class: "muted why", "data-same": "true", role: "status" }, SAME_FAILURE) : null;
   const line = h("input", { class: "ork-field", type: "text", "aria-label": fix ? "What to fix, in one line" : "Why you send it back, in one line",
     placeholder: "One line: what should change?", maxlength: "1000", enterkeyhint: "send" });
   const go = h("button", { class: "ork-btn primary", type: "submit", disabled: true }, fix ? "Fix" : "Send back");
@@ -149,13 +161,13 @@ export function resultActions(core, r, done = () => {}) {
     e.preventDefault();
     if (!line.value.trim()) return;
     go.disabled = true;
-    const got = await core.call("ideas.back", { ...key, why: line.value.trim() });
+    const got = await core.call("ideas.back", { ...key, why: line.value.trim(), ...(line.value.trim() === fixLine(r, into) ? { suggested: true } : {}) });
     if (got?.ok) { mine.line = null; done(); } else go.disabled = false;
     core.refresh();
   });
   fixThem.addEventListener("click", async () => {
     fixThem.disabled = true;
-    const got = await core.call("ideas.back", { ...key, why: fixThemWhy(r) });
+    const got = await core.call("ideas.back", { ...key, why: fixThemWhy(r), suggested: true });
     if (got?.ok) done(); else fixThem.disabled = false;
     core.refresh();
   });
@@ -164,9 +176,16 @@ export function resultActions(core, r, done = () => {}) {
     if (got?.ok) done();
     core.refresh();
   }));
+  regate.addEventListener("click", async () => {
+    regate.disabled = true;
+    const got = await core.call("ideas.regate", { ...key, install: rows.length > 0 });
+    if (got?.ok) done(); else regate.disabled = false;
+    core.refresh();
+  });
+  if (env) return h("div", { class: "result-actions", "data-task": r.task }, why, more, regate, merge, h("div", { class: "row between" }, back, drop), form);
   if (place) return h("div", { class: "result-actions", "data-task": r.task }, why, placeLine, merge, h("div", { class: "row between" }, drop));
   if (check) return h("div", { class: "result-actions", "data-task": r.task }, why, fixThem, merge, h("div", { class: "row between" }, drop));
-  return h("div", { class: "result-actions", "data-task": r.task }, why, merge, h("div", { class: "row between" }, back, drop), form);
+  return h("div", { class: "result-actions", "data-task": r.task }, why, more, merge, h("div", { class: "row between" }, back, drop), form);
 }
 
 /** Merge into `dev` ▾ (the branch results merge into): the sheet of branches, opened from the menu. `core`: the board's frame. Returns {sheets, openInto()}. */

@@ -3,11 +3,14 @@
 """
 from __future__ import annotations
 
+import re
 import subprocess
 import threading
+import time
 from pathlib import Path
 
-from orkboard.realm import gate_config, idea_checks, idea_pick, idea_secrets, task_brief
+from orkboard.core.idea_landing import COULD_NOT_RUN
+from orkboard.realm import dep_links, event_log, gate_config, gate_env, idea_checks, idea_pick, idea_secrets, task_brief
 from orkboard.realm.idea_git import BOARD_PAGE, env_name, has_summary, parse_tests, read_secret, spec_paths
 
 
@@ -36,6 +39,26 @@ None of the last variants: "{note}"
 Make {n} new ones in this same worktree."""
 NO_RUN = {"passed": 0, "failed": 0, "failing": [], "tail": "", "green": True, "ran": False, "command": ""}      # a check that changed no file: no gate ran
 NO_DIFF = {"files": 0, "added": 0, "removed": 0}
+INSTALL_FAILED = "The install failed: {last}"
+_TIMES = re.compile(r"\b\d+(?:\.\d+)?\s?m?s\b|\b\d\d:\d\d:\d\d\b")      # what changes between two runs of the same failure: durations, clock times
+
+
+def verdict(d: dict) -> str:
+    """What a gate run came to, for the event log (spec 107 §1.2): `could_not_run` · `docs` · `nothing` (it found nothing to run) · `green` · `red`.
+    `d`: a result's `tests`, or a run as {"env", "docs", "ran", "green"}."""
+    if d.get("env"):
+        return "could_not_run"
+    if d.get("docs"):
+        return "docs"
+    if d.get("ran") is False:
+        return "nothing"
+    return "green" if d.get("green") else "red"
+
+
+def same_tail(a: object, b: object) -> bool:
+    """Two gate tails are one failure: the same words, durations and clock times left out. Empty tails are none."""
+    clean = lambda t: " ".join(_TIMES.sub("", str(t or "")).split())      # noqa: E731
+    return bool(clean(a)) and clean(a) == clean(b)
 
 
 def is_check(task: dict) -> bool:
@@ -80,7 +103,7 @@ def pick_ask(task: dict) -> str:
 
 
 class TaskMixin:
-    """Needs the runner's `repo_root`, `state_dir`, `settings`, `git`, `_gate_runs` and `_role`."""
+    """Needs the runner's `repo_root`, `state_dir`, `settings`, `git`, `_gate_runs`, `_since`, `on_held`, `_emit`, `_log` and `_role`."""
 
     def _tests_of(self, path: Path, out: str, problem: str | None) -> dict:
         """The result's `tests` (spec 37 §5): pytest's counts when its summary line is there, else `null` counts and the
@@ -96,7 +119,77 @@ class TaskMixin:
             tests["exit"] = run.code
             if not has_summary(out):
                 tests["passed"] = tests["failed"] = None
+        if run and run.env:                            # it tested nothing (spec 107 §1.1): why, and what install would make it run
+            tests["env"], tests["install"] = run.env, gate_env.missing(self.repo_root)
+        if run and run.docs:
+            tests["docs"] = True
         return tests
+
+    def _gate_ran(self, slug: str, tid: str, path: Path, rnd: int, attempt: int) -> bool:
+        """`gate_ran` for the try that just ran (spec 107 §1.2): True when the run could not test anything (`env`), which no session can mend.
+        A try that ran no gate (no commit, an uncommitted file) writes nothing."""
+        run = self._gate_runs.get(str(path))
+        if run is None:
+            return False
+        named = re.search(r"`([^`]+)`", run.env)
+        self._emit(event_log.GATE_RAN, idea=slug, task=tid, round=rnd, attempt=attempt, command=run.command, exit=run.code, seconds=run.seconds,
+                   verdict=verdict({"env": run.env, "docs": run.docs, "ran": run.ran, "green": run.ok}), missing=named.group(1) if named else "",
+                   linked=dep_links.present(self.repo_root, path))
+        return bool(run.env)
+
+    def _regate(self, slug: str, tid: str, task: dict, path: Path, again: dict, cancel: threading.Event, env: dict) -> bool:
+        """*Install and test again* / *Test again* (spec 107 §1.3), before the gate: with `install`, each folder `gate_env.missing` names is installed in
+        the main checkout (its lines in the task's log under `== installing`); the worktree is linked again. True when the install failed: the task is at Review
+        again, its `tests.env` *The install failed:* and the last line (the output is in the log)."""
+        r = _r()
+        self._log(slug, tid, f"== testing again · {r.now_iso()}\n", env)
+        if again.get("install"):
+            ok, out = gate_env.install(self.repo_root, gate_env.missing(self.repo_root), cancel, log=lambda text: self._log(slug, tid, text, env))
+            if not ok:
+                last = next((ln.strip() for ln in reversed(out.splitlines()) if ln.strip()), "it said nothing")
+                tests = {**(task.get("tests") or {}), "env": INSTALL_FAILED.format(last=last)[:300], "install": gate_env.missing(self.repo_root)}
+                self._set_task(slug, tid, state="review", tests=tests, finished=r.now_iso(), look=COULD_NOT_RUN, error="the tests could not run")
+                self._log(slug, tid, f"== at Review · {r.now_iso()}\n", env)
+                return True
+        dep_links.link(self.repo_root, path)
+        return False
+
+    def _sent_from(self, again: dict | None, path: Path) -> str:
+        """The worktree's head before a send back's session (spec 107 §1.4), else "": what a conflict, a pick, the tests again or a variant taken are not."""
+        if not again or not again.get("why") or again.get("files") or again.get("pick") or again.get("regate") or again.get("taken"):
+            return ""
+        return self.git.head(path)
+
+    def _same(self, path: Path, head: str, task: dict, tests: dict) -> bool:
+        """A send back that changed nothing and failed the same way (spec 107 §1.4): the worktree's head did not move, the tests are red, and their
+        tail is the round before's (`task`'s tests, as they were before the session)."""
+        return bool(head) and tests.get("green") is False and self.git.head(path) == head and same_tail(tests.get("tail"), (task.get("tests") or {}).get("tail"))
+
+    def _note(self, slug: str, was: dict, tasks: list[dict]) -> None:
+        """The event log's lines for the tasks whose state changed (spec 33 §9): `task_state`, and `result_ready` at Review."""
+        now = time.time()
+        for t in tasks:
+            tid, new, old = t.get("id"), t.get("state"), was.get(t.get("id"))
+            if new == old or old is None:
+                continue
+            since = self._since.get((slug, tid))
+            self._since[(slug, tid)] = now
+            check = ({"check": True, **({"clean": True} if new == "merged" and t.get("note") == "clean" else {})}
+                     if is_check(t) else {})            # a check task's lines say so; a clean one is no result (spec 43 §1.3)
+            self._emit(event_log.TASK_STATE, idea=slug, task=tid, state=new, was=old, round=int(t.get("round") or 1),
+                       tier=t.get("tier") or "", role=t.get("role") or "", seconds=round(now - since, 1) if since else None, tokens=t.get("tokens"),
+                       cost=t.get("cost"), ran_tier=t.get("ran_tier") or "", effort=t.get("effort") or "",
+                       tool=t.get("tool") or "", model=t.get("model") or "", **check)
+            if new == "review":
+                tests, diff = t.get("tests") or {}, t.get("diff") or {}
+                self._emit(event_log.RESULT_READY, idea=slug, task=tid, round=int(t.get("round") or 1), passed=tests.get("passed"),
+                           failed=tests.get("failed"), files=diff.get("files"), added=diff.get("added"),
+                           removed=diff.get("removed"), cost=t.get("cost"), role=t.get("role") or "", exit=tests.get("exit"), verdict=verdict(tests))
+            if new == "held" and self.on_held is not None:
+                try:
+                    self.on_held()
+                except Exception:               # a log never stops the work
+                    pass
 
     def _paced_elsewhere(self, slug: str) -> bool:
         """Another plan of the project already runs by day because the week had room (it is not finished)."""
@@ -157,6 +250,7 @@ class TaskMixin:
         """(None, the gate's run) when the task's work passes; else (what is wrong, in words the session can act on,
         the gate's run: "" when the gate did not run). What the session left uncommitted is committed first, under
         the task's title: its session may edit files but not run git."""
+        self._gate_runs.pop(str(path), None)                 # the run of a try before is not this one's
         self.git.commit_left(path, title)
         if not self.git.commits(path, start_sha):
             return "You changed no file. Make the change the task asks for in this worktree.", ""
@@ -252,7 +346,7 @@ class TaskMixin:
         there is no session to resume. A send back of a task whose last call read more than FRESH_TOKENS (spec 86 §4) starts a fresh
         session: its prompt, the diff so far (`path` against `start_sha`) and the why."""
         resume = str(task.get("session") or "")
-        if again.get("taken"):
+        if again.get("taken") or again.get("regate"):       # nothing is sent: the gate runs on what is there (a variant taken; the tests again, spec 107 §1.3)
             return "", resume
         fresh = bool(resume) and not again.get("pick") and int(task.get("last_tokens") or 0) > FRESH_TOKENS
         if fresh:

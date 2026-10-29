@@ -46,7 +46,7 @@ async def test_a_check_s_card_says_what_it_found_and_fix_them_and_leave_them_ans
         card = await _pop(page, "To look at: Check: Reviewer")
         await card.get_by_role("button", name="Fix them").click()
         assert await _called(stub, "ideas.back", {"slug": "sync", "task": "k6",
-                                                  "why": "Fix the findings left:\nqueue.py:9: the queue is never emptied\nthe Sync screen: no way to cancel"})
+                                                  "why": "Fix the findings left:\nqueue.py:9: the queue is never emptied\nthe Sync screen: no way to cancel", "suggested": True})
 
 
 @pytest.mark.asyncio
@@ -121,7 +121,7 @@ async def test_fix_them_lists_the_findings_of_the_code_only_and_the_same_again_o
         card = await _pop(page, "To look at: Check: Playtest")
         assert PLACE not in await card.inner_text()
         await card.get_by_role("button", name="Fix them").click()
-        assert await _called(stub, "ideas.back", {"slug": "sync", "task": "k9", "why": "Fix the findings left:\nqueue.py:9: the queue is never emptied"})
+        assert await _called(stub, "ideas.back", {"slug": "sync", "task": "k9", "why": "Fix the findings left:\nqueue.py:9: the queue is never emptied", "suggested": True})
 
 
 @pytest.mark.asyncio

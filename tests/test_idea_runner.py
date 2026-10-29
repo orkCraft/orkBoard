@@ -43,13 +43,17 @@ if mode == "slow":
     time.sleep(30)
 if mode == "env":
     commit(f"{tid}.txt", os.environ.get("API_KEY", "none"), f"{tid}: key")
-elif mode in ("fail_once", "fail_always"):
+elif mode == "docs":                                # changes only a document (spec 107 §1.2)
+    commit(f"{tid}.md", "# notes\n", f"{tid}: notes")
+elif mode in ("fail_once", "fail_always", "fail_moving"):
     if not resume:
         commit("pkg/thing.py", "VALUE = 1\n", f"{tid}: thing")
         commit("tests/test_thing.py", "from pkg.thing import VALUE\n\ndef test_value():\n    assert VALUE == 2\n",
                f"{tid}: its test")
     elif mode == "fail_once":
         commit("pkg/thing.py", "VALUE = 2\n", f"{tid}: fix the value")
+    elif mode == "fail_moving":                     # changes the code each time, and the test still fails (another value each time)
+        commit("pkg/thing.py", f"VALUE = {time.time_ns()}\n", f"{tid}: another value")
 elif mode == "conflict":
     commit("shared.txt", "the task's line\n", f"{tid}: shared")
     root = os.environ["STUB_ROOT"]
@@ -131,6 +135,8 @@ def town(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> SimpleNamespace:
     (repo / "pkg").mkdir()
     (repo / "pkg" / "__init__.py").write_text("")
     (repo / "conftest.py").write_text("")
+    # The project's own gate, written down: its stub tasks write `.txt` files, and a task that changed only documents runs no derived gate (spec 107 §1.2).
+    (repo / "orkcraft.toml").write_text('[gate]\nalways = ["tests/test_architecture.py", "tests/test_cli.py", "tests/test_updates.py"]\n')
     git(repo, "add", "-A")
     git(repo, "commit", "-m", "start")
     git(repo, "remote", "add", "origin", str(origin))
@@ -852,3 +858,164 @@ def test_a_to_do_gone_without_or_described_is_said_in_the_prompt_and_lets_the_ta
     assert "Other task's" not in prompt
     runner.start("demo")
     assert wait_idle(runner)["state"] == "done"
+
+
+# -- spec 107 §1: a gate that could not run is not red; install and test again; the same failure again ---------------------
+
+NO_TOOL = "nonexistent-tool-xyz"
+
+
+def gate_toml(town, run: str) -> None:
+    """The project's own gate in orkcraft.toml: `run`, as written."""
+    (town.repo / "orkcraft.toml").write_text(f"[gate]\nrun = {json.dumps(run)}\n", encoding="utf-8")
+
+
+def events_of(town, name: str) -> list[dict]:
+    from orkboard.realm import event_log
+    return [r for r in event_log.read(town.repo) if r["event"] == name]
+
+
+def node_project(town, install_command: str):
+    """A Node project whose tests need `node_modules` (made by the install, which is `install_command`)."""
+    (town.repo / "package.json").write_text(json.dumps({"name": "x", "dependencies": {"left-pad": "1"}}))
+    gate_toml(town, f"test -d node_modules || {NO_TOOL}")
+    return [{"dir": ".", "command": install_command}]
+
+
+def test_a_gate_that_could_not_run_goes_to_review_after_one_try_and_no_session_is_asked_to_fix_it(town):
+    gate_toml(town, f"sh -c {NO_TOOL}")
+    plan_of(town, [{"id": "k1"}])
+    runner, _ = reviewing(town)
+    runner.events = True
+    runner.start("demo")
+    task = wait_task(runner, "k1", "review")
+    assert len(calls(town)) == 1                                                   # the session worked once; none was sent the red gate
+    tests = task["tests"]
+    assert tests["green"] is False and tests["exit"] == 127 and tests["install"] == []
+    assert tests["env"] == f"The tests could not run: `{NO_TOOL}` is not installed."
+    assert task["look"] == "the tests could not run" and task["error"] == "the tests could not run" and task["round"] == 1
+    assert runner.log("demo", "k1").count("== the gate, try") == 1
+    (ran,) = events_of(town, "gate_ran")
+    assert (ran["verdict"], ran["missing"], ran["linked"], ran["attempt"], ran["round"], ran["exit"]) == ("could_not_run", NO_TOOL, 0, 1, 1, 127)
+    assert ran["seconds"] >= 0 and ran["command"] and ran["task"] == "k1"
+    (ready,) = events_of(town, "result_ready")
+    assert ready["verdict"] == "could_not_run" and ready["exit"] == 127
+    with pytest.raises(RunnerError, match="could not run"):
+        runner.merge("demo", "k1")
+
+
+def test_install_and_test_again_installs_links_and_runs_the_gate_with_no_session_and_no_new_round(town, monkeypatch):
+    from orkboard.realm import gate_env
+    rows = node_project(town, f"{sys.executable} -c \"import os; os.makedirs('node_modules'); print('installed')\"")
+    monkeypatch.setattr(gate_env, "missing", lambda root: rows if not (Path(root) / "node_modules").is_dir() else [])
+    plan_of(town, [{"id": "k1"}])
+    runner, _ = reviewing(town)
+    runner.events = True
+    runner.start("demo")
+    task = wait_task(runner, "k1", "review")
+    assert task["tests"]["env"] and task["tests"]["install"] == rows
+    runner.regate("demo", "k1", True, device="phone")
+    assert tasks_of(town)["k1"]["state"] == "running"
+    task = wait_task(runner, "k1", "review")
+    assert task["tests"]["green"] is True and not task["tests"].get("env") and task["round"] == 1 and task["error"] == ""
+    assert len(calls(town)) == 1                                                   # no session was called
+    (tree,) = list((town.repo / ".orkcraft" / "worktrees").glob("*"))
+    assert (tree / "node_modules").is_symlink()
+    log = runner.log("demo", "k1")
+    assert f"== installing: .: {rows[0]['command']}" in log and "installed" in log and "== testing again" in log
+    decided = events_of(town, "result_decided")
+    assert [(d["decision"], d["device"], d["round"]) for d in decided] == [("install", "phone", 1)]
+    ran = events_of(town, "gate_ran")
+    assert [(r["verdict"], r["linked"]) for r in ran] == [("could_not_run", 0), ("green", 1)] and ran[1]["round"] == 1
+    assert runner.merge("demo", "k1")
+
+
+def test_test_again_without_an_install_relinks_and_runs_the_gate(town, monkeypatch):
+    from orkboard.realm import gate_env
+    node_project(town, "unused")
+    monkeypatch.setattr(gate_env, "missing", lambda root: [{"dir": ".", "command": "npm ci"}])
+    plan_of(town, [{"id": "k1"}])
+    runner, _ = reviewing(town)
+    runner.events = True
+    runner.start("demo")
+    wait_task(runner, "k1", "review")
+    (town.repo / "node_modules").mkdir()                                           # the person installed it themselves
+    runner.regate("demo", "k1", False)
+    task = wait_task(runner, "k1", "review")
+    assert task["tests"]["green"] is True and "== installing" not in runner.log("demo", "k1")
+    assert [d["decision"] for d in events_of(town, "result_decided")] == ["test again"]
+    with pytest.raises(RunnerError, match="not waiting for its tests"):
+        runner.regate("demo", "k1", False)                                         # it ran: nothing is waiting for its tests now
+
+
+def test_an_install_that_fails_comes_back_to_review_with_its_last_line_and_the_round_stays(town, monkeypatch):
+    from orkboard.realm import gate_env
+    rows = node_project(town, f"{sys.executable} -c \"import sys; print('npm ERR! first'); print('npm ERR! network is down'); sys.exit(1)\"")
+    monkeypatch.setattr(gate_env, "missing", lambda root: rows)
+    plan_of(town, [{"id": "k1"}])
+    runner, _ = reviewing(town)
+    runner.events = True
+    runner.start("demo")
+    wait_task(runner, "k1", "review")
+    runner.regate("demo", "k1", True)
+    task = wait_task(runner, "k1", "review")
+    assert task["tests"]["env"] == "The install failed: npm ERR! network is down" and task["tests"]["install"] == rows
+    assert task["round"] == 1 and task["look"] == "the tests could not run" and task["finished"]
+    assert "npm ERR! first" in runner.log("demo", "k1") and len(calls(town)) == 1
+    assert len(events_of(town, "gate_ran")) == 1                                   # the gate did not run the second time
+    runner.regate("demo", "k1", True)                                              # it can be tried again
+    assert wait_task(runner, "k1", "review")["tests"]["env"].startswith("The install failed")
+
+
+def test_install_and_test_again_is_refused_for_a_result_that_did_not_fail_to_run(town):
+    plan_of(town, [{"id": "k1"}])
+    runner, _ = reviewing(town)
+    with pytest.raises(RunnerError):
+        runner.regate("demo", "k1", True)                                          # not at Review yet
+    runner.start("demo")
+    wait_task(runner, "k1", "review")
+    with pytest.raises(RunnerError, match="That result is not waiting for its tests"):
+        runner.regate("demo", "k1", True)                                          # its tests ran
+
+
+def test_a_send_back_that_changed_nothing_and_failed_the_same_way_says_so_and_a_changed_one_does_not(town, monkeypatch):
+    monkeypatch.setenv("STUB_MODE", "k1=fail_always")
+    plan_of(town, [{"id": "k1"}])
+    runner, _ = reviewing(town)
+    runner.events = True
+    runner.start("demo")
+    first = wait_task(runner, "k1", "review")
+    assert not first["tests"].get("same")
+    runner.back("demo", "k1", "Fix the failing tests", suggested=True)
+    again = wait_task(runner, "k1", "review")
+    assert again["round"] == 2 and again["tests"]["same"] is True
+    runner.back("demo", "k1", "look at the value")
+    assert wait_task(runner, "k1", "review")["tests"]["same"] is True              # still nothing changed
+    kinds = [(d["decision"], d["why_kind"]) for d in events_of(town, "result_decided")]
+    assert kinds == [("fix", "suggested"), ("fix", "typed")]
+
+
+def test_a_send_back_that_changed_the_code_is_not_the_same_failure(town, monkeypatch):
+    monkeypatch.setenv("STUB_MODE", "k1=fail_moving")
+    plan_of(town, [{"id": "k1"}])
+    runner, _ = reviewing(town)
+    runner.start("demo")
+    wait_task(runner, "k1", "review")
+    runner.back("demo", "k1", "try another value")
+    again = wait_task(runner, "k1", "review")
+    assert again["round"] == 2 and again["tests"]["green"] is False and "same" not in again["tests"]
+
+
+def test_a_task_that_changed_only_documents_runs_no_derived_gate_and_waits_for_a_look(town, monkeypatch):
+    monkeypatch.setenv("STUB_MODE", "k1=docs")
+    (town.repo / "orkcraft.toml").unlink()                                          # no gate written: the project's own is derived (its critical tests)
+    plan_of(town, [{"id": "k1"}])
+    runner, _ = runner_of(town)                                                    # `review` off: a result that holds lands by itself
+    runner.events = True
+    runner.start("demo")
+    task = wait_task(runner, "k1", "review")
+    assert task["look"] == "it changes only documents" and task["tests"]["docs"] is True and task["tests"]["ran"] is False
+    assert task["tests"]["green"] is True and not task["tests"].get("env")
+    (ran,) = events_of(town, "gate_ran")
+    assert ran["verdict"] == "docs" and ran["command"] == ""
+    assert git(town.repo, "rev-parse", "main") == git(town.origin, "rev-parse", "main")      # nothing landed

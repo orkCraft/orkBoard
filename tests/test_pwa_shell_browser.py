@@ -148,7 +148,7 @@ class Stub:
         return {"goals": goals, "nodes": nodes, "edges": [], "rev": str(self.rev)}
 
     def commands(self) -> dict:
-        names = ("board", "page", "review_list", "agents", "task", "diff", "merge", "back", "drop_task", "stop_task", "into", "todo", "say",
+        names = ("board", "page", "review_list", "agents", "task", "diff", "merge", "back", "regate", "drop_task", "stop_task", "into", "todo", "say",
                  "plan", "start", "stop", "move", "add", "drop", "log", "logs", "goal_save", "goal", "read_now", "roles", "role_save", "role_drop",
                  "kind_set", "doc", "queue", "read_stop", "start_now", "proposal", "board_set", "answer", "spend", "words", "goal_accept", "lens",
                  "lens_code", "lens_screen", "map", "check_skip", "role_add", "party", "party_price", "party_answer", "parties", "party_save", "party_drop",
@@ -302,6 +302,9 @@ class Stub:
             return self.bump({"ok": True, "commit": "abc"})
         if name == "ideas.back":
             self.find(a).update(state="running", round=self.find(a)["round"] + 1)
+            return self.bump({"ok": True})
+        if name == "ideas.regate":                    # install and test again (spec 107 §1.3): the gate runs again, no new round
+            self.find(a).update(state="running")
             return self.bump({"ok": True})
         if name == "ideas.drop_task":
             self.find(a).update(state="dropped", error="dropped by you")

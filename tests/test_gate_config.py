@@ -27,7 +27,7 @@ def gate_in(repo: Path, **more):
     """A task worktree with one commit; `gate_run` on it."""
     g = IdeaGit(repo)
     path, _ = g.prepare("demo", "k1", "main")
-    commit_in(path, "b.txt", "b\n")
+    commit_in(path, "b.dat", "b\n")
     return g.gate_run(path, "main", threading.Event(), **more)
 
 
@@ -356,3 +356,30 @@ def test_a_node_gate_runs_in_the_worktree_and_a_none_gate_runs_nothing(repo):
     git(repo, "commit", "-m", "plain")
     run = gate_in(repo)
     assert run.ran is False and "no tests ran" in run.out
+
+
+# -- spec 107 §1.2: the derived gate, documents only, a run that could not run -------------------------------------------
+
+def test_the_project_s_own_gate_is_derived_and_one_its_file_wrote_is_not(tmp_path):
+    critical_tests(tmp_path)
+    assert gate_config.read(tmp_path).derived is True
+    toml(tmp_path, '[gate]\nrun = "make check"\n')
+    assert gate_config.read(tmp_path).derived is False
+    toml(tmp_path, "[other]\nx = 1\n")
+    assert gate_config.read(tmp_path).derived is True
+    toml(tmp_path, "[gate\nbroken")
+    bad = gate_config.read(tmp_path)
+    assert bad.derived is True and bad.error                                   # it ran as with no file
+    for kind, make in (("node", lambda d: package(d, "jest")), ("python", lambda d: (d / "pyproject.toml").write_text("")),
+                       ("none", lambda d: (d / "README.md").write_text("x"))):
+        folder = tmp_path / kind
+        folder.mkdir()
+        make(folder)
+        assert gate_config.read(folder).derived is True
+    assert gate_config.Gate().derived is False and gate_config.Gate() == gate_config.Gate(derived=True)     # not part of what a gate is equal by
+
+
+@pytest.mark.parametrize("files,only", [(["docs/a.md"], True), (["a.MD", "b.mdx", "c.markdown", "d.txt", "e.rst", "f.adoc"], True),
+                                        (["docs/a.md", "src/a.js"], False), (["README"], False), ([], False), (["a.md.js"], False)])
+def test_only_documents_are_documents(files, only):
+    assert gate_config.docs_only(files) is only

@@ -19,7 +19,7 @@ from orkboard.realm import idea_secrets, ideas, jobs, roles, tool_run
 
 BOARD_COMMANDS = {"ideas.board", "ideas.page", "ideas.add", "ideas.say", "ideas.plan", "ideas.start", "ideas.move",
                   "ideas.edit", "ideas.track_add", "ideas.track_set", "ideas.track_drop", "ideas.todo", "ideas.drop", "ideas.stop",
-                  "ideas.review_list", "ideas.diff", "ideas.merge", "ideas.back", "ideas.drop_task",
+                  "ideas.review_list", "ideas.diff", "ideas.merge", "ideas.back", "ideas.regate", "ideas.drop_task",
                   "ideas.stop_task", "ideas.agents", "ideas.task", "ideas.into", "ideas.log", "ideas.logs", "ideas.goal_save",
                   "ideas.goal", "ideas.read_now", "ideas.roles", "ideas.role_save", "ideas.role_add", "ideas.role_drop",
                   "ideas.kind_set", "ideas.gate", "ideas.gate_merge", "ideas.to_main_plan", "ideas.to_main", "ideas.today", "ideas.pick",
@@ -420,8 +420,11 @@ def test_the_answers_at_review_reach_the_runner_and_its_refusals_are_plain_words
             seen.append(("merge", slug, tid))
             return "abc123"
 
-        def back(self, slug, tid, why, device=""):
-            seen.append(("back", slug, tid, why))
+        def back(self, slug, tid, why, device="", suggested=False):
+            seen.append(("back", slug, tid, why) + (("suggested",) if suggested else ()))
+
+        def regate(self, slug, tid, install=False, device=""):
+            seen.append(("regate", slug, tid, install, device))
 
         def drop_task(self, slug, tid, device=""):
             seen.append(("drop", slug, tid))
@@ -440,6 +443,14 @@ def test_the_answers_at_review_reach_the_runner_and_its_refusals_are_plain_words
     assert host.command("ideas.drop_task", a) == {"ok": True} and host.command("ideas.stop_task", a) == {"ok": True}
     assert seen == [("merge", slug, "k1"), ("back", slug, "k1", "rename it"), ("drop", slug, "k1"),
                     ("stop", slug, "k1")]
+    seen.clear()                                                                       # spec 107 §1.3, §1.4
+    assert host.command("ideas.back", {**a, "why": "Fix the failing tests", "suggested": True}) == {"ok": True}
+    assert host.command("ideas.regate", {**a, "install": True}) == {"ok": True} and host.command("ideas.regate", a) == {"ok": True}
+    assert seen == [("back", slug, "k1", "Fix the failing tests", "suggested"), ("regate", slug, "k1", True, "desktop"), ("regate", slug, "k1", False, "desktop")]
+    with pytest.raises(CommandError, match="suggested is true or false"):
+        host.command("ideas.back", {**a, "why": "x", "suggested": "yes"})
+    with pytest.raises(CommandError, match="install is true or false"):
+        host.command("ideas.regate", {**a, "install": 1})
     assert host.command("ideas.task", a)["log"] == "the log"
     with pytest.raises(CommandError, match="why is missing"):
         host.command("ideas.back", a)

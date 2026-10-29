@@ -1,5 +1,5 @@
 """Review, Agents and one task (spec 33 §5), as `gui/ideas.py`'s `Ideas` has them: the results waiting for the person
-(`ideas.review_list`, `ideas.diff`), their three answers (`ideas.merge`, `ideas.back`, `ideas.drop_task`),
+(`ideas.review_list`, `ideas.diff`), their three answers (`ideas.merge`, `ideas.back`, `ideas.drop_task`, and `ideas.regate` for a gate that could not run),
 `ideas.stop_task`, a check skipped to spare its run (`ideas.check_skip`), one task with its log (`ideas.task`) and the branch results merge into (`ideas.into`, the project's
 own setting: spec 37 §8). Split from ideas.py to keep it under ~600 lines.
 """
@@ -104,7 +104,20 @@ class ReviewMixin:
 
     def back(self, args: dict) -> dict:
         slug, tid, _task, _plan = self._task(args)
-        self.runner(need=True).back(slug, tid, _text(args, "why", 1000), device=_device(args))
+        suggested = args.get("suggested", False)
+        if not isinstance(suggested, bool):
+            raise IdeasError("suggested is true or false")
+        self.runner(need=True).back(slug, tid, _text(args, "why", 1000), device=_device(args), **({"suggested": True} if suggested else {}))
+        self.changed(slug)
+        return {"ok": True}
+
+    def regate(self, args: dict) -> dict:
+        """`{"slug", "task", "install"?}`: a result whose gate could not run, tested again (spec 107 §1.3); `install`: its project's dependencies installed first."""
+        slug, tid, _task, _plan = self._task(args)
+        install = args.get("install", False)
+        if not isinstance(install, bool):
+            raise IdeasError("install is true or false")
+        self.runner(need=True).regate(slug, tid, install, device=_device(args))
         self.changed(slug)
         return {"ok": True}
 

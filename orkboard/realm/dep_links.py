@@ -1,6 +1,7 @@
 """A task's worktree has the project's installed dependencies (docs/specs/86-what-the-logs-said.md §2).
 
     linked = link(repo_root, worktree)      # ["node_modules", "web/node_modules", ".venv"]: the symlinks laid
+    n = present(repo_root, worktree)        # how many lie there now, linked to the main checkout (spec 107 §1.2)
 
 A fresh worktree holds only what git tracks, so a task could not run the project's tests until it installed them (`npm ci`
 in every worktree, which a task is never allowed: realm/task_commands.py). Code lays them instead: the main checkout's
@@ -33,6 +34,20 @@ def link(repo_root: Path, worktree: Path) -> list[str]:
     if linked:
         exclude(tree, sorted({Path(r).name for r in linked}))
     return linked
+
+
+def present(repo_root: Path, worktree: Path) -> int:
+    """How many dependency folders lie linked in `worktree`: the symlinks (of the names `link` lays) that point into the main checkout."""
+    root, tree = Path(repo_root).resolve(), Path(worktree)
+    n = 0
+    for src in [d / "node_modules" for d in task_commands.package_dirs(Path(repo_root))] + [Path(repo_root) / ".venv"]:
+        dst = tree / src.relative_to(repo_root)
+        try:
+            if dst.is_symlink() and dst.resolve().is_relative_to(root):
+                n += 1
+        except OSError:
+            continue
+    return n
 
 
 def exclude(worktree: Path, names: list[str]) -> None:

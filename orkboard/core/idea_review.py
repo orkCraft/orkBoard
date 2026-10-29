@@ -79,6 +79,8 @@ class ReviewMixin:
             if task.get("state") != "review" or (slug, tid) in self._runs:
                 raise RunnerError("That result is not waiting at Review")
             tests = task.get("tests") or {}
+            if tests.get("env"):                                    # spec 107 §1.3: not red; they tested nothing
+                raise RunnerError(f"{tests['env']} Install and test again, or drop it")
             if not tests.get("green", not tests.get("failed")):
                 raise RunnerError("Its tests are red: send it back to fix them, or drop it")
             if task.get("conflict"):
@@ -142,9 +144,9 @@ class ReviewMixin:
             self._set_idea(slug, "done")
             self._changed(slug)
 
-    def back(self, slug: str, tid: str, why: str, device: str = "desktop") -> None:
+    def back(self, slug: str, tid: str, why: str, device: str = "desktop", suggested: bool = False) -> None:
         """Send a result back with one line: the same session goes on with it (and the failing tests, or the
-        conflict), the round counts up, and it comes to Review again."""
+        conflict), the round counts up, and it comes to Review again. `suggested`: the line is the one the face wrote (`why_kind`, spec 107 §1.4)."""
         why = " ".join(str(why or "").split())[:1000]
         if not why:
             raise RunnerError("Say in one line what to change")
@@ -161,13 +163,29 @@ class ReviewMixin:
                     raise RunnerError(" ".join(str(e).split())[:300]) from None
             tests = task.get("tests") or {}
             red = tests.get("green") is False or bool(tests.get("failed"))
-            self._decided(slug, task, "fix" if red or task.get("conflict") else "back", device, why=why, into=base)
+            self._decided(slug, task, "fix" if red or task.get("conflict") else "back", device, why=why, into=base,
+                          why_kind="suggested" if suggested else "typed")
             self._set_task(slug, tid, state="running", round=int(task.get("round") or 1) + 1, why=why, conflict="",
                            error="", note="", finished="", look="")
             if slug not in self._active:
                 self._active.append(slug)
                 self._set_idea(slug, "working")
             self._spawn(slug, tid, threading.Event(), {"why": why, "files": files})
+        self._changed(slug)
+
+    def regate(self, slug: str, tid: str, install: bool = False, device: str = "desktop") -> None:
+        """*Install and test again* (`install`) or *Test again* on a result whose gate could not run (spec 107 §1.3): nothing is sent to the session
+        and the round does not count up; the install is made in the main checkout, the worktree linked again, and the gate runs; it comes to Review again."""
+        with self._lock:
+            task = self._task(slug, tid)
+            if task.get("state") != "review" or (slug, tid) in self._runs or not (task.get("tests") or {}).get("env"):
+                raise RunnerError("That result is not waiting for its tests")
+            self._decided(slug, task, "install" if install else "test again", device, into=str(_r().setting(self.settings, "merge_into") or "dev"))
+            self._set_task(slug, tid, state="running", conflict="", error="", note="", finished="", look="")
+            if slug not in self._active:
+                self._active.append(slug)
+                self._set_idea(slug, "working")
+            self._spawn(slug, tid, threading.Event(), {"why": "", "files": [], "regate": True, "install": bool(install)})
         self._changed(slug)
 
     def drop_task(self, slug: str, tid: str, device: str = "desktop") -> None:
