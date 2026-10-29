@@ -117,7 +117,8 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
         `size_of(slug)`: the size of the idea's party (spec 75 §3: lean, standard, full, else ""): its tasks work at that size's Target.
         `sign_ins`: the host's sign-ins (core/sign_ins.py): a task whose tool is not signed in is held for it, not failed.
         `party_of(slug)`: the idea's party's `{"tool", "tiers"}` (spec 81): the tool its tasks run on (none: the Main tool) and the tiers its size gave its seats.
-        `follow()`: the tool now (spec 105 §2, realm/tool_now.py): where a task that follows the Main tool goes when the Main tool is out; None, or no `follow`: the Main tool."""
+        `follow(reserve=)`: the tool now (spec 105 §2, realm/tool_now.py): where a task that follows the Main tool goes when the Main tool is out (`reserve` True for a plan the
+        Board started by itself, decisions §177.10); None, or no `follow`: the Main tool."""
         self.repo_root, self.state_dir = Path(repo_root), Path(state_dir)
         self.settings, self.bus = settings, bus
         self.git = IdeaGit(self.repo_root)
@@ -415,8 +416,10 @@ class IdeaRunner(HoldsMixin, SessionMixin, LandingMixin, TaskMixin, PickMixin, R
             return HARNESS
         from orkboard import settings as machine
         main = machine.main_tool()
+        plan = self.plan(slug) or {}
+        by_itself = plan.get("passed_by") == "auto" or plan.get("start_at") == "night"      # the reserve holds only what the Board started (`idea_target.gate`)
         try:
-            return (self.follow() if self.follow is not None else None) or main
+            return (self.follow(reserve=by_itself) if self.follow is not None else None) or main
         except Exception:                               # a host that cannot say leaves the work on the Main tool
             return main
 

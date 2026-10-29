@@ -140,19 +140,39 @@ def test_the_runner_falls_to_the_tool_now_but_never_moves_a_pinned_tool(tmp_path
     monkeypatch.setattr(settings, "main_tool", lambda machine=None: "claude")
     task = {"id": "k1", "kind": "code"}
     now = {"tool": "codex"}
-    runner = _runner(tmp_path, lambda: now["tool"], {})
+    runner = _runner(tmp_path, lambda **_: now["tool"], {})
     assert runner.tool_of("demo", task) == "codex" and runner.pinned_tool("demo", task) == ""
     now["tool"] = None
     assert runner.tool_of("demo", task) == "claude"                                    # every tool out: it holds on the Main tool
     now["tool"] = "codex"
-    assert _runner(tmp_path, lambda: "codex", {"tool": "agy"}).tool_of("demo", task) == "agy"                      # the party's own
-    seat = _runner(tmp_path, lambda: "codex", {"tool": "agy", "tools": {"grunt": "claude"}})
+    assert _runner(tmp_path, lambda **_: "codex", {"tool": "agy"}).tool_of("demo", task) == "agy"                      # the party's own
+    seat = _runner(tmp_path, lambda **_: "codex", {"tool": "agy", "tools": {"grunt": "claude"}})
     assert seat.tool_of("demo", task) == "claude" and seat.pinned_tool("demo", task) == "claude"                   # the seat's own wins
     assert _runner(tmp_path, None, {}).tool_of("demo", task) == "claude"                                           # no host to say: the Main tool
 
-    def broken():
+    def broken(**_):
         raise RuntimeError("no read")
     assert _runner(tmp_path, broken, {}).tool_of("demo", task) == "claude"
+
+
+def test_a_plan_the_person_started_may_spend_the_reserve_one_the_board_started_moves_at_it(tmp_path, monkeypatch):
+    """Decisions §177.10: the reserve is the person's, so only the work the Board started by itself counts it as out; the keeper's steps never do."""
+    import json
+    monkeypatch.setattr(settings, "main_tool", lambda machine=None: "claude")
+    asked = []
+
+    def follow(reserve=True):
+        asked.append(reserve)
+        return "codex" if reserve else "claude"
+    runner, task = _runner(tmp_path, follow, {}), {"id": "k1", "kind": "code"}
+    for slug, passed in (("by-hand", "person"), ("by-itself", "auto")):
+        d = runner._dir(slug)
+        d.mkdir(parents=True, exist_ok=True)
+        (d / "plan.json").write_text(json.dumps({"idea": slug, "tasks": [task], "passed_by": passed}))
+    assert runner.tool_of("by-hand", task) == "claude" and runner.tool_of("by-itself", task) == "codex"
+    assert asked == [False, True]
+    asked.clear()
+    assert idea_keeper.IdeaKeeper(tmp_path, tmp_path / ".orkcraft", lambda: tmp_path / "wiki", lambda: {}, follow=follow).tool_now() == "claude" and asked == [False]
 
 
 def test_the_runner_starts_a_task_on_the_tool_now_and_holds_a_pinned_one(tmp_path, monkeypatch):
@@ -163,7 +183,7 @@ def test_the_runner_starts_a_task_on_the_tool_now_and_holds_a_pinned_one(tmp_pat
     monkeypatch.setattr(idea_runner.IdeaRunner, "room", lambda self, *a, **k: True)
     party = {"tools": {"grunt": "claude"}}
     runner = idea_runner.IdeaRunner(tmp_path, tmp_path / ".orkcraft", SimpleNamespace(ideas={}), None, events=False, limits=lambda: spent,
-                                    party_of=lambda slug: party if slug == "pinned" else {}, follow=lambda: "codex")
+                                    party_of=lambda slug: party if slug == "pinned" else {}, follow=lambda **_: "codex")
     for slug in ("moving", "pinned"):
         d = tmp_path / ".orkcraft" / "ideas" / slug
         d.mkdir(parents=True)
@@ -185,10 +205,10 @@ def test_the_keeper_falls_to_the_tool_now_as_the_runner_does(tmp_path, monkeypat
 
     def keeper(follow):
         return idea_keeper.IdeaKeeper(tmp_path, tmp_path / ".orkcraft", lambda: root, lambda: {}, follow=follow)
-    assert keeper(lambda: "codex").tool_now() == "codex"
-    assert keeper(lambda: None).tool_now() == "claude" and keeper(None).tool_now() == "claude"
+    assert keeper(lambda **_: "codex").tool_now() == "codex"
+    assert keeper(lambda **_: None).tool_now() == "claude" and keeper(None).tool_now() == "claude"
 
-    def broken():
+    def broken(**_):
         raise RuntimeError("no read")
     assert keeper(broken).tool_now() == "claude"
 

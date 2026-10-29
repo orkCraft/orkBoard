@@ -3556,4 +3556,7 @@ view, §175.2 and §176.2, and spec 98 §2.3's *Switch* as the only way on):
 9. The owner's yes on the mockup (`docs/mockups/portals/`, v2), with **the portal purple**: its light orkUI's new
    `--ork-portal`, a violet clearly apart from the void element's, a signal (*a goal can be played here*); drawn in orkUI
    first (`.ork-portal`, 0.18.0), then here (spec 105).
+10. **The reserve is the person's**: at the Main tool's reserve only the work the Board started by itself moves on; a plan
+   the person started, and a keeper's step, stay on the Main tool and may spend the reserve, and move on only when a window
+   is spent (this makes 2 precise).
 The owner's call.

@@ -165,7 +165,7 @@ class IdeaKeeper(SignInMixin, TalkMixin, ProjectQMixin, LoopMixin, TreeMixin, De
         from orkboard import settings as machine
         main = machine.main_tool() or HARNESS
         try:
-            return (self.follow() if self.follow is not None else None) or main
+            return (self.follow(reserve=False) if self.follow is not None else None) or main      # a keeper's step is the person's: it may spend the reserve (decisions §177.10)
         except Exception:                              # a host that cannot say leaves the step on the Main tool
             return main
 

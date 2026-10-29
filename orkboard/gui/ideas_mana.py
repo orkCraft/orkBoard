@@ -31,17 +31,19 @@ class ManaMixin:
     _mana_last: tuple[str, str | None] | None = None      # (the Main tool, the tool now) as the last tick saw them
     _mana_moved: dict | None = None
 
-    def tool_now(self, at: float | None = None) -> dict:
-        """The tool now for this Board (see the module's words): None-safe, a host with no machine settings says the Main tool."""
+    def tool_now(self, at: float | None = None, reserve: bool = True) -> dict:
+        """The tool now for this Board (see the module's words): None-safe, a host with no machine settings says the Main tool. `reserve`: whether the
+        person's reserve counts as out (it does for the work the Board starts by itself; a plan the person started may spend it: decisions §177.10)."""
         at = time.time() if at is None else at
         machine = getattr(self.host, "machine", None)
         if machine is None:
             return {"main": "", "now": None, "until": None, "moved_from": None}
-        return tool_now.now(machine, list(self.host.limits() or []), at, paid.until(self.state_dir, at), self.settings_now())
+        return tool_now.now(machine, list(self.host.limits() or []), at, paid.until(self.state_dir, at), self.settings_now() if reserve else None)
 
-    def follow(self) -> str | None:
-        """What a resolution that fell to the Main tool falls to: the tool now (None while every tool is out: the work holds on the Main tool)."""
-        return self.tool_now()["now"]
+    def follow(self, reserve: bool = True) -> str | None:
+        """What a resolution that fell to the Main tool falls to: the tool now (None while every tool is out: the work holds on the Main tool). `reserve`
+        False for work the person started (decisions §177.10): it stays on the Main tool at the reserve and moves only when a window is spent."""
+        return self.tool_now(reserve=reserve)["now"]
 
     def mana(self, at: float | None = None) -> dict[str, Any]:
         """`{main, now, until, moved}` for the snapshot: `until` is when the Main tool is back (ISO, local) while the work is on another; `moved`, the last change this run

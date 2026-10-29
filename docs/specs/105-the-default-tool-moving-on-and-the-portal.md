@@ -172,6 +172,8 @@ What it is, and what differs from §5 or is not said there:
   moves a plan the person started by hand to the next tool too, where before it ran on Claude's reserve; (2) a step that says `main` has no host (`tiers`, `tool_run`), hence the kept read; (3) the keeper's call
   keeps the tool it ran on for its ledger line (`_tls.tool`, set in `_claude`), so a call that began on Claude and ended after the move is still booked to Claude.
 - Tests: `tests/test_tool_now.py`; `tests/conftest.py` clears the kept read for every test; `tests/test_board_alone.py` knows `mana` in the snapshot.
+- Changed since (decisions §177.10): `follow(reserve=)`: the runner asks with `reserve` True only for a plan the Board passed by itself
+  (`passed_by: "auto"`, or `start_at: "night"`), the keeper always False, so the person's own work stays on the Main tool at its reserve.
 
 ## As built C (engine and the hand: going on paid)
 
