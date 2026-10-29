@@ -66,7 +66,7 @@ export function Hand() {
   if (!map) return null;
   const none = !(map.nodes || []).length, parties = partiesOf(map).length > 0, middle = none && parties && !stacks.length;      // no goal at all and nothing asked: the + card lies large in the pane
   const plus = () => { lower(); fieldOpen.value = true; };
-  const anchor = key ? root.current?.querySelector(`.hand-card[data-key="${CSS.escape(key)}"]`) : null;
+  const anchor = key ? root.current?.querySelector(`.hand-places .hand-card[data-key="${CSS.escape(key)}"]`) : null;
   return html`<footer ref=${root} class="hand" aria-label="The hand" data-empty=${middle ? "1" : undefined}>
     ${!middle && html`<div class="hand-places"><div class="hand-row">
       <${Stacks} stacks=${stacks} plus=${html`<${PlusCard} onPress=${plus} />`} />

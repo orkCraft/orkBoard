@@ -92,3 +92,23 @@ A and D at once (D needs nothing of A); C after D (both touch `hand.css` and `ha
 - The hand's browser tests: the potions' order, rows and words; the spend on a lifted card; the press opens the limits; the
   tabs' end has no chip; the discard on the table on the Orkmaster's tab and a party's, its press; a lifted card's class,
   width (about twice a hand card), its body scrolling, Esc.
+
+## As built D
+
+`Lifted` (`hand/stopcard.js`) draws `ork-card hand-card hand-card--stop hand-card--big hand-lifted` (an `aside`, the element's `el-*`, `asks` and `fails` as the hand card has them): `.hand-card__head` (the element and the name, which is also
+`.hand-lifted__title`), `.hand-card__window` (the action's sign, the asker's head over its corner), `.hand-card__label` (the party and the gem), `.hand-lifted__body`, `.hand-card__foot`. Its CSS is `.hand .hand-card--big` in
+`hand/hand.css` (the old panel's rules and `.hand-lifted__top` are gone); `way.css` hides the route's and the start card's own `Spend` inside `.hand-lifted__body`. Tests: `tests/test_lifted_card_browser.py` (anatomy, twice a
+hand card's width, the screen's width less a gutter a side, the lean, the foot on the hand's line, a long body scrolling, Esc); `tests/test_design_system.py` allows `--hc-tabs` and `--hc-lean`.
+
+What differs from §5, or is not said there:
+
+- **The foot says what the card is** (`.hand-lifted__kind`: *Plan ready*, *Route*, *Decision 118*), not the hand card's question or line. The body holds that text in full, so the foot repeating it would say it twice, and the tests
+  that read `.hand-lifted__kind` keep reading it. The party in the label row is the card's own party (`s.party.name`, the stop's label with none), always, where the panel said it only on another party's tab.
+- **The gem is on the label row and in the cost's words** (`Spend`), as the hand card and the panel each had it: a lifted card that spends shows it twice.
+- **The turn** is `--ork-motion-lean` × 0.25 (1.5°) on the desktop, × 0.17 (1°) at the narrow width, to the left (-1) or right (1) by which half of the hand its stack lies in (`--hc-lean`, set from the anchor in `Lifted`);
+  orkUI has no `--ork-lean` token. It turns about the foot's middle on the desktop and about the card's centre at the narrow width, so the full-width card's corners stay inside the gutter.
+- **Its height** is the hand card's 5 : 7 at twice the width at the least on the desktop (403 px), and at most `100dvh` less the hand, `--hc-tabs` (52 px, 56 px narrow) and `--ork-4`. At the narrow width it has no least height:
+  at 5 : 7 a screen-wide card would be 500 px of nothing for a short question. The name takes up to four lines in the body face, its row `minmax(--ork-6, auto)`, not the hand card's fixed three.
+- The foot stands on the hand's line (`bottom: 100%` of the hand, no gap, where the panel stood `--ork-4` above it); the slot, `useAbout`, focus, Esc and a press away are as they were.
+- `hand.js` finds the anchor in `.hand-places`, since the lifted card now has the class `hand-card` too (tests that locate `.hand-card[data-kind]` while a card is lifted say `.hand-places .hand-card` for the one in the hand).
+- The body's scroll has no visible bar (the project hides them elsewhere); a long body's *Put it back* is reached by scrolling, Esc lowers the card at once.

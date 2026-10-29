@@ -105,13 +105,20 @@
 .hand-field__row { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-3); flex-wrap: wrap; }
 .hand-field__hint { flex: 1 1 100%; color: var(--ork-ink-muted); }
 
-/* a card lifted over the pane's foot */
-.hand .hand-lifted { position: absolute; left: var(--ork-6); bottom: calc(100% + var(--ork-4)); z-index: 60; display: flex; flex-direction: column; gap: var(--ork-3); width: 304px; max-height: min(560px, calc(100dvh - 232px));
-  overflow-y: auto; padding: var(--ork-4); }
+/* a card lifted over the pane's foot is a card (docs/specs/104 §5, decisions §176.4): the hand card's frame and anatomy at twice its width, in its proportions at the least, turned a degree or two as a card held up (to the side its stack
+   lies on, --hc-lean is -1 or 1), its foot on the hand's line, over the cards beside it and the lanes' foot. Its body, between the window and the foot, scrolls inside at the card's most height; the card never grows wider */
+.hand .hand-card--big { --hc-head: 48px; --hc-window: 70px; --hc-label: 24px; --hc-pad: var(--ork-3); --hc-gap: var(--ork-2); --hc-tabs: 52px;
+  position: absolute; left: var(--ork-6); bottom: 100%; z-index: 60; width: calc(var(--hc-w) * 2); height: auto; min-height: calc(var(--hc-h) * 2);
+  max-height: calc(100dvh - var(--hc-top) - var(--hc-shown) - var(--hc-tabs) - var(--ork-4));                    /* the window's height less the hand, the tabs and a gutter */
+  grid-template-rows: minmax(var(--ork-6), auto) var(--hc-window) var(--hc-label) minmax(0, 1fr) auto; cursor: default; transform-origin: 50% 100%;
+  rotate: calc(var(--hc-lean, 1) * var(--ork-motion-lean) * 0.25); }
+.hand .hand-card--big:hover { border-color: var(--ork-card-frame); }
 .hand-lifted:focus-visible { outline: 0; }
-.hand-lifted__top { display: flex; align-items: flex-start; gap: var(--ork-3); }
-.hand-lifted__title { flex: 1; min-width: 0; overflow-wrap: anywhere; }
-.hand-lifted__kind, .hand-lifted__why { color: var(--ork-ink-muted); }
+.hand .hand-card--big .hand-card__name { -webkit-line-clamp: 4; line-clamp: 4; }                                                    /* the name in the body face, a line more than the hand card's */
+.hand .hand-card--big .hand-card__foot { -webkit-line-clamp: 1; line-clamp: 1; }
+.hand-lifted__body { display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; min-height: 0; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; }
+.hand-lifted__body > * { flex: none; }
+.hand-lifted__why { color: var(--ork-ink-muted); }
 .hand-lifted__text { overflow-wrap: anywhere; }
 .hand-goals { display: flex; flex-direction: column; gap: var(--ork-1); font: var(--ork-type-caption); }
 .hand-answers { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2); }
@@ -177,7 +184,12 @@
   .hand .hand-stack > .hand-back.edge { transform: translate(calc(var(--dx, 0) * 0.7px), 0) rotate(calc(var(--rot, 0) * 1deg)); }
   .hand-slot:hover .hand-stack > .hand-back.edge, .hand-slot:focus-within .hand-stack > .hand-back.edge { transform: translate(calc(var(--dx, 0) * 1.1px), 0) rotate(calc(var(--rot, 0) * 1.3deg)); }
   .hand .hand-field { left: var(--ork-4); right: var(--ork-4); width: auto; }
-  .hand .hand-lifted { left: var(--ork-4) !important; right: var(--ork-4); width: auto; max-height: calc(100dvh - 200px); }
+  .hand .hand-card--big { --hc-head: 48px; --hc-tabs: 56px; left: var(--ork-4) !important; right: var(--ork-4); width: auto; min-height: 0; transform-origin: 50% 50%; rotate: calc(var(--hc-lean, 1) * var(--ork-motion-lean) * 0.17); }       /* the screen's width less a gutter a side, rising from the hand; its own size of head and window, not the narrow hand card's */
+  .hand .hand-card--big .hand-card__name { font: var(--ork-type-body); font-weight: 600; -webkit-line-clamp: 4; line-clamp: 4; }
+  .hand .hand-card--big .hand-card__party { display: block; }
+  .hand .hand-card--big .hand-card__foot { display: -webkit-box; }
+  .hand .hand-card--big .hand-card__label { justify-content: space-between; }
+  .hand .hand-card--big .hand-card__window { overflow: hidden; }
   .hand-list__row, .hand-drow { gap: var(--ork-3); padding: var(--ork-3) var(--ork-4); }
   .hand-list__place, .hand-drow__place { display: none; }
 }

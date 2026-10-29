@@ -42,7 +42,6 @@ export const ElemOf = ({ s }) => html`<${Elem} name=${s.node?.element || ""} dim
 
 const headOf = (s) => wayOf(s.kind)?.head?.(s) || s.head || s.party?.head || null;           // a goal's way's card may name its asker (spec 100: the route's is the Orkmaster)
 const footOf = (s) => wayOf(s.kind)?.foot?.(s) ?? (s.text || s.why || "");           // a goal's way's card may say its own foot (spec 100 C: *Decision 118*, *Design and Tech disagree*)
-const partyWords =(s) => (s.other && s.party?.name ? `${s.party.name} · ` : "");
 /** What a card is called for a screen reader and a long press: *Asks you in Tech: The title*. */
 export const labelOf = (s) => `${s.label}${s.other && s.party?.name ? ` in ${s.party.name}` : ""}: ${s.full}`;
 
@@ -71,16 +70,18 @@ function Body({ s }) {
     ${s.kind === "pick" && html`<p class="body hand-lifted__text">${s.text}</p><${Tiles} row=${s.row} />`}`;
 }
 
-/** A card lifted over the pane's foot (§4.4): its answers, its cost's words, *Put it back*. `anchor`: the element of the card it lies for (its left edge is the lifted card's). */
+/** A card lifted over the pane's foot (docs/specs/104 §5, decisions §176.4): the hand card grown to twice its width, held up a degree or two, its foot on the hand's line where its stack lies. Its anatomy is the hand card's (the
+ * element and name, the window with the action's sign and the asker's head, the party and the gem); between the window and the foot its body holds the stop's lines, its answers (or a goal's way's own body), its cost's words and
+ * *Put it back*, and scrolls inside when the card reaches its most height; its foot says what the card is. `anchor`: the element of the card it lies for (its left edge is the lifted card's, its side the card's lean). */
 export function Lifted({ s, anchor }) {
-  const box = useRef(), [left, setLeft] = useState(null), cost = costOf(s), head = headOf(s);
+  const box = useRef(), [at, setAt] = useState(null), cost = costOf(s), head = headOf(s), element = s.node?.element || "";
   useAbout(s);
-  useLayoutEffect(() => {                                              // over its stack, kept inside the hand's width
+  useLayoutEffect(() => {                                              // over its stack, kept inside the hand's width; it leans toward the side of the hand its stack lies on
     const place = () => {
       const hand = box.current?.parentElement, a = anchor?.isConnected ? anchor.getBoundingClientRect() : null;
-      if (!hand || !a) { setLeft(null); return; }
+      if (!hand || !a) { setAt(null); return; }
       const h = hand.getBoundingClientRect(), w = box.current.offsetWidth;
-      setLeft(Math.max(0, Math.min(a.left - h.left, h.width - w)));
+      setAt({ left: Math.max(0, Math.min(a.left - h.left, h.width - w)), lean: a.left + a.width / 2 < h.left + h.width / 2 ? -1 : 1 });
     };
     place();
     window.addEventListener("resize", place);
@@ -88,14 +89,19 @@ export function Lifted({ s, anchor }) {
   }, [s.key, anchor]);
   useEffect(() => { box.current?.focus({ preventScroll: true }); }, [s.key]);
   const tone = s.tone === "danger" ? "danger" : s.tone === "alert" ? "alert" : "", Way = wayOf(s.kind)?.Lifted;
-  return html`<aside ref=${box} class=${cls("ork-frame hand-lifted", tone)} role="dialog" tabindex="-1" aria-label=${`Lifted: ${labelOf(s)}`} data-key=${s.key} data-kind=${s.kind}
-      style=${left != null ? `left:${left}px` : undefined}>
-    <div class="hand-lifted__top"><${ElemOf} s=${s} /><p class="cap hand-lifted__title">${partyWords(s)}${s.title || s.full}</p>${head && html`<${Head} race=${head.race} tier=${head.tier} size="mid" />`}</div>
-    <p class="cap hand-lifted__kind"><${Mark} s=${s} /> ${s.label}</p>
-    ${Way ? html`<${Way} s=${s} close=${lower} />` : html`<${Body} s=${s} />
-    <div class="hand-answers" role="group" aria-label="Answers"><${Answers} s=${s} /></div>`}
-    <${Spend} cost=${cost} />
-    <button type="button" class="ork-btn hand-put" onClick=${lower}>Put it back</button>
+  return html`<aside ref=${box} class=${cls(`ork-card hand-card hand-card--stop hand-card--big hand-lifted${element ? ` el-${element}` : ""}`, tone, { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed" })}
+      role="dialog" tabindex="-1" aria-label=${`Lifted: ${labelOf(s)}`} data-key=${s.key} data-kind=${s.kind}
+      style=${at ? `left:${at.left}px;--hc-lean:${at.lean}` : undefined}>
+    <span class="hand-card__head"><${ElemOf} s=${s} /><span class="hand-card__name hand-lifted__title">${s.title || s.full}</span></span>
+    <span class="hand-card__window"><span class="hand-card__fig"><span class="hand-card__act"><${Mark} s=${s} big=${true} /></span>${head ? html`<span class="hand-card__asker"><${Head} race=${head.race} tier=${head.tier} /></span>` : null}</span></span>
+    <span class="hand-card__label"><span class="hand-card__party">${s.party?.name || s.label}</span><span class="hand-card__gem"><${Gem} cost=${cost} /></span></span>
+    <div class="hand-lifted__body">
+      ${Way ? html`<${Way} s=${s} close=${lower} />` : html`<${Body} s=${s} />
+      <div class="hand-answers" role="group" aria-label="Answers"><${Answers} s=${s} /></div>`}
+      <${Spend} cost=${cost} />
+      <button type="button" class="ork-btn hand-put" onClick=${lower}>Put it back</button>
+    </div>
+    <span class="hand-card__foot hand-lifted__kind">${s.label}</span>
   </aside>`;
 }
 
