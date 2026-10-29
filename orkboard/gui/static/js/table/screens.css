@@ -1,0 +1,84 @@
+/* Design's map (docs/specs/102-the-other-maps-and-picking-on-them.md §5.1–§5.2; mockup docs/mockups/s3/ states 1 and 2): the steps as columns, a screen a card, the arrows between them, the pains pinned under them. Layout only: every colour, face, corner and
+   move is orkUI's (its tokens and classes: .ork-card, .ork-leans, .ork-chip, .ork-label, .ork-sign, .ork-elem, .ork-chev), the sizes its spacing steps. Under 760 px the steps lie top to bottom and nothing scrolls sideways. */
+
+.scr-map { position: relative; flex: 1; min-height: 0; min-width: 0; display: flex; flex-direction: column; padding-top: var(--ork-2); }
+.scr-grow { flex: 1; min-width: 0; }
+.scr-head { flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3) var(--ork-5); padding: var(--ork-2) var(--ork-5) var(--ork-4); }
+.scr-seg { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3); }
+.scr-seg .ork-chip { cursor: pointer; appearance: none; background: none; }
+.scr-seg .ork-chip[aria-pressed="true"] { background: var(--ork-ink); color: var(--ork-on-ink); border-color: var(--ork-ink); }
+.scr-note { min-width: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.scr-note--blank { padding: var(--ork-6); }
+.scr-scroll { position: relative; flex: 1; min-height: 0; min-width: 0; overflow: auto; overscroll-behavior: contain; padding: var(--ork-4) var(--ork-5) var(--ork-8); }
+
+/* -- the flow ------------------------------------------------------------------------------------------------------------------- */
+.scr-flow { position: relative; display: flex; align-items: flex-start; gap: calc(var(--ork-8) * 3); width: max-content; min-width: 0; }
+.scr-flow.is-narrow { display: block; width: auto; }
+.scr-lines { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
+.scr-lines path { fill: none; stroke: var(--ork-edge); stroke-width: 1; shape-rendering: crispEdges; vector-effect: non-scaling-stroke; }
+.scr-arrow { position: absolute; z-index: 2; width: 0; height: 0; pointer-events: none; }
+.scr-arrow .ork-chev { position: absolute; left: -8px; top: -5px; margin: 0; color: var(--ork-edge); }
+.scr-arrow__name { position: absolute; right: 12px; top: 0; transform: translateY(-50%); max-width: 64px; overflow: hidden; background: var(--ork-raised); }
+.scr-arrow__name { display: block; line-height: calc(var(--ork-chip) - 2px); white-space: nowrap; text-overflow: ellipsis; }
+
+.scr-step { position: relative; z-index: 1; display: flex; flex-direction: column; gap: var(--ork-4); width: 128px; flex: none; }
+.scr-step.is-over { outline: var(--ork-line) dashed var(--ork-ink); outline-offset: var(--ork-3); }
+.scr-steplab { appearance: none; background: none; border: 0; padding: 0; text-align: left; height: 20px; cursor: default; }
+button.scr-steplab:disabled { color: var(--ork-ink-muted); opacity: 1; }
+button.scr-steplab:not(:disabled) { cursor: pointer; color: var(--ork-ink); }
+.scr-steplab.is-aim, .scr-steplab.is-over { color: var(--ork-ink); }
+.scr-step__cards { display: flex; flex-direction: column; gap: var(--ork-5); }
+.scr-item { display: flex; flex-direction: column; gap: var(--ork-3); }
+
+/* -- a screen's card (decisions §167.1, §168 at the maps' size) --------------------------------------------------------------- */
+.scr-card.ork-card { position: relative; display: flex; flex-direction: column; gap: var(--ork-2); box-sizing: border-box; width: 100%; padding: var(--ork-4); text-align: left; cursor: pointer; }
+.scr-card__head { display: flex; align-items: flex-start; gap: var(--ork-3); min-height: 20px; }
+.scr-card__head .ork-elem { margin-top: 3px; }
+.scr-card__nm { flex: 1; min-width: 0; font: var(--ork-type-body); font-weight: 600; text-align: left; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; }
+.scr-win { display: flex; align-items: center; justify-content: center; box-sizing: border-box; height: 60px; flex: none; overflow: hidden; border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-card); color: var(--ork-ink-muted); }
+.scr-win.is-pic { padding: var(--ork-2); }
+.scr-win img { display: block; max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain; image-rendering: auto; }
+.scr-win .ork-sign { opacity: 0.85; }
+.scr-card__row { display: flex; align-items: center; gap: var(--ork-2); min-height: 22px; min-width: 0; color: var(--ork-ink-muted); }
+.scr-card__path { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--ork-font-code); font-size: 12px; line-height: 16px; }
+.scr-card.is-aim, .scr-card.is-over, .scr-card.is-lit { background: var(--ork-raised); }
+.scr-card.is-over { outline: var(--ork-line) dashed var(--ork-ink); outline-offset: var(--ork-1); }
+
+/* -- a pain: a small card pinned under its screen or step ---------------------------------------------------------------------- */
+.scr-rail { display: flex; flex-direction: column; gap: var(--ork-2); border-left: var(--ork-line) solid var(--ork-edge); padding-left: var(--ork-3); margin-left: var(--ork-4); min-width: 0; }
+.scr-rail.is-step { border-left-style: dashed; }
+.scr-pain.ork-card { display: flex; flex-direction: column; gap: 0; box-sizing: border-box; width: 100%; min-height: 60px; padding: var(--ork-2) var(--ork-3); text-align: left; cursor: grab; }
+.scr-pain__sg { display: flex; align-items: center; gap: var(--ork-2); min-width: 0; color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.scr-pain__nm { font: var(--ork-type-caption); font-weight: 600; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; }
+.scr-pain.is-carried { border-color: var(--ork-ink); background: var(--ork-raised); }
+.scr-pain.is-dragged { opacity: 0.4; }
+.scr-ghost.ork-card { position: fixed; z-index: 60; width: 120px; padding: var(--ork-2) var(--ork-3); pointer-events: none; transform: translate(var(--ork-3), var(--ork-3)) rotate(3deg); border-color: var(--ork-ink); }
+.scr-map.is-dragging { user-select: none; cursor: grabbing; }
+.scr-loose { display: flex; flex-direction: column; gap: var(--ork-3); margin-top: var(--ork-8); max-width: 360px; }
+.scr-loose .ork-label.is-over { color: var(--ork-ink); }
+.scr-loose .scr-rail { margin-left: 0; }
+
+/* -- a screen turned over: its picture large (card.js Lifted draws the frame) -------------------------------------------------- */
+.scr-back { display: flex; flex-direction: column; gap: var(--ork-4); min-width: 0; }
+.scr-back__top { display: flex; align-items: flex-start; gap: var(--ork-3); }
+.scr-back__top .ork-elem { margin-top: 4px; }
+.scr-back__nm { margin: 0; flex: 1; min-width: 0; font: var(--ork-type-body); font-weight: 600; font-size: 16px; line-height: 22px; overflow-wrap: anywhere; }
+.scr-bigpic { display: flex; align-items: center; justify-content: center; box-sizing: border-box; border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-card); padding: var(--ork-3); color: var(--ork-ink-muted); }
+.scr-bigpic.is-none { height: 96px; }
+.scr-bigpic img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.scr-back__code { font-family: var(--ork-font-code); font-size: 12px; line-height: 16px; overflow-wrap: anywhere; }
+.scr-back__file.ork-btn { height: auto; min-height: 20px; padding: 0; justify-content: flex-start; text-align: left; white-space: normal; overflow-wrap: anywhere; font-family: var(--ork-font-code); font-size: 12px; text-transform: none; }
+.scr-back__links, .scr-back__pains { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--ork-2); }
+.scr-back__links li { display: flex; align-items: center; gap: var(--ork-3); }
+.scr-back__links .ork-btn { height: auto; min-height: 20px; padding: 0; text-align: left; white-space: normal; font: var(--ork-type-caption); text-transform: none; }
+
+/* -- the narrow width: steps top to bottom, two cards a row ------------------------------------------------------------------- */
+.scr-steps { display: flex; flex-direction: column; gap: var(--ork-4); }
+.scr-step--row { width: auto; }
+.scr-step--row .scr-step__cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ork-4); align-items: start; }
+.scr-step--row .scr-card__nm { font-size: 16px; line-height: 22px; }
+.scr-step--row .scr-pain.ork-card { min-height: 0; }
+.scr-links { display: flex; flex-wrap: wrap; gap: var(--ork-3) var(--ork-5); padding-bottom: var(--ork-3); }
+.scr-links__one { display: inline-flex; align-items: center; gap: var(--ork-2); min-width: 0; }
+.scr-links__one .ork-chip { max-width: 140px; overflow: hidden; white-space: nowrap; }
+.scr-links__one .ork-chev { color: var(--ork-edge); margin: 0; }
