@@ -11,6 +11,7 @@ import { openOver, pick, picked } from "../frame/state.js";
 import { MANY, waitsWords } from "./data.js";
 import { TaskCard, TaskEdge, OwnCard, Token, BEHIND, aboutTokens, fanOf, leans } from "./card.js";
 import { moveGoal, neighbour } from "./line.js";
+import { GoalMenu } from "./dropgoal.js";
 
 const THRESHOLD = 6;                                               // px a pointer moves before a press is a drag
 
@@ -41,7 +42,7 @@ export function GoalBlock({ n, tasks, tokens }) {
 /** A goal the Orkmaster reads, routes or joins itself, in the first lane: its strip over its card. */
 export function OwnBlock({ n, stage, tokens }) {
   if (tokens) return html`<${Token} n=${n} stage=${stage} />`;
-  return html`<div class="table-goal" data-goal=${n.slug}><${GoalStrip} n=${n} /><${OwnCard} n=${n} stage=${stage} /></div>`;
+  return html`<div class="table-goal" data-goal=${n.slug}><${GoalStrip} n=${n} /><div class="table-cardwrap"><${OwnCard} n=${n} stage=${stage} /><${GoalMenu} slug=${n.slug} where="card" /></div></div>`;
 }
 
 // -- the line ----------------------------------------------------------------------------------------------------------------------
@@ -134,7 +135,7 @@ export function Line({ line, tokens }) {
   const behind = ord.slice(0, -1), front = ord[ord.length - 1], fan = fanOf(behind.length);
   return html`<div ref=${box} class=${cls("table-casc table-casc--line", { "is-dragging": !!drag })} role="group" aria-label="In line. Alt and the up and down arrows move a goal.">
     ${more && html`<button type="button" class="ork-card table-gstrip table-lstrip table-lstrip--all" aria-label="All goals in line, with a search" onClick=${openLine}><${Icon} name="search" /><span class="table-gstrip__nm">All · search</span></button>`}
-    ${behind.length > 0 && html`<div class="table-fan" style=${fan.style}>${behind.map((g, v) => html`<div key=${g.slug} class="table-line-item table-fan__slot" style=${`${fan.cards[v].style};${shift(v) || ""}`}><${LineEdge} g=${g} grip=${grip(g)} hint=${fan.cards[v].hint} /></div>`)}</div>`}
-    <div key=${front.slug} class="table-line-item" style=${shift(ord.length - 1)}><${LineCard} g=${front} grip=${grip(front)} /></div>
+    ${behind.length > 0 && html`<div class="table-fan" style=${fan.style}>${behind.map((g, v) => html`<div key=${g.slug} class="table-line-item table-fan__slot" style=${`${fan.cards[v].style};${shift(v) || ""}`}><${LineEdge} g=${g} grip=${grip(g)} hint=${fan.cards[v].hint} />${!fan.cards[v].hint && html`<${GoalMenu} slug=${g.slug} where="edge" />`}</div>`)}</div>`}
+    <div key=${front.slug} class="table-line-item" style=${shift(ord.length - 1)}><${LineCard} g=${front} grip=${grip(front)} /><${GoalMenu} slug=${front.slug} where="card" /></div>
   </div>`;
 }

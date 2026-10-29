@@ -100,7 +100,7 @@ class HandHost(StubHost):
                          "ideas": [{"slug": "music", "title": music["title"], "goal": "tech", "tasks": 1}, {"slug": "codes", "title": codes["title"], "goal": "design", "tasks": 2}]}
         if extra:                                                             # a pick, a tool's sign-in (a stack of no goal) and a card of a kind the hand does not know (spec 100's route)
             look = node("look", "design", "The look of the first screen", "table", state="working", element="ice", asks_you=True, tasks=[task("p1", "Pick the words", "picking")])
-            routed = node("fresh", "tech", "A goal just sent", "hand", state="routed", element="meadow")
+            routed = node("fresh", "tech", "A goal just sent", "table", state="routed", element="meadow", asks_you=True)
             self.nodes += [look, routed]
             variants = [{"key": "A", "name": "Calm", "text": "Welcome back.", "why": ""}, {"key": "B", "name": "Loud", "text": "WELCOME BACK!", "why": ""}]
             self.needs += [need("pick", "design", "", look["title"], "Which words?", slug="look", task="p1", round=1, media="text", variants=variants, n=2, ask="Which words?",
