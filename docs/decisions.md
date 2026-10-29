@@ -3418,3 +3418,16 @@ business, a story map would be Design's screens again. So (this changes §112.7'
 3. **The pains along the journey are Design's**: pinned to its screens and steps, the segment a filter over Design's map.
 The owner's call.
 
+## 173. A task card shows a drawing of the race that does it (29 October, the owner)
+
+Why: the owner: a task's picture should follow the race that does it first (the knights a map, the gnomes rockets and
+firecrackers), and orkUI 0.16 already leans each party's things on its race and gives each race its tool. So (this makes §170.1
+and §171.2 precise):
+1. **A task card's window draws its kind's drawing when the race that does it** (the doer's head, its party's race) **has that
+   drawing**: the orks the wand, the beetle, the broom, the anvil, the compass, the flask, the scroll; the elves the mirror, the gem,
+   the seal, the shoe, the lyre; the goblins the gauge, the scales, the fork; the gnomes the rocket, the signpost, the letter, the
+   quill, the stall; the knights the die, the castle, the crown, the heart, the fork; the undead the chest.
+2. **Else it draws that race's tool** (the drum, the bow, the pick, the bell, the map, the hourglass), its variant by the task's kind,
+   so one kind is one variant.
+The owner's call.
+

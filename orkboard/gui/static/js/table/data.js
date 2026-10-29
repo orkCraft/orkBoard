@@ -127,8 +127,26 @@ const TAG_KIND = { "Tests": "tests", "Docs": "docs", "Text for people": "text", 
   "Search (SEO)": "seo", "Launch and campaigns": "campaign", "Community": "community", "Security check": "security", "Editing": "edit", "Game design": "gamedesign", "Levels": "level",
   "Sound": "sound", "Music": "music", "Playtest": "playtest", "Store pages (ASO)": "aso", "Art direction": "artdirection", "Animation": "motion", "Art check": "artcheck" };
 
-/** The sign in a task card's window: its kind's, else its goal's type's, "" with neither. */
-export const typeSignOf = (n, t) => KIND_SIGN[t?.kind || TAG_KIND[t?.tag] || ""] || n?.type?.sign || "";
+// Each race's drawings (orkUI 0.16: *each party's things lean on its race*) and its tool (`.ork-tool`, four variants): a task card shows a drawing of the race
+// that does it, by its head (decisions §173): its kind's when that race has it, else the race's tool, its variant by the kind (the same kind, the same variant).
+const RACE_OF = { peon: "ork", shaman: "ork", elf: "elf", dryad: "elf", goblin: "goblin", imp: "goblin", gnome: "gnome", fairy: "gnome", knight: "knight", unicorn: "knight",
+  skeleton: "undead", lich: "undead" };
+const RACE_SIGNS = { ork: ["feature", "bug", "tidy", "restructure", "compass", "flask", "page"], elf: ["screen", "picture", "logo", "steps", "tune"],
+  goblin: ["chart", "balance", "abtest"], gnome: ["horn", "landing", "post", "tagline", "store"], knight: ["mechanic", "level", "character", "target", "abtest"],
+  undead: ["release"] };
+const RACE_TOOL = { ork: ["drum", "gear", "bolt", "spiral", "tusk"], elf: ["bow", "round", "flat", "drip", "fan"], goblin: ["pick", "gem", "coin", "gear", "mushroom"],
+  gnome: ["bell", "waves", "stars", "note", "hearts"], knight: ["map", "cross", "star", "heart", "crown"], undead: ["hourglass", "candle", "bone", "gem", "ring"] };
+const variantOf = (word) => [...String(word || "")].reduce((a, c) => a + c.charCodeAt(0), 0) % 4;
+
+/** The drawing in a task card's window: its kind's (else its goal's type's) when the race that does it has that drawing, else that race's tool
+ *  (`tool:<tool>-<variant>`); with no head, the kind's; "" with none. */
+export function typeSignOf(n, t) {
+  const kind = t?.kind || TAG_KIND[t?.tag] || "", sign = KIND_SIGN[kind] || n?.type?.sign || "";
+  const race = RACE_OF[String(t?.head?.race || "").split("-")[0]];
+  if (!race || !sign || RACE_SIGNS[race].includes(sign)) return sign;
+  const [tool, ...variants] = RACE_TOOL[race];
+  return `tool:${tool}-${variants[variantOf(kind || sign)]}`;
+}
 
 /** The gem on a card that spends: a task being done again (its round past the first) shows what its last run cost, as a share of the limits or at API prices; "" for a card that spends nothing. */
 export function gemOf(t) {

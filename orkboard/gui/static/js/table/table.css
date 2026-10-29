@@ -87,7 +87,7 @@ button.table-phase { appearance: none; min-height: 28px; cursor: pointer; }
 .table-card__head .ork-elem { margin-top: 1px; }
 .table-card__nm { flex: 1; min-width: 0; font: var(--ork-type-body); font-weight: 600; letter-spacing: var(--ork-type-body-track, 0); text-align: left; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; }
 .table-card__win { flex: none; display: flex; align-items: center; justify-content: center; gap: var(--ork-3); box-sizing: border-box; height: 70px; border: var(--ork-line) solid var(--ork-card-frame); color: var(--ork-ink-muted); }
-.table-card__win .ork-sign { opacity: 0.6; }
+.table-card__win .ork-sign, .table-card__win .ork-tool { opacity: 0.6; }
 .table-card__win.is-meadow { color: var(--ork-elem-meadow); }
 .table-card__win.is-ice { color: var(--ork-elem-ice); }
 .table-card__win.is-dust { color: var(--ork-elem-dust); }

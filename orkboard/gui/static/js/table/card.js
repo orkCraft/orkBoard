@@ -42,7 +42,7 @@ export function Stage({ stage }) {
 
 /** The card's window: one sign at the signs' big size, in the goal's colour toned down (an opacity on orkUI's token, table.css). `moon`: the moon beside it (a goal that waits for the reset). */
 function Win({ n, sign, moon = false, danger = false }) {
-  return html`<span class=${cls("table-card__win", `is-${typeTone(n)}`, { "is-danger": danger })}>${sign && html`<${Sign} name=${sign} big=${true} />`}${moon && html`<${Sign} name="moon" big=${true} />`}</span>`;
+  return html`<span class=${cls("table-card__win", `is-${typeTone(n)}`, { "is-danger": danger })}>${sign && (sign.startsWith("tool:") ? html`<span class=${`ork-tool ${sign.slice(5)}`} aria-hidden="true"></span>` : html`<${Sign} name=${sign} big=${true} />`)}${moon && html`<${Sign} name="moon" big=${true} />`}</span>`;
 }
 
 /** A task, as a card in its goal's cascade: the goal's element and the task's name, the type in the window, the stage and, at its right, the gem when it spends. */
