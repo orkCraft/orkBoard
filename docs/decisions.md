@@ -3553,4 +3553,7 @@ view, §175.2 and §176.2, and spec 98 §2.3's *Switch* as the only way on):
 7. Drawn first (`docs/mockups/portals/`), built after the owner's yes.
 8. Later the same day, the owner: **the portal is round and magical, never a door**; and **four tools stand two rows of
    two** (five and six two rows of three; this makes §176.2 precise).
+9. The owner's yes on the mockup (`docs/mockups/portals/`, v2), with **the portal purple**: its light orkUI's new
+   `--ork-portal`, a violet clearly apart from the void element's, a signal (*a goal can be played here*); drawn in orkUI
+   first (`.ork-portal`, 0.18.0), then here (spec 105).
 The owner's call.
