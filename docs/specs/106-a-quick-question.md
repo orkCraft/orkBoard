@@ -115,7 +115,7 @@ ideas.ask_goal   {}                         -> {"ok": true}       # *Make it a g
 
 ### 3.1 The line (`js/table/ask.js` `AskLine({ tab, parties })`, drawn by `pane.js`)
 
-- In `Pane`, at the top of `.table-body`, before `PickStrip`, **only when nothing is open over the pane** (`!o`) and the Board
+- In `Pane`, before `PickStrip`: at the top of `.table-body` on the Orkmaster's tab, under the party's header on a party's; **only when nothing is open over the pane** (`!o`) and the Board
   has at least one party.
 - One `input.ork-field` in a `form.table-ask`: placeholder *Ask the Orkmaster…* on the Orkmaster's tab, *Ask the <role>…* on a
   party's (the party's leader seat's `name` from `groupsOf(g)`, as `header.js` reads its seats; *Ask the leader…* when none);
