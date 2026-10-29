@@ -165,7 +165,7 @@ def test_a_press_marks_a_part_with_the_brackets_and_again_takes_it_off(picking):
     open_field(pg)
     lobby = part(pg, "server/lobby.ts")
     lobby.scroll_into_view_if_needed()
-    lobby.click() if w == "wide" else lobby.tap()
+    lobby.click()
     pg.locator(".pick-chip").wait_for(timeout=WAIT_MS)
     assert chips(pg) == ["server/lobby.ts"] and "server/lobby.ts" in pg.locator(".pick-chip").inner_text()
     assert "ork-picked" in lobby.get_attribute("class") and "pick-lifted" in lobby.get_attribute("class"), "orkUI's brackets, lifted"
@@ -173,7 +173,7 @@ def test_a_press_marks_a_part_with_the_brackets_and_again_takes_it_off(picking):
     assert field(pg).count() == 1, "a press on the map does not close the field"
     assert part(pg, "server/index.ts").get_attribute("class").count("ork-picked") == 0
     shot(pg, f"picking-one-{w}.png")
-    lobby.click() if w == "wide" else lobby.tap()
+    lobby.click()
     pg.wait_for_selector(".pick-chip", state="detached", timeout=WAIT_MS)
     pg.wait_for_function("() => !document.querySelector('.sys-part.ork-picked')", timeout=WAIT_MS)
 
@@ -185,7 +185,7 @@ def test_the_marks_go_with_the_idea_and_are_gone_after_it(picking):
     for p in ("server/lobby.ts", "client/net.ts"):
         b = part(pg, p)
         b.scroll_into_view_if_needed()
-        b.click() if w == "wide" else b.tap()
+        b.click()
     pg.locator(".pick-chip").nth(1).wait_for(timeout=WAIT_MS)
     pg.get_by_role("button", name="Send").click()
     pg.wait_for_selector(".hand-field", state="detached", timeout=WAIT_MS)
@@ -352,7 +352,7 @@ def test_esc_with_the_focus_on_the_map_ends_picking_and_keeps_the_marks_and_the_
     open_field(pg)
     b = part(pg, "server/lobby.ts")
     b.scroll_into_view_if_needed()
-    b.click() if w == "wide" else b.tap()
+    b.click()
     b.focus()
     pg.keyboard.press("Escape")
     pg.wait_for_selector(".pick-strip", state="detached", timeout=WAIT_MS)
@@ -414,7 +414,7 @@ def test_a_map_drawn_with_pickable_is_picked_the_same_a_lane_a_group_the_map_all
     pg.locator(".stub-map").wait_for(timeout=WAIT_MS)
     open_field(pg, "Art for the towers")
     card = lambda i: pg.locator(f'[data-card="{i}"]')  # noqa: E731
-    card("hero.png").click() if w == "wide" else card("hero.png").tap()
+    card("hero.png").click()
     assert chips(pg) == ["hero.png"] and "ork-picked" in card("hero.png").get_attribute("class")
     if w == "wide":
         a = card("hit.wav").bounding_box()

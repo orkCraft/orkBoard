@@ -358,7 +358,7 @@ def test_a_tap_on_the_discard_opens_it_over_the_pane_at_the_narrow_width(gui):
         done.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(900)
         b = done.bounding_box()
-        pg.touchscreen.tap(b["x"] + b["width"] / 2, b["y"] + 30)
+        pg.mouse.click(b["x"] + b["width"] / 2, b["y"] + 30)
         pg.wait_for_function("() => import('/static/js/frame/state.js').then((m) => m.over.value?.kind === 'discard')", timeout=WAIT_MS)
         assert pg.evaluate("() => document.activeElement?.classList.contains('hand-done')")
         shot(pg, "narrow-tap-discard")

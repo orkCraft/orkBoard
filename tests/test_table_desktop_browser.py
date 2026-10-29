@@ -1102,10 +1102,18 @@ def test_nothing_moves_under_reduced_motion_and_a_card_turns_on_orkuis_tokens_ot
     pg.emulate_media(reduced_motion="no-preference")
 
 
-def test_every_press_is_44_by_44_on_a_touch_screen_and_nothing_is_said_only_on_hover(table):
-    pg, host, w = table
-    if wide(w):
-        return
+def test_every_press_is_44_by_44_on_a_touch_screen_and_nothing_is_said_only_on_hover(gui):
+    # Since spec 103 A / decisions §180 a touch window under 760 px is the phone's hand, never the table; a touch screen that
+    # shows the table is a tablet's (800 px wide here), and the rule (`pointer: coarse`, spec 94 §1.3) is the same.
+    server, browser = gui
+    errors: list[str] = []
+    host = TableHost()
+    pg = browser.new_context(viewport={"width": 800, "height": 700}, has_touch=True).new_page()
+    watch(pg, errors)
+    pg.route_web_socket("**/ws*", host.on_socket)
+    pg.goto(server.url)
+    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
     open_tab(pg, "tech")
     pg.locator('.table-seat[data-seat="grunt"]').wait_for(timeout=WAIT_MS)
     for sel in (".table-tab", ".table-plus", ".table-stop", ".table-play", ".table-menu__btn", ".table-seat"):
@@ -1117,3 +1125,5 @@ def test_every_press_is_44_by_44_on_a_touch_screen_and_nothing_is_said_only_on_h
     pg.locator(".table-tab").nth(3).dispatch_event("pointerdown", {"pointerType": "touch"})                              # a long press says the name
     pg.locator(".gui-toast").wait_for(timeout=WAIT_MS)
     assert "Art" in pg.locator(".gui-toast").text_content()
+    pg.context.close()
+    assert not errors, "\n".join(errors)

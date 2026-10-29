@@ -51,7 +51,9 @@ class Phone:
 
     def on_socket(self, ws):
         if self.mode == "dead":
-            ws.close()
+            # The handler runs on Playwright's dispatcher: a sync `ws.close()` here waits on the dispatcher itself and never
+            # returns (the hang of this file), so the close is scheduled on its loop.
+            ws._loop.create_task(ws._impl_obj.close())
             return
         self.ws = ws
         ws.send(json.dumps({"t": "state", "state": self.snapshot()}))
@@ -71,7 +73,7 @@ class Phone:
         ws.on_message(on_message)
 
 
-@pytest.fixture(params=narrow.WIDTHS)
+@pytest.fixture(params=narrow.PHONE_WIDTHS)
 def paired(gui, request):
     """A blank page of the window's origin at one width, paired with a `Phone`: `(page, phone)`."""
     server, browser = gui

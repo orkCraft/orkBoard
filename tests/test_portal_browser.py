@@ -137,7 +137,7 @@ def test_pressing_the_portal_sends_the_goal_alone_with_what_it_stands_on_and_the
     try:
         open_portal(pg)
         shot(pg, f"{width}-open")
-        (portal(pg).tap() if width == "narrow" else portal(pg).click())
+        portal(pg).click()
         assert _sent(pg, host, ("ideas.to_main", {"idea": "music"})) and [a for n, a in host.log if n == "ideas.to_main"] == [{"idea": "music"}]
         pg.wait_for_function("() => document.querySelectorAll('[data-portal-card]').length === 1", timeout=WAIT_MS)             # Lobby and Reconnect left the ready goals
         assert card(pg, "menu").count() == 1 and card(pg, "music").count() == 0 and card(pg, "codes").count() == 0
