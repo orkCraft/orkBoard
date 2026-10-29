@@ -22,6 +22,7 @@
   .orks { display: flex; flex-wrap: wrap; gap: var(--ork-6); }
   .pots { display: flex; flex-wrap: wrap; gap: var(--ork-6); align-items: end; padding: var(--ork-5); background: var(--ork-panel); border: 1px solid var(--ork-frame); }
   .pots figure { width: auto; min-width: 72px; }
+  .pots.ontable { background: var(--ork-table); align-items: center; }
   .row { display: flex; gap: var(--ork-4); flex-wrap: wrap; align-items: center; }
   .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--ork-4); }
   .box { border: 1px solid var(--ork-frame); }
@@ -348,6 +349,12 @@
   <div class="pots"><span class="ork-card" style="display:flex;gap:var(--ork-5);padding:var(--ork-4)"><span class="ork-potion" style="--ork-potion-left:.62" aria-hidden="true"></span><span class="ork-potion is-warn" style="--ork-potion-left:.18" aria-hidden="true"></span><span class="ork-potion is-danger" style="--ork-potion-left:.04" aria-hidden="true"></span><span class="ork-potion small" style="--ork-potion-left:.62;--ork-potion-spend:.04" aria-hidden="true"></span></span></div>
   <div class="ork-label">the liquid is --ork-mana while there is room, the alert at a warning, the danger at a danger; the level steps by an eighth, rounded up, so a share above 0 shows a row; the hatched cells are the share a card would spend</div></section>
 
+<section><h2>Portal (a goal's way into main: 130 x 140 and .small 104 x 112, a 26 x 28 grid)</h2>
+  <div class="pots"><figure><span class="ork-portal" aria-hidden="true"></span><figcaption>open</figcaption></figure><figure><span class="ork-portal is-taking" aria-hidden="true"></span><figcaption>taking: a card held over it</figcaption></figure><figure><span class="ork-portal is-sealed" aria-hidden="true"></span><figcaption>sealed</figcaption></figure><figure><span class="ork-portal is-new" id="portal-new" aria-hidden="true"></span><figcaption>new: shimmers once</figcaption></figure></div>
+  <div class="pots small"><figure><span class="ork-portal small" aria-hidden="true"></span><figcaption>open</figcaption></figure><figure><span class="ork-portal is-taking small" aria-hidden="true"></span><figcaption>taking: a card held over it</figcaption></figure><figure><span class="ork-portal is-sealed small" aria-hidden="true"></span><figcaption>sealed</figcaption></figure><figure><span class="ork-portal is-new small" aria-hidden="true"></span><figcaption>new: shimmers once</figcaption></figure></div>
+  <div class="pots ontable"><figure><span class="ork-portal" aria-hidden="true"></span><figcaption>open, on the table</figcaption></figure><figure><span class="ork-portal is-taking" aria-hidden="true"></span><figcaption>taking</figcaption></figure><figure><span class="ork-portal is-sealed" aria-hidden="true"></span><figcaption>sealed</figcaption></figure><button class="ork-btn quiet" type="button" id="portal-again">Shimmer again</button></div>
+  <div class="ork-label">the swirl's light is --ork-portal (a signal: a goal can be played here), --ork-portal-hi while a card is held over it; only the swirl turns, a quarter turn at a time, 6 s a turn; a sealed portal is still, dim and crossed, with no sparks; under prefers-reduced-motion the swirl stands still and the shimmer is off; the caller adds the label and the line</div></section>
+
 <section><h2>Frame (the double frame of a raised thing)</h2><div class="row" style="align-items:start">
   <div class="ork-frame" style="width:156px;padding:var(--ork-3);display:grid;gap:var(--ork-2)"><span class="ork-gem alert" style="justify-self:start">$1&ndash;2</span><b>Plan ready</b><span style="color:var(--ork-ink-muted)">2 tasks, 1 check</span></div>
   <div class="ork-frame alert" style="width:156px;padding:var(--ork-3);display:grid;gap:var(--ork-2)"><span class="ork-gem alert" style="justify-self:start">?</span><b>Asks you</b><span style="color:var(--ork-ink-muted)">alert edge</span></div>
@@ -619,9 +626,9 @@ python -m pytest</code></pre>
 <script>
   const css = getComputedStyle(document.documentElement);
   const sw = document.getElementById("sw");
-  for (const n of ["canvas","panel","raised","frame","edge","ink","ink-muted","ink-faint","on-ink","action","action-hi","action-press","danger","alert","success","elem-meadow","elem-ice","elem-dust","elem-void","elem-lava","table","table-rim","table-rim-hi","card","card-frame","mana","paper","ink-read"]) {
+  for (const n of ["canvas","panel","raised","frame","edge","ink","ink-muted","ink-faint","on-ink","action","action-hi","action-press","danger","alert","success","elem-meadow","elem-ice","elem-dust","elem-void","elem-lava","table","table-rim","table-rim-hi","card","card-frame","mana","portal","portal-hi","paper","ink-read"]) {
     const d = document.createElement("div"); d.style.background = "var(--ork-" + n + ")"; d.textContent = n;
-    d.style.color = ["ink","ink-muted","ink-faint","ink-read","action","action-hi","action-press","danger","alert","success","edge","elem-meadow","elem-ice","elem-dust","elem-void","elem-lava","mana"].includes(n) ? "var(--ork-on-ink)" : "var(--ork-ink)"; sw.append(d); }
+    d.style.color = ["ink","ink-muted","ink-faint","ink-read","action","action-hi","action-press","danger","alert","success","edge","elem-meadow","elem-ice","elem-dust","elem-void","elem-lava","mana","portal","portal-hi"].includes(n) ? "var(--ork-on-ink)" : "var(--ork-ink)"; sw.append(d); }
   const cells = (el, on) => { for (let i = 0; i < 16; i++) { const c = document.createElement("i"); if (i < on) c.className = "on"; el.append(c); } };
   cells(document.getElementById("m1"), 6); cells(document.getElementById("m2"), 13); cells(document.getElementById("m3"), 16);
   for (const n of ["ork","ork-asleep","ork-asks","ork-failed","ork-working"]) {
@@ -653,6 +660,9 @@ python -m pytest</code></pre>
         el.classList.remove("ork-deal", "ork-play", "ork-seal"); $("fanrow").classList.remove("ork-fan", "closing"); },
   };
   for (const b of document.querySelectorAll("[data-play]")) b.addEventListener("click", () => plays[b.dataset.play]());
+  document.getElementById("portal-again").addEventListener("click", () => {
+    const news = document.querySelectorAll(".ork-portal.is-new");
+    news.forEach(p => p.classList.remove("is-new")); void document.body.offsetWidth; news.forEach(p => p.classList.add("is-new")); });
 </script>
 </body>
 </html>

@@ -125,6 +125,19 @@ about as bright as `--ork-ink-muted` (L* 69; it is a little darker), so it does 
 used by `.ork-potion` alone, never a text colour, a fill or an element's: 5.63:1 on the panel, 4.54 on the card, 3:1 or more on every ground,
 CIE76 29.5 from `ice`, 11.9 from `void`, 67 or more from every signal.
 
+## The portal (0.18.0)
+`.ork-portal` is a round, magical pixel portal, the way a goal is sent into main (`portal/`, `portal/README.md`): a ring of stones round a dark panel,
+a three-armed swirl turning to a dark eye, twelve sparks outside, on a **26 x 28** grid, 5 px a cell (130 x 140), `.small` 4 px (104 x 112).
+`<span class="ork-portal" aria-hidden="true"></span>`; `.is-taking` (a card held over it: the swirl brighter, the ring a cell wider), `.is-sealed`
+(still, dim, an X over it, no sparks) and `.is-new` (shimmers once). Only the swirl turns, a quarter turn at a time, 6 s a turn; nothing moves under
+reduced motion. No words inside: the caller adds the label and the line.
+
+**`--ork-portal`** `#b27bf6` is the swirl's and the sparks' light, a magical violet (CIELAB L* 61.9, hue 310, chroma 70); **`--ork-portal-hi`** `#d5a8ff`
+(L* 75.7) is the brighter one while a card is held over it. A signal (*a goal can be played here*), used by `.ork-portal` alone, never a text colour, a
+fill or an element's: `--ork-portal` is 5.71:1 on the panel and 4.60 on the card, `--ork-portal-hi` 8.80 and 7.09, 3:1 or more on every ground; CIE76
+52.6 from the void element's `#8e88a8` (a goal's element is never mistaken for the portal; `-hi` 36.0), 37.8 from `ice`, 57.8 from `mana`, 84 or more
+from every signal.
+
 ## The icons
 `icons/icons.svg` is the sprite of the window's icons (`icons/README.md`). Twelve are **orkUI's own** (0.15.0), drawn on the signs' 7 x 7 grid in solid pixels: `arrow-left`, `close` (×),
 `more-horizontal` (…), `plus`, `search`, `mic`, `play`, `stop` and the four chevrons; at 14, 21 or 28 px (two, three or four pixels a cell) they are whole pixels. The other 22 are

@@ -114,3 +114,10 @@ git) at once; D after B and A's copy; F after E and A's copy.
   reasons (not landed, conflict), the merge onto main.
 - Browser: the frame on the project's and a party's tab, its slide, the line; the paid card's answers; the portal's open,
   taking, sealed, first-time line, press and keyboard path, the phone.
+
+## As built A
+
+orkUI 0.18.0 (orkUI fd49708): `--ork-portal` `#b27bf6`, `--ork-portal-hi` `#d5a8ff` (CIE76 52.6 from the void element);
+`.ork-portal` drawn in `box-shadow` pixels from `office/portal/portal.json` (`::before` the ring, panel, eye and sparks;
+`::after` the swirl alone, turning in `steps(4)` over 6 s); `is-taking`, `is-sealed` (wins over taking), `is-new`, `small`;
+a `<button class="ork-portal">` works too. Needs Chromium 111, Firefox 113, Safari 16.2.

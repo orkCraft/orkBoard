@@ -1,0 +1,33 @@
+# orkUI / office / portal
+
+The portal: **a round, magical pixel portal, the way a goal is sent into main** (orkBoard's decisions §177.4). A goal dropped or pressed into it
+is merged. It is round and purple, never a door; its light, `--ork-portal`, is a signal (*a goal can be played here*), used by `.ork-portal` alone.
+
+    portal.json   the drawing: three 26 x 28 grids of letters (`still`, `arms`, `seal`) and what each letter is (`legend`)
+
+`still` is what stands: the ring of ink and edge stones with the frame's gaps and a panel lip, the cell-wider ring a held card shows, the panel,
+the dark eye and twelve single-cell sparks. `arms` is the swirl, in four tones, the one part that turns (about the cell corner 13, 14). `seal` is the
+X (two bars with a dark edge and a square knot) over the swirl while sealed. `python tools/build_portal.py` writes them into `components.css`
+as `box-shadow` pixels, as `.ork-busy` is drawn; `--check` says whether they are what this file makes.
+
+## Writing one
+
+Plain HTML and CSS, no script and no inner markup:
+
+    <span class="ork-portal" aria-hidden="true"></span>
+
+- **State** is a class on the same element: none is open; **`is-taking`** while a card is held over it (the swirl brighter, in `--ork-portal-hi`,
+  the ring a cell wider); **`is-sealed`** while the gate holds the goal (the swirl still, in the frame and the faint ink, no sparks, the ring dim,
+  an X over it; it wins over `is-taking`); **`is-new`** shimmers the swirl once, the first time it appears (take the class off to play it again).
+- **Size**: the cell is 5 px by default (**130 x 140**), **`small`** 4 px (**104 x 112**); whole pixels, no size between, the same on a phone.
+- **Motion**: only the swirl turns, a quarter turn at a time (`steps(4)`), 6 s a turn. Under `prefers-reduced-motion` nothing moves: the swirl
+  stands still and the shimmer is off.
+- **No words inside**: the caller adds the label and the line (*Into main: Lobby*), and says what it is to a screen reader. It is a box of its
+  own (`inline-block`, `flex: none`); it takes no colour of the text around it, and on a `<button class="ork-portal">` the button's own look is gone
+  and `:focus-visible` draws the 2 px ink frame.
+
+It needs `color-mix()` and `box-shadow` lists in custom properties (Chromium 111, Firefox 113, Safari 16.2 or later).
+
+`--ork-portal` (`#b27bf6`, a magical violet: CIELAB L* 61.9, hue 310, chroma 70) and `--ork-portal-hi` (`#d5a8ff`, L* 75.7) are far from the
+void element's grey violet (CIE76 52.6 and 36.0 from `#8e88a8`); see `../README.md`. The drawing is changed in `portal.json`, in the table of
+`tests/test_orkui.py` and in orkBoard's decisions §177 together, never in a face.
