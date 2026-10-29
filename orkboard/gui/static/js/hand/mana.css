@@ -1,0 +1,34 @@
+/* The mana (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §3, decisions §176.2): the AI tools' potions at the hand's right end, flush against the window's edge. Layout only: the bottle, its liquid and
+   the blue are orkUI's (`.ork-potion`, `--ork-mana`); the share's colour is the signals' tokens. One to three potions in one row, four to six in two rows of three (the small size), the narrow width's all small. */
+
+.hand-mana { display: grid; grid-auto-flow: column; align-items: start; justify-items: center; flex: none; pointer-events: auto; }
+.hand-mana[data-rows="2"] { grid-auto-flow: row; grid-template-columns: repeat(3, auto); }
+.hand-pot { appearance: none; border: 0; background: none; margin: 0; color: var(--ork-ink); font: var(--ork-type-caption); cursor: pointer; padding: var(--ork-1) var(--ork-2);
+  min-width: 44px; display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); }
+.hand-pot:hover { background: var(--ork-raised); }
+.hand-pot:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.hand-pot .ork-mark { display: block; }
+.hand-pot__initial { display: block; height: 16px; color: var(--ork-ink-muted); font: var(--ork-type-body); font-weight: 600; line-height: 16px; }
+.hand-pot__share { color: var(--ork-ink); font: var(--ork-type-caption); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: center; }
+.hand-pot__took { color: var(--ork-ink-muted); font-weight: 400; }
+.hand-pot.is-warn .hand-pot__share { color: var(--ork-alert); }
+.hand-pot.is-danger .hand-pot__share { color: var(--ork-danger); }
+.hand-pot.is-unread .hand-pot__share { color: var(--ork-ink-muted); }
+.hand-pot--more { align-self: center; justify-content: center; min-height: 44px; }
+.hand-pot--more .hand-pot__initial { color: var(--ork-ink-muted); font: var(--ork-type-caption); font-weight: 600; height: auto; line-height: 16px; }
+
+/* the hand's height is the cards': two rows of potions (four tools and more) lie in it when they fit, and when they do not the hand grows by what they need and no more (spec 104 §3.4): a potion is its padding, the mark,
+   the bottle at the small size (36 px) and the share's line */
+.hand { --hc-cap: 16px; --hc-pots: calc(2 * (var(--ork-1) * 4 + 16px + 36px + var(--hc-cap))); }
+@media (max-width: 1023px) { .hand { --hc-cap: 18px; } }
+.hand:has(.hand-mana[data-rows="2"]) .hand-places { height: max(calc(var(--hc-room) + var(--hc-top) + var(--hc-shown)), calc(var(--hc-room) + var(--hc-top) + var(--hc-pots))); }
+
+/* a hand with no goal at all has no cards: its potions lie alone at the right end */
+.hand-mana-only { display: flex; justify-content: flex-end; }
+.hand-mana-only:empty { display: none; }
+
+@media (pointer: coarse) { .hand-pot { min-width: var(--ork-tap); } }
+@media (max-width: 759.98px) {
+  .hand-mana { order: 101; margin-left: auto; }
+  .hand-pot { min-width: 0; }                                                                                /* the cards of the row tighten for them: a potion is as wide as its share (tall past 44) */
+}

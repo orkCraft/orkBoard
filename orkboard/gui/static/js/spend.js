@@ -12,6 +12,9 @@ const ok = (n) => n != null && n !== "" && Number.isFinite(Number(n));
 /** Whether a rate is learnt: the page says spends as shares of the window (and its hints say SHARE_TIP). */
 export const rated = () => per() > 0;
 
+/** The share of the window $ at API prices is, as a number of per cent (12 for 12 %); 0 with no rate (or no number). */
+export const shareOf = (usd) => (rated() && ok(usd) ? Math.abs(Number(usd)) / per() : 0);
+
 /** *12 % of 5h* for $ at API prices (the caller adds its *≈* as it did to its $); "" with no rate (or no number). */
 export const pctOf = (usd) => (rated() && ok(usd) ? `${pct(Math.abs(Number(usd)) / per())} % of 5h` : "");
 

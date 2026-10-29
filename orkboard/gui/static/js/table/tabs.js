@@ -1,11 +1,11 @@
 // The tabs (docs/specs/98-the-table-and-the-hand.md §3.1, docs/specs/95-the-window-as-decided.md §2, decisions §167.6): the project's first — its crowned head and the project's name (*Party game*) —, then a tab a party in the Board's order, its leader's
-// head and the party's name; at the end **+** (*New party*), the AI tools' limits as chips (a press opens what used them over the pane) and **Stop all**. Under 760 px the tabs are a row of heads, *Stop all* at the end,
-// and the limits are in the Orkmaster's **…** (pane.js). The tabs, the Board's lanes and the hand read the frame's one `--cols`, so a tab stands over its lane. A party's tab carries a dot when the picked goal's route has it.
+// head and the party's name; at the end **+** (*New party*) and **Stop all**; the AI tools' limits are the hand's mana (hand/mana.js, spec 104 B). Under 760 px the tabs are a row of heads, *Stop all* at the end,
+// and the limits are in the Orkmaster's **…** as chips (pane.js) and in the hand as small potions. The tabs, the Board's lanes and the hand read the frame's one `--cols`, so a tab stands over its lane. A party's tab carries a dot when the picked goal's route has it.
 // The open tab is the person's: nothing here switches it. A name is also said on a long press (nothing only on hover: spec 94 §1.1).
 import { useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Head, Icon } from "../orkui.js";
-import { command, toast, town } from "../link.js";
+import { command, toast } from "../link.js";
 import { ORKMASTER, openTab, openOver, picked } from "../frame/state.js";
 import { currentProject } from "../shell/projects.js";
 import { levelOf, windowOf } from "../arena/limits.js";
@@ -33,7 +33,7 @@ function Tab({ slug, on, name, head, dot = false, compact, onPick }) {
   </button>`;
 }
 
-/** One AI tool's chip: its ink mark, its name and its share left; a press opens what used it over the pane. */
+/** One AI tool's chip, in the Orkmaster's **…** at the narrow width (pane.js): its ink mark, its name and its share left; a press opens what used it over the pane. */
 function LimitChip({ l, from }) {
   const read = typeof l.left === "number", win = read ? windowOf(l) : "", level = read ? levelOf(l.left) : "unread";
   const words = read ? `${l.name} ${Math.round(l.left * 100)}% left` : `${l.name}: not read`;
@@ -43,7 +43,7 @@ function LimitChip({ l, from }) {
 }
 
 export function Tabs({ parties, current, narrow, compact }) {
-  const project = currentProject.value?.name || "The project", limits = town.value?.limits || [], route = routeParties(picked.value);
+  const project = currentProject.value?.name || "The project", route = routeParties(picked.value);
   const from = { title: mapName(current, parties), key: "" };
   const slugs = [ORKMASTER, ...parties.map((g) => g.slug)];
   const keys = (e) => {
@@ -60,7 +60,6 @@ export function Tabs({ parties, current, narrow, compact }) {
     </div>
     <div class="table-tabs__end">
       <button type="button" class="ork-btn table-plus" aria-label="New party" title="New party" onClick=${() => openParties({}, from)}><${Icon} name="plus" /></button>
-      ${!narrow && limits.map((l) => html`<${LimitChip} key=${l.provider} l=${l} from=${from} />`)}
       <button type="button" class="ork-btn danger table-stop" title="Stop every ork, script and browser at once" onClick=${() => command("halt").catch(() => {})}>Stop all</button>
     </div>
   </nav>`;

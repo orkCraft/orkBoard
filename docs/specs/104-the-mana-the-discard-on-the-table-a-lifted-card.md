@@ -93,6 +93,12 @@ A and D at once (D needs nothing of A); C after D (both touch `hand.css` and `ha
   tabs' end has no chip; the discard on the table on the Orkmaster's tab and a party's, its press; a lifted card's class,
   width (about twice a hand card), its body scrolling, Esc.
 
+## As built A
+
+orkUI 0.17.0 (orkUI bcbaaa2, copied e64a2f5): `--ork-mana` is `#7b97b8` (L* 61.5, a little under the muted ink; the mockup's
+`#5f7fa6` fell to 3.3:1 on a card); `.ork-potion` is CSS only (three 14 × 18 masks in `office/potion/`), the level stepping by
+an eighth of the body rounded up (so 4 % shows a row), the spend a one-cell checker.
+
 ## As built D
 
 `Lifted` (`hand/stopcard.js`) draws `ork-card hand-card hand-card--stop hand-card--big hand-lifted` (an `aside`, the element's `el-*`, `asks` and `fails` as the hand card has them): `.hand-card__head` (the element and the name, which is also
@@ -112,3 +118,26 @@ What differs from §5, or is not said there:
 - The foot stands on the hand's line (`bottom: 100%` of the hand, no gap, where the panel stood `--ork-4` above it); the slot, `useAbout`, focus, Esc and a press away are as they were.
 - `hand.js` finds the anchor in `.hand-places`, since the lifted card now has the class `hand-card` too (tests that locate `.hand-card[data-kind]` while a card is lifted say `.hand-places .hand-card` for the one in the hand).
 - The body's scroll has no visible bar (the project hides them elsewhere); a long body's *Put it back* is reached by scrolling, Esc lowers the card at once.
+
+## As built B (the mana in the hand)
+
+Built in `orkboard/gui/static/js/hand/mana.js` and `hand/mana.css` (loaded by `frame/frame.js` with the other sheets); tests in `tests/test_hand_mana_browser.py`.
+
+- **`Mana`** reads `town.value?.limits` (the chips' data and order) and draws one `.ork-potion` a tool inside a button `.hand-pot` (`data-provider`, `data-level`), the tool's mark above it, the share under it. Marks are the coloured
+  `marks/harness-<id>.png` with the `@2x` as `srcset` (`MARKED` from `table/data.js`, the same list as `arena/limits.js`); a tool with no mark shows its initial in the body face. The share is `62%` in the caption size, in
+  `--ork-alert` at `levelOf` warn and `--ork-danger` at danger. The words are the chip's, with the window in words: *Claude Code: 62% of the week left* (`windowWords`: `week` the week, `5h` the 5-hour window, `daily` the day),
+  as `title` and `aria-label`; the potion itself is `aria-hidden`. A press is `openOver("limits", { provider }, from, "<name>: what used it")`, as the chip's. A tool not read is an empty potion (`--ork-potion-left:0`), *?* under it,
+  *Claude Code: limits not read yet*.
+- **Rows**: one to three tools one row at the default size; four to six two rows of three, `.small` (`data-rows`); more than six: the first five and *+n* (*n more tools: what is left of them*), which opens
+  `openOver("limits", {}, …)`. At the narrow width (under 760 px) every potion is `.small`.
+- **The spend**: `costOf(s)` (`hand/cost.js`) now also says `tool` (the id the host's rate names, `rate.tool`, Claude with none), `spend` (0 to 1 of the window, the card's high price over the learnt rate; 0 for a card that saves or with no
+  rate) and `taken` (`4%`); `spend.js` gets `shareOf`. `Hand` passes the lifted stop to `Mana`; that tool's potion gets `--ork-potion-spend`, its share reads `62% −4%` (on the same line: the potion's cell widens, the hand's height does not
+  change) and its words add *This card takes about 4% of it*.
+- **Place**: `.hand-end` holds `<Discard />` and then `<Mana />`; the hand row has no right gutter, so the potions touch the window's right edge. At the narrow width `.hand-end` is `display: contents`, the pile keeps its place
+  (it takes the least a card shows, its card over the row's spacer) and the potions are the row's last place. `table/tabs.js` draws no chip at the tabs' end (+ and *Stop all* only); `LimitChip` stays exported, because
+  `table/pane.js` draws it in the Orkmaster's **…** at the narrow width.
+- **Height**: the hand keeps the cards' height for one row. Two rows (four tools and more) need 152 px (156 on the phone's type) against the cards' shown 133–146 px, so `.hand:has(.hand-mana[data-rows="2"]) .hand-places`
+  grows to `max(the cards', room + top + --hc-pots)`: on the desktop the hand is about 20 px taller with six tools, on the phone with four or more about 70 px taller (the cards tighten to their left edges as they already do).
+  `--hc-cap` and `--hc-pots` are the hand's own sizes (named in `tests/test_design_system.py` with the others).
+- **A hand with no goal at all** (the + card large in the pane's middle, no row) shows the potions alone at its right end (`.hand-mana-only`), so the limits are not lost on a project's first day.
+- **Not done here** (C and D): the discard stays in `.hand-end`, beside the potions; a lifted card is still the panel.

@@ -2,7 +2,7 @@
 page, spec 98 E), at both widths (`tests/narrow.py`: 1280 × 800, and 390 × 844 with touch), against a stub host of its own (a project of four parties: Game design, Tech led by the Architect, Art and Release; the Orkmaster reading two goals,
 routing one and joining one; tasks at work, failures, a check; three goals in line; Tech's System).
 
-The tabs in order with the project's first (its name), its **…** and its three places over the pane, **+**, the chips, *Stop all*; the Board's lanes under their tabs, the same widths; a task card's header, window and label row, a goal's strip and
+The tabs in order with the project's first (its name), its **…** and its three places over the pane, **+**, *Stop all*; the Board's lanes under their tabs, the same widths; a task card's header, window and label row, a goal's strip and
 cascade (its front by the rule, the others a fan behind it with a fixed turn by place, opened by a hover, an edge lifting its task, the picked goal's unfolded, a goal in two lanes lit in both); the first lane's cards and the line (the Orkmaster's order, the moon, a drag, *All · search*); a party's header with its
 groups, a seat's popover and its **Open**, another party's tab its header alone; Tech's System; a card lifted and lowered (Esc, a press away); a file opened over the pane, its title, **←** back to the card lit; a form in the pane, never a dialog; no
 sideways scroll at 390. Screenshots to the directory ORKCRAFT_SHOTS_DIR names when it is set."""
@@ -286,7 +286,7 @@ def open_menu(pg):
 
 # -- the tabs ----------------------------------------------------------------------------------------------------------------------------------------
 
-def test_the_tabs_in_order_the_projects_first_then_plus_the_chips_and_stop_all(table):
+def test_the_tabs_in_order_the_projects_first_then_plus_and_stop_all(table):
     pg, host, w = table
     tabs = pg.locator(".table-tab")
     assert [t.get_attribute("data-tab") for t in tabs.all()] == ["orkmaster", "game", "tech", "art", "release"]         # the project's first, then the Board's order
@@ -297,12 +297,8 @@ def test_the_tabs_in_order_the_projects_first_then_plus_the_chips_and_stop_all(t
     assert "knight-elder" in tab(pg, "game").locator(".ork-race__head").get_attribute("src")                             # a party's tab wears its leader's head
     assert tab(pg, "tech").get_attribute("aria-label") == "Tech"                                                         # and its name, said also when only the head is drawn
     assert pg.get_by_role("button", name="New party").count() == 1 and pg.get_by_role("button", name="Stop all").count() == 1
-    chips = pg.locator(".table-tabs__end .table-chip")
-    if wide(w):
-        assert [c.inner_text().strip() for c in chips.all()] == ["Claude 62% left", "Codex 18% left"]                    # the limits as chips
-        assert chips.first.locator(".ork-mark").count() == 1
-    else:
-        assert chips.count() == 0                                                                                        # under 760 px the limits are in the Orkmaster's …
+    assert pg.locator(".table-tabs__end .table-chip").count() == 0 and pg.locator(".table-tabs__end button").count() == 2                  # the tabs' end keeps + and Stop all: the limits are the hand's potions (spec 104 B)
+    if not wide(w):
         assert tab(pg, "tech").locator(".table-tab__txt").is_hidden()                                                    # the tabs a row of heads
         assert all(t.bounding_box()["width"] >= 44 and t.bounding_box()["height"] >= 44 for t in tabs.all())             # a press 44 × 44 on a touch screen
     assert title(pg) == "The whole project · through the Orkmaster"                                                      # the Orkmaster is named where it speaks
@@ -356,7 +352,7 @@ def test_the_orkmasters_menu_has_the_projects_settings_and_files_over_the_pane(t
     pg.locator(".table-board").wait_for(timeout=WAIT_MS)
 
 
-def test_plus_opens_the_parties_in_the_pane_and_a_chip_opens_what_used_the_tool(table):
+def test_plus_opens_the_parties_in_the_pane_and_a_potion_opens_what_used_the_tool(table):
     pg, host, w = table
     pg.get_by_role("button", name="New party").click()
     pg.locator('.table-over[data-kind="parties"]').wait_for(timeout=WAIT_MS)
@@ -364,7 +360,7 @@ def test_plus_opens_the_parties_in_the_pane_and_a_chip_opens_what_used_the_tool(
     pg.get_by_role("button", name="Back").click()
     pg.locator(".table-board").wait_for(timeout=WAIT_MS)
     if wide(w):
-        pg.locator('.table-chip[data-provider="codex"]').click()
+        pg.locator('.hand-pot[data-provider="codex"]').click()
         pg.locator('.table-over[data-kind="limits"] .arena-usage').wait_for(timeout=WAIT_MS)
         assert title(pg) == "Board · Codex: what used it"
         assert ("ideas.usage", {"provider": "codex", "scope": "project"}) in host.log

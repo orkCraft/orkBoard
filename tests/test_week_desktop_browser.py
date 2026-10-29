@@ -1,4 +1,4 @@
-"""Spec 42 F on the desktop (docs/specs/42-coming-back.md §6, Tests → F), in the window as two parts (docs/specs/98-the-table-and-the-hand.md §7): the AI tools' limits (a chip of the tabs) open what used the tool over the pane, and
+"""Spec 42 F on the desktop (docs/specs/42-coming-back.md §6, Tests → F), in the window as two parts (docs/specs/98-the-table-and-the-hand.md §7): the AI tools' limits (a potion of the hand's mana, spec 104 B) open what used the tool over the pane, and
 *Spend today · This week's work* in it opens This week with its lines in order (the nights, the streak and the tonight line went, spec 98 A). The words of a week that waits (`waitsWords`) are read from the page's module. The cards
 *While you were away* and *Last week* went with the old window (spec 98 E)."""
 from __future__ import annotations
@@ -45,9 +45,9 @@ def _open(gui, host=None):
 
 
 def _spend(pg):
-    """*Spend today*, in the place the limits' chip opens."""
+    """*Spend today*, in the place the limits' potion opens."""
     if not pg.locator(".table-over__limits").count():
-        pg.locator(".table-chip").first.click()
+        pg.locator(".hand-pot").first.click()
     return pg.get_by_role("button", name="Spend today: $2.40. This week's work")
 
 

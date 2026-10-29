@@ -245,10 +245,11 @@ def test_the_hand_lies_under_the_lanes_one_size_half_under_the_edge_and_nothing_
             boxes = [lane(pg, i).bounding_box() for i in range(5)]
             assert all(abs(boxes[i + 1]["x"] - (boxes[i]["x"] + boxes[i]["width"])) <= 1 for i in range(4)), "the lanes are side by side on the grid"
             done, end = pg.locator(".hand-done").bounding_box(), pg.locator(".hand-end").bounding_box()
-            assert end["x"] >= boxes[4]["x"] + boxes[4]["width"] - 1 and abs(done["x"] + done["width"] - size["width"]) <= 24, "the discard under the tabs' end, at its right"
+            mana = pg.locator(".hand-mana").bounding_box()
+            assert end["x"] >= boxes[4]["x"] + boxes[4]["width"] - 1 and done["x"] + done["width"] <= mana["x"] and abs(mana["x"] + mana["width"] - size["width"]) <= 1, "the discard under the tabs' end, the mana right of it flush against the edge"
         else:
-            slots = sorted(pg.locator(".hand-slot, .hand-end").evaluate_all("els => els.map((e) => [e.classList.contains('is-plus') ? 'plus' : e.classList.contains('hand-end') ? 'end' : 'stack', e.getBoundingClientRect().x])"), key=lambda t: t[1])
-            assert slots[0][0] == "plus" and slots[-1][0] == "end", "a free row in the lanes' order: the + card first, the discard last"
+            slots = sorted(pg.locator(".hand-slot, .hand-end > .hand-discard").evaluate_all("els => els.map((e) => [e.classList.contains('is-plus') ? 'plus' : e.classList.contains('hand-discard') ? 'end' : 'stack', e.getBoundingClientRect().x])"), key=lambda t: t[1])
+            assert slots[0][0] == "plus" and slots[-1][0] == "end", "a free row in the lanes' order: the + card first, the discard last (the mana after it, mana.css)"
             assert all(b["width"] >= 44 and b["height"] >= 44 for b in card_boxes(pg)), "a press is 44 x 44 on touch"
         narrow.no_sideways(pg)
         assert pg.locator(".hand-row").evaluate("e => e.scrollWidth <= e.clientWidth + 1")
@@ -497,7 +498,7 @@ def test_the_plus_card_grows_into_the_field_enter_sends_shift_enter_a_new_line_e
     pg, host, log = open_hand(gui, width=width)
     try:
         _plus(pg).wait_for(timeout=WAIT_MS)
-        _plus(pg).click()
+        _plus(pg).click(position={"x": 8, "y": 60})                                                                                                  # its left edge: at the phone the potions take room and the cards tighten (hand.css)
         field, area = _field(pg)
         assert area.evaluate("e => e === document.activeElement") and area.get_attribute("placeholder") == "Write a goal…"
         area.type("Show the round number")
@@ -509,18 +510,18 @@ def test_the_plus_card_grows_into_the_field_enter_sends_shift_enter_a_new_line_e
         shot(pg, f"{width}-field")
         pg.keyboard.press("Escape")                                              # Esc closes it, its text kept
         assert pg.locator(".hand-field").count() == 0
-        _plus(pg).click()
+        _plus(pg).click(position={"x": 8, "y": 60})
         _, area = _field(pg)
         assert area.input_value() == "Show the round number\nabove the timer"
         pg.mouse.click(size["width"] / 2, 60)                                       # a press away closes it, its text kept
         assert pg.locator(".hand-field").count() == 0
-        _plus(pg).click()
+        _plus(pg).click(position={"x": 8, "y": 60})
         _, area = _field(pg)
         assert area.input_value() == "Show the round number\nabove the timer"
         area.press("Enter")                                                        # Enter sends: general on the Orkmaster's tab, no party
         assert _sent(pg, host, ("ideas.add", {"text": "Show the round number\nabove the timer"}))
         pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)             # sent: the field closes with its text gone
-        _plus(pg).click()
+        _plus(pg).click(position={"x": 8, "y": 60})
         assert _field(pg)[1].input_value() == ""
     finally:
         pg.close()

@@ -126,7 +126,7 @@ def test_the_page_is_the_table_over_the_hand_and_nothing_else(window):
     assert pg.locator(".frame-table .table").count() == 1 and pg.locator(".frame-hand .hand").count() == 1
     assert [c.get_attribute("class").split()[0] for c in pg.locator(".shell > *").all()] == ["frame"]                    # the shell holds the frame (and the sign-in page, which draws nothing until it has a tool to sign in)
     nothing_modal(pg)
-    assert pg.locator("header.shell-top, .shell-top__chip, .arena-pswitch").count() == 0                                # no top bar: the tabs hold Stop all and the limits
+    assert pg.locator("header.shell-top, .shell-top__chip, .arena-pswitch").count() == 0                                # no top bar: the tabs hold Stop all, the hand the limits
     shot(pg, f"window-board-{w}.png")
 
 
@@ -180,7 +180,7 @@ def test_every_place_is_reached_over_the_pane(window):
     open_tab(pg, "orkmaster")
     # a tool's limits and the week's work; Play
     if w == "wide":
-        pg.locator(".table-chip").first.click()
+        pg.locator(".hand-pot").first.click()                                                                              # the limits are the hand's potions (spec 104 B)
     else:
         open_menu(pg)
         pg.locator(".table-menu__chips .table-chip").first.click()

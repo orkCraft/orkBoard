@@ -4,7 +4,7 @@
 // The shares come from spend.js (the host's learnt rate over the tool's window); with no rate learnt the gem says the price at API prices, as the old hand did.
 import { html } from "../html.js";
 import { town } from "../link.js";
-import { pctRange, pctShort, rated } from "../spend.js";
+import { pctRange, pctShort, rated, shareOf } from "../spend.js";
 import { wayOf } from "./ways.js";
 
 const num = (n, cents) => (cents ? Number(n).toFixed(2) : String(Math.round(n)));
@@ -19,9 +19,12 @@ function windowWords() {
   return r?.window === "week" ? "week" : "five-hour window";
 }
 
+/** The id of the tool whose share it is (`rate.tool`), Claude with none known. */
+const toolId = () => town.value?.rate?.tool || "claude";
+
 /** The tool whose share it is (`rate.tool`, named as the limits name it), Claude with none known. */
 function toolName() {
-  const id = town.value?.rate?.tool || "claude";
+  const id = toolId();
   return (town.value?.limits || []).find((l) => l.provider === id)?.name || id.charAt(0).toUpperCase() + id.slice(1);
 }
 
@@ -49,7 +52,7 @@ export function priceOf(s) {
   return null;
 }
 
-/** `{gem, words}` of a stop that spends, null of one that does not. */
+/** `{gem, words, share, saves, tool, spend, taken}` of a stop that spends, null of one that does not. */
 export function costOf(s) {
   const p = priceOf(s);
   if (!p) return null;
@@ -57,7 +60,9 @@ export function costOf(s) {
   if (!gem) return null;
   const sign = p.saves ? "−" : p.low < 0 ? "−" : "";
   const words = rated() ? `about ${sign}${gem} of ${toolName()}'s ${windowWords()}` : `about ${sign}${gem} at API prices`;
-  return { gem: `${sign}${gem}`, words, share: rated(), saves: !!p.saves };
+  const high = Math.max(Math.abs(p.low), Math.abs(p.high));       // the mana's potion (mana.js) hatches this much of its tool's top: `spend` 0 to 1 of the window, `taken` as a gem says it
+  const spend = rated() && !p.saves && p.low >= 0 ? Math.min(1, shareOf(high) / 100) : 0;
+  return { gem: `${sign}${gem}`, words, share: rated(), saves: !!p.saves, tool: toolId(), spend, taken: spend ? pctShort(high).replace(/\s+%$/, "%") : "" };
 }
 
 /** The gem on a card: nothing for a card that spends nothing. */
