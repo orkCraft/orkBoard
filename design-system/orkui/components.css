@@ -364,6 +364,35 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-tool.hourglass-ring { -webkit-mask-image: url(tools/hourglass-ring.svg); mask-image: url(tools/hourglass-ring.svg); }
 .ork-tool.hourglass-ring::after { -webkit-mask-image: url(tools/hourglass-ring-light.svg); mask-image: url(tools/hourglass-ring-light.svg); }
 
+/* --- Potion: a pool shown as a bottle (potion/, 0.17.0): a round bottle with a neck and a cork on a 14 x 18 grid, 3 px a cell (42 x 54), `.small` 2 px
+   (28 x 36), whole pixels. Plain HTML, CSS only: `<span class="ork-potion" style="--ork-potion-left:.62"></span>`. Three layers: the box is the edge
+   and the cork (the silhouette's mask); its ::before the glass and the liquid (the body's mask, painted in rectangles of whole cells, so the top is a pixel
+   row, never a slope); its ::after the highlight (the cell at the body's left edge, two rows under the liquid's top). The body is eight rows (y 9 to 16), so
+   --ork-potion-left (0 to 1, the share left) steps by an eighth, rounded up: any share above 0 shows a row, and 18 % shows two where 4 % shows one. --ork-potion-spend (0 to 1) hatches that share
+   at the liquid's top in a cell checker, for a card that would spend it. The liquid is --ork-mana (a signal: room to spend), --ork-alert on `.is-warn`,
+   --ork-danger on `.is-danger`. No words inside: the caller says the share. ----------------------------------------------------------------------- */
+.ork-potion { --_c: 3px; --_liq: var(--ork-mana);
+  --_left: clamp(0, var(--ork-potion-left, 1), 1); --_spend: clamp(0, var(--ork-potion-spend, 0), 1);
+  --_rows: round(up, calc(var(--_left) * 8), 1);
+  --_hatch: min(var(--_rows), round(up, calc(var(--_spend) * 8), 1));
+  position: relative; display: inline-block; flex: none; box-sizing: border-box; vertical-align: middle; width: calc(14 * var(--_c)); height: calc(18 * var(--_c));
+  background: linear-gradient(var(--ork-ink-muted), var(--ork-ink-muted)) 0 0 / 100% var(--_c) no-repeat, var(--ork-edge);
+  -webkit-mask: url(potion/silhouette.svg) 0 0 / 100% 100% no-repeat; mask: url(potion/silhouette.svg) 0 0 / 100% 100% no-repeat; }
+.ork-potion.small { --_c: 2px; }
+.ork-potion.is-warn { --_liq: var(--ork-alert); }
+.ork-potion.is-danger { --_liq: var(--ork-danger); }
+.ork-potion::before, .ork-potion::after { content: ""; position: absolute; inset: 0;
+  -webkit-mask-size: 100% 100%; mask-size: 100% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: 0 0; mask-position: 0 0; }
+.ork-potion::before { -webkit-mask-image: url(potion/body.svg); mask-image: url(potion/body.svg);
+  background:
+    linear-gradient(var(--ork-panel), var(--ork-panel)) 0 0 / 100% calc((17 - var(--_rows)) * var(--_c)) no-repeat,                 /* the glass above the liquid hides the checker */
+    linear-gradient(var(--_liq), var(--_liq)) 0 calc((17 - var(--_rows) + var(--_hatch)) * var(--_c)) / 100% calc((var(--_rows) - var(--_hatch)) * var(--_c)) no-repeat,
+    conic-gradient(transparent 25%, var(--_liq) 0 50%, transparent 0 75%, var(--_liq) 0) 0 0 / calc(2 * var(--_c)) calc(2 * var(--_c)),      /* the spent share: a cell checker */
+    var(--ork-panel); }
+.ork-potion::after { -webkit-mask-image: url(potion/shine.svg); mask-image: url(potion/shine.svg);
+  background: linear-gradient(color-mix(in srgb, var(--_liq) 45%, var(--ork-ink)), color-mix(in srgb, var(--_liq) 45%, var(--ork-ink)))
+    0 calc((18 - var(--_rows) + var(--_hatch)) * var(--_c)) / 100% calc(2 * var(--_c)) no-repeat; }
+
 /* --- Dialog, menu, toast ------------------------------------------------------------------------------------------------------- */
 .ork-scrim { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: var(--ork-6); background: var(--ork-scrim); }
 .ork-dialog, .ork-menu { background: var(--ork-panel); color: var(--ork-ink); border: var(--ork-double) double var(--ork-edge); clip-path: var(--ork-notch); box-sizing: border-box; }

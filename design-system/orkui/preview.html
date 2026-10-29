@@ -20,6 +20,8 @@
   figure { margin: 0; display: grid; justify-items: center; gap: var(--ork-2); width: 96px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
   .orks figure { width: auto; }
   .orks { display: flex; flex-wrap: wrap; gap: var(--ork-6); }
+  .pots { display: flex; flex-wrap: wrap; gap: var(--ork-6); align-items: end; padding: var(--ork-5); background: var(--ork-panel); border: 1px solid var(--ork-frame); }
+  .pots figure { width: auto; min-width: 72px; }
   .row { display: flex; gap: var(--ork-4); flex-wrap: wrap; align-items: center; }
   .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: var(--ork-4); }
   .box { border: 1px solid var(--ork-frame); }
@@ -340,6 +342,12 @@
   <span class="ork-crystals" role="img" aria-label="none left"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span> 0 %</div>
   <div class="ork-label">hatched: kept for tonight</div></section>
 
+<section><h2>Potion (a pool as a bottle: the mana left; 42 x 54 and .small 28 x 36, a 14 x 18 grid)</h2>
+  <div class="pots "><figure><span class="ork-potion" style="--ork-potion-left:1" aria-hidden="true"></span><figcaption>100 %</figcaption></figure><figure><span class="ork-potion" style="--ork-potion-left:.62" aria-hidden="true"></span><figcaption>62 %</figcaption></figure><figure><span class="ork-potion is-warn" style="--ork-potion-left:.18" aria-hidden="true"></span><figcaption>18 %, warns</figcaption></figure><figure><span class="ork-potion is-danger" style="--ork-potion-left:.04" aria-hidden="true"></span><figcaption>4 %, danger</figcaption></figure><figure><span class="ork-potion" style="--ork-potion-left:.62;--ork-potion-spend:.04" aria-hidden="true"></span><figcaption>62 %, 4 % spent</figcaption></figure></div>
+  <div class="pots small"><figure><span class="ork-potion small" style="--ork-potion-left:1" aria-hidden="true"></span><figcaption>100 %</figcaption></figure><figure><span class="ork-potion small" style="--ork-potion-left:.62" aria-hidden="true"></span><figcaption>62 %</figcaption></figure><figure><span class="ork-potion is-warn small" style="--ork-potion-left:.18" aria-hidden="true"></span><figcaption>18 %, warns</figcaption></figure><figure><span class="ork-potion is-danger small" style="--ork-potion-left:.04" aria-hidden="true"></span><figcaption>4 %, danger</figcaption></figure><figure><span class="ork-potion small" style="--ork-potion-left:.62;--ork-potion-spend:.04" aria-hidden="true"></span><figcaption>62 %, 4 % spent</figcaption></figure></div>
+  <div class="pots"><span class="ork-card" style="display:flex;gap:var(--ork-5);padding:var(--ork-4)"><span class="ork-potion" style="--ork-potion-left:.62" aria-hidden="true"></span><span class="ork-potion is-warn" style="--ork-potion-left:.18" aria-hidden="true"></span><span class="ork-potion is-danger" style="--ork-potion-left:.04" aria-hidden="true"></span><span class="ork-potion small" style="--ork-potion-left:.62;--ork-potion-spend:.04" aria-hidden="true"></span></span></div>
+  <div class="ork-label">the liquid is --ork-mana while there is room, the alert at a warning, the danger at a danger; the level steps by an eighth, rounded up, so a share above 0 shows a row; the hatched cells are the share a card would spend</div></section>
+
 <section><h2>Frame (the double frame of a raised thing)</h2><div class="row" style="align-items:start">
   <div class="ork-frame" style="width:156px;padding:var(--ork-3);display:grid;gap:var(--ork-2)"><span class="ork-gem alert" style="justify-self:start">$1&ndash;2</span><b>Plan ready</b><span style="color:var(--ork-ink-muted)">2 tasks, 1 check</span></div>
   <div class="ork-frame alert" style="width:156px;padding:var(--ork-3);display:grid;gap:var(--ork-2)"><span class="ork-gem alert" style="justify-self:start">?</span><b>Asks you</b><span style="color:var(--ork-ink-muted)">alert edge</span></div>
@@ -611,9 +619,9 @@ python -m pytest</code></pre>
 <script>
   const css = getComputedStyle(document.documentElement);
   const sw = document.getElementById("sw");
-  for (const n of ["canvas","panel","raised","frame","edge","ink","ink-muted","ink-faint","on-ink","action","action-hi","action-press","danger","alert","success","elem-meadow","elem-ice","elem-dust","elem-void","elem-lava","table","table-rim","table-rim-hi","card","card-frame","paper","ink-read"]) {
+  for (const n of ["canvas","panel","raised","frame","edge","ink","ink-muted","ink-faint","on-ink","action","action-hi","action-press","danger","alert","success","elem-meadow","elem-ice","elem-dust","elem-void","elem-lava","table","table-rim","table-rim-hi","card","card-frame","mana","paper","ink-read"]) {
     const d = document.createElement("div"); d.style.background = "var(--ork-" + n + ")"; d.textContent = n;
-    d.style.color = ["ink","ink-muted","ink-faint","ink-read","action","action-hi","action-press","danger","alert","success","edge","elem-meadow","elem-ice","elem-dust","elem-void","elem-lava"].includes(n) ? "var(--ork-on-ink)" : "var(--ork-ink)"; sw.append(d); }
+    d.style.color = ["ink","ink-muted","ink-faint","ink-read","action","action-hi","action-press","danger","alert","success","edge","elem-meadow","elem-ice","elem-dust","elem-void","elem-lava","mana"].includes(n) ? "var(--ork-on-ink)" : "var(--ork-ink)"; sw.append(d); }
   const cells = (el, on) => { for (let i = 0; i < 16; i++) { const c = document.createElement("i"); if (i < on) c.className = "on"; el.append(c); } };
   cells(document.getElementById("m1"), 6); cells(document.getElementById("m2"), 13); cells(document.getElementById("m3"), 16);
   for (const n of ["ork","ork-asleep","ork-asks","ork-failed","ork-working"]) {

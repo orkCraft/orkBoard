@@ -112,6 +112,19 @@ pick of four, four variants each (the orks' drum with its spanner, the elves' bo
 gnomes' handbell, the knights' treasure map, the skeletons' hourglass), drawn the same way at 28 px by `.ork-tool` (`tools/README.md`).
 Both come from `../drawings/drawings.json` (`python tools/build_big.py`).
 
+## The potion and the mana (0.17.0)
+`.ork-potion` is a pool drawn as a round bottle with a neck and a cork on a **14 x 18** grid (`potion/`, `potion/README.md`): 3 px a cell
+(42 x 54), `.small` 2 px (28 x 36), whole pixels. `<span class="ork-potion is-warn" style="--ork-potion-left:.18" aria-hidden="true"></span>`
+fills the body from the bottom by `--ork-potion-left` (0 to 1; eight rows, so an eighth a step, rounded up, the top always a whole row);
+`--ork-potion-spend` (0 to 1) hatches that share at the liquid's top in a cell checker; `.is-warn` and `.is-danger` turn the liquid
+`--ork-alert` and `--ork-danger`. The edge is `--ork-edge`, the glass `--ork-panel`, the cork `--ork-ink-muted`, a highlight on the liquid
+lighter toward the ink. No words inside: the caller says the share.
+
+**`--ork-mana`** `#7b97b8` is the liquid while there is room to spend: a dim, desaturated blue (CIELAB L* 61.5, hue 265, chroma 20),
+about as bright as `--ork-ink-muted` (L* 69; it is a little darker), so it does not pull the eye. It is a signal (*there is room*),
+used by `.ork-potion` alone, never a text colour, a fill or an element's: 5.63:1 on the panel, 4.54 on the card, 3:1 or more on every ground,
+CIE76 29.5 from `ice`, 11.9 from `void`, 67 or more from every signal.
+
 ## The icons
 `icons/icons.svg` is the sprite of the window's icons (`icons/README.md`). Twelve are **orkUI's own** (0.15.0), drawn on the signs' 7 x 7 grid in solid pixels: `arrow-left`, `close` (×),
 `more-horizontal` (…), `plus`, `search`, `mic`, `play`, `stop` and the four chevrons; at 14, 21 or 28 px (two, three or four pixels a cell) they are whole pixels. The other 22 are
