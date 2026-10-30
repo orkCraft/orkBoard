@@ -28,9 +28,9 @@ p, h1, h2 { margin: 0; }
 
 /* the die */
 .die { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); padding: var(--ork-1) var(--ork-2); border: 0; background: none; color: var(--ork-ink); cursor: pointer; font: var(--ork-type-caption); }
-.die svg { width: 72px; height: 66px; display: block; shape-rendering: crispEdges; overflow: visible; }
+.die svg { width: 72px; height: 66px; display: block; shape-rendering: crispEdges; overflow: visible; rotate: calc(var(--ork-motion-lean) * -1); }
 .die .w { font-weight: 600; }
-svg .t { fill: var(--ork-card-frame); } svg .f { fill: var(--ork-card); } svg .r { fill: var(--ork-panel); } svg .o { fill: var(--ork-edge); } svg .p { fill: var(--ork-ink-muted); }
+svg .t { fill: var(--ork-card-frame); } svg .f { fill: var(--ork-card); } svg .r { fill: var(--ork-panel); } svg .o { fill: var(--ork-edge); } svg .p { fill: var(--ork-ink-muted); } svg .ok { fill: var(--ork-success); } svg .no { fill: var(--ork-danger); }
 .die:hover svg, .die.is-hover svg { animation: wobble 300ms steps(3) 1 both; }
 @keyframes wobble { 0% { transform: translateY(-2px) rotate(-8deg); } 50% { transform: translateY(-4px) rotate(6deg); } 100% { transform: translateY(-4px) rotate(0deg); } }
 .die.is-playing .p { fill: var(--ork-ink); animation: pip 2.4s steps(6) infinite; } .die.is-playing .o { fill: var(--ork-ink); }
@@ -82,11 +82,11 @@ svg .t { fill: var(--ork-card-frame); } svg .f { fill: var(--ork-card); } svg .r
 @keyframes fly { from { transform: translate(var(--fx), var(--fy)) scale(0.5) rotate(-30deg); } 60% { transform: translate(calc(var(--tx) + 20px), calc(var(--ty) - 60px)) scale(1.1) rotate(160deg); } to { transform: translate(var(--tx), var(--ty)) scale(1) rotate(360deg); } }
 .thrown.roll { transform: translate(var(--tx), var(--ty)); animation: roll 480ms steps(4) infinite; }
 @keyframes roll { 0% { transform: translate(var(--tx), var(--ty)) rotate(0deg); } 25% { transform: translate(calc(var(--tx) + 6px), calc(var(--ty) - 8px)) rotate(90deg); } 50% { transform: translate(var(--tx), var(--ty)) rotate(180deg); } 75% { transform: translate(calc(var(--tx) - 6px), calc(var(--ty) - 8px)) rotate(270deg); } 100% { transform: translate(var(--tx), var(--ty)) rotate(360deg); } }
-.thrown.land { transform: translate(var(--tx), var(--ty)); animation: land 300ms steps(3) both; }
-@keyframes land { 0% { transform: translate(var(--tx), calc(var(--ty) - 14px)) scale(1.08); } 60% { transform: translate(var(--tx), calc(var(--ty) + 2px)) scale(0.97); } 100% { transform: translate(var(--tx), var(--ty)) scale(1); } }
-.thrown.fade { transform: translate(var(--tx), var(--ty)); animation: fadeout 300ms steps(3) forwards; }
-@keyframes fadeout { to { opacity: 0; transform: translate(var(--tx), calc(var(--ty) - 10px)); } }
-.thrown.tip { transform: translate(var(--tx), var(--ty)); animation: tip 360ms steps(3) forwards; }
+.thrown.land { transform: translate(var(--tx), var(--ty)) rotate(var(--ork-motion-lean)); animation: land 300ms steps(3) both; }
+@keyframes land { 0% { transform: translate(var(--tx), calc(var(--ty) - 14px)) scale(1.08) rotate(20deg); } 60% { transform: translate(var(--tx), calc(var(--ty) + 2px)) scale(0.97) rotate(4deg); } 100% { transform: translate(var(--tx), var(--ty)) scale(1) rotate(var(--ork-motion-lean)); } }
+.thrown.fade { transform: translate(var(--tx), var(--ty)) rotate(var(--ork-motion-lean)); animation: fadeout 300ms steps(3) forwards; }
+@keyframes fadeout { to { opacity: 0; transform: translate(var(--tx), calc(var(--ty) - 10px)) rotate(var(--ork-motion-lean)); } }
+.thrown.tip { transform: translate(var(--tx), var(--ty)) rotate(var(--ork-motion-lean)); animation: tip 360ms steps(3) forwards; }
 @keyframes tip { to { transform: translate(calc(var(--tx) + 10px), calc(var(--ty) + 6px)) rotate(28deg); opacity: 0.35; } }
 .warm .die svg { animation: wobble 300ms steps(3) 2 both; }
 @media (prefers-reduced-motion: reduce) { .thrown { display: none !important; } }
@@ -104,7 +104,7 @@ svg .t { fill: var(--ork-card-frame); } svg .f { fill: var(--ork-card); } svg .r
   </section>
   <section class="mk-sec" id="board">
     <h1>2 · The story of a cold start</h1>
-    <p class="mk-line">Pressed, <b>the die is thrown from the hand onto the pane</b>, which turns black (today's start screen), and <b>rolls while the preview starts</b>, the stage line under it (<i>Starting npm run dev · 2 s</i>). It lands, and in its place <b>the project's logo comes up as today</b> (six steps, two blinks, the name under it, the band sweeping while it still starts: the user's product, as a game shows its studio). When the page answers, the black fades and <b>the frame comes up</b>. The roll lasts about a second, then the logo holds the rest of the start; <b>nothing waits for the show</b>: if the preview is already running, the die only wobbles in the hand and the frame opens at once. If the start fails, the die tips over and today's failure (the reason, the command's last lines) takes its place. Under reduced motion: no throw, no roll; today's start screen.</p>
+    <p class="mk-line"><b>Its faces of fate</b>: it rolls the whole start, the stage line under it, and lands on what came of it: <b>a green tick</b> (orkUI's success) when the page answered, <b>a red cross</b> (orkUI's danger) when the start failed. A die on the table lies askew: turned by the lean token in the hand, as a laid card is, and the other way where it lands. Pressed, <b>the die is thrown from the hand onto the pane</b>, which turns black (today's start screen), and <b>rolls while the preview starts</b>, the stage line under it (<i>Starting npm run dev · 2 s</i>). It lands, and in its place <b>the project's logo comes up as today</b> (six steps, two blinks, the name under it, the band sweeping while it still starts: the user's product, as a game shows its studio). When the page answers, the black fades and <b>the frame comes up</b>. The roll lasts about a second, then the logo holds the rest of the start; <b>nothing waits for the show</b>: if the preview is already running, the die only wobbles in the hand and the frame opens at once. If the start fails, the die tips over and today's failure (the reason, the command's last lines) takes its place. Under reduced motion: no throw, no roll; today's start screen.</p>
     <div class="board" id="story"></div>
   </section>
   <section class="mk-sec" id="live">
@@ -119,6 +119,8 @@ svg .t { fill: var(--ork-card-frame); } svg .f { fill: var(--ork-card); } svg .r
   var B = "../../../design-system/orkui/";
   // the die: top face x 0..19, y 0..15; the front face under it (4 rows, slanting right); the right face beside it (4 columns, slanting down)
   var PIPS = { 1: [[9, 7]], 2: [[4, 3], [14, 11]], 3: [[4, 3], [9, 7], [14, 11]], 4: [[4, 3], [14, 3], [4, 11], [14, 11]], 5: [[4, 3], [14, 3], [9, 7], [4, 11], [14, 11]], 6: [[4, 3], [14, 3], [4, 7], [14, 7], [4, 11], [14, 11]] };
+  function scaled(rows, x0, y0) { var d = ""; rows.forEach(function (r, y) { for (var x = 0; x < r.length; x++) if (r[x] === "#") d += "M" + (x0 + 2 * x) + " " + (y0 + 2 * y) + "h2v2h-2z"; }); return d; }
+  var TICK = ["......#", ".....#.", "#...#..", ".#.#...", "..#...."], CROSS = ["#...#", ".#.#.", "..#..", ".#.#.", "#...#"];
   function dieSvg(top) {
     var face = {};
     for (var y = 0; y < 22; y++) for (var x = 0; x < 24; x++) {
@@ -133,12 +135,14 @@ svg .t { fill: var(--ork-card-frame); } svg .f { fill: var(--ork-card); } svg .r
         || (face[k] === "t" && (face[x + "," + (y + 1)] === "f" || face[(x + 1) + "," + y] === "r"));
       d[edge ? "o" : face[k]] += c;
     }
-    var p = (PIPS[top] || PIPS[5]).map(function (q) { return "M" + q[0] + " " + q[1] + "h2v2h-2z"; }).join("");
-    return '<svg viewBox="0 0 24 22" aria-hidden="true"><path class="t" d="' + d.t + '"/><path class="f" d="' + d.f + '"/><path class="r" d="' + d.r + '"/><path class="o" d="' + d.o + '"/><path class="p" d="' + p + '"/></svg>';
+    var p = top === "ok" ? '<path class="ok" d="' + scaled(TICK, 3, 3) + '"/>' : top === "no" ? '<path class="no" d="' + scaled(CROSS, 5, 3) + '"/>'
+      : '<path class="p" d="' + (PIPS[top] || PIPS[5]).map(function (q) { return "M" + q[0] + " " + q[1] + "h2v2h-2z"; }).join("") + '"/>';
+    return '<svg viewBox="0 0 24 22" aria-hidden="true"><path class="t" d="' + d.t + '"/><path class="f" d="' + d.f + '"/><path class="r" d="' + d.r + '"/><path class="o" d="' + d.o + '"/>' + p + "</svg>";
   }
   var die = function (cls, word, top) { return '<button type="button" class="die ' + (cls || "") + '" title="Play: the project\'s preview of dev">' + dieSvg(top || 5) + '<span class="w">' + (word || "Play") + "</span></button>"; };
   document.getElementById("dies").innerHTML = [["", "Play", "At rest."], ["is-hover", "Play", "Hovered: one wobble, then lifted."], ["is-playing", "Playing", "The preview is open: its pips glow."]]
     .map(function (c) { return '<figure style="width:200px;align-items:center">' + die(c[0], c[1]) + "<figcaption>" + c[2] + "</figcaption></figure>"; }).join("")
+    + '<figure style="width:200px;align-items:center"><div style="display:flex;gap:var(--ork-3)">' + die("", "Started", "ok") + die("", "Failed", "no") + "</div><figcaption>Its two faces of fate.</figcaption></figure>"
     + '<figure style="width:420px"><div style="display:flex;gap:var(--ork-3);align-items:flex-end">' + [1, 2, 3, 4, 5, 6].map(function (n) { return die("", String(n), n); }).join("") + "</div><figcaption>The six faces it rolls through.</figcaption></figure>";
 
   // the stage
@@ -153,8 +157,8 @@ svg .t { fill: var(--ork-card-frame); } svg .f { fill: var(--ork-card); } svg .r
       + '<div class="hand"><div class="ork-card hc">Reset the clock</div><div class="ork-card hc">Which shade of red?</div><div class="end">' + die("") + '<span style="width:var(--ork-3)"></span>' + pots + "</div></div></div>";
   }
   // the story, frame by frame (static)
-  var STEPS = [["Hover", "The die wobbles once in the hand."], ["Thrown", "Pressed: it flies onto the pane, which turns black."], ["Rolling", "It rolls while the preview starts; the stage line under it."], ["Landed", "It lands on a face."],
-    ["The logo", "The project's logo comes up in its place (today's: six steps, two blinks, the name), the band sweeping while it starts."], ["The frame", "The page answered: the black fades, the frame comes up; the die in the hand glows."]];
+  var STEPS = [["Hover", "The die wobbles once in the hand, lying askew."], ["Thrown", "Pressed: it flies onto the pane, which turns black."], ["Rolling", "It rolls the whole start; the stage line under it."], ["It started", "The page answered: it lands askew on its green tick."],
+    ["The logo", "The project's logo comes up in its place (today's: six steps, two blinks, the name), about a second."], ["The frame", "The black fades, the frame comes up; the die in the hand glows."], ["It did not start", "It lands on its red cross, tips over, and today's failure takes its place."]];
   document.getElementById("story").innerHTML = STEPS.map(function (s, i) { return '<figure><div style="width:380px;height:280px;overflow:hidden"><div class="st" data-i="' + i + '" style="transform:scale(0.5);transform-origin:0 0">' + stage(false) + "</div></div><figcaption><b>" + (i + 1) + " · " + s[0] + ".</b> " + s[1] + "</figcaption></figure>"; }).join("");
   [].slice.call(document.querySelectorAll("#story .st")).forEach(function (st) {
     var i = +st.dataset.i, black = st.querySelector(".black"), th = st.querySelector(".thrown"), handDie = st.querySelector(".hand .die"), line = st.querySelector(".line");
@@ -163,7 +167,8 @@ svg .t { fill: var(--ork-card-frame); } svg .f { fill: var(--ork-card); } svg .r
     if (i >= 1 && i <= 4) { black.classList.add("on"); handDie.classList.add("is-gone"); }
     if (i === 1) { th.classList.add("on"); th.innerHTML = dieSvg(3); th.style.transform = "translate(470px, 260px) scale(0.7) rotate(140deg)"; }
     if (i === 2) { th.classList.add("on"); th.innerHTML = dieSvg(2); th.style.transform = "translate(314px, 108px) rotate(90deg)"; line.innerHTML = "Starting <code>npm run dev</code> · 2 s"; }
-    if (i === 3) { th.classList.add("on"); th.innerHTML = dieSvg(6); line.innerHTML = "Starting <code>npm run dev</code> · 3 s"; }
+    if (i === 3) { th.classList.add("on"); th.innerHTML = dieSvg("ok"); th.style.transform = "translate(308px, 120px) rotate(6deg)"; line.innerHTML = ""; }
+    if (i === 6) { black.classList.add("on"); th.classList.add("on"); th.innerHTML = dieSvg("no"); th.style.transform = "translate(308px, 120px) rotate(6deg)"; }
     if (i === 4) { st.querySelector(".logo").classList.add("on"); st.querySelector(".slot").style.display = "none"; line.innerHTML = "Waiting for a page on :5173 · 4 s"; }
     if (i === 5) { st.querySelector(".frame").classList.add("on"); handDie.classList.add("is-playing"); handDie.querySelector(".w").textContent = "Playing"; }
     st.querySelectorAll(".black, .black *, .frame").forEach(function (e) { e.style.animation = "none"; });
@@ -185,7 +190,7 @@ svg .t { fill: var(--ork-card-frame); } svg .f { fill: var(--ork-card); } svg .r
     var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (kind === "warm") {
       box.dataset.running = "1";
-      handDie.classList.remove("is-playing"); st.classList.add("warm"); later(10, function () { st.classList.remove("warm"); void st.offsetWidth; st.classList.add("warm"); });
+      handDie.classList.remove("is-playing"); st.classList.remove("warm"); void st.offsetWidth; st.classList.add("warm");
       later(400, function () { st.querySelector(".frame").classList.add("on"); handDie.classList.add("is-playing"); handDie.querySelector(".w").textContent = "Playing"; });
       return;
     }
@@ -193,23 +198,26 @@ svg .t { fill: var(--ork-card-frame); } svg .f { fill: var(--ork-card); } svg .r
     th.style.setProperty("--fx", (hb.left - sb.left) + "px"); th.style.setProperty("--fy", (hb.top - sb.top) + "px");
     th.style.setProperty("--tx", (sb.width / 2 - 72) + "px"); th.style.setProperty("--ty", "120px");
     black.classList.add("on"); handDie.classList.add("is-gone");
-    var secs = 0, tick = function () { secs++; line.innerHTML = (secs < 3 ? "Starting <code>npm run dev</code>" : "Waiting for a page on :5173") + " · " + secs + " s"; };
-    line.innerHTML = "Making its worktree"; later(1000, tick); later(2000, tick); later(3000, tick);
-    if (!reduced) {
-      th.innerHTML = dieSvg(3); th.classList.add("on", "fly");
-      later(420, function () { th.classList.remove("fly"); th.classList.add("roll"); var n = 0; var face = function () { th.innerHTML = dieSvg(1 + (n++ % 6)); }; for (var t = 0; t < 900; t += 120) later(420 + t, face); });
-      later(1320, function () {
-        th.classList.remove("roll");
-        if (kind === "fail") { th.innerHTML = dieSvg(1); th.classList.add("tip"); later(380, function () { th.classList.remove("on"); st.querySelector(".slot").style.display = "none"; st.querySelector(".fail").classList.add("on"); line.innerHTML = ""; handDie.classList.remove("is-gone"); timers.forEach(clearTimeout); }); return; }
-        th.innerHTML = dieSvg(6); th.classList.add("land");
-        later(420, function () { th.classList.remove("land"); th.classList.add("fade"); });
-        later(720, function () { th.classList.remove("on", "fade"); st.querySelector(".slot").style.display = "none"; st.querySelector(".logo").classList.add("on"); });
+    var ends = kind === "fail" ? 2400 : 3600, secs = 0;
+    var tick = function () { secs++; line.innerHTML = (secs < 3 ? "Starting <code>npm run dev</code>" : "Waiting for a page on :5173") + " · " + secs + " s"; };
+    line.innerHTML = "Making its worktree"; for (var t = 1000; t < ends; t += 1000) later(t, tick);
+    var done = function () {
+      if (kind === "fail") { line.innerHTML = ""; st.querySelector(".slot").style.display = "none"; st.querySelector(".fail").classList.add("on"); handDie.classList.remove("is-gone"); return; }
+      st.querySelector(".slot").style.display = "none"; st.querySelector(".logo").classList.add("on"); line.innerHTML = "";
+      later(1400, function () {
+        black.classList.add("out"); st.querySelector(".frame").classList.add("on");
+        handDie.classList.remove("is-gone"); handDie.classList.add("is-playing"); handDie.querySelector(".w").textContent = "Playing"; box.dataset.running = "1";
+        later(460, function () { black.classList.remove("on", "out"); });
       });
-    } else { st.querySelector(".slot").style.display = "none"; st.querySelector(".logo").classList.add("on"); }
-    if (kind === "cold") later(4200, function () {
-      black.classList.add("out"); st.querySelector(".frame").classList.add("on");
-      handDie.classList.remove("is-gone"); handDie.classList.add("is-playing"); handDie.querySelector(".w").textContent = "Playing"; box.dataset.running = "1";
-      later(460, function () { black.classList.remove("on", "out"); });
+    };
+    if (reduced) { later(ends, done); return; }
+    th.innerHTML = dieSvg(3); th.classList.add("on", "fly");
+    later(420, function () { th.classList.remove("fly"); th.classList.add("roll"); });
+    var n = 0; for (var u = 420; u < ends; u += 120) later(u, function () { th.innerHTML = dieSvg(1 + (n++ % 6)); });
+    later(ends, function () {                                          // the outcome is known: it lands on it, askew
+      th.classList.remove("roll"); th.innerHTML = dieSvg(kind === "fail" ? "no" : "ok"); th.classList.add("land"); timers.forEach(function (x, k) { if (k < timers.length) {} }); line.innerHTML = kind === "fail" ? "It did not start" : "It started";
+      later(kind === "fail" ? 700 : 600, function () { th.classList.remove("land"); th.classList.add(kind === "fail" ? "tip" : "fade"); });
+      later(kind === "fail" ? 1060 : 900, function () { th.classList.remove("on", "fade", "tip"); done(); });
     });
   }
   [].slice.call(document.querySelectorAll("[data-run]")).forEach(function (b) { b.addEventListener("click", function () { run(b.dataset.run); }); });
