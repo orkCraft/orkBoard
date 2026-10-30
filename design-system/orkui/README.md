@@ -133,10 +133,19 @@ a three-armed swirl turning to a dark eye, twelve sparks outside, on a **26 x 28
 reduced motion. No words inside: the caller adds the label and the line.
 
 **`--ork-portal`** `#b27bf6` is the swirl's and the sparks' light, a magical violet (CIELAB L* 61.9, hue 310, chroma 70); **`--ork-portal-hi`** `#d5a8ff`
-(L* 75.7) is the brighter one while a card is held over it. A signal (*a goal can be played here*), used by `.ork-portal` alone, never a text colour, a
+(L* 75.7) is the brighter one while a card is held over it. A signal (*a goal can be played here*), used by `.ork-portal` and its ring alone, never a text colour, a
 fill or an element's: `--ork-portal` is 5.71:1 on the panel and 4.60 on the card, `--ork-portal-hi` 8.80 and 7.09, 3:1 or more on every ground; CIE76
 52.6 from the void element's `#8e88a8` (a goal's element is never mistaken for the portal; `-hi` 36.0), 37.8 from `ice`, 57.8 from `mana`, 84 or more
 from every signal.
+
+## The runes, the portal's ring, the sigil and a card's place (0.19.0)
+Twelve runes on a **5 x 7** grid, orkUI's own: they spell nothing, and none is a letter of a real alphabet (`runes/`, `runes/README.md`). `.ork-rune.<name>`
+is 10 x 14, `.big` 20 x 28, in the text's colour. They are the table's one vocabulary of magic. **`.ork-portal-ring`** is the portal's place, 192 x 192:
+a dotted circle with eight runes, still and grey while asleep, its runes `--ork-portal` when `.is-open` (the portal in it), `--ork-portal-hi` when
+`.is-taking`, grey again when `.is-sealed`; `.is-waking` lights them one after another, then opens the portal's eye. **`.ork-sigil`** is the + card's
+seal of summoning, 136 x 136 (`.small` 72 x 72 at an 80 px card): a circle, a band of eight runes and a star of two squares in the card's own
+colour at a quarter's strength, so the + stays the one bright thing. On hover its runes light once round the circle. **`.ork-card-place`** is a pile's
+place before its first card (the discard's), a card's outline in pixel dashes, never pressed. Nothing turns under reduced motion.
 
 ## The icons
 `icons/icons.svg` is the sprite of the window's icons (`icons/README.md`). Twelve are **orkUI's own** (0.15.0), drawn on the signs' 7 x 7 grid in solid pixels: `arrow-left`, `close` (×),
