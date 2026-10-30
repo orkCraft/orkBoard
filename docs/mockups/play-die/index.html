@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orkboard Play die, mockup</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* The mockup's own CSS: layout only, in orkUI 0.21.0's tokens. The die is drawn by the script on a 24 x 22 grid at 3 px (72 x 66), seen from above: its top face
+   large, its front and right faces thin strips. The start screen after the roll is today's (js/arena/play.js, play.css: the logo up in six steps, two blinks,
+   the name, the band sweeping while it starts, the frame up out of the black), copied here in look. */
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--ork-canvas); }
+body { margin: 0; background: var(--ork-canvas); color: var(--ork-ink); font: var(--ork-type-body); }
+p, h1, h2 { margin: 0; }
+.mk-bar { position: sticky; top: 0; z-index: 99; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-4) var(--ork-6); padding: var(--ork-4) var(--ork-6); background: var(--ork-canvas); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.mk-bar nav { display: flex; gap: var(--ork-3); flex-wrap: wrap; }
+.mk-main { padding: var(--ork-6); display: flex; flex-direction: column; gap: var(--ork-8); }
+.mk-sec h1 { font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); margin-bottom: var(--ork-3); }
+.mk-line { max-width: 116ch; margin-bottom: var(--ork-5); }
+.mk-line b { font-weight: 600; }
+.board { display: flex; flex-wrap: wrap; gap: var(--ork-6); }
+.board figure { margin: 0; display: flex; flex-direction: column; gap: var(--ork-2); width: 380px; }
+.board figcaption { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.board figcaption b { color: var(--ork-ink); }
+
+/* the die */
+.die { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); padding: var(--ork-1) var(--ork-2); border: 0; background: none; color: var(--ork-ink); cursor: pointer; font: var(--ork-type-caption); }
+.die svg { width: 72px; height: 66px; display: block; shape-rendering: crispEdges; overflow: visible; }
+.die .w { font-weight: 600; }
+svg .t { fill: var(--ork-card-frame); } svg .f { fill: var(--ork-card); } svg .r { fill: var(--ork-panel); } svg .o { fill: var(--ork-edge); } svg .p { fill: var(--ork-ink-muted); }
+.die:hover svg, .die.is-hover svg { animation: wobble 300ms steps(3) 1 both; }
+@keyframes wobble { 0% { transform: translateY(-2px) rotate(-8deg); } 50% { transform: translateY(-4px) rotate(6deg); } 100% { transform: translateY(-4px) rotate(0deg); } }
+.die.is-playing .p { fill: var(--ork-ink); animation: pip 2.4s steps(6) infinite; } .die.is-playing .o { fill: var(--ork-ink); }
+@keyframes pip { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+.die.is-gone svg { visibility: hidden; }
+@media (prefers-reduced-motion: reduce) { .die:hover svg, .die.is-hover svg, .die.is-playing .p { animation: none; } }
+
+/* the stage: the pane over the hand, at 760 x 560 */
+.stage { position: relative; width: 760px; height: 560px; display: grid; grid-template-rows: minmax(0, 1fr) 140px; outline: var(--ork-line) solid var(--ork-edge); overflow: hidden; background: var(--ork-table); }
+.stage.small { width: 380px; height: 280px; grid-template-rows: minmax(0, 1fr) 70px; }
+.pane { position: relative; overflow: hidden; }
+.pane .lanes { position: absolute; inset: 0; display: grid; grid-template-columns: repeat(4, 1fr); }
+.pane .lanes > i { border-right: var(--ork-line) solid var(--ork-frame); }
+.hand { position: relative; z-index: 3; display: flex; align-items: flex-start; gap: var(--ork-4); padding: var(--ork-4) var(--ork-3) 0; border-top: var(--ork-line) solid var(--ork-frame); background: var(--ork-canvas); }
+.hand .hc { width: 120px; height: 170px; padding: var(--ork-3); font-weight: 600; font-size: 13px; }
+.hand .end { margin-left: auto; display: flex; align-items: flex-start; gap: var(--ork-2); }
+.pool { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); width: 60px; padding: var(--ork-1) 0; border: 2px solid transparent; font: var(--ork-type-caption); }
+.pool.is-default { border-color: var(--ork-ink); clip-path: var(--ork-notch); background: var(--ork-panel); }
+.pool .pct { font-weight: 600; }
+/* the start screen over the pane (today's, in look) */
+.black { position: absolute; inset: 0; z-index: 4; display: none; flex-direction: column; align-items: center; justify-content: center; gap: var(--ork-5); background: var(--ork-canvas); }
+.black.on { display: flex; animation: in 240ms steps(3) both; }
+@keyframes in { from { opacity: 0; } to { opacity: 1; } }
+.black .logo { display: none; flex-direction: column; align-items: center; gap: var(--ork-4); }
+.black .logo.on { display: flex; }
+.black .logo .mark { position: relative; display: grid; place-items: center; width: 112px; height: 112px; border: 4px solid var(--ork-ink); color: var(--ork-ink); animation: up 0.6s steps(6) both, blink 0.8s steps(1, end) 0.6s both; }
+.black .logo .mark .ork-sign { width: 56px; height: 56px; }
+.black .logo .name { font-family: var(--ork-font-pixel); font-size: 28px; line-height: 36px; text-transform: uppercase; letter-spacing: 0.04em; animation: in 0.4s steps(4) 1.4s both; }
+@keyframes up { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+@keyframes blink { 0% { opacity: 1; } 25% { opacity: 0.2; } 50% { opacity: 1; } 75% { opacity: 0.2; } 100% { opacity: 1; } }
+.black .line { color: var(--ork-ink-faint); font: var(--ork-type-body); min-height: 20px; }
+.black .line code { font-family: var(--ork-font-code); color: var(--ork-ink-muted); }
+.black .fail { display: none; width: 420px; flex-direction: column; gap: var(--ork-3); }
+.black .fail.on { display: flex; }
+.black .fail .why { color: var(--ork-danger); font-weight: 600; }
+.black .fail pre { margin: 0; padding: var(--ork-3) var(--ork-4); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink-muted); font: var(--ork-type-caption); font-family: var(--ork-font-code); white-space: pre; }
+.black.out { animation: out 0.45s steps(5) forwards; }
+@keyframes out { to { opacity: 0; } }
+/* the frame: the project's preview, up out of the black */
+.frame { position: absolute; inset: 0; z-index: 3; display: none; place-items: center; background: var(--ork-panel); }
+.frame.on { display: grid; animation: in 0.45s steps(5) both; }
+.frame .game { width: 70%; height: 70%; display: grid; place-items: center; border: 2px dashed var(--ork-edge); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.frame .bar { position: absolute; top: 0; left: 0; right: 0; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--ork-4); background: var(--ork-canvas); border-bottom: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+/* the thrown die: a copy of it flying from the hand to the pane's middle, then rolling, then landing */
+.thrown { position: absolute; z-index: 6; left: 0; top: 0; width: 144px; height: 132px; pointer-events: none; display: none; }
+.thrown.on { display: block; }
+.thrown svg { width: 144px; height: 132px; display: block; shape-rendering: crispEdges; overflow: visible; }
+.thrown.fly { animation: fly 420ms steps(7) both; }
+@keyframes fly { from { transform: translate(var(--fx), var(--fy)) scale(0.5) rotate(-30deg); } 60% { transform: translate(calc(var(--tx) + 20px), calc(var(--ty) - 60px)) scale(1.1) rotate(160deg); } to { transform: translate(var(--tx), var(--ty)) scale(1) rotate(360deg); } }
+.thrown.roll { transform: translate(var(--tx), var(--ty)); animation: roll 480ms steps(4) infinite; }
+@keyframes roll { 0% { transform: translate(var(--tx), var(--ty)) rotate(0deg); } 25% { transform: translate(calc(var(--tx) + 6px), calc(var(--ty) - 8px)) rotate(90deg); } 50% { transform: translate(var(--tx), var(--ty)) rotate(180deg); } 75% { transform: translate(calc(var(--tx) - 6px), calc(var(--ty) - 8px)) rotate(270deg); } 100% { transform: translate(var(--tx), var(--ty)) rotate(360deg); } }
+.thrown.land { transform: translate(var(--tx), var(--ty)); animation: land 300ms steps(3) both; }
+@keyframes land { 0% { transform: translate(var(--tx), calc(var(--ty) - 14px)) scale(1.08); } 60% { transform: translate(var(--tx), calc(var(--ty) + 2px)) scale(0.97); } 100% { transform: translate(var(--tx), var(--ty)) scale(1); } }
+.thrown.fade { transform: translate(var(--tx), var(--ty)); animation: fadeout 300ms steps(3) forwards; }
+@keyframes fadeout { to { opacity: 0; transform: translate(var(--tx), calc(var(--ty) - 10px)); } }
+.thrown.tip { transform: translate(var(--tx), var(--ty)); animation: tip 360ms steps(3) forwards; }
+@keyframes tip { to { transform: translate(calc(var(--tx) + 10px), calc(var(--ty) + 6px)) rotate(28deg); opacity: 0.35; } }
+.warm .die svg { animation: wobble 300ms steps(3) 2 both; }
+@media (prefers-reduced-motion: reduce) { .thrown { display: none !important; } }
+.ctrls { display: flex; gap: var(--ork-3); margin-bottom: var(--ork-4); flex-wrap: wrap; }
+</style>
+</head>
+<body>
+<header class="mk-bar"><span class="ork-label">Orkboard · Play as a die: thrown, rolling while it starts, then the project's logo</span>
+  <nav><a class="ork-btn" href="#die">1 · The die</a><a class="ork-btn" href="#board">2 · The story</a><a class="ork-btn" href="#live">3 · Live</a></nav></header>
+<main class="mk-main">
+  <section class="mk-sec" id="die">
+    <h1>1 · The die, seen from above</h1>
+    <p class="mk-line">Bigger, and seen from above as a die on a table: <b>its top face large</b> (its number clear), the front and right faces thin strips that only peek out. 24 × 22 cells at 3 px (72 × 66), the potions' pixel; the card's greys, the edge round it, pips in the muted ink; <i>Play</i> under it. <b>Hover: it wobbles once</b> (three steps, 300 ms) and stays lifted, never shaking on. Playing, its pips and edge turn to the ink and glow.</p>
+    <div class="board" id="dies"></div>
+  </section>
+  <section class="mk-sec" id="board">
+    <h1>2 · The story of a cold start</h1>
+    <p class="mk-line">Pressed, <b>the die is thrown from the hand onto the pane</b>, which turns black (today's start screen), and <b>rolls while the preview starts</b>, the stage line under it (<i>Starting npm run dev · 2 s</i>). It lands, and in its place <b>the project's logo comes up as today</b> (six steps, two blinks, the name under it, the band sweeping while it still starts: the user's product, as a game shows its studio). When the page answers, the black fades and <b>the frame comes up</b>. The roll lasts about a second, then the logo holds the rest of the start; <b>nothing waits for the show</b>: if the preview is already running, the die only wobbles in the hand and the frame opens at once. If the start fails, the die tips over and today's failure (the reason, the command's last lines) takes its place. Under reduced motion: no throw, no roll; today's start screen.</p>
+    <div class="board" id="story"></div>
+  </section>
+  <section class="mk-sec" id="live">
+    <h1>3 · Live</h1>
+    <p class="mk-line">Press the die in the hand, or a button: a cold start of about four seconds, a warm one, a start that fails.</p>
+    <div class="ctrls"><button class="ork-btn" type="button" data-run="cold">Cold start</button><button class="ork-btn" type="button" data-run="warm">Warm (already running)</button><button class="ork-btn" type="button" data-run="fail">It fails</button><button class="ork-btn quiet" type="button" data-run="reset">Reset</button></div>
+    <div id="livebox"></div>
+  </section>
+</main>
+<script>
+(function () {
+  var B = "../../../design-system/orkui/";
+  // the die: top face x 0..19, y 0..15; the front face under it (4 rows, slanting right); the right face beside it (4 columns, slanting down)
+  var PIPS = { 1: [[9, 7]], 2: [[4, 3], [14, 11]], 3: [[4, 3], [9, 7], [14, 11]], 4: [[4, 3], [14, 3], [4, 11], [14, 11]], 5: [[4, 3], [14, 3], [9, 7], [4, 11], [14, 11]], 6: [[4, 3], [14, 3], [4, 7], [14, 7], [4, 11], [14, 11]] };
+  function dieSvg(top) {
+    var face = {};
+    for (var y = 0; y < 22; y++) for (var x = 0; x < 24; x++) {
+      if (x <= 19 && y <= 15 && !((x === 0 || x === 19) && (y === 0 || y === 15))) face[x + "," + y] = "t";
+      else if (y >= 16 && y <= 19 && x >= y - 15 && x <= 19 + y - 15) face[x + "," + y] = "f";
+      else if (x >= 20 && x <= 23 && y >= x - 19 && y <= 15 + x - 19) face[x + "," + y] = "r";
+    }
+    var d = { t: "", f: "", r: "", o: "" };
+    for (var k in face) {
+      var q = k.split(","), x = +q[0], y = +q[1], c = "M" + x + " " + y + "h1v1h-1z";
+      var edge = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(function (e) { return !face[(x + e[0]) + "," + (y + e[1])]; })
+        || (face[k] === "t" && (face[x + "," + (y + 1)] === "f" || face[(x + 1) + "," + y] === "r"));
+      d[edge ? "o" : face[k]] += c;
+    }
+    var p = (PIPS[top] || PIPS[5]).map(function (q) { return "M" + q[0] + " " + q[1] + "h2v2h-2z"; }).join("");
+    return '<svg viewBox="0 0 24 22" aria-hidden="true"><path class="t" d="' + d.t + '"/><path class="f" d="' + d.f + '"/><path class="r" d="' + d.r + '"/><path class="o" d="' + d.o + '"/><path class="p" d="' + p + '"/></svg>';
+  }
+  var die = function (cls, word, top) { return '<button type="button" class="die ' + (cls || "") + '" title="Play: the project\'s preview of dev">' + dieSvg(top || 5) + '<span class="w">' + (word || "Play") + "</span></button>"; };
+  document.getElementById("dies").innerHTML = [["", "Play", "At rest."], ["is-hover", "Play", "Hovered: one wobble, then lifted."], ["is-playing", "Playing", "The preview is open: its pips glow."]]
+    .map(function (c) { return '<figure style="width:200px;align-items:center">' + die(c[0], c[1]) + "<figcaption>" + c[2] + "</figcaption></figure>"; }).join("")
+    + '<figure style="width:420px"><div style="display:flex;gap:var(--ork-3);align-items:flex-end">' + [1, 2, 3, 4, 5, 6].map(function (n) { return die("", String(n), n); }).join("") + "</div><figcaption>The six faces it rolls through.</figcaption></figure>";
+
+  // the stage
+  var pots = '<div class="pool is-default"><img class="ork-mark" src="' + B + 'marks/harness-claude.png" alt=""><span class="ork-potion small" style="--ork-potion-left:.62"></span><span class="pct">62%</span></div>'
+    + '<div class="pool"><img class="ork-mark" src="' + B + 'marks/harness-codex.png" alt=""><span class="ork-potion small" style="--ork-potion-left:.88"></span><span class="pct">88%</span></div>';
+  var logo = '<div class="logo"><span class="mark"><span class="ork-sign big level" aria-hidden="true"></span></span><span class="name">Tower brawl</span></div>';
+  function stage(small) {
+    return '<div class="stage' + (small ? " small" : "") + '"><div class="pane"><div class="lanes"><i></i><i></i><i></i><i></i></div>'
+      + '<div class="black"><span class="slot" style="height:132px"></span>' + logo + '<div class="fail"><span class="why">The preview did not start: npm run dev stopped (exit 1)</span><pre>&gt; tower-brawl@0.3.0 dev\n&gt; vite\n\nError: Cannot find module \'vite\'</pre><span style="display:flex;gap:var(--ork-3)"><button class="ork-btn" type="button">Try again</button><button class="ork-btn quiet" type="button">Close</button></span></div><p class="line"></p></div>'
+      + '<div class="frame"><div class="bar"><span>Plays dev at 4f2a91c</span><span>Stop the build · Full screen</span></div><div class="game">the project\'s preview (an iframe)</div></div>'
+      + '<span class="thrown"></span></div>'
+      + '<div class="hand"><div class="ork-card hc">Reset the clock</div><div class="ork-card hc">Which shade of red?</div><div class="end">' + die("") + '<span style="width:var(--ork-3)"></span>' + pots + "</div></div></div>";
+  }
+  // the story, frame by frame (static)
+  var STEPS = [["Hover", "The die wobbles once in the hand."], ["Thrown", "Pressed: it flies onto the pane, which turns black."], ["Rolling", "It rolls while the preview starts; the stage line under it."], ["Landed", "It lands on a face."],
+    ["The logo", "The project's logo comes up in its place (today's: six steps, two blinks, the name), the band sweeping while it starts."], ["The frame", "The page answered: the black fades, the frame comes up; the die in the hand glows."]];
+  document.getElementById("story").innerHTML = STEPS.map(function (s, i) { return '<figure><div style="width:380px;height:280px;overflow:hidden"><div class="st" data-i="' + i + '" style="transform:scale(0.5);transform-origin:0 0">' + stage(false) + "</div></div><figcaption><b>" + (i + 1) + " · " + s[0] + ".</b> " + s[1] + "</figcaption></figure>"; }).join("");
+  [].slice.call(document.querySelectorAll("#story .st")).forEach(function (st) {
+    var i = +st.dataset.i, black = st.querySelector(".black"), th = st.querySelector(".thrown"), handDie = st.querySelector(".hand .die"), line = st.querySelector(".line");
+    th.style.transform = "translate(308px, 120px)"; th.style.transformOrigin = "50% 50%";
+    if (i === 0) handDie.classList.add("is-hover");
+    if (i >= 1 && i <= 4) { black.classList.add("on"); handDie.classList.add("is-gone"); }
+    if (i === 1) { th.classList.add("on"); th.innerHTML = dieSvg(3); th.style.transform = "translate(470px, 260px) scale(0.7) rotate(140deg)"; }
+    if (i === 2) { th.classList.add("on"); th.innerHTML = dieSvg(2); th.style.transform = "translate(314px, 108px) rotate(90deg)"; line.innerHTML = "Starting <code>npm run dev</code> · 2 s"; }
+    if (i === 3) { th.classList.add("on"); th.innerHTML = dieSvg(6); line.innerHTML = "Starting <code>npm run dev</code> · 3 s"; }
+    if (i === 4) { st.querySelector(".logo").classList.add("on"); st.querySelector(".slot").style.display = "none"; line.innerHTML = "Waiting for a page on :5173 · 4 s"; }
+    if (i === 5) { st.querySelector(".frame").classList.add("on"); handDie.classList.add("is-playing"); handDie.querySelector(".w").textContent = "Playing"; }
+    st.querySelectorAll(".black, .black *, .frame").forEach(function (e) { e.style.animation = "none"; });
+  });
+
+  // live
+  var box = document.getElementById("livebox"), timers = [];
+  function reset() {
+    timers.forEach(clearTimeout); timers = [];
+    box.innerHTML = stage(false);
+    box.querySelector(".hand .die").addEventListener("click", function () { run(box.dataset.running ? "warm" : "cold"); });
+    delete box.dataset.running;
+  }
+  function later(ms, fn) { timers.push(setTimeout(fn, ms)); }
+  function run(kind) {
+    if (kind === "reset") return reset();
+    if (kind !== "warm" || !box.dataset.running) reset();
+    var st = box.querySelector(".stage"), black = st.querySelector(".black"), th = st.querySelector(".thrown"), handDie = st.querySelector(".hand .die"), line = st.querySelector(".line");
+    var reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (kind === "warm") {
+      box.dataset.running = "1";
+      handDie.classList.remove("is-playing"); st.classList.add("warm"); later(10, function () { st.classList.remove("warm"); void st.offsetWidth; st.classList.add("warm"); });
+      later(400, function () { st.querySelector(".frame").classList.add("on"); handDie.classList.add("is-playing"); handDie.querySelector(".w").textContent = "Playing"; });
+      return;
+    }
+    var hb = handDie.getBoundingClientRect(), sb = st.getBoundingClientRect();
+    th.style.setProperty("--fx", (hb.left - sb.left) + "px"); th.style.setProperty("--fy", (hb.top - sb.top) + "px");
+    th.style.setProperty("--tx", (sb.width / 2 - 72) + "px"); th.style.setProperty("--ty", "120px");
+    black.classList.add("on"); handDie.classList.add("is-gone");
+    var secs = 0, tick = function () { secs++; line.innerHTML = (secs < 3 ? "Starting <code>npm run dev</code>" : "Waiting for a page on :5173") + " · " + secs + " s"; };
+    line.innerHTML = "Making its worktree"; later(1000, tick); later(2000, tick); later(3000, tick);
+    if (!reduced) {
+      th.innerHTML = dieSvg(3); th.classList.add("on", "fly");
+      later(420, function () { th.classList.remove("fly"); th.classList.add("roll"); var n = 0; var face = function () { th.innerHTML = dieSvg(1 + (n++ % 6)); }; for (var t = 0; t < 900; t += 120) later(420 + t, face); });
+      later(1320, function () {
+        th.classList.remove("roll");
+        if (kind === "fail") { th.innerHTML = dieSvg(1); th.classList.add("tip"); later(380, function () { th.classList.remove("on"); st.querySelector(".slot").style.display = "none"; st.querySelector(".fail").classList.add("on"); line.innerHTML = ""; handDie.classList.remove("is-gone"); timers.forEach(clearTimeout); }); return; }
+        th.innerHTML = dieSvg(6); th.classList.add("land");
+        later(420, function () { th.classList.remove("land"); th.classList.add("fade"); });
+        later(720, function () { th.classList.remove("on", "fade"); st.querySelector(".slot").style.display = "none"; st.querySelector(".logo").classList.add("on"); });
+      });
+    } else { st.querySelector(".slot").style.display = "none"; st.querySelector(".logo").classList.add("on"); }
+    if (kind === "cold") later(4200, function () {
+      black.classList.add("out"); st.querySelector(".frame").classList.add("on");
+      handDie.classList.remove("is-gone"); handDie.classList.add("is-playing"); handDie.querySelector(".w").textContent = "Playing"; box.dataset.running = "1";
+      later(460, function () { black.classList.remove("on", "out"); });
+    });
+  }
+  [].slice.call(document.querySelectorAll("[data-run]")).forEach(function (b) { b.addEventListener("click", function () { run(b.dataset.run); }); });
+  reset();
+})();
+</script>
+</body>
+</html>
