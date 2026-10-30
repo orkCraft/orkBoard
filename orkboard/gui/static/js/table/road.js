@@ -49,11 +49,11 @@ export function Corner({ side, words, c, passed = null }) {
   </button>`;
 }
 
-/** The gate: the skeletons whose checks have not passed, in front of the portal's lower part (orkUI `.ork-portal-ring__gate`, three at most), the one running stepping, a red one with its alert sign. It lies over the portal, so a press on it is a press on the portal (`onPress`: the sealed portal says its reason again). */
-export function Gate({ skeletons, onPress }) {
+/** The gate: the skeletons whose checks have not passed, in front of the portal's lower part (orkUI `.ork-portal-ring__gate`, three at most), the one running stepping, a red one with its alert sign. It lies over the portal, so a press on it is a press on the portal (`onPress`: the sealed portal says its reason again; `drag`: a card dropped on it is dropped on the portal, which says it is checking). */
+export function Gate({ skeletons, onPress, drag = {} }) {
   const standing = skeletons.filter((s) => s.state !== "passed");
   if (!standing.length) return null;
   const running = standing.find((s) => s.state === "running")?.at;
-  return html`<span class="ork-portal-ring__gate" data-gate=${standing.map((s) => s.state).join(" ")} onClick=${onPress}>${standing.map((s) => html`<span key=${s.at} class=${cls("ork-portal-ring__guard", { "is-working": s.at === running, "is-red": s.state === "failed" })}
+  return html`<span class="ork-portal-ring__gate" data-gate=${standing.map((s) => s.state).join(" ")} onClick=${onPress} ...${drag}>${standing.map((s) => html`<span key=${s.at} class=${cls("ork-portal-ring__guard", { "is-working": s.at === running, "is-red": s.state === "failed" })}
       role="img" aria-label=${s.label} title=${s.label} data-check=${s.state}><${Head} race="skeleton" tier=${s.tier} size="big" />${s.state === "failed" && html`<span class="ork-portal-ring__alert" aria-hidden="true"></span>`}</span>`)}</span>`;
 }

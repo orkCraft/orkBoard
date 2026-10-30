@@ -279,6 +279,29 @@ def test_a_red_check_stays_in_front_with_its_words_and_blocks_the_portal(gui):
     assert not log, "\n".join(log)
 
 
+def test_a_card_dropped_on_the_portal_while_its_checks_run_is_not_lost_in_silence_and_goes_nowhere(gui):
+    host = RoadPortalHost()
+    host.step("codes", "passed", "running")
+    pg, log = open_view(gui, host)
+    try:
+        woken(pg)
+        src = card(pg, "codes").bounding_box()
+        pg.mouse.move(src["x"] + 40, src["y"] + 60)
+        pg.mouse.down()
+        pg.mouse.move(src["x"] + 60, src["y"] + 70, steps=4)
+        pg.wait_for_function("() => document.querySelectorAll('.ork-portal-ring__gate > .ork-portal-ring__guard').length === 1", timeout=WAIT_MS)
+        door = pg.locator(".ork-portal-ring__gate").bounding_box()
+        pg.mouse.move(door["x"] + door["width"] / 2, door["y"] + door["height"] / 2, steps=12)                           # over the skeleton standing in front of the portal
+        pg.wait_for_function("() => document.querySelector('.ork-portal')?.classList.contains('is-taking')", timeout=WAIT_MS)
+        pg.mouse.up()
+        pg.locator(".gui-toasts").get_by_text("Checking the way into main").wait_for(timeout=WAIT_MS)                  # said in a toast, not dropped in silence
+        assert [a for n, a in host.log if n == "ideas.to_main"] == [], "nothing goes to main while a skeleton stands"
+        assert "is-taking" not in portal(pg).get_attribute("class")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
 def test_a_fourth_check_is_folded_into_the_third_skeletons_words(gui):
     host = RoadPortalHost()
     host.step("codes", "passed", "passed", "passed", "running")
@@ -401,6 +424,14 @@ def test_the_road_fits_over_the_hand_at_1280_and_1024_wide_in_every_state(gui, w
                         assert box["y"] + box["height"] <= hand["y"] + 1, f"{state}: {sel} overlaps the hand"
                         assert box["x"] >= 0 and box["x"] + box["width"] <= pg.viewport_size["width"] + 1, f"{state}: {sel} leaves the window"
             narrow.no_sideways(pg)
+            corners = [b for b in (el.bounding_box() for el in pg.locator(".ork-portal-ring__before, .ork-portal-ring__after").all()) if b]
+            for sel in (".portal__hint", ".portal__sealed", ".portal__line", ".portal__label", ".table-end__label"):
+                for el in pg.locator(sel).all():
+                    box = el.bounding_box()
+                    if box and box["height"] and el.inner_text().strip():
+                        for c in corners:
+                            apart = box["x"] + box["width"] <= c["x"] or c["x"] + c["width"] <= box["x"] or box["y"] + box["height"] <= c["y"] or c["y"] + c["height"] <= box["y"]
+                            assert apart, f"{state}: {sel} overlaps a corner of the ring"
         clear("asleep or open")
         shot(pg, f"{width}-rest")
         choose(pg, "codes")

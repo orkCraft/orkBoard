@@ -37,6 +37,7 @@ export const going = signal("");                                  // the goal wh
 export const first = signal(false);                               // the first time the portal opens on this device
 export const sending = signal("");                                // the element of the goal that went in: the ring plays its rite (`is-sending rite-<element>`) for RITE_MS
 export const RITE_MS = 1200;
+const woke = signal(false);                                       // the ring's first waking has played: its class comes off, so the ring opening and closing again (the checks) does not play it again
 export const echo = signal(0);                                    // a press on a sealed portal says its reason again
 let planning = Promise.resolve(), said = false;
 
@@ -98,7 +99,11 @@ export async function play() {
   await whenAsked();                                                                         // a press before the host has said what its checks stand at waits for that
   const p = plan.value;
   if (chosen.value !== slug || !p || p.slug !== slug) return;
-  if (p.state !== "ok" || (p.sealed && !(p.conflict && checksOf(slug).length)) || checkedOpen(slug)) { echo.value += 1; return; }
+  if (p.state !== "ok" || (p.sealed && !(p.conflict && checksOf(slug).length)) || checkedOpen(slug)) {
+    echo.value += 1;
+    if (p.state === "ok" && !isRed(checksOf(slug)) && checkedOpen(slug) && !(p.sealed && !p.conflict)) toast(CHECKING, "information", "", 3);   // a press or a drop while the checks run is not lost in silence
+    return;
+  }
   const got = await ask("ideas.to_main", { idea: slug });                                   // an error is toasted by `ask`, as every failed act of the page is
   if (!got) return;
   if (got.note) toast(got.note, "warning");
@@ -199,13 +204,13 @@ function PortalDoor() {
     ${open && line && html`<p class="portal__line">${line}</p>`}
     ${red && !sealed && html`<p class="portal__line is-red" role="status" aria-live="polite">${said}</p>`}
     <span class="portal__label">${label}</span>
-    <span class=${cls("ork-portal-ring", { "is-open": (ready && !shut) || !!sending.value, "is-sealed": shut, "is-waking": ready && first.value, "is-taking": taking.value, "is-sending": !!sending.value, [`rite-${sending.value}`]: !!sending.value })}
-        aria-hidden=${ready || corners ? undefined : "true"}>
+    <span class=${cls("ork-portal-ring", { "is-open": (ready && !shut) || !!sending.value, "is-sealed": shut, "is-waking": ready && first.value && !woke.value, "is-taking": taking.value, "is-sending": !!sending.value, [`rite-${sending.value}`]: !!sending.value })}
+        aria-hidden=${ready || corners ? undefined : "true"} onAnimationEnd=${(e) => { if (e.animationName === "ork-ring-eye") woke.value = true; }}>
       ${ready && button}
       <span class="ork-portal-ring__seal" aria-hidden="true">${element && html`<${Elem} name=${element} />`}</span>
       <${Corner} side="before" words="Release: open its view" c=${road.release} passed=${passed} />
       <${Corner} side="after" words="Live: open its view" c=${road.live} />
-      ${guard && html`<${Gate} skeletons=${skeletons} onPress=${play} />`}
+      ${guard && html`<${Gate} skeletons=${skeletons} onPress=${play} drag=${{ onDragEnter: held, onDragOver: held, onDragLeave: left, onDrop: drop }} />`}
     </span>
     ${hint}${reasoned}
   </div>`;
