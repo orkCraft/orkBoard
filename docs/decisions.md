@@ -3917,6 +3917,9 @@ spec 107 §9.2's logo shown while it starts):
    throw, no logo. While the preview is open its pips glow; pressed again, the preview closes.
 4. Under reduced motion: no wobble, no throw, no roll: today's start screen.
 5. Drawn in orkUI first (the icons and `.ork-die`), then here; spec 112, built by the cheaper model.
+6. Later the same day, the owner: **the bug under the glass (Save logs, §182.12) leaves the hand for the top right**, a quiet icon
+   after *Stop all* at the tabs' end, its panel opening downward; the hand's right end is the die and the potions (the die's 69 px
+   folded the first lane's fan at 1280 and overlapped the first potion at 390).
 The owner's call.
 
 ## 191. A project with no preview or no gate: the die sleeps, and with no gate there is no ring and no Release corner (31 October, the owner)
