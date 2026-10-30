@@ -28,7 +28,7 @@ p, h1, h2 { margin: 0; }
 
 /* the die */
 .die { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); padding: var(--ork-1) var(--ork-2); border: 0; background: none; color: var(--ork-ink); cursor: pointer; font: var(--ork-type-caption); }
-.die svg { width: 72px; height: 66px; display: block; shape-rendering: crispEdges; overflow: visible; rotate: calc(var(--ork-motion-lean) * -1); }
+.die svg { width: 66px; height: 60px; display: block; shape-rendering: crispEdges; overflow: visible; rotate: calc(var(--ork-motion-lean) * -1); }
 .die .w { font-weight: 600; }
 svg .t { fill: var(--ork-card-frame); } svg .f { fill: var(--ork-card); } svg .r { fill: var(--ork-panel); } svg .o { fill: var(--ork-edge); } svg .p { fill: var(--ork-ink-muted); } svg .ok { fill: var(--ork-success); } svg .no { fill: var(--ork-danger); }
 .die:hover svg, .die.is-hover svg { animation: wobble 300ms steps(3) 1 both; }
@@ -75,9 +75,9 @@ svg .t { fill: var(--ork-card-frame); } svg .f { fill: var(--ork-card); } svg .r
 .frame .game { width: 70%; height: 70%; display: grid; place-items: center; border: 2px dashed var(--ork-edge); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
 .frame .bar { position: absolute; top: 0; left: 0; right: 0; height: 28px; display: flex; align-items: center; justify-content: space-between; padding: 0 var(--ork-4); background: var(--ork-canvas); border-bottom: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 /* the thrown die: a copy of it flying from the hand to the pane's middle, then rolling, then landing */
-.thrown { position: absolute; z-index: 6; left: 0; top: 0; width: 144px; height: 132px; pointer-events: none; display: none; }
+.thrown { position: absolute; z-index: 6; left: 0; top: 0; width: 132px; height: 120px; pointer-events: none; display: none; }
 .thrown.on { display: block; }
-.thrown svg { width: 144px; height: 132px; display: block; shape-rendering: crispEdges; overflow: visible; }
+.thrown svg { width: 132px; height: 120px; display: block; shape-rendering: crispEdges; overflow: visible; }
 .thrown.fly { animation: fly 420ms steps(7) both; }
 @keyframes fly { from { transform: translate(var(--fx), var(--fy)) scale(0.5) rotate(-30deg); } 60% { transform: translate(calc(var(--tx) + 20px), calc(var(--ty) - 60px)) scale(1.1) rotate(160deg); } to { transform: translate(var(--tx), var(--ty)) scale(1) rotate(360deg); } }
 .thrown.roll { transform: translate(var(--tx), var(--ty)); animation: roll 480ms steps(4) infinite; }
@@ -99,7 +99,7 @@ svg .t { fill: var(--ork-card-frame); } svg .f { fill: var(--ork-card); } svg .r
 <main class="mk-main">
   <section class="mk-sec" id="die">
     <h1>1 · The die, seen from above</h1>
-    <p class="mk-line">Bigger, and seen from above as a die on a table: <b>its top face large</b> (its number clear), the front and right faces thin strips that only peek out. 24 × 22 cells at 3 px (72 × 66), the potions' pixel; the card's greys, the edge round it, pips in the muted ink; <i>Play</i> under it. <b>Hover: it wobbles once</b> (three steps, 300 ms) and stays lifted, never shaking on. Playing, its pips and edge turn to the ink and glow.</p>
+    <p class="mk-line">Bigger, and seen from above as a die on a table: <b>its top face large and nearly square</b> (its number clear), the front and right faces strips of two cells that only peek out, so it reads as a cube, not a box. 22 × 20 cells at 3 px (66 × 60), the potions' pixel; the card's greys, the edge round it, pips in the muted ink; <i>Play</i> under it. <b>Hover: it wobbles once</b> (three steps, 300 ms) and stays lifted, never shaking on. Playing, its pips and edge turn to the ink and glow.</p>
     <div class="board" id="dies"></div>
   </section>
   <section class="mk-sec" id="board">
@@ -118,15 +118,18 @@ svg .t { fill: var(--ork-card-frame); } svg .f { fill: var(--ork-card); } svg .r
 (function () {
   var B = "../../../design-system/orkui/";
   // the die: top face x 0..19, y 0..15; the front face under it (4 rows, slanting right); the right face beside it (4 columns, slanting down)
-  var PIPS = { 1: [[9, 7]], 2: [[4, 3], [14, 11]], 3: [[4, 3], [9, 7], [14, 11]], 4: [[4, 3], [14, 3], [4, 11], [14, 11]], 5: [[4, 3], [14, 3], [9, 7], [4, 11], [14, 11]], 6: [[4, 3], [14, 3], [4, 7], [14, 7], [4, 11], [14, 11]] };
-  function scaled(rows, x0, y0) { var d = ""; rows.forEach(function (r, y) { for (var x = 0; x < r.length; x++) if (r[x] === "#") d += "M" + (x0 + 2 * x) + " " + (y0 + 2 * y) + "h2v2h-2z"; }); return d; }
+  // the die seen from above: its top face nearly square (20 x 18 cells), its front and right faces strips of 2 cells that only peek out; 22 x 20 cells at 3 px
+  var W = 20, H = 18, D = 2;
+  var cols = [4, 9, 14], rows = [3, 8, 13];
+  var PIPS = { 1: [[1, 1]], 2: [[0, 0], [2, 2]], 3: [[0, 0], [1, 1], [2, 2]], 4: [[0, 0], [2, 0], [0, 2], [2, 2]], 5: [[0, 0], [2, 0], [1, 1], [0, 2], [2, 2]], 6: [[0, 0], [2, 0], [0, 1], [2, 1], [0, 2], [2, 2]] };
+  function scaled(rows_, x0, y0) { var d = ""; rows_.forEach(function (r, y) { for (var x = 0; x < r.length; x++) if (r[x] === "#") d += "M" + (x0 + 2 * x) + " " + (y0 + 2 * y) + "h2v2h-2z"; }); return d; }
   var TICK = ["......#", ".....#.", "#...#..", ".#.#...", "..#...."], CROSS = ["#...#", ".#.#.", "..#..", ".#.#.", "#...#"];
   function dieSvg(top) {
     var face = {};
-    for (var y = 0; y < 22; y++) for (var x = 0; x < 24; x++) {
-      if (x <= 19 && y <= 15 && !((x === 0 || x === 19) && (y === 0 || y === 15))) face[x + "," + y] = "t";
-      else if (y >= 16 && y <= 19 && x >= y - 15 && x <= 19 + y - 15) face[x + "," + y] = "f";
-      else if (x >= 20 && x <= 23 && y >= x - 19 && y <= 15 + x - 19) face[x + "," + y] = "r";
+    for (var y = 0; y < H + D; y++) for (var x = 0; x < W + D; x++) {
+      if (x < W && y < H && !((x === 0 || x === W - 1) && (y === 0 || y === H - 1))) face[x + "," + y] = "t";
+      else if (y >= H && x >= y - H + 1 && x <= W - 1 + y - H + 1) face[x + "," + y] = "f";
+      else if (x >= W && y >= x - W + 1 && y <= H - 1 + x - W + 1) face[x + "," + y] = "r";
     }
     var d = { t: "", f: "", r: "", o: "" };
     for (var k in face) {
@@ -135,9 +138,9 @@ svg .t { fill: var(--ork-card-frame); } svg .f { fill: var(--ork-card); } svg .r
         || (face[k] === "t" && (face[x + "," + (y + 1)] === "f" || face[(x + 1) + "," + y] === "r"));
       d[edge ? "o" : face[k]] += c;
     }
-    var p = top === "ok" ? '<path class="ok" d="' + scaled(TICK, 3, 3) + '"/>' : top === "no" ? '<path class="no" d="' + scaled(CROSS, 5, 3) + '"/>'
-      : '<path class="p" d="' + (PIPS[top] || PIPS[5]).map(function (q) { return "M" + q[0] + " " + q[1] + "h2v2h-2z"; }).join("") + '"/>';
-    return '<svg viewBox="0 0 24 22" aria-hidden="true"><path class="t" d="' + d.t + '"/><path class="f" d="' + d.f + '"/><path class="r" d="' + d.r + '"/><path class="o" d="' + d.o + '"/>' + p + "</svg>";
+    var p = top === "ok" ? '<path class="ok" d="' + scaled(TICK, 3, 4) + '"/>' : top === "no" ? '<path class="no" d="' + scaled(CROSS, 5, 4) + '"/>'
+      : '<path class="p" d="' + (PIPS[top] || PIPS[5]).map(function (q) { return "M" + cols[q[0]] + " " + rows[q[1]] + "h2v2h-2z"; }).join("") + '"/>';
+    return '<svg viewBox="0 0 ' + (W + D) + " " + (H + D) + '" aria-hidden="true"><path class="t" d="' + d.t + '"/><path class="f" d="' + d.f + '"/><path class="r" d="' + d.r + '"/><path class="o" d="' + d.o + '"/>' + p + "</svg>";
   }
   var die = function (cls, word, top) { return '<button type="button" class="die ' + (cls || "") + '" title="Play: the project\'s preview of dev">' + dieSvg(top || 5) + '<span class="w">' + (word || "Play") + "</span></button>"; };
   document.getElementById("dies").innerHTML = [["", "Play", "At rest."], ["is-hover", "Play", "Hovered: one wobble, then lifted."], ["is-playing", "Playing", "The preview is open: its pips glow."]]
