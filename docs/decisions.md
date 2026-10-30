@@ -3789,3 +3789,31 @@ changes §145.9's *the discard when the first goal is done*, §177.4's *opens th
 8. Drawn in orkUI first (0.19.0: `runes/`, `.ork-portal-ring`, `.ork-sigil`, `.ork-card-place`), then here (the table's end,
    `table/discard.js` and `table/portal.js`; the + card, `hand/pluscard.js` and `hand/hand.css`).
 The owner's call.
+
+## 186. A goal's element is a rune: five of the twelve, each tied to its colour; the + card and the portal hold the goal's rune (30 October, the owner)
+
+Why: the owner, after §185: *should the runes replace the elements' signs? Take the most different ones and tie them to the
+colours; on the + card and on the portal the goal's rune could be gold, but decide yourself.* An element is the mark that tells
+a party's goals apart (§63.4): its colour does most of the work, its shape repeats it for colour blindness and for the dim
+state, and it is never named. A leaf, a flake, stones, a ring and a flame are every fantasy game's, and §69 already feared
+that a flame reads *urgent* and a flake *frozen*; a rune means nothing, which is what a mark of *which goal* should be, and it
+is ours. With the runes already on the table (§185), the goal's own rune can stand in the seal that summons it and in the
+ring it leaves through. So (this changes §63.4's *a pixel symbol*, §185.5's *a face draws them only where they mean
+nothing*, spec 50 §1.1's shapes, and orkUI's elements README):
+1. **The five elements are five runes**, chosen as the most different of the twelve by their pixels and their silhouettes,
+   at a like weight (10 to 15 pixels), so no goal looks louder than another: **meadow the tusks** (two shoots from the
+   ground), **ice the key** (an icicle hanging), **dust the comb** (stones under a lintel), **void the eye** (the old empty ring,
+   with its centre), **lava the wave** (a flow). The colours stay as they are; the names stay in the code and are never said.
+2. **The seven others are decoration only**: the ring and the seal are written in them and never in an element's rune, so a
+   rune on the table that is not in a goal's colour never means a goal.
+3. **The ring and the seal each keep one place for the goal's rune**, at their top: the ring holds the rune of the goal chosen
+   for main (pressed or dragged, §177.4), the seal holds the rune the new goal will be given (the one used least among the
+   addressed party's open goals, as `idea_element` gives it; none on the Orkmaster's tab until a party is named).
+4. **Not gold: the goal's own colour.** Gold would be a sixth colour of meaning beside five, too near dust's ochre and the
+   alert's yellow, and the window's rule is that colour is a signal; the goal's rune in its own colour, at full strength among
+   runes at a quarter's, is the one coloured mark in the seal and the ring and says *this goal* the way every card of it does.
+   Sealed, it stands in the faint ink.
+5. **The portal's ring is open whenever a goal is ready for main** (§185.2), so the place the goal's rune takes is waiting
+   before it is pressed.
+6. Drawn in orkUI first (0.20.0), then here; spec 110, built by the cheaper model and reviewed by the spec's author.
+The owner's call.
