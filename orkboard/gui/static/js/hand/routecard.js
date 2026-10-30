@@ -12,7 +12,7 @@ import { command, toast } from "../link.js";
 import { act, mapData } from "../shell/store.js";
 import { SeatPop } from "../table/seatpop.js";
 import { GoalMenu } from "../table/dropgoal.js";
-import { groupsOf, nameOf, partiesNow } from "../table/data.js";
+import { groupsOf, nameOf, partiesAll } from "../table/data.js";
 import { Gem, costOf } from "./cost.js";
 import { way } from "./ways.js";
 
@@ -51,7 +51,7 @@ export function ordinal(n) {
   return `${n}${end}`;
 }
 
-const partyBy = (slug) => partiesNow().find((g) => g.slug === slug) || null;
+const partyBy = (slug) => partiesAll().find((g) => g.slug === slug) || null;
 /** A party's name as the Board says it (its slug while the map has not got it). */
 export const partyName = (slug) => nameOf(partyBy(slug)) || slug;
 
@@ -86,7 +86,7 @@ export function CostLine({ cost }) {
 /** The parties a **+** offers: the project's, but those on the route and Release (and Ideation, which judges pitches); the ones the goal's marks touch first. */
 export function offered(v) {
   const on = new Set((v.route || []).map((x) => x.party)), touches = new Set(v.offer || []);
-  return partiesNow().filter((g) => !on.has(g.slug) && g.leader?.slug !== RELEASE && !g.ideation)
+  return partiesAll().filter((g) => !on.has(g.slug) && g.leader?.slug !== RELEASE && !g.ideation)
     .sort((a, b) => Number(touches.has(b.slug)) - Number(touches.has(a.slug))).map((g) => ({ g, touches: touches.has(g.slug) }));
 }
 

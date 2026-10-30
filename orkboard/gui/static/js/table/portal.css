@@ -11,6 +11,7 @@
 .portal-host .ork-portal { cursor: pointer; }
 .portal-host .ork-portal[aria-disabled="true"] { cursor: progress; }
 .portal-host .ork-portal.is-sealed { cursor: not-allowed; }
+.portal__line.is-red { color: var(--ork-danger); }                      /* a red check on the way into main: the line says *Sealed: Tests is red: 2 tests fail* (spec 111 §4.3) */
 .portal__hint { margin: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); overflow-wrap: anywhere; }
 .portal__sealed { margin: 0; color: var(--ork-danger); font: var(--ork-type-caption); overflow-wrap: anywhere; }
 .portal__sealed:empty { display: none; }

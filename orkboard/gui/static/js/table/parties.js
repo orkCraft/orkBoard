@@ -15,7 +15,7 @@ import { useTools } from "../shell/toolpick.js";
 import { drawn } from "../frame/kinds.js";
 import { openOver, over, tab } from "../frame/state.js";
 import { costOf } from "../hand/cost.js";
-import { mapName, partiesNow } from "./data.js";
+import { mapName, partiesAll } from "./data.js";
 import { PartyRight, SIZES, Tick, headOf } from "./partyseats2.js";
 import { SeatPop } from "./seatpop.js";
 
@@ -34,7 +34,7 @@ const STAGE_WORDS = { idea: "Idea", being_made: "Being made", live: "Live" };
 const NARROW = "(max-width: 759px)";                                              // spec 94: the phone's width is the narrow one
 
 /** Opens the one place of the parties over the pane (`props.party`: a party's slug to open at the right; `props.first`: the first start, whatever the Board holds). It says it came from the map that was shown. */
-export function openParties(props = {}, from = over.peek()?.from || { title: mapName(tab.value, partiesNow()), key: "" }) {
+export function openParties(props = {}, from = over.peek()?.from || { title: mapName(tab.value, partiesAll()), key: "" }) {
   openOver("parties", props, from, "Parties");
 }
 

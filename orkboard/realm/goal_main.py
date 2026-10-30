@@ -7,20 +7,25 @@ main by its commits, cherry-picked in the order they landed, with the goals it s
     got = goal_main.merge(repo, state_dir, "lobby", push=False, root=root, into="dev", main="main")
         # {"commit", "goals", "commits", "files", "note", "pushed"}: main moved to the picks, pushed when asked
     goal_main.in_main(git, shas, "dev", "main")    # every sha is in main, by ancestry or by patch id (a goal's flag after the pick)
+    with goal_main.trial(repo, state_dir, "lobby", root=root, into="dev", main="main") as t:
+        t.path                                     # the picks on main's head in a worktree kept for the checks (realm/main_checks.py), gone after
 
 `goals`: the goal first, then what it stands on. Those are its `depends_on` (deeply) and any goal with a commit before one of its own that
 touched a file the same; a goal main has already (flag raised, or all its commits in main) is left out. **Already in main is decided by patch
 id (`git cherry`), never by sha**: a pick is a new commit. `sealed` says why it cannot go, in plain words, with the goal's short title as the
 page names it: a task of it not landed (*Lobby is not done yet*), a goal it stands on not done (*Reconnect is not done yet*), a pick that
-would conflict, tried in a worktree of its own that is gone again (*Lobby does not apply to main cleanly: player.ts*), main behind its origin.
+would conflict, tried in a worktree of its own that is gone again (*Lobby does not apply to main cleanly: player.ts*; the plan then says `conflict`, since
+the page's check *The merge* owns that reason, spec 111 §4.3), main behind its origin.
 No face, no model. `merge` runs under the repository's lock; whatever is refused, main is as it was and no worktree is left behind.
 Nothing here moves dev.
 """
 from __future__ import annotations
 
 import json
+import uuid
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator, NamedTuple
 
 from orkboard.realm import commit_goal, goal_types, idea_flag, idea_gate, ideas, worktrees
 from orkboard.realm.idea_git import PUSH_TIMEOUT_S, IdeaGit, _git, _ok
@@ -136,25 +141,30 @@ def _compose(git: IdeaGit, state_dir: Path, slug: str, root: Path | None, into: 
     return out
 
 
-def _pick(git: IdeaGit, where: str, old: str, commits: list[str]) -> tuple[str, tuple[str, list[str]] | None]:
-    """The commits cherry-picked in order onto `old` in a worktree of its own, detached there: (the new head, None), or (`old`, (the
-    commit that did not apply, the files in conflict)). The worktree is gone either way."""
-    path = worktrees.worktree_path(git.root, where)
+def _apply(git: IdeaGit, path: Path, old: str, commits: list[str]) -> tuple[str, tuple[str, list[str]] | None]:
+    """The commits cherry-picked in order onto `old` in a worktree of its own at `path`, detached there, which stays: (the new head, None), or
+    (`old`, (the commit that did not apply, the files in conflict)). The caller removes the worktree."""
     git.remove(path)                                           # a leftover of an earlier try
     path.parent.mkdir(parents=True, exist_ok=True)
+    _ok(_git(git.root, "worktree", "add", "--detach", str(path), old))
+    for sha in commits:
+        done = _git(path, *idea_gate.IDENTITY, "cherry-pick", sha, timeout=PUSH_TIMEOUT_S)
+        if done.returncode == 0:
+            continue
+        files = _git(path, "diff", "--name-only", "--diff-filter=U").stdout.split()
+        if not files and _git(path, "diff", "--cached", "--quiet").returncode == 0 and \
+                _git(path, *idea_gate.IDENTITY, "cherry-pick", "--skip").returncode == 0:
+            continue                                       # it came out empty: main has what it brings
+        _git(path, "cherry-pick", "--abort")
+        return old, (sha, files)
+    return git.head(path), None
+
+
+def _pick(git: IdeaGit, where: str, old: str, commits: list[str]) -> tuple[str, tuple[str, list[str]] | None]:
+    """`_apply` in the worktree named `where` under `.orkcraft/worktrees/`, which is gone either way."""
+    path = worktrees.worktree_path(git.root, where)
     try:
-        _ok(_git(git.root, "worktree", "add", "--detach", str(path), old))
-        for sha in commits:
-            done = _git(path, *idea_gate.IDENTITY, "cherry-pick", sha, timeout=PUSH_TIMEOUT_S)
-            if done.returncode == 0:
-                continue
-            files = _git(path, "diff", "--name-only", "--diff-filter=U").stdout.split()
-            if not files and _git(path, "diff", "--cached", "--quiet").returncode == 0 and \
-                    _git(path, *idea_gate.IDENTITY, "cherry-pick", "--skip").returncode == 0:
-                continue                                       # it came out empty: main has what it brings
-            _git(path, "cherry-pick", "--abort")
-            return old, (sha, files)
-        return git.head(path), None
+        return _apply(git, path, old, commits)
     finally:
         git.remove(path)
 
@@ -165,14 +175,16 @@ def _conflict(plan: dict[str, Any], slug: str, hit: tuple[str, list[str]]) -> st
     return f"{plan['titles'].get(goal) or goal} does not apply to main cleanly" + (f": {', '.join(files)}" if files else "")
 
 
-def plan(repo: Path, state_dir: Path, slug: str, *, root: Path | None = None, into: str = "dev", main: str = "") -> dict[str, Any]:
-    """`{goals, commits, sealed, titles, files}` (the module's docstring). `root`: where the Board's pages are (the goals' titles and
-    `depends_on`; without it a goal is named by its slug and stands on nothing). `main`: the repository's default branch when empty."""
+def plan(repo: Path, state_dir: Path, slug: str, *, root: Path | None = None, into: str = "dev", main: str = "",
+         pick: bool = True) -> dict[str, Any]:
+    """`{goals, commits, sealed, titles, files}` (the module's docstring), and `conflict: True` when the seal is a pick that does not apply. `root`: where
+    the Board's pages are (the goals' titles and `depends_on`; without it a goal is named by its slug and stands on nothing). `main`: the repository's
+    default branch when empty. `pick`: False tries no pick (no worktree is made), so a conflict is not found."""
     git = IdeaGit(Path(repo))
     with git.lock:
         main = main or git.default_branch()
         got = _compose(git, Path(state_dir), slug, root, into, main)
-        if got["sealed"] is None and got["commits"]:
+        if pick and got["sealed"] is None and got["commits"]:
             try:
                 old = _ok(_git(git.root, "rev-parse", f"refs/heads/{main}"))
                 _tip, hit = _pick(git, TRIAL, old, got["commits"])
@@ -180,9 +192,50 @@ def plan(repo: Path, state_dir: Path, slug: str, *, root: Path | None = None, in
                 got["sealed"] = " ".join(str(e).split())[:300] or "Git could not try the picks"
             else:
                 if hit:
-                    got["sealed"] = _conflict(got, slug, hit)
+                    got["sealed"], got["conflict"] = _conflict(got, slug, hit), True
     got.pop("owner")
     return got
+
+
+class Trial(NamedTuple):
+    """`trial`'s answer: the plan (`owner` kept), `path` the worktree with the picks applied on main's head `old` (None when nothing was tried: the plan
+    is sealed for a reason of its own, or there is nothing to pick), `hit` the commit that did not apply and its files (None when all did)."""
+    plan: dict[str, Any]
+    path: Path | None
+    old: str
+    hit: tuple[str, list[str]] | None
+
+    @property
+    def words(self) -> str:
+        """Why the picks do not apply, in words; "" when they do."""
+        if self.hit:
+            return _conflict(self.plan, self.plan["goals"][0], self.hit)
+        return self.plan["sealed"] or ""
+
+
+@contextmanager
+def trial(repo: Path, state_dir: Path, slug: str, *, root: Path | None = None, into: str = "dev", main: str = "") -> Iterator[Trial]:
+    """The plan's picks onto main's head in a worktree of its own (`gate-main-try-<id>`), kept while the `with` block runs, for the checks of
+    realm/main_checks.py, and removed whatever happens in it. The repository's lock is held only while the worktree is made and removed; no ref moves, so
+    the person's main and dev are never touched."""
+    git = IdeaGit(Path(repo))
+    path: Path | None = None
+    try:
+        with git.lock:
+            main = main or git.default_branch()
+            got = _compose(git, Path(state_dir), slug, root, into, main)
+            old, hit = "", None
+            if got["sealed"] is None and got["commits"]:
+                old = _ok(_git(git.root, "rev-parse", f"refs/heads/{main}"))
+                path = worktrees.worktree_path(git.root, f"{TRIAL}-{uuid.uuid4().hex[:8]}")
+                try:
+                    _tip, hit = _apply(git, path, old, got["commits"])
+                except RuntimeError as e:                      # git could not make the worktree
+                    got["sealed"] = " ".join(str(e).split())[:300] or "Git could not try the picks"
+        yield Trial(got, path if path is not None and not hit and not got["sealed"] else None, old, hit)
+    finally:
+        if path is not None:
+            git.remove(path)
 
 
 def merge(repo: Path, state_dir: Path, slug: str, push: bool = False, *, root: Path | None = None, into: str = "dev",

@@ -43,6 +43,7 @@ from __future__ import annotations
 import base64
 import datetime as dt
 import os
+import threading
 import time
 from pathlib import Path
 from typing import Any, Callable
@@ -140,6 +141,8 @@ class Ideas(FactsMixin, LoopFace, TreeFace, ConcernsMixin, MapsMixin, ScreensMix
         self._seen: dict[str, tuple[str, float]] = {}     # slug → (state, when it began): keeper_state
         self._what: dict[str, str] = {}                   # slug → what its next Board commit says (spec 35 §13)
         self._limits_logged = float("-inf")
+        self._main_checks: dict[str, dict] = {}           # slug → the last checks on its way into main: {key, checks, running, stop} (gui/ideas_gate.py)
+        self._main_lock = threading.Lock()
         self._passing: dict[str, dict] = {}               # slug → what its plan_passed says of a join (gui/ideas_types.py)
         self.keeper = idea_keeper.IdeaKeeper(
             self.host.repo_root, self.state_dir, self.keeper_root, self.settings_now, self._publish,
@@ -329,7 +332,7 @@ class Ideas(FactsMixin, LoopFace, TreeFace, ConcernsMixin, MapsMixin, ScreensMix
             except Exception:                   # a broken page never breaks the town's snapshot
                 data = {"needs_you": 0, "idea_states": [], "review_count": 0, "review_results": []}
             self._cache = (self.rev, now, data)
-        return {"focus": focus_of(self.host.machine), "ideas_rev": self.rev, **self._cache[2],
+        return {"focus": focus_of(self.host.machine), "ideas_rev": self.rev, **self._cache[2], "main_checks": self.main_checks_now(),
                 "limits": self.limits(), "mana": self.mana(), "ask": board_ask.record(self.state_dir), "reserve": self.reserve(), "canvases_new": self.canvas_store.new_count(),
                 "canvases_rev": self.canvas_store.rev}
 

@@ -1,6 +1,7 @@
 // What the table reads (docs/specs/98-the-table-and-the-hand.md §3, §5): pure functions over the page's own stores — `ideas.map`
 // (the parties and their goals, the code's goals and ideas), `ideas.agents` and `ideas.roles` (the seats), the snapshot's limits —
 // and the words the table says. No template here. The table draws a party's name, never "goal" or "track" (CLAUDE.md, Wording).
+import { signal } from "@preact/signals";
 import { mapData, agents, roles } from "../shell/store.js";
 import { board, goalList, hhmm } from "../board/store.js";
 import { goalsOf, nodesOf, atWork, openTasks, partyOf, roleOf } from "../arena/arenawords.js";
@@ -16,8 +17,31 @@ export const LIVE = ["running", "testing", "picking", "failed"];       // a task
 const SIZE_WORD = { lean: "Lean", standard: "Standard", full: "Full" };
 const SIZE_TARGET = { lean: "thrift", standard: "balance", full: "quality" };
 
-/** The project's parties in the Board's order, General left out. */
-export const partiesNow = () => goalsOf(mapData.value, goalList().map((x) => x.slug)).filter((g) => g.slug !== GENERAL);
+// -- the parties, and the road's two out of the tabs at the wide width (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §4.1, decisions §188.1) --------------------------
+
+const WIDE = typeof matchMedia === "function" ? matchMedia("(min-width: 760px)") : null;
+/** Whether the window is at the wide width (760 px and up), where Release and Live wait in the portal ring's corners; the narrow width keeps them as tabs. */
+export const wide = signal(WIDE ? WIDE.matches : true);
+WIDE?.addEventListener?.("change", () => { wide.value = WIDE.matches; });
+
+/** Every party of the project in the Board's order, General left out: what everything that looks a party up by its slug needs (a map's name, a question's party, the open tab). */
+export const partiesAll = () => goalsOf(mapData.value, goalList().map((x) => x.slug)).filter((g) => g.slug !== GENERAL);
+
+const LIVE_CRAFTS = ["run", "liveops"];
+/** The road's two parties: Release (the party whose craft is `release`, before main) and Live (the first whose craft is `run` or `liveops`, past it); null for one the project does not have. */
+export function roadParties(all = partiesAll()) {
+  return { release: all.find((g) => g.party_craft === "release") || null, live: all.find((g) => LIVE_CRAFTS.includes(g.party_craft)) || null };
+}
+/** The slugs of the road's parties. */
+export const roadSlugs = (all = partiesAll()) => new Set(Object.values(roadParties(all)).filter(Boolean).map((g) => g.slug));
+
+/** The parties of the tabs and of the lanes: every party, but at the wide width not Release and Live, which have neither (they are in the ring's corners). */
+export function partiesNow() {
+  const all = partiesAll();
+  if (!wide.value) return all;
+  const road = roadSlugs(all);
+  return road.size ? all.filter((g) => !road.has(g.slug)) : all;
+}
 
 export const nameOf = (g) => g?.short || g?.title || "";
 export const nodesFor = (g) => nodesOf(mapData.value, g.slug);

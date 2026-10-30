@@ -6,7 +6,7 @@ import { board, goalList } from "../board/store.js";
 import { gateData, mapData } from "../shell/store.js";
 import { byUrgency, gateOf, goalsOf, nodesOf, paidStopsOf, resultStop, resultsOf, signInStopsOf, stopsOf, todoLast } from "../arena/arenawords.js";
 import { ORKMASTER } from "../frame/state.js";
-import { partiesNow } from "../table/data.js";
+import { partiesNow, roadSlugs } from "../table/data.js";
 import { projectStops, questionStops } from "./questions.js";
 
 /** The parties of the map in the Board's order. */
@@ -63,23 +63,28 @@ export function stackKey(s) {
 /** What is the whole goal's, not one party's: the route, Talk of several leaders, the decision, a fork, the Orkmaster's collision (docs/specs/101 §4.2) and its *Go on paid?* (docs/specs/105 §3): they lie under the first lane. */
 const WHOLE = new Set(["route", "talk", "objection", "decision", "fork", "collide", "paid"]);
 
+/** The party a row belongs to ("" for a row of no party of its own). */
+const partyOfRow = (row) => row?.g?.slug || row?.row?.goal || row?.goal || "";
+/** Whether a row is one of a road party at a width where that party has no lane (Release and Live in the ring's corners, docs/specs/111 §4.1): it lies in the hand's last lane. */
+const onRoad = (row, parties) => !WHOLE.has(row?.kind || row?.row?.kind || "") && !parties.some((g) => g.slug === partyOfRow(row)) && roadSlugs().has(partyOfRow(row));
+
 /** The lane a row lies under (docs/specs/101 §4.3): 0 the first (the project's), else 1 + the place of its party among the tabs' parties (table/data.js `partiesNow`, the order of the lanes after the first).
  *  A failure lies under its task's party, a party's question under its party, the project's questions (no goal of their own) under their leader's party; what is the whole goal's, a sign-in and a row
- *  of a party the tabs do not have lie under the first. `row`: a stop (`stopsOfProject`) or a Needs you row (`{kind, goal}`). */
+ *  of a party the tabs do not have lie under the first. The exception is a road party's row at the wide width (Release, Live: no lane of their own): it lies in the last lane (spec 111 §4.1).
+ *  `row`: a stop (`stopsOfProject`) or a Needs you row (`{kind, goal}`). */
 export function laneOf(row, parties = partiesNow()) {
   if (WHOLE.has(row?.kind || row?.row?.kind || "")) return 0;
-  const slug = row?.g?.slug || row?.row?.goal || row?.goal || "";
-  const at = parties.findIndex((g) => g.slug === slug);
-  return at < 0 ? 0 : at + 1;
+  const at = parties.findIndex((g) => g.slug === partyOfRow(row));
+  return at < 0 ? (onRoad(row, parties) ? parties.length : 0) : at + 1;
 }
 
-/** The stacks (§4.3): one a goal and a lane that has Needs you rows, in the order of their top cards' urgency (the stops come in it), each `{key, goal, lane, cards}`, the top first. A goal's cards from one party are
- *  one stack; the cards of a goal that two parties ask about lie in a stack each, under each one's lane. */
+/** The stacks (§4.3): one a goal and a lane that has Needs you rows, in the order of their top cards' urgency (the stops come in it), each `{key, goal, lane, road, cards}`, the top first. A goal's cards from one party are
+ *  one stack; the cards of a goal that two parties ask about lie in a stack each, under each one's lane. `road`: a road party's stack in the last lane, which lies at its right end (hand/stacks.js). */
 export function stacksOf(stops, parties = partiesNow()) {
   const out = [], at = new Map();
   for (const s of stops) {
     const lane = laneOf(s, parties), key = `${stackKey(s)}@${lane}`;
-    if (!at.has(key)) { at.set(key, out.length); out.push({ key, goal: goalOfStop(s), lane, cards: [] }); }
+    if (!at.has(key)) { at.set(key, out.length); out.push({ key, goal: goalOfStop(s), lane, road: onRoad(s, parties), cards: [] }); }
     out[at.get(key)].cards.push(s);
   }
   return out;

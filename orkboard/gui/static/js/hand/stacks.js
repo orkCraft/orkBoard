@@ -50,6 +50,8 @@ export function Stacks({ stacks, plus }) {
   const parties = partiesNow(), count = parties.length + 1, items = useGone(stacks, (st) => st.key), dealt = useDealt(stacks.flatMap((st) => st.cards.map((s) => s.key)));
   const lanes = Array.from({ length: count }, () => []);
   for (const it of items) lanes[Math.min(it.item.lane || 0, count - 1)].push(it);
+  const last = lanes[count - 1];
+  last.sort((a, b) => Number(!!b.item.road) - Number(!!a.item.road));                 // Release's and Live's stacks (no lane of their own at the wide width) lie at the last lane's right end, in front (spec 111 §4.1)
   return lanes.map((list, i) => {
     const m = list.length, solo = m === 1;
     const place = (k) => ({ at: solo ? 1 : m - 1 - k, of: solo ? 2 : m - 1, z: m - k, behind: !solo && k > 0 });

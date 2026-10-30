@@ -10,7 +10,7 @@ import { command, toast, town } from "../link.js";
 import { lift, lower, lifted } from "../frame/state.js";
 import { mapData } from "../shell/store.js";
 import { Lifted } from "./card.js";
-import { mapName, partiesNow } from "./data.js";
+import { mapName, partiesAll } from "./data.js";
 import { mapFor, Pickable } from "./maps.js";
 import { PainCard, ScreenBack, ScreenCard, screenKey } from "./screenparts.js";
 
@@ -76,7 +76,7 @@ export function ScreensMap({ g, narrow }) {
   const [geo, setGeo] = useState({}), host = useRef(), flow = useRef(), scroller = useRef(), seen = useRef({ top: 0, left: 0, at: 0 });
   const model = useMemo(() => (doc ? modelOf(doc) : null), [doc]);
   const key = lifted.value, id = key.startsWith(`t:screen:${g.slug}:`) ? key.slice(`t:screen:${g.slug}:`.length) : "";
-  const from = { title: mapName(g.slug, partiesNow()), key };
+  const from = { title: mapName(g.slug, partiesAll()), key };
 
   useEffect(() => { seen.current = { top: scroller.current?.scrollTop || 0, left: scroller.current?.scrollLeft || 0, at: Date.now() }; }, [id]);   // where the map was when a screen was lifted: a scroll away lowers it
 

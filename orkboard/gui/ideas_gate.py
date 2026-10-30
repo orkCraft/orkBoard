@@ -4,16 +4,25 @@ to main on its own through `ideas.to_main_plan` and `ideas.to_main` (realm/goal_
 merge into (`ideas.into`), `main` the repository's default branch. Results still land in dev one by one; nothing reaches
 main but through this press. Spec 50 §2.2: a goal raises its flag (realm/idea_flag.py) when this press takes it into main, or when it is done where there is
 no gate. Split from ideas.py to keep it under ~600 lines.
+
+The checks on the way into main (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §4.2, realm/main_checks.py): `ideas.to_main_checks {idea}` starts
+them in the background, one run at a time for a goal, and publishes each step on the bus (`main.check`, `{idea, checks}`: the face draws the snapshot's
+`main_checks` again); their last results are kept per goal until the goal's plan changes (a new commit in it, or main moving), and `ideas.to_main` refuses
+while any of them is not passed.
 """
 from __future__ import annotations
 
+import hashlib
+import json
+import threading
 from pathlib import Path
 from typing import Any
 
 from orkboard import settings
+from orkboard.core import bus
 from orkboard.gui.ideas_args import IdeasError, _text
-from orkboard.realm import event_log, goal_main, idea_flag, idea_gate, ideas
-from orkboard.realm.idea_git import IdeaGit
+from orkboard.realm import event_log, gate_config, goal_main, idea_flag, idea_gate, ideas, main_checks
+from orkboard.realm.idea_git import IdeaGit, _git
 
 
 class GateMixin:
@@ -83,8 +92,11 @@ class GateMixin:
 
     def to_main(self, args: dict) -> dict:
         """`{idea}`: the goal's commits (and its dependencies') cherry-picked onto main, pushed when the project pushes after merging.
-        `{ok, commit, goals, note}`; a sealed goal is refused in words."""
+        `{ok, commit, goals, note}`; a sealed goal is refused in words, and so is one whose checks (`to_main_checks`) are running or not passed."""
         slug, where = self._to_main_args(args)
+        refused = self._checks_refusal(slug, where)
+        if refused:
+            raise IdeasError(refused)
         push = bool(self.settings_now().get("push", settings.IDEAS["push"]))
         git = IdeaGit(Path(self.host.repo_root))
         try:
@@ -96,6 +108,91 @@ class GateMixin:
         self._flag_after_goal(got["goals"], got["commit"], git, where["into"], where["main"])
         self.changed("")
         return {"ok": True, "commit": got["commit"], "goals": got["goals"], "note": got["note"]}
+
+    # -- the checks on the way into main (spec 111 §4.2) -----------------------------------------------------
+
+    def _checks_key(self, slug: str, where: dict) -> tuple[str, str]:
+        """(a name for what the checks would run on, the plan's seal for a reason no check owns): the plan's commits and main's head, hashed.
+        Nothing is tried here (no worktree)."""
+        plan = goal_main.plan(Path(self.host.repo_root), self.state_dir, slug, **where, pick=False)
+        head = _git(Path(self.host.repo_root), "rev-parse", "--verify", "-q", f"refs/heads/{where['main']}").stdout.strip()
+        return hashlib.sha1(json.dumps([plan["commits"], head]).encode()).hexdigest()[:16], plan["sealed"] or ""
+
+    def _checks_refusal(self, slug: str, where: dict) -> str:
+        """Why the goal may not go to main yet for its checks, in words; "" when none stands (a goal whose checks were never asked goes as before)."""
+        with self._main_lock:
+            got = self._main_checks.get(slug)
+            if got is None:
+                return ""
+            checks, running, key = list(got["checks"]), got["running"], got["key"]
+        if running:
+            return "Checking the way into main"
+        if self._checks_key(slug, where)[0] != key:
+            return "The way into main changed: choose the goal again"
+        for c in checks:
+            if c["state"] != "passed":
+                return f"Sealed: {c['name']} is red: {c['words']}" if c["state"] == "failed" else "Checking the way into main"
+        return ""
+
+    def to_main_checks(self, args: dict) -> dict:
+        """`{idea, again?}`: starts the checks on the way into main in the background (realm/main_checks.py), publishing each step (`main.check`).
+        `{idea, checks: [{name, state, words}], running}`; the last results of the same plan are answered as they are, not run again, unless `again`
+        (the person chose the goal anew after a red check). A seal no check owns (a goal not done, main behind its origin) is `{idea, checks: [], sealed}`."""
+        slug, where = self._to_main_args(args)
+        key, sealed = self._checks_key(slug, where)
+        if sealed:
+            return {"idea": slug, "checks": [], "running": False, "sealed": sealed}
+        with self._main_lock:
+            got = self._main_checks.get(slug)
+            if got and got["key"] == key and (got["running"] or not (args.get("again") and any(c["state"] != "passed" for c in got["checks"]))):
+                return {"idea": slug, "checks": list(got["checks"]), "running": got["running"]}
+            if got:
+                got["stop"].set()                                   # an older run of this goal ends, its worktree gone
+            entry = {"key": key, "checks": [{"name": c.name, "state": "waiting", "words": ""} for c in gate_config.main_checks(Path(self.host.repo_root))],
+                     "running": True, "stop": threading.Event()}
+            self._main_checks[slug] = entry
+        threading.Thread(target=self._checks_run, args=(slug, where, entry), name=f"main-checks-{slug}", daemon=True).start()
+        self._checks_said(slug, entry)
+        return {"idea": slug, "checks": list(entry["checks"]), "running": True}
+
+    def _checks_run(self, slug: str, where: dict, entry: dict) -> None:
+        """The run, on its own thread: each step is kept and published; whatever happens the run ends (a failure of the run itself fails the first check
+        that has not passed, in words)."""
+        def step(steps: list[dict]) -> None:
+            with self._main_lock:
+                if self._main_checks.get(slug) is entry:
+                    entry["checks"] = steps
+            self._checks_said(slug, entry)
+
+        try:
+            main_checks.run(Path(self.host.repo_root), self.state_dir, slug, root=where["root"], into=where["into"], main=where["main"],
+                            on_step=step, cancel=entry["stop"])
+        except InterruptedError:
+            with self._main_lock:
+                if self._main_checks.get(slug) is entry:
+                    del self._main_checks[slug]
+        except Exception as e:                                  # a run that cannot go on says why on the check it stopped at
+            steps = [dict(c) for c in entry["checks"]]
+            at = next((i for i, c in enumerate(steps) if c["state"] != "passed"), 0)
+            steps[at] = {**steps[at], "state": "failed", "words": " ".join(str(e).split())[:160] or "The check could not run"}
+            step(steps)
+        finally:
+            with self._main_lock:
+                entry["running"] = False
+            self._checks_said(slug, entry)
+
+    def _checks_said(self, slug: str, entry: dict) -> None:
+        """`main.check` on the host's bus, from whichever thread (the host's own, as the keeper's changes are)."""
+        with self._main_lock:
+            if self._main_checks.get(slug) is not entry:                # an older run of the goal ended: its steps say nothing now
+                return
+            checks = [dict(c) for c in entry["checks"]]
+        self.host.call(lambda: self.host.publish(bus.MAIN_CHECK, idea=slug, checks=checks))
+
+    def main_checks_now(self) -> dict[str, list[dict]]:
+        """The last results of the checks, by goal, for the snapshot (the face follows them there): `{slug: [{name, state, words}]}`."""
+        with self._main_lock:
+            return {slug: [dict(c) for c in got["checks"]] for slug, got in self._main_checks.items()}
 
     def _flag_after_goal(self, goals: list[str], commit: str, git: IdeaGit, into: str, main: str) -> None:
         """After the pick: each goal it took that is done and has no flag, all of whose commits are in main now (by patch id: a pick is a
@@ -151,4 +248,4 @@ class GateMixin:
 
 def gate_commands(ideas_: Any) -> dict:
     """The goal-to-main commands by name (`gui/ideas.py` adds them to its table: `**gate_commands(self)`)."""
-    return {"ideas.to_main_plan": ideas_.to_main_plan, "ideas.to_main": ideas_.to_main}
+    return {"ideas.to_main_plan": ideas_.to_main_plan, "ideas.to_main": ideas_.to_main, "ideas.to_main_checks": ideas_.to_main_checks}

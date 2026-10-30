@@ -3,6 +3,7 @@
     gate = read(repo_root)                       # orkcraft.toml `[gate]`, else the project's own (spec 86 §3), else none
     files = gate_files(gate, touched, worktree)  # `always`, then the touched files' tests that exist
     argv = test_argv(command)                    # words, or `sh -c` when the command needs a shell
+    checks = main_checks(repo_root)              # the checks on a goal's way into main (spec 111 §4.2): `[gate.main]`, else two
 
 `orkcraft.toml` is tracked at the repository's root; an unknown key is ignored, a bad file is said in `Gate.error`
 and the gate runs as with no file. With no file or no `[gate]` the gate is the project's own (`derive`): Orkboard's
@@ -33,6 +34,21 @@ def test_argv(cmd: str) -> list[str]:
 
 
 @dataclass(frozen=True)
+class Check:
+    """One check on a goal's way into main (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §4.2, decisions §188.3): a name and what it runs
+    in the trial worktree. `run` "" with `gate` False is the merge itself (the plan's picks apply to main); `gate` True is the gate's own command and files, as
+    a task's result runs them; otherwise `run` is the command (`test_argv`)."""
+    name: str
+    run: str = ""
+    gate: bool = False
+
+
+MERGE = "The merge"
+TESTS = "Tests"
+MAX_CHECKS = 20
+
+
+@dataclass(frozen=True)
 class Gate:
     run: str = ""                                  # "" = today's gate: pytest on the files
     always: tuple[str, ...] = CRITICAL_TESTS
@@ -41,6 +57,7 @@ class Gate:
     error: str = field(default="", compare=False)  # a bad file, in words
     none: bool = False                             # the project has no tests at all: nothing to run (`derive`)
     derived: bool = field(default=False, compare=False)   # the project's own gate (`derive`), not one its `orkcraft.toml` wrote (spec 107 §1.2)
+    main: tuple[Check, ...] = ()                   # `[gate.main]` checks: the way into main (spec 111 §4.2); () = the two default checks
 
     @property
     def custom(self) -> bool:
@@ -51,6 +68,22 @@ def _strings(value: object, key: str) -> tuple[str, ...]:
     if not isinstance(value, list) or not all(isinstance(v, str) for v in value):
         raise ValueError(f"[gate] {key} must be a list of strings")
     return tuple(value)
+
+
+def _main_checks(value: object) -> tuple[Check, ...]:
+    """`[gate.main]`'s `checks = [{name = "Unit tests", run = "pytest -q tests/unit"}, …]`: each a name and a command."""
+    if not isinstance(value, dict):
+        raise ValueError("[gate.main] must be a table")
+    rows = value.get("checks", [])
+    if not isinstance(rows, list) or len(rows) > MAX_CHECKS:
+        raise ValueError(f"[gate.main] checks must be a list of at most {MAX_CHECKS} tables with a name and a run")
+    out: list[Check] = []
+    for row in rows:
+        name, run = (row.get("name"), row.get("run")) if isinstance(row, dict) else (None, None)
+        if not isinstance(name, str) or not name.strip() or not isinstance(run, str) or not run.strip():
+            raise ValueError("[gate.main] each check needs a name and a run, both words")
+        out.append(Check(" ".join(name.split())[:60], run.strip()))
+    return tuple(out)
 
 
 SKIP_DIRS = {"node_modules", ".git", ".venv", "venv", "dist", "build", "__pycache__"}
@@ -141,7 +174,8 @@ def read(repo_root: Path) -> Gate:
         if minutes is not None and (isinstance(minutes, bool) or not isinstance(minutes, (int, float)) or minutes <= 0):
             raise ValueError("[gate] timeout_min must be a number of minutes above 0")
         return Gate(run=run.strip(), always=_strings(table.get("always", list(CRITICAL_TESTS)), "always"),
-                    map=_strings(table.get("map", list(DEFAULT_MAP)), "map"), timeout_min=minutes)
+                    map=_strings(table.get("map", list(DEFAULT_MAP)), "map"), timeout_min=minutes,
+                    main=_main_checks(table["main"]) if "main" in table else ())
     except (OSError, UnicodeDecodeError, tomllib.TOMLDecodeError, ValueError) as e:
         return dataclasses.replace(derive(repo_root), error=f"{FILE} is not usable ({' '.join(str(e).split())[:200]}): the gate ran as with no file")
 
@@ -175,3 +209,10 @@ def command(gate: Gate, files: list[str]) -> str | None:
     if not files:
         return None
     return gate.run.replace("{files}", " ".join(shlex.quote(f) for f in files))
+
+
+def main_checks(repo_root: Path) -> list[Check]:
+    """The checks on a goal's way into main (spec 111 §4.2), in order. *The merge* (the plan's picks apply to main) is always the first, since nothing
+    else can run without it; then the checks `[gate.main]` writes, else one: *Tests*, the gate's own command and files as a task's result runs them."""
+    written = read(repo_root).main
+    return [Check(MERGE), *(written or (Check(TESTS, gate=True),))]

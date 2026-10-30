@@ -9,7 +9,7 @@ import { command } from "../link.js";
 import { lift, lifted, lower, openOver, tab } from "../frame/state.js";
 import { mapData } from "../shell/store.js";
 import { Lifted, leans, litKey } from "./card.js";
-import { mapName, partiesNow } from "./data.js";
+import { mapName, partiesAll } from "./data.js";
 import { Pickable } from "./maps.js";
 
 if (typeof document !== "undefined") {                                  // the sheet, once, as frame.js links the others
@@ -51,7 +51,7 @@ export function useRead(name, args = {}) {
 
 /** A file of the project opened over the pane (frame/kinds.js `file`), the map it came from named in the title (*← Loop · config/balance.ts*), the card lit on the way back. */
 export function openFile(path, key = "") {
-  openOver("file", { path }, { title: mapName(tab.value, partiesNow()), key }, path);
+  openOver("file", { path }, { title: mapName(tab.value, partiesAll()), key }, path);
 }
 
 /** A map's body: the part that scrolls, with a card lifted over it (`back`, from `MapBack`). A card still lifted when the map goes (another tab) is lowered. */
