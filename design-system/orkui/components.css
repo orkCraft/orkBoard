@@ -400,6 +400,37 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
   background: linear-gradient(color-mix(in srgb, var(--_liq) 45%, var(--ork-ink)), color-mix(in srgb, var(--_liq) 45%, var(--ork-ink)))
     0 calc((18 - var(--_rows) + var(--_hatch)) * var(--_c)) / 100% calc(2 * var(--_c)) no-repeat; }
 
+/* --- Potion in four sizes (potion/, 0.23.0): the potion above is the large (`.ork-potion`, 14 x 18); `.size-medium` (12 x 14), `.size-small` (10 x 10) and `.size-vial`
+   (8 x 9) are drawn bottles of their own, never the large scaled (potion/sizes.json, tools/build_potion.py): the same three masks and layers, the same cell (3 px, `.small`
+   2 px), so a bottle's box is its grid times the cell (36 x 42, 30 x 30, 24 x 27). Each has its own count of body rows (--_n: where the liquid can stand, 8, 5 and 5), so
+   --ork-potion-left and --ork-potion-spend step by that many, rounded up as the large's do; --_end is the row of the foot, where the glass over the liquid ends. The box
+   is the bottle's, no more: the caller gives it a slot and stands the bottle on its floor. ------------------------------------------------------------------------ */
+.ork-potion.size-medium, .ork-potion.size-small, .ork-potion.size-vial {
+  --_rows: round(up, calc(var(--_left) * var(--_n)), 1);
+  --_hatch: min(var(--_rows), round(up, calc(var(--_spend) * var(--_n)), 1));
+  width: calc(var(--_w) * var(--_c)); height: calc(var(--_h) * var(--_c)); }
+.ork-potion.size-medium { --_w: 12; --_h: 14; --_n: 8; --_end: 13;
+  -webkit-mask: url(potion/medium-silhouette.svg) 0 0 / 100% 100% no-repeat; mask: url(potion/medium-silhouette.svg) 0 0 / 100% 100% no-repeat; }
+.ork-potion.size-small { --_w: 10; --_h: 10; --_n: 5; --_end: 9;
+  -webkit-mask: url(potion/small-silhouette.svg) 0 0 / 100% 100% no-repeat; mask: url(potion/small-silhouette.svg) 0 0 / 100% 100% no-repeat; }
+.ork-potion.size-vial { --_w: 8; --_h: 9; --_n: 5; --_end: 8;
+  -webkit-mask: url(potion/vial-silhouette.svg) 0 0 / 100% 100% no-repeat; mask: url(potion/vial-silhouette.svg) 0 0 / 100% 100% no-repeat; }
+.ork-potion.size-medium::before { -webkit-mask-image: url(potion/medium-body.svg); mask-image: url(potion/medium-body.svg); }
+.ork-potion.size-medium::after { -webkit-mask-image: url(potion/medium-shine.svg); mask-image: url(potion/medium-shine.svg); }
+.ork-potion.size-small::before { -webkit-mask-image: url(potion/small-body.svg); mask-image: url(potion/small-body.svg); }
+.ork-potion.size-small::after { -webkit-mask-image: url(potion/small-shine.svg); mask-image: url(potion/small-shine.svg); }
+.ork-potion.size-vial::before { -webkit-mask-image: url(potion/vial-body.svg); mask-image: url(potion/vial-body.svg); }
+.ork-potion.size-vial::after { -webkit-mask-image: url(potion/vial-shine.svg); mask-image: url(potion/vial-shine.svg); }
+.ork-potion.size-medium::before, .ork-potion.size-small::before, .ork-potion.size-vial::before {
+  background:
+    linear-gradient(var(--ork-panel), var(--ork-panel)) 0 0 / 100% calc((var(--_end) - var(--_rows)) * var(--_c)) no-repeat,
+    linear-gradient(var(--_liq), var(--_liq)) 0 calc((var(--_end) - var(--_rows) + var(--_hatch)) * var(--_c)) / 100% calc((var(--_rows) - var(--_hatch)) * var(--_c)) no-repeat,
+    conic-gradient(transparent 25%, var(--_liq) 0 50%, transparent 0 75%, var(--_liq) 0) 0 0 / calc(2 * var(--_c)) calc(2 * var(--_c)),
+    var(--ork-panel); }
+.ork-potion.size-medium::after, .ork-potion.size-small::after, .ork-potion.size-vial::after {
+  background: linear-gradient(color-mix(in srgb, var(--_liq) 45%, var(--ork-ink)), color-mix(in srgb, var(--_liq) 45%, var(--ork-ink)))
+    0 calc((var(--_end) + 1 - var(--_rows) + var(--_hatch)) * var(--_c)) / 100% calc(2 * var(--_c)) no-repeat; }
+
 /* --- Portal: a round, magical pixel portal, the way a goal is sent into main (portal/, 0.18.0). A 26 x 28 grid, 5 px a cell (130 x 140), `.small` 4 px
    (104 x 112), whole pixels. Plain HTML, CSS only: `<span class="ork-portal"></span>`. Drawn in `box-shadow` pixels as `.ork-busy` is (many colours, and the
    swirl must turn alone): a 1 px square scaled by the cell, ::before the ring's 16 stones (ink and edge, the frame's gaps, a panel lip), the panel, the dark
