@@ -1,5 +1,5 @@
 /* Play, the project's build in the pane (docs/specs/88-assets-and-play.md §6, docs/specs/90-what-the-first-look-said.md §1.3, docs/specs/91-the-owners-list.md §5, docs/specs/107-what-the-owners-day-said.md §9): the pane the build fills, its
-   bar, the start screen (black, the project's logo or its name coming up in steps), what a build that would not start says and the command's last lines. These rules lived in `assets.css`, which went with the Assets
+   bar, the start screen (black, the project's logo or its name coming up in steps; since spec 112 §3.4 the die thrown onto it first), what a build that would not start says and the command's last lines. These rules lived in `assets.css`, which went with the Assets
    tab (spec 98 §7) and took Play's with it: the frame was the browser's 300 x 150 and nothing blinked. In orkUI's office look: its tokens only, no colour, font or corner of its own. */
 
 /* -- the pane the build fills ------------------------------------------------------------------------------------------------------------------ */
@@ -32,6 +32,22 @@
 .play-tail__cap { margin: 0; }
 .play-tail__lines { margin: 0; padding: var(--ork-3) var(--ork-4); box-sizing: border-box; max-height: calc(18em + 2 * var(--ork-3)); overflow: auto; background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame);
   color: var(--ork-ink-muted); font: var(--ork-type-caption); font-family: var(--ork-font-code); line-height: 1.5; white-space: pre; }
+/* -- the die thrown onto the black pane (spec 112 §3.4, decisions §190.3): orkUI's `.ork-die big` (138 x 120) in a slot, flown in from the hand's die (arena/play.js, a WAAPI flight; the die grows in whole cells there, `--_n`), rolling the whole start (orkUI's `is-rolling` cycles its face; the page tumbles it in four
+   poses, 120 ms each), landed askew on its outcome (the lean token, the other way from the hand's die), then it fades (the tick) or tips over (the cross). Every move is in whole steps and none scales the die (a scaled ancestor fixes its layer's raster at that scale: seams between its cells); none of it is drawn under reduced motion (play.js). ------------------------------- */
+.play-throw { gap: var(--ork-6); }
+.play-slot { position: relative; flex: none; width: 138px; height: 120px; }
+.play-die { position: absolute; inset: 0; display: grid; place-items: center; }
+.play-die > .ork-die { display: block; }
+.play-die > .ork-die.is-landed { rotate: var(--ork-motion-lean); }
+.play-die.is-rolling { animation: play-die-roll calc(var(--ork-motion-quick) * 4) steps(1, end) infinite; }
+.play-die.is-landing { animation: play-die-land calc(var(--ork-motion-sure) + 50ms) steps(1, end) both; }
+.play-die.is-fading { animation: play-die-fade calc(var(--ork-motion-sure) + 50ms) steps(1, end) forwards; }
+.play-die.is-tipping { animation: play-die-tip 360ms steps(1, end) forwards; }
+.play-landed { animation: play-name-in 0.3s steps(3) both; }
+@keyframes play-die-roll { 0% { transform: none; } 25% { transform: translate(6px, -8px) rotate(90deg); } 50% { transform: rotate(180deg); } 75% { transform: translate(-6px, -8px) rotate(270deg); } 100% { transform: none; } }
+@keyframes play-die-land { 0% { transform: translateY(-14px) rotate(20deg); } 33.33% { transform: translateY(2px) rotate(4deg); } 66.67%, 100% { transform: none; } }
+@keyframes play-die-fade { 0% { opacity: 1; transform: none; } 33.33% { opacity: 0.66; transform: translateY(-4px); } 66.67% { opacity: 0.33; transform: translateY(-8px); } 100% { opacity: 0; transform: translateY(-10px); } }
+@keyframes play-die-tip { 0% { transform: none; opacity: 1; } 33.33% { transform: translate(4px, 2px) rotate(10deg); opacity: 0.8; } 66.67% { transform: translate(8px, 4px) rotate(20deg); opacity: 0.5; } 100% { transform: translate(10px, 6px) rotate(28deg); opacity: 0.35; } }
 @keyframes play-name-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes play-name-loop { 0%, 100% { opacity: 0.15; } 50% { opacity: 1; } }
 @keyframes play-intro-out { from { opacity: 1; } to { opacity: 0; } }

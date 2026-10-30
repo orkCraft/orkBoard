@@ -61,7 +61,7 @@ def test_the_discard_lies_at_the_foot_of_the_projects_last_column_not_in_the_han
         done.wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(600)
         assert pg.locator(".hand .hand-done, .hand .table-discard, .hand .table-end").count() == 0, "none in the hand"
-        assert pg.locator(".hand-end > :not(.hand-mana):not(.hand-logs)").count() == 0, "`.hand-end` holds the mana and the logs button alone (spec 107 §10)"
+        assert pg.locator(".hand-end > :not(.hand-mana):not(.hand-die)").count() == 0, "`.hand-end` holds the Play die and the mana alone (spec 112 §3.3, decisions §190.6)"
         pile, label = box(pg, ".table-discard"), box(pg, ".table-end__label")
         assert pg.locator(".table-end__label").text_content() == "Discard" and label["y"] + label["height"] <= pile["y"] + 1, "the word above the pile"
         assert (round(pile["width"]), round(pile["height"])) == CARD[width], "the hand card's size"

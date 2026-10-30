@@ -242,7 +242,7 @@ def test_the_head_stands_still_under_reduced_motion(gui):
 # -- I: Play ---------------------------------------------------------------------------------------------------------------------------------------------
 
 def open_play(pg):
-    pg.get_by_role("button", name="Play", exact=True).click()
+    pg.locator(".hand-die").click()
     pg.locator('.table-over[data-kind="play"]').wait_for(timeout=WAIT_MS)
 
 
@@ -269,10 +269,15 @@ def test_plays_frame_fills_the_pane_and_full_screen_lays_its_stage_over_the_scre
 
 
 def test_the_start_screen_is_the_projects_logo_with_its_name_under_it_else_the_name_alone(gui):
+    """Spec 112 §3.4: the logo no longer shows while the build starts (the die is thrown then: tests/test_play_die_browser.py); it comes up after the die's landing on the tick, as it did before. Under reduced motion it is today's screen."""
     errors: list[str] = []
     starting = {"state": "starting", "commit": "a" * 40, "short": "aaaaaaa", "stage": "page", "command": "npm run dev", "ports": [5173], "since": 3.0}
-    pg = start(gui, {"width": 1280, "height": 800}, errors, Host(play={**starting, "logo": LOGO}))
+    host = Host(play={**starting, "logo": LOGO})
+    pg = start(gui, {"width": 1280, "height": 800}, errors, host)
     open_play(pg)
+    pg.locator(".play-throw[data-phase=roll]").wait_for(timeout=WAIT_MS)
+    assert pg.locator(".play-logo").count() == 0                                                                        # the die rolls, the logo waits
+    host.play = {**PLAYING, "logo": LOGO}
     logo = pg.locator(".play-intro .play-logo__img")
     logo.wait_for(timeout=WAIT_MS)
     pg.wait_for_function("() => { const i = document.querySelector('.play-logo__img'); return i && i.complete && i.naturalWidth > 0; }")
@@ -284,11 +289,26 @@ def test_the_start_screen_is_the_projects_logo_with_its_name_under_it_else_the_n
     assert logo.bounding_box()["y"] + 128 <= pg.locator(".play-title").bounding_box()["y"] + 1                          # the name under it
     shot(pg, "owners-day-play-start.png")
     pg.context.close()
-    plain = start(gui, {"width": 1280, "height": 800}, errors, Host(play={**starting, "logo": ""}))
+    host = Host(play={**starting, "logo": ""})
+    plain = start(gui, {"width": 1280, "height": 800}, errors, host)
     open_play(plain)
-    plain.locator(".play-intro .play-title").wait_for(timeout=WAIT_MS)
+    plain.locator(".play-throw[data-phase=roll]").wait_for(timeout=WAIT_MS)
+    host.play = PLAYING
+    plain.locator(".play-intro:not(.play-throw) .play-title").wait_for(timeout=WAIT_MS)
     assert plain.locator(".play-logo").count() == 0 and plain.locator(".play-intro.has-logo").count() == 0
     plain.context.close()
+    assert not errors, "\n".join(errors)
+
+
+def test_under_reduced_motion_the_start_screen_is_the_logo_while_it_starts_as_before(gui):
+    errors: list[str] = []
+    starting = {"state": "starting", "commit": "a" * 40, "short": "aaaaaaa", "stage": "page", "command": "npm run dev", "ports": [5173], "since": 3.0, "logo": LOGO}
+    pg = start(gui, {"width": 1280, "height": 800}, errors, Host(play=starting), reduced_motion="reduce")
+    open_play(pg)
+    logo = pg.locator(".play-intro .play-logo__img")
+    logo.wait_for(timeout=WAIT_MS)
+    assert logo.bounding_box()["height"] == 128 and pg.locator(".play-intro.has-logo .play-title").is_visible() and pg.locator(".playpane .ork-die").count() == 0
+    pg.context.close()
     assert not errors, "\n".join(errors)
 
 

@@ -77,13 +77,13 @@ def test_two_tools_are_two_potions_in_one_row_in_the_chips_order_flush_against_t
     assert not log, "\n".join(log)
 
 
-def test_the_tabs_end_keeps_plus_and_stop_all_and_no_chip(gui):
+def test_the_tabs_end_keeps_plus_and_stop_all_and_the_bug_and_no_chip(gui):
     pg, host, log = open_mana(gui, TWO)
     try:
         pots(pg)
         end = pg.locator(".table-tabs__end")
         assert end.get_by_role("button", name="New party").count() == 1 and end.get_by_role("button", name="Stop all").count() == 1
-        assert end.locator("button").count() == 2 and pg.locator(".table-chip").count() == 0
+        assert end.locator("button").count() == 3 and end.locator(".table-logs").count() == 1 and pg.locator(".table-chip").count() == 0          # + Party, Stop all and the bug under the glass (decisions §190.6)
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -205,6 +205,9 @@ def test_a_lifted_card_that_spends_hatches_its_share_off_its_tools_potion(gui, w
         pg.keyboard.press("Escape")
         pg.wait_for_function("() => !document.querySelector('.hand-lifted')", timeout=WAIT_MS)
         assert p.locator(".hand-pot__took").count() == 0 and "--ork-potion-spend" not in claude.locator(".ork-potion").get_attribute("style")
+        pg.evaluate("() => document.activeElement.blur()")                                                                       # the card that had the focus or the pointer lies risen, whole, over its neighbours (the die takes room at the narrow width: they lie closer)
+        pg.mouse.move(pg.viewport_size["width"] / 2, 20)
+        pg.wait_for_timeout(400)
         _press(pg, "theme")                                                                                                      # a question spends nothing
         pg.locator(".hand-lifted").wait_for(timeout=WAIT_MS)
         assert p.locator(".hand-pot__took").count() == 0

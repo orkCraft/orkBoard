@@ -1,5 +1,6 @@
 // The pane (docs/specs/98-the-table-and-the-hand.md §3.2–§3.6, decisions §110, §142): its title — *<what is looked at> · through <whom>* (*The whole project · through the Orkmaster*), or, with a thing opened over it, **←** and
-// where it came from (*← System · server/lobby.ts*) —, **▶ Play** and, on the Orkmaster's tab, its **…** (the projects, Settings, Files; under 760 px also the AI tools' limits); under it the tab's map — the Board for the
+// where it came from (*← System · server/lobby.ts*) — and, on the Orkmaster's tab, its **…** (the projects, Settings, Files; under 760 px also the AI tools' limits). Play is no button of the title any more: it is the die in the hand (hand/playdie.js, spec 112 §3.2–§3.3,
+// decisions §190.2), which opens and closes the same `play` view over this pane; under it the tab's map — the Board for the
 // Orkmaster, a party's header and, for Tech, its System — or the one thing opened over it (`Over`, which draws whatever kind `frame/kinds.js` knows, the table's and the hand's). A card lifted where it lies is drawn over
 // the map (card.js `Lifted`).
 import { useRef } from "preact/hooks";
@@ -83,7 +84,6 @@ function Phases({ goal, from }) {
 /** The pane's title: *The whole project · through Tech*, or ← and *System · server/lobby.ts*. */
 function Title({ parties, tab, narrow }) {
   const o = over.value, where = o?.from?.title || "", code = o && (o.kind === "file" || (o.kind === "diff" && o.props?.path));
-  const play = () => { if (o?.kind !== "play") openOver("play", {}, o?.from || { title: mapName(tab, parties), key: "" }, "Play"); };
   const limits = town.value?.limits || [], from = { title: mapName(tab, parties), key: "" };
   const items = [["Settings", () => openOver("settings", {}, from, "Settings"), false, "sliders"], ["Files", () => openOver("files", {}, from, "Files"), false, "folder"]];   // Switch project is the ▾ after the project's name (tabs.js, spec 107 §8.2)
   return html`<header class="ork-head table-title">
@@ -91,7 +91,6 @@ function Title({ parties, tab, narrow }) {
     <span class="table-title__pt" data-title>${o ? html`${where && html`${where} · `}<span class=${code ? "table-pathcase" : undefined}>${o.title}</span>` : paneTitle(picked.value, tab, parties)}</span>
     ${picked.value && html`<${Phases} goal=${picked.value} from=${from} />`}
     <span class="table-grow"></span>
-    <button type="button" class="ork-btn table-play" aria-label="Play" title="Play: the project's preview of dev" onClick=${play}><${Icon} name="play" /><span class="table-play__w">Play</span></button>
     ${!o && tab === ORKMASTER && html`<${Menu} label="The Orkmaster's menu" items=${items}
       top=${narrow && limits.length > 0 ? html`<div class="table-menu__limits"><span class="ork-label">Limits</span><div class="table-menu__chips">${limits.map((l) => html`<${LimitChip} key=${l.provider} l=${l} from=${from} />`)}</div></div>` : null} />`}
   </header>`;

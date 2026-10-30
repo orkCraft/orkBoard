@@ -194,7 +194,7 @@ def test_every_place_is_reached_over_the_pane(window):
     nothing_modal(pg)
     pg.get_by_role("button", name="Close").click()
     pg.locator(".table-board").wait_for(timeout=WAIT_MS)
-    pg.get_by_role("button", name="Play", exact=True).click()
+    pg.locator(".hand-die").click()                                                                                          # Play is the die in the hand (spec 112)
     over(pg, "play")
     nothing_modal(pg)
     back(pg)

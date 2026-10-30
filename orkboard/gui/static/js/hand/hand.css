@@ -24,7 +24,7 @@
 .hand-lane[data-lane="0"] { --hc-lead: calc(var(--hc-w) + var(--ork-4)); --span: max(0px, calc(100cqw - var(--hc-lead) - var(--hc-w) - var(--hc-edge))); }
 .hand-lane[data-lane="0"] > .hand-slot:not(.is-plus) { left: calc(var(--hc-lead) + var(--span) * var(--at) / var(--of)); }
 .hand-slot.is-plus { left: 0; }
-.hand-end { display: flex; justify-content: flex-end; align-items: flex-start; gap: var(--ork-4); min-width: 0; }      /* holds the mana alone (mana.css) */
+.hand-end { display: flex; justify-content: flex-end; align-items: flex-start; gap: var(--ork-4); min-width: 0; }      /* holds the Play die and the mana (mana.css, playdie.js) */
 
 /* a place along a lane's fan: the front at the lane's right, those behind it to the left, showing their left edge (the element); one card alone is in the lane's middle */
 .hand-slot { position: absolute; top: 0; left: calc(var(--span) * var(--at) / var(--of)); width: min(var(--hc-w), 100cqw); z-index: var(--z); pointer-events: auto;
@@ -186,9 +186,9 @@
 @media (max-width: 759.98px) {
   .hand, .table-end, .table-body { --hc-w: 80px; --hc-pad: var(--ork-1); --hc-gap: var(--ork-1); --hc-head: 44px; --hc-window: 32px; --hc-label: 22px; --hc-edge: 6px; --hc-tight: 20px; }
   .hand-row { display: flex; align-items: flex-start; padding-left: var(--ork-4); padding-right: 0; }
-  .hand-row::after { content: ""; order: 100; flex: none; width: calc(var(--hc-w) - var(--hc-tight)); }            /* the last card of the row lies out past its place by what the cards tighten: room for it before the mana */
+  .hand-row::after { content: ""; order: 100; flex: 0 1 calc(var(--hc-w) - var(--hc-tight)); min-width: 0; }            /* the last card of the row lies out past its place by what the cards tighten: room for it before the die and the mana (it gives way last, a crowded row: the die then lies over the last card's edge, spec 112 §3.3) */
   .hand-lane { display: contents; }
-  .hand-slot { position: relative; left: auto; top: auto; z-index: auto; flex: 0 1 var(--hc-w); min-width: var(--hc-tight); width: auto; height: var(--hc-h); }
+  .hand-slot { position: relative; left: auto; top: auto; z-index: auto; flex: 0 1000 var(--hc-w); min-width: var(--hc-tight); width: auto; height: var(--hc-h); }
   .hand .hand-slot > * { width: var(--hc-w); }
   .hand-slot.is-plus { order: -1; flex: none; min-width: var(--hc-w); margin-right: var(--ork-1); z-index: 2; }
   .hand-slot.is-plus, .hand-lane[data-lane="0"] > .hand-slot:not(.is-plus) { left: auto; }
