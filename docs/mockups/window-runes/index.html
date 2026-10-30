@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orkboard window with runes, mockup</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* The mockup's own CSS: layout only, colours, faces and corners read through orkUI 0.20.0's tokens and classes. The window is drawn at 1 : 1 (1280 x 800 and
+   1024 x 768). What is new here (the glow, the stations at the table's end, the sword and shield on a tab) is this page's until orkUI and Orkboard draw it. */
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--ork-canvas); }
+body { margin: 0; background: var(--ork-canvas); color: var(--ork-ink); font: var(--ork-type-body); }
+p, ul, h1, h2 { margin: 0; padding: 0; }
+code { font-family: var(--ork-font-code); font-size: 0.92em; }
+.mk-bar { position: sticky; top: 0; z-index: 90; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-4) var(--ork-6); padding: var(--ork-4) var(--ork-6);
+  background: var(--ork-canvas); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.mk-bar nav { display: flex; flex-wrap: wrap; gap: var(--ork-3); }
+.mk-main { padding: var(--ork-6); display: flex; flex-direction: column; gap: var(--ork-8); }
+.mk-sec h1 { font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); margin-bottom: var(--ork-3); }
+.mk-line { max-width: 120ch; margin-bottom: var(--ork-5); }
+.mk-line b { font-weight: 600; }
+.mk-notes { max-width: 120ch; margin-top: var(--ork-4); color: var(--ork-ink-muted); font: var(--ork-type-caption); display: grid; gap: var(--ork-2); }
+.mk-notes b { color: var(--ork-ink); font-weight: 600; }
+.mk-foot { max-width: 120ch; margin: 0 var(--ork-6) var(--ork-8); padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+
+/* ---------- the window ---------- */
+.win { --lane: 180px; position: relative; width: 1280px; height: 800px; display: grid; grid-template-rows: 52px 36px 36px minmax(0, 1fr) 140px; overflow: hidden;
+  outline: var(--ork-line) solid var(--ork-edge); background: var(--ork-canvas); }
+.win.w1024 { width: 1024px; height: 768px; --lane: 164px; }
+.tabs { display: flex; align-items: stretch; border-bottom: var(--ork-line) solid var(--ork-frame); }
+.tab { position: relative; display: flex; align-items: center; gap: var(--ork-4); width: var(--lane); padding: 0 var(--ork-4); border-right: var(--ork-line) solid var(--ork-frame); min-width: 0; }
+.tab.on { background: var(--ork-panel); box-shadow: inset 0 -2px 0 var(--ork-ink); }
+.tab .tt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.tab .nm { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ork-ink-muted); }
+.tab.on .nm { color: var(--ork-ink); }
+.tab .ork-race__head { flex: none; }
+.tab .alert { position: absolute; left: 30px; top: 8px; color: var(--ork-danger); }
+.tabs-end { margin-left: auto; display: flex; align-items: center; gap: var(--ork-3); padding: 0 var(--ork-4); }
+/* the sword and the shield with the tools' marks: the party's Does and Checks, ink, the open tab in colour */
+.ss { display: flex; align-items: center; gap: var(--ork-2); color: var(--ork-ink-faint); }
+.ss .ork-sign { width: 14px; height: 14px; }
+.ss img { width: 14px; height: 14px; image-rendering: pixelated; }
+.ss .gap { width: var(--ork-3); }
+.ss .off { opacity: 0.35; }
+.ss .more { width: 4px; height: 4px; background: var(--ork-ink-faint); margin-left: -1px; align-self: flex-end; }
+.tab.lit-claude .ss img[data-t="claude"], .tab.lit-codex .ss img[data-t="codex"] { outline: 1px solid var(--ork-ink); outline-offset: 1px; }
+.head { display: flex; align-items: center; justify-content: space-between; padding: 0 var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-frame);
+  font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.ask { padding: var(--ork-1) var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.ask div { height: 28px; padding: 0 var(--ork-3); display: flex; align-items: center; border: var(--ork-line) solid var(--ork-edge); color: var(--ork-ink-muted); font: var(--ork-type-body); }
+.body { position: relative; display: flex; min-height: 0; background: var(--ork-table); }
+.lane { width: var(--lane); flex: none; display: flex; flex-direction: column; gap: var(--ork-5); padding: var(--ork-4) var(--ork-4) 0 var(--ork-5); border-right: var(--ork-line) solid var(--ork-frame); overflow: hidden; }
+.endcol { position: relative; flex: 1; min-width: 0; }
+.hand { position: relative; z-index: 5; display: flex; align-items: flex-start; gap: var(--ork-6); padding: var(--ork-4) 0 0 0; border-top: var(--ork-line) solid var(--ork-frame); background: var(--ork-canvas); overflow: hidden; }
+
+/* a goal: its strip, its fan, its front card (one rune per stack; the rune glows at the stage of a task at work) */
+.goal { display: flex; flex-direction: column; gap: var(--ork-2); width: 144px; }
+.strip { display: flex; align-items: center; gap: var(--ork-2); height: 22px; padding: 0 var(--ork-3); font: var(--ork-type-caption); white-space: nowrap; overflow: hidden; }
+.strip span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.fan { position: relative; height: 36px; }
+.edge { position: absolute; left: 0; right: 0; height: 56px; display: flex; align-items: flex-start; gap: var(--ork-2); padding: var(--ork-1) var(--ork-3) 0; font: var(--ork-type-caption); }
+.edge > :last-child { margin-left: auto; }
+.edge.e1 { top: 0; transform: translateX(3px) rotate(2deg); } .edge.e2 { top: 18px; transform: translateX(-4px) rotate(-1.5deg); }
+.card { position: relative; z-index: 2; display: flex; flex-direction: column; gap: var(--ork-2); width: 144px; padding: var(--ork-3); }
+.card .hd { display: flex; align-items: flex-start; gap: var(--ork-2); min-height: 60px; font-weight: 600; font-size: 14px; line-height: 20px; }
+.card .hd .ork-elem { margin-top: 3px; flex: none; }
+.card .wn { height: 56px; display: flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-card-frame); }
+.card .wn .ork-sign { opacity: 0.6; }
+.card .row { display: flex; align-items: center; gap: var(--ork-2); min-height: 22px; color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); white-space: nowrap; }
+.card .row .ork-gem { margin-left: auto; }
+.card.fails { border-color: var(--ork-danger); }
+.c-meadow { color: var(--ork-elem-meadow); } .c-ice { color: var(--ork-elem-ice); } .c-dust { color: var(--ork-elem-dust); } .c-void { color: var(--ork-elem-void); } .c-lava { color: var(--ork-elem-lava); }
+.flame { display: inline-flex; animation: glow 2.4s steps(6) infinite; }
+@keyframes glow { 0%, 100% { opacity: 0.62; } 50% { opacity: 1; } }
+
+/* the table's end: the road after the work, from the bottom up: the discard, Release (the undead), the portal (main), Live (the goblins) */
+.road { position: absolute; right: 0; bottom: var(--ork-2); width: 208px; display: flex; flex-direction: column; align-items: center; gap: var(--ork-3); }
+.station { display: flex; align-items: center; gap: var(--ork-3); height: 26px; padding: 0 var(--ork-3); border: var(--ork-line) solid transparent; cursor: pointer; }
+.station:hover { border-color: var(--ork-edge); }
+.station .lab { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); margin-left: var(--ork-2); }
+.station .heads { display: flex; gap: 2px; position: relative; }
+.station .ork-race__head { width: 24px; height: 22px; }
+.station .ss { margin-left: var(--ork-2); }
+.station .alert { position: absolute; left: 14px; top: -6px; color: var(--ork-danger); }
+.station.works .heads > img:first-child, .tab.works .ork-race__head { animation: step 1.2s steps(2) infinite; }
+@keyframes step { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1px); } }
+.road .mainlab { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-faint); }
+.road .mainlab.on { color: var(--ork-ink-muted); }
+.road .line { font: var(--ork-type-caption); text-align: center; }
+.road .dlab { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); }
+.road .ork-portal-ring { flex: none; }
+.pile { position: relative; width: 144px; height: 202px; flex: none; }
+.pile > * { position: absolute; inset: 0; }
+.pile .b1 { transform: translate(10px, 3px) rotate(4deg); } .pile .b2 { transform: translate(-8px, 4px) rotate(-3deg); }
+.pile .top { display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4); }
+.pile .top .hd { display: flex; gap: var(--ork-3); font-weight: 600; font-size: 13px; line-height: 17px; }
+.pile .top .wn { height: 60px; display: flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-canvas); color: var(--ork-success); }
+.pile .top .rw { margin-top: auto; color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
+.place { width: 144px; height: 202px; flex: none; }
+/* a short window (768 px tall): the label Main gives way (the line says it when a goal is chosen) and the discard's foot tucks under the hand */
+.w1024 .road .mainlab { display: none; }
+.w1024 .road { bottom: -30px; gap: var(--ork-2); }
+
+/* the hand */
+.ork-card.plus { position: relative; width: 144px; height: 202px; flex: none; margin-left: var(--ork-4); display: grid; place-items: center; padding: 0;
+  border: var(--ork-double) double var(--ork-action); color: var(--ork-action); rotate: calc(var(--ork-motion-lean) * -1); }
+.plus > .ork-icon { width: 42px; height: 42px; position: relative; z-index: 3; }
+.plus .free { position: absolute; z-index: 2; width: 14px; height: 14px; opacity: 0.75; }
+.plus.is-hover .ork-sigil::after { opacity: 0; }
+.ork-card.hcard { width: 144px; height: 202px; flex: none; display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3); }
+.hcard .hd { display: flex; gap: var(--ork-2); font-weight: 600; font-size: 13px; line-height: 17px; min-height: 36px; }
+.hcard .wn { height: 56px; display: flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-canvas); }
+.hcard.asks { border-color: var(--ork-alert); }
+.pots { margin-left: auto; display: flex; gap: var(--ork-2); padding-right: var(--ork-2); }
+.pool { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); width: 60px; padding: var(--ork-1) 0; border: 2px solid transparent; font: var(--ork-type-caption); }
+.pool.is-default { border-color: var(--ork-ink); clip-path: var(--ork-notch); background: var(--ork-panel); }
+.pool.is-hover { background: var(--ork-raised); }
+.pool .pct { font-weight: 600; }
+.cursor { position: absolute; z-index: 80; width: 14px; height: 20px; pointer-events: none;
+  background: var(--ork-ink); clip-path: polygon(0 0, 100% 70%, 55% 70%, 75% 100%, 60% 100%, 40% 72%, 0 100%); }
+
+/* the field the + card grows into */
+.field { position: absolute; z-index: 60; left: 12px; bottom: 12px; width: 340px; display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4); border-color: var(--ork-action); background: var(--ork-raised); }
+.field textarea { min-height: 56px; resize: none; padding: var(--ork-3); font: var(--ork-type-body); }
+.field .runes { display: flex; align-items: center; gap: var(--ork-2); }
+.field .runes .cap { color: var(--ork-ink-muted); font: var(--ork-type-caption); margin-right: var(--ork-2); }
+.field .pick { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: var(--ork-line) solid var(--ork-frame); background: none; clip-path: var(--ork-notch); }
+.field .pick .ork-elem { width: 28px; height: 28px; opacity: 0.7; }
+.field .pick[aria-checked="true"] { border: 2px solid var(--ork-ink); background: var(--ork-panel); }
+.field .pick[aria-checked="true"] .ork-elem { opacity: 1; }
+.field .pick.used .ork-elem { opacity: 0.3; }
+.field .acts { display: flex; justify-content: space-between; align-items: center; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.callout { position: absolute; z-index: 85; max-width: 220px; padding: var(--ork-2) var(--ork-3); background: var(--ork-ink); color: var(--ork-on-ink); font: var(--ork-type-caption); }
+
+/* the lighter alternative: Release and Live stay tabs, at the tabs' right end over the table's end */
+.tab.over-end { width: 104px; padding: 0 var(--ork-3); }
+.tab.over-end .tt { display: none; }
+.altgap { width: var(--ork-6); border-right: var(--ork-line) solid var(--ork-frame); }
+@media (prefers-reduced-motion: reduce) { .flame, .station.works .heads > img:first-child, .tab.works .ork-race__head { animation: none; } .flame { opacity: 1; } }
+</style>
+</head>
+<body>
+<header class="mk-bar">
+  <span class="ork-label">Orkboard · the window with all of it</span>
+  <nav aria-label="States"><a class="ork-btn" href="#s1">1 · At rest</a><a class="ork-btn" href="#s2">2 · A goal ready</a><a class="ork-btn" href="#s3">3 · A new goal</a><a class="ork-btn" href="#s4">4 · 1024 × 768</a><a class="ork-btn" href="#s5">5 · The lighter way</a></nav>
+</header>
+<main class="mk-main">
+  <section class="mk-sec" id="s1"><h1>1 · At rest: nothing is ready for main</h1>
+    <p class="mk-line">The window at 1280 × 800, on the project's tab, with four parties. <b>Release and Live are not tabs.</b> They stand at the table's end, on <b>the road after the work</b>, read from the bottom up: the discard (done in dev), <b>Release</b> (the lich and its skeletons, who take a goal to main), the portal (main), <b>Live</b> (the imp and its goblins, who run what people use). Each station is a row of small heads with its label. Press one to open that party's view over the pane, as the discard opens. At rest the stations are still, the ring sleeps, and the discard is its place. <b>The tabs carry each party's sword and shield</b>: the marks of the tools its Does and its Checks run on, in ink, the open tab's in colour. <b>One rune per stack</b>, and the rune glows at the stage of a task at work.</p>
+    <div id="w1"></div>
+    <div class="mk-notes"><span><b>Tabs:</b> Game design does and checks on Claude Code; Tech does on Claude Code and checks on Codex; Design is <i>Lean</i>, so its shield is faint with no mark (the doer runs its own tests); Marketing does on Codex, with a dot because one of its roles runs on another tool.</span>
+      <span><b>Lanes:</b> two runes glow, one in Tech (the timer being reset) and one in Design (the bar's colours being checked).</span></div></section>
+
+  <section class="mk-sec" id="s2"><h1>2 · A goal ready, Release at work, an alert from Live</h1>
+    <p class="mk-line">A goal is ready for main, so the ring is open, and the goal chosen in the discard's view puts its rune (lava) at the ring's top. <b>The lich steps</b>, as a tab's head does while its party works. <b>Live has an alert</b>, the most urgent thing on the table, because it is what people use. The pointer is on Claude's potion: <b>the tabs that drink from it are marked</b> (the Does of Game design and Tech, and the Checks of Game design).</p>
+    <div id="w2"></div></section>
+
+  <section class="mk-sec" id="s3"><h1>3 · A new goal on Tech's tab</h1>
+    <p class="mk-line">On Tech's tab, Tech's sword and shield are in colour. The + card was hovered (the free runes, void and lava, stood in its band), then pressed: the field holds the row of runes. Void is chosen; meadow and ice are Tech's goals' runes, faint but possible. On <i>Send</i> the seal fills from void in its colour, and the card is drawn into Tech's lane (the rite: <a href="../runes-life/#rite" style="color:var(--ork-ink)">runes-life, 3</a>).</p>
+    <div id="w3"></div></section>
+
+  <section class="mk-sec" id="s4"><h1>4 · The same at 1024 × 768</h1>
+    <p class="mk-line">Three lanes fit under the tabs. The road keeps its four places, but the window is 32 px shorter: the label <i>Main</i> gives way (the ring and its line say it), and the discard's foot tucks further under the hand, which already stands over the pile. Below about 740 px tall the stations would have to move beside the ring; that is a limit to note in the spec. The tabs' second line still fits (the tab is 52 px tall).</p>
+    <div id="w4"></div></section>
+
+  <section class="mk-sec" id="s5"><h1>5 · The lighter way, for comparison</h1>
+    <p class="mk-line">Release and Live stay tabs, but sit at the tabs' right end, over the table's end, with a gap before them. The tabs and their signals stay as they are, but the lanes gain nothing and the road from the discard to Live is only hinted at. Shown for the choice; <b>I would take 1.</b></p>
+    <div id="w5"></div></section>
+</main>
+<p class="mk-foot">This is a mockup and is not wired into the app. It is drawn in orkUI 0.20.0 (the runes are the elements; <code>.ork-sigil</code>, <code>.ork-portal-ring</code>, <code>.ork-portal</code>, <code>.ork-potion</code>, the heads and the tools' marks in colour and in ink). The rite and the choice of a rune are in <code>docs/mockups/runes-life/</code>. Open it over http, not file://.</p>
+
+<script>
+(function () {
+  var B = "../../../design-system/orkui/";
+  var E = function (n, x) { return '<span class="ork-elem ' + n + (x ? " " + x : "") + '" aria-hidden="true"></span>'; };
+  var S = function (n, big) { return '<span class="ork-sign ' + n + (big ? " big" : "") + '" aria-hidden="true"></span>'; };
+  var H = function (race, tier) { return '<img class="ork-race__head" src="' + B + "races/" + race + "-" + tier + '@2x.png" alt="">'; };
+  var M = function (t, colour) { return '<img data-t="' + t + '" src="' + B + "marks/harness-" + t + (colour ? "" : "-ink") + '.png" alt="">'; };
+  var ICON = function (n) { return '<svg class="ork-icon pix" aria-hidden="true"><use href="' + B + "icons/icons.svg#" + n + '"/></svg>'; };
+  var STAGE = { doing: ["sword", "Doing"], checking: ["shield", "Checking"], planning: ["page", "Planning"], reading: ["page", "Reading"], routing: ["page", "Routing"] };
+
+  // the sword and the shield: {does, checks, lean, more}
+  function ss(p, colour) {
+    return '<span class="ss" title="Does on ' + p.does + (p.lean ? " · no separate check" : " · Checks on " + p.checks) + '">' + S("sword") + M(p.does, colour) + (p.more ? '<i class="more"></i>' : "")
+      + '<i class="gap"></i>' + (p.lean ? '<span class="off">' + S("shield") + "</span>" : S("shield") + M(p.checks, colour)) + "</span>";
+  }
+  var PARTIES = [
+    { name: "Game design", head: ["unicorn", "elder"], does: "claude", checks: "claude" },
+    { name: "Tech", head: ["shaman", "elder"], does: "claude", checks: "codex", works: true },
+    { name: "Design", head: ["dryad", "elder"], does: "claude", checks: "claude", lean: true, works: true },
+    { name: "Marketing", head: ["fairy", "elder"], does: "codex", checks: "claude", more: true }
+  ];
+  function tabs(o) {
+    var t = '<div class="tab' + (o.on === "project" ? " on" : "") + '">' + H("peon", "crown") + '<span class="tt"><span class="nm">Tower brawl</span>' + ss({ does: "claude", checks: "codex" }, o.on === "project") + "</span></div>";
+    PARTIES.slice(0, o.n || 4).forEach(function (p) {
+      var cls = "tab" + (o.on === p.name ? " on" : "") + (p.works ? " works" : "") + (o.lit ? (p.does === o.lit || (!p.lean && p.checks === o.lit) ? " lit-" + o.lit : "") : "");
+      t += '<div class="' + cls + '">' + H(p.head[0], p.head[1]) + '<span class="tt"><span class="nm">' + p.name + "</span>" + ss(p, o.on === p.name) + "</span></div>";
+    });
+    if (o.alt) t += '<span class="altgap"></span><div class="tab over-end works">' + H("lich", "elder") + '<span class="nm" style="font:var(--ork-type-heading);text-transform:uppercase;color:var(--ork-ink-muted)">Release</span></div><div class="tab over-end">' + H("imp", "elder") + '<span class="nm" style="font:var(--ork-type-heading);text-transform:uppercase;color:var(--ork-ink-muted)">Live</span></div>';
+    return '<div class="tabs">' + t + '<div class="tabs-end"><button class="ork-btn" type="button">' + ICON("plus") + 'Party</button><button class="ork-btn danger" type="button">Stop all</button></div></div>';
+  }
+
+  // the stacks
+  function card(o) {
+    var st = STAGE[o.stage];
+    var row = (o.work ? '<span class="flame">' + E(o.el) + "</span>" : S(st[0])) + "<span>" + st[1] + (o.work ? " · 3 m" : "") + "</span>" + (o.gem ? '<span class="ork-gem share">' + o.gem + "</span>" : "");
+    return '<div class="ork-card card' + (o.fails ? " fails" : "") + '"><div class="hd">' + (o.own ? E(o.el) : "") + "<span>" + o.name + '</span></div><div class="wn c-' + o.el + '">' + S(o.sign, true) + '</div><div class="row">' + row + "</div></div>";
+  }
+  function goal(g) {
+    var strip = g.front.own ? "" : '<div class="ork-card strip">' + E(g.el) + "<span>" + g.name + "</span></div>";
+    var fan = g.behind ? '<div class="fan">' + g.behind.map(function (b, i) { return '<div class="ork-card edge e' + (i + 1) + '">' + (b.work ? '<span class="flame">' + E(g.el) + "</span>" : "") + S(STAGE[b.stage][0]) + "</div>"; }).join("") + "</div>" : "";
+    return '<div class="goal">' + strip + fan + card(Object.assign({ el: g.el }, g.front)) + "</div>";
+  }
+  var LANES = [
+    [{ el: "meadow", front: { own: true, name: "Round timer shows on every phone", stage: "reading", sign: "mechanic" } },
+     { el: "dust", front: { own: true, name: "Results screen with the best answer", stage: "routing", sign: "screen" } }],
+    [{ el: "dust", name: "A round has three phases", front: { name: "Balance the phase timers", stage: "planning", sign: "balance" } }],
+    [{ el: "ice", name: "Keep the seat when a player…", front: { name: "Reset the round timer when a player rejoins", stage: "doing", sign: "feature", work: true, gem: "$1" }, behind: [{ stage: "planning" }, { stage: "planning" }] },
+     { el: "lava", name: "Check that a rejoin keeps…", front: { name: "Check the rejoin", stage: "checking", sign: "bug", fails: true } }],
+    [{ el: "void", name: "A timer bar that drains", front: { name: "Check the bar's colours", stage: "checking", sign: "picture", work: true }, behind: [{ stage: "planning" }] }],
+    [{ el: "meadow", name: "The store page says it", front: { name: "Write the store's short text", stage: "planning", sign: "tagline" } }]
+  ];
+
+  // the road
+  function station(name, heads, o) {
+    o = o || {};
+    return '<div class="station' + (o.works ? " works" : "") + '" title="' + name + ': open its view"><span class="heads">' + heads.map(function (h) { return H(h[0], h[1]); }).join("")
+      + (o.alert ? '<span class="alert">' + S("alert") + "</span>" : "") + '</span><span class="lab">' + name + "</span></div>";
+  }
+  function road(o) {
+    var ring = o.ready ? '<span class="ork-portal-ring is-open" aria-hidden="true"><span class="ork-portal"></span><span class="ork-portal-ring__seal">' + (o.chosen ? E(o.chosen) : "") + "</span></span>"
+      : '<span class="ork-portal-ring" aria-hidden="true"></span>';
+    var pile = o.done ? '<div class="pile"><div class="ork-card-back b1"></div><div class="ork-card-back b2"></div><div class="ork-card top"><div class="hd">' + E("lava") + '<span>Check that a rejoin keeps the seat</span></div><div class="wn">' + S("check", true) + '</div><div class="rw">' + (o.ready ? "1 goal ready for main" : "Done") + "</div></div></div>"
+      : '<span class="ork-card-place place" aria-hidden="true"></span>';
+    return '<div class="road">' + station("Live", [["imp", "elder"], ["goblin", "warrior"], ["goblin", "laborer"]], { alert: o.alert })
+      + (o.chosen ? '<p class="line">Into main: Check that a rejoin…</p>' : "") + '<span class="mainlab' + (o.ready ? " on" : "") + '">Main</span>' + ring
+      + station("Release", [["lich", "elder"], ["skeleton", "warrior"]], { works: o.relworks }) + '<span class="dlab">Discard</span>' + pile + "</div>";
+  }
+
+  // the hand
+  function plus(o) {
+    var frees = "";
+    if (o.hover) frees = [[120, "void"], [240, "lava"]].map(function (f) { var a = f[0] * Math.PI / 180; return '<span class="free" style="left:' + (2 * Math.round((68 + 50 * Math.sin(a) - 7) / 2) + 4) + "px;top:" + (2 * Math.round((68 - 50 * Math.cos(a) - 7) / 2) + 33) + 'px">' + E(f[1]) + "</span>"; }).join("");
+    return '<button type="button" class="ork-card plus' + (o.hover ? " is-hover" : "") + '" aria-label="New goal"><span class="ork-sigil" aria-hidden="true"><span class="ork-sigil__seal">' + (o.seal ? E(o.seal) : "") + "</span></span>" + frees + ICON("plus") + "</button>";
+  }
+  function hcard(el, name, head, asks) {
+    return '<div class="ork-card hcard' + (asks ? " asks" : "") + '"><div class="hd">' + E(el) + "<span>" + name + '</span></div><div class="wn">' + S(asks ? "question" : "alert", true).replace('class="ork-sign', 'style="color:var(--ork-' + (asks ? "alert" : "danger") + ')" class="ork-sign') + H(head[0], head[1]) + "</div></div>";
+  }
+  function pots(o) {
+    return '<div class="pots"><div class="pool is-default' + (o.hover === "claude" ? " is-hover" : "") + '"><img class="ork-mark" src="' + B + 'marks/harness-claude.png" alt=""><span class="ork-potion small" style="--ork-potion-left:.62"></span><span class="pct">62%</span></div>'
+      + '<div class="pool"><img class="ork-mark" src="' + B + 'marks/harness-codex.png" alt=""><span class="ork-potion small" style="--ork-potion-left:.88"></span><span class="pct">88%</span></div></div>';
+  }
+
+  function win(o) {
+    var lanes = LANES.slice(0, o.lanes || 5).map(function (l) { return '<div class="lane">' + l.map(goal).join("") + "</div>"; }).join("");
+    var title = o.on === "project" ? "The whole project · through the Orkmaster" : o.on + " · its goals";
+    return '<div class="win' + (o.w1024 ? " w1024" : "") + '" style="position:relative">' + tabs(o)
+      + '<div class="head"><span>' + title + '</span><button class="ork-btn" type="button">' + ICON("play") + "Play</button></div>"
+      + '<div class="ask"><div>Ask the Orkmaster…</div></div>'
+      + '<div class="body">' + lanes + '<div class="endcol">' + road(o) + "</div></div>"
+      + '<div class="hand">' + plus(o) + hcard("ice", "Reset the clock", ["shaman", "laborer"], true) + hcard("void", "Which shade of red?", ["dryad", "laborer"], true) + pots(o) + "</div>"
+      + (o.field || "") + (o.extra || "") + "</div>";
+  }
+
+  var field = '<div class="ork-card field"><textarea class="ork-field">Players see who answered first</textarea><div class="runes" role="radiogroup" aria-label="Its rune"><span class="cap">→ Tech</span>'
+    + ["meadow", "ice", "dust", "void", "lava"].map(function (n) { return '<button type="button" role="radio" class="pick' + (n === "meadow" || n === "ice" ? " used" : "") + '" aria-checked="' + (n === "void") + '">' + E(n) + "</button>"; }).join("")
+    + '</div><div class="acts"><span>Enter sends · Esc closes</span><button class="ork-btn primary" type="button">Send</button></div></div>';
+
+  document.getElementById("w1").innerHTML = win({ on: "project" });
+  document.getElementById("w2").innerHTML = win({ on: "project", ready: true, chosen: "lava", done: true, relworks: true, alert: true, lit: "claude", hover: "claude",
+    extra: '<span class="cursor" style="right:96px;bottom:70px"></span><span class="callout" style="right:150px;bottom:24px">Claude Code: 62% of the week. Game design and Tech do on it; Game design checks on it.</span>' });
+  document.getElementById("w3").innerHTML = win({ on: "Tech", seal: "void", field: field, done: true });
+  document.getElementById("w4").innerHTML = win({ on: "project", w1024: true, lanes: 3, n: 3, ready: true, chosen: "lava", done: true, relworks: true });
+  document.getElementById("w5").innerHTML = win({ on: "project", alt: true, n: 3, lanes: 4, done: true });
+  // the lighter way keeps the old end: the portal over the pile, no stations
+  var w5 = document.querySelector("#w5 .road");
+  w5.querySelectorAll(".station").forEach(function (s) { s.remove(); });
+})();
+</script>
+</body>
+</html>
