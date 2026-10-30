@@ -41,6 +41,14 @@ svg.px { display: block; width: 14px; height: 14px; shape-rendering: crispEdges;
 @keyframes f1 { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
 @keyframes f2 { 0%, 49% { opacity: 0; } 50%, 100% { opacity: 1; } }
 .torch:not(.lit) .flame { opacity: 0.35; }
+.fam { display: flex; gap: var(--ork-8); flex-wrap: wrap; }
+.fam .cell { width: 260px; }
+.vs { display: grid; grid-template-columns: repeat(3, 240px); gap: var(--ork-4) var(--ork-6); }
+.vs .pair { display: flex; align-items: center; gap: var(--ork-5); padding: var(--ork-4); background: var(--ork-panel); outline: var(--ork-line) solid var(--ork-frame); }
+.vs .pair figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.vs svg.px, .vs .ork-sign, .vs .ork-icon { width: 28px; height: 28px; }
+.vs .ork-icon { color: var(--ork-ink); }
+.vs .danger { color: var(--ork-danger); }
 .lit-word { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
 @media (prefers-reduced-motion: reduce) { .banner-hover .px .cloth, .torch.lit .f1, .torch.lit .f2 { animation: none; } .torch.lit .f2 { display: none; } }
 /* the window's top right at 1 : 1 */
@@ -60,8 +68,17 @@ svg.px { display: block; width: 14px; height: 14px; shape-rendering: crispEdges;
     <p class="mk-line">The words say what a button does (CLAUDE.md: <i>everything else by what it does</i>; labels say plainly what happens), and the marks say which world we are in. <i>Start a raid</i> would promise work to begin, where Play opens dev's preview; <i>Invite to guild</i> would promise a person, where + Party gathers orks of a craft. Each button keeps its word and gets a pixel mark on the icons' 7 × 7 grid, in its text's colour, at 14 px. <b>The outlined cell is the one I would take.</b> Hover the first column's buttons.</p>
     <div class="grid" id="grid"></div>
   </section>
+  <section class="mk-sec" id="family">
+    <h1>The family: three signs on one pole</h1>
+    <p class="mk-line">The owner's idea: the three buttons as one family of marks. Each is a sign on the same pole, at the same height, so the bar reads as a set: <b>+ Party</b> a square banner with a + cut out of it, <b>Play</b> a pennant whose cloth is the ▶ itself (the one sign everyone reads, carried on a pole), <b>Stop all</b> two thick planks nailed across the pole (<i>boarded up: no way through</i>). Each must stay apart from the marks the window already has: <b>⚑</b> (a goal in main) is a <i>notched</i> flag, so the family's cloths have no notch; the × (close), the failed cross and the sealed portal's X are thin, so the planks are two cells thick. The words stay; Stop all stays red.</p>
+    <div class="fam" id="fam"></div>
+    <h2 style="margin:var(--ork-6) 0 var(--ork-3);font:var(--ork-type-label);text-transform:var(--ork-type-label-case);letter-spacing:var(--ork-type-label-track);color:var(--ork-ink-muted)">Beside the marks they must not be mistaken for (28 px)</h2>
+    <div class="vs" id="vs"></div>
+    <h2 style="margin:var(--ork-6) 0 var(--ork-3);font:var(--ork-type-label);text-transform:var(--ork-type-label-case);letter-spacing:var(--ork-type-label-track);color:var(--ork-ink-muted)">In the window, with the family</h2>
+    <div id="ftops" style="display:flex;flex-direction:column;gap:var(--ork-5)"></div>
+  </section>
   <section class="mk-sec">
-    <h1>In the window</h1>
+    <h1>In the window (the first picks)</h1>
     <p class="mk-line">The window's top right at 1 : 1 with the picks: the tabs' end (+ Party, Stop all) and the pane's head (Play), first with the preview off, then running.</p>
     <div id="tops" style="display:flex;flex-direction:column;gap:var(--ork-5)"></div>
   </section>
@@ -82,6 +99,9 @@ svg.px { display: block; width: 14px; height: 14px; shape-rendering: crispEdges;
     return '<svg class="px torch' + (lit ? " lit" : "") + '" viewBox="0 0 7 7" aria-hidden="true">' + svg(stick) + '<g class="flame">' + svg(f1, "f1") + svg(f2, "f2") + "</g></svg>";
   };
   var HORN = icon(svg([".......", "......#", ".....##", "#######", ".....##", "......#", "......."]));          // a horn: the tube at the left, the bell flaring at the right
+  // the family: one pole (column 0), the cloth or planks on its upper five rows
+  var PENNANT = icon(svg(POLE) + svg(["###....", "#####..", "#######", "#####..", "###....", ".......", "......."].map(function (r) { return "." + r.slice(1); }), "cloth"));   // the ▶ as a pennant
+  var PLANKS = icon(svg(POLE) + svg([".##..##", "..####.", "...##..", "..####.", ".##..##", ".......", "......."]));                                             // two planks nailed across
   var DIE = icon(svg(["#######", "#.....#", "#.#.#.#", "#.....#", "#.#.#.#", "#.....#", "#######"]));
   var heads = '<span class="heads"><img src="' + B + 'races/gnome-warrior.png" alt=""><img src="' + B + 'races/knight-warrior.png" alt=""></span>';
   var btn = function (inner, cls, title) { return '<button class="ork-btn ' + (cls || "") + '" type="button" title="' + title + '">' + inner + "</button>"; };
@@ -114,6 +134,23 @@ svg.px { display: block; width: 14px; height: 14px; shape-rendering: crispEdges;
       + '<div class="head"><span>The whole project · through the Orkmaster</span>' + btn(ICON("play") + "Play" + (running ? '<span style="width:6px"></span>' + TORCH(true) : ""), "", "Play") + "</div></div>";
   }
   document.getElementById("tops").innerHTML = top(false) + top(true);
+
+  // the family
+  var FAM = [[btn(BANNER + "Party", "banner-hover", "New party: pick a craft and its squad"), "<b>+ Party</b>: the square banner with a + cut out of it; it unfurls once on hover."],
+    [btn(PENNANT + "Play", "", "Play: the project's preview of dev"), "<b>Play</b>: the pennant is the ▶ on the pole. While the preview runs, the torch beside it burns, as before."],
+    [btn(PLANKS + "Stop all", "danger", "Stop every ork, script and browser at once"), "<b>Stop all</b>: two planks nailed across the pole, two cells thick, in the danger colour."]];
+  document.getElementById("fam").innerHTML = FAM.map(function (c) { return '<div class="cell"><div class="row">' + c[0] + '</div><div class="zoom row">' + c[0] + "</div><p>" + c[1] + "</p></div>"; }).join("");
+  var S = function (n) { return '<span class="ork-sign ' + n + '" aria-hidden="true"></span>'; };
+  var pair = function (a, al, b, bl) { return '<div class="pair"><figure>' + a + "<span>" + al + "</span></figure><figure>" + b + "<span>" + bl + "</span></figure></div>"; };
+  document.getElementById("vs").innerHTML = pair(BANNER, "+ Party", S("flag"), "⚑ a goal in main") + pair(PENNANT, "Play", S("flag"), "⚑ a goal in main")
+    + pair('<span class="danger">' + PLANKS + "</span>", "Stop all", S("cross"), "failed") + pair(PENNANT, "Play", S("play"), "▶ (today's)")
+    + pair('<span class="danger">' + PLANKS + "</span>", "Stop all", ICON("close"), "× close") + pair(BANNER, "+ Party", ICON("plus"), "+ (today's)");
+  function ftop(running) {
+    var tab = function (race, tier, name) { return '<div class="tab"><img class="ork-race__head" src="' + B + "races/" + race + "-" + tier + '@2x.png" alt=""><span>' + name + "</span></div>"; };
+    return '<div class="top"><div class="tabs">' + tab("shaman", "elder", "Tech") + tab("dryad", "elder", "Design") + '<div class="end">' + btn(BANNER + "Party", "banner-hover", "New party") + btn(PLANKS + "Stop all", "danger", "Stop all") + "</div></div>"
+      + '<div class="head"><span>The whole project · through the Orkmaster</span>' + btn(PENNANT + "Play" + (running ? '<span style="width:6px"></span>' + TORCH(true) : ""), "", "Play") + "</div></div>";
+  }
+  document.getElementById("ftops").innerHTML = ftop(false) + ftop(true);
 })();
 </script>
 </body>
