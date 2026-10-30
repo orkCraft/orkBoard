@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orkboard button marks, mockup</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* The mockup's own CSS: layout only, in orkUI 0.21.0's tokens and classes. The new marks (a banner, a torch, a horn) are drawn by the script on the icons' 7 x 7
+   grid, in the colour of the button's text, at 14 px (two pixels a cell) as orkUI's icons are; they would become orkUI icons after the owner's pick. */
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--ork-canvas); }
+body { margin: 0; background: var(--ork-canvas); color: var(--ork-ink); font: var(--ork-type-body); }
+p, h1, h2 { margin: 0; }
+.mk-bar { position: sticky; top: 0; z-index: 9; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-4) var(--ork-6); padding: var(--ork-4) var(--ork-6); background: var(--ork-canvas); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.mk-main { padding: var(--ork-6); display: flex; flex-direction: column; gap: var(--ork-8); }
+.mk-sec h1 { font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); margin-bottom: var(--ork-3); }
+.mk-line { max-width: 116ch; margin-bottom: var(--ork-5); }
+.mk-line b { font-weight: 600; }
+.grid { display: grid; grid-template-columns: 200px repeat(3, minmax(0, 300px)); gap: var(--ork-4) var(--ork-6); align-items: center; }
+.grid > .h { color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
+.cell { display: flex; flex-direction: column; gap: var(--ork-3); align-items: flex-start; }
+.cell p { color: var(--ork-ink-muted); font: var(--ork-type-caption); max-width: 290px; }
+.cell p b { color: var(--ork-ink); }
+.row { display: flex; align-items: center; gap: var(--ork-3); padding: var(--ork-3) var(--ork-4); background: var(--ork-canvas); outline: var(--ork-line) solid var(--ork-frame); }
+.zoom { transform: scale(2); transform-origin: 0 0; margin-bottom: 30px; }
+.pick { outline: 2px solid var(--ork-ink); outline-offset: 6px; }
+svg.px { display: block; width: 14px; height: 14px; shape-rendering: crispEdges; fill: currentColor; flex: none; }
+.ork-btn .px { margin-right: var(--ork-2); }
+.heads { display: inline-flex; gap: 1px; margin-left: var(--ork-2); }
+.heads img { width: 12px; height: 11px; image-rendering: pixelated; }
+/* the banner unfurls on hover, once, in steps */
+.banner-hover:hover .px .cloth, .banner-hover.is-hover .px .cloth { animation: unfurl 360ms steps(3) 1 both; }
+@keyframes unfurl { 0% { transform: scaleX(0.34); } 100% { transform: scaleX(1); } }
+.px .cloth { transform-box: fill-box; transform-origin: left center; }
+/* the torch burns while the preview runs: two frames */
+.torch .f2 { display: none; }
+.torch.lit .f1 { animation: f1 0.8s steps(1) infinite; } .torch.lit .f2 { display: inline; animation: f2 0.8s steps(1) infinite; }
+@keyframes f1 { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes f2 { 0%, 49% { opacity: 0; } 50%, 100% { opacity: 1; } }
+.torch:not(.lit) .flame { opacity: 0.35; }
+.lit-word { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+@media (prefers-reduced-motion: reduce) { .banner-hover .px .cloth, .torch.lit .f1, .torch.lit .f2 { animation: none; } .torch.lit .f2 { display: none; } }
+/* the window's top right at 1 : 1 */
+.top { width: 760px; height: 88px; display: grid; grid-template-rows: 52px 36px; outline: var(--ork-line) solid var(--ork-edge); overflow: hidden; }
+.top .tabs { display: flex; align-items: stretch; border-bottom: var(--ork-line) solid var(--ork-frame); }
+.top .tab { display: flex; align-items: center; gap: var(--ork-4); width: 180px; padding: 0 var(--ork-4); border-right: var(--ork-line) solid var(--ork-frame); }
+.top .tab span { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); color: var(--ork-ink-muted); }
+.top .end { margin-left: auto; display: flex; align-items: center; gap: var(--ork-3); padding: 0 var(--ork-4); }
+.top .head { display: flex; align-items: center; justify-content: space-between; padding: 0 var(--ork-4); font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+</style>
+</head>
+<body>
+<header class="mk-bar"><span class="ork-label">Orkboard · marks for + Party, Play and Stop all</span></header>
+<main class="mk-main">
+  <section class="mk-sec">
+    <h1>The rule: the words stay, the marks bring the world</h1>
+    <p class="mk-line">The words say what a button does (CLAUDE.md: <i>everything else by what it does</i>; labels say plainly what happens), and the marks say which world we are in. <i>Start a raid</i> would promise work to begin, where Play opens dev's preview; <i>Invite to guild</i> would promise a person, where + Party gathers orks of a craft. Each button keeps its word and gets a pixel mark on the icons' 7 × 7 grid, in its text's colour, at 14 px. <b>The outlined cell is the one I would take.</b> Hover the first column's buttons.</p>
+    <div class="grid" id="grid"></div>
+  </section>
+  <section class="mk-sec">
+    <h1>In the window</h1>
+    <p class="mk-line">The window's top right at 1 : 1 with the picks: the tabs' end (+ Party, Stop all) and the pane's head (Play), first with the preview off, then running.</p>
+    <div id="tops" style="display:flex;flex-direction:column;gap:var(--ork-5)"></div>
+  </section>
+</main>
+<script>
+(function () {
+  var B = "../../../design-system/orkui/";
+  function svg(rows, cls) { var d = ""; rows.forEach(function (r, y) { for (var x = 0; x < r.length; x++) if (r[x] === "#") d += "M" + x + " " + y + "h1v1h-1z"; }); return '<path class="' + (cls || "") + '" d="' + d + '"/>'; }
+  function icon(parts, extra) { return '<svg class="px ' + (extra || "") + '" viewBox="0 0 7 7" aria-hidden="true">' + parts + "</svg>"; }
+  var ICON = function (n) { return '<svg class="ork-icon pix" aria-hidden="true"><use href="' + B + "icons/icons.svg#" + n + '"/></svg>'; };
+  // the marks, on the icons' 7 x 7 grid
+  var POLE = ["#......", "#......", "#......", "#......", "#......", "#......", "#......"];
+  var CLOTH = [".#####.", ".##.##.", ".#...#.", ".##.##.", ".#####.", ".......", "......."];        // a banner with a + cut out of it
+  var BANNER = icon(svg(POLE) + svg(CLOTH, "cloth"));
+  var TORCH = function (lit) {
+    var f1 = ["..#....", "..##...", ".####..", ".####..", ".......", ".......", "......."], f2 = ["...#...", "..##...", ".####..", ".####..", ".......", ".......", "......."];
+    var stick = [".......", ".......", ".......", ".......", "..##...", "..##...", "..##..."];      // a torch upright: its flame over its stick
+    return '<svg class="px torch' + (lit ? " lit" : "") + '" viewBox="0 0 7 7" aria-hidden="true">' + svg(stick) + '<g class="flame">' + svg(f1, "f1") + svg(f2, "f2") + "</g></svg>";
+  };
+  var HORN = icon(svg([".......", "......#", ".....##", "#######", ".....##", "......#", "......."]));          // a horn: the tube at the left, the bell flaring at the right
+  var DIE = icon(svg(["#######", "#.....#", "#.#.#.#", "#.....#", "#.#.#.#", "#.....#", "#######"]));
+  var heads = '<span class="heads"><img src="' + B + 'races/gnome-warrior.png" alt=""><img src="' + B + 'races/knight-warrior.png" alt=""></span>';
+  var btn = function (inner, cls, title) { return '<button class="ork-btn ' + (cls || "") + '" type="button" title="' + title + '">' + inner + "</button>"; };
+
+  var ROWS = [
+    ["+ Party", [
+      [btn(BANNER + "Party", "banner-hover", "New party: pick a craft and its squad"), "<b>A banner with a + cut out of it.</b> A party gathers under a standard; the + still says <i>new</i>. On hover it unfurls once, in three steps.", true],
+      [btn(BANNER + "Party" + heads, "banner-hover", "New party: pick a craft and its squad"), "The banner, and the heads of the crafts the project has no party of yet, at 12 × 11 (1 px a cell). It shows who can be called, as the + card shows the free runes. Busier; a second idea."],
+      [btn(ICON("plus") + "Party", "", "New party"), "Today: orkUI's plain +."]]],
+    ["Play", [
+      [btn(ICON("play") + "Play", "", "Play: the project's preview of dev"), "Today's ▶ stays: the one sign everyone reads at once. Off, nothing else."],
+      [btn(ICON("play") + "Play" + '<span style="width:6px"></span>' + TORCH(true), "", "Play: the preview is running"), "<b>The ▶ and a torch that burns while the preview runs</b> (two frames, still under reduced motion). The state is told by the torch, and the word stays.", true],
+      [btn(DIE + "Play", "", "Play"), "A die instead of ▶. More of the world, but slower to read than ▶ on the most pressed button. I would not."]]],
+    ["Stop all", [
+      [btn("Stop all", "danger", "Stop every ork, script and browser at once"), "<b>Today: the word alone, in the danger colour.</b> It stays: the red word is already the clearest thing on the bar.", true],
+      [btn(HORN + "Stop all", "danger", "Stop every ork, script and browser at once"), "A war horn (<i>sound the retreat</i>). At 7 × 7 it does not read as a horn: it reads as <i>to the end</i> (→|), a wrong promise on the most serious button. Not taken."],
+      [btn(ICON("stop") + "Stop all", "danger", "Stop every ork, script and browser at once"), "orkUI's ■: plain and clear, no world in it."]]]
+  ];
+  var g = '<span class="h"></span><span class="h">1</span><span class="h">2</span><span class="h">3</span>';
+  ROWS.forEach(function (r) {
+    g += '<span class="h">' + r[0] + "</span>";
+    r[1].forEach(function (c) { g += '<div class="cell"><div class="row' + (c[2] ? " pick" : "") + '">' + c[0] + '</div><div class="zoom row">' + c[0] + "</div><p>" + c[1] + "</p></div>"; });
+  });
+  document.getElementById("grid").innerHTML = g;
+  [].slice.call(document.querySelectorAll("#grid .zoom .banner-hover")).forEach(function (b) { b.classList.add("is-hover"); });
+
+  function top(running) {
+    var tab = function (race, tier, name) { return '<div class="tab"><img class="ork-race__head" src="' + B + "races/" + race + "-" + tier + '@2x.png" alt=""><span>' + name + "</span></div>"; };
+    return '<div class="top"><div class="tabs">' + tab("shaman", "elder", "Tech") + tab("dryad", "elder", "Design") + '<div class="end">' + btn(BANNER + "Party", "banner-hover", "New party") + btn("Stop all", "danger", "Stop all") + "</div></div>"
+      + '<div class="head"><span>The whole project · through the Orkmaster</span>' + btn(ICON("play") + "Play" + (running ? '<span style="width:6px"></span>' + TORCH(true) : ""), "", "Play") + "</div></div>";
+  }
+  document.getElementById("tops").innerHTML = top(false) + top(true);
+})();
+</script>
+</body>
+</html>
