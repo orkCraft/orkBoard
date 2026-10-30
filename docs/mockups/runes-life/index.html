@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orkboard runes life, mockup</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* The mockup's own CSS: layout only, every colour, face and corner read through orkUI 0.20.0's tokens and classes (the runes are the elements,
+   `.ork-sigil`, `.ork-portal-ring`). What is drawn here for the first time (the glow, the rite, the choice of a rune) is this page's until orkUI draws it. */
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--ork-canvas); }
+body { margin: 0; background: var(--ork-canvas); color: var(--ork-ink); font: var(--ork-type-body); }
+p, ul, h1, h2 { margin: 0; padding: 0; }
+code { font-family: var(--ork-font-code); font-size: 0.92em; }
+.mk-bar { position: sticky; top: 0; z-index: 30; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-4) var(--ork-6); padding: var(--ork-4) var(--ork-6);
+  background: var(--ork-canvas); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.mk-bar nav { display: flex; flex-wrap: wrap; gap: var(--ork-3); }
+.mk-main { padding: var(--ork-6); display: flex; flex-direction: column; gap: var(--ork-8); }
+.mk-sec h1 { font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); margin-bottom: var(--ork-3); }
+.mk-line { max-width: 112ch; margin-bottom: var(--ork-6); }
+.mk-row { display: flex; flex-wrap: wrap; gap: var(--ork-8); align-items: flex-start; padding: var(--ork-2); }
+.mk-fig { display: flex; flex-direction: column; gap: var(--ork-3); margin: 0; }
+.mk-fig > h2 { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.mk-fig > p { max-width: 420px; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.mk-fig > p b { color: var(--ork-ink); font-weight: 600; }
+.mk-foot { max-width: 112ch; margin: 0 var(--ork-6) var(--ork-8); padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+
+/* ---------- lanes on the table ---------- */
+.lanes { display: grid; grid-template-columns: repeat(3, 168px); background: var(--ork-table); outline: var(--ork-line) solid var(--ork-edge); padding: var(--ork-4) 0 var(--ork-6); }
+.lane { display: flex; flex-direction: column; gap: var(--ork-6); padding: 0 var(--ork-4) 0 var(--ork-5); border-left: var(--ork-line) solid var(--ork-frame); }
+.lane:first-child { border-left: 0; }
+.lane > .lab { color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
+.goal { display: flex; flex-direction: column; gap: var(--ork-2); width: 144px; }
+.strip { display: flex; align-items: center; gap: var(--ork-2); height: 22px; padding: 0 var(--ork-3); font: var(--ork-type-caption); white-space: nowrap; overflow: hidden; }
+.strip span:last-child { overflow: hidden; text-overflow: ellipsis; }
+.fan { position: relative; height: 40px; }
+.edge { position: absolute; left: 0; right: 0; height: 56px; display: flex; align-items: flex-start; gap: var(--ork-2); padding: var(--ork-1) var(--ork-3) 0; font: var(--ork-type-caption); }
+.edge .ork-sign:last-child { margin-left: auto; }
+.edge.e1 { top: 0; transform: translateX(3px) rotate(2deg); } .edge.e2 { top: 20px; transform: translateX(-4px) rotate(-1.5deg); }
+.card { position: relative; z-index: 2; display: flex; flex-direction: column; gap: var(--ork-2); width: 144px; padding: var(--ork-3); }
+.card .hd { display: flex; align-items: flex-start; gap: var(--ork-2); min-height: 60px; font-weight: 600; }
+.card .hd .ork-elem { margin-top: 3px; flex: none; }
+.card .win { height: 70px; display: flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-card-frame); }
+.card .win .ork-sign { opacity: 0.6; }
+.card .row { display: flex; align-items: center; gap: var(--ork-2); min-height: 22px; color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); white-space: nowrap; }
+.card .row .gem { margin-left: auto; }
+.card.fails { border-color: var(--ork-danger); }
+.c-meadow { color: var(--ork-elem-meadow); } .c-ice { color: var(--ork-elem-ice); } .c-dust { color: var(--ork-elem-dust); } .c-void { color: var(--ork-elem-void); } .c-lava { color: var(--ork-elem-lava); }
+/* today: an ork at work moves, its stage row's dots run under it */
+.today .card.working .row { background: repeating-linear-gradient(90deg, var(--ork-ink-faint) 0 2px, transparent 2px 6px) left bottom / 100% 2px no-repeat; animation: dots 1.2s steps(3) infinite; }
+@keyframes dots { to { background-position: 6px 100%; } }
+
+/* proposed: the glow, the rune at the stage while its task is at work: brightness up and down in steps, slow, no halo */
+.flame { animation: glow 2.4s steps(6) infinite; }
+@keyframes glow { 0%, 100% { opacity: 0.62; } 50% { opacity: 1; } }
+.edge .flame { margin-left: auto; } .edge .flame + .ork-sign { margin-left: var(--ork-2); }
+@media (prefers-reduced-motion: reduce) { .flame { animation: none; opacity: 1; } .today .card.working .row { animation: none; } }
+
+/* ---------- the + card and its seal, the choice ---------- */
+.ork-card.plus { position: relative; width: 144px; height: 202px; display: grid; place-items: center; padding: 0; cursor: pointer;
+  border: var(--ork-double) double var(--ork-action); color: var(--ork-action); rotate: calc(var(--ork-motion-lean) * -1); }
+.plus > .ork-icon { width: 42px; height: 42px; position: relative; z-index: 3; }
+.plus::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-repeat: no-repeat; --a: linear-gradient(var(--ork-action), var(--ork-action));
+  background-image: var(--a), var(--a), var(--a), var(--a), var(--a), var(--a), var(--a), var(--a);
+  background-size: 8px 2px, 2px 8px, 8px 2px, 2px 8px, 8px 2px, 2px 8px, 8px 2px, 2px 8px;
+  background-position: left 2px top 2px, left 2px top 2px, right 2px top 2px, right 2px top 2px, left 2px bottom 2px, left 2px bottom 2px, right 2px bottom 2px, right 2px bottom 2px; }
+/* on hover (or .is-hover here): the decorative runes give way and the free elements' runes stand in the band, each in its colour, dim; the one the goal would be given stays at the top */
+.plus .free { position: absolute; z-index: 2; width: 14px; height: 14px; opacity: 0; }
+.plus:hover .ork-sigil::after, .plus.is-hover .ork-sigil::after { opacity: 0; }
+.plus:hover .free, .plus.is-hover .free { opacity: 0.75; }
+@media (prefers-reduced-motion: no-preference) {
+  .plus:hover .free, .plus.is-hover .free { animation: free-in 480ms steps(4) both; animation-delay: calc(var(--i) * 90ms); }
+  @keyframes free-in { from { opacity: 0; } to { opacity: 0.75; } } }
+/* the field the + card grows into, with the row of runes to choose from */
+.field { width: 300px; display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4); border-color: var(--ork-action); background: var(--ork-raised); }
+.field textarea { min-height: 64px; resize: none; padding: var(--ork-3); font: var(--ork-type-body); }
+.field .runes { display: flex; align-items: center; gap: var(--ork-2); }
+.field .runes .cap { color: var(--ork-ink-muted); font: var(--ork-type-caption); margin-right: var(--ork-2); }
+.field .pick { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: var(--ork-line) solid var(--ork-frame); background: none; cursor: pointer; clip-path: var(--ork-notch); }
+.field .pick .ork-elem { width: 28px; height: 28px; opacity: 0.7; }
+.field .pick[aria-checked="true"] { border: 2px solid var(--ork-ink); background: var(--ork-panel); }
+.field .pick[aria-checked="true"] .ork-elem { opacity: 1; }
+.field .pick.used .ork-elem { opacity: 0.3; }
+.field .acts { display: flex; justify-content: space-between; align-items: center; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+
+/* ---------- the rite: the seal (or the ring) fills from the goal's rune, clockwise, in the goal's colour, once ---------- */
+@property --mk-t { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+.rite { position: absolute; inset: 0; pointer-events: none; z-index: 2; opacity: 0;
+  background: conic-gradient(var(--c) 0 var(--mk-t), transparent var(--mk-t));
+  -webkit-mask: var(--m) center / 100% 100% no-repeat; mask: var(--m) center / 100% 100% no-repeat; }
+.rite.lines { --m: url(../../../design-system/orkui/runes/sigil-lines.svg); }
+.rite.runes { --m: url(../../../design-system/orkui/runes/sigil-runes.svg); }
+.rite.ring-runes { --m: url(../../../design-system/orkui/runes/ring-runes.svg); }
+.rite.ring-dots { --m: url(../../../design-system/orkui/runes/ring-dots.svg); }
+.is-rite .rite { animation: rite-fill 640ms steps(8, jump-start) both, rite-out 480ms steps(4) 900ms forwards; }
+@keyframes rite-fill { from { --mk-t: 0deg; opacity: 1; } to { --mk-t: 360deg; opacity: 1; } }
+@keyframes rite-out { from { opacity: 1; } to { opacity: 0; } }
+.is-rite .plus > .ork-icon { animation: plus-flash 640ms steps(1) 640ms both; }
+@keyframes plus-flash { 0% { color: var(--c); } 100% { color: var(--c); } }
+/* the card born: drawn off the seal into the lane */
+.born { width: 144px; opacity: 0; }
+.is-rite .born { animation: born 400ms steps(4) 1100ms both; }
+@keyframes born { from { opacity: 0; transform: translate(-40px, 20px) rotate(-6deg) scale(0.8); } to { opacity: 1; transform: none; } }
+/* the portal: the card goes in, the ring fills from its rune at the top */
+.gone { width: 144px; }
+.is-rite .gone { animation: gone 420ms steps(6) both; }
+@keyframes gone { to { transform: translate(178px, -10px) scale(0.2); opacity: 0; } }
+.is-rite .ring-rite .rite { animation-delay: 380ms, 1280ms; }
+@media (prefers-reduced-motion: reduce) { .is-rite .rite, .is-rite .born, .is-rite .gone, .is-rite .plus > .ork-icon { animation: none; } .is-rite .born { opacity: 1; } .is-rite .gone { opacity: 0; } }
+.stage { position: relative; display: flex; align-items: center; gap: var(--ork-8); padding: var(--ork-6); background: var(--ork-table); outline: var(--ork-line) solid var(--ork-edge); min-height: 300px; }
+.ringbox { position: relative; }
+.ringbox .ork-portal-ring { position: relative; }
+.ring-rite { position: absolute; inset: 0; z-index: 3; }
+.portal-lab { text-align: center; color: var(--ork-ink-muted); font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); margin-bottom: var(--ork-3); }
+.portal-line { text-align: center; font: var(--ork-type-caption); margin-bottom: var(--ork-2); }
+</style>
+</head>
+<body>
+<header class="mk-bar">
+  <span class="ork-label">Orkboard · a goal's rune from its summoning to main</span>
+  <nav aria-label="Sections"><a class="ork-btn" href="#stacks">1 · Stacks</a><a class="ork-btn" href="#choose">2 · Choosing a rune</a><a class="ork-btn" href="#rite">3 · The rite</a></nav>
+</header>
+<main class="mk-main">
+
+<section class="mk-sec" id="stacks">
+  <h1>1 · A stack: the goal on top, its flame below</h1>
+  <p class="mk-line">Today a goal's rune stands three or four times on its stack: in the strip, on every edge of the fan and in the front card's header. The goal's name repeats too, under the strip, on the card the Orkmaster reads or routes. A card at work also moves twice: its stage row's dots run, and the head steps.
+    <b>Proposed:</b> the strip holds the goal's rune and name, once. A card holds its task's name and no rune. An edge holds the stage's sign. While a task is at work, the goal's rune takes the place of the stage's sign, beside <i>Doing · 3 m</i>, and <b>glows</b> (from about 62 % to full and back, in steps, 2.4 s, no halo), and that replaces the running dots. A card that is the goal itself (the Orkmaster reading or routing it, no tasks yet) has no strip: its header is the goal's.</p>
+  <div class="mk-row" id="lanes"></div>
+</section>
+
+<section class="mk-sec" id="choose">
+  <h1>2 · Choosing the next goal's rune</h1>
+  <p class="mk-line">On hover the + card <b>shows</b> the runes the addressed party does not use yet. The decorative runes give way, and the free elements' runes stand in the band, each in its colour, dim, one after another. The one the goal would be given stays at the top. When all five are in use, all five stand there. The choice itself is <b>made in the field</b> the card grows into, not on the leaning card: a 14 px rune on a card that turns under the pointer is too small a target, and too near the press that opens the field. The field has a row of the five runes at 28 px. The free ones are bright, the used ones faint but still possible, and the default is the one picked today. Arrows and Tab work, and doing nothing keeps today's rule.</p>
+  <div class="mk-row" id="choice"></div>
+</section>
+
+<section class="mk-sec" id="rite">
+  <h1>3 · The rite: summoned at the +, sent through the ring</h1>
+  <p class="mk-line">Pressing <i>Send</i>: the seal fills from the chosen rune, clockwise, in <b>the goal's own colour</b>, eight steps in 640 ms, and the + takes the colour for a moment. Then the card is drawn off the seal into its lane, and the colour leaves the seal. When the goal goes to main, the same rite runs in the portal's ring: the card goes in, and the ring's runes fill from its rune at the top, in its colour, and fade. It plays once each time, and never under reduced motion. It uses no gold: the goal's colour says <i>this goal</i>, as every card of it does.</p>
+  <div class="mk-row">
+    <figure class="mk-fig"><h2>Summoned (dust)</h2><div class="stage" id="rite-plus"></div><button class="ork-btn" type="button" data-rite="rite-plus">Play the summoning</button></figure>
+    <figure class="mk-fig"><h2>Sent to main (lava)</h2><div class="stage" id="rite-portal"></div><button class="ork-btn" type="button" data-rite="rite-portal">Play the sending</button></figure>
+  </div>
+</section>
+</main>
+<p class="mk-foot">This is a mockup and is not wired into the app. It is drawn in orkUI 0.20.0: the runes are the elements, and the page uses <code>.ork-sigil</code>, <code>.ork-portal-ring</code> and <code>.ork-portal</code>. The glow, the free runes in the band and the rite are this page's own, in orkUI's tokens. After the owner's yes they would go into orkUI first: an <code>.ork-elem.is-glowing</code> (a second thing that moves by itself, after <code>.ork-busy</code>), a seal that shows chosen runes, and the rite on the seal and on the ring. Open it over http, not file://.</p>
+
+<script>
+(function () {
+  var B = "../../../design-system/orkui/";
+  var E = function (n, extra) { return '<span class="ork-elem ' + n + (extra ? " " + extra : "") + '" aria-hidden="true"></span>'; };
+  var S = function (n, big) { return '<span class="ork-sign ' + n + (big ? " big" : "") + '" aria-hidden="true"></span>'; };
+  var ICON = function (n) { return '<svg class="ork-icon pix" aria-hidden="true"><use href="' + B + "icons/icons.svg#" + n + '"/></svg>'; };
+  var STAGE = { doing: ["sword", "Doing"], checking: ["shield", "Checking"], planning: ["page", "Planning"], reading: ["page", "Reading"], routing: ["page", "Routing"] };
+
+  // ---------- the stacks ----------
+  function card(o, mode) {
+    var st = STAGE[o.stage], working = !!o.work, name = o.name;
+    var head = mode === "today" || o.own ? E(o.el) : "";
+    var row = (mode === "new" && working ? '<span class="flame">' + E(o.el) + "</span>" : (working ? "" : S(st[0]))) + "<span>" + st[1] + (working ? " · 3 m" : "") + "</span>";
+    if (o.gem) row += '<span class="ork-gem share gem">' + o.gem + "</span>";
+    return '<div class="ork-card card' + (working ? " working" : "") + (o.fails ? " fails" : "") + '"><div class="hd">' + head + "<span>" + name + "</span></div>"
+      + '<div class="win c-' + o.el + '">' + S(o.sign, true) + '</div><div class="row">' + row + "</div></div>";
+  }
+  function edge(o, el, k, mode) {
+    var st = STAGE[o.stage];
+    var inner = (mode === "today" ? E(el) : "") + (mode === "new" && o.work ? '<span class="flame">' + E(el) + "</span>" : "") + S(st[0]);
+    return '<div class="ork-card edge e' + k + '">' + inner + "</div>";
+  }
+  function goal(g, mode) {
+    var strip = (mode === "new" && g.front.own) ? "" : '<div class="ork-card strip">' + E(g.el) + "<span>" + g.name + "</span></div>";
+    var fan = g.behind && g.behind.length ? '<div class="fan">' + g.behind.map(function (b, i) { return edge(b, g.el, i + 1, mode); }).join("") + "</div>" : "";
+    var front = Object.assign({ el: g.el }, g.front);
+    if (mode === "new" && front.own) front.name = g.full;
+    return '<div class="goal">' + strip + fan + card(front, mode) + "</div>";
+  }
+  var GOALS = [
+    [{ el: "meadow", name: "Round timer shows on…", full: "Round timer shows on every phone", front: { own: true, name: "Round timer shows on every phone", stage: "reading", sign: "mechanic" } },
+     { el: "dust", name: "Results screen with…", full: "Results screen with the round's best answer", front: { own: true, name: "Results screen with the round's best answer", stage: "routing", sign: "screen" } }],
+    [{ el: "ice", name: "Keep the seat when…", front: { name: "Reset the round timer when a player rejoins", stage: "doing", sign: "feature", work: true, gem: "$1" },
+       behind: [{ stage: "planning" }, { stage: "planning" }] },
+     { el: "lava", name: "Check that a rejoin…", front: { name: "Check the rejoin", stage: "checking", sign: "bug", fails: true }, behind: [{ stage: "planning" }] }],
+    [{ el: "void", name: "A timer bar that drains", front: { name: "Check the bar's colours", stage: "checking", sign: "picture", work: true },
+       behind: [{ stage: "doing", work: true }, { stage: "planning" }] },
+     { el: "meadow", name: "Write the timer's rules", front: { name: "Write the timer's rules: seconds in each phase", stage: "planning", sign: "page" } }]
+  ];
+  function lanes(mode) {
+    var names = ["The project", "Tech", "Design"];
+    return '<div class="lanes ' + mode + '">' + GOALS.map(function (l, i) { return '<div class="lane"><span class="lab">' + names[i] + "</span>" + l.map(function (g) { return goal(g, mode); }).join("") + "</div>"; }).join("") + "</div>";
+  }
+  document.getElementById("lanes").innerHTML =
+    '<figure class="mk-fig"><h2>Today</h2>' + lanes("today") + "<p>The rune four times on a stack of three, the name twice on the Orkmaster's cards, and the dots running under a card at work.</p></figure>"
+    + '<figure class="mk-fig"><h2>Proposed</h2>' + lanes("new") + "<p><b>One rune per stack</b>, in its strip. The Orkmaster's cards are the goal itself, so they have no strip. The rune <b>glows at the stage</b> of the task at work: two in Design, where the bar is being drawn while its colours are checked. A card that waits, or is failed, has no flame.</p></figure>";
+
+  // ---------- the choice ----------
+  var POS = function (deg) { var a = deg * Math.PI / 180; return { x: 2 * Math.round((68 + 50 * Math.sin(a) - 7) / 2), y: 2 * Math.round((68 - 50 * Math.cos(a) - 7) / 2) }; };
+  function seal(top, free, cls) {
+    var angles = free.length === 4 ? [72, 144, 216, 288] : free.length === 2 ? [120, 240] : free.length === 3 ? [90, 180, 270] : [180];
+    var frees = free.map(function (n, i) { var p = POS(angles[i]); return '<span class="free" style="--i:' + i + ";left:" + (p.x + 4) + "px;top:" + (p.y + 33) + 'px">' + E(n) + "</span>"; }).join("");
+    return '<button type="button" class="ork-card plus ' + (cls || "") + '" aria-label="New goal"><span class="ork-sigil" aria-hidden="true"><span class="ork-sigil__seal">' + (top ? E(top) : "") + "</span></span>" + frees + ICON("plus") + "</button>";
+  }
+  function field(sel, used) {
+    var all = ["meadow", "ice", "dust", "void", "lava"];
+    return '<div class="ork-card field"><textarea class="ork-field" placeholder="Write a goal…">Players see who answered first</textarea>'
+      + '<div class="runes" role="radiogroup" aria-label="Its rune"><span class="cap">→ Tech</span>' + all.map(function (n) {
+        return '<button type="button" role="radio" class="pick' + (used.indexOf(n) >= 0 ? " used" : "") + '" aria-checked="' + (n === sel) + '">' + E(n) + "</button>"; }).join("") + "</div>"
+      + '<div class="acts"><span>Enter sends · Esc closes</span><button class="ork-btn primary" type="button">Send</button></div></div>';
+  }
+  document.getElementById("choice").innerHTML =
+    '<figure class="mk-fig"><h2>At rest (Tech: meadow and ice in use)</h2>' + seal("dust", ["void", "lava"]) + "<p>The seal holds dust, the rune the goal would be given today.</p></figure>"
+    + '<figure class="mk-fig"><h2>Hover (held)</h2>' + seal("dust", ["void", "lava"], "is-hover") + "<p>The free runes, <b>void and lava</b>, come into the band one after another. It is a preview: nothing is chosen on the card.</p></figure>"
+    + '<figure class="mk-fig"><h2>Hover, all five in use</h2>' + seal("meadow", ["ice", "dust", "void", "lava"], "is-hover") + "<p>Every rune stands there. The top one is the least used.</p></figure>"
+    + '<figure class="mk-fig"><h2>The field: the choice</h2>' + field("void", ["meadow", "ice"]) + "<p>Void is chosen: the free runes are bright, and the used ones are faint but can still be chosen. Each target is 40 px. The seal on the card follows the choice.</p></figure>";
+
+  // ---------- the rites ----------
+  var dustC = "var(--ork-elem-dust)", lavaC = "var(--ork-elem-lava)";
+  document.getElementById("rite-plus").innerHTML = '<div style="position:relative;--c:' + dustC + '">' + seal("dust", [])
+    .replace('<span class="ork-sigil__seal">', '<span class="rite lines" style="--c:' + dustC + '"></span><span class="rite runes" style="--c:' + dustC + '"></span><span class="ork-sigil__seal">')
+    + "</div>" + '<div class="born">' + card({ el: "dust", name: "Players see who answered first", stage: "planning", sign: "feature" }, "new") + "</div>";
+  document.getElementById("rite-portal").innerHTML = '<div class="gone">' + card({ el: "lava", name: "Check the rejoin", stage: "checking", sign: "bug" }, "new") + "</div>"
+    + '<div class="ringbox"><p class="portal-line">Into main: Check that a rejoin keeps the seat</p><p class="portal-lab">Main</p><span class="ork-portal-ring is-open" aria-hidden="true"><span class="ork-portal"></span><span class="ork-portal-ring__seal">' + E("lava") + '</span>'
+    + '<span class="ring-rite" style="--c:' + lavaC + '"><span class="rite ring-runes" style="--c:' + lavaC + '"></span></span></span></div>';
+  [].slice.call(document.querySelectorAll("[data-rite]")).forEach(function (b) {
+    b.addEventListener("click", function () { var s = document.getElementById(b.dataset.rite); s.classList.remove("is-rite"); void s.offsetWidth; s.classList.add("is-rite"); });
+  });
+})();
+</script>
+</body>
+</html>
