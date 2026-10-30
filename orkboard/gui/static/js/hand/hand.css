@@ -24,7 +24,7 @@
 .hand-lane[data-lane="0"] { --hc-lead: calc(var(--hc-w) + var(--ork-4)); --span: max(0px, calc(100cqw - var(--hc-lead) - var(--hc-w) - var(--hc-edge))); }
 .hand-lane[data-lane="0"] > .hand-slot:not(.is-plus) { left: calc(var(--hc-lead) + var(--span) * var(--at) / var(--of)); }
 .hand-slot.is-plus { left: 0; }
-.hand-end { display: flex; justify-content: flex-end; align-items: flex-start; gap: var(--ork-4); min-width: 0; }      /* holds the bug, the Play die and the mana (mana.css, playdie.js) */
+.hand-end { display: flex; justify-content: flex-end; align-items: flex-start; gap: var(--ork-4); min-width: 0; }      /* holds the Play die and the mana (mana.css, playdie.js) */
 
 /* a place along a lane's fan: the front at the lane's right, those behind it to the left, showing their left edge (the element); one card alone is in the lane's middle */
 .hand-slot { position: absolute; top: 0; left: calc(var(--span) * var(--at) / var(--of)); width: min(var(--hc-w), 100cqw); z-index: var(--z); pointer-events: auto;

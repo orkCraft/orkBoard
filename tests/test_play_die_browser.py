@@ -205,6 +205,34 @@ def test_a_start_is_thrown_rolls_without_the_logo_lands_on_the_tick_then_the_log
     finish(pg, errors)
 
 
+def interior_colors(pg):
+    """How many colours the top face shows in a stretch free of pips and edges (a clean die: its one fill; seams between its cells: more)."""
+    import io
+    from PIL import Image
+    x, y = pg.evaluate("() => { const r = document.querySelector('.play-die > .ork-die').getBoundingClientRect(); return [r.x, r.y]; }")
+    shot_ = Image.open(io.BytesIO(pg.screenshot())).convert("RGB")
+    region = shot_.crop((round(x + 37), round(y + 31), round(x + 52), round(y + 41))).tobytes()
+    return len({region[i:i + 3] for i in range(0, len(region), 3)})
+
+
+def test_the_thrown_die_shows_no_seams_between_its_cells_while_it_rolls_and_on_the_tick(gui):
+    """A scale on the die's ancestors (the flight once scaled it from half size) fixes its layer's raster at that scale: a grid of seams between its 6 px cells. The flight only moves and turns it, and it grows in whole cells."""
+    pytest.importorskip("PIL")
+    host = Host(play=STARTING)
+    pg, errors = window(gui, host)
+    die(pg).click()
+    pg.locator('.play-throw[data-phase="roll"]').wait_for(timeout=WAIT_MS)
+    pg.wait_for_timeout(500)
+    pg.add_style_tag(content=".play-die { animation: none !important; }")                                                                     # one pose, unturned, so the stretch measured lies where it is expected
+    pg.wait_for_timeout(250)
+    assert interior_colors(pg) == 1
+    host.play = PLAYING
+    pg.locator('.play-throw[data-phase="ok"]').wait_for(timeout=WAIT_MS)
+    pg.wait_for_timeout(340)                                                                                                                  # landed, askew by the lean token
+    assert interior_colors(pg) <= 2
+    finish(pg, errors)
+
+
 def test_the_name_alone_comes_up_after_the_tick_when_the_project_has_no_logo(gui):
     host = Host(play=STARTING)
     pg, errors = window(gui, host)

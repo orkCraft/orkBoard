@@ -1,6 +1,6 @@
 // The tabs (docs/specs/98-the-table-and-the-hand.md §3.1, docs/specs/95-the-window-as-decided.md §2, decisions §167.6): the project's first — its crowned head and the project's name (*Party game*), then **▾** (*Switch project*, spec 107 §8.2) —, then a tab a party in the Board's order, its leader's
 // head and the party's name (the head steps while one of its tasks runs: `data-working`, spec 107 §8.3), and under the name its **sword and shield**: the marks of the AI tools its Does and its Checks run on (tabmarks.js, docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §3.4, decisions §189;
-// the title and the label say them: *Tech · Does on Claude · Checks on Codex*; the project's tab shows the main tool on both); at the end **+ Party** (*New party*, wearing orkUI's banner: a square cloth on a pole with a + cut out of it, unfurling once on hover) and **Stop all** (the boards nailed across a pole before its word, in the danger colour: spec 112 §3.1, decisions §190.1); the AI tools' limits are the hand's mana (hand/mana.js, spec 104 B). Under 760 px the tabs are a row of heads, *Stop all* at the end,
+// the title and the label say them: *Tech · Does on Claude · Checks on Codex*; the project's tab shows the main tool on both); at the end **+ Party** (*New party*, wearing orkUI's banner: a square cloth on a pole with a + cut out of it, unfurling once on hover) and **Stop all** (the boards nailed across a pole before its word, in the danger colour: spec 112 §3.1, decisions §190.1) and, last, the bug under the glass (*Save the logs*, hand/logsbtn.js: decisions §190.6); the AI tools' limits are the hand's mana (hand/mana.js, spec 104 B). Under 760 px the tabs are a row of heads, *Stop all* at the end,
 // and the limits are in the Orkmaster's **…** as chips (pane.js) and in the hand as small potions. The tabs, the Board's lanes and the hand read the frame's one `--cols`, so a tab stands over its lane. A party's tab carries a dot when the picked goal's route has it.
 // At the wide width Release's and Live's are not in the row (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §4.1, decisions §188.1): they wait in the portal ring's corners (road.js, portal.js) and open their view in the pane from there; `parties` is the tabs' (data.js `partiesNow`).
 // The open tab is the person's: nothing here switches it. A name is also said on a long press (nothing only on hover: spec 94 §1.1).
@@ -15,6 +15,7 @@ import { nameOf, routeParties, MARKED, markSrc, mapName, laneOf } from "./data.j
 import { openParties } from "./parties.js";
 import { hasAlert, theLeader } from "./concerns.js";
 import { Marks, marksOf, marksWords, projectMarks } from "./tabmarks.js";
+import { LogsButton } from "../hand/logsbtn.js";                // the bug under the glass, the last of the row (decisions §190.6)
 
 const LONG_MS = 500;
 
@@ -72,6 +73,7 @@ export function Tabs({ parties, current, narrow, compact }) {
     <div class="table-tabs__end">
       <button type="button" class="ork-btn table-plus" aria-label="New party" title="New party" onClick=${() => openParties({}, from)}><${Icon} name="banner" /><span class="table-plus__w">Party</span></button>
       <button type="button" class="ork-btn danger table-stop" title="Stop every ork, script and browser at once" onClick=${() => command("halt").catch(() => {})}><${Icon} name="boarded" />Stop all</button>
+      <${LogsButton} />
     </div>
   </nav>`;
 }

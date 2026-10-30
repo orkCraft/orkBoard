@@ -210,31 +210,34 @@ def test_a_word_that_names_a_type_offers_it_with_its_party_and_takes_both(gui):
 
 # -- J: the bug under the glass -----------------------------------------------------------------------------------------------------------------
 
-def test_the_logs_button_lies_by_the_mana_opens_its_panel_and_saves_with_the_line(gui):
-    pg, host, log = open_hand(gui, host=MentionHost())
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_the_logs_button_ends_the_tabs_row_after_stop_all_opens_its_panel_downward_and_saves_with_the_line(gui, width):
+    pg, host, log = open_hand(gui, host=MentionHost(), width=width)
     try:
-        button = pg.locator(".hand-end .hand-logs")
+        button = pg.locator(".table-tabs__end .table-logs")
         button.wait_for(timeout=WAIT_MS)
-        assert button.get_attribute("aria-label") == "Save the logs" and button.get_attribute("title") == "Save the logs"
+        assert pg.locator(".hand .table-logs, .hand-end .table-logs").count() == 0, "not in the hand any more (decisions §190.6)"
+        assert button.get_attribute("aria-label") == "Save the logs" and button.get_attribute("title") == "Save the logs" and button.inner_text().strip() == "", "an icon with no word"
         assert button.locator(".ork-sign.bug").count() == 1 and button.locator("svg.ork-icon use").get_attribute("href").endswith("#search")
-        b, mana = button.bounding_box(), pg.locator(".hand-mana").bounding_box()
-        assert b["x"] + b["width"] <= mana["x"] + 1, "before the mana"
+        b, stop = button.bounding_box(), pg.locator(".table-stop").bounding_box()
+        assert b["x"] >= stop["x"] + stop["width"] - 1, "after Stop all"
         button.click()
-        panel = pg.locator(".hand-logs__panel")
+        panel = pg.locator(".table-logs__panel")
         panel.wait_for(timeout=WAIT_MS)
         assert "What went wrong? (optional)" in panel.inner_text() and panel.locator("input").evaluate("e => e === document.activeElement")
-        p = panel.bounding_box()
-        assert p["y"] + p["height"] <= b["y"] + 1 and p["x"] >= 0, "above the button, inside the window"
+        p, size = panel.bounding_box(), pg.viewport_size
+        assert p["y"] >= b["y"] + b["height"] - 1, "under the button"
+        assert p["x"] >= 0 and p["x"] + p["width"] <= size["width"] + 1 and p["y"] + p["height"] <= size["height"], "inside the window"
         pg.keyboard.press("Escape")
-        assert pg.locator(".hand-logs__panel").count() == 0
+        assert pg.locator(".table-logs__panel").count() == 0
         button.click()
-        pg.mouse.click(600, 100)
-        assert pg.locator(".hand-logs__panel").count() == 0, "a press away closes it"
+        pg.mouse.click(size["width"] / 2, size["height"] - 200)
+        assert pg.locator(".table-logs__panel").count() == 0, "a press away closes it"
         button.click()
         panel.locator("input").fill("The timer froze")
         panel.get_by_role("button", name="Save logs").click()
         assert any("The timer froze" in a.get("said", "") for a in _calls(pg, host, "logs.save"))
-        assert pg.locator(".hand-logs__panel").count() == 0
+        assert pg.locator(".table-logs__panel").count() == 0
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -246,10 +249,10 @@ def test_the_logs_button_is_there_with_no_mana_and_with_no_goal(gui):
         host.limits = []
         pg, host, log = open_hand(gui, host=host)
         try:
-            pg.locator(".hand-logs").wait_for(timeout=WAIT_MS)
-            assert pg.locator(".hand-logs").count() == 1
-            pg.locator(".hand-logs").click()
-            pg.locator(".hand-logs__panel").wait_for(timeout=WAIT_MS)
+            pg.locator(".table-logs").wait_for(timeout=WAIT_MS)
+            assert pg.locator(".table-logs").count() == 1
+            pg.locator(".table-logs").click()
+            pg.locator(".table-logs__panel").wait_for(timeout=WAIT_MS)
         finally:
             pg.close()
         assert not log, "\n".join(log)

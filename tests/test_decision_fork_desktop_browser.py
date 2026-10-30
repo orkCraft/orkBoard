@@ -95,9 +95,7 @@ def front(pg, goal):
 
 
 def press(pg, goal):
-    """A press on a goal's front card by the keyboard: with the Play die in the hand's right end (spec 112 §3.3) the first lane's stacks lie one over the other at 1280 px, so no edge of a stack behind another is left to press."""
-    front(pg, goal).focus()
-    pg.keyboard.press("Enter")
+    front(pg, goal).click(position={"x": 10, "y": 24})
 
 
 def lifted(pg):

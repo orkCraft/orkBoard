@@ -322,7 +322,7 @@ def test_the_tabs_in_order_the_projects_first_then_plus_and_stop_all(table):
     plus = pg.locator(".table-tabs__end .table-plus")
     assert " ".join(plus.inner_text().split()) == ("Party" if wide(w) else "") and "primary" not in plus.get_attribute("class")                # spec 107 §8.1: + Party, green is New goal's
     assert pg.get_by_role("button", name="Switch project").count() == 1                                                  # the ▾ after the project's name, its own button
-    assert pg.locator(".table-tabs__end .table-chip").count() == 0 and pg.locator(".table-tabs__end button").count() == 2                  # the tabs' end keeps + and Stop all: the limits are the hand's potions (spec 104 B)
+    assert pg.locator(".table-tabs__end .table-chip").count() == 0 and pg.locator(".table-tabs__end button").count() == 3 and pg.locator(".table-tabs__end .table-logs").count() == 1                  # the tabs' end keeps + and Stop all, then the bug under the glass (decisions §190.6): the limits are the hand's potions (spec 104 B)
     if not wide(w):
         assert tab(pg, "tech").locator(".table-tab__txt").is_hidden()                                                    # the tabs a row of heads
         assert all(t.bounding_box()["width"] >= 44 and t.bounding_box()["height"] >= 44 for t in tabs.all())             # a press 44 × 44 on a touch screen
