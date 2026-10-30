@@ -6,6 +6,7 @@ made of, seen and touched, and its own preview of dev. Read from the files, git 
     ideas.play {fresh?, peek?}        # the project's preview of dev's head on 127.0.0.1: starting {stage, command, ports, since} → playing {url, commit} or failed {error, tail}
     ideas.play_stop {}                # it stops and its worktree goes
 
+The snapshot carries `preview` (`preview_kind`: `command` · `static` · ""), whether the project has a preview to play: the Play die sleeps with none (spec 113).
 While it starts and plays, `logo` is the address of the project's logo in dev's head (realm/assets.py `logo`, served as an asset of that commit), "" with none:
 Play's start screen shows it (docs/specs/107-what-the-owners-day-said.md §9.2).
 
@@ -294,6 +295,14 @@ class AssetsMixin:
                 **{k: got[k] for k in ("bytes", "w", "h", "seconds")}}
 
     # -- Play ------------------------------------------------------------------------------------------------
+
+    def preview_kind(self) -> str:
+        """How the project's checkout opens a preview, for the snapshot (the die sleeps with none, spec 113 §2): `command` · `static` · "" (`idea_shot.preview_of`, the rule Play uses; a read of files, nothing is started)."""
+        try:
+            how = idea_shot.preview_of(self.state_dir, Path(self.host.repo_root))
+        except Exception:                          # a snapshot is never broken by a file it could not read
+            how = None
+        return how["how"] if how else ""
 
     @property
     def player(self) -> Play:

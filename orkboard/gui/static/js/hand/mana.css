@@ -46,6 +46,9 @@
 .hand-die .ork-die { rotate: calc(var(--ork-motion-lean) * -1); }
 .hand-die:is(:hover, :focus-visible) .ork-die:not(.is-wobbling) { transform: translateY(calc(var(--ork-motion-rise) * -1)); }
 .hand-die.is-gone .ork-die { visibility: hidden; }
+.hand-die.is-asleep .ork-die { filter: grayscale(1); opacity: 0.4; }                                              /* no preview to play (spec 113 §3): grey and still, as Release and Live sleep in the ring's corners; pressed it still opens the view that says so */
+.hand-die.is-asleep:is(:hover, :focus-visible) .ork-die { transform: none; }
+.hand-die.is-asleep .hand-die__word { color: var(--ork-ink-faint); }
 .hand-die__word { font-weight: 600; white-space: nowrap; }
 
 /* a hand with no goal at all has no cards: its die and potions lie alone at the right end */

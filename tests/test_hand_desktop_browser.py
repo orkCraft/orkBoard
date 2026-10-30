@@ -116,7 +116,7 @@ class HandHost(StubHost):
             self.needs.append(need("asks", "design", "timer", "The timer doesn't reset after a reconnect", "Does the clock show on phones?", at="2026-10-20T09:55:00", asked=q))
         if bare:                                                              # nothing done, nothing ready for main, nothing in line
             self.nodes = [n for n in self.nodes if n["place"] not in ("discard", "deck")]
-            self.gate_doc = {"into": "dev", "main": "main", "same": True, "commits": 0, "files": 0, "ideas": []}
+            self.gate_doc = {"into": "dev", "main": "main", "same": False, "commits": 0, "files": 0, "ideas": []}   # a gate with nothing to merge (the ring asleep); `same` would be no gate at all (spec 113)
 
     def map_doc(self):
         return {"goals": self.parties, "nodes": copy.deepcopy(self.nodes), "edges": [], "rev": self.rev}

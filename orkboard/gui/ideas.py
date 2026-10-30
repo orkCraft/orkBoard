@@ -328,9 +328,10 @@ class Ideas(FactsMixin, LoopFace, TreeFace, ConcernsMixin, MapsMixin, ScreensMix
                 data = {"needs_you": sum(1 for n in b["needs_you"] if n["kind"] not in ("proposal", "party", "pitch", "project_q")),     # a judged pitch holds nothing (spec 65 §5), nor the project's questions (spec 99 §8.2); the Orkmaster's *Go on paid?* is a card of the hand and counts (decisions §178.5)
                         "idea_states": [{"slug": i["slug"], "title": i["title"], "state": i["state"]} for i in b["ideas"]],
                         "review_count": len(waiting),
-                        "review_results": [{k: r[k] for k in ("idea", "task", "title")} for r in waiting]}
+                        "review_results": [{k: r[k] for k in ("idea", "task", "title")} for r in waiting],
+                        "preview": self.preview_kind()}                  # whether the project has a preview to play (spec 113 §2)
             except Exception:                   # a broken page never breaks the town's snapshot
-                data = {"needs_you": 0, "idea_states": [], "review_count": 0, "review_results": []}
+                data = {"needs_you": 0, "idea_states": [], "review_count": 0, "review_results": [], "preview": ""}
             self._cache = (self.rev, now, data)
         return {"focus": focus_of(self.host.machine), "ideas_rev": self.rev, **self._cache[2], "main_checks": self.main_checks_now(),
                 "limits": self.limits(), "mana": self.mana(), "ask": board_ask.record(self.state_dir), "reserve": self.reserve(), "canvases_new": self.canvas_store.new_count(),

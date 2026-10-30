@@ -15,13 +15,14 @@
 // die tips over in three steps and today's failure view takes its place. The hand's die is hidden while its copy is out and is back, glowing (`is-playing`), when the frame rises, or when the failure shows. A view opened on a build already playing (*warm*) has no
 // throw and no intro: the frame opens at once and the hand's die wobbles twice. Under reduced motion none of it: today's start screen exactly (the logo or the name while it starts, no die on the pane, no fade). The throw's phases are `ph`: `fly` · `roll` · `ok` /
 // `no` (landed) · `ok-leave` / `no-leave` · `logo` · `out`; the pane says it as `data-throw`.
+// A project with no preview (the snapshot's `preview` is "", the die in the hand asleep: spec 113 §3, decisions §191.1) is not asked to start: the view says *Nothing here yet* and how at once, with no throw.
 // The build is the machine's own address (127.0.0.1): the phone has no Play.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Sign } from "../orkui.js";
 import { command } from "../link.js";
 import { projectList } from "../shell/projects.js";
-import { dieRect, playing, thrown, warmed } from "../hand/playdie.js";
+import { asleepNow, dieRect, playing, thrown, warmed } from "../hand/playdie.js";
 
 export const OPEN = "Open the build", STARTING = "Starting the build…", STOP = "Stop the build";
 export const FULL = "Full screen";
@@ -49,6 +50,7 @@ function useBuild() {
   const begin = (fresh) => { setB({ state: "starting", commit: "", short: "", stage: "worktree", since: 0, at: Date.now() }); ask(fresh ? { fresh: true } : {}); };
   useEffect(() => {                                   // the die was pressed: a build that is not running is started at once (spec 112 §3.4)
     live.current = true;
+    if (asleepNow()) { setB({ state: "failed", none: true, error: "no preview" }); return () => { live.current = false; }; }      // the project has no preview (the die sleeps, spec 113 §3): *Nothing here yet*, nothing asked, nothing thrown
     command("ideas.play", { peek: true }, true).then((r) => (r?.state === "stopped" && live.current ? begin(false) : take(r))).catch(fail);
     return () => { live.current = false; };
   }, []);
