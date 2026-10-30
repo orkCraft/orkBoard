@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orkboard table end and seal, mockup</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* The mockup's own CSS: layout only, every colour, face and corner read through orkUI's tokens and classes. The runes, the rune ring and the seal are
+   drawn by the script below on a 2 px pixel grid (shape-rendering: crispEdges), as orkUI would draw them from a source file. */
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--ork-canvas); }
+body { margin: 0; min-height: 100vh; background: var(--ork-canvas); color: var(--ork-ink); font: var(--ork-type-body); }
+p, ul, h1, h2, h3 { margin: 0; padding: 0; }
+ul { list-style: none; }
+code { font-family: var(--ork-font-code); font-size: 0.92em; }
+.mk-bar { position: sticky; top: 0; z-index: 10; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-4) var(--ork-6);
+  padding: var(--ork-4) var(--ork-6); background: var(--ork-canvas); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.mk-bar nav { display: flex; flex-wrap: wrap; gap: var(--ork-3); }
+.mk-main { padding: var(--ork-6); display: flex; flex-direction: column; gap: var(--ork-8); }
+.mk-sec h1 { font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); margin-bottom: var(--ork-3); }
+.mk-line { max-width: 110ch; color: var(--ork-ink); margin-bottom: var(--ork-6); }
+.mk-row { display: flex; flex-wrap: wrap; gap: var(--ork-8) var(--ork-6); align-items: flex-start; padding: var(--ork-4) var(--ork-4) 0; }
+.mk-fig { display: flex; flex-direction: column; gap: var(--ork-3); }
+.mk-fig > h2 { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.mk-fig > p { max-width: 340px; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.mk-fig > p b { color: var(--ork-ink); font-weight: 600; }
+.mk-foot { max-width: 110ch; margin: 0 var(--ork-6) var(--ork-8); padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+svg.px { display: block; shape-rendering: crispEdges; overflow: visible; }
+
+/* ---------- a crop of the wide window (1280 x 800): its right end, the last lane, the table's last column, the hand under it ---------- */
+.crop { position: relative; width: 336px; height: 800px; display: grid; grid-template-rows: 52px 44px minmax(0, 1fr) 188px; overflow: hidden;
+  outline: var(--ork-line) solid var(--ork-edge); background: var(--ork-canvas); }
+.c-tabs { display: grid; grid-template-columns: 96px minmax(0, 1fr); }
+.c-tabs .ork-tab { display: flex; align-items: center; gap: var(--ork-4); padding: 0 var(--ork-4); border-left: var(--ork-line) solid var(--ork-frame); min-width: 0; }
+.c-tabs .ork-tab span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.c-end { display: flex; align-items: center; justify-content: flex-end; gap: var(--ork-3); padding: 0 var(--ork-6) 0 var(--ork-4); border-left: var(--ork-line) solid var(--ork-frame); }
+.c-head { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-4); padding: 0 var(--ork-6) 0 var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.c-head .t { color: var(--ork-ink-muted); font: var(--ork-type-caption); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.c-body { position: relative; display: grid; grid-template-columns: 96px minmax(0, 1fr); min-height: 0; background: var(--ork-table); }
+.c-lane { display: flex; flex-direction: column; gap: var(--ork-4); padding: var(--ork-5) 0 0 0; border-left: var(--ork-line) solid var(--ork-frame); overflow: hidden; }
+.c-lane .mc { margin-left: -48px; }
+.c-col { position: relative; border-left: var(--ork-line) solid var(--ork-frame); }
+.c-hand { position: relative; display: flex; align-items: flex-start; justify-content: space-between; padding: var(--ork-4) 0 0 0; border-top: var(--ork-line) solid var(--ork-frame); overflow: hidden; }
+
+/* a map card, small */
+.mc { width: 144px; height: 120px; display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-4); flex: none; }
+.mc .h { display: flex; gap: var(--ork-3); align-items: flex-start; font-weight: 600; font-size: 13px; line-height: 17px; }
+.mc .h .ork-elem { margin-top: 2px; }
+.mc .w { height: 40px; display: flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-card); color: var(--ork-ink-muted); }
+.mc .l { margin-top: auto; color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
+
+/* the hand's end: a stack's edge at the left, the potions flush right */
+.c-hand .stk { position: relative; width: 144px; height: 202px; margin-left: -72px; }
+.c-hand .stk > * { position: absolute; inset: 0 auto auto 0; width: 144px; }
+.c-hand .stk .b1 { transform: translate(7px, 2px) rotate(3deg); }
+.pools { display: grid; grid-template-columns: repeat(2, 64px); gap: var(--ork-2); }
+.pool { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); padding: var(--ork-1) 0; border: 2px solid transparent; font: var(--ork-type-caption); }
+.pool.is-default { border-color: var(--ork-ink); clip-path: var(--ork-notch); background: var(--ork-panel); }
+.pool .pct { font-weight: 600; font-variant-numeric: tabular-nums; }
+.pool .sub { color: var(--ork-ink-muted); }
+
+/* ---------- the table's end: the rune ring (the portal's place) over the discard's place ---------- */
+.end { position: absolute; right: var(--ork-8); bottom: var(--ork-4); display: flex; flex-direction: column; align-items: center; gap: var(--ork-3); width: 192px; }
+.end .lab { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); }
+.end .lab.faint { color: var(--ork-ink-faint); opacity: 0.6; }
+.end .line { color: var(--ork-ink); font: var(--ork-type-caption); text-align: center; min-height: 16px; }
+.end .why { color: var(--ork-danger); font: var(--ork-type-caption); text-align: center; }
+.end .dl { align-self: flex-start; margin-left: 24px; }
+.end .pile, .end .slot { margin-left: 24px; align-self: flex-start; }
+
+/* the ring: a dotted circle with eight runes on it, the portal in its middle when it is open */
+.ring { position: relative; width: 192px; height: 192px; flex: none; }
+.ring > svg.px { position: absolute; inset: 0; width: 192px; height: 192px; }
+.ring > .ork-portal { position: absolute; left: 31px; top: 26px; }
+.ring .dots { fill: var(--ork-edge); fill-opacity: 0.32; }
+.ring .rn { fill: var(--ork-ink-faint); fill-opacity: 0.55; }
+/* open: the runes lit in the portal's violet (a goal can be played here), the dotted circle gone under the portal's own ring */
+.ring.is-open .dots { display: none; }
+.ring.is-open .rn { fill: var(--ork-portal); fill-opacity: 0.7; }
+.ring.is-taking .rn { fill: var(--ork-portal-hi); fill-opacity: 1; }
+/* sealed: the portal is there with its X, the runes back to the still grey (so asleep and sealed never read alike: asleep has no portal) */
+.ring.is-sealed .dots { display: none; }
+/* waking: the runes light one after another, a step each, then the portal's eye opens in the ring */
+.ring.is-waking .rn { animation: rn-wake 140ms steps(1) both; animation-delay: calc(var(--i) * 110ms); }
+@keyframes rn-wake { from { fill: var(--ork-ink-faint); fill-opacity: 0.55; } to { fill: var(--ork-portal); fill-opacity: 0.7; } }
+.ring.is-waking .dots { animation: dots-go 1ms 900ms both; }
+@keyframes dots-go { to { opacity: 0; } }
+.ring.is-waking > .ork-portal { animation: eye-open 500ms steps(5) 900ms both; }
+@keyframes eye-open { from { clip-path: circle(0% at 50% 50%); } to { clip-path: circle(72% at 50% 50%); } }
+@media (prefers-reduced-motion: reduce) { .ring.is-waking .rn, .ring.is-waking .dots, .ring.is-waking > .ork-portal { animation: none; } }
+
+/* the discard's place: a card's outline in pixel dashes (2 x 4 px, the grid's), no fill, nothing to press */
+.slot { width: 144px; height: 202px; flex: none; --d: color-mix(in srgb, var(--ork-edge) 45%, transparent);
+  background: repeating-linear-gradient(90deg, var(--d) 0 4px, transparent 4px 8px) left 2px top 0 / calc(100% - 4px) 2px no-repeat,
+    repeating-linear-gradient(90deg, var(--d) 0 4px, transparent 4px 8px) left 2px bottom 0 / calc(100% - 4px) 2px no-repeat,
+    repeating-linear-gradient(0deg, var(--d) 0 4px, transparent 4px 8px) left 0 top 2px / 2px calc(100% - 4px) no-repeat,
+    repeating-linear-gradient(0deg, var(--d) 0 4px, transparent 4px 8px) right 0 top 2px / 2px calc(100% - 4px) no-repeat; }
+.pile { position: relative; width: 144px; height: 202px; flex: none; }
+.pile > * { position: absolute; inset: 0; width: 144px; height: 202px; }
+.pile .b1 { transform: translate(12px, 3px) rotate(5deg); }
+.pile .b2 { transform: translate(-10px, 5px) rotate(-4deg); }
+.pile .top { display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4); cursor: pointer; }
+.pile .top .h { display: flex; gap: var(--ork-3); font-weight: 600; font-size: 13px; line-height: 17px; }
+.pile .top .h .ork-elem { margin-top: 2px; }
+.pile .top .w { height: 64px; display: flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-canvas); }
+.pile .top .w .ork-sign { color: var(--ork-success); }
+.pile .top .l { margin-top: auto; display: flex; justify-content: space-between; color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
+.pile .top .l .ok { color: var(--ork-success); }
+
+/* ---------- the + card: today's and the seal of summoning ---------- */
+.ork-card.plus { position: relative; width: 144px; height: 202px; display: grid; place-items: center; padding: 0; cursor: pointer; overflow: hidden;
+  rotate: calc(var(--ork-motion-lean) * -1); border: var(--ork-double) double var(--ork-action); color: var(--ork-action); background: var(--ork-card); }
+.ork-card.plus.lg { width: 180px; height: 252px; }
+.ork-card.plus.sm { width: 80px; height: 112px; }
+.plus > .ork-icon { width: 42px; height: 42px; position: relative; z-index: 1; }
+.plus.lg > .ork-icon { width: 56px; height: 56px; }
+.plus.sm > .ork-icon { width: 28px; height: 28px; }
+/* orkUI's pixel corner brackets in the action colour, as today */
+.plus::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-repeat: no-repeat; --a: linear-gradient(var(--ork-action), var(--ork-action));
+  background-image: var(--a), var(--a), var(--a), var(--a), var(--a), var(--a), var(--a), var(--a);
+  background-size: 8px 2px, 2px 8px, 8px 2px, 2px 8px, 8px 2px, 2px 8px, 8px 2px, 2px 8px;
+  background-position: left 2px top 2px, left 2px top 2px, right 2px top 2px, right 2px top 2px, left 2px bottom 2px, left 2px bottom 2px, right 2px bottom 2px, right 2px bottom 2px; }
+/* today: the 45 degree hatch, a band of light on hover */
+.plus.today { background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--ork-action) 12%, transparent) 0 1px, transparent 1px 4px), var(--ork-card); }
+.plus.today::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; background-repeat: no-repeat; background-size: 300% 100%; background-position: 100% 0;
+  background-image: linear-gradient(105deg, transparent 0 42%, color-mix(in srgb, var(--ork-action) 38%, transparent) 42% 58%, transparent 58%); }
+.plus.today:hover::before { opacity: 1; animation: band 900ms steps(6) 1 both; }
+@keyframes band { from { background-position: 100% 0; } to { background-position: 0 0; } }
+/* the seal: drawn under the +, in the action colour at low strength; the + stays the one bright thing */
+.plus > svg.px { position: absolute; inset: 0; width: 100%; height: 100%; }
+.plus .ln { fill: var(--ork-action); fill-opacity: 0.26; }
+.plus .tk { fill: var(--ork-action); fill-opacity: 0.4; }
+.plus .rn { fill: var(--ork-action); fill-opacity: 0.42; }
+/* hover: the lines a step brighter, the runes lit one after another round the circle, once, clockwise from the top (as a summoning is drawn) */
+.plus:hover .ln, .plus.is-hover .ln { fill-opacity: 0.4; }
+.plus.is-hover .rn { fill: var(--ork-action-hi); fill-opacity: 0.95; }
+.plus:hover .rn { animation: rn-lit 560ms steps(1) 1 both; animation-delay: calc(var(--i) * 70ms); }
+@keyframes rn-lit { 0% { fill-opacity: 0.42; } 25% { fill: var(--ork-action-hi); fill-opacity: 1; } 100% { fill-opacity: 0.7; } }
+@media (prefers-reduced-motion: reduce) { .plus:hover .rn { animation: none; fill-opacity: 0.7; } .plus.today:hover::before { animation: none; opacity: 0; } }
+
+/* an empty table with the large + card in the pane's middle */
+.empty { width: 520px; height: 360px; display: grid; place-items: center; background: var(--ork-table); outline: var(--ork-line) solid var(--ork-edge); }
+.empty > div { display: flex; flex-direction: column; align-items: center; gap: var(--ork-5); }
+.empty .cap { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+
+/* the alphabet */
+.abc { display: flex; flex-wrap: wrap; gap: var(--ork-5); padding: var(--ork-5); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame); max-width: 520px; }
+.abc svg { width: 20px; height: 28px; }
+.abc svg path { fill: var(--ork-ink); }
+
+/* the journey: the + card, a card on the table, the ring */
+.trip { display: flex; align-items: center; gap: var(--ork-6); padding: var(--ork-6); background: var(--ork-table); outline: var(--ork-line) solid var(--ork-edge); }
+.trip .arrow { color: var(--ork-ink-faint); font: var(--ork-type-caption); display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); }
+.trip .arrow svg { width: 21px; height: 21px; }
+</style>
+</head>
+<body>
+<header class="mk-bar">
+  <span class="ork-label">Orkboard · the table's end at rest, and the seal of summoning</span>
+  <nav aria-label="Sections"><a class="ork-btn" href="#end">1 · Table's end</a><a class="ork-btn" href="#seal">2 · The + card</a><a class="ork-btn" href="#abc">3 · Runes</a></nav>
+  <button class="ork-btn" id="wake" type="button">Wake the portal again</button>
+</header>
+<main class="mk-main">
+
+<section class="mk-sec" id="end">
+  <h1>1 · The table's end, always laid</h1>
+  <p class="mk-line">The table's last column, under <i>+ Party</i>, <i>Stop all</i> and <i>Play</i>, is empty today until a goal is done. Here both places lie there from the start, still and without colour:
+    the portal's place is a ring of eight runes in the faint grey, and the discard's place is a card's outline in pixel dashes. Neither can be pressed, and neither moves. Colour and motion come
+    only when there is something to do: a goal ready for main lights the runes one after another in the portal's violet, and then the portal opens inside the ring. The crops are the wide window's right end at 1 : 1 (1280 × 800).</p>
+  <div class="mk-row" id="crops"></div>
+</section>
+
+<section class="mk-sec" id="seal">
+  <h1>2 · The + card: a seal of summoning</h1>
+  <p class="mk-line">The new goal's card keeps its frame (the action colour's double line, the pixel corner brackets, the lean). The hatch gives way to a seal: a circle, a band of eight runes, and
+    two squares crossed into an eight-pointed star round the +. The seal is drawn at about a quarter of the action colour's strength, so the + is still the one bright thing. On hover the runes light once,
+    one after another, clockwise from the top, where today a band of light crosses the card. A goal is summoned at the +, and it leaves through the portal's ring, written in the same runes.
+    <b>Hover the cards.</b></p>
+  <div class="mk-row" id="seals"></div>
+  <div class="mk-row" style="margin-top: var(--ork-8)" id="seals2"></div>
+</section>
+
+<section class="mk-sec" id="abc">
+  <h1>3 · One alphabet</h1>
+  <p class="mk-line">Twelve runes on a 5 × 7 grid (the signs' family: one-pixel strokes, square ends), Orkboard's own and not letters: they spell nothing and are read by no one. They are the one
+    vocabulary of magic on the table, used by the + card's seal and the portal's ring. They could later go into the back's ring (<code>backs/back.svg</code>) as well, in the card frame's grey. Drawn at 4 px a cell here.</p>
+  <div class="abc" id="runes"></div>
+  <div class="trip" id="trip" style="margin-top: var(--ork-6); width: fit-content"></div>
+</section>
+</main>
+<p class="mk-foot">This is a mockup and is not wired into the app. The portal is orkUI 0.18.0's <code>.ork-portal</code> (its states <code>is-sealed</code>, <code>is-taking</code>, <code>is-new</code>), and the potions are
+  <code>.ork-potion</code>. The rune ring, the dashed place, the seal and the runes are drawn by this page's script on a 2 px grid in orkUI's tokens. After the owner's yes, orkUI would draw them first (<code>runes/</code>,
+  <code>.ork-portal</code>'s ring with an asleep state, <code>.ork-deck</code>'s empty place and the seal for <code>.ork-plus</code>), and then Orkboard. At the narrow width neither the ring nor the
+  dashed place is drawn: the portal and the pile appear as they do today. Open it over http, not file://.</p>
+
+<script>
+(function () {
+  var B = "../../../design-system/orkui/";
+  // ---------- the runes: 5 x 7, '#' a cell ----------
+  var RUNES = [
+    ["..#..", ".###.", "#.#.#", "..#..", "..#..", ".#.#.", "#...#"],
+    ["..#..", ".#.#.", "#.#.#", "..#..", "..#..", "..#..", "..#.."],
+    ["#...#", "##.##", "#.#.#", "#.#.#", "#.#.#", "##.##", "#...#"],
+    ["..#..", ".#.#.", "#...#", ".#.#.", "..#..", ".#.#.", "#...#"],
+    ["#.#.#", "#.#.#", ".###.", "..#..", "..#..", "..#..", "..#.."],
+    [".....", ".###.", "#...#", "#.#.#", "#...#", ".###.", "....."],
+    ["#....", "#..#.", "#.#..", "##..#", "#..#.", "#.#..", "##..."],
+    ["...#.", "..#..", ".#...", "..#..", "...#.", "..#..", ".#..."],
+    ["..#..", ".#.#.", "#...#", "#.#.#", "#...#", ".#.#.", "..#.."],
+    ["..#..", "#.#.#", ".###.", "#.#.#", "..#..", "..#..", ".###."],
+    [".##..", "#....", "#..#.", "#.#.#", "#..#.", "#....", ".##.."],
+    ["#.#.#", "#.#.#", "#.#.#", "#####", "..#..", "..#..", "..#.."]
+  ];
+  function Grid() { this.s = {}; }
+  Grid.prototype.on = function (x, y) { this.s[x + "," + y] = 1; };
+  Grid.prototype.off = function (x, y) { delete this.s[x + "," + y]; };
+  Grid.prototype.path = function () { var d = ""; for (var k in this.s) { var p = k.split(","); d += "M" + p[0] + " " + p[1] + "h1v1h-1z"; } return d; };
+  function circle(g, cx, cy, r, dotted) {
+    for (var x = Math.floor(cx - r - 2); x <= cx + r + 2; x++) for (var y = Math.floor(cy - r - 2); y <= cy + r + 2; y++) {
+      var dx = x + 0.5 - cx, dy = y + 0.5 - cy, d = Math.sqrt(dx * dx + dy * dy);
+      if (Math.abs(d - r) < 0.5) { var n = Math.round(Math.atan2(dy, dx) * r / 1.5); if (!dotted || ((n % 2) + 2) % 2 === 0) g.on(x, y); }
+    }
+  }
+  function line(g, x0, y0, x1, y1) {
+    x0 = Math.round(x0); y0 = Math.round(y0); x1 = Math.round(x1); y1 = Math.round(y1);
+    var dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1, dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1, e = dx + dy;
+    for (;;) { g.on(x0, y0); if (x0 === x1 && y0 === y1) break; var e2 = 2 * e; if (e2 >= dy) { e += dy; x0 += sx; } if (e2 <= dx) { e += dx; y0 += sy; } }
+  }
+  function polygon(g, cx, cy, r, n, a0) {
+    var pts = []; for (var i = 0; i < n; i++) { var a = a0 + i * 2 * Math.PI / n; pts.push([cx + r * Math.cos(a) - 0.5, cy + r * Math.sin(a) - 0.5]); }
+    for (i = 0; i < n; i++) line(g, pts[i][0], pts[i][1], pts[(i + 1) % n][0], pts[(i + 1) % n][1]);
+  }
+  function rune(i) { var g = new Grid(), r = RUNES[i % RUNES.length]; for (var y = 0; y < 7; y++) for (var x = 0; x < 5; x++) if (r[y][x] === "#") g.on(x, y); return g; }
+  // eight runes upright on a circle of radius R, clockwise from the top; returns their paths, and clears what lies under them in `under`
+  function runesOn(cx, cy, R, a0, which, under) {
+    var out = "";
+    for (var i = 0; i < 8; i++) {
+      var a = -Math.PI / 2 + a0 + i * Math.PI / 4, x0 = Math.round(cx + R * Math.cos(a) - 2.5), y0 = Math.round(cy + R * Math.sin(a) - 3.5), g = rune(which[i]), d = "";
+      for (var k in g.s) { var p = k.split(","); d += "M" + (x0 + +p[0]) + " " + (y0 + +p[1]) + "h1v1h-1z"; }
+      if (under) for (var x = x0 - 2; x < x0 + 7; x++) for (var y = y0 - 2; y < y0 + 9; y++) under.off(x, y);
+      out += '<path class="rn" style="--i:' + i + '" d="' + d + '"/>';
+    }
+    return out;
+  }
+  function svg(w, h, body) { return '<svg class="px" viewBox="0 0 ' + w + " " + h + '" aria-hidden="true">' + body + "</svg>"; }
+
+  // ---------- the portal's ring: 96 x 96 cells of 2 px ----------
+  function ringArt() {
+    var dots = new Grid(); circle(dots, 48, 48, 42, true);
+    var rn = runesOn(48, 48, 42, 0, [0, 4, 8, 2, 6, 10, 3, 9], dots);
+    return svg(96, 96, '<path class="dots" d="' + dots.path() + '"/>' + rn);
+  }
+  // ---------- the seal: w x h cells of 2 px ----------
+  function sealArt(w, h, kind) {
+    var cx = w / 2, cy = h / 2, ln = new Grid(), tk = new Grid(), rn = "", s = w / 72;
+    if (kind === "small") { circle(ln, cx, cy, 15, false); polygon(ln, cx, cy, 15, 4, -Math.PI / 2); polygon(tk, cx, cy, 18, 4, -Math.PI / 4); }
+    else if (kind === "calm") {
+      circle(ln, cx, cy, 27 * s, true); polygon(ln, cx, cy, 17 * s, 4, -Math.PI / 2);
+      rn = runesOn(cx, cy, 27 * s, 0, [1, 5, 9, 3, 7, 11, 0, 6], ln);
+    } else {
+      var r1 = Math.round(29 * s), r2 = Math.round(20 * s);
+      circle(ln, cx, cy, r1, false); circle(ln, cx, cy, r2, false);
+      polygon(ln, cx, cy, r2, 4, -Math.PI / 2); polygon(ln, cx, cy, r2, 4, -Math.PI / 4);
+      for (var i = 0; i < 8; i++) { var a = -Math.PI / 2 + i * Math.PI / 4; tk.on(Math.floor(cx + (r1 + 3) * Math.cos(a)), Math.floor(cy + (r1 + 3) * Math.sin(a))); }
+      rn = runesOn(cx, cy, (r1 + r2) / 2, Math.PI / 8, [1, 5, 9, 3, 7, 11, 0, 6]);
+    }
+    return svg(w, h, '<path class="ln" d="' + ln.path() + '"/><path class="tk" d="' + tk.path() + '"/>' + rn);
+  }
+  var ICON = function (n) { return '<svg class="ork-icon pix" aria-hidden="true"><use href="' + B + "icons/icons.svg#" + n + '"/></svg>'; };
+  function plusCard(cls, art) { return '<button type="button" class="ork-card plus ' + cls + '" aria-label="New goal">' + (art || "") + ICON("plus") + "</button>"; }
+
+  // ---------- the crops ----------
+  var head = function (race) { return '<img class="ork-race__head" src="' + B + "races/" + race + '.png" alt="">'; };
+  var mc = function (el, name, sign, lab) { return '<div class="ork-card mc"><div class="h"><span class="ork-elem ' + el + '"></span><span>' + name + '</span></div><div class="w"><span class="ork-sign big ' + sign + '"></span></div><div class="l">' + lab + "</div></div>"; };
+  var pools = '<div class="pools"><div class="pool is-default"><img class="ork-mark" src="' + B + 'marks/harness-claude.png" alt=""><span class="ork-potion small" style="--ork-potion-left:.62"></span><span class="pct">62%</span><span class="sub">Thu</span></div>'
+    + '<div class="pool"><img class="ork-mark" src="' + B + 'marks/harness-codex.png" alt=""><span class="ork-potion small" style="--ork-potion-left:.88"></span><span class="pct">88%</span><span class="sub">Fri</span></div></div>';
+  var pile = function (top) {
+    return '<div class="pile"><div class="ork-card-back b1"></div><div class="ork-card-back b2"></div><div class="ork-card top"><div class="h"><span class="ork-elem void"></span><span>Lobby music loop</span></div>'
+      + '<div class="w"><span class="ork-sign big check"></span></div><div class="l"><span>' + top + '</span><span class="ok">Done</span></div></div></div>';
+  };
+  function crop(end) {
+    return '<div class="crop"><div class="c-tabs"><div class="ork-tab" role="tab" aria-selected="false">' + head("dryad-elder") + '<span>Art</span></div>'
+      + '<div class="c-end"><button class="ork-btn" type="button">' + ICON("plus") + 'Party</button><button class="ork-btn danger" type="button">Stop all</button></div></div>'
+      + '<div class="c-head"><span class="t">Tower brawl · dev</span><button class="ork-btn" type="button">' + ICON("play") + 'Play</button></div>'
+      + '<div class="c-body"><div class="c-lane">' + mc("dust", "Room codes", "screen", "Art") + mc("ice", "Lobby skin", "screen", "Art") + '</div><div class="c-col">' + end + "</div></div>"
+      + '<div class="c-hand"><div class="stk"><div class="ork-card-back b1"></div><div class="ork-card-back"></div></div>' + pools + "</div></div>";
+  }
+  var ring = function (cls, portal) { return '<div class="ring ' + cls + '">' + ringArt() + (portal ? '<span class="ork-portal ' + portal + '" aria-hidden="true"></span>' : "") + "</div>"; };
+  var label = function (w, faint) { return '<span class="lab' + (faint ? " faint" : "") + '">' + w + "</span>"; };
+  var CROPS = [
+    ["Today: nothing done", "The last column is empty until the first goal is done. This is the hole under <i>Stop all</i>.", ""],
+    ["At rest: nothing done, nothing ready", "<b>The ring</b> of runes in the faint grey, the word <i>Main</i> fainter still, and <b>the dashed place</b> of the discard. They are still, colourless and cannot be pressed.",
+      '<div class="end">' + label("Main", true) + ring("") + label("Discard") + '<div class="slot"></div></div>'],
+    ["Done, nothing ready for main", "The first goal done lands on its dashed place and covers it. The ring sleeps on, since nothing can go to main yet.",
+      '<div class="end">' + label("Main", true) + ring("") + label("Discard") + pile("Result") + "</div>"],
+    ["A goal ready for main: it wakes", "The runes light one after another in the portal's violet, and the portal's eye opens in the ring (once, <i>is-new</i>); the line says what goes. <b>Wake the portal again</b> in the bar replays it.",
+      '<div class="end"><p class="line">Into main: Lobby music loop</p>' + label("Main") + ring("is-open js-wake", "is-new") + label("Discard") + pile("Ready") + "</div>"],
+    ["Sealed", "The portal is there with its X, while the runes go back to grey. Asleep has no portal and sealed has one, so the two never read alike.",
+      '<div class="end"><p class="why">Sealed: a check is red</p>' + label("Main") + ring("is-sealed", "is-sealed") + label("Discard") + pile("Ready") + "</div>"]
+  ];
+  document.getElementById("crops").innerHTML = CROPS.map(function (c) { return '<figure class="mk-fig" style="margin:0"><h2>' + c[0] + "</h2>" + crop(c[2]) + "<p>" + c[1] + "</p></figure>"; }).join("");
+
+  // ---------- the + cards ----------
+  var SEALS = [
+    ["Today", "The 45° hatch, and a band of light on hover.", plusCard("today")],
+    ["Seal of summoning (proposed)", "<b>Circle, band of runes, and a star of two squares.</b> The richest variant, and the one that rhymes with the portal's ring.", plusCard("", sealArt(72, 101, "full"))],
+    ["Seal, calm", "One dotted circle carrying the runes, and a diamond. Quieter, if the full seal pulls the eye in the hand.", plusCard("", sealArt(72, 101, "calm"))],
+    ["Seal, hover (held)", "The runes lit in turn, all shown lit at once here. On a real hover each one flares and settles.", plusCard("is-hover", sealArt(72, 101, "full"))]
+  ];
+  document.getElementById("seals").innerHTML = SEALS.map(function (c) { return '<figure class="mk-fig" style="margin:0"><h2>' + c[0] + "</h2>" + c[2] + "<p>" + c[1] + "</p></figure>"; }).join("");
+  document.getElementById("seals2").innerHTML =
+    '<figure class="mk-fig" style="margin:0"><h2>No goal at all: the large card</h2><div class="empty"><div>' + plusCard("lg", sealArt(90, 126, "full")) + '<span class="cap">Write the first goal</span></div></div><p>At 180 px the seal keeps its eight runes; the cells stay 2 px.</p></figure>'
+    + '<figure class="mk-fig" style="margin:0"><h2>Narrow width: 80 px</h2>' + plusCard("sm", sealArt(40, 56, "small")) + '<p>Runes would be mush at this size, so only the circle, the diamond and four ticks remain.</p></figure>';
+
+  // ---------- the alphabet and the trip ----------
+  document.getElementById("runes").innerHTML = RUNES.map(function (r, i) { return svg(5, 7, '<path d="' + rune(i).path() + '"/>'); }).join("");
+  document.getElementById("trip").innerHTML = plusCard("", sealArt(72, 101, "full"))
+    + '<span class="arrow">' + ICON("arrow-right") + "summoned</span>" + mc("void", "Lobby music loop", "check", "Done")
+    + '<span class="arrow">' + ICON("arrow-right") + "sent</span>" + ring("is-open", "small").replace('class="ork-portal small"', 'class="ork-portal small" style="left:44px;top:40px"');
+
+  // replay the waking
+  function wake() {
+    [].slice.call(document.querySelectorAll(".js-wake")).forEach(function (r) {
+      var p = r.querySelector(".ork-portal");
+      r.classList.remove("is-waking", "is-open"); if (p) p.classList.remove("is-new"); void r.offsetWidth;
+      r.classList.add("is-waking", "is-open"); if (p) p.classList.add("is-new");
+    });
+  }
+  document.getElementById("wake").addEventListener("click", wake);
+  wake();
+})();
+</script>
+</body>
+</html>

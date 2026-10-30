@@ -1,7 +1,7 @@
 # orkUI / office / portal
 
 The portal: **a round, magical pixel portal, the way a goal is sent into main** (orkBoard's decisions §177.4). A goal dropped or pressed into it
-is merged. It is round and purple, never a door; its light, `--ork-portal`, is a signal (*a goal can be played here*), used by `.ork-portal` alone.
+is merged. It is round and purple, never a door; its light, `--ork-portal`, is a signal (*a goal can be played here*), used by `.ork-portal` and its ring alone.
 
     portal.json   the drawing: three 26 x 28 grids of letters (`still`, `arms`, `seal`) and what each letter is (`legend`)
 
@@ -25,6 +25,10 @@ Plain HTML and CSS, no script and no inner markup:
 - **No words inside**: the caller adds the label and the line (*Into main: Lobby*), and says what it is to a screen reader. It is a box of its
   own (`inline-block`, `flex: none`); it takes no colour of the text around it, and on a `<button class="ork-portal">` the button's own look is gone
   and `:focus-visible` draws the 2 px ink frame.
+
+**Its place on the table** is `.ork-portal-ring` (`../runes/README.md`, 0.19.0): a ring of eight runes laid before there is anything to send,
+192 x 192, with the portal inside it (`<span class="ork-portal-ring is-open"><span class="ork-portal"></span></span>`). Asleep it is grey and still,
+`is-open` lights its runes in `--ork-portal`, `is-sealed` greys them again, and `is-waking` opens it once.
 
 It needs `color-mix()` and `box-shadow` lists in custom properties (Chromium 111, Firefox 113, Safari 16.2 or later).
 

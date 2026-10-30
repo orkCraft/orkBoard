@@ -23,3 +23,8 @@ and nothing else (the new goal's card). `.ork-deck` is a pile: the backs' edges 
 each, the far one first), the top back, and the + card lying off its top, to the left (four fifths of its width out, a little up, turned by
 the lean token), so the seal stays in view. It is a transform that is still at rest: nothing moves, and under reduced motion nothing does
 either. The page gives the deck its width and leaves room at its left. With no back in it, the deck is the + card alone.
+
+**The + card's seal** (0.19.0), `.ork-sigil`: `<span class="ork-sigil" aria-hidden="true"></span>` inside `.ork-card.ork-plus`, before its icon, is the seal of
+summoning, written in orkUI's runes (`../runes/README.md`): a circle, a band of eight runes and a star of two squares under the +, in the card's
+colour at a quarter's strength. Its runes light once round the circle on hover. `.small` is drawn at an 80 px card. **A pile's place** before its first
+card is `.ork-card-place`: a card's outline in pixel dashes in the edge, with no fill, never pressed.

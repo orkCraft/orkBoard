@@ -3755,3 +3755,37 @@ had no hint of code at all. Spec 109 builds it (its §0 is the comparison, craft
 7. **Later**: Run's map of services and SLOs, LiveOps' calendar; ADRs, positioning and design pillars as records.
 8. **Measured**: concerns by aspect, made goals or dismissed.
 The owner's call.
+
+## 185. The table's end is always laid: the portal's ring of runes and the discard's place; the + card bears a seal of summoning (30 October, the owner)
+
+Why: the owner: *what if the discard and the portal showed even while idle (the discard's place in a dashed line, the portal as
+runes round its edge)? The right of the table under Play and Stop all looks empty; not to make the window busier, only more
+alive*; and *make the + card's pattern magical and fantasy, not just a pattern*. Today the table's last column is empty until
+the first goal is done (`DiscardEnd` draws nothing, §145.9) and the portal appears from nowhere (§177.4), so the window's
+weightiest place reads as a hole, then fills by surprise. A card game's places lie on its table before a card does, and a
+place laid in advance makes the first card's landing an event. The hatch on the + card is a pattern of the office, the one
+card the person plays every day. The owner's yes on the mockup (`docs/mockups/table-end/`), with the full seal. So (this
+changes §145.9's *the discard when the first goal is done*, §177.4's *opens the portal*, and §182.4's hatch on the + card):
+1. **One rule for what is idle: still and colourless.** A place at rest is drawn in the edge and the faint ink, never moves and
+   cannot be pressed; colour and motion come only when there is something to do.
+2. **The portal's place is a ring of runes** (orkUI's `.ork-portal-ring`, 192 × 192), on the table's right above the discard,
+   on every tab, with *Main* over it in the faint ink. **Asleep** with nothing ready for main: eight runes on a dotted circle,
+   grey. **A goal ready** wakes it once: the runes light one after another in the portal's violet, a quick step each, then the
+   portal's eye opens in the ring (`is-waking`, the portal's `is-new`); it stays open, its runes violet (`is-open`, `is-taking`
+   while a card is held over it). **Sealed**: the portal with its X and the runes grey again, so asleep (no portal) and sealed
+   never read alike. What the portal says and does is §177.4's, unchanged.
+3. **The discard's place** (orkUI's `.ork-card-place`) is a card's outline in pixel dashes, with *Discard* over it, from the
+   start; the first goal done lands on it and covers it. Pressed it does nothing: there is nothing to open.
+4. **The + card bears a seal of summoning** (orkUI's `.ork-sigil`): a circle, a band of eight runes and a star of two squares
+   under the +, in the action's green at about a quarter's strength, so the + stays the one bright thing. The hatch goes. The
+   frame, the corner brackets and the lean stay (§182.4). On hover the runes light once round the circle, clockwise from the top,
+   where a band of light crossed it; the large card keeps the same seal; at 80 px a circle, a diamond and four ticks, no runes.
+5. **The runes are orkUI's own**: twelve marks on a 5 × 7 grid that spell nothing and are read by no one, never a letter of a
+   real alphabet (no arrow up, no Y on a stem, no lightning, no diamond on legs: shapes some wear as hate symbols). They are the
+   table's one vocabulary of magic: a goal is summoned at the + and leaves through a ring in the same runes. A face draws them
+   only where they mean nothing; giving them a meaning (a goal's mark, say) is a decision of its own.
+6. **The narrow width draws neither place**: there the portal and the pile appear as they do today (§180).
+7. **Reduced motion**: the ring opens at once and the seal's runes do not turn.
+8. Drawn in orkUI first (0.19.0: `runes/`, `.ork-portal-ring`, `.ork-sigil`, `.ork-card-place`), then here (the table's end,
+   `table/discard.js` and `table/portal.js`; the + card, `hand/pluscard.js` and `hand/hand.css`).
+The owner's call.
