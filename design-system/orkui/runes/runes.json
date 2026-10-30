@@ -1,5 +1,5 @@
 {
-  "note": "The source of office/runes/ (python tools/build_runes.py writes the files from it). Twelve runes on a 5 x 7 grid, orkUI's own: they spell nothing, no one reads them, and none is a letter of a real alphabet (no arrow, no Y, no lightning, no diamond on legs). Rows are listed from the top, and '#' is a pixel. `ring` is the portal's place, a dotted circle carrying eight runes, on a 96 x 96 grid drawn 2 px a cell (192 x 192). `sigil` is the + card's seal of summoning, a circle, a band of eight runes and a star of two squares, on a 68 x 68 grid (136 x 136). `sigil_small` is the seal at 80 px, a circle, a diamond and four ticks with no runes, on a 36 x 36 grid (72 x 72). Every radius is in cells from the grid's centre, and the runes run clockwise.",
+  "note": "The source of office/runes/ and of office/elements/ (python tools/build_runes.py writes the files from it). Twelve runes on a 5 x 7 grid, orkUI's own: they spell nothing, no one reads them, and none is a letter of a real alphabet (no arrow, no Y, no lightning, no diamond on legs). Rows are listed from the top, and '#' is a pixel. `elements` are the five runes that are a goal's element (0.20.0; each is drawn centred in the elements' 7 x 7 grid, columns 1 to 5); `decoration` are the seven others, the only ones the ring and the seal are written in. `ring` is the portal's place, a dotted circle carrying seven runes at 45 degrees and on, clockwise, on a 96 x 96 grid drawn 2 px a cell (192 x 192); the top (angle 0) is the place of a goal's element, a 7 x 7 box the dots keep clear. `sigil` is the + card's seal of summoning, two circles, a band of seven runes at 45 degrees and on, and a star of two squares, on a 68 x 68 grid (136 x 136); its top is the goal's place too. `sigil_small` is the seal at 80 px, a circle, a diamond and four ticks with no runes, on a 36 x 36 grid (72 x 72). Every radius is in cells from the grid's centre, and the runes run clockwise.",
   "grid": [5, 7],
   "runes": {
     "key":       [".##..", "#..#.", ".##..", "..#..", "..##.", "..#..", "..##."],
@@ -15,7 +15,9 @@
     "knot":      [".###.", "#...#", ".#.#.", "..#..", ".#.#.", "#...#", ".###."],
     "wave":      ["#....", ".#...", "#.#..", ".#.#.", "..#.#", "...#.", "....#"]
   },
-  "ring": {"size": 96, "radius": 42, "clear": 2, "runes": ["key", "tusks", "diamond", "ladder", "staff", "knot", "hook", "comb"]},
-  "sigil": {"size": 68, "outer": 30, "inner": 19, "ticks": 32, "runes": ["eye", "spiral", "comb", "hourglass", "wave", "key", "staff", "knot"]},
+  "elements": {"meadow": "tusks", "ice": "key", "dust": "comb", "void": "eye", "lava": "wave"},
+  "decoration": ["hook", "ladder", "spiral", "staff", "hourglass", "diamond", "knot"],
+  "ring": {"size": 96, "radius": 42, "clear": 2, "runes": ["hook", "ladder", "spiral", "staff", "hourglass", "diamond", "knot"]},
+  "sigil": {"size": 68, "outer": 31, "inner": 19, "ticks": 33, "band": 25, "runes": ["hook", "ladder", "spiral", "staff", "hourglass", "diamond", "knot"]},
   "sigil_small": {"size": 36, "radius": 15, "ticks": 18}
 }

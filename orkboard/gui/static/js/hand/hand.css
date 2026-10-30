@@ -88,21 +88,17 @@
 .hand .hand-done.hand-back.is-on, .table-end .hand-done.hand-back.is-on { box-shadow: inset 2px 0 0 var(--ork-ink); }
 .hand-back__ready { display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); padding: var(--ork-3); color: var(--ork-ink-muted); text-align: center; }
 .hand .hand-card.ork-deal { --ork-deal-x: 0px; --ork-deal-y: calc(var(--hc-h) * 0.6); }
-/* New goal's card (spec 107 §13.1, decisions §182.4): the green card worth looking at, drawn in orkUI's pieces and nothing of its own. A double frame in the action colour (`--ork-double`, inside orkUI's notch), pixel corner
-   brackets as `.ork-picked::after` draws them (8 x 2 px bars at 2 px, here in the action colour), inside a fine 45 degree hatch of the action colour at 12 %, its + a large pixel glyph (a multiple of the 7 x 7 grid); turned a little as a
-   card laid down (§167.5). On hover a light band crosses it once in six steps. To be offered to orkUI as `.ork-deck.is-main` at its next copy. */
-.hand .hand-plus { position: relative; cursor: pointer; rotate: calc(var(--ork-motion-lean) * -1); border: var(--ork-double) double var(--ork-action); color: var(--ork-action); overflow: hidden;
-  background: repeating-linear-gradient(45deg, color-mix(in srgb, var(--ork-action) 12%, transparent) 0 1px, transparent 1px 4px), var(--ork-card); }
+/* New goal's card (spec 107 §13.1, decisions §182.4, §185.4, §186.3; docs/specs/110-runes-on-the-table.md §3.3): the green card worth looking at, drawn in orkUI's pieces and nothing of its own. A double frame in the action colour (`--ork-double`, inside
+   orkUI's notch), pixel corner brackets as `.ork-picked::after` draws them (8 x 2 px bars at 2 px, here in the action colour), its + a large pixel glyph (a multiple of the 7 x 7 grid) over the seal of summoning, orkUI's `.ork-sigil` (a circle, a band of
+   runes and a star in the card's green at about a quarter's strength; its top holds the goal's own element, in its own colour, full strength: `pluscard.js`); turned a little as a card laid down (§167.5). The hatch and the band of light that crossed
+   the card on hover are gone (§185.4): on hover the seal's runes light once round the circle, orkUI's. To be offered to orkUI as `.ork-deck.is-main` at its next copy. */
+.hand .hand-plus { position: relative; cursor: pointer; rotate: calc(var(--ork-motion-lean) * -1); border: var(--ork-double) double var(--ork-action); color: var(--ork-action); overflow: hidden; }
 .hand .hand-plus > .ork-icon { width: 42px; height: 42px; position: relative; z-index: 1; }
 .hand .hand-plus::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-repeat: no-repeat;
   background-image: linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action)),
     linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action));
   background-size: 8px 2px, 2px 8px, 8px 2px, 2px 8px, 8px 2px, 2px 8px, 8px 2px, 2px 8px;
   background-position: left 2px top 2px, left 2px top 2px, right 2px top 2px, right 2px top 2px, left 2px bottom 2px, left 2px bottom 2px, right 2px bottom 2px, right 2px bottom 2px; }
-.hand .hand-plus::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0; background-repeat: no-repeat; background-size: 300% 100%; background-position: 100% 0;
-  background-image: linear-gradient(105deg, transparent 0 42%, color-mix(in srgb, var(--ork-action) 38%, transparent) 42% 58%, transparent 58%); }
-.hand .hand-plus:hover::before, .hand .hand-plus:focus-visible::before { opacity: 1; animation: hand-plus-band calc(var(--ork-motion-play) + var(--ork-motion-base)) steps(6) 1 both; }
-@keyframes hand-plus-band { from { background-position: 100% 0; } to { background-position: 0 0; } }
 .hand .hand-plus.is-large { width: 180px; height: auto; aspect-ratio: 5 / 7; }
 .hand .hand-plus.is-large > .ork-icon { width: 56px; height: 56px; }
 
@@ -217,6 +213,5 @@
 /* none of it moves under reduced motion: a card is marked by its edge instead; a card risen shows its whole face at once, without the spring */
 @media (prefers-reduced-motion: reduce) {
   .hand-slot, .hand .hand-stack > .hand-back.edge { transition: none; }
-  .hand .hand-plus:hover::before, .hand .hand-plus:focus-visible::before { animation: none; opacity: 0; }                    /* the band is a motion: a still hover shows no band */
   .frame-table .is-about { transform: none; transition: none; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 }

@@ -1,9 +1,12 @@
-// The portal to main (docs/specs/105-the-default-tool-moving-on-and-the-portal.md §6, decisions §177.4): in the discard's view each goal ready for main is a card; pressing one, or starting to drag it, chooses it and opens the
-// portal over the pile on the table's right (the `.table-end` place) with the pixel-face label *Main* and the line the host's plan says (`ideas.to_main_plan`, asked once when the portal opens for a goal, because it
+// The portal to main (docs/specs/105-the-default-tool-moving-on-and-the-portal.md §6, decisions §177.4; docs/specs/110-runes-on-the-table.md §3.2, decisions §185.2, §186.3, §186.5): in the discard's view each goal ready for main is a card; pressing one, or starting to drag it, chooses it
+// and sends it through the portal on the table's right (the `.table-end` place) with the pixel-face label *Main* and the line the host's plan says (`ideas.to_main_plan`, asked once when a goal is chosen, because it
 // runs a trial worktree). A card held over the portal is `is-taking`; dropped on it, or the portal pressed while a card is chosen (Enter on the focused portal too), `ideas.to_main` sends the goal alone with the goals it
 // stands on, the card goes into the portal and leaves the ready goals at the next `ideas.gate` read. While the gate holds the goal the portal is `is-sealed`, the reason under it in the danger colour; a press on it says the
-// reason again and plays nothing. The first time, the portal shimmers (`is-new`) with a line saying how (a per-viewer convenience in localStorage; the page works without it). Esc or a press away closes it and drops the
-// choice. Pressing works as dragging does: the press path needs no drag, so it is the phone's. The portal is orkUI's (`.ork-portal`, 0.18.0); its sheet is portal.css, layout only.
+// reason again and plays nothing. Pressing works as dragging does: the press path needs no drag, so it is the phone's. The portal is orkUI's (`.ork-portal`, 0.18.0); its sheet is portal.css, layout only.
+// At the wide width (760 px and up) its place is always laid (§185.2): orkUI's ring of runes (`.ork-portal-ring`, 0.20.0), asleep (grey, nothing to press, *Main* in the faint ink) while no goal is ready for main, and open (the portal
+// inside it, a button) as long as one is, whether or not one is chosen. The first time it opens on a device it wakes (`is-waking`, the portal's `is-new`, a per-viewer convenience in localStorage; the page works without it) with a line
+// saying how. The chosen goal's element lies in the ring's seal (§186.3: its rune, in its own colour; faint while the portal is sealed). With no goal chosen the open portal, pressed, opens the discard's view where the goals ready are
+// chosen; closing the view (or Esc, or a press away) drops the choice and no longer closes the portal. At the narrow width nothing changes: the portal opens above the pile when a goal is chosen and closes with the choice.
 import { signal } from "@preact/signals";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
@@ -11,7 +14,7 @@ import { Elem, Sign } from "../orkui.js";
 import { toast } from "../link.js";
 import { ask } from "../board/store.js";
 import { mapData, refreshShell } from "../shell/store.js";
-import { over } from "../frame/state.js";
+import { openOver, over } from "../frame/state.js";
 import { uprightNow } from "../frame/upright.js";
 import { readyOf } from "../hand/data.js";
 import { reduced, leans } from "../hand/motion.js";
@@ -56,7 +59,7 @@ export const reasonOf = (p) => (p?.state === "fail" ? "What goes to main could n
 /** Chooses a goal and opens the portal for it: the plan is asked once. A goal already chosen keeps its plan. */
 export function choose(slug) {
   if (!slug || chosen.value === slug) return;
-  if (!chosen.value && !said) { said = true; first.value = !readSeen(); writeSeen(); }
+  if (!chosen.value) openedOnce();
   chosen.value = slug;
   taking.value = false;
   plan.value = { slug, state: "wait" };
@@ -96,7 +99,8 @@ export async function play() {
   await refreshShell();
 }
 
-function useNarrow() {
+/** Whether the window is at the narrow width (under 760 px): the table's end is laid always above it and only as it is needed below. */
+export function useNarrow() {
   const [narrow, set] = useState(() => typeof matchMedia === "function" && matchMedia(NARROW).matches);
   useEffect(() => {
     if (typeof matchMedia !== "function") return undefined;
@@ -108,16 +112,28 @@ function useNarrow() {
   return narrow;
 }
 
-/** The portal, above the pile in the table's right column; nothing while no goal is chosen, and none on a phone (hand/readycard.js lays it on the goal's card there). */
+/** The first time the portal opens on this device (the wide ring opening, or a goal chosen at the narrow width): `first` says so until the choice is dropped; said once a page. */
+function openedOnce() {
+  if (said) return;
+  said = true;
+  first.value = !readSeen();
+  writeSeen();
+}
+
+/** The portal's place, above the pile in the table's right column: at the wide width the ring of runes always (asleep, or open with the portal inside), at the narrow one the portal alone while a goal is chosen; none on a phone (hand/readycard.js lays it on the goal's card there). */
 export function Portal() {
   return uprightNow.value ? null : html`<${PortalDoor} />`;
 }
 
+const openDiscard = () => openOver("discard", {}, null, "Done");
+
 function PortalDoor() {
   const slug = chosen.value, p = plan.value, narrow = useNarrow(), door = useRef(), r = readyOf();
-  const here = !!slug && (r?.goals || []).some((g) => g.slug === slug);
-  useEffect(() => { if (slug && !here) close(); }, [slug, here]);                          // the goal left the ready goals (sent, or the gate changed): the portal closes
-  useEffect(() => { if (slug && over.value?.kind !== "discard") close(); }, [slug, over.value?.kind]);
+  const ready = !!r && r.goals.length > 0, here = !!slug && (r?.goals || []).some((g) => g.slug === slug);
+  const ring = !narrow;                                                                    // the wide ring: laid always
+  useEffect(() => { if (slug && !here) close(); }, [slug, here]);                          // the goal left the ready goals (sent, or the gate changed): the choice is dropped
+  useEffect(() => { if (slug && over.value?.kind !== "discard") close(); }, [slug, over.value?.kind]);   // the view closed: the choice is dropped (the ring stays open at the wide width)
+  useLayoutEffect(() => { if (ring && ready) openedOnce(); }, [ring, ready]);               // the ring opens: it wakes the first time on a device
   useLayoutEffect(() => { if (slug) door.current?.focus({ preventScroll: true }); }, [slug]);   // Enter on a card moves the focus here
   useEffect(() => {
     if (!slug) return undefined;
@@ -127,19 +143,36 @@ function PortalDoor() {
     document.addEventListener("keydown", esc);
     return () => { document.removeEventListener("pointerdown", away, true); document.removeEventListener("keydown", esc); };
   }, [slug]);
-  if (!slug || !here) return null;
-  const main = r.main || "main", sealed = p?.state === "fail" || !!p?.sealed, reason = reasonOf(p);
+  const open = !!slug && here;
+  if (!ring && !open) return null;
+  const main = r?.main || "main", sealed = open && (p?.state === "fail" || !!p?.sealed), reason = reasonOf(p);
   const held = (e) => { if (!chosen.value) return; e.preventDefault(); if (e.dataTransfer) e.dataTransfer.dropEffect = "move"; taking.value = true; };
   const left = (e) => { if (!e.currentTarget.contains(e.relatedTarget)) taking.value = false; };
   const drop = (e) => { e.preventDefault(); taking.value = false; play(); };
-  return html`<div class=${cls("portal-host", { "is-new": first.value })} data-portal=${p?.state === "ok" ? (sealed ? "sealed" : "open") : p?.state || "wait"}>
-    <p class="portal__line">${p?.state === "ok" ? lineOf(p, slug, main) : p?.state === "fail" ? `Into ${main}: ${titleOf(slug, p)}` : `Checking ${titleOf(slug, p)}…`}</p>
-    <span class="portal__label">${main === "main" ? "Main" : main}</span>
-    <button type="button" ref=${door} class=${cls("ork-portal", { small: narrow, "is-taking": taking.value, "is-sealed": sealed, "is-new": first.value })}
-      aria-label=${labelOf(p, slug, main)} aria-disabled=${p?.state === "wait" ? "true" : undefined} onClick=${play}
-      onDragEnter=${held} onDragOver=${held} onDragLeave=${left} onDrop=${drop}></button>
-    ${first.value && !sealed && html`<p class="portal__hint">${narrow ? "Tap the portal to send it to main" : "Drag a goal done into the portal to send it to main"}</p>`}
-    <p class="portal__sealed" role="status" aria-live="polite">${sealed && html`<span key=${echo.value}>Sealed: ${reason}</span>`}</p>
+  const state = open ? (p?.state === "ok" ? (sealed ? "sealed" : "open") : p?.state || "wait") : ready ? "ready" : "asleep";
+  const none = !open, line = open && (p?.state === "ok" ? lineOf(p, slug, main) : p?.state === "fail" ? `Into ${main}: ${titleOf(slug, p)}` : `Checking ${titleOf(slug, p)}…`);
+  const button = html`<button type="button" ref=${door} class=${cls("ork-portal", { small: narrow, "is-taking": taking.value, "is-sealed": sealed, "is-new": first.value })}
+      aria-label=${none ? `Choose a goal done to send it to ${main}` : labelOf(p, slug, main)} aria-disabled=${open && p?.state === "wait" ? "true" : undefined} onClick=${none ? openDiscard : play}
+      onDragEnter=${held} onDragOver=${held} onDragLeave=${left} onDrop=${drop}></button>`;
+  const element = open ? (mapData.value?.nodes || []).find((n) => n.slug === slug)?.element || "" : "";
+  const label = main === "main" ? "Main" : main;
+  const hint = first.value && !sealed && (ready || open) && html`<p class="portal__hint">${narrow ? "Tap the portal to send it to main" : "Drag a goal done into the portal to send it to main"}</p>`;
+  const reasoned = html`<p class="portal__sealed" role="status" aria-live="polite">${sealed && html`<span key=${echo.value}>Sealed: ${reason}</span>`}</p>`;
+  if (!ring) {
+    return html`<div class=${cls("portal-host", { "is-new": first.value })} data-portal=${state}>
+      <p class="portal__line">${line}</p>
+      <span class="portal__label">${label}</span>
+      ${button}${hint}${reasoned}
+    </div>`;
+  }
+  return html`<div class=${cls("portal-host is-ring", { "is-new": first.value, "is-asleep": !ready })} data-portal=${state}>
+    ${open && html`<p class="portal__line">${line}</p>`}
+    <span class="portal__label">${label}</span>
+    <span class=${cls("ork-portal-ring", { "is-open": ready && !sealed, "is-sealed": sealed, "is-waking": ready && first.value, "is-taking": taking.value })} aria-hidden=${ready ? undefined : "true"}>
+      ${ready && button}
+      <span class="ork-portal-ring__seal">${element && html`<${Elem} name=${element} />`}</span>
+    </span>
+    ${hint}${reasoned}
   </div>`;
 }
 
