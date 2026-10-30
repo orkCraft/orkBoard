@@ -479,3 +479,16 @@ def test_the_narrow_width_has_heads_only_and_says_the_words_on_the_tab(gui):
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+def test_a_full_week_is_a_large_full_bottle_and_a_low_five_hours_a_large_bottle_nearly_empty_in_the_danger_colour(gui):
+    pg, host, log = open_mana(gui, [two("claude", "Claude Code", 1.0, 1.0), two("codex", "Codex", 0.04, 0.9)])
+    try:
+        full, low = pot(pg, "claude"), pot(pg, "codex")
+        assert full.get_attribute("data-size") == "large" and full.get_attribute("data-level") == "ok" and "--ork-potion-left:1" in full.locator(".ork-potion").get_attribute("style").replace(" ", "")
+        assert low.get_attribute("data-size") == "large" and low.get_attribute("data-level") == "danger"                  # the week is plentiful, the 5 hours are not: a large bottle, one row of red
+        assert low.locator(".hand-pot__share").inner_text() == "4%" and low.locator(".hand-pot__week").inner_text() == "week 90%"
+        shot(pg, "wide-full-and-five-hours-low")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
