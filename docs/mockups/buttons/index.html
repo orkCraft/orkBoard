@@ -49,6 +49,30 @@ svg.px { display: block; width: 14px; height: 14px; shape-rendering: crispEdges;
 .vs svg.px, .vs .ork-sign, .vs .ork-icon { width: 28px; height: 28px; }
 .vs .ork-icon { color: var(--ork-ink); }
 .vs .danger { color: var(--ork-danger); }
+.dies { display: flex; gap: var(--ork-8); flex-wrap: wrap; align-items: flex-end; }
+.dies figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: var(--ork-3); width: 200px; }
+.dies figcaption { color: var(--ork-ink-muted); font: var(--ork-type-caption); text-align: center; }
+.die { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); width: 64px; padding: var(--ork-1) 0; border: 2px solid transparent; background: none; color: var(--ork-ink); cursor: pointer; font: var(--ork-type-caption); }
+.die:hover, .die.is-hover { background: var(--ork-raised); }
+.die svg { width: 48px; height: 48px; shape-rendering: crispEdges; display: block; }
+.die:hover svg, .die.is-hover svg { transform: translateY(calc(var(--ork-motion-rise) * -1)); }
+.die .t { fill: var(--ork-card-frame); } .die .l { fill: var(--ork-card); } .die .r { fill: var(--ork-panel); } .die .o { fill: var(--ork-edge); } .die .p { fill: var(--ork-ink-muted); }
+.die .w { font-weight: 600; }
+.die.is-playing .p { fill: var(--ork-ink); animation: pip 2.4s steps(6) infinite; }
+.die.is-playing .o { fill: var(--ork-ink); }
+@keyframes pip { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+.die .fr { display: none; } .die .fr.f0 { display: inline; }
+.die.is-rolling .fr.f0 { animation: fr0 360ms steps(1) 1 both; } .die.is-rolling .fr.f1 { display: inline; animation: fr1 360ms steps(1) 1 both; } .die.is-rolling .fr.f2 { display: inline; animation: fr2 360ms steps(1) 1 both; }
+@keyframes fr0 { 0%, 99% { opacity: 0; } 100% { opacity: 1; } } @keyframes fr1 { 0%, 33% { opacity: 1; } 34%, 100% { opacity: 0; } } @keyframes fr2 { 0%, 33% { opacity: 0; } 34%, 66% { opacity: 1; } 67%, 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .die.is-playing .p, .die.is-rolling .fr { animation: none; } .die:hover svg { transform: none; } }
+.handend { width: 760px; height: 150px; position: relative; display: flex; align-items: flex-start; gap: var(--ork-6); padding: var(--ork-4) 0 0 var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame); outline: var(--ork-line) solid var(--ork-edge); overflow: hidden; }
+.handend .ends { margin-left: auto; display: flex; align-items: flex-start; gap: var(--ork-2); padding-right: var(--ork-2); }
+.handend .gap { width: var(--ork-4); }
+.hc { width: 144px; height: 202px; flex: none; display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3); }
+.hc .hd { font-weight: 600; font-size: 13px; line-height: 17px; }
+.pool { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); width: 60px; padding: var(--ork-1) 0; border: 2px solid transparent; font: var(--ork-type-caption); }
+.pool.is-default { border-color: var(--ork-ink); clip-path: var(--ork-notch); background: var(--ork-panel); }
+.pool .pct { font-weight: 600; }
 .lit-word { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
 @media (prefers-reduced-motion: reduce) { .banner-hover .px .cloth, .torch.lit .f1, .torch.lit .f2 { animation: none; } .torch.lit .f2 { display: none; } }
 /* the window's top right at 1 : 1 */
@@ -76,6 +100,13 @@ svg.px { display: block; width: 14px; height: 14px; shape-rendering: crispEdges;
     <div class="vs" id="vs"></div>
     <h2 style="margin:var(--ork-6) 0 var(--ork-3);font:var(--ork-type-label);text-transform:var(--ork-type-label-case);letter-spacing:var(--ork-type-label-track);color:var(--ork-ink-muted)">In the window, with the family</h2>
     <div id="ftops" style="display:flex;flex-direction:column;gap:var(--ork-5)"></div>
+  </section>
+  <section class="mk-sec" id="die">
+    <h1>Play as a die, by the potions</h1>
+    <p class="mk-line">The owner's idea: Play is not a small button in the pane's head but <b>a die lying in the hand beside the potions</b>, drawn bigger, in isometry, three of its faces seen. A die is a thing of the table, as the cards and the potions are; Play is the person's to press, and the hand is <i>what the person decides</i>. It is drawn as a potion is: the thing, and its word under it (<i>Play</i>), so it says what it does. Pressed, it rolls once (three frames) and the preview opens over the pane; while the preview is open its pips <b>glow</b>, as a rune glows where work goes on, and its word is <i>Playing</i>; pressed again, the preview closes. The pane's head loses its Play. 16 × 16 cells at 3 px (48 × 48), the potions' pixel; monochrome: a dark die (the card's greys for its three faces, the edge round it) with pips in the muted ink, so it never passes for a signal; while it plays, its pips and its edge turn to the ink and the pips glow.</p>
+    <div class="dies" id="dies"></div>
+    <h2 style="margin:var(--ork-6) 0 var(--ork-3);font:var(--ork-type-label);text-transform:var(--ork-type-label-case);letter-spacing:var(--ork-type-label-track);color:var(--ork-ink-muted)">The hand's right end at 1 : 1, then the top of the window without Play</h2>
+    <div id="handend" style="display:flex;flex-direction:column;gap:var(--ork-5)"></div>
   </section>
   <section class="mk-sec">
     <h1>In the window (the first picks)</h1>
@@ -151,6 +182,52 @@ svg.px { display: block; width: 14px; height: 14px; shape-rendering: crispEdges;
       + '<div class="head"><span>The whole project · through the Orkmaster</span>' + btn(PENNANT + "Play" + (running ? '<span style="width:6px"></span>' + TORCH(true) : ""), "", "Play") + "</div></div>";
   }
   document.getElementById("ftops").innerHTML = ftop(false) + ftop(true);
+
+  // the die: an isometric cube on a 16 x 16 grid, its three faces in the ink, the muted ink and the edge, its pips dark
+  function dieSvg() {
+    var t = "", l = "", r = "", o = "", face = {};
+    for (var y = 0; y < 16; y++) for (var x = 0; x < 16; x++) {
+      var cx = x + 0.5, cy = y + 0.5;
+      if (Math.abs(cx - 8) / 8 + Math.abs(cy - 4) / 4 <= 1) face[x + "," + y] = "t";
+      else if (cx < 8 && cy >= 4 + cx / 2 && cy <= 12 + cx / 2) face[x + "," + y] = "l";
+      else if (cx >= 8 && cy >= 8 - (cx - 8) / 2 && cy <= 16 - (cx - 8) / 2) face[x + "," + y] = "r";
+    }
+    for (var k in face) {                                   // the silhouette's edge in the edge grey, so the dark die stands off the dark ground
+      var q = k.split(","), x = +q[0], y = +q[1], c = "M" + x + " " + y + "h1v1h-1z";
+      var edge = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(function (d) { return !face[(x + d[0]) + "," + (y + d[1])]; })
+        || (face[k] === "t" && [[0, 1]].some(function (d) { return face[(x + d[0]) + "," + (y + d[1])] !== "t"; }))      // the top face's lower edges: the Y of the cube's ridges
+        || (face[k] === "l" && face[(x + 1) + "," + y] === "r");
+      if (edge) o += c; else if (face[k] === "t") t += c; else if (face[k] === "l") l += c; else r += c;
+    }
+    var pip = function (x, y) { return "M" + x + " " + y + "h2v1h-2z"; };
+    // three frames of pips: (top, left, right) = (1, 2, 3), (3, 1, 2), (2, 3, 1)
+    var top = { 1: [[7, 3]], 2: [[4, 3], [10, 4]], 3: [[4, 3], [7, 4], [10, 5]] };
+    top = { 1: [[7, 4]], 2: [[4, 4], [10, 4]], 3: [[3, 4], [7, 4], [11, 4]] };
+    var left = { 1: [[3, 9]], 2: [[1, 7], [5, 11]], 3: [[1, 7], [3, 9], [5, 11]] };
+    var right = { 1: [[11, 9]], 2: [[9, 11], [13, 7]], 3: [[9, 11], [11, 9], [13, 7]] };
+    var frames = [[1, 2, 3], [3, 1, 2], [2, 3, 1]].map(function (f, i) {
+      var d = top[f[0]].concat(left[f[1]], right[f[2]]).map(function (q) { return pip(q[0], q[1]); }).join("");
+      return '<path class="p fr f' + i + '" d="' + d + '"/>';
+    }).join("");
+    return '<svg viewBox="0 0 16 16" aria-hidden="true"><path class="t" d="' + t + '"/><path class="l" d="' + l + '"/><path class="r" d="' + r + '"/><path class="o" d="' + o + '"/>' + frames + "</svg>";
+  }
+  var die = function (cls, word) { return '<button type="button" class="die ' + (cls || "") + '" title="Play: the project\'s preview of dev">' + dieSvg() + '<span class="w">' + (word || "Play") + "</span></button>"; };
+  document.getElementById("dies").innerHTML =
+    '<figure>' + die("") + "<figcaption>At rest: the die and its word.</figcaption></figure>"
+    + '<figure>' + die("is-hover") + "<figcaption>Hovered: it rises as a card does.</figcaption></figure>"
+    + '<figure>' + die("is-rolling", "Play") + '<figcaption>Pressed: it rolls once, three frames (<button class="ork-btn quiet" type="button" id="roll">roll it</button>).</figcaption></figure>'
+    + '<figure>' + die("is-playing", "Playing") + "<figcaption>The preview is open: its pips glow, and the word is <i>Playing</i>. Pressed again, it closes.</figcaption></figure>";
+  document.getElementById("roll").addEventListener("click", function () { var d = document.querySelector(".dies .is-rolling"); d.classList.remove("is-rolling"); void d.offsetWidth; d.classList.add("is-rolling"); });
+  var pots = '<div class="pool is-default"><img class="ork-mark" src="' + B + 'marks/harness-claude.png" alt=""><span class="ork-potion small" style="--ork-potion-left:.62"></span><span class="pct">62%</span></div>'
+    + '<div class="pool"><img class="ork-mark" src="' + B + 'marks/harness-codex.png" alt=""><span class="ork-potion small" style="--ork-potion-left:.88"></span><span class="pct">88%</span></div>';
+  var hc = '<div class="ork-card hc"><div class="hd">Reset the clock</div></div><div class="ork-card hc"><div class="hd">Which shade of red?</div></div>';
+  function etop() {
+    var tab = function (race, tier, name) { return '<div class="tab"><img class="ork-race__head" src="' + B + "races/" + race + "-" + tier + '@2x.png" alt=""><span>' + name + "</span></div>"; };
+    return '<div class="top"><div class="tabs">' + tab("shaman", "elder", "Tech") + tab("dryad", "elder", "Design") + '<div class="end">' + btn(BANNER + "Party", "banner-hover", "New party") + btn(PLANKS + "Stop all", "danger", "Stop all") + "</div></div>"
+      + '<div class="head"><span>The whole project · through the Orkmaster</span><span></span></div></div>';
+  }
+  document.getElementById("handend").innerHTML = '<div class="handend">' + hc + '<div class="ends">' + die("") + '<span class="gap"></span>' + pots + "</div></div>"
+    + '<div class="handend">' + hc + '<div class="ends">' + die("is-playing", "Playing") + '<span class="gap"></span>' + pots + "</div></div>" + etop();
 })();
 </script>
 </body>
