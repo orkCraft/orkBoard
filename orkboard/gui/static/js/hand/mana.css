@@ -45,8 +45,10 @@
 .hand-pot__shares { display: flex; flex-direction: column; align-items: center; }
 @media (min-width: 760px) { .hand-mana[data-rows="2"] .hand-pot__shares { flex-direction: row; align-items: baseline; gap: var(--ork-1); } }
 @media (max-width: 759.98px) {
-  .hand { --hc-pots: calc(2 * var(--hc-pot1)); }
-  .hand:has(.hand-mana[data-rows="2"][data-paid]) { --hc-pots: calc(2 * var(--hc-pot1)); }
+  .hand { --hc-pot1: calc(var(--ork-1) * 4 + 16px + 36px + 24px); --hc-pots: calc(2 * var(--hc-pot1)); }                                  /* a potion at the phone's width: its border, the mark, the slot and two lines of 12 px, no padding above and under */
+  .hand:has(.hand-mana[data-rows="2"][data-paid]) { --hc-pots: calc(2 * (var(--ork-1) * 6 + 16px + 36px + var(--hc-cap)) + var(--hc-cap) + var(--ork-1)); }
+  .hand-pot { padding-block: 0; }
+  .hand-pot__share, .hand-pot__week { line-height: 12px; }
   .hand:has(.hand-mana[data-rows="1"]) .hand-places { height: max(calc(var(--hc-room) + var(--hc-top) + var(--hc-shown)), calc(var(--hc-room) + var(--hc-top) + var(--hc-pot1))); }
 }
 
@@ -74,5 +76,5 @@
   .hand-row:has(.hand-mana[data-rows="2"]) .hand-die { margin-right: -6px; }                                      /* four tools and more (two rows of potions, wider): the die's edge lies over the first potion's empty border, the row has no room else */
   .hand-die + .hand-mana { margin-left: 0; }                                                                    /* the die and the potions stand together at the row's end */
   .hand-pot__week-name, .hand-pot__week--of { display: none; }                                              /* the phone's potions keep their narrow width: the week's share alone under the now share (its words are on the control) */
-  .hand-pot { min-width: 0; padding: var(--ork-1) var(--ork-1); }                                                                                /* the cards of the row tighten for them: a potion is as wide as its share (tall past 44) */
+  .hand-pot { min-width: 0; padding-inline: var(--ork-1); }                                                                                /* the cards of the row tighten for them: a potion is as wide as its share (tall past 44) */
 }
