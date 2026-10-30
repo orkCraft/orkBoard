@@ -82,9 +82,9 @@ function Pot({ l, cost, small, from, framed, parties = [] }) {
       onPointerEnter=${mark} onPointerLeave=${unmark} onFocus=${mark} onBlur=${unmark}>
     <${Who} l=${l} />
     <span class=${cls("hand-pot__slot", { "is-small": small })}><span class=${cls("ork-potion", { [`size-${p.size}`]: p.size !== "large", small, "is-warn": p.level === "warn", "is-danger": p.level === "danger" })} style=${style} aria-hidden="true"></span></span>
-    <span class="hand-pot__share">${p.share}${p.took && html` <span class="hand-pot__took">−${p.took}</span>`}</span>
+    <span class="hand-pot__shares"><span class="hand-pot__share">${p.share}${p.took && html` <span class="hand-pot__took">−${p.took}</span>`}</span>
     ${p.week && html`<span class="hand-pot__week"><span class="hand-pot__week-name">${p.week.name} </span>${p.week.share}</span>`}
-    ${p.of && html`<span class="hand-pot__week hand-pot__week--of">${p.of}</span>`}
+    ${p.of && html`<span class="hand-pot__week hand-pot__week--of">${p.of}</span>`}</span>
   </button>`;
 }
 

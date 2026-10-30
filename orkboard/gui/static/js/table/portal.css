@@ -43,4 +43,5 @@
   .portal-host.is-ring .ork-portal-ring + .portal__hint, .portal-host.is-ring .ork-portal-ring ~ .portal__sealed { margin-top: var(--ork-4); }   /* the ring's lower corner reaches 8 px below it (spec 111 §4.1): the words stand clear of it */
   .portal-host.is-asleep .portal__label { color: var(--ork-ink-faint); opacity: 0.6; }
   .portal-host .ork-portal-ring { flex: none; }
+  body:has(.hand-mana[data-rows="2"][data-paid]) .portal-host .portal__hint { display: none; }   /* two rows of potions and the paid slot make the hand 18 px taller: the first-time line gives way so the ring and its label keep clear of the pane's head at 1280 x 800 (spec 114 B) */
 }

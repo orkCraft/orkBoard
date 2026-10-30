@@ -492,3 +492,62 @@ def test_a_full_week_is_a_large_full_bottle_and_a_low_five_hours_a_large_bottle_
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+# -- the room the second line takes (the hand's height at the wide width, its width at the narrow one) ----------------------------------------------
+
+MORE = [two("hermes", "Hermes", 0.5, 0.5), two("aider", "Aider", 0.4, 0.2)]
+PAID = {"tool": "agy", "name": "Antigravity", "until": "2026-10-29T18:00", "usd_task": 0.4}
+
+
+@pytest.mark.parametrize("tools,paid", [(4, False), (6, False), (6, True)], ids=["four", "six", "six-and-paid"])
+def test_at_1280_by_800_two_rows_of_potions_leave_the_portal_ring_and_its_label_clear_of_the_panes_head(gui, tools, paid):
+    pg, host, log = open_mana(gui, (TOOLS + MORE)[:tools], "wide", mana_of("claude", "claude", paid=PAID if paid else None))
+    try:
+        pg.locator(".portal__label").wait_for(timeout=WAIT_MS)
+        label, ask, ring = pg.locator(".portal__label").bounding_box(), pg.locator(".table-ask").bounding_box(), pg.locator(".ork-portal-ring").bounding_box()
+        assert label["y"] >= ask["y"] + ask["height"] and ring["y"] >= label["y"] + label["height"]                # the label and the ring lie under the line that asks the Orkmaster, never over the pane's head
+        hand = pg.locator(".hand").bounding_box()
+        assert hand["height"] <= (190 if paid else 170)                                                          # the week's share lies beside the now share: two rows are no taller than with one share
+        assert pg.locator(".hand-pot__shares").first.evaluate("e => getComputedStyle(e).flexDirection") == "row"
+        narrow.no_sideways(pg)
+        shot(pg, f"fix-wide-two-rows-{tools}{'-paid' if paid else ''}")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("tools", [3, 4, 6])
+def test_at_390_the_potions_and_both_their_lines_lie_inside_the_window_and_the_hand_grows_for_them(gui, tools):
+    pg, host, log = open_mana(gui, (TOOLS + MORE)[:tools], "narrow")
+    try:
+        height = pg.viewport_size["height"]
+        for sel in (".hand-pot__share", ".hand-pot__week", ".hand-pot", ".hand-mana", ".hand"):
+            for b in pg.locator(sel).all():
+                box = b.bounding_box()
+                assert box["y"] + box["height"] <= height + 0.5 and box["x"] + box["width"] <= pg.viewport_size["width"] + 0.5, (sel, box)       # nothing cut off at the window's foot or edge
+        weeks = pg.locator(".hand-pot__week").all()
+        assert weeks and all(w.is_visible() for w in weeks)
+        mana, hand = pg.locator(".hand-mana").bounding_box(), pg.locator(".hand").bounding_box()
+        assert mana["y"] >= hand["y"]                                                                              # the hand holds them
+        narrow.no_sideways(pg)
+        shot(pg, f"fix-narrow-{tools}")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_at_390_three_tools_take_no_more_width_than_before_so_the_die_overlaps_the_cards_no_more(gui):
+    pg, host, log = open_mana(gui, TOOLS[:3], "narrow")
+    try:
+        pots = pg.locator(".hand-pot").all()
+        widths = [b.bounding_box()["width"] for b in pots]
+        assert all(w <= 44 for w in widths), widths                                                                # a potion is as wide as its share, the slot of the large bottle (28 px at the small size) inside it
+        mana, die = pg.locator(".hand-mana").bounding_box(), pg.locator(".hand-die").bounding_box()
+        assert mana["width"] <= 120, mana                                                                         # as wide as three potions were before the second line (spec 112 B: the die stands where it stood)
+        assert die["x"] + die["width"] <= mana["x"] + 1 and die["x"] >= 200, die                                  # the die ends where the potions begin, as far right as on main
+        assert pots[0].locator(".hand-pot__slot").bounding_box()["width"] == 28
+        shot(pg, "fix-narrow-die")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
