@@ -215,7 +215,7 @@ svg .t { fill: var(--ork-card-frame); } svg .f { fill: var(--ork-card); } svg .r
     later(420, function () { th.classList.remove("fly"); th.classList.add("roll"); });
     var n = 0; for (var u = 420; u < ends; u += 120) later(u, function () { th.innerHTML = dieSvg(1 + (n++ % 6)); });
     later(ends, function () {                                          // the outcome is known: it lands on it, askew
-      th.classList.remove("roll"); th.innerHTML = dieSvg(kind === "fail" ? "no" : "ok"); th.classList.add("land"); timers.forEach(function (x, k) { if (k < timers.length) {} }); line.innerHTML = kind === "fail" ? "It did not start" : "It started";
+      th.classList.remove("roll"); th.innerHTML = dieSvg(kind === "fail" ? "no" : "ok"); th.classList.add("land"); line.innerHTML = kind === "fail" ? "It did not start" : "It started";
       later(kind === "fail" ? 700 : 600, function () { th.classList.remove("land"); th.classList.add(kind === "fail" ? "tip" : "fade"); });
       later(kind === "fail" ? 1060 : 900, function () { th.classList.remove("on", "fade", "tip"); done(); });
     });
