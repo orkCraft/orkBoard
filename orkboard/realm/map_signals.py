@@ -7,14 +7,20 @@ grounded in what the map holds. A hint is not a verdict (the leader judges it, `
 `on` is the id of a part of the map as it is drawn (`realm/map_parts.py`), "" where a hint belongs to no part; `kind` names the rule; `words` is a line for a model, in plain English. A hint that
 is about a part of another map (a pain piled on a screen) also has `map` (that map's id). By craft (the craft of the party, as `map_text.of` takes it):
 - `tech` (System, from the newest snapshot of the ref): `cycle` (parts that use one another in a loop), `fan_in` (a part used by FAN_IN parts or more), `fan_out` (one using FAN_OUT or more),
-  `big` (a part holding a source file of BIG_LINES lines or more, counted at the ref's head), `shared_churn` (a part two containers or more share, changed in the last CHURN_DAYS days in commits
-  that also touched files of SHARED_FROM containers or more other than the part's own files), `untested_churn` (a part changed CHURN_TIMES times in the last CHURN_DAYS days with no test mapped
-  to it: none by the gate's map (`gate_config.gate_files`), none named after one of its files, none inside it).
-- `game-design` (the loop): `loop.findings_on`, each on the loop's step or the currency it names.
-- `design` (the screens): `loose` (a screen nothing leads to), `dead_end` (one that leads nowhere and is not where the flow ends), `no_picture` (one with no picture kept).
+  `big` (a part holding a source file of BIG_LINES lines or more, counted at the ref's head), `hotspot` (a part changed HOT_TIMES times or more in the last CHURN_DAYS days whose longest source file is
+  HOT_LINES lines or more), `unstable` (a part used by UNSTABLE_IN parts or more whose instability, what it uses over what it uses and what uses it, is UNSTABLE_I or more), `shared_churn` (a part two
+  containers or more share, changed in the last CHURN_DAYS days in commits that also touched files of SHARED_FROM containers or more other than the part's own files), `untested_churn` (a part changed
+  CHURN_TIMES times in the last CHURN_DAYS days with no test mapped to it: none by the gate's map (`gate_config.gate_files`), none named after one of its files, none inside it).
+- `game-design` (the loop): each of `loop.findings_kinds` by its kind, on the loop's step or the currency it names (`no_source`, `pile_up`, `no_reward`, `unfed`, `flat`), then `spike` (two
+  neighbouring steps of a loop whose intensities differ by SPIKE or more, on the later), `no_hook` (a loop is kept and no hook is D1, on the core loop's first step), `unground` (a step resting on no
+  file where another step of its loop does, on that step). These three are hints only: the map's *what the loop says* stays as it is.
+- `design` (the screens): `loose` (a screen nothing leads to), `dead_end` (one that leads nowhere and is not where the flow ends), `no_picture` (one with no picture kept), `no_states` (a screen whose
+  own file, read at the ref's head, names no loading, error, empty, retry or fallback state), `a11y` (one whose file has an image with no alt text, a press on a div or span with no role, or an input
+  with no label). A screen whose file is not read (shared by several screens, over SCREEN_BYTES, missing) has neither of the last two.
 - `product` (the tree): `unserved` (a job no goal serves), `pains` (a screen or a step with PAINS_PILED pains or more pinned: on that screen, `map` "screens"), `pain_loose` (pains pinned to no
-  screen or step: `on` "").
-- `art`, `release`, `marketing`: none by code yet; their leader reads the map alone.
+  screen or step: `on` ""), `vague_outcome` (an outcome whose text holds no number: `on` ""), `no_evidence` (a job served by EVIDENCE_GOALS goals or more, none tested by an experiment), `off_tree` (with
+  `pages`: OFF_TREE goals or more of the Board's line serve no job: `on` "").
+- `art`, `release`, `marketing`: `realm/map_signals_crafts.py` (its module says which).
 """
 from __future__ import annotations
 
@@ -23,16 +29,22 @@ import re
 import subprocess
 from pathlib import Path, PurePosixPath
 
-from orkboard.realm import code_map, commit_goal, gate_config, idea_lens, loop, opportunity_tree, project_map, screen_map, system_overview
+from orkboard.realm import code_map, commit_goal, gate_config, goal_line, idea_lens, loop, map_signals_crafts, opportunity_tree, project_map, screen_map, system_overview
 
 MAX_SIGNALS = 20
 FAN_IN, FAN_OUT = 8, 12             # a part used by this many parts, one using this many
 BIG_LINES = 800                     # a source file this long
 CHURN_DAYS, CHURN_TIMES = 30, 6     # a part changed this many times in this many days
 SHARED_FROM = 2                     # a shared part changed from this many containers
+HOT_TIMES, HOT_LINES = 4, 400       # a part changed this many times in CHURN_DAYS whose longest source file is this long
+UNSTABLE_IN, UNSTABLE_I = 4, 0.6    # a part used by this many parts whose instability (uses / (uses + used_by)) is this or more
 PAINS_PILED = 3                     # pains pinned to one screen or step
+SCREEN_BYTES = 200_000              # a screen's file is read up to this size
+SPIKE = 3                           # two neighbouring steps whose intensities differ by this much
+EVIDENCE_GOALS = 2                  # a job served by this many goals needs an experiment
+OFF_TREE = 3                        # goals in line that serve no job
 TESTS = ("tests", "test", "__tests__", "spec")
-ORDER = ("cycle", "fan_in", "fan_out", "big", "shared_churn", "untested_churn")
+ORDER = ("cycle", "fan_in", "fan_out", "big", "hotspot", "unstable", "shared_churn", "untested_churn")
 _SOURCE = tuple(f"*{e}" for e in sorted(code_map.PY | code_map.JS))
 _TEST_NAME = re.compile(r"(?:^test_.+|.+_test|.+\.test|.+\.spec)$")
 
@@ -154,7 +166,8 @@ def _tech(state_dir: Path, root: Path, ref: str) -> list[dict]:
             out["fan_in"].append({"on": p, "kind": "fan_in", "words": f"{p} is used by {len(v['used_by'])} parts"})
         if len(v.get("uses") or []) >= FAN_OUT:
             out["fan_out"].append({"on": p, "kind": "fan_out", "words": f"{p} uses {len(v['uses'])} parts"})
-    for part, (name, n) in sorted(_lines(root, sha).items()):
+    longest = _lines(root, sha)
+    for part, (name, n) in sorted(longest.items()):
         if n >= BIG_LINES and part in by:
             out["big"].append({"on": part, "kind": "big", "words": f"{part} holds {name} of {n} lines"})
     commits = _churn(root, sha)
@@ -172,6 +185,14 @@ def _tech(state_dir: Path, root: Path, ref: str) -> list[dict]:
         if len(others) >= SHARED_FROM:
             out["shared_churn"].append({"on": part, "kind": "shared_churn", "words": f"{part} is shared by {len(shared[part].get('containers') or [])} containers and was changed in the last "
                                         f"{CHURN_DAYS} days along with files of {len(others)} containers ({', '.join(sorted(others)[:4])})"})
+    for part, n in sorted(touched.items(), key=lambda kv: (-kv[1], kv[0])):
+        name, lines = longest.get(part, ("", 0))
+        if n >= HOT_TIMES and lines >= HOT_LINES:
+            out["hotspot"].append({"on": part, "kind": "hotspot", "words": f"{part} changed {n} times in the last {CHURN_DAYS} days and holds {name} of {lines} lines"})
+    for p, v in sorted(by.items()):
+        used, uses = len(v.get("used_by") or []), len(v.get("uses") or [])
+        if used >= UNSTABLE_IN and uses / (uses + used) >= UNSTABLE_I:
+            out["unstable"].append({"on": p, "kind": "unstable", "words": f"{p} is used by {used} parts and itself uses {uses}: what many stand on keeps changing with what it uses"})
     hot = {p: n for p, n in touched.items() if n >= CHURN_TIMES}
     if hot:
         tracked, gate = _tracked(root, sha), gate_config.read(root)
@@ -185,10 +206,70 @@ def _tech(state_dir: Path, root: Path, ref: str) -> list[dict]:
 # -- Game design: the loop ------------------------------------------------------------------------------------------------------------
 
 def _game(state_dir: Path) -> list[dict]:
-    return [{"on": on, "kind": "loop", "words": words} for on, words in loop.findings_on(loop.read(state_dir))]
+    data = loop.read(state_dir)
+    out = [{"on": on, "kind": kind, "words": words} for on, kind, words in loop.findings_kinds(data)]
+    loops = [lp for lp in data.get("loops") or [] if lp.get("steps")]
+    for lp in loops:
+        for prev, step in zip(lp["steps"], lp["steps"][1:]):
+            if abs(step["intensity"] - prev["intensity"]) >= SPIKE:
+                out.append({"on": step["id"], "kind": "spike", "words": f"The {lp['span']} loop jumps from intensity {prev['intensity']} at {prev['name']} to {step['intensity']} at {step['name']}"})
+    if loops and not any(h["when"] == "D1" for h in data.get("hooks") or []):
+        core = next((lp for lp in loops if lp["span"] == "core"), loops[0])
+        out.append({"on": core["steps"][0]["id"], "kind": "no_hook", "words": "No hook says why a player comes back on the first day (D1)"})
+    for lp in loops:
+        if any(s["rests_on"] for s in lp["steps"]):
+            out += [{"on": s["id"], "kind": "unground", "words": f"The step {s['name']} of the {lp['span']} loop rests on no file, though others of it do"} for s in lp["steps"] if not s["rests_on"]]
+    return out
 
 
 # -- Design: the screens --------------------------------------------------------------------------------------------------------------
+
+_STATES = ("loading", "error", "empty", "spinner", "skeleton", "retry", "fallback", "catch")
+_TAG = re.compile(r"<(img|div|span|input)(?![\w-])")
+_PRESS = re.compile(r"(?<!\w)(?:onClick|@click|on:click)(?![\w-])")
+_ATTR = {"alt": re.compile(r"(?<![\w-])alt\s*="), "role": re.compile(r"(?<![\w-])role\s*="), "label": re.compile(r"(?<![\w-])(?:aria-label|aria-labelledby|id|placeholder)\s*="),
+         "hidden": re.compile(r"""(?<![\w-])type\s*=\s*\{?["']hidden["']""")}
+TAG_CHARS = 1500                    # a tag is read this far
+
+
+def _attrs(text: str, at: int) -> str:
+    """The attributes of the tag starting at `at`, up to its closing `>` outside braces and quotes."""
+    depth, quote = 0, ""
+    for i in range(at, min(len(text), at + TAG_CHARS)):
+        c = text[i]
+        if quote:
+            quote = "" if c == quote else quote
+        elif c in "\"'`":
+            quote = c
+        elif c == "{":
+            depth += 1
+        elif c == "}":
+            depth = max(0, depth - 1)
+        elif c == ">" and depth == 0:
+            return text[at:i]
+    return text[at:at + TAG_CHARS]
+
+
+def _a11y(text: str) -> str:
+    """The first thing in a screen's file a person with a screen reader or a keyboard would stumble on (a tag with its attributes spread is not judged); "" for none."""
+    for m in _TAG.finditer(text):
+        tag, attrs = m.group(1), _attrs(text, m.end())
+        if "{..." in attrs:
+            continue
+        if tag == "img" and not _ATTR["alt"].search(attrs):
+            return "an image with no alt text"
+        if tag in ("div", "span") and _PRESS.search(attrs) and not _ATTR["role"].search(attrs):
+            return f"a press on a {tag} with no role"
+        if tag == "input" and not _ATTR["label"].search(attrs) and not _ATTR["hidden"].search(attrs):
+            return "an input with no label"
+    return ""
+
+
+def _screen_text(root: Path, sha: str, path: str) -> str | None:
+    """A screen's file at `sha`, None when it is not there, is binary or is over SCREEN_BYTES."""
+    text = _git(root, "--literal-pathspecs", "show", f"{sha}:{path}")
+    return text if text and len(text) <= SCREEN_BYTES and "\0" not in text[:2000] else None
+
 
 def _design(state_dir: Path, root: Path) -> list[dict]:
     got = screen_map.read(state_dir, root)
@@ -210,15 +291,28 @@ def _design(state_dir: Path, root: Path) -> list[dict]:
         elif sid not in leads and sid not in ends and sid not in loose:
             out.append({"on": sid, "kind": "dead_end", "words": f"The screen {name} ({s['path']}) leads nowhere and is not where the flow ends"})
     out += [{"on": s["id"], "kind": "no_picture", "words": f"The screen {s['name']} ({s['path']}) has no picture kept"} for s in screens if not s.get("picture")]
+    own = {s["file"] for s in screens if sum(1 for o in screens if o["file"] == s["file"]) == 1}            # a file several screens share says nothing of any one
+    texts = {s["id"]: _screen_text(root, got["head"], s["file"]) for s in screens if s["file"] in own and got.get("head")}
+    shown = [s for s in screens if texts.get(s["id"]) is not None]
+    out += [{"on": s["id"], "kind": "no_states", "words": f"The screen {s['name']} ({s['path']}) says nothing of loading, error or empty states"} for s in shown
+            if not any(w in texts[s["id"]].lower() for w in _STATES)]
+    out += [{"on": s["id"], "kind": "a11y", "words": f"{s['name']} ({s['path']}): {what}"} for s in shown if (what := _a11y(texts[s["id"]]))]
     return out
 
 
 # -- Product: the tree and the pains ----------------------------------------------------------------------------------------------------
 
-def _product(state_dir: Path, root: Path) -> list[dict]:
+def _product(state_dir: Path, root: Path, pages: Path | None = None) -> list[dict]:
     rec = opportunity_tree.read(state_dir)
     served = {s["job"] for s in rec["serves"]}
     out = [{"on": j["id"], "kind": "unserved", "words": f"No goal serves the job: {j['want']}"} for j in rec["jobs"] if j["id"] not in served]
+    out += [{"on": "", "kind": "vague_outcome", "words": f"The outcome holds no number, so nothing says when it is met: {o['text']}"} for o in rec["outcomes"] if not any(c.isdigit() for c in o["text"])]
+    have = set(opportunity_tree.goals(state_dir, Path(pages))) if pages is not None else None         # a goal the Board dropped serves nothing
+    tested = {t["goal"] for t in rec["tests"]}
+    for j in rec["jobs"]:
+        mine = [s["goal"] for s in rec["serves"] if s["job"] == j["id"] and (have is None or s["goal"] in have)]
+        if len(mine) >= EVIDENCE_GOALS and not tested & set(mine):
+            out.append({"on": j["id"], "kind": "no_evidence", "words": f"{len(mine)} goals serve the job {j['want']} and no experiment tests any of them"})
     placed = [p for seg in idea_lens.segments_placed(state_dir) for p in seg["pains"]]
     try:
         got = screen_map.read(state_dir, root)
@@ -234,6 +328,11 @@ def _product(state_dir: Path, root: Path) -> list[dict]:
     loose = [p["text"] for p in placed if p["on"] not in known]
     if loose:
         out.append({"on": "", "kind": "pain_loose", "words": f"{len(loose)} pains are pinned to no screen or step: " + "; ".join(loose[:3])})
+    if pages is not None:
+        on_tree = {s["goal"] for s in rec["serves"]}
+        off = [g["title"] for g in goal_line.line(Path(pages), state_dir) if g["slug"] not in on_tree]
+        if len(off) >= OFF_TREE:
+            out.append({"on": "", "kind": "off_tree", "words": f"{len(off)} goals in line serve no job: " + "; ".join(off[:3])})
     return out
 
 
@@ -269,7 +368,8 @@ def signals(state_dir: Path, root: Path, craft: str, pages: Path | None = None, 
     state_dir, root = Path(state_dir), Path(root)
     try:
         rows = {"tech": lambda: _tech(state_dir, root, ref), "game-design": lambda: _game(state_dir), "design": lambda: _design(state_dir, root),
-                "product": lambda: _product(state_dir, root)}.get(craft, lambda: [])()
+                "product": lambda: _product(state_dir, root, pages), "art": lambda: map_signals_crafts.art(state_dir, root, ref),
+                "release": lambda: map_signals_crafts.release(state_dir, root, pages, ref), "marketing": lambda: map_signals_crafts.marketing(state_dir, root, ref)}.get(craft, lambda: [])()
     except Exception:                                # a hint that cannot be read is no hint, never an error for a caller
         return []
     return rows[:MAX_SIGNALS]

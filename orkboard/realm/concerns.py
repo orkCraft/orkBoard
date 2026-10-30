@@ -5,15 +5,17 @@ what would fix it, kept beside the Board's state. Read, kept and strictly parsed
     concerns.save(state_dir, party, **changes)           # the record changed and kept (under the Board's lock)
     concerns.look_due(rec, map_hash, now, again=False)   # whether a look is due: none yet · the map changed since and the last look is a day old or more · asked again
     concerns.map_hash(text) / part_hash(text, part)      # the map text's hash; the lines of the text that name a part, hashed (what *the part changed* means)
-    concerns.parse(party, answer, parts, dismissed, hashes, signals)   # the leader's answer, strictly → [{id, on, name, level, what, why, fix, signal}], at most MAX, an `on` that is no part dropped
+    concerns.parse(party, answer, parts, dismissed, hashes, signals, craft="")   # the leader's answer, strictly → [{id, on, name, level, what, why, fix, signal, aspect}], at most MAX, an `on` that is no part dropped
     concerns.dismiss(state_dir, party, id, part_hash)    # *Not a problem*: the concern moves to `dismissed` → the concern, or None when it is not there
     concerns.made_goal(state_dir, party, id, idea)       # the concern notes the goal made of it (`idea`: its slug) → the concern, or None
     concerns.counts(rec)                                 # {alerts, notes}: the concerns no goal was made of
     concerns.text(rec, parts)                            # the concerns as lines a leader reads in Talk (*Your concerns on your map*)
 
 `<state_dir>/concerns/<party>.json` is `{at, map_hash, by (the leader's role), status ("" | "looking" | "ready" | "failed"), error, measure, concerns: [{id, on, name, level ("alert" | "note"), what, why,
-fix, signal, idea?}], dismissed: [{on, what, at, map_hash, part_hash}]}`. `at` is when the last look ended (or failed): none before the first. A concern's `id` is a hash of its part and its
-words, so a look that says it again keeps the id; `signal` is the kind of hint of code (`realm/map_signals.py`) that is on its part, else "". A concern dismissed is not raised again while its part is as
+fix, signal, aspect, idea?}], dismissed: [{on, what, at, map_hash, part_hash}], hints: [{on, kind, aspect, words}]}`. `at` is when the last look ended (or failed): none before the first. A concern's `id` is a hash of its part and its
+words, so a look that says it again keeps the id; `signal` is the kind of hint of code (`realm/map_signals.py`) that is on its part, else "";
+`aspect` the id of the aspect of its craft's rubric (`realm/lens_rubrics.py`) it is about: the leader's, else the hint's, else "". `hints` are the hints of code the last look was given (at most HINTS, `on` "" for a hint of
+no part), kept with the concerns so the scorecard can say what code noticed and the leader let be. A concern dismissed is not raised again while its part is as
 it was (`part_hash`); the leader is told what was dismissed, and a concern that repeats one dismissed, its part unchanged, is dropped.
 """
 from __future__ import annotations
@@ -23,12 +25,13 @@ import hashlib
 import re
 from pathlib import Path
 
-from orkboard.realm import ideas
+from orkboard.realm import ideas, lens_rubrics
 
 FOLDER = "concerns"
 MAX = 7                              # the most concerns a look keeps
 LINE = 200                           # a concern's what, why and fix: a line each, at most
 LEVELS = ("alert", "note")
+HINTS = 20                           # the most hints of code a record keeps (map_signals.MAX_SIGNALS)
 DISMISSED = 40                       # the most dismissed concerns a record keeps (the newest)
 EVERY_S = 24 * 3600                  # a look again, a map changed: when the last look is this old
 _PARTY = re.compile(r"[a-z0-9][a-z0-9-]{0,99}")
@@ -67,7 +70,7 @@ def now() -> str:
 # -- the record ------------------------------------------------------------------------------------------------------------------------
 
 def _empty() -> dict:
-    return {"at": "", "map_hash": "", "by": "", "status": "", "error": "", "measure": None, "concerns": [], "dismissed": []}
+    return {"at": "", "map_hash": "", "by": "", "status": "", "error": "", "measure": None, "concerns": [], "dismissed": [], "hints": []}
 
 
 def read(state_dir: Path, party: str) -> dict:
@@ -84,12 +87,16 @@ def read(state_dir: Path, party: str) -> dict:
     for r in raw.get("concerns") if isinstance(raw.get("concerns"), list) else []:
         if isinstance(r, dict) and isinstance(r.get("id"), str) and r.get("level") in LEVELS and _line(r.get("on"), 300) and _line(r.get("what")):
             out["concerns"].append({"id": r["id"][:40], "on": _line(r["on"], 300), "name": _line(r.get("name"), 300), "level": r["level"], "what": _line(r["what"]), "why": _line(r.get("why")),
-                                    "fix": _line(r.get("fix")), "signal": _line(r.get("signal"), 40), **({"idea": _line(r["idea"], 100)} if _line(r.get("idea"), 100) else {})})
+                                    "fix": _line(r.get("fix")), "signal": _line(r.get("signal"), 40), "aspect": _line(r.get("aspect"), 40), **({"idea": _line(r["idea"], 100)} if _line(r.get("idea"), 100) else {})})
     for r in raw.get("dismissed") if isinstance(raw.get("dismissed"), list) else []:
         if isinstance(r, dict) and _line(r.get("on"), 300) and _line(r.get("what")):
             out["dismissed"].append({"on": _line(r["on"], 300), "what": _line(r["what"]), "at": _line(r.get("at"), 40), "map_hash": _line(r.get("map_hash"), 40),
                                      "part_hash": _line(r.get("part_hash"), 40)})
     out["dismissed"] = out["dismissed"][-DISMISSED:]
+    for r in raw.get("hints") if isinstance(raw.get("hints"), list) else []:
+        if isinstance(r, dict) and isinstance(r.get("on"), str) and _line(r.get("kind"), 40) and _line(r.get("words")):
+            out["hints"].append({"on": _line(r["on"], 300), "kind": _line(r["kind"], 40), "aspect": _line(r.get("aspect"), 40), "words": _line(r["words"])})
+    out["hints"] = out["hints"][:HINTS]
     return out
 
 
@@ -120,17 +127,18 @@ def look_due(rec: dict, hash_now: str, at: dt.datetime | None = None, again: boo
 # -- the leader's answer ---------------------------------------------------------------------------------------------------------------
 
 def parse(party: str, answer: object, parts: list[dict], dismissed: list[dict] | None = None, hashes: dict[str, str] | None = None,
-          signals: list[dict] | None = None) -> list[dict] | None:
+          signals: list[dict] | None = None, craft: str = "") -> list[dict] | None:
     """The leader's `{"concerns": [...]}` strictly: a concern is kept when its `on` is one of `parts` (`[{map, id, name}]`, a concern on another part is dropped), it says a `what` and its `level` is
     `alert` or `note` (an unsaid or unknown level is `note`); `what`, `why` and `fix` are a line of LINE characters at most; the same part and words once. Alerts come before notes, at most MAX are kept.
     A concern that says again one the person dismissed while its part is as it was (`dismissed`: [{on, what, part_hash}]; `hashes`: {part id: part_hash now}) is dropped. `signal` is the kind of the
-    hint of code (`signals`) on its part, else "". None when the answer is no object with a `concerns` list."""
+    hint of code (`signals`) on its part, else "". `aspect` is the leader's `aspect` when it is one of `craft`'s aspect ids (`realm/lens_rubrics.py`), else the aspect of that hint's kind, else "". None when the answer is no object with a `concerns` list."""
     if not isinstance(answer, dict) or not isinstance(answer.get("concerns"), list):
         return None
     by = {p["id"]: p for p in parts}
     hint = {}
     for s in signals or []:
         hint.setdefault(s.get("on"), s.get("kind") or "")
+    ids = {a["id"] for a in (lens_rubrics.rubric(craft) or {}).get("aspects", ())}
     skip = {_id(party, d["on"], d["what"]) for d in dismissed or [] if (hashes or {}).get(d["on"], "") == d.get("part_hash", "")}
     out, seen = [], set()
     for r in answer["concerns"]:
@@ -143,8 +151,9 @@ def parse(party: str, answer: object, parts: list[dict], dismissed: list[dict] |
         if cid in seen or cid in skip:
             continue
         seen.add(cid)
+        aspect = _line(r.get("aspect"), 40)
         out.append({"id": cid, "on": on, "name": by[on]["name"], "level": r["level"] if r.get("level") in LEVELS else "note", "what": what, "why": _line(r.get("why")), "fix": _line(r.get("fix")),
-                    "signal": hint.get(on, "")})
+                    "signal": hint.get(on, ""), "aspect": aspect if aspect in ids else lens_rubrics.aspect_of(craft, hint.get(on, ""))})
     out.sort(key=lambda c: LEVELS.index(c["level"]))
     return out[:MAX]
 

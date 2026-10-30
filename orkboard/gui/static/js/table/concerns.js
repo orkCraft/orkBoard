@@ -3,8 +3,10 @@
 // (`concerns[].on` is the card's id) and gives each a mark in a slot of its own — inside the card, or, for a card that is a button (System's part), beside it in the box that holds it, so the mark scales with the System's fit and a
 // button holds no button. An alert is orkUI's alert sign in the alert tone with the leader's small head beside it, a note a small dot in the muted ink; several on one card show the highest level and the count only in the label
 // (*2 concerns of the Architect*). A mark is decoration over a card (a press falls through to the card, which lifts); made into a goal it becomes a link to the goal in the goal's element's colour.
-// `Concerns` draws the strip over the map (the leader's head, *The Architect: 2 alerts, 3 notes*, **Ask again**; a press on the counts steps through the marked cards) and the host that paints; `ConcernsBack` is the section a lifted
-// card's back (card.js `Lifted`) gains: each concern's what, why and fix, **Make it a goal** and **Not a problem**. The record is the host's (`ideas.concerns`, `ideas.concerns_again`, `ideas.concern_dismiss`, `ideas.concern_goal`);
+// `Concerns` draws the strip over the map (the leader's head, *The Architect: 2 alerts, 3 notes*, **Ask again**; a press on the counts steps through the marked cards) and the host that paints; under the strip's line, the row of the
+// aspects the leader looks at (docs/specs/109-each-leader-looks-as-a-senior-of-its-craft.md §4: the rubric's `short`, then each aspect an orkUI chip with the small mark of its state, alert, note, hint, clear or none yet; a press on one steps
+// through the cards whose open concerns are of it, an aspect with no card is no button; a record with no `rubric`, from an older host, draws no row); `ConcernsBack` is the section a lifted card's back (card.js `Lifted`) gains: each
+// concern's what, why and fix and its aspect beside its level (*Alert · Hotspots*), **Make it a goal** and **Not a problem**. The record is the host's (`ideas.concerns`, `ideas.concerns_again`, `ideas.concern_dismiss`, `ideas.concern_goal`);
 // a host without the commands draws nothing and throws nothing. Picking wins: while a map is in picking a press is a pick, and the marks take no press.
 import { render } from "preact";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
@@ -133,11 +135,33 @@ const markedCards = () => {
   return [...all.filter((el) => el.dataset.concern === "alert"), ...all.filter((el) => el.dataset.concern !== "alert")];
 };
 
+/** The cards whose open concerns (not yet made into goals) are of the aspect `id`, the alerts first; `cards` the cards marked now. */
+const aspectCards = (party, id, cards) => {
+  const on = new Set((recordOf(party)?.concerns || []).filter((c) => c.aspect === id && c.on && !goalOf(party, c)).map((c) => c.on));
+  const own = new Set([...document.querySelectorAll(".table-body [data-pick-id]")].filter((w) => on.has(w.dataset.pickId)).map(cardEl));
+  return cards.filter((el) => own.has(el));
+};
+
 const reduced = () => typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/** What an aspect's chip says in words, by its state (`a.n` its open concerns): *Hotspots: 2 concerns*, *a hint from code*, *nothing wrong*, *not looked at yet*. */
+export const aspectWords = (a) => `${a.name}: ${a.state === "alert" || a.state === "note" ? count(a.n || 1, "concern", "concerns") : a.state === "hint" ? "a hint from code" : a.state === "clear" ? "nothing wrong" : "not looked at yet"}`;
+
+/** The small mark of an aspect's state: the alert sign in the alert tone, the muted dot, a hollow square (code noticed it), a tick (a look found nothing), nothing (not looked at yet). */
+const AspectMark = ({ state }) => (state === "alert" ? html`<${Sign} name="alert" />` : state === "note" ? html`<i class="cn-dot" aria-hidden="true"></i>`
+  : state === "hint" ? html`<i class="cn-hint" aria-hidden="true"></i>` : state === "clear" ? html`<${Sign} name="check" />` : null);
+
+/** One aspect of the rubric as an orkUI chip: a button while a card of the map has an open concern of it (a press steps through those cards), else a span that is only its title. `card`: whether one has. */
+function Aspect({ a, card, step }) {
+  const words = aspectWords(a), title = [a.ask, ...(a.hints || [])].filter(Boolean).join("\n");
+  const props = { class: "ork-chip cn-aspect", "data-state": a.state, "data-aspect": a.id, "aria-label": words, title };
+  return card ? html`<button type="button" ...${props} onClick=${() => step(a.id)}><${AspectMark} state=${a.state} />${a.name}</button>`
+    : html`<span role="img" ...${props}><${AspectMark} state=${a.state} />${a.name}</span>`;
+}
 
 /** The strip over the map: the leader's head and its counts (a press steps through the marked cards: each scrolled into view and lifted), **Ask again**. Nothing for a host that does not know concerns. */
 function Strip({ g, lead }) {
-  const party = g.slug, rec = recordOf(party), rev = mapData.value?.rev, [tick, setTick] = useState(0), [asking, setAsking] = useState(false), at = useRef(-1);
+  const party = g.slug, rec = recordOf(party), rev = mapData.value?.rev, [tick, setTick] = useState(0), [asking, setAsking] = useState(false), at = useRef({ of: "", i: -1 });
   useEffect(() => {                                          // read when the map is opened and when the Board changes; asked again after a while while a look is under way
     let live = true, timer = 0;
     const go = async () => {
@@ -147,9 +171,10 @@ function Strip({ g, lead }) {
     go();
     return () => { live = false; clearTimeout(timer); };
   }, [party, rev, tick]);
-  useEffect(() => { at.current = -1; }, [party]);
+  useEffect(() => { at.current = { of: "", i: -1 }; }, [party]);
   if (!rec) return null;
   const name = theLeader(lead.name), list = rec.concerns || [], alerts = list.filter((c) => c.level === "alert").length, notes = list.length - alerts;
+  const rubric = rec.rubric && Array.isArray(rec.rubric.aspects) && rec.rubric.aspects.length ? rec.rubric : null;
   const looking = rec.status === "looking", failed = rec.status === "failed";
   const counts = [alerts && count(alerts, "alert", "alerts"), notes && count(notes, "note", "notes")].filter(Boolean).join(", ");
   const again = async () => {
@@ -157,11 +182,12 @@ function Strip({ g, lead }) {
     try { await read("ideas.concerns_again", party); } finally { setAsking(false); }
     setTick((n) => n + 1);
   };
-  const step = () => {
-    const cards = markedCards();
+  const step = (only = "") => {
+    const cards = only ? aspectCards(party, only, markedCards()) : markedCards();
     if (!cards.length) return;
-    at.current = (at.current + 1) % cards.length;
-    const el = cards[at.current];
+    if (at.current.of !== only) at.current = { of: only, i: -1 };                              // a press on another aspect (or on the counts) starts that round from its first card
+    at.current.i = (at.current.i + 1) % cards.length;
+    const el = cards[at.current.i];
     el.scrollIntoView({ block: "center", inline: "center", behavior: reduced() ? "auto" : "smooth" });
     if (!pickFor.value && !el.matches(".is-lifted, [aria-pressed=true]")) el.click();       // picking wins: there a press is a pick, and stepping only shows the card
   };
@@ -171,10 +197,14 @@ function Strip({ g, lead }) {
   return html`<div class="cn-strip" role="status" data-concerns=${looking ? "looking" : failed ? "failed" : list.length ? "some" : "none"} data-party=${party}>
     ${lead.head && html`<${Head} race=${lead.head.race} tier=${lead.head.tier} />`}
     ${text ? html`<span class="cn-strip__say">${text}</span>`
-      : html`<button type="button" class="ork-btn quiet cn-strip__counts" onClick=${step} title="Step through the marked parts">${name}: ${counts}</button>`}
-    ${looking && list.length > 0 && html`<button type="button" class="ork-btn quiet cn-strip__counts" onClick=${step} title="Step through the marked parts">${counts}</button>`}
+      : html`<button type="button" class="ork-btn quiet cn-strip__counts" onClick=${() => step()} title="Step through the marked parts">${name}: ${counts}</button>`}
+    ${looking && list.length > 0 && html`<button type="button" class="ork-btn quiet cn-strip__counts" onClick=${() => step()} title="Step through the marked parts">${counts}</button>`}
     <span class="cn-strip__grow"></span>
     <button type="button" class="ork-btn cn-strip__again" disabled=${looking || asking} title=${`${name} looks at the map again`} onClick=${again}>Ask again</button>
+    ${rubric && html`<div class="cn-aspects" role="group" aria-label=${`What ${ofLeader(lead.name)} looks at`}>
+      ${rubric.short && html`<span class="cn-aspects__short">${rubric.short}</span>`}
+      ${rubric.aspects.map((a) => html`<${Aspect} key=${a.id} a=${a} card=${list.some((c) => c.aspect === a.id && c.on && !goalOf(party, c))} step=${step} />`)}
+    </div>`}
   </div>`;
 }
 
@@ -211,7 +241,7 @@ export const Concerns = ({ g, children }) => (hasMap(g) ? html`<${Inner} key=${g
 
 // -- the back of a marked card -------------------------------------------------------------------------------------------------------------------------------------------------
 
-function Item({ party, c, lead, title }) {
+function Item({ party, c, lead, title, aspect }) {
   const [busy, setBusy] = useState(false), slug = goalOf(party, c);
   const goal = async () => {
     setBusy(true);
@@ -230,7 +260,7 @@ function Item({ party, c, lead, title }) {
     } finally { setBusy(false); }
   };
   return html`<div class="cn-item" data-concern-id=${c.id} data-level=${c.level}>
-    <p class="cn-item__what">${c.level === "alert" ? html`<${Sign} name="alert" />` : html`<i class="cn-dot" aria-hidden="true"></i>`}<span><span class="ork-label">${c.level === "alert" ? "Alert" : "Note"}</span> ${c.what}</span></p>
+    <p class="cn-item__what">${c.level === "alert" ? html`<${Sign} name="alert" />` : html`<i class="cn-dot" aria-hidden="true"></i>`}<span><span class="ork-label">${c.level === "alert" ? "Alert" : "Note"}${aspect ? ` · ${aspect}` : ""}</span> ${c.what}</span></p>
     ${c.why && html`<p class="cn-item__why"><span class="ork-label">Why</span> ${c.why}</p>`}
     ${c.fix && html`<p class="cn-item__fix"><span class="ork-label">Fix</span> ${c.fix}</p>`}
     <div class="table-back__acts cn-item__acts">${slug
@@ -248,7 +278,8 @@ export function ConcernsBack({ el }) {
   const lead = leaderOf(g);
   return html`<div class="table-back__sec cn-back" data-concerns-back="">
     <span class="ork-label">${concernWords(list.length, lead.name)}</span>
-    ${list.map((c) => html`<${Item} key=${c.id} party=${party} c=${c} lead=${lead} title=${nodes.find((n) => n.slug === goalOf(party, c))?.title || ""} />`)}
+    ${list.map((c) => html`<${Item} key=${c.id} party=${party} c=${c} lead=${lead} title=${nodes.find((n) => n.slug === goalOf(party, c))?.title || ""}
+      aspect=${(recordOf(party)?.rubric?.aspects || []).find((a) => a.id === c.aspect)?.name || ""} />`)}
   </div>`;
 }
 

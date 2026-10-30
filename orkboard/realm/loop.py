@@ -8,6 +8,7 @@ its currencies and why a player comes back, which the person and Game design's l
     loop.parse(answer, root)                       # the leader's answer, strictly but clamped to the limits → {loops, currencies, hooks} or None
     loop.findings(data)                            # what the loop says, by code: [str] (a currency nothing takes, one nothing gives, a loop that rewards nothing, a span nothing feeds, a flat feeling)
     loop.findings_on(data)                         # the same with the part each is on (spec 108 §2.2): [(id, str)], `cur:<id>` for a currency, a loop's first step for a loop
+    loop.findings_kinds(data)                      # … and the rule that said each (spec 109 §3): [(id, kind, str)], kind `no_source` · `pile_up` · `no_reward` · `unfed` · `flat`
     loop.config_files(root)                        # the project's configs by name, chosen by code from dev's tree: balance*, config/, levels/, *.config.*; bounded
     loop.heads(root, paths)                        # {path: its first lines} of the first few of them, bounded
     loop.text(state_dir, root, since="")           # the loops as text for a leader's call (~3,000 characters); None when none is kept
@@ -383,25 +384,31 @@ def parse(answer: object, root: Path) -> dict | None:
     return clean
 
 
-def findings_on(data: dict) -> list[tuple[str, str]]:
-    """`findings` with the part of the map each is about, as the map stamps its cards (`realm/map_parts.py`): `[(id, words)]`; a currency finding is on `cur:<id>`, a loop's on its first step."""
+def findings_kinds(data: dict) -> list[tuple[str, str, str]]:
+    """What the loop says with the part of the map each is about and the rule that said it (spec 109 §3): `[(id, kind, words)]`, `kind` one of `no_source` (a currency nothing gives), `pile_up`
+    (one only earned), `no_reward` (a loop no step of which gives, where there are currencies), `unfed` (a span nothing feeds), `flat` (a feeling that never moves); the part as `findings_on` has it."""
     loops, currencies = data.get("loops") or [], data.get("currencies") or []
     steps = [s for lp in loops for s in lp["steps"]]
     gives, takes = {c for s in steps for c in s["gives"]}, {c for s in steps for c in s["takes"]}
     first = {lp["span"]: lp["steps"][0]["id"] for lp in loops if lp["steps"]}
-    out: list[tuple[str, str]] = []
+    out: list[tuple[str, str, str]] = []
     for c in currencies:
         if c["id"] not in gives:
-            out.append((f"cur:{c['id']}", f"Nothing gives {c['name']}"))
+            out.append((f"cur:{c['id']}", "no_source", f"Nothing gives {c['name']}"))
         elif c["id"] not in takes:
-            out.append((f"cur:{c['id']}", f"{c['name']} is only earned: it will pile up"))
+            out.append((f"cur:{c['id']}", "pile_up", f"{c['name']} is only earned: it will pile up"))
     if currencies:
-        out += [(first[lp["span"]], f"The {lp['span']} loop rewards nothing") for lp in loops if lp["span"] in first and not any(s["gives"] for s in lp["steps"])]
+        out += [(first[lp["span"]], "no_reward", f"The {lp['span']} loop rewards nothing") for lp in loops if lp["span"] in first and not any(s["gives"] for s in lp["steps"])]
     fed = {lp["feeds"] for lp in loops}
-    out += [(first[lp["span"]], f"Nothing feeds the {lp['span']} loop") for lp in loops if lp["span"] in first and lp["span"] != "core" and lp["span"] not in fed]
-    out += [(first[lp["span"]], f"The {lp['span']} loop's feeling is flat") for lp in loops
+    out += [(first[lp["span"]], "unfed", f"Nothing feeds the {lp['span']} loop") for lp in loops if lp["span"] in first and lp["span"] != "core" and lp["span"] not in fed]
+    out += [(first[lp["span"]], "flat", f"The {lp['span']} loop's feeling is flat") for lp in loops
             if lp["span"] in first and any(s["feel"] for s in lp["steps"]) and len({s["intensity"] for s in lp["steps"]}) == 1]
     return out
+
+
+def findings_on(data: dict) -> list[tuple[str, str]]:
+    """`findings` with the part of the map each is about, as the map stamps its cards (`realm/map_parts.py`): `[(id, words)]`; a currency finding is on `cur:<id>`, a loop's on its first step."""
+    return [(on, words) for on, _kind, words in findings_kinds(data)]
 
 
 def findings(data: dict) -> list[str]:

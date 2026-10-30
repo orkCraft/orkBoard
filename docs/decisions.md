@@ -3730,3 +3730,28 @@ changed nothing; no map said where it hurt (§151.4's marks were left to S4 and 
    rule's words are softened).
 9. **Later**: specialists' concerns on the same rails (§151.4), the phone.
 The owner's call.
+
+## 184. Each leader looks as a senior of its craft: the lenses measured against the field's frameworks (29 October, the owner)
+
+Why: the owner: *analyse every party leader's lens, compare it with the frameworks senior specialists use to review an
+architecture, a product, its marketing and the other crafts, and adapt them to our window.* Spec 108's look asked every
+leader one question, so what it said hung on the model, not on how the craft reviews its work; Art, Release and Marketing
+had no hint of code at all. Spec 109 builds it (its §0 is the comparison, craft by craft).
+1. **Each craft's lens is a known frame**: Tech by C4, ISO 25010 and hotspots; Design by Nielsen's heuristics and WCAG 2.2;
+   Product by the opportunity solution tree, jobs to be done and RICE; Game design by MDA, its loops, an economy of sources
+   and sinks, flow and retention; Art by an art bible, its pipeline and a budget; Release by DORA's keys, readiness and
+   semver; Marketing by AARRR, ASO and positioning; Run by SRE; LiveOps by its calendar and KPIs.
+2. **A frame is four to six *aspects*** (`TERMS`), each a name and a question; the leader's look judges by them and gives
+   each concern its aspect; Talk's verdict judges by the same frame.
+3. **Code grounds what it can** in each aspect (hotspots, instability, a screen with no error state or an image with no alt,
+   an outcome with no number, a bet with no test, a spike in the loop, no first-day hook, mixed sizes, heavy or unused
+   assets, a big or stale batch, reverts, no changelog, a store title past its limit, no way back, no way to share, no way
+   to earn); a hint is not a verdict.
+4. **The strip shows the aspects** as a row of chips, each in its state (an alert, a note, a hint code noticed, nothing
+   wrong, not looked at yet), a press stepping through its cards; no count is drawn.
+5. **No new pane, column, call or tier**: the look and Talk are spec 108's, given the frame.
+6. **Not taken**: a RICE score per goal (numbers we do not have), player-type models (a survey), loudness and palettes by
+   code, a full WCAG audit (a specialist's, later), DORA's time to restore (no incidents recorded).
+7. **Later**: Run's map of services and SLOs, LiveOps' calendar; ADRs, positioning and design pillars as records.
+8. **Measured**: concerns by aspect, made goals or dismissed.
+The owner's call.

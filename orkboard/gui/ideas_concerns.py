@@ -1,15 +1,17 @@
 """A party's concerns (docs/specs/108-a-leader-says-no-and-shows-where-it-hurts.md §2.5; decisions §183.4–§183.6), as `gui/ideas.py`'s `Ideas` has them: the commands the map's faces read and answer them by.
 
     ideas.concerns {party}              # → the record (`realm/concerns.py`) as the face reads it: {party, map, leader, has_map, at, map_hash, by, status: "" | "looking" | "ready" | "failed", error?, measure,
-                                        #    concerns: [{id, on, name, level: "alert" | "note", what, why, fix, signal, idea?}], dismissed: [{on, what, at, map_hash, part_hash}], alerts, notes, waits?}
-                                        #    (`idea`: the slug of the goal made of a concern) and starts a look when one is due (the person opened the map and it has none yet, or it changed and the last is a day old); `waits` is why one could
+                                        #    concerns: [{id, on, name, level: "alert" | "note", what, why, fix, signal, aspect, idea?}], dismissed: [{on, what, at, map_hash, part_hash}],
+                                        #    hints: [{on, kind, aspect, words}], alerts, notes, rubric: {framework, short, aspects: [{id, name, ask, state, n, hints}]} | null, waits?}
+                                        #    (`idea`: the slug of the goal made of a concern; `aspect`: the id of the aspect of the craft's rubric it is about, "" for none; `rubric`: how a senior of the craft
+                                        #    reviews its map and each aspect's state, `realm/lens_rubrics.py`, null for a craft with none) and starts a look when one is due (the person opened the map and it has none yet, or it changed and the last is a day old); `waits` is why one could
                                         #    not be made now (a spent window or limit), in plain words; nothing is touched then
     ideas.concerns_again {party}        # a look now → {ok, asked: bool, why?}
     ideas.concern_dismiss {party, id}   # *Not a problem*: the concern is dismissed (not raised again while its part is as it was) → {ok, concerns, alerts, notes}
     ideas.concern_goal {party, id}      # *Make it a goal*: an `ideas.add` of the party with the concern's what and fix as its words, its part as the goal's mark and the type its map's default
                                         #    (System `restructure`, screens `screen`, the loop `balance`; none where the party is not offered it) → {ok, idea, concerns, alerts, notes}
 
-`alerts` and `notes` count the open concerns (no goal was made of them). The party's snapshot row (`ideas.map` `goals[]`) carries `concerns: {alerts, notes, status}` for its tab. The host returns keys and data,
+`alerts` and `notes` count the open concerns (no goal was made of them); every command's record carries the `rubric` (spec 109 §2.5). The party's snapshot row (`ideas.map` `goals[]`) carries `concerns: {alerts, notes, status}` for its tab. The host returns keys and data,
 never interface words; a refusal is plain words.
 """
 from __future__ import annotations
@@ -18,7 +20,7 @@ from typing import Any
 
 from orkboard.core.idea_keeper import KeeperError
 from orkboard.gui.ideas_args import IdeasError, _str
-from orkboard.realm import concerns as store, event_log, goal_team, goal_types, ideas, map_parts
+from orkboard.realm import concerns as store, event_log, goal_team, goal_types, ideas, lens_rubrics, map_parts
 
 DEFAULT_TYPE = {"system": "restructure", "screens": "screen", "game-design": "balance"}      # a map's goal type, when its party is offered it
 
@@ -37,12 +39,19 @@ class ConcernsMixin:
             rec["status"] = ""
         return {**rec, **store.counts(rec)}
 
+    def _concern_rubric(self, party: str, rec: dict) -> dict | None:
+        """The craft's rubric as the face reads it: `{framework, short, aspects: scorecard}`; None for a party whose craft has none."""
+        craft = map_parts.craft_of(self.root(make=False), party)
+        r = lens_rubrics.rubric(craft)
+        return None if r is None else {"framework": r["framework"], "short": r["short"], "aspects": lens_rubrics.scorecard(craft, rec)}
+
     def _concern_reply(self, party: str, **more) -> dict:
         """Every concern command answers with the whole record as `ideas.concerns` does (the page keeps what it is answered: spec 108 §2.5), and `more`."""
         root = self.root(make=False)
         craft = map_parts.craft_of(root, party)
+        rec = self._concern_record(party)
         return {"party": party, "map": map_parts.MAPS.get(craft, ""), "leader": goal_team.leader_of(root, party), "has_map": craft in map_parts.MAPS,
-                **self._concern_record(party), **more}
+                **rec, "rubric": self._concern_rubric(party, rec), **more}
 
     def concerns_counts(self, party: str) -> dict:
         """The party's row in the snapshot: `{alerts, notes, status}`."""
@@ -67,7 +76,7 @@ class ConcernsMixin:
         rec = self._concern_record(party)
         if rec["concerns"]:                                           # the page sends no event of its own: each opening of a map that has concerns is one `concern_opened`
             self._ev(event_log.CONCERN_OPENED, args, party=party, level="alert" if any(c["level"] == "alert" for c in rec["concerns"]) else "note")
-        return {**out, **rec, **({"waits": waits} if waits else {})}
+        return {**out, **rec, "rubric": self._concern_rubric(party, rec), **({"waits": waits} if waits else {})}
 
     def concerns_again(self, args: dict) -> dict:
         party = self._concern_party(args)

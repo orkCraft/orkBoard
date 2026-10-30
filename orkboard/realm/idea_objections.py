@@ -17,7 +17,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Callable
 
-from orkboard.realm import ideas
+from orkboard.realm import ideas, lens_rubrics
 from orkboard.realm.idea_words import short_of
 
 ANSWERS = ("drop", "smaller", "later", "go")      # in the order the card offers them
@@ -34,8 +34,10 @@ LENS = {"product": "the goals in line and the product's aim: is this worth doing
 
 
 def lens(craft: str) -> str:
-    """What the leader of a party of this craft judges a goal against (the spec's per-craft lens); what its party keeps, for a craft that has none."""
-    return LENS.get(craft, "what your party keeps")
+    """What the leader of a party of this craft judges a goal against (the spec's per-craft lens); what its party keeps, for a craft that has none. It ends with the framework a senior of the craft
+    reviews by when the craft has a rubric (`realm/lens_rubrics.py`, spec 109 §2.4), so a verdict in Talk judges by the frame of the leader's look."""
+    r = lens_rubrics.rubric(craft)
+    return LENS.get(craft, "what your party keeps") + (f", as a senior of it would: by {r['framework']}" if r else "")
 
 
 def made(stances: list[dict]) -> list[dict]:
