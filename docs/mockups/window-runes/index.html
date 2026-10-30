@@ -78,14 +78,25 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
 
 /* the table's end: the road after the work, from the bottom up: the discard, Release (the undead), the portal (main), Live (the goblins) */
 .road { position: absolute; right: 0; bottom: var(--ork-2); width: 208px; display: flex; flex-direction: column; align-items: center; gap: var(--ork-3); }
-.station { display: flex; align-items: center; gap: var(--ork-3); height: 26px; padding: 0 var(--ork-3); border: var(--ork-line) solid transparent; cursor: pointer; }
-.station:hover { border-color: var(--ork-edge); }
-.station .lab { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); margin-left: var(--ork-2); }
-.station .heads { display: flex; gap: 2px; position: relative; }
-.station .ork-race__head { width: 24px; height: 22px; }
-.station .ss { margin-left: var(--ork-2); }
-.station .alert { position: absolute; left: 14px; top: -6px; color: var(--ork-danger); }
-.station.works .heads > img:first-child, .tab.works .ork-race__head { animation: step 1.2s steps(2) infinite; }
+.corner { position: absolute; z-index: 4; display: flex; gap: 2px; cursor: pointer; padding: 2px; border: var(--ork-line) solid transparent; }
+.corner:hover { border-color: var(--ork-edge); }
+.corner.rel { left: -6px; bottom: -8px; }
+.corner.live { right: -6px; top: -4px; flex-direction: row-reverse; }
+.corner .ork-race__head { width: 24px; height: 22px; }
+.corner.asleep .ork-race__head { filter: grayscale(1); opacity: 0.4; }
+.corner .alert { position: absolute; left: 50%; top: -10px; color: var(--ork-danger); }
+.corner .ok { position: absolute; right: -2px; bottom: -4px; color: var(--ork-success); }
+.corner .ok .ork-sign, .gate .ok .ork-sign { width: 10px; height: 10px; }
+.corner .g { position: relative; display: inline-flex; }
+.corner.works .g:first-child > img, .tab.works .ork-race__head, .gate.works .g > img { animation: step 1.2s steps(2) infinite; }
+/* the skeletons at the gate: each a check on the way into main, standing in front of the portal while it runs or while it is red */
+.gate { position: absolute; z-index: 5; left: 0; right: 0; top: 104px; display: flex; justify-content: center; gap: 2px; }
+.gate .g { position: relative; display: inline-flex; flex-direction: column; align-items: center; }
+.gate .ork-race__head { width: 48px; height: 44px; }
+.gate .alert { position: absolute; top: -14px; color: var(--ork-danger); }
+.gate .ork-sign.alert { width: 14px; height: 14px; }
+.gate .g.red > img { filter: drop-shadow(0 2px 0 var(--ork-danger)); }
+.road .why { font: var(--ork-type-caption); color: var(--ork-danger); text-align: center; max-width: 200px; }
 @keyframes step { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1px); } }
 .road .mainlab { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-faint); }
 .road .mainlab.on { color: var(--ork-ink-muted); }
@@ -100,9 +111,15 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
 .pile .top .wn { height: 60px; display: flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-canvas); color: var(--ork-success); }
 .pile .top .rw { margin-top: auto; color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
 .place { width: 144px; height: 202px; flex: none; }
-/* a short window (768 px tall): the label Main gives way (the line says it when a goal is chosen) and the discard's foot tucks under the hand */
-.w1024 .road .mainlab { display: none; }
-.w1024 .road { bottom: -30px; gap: var(--ork-2); }
+.ringbox { position: relative; width: 192px; height: 192px; flex: none; }
+/* the portal behind the guards: still, the X left out (the skeletons are its seal) */
+.ork-portal.guarded { --_bar: transparent; --_bardark: transparent; --_knot: transparent; }
+.crop { position: relative; width: 240px; height: 560px; background: var(--ork-table); outline: var(--ork-line) solid var(--ork-edge); }
+.crop .road { right: 16px; }
+.crops { display: flex; flex-wrap: wrap; gap: var(--ork-6); }
+.crops figure { margin: 0; display: flex; flex-direction: column; gap: var(--ork-3); }
+.crops figcaption { max-width: 240px; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.crops figcaption b { color: var(--ork-ink); }
 
 /* the hand */
 .ork-card.plus { position: relative; width: 144px; height: 202px; flex: none; margin-left: var(--ork-4); display: grid; place-items: center; padding: 0;
@@ -145,17 +162,17 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
 <body>
 <header class="mk-bar">
   <span class="ork-label">Orkboard · the window with all of it</span>
-  <nav aria-label="States"><a class="ork-btn" href="#s1">1 · At rest</a><a class="ork-btn" href="#s2">2 · A goal ready</a><a class="ork-btn" href="#s3">3 · A new goal</a><a class="ork-btn" href="#s4">4 · 1024 × 768</a><a class="ork-btn" href="#s5">5 · The lighter way</a></nav>
+  <nav aria-label="States"><a class="ork-btn" href="#s1">1 · At rest</a><a class="ork-btn" href="#s2">2 · A goal ready</a><a class="ork-btn" href="#s3">3 · A new goal</a><a class="ork-btn" href="#s4">4 · 1024 × 768</a><a class="ork-btn" href="#s6">6 · The gate</a><a class="ork-btn" href="#s5">5 · The lighter way</a></nav>
 </header>
 <main class="mk-main">
   <section class="mk-sec" id="s1"><h1>1 · At rest: nothing is ready for main</h1>
-    <p class="mk-line">The window at 1280 × 800, on the project's tab, with four parties. <b>Release and Live are not tabs.</b> They stand at the table's end, on <b>the road after the work</b>, read from the bottom up: the discard (done in dev), <b>Release</b> (the lich and its skeletons, who take a goal to main), the portal (main), <b>Live</b> (the imp and its goblins, who run what people use). Each station is a row of small heads with its label. Press one to open that party's view over the pane, as the discard opens. At rest the stations are still, the ring sleeps, and the discard is its place. <b>The tabs carry each party's sword and shield</b>: the marks of the tools its Does and its Checks run on, in ink, the open tab's in colour. <b>One rune per stack</b>, and the rune glows at the stage of a task at work.</p>
+    <p class="mk-line">The window at 1280 × 800, on the project's tab, with four parties. <b>Release and Live are not tabs.</b> They stand in the ring's corners, on <b>the road after the work</b>: <b>Release</b> at its lower left, before main (the lich; its skeletons are the checks on the way in), <b>Live</b> at its upper right, past the portal (the imp and its goblins, who run what people use). <b>Asleep they are one grey, still head</b> each, a way into that party's view. They wake, in colour and with their followers, only when there is something to do. At rest the ring sleeps and the discard is its place. <b>The tabs carry each party's sword and shield</b>: the marks of the tools its Does and its Checks run on, in ink, the open tab's in colour. <b>One rune per stack</b>, and the rune glows at the stage of a task at work.</p>
     <div id="w1"></div>
     <div class="mk-notes"><span><b>Tabs:</b> Game design does and checks on Claude Code; Tech does on Claude Code and checks on Codex; Design is <i>Lean</i>, so its shield is faint with no mark (the doer runs its own tests); Marketing does on Codex, with a dot because one of its roles runs on another tool.</span>
       <span><b>Lanes:</b> two runes glow, one in Tech (the timer being reset) and one in Design (the bar's colours being checked).</span></div></section>
 
-  <section class="mk-sec" id="s2"><h1>2 · A goal ready, Release at work, an alert from Live</h1>
-    <p class="mk-line">A goal is ready for main, so the ring is open, and the goal chosen in the discard's view puts its rune (lava) at the ring's top. <b>The lich steps</b>, as a tab's head does while its party works. <b>Live has an alert</b>, the most urgent thing on the table, because it is what people use. The pointer is on Claude's potion: <b>the tabs that drink from it are marked</b> (the Does of Game design and Tech, and the Checks of Game design).</p>
+  <section class="mk-sec" id="s2"><h1>2 · A goal ready, its checks passed, an alert from Live</h1>
+    <p class="mk-line">A goal is ready for main and its checks have passed: <b>the skeletons stand aside</b> in the lich's corner with their ticks, the ring is open, and the goal chosen puts its rune (lava) at the ring's top. <b>Live is awake with an alert</b>, the most urgent thing on the table, because it is what people use. The pointer is on Claude's potion: <b>the tabs that drink from it are marked</b> (the Does of Game design and Tech, and the Checks of Game design).</p>
     <div id="w2"></div></section>
 
   <section class="mk-sec" id="s3"><h1>3 · A new goal on Tech's tab</h1>
@@ -163,8 +180,12 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
     <div id="w3"></div></section>
 
   <section class="mk-sec" id="s4"><h1>4 · The same at 1024 × 768</h1>
-    <p class="mk-line">Three lanes fit under the tabs. The road keeps its four places, but the window is 32 px shorter: the label <i>Main</i> gives way (the ring and its line say it), and the discard's foot tucks further under the hand, which already stands over the pile. Below about 740 px tall the stations would have to move beside the ring; that is a limit to note in the spec. The tabs' second line still fits (the tab is 52 px tall).</p>
+    <p class="mk-line">Three lanes fit under the tabs. With Release and Live in the ring's corners the road needs no rows of its own and fits as it is. Here <b>a check is red</b>: the regression skeleton blocks the portal. The tabs' second line still fits (the tab is 52 px tall).</p>
     <div id="w4"></div></section>
+
+  <section class="mk-sec" id="s6"><h1>6 · The skeletons at the gate</h1>
+    <p class="mk-line">The table's end alone, in each state. <b>Each skeleton is one check on the way into main</b> (from the gate's settings, three at most, grouped: unit tests, looks, regression). It stands in front of the portal while its check runs or while it is red, and steps aside when it passes. A check judged by a model would carry its tool's mark; a script's spends no mana and has none. Its words are on hover and for a screen reader (<i>Regression: 2 tests fail</i>).</p>
+    <div class="crops" id="w6"></div></section>
 
   <section class="mk-sec" id="s5"><h1>5 · The lighter way, for comparison</h1>
     <p class="mk-line">Release and Live stay tabs, but sit at the tabs' right end, over the table's end, with a gap before them. The tabs and their signals stay as they are, but the lanes gain nothing and the road from the discard to Live is only hinted at. Shown for the choice; <b>I would take 1.</b></p>
@@ -224,20 +245,27 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
     [{ el: "meadow", name: "The store page says it", front: { name: "Write the store's short text", stage: "planning", sign: "tagline" } }]
   ];
 
-  // the road
-  function station(name, heads, o) {
-    o = o || {};
-    return '<div class="station' + (o.works ? " works" : "") + '" title="' + name + ': open its view"><span class="heads">' + heads.map(function (h) { return H(h[0], h[1]); }).join("")
-      + (o.alert ? '<span class="alert">' + S("alert") + "</span>" : "") + '</span><span class="lab">' + name + "</span></div>";
-  }
+  // the road: the ring with Release asleep or awake at its lower left and Live at its upper right; the skeletons, each a check, at the gate
+  var CHECKS = [["skeleton", "laborer", "Unit tests"], ["skeleton", "warrior", "Looks"], ["skeleton", "elder", "Regression"]];
+  function g(h, o) { o = o || {}; return '<span class="g' + (o.red ? " red" : "") + '" title="' + (o.title || "") + '">' + H(h[0], h[1]) + (o.alert ? '<span class="alert">' + S("alert") + "</span>" : "") + (o.ok ? '<span class="ok">' + S("check") + "</span>" : "") + "</span>"; }
   function road(o) {
-    var ring = o.ready ? '<span class="ork-portal-ring is-open" aria-hidden="true"><span class="ork-portal"></span><span class="ork-portal-ring__seal">' + (o.chosen ? E(o.chosen) : "") + "</span></span>"
+    var rel = o.release || "asleep", live = o.live || "asleep";
+    // Release: asleep, the lich alone, grey; awake, the lich in colour and the skeletons that have passed beside it
+    var aside = rel === "passed" ? CHECKS : rel === "red" ? CHECKS.slice(0, 2) : [];
+    var relC = o.alt ? "" : '<span class="corner rel' + (rel === "asleep" ? " asleep" : "") + (rel === "checking" ? " works" : "") + '" title="Release: open its view">' + g(["lich", "elder"])
+      + aside.map(function (c) { return g(c, { ok: true, title: c[2] + ": passed" }); }).join("") + "</span>";
+    var liveC = o.alt ? "" : '<span class="corner live' + (live === "asleep" ? " asleep" : " works") + '" title="Live: open its view">' + g(["imp", "elder"], { alert: live === "alert" })
+      + (live === "asleep" ? "" : g(["goblin", "warrior"]) + g(["goblin", "laborer"])) + "</span>";
+    var front = rel === "checking" ? CHECKS : rel === "red" ? [CHECKS[2]] : [];
+    var gate = front.length ? '<span class="gate' + (rel === "checking" ? " works" : "") + '">' + front.map(function (c) { return g(c, { red: rel === "red", alert: rel === "red", title: c[2] + (rel === "red" ? ": 2 tests fail" : ": checking") }); }).join("") + "</span>" : "";
+    var guarded = rel === "checking" || rel === "red";
+    var ring = o.ready ? '<span class="ork-portal-ring ' + (guarded ? "is-sealed" : "is-open") + '" aria-hidden="true"><span class="ork-portal' + (guarded ? " is-sealed guarded" : "") + '"></span><span class="ork-portal-ring__seal">' + (o.chosen ? E(o.chosen) : "") + "</span></span>"
       : '<span class="ork-portal-ring" aria-hidden="true"></span>';
     var pile = o.done ? '<div class="pile"><div class="ork-card-back b1"></div><div class="ork-card-back b2"></div><div class="ork-card top"><div class="hd">' + E("lava") + '<span>Check that a rejoin keeps the seat</span></div><div class="wn">' + S("check", true) + '</div><div class="rw">' + (o.ready ? "1 goal ready for main" : "Done") + "</div></div></div>"
       : '<span class="ork-card-place place" aria-hidden="true"></span>';
-    return '<div class="road">' + station("Live", [["imp", "elder"], ["goblin", "warrior"], ["goblin", "laborer"]], { alert: o.alert })
-      + (o.chosen ? '<p class="line">Into main: Check that a rejoin…</p>' : "") + '<span class="mainlab' + (o.ready ? " on" : "") + '">Main</span>' + ring
-      + station("Release", [["lich", "elder"], ["skeleton", "warrior"]], { works: o.relworks }) + '<span class="dlab">Discard</span>' + pile + "</div>";
+    var line = rel === "red" ? '<p class="why">Sealed: Regression is red, 2 tests fail</p>' : rel === "checking" ? '<p class="line">Checking the way into main</p>' : o.chosen ? '<p class="line">Into main: Check that a rejoin…</p>' : "";
+    return '<div class="road">' + line + '<span class="mainlab' + (o.ready ? " on" : "") + '">Main</span><span class="ringbox">' + ring + gate + relC + liveC + "</span>"
+      + '<span class="dlab">Discard</span>' + pile + "</div>";
   }
 
   // the hand
@@ -270,14 +298,18 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
     + '</div><div class="acts"><span>Enter sends · Esc closes</span><button class="ork-btn primary" type="button">Send</button></div></div>';
 
   document.getElementById("w1").innerHTML = win({ on: "project" });
-  document.getElementById("w2").innerHTML = win({ on: "project", ready: true, chosen: "lava", done: true, relworks: true, alert: true, lit: "claude", hover: "claude",
+  document.getElementById("w2").innerHTML = win({ on: "project", ready: true, chosen: "lava", done: true, release: "passed", live: "alert", lit: "claude", hover: "claude",
     extra: '<span class="cursor" style="right:96px;bottom:70px"></span><span class="callout" style="right:150px;bottom:24px">Claude Code: 62% of the week. Game design and Tech do on it; Game design checks on it.</span>' });
   document.getElementById("w3").innerHTML = win({ on: "Tech", seal: "void", field: field, done: true });
-  document.getElementById("w4").innerHTML = win({ on: "project", w1024: true, lanes: 3, n: 3, ready: true, chosen: "lava", done: true, relworks: true });
+  document.getElementById("w4").innerHTML = win({ on: "project", w1024: true, lanes: 3, n: 3, ready: true, chosen: "lava", done: true, release: "red" });
   document.getElementById("w5").innerHTML = win({ on: "project", alt: true, n: 3, lanes: 4, done: true });
-  // the lighter way keeps the old end: the portal over the pile, no stations
-  var w5 = document.querySelector("#w5 .road");
-  w5.querySelectorAll(".station").forEach(function (s) { s.remove(); });
+  // the gate, column by column
+  var C = [["Asleep", "Nothing is ready for main: <b>the lich and the imp sleep</b> in the ring's corners, grey and still, each a way into its party's view.", { release: "asleep" }],
+    ["Checking", "A goal is ready: <b>the three skeletons stand in front of the portal</b> while their checks run (unit tests, looks, regression), and the lich wakes. The portal cannot be entered yet.", { ready: true, chosen: "lava", done: true, release: "checking" }],
+    ["Passed", "Every check passed: <b>the skeletons step aside</b> into the lich's corner, each with its tick, and the portal is open for the goal (its rune at the top).", { ready: true, chosen: "lava", done: true, release: "passed" }],
+    ["A check is red", "<b>The skeleton whose check is red stays in front of the portal and blocks it.</b> The others stand aside with their ticks. The portal is still behind it, with no X: the skeleton is its seal. The reason is said in the danger colour.", { ready: true, chosen: "lava", done: true, release: "red" }],
+    ["Live alerts", "<b>The imp wakes</b> with its goblins in the upper corner, past the portal, and says an alert: what people use is hurting.", { release: "asleep", live: "alert", done: true }]];
+  document.getElementById("w6").innerHTML = C.map(function (c) { return '<figure><div class="crop">' + road(c[2]) + "</div><figcaption><b>" + c[0] + ".</b> " + c[1] + "</figcaption></figure>"; }).join("");
 })();
 </script>
 </body>
