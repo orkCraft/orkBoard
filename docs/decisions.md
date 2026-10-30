@@ -3918,3 +3918,43 @@ spec 107 §9.2's logo shown while it starts):
 4. Under reduced motion: no wobble, no throw, no roll: today's start screen.
 5. Drawn in orkUI first (the icons and `.ork-die`), then here; spec 112, built by the cheaper model.
 The owner's call.
+
+## 191. A project with no preview or no gate: the die sleeps, and with no gate there is no ring and no Release corner (31 October, the owner)
+
+Why: the owner: *a project like a wiki will not have the die, right? And will it have Release, the portal and the skeletons?*
+Today Play is pressed before anyone knows there is nothing to open (*Nothing here yet*), so the die of §190 would be thrown and land
+on its red cross for what is no failure; and the portal's ring of §185 lies on every project, asleep for ever on one whose results
+merge into main itself (no gate: `idea_gate.same`). So (this makes §185.2, §188.1 and §190.3 precise):
+1. **The page knows before the press whether the project has a preview** (`idea_shot.preview_of`: a command, a static
+   `index.html`, a package script). **With none, the die sleeps**: grey and still, as Release and Live sleep in the ring's corners,
+   its word *Play*, its words on hover *Nothing to play yet*; pressed, it opens today's *Nothing here yet* and how to give it one,
+   without a throw. A wiki with a site to serve (`preview = "mkdocs serve"`) has a die that wakes as a game's does.
+2. **With no gate there is no ring and no Release corner**: the table's end is the discard's place and pile alone. Live's corner
+   needs the ring too: with no gate, Live stays a tab, as at the narrow width.
+3. **The skeletons are any command**: a project whose way into main is not code says its own checks in `[gate.main]` (a wiki's
+   *Links* and *Build*); with none, *The merge* and *Tests* as today (a project with no tests passes *Tests*, saying so).
+4. Spec 113, built by the cheaper model.
+The owner's call.
+
+## 192. The mana in two windows: the liquid is the 5-hour window, the bottle the week; a tab says whether its party follows the default tool (31 October, the owner)
+
+Why: the owner: *let the 5-hour limit be the liquid's level in the mana's bottles and the weekly one the bottle's size*; and *a
+party may be set to the default tool: if it is, its tab should not just draw Claude*. A potion today is one share, the window that
+binds hardest, while a subscriber asks two things: *can I work now?* and *will I last until the reset?*. And a party that follows
+the default moves on with it when it runs dry (§177.2), while a party set to a tool on purpose waits: two tabs drawn alike behave
+apart. The owner's yes on `docs/mockups/mana-two/`. So (this changes §176.1's one share, §189.1's marks):
+1. **The liquid is the tool's shortest window** (Claude's 5 hours), **the bottle its longest** (the week), in **four drawn sizes**,
+   never scaled: the large (orkUI's potion today) above 60 % of the week left, the medium 30 to 60 %, the small 10 to 30 %, the vial
+   under 10 %. Each tool keeps the large bottle's place, the bottle on its floor. A tool with one window keeps the large bottle; a
+   tool paid by its API keeps its coin.
+2. **The colour follows whichever runs out first** (the lower of the two shares, at today's warning and danger levels): a vial
+   brim-full is red.
+3. **Two shares under it**: the now share in bold (in the warning's or the danger's colour), the week's muted under it; the words say
+   both and when each comes back (*Claude Code: 30% of the 5 hours left, until 18:40; 82% of the week, until Thu 09:00*).
+4. **A tab's sword and shield say whether their side follows the default**: a mark **in a small frame** (the default potion's frame)
+   follows the default and shows the tool it is on now, changing when the work moves on; a **bare mark** is a tool set for the party,
+   and when that tool is dry its mark is dim with the moon beside it (*waits for Claude Code until Thu 09:00*). The words say it:
+   *Does on the default (now Claude Code)*, *Does on Claude Code, set for this party*. Hovering the default potion marks the framed
+   marks too.
+5. Drawn in orkUI first (the three smaller bottles), then here; spec 114, built by the cheaper model.
+The owner's call.
