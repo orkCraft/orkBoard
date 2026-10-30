@@ -187,6 +187,13 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-elem.void { background: var(--ork-elem-void); -webkit-mask-image: url(elements/void.svg); mask-image: url(elements/void.svg); }
 .ork-elem.lava { background: var(--ork-elem-lava); -webkit-mask-image: url(elements/lava.svg); mask-image: url(elements/lava.svg); }
 .ork-elem.dim { background: var(--ork-ink-faint); }
+/* The rite's colour (0.21.0): `.rite-<element>` sets `--_rite` to that element's token for `.ork-sigil.is-summoning` and `.ork-portal-ring.is-sending`
+   (below); the + card holding such a seal gets it too, so its icon can take it. */
+.rite-meadow, .ork-plus:has(> .rite-meadow) { --_rite: var(--ork-elem-meadow); }
+.rite-ice, .ork-plus:has(> .rite-ice) { --_rite: var(--ork-elem-ice); }
+.rite-dust, .ork-plus:has(> .rite-dust) { --_rite: var(--ork-elem-dust); }
+.rite-void, .ork-plus:has(> .rite-void) { --_rite: var(--ork-elem-void); }
+.rite-lava, .ork-plus:has(> .rite-lava) { --_rite: var(--ork-elem-lava); }
 
 /* --- Moons: a goal's progress (moons/, four 7 x 7 pixel masks), drawn in two layers: the box is the dark side in the frame colour, its ::after
    the lit part in the muted ink (the full moon in ink). 14 x 14 or 28 x 28, never a size between: two or four pixels a cell, whole pixels -- */
@@ -417,6 +424,7 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-portal.is-sealed { --_stone: var(--ork-edge); --_edge: var(--ork-frame); --_gap: var(--ork-panel); --_xedge: transparent; --_xfaint: transparent;
   --_spark: transparent; --_glint: transparent; --_arm1: var(--ork-frame); --_arm2: var(--ork-frame);
   --_arm3: color-mix(in srgb, var(--ork-ink-faint) 50%, transparent); --_arm4: color-mix(in srgb, var(--ork-ink-faint) 70%, transparent); }
+.ork-portal.is-sealed.is-guarded { --_bar: transparent; --_bardark: transparent; --_knot: transparent; }
 .ork-portal::before, .ork-portal::after { content: ""; position: absolute; left: 0; top: 0; width: 1px; height: 1px; transform-origin: 0 0; transform: scale(var(--_n)); }
 .ork-portal::before { box-shadow: var(--_still); }
 .ork-portal::after { box-shadow: var(--_arms); animation: ork-portal-turn 6s steps(4) infinite; }
@@ -436,7 +444,7 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
    with the portal's eye. */
 .ork-portal-ring { --_dots: color-mix(in srgb, var(--ork-edge) 32%, transparent); --_asleep: color-mix(in srgb, var(--ork-ink-faint) 55%, transparent);
   --_lit: color-mix(in srgb, var(--ork-portal) 70%, transparent);
-  position: relative; display: inline-block; flex: none; box-sizing: border-box; vertical-align: middle; width: 192px; height: 192px; }
+  position: relative; isolation: isolate; display: inline-block; flex: none; box-sizing: border-box; vertical-align: middle; width: 192px; height: 192px; }
 .ork-portal-ring::before, .ork-portal-ring::after { content: ""; position: absolute; inset: 0; pointer-events: none; -webkit-mask-size: 100% 100%; mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
 .ork-portal-ring::before { background: var(--_dots); -webkit-mask-image: url(runes/ring-dots.svg); mask-image: url(runes/ring-dots.svg); }
@@ -453,6 +461,41 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-portal-ring.is-open.is-waking::after { background: conic-gradient(var(--_lit) 0 var(--_turn), var(--_asleep) var(--_turn)); animation: ork-ring-wake calc(var(--ork-motion-quick) * 8) steps(8, jump-start) both; }
 .ork-portal-ring.is-open.is-waking > .ork-portal { animation: ork-ring-eye var(--ork-motion-play) steps(5) calc(var(--ork-motion-quick) * 8) both; }
 .ork-portal-ring.is-open.is-waking > .ork-portal-ring__seal { animation: ork-ring-eye var(--ork-motion-play) steps(5) calc(var(--ork-motion-quick) * 8) both; }
+/* The road's corners and the gate (0.21.0, Orkboard's decisions §188): the ring is also where a goal's way into main is kept. `.ork-portal-ring__before` (its lower
+   left: Release, the party before main) and `.ork-portal-ring__after` (its upper right, its heads in reverse order: Live, the party past it) are each a row of
+   heads (`.ork-race__head`, 24 x 22, 2 px between), a box the caller makes a button; `.is-asleep` draws the heads grey and faint, `.is-working` steps the first one
+   (1.2 s, two steps; still under reduced motion). A head that holds a mark stands in a `.ork-portal-ring__guard`, which may hold `.ork-portal-ring__tick` (the
+   check sign, drawn by the class itself, 10 px, the success colour) or `.ork-portal-ring__alert` (the alert sign, 14 px, the danger colour). `.ork-portal-ring__gate` is a row of at most three
+   `.ork-portal-ring__guard` boxes with heads at 48 x 44 standing in front of the portal's lower part: `.is-working` steps its head, `.is-red` draws a 2 px shadow
+   in the danger colour under it. */
+.ork-portal-ring__before, .ork-portal-ring__after { position: absolute; z-index: 4; display: flex; gap: var(--ork-1); box-sizing: border-box; margin: 0; padding: var(--ork-1);
+  appearance: none; background: none; border: var(--ork-line) solid transparent; color: inherit; font: inherit; }
+.ork-portal-ring__before { left: -6px; bottom: -8px; }
+.ork-portal-ring__after { right: -6px; top: -4px; flex-direction: row-reverse; }
+.ork-portal-ring__before:is(button, a), .ork-portal-ring__after:is(button, a) { cursor: pointer; }
+.ork-portal-ring__before:is(button, a):hover, .ork-portal-ring__after:is(button, a):hover { border-color: var(--ork-edge); }
+.ork-portal-ring__before:focus-visible, .ork-portal-ring__after:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.ork-portal-ring__before .ork-race__head, .ork-portal-ring__after .ork-race__head { width: 24px; height: 22px; }
+.ork-portal-ring__before.is-asleep .ork-race__head, .ork-portal-ring__after.is-asleep .ork-race__head { filter: grayscale(1); opacity: 0.4; }
+.ork-portal-ring__guard { position: relative; display: inline-flex; flex-direction: column; align-items: center; }
+.ork-portal-ring__tick { position: absolute; right: -2px; bottom: -4px; width: 10px; height: 10px; background: var(--ork-success);
+  -webkit-mask: url(signs/check.svg) center / 100% 100% no-repeat; mask: url(signs/check.svg) center / 100% 100% no-repeat; }
+.ork-portal-ring__alert { position: absolute; left: 50%; top: -10px; width: 14px; height: 14px; transform: translateX(-50%); background: var(--ork-danger);
+  -webkit-mask: url(signs/alert.svg) center / 100% 100% no-repeat; mask: url(signs/alert.svg) center / 100% 100% no-repeat; }
+.ork-portal-ring__gate { position: absolute; z-index: 5; left: 0; right: 0; top: 104px; display: flex; justify-content: center; gap: var(--ork-1); }
+.ork-portal-ring__gate > :nth-child(n+4) { display: none; }
+.ork-portal-ring__gate .ork-race__head { width: 48px; height: 44px; }
+.ork-portal-ring__gate .ork-portal-ring__alert { top: -14px; }
+.ork-portal-ring__guard.is-red > .ork-race__head { filter: drop-shadow(0 2px 0 var(--ork-danger)); }
+.ork-portal-ring__before.is-working > .ork-race__head:first-child, .ork-portal-ring__before.is-working > .ork-portal-ring__guard:first-child > .ork-race__head,
+.ork-portal-ring__after.is-working > .ork-race__head:first-child, .ork-portal-ring__after.is-working > .ork-portal-ring__guard:first-child > .ork-race__head,
+.ork-portal-ring__guard.is-working > .ork-race__head { animation: ork-guard-step 1.2s steps(2) infinite; }
+/* The rite in the ring (0.21.0): `.is-sending` with `.rite-<element>` (the goal's) on an open ring, while the card goes in. The ring's runes fill with the
+   element's colour once round, clockwise from the top, in eight steps (see the seal's rite in the runes' section), then the colour leaves in four steps.
+   The caller takes the class off after (about 1.1 s). Nothing plays under reduced motion. */
+.ork-portal-ring.is-open.is-sending::after { --_rest: var(--_lit); background: conic-gradient(color-mix(in srgb, var(--_rite) var(--_fade), var(--_rest)) 0 var(--_turn), var(--_rest) var(--_turn));
+  animation: ork-rite-fill calc(var(--ork-motion-base) * 3.5) steps(8, jump-start) forwards, ork-rite-fade calc(var(--ork-motion-quick) * 3) steps(4) calc(var(--ork-motion-base) * 4) forwards; }
+@keyframes ork-guard-step { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1px); } }
 @keyframes ork-ring-wake { from { --_turn: 0deg; } to { --_turn: 360deg; } }
 @keyframes ork-ring-dots { from { opacity: 1; } to { opacity: 0; } }
 @keyframes ork-ring-eye { from { clip-path: circle(0% at 50% 50%); } to { clip-path: circle(72% at 50% 50%); } }
@@ -465,6 +508,9 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
   50% { --_arm2: color-mix(in srgb, var(--ork-ink) 55%, transparent); --_arm3: color-mix(in srgb, var(--ork-ink) 55%, transparent); --_arm4: color-mix(in srgb, var(--ork-ink) 55%, transparent); }
   75% { --_arm2: color-mix(in srgb, var(--ork-ink) 25%, transparent); --_arm3: color-mix(in srgb, var(--ork-ink) 25%, transparent); --_arm4: color-mix(in srgb, var(--ork-ink) 25%, transparent); } }
 @media (prefers-reduced-motion: reduce) { .ork-portal::after, .ork-portal.is-new::after { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .ork-portal-ring__before.is-working > .ork-race__head:first-child, .ork-portal-ring__before.is-working > .ork-portal-ring__guard:first-child > .ork-race__head,
+  .ork-portal-ring__after.is-working > .ork-race__head:first-child, .ork-portal-ring__after.is-working > .ork-portal-ring__guard:first-child > .ork-race__head, .ork-portal-ring__guard.is-working > .ork-race__head,
+  .ork-portal-ring.is-open.is-sending::after { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .ork-portal-ring.is-open.is-waking::before { display: none; animation: none; }
   .ork-portal-ring.is-open.is-waking::after { background: var(--_lit); animation: none; } .ork-portal-ring.is-open.is-waking > .ork-portal { animation: none; } .ork-portal-ring.is-open.is-waking > .ork-portal-ring__seal { animation: none; } }
 /* portal:begin (generated by tools/build_portal.py from portal/portal.json; do not edit by hand) */
@@ -554,6 +600,7 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
    the grid's) in the edge at under half its strength, no fill, aspect 5 : 7, the page gives its width. It cannot be pressed and never moves. --- */
 @property --_turn { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
 @property --_arc { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
+@property --_fade { syntax: "<percentage>"; inherits: false; initial-value: 100%; }
 .ork-rune { display: inline-block; flex: none; width: 10px; height: 14px; vertical-align: middle; background: currentColor;
   -webkit-mask: var(--_rune) center / 100% 100% no-repeat; mask: var(--_rune) center / 100% 100% no-repeat; }
 .ork-rune.big { width: 20px; height: 28px; }
@@ -571,10 +618,10 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-rune.wave { --_rune: url(runes/wave.svg); }
 .ork-sigil { position: absolute; inset: 0; margin: auto; width: 136px; height: 136px; pointer-events: none; }
 .ork-sigil::before, .ork-sigil::after { content: ""; position: absolute; inset: 0; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
-.ork-sigil::before { background: color-mix(in srgb, currentColor 26%, transparent); -webkit-mask-image: url(runes/sigil-lines.svg); mask-image: url(runes/sigil-lines.svg); }
+.ork-sigil::before { --_rest: color-mix(in srgb, currentColor 26%, transparent); background: var(--_rest); -webkit-mask-image: url(runes/sigil-lines.svg); mask-image: url(runes/sigil-lines.svg); }
 .ork-sigil::after { --_rest: color-mix(in srgb, currentColor 42%, transparent); background: conic-gradient(from calc(var(--_turn) - 22.5deg), currentColor 0 var(--_arc), var(--_rest) var(--_arc));
   -webkit-mask-image: url(runes/sigil-runes.svg); mask-image: url(runes/sigil-runes.svg); }
-.ork-plus:hover > .ork-sigil::before, .ork-plus:focus-visible > .ork-sigil::before { background: color-mix(in srgb, currentColor 40%, transparent); }
+.ork-plus:hover > .ork-sigil::before, .ork-plus:focus-visible > .ork-sigil::before { --_rest: color-mix(in srgb, currentColor 40%, transparent); }
 .ork-plus:hover > .ork-sigil::after, .ork-plus:focus-visible > .ork-sigil::after { --_rest: color-mix(in srgb, currentColor 70%, transparent);
   animation: ork-sigil-sweep calc(var(--ork-motion-play) + var(--ork-motion-base)) steps(8) 1; }
 .ork-sigil__seal { position: absolute; left: 62px; top: 12px; z-index: 2; width: 14px; height: 14px; }
@@ -583,6 +630,35 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-sigil.small > .ork-sigil__seal { display: none; }
 .ork-sigil.small::before { -webkit-mask-image: url(runes/sigil-small.svg); mask-image: url(runes/sigil-small.svg); }
 .ork-sigil.small::after { display: none; }
+/* The free runes (0.21.0): up to four `<span class="ork-sigil__free at-<degrees>"><span class="ork-elem lava"></span></span>` children of the sigil, at the band's places
+   90, 270, 180 and 45 degrees (the order of use), each a 14 x 14 box at a 7 x 7 box of cells (left and top are `tools/build_runes.py` `sigil_free` times 2, a test keeps
+   them together). Hidden at rest. On the card's hover or focus, or while it has `.is-choosing` (a held state), a seal that holds some lets its decorative runes give way and
+   shows them at three quarters, one after another (90 ms apart, four steps; at once under reduced motion). `.small` has none; a summoning seal hides them. */
+.ork-sigil__free { position: absolute; z-index: 2; width: 14px; height: 14px; opacity: 0; }
+.ork-sigil__free > .ork-elem { display: block; width: 14px; height: 14px; }
+.ork-sigil__free.at-90 { left: 112px; top: 62px; --_i: 0; }
+.ork-sigil__free.at-270 { left: 12px; top: 62px; --_i: 1; }
+.ork-sigil__free.at-180 { left: 62px; top: 112px; --_i: 2; }
+.ork-sigil__free.at-45 { left: 96px; top: 26px; --_i: 3; }
+.ork-sigil.small > .ork-sigil__free, .ork-sigil.is-summoning > .ork-sigil__free { display: none; }
+.ork-plus:is(:hover, :focus-visible, .is-choosing) > .ork-sigil:not(.is-summoning):has(> .ork-sigil__free)::after { opacity: 0; animation: none; }
+.ork-plus:is(:hover, :focus-visible, .is-choosing) > .ork-sigil > .ork-sigil__free { opacity: 0.75; }
+@keyframes ork-free-in { from { opacity: 0; } to { opacity: 0.75; } }
+@media (prefers-reduced-motion: no-preference) { .ork-plus:is(:hover, :focus-visible, .is-choosing) > .ork-sigil > .ork-sigil__free {
+  animation: ork-free-in calc(var(--ork-motion-quick) * 4) steps(4) calc(var(--_i) * var(--ork-motion-quick) * 0.75) both; } }
+/* The rite (0.21.0): `.ork-sigil.is-summoning` with one of `.rite-meadow`, `.rite-ice`, `.rite-dust`, `.rite-void`, `.rite-lava` (which set `--_rite` to that element's token,
+   beside the elements above). The seal's lines and runes are painted in that colour as it turns once round from the top, clockwise, in eight steps over 3.5 times
+   `--ork-motion-base` (about 640 ms), then the colour leaves in four steps; the + takes it for the last step of the fill. Once, not repeated: the caller takes the
+   class off after (the last `animationend`, or about 1.2 s). Nothing plays under reduced motion. The same rite runs in the ring (`.ork-portal-ring.is-sending`). */
+.ork-sigil.is-summoning::before, .ork-sigil.is-summoning::after, .ork-plus:is(:hover, :focus-visible, .is-choosing) > .ork-sigil.is-summoning::after {
+  background: conic-gradient(color-mix(in srgb, var(--_rite) var(--_fade), var(--_rest)) 0 var(--_turn), var(--_rest) var(--_turn));
+  animation: ork-rite-fill calc(var(--ork-motion-base) * 3.5) steps(8, jump-start) forwards, ork-rite-fade calc(var(--ork-motion-quick) * 3) steps(4) calc(var(--ork-motion-base) * 4) forwards; }
+.ork-sigil.is-summoning ~ .ork-icon { animation: ork-rite-icon calc(var(--ork-motion-base) * 3.5 / 8) steps(1) calc(var(--ork-motion-base) * 3.5 * 7 / 8) forwards; }
+@keyframes ork-rite-fill { from { --_turn: 0deg; } to { --_turn: 360deg; } }
+@keyframes ork-rite-fade { from { --_fade: 100%; } to { --_fade: 0%; } }
+@keyframes ork-rite-icon { from, to { color: var(--_rite); } }
+@media (prefers-reduced-motion: reduce) { .ork-sigil.is-summoning::before, .ork-sigil.is-summoning::after,
+  .ork-plus:is(:hover, :focus-visible, .is-choosing) > .ork-sigil.is-summoning::after, .ork-sigil.is-summoning ~ .ork-icon { animation: none; } }
 @keyframes ork-sigil-sweep { from { --_turn: 0deg; --_arc: 45deg; } to { --_turn: 360deg; --_arc: 45deg; } }
 @media (prefers-reduced-motion: reduce) { .ork-plus:hover > .ork-sigil::after, .ork-plus:focus-visible > .ork-sigil::after { animation: none; } }
 .ork-card-place { display: block; box-sizing: border-box; aspect-ratio: 5 / 7; pointer-events: none; --_dash: color-mix(in srgb, var(--ork-edge) 45%, transparent);
@@ -696,6 +772,13 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
   .ork-busy::after { animation: none; } }
 .ork-empty { display: grid; place-content: center; justify-items: center; gap: var(--ork-5); min-height: 100%; text-align: center; color: var(--ork-ink-muted); }
 .ork-ork { margin: 0; text-align: left; white-space: pre; color: var(--ork-ink-muted); font: 400 12px/14px var(--ork-font-text); }
+
+/* The glow (0.21.0): a goal's rune while its task is at work, `<span class="ork-elem lava is-glowing">`: its brightness goes from about three fifths to
+   full and back in six steps over 2.4 s, no halo, only the opacity moves. One of the few things that move by themselves (beside .ork-busy, the portal's
+   swirl, the caret and a working head); under reduced motion it stands, at full strength. */
+.ork-elem.is-glowing { animation: ork-glow 2.4s steps(6) infinite; }
+@keyframes ork-glow { 0%, 100% { opacity: 0.62; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .ork-elem.is-glowing { animation: none; opacity: 1; } }
 
 /* --- Motion: how a card answers a hand (orkboard's decisions §149.1 to §149.3). Transforms only, at 60 frames a second; the times, the
    curves, the angle, the rise, the press and the shards' count are tokens (--ork-motion-*), nothing here has one of its own. No idle

@@ -81,3 +81,59 @@ line, a 7 x 7 box at the top three, and the middle 13 cells clear for the +.
 
 `.ork-card-place`: `<span class="ork-card-place" aria-hidden="true"></span>` marks where a pile will lie (the discard before its first card): a card's outline in pixel
 dashes (2 px by 4) in the edge at under half its strength, with no fill, at 5 : 7. The page gives it its width. It cannot be pressed and it never moves.
+
+## 0.21.0: the glow, the seal's free runes and rite, the ring's corners and gate (Orkboard's decisions §187 to §189, spec 111 part A)
+
+**The glow** (`.ork-elem.is-glowing`, with the elements, `../elements/README.md`) is a goal's rune while its task is at work: `<span class="ork-elem lava is-glowing" aria-hidden="true"></span>`.
+Only its opacity moves, from 62 % to full and back in six steps over 2.4 s, with no halo; under reduced motion it stands, at full strength.
+
+**The seal's free runes** are up to four children of `.ork-sigil`, one for each element the addressed party has no goal of, in the order of use 90, 270, 180 and 45 degrees
+clockwise from the top (the top stays the goal's place):
+
+    <span class="ork-sigil" aria-hidden="true">
+      <span class="ork-sigil__seal"><span class="ork-elem dust" aria-hidden="true"></span></span>
+      <span class="ork-sigil__free at-90"><span class="ork-elem void" aria-hidden="true"></span></span>
+      <span class="ork-sigil__free at-270"><span class="ork-elem lava" aria-hidden="true"></span></span>
+    </span>
+
+Each is a 14 x 14 box at a 7 x 7 box of cells on the band (`tools/build_runes.py` `sigil_free` from `sigil.free` in `runes.json`, times 2 px; a test keeps the CSS and the
+generator together). They are hidden at rest. On the card's hover or focus (`.ork-plus:hover`, `.ork-plus:focus-visible`), or while the card has **`.is-choosing`** (a held
+state the page sets), a seal that holds some lets its decorative runes give way (`opacity: 0`) and shows them at 75 %, one after another, 90 ms apart, each in four steps; under
+reduced motion at once. A seal with no free rune is as it was (the sweep). `.small` has none, and a summoning seal hides them. The page decides which runes are free and their
+order; the box is no button (the choice is made in the field).
+
+**The rite** is the seal or the ring filled with the goal's colour, once. Put **`.is-summoning`** on the sigil, or **`.is-sending`** on an open ring, with one of **`.rite-meadow`**,
+**`.rite-ice`**, **`.rite-dust`**, **`.rite-void`**, **`.rite-lava`** (each sets `--_rite` to that element's token) on the same element:
+
+    <span class="ork-sigil is-summoning rite-dust" aria-hidden="true">...</span>                       inside .ork-plus
+    <span class="ork-portal-ring is-open is-sending rite-lava">...</span>
+
+The seal's lines and runes (its `::before` and `::after`), or the ring's runes (its `::after`), are painted in the colour as it turns once round from the top, clockwise, in eight
+steps over `calc(var(--ork-motion-base) * 3.5)` (about 630 ms); the colour then leaves in four steps (starting at 720 ms, 360 ms long, 1.08 s in all). The + takes the colour for the
+fill's last step and keeps it until the class is taken off. It plays once and holds its end, so **the caller takes the classes off** after (the last `animationend`, or a timer of 1.2 s).
+Nothing plays under reduced motion. The ring's rite needs `.is-open`.
+
+**The ring's corners** hold the party before main and the party past it. `.ork-portal-ring__before` (lower left) and `.ork-portal-ring__after` (upper right, its heads in
+reverse order) are boxes the caller makes a button; each holds heads of 24 x 22 with 2 px between, each head in a `.ork-portal-ring__guard` box so it can carry a mark:
+
+    <button class="ork-portal-ring__before is-asleep" type="button" title="Release: open its view">
+      <span class="ork-portal-ring__guard"><img class="ork-race__head" src="races/lich-elder.png" alt=""></span>
+      <span class="ork-portal-ring__guard"><img class="ork-race__head" src="races/skeleton-warrior.png" alt=""><span class="ork-portal-ring__tick" aria-hidden="true"></span></span>
+    </button>
+
+- **`.is-asleep`** draws the corner's heads in grey at 40 % (`filter: grayscale(1); opacity: 0.4`). **`.is-working`** steps the first head, 1 px up and down (1.2 s, two steps; still under reduced motion).
+- **`.ork-portal-ring__tick`** (the check sign, 10 px, `--ork-success`, at the head's lower right) and **`.ork-portal-ring__alert`** (the alert sign, 14 px, `--ork-danger`, above the head) draw
+  themselves: no `.ork-sign` inside.
+- The ring then holds buttons, so the caller puts `aria-hidden="true"` on the ring's decorations (the portal, the seal), not on the ring.
+
+**The gate** is a row of at most three heads in front of the portal's lower part, each check on the way into main one skeleton (a fourth is not drawn):
+
+    <span class="ork-portal-ring__gate">
+      <span class="ork-portal-ring__guard is-working" title="Tests: checking"><img class="ork-race__head big" src="races/skeleton-laborer@2x.png" alt=""></span>
+      <span class="ork-portal-ring__guard is-red" title="Looks: 2 tests fail"><img class="ork-race__head big" src="races/skeleton-elder@2x.png" alt=""><span class="ork-portal-ring__alert" aria-hidden="true"></span></span>
+    </span>
+
+It lies at `top: 104px`, centred, over the portal (`z-index: 5`), its heads 48 x 44 (`.ork-race__head.big`). A guard that is **`.is-working`** steps its head (as above); one that is **`.is-red`**
+has a 2 px drop shadow in `--ork-danger` under its head (the caller adds the alert). A check that has passed leaves the gate for the corner with a tick: the caller moves the markup.
+
+**A guarded portal** is `<span class="ork-portal is-sealed is-guarded">`: the sealed stillness without its X (the skeletons are the seal). Put `.is-sealed` on the ring too.

@@ -1,5 +1,6 @@
 """A goal's element (docs/specs/50-parties-and-goals.md §2.3): `pick`, `give` and what stores it (realm/idea_element.py), the
-`element` of `ideas.add`'s answer, and the Map giving one, once, to a goal of before. Code, no model."""
+`element` of `ideas.add`'s answer, and the Map giving one, once, to a goal of before. Spec 111 B (decisions §187.3): the elements a party has
+no open goal of (`free`, `free_for`, the party nodes' `free_elements`) and the element the person chose, which `ideas.add` takes and `give` stores. Code, no model."""
 from __future__ import annotations
 
 import json
@@ -190,3 +191,84 @@ def test_every_party_of_the_map_carries_the_element_its_next_goal_would_be_given
     assert parties[p]["next_element"] == "void" and parties[q]["next_element"] == "ice" and parties[empty]["next_element"] == "meadow"
     one = host.command("ideas.map", {"goal": p})                                              # one party's Map says the same
     assert [g["next_element"] for g in one["goals"]] == ["void"]
+
+
+# -- the rune chosen (spec 111 B, decisions §187.3) ----------------------------------------------------------------
+
+def test_free_is_what_no_open_goal_has_in_the_order_and_empty_when_none_is_free():
+    free = idea_element.free
+    assert free([]) == list(idea_element.ELEMENTS)
+    assert free(["ice", "void", "ice"]) == ["meadow", "dust", "lava"]
+    assert free(["lava", "void", "dust", "ice", "meadow"]) == []                           # none free: the face shows all of them
+    assert free(["fire"]) == list(idea_element.ELEMENTS)                                   # a word that is no element holds none
+    used = ["ice"]
+    assert free(used) == ["meadow", "dust", "void", "lava"] and used == ["ice"]            # pure
+
+
+def test_free_for_reads_the_partys_open_goals_only(host):
+    root, state = host.ideas.root(), host.ideas.state_dir
+    p, q = party(host), party(host, "Second party")
+    assert idea_element.free_for(root, state, p) == list(idea_element.ELEMENTS)
+    a, b = raw(host, p, "Open one", "working"), raw(host, p, "Open two", "working")
+    ideas.save_state(state, a, element="meadow")
+    ideas.save_state(state, b, element="dust")
+    done = raw(host, p, "Finished", "done")
+    ideas.save_state(state, done, element="lava")
+    other = raw(host, q, "Another party's", "working")
+    ideas.save_state(state, other, element="ice")
+    assert idea_element.free_for(root, state, p) == ["ice", "void", "lava"]                # a done goal and another party's do not count
+    assert idea_element.free_for(root, state, q) == ["meadow", "dust", "void", "lava"]
+    for e, slug in zip(("ice", "void", "lava"), (raw(host, p, "Three", "working"), raw(host, p, "Four", "working"), raw(host, p, "Five", "working"))):
+        ideas.save_state(state, slug, element=e)
+    assert idea_element.free_for(root, state, p) == []                                     # all five are used: empty, never "all"
+
+
+def test_give_takes_the_element_asked_for_stores_it_once_and_ignores_what_is_no_element(host):
+    root, state = host.ideas.root(), host.ideas.state_dir
+    p = party(host)
+    a = raw(host, p, "Chosen")
+    assert idea_element.give(root, state, a, want="void") == "void" and idea_element.of(state, a) == "void"
+    assert idea_element.give(root, state, a, want="lava") == "void"                        # one write, ever
+    b = raw(host, p, "Not an element")
+    assert idea_element.give(root, state, b, want="fire") == "meadow"                      # the rule, as before
+    c = raw(host, p, "Default")
+    assert idea_element.give(root, state, c) == idea_element.pick(["void", "meadow"])
+
+
+def test_every_party_of_the_map_carries_its_free_elements(host):
+    root, state = host.ideas.root(), host.ideas.state_dir
+    p, q, empty = party(host), party(host, "Second party"), party(host, "Third party")
+    for n in range(2):
+        raw(host, p, f"Open {n}", "working")
+    raw(host, p, "Closed", "done")
+    raw(host, q, "Only one", "working")
+    parties = {g["slug"]: g for g in host.command("ideas.map", {})["goals"]}
+    for slug, g in parties.items():
+        assert g["free_elements"] == idea_element.free_for(root, state, slug), slug
+    assert parties[p]["free_elements"] == ["dust", "void", "lava"] and parties[q]["free_elements"] == ["ice", "dust", "void", "lava"] and parties[empty]["free_elements"] == list(idea_element.ELEMENTS)
+    assert parties[p]["next_element"] == parties[p]["free_elements"][0]                    # the default is a free one while one is free
+    for n in range(3):
+        raw(host, p, f"More {n}", "working")
+    assert {g["slug"]: g for g in host.command("ideas.map", {})["goals"]}[p]["free_elements"] == []     # none free: empty
+
+
+def test_ideas_add_gives_the_goal_the_element_chosen_and_the_rule_without_one(host):
+    p = party(host)
+    state = host.ideas.state_dir
+    chosen = host.command("ideas.add", {"text": "Chosen", "track": p, "element": "lava", "hold": True})
+    assert chosen["element"] == "lava" and idea_element.of(state, chosen["slug"]) == "lava"
+    (node,) = [n for n in host.command("ideas.map", {})["nodes"] if n["slug"] == chosen["slug"]]
+    assert node["element"] == "lava"                                                       # the Map reads it, and gives nothing over it
+    ruled = host.command("ideas.add", {"text": "By the rule", "track": p, "hold": True})
+    assert ruled["element"] == "meadow"                                                    # the default untouched: the one used least
+    again = host.command("ideas.add", {"text": "The same one again", "track": p, "element": "lava", "hold": True})
+    assert again["element"] == "lava"                                                      # a rune already used is possible, faint in the field only
+    assert host.command("ideas.add", {"text": "Next by the rule", "track": p, "hold": True})["element"] == "ice"
+
+
+def test_ideas_add_refuses_an_element_that_is_none_of_the_five_and_adds_nothing(host):
+    p = party(host)
+    before = host.command("ideas.board", {})["ideas"]
+    with pytest.raises(Exception, match="five runes"):
+        host.command("ideas.add", {"text": "Fire", "track": p, "element": "fire"})
+    assert host.command("ideas.board", {})["ideas"] == before

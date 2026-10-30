@@ -1,8 +1,10 @@
-// A card of the Board (docs/specs/101-the-cards-the-cascade-and-the-hand-under-the-lanes.md §2, decisions §167.1; the lifting of docs/specs/98-the-table-and-the-hand.md §3.5, §6, decisions §120.1): 144 wide, its goal's element
-// bare at the left of its header and its name beside it (the pixel face, three lines at most), under it a window (the card's own fill, a hairline) with one sign at the signs' big size, toned down — the task's type —, and its
-// label row: the stage's small sign and word, the gem at its right when it spends. The tasks behind the front one lie as a fan (`fanOf`, `TaskEdge`). No foot and no head: who works is on its back and in its party's header. A card is **lifted where it lies** and turns over (`Lifted`): its back
-// the details and **Open**; Esc or a press away lowers it, one at a time. A card leans toward the pointer and rises on orkUI's motion tokens (`.ork-leans`, the page sets `--ork-lean-x/-y`); nothing moves under reduced motion
-// (orkUI's own rule). At the narrow width a lane a token wide lays a goal as one token (`Token`) with its stack's edges, and what is lifted is a screen.
+// A card of the Board (docs/specs/101-the-cards-the-cascade-and-the-hand-under-the-lanes.md §2, decisions §167.1; the lifting of docs/specs/98-the-table-and-the-hand.md §3.5, §6, decisions §120.1; one rune per stack: docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §3.1,
+// decisions §187.1–§187.2): 144 wide, its task's name at the top of its header (the pixel face is never used for it; three lines at most; **no rune**: the goal's rune stands once, on the strip over its stack), under it a window (the card's own fill, a hairline) with one sign
+// at the signs' big size, toned down — the task's type —, and its label row: the stage's small sign and word, the gem at its right when it spends. **A task at work shows the flame**: the goal's rune, glowing (orkUI's `.is-glowing`), takes the place of the stage's
+// small sign, on its card and on its edge; it is the card's only motion of the work, and it stands still under reduced motion. The tasks behind the front one lie as a fan (`fanOf`, `TaskEdge`): an edge holds the stage's sign (and the flame) and, once the fan is opened, the task's
+// name. **A card that is the goal itself** (`OwnCard`: the Orkmaster reading, routing or joining it) has no strip over it: its header holds the goal's rune and its whole title, and it wears the pick (`ork-picked`) a strip would, so a goal in two lanes is lit alike. No foot and no head: who works is on its back and in its party's header.
+// A card is **lifted where it lies** and turns over (`Lifted`): its back the details and **Open**; Esc or a press away lowers it, one at a time. A card leans toward the pointer and rises on orkUI's motion tokens (`.ork-leans`, the page sets `--ork-lean-x/-y`); nothing moves under
+// reduced motion (orkUI's own rule). At the narrow width a lane a token wide lays a goal as one token (`Token`, its rune kept, glowing while its front task is at work) with its stack's edges, and what is lifted is a screen.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
@@ -37,10 +39,10 @@ export const mineKey = (key) => typeof key === "string" && key.startsWith("t:");
 /** What a card of this goal says it is about (the hand's lifted card marks it, hand/about.js): the goal and, for a task, itself. */
 export const aboutTokens = (n, tasks = []) => `idea:${n.slug}${tasks.map((t) => ` task:${n.slug}/${t.id}`).join("")}`;
 
-/** The stage's small sign (14 px) and its word, as a label row or a strip says it. */
-export function Stage({ stage, worked = -1 }) {
+/** The stage's small sign (14 px) and its word, as a label row or a strip says it. `flame`: the goal's element (`{name}`), glowing in the sign's place while the task is at work (decisions §187.2). */
+export function Stage({ stage, worked = -1, flame = null }) {
   const s = STAGES[stage] || STAGES.routing;
-  return html`<span class=${cls("table-stage", { "is-timed": worked >= 0 })}><${Sign} name=${s.sign} /><span class="table-stage__w">${worked >= 0 ? `${s.word} · ${workedWords(worked)}` : s.word}</span></span>`;
+  return html`<span class=${cls("table-stage", { "is-timed": worked >= 0 })}>${flame ? html`<${Elem} name=${flame.name} dim=${!flame.name} glowing=${true} />` : html`<${Sign} name=${s.sign} />`}<span class="table-stage__w">${worked >= 0 ? `${s.word} · ${workedWords(worked)}` : s.word}</span></span>`;
 }
 
 /** The card's window: one sign at the signs' big size, in the goal's colour toned down (an opacity on orkUI's token, table.css). `moon`: the moon beside it (a goal that waits for the reset). */
@@ -48,16 +50,16 @@ function Win({ n, sign, moon = false, danger = false }) {
   return html`<span class=${cls("table-card__win", `is-${typeTone(n)}`, { "is-danger": danger })}>${sign && (sign.startsWith("tool:") ? html`<span class=${`ork-tool ${sign.slice(5)}`} aria-hidden="true"></span>` : html`<${Sign} name=${sign} big=${true} />`)}${moon && html`<${Sign} name="moon" big=${true} />`}</span>`;
 }
 
-/** A task, as a card in its goal's cascade: the goal's element and the task's name, the type in the window, the stage and, at its right, the gem when it spends. A task at work moves and says the time it has worked; a card whose state
- *  changed flashes its frame once (spec 107 §7, table.css; none of it under reduced motion, the time still ticks). */
+/** A task, as a card in its goal's cascade: the task's name (no rune: the goal's is on its strip), the type in the window, the stage and, at its right, the gem when it spends. A task at work shows the flame in the stage's sign's place and says the time it has
+ *  worked; a card whose state changed flashes its frame once (spec 107 §7, table.css; the flash is not played under reduced motion, the time still ticks). */
 export function TaskCard({ n, t }) {
   const key = taskKey(n, t), on = lifted.value === key, bad = t.state === "failed", asks = t.state === "picking", gem = gemOf(t);
   const said = `${t.title}, ${n.short || n.title}: ${footWords(t)}`, worked = useWorked(t.started, aliveState(t.state)), changed = useChanged(t.state);
   return html`<button type="button" class=${cls("ork-card ork-leans table-card", { fails: bad, asks, "is-lifted": on, "is-lit": litKey.value === key, "is-changed": changed })} data-lkey=${key} data-goal=${n.slug} data-task=${t.id}
     data-about=${aboutTokens(n, [t])} data-state=${t.state} data-stage=${stageOf(t)} aria-pressed=${String(on)} aria-label=${said} title=${n.title} onClick=${() => lift(on ? "" : key)} ...${leans}>
-    <span class="table-card__head"><${Elem} name=${n.element} dim=${!n.element} /><span class="table-card__nm" title=${t.title}>${t.short || t.title}</span></span>
+    <span class="table-card__head"><span class="table-card__nm" title=${t.title}>${t.short || t.title}</span></span>
     <${Win} n=${n} sign=${typeSignOf(n, t)} />
-    <span class="table-card__row"><${Stage} stage=${stageOf(t)} worked=${worked} />${gem &&html`<span class="ork-gem share" data-cost=${gem}>${gem}</span>`}</span>
+    <span class="table-card__row"><${Stage} stage=${stageOf(t)} worked=${worked} flame=${aliveState(t.state) ? { name: n.element } : null} />${gem &&html`<span class="ork-gem share" data-cost=${gem}>${gem}</span>`}</span>
   </button>`;
 }
 
@@ -82,20 +84,20 @@ export function fanOf(count) {
   return { cards, style: `--of:${at}px;--span:${open}px` };
 }
 
-/** A task behind the front one, as its edge on the goal's fan: the goal's element and the stage's small sign, no name until the fan is opened by a hover or the focus; a press lifts the task. */
+/** A task behind the front one, as its edge on the goal's fan: the stage's small sign (the goal's rune glowing before it while the task is at work), no name until the fan is opened by a hover or the focus; a press lifts the task. */
 export function TaskEdge({ n, t, hint = false }) {
-  const key = taskKey(n, t), on = lifted.value === key, bad = t.state === "failed", asks = t.state === "picking";
+  const key = taskKey(n, t), on = lifted.value === key, bad = t.state === "failed", asks = t.state === "picking", alive = aliveState(t.state);
   return html`<button type="button" class=${cls("ork-card table-fan__card table-tedge", { fails: bad, asks, "is-lifted": on, "is-lit": litKey.value === key, "is-hint": hint })} data-lkey=${key} data-goal=${n.slug} data-task=${t.id}
     data-about=${aboutTokens(n, [t])} data-state=${t.state} data-stage=${stageOf(t)} aria-pressed=${String(on)} aria-label=${`${t.title}: ${STAGES[stageOf(t)].word}${bad ? ", failed" : ""}`} title=${t.title}
-    onClick=${() => lift(on ? "" : key)}><${Elem} name=${n.element} dim=${!n.element} /><span class="table-fan__nm">${t.short || t.title}</span><${Sign} name=${STAGES[stageOf(t)].sign} /></button>`;
+    onClick=${() => lift(on ? "" : key)}>${alive && html`<${Elem} name=${n.element} dim=${!n.element} glowing=${true} />`}<span class="table-fan__nm">${t.short || t.title}</span><${Sign} name=${STAGES[stageOf(t)].sign} /></button>`;
 }
 
-/** A goal the Orkmaster reads, routes or joins itself, as a card in the first lane (under its strip): the same face, its stage *Reading*, *Routing* or *Joining*. */
+/** A goal the Orkmaster reads, routes or joins itself, as a card in the first lane (no strip over it: the card is the goal's): the same face with the goal's rune and its whole title in the header, its stage *Reading*, *Routing* or *Joining*. */
 export function OwnCard({ n, stage }) {
   const key = ownKey(n), on = lifted.value === key;
-  return html`<button type="button" class=${cls("ork-card ork-leans table-card table-card--own", { "is-lifted": on, "is-lit": litKey.value === key })} data-lkey=${key} data-goal=${n.slug} data-about=${aboutTokens(n)} data-state=${n.state}
+  return html`<button type="button" class=${cls("ork-card ork-leans table-card table-card--own", { "is-lifted": on, "is-lit": litKey.value === key, "ork-picked": picked.value === n.slug })} data-lkey=${key} data-goal=${n.slug} data-about=${aboutTokens(n)} data-state=${n.state}
     data-stage=${stage} aria-pressed=${String(on)} aria-label=${`${n.title}: ${doingWords(n)}`} onClick=${() => lift(on ? "" : key)} ...${leans}>
-    <span class="table-card__head"><${Elem} name=${n.element} dim=${!n.element || n.state === "reading"} /><span class="table-card__nm" title=${n.title}>${n.short || n.title}</span></span>
+    <span class="table-card__head"><${Elem} name=${n.element} dim=${!n.element || n.state === "reading"} /><span class="table-card__nm" title=${n.title}>${n.title}</span></span>
     <${Win} n=${n} sign=${n.type?.sign || ""} />
     <span class="table-card__row"><${Stage} stage=${stage} /></span>
   </button>`;
@@ -111,7 +113,7 @@ export function Token({ n, tasks = [], stage = "" }) {
     ${Array.from({ length: edges }, (_, k) => html`<i key=${k} class="ork-card table-edge" style=${`--ork-deck-i:${k + 1}`} aria-hidden="true"></i>`)}
     <button type="button" class=${cls("ork-card table-token", { fails: bad, "is-lifted": on, "is-lit": litKey.value === key, "ork-picked": picked.value === n.slug })} data-lkey=${key} data-goal=${n.slug} data-task=${front?.id}
       data-about=${aboutTokens(n, tasks)} data-state=${front ? front.state : n.state} data-stage=${st} aria-pressed=${String(on)} aria-label=${words} title=${words} onClick=${() => lift(lifted.value === key ? "" : key)}>
-      <span class="table-card__top"><${Elem} name=${n.element} dim=${!n.element} /><${Sign} name=${(STAGES[st] || STAGES.routing).sign} /></span>
+      <span class="table-card__top"><${Elem} name=${n.element} dim=${!n.element} glowing=${!!front && aliveState(front.state)} /><${Sign} name=${(STAGES[st] || STAGES.routing).sign} /></span>
       <${Win} n=${n} sign=${front ? typeSignOf(n, front) : n.type?.sign || ""} danger=${bad} />
     </button>
   </span>`;

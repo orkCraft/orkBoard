@@ -28,7 +28,9 @@ Plain HTML and CSS, no script and no inner markup:
 
 **Its place on the table** is `.ork-portal-ring` (`../runes/README.md`, 0.19.0): a ring of seven runes, with the place of a goal's element at its top (`.ork-portal-ring__seal`), laid before there is anything to send,
 192 x 192, with the portal inside it (`<span class="ork-portal-ring is-open"><span class="ork-portal"></span></span>`). Asleep it is grey and still,
-`is-open` lights its runes in `--ork-portal`, `is-sealed` greys them again, and `is-waking` opens it once.
+`is-open` lights its runes in `--ork-portal`, `is-sealed` greys them again, and `is-waking` opens it once. **0.21.0**: the ring keeps the road's corners
+(`.ork-portal-ring__before` Release, `.ork-portal-ring__after` Live) and the gate of heads that stand before the portal while the way into main is checked (`.ork-portal-ring__gate`); a portal guarded by them is
+`<span class="ork-portal is-sealed is-guarded">`, sealed without its X; `.ork-portal-ring.is-sending` with `.rite-<element>` plays the rite once: `../runes/README.md`.
 
 It needs `color-mix()` and `box-shadow` lists in custom properties (Chromium 111, Firefox 113, Safari 16.2 or later).
 

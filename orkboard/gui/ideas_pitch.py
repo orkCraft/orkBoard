@@ -40,10 +40,12 @@ class PitchMixin:
             return None
         return {**pitches.face(root, self.state_dir, slug, state, self.target_of_idea(slug)), "goal_state": idea_route.goal_state(root, self.state_dir, slug)}
 
-    def element_for(self, slug: str, pitch: str = "") -> str:
-        """A new goal's element (spec 50 §2.3): the one it has, else, for a goal sent from a pitch, the pitch's own when no open goal of the
-        target party wears it (spec 68 §2.3), else the one used least."""
+    def element_for(self, slug: str, pitch: str = "", chosen: str = "") -> str:
+        """A new goal's element (spec 50 §2.3): the one it has, else the one the person chose (`ideas.add`'s `element`, decisions §187.3), else, for a goal
+        sent from a pitch, the pitch's own when no open goal of the target party wears it (spec 68 §2.3), else the one used least."""
         root = self.root()
+        if chosen:
+            return idea_element.give(root, self.state_dir, slug, want=chosen)       # (`ideas.add` stored it with the goal already: this is the one it has)
         mine = idea_element.of(self.state_dir, pitch) if pitch else ""
         if mine and not idea_element.of(self.state_dir, slug):
             page = ideas.idea_page(root, slug)

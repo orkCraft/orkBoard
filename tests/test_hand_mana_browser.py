@@ -1,7 +1,8 @@
 """The mana in the hand (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §3, §7; decisions §175.2, §176.1–§176.2), in a real browser against a stub host, at the two widths of `tests/narrow.py`: the AI tools' limits
 as potions at the hand's right end, flush against the window's edge: one potion a tool in the chips' order, one row of up to three at the default size and two rows of two small ones for four and of three for five or six, the first five and a
 *+n* for more, each tool's mark in its own colour above it and its share under it, the chip's words on the button, a press opening what used the tool over the pane, a tool not read an empty potion with *?*, a card lifted
-that spends hatching its share off its tool's potion; the tabs' end holds no chip. Screenshots to $MANA_SHOTS when it is set."""
+that spends hatching its share off its tool's potion; the tabs' end holds no chip. Spec 111 B (decisions §189.2): a potion hovered or focused outlines its tool's marks on the tabs and its words say how many parties do and check
+on it. Screenshots to $MANA_SHOTS when it is set."""
 from __future__ import annotations
 
 import os
@@ -440,6 +441,47 @@ def test_the_paid_slot_with_no_known_cost_says_so_and_has_no_price(gui):
         settle(pg, host)
         pg.wait_for_function("() => !document.querySelector('.hand-pot--paid')")
         assert framed_on(pg) == "claude"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+# -- who drinks from a potion (spec 111 §3.4, decisions §189.2) ---------------------------------------------------------------------------------
+
+def with_marks(host):
+    """The four parties with their sword and shield as `ideas.map` serves them: Tech does on Claude and checks on Codex, Design is Lean on Claude, Product does on Codex and checks on Claude, Release does and checks on Claude."""
+    for p, (does, checks, lean) in zip(host.parties, [("claude", "codex", False), ("claude", "", True), ("codex", "claude", False), ("claude", "claude", False)]):
+        p.update(does_tool=does, checks_tool=checks, does_mixed=False, checks_mixed=False, lean=lean)
+
+
+def marked(pg):
+    return sorted(pg.locator(".table-tab .is-marked").evaluate_all("els => els.map((e) => [e.closest('.table-tab').dataset.tab, e.dataset.tool])"))
+
+
+def test_a_potion_hovered_or_focused_marks_its_tools_marks_on_the_tabs_and_its_words_say_who_drinks_from_it(gui):
+    host = HandHost()
+    host.limits = TWO
+    with_marks(host)
+    pg, host, log = open_hand(gui, host)
+    try:
+        p = pots(pg)
+        pg.locator(".table-tab__marks").first.wait_for(timeout=WAIT_MS)
+        assert marked(pg) == []
+        assert p.nth(0).get_attribute("aria-label") == "Claude Code: 62% of the week left, the default. 3 parties do on it, 2 parties check on it"     # Tech, Design and Release do (Product does on Codex), Product and Release check (Design is Lean)
+        assert p.nth(1).get_attribute("aria-label") == "Codex: 18% of the week left. 1 party does on it, 1 party checks on it" and p.nth(1).get_attribute("title") == p.nth(1).get_attribute("aria-label")
+        p.nth(1).hover()
+        pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length > 0", timeout=WAIT_MS)
+        assert marked(pg) == [["product", "codex"], ["tech", "codex"]]                                                         # Codex's marks only
+        assert pg.locator(".table-tab .is-marked").first.evaluate("e => getComputedStyle(e).outlineWidth") == "1px"
+        shot(pg, "wide-potion-marks")
+        pg.mouse.move(5, 300)
+        pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length === 0", timeout=WAIT_MS)
+        p.nth(0).focus()
+        pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length > 0", timeout=WAIT_MS)
+        assert ["design", "claude"] in marked(pg) and all(t == "claude" for _, t in marked(pg)) and ["product", "claude"] in marked(pg)
+        assert ["design", "claude"] in marked(pg) and len([m for m in marked(pg) if m[0] == "design"]) == 1, "a Lean party's shield has no mark to outline"
+        pg.evaluate("() => document.activeElement.blur()")
+        pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length === 0", timeout=WAIT_MS)
     finally:
         pg.close()
     assert not log, "\n".join(log)
