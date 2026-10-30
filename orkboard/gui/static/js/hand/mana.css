@@ -1,5 +1,6 @@
 /* The mana (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §3, decisions §176.2): the AI tools' potions at the hand's right end, flush against the window's edge. Layout only: the bottle, its liquid and
-   the blue are orkUI's (`.ork-potion`, `--ork-mana`); the share's colour is the signals' tokens. One to three potions in one row, four in two rows of two, five or six in two rows of three (the small size), the narrow width's all small. */
+   the blue are orkUI's (`.ork-potion`, `--ork-mana`); the share's colour is the signals' tokens.
+   Spec 114 B (decisions §192): every bottle, whatever its size (`size-medium|small|vial`), stands on its floor in a slot of the large bottle's size (14 x 18 cells), so the row never moves; under it the now share in bold, the week's muted. One to three potions in one row, four in two rows of two, five or six in two rows of three (the small size), the narrow width's all small. */
 
 .hand-mana { position: relative; display: grid; grid-auto-flow: column; align-items: start; justify-items: center; flex: none; pointer-events: auto; }
 .hand-mana[data-rows="2"] { grid-auto-flow: row; grid-template-columns: repeat(3, auto); }
@@ -25,18 +26,31 @@
 .hand-pot__initial { display: block; height: 16px; color: var(--ork-ink-muted); font: var(--ork-type-body); font-weight: 600; line-height: 16px; }
 .hand-pot__share { color: var(--ork-ink); font: var(--ork-type-caption); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: center; }
 .hand-pot__took { color: var(--ork-ink-muted); font-weight: 400; }
+.hand-pot__week { color: var(--ork-ink-muted); font: var(--ork-type-caption); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: center; }
+.hand-pot__slot { display: flex; flex: none; align-items: flex-end; justify-content: center; width: 42px; height: 54px; }                       /* the large bottle's box at 3 px a cell (orkUI: 14 x 18) */
+.hand-pot__slot.is-small { width: 28px; height: 36px; }                                                                                 /* and at the small size, 2 px a cell */
 .hand-pot.is-warn .hand-pot__share { color: var(--ork-alert); }
 .hand-pot.is-danger .hand-pot__share { color: var(--ork-danger); }
 .hand-pot.is-unread .hand-pot__share { color: var(--ork-ink-muted); }
 .hand-pot--more { align-self: center; justify-content: center; min-height: 44px; }
 .hand-pot--more .hand-pot__initial { color: var(--ork-ink-muted); font: var(--ork-type-caption); font-weight: 600; height: auto; line-height: 16px; }
 
-/* the hand's height is the cards': two rows of potions (four tools and more) lie in it when they fit, and when they do not the hand grows by what they need and no more (spec 104 §3.4): a potion is its padding, the mark,
-   the bottle at the small size (36 px) and the share's line */
-.hand { --hc-cap: 16px; --hc-pots: calc(2 * (var(--ork-1) * 6 + 16px + 36px + var(--hc-cap))); }
+/* the hand's height is the cards': two rows of potions (four tools and more) lie in it when they fit, and when they do not the hand grows by what they need and no more (spec 104 §3.4): a potion is its padding, the mark, the slot of the
+   large bottle at the small size (36 px) and the line or two under it. At the wide width the now share and the week's lie on one line in two rows (the room is across, not down: the hand is no taller than with one share, so the portal ring above
+   the discard keeps clear of the pane's head); at the narrow width they stand over each other (the room is down, not across: a potion is no wider than its share) and the hand grows by the second line, one row of potions too (spec 114 B). */
+.hand { --hc-cap: 16px; --hc-pots: calc(2 * (var(--ork-1) * 6 + 16px + 36px + var(--hc-cap))); --hc-pot1: calc(var(--ork-1) * 6 + 16px + 36px + 2 * var(--hc-cap)); }
 @media (max-width: 1023px) { .hand { --hc-cap: 18px; } }
 .hand:has(.hand-mana[data-rows="2"][data-paid]) { --hc-pots: calc(2 * (var(--ork-1) * 6 + 16px + 36px + var(--hc-cap)) + var(--hc-cap) + var(--ork-1)); }      /* the paid slot's price is a second line under *API* */
 .hand:has(.hand-mana[data-rows="2"]) .hand-places { height: max(calc(var(--hc-room) + var(--hc-top) + var(--hc-shown)), calc(var(--hc-room) + var(--hc-top) + var(--hc-pots))); }
+.hand-pot__shares { display: flex; flex-direction: column; align-items: center; }
+@media (min-width: 760px) { .hand-mana[data-rows="2"] .hand-pot__shares { flex-direction: row; align-items: baseline; gap: var(--ork-1); } }
+@media (max-width: 759.98px) {
+  .hand { --hc-pot1: calc(var(--ork-1) * 4 + 16px + 36px + 24px); --hc-pots: calc(2 * var(--hc-pot1)); }                                  /* a potion at the phone's width: its border, the mark, the slot and two lines of 12 px, no padding above and under */
+  .hand:has(.hand-mana[data-rows="2"][data-paid]) { --hc-pots: calc(2 * (var(--ork-1) * 6 + 16px + 36px + var(--hc-cap)) + var(--hc-cap) + var(--ork-1)); }
+  .hand-pot { padding-block: 0; }
+  .hand-pot__share, .hand-pot__week { line-height: 12px; }
+  .hand:has(.hand-mana[data-rows="1"]) .hand-places { height: max(calc(var(--hc-room) + var(--hc-top) + var(--hc-shown)), calc(var(--hc-room) + var(--hc-top) + var(--hc-pot1))); }
+}
 
 /* the Play die (spec 112 §3.3, decisions §190.2, hand/playdie.js): orkUI's `.ork-die` (69 x 60, 3 px a cell) lying in the hand left of the potions, turned by the lean token, its word under it as a potion's share is. Hovered or focused it stays lifted by
    the rise token (the wobble itself is orkUI's `.is-wobbling`, put on at pointer enter); thrown onto the pane it is hidden, kept in its place. At the narrow width it keeps its 3 px and stands beside the potions as they stand. */
@@ -61,5 +75,6 @@
   .hand-die { order: 101; margin-left: auto; }                                                                    /* the die's own 69 px; a crowded row has no room to spare: the cards tighten to their edges first, then the room kept for the last card gives way (hand.css) and the die lies over that card's edge */
   .hand-row:has(.hand-mana[data-rows="2"]) .hand-die { margin-right: -6px; }                                      /* four tools and more (two rows of potions, wider): the die's edge lies over the first potion's empty border, the row has no room else */
   .hand-die + .hand-mana { margin-left: 0; }                                                                    /* the die and the potions stand together at the row's end */
-  .hand-pot { min-width: 0; }                                                                                /* the cards of the row tighten for them: a potion is as wide as its share (tall past 44) */
+  .hand-pot__week-name, .hand-pot__week--of { display: none; }                                              /* the phone's potions keep their narrow width: the week's share alone under the now share (its words are on the control) */
+  .hand-pot { min-width: 0; padding-inline: var(--ork-1); }                                                                                /* the cards of the row tighten for them: a potion is as wide as its share (tall past 44) */
 }

@@ -120,6 +120,10 @@ fills the body from the bottom by `--ork-potion-left` (0 to 1; eight rows, so an
 `--ork-alert` and `--ork-danger`. The edge is `--ork-edge`, the glass `--ork-panel`, the cork `--ork-ink-muted`, a highlight on the liquid
 lighter toward the ink. No words inside: the caller says the share.
 
+**Four sizes** (0.23.0): `size-medium` (12 x 14), `size-small` (10 x 10) and `size-vial` (8 x 9) beside the large, each a bottle drawn on its own grid,
+never the large scaled, at the same cell (3 px, `.small` 2 px): 36 x 42, 30 x 30 and 24 x 27. `<span class="ork-potion size-small is-danger" style="--ork-potion-left:.4" aria-hidden="true"></span>`.
+The liquid steps by each bottle's own rows (medium eight, small and vial five), rounded up. Generated: `python tools/build_potion.py` from `potion/sizes.json`.
+
 **`--ork-mana`** `#7b97b8` is the liquid while there is room to spend: a dim, desaturated blue (CIELAB L* 61.5, hue 265, chroma 20),
 about as bright as `--ork-ink-muted` (L* 69; it is a little darker), so it does not pull the eye. It is a signal (*there is room*),
 used by `.ork-potion` alone, never a text colour, a fill or an element's: 5.63:1 on the panel, 4.54 on the card, 3:1 or more on every ground,

@@ -1,0 +1,8 @@
+{
+  "_": "The three smaller potions (orkUI 0.23.0), after Orkboard's mockup docs/mockups/mana-two/ (SIZES): a bottle is its rows' widths, centred on the grid's width w. Row 0 is the cork; a cell with an empty neighbour on its four sides (or the cork above it) is the edge; the rest is glass, and from row `neck` down it is where the liquid stands. The large (14 x 18) is the hand-drawn silhouette.svg, body.svg and shine.svg beside this file.",
+  "sizes": {
+    "medium": { "w": 12, "neck": 5, "rows": [4, 6, 4, 4, 4, 6, 8, 10, 10, 10, 10, 8, 6, 4] },
+    "small": { "w": 10, "neck": 4, "rows": [4, 6, 4, 4, 6, 8, 8, 8, 6, 4] },
+    "vial": { "w": 8, "neck": 3, "rows": [4, 6, 4, 6, 6, 6, 6, 6, 4] }
+  }
+}
