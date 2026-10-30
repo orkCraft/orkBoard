@@ -1,7 +1,9 @@
 /* The portal to main (docs/specs/105-the-default-tool-moving-on-and-the-portal.md §6, decisions §177.4; mockup docs/mockups/portals/): layout only. The portal itself is orkUI's `.ork-portal` (its drawing, its states `is-taking`, `is-sealed`,
    `is-new`, its size `small`); every colour, face and move is orkUI's. It opens above the pile in the table's right column (`.table-end`), the line over it and the pixel-face label *Main*; the sealed reason lies under it in the danger
    colour. The goals ready for main are cards in the discard's view, the hand card's anatomy at the hand's size on each width (80 px wide at the narrow one, as the pile is): the card's own rules are the hand's (hand.css),
-   copied here for the view (they are scoped to the hand and the table's end there). */
+   copied here for the view (they are scoped to the hand and the table's end there).
+   At 760 px and up (docs/specs/110-runes-on-the-table.md §3.2, decisions §185.2) the host is the ring's column, 192 px wide (the whole width of `.table-end`, discard.css), always laid: the line over the label *Main* (in the faint ink while the ring is asleep),
+   orkUI's `.ork-portal-ring` (asleep, open or sealed) with the portal inside it and the goal's element in its seal, the first-time line and the sealed reason under it. */
 
 .portal-host { display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); align-self: flex-end; width: calc(var(--hc-w) + var(--ork-8)); margin-bottom: var(--ork-3); text-align: center; }
 .portal__line { margin: 0; color: var(--ork-ink); font: var(--ork-type-caption); overflow-wrap: anywhere; }
@@ -32,4 +34,11 @@
 @media (max-width: 759.98px) {
   .portal-host { width: 136px; gap: var(--ork-1); margin-bottom: var(--ork-2); }
   .table-body:has(.portal-host) .hand-discardview { padding-right: calc(136px + var(--ork-3)); }
+}
+
+@media (min-width: 760px) {
+  .portal-host { width: 100%; }
+  .portal-host.is-ring { gap: var(--ork-3); margin-bottom: 0; }
+  .portal-host.is-asleep .portal__label { color: var(--ork-ink-faint); opacity: 0.6; }
+  .portal-host .ork-portal-ring { flex: none; }
 }

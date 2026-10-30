@@ -156,3 +156,37 @@ def test_a_goal_not_yet_read_has_one_too(host):
     a = host.command("ideas.add", {"text": "Not read yet", "track": p, "hold": True})
     (node,) = host.command("ideas.map", {})["nodes"]
     assert node["state"] == "raw" and node["element"] == a["element"] != ""
+
+
+# -- next_for -----------------------------------------------------------------------------------------------------
+
+def test_next_for_is_what_give_gives_the_next_goal_of_that_party(host):
+    root, state = host.ideas.root(), host.ideas.state_dir
+    p, q = party(host), party(host, "Second party")
+    assert idea_element.next_for(root, state, p) == "meadow"
+    for n in range(7):
+        want = idea_element.next_for(root, state, p)
+        assert idea_element.next_for(root, state, p) == want                                  # it reads and stores nothing
+        got = idea_element.give(root, state, raw(host, p, f"Goal number {n}", "working"))
+        assert got == want
+    done = raw(host, p, "Finished", "done")
+    ideas.save_state(state, done, element="lava")
+    assert idea_element.next_for(root, state, p) == idea_element.pick(idea_element.open_elements(root, state, p))   # a done goal does not count
+    assert idea_element.next_for(root, state, q) == "meadow"                                  # each party counts its own
+
+
+def test_every_party_of_the_map_carries_the_element_its_next_goal_would_be_given(host):
+    p, q, empty = party(host), party(host, "Second party"), party(host, "Third party")
+    for n in range(3):
+        raw(host, p, f"Open {n}", "working")
+    raw(host, p, "Closed", "done")
+    raw(host, q, "Only one", "working")
+    root, state = host.ideas.root(), host.ideas.state_dir
+    got = host.command("ideas.map", {})
+    parties = {g["slug"]: g for g in got["goals"]}
+    assert {p, q, empty} <= set(parties)
+    for slug, g in parties.items():
+        assert g["next_element"] == idea_element.next_for(root, state, slug), slug
+    assert parties[p]["next_element"] == "void" and parties[q]["next_element"] == "ice" and parties[empty]["next_element"] == "meadow"
+    one = host.command("ideas.map", {"goal": p})                                              # one party's Map says the same
+    assert [g["next_element"] for g in one["goals"]] == ["void"]

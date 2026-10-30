@@ -1,9 +1,10 @@
-// The discard (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §4, decisions §176.3; docs/specs/101 §4.4, decisions §145.4, §159, §167.7): it lies on the table, at the foot of its last column (the one right of
+// The discard (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §4, decisions §176.3, §185.3; docs/specs/101 §4.4, decisions §145.4, §159, §167.7): it lies on the table, at the foot of its last column (the one right of
 // the lanes), the hand card's size, with the word *Discard* above it, on every tab. It was the hand's (hand/discard.js); the hand imports nothing of it. Its sheet is discard.css (the card's anatomy and sizes are the hand's, hand.css).
 // The last goal done lies face up on a card's face (its element and name in the header, the check in the window, *Done* in the label row) with the backs of the others under it; while dev holds goals main lacks (the gate), its
 // window carries the lich's head and its foot *n goals ready for main*; with nothing done to see, that line alone is on its back. Pressed, it opens over the pane (`discard`): the goals done and not yet seen (a goal pressed opens
-// its Result and tells the host it was seen, `ideas.seen`, and it leaves the discard), and *Ready for main*: each goal ready is a card (table/portal.js, spec 105 F: pressed or dragged it opens the portal over the pile, which sends that goal alone to main) and **To main** (dev whole, for a person's own commits, by code). No act on main lies on the pile (§160.5): the pile only shows and opens.
-// No part with nothing done and nothing ready for main.
+// its Result and tells the host it was seen, `ideas.seen`, and it leaves the discard), and *Ready for main*: each goal ready is a card (table/portal.js, spec 105 F: pressed or dragged it is chosen for the portal in the ring over the pile, which sends that goal alone to main) and **To main** (dev whole, for a person's own commits, by code). No act on main lies on the pile (§160.5): the pile only shows and opens.
+// At the wide width (760 px and up) the end is always laid (docs/specs/110-runes-on-the-table.md §3.2, decisions §185, §186): the portal's ring over the label *Discard*, and with nothing done and nothing ready for main orkUI's `.ork-card-place`
+// (a card's outline in dashes, nothing to press) where the pile will lie, so the first goal done lands on a place. At the narrow width, as before, no part with nothing done and nothing ready for main.
 import { useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Head, Sign } from "../orkui.js";
@@ -13,7 +14,8 @@ import { closeOver, openOver, over } from "../frame/state.js";
 import { drawn } from "../frame/kinds.js";
 import { doneOf, readyOf, readyWords } from "../hand/data.js";
 import { leans } from "../hand/motion.js";
-import { Portal, ReadyCards } from "./portal.js";
+import { Portal, ReadyCards, useNarrow } from "./portal.js";
+import { uprightNow } from "../frame/upright.js";
 
 const LICH = { race: "lich", tier: "elder" };
 const EDGES = 3;
@@ -76,10 +78,11 @@ export function DiscardView() {
   </div>`;
 }
 
-/** The pile's place on the table: the last column's foot, the word *Discard* above the pile (discard.css); nothing with nothing done and nothing ready for main. */
+/** The table's end: the portal's place, the word *Discard* and the pile's place (discard.css). At the wide width it is always laid, the pile's place a dashed outline until a goal is done or ready; at the narrow one (and on a phone) nothing with nothing done and nothing ready for main. */
 export function DiscardEnd() {
-  if (!hasDiscard()) return null;
-  return html`<div class="table-end" data-end="discard"><${Portal} /><span class="table-end__label">Discard</span><${Discard} /></div>`;
+  const narrow = useNarrow(), laid = !narrow && !uprightNow.value;
+  if (!laid && !hasDiscard()) return null;
+  return html`<div class="table-end" data-end="discard"><${Portal} /><span class="table-end__label">Discard</span>${hasDiscard() ? html`<${Discard} />` : html`<span class="ork-card-place table-place" aria-hidden="true"></span>`}</div>`;
 }
 
 drawn("discard", DiscardView);

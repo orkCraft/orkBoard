@@ -1,4 +1,6 @@
 // The + card and the field it grows into (docs/specs/101 §4.2, docs/specs/98-the-table-and-the-hand.md §4.1, decisions §160.2, §167.5): the new goal's card lies at the first lane's left end, whole and face up, a + on its face, in its own frame (hand.css, spec 107 §13): the Orkmaster's stacks fan to its right, nothing lies over it.
+// Under the + lies the seal of summoning (docs/specs/110-runes-on-the-table.md §3.3, decisions §185.4, §186.3): orkUI's `.ork-sigil`, its top holding the element the goal being written would be given, the addressed party's `next_element`
+// (the map says it; none on the Orkmaster's tab until a party is named with *@*, and then the place is empty). The seal is `small` at the narrow width.
 // Pressed (or a key typed with nothing focused), it grows into the field over the hand: one field, *Write a goal…*. Enter sends, Shift+Enter is a new line, a picture pasted goes with
 // it (`photos`, as the old New goal took them), Esc or a press away closes it and keeps its text. No priority, no kind. On a party's tab it is addressed to that party (*→ Tech ×*,
 // one press takes it off); *@Tech* in the text addresses it too; on the Orkmaster's tab it is general and the Orkmaster routes it by code (`ideas.add` with no party). The page has no
@@ -17,11 +19,16 @@ import { MarkChips, addressNow, marks, marksToSend, resetMarks } from "../table/
 import { leans } from "./motion.js";
 import { MentionList, useMention } from "./mention.js";
 import { mapData } from "../shell/store.js";
+import { Elem } from "../orkui.js";
+import { useNarrow } from "../table/portal.js";
 
 /** The + card. `large`: the card in the pane's middle, with no goal at all. */
 export function PlusCard({ large = false, onPress }) {
+  const narrow = useNarrow(), address = addressNow();
+  const element = (address.party && partiesOf(mapData.value).find((g) => g.slug === address.party)?.next_element) || "";       // the rune the new goal would be given, in the seal's place
   return html`<button type="button" class=${cls("ork-card ork-plus ork-leans hand-plus", { "is-large": large })} aria-label="New goal" title="New goal" aria-haspopup="dialog"
-    aria-expanded=${fieldOpen.value ? "true" : "false"} onClick=${onPress} ...${leans}><${Icon} name="plus" /></button>`;
+    aria-expanded=${fieldOpen.value ? "true" : "false"} onClick=${onPress} ...${leans}>
+    <span class=${cls("ork-sigil", { small: narrow })} aria-hidden="true"><span class="ork-sigil__seal">${element && html`<${Elem} name=${element} />`}</span></span><${Icon} name="plus" /></button>`;
 }
 
 /** Pictures pasted or chosen: shrunk as the old form shrank them, at most four. */

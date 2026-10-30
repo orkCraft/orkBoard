@@ -45,6 +45,7 @@ class MapMixin:
                 if n["state"] != "done":
                     used[n["goal"]].append(n["element"])
         for g in got["goals"]:
+            g["next_element"] = idea_element.pick(used.get(g["slug"], []))                 # what a new goal of this party would be given (`idea_element.next_for`, from the elements read above)
             g["types"] = self.types_of(root, g["slug"], [n["slug"] for n in got["nodes"] if n["goal"] == g["slug"]])
             g["stages"] = self.stages_of(root, g["slug"])
             g["concerns"] = self.concerns_counts(g["slug"])                              # its leader's concerns on its map, for its tab (spec 108 §2.5)

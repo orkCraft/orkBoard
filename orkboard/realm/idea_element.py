@@ -6,6 +6,7 @@ and never name it.
     idea_element.pick(["ice", "ice", "dust"])                  # "meadow": the one used least, ties in ELEMENTS' order
     idea_element.of(state_dir, "dark-mode")                    # "" before one is given
     idea_element.give(root, state_dir, "dark-mode")            # the one it has, else the one it is given now (stored)
+    idea_element.next_for(root, state_dir, "tech")             # the one a new goal of that party would be given (the + card's seal shows it)
 
 No face, no model.
 """
@@ -40,6 +41,12 @@ def open_elements(root: Path, state_dir: Path, party: str, besides: str = "") ->
         if st["state"] != "done" and st.get("element") in ELEMENTS:
             out.append(st["element"])
     return out
+
+
+def next_for(root: Path, state_dir: Path, party: str) -> str:
+    """The element a new goal of the party would be given now (decisions §186.3): the rule `give` uses, so the rune the + card's seal shows
+    is the one the goal gets. Reads, stores nothing."""
+    return pick(open_elements(root, state_dir, party))
 
 
 def give(root: Path, state_dir: Path, slug: str, used: list[str] | None = None) -> str:

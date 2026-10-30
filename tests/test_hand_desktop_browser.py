@@ -34,10 +34,13 @@ def head(race, craft="engineering", tier="elder"):
 PARTIES = [("tech", "Tech", "shaman", "engineering"), ("design", "Design", "dryad", "design"), ("product", "Product", "unicorn", "product"), ("release", "Release", "lich", "engineering")]
 
 
+NEXT_ELEMENT = {"tech": "ice", "design": "dust", "product": "void", "release": "lava"}          # what a new goal of each party would be given (`ideas.map`'s `next_element`, spec 110 §3.1)
+
+
 def party(slug, name, race, craft):
     lead = {"slug": f"{slug}-lead", "name": f"{name} lead", "head": head(race, craft)}
     return {"slug": slug, "title": name, "short": name, "priority": "normal", "state": "ready", "done_when": [], "ideas": 0, "done": 0, "usd": None, "leader": lead,
-            "team": [], "party": [], "today": {"merged": 0, "usd": 0.0}, "flags": 0, "waits_main": 0, "brief": "", "craft": craft, "race": race, "ideation": False}
+            "team": [], "party": [], "today": {"merged": 0, "usd": 0.0}, "flags": 0, "waits_main": 0, "brief": "", "craft": craft, "race": race, "ideation": False, "next_element": NEXT_ELEMENT.get(slug, "meadow")}
 
 
 def node(slug, goal, title, place, state="ready", element="meadow", **more):
@@ -494,6 +497,80 @@ def test_with_no_goal_at_all_the_plus_card_lies_large_in_the_panes_middle(gui):
 
 
 # -- the + card and its field -------------------------------------------------------------------------------------------------------------
+
+def _seal(pg, large=False):
+    """The element lying in the + card's seal: its class name ("" when the place is empty)."""
+    inner = pg.locator(f".hand .hand-plus{'.is-large' if large else ''} > .ork-sigil > .ork-sigil__seal > .ork-elem")
+    return inner.get_attribute("class").replace("ork-elem", "").strip() if inner.count() else ""
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_the_plus_card_bears_the_seal_of_summoning_with_the_next_goals_element_and_no_hatch(gui, width):
+    pg, host, log = open_hand(gui, width=width)
+    try:
+        pg.locator(".hand-plus").wait_for(timeout=WAIT_MS)
+        plus = _plus(pg)
+        sigil = plus.locator("> .ork-sigil")
+        assert sigil.count() == 1 and sigil.get_attribute("aria-hidden") == "true" and plus.locator("> .ork-sigil__seal, > .ork-sigil > .ork-sigil__seal").count() == 1
+        assert sigil.evaluate("e => e.nextElementSibling?.classList.contains('ork-icon')"), "the seal lies before the +'s icon"
+        assert ("small" in sigil.get_attribute("class").split()) == (width == "narrow"), "the seal is small on the 80 px card"
+        s = sigil.bounding_box()
+        assert round(s["width"]) <= (72 if width == "narrow" else 136) + 14, "the seal's size (the card is turned a little)"
+        assert plus.evaluate("e => getComputedStyle(e).backgroundImage") == "none", "the hatch is gone"
+        assert plus.evaluate("e => getComputedStyle(e, '::before').content") in ("none", "normal"), "so is the band of light"
+        assert plus.evaluate("e => getComputedStyle(e, '::after').content") == '""', "the corner brackets stay"
+        assert "double" in plus.evaluate("e => getComputedStyle(e).borderTopStyle") and plus.evaluate("e => getComputedStyle(e).rotate") != "none", "the double frame and the lean stay"
+        assert plus.evaluate("e => getComputedStyle(e).color") == plus.evaluate("e => getComputedStyle(e).borderTopColor"), "the green: the seal takes the card's colour"
+        assert _seal(pg) == "", "the Orkmaster's tab, no party named: the place is empty"
+        shot(pg, f"{width}-plus-seal-empty")
+        call(pg, "frame/state.js", "openTab", "tech")                                                                      # a party's tab: that party's next element
+        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.ice')", timeout=WAIT_MS)
+        assert _seal(pg) == "ice"
+        if width == "wide":
+            elem = plus.locator(".ork-sigil__seal > .ork-elem")
+            want = pg.evaluate("() => { const s = document.createElement('i'); s.className = 'ork-elem ice'; document.body.append(s); const c = getComputedStyle(s).backgroundColor; s.remove(); return c; }")
+            assert elem.evaluate("e => getComputedStyle(e).backgroundColor") == want, "the goal's rune in its own colour"
+            shot(pg, "wide-plus-seal-ice")
+        call(pg, "frame/state.js", "openTab", "design")
+        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.dust')", timeout=WAIT_MS)
+        call(pg, "frame/state.js", "openTab", "orkmaster")
+        pg.wait_for_function("() => !document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem')", timeout=WAIT_MS)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_seals_place_follows_the_party_named_with_an_at_sign_in_the_field(gui):
+    pg, host, log = open_hand(gui)
+    try:
+        _plus(pg).wait_for(timeout=WAIT_MS)
+        assert _seal(pg) == ""
+        _plus(pg).click()
+        field, area = _field(pg)
+        area.fill("@Product ")
+        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.void')", timeout=WAIT_MS)
+        area.fill("@Design ")
+        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.dust')", timeout=WAIT_MS)
+        area.fill("no party")
+        pg.wait_for_function("() => !document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem')", timeout=WAIT_MS)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_large_plus_card_keeps_the_full_seal(gui):
+    pg, host, log = open_hand(gui, host=HandHost(empty=True))
+    try:
+        big = pg.locator(".hand-plus.is-large")
+        big.wait_for(timeout=WAIT_MS)
+        sigil = big.locator("> .ork-sigil")
+        assert sigil.count() == 1 and "small" not in sigil.get_attribute("class").split()
+        assert round(sigil.bounding_box()["width"]) >= 136 and big.bounding_box()["width"] > 136
+        assert _seal(pg, large=True) == "", "no party at all: the place is empty"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
 def test_the_plus_card_grows_into_the_field_enter_sends_shift_enter_a_new_line_esc_keeps_the_words(gui, width):

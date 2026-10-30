@@ -175,7 +175,7 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
    A surface, never a mark: nothing on it takes the wood, and a signal stays a signal on it ---------------------------------------- */
 .ork-table { background: var(--ork-table); box-shadow: inset 0 0 0 3px var(--ork-table-rim), inset 0 1px 0 3px var(--ork-table-rim-hi); }
 
-/* --- Elements: a goal's mark (elements/, five 7 x 7 pixel shapes), drawn as a mask in the element's token. 14 x 14 or 28 x 28, never a
+/* --- Elements: a goal's mark (elements/, five runes, each centred in a 7 x 7 grid since 0.20.0), drawn as a mask in the element's token. 14 x 14 or 28 x 28, never a
    size between: two or four pixels a cell, whole pixels. `.dim` is a goal not yet given one; it goes after the elements so it wins ----- */
 .ork-elem { display: inline-block; flex: none; width: 14px; height: 14px; vertical-align: middle;
   -webkit-mask-size: 100%; mask-size: 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
@@ -423,11 +423,17 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-portal.is-new::after { animation: ork-portal-turn 6s steps(4) infinite, ork-portal-shine 1.2s steps(1) 1; }
 .ork-portal.is-sealed::after { box-shadow: var(--_seal), var(--_arms); animation: none; }
 /* The portal's ring (runes/, 0.19.0): the portal's place on the table, laid before there is anything to send. A wrapper of its own, 96 x 96 cells at
-   2 px (192 x 192), drawn in two masks: ::before a dotted circle with a gap under each rune, ::after eight upright runes on it. At rest it is
-   still and has no colour: the dots in the edge, the runes in the faint ink. `.is-open` (the portal is in it: a goal can be played) lights the
-   runes in --ork-portal and drops the dots under the portal's own ring; `.is-taking` the runes in --ork-portal-hi; `.is-sealed` the runes back in
-   the faint ink, so asleep (no portal) and sealed (a portal with its X) never read alike. `.is-open.is-waking` plays the opening once: the runes
-   light one after another, a quick step each, the dots go, then the portal's eye opens in five steps. Under reduced motion it is open at once. */
+   2 px (192 x 192), drawn in two masks: ::before a dotted circle with a gap under each rune, ::after seven upright decorative runes on it (0.20.0: at
+   45 degrees and on, clockwise; none is an element's rune). At rest it is still and has no colour: the dots in the edge, the runes in the faint ink.
+   `.is-open` (the portal is in it: a goal can be played) lights the runes in --ork-portal and drops the dots under the portal's own ring; `.is-taking`
+   the runes in --ork-portal-hi; `.is-sealed` the runes back in the faint ink, so asleep (no portal) and sealed (a portal with its X) never read alike.
+   `.is-open.is-waking` plays the opening once: the runes light one after another, a quick step each, the dots go, then the portal's eye opens in five
+   steps. Under reduced motion it is open at once.
+   The top is the place of a goal's element (0.20.0): no rune is drawn there and the dots keep clear of it. `.ork-portal-ring__seal` is a 14 x 14 box at
+   that place (the 7 x 7 box at the top, 2 px a cell: left and top are `tools/build_runes.py` `ring_place` times 2, a test keeps them together); the
+   caller puts the goal's element in it (`<span class="ork-portal-ring__seal"><span class="ork-elem dust" aria-hidden="true"></span></span>`), in the
+   element's own colour at full strength; empty, it draws nothing. Sealed, the element is in the faint ink (as a dim element). Waking, it appears
+   with the portal's eye. */
 .ork-portal-ring { --_dots: color-mix(in srgb, var(--ork-edge) 32%, transparent); --_asleep: color-mix(in srgb, var(--ork-ink-faint) 55%, transparent);
   --_lit: color-mix(in srgb, var(--ork-portal) 70%, transparent);
   position: relative; display: inline-block; flex: none; box-sizing: border-box; vertical-align: middle; width: 192px; height: 192px; }
@@ -436,13 +442,17 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-portal-ring::before { background: var(--_dots); -webkit-mask-image: url(runes/ring-dots.svg); mask-image: url(runes/ring-dots.svg); }
 .ork-portal-ring::after { background: var(--_asleep); -webkit-mask-image: url(runes/ring-runes.svg); mask-image: url(runes/ring-runes.svg); }
 .ork-portal-ring > .ork-portal { position: absolute; left: 31px; top: 26px; z-index: 1; }
+.ork-portal-ring__seal { position: absolute; left: 90px; top: 6px; z-index: 2; width: 14px; height: 14px; }
+.ork-portal-ring__seal > .ork-elem { display: block; width: 14px; height: 14px; }
 .ork-portal-ring.is-open::before, .ork-portal-ring.is-sealed::before { display: none; }
 .ork-portal-ring.is-open::after { background: var(--_lit); }
 .ork-portal-ring.is-open.is-taking::after { background: var(--ork-portal-hi); }
 .ork-portal-ring.is-sealed::after { background: var(--_asleep); }
+.ork-portal-ring.is-sealed .ork-portal-ring__seal > .ork-elem { background: var(--ork-ink-faint); }
 .ork-portal-ring.is-open.is-waking::before { display: block; animation: ork-ring-dots calc(var(--ork-motion-quick) * 8) steps(1) both; }
 .ork-portal-ring.is-open.is-waking::after { background: conic-gradient(var(--_lit) 0 var(--_turn), var(--_asleep) var(--_turn)); animation: ork-ring-wake calc(var(--ork-motion-quick) * 8) steps(8, jump-start) both; }
 .ork-portal-ring.is-open.is-waking > .ork-portal { animation: ork-ring-eye var(--ork-motion-play) steps(5) calc(var(--ork-motion-quick) * 8) both; }
+.ork-portal-ring.is-open.is-waking > .ork-portal-ring__seal { animation: ork-ring-eye var(--ork-motion-play) steps(5) calc(var(--ork-motion-quick) * 8) both; }
 @keyframes ork-ring-wake { from { --_turn: 0deg; } to { --_turn: 360deg; } }
 @keyframes ork-ring-dots { from { opacity: 1; } to { opacity: 0; } }
 @keyframes ork-ring-eye { from { clip-path: circle(0% at 50% 50%); } to { clip-path: circle(72% at 50% 50%); } }
@@ -456,7 +466,7 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
   75% { --_arm2: color-mix(in srgb, var(--ork-ink) 25%, transparent); --_arm3: color-mix(in srgb, var(--ork-ink) 25%, transparent); --_arm4: color-mix(in srgb, var(--ork-ink) 25%, transparent); } }
 @media (prefers-reduced-motion: reduce) { .ork-portal::after, .ork-portal.is-new::after { animation: none; } }
 @media (prefers-reduced-motion: reduce) { .ork-portal-ring.is-open.is-waking::before { display: none; animation: none; }
-  .ork-portal-ring.is-open.is-waking::after { background: var(--_lit); animation: none; } .ork-portal-ring.is-open.is-waking > .ork-portal { animation: none; } }
+  .ork-portal-ring.is-open.is-waking::after { background: var(--_lit); animation: none; } .ork-portal-ring.is-open.is-waking > .ork-portal { animation: none; } .ork-portal-ring.is-open.is-waking > .ork-portal-ring__seal { animation: none; } }
 /* portal:begin (generated by tools/build_portal.py from portal/portal.json; do not edit by hand) */
 .ork-portal::before { --_still:
     13px 0px var(--_spark),
@@ -528,12 +538,18 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
    wave. They are orkUI's own, spell nothing and are read by no one; none is a letter of a real alphabet. They are the table's one vocabulary of magic:
    the portal's ring (above, beside the portal) and the + card's seal are written in them. `.ork-rune.<name>` is 10 x 14 (2 px a cell), `.big`
    20 x 28 (4 px), in the colour of its text; a face draws one only where it means nothing (an accent, never a word).
+   Five of the twelve are the elements (0.20.0: tusks meadow, key ice, comb dust, eye void, wave lava; `elements/` is drawn from them) and seven are the
+   decoration (hook, ladder, spiral, staff, hourglass, diamond, knot): the ring and the seal use the decoration alone, and keep a place at their top for
+   a goal's element.
    The sigil, the seal of summoning on the + card: `<span class="ork-sigil" aria-hidden="true"></span>` inside `.ork-card.ork-plus`, before its icon.
-   A circle, a band of eight runes and a star of two squares, 68 x 68 cells at 2 px (136 x 136), centred on the card under its +, in the colour of the
-   card's text at a quarter's strength (the lines) and a little more (the runes), so the + stays the one bright thing. On the card's hover or focus
-   the lines are a step brighter and the runes light once, one after another, clockwise from the top right, in eight steps (a sector of the colour
-   turned round them); then they rest a little brighter. `.small` is the seal at an 80 px card: 36 x 36 cells (72 x 72), a circle, a diamond and four
-   ticks, no runes. Under reduced motion the runes do not turn: hovered they are simply brighter.
+   Two circles, a band of seven runes (at 45 degrees and on, clockwise) and a star of two squares, 68 x 68 cells at 2 px (136 x 136), centred on the
+   card under its +, in the colour of the card's text at a quarter's strength (the lines) and a little more (the runes), so the + stays the one bright
+   thing. On the card's hover or focus the lines are a step brighter and the runes light once, one after another from the top, in eight steps (a sector
+   of the colour turned round them, centred on each position); then they rest a little brighter. The top is the goal's place: `.ork-sigil__seal`, a
+   14 x 14 box at the 7 x 7 box there (left and top are `tools/build_runes.py` `sigil_place` times 2, a test keeps them together), holds
+   `<span class="ork-elem lava" aria-hidden="true"></span>` in the element's own colour at full strength, so it takes no part in the sweep; empty, it
+   draws nothing. `.small` is the seal at an 80 px card: 36 x 36 cells (72 x 72), a circle, a diamond and four ticks, no runes and no seal. Under
+   reduced motion the runes do not turn: hovered they are simply brighter.
    A card's place, `.ork-card-place`: where a pile will lie (the discard before its first card), a card's outline in pixel dashes (2 px by 4,
    the grid's) in the edge at under half its strength, no fill, aspect 5 : 7, the page gives its width. It cannot be pressed and never moves. --- */
 @property --_turn { syntax: "<angle>"; inherits: false; initial-value: 0deg; }
@@ -556,12 +572,15 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-sigil { position: absolute; inset: 0; margin: auto; width: 136px; height: 136px; pointer-events: none; }
 .ork-sigil::before, .ork-sigil::after { content: ""; position: absolute; inset: 0; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
 .ork-sigil::before { background: color-mix(in srgb, currentColor 26%, transparent); -webkit-mask-image: url(runes/sigil-lines.svg); mask-image: url(runes/sigil-lines.svg); }
-.ork-sigil::after { --_rest: color-mix(in srgb, currentColor 42%, transparent); background: conic-gradient(from var(--_turn), currentColor 0 var(--_arc), var(--_rest) var(--_arc));
+.ork-sigil::after { --_rest: color-mix(in srgb, currentColor 42%, transparent); background: conic-gradient(from calc(var(--_turn) - 22.5deg), currentColor 0 var(--_arc), var(--_rest) var(--_arc));
   -webkit-mask-image: url(runes/sigil-runes.svg); mask-image: url(runes/sigil-runes.svg); }
 .ork-plus:hover > .ork-sigil::before, .ork-plus:focus-visible > .ork-sigil::before { background: color-mix(in srgb, currentColor 40%, transparent); }
 .ork-plus:hover > .ork-sigil::after, .ork-plus:focus-visible > .ork-sigil::after { --_rest: color-mix(in srgb, currentColor 70%, transparent);
   animation: ork-sigil-sweep calc(var(--ork-motion-play) + var(--ork-motion-base)) steps(8) 1; }
+.ork-sigil__seal { position: absolute; left: 62px; top: 12px; z-index: 2; width: 14px; height: 14px; }
+.ork-sigil__seal > .ork-elem { display: block; width: 14px; height: 14px; }
 .ork-sigil.small { width: 72px; height: 72px; }
+.ork-sigil.small > .ork-sigil__seal { display: none; }
 .ork-sigil.small::before { -webkit-mask-image: url(runes/sigil-small.svg); mask-image: url(runes/sigil-small.svg); }
 .ork-sigil.small::after { display: none; }
 @keyframes ork-sigil-sweep { from { --_turn: 0deg; --_arc: 45deg; } to { --_turn: 360deg; --_arc: 45deg; } }

@@ -26,7 +26,7 @@ Plain HTML and CSS, no script and no inner markup:
   own (`inline-block`, `flex: none`); it takes no colour of the text around it, and on a `<button class="ork-portal">` the button's own look is gone
   and `:focus-visible` draws the 2 px ink frame.
 
-**Its place on the table** is `.ork-portal-ring` (`../runes/README.md`, 0.19.0): a ring of eight runes laid before there is anything to send,
+**Its place on the table** is `.ork-portal-ring` (`../runes/README.md`, 0.19.0): a ring of seven runes, with the place of a goal's element at its top (`.ork-portal-ring__seal`), laid before there is anything to send,
 192 x 192, with the portal inside it (`<span class="ork-portal-ring is-open"><span class="ork-portal"></span></span>`). Asleep it is grey and still,
 `is-open` lights its runes in `--ork-portal`, `is-sealed` greys them again, and `is-waking` opens it once.
 
