@@ -3817,3 +3817,80 @@ nothing*, spec 50 §1.1's shapes, and orkUI's elements README):
    before it is pressed.
 6. Drawn in orkUI first (0.20.0), then here; spec 110, built by the cheaper model and reviewed by the spec's author.
 The owner's call.
+
+## 187. A goal's rune from its summoning to main: one rune per stack, a flame at the stage at work, the rune chosen, the rite (30 October, the owner)
+
+Why: the owner, on the stacks: *a stack's name is doubled; let the name stand on top only, and below a burning rune stand at
+the stage being worked on*; on the + card: *show the runes not yet on the Board, choose your next goal's rune, and when + is
+pressed let the circle light from the chosen rune, then the same in the portal*; and *show the work on a card by a rune
+lighting and dimming, not only by the turning signs*. Today a goal's rune stands three or four times on a stack of three (its
+strip, every edge of its fan, the front card's header), a goal the Orkmaster reads repeats its name under its strip, a card
+at work moves twice, and the element is given, never chosen. The owner's yes on `docs/mockups/runes-life/` and
+`docs/mockups/window-runes/`. So (this changes §167.1's element on a card's header, §168.4's element on an edge, §63.4's and
+§186.3's *given*, spec 107 §7's motion of a card at work):
+1. **One rune per stack**: the strip over a goal's stack holds its rune and name; a card holds its task's name and no rune; an
+   edge of the fan holds the stage's sign. **A card that is the goal itself** (the Orkmaster reading, routing or joining it,
+   no tasks yet) has no strip: its header is the goal's, its rune and its whole name. The narrow width's token keeps its rune.
+2. **The flame**: while a task is at work, the goal's rune takes the place of the stage's sign on its card (beside *Doing ·
+   3 m*) and on its edge, and **glows**: its strength from about 62 % to full and back, in six steps over 2.4 s, no halo. It
+   replaces the card's own motion of a task at work; the heads' step on the tabs stays, and the swords and shields stay signs of
+   the stage. At most as many flames as orks at work. Under reduced motion the rune stands at full strength, still. The words
+   (*at work*, the time) stay for a screen reader. It is the second thing in orkUI that moves by itself, after `.ork-busy`.
+3. **The rune is chosen**: hovering the + card shows the runes the addressed party's open goals do not use, each in its colour,
+   dim, in the seal's band, the decorative runes giving way (all five when all are used); the one it would be given stays at the
+   top. **The choice is made in the field** the card grows into: a row of the five runes, 40 px each, the free ones bright, the
+   used ones faint but possible, the default the one given today (§186.3); arrows and Tab move it; doing nothing keeps the rule.
+   Not on the card: a 14 px rune on a card that leans under the pointer is too small a target and too near the press that opens
+   the field.
+4. **The rite**: when the goal is sent, the seal fills from its rune, clockwise, in the goal's own colour, eight steps in about
+   640 ms, the + takes the colour for a moment, the card is drawn into its lane, and the colour leaves; when the goal goes to
+   main, the same in the portal's ring, from its rune at the top, as the card goes in. Once each time; never under reduced
+   motion; the goal's colour, not gold (§186.4).
+5. Drawn in orkUI first, then here; spec 111.
+The owner's call.
+
+## 188. Release and Live wait at the portal: asleep in its corners, awake when there is something to do; each skeleton a check that blocks the way into main (30 October, the owner)
+
+Why: the owner: *the skeletons and the imps stand apart: they work after the release, or on it; take them out of the tabs, put
+the skeletons between the discard and the portal and the imps above the portal*; then *hide them, or show them only when
+needed*; *give each skeleton a check (unit tests, looks, regression)*; *and let the skeletons block the portal*. Release
+takes a goal into main and Live runs what people use: their work comes after the work the tabs show, and the table's end is
+already that road (§185). On a tab they take two lanes for little; at the portal they say *before main* and *after main*.
+The owner's yes on `docs/mockups/window-runes/` (6). So (this changes §145's and CLAUDE.md's *the leaders' tabs* for these
+crafts, §177.4's sealed X, and §159.3's *Release keeps its tab*):
+1. **At the wide width, the Release party and the Run or LiveOps party are not tabs** and have no lanes. Release waits in the
+   portal ring's **lower left corner** (before main), Live in its **upper right** (past the portal). The narrow width keeps them
+   in the row of heads, as today.
+2. **Asleep, each is its leader's head alone, grey and still** (the lich, the imp): a way into that party's view, pressed as a
+   tab is. **Awake, in colour, with its members' heads**, its leader stepping while it works, an alert on it when it has one.
+   Release wakes when a goal is ready for main, a task of its runs, or it asks; Live when a task of its runs, it asks, or it has
+   an alert. Their cards that ask lie at the hand's right end, before the potions.
+3. **Each skeleton is a check on the way into main**: the checks of the gate's `[gate.main]` (`orkcraft.toml`), each a name and a
+   command, run on the goal's commits picked onto main in a trial worktree; with none written, two: *The merge* (the picks apply)
+   and *Tests* (the gate's own command). Three skeletons at most; more checks are one skeleton's *and n more*.
+4. **The skeletons block the portal**: when a goal is chosen for main they stand in front of the portal while their checks run
+   (the portal still behind them), step aside into the lich's corner with a tick each as their checks pass, and **one whose check
+   is red stays in front and blocks it**, its reason in the danger colour (*Sealed: Regression is red: 2 tests fail*). The X of a
+   sealed portal is left out where a skeleton seals it; a reason no check owns (a goal not done, main behind its origin) keeps the
+   X. Nothing goes to main while a skeleton stands in front.
+5. A check judged by a model carries its tool's mark; a script spends no mana and has none. A skeleton's words are on hover and
+   for a screen reader (*Regression: 2 tests fail*); no skeleton gets a job title (CLAUDE.md).
+6. Drawn in orkUI first, then here; spec 111.
+The owner's call.
+
+## 189. A party's sword and shield on its tab: the tools its Does and its Checks run on (30 October, the owner)
+
+Why: the owner: *on the tabs, mark attack and defence for the leaders, or the whole party, with the harnesses' small icons, as
+a card's elements of attack and defence.* A party's squad is two columns, **Does** under a sword and **Checks** under a shield
+(§151.5), each on an AI tool; who does and who checks is the first thing about a party's quality (a check by another model is a
+real one), and today it is read only in the party's editor. So:
+1. **A tab's second line under the party's name**: the sword and the mark of the tool its Does run on, then the shield and the
+   mark of the tool its Checks run on (`marks/harness-<id>-ink`), 14 px, in ink; **the open tab's in colour**. A column whose
+   roles run on more than one tool shows the most used with a dot. **Lean** (no separate check) shows the shield faint with no
+   mark. The project's tab shows the machine's main tool on both unless set.
+2. **Hovering a potion marks the tabs' marks of that tool** (who drinks from it), and its words say them. When work moves on to
+   the next tool (§177.2), the marks follow.
+3. Words on hover and for a screen reader: *Does on Claude Code · Checks on Codex*. Not pressable (inside the tab's button):
+   changed in the party's editor, as today. The narrow width's tabs are heads only: no marks.
+4. Built with spec 111.
+The owner's call.
