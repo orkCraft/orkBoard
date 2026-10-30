@@ -18,9 +18,8 @@ open); the tick and the cross are announced by the start screen's own words, as 
 ## 2. Part A: orkUI 0.22.0
 
 1. **Icons** on the 7 × 7 grid (orkUI's own, solid pixels, `src/<name>.svg`, built into `icons.svg`):
-   - `banner`: rows `#.#####`, `#.##.##`, `#.#...#`, `#.##.##`, `#.#####`, `#......`, `#......` (a pole at the left, a square
-     cloth with a + cut out of it). Read the mockup's `BANNER` (`docs/mockups/buttons/index.html`); keep its cloth 5 × 5, its +
-     three cells each way; if the mockup and these rows differ, the mockup wins.
+   - `banner`: rows `######.`, `###.##.`, `##...#.`, `###.##.`, `######.`, `#......`, `#......` (a pole at the left, a square
+     cloth 5 × 5 against it with a + cut out of it), as the mockup's `BANNER` (`docs/mockups/buttons/index.html`).
    - `boarded`: the mockup's `PLANKS` (a pole at the left, two planks two cells thick crossing over it).
    Their README lines; the icons' tests (orkUI's own set) count them.
 2. **The die**, `<span class="ork-die face-5" aria-hidden="true"></span>`: drawn as the portal is, in `box-shadow` pixels
@@ -52,8 +51,8 @@ open); the tick and the cross are announced by the start screen's own words, as 
    holding `.ork-die face-5` turned by the lean token (`rotate: calc(var(--ork-motion-lean) * -1)`) and its word under it, as a potion's
    share is; `is-wobbling` on pointer enter (once); pressed: if the play view is open (`over.value?.kind === "play"`) it closes it,
    else it opens it (`openOver("play", …)` as `pane.js` did). `.is-playing` and the word *Playing* while the play view is open and its
-   build plays. At the narrow width the die is `small`? No such size: keep 3 px and let the hand's row wrap as the potions do. The phone
-   (PWA) has no Play: no die there.
+   build plays. At the narrow width it keeps its 3 px and stands beside the potions as they stand. The phone (PWA) has no Play: no
+   die there.
 4. **The start screen** (`arena/play.js`, `arena/play.css`): when the play view opens on a build that is not running (`starting`):
    - a `.ork-die big is-rolling` flies from the hand's die (its rectangle) to the middle of the black pane (a three- to seven-step
      transform, about 420 ms) and rolls, the hand's die hidden meanwhile; the stage line (`StageLine`) stands under it as today; the
