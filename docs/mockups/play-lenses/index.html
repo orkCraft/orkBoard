@@ -1,0 +1,370 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Play Lenses Mockup</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* The mockup of docs/specs/115-the-live-product-under-each-leaders-eyes.md. Orkboard's parts are drawn in orkUI's tokens and classes; the product inside the
+   frame is a made-up project (Sproutly, a phone-first web app that reminds you to water your plants; Tower brawl, a small canvas game), drawn in its own
+   look under `.sp` and `.game`, as a person's project would be. The window is drawn at 1 : 1 (1280 x 800); each is in a box that scrolls on a narrow screen. */
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--ork-canvas); color-scheme: dark; }
+body { margin: 0; background: var(--ork-canvas); color: var(--ork-ink); font: var(--ork-type-body); }
+p, h1, h2, ul { margin: 0; padding: 0; }
+code { font-family: var(--ork-font-code); font-size: 0.92em; }
+.mk-bar { position: sticky; top: 0; z-index: 90; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-4) var(--ork-6);
+  padding: var(--ork-4) max(16px, env(safe-area-inset-right, 0px)) var(--ork-4) max(16px, env(safe-area-inset-left, 0px)); background: var(--ork-canvas); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.mk-bar nav { display: flex; flex-wrap: wrap; gap: var(--ork-3); }
+.mk-main { padding: var(--ork-6) max(16px, env(safe-area-inset-right, 0px)) var(--ork-6) max(16px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: var(--ork-8); }
+.mk-sec { min-width: 0; }
+.mk-sec h1 { font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); margin-bottom: var(--ork-3); text-wrap: balance; }
+.mk-line { max-width: 120ch; margin-bottom: var(--ork-5); }
+.mk-line b { font-weight: 600; }
+.mk-notes { max-width: 120ch; margin-top: var(--ork-4); color: var(--ork-ink-muted); font: var(--ork-type-caption); display: grid; gap: var(--ork-2); }
+.mk-notes b { color: var(--ork-ink); font-weight: 600; }
+.mk-foot { max-width: 120ch; margin: 0 max(16px, env(safe-area-inset-right, 0px)) var(--ork-8) max(16px, env(safe-area-inset-left, 0px)); padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.scroll { overflow-x: auto; max-width: 100%; }
+
+/* ---------- the window ---------- */
+.win { --lane: 176px; position: relative; width: 1280px; height: 800px; display: grid; grid-template-rows: 52px 36px auto minmax(0, 1fr) 140px; overflow: hidden;
+  outline: var(--ork-line) solid var(--ork-edge); background: var(--ork-canvas); }
+.tabs { display: flex; align-items: stretch; border-bottom: var(--ork-line) solid var(--ork-frame); }
+.tab { position: relative; display: flex; align-items: center; gap: var(--ork-4); width: var(--lane); padding: 0 var(--ork-4); border-right: var(--ork-line) solid var(--ork-frame); min-width: 0; }
+.tab.on { background: var(--ork-panel); box-shadow: inset 0 -2px 0 var(--ork-ink); }
+.tab .nm { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ork-ink-muted); }
+.tab.on .nm { color: var(--ork-ink); }
+.tabs-end { margin-left: auto; display: flex; align-items: center; gap: var(--ork-3); padding: 0 var(--ork-4); }
+
+/* Play's bar: what plays, then Mark, Hide the marks, Full screen, Stop the build */
+.pbar { display: flex; align-items: center; gap: var(--ork-3); padding: 0 var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.pbar .what { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.pbar .what b { color: var(--ork-ink); font-weight: 600; }
+.pbar .grow { flex: 1; }
+.pbar .say { display: inline-flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-caption); }
+.pbar .say.sent { color: var(--ork-success); }
+.ork-btn.is-on { --_bg: var(--ork-ink); --_fg: var(--ork-on-ink); --_bd: var(--ork-ink); }
+.ork-btn kbd { font: var(--ork-type-caption); opacity: 0.7; margin-left: var(--ork-2); }
+
+/* the lens strip: as the concerns' strip on a map (concerns.css .cn-strip), the open tab's leader */
+.strip { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2) var(--ork-4); padding: var(--ork-2) var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.strip .say { display: inline-flex; align-items: center; gap: var(--ork-3); }
+.strip .say b { font-weight: 600; }
+.strip .short { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.strip .aspects { flex: 1 0 100%; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2) var(--ork-3); }
+.strip .aspects .ork-chip { gap: var(--ork-2); }
+.strip .aspects .ork-chip[data-state="alert"] > .ork-sign { color: var(--ork-alert); }
+.strip .aspects .ork-chip[data-state="note"] > .dot, .strip .aspects .ork-chip[data-state="hint"] > .hint, .strip .aspects .ork-chip[data-state="unlooked"] { color: var(--ork-ink-muted); }
+.strip .aspects .ork-chip[data-state="out"] { opacity: 0.45; }
+.strip .loose { flex: 1 0 100%; display: flex; flex-wrap: wrap; gap: var(--ork-2) var(--ork-5); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.strip .loose span { display: inline-flex; align-items: center; gap: var(--ork-2); }
+.strip .loose b { color: var(--ork-ink); font-weight: 600; }
+.strip.none { color: var(--ork-ink-muted); }
+.dot { display: inline-block; flex: none; width: 6px; height: 6px; background: currentColor; }
+.hint { display: inline-block; flex: none; width: 6px; height: 6px; border: var(--ork-line) solid currentColor; }
+
+/* the stage: the frame on orkUI's canvas, the marks on a layer that lets presses through */
+.stage { position: relative; background: var(--ork-table); overflow: hidden; }
+.frame { position: absolute; top: 12px; left: 300px; width: 390px; bottom: 12px; overflow: hidden; outline: var(--ork-line) solid var(--ork-edge); }
+.frame.wide { left: 24px; width: 640px; height: 400px; bottom: auto; }
+.marks { position: absolute; inset: 0; pointer-events: none; }
+.m { position: absolute; }
+.m.alert { outline: 2px solid var(--ork-alert); outline-offset: 2px; }
+.m.note { outline: 2px solid var(--ork-ink-muted); outline-offset: 2px; }
+.m.hintm { outline: 2px dotted var(--ork-ink-muted); outline-offset: 2px; }
+.m .tag { position: absolute; right: -6px; top: -16px; display: inline-flex; align-items: center; gap: 2px; padding: 1px 2px; background: var(--ork-canvas); color: var(--ork-alert); border: var(--ork-line) solid var(--ork-frame); pointer-events: auto; cursor: pointer; }
+.m.note .tag, .m.hintm .tag { color: var(--ork-ink-muted); }
+.m .tag .ork-race__head { width: 16px; height: 15px; }
+.m.picked .tag { outline: 2px solid var(--ork-ink); }
+/* marking: the still layer, the box, the box sent */
+.still { position: absolute; inset: 0; background: color-mix(in srgb, var(--ork-canvas) 45%, transparent); cursor: crosshair; }
+.box { position: absolute; border: 2px dashed var(--ork-ink); background: color-mix(in srgb, var(--ork-ink) 6%, transparent); }
+.box .grip { position: absolute; width: 6px; height: 6px; background: var(--ork-ink); }
+.box .grip.a { left: -4px; top: -4px; } .box .grip.b { right: -4px; bottom: -4px; }
+.box.sent { border-style: solid; border-color: var(--ork-elem-lava); background: none; }
+.box.sent.meadow { border-color: var(--ork-elem-meadow); }
+
+/* the field the mark opens: beside the box, inside the pane (the + card's field: window-runes .field) */
+.field { position: absolute; z-index: 6; width: 400px; display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4); border-color: var(--ork-action); background: var(--ork-raised); }
+.field .hd { display: flex; align-items: center; gap: var(--ork-3); font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.field .hd .muted { margin-left: auto; color: var(--ork-ink-muted); font: var(--ork-type-caption); text-transform: none; letter-spacing: 0; }
+.field textarea { min-height: 54px; resize: none; padding: var(--ork-3); font: var(--ork-type-body); background: var(--ork-canvas); color: var(--ork-ink); border: var(--ork-line) solid var(--ork-edge); }
+.field .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2); }
+.field .cap { color: var(--ork-ink-muted); font: var(--ork-type-caption); margin-right: var(--ork-2); min-width: 44px; }
+.kind { display: inline-flex; align-items: center; gap: var(--ork-2); height: 28px; padding: 0 var(--ork-3); border: var(--ork-line) solid var(--ork-frame); background: none; color: var(--ork-ink-muted); font: var(--ork-type-body); clip-path: var(--ork-notch); }
+.kind[aria-checked="true"] { border: 2px solid var(--ork-ink); color: var(--ork-ink); background: var(--ork-panel); }
+.with { display: inline-flex; align-items: center; gap: var(--ork-2); }
+.with .x { color: var(--ork-ink-muted); }
+.with.off { opacity: 0.45; text-decoration: line-through; }
+.to { display: inline-flex; align-items: center; gap: var(--ork-2); }
+.to .ork-race__head { width: 16px; height: 15px; }
+.field .route { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.field .route b { color: var(--ork-ink); font-weight: 600; }
+.field .acts { display: flex; justify-content: flex-end; align-items: center; gap: var(--ork-3); }
+.field .addto { display: flex; align-items: flex-start; gap: var(--ork-3); padding: var(--ork-3); border: var(--ork-line) solid var(--ork-frame); }
+.field .addto .sq { flex: none; width: 14px; height: 14px; margin-top: 2px; border: 2px solid var(--ork-ink); display: grid; place-items: center; }
+.field .addto .sq::after { content: ""; width: 6px; height: 6px; background: var(--ork-ink); }
+.field .addto small { display: block; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+
+/* a concern's back, lifted (card.js Lifted, concerns.js ConcernsBack) */
+.back { position: absolute; z-index: 6; width: 330px; display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4); }
+.back .who { display: flex; align-items: center; gap: var(--ork-3); font-weight: 600; }
+.back .lvl { display: inline-flex; align-items: center; gap: var(--ork-2); color: var(--ork-alert); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
+.back .lvl.muted { color: var(--ork-ink-muted); }
+.back dl { display: grid; grid-template-columns: 44px 1fr; gap: var(--ork-2) var(--ork-3); margin: 0; }
+.back dt { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.back dd { margin: 0; }
+.back .acts { display: flex; gap: var(--ork-3); }
+.back hr { border: 0; border-top: var(--ork-line) solid var(--ork-frame); margin: 0; width: 100%; }
+
+/* the hand, short: a card, the die playing, the potions */
+.hand { position: relative; z-index: 5; display: flex; align-items: flex-start; gap: var(--ork-6); padding: var(--ork-4) var(--ork-4) 0; border-top: var(--ork-line) solid var(--ork-frame); background: var(--ork-canvas); overflow: hidden; }
+.ork-card.hcard { width: 144px; height: 202px; flex: none; display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3); }
+.hcard .hd { display: flex; gap: var(--ork-2); font-weight: 600; font-size: 13px; line-height: 17px; min-height: 36px; }
+.hcard .wn { height: 56px; display: flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-canvas); }
+.hend { margin-left: auto; display: flex; align-items: flex-start; gap: var(--ork-4); }
+.diebtn { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); font: var(--ork-type-caption); }
+.diebtn .ork-die { rotate: calc(var(--ork-motion-lean) * -1); }
+.diebtn b { font-weight: 600; }
+.pool { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); width: 60px; padding: var(--ork-1) 0; border: 2px solid transparent; font: var(--ork-type-caption); }
+.pool.is-default { border-color: var(--ork-ink); clip-path: var(--ork-notch); background: var(--ork-panel); }
+.pool .pct { font-weight: 600; }
+
+/* ---------- the made-up product, in its own look (not Orkboard's) ---------- */
+.sp { --sp-bg: #f3f6ef; --sp-card: #ffffff; --sp-ink: #1f2a1c; --sp-muted: #6b7866; --sp-green: #3d8b4f; --sp-line: #dfe6d9; --sp-warn: #c4682a;
+  position: absolute; inset: 0; background: var(--sp-bg); color: var(--sp-ink); font: 14px/1.35 system-ui, -apple-system, "Segoe UI", sans-serif; }
+.sp > * { position: absolute; }
+.sp .top { left: 0; right: 0; top: 0; height: 56px; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: var(--sp-green); color: #fff; }
+.sp .top b { font-size: 18px; letter-spacing: 0.01em; }
+.sp .top span { font-size: 13px; opacity: 0.85; }
+.sp .h2 { left: 16px; top: 64px; font-size: 13px; color: var(--sp-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+.sp .pc { left: 16px; right: 16px; height: 92px; padding: 12px; background: var(--sp-card); border: 1px solid var(--sp-line); border-radius: 10px; }
+.sp .pc .n { font-weight: 600; font-size: 15px; }
+.sp .pc .s { color: var(--sp-muted); font-size: 13px; }
+.sp .pc .s.warn { color: var(--sp-warn); }
+.sp .pc .pot { position: absolute; left: 12px; top: 12px; width: 36px; height: 36px; border-radius: 50%; background: #e3efdc; display: grid; place-items: center; font-size: 18px; }
+.sp .pc .txt { position: absolute; left: 60px; top: 12px; right: 12px; }
+.sp .pc .btn { position: absolute; right: 12px; bottom: 12px; height: 20px; padding: 0 12px; border-radius: 10px; background: var(--sp-green); color: #fff; font-size: 12px; line-height: 20px; }
+.sp .pc .chip { position: absolute; right: 108px; bottom: 12px; height: 20px; padding: 0 10px; border-radius: 10px; border: 1px solid var(--sp-line); color: var(--sp-muted); font-size: 12px; line-height: 18px; }
+.sp .tabbar { left: 0; right: 0; bottom: 0; height: 56px; display: grid; grid-template-columns: repeat(3, 1fr); align-items: center; text-align: center; background: var(--sp-card); border-top: 1px solid var(--sp-line); color: var(--sp-muted); font-size: 12px; }
+.sp .tabbar b { color: var(--sp-green); }
+.sp .toast { left: 16px; right: 16px; bottom: 68px; padding: 10px 12px; border-radius: 8px; background: #2b2b2b; color: #fff; font-size: 13px; }
+.game { position: absolute; inset: 0; display: block; width: 640px; height: 400px; image-rendering: pixelated; }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+</style>
+</head>
+<body>
+<header class="mk-bar">
+  <span class="ork-label">Orkboard · the live product under each leader's eyes (spec 115)</span>
+  <nav aria-label="States">
+    <a class="ork-btn" href="#s1">1 · Design's eyes</a><a class="ork-btn" href="#s2">2 · Tech's eyes</a><a class="ork-btn" href="#s3">3 · Product's eyes</a>
+    <a class="ork-btn" href="#s4">4 · Mark a bug</a><a class="ork-btn" href="#s5">5 · Sent</a><a class="ork-btn" href="#s6">6 · Add to a goal</a>
+    <a class="ork-btn" href="#s7">7 · A game</a><a class="ork-btn" href="#s8">8 · No probe</a>
+  </nav>
+</header>
+<main class="mk-main">
+  <section class="mk-sec" id="s1"><h1>1 · Play under Design's tab: the Product designer's lens</h1>
+    <p class="mk-line">The made-up project is <b>Sproutly</b>, a phone-first web app that reminds you to water your plants. The die is playing; Play lies over the pane. <b>The open tab is Design</b>, so the strip under Play's bar is the Product designer's: where this page is on its map (<i>Today · Step 1</i>), its rubric and its aspects <b>for this screen only</b>. On the frame, a concern of Accessibility (the <i>Watered</i> buttons are 20 px tall) and a hint the probe saw (<i>A press did nothing</i> on <i>Snooze</i>). The concern is pressed: its back is lifted beside the frame, with <b>Make it a goal</b> and <b>Not a problem</b>. The marks let the product's presses through.</p>
+    <div class="scroll"><div id="w1"></div></div>
+    <div class="mk-notes"><span><b>Strip:</b> the aspects' states are the rubric's (spec 109), counted only on this screen's parts; a press on one steps through its marks here.</span>
+      <span><b>Hint vs concern:</b> a hint is what code saw (a dotted outline, a hollow square), a concern what the leader said (a solid outline, its head).</span></div></section>
+
+  <section class="mk-sec" id="s2"><h1>2 · The same moment under Tech's tab: the Architect's lens</h1>
+    <p class="mk-line">Only the tab changed: <b>Play stays open, the lens changes</b>. The strip says which parts of System this screen touches (from the file the dev build names: <code>web/src/screens/Today.tsx</code> in <code>web/src/screens</code>, and <code>api/plants</code> through its requests). On the frame: <i>A request failed: POST /api/water 500</i> on the second plant's <i>Watered</i> (it was pressed a minute ago) and the Architect's concern of Hotspots on the screen's part. What has no element (a slow request) stands in the strip.</p>
+    <div class="scroll"><div id="w2"></div></div></section>
+
+  <section class="mk-sec" id="s3"><h1>3 · Under Product's tab: the Product manager's lens</h1>
+    <p class="mk-line">Product's map is about people, not files: the strip names the job this screen serves (<i>When a plant is thirsty, I want a reminder, so I can keep it alive</i>), read through the goals that touched its file. Its concern is of <b>Evidence</b>: two goals serve the job and no experiment tests it. Nothing is outlined on the frame, since no element is about a job; aspects with nothing here are faint.</p>
+    <div class="scroll"><div id="w3"></div></div></section>
+
+  <section class="mk-sec" id="s4"><h1>4 · Mark: a bug, under Tech's tab</h1>
+    <p class="mk-line"><b>Mark</b> (or <kbd>M</kbd>) lays a still layer on the frame: the product takes no press, the bar says <i>Draw a box or press a part · Cancel</i>. A box is drawn over the second plant's <i>Watered</i>. The field opens beside it, inside the pane: the line, <b>the kind</b> (<i>Bug</i>), <b>→ Tech</b> (the open tab's; <kbd>@</kbd> changes it), and <b>With:</b> what goes with it, each with its × (here the server's last lines are taken off). With an error and a failed request kept, <b>the bug reproduces</b>: Tech alone, the short way, no diagnosis call.</p>
+    <div class="scroll"><div id="w4"></div></div></section>
+
+  <section class="mk-sec" id="s5"><h1>5 · Sent</h1>
+    <p class="mk-line">The box stays a moment on the frame in the new goal's element's colour (lava), and the bar says <i>Sent to Tech</i>. The goal is in the first lane as a new goal is; Play is not closed. The goal's page holds the screen with the box, the picture of that moment (the probe's snapshot, drawn by the host), and its play: the commit, the path, the element, the error, the request.</p>
+    <div class="scroll"><div id="w5"></div></div></section>
+
+  <section class="mk-sec" id="s6"><h1>6 · Looks wrong, under Design's tab: added to a goal not yet started</h1>
+    <p class="mk-line">A part is pressed rather than a box drawn: the <i>Watered</i> button of the first plant. The kind is <i>Looks wrong</i>, to Design. A goal not yet started already has a mark on this screen of this kind (<i>Bigger touch targets</i>), so <b>Add to "Bigger touch targets"</b> is offered, by code, and ticked: no new goal, the mark joins that one's screen and play.</p>
+    <div class="scroll"><div id="w6"></div></div></section>
+
+  <section class="mk-sec" id="s7"><h1>7 · A game on a canvas, under Game design's tab</h1>
+    <p class="mk-line">The made-up <b>Tower brawl</b> draws on a canvas: the probe knows no element under the box, only <i>the canvas</i>. The project gives <code>window.__ork.state()</code>, so <b>the game's state</b> goes with the mark. No code knows which step of the loop this is, so under Game design's tab the field asks <b>At which step?</b> with the loop's steps as chips.</p>
+    <div class="scroll"><div id="w7"></div></div></section>
+
+  <section class="mk-sec" id="s8"><h1>8 · No probe</h1>
+    <p class="mk-line">The project turned it off (<code>preview_probe = false</code>) or its proxy could not start. Play is today's, and marking still works: <b>the box and the page's path</b>, the picture drawn anew from that path (<i>the picture is of the page, not of the moment</i>). The strip says so once; no hints, no elements, no errors.</p>
+    <div class="scroll"><div id="w8"></div></div></section>
+</main>
+<p class="mk-foot">This is a mockup and is not wired into the app. Orkboard's parts are drawn in orkUI (the heads, the signs, the chips, the die, the potions); Sproutly and Tower brawl are made-up projects in their own look. Words as spec 115 §1 has them.</p>
+
+<script>
+(function () {
+  var B = "../../../design-system/orkui/";
+  var H = function (race, tier, cls) { return '<img class="ork-race__head' + (cls ? " " + cls : "") + '" src="' + B + "races/" + race + "-" + tier + '@2x.png" alt="">'; };
+  var S = function (n) { return '<span class="ork-sign ' + n + '" aria-hidden="true"></span>'; };
+  var E = function (n) { return '<span class="ork-elem ' + n + '" aria-hidden="true"></span>'; };
+  var ICON = function (n) { return '<svg class="ork-icon pix" aria-hidden="true"><use href="' + B + "icons/icons.svg#" + n + '"/></svg>'; };
+
+  var PARTIES = [
+    { id: "product", name: "Product", head: ["unicorn", "elder"] },
+    { id: "design", name: "Design", head: ["dryad", "elder"] },
+    { id: "tech", name: "Tech", head: ["shaman", "elder"] },
+    { id: "marketing", name: "Marketing", head: ["fairy", "elder"] }
+  ];
+  function tabs(on, project, parties) {
+    var t = '<div class="tab' + (on === "project" ? " on" : "") + '">' + H("peon", "crown") + '<span class="nm">' + project + "</span></div>";
+    (parties || PARTIES).forEach(function (p) { t += '<div class="tab' + (on === p.id ? " on" : "") + '">' + H(p.head[0], p.head[1]) + '<span class="nm">' + p.name + "</span></div>"; });
+    return '<div class="tabs">' + t + '<div class="tabs-end"><button class="ork-btn" type="button">' + ICON("plus") + 'Party</button><button class="ork-btn danger" type="button">Stop all</button></div></div>';
+  }
+  function pbar(o) {
+    var mid = o.marking ? '<span class="say">' + S("target") + "Draw a box or press a part</span>" : o.sent ? '<span class="say sent">' + S("check") + o.sent + "</span>" : "";
+    return '<div class="pbar"><span class="what">Plays dev at <b>' + (o.short || "3f9c2a1") + "</b></span>" + mid + '<span class="grow"></span>'
+      + (o.marking ? '<button class="ork-btn quiet" type="button">Cancel</button>' : "")
+      + '<button class="ork-btn' + (o.marking ? " is-on" : "") + '" type="button">' + S("target") + "Mark<kbd>M</kbd></button>"
+      + '<button class="ork-btn" type="button">Hide the marks</button><button class="ork-btn" type="button">Full screen</button><button class="ork-btn danger" type="button">Stop the build</button></div>';
+  }
+  function chip(a) {
+    var mark = a.state === "alert" ? S("alert") : a.state === "note" ? '<i class="dot"></i>' : a.state === "hint" ? '<i class="hint"></i>' : a.state === "clear" ? S("check") : "";
+    return '<span class="ork-chip" data-state="' + a.state + '">' + mark + a.name + "</span>";
+  }
+  function strip(s) {
+    if (!s) return "<div></div>";
+    if (s.none) return '<div class="strip none"><span class="say">' + S("alert") + s.none + "</span></div>";
+    return '<div class="strip"><span class="say">' + H(s.head[0], s.head[1]) + "<span><b>" + s.leader + "</b> on " + s.where + '</span></span><span class="short">' + s.short + "</span>"
+      + '<div class="aspects">' + s.aspects.map(chip).join("") + "</div>" + (s.loose ? '<div class="loose">' + s.loose.join("") + "</div>" : "") + "</div>";
+  }
+  function hand() {
+    return '<div class="hand"><div class="ork-card hcard"><div class="hd">' + E("dust") + '<span>Pick one: the empty list</span></div><div class="wn">' + S("picture") + '</div></div>'
+      + '<div class="hend"><span class="diebtn"><span class="ork-die face-5 is-playing" aria-hidden="true"></span><b>Playing</b></span>'
+      + '<span class="pool is-default"><span class="ork-potion" style="--ork-potion-left:0.7"></span><span class="pct">70%</span></span>'
+      + '<span class="pool"><span class="ork-potion" style="--ork-potion-left:0.45"></span><span class="pct">45%</span></span></div></div>';
+  }
+
+  // Sproutly, the made-up product: every element at a known place in the frame's pixels (390 wide)
+  var CARD = [88, 188, 288];
+  function sproutly(o) {
+    o = o || {};
+    var plants = [["🪴", "Monstera", "Thirsty for 2 days", true, false], ["🌿", "Boston fern", "Water today", true, true], ["🌵", "Cactus", "Next in 9 days", false, false]];
+    var h = '<div class="sp"><div class="top"><b>Sproutly</b><span>Today</span></div><div class="h2">Needs you</div>';
+    plants.forEach(function (p, i) {
+      h += '<div class="pc" style="top:' + CARD[i] + 'px"><span class="pot">' + p[0] + '</span><span class="txt"><span class="n">' + p[1] + '</span><br><span class="s' + (p[3] ? " warn" : "") + '">' + p[2] + "</span></span>"
+        + (p[4] ? '<span class="chip">Snooze</span>' : "") + '<span class="btn">Watered</span></div>';
+    });
+    if (o.toast) h += '<div class="toast">Something went wrong. Try again.</div>';
+    return h + '<div class="tabbar"><b>Today</b><span>Plants</span><span>Settings</span></div></div>';
+  }
+  // the rects: the Watered button of card i, the Snooze chip, the whole list
+  function wateredRect(i) { return { x: 292, y: CARD[i] + 60, w: 82, h: 20 }; }
+  var SNOOZE = { x: 208, y: CARD[1] + 60, w: 66, h: 20 };
+  function at(r) { return "left:" + r.x + "px;top:" + r.y + "px;width:" + r.w + "px;height:" + r.h + "px"; }
+  function mark(r, cls, tag) { return '<span class="m ' + cls + '" style="' + at(r) + '">' + (tag ? '<span class="tag">' + tag + "</span>" : "") + "</span>"; }
+
+  function win(o) {
+    var stage = '<div class="stage"><div class="frame' + (o.wide ? " wide" : "") + '">' + (o.product || sproutly()) + '<div class="marks">' + (o.marks || "") + "</div>"
+      + (o.still ? '<div class="still"></div>' : "") + (o.box || "") + "</div>" + (o.side || "") + "</div>";
+    return '<div class="win">' + tabs(o.tab, o.project || "Sproutly", o.parties) + pbar(o.bar || {}) + strip(o.strip) + stage + hand() + "</div>";
+  }
+
+  var DESIGN = { head: ["dryad", "elder"], leader: "The Product designer", where: "Today · Step 1", short: "Nielsen · WCAG 2.2",
+    aspects: [{ name: "The way through", state: "hint" }, { name: "State and errors", state: "note" }, { name: "Accessibility", state: "alert" }, { name: "Consistency", state: "clear" }, { name: "Seen", state: "clear" }] };
+  var TECH = { head: ["shaman", "elder"], leader: "The Architect", where: "Today · <code>web/src/screens</code>, <code>api/plants</code>", short: "C4 · ISO 25010 · hotspots",
+    aspects: [{ name: "Modularity", state: "clear" }, { name: "Coupling", state: "clear" }, { name: "Hotspots", state: "alert" }, { name: "Testability", state: "note" }, { name: "Security and reliability", state: "hint" }],
+    loose: ['<span><i class="hint"></i>Slow: <b>GET /api/plants</b> 1,840 ms</span>', '<span>' + S("alert") + '<b>Hotspots</b> · <code>web/src/screens</code>: changed in 14 goals, 610 lines in <code>Today.tsx</code></span>'] };
+
+  // 1 · Design's eyes, the concern lifted
+  var acc = mark(wateredRect(0), "alert picked", S("alert") + H("dryad", "elder")) + mark(wateredRect(1), "alert", S("alert") + H("dryad", "elder")) + mark(wateredRect(2), "alert", S("alert") + H("dryad", "elder"))
+    + mark(SNOOZE, "hintm", '<i class="hint"></i>');
+  var back = '<div class="ork-card back" style="left:724px;top:24px"><div class="who">' + H("dryad", "elder") + '<span>The Product designer</span></div>'
+    + '<span class="lvl">' + S("alert") + "Alert · Accessibility</span>"
+    + "<dl><dt>What</dt><dd>The <i>Watered</i> buttons are 20 px tall.</dd><dt>Why</dt><dd>Under the 24 px WCAG 2.2 asks of a target; the screen's one action is the easiest to miss with a thumb.</dd>"
+    + "<dt>Fix</dt><dd>44 px tall, the whole card's lower band pressable.</dd></dl>"
+    + '<div class="acts"><button class="ork-btn primary" type="button">Make it a goal</button><button class="ork-btn" type="button">Not a problem</button></div><hr>'
+    + '<span class="lvl muted"><i class="hint"></i>Hint · The way through</span><p>A press did nothing: <i>Snooze</i> on Boston fern, twice.</p></div>';
+  document.getElementById("w1").innerHTML = win({ tab: "design", strip: DESIGN, marks: acc, side: back });
+
+  // 2 · Tech's eyes
+  var tm = mark(wateredRect(1), "hintm", '<i class="hint"></i>') + mark({ x: 16, y: CARD[0], w: 358, h: 292 }, "alert", S("alert") + H("shaman", "elder"));
+  var tback = '<div class="ork-card back" style="left:724px;top:24px"><span class="lvl muted"><i class="hint"></i>Hint · Security and reliability</span>'
+    + "<p>A request failed: <b>POST /api/water</b> 500, 1 minute ago, after a press on <i>Watered</i> (Boston fern).</p>"
+    + '<div class="acts"><button class="ork-btn primary" type="button">Make it a goal</button><button class="ork-btn" type="button">Not a problem</button></div></div>';
+  document.getElementById("w2").innerHTML = win({ tab: "tech", strip: TECH, marks: tm, product: sproutly({ toast: true }), side: tback });
+
+  // 3 · Product's eyes
+  document.getElementById("w3").innerHTML = win({ tab: "product", strip: { head: ["unicorn", "elder"], leader: "The Product manager", where: "Today", short: "OST · JTBD · RICE",
+    aspects: [{ name: "Outcome", state: "clear" }, { name: "Opportunities", state: "clear" }, { name: "Evidence", state: "alert" }, { name: "Focus", state: "out" }],
+    loose: ['<span>' + S("target") + 'Serves: <b>When a plant is thirsty, I want a reminder, so I can keep it alive</b></span>', '<span>' + S("alert") + '<b>Evidence</b>: two goals serve this job, and no experiment tests it</span>'] },
+    side: '<div class="ork-card back" style="left:724px;top:24px"><div class="who">' + H("unicorn", "elder") + '<span>The Product manager</span></div><span class="lvl">' + S("alert") + 'Alert · Evidence</span>'
+      + '<dl><dt>What</dt><dd><i>Reminders at the right hour</i> and <i>Snooze a plant</i> both serve this job.</dd><dt>Why</dt><dd>Neither was tested: we do not know a reminder brings people back to this screen.</dd><dt>Fix</dt><dd>Count who opens Today from a reminder in its first week.</dd></dl>'
+      + '<div class="acts"><button class="ork-btn primary" type="button">Make it a goal</button><button class="ork-btn" type="button">Not a problem</button></div></div>' });
+
+  // 4 · marking a bug
+  function field(o) {
+    var kinds = ["Bug", "Looks wrong", "Missing", "Confusing"].map(function (k) { return '<button class="kind" type="button" role="radio" aria-checked="' + (k === o.kind) + '">' + k + "</button>"; }).join("");
+    var withs = o.with.map(function (w) { return '<span class="ork-chip with' + (w[1] ? "" : " off") + '">' + w[0] + '<span class="x">×</span></span>'; }).join("");
+    return '<div class="ork-card field" style="left:' + o.x + "px;top:" + o.y + 'px"><div class="hd">' + S("target") + "Mark on " + o.on + '<span class="muted">' + o.path + "</span></div>"
+      + '<textarea aria-label="What is wrong here">' + o.text + "</textarea>"
+      + '<div class="row" role="radiogroup" aria-label="Kind"><span class="cap">Kind</span>' + kinds + "</div>"
+      + (o.steps ? '<div class="row"><span class="cap">At which step?</span>' + o.steps + "</div>" : "")
+      + '<div class="row"><span class="cap">To</span><span class="ork-chip to">→ ' + H(o.to[1][0], o.to[1][1]) + o.to[0] + ' <span class="x">×</span></span></div>'
+      + '<div class="row"><span class="cap">With</span>' + withs + "</div>"
+      + (o.addto ? '<div class="addto"><span class="sq"></span><span>Add to "' + o.addto + '"<small>Not started yet; it has a mark of this kind on Today.</small></span></div>' : "")
+      + '<p class="route">' + o.route + '</p><div class="acts"><button class="ork-btn quiet" type="button">Cancel</button><button class="ork-btn primary" type="button">Send</button></div></div>';
+  }
+  var bugBox = '<span class="box" style="' + at({ x: 284, y: CARD[1] + 52, w: 98, h: 36 }) + '"><i class="grip a"></i><i class="grip b"></i></span>';
+  document.getElementById("w4").innerHTML = win({ tab: "tech", strip: TECH, bar: { marking: true }, still: true, box: bugBox, product: sproutly({ toast: true }),
+    side: field({ x: 712, y: 16, on: "Today", path: "/today", kind: "Bug", to: ["Tech", ["shaman", "elder"]],
+      text: "Watered on the second plant shows “Something went wrong”; the first one works.",
+      with: [["the screen: Today", true], ["the part: <code>web/src/screens</code>", true], ["1 error", true], ["1 failed request", true], ["the server's last lines", false]],
+      route: "<b>Tech alone · the short way.</b> It reproduces: <code>POST /api/water</code> 500 and <code>TypeError: plant.lastWatered is undefined</code> go with it, so no diagnosis call." }) });
+
+  // 5 · sent
+  var sentBox = '<span class="box sent" style="' + at({ x: 284, y: CARD[1] + 52, w: 98, h: 36 }) + '"></span>';
+  document.getElementById("w5").innerHTML = win({ tab: "tech", strip: TECH, bar: { sent: "Sent to Tech: Watered fails on the second plant" }, box: sentBox, product: sproutly({ toast: true }),
+    marks: mark({ x: 16, y: CARD[0], w: 358, h: 292 }, "alert", S("alert") + H("shaman", "elder")),
+    side: '<div class="ork-card back" style="left:724px;top:24px"><div class="who">' + E("lava") + '<span>Watered fails on the second plant</span></div><span class="lvl muted">New goal · Tech · in line</span>'
+      + '<dl><dt>Screen</dt><dd>Today, the box over <i>Watered</i> (Boston fern), the picture of that moment</dd><dt>Play</dt><dd>dev at 3f9c2a1, <code>/today</code>, <code>button.btn</code> in <code>Today.tsx</code></dd>'
+      + '<dt>Failed</dt><dd><code>POST /api/water</code> 500 · <code>TypeError: plant.lastWatered is undefined</code></dd></dl></div>' });
+
+  // 6 · looks wrong, added to a goal
+  var pressBox = '<span class="box" style="' + at(wateredRect(0)) + '"><i class="grip a"></i><i class="grip b"></i></span>';
+  document.getElementById("w6").innerHTML = win({ tab: "design", strip: DESIGN, bar: { marking: true }, still: true, box: pressBox,
+    side: field({ x: 712, y: 16, on: "Today", path: "/today", kind: "Looks wrong", to: ["Design", ["dryad", "elder"]],
+      text: "Watered looks like a tag, not the main action of the card.",
+      with: [["the screen: Today", true], ["the part: <code>button.btn</code>", true]], addto: "Bigger touch targets",
+      route: "Joins <b>Bigger touch targets</b> (Design, in line): its screen gains this box and its line." }) });
+
+  // 7 · a game
+  var GPARTIES = [{ id: "game-design", name: "Game design", head: ["unicorn", "elder"] }, { id: "art", name: "Art", head: ["dryad", "elder"] }, { id: "tech", name: "Tech", head: ["shaman", "elder"] }];
+  var steps = ["Place a tower", "Survive the wave", "Spend the gold"].map(function (s, i) { return '<button class="kind" type="button" role="radio" aria-checked="' + (i === 1) + '">' + s + "</button>"; }).join("");
+  document.getElementById("w7").innerHTML = win({ tab: "game-design", project: "Tower brawl", parties: GPARTIES, wide: true,
+    strip: { head: ["unicorn", "elder"], leader: "The Game designer", where: "the canvas · loop <i>Hold the lane</i>", short: "MDA · loops · economy · flow",
+      aspects: [{ name: "Core loop", state: "clear" }, { name: "Economy", state: "note" }, { name: "Pacing and flow", state: "alert" }, { name: "Retention", state: "unlooked" }, { name: "Grounded", state: "clear" }] },
+    bar: { marking: true, short: "8b01e4c" }, still: true, product: '<canvas class="game" id="g7" width="160" height="100" aria-label="Tower brawl, wave 3"></canvas>',
+    box: '<span class="box" style="' + at({ x: 360, y: 92, w: 176, h: 140 }) + '"><i class="grip a"></i><i class="grip b"></i></span>',
+    side: field({ x: 700, y: 16, on: "the game", path: "/play", kind: "Confusing", to: ["Game design", ["unicorn", "elder"]], steps: steps,
+      text: "Wave 3 comes in from both lanes at once and I lose before I can place a second tower.",
+      with: [["the canvas", true], ["the game's state", true], ["1 error", false]],
+      route: 'The game\'s state: <code>{"wave": 3, "gold": 40, "lives": 2, "towers": 1}</code>' }) });
+  // the game itself, drawn small and scaled 4 x (its own look)
+  var c = document.getElementById("g7"), g = c.getContext("2d");
+  g.fillStyle = "#4f7a3a"; g.fillRect(0, 0, 160, 100);
+  g.fillStyle = "#c9a86a"; g.fillRect(0, 22, 160, 12); g.fillRect(0, 66, 160, 12); g.fillRect(140, 22, 12, 56);
+  g.fillStyle = "#7a5a3a"; g.fillRect(146, 40, 14, 20);
+  g.fillStyle = "#8a8f99"; g.fillRect(60, 42, 10, 14); g.fillStyle = "#5b6070"; g.fillRect(58, 40, 14, 3);
+  g.fillStyle = "#d2453a"; [[96, 26], [104, 27], [112, 25], [94, 70], [102, 71], [110, 69], [118, 70]].forEach(function (p) { g.fillRect(p[0], p[1], 4, 4); });
+  g.fillStyle = "#1e2a16"; g.fillRect(0, 0, 160, 8); g.fillStyle = "#f2d16b"; g.fillRect(3, 2, 3, 3); g.fillStyle = "#e9efe4"; g.fillRect(8, 2, 14, 3); g.fillStyle = "#e05a5a"; g.fillRect(140, 2, 3, 3); g.fillRect(145, 2, 3, 3);
+
+  // 8 · no probe
+  document.getElementById("w8").innerHTML = win({ tab: "design", strip: { none: "Marks keep the picture and the place only: this project's Play has no probe (preview_probe = false)." }, bar: { marking: true }, still: true, box: bugBox,
+    side: field({ x: 712, y: 16, on: "/today", path: "no screen known", kind: "Looks wrong", to: ["Design", ["dryad", "elder"]], text: "The fern's buttons crowd each other.",
+      with: [["the path: /today", true], ["the picture of the page", true]], route: "The picture is of the page, not of the moment: it is drawn anew from <code>/today</code>." }) });
+})();
+</script>
+</body>
+</html>
