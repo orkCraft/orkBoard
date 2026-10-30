@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orkboard mana in two windows, mockup</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* The mockup's own CSS: layout only, in orkUI's tokens. The potions are drawn by the script on a grid of 3 px cells in four sizes (orkUI's potion is the
+   largest, 14 x 18); the edge, the glass, the cork and the liquid read orkUI's tokens. The liquid is the mana's blue, the warning's or the danger's. */
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--ork-canvas); }
+body { margin: 0; background: var(--ork-canvas); color: var(--ork-ink); font: var(--ork-type-body); }
+p, h1, h2 { margin: 0; }
+.mk-bar { position: sticky; top: 0; z-index: 9; display: flex; align-items: center; gap: var(--ork-6); padding: var(--ork-4) var(--ork-6); background: var(--ork-canvas); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.mk-main { padding: var(--ork-6); display: flex; flex-direction: column; gap: var(--ork-8); }
+.mk-sec h1 { font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); margin-bottom: var(--ork-3); }
+.mk-line { max-width: 116ch; margin-bottom: var(--ork-5); }
+.mk-line b { font-weight: 600; }
+.row { display: flex; flex-wrap: wrap; gap: var(--ork-6); align-items: flex-end; padding: var(--ork-5); background: var(--ork-canvas); outline: var(--ork-line) solid var(--ork-frame); width: fit-content; }
+.row.table { background: var(--ork-table); }
+figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); }
+figcaption { max-width: 150px; text-align: center; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+figcaption b { color: var(--ork-ink); }
+svg.pot { display: block; shape-rendering: crispEdges; }
+svg .e { fill: var(--ork-edge); } svg .g { fill: var(--ork-panel); } svg .k { fill: var(--ork-ink-muted); }
+svg .l { fill: var(--ork-mana); } svg .l.warn { fill: var(--ork-warning); } svg .l.danger { fill: var(--ork-danger); }
+/* a tool's place: always the largest potion's slot, the potion standing on its floor, its mark above, its two shares under */
+.pool { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); width: 64px; padding: var(--ork-1) 0; border: 2px solid transparent; font: var(--ork-type-caption); }
+.pool.is-default { border-color: var(--ork-ink); clip-path: var(--ork-notch); background: var(--ork-panel); }
+.pool .slot { width: 42px; height: 54px; display: flex; align-items: flex-end; justify-content: center; }
+.pool .now { font-weight: 600; font-variant-numeric: tabular-nums; }
+.pool .now.warn { color: var(--ork-warning); } .pool .now.danger { color: var(--ork-danger); }
+.pool .week { color: var(--ork-ink-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pool .ork-mark { width: 16px; height: 16px; image-rendering: pixelated; }
+.coin { width: 28px; height: 36px; display: grid; place-items: center; border: var(--ork-line) dashed var(--ork-edge); color: var(--ork-ink-muted); }
+.tip { max-width: 360px; padding: var(--ork-3) var(--ork-4); background: var(--ork-raised); border: var(--ork-line) solid var(--ork-edge); font: var(--ork-type-caption); }
+.week-strip { display: flex; gap: var(--ork-4); align-items: flex-end; }
+.legend { display: grid; grid-template-columns: repeat(4, 150px); gap: var(--ork-5); }
+</style>
+</head>
+<body>
+<header class="mk-bar"><span class="ork-label">Orkboard · the mana in two windows: the liquid is now, the bottle is the week</span></header>
+<main class="mk-main">
+  <section class="mk-sec">
+    <h1>1 · Four bottles for the week</h1>
+    <p class="mk-line">A subscriber asks two things: <i>can I work now?</i> (the 5-hour window) and <i>will I last until the reset?</i> (the week). One potion answers both: <b>the liquid is the shorter window</b>, how much is at hand now, and <b>the bottle is the longer one</b>, how much can still be carried this week. The bottle shrinks in four drawn sizes, a game's potions (the large is orkUI's potion today, 14 × 18; then 12 × 14, 10 × 10 and a vial 8 × 9), never scaled, so every one stays on the 3 px grid: <b>above 60 %</b> of the week left the large, <b>30 to 60 %</b> the medium, <b>10 to 30 %</b> the small, <b>under 10 %</b> the vial. The week drains slowly, so four steps are enough.</p>
+    <div class="row legend" id="legend"></div>
+  </section>
+  <section class="mk-sec">
+    <h1>2 · The potions in the hand</h1>
+    <p class="mk-line">Each tool keeps <b>the largest bottle's place</b>, the bottle standing on its floor, so the row never moves and the room left above a small bottle says the week has thinned. <b>Two shares under it</b>: the now share in bold (in the warning's or the danger's colour at their levels), the week's under it, muted. <b>The colour follows whichever runs out first</b>: a vial brim-full is still red, because the week is what will stop it. A tool with one window keeps the large bottle and its level; a tool paid by its API keeps its coin.</p>
+    <div class="row" id="hand"></div>
+    <div class="tip" style="margin-top:var(--ork-4)"><b>Claude Code</b>, the default: 30% of the 5 hours left (until 18:40), 82% of the week (until Thu 09:00). Game design and Tech do on it.</div>
+  </section>
+  <section class="mk-sec">
+    <h1>3 · A week, on one tool</h1>
+    <p class="mk-line">Monday to Thursday morning, one potion: the liquid empties and fills again every five hours; the bottle steps down through the week, and at the weekly reset it is the large one again, full.</p>
+    <div class="row table week-strip" id="week"></div>
+  </section>
+</main>
+<script>
+(function () {
+  var B = "../../../design-system/orkui/";
+  // a bottle by its rows' widths (cells, centred on the bottle's width): the cork, the rim, the neck, the shoulders, the body, its foot
+  var SIZES = {
+    large: { w: 14, rows: [4, 6, 4, 4, 4, 4, 6, 8, 10, 12, 12, 12, 12, 12, 12, 10, 8, 6], neck: 6 },
+    medium: { w: 12, rows: [4, 6, 4, 4, 4, 6, 8, 10, 10, 10, 10, 8, 6, 4], neck: 5 },
+    small: { w: 10, rows: [4, 6, 4, 4, 6, 8, 8, 8, 6, 4], neck: 4 },
+    vial: { w: 8, rows: [4, 6, 4, 6, 6, 6, 6, 6, 4], neck: 3 }
+  };
+  function pot(size, level, tone) {
+    var s = SIZES[size], cells = {}, H = s.rows.length;
+    s.rows.forEach(function (n, y) { var x0 = (s.w - n) / 2; for (var x = x0; x < x0 + n; x++) cells[x + "," + y] = 1; });
+    var e = "", g = "", k = "", l = "", inside = [];
+    for (var key in cells) {
+      var q = key.split(","), x = +q[0], y = +q[1], c = "M" + x + " " + y + "h1v1h-1z";
+      if (y === 0) { k += c; continue; }                                                  // the cork
+      var edge = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(function (d) { return !cells[(x + d[0]) + "," + (y + d[1])] || (y + d[1]) === 0; });
+      if (edge) e += c; else if (y >= s.neck) inside.push([x, y, c]); else g += c;
+    }
+    var ys = inside.map(function (a) { return a[1]; }), top = Math.min.apply(null, ys), bottom = Math.max.apply(null, ys), n = bottom - top + 1;
+    var filled = level <= 0 ? 0 : Math.max(1, Math.ceil(level * n));                    // rows, rounded up: any share shows a row
+    inside.forEach(function (a) { if (a[1] > bottom - filled) l += a[2]; else g += a[2]; });
+    return '<svg class="pot" width="' + s.w * 3 + '" height="' + H * 3 + '" viewBox="0 0 ' + s.w + " " + H + '" aria-hidden="true"><path class="g" d="' + g + '"/><path class="l ' + (tone || "") + '" d="' + l + '"/><path class="e" d="' + e + '"/><path class="k" d="' + k + '"/></svg>';
+  }
+  var sizeOf = function (week) { return week > 0.6 ? "large" : week > 0.3 ? "medium" : week > 0.1 ? "small" : "vial"; };
+  var toneOf = function (now, week) { var m = Math.min(now, week); return m < 0.1 ? "danger" : m < 0.25 ? "warn" : ""; };
+  var pct = function (v) { return Math.round(v * 100) + "%"; };
+  function pool(t) {
+    var tone = t.week == null ? toneOf(t.now, 1) : toneOf(t.now, t.week);
+    var bottle = t.coin ? '<span class="coin">$</span>' : pot(t.week == null ? "large" : sizeOf(t.week), t.now, tone);
+    var under = t.coin ? '<span class="now">API</span><span class="week">$0.40 a task</span>'
+      : '<span class="now ' + tone + '">' + pct(t.now) + '</span><span class="week">' + (t.week == null ? (t.one || "") : "week " + pct(t.week)) + "</span>";
+    return '<div class="pool' + (t.def ? " is-default" : "") + '" title="' + t.say + '">' + (t.mark ? '<img class="ork-mark" src="' + B + "marks/harness-" + t.mark + '.png" alt="">' : "") + '<span class="slot">' + bottle + "</span>" + under + "</div>";
+  }
+  // 1: the legend
+  document.getElementById("legend").innerHTML = [["large", 0.8, "Above 60 % of the week"], ["medium", 0.45, "30 to 60 %"], ["small", 0.2, "10 to 30 %"], ["vial", 0.06, "Under 10 %"]]
+    .map(function (r) { return "<figure>" + pot(r[0], 0.7, toneOf(0.7, r[1])) + "<figcaption><b>" + r[0] + "</b><br>" + r[2] + "</figcaption></figure>"; }).join("");
+  // 2: the hand
+  var TOOLS = [
+    { mark: "claude", now: 0.3, week: 0.82, def: true, say: "Claude Code: 30% of 5 hours, 82% of the week" },
+    { mark: "codex", now: 1, week: 0.45, say: "Codex: all of 5 hours, 45% of the week" },
+    { mark: "cursor", now: 0.7, week: 0.18, say: "Cursor: 70% now, 18% of the week" },
+    { mark: "agy", now: 1, week: 0.06, say: "A tool full now but at 6% of its week: red, the week stops it first" },
+    { mark: "hermes", now: 0, week: 0.5, say: "Dry now, half the week left: back at 18:40" },
+    { mark: "pi", now: 0.55, week: null, one: "of the month", say: "One window only: the large bottle, its level" },
+    { coin: true, mark: "pipeline", say: "Paid by its API: no limit to pour" }
+  ];
+  document.getElementById("hand").innerHTML = TOOLS.map(pool).join("");
+  // 3: a week
+  var W = [["Mon 9:00", 1, 1], ["Mon 14:00", 0.2, 0.9], ["Mon 19:00", 1, 0.85], ["Tue", 0.6, 0.7], ["Wed", 0.4, 0.5], ["Wed 20:00", 0, 0.42], ["Thu 7:00", 0.9, 0.22], ["Thu 8:30", 0.5, 0.07], ["Thu 9:00 reset", 1, 1]];
+  document.getElementById("week").innerHTML = W.map(function (d) { return "<figure>" + '<span class="slot" style="width:42px;height:54px;display:flex;align-items:flex-end;justify-content:center">' + pot(sizeOf(d[2]), d[1], toneOf(d[1], d[2])) + "</span><figcaption><b>" + d[0] + "</b><br>" + pct(d[1]) + " · week " + pct(d[2]) + "</figcaption></figure>"; }).join("");
+})();
+</script>
+</body>
+</html>
