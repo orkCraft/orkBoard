@@ -26,5 +26,5 @@ either. The page gives the deck its width and leaves room at its left. With no b
 
 **The + card's seal** (0.19.0), `.ork-sigil`: `<span class="ork-sigil" aria-hidden="true"></span>` inside `.ork-card.ork-plus`, before its icon, is the seal of
 summoning, written in orkUI's runes (`../runes/README.md`): two circles, a band of seven runes and a star of two squares under the +, in the card's
-colour at a quarter's strength, with the place of the goal's element at its top (`.ork-sigil__seal`, 0.20.0: the element the new goal would be given, in its own colour). Its runes light once round the circle on hover, from the top. `.small` is drawn at an 80 px card. **A pile's place** before its first
+colour at a quarter's strength, with the place of the goal's element at its top (`.ork-sigil__seal`, 0.20.0: the element the new goal would be given, in its own colour). Its runes light once round the circle on hover, from the top. 0.21.0: it may hold up to four free runes (`.ork-sigil__free`) that show on hover, focus or `.ork-plus.is-choosing`, and `.ork-sigil.is-summoning` with `.rite-<element>` fills it once with the goal's colour (`../runes/README.md`). `.small` is drawn at an 80 px card. **A pile's place** before its first
 card is `.ork-card-place`: a card's outline in pixel dashes in the edge, with no fill, never pressed.

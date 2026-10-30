@@ -12,6 +12,15 @@
   border-left: var(--ork-line) solid var(--ork-frame); }
 .table-tab__txt { display: flex; flex-direction: column; min-width: 0; }
 .table-tab__main { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* the sword and the shield with the marks of the tools a party's Does and Checks run on (tabmarks.js, spec 111 §3.4, decisions §189): a second line under the name, 14 px, in ink; the open tab's marks are in colour; a column that mixes tools has a dot;
+   a Lean party's shield is faint with no mark; a potion hovered outlines the marks of its tool (`is-marked`, 1 px of ink). A row of heads (the narrow width, a crowded row) has no second line (`.table-tab__txt` is hidden). */
+.table-tab__marks { display: flex; align-items: center; gap: var(--ork-2); margin-top: 2px; color: var(--ork-ink-faint); }
+.table-tab__marks .ork-sign, .table-tab__marks .ork-mark { width: 14px; height: 14px; }
+.table-tab__gap { flex: none; width: var(--ork-3); }
+.table-tab__off { display: inline-flex; opacity: 0.35; }
+.table-tab__more { flex: none; align-self: flex-end; width: 4px; height: 4px; margin-left: -1px; background: var(--ork-ink-faint); }
+.table-tab__initial { display: inline-grid; place-items: center; flex: none; width: 14px; height: 14px; font: var(--ork-type-caption); line-height: 1; color: var(--ork-ink-muted); }
+.table-tab__mark.is-marked, .table-tab__initial.is-marked { outline: 1px solid var(--ork-ink); outline-offset: 1px; }
 .table-tab__dot { position: absolute; top: var(--ork-2); right: var(--ork-2); width: 6px; height: 6px; background: var(--ork-ink); }
 /* a party whose map has an alert (concerns.js `hasAlert`): orkUI's alert sign in the alert tone at the tab's foot, no count (decisions §145.3) */
 .table-tab__alert { position: absolute; right: var(--ork-2); bottom: var(--ork-2); display: inline-flex; color: var(--ork-alert); pointer-events: none; }

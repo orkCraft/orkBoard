@@ -30,5 +30,8 @@ the danger's (`#ad6a5a`, 25 from `danger`), ice (`#82aaff`) and void (`#8e88a8`)
     <span class="ork-elem ice big" aria-hidden="true"></span>         28 x 28
     <span class="ork-elem lava dim" aria-hidden="true"></span>        not yet given one
 
+**The glow** (0.21.0): `<span class="ork-elem lava is-glowing" aria-hidden="true"></span>` is a goal's rune while its task is at work: its opacity goes from 62 % to full and back in six steps
+over 2.4 s, no halo; under reduced motion it stands, at full strength. It is the only thing about an element that moves by itself.
+
 A mark is an accent on a card, beside the goal's name: the element is shown, never named in the interface, so the mark is
 `aria-hidden`. A shape is changed in `runes/runes.json`, then `python tools/build_runes.py`, in the table of `tests/test_orkui.py` and in orkBoard's decisions together, never in a face.

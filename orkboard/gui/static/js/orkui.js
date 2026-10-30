@@ -23,9 +23,10 @@ export function Sign({ name, big = false, label = "" }) {
 }
 
 /** A goal's element (orkUI's elements/, spec 50 §1): meadow, ice, dust, void or lava, 14 x 14 (`big` 28 x 28); `dim` while the goal is not
- *  yet read. Shown, never named: `aria-hidden`. A goal the host has not given one yet is drawn dim. */
-export function Elem({ name = "", big = false, dim = false }) {
-  return html`<span class=${`ork-elem ${name || "dust"}${big ? " big" : ""}${dim || !name ? " dim" : ""}`} aria-hidden="true"></span>`;
+ *  yet read. Shown, never named: `aria-hidden`. A goal the host has not given one yet is drawn dim. `glowing`: the flame of a task at work (orkUI 0.21.0
+ *  `.is-glowing`, decisions §187.2): its strength from about 62 % to full and back, only its opacity; it stands under reduced motion. */
+export function Elem({ name = "", big = false, dim = false, glowing = false }) {
+  return html`<span class=${`ork-elem ${name || "dust"}${big ? " big" : ""}${dim || !name ? " dim" : ""}${glowing ? " is-glowing" : ""}`} aria-hidden="true"></span>`;
 }
 
 /** orkUI's chevron: down (a menu, an open fold), up, right (a closed fold) or left. */

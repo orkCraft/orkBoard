@@ -35,12 +35,13 @@ PARTIES = [("tech", "Tech", "shaman", "engineering"), ("design", "Design", "drya
 
 
 NEXT_ELEMENT = {"tech": "ice", "design": "dust", "product": "void", "release": "lava"}          # what a new goal of each party would be given (`ideas.map`'s `next_element`, spec 110 §3.1)
+FREE_ELEMENTS = {"tech": ["ice", "void", "lava"], "design": ["dust", "lava"], "product": ["void"], "release": []}       # the runes none of its open goals has (`free_elements`, spec 111 §3.2); Release has none free: the face shows all
 
 
 def party(slug, name, race, craft):
     lead = {"slug": f"{slug}-lead", "name": f"{name} lead", "head": head(race, craft)}
     return {"slug": slug, "title": name, "short": name, "priority": "normal", "state": "ready", "done_when": [], "ideas": 0, "done": 0, "usd": None, "leader": lead,
-            "team": [], "party": [], "today": {"merged": 0, "usd": 0.0}, "flags": 0, "waits_main": 0, "brief": "", "craft": craft, "race": race, "ideation": False, "next_element": NEXT_ELEMENT.get(slug, "meadow")}
+            "team": [], "party": [], "today": {"merged": 0, "usd": 0.0}, "flags": 0, "waits_main": 0, "brief": "", "craft": craft, "race": race, "ideation": False, "next_element": NEXT_ELEMENT.get(slug, "meadow"), "free_elements": FREE_ELEMENTS.get(slug, [])}
 
 
 def node(slug, goal, title, place, state="ready", element="meadow", **more):
@@ -132,7 +133,7 @@ class HandHost(StubHost):
         if name == "ideas.add":
             self.log.append((name, a))
             self.added.append(a)
-            return self.bump({"slug": "new-goal", "queue": "now", "element": "meadow", "route": [a.get("party") or "tech"]})
+            return self.bump({"slug": "new-goal", "queue": "now", "element": a.get("element") or NEXT_ELEMENT.get(a.get("party"), "meadow"), "route": [a.get("party") or "tech"]})
         if name == "ideas.move":
             self.log.append((name, a))
             mine = next(n for n in self.nodes if n["slug"] == a["slug"])
@@ -602,6 +603,187 @@ def test_the_plus_card_grows_into_the_field_enter_sends_shift_enter_a_new_line_e
         pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)             # sent: the field closes with its text gone
         _plus(pg).click(position={"x": 8, "y": 60})
         assert _field(pg)[1].input_value() == ""
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def _frees(pg):
+    """The free runes lying in the + card's seal, in the places of the band: `[place, element]`."""
+    return pg.locator(".hand .hand-plus .ork-sigil > .ork-sigil__free").evaluate_all("els => els.map((e) => [e.classList[1], e.firstElementChild.classList[1]])")
+
+
+def _radios(pg):
+    return pg.locator(".hand-field .hand-field__runes [role=radio]")
+
+
+def _checked(pg):
+    return [r.get_attribute("data-rune") for r in _radios(pg).all() if r.get_attribute("aria-checked") == "true"]
+
+
+def test_the_seal_holds_the_free_runes_of_the_addressed_party_at_most_four_none_for_the_orkmaster_and_all_the_others_when_none_is_free(gui):
+    pg, host, log = open_hand(gui)
+    try:
+        _plus(pg).wait_for(timeout=WAIT_MS)
+        assert _frees(pg) == [], "the Orkmaster's tab, no party named: none"
+        call(pg, "frame/state.js", "openTab", "tech")                                                                      # free: ice (the default, at the top), void, lava
+        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__free')", timeout=WAIT_MS)
+        assert _frees(pg) == [["at-90", "void"], ["at-270", "lava"]], "the default stays in the seal, the others in the band's places in order of use"
+        assert _seal(pg) == "ice"
+        free = pg.locator(".hand .hand-plus .ork-sigil__free").first
+        assert free.evaluate("e => getComputedStyle(e).opacity") == "0" and free.locator(".ork-elem[aria-hidden='true']").count() == 1      # hidden at rest
+        _plus(pg).hover()
+        pg.wait_for_function("() => getComputedStyle(document.querySelector('.hand .hand-plus .ork-sigil__free')).opacity === '0.75'", timeout=WAIT_MS)     # shown on hover, at 75 %
+        assert free.evaluate("e => e.offsetWidth") == 14 and free.locator(".ork-elem").evaluate("e => getComputedStyle(e).backgroundColor") != "rgba(0, 0, 0, 0)"
+        shot(pg, "wide-plus-free-runes")
+        pg.mouse.move(5, 5)
+        call(pg, "frame/state.js", "openTab", "design")                                                                    # free: dust (the default), lava
+        pg.wait_for_function("() => document.querySelectorAll('.hand .hand-plus .ork-sigil__free').length === 1", timeout=WAIT_MS)
+        assert _frees(pg) == [["at-90", "lava"]]
+        call(pg, "frame/state.js", "openTab", "product")                                                                   # only its default is free: nothing in the band
+        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.void')", timeout=WAIT_MS)
+        assert _frees(pg) == []
+        call(pg, "frame/state.js", "openTab", "release")                                                                   # none free: the four others, in the four places in order
+        pg.wait_for_function("() => document.querySelectorAll('.hand .hand-plus .ork-sigil__free').length === 4", timeout=WAIT_MS)
+        assert _frees(pg) == [["at-90", "meadow"], ["at-270", "ice"], ["at-180", "dust"], ["at-45", "void"]] and _seal(pg) == "lava"
+        _plus(pg).click()                                                                                                  # the field open: the card holds the choice (`is-choosing`)
+        _field(pg)
+        assert "is-choosing" in _plus(pg).get_attribute("class")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_narrow_seal_is_small_and_holds_no_free_rune(gui):
+    pg, host, log = open_hand(gui, width="narrow")
+    try:
+        _plus(pg).wait_for(timeout=WAIT_MS)
+        call(pg, "frame/state.js", "openTab", "tech")
+        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.ice')", timeout=WAIT_MS)
+        assert "small" in pg.locator(".hand .hand-plus .ork-sigil").get_attribute("class").split() and _frees(pg) == []        # `.small` has none (orkUI 0.21.0)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_the_field_holds_a_row_of_five_runes_the_default_checked_the_used_faint_arrows_move_it_and_the_seal_follows(gui, width):
+    pg, host, log = open_hand(gui, width=width)
+    try:
+        _plus(pg).wait_for(timeout=WAIT_MS)
+        call(pg, "frame/state.js", "openTab", "tech")                                                                      # free: ice (the default), void, lava; meadow and dust are used
+        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.ice')", timeout=WAIT_MS)
+        _plus(pg).click(position={"x": 8, "y": 60})
+        field, area = _field(pg)
+        group = field.locator(".hand-field__runes")
+        assert group.get_attribute("role") == "radiogroup" and group.get_attribute("aria-label") == "Its rune"
+        radios = _radios(pg)
+        assert [r.get_attribute("aria-label") for r in radios.all()] == ["Rune 1", "Rune 2", "Rune 3", "Rune 4", "Rune 5"]      # the elements are never named (§63.4)
+        assert [r.get_attribute("data-rune") for r in radios.all()] == ["meadow", "ice", "dust", "void", "lava"]
+        assert all(r.get_attribute("role") == "radio" and r.locator(".ork-elem.big").count() == 1 for r in radios.all()) and _checked(pg) == ["ice"], "the default checked"
+        box = radios.first.bounding_box()
+        assert abs(box["width"] - 40) <= 1 and abs(box["height"] - 40) <= 1, box                                          # 40 x 40 (44 under a touch pointer)
+        assert radios.first.locator(".ork-elem").evaluate("e => e.offsetWidth") == 28                                      # the rune at 28 px
+        faint = lambda e: float(pg.locator(f'.hand-rune[data-rune="{e}"] .ork-elem').evaluate("e => getComputedStyle(e).opacity"))  # noqa: E731
+        assert faint("meadow") == faint("dust") < faint("void") < faint("ice") == 1.0, "the used ones faint, the free ones bright, the chosen one full"
+        assert [r.get_attribute("tabindex") for r in radios.all()] == ["-1", "0", "-1", "-1", "-1"]                         # one stop in the row
+        assert group.evaluate("e => e.scrollWidth <= e.clientWidth + 1")
+        shot(pg, f"{width}-field-runes")
+        radios.nth(1).focus()
+        pg.keyboard.press("ArrowRight")                                                                                    # the arrows move the choice and the focus
+        assert _checked(pg) == ["dust"] and radios.nth(2).evaluate("e => e === document.activeElement")
+        assert _seal(pg) == "dust", "the seal follows the choice"
+        if width == "wide":
+            assert [f[1] for f in _frees(pg)] == ["ice", "void", "lava"], "and the default is among the free ones again"
+        pg.keyboard.press("ArrowLeft"); pg.keyboard.press("ArrowLeft")
+        assert _checked(pg) == ["meadow"]
+        pg.keyboard.press("ArrowLeft")
+        assert _checked(pg) == ["lava"], "it goes round"
+        pg.keyboard.press("ArrowUp")
+        assert _checked(pg) == ["void"]
+        pg.keyboard.press("Tab")                                                                                           # Tab leaves the row
+        assert pg.evaluate("() => !document.activeElement.closest('.hand-field__runes')") and _checked(pg) == ["void"]
+        radios.nth(0).click()                                                                                              # a press chooses too
+        assert _checked(pg) == ["meadow"] and _seal(pg) == "meadow"
+        area.fill("The rune is meadow")
+        area.press("Enter")
+        assert _sent(pg, host, ("ideas.add", {"text": "The rune is meadow", "party": "tech", "element": "meadow"}))         # sent: the choice differs from the default
+        pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
+        _plus(pg).click(position={"x": 8, "y": 60})
+        _field(pg)
+        assert _checked(pg) == ["ice"], "the next goal starts from the default again"
+        _field(pg)[1].fill("The default")
+        _field(pg)[1].press("Enter")
+        assert "element" not in _calls(pg, host, "ideas.add", 2)[-1], "the default is not sent"
+        narrow.no_sideways(pg)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_with_no_party_addressed_no_rune_is_checked_the_arrows_begin_at_the_first_and_the_choice_is_sent(gui):
+    pg, host, log = open_hand(gui)
+    try:
+        _plus(pg).wait_for(timeout=WAIT_MS)
+        _plus(pg).click()
+        field, area = _field(pg)
+        assert _checked(pg) == [] and [r.get_attribute("tabindex") for r in _radios(pg).all()] == ["0", "-1", "-1", "-1", "-1"]
+        assert pg.locator(".hand-rune.is-used").count() == 0, "no party: none is used"
+        _radios(pg).first.focus()
+        pg.keyboard.press("ArrowRight")
+        assert _checked(pg) == ["meadow"] and _seal(pg) == "meadow"
+        area.fill("A general goal in lava")
+        _radios(pg).nth(4).click()
+        area.press("Enter")
+        assert _sent(pg, host, ("ideas.add", {"text": "A general goal in lava", "element": "lava"}))
+        pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_party_named_in_the_text_changes_the_default_and_the_used_runes_and_all_five_used_are_none_faint(gui):
+    pg, host, log = open_hand(gui)
+    try:
+        _plus(pg).wait_for(timeout=WAIT_MS)
+        _plus(pg).click()
+        field, area = _field(pg)
+        area.fill("@Design ")
+        pg.wait_for_function("() => document.querySelector('.hand-rune[aria-checked=\"true\"][data-rune=\"dust\"]')", timeout=WAIT_MS)
+        assert [r.get_attribute("data-rune") for r in pg.locator(".hand-rune.is-used").all()] == ["meadow", "ice", "void"]       # Design's free runes are dust and lava
+        area.fill("@Release ")
+        pg.wait_for_function("() => document.querySelector('.hand-rune[aria-checked=\"true\"][data-rune=\"lava\"]')", timeout=WAIT_MS)
+        assert pg.locator(".hand-rune.is-used").count() == 0, "all five used: nothing tells them apart"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_goal_sent_plays_the_rite_on_the_seal_in_its_element_once_and_none_under_reduced_motion(gui):
+    pg, host, log = open_hand(gui)
+    try:
+        _plus(pg).wait_for(timeout=WAIT_MS)
+        call(pg, "frame/state.js", "openTab", "tech")
+        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.ice')", timeout=WAIT_MS)
+        sigil = pg.locator(".hand .hand-plus .ork-sigil")
+        assert "is-summoning" not in sigil.get_attribute("class")
+        _plus(pg).click()
+        field, area = _field(pg)
+        _radios(pg).nth(3).click()                                                                                         # void
+        area.fill("Light the seal")
+        area.press("Enter")
+        pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil.is-summoning.rite-void')", timeout=WAIT_MS)       # the goal's own element
+        assert pg.locator(".hand-field").count() == 0, "the field closes as it did"
+        shot(pg, "wide-plus-rite")
+        pg.wait_for_function("() => !document.querySelector('.hand .hand-plus .ork-sigil.is-summoning')", timeout=3000)       # taken off after the animation
+        assert not [c for c in sigil.get_attribute("class").split() if c.startswith("rite-")]
+        pg.emulate_media(reduced_motion="reduce")                                                                          # nothing plays under reduced motion
+        _plus(pg).click()
+        _field(pg)[1].fill("Still")
+        _field(pg)[1].press("Enter")
+        pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
+        pg.wait_for_timeout(300)
+        assert "is-summoning" not in sigil.get_attribute("class")
     finally:
         pg.close()
     assert not log, "\n".join(log)

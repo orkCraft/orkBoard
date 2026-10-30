@@ -3,6 +3,10 @@
 time the Map reads it one is given and stored (once, ever; `ideas_rev` does not move). A party carries its goal types (spec 52
 §2.4: its leader's set, the most used first, with what each misses of the party), read here with the map: the pure
 `board_map.build` reads no runs. Split from ideas.py to keep it under ~600 lines.
+
+A party carries what its tab needs besides (spec 111 B): `free_elements`, the runes none of its open goals has (the + card's free runes and the field's row; empty
+when none is free), beside `next_element`; and its sword and shield (decisions §189): `does_tool` and `checks_tool`, the AI tools its Does and its Checks run on (a
+`harnesses` id, the Main tool resolved), `does_mixed` / `checks_mixed` when a column's roles run on more than one, and `lean` (no separate check: `checks_tool` is "").
 """
 from __future__ import annotations
 
@@ -10,6 +14,7 @@ import time
 from collections import Counter
 from pathlib import Path
 
+from orkboard import settings as machine
 from orkboard.gui import media
 from orkboard.gui.ideas_args import IdeasError, _opt
 from orkboard.realm import board_map, collide, goal_team, goal_types, idea_element, ideas, library, orkmaster, party_recipes
@@ -44,14 +49,33 @@ class MapMixin:
                     continue                                             # a disk that refuses: the faces draw it dim, the next read tries again
                 if n["state"] != "done":
                     used[n["goal"]].append(n["element"])
+        main = machine.main_tool(getattr(self.host, "machine", None))              # what a party with no tool of its own runs on
         for g in got["goals"]:
             g["next_element"] = idea_element.pick(used.get(g["slug"], []))                 # what a new goal of this party would be given (`idea_element.next_for`, from the elements read above)
+            g["free_elements"] = idea_element.free(used.get(g["slug"], []))                # the runes none of its open goals has (`idea_element.free_for`): [] when none is free
+            g.update(self.marks_of(g, main))                                                # its sword and shield on its tab (decisions §189)
             g["types"] = self.types_of(root, g["slug"], [n["slug"] for n in got["nodes"] if n["goal"] == g["slug"]])
             g["stages"] = self.stages_of(root, g["slug"])
             g["concerns"] = self.concerns_counts(g["slug"])                              # its leader's concerns on its map, for its tab (spec 108 §2.5)
             g["ops"] = goal_team.recipe_of(root, g["slug"]) == party_recipes.TEAM_ID         # the Team party: its Board is the person's Operations (spec 92 §3)
         got["project"] = self.project_of(root, got, goal)
         return got
+
+    @staticmethod
+    def marks_of(g: dict, main: str) -> dict:
+        """The tools of a party's sword and shield (decisions §189.1): `{does_tool, checks_tool, does_mixed, checks_mixed, lean}`. A seat runs on its own tool, else the
+        party's (`goal_team.tool_for`), else the Main tool `main`; **Does** is the tool most of its doing seats run on (its leader's when it has none), **Checks** the tool most
+        of its checking seats run on (its leader's when none checks: the leader checks, `goal_team.checkers`); a column that mixes tools is `*_mixed`. A **Lean** party has no
+        separate check: `lean`, and `checks_tool` is "" (the shield stands faint, no mark)."""
+        mine = goal_team.clean_tools(g.get("tools") or {})
+        of = lambda agent: mine.get(agent) or g.get("tool") or main                   # noqa: E731  (`tool_for`, from what the map has read, the Main tool at the end)
+        squad = [m["slug"] for m in g.get("team") or []]
+        lead = of((g.get("leader") or {}).get("slug") or "taskmaster")
+        does = [of(s) for s in squad if goal_team.band_of(s) != "check"] or [lead]
+        checks = [of(s) for s in squad if goal_team.band_of(s) == "check"] or [lead]
+        lean = g.get("size") == "lean"
+        most = lambda tools: Counter(tools).most_common(1)[0][0]                       # noqa: E731  (ties: the first seat's)
+        return {"does_tool": most(does), "does_mixed": len(set(does)) > 1, "checks_tool": "" if lean else most(checks), "checks_mixed": not lean and len(set(checks)) > 1, "lean": lean}
 
     def project_of(self, root: Path, got: dict, goal: str | None) -> dict:
         """The project's level (spec 70 §1.1): the Orkmaster and its deal of the parties. The flags are counted from the nodes already read

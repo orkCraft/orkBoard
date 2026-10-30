@@ -5,7 +5,11 @@ routing one and joining one; tasks at work, failures, a check; three goals in li
 The tabs in order with the project's first (its name), its **…** and its three places over the pane, **+**, *Stop all*; the Board's lanes under their tabs, the same widths; a task card's header, window and label row, a goal's strip and
 cascade (its front by the rule, the others a fan behind it with a fixed turn by place, opened by a hover, an edge lifting its task, the picked goal's unfolded, a goal in two lanes lit in both); the first lane's cards and the line (the Orkmaster's order, the moon, a drag, *All · search*); a party's header with its
 groups, a seat's popover and its **Open**, another party's tab its header alone; Tech's System; a card lifted and lowered (Esc, a press away); a file opened over the pane, its title, **←** back to the card lit; a form in the pane, never a dialog; no
-sideways scroll at 390. Screenshots to the directory ORKCRAFT_SHOTS_DIR names when it is set."""
+sideways scroll at 390. Screenshots to the directory ORKCRAFT_SHOTS_DIR names when it is set.
+
+Spec 111 B (decisions §187.1–§187.2, §189): one rune a stack (the strip's; none on a task card's header or an edge; a goal the Orkmaster does itself is its card alone with its rune and its whole title), the flame (the rune
+glowing in the stage's sign's place on a task at work, none on a task that waits or failed, still under reduced motion, the old motion gone), and the sword and shield on each tab with the marks of the tools its Does and
+Checks run on (the open tab's in colour, a Lean party's shield faint with no mark, a dot for a mixed column, the words in the title and the label, none at the narrow width)."""
 from __future__ import annotations
 
 import copy
@@ -30,6 +34,10 @@ NAMES = {"game": "Game design", "tech": "Tech", "art": "Art", "release": "Releas
 MEMBER = {"grunt": ("Grunts", HEAD("peon", "warrior"), "build"), "tester": ("Tester", HEAD("peon", "laborer"), "build"), "reviewer": ("Reviewer", HEAD("peon", "warrior"), "check"),
           "designer": ("Designer", HEAD("knight", "warrior", "product"), "build"), "artist": ("Artist", HEAD("elf", "warrior", "design"), "build")}
 FILE = "server/lobby.ts"
+MARKS = {"game": {"does_tool": "claude", "checks_tool": "claude", "does_mixed": False, "checks_mixed": False, "lean": False},                         # a party's sword and shield as `ideas.map` serves them (gui/ideas_map.py `marks_of`)
+         "tech": {"does_tool": "claude", "checks_tool": "codex", "does_mixed": False, "checks_mixed": False, "lean": False},
+         "art": {"does_tool": "claude", "checks_tool": "", "does_mixed": False, "checks_mixed": False, "lean": True},                                    # Lean: no separate check
+         "release": {"does_tool": "codex", "checks_tool": "claude", "does_mixed": True, "checks_mixed": False, "lean": False}}                          # one of its roles runs on another tool
 LOBBY = "\n".join(f"line {i}" for i in range(1, 30))
 
 
@@ -56,7 +64,8 @@ def party(slug, order, seats=()):
     lead = {"slug": "architect" if slug == "tech" else "taskmaster", "name": "Architect" if slug == "tech" else name, "head": head}
     return {"slug": slug, "title": name, "short": name, "priority": "normal", "state": "ready", "done_when": [], "ideas": 1, "done": 0, "usd": None, "leader": lead, "size": "standard",
             "team": [{"slug": s, "name": MEMBER[s][0], "head": MEMBER[s][1], "checks": MEMBER[s][2] == "check", "every": False} for s, _ in seats], "tool": "", "tools": {}, "craft": "engineering",
-            "party": [{**lead, "band": "lead", "state": "free", "why": ""}, *[seat(s, b) for s, b in seats]], "today": {"merged": 0, "usd": 0.0}, "flags": 0, "waits_main": 0, "brief": "", "order": order}
+            "party": [{**lead, "band": "lead", "state": "free", "why": ""}, *[seat(s, b) for s, b in seats]], "today": {"merged": 0, "usd": 0.0}, "flags": 0, "waits_main": 0, "brief": "", "order": order,
+            "next_element": "dust", "free_elements": ["dust", "void", "lava"], **MARKS.get(slug, MARKS["game"])}
 
 
 def system_doc():
@@ -111,11 +120,17 @@ class TableHost:
             slug, goal, title, element, sign, more = fixed[i] if i < len(fixed) else (f"ln{i + 1}", ["game", "tech", "art"][i % 3], f"Goal {i + 1} in line", ["dust", "ice", "meadow"][i % 3], "feature", {})
             self.nodes.append(node(slug, goal, title, "ready", element=element, sign=sign, place="deck", **more))
 
+    def push(self):
+        """The Board changed: a new revision, and the page reads the map again."""
+        self.rev += 1
+        self.ws.send(json.dumps(self.snapshot()))
+
     def snapshot(self):
         return {"t": "state", "state": {
             "focus": "board", "ideas_rev": self.rev, "look": "office", "project": "shop", "demo": False, "onboarding": False, "words": [], "resources": {}, "orkspaces": [], "buildings": [], "roads": [], "alerts": [],
             "score": {}, "limits": [{"provider": "claude", "name": "Claude", "left": 0.62, "rows": [{"window": "5h", "left": 0.62, "reset": ""}]},
                                     {"provider": "codex", "name": "Codex", "left": 0.18, "rows": [{"window": "daily", "left": 0.18, "reset": ""}]}],
+            "mana": {"main": "claude", "now": "claude", "until": None, "moved": None, "paid": None},
             "reserve": {"share": 0.1, "night": False}, "rate": None, "review_count": 0, "needs_you": 0, "sign_in": [], "hud": {"gold": "$2.40", "show_gold": True, "lumber": "120k"},
             "projects": {"current": self.current, "recent": [{"path": "/work/old", "name": "old"}], "open": [{"path": SHOP, "name": "shop", "working": 1, "needs_you": 0, "review": 0},
                                                                                                          {"path": "/work/other", "name": "other", "working": 0, "needs_you": 0, "review": 0}]}}}
@@ -266,6 +281,11 @@ def wide(w):
     return w == "wide"
 
 
+def anim(el, pseudo=""):
+    """`[name, duration, timing]` of an element's animation (or its pseudo-element's)."""
+    return el.evaluate("(e, p) => { const s = getComputedStyle(e, p || null); return [s.animationName, s.animationDuration, s.animationTimingFunction]; }", pseudo)
+
+
 def tab(pg, slug):
     return pg.locator(f'.table-tab[data-tab="{slug}"]')
 
@@ -291,11 +311,13 @@ def test_the_tabs_in_order_the_projects_first_then_plus_and_stop_all(table):
     tabs = pg.locator(".table-tab")
     assert [t.get_attribute("data-tab") for t in tabs.all()] == ["orkmaster", "game", "tech", "art", "release"]         # the project's first, then the Board's order
     first = tab(pg, "orkmaster")
-    assert first.get_attribute("aria-label") == "shop" and first.get_attribute("aria-selected") == "true"                # the first tab is the project's: its name (spec 101 §3.4, decisions §167.6)
+    assert first.get_attribute("aria-label") == "shop · Does on Claude · Checks on Claude" and first.get_attribute("aria-selected") == "true"                # the first tab is the project's: its name (spec 101 §3.4, decisions §167.6) and the main tool on both (spec 111 §3.4)
     assert "Orkmaster" not in (first.get_attribute("title") or "") and first.locator(".table-tab__sub").count() == 0
+    assert first.locator(".table-tab__main").text_content() == "shop"
     assert "peon-crown" in first.locator(".ork-race__head").get_attribute("src")                                         # its crowned head
     assert "knight-elder" in tab(pg, "game").locator(".ork-race__head").get_attribute("src")                             # a party's tab wears its leader's head
-    assert tab(pg, "tech").get_attribute("aria-label") == "Tech"                                                         # and its name, said also when only the head is drawn
+    assert tab(pg, "tech").get_attribute("aria-label") == "Tech · Does on Claude · Checks on Codex"                      # and its name, said also when only the head is drawn, with its sword and shield's words (spec 111 §3.4)
+    assert tab(pg, "tech").get_attribute("title") == tab(pg, "tech").get_attribute("aria-label")
     assert pg.get_by_role("button", name="New party").count() == 1 and pg.get_by_role("button", name="Stop all").count() == 1
     plus = pg.locator(".table-tabs__end .table-plus")
     assert " ".join(plus.inner_text().split()) == ("Party" if wide(w) else "") and "primary" not in plus.get_attribute("class")                # spec 107 §8.1: + Party, green is New goal's
@@ -417,8 +439,7 @@ def test_a_task_card_has_its_header_its_window_with_the_types_sign_and_its_label
     box = failed.bounding_box()
     assert abs(box["width"] - 144) <= 1                                                                                   # 144 wide (frame.css `--card-w`)
     head = failed.locator(".table-card__head")
-    assert head.locator(".ork-elem.ice").count() == 1 and failed.locator(".ork-elem").count() == 1                      # the goal's element, bare, at the left
-    assert head.evaluate("e => e.firstElementChild.classList.contains('ork-elem')")
+    assert failed.locator(".ork-elem").count() == 0 and head.evaluate("e => e.firstElementChild.classList.contains('table-card__nm')")      # no rune on a task card: the goal's stands once, on its strip (spec 111 §3.1, decisions §187.1)
     nm = head.locator(".table-card__nm")
     assert nm.inner_text().strip() == "Reset the round timer when a player rejoins"
     assert nm.evaluate("e => getComputedStyle(e).textAlign") in ("left", "start") and nm.evaluate("e => getComputedStyle(e).webkitLineClamp") == "3"        # left-aligned, three lines at most
@@ -455,7 +476,8 @@ def test_a_goal_is_a_strip_over_its_cascade_the_front_by_the_rule_and_the_others
     assert [e.get_attribute("data-stage") for e in bar.locator("[data-lkey]").all()] == ["planning", "doing", "checking"]
     assert bar.locator(".table-tedge").count() == 2 and bar.locator(".table-card").count() == 1 and bar.get_attribute("data-open") == "false"                  # collapsed: nothing is picked
     edge = pg.locator('[data-lkey="t:task:bar/a1"]')
-    assert edge.locator(".ork-sign.sword").count() == 1 and edge.locator(".ork-elem.void").count() == 1 and edge.locator(".ork-sign").count() == 1             # the stage's small sign and the goal's element
+    assert edge.locator(".ork-sign.sword").count() == 1 and edge.locator(".ork-sign").count() == 1 and edge.locator(".ork-elem.void.is-glowing").count() == 1     # the stage's small sign and, a task at work, the goal's rune glowing before it (spec 111 §3.1)
+    assert pg.locator('[data-lkey="t:task:bar/a3"] .ork-elem').count() == 0 and pg.locator('[data-lkey="t:task:bar/a3"] .ork-sign.page').count() == 1                # a task that only asks has the sign and no flame
     assert edge.evaluate("e => getComputedStyle(e.querySelector('.table-fan__nm')).opacity") == "0" and edge.get_attribute("title") == "Draw the bar"       # no name at rest (it is the edge's label for a screen reader)
     assert "asks" in pg.locator('[data-lkey="t:task:bar/a3"]').get_attribute("class")                                    # a pick asked for: orkUI's alert frame
     gs = pg.locator('.table-lane[data-party="tech"] > .table-goal .table-gstrip')
@@ -467,6 +489,47 @@ def test_a_goal_is_a_strip_over_its_cascade_the_front_by_the_rule_and_the_others
     shot(pg, f"table-cascade-{w}.png")
     open_fan(pg, "t:task:bar/a1")
     shot(pg, f"table-fan-open-{w}.png")
+
+
+FLAME = ".ork-elem.is-glowing"
+AT_WORK = ("r1", "k1", "s1", "c1", "a1", "a2")                                                                           # the tasks the stub has running or testing
+
+
+def test_a_goals_rune_stands_once_on_its_strip_and_a_task_at_work_shows_the_flame_in_the_stages_place(table):
+    pg, host, w = table
+    if not wide(w):
+        glowing = pg.locator('[data-lkey="t:task:rules/r1"]')                                                             # a lane a token wide: the token keeps its rune, glowing while its front task is at work
+        assert glowing.locator(".ork-elem.meadow.is-glowing").count() == 1 and glowing.locator(".ork-elem").count() == 1
+        assert pg.locator('[data-lkey="t:task:seat/s2"] .ork-elem.ice').count() == 1 and pg.locator('[data-lkey="t:task:seat/s2"] .is-glowing').count() == 0       # its front task failed: the rune is still
+        assert anim(glowing.locator(".ork-elem"))[0] == "ork-glow" and glowing.locator(".table-card__win > *").evaluate_all("els => els.map((e) => getComputedStyle(e).animationName)") == ["none"]
+        return
+    assert pg.locator(".table-lane[data-party] .table-card__head .ork-elem, .table-lane[data-party] .table-tedge > .ork-elem:not(.is-glowing)").count() == 0       # no rune on a card's header or on an edge that does not work
+    for slug in ("rules", "seat", "calm", "recheck", "bar"):
+        assert pg.locator(f'.table-lane[data-party] .table-goal[data-goal="{slug}"] .table-gstrip .ork-elem').count() == 1, slug                  # the goal's one rune: its strip's
+    r1 = pg.locator('[data-lkey="t:task:rules/r1"]')                                                                      # at work, the front card
+    flame = r1.locator(".table-stage .ork-elem.meadow.is-glowing")
+    assert flame.count() == 1 and r1.locator(".table-stage .ork-sign").count() == 0 and r1.locator(".table-stage").inner_text().strip().lower() == "doing"      # the flame takes the stage's sign's place; the words stay
+    assert flame.evaluate("e => e.offsetWidth") == 14 and flame.get_attribute("aria-hidden") == "true"
+    name, duration, timing = anim(flame)
+    assert name == "ork-glow" and duration == "2.4s" and timing.startswith("steps(6"), (name, duration, timing)           # orkUI's glow: six steps over 2.4 s
+    assert pg.locator('[data-lkey="t:task:bar/a2"] .table-stage .ork-elem.void.is-glowing').count() == 1                 # a task being checked is at work too
+    edge = pg.locator('[data-lkey="t:task:seat/s1"]')                                                                     # at work, behind the front one: the rune glowing before the stage's sign
+    assert edge.locator(".ork-elem.ice.is-glowing").count() == 1 and edge.locator(".ork-sign.sword").count() == 1 and edge.evaluate("e => e.firstElementChild.classList.contains('ork-elem')")
+    for key in ("t:task:seat/s2", "t:task:recheck/c2", "t:task:bar/a3"):                                                  # failed, or asking: no flame
+        assert pg.locator(f'[data-lkey="{key}"] .ork-elem').count() == 0, key
+    assert pg.locator(f".table-lane[data-party] {FLAME}").count() == len(AT_WORK)                                          # as many flames as tasks at work
+    assert anim(r1.locator(".table-card__win > *").first)[0] == "none" and anim(r1, "::after")[0] == "none"              # the card's own motion of before is gone (the tab's head step stays)
+    pg.emulate_media(reduced_motion="reduce")                                                                             # under reduced motion the flame stands, at full strength
+    assert anim(flame)[0] == "none" and flame.evaluate("e => getComputedStyle(e).opacity") == "1"
+    pg.emulate_media(reduced_motion="no-preference")
+    shot(pg, "table-flame-wide.png")
+    for n in host.nodes:                                                                                                  # the task stops working: the flame goes, the sign comes back
+        for t in n["tasks"]:
+            if t["id"] == "r1":
+                t["state"] = "failed"
+    host.push()
+    pg.locator('[data-lkey="t:task:rules/r1"][data-state="failed"]').wait_for(timeout=WAIT_MS)
+    assert r1.locator(".table-stage .ork-elem").count() == 0 and r1.locator(".table-stage .ork-sign.sword").count() == 1
 
 
 def test_a_goals_tasks_lie_as_a_fan_turned_one_to_three_degrees_by_their_place_and_a_hover_opens_it(table):
@@ -540,7 +603,8 @@ def test_a_goal_picked_unfolds_its_cascade_and_is_lit_in_both_its_lanes_the_othe
         assert bar.locator('[data-lkey="t:task:bar/a1"] .ork-sign.picture').count() == 1                                  # a task of a kind of its own: its kind's sign, not the goal's
         assert pg.locator('.table-casc[data-goal="seat"]').get_attribute("data-open") == "false"                          # the others stay collapsed
         assert pg.locator('.table-casc[data-goal="seat"] .table-tedge').count() == 1
-        assert pg.locator('.table-lane[data-lane="first"] .table-gstrip.ork-picked').evaluate("e => e.getAttribute('aria-pressed')") == "true"
+        assert pg.locator('.table-lane[data-party="art"] .table-gstrip.ork-picked').evaluate("e => e.getAttribute('aria-pressed')") == "true"
+        assert pg.locator('.table-lane[data-lane="first"] .table-card--own.ork-picked').get_attribute("data-goal") == "bar"       # in the first lane the goal has no strip: its own card wears the pick (spec 111 §3.1)
     shot(pg, f"table-picked-{w}.png")
     pick(pg, "")
     pg.wait_for_function("() => document.querySelectorAll('.table .ork-picked').length === 0", timeout=WAIT_MS)
@@ -556,7 +620,9 @@ def test_the_first_lane_holds_what_is_the_whole_projects_the_goals_read_routed_a
         assert words == ["reading", "routing", "joining"]
         assert first.locator(".table-card--own .ork-race__head").count() == 0                                             # no crown: who works is not on a card of the Board
         goal = first.locator('.table-goal[data-goal="results"]')
-        assert goal.locator(".table-gstrip").count() == 1 and goal.locator(".table-card--own").count() == 1               # a card a goal, under its strip
+        assert goal.locator(".table-gstrip").count() == 0 and goal.locator(".table-card--own").count() == 1               # a card a goal, no strip over it: the card is the goal's (spec 111 §3.1, decisions §187.1)
+        own = goal.locator(".table-card--own .table-card__head")
+        assert own.locator(".ork-elem.dust").count() == 1 and own.evaluate("e => e.firstElementChild.classList.contains('ork-elem')") and own.locator(".table-card__nm").inner_text().strip() == "Results screen with the round's best answer"     # its rune and its whole title
         assert goal.locator(".table-card__win .ork-sign.screen").count() == 1
         assert first.locator(".table-casc--line").count() == 1 and first.locator(".table-goal").last.bounding_box()["y"] < first.locator(".table-casc--line").bounding_box()["y"]       # the line last
     else:
@@ -909,11 +975,76 @@ def test_with_many_parties_the_tabs_keep_their_heads_and_the_board_lays_tokens(g
     pg.goto(server.url)
     pg.locator(".table-tab").nth(8).wait_for(timeout=WAIT_MS)
     pg.wait_for_selector('.table[data-compact="true"]', timeout=WAIT_MS)
-    assert tab(pg, "tech").locator(".table-tab__txt").is_hidden() and tab(pg, "tech").get_attribute("aria-label") == "Tech"           # more than fit: the heads alone
+    assert tab(pg, "tech").locator(".table-tab__txt").is_hidden() and tab(pg, "tech").get_attribute("aria-label") == "Tech · Does on Claude · Checks on Codex"           # more than fit: the heads alone, the words said
     assert pg.locator('.table-board[data-tokens="true"]').count() == 1
     narrow.no_sideways(pg)
     pg.context.close()
     assert not errors, "\n".join(errors)
+
+
+# -- the sword and shield on a tab (spec 111 §3.4, decisions §189) ----------------------------------------------------------------------------------------------
+
+def marks_of(pg, slug):
+    """What a tab's second line holds, in order: `sword`, a tool, `shield`, a tool (or the faint shield with none), as `[kind, tool]`."""
+    return pg.locator(f'.table-tab[data-tab="{slug}"] .table-tab__marks').evaluate("""e => [...e.children].filter((c) => !c.classList.contains('table-tab__gap')).map((c) =>
+        c.classList.contains('ork-sign') ? [[...c.classList].find((k) => k === 'sword' || k === 'shield'), ''] : c.classList.contains('table-tab__off') ? ['off', c.firstElementChild.classList.contains('shield') ? 'shield' : '']
+        : c.classList.contains('table-tab__more') ? ['more', ''] : ['tool', c.dataset.tool])""")
+
+
+def test_a_tab_has_a_second_line_the_sword_and_the_tool_its_does_run_on_the_shield_and_the_tool_its_checks_run_on(table):
+    pg, host, w = table
+    if not wide(w):
+        assert tab(pg, "tech").locator(".table-tab__marks").is_hidden() and tab(pg, "tech").locator(".table-tab__txt").is_hidden()      # a row of heads: no second line
+        assert "Does on Claude · Checks on Codex" in tab(pg, "tech").get_attribute("title")                              # its words are still said
+        return
+    assert marks_of(pg, "game") == [["sword", ""], ["tool", "claude"], ["shield", ""], ["tool", "claude"]]
+    assert marks_of(pg, "tech") == [["sword", ""], ["tool", "claude"], ["shield", ""], ["tool", "codex"]]
+    assert marks_of(pg, "orkmaster") == [["sword", ""], ["tool", "claude"], ["shield", ""], ["tool", "claude"]]            # the project's tab: the main tool on both
+    assert marks_of(pg, "art") == [["sword", ""], ["tool", "claude"], ["off", "shield"]]                                  # Lean: the shield faint, no mark
+    assert marks_of(pg, "release") == [["sword", ""], ["tool", "codex"], ["more", ""], ["shield", ""], ["tool", "claude"]]    # a dot: one of its roles runs on another tool
+    assert tab(pg, "art").locator(".table-tab__off").evaluate("e => getComputedStyle(e).opacity") == "0.35"
+    assert tab(pg, "tech").get_attribute("title") == "Tech · Does on Claude · Checks on Codex"
+    assert tab(pg, "art").get_attribute("aria-label") == "Art · Does on Claude · no separate check"
+    assert tab(pg, "release").get_attribute("aria-label") == "Release · Does on Codex and others · Checks on Claude"
+    line = tab(pg, "tech").locator(".table-tab__marks")
+    assert line.get_attribute("aria-hidden") == "true"                                                                    # the words are the tab's label, the marks are drawn
+    assert all(abs(b["width"] - 14) <= 1 and abs(b["height"] - 14) <= 1 for b in (e.bounding_box() for e in line.locator(".ork-sign, img").all()))        # 14 px, as the signs' small size
+    head, name, tb = tab(pg, "tech").bounding_box(), tab(pg, "tech").locator(".table-tab__main").bounding_box(), line.bounding_box()
+    assert abs(head["height"] - 52) <= 1 and tb["y"] >= name["y"] + name["height"] - 1 and tb["y"] + tb["height"] <= head["y"] + head["height"] and abs(tb["x"] - name["x"]) <= 1      # under the name, inside the 52 px tab
+    ink = lambda slug, i: tab(pg, slug).locator(".table-tab__marks img").nth(i).get_attribute("src")                          # noqa: E731
+    assert ink("tech", 0).endswith("/marks/harness-claude-ink.png") and ink("tech", 1).endswith("/marks/harness-codex-ink.png")      # in ink
+    assert ink("orkmaster", 0).endswith("/marks/harness-claude.png") and ink("orkmaster", 1).endswith("/marks/harness-claude.png")     # the open tab's in colour
+    assert tab(pg, "tech").locator(".table-tab__marks img").first.get_attribute("srcset").endswith("harness-claude-ink@2x.png 2x")
+    open_tab(pg, "tech")
+    assert ink("tech", 0).endswith("/marks/harness-claude.png") and ink("tech", 1).endswith("/marks/harness-codex.png")               # Tech is open: its marks in colour
+    assert ink("orkmaster", 0).endswith("/marks/harness-claude-ink.png") and ink("game", 0).endswith("/marks/harness-claude-ink.png")  # and the others back in ink
+    shot(pg, "table-tabs-marks-wide.png")
+
+
+def test_a_potion_hovered_or_focused_outlines_its_tools_marks_on_the_tabs_and_says_who_drinks_from_it(table):
+    pg, host, w = table
+    if not wide(w):
+        pytest.skip("the potions lie in the hand at the wide width; the narrow width's tabs are heads only")
+    outlined = lambda: pg.locator(".table-tab .is-marked").evaluate_all("els => els.map((e) => [e.closest('.table-tab').dataset.tab, e.dataset.tool])")        # noqa: E731
+    assert outlined() == []
+    claude, codex = pg.locator('.hand-pot[data-provider="claude"]'), pg.locator('.hand-pot[data-provider="codex"]')
+    claude.hover()
+    pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length > 0", timeout=WAIT_MS)
+    got = outlined()
+    assert sorted(got) == sorted([["orkmaster", "claude"], ["orkmaster", "claude"], ["game", "claude"], ["game", "claude"], ["tech", "claude"], ["art", "claude"], ["release", "claude"]])       # every mark of Claude, none of Codex
+    assert pg.locator('.table-tab[data-tab="tech"] img.is-marked').evaluate("e => [getComputedStyle(e).outlineWidth, getComputedStyle(e).outlineStyle]") == ["1px", "solid"]
+    pg.mouse.move(5, 300)
+    pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length === 0", timeout=WAIT_MS)
+    codex.focus()                                                                                                         # the focus marks too
+    pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length > 0", timeout=WAIT_MS)
+    assert sorted(outlined()) == [["release", "codex"], ["tech", "codex"]]
+    pg.evaluate("() => document.activeElement.blur()")
+    pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length === 0", timeout=WAIT_MS)
+    assert claude.get_attribute("aria-label").endswith(". 3 parties do on it, 2 parties check on it")                       # the parties that do and check on it: Lean checks on none
+    assert codex.get_attribute("aria-label") == "Codex: 18% of the day left. 1 party does on it, 1 party checks on it" and codex.get_attribute("title") == codex.get_attribute("aria-label")
+    claude.hover()
+    pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length > 0", timeout=WAIT_MS)
+    shot(pg, "table-potion-marks-wide.png")
 
 
 # -- a goal picked, the project, the keys, the motion, the presses ------------------------------------------------------------------------------------
@@ -1084,7 +1215,7 @@ def test_ctrl_o_opens_a_project_in_the_pane_and_another_project_is_shown_from_it
         pg.wait_for_timeout(50)
     assert ("projects.use", {"path": "/work/other"}) in host.log
     pg.locator(".table-board").wait_for(timeout=WAIT_MS)                                                                 # another project: the map again, nothing open
-    assert tab(pg, "orkmaster").get_attribute("aria-label") == "other"
+    assert tab(pg, "orkmaster").get_attribute("aria-label") == "other · Does on Claude · Checks on Claude"
 
 
 def test_nothing_moves_under_reduced_motion_and_a_card_turns_on_orkuis_tokens_otherwise(table):

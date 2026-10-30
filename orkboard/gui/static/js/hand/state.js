@@ -9,6 +9,19 @@ export const fieldText = signal("");           // what was written, kept when th
 export const fieldPhotos = signal([]);         // the pictures pasted, as data URLs (board/pictures.js `shrink`)
 export const fieldType = signal(null);        // the goal type taken with @ (mention.js): {id, name, sign, party}; sent as `type` while the goal is addressed to that party
 export const fieldOff = signal("");            // the tab whose address the person took off (*→ Tech ×*): the goal is then general
+export const fieldRune = signal("");           // the rune the person chose in the field (pluscard.js, decisions §187.3): an element, "" the one the addressed party's goal would be given
+export const rite = signal("");                // the element of the goal just sent: the + card's seal plays the summoning rite in it for a moment (`summon`, decisions §187.4)
+export const markedTool = signal("");          // the AI tool whose potion is hovered or focused: the tabs outline its marks (mana.js, tabmarks.js; decisions §189.2)
+
+const RITE_MS = 1200;                          // orkUI's rite lasts about 1.1 s: the classes come off after it (orkUI 0.21.0 runes README)
+let riteTimer = 0;
+/** The summoning rite on the + card's seal, in the goal's element, once; nothing under reduced motion. */
+export function summon(element) {
+  if (!element || (typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches)) return;
+  clearTimeout(riteTimer);
+  rite.value = element;
+  riteTimer = setTimeout(() => { rite.value = ""; }, RITE_MS);
+}
 
 export const HAND = "hand:";
 export const liftKey = (stopKey) => `${HAND}${stopKey}`;

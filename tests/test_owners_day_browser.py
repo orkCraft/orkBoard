@@ -3,8 +3,8 @@
 D, a goal dropped from its card: **…** on the Orkmaster's lane's card (its back at the narrow width), on the line's cards, on the route card lifted and on a goal's face over the pane, its one item *Drop this goal…*,
 the question asked in place (*Drop this goal?*, *Keep it* · *Drop it*, *Its work stops first.* while tasks run), `ideas.stop` then `ideas.drop`, the host's refusal said in the card, a 44 px target under touch;
 E, a goal sent lies in the Orkmaster's lane at once and its route card stays in the hand;
-G, what works moves: a task card at work steps its drawing and marches a dotted line, says the time it has worked and ticks it, a card whose state changed flashes its frame once, all of it off under reduced motion
-(the time still ticks)."""
+G, what works shows: a task card at work shows the flame (its goal's rune glowing, spec 111 §3.1; it replaced the stepping drawing and the dotted line of before), says the time it has worked and ticks it, a card whose state changed
+flashes its frame once, the flash off and the flame still under reduced motion (the time still ticks)."""
 from __future__ import annotations
 
 import datetime as dt
@@ -320,7 +320,7 @@ def test_under_touch_the_menu_button_and_the_answers_are_44_by_44(gui):
     assert not errors, "\n".join(errors)
 
 
-# -- G: what works moves --------------------------------------------------------------------------------------------------------------------------
+# -- G: what works shows the flame (spec 111 §3.1, decisions §187.2; the steps and the dotted line of spec 107 §7 are gone) --------------------------------------------------------------------------------------------------------------------------
 
 WORKING = '.table-card[data-state="running"], .table-card[data-state="testing"]'
 DRAWING = ".table-card__win > *"
@@ -330,33 +330,35 @@ def anim(el, pseudo=""):
     return el.evaluate("(e, p) => { const s = getComputedStyle(e, p || null); return [s.animationName, s.animationDuration, s.animationTimingFunction]; }", pseudo)
 
 
-def test_a_task_card_at_work_steps_its_drawing_marches_a_dotted_line_and_says_the_time_it_has_worked(day):
+def test_a_task_card_at_work_shows_the_flame_and_says_the_time_it_has_worked_and_nothing_else_moves(day):
     pg, host, w = day
     if not wide(w):
-        pytest.skip("a lane a token wide has no stage word: its token steps its drawing, tested below")
+        pytest.skip("a lane a token wide has no stage word: its token's rune glows, tested below")
     card = pg.locator('.table-card[data-task="r1"]')
     assert card.get_attribute("data-state") == "running"
-    name, duration, timing = anim(card.locator(DRAWING).first)
-    assert name == "table-step" and duration == "1.2s" and timing.startswith("steps(2"), (name, duration, timing)
-    name, duration, timing = anim(card, "::after")
-    assert name == "table-march" and timing.startswith("steps("), (name, duration, timing)
-    assert card.evaluate("e => getComputedStyle(e, '::after').backgroundImage").startswith("repeating-linear-gradient")
+    flame = card.locator(".table-stage .ork-elem.is-glowing")                                                          # the goal's rune glowing, in the stage's sign's place (spec 111 §3.1, decisions §187.2)
+    assert flame.count() == 1 and card.locator(".table-stage .ork-sign").count() == 0
+    name, duration, timing = anim(flame)
+    assert name == "ork-glow" and duration == "2.4s" and timing.startswith("steps(6"), (name, duration, timing)
+    assert anim(card.locator(DRAWING).first)[0] == "none" and anim(card, "::after")[0] == "none", "the stepping drawing and the dotted line of before are gone"
+    assert card.evaluate("e => getComputedStyle(e, '::after').backgroundImage") in ("none", "")
     words = card.locator(".table-stage").inner_text().strip()
     assert words.lower().startswith("doing · 1 m "), words
     ticked = card.locator(".table-stage").inner_text()
     pg.wait_for_function("([sel, was]) => document.querySelector(sel + ' .table-stage').innerText !== was", arg=['.table-card[data-task="r1"]', ticked], timeout=3000)   # it ticks
     waiting = pg.locator('.table-card[data-state="failed"]').first
-    assert anim(waiting.locator(DRAWING).first)[0] == "none" and anim(waiting, "::after")[0] == "none", "what does not work does not move"
+    assert waiting.locator(".ork-elem").count() == 0 and waiting.locator(".table-stage .ork-sign").count() == 1, "what does not work shows no flame"
     assert "·" not in waiting.locator(".table-stage").inner_text(), "and counts no time"
 
 
-def test_a_token_at_work_steps_its_drawing_at_the_narrow_width(day):
+def test_a_token_at_work_has_its_rune_glow_at_the_narrow_width(day):
     pg, host, w = day
     if wide(w):
         pytest.skip("the narrow width's")
     token = pg.locator('.table-token[data-state="running"]').first
     token.wait_for(timeout=WAIT_MS)
-    assert anim(token.locator(DRAWING).first)[0] == "table-step"
+    assert anim(token.locator(".ork-elem"))[0] == "ork-glow" and anim(token.locator(DRAWING).first)[0] == "none"
+    assert anim(pg.locator('.table-token[data-state="failed"]').first.locator(".ork-elem"))[0] == "none"
 
 
 def test_a_card_whose_state_changed_flashes_its_frame_twice_once_and_then_is_still(day):
@@ -387,12 +389,14 @@ def test_a_card_whose_state_changed_flashes_its_frame_twice_once_and_then_is_sti
     assert "is-changed" not in card.get_attribute("class")
 
 
-def test_under_reduced_motion_nothing_moves_and_the_time_still_ticks(day):
+def test_under_reduced_motion_nothing_moves_the_flame_stands_and_the_time_still_ticks(day):
     pg, host, w = day
     if not wide(w):
         pytest.skip("the card's")
     pg.emulate_media(reduced_motion="reduce")
     card = pg.locator('.table-card[data-task="r1"]')
+    flame = card.locator(".table-stage .ork-elem.is-glowing")
+    assert anim(flame)[0] == "none" and flame.evaluate("e => getComputedStyle(e).opacity") == "1", "the flame stands, at full strength"
     assert anim(card.locator(DRAWING).first)[0] == "none" and anim(card, "::after")[0] == "none"
     was = card.locator(".table-stage").inner_text()
     assert "·" in was

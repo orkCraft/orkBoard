@@ -147,7 +147,9 @@ written in. **`.ork-portal-ring`** is the portal's place, 192 x 192: a dotted ci
 `.is-taking`, grey again when `.is-sealed`; `.is-waking` lights them one after another, then opens the portal's eye. **`.ork-sigil`** is the + card's
 seal of summoning, 136 x 136 (`.small` 72 x 72 at an 80 px card, with no runes and no seal): two circles, a band of seven runes and a star of two squares in the card's own
 colour at a quarter's strength, so the + stays the one bright thing; at its top **`.ork-sigil__seal`** (14 x 14) holds the goal's element at full strength. On hover its
-runes light once round the circle, from the top. **`.ork-card-place`** is a pile's
+runes light once round the circle, from the top. **0.21.0** adds the glow (`.ork-elem.is-glowing`), the seal's up to four free runes (`.ork-sigil__free.at-90`, `-270`, `-180`, `-45`, shown on hover, focus or `.ork-plus.is-choosing`) and its rite
+(`.ork-sigil.is-summoning` or `.ork-portal-ring.is-sending` with `.rite-<element>`, once), the ring's corners (`.ork-portal-ring__before` and `__after`, with `.is-asleep`, `.is-working`, `.ork-portal-ring__tick`, `.ork-portal-ring__alert`)
+and its gate of at most three skeleton heads (`.ork-portal-ring__gate`, `.ork-portal-ring__guard` with `.is-working` or `.is-red`), and a portal guarded without its X (`.ork-portal.is-sealed.is-guarded`): `runes/README.md`. **`.ork-card-place`** is a pile's
 place before its first card (the discard's), a card's outline in pixel dashes, never pressed. Nothing turns under reduced motion.
 
 ## The icons

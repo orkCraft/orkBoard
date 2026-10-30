@@ -1,4 +1,4 @@
-/* A goal's **…** with the question it asks in place (docs/specs/107-what-the-owners-day-said.md §4, dropgoal.js), and what works moves (§7, decisions §182.7): an ork at work moves, nothing that waits does. Linked after table.css
+/* A goal's **…** with the question it asks in place (docs/specs/107-what-the-owners-day-said.md §4, dropgoal.js), and what changes flashes (§7, decisions §182.7; the work's own motion is the flame, spec 111 §3.1). Linked after table.css
    (frame/frame.js); orkUI's tokens only. */
 
 /* -- a goal's **…** and the question it asks in place ---------------------------------------------------------------------------------------- */
@@ -38,15 +38,9 @@
   .table-dropper.is-card .table-menu__btn, .table-dropper.is-edge .table-menu__btn { right: 0; }
 }
 
-/* -- what works moves: a task card at work (running, testing) steps its drawing a pixel up and down (two frames, 1.2 s) and a dotted line marches along its foot; a card whose state changed flashes its frame twice, once (0.6 s) -------------------- */
+/* -- what works moves (decisions §187.2, docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §3.1): a task at work shows its goal's rune glowing in the stage's sign's place (orkUI's `.ork-elem.is-glowing`: its opacity from about 62 % to full and back, six steps over 2.4 s,
+   still under reduced motion, orkUI's own rule); that flame is the card's only motion of the work, the dotted line and the stepping drawing of before are gone. The tab's head still steps (table.css). A card whose state changed flashes its frame twice, once (0.6 s) -------------------- */
 @media (prefers-reduced-motion: no-preference) {
-  .table-card[data-state="running"] .table-card__win > *, .table-card[data-state="testing"] .table-card__win > *,
-  .table-token[data-state="running"] .table-card__win > *, .table-token[data-state="testing"] .table-card__win > * { animation: table-step 1.2s steps(2) infinite; }
-  .table-card[data-state="running"]::after, .table-card[data-state="testing"]::after {
-    content: ""; position: absolute; left: var(--ork-3); right: var(--ork-3); bottom: var(--ork-1); height: 2px; pointer-events: none;
-    background: repeating-linear-gradient(90deg, var(--ork-ink-faint) 0 2px, transparent 2px 6px); animation: table-march 0.6s steps(4) infinite; }
   .table-card.is-changed { animation: table-flash 0.3s steps(2, jump-none) 2; }
-  @keyframes table-step { from { transform: translateY(0); } to { transform: translateY(-2px); } }
-  @keyframes table-march { from { background-position-x: 0; } to { background-position-x: 6px; } }
   @keyframes table-flash { from { box-shadow: inset 0 0 0 2px var(--ork-ink); } to { box-shadow: none; } }
 }

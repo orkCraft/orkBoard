@@ -114,6 +114,16 @@
 .hand .hand-field .hand-field__text { flex: 1; height: auto; min-height: 88px; resize: none; padding: var(--ork-3); font: var(--ork-type-body); }
 .hand-field__row { display: flex; align-items: center; justify-content: space-between; gap: var(--ork-3); flex-wrap: wrap; }
 .hand-field__hint { flex: 1 1 100%; color: var(--ork-ink-muted); }
+/* the rune chosen (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §3.2, decisions §187.3): a row of the five runes, each a 40 x 40 radio holding the rune at 28 px (orkUI's `big`), the chosen one in a 2 px ink frame on the panel and at full strength,
+   the others a hairline and a little dimmed, a used one faint but possible (mockup docs/mockups/window-runes/ 3) */
+.hand-field__runes { display: flex; align-items: center; gap: var(--ork-2); }
+.hand-rune { display: grid; place-items: center; box-sizing: border-box; flex: none; width: 40px; height: 40px; padding: 0; border: var(--ork-line) solid var(--ork-frame); background: none; clip-path: var(--ork-notch); cursor: pointer; }
+.hand-rune .ork-elem { opacity: 0.7; }
+.hand-rune[aria-checked="true"] { border: 2px solid var(--ork-ink); background: var(--ork-panel); }
+.hand-rune[aria-checked="true"] .ork-elem { opacity: 1; }
+.hand-rune.is-used .ork-elem { opacity: 0.3; }
+.hand-rune.is-used[aria-checked="true"] .ork-elem { opacity: 1; }
+.hand-rune:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 
 /* a card lifted over the pane's foot is a card (docs/specs/104 §5, decisions §176.4): the hand card's frame and anatomy at twice its width, in its proportions at the least, turned a degree or two as a card held up (to the side its stack
    lies on, --hc-lean is -1 or 1), its foot on the hand's line, over the cards beside it and the lanes' foot. Its body, between the window and the foot, scrolls inside at the card's most height; the card never grows wider */
@@ -208,6 +218,7 @@
 /* a press is 44 x 44 under a touch pointer */
 @media (pointer: coarse) {
   .hand-chip__off { min-width: var(--ork-tap); min-height: var(--ork-tap); display: inline-flex; align-items: center; justify-content: center; }
+  .hand-rune { width: var(--ork-tap); height: var(--ork-tap); }
 }
 
 /* none of it moves under reduced motion: a card is marked by its edge instead; a card risen shows its whole face at once, without the spring */

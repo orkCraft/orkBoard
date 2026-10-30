@@ -199,9 +199,9 @@ export function toolOf(g, m) {
   return { id, name: role?.harness && role.harness.id === id ? role.harness.name : id.charAt(0).toUpperCase() + id.slice(1) };
 }
 
-/** The ink mark of a tool (orkUI marks/): known tools only. */
+/** The ink mark of a tool (orkUI marks/): known tools only; `colour`: its own colours (the open tab's, the potions'). */
 export const MARKED = ["claude", "codex", "agy", "cursor", "hermes", "pi"];
-export const markSrc = (id, x2 = false) => `${ORKUI}/marks/harness-${id}-ink${x2 ? "@2x" : ""}.png`;
+export const markSrc = (id, x2 = false, colour = false) => `${ORKUI}/marks/harness-${id}${colour ? "" : "-ink"}${x2 ? "@2x" : ""}.png`;
 
 /** A party's size in one word, and what it works as. */
 export const sizeWord = (g) => SIZE_WORD[g.size] || "";

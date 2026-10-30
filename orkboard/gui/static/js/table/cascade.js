@@ -1,9 +1,9 @@
-// A goal's cascade and the line (docs/specs/101-the-cards-the-cascade-and-the-hand-under-the-lanes.md §3, §7.2, decisions §167.4–§167.5, §168.4): in a party's lane a goal is a thin strip (its element, its name on one line, the whole strip a button
-// that picks the goal) over its tasks: the front one whole, the others behind it as a fan — turned 1° to 3° and pushed a few px aside by turns, by their place (never random), their edges the goal's element and the stage's small sign, no
+// A goal's cascade and the line (docs/specs/101-the-cards-the-cascade-and-the-hand-under-the-lanes.md §3, §7.2, decisions §167.4–§167.5, §168.4; docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §3.1, decisions §187.1–§187.2): in a party's lane a goal is a thin strip (its element, **the goal's rune stands once, here**, its name on one line, the whole strip a button
+// that picks the goal) over its tasks: the front one whole, the others behind it as a fan — turned 1° to 3° and pushed a few px aside by turns, by their place (never random), their edges the stage's small sign (and the flame), no
 // names; a hover or the focus opens the fan a little and the names are read; a press on a card behind lifts that task. Collapsed always but the picked goal's, which unfolds into whole cards in the same order. A goal in two lanes at once has
 // its strip in both, lit alike (orkUI's `.ork-picked`). The first lane's last cascade is **the line**: the goals in line (`lineNow()`), the front one the next to start, whole, the others a fan behind it; an edge pressed picks its goal, a goal
 // dragged among them moves it (`ideas.move`, line.js), past about seven *All · search* opens the whole line over the pane (kind `line`).
-// A drag starts from the goal with a mouse; Alt+↑ and Alt+↓ move the goal that has the focus, so no move needs a pointer (and the list over the pane has its arrows).
+// A goal the Orkmaster reads, routes or joins itself is its card alone, with no strip over it (`OwnBlock`). The cards and the edges of a task at work show the flame (card.js). A drag starts from the goal with a mouse; Alt+↑ and Alt+↓ move the goal that has the focus, so no move needs a pointer (and the list over the pane has its arrows).
 import { useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Icon, Sign } from "../orkui.js";
@@ -33,16 +33,16 @@ export function Cascade({ n, tasks }) {
   </div>`;
 }
 
-/** A goal in its party's lane: its strip over its cascade. At a lane a token wide, one token with its stack's edges. */
+/** A goal in its party's lane: its strip (its rune and its name, once) over its cascade. At a lane a token wide, one token with its stack's edges. */
 export function GoalBlock({ n, tasks, tokens }) {
   if (tokens) return html`<${Token} n=${n} tasks=${tasks} />`;
   return html`<div class="table-goal" data-goal=${n.slug}><${GoalStrip} n=${n} /><${Cascade} n=${n} tasks=${tasks} /></div>`;
 }
 
-/** A goal the Orkmaster reads, routes or joins itself, in the first lane: its strip over its card. */
+/** A goal the Orkmaster reads, routes or joins itself, in the first lane: its card alone, no strip (the card is the goal's, decisions §187.1). */
 export function OwnBlock({ n, stage, tokens }) {
   if (tokens) return html`<${Token} n=${n} stage=${stage} />`;
-  return html`<div class="table-goal" data-goal=${n.slug}><${GoalStrip} n=${n} /><div class="table-cardwrap"><${OwnCard} n=${n} stage=${stage} /><${GoalMenu} slug=${n.slug} where="card" /></div></div>`;
+  return html`<div class="table-goal" data-goal=${n.slug}><div class="table-cardwrap"><${OwnCard} n=${n} stage=${stage} /><${GoalMenu} slug=${n.slug} where="card" /></div></div>`;
 }
 
 // -- the line ----------------------------------------------------------------------------------------------------------------------

@@ -49,7 +49,7 @@ from typing import Any, Callable
 
 from orkboard import settings
 from orkboard.core import idea_keeper
-from orkboard.realm import board_ask, board_map, event_log, goal_mentions, idea_checks, idea_lens, idea_photos, idea_route, idea_secrets, idea_target, ideas, party_recipes, pitches, recurring, wiki
+from orkboard.realm import board_ask, board_map, event_log, goal_mentions, idea_checks, idea_element, idea_lens, idea_photos, idea_route, idea_secrets, idea_target, ideas, party_recipes, pitches, recurring, wiki
 from orkboard.gui.ideas_args import VIA, IdeasError, _device, _opt, _text
 from orkboard.gui.ideas_board import BoardMixin
 from orkboard.gui.ideas_assets import AssetsMixin, asset_commands
@@ -382,7 +382,8 @@ class Ideas(FactsMixin, LoopFace, TreeFace, ConcernsMixin, MapsMixin, ScreensMix
         """An idea: a text, its party (`track`, or `party`; none, or General, and the Orkmaster routes it by code) and a priority (default the party's). It makes
         **no model call** (spec 99 §4): it waits as `routed` with its route until `ideas.talk` (gui/ideas_route.py); only a goal kept on `hold`, a pitch, a
         release or a goal sent from a pitch is drafted at once, whatever its priority (spec 99 §3: the night is gone, so there is no `night` and
-        Low waits for nothing). `marks`: the places of its party's map the goal points at, `[{map, id, name, group?}]` or `[{map, group, name}]` (spec 102 §6): kept in its state as `marks`
+        Low waits for nothing). `element`: the rune the person chose in the field (one of `idea_element.ELEMENTS`, else refused in words; decisions §187.3, spec 111 B): the goal is
+        given it at once; without it the goal is given the one its party uses least, as before. The answer's `element` is the one it wears (the + card's seal plays its rite in it). `marks`: the places of its party's map the goal points at, `[{map, id, name, group?}]` or `[{map, group, name}]` (spec 102 §6): kept in its state as `marks`
         (realm/idea_lens.py `clean_marks`), read into its calls' prompts (`idea_lens.attached`), and the parts of System among them offer Tech on its route. `photos`
         (the phone's, base64) are kept beside it for the Taskmaster to read (realm/idea_photos.py), and `lens`, what the
         person pointed at with the lens of the goal's party (realm/idea_lens.py). Spec 52 §2.3: `type` (one of the party's
@@ -402,6 +403,9 @@ class Ideas(FactsMixin, LoopFace, TreeFace, ConcernsMixin, MapsMixin, ScreensMix
         priority = _opt(args, "priority").lower() or goals[track]["priority"]
         if priority not in ideas.PRIORITIES:
             raise IdeasError("Priority is High, Normal or Low")
+        chosen = _opt(args, "element")                          # the rune the person picked in the field (decisions §187.3); never named: five runes, one of them
+        if chosen and chosen not in idea_element.ELEMENTS:
+            raise IdeasError("Pick one of the five runes")
         try:
             photos = idea_photos.decode(args.get("photos"))
         except ValueError as e:
@@ -417,6 +421,8 @@ class Ideas(FactsMixin, LoopFace, TreeFace, ConcernsMixin, MapsMixin, ScreensMix
         with ideas.LOCK:                        # the party changes before the goal, under the same lock; never for a goal kept on hold (spec 52 §2.3)
             joined = self.join_goal(track, typed, args) if not hold else None
             slug = ideas.add_idea(self.root(), self.with_asks(text, typed), track, self.state_dir, priority, "hold" if routed else queue)
+            if chosen:                          # the person's rune, before any read of the Map can give the goal its own (decisions §187.3)
+                idea_element.give(self.root(), self.state_dir, slug, want=chosen)
             if routed:
                 self.route_save(slug, routed)         # waits as `routed`, nothing drafts it (spec 99 §4)
             if typed["key"] or pitch:
@@ -430,7 +436,7 @@ class Ideas(FactsMixin, LoopFace, TreeFace, ConcernsMixin, MapsMixin, ScreensMix
         idea_lens.save(self.state_dir, slug, pointed or (idea_lens.read(self.state_dir, pitch) if pitch else []))
         if picked:
             ideas.save_state(self.state_dir, slug, marks=picked)
-        element = self.element_for(slug, pitch)    # the mark of every card of it (spec 50 §2.3); a sent pitch's, where it is free (spec 68 §2.3)
+        element = self.element_for(slug, pitch, chosen)    # the mark of every card of it (spec 50 §2.3); the one chosen, else a sent pitch's where it is free (spec 68 §2.3)
         ideas.add_turn(self.state_dir, slug, "you", self.with_asks(text, typed), "Gist")     # the person's own words, kept
         self._ev(event_log.IDEA_ADDED, args, idea=slug, track=track, chars=len(text), now=queue == "now",
                  priority=priority, queue=queue, photos=len(photos), files=files, lens=[a["kind"] for a in pointed], type=typed["key"],

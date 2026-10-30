@@ -8,6 +8,8 @@
 // panel), and its words add *, the default*. On the project's tab it is the tool now (`town.mana.now`, else the Main tool, else the first); on a party's tab the tool the party is set to when it has one, else the same. One frame
 // element slides between the places (a transform, `--ork-motion-base`; not under reduced motion); every potion keeps a transparent border of the frame's width, so nothing shifts. While going on paid holds (`town.mana.paid`)
 // the tool billed by its API is a slot after the potions: its mark, orkUI's coins, *API* and the price under it, and the frame on it.
+// Who drinks from it (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §3.4, decisions §189.2): a potion hovered or focused marks its tool's marks on the tabs (`markedTool`, the tabs' second line: table/tabmarks.js, a 1 px outline), and its words add the parties
+// that do and that check on it (*2 parties do on it, 1 party checks on it*; `usesWords`).
 // Upright on a touch phone (docs/specs/103 §1.2.5, decisions §179.1) the tools are `Tools`: each its coloured mark with its share under it, no bottle, a 44 px target, in one row no taller than the …; the default framed (on the hand's screen
 // the tool now, else the Main tool: §178.3), its words the potion's.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
@@ -18,6 +20,7 @@ import { levelOf, windowOf } from "../arena/limits.js";
 import { untilWords } from "../arena/arenawords.js";
 import { MARKED, mapName, openTabOf, partiesNow } from "../table/data.js";
 import { ORKMASTER, openOver, tab } from "../frame/state.js";
+import { markedTool } from "./state.js";
 import { costOf } from "./cost.js";
 import { priceWords } from "./paidcard.js";
 
@@ -41,13 +44,21 @@ export function windowWords(win) {
   return { week: "the week", "5h": "the 5-hour window", daily: "the day", day: "the day" }[win] || (win ? `the ${win} window` : "");
 }
 
-/** What a tool's potion says: `{read, share, level, took, words}`; `cost` (from `costOf`) is the lifted card's, when it takes from this tool; `framed` adds *, the default*. */
-export function potionOf(l, cost = null, framed = false) {
+/** The parties that do and that check on a tool, in words (decisions §189.2): *2 parties do on it, 1 party checks on it*; "" when none does either. A Lean party does but has no separate check. */
+export function usesWords(provider, parties = []) {
+  const does = parties.filter((g) => g.does_tool === provider).length, checks = parties.filter((g) => !g.lean && g.checks_tool === provider).length;
+  const said = [does && `${does} ${does === 1 ? "party does" : "parties do"} on it`, checks && `${checks} ${checks === 1 ? "party checks" : "parties check"} on it`].filter(Boolean);
+  return said.join(", ");
+}
+
+/** What a tool's potion says: `{read, share, level, took, words}`; `cost` (from `costOf`) is the lifted card's, when it takes from this tool; `framed` adds *, the default*; `uses` (from `usesWords`) the parties that do and check on it. */
+export function potionOf(l, cost = null, framed = false, uses = "") {
   const read = typeof l.left === "number", win = read ? windowWords(windowOf(l)) : "";
   const share = read ? `${Math.round(l.left * 100)}%` : "?", level = read ? levelOf(l.left) : "unread";
   const took = read && cost?.spend ? cost.taken : "";
   const said = read ? `${l.name}: ${share} ${win ? `of ${win} ` : ""}left` : `${l.name}: limits not read yet`, left = framed ? `${said}, the default` : said;
-  return { read, share, level, took, words: took ? `${left}. This card takes about ${took} of it` : left };
+  const spent = took ? `${left}. This card takes about ${took} of it` : left;
+  return { read, share, level, took, words: uses ? `${spent}. ${uses.charAt(0).toUpperCase()}${uses.slice(1)}` : spent };
 }
 
 /** One tool's mark in its own colour (orkUI's `marks/harness-<id>.png`, not the ink one); its initial in the body face with no mark. */
@@ -57,11 +68,13 @@ function Who({ l }) {
     : html`<span class="hand-pot__initial" aria-hidden="true">${(l.name || l.provider || "?").charAt(0).toUpperCase()}</span>`;
 }
 
-function Pot({ l, cost, small, from, framed }) {
-  const p = potionOf(l, cost && cost.tool === l.provider ? cost : null, framed);
+function Pot({ l, cost, small, from, framed, parties = [] }) {
+  const p = potionOf(l, cost && cost.tool === l.provider ? cost : null, framed, usesWords(l.provider, parties));
   const style = `--ork-potion-left:${p.read ? l.left : 0}${p.took ? `;--ork-potion-spend:${cost.spend}` : ""}`;
   return html`<button type="button" class=${cls("hand-pot", `is-${p.level}`, { "is-default": framed })} data-provider=${l.provider} data-level=${p.level} data-default=${framed ? "1" : undefined}
-      title=${p.words} aria-label=${p.words} onClick=${() => openOver("limits", { provider: l.provider }, from, `${l.name}: what used it`)}>
+      title=${p.words} aria-label=${p.words} onClick=${() => openOver("limits", { provider: l.provider }, from, `${l.name}: what used it`)}
+      onPointerEnter=${() => { markedTool.value = l.provider; }} onPointerLeave=${() => { if (markedTool.value === l.provider) markedTool.value = ""; }}
+      onFocus=${() => { markedTool.value = l.provider; }} onBlur=${() => { if (markedTool.value === l.provider) markedTool.value = ""; }}>
     <${Who} l=${l} />
     <span class=${cls("ork-potion", { small, "is-warn": p.level === "warn", "is-danger": p.level === "danger" })} style=${style} aria-hidden="true"></span>
     <span class="hand-pot__share">${p.share}${p.took && html` <span class="hand-pot__took">−${p.took}</span>`}</span>
@@ -163,7 +176,7 @@ export function Mana({ lifted = null }) {
   const cost = lifted ? costOf(lifted) : null, from = { title: mapName(tab.value, parties), key: "" };
   return html`<div class="hand-mana" ref=${box} role="group" aria-label="What is left of your AI tools" data-rows=${rows} data-n=${places} data-paid=${paid ? "1" : undefined} data-default=${key || undefined}>
     <span class="hand-mana__frame" ref=${frame} aria-hidden="true" hidden></span>
-    ${shown.map((l) => html`<${Pot} key=${l.provider} l=${l} cost=${cost} small=${small} from=${from} framed=${key === l.provider} />`)}
+    ${shown.map((l) => html`<${Pot} key=${l.provider} l=${l} cost=${cost} small=${small} from=${from} framed=${key === l.provider} parties=${parties} />`)}
     ${over && html`<button type="button" class="hand-pot hand-pot--more" title=${`${more} more tools: what is left of them`} aria-label=${`${more} more tools: what is left of them`}
       onClick=${() => openOver("limits", {}, from, "What is left of your AI tools")}><span class="hand-pot__initial" aria-hidden="true">+${more}</span></button>`}
     ${paid && html`<${PaidPot} key="paid" paid=${paid} from=${from} framed=${key === "paid"} />`}
