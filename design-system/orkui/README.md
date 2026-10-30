@@ -152,9 +152,17 @@ runes light once round the circle, from the top. **0.21.0** adds the glow (`.ork
 and its gate of at most three skeleton heads (`.ork-portal-ring__gate`, `.ork-portal-ring__guard` with `.is-working` or `.is-red`), and a portal guarded without its X (`.ork-portal.is-sealed.is-guarded`): `runes/README.md`. **`.ork-card-place`** is a pile's
 place before its first card (the discard's), a card's outline in pixel dashes, never pressed. Nothing turns under reduced motion.
 
+## The die (0.22.0)
+`.ork-die` is Play as a die, seen from above (`die/`, `die/README.md`): its top face large and nearly square, the front and right faces thin strips under and beside it,
+23 x 20 cells at 3 px (**69 x 60**), `.big` 6 px (**138 x 120**), whole pixels. `<span class="ork-die face-5" aria-hidden="true"></span>`, no inner markup; drawn in `box-shadow`
+pixels as the portal is, from `die/die.json` by `tools/build_die.py`. The faces are `.face-1` to `.face-6` (pips in the muted ink), `.face-ok` (a tick in `--ork-success`) and
+`.face-no` (a cross in `--ork-danger`). `.is-playing` turns the pips and the edges to the ink and makes the pips glow (six steps, 2.4 s); `.is-rolling` cycles the face 1 to 6, 120 ms a
+face, in steps, until the class is taken off (the page then sets the face it stops on); `.is-wobbling` is one wobble, 300 ms in three steps (the page adds it on pointer enter and takes it off at
+`animationend`). The die is not turned by itself: the page turns it with the lean token. Nothing moves under reduced motion.
+
 ## The icons
-`icons/icons.svg` is the sprite of the window's icons (`icons/README.md`). Twelve are **orkUI's own** (0.15.0), drawn on the signs' 7 x 7 grid in solid pixels: `arrow-left`, `close` (×),
-`more-horizontal` (…), `plus`, `search`, `mic`, `play`, `stop` and the four chevrons; at 14, 21 or 28 px (two, three or four pixels a cell) they are whole pixels. The other 22 are
+`icons/icons.svg` is the sprite of the window's icons (`icons/README.md`). Fourteen are **orkUI's own** (0.15.0), drawn on the signs' 7 x 7 grid in solid pixels: `arrow-left`, `close` (×),
+`more-horizontal` (…), `plus`, `search`, `mic`, `play`, `stop`, `banner` and `boarded` (0.22.0: a pole with a square banner with a + cut out of it, a pole crossed by two planks) and the four chevrons; at 14, 21 or 28 px (two, three or four pixels a cell) they are whole pixels. The other 22 are
 Pixelarticons (MIT), kept for Orkline. The gallery shows both.
 
 ## The parts of the one window

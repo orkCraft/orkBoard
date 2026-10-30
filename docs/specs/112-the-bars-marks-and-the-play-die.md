@@ -70,4 +70,20 @@ open); the tick and the cross are announced by the start screen's own words, as 
 
 ## As built
 
-(filled in after the build)
+**Part B.** orkUI 0.22.0 copied (`python -m orkboard.design.orkui`, commit 8264abb). *The bar:* `tabs.js` draws `banner` for + Party and `boarded` before *Stop all* (both added to `orkui.js`'s 7-grid set, drawn at 14 px as the mockup has them, not
+the 21 px of the old +). The banner's hover is the **one-time three-step `clip-path` reveal from the pole** (`table.css`: 3, 5, then 7 columns of the icon in 360 ms, per hover or focus; none under reduced motion), not "none". *Play leaves the pane's head:*
+the `table-play` button and its CSS are gone. *The die:* new `hand/playdie.js` (`PlayDie`, `pressPlay`, and the seam signals `thrown`, `playing`, `warmed` with `dieRect()`), drawn by `hand.js` between the bug and the potions, also in the hand with no goal
+(`hand-mana-only`); its CSS is in `hand/mana.css` (turned by `rotate: calc(var(--ork-motion-lean) * -1)`, lifted by the rise token while hovered or focused, hidden with `visibility` while its copy is out, the narrow width keeps 3 px and stands with the potions). The
+wobble is a state with a key (the span is made again for each wobble so orkUI's animation replays), once on hover, twice when the view opens on a playing build, none under reduced motion. The upright phone has no die. *The start screen* (`arena/play.js`, `play.css`): the throw
+is a phase machine `ph` (`fly` 420 ms → `roll` until the answer → `ok` / `no` landed 600 / 700 ms → `ok-leave` fade 300 ms, `no-leave` tip 360 ms → `logo` → `out`); the flight is a Web Animations `steps(7)` from the hand die's rectangle, the roll and landing
+are CSS in whole steps; the iframe is the same element all through (keyed, never reloaded) under the black overlay, which covers the bar too. Tests: new `tests/test_play_die_browser.py` (the bar's icons at both widths, the banner's hover and reduced motion, the die's place and press,
+no Play in the head, the throw, the tick, the logo, the frame, the cross and failure, warm with two wobbles, the stopped roll, retrying, reduced motion, the phone); the older browser tests that pressed *Play* in the pane's head press the die.
+
+*Departures and choices.* (1) **A build that is not running is started by the die's press itself**: the view asks with `peek`, and when the host says `stopped` it starts at once (`ideas.play`), where before it showed *Open the build* and waited for a second press. The
+spec's "pressed when the preview is not running, it is thrown" needs this; *Open the build* stays for a build stopped or failed. (2) The intro after the tick lasts 1.8 s with a logo (the name comes in after the logo's two blinks, at 1.4 s) and 1 s with the name alone, where the spec says
+about a second. (3) The black overlay covers the pane's bar as well as the stage (the mockup's frame sits under the black), so *Plays dev at …* shows when the frame rises. (4) A project with no preview (*Nothing here yet*) is thrown and lands on the cross like a failure, then says so. (5) The
+start screen's old `came` / `gone` bookkeeping went: the fade after the intro is the throw's last phase; under reduced motion nothing fades, as before.
+(6) **The die takes room.** At 1280 px the hand's last track grows by the die (about 40 px), so the first lane's fan (the Orkmaster's stacks, 16 px of fan before) collapses: its stacks lie one over the other until the window is wider; at 390 px
+the row has no room left for five stacks, a die and two potions, so the room kept for the last card gives way first (`.hand-row::after` shrinks, the slots shrink first by their `flex-shrink`) and the die's right edge lies 6 px over the first potion's empty border. Tests that pressed a stack by the left edge of its card
+(`test_decision_fork_desktop_browser.py` `press`, one step of `test_hand_desktop_browser.py`) press it by the keyboard now (`focus`, Enter), and one of `test_hand_mana_browser.py` moves the pointer off the cards first, as its neighbours already did; `test_discard_table_browser.py`
+lets `.hand-end` hold the die. If the fan matters more than the die's 69 px, the way out is a smaller die at 1280 or the bug button moved out of the hand's end: the owner's to say.

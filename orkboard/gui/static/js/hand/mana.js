@@ -10,6 +10,7 @@
 // the tool billed by its API is a slot after the potions: its mark, orkUI's coins, *API* and the price under it, and the frame on it.
 // Who drinks from it (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §3.4, decisions §189.2): a potion hovered or focused marks its tool's marks on the tabs (`markedTool`, the tabs' second line: table/tabmarks.js, a 1 px outline), and its words add the parties
 // that do and that check on it (*2 parties do on it, 1 party checks on it*; `usesWords`).
+// The Play die lies at the potions' left (playdie.js, docs/specs/112-the-bars-marks-and-the-play-die.md §3.3, decisions §190.2): the same row, the same top edge; at the narrow width the two stand together at the row's end (mana.css).
 // Upright on a touch phone (docs/specs/103 §1.2.5, decisions §179.1) the tools are `Tools`: each its coloured mark with its share under it, no bottle, a 44 px target, in one row no taller than the …; the default framed (on the hand's screen
 // the tool now, else the Main tool: §178.3), its words the potion's.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";

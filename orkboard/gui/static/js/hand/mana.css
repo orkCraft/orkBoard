@@ -46,8 +46,18 @@
 .hand-logs__panel { position: fixed; pointer-events: auto; z-index: 70; display: flex; flex-direction: column; gap: var(--ork-3); width: 280px; max-width: calc(100vw - 16px); padding: var(--ork-3); }
 .hand-logs__label { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
 
-/* a hand with no goal at all has no cards: its potions lie alone at the right end */
-.hand-mana-only { display: flex; justify-content: flex-end; }
+/* the Play die (spec 112 §3.3, decisions §190.2, hand/playdie.js): orkUI's `.ork-die` (69 x 60, 3 px a cell) lying in the hand left of the potions, turned by the lean token, its word under it as a potion's share is. Hovered or focused it stays lifted by
+   the rise token (the wobble itself is orkUI's `.is-wobbling`, put on at pointer enter); thrown onto the pane it is hidden, kept in its place. At the narrow width it keeps its 3 px and stands beside the potions as they stand. */
+.hand-die { appearance: none; position: relative; z-index: 1; flex: none; pointer-events: auto; display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); margin: 0; padding: var(--ork-1) 0; border: 0;
+  background: none; color: var(--ork-ink); font: var(--ork-type-caption); cursor: pointer; }
+.hand-die:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.hand-die .ork-die { rotate: calc(var(--ork-motion-lean) * -1); }
+.hand-die:is(:hover, :focus-visible) .ork-die:not(.is-wobbling) { transform: translateY(calc(var(--ork-motion-rise) * -1)); }
+.hand-die.is-gone .ork-die { visibility: hidden; }
+.hand-die__word { font-weight: 600; white-space: nowrap; }
+
+/* a hand with no goal at all has no cards: its die and potions lie alone at the right end */
+.hand-mana-only { display: flex; justify-content: flex-end; align-items: flex-start; gap: var(--ork-4); }
 .hand-mana-only:empty { display: none; }
 
 @media (pointer: coarse) { .hand-pot { min-width: var(--ork-tap); } .hand-logs { min-width: var(--ork-tap); min-height: var(--ork-tap); } }
@@ -55,5 +65,7 @@
   .hand-mana-only .hand-logs { display: inline-flex; }
   .hand-logs { display: none; }                                                                              /* no room beside New goal, the stacks and the potions at this width: Settings saves the logs too */
   .hand-mana { order: 101; margin-left: auto; }
+  .hand-die { order: 101; margin-left: auto; margin-right: -6px; }                                               /* the die's own 69 px, and its right edge over the first potion's empty border: the row has no room to spare (the cards tighten to their edges first, then the room kept for the last card gives way) */
+  .hand-die + .hand-mana { margin-left: 0; }                                                                    /* the die and the potions stand together at the row's end */
   .hand-pot { min-width: 0; }                                                                                /* the cards of the row tighten for them: a potion is as wide as its share (tall past 44) */
 }

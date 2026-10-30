@@ -1,5 +1,5 @@
 // The hand (docs/specs/101 §4, docs/specs/98-the-table-and-the-hand.md §4, decisions §116.2, §121.2, §124, §144.2, §145.3–§145.4, §159, §160, §167): under the table's lanes, on the grid the tabs and the Board stand on (the frame's `--cols`).
-// At the first lane's left end the + card, whole, with the Orkmaster's stacks fanned to its right (spec 107 M); under each party's lane the stacks of who asks there (stacks.js: a goal a stack, two goals under one lane a fan); at the right end the bug under the glass (Save logs: logsbtn.js, spec 107 J) and the AI tools' limits as
+// At the first lane's left end the + card, whole, with the Orkmaster's stacks fanned to its right (spec 107 M); under each party's lane the stacks of who asks there (stacks.js: a goal a stack, two goals under one lane a fan); at the right end the bug under the glass (Save logs: logsbtn.js, spec 107 J) and the Play die (playdie.js: Play is a die lying in the hand, left of the potions, its word under it; spec 112 §3.3, decisions §190.2) and the AI tools' limits as
 // the mana's potions, flush against the window's edge (mana.js: spec 104 B). The discard of the goals done lies on the table, not here (table/discard.js: spec 104 C). No deck: the goals in line lie on the table. A card shows its header and its window; the rest lies under the window's edge until it rises (hand.css). A card pressed is lifted
 // over the pane's foot with its answers and its cost's words; the cards of the table it is about rise (about.js). With no
 // goal at all the + card lies large in the pane's middle. What is opened over the pane (`result`, `stop`) is drawn by the faces registered below (frame/kinds.js).
@@ -16,6 +16,7 @@ import { partiesNow } from "../table/data.js";
 import { partiesOf, stacksOf, stopByKey, stopsOfProject } from "./data.js";
 import { LogsButton } from "./logsbtn.js";
 import { Mana } from "./mana.js";
+import { PlayDie } from "./playdie.js";
 import { Field, Middle, PlusCard, closeField, openField } from "./pluscard.js";
 import { ResultFace } from "./resultface.js";
 import { Lifted } from "./stopcard.js";
@@ -75,11 +76,11 @@ export function Hand() {
   return html`<footer ref=${root} class="hand" aria-label="The hand" data-empty=${middle ? "1" : undefined}>
     ${!middle && html`<div class="hand-places"><div class="hand-row" style=${`--hc-rest:${partiesNow().length}`}>
       <${Stacks} stacks=${stacks} plus=${html`<${PlusCard} onPress=${plus} />`} />
-      <div class="hand-end"><${LogsButton} /><${Mana} lifted=${s} /></div>
+      <div class="hand-end"><${LogsButton} /><${PlayDie} /><${Mana} lifted=${s} /></div>
     </div></div>`}
     ${fieldOpen.value && !middle && html`<${Field} />`}
     ${s && html`<${Lifted} s=${s} anchor=${anchor} />`}
-    ${middle && html`<div class="hand-mana-only"><${LogsButton} /><${Mana} /></div>`}
+    ${middle && html`<div class="hand-mana-only"><${LogsButton} /><${PlayDie} /><${Mana} /></div>`}
     ${middle && html`<${Middle}>${fieldOpen.value ? html`<${Field} middle=${true} />` : html`<${PlusCard} large=${true} onPress=${plus} />`}<//>`}
   </footer>`;
 }

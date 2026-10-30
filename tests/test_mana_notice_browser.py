@@ -156,7 +156,7 @@ def test_the_line_is_the_tables_and_stays_while_another_tab_is_open(gui):
         pg.locator('[data-tab="tech"]').click()
         pg.wait_for_timeout(200)
         assert pg.locator(".table-notice").count() == 1                                                                          # the Orkmaster speaks on every tab
-        pg.get_by_role("button", name="Play").click()
+        pg.locator(".hand-die").click()
         pg.locator('.table-over[data-kind="play"]').wait_for(timeout=WAIT_MS)
         assert pg.locator(".table-notice").count() == 0                                                                          # not over what is opened over the pane
     finally:

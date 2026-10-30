@@ -205,6 +205,9 @@ def test_a_lifted_card_that_spends_hatches_its_share_off_its_tools_potion(gui, w
         pg.keyboard.press("Escape")
         pg.wait_for_function("() => !document.querySelector('.hand-lifted')", timeout=WAIT_MS)
         assert p.locator(".hand-pot__took").count() == 0 and "--ork-potion-spend" not in claude.locator(".ork-potion").get_attribute("style")
+        pg.evaluate("() => document.activeElement.blur()")                                                                       # the card that had the focus or the pointer lies risen, whole, over its neighbours (the die takes room at the narrow width: they lie closer)
+        pg.mouse.move(pg.viewport_size["width"] / 2, 20)
+        pg.wait_for_timeout(400)
         _press(pg, "theme")                                                                                                      # a question spends nothing
         pg.locator(".hand-lifted").wait_for(timeout=WAIT_MS)
         assert p.locator(".hand-pot__took").count() == 0

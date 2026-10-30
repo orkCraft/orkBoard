@@ -1251,7 +1251,7 @@ def test_every_press_is_44_by_44_on_a_touch_screen_and_nothing_is_said_only_on_h
     pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
     open_tab(pg, "tech")
     pg.locator('.table-seat[data-seat="grunt"]').wait_for(timeout=WAIT_MS)
-    for sel in (".table-tab", ".table-plus", ".table-stop", ".table-play", ".table-menu__btn", ".table-seat", ".table-switch"):
+    for sel in (".table-tab", ".table-plus", ".table-stop", ".hand-die", ".table-menu__btn", ".table-seat", ".table-switch"):
         for el in pg.locator(sel).all():
             box = el.bounding_box()
             assert box["width"] >= 43.5 and box["height"] >= 43.5, (sel, box)

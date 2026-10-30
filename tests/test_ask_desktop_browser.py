@@ -211,7 +211,7 @@ def test_none_over_an_open_page(asked):
     pg, host, w = asked
     host.put(record("answered", ""))
     pg.locator(".table-ask__answer").wait_for(timeout=WAIT_MS)
-    pg.get_by_role("button", name="Play", exact=True).click()                                                                            # Play opens over the pane
+    pg.locator(".hand-die").click()                                                                                                          # Play, the die in the hand, opens over the pane
     pg.locator(".table-over").wait_for(timeout=WAIT_MS)
     assert pg.locator(".table-ask").count() == 0
     pg.get_by_role("button", name="Back").click()

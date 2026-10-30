@@ -1266,7 +1266,8 @@ def test_a_pick_a_sign_in_and_a_card_of_an_unknown_kind_are_cards_of_the_hand_to
         lifted.get_by_role("button", name="Put it back").click()
         pg.mouse.move(pg.viewport_size["width"] / 2, 20)                                                         # the pointer off the cards: one under it would rise over its neighbour's edge
         pg.wait_for_timeout(400)
-        _press(pg, "sign_in/claude")
+        _stack(pg, "sign_in/claude").locator('.hand-card[data-top="1"]').first.focus()                             # by the keyboard: with the Play die in the hand's right end (spec 112) the first lane's two stacks lie one over the other at 1280 px, no edge to press
+        pg.keyboard.press("Enter")
         pg.locator(".hand-lifted").get_by_role("button", name="Sign in").wait_for(timeout=WAIT_MS)
         pg.keyboard.press("Escape")
         pg.evaluate("() => document.activeElement.blur()")                                                         # the card that had the focus lies risen, whole, over its neighbours
