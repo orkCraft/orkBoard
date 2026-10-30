@@ -2,6 +2,7 @@
 // head and the party's name (the head steps while one of its tasks runs: `data-working`, spec 107 §8.3), and under the name its **sword and shield**: the marks of the AI tools its Does and its Checks run on (tabmarks.js, docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §3.4, decisions §189;
 // the title and the label say them: *Tech · Does on Claude · Checks on Codex*; the project's tab shows the main tool on both); at the end **+ Party** (*New party*) and **Stop all**; the AI tools' limits are the hand's mana (hand/mana.js, spec 104 B). Under 760 px the tabs are a row of heads, *Stop all* at the end,
 // and the limits are in the Orkmaster's **…** as chips (pane.js) and in the hand as small potions. The tabs, the Board's lanes and the hand read the frame's one `--cols`, so a tab stands over its lane. A party's tab carries a dot when the picked goal's route has it.
+// At the wide width Release's and Live's are not in the row (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §4.1, decisions §188.1): they wait in the portal ring's corners (road.js, portal.js) and open their view in the pane from there; `parties` is the tabs' (data.js `partiesNow`).
 // The open tab is the person's: nothing here switches it. A name is also said on a long press (nothing only on hover: spec 94 §1.1).
 import { useRef } from "preact/hooks";
 import { html, cls } from "../html.js";

@@ -10,7 +10,7 @@ import { mapData } from "../shell/store.js";
 import { Tabs } from "./tabs.js";
 import { Pane, back } from "./pane.js";
 import { litKey, elOf, mineKey, useLowering } from "./card.js";
-import { openTabOf, partiesNow } from "./data.js";
+import { openTabOf, partiesAll, partiesNow } from "./data.js";
 import { useFirstStart } from "./parties.js";
 import "./wayparts.js";                                   // the goal's way's pages over the pane (spec 100)
 
@@ -64,7 +64,7 @@ function useBackButton(open, narrow) {
 }
 
 export function Table() {
-  const parties = partiesNow(), current = openTabOf(tab.value, parties), narrow = useNarrow(), [host, compact] = useCompact(parties.length, narrow);
+  const parties = partiesAll(), tabs = partiesNow(), current = openTabOf(tab.value, parties), narrow = useNarrow(), [host, compact] = useCompact(tabs.length, narrow);   // `tabs`: Release and Live are in the portal ring's corners at the wide width (spec 111 §4.1), but a press there opens their view in the pane
   const project = currentProject.value?.path || "";
   useEffect(() => { restoreTab(); picked.value = ""; lower(); closeOver(); }, [project]);   // another project: its tab, nothing picked, nothing open
   useFirstStart(parties);                                                                  // no party yet: the parties' place opens at once (decisions §169.4)
@@ -95,7 +95,7 @@ export function Table() {
     return () => { clearInterval(poll); lit?.classList.remove("is-lit"); removeEventListener("pointerdown", off, true); removeEventListener("keydown", off, true); };
   }, [litKey.value]);
   return html`<div class="table" ref=${host} data-tab=${current} data-narrow=${String(narrow)} data-compact=${String(compact)}>
-    <${Tabs} parties=${parties} current=${current} narrow=${narrow} compact=${compact} />
+    <${Tabs} parties=${tabs} current=${current} narrow=${narrow} compact=${compact} />
     <${Pane} parties=${parties} tab=${current} narrow=${narrow} />
   </div>`;
 }

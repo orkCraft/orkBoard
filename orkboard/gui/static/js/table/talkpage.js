@@ -12,7 +12,7 @@ import { Elem, Head } from "../orkui.js";
 import { drawn } from "../frame/kinds.js";
 import { cardSig, given, give, scopeOf, sendRow } from "../hand/questions.js";
 import { named } from "../hand/todoform.js";
-import { nameOf, partiesNow } from "./data.js";
+import { nameOf, partiesAll } from "./data.js";
 
 /** The Talk as the host kept it (`ideas.talk_read {idea}`): `{stances: [{party, leader, stance, for, against, questions}], cause}`; undefined while it is asked, null when the host has none. Asked again when the row's questions change. */
 function useKept(idea, sig) {
@@ -70,7 +70,7 @@ function Together({ row, g, close }) {
 }
 
 export function TalkPage({ props, close }) {
-  const row = (board.value?.needs_you || []).find((r) => r.kind === "talk" && r.idea === props.idea) || null, parties = partiesNow();
+  const row = (board.value?.needs_you || []).find((r) => r.kind === "talk" && r.idea === props.idea) || null, parties = partiesAll();
   const [together, setTogether] = useState(!!props.together);
   const node = (mapData.value?.nodes || []).find((n) => n.slug === props.idea);
   const kept = useKept(props.idea, row ? row.questions.map((c) => c.id).join("|") : "");

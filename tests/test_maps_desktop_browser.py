@@ -196,6 +196,10 @@ def wide(w):
 
 
 def go(pg, slug):
+    if slug == "release" and pg.viewport_size["width"] >= 760:        # at the wide width Release is no tab: it waits in the portal ring's lower left corner (docs/specs/111 §4.1)
+        pg.locator(".ork-portal-ring__before").click()
+        pg.locator('.table[data-tab="release"]').wait_for(timeout=WAIT_MS)
+        return
     tab(pg, slug).click()
     pg.locator(f'.table-tab[data-tab="{slug}"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
 

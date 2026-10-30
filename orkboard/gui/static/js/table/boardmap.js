@@ -6,7 +6,7 @@ import { useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html } from "../html.js";
 import { picked } from "../frame/state.js";
 import { currentProject } from "../shell/projects.js";
-import { laneOf, lineNow, nameOf, ownOf } from "./data.js";
+import { laneOf, lineNow, nameOf, ownOf, partiesNow } from "./data.js";
 import { GoalBlock, Line, OwnBlock } from "./cascade.js";
 import "./line.js";
 
@@ -30,9 +30,10 @@ function useTokens(host, narrow) {
   return tokens;
 }
 
+/** `parties`: every party (the Orkmaster reads, routes and joins the goals of Release and Live too); the lanes are the tabs' parties (`partiesNow`: not those two at the wide width, spec 111 §4.1). */
 export function BoardMap({ parties, narrow }) {
   const host = useRef(), tokens = useTokens(host, narrow), only = picked.value;
-  const own = ownOf(parties), line = lineNow(), lanes = parties.map((g) => ({ g, goals: laneOf(g) }));
+  const own = ownOf(parties), line = lineNow(), lanes = partiesNow().map((g) => ({ g, goals: laneOf(g) }));
   const none = !own.length && !line.length && lanes.every((l) => !l.goals.length);
   return html`<div class="table-board" ref=${host} data-tokens=${String(tokens)} data-picked=${only || undefined}>
     <div class="table-lane table-lane--first" data-lane="first" role="group" aria-label=${currentProject.value?.name || "The project"}>

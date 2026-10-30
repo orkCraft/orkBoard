@@ -11,6 +11,7 @@
 .portal-host .ork-portal { cursor: pointer; }
 .portal-host .ork-portal[aria-disabled="true"] { cursor: progress; }
 .portal-host .ork-portal.is-sealed { cursor: not-allowed; }
+.portal__line.is-red { color: var(--ork-danger); }                      /* a red check on the way into main: the line says *Sealed: Tests is red: 2 tests fail* (spec 111 §4.3) */
 .portal__hint { margin: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); overflow-wrap: anywhere; }
 .portal__sealed { margin: 0; color: var(--ork-danger); font: var(--ork-type-caption); overflow-wrap: anywhere; }
 .portal__sealed:empty { display: none; }
@@ -39,6 +40,7 @@
 @media (min-width: 760px) {
   .portal-host { width: 100%; }
   .portal-host.is-ring { gap: var(--ork-3); margin-bottom: 0; }
+  .portal-host.is-ring .ork-portal-ring + .portal__hint, .portal-host.is-ring .ork-portal-ring ~ .portal__sealed { margin-top: var(--ork-4); }   /* the ring's lower corner reaches 8 px below it (spec 111 §4.1): the words stand clear of it */
   .portal-host.is-asleep .portal__label { color: var(--ork-ink-faint); opacity: 0.6; }
   .portal-host .ork-portal-ring { flex: none; }
 }

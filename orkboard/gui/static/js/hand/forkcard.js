@@ -8,12 +8,12 @@ import { html } from "../html.js";
 import { board } from "../board/store.js";
 import { openOver, tab } from "../frame/state.js";
 import { act, mapData } from "../shell/store.js";
-import { mapName, nameOf, partiesNow } from "../table/data.js";
+import { mapName, nameOf, partiesAll } from "../table/data.js";
 import { SpecPage } from "../table/specpage.js";
 import { Choose, chooseFor } from "./choose.js";
 import { way } from "./ways.js";
 
-const partyBy = (slug) => partiesNow().find((g) => g.slug === slug) || null;
+const partyBy = (slug) => partiesAll().find((g) => g.slug === slug) || null;
 const sideName = (side) => nameOf(partyBy(side.party)) || side.party;
 
 /** *Design and Tech disagree*, *Design, Tech and Art disagree*. */
@@ -25,7 +25,7 @@ export function disagreeWords(sides) {
 /** The lifted card of a fork: opens the sides over the pane, in place of the aside (hand/questions.css hides it for the frame it takes). */
 export function ForkLifted({ s }) {
   useLayoutEffect(() => {
-    openOver("choose", { source: "fork", idea: s.row.idea }, { title: mapName(tab.value, partiesNow()), key: "" }, s.title || s.full);
+    openOver("choose", { source: "fork", idea: s.row.idea }, { title: mapName(tab.value, partiesAll()), key: "" }, s.title || s.full);
   }, [s.key]);
   return html`<span class="q-opening" aria-hidden="true"></span>`;
 }

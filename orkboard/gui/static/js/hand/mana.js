@@ -18,7 +18,7 @@ import { Icon, ORKUI } from "../orkui.js";
 import { town } from "../link.js";
 import { levelOf, windowOf } from "../arena/limits.js";
 import { untilWords } from "../arena/arenawords.js";
-import { MARKED, mapName, openTabOf, partiesNow } from "../table/data.js";
+import { MARKED, mapName, openTabOf, partiesAll } from "../table/data.js";
 import { ORKMASTER, openOver, tab } from "../frame/state.js";
 import { markedTool } from "./state.js";
 import { costOf } from "./cost.js";
@@ -167,7 +167,7 @@ export function Tools() {
 /** The potions. `lifted`: the stop now lifted in the hand, whose cost names the tool it takes from. */
 export function Mana({ lifted = null }) {
   const narrow = useNarrow(), box = useRef(), frame = useRef(), limits = town.value?.limits || [], mana = town.value?.mana || null, paid = mana?.paid || null;
-  const parties = partiesNow(), open = openTabOf(tab.value, parties);
+  const parties = partiesAll(), open = openTabOf(tab.value, parties);
   const slots = PLACES - (paid ? 1 : 0), over = limits.length > slots, shown = over ? limits.slice(0, slots - 1) : limits, more = limits.length - shown.length;
   const places = shown.length + (over ? 1 : 0) + (paid ? 1 : 0), rows = places > 3 ? 2 : 1, small = narrow || rows === 2;
   const key = framedOf({ limits, mana, open, parties, shown });

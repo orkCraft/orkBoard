@@ -9,7 +9,7 @@ import { board } from "../board/store.js";
 import { mapData } from "../shell/store.js";
 import { ORKMASTER, openOver, over, tab } from "../frame/state.js";
 import { uprightNow } from "../frame/upright.js";
-import { mapName, partiesNow } from "../table/data.js";
+import { mapName, partiesAll } from "../table/data.js";
 import { Choose, ChoiceCard, OtherCard, chooseFor } from "./choose.js";
 import { stopsOfProject } from "./data.js";
 import { give, givePicks, given, cardSig, cardsOf, sendRow } from "./questions.js";
@@ -42,7 +42,7 @@ export function QuestionLifted({ s }) {
 
 function QuestionOpens({ s }) {
   useLayoutEffect(() => {
-    openOver("choose", { source: "question", scope: s.scope }, { title: mapName(tab.value, partiesNow()), key: "" }, s.title || s.full);
+    openOver("choose", { source: "question", scope: s.scope }, { title: mapName(tab.value, partiesAll()), key: "" }, s.title || s.full);
   }, [s.key]);
   return html`<span class="q-opening" aria-hidden="true"></span>`;
 }
@@ -51,7 +51,7 @@ function QuestionOpens({ s }) {
 function QuestionHere({ s }) {
   const stops = stopsOfProject(mapData.value, board.value?.needs_you || [], ORKMASTER), mine = stops.filter((x) => x.scope === s.scope && x.card), top = mine.find((x) => x.key === s.key) || mine[0];
   if (!top) return null;
-  const a = asking(top, mine, { title: mapName(tab.value, partiesNow()), key: "" }), seed = (a.choices[a.c.pick] || a.choices[0] || {}).name || "";
+  const a = asking(top, mine, { title: mapName(tab.value, partiesAll()), key: "" }), seed = (a.choices[a.c.pick] || a.choices[0] || {}).name || "";
   return html`<div class="q-choose q-here" data-kind="choose" role="group" aria-label="Choices">
     <div class="q-choose__row" key=${a.c.q}>
       ${a.choices.map((c, i) => html`<${ChoiceCard} key=${c.id} c=${{ ...c, why: "" }} i=${i} picked=${c.id === String(a.c.pick)} element=${top.node?.element || ""} by=${top.party?.name || ""} head=${top.head}
@@ -67,7 +67,7 @@ function Questions({ props, close }) {
   const stops = stopsOfProject(mapData.value, board.value?.needs_you || [], tab.value), mine = stops.filter((s) => s.scope === props.scope && s.card), top = mine[0];
   useLayoutEffect(() => { if (!top) close(); }, [!top]);
   if (!top) return null;
-  const a = asking(top, mine, over.value?.from || { title: mapName(tab.value, partiesNow()), key: "" });
+  const a = asking(top, mine, over.value?.from || { title: mapName(tab.value, partiesAll()), key: "" });
   return html`<${Choose} question=${a.c.q} choices=${a.choices} pick=${String(a.c.pick)} by=${top.party?.name || ""} element=${top.node?.element || ""} head=${top.head}
     hint=${a.first && a.row.kind !== "cause" ? hintOf(top) : ""} onChoose=${(id) => a.answer({ pick: Number(id) })} onOther=${(text) => a.answer({ text })}
     decide=${a.decide} together=${a.together} onBack=${close} />`;

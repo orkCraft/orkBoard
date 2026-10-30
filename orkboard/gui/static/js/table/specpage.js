@@ -10,7 +10,7 @@ import { command } from "../link.js";
 import { mapData } from "../shell/store.js";
 import { Elem, Head } from "../orkui.js";
 import { drawn } from "../frame/kinds.js";
-import { nameOf, partiesNow } from "./data.js";
+import { nameOf, partiesAll } from "./data.js";
 
 if (typeof document !== "undefined") {                                  // the sheet, once, as frame.js links the others
   const href = new URL("./spec.css", import.meta.url).href;
@@ -112,7 +112,7 @@ function Section({ sec, lit, says }) {
 }
 
 export function SpecPage({ props }) {
-  const idea = props?.idea, page = usePage(idea), parties = partiesNow(), node = (mapData.value?.nodes || []).find((n) => n.slug === idea) || null;
+  const idea = props?.idea, page = usePage(idea), parties = partiesAll(), node = (mapData.value?.nodes || []).find((n) => n.slug === idea) || null;
   const fork = forkOf(idea), sides = (fork?.sides || []).filter((s) => s && s.party), lit = new Set(sides.map((s) => s.party));
   if (page === undefined) return html`<p class="table-over__muted" data-kind="spec">Reading the spec…</p>`;
   if (!page) return html`<p class="table-over__muted" data-kind="spec">The spec could not be read now.</p>`;

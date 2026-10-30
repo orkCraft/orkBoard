@@ -14,7 +14,7 @@ import { openTab, tab } from "../frame/state.js";
 import { mapData } from "../shell/store.js";
 import { addressOf, fieldOff, fieldOpen, fieldText } from "../hand/state.js";
 import { partiesOf, partyCard } from "../hand/data.js";
-import { leadsSystem, mapName, partiesNow } from "./data.js";
+import { leadsSystem, mapName, partiesAll } from "./data.js";
 import { mapOf, pickWith } from "./maps.js";
 import { cardEl, cardsIn, gestureEnded, usePickGestures } from "./pickbox.js";
 
@@ -47,7 +47,7 @@ export function addressNow() {
 /** The party whose map is in picking now (`{party, name}`), or null: the field is open, addressed to a party with a map, and picking not ended. */
 export const pickFor = computed(() => {
   if (!fieldOpen.value) return null;
-  const a = addressNow(), g = a.party ? partiesNow().find((x) => x.slug === a.party) : null;
+  const a = addressNow(), g = a.party ? partiesAll().find((x) => x.slug === a.party) : null;
   return g && pickOff.value !== g.slug && (leadsSystem(g) || mapOf(g)) ? { party: g.slug, name: a.name } : null;
 });
 
@@ -135,7 +135,7 @@ export function PickStrip({ tab: open }) {
 /** A party's map, with picking on it: no box of its own (`display: contents`), the box and the gestures on the cards inside. `g`: the party. */
 export function PickHost({ g, children }) {
   const host = useRef(), on = pickFor.value?.party === g.slug, list = marks.value, [rect, setRect] = useState(null);
-  const label = mapName(g.slug, partiesNow());
+  const label = mapName(g.slug, partiesAll());
   const state = useRef();
   state.current = { on };
   useEffect(() => {                                                                      // paint the marks; again whenever the map draws a card or the page rewrites a class

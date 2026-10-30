@@ -15,7 +15,7 @@ pytest.importorskip("playwright.sync_api")
 
 from tests import narrow  # noqa: E402
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
-from tests.test_hand_desktop_browser import HandHost, call, node, open_hand, sig  # noqa: E402
+from tests.test_hand_desktop_browser import HandHost, RoadHost, call, node, open_hand, sig  # noqa: E402
 from tests.test_shell_browser import _calls, _sent  # noqa: E402
 
 pytestmark = pytest.mark.browser
@@ -47,6 +47,9 @@ class PortalHost(HandHost):
         self.refuse = ""
 
     def handle(self, name, a):
+        if name == "ideas.to_main_checks" and not isinstance(self, RoadHost):                # the checks on the way into main (spec 111 §4.2), all passed at once: the portal is open as the test means it
+            self.log.append((name, a))
+            return {"idea": a["idea"], "running": False, "checks": [{"name": "The merge", "state": "passed", "words": ""}, {"name": "Tests", "state": "passed", "words": ""}]}
         if name == "ideas.to_main_plan":
             self.log.append((name, a))
             return {"idea": a["idea"], "into": "dev", "main": "main", **self.plans[a["idea"]]}
@@ -207,6 +210,8 @@ def test_a_card_dragged_over_the_portal_takes_it_and_dropped_on_it_is_sent(gui):
         pg.mouse.down()
         pg.mouse.move(src["x"] + 60, src["y"] + 70, steps=4)                                                         # begun to drag: the portal opens
         portal(pg).wait_for(timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelector('.portal-host')?.dataset.portal === 'open'", timeout=WAIT_MS)   # its checks answered (passed): an open portal, not one still being checked
+        woken(pg)
         assert card(pg, "codes").get_attribute("aria-pressed") == "true"
         assert "is-taking" not in portal(pg).get_attribute("class")
         door = portal(pg).bounding_box()

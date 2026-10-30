@@ -162,6 +162,50 @@ class HandHost(StubHost):
         return super().handle(name, a)
 
 
+class RoadHost(HandHost):
+    """HandHost with the road's two parties as the host's map names them (`party_craft`, spec 111 §4.1): Release (the lich, whose members are two undead) and Live (the imp, a goblin beside it), and the checks on the way into main
+    scripted (§4.2): `checks[slug]` is what the snapshot's `main_checks` says, `ideas.to_main_checks` answers it, `step` moves it as the host's `main.check` does. A plan with a `conflict` seals through the check *The merge*."""
+
+    def __init__(self, **more):
+        super().__init__(**more)
+        self.checks: dict[str, list[dict]] = {}
+        self.script: dict[str, tuple[tuple[str, ...], dict]] = {}               # slug → the states the checks come to when they are asked (or asked again)
+        self.asked: list[dict] = []
+        live = party("live", "Live", "imp", "engineering")
+        self.parties.append(live)
+        for p in self.parties:
+            if p["slug"] in ("release", "live"):
+                p["party_craft"] = "release" if p["slug"] == "release" else "run"
+        release = next(p for p in self.parties if p["slug"] == "release")
+        release["party"] = [{"slug": "release-lead", "name": "Release lead", "head": release["leader"]["head"], "band": "lead", "state": "free", "why": ""},
+                            {"slug": "keeper", "name": "Keeper", "head": head("lich", "engineering", "warrior"), "band": "build", "state": "free", "why": ""},
+                            {"slug": "warden", "name": "Warden", "head": head("lich", "engineering", "laborer"), "band": "check", "state": "free", "why": ""}]
+        live["party"] = [{"slug": "live-lead", "name": "Live lead", "head": live["leader"]["head"], "band": "lead", "state": "free", "why": ""},
+                         {"slug": "digger", "name": "Digger", "head": head("goblin", "engineering", "warrior"), "band": "build", "state": "free", "why": ""}]
+
+    def snapshot(self):
+        doc = super().snapshot()
+        doc["state"]["main_checks"] = copy.deepcopy(self.checks)
+        return doc
+
+    def step(self, slug, *states, words=None):
+        """The host's `main.check`: the goal's checks now stand as `states` (one of waiting, running, passed, failed each) and the snapshot carries them."""
+        names = ["The merge", "Tests", "Looks", "Regression", "Extra"]
+        self.checks[slug] = [{"name": names[i], "state": st, "words": (words or {}).get(i, "")} for i, st in enumerate(states)]
+        return self.bump(None)
+
+    def handle(self, name, a):
+        if name == "ideas.to_main_checks":
+            self.log.append((name, a))
+            self.asked.append(a)
+            want = self.script.get(a["idea"])
+            if want and (a["idea"] not in self.checks or a.get("again")):
+                self.step(a["idea"], *want[0], words=want[1])
+            got = copy.deepcopy(self.checks.get(a["idea"], []))
+            return {"idea": a["idea"], "checks": got, "running": any(c["state"] in ("waiting", "running") for c in got)}
+        return super().handle(name, a)
+
+
 def open_hand(gui, host=None, width="wide", errors=True):
     """The page against the stub, at one of the two widths; waits for the hand."""
     server, browser = gui

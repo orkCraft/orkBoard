@@ -6,10 +6,10 @@
 import { useState } from "preact/hooks";
 import { html } from "../html.js";
 import { act } from "../shell/store.js";
-import { partiesNow } from "../table/data.js";
+import { partiesAll } from "../table/data.js";
 import { way } from "./ways.js";
 
-const partyBy = (slug) => partiesNow().find((g) => g.slug === slug) || null;
+const partyBy = (slug) => partiesAll().find((g) => g.slug === slug) || null;
 
 /** The leader of the party that said no, as the page shows leaders: `{name, head}` (the Taskmaster where the party has no leader of its own). */
 export const objector = (row) => {
