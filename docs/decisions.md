@@ -3894,3 +3894,27 @@ real one), and today it is read only in the party's editor. So:
    changed in the party's editor, as today. The narrow width's tabs are heads only: no marks.
 4. Built with spec 111.
 The owner's call.
+
+## 190. The bar's marks: a banner for + Party, boards across Stop all; Play is a die in the hand, thrown while the preview starts (31 October, the owner)
+
+Why: the owner: *style the Party and Play buttons, as an invite to a guild or a raid, as long as it is clear what each does*;
+then *the three as flags*; then *Play as a die, bigger, seen from above, by the potions: it shakes on hover, is thrown onto the
+screen when pressed and rolls while Play loads, then the product's logo comes up as today*, *it lands on a green tick or a red
+cross*, *lying askew*. A button's word says what it does (CLAUDE.md), so the words stay and the marks bring the world: *Start a
+raid* would promise work where Play opens dev's preview, *Invite to guild* a person where + Party gathers orks. The owner's yes
+on `docs/mockups/buttons/` and `docs/mockups/play-die/`. So (this changes spec 88's *Open the build* in the pane's head, and
+spec 107 §9.2's logo shown while it starts):
+1. **+ Party wears a banner** (a square cloth on a pole, a + cut out of it, unfurling once on hover); **Stop all wears two thick
+   planks nailed across a pole** (boarded up), in the danger colour. Both are orkUI icons on the 7 × 7 grid; the words stay.
+   A pennant for Play was weighed and not taken: on a pole it is ⚑ (*a goal in main*) at 14 px.
+2. **Play is a die lying in the hand**, left of the potions, its word under it (*Play*, *Playing* while the preview is open),
+   seen from above (its top face large, its front and right faces three cells), the card's greys with pips in the muted ink,
+   turned by the lean token. **Hovered, it wobbles once** and stays lifted. The pane's head loses Play.
+3. **Pressed when the preview is not running, it is thrown onto the pane** (black: the start screen) **and rolls the whole start**,
+   the stage line under it; it **lands on its outcome**, askew: **a green tick** when the page answered, then the project's logo
+   comes up as today (about a second) and the frame rises; **a red cross** when the start failed, then it tips over and today's
+   failure takes its place. **Warm** (the preview already running): it wobbles in the hand and the frame opens at once; no
+   throw, no logo. While the preview is open its pips glow; pressed again, the preview closes.
+4. Under reduced motion: no wobble, no throw, no roll: today's start screen.
+5. Drawn in orkUI first (the icons and `.ork-die`), then here; spec 112, built by the cheaper model.
+The owner's call.
