@@ -353,3 +353,74 @@ def test_under_reduced_motion_a_failure_is_todays_failure_at_once(gui):
     pg.locator(".play-error").wait_for(timeout=WAIT_MS)
     assert pg.locator(".playpane .ork-die").count() == 0
     finish(pg, errors)
+
+
+# -- spec 113 part B: a project with no preview, the die sleeps -----------------------------------------------------------------------------------------
+
+class PreviewHost(Host):
+    """The table's host whose snapshot says how the project opens a preview (`preview`: "command" · "static" · ""; None leaves the key out, as before the first snapshot)."""
+
+    def __init__(self, preview: str | None = "", **kw):
+        super().__init__(**kw)
+        self.preview = preview
+
+    def snapshot(self):
+        doc = super().snapshot()
+        if self.preview is not None:
+            doc["state"]["preview"] = self.preview
+        return doc
+
+
+ASLEEP = "Nothing to play yet"
+NOTHING = "Nothing here yet"
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_with_no_preview_the_die_sleeps_grey_and_still_and_says_nothing_to_play_yet(gui, width):
+    host = PreviewHost("", play=STARTING)                                                                           # were it asked to start, it would
+    pg, errors = window(gui, host, {"wide": WIDE, "narrow": {"width": 390, "height": 844}}[width])
+    d, face = die(pg), die(pg).locator(".ork-die")
+    assert "is-asleep" in d.get_attribute("class") and d.locator(".hand-die__word").inner_text() == "Play"
+    assert d.get_attribute("title") == ASLEEP and d.get_attribute("aria-label") == f"{ASLEEP}: say how the project opens"
+    assert face.evaluate("e => [getComputedStyle(e).filter, getComputedStyle(e).opacity]") == ["grayscale(1)", "0.4"]
+    d.hover()
+    pg.wait_for_timeout(150)
+    assert pg.locator(".hand-die .ork-die.is-wobbling").count() == 0 and face.evaluate("e => getComputedStyle(e).transform") == "none" and face.evaluate("e => getComputedStyle(e).animationName") == NO_ANIMATION
+    shot(pg, f"c113-die-asleep-{width}.png")
+    d.click()                                                                                                       # pressed it opens the view that says so, with no throw
+    pg.locator('.table-over[data-kind="play"]').wait_for(timeout=WAIT_MS)
+    pg.locator('.playpane[data-state="none"]').wait_for(timeout=WAIT_MS)
+    assert pg.locator(".assets-none__title").text_content() == NOTHING and "checks.toml" in pg.locator(".assets-none .arena-cap").text_content()
+    pg.wait_for_timeout(700)                                                                                        # the throw would be in the air by now
+    assert pg.locator(".play-throw").count() == 0 and pg.locator(".playpane .ork-die").count() == 0 and "is-gone" not in d.get_attribute("class")
+    assert not [c for c in host.log if c[0] == "ideas.play"], "a project with no preview is not asked to start one"
+    assert "is-playing" not in face.get_attribute("class") and d.locator(".hand-die__word").inner_text() == "Play"
+    shot(pg, f"c113-die-asleep-pressed-{width}.png")
+    d.click()                                                                                                       # and pressed again it closes the view, as the die always does
+    pg.wait_for_selector(".table-over", state="detached", timeout=WAIT_MS)
+    assert d.get_attribute("title") == ASLEEP
+    finish(pg, errors)
+
+
+@pytest.mark.parametrize("preview", ["command", "static", None])
+def test_with_a_preview_or_before_the_first_snapshot_the_die_is_awake_as_before(gui, preview):
+    host = PreviewHost(preview, play=PLAYING)
+    pg, errors = window(gui, host)
+    d = die(pg)
+    assert "is-asleep" not in d.get_attribute("class") and d.get_attribute("title") == "Play: the project's preview of dev" and d.get_attribute("aria-label") == d.get_attribute("title")
+    assert d.locator(".ork-die").evaluate("e => [getComputedStyle(e).filter, getComputedStyle(e).opacity]") == ["none", "1"]
+    d.click()
+    pg.locator(".play-frame").wait_for(timeout=WAIT_MS)                                                             # opens the preview, not the empty view
+    assert pg.locator('.playpane[data-state="none"]').count() == 0
+    finish(pg, errors)
+
+
+def test_the_die_wakes_when_the_snapshot_says_the_project_has_a_preview_now(gui):
+    host = PreviewHost("")
+    pg, errors = window(gui, host)
+    assert "is-asleep" in die(pg).get_attribute("class")
+    host.preview = "command"
+    host.push()
+    pg.wait_for_function("() => !document.querySelector('.hand-die').classList.contains('is-asleep')", timeout=WAIT_MS)
+    assert die(pg).get_attribute("title") == "Play: the project's preview of dev"
+    finish(pg, errors)

@@ -4,6 +4,7 @@
 // window carries the lich's head and its foot *n goals ready for main*; with nothing done to see, that line alone is on its back. Pressed, it opens over the pane (`discard`): the goals done and not yet seen (a goal pressed opens
 // its Result and tells the host it was seen, `ideas.seen`, and it leaves the discard), and *Ready for main*: each goal ready is a card (table/portal.js, spec 105 F: pressed or dragged it is chosen for the portal in the ring over the pile, which sends that goal alone to main) and **To main** (dev whole, for a person's own commits, by code). No act on main lies on the pile (§160.5): the pile only shows and opens.
 // The ring in it also holds the road's two corners, Release and Live, and the gate of skeletons while a goal's way into main is checked (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §4, portal.js, road.js).
+// With no gate (dev and main one branch, or no main: `gateData.same`, docs/specs/113-a-project-with-no-preview-or-no-gate.md §4, decisions §191.2) the end is the label and the pile's place or the pile alone: no ring, no portal, no corners.
 // At the wide width (760 px and up) the end is always laid (docs/specs/110-runes-on-the-table.md §3.2, decisions §185, §186): the portal's ring over the label *Discard*, and with nothing done and nothing ready for main orkUI's `.ork-card-place`
 // (a card's outline in dashes, nothing to press) where the pile will lie, so the first goal done lands on a place. At the narrow width, as before, no part with nothing done and nothing ready for main.
 import { useState } from "preact/hooks";
@@ -16,6 +17,7 @@ import { drawn } from "../frame/kinds.js";
 import { doneOf, readyOf, readyWords } from "../hand/data.js";
 import { leans } from "../hand/motion.js";
 import { Portal, ReadyCards, useNarrow } from "./portal.js";
+import { noGate } from "./data.js";
 import { uprightNow } from "../frame/upright.js";
 
 const LICH = { race: "lich", tier: "elder" };
@@ -83,7 +85,7 @@ export function DiscardView() {
 export function DiscardEnd() {
   const narrow = useNarrow(), laid = !narrow && !uprightNow.value;
   if (!laid && !hasDiscard()) return null;
-  return html`<div class="table-end" data-end="discard"><${Portal} /><span class="table-end__label">Discard</span>${hasDiscard() ? html`<${Discard} />` : html`<span class="ork-card-place table-place" aria-hidden="true"></span>`}</div>`;
+  return html`<div class="table-end" data-end="discard">${!noGate() && html`<${Portal} />`}<span class="table-end__label">Discard</span>${hasDiscard() ? html`<${Discard} />` : html`<span class="ork-card-place table-place" aria-hidden="true"></span>`}</div>`;
 }
 
 drawn("discard", DiscardView);

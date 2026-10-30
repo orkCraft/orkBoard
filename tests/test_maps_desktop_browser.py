@@ -118,6 +118,8 @@ class MapsHost(TableHost):
                 {"kind": "clip", "own": True, "n": 2, "folders": [{"folder": "clips/", "n": 2}], "assets": [asset("clips/intro.mp4", "clip", seconds=8, url="data:video/mp4;base64,AAAA")]}]
 
     def handle(self, name, a):
+        if name == "ideas.gate":                                                                         # a project with a main branch: its gate is there (nothing waits), so the ring holds Release at the wide width; `same` would be no gate (spec 113 §4)
+            return {"into": "dev", "main": "main", "same": False, "commits": 0, "files": 0, "ideas": []}
         if name == "ideas.loop":
             self.log.append((name, a))
             return {**json.loads(json.dumps(self.loop)), "findings": FINDINGS if self.loop["loops"] else [], "proposing": False, "status": "", "party": "game"}

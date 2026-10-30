@@ -341,3 +341,30 @@ def test_an_exception_says_why_and_answers_a_tail_too(host, monkeypatch):
     host.command("ideas.play", {})
     got = settle(host)
     assert got == {"state": "failed", "error": "could not make its worktree: disk full", "tail": []}
+
+
+# -- the snapshot knows before the press whether there is a preview (spec 113 §2, decisions §191.1) ---------------------------------------
+
+def preview_of_snapshot(host) -> str:
+    host.ideas._cache = None                                  # the snapshot keeps its Board's read ten seconds: a file changed since is read again
+    return host.snapshot()["preview"]
+
+
+def test_the_snapshot_says_how_the_project_opens_a_preview(host, repo):
+    state = host.ideas.state_dir
+    assert preview_of_snapshot(host) == "static"                                                                  # an index.html at its root
+    (repo / "index.html").unlink()
+    assert preview_of_snapshot(host) == ""                                                                        # none: the die sleeps
+    (repo / "package.json").write_text('{"scripts": {"test": "jest", "dev": "vite"}}')
+    assert preview_of_snapshot(host) == "command"                                                                 # a package's dev script
+    (repo / "package.json").write_text('{"scripts": {"test": "jest"}}')
+    assert preview_of_snapshot(host) == ""                                                                        # a package with no script that serves
+    (state / "checks.toml").write_text('preview = "mkdocs serve"\n')
+    assert preview_of_snapshot(host) == "command"                                                                 # a wiki with a site to serve: the die wakes as a game's does
+    (state / "checks.toml").write_text('preview = "   "\n')
+    assert preview_of_snapshot(host) == ""                                                                        # a blank command is none
+
+
+def test_the_phone_is_not_told_of_a_preview(host):
+    from orkboard.gui.board_host import BoardPhone
+    assert "preview" in host.snapshot() and "preview" not in BoardPhone.phone_snapshot(host)                      # the phone has no Play

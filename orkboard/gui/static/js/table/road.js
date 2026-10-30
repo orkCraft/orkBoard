@@ -3,7 +3,7 @@
 // party's members' heads, its leader stepping while one of its tasks runs (`.is-working`, the tabs' `isWorking`), an alert sign on it when the party has one (`hasAlert`). Each corner is a button that opens that party's view in the
 // pane as a tab does (`openTab`), with no tab lit in the row. Release wakes when a goal is ready for main, a task of its runs, it asks (a card of its in the hand) or has an alert, or while the checks of the goal chosen for main run;
 // Live when a task of its runs, it asks or it has an alert. The skeletons that have passed their checks stand in Release's corner beside its leader, each with a tick, in place of its members; the ones still checking, and a red
-// one, stand in the gate in front of the portal (`Gate`). A party the project does not have has no corner.
+// one, stand in the gate in front of the portal (`Gate`). A party the project does not have has no corner, and a project with no gate (table/data.js `noGate`) has no ring: `roadParties` says none, so Release and Live are tabs there (docs/specs/113-a-project-with-no-preview-or-no-gate.md §4).
 import { html, cls } from "../html.js";
 import { Head } from "../orkui.js";
 import { closeOver, openTab } from "../frame/state.js";

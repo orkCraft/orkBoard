@@ -3,7 +3,7 @@ have no lanes at the wide width, and wait in the portal ring's corners, asleep (
 use; a press on a corner opens that party's view with no tab lit; the narrow width keeps them in the row of heads. A goal chosen for main has its checks asked (`ideas.to_main_checks`) and followed in the snapshot's `main_checks`
 (scripted here as the host's `main.check` moves it): each check a skeleton in the gate in front of the portal (the portal `is-sealed is-guarded`, the line *Checking the way into main*), passed ones in Release's corner with a tick,
 a red one staying with its words (*Sealed: Tests is red: 2 tests fail*), the portal open when all passed; a seal no check owns keeps its X; `ideas.to_main` is not asked while a skeleton stands; the ring plays the rite as the goal
-goes in. A road party's cards lie in the hand's last lane, at its right end. Screenshots to $ROAD_SHOTS when it is set."""
+goes in. A road party's cards lie in the hand's last lane, at its right end. With no gate (spec 113 §4: dev and main one branch) there is no ring: Release and Live stay tabs with their lanes and the table's end is the discard alone. Screenshots to $ROAD_SHOTS when it is set."""
 from __future__ import annotations
 
 import os
@@ -201,6 +201,79 @@ def test_a_road_partys_cards_lie_in_the_last_lane_at_its_right_end_before_the_po
         assert road["x"] > own["x"], "at the lane's right end, in front"
         potions = pg.locator(".hand .ork-potion").first.bounding_box() if pg.locator(".hand .ork-potion").count() else None
         assert potions is None or road["x"] + road["width"] <= potions["x"] + 1
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+# -- no gate, no ring (spec 113 §4, decisions §191.2) ---------------------------------------------------------------------------------------------------
+
+NO_GATE = {"into": "dev", "main": "dev", "same": True, "commits": 0, "files": 0, "ideas": []}      # results merge into dev itself: the gate's own answer (`idea_gate.same`)
+GATE = {"into": "dev", "main": "main", "same": False, "commits": 0, "files": 0, "ideas": []}
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_with_no_gate_there_is_no_ring_and_release_and_live_stay_tabs_with_their_lanes_and_the_end_is_the_discard_alone(gui, width):
+    host = RoadHost(bare=True)
+    host.gate_doc = dict(NO_GATE)
+    pg, log = open_page(gui, host, width)
+    try:
+        pg.locator(".table-tab[data-tab]").first.wait_for(timeout=WAIT_MS)
+        pg.wait_for_timeout(400)
+        assert tabs(pg) == ["orkmaster", "tech", "design", "product", "release", "live"], "in the row of heads as at the narrow width"
+        assert pg.locator(".ork-portal-ring, .portal-host, .ork-portal, .ork-portal-ring__before, .ork-portal-ring__after").count() == 0
+        assert pg.evaluate("() => document.querySelector('.frame').style.getPropertyValue('--lanes')") == "6", "the project's lane and five parties'"
+        assert pg.locator(".hand-lane").count() == 6
+        if width == "wide":
+            label, place = pg.locator(".table-end .table-end__label"), pg.locator(".table-end .ork-card-place")
+            assert label.text_content() == "Discard" and place.count() == 1 and pg.locator(".table-end").locator("button").count() == 0, "the label and the pile's place, nothing else"
+            assert pg.locator(".portal__label").count() == 0, "no *Main*"
+            assert label.bounding_box()["y"] < place.bounding_box()["y"]
+            shot(pg, "c113-no-gate-wide", still=False)
+        else:
+            assert pg.locator(".table-end").count() == 0
+            shot(pg, "c113-no-gate-narrow", still=False)
+        pg.locator('.table-tab[data-tab="release"]').click()                            # and Release is a tab that opens its party, as at the narrow width
+        pg.locator('.table-tab[data-tab="release"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_with_no_gate_a_goal_done_lies_on_the_pile_with_no_ring_and_no_ready_for_main(gui):
+    host = RoadHost()
+    host.gate_doc = dict(NO_GATE)
+    pg, log = open_page(gui, host)
+    try:
+        pile = pg.locator(".table-end .hand-done")
+        pile.wait_for(timeout=WAIT_MS)
+        pg.wait_for_timeout(400)
+        assert pg.locator(".ork-portal-ring, .portal-host").count() == 0 and pg.locator(".table-end .table-end__label").text_content() == "Discard"
+        assert pg.locator(".table-end .ork-card-place").count() == 0 and pg.locator(".table-end .hand-card .hand-card__foot").inner_text().strip() == "", "no *ready for main* on the pile"
+        pile.click()
+        pg.locator(".hand-discardview").wait_for(timeout=WAIT_MS)
+        assert pg.locator(".hand-discardview").get_by_text("Ready for").count() == 0 and pg.locator(".portal-cards").count() == 0
+        shot(pg, "c113-no-gate-pile", still=False)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_ring_comes_and_goes_with_the_gate_and_release_and_live_follow_into_it_and_out_of_the_tabs(gui):
+    host = RoadHost(bare=True)
+    host.gate_doc = dict(NO_GATE)
+    pg, log = open_page(gui, host)
+    try:
+        pg.locator(".table-tab[data-tab]").first.wait_for(timeout=WAIT_MS)
+        assert pg.locator(".ork-portal-ring").count() == 0 and "release" in tabs(pg)
+        host.gate_doc = dict(GATE)                                                         # a main branch appears: the gate is there, nothing ready for it yet
+        host.bump({})
+        release(pg).wait_for(timeout=WAIT_MS)
+        assert pg.locator(".ork-portal-ring").count() == 1 and tabs(pg) == ["orkmaster", "tech", "design", "product"] and live(pg).count() == 1
+        host.gate_doc = dict(NO_GATE)
+        host.bump({})
+        pg.locator(".ork-portal-ring").wait_for(state="detached", timeout=WAIT_MS)
+        assert tabs(pg) == ["orkmaster", "tech", "design", "product", "release", "live"]
     finally:
         pg.close()
     assert not log, "\n".join(log)

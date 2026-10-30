@@ -235,7 +235,7 @@ def test_a_goal_ready_for_main_opens_the_ring_with_the_portal_inside_and_it_wake
 def test_the_ring_wakes_when_the_first_goal_becomes_ready_and_sleeps_when_none_is_left(gui):
     host = HandHost()
     ready = host.gate_doc["ideas"]
-    host.gate_doc = {**host.gate_doc, "ideas": [], "commits": 0, "files": 0, "same": True}
+    host.gate_doc = {**host.gate_doc, "ideas": [], "commits": 0, "files": 0, "same": False}
     pg, host, log = open_hand(gui, host=host)
     try:
         pg.locator(".ork-portal-ring").wait_for(timeout=WAIT_MS)
@@ -244,7 +244,7 @@ def test_the_ring_wakes_when_the_first_goal_becomes_ready_and_sleeps_when_none_i
         host.bump({})
         pg.locator(".ork-portal-ring.is-open > .ork-portal").wait_for(timeout=WAIT_MS)
         assert "is-waking" in pg.locator(".ork-portal-ring").get_attribute("class")
-        host.gate_doc = {**host.gate_doc, "ideas": [], "commits": 0, "files": 0, "same": True}
+        host.gate_doc = {**host.gate_doc, "ideas": [], "commits": 0, "files": 0, "same": False}
         host.bump({})
         pg.wait_for_function("() => !document.querySelector('.ork-portal-ring > .ork-portal')", timeout=WAIT_MS)
         assert "is-open" not in pg.locator(".ork-portal-ring").get_attribute("class") and pg.locator(".portal-host").get_attribute("data-portal") == "asleep"

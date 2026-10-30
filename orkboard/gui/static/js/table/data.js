@@ -2,7 +2,7 @@
 // (the parties and their goals, the code's goals and ideas), `ideas.agents` and `ideas.roles` (the seats), the snapshot's limits —
 // and the words the table says. No template here. The table draws a party's name, never "goal" or "track" (CLAUDE.md, Wording).
 import { signal } from "@preact/signals";
-import { mapData, agents, roles } from "../shell/store.js";
+import { mapData, agents, roles, gateData } from "../shell/store.js";
 import { board, goalList, hhmm } from "../board/store.js";
 import { goalsOf, nodesOf, atWork, openTasks, partyOf, roleOf } from "../arena/arenawords.js";
 import { ORKMASTER } from "../frame/state.js";
@@ -28,8 +28,12 @@ WIDE?.addEventListener?.("change", () => { wide.value = WIDE.matches; });
 export const partiesAll = () => goalsOf(mapData.value, goalList().map((x) => x.slug)).filter((g) => g.slug !== GENERAL);
 
 const LIVE_CRAFTS = ["run", "liveops"];
-/** The road's two parties: Release (the party whose craft is `release`, before main) and Live (the first whose craft is `run` or `liveops`, past it); null for one the project does not have. */
+/** The project has no gate: dev and main are one branch, or main does not exist (the gate's own answer, `ideas.gate`'s `same`; docs/specs/113-a-project-with-no-preview-or-no-gate.md §4, decisions §191.2). Unknown before the first answer: a gate. */
+export const noGate = () => gateData.value?.same === true;
+
+/** The road's two parties: Release (the party whose craft is `release`, before main) and Live (the first whose craft is `run` or `liveops`, past it); null for one the project does not have. With no gate there is no ring to hold them: none, so both stay tabs. */
 export function roadParties(all = partiesAll()) {
+  if (noGate()) return { release: null, live: null };
   return { release: all.find((g) => g.party_craft === "release") || null, live: all.find((g) => LIVE_CRAFTS.includes(g.party_craft)) || null };
 }
 /** The slugs of the road's parties. */
