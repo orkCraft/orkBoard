@@ -4031,6 +4031,7 @@ do it for every lens.* So:
    spec does not yet say what will change, the lands' pictures (Orkline Camp's, §50.1), a lore of the leaders.
 4. **The rule of the line holds** (§50.5): no count of what waits, no streak; the reach is shown, Start stays the person's.
 5. Spec 117, built by the cheaper model, each part reviewed; no mockup but Tech's.
+The owner's call.
 
 ## 196. The die's up face says what Play would show: the cross while the last start failed, a spark when dev is new (31 October, the owner)
 
