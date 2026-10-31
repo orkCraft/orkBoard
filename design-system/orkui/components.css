@@ -611,122 +611,283 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
     5px 22px var(--_bar), 6px 22px var(--_bardark), 19px 22px var(--_bardark), 20px 22px var(--_bar); }
 /* portal:end */
 
-/* --- Die: Play as a die, seen from above (die/, 0.22.0). A 23 x 20 grid, 3 px a cell (69 x 60), `.big` 6 px (138 x 120), whole pixels. Plain HTML, CSS only:
-   `<span class="ork-die face-5" aria-hidden="true"></span>`. Drawn in `box-shadow` pixels as the portal is (many colours, and its face changes): a 1 px square
-   scaled by the cell, ::before the body (the top face 20 x 17 with its four corners cut, the front face under it slanting right, the right face beside it
-   slanting down, the silhouette and the top face's lower and right ridges in the edge), ::after the face (pips 2 x 2 cells, or the tick, or the cross). The lists
-   are generated (tools/build_die.py from die/die.json) into the block below, in the colours `--_<name>` set here. Faces: `.face-1` to `.face-6` (`.face-5` when
-   none), `.face-ok` (the tick, the success colour), `.face-no` (the cross, the danger colour). States: `.is-playing` (the pips and the edges in the ink, the
-   pips glowing: six steps, 2.4 s), `.is-rolling` (the face cycles 1 to 6, one quick step a face, until the class is taken off; the page then sets the face it
-   stops on), `.is-wobbling` (one wobble, 300 ms in three steps, rising by the rise token; the page adds it on pointer enter and takes it off at
-   `animationend`). The die is not turned by itself: the page turns it (`rotate: calc(var(--ork-motion-lean) * -1)`). No words inside: the caller says what it
-   does. Under reduced motion none of them moves (the glow stands at full). ------------------------------------------------------------------------------ */
-.ork-die { --_n: 3; --_top: var(--ork-card-frame); --_front: var(--ork-card); --_side: var(--ork-panel); --_edge: var(--ork-edge);
-  --_pip: var(--ork-ink-muted); --_tick: var(--ork-success); --_cross: var(--ork-danger);
+/* --- Die: Play as a die, a cube in CSS 3D (die/; 0.22.0, a cube since 0.24.0). Its box 23 x 24 cells, 3 px a cell (69 x 72), `.big` 6 px (138 x 144); a face
+   18 x 18 cells, its rim a cell. Plain HTML, the die, its cube and the cube's six faces, nothing else inside:
+   `<span class="ork-die face-5" aria-hidden="true"><span class="ork-die__cube"><i class="ork-die__face is-up"></i><i class="ork-die__face is-front"></i>
+   <i class="ork-die__face is-right"></i><i class="ork-die__face is-back"></i><i class="ork-die__face is-left"></i><i class="ork-die__face is-down"></i></span></span>`.
+   Seen from above and before (the view, generated) under a perspective of 150 cells: the up face large, the front face under it, the right face beside it. A face
+   is the card's frame in the edge's rim with its corners cut, its marks (::before, background layers of 2 x 2 cells) and the panel's colour over it at its shade
+   (::after: the light stays where it is, so a face darkens as it turns away from it). The lists, the view and every pose are generated (tools/build_die.py from
+   die/die.json) into the block below. The up face shows the face class: `.face-1` to `.face-6` (`.face-5` when none), `.face-ok` (the tick, the success colour),
+   `.face-no` (the cross, the danger colour), `.face-new` (the spark, the ink: news, not a warning); the other five are a die's (front 1, right 3, back 6, left 4, down 2). States: `.is-playing` (the up face's marks and
+   every edge in the ink, the marks glowing: six steps, 2.4 s), `.is-rolling` (the cube tumbles: a quarter turn a quick step, in three poses, until the class is
+   taken off; it then stands on the face class), `.is-wobbling` (the cube rocks once on its edges, 300 ms in three poses, rising by the rise token), `.is-landing`
+   (the up face rolls in from the back and the cube drops onto the table, 300 ms in three poses). The page adds the classes and takes them off. On the table the
+   die is turned by the page (`rotate: calc(var(--ork-motion-lean) * -1)`). No words inside: the caller says what it does. Nothing moves unless the person allows
+   motion (under reduced motion the glow stands at full and a rolling die stands on its face). ---------------------------------------------------------- */
+.ork-die { --_n: 3; --_c: calc(1px * var(--_n)); --_face: var(--ork-card-frame); --_shade: var(--ork-panel); --_edge: var(--ork-edge);
+  --_pip: var(--ork-ink-muted); --_tick: var(--ork-success); --_cross: var(--ork-danger); --_new: var(--ork-ink);
   position: relative; display: inline-block; flex: none; box-sizing: border-box; vertical-align: middle; margin: 0; padding: 0; border: 0; background: none;
-  width: calc(23px * var(--_n)); height: calc(20px * var(--_n)); will-change: transform; }      /* drawn whole before it is turned: a die turned by the lean token shows no seams between its pixels */
+  width: calc(23px * var(--_n)); height: calc(24px * var(--_n)); perspective: calc(var(--_c) * 150); }
 .ork-die.big { --_n: 6; }
 .ork-die.is-playing { --_pip: var(--ork-ink); --_edge: var(--ork-ink); }
-.ork-die::before, .ork-die::after { content: ""; position: absolute; left: 0; top: 0; width: 1px; height: 1px; transform-origin: 0 0; transform: scale(var(--_n)); }
-.ork-die::before { box-shadow: var(--_body); }
-.ork-die::after { box-shadow: var(--_f5); }
-.ork-die.face-1::after { box-shadow: var(--_f1); }
-.ork-die.face-2::after { box-shadow: var(--_f2); }
-.ork-die.face-3::after { box-shadow: var(--_f3); }
-.ork-die.face-4::after { box-shadow: var(--_f4); }
-.ork-die.face-5::after { box-shadow: var(--_f5); }
-.ork-die.face-6::after { box-shadow: var(--_f6); }
-.ork-die.face-ok::after { box-shadow: var(--_fok); }
-.ork-die.face-no::after { box-shadow: var(--_fno); }
-.ork-die.is-playing::after { animation: ork-die-glow 2.4s steps(6) infinite; }
-.ork-die.is-rolling::after { animation: ork-die-roll calc(var(--ork-motion-quick) * 6) steps(1) infinite; }
-.ork-die.is-wobbling { animation: ork-die-wobble calc(var(--ork-motion-quick) * 2.5) steps(1) 1 both; }
+.ork-die__cube { position: absolute; width: 0; height: 0; transform-style: preserve-3d; }
+.ork-die__face { position: absolute; left: calc(var(--_h) * -1); top: calc(var(--_h) * -1); width: calc(var(--_h) * 2); height: calc(var(--_h) * 2); box-sizing: border-box;
+  margin: 0; border: var(--_c) solid var(--_edge); background: var(--_face); backface-visibility: hidden;
+  clip-path: polygon(var(--_c) 0, calc(100% - var(--_c)) 0, 100% var(--_c), 100% calc(100% - var(--_c)), calc(100% - var(--_c)) 100%, var(--_c) 100%, 0 calc(100% - var(--_c)), 0 var(--_c)); }
+.ork-die__face::before, .ork-die__face::after { content: ""; position: absolute; inset: 0; }
+.ork-die__face::before { background-size: calc(var(--_c) * 2) calc(var(--_c) * 2); background-repeat: no-repeat; }
+.ork-die__face::after { background: var(--_shade); }
+.ork-die__face.is-up { transform: translateZ(var(--_h)); }
+.ork-die__face.is-front { transform: rotateX(-90deg) translateZ(var(--_h)); }
+.ork-die__face.is-right { transform: rotateY(90deg) translateZ(var(--_h)); }
+.ork-die__face.is-back { transform: rotateX(90deg) translateZ(var(--_h)); }
+.ork-die__face.is-left { transform: rotateY(-90deg) translateZ(var(--_h)); }
+.ork-die__face.is-down { transform: rotateY(180deg) translateZ(var(--_h)); }
 @keyframes ork-die-glow { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
-@keyframes ork-die-roll { 0% { box-shadow: var(--_f1); } 16.667% { box-shadow: var(--_f2); } 33.333% { box-shadow: var(--_f3); } 50% { box-shadow: var(--_f4); }
-  66.667% { box-shadow: var(--_f5); } 83.333% { box-shadow: var(--_f6); } 100% { box-shadow: var(--_f6); } }
-@keyframes ork-die-wobble { 0% { transform: translateY(calc(var(--ork-motion-rise) * -0.5)) rotate(-8deg); }
-  33.333% { transform: translateY(calc(var(--ork-motion-rise) * -1)) rotate(var(--ork-motion-lean)); }
-  66.667%, 100% { transform: translateY(calc(var(--ork-motion-rise) * -1)) rotate(0deg); } }
-@media (prefers-reduced-motion: reduce) { .ork-die.is-playing::after, .ork-die.is-rolling::after, .ork-die.is-wobbling { animation: none; } }
+@media (prefers-reduced-motion: no-preference) {
+.ork-die.is-playing .ork-die__face.is-up::before { animation: ork-die-glow 2.4s steps(6) infinite; }
+.ork-die.is-rolling .ork-die__cube { animation: ork-die-roll calc(var(--ork-motion-quick) * 6) steps(1) infinite; }
+.ork-die.is-wobbling .ork-die__cube { animation: ork-die-wobble calc(var(--ork-motion-quick) * 2.5) steps(1) 1 both; }
+.ork-die.is-landing .ork-die__cube { animation: ork-die-land calc(var(--ork-motion-quick) * 2.5) steps(1) 1 both; } }
 /* die:begin (generated by tools/build_die.py from die/die.json; do not edit by hand) */
-.ork-die::before { --_body:
-    1px 0px var(--_edge), 2px 0px var(--_edge), 3px 0px var(--_edge), 4px 0px var(--_edge), 5px 0px var(--_edge), 6px 0px var(--_edge), 7px 0px var(--_edge), 8px 0px var(--_edge), 9px 0px var(--_edge), 10px 0px var(--_edge), 11px 0px var(--_edge), 12px 0px var(--_edge), 13px 0px var(--_edge), 14px 0px var(--_edge), 15px 0px var(--_edge), 16px 0px var(--_edge), 17px 0px var(--_edge), 18px 0px var(--_edge),
-    0px 1px var(--_edge), 1px 1px var(--_top), 2px 1px var(--_top), 3px 1px var(--_top), 4px 1px var(--_top), 5px 1px var(--_top), 6px 1px var(--_top), 7px 1px var(--_top), 8px 1px var(--_top), 9px 1px var(--_top), 10px 1px var(--_top), 11px 1px var(--_top), 12px 1px var(--_top), 13px 1px var(--_top), 14px 1px var(--_top), 15px 1px var(--_top), 16px 1px var(--_top), 17px 1px var(--_top), 18px 1px var(--_top), 19px 1px var(--_edge), 20px 1px var(--_edge),
-    0px 2px var(--_edge), 1px 2px var(--_top), 2px 2px var(--_top), 3px 2px var(--_top), 4px 2px var(--_top), 5px 2px var(--_top), 6px 2px var(--_top), 7px 2px var(--_top), 8px 2px var(--_top), 9px 2px var(--_top), 10px 2px var(--_top), 11px 2px var(--_top), 12px 2px var(--_top), 13px 2px var(--_top), 14px 2px var(--_top), 15px 2px var(--_top), 16px 2px var(--_top), 17px 2px var(--_top), 18px 2px var(--_top), 19px 2px var(--_edge), 20px 2px var(--_side), 21px 2px var(--_edge),
-    0px 3px var(--_edge), 1px 3px var(--_top), 2px 3px var(--_top), 3px 3px var(--_top), 4px 3px var(--_top), 5px 3px var(--_top), 6px 3px var(--_top), 7px 3px var(--_top), 8px 3px var(--_top), 9px 3px var(--_top), 10px 3px var(--_top), 11px 3px var(--_top), 12px 3px var(--_top), 13px 3px var(--_top), 14px 3px var(--_top), 15px 3px var(--_top), 16px 3px var(--_top), 17px 3px var(--_top), 18px 3px var(--_top), 19px 3px var(--_edge), 20px 3px var(--_side), 21px 3px var(--_side), 22px 3px var(--_edge),
-    0px 4px var(--_edge), 1px 4px var(--_top), 2px 4px var(--_top), 3px 4px var(--_top), 4px 4px var(--_top), 5px 4px var(--_top), 6px 4px var(--_top), 7px 4px var(--_top), 8px 4px var(--_top), 9px 4px var(--_top), 10px 4px var(--_top), 11px 4px var(--_top), 12px 4px var(--_top), 13px 4px var(--_top), 14px 4px var(--_top), 15px 4px var(--_top), 16px 4px var(--_top), 17px 4px var(--_top), 18px 4px var(--_top), 19px 4px var(--_edge), 20px 4px var(--_side), 21px 4px var(--_side), 22px 4px var(--_edge),
-    0px 5px var(--_edge), 1px 5px var(--_top), 2px 5px var(--_top), 3px 5px var(--_top), 4px 5px var(--_top), 5px 5px var(--_top), 6px 5px var(--_top), 7px 5px var(--_top), 8px 5px var(--_top), 9px 5px var(--_top), 10px 5px var(--_top), 11px 5px var(--_top), 12px 5px var(--_top), 13px 5px var(--_top), 14px 5px var(--_top), 15px 5px var(--_top), 16px 5px var(--_top), 17px 5px var(--_top), 18px 5px var(--_top), 19px 5px var(--_edge), 20px 5px var(--_side), 21px 5px var(--_side), 22px 5px var(--_edge),
-    0px 6px var(--_edge), 1px 6px var(--_top), 2px 6px var(--_top), 3px 6px var(--_top), 4px 6px var(--_top), 5px 6px var(--_top), 6px 6px var(--_top), 7px 6px var(--_top), 8px 6px var(--_top), 9px 6px var(--_top), 10px 6px var(--_top), 11px 6px var(--_top), 12px 6px var(--_top), 13px 6px var(--_top), 14px 6px var(--_top), 15px 6px var(--_top), 16px 6px var(--_top), 17px 6px var(--_top), 18px 6px var(--_top), 19px 6px var(--_edge), 20px 6px var(--_side), 21px 6px var(--_side), 22px 6px var(--_edge),
-    0px 7px var(--_edge), 1px 7px var(--_top), 2px 7px var(--_top), 3px 7px var(--_top), 4px 7px var(--_top), 5px 7px var(--_top), 6px 7px var(--_top), 7px 7px var(--_top), 8px 7px var(--_top), 9px 7px var(--_top), 10px 7px var(--_top), 11px 7px var(--_top), 12px 7px var(--_top), 13px 7px var(--_top), 14px 7px var(--_top), 15px 7px var(--_top), 16px 7px var(--_top), 17px 7px var(--_top), 18px 7px var(--_top), 19px 7px var(--_edge), 20px 7px var(--_side), 21px 7px var(--_side), 22px 7px var(--_edge),
-    0px 8px var(--_edge), 1px 8px var(--_top), 2px 8px var(--_top), 3px 8px var(--_top), 4px 8px var(--_top), 5px 8px var(--_top), 6px 8px var(--_top), 7px 8px var(--_top), 8px 8px var(--_top), 9px 8px var(--_top), 10px 8px var(--_top), 11px 8px var(--_top), 12px 8px var(--_top), 13px 8px var(--_top), 14px 8px var(--_top), 15px 8px var(--_top), 16px 8px var(--_top), 17px 8px var(--_top), 18px 8px var(--_top), 19px 8px var(--_edge), 20px 8px var(--_side), 21px 8px var(--_side), 22px 8px var(--_edge),
-    0px 9px var(--_edge), 1px 9px var(--_top), 2px 9px var(--_top), 3px 9px var(--_top), 4px 9px var(--_top), 5px 9px var(--_top), 6px 9px var(--_top), 7px 9px var(--_top), 8px 9px var(--_top), 9px 9px var(--_top), 10px 9px var(--_top), 11px 9px var(--_top), 12px 9px var(--_top), 13px 9px var(--_top), 14px 9px var(--_top), 15px 9px var(--_top), 16px 9px var(--_top), 17px 9px var(--_top), 18px 9px var(--_top), 19px 9px var(--_edge), 20px 9px var(--_side), 21px 9px var(--_side), 22px 9px var(--_edge),
-    0px 10px var(--_edge), 1px 10px var(--_top), 2px 10px var(--_top), 3px 10px var(--_top), 4px 10px var(--_top), 5px 10px var(--_top), 6px 10px var(--_top), 7px 10px var(--_top), 8px 10px var(--_top), 9px 10px var(--_top), 10px 10px var(--_top), 11px 10px var(--_top), 12px 10px var(--_top), 13px 10px var(--_top), 14px 10px var(--_top), 15px 10px var(--_top), 16px 10px var(--_top), 17px 10px var(--_top), 18px 10px var(--_top), 19px 10px var(--_edge), 20px 10px var(--_side), 21px 10px var(--_side), 22px 10px var(--_edge),
-    0px 11px var(--_edge), 1px 11px var(--_top), 2px 11px var(--_top), 3px 11px var(--_top), 4px 11px var(--_top), 5px 11px var(--_top), 6px 11px var(--_top), 7px 11px var(--_top), 8px 11px var(--_top), 9px 11px var(--_top), 10px 11px var(--_top), 11px 11px var(--_top), 12px 11px var(--_top), 13px 11px var(--_top), 14px 11px var(--_top), 15px 11px var(--_top), 16px 11px var(--_top), 17px 11px var(--_top), 18px 11px var(--_top), 19px 11px var(--_edge), 20px 11px var(--_side), 21px 11px var(--_side), 22px 11px var(--_edge),
-    0px 12px var(--_edge), 1px 12px var(--_top), 2px 12px var(--_top), 3px 12px var(--_top), 4px 12px var(--_top), 5px 12px var(--_top), 6px 12px var(--_top), 7px 12px var(--_top), 8px 12px var(--_top), 9px 12px var(--_top), 10px 12px var(--_top), 11px 12px var(--_top), 12px 12px var(--_top), 13px 12px var(--_top), 14px 12px var(--_top), 15px 12px var(--_top), 16px 12px var(--_top), 17px 12px var(--_top), 18px 12px var(--_top), 19px 12px var(--_edge), 20px 12px var(--_side), 21px 12px var(--_side), 22px 12px var(--_edge),
-    0px 13px var(--_edge), 1px 13px var(--_top), 2px 13px var(--_top), 3px 13px var(--_top), 4px 13px var(--_top), 5px 13px var(--_top), 6px 13px var(--_top), 7px 13px var(--_top), 8px 13px var(--_top), 9px 13px var(--_top), 10px 13px var(--_top), 11px 13px var(--_top), 12px 13px var(--_top), 13px 13px var(--_top), 14px 13px var(--_top), 15px 13px var(--_top), 16px 13px var(--_top), 17px 13px var(--_top), 18px 13px var(--_top), 19px 13px var(--_edge), 20px 13px var(--_side), 21px 13px var(--_side), 22px 13px var(--_edge),
-    0px 14px var(--_edge), 1px 14px var(--_top), 2px 14px var(--_top), 3px 14px var(--_top), 4px 14px var(--_top), 5px 14px var(--_top), 6px 14px var(--_top), 7px 14px var(--_top), 8px 14px var(--_top), 9px 14px var(--_top), 10px 14px var(--_top), 11px 14px var(--_top), 12px 14px var(--_top), 13px 14px var(--_top), 14px 14px var(--_top), 15px 14px var(--_top), 16px 14px var(--_top), 17px 14px var(--_top), 18px 14px var(--_top), 19px 14px var(--_edge), 20px 14px var(--_side), 21px 14px var(--_side), 22px 14px var(--_edge),
-    0px 15px var(--_edge), 1px 15px var(--_top), 2px 15px var(--_top), 3px 15px var(--_top), 4px 15px var(--_top), 5px 15px var(--_top), 6px 15px var(--_top), 7px 15px var(--_top), 8px 15px var(--_top), 9px 15px var(--_top), 10px 15px var(--_top), 11px 15px var(--_top), 12px 15px var(--_top), 13px 15px var(--_top), 14px 15px var(--_top), 15px 15px var(--_top), 16px 15px var(--_top), 17px 15px var(--_top), 18px 15px var(--_top), 19px 15px var(--_edge), 20px 15px var(--_side), 21px 15px var(--_side), 22px 15px var(--_edge),
-    1px 16px var(--_edge), 2px 16px var(--_edge), 3px 16px var(--_edge), 4px 16px var(--_edge), 5px 16px var(--_edge), 6px 16px var(--_edge), 7px 16px var(--_edge), 8px 16px var(--_edge), 9px 16px var(--_edge), 10px 16px var(--_edge), 11px 16px var(--_edge), 12px 16px var(--_edge), 13px 16px var(--_edge), 14px 16px var(--_edge), 15px 16px var(--_edge), 16px 16px var(--_edge), 17px 16px var(--_edge), 18px 16px var(--_edge), 20px 16px var(--_edge), 21px 16px var(--_side), 22px 16px var(--_edge),
-    1px 17px var(--_edge), 2px 17px var(--_front), 3px 17px var(--_front), 4px 17px var(--_front), 5px 17px var(--_front), 6px 17px var(--_front), 7px 17px var(--_front), 8px 17px var(--_front), 9px 17px var(--_front), 10px 17px var(--_front), 11px 17px var(--_front), 12px 17px var(--_front), 13px 17px var(--_front), 14px 17px var(--_front), 15px 17px var(--_front), 16px 17px var(--_front), 17px 17px var(--_front), 18px 17px var(--_front), 19px 17px var(--_edge), 20px 17px var(--_front), 21px 17px var(--_side), 22px 17px var(--_edge),
-    2px 18px var(--_edge), 3px 18px var(--_front), 4px 18px var(--_front), 5px 18px var(--_front), 6px 18px var(--_front), 7px 18px var(--_front), 8px 18px var(--_front), 9px 18px var(--_front), 10px 18px var(--_front), 11px 18px var(--_front), 12px 18px var(--_front), 13px 18px var(--_front), 14px 18px var(--_front), 15px 18px var(--_front), 16px 18px var(--_front), 17px 18px var(--_front), 18px 18px var(--_front), 19px 18px var(--_front), 20px 18px var(--_front), 21px 18px var(--_front), 22px 18px var(--_edge),
-    3px 19px var(--_edge), 4px 19px var(--_edge), 5px 19px var(--_edge), 6px 19px var(--_edge), 7px 19px var(--_edge), 8px 19px var(--_edge), 9px 19px var(--_edge), 10px 19px var(--_edge), 11px 19px var(--_edge), 12px 19px var(--_edge), 13px 19px var(--_edge), 14px 19px var(--_edge), 15px 19px var(--_edge), 16px 19px var(--_edge), 17px 19px var(--_edge), 18px 19px var(--_edge), 19px 19px var(--_edge), 20px 19px var(--_edge), 21px 19px var(--_edge), 22px 19px var(--_edge); }
-.ork-die::after {
-  --_f1:
-    9px 7px var(--_pip), 10px 7px var(--_pip),
-    9px 8px var(--_pip), 10px 8px var(--_pip);
-  --_f2:
-    4px 3px var(--_pip), 5px 3px var(--_pip),
-    4px 4px var(--_pip), 5px 4px var(--_pip),
-    14px 12px var(--_pip), 15px 12px var(--_pip),
-    14px 13px var(--_pip), 15px 13px var(--_pip);
-  --_f3:
-    4px 3px var(--_pip), 5px 3px var(--_pip),
-    4px 4px var(--_pip), 5px 4px var(--_pip),
-    9px 7px var(--_pip), 10px 7px var(--_pip),
-    9px 8px var(--_pip), 10px 8px var(--_pip),
-    14px 12px var(--_pip), 15px 12px var(--_pip),
-    14px 13px var(--_pip), 15px 13px var(--_pip);
-  --_f4:
-    4px 3px var(--_pip), 5px 3px var(--_pip), 14px 3px var(--_pip), 15px 3px var(--_pip),
-    4px 4px var(--_pip), 5px 4px var(--_pip), 14px 4px var(--_pip), 15px 4px var(--_pip),
-    4px 12px var(--_pip), 5px 12px var(--_pip), 14px 12px var(--_pip), 15px 12px var(--_pip),
-    4px 13px var(--_pip), 5px 13px var(--_pip), 14px 13px var(--_pip), 15px 13px var(--_pip);
-  --_f5:
-    4px 3px var(--_pip), 5px 3px var(--_pip), 14px 3px var(--_pip), 15px 3px var(--_pip),
-    4px 4px var(--_pip), 5px 4px var(--_pip), 14px 4px var(--_pip), 15px 4px var(--_pip),
-    9px 7px var(--_pip), 10px 7px var(--_pip),
-    9px 8px var(--_pip), 10px 8px var(--_pip),
-    4px 12px var(--_pip), 5px 12px var(--_pip), 14px 12px var(--_pip), 15px 12px var(--_pip),
-    4px 13px var(--_pip), 5px 13px var(--_pip), 14px 13px var(--_pip), 15px 13px var(--_pip);
-  --_f6:
-    4px 3px var(--_pip), 5px 3px var(--_pip), 14px 3px var(--_pip), 15px 3px var(--_pip),
-    4px 4px var(--_pip), 5px 4px var(--_pip), 14px 4px var(--_pip), 15px 4px var(--_pip),
-    4px 7px var(--_pip), 5px 7px var(--_pip), 14px 7px var(--_pip), 15px 7px var(--_pip),
-    4px 8px var(--_pip), 5px 8px var(--_pip), 14px 8px var(--_pip), 15px 8px var(--_pip),
-    4px 12px var(--_pip), 5px 12px var(--_pip), 14px 12px var(--_pip), 15px 12px var(--_pip),
-    4px 13px var(--_pip), 5px 13px var(--_pip), 14px 13px var(--_pip), 15px 13px var(--_pip);
-  --_fok:
-    15px 4px var(--_tick), 16px 4px var(--_tick),
-    15px 5px var(--_tick), 16px 5px var(--_tick),
-    13px 6px var(--_tick), 14px 6px var(--_tick),
-    13px 7px var(--_tick), 14px 7px var(--_tick),
-    3px 8px var(--_tick), 4px 8px var(--_tick), 11px 8px var(--_tick), 12px 8px var(--_tick),
-    3px 9px var(--_tick), 4px 9px var(--_tick), 11px 9px var(--_tick), 12px 9px var(--_tick),
-    5px 10px var(--_tick), 6px 10px var(--_tick), 9px 10px var(--_tick), 10px 10px var(--_tick),
-    5px 11px var(--_tick), 6px 11px var(--_tick), 9px 11px var(--_tick), 10px 11px var(--_tick),
-    7px 12px var(--_tick), 8px 12px var(--_tick),
-    7px 13px var(--_tick), 8px 13px var(--_tick);
-  --_fno:
-    5px 4px var(--_cross), 6px 4px var(--_cross), 13px 4px var(--_cross), 14px 4px var(--_cross),
-    5px 5px var(--_cross), 6px 5px var(--_cross), 13px 5px var(--_cross), 14px 5px var(--_cross),
-    7px 6px var(--_cross), 8px 6px var(--_cross), 11px 6px var(--_cross), 12px 6px var(--_cross),
-    7px 7px var(--_cross), 8px 7px var(--_cross), 11px 7px var(--_cross), 12px 7px var(--_cross),
-    9px 8px var(--_cross), 10px 8px var(--_cross),
-    9px 9px var(--_cross), 10px 9px var(--_cross),
-    7px 10px var(--_cross), 8px 10px var(--_cross), 11px 10px var(--_cross), 12px 10px var(--_cross),
-    7px 11px var(--_cross), 8px 11px var(--_cross), 11px 11px var(--_cross), 12px 11px var(--_cross),
-    5px 12px var(--_cross), 6px 12px var(--_cross), 13px 12px var(--_cross), 14px 12px var(--_cross),
-    5px 13px var(--_cross), 6px 13px var(--_cross), 13px 13px var(--_cross), 14px 13px var(--_cross); }
+.ork-die__cube { --_h: calc(var(--_c) * 9); left: calc(50% + var(--_c) * 0.46); top: calc(50% + var(--_c) * 0.6); transform: rotateX(18deg) rotateY(-14deg); }
+.ork-die__face.is-up::after { opacity: 0; }
+.ork-die__face.is-front::after { opacity: 0.3; }
+.ork-die__face.is-right::after { opacity: 0.5; }
+.ork-die__face.is-back::after { opacity: 0; }
+.ork-die__face.is-left::after { opacity: 0; }
+.ork-die__face.is-down::after { opacity: 0; }
+.ork-die__face.is-front::before { background-image: linear-gradient(var(--_pip), var(--_pip)); background-position: calc(var(--_c) * 7) calc(var(--_c) * 7); }
+.ork-die__face.is-back::before { background-image: linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)); background-position: calc(var(--_c) * 3) calc(var(--_c) * 3), calc(var(--_c) * 11) calc(var(--_c) * 3), calc(var(--_c) * 3) calc(var(--_c) * 7), calc(var(--_c) * 11) calc(var(--_c) * 7), calc(var(--_c) * 3) calc(var(--_c) * 11), calc(var(--_c) * 11) calc(var(--_c) * 11); }
+.ork-die__face.is-right::before { background-image: linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)); background-position: calc(var(--_c) * 3) calc(var(--_c) * 3), calc(var(--_c) * 7) calc(var(--_c) * 7), calc(var(--_c) * 11) calc(var(--_c) * 11); }
+.ork-die__face.is-left::before { background-image: linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)); background-position: calc(var(--_c) * 3) calc(var(--_c) * 3), calc(var(--_c) * 11) calc(var(--_c) * 3), calc(var(--_c) * 3) calc(var(--_c) * 11), calc(var(--_c) * 11) calc(var(--_c) * 11); }
+.ork-die__face.is-down::before { background-image: linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)); background-position: calc(var(--_c) * 3) calc(var(--_c) * 3), calc(var(--_c) * 11) calc(var(--_c) * 11); }
+.ork-die__face.is-up::before { background-image: linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)); background-position: calc(var(--_c) * 3) calc(var(--_c) * 3), calc(var(--_c) * 11) calc(var(--_c) * 3), calc(var(--_c) * 7) calc(var(--_c) * 7), calc(var(--_c) * 3) calc(var(--_c) * 11), calc(var(--_c) * 11) calc(var(--_c) * 11); }
+.ork-die.face-1 .ork-die__face.is-up::before { background-image: linear-gradient(var(--_pip), var(--_pip)); background-position: calc(var(--_c) * 7) calc(var(--_c) * 7); }
+.ork-die.face-2 .ork-die__face.is-up::before { background-image: linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)); background-position: calc(var(--_c) * 3) calc(var(--_c) * 3), calc(var(--_c) * 11) calc(var(--_c) * 11); }
+.ork-die.face-3 .ork-die__face.is-up::before { background-image: linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)); background-position: calc(var(--_c) * 3) calc(var(--_c) * 3), calc(var(--_c) * 7) calc(var(--_c) * 7), calc(var(--_c) * 11) calc(var(--_c) * 11); }
+.ork-die.face-4 .ork-die__face.is-up::before { background-image: linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)); background-position: calc(var(--_c) * 3) calc(var(--_c) * 3), calc(var(--_c) * 11) calc(var(--_c) * 3), calc(var(--_c) * 3) calc(var(--_c) * 11), calc(var(--_c) * 11) calc(var(--_c) * 11); }
+.ork-die.face-5 .ork-die__face.is-up::before { background-image: linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)); background-position: calc(var(--_c) * 3) calc(var(--_c) * 3), calc(var(--_c) * 11) calc(var(--_c) * 3), calc(var(--_c) * 7) calc(var(--_c) * 7), calc(var(--_c) * 3) calc(var(--_c) * 11), calc(var(--_c) * 11) calc(var(--_c) * 11); }
+.ork-die.face-6 .ork-die__face.is-up::before { background-image: linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)); background-position: calc(var(--_c) * 3) calc(var(--_c) * 3), calc(var(--_c) * 11) calc(var(--_c) * 3), calc(var(--_c) * 3) calc(var(--_c) * 7), calc(var(--_c) * 11) calc(var(--_c) * 7), calc(var(--_c) * 3) calc(var(--_c) * 11), calc(var(--_c) * 11) calc(var(--_c) * 11); }
+.ork-die.face-ok .ork-die__face.is-up::before { background-image: linear-gradient(var(--_tick), var(--_tick)), linear-gradient(var(--_tick), var(--_tick)), linear-gradient(var(--_tick), var(--_tick)), linear-gradient(var(--_tick), var(--_tick)), linear-gradient(var(--_tick), var(--_tick)), linear-gradient(var(--_tick), var(--_tick)), linear-gradient(var(--_tick), var(--_tick)); background-position: calc(var(--_c) * 13) calc(var(--_c) * 3), calc(var(--_c) * 11) calc(var(--_c) * 5), calc(var(--_c) * 1) calc(var(--_c) * 7), calc(var(--_c) * 9) calc(var(--_c) * 7), calc(var(--_c) * 3) calc(var(--_c) * 9), calc(var(--_c) * 7) calc(var(--_c) * 9), calc(var(--_c) * 5) calc(var(--_c) * 11); }
+.ork-die.face-no .ork-die__face.is-up::before { background-image: linear-gradient(var(--_cross), var(--_cross)), linear-gradient(var(--_cross), var(--_cross)), linear-gradient(var(--_cross), var(--_cross)), linear-gradient(var(--_cross), var(--_cross)), linear-gradient(var(--_cross), var(--_cross)), linear-gradient(var(--_cross), var(--_cross)), linear-gradient(var(--_cross), var(--_cross)), linear-gradient(var(--_cross), var(--_cross)), linear-gradient(var(--_cross), var(--_cross)); background-position: calc(var(--_c) * 3) calc(var(--_c) * 3), calc(var(--_c) * 11) calc(var(--_c) * 3), calc(var(--_c) * 5) calc(var(--_c) * 5), calc(var(--_c) * 9) calc(var(--_c) * 5), calc(var(--_c) * 7) calc(var(--_c) * 7), calc(var(--_c) * 5) calc(var(--_c) * 9), calc(var(--_c) * 9) calc(var(--_c) * 9), calc(var(--_c) * 3) calc(var(--_c) * 11), calc(var(--_c) * 11) calc(var(--_c) * 11); }
+.ork-die.face-new .ork-die__face.is-up::before { background-image: linear-gradient(var(--_new), var(--_new)), linear-gradient(var(--_new), var(--_new)), linear-gradient(var(--_new), var(--_new)), linear-gradient(var(--_new), var(--_new)), linear-gradient(var(--_new), var(--_new)), linear-gradient(var(--_new), var(--_new)), linear-gradient(var(--_new), var(--_new)), linear-gradient(var(--_new), var(--_new)), linear-gradient(var(--_new), var(--_new)), linear-gradient(var(--_new), var(--_new)), linear-gradient(var(--_new), var(--_new)), linear-gradient(var(--_new), var(--_new)), linear-gradient(var(--_new), var(--_new)), linear-gradient(var(--_new), var(--_new)), linear-gradient(var(--_new), var(--_new)), linear-gradient(var(--_new), var(--_new)), linear-gradient(var(--_new), var(--_new)); background-position: calc(var(--_c) * 7) calc(var(--_c) * 1), calc(var(--_c) * 7) calc(var(--_c) * 3), calc(var(--_c) * 5) calc(var(--_c) * 5), calc(var(--_c) * 7) calc(var(--_c) * 5), calc(var(--_c) * 9) calc(var(--_c) * 5), calc(var(--_c) * 1) calc(var(--_c) * 7), calc(var(--_c) * 3) calc(var(--_c) * 7), calc(var(--_c) * 5) calc(var(--_c) * 7), calc(var(--_c) * 7) calc(var(--_c) * 7), calc(var(--_c) * 9) calc(var(--_c) * 7), calc(var(--_c) * 11) calc(var(--_c) * 7), calc(var(--_c) * 13) calc(var(--_c) * 7), calc(var(--_c) * 5) calc(var(--_c) * 9), calc(var(--_c) * 7) calc(var(--_c) * 9), calc(var(--_c) * 9) calc(var(--_c) * 9), calc(var(--_c) * 7) calc(var(--_c) * 11), calc(var(--_c) * 7) calc(var(--_c) * 13); }
+@media (prefers-reduced-motion: no-preference) {
+.ork-die.is-rolling .ork-die__face.is-up::after { animation: ork-die-roll-up calc(var(--ork-motion-quick) * 6) steps(1) infinite; }
+.ork-die.is-rolling .ork-die__face.is-front::after { animation: ork-die-roll-front calc(var(--ork-motion-quick) * 6) steps(1) infinite; }
+.ork-die.is-rolling .ork-die__face.is-right::after { animation: ork-die-roll-right calc(var(--ork-motion-quick) * 6) steps(1) infinite; }
+.ork-die.is-rolling .ork-die__face.is-back::after { animation: ork-die-roll-back calc(var(--ork-motion-quick) * 6) steps(1) infinite; }
+.ork-die.is-rolling .ork-die__face.is-left::after { animation: ork-die-roll-left calc(var(--ork-motion-quick) * 6) steps(1) infinite; }
+.ork-die.is-rolling .ork-die__face.is-down::after { animation: ork-die-roll-down calc(var(--ork-motion-quick) * 6) steps(1) infinite; }
+.ork-die.is-wobbling .ork-die__face.is-up::after { animation: ork-die-wobble-up calc(var(--ork-motion-quick) * 2.5) steps(1) 1 both; }
+.ork-die.is-wobbling .ork-die__face.is-front::after { animation: ork-die-wobble-front calc(var(--ork-motion-quick) * 2.5) steps(1) 1 both; }
+.ork-die.is-wobbling .ork-die__face.is-right::after { animation: ork-die-wobble-right calc(var(--ork-motion-quick) * 2.5) steps(1) 1 both; }
+.ork-die.is-wobbling .ork-die__face.is-back::after { animation: ork-die-wobble-back calc(var(--ork-motion-quick) * 2.5) steps(1) 1 both; }
+.ork-die.is-wobbling .ork-die__face.is-left::after { animation: ork-die-wobble-left calc(var(--ork-motion-quick) * 2.5) steps(1) 1 both; }
+.ork-die.is-wobbling .ork-die__face.is-down::after { animation: ork-die-wobble-down calc(var(--ork-motion-quick) * 2.5) steps(1) 1 both; }
+.ork-die.is-landing .ork-die__face.is-up::after { animation: ork-die-land-up calc(var(--ork-motion-quick) * 2.5) steps(1) 1 both; }
+.ork-die.is-landing .ork-die__face.is-front::after { animation: ork-die-land-front calc(var(--ork-motion-quick) * 2.5) steps(1) 1 both; }
+.ork-die.is-landing .ork-die__face.is-right::after { animation: ork-die-land-right calc(var(--ork-motion-quick) * 2.5) steps(1) 1 both; }
+.ork-die.is-landing .ork-die__face.is-back::after { animation: ork-die-land-back calc(var(--ork-motion-quick) * 2.5) steps(1) 1 both; }
+.ork-die.is-landing .ork-die__face.is-left::after { animation: ork-die-land-left calc(var(--ork-motion-quick) * 2.5) steps(1) 1 both; }
+.ork-die.is-landing .ork-die__face.is-down::after { animation: ork-die-land-down calc(var(--ork-motion-quick) * 2.5) steps(1) 1 both; } }
+@keyframes ork-die-roll {
+  0% { transform: translateY(calc(var(--_c) * -2.078)) rotateX(18deg) rotateY(-14deg) rotateX(-30deg); }
+  5.556% { transform: translateY(calc(var(--_c) * -2.078)) rotateX(18deg) rotateY(-14deg) rotateX(-60deg); }
+  11.111% { transform: rotateX(18deg) rotateY(-14deg) rotateX(-90deg); }
+  16.667% { transform: translateY(calc(var(--_c) * -2.078)) rotateX(18deg) rotateY(-14deg) rotateY(30deg) rotateX(-90deg); }
+  22.222% { transform: translateY(calc(var(--_c) * -2.078)) rotateX(18deg) rotateY(-14deg) rotateY(60deg) rotateX(-90deg); }
+  27.778% { transform: rotateX(18deg) rotateY(-14deg) rotateY(90deg) rotateX(-90deg); }
+  33.333% { transform: translateY(calc(var(--_c) * -2.078)) rotateX(18deg) rotateY(-14deg) rotateX(-30deg) rotateY(90deg) rotateX(-90deg); }
+  38.889% { transform: translateY(calc(var(--_c) * -2.078)) rotateX(18deg) rotateY(-14deg) rotateX(-60deg) rotateY(90deg) rotateX(-90deg); }
+  44.444% { transform: rotateX(18deg) rotateY(-14deg) rotateX(-90deg) rotateY(90deg) rotateX(-90deg); }
+  50% { transform: translateY(calc(var(--_c) * -2.078)) rotateX(18deg) rotateY(-14deg) rotateY(30deg) rotateX(-90deg) rotateY(90deg) rotateX(-90deg); }
+  55.556% { transform: translateY(calc(var(--_c) * -2.078)) rotateX(18deg) rotateY(-14deg) rotateY(60deg) rotateX(-90deg) rotateY(90deg) rotateX(-90deg); }
+  61.111% { transform: rotateX(18deg) rotateY(-14deg) rotateY(90deg) rotateX(-90deg) rotateY(90deg) rotateX(-90deg); }
+  66.667% { transform: translateY(calc(var(--_c) * -2.078)) rotateX(18deg) rotateY(-14deg) rotateX(-30deg) rotateY(90deg) rotateX(-90deg) rotateY(90deg) rotateX(-90deg); }
+  72.222% { transform: translateY(calc(var(--_c) * -2.078)) rotateX(18deg) rotateY(-14deg) rotateX(-60deg) rotateY(90deg) rotateX(-90deg) rotateY(90deg) rotateX(-90deg); }
+  77.778% { transform: rotateX(18deg) rotateY(-14deg) rotateX(-90deg) rotateY(90deg) rotateX(-90deg) rotateY(90deg) rotateX(-90deg); }
+  83.333% { transform: translateY(calc(var(--_c) * -2.078)) rotateX(18deg) rotateY(-14deg) rotateY(30deg) rotateX(-90deg) rotateY(90deg) rotateX(-90deg) rotateY(90deg) rotateX(-90deg); }
+  88.889% { transform: translateY(calc(var(--_c) * -2.078)) rotateX(18deg) rotateY(-14deg) rotateY(60deg) rotateX(-90deg) rotateY(90deg) rotateX(-90deg) rotateY(90deg) rotateX(-90deg); }
+  94.444% { transform: rotateX(18deg) rotateY(-14deg) rotateY(90deg) rotateX(-90deg) rotateY(90deg) rotateX(-90deg) rotateY(90deg) rotateX(-90deg); }
+  100% { transform: rotateX(18deg) rotateY(-14deg); } }
+@keyframes ork-die-roll-up {
+  0% { opacity: 0.15; }
+  5.556% { opacity: 0.26; }
+  11.111% { opacity: 0.3; }
+  16.667% { opacity: 0.3; }
+  22.222% { opacity: 0.3; }
+  27.778% { opacity: 0.3; }
+  33.333% { opacity: 0.26; }
+  38.889% { opacity: 0.15; }
+  44.444% { opacity: 0; }
+  50% { opacity: 0; }
+  55.556% { opacity: 0; }
+  61.111% { opacity: 0; }
+  66.667% { opacity: 0; }
+  72.222% { opacity: 0; }
+  77.778% { opacity: 0; }
+  83.333% { opacity: 0; }
+  88.889% { opacity: 0; }
+  94.444% { opacity: 0; }
+  100% { opacity: 0; } }
+@keyframes ork-die-roll-front {
+  0% { opacity: 0.26; }
+  5.556% { opacity: 0.15; }
+  11.111% { opacity: 0; }
+  16.667% { opacity: 0; }
+  22.222% { opacity: 0; }
+  27.778% { opacity: 0; }
+  33.333% { opacity: 0; }
+  38.889% { opacity: 0; }
+  44.444% { opacity: 0; }
+  50% { opacity: 0; }
+  55.556% { opacity: 0; }
+  61.111% { opacity: 0; }
+  66.667% { opacity: 0.15; }
+  72.222% { opacity: 0.26; }
+  77.778% { opacity: 0.3; }
+  83.333% { opacity: 0.3; }
+  88.889% { opacity: 0.3; }
+  94.444% { opacity: 0.3; }
+  100% { opacity: 0.3; } }
+@keyframes ork-die-roll-right {
+  0% { opacity: 0.5; }
+  5.556% { opacity: 0.5; }
+  11.111% { opacity: 0.5; }
+  16.667% { opacity: 0.43; }
+  22.222% { opacity: 0.25; }
+  27.778% { opacity: 0; }
+  33.333% { opacity: 0; }
+  38.889% { opacity: 0; }
+  44.444% { opacity: 0; }
+  50% { opacity: 0; }
+  55.556% { opacity: 0; }
+  61.111% { opacity: 0; }
+  66.667% { opacity: 0; }
+  72.222% { opacity: 0; }
+  77.778% { opacity: 0; }
+  83.333% { opacity: 0.25; }
+  88.889% { opacity: 0.43; }
+  94.444% { opacity: 0.5; }
+  100% { opacity: 0.5; } }
+@keyframes ork-die-roll-back {
+  0% { opacity: 0; }
+  5.556% { opacity: 0; }
+  11.111% { opacity: 0; }
+  16.667% { opacity: 0.25; }
+  22.222% { opacity: 0.43; }
+  27.778% { opacity: 0.5; }
+  33.333% { opacity: 0.5; }
+  38.889% { opacity: 0.5; }
+  44.444% { opacity: 0.5; }
+  50% { opacity: 0.43; }
+  55.556% { opacity: 0.25; }
+  61.111% { opacity: 0; }
+  66.667% { opacity: 0; }
+  72.222% { opacity: 0; }
+  77.778% { opacity: 0; }
+  83.333% { opacity: 0; }
+  88.889% { opacity: 0; }
+  94.444% { opacity: 0; }
+  100% { opacity: 0; } }
+@keyframes ork-die-roll-left {
+  0% { opacity: 0; }
+  5.556% { opacity: 0; }
+  11.111% { opacity: 0; }
+  16.667% { opacity: 0; }
+  22.222% { opacity: 0; }
+  27.778% { opacity: 0; }
+  33.333% { opacity: 0.15; }
+  38.889% { opacity: 0.26; }
+  44.444% { opacity: 0.3; }
+  50% { opacity: 0.3; }
+  55.556% { opacity: 0.3; }
+  61.111% { opacity: 0.3; }
+  66.667% { opacity: 0.26; }
+  72.222% { opacity: 0.15; }
+  77.778% { opacity: 0; }
+  83.333% { opacity: 0; }
+  88.889% { opacity: 0; }
+  94.444% { opacity: 0; }
+  100% { opacity: 0; } }
+@keyframes ork-die-roll-down {
+  0% { opacity: 0; }
+  5.556% { opacity: 0; }
+  11.111% { opacity: 0; }
+  16.667% { opacity: 0; }
+  22.222% { opacity: 0; }
+  27.778% { opacity: 0; }
+  33.333% { opacity: 0; }
+  38.889% { opacity: 0; }
+  44.444% { opacity: 0; }
+  50% { opacity: 0.25; }
+  55.556% { opacity: 0.43; }
+  61.111% { opacity: 0.5; }
+  66.667% { opacity: 0.5; }
+  72.222% { opacity: 0.5; }
+  77.778% { opacity: 0.5; }
+  83.333% { opacity: 0.43; }
+  88.889% { opacity: 0.25; }
+  94.444% { opacity: 0; }
+  100% { opacity: 0; } }
+@keyframes ork-die-wobble {
+  0% { transform: translateY(calc(var(--ork-motion-rise) * -0.5)) rotateX(18deg) rotateY(-14deg) rotateY(10deg) rotateX(-4deg); }
+  33.333% { transform: translateY(calc(var(--ork-motion-rise) * -1)) rotateX(18deg) rotateY(-14deg) rotateY(-7deg) rotateX(5deg); }
+  66.667%, 100% { transform: translateY(calc(var(--ork-motion-rise) * -1)) rotateX(18deg) rotateY(-14deg); } }
+@keyframes ork-die-wobble-up {
+  0% { opacity: 0.11; }
+  33.333% { opacity: 0; }
+  66.667%, 100% { opacity: 0; } }
+@keyframes ork-die-wobble-front {
+  0% { opacity: 0.29; }
+  33.333% { opacity: 0.29; }
+  66.667%, 100% { opacity: 0.3; } }
+@keyframes ork-die-wobble-right {
+  0% { opacity: 0.49; }
+  33.333% { opacity: 0.5; }
+  66.667%, 100% { opacity: 0.5; } }
+@keyframes ork-die-wobble-back {
+  0% { opacity: 0; }
+  33.333% { opacity: 0; }
+  66.667%, 100% { opacity: 0; } }
+@keyframes ork-die-wobble-left {
+  0% { opacity: 0; }
+  33.333% { opacity: 0; }
+  66.667%, 100% { opacity: 0; } }
+@keyframes ork-die-wobble-down {
+  0% { opacity: 0; }
+  33.333% { opacity: 0.09; }
+  66.667%, 100% { opacity: 0; } }
+@keyframes ork-die-land {
+  0% { transform: translateY(calc(var(--_c) * -3)) rotateX(18deg) rotateY(-14deg) rotateX(60deg); }
+  33.333% { transform: translateY(calc(var(--_c) * -1)) rotateX(18deg) rotateY(-14deg) rotateX(30deg); }
+  66.667%, 100% { transform: rotateX(18deg) rotateY(-14deg); } }
+@keyframes ork-die-land-up {
+  0% { opacity: 0; }
+  33.333% { opacity: 0; }
+  66.667%, 100% { opacity: 0; } }
+@keyframes ork-die-land-front {
+  0% { opacity: 0.15; }
+  33.333% { opacity: 0.26; }
+  66.667%, 100% { opacity: 0.3; } }
+@keyframes ork-die-land-right {
+  0% { opacity: 0.5; }
+  33.333% { opacity: 0.5; }
+  66.667%, 100% { opacity: 0.5; } }
+@keyframes ork-die-land-back {
+  0% { opacity: 0; }
+  33.333% { opacity: 0; }
+  66.667%, 100% { opacity: 0; } }
+@keyframes ork-die-land-left {
+  0% { opacity: 0; }
+  33.333% { opacity: 0; }
+  66.667%, 100% { opacity: 0; } }
+@keyframes ork-die-land-down {
+  0% { opacity: 0.26; }
+  33.333% { opacity: 0.15; }
+  66.667%, 100% { opacity: 0; } }
 /* die:end */
 
 /* --- Runes (runes/, 0.19.0): orkUI's twelve runes, 5 x 7 pixel masks: key, eye, hook, tusks, ladder, spiral, staff, hourglass, diamond, comb, knot,

@@ -10,19 +10,25 @@
 // name under it, a light band sweeping across it every 2.4 s while it starts (play.css; none under reduced motion). *Full screen* in the bar lays the stage over the screen (Esc leaves).
 // Play is a die (docs/specs/112-the-bars-marks-and-the-play-die.md §3.3–§3.4, decisions §190.3): the die in the hand (hand/playdie.js) opens this view, and the view starts the build at once when none runs (it asks with `peek` first, then starts: no second press
 // of *Open the build*; that button is left for a build stopped or failed). A build that starts is thrown onto the pane: a `.ork-die is-rolling` flies from the hand's die (its rectangle: `dieRect`, a WAAPI flight of five steps, 300 ms, translate and rotate only) to the black pane's
-// middle, grows there in whole cells (3, 4, 6 px a cell, 120 ms: `--_n`; never a scale, which would fix the die's raster at a small scale and show the seams between its cells) and rolls the whole start, the stage line under it; the logo is not shown meanwhile. When the page answers the roll stops on `face-ok` (the green tick), turned by the lean token the other way, a three-step landing, *It started* for a moment; the die leaves
+// middle, grows there in whole cells (3, 4, 6 px a cell, 120 ms: `--_n`; never a scale) and rolls the whole start, the stage line under it: orkUI's cube (0.24.0) tumbles in 3D while the slot only drifts; the logo is not shown meanwhile. When the page answers the roll stops on `face-ok` (the green tick), turned by the lean token the other way, a three-step landing (orkUI's `is-landing`: the tick's face rolls in from the back and the cube drops), *It started* for a moment; the die leaves
 // and today's intro stands in its place (the logo up in six steps, two blinks, the name: about 1.8 s with a logo, 1 s with the name alone), then today's fade and the frame rising out of the black. When the start failed the roll stops on `face-no` (the red cross), the
 // die tips over in three steps and today's failure view takes its place. The hand's die is hidden while its copy is out and is back, glowing (`is-playing`), when the frame rises, or when the failure shows. A view opened on a build already playing (*warm*) has no
 // throw and no intro: the frame opens at once and the hand's die wobbles twice. Under reduced motion none of it: today's start screen exactly (the logo or the name while it starts, no die on the pane, no fade). The throw's phases are `ph`: `fly` · `roll` · `ok` /
 // `no` (landed) · `ok-leave` / `no-leave` · `logo` · `out`; the pane says it as `data-throw`.
 // A project with no preview (the snapshot's `preview` is "", the die in the hand asleep: spec 113 §3, decisions §191.1) is not asked to start: the view says *Nothing here yet* and how at once, with no throw.
 // The build is the machine's own address (127.0.0.1): the phone has no Play.
+// Play under each leader's eyes (docs/specs/115-the-live-product-under-each-leaders-eyes.md §6): the playing view (`Playing`) stays open when the tab changes (the iframe is never reloaded) and gains the lens strip under its bar (arena/playlens.js: the open tab's leader,
+// its aspects for this screen, the concerns and hints on the frame; **Hide the marks**) and **Mark** (arena/playmark.js: a box or a press on the frame, a field beside it, **Send**; the key `M`). The bar says what was sent: *Sent to <Party>: <title>*.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Sign } from "../orkui.js";
 import { command } from "../link.js";
 import { projectList } from "../shell/projects.js";
-import { asleepNow, dieRect, playing, thrown, warmed } from "../hand/playdie.js";
+import { DieCube, asleepNow, dieRect, playing, thrown, warmed } from "../hand/playdie.js";
+import { followTab, tab } from "../frame/state.js";
+import { mapName, partiesAll } from "../table/data.js";
+import { HIDE, SHOW, Back, LensStrip, MarksLayer, letHintBe, useLens, useProbe, useSize } from "./playlens.js";
+import { CANCEL, DRAW, MARK, MarkLayer, useMark } from "./playmark.js";
 
 export const OPEN = "Open the build", STARTING = "Starting the build…", STOP = "Stop the build";
 export const FULL = "Full screen";
@@ -121,15 +127,15 @@ function Throw({ ph, b }) {
     const el = die.current, to = slot.current?.getBoundingClientRect(), from = dieRect(), t = [setTimeout(() => setN(4), FLY_MS - 120), setTimeout(() => setN(6), FLY_MS - 60)];
     if (el && to && typeof el.animate === "function") {
       const dx = from ? from.left + from.width / 2 - (to.left + to.width / 2) : 0, dy = from ? from.top + from.height / 2 - (to.top + to.height / 2) : 240;
-      el.animate([{ transform: `translate(${dx}px, ${dy}px) rotate(-30deg)`, offset: 0 }, { transform: "translate(20px, -60px) rotate(160deg)", offset: 0.6 },
-        { transform: "translate(0, 0) rotate(360deg)", offset: 1 }], { duration: FLY_MS - 120, easing: "steps(5)" });
+      el.animate([{ transform: `translate(${dx}px, ${dy}px) rotate(-20deg)`, offset: 0 }, { transform: "translate(20px, -60px) rotate(10deg)", offset: 0.6 },      // it arcs over; the cube tumbles inside it (orkUI's roll), so it barely turns flat
+        { transform: "translate(0, 0) rotate(0deg)", offset: 1 }], { duration: FLY_MS - 120, easing: "steps(5)" });
     }
     return () => t.forEach(clearTimeout);
   }, []);
   return html`<div class="play-intro play-throw" data-phase=${ph}>
     <div class="play-slot" ref=${slot}>
       <div ref=${die} class=${cls("play-die", { "is-rolling": ph === "roll", "is-landing": ph === "ok" || ph === "no", "is-fading": ph === "ok-leave", "is-tipping": ph === "no-leave" })}>
-        <span class=${cls("ork-die big", { "is-rolling": !landed, "face-ok": ok, "face-no": no, "is-landed": landed })} style=${n === 6 ? undefined : `--_n:${n}`} aria-hidden="true"></span>
+        <span class=${cls("ork-die big", { "is-rolling": !landed, "face-ok": ok, "face-no": no, "is-landed": landed, "is-landing": ph === "ok" || ph === "no" })} style=${n === 6 ? undefined : `--_n:${n}`} aria-hidden="true"><${DieCube} /></span>
       </div>
     </div>
     ${(ph === "fly" || ph === "roll") && html`<${StageLine} b=${b} />`}
@@ -149,6 +155,56 @@ function Tail({ lines }) {
   useEffect(() => { if (box.current) box.current.scrollTop = box.current.scrollHeight; }, [lines.length]);
   if (!lines.length) return null;
   return html`<div class="play-tail"><p class="arena-cap play-tail__cap">${LAST_LINES}</p><pre class="play-tail__lines" ref=${box} tabindex="0" aria-label=${LAST_LINES}>${lines.join("\n")}</pre></div>`;
+}
+
+const fitBox = (r, size) => { const x = Math.max(0, Math.min(r.x, size.w - 8)), y = Math.max(0, Math.min(r.y, size.h - 8)); return { x, y, w: Math.max(8, Math.min(r.w, size.w - x)), h: Math.max(8, Math.min(r.h, size.h - y)) }; };
+
+/** The build playing: its bar, the lens strip, the frame with the marks and the mark's layers over it (spec 115 §6). It stays mounted when the tab changes: the lens changes, the iframe does not. `story`: the throw's phase while the frame comes up (nothing is marked then). */
+function Playing({ b, open, stop, full, stage, story, name, done }) {
+  const frame = useRef(null), probe = useProbe(frame, b), size = useSize(stage), { lens, where } = useLens(b, probe, stage);
+  const [said, setSaid] = useState(""), [hide, setHide] = useState(false), [openKey, setOpenKey] = useState("");
+  const g = partiesAll().find((x) => x.slug === tab.value) || null, moved = b.dev && b.commit && b.dev !== b.commit;
+  const mk = useMark({ stage, probe, where, lens, g, said: setSaid, enabled: !story, made: (h) => letHintBe(b.play, h) });
+  const marking = mk.m.mode === "draw" || mk.m.mode === "field", item = openKey ? (lens?.items || []).find((i) => i.key === openKey) : null;
+  useEffect(() => { followTab(mapName(tab.value, partiesAll())); }, [tab.value]);       // the pane's title follows the tab; the frame is not touched
+  useEffect(() => { if (!said) return undefined; const t = setTimeout(() => setSaid(""), 10_000); return () => clearTimeout(t); }, [said]);
+  useEffect(() => { if (marking) setOpenKey(""); }, [marking]);
+  useEffect(() => {                                    // Esc closes an open back first (the pane's Esc would close Play)
+    if (!item) return undefined;
+    const key = (e) => { if (e.key === "Escape" && !e.defaultPrevented) { e.preventDefault(); e.stopPropagation(); setOpenKey(""); } };
+    addEventListener("keydown", key, true);
+    return () => removeEventListener("keydown", key, true);
+  }, [!!item]);
+  const goal = (it) => {                               // a hint made into a goal: the mark's field, as a Bug on its element (the whole frame where it has none)
+    const h = it.hint, r = h.on?.rect;
+    setOpenKey("");
+    mk.start({ box: fitBox(r || { x: 0, y: 0, w: size.w, h: size.h }, size), under: h.on ? [{ selector: h.on.selector, role: "", text: "", rect: r }] : [], text: h.words, kind: "bug", hint: h });
+  };
+  const no = (h) => { letHintBe(b.play, h); setOpenKey(""); };
+  return html`<div class=${cls("playpane", { "is-black": story && story !== "out" })} data-state="playing" data-throw=${story || undefined} data-marking=${marking ? mk.m.mode : undefined}>
+    <div class="play-bar" key="bar">
+      <span class="play-at"><${Sign} name="play" /> <span>${playsAt(b.short || String(b.commit || "").slice(0, 7))}</span></span>
+      ${moved && html`<span class="arena-cap play-moved">dev is at ${String(b.dev).slice(0, 7)} now</span>`}
+      ${marking && html`<span class="play-say" role="status"><${Sign} name="target" />${DRAW}</span>`}
+      ${!marking && said && html`<span class="play-say is-sent" role="status"><${Sign} name="check" />${said}</span>`}
+      <span class="arena-spacer"></span>
+      ${marking && html`<button type="button" class="ork-btn quiet play-cancel" onClick=${mk.cancel}>${CANCEL}</button>`}
+      <button type="button" class=${cls("ork-btn play-mark-btn", { "is-on": marking })} aria-label=${MARK} aria-pressed=${String(marking)} aria-keyshortcuts="M" disabled=${!!story} title="Draw a box on the product, or press a part of it"
+        onClick=${() => (marking ? mk.cancel() : mk.start())}><${Sign} name="target" />${MARK}<kbd class="play-kbd" aria-hidden="true">M</kbd></button>
+      <button type="button" class="ork-btn play-hide" aria-pressed=${String(hide)} onClick=${() => { setHide(!hide); setOpenKey(""); }}>${hide ? SHOW : HIDE}</button>
+      ${moved && html`<button type="button" class="ork-btn" onClick=${() => open(true)}>${OPEN}</button>`}
+      <button type="button" class="ork-btn play-full" title="Fill the screen with it: Esc leaves" onClick=${full}>${FULL}</button>
+      <button type="button" class="ork-btn" onClick=${stop}>${STOP}</button>
+    </div>
+    <${LensStrip} lens=${lens} probing=${probe.probing} onOpen=${setOpenKey} />
+    <div key="stage" class=${cls("play-stage", { "is-rising": story === "out" })} ref=${stage}>
+      <iframe ref=${frame} class="play-frame" src=${b.url} title="Play" sandbox=${SANDBOX} allow="autoplay; fullscreen; gamepad" onLoad=${probe.hello}></iframe>
+      ${!hide && !story && html`<${MarksLayer} lens=${lens} open=${openKey} onOpen=${setOpenKey} />`}
+      ${item && !story && (!hide || !item.rect) && html`<${Back} lens=${lens} item=${item} size=${size} onClose=${() => setOpenKey("")} onGoal=${goal} onNo=${no} />`}
+      ${!story && html`<${MarkLayer} mk=${mk} g=${g} size=${size} where=${where} />`}
+    </div>
+    ${story && html`<${Story} key="story" ph=${story} name=${name} b=${b} done=${done} />`}
+  </div>`;
 }
 
 export function Play() {
@@ -190,23 +246,7 @@ export function Play() {
   if (!story && starting) {                            // reduced motion: today's start screen
     return html`<div class="playpane is-black" data-state="starting"><${Intro} name=${name} b=${b} /></div>`;
   }
-  if (b.state === "playing") {
-    const moved = b.dev && b.commit && b.dev !== b.commit;
-    return html`<div class=${cls("playpane", { "is-black": story && story !== "out" })} data-state="playing" data-throw=${story || undefined}>
-      <div class="play-bar" key="bar">
-        <span class="play-at"><${Sign} name="play" /> <span>${playsAt(b.short || String(b.commit || "").slice(0, 7))}</span></span>
-        ${moved && html`<span class="arena-cap play-moved">dev is at ${String(b.dev).slice(0, 7)} now</span>`}
-        <span class="arena-spacer"></span>
-        ${moved && html`<button type="button" class="ork-btn" onClick=${() => open(true)}>${OPEN}</button>`}
-        <button type="button" class="ork-btn play-full" title="Fill the screen with it: Esc leaves" onClick=${full}>${FULL}</button>
-        <button type="button" class="ork-btn" onClick=${stop}>${STOP}</button>
-      </div>
-      <div key="stage" class=${cls("play-stage", { "is-rising": story === "out" })} ref=${stage}>
-        <iframe class="play-frame" src=${b.url} title="Play" sandbox=${SANDBOX} allow="autoplay; fullscreen; gamepad"></iframe>
-      </div>
-      ${story && html`<${Story} key="story" ph=${story} name=${name} b=${b} done=${() => setPh("")} />`}
-    </div>`;
-  }
+  if (b.state === "playing") return html`<${Playing} b=${b} open=${open} stop=${stop} full=${full} stage=${stage} story=${story} name=${name} done=${() => setPh("")} />`;
   if (b.state === "failed" && b.none) {
     return html`<div class="playpane" data-state="none"><div class="assets-none"><p class="assets-none__title">${NOTHING}</p><p class="arena-cap">${NOTHING_HOW}</p></div></div>`;
   }

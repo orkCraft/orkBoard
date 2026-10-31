@@ -108,11 +108,13 @@ def test_the_die_lies_in_the_hand_left_of_the_potions_with_its_word_under_it_ask
     assert d.evaluate("e => e.closest('.hand') !== null") and d.get_attribute("aria-label") == "Play: the project's preview of dev" and d.get_attribute("title") == d.get_attribute("aria-label")
     assert d.locator(".hand-die__word").inner_text() == "Play" and d.locator(".ork-die").get_attribute("aria-hidden") == "true"
     box, mana, word = d.locator(".ork-die").bounding_box(), pg.locator(".hand-mana").bounding_box(), d.locator(".hand-die__word").bounding_box()
-    assert 66 <= box["width"] <= 80 and 57 <= box["height"] <= 72                                                      # 69 x 60 (3 px a cell), turned a little: it keeps its size at the narrow width too
+    assert 66 <= box["width"] <= 80 and 69 <= box["height"] <= 82                                                      # 69 x 72 (3 px a cell), turned a little: it keeps its size at the narrow width too
     assert d.bounding_box()["x"] + d.bounding_box()["width"] <= mana["x"] + 7 and box["x"] < mana["x"]                    # left of the potions (at the narrow width its edge lies over the first potion's empty border)
     assert word["y"] >= box["y"] + 56                                                                                   # its word under it
     assert d.locator(".ork-die").evaluate("e => getComputedStyle(e).rotate") == "-6deg"                                 # the lean token the other way
-    assert d.locator(".ork-die").evaluate("e => getComputedStyle(e).willChange") == "transform"
+    assert d.locator(".ork-die > .ork-die__cube > .ork-die__face").count() == 6                                         # orkUI's die is a cube in CSS 3D (0.24.0): its six faces
+    assert d.locator(".ork-die__cube").evaluate("e => getComputedStyle(e).transformStyle") == "preserve-3d"
+    assert d.locator(".ork-die__face.is-front").bounding_box()["height"] > 4 and d.locator(".ork-die__face.is-right").bounding_box()["width"] > 4      # seen from above, its front and right faces show
     narrow.no_sideways(pg)
     shot(pg, f"b112-hand-{width}.png")
     finish(pg, errors)
@@ -172,7 +174,13 @@ def test_a_start_is_thrown_rolls_without_the_logo_lands_on_the_tick_then_the_log
     pane.wait_for(timeout=WAIT_MS)
     pg.locator('.play-throw[data-phase="roll"]').wait_for(timeout=WAIT_MS)
     rolling = pg.locator(".playpane .ork-die.big.is-rolling")
-    assert rolling.count() == 1 and rolling.evaluate("e => [e.offsetWidth, e.offsetHeight]") == [138, 120]                                    # orkUI's big die
+    assert rolling.count() == 1 and rolling.evaluate("e => [e.offsetWidth, e.offsetHeight]") == [138, 144]                                    # orkUI's big die
+    cube = rolling.locator(".ork-die__cube")
+    assert cube.evaluate("e => getComputedStyle(e).animationName") == "ork-die-roll"                                                         # the cube tumbles in 3D
+    poses = {cube.evaluate("e => getComputedStyle(e).transform") for _ in range(6) if pg.wait_for_timeout(45) is None}
+    assert len(poses) >= 3 and all(p.startswith("matrix3d(") for p in poses)                                                                 # turned out of the screen's plane, pose after pose
+    assert pg.locator(".play-die").evaluate("e => getComputedStyle(e).animationName") == "play-die-roll" and "rotate" not in pg.locator(".play-die").evaluate(
+        "e => [...document.styleSheets].flatMap(s => { try { return [...s.cssRules]; } catch { return []; } }).find(r => r.name === 'play-die-roll')?.cssText || ''")      # the slot only drifts: no flat spin
     assert pg.locator(".play-logo").count() == 0 and pg.locator(".play-intro .play-title").count() == 0                                      # the logo is not shown while it starts
     assert "npm run dev" in pg.locator(".play-starting").inner_text() and pane.evaluate("e => getComputedStyle(e).backgroundColor") != "rgba(0, 0, 0, 0)"
     assert "is-gone" in d.get_attribute("class") and d.locator(".ork-die").evaluate("e => getComputedStyle(e).visibility") == "hidden"          # the hand's die is out on the pane
@@ -184,6 +192,7 @@ def test_a_start_is_thrown_rolls_without_the_logo_lands_on_the_tick_then_the_log
     landed = pg.locator(".playpane .ork-die.big")
     assert "face-ok" in landed.get_attribute("class") and "is-rolling" not in landed.get_attribute("class") and "face-5" not in landed.get_attribute("class")
     assert landed.evaluate("e => getComputedStyle(e).rotate") == "6deg"                                                                       # askew, the lean token the other way from the hand's
+    assert "is-landing" in landed.get_attribute("class") and landed.locator(".ork-die__cube").evaluate("e => getComputedStyle(e).animationName") == "ork-die-land"     # the tick's face rolls in and the cube drops
     assert pg.locator(".play-landed").inner_text() == "It started" and pg.locator(".play-logo").count() == 0
     pg.wait_for_timeout(330)                                                                                                                  # the landing is over: it lies askew on its tick
     shot(pg, "b112-tick.png")
@@ -206,24 +215,26 @@ def test_a_start_is_thrown_rolls_without_the_logo_lands_on_the_tick_then_the_log
 
 
 def interior_colors(pg):
-    """How many colours the top face shows in a stretch free of pips and edges (a clean die: its one fill; seams between its cells: more)."""
+    """How many colours the up face shows in a stretch free of pips, tick and edges, low on its left (a clean die: its one fill; seams: more). orkUI's die is a cube (0.24.0): the stretch is
+    taken from the up face's own rectangle."""
     import io
     from PIL import Image
-    x, y = pg.evaluate("() => { const r = document.querySelector('.play-die > .ork-die').getBoundingClientRect(); return [r.x, r.y]; }")
+    x, y, w, h = pg.evaluate("() => { const r = document.querySelector('.play-die > .ork-die .ork-die__face.is-up').getBoundingClientRect(); return [r.x, r.y, r.width, r.height]; }")
     shot_ = Image.open(io.BytesIO(pg.screenshot())).convert("RGB")
-    region = shot_.crop((round(x + 37), round(y + 31), round(x + 52), round(y + 41))).tobytes()
+    region = shot_.crop((round(x + 0.16 * w), round(y + 0.82 * h), round(x + 0.3 * w), round(y + 0.9 * h))).tobytes()
     return len({region[i:i + 3] for i in range(0, len(region), 3)})
 
 
 def test_the_thrown_die_shows_no_seams_between_its_cells_while_it_rolls_and_on_the_tick(gui):
-    """A scale on the die's ancestors (the flight once scaled it from half size) fixes its layer's raster at that scale: a grid of seams between its 6 px cells. The flight only moves and turns it, and it grows in whole cells."""
+    """A scale on the die's ancestors (the flight once scaled it from half size) fixed its layer's raster at that scale: a grid of seams between its 6 px cells. The flight only moves and turns it, and it grows in whole cells; the cube
+    (orkUI 0.24.0) draws its marks as background blocks, not pixels, so its up face stays one fill while it grows and when it lands."""
     pytest.importorskip("PIL")
     host = Host(play=STARTING)
     pg, errors = window(gui, host)
     die(pg).click()
     pg.locator('.play-throw[data-phase="roll"]').wait_for(timeout=WAIT_MS)
     pg.wait_for_timeout(500)
-    pg.add_style_tag(content=".play-die { animation: none !important; }")                                                                     # one pose, unturned, so the stretch measured lies where it is expected
+    pg.add_style_tag(content=".play-die, .play-die .ork-die__cube, .play-die .ork-die__face::after { animation: none !important; }")              # one pose, the cube at rest, so the stretch measured lies where it is expected
     pg.wait_for_timeout(250)
     assert interior_colors(pg) == 1
     host.play = PLAYING
@@ -358,16 +369,20 @@ def test_under_reduced_motion_a_failure_is_todays_failure_at_once(gui):
 # -- spec 113 part B: a project with no preview, the die sleeps -----------------------------------------------------------------------------------------
 
 class PreviewHost(Host):
-    """The table's host whose snapshot says how the project opens a preview (`preview`: "command" · "static" · ""; None leaves the key out, as before the first snapshot)."""
+    """The table's host whose snapshot says how the project opens a preview (`preview`: "command" · "static" · ""; None leaves the key out, as before the first snapshot) and, since spec 118, the die's up face
+    (`play_face`: "failed" · "new" · ""; None leaves the key out)."""
 
-    def __init__(self, preview: str | None = "", **kw):
+    def __init__(self, preview: str | None = "", play_face: str | None = None, **kw):
         super().__init__(**kw)
         self.preview = preview
+        self.play_face = play_face
 
     def snapshot(self):
         doc = super().snapshot()
         if self.preview is not None:
             doc["state"]["preview"] = self.preview
+        if self.play_face is not None:
+            doc["state"]["play_face"] = self.play_face
         return doc
 
 
@@ -423,4 +438,115 @@ def test_the_die_wakes_when_the_snapshot_says_the_project_has_a_preview_now(gui)
     host.push()
     pg.wait_for_function("() => !document.querySelector('.hand-die').classList.contains('is-asleep')", timeout=WAIT_MS)
     assert die(pg).get_attribute("title") == "Play: the project's preview of dev"
+    finish(pg, errors)
+
+
+# -- spec 118 part C: the die's up face ---------------------------------------------------------------------------------------------------------------
+
+FAILED_WORDS = "Play: it did not start last time"
+NEW_WORDS = "Play: dev has changed since you last played"
+TODAYS_WORDS = "Play: the project's preview of dev"
+
+
+def face_of(pg):
+    return pg.locator(".hand-die .ork-die").get_attribute("class").split()
+
+
+def watch_landing(pg):
+    """Notes whether the hand's die ever wears `is-landing` (a landing of 300 ms is too short to wait for with a poll)."""
+    pg.evaluate("""() => { window.__landed = false; const d = document.querySelector('.hand-die .ork-die'), note = () => { if (document.querySelector('.hand-die .ork-die.is-landing')) window.__landed = true; };
+      new MutationObserver(note).observe(document.querySelector('.hand-die'), { subtree: true, attributes: true, attributeFilter: ['class'], childList: true }); note(); }""")
+
+
+@pytest.mark.parametrize("play_face, face, words", [("failed", "face-no", FAILED_WORDS), ("new", "face-new", NEW_WORDS), ("", "face-5", TODAYS_WORDS), (None, "face-5", TODAYS_WORDS)])
+def test_the_die_wears_the_face_the_snapshot_says_and_says_it_in_words(gui, play_face, face, words):
+    pg, errors = window(gui, PreviewHost("command", play_face))
+    d = die(pg)
+    classes = face_of(pg)
+    assert face in classes and len([c for c in classes if c.startswith("face-")]) == 1
+    assert d.get_attribute("title") == words and d.get_attribute("aria-label") == words and d.locator(".hand-die__word").inner_text() == "Play"
+    assert "is-landing" not in classes                                                                                # the first snapshot rolls nothing
+    shot(pg, f"c118-die-{play_face or 'five'}.png")
+    finish(pg, errors)
+
+
+def test_while_the_view_is_open_the_die_says_close_the_preview_whatever_its_face(gui):
+    pg, errors = window(gui, PreviewHost("command", "failed", play=PLAYING))
+    d = die(pg)
+    d.click()
+    pg.locator('.table-over[data-kind="play"]').wait_for(timeout=WAIT_MS)
+    assert d.get_attribute("aria-label") == "Close the preview" and d.get_attribute("title") == "Close the preview"
+    assert "face-no" in face_of(pg)
+    finish(pg, errors)
+
+
+def test_the_cube_rolls_onto_a_new_face_and_the_landing_is_taken_off_after(gui):
+    host = PreviewHost("command", "")
+    pg, errors = window(gui, host)
+    assert "face-5" in face_of(pg) and "is-landing" not in face_of(pg)
+    watch_landing(pg)
+    host.play_face = "new"
+    host.push()
+    pg.wait_for_function("() => document.querySelector('.hand-die .ork-die').classList.contains('face-new')", timeout=WAIT_MS)
+    pg.wait_for_function("() => window.__landed === true", timeout=WAIT_MS)
+    pg.wait_for_function("() => !document.querySelector('.hand-die .ork-die.is-landing')", timeout=WAIT_MS)             # taken off at the cube's animationend
+    assert "face-new" in face_of(pg) and die(pg).get_attribute("title") == NEW_WORDS
+    watch_landing(pg)                                                                                                   # and again, onto the cross
+    host.play_face = "failed"
+    host.push()
+    pg.wait_for_function("() => document.querySelector('.hand-die .ork-die').classList.contains('face-no')", timeout=WAIT_MS)
+    pg.wait_for_function("() => window.__landed === true", timeout=WAIT_MS)
+    pg.wait_for_function("() => !document.querySelector('.hand-die .ork-die.is-landing')", timeout=WAIT_MS)
+    assert die(pg).get_attribute("aria-label") == FAILED_WORDS
+    finish(pg, errors)
+
+
+def test_a_snapshot_that_keeps_the_face_rolls_nothing(gui):
+    host = PreviewHost("command", "new")
+    pg, errors = window(gui, host)
+    watch_landing(pg)
+    host.push()
+    pg.wait_for_timeout(400)
+    assert pg.evaluate("() => window.__landed") is False and "face-new" in face_of(pg)
+    finish(pg, errors)
+
+
+def test_under_reduced_motion_the_face_changes_with_no_landing(gui):
+    host = PreviewHost("command", "")
+    pg, errors = window(gui, host, reduced_motion="reduce")
+    watch_landing(pg)
+    host.play_face = "new"
+    host.push()
+    pg.wait_for_function("() => document.querySelector('.hand-die .ork-die').classList.contains('face-new')", timeout=WAIT_MS)
+    pg.wait_for_timeout(500)
+    assert pg.evaluate("() => window.__landed") is False and "is-landing" not in face_of(pg)
+    finish(pg, errors)
+
+
+def test_asleep_wins_over_the_face_and_a_face_said_asleep_rolls_nothing(gui):
+    host = PreviewHost("", "failed")
+    pg, errors = window(gui, host)
+    d = die(pg)
+    assert "face-5" in face_of(pg) and "face-no" not in face_of(pg) and "is-asleep" in d.get_attribute("class")
+    assert d.get_attribute("title") == ASLEEP and d.get_attribute("aria-label") == f"{ASLEEP}: say how the project opens"
+    watch_landing(pg)
+    host.play_face = "new"
+    host.push()
+    pg.wait_for_timeout(500)
+    assert "face-5" in face_of(pg) and pg.evaluate("() => window.__landed") is False and d.get_attribute("title") == ASLEEP
+    finish(pg, errors)
+
+
+def test_a_hover_wobble_and_a_landing_do_not_run_together(gui):
+    host = PreviewHost("command", "")
+    pg, errors = window(gui, host)
+    d = die(pg)
+    d.hover()
+    pg.locator(".hand-die .ork-die.is-wobbling").wait_for(timeout=WAIT_MS)
+    host.play_face = "failed"
+    host.push()
+    pg.wait_for_function("() => document.querySelector('.hand-die .ork-die').classList.contains('face-no')", timeout=WAIT_MS)
+    assert pg.evaluate("() => { const c = document.querySelector('.hand-die .ork-die').classList; return !(c.contains('is-wobbling') && c.contains('is-landing')); }")
+    pg.wait_for_function("() => !document.querySelector('.hand-die .ork-die.is-wobbling')", timeout=WAIT_MS)
+    assert "is-landing" not in face_of(pg)                                                                              # the landing was skipped while it wobbled
     finish(pg, errors)

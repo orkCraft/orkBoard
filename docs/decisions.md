@@ -3920,6 +3920,12 @@ spec 107 §9.2's logo shown while it starts):
 6. Later the same day, the owner: **the bug under the glass (Save logs, §182.12) leaves the hand for the top right**, a quiet icon
    after *Stop all* at the tabs' end, its panel opening downward; the hand's right end is the die and the potions (the die's 69 px
    folded the first lane's fan at 1280 and overlapped the first potion at 390).
+7. Later the same day, the owner: *the die should feel like a 3D object; now it looks like a tile*. **The die is a cube** (orkUI
+   0.24.0): six faces in CSS 3D seen from above and before, lit from above so a face darkens as it turns away; its box 69 × 72
+   (`big` 138 × 144), a face 18 cells. **Rolling, the cube tumbles** (quarter turns, rising on an edge); **landing, its face rolls
+   in from the back and it drops** onto the pane; **hovered, it rocks on its edges**. The slot on the pane only drifts and the
+   flight barely turns flat (a flat spin would turn the table under it). The faces, the tick and the cross, the words, the
+   lean and reduced motion are as in 2–4.
 The owner's call.
 
 ## 191. A project with no preview or no gate: the die sleeps, and with no gate there is no ring and no Release corner (31 October, the owner)
@@ -4025,4 +4031,19 @@ do it for every lens.* So:
    spec does not yet say what will change, the lands' pictures (Orkline Camp's, §50.1), a lore of the leaders.
 4. **The rule of the line holds** (§50.5): no count of what waits, no streak; the reach is shown, Start stays the person's.
 5. Spec 117, built by the cheaper model, each part reviewed; no mockup but Tech's.
+
+## 196. The die's up face says what Play would show: the cross while the last start failed, a spark when dev is new (31 October, the owner)
+
+Why: the owner: *how else can the die be used while it just lies: show something useful on its up face*; of the ideas
+weighed (the last outcome, dev's news, the probe's alarms, an empty face asleep, the leader's head), *1 and 2*. The question a
+die in the hand can answer is *why press Play now*. A count would break §104.0 and §145 (no count of what waits), so the face
+says *something*, never *how much*. So (this makes §190.2 and §190.7 precise):
+1. **The cross stays** on the die in the hand **while the last start of dev's head failed**; it goes when a start plays, or
+   when dev moves on (then 2).
+2. **A spark** (orkUI's new `face-new`, in the ink: news, not a warning) when **dev's head is a commit the person has not tried in
+   Play**; a project never tried says nothing.
+3. **The cube rolls onto the face** that says it when it changes (orkUI's `is-landing`); not under reduced motion.
+4. The word under the die stays *Play*; the button's `title` says it (*Play: it did not start last time*, *Play: dev has changed
+   since you last played*). The phone has no Play and gets none of it.
+5. Spec 118, built by the cheaper model.
 The owner's call.

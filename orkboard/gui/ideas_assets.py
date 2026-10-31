@@ -7,6 +7,8 @@ made of, seen and touched, and its own preview of dev. Read from the files, git 
     ideas.play_stop {}                # it stops and its worktree goes
 
 The snapshot carries `preview` (`preview_kind`: `command` · `static` · ""), whether the project has a preview to play: the Play die sleeps with none (spec 113).
+It carries `play_face` (`play_face`: `failed` · `new` · ""), what the die's up face says (docs/specs/118-the-dies-up-face.md §3): the last start of dev's head failed, or dev's head is
+a commit Play has not tried yet. Play keeps the commit last tried (a start that came to playing or failed) in `<state_dir>/play_tried.json`.
 While it starts and plays, `logo` is the address of the project's logo in dev's head (realm/assets.py `logo`, served as an asset of that commit), "" with none:
 Play's start screen shows it (docs/specs/107-what-the-owners-day-said.md §9.2).
 
@@ -27,6 +29,7 @@ worktree. The phones never get it: the commands refuse a phone, and the listener
 from __future__ import annotations
 
 import atexit
+import json
 import logging
 import shutil
 import subprocess
@@ -45,6 +48,8 @@ IDLE_S = 600.0                       # ten minutes with no face asking: Play sto
 PLAY_OPEN_S = 60.0                   # Play's wait for a page (a dev server's first build is slow); the picture's stays `idea_shot.OPEN_S`
 ALIVE_S = 15.0                      # how often a playing preview is looked at (its command may have ended)
 PLAY_DIR = "play"
+TRIED_FILE = "play_tried.json"       # `{"commit": C}`: the commit last tried in Play, kept across restarts (spec 118 §3)
+HEAD_S = 2.0                         # how long the snapshot keeps dev's head it read for the die's face
 TOPIC = "play.changed"               # on the bus when Play started, failed or stopped (the snapshot follows)
 NO_PREVIEW = "no preview"
 NO_PAGE = "nopage"                   # it started and listens, but no port it printed (nor PORT) answers a page (spec 90 §1)
@@ -59,6 +64,16 @@ def _stop_live() -> None:
 
 
 atexit.register(_stop_live)
+
+
+def tried_commit(state_dir: Path) -> str:
+    """The commit Play last tried (`<state_dir>/play_tried.json`); "" when there is none or the file cannot be read."""
+    try:
+        got = json.loads((Path(state_dir) / TRIED_FILE).read_text(encoding="utf-8"))
+        commit = got.get("commit") if isinstance(got, dict) else ""
+    except (OSError, ValueError):
+        return ""
+    return commit if isinstance(commit, str) else ""
 
 
 class Play:
@@ -79,10 +94,26 @@ class Play:
         self.tail: play_lines.Tail = play_lines.Tail()   # the command's output, its last lines (`idea_shot.opened`'s `tail`), and the last 400 with their time (`lines_before`)
         self.probe, self.play_id, self._proxy = False, "", None     # whether the page goes through the probe's proxy (spec 115 §2), this play's id, the proxy
         self.page_origin = ""                            # the origin the page is shown at, when a caller knows it (gui/play_proxy.py: "" lets the probe ask the browser)
+        self._tried: str | None = None                   # the commit last tried, read from its file when first asked (spec 118 §3)
         self.began = 0.0
         self.port: int | None = None
         self.seen_at = self._alive_at = 0.0
         _LIVE.add(self)
+
+    @property
+    def tried(self) -> str:
+        """The commit last tried: a start that came to playing or failed (not one stopped first, not a project with no preview)."""
+        if self._tried is None:
+            self._tried = tried_commit(self.state_dir)
+        return self._tried
+
+    def _tried_now(self, commit: str) -> None:
+        """A start of `commit` came to playing or failed: it is the commit last tried, kept in memory and in its file."""
+        self._tried = commit
+        try:
+            ideas._write_json(self.state_dir / TRIED_FILE, {"commit": commit})
+        except OSError as e:                         # a disk that refuses costs the face its memory, never the start
+            log.warning("Play could not keep the commit it tried (%s)", e)
 
     # -- the answer ------------------------------------------------------------------------------------------
 
@@ -208,6 +239,8 @@ class Play:
                 try:
                     self._set("playing", port=port, url=proxy.url_of(path) if proxy else idea_shot.url_of(port, path), probe=proxy is not None,
                               play_id=proxy.play_id if proxy else "", _proxy=proxy)
+                    if self.state == "playing":
+                        self._tried_now(commit)
                     self._emit(event_log.PLAY_STARTED, seconds=round(time.monotonic() - began, 1), ok=True, why="", command=command, url=self.url)
                     stop.wait()
                 finally:
@@ -246,6 +279,8 @@ class Play:
         self._emit(event_log.PLAY_STARTED, seconds=round(time.monotonic() - began, 1), ok=False, why=why, command=self.command, url="",
                    tail="\n".join(self.tail)[-600:])                  # what the command printed, for whoever reads the day (spec 107 §2)
         self._set("failed", error=why, none=none, url="", port=None, ports=list(ports or []))
+        if self.state == "failed" and not none:
+            self._tried_now(self.commit)
 
     def _git(self, *args: str) -> subprocess.CompletedProcess:
         return subprocess.run(["git", *args], cwd=self.root, capture_output=True, text=True, timeout=idea_git.GIT_TIMEOUT_S)
@@ -275,6 +310,7 @@ class AssetsMixin:
     """Needs `host`, `state_dir`, `root()`, `settings_now()`, `_ev` (gui/ideas.py)."""
 
     _play: Play | None = None
+    _head_seen: tuple[float, str, str] = (0.0, "", "")       # when, which ref and what dev's head was when the die's face last read it
 
     def _ref(self) -> str:
         ref = str(self.settings_now().get("merge_into") or "dev")
@@ -336,6 +372,30 @@ class AssetsMixin:
         except Exception:                          # a snapshot is never broken by a file it could not read
             how = None
         return how["how"] if how else ""
+
+    def _head_now(self) -> str:
+        """Dev's head, read at most every `HEAD_S` seconds (the snapshot asks on each push)."""
+        ref, now = self._ref(), time.monotonic()
+        at, seen, head = self._head_seen
+        if seen != ref or now - at >= HEAD_S or now < at:
+            head = commit_goal.head(Path(self.host.repo_root), ref)
+            self._head_seen = (now, ref, head)
+        return head
+
+    def play_face(self) -> str:
+        """What the die's up face says, for the snapshot (spec 118 §3): `failed` (the last start of dev's head failed) · `new` (dev's head is a commit
+        not tried in Play yet; a project never tried says nothing) · "". Never raises."""
+        try:
+            play, head = self._play, self._head_now()
+            state, commit, none = (play.state, play.commit, play.none) if play is not None else ("stopped", "", False)
+            if head and state == "failed" and not none and commit == head:
+                return "failed"
+            tried = play.tried if play is not None else tried_commit(self.state_dir)
+            if tried and head and head != tried and not (state in ("starting", "playing") and commit == head):
+                return "new"
+        except Exception:                          # a snapshot is never broken by the die's face
+            pass
+        return ""
 
     @property
     def player(self) -> Play:

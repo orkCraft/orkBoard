@@ -52,7 +52,7 @@
   .hand:has(.hand-mana[data-rows="1"]) .hand-places { height: max(calc(var(--hc-room) + var(--hc-top) + var(--hc-shown)), calc(var(--hc-room) + var(--hc-top) + var(--hc-pot1))); }
 }
 
-/* the Play die (spec 112 §3.3, decisions §190.2, hand/playdie.js): orkUI's `.ork-die` (69 x 60, 3 px a cell) lying in the hand left of the potions, turned by the lean token, its word under it as a potion's share is. Hovered or focused it stays lifted by
+/* the Play die (spec 112 §3.3, decisions §190.2, hand/playdie.js): orkUI's `.ork-die` (a cube in CSS 3D since orkUI 0.24.0, a box of 69 x 72, 3 px a cell) lying in the hand left of the potions, turned by the lean token, its word under it as a potion's share is. Hovered or focused it stays lifted by
    the rise token (the wobble itself is orkUI's `.is-wobbling`, put on at pointer enter); thrown onto the pane it is hidden, kept in its place. At the narrow width it keeps its 3 px and stands beside the potions as they stand. */
 .hand-die { appearance: none; position: relative; z-index: 1; flex: none; pointer-events: auto; display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); margin: 0; padding: var(--ork-1) 0; border: 0;
   background: none; color: var(--ork-ink); font: var(--ork-type-caption); cursor: pointer; }
