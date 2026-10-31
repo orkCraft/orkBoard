@@ -1,0 +1,7 @@
+/* Game design's loop as a rondel (docs/specs/117-each-lens-a-games-shape.md §7, decisions §195). The ring closes (maps.css `.mp-ring__chev`, the last one marked `data-close`), and a step's card carries what it
+   gives and takes as chips under its line: orkUI's `.ork-chip`, in ink, a take dashed so that it reads without a colour. Layout only: every colour, face and size is orkUI's tokens. */
+
+.rd-toks { display: flex; flex-wrap: wrap; gap: var(--ork-1); min-width: 0; margin-top: var(--ork-1); }
+.rd-tok.ork-chip { height: 18px; padding: 0 var(--ork-2); max-width: 100%; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; display: inline-block; line-height: 14px; box-sizing: border-box; }
+.rd-tok[data-token="takes"].ork-chip { border-style: dashed; }
+.rd-tok[data-token="more"].ork-chip { color: var(--ork-ink-muted); }

@@ -23,10 +23,11 @@ export const KIND_WORDS = { soft: "soft", hard: "hard", energy: "energy", progre
 export const Pips = ({ n }) => html`<span class="ork-pips mp-pips" role="img" aria-label=${`intensity ${n} of 5`}>${[1, 2, 3, 4, 5].map((i) => html`<i key=${i} class=${i <= n ? "d" : ""}></i>`)}</span>`;
 
 export const RING_MIN = 640;                                             // under it the loops lie as lists
-const HEIGHTS = { 1: 420, 2: 560, 3: 720 }, MARGIN = 62;
+const HEIGHTS = { 1: 420, 2: 560, 3: 720 }, MARGIN = 62, TAG_MAX = 208, CHAR = 8;
 
 /** The rings' places in `w` px: the loops from the core out, each an ellipse with its steps' centres clockwise round it from just right of its top (half a step from it, so that the top keeps the ring's tag), and the
- *  chevron between each two (at the mid-angle, pointing along the loop). The core ring of a game with more loops has its tag in its middle, any other at its top. The card's width follows the room between the rings. */
+ *  chevron after each (at the mid-angle, pointing along the loop; the last one's closes the ring, spec 117 §7, and where the tag lies at the top it stands just right of the tag). The core ring of a game with more loops
+ *  has its tag in its middle, any other at its top. The card's width follows the room between the rings. */
 export function layout(loops, w) {
   const n = loops.length, h = HEIGHTS[n] || HEIGHTS[1], cx = w / 2, cy = h / 2;
   const rxMax = Math.max(120, w / 2 - MARGIN), ryMax = h / 2 - 40;
@@ -35,12 +36,21 @@ export function layout(loops, w) {
   const rings = loops.map((lp, i) => {
     const t = n === 1 ? 0 : i / (n - 1), rx = rx0 + (rxMax - rx0) * t, ry = ry0 + (ryMax - ry0) * t, k = lp.steps.length;
     const at = (a) => [cx + rx * Math.cos(a), cy + ry * Math.sin(a)];
+    const chev = (m) => {
+      const [mx, my] = at(m), dx = -rx * Math.sin(m), dy = ry * Math.cos(m);
+      return { mx, my, dir: Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? "right" : "left") : dy > 0 ? "down" : "up" };
+    };
     const places = lp.steps.map((_, j) => {
-      const a = -Math.PI / 2 + ((j + 0.5) / k) * 2 * Math.PI, m = a + Math.PI / k, [x, y] = at(a), [mx, my] = at(m);
-      const dx = -rx * Math.sin(m), dy = ry * Math.cos(m);
-      return { x, y, mx, my, dir: Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? "right" : "left") : dy > 0 ? "down" : "up" };
+      const a = -Math.PI / 2 + ((j + 0.5) / k) * 2 * Math.PI, [x, y] = at(a);
+      return { x, y, ...chev(a + Math.PI / k) };
     });
-    return { rx, ry, places, tag: n > 1 && i === 0 ? { x: cx, y: cy, mid: true } : { x: cx, y: cy - ry, mid: false } };
+    const mid = n > 1 && i === 0;
+    if (!mid && places.length) {                                                // the closing chevron would lie under the tag: it stands between the tag's right edge and the first card's left edge
+      const tagR = cx + Math.min(TAG_MAX, CHAR * Math.max(lp.name.length, 16) + 16) / 2, cardL = places[0].x - cw / 2;
+      const x = Math.min(cardL > tagR + 28 ? (tagR + cardL) / 2 : tagR + 14, cx + rx * 0.97);
+      Object.assign(places[k - 1], chev(-Math.acos((x - cx) / rx)));
+    }
+    return { rx, ry, places, tag: mid ? { x: cx, y: cy, mid: true } : { x: cx, y: cy - ry, mid: false } };
   });
   return { h, cx, cy, cw, rings };
 }
@@ -104,8 +114,23 @@ export function Feeling({ loop, width }) {
   </section>`;
 }
 
-/** A step's small card on its ring (or in a list): its name, its feeling's word and its intensity as pips; a press lifts it (loopmap.js draws the back). */
-export function StepCard({ s, style, narrow }) {
+/** The currencies' names by id (what a step's tokens say). */
+export const curNames = (d) => Object.fromEntries((d.currencies || []).map((c) => [c.id, c.name]));
+
+const MAX_TOKENS = 3, TOKEN_NAME = 12;
+const short = (name) => (name.length > TOKEN_NAME ? `${name.slice(0, TOKEN_NAME - 1)}…` : name);
+
+/** What a step gives (*+ Coins*) and takes (*− Coins*) as chips in ink, the name up to 12 characters (the full one in the title), three at most and then *+n* (spec 117 §7); a currency the loop does not name is left out. */
+export function Tokens({ s, cur }) {
+  const all = [["Gives", "+", s.gives], ["Takes", "−", s.takes]].flatMap(([verb, sign, ids]) => (ids || []).filter((id) => cur[id]).map((id) => ({ id: `${sign}${id}`, verb, sign, name: cur[id] })));
+  if (!all.length) return null;
+  const rest = all.slice(MAX_TOKENS);
+  return html`<span class="rd-toks">${all.slice(0, MAX_TOKENS).map((t) => html`<span key=${t.id} class="ork-chip rd-tok" data-token=${t.verb.toLowerCase()} title=${`${t.verb} ${t.name}`}>${`${t.sign} ${short(t.name)}`}</span>`)}
+    ${rest.length > 0 && html`<span class="ork-chip rd-tok" data-token="more" title=${rest.map((t) => `${t.verb} ${t.name}`).join(", ")}>+${rest.length}</span>`}</span>`;
+}
+
+/** A step's small card on its ring (or in a list): its name, its feeling's word and its intensity as pips (in a list its line), under them what it gives and takes; a press lifts it (loopmap.js draws the back). */
+export function StepCard({ s, style, narrow, cur = {} }) {
   return html`<${MapCard} map=${MAP} id=${s.id} name=${s.name} group="loop" compact=${true} className=${cls("mp-st", { "is-narrow": narrow })} style=${style}
-    foot=${html`<span class="mp-st__meta"><span>${s.feel || "no feeling said"}</span></span><${Pips} n=${s.intensity} />${narrow && html`<span class="mp-card__foot is-three">${s.line}</span>`}`} />`;
+    foot=${html`<span class="mp-st__meta"><span>${s.feel || "no feeling said"}</span></span><${Pips} n=${s.intensity} />${narrow && html`<span class="mp-card__foot is-three">${s.line}</span>`}<${Tokens} s=${s} cur=${cur} />`} />`;
 }
