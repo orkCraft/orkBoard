@@ -1,7 +1,8 @@
 """What a party's map says is wrong, by code (docs/specs/108-a-leader-says-no-and-shows-where-it-hurts.md §2.2; decisions §183.4): the hints a leader is given before it looks at its map, each
 grounded in what the map holds. A hint is not a verdict (the leader judges it, `core/idea_concerns.py`). Read from the files, the Board and git; no model, no face; nothing is written.
 
-    map_signals.signals(state_dir, root, craft, pages=None, ref="dev")     # [{on, kind, words}], at most MAX_SIGNALS; [] for a craft that has none by code or a map that cannot be read
+    map_signals.signals(state_dir, root, craft, pages=None, ref="dev", limit=MAX_SIGNALS)   # [{on, kind, words}], at most `limit` (None: every hint); [] for a craft that has none by code or a map that cannot be read
+    map_signals.tested(part, files, tracked, gate, root)                   # a test is mapped to the part (System's guard in `realm/map_reach.py`)
     map_signals.pictures(state_dir, root, since="", limit=4)               # Design's screens' pictures kept after `since`, to be read: [{id, name, path, at}]
 
 `on` is the id of a part of the map as it is drawn (`realm/map_parts.py`), "" where a hint belongs to no part; `kind` names the rule; `words` is a line for a model, in plain English. A hint that
@@ -138,7 +139,7 @@ def _tracked(root: Path, sha: str) -> list[str]:
     return [p for p in _git(root, "ls-tree", "-r", "--name-only", sha).splitlines() if p]
 
 
-def _tested(part: str, files: list[str], tracked: set[str], gate: gate_config.Gate, root: Path) -> bool:
+def tested(part: str, files: list[str], tracked: set[str], gate: gate_config.Gate, root: Path) -> bool:
     """A test is mapped to the part: the gate's map finds one for a file of it, a file of it is a test or lies in a tests folder, or a test is named after one of its files."""
     if any(bit in TESTS for bit in part.split("/")):
         return True
@@ -199,7 +200,7 @@ def _tech(state_dir: Path, root: Path, ref: str) -> list[dict]:
         tracked, gate = _tracked(root, sha), gate_config.read(root)
         names = set(tracked)
         for part, n in sorted(hot.items(), key=lambda kv: (-kv[1], kv[0])):
-            if not _tested(part, list(by[part].get("files") or []), names, gate, root):
+            if not tested(part, list(by[part].get("files") or []), names, gate, root):
                 out["untested_churn"].append({"on": part, "kind": "untested_churn", "words": f"{part} changed {n} times in the last {CHURN_DAYS} days and no test is mapped to it"})
     return [s for k in ORDER for s in out[k]]
 
@@ -387,8 +388,8 @@ def pictures(state_dir: Path, root: Path, since: str = "", limit: int = 4) -> li
     return sorted(out, key=lambda r: (r["at"], r["id"]), reverse=True)[:limit]
 
 
-def signals(state_dir: Path, root: Path, craft: str, pages: Path | None = None, ref: str = "dev") -> list[dict]:
-    """The hints of `craft`'s party's map (see the module): `[{on, kind, words, map?}]`, at most MAX_SIGNALS; [] for a craft that has none by code and for a map that cannot be read."""
+def signals(state_dir: Path, root: Path, craft: str, pages: Path | None = None, ref: str = "dev", limit: int | None = MAX_SIGNALS) -> list[dict]:
+    """The hints of `craft`'s party's map (see the module): `[{on, kind, words, map?}]`, at most `limit` (None: every hint); [] for a craft that has none by code and for a map that cannot be read."""
     state_dir, root = Path(state_dir), Path(root)
     try:
         rows = {"tech": lambda: _tech(state_dir, root, ref), "game-design": lambda: _game(state_dir), "design": lambda: _design(state_dir, root),
@@ -396,4 +397,4 @@ def signals(state_dir: Path, root: Path, craft: str, pages: Path | None = None, 
                 "release": lambda: map_signals_crafts.release(state_dir, root, pages, ref), "marketing": lambda: map_signals_crafts.marketing(state_dir, root, ref)}.get(craft, lambda: [])()
     except Exception:                                # a hint that cannot be read is no hint, never an error for a caller
         return []
-    return rows[:MAX_SIGNALS]
+    return rows if limit is None else rows[:limit]

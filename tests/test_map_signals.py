@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.realm import hypotheses as hyp, idea_lens, ideas, loop, map_parts, map_signals, map_signals_crafts, opportunity_tree as tree
+from orkboard.realm import gate_config, hypotheses as hyp, idea_lens, ideas, loop, map_parts, map_signals, map_signals_crafts, opportunity_tree as tree
 
 PNG = b"\x89PNG\r\n\x1a\n" + struct.pack(">I", 13) + b"IHDR" + struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0) + b"\x00" * 4 + struct.pack(">I", 0) + b"IEND" + b"\x00" * 4
 
@@ -259,6 +259,20 @@ def test_at_most_twenty_signals(repo, tmp_path):
     put(repo, {"src/App.jsx": f'import {{ Routes, Route }} from "react-router-dom";\nexport default () => <Routes>{routes}</Routes>;\n',
                **{f"src/p{n}.jsx": "export default () => null;\n" for n in range(40)}, "package.json": json.dumps({"dependencies": {"react-router-dom": "6"}})})
     assert len(map_signals.signals(tmp_path / "state", repo, "design")) == map_signals.MAX_SIGNALS
+    every = map_signals.signals(tmp_path / "state", repo, "design", limit=None)
+    assert len(every) > map_signals.MAX_SIGNALS and every[:map_signals.MAX_SIGNALS] == map_signals.signals(tmp_path / "state", repo, "design"), "limit None: every hint, the same order"
+    assert map_signals.signals(tmp_path / "state", repo, "design", limit=3) == every[:3] and map_signals.signals(tmp_path / "state", repo, "no-craft", limit=None) == []
+
+
+def test_tested_is_public_a_test_mapped_to_a_part_by_its_folder_its_files_its_name_or_the_gate(repo):
+    put(repo, {"alpha/one.py": "X = 1\n", "alpha/two.py": "Y = 1\n", "beta/three.py": "Z = 1\n", "tests/test_one.py": "import alpha.one\n", "tests/helpers/h.py": "H = 1\n", "gamma/test_g.py": "T = 1\n"})
+    sha = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, check=True, capture_output=True, text=True).stdout.strip()
+    tracked, gate = set(map_signals._tracked(repo, sha)), gate_config.read(repo)
+    assert map_signals.tested("alpha", ["one.py", "two.py"], tracked, gate, repo), "a test named after one of its files"
+    assert not map_signals.tested("beta", ["three.py"], tracked, gate, repo)
+    assert map_signals.tested("tests/helpers", ["h.py"], tracked, gate, repo), "inside a tests folder"
+    assert map_signals.tested("gamma", ["test_g.py"], tracked, gate, repo), "a file of it is a test"
+    assert not hasattr(map_signals, "_tested")
 
 
 def test_the_pictures_of_the_screens_kept_since_a_look(repo, tmp_path):
