@@ -10,7 +10,7 @@ import pytest
 
 from orkboard.gui.board_host import Orkboard
 from orkboard.gui.ideas_maps import MapsMixin, maps_commands
-from orkboard.realm import goal_team, ideas, idea_element, library, map_text, release_map, releases
+from orkboard.realm import goal_team, ideas, idea_element, library, map_signals_crafts, map_text, release_map, releases
 from tests.test_commit_goal import commit, git, land, repo, state  # noqa: F401  (the fixture)
 
 
@@ -41,10 +41,37 @@ def test_the_goals_in_dev_and_not_in_main_newest_landing_first_ticked_with_their
     c, _ = land(repo, one, "k2", {"z.css": "z\n"})
     commit(repo, "mine.txt", "my own\n")                                             # the person's own commit: no goal's
     got = release_map.read(state(repo), repo, pages)
-    assert got == {"into": "dev", "main": "main", "same": False, "commits": 4, "files": 4, "since": None,
-                   "goals": [{"idea": one, "title": "Dark mode", "element": "ice", "commit": c, "ticked": True},
-                             {"idea": two, "title": "Faster pages", "element": "", "commit": b, "ticked": True}]}
-    assert a != c
+    at = {sha: int(git(repo, "log", "-1", "--format=%ct", sha)) for sha in (b, c)}
+    assert got == {"into": "dev", "main": "main", "same": False, "commits": 4, "files": 4, "big_from": map_signals_crafts.BATCH_GOALS, "since": None,
+                   "goals": [{"idea": one, "title": "Dark mode", "element": "ice", "commit": c, "at": at[c], "ticked": True},
+                             {"idea": two, "title": "Faster pages", "element": "", "commit": b, "at": at[b], "ticked": True}]}
+    assert a != c and at[b] > 0
+
+
+def test_a_goals_at_is_its_commits_time_in_seconds_and_zero_when_git_cannot_say(repo, pages, monkeypatch):
+    one = goal(pages, repo, "Dark mode")
+    sha, _ = land(repo, one, "k1", {"x.css": "x\n"})
+    got = release_map.read(state(repo), repo, pages)
+    assert got["goals"][0]["commit"] == sha and got["goals"][0]["at"] == int(git(repo, "log", "-1", "--format=%ct", sha)) > 0
+    monkeypatch.setattr(release_map, "_times", lambda root, shas: {})
+    assert release_map.read(state(repo), repo, pages)["goals"][0]["at"] == 0
+
+
+def test_a_goal_sent_to_main_alone_by_cherry_pick_is_not_listed_and_the_counts_are_the_gates(repo, pages):
+    one, two = goal(pages, repo, "Dark mode"), goal(pages, repo, "Faster pages")
+    a, _ = land(repo, one, "k1", {"x.css": "x\n"})
+    b, _ = land(repo, two, "k1", {"y.css": "y\n"})
+    git(repo, "checkout", "-q", "main")
+    git(repo, "cherry-pick", a)                                                       # one went alone: main holds it under a new sha
+    git(repo, "checkout", "-q", "dev")
+    got = release_map.read(state(repo), repo, pages)
+    assert [g["idea"] for g in got["goals"]] == [two] and got["goals"][0]["commit"] == b
+    assert (got["commits"], got["files"]) == (1, 1)
+
+
+def test_big_from_is_the_number_of_goals_from_which_a_batch_is_big_also_when_there_is_no_gate(repo, pages):
+    assert release_map.read(state(repo), repo, pages)["big_from"] == map_signals_crafts.BATCH_GOALS == 8
+    assert release_map.read(state(repo), repo, pages, "main")["big_from"] == 8
 
 
 def test_a_goal_all_of_whose_commits_main_has_waits_for_nothing_and_a_dropped_goal_is_not_listed(repo, pages):
@@ -133,5 +160,6 @@ def test_the_command_answers_what_the_gate_would_merge(host, fake_repo):
     got = host.command("ideas.release_map", {})
     gate = host.command("ideas.gate", {})
     assert (got["into"], got["main"], got["commits"], got["files"]) == (gate["into"], gate["main"], gate["commits"], gate["files"])
-    assert got["goals"] == [{"idea": slug, "title": "Dark mode", "element": idea_element.of(host.ideas.state_dir, slug), "commit": sha, "ticked": True}]
+    assert got["goals"] == [{"idea": slug, "title": "Dark mode", "element": idea_element.of(host.ideas.state_dir, slug), "commit": sha,
+                             "at": int(git(fake_repo, "log", "-1", "--format=%ct", sha)), "ticked": True}]
     assert [g["slug"] for g in gate["ideas"]] == [slug]
