@@ -369,16 +369,20 @@ def test_under_reduced_motion_a_failure_is_todays_failure_at_once(gui):
 # -- spec 113 part B: a project with no preview, the die sleeps -----------------------------------------------------------------------------------------
 
 class PreviewHost(Host):
-    """The table's host whose snapshot says how the project opens a preview (`preview`: "command" · "static" · ""; None leaves the key out, as before the first snapshot)."""
+    """The table's host whose snapshot says how the project opens a preview (`preview`: "command" · "static" · ""; None leaves the key out, as before the first snapshot) and, since spec 118, the die's up face
+    (`play_face`: "failed" · "new" · ""; None leaves the key out)."""
 
-    def __init__(self, preview: str | None = "", **kw):
+    def __init__(self, preview: str | None = "", play_face: str | None = None, **kw):
         super().__init__(**kw)
         self.preview = preview
+        self.play_face = play_face
 
     def snapshot(self):
         doc = super().snapshot()
         if self.preview is not None:
             doc["state"]["preview"] = self.preview
+        if self.play_face is not None:
+            doc["state"]["play_face"] = self.play_face
         return doc
 
 
@@ -434,4 +438,115 @@ def test_the_die_wakes_when_the_snapshot_says_the_project_has_a_preview_now(gui)
     host.push()
     pg.wait_for_function("() => !document.querySelector('.hand-die').classList.contains('is-asleep')", timeout=WAIT_MS)
     assert die(pg).get_attribute("title") == "Play: the project's preview of dev"
+    finish(pg, errors)
+
+
+# -- spec 118 part C: the die's up face ---------------------------------------------------------------------------------------------------------------
+
+FAILED_WORDS = "Play: it did not start last time"
+NEW_WORDS = "Play: dev has changed since you last played"
+TODAYS_WORDS = "Play: the project's preview of dev"
+
+
+def face_of(pg):
+    return pg.locator(".hand-die .ork-die").get_attribute("class").split()
+
+
+def watch_landing(pg):
+    """Notes whether the hand's die ever wears `is-landing` (a landing of 300 ms is too short to wait for with a poll)."""
+    pg.evaluate("""() => { window.__landed = false; const d = document.querySelector('.hand-die .ork-die'), note = () => { if (document.querySelector('.hand-die .ork-die.is-landing')) window.__landed = true; };
+      new MutationObserver(note).observe(document.querySelector('.hand-die'), { subtree: true, attributes: true, attributeFilter: ['class'], childList: true }); note(); }""")
+
+
+@pytest.mark.parametrize("play_face, face, words", [("failed", "face-no", FAILED_WORDS), ("new", "face-new", NEW_WORDS), ("", "face-5", TODAYS_WORDS), (None, "face-5", TODAYS_WORDS)])
+def test_the_die_wears_the_face_the_snapshot_says_and_says_it_in_words(gui, play_face, face, words):
+    pg, errors = window(gui, PreviewHost("command", play_face))
+    d = die(pg)
+    classes = face_of(pg)
+    assert face in classes and len([c for c in classes if c.startswith("face-")]) == 1
+    assert d.get_attribute("title") == words and d.get_attribute("aria-label") == words and d.locator(".hand-die__word").inner_text() == "Play"
+    assert "is-landing" not in classes                                                                                # the first snapshot rolls nothing
+    shot(pg, f"c118-die-{play_face or 'five'}.png")
+    finish(pg, errors)
+
+
+def test_while_the_view_is_open_the_die_says_close_the_preview_whatever_its_face(gui):
+    pg, errors = window(gui, PreviewHost("command", "failed", play=PLAYING))
+    d = die(pg)
+    d.click()
+    pg.locator('.table-over[data-kind="play"]').wait_for(timeout=WAIT_MS)
+    assert d.get_attribute("aria-label") == "Close the preview" and d.get_attribute("title") == "Close the preview"
+    assert "face-no" in face_of(pg)
+    finish(pg, errors)
+
+
+def test_the_cube_rolls_onto_a_new_face_and_the_landing_is_taken_off_after(gui):
+    host = PreviewHost("command", "")
+    pg, errors = window(gui, host)
+    assert "face-5" in face_of(pg) and "is-landing" not in face_of(pg)
+    watch_landing(pg)
+    host.play_face = "new"
+    host.push()
+    pg.wait_for_function("() => document.querySelector('.hand-die .ork-die').classList.contains('face-new')", timeout=WAIT_MS)
+    pg.wait_for_function("() => window.__landed === true", timeout=WAIT_MS)
+    pg.wait_for_function("() => !document.querySelector('.hand-die .ork-die.is-landing')", timeout=WAIT_MS)             # taken off at the cube's animationend
+    assert "face-new" in face_of(pg) and die(pg).get_attribute("title") == NEW_WORDS
+    watch_landing(pg)                                                                                                   # and again, onto the cross
+    host.play_face = "failed"
+    host.push()
+    pg.wait_for_function("() => document.querySelector('.hand-die .ork-die').classList.contains('face-no')", timeout=WAIT_MS)
+    pg.wait_for_function("() => window.__landed === true", timeout=WAIT_MS)
+    pg.wait_for_function("() => !document.querySelector('.hand-die .ork-die.is-landing')", timeout=WAIT_MS)
+    assert die(pg).get_attribute("aria-label") == FAILED_WORDS
+    finish(pg, errors)
+
+
+def test_a_snapshot_that_keeps_the_face_rolls_nothing(gui):
+    host = PreviewHost("command", "new")
+    pg, errors = window(gui, host)
+    watch_landing(pg)
+    host.push()
+    pg.wait_for_timeout(400)
+    assert pg.evaluate("() => window.__landed") is False and "face-new" in face_of(pg)
+    finish(pg, errors)
+
+
+def test_under_reduced_motion_the_face_changes_with_no_landing(gui):
+    host = PreviewHost("command", "")
+    pg, errors = window(gui, host, reduced_motion="reduce")
+    watch_landing(pg)
+    host.play_face = "new"
+    host.push()
+    pg.wait_for_function("() => document.querySelector('.hand-die .ork-die').classList.contains('face-new')", timeout=WAIT_MS)
+    pg.wait_for_timeout(500)
+    assert pg.evaluate("() => window.__landed") is False and "is-landing" not in face_of(pg)
+    finish(pg, errors)
+
+
+def test_asleep_wins_over_the_face_and_a_face_said_asleep_rolls_nothing(gui):
+    host = PreviewHost("", "failed")
+    pg, errors = window(gui, host)
+    d = die(pg)
+    assert "face-5" in face_of(pg) and "face-no" not in face_of(pg) and "is-asleep" in d.get_attribute("class")
+    assert d.get_attribute("title") == ASLEEP and d.get_attribute("aria-label") == f"{ASLEEP}: say how the project opens"
+    watch_landing(pg)
+    host.play_face = "new"
+    host.push()
+    pg.wait_for_timeout(500)
+    assert "face-5" in face_of(pg) and pg.evaluate("() => window.__landed") is False and d.get_attribute("title") == ASLEEP
+    finish(pg, errors)
+
+
+def test_a_hover_wobble_and_a_landing_do_not_run_together(gui):
+    host = PreviewHost("command", "")
+    pg, errors = window(gui, host)
+    d = die(pg)
+    d.hover()
+    pg.locator(".hand-die .ork-die.is-wobbling").wait_for(timeout=WAIT_MS)
+    host.play_face = "failed"
+    host.push()
+    pg.wait_for_function("() => document.querySelector('.hand-die .ork-die').classList.contains('face-no')", timeout=WAIT_MS)
+    assert pg.evaluate("() => { const c = document.querySelector('.hand-die .ork-die').classList; return !(c.contains('is-wobbling') && c.contains('is-landing')); }")
+    pg.wait_for_function("() => !document.querySelector('.hand-die .ork-die.is-wobbling')", timeout=WAIT_MS)
+    assert "is-landing" not in face_of(pg)                                                                              # the landing was skipped while it wobbled
     finish(pg, errors)
