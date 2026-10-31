@@ -10,7 +10,7 @@
 // name under it, a light band sweeping across it every 2.4 s while it starts (play.css; none under reduced motion). *Full screen* in the bar lays the stage over the screen (Esc leaves).
 // Play is a die (docs/specs/112-the-bars-marks-and-the-play-die.md §3.3–§3.4, decisions §190.3): the die in the hand (hand/playdie.js) opens this view, and the view starts the build at once when none runs (it asks with `peek` first, then starts: no second press
 // of *Open the build*; that button is left for a build stopped or failed). A build that starts is thrown onto the pane: a `.ork-die is-rolling` flies from the hand's die (its rectangle: `dieRect`, a WAAPI flight of five steps, 300 ms, translate and rotate only) to the black pane's
-// middle, grows there in whole cells (3, 4, 6 px a cell, 120 ms: `--_n`; never a scale, which would fix the die's raster at a small scale and show the seams between its cells) and rolls the whole start, the stage line under it; the logo is not shown meanwhile. When the page answers the roll stops on `face-ok` (the green tick), turned by the lean token the other way, a three-step landing, *It started* for a moment; the die leaves
+// middle, grows there in whole cells (3, 4, 6 px a cell, 120 ms: `--_n`; never a scale) and rolls the whole start, the stage line under it: orkUI's cube (0.24.0) tumbles in 3D while the slot only drifts; the logo is not shown meanwhile. When the page answers the roll stops on `face-ok` (the green tick), turned by the lean token the other way, a three-step landing (orkUI's `is-landing`: the tick's face rolls in from the back and the cube drops), *It started* for a moment; the die leaves
 // and today's intro stands in its place (the logo up in six steps, two blinks, the name: about 1.8 s with a logo, 1 s with the name alone), then today's fade and the frame rising out of the black. When the start failed the roll stops on `face-no` (the red cross), the
 // die tips over in three steps and today's failure view takes its place. The hand's die is hidden while its copy is out and is back, glowing (`is-playing`), when the frame rises, or when the failure shows. A view opened on a build already playing (*warm*) has no
 // throw and no intro: the frame opens at once and the hand's die wobbles twice. Under reduced motion none of it: today's start screen exactly (the logo or the name while it starts, no die on the pane, no fade). The throw's phases are `ph`: `fly` · `roll` · `ok` /
@@ -24,7 +24,7 @@ import { html, cls } from "../html.js";
 import { Sign } from "../orkui.js";
 import { command } from "../link.js";
 import { projectList } from "../shell/projects.js";
-import { asleepNow, dieRect, playing, thrown, warmed } from "../hand/playdie.js";
+import { DieCube, asleepNow, dieRect, playing, thrown, warmed } from "../hand/playdie.js";
 import { followTab, tab } from "../frame/state.js";
 import { mapName, partiesAll } from "../table/data.js";
 import { HIDE, SHOW, Back, LensStrip, MarksLayer, letHintBe, useLens, useProbe, useSize } from "./playlens.js";
@@ -127,15 +127,15 @@ function Throw({ ph, b }) {
     const el = die.current, to = slot.current?.getBoundingClientRect(), from = dieRect(), t = [setTimeout(() => setN(4), FLY_MS - 120), setTimeout(() => setN(6), FLY_MS - 60)];
     if (el && to && typeof el.animate === "function") {
       const dx = from ? from.left + from.width / 2 - (to.left + to.width / 2) : 0, dy = from ? from.top + from.height / 2 - (to.top + to.height / 2) : 240;
-      el.animate([{ transform: `translate(${dx}px, ${dy}px) rotate(-30deg)`, offset: 0 }, { transform: "translate(20px, -60px) rotate(160deg)", offset: 0.6 },
-        { transform: "translate(0, 0) rotate(360deg)", offset: 1 }], { duration: FLY_MS - 120, easing: "steps(5)" });
+      el.animate([{ transform: `translate(${dx}px, ${dy}px) rotate(-20deg)`, offset: 0 }, { transform: "translate(20px, -60px) rotate(10deg)", offset: 0.6 },      // it arcs over; the cube tumbles inside it (orkUI's roll), so it barely turns flat
+        { transform: "translate(0, 0) rotate(0deg)", offset: 1 }], { duration: FLY_MS - 120, easing: "steps(5)" });
     }
     return () => t.forEach(clearTimeout);
   }, []);
   return html`<div class="play-intro play-throw" data-phase=${ph}>
     <div class="play-slot" ref=${slot}>
       <div ref=${die} class=${cls("play-die", { "is-rolling": ph === "roll", "is-landing": ph === "ok" || ph === "no", "is-fading": ph === "ok-leave", "is-tipping": ph === "no-leave" })}>
-        <span class=${cls("ork-die big", { "is-rolling": !landed, "face-ok": ok, "face-no": no, "is-landed": landed })} style=${n === 6 ? undefined : `--_n:${n}`} aria-hidden="true"></span>
+        <span class=${cls("ork-die big", { "is-rolling": !landed, "face-ok": ok, "face-no": no, "is-landed": landed, "is-landing": ph === "ok" || ph === "no" })} style=${n === 6 ? undefined : `--_n:${n}`} aria-hidden="true"><${DieCube} /></span>
       </div>
     </div>
     ${(ph === "fly" || ph === "roll") && html`<${StageLine} b=${b} />`}
