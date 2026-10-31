@@ -5,6 +5,8 @@ that write its spec and do its work, in order, worked out by the Orkmaster by **
     shape(root, how, route)                             # {short, reproduces, offer} of a route as it stands, after an edit
     parties(root)                                       # the project's parties a route may name: all but General, Team, Ideation and Release
     reproduces(text)                                    # a bug's report holds a failure's lines, a stack trace or a failing test
+    with_play(root, state_dir, slug, how, route)        # `how` once a bug's kept play is read (realm/idea_play.py): a bug whose mark holds an error or a failed request `reproduces`, as the lines of a report do
+    tech_party(root)                                    # the project's Tech party, "" with none
     edit(root, current, wanted)                         # the route after the person's edit (a party off, one added); ValueError for one a route cannot name
     prompt(text, parties) / read_answer(text, parties)  # the one cheaper call, made only when code finds no party (step `route`, no tools, no reads)
     cost(state_dir, route, short, root=, settings=)      # {calls, usd_low, usd_high}: the calls counted by rule, priced from the tiers their steps run on
@@ -30,7 +32,7 @@ import time
 from pathlib import Path
 from typing import Any, Iterable
 
-from orkboard.realm import goal_team, goal_types, idea_route, idea_spend, idea_target, ideas, library, orkmaster, party_recipes, roles
+from orkboard.realm import goal_team, goal_types, idea_play, idea_route, idea_spend, idea_target, ideas, library, orkmaster, party_recipes, roles
 
 CRAFT_ORDER = ("product", "design", "engineering", "data", "marketing")      # the product's craft, the look's, the code's, the running's, the marketing's
 OFFER_SHORT = ("tidy", "balance")                                              # a small goal the short way is offered for (a bug is always short): §118.2
@@ -132,6 +134,22 @@ def shape(root: Path, how: dict, route_: list[dict]) -> dict:
     short = len(on) == 1 and ((kind == "bug" and on[0] == tech) or kind in OFFER_SHORT)
     return {"short": short, "reproduces": short and kind == "bug" and bool(how.get("failure")),
             "offer": [tech] if how.get("touched") and tech and tech not in on else []}      # §156.6: the marks' parts of System are Tech's map
+
+
+def tech_party(root: Path) -> str:
+    """The project's Tech party (the first of the engineering craft; a bug is its alone): "" in a project with none."""
+    return _tech(parties(root))
+
+
+def with_play(root: Path, state_dir: Path, slug: str, how: dict, route_: list[dict]) -> dict:
+    """`how` (`route_how`) as it stands once the goal's kept play is read (docs/specs/115-the-live-product-under-each-leaders-eyes.md §5): a goal with a mark of the kind *Bug* is a bug
+    whatever its words say, and a bug whose mark holds an error or a failed request has the failure its report would hold, so it `reproduces` (the short way skips the diagnosis call).
+    `how` unchanged for any other goal."""
+    marks = [m for m in idea_play.read(state_dir, slug) if m["kind"] == "bug"]
+    if not marks:
+        return how
+    seen = {**how, "kind": "bug", "failure": bool(how.get("failure")) or any(m["errors"] or m["requests"] for m in marks)}
+    return {**seen, **shape(root, seen, route_)}
 
 
 def route(state_dir: Path, root: Path, text: str, party: str = "", marks: Iterable[Any] = ()) -> dict:
