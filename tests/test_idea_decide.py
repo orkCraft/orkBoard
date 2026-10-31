@@ -357,3 +357,50 @@ def test_a_decision_the_orkmaster_could_not_word_names_the_overruled_as_well(hos
     slug = _overruled(host, parties, model, answer="I am sorry, I cannot", **NO)
     d = spec_sections.record(host.ideas.state_dir, slug)["decision"]
     assert d["by"] == "code" and f"Against {host.ideas.keeper._name('architect')}: It adds a third caller to server/ws" in d["text"]
+
+
+# -- a decision with no goal (spec 116 §4: a hypothesis's verdict) -----------------------------------------------------------------------------------
+
+def test_write_decision_appends_the_next_numbered_entry_with_no_goal_and_commits_it_to_dev(host):
+    k = host.ideas.keeper
+    tree = host.ideas._decision_tree()
+    first = k.write_decision("Hypothesis held: People want a sketch", "Signal: most ask for one\n\n## Not a heading of the file's own", tree)
+    second = k.write_decision("Hypothesis refuted: Teams want sharing", "Why: nobody asked.", tree)
+    assert (first["number"], second["number"]) == (1, 2) and first["path"] == "docs/decisions.md" and first["commit"] and first["held"] == "" and first["pages"] >= 0
+    log = git(host.repo_root, "show", "dev:docs/decisions.md")
+    assert log.startswith("# Decisions\n\n## 1. Hypothesis held: People want a sketch (") and ", the person and Orkboard)\n\nSignal: most ask for one" in log
+    assert "### Not a heading of the file's own" in log
+    assert [h.split(" (")[0] for h in decisions_log.headings(log)] == ["1. Hypothesis held: People want a sketch", "2. Hypothesis refuted: Teams want sharing"]
+    assert git(host.repo_root, "rev-parse", "dev") == second["commit"] and git(host.repo_root, "log", "-1", "--format=%s", "dev") == "board: decision 2 — Hypothesis refuted: Teams want sharing"
+    assert not (host.repo_root / "docs" / "decisions.md").exists()
+
+
+def test_write_decision_without_the_boards_tree_writes_the_working_copy_and_commits_nothing(host):
+    got = host.ideas.keeper.write_decision("A decision", "Why: because.")
+    assert got["number"] == 1 and got["commit"] == "" and got["path"] == "docs/decisions.md"
+    assert (host.repo_root / "docs" / "decisions.md").read_text(encoding="utf-8").startswith("# Decisions\n\n## 1. A decision (")
+    assert host.ideas.keeper.write_decision("Another", "Why: too.")["number"] == 2
+
+
+def test_write_decision_needs_its_words_and_cuts_a_long_title(host):
+    k = host.ideas.keeper
+    for title, body in (("", "Why: x."), ("T", "  "), ("   ", "Why: x.")):
+        with pytest.raises(idea_keeper.KeeperError, match="needs its words"):
+            k.write_decision(title, body)
+    k.write_decision("t" * 300, "Why: x.")
+    assert len(decisions_log.headings((host.repo_root / "docs" / "decisions.md").read_text(encoding="utf-8"))[0].split(" (")[0]) <= 123
+
+
+def test_write_decision_follows_the_path_the_project_chose(host):
+    (host.ideas.state_dir).mkdir(parents=True, exist_ok=True)
+    (host.ideas.state_dir / "project.json").write_text(json.dumps({"decisions": "notes/adr.md"}), encoding="utf-8")
+    assert host.ideas.keeper.write_decision("A decision", "Why: x.")["path"] == "notes/adr.md"
+    assert (host.repo_root / "notes" / "adr.md").read_text(encoding="utf-8").startswith("# Decisions\n\n## 1. A decision (")
+
+
+def test_a_goals_decision_and_a_goalless_one_share_the_numbers(host, parties, model):
+    slug = _decided(host, parties, model)
+    host.ideas.keeper.sections = lambda s: None
+    tree = host.ideas._decision_tree()
+    assert host.ideas.keeper.write_decision("No goal", "Why: x.", tree)["number"] == 1
+    assert host.command("ideas.confirm", {"idea": slug})["number"] == 2
