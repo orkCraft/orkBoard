@@ -3920,6 +3920,12 @@ spec 107 §9.2's logo shown while it starts):
 6. Later the same day, the owner: **the bug under the glass (Save logs, §182.12) leaves the hand for the top right**, a quiet icon
    after *Stop all* at the tabs' end, its panel opening downward; the hand's right end is the die and the potions (the die's 69 px
    folded the first lane's fan at 1280 and overlapped the first potion at 390).
+7. Later the same day, the owner: *the die should feel like a 3D object; now it looks like a tile*. **The die is a cube** (orkUI
+   0.24.0): six faces in CSS 3D seen from above and before, lit from above so a face darkens as it turns away; its box 69 × 72
+   (`big` 138 × 144), a face 18 cells. **Rolling, the cube tumbles** (quarter turns, rising on an edge); **landing, its face rolls
+   in from the back and it drops** onto the pane; **hovered, it rocks on its edges**. The slot on the pane only drifts and the
+   flight barely turns flat (a flat spin would turn the table under it). The faces, the tick and the cross, the words, the
+   lean and reduced motion are as in 2–4.
 The owner's call.
 
 ## 191. A project with no preview or no gate: the die sleeps, and with no gate there is no ring and no Release corner (31 October, the owner)

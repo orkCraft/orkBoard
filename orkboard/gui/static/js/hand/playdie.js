@@ -1,6 +1,6 @@
-// The Play die (docs/specs/112-the-bars-marks-and-the-play-die.md §3.2–§3.3, decisions §190.2–§190.3): Play is a die lying in the hand, at its right end, left of the potions — orkUI's `.ork-die` (0.22.0), seen from above, the card's greys with
-// pips in the muted ink, turned by the lean token — and its word under it, as a potion's share is: *Play*, *Playing* while the preview is open and its build plays. The pane's head has no Play any more. Hovered, it wobbles once (`is-wobbling`, put on
-// at pointer enter and taken off at its `animationend`) and stays lifted; not under reduced motion. Pressed it opens the `play` view over the pane (as the title's button did), and pressed again, while that view is open, it closes it (`aria-label`
+// The Play die (docs/specs/112-the-bars-marks-and-the-play-die.md §3.2–§3.3, decisions §190.2–§190.3): Play is a die lying in the hand, at its right end, left of the potions — orkUI's `.ork-die` (a cube in CSS 3D since 0.24.0: `DieCube`, its six faces, seen from above, lit from above, the card's greys with
+// pips in the muted ink), turned by the lean token — and its word under it, as a potion's share is: *Play*, *Playing* while the preview is open and its build plays. The pane's head has no Play any more. Hovered, it wobbles once (`is-wobbling`: the cube rocks on its edges, put on
+// at pointer enter and taken off at the cube's `animationend` named `ork-die-wobble`) and stays lifted; not under reduced motion. Pressed it opens the `play` view over the pane (as the title's button did), and pressed again, while that view is open, it closes it (`aria-label`
 // *Play: the project's preview of dev*, *Close the preview* while open). It is a `<button>`; the die inside is `aria-hidden`. On a touch phone upright (frame/upright.js) and in the phone's app there is no Play: no die.
 // **Asleep** (docs/specs/113-a-project-with-no-preview-or-no-gate.md §3, decisions §191.1): a project with no preview (the snapshot's `preview` is "": no checks.toml `preview`, no index.html, no dev script) has a die that sleeps: grey and still
 // (`is-asleep`: no wobble, no lift, no glow), its word still *Play*, its `title` *Nothing to play yet* (and ': say how the project opens' after it for a screen reader). Pressed, it opens the play view as always, which says *Nothing here yet* and how, and throws nothing.
@@ -21,6 +21,9 @@ export const warmed = signal(0);              // counts the views opened on a bu
 
 export const PLAY = "Play", PLAYING = "Playing", PLAY_WORDS = "Play: the project's preview of dev", CLOSE_WORDS = "Close the preview";
 export const ASLEEP = "Nothing to play yet", ASLEEP_WORDS = `${ASLEEP}: say how the project opens`;
+
+/** What orkUI's die holds (0.24.0): its cube and the cube's six faces; the die's classes (its face, its state) say which face is up and how it moves. */
+export const DieCube = () => html`<span class="ork-die__cube"><i class="ork-die__face is-up"></i><i class="ork-die__face is-front"></i><i class="ork-die__face is-right"></i><i class="ork-die__face is-back"></i><i class="ork-die__face is-left"></i><i class="ork-die__face is-down"></i></span>`;
 
 /** The project has no preview to play (the snapshot's `preview` is ""; undefined, before the first snapshot, is not): the die sleeps. */
 export const asleepNow = () => town.value?.preview === "";
@@ -54,7 +57,7 @@ export function PlayDie() {
   const ended = (e) => { if (e.animationName === "ork-die-wobble") setWob((w) => (w.left > 1 ? { key: w.key + 1, left: w.left - 1 } : { key: w.key, left: 0 })); };
   return html`<button ref=${button} type="button" class=${cls("hand-die", { "is-gone": gone, "is-asleep": asleep })} data-open=${open ? "1" : undefined} aria-label=${asleep && !open ? ASLEEP_WORDS : words} title=${asleep && !open ? ASLEEP : words}
       onClick=${pressPlay} onPointerEnter=${hover}>
-    <span key=${wob.key} class=${cls("ork-die face-5", { "is-playing": glow, "is-wobbling": wob.left > 0 && !asleep })} aria-hidden="true" onAnimationEnd=${ended}></span>
+    <span key=${wob.key} class=${cls("ork-die face-5", { "is-playing": glow, "is-wobbling": wob.left > 0 && !asleep })} aria-hidden="true" onAnimationEnd=${ended}><${DieCube} /></span>
     <span class="hand-die__word">${glow ? PLAYING : PLAY}</span>
   </button>`;
 }
