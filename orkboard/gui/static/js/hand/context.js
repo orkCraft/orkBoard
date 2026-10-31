@@ -14,7 +14,7 @@ import { goalOfStop } from "./data.js";
 const WAITS = "The work waits for your answer";
 
 /** The Orkmaster's crowned head, as the map names it (the hand's `orkHead` for a stop with none of its own). */
-const orkHeadOf = () => {
+export const orkHeadOf = () => {
   const o = mapData.value?.project?.orkmaster || null;
   return { race: o?.race || "peon", tier: o?.tier || "crown" };
 };
@@ -58,14 +58,14 @@ export function contextOf(s) {
 /** The page of the goal's way it is in (§142): Talk until it is decided, else its Spec. */
 const pageOf = (idea) => (phaseOf(idea) === "talk" ? "talk" : "spec");
 
-/** The context of the card on top of the stack. */
-export function Context({ s }) {
-  const c = contextOf(s), open = c.idea && !c.idea.startsWith("party:") ? () => {
+/** The context of the card on the screen. `bare`: the goal's own header is drawn above it (hand/upway.js), so it leaves out the goal's line and its press (the way's phases open the goal's page). */
+export function Context({ s, bare = false }) {
+  const c = contextOf(s), open = !bare && c.idea && !c.idea.startsWith("party:") ? () => {
     const word = pageOf(c.idea) === "talk" ? "Talk" : "Spec";
     openOver(pageOf(c.idea), { idea: c.idea }, { title: "", key: "" }, word);      // no upright Board to name: the title says the page
   } : null;
   const inner = html`<span class="up-ctx__who ork-race">${c.head && html`<${Head} race=${c.head.race} tier=${c.head.tier} />`}<span class="ork-race__word">${c.who}</span></span>
-    ${c.goal && html`<span class="up-ctx__goal"><${Elem} name=${c.goal.element} dim=${!c.goal.element} />${c.goal.sign && html`<${Sign} name=${c.goal.sign} />`}<span class="up-ctx__name">${c.goal.name}</span></span>`}
+    ${c.goal && !bare && html`<span class="up-ctx__goal"><${Elem} name=${c.goal.element} dim=${!c.goal.element} />${c.goal.sign && html`<${Sign} name=${c.goal.sign} />`}<span class="up-ctx__name">${c.goal.name}</span></span>`}
     ${c.project && html`<span class="up-ctx__goal"><span class="up-ctx__name">${c.project}</span></span>`}
     ${c.why && html`<span class="up-ctx__why">${c.why}</span>`}
     ${c.pick && html`<span class="up-ctx__rec">Recommended: ${c.pick}</span>`}

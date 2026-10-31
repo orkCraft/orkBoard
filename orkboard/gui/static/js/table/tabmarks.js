@@ -46,7 +46,7 @@ export function projectMarks() {
 }
 
 /** One side in words: *Does on the default (now Claude Code)*, *Does on Claude Code, set for this party*, *Does waits for Claude Code until Thu 09:00*; with no mode (the host does not say) *Does on Claude Code*. A column that mixes tools says *and others*. */
-function sideWords(verb, tool, mode, mixed) {
+export function sideWords(verb, tool, mode, mixed) {
   const name = toolName(tool), others = mixed ? " and others" : "";
   if (mode === "default") return `${verb} on the default (now ${name})`;
   const dry = mode === "set" ? dryUntil(tool) : null;
@@ -62,7 +62,7 @@ export function marksWords(m) {
 
 /** One tool's mark: its ink mark (its colour on the open tab), its initial with none; outlined while its potion is hovered or focused (and, for a side that follows the default, while the default's potion is). `mode`: the side's
  *  (see `marksOf`): `"default"` draws it in a small frame, a `"set"` tool that is dry dim with the moon beside it. */
-function Mark({ id, on, mode = "" }) {
+export function Mark({ id, on, mode = "" }) {
   const dry = mode === "set" ? dryUntil(id) !== null : false, marked = markedTool.value === id || (mode === "default" && markedDefault.value);
   const one = !MARKED.includes(id)
     ? html`<span class=${cls("table-tab__initial", { "is-marked": marked })} data-tool=${id} aria-hidden="true">${toolName(id).charAt(0).toUpperCase()}</span>`

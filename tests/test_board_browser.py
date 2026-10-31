@@ -131,7 +131,7 @@ async def test_orkboard_on_a_phone_the_shell_the_same_no_camp_file_no_horizontal
                 ctx.on("request", lambda r: urls.append(r.url))         # the page's and its service worker's
                 page = await ctx.new_page()
                 page.on("pageerror", lambda e: errors.append(str(e)))
-                await page.goto(f"{server.phones.address}/app/#pair={offer['code']}")
+                await page.goto(f"{server.phones.address}/app/old.html#pair={offer['code']}")
                 await page.locator(".gbar").first.wait_for(timeout=WAIT_MS)                               # the one window: the project in the top bar, the party in the goals bar, no tab bar (spec 49 §10, spec 52 §5)
                 assert await page.locator(".board-tabs").count() == 0 and await page.get_by_role("tab", name="Needs you").count() == 0
                 assert [(await b.get_attribute("aria-label")).split(":")[0] for b in await page.get_by_role("tab").all()] == ["Planning", "Implementation", "Checking"]   # the stage switch

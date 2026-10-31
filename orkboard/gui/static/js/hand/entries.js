@@ -1,8 +1,11 @@
 // What the phone's hand goes through, one goal at a time (docs/decisions.md §180.3, docs/specs/103 As built A and "Changed since"): every stop in Needs you's order grouped by its goal — a card of no goal (*Go on paid?*, a sign-in, a
 // project's question) is an entry of its own —, then each goal ready for main (hand/readycard.js), the ones put back with *Later* left out. The screen shows the entry `at` names: its first card on top, the rest of its cards
 // under it as edges. The arrows and a swipe move along the entries; answering the last card of an entry leaves it, and the place it held is the next one's.
+// Since spec 117 B (decisions §195.4) the arrows and the swipe are gone: the hand's row (uprow.js) is one card an entry and a press picks it (`pickEntry`); the entry's other cards show no edge, no count. The menu of the leaders (upmenu.js, spec 117 C)
+// picks a goal (`pickGoal`: its entry on the screen when it has one) or a party (`pickParty`).
 import { signal } from "@preact/signals";
 import { mapData } from "../shell/store.js";
+import { ORKMASTER, openTab, picked, tab } from "../frame/state.js";
 import { contextOf } from "./context.js";
 import { goalOfStop } from "./data.js";
 import { lichOf } from "../table/discard.js";
@@ -42,8 +45,26 @@ export function placeOf(entries) {
   return i;
 }
 
-/** Moves along the entries by `d` (-1 the previous, 1 the next); nothing beyond the ends. */
-export function step(entries, d) {
-  const i = placeOf(entries) + d, e = entries[i];
+/** The goal an entry is about ("" for a card of no goal). */
+export const goalOfEntry = (e) => (e.kind === "ready" ? e.ready.slug : goalOfStop(e.stops[0]) || "");
+
+/** A press on an entry of the hand's row: it is the one on the screen, and its goal the picked one (a party picked in the menu is let go). */
+export function pickEntry(e) {
+  at.value = e.key;
+  picked.value = goalOfEntry(e);
+  if (tab.value !== ORKMASTER) openTab(ORKMASTER);
+}
+
+/** A goal picked in the menu (upmenu.js): it is the picked one, and its entry in the hand, when it has one, the one on the screen. */
+export function pickGoal(entries, slug) {
+  const e = entries.find((x) => goalOfEntry(x) === slug);
   if (e) at.value = e.key;
+  picked.value = slug;
+  if (tab.value !== ORKMASTER) openTab(ORKMASTER);
+}
+
+/** A party picked in the menu: its leader's header is what is looked at (`tab` its slug), no goal picked. */
+export function pickParty(slug) {
+  picked.value = "";
+  openTab(slug);
 }

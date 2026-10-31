@@ -14,8 +14,7 @@
 // Who drinks from it (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §3.4, decisions §189.2): a potion hovered or focused marks its tool's marks on the tabs (`markedTool`, the tabs' second line: table/tabmarks.js, a 1 px outline), and its words add the parties
 // that do and that check on it (*2 parties do on it, 1 party checks on it*; `usesWords`).
 // The Play die lies at the potions' left (playdie.js, docs/specs/112-the-bars-marks-and-the-play-die.md §3.3, decisions §190.2): the same row, the same top edge; at the narrow width the two stand together at the row's end (mana.css).
-// Upright on a touch phone (docs/specs/103 §1.2.5, decisions §179.1) the tools are `Tools`: each its coloured mark with its share under it, no bottle, a 44 px target, in one row no taller than the …; the default framed (on the hand's screen
-// the tool now, else the Main tool: §178.3), its words the potion's.
+// On a touch phone (docs/specs/117 §3, decisions §195.3) the potions are the top row's bottles (uptop.js): the same `potionOf` and `framedOf`, the same words, the bottle at its small scale, the default framed.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Icon, ORKUI } from "../orkui.js";
@@ -67,7 +66,7 @@ export function potionOf(l, cost = null, framed = false, uses = "") {
 }
 
 /** One tool's mark in its own colour (orkUI's `marks/harness-<id>.png`, not the ink one); its initial in the body face with no mark. */
-function Who({ l }) {
+export function Who({ l }) {
   return MARKED.includes(l.provider)
     ? html`<img class="ork-mark" src=${`${ORKUI}/marks/harness-${l.provider}.png`} srcset=${`${ORKUI}/marks/harness-${l.provider}@2x.png 2x`} alt="" draggable="false" />`
     : html`<span class="hand-pot__initial" aria-hidden="true">${(l.name || l.provider || "?").charAt(0).toUpperCase()}</span>`;
@@ -136,39 +135,6 @@ function useFrame(box, frame, key, deps) {
     wrap.querySelectorAll(".hand-pot").forEach((p) => ro.observe(p));
     return () => ro.disconnect();
   }, [key, ...deps]);
-}
-
-/** One tool upright on a touch phone: its mark with its share under it (the share in the warn or the danger colour as it runs low), no bottle; its words are the potion's. */
-function Tool({ l, from, framed }) {
-  const p = potionOf(l, null, framed);
-  return html`<button type="button" class=${cls("hand-pot hand-pot--tool", `is-${p.level}`, { "is-default": framed })} data-provider=${l.provider} data-level=${p.level} data-default=${framed ? "1" : undefined}
-      title=${p.words} aria-label=${p.words} onClick=${() => openOver("limits", { provider: l.provider }, from, `${l.name}: what used it`)}>
-    <${Who} l=${l} /><span class="hand-pot__share">${p.share}</span>
-  </button>`;
-}
-
-/** The paid slot upright: the tool's mark with *API* under it (its words say the price and until when). */
-function PaidTool({ paid, from, framed }) {
-  const words = paidWordsOf(paid, framed);
-  return html`<button type="button" class=${cls("hand-pot hand-pot--tool hand-pot--paid", { "is-default": framed })} data-provider=${paid.tool} data-paid="1" data-default=${framed ? "1" : undefined} title=${words} aria-label=${words}
-      onClick=${() => openOver("limits", { provider: paid.tool }, from, `${paid.name}: what used it`)}><${Who} l=${{ provider: paid.tool, name: paid.name }} /><span class="hand-pot__share">API</span></button>`;
-}
-
-/** The AI tools' row upright on a touch phone (spec 103 §1.2.5): a mark and a share each, the default framed (the frame slides as on the desktop). A press opens what used it over the pane. */
-export function Tools() {
-  const box = useRef(), frame = useRef(), limits = town.value?.limits || [], mana = town.value?.mana || null, paid = mana?.paid || null;
-  const slots = PLACES - (paid ? 1 : 0), over = limits.length > slots, shown = over ? limits.slice(0, slots - 1) : limits, more = limits.length - shown.length;
-  const key = framedOf({ limits, mana, open: ORKMASTER, parties: [], shown }), places = shown.length + (over ? 1 : 0) + (paid ? 1 : 0);
-  useFrame(box, frame, key, [places]);
-  if (!limits.length && !paid) return null;
-  const from = { title: "", key: "" };                                                  // the Board is not reached upright: the opened place says its own title
-  return html`<div class="hand-mana hand-mana--tools" ref=${box} role="group" aria-label="What is left of your AI tools" data-n=${places} data-default=${key || undefined}>
-    <span class="hand-mana__frame" ref=${frame} aria-hidden="true" hidden></span>
-    ${shown.map((l) => html`<${Tool} key=${l.provider} l=${l} from=${from} framed=${key === l.provider} />`)}
-    ${over && html`<button type="button" class="hand-pot hand-pot--more" title=${`${more} more tools: what is left of them`} aria-label=${`${more} more tools: what is left of them`}
-      onClick=${() => openOver("limits", {}, from, "What is left of your AI tools")}><span class="hand-pot__initial" aria-hidden="true">+${more}</span></button>`}
-    ${paid && html`<${PaidTool} key="paid" paid=${paid} from=${from} framed=${key === "paid"} />`}
-  </div>`;
 }
 
 /** The potions. `lifted`: the stop now lifted in the hand, whose cost names the tool it takes from. */

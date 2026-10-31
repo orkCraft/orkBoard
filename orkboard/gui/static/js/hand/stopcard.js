@@ -40,7 +40,7 @@ export function Mark({ s, big = false }) {
 /** The goal's element, bare; dim while it has none (a stop of no goal). */
 export const ElemOf = ({ s }) => html`<${Elem} name=${s.node?.element || ""} dim=${!s.node?.element} />`;
 
-const headOf = (s) => wayOf(s.kind)?.head?.(s) || s.head || s.party?.head || null;           // a goal's way's card may name its asker (spec 100: the route's is the Orkmaster)
+export const headOf = (s) => wayOf(s.kind)?.head?.(s) || s.head || s.party?.head || null;           // a goal's way's card may name its asker (spec 100: the route's is the Orkmaster)
 const footOf = (s) => wayOf(s.kind)?.foot?.(s) ?? (s.text || s.why || "");           // a goal's way's card may say its own foot (spec 100 C: *Decision 118*, *Design and Tech disagree*)
 /** What a card is called for a screen reader and a long press: *Asks you in Tech: The title*. */
 export const labelOf = (s) => `${s.label}${s.other && s.party?.name ? ` in ${s.party.name}` : ""}: ${s.full}`;

@@ -10,7 +10,7 @@ import { SeatPop } from "./seatpop.js";
 import { openParties } from "./parties.js";
 import { Menu } from "./menu.js";
 
-function Seat({ g, m, open, onPress }) {
+export function Seat({ g, m, open, onPress }) {
   const tool = toolOf(g, m), words = [m.name, TIER_WORDS[m.head?.tier]].filter(Boolean).join(", ");
   return html`<button type="button" class=${cls("table-seat", { "is-on": open, "is-work": m.state === "work", "is-needs": m.state === "needs" })} data-seat=${m.slug} data-band=${m.band}
     aria-haspopup="dialog" aria-expanded=${String(open)} aria-label=${`${words}, runs on ${tool.name}`} title=${`${m.name} · ${tool.name}`} onClick=${onPress}>

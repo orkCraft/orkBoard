@@ -410,7 +410,7 @@ async def _phone(repo: Path, monkeypatch, init: str = "", extra: str = ""):
                 page = await ctx.new_page()
                 errors: list[str] = []
                 page.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
-                await page.goto(f"{server.phones.address}/app/#pair={offer['code']}{extra}")
+                await page.goto(f"{server.phones.address}/app/old.html#pair={offer['code']}{extra}")
                 await page.locator(".arena").wait_for(state="attached", timeout=WAIT_MS)
                 await page.locator(".gbar, .arena > .arena-empty:not(:has-text('Loading')), .arena > p.arena-empty:not(:has-text('Loading'))").first.wait_for(state="attached", timeout=WAIT_MS)      # the goals bar (or, with no project or no party, what it says)
                 try:                                  # the party's window read (its Map comes with its goals): drawn once more then

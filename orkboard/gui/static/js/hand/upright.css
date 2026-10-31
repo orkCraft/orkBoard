@@ -1,6 +1,6 @@
-/* The hand on a phone (docs/specs/103-the-phones-app-a-native-frame.md §1, decisions §174.1, §178, §179, §180; the mockups docs/mockups/phone/hand.html and portal.html): a touch window, narrow or low, the hand its whole screen. Layout only: every colour, face and corner is orkUI's.
+/* The hand on a phone (docs/specs/117-the-phone-a-menu-of-the-leaders.md §3, docs/specs/103-the-phones-app-a-native-frame.md §1, decisions §174.1, §178, §179, §180, §195; the mockup docs/mockups/phone/sidebar.html): a touch window, narrow or low, the hand its whole screen. Layout only: every colour, face and corner is orkUI's.
    frame/upright.js says when (`pointer: coarse` and narrow or low); the frame carries it as `data-upright`, and `data-over` while a thing is open over the pane (a limit's story, a goal's way, Settings): the table's pane then takes the screen,
-   its row of heads gone, and ← comes back to the hand. A narrow window with a fine pointer keeps the table over the hand (frame.css, table.css, hand.css). */
+   its row of heads gone, and ← comes back to the hand. A narrow window with a fine pointer keeps the table over the hand (frame.css, table.css, hand.css). From the top: the top row, the middle (it scrolls), the hand's row. */
 
 .frame[data-upright] { display: flex; flex-direction: column; }
 .frame[data-upright] .frame-table { display: none; }
@@ -11,17 +11,40 @@
 
 .hand.hand-up { position: relative; flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; box-sizing: border-box; border-top: 0; }
 
-/* the tools' row at the top left of *The Board*, no taller than it (decisions §179.1): each tool its mark and its share under it, a 44 px target */
-.up-top { flex: none; display: flex; align-items: center; gap: var(--ork-2); padding: var(--ork-2) var(--ork-4) 0; }
-.hand-up .up-top .hand-mana--tools { order: 0; margin: 0 auto 0 0; display: flex; align-items: stretch; gap: var(--ork-1); min-width: 0; }
-.hand-up .hand-pot--tool { box-sizing: border-box; height: var(--ork-tap); min-width: var(--ork-tap); padding: 0; justify-content: center; gap: 2px; }
-.hand-up .hand-pot--tool .ork-mark { width: 16px; height: 16px; }
-.hand-up .hand-pot--tool .hand-pot__share { font-size: 12px; line-height: 14px; }
-.hand-up .hand-pot--more { height: var(--ork-tap); min-width: var(--ork-tap); padding: 0; }
+/* the top row (60 px): the crown, the potions as bottles, the die, the discard */
+.up-top { flex: none; box-sizing: border-box; display: flex; align-items: center; gap: var(--ork-2); height: 60px; padding: 0 var(--ork-3); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.hand-up .up-crown { appearance: none; margin: 0; cursor: pointer; color: inherit; box-sizing: border-box; width: var(--ork-tap); min-width: var(--ork-tap); height: var(--ork-tap); min-height: var(--ork-tap); padding: 0; display: inline-flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-frame); background: var(--ork-panel); }
+.up-pots { flex: 1 1 auto; min-width: 0; display: flex; gap: 2px; }
+.up-pot { appearance: none; position: relative; box-sizing: border-box; flex: none; width: 48px; height: 56px; margin: 0; padding: 2px 0 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 1px;
+  border: 2px solid transparent; background: none; color: var(--ork-ink); font: var(--ork-type-caption); cursor: pointer; }
+.up-pot.is-default { border-color: var(--ork-ink); clip-path: var(--ork-notch); background: var(--ork-panel); }
+.up-pot:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.up-pot .ork-mark, .up-pot .hand-pot__initial { position: absolute; left: 2px; top: 2px; width: 12px; height: 12px; }
+.up-pot .hand-pot__initial { font-size: 11px; line-height: 12px; }
+.up-pot__slot { display: flex; flex: none; align-items: flex-end; justify-content: center; width: 28px; height: 36px; }                      /* the large bottle's box at 2 px a cell (14 x 18 cells): every bottle stands on its floor in it */
+.up-pot--paid .up-pot__slot .ork-icon { width: 24px; height: 24px; margin-bottom: var(--ork-1); color: var(--ork-ink-muted); }
+.up-pot__share { color: var(--ork-ink); font: var(--ork-type-caption); font-size: 11px; line-height: 13px; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.up-pot.is-warn .up-pot__share { color: var(--ork-alert); }
+.up-pot.is-danger .up-pot__share { color: var(--ork-danger); }
+.up-pot.is-unread .up-pot__share, .up-pot--more .up-pot__initial { color: var(--ork-ink-muted); }
+.up-pot--more { justify-content: center; }
+.up-pot--more .up-pot__initial { position: static; width: auto; height: auto; font: var(--ork-type-caption); font-weight: 600; }
+.up-die { appearance: none; box-sizing: border-box; flex: none; width: 52px; height: 52px; margin: 0; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: 0; background: none; cursor: pointer; }
+.up-die:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.up-die .ork-die { --_n: 2; rotate: calc(var(--ork-motion-lean) * -1); }                                                                    /* orkUI's die at two pixels a cell */
+.up-die.is-asleep .ork-die { filter: grayscale(1); opacity: 0.4; }
+.up-pile { appearance: none; position: relative; box-sizing: border-box; flex: none; width: 44px; height: 52px; margin: 0; padding: 0; border: 0; background: none; cursor: pointer; }
+.up-pile:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.up-pile > * { position: absolute; left: 6px; top: 4px; width: 32px; height: 44px; }
+.up-pile > .ork-card-back:first-child { transform: translate(3px, 1px) rotate(6deg); }
+.up-pile > .up-pile__top { display: flex; align-items: center; justify-content: center; padding: 0; }
+.up-pile__top .ork-sign { color: var(--ork-success); }
+.up-pile.is-on .up-pile__top { border-color: var(--ork-ink); }
 
-/* the top card's context: at most a quarter of the screen, its own scroll past that; a press opens the goal's way */
-.up-ctx { flex: none; box-sizing: border-box; width: 100%; max-height: 25dvh; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; align-items: stretch; gap: var(--ork-2);
-  margin: 0; padding: var(--ork-3) var(--ork-4) var(--ork-4); border: 0; background: none; color: var(--ork-ink); font: var(--ork-type-body); text-align: left; }
+/* the middle: the card's context, the card with its answers, *Spec*; it scrolls as a whole */
+.up-look { flex: 1 1 0; min-height: 0; box-sizing: border-box; overflow-y: auto; overscroll-behavior: contain; display: flex; flex-direction: column; gap: var(--ork-3); padding: 0 var(--ork-4) var(--ork-4); }
+.up-ctx { flex: none; box-sizing: border-box; width: 100%; display: flex; flex-direction: column; align-items: stretch; gap: var(--ork-2);
+  margin: 0; padding: var(--ork-3) 0 0; border: 0; background: none; color: var(--ork-ink); font: var(--ork-type-body); text-align: left; }
 button.up-ctx { appearance: none; cursor: pointer; }
 button.up-ctx:focus-visible { outline: var(--ork-1) solid var(--ork-ink); outline-offset: calc(var(--ork-1) * -1); }
 .up-ctx__who { flex: none; max-width: 100%; }
@@ -34,32 +57,15 @@ button.up-ctx:focus-visible { outline: var(--ork-1) solid var(--ork-ink); outlin
 .up-ctx__wait { display: flex; align-items: center; gap: var(--ork-2); }
 .up-ctx__wait .ork-sign { flex: none; color: var(--ork-alert); }
 
-/* ONE goal's cards: the top card about 68% of the screen wide, centred, turned a degree, its answers inside; the backs of the goal's other cards show their edges under it. The deck lies under the thumb, so the stack stops above it. */
-.up-stack { position: relative; flex: 1 1 0; min-height: 0; margin: 0 0 88px; touch-action: pan-y; }
-.up-edge { position: absolute; left: 50%; width: 68%; max-width: 420px; top: 0; bottom: var(--ork-2); aspect-ratio: auto; pointer-events: none; translate: -50% 0;
-  transform: translate(calc(var(--dx, 0) * 0.6px), calc(var(--ork-deck-i, 1) * 3px)) rotate(calc(var(--rot, 0) * 0.4deg)); }
-.hand .hand-lifted.hand-lifted--up { --hc-head: auto; --hc-window: 52px; position: absolute; top: 0; bottom: var(--ork-2); left: 50% !important; right: auto; width: 68%; max-width: 420px; height: auto; min-height: 0; max-height: none; translate: -50% 0;
-  rotate: -1deg; transform-origin: 50% 50%; z-index: 1; }
+/* the picked entry's card in its place: full width, not turned, its height its content's (the middle scrolls), its answers on it */
+.hand .hand-lifted.hand-lifted--up { --hc-head: auto; --hc-window: 52px; position: relative; flex: none; top: auto; bottom: auto; left: auto !important; right: auto; width: 100%; max-width: none; height: auto; min-height: 0; max-height: none;
+  translate: none; rotate: none; transform-origin: 50% 50%; z-index: auto; }
 .hand-lifted--up .hand-lifted__body { padding-bottom: var(--ork-1); }
 .hand-lifted--up .hand-answers { flex-direction: column; align-items: stretch; }
 .hand-lifted--up .hand-answers .ork-btn, .hand-lifted--up .hand-lifted__body > .ork-btn { min-height: var(--ork-tap); justify-content: center; }
 .hand-lifted--up .hand-way__acts { flex-direction: column; align-items: stretch; }
 .hand-lifted--up .hand-way__acts .ork-btn { min-height: var(--ork-tap); justify-content: center; }
 
-/* the arrows at the two sides of the context (each a 44 px target: the neighbour goal's leader head and element) and *Spec* under it */
-.up-navrow { flex: none; display: flex; align-items: flex-start; gap: var(--ork-1); padding: 0 var(--ork-2); }
-.up-navmid { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: stretch; }
-.up-nav { flex: none; box-sizing: border-box; width: var(--ork-tap); min-width: var(--ork-tap); height: var(--ork-tap); padding: 0; margin-top: var(--ork-2); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0; }
-.up-nav:disabled { visibility: hidden; }
-.up-nav .ork-icon { width: 16px; height: 16px; }
-.up-nav__who { display: flex; align-items: center; gap: 2px; pointer-events: none; }
-.up-nav__who .ork-elem { width: 12px; height: 12px; }
-.up-spec { align-self: flex-start; min-height: var(--ork-tap); margin: 0 var(--ork-3); max-width: calc(100% - 2 * var(--ork-3)); text-align: left; }
-
-/* the … menu's rows and the project's name over them */
-.hand-up .table-menu__btn { min-width: var(--ork-tap); min-height: var(--ork-tap); }
-.hand-up .table-menu__item { min-height: var(--ork-tap); }
-.up-menu__project { margin: 0; padding: var(--ork-3) var(--ork-4); font: var(--ork-type-body); font-weight: 600; border-bottom: var(--ork-line) solid var(--ork-frame); overflow-wrap: anywhere; }
 
 /* a goal ready for main: the portal on the card's body */
 .hand-ready__body { align-items: center; justify-content: center; text-align: center; gap: var(--ork-3); }
@@ -82,16 +88,28 @@ button.up-ctx:focus-visible { outline: var(--ork-1) solid var(--ork-ink); outlin
 .q-here .q-choose__acts { justify-content: center; }
 .q-here .q-choose__acts .ork-btn { min-height: var(--ork-tap); }
 
-/* New goal: the green deck under the thumb (the old phone's button, pwa/shell-fab.js): two edges behind a back with the plus in the action colour */
-.up-deck { all: unset; box-sizing: border-box; cursor: pointer; position: fixed; z-index: 30; right: var(--ork-4); bottom: calc(var(--ork-3) + env(safe-area-inset-bottom, 0px)); width: 60px; height: 80px; }
-.up-deck__edge { position: absolute; width: 56px; height: 76px; box-sizing: border-box; background: var(--ork-canvas); border: var(--ork-line) solid var(--ork-action); clip-path: var(--ork-notch); }
-.up-deck__edge.e1 { right: 2px; top: 2px; }
-.up-deck__edge.e2 { right: 0; top: 0; }
-.up-deck__back { position: absolute; left: 0; bottom: 0; z-index: 1; width: 56px; height: 76px; box-sizing: border-box; display: flex; align-items: center; justify-content: center; color: var(--ork-action); background: var(--ork-card);
-  border: 2px solid var(--ork-action); clip-path: var(--ork-notch); }
-.up-deck__back .ork-icon { width: 28px; height: 28px; }
-.up-deck:active .up-deck__back { background: var(--ork-action); color: var(--ork-on-ink); }
-.up-deck:focus-visible .up-deck__back { box-shadow: inset 0 0 0 2px var(--ork-ink); }
+/* the hand's row (112 px, over the home bar's safe area): the entries' upper parts, scrolling sideways under the + card, which lies at its right end */
+.up-row { flex: none; position: relative; box-sizing: content-box; height: 112px; padding-bottom: env(safe-area-inset-bottom, 0px); border-top: var(--ork-line) solid var(--ork-frame); overflow: hidden; }
+.up-cards { position: absolute; left: 0; right: 0; top: 0; height: 112px; box-sizing: border-box; display: flex; align-items: flex-start; gap: var(--ork-2); padding: var(--ork-3) 92px 0 var(--ork-3);
+  overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; }
+.up-cards::-webkit-scrollbar { display: none; }
+button.ork-card.up-card { position: relative; flex: none; width: 88px; height: 124px; padding: var(--ork-2); display: flex; flex-direction: column; gap: var(--ork-1); text-align: left; }
+.up-card.is-picked { transform: translateY(-6px); border-color: var(--ork-ink); box-shadow: inset 0 0 0 1px var(--ork-ink); }
+.up-card__head { display: flex; gap: var(--ork-1); align-items: flex-start; min-width: 0; }
+.up-card__head .ork-elem { margin-top: 2px; }
+.up-card__name { flex: 1; min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-caption); font-size: 11px; line-height: 14px; font-weight: 600; }
+.up-card__window { position: relative; flex: none; margin-top: auto; height: 34px; display: flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-card-frame); }
+.up-card .hand-mark { display: inline-flex; color: var(--ork-ink-muted); }
+.up-card .hand-mark .ork-sign.big { transform: scale(0.8); }
+.up-card.asks .hand-mark, .up-card .hand-mark.is-alert { color: var(--ork-alert); }
+.up-card.fails .hand-mark, .up-card .hand-mark.is-danger { color: var(--ork-danger); }
+.up-card .hand-mark.is-ok { color: var(--ork-success); }
+.up-card__asker { position: absolute; right: var(--ork-2); bottom: 2px; display: inline-flex; }
+.up-card__asker .ork-race__head { width: 16px; height: 15px; }
+.up-plus { position: absolute; right: var(--ork-4); top: var(--ork-3); z-index: 2; width: 64px; height: 90px; }
+.hand-up .up-plus .hand-plus { width: 64px; height: 90px; padding: 0; display: flex; align-items: center; justify-content: center; rotate: calc(var(--ork-motion-lean) * 0.5); }
+.hand-up .up-plus .hand-plus > .ork-icon { width: 28px; height: 28px; }
+.hand-up .up-plus .hand-plus .ork-sigil { display: none; }
 
 /* the field over the keyboard, the microphone in its corner */
 .up-field { position: fixed; z-index: 40; left: 0; right: 0; bottom: 0; padding: var(--ork-3) var(--ork-4) calc(var(--ork-3) + env(safe-area-inset-bottom, 0px)); background: var(--ork-canvas); }
@@ -101,13 +119,7 @@ button.up-ctx:focus-visible { outline: var(--ork-1) solid var(--ork-ink); outlin
 .up-mid { flex: 1 1 0; min-height: 0; display: flex; align-items: center; justify-content: center; padding: var(--ork-4); }
 .up-none { margin: 0; text-align: center; font: var(--ork-type-body); color: var(--ork-ink-muted); }
 
-.up-body { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; }
-
-/* a phone on its side (a low window): the arrows and the context at the left, the goal's card at the right beside them, clear of the deck */
+/* a phone on its side (a low window): the hand's row is lower, so the middle keeps its room */
 @media (max-height: 499.98px) {
-  .up-body { flex-direction: row; }
-  .up-body > .up-navrow { flex: 1 1 0; min-width: 0; min-height: 0; overflow-y: auto; }
-  .up-body > .up-stack { flex: 1 1 0; min-width: 0; margin: 0 76px var(--ork-2) var(--ork-2); }
-  .hand-up .up-edge, .hand .hand-lifted.hand-lifted--up { width: 96%; max-width: none; }
-  .up-ctx { max-height: none; }
+  .up-row, .up-cards { height: 76px; }
 }
