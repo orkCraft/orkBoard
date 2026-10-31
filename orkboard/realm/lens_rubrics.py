@@ -1,5 +1,5 @@
 """The frame each craft's senior reviews its map by (docs/specs/109-each-leader-looks-as-a-senior-of-its-craft.md §2.1–§2.2; decisions §184): a few *aspects* a leader looks at, each with the question it asks
-and the kinds of hints of code (`realm/map_signals.py`) that ground it. Pure data and code; no face, no model.
+and the kinds of hints of code (`realm/map_signals.py`; for tech and design also the live product's, `realm/play_signals.py`: `error` and `failed` in *safety*, `slow` in *hotspots*, `dead_press` in *flow*, `again` in *status*) that ground it. Pure data and code; no face, no model.
 
     lens_rubrics.RUBRICS[craft] = {"framework": str, "short": str, "aspects": ({"id", "name", "ask", "signals": (kind, …)}, …)}     # the crafts: tech, design, product, game-design, art, release, marketing, run, liveops
     lens_rubrics.rubric(craft)                       # the craft's rubric, or None (a craft with none)
@@ -26,13 +26,13 @@ RUBRICS = {
              "short": "C4 · ISO 25010 · hotspots",
              "aspects": (_a("modularity", "Modularity", "Are the parts' edges clean: no cycles, no part reaching into many others?", "cycle", "fan_out", "unstable"),
                          _a("coupling", "Coupling", "Does a change ripple: a part everyone needs, a shared part changed from many containers?", "fan_in", "shared_churn"),
-                         _a("hotspots", "Hotspots", "Where is code both big and often changed, where bugs and slow work collect?", "big", "hotspot"),
+                         _a("hotspots", "Hotspots", "Where is code both big and often changed, where bugs and slow work collect?", "big", "hotspot", "slow"),
                          _a("testability", "Testability", "Is what changes often covered by tests?", "untested_churn"),
-                         _a("safety", "Security and reliability", "Does a part take people's input, secrets or money without a guard; is one part a single point of failure?"))},
+                         _a("safety", "Security and reliability", "Does a part take people's input, secrets or money without a guard; is one part a single point of failure?", "error", "failed"))},
     "design": {"framework": "Nielsen's ten usability heuristics, WCAG 2.2 AA, and the person's way through the screens",
                "short": "Nielsen · WCAG 2.2",
-               "aspects": (_a("flow", "The way through", "Can a person reach every screen and finish what they came for?", "loose", "dead_end"),
-                           _a("status", "State and errors", "Does each screen show loading, empty and error states and say what happened?", "no_states"),
+               "aspects": (_a("flow", "The way through", "Can a person reach every screen and finish what they came for?", "loose", "dead_end", "dead_press"),
+                           _a("status", "State and errors", "Does each screen show loading, empty and error states and say what happened?", "no_states", "again"),
                            _a("access", "Accessibility", "Text alternatives, keyboard, labels, contrast and touch targets of 24 px or more?", "a11y"),
                            _a("consistency", "Consistency", "Do the screens use one set of words, controls and layouts for the same thing?"),
                            _a("seen", "Seen", "Has each screen been looked at as a picture?", "no_picture"))},
