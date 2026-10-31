@@ -17,6 +17,7 @@ import { SpecButton } from "./upnav.js";
 import { DeckField } from "./updeck.js";
 import { Row } from "./uprow.js";
 import { Top } from "./uptop.js";
+import { Sheet } from "./upmenu.js";
 
 /** The hand on a phone. `root`: the hand's element ref (the keys), `stacks`: data.js `stacksOf`, `plus`: opens the field. */
 export function Upright({ root, stacks, plus }) {
@@ -32,6 +33,7 @@ export function Upright({ root, stacks, plus }) {
         <${SpecButton} idea=${goal} /></div>`
       : html`<div class="up-mid"><p class="up-none" role="status">Nothing waits for you.</p></div>`}
     <${Row} entries=${entries} cur=${cur} plus=${plus} />
+    <${Sheet} entries=${entries} />
     ${field && html`<${DeckField} />`}
   </footer>`;
 }

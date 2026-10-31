@@ -186,7 +186,7 @@ def test_the_screen_is_the_notice_the_top_row_the_middle_and_the_hand_row_from_t
     assert not log, "\n".join(log)
 
 
-def test_the_crown_is_a_44_px_button_at_the_left_of_the_top_row_and_opens_the_page_menu_until_the_menu_of_the_leaders_lands(gui):
+def test_the_crown_is_a_44_px_button_at_the_left_of_the_top_row_and_opens_the_menu_of_the_leaders(gui):       # the menu itself: tests/test_phone_menu_browser.py
     pg, host, log = open_up(gui)
     try:
         c = crown(pg)
@@ -194,26 +194,11 @@ def test_the_crown_is_a_44_px_button_at_the_left_of_the_top_row_and_opens_the_pa
         assert r["width"] >= 44 and r["height"] >= 44 and r["x"] < 16 and "/races/peon-crown" in c.locator("img").get_attribute("src"), "the Orkmaster's crowned head at the left"
         assert c.get_attribute("aria-expanded") == "false" and box(pots(pg).first)["x"] > r["x"] + r["width"] - 1
         c.click()
-        menu = pg.get_by_role("menu", name="The leaders and their goals")
-        menu.wait_for(timeout=WAIT_MS)
-        assert c.get_attribute("aria-expanded") == "true"
-        assert menu.get_by_role("menuitem").all_inner_texts() == ["Stop all", "Switch project", "Settings"] and menu.locator("[data-project]").inner_text().strip() == "Party game"
-        for b in menu.get_by_role("menuitem").all():
-            assert box(b)["height"] >= 44
-        m = box(menu)
-        assert m["x"] >= 0 and m["x"] + m["width"] <= pg.viewport_size["width"] + 1
+        pg.locator(".up-menu").wait_for(timeout=WAIT_MS)
+        assert c.get_attribute("aria-expanded") == "true" and pg.locator(".up-menu").get_attribute("aria-label") == "The leaders and their goals"
         pg.keyboard.press("Escape")
-        menu.wait_for(state="detached", timeout=WAIT_MS)
-        c.click()
-        menu.get_by_role("menuitem", name="Settings").click()
-        pg.wait_for_selector(".table-over", timeout=WAIT_MS)
-        assert pg.locator(".table-over").get_attribute("data-kind") == "settings" and pg.locator(".hand-up").is_hidden()
-        pg.get_by_role("button", name="Back").click()
-        pg.wait_for_selector(".hand-up", state="visible", timeout=WAIT_MS)
-        c.click()
-        menu.get_by_role("menuitem", name="Stop all").click()
-        pg.wait_for_timeout(300)
-        assert any("halt" in str(c) for c in host.log)
+        pg.locator(".up-menu").wait_for(state="detached", timeout=WAIT_MS)
+        assert pg.get_by_role("menu").count() == 0, "no **…** menu any more"
     finally:
         pg.close()
     assert not log, "\n".join(log)

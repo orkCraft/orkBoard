@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Icon } from "../orkui.js";
 
-/** `items`: [[word, run, danger?, icon?]]; `top`: something drawn above the items (the limits' chips at the narrow width); `face`: what the button shows in place of the **…** (the phone's crown, hand/updeck.js), `own`: its class. */
-export function Menu({ label, items, top = null, onOpen = null, face = null, own = "" }) {
+/** `items`: [[word, run, danger?, icon?]]; `top`: something drawn above the items (the limits' chips at the narrow width). */
+export function Menu({ label, items, top = null, onOpen = null }) {
   const [open, setOpen] = useState(false), box = useRef(), btn = useRef(), list = useRef();
   const close = (back = true) => { setOpen(false); if (back) btn.current?.focus(); };
   useEffect(() => {
@@ -23,8 +23,8 @@ export function Menu({ label, items, top = null, onOpen = null, face = null, own
     else if (e.key === "Tab") close(false);
   };
   return html`<span class=${cls("table-menu", { "is-open": open })} ref=${box}>
-    <button type="button" class=${cls("ork-btn quiet table-menu__btn", own)} ref=${btn} aria-haspopup="menu" aria-expanded=${String(open)} aria-label=${label} title=${label}
-      onClick=${() => { if (!open && onOpen) onOpen(); setOpen(!open); }}>${face || html`<${Icon} name="more-horizontal" />`}</button>
+    <button type="button" class="ork-btn quiet table-menu__btn" ref=${btn} aria-haspopup="menu" aria-expanded=${String(open)} aria-label=${label} title=${label}
+      onClick=${() => { if (!open && onOpen) onOpen(); setOpen(!open); }}><${Icon} name="more-horizontal" /></button>
     ${open && html`<div class="ork-menu table-menu__list" role="menu" aria-label=${label} ref=${list} onKeyDown=${keys}>
       ${top}
       ${items.map(([word, run, danger, icon]) => html`<button type="button" key=${word} role="menuitem" class=${cls("ork-menu__item table-menu__item", { "is-danger": !!danger })}

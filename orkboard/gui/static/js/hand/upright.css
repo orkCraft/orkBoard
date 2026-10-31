@@ -13,8 +13,7 @@
 
 /* the top row (60 px): the crown, the potions as bottles, the die, the discard */
 .up-top { flex: none; box-sizing: border-box; display: flex; align-items: center; gap: var(--ork-2); height: 60px; padding: 0 var(--ork-3); border-bottom: var(--ork-line) solid var(--ork-frame); }
-.hand-up .up-crown { box-sizing: border-box; width: var(--ork-tap); min-width: var(--ork-tap); height: var(--ork-tap); min-height: var(--ork-tap); padding: 0; display: inline-flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-frame); background: var(--ork-panel); }
-.hand-up .up-top .table-menu__list { left: 0; right: auto; }
+.hand-up .up-crown { appearance: none; margin: 0; cursor: pointer; color: inherit; box-sizing: border-box; width: var(--ork-tap); min-width: var(--ork-tap); height: var(--ork-tap); min-height: var(--ork-tap); padding: 0; display: inline-flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-frame); background: var(--ork-panel); }
 .up-pots { flex: 1 1 auto; min-width: 0; display: flex; gap: 2px; }
 .up-pot { appearance: none; position: relative; box-sizing: border-box; flex: none; width: 48px; height: 56px; margin: 0; padding: 2px 0 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 1px;
   border: 2px solid transparent; background: none; color: var(--ork-ink); font: var(--ork-type-caption); cursor: pointer; }
@@ -68,10 +67,6 @@ button.up-ctx:focus-visible { outline: var(--ork-1) solid var(--ork-ink); outlin
 .hand-lifted--up .hand-way__acts { flex-direction: column; align-items: stretch; }
 .hand-lifted--up .hand-way__acts .ork-btn { min-height: var(--ork-tap); justify-content: center; }
 
-/* the … menu's rows and the project's name over them */
-.hand-up .table-menu__btn { min-width: var(--ork-tap); min-height: var(--ork-tap); }
-.hand-up .table-menu__item { min-height: var(--ork-tap); }
-.up-menu__project { margin: 0; padding: var(--ork-3) var(--ork-4); font: var(--ork-type-body); font-weight: 600; border-bottom: var(--ork-line) solid var(--ork-frame); overflow-wrap: anywhere; }
 
 /* a goal ready for main: the portal on the card's body */
 .hand-ready__body { align-items: center; justify-content: center; text-align: center; gap: var(--ork-3); }

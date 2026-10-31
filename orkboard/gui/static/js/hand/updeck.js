@@ -1,24 +1,10 @@
-// The phone's crown and field (docs/decisions.md §180.4–§180.5, §195.1, §195.4, docs/specs/103 "Changed since", docs/specs/117 §3).
-// **The crown** (`More`) is the Orkmaster's crowned head at the top row's left: until the menu of the leaders lands (spec 117 C) it opens the page's menu (table/menu.js) in a 44 px target: *Stop all* (the tabs' own halt), the project's name and
-// *Switch project*, *Settings*; Esc or a press away closes it. *New goal* is the + card at the hand's row's right end (uprow.js): a press opens the hand's field (pluscard.js) over the keyboard with the microphone in it (voice.js).
-// The field sits on the visual viewport's foot, so the keyboard does not cover it.
+// The phone's field (docs/decisions.md §180.4, §195.4, docs/specs/103 "Changed since", docs/specs/117 §3): *New goal* is the + card at the hand's row's right end (uprow.js); a press opens the hand's field (pluscard.js) over the keyboard with the
+// microphone in it (voice.js). The field sits on the visual viewport's foot, so the keyboard does not cover it. (The crown and its menu of the leaders are upmenu.js's; **…** and its rows went to that menu, spec 117 C.)
 import { useEffect, useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
-import { Head, Icon } from "../orkui.js";
-import { command } from "../link.js";
-import { openOver } from "../frame/state.js";
-import { currentProject } from "../shell/projects.js";
-import { Menu } from "../table/menu.js";
-import { orkHeadOf } from "./context.js";
+import { Icon } from "../orkui.js";
 import { Field } from "./pluscard.js";
 import { VOICE_TIP, canSpeak, listening, toggleVoice } from "./voice.js";
-
-/** The crown: the Orkmaster's crowned head, a 44 px button; its label says what it opens. */
-export function More() {
-  const from = { title: "", key: "" }, name = currentProject.value?.name || "", o = orkHeadOf();
-  const items = [["Stop all", () => command("halt").catch(() => {}), true, "stop"], ["Switch project", () => openOver("projects", {}, from, "Projects"), false, "list-box"], ["Settings", () => openOver("settings", {}, from, "Settings"), false, "sliders"]];
-  return html`<${Menu} label="The leaders and their goals" own="up-crown" face=${html`<${Head} race=${o.race} tier=${o.tier} />`} items=${items} top=${name ? html`<p class="up-menu__project" data-project="1">${name}</p>` : null} />`;
-}
 
 /** The microphone in the field; none where the browser has no way to recognise a voice (decisions §125.3). */
 function Mic() {

@@ -1,0 +1,31 @@
+/* The phone's menu of the leaders (docs/specs/117-the-phone-a-menu-of-the-leaders.md §4, docs/mockups/phone/sidebar.html A2; hand/upmenu.js): a sheet from the left, 312 px (at most 80% of the width), over orkUI's scrim. Layout only: every colour,
+   face and corner is orkUI's. A row is a button of 40 px (a goal) or 48 px (a party); no count, no alert. The picked row has the ink's bar at its left and the panel's fill. */
+
+.up-scrim { position: fixed; inset: 0; z-index: 60; background: var(--ork-scrim); }
+.up-menu { position: fixed; z-index: 61; left: 0; top: 0; bottom: 0; box-sizing: border-box; width: min(312px, 80%); display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
+  padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px); background: var(--ork-canvas); color: var(--ork-ink); border-right: var(--ork-line) solid var(--ork-edge); }
+.up-menu::-webkit-scrollbar { display: none; }
+:where(.up-menu) button { appearance: none; margin: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.up-menu button:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+
+/* its head (60 px): the crowned head, the project with a chevron, Settings, Stop all */
+.up-menu__head { flex: none; box-sizing: border-box; display: flex; align-items: center; gap: var(--ork-3); height: 60px; padding: 0 var(--ork-3); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.up-menu__project { flex: 1; min-width: 0; height: var(--ork-tap); padding: 0 var(--ork-2); display: flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-body); font-weight: 600; }
+.up-menu__project > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.up-menu__project .ork-icon { flex: none; width: 14px; height: 14px; color: var(--ork-ink-muted); }
+.up-menu__ico { flex: none; width: var(--ork-tap); height: var(--ork-tap); padding: 0; display: inline-flex; align-items: center; justify-content: center; color: var(--ork-ink-muted); }
+.up-menu button.is-stop { color: var(--ork-danger); }
+
+/* the groups: the Orkmaster's goals, then each party */
+.up-group { flex: none; padding: var(--ork-2) 0; border-bottom: var(--ork-line) solid var(--ork-frame); }
+.up-menu .up-group__label { margin: 0; padding: var(--ork-2) var(--ork-3) var(--ork-1); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.up-prow { width: 100%; min-height: 48px; padding: 0 var(--ork-3); display: flex; align-items: center; gap: var(--ork-3); }
+.up-prow__name { flex: 1; min-width: 0; font: var(--ork-type-body); font-weight: 600; overflow-wrap: anywhere; }
+.up-prow__none { flex: none; width: 24px; height: 22px; }
+.up-grow { width: 100%; min-height: 40px; padding: 0 var(--ork-3) 0 44px; display: flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-body); }
+.up-grow__name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.up-grow__none { flex: none; width: 14px; height: 14px; }
+.up-grow .ork-sign { flex: none; color: var(--ork-ink-muted); }
+.up-grow__phase { flex: none; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.up-menu button.is-on { background: var(--ork-panel); box-shadow: inset 3px 0 0 var(--ork-ink); }
+.up-menu button.is-on:focus-visible { box-shadow: inset 3px 0 0 var(--ork-ink), inset 0 0 0 2px var(--ork-ink); }

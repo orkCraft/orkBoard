@@ -1,4 +1,4 @@
-// The phone's top row (docs/specs/117-the-phone-a-menu-of-the-leaders.md §3, docs/mockups/phone/sidebar.html, decisions §195.3): at the left **the crown** (updeck.js `More`: the Orkmaster's crowned head, 44 px; it opens the menu of the leaders, spec 117 C),
+// The phone's top row (docs/specs/117-the-phone-a-menu-of-the-leaders.md §3, docs/mockups/phone/sidebar.html, decisions §195.3): at the left **the crown** (upmenu.js `Crown`: the Orkmaster's crowned head, 44 px; it opens the menu of the leaders),
 // then **the potions as bottles** (the desktop's own: mana.js `potionOf`, `framedOf`, the bottle by §192's four sizes at the small scale, its liquid the 5 hours, the default framed, its mark small at its corner and its share under it, each a 44 px
 // target; at most four places, a fifth or the paid slot makes *+n*), at the right **the die** (orkUI's, small; on a phone Play runs on the computer, so a press says so and throws nothing) and **the discard** (its top card small; a press opens the
 // goals done over the pane, as the table's pile does; none while there is nothing done and nothing ready for main). Layout only (upright.css); every colour, face and corner is orkUI's.
@@ -10,7 +10,7 @@ import { lichOf, hasDiscard } from "../table/discard.js";
 import { doneOf, readyOf, readyWords } from "./data.js";
 import { Who, framedOf, paidWordsOf, potionOf } from "./mana.js";
 import { DieCube, asleepNow } from "./playdie.js";
-import { More } from "./updeck.js";
+import { Crown } from "./upmenu.js";
 
 const PLACES_UP = 4;                                    // the potions' places on a phone (the desktop's six, two rows of three, do not fit a row of the top)
 export const PLAY_UP = "Play it on the computer";       // the die's line on a phone
@@ -68,5 +68,5 @@ function Pile() {
 
 /** The top row. */
 export function Top() {
-  return html`<div class="up-top"><${More} /><${Bottles} /><${Die} /><${Pile} /></div>`;
+  return html`<div class="up-top"><${Crown} /><${Bottles} /><${Die} /><${Pile} /></div>`;
 }
