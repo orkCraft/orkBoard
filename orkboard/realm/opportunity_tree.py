@@ -8,21 +8,21 @@ first proposal is `core/idea_tree.py`'s); no face.
     opportunity_tree.test(state_dir, goal, experiment)        # the experiment tests the goal (an experiment tests one goal at most); an empty `experiment` takes the goal's off → the `tests`
     opportunity_tree.parse(answer)                            # the leader's answer, strictly → {outcomes: [{text}], jobs: [{when, want, so, segment}]} or None
     opportunity_tree.goals(state_dir, pages)                  # {slug: {slug, title, element, place}} of the goals the record names that the Board still has
-    opportunity_tree.text(state_dir, root, since="", pages=None)   # Product's leader's map as text (~3,000 characters); None when nothing is kept
+    opportunity_tree.text(state_dir, root, since="", pages=None)   # Product's leader's map as text (~3,000 characters), with the hypotheses under their job; None when nothing is kept
     opportunity_tree.proposal(state_dir) / save_proposal(...) # what the first proposal did: {status: "asking"|"done"|"failed", error, at}
 
 `<state_dir>/tree.json` is `{outcomes, jobs, serves, tests, proposal}`. One or two outcomes and three to seven jobs; a job is *When <when>, I want to <want>, so I can <so>* for a
 `segment` of the project's people. A job's `id` stays with it (its want's slug at first), so its goals stay when the person words it again; a job kept again unchanged keeps its `by` and
 `at`, so the leader's jobs the person did not touch stay *Proposed by the leader*. A job gone takes its `serves` with it. A goal's `place` is where its work is: "line" (not started, or
 waiting for the person), "work" (read, planned, being done or judged, or its way talked), "done" (the Board's `done`, a pitch sent or passed). The text is the same bytes for the same record
-and the same goals; `root` and `since` are there for `map_text.of`'s uniform call: nothing under the tree changes with the code.
+and the same goals; under each job its hypotheses (`realm/hypotheses.py`: *Hypothesis (open): … — we'll know when …*; the proposed ones are not shown), the ones on no job after the jobs; `root` and `since` are there for `map_text.of`'s uniform call: nothing under the tree changes with the code.
 """
 from __future__ import annotations
 
 import re
 from pathlib import Path
 
-from orkboard.realm import ideas, idea_element
+from orkboard.realm import hypotheses, ideas, idea_element
 
 FILE = "tree.json"
 MIN_OUTCOMES, MAX_OUTCOMES = 1, 2
@@ -271,6 +271,19 @@ def goals(state_dir: Path, pages: Path) -> dict[str, dict]:
     return out
 
 
+def _places(state_dir: Path, pages: Path | None, slugs: list[str]) -> dict[str, str]:
+    """`{slug: place}` of the goals among `slugs` that the Board's pages still have; empty without `pages` (the goals cannot be told from the Board's)."""
+    out: dict[str, str] = {}
+    for slug in dict.fromkeys(slugs) if pages is not None else ():
+        try:
+            page = ideas.idea_page(Path(pages), slug)
+        except (OSError, ValueError):
+            page = None
+        if page is not None:
+            out[slug] = place_of(state_dir, slug)
+    return out
+
+
 # -- its text -------------------------------------------------------------------------------------------------------------------------
 
 def _named(slug: str, known: dict[str, dict] | None) -> str | None:
@@ -283,7 +296,8 @@ def _named(slug: str, known: dict[str, dict] | None) -> str | None:
 
 def text(state_dir: Path, root: Path, since: str = "", pages: Path | None = None) -> str | None:
     """Product's map as text: the outcome, each job as its sentence with its segment and the goals that serve it (their title and place with `pages`, else their names), the experiments
-    that test a goal after it, and the jobs no goal serves named at the end; LIMIT characters at most. The same bytes for the same record and the same goals. None when nothing is kept."""
+    that test a goal after it, the hypotheses under their job (open, testing, held, refuted; not the proposed ones) and the ones on no job after the jobs, and the jobs no goal serves named at the
+    end; LIMIT characters at most (the hypotheses' words are cut before a goal is left out). The same bytes for the same record and the same goals. None when nothing is kept."""
     rec = read(state_dir)
     if not rec["outcomes"] and not rec["jobs"]:
         return None
@@ -297,7 +311,15 @@ def text(state_dir: Path, root: Path, since: str = "", pages: Path | None = None
         if (name := _named(s["goal"], known)) is not None:
             mine.setdefault(s["job"], []).append((s["goal"], name))
 
-    def build(shown: int, tail: bool = True) -> str:
+    kept_hyp = hypotheses.read(state_dir)["items"]
+    places = _places(state_dir, pages, [t for h in kept_hyp for t in h["tests"]])
+    shown_hyp = hypotheses._shown(kept_hyp, places, ("open", "testing", "held", "refuted"))
+    job_ids = {j["id"] for j in rec["jobs"]}
+
+    def build(shown: int, tail: bool = True, cap: int = hypotheses.TEXT_CHARS, n_hyp: int = len(shown_hyp)) -> str:
+        under: dict[str, list[tuple[dict, str]]] = {}
+        for h, st in shown_hyp[:n_hyp]:
+            under.setdefault(h["on"] if h["on"] in job_ids else "", []).append((h, st))
         lines = ["The opportunity tree", ""]
         lines += [f"Outcome: {o['text']}" for o in rec["outcomes"]] or ["Outcome: not said yet"]
         lines.append("")
@@ -307,17 +329,26 @@ def text(state_dir: Path, root: Path, since: str = "", pages: Path | None = None
             serving = mine.get(j["id"], [])
             if not serving:
                 lines.append("   Served by: no goal yet")
-                continue
-            names = [name + (f" (tested by {', '.join(testers[slug])})" if slug in testers else "") for slug, name in serving[:shown]]
-            more = len(serving) - len(names)
-            lines.append("   Served by: " + ("; ".join(names) + (f"; and {more} more" if more else "") if names else f"{len(serving)} goals"))
+            else:
+                names = [name + (f" (tested by {', '.join(testers[slug])})" if slug in testers else "") for slug, name in serving[:shown]]
+                more = len(serving) - len(names)
+                lines.append("   Served by: " + ("; ".join(names) + (f"; and {more} more" if more else "") if names else f"{len(serving)} goals"))
+            lines += [f"   {hypotheses._sentence(h, st, cap)}" for h, st in under.get(j["id"], [])]
+        if under.get(""):
+            lines += [""] + [hypotheses._sentence(h, st, cap) for h, st in under[""]]
         empty = [f"{n} ({_cut(j['want'], 40)})" for n, j in enumerate(rec["jobs"], 1) if j["id"] not in mine]
         if rec["jobs"] and tail:
             lines += ["", ("No goal serves yet: " + ", ".join(empty)) if empty else "A goal serves every job."]
         return "\n".join(lines)
 
+    caps = hypotheses.CAPS[:3] if shown_hyp else hypotheses.CAPS[:1]
     for shown, tail in [(n, True) for n in SHOWN] + [(0, False)]:
-        out = build(shown, tail)
+        for cap in caps:
+            out = build(shown, tail, cap)
+            if len(out) <= LIMIT:
+                return out
+    for n_hyp in range(len(shown_hyp) - 1, -1, -1):                      # the jobs are named before the last hypotheses are
+        out = build(0, False, caps[-1], n_hyp)
         if len(out) <= LIMIT:
             return out
     return out[:LIMIT]

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.realm import ideas, opportunity_tree as tree
+from orkboard.realm import hypotheses as hyp, ideas, opportunity_tree as tree
 
 
 def job(want, when="I start a new project", so="judge the idea", segment="solo founders", **more):
@@ -227,3 +227,89 @@ def test_the_text_is_bounded_and_the_same_bytes_for_the_same_record_and_goals(st
 def test_a_tree_with_jobs_and_no_outcome_still_reads(state):
     tree.keep(state, None, THREE, "person")
     assert tree.text(state, state).splitlines()[2] == "Outcome: not said yet"
+
+
+# -- the hypotheses under their job (spec 116 A) -------------------------------------------------------------------------------------
+
+def test_the_hypotheses_are_under_their_job_and_the_ones_on_no_job_after_the_jobs(state, pages):
+    one, exp = goal(pages, state, "Dark mode"), goal(pages, state, "Try a contrast test", "planning")
+    done_exp = goal(pages, state, "Ask five people", "done")
+    tree.keep(state, OUT, THREE, "person")
+    tree.attach(state, "see-a-sketch", one)
+    hyp.add(state, "People want a sketch first", "most ask within a minute", on="see-a-sketch")
+    testing = hyp.add(state, "Contrast matters", "the test shows it", on="see-a-sketch")
+    hyp.attach(state, testing["id"], test=exp)
+    held = hyp.add(state, "Friends are the audience", "five say so", on="share-it-with-a-friend")
+    hyp.attach(state, held["id"], test=done_exp)
+    hyp.judge(state, held["id"], "held")
+    hyp.add(state, "Not kept yet", "x", on="see-a-sketch", by="leader", party="product")             # proposed: not shown
+    hyp.add(state, "Nobody tried this", "x", on="gone-job")                                          # a job that is gone: on no job
+    hyp.add(state, "Under no job", "y")
+    refuted = hyp.add(state, "It will go viral", "a thousand share", axis="viable")
+    hyp.judge(state, refuted["id"], "refuted")
+    got = tree.text(state, state, pages=pages)
+    assert got == """The opportunity tree
+
+Outcome: Cut the time to a first sketch from ten minutes to two
+
+1. When I start a new project, I want to see a sketch, so I can judge the idea. For solo founders.
+   Served by: Dark mode (in line)
+   Hypothesis (open): People want a sketch first — we'll know when most ask within a minute
+   Hypothesis (testing): Contrast matters — we'll know when the test shows it
+2. When I start a new project, I want to share it with a friend, so I can judge the idea. For solo founders.
+   Served by: no goal yet
+   Hypothesis (held): Friends are the audience — we'll know when five say so
+3. When I start a new project, I want to compare two versions, so I can judge the idea. For solo founders.
+   Served by: no goal yet
+
+Hypothesis (open): Nobody tried this — we'll know when x
+Hypothesis (open): Under no job — we'll know when y
+Hypothesis (refuted): It will go viral — we'll know when a thousand share
+
+No goal serves yet: 2 (share it with a friend), 3 (compare two versions)"""
+    assert "Not kept yet" not in got
+    plain = tree.text(state, state)                                                                  # without pages the Board's places are not known: nothing is testing
+    assert "Hypothesis (open): Contrast matters" in plain and "(testing)" not in plain
+
+
+def test_a_record_with_only_hypotheses_is_still_nothing_to_read_and_none_leaves_the_text_as_it_was(state, pages):
+    hyp.add(state, "Alone", "x")
+    assert tree.text(state, state, pages=pages) is None
+    tree.keep(state, OUT, THREE, "person")
+    assert "Hypothesis (open): Alone" in tree.text(state, state)
+    hyp.drop(state, "alone")
+    assert "Hypothesis" not in tree.text(state, state, pages=pages)
+
+
+def test_the_text_with_hypotheses_is_bounded_and_the_same_bytes(state, pages):
+    words = "word " * 30
+    jobs = [job(f"w{n} " + "word " * 8, when="word " * 8, so="word " * 8) for n in range(7)]
+    tree.keep(state, [{"text": "A " + words * 3}], jobs, "person")
+    ids = [j["id"] for j in tree.read(state)["jobs"]]
+    for n in range(hyp.MAX_OPEN):
+        hyp.add(state, f"Claim {n} " + words * 2, "signal " + words * 2, on=ids[n])
+    for n in range(10):
+        tree.attach(state, ids[n % 7], goal(pages, state, f"A goal with a long title {n} " + words))
+    first = tree.text(state, state, pages=pages)
+    assert len(first) <= tree.LIMIT and first == tree.text(state, state, pages=pages) == tree.text(state, state, "any-head", pages=pages)
+    assert "7. When" in first and "Hypothesis (open): Claim 0" in first and "…" in first                    # every job is named, the hypotheses' words are cut
+
+
+def test_a_hypotheses_words_are_cut_before_a_goal_is_left_out(state, pages):
+    tree.keep(state, OUT, THREE, "person")
+    for n in range(2):
+        tree.attach(state, "see-a-sketch", goal(pages, state, f"Goal number {n}"))
+    for n in range(hyp.MAX_OPEN):
+        hyp.add(state, f"Claim {n} " + "word " * 35, "signal " + "word " * 35, on="see-a-sketch")
+    got = tree.text(state, state, pages=pages)
+    assert len(got) <= tree.LIMIT and "Goal number 0 (in line); Goal number 1 (in line)" in got
+    assert got.count("Hypothesis (open): Claim") == hyp.MAX_OPEN and "…" in got
+
+
+def test_when_the_jobs_alone_fill_the_text_the_last_hypotheses_go_before_a_job_is_cut(state, pages):
+    words = "word " * 30
+    tree.keep(state, [{"text": "A " + words * 3}, {"text": "B " + words * 4}], [job(f"w{n} {words}", when=words, so=words, segment=words) for n in range(7)], "person")
+    for n in range(hyp.MAX_OPEN):
+        hyp.add(state, f"Claim {n} " + words, "signal " + words, on=tree.read(state)["jobs"][n]["id"])
+    got = tree.text(state, state, pages=pages)
+    assert len(got) <= tree.LIMIT and "7. When" in got and got.count("Hypothesis (open)") < hyp.MAX_OPEN and got == tree.text(state, state, pages=pages)
