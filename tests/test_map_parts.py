@@ -10,7 +10,7 @@ from pathlib import Path
 import pytest
 
 from orkboard.gui.board_host import Orkboard
-from orkboard.realm import goal_team, ideas, library, loop, map_parts, opportunity_tree as tree
+from orkboard.realm import goal_team, hypotheses, ideas, library, loop, map_parts, opportunity_tree as tree
 from tests.test_commit_goal import land, repo, state  # noqa: F401  (the fixture)
 
 APP = {
@@ -94,6 +94,26 @@ def test_products_parts_are_the_jobs_then_the_goals_the_tree_names_that_the_boar
     shown = host.command("ideas.tree", {})
     assert [p["id"] for p in got] == [j["id"] for j in shown["jobs"]] + [s["goal"] for s in shown["serves"]] == [j["id"] for j in tree.read(state_dir)["jobs"]] + [goal]
     assert [p["name"] for p in got][-1] == "Fast checkout" and [p["group"] for p in got] == ["jobs"] * 3 + ["goals"] and {p["map"] for p in got} == {"product"}
+
+
+def test_products_parts_name_the_hypotheses_proposed_ones_too_in_the_order_the_tree_draws_them_between_the_jobs_and_the_goals(host):
+    """Spec 116 E: `hyp:<id>` named by the text, group `hypotheses`; the row under the outcome first, then each job's in the jobs' order, then the goals."""
+    state_dir, pages = host.ideas.state_dir, host.ideas.root()
+    goal = ideas.add_idea(pages, "Fast checkout", "general", state_dir)
+    tree.keep(state_dir, [{"text": "Cut the time to a first sketch from ten minutes to two"}],
+              [{"when": "I start", "want": w, "so": "judge it", "segment": "founders"} for w in ("see a sketch", "share it", "compare two")], "person")
+    first, second, third = (j["id"] for j in tree.read(state_dir)["jobs"])
+    tree.attach(state_dir, first, goal)
+    late = hypotheses.add(state_dir, "Sharing is rare", "few press share", on=second)
+    early = hypotheses.add(state_dir, "A sketch is wanted first", "most ask within a minute", on=first, by="leader", party="design")       # proposed by a leader: kept as proposed
+    loose = hypotheses.add(state_dir, "Founders come back weekly", "half return in a week")
+    assert early["state"] == "proposed"
+    got = parts(host, "product")
+    assert [p["id"] for p in got] == [first, second, third, f"hyp:{loose['id']}", f"hyp:{early['id']}", f"hyp:{late['id']}", goal], "the jobs, the hypotheses as the tree draws them, the goals"
+    assert [p["group"] for p in got] == ["jobs"] * 3 + ["hypotheses"] * 3 + ["goals"] and {p["map"] for p in got} == {"product"}
+    assert [p["name"] for p in got][3:6] ==["Founders come back weekly", "A sketch is wanted first", "Sharing is rare"]
+    hypotheses.drop(state_dir, late["id"])
+    assert f"hyp:{late['id']}" not in {p["id"] for p in parts(host, "product")}
 
 
 def test_arts_parts_are_the_assets_the_map_draws_by_their_path(host):

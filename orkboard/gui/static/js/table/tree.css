@@ -51,3 +51,22 @@
 .tr.is-narrow .tr-col + .tr-col { padding-top: var(--ork-5); border-top: var(--ork-line) solid var(--ork-frame); }
 .tr.is-narrow .tr-tier { margin-top: var(--ork-5); }
 .tr.is-narrow .tr-tier + .tr-tier { padding-top: var(--ork-5); border-top: var(--ork-line) solid var(--ork-frame); }
+
+/* the hypotheses (docs/specs/116-hypotheses-on-products-tree.md §6.1): small cards under a job, before its goals; those of no job in a row under the outcome. The state is orkUI's chip (a dashed edge for a proposed
+   one, the success colour held, the danger colour refuted); the proposer's head is its leader's own, small */
+.tr-hyps { display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; }
+.tr-hyps--outcome { flex-direction: row; flex-wrap: wrap; align-items: flex-start; margin-top: var(--ork-3); }
+.tr-hyps--outcome > .hy-form, .tr-hyps--outcome > .hy-add { flex: 1 1 100%; }
+.tr-hyps--outcome > .hy-form { max-width: 560px; }
+.mp-card.ork-card.hy-card { cursor: default; gap: var(--ork-3); }
+.tr-hyps--outcome .mp-card.ork-card.hy-card { flex: 1 1 240px; width: auto; min-width: 0; max-width: 100%; }
+.hy-card__top { margin-top: 0; flex-wrap: wrap; }
+.hy-by { display: inline-flex; align-items: center; gap: var(--ork-2); min-width: 0; }
+.hy-line { margin: 0; font: var(--ork-type-body); overflow-wrap: anywhere; }
+.hy-chip.is-proposed { border-style: dashed; color: var(--ork-ink-muted); }
+.hy-chip.is-testing { border-color: var(--ork-action); color: var(--ork-action); }
+.hy-chip.is-held { border-color: var(--ork-success); color: var(--ork-success); }
+.hy-chip.is-refuted { border-color: var(--ork-danger); color: var(--ork-danger); }
+.hy-add { margin-top: 0; }
+.hy-form textarea.ork-field { min-height: calc(var(--ork-control) * 1.5); }
+@media (pointer: coarse) { .hy-card .ork-btn, .tr-addhyp { min-height: var(--ork-tap); } }

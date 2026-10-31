@@ -7,3 +7,4 @@ import "./decisioncard.js";
 import "./forkcard.js";
 import "./objectioncard.js";
 import "./paidcard.js";
+import "./hypothesiscard.js";

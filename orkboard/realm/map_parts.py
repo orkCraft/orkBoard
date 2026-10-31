@@ -10,7 +10,8 @@ say is wrong, with the very ids the maps' faces stamp as `data-pick-map` and `da
 - Tech, `system`: a part's path is its id and its name (`syspane.js`), from the snapshot of the ref's head; its group the container it lies in.
 - Design, `screens`: each step `step:<n>` named *Step n* (`screensmap.js`), then each screen by its id (`screenparts.js`), its group the step it lies in.
 - Game design, `game-design`: every loop's steps by their id (group `loop`), then every currency `cur:<id>` (group `economy`) (`loopparts.js`).
-- Product, `product`: each job by its id, named by its want (group `jobs`), then each goal the tree names that the Board still has, by its slug and title (group `goals`) (`treemap.js`).
+- Product, `product`: each job by its id, named by its want (group `jobs`), then each hypothesis `hyp:<id>` named by its text, proposed ones too (group `hypotheses`, spec 116 E; in the order the tree draws them:
+  the row under the outcome, then each job's), then each goal the tree names that the Board still has, by its slug and title (group `goals`) (`treemap.js`).
 - Art, `art`: each asset by its path (group its kind) (`artmap.js`).
 - Release, `release`: each goal waiting for main by its slug and title (group the branch it waits in) (`releasemap.js`).
 - Marketing, `marketing`: each file of the way in by its path, named by its file's name (group its step) (`waymap.js`).
@@ -20,7 +21,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from orkboard.realm import art_map, goal_team, loop, opportunity_tree, project_map, release_map, screen_map, system_overview, way_map
+from orkboard.realm import art_map, goal_team, hypotheses, loop, opportunity_tree, project_map, release_map, screen_map, system_overview, way_map
 
 ARCHITECT = "architect"
 MAPS = {"tech": "system", "design": "screens", "game-design": "game-design", "product": "product", "art": "art", "release": "release", "marketing": "marketing"}
@@ -57,6 +58,8 @@ def screens_of(got: dict) -> list[dict]:
 def _product(state_dir: Path, pages: Path | None) -> list[dict]:
     rec = opportunity_tree.read(Path(state_dir))
     out = [{"id": j["id"], "name": j["want"], "group": "jobs"} for j in rec["jobs"]]
+    items, jobs = hypotheses.read(Path(state_dir))["items"], [j["id"] for j in rec["jobs"]]
+    out += [{"id": f"hyp:{h['id']}", "name": h["text"], "group": "hypotheses"} for h in [*(h for h in items if h["on"] not in jobs), *(h for j in jobs for h in items if h["on"] == j)]]     # as treemap.js draws them
     if pages is not None:
         out += [{"id": g["slug"], "name": g["title"], "group": "goals"} for g in opportunity_tree.goals(Path(state_dir), Path(pages)).values()]
     return out
