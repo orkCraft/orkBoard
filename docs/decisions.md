@@ -3999,3 +3999,19 @@ live, when hypotheses matter least. So:
 3. The aspect *Evidence* gains the hint *Rests on an untested hypothesis*.
 4. Spec 116, built by the cheaper model, without a mockup.
 The owner's call.
+
+## 196. The die's up face says what Play would show: the cross while the last start failed, a spark when dev is new (31 October, the owner)
+
+Why: the owner: *how else can the die be used while it just lies: show something useful on its up face*; of the ideas
+weighed (the last outcome, dev's news, the probe's alarms, an empty face asleep, the leader's head), *1 and 2*. The question a
+die in the hand can answer is *why press Play now*. A count would break §104.0 and §145 (no count of what waits), so the face
+says *something*, never *how much*. So (this makes §190.2 and §190.7 precise):
+1. **The cross stays** on the die in the hand **while the last start of dev's head failed**; it goes when a start plays, or
+   when dev moves on (then 2).
+2. **A spark** (orkUI's new `face-new`, in the ink: news, not a warning) when **dev's head is a commit the person has not tried in
+   Play**; a project never tried says nothing.
+3. **The cube rolls onto the face** that says it when it changes (orkUI's `is-landing`); not under reduced motion.
+4. The word under the die stays *Play*; the button's `title` says it (*Play: it did not start last time*, *Play: dev has changed
+   since you last played*). The phone has no Play and gets none of it.
+5. Spec 118, built by the cheaper model.
+The owner's call.
