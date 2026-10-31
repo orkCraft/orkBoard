@@ -9,6 +9,8 @@ leaders' calls (§156.1–§156.2, the model of realm/map_text.py's System) and 
         #  "steps": [["home"], ["orders", "settings"], ["order"]], "loose": [], "more": 0}
     screen_map.text(state_dir, root, since="")     # about 3,000 characters: the steps, the flow, the pains under their screens; None with no screen
     screen_map.step_id(1)                          # "step:1": a pain may be pinned to a screen's id or a step's
+    screen_map.screen_of(state_dir, root, path)    # the screen a page's path reaches: {"id", "name", "step"} (`step` its number, from 1), None when it reaches none
+    screen_map.file_of(root, screen_id)            # the file of a screen's component ("" for an id the newest screens do not have)
 
 A screen's id is its path as a word (`/` home, `/orders/:id` orders-id). The links are read from the screens' files by name (`navigate("/x")`,
 `router.push("/x")`, `<Link to="/x">`, `href="/x"`, `Navigator.pushNamed(context, "/x")`, `context.go("/x")`, `goto("/x")`), in the order they stand; a
@@ -279,6 +281,42 @@ def pictures(state_dir: Path, root: Path, screens: list[dict]) -> dict[str, dict
 
 def head_of(root: Path) -> str:
     return commit_goal.head(Path(root), REF)
+
+
+def _route(path: object) -> str:
+    """A running page's path as a route: its query out, and a route that lives in the hash (`/#/orders`, a page on a static host) taken when the path itself is the top."""
+    if not isinstance(path, str):
+        return ""
+    base, _, frag = path.strip()[:600].partition("#")
+    base = base.split("?")[0]
+    if frag.startswith("/") and base in ("", "/"):
+        return frag
+    return base if base.startswith("/") else ("/" + base if base else "")
+
+
+def screen_of(state_dir: Path, root: Path, path: str) -> dict | None:
+    """The screen of dev's newest screens that a page's path reaches, `{id, name, step}` (`_target`'s own rule: an exact path, else the fit with the most static segments),
+    `step` the number of the step it lies in (from 1, as `step_id` takes it); None for a path no screen fits and for a project with no `dev` or no screen. Reads the screens
+    through `_core`, so a head read before costs no new read of the repository. `state_dir` is there for the other reads' uniform call."""
+    route = _route(path)
+    root = Path(root)
+    sha = head_of(root) if route else ""
+    core = _core(root, sha) if sha else None
+    if not core or not core["screens"]:
+        return None
+    sid = _target(route, [(s["id"], _segments(s["path"])) for s in core["screens"]])
+    if not sid:
+        return None
+    step = next((n for n, row in enumerate(core["steps"], 1) if sid in row), None)
+    return {"id": sid, "name": next(s["name"] for s in core["screens"] if s["id"] == sid), "step": step}
+
+
+def file_of(root: Path, screen_id: str) -> str:
+    """The file of a screen's component at dev's head ("" when the newest screens have no such id)."""
+    root = Path(root)
+    sha = head_of(root)
+    core = _core(root, sha) if sha else None
+    return next((s["file"] for s in (core or {}).get("screens") or [] if s["id"] == screen_id), "")
 
 
 def read(state_dir: Path, root: Path) -> dict:
