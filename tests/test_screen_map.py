@@ -391,3 +391,38 @@ def test_since_says_the_screens_that_came_or_went_after_the_commit(repo):
     assert got.split("\n\n")[-1] == "Changed since your last call:\n- new screen Pay (/cart/refund)\n- gone screen Pay (/cart/pay)"
     assert screen_map.text(state(repo), repo, "0" * 40).endswith("not known (that commit is not on dev).")
     assert base.split("\n", 1)[1] != "" and "Changed since" not in screen_map.text(state(repo), repo)
+
+
+# -- spec 115 B: the screen a running page's path reaches --------------------------------------------------------------------------------------
+
+def test_screen_of_gives_the_screen_a_path_reaches_with_its_name_and_step_by_target_s_rule(repo):
+    on_dev(repo, REACT)
+    sd = state(repo)
+    assert screen_map.screen_of(sd, repo, "/orders") == {"id": "orders", "name": "Orders", "step": 2}
+    assert screen_map.screen_of(sd, repo, "/orders/12") == {"id": "orders-id", "name": "Order detail", "step": 3}       # a parameter fits any one segment
+    assert screen_map.screen_of(sd, repo, "/orders/12/?tab=a#b")["id"] == "orders-id"                                    # the query, the hash and a trailing slash are not the route
+    assert screen_map.screen_of(sd, repo, "/")["id"] == "home" and screen_map.screen_of(sd, repo, "/lazy")["step"] == 4         # no link leads to it: the last step
+    assert screen_map.file_of(repo, "orders-id") == "src/pages/OrderDetail.tsx" and screen_map.file_of(repo, "nope") == ""
+
+
+def test_screen_of_is_none_for_a_path_no_screen_fits_for_a_non_path_and_for_a_project_with_no_screen_or_no_dev(repo, tmp_path):
+    on_dev(repo, REACT)
+    for path in ("/nowhere", "/orders/1/2/3", "", None, 5):
+        assert screen_map.screen_of(state(repo), repo, path) is None
+    other = tmp_path / "plain"
+    other.mkdir()
+    git(other, "init", "-q", "-b", "main")
+    assert screen_map.screen_of(other / ".orkcraft", other, "/") is None and screen_map.file_of(other, "home") == ""
+
+
+def test_screen_of_reads_the_screens_once_per_dev_head_and_follows_dev(repo, monkeypatch):
+    on_dev(repo, REACT_JSX)
+    assert screen_map.screen_of(state(repo), repo, "/cart/pay")["id"] == "cart-pay"
+    seen = []
+    real = screen_routes.routes
+    monkeypatch.setattr(screen_routes, "routes", lambda tree: seen.append(1) or real(tree))
+    assert screen_map.screen_of(state(repo), repo, "/cart")["id"] == "cart" and screen_map.screen_of(state(repo), repo, "/")["id"] == "home"
+    screen_map.read(state(repo), repo)
+    assert seen == []                                                                                   # the head was read already: no new read of the repository
+    on_dev(repo, {"src/App.jsx": REACT_JSX["src/App.jsx"].replace("/cart", "/basket")})
+    assert screen_map.screen_of(state(repo), repo, "/basket")["id"] == "basket" and screen_map.screen_of(state(repo), repo, "/cart") is None
