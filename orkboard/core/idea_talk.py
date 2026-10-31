@@ -14,6 +14,8 @@ once, each as itself, and what they ask of the person is a stack of cards; a bug
   first, then by the route's order, shown in the route's order; the rest are closed by their leaders' picks (`defaults`, kept for the decision).
 - **A no** (spec 108 §4.3, decisions §183.3) is a Needs you row of its own, `objection`, one a leader in the route's order (`realm/idea_objections.py`; answered by
   `core/idea_objection.py`); the decision waits while any is unanswered. A doubt is no row: the decision says it.
+- **What a leader assumes** (spec 116 §3): a round's answer may carry `assumes` (`{text, signal}`, a line each; a bare line is the text alone), what the goal rests on that no one has shown;
+  each becomes a proposed hypothesis `by: "leader"`, `party` the leader's, `rests` this goal (`realm/hypotheses.py`); the same text twice is kept once; a hypothesis that does not fit its bounds is passed over.
 - **The second round**: only when a leader said, in the first, that the answers may open a question the work cannot start without (`second_round`), and
   the person did not leave it to the leaders (`decide`); only those leaders are called, given the answers; at most three cards again; what is left takes the picks.
 - **A project question** (§153.3): asked at a party's first goal (no other goal has had that party on its route), inside the three, never again once answered
@@ -35,9 +37,12 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable
 
-from orkboard.realm import concerns, event_log, goal_line, goal_team, idea_objections, idea_questions, idea_target, ideas, map_text, project_facts, roles
+from orkboard.realm import concerns, event_log, goal_line, goal_team, hypotheses, idea_objections, idea_questions, idea_target, ideas, map_text, project_facts, roles
 from orkboard.realm.idea_talk_parse import (CAUSE_CHARS, LINE, MAX_GOAL, MAX_PROJECT, WHERE, clean_diagnosis, clean_round, fact_text, failure_lines, pick_three,
                                             said_lines, touched, total)
+
+
+UNSHOWN = "someone shows it"        # an assumption's signal when the leader named none (the face puts *We'll know when* before it)
 
 
 def _kw():
@@ -257,6 +262,7 @@ Say `no` when it is not worth its cost now or harms what your party keeps; say i
 it rests on: a no without one is not a no. `doubt` is for a goal you would do only if something changed: `why` says what. `why` is needed for a `doubt` and a `no`; without it your \
 verdict reads as `go`. A worse thing than a needless goal is one you let through in silence.
 - `instead` (optional, one line): a smaller or different goal that would serve, when you can name one.{after_rule}
+- If this goal rests on something no one has shown, say it in `assumes`: `{{"text": "what it rests on", "signal": "what would show it"}}`, a line each, {LINE} characters at most; else leave it out.
 - Ask at most {MAX_GOAL} questions about the goal. {cards}{project_rule}
 - `second_round` is true only when the answers to your questions may open a question your party cannot start without; else false.
 
@@ -286,11 +292,28 @@ Answer with one JSON object and nothing else:
             held = bool(idea_objections.pending(rec))
         ideas.add_turn(self.state_dir, slug, "keeper", "\n".join(f"{self._name(s['leader'])}: {s['stance']}\n  For: {s['for'] or '—'}\n  Against: {s['against'] or '—'}"
                                                                 for s in stances), "Talk")
+        self._assumed(slug, [(e["party"], got["assumes"]) for e, got in heard])
         for s in stances:
             if s["verdict"] != "go":
                 self._ev(event_log.LEADER_OBJECTED, idea=slug, party=s["party"], verdict=s["verdict"], has_instead=bool(s["instead"]))
         if not chosen and not held:              # a no waits for the person's answer first (core/idea_objection.py)
             after.append("decide")
+
+    def _assumed(self, slug: str, said: list[tuple[str, dict]]) -> None:
+        """What the leaders said the goal rests on (`assumes`: {text, signal}, spec 116 §3), each a proposed hypothesis `by: "leader"` of its party that `rests` on this goal; a text kept
+        already (whatever its state) is not kept twice, and the goal rests on it instead. A bound, a duplicate or anything else that does not apply is passed over: Talk never fails on it."""
+        for party, assumes in said:
+            if not assumes:
+                continue
+            try:
+                text = assumes["text"]
+                same = next((i for i in hypotheses.read(self.state_dir)["items"] if " ".join(i["text"].lower().split()) == " ".join(text.lower().split())), None)
+                if same is not None:
+                    hypotheses.attach(self.state_dir, same["id"], goal=slug)
+                else:
+                    hypotheses.add(self.state_dir, text, assumes["signal"] or UNSHOWN, by="leader", party=party, rests=[slug])
+            except Exception:                        # past the bounds, no words, a goal that rests on twelve already
+                continue
 
     def _closed(self, c: dict, rnd: int) -> dict:
         return {"id": c["id"], "by": c["by"], "leader": c["leader"], "q": c["q"], "answer": idea_questions.default_of(c), "why": c["why"], "project": c["project"], "round": rnd}

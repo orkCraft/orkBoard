@@ -27,7 +27,7 @@ from orkboard.realm import plans
 TARGETS = ("thrift", "balance", "quality")
 DEFAULT = "balance"
 EFFORTS = ("low", "medium", "high", "xhigh", "max")      # the Claude CLI's `--effort` levels
-STEPS = ("goal", "draft", "answer", "talk", "plan", "task", "pitch_view", "pitch_case", "pitch_decide", "collide", "kind", "route", "talk_round", "diagnose", "decide", "section_first", "section", "join", "project_q", "loop", "tree", "ask", "concerns")
+STEPS = ("goal", "draft", "answer", "talk", "plan", "task", "pitch_view", "pitch_case", "pitch_decide", "collide", "kind", "route", "talk_round", "diagnose", "decide", "section_first", "section", "join", "project_q", "loop", "tree", "hypotheses", "ask", "concerns")
 PITCH_STEPS = ("pitch_view", "pitch_case", "pitch_decide")   # a pitch's three calls (spec 65 §3, core/idea_judge.py)
 SIZES = ("lean", "standard", "full")                     # a party's size (spec 75 §3): its Target, for its goals
 SIZE_TARGET = {"lean": "thrift", "standard": "balance", "full": "quality"}
@@ -67,6 +67,8 @@ MATRIX: dict[str, dict[str, tuple[Any, str] | None]] = {
     "loop": {"thrift": ("laborer", ""), "balance": ("warrior", "low"), "quality": ("warrior", "medium")},
     # Product's opportunity tree, proposed once (spec 102 §8.1): its leader names the outcome and the jobs, no tools, on the cheaper tier as `loop`
     "tree": {"thrift": ("laborer", ""), "balance": ("warrior", "low"), "quality": ("warrior", "medium")},
+    # Hypotheses on Product's tree, proposed on a press (spec 116 §3): its leader names up to three from the tree, the facts, the stage and what the leaders assumed, no tools, on the cheaper tier as `tree`
+    "hypotheses": {"thrift": ("laborer", ""), "balance": ("warrior", "low"), "quality": ("warrior", "medium")},
     # A quick question on the open tab (spec 106): the tab's leader (the Orkmaster on its own) answers once from text, no tools, on the cheaper tier as Talk's round
     "ask": {"thrift": ("laborer", ""), "balance": ("warrior", "low"), "quality": ("warrior", "medium")},
     # A leader's look at its own map (spec 108 §2.3): the concerns it has, no tools (Design's reads the pictures of the screens changed), on the cheaper tier as Talk's round
@@ -92,13 +94,13 @@ OP_STEPS = ("op_prepare", "op_act", "op_learn")
 CONTEXT = {"goal": 12_000, "draft": 8_000, "answer": 8_000, "talk": 6_000, "plan": 10_000, "accept": 10_000,
            "op_prepare": 12_000, "op_act": 6_000, "op_learn": 6_000,
            "pitch_view": 6_000, "pitch_case": 6_000, "pitch_decide": 8_000, "collide": 3_000, "kind": 1_500, "route": 2_500,
-           "talk_round": 8_000, "diagnose": 10_000, "decide": 8_000, "section_first": 12_000, "section": 12_000, "join": 8_000, "project_q": 12_000, "loop": 12_000, "tree": 12_000, "ask": 8_000, "concerns": 12_000}
+           "talk_round": 8_000, "diagnose": 10_000, "decide": 8_000, "section_first": 12_000, "section": 12_000, "join": 8_000, "project_q": 12_000, "loop": 12_000, "tree": 12_000, "hypotheses": 12_000, "ask": 8_000, "concerns": 12_000}
 READS = {"goal": 8, "draft": 6, "plan": 6, "talk": 2, "answer": 2, "accept": 4,
          "pitch_view": 4, "pitch_case": 0, "pitch_decide": 0, "collide": 0, "kind": 0, "route": 0,
-         "talk_round": 0, "diagnose": 4, "decide": 0, "section_first": 6, "section": 6, "join": 0, "project_q": 0, "loop": 0, "tree": 0, "ask": 0, "concerns": 0}    # a view's reads: the Engineering view's only (the others get no tools); a leader's Talk reads no file (its map's text is enough: §156.8)
+         "talk_round": 0, "diagnose": 4, "decide": 0, "section_first": 6, "section": 6, "join": 0, "project_q": 0, "loop": 0, "tree": 0, "hypotheses": 0, "ask": 0, "concerns": 0}    # a view's reads: the Engineering view's only (the others get no tools); a leader's Talk reads no file (its map's text is enough: §156.8)
 CAPS = {"goal": 1.00, "draft": 0.60, "answer": 0.40, "talk": 0.20, "plan": 0.60, "accept": 0.60,
         "op_prepare": 0.30, "op_act": 0.10, "op_learn": 0.10, "pitch_view": 0.08, "pitch_case": 0.06, "pitch_decide": 0.20, "collide": 0.05, "kind": 0.03, "route": 0.03,
-        "talk_round": 0.08, "diagnose": 0.20, "decide": 0.08, "section_first": 0.60, "section": 0.30, "join": 0.08, "project_q": 0.10, "loop": 0.10, "tree": 0.10, "ask": 0.05, "concerns": 0.10}
+        "talk_round": 0.08, "diagnose": 0.20, "decide": 0.08, "section_first": 0.60, "section": 0.30, "join": 0.08, "project_q": 0.10, "loop": 0.10, "tree": 0.10, "hypotheses": 0.10, "ask": 0.05, "concerns": 0.10}
 READS_FOR = {("concerns", "design"): 4}                 # a step's reads for a craft that has more: Design's look at its map reads the pictures of the screens changed (spec 108 §2.3)
 BUDGET_SHARE = {"thrift": 0.5, "balance": 1.0, "quality": 2.0}
 
