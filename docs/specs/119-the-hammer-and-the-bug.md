@@ -219,3 +219,16 @@ restart; or the error and Try again). Save logs is not on the phone (a phone sav
 
 - **A cloud session** when the computer cannot (`claude --cloud "…"` from the checkout, with the logs scrubbed as crash reports
   are, never a person's paths or prompts): only if the local one proves not enough.
+
+## As built
+
+### As built: D
+
+**Part D.** `js/hand/logsbtn.js` draws the bug and its panel by `town.repair.state` (a missing `repair` reads as `{can: false, state: "idle"}`): `repairOf()` reads the snapshot, `repairTitle()` has §1's title words (the button's `title`, `aria-label` and the panel's), `RepairBody` is the
+panel's content (idle: the line, **Fix it** with its one line, **Save logs**, Save logs alone and primary when `can` is false; working: the words, *Started {time}.*, **Stop the fix**; ready: *The fix is in: {newest subject}* with *and {n − 1} more*,
+**Update and restart** in the primary, the restart line; updating: *Updating…*; failed: the error in a `pre`, **Try again** with the line last sent, **Save logs**). Enter in the line presses the primary. The pictures are the one map `PICTURES` (§4.3, until orkUI's
+`hammer` and `bug-squashed` are copied: idle bug + icon `search`, working and updating bug + sign `work`, ready sign `check`, failed bug + sign `cross`); the button wears `is-working` (updating too), `is-ready` or `is-failed` and carries `data-repair-state`.
+`table.css`: ready is `--ork-alert`, the token the update's own notice wears (`.update-bar.is-critical`); working and failed are the ink; working steps its sign (`table-logs-work`, whole steps, none under `prefers-reduced-motion`). The commands answer the fix as the
+snapshot will say it and the page shows that at once (`adopt`); the next snapshot says the same. `js/hand/upphone.js`: the row **Fix {Orkboard}** above Notifications, only when `repair.can`, its line the title words, a tap opens `RepairBody` in the menu (no Save logs; a
+second tap shuts it; Fix it, Stop and Try again shut it, Update and restart leaves *Updating…* showing); `upmenu.css` has its look. Not in the spec, said here: *Updating {Orkboard} with the fix* is the updating state's title; the session's name in the working words is
+`Fix {PRODUCT}`. Tests: `tests/test_repair_browser.py` (16, Chromium against `TableHost` with `repair` in its snapshot).
