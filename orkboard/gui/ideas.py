@@ -32,6 +32,8 @@ Spec 70: the Orkmaster's suggestion of a goal's party (`ideas.party_for`): gui/i
 Spec 71: the Orkmaster keeps the parties from colliding (`ideas.collide_answer`; a plan made or a spec changed is compared with the other parties'
 open goals; a goal's `depends_on` across parties holds its start until a flag): gui/ideas_project.py, realm/collide.py, core/idea_collide.py.
 
+Spec 115 §5: a mark on the live product (`ideas.play_events`, `ideas.play_place`, `ideas.play_hints`, `ideas.play_mark`, `ideas.play_mark_offer`): gui/ideas_play_mark.py.
+
 Spec 78: what the AI tools drew outside the code, its canvases (`ideas.canvases`, `ideas.canvas_seen`, `ideas.canvas_open`,
 `ideas.canvas_file`; `canvases_new` and `canvases_rev` in the snapshot): gui/ideas_canvases.py.
 
@@ -65,6 +67,7 @@ from orkboard.gui.ideas_party import PartyMixin, stage_commands
 from orkboard.gui.ideas_pick import PickMixin
 from orkboard.gui.ideas_pickables import PickablesMixin, pickables_commands
 from orkboard.gui.ideas_pitch import PitchMixin
+from orkboard.gui.ideas_play_mark import PlayMarkMixin, play_mark_commands
 from orkboard.gui.ideas_project import ProjectMixin
 from orkboard.gui.ideas_recap import RecapMixin
 from orkboard.gui.ideas_release import ReleaseMixin
@@ -123,7 +126,7 @@ class _Hop:
         self.host.call(lambda: self.host.publish(topic, **data))
 
 
-class Ideas(FactsMixin, LoopFace, TreeFace, ConcernsMixin, MapsMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, AskFace, DecideMixin, LensMixin, LimitsMixin, ManaMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PickablesMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
+class Ideas(PlayMarkMixin, FactsMixin, LoopFace, TreeFace, ConcernsMixin, MapsMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, AskFace, DecideMixin, LensMixin, LimitsMixin, ManaMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PickablesMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
             TypesMixin, CanvasesMixin, AssetsMixin, SystemMixin, BoardMixin):
     def __init__(self, host) -> None:
         """`host`: what the Board needs of whoever runs it, a `gui/board_host.py` `BoardHost` (spec 37 §4): Orkline's
@@ -670,6 +673,6 @@ class Ideas(FactsMixin, LoopFace, TreeFace, ConcernsMixin, MapsMixin, ScreensMix
                       "ideas.pitch_pass": self.pitch_pass,
                       "ideas.release_out": self.release_out, "ideas.release_candidates": self.release_candidates, "ideas.shown": self.shown,
                       "ideas.party_for": self.party_for, "ideas.kind_for": self.kind_for, "ideas.collide_answer": self.collide_answer,
-                      "ideas.repeat": self.repeat, "ideas.team": self.team, "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, "ideas.party_presets": self.party_presets, **canvas_commands(self), **asset_commands(self), **system_commands(self), **usage_commands(self), **mana_commands(self), **route_commands(self), **talk_commands(self), **decide_commands(self), **stage_commands(self), **project_q_commands(self), **ask_commands(self), **facts_commands(self), **loop_commands(self), **maps_commands(self), **screens_commands(self), **pickables_commands(self), **concerns_commands(self), **tree_commands(self), **gate_commands(self)})
+                      "ideas.repeat": self.repeat, "ideas.team": self.team, "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, "ideas.party_presets": self.party_presets, **canvas_commands(self), **asset_commands(self), **system_commands(self), **usage_commands(self), **mana_commands(self), **route_commands(self), **talk_commands(self), **decide_commands(self), **stage_commands(self), **project_q_commands(self), **ask_commands(self), **facts_commands(self), **loop_commands(self), **maps_commands(self), **screens_commands(self), **pickables_commands(self), **concerns_commands(self), **tree_commands(self), **gate_commands(self), **play_mark_commands(self)})
         return {name: guarded(name, fn) for name, fn in table.items()}
 

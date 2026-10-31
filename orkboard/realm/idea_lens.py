@@ -7,7 +7,7 @@ a lens no one in the party has is not offered.
     lenses(state_dir, root, "ship")      # {"lenses": [{"id": "text"}, {"id": "code", "by": "Architect", ...}], "default": "code"}
     clean(state_dir, [{"kind": "pain", "segment": "Shop owners", "pain": "Orders get lost"}])   # checked, a screen kept
     save(state_dir, "dark-mode", got); read(state_dir, "dark-mode")
-    attached(state_dir, "dark-mode")     # for a keeper's prompt: the photos, then what the lens pointed at, then the marks picked on the party's map
+    attached(state_dir, "dark-mode")     # for a keeper's prompt: the photos, then what the lens pointed at, then the marks picked on the party's map, then what the live product knew at the places marked on it (realm/idea_play.py)
     clean_marks([{"map": "system", "id": "server/lobby.ts", "name": "server/lobby.ts", "group": "server"}])    # spec 102 §6: what picking sent with the idea
 
 Kept beside the idea's state (`<state_dir>/ideas/<slug>/lens.json`). A screen is kept for the project
@@ -22,7 +22,7 @@ import hashlib
 from pathlib import Path
 
 from orkboard.hooks.warder import is_secret
-from orkboard.realm import goal_team, idea_photos, ideas, library, roles
+from orkboard.realm import goal_team, idea_photos, idea_play, ideas, library, roles
 
 LENSES = {"engineering": "code", "design": "screen", "product": "pain"}   # a craft's lens; the others write text
 ORDER = ("text", "code", "screen", "pain")
@@ -295,5 +295,6 @@ def marks_lines(state_dir: Path, slug: str) -> str:
 
 
 def attached(state_dir: Path, slug: str) -> str:
-    """Everything that came with the idea's text, for a keeper's prompt: its photos, then what the lens pointed at, then the marks on the party's map."""
-    return idea_photos.prompt_lines(state_dir, slug) + prompt_lines(state_dir, slug) + marks_lines(state_dir, slug)
+    """Everything that came with the idea's text, for a keeper's prompt: its photos, then what the lens pointed at, then the marks on the party's map, then what the live product knew at
+    the places marked on it (realm/idea_play.py, spec 115 §5)."""
+    return idea_photos.prompt_lines(state_dir, slug) + prompt_lines(state_dir, slug) + marks_lines(state_dir, slug) + idea_play.prompt_lines(state_dir, slug)

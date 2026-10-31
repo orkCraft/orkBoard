@@ -246,3 +246,52 @@ def test_the_rows_sit_on_the_boards_needs_you_of_a_goal_and_a_node_names_them(pr
     node = next(n for n in got["nodes"] if n["slug"] == slug)
     assert node["needs_you"] == "route" and node["place"] == "table" and node["asks_you"] is True and node["state"] == "routed"
     json.dumps(got)                                                                                          # all data
+
+
+# -- spec 115 D: a bug's mark on the live product (docs/specs/115-the-live-product-under-each-leaders-eyes.md §5) ---------------------------------------------------------------------
+
+def _play(state, slug, kind="bug", **more):
+    from orkboard.realm import idea_play
+    idea_play.save(state, slug, {"kind": kind, "text": "It does nothing", "path": "/orders", "box": {"x": 0.1, "y": 0.1, "w": 0.2, "h": 0.2}, **more})
+
+
+def test_tech_party_is_the_first_of_the_engineering_craft_and_empty_without_one(project, tmp_path):
+    root, _state, p = project
+    assert goal_route.tech_party(root) == p["tech"]
+    assert goal_route.tech_party(tmp_path / "none") == ""
+
+
+def test_a_bug_with_a_mark_that_holds_an_error_or_a_failed_request_reproduces_the_short_way_with_no_diagnosis(project):
+    root, state, p = project
+    how = {"by": "party", "kind": "", "failure": False, "touched": False}
+    route_ = [goal_route.entry(root, p["tech"])]
+    assert goal_route.with_play(root, state, "g", how, route_) == how                                  # no play: as it was
+    _play(state, "g")
+    seen = goal_route.with_play(root, state, "g", how, route_)
+    assert seen["kind"] == "bug" and seen["short"] is True and seen["reproduces"] is False             # a bug of Tech's alone, but its report holds no failure: Talk is its diagnosis
+    _play(state, "g", errors=[{"message": "TypeError: x is undefined"}])
+    seen = goal_route.with_play(root, state, "g", how, route_)
+    assert seen["failure"] is True and seen["short"] is True and seen["reproduces"] is True            # the failure is kept: no diagnosis call
+    _play(state, "h", requests=[{"method": "POST", "path": "/api/orders", "status": 500, "ms": 5}])
+    assert goal_route.with_play(root, state, "h", how, route_)["reproduces"] is True
+    assert goal_route.cost(state, route_, True, root=root, kind="bug", reproduces=True)["calls"] < goal_route.cost(state, route_, True, root=root, kind="bug")["calls"]
+
+
+def test_a_failure_of_a_mark_of_another_kind_is_no_bugs_and_a_bug_addressed_to_another_party_is_not_the_short_way(project):
+    root, state, p = project
+    how = {"by": "party", "kind": "", "failure": False, "touched": False}
+    _play(state, "g", kind="looks", errors=[{"message": "boom"}])
+    assert goal_route.with_play(root, state, "g", how, [goal_route.entry(root, p["tech"])]) == how
+    _play(state, "d", errors=[{"message": "boom"}])
+    seen = goal_route.with_play(root, state, "d", how, [goal_route.entry(root, p["design"])])
+    assert seen["kind"] == "bug" and seen["short"] is False and seen["reproduces"] is False
+
+
+def test_the_failure_a_play_gave_stays_when_the_person_edits_the_route(project):
+    root, state, p = project
+    _play(state, "g", errors=[{"message": "boom"}])
+    how = goal_route.with_play(root, state, "g", {"by": "party", "kind": "", "failure": False, "touched": False}, [goal_route.entry(root, p["tech"])])
+    again = {**how, **goal_route.shape(root, how, [goal_route.entry(root, p["tech"])])}
+    assert again["reproduces"] is True
+    off = {**how, **goal_route.shape(root, how, [goal_route.entry(root, p["design"])])}
+    assert off["reproduces"] is False and off["failure"] is True                                       # the failure is the goal's; the short way is Tech's alone
