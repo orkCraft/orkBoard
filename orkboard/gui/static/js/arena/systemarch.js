@@ -8,11 +8,13 @@
 // the parts inside the containers and the shared ones: the reveal is played once by `Lens` for both views, System and Feature modules (systemmap.js `Modules`); a container's parts gone since the last look
 // lie in a last row of their own to crumble. `overview` null (a snapshot of a host from before spec 90): *Reading the project…*, and Feature modules still works.
 // The whole is drawn at its natural size and scaled to the pane's width (sysfit.js: spec 107 §6; the arrows are measured in the unscaled box); *Fit* and *100 %* in its corner.
+// A link the goal shown reaches across (reach.js `shownReach.links`, on this party's System: spec 117 F) draws its arrow and its name in the goal's element (`is-reach`); the others stay as they are.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Icon } from "../orkui.js";
 import { command } from "../link.js";
 import { lift, lifted, lower, linkKey } from "../frame/state.js";
+import { shownReach } from "../table/reach.js";
 import { ArrowLines } from "./arrows.js";
 import { useScrollCue } from "../scrollcue.js";
 import { FitButtons, useFit, usePan } from "./sysfit.js";
@@ -130,6 +132,9 @@ export function Architecture({ doc, order, step, pick, party }) {
   useScrollCue(scroller);
   usePan(scroller, [there]);
   if (!(ov.containers || []).length) return html`<div class="sys-main"><div class="assets-none"><p class="assets-none__title">${NOTHING}</p></div></div>`;
+  const shown = shownReach.value, reach = shown && shown.map === "system" && shown.party === party ? shown : null;     // the reach on show, when it is this party's System's
+  const crossed = new Set((reach?.links || []).flatMap(([a, b]) => [`${a}>${b}`, `${b}>${a}`]));                    // a pair either way: the reach says which containers a change crosses, not which way
+  const drawn = arrows.map((a) => (crossed.has(a.key) ? { ...a, el: reach.element, reach: true } : a));
   const goals = doc.goals || {}, gindex = new Map(order.map((o, i) => [o.goal, i])), deals = dealsOf(doc, order);
   const lit = new Set(hover ? [...(parts[hover]?.uses || []), ...(parts[hover]?.used_by || [])] : []);
   const names = Object.fromEntries((ov.containers || []).map((c) => [c.path, c.name]));
@@ -164,8 +169,8 @@ export function Architecture({ doc, order, step, pick, party }) {
                 <div class="arch-layer__parts">${r.parts.map((p) => card(p, col.c.name))}</div></div>`)}</div>`}
             </section>`))}
         </div>
-        <${ArrowLines} lines=${arrows} />
-        ${arrows.map((a) => html`<button type="button" key=${a.key} class="arch-link" data-link=${a.key} style=${`left:${a.at.x.toFixed(1)}px;top:${a.at.y.toFixed(1)}px`}
+        <${ArrowLines} lines=${drawn} />
+        ${drawn.map((a) => html`<button type="button" key=${a.key} class=${cls("arch-link", { "is-reach": !!a.reach })} data-elem=${a.el || undefined} data-link=${a.key} style=${`left:${a.at.x.toFixed(1)}px;top:${a.at.y.toFixed(1)}px`}
           aria-pressed=${String(shownLink === a.key)} aria-label=${`${names[a.link.from] || a.link.from} → ${names[a.link.to] || a.link.to}: ${linkWords(a.link)}`}
           onClick=${() => openLink(a.link)}>${linkWords(a.link)}</button>`)}
       </div>

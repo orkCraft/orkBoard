@@ -57,7 +57,7 @@ export function across(key, a, b, gx, gy) {
 
 /** The svg layer that draws `lines` (from `steps`, a field's; from `segment`, the project's diagonals; from `across`, the System's uses) over its positioned host. */
 export function ArrowLines({ lines }) {
-  return html`<svg class="arena-arrows" aria-hidden="true">${lines.map((l) => html`<g key=${l.key} class=${cls("arena-arrow", { "is-leaving": !!l.leaving })} data-edge=${l.key} data-kind=${l.kind || undefined} data-elem=${l.el || undefined}>
+  return html`<svg class="arena-arrows" aria-hidden="true">${lines.map((l) => html`<g key=${l.key} class=${cls("arena-arrow", { "is-leaving": !!l.leaving, "is-reach": !!l.reach })} data-edge=${l.key} data-kind=${l.kind || undefined} data-elem=${l.el || undefined}>
     ${l.points ? html`<polyline points=${l.points} fill="none" style=${`transform-origin: ${l.x1.toFixed(1)}px ${l.y1.toFixed(1)}px`} />`
       : html`<line x1=${l.x1} y1=${l.y1} x2=${l.x2} y2=${l.y2} style=${`transform-origin: ${l.x1.toFixed(1)}px ${l.y1.toFixed(1)}px`} />`}<polygon points=${l.head} /></g>`)}</svg>`;
 }

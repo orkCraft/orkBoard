@@ -130,6 +130,14 @@
 .arch-link:hover { border-color: var(--ork-ink); }
 .arch-link:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 .arch-link[aria-pressed="true"] { border-color: var(--ork-ink); background: var(--ork-ink); color: var(--ork-on-ink); }
+/* a link the goal shown reaches across (reach.js, spec 117 F): its arrow and its name in the goal's element (`data-elem`; ink where the element is not one of the five) */
+.arena-arrow.is-reach polyline { stroke-width: 3; }
+.arch-link.is-reach:not([aria-pressed="true"]) { border-color: var(--ork-ink); box-shadow: inset 0 0 0 1px var(--ork-ink); }
+.arch-link.is-reach[data-elem="meadow"]:not([aria-pressed="true"]) { border-color: var(--ork-elem-meadow); color: var(--ork-elem-meadow); box-shadow: inset 0 0 0 1px var(--ork-elem-meadow); }
+.arch-link.is-reach[data-elem="ice"]:not([aria-pressed="true"]) { border-color: var(--ork-elem-ice); color: var(--ork-elem-ice); box-shadow: inset 0 0 0 1px var(--ork-elem-ice); }
+.arch-link.is-reach[data-elem="dust"]:not([aria-pressed="true"]) { border-color: var(--ork-elem-dust); color: var(--ork-elem-dust); box-shadow: inset 0 0 0 1px var(--ork-elem-dust); }
+.arch-link.is-reach[data-elem="void"]:not([aria-pressed="true"]) { border-color: var(--ork-elem-void); color: var(--ork-elem-void); box-shadow: inset 0 0 0 1px var(--ork-elem-void); }
+.arch-link.is-reach[data-elem="lava"]:not([aria-pressed="true"]) { border-color: var(--ork-elem-lava); color: var(--ork-elem-lava); box-shadow: inset 0 0 0 1px var(--ork-elem-lava); }
 /* a link in the right column: its routes and its events */
 .arch-side__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--ork-3); font: var(--ork-type-caption); color: var(--ork-ink); }
 .arch-route, .arch-event { display: flex; flex-direction: column; gap: 0; min-width: 0; }
