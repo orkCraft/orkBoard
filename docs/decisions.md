@@ -3993,3 +3993,36 @@ live, when hypotheses matter least. So:
 3. The aspect *Evidence* gains the hint *Rests on an untested hypothesis*.
 4. Spec 116, built by the cheaper model, without a mockup.
 The owner's call.
+
+## 195. Each leader's map takes a board game's shape: heat on its parts, a goal's reach before it starts (31 October, the owner)
+
+Why: the owner, after the lands (*style the leaders' tabs as the maps of their races' lands, with storytelling*) were turned
+down as a skin (§50.5, spec 40's *an accent, never a picture*, and colours the elements already hold): *we refer to board
+games everywhere: give each tab the right picture, a nod to some game.* A game earns a map when its loop is the map's work
+(§50.4), and only its shape is taken (§50.5). The mockup of Tech's System (`docs/mockups/tech-reach/`) showed it: a network
+game with outbreaks gives two rules that are the work, the heat of what code saw on a part and how far a change spreads
+through what uses it, so a person compares goals by their spread before either starts. The owner: *the direction is right;
+do it for every lens.* So:
+1. **Two rules on every map, one grammar.** **Heat**: the hints code finds on a part (`map_signals`, every craft's) drawn on
+   it, a hollow square a kind, three at most, beside the leader's concern's mark; until now they reached only the leader's
+   prompt and the strip's chips. **Reach** (`TERMS`): a goal under the pointer in the hand, or picked, lights on the open
+   tab's map the parts its section's *Will be* and its marks name (a solid edge in its element), what they reach by the map's
+   own relation one step out (dashed) and two (dotted), and dims the rest; the strip says it in a line. Where the map knows
+   what checks a part (System: a test), each reached part says so. Read by code, no call.
+2. **A map's shape is its work's game**, its cards unchanged (one deck, a layout a map):
+   - **System**, a network game: the columns as built (never a diagram); a link lights when a reach crosses it.
+   - **Screens**, a dungeon's rooms: each screen's doors in and out on its sides, a wall where there is none (a dead end, a
+     screen nothing leads to); a link back to an earlier step is a door too.
+   - **The tree**, a tech tree: as built; the hypotheses (spec 116) are its parts when they are built.
+   - **The loop**, a rondel: the ring closes, last step to first; what a step gives and takes lies on it as tokens.
+   - **Art's assets**, an inventory: a card's width is its weight (light, normal, heavy), a lane's foot its total against
+     the project's budget when one is set (`orkcraft.toml` `[art] budget_mb`); an asset nothing names lies faint.
+   - **Dev and main**, a train and push your luck: the goals as cars, oldest first, each its age; past the eighth car the
+     batch is big, marked where it starts; a goal's reach is the goals it must take to main with it (`goal_main.plan`).
+   - **The way in** keeps its columns: no game fits it until people's numbers are read (§193.4); heat only.
+3. **Not taken**: a free graph, an outbreak that spreads by itself, a timer, a score or a percentage of risk, the games'
+   names or words in the interface (*changes*, *reaches*, *no test* say what happens), a new colour, a reach for a goal whose
+   spec does not yet say what will change, the lands' pictures (Orkline Camp's, §50.1), a lore of the leaders.
+4. **The rule of the line holds** (§50.5): no count of what waits, no streak; the reach is shown, Start stays the person's.
+5. Spec 117, built by the cheaper model, each part reviewed; no mockup but Tech's.
+The owner's call.

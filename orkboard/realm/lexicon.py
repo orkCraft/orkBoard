@@ -228,6 +228,7 @@ TERMS: tuple[Term, ...] = (
     _t("hint", "hint", "hints"),                                   # what code noticed and no one said: a map's hint of code (spec 109 §3), a press that did nothing on Play (spec 115 §4)
     _t("play_mark", "mark", "marks"),                              # a box the person drew on Play with a line: the live product's own picking (spec 115 §5)
     _t("hypothesis", "hypothesis", "hypotheses"),                  # what the project believes and has not shown, with the signal that would show it, on Product's tree; tested by goals, judged in the hand (spec 116)
+    _t("reach", "reach", "reaches"),                               # how far a goal's change goes on a leader's map: the parts it changes, what they reach by the map's relation one and two steps out (spec 117)
     _t("seat", "seat", "seats"),                                  # one place in a party: its leader's, a builder's, a checker's; a head sits in it
     _t("squad", "squad", "squads"),                                # a party's seats together, grouped *Leads* | *Does* | *Checks*
     _t("size", "size", "sizes"),                                   # how large a party is, in one word: lean, standard or full (the Target's, spec 75)
