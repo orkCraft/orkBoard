@@ -4,8 +4,10 @@ closing the project, its worktree removed; `play_started` and `play_stopped`; ne
 from __future__ import annotations
 
 import inspect
+import json
 import subprocess
 import sys
+import threading
 import time
 import urllib.request
 from pathlib import Path
@@ -368,3 +370,121 @@ def test_the_snapshot_says_how_the_project_opens_a_preview(host, repo):
 def test_the_phone_is_not_told_of_a_preview(host):
     from orkboard.gui.board_host import BoardPhone
     assert "preview" in host.snapshot() and "preview" not in BoardPhone.phone_snapshot(host)                      # the phone has no Play
+
+
+# -- the die's up face: the host says whether the last start failed, or dev has something new (spec 118 §3) ----------------------------------
+
+def face(host) -> str:
+    host.ideas._head_seen = (0.0, "", "")                     # the snapshot keeps dev's head two seconds: a commit made since is read again
+    return host.snapshot()["play_face"]
+
+
+def test_a_project_never_tried_says_nothing_and_a_head_tried_says_nothing(host, repo):
+    assert face(host) == ""                                                                                       # nothing it could be new against
+    host.command("ideas.play", {})
+    assert settle(host)["state"] == "playing"
+    head = git(repo, "rev-parse", "dev")
+    assert ideas_assets.tried_commit(host.ideas.state_dir) == head                                                # it came to playing: that is the commit tried
+    assert face(host) == ""                                                                                       # playing head
+    host.command("ideas.play_stop", {})
+    host.ideas.player.wait()
+    assert face(host) == ""                                                                                       # stopped, tried at head
+
+
+def test_dev_moved_since_the_last_play_says_new(host, repo):
+    host.command("ideas.play", {})
+    assert settle(host)["state"] == "playing"
+    host.command("ideas.play_stop", {})
+    host.ideas.player.wait()
+    commit(repo, {"index.html": PAGE + "<p>more</p>"}, "more")
+    assert face(host) == "new"
+    host.command("ideas.play", {})
+    assert settle(host)["state"] == "playing"
+    assert face(host) == ""                                                                                       # playing the new head: it is tried now
+    host.command("ideas.play_stop", {})
+    host.ideas.player.wait()
+    assert face(host) == ""
+
+
+def test_dev_moving_while_playing_says_new_and_starting_head_says_nothing(host, repo, monkeypatch):
+    host.command("ideas.play", {})
+    assert settle(host)["state"] == "playing"
+    commit(repo, {"index.html": PAGE + "<p>more</p>"}, "more")
+    assert face(host) == "new"                                                                                    # playing an older head: the new one is news
+    host.ideas.player.stop("stopped", wait=True)
+    release = threading.Event()
+    real = ideas_assets.Play._worktree
+    monkeypatch.setattr(ideas_assets.Play, "_worktree", lambda self, c: (release.wait(10), real(self, c))[1])
+    host.command("ideas.play", {})
+    assert host.ideas.player.state == "starting"
+    assert face(host) == ""                                                                                       # starting head now
+    release.set()
+    assert settle(host)["state"] == "playing"
+
+
+def test_a_failed_start_at_head_says_failed_and_dev_moving_after_it_says_new(host, repo, monkeypatch):
+    def broken(self, commit):
+        raise RuntimeError("disk full")
+
+    monkeypatch.setattr(ideas_assets.Play, "_worktree", broken)
+    host.command("ideas.play", {})
+    assert settle(host)["state"] == "failed"
+    head = git(repo, "rev-parse", "dev")
+    assert ideas_assets.tried_commit(host.ideas.state_dir) == head                                                # a failure is a start tried too
+    assert face(host) == "failed"                                                                                 # the cross stays while it did not start
+    commit(repo, {"index.html": PAGE + "<p>fixed</p>"}, "fixed")
+    assert face(host) == "new"                                                                                    # a head not tried since
+    monkeypatch.undo()
+    host.command("ideas.play", {})
+    assert settle(host)["state"] == "playing"
+    assert face(host) == ""
+
+
+def test_a_start_stopped_before_it_came_to_anything_is_not_tried(host, repo, monkeypatch):
+    release = threading.Event()
+    real = ideas_assets.Play._worktree
+    monkeypatch.setattr(ideas_assets.Play, "_worktree", lambda self, c: (release.wait(10), real(self, c))[1])
+    host.command("ideas.play", {})
+    host.ideas.player.stop("stopped")
+    release.set()
+    host.ideas.player.wait()
+    assert host.ideas.player.state == "" and not (host.ideas.state_dir / ideas_assets.TRIED_FILE).exists() and face(host) == ""
+
+
+def test_no_preview_is_not_tried(host, repo):
+    (repo / "index.html").unlink()
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "no page")
+    host.command("ideas.play", {})
+    assert settle(host) == {"state": "failed", "error": "no preview", "none": True}
+    assert ideas_assets.tried_commit(host.ideas.state_dir) == "" and face(host) == ""                             # a project with no preview has nothing to fail
+    assert not (host.ideas.state_dir / ideas_assets.TRIED_FILE).exists()
+
+
+def test_the_commit_last_tried_survives_a_new_play_and_an_unreadable_file_is_none(host, repo):
+    host.command("ideas.play", {})
+    assert settle(host)["state"] == "playing"
+    head = git(repo, "rev-parse", "dev")
+    host.command("ideas.play_stop", {})
+    host.ideas.player.wait()
+    state = host.ideas.state_dir
+    assert json.loads((state / ideas_assets.TRIED_FILE).read_text()) == {"commit": head}
+    again = ideas_assets.Play(repo, state, lambda *a, **k: None, lambda: None)
+    assert again.tried == head                                                                                    # read back from the file
+    (state / ideas_assets.TRIED_FILE).write_text("{not json")
+    assert ideas_assets.Play(repo, state, lambda *a, **k: None, lambda: None).tried == ""
+
+
+def test_the_face_is_said_before_any_play_exists_and_never_breaks_the_snapshot(host, repo, monkeypatch):
+    state = host.ideas.state_dir
+    state.mkdir(parents=True, exist_ok=True)
+    (state / ideas_assets.TRIED_FILE).write_text(json.dumps({"commit": "0" * 40}))
+    assert host.ideas._play is None and face(host) == "new"                                                       # read from the file; no Play was made to answer
+    assert host.ideas._play is None
+    monkeypatch.setattr(ideas_assets.commit_goal, "head", lambda *a: (_ for _ in ()).throw(OSError("git")))
+    assert face(host) == ""
+
+
+def test_the_phone_is_not_told_of_the_face(host):
+    from orkboard.gui.board_host import BoardPhone
+    assert "play_face" in host.snapshot() and "play_face" not in BoardPhone.phone_snapshot(host)

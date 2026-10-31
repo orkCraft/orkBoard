@@ -338,6 +338,7 @@ class Ideas(PlayMarkMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, Conc
                 data = {"needs_you": 0, "idea_states": [], "review_count": 0, "review_results": [], "preview": ""}
             self._cache = (self.rev, now, data)
         return {"focus": focus_of(self.host.machine), "ideas_rev": self.rev, **self._cache[2], "main_checks": self.main_checks_now(),
+                "play_face": self.play_face(),                   # what the die's up face says: Play's state changes without the Board's rev (spec 118 §3)
                 "limits": self.limits(), "mana": self.mana(), "ask": board_ask.record(self.state_dir), "reserve": self.reserve(), "canvases_new": self.canvas_store.new_count(),
                 "canvases_rev": self.canvas_store.rev}
 
