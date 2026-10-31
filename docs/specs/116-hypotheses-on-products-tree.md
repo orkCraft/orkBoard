@@ -125,3 +125,17 @@ hint on and off; the rubric; the lens's words.
 
 Each part's above; the critical tests (`tests/test_architecture.py`: `realm/hypotheses.py` imports no `gui/`),
 `tests/test_board_alone.py`, `tests/test_updates.py`, and every touched module's.
+
+## As built
+
+Built by the cheaper model, a part a branch, each reviewed and merged by the spec's author.
+
+**A** (`realm/hypotheses.py`, `opportunity_tree.text`). Items keep the file's order (the clock's one-second grain would scramble a sort by `at`). A leader's proposal is refused at seven open or twelve proposed; the fortieth item drops the oldest judged, and with none judged the add is refused. A hypothesis is judged once, and only once kept (*Keep it first*). `due` reads a test goal gone from the Board as not done. `on` is checked for its shape only (a job gone reads as no job). The tree's text cuts the hypotheses' words first, then the goals, then drops the last hypotheses before it cuts a job; with none its bytes are as before.
+
+**B** (`core/idea_hypotheses.py`, Talk). The proposal's status is kept in `hypotheses.json` (`proposal`), read through `keeper.hypotheses_proposal()`; no *once* block (the bounds limit it); with no room left the press is refused before any call. The call is given the stage, the tree's text, the jobs' and outcomes' ids, the common facts and the *Defaults* of the goals not done, newest page first (ten, three lines each); an `on` or a `rests` not given is dropped. Talk's `assumes` is `{text, signal}` (a bare line is taken too, its signal *someone shows it*); a repeated text makes the goal rest on the one kept. `realm/idea_spend.py` counts the step as *spec*.
+
+**C** (`board_rows.hypothesis`, `gui/ideas_hypotheses.py`, `write_decision`). `write_decision(title, body, tree=None)` is `_enter`'s writing taken out; a verdict is committed to dev as a goal's decision is, and nothing is written for a hypothesis gone, not kept or judged already. A person's hypothesis has the Orkmaster as the row's leader. The row is data only (the face words *Did it hold?*); it is left out of the snapshot's count and laid after the others. `ideas.hypothesis_set` refuses an `on` the tree does not have.
+
+**D** (`untested`). Only with the Board's pages; `on` is the goal's id when the product map names it, else "". Product's Talk sees the hypotheses through the tree's text (no other change); proposed ones are not in it.
+
+**E** (the faces). `hand/data.js` lays the `hypothesis` stop under its proposer's lane (the first lane for the person's own); the tree reads `ideas.hypotheses` with its own hook so a proposal's `error` never hides the cards; the outcome's row always stands (with *+ Hypothesis*, and *Propose hypotheses* while none is kept). `ideas.add` attaches a goal carrying a `hyp:<id>` mark: an experiment as the first marked hypothesis's test, any other goal as resting on each; a hypothesis gone or full is skipped and never fails the add.
