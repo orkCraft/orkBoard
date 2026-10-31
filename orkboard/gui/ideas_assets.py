@@ -3,7 +3,7 @@ made of, seen and touched, and its own preview of dev. Read from the files, git 
 
     ideas.assets {since?}             # the assets of dev's head by kind, each with its signed address and, since `since`, what changed and its goal
     ideas.asset_before {path, since}  # the signed address of the file as it was at `since`; url "" when it was added since
-    ideas.play {fresh?, peek?}        # the project's preview of dev's head on 127.0.0.1: starting {stage, command, ports, since} → playing {url, commit} or failed {error, tail}
+    ideas.play {fresh?, peek?}        # the project's preview of dev's head on 127.0.0.1: starting {stage, command, ports, since} → playing {url, commit, probe, play} or failed {error, tail}
     ideas.play_stop {}                # it stops and its worktree goes
 
 The snapshot carries `preview` (`preview_kind`: `command` · `static` · ""), whether the project has a preview to play: the Play die sleeps with none (spec 113).
@@ -15,6 +15,10 @@ the package's `dev|preview|start` script) in a worktree of dev's head, `<state_d
 realm/dep_links.py), on a port of its own on the machine's own address. While it starts it says its **stage** (spec 91 §5): `worktree` (making it), `command` (the command started, `command` as words:
 `npm run dev`), `page` (something listens and no page has answered; `ports` asked so far), and `since` (seconds since the start); a failure says the
 last `idea_shot.TAIL_LINES` lines of the command's output (`tail`, colour codes out). Its wait for a page is `PLAY_OPEN_S`, not the picture's.
+**The probe** (docs/specs/115-the-live-product-under-each-leaders-eyes.md §2): the playing `url` is that of a proxy of its own on 127.0.0.1 (gui/play_proxy.py)
+in front of the preview's page, which puts gui/static/play/probe.js in every HTML answer; `probe` says so and `play` is the id its messages carry. `.orkcraft/checks.toml`
+`preview_probe = false` turns the proxy off (`url` is the preview's own, `probe` false), and a proxy that cannot start does the same, saying why in the log. While it plays the
+command's output lines are kept with their time (gui/play_lines.py), `lines_before(t, n=40)` reads them, and the proxy stops with Play.
 One Play a project: a second `ideas.play` while it starts or
 plays answers the same (and says dev's head now, `dev`); `fresh: true` starts it anew when dev moved. `ideas.play_stop`, closing the
 project (`play_close`), quitting, its command ending, or IDLE_S with no face asking (`ideas.play`, `peek` too) stops it and removes the
@@ -23,6 +27,7 @@ worktree. The phones never get it: the commands refuse a phone, and the listener
 from __future__ import annotations
 
 import atexit
+import logging
 import shutil
 import subprocess
 import threading
@@ -32,7 +37,7 @@ from pathlib import Path
 from typing import Any
 
 from orkboard.core import idea_shot
-from orkboard.gui import media
+from orkboard.gui import media, play_lines, play_proxy
 from orkboard.gui.ideas_args import IdeasError, _device, _str, _text
 from orkboard.realm import assets, commit_goal, dep_links, event_log, idea_element, idea_git, ideas
 
@@ -45,6 +50,7 @@ NO_PREVIEW = "no preview"
 NO_PAGE = "nopage"                   # it started and listens, but no port it printed (nor PORT) answers a page (spec 90 §1)
 NO_PAGE_WORDS = "The build started, but no port gives a page. Name it in .orkcraft/checks.toml: preview_port or preview_path."
 _LIVE: "weakref.WeakSet[Play]" = weakref.WeakSet()
+log = logging.getLogger(__name__)
 
 
 def _stop_live() -> None:
@@ -70,7 +76,9 @@ class Play:
         self.logo = ""                                   # the project's logo in dev's head, the address its start screen shows (spec 107 §9.2); "" when it has none
         self.ports: list[int] = []                       # the ports asked so far (stage `page`); a start that gave no page (`nopage`): the ports it asked (spec 90 §1)
         self.stage, self.command = "", ""                # while it starts: worktree · command · page (spec 91 §5), and the command as words
-        self.tail: list[str] = []                        # the command's output, its last lines (`idea_shot.opened`'s `tail`)
+        self.tail: play_lines.Tail = play_lines.Tail()   # the command's output, its last lines (`idea_shot.opened`'s `tail`), and the last 400 with their time (`lines_before`)
+        self.probe, self.play_id, self._proxy = False, "", None     # whether the page goes through the probe's proxy (spec 115 §2), this play's id, the proxy
+        self.page_origin = ""                            # the origin the page is shown at, when a caller knows it (gui/play_proxy.py: "" lets the probe ask the browser)
         self.began = 0.0
         self.port: int | None = None
         self.seen_at = self._alive_at = 0.0
@@ -80,7 +88,8 @@ class Play:
 
     def answer(self, ref: str) -> dict:
         if self.state == "playing":
-            return {"state": "playing", "url": self.url, "commit": self.commit, "short": self.commit[:7], "dev": commit_goal.head(self.root, ref), "logo": self.logo}
+            return {"state": "playing", "url": self.url, "commit": self.commit, "short": self.commit[:7], "dev": commit_goal.head(self.root, ref), "logo": self.logo,
+                    "probe": self.probe, "play": self.play_id}
         if self.state == "starting":
             return {"state": "starting", "commit": self.commit, "short": self.commit[:7], "stage": self.stage, "command": self.command,
                     "ports": list(self.ports), "since": round(max(0.0, time.monotonic() - self.began), 1), "logo": self.logo}
@@ -113,7 +122,7 @@ class Play:
             self._stop = threading.Event()
             self.state, self.commit, self.url, self.error, self.none, self.port, self._why = "starting", tip, "", "", False, None, ""
             self.logo = self._logo_of(tip)
-            self.ports, self.tail, self.stage, self.command, self.began = [], [], "worktree", "", time.monotonic()
+            self.ports, self.tail, self.stage, self.command, self.began = [], play_lines.Tail(), "worktree", "", time.monotonic()
             self._thread =threading.Thread(target=self._run, args=(tip, self._stop), name="play", daemon=True)
             self._thread.start()
         return self.answer(ref)
@@ -195,14 +204,38 @@ class Play:
                 if port is None or stop.is_set():
                     return self._failed(began, stop, NO_PAGE if tried else "did not open", ports=tried)
                 self._alive_at = time.monotonic()
-                self._set("playing", port=port, url=idea_shot.url_of(port, path))
-                self._emit(event_log.PLAY_STARTED, seconds=round(time.monotonic() - began, 1), ok=True, why="", command=command, url=self.url)
-                stop.wait()
+                proxy = self._proxied(port)
+                try:
+                    self._set("playing", port=port, url=proxy.url_of(path) if proxy else idea_shot.url_of(port, path), probe=proxy is not None,
+                              play_id=proxy.play_id if proxy else "", _proxy=proxy)
+                    self._emit(event_log.PLAY_STARTED, seconds=round(time.monotonic() - began, 1), ok=True, why="", command=command, url=self.url)
+                    stop.wait()
+                finally:
+                    self._unproxy()
             self._remove()
             self._emit(event_log.PLAY_STOPPED, why=self._why or "stopped")
             self._set("", url="", port=None)
         except Exception as e:                       # Play never troubles the host: it says why it did not start
             self._failed(began, stop, " ".join(str(e).split())[:300] or type(e).__name__)
+
+    def _proxied(self, port: int) -> "play_proxy.PlayProxy | None":
+        """The probe's proxy in front of the preview's page port, None when the project turned it off (`preview_probe = false`) or it could not start."""
+        if idea_shot._config(self.state_dir).get("preview_probe") is False:
+            return None
+        try:
+            return play_proxy.PlayProxy(port, play_proxy.new_id(), self.page_origin).start()
+        except OSError as e:                         # Play is then today's: the preview's own address
+            log.warning("Play's probe proxy did not start (%s): the page is shown without the probe", e)
+            return None
+
+    def _unproxy(self) -> None:
+        proxy, self._proxy, self.probe, self.play_id = self._proxy, None, False, ""
+        if proxy is not None:
+            proxy.stop()
+
+    def lines_before(self, t: float | None = None, n: int = 40) -> list[str]:
+        """The last `n` lines the preview command printed at or before the wall-clock time `t` (None: now), oldest first; colour codes and secrets out."""
+        return self.tail.before(t, n)
 
     def _failed(self, began: float, stop: threading.Event, why: str, none: bool = False, ports: list[int] | None = None) -> None:
         """It did not start: the worktree goes, `play_started` says why (or `play_stopped`, when it was told to stop meanwhile)."""
