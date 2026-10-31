@@ -9,7 +9,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.realm import ideas, lens_rubrics, loop, map_parts, map_reach, map_signals, opportunity_tree as tree, project_map, spec_sections
+from orkboard.realm import hypotheses as hyp, ideas, lens_rubrics, loop, map_parts, map_reach, map_signals, opportunity_tree as tree, project_map, spec_sections
 from orkboard.realm.idea_git import IdeaGit
 from tests.test_map_signals import APP, git, put
 
@@ -110,6 +110,24 @@ def test_the_tree_a_job_reaches_its_goals_a_goal_its_job_and_experiments_an_expe
     assert map_reach.reach(rel, [trial]) == {trial: 0, goal: 1, job: 2}
     ideas.drop(pages, other, state)
     assert map_reach.relation(state, repo, "product", pages) == {job: [goal], goal: [job, trial], trial: [goal]}, "a goal the Board dropped is no part"
+
+
+def test_the_tree_a_hypothesis_reaches_its_job_and_the_goals_that_rest_on_it_or_test_it_and_they_it(repo, state, pages):
+    tree.keep(state, [{"text": "Cut the time to a first sketch to 2 minutes"}],
+              [{"when": "I start", "want": w, "so": "judge it", "segment": "founders"} for w in ("see a sketch", "share it", "compare two")], "person")
+    job = tree.read(state)["jobs"][0]["id"]
+    goal, trial = (ideas.add_idea(pages, t, "general", state) for t in ("Fast sketch", "Try two sketches"))
+    tree.attach(state, job, goal)
+    tree.test(state, goal, trial)
+    h = hyp.add(state, "People want a sketch in a minute", "half open it twice", on=job, rests=[goal])
+    hyp.attach(state, h["id"], test=trial)
+    hid = f"hyp:{h['id']}"
+    rel = map_reach.relation(state, repo, "product", pages)
+    assert rel == {job: [goal, hid], goal: [job, trial, hid], trial: [goal, hid], hid: [job, goal, trial]}
+    assert map_reach.reach(rel, [trial]) == {trial: 0, goal: 1, hid: 1, job: 2}, "a test reaches its hypothesis, and through it the job"
+    hyp.attach(state, "", test=trial)
+    tree.test(state, "", trial)
+    assert hid not in map_reach.relation(state, repo, "product", pages).get(trial, []), "a goal not on the tree is no part: nothing reaches it"
 
 
 def test_the_loop_a_step_reaches_the_next_the_last_the_first_and_the_currencies_it_gives_and_a_currency_the_steps_that_take_it(repo, state):

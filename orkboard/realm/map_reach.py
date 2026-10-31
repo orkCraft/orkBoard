@@ -10,7 +10,8 @@ it starts (the parts its section's *Will be* and its marks name, and how far a c
 
 `root` is the project's repository, `pages` where the Board's pages are (`ideas.idea_page`). The relation by map (`map_parts.MAPS`' ids), directed as a change spreads:
 - `system`: a part reaches what uses it (`used_by` of the newest snapshot, `project_map`).  `screens`: a screen reaches the screens that link to it (`screen_map`'s links).
-- `product`: a job reaches its goals, a goal its job and its experiments, an experiment its goal (`opportunity_tree`).
+- `product`: a job reaches its goals and its hypotheses, a goal its job, its experiments and the hypotheses it rests on or tests, an experiment its goal, a hypothesis (`hyp:<id>`) its job and the
+  goals that rest on it or test it (`opportunity_tree`, `hypotheses`).
 - `game-design`: a step reaches the next step of its loop (the last the first) and `cur:<id>` of each currency it gives; a currency each step that takes it (`loop`).
 - `release`: a goal reaches the goals `goal_main.plan` takes to main with it. It is computed for the goals asked (`only`; none given: for every goal waiting), for each runs git.
 - `art`, `marketing`: none.
@@ -25,9 +26,10 @@ import threading
 from pathlib import Path
 from typing import Iterable
 
-from orkboard.realm import commit_goal, gate_config, goal_main, ideas, lens_rubrics, loop, map_parts, map_signals, opportunity_tree, project_map, release_map, screen_map, spec_sections, system_overview
+from orkboard.realm import commit_goal, gate_config, goal_main, hypotheses, ideas, lens_rubrics, loop, map_parts, map_signals, opportunity_tree, project_map, release_map, screen_map, spec_sections, system_overview
 
 PER_PART = 3                                  # the hints kept on a part
+HYP = "hyp:"                                  # a hypothesis's part id on the tree (spec 116 §6.1)
 CACHE_MAX = 8
 KEPT = ("tech", "art", "marketing")           # the crafts whose hints depend on the ref's head alone
 _LOCK = threading.Lock()
@@ -110,6 +112,15 @@ def _product(state_dir: Path, pages: Path | None) -> dict[str, list[str]]:
         if ok(t["goal"]) and ok(t["experiment"]):
             _add(rel, t["goal"], t["experiment"])
             _add(rel, t["experiment"], t["goal"])
+    for h in hypotheses.read(state_dir)["items"]:
+        hid = f"{HYP}{h['id']}"
+        if h["on"]:
+            _add(rel, h["on"], hid)
+            _add(rel, hid, h["on"])
+        for goal in (*h["rests"], *h["tests"]):
+            if ok(goal):
+                _add(rel, hid, goal)
+                _add(rel, goal, hid)
     return rel
 
 
