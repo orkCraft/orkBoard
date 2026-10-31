@@ -1,13 +1,13 @@
 # 115. The live product under each leader's eyes: Play as a map, marks on it, hints by code
 
-Decisions §193 (to be written at the owner's yes on `docs/mockups/play-lenses/`). The owner: *Play today is only to poke at
+Decisions §193. The mockup is `docs/mockups/play-lenses/`; the owner sent it to the build without a review of it. The owner: *Play today is only to poke at
 the product and come back with an idea. I propose to gather feedback while working with the running project: what is pressed
 and how, cards on the interface where there are doubts, the technical logs, and above all the person can always pick an area
 of a page or a screen of the product and pick the problem (the party's leader, and a question or a complaint): a bug, the
 wrong design, a feature to hand over.* And then: *it is the same work as with the leaders' lenses, where you leave comments,
 but done right on the live product.* **Builds:** Claude (the cheaper model builds, the spec's author reviews) · **Review:**
 full · P1. After spec 113 (the preview known) and spec 109 (the rubrics). **Waves** (parts in a wave share no file): **1** A,
-B, C; **2** D; **3** E (after the owner's yes on the mockup).
+B, C; **2** D; **3** E.
 
 **What it is, and is not:** Play is **one more map, the product itself, shared by every party**: under a party's tab it is
 seen through that leader's lens (its map's parts on this screen, its concerns, its aspects), and the person marks a place on
@@ -157,7 +157,7 @@ kind *Bug* with the hint's element) or let be (*Not a problem*: not shown again 
 3. Tests: a mark with each kind; on the project's tab (no party); `with` taking chips off; a bug with an error `reproduces`;
    `add_to`; the picture from a snapshot and from the path; secrets out of the lines; no probe (a box and a path only).
 
-## 6. Part E: the faces (after the owner's yes on `docs/mockups/play-lenses/`)
+## 6. Part E: the faces (as `docs/mockups/play-lenses/` draws them)
 
 1. **Play stays open when the tab changes** (`frame/state.js`): the die's view is the pane's over the open tab; another
    tab changes the lens over it, never closes it.

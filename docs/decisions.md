@@ -3961,3 +3961,35 @@ apart. The owner's yes on `docs/mockups/mana-two/`. So (this changes §176.1's o
    marks too.
 5. Drawn in orkUI first (the three smaller bottles), then here; spec 114, built by the cheaper model.
 The owner's call.
+
+## 193. Play is a map for every leader's lens: marks on the live product, hints by code (31 October, the owner)
+
+Why: the owner: *Play today is only to poke at the product and come back with an idea; gather feedback while working with the
+running project, and let the person pick an area of a screen and a problem for a party's leader*; then: *it is the same work as
+with the leaders' lenses, but on the live product.* So:
+1. **Play is one more map, the product itself, shared by every party**: under a party's tab it is seen through that leader's
+   lens (its map's parts on this screen, its concerns, its aspects); the tab changes the lens, never closes Play.
+2. **A mark** is a box on the live product with a line, a kind (*Bug*, *Looks wrong*, *Missing*, *Confusing*) and the open
+   tab's party; it becomes a goal carrying what the live product knows (the screen, the element, the commit, the errors, the
+   requests, the server's last lines, a picture of the moment). A bug's mark with its failure reproduces: no diagnosis call.
+3. **What the probe sees by rule is a hint** (an error, a failed or slow request, a press that did nothing, a press again and
+   again), in the lens of the party whose aspect it is.
+4. Not: analytics of real people (a later spec, through the tools a project already has), a recording of the session, a
+   native app on a device, the phone.
+5. Spec 115, built by the cheaper model; the owner sent it to the build without a review of its mockup.
+The owner's call.
+
+## 194. Hypotheses live on Product's tree: proposed by the leaders, tested by goals, judged in the hand (31 October, the owner)
+
+Why: the owner: *do we have a place for hypotheses in the product? Maybe on the analytics' or the product's leader's tab.*
+There was none: the tree's experiments tie two goals, a goal's *Defaults* are lost in its spec, and the decisions file keeps
+what was decided but not the belief under it. There is no Analytics party, and the analyst leads Run only once a project is
+live, when hypotheses matter least. So:
+1. **A hypothesis is on Product's map**, between a job and its goals: *We believe …*, *We'll know when …*; seven open at
+   most. Product's leader keeps them; **any leader may propose one** (Talk's `assumes`), and Product's leader proposes the
+   riskiest from what the leaders assumed, on a press.
+2. **A test is an ordinary goal**; when its tests are done the hand asks **Did it hold?** (*Held*, *Refuted*, *Not sure yet*);
+   held or refuted writes a decision.
+3. The aspect *Evidence* gains the hint *Rests on an untested hypothesis*.
+4. Spec 116, built by the cheaper model, without a mockup.
+The owner's call.

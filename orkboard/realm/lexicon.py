@@ -225,6 +225,9 @@ TERMS: tuple[Term, ...] = (
     _t("map", "map", "maps"),                                      # what a party's tab shows under its header: Tech's is *System* (a part of it is never called a card)
     _t("concern", "concern", "concerns"),                          # what a party's leader says is wrong or at risk in one part of its map, with why and what would fix it (spec 108, decisions §183.7); not a flag, not a finding
     _t("aspect", "aspect", "aspects"),                             # one thing a craft's senior looks at on its map (*Hotspots*, *Accessibility*, *Economy*), with the question it asks; a concern names its aspect; never a check (the gate's) nor a finding (spec 109, decisions §184.2)
+    _t("hint", "hint", "hints"),                                   # what code noticed and no one said: a map's hint of code (spec 109 §3), a press that did nothing on Play (spec 115 §4)
+    _t("play_mark", "mark", "marks"),                              # a box the person drew on Play with a line: the live product's own picking (spec 115 §5)
+    _t("hypothesis", "hypothesis", "hypotheses"),                  # what the project believes and has not shown, with the signal that would show it, on Product's tree; tested by goals, judged in the hand (spec 116)
     _t("seat", "seat", "seats"),                                  # one place in a party: its leader's, a builder's, a checker's; a head sits in it
     _t("squad", "squad", "squads"),                                # a party's seats together, grouped *Leads* | *Does* | *Checks*
     _t("size", "size", "sizes"),                                   # how large a party is, in one word: lean, standard or full (the Target's, spec 75)
