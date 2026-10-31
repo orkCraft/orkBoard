@@ -2,6 +2,8 @@
 // the others (fonts, the screens' pictures) under them; an asset is a card — a picture is its own window (the asset's `url`), a sound or a music track its two-tone sign and a play button, a clip its first frame and a play
 // button; *new* is the gem of one a goal made or changed since the device's last look at this map. Lifted, an asset shows large and plays (an audio or a video element), its file (a press opening it over the pane), its size and
 // where it was picked, and the variants not picked under it. Registered with maps.js for the craft `art`.
+// An inventory (docs/specs/117-each-lens-a-games-shape.md §8, decisions §195; sheet inventory.css): a lane is a grid of 72 px cells and a card spans 1, 2 or 3 by the asset's `weight` (light, normal, heavy), its picture filling it; a lane's foot says
+// its size in files (the kind's `bytes`); with a `budget` a line over the lanes says how much of it Art takes, in the alert colour past it; an asset the heat (heat.js) says no code names (`data-heat~="unused"`) lies faint, its frame dashed.
 import { useEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
@@ -9,13 +11,24 @@ import { Elem, Sign } from "../orkui.js";
 import { town } from "../link.js";
 import { lift } from "../frame/state.js";
 import { mapFor } from "./maps.js";
-import { FileLink, MapBack, MapCard, MapFrame, Nothing, Sec, Win, countWords, keyOf, useLifted, useRead } from "./mapkit.js";
+import { FileLink, MapBack, MapCard, MapFrame, Nothing, Sec, Win, countWords, keyOf, useLifted, useRead, useWidth } from "./mapkit.js";
+
+if (typeof document !== "undefined") {                                  // the sheet, once, as treemap.js links tree.css
+  const href = new URL("./inventory.css", import.meta.url).href;
+  if (!document.querySelector(`link[href="${href}"]`)) {
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = href;
+    document.head.appendChild(link);
+  }
+}
 
 const MAP = "art", NONE_WHAT = "the project's pictures, sounds, music and clips", SHOWN = 6, SHOWN_NARROW = 4;
 const KINDS = { art: ["Art and icons", "picture", "pictures"], sound: ["Sound", "sound", "sounds"], music: ["Music", "music track", "music tracks"], clip: ["Clips", "clip", "clips"],
   font: ["Fonts", "font", "fonts"], screen: ["Screens' pictures", "screen picture", "screen pictures"] };
 const SIGNS = { sound: "tune", music: "tune", clip: "picture", font: "tagline", art: "picture", screen: "screen" };         // the two-tone drawings (decisions §170.1, §171.2): a sound and a tune the lyre, an animation the picture
 const LOOK = "orkboard.art.look.", PIXEL_MAX = 64;
+const SPAN = { light: 1, normal: 2, heavy: 3 }, CELL = 72, GAP = 8, UNUSED = "Nothing in the code names it";                  // a lane's cell and the gap between: inventory.css's 72px and `--ork-4`
 const read = (k) => { try { return localStorage.getItem(k) || ""; } catch { return ""; } };
 const write = (k, v) => { try { localStorage.setItem(k, v); } catch { /* the new ones are marked again next time */ } };
 
@@ -27,6 +40,12 @@ export function lengthWords(s) {
 }
 const bytesWords = (b) => (b >= 1048576 ? `${(b / 1048576).toFixed(1)} MB` : b >= 1024 ? `${Math.round(b / 1024)} KB` : b > 0 ? `${b} B` : "");
 const sizeWords = (a) => (a.w && a.h ? `${a.w} × ${a.h}` : lengthWords(a.seconds) || bytesWords(a.bytes));
+/** A total: *640 KB*, *4.2 MB*, *10 MB*. */
+export function totalWords(b) {
+  if (b >= 1073741824) return `${+(b / 1073741824).toFixed(1)} GB`;
+  if (b >= 1048576) return `${+(b / 1048576).toFixed(1)} MB`;
+  return bytesWords(b) || "0 B";
+}
 const isAudio = (a) => a.kind === "sound" || a.kind === "music";
 
 /** A lane's caption under its name: its folder and what it holds (*sprites/: 40 pictures*), else the count and the folders. */
@@ -57,7 +76,7 @@ function Pic({ a, big = false }) {
   return html`<img class=${cls("mp-pic", { "is-pixel": pixel })} src=${a.url} alt=${a.name} draggable="false" loading=${big ? "eager" : "lazy"} />`;
 }
 
-function AssetCard({ a, goals, narrow }) {
+function AssetCard({ a, goals, span }) {
   const goal = a.goal && goals[a.goal], element = goal?.element || "", on = playing.value === a.id;
   const gem = a.change === "added" ? "new" : a.change === "changed" ? "changed" : "";
   const play = (e) => {
@@ -66,7 +85,7 @@ function AssetCard({ a, goals, narrow }) {
     else { wantPlay = a.id; lift(keyOf(MAP, a.id)); }
   };
   const pic = a.kind === "art" || a.kind === "screen";
-  return html`<${MapCard} map=${MAP} id=${a.id} name=${a.name} code=${true} element=${element} group=${a.kind} gem=${gem} row=${sizeWords(a)} rowCode=${true} className="mp-asset">
+  return html`<${MapCard} map=${MAP} id=${a.id} name=${a.name} code=${true} element=${element} group=${a.kind} gem=${gem} row=${sizeWords(a)} rowCode=${true} className=${`mp-asset is-s${span}`} style=${`--span:${span}`}>
     <${Win} tone=${element} tall=${true} pic=${pic}>
       ${pic ? html`<${Pic} a=${a} />`
         : a.kind === "clip" ? html`<video class="mp-pic" src=${`${a.url}#t=0.001`} preload="metadata" muted playsinline aria-hidden="true"></video>`
@@ -78,11 +97,13 @@ function AssetCard({ a, goals, narrow }) {
 }
 
 function Lane({ k, goals, narrow, open, setOpen }) {
+  const grid = useRef(), width = useWidth(grid), cols = width ? Math.max(1, Math.floor((width + GAP) / (CELL + GAP))) : 3;        // a card never spans more cells than the lane has
   const [head] = KINDS[k.kind] || [k.kind], cap = narrow ? SHOWN_NARROW : SHOWN, all = open.has(k.kind), shown = all ? k.assets : k.assets.slice(0, cap), more = k.assets.length - shown.length;
   return html`<section class="mp-lane" data-kind=${k.kind} aria-label=${head}>
     <header class="mp-lane__head"><span class="ork-label">${head}</span><span class="mp-cap">${k.n ? laneWords(k) : "None yet"}</span></header>
-    <div class="mp-lane__cards">${shown.map((a) => html`<${AssetCard} key=${a.id} a=${a} goals=${goals} narrow=${narrow} />`)}</div>
+    <div class="mp-lane__cards iv-grid" ref=${grid} style=${`--cols:${cols}`}>${shown.map((a) => html`<${AssetCard} key=${a.id} a=${a} goals=${goals} span=${Math.min(SPAN[a.weight] || SPAN.normal, cols)} />`)}</div>
     ${more > 0 && html`<button type="button" class="ork-btn quiet mp-more" onClick=${() => setOpen(new Set([...open, k.kind]))}>and ${more} more</button>`}
+    ${k.n > 0 && typeof k.bytes === "number" && html`<p class="iv-foot">${totalWords(k.bytes)} in ${countWords(k.n, "file", "files")}</p>`}
   </section>`;
 }
 
@@ -115,17 +136,44 @@ function Back({ a, goals }) {
     ${vs.length > 0 && html`<${Sec} label="Variants not picked"><div class="mp-variants">${vs.map((v) => html`<${Variant} key=${v.key || v.name} v=${v} />`)}</div></${Sec}>`}`;
 }
 
+/** *Art: 4.2 MB of the budget's 10 MB*; past it *Art: 12 MB, over the budget's 10 MB* (`data-over`, in the alert colour). */
+function Budget({ b }) {
+  const over = b.bytes > b.of;
+  return html`<p class="iv-budget" data-over=${over ? "1" : undefined}>${over ? `Art: ${totalWords(b.bytes)}, over the budget's ${totalWords(b.of)}` : `Art: ${totalWords(b.bytes)} of the budget's ${totalWords(b.of)}`}</p>`;
+}
+
+/** An asset the heat says no code names (`data-heat~="unused"`, set by heat.js after the cards are drawn) says so in its title, the card's and its name's. */
+function useUnusedTitles(host) {
+  useEffect(() => {
+    const el = host.current;
+    if (!el) return undefined;
+    const sync = () => {
+      for (const c of el.querySelectorAll(".mp-asset")) {
+        const nm = c.querySelector(".mp-card__nm"), name = nm?.textContent || "", unused = (c.dataset.heat || "").split(" ").includes("unused");
+        if (nm && nm.title !== (unused ? `${name}\n${UNUSED}` : name)) nm.title = unused ? `${name}\n${UNUSED}` : name;
+        if (unused && c.title !== `${name}\n${UNUSED}`) c.title = `${name}\n${UNUSED}`;
+        else if (!unused && c.hasAttribute("title")) c.removeAttribute("title");
+      }
+    };
+    sync();
+    const watch = new MutationObserver(sync);
+    watch.observe(el, { subtree: true, childList: true, attributes: true, attributeFilter: ["data-heat"] });
+    return () => watch.disconnect();
+  }, []);
+}
+
 export function ArtMap({ g, narrow }) {
   const host = useRef(), project = town.value?.projects?.current || "", since = useRef(read(LOOK + project)).current, [open, setOpen] = useState(() => new Set());
   const [rd] = useRead("ideas.art_map", since ? { since } : {}), d = rd.data, at = useLifted(MAP), seen = useRef("");
   seen.current = d?.commit || seen.current;
   useEffect(() => () => { stop(); if (seen.current) write(LOOK + project, seen.current); }, [project]);        // leaving the map is looking at it: what is new is new once
   const goals = d?.goals || {}, kinds = (d?.kinds || []).filter((k) => k.own || k.n > 0);
+  useUnusedTitles(host);
   const asset = at ? kinds.flatMap((k) => k.assets).find((x) => x.id === at) : null;
   const back = asset ? html`<${MapBack} host=${host} name=${asset.name} narrow=${narrow} wide=${true}><${Back} key=${asset.id} a=${asset} goals=${goals} /></${MapBack}>` : null;
   return html`<${MapFrame} map=${MAP} host=${host} back=${back} className="mp--art">
     ${d && d.none ? html`<${Nothing} what=${NONE_WHAT} />`
-      : d && html`<div class="mp-lanes">${kinds.map((k) => html`<${Lane} key=${k.kind} k=${k} goals=${goals} narrow=${narrow} open=${open} setOpen=${setOpen} />`)}</div>`}
+      : d && html`${d.budget?.of > 0 && html`<${Budget} b=${d.budget} />`}<div class="mp-lanes">${kinds.map((k) => html`<${Lane} key=${k.kind} k=${k} goals=${goals} narrow=${narrow} open=${open} setOpen=${setOpen} />`)}</div>`}
     ${!d && rd.err && html`<p class="mp-err" role="alert">${rd.err}</p>`}
   </${MapFrame}>`;
 }

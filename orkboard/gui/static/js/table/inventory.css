@@ -1,0 +1,39 @@
+/* Art as an inventory (docs/specs/117-each-lens-a-games-shape.md §8, decisions §195). orkUI's tokens only. A lane is a grid of 72 px cells with `--ork-4` (8 px) between (artmap.js CELL and GAP are the same two numbers), `--cols`
+   across (artmap.js sets it from the lane's width) and a card spans 1, 2 or 3 cells each way by its asset's weight (`--span`), its picture filling it; a one-cell card is its picture and its name in a line. maps.css's lane rules stay; these are heavier. */
+.mp--art .mp-lanes { grid-template-columns: repeat(auto-fit, minmax(calc(232px + var(--ork-6)), 1fr)); gap: var(--ork-6) 0; }
+.mp--art .mp-lane, .mp--art .mp-lane:nth-child(4n + 1) { padding: 0 var(--ork-4); border-left: var(--ork-line) solid var(--ork-frame); }
+.mp--art .mp-lane:first-child { padding-left: 0; border-left: 0; }
+.mp--art .mp-lane__cards.iv-grid { display: grid; grid-template-columns: repeat(var(--cols, 3), 72px); grid-auto-rows: 72px; grid-auto-flow: dense; gap: var(--ork-4); justify-content: start; align-items: stretch; }
+.mp--art .iv-grid .mp-card.ork-card { grid-column: span var(--span, 2); grid-row: span var(--span, 2); max-width: none; min-width: 0; min-height: 0; padding: var(--ork-2); gap: var(--ork-1); }
+.mp--art .iv-grid .mp-card__head { min-height: 0; gap: var(--ork-2); }
+.mp--art .iv-grid .mp-card__head .ork-elem { margin-top: 1px; }
+.mp--art .iv-grid .mp-card__nm { -webkit-line-clamp: 2; line-clamp: 2; padding-top: 0; }
+.mp--art .iv-grid .mp-card__row { min-height: 0; }
+.mp--art .iv-grid .mp-win, .mp--art .iv-grid .mp-win.is-tall { flex: 1 1 0; height: auto; min-height: 0; }
+.mp--art .iv-grid .mp-win .mp-pic:not(video) { width: 100%; height: 100%; max-width: none; max-height: none; }
+
+/* one cell: the picture over its name in a line; the size is left out, the gem sits on the picture's corner */
+.mp--art .iv-grid .is-s1.mp-card.ork-card { padding: var(--ork-1); gap: 0; }
+.mp--art .iv-grid .is-s1 .mp-win { order: -1; padding: var(--ork-1); gap: var(--ork-1); }
+.mp--art .iv-grid .is-s1 .mp-win:has(.mp-play) > .ork-sign { display: none; }
+.mp--art .iv-grid .is-s1 .mp-card__head { padding: 0 var(--ork-1); }
+.mp--art .iv-grid .is-s1 .mp-card__head .ork-elem { display: none; }
+.mp--art .iv-grid .is-s1 .mp-card__nm { -webkit-line-clamp: 1; line-clamp: 1; }
+.mp--art .iv-grid .is-s1 .mp-card__row { position: absolute; top: var(--ork-1); right: var(--ork-1); margin: 0; }
+.mp--art .iv-grid .is-s1 .mp-card__l { display: none; }
+.mp--art .iv-grid .is-s1 .mp-play { height: 24px; min-width: 24px; padding: 0 var(--ork-1); }
+
+/* a lane's foot, and the budget over the lanes */
+.iv-foot { margin: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.iv-budget { margin: 0 0 var(--ork-5); color: var(--ork-ink-muted); font: var(--ork-type-body); }
+.iv-budget[data-over] { color: var(--ork-alert); }
+
+/* an asset no code names lies faint, its frame dashed (heat.js sets `data-heat`); the reach's edge and the heat's squares keep their strength */
+.mp-asset[data-heat~="unused"] { border-style: dashed; }
+.mp-asset[data-heat~="unused"]:not([data-reach-dim]) > :not(.rc-edge, .cn-slot) { opacity: 0.5; }
+
+@media (max-width: 759px) {
+  .mp--art .mp-lanes { grid-template-columns: minmax(0, 1fr); gap: var(--ork-5); }
+  .mp--art .mp-lane, .mp--art .mp-lane:nth-child(4n + 1), .mp--art .mp-lane:first-child { padding: 0; border-left: 0; }
+  .mp--art .mp-lane__cards.iv-grid { display: grid; }
+}
