@@ -13,8 +13,8 @@ import pytest
 from orkboard.core import idea_keeper
 from orkboard.core.idea_talk import TalkMixin
 from orkboard.gui.board_host import Orkboard
-from orkboard.realm import event_log, goal_team, idea_objections, idea_questions, idea_target, ideas, library, project_facts
-from orkboard.realm.idea_talk_parse import clean_diagnosis, clean_round, fact_text, pick_three, touched
+from orkboard.realm import event_log, goal_team, hypotheses, idea_objections, idea_questions, idea_target, ideas, library, project_facts
+from orkboard.realm.idea_talk_parse import clean_assumes, clean_diagnosis, clean_round, fact_text, pick_three, touched
 
 
 @pytest.fixture
@@ -756,3 +756,98 @@ def test_a_leader_is_told_not_to_agree_by_its_partys_craft_and_the_concerns_seam
         assert "`verdict` is `go`, `doubt` or `no`" in prompt and "Your concerns on your map" not in prompt
     assert "`after`" not in by[parties["product"]] and "`after`" not in by[parties["tech"]]                           # a goal to wait for is offered only when there is a line
     assert host.ideas.keeper.concerns_text(parties["tech"]) == ""
+
+
+# -- what a leader assumes (spec 116 §3) --------------------------------------------------------------------------------------------------
+
+def _assumes(model, parties, **by):
+    """Round one for the three leaders as `_round_one` has it, `by[who]` the `assumes` of that leader's answer (none where it is not given)."""
+    _round_one(model, parties)
+    for who, value in by.items():
+        model.said[("talk_round", parties[who])] = {**model.said[("talk_round", parties[who])], "assumes": value}
+
+
+def _kept(host):
+    return hypotheses.read(host.ideas.state_dir)["items"]
+
+
+def test_assumes_is_taken_strictly_a_line_each_of_text_and_signal_or_a_bare_line_or_none():
+    assert clean_assumes({"text": "  People   want\n a sketch ", "signal": "three of five say so"}) == {"text": "People want a sketch", "signal": "three of five say so"}
+    assert clean_assumes("A bare line") == {"text": "A bare line", "signal": ""}                                                  # a leader that writes less still has said it
+    assert len(clean_assumes({"text": "x" * 500, "signal": "y" * 500})["text"]) == 200 and len(clean_assumes({"text": "x", "signal": "y" * 500})["signal"]) == 200
+    assert clean_assumes({"text": "x", "signal": 3}) == {"text": "x", "signal": ""}
+    for none in (None, "", "   ", {}, {"signal": "no text"}, {"text": ""}, {"text": 3}, 3, True, ["a"]):
+        assert clean_assumes(none) == {}
+    got = clean_round({"stance": "s", "assumes": {"text": "It rests on this", "signal": "a test"}}, "tech", "architect", 1, False, set())
+    assert got["assumes"] == {"text": "It rests on this", "signal": "a test"} and clean_round({"stance": "s"}, "tech", "architect", 1, False, set())["assumes"] == {}      # absent: none
+    assert clean_round({"assumes": {"text": "a"}, "questions": []}, "tech", "architect", 2, False, set())["assumes"] == {}                 # the second round has none
+
+
+def test_the_round_asks_for_assumes_in_one_sentence_for_every_leader(host, parties, model):
+    _round_one(model, parties)
+    _talk(host, parties, ["product", "design", "tech"])
+    for c in model.steps("talk_round"):
+        assert "If this goal rests on something no one has shown, say it in `assumes`" in c["prompt"] and "else leave it out" in c["prompt"]
+
+
+def test_each_assumes_is_kept_as_a_proposed_hypothesis_of_the_leader_that_rests_on_the_goal(host, parties, model):
+    _assumes(model, parties, product={"text": "Founders want a sketch first", "signal": "five of five ask for it"}, tech={"text": "The canvas holds a thousand shapes", "signal": "a test with a thousand"})
+    slug = _talk(host, parties, ["product", "design", "tech"])
+    first, second = _kept(host)
+    assert (first["text"], first["signal"], first["state"], first["by"], first["party"], first["rests"], first["tests"]) == (
+        "Founders want a sketch first", "five of five ask for it", "proposed", "leader", parties["product"], [slug], [])
+    assert (second["text"], second["state"], second["by"], second["party"], second["rests"]) == ("The canvas holds a thousand shapes", "proposed", "leader", parties["tech"], [slug])
+    row = _row(host, slug, "talk")
+    assert [set(s) for s in row["stances"]] == [{"party", "leader", "stance", "for", "against", "verdict", "why", "instead", "after"}] * 3         # Talk's row is as it was
+
+
+def test_a_bare_line_is_kept_with_a_signal_of_its_own_words_for_when_none_was_given(host, parties, model):
+    _assumes(model, parties, design="People will find the share button")
+    _talk(host, parties, ["product", "design"])
+    (got,) = _kept(host)
+    assert got["text"] == "People will find the share button" and got["signal"] == "someone shows it" and got["party"] == parties["design"]
+
+
+def test_with_no_assumes_nothing_is_kept_and_a_blank_one_is_none(host, parties, model):
+    _assumes(model, parties, product="", design={"text": "  "}, tech=None)
+    _talk(host, parties, ["product", "design", "tech"])
+    assert _kept(host) == []
+
+
+def test_the_same_text_twice_is_kept_once_and_the_goal_rests_on_it_instead(host, parties, model):
+    _assumes(model, parties, product={"text": "Founders want a sketch first", "signal": "one"}, design={"text": "founders  WANT a sketch first", "signal": "two"})
+    one = _talk(host, parties, ["product", "design"])
+    (got,) = _kept(host)
+    assert got["party"] == parties["product"] and got["signal"] == "one" and got["rests"] == [one]                                   # the first leader's, kept once
+    two = _talk(host, parties, ["product", "design"], text="add a light mode option")
+    (got,) = _kept(host)
+    assert got["rests"] == [one, two]                                                                                                # the same assumption of another goal: the goal rests on it too
+
+
+def test_a_hypothesis_past_the_bounds_never_fails_talk(host, parties, model):
+    for n in range(hypotheses.MAX_PROPOSED):
+        hypotheses.add(host.ideas.state_dir, f"Waiting {n}", "a signal", by="leader", party=parties["product"])
+    _assumes(model, parties, product={"text": "One too many", "signal": "s"})
+    slug = _talk(host, parties, ["product", "design"])
+    assert len(_kept(host)) == hypotheses.MAX_PROPOSED and all(h["text"].startswith("Waiting") for h in _kept(host))
+    assert _state(host, slug)["state"] == "talk" and _state(host, slug)["error"] == "" and _row(host, slug, "talk") is not None         # the round is kept all the same
+
+
+def test_a_hypothesis_that_cannot_be_kept_for_any_other_reason_never_fails_talk(host, parties, model, monkeypatch):
+    def broken(*a, **k):
+        raise RuntimeError("the record cannot be written")
+
+    monkeypatch.setattr(hypotheses, "add", broken)
+    _assumes(model, parties, product={"text": "A thing", "signal": "s"})
+    slug = _talk(host, parties, ["product", "design"])
+    assert _state(host, slug)["state"] == "talk" and _row(host, slug, "talk") is not None
+
+
+def test_a_second_round_asks_nothing_of_assumes(host, parties, model, monkeypatch):
+    _round_one(model, parties, per=1, second_round=True)
+    slug = _talk(host, parties, ["product", "tech"])
+    model.said[("talk_round", parties["product"])] = {"questions": [], "assumes": {"text": "Said again", "signal": "s"}}
+    model.said[("talk_round", parties["tech"])] = {"questions": [], "assumes": {"text": "Said again", "signal": "s"}}
+    host.command("ideas.talk_answer", {"idea": slug, "answers": [{"id": c["id"], "pick": 0} for c in _row(host, slug, "talk")["questions"]]})
+    _wait(host, slug)
+    assert _kept(host) == []
