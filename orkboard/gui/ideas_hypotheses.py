@@ -12,7 +12,7 @@ them by. The record is `realm/hypotheses.py`'s; the row *Did it hold?* that asks
                                               #    its body the signal, the evidence, the tests' titles and the why) and keep its number in the verdict; unsure keeps it open, the why its evidence
     ideas.hypotheses_propose {}               # the leaders' proposal (core/idea_hypotheses.py) → {ok, asked: bool, why?}
 
-`hypotheses` is data only: `party` is Product's party (or ""), `proposing` true while a proposal this host asked runs, `status` "asking" then and "" otherwise. Every command but `hypotheses_propose`
+`hypotheses` is data only: `party` is Product's party (or ""), `proposing` true while a proposal runs, `status` the last proposal's ("" · asking · done · failed, `core/idea_hypotheses.py`) with its `error` when it has one. Every command but `hypotheses_propose`
 refuses in plain words (`IdeasError`): a hypothesis gone or judged already, no words, a bound passed (seven open, twelve waiting, forty in all), a job or a goal that is gone, a verdict on a
 hypothesis not yet kept, a decision that could not be written (then the hypothesis stays as it was). `hypotheses_propose` is never a refusal: a call that cannot be made is `asked: false` with
 why. The host returns keys and data, never interface words.
@@ -56,10 +56,9 @@ class HypothesesMixin:
 
     def hypotheses(self, args: dict) -> dict:
         party = self.keeper.tree_party() if hasattr(self.keeper, "tree_party") else ""
-        proposing = bool(party) and bool(getattr(self, "_hyp_asked", False)) and bool(self.keeper.busy_goal(party))
-        if not proposing:
-            self._hyp_asked = False                                   # a call lost with the process, or done, is no longer asked
-        return {"items": self._hyp_shown(hypotheses.read(self.state_dir)["items"]), "party": party, "proposing": proposing, "status": "asking" if proposing else ""}
+        prop = self.keeper.hypotheses_proposal() if hasattr(self.keeper, "hypotheses_proposal") else {"status": "", "error": ""}     # core/idea_hypotheses.py: a run lost with the process reads as none
+        out = {"items": self._hyp_shown(hypotheses.read(self.state_dir)["items"]), "party": party, "proposing": prop.get("status") == "asking", "status": prop.get("status") or ""}
+        return {**out, "error": prop["error"]} if prop.get("error") else out
 
     # -- the person's ---------------------------------------------------------------------------------------------------------------------------
 
@@ -183,7 +182,6 @@ class HypothesesMixin:
             asked = bool(ask())
         except KeeperError as e:                                  # the keeper's refusals are plain words; none fails the caller
             return {"ok": True, "asked": False, "why": str(e)}
-        self._hyp_asked = asked
         self.changed("")
         return {"ok": True, "asked": asked}
 

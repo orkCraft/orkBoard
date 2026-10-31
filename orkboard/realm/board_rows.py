@@ -2,7 +2,7 @@
 Board keeps: it writes nothing, starts nothing and words nothing. `realm/board_map.py` lays them in `build`, `gui/ideas_board.py` in the Board's Needs you.
 
     board_rows.project_q(state_dir)           # [] or [{kind: "project_q", party, leader, questions: [card], text, blocks, priority, at}]
-    board_rows.hypothesis(state_dir, pages)   # [{kind: "hypothesis", id, text, signal, evidence, tests: [{slug, title}], party, leader, blocks, priority, at, question}]
+    board_rows.hypothesis(state_dir, pages)   # [{kind: "hypothesis", id, text, signal, evidence, tests: [{slug, title}], party, leader, blocks, priority, at}]
     board_rows.rows(state_dir, pages)         # every such row, in the order they are laid (`pages`: the Board's pages, where the tests' places are read; none, and no hypothesis is due)
 
 `project_q`: the project's questions at the first start (core/idea_project_q.py asks them, `ideas.project_answer` answers them): the stack of its party's leader (Product's, in a
@@ -12,7 +12,7 @@ It holds nothing back (`blocks` false: the first goal is sent with it unanswered
 
 `hypothesis` (docs/specs/116-hypotheses-on-products-tree.md §4.1; decisions §194): *Did it hold?*, one row for each open hypothesis that has a test and whose every test (a goal) is done
 (`hypotheses.due`; the places are the goals' on the Board's pages). `text` is the hypothesis's own words, the top line a face that does not draw the kind shows (as `project_q`'s is its top
-card's question); `question` is the plain question about it, for such a face to ask. `signal` and `evidence` ({text, ref, at}) are what would show it and what was found; `tests` the goals that
+card's question; the face words the question). `signal` and `evidence` ({text, ref, at}) are what would show it and what was found; `tests` the goals that
 tested it, `[{slug, title}]`; `party` is the party that proposed it ("" the person's own) and `leader` that party's leader (the Orkmaster's for the person's). It holds nothing back (`blocks`
 false) and lies after the others; judged (`ideas.hypothesis_judge`), it leaves the hand.
 """
@@ -53,8 +53,7 @@ def hypothesis(state_dir: Path, pages: Path | None = None) -> list[dict]:
         tests = [{"slug": t, "title": " ".join((ideas.idea_page(Path(pages), t).title or t).split())[:80]} for t in item["tests"]]      # `due` has every test in `places`: its page is there
         party = item["party"]
         out.append({"kind": "hypothesis", "id": item["id"], "text": item["text"], "signal": item["signal"], "evidence": item["evidence"], "tests": tests, "party": party,
-                    "leader": goal_team.leader_of(Path(pages), party) if party else "orkmaster", "blocks": False, "priority": "normal", "at": item["at"],
-                    "question": f"Did it hold? {item['text']}"})
+                    "leader": goal_team.leader_of(Path(pages), party) if party else "orkmaster", "blocks": False, "priority": "normal", "at": item["at"]})
     return out
 
 

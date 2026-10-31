@@ -43,7 +43,7 @@ def test_the_row_appears_when_the_last_test_is_done_and_not_before(host):
     assert row == {"kind": "hypothesis", "id": item["id"], "text": "People want a sketch", "signal": "most ask for one in a minute",
                    "evidence": [{"text": "Four of five asked", "ref": first, "at": row["evidence"][0]["at"]}],
                    "tests": [{"slug": first, "title": "Interview five founders"}, {"slug": second, "title": "Playtest the sketch"}],
-                   "party": "", "leader": "orkmaster", "blocks": False, "priority": "normal", "at": item["at"], "question": "Did it hold? People want a sketch"}
+                   "party": "", "leader": "orkmaster", "blocks": False, "priority": "normal", "at": item["at"]}
 
 
 def test_a_test_gone_from_the_board_is_not_done(host):

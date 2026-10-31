@@ -244,8 +244,7 @@ def test_seven_open_at_most(host):
 
 # -- the leaders' proposal ----------------------------------------------------------------------------------------------------------------------
 
-def test_without_the_keepers_proposal_nothing_is_asked_and_it_says_why(host):
-    assert not hasattr(host.ideas.keeper, "hypotheses_propose")
+def test_with_no_product_party_nothing_is_asked_and_it_says_why(host):
     got = host.command("ideas.hypotheses_propose", {})
     assert got["ok"] is True and got["asked"] is False and got["why"]
 
