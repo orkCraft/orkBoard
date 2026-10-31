@@ -39,6 +39,7 @@ def test_a_phone_may_send_the_boards_commands_and_halt_but_not_build_or_type(fak
                  "orders.answer", "phones.pair", "update.policy", "update.restart", "link.open"):
         assert not may(name, {}), name
     assert may("update.check") and may("update.install")         # a newer version, installed from the phone (shell-update.js)
+    assert may("repair.start") and may("repair.stop") and may("repair.update")   # Fix it (spec 119 §3.3, decisions §197.4)
 
 
 def test_the_compact_snapshot_is_small_and_names_its_content(fake_repo):
@@ -50,7 +51,8 @@ def test_the_compact_snapshot_is_small_and_names_its_content(fake_repo):
     assert len(json.dumps(snap)) < len(json.dumps(full))
     assert set(snap) == {"v", "project", "focus", "look", "ideas_rev", "ops_rev", "ops_team", "needs_you", "idea_states",
                          "review_count", "review_results", "limits", "reserve", "rate", "hud", "version", "update", "rev",
-                         "canvases_new", "canvases_rev", "sleep", "mana", "projects"}   # spec 94 B: the page's, less COMPUTER_ONLY
+                         "canvases_new", "canvases_rev", "sleep", "mana", "projects",
+                         "repair"}   # spec 94 B: the page's, less COMPUTER_ONLY; spec 119: Fix it is the phone's too
     assert snap["focus"] == "board" and snap["look"] == "office"
     assert "words" not in snap and not set(snap) & set(host.COMPUTER_ONLY)
     assert host.command("mobile.snapshot", {"since": snap["rev"]}) == {"v": phones.API, "rev": snap["rev"],
