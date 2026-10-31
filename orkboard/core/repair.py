@@ -122,12 +122,28 @@ def head(root: Path | str | None = None, run: Callable = subprocess.run) -> str:
 _can_seen: tuple[float, tuple[bool, str]] | None = None
 
 
+# Where Claude Code is installed when the PATH an app is started with (the Dock's, launchd's) does not reach it (spec 119 §2.1)
+PLACES = ("~/.claude/local", "~/.local/bin", "~/.npm-global/bin", "~/.bun/bin", "/opt/homebrew/bin", "/usr/local/bin")
+
+
+def find(name: str, which: Callable[[str], str | None] = shutil.which, places: tuple[str, ...] = PLACES) -> str | None:
+    """`name` on the PATH, else in the places Claude Code installs to; None when neither has it."""
+    found = which(name)
+    if found or os.sep in name:
+        return found
+    for place in places:
+        p = Path(place).expanduser() / name
+        if p.is_file() and os.access(p, os.X_OK):
+            return str(p)
+    return None
+
+
 def forget_can() -> None:
     global _can_seen
     _can_seen = None
 
 
-def can(run: Callable = subprocess.run, which: Callable[[str], str | None] = shutil.which, way: updates.Method | None = None,
+def can(run: Callable = subprocess.run, which: Callable[[str], str | None] = find, way: updates.Method | None = None,
         now: float | None = None, fresh: bool = False) -> tuple[bool, str]:
     """Whether Fix it is offered here and, when not, why in plain words: a git checkout of Orkboard on `main`, with a remote `origin`,
     and Claude Code (the first word of the machine's `repair_command`) on the PATH. Read once a minute at most."""
@@ -304,6 +320,8 @@ def start(said: str, logs_zip: bytes, now: float | None = None, run: Callable = 
     if root is None:
         raise RepairError(f"{brand.name()} was not installed from git")
     argv = list(cmd or command())
+    if argv and cmd is None:
+        argv[0] = find(argv[0]) or argv[0]                # the app's PATH may not reach it (PLACES)
     try:
         stop()
         base = _fresh_worktree(root, run)

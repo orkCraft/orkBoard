@@ -2,7 +2,7 @@
 
 The bug at the end of the tabs' row, by `repair.state`: idle (the line, *Fix it* when `repair.can` with its one line under it, *Save logs*; Save logs alone, as before, on a host that cannot or knows nothing of it), working (where to follow it, since when, *Stop the fix*),
 ready (the newest subject, *and n more*, *Update and restart* in the signal), updating (nothing to press), failed (the error, *Try again* with the line last sent, *Save logs*); its title and `aria-label` by state; the commands each press sends
-(`repair.start {said, page}`, `repair.stop`, `repair.update`); the pictures (the one map `PICTURES`); the working motion, none under reduced motion. The paired phone's row *Fix Orkboard* above Notifications, only when `repair.can`, its panel in the menu without Save logs.
+(`repair.start {said, page}`, `repair.stop`, `repair.update`); the pictures (the one map `PICTURES`: the bug and orkUI's hammer, striking while Claude works, standing raised under reduced motion; the squashed bug when the fix is in); why Fix it is not offered. The paired phone's row *Fix Orkboard* above Notifications, only when `repair.can`, its panel in the menu without Save logs.
 Screenshots to the directory ORKCRAFT_SHOTS_DIR names when it is set."""
 from __future__ import annotations
 
@@ -142,7 +142,7 @@ def test_idle_and_can_the_panel_has_the_line_fix_it_with_its_one_line_under_it_a
     pg, errors = window(gui, RepairHost(CAN), width)
     b = button(pg)
     assert b.get_attribute("aria-label") == b.get_attribute("title") == TITLES["idle"] == "Save the logs or fix Orkboard" and b.inner_text().strip() == ""
-    assert pic(pg) == {"signs": ["bug"], "icon": "search"} and not b.evaluate("e => /is-(working|ready|failed)/.test(e.className)")
+    assert pic(pg) == {"signs": ["bug"], "icon": "hammer"} and not b.evaluate("e => /is-(working|ready|failed)/.test(e.className)")
     p = opened(pg)
     assert p.get_attribute("aria-label") == TITLES["idle"]
     assert "What went wrong? (optional)" in p.inner_text() and p.locator("input").evaluate("e => e === document.activeElement")
@@ -192,9 +192,11 @@ def test_a_host_that_cannot_or_knows_nothing_of_it_shows_save_logs_alone_as_befo
     pg, errors = window(gui, host)
     b = button(pg)
     assert b.get_attribute("aria-label") == b.get_attribute("title") == "Save the logs"
-    assert pic(pg) == {"signs": ["bug"], "icon": "search"}
+    assert pic(pg) == {"signs": ["bug"], "icon": "hammer"}
     p = opened(pg)
-    assert buttons(p) == ["Save logs"] and "Fix it" not in p.inner_text() and "Claude" not in p.inner_text()
+    assert buttons(p) == ["Save logs"] and "Claude" not in p.inner_text()
+    why = p.locator("[data-repair=why]")                                # the host says why Fix it is not offered; an old host says nothing
+    assert (why.inner_text() == "Fix it is not here: Orkboard was not installed from git.") if repair else why.count() == 0
     assert "primary" in p.get_by_role("button", name="Save logs").get_attribute("class").split()
     p.locator("input").fill("Not git")
     p.get_by_role("button", name="Save logs").click()
@@ -209,7 +211,7 @@ def test_working_says_where_to_follow_it_and_since_when_and_stop_the_fix_stops_i
     pg, errors = window(gui, host)
     b = button(pg)
     assert b.get_attribute("aria-label") == b.get_attribute("title") == TITLES["working"]
-    assert "is-working" in b.get_attribute("class").split() and pic(pg) == {"signs": ["bug", "work"], "icon": ""}
+    assert "is-working" in b.get_attribute("class").split() and pic(pg) == {"signs": ["bug"], "icon": "hammer"}
     p = opened(pg)
     assert "Claude is fixing it in the Claude app, session Fix Orkboard." in words(p) and p.locator("strong").inner_text() == "Fix Orkboard"
     started = pg.evaluate("() => new Date(1761900000 * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })")
@@ -222,13 +224,14 @@ def test_working_says_where_to_follow_it_and_since_when_and_stop_the_fix_stops_i
     finish(pg, errors)
 
 
-def test_the_working_button_steps_a_sign_and_not_under_reduced_motion(gui):
+def test_the_hammer_strikes_while_claude_works_and_stands_raised_under_reduced_motion(gui):
     pg, errors = window(gui, RepairHost(WORKING))
-    sign = pg.locator(".table-logs .ork-sign.work")
-    assert sign.evaluate("e => getComputedStyle(e).animationName") == "table-logs-work"
+    hammer = pg.locator(".table-logs svg.ork-icon.is-striking")
+    assert hammer.evaluate("e => getComputedStyle(e).animationName") == "ork-strike"
     finish(pg, errors)
     pg, errors = window(gui, RepairHost(WORKING), reduced_motion="reduce")
-    assert pg.locator(".table-logs .ork-sign.work").evaluate("e => getComputedStyle(e).animationName") == "none"
+    hammer = pg.locator(".table-logs svg.ork-icon.is-striking")
+    assert hammer.evaluate("e => getComputedStyle(e).animationName") == "none" and hammer.evaluate("e => getComputedStyle(e).transform") != "none"
     finish(pg, errors)
     pg, errors = window(gui, RepairHost(CAN))
     assert pg.locator(".table-logs svg.ork-icon").evaluate("e => getComputedStyle(e).animationName") == "none", "an idle bug does not move"
@@ -245,9 +248,9 @@ def test_ready_is_the_one_state_in_the_signal_names_the_newest_commit_and_update
     pg.wait_for_function("() => document.querySelector('.table-logs').dataset.repairState === 'ready'", timeout=WAIT_MS)
     b = button(pg)
     assert b.get_attribute("aria-label") == b.get_attribute("title") == TITLES["ready"]
-    assert "is-ready" in b.get_attribute("class").split() and pic(pg) == {"signs": ["check"], "icon": ""}
+    assert "is-ready" in b.get_attribute("class").split() and pic(pg) == {"signs": ["bug-squashed"], "icon": "hammer"}
     alert = pg.evaluate("() => { const e = document.createElement('i'); e.style.color = 'var(--ork-alert)'; document.body.append(e); const c = getComputedStyle(e).color; e.remove(); return c; }")
-    assert color(b) == alert != ink and color(b.locator(".ork-sign")) == alert, "the signal the update's own notice wears"
+    assert color(b) == alert != ink and color(b.locator(".ork-sign")) == alert == color(b.locator("svg.ork-icon")), "the signal the update's own notice wears"
     p = opened(pg)
     assert "The fix is in: Keep the seat when the socket drops" in words(p) and "and 2 more" in words(p)
     assert "What runs now stops, and the tasks cut off start again by themselves. The phone comes back by itself." in words(p)

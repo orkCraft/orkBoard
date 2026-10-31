@@ -699,3 +699,15 @@ def test_a_phone_may_start_stop_and_update_a_fix_and_sees_its_state(fix):
     host.command("repair.start", BoardPhone.guard("repair.start", {"said": "from the phone"}, {"id": "d1"}))
     assert host.phone_snapshot()["repair"]["state"] == "working"
     assert host.command("mobile.snapshot")["repair"]["state"] == "working"
+
+
+def test_claude_code_is_found_where_it_installs_when_the_apps_path_does_not_reach_it(tmp_path):
+    """An app started from the Dock has a short PATH: Claude Code is looked for where it installs (spec 119 §2.1, `PLACES`)."""
+    place = tmp_path / "bin"
+    place.mkdir()
+    assert repair.find("claude", which=lambda name: None, places=(str(place),)) is None
+    (place / "claude").write_text("#!/bin/sh\n")
+    assert repair.find("claude", which=lambda name: None, places=(str(place),)) is None        # not executable
+    (place / "claude").chmod(0o755)
+    assert repair.find("claude", which=lambda name: None, places=(str(place),)) == str(place / "claude")
+    assert repair.find("claude", which=lambda name: "/on/path/claude", places=(str(place),)) == "/on/path/claude"

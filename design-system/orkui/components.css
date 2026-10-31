@@ -67,6 +67,13 @@ textarea.ork-field { height: auto; min-height: calc(var(--ork-control) * 3); pad
 .ork-chev.right { -webkit-mask-image: var(--ork-chev-right); mask-image: var(--ork-chev-right); }
 .ork-chev.left { -webkit-mask-image: var(--ork-chev-left); mask-image: var(--ork-chev-left); }
 .ork-icon { flex: none; width: var(--ork-icon); height: var(--ork-icon); fill: currentColor; shape-rendering: crispEdges; vertical-align: middle; }
+/* The hammer striking (0.26.0): `<svg class="ork-icon is-striking">` with the icon `hammer`. The icon is raised by one cell of its 7 x 7 grid (a seventh of its
+   box: 2, 3 or 4 px at 14, 21 or 28 px, whole pixels) and comes down, two poses, each held half of 600 ms (five quick steps), on and on. Under reduced
+   motion it does not move: it stands raised. */
+.ork-icon.is-striking { transform: translateY(-14.2857%); }
+@media (prefers-reduced-motion: no-preference) {
+  .ork-icon.is-striking { animation: ork-strike calc(var(--ork-motion-quick) * 5) steps(1) infinite; } }
+@keyframes ork-strike { 0%, 100% { transform: translateY(-14.2857%); } 50% { transform: translateY(0); } }
 
 /* --- Tabs, a pane's head, the key line, a divider ---------------------------------------------------------------------------- */
 .ork-tabs { display: flex; border-bottom: var(--ork-line) solid var(--ork-frame); }
@@ -209,8 +216,8 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-moon.gibbous::after { -webkit-mask-image: url(moons/gibbous.svg); mask-image: url(moons/gibbous.svg); }
 .ork-moon.full::after { background: var(--ork-ink); -webkit-mask-image: url(moons/disk.svg); mask-image: url(moons/disk.svg); }
 
-/* --- Signs: every symbol a face draws (signs/, forty-one 7 x 7 pixel shapes; the goal types' twenty-five drawn again at 14 x 14 for
-   28 px, signs/big/), drawn as a mask in the colour of the text it stands in (`currentColor`). 14 x 14 or 28 x 28, never a size
+/* --- Signs: every symbol a face draws (signs/, forty-two 7 x 7 pixel shapes; the goal types' twenty-five and the squashed bug drawn again at 14 x 14
+   for 28 px, signs/big/), drawn as a mask in the colour of the text it stands in (`currentColor`). 14 x 14 or 28 x 28, never a size
    between. -3px sets the 14 px box on the baseline of a 16 px line ------------------------------------------------------------- */
 .ork-sign { display: inline-block; flex: none; width: 14px; height: 14px; vertical-align: -3px; background: currentColor;
   -webkit-mask-size: 100%; mask-size: 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
@@ -257,6 +264,7 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-sign.sword { -webkit-mask-image: url(signs/sword.svg); mask-image: url(signs/sword.svg); }      /* a squad's Does column, never a state */
 .ork-sign.shield { -webkit-mask-image: url(signs/shield.svg); mask-image: url(signs/shield.svg); }   /* a squad's Checks column, never a state */
 .ork-sign.question { -webkit-mask-image: url(signs/question.svg); mask-image: url(signs/question.svg); }   /* a question the person answers, never a state */
+.ork-sign.bug-squashed { -webkit-mask-image: url(signs/bug-squashed.svg); mask-image: url(signs/bug-squashed.svg); }   /* a bug fixed (0.26.0): the beetle squashed flat, never a goal type */
 
 /* A goal type's sign at 28 px (0.16.0): its own 14 x 14 drawing (signs/big/), two pixels a cell as at 14 px, in two tones: the silhouette
    (signs/big/<name>.svg) in the colour of its text, its light (signs/big/<name>-light.svg) over it, that colour lightened toward the ink.
@@ -286,7 +294,8 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-sign.big.store { -webkit-mask-image: url(signs/big/store.svg); mask-image: url(signs/big/store.svg); }
 .ork-sign.big.tune { -webkit-mask-image: url(signs/big/tune.svg); mask-image: url(signs/big/tune.svg); }
 .ork-sign.big.steps { -webkit-mask-image: url(signs/big/steps.svg); mask-image: url(signs/big/steps.svg); }
-.ork-sign.big:is(.feature, .compass, .bug, .tidy, .restructure, .screen, .picture, .logo, .target, .flask, .horn, .chart, .page, .abtest, .landing, .post, .tagline, .mechanic, .level, .balance, .character, .release, .store, .tune, .steps)::after { content: ""; position: absolute; inset: 0; background: color-mix(in srgb, currentColor 45%, var(--ork-ink));
+.ork-sign.big.bug-squashed { -webkit-mask-image: url(signs/big/bug-squashed.svg); mask-image: url(signs/big/bug-squashed.svg); }
+.ork-sign.big:is(.feature, .compass, .bug, .tidy, .restructure, .screen, .picture, .logo, .target, .flask, .horn, .chart, .page, .abtest, .landing, .post, .tagline, .mechanic, .level, .balance, .character, .release, .store, .tune, .steps, .bug-squashed)::after { content: ""; position: absolute; inset: 0; background: color-mix(in srgb, currentColor 45%, var(--ork-ink));
   -webkit-mask-size: 100%; mask-size: 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-position: center; mask-position: center; }
 .ork-sign.big.feature::after { -webkit-mask-image: url(signs/big/feature-light.svg); mask-image: url(signs/big/feature-light.svg); }
 .ork-sign.big.compass::after { -webkit-mask-image: url(signs/big/compass-light.svg); mask-image: url(signs/big/compass-light.svg); }
@@ -313,6 +322,7 @@ button.ork-row, button.ork-card, a.ork-row, a.ork-card { cursor: pointer; font: 
 .ork-sign.big.store::after { -webkit-mask-image: url(signs/big/store-light.svg); mask-image: url(signs/big/store-light.svg); }
 .ork-sign.big.tune::after { -webkit-mask-image: url(signs/big/tune-light.svg); mask-image: url(signs/big/tune-light.svg); }
 .ork-sign.big.steps::after { -webkit-mask-image: url(signs/big/steps-light.svg); mask-image: url(signs/big/steps-light.svg); }
+.ork-sign.big.bug-squashed::after { -webkit-mask-image: url(signs/big/bug-squashed-light.svg); mask-image: url(signs/big/bug-squashed-light.svg); }
 
 
 /* --- Tools: a race's tool for a pick of four (tools/, 0.16.0): the orks' drum, the elves' bow, the goblins' pick, the gnomes' bell, the
