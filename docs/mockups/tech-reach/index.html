@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tech Reach Mockup</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* A mockup for the owner's look, no spec yet: Tech's System with a network game's two rules laid over it (a network game with outbreaks: heat on a part, and what
+   a change reaches through what uses it). The layout is System's as built (arena/systemarch.js: a container a column, its layers as rows, a shared part in a
+   *Shared* column, a link an arrow through a lane over the columns): the cards, never a diagram. The project is spec 115's made-up Sproutly. Drawn at 1 : 1
+   (1280 x 840); each window is in a box that scrolls on a narrow screen. */
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--ork-canvas); color-scheme: dark; }
+body { margin: 0; background: var(--ork-canvas); color: var(--ork-ink); font: var(--ork-type-body); }
+p, h1, h2, ul { margin: 0; padding: 0; }
+code { font-family: var(--ork-font-code); font-size: 0.92em; }
+.mk-bar { position: sticky; top: 0; z-index: 90; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-4) var(--ork-6);
+  padding: var(--ork-4) max(16px, env(safe-area-inset-right, 0px)) var(--ork-4) max(16px, env(safe-area-inset-left, 0px)); background: var(--ork-canvas); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.mk-bar nav { display: flex; flex-wrap: wrap; gap: var(--ork-3); }
+.mk-main { padding: var(--ork-6) max(16px, env(safe-area-inset-right, 0px)) var(--ork-6) max(16px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: var(--ork-8); }
+.mk-sec { min-width: 0; }
+.mk-sec h1 { font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); margin-bottom: var(--ork-3); text-wrap: balance; }
+.mk-line { max-width: 120ch; margin-bottom: var(--ork-5); }
+.mk-line b { font-weight: 600; }
+.mk-notes { max-width: 120ch; margin-top: var(--ork-4); color: var(--ork-ink-muted); font: var(--ork-type-caption); display: grid; gap: var(--ork-2); }
+.mk-notes b { color: var(--ork-ink); font-weight: 600; }
+.mk-foot { max-width: 120ch; margin: 0 max(16px, env(safe-area-inset-right, 0px)) var(--ork-8) max(16px, env(safe-area-inset-left, 0px)); padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame);
+  color: var(--ork-ink-muted); font: var(--ork-type-caption); display: grid; gap: var(--ork-2); }
+.mk-foot b { color: var(--ork-ink); font-weight: 600; }
+.scroll { overflow-x: auto; max-width: 100%; }
+
+/* ---------- the window (play-lenses' frame) ---------- */
+.win { --lane: 176px; position: relative; width: 1280px; display: grid; grid-template-rows: 52px auto minmax(0, 1fr) 150px; height: 840px; overflow: hidden;
+  outline: var(--ork-line) solid var(--ork-edge); background: var(--ork-canvas); }
+.tabs { display: flex; align-items: stretch; border-bottom: var(--ork-line) solid var(--ork-frame); }
+.tab { position: relative; display: flex; align-items: center; gap: var(--ork-4); width: var(--lane); padding: 0 var(--ork-4); border-right: var(--ork-line) solid var(--ork-frame); min-width: 0; }
+.tab.on { background: var(--ork-panel); box-shadow: inset 0 -2px 0 var(--ork-ink); }
+.tab .nm { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--ork-ink-muted); }
+.tab.on .nm { color: var(--ork-ink); }
+.tabs-end { margin-left: auto; display: flex; align-items: center; gap: var(--ork-3); padding: 0 var(--ork-4); }
+
+/* the lens strip (concerns.css .cn-strip): the leader, its frame, the aspects; under them, while a goal is shown, what it reaches */
+.strip { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2) var(--ork-4); padding: var(--ork-2) var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.strip .say { display: inline-flex; align-items: center; gap: var(--ork-3); }
+.strip .say b { font-weight: 600; }
+.strip .short { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.strip .aspects { flex: 1 0 100%; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2) var(--ork-3); }
+.strip .aspects .ork-chip { gap: var(--ork-2); }
+.strip .aspects .ork-chip[data-state="alert"] > .ork-sign { color: var(--ork-alert); }
+.strip .aspects .ork-chip[data-state="note"] > .dot, .strip .aspects .ork-chip[data-state="hint"] > .hint, .strip .aspects .ork-chip[data-state="unlooked"] { color: var(--ork-ink-muted); }
+.reach { flex: 1 0 100%; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2) var(--ork-3); padding-top: var(--ork-1); }
+.reach b { font-weight: 600; }
+.reach .sep { color: var(--ork-ink-faint); }
+.reach .muted { color: var(--ork-ink-muted); }
+.dot { display: inline-block; flex: none; width: 6px; height: 6px; background: currentColor; }
+.hint { display: inline-block; flex: none; width: 6px; height: 6px; border: var(--ork-line) solid currentColor; }
+
+/* ---------- the table: System as built, the columns of cards ---------- */
+.stage { position: relative; background: var(--ork-table); overflow: hidden; }
+.colhd { position: absolute; top: 46px; height: 22px; font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); border-bottom: 2px solid var(--ork-ink-muted); }
+.colhd.shared { color: var(--ork-ink-muted); border-bottom-style: dashed; }
+.colhd.lit { border-bottom-color: var(--el); }
+.rowlab { position: absolute; left: 24px; width: 64px; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.links { position: absolute; inset: 0; pointer-events: none; }
+.links path { fill: none; stroke: var(--ork-ink-faint); stroke-width: 2; }
+.links path.lit { stroke: var(--el); }
+.linkname { position: absolute; top: 4px; padding: 0 var(--ork-2); background: var(--ork-table); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.linkname.lit { color: var(--ork-ink); }
+
+/* a part: the crowded card of spec 87 (96 x 134, 5 : 7), its name, its files, *Uses k · Used by m* */
+.part { position: absolute; width: 96px; height: 134px; display: flex; flex-direction: column; gap: var(--ork-1); padding: var(--ork-3); transition: opacity var(--ork-motion-quick) var(--ork-motion-ease); }
+.part .top { display: flex; align-items: center; gap: var(--ork-1); min-height: 14px; }
+.part .heat { margin-left: auto; display: inline-flex; gap: 2px; color: var(--ork-ink-muted); }
+.part .heat .ork-sign { color: var(--ork-alert); width: 12px; height: 12px; }
+.part .nm { font-weight: 600; font-size: 13px; line-height: 17px; overflow-wrap: anywhere; }
+.part .files { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.part .foot { margin-top: auto; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.part .guard .ork-sign { color: var(--ork-ink); }
+.part .guard.none { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.part.is-dim { opacity: 0.38; }
+.part.is-picked { border-color: var(--ork-ink); }
+
+/* what a goal reaches: an edge round the card (never on it: the card's notch clips an outline), in the goal's element, by how near */
+.ring { position: absolute; width: 104px; height: 142px; pointer-events: none; border: 2px solid var(--el); animation: ring-in var(--ork-motion-base) var(--ork-motion-ease) both; }
+.ring.r1 { border-style: dashed; animation-delay: 120ms; }
+.ring.r2 { border-style: dotted; opacity: 0.7; animation-delay: 240ms; }
+.ring .ork-elem { position: absolute; left: -9px; top: -9px; }
+@keyframes ring-in { from { opacity: 0; transform: scale(0.96); } }
+.meadow { --el: var(--ork-elem-meadow); } .ice { --el: var(--ork-elem-ice); }
+
+/* a part's back, lifted (card.js Lifted, concerns.js ConcernsBack) */
+.back { position: absolute; z-index: 6; width: 300px; display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4); }
+.back .who { display: flex; align-items: center; gap: var(--ork-3); font-weight: 600; }
+.back .lvl { display: inline-flex; align-items: center; gap: var(--ork-2); color: var(--ork-alert); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
+.back .lvl.muted { color: var(--ork-ink-muted); }
+.back dl { display: grid; grid-template-columns: 44px 1fr; gap: var(--ork-2) var(--ork-3); margin: 0; }
+.back dt { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.back dd { margin: 0; }
+.back .acts { display: flex; gap: var(--ork-3); flex-wrap: wrap; }
+.back hr { border: 0; border-top: var(--ork-line) solid var(--ork-frame); margin: 0; width: 100%; }
+.back .path { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.back .whatif { display: flex; align-items: flex-start; gap: var(--ork-2); padding: var(--ork-2) var(--ork-3); border: var(--ork-line) dashed var(--ork-frame); }
+.back .whatif .ork-elem { margin-top: 3px; }
+
+/* the hand, short: the goals that wait to start, one under the pointer; the potions */
+.hand { position: relative; z-index: 5; display: flex; align-items: flex-start; gap: var(--ork-4); padding: var(--ork-4) var(--ork-4) 0; border-top: var(--ork-line) solid var(--ork-frame); background: var(--ork-canvas); overflow: hidden; }
+.ork-card.hcard { width: 144px; height: 202px; flex: none; display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3); transition: translate var(--ork-motion-quick) var(--ork-motion-ease); }
+.hcard .hd { display: flex; gap: var(--ork-2); font-weight: 600; font-size: 13px; line-height: 17px; min-height: 36px; }
+.hcard .wn { height: 56px; display: flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-canvas); }
+.hcard .lb { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.hcard.is-hover { translate: 0 -10px; border-color: var(--ork-edge); }
+.hend { margin-left: auto; display: flex; align-items: flex-start; gap: var(--ork-4); }
+.pool { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); width: 60px; padding: var(--ork-1) 0; border: 2px solid transparent; font: var(--ork-type-caption); }
+.pool.is-default { border-color: var(--ork-ink); clip-path: var(--ork-notch); background: var(--ork-panel); }
+.pool .pct { font-weight: 600; }
+
+/* ---------- the narrow width: the pane a list ---------- */
+.narrow { width: 375px; border: var(--ork-line) solid var(--ork-edge); background: var(--ork-canvas); }
+.narrow .ntabs { display: flex; gap: var(--ork-2); padding: var(--ork-3); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.narrow .ntabs span { padding: var(--ork-1); }
+.narrow .ntabs span.on { box-shadow: inset 0 -2px 0 var(--ork-ink); background: var(--ork-panel); }
+.narrow .nhd { display: flex; align-items: center; gap: var(--ork-2); padding: var(--ork-3) var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-frame); flex-wrap: wrap; }
+.narrow .nhd b { font-weight: 600; }
+.narrow .nhd .muted { color: var(--ork-ink-muted); font: var(--ork-type-caption); flex: 1 0 100%; }
+.narrow .grp { padding: var(--ork-3) var(--ork-4) 0; }
+.narrow .grp h2 { display: flex; align-items: center; gap: var(--ork-2); margin-bottom: var(--ork-2); color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
+.narrow .grp h2 i { display: inline-block; width: 18px; height: 0; border-top: 2px solid var(--el); }
+.narrow .grp h2 i.r1 { border-top-style: dashed; } .narrow .grp h2 i.r2 { border-top-style: dotted; }
+.narrow .ork-row { display: flex; align-items: center; gap: var(--ork-2); margin-bottom: var(--ork-2); }
+.narrow .ork-row .in { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.narrow .ork-row .end { margin-left: auto; display: inline-flex; align-items: center; gap: var(--ork-2); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.narrow .ork-row .end .ork-sign.alert { color: var(--ork-alert); }
+.narrow .nfoot { padding: var(--ork-3) var(--ork-4) var(--ork-4); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+</style>
+</head>
+<body>
+<header class="mk-bar">
+  <span class="ork-label">Orkboard · Tech's System: heat and what a change reaches (mockup, no spec yet)</span>
+  <nav aria-label="States">
+    <a class="ork-btn" href="#s1">1 · At rest</a><a class="ork-btn" href="#s2">2 · A small goal's reach</a><a class="ork-btn" href="#s3">3 · A wide reach</a>
+    <a class="ork-btn" href="#s4">4 · The part lifted</a><a class="ork-btn" href="#s5">5 · Narrow</a>
+  </nav>
+</header>
+<main class="mk-main">
+  <section class="mk-sec" id="s1"><h1>1 · At rest: the heat on the parts</h1>
+    <p class="mk-line">Tech's tab is open: System as it is built today, a container a column, its layers as rows, <code>plants</code> in the <b>Shared</b> column between the containers it serves,
+      the one link an arrow over the lanes. What is new is the <b>heat</b>: at a card's top right, a hollow square for each kind of hint code saw on it (at most three), and the alert sign
+      where the Architect said it hurts. <code>screens</code> is the hottest part: big, changed often, and with no test.</p>
+    <div class="scroll"><div id="w1"></div></div>
+    <div class="mk-notes"><span><b>The heat is the hints, not a new number:</b> each square is one kind of <code>map_signals</code>' tech hints on that part (<code>hotspot</code>, <code>big</code>,
+        <code>untested_churn</code>, <code>shared_churn</code>, <code>fan_in</code>, <code>unstable</code>, <code>cycle</code>…), the hollow square spec 115 already uses for a hint. A leader's concern is
+        the alert sign, as on Play. No count, no score, no colour of its own.</span>
+      <span><b>Quiet at rest:</b> which part a test checks is not drawn here. It matters only once something reaches it (2).</span></div></section>
+
+  <section class="mk-sec" id="s2"><h1>2 · A goal under the pointer in the hand: what it reaches</h1>
+    <p class="mk-line">The pointer is on <b>Snooze a plant</b>, which waits to start. Its spec's <i>Will be</i> names two parts, <code>routes</code> and <code>water</code>: they get a solid edge in the
+      goal's element (ice). What uses them gets a dashed edge, and what uses those a dotted one: <code>api-client</code> across the <i>HTTP</i> link, then <code>screens</code> and <code>store</code>.
+      Everything else dims. Each reached card says at its top left whether a test checks it: the shield, or <i>no test</i>. The strip says it in one line.</p>
+    <div class="scroll"><div id="w2"></div></div>
+    <div class="mk-notes"><span><b>Two steps and no further:</b> a change reaches what uses it, and what uses that. A third step would light almost every part and say nothing.</span>
+      <span><b>The link lights</b> when the reach crosses it, so you see a change in <code>api</code> showing up in <code>web</code>.</span>
+      <span><b>Read by code, no call:</b> the parts named in <i>Will be</i> (decisions §156.4), <code>uses</code> and <code>used_by</code> from the snapshot, the tests from the gate's map
+        (<code>gate_config.gate_files</code>, as <code>untested_churn</code> reads them).</span></div></section>
+
+  <section class="mk-sec" id="s3"><h1>3 · A wide reach: a goal through the shared part</h1>
+    <p class="mk-line">The pointer moves to <b>Reminders at the right hour</b> (meadow). It changes <code>plants</code>, the part every container uses, so the reach goes over all three columns:
+      it reaches seven parts, four of them with no test, and passes the hotspot <code>screens</code>. Nothing in the window forbids starting it. The person sees the cost before pressing Start.</p>
+    <div class="scroll"><div id="w3"></div></div>
+    <div class="mk-notes"><span><b>What the shape gives:</b> the person compares two goals by how far they spread before either starts, and Start stays the person's decision.</span></div></section>
+
+  <section class="mk-sec" id="s4"><h1>4 · The shared part lifted: the Architect's concern, and the way round</h1>
+    <p class="mk-line">A press on <code>plants</code> while the reach is shown lifts its back: the Architect's concern of <b>Coupling</b>, and under it what code works out with no call:
+      if the goal changed <code>reminders</code> alone, it would reach one part. The fix is the Architect's to propose, and the person makes it a goal or keeps the plan.</p>
+    <div class="scroll"><div id="w4"></div></div>
+    <div class="mk-notes"><span><b>The way round</b> is the same rule run on the parts the Fix leaves changed. It is shown only when the leader's Fix names the parts, and only on a part whose own reach is most of the whole.</span></div></section>
+
+  <section class="mk-sec" id="s5"><h1>5 · Under 760 px: the reach as a list</h1>
+    <p class="mk-line">At the narrow width the tabs are heads and there is no room for columns of cards. The goal that was lifted (from the hand, a long press) shows its reach as three groups
+      under the same edges: <i>Changes</i>, <i>Uses them</i>, <i>Uses those</i>. Each row is the part, its container, its heat and its test.</p>
+    <div id="w5"></div></section>
+</main>
+<div class="mk-foot">
+  <span>This is a mockup and is not wired into the app. Orkboard's parts are drawn in orkUI (the heads, the signs, the elements, the chips, the potions); Sproutly is spec 115's made-up project.</span>
+  <span><b>Taken from the network game:</b> heat that collects on a node, and a change that spreads to its neighbours. <b>Not taken:</b> a free graph of nodes (System stays the cards in columns,
+    systemarch.js: <i>never a diagram</i>), an outbreak that spreads by itself or a timer, a score of risk or a percentage (numbers we do not have), the game's words in the interface
+    (<i>touches</i>, <i>reaches</i>, <i>no test</i> say what happens), a reach for a goal whose spec does not yet say <i>Will be</i> (its strip line reads <i>What it reaches is known once its spec
+    says what will change</i>).</span>
+  <span><b>Motion:</b> the edges come in nearest first (the parts it changes, then 120 ms later what uses them, then what uses those); nothing under <code>prefers-reduced-motion</code>.</span>
+</div>
+
+<script>
+(function () {
+  var B = "../../../design-system/orkui/";
+  function src(p) { return B + p; }
+  var H = function (race, tier) { return '<img class="ork-race__head" src="' + src("races/" + race + "-" + tier + "@2x.png") + '" alt="">'; };
+  var S = function (n) { return '<span class="ork-sign ' + n + '" aria-hidden="true"></span>'; };
+  var E = function (n) { return '<span class="ork-elem ' + n + '" aria-hidden="true"></span>'; };
+  var ICON = function (n) { return '<svg class="ork-icon pix" aria-hidden="true"><use href="' + src("icons/icons.svg#" + n) + '"/></svg>'; };
+
+  var PARTIES = [{ id: "product", name: "Product", head: ["unicorn", "elder"] }, { id: "design", name: "Design", head: ["dryad", "elder"] },
+    { id: "tech", name: "Tech", head: ["shaman", "elder"] }, { id: "marketing", name: "Marketing", head: ["fairy", "elder"] }];
+  function tabs() {
+    var t = '<div class="tab">' + H("peon", "crown") + '<span class="nm">Sproutly</span></div>';
+    PARTIES.forEach(function (p) { t += '<div class="tab' + (p.id === "tech" ? " on" : "") + '">' + H(p.head[0], p.head[1]) + '<span class="nm">' + p.name + "</span></div>"; });
+    return '<div class="tabs">' + t + '<div class="tabs-end"><button class="ork-btn" type="button">' + ICON("plus") + 'Party</button><button class="ork-btn danger" type="button">Stop all</button></div></div>';
+  }
+
+  // Sproutly's System: three containers and the shared column; a part's column, row (0 its face, 1 its doors, 2 its data) and slot in the row
+  var COLS = [{ id: "web", name: "web", x: 104, w: 208 }, { id: "shared", name: "Shared", x: 352, w: 96, shared: true }, { id: "api", name: "api", x: 488, w: 208 }, { id: "worker", name: "worker", x: 736, w: 208 }];
+  var ROWS = [{ y: 84, name: "Its face" }, { y: 232, name: "Its doors" }, { y: 380, name: "Its data" }];
+  var P = {
+    screens:      { col: "web", row: 0, slot: 0, files: 9, uses: ["components", "store", "api-client", "plants"], test: false, heat: ["hotspot", "big", "untested_churn"], said: true },
+    components:   { col: "web", row: 0, slot: 1, files: 14, uses: ["plants"], test: true },
+    "api-client": { col: "web", row: 1, slot: 0, files: 3, uses: ["plants"], test: true },
+    store:        { col: "web", row: 2, slot: 0, files: 4, uses: ["api-client"], test: false },
+    plants:       { col: "shared", row: 1, slot: 0, files: 5, uses: ["time"], test: true, heat: ["shared_churn"], said: true },
+    time:         { col: "shared", row: 2, slot: 0, files: 2, uses: [], test: true },
+    routes:       { col: "api", row: 1, slot: 0, files: 6, uses: ["auth", "water", "plants"], test: true, across: ["api-client"] },
+    auth:         { col: "api", row: 1, slot: 1, files: 3, uses: ["db"], test: true },
+    water:        { col: "api", row: 2, slot: 0, files: 4, uses: ["db", "plants", "time"], test: false, heat: ["untested_churn"] },
+    db:           { col: "api", row: 2, slot: 1, files: 5, uses: [], test: true },
+    schedule:     { col: "worker", row: 1, slot: 0, files: 2, uses: ["reminders", "time"], test: false },
+    reminders:    { col: "worker", row: 2, slot: 0, files: 3, uses: ["plants", "time", "push"], test: false, heat: ["big"] },
+    push:         { col: "worker", row: 2, slot: 1, files: 2, uses: [], test: true }
+  };
+  var HEAT_WORDS = { hotspot: "Changed 14 times in 30 days, holds Today.tsx of 610 lines", big: "Holds a file of 800 lines or more", untested_churn: "Changed 9 times in 30 days, no test",
+    shared_churn: "Changed in commits that also touched web, api and worker" };
+  function colOf(id) { return COLS.filter(function (c) { return c.id === id; })[0]; }
+  function usedBy(name) {   // what uses a part: its users in the snapshot, and across a link the part that calls it
+    var out = [];
+    Object.keys(P).forEach(function (k) { if (P[k].uses.indexOf(name) >= 0) out.push(k); });
+    return out.concat(P[name].across || []);
+  }
+  function at(name) { var p = P[name], c = colOf(p.col); return { x: c.x + p.slot * 112, y: ROWS[p.row].y }; }
+
+  // the reach of the parts a goal changes: one step (what uses them), a second (what uses those), no further
+  function reach(touched) {
+    var seen = {}, r1 = [], r2 = [];
+    touched.forEach(function (t) { seen[t] = 0; });
+    touched.forEach(function (t) { usedBy(t).forEach(function (u) { if (!(u in seen)) { seen[u] = 1; r1.push(u); } }); });
+    r1.forEach(function (t) { usedBy(t).forEach(function (u) { if (!(u in seen)) { seen[u] = 2; r2.push(u); } }); });
+    return { seen: seen, r1: r1, r2: r2, all: r1.concat(r2) };
+  }
+
+  function partCard(name, o) {
+    var p = P[name], a = at(name), heat = (p.heat || []).map(function () { return '<i class="hint"></i>'; }).join("");
+    if (p.said) heat = S("alert") + heat;
+    var near = o.reach ? o.reach.seen[name] : undefined, dim = o.reach && near === undefined;
+    var guard = near !== undefined && near > 0 ? (p.test ? '<span class="guard" title="A test checks it">' + S("shield") + "</span>" : '<span class="guard none">no test</span>') : "";
+    var used = usedBy(name).length;
+    return '<div class="ork-card part' + (dim ? " is-dim" : "") + (o.picked === name ? " is-picked" : "") + '" style="left:' + a.x + "px;top:" + a.y + 'px" title="' + (p.heat || []).map(function (h) { return HEAT_WORDS[h]; }).join(" · ") + '">'
+      + '<span class="top">' + guard + '<span class="heat">' + heat + "</span></span>"
+      + '<span class="nm">' + name + '</span><span class="files">' + p.files + " files</span>"
+      + '<span class="foot">Uses ' + p.uses.length + "<br>Used by " + used + "</span></div>";
+  }
+  function ringOf(name, near, el) {
+    var a = at(name);
+    return '<span class="ring ' + (near === 1 ? "r1" : near === 2 ? "r2" : "") + '" style="left:' + (a.x - 4) + "px;top:" + (a.y - 4) + 'px">' + (near === 0 ? E(el) : "") + "</span>";
+  }
+  function table(o) {
+    var h = "", s = o.reach && o.reach.seen, lit = s && s.routes !== undefined && s["api-client"] > s.routes;   // the reach crossed the link: what calls routes reached through it
+    ROWS.forEach(function (r) { h += '<span class="rowlab" style="top:' + (r.y + 4) + 'px">' + r.name + "</span>"; });
+    COLS.forEach(function (c) {
+      var on = o.reach && Object.keys(o.reach.seen).some(function (k) { return P[k].col === c.id; });
+      h += '<span class="colhd' + (c.shared ? " shared" : "") + (on ? " lit" : "") + '" style="left:' + c.x + "px;width:" + c.w + 'px">' + c.name + "</span>";
+    });
+    // the one link, web → api, through the lane over the columns
+    h += '<svg class="links" viewBox="0 0 1280 600" width="1280" height="600" aria-hidden="true"><path class="' + (lit ? "lit" : "") + '" d="M208 46 V24 H592 V46"/><path class="' + (lit ? "lit" : "") + '" d="M586 38 L592 46 L598 38"/></svg>'
+      + '<span class="linkname' + (lit ? " lit" : "") + '" style="left:340px">HTTP: 14 routes</span>';
+    Object.keys(P).forEach(function (k) { h += partCard(k, o); });
+    if (o.reach) Object.keys(o.reach.seen).forEach(function (k) { h += ringOf(k, o.reach.seen[k], o.el); });
+    return '<div class="stage ' + (o.el || "") + '">' + h + (o.side || "") + "</div>";
+  }
+
+  function chip(a) {
+    var mark = a.state === "alert" ? S("alert") : a.state === "note" ? '<i class="dot"></i>' : a.state === "hint" ? '<i class="hint"></i>' : a.state === "clear" ? S("check") : "";
+    return '<span class="ork-chip" data-state="' + a.state + '">' + mark + a.name + "</span>";
+  }
+  var ASPECTS = [{ name: "Modularity", state: "clear" }, { name: "Coupling", state: "alert" }, { name: "Hotspots", state: "alert" }, { name: "Testability", state: "hint" }, { name: "Security and reliability", state: "unlooked" }];
+  function reachLine(g) {
+    var r = g.reach, open = r.all.filter(function (k) { return !P[k].test; }), hot = r.all.filter(function (k) { return (P[k].heat || []).indexOf("hotspot") >= 0; });
+    var cols = {}; Object.keys(r.seen).forEach(function (k) { if (P[k].col !== "shared") cols[P[k].col] = 1; });
+    return '<div class="reach ' + g.el + '">' + E(g.el) + "<b>" + g.title + "</b>"
+      + '<span>changes <b>' + g.touched.length + "</b> parts</span><span class=\"sep\">·</span>"
+      + "<span>reaches <b>" + r.all.length + "</b> through what uses them</span><span class=\"sep\">·</span>"
+      + "<span><b>" + open.length + "</b> with no test</span>"
+      + (hot.length ? '<span class="sep">·</span><span>through the hotspot ' + hot.map(function (k) { return "<code>" + k + "</code>"; }).join(", ") + "</span>" : "")
+      + '<span class="muted">in ' + Object.keys(cols).sort().join(", ") + "</span></div>";
+  }
+  function strip(g) {
+    return '<div class="strip"><span class="say">' + H("shaman", "elder") + "<span><b>The Architect</b> on System</span></span><span class=\"short\">C4 · ISO 25010 · hotspots</span>"
+      + '<div class="aspects">' + ASPECTS.map(chip).join("") + "</div>" + (g ? reachLine(g) : "") + "</div>";
+  }
+
+  var GOALS = [
+    { id: "snooze", title: "Snooze a plant", el: "ice", sign: "feature", touched: ["routes", "water"] },
+    { id: "hour", title: "Reminders at the right hour", el: "meadow", sign: "feature", touched: ["plants", "reminders", "time"] },
+    { id: "empty", title: "Pick one: the empty list", el: "dust", sign: "picture", touched: [] }
+  ];
+  GOALS.forEach(function (g) { g.reach = reach(g.touched); });
+  function hand(hover) {
+    var h = GOALS.map(function (g) {
+      return '<div class="ork-card hcard' + (g.id === hover ? " is-hover" : "") + '"><div class="hd">' + E(g.el) + "<span>" + g.title + '</span></div><div class="wn">' + S(g.sign) + '</div><span class="lb">Waits to start</span></div>';
+    }).join("");
+    return '<div class="hand">' + h + '<div class="hend"><span class="pool is-default"><span class="ork-potion" style="--ork-potion-left:0.7"></span><span class="pct">70%</span></span>'
+      + '<span class="pool"><span class="ork-potion" style="--ork-potion-left:0.45"></span><span class="pct">45%</span></span></div></div>';
+  }
+  function win(o) {
+    var g = o.goal && GOALS.filter(function (x) { return x.id === o.goal; })[0];
+    return '<div class="win">' + tabs() + strip(g) + table({ reach: g && g.reach, el: g && g.el, side: o.side, picked: o.picked }) + hand(o.goal) + "</div>";
+  }
+
+  document.getElementById("w1").innerHTML = win({});
+  document.getElementById("w2").innerHTML = win({ goal: "snooze" });
+  document.getElementById("w3").innerHTML = win({ goal: "hour" });
+
+  // 4 · plants lifted: the concern, and the reach without it, worked out by the same rule
+  var hour = GOALS[1], without = reach(["reminders"]);
+  var back = '<div class="ork-card back" style="left:964px;top:24px"><div class="who">' + H("shaman", "elder") + "<span>The Architect</span></div>"
+    + '<span class="path"><code>packages/plants</code> · 5 files · used by ' + usedBy("plants").length + "</span>"
+    + '<span class="lvl">' + S("alert") + "Alert · Coupling</span>"
+    + "<dl><dt>What</dt><dd><code>plants</code> changes with all three containers: 9 commits in 30 days touched it together with files of web, api and worker.</dd>"
+    + "<dt>Why</dt><dd><i>Reminders at the right hour</i> adds the hour to it, so every screen and both servers are rebuilt on it.</dd>"
+    + "<dt>Fix</dt><dd>Keep the hour in <code>reminders</code>, and leave <code>plants</code> and <code>time</code> as they are.</dd></dl>"
+    + '<p class="whatif">' + E("meadow") + "<span>Changing <code>reminders</code> alone, it would reach " + without.all.length + ": " + without.all.map(function (k) { return "<code>" + k + "</code>"; }).join(", ") + ".</span></p>"
+    + '<div class="acts"><button class="ork-btn primary" type="button">Make it a goal</button><button class="ork-btn" type="button">Not a problem</button></div><hr>'
+    + '<span class="lvl muted"><i class="hint"></i>Hint · Coupling</span><p>' + HEAT_WORDS.shared_churn + ".</p></div>";
+  document.getElementById("w4").innerHTML = win({ goal: "hour", side: back, picked: "plants" });
+
+  // 5 · narrow: the reach as a list
+  function row(k) {
+    var p = P[k], heat = (p.heat || []).map(function () { return '<i class="hint"></i>'; }).join("") + (p.said ? S("alert") : "");
+    return '<div class="ork-row"><code>' + k + '</code><span class="in">' + (p.col === "shared" ? "shared" : p.col) + '</span><span class="end">' + heat + (p.test ? S("shield") : "no test") + "</span></div>";
+  }
+  function group(title, ring, list) {
+    return list.length ? '<div class="grp"><h2><i class="' + ring + '"></i>' + title + "</h2>" + list.map(row).join("") + "</div>" : "";
+  }
+  var heads = PARTIES.map(function (p) { return "<span" + (p.id === "tech" ? ' class="on"' : "") + ">" + H(p.head[0], p.head[1]) + "</span>"; }).join("");
+  document.getElementById("w5").innerHTML = '<div class="narrow meadow"><div class="ntabs"><span>' + H("peon", "crown") + "</span>" + heads + "</div>"
+    + '<div class="nhd">' + E("meadow") + "<b>" + hour.title + '</b><span class="muted">Reaches ' + hour.reach.all.length + " through what uses them · "
+    + hour.reach.all.filter(function (k) { return !P[k].test; }).length + " with no test · through the hotspot <code>screens</code></span></div>"
+    + group("Changes", "", hour.touched) + group("Uses them", "r1", hour.reach.r1) + group("Uses those", "r2", hour.reach.r2)
+    + '<p class="nfoot">A press on a row opens its part, as on the wide table.</p></div>';
+})();
+</script>
+</body>
+</html>
