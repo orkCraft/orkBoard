@@ -27,6 +27,13 @@ export function openTab(slug) {
 export const partKey = (party, path) => `t:part:${party}:${path}`;
 export const linkKey = (party, key) => `t:link:${party}:${key}`;
 
+/** Play stays open when another tab is opened (docs/specs/115-the-live-product-under-each-leaders-eyes.md §6.1): `openTab` never closes it — the lens over the frame changes (arena/playlens.js reads `tab`), the iframe is the same element all through —,
+ *  and the pane's title follows the tab: Play, open, takes the new tab's map as the place it came from (`title`, the map's name). Nothing else open over the pane is touched. */
+export function followTab(title) {
+  const o = over.peek();
+  if (o?.kind === "play" && o.from?.title !== title) over.value = { ...o, from: { ...(o.from || {}), title, key: o.from?.key || "" } };
+}
+
 /** The tab kept for the project now shown (on a project switch). */
 export function restoreTab() { tab.value = keptTabs()[projectKey()] || ORKMASTER; }
 
