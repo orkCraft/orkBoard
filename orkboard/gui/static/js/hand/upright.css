@@ -56,7 +56,6 @@ button.up-ctx:focus-visible { outline: var(--ork-1) solid var(--ork-ink); outlin
 .up-ctx__rec, .up-ctx__wait { font: var(--ork-type-caption); color: var(--ork-ink-muted); overflow-wrap: anywhere; }
 .up-ctx__wait { display: flex; align-items: center; gap: var(--ork-2); }
 .up-ctx__wait .ork-sign { flex: none; color: var(--ork-alert); }
-.up-spec { flex: none; align-self: flex-start; min-height: var(--ork-tap); max-width: 100%; text-align: left; }
 
 /* the picked entry's card in its place: full width, not turned, its height its content's (the middle scrolls), its answers on it */
 .hand .hand-lifted.hand-lifted--up { --hc-head: auto; --hc-window: 52px; position: relative; flex: none; top: auto; bottom: auto; left: auto !important; right: auto; width: 100%; max-width: none; height: auto; min-height: 0; max-height: none;

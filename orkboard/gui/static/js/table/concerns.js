@@ -56,6 +56,9 @@ async function read(name, party, more = {}) {
   return null;
 }
 
+/** Reads a party's record as the host has it now (`ideas.concerns`), for a face that has no map to draw them on: the phone's party header (hand/upparty.js). */
+export const readConcerns = (party) => read("ideas.concerns", party);
+
 /** The goal a concern became (its slug), "" none. */
 const goalOf = (party, c) => c.idea || c.goal || made.value[`${party}/${c.id}`] || "";
 

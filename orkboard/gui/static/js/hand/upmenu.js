@@ -9,7 +9,7 @@ import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
 import { Elem, Head, Icon, Sign } from "../orkui.js";
 import { command } from "../link.js";
-import { openOver, picked, tab } from "../frame/state.js";
+import { openOver } from "../frame/state.js";
 import { currentProject } from "../shell/projects.js";
 import { mapData } from "../shell/store.js";
 import { PHASES, laneOf, lineNow, nameOf, partiesAll, phaseOf, stageOf, typeSignOf } from "../table/data.js";
@@ -36,7 +36,7 @@ export function workOf(g) {
 }
 
 /** One goal as a row: its element, its type's sign, its short name, the moon of one that waits for the reset, its phase at the right. */
-function GoalRow({ r, on, onPress }) {
+export function GoalRow({ r, on, onPress }) {
   return html`<button type="button" class=${cls("up-grow", { "is-on": on })} data-goal=${r.slug} aria-current=${on ? "true" : undefined} aria-label=${`${r.name}: ${r.moon ? "in line, waits for the reset" : r.phase}`} onClick=${onPress}>
     <${Elem} name=${r.element} dim=${!r.element} />${r.sign ? html`<${Sign} name=${r.sign} />` : html`<span class="up-grow__none" aria-hidden="true"></span>`}<span class="up-grow__name">${r.name}</span>
     ${r.moon && html`<${Sign} name="moon" />`}<span class="up-grow__phase">${r.phase}</span>
@@ -100,10 +100,10 @@ function useSheet(box) {
 }
 
 /** The sheet while it is open. */
-function Open({ entries }) {
+function Open({ entries, look }) {
   const box = useRef(), close = useSheet(box);
   const project = currentProject.value?.name || "The project", o = orkHeadOf(), from = { title: "", key: "" }, talked = talkedOf(), parties = partiesAll();
-  const goalOn = (slug) => picked.value === slug, partyOn = (slug) => tab.value === slug && !picked.value;
+  const goalOn = (slug) => look.kind === "goal" && look.slug === slug, partyOn = (slug) => look.kind === "party" && look.g.slug === slug;       // what the middle looks at is what is picked
   return html`<div class="up-scrim" onClick=${() => close()}></div>
     <aside class="up-menu" ref=${box} role="dialog" aria-modal="true" aria-label=${MENU}>
       <div class="up-menu__head">
@@ -120,5 +120,5 @@ function Open({ entries }) {
     </aside>`;
 }
 
-/** The sheet. `entries`: the hand's entries (entries.js), so a goal with a card in the hand is picked as that card. */
-export const Sheet = ({ entries }) => (menuOpen.value ? html`<${Open} entries=${entries} />` : null);
+/** The sheet. `entries`: the hand's entries (entries.js), so a goal with a card in the hand is picked as that card; `look`: what the middle looks at (uplook.js `lookOf`), whose row is the picked one. */
+export const Sheet = ({ entries, look }) => (menuOpen.value ? html`<${Open} entries=${entries} look=${look} />` : null);

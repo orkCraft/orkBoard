@@ -1,0 +1,62 @@
+/* The phone's middle (docs/specs/117-the-phone-a-menu-of-the-leaders.md §5, docs/mockups/phone/sidebar.html A1 and A3; hand/uplook.js, upway.js, upparty.js): a goal's header, phases, route, why and tasks; a party's header, squad, tools, goals at work and
+   concerns. Layout only: every colour, face and corner is orkUI's. `.up-look` (upright.css) scrolls as a whole. */
+
+/* a goal's header */
+.up-gh { flex: none; display: flex; align-items: flex-start; gap: var(--ork-3); padding-top: var(--ork-3); }
+.up-gh > .ork-elem { margin-top: 2px; }
+.up-gh__txt { flex: 1; min-width: 0; }
+.up-gh__name { margin: 0; font: var(--ork-type-body); font-size: 20px; line-height: 26px; font-weight: 600; overflow-wrap: anywhere; }
+.up-gh__type { margin: 0; display: flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.up-gh__type .ork-sign { flex: none; color: var(--ork-ink-muted); }
+
+/* its phases (one button: a press opens its page), its route, why */
+.up-phases { appearance: none; flex: none; box-sizing: border-box; width: 100%; margin: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 2px; }
+.up-phases:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.up-phase { height: var(--ork-tap); display: flex; align-items: center; justify-content: center; border-top: 3px solid var(--ork-frame); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.up-phase.is-past { border-top-color: var(--ork-ink-muted); }
+.up-phase.is-now { border-top-color: var(--ork-ink); color: var(--ork-ink); font-weight: 600; }
+.up-wait { flex: none; margin: 0; display: flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.up-route { flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-2); }
+.up-route > .ork-icon { flex: none; width: 14px; height: 14px; color: var(--ork-ink-faint); }
+.up-step { display: inline-flex; align-items: center; gap: var(--ork-2); height: 36px; padding: 0 var(--ork-3) 0 var(--ork-2); border: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); }
+.up-step .ork-sign { color: var(--ork-ink-muted); }
+.up-step.is-done .ork-sign { color: var(--ork-success); }
+.up-step.is-now { border-color: var(--ork-ink); background: var(--ork-panel); rotate: var(--ork-motion-lean); }
+.up-step.is-next { opacity: 0.55; }
+.up-why { flex: none; margin: 0; font: var(--ork-type-body); overflow-wrap: anywhere; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; overflow: hidden; }
+
+/* a section and its label; the tasks of the step at work */
+.up-sec { flex: none; display: flex; flex-direction: column; gap: var(--ork-2); }
+.up-lab { margin: 0; font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.up-tasks { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--ork-1); }
+.up-task { display: flex; align-items: center; gap: var(--ork-3); min-height: 40px; padding: 0 var(--ork-3); border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-card); clip-path: var(--ork-notch); font: var(--ork-type-body); }
+.up-task.asks { border-color: var(--ork-alert); }
+.up-task .ork-sign { flex: none; color: var(--ork-ink-muted); }
+.up-task__name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.up-task__stage { flex: none; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+
+/* a party: its header, squad, tools, goals at work, concerns */
+.up-party { flex: none; display: flex; flex-direction: column; gap: var(--ork-4); padding-top: var(--ork-3); }
+.up-ph { display: flex; align-items: center; gap: var(--ork-3); }
+.up-ph__txt { flex: 1; min-width: 0; }
+.up-ph__name { margin: 0; padding: 0; border: 0; min-height: 0; }
+.up-ph__brief { margin: 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); overflow-wrap: anywhere; }
+.up-ph__size { flex: none; }
+.up-squad { display: flex; flex-wrap: wrap; gap: var(--ork-3) var(--ork-5); }
+.up-squad__col { display: flex; flex-direction: column; gap: var(--ork-1); }
+.up-squad__seats { display: flex; gap: var(--ork-2); }
+.up-party .table-seat { min-width: var(--ork-tap); min-height: var(--ork-tap); justify-content: center; }
+.hand-up .table-seatpop { left: 0; right: 0; top: auto; bottom: 0; width: auto; max-height: 80%; }                                          /* a head's popover is a sheet at the foot, a phone on its side too */
+.up-tools { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--ork-1); }
+.up-tool { display: flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-caption); }
+.up-tool .ork-sign { flex: none; color: var(--ork-ink-muted); }
+.up-tool .ork-mark { width: 14px; height: 14px; }
+.up-tool .table-tab__follow { margin: 0 var(--ork-1); }
+.up-tool.is-off .ork-sign { opacity: 0.4; }
+.up-sec .up-grow { padding-left: 0; }
+.up-concerns { margin: 0; padding: 0; list-style: none; }
+.up-concern { display: flex; gap: var(--ork-3); padding: var(--ork-2) 0; font: var(--ork-type-body); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.up-concern > .ork-sign { flex: none; margin-top: var(--ork-2); color: var(--ork-alert); }
+.up-concern > .cn-dot { flex: none; margin: var(--ork-3) var(--ork-2) 0; }
+.up-concern__what { overflow-wrap: anywhere; }
+.up-concern__on { display: block; font: var(--ork-type-caption); color: var(--ork-ink-muted); overflow-wrap: anywhere; }

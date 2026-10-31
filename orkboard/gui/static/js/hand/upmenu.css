@@ -5,7 +5,7 @@
 .up-menu { position: fixed; z-index: 61; left: 0; top: 0; bottom: 0; box-sizing: border-box; width: min(312px, 80%); display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: none;
   padding: env(safe-area-inset-top, 0px) 0 env(safe-area-inset-bottom, 0px); background: var(--ork-canvas); color: var(--ork-ink); border-right: var(--ork-line) solid var(--ork-edge); }
 .up-menu::-webkit-scrollbar { display: none; }
-:where(.up-menu) button { appearance: none; margin: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+:where(.up-menu, .up-sec) button { appearance: none; margin: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .up-menu button:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 
 /* its head (60 px): the crowned head, the project with a chevron, Settings, Stop all */
