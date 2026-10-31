@@ -46,7 +46,25 @@ function modelOf(doc) {
   if (rest.length) steps.push({ n: steps.length + 1, real: false, ids: rest });
   const stepIds = new Set(steps.filter((st) => st.real).map((st) => `step:${st.n}`));
   const pains = (doc.segments || []).flatMap((g) => (g.pains || []).map((p) => ({ segment: g.segment, text: p.text, on: byId.has(p.on) || stepIds.has(p.on) ? p.on : "" })));
-  return { byId, steps, pains, stepOf: new Map(steps.flatMap((st) => st.ids.map((id) => [id, st.n]))) };
+  return { byId, steps, pains, stepOf: new Map(steps.flatMap((st) => st.ids.map((id) => [id, st.n]))), rooms: roomsOf(doc, byId, steps) };
+}
+
+/** The rooms (spec 117 G): for each screen the names of the screens that lead to it (`ins`: its left side's doors) and that it leads to (`outs`: its right's), a screen once in either, in the flow's order, a link to itself none; and its `tags`:
+ *  `entry`, `end` (in the flow's last step that is not loose), `dead_end` (no door out and not the end) and `loose` (no door in and not the entry) — the rules of realm/map_signals.py `_design`, so a wall and a heat square agree. */
+function roomsOf(doc, byId, steps) {
+  const rank = new Map(steps.flatMap((st) => st.ids).map((id, i) => [id, i])), ins = new Map(), outs = new Map(), seen = new Set();
+  for (const l of doc.links || []) {
+    if (l.from === l.to || !byId.has(l.from) || !byId.has(l.to) || seen.has(`${l.from}>${l.to}`)) continue;
+    seen.add(`${l.from}>${l.to}`);
+    ins.set(l.to, [...(ins.get(l.to) || []), l.from]);
+    outs.set(l.from, [...(outs.get(l.from) || []), l.to]);
+  }
+  const loose = new Set(doc.loose || []), last = (doc.steps || []).filter((row) => row.length > 0 && !row.every((id) => loose.has(id))).slice(-1)[0] || [];
+  const byFlow = (ids) => [...(ids || [])].sort((a, b) => (rank.get(a) ?? 0) - (rank.get(b) ?? 0)).map((id) => byId.get(id).name);
+  return new Map(doc.screens.map((s) => {
+    const tags = [s.id === doc.entry && "entry", last.includes(s.id) && "end", !outs.has(s.id) && !last.includes(s.id) && !loose.has(s.id) && "dead_end", !ins.has(s.id) && s.id !== doc.entry && "loose"].filter(Boolean).join(" ");
+    return [s.id, { ins: byFlow(ins.get(s.id)), outs: byFlow(outs.get(s.id)), tags }];
+  }));
 }
 
 /** The arrows between the cards (forward links only: a link back, or within a step, is in the screens' backs): each its path through a lane of the gap after its source's step, its name (the target's) at the target. */
@@ -165,7 +183,7 @@ export function ScreensMap({ g, narrow }) {
   const card = (sid, step) => {
     const s = model.byId.get(sid);
     return html`<div class="scr-item" key=${sid}>
-      <${ScreenCard} s=${s} party=${g.slug} step=${step} on=${key === screenKey(g.slug, sid)} carry=${!!carry} over=${drag?.over === sid}
+      <${ScreenCard} s=${s} party=${g.slug} step=${step} room=${model.rooms.get(sid)} on=${key === screenKey(g.slug, sid)} carry=${!!carry} over=${drag?.over === sid}
         onPress=${target(sid) || (() => lift(key === screenKey(g.slug, sid) ? "" : screenKey(g.slug, sid)))} />
       ${painsAt(sid)}
     </div>`;

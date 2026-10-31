@@ -1,5 +1,5 @@
 // The parts of Design's map (docs/specs/102-the-other-maps-and-picking-on-them.md §5.1, mockup docs/mockups/s3/ states 1 and 2): a screen's card (§167.1 at the maps' size), a pain's small card, a screen's back.
-// screensmap.js lays them out. Written by part D.
+// screensmap.js lays them out. Written by part D. A screen is a room (docs/specs/117-each-lens-a-games-shape.md §6): a door in its left side for each screen that leads to it, one in its right for each it leads to, a wall where there is none.
 import { useEffect, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Sign } from "../orkui.js";
@@ -53,12 +53,27 @@ function Window({ s }) {
   return html`<span class=${cls("scr-win", { "is-pic": !!src })}>${src ? html`<img src=${src} alt="" draggable="false" />` : html`<${Sign} name="screen" big=${true} />`}</span>`;
 }
 
+const DOORS = 3;                                           // doors a side shows at most; the others are *and n more* in its title
+
+/** One side of a screen's room, drawn inside the card's box (the notch clips what lies outside it): `names` the screens at the other end of its doors, in the flow's order; a door is a gap in the frame, a side with none a wall.
+ *  The entry's left side has one door more, from outside, with a chevron in it (`entry`). It counts among the three. */
+function Side({ side, names, entry }) {
+  const from = side === "in", outside = from && entry, shown = names.slice(0, DOORS - (outside ? 1 : 0)), more = names.length - shown.length, n = shown.length + (outside ? 1 : 0);
+  const verb = from ? "Leads here" : "Leads to", title = shown.length ? `${verb}: ${shown.join(", ")}${more ? ` and ${more} more` : ""}` : undefined;
+  const door = (k, plain) => html`<i class=${plain ? "scr-door scr-door--in" : "scr-door"} key=${`d${k}`} title=${plain ? "Where people come in" : undefined}>${plain && html`<i class="ork-chev right"></i>`}</i>`;
+  const parts = [];
+  for (let k = 0; k < n; k++) parts.push(html`<i class="scr-frame" key=${`f${k}`}></i>`, door(k, outside && k === 0));
+  return html`<span class=${cls("scr-side", { "is-wall": n === 0 })} data-side=${side} data-doors=${n} data-more=${more} title=${title} aria-hidden="true">
+    ${parts}<i class="scr-frame" key="f"></i></span>`;
+}
+
 /** A screen as a card: the element of the goal that changed it at the left (none when no goal did), its name in the body face, a low window with its picture or the `screen` sign, and the label row with its path. The gem
  *  *new* (changed since the leader's last call) is not drawn: `ideas.screens` does not say it (reported with part D). `lit`: a pain is carried and this is where it may go; `over`: a dragged pain is above it. */
-export function ScreenCard({ s, party, step, on, carry, over, onPress }) {
-  const el = elementOf(s), key = screenKey(party, s.id);
-  const card = html`<button type="button" class=${cls("ork-card ork-leans scr-card", { "is-lifted": on, "is-lit": litKey.value === key, "is-aim": carry, "is-over": over })} data-lkey=${key} data-screen=${s.id} data-drop=${s.id} data-step=${step}
+export function ScreenCard({ s, party, step, on, carry, over, onPress, room }) {
+  const el = elementOf(s), key = screenKey(party, s.id), r = room || { ins: [], outs: [], tags: "" };
+  const card = html`<button type="button" class=${cls("ork-card ork-leans scr-card", { "is-lifted": on, "is-lit": litKey.value === key, "is-aim": carry, "is-over": over })} data-lkey=${key} data-screen=${s.id} data-drop=${s.id} data-step=${step} data-room=${r.tags || undefined}
     aria-pressed=${String(on)} aria-label=${`${s.name}, ${s.path}${carry ? ": pin the pain here" : ""}`} title=${carry ? `Pin the pain to ${s.name}` : s.file} onClick=${onPress} ...${leans}>
+    <${Side} side="in" names=${r.ins} entry=${r.tags.includes("entry")} /><${Side} side="out" names=${r.outs} />
     <span class="scr-card__head">${el && html`<${Elem} name=${el} />`}<span class="scr-card__nm">${s.name}</span></span>
     <${Window} s=${s} />
     <span class="scr-card__row"><${Sign} name="screen" /><span class="scr-card__path" title=${s.path}>${s.path}</span></span>

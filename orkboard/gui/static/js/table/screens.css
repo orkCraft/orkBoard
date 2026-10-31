@@ -44,6 +44,18 @@ button.scr-steplab:not(:disabled) { cursor: pointer; color: var(--ork-ink); }
 .scr-card.is-aim, .scr-card.is-over, .scr-card.is-lit { background: var(--ork-raised); }
 .scr-card.is-over { outline: var(--ork-line) dashed var(--ork-ink); outline-offset: var(--ork-1); }
 
+/* -- a screen's room (docs/specs/117-each-lens-a-games-shape.md §6): doors in its two sides, a wall where a side has none. All of it lies inside the card's box (the notch would clip what lies outside it) and under the reach edge
+   (reach.css `.rc-edge`, z-index 1, inset -1px), so a goal's reach and the heat stay over the doors. A side is a column over the card's frame from the top to the foot: frame (2px, the edge), door (a 10px gap that hides the card's own
+   border), frame, …; a side with no door is one wall of 3px ink. The side holds the title (*Leads here: …*), its width the pointer's room for it. -------------------------------------------------------------------------------- */
+.scr-side { position: absolute; z-index: 0; top: calc(var(--ork-line) * -1); bottom: calc(var(--ork-line) * -1); width: 9px; display: flex; flex-direction: column; align-items: flex-start; }
+.scr-side[data-side="in"] { left: calc(var(--ork-line) * -1); }
+.scr-side[data-side="out"] { right: calc(var(--ork-line) * -1); align-items: flex-end; }
+.scr-frame { display: block; flex: 1 1 0; min-height: var(--ork-2); width: 2px; background: var(--ork-edge); }
+.scr-door { position: relative; display: block; flex: none; width: 3px; height: 10px; background: var(--ork-card); }
+.scr-side.is-wall .scr-frame { width: 3px; background: var(--ork-ink); }
+.scr-door--in .ork-chev { position: absolute; left: 3px; top: 0; margin: 0; color: var(--ork-ink); }
+.scr-card.is-aim .scr-door, .scr-card.is-over .scr-door, .scr-card.is-lit .scr-door { background: var(--ork-raised); }
+
 /* -- a pain: a small card pinned under its screen or step ---------------------------------------------------------------------- */
 .scr-rail { display: flex; flex-direction: column; gap: var(--ork-2); border-left: var(--ork-line) solid var(--ork-edge); padding-left: var(--ork-3); margin-left: var(--ork-4); min-width: 0; }
 .scr-rail.is-step { border-left-style: dashed; }
