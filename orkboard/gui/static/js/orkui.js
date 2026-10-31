@@ -7,12 +7,12 @@ import { html } from "./html.js";
 export const ORKUI = "/ds/orkui";
 
 // orkUI's own icons, drawn on the signs' 7 grid in solid pixels (0.15.0; `banner` and `boarded`, the bar's marks, 0.22.0, decisions §190.1): drawn at 14, 21 or 28 px, never at 24.
-const GRID7 = new Set(["arrow-left", "close", "more-horizontal", "plus", "search", "mic", "play", "stop", "chevron-down", "chevron-left", "chevron-right", "chevron-up", "banner", "boarded"]);
+const GRID7 = new Set(["arrow-left", "close", "more-horizontal", "plus", "search", "mic", "play", "stop", "chevron-down", "chevron-left", "chevron-right", "chevron-up", "banner", "boarded", "hammer"]);
 
 /** One of orkUI's pixel icons (icons/icons.svg: flag, robot, eye, sliders, close, …), 24 px, in the text's colour; one of orkUI's own on the
  *  7 grid (close, plus, …) is 21 px (`.ork-icon.g7`, page.css), and a sheet that sets its size sets 14, 21 or 28. */
-export function Icon({ name, label = "" }) {
-  return html`<svg class=${GRID7.has(name) ? "ork-icon g7" : "ork-icon"} aria-hidden=${label ? undefined : "true"} role=${label ? "img" : undefined} aria-label=${label || undefined}>
+export function Icon({ name, label = "", cls = "" }) {
+  return html`<svg class=${`${GRID7.has(name) ? "ork-icon g7" : "ork-icon"}${cls ? ` ${cls}` : ""}`} aria-hidden=${label ? undefined : "true"} role=${label ? "img" : undefined} aria-label=${label || undefined}>
     <use href=${`${ORKUI}/icons/icons.svg#${name}`} /></svg>`;
 }
 

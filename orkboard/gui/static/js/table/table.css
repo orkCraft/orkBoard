@@ -287,13 +287,11 @@ button.table-token.ork-card { position: relative; display: flex; flex-direction:
 .table-logs__text { margin: 0; font: var(--ork-type-body); overflow-wrap: anywhere; }
 .table-logs__error { margin: 0; max-height: 160px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; padding: var(--ork-3); background: var(--ork-canvas); border: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink); font: var(--ork-type-caption); }
 .table-logs { margin-left: var(--ork-1); }
-/* the fix's states (spec 119 §4.1, decisions §197; the pictures are logsbtn.js `PICTURES`): a sign over the bug's lower right is the same as the icon was; working steps it (whole steps, as the tab's head does), ready is the one state in a colour:
-   the signal the update's own notice wears (pwa/app.css `.update-bar.is-critical`), so the eye finds it; working and failed are the ink */
+/* the fix's states (spec 119 §4, decisions §197; the pictures are logsbtn.js `PICTURES`): the hammer over the bug's lower right as the glass was, striking while Claude works (orkUI's
+   `is-striking`), a sign over it (failed's cross) the same; ready is the one state in a colour: the signal the update's own notice wears (pwa/app.css `.update-bar.is-critical`), so the
+   eye finds it; working and failed are the ink */
 .table-logs__pic > .ork-sign:not(.big) { position: absolute; right: -4px; bottom: -4px; width: 14px; height: 14px; color: var(--ork-ink);
   filter: drop-shadow(1px 0 0 var(--ork-canvas)) drop-shadow(-1px 0 0 var(--ork-canvas)) drop-shadow(0 1px 0 var(--ork-canvas)) drop-shadow(0 -1px 0 var(--ork-canvas)); }
 .ork-btn.table-logs.is-working, .ork-btn.table-logs.is-failed { color: var(--ork-ink); }
-.ork-btn.table-logs.is-ready, .ork-btn.table-logs.is-ready:hover:not(:disabled) { color: var(--ork-alert); }
-.table-logs.is-working .table-logs__pic > .ork-sign:not(.big) { animation: table-logs-work 1.2s steps(2) infinite; }
-@keyframes table-logs-work { 0% { transform: translateY(0); } 50% { transform: translateY(-2px); } 100% { transform: translateY(0); } }
-@media (prefers-reduced-motion: reduce) { .table-logs.is-working .table-logs__pic > .ork-sign:not(.big) { animation: none; } }
+.ork-btn.table-logs.is-ready, .ork-btn.table-logs.is-ready:hover:not(:disabled), .table-logs.is-ready .table-logs__pic > .ork-icon { color: var(--ork-alert); }
 @media (pointer: coarse) { .table-logs { min-width: var(--ork-tap); min-height: var(--ork-tap); } }

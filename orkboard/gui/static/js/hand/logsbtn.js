@@ -1,11 +1,11 @@
 // The bug under the glass (docs/specs/107-what-the-owners-day-said.md §10, decisions §182.12; moved by decisions §190.6, docs/specs/112-the-bars-marks-and-the-play-die.md As built; made the fix's by docs/specs/119-the-hammer-and-the-bug.md §4, decisions §197):
 // a quiet icon button with no word at the end of the tabs' row (table/tabs.js, after *Stop all*). Its picture and its panel follow `town.repair.state` (the host's snapshot; an old host sends none: idle, cannot):
-// - idle: orkUI's sign `bug` with an icon laid over its lower right; the panel is *What went wrong? (optional)*, one line, **Fix it** (only when `repair.can`: it starts Claude Code on this program's own code with the line and the logs,
-//   `repair.start`) and **Save logs** (`saveLogs`, shell/errors.js: the day's logs with the line, then where they were saved; the primary when Fix it is not offered). Enter presses the primary;
-// - working (and updating): the bug with a sign over it that steps while Claude works; the panel says where to follow it (the Claude app), since when, and **Stop the fix** (`repair.stop`);
-// - ready: orkUI's sign `check` in the signal colour (`is-ready`, table.css): main moved; the panel says what came in and **Update and restart** (`repair.update`, the restart updates already make: the phone comes back by itself);
+// - idle: orkUI's sign `bug` with its icon `hammer` laid over its lower right; the panel is *What went wrong? (optional)*, one line, **Fix it** (only when `repair.can`: it starts Claude Code on this program's own code with the line and the logs,
+//   `repair.start`) and **Save logs** (`saveLogs`, shell/errors.js: the day's logs with the line, then where they were saved; the primary when Fix it is not offered, and then a line says why: `repair.why`). Enter presses the primary;
+// - working (and updating): the hammer strikes (orkUI's `is-striking`; it stands raised under reduced motion); the panel says where to follow it (the Claude app), since when, and **Stop the fix** (`repair.stop`);
+// - ready: orkUI's sign `bug-squashed` under the hammer, in the signal colour (`is-ready`, table.css): main moved; the panel says what came in and **Update and restart** (`repair.update`, the restart updates already make: the phone comes back by itself);
 // - failed: the bug with a `cross` over it; the panel says the error as it is, **Try again** (a new fix with the line last sent) and **Save logs**.
-// `PICTURES` is the one map of pictures by state (docs/specs/119 §4.3): until orkUI has `hammer` and `bug-squashed` it wears the signs orkUI has; only this map changes then. `RepairBody` is the panel's content, which the phone's menu shows too
+// `PICTURES` is the one map of pictures by state (docs/specs/119 §4.3, orkUI 0.26.0). `RepairBody` is the panel's content, which the phone's menu shows too
 // (upphone.js; without Save logs: a phone saves nothing on the computer). Esc or a press away closes the panel. The panel is fixed, opens downward from the button's foot and is kept inside the window.
 // On a touch phone upright there is no tabs' row: *Settings* saves the logs there (as Stop all is in the **…** menu), and the paired app's menu has the fix's row.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
@@ -16,13 +16,13 @@ import { pageState, saveLogs } from "../shell/errors.js";
 
 export const LINE_MAX = 300;                          // what went wrong, at most this long
 
-/** The picture by state: a `base` (a sign, `big`) and what lies over its lower right (`[kind, name]`, an icon or a sign; none for the check). Docs/specs/119 §4.3, "Until A is copied":
- *  with orkUI's `hammer` it becomes idle `bug` + icon `hammer`, working `bug` + the hammer raised and lowered, ready sign `bug-squashed`, failed `bug` + icon `hammer` aside and `cross`. */
+/** The picture by state (docs/specs/119 §4.3, orkUI 0.26.0): a `base` (a sign, `big`) and what lies over its lower right (`[kind, name, cls]`, an icon or a sign): the bug and orkUI's
+ *  `hammer`; while Claude works the hammer strikes (orkUI's `is-striking`: raised and lowered, standing raised under reduced motion); when the fix is in, the squashed bug under the hammer laid down. */
 export const PICTURES = {
-  idle: { base: "bug", over: ["icon", "search"] },
-  working: { base: "bug", over: ["sign", "work"] },
-  updating: { base: "bug", over: ["sign", "work"] },
-  ready: { base: "check", over: null },
+  idle: { base: "bug", over: ["icon", "hammer"] },
+  working: { base: "bug", over: ["icon", "hammer", "is-striking"] },
+  updating: { base: "bug", over: ["icon", "hammer", "is-striking"] },
+  ready: { base: "bug-squashed", over: ["icon", "hammer"] },
   failed: { base: "bug", over: ["sign", "cross"] },
 };
 
@@ -80,12 +80,13 @@ export function RepairBody({ r, line, setLine, fieldId, field, done = () => {}, 
     <input ref=${field} id=${fieldId} class="ork-field" type="text" maxlength=${LINE_MAX} value=${line} onInput=${(e) => setLine(e.currentTarget.value)} onKeyDown=${key} />
     ${r.can && html`<button type="button" class="ork-btn primary" data-repair="fix" onClick=${fix}>Fix it</button>
       <p class="table-logs__label">Starts Claude Code on ${PRODUCT}'s own code with this and the logs; you say go in the Claude app.</p>`}
+    ${!r.can && r.why && html`<p class="table-logs__label" data-repair="why">Fix it is not here: ${r.why}.</p>`}
     ${save && html`<button type="button" class=${r.can ? "ork-btn quiet" : "ork-btn primary"} data-repair="save" onClick=${save}>Save logs</button>`}`;
 }
 
 function Picture({ state }) {
   const p = PICTURES[state] || PICTURES.idle;
-  return html`<span class="table-logs__pic" aria-hidden="true"><${Sign} name=${p.base} big=${true} />${p.over && (p.over[0] === "icon" ? html`<${Icon} name=${p.over[1]} />` : html`<${Sign} name=${p.over[1]} />`)}</span>`;
+  return html`<span class="table-logs__pic" aria-hidden="true"><${Sign} name=${p.base} big=${true} />${p.over && (p.over[0] === "icon" ? html`<${Icon} name=${p.over[1]} cls=${p.over[2] || ""} />` : html`<${Sign} name=${p.over[1]} />`)}</span>`;
 }
 
 export function LogsButton() {

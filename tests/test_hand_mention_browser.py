@@ -218,7 +218,7 @@ def test_the_logs_button_ends_the_tabs_row_after_stop_all_opens_its_panel_downwa
         button.wait_for(timeout=WAIT_MS)
         assert pg.locator(".hand .table-logs, .hand-end .table-logs").count() == 0, "not in the hand any more (decisions §190.6)"
         assert button.get_attribute("aria-label") == "Save the logs" and button.get_attribute("title") == "Save the logs" and button.inner_text().strip() == "", "an icon with no word"
-        assert button.locator(".ork-sign.bug").count() == 1 and button.locator("svg.ork-icon use").get_attribute("href").endswith("#search")
+        assert button.locator(".ork-sign.bug").count() == 1 and button.locator("svg.ork-icon use").get_attribute("href").endswith("#hammer")      # the hammer over the bug since spec 119 (orkUI 0.26.0); it was the glass
         b, stop = button.bounding_box(), pg.locator(".table-stop").bounding_box()
         assert b["x"] >= stop["x"] + stop["width"] - 1, "after Stop all"
         button.click()
