@@ -1,0 +1,22 @@
+/* Release's map as a train (docs/specs/117-each-lens-a-games-shape.md §9, releasemap.js). orkUI's tokens only; maps.css keeps the goal card (204 px) and the row it wraps in. Each goal is a car; a short line couples it to the one
+   before it (not at the start of a row: releasemap.js marks that car `data-first`); an upright dashed line before the car where the batch turns big; a car a hint calls stale lies faint, all but the reach's edge (reach.css), which must stay seen. */
+.mp-goals.tr-train { gap: var(--ork-8) var(--ork-6); padding-top: var(--ork-6); }
+.tr-car { position: relative; min-width: 0; }
+.tr-car:not([data-first])::before { content: ""; position: absolute; top: var(--ork-6); left: calc(var(--ork-6) * -1); width: var(--ork-6); border-top: var(--ork-line) solid var(--ork-edge); pointer-events: none; }
+
+/* its age, under its title */
+.tr-age { color: var(--ork-ink-muted); }
+
+/* the batch turns big: the line stands in the gap before the car, the words over the car */
+.tr-big { position: absolute; z-index: 1; top: calc(var(--ork-6) * -1); bottom: 0; left: calc(var(--ork-6) / -2); width: 0; border-left: var(--ork-line) dashed var(--ork-ink); pointer-events: none; }
+.tr-big > .mp-cap { position: absolute; top: 0; left: calc(var(--ork-6) / 2); white-space: nowrap; color: var(--ork-ink); }
+
+/* a stale goal lies faint: the card's own parts, not the edge the reach draws on it */
+.tr-car [data-heat~="stale"] > :not(.rc-edge) { opacity: 0.5; }
+
+@media (max-width: 759px) {                                             /* the cars a little closer, as maps.css's grid is */
+  .mp-goals.tr-train { column-gap: var(--ork-4); }
+  .tr-car:not([data-first])::before { left: calc(var(--ork-4) * -1); width: var(--ork-4); }
+  .tr-big { left: calc(var(--ork-4) / -2); }
+  .tr-big > .mp-cap { left: calc(var(--ork-4) / 2); }
+}
