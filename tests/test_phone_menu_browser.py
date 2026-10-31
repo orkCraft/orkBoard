@@ -351,3 +351,36 @@ def test_the_desktop_and_a_narrow_window_with_a_mouse_have_no_crown_and_no_menu(
     finally:
         pg.close()
     assert not errors, "\n".join(errors)
+
+
+PHONE = """globalThis.__calls = []; let on = false;
+globalThis.orkboardPhone = Object.freeze({ paired: () => true, unpair() { __calls.push("unpair"); },
+  push: Object.freeze({ async state() { return { supported: true, why: "", permission: on ? "granted" : "default", on, quiet: "" }; },
+    async on() { __calls.push("on"); on = true; return { ok: true }; }, async off() { __calls.push("off"); on = false; return { ok: true }; }, async setQuiet() { return { ok: true }; } }) });"""
+
+
+def test_this_phone_rows_only_in_the_paired_app(gui):
+    """At the menu's foot, only in the app the frame pairs: *Notifications* turns them on and off; *Unpair this phone* asks a second press (spec 117 As built E)."""
+    pg, _host, errors = start(gui)
+    crown(pg).click()
+    assert menu(pg).get_by_role("switch", name="Notifications").count() == 0          # the page from the link: no frame, no rows
+    pg.context.close()
+    server, browser = gui
+    ctx = narrow.context(browser, "phone")
+    ctx.add_init_script(PHONE)
+    pg = ctx.new_page()
+    watch(pg, errors)
+    pg.route_web_socket("**/ws*", MenuHost().on_socket)
+    pg.goto(server.url)
+    pg.wait_for_selector(".up-crown", timeout=WAIT_MS)
+    crown(pg).click()
+    sw = menu(pg).get_by_role("switch", name="Notifications")
+    assert sw.get_attribute("aria-checked") == "false"
+    sw.click()
+    pg.wait_for_function("document.querySelector('.up-phone__row[role=switch]').getAttribute('aria-checked') === 'true'", timeout=WAIT_MS)
+    menu(pg).get_by_role("button", name="Unpair this phone").click()
+    assert pg.evaluate("__calls") == ["on"]
+    menu(pg).get_by_role("button", name="Press again to unpair").click()
+    assert pg.evaluate("__calls") == ["on", "unpair"]
+    shot(pg, "phone-menu-this-phone")
+    assert not errors

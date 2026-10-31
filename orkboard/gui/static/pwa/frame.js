@@ -237,7 +237,7 @@ async function pushQuiet(from, to) {
 
 // -- what the page may ask of its frame -------------------------------------------------------------------------
 
-/** `globalThis.orkboardPhone`: the page's Settings (a later part) asks the frame for these; the page imports nothing of it. Nothing in the page calls them yet (spec 117 As built A). */
+/** `globalThis.orkboardPhone`: the page asks the frame for these (js/hand/upphone.js, at the foot of the crown's menu: notifications and unpairing; spec 117 As built E); the page imports nothing of it. */
 globalThis.orkboardPhone = Object.freeze({
   paired: () => device !== null && started,
   /** Forget the pairing here (the person confirmed): notifications stop first, the socket closes, the storage is wiped; then the card says to pair again. */

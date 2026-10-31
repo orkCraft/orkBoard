@@ -16,6 +16,7 @@ import { PHASES, laneOf, lineNow, nameOf, partiesAll, phaseOf, stageOf, typeSign
 import { Marks, marksOf, marksWords } from "../table/tabmarks.js";
 import { orkHeadOf } from "./context.js";
 import { pickGoal, pickParty } from "./entries.js";
+import { PhoneRows } from "./upphone.js";
 
 export const menuOpen = signal(false);                           // the sheet is open
 export const MENU = "The leaders and their goals";               // the crown's words
@@ -117,6 +118,7 @@ function Open({ entries, look }) {
       ${parties.map((g) => html`<section key=${g.slug} class="up-group" aria-label=${nameOf(g)}>
         <${PartyRow} g=${g} on=${partyOn(g.slug)} onPress=${() => close(() => pickParty(g.slug))} />
         ${workOf(g).map((r) => html`<${GoalRow} key=${r.slug} r=${r} on=${goalOn(r.slug)} onPress=${() => close(() => pickGoal(entries, r.slug))} />`)}</section>`)}
+      <${PhoneRows} />
     </aside>`;
 }
 

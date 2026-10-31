@@ -29,3 +29,12 @@
 .up-grow__phase { flex: none; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .up-menu button.is-on { background: var(--ork-panel); box-shadow: inset 3px 0 0 var(--ork-ink); }
 .up-menu button.is-on:focus-visible { box-shadow: inset 3px 0 0 var(--ork-ink), inset 0 0 0 2px var(--ork-ink); }
+
+/* this phone's own rows at the menu's foot (upphone.js): notifications and unpairing, only in the paired app */
+.up-menu .up-phone { margin-top: auto; border-top: var(--ork-line) solid var(--ork-frame); border-bottom: 0; }
+.up-phone__row { width: 100%; min-height: var(--ork-tap); padding: 0 var(--ork-3); display: flex; align-items: center; gap: var(--ork-3); font: var(--ork-type-body); }
+.up-phone__name { flex: 1; min-width: 0; }
+.up-phone__state { flex: none; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.up-menu button.up-phone__row.is-danger { color: var(--ork-danger); }
+.up-menu button.up-phone__row:disabled { color: var(--ork-ink-muted); cursor: default; }
+.up-menu .up-phone__line { margin: 0; padding: 0 var(--ork-3) var(--ork-2); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
