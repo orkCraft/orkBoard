@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import re
 
-from orkboard.realm import idea_objections, lens_rubrics as rubrics, lexicon, map_parts
+from orkboard.realm import idea_objections, lens_rubrics as rubrics, lexicon, map_parts, play_signals
 
 CRAFTS = ("tech", "design", "product", "game-design", "art", "release", "marketing", "run", "liveops")
 KINDS = {                        # the hints of code each craft has (spec 109 §3), every one in exactly one aspect of its craft
-    "tech": ("cycle", "fan_in", "fan_out", "big", "shared_churn", "untested_churn", "hotspot", "unstable"),
-    "design": ("loose", "dead_end", "no_picture", "no_states", "a11y"),
+    "tech": ("cycle", "fan_in", "fan_out", "big", "shared_churn", "untested_churn", "hotspot", "unstable", "error", "failed", "slow"),
+    "design": ("loose", "dead_end", "no_picture", "no_states", "a11y", "dead_press", "again"),
     "product": ("unserved", "pains", "pain_loose", "vague_outcome", "no_evidence", "off_tree"),
     "game-design": ("no_source", "pile_up", "no_reward", "unfed", "flat", "spike", "no_hook", "unground"),
     "art": ("mixed_sizes", "naming", "heavy", "unused"),
@@ -128,6 +128,24 @@ def test_every_kind_the_signals_emit_is_in_one_aspect_and_every_aspects_kind_is_
     root = Path(rubrics.__file__).parent
     text = "".join((root / n).read_text(encoding="utf-8") for n in ("map_signals.py", "map_signals_crafts.py"))
     assert all(f'"{k}"' in text for k in MARKETING_KINDS) and all(f'"{k}"' in (root / "loop.py").read_text(encoding="utf-8") for k in LOOP_KINDS)
-    emitted = set(re.findall(r'"kind": "([a-z_0-9]+)"', text)) | MARKETING_KINDS | LOOP_KINDS
+    emitted = set(re.findall(r'"kind": "([a-z_0-9]+)"', text)) | MARKETING_KINDS | LOOP_KINDS | set(play_signals.CRAFT)
     named = {k for craft in rubrics.RUBRICS for a in rubrics.RUBRICS[craft]["aspects"] for k in a["signals"]}
     assert emitted == named, (sorted(emitted - named), sorted(named - emitted))
+
+
+def test_the_live_products_kinds_are_in_the_aspects_the_spec_names():
+    """Spec 115 §4: the probe's hints (`realm/play_signals.py`) ground a tech and a design aspect each."""
+    assert play_signals.CRAFT == {"error": "tech", "failed": "tech", "slow": "tech", "dead_press": "design", "again": "design"}
+    got = {k: (c, rubrics.aspect_of(c, k)) for k, c in play_signals.CRAFT.items()}
+    assert got == {"error": ("tech", "safety"), "failed": ("tech", "safety"), "slow": ("tech", "hotspots"), "dead_press": ("design", "flow"), "again": ("design", "status")}
+    names = {a["id"]: a["name"] for c in ("tech", "design") for a in rubrics.RUBRICS[c]["aspects"]}
+    assert names["safety"] == "Security and reliability" and names["hotspots"] == "Hotspots" and names["flow"] == "The way through" and names["status"] == "State and errors"
+    assert rubrics.aspect_of("design", "error") == "" and rubrics.aspect_of("tech", "dead_press") == "", "a kind is of one craft"
+
+
+def test_a_hint_of_the_live_product_lights_its_aspect_in_the_scorecard():
+    failed = {"on": "", "kind": "failed", "words": "A request failed: POST /api/water 500"}
+    again = {"on": "", "kind": "again", "words": "Pressed again and again"}
+    tech = {a["id"]: a for a in rubrics.scorecard("tech", _rec(hints=[failed]))}
+    design = {a["id"]: a for a in rubrics.scorecard("design", _rec(hints=[again]))}
+    assert tech["safety"]["state"] == "hint" and tech["safety"]["hints"] == [failed["words"]] and design["status"]["state"] == "hint"
