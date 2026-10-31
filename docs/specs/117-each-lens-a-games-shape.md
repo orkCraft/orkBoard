@@ -194,3 +194,28 @@ with H, I and J together (the parts may not edit them: they share them); the sho
 
 Each part's above; the critical tests (`tests/test_architecture.py`: `realm/map_reach.py` imports no `gui/`),
 `tests/test_board_alone.py`, `tests/test_updates.py`, and every touched module's.
+
+## As built (31 October)
+
+All ten parts on the cheaper model, each reviewed; on `main` with spec 116 A–D in it. Where the build read the spec:
+- **A.** Heat is kept per head only for Tech, Art and Marketing, whose hints are of dev's head alone; the others' hints read
+  the Board and the state, so they are read again. A hint of another map (a pain piled on a screen) is no heat here. `relation`
+  takes `only` (Release's goals to plan; `goal_main.plan` runs git). The top part `.` holds only the files at the project's
+  top. A mark with a group and no id touches the group. `map_reach.guard` and `map_reach.links` hold System's two extras. The
+  tree's relation takes the hypotheses (`hyp:<id>`: its job, the goals resting on it or testing it, each way); a goal not on
+  the tree is no part, so nothing reaches it.
+- **C.** A goal's `at` is read for all waiting commits in one `git log --no-walk`.
+- **E.** The concern's mark is drawn into `span.cn-slot__m` inside the slot, so the heat's squares and the mark share it;
+  `concerns.js` and `heat.js` import each other (used inside functions only). The edge lies at `inset: -1px`, over the card's
+  frame. The table's goal is the hand's card under the pointer, else the picked one (a press in the hand picks it). The
+  strip's line needs a concerns record, as the strip does. Colours by `data-elem` rules: a sheet holds no variable but
+  orkUI's (`test_design_system.py`).
+- **F.** A pair in `links` lights its link either way. `arena/arrows.js` gains `is-reach` on the arrow.
+- **G.** A side shows three doors at most, the entry's door from outside among them; a wall has no title. The flow's end
+  with no door out has its right wall as a dead end's; `data-room` tells them apart (`entry`, `end`, `dead_end`, `loose`).
+- **H.** The closing chevron of a ring whose tag stands at its top is moved between the tag and the first card. Tokens are
+  three in all, gives first; a name past twelve characters is cut with *…*, the title keeps it.
+- **I.** A card spans one, two or three cells each way (an area, not a width alone), never more than its lane holds; a heavy
+  card fits a lane (lanes at least 232 px). Sizes in words by a new `totalWords` (*640 KB*, *4.2 MB*).
+- **J.** A time not known counts as the oldest. Couplers are drawn between cars in a row, none at a row's start.
+- **The lead.** `test_maps_desktop_browser.py`: the loop's chevrons are a step's each (nine, three closing).
