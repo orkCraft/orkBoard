@@ -1,11 +1,13 @@
 """Spec 102 C §3.1 (docs/specs/102-the-other-maps-and-picking-on-them.md, decisions §135.3–§135.4): Art's map, the assets by kind with Art's kinds first (art and
 icons, sound, music, clips) and the others under them, each file with its folder, a picked file's variants not picked under it; its text bounded and the same
 bytes for the same dev, the folders by count's words, the picks, what changed since the last call with its goal; no dev, no map and no text; nothing to read.
+Spec 117 §3: an asset's weight at its edges, a kind's bytes, the budget set, unset and unreadable.
 `ideas.art_map` on the host, composed as the lead's wiring does. Real git repositories (tests/test_commit_goal.py's), no model."""
 from __future__ import annotations
 
 import json
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -86,6 +88,70 @@ def test_the_changed_since_a_commit_are_marked_with_their_goal_and_the_gone_list
     marks = {a["id"]: (a["change"], a["goal"]) for k in got["kinds"] for a in k["assets"] if a["change"]}
     assert marks == {"art/hero.png": ("changed", "dark-mode"), "art/new.svg": ("added", "dark-mode")}
     assert [(r["id"], r["kind"], r["goal"]) for r in got["removed"]] == [("art/old.png", "art", "")]
+
+
+# -- the weight, the kinds' bytes and the budget (docs/specs/117-each-lens-a-games-shape.md §3) ------------------------------------------
+
+KB, MB = 1024, 1024 * 1024
+
+
+def sized(head: bytes, size: int) -> bytes:
+    """A file's header padded with zeros to exactly `size` bytes."""
+    return head + b"\x00" * (size - len(head))
+
+
+def weights(got: dict) -> dict[str, str]:
+    return {a["id"]: a["weight"] for k in got["kinds"] for a in k["assets"]}
+
+
+def test_a_picture_weighs_light_normal_or_heavy_at_the_edges_of_100_kb_and_1_mb(repo):
+    put(repo, {"a/tiny.png": PNG, "a/under.png": sized(PNG, 100 * KB - 1), "a/at.png": sized(PNG, 100 * KB), "a/near.png": sized(PNG, MB - 1), "a/big.png": sized(PNG, MB)})
+    assert weights(art_map.read(state(repo), repo)) == {"a/tiny.png": "light", "a/under.png": "light", "a/at.png": "normal", "a/near.png": "normal", "a/big.png": "heavy"}
+
+
+def test_a_sound_is_heavy_at_1_mb_and_music_clips_fonts_never_are(repo):
+    put(repo, {"s/near.wav": sized(pf.wav(0.1), MB - 1), "s/big.wav": sized(pf.wav(0.1), MB), "s/small.wav": pf.wav(0.1), "m/long.wav": sized(pf.wav(12, rate=200), 3 * MB),
+               "c/long.mp4": sized(pf.mp4(seconds=1), 3 * MB), "f/Big.ttf": sized(b"\x00\x01\x00\x00font", 3 * MB), "m/small.wav": pf.wav(12, rate=200)})
+    got = art_map.read(state(repo), repo)
+    kinds = {a["id"]: k["kind"] for k in got["kinds"] for a in k["assets"]}
+    assert weights(got)["s/near.wav"] == "normal" and weights(got)["s/big.wav"] == "heavy" and weights(got)["s/small.wav"] == "light"
+    assert (kinds["c/long.mp4"], weights(got)["c/long.mp4"], kinds["f/Big.ttf"], weights(got)["f/Big.ttf"]) == ("clip", "normal", "font", "normal")
+    assert (kinds["m/long.wav"], weights(got)["m/long.wav"], weights(got)["m/small.wav"]) == ("music", "normal", "light") and list(weights(got).values()).count("heavy") == 1
+
+
+def test_a_kind_has_the_bytes_of_its_assets(game):
+    got = art_map.read(state(game), game)
+    for kind in ("art", "sound", "music", "clip", "font"):
+        assert lane(got, kind)["bytes"] == sum(a["bytes"] for a in lane(got, kind)["assets"]) > 0
+    assert lane(got, "art")["bytes"] == sum(len(pf.png(n + 1, 2)) for n in range(4)) + 2 * len(PNG)
+
+
+def test_a_kind_with_nothing_in_it_has_no_bytes(repo):
+    put(repo, {"music/theme.wav": pf.wav(12, rate=200)})
+    got = art_map.read(state(repo), repo)
+    assert (lane(got, "art")["bytes"], lane(got, "sound")["bytes"]) == (0, 0) and lane(got, "music")["bytes"] > 0
+
+
+def budgeted(repo: Path, toml: str) -> dict | None:
+    (repo / "orkcraft.toml").write_text(toml, encoding="utf-8")
+    return art_map.read(state(repo), repo)["budget"]
+
+
+def test_the_budget_is_the_art_kinds_sum_against_the_toml_in_bytes_and_none_without_one(repo):
+    put(repo, {"a/one.png": sized(PNG, 300 * KB), "s/hit.wav": sized(pf.wav(0.1), 200 * KB), "f/x.ttf": sized(b"\x00\x01\x00\x00font", 400 * KB)})
+    assert art_map.read(state(repo), repo)["budget"] is None                                    # no orkcraft.toml
+    assert budgeted(repo, "[art]\nbudget_mb = 2\n") == {"bytes": 500 * KB, "of": 2 * MB}          # the font is not Art's
+    assert budgeted(repo, "[art]\nbudget_mb = 0.5\n") == {"bytes": 500 * KB, "of": MB // 2}
+
+
+def test_no_budget_when_it_is_not_a_number_above_zero_or_the_file_does_not_parse(repo):
+    put(repo, {"a/one.png": PNG})
+    for toml in ("", "[gate]\nalways = []\n", "[art]\n", "[art]\nbudget_mb = 0\n", "[art]\nbudget_mb = -3\n", '[art]\nbudget_mb = "10"\n', "[art]\nbudget_mb = true\n",
+                 "art = 5\n", "[art\nbudget_mb = = 10\n"):
+        assert budgeted(repo, toml) is None, toml
+    (repo / "orkcraft.toml").write_bytes(b"\xff\xfe[art]\nbudget_mb = 2\n")                       # not text at all
+    assert art_map.read(state(repo), repo)["budget"] is None
+    assert art_map.read(state(repo), repo, ref="no-such")["budget"] is None
 
 
 # -- the text ---------------------------------------------------------------------------------------------------------------------------
