@@ -19,7 +19,7 @@ with nothing left to settle the goal goes to its plan and starts as it always di
   thread (the goal is `ready` first, so the clock plans it after a spent window as it always did); `on_plan` decides whether it starts. **With a fork** the goal waits for the forks, then
   for the person's *Start* (the plan is made, never started by itself: `way.json` `wait`).
 
-`self` has the keeper's `ask`, `measure`, `_begin`, `_route`, `_name`, `_map`, `_tried`, `reads`, `plan_now`, `hold`, `publish`, `_may_run`, `busy`, `refuse_spent`, `wiki_root`, `state_dir`,
+`self` has the keeper's `ask`, `measure`, `_begin`, `_route`, `_name`, `_map`, `map_ref`, `_tried`, `reads`, `plan_now`, `hold`, `publish`, `_may_run`, `busy`, `refuse_spent`, `wiki_root`, `state_dir`,
 `repo_root`, `_tls`, `role_as`.
 """
 from __future__ import annotations
@@ -137,7 +137,7 @@ class SectionsMixin:
             parts.append(("What is known of the project", facts))
         if text := self._map(party):
             parts.append(("Your party's map", text))
-        if files and (detail := map_text.detail(self.state_dir, self.repo_root, files)):
+        if files and (detail := map_text.detail(self.state_dir, self.repo_root, files, self.map_ref())):
             parts.append(("The parts the goal touches", detail))
         context = idea_target.cut(parts, idea_target.CONTEXT[step])
         redo = " Your section was written already: write it again, changing only what the settled fork changes." if told else ""

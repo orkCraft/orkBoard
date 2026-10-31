@@ -313,8 +313,7 @@ class AssetsMixin:
     _head_seen: tuple[float, str, str] = (0.0, "", "")       # when, which ref and what dev's head was when the die's face last read it
 
     def _ref(self) -> str:
-        ref = str(self.settings_now().get("merge_into") or "dev")
-        return ref if commit_goal.REF.fullmatch(ref) and ".." not in ref else "dev"
+        return commit_goal.work_ref(self.settings_now())
 
     def _goals(self, slugs: set[str]) -> dict[str, dict]:
         root = self.root(make=False)

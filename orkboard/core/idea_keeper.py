@@ -59,7 +59,7 @@ from orkboard.core.idea_loop import LoopMixin
 from orkboard.core.idea_tree import TreeMixin
 from orkboard.core.idea_hypotheses import HypothesesMixin
 from orkboard.core.idea_plan import PlanMixin, _task, _why, estimate, readiness  # noqa: F401  (the plan's small helpers: the callers and tests use them from here)
-from orkboard.realm import (call_log, event_log, goal_team, idea_change, idea_checks, idea_look, idea_pick, idea_spend, idea_target, ideas,
+from orkboard.realm import (call_log, commit_goal, event_log, goal_team, idea_change, idea_checks, idea_look, idea_pick, idea_spend, idea_target, ideas,
                             roles, status, tool_errors)
 from orkboard.realm.idea_words import short_said, title_of
 
@@ -177,6 +177,10 @@ class IdeaKeeper(SignInMixin, TalkMixin, ObjectionMixin, ProjectQMixin, AskMixin
         """The Target the running step works at: its goal's party's size, else the setting (spec 75 §3); a step of no goal's, the setting."""
         goal = self.goal_of_key(getattr(self._tls, "key", "") or getattr(self._tls, "slug", "") or "")
         return idea_target.target_for(self.settings(), ideas.track_page(self.wiki_root(), goal) if goal else None)
+
+    def map_ref(self) -> str:
+        """The branch the leaders' maps are read from: the project's `merge_into` (`commit_goal.work_ref`)."""
+        return commit_goal.work_ref(self.settings())
 
     def pick(self, step: str) -> tuple[str, str] | None:
         """The (model or tier, effort) a keeper step runs on: by the Target, its goal's leader's own model (else the

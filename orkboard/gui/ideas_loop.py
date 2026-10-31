@@ -32,7 +32,7 @@ class LoopMixin:
     def loop_set(self, args: dict) -> dict:
         data = {k: args[k] for k in ("loops", "currencies", "hooks", "cards") if k in args}
         try:
-            kept, dropped = loop.keep(self.state_dir, Path(self.host.repo_root), data, "person")
+            kept, dropped = loop.keep(self.state_dir, Path(self.host.repo_root), data, "person", self._ref())
         except ValueError as e:
             raise IdeasError(str(e)) from None
         self.changed("")

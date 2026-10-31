@@ -120,7 +120,7 @@ def _frame(w: float | None, h: float | None, default: tuple[int, int] = idea_sho
 
 
 class PlayMarkMixin:
-    """Needs `host`, `state_dir`, `root()`, `settings_now()`, `add`, `changed`, `_state`, `player`, `_play` (gui/ideas.py and gui/ideas_assets.py)."""
+    """Needs `host`, `state_dir`, `root()`, `settings_now()`, `_ref()`, `add`, `changed`, `_state`, `player`, `_play` (gui/ideas.py and gui/ideas_assets.py)."""
 
     # -- the play's events ------------------------------------------------------------------------------------------
 
@@ -187,12 +187,12 @@ class PlayMarkMixin:
         return out
 
     def _parts(self, path: str, files: list[str]) -> dict:
-        return play_place.parts(self.state_dir, Path(self.host.repo_root), path, files, pages=self.root(False))
+        return play_place.parts(self.state_dir, Path(self.host.repo_root), path, files, pages=self.root(False), ref=self._ref())
 
     def play_place(self, args: dict) -> dict:
         self._computer(args)
         path = _path(args.get("path"))
-        return {"screen": play_place.screen(self.state_dir, Path(self.host.repo_root), path), "parts": self._parts(path, self._relative(args.get("files")))}
+        return {"screen": play_place.screen(self.state_dir, Path(self.host.repo_root), path, self._ref()), "parts": self._parts(path, self._relative(args.get("files")))}
 
     # -- what the ring knows ---------------------------------------------------------------------------------------
 
@@ -247,7 +247,7 @@ class PlayMarkMixin:
     def _mark_of(self, args: dict, kind: str, text: str, path: str, box: dict, keep: set[str]) -> dict:
         """What the live product knew at the mark, for the goal's play (the chips left on only; the picture is added by the caller)."""
         play = self._playing()
-        here = play_place.screen(self.state_dir, Path(self.host.repo_root), path)
+        here = play_place.screen(self.state_dir, Path(self.host.repo_root), path, self._ref())
         errors, requests = self._ring_seen(path) if play is not None else ([], [])
         under = idea_play.elements(args.get("under")) if "part" in keep else []
         return {"kind": kind, "text": text, "path": path, "screen": {"id": here["id"], "name": here["name"]} if here else None, "box": box,
@@ -364,7 +364,7 @@ class PlayMarkMixin:
         """A goal not started that has a mark of this kind on this screen (else on this page), the latest first; `{}` with none."""
         self._computer(args)
         kind, path, root = _kind(args), _path(args.get("path")), self.root(False)
-        here = play_place.screen(self.state_dir, Path(self.host.repo_root), path)
+        here = play_place.screen(self.state_dir, Path(self.host.repo_root), path, self._ref())
         folder = self.state_dir / "ideas"
         slugs = sorted(p.parent.name for p in folder.glob("*/play.json")) if folder.is_dir() else []
         open_ = [s for s in slugs if ideas.idea_page(root, s) is not None and self._state(s)["state"] in goal_route.LINE_STATES]

@@ -1,8 +1,9 @@
 """Where you are on the running product (docs/specs/115-the-live-product-under-each-leaders-eyes.md §3, decisions §193): a page's path and the files the probe named → the parts of every
-map that this place touches, by rule, from the newest snapshot of dev (the maps' own reads, never a model). No model, no face.
+map that this place touches, by rule, from the newest snapshot of `ref` (the branch results land in, the project's `merge_into`: `commit_goal.work_ref`; the maps' own
+reads, never a model). No model, no face.
 
-    play_place.screen(state_dir, root, path)                          # Design's screen the path reaches: {id, name, step} or None (screen_map.screen_of)
-    play_place.parts(state_dir, root, path, files=(), pages=None)     # {map: [{id, name}]} of every map this place touches; {} when none
+    play_place.screen(state_dir, root, path, ref="dev")                          # Design's screen the path reaches: {id, name, step} or None (screen_map.screen_of)
+    play_place.parts(state_dir, root, path, files=(), pages=None, ref="dev")     # {map: [{id, name}]} of every map this place touches; {} when none
 
 `path` is the page's (`location.pathname`, a route in the hash too); `files` the repository files the probe named for the element (a dev build's `data-source`; a path with a line and a
 column, a `./`, or the project's own folder in front is read as the file it names); `pages` where the Board's pages are, for Product's goals (without it Product has none). The keys are the
@@ -64,17 +65,17 @@ def _under(path: str, folder: str) -> bool:
 
 # -- the maps ---------------------------------------------------------------------------------------------------------------------------
 
-def screen(state_dir: Path, root: Path, path: str) -> dict | None:
+def screen(state_dir: Path, root: Path, path: str, ref: str = screen_map.REF) -> dict | None:
     """Design's screen the path reaches, `{id, name, step}`; None for a path no screen fits."""
     try:
-        return screen_map.screen_of(state_dir, root, path)
+        return screen_map.screen_of(state_dir, root, path, ref)
     except Exception:                            # a map that cannot be read has no place
         return None
 
 
-def _system(state_dir: Path, root: Path, named: list[str], screen_file: str) -> list[dict]:
-    tip = commit_goal.head(root, screen_map.REF)
-    snap = (project_map.read(state_dir, tip) if tip else None) or project_map.newest(state_dir) or project_map.ensure(state_dir, root, screen_map.REF)
+def _system(state_dir: Path, root: Path, named: list[str], screen_file: str, ref: str) -> list[dict]:
+    tip = commit_goal.head(root, ref)
+    snap = (project_map.read(state_dir, tip) if tip else None) or project_map.newest(state_dir) or project_map.ensure(state_dir, root, ref)
     held = sorted({p["path"] for p in (snap or {}).get("parts") or [] if isinstance(p, dict) and isinstance(p.get("path"), str) and p["path"]})
     if not held:
         return []
@@ -102,8 +103,8 @@ def _text_names(root: Path, sha: str, names: list[str], files: list[str]) -> set
     return set(got.stdout.splitlines()) if got.returncode == 0 else set()
 
 
-def _art(state_dir: Path, root: Path, files: list[str]) -> list[dict]:
-    got = art_map.read(state_dir, root)
+def _art(state_dir: Path, root: Path, files: list[str], ref: str) -> list[dict]:
+    got = art_map.read(state_dir, root, ref=ref)
     if not got["commit"] or not files:
         return []
     rows = sorted((a for k in got["kinds"] if k["kind"] != "screen" for a in k["assets"]), key=lambda a: a["id"])
@@ -112,8 +113,8 @@ def _art(state_dir: Path, root: Path, files: list[str]) -> list[dict]:
     return [{"id": a["id"], "name": a["name"]} for a in rows if a["name"] in found]
 
 
-def _marketing(state_dir: Path, root: Path, files: list[str]) -> list[dict]:
-    got = way_map.read(state_dir, root)
+def _marketing(state_dir: Path, root: Path, files: list[str], ref: str) -> list[dict]:
+    got = way_map.read(state_dir, root, ref)
     return [{"id": h["path"], "name": h["path"].rsplit("/", 1)[-1]} for step in got["steps"] for h in (got.get(step) or {}).get("holds") or [] if h["path"] in files]
 
 
@@ -134,21 +135,21 @@ def _product(state_dir: Path, pages: Path, files: list[str]) -> list[dict]:
     return [{"id": j["id"], "name": j["want"]} for j in rec["jobs"] if j["id"] in jobs]
 
 
-def parts(state_dir: Path, root: Path, path: str, files: object = (), pages: Path | None = None) -> dict[str, list[dict]]:
+def parts(state_dir: Path, root: Path, path: str, files: object = (), pages: Path | None = None, ref: str = screen_map.REF) -> dict[str, list[dict]]:
     """The parts of every map this place touches, `{map: [{id, name}]}` (see the module); {} when it touches none."""
     state_dir, root = Path(state_dir), Path(root)
-    here = screen(state_dir, root, path)
+    here = screen(state_dir, root, path, ref)
     screen_file = ""
     if here:
         try:
-            screen_file = screen_map.file_of(root, here["id"])
+            screen_file = screen_map.file_of(root, here["id"], ref)
         except Exception:
             pass
     named, every = _files(root, files, screen_file)
     reads = {"screens": lambda: [{"id": here["id"], "name": here["name"]}] if here else [],
-             "system": lambda: _system(state_dir, root, named, screen_file),
-             "art": lambda: _art(state_dir, root, every),
-             "marketing": lambda: _marketing(state_dir, root, every),
+             "system": lambda: _system(state_dir, root, named, screen_file, ref),
+             "art": lambda: _art(state_dir, root, every, ref),
+             "marketing": lambda: _marketing(state_dir, root, every, ref),
              "game-design": lambda: _loop(state_dir, every),
              "product": lambda: _product(state_dir, Path(pages), every) if pages is not None else []}
     out: dict[str, list[dict]] = {}

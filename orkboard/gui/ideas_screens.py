@@ -21,7 +21,7 @@ from orkboard.realm import idea_lens, screen_map
 
 class ScreensMixin:
     def _screens_read(self) -> dict:
-        got = screen_map.read(self.state_dir, Path(self.host.repo_root))
+        got = screen_map.read(self.state_dir, Path(self.host.repo_root), self._ref())
         for s in got["screens"]:
             pic = s.get("picture")
             if pic and pic.get("kind") == "shot":
@@ -38,7 +38,7 @@ class ScreensMixin:
         if mine is None or kept is None:
             raise IdeasError("That pain is gone")
         if on:
-            got = screen_map.read(self.state_dir, Path(self.host.repo_root))
+            got = screen_map.read(self.state_dir, Path(self.host.repo_root), self._ref())
             if on not in {s["id"] for s in got["screens"]} | {screen_map.step_id(n) for n in range(1, len(got["steps"]) + 1)}:
                 raise IdeasError("That screen is gone")
         idea_lens.keep_segment(self.state_dir, mine["segment"], kept, on)

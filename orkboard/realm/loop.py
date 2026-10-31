@@ -4,14 +4,15 @@ its currencies and why a player comes back, which the person and Game design's l
 
     loop.read(state_dir)                           # what is kept: {version: 2, loops, currencies, hooks, by, at, was?}, each as below; empty lists before any (a version 1 file, `cards`, reads as one core loop)
     loop.kept(data)                                # True when `data` has a loop
-    loop.keep(state_dir, root, data, by)           # replaced whole → (kept, dropped): `data` is {loops, currencies, hooks} (or v1's {cards}); limits below; a `rests_on` path only where dev's tree has it
-    loop.parse(answer, root)                       # the leader's answer, strictly but clamped to the limits → {loops, currencies, hooks} or None
+    loop.keep(state_dir, root, data, by, ref="dev")  # replaced whole → (kept, dropped): `data` is {loops, currencies, hooks} (or v1's {cards}); limits below; a `rests_on` path only where dev's tree has it
+    loop.parse(answer, root, ref="dev")            # the leader's answer, strictly but clamped to the limits → {loops, currencies, hooks} or None
     loop.findings(data)                            # what the loop says, by code: [str] (a currency nothing takes, one nothing gives, a loop that rewards nothing, a span nothing feeds, a flat feeling)
     loop.findings_on(data)                         # the same with the part each is on (spec 108 §2.2): [(id, str)], `cur:<id>` for a currency, a loop's first step for a loop
     loop.findings_kinds(data)                      # … and the rule that said each (spec 109 §3): [(id, kind, str)], kind `no_source` · `pile_up` · `no_reward` · `unfed` · `flat`
-    loop.config_files(root)                        # the project's configs by name, chosen by code from dev's tree: balance*, config/, levels/, *.config.*; bounded
-    loop.heads(root, paths)                        # {path: its first lines} of the first few of them, bounded
-    loop.text(state_dir, root, since="")           # the loops as text for a leader's call (~3,000 characters); None when none is kept
+    loop.config_files(root, ref="dev")             # the project's configs by name, chosen by code from dev's tree: balance*, config/, levels/, *.config.*; bounded
+    loop.heads(root, paths, ref="dev")             # {path: its first lines} of the first few of them, bounded
+                                                   # (`ref`: the branch results land in, the project's `merge_into`: `commit_goal.work_ref`)
+    loop.text(state_dir, root, since="", ref="dev")  # the loops as text for a leader's call (~3,000 characters); None when none is kept
     loop.proposal(state_dir) / save_proposal(...)   # what the proposal did: {status: "asking"|"done"|"failed", error, at}
 
 `<state_dir>/loop.json` is `{version: 2, loops: [{id, span, name, line, feeds, steps: [{id, name, line, feel, intensity, gives, takes, rests_on, by, at}]}], currencies: [{id, name, kind, line}],
@@ -77,9 +78,9 @@ def _record(state_dir: Path) -> dict:
 
 # -- dev's tree -----------------------------------------------------------------------------------------------------------------------
 
-def tree(root: Path) -> dict[str, int]:
-    """`{path: bytes}` of the files of dev's head (`git ls-tree -r -l`: blobs only, no link, no submodule); {} with no `dev`."""
-    tip = commit_goal.head(Path(root), REF)
+def tree(root: Path, ref: str = REF) -> dict[str, int]:
+    """`{path: bytes}` of the files of `ref`'s head (`git ls-tree -r -l`: blobs only, no link, no submodule); {} with no such branch."""
+    tip = commit_goal.head(Path(root), ref)
     if not tip:
         return {}
     try:
@@ -336,14 +337,14 @@ def _bare(data: dict) -> dict:
     return {"loops": [{**lp, "steps": [{k: v for k, v in s.items() if k not in ("by", "at")} for s in lp["steps"]]} for lp in data["loops"]], "currencies": data["currencies"], "hooks": data["hooks"]}
 
 
-def keep(state_dir: Path, root: Path, data: object, by: str) -> tuple[dict, list[dict]]:
+def keep(state_dir: Path, root: Path, data: object, by: str, ref: str = REF) -> tuple[dict, list[dict]]:
     """The loops replaced whole by `data` (`{loops, currencies, hooks}`; a version 1 `{cards}` is one core loop) → (what is kept, what was dropped `[{name, path}]`). `by` is who kept them: "person" or
     "leader"; a step the same as the one kept under its `id` keeps its own `by` and `at`; nothing changed keeps all. The leader's keeping over a person's version puts it aside in `was`. ValueError, in
     plain words, for a `by` that is none, a count outside the limits, a loop, step, currency or hook not of the shape, two of one name or span; a path that is not a file or folder of dev's tree is
     dropped, not refused."""
     if by not in BY:
         raise ValueError(f"A loop is kept by the person or the leader, not {by!r}")
-    files = tree(Path(root))
+    files = tree(Path(root), ref)
     clean, dropped = _clean(data, set(files) | _folders(files), False)
     return _store(state_dir, clean, by), dropped
 
@@ -369,11 +370,11 @@ def _store(state_dir: Path, clean: dict, by: str) -> dict:
     return read(state_dir)
 
 
-def parse(answer: object, root: Path) -> dict | None:
+def parse(answer: object, root: Path, ref: str = REF) -> dict | None:
     """The leader's answer, strictly: `{loops, currencies, hooks}` with one to three loops (one of a span), three to six steps each, each a name and a line; what is over a limit is cut, a feeling that
     is none is left unsaid, an intensity is clamped to 1–5, a currency a step names that is none is left out, the paths dev's tree does not have are left out. None for anything else (the call is
     tried once more)."""
-    files = tree(Path(root))
+    files = tree(Path(root), ref)
     try:
         clean, _dropped = _clean(answer, set(files) | _folders(files), True)
     except ValueError:
@@ -452,10 +453,10 @@ def _class_of(path: str) -> int | None:
     return 3 if ".config." in name else None
 
 
-def config_files(root: Path) -> list[str]:
+def config_files(root: Path, ref: str = REF) -> list[str]:
     """The files of dev's tree that are the game's configs, by name (CONFIGS at most, PER_FOLDER of one folder): `balance*`, then `config/`'s, `levels/`'s and `*.config.*`; shallow
     first, then by path. [] with no `dev`."""
-    found = sorted(((c, p.count("/"), p) for p in tree(Path(root)) if (c := _class_of(p)) is not None))
+    found = sorted(((c, p.count("/"), p) for p in tree(Path(root), ref) if (c := _class_of(p)) is not None))
     out: list[str] = []
     per: dict[str, int] = {}
     for _c, _depth, path in found:
@@ -469,11 +470,11 @@ def config_files(root: Path) -> list[str]:
     return out
 
 
-def heads(root: Path, paths: list[str]) -> dict[str, str]:
+def heads(root: Path, paths: list[str], ref: str = REF) -> dict[str, str]:
     """`{path: its first HEAD_LINES lines}` (each cut to HEAD_CHARS) of the first HEAD_FILES of `paths` that dev's tree has, a file too large or not text left out; HEAD_TOTAL
     characters at most in all."""
-    files = tree(Path(root))
-    tip = commit_goal.head(Path(root), REF)
+    files = tree(Path(root), ref)
+    tip = commit_goal.head(Path(root), ref)
     out: dict[str, str] = {}
     used = 0
     for path in [p for p in paths if p in files][:HEAD_FILES]:
@@ -545,26 +546,26 @@ def _fit(lines: list[str], room: int, more: str) -> list[str]:
     return out + [more.format(n=len(lines) - len(out))]
 
 
-def _changed(state_dir: Path, root: Path, steps: list[dict], since: str) -> str:
+def _changed(state_dir: Path, root: Path, steps: list[dict], since: str, ref: str = REF) -> str:
     """*Changed since your last call*, under the loops: each step's file (or a file in its folder) a commit of dev touched since `since`, with the goal that made it (`by you` for the
     person's own)."""
     head = "Changed under the loop since your last call"
-    base = commit_goal.resolve(Path(root), since)
+    base = commit_goal.resolve(Path(root), since, ref)
     if not base:
         return f"{head}: not known (no map was kept at that commit)."
-    touched = commit_goal.last_touch(Path(root), REF, base)
+    touched = commit_goal.last_touch(Path(root), ref, base)
     rows = []
     for s in steps:
         for path in s["rests_on"]:
             for file in sorted(f for f in touched if f == path or f.startswith(path + "/")):
-                goal = commit_goal.of(state_dir, root, touched[file]["sha"]).get("goal")
+                goal = commit_goal.of(state_dir, root, touched[file]["sha"], ref).get("goal")
                 rows.append(f"- {s['name']}: {file} ({f'goal {goal}' if goal else 'by you'})")
     if not rows:
         return f"{head}: nothing."
     return "\n".join([f"{head}:"] + _fit(rows, CHANGED - len(head) - 2, "- and {n} more changes"))
 
 
-def text(state_dir: Path, root: Path, since: str = "") -> str | None:
+def text(state_dir: Path, root: Path, since: str = "", ref: str = REF) -> str | None:
     """Game design's map as text: the loops from the core out, each its steps in order (name, line, feeling, what it gives and takes, what it rests on), then the currencies with what gives and
     takes them, why a player comes back and what the loop says, after a first line naming dev's head (`The map of the loop at dev <short>`); LIMIT characters at most (the lines and files
     are shortened, then the names, before anything is cut). The same bytes for the same record and the same head. None when no loop is kept. With `since` (the commit of the party's last call) ends with what
@@ -572,12 +573,12 @@ def text(state_dir: Path, root: Path, since: str = "") -> str | None:
     data = read(state_dir)
     if not kept(data):
         return None
-    tip = commit_goal.head(Path(root), REF)
-    first = f"The map of the loop at dev {tip[:7]}" if tip else "The map of the loop"
+    tip = commit_goal.head(Path(root), ref)
+    first = f"The map of the loop at {ref} {tip[:7]}" if tip else "The map of the loop"
     for level in range(4):
         body = "\n".join([first] + _body(data, level))
         if len(body) <= LIMIT:
             break
     body = body[:LIMIT]
     since = str(since or "").strip()
-    return body + "\n\n" + _changed(Path(state_dir), Path(root), [s for lp in data["loops"] for s in lp["steps"]], since) if since else body
+    return body + "\n\n" + _changed(Path(state_dir), Path(root), [s for lp in data["loops"] for s in lp["steps"]], since, ref) if since else body

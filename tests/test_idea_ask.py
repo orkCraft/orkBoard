@@ -135,7 +135,7 @@ def test_a_question_is_refused_while_another_is_being_answered_and_what_lay_ther
 # -- a party's leader answers ---------------------------------------------------------------------------------------------------------
 
 def test_a_partys_call_runs_as_its_leader_on_step_ask_with_no_tools_its_map_and_goals_in_it_and_the_question_last(host, tech, model, monkeypatch):
-    monkeypatch.setattr(map_text, "of", lambda craft, state_dir, root, since="", pages=None: f"MAP TEXT of {craft}")
+    monkeypatch.setattr(map_text, "of", lambda craft, state_dir, root, since="", pages=None, ref="dev": f"MAP TEXT of {craft}")
     craft = goal_team.craft_of(host.ideas.root(), tech)
     other = _party(host, "Product", "product-manager", ["copywriter"], "product")
     ideas.add_idea(host.ideas.root(), "Reconnect the lobby", tech, host.ideas.state_dir)
@@ -151,6 +151,14 @@ def test_a_partys_call_runs_as_its_leader_on_step_ask_with_no_tools_its_map_and_
     assert p.index("Your party's map") < p.index("Your party's goals") < p.index("The question:\nWhy is the lobby here?") < p.index('"answer"')
     assert p.rstrip().endswith("else empty\"}")
     assert len(idea_target.cut([("x", p)], idea_target.CONTEXT["ask"])) <= idea_target.CONTEXT["ask"] + 10
+
+
+def test_a_partys_map_is_read_from_the_branch_results_land_in(host, tech, model, monkeypatch):
+    seen = []
+    monkeypatch.setattr(map_text, "of", lambda craft, state_dir, root, since="", pages=None, ref="dev": seen.append(ref) or "MAP")
+    host.ideas.save_settings({**host.ideas.settings_now(), "merge_into": "main"})
+    _ask(host, tech)
+    assert seen == ["main"]
 
 
 def test_a_party_with_no_map_is_given_none(host, product, model, monkeypatch):

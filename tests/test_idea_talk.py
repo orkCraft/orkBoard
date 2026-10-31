@@ -146,7 +146,7 @@ def test_a_leader_is_given_the_goal_the_facts_for_its_call_and_its_maps_text_but
 
 def test_tech_is_given_its_maps_text(host, parties, model, monkeypatch):
     from orkboard.realm import map_text
-    monkeypatch.setattr(map_text, "system", lambda state_dir, root, since="", pages=None: "The map of System at dev abc1234\ncontainers: web")
+    monkeypatch.setattr(map_text, "system", lambda state_dir, root, since="", pages=None, ref="dev": "The map of System at dev abc1234\ncontainers: web")
     _round_one(model, parties)
     _talk(host, parties, ["product", "tech"])
     by = {c["party"]: c["prompt"] for c in model.steps("talk_round")}

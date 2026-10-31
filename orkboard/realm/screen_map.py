@@ -2,15 +2,15 @@
 decisions §112.7, §134.2). Read from dev's tree by code with no model (realm/screen_routes.py reads the routes; never the working tree), as text in the
 leaders' calls (§156.1–§156.2, the model of realm/map_text.py's System) and as cards on the party's tab.
 
-    screen_map.read(state_dir, root)
+    screen_map.read(state_dir, root, ref="dev")     # `ref`: the branch results land in (the project's `merge_into`, `commit_goal.work_ref`)
         # {"head": "<dev sha>", "source": "react-router", "entry": "home",
         #  "screens": [{"id": "orders", "name": "Orders", "path": "/orders", "file": "src/pages/Orders.tsx", "picture": {…}}],   # `picture` only when one is kept
         #  "links": [{"from": "home", "to": "orders"}],
         #  "steps": [["home"], ["orders", "settings"], ["order"]], "loose": [], "more": 0}
-    screen_map.text(state_dir, root, since="")     # about 3,000 characters: the steps, the flow, the pains under their screens; None with no screen
+    screen_map.text(state_dir, root, since="", ref="dev")   # about 3,000 characters: the steps, the flow, the pains under their screens; None with no screen
     screen_map.step_id(1)                          # "step:1": a pain may be pinned to a screen's id or a step's
-    screen_map.screen_of(state_dir, root, path)    # the screen a page's path reaches: {"id", "name", "step"} (`step` its number, from 1), None when it reaches none
-    screen_map.file_of(root, screen_id)            # the file of a screen's component ("" for an id the newest screens do not have)
+    screen_map.screen_of(state_dir, root, path, ref="dev")  # the screen a page's path reaches: {"id", "name", "step"} (`step` its number, from 1), None when it reaches none
+    screen_map.file_of(root, screen_id, ref="dev")          # the file of a screen's component ("" for an id the newest screens do not have)
 
 A screen's id is its path as a word (`/` home, `/orders/:id` orders-id). The links are read from the screens' files by name (`navigate("/x")`,
 `router.push("/x")`, `<Link to="/x">`, `href="/x"`, `Navigator.pushNamed(context, "/x")`, `context.go("/x")`, `goto("/x")`), in the order they stand; a
@@ -279,8 +279,8 @@ def pictures(state_dir: Path, root: Path, screens: list[dict]) -> dict[str, dict
     return out
 
 
-def head_of(root: Path) -> str:
-    return commit_goal.head(Path(root), REF)
+def head_of(root: Path, ref: str = REF) -> str:
+    return commit_goal.head(Path(root), ref)
 
 
 def _route(path: object) -> str:
@@ -294,13 +294,13 @@ def _route(path: object) -> str:
     return base if base.startswith("/") else ("/" + base if base else "")
 
 
-def screen_of(state_dir: Path, root: Path, path: str) -> dict | None:
+def screen_of(state_dir: Path, root: Path, path: str, ref: str = REF) -> dict | None:
     """The screen of dev's newest screens that a page's path reaches, `{id, name, step}` (`_target`'s own rule: an exact path, else the fit with the most static segments),
     `step` the number of the step it lies in (from 1, as `step_id` takes it); None for a path no screen fits and for a project with no `dev` or no screen. Reads the screens
     through `_core`, so a head read before costs no new read of the repository. `state_dir` is there for the other reads' uniform call."""
     route = _route(path)
     root = Path(root)
-    sha = head_of(root) if route else ""
+    sha = head_of(root, ref) if route else ""
     core = _core(root, sha) if sha else None
     if not core or not core["screens"]:
         return None
@@ -311,18 +311,18 @@ def screen_of(state_dir: Path, root: Path, path: str) -> dict | None:
     return {"id": sid, "name": next(s["name"] for s in core["screens"] if s["id"] == sid), "step": step}
 
 
-def file_of(root: Path, screen_id: str) -> str:
-    """The file of a screen's component at dev's head ("" when the newest screens have no such id)."""
+def file_of(root: Path, screen_id: str, ref: str = REF) -> str:
+    """The file of a screen's component at `ref`'s head ("" when the newest screens have no such id)."""
     root = Path(root)
-    sha = head_of(root)
+    sha = head_of(root, ref)
     core = _core(root, sha) if sha else None
     return next((s["file"] for s in (core or {}).get("screens") or [] if s["id"] == screen_id), "")
 
 
-def read(state_dir: Path, root: Path) -> dict:
-    """Design's map at dev's head (see the module's doc); the same shape, empty, for a project with no `dev` or no screen to read."""
+def read(state_dir: Path, root: Path, ref: str = REF) -> dict:
+    """Design's map at `ref`'s head (see the module's doc); the same shape, empty, for a project with no `ref` or no screen to read."""
     root = Path(root)
-    sha = head_of(root)
+    sha = head_of(root, ref)
     if not sha:
         return {"head": "", "source": "", "entry": "", "more": 0, "loose": [], "links": [], "steps": [], "screens": []}
     core = copy.deepcopy(_core(root, sha))                     # the cache is not the caller's to change
@@ -385,11 +385,11 @@ def _pain_lines(core: dict, segs: list[dict], room: int) -> list[str]:
     return _fit([_cut(ln, 240) for ln in lines], room, "- and {n} more pains")
 
 
-def _since(root: Path, since: str, core: dict) -> str:
+def _since(root: Path, since: str, core: dict, ref: str = REF) -> str:
     head = "Changed since your last call"
-    before = commit_goal.resolve(root, since, REF)
+    before = commit_goal.resolve(root, since, ref)
     if not before:
-        return f"{head}: not known (that commit is not on dev)."
+        return f"{head}: not known (that commit is not on {ref})."
     if before == core["head"]:
         return f"{head}: nothing."
     old = _core(root, before)
@@ -402,17 +402,17 @@ def _since(root: Path, since: str, core: dict) -> str:
     return "\n".join([f"{head}:"] + _fit(rows, CHANGED - len(head) - 2, "- and {n} more"))
 
 
-def text(state_dir: Path, root: Path, since: str = "") -> str | None:
+def text(state_dir: Path, root: Path, since: str = "", ref: str = REF) -> str | None:
     """Design's map as text at dev's head (about LIMIT characters at most): the steps, a line each, the flow, then the pains under their screens, by segment;
     when `since` (the commit of the party's last call) is set, the screens that came or went after it. None for a project with no `dev` or no screen to read.
     The same bytes for the same dev head and pains."""
     root = Path(root)
-    sha = head_of(root)
+    sha = head_of(root, ref)
     core = _core(root, sha) if sha else None
     if not core or not core["screens"]:
         return None
     entry = next(s for s in core["screens"] if s["id"] == core["entry"])
-    head = f"The map of the screens at dev {sha[:7]}, read from {screen_routes.SOURCES.get(core['source'], core['source'])}; the entry is {_label(entry)}"
+    head = f"The map of the screens at {ref} {sha[:7]}, read from {screen_routes.SOURCES.get(core['source'], core['source'])}; the entry is {_label(entry)}"
     lines = [head, "", "Steps (breadth first from the entry, a screen once):"] + _fit(_step_lines(core), STEPS_ROOM, "- and {n} more steps")
     if core["more"]:
         lines.append(f"({core['more']} more screens are not named)")
@@ -425,4 +425,4 @@ def text(state_dir: Path, root: Path, since: str = "") -> str | None:
         lines += [""] + pains
     out = "\n".join(lines)[:LIMIT]
     since = str(since or "").strip()
-    return out + "\n\n" + _since(root, since, core) if since else out
+    return out + "\n\n" + _since(root, since, core, ref) if since else out

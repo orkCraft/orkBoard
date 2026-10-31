@@ -2,7 +2,7 @@
 grounded in what the map holds. A hint is not a verdict (the leader judges it, `core/idea_concerns.py`). Read from the files, the Board and git; no model, no face; nothing is written.
 
     map_signals.signals(state_dir, root, craft, pages=None, ref="dev")     # [{on, kind, words}], at most MAX_SIGNALS; [] for a craft that has none by code or a map that cannot be read
-    map_signals.pictures(state_dir, root, since="", limit=4)               # Design's screens' pictures kept after `since`, to be read: [{id, name, path, at}]
+    map_signals.pictures(state_dir, root, since="", limit=4, ref="dev")           # Design's screens' pictures kept after `since`, to be read: [{id, name, path, at}]
 
 `on` is the id of a part of the map as it is drawn (`realm/map_parts.py`), "" where a hint belongs to no part; `kind` names the rule; `words` is a line for a model, in plain English. A hint that
 is about a part of another map (a pain piled on a screen) also has `map` (that map's id). By craft (the craft of the party, as `map_text.of` takes it):
@@ -272,8 +272,8 @@ def _screen_text(root: Path, sha: str, path: str) -> str | None:
     return text if text and len(text) <= SCREEN_BYTES and "\0" not in text[:2000] else None
 
 
-def _design(state_dir: Path, root: Path) -> list[dict]:
-    got = screen_map.read(state_dir, root)
+def _design(state_dir: Path, root: Path, ref: str) -> list[dict]:
+    got = screen_map.read(state_dir, root, ref)
     screens = got.get("screens") or []
     if len(screens) < 2:
         return []
@@ -303,7 +303,7 @@ def _design(state_dir: Path, root: Path) -> list[dict]:
 
 # -- Product: the tree and the pains ----------------------------------------------------------------------------------------------------
 
-def _product(state_dir: Path, root: Path, pages: Path | None = None) -> list[dict]:
+def _product(state_dir: Path, root: Path, pages: Path | None = None, ref: str = "dev") -> list[dict]:
     rec = opportunity_tree.read(state_dir)
     served = {s["job"] for s in rec["serves"]}
     out = [{"on": j["id"], "kind": "unserved", "words": f"No goal serves the job: {j['want']}"} for j in rec["jobs"] if j["id"] not in served]
@@ -316,7 +316,7 @@ def _product(state_dir: Path, root: Path, pages: Path | None = None) -> list[dic
             out.append({"on": j["id"], "kind": "no_evidence", "words": f"{len(mine)} goals serve the job {j['want']} and no experiment tests any of them"})
     placed = [p for seg in idea_lens.segments_placed(state_dir) for p in seg["pains"]]
     try:
-        got = screen_map.read(state_dir, root)
+        got = screen_map.read(state_dir, root, ref)
         known = {s["id"] for s in got.get("screens") or []} | {screen_map.step_id(n) for n in range(1, len(got.get("steps") or []) + 1)}
     except Exception:                                # a map that cannot be read: the pains stand where they were pinned
         known = {p["on"] for p in placed if p["on"]}
@@ -360,12 +360,12 @@ def _untested(state_dir: Path, pages: Path, named: set[str]) -> list[dict]:
     return out
 
 
-def pictures(state_dir: Path, root: Path, since: str = "", limit: int = 4) -> list[dict]:
+def pictures(state_dir: Path, root: Path, since: str = "", limit: int = 4, ref: str = "dev") -> list[dict]:
     """The pictures of Design's screens kept since `since` (an ISO time: a look's; "" all), the newest `limit`: `[{id, name, path, at}]`, `path` a file under the repository to read (relative to it
     when it lies in it). [] for a map that cannot be read."""
     from orkboard.realm import idea_pick
     try:
-        screens = screen_map.read(Path(state_dir), Path(root)).get("screens") or []
+        screens = screen_map.read(Path(state_dir), Path(root), ref).get("screens") or []
     except Exception:
         return []
     out = []
@@ -391,8 +391,8 @@ def signals(state_dir: Path, root: Path, craft: str, pages: Path | None = None, 
     """The hints of `craft`'s party's map (see the module): `[{on, kind, words, map?}]`, at most MAX_SIGNALS; [] for a craft that has none by code and for a map that cannot be read."""
     state_dir, root = Path(state_dir), Path(root)
     try:
-        rows = {"tech": lambda: _tech(state_dir, root, ref), "game-design": lambda: _game(state_dir), "design": lambda: _design(state_dir, root),
-                "product": lambda: _product(state_dir, root, pages), "art": lambda: map_signals_crafts.art(state_dir, root, ref),
+        rows = {"tech": lambda: _tech(state_dir, root, ref), "game-design": lambda: _game(state_dir), "design": lambda: _design(state_dir, root, ref),
+                "product": lambda: _product(state_dir, root, pages, ref), "art": lambda: map_signals_crafts.art(state_dir, root, ref),
                 "release": lambda: map_signals_crafts.release(state_dir, root, pages, ref), "marketing": lambda: map_signals_crafts.marketing(state_dir, root, ref)}.get(craft, lambda: [])()
     except Exception:                                # a hint that cannot be read is no hint, never an error for a caller
         return []

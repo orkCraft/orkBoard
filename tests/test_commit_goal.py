@@ -131,3 +131,9 @@ def test_the_last_commit_that_touched_each_file(repo):
     whole = commit_goal.last_touch(repo, "dev")
     assert whole["a.txt"]["sha"] == since and whole["art/a.png"]["sha"] == a2
     assert commit_goal.last_touch(repo, "dev", "not-a-sha") == {}
+
+
+def test_the_maps_read_the_branch_results_land_in_and_dev_when_none_or_not_a_branch():
+    assert commit_goal.work_ref({"merge_into": "main"}) == "main"
+    assert commit_goal.work_ref({}) == commit_goal.work_ref(None) == commit_goal.work_ref({"merge_into": ""}) == "dev"
+    assert commit_goal.work_ref({"merge_into": "a..b"}) == commit_goal.work_ref({"merge_into": "-x"}) == "dev"

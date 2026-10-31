@@ -14,7 +14,7 @@
   window) is `failed` with why, and the next press asks again; a stop forgets it. A loop the person kept first (or while the leader was asked) is never overwritten by a proposal that
   finishes after it.
 
-`self` has the keeper's `ask`, `_tried`, `_start`, `_may_run`, `refuse_spent`, `busy_goal`, `role_as`, `wiki_root`, `state_dir`, `repo_root`, `publish`.
+`self` has the keeper's `ask`, `map_ref`, `_tried`, `_start`, `_may_run`, `refuse_spent`, `busy_goal`, `role_as`, `wiki_root`, `state_dir`, `repo_root`, `publish`.
 """
 from __future__ import annotations
 
@@ -64,12 +64,13 @@ class LoopMixin:
     def loop_prompt(self, party: str) -> str:
         """What the leader is told (after its voice): the brief of a senior game designer — the task and the rules (no file is read: the files are here) — then the context cut to
         `CONTEXT["loop"]` — the facts kept, the configs' names and first lines, then the README and docs by their paths — and the JSON it answers with."""
-        names = loop.config_files(self.repo_root)
+        ref = self.map_ref()
+        names = loop.config_files(self.repo_root, ref)
         parts = []
         if facts := project_facts.for_call(self.state_dir, party):
             parts.append(("What is known of the project", facts))
         parts.append(("The project's config files (by name)", "\n".join(names) or "(none: no balance file, config folder or levels folder)"))
-        parts += [(f"File {path} (its first lines)", text) for path, text in loop.heads(self.repo_root, names).items()]
+        parts += [(f"File {path} (its first lines)", text) for path, text in loop.heads(self.repo_root, names, ref).items()]
         parts += [(f"File {f['path']} (its first part)", f["text"]) for f in project_facts.start_files(self.repo_root)]
         context = idea_target.cut(parts, idea_target.CONTEXT["loop"])
         return f"""The person has no loop map for this game yet, or wants a better one. You write it as a senior game designer would brief a team: the loops one inside another, the economy that \
@@ -101,7 +102,7 @@ Answer with one JSON object and nothing else:
         leader = goal_team.leader_of(self.wiki_root(), party)
         measures: list[dict] = []
         try:
-            got = self._tried(lambda: loop.parse(kw.first_json(self.ask("loop", self.loop_prompt(party), tools=False)[0]), self.repo_root), measures, str(self.role_as(leader)["name"]))
+            got = self._tried(lambda: loop.parse(kw.first_json(self.ask("loop", self.loop_prompt(party), tools=False)[0]), self.repo_root, self.map_ref()), measures, str(self.role_as(leader)["name"]))
         except InterruptedError:
             loop.save_proposal(self.state_dir, "")
             return
@@ -110,5 +111,5 @@ Answer with one JSON object and nothing else:
             return
         with ideas.LOCK:
             if loop.read(self.state_dir)["at"] == stamp:             # a loop the person kept meanwhile stands
-                loop.keep(self.state_dir, self.repo_root, got, "leader")
+                loop.keep(self.state_dir, self.repo_root, got, "leader", self.map_ref())
             loop.save_proposal(self.state_dir, "done")

@@ -69,8 +69,8 @@ def _art(state_dir: Path, root: Path, ref: str) -> list[dict]:
     return [{"id": a["id"], "name": a["name"], "group": k["kind"]} for k in art_map.read(Path(state_dir), Path(root), ref=ref)["kinds"] for a in k["assets"]]
 
 
-def _release(state_dir: Path, root: Path, pages: Path | None) -> list[dict]:
-    got = release_map.read(Path(state_dir), Path(root), pages)
+def _release(state_dir: Path, root: Path, pages: Path | None, ref: str) -> list[dict]:
+    got = release_map.read(Path(state_dir), Path(root), pages, ref)
     return [{"id": g["idea"], "name": g["title"], "group": got["into"]} for g in got["goals"]]
 
 
@@ -87,11 +87,11 @@ def parts(state_dir: Path, root: Path, craft: str, pages: Path | None = None, re
     state_dir, root = Path(state_dir), Path(root)
     try:
         rows = {"tech": lambda: _system(state_dir, root, ref),
-                "design": lambda: screens_of(screen_map.read(state_dir, root)),
+                "design": lambda: screens_of(screen_map.read(state_dir, root, ref)),
                 "game-design": lambda: loop_parts(state_dir),
                 "product": lambda: _product(state_dir, pages),
                 "art": lambda: _art(state_dir, root, ref),
-                "release": lambda: _release(state_dir, root, pages),
+                "release": lambda: _release(state_dir, root, pages, ref),
                 "marketing": lambda: _marketing(state_dir, root, ref)}[craft]()
     except Exception:                            # a map that cannot be read has no parts, never an error for a caller
         return []

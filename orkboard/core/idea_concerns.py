@@ -15,7 +15,7 @@
   of the attempt, so the next look waits a day or the person's press; a stop forgets the look. The hints of code the look was given are kept with the concerns (`hints`, for the scorecard). Concerns a goal was made of keep their goal across a new look. It runs as its party's own step
   (`goal:<party>`): its tool, its size's Target, its cost in the party's ledger as the *spec* stage. Event `concerns_made`.
 
-`self` has the keeper's `ask`, `reads`, `_tried`, `_start`, `_may_run`, `refuse_spent`, `busy_goal`, `role_as`, `wiki_root`, `state_dir`, `repo_root`, `publish`, `_ev`.
+`self` has the keeper's `ask`, `map_ref`, `reads`, `_tried`, `_start`, `_may_run`, `refuse_spent`, `busy_goal`, `role_as`, `wiki_root`, `state_dir`, `repo_root`, `publish`, `_ev`.
 """
 from __future__ import annotations
 
@@ -43,10 +43,10 @@ class ConcernsMixin:
         if craft not in map_parts.MAPS:
             return "", None, []
         try:
-            text = map_text.of(craft, self.state_dir, self.repo_root, pages=pages)
+            text = map_text.of(craft, self.state_dir, self.repo_root, pages=pages, ref=self.map_ref())
         except Exception:                                 # a map that cannot be read is not looked at
             text = None
-        return craft, text, map_parts.parts(self.state_dir, self.repo_root, craft, pages) if text else []
+        return craft, text, map_parts.parts(self.state_dir, self.repo_root, craft, pages, self.map_ref()) if text else []
 
     def concerns(self, party: str, why: str = "open") -> bool:
         """A look at the party's map: begun in the background when it is due (see the module). KeeperError, in plain words, for a party that is gone, a map to look at that is not there (`again` only) and a call that
@@ -133,8 +133,8 @@ Answer with one JSON object and nothing else:
         measures: list[dict] = []
         rec = store.read(self.state_dir, party)
         try:
-            hints = map_signals.signals(self.state_dir, self.repo_root, craft, self.wiki_root())
-            files = map_signals.pictures(self.state_dir, self.repo_root, at) if craft == "design" else []
+            hints = map_signals.signals(self.state_dir, self.repo_root, craft, self.wiki_root(), self.map_ref())
+            files = map_signals.pictures(self.state_dir, self.repo_root, at, ref=self.map_ref()) if craft == "design" else []
             hashes = {d["on"]: store.part_hash(text, next((p for p in parts if p["id"] == d["on"]), {"id": d["on"], "name": d["on"]})) for d in rec["dismissed"]}
             prompt = self.concerns_prompt(party, craft, text, parts, hints, files, rec)
             n = idea_target.reads_of("concerns", craft) if files else 0

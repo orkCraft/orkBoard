@@ -29,7 +29,7 @@ once, each as itself, and what they ask of the person is a stack of cards; a bug
   (core/idea_sections.py).
 
 A call that fails goes back to the route card (`routed`) with its error; a Talk lost with the process leaves the goal at `talk` with no row. `self` has the
-keeper's `ask`, `_tried`, `_claim`, `_run`, `_may_run`, `refuse_spent`, `window_until`, `role_as`, `is_pitch`, `wiki_root`, `state_dir`, `repo_root`, `_tls`.
+keeper's `ask`, `map_ref`, `_tried`, `_claim`, `_run`, `_may_run`, `refuse_spent`, `window_until`, `role_as`, `is_pitch`, `wiki_root`, `state_dir`, `repo_root`, `_tls`.
 """
 from __future__ import annotations
 
@@ -152,7 +152,7 @@ class TalkMixin:
 
     def _map(self, party: str) -> str | None:
         try:
-            return map_text.of(goal_team.craft_of(self.wiki_root(), party) or party, self.state_dir, self.repo_root, pages=self.wiki_root())      # by the party's craft (spec 102 §4)
+            return map_text.of(goal_team.craft_of(self.wiki_root(), party) or party, self.state_dir, self.repo_root, pages=self.wiki_root(), ref=self.map_ref())      # by the party's craft (spec 102 §4)
         except Exception:                            # a map that cannot be read never stops a Talk: the leader is given none
             return None
 
@@ -446,7 +446,7 @@ Answer with one JSON object and nothing else:
             parts.append(("What is known of the project", facts))
         if text := self._map(entry["party"]):
             parts.append(("Your party's map", text))
-        if files and (detail := map_text.detail(self.state_dir, self.repo_root, files)):
+        if files and (detail := map_text.detail(self.state_dir, self.repo_root, files, self.map_ref())):
             parts.append(("The parts the report touches", detail))
         context = idea_target.cut(parts, idea_target.CONTEXT["diagnose"])
         if rec is not None:

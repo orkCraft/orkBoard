@@ -1,12 +1,13 @@
 """A leader's map as text (docs/specs/99-a-goals-way.md §2.1, decisions §156.1–§156.2): what a leader is given in its call, read by code from
-the newest snapshot of dev (realm/project_map.py, realm/system_overview.py), so the leader reads the repository only to read further what the
-map names. Tech's *System* is the one map as text today; the other maps' texts are `None` (a party with no map is given none).
+the newest snapshot of the branch results land in (`ref`: the project's `merge_into`, `commit_goal.work_ref`; "dev" by default; realm/project_map.py,
+realm/system_overview.py), so the leader reads the repository only to read further what the map names. Tech's is *System*; the other crafts' maps
+are their own modules' (`of`); a party with no map is given none.
 
-    map_text.system(state_dir, root, since="")      # The map of System at dev <short>: containers whole, links, parts a line each; ~3,000 characters
+    map_text.system(state_dir, root, since="", ref="dev")   # The map of System at <ref> <short>: containers whole, links, parts a line each; ~3,000 characters
     map_text.system(state_dir, root, since, pages)  # … then *Changed since your last call* (`since`: the commit of the party's last call);
                                                     #   `pages`: the Board's pages, for a goal's title
-    map_text.detail(state_dir, root, parts)         # the named parts in full (files, uses, used by): 1,500 characters more at most
-    map_text.of(party, state_dir, root, since)      # the party's map as text: System for Tech, else None
+    map_text.detail(state_dir, root, parts, ref="dev")      # the named parts in full (files, uses, used by): 1,500 characters more at most
+    map_text.of(craft, state_dir, root, since, ref="dev")   # the party's map as text by its craft: System for Tech, the screens for Design, …; None with none
 
 The text is plain English for a model: short lines, no table. With `since` empty it is the same bytes for the same snapshot (no time, no
 dict order: what a source holds unordered is sorted), which is what the prompt's cache keeps. Past LIMIT the parts keep only their names, and
@@ -53,10 +54,10 @@ def _fit(lines: list[str], room: int, more: str) -> list[str]:
     return out + [more.format(n=len(lines) - len(out))]
 
 
-def _snapshot(state_dir: Path, root: Path) -> dict | None:
-    """Dev's head snapshot (made when none is kept); the newest kept when it cannot be made; None when the project has no `dev`."""
+def _snapshot(state_dir: Path, root: Path, ref: str = REF) -> dict | None:
+    """`ref`'s head snapshot (made when none is kept); the newest kept when it cannot be made; None when the project has no such branch."""
     try:
-        return project_map.ensure(state_dir, Path(root), REF)
+        return project_map.ensure(state_dir, Path(root), ref)
     except (OSError, RuntimeError, ValueError, subprocess.SubprocessError):
         return project_map.newest(state_dir)
 
@@ -134,8 +135,8 @@ def _parts(snap: dict, project: str) -> tuple[list[str], list[str]]:
     return full, [f"- {p['path']}" for p in parts]
 
 
-def _map(snap: dict, project: str) -> str:
-    head = f"The map of System at dev {snap['commit'][:7]}"
+def _map(snap: dict, project: str, ref: str = REF) -> str:
+    head = f"The map of System at {ref} {snap['commit'][:7]}"
     containers, links, shared = _top(snap)
     top = [head, "", "Containers:"] + _fit(containers, CONTAINERS, "- and {n} more containers: read further what you need")
     if links:
@@ -190,12 +191,12 @@ def _by(slug: str, part: str, pages: Path | None, cache: dict[str, object]) -> s
     return f", decided by {who}" if who else ""
 
 
-def _changed(state_dir: Path, root: Path, since: str, pages: Path | None) -> str:
+def _changed(state_dir: Path, root: Path, since: str, pages: Path | None, ref: str = REF) -> str:
     """*Changed since your last call*: each part new, changed or gone and each use new or gone, with the goal that made it (`by you` for the
     person's own) and who decided it (spec 99 §7.4: `_by`, once a goal's section has its *Will be*)."""
     head = "Changed since your last call"
     try:
-        got = project_map.changed(state_dir, Path(root), since, REF)
+        got = project_map.changed(state_dir, Path(root), since, ref)
     except (OSError, ValueError, subprocess.SubprocessError):
         got = project_map.nothing()
     if not got["since"]:
@@ -214,21 +215,21 @@ def _changed(state_dir: Path, root: Path, since: str, pages: Path | None) -> str
 
 # -- the calls ----------------------------------------------------------------------------------------------------------------------------
 
-def system(state_dir: Path, root: Path, since: str = "", pages: Path | None = None) -> str | None:
-    """Tech's map as text at dev's head (about LIMIT characters at most), then, when `since` is set, what changed since that commit with its
-    goal. `pages`: where the Board's pages are, for a goal's title (else the slug alone). None when the project has no `dev` to read."""
-    snap = _snapshot(Path(state_dir), Path(root))
+def system(state_dir: Path, root: Path, since: str = "", pages: Path | None = None, ref: str = REF) -> str | None:
+    """Tech's map as text at `ref`'s head (about LIMIT characters at most), then, when `since` is set, what changed since that commit with its
+    goal. `pages`: where the Board's pages are, for a goal's title (else the slug alone). None when the project has no `ref` to read."""
+    snap = _snapshot(Path(state_dir), Path(root), ref)
     if snap is None:
         return None
-    text = _map(snap, Path(root).name)
+    text = _map(snap, Path(root).name, ref)
     since = str(since or "").strip()
-    return text + "\n\n" + _changed(Path(state_dir), Path(root), since, pages) if since else text
+    return text + "\n\n" + _changed(Path(state_dir), Path(root), since, pages, ref) if since else text
 
 
-def detail(state_dir: Path, root: Path, parts: list[str]) -> str:
+def detail(state_dir: Path, root: Path, parts: list[str], ref: str = REF) -> str:
     """The named parts in full: files, Uses, Used by (DETAIL characters at most). A path inside a part names that part; one that is no part's
     is left out; "" when none is known."""
-    snap = _snapshot(Path(state_dir), Path(root))
+    snap = _snapshot(Path(state_dir), Path(root), ref)
     have = {p["path"]: p for p in (snap or {}).get("parts") or [] if isinstance(p, dict)}
     picked: list[str] = []
     for want in parts if isinstance(parts, (list, tuple)) else []:
@@ -238,7 +239,7 @@ def detail(state_dir: Path, root: Path, parts: list[str]) -> str:
             picked.append(path)
     if not picked:
         return ""
-    head = f"Parts in detail at dev {snap['commit'][:7]}:"
+    head = f"Parts in detail at {ref} {snap['commit'][:7]}:"
     lines = []
     for path in picked:
         p = have[path]
@@ -251,21 +252,24 @@ def detail(state_dir: Path, root: Path, parts: list[str]) -> str:
     return "\n".join([head] + _fit([ln for ln in lines if ln], DETAIL - len(head) - 1, "- and more parts: read further what you need"))
 
 
-def of(party: str, state_dir: Path, root: Path, since: str = "", pages: Path | None = None) -> str | None:
-    """The map of `party` (its craft: `goal_team.craft_of`) as text: System for Tech, the loop for Game design, the other maps' texts as their parts
-    come (spec 102 §4); a party with none is given none."""
+def of(party: str, state_dir: Path, root: Path, since: str = "", pages: Path | None = None, ref: str = REF) -> str | None:
+    """The map of `party` (its craft: `goal_team.craft_of`) as text at `ref` (the project's `merge_into`): System for Tech, the loop for Game design, the
+    other maps' texts as their parts come (spec 102 §4); a party with none is given none."""
     if party == TECH:
-        return system(state_dir, root, since, pages)
+        return system(state_dir, root, since, pages, ref)
     if party == "design":
         from orkboard.realm import screen_map
-        return screen_map.text(state_dir, root, since)
+        return screen_map.text(state_dir, root, since, ref)
     if party == "product":
         from orkboard.realm import opportunity_tree
         return opportunity_tree.text(state_dir, root, since, pages)
     if party == "game-design":
         from orkboard.realm import loop
-        return loop.text(state_dir, root, since)
-    if party in ("art", "release", "marketing"):
-        from orkboard.realm import art_map, release_map, way_map
-        return {"art": art_map, "release": release_map, "marketing": way_map}[party].text(state_dir, root, since, pages)
+        return loop.text(state_dir, root, since, ref)
+    if party == "release":
+        from orkboard.realm import release_map
+        return release_map.text(state_dir, root, since, pages, into=ref)
+    if party in ("art", "marketing"):
+        from orkboard.realm import art_map, way_map
+        return {"art": art_map, "marketing": way_map}[party].text(state_dir, root, since, pages, ref=ref)
     return None
