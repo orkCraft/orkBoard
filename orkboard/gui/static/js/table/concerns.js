@@ -47,7 +47,7 @@ export const recordOf = (party) => {
 const keep = (party, r) => { records.value = { ...records.peek(), [party]: r }; };
 
 /** Reads (or answers with) a record; a host that does not answer as one is left as it was, and `{off: true}` where there is nothing yet. Returns the record or null. */
-async function read(name, party, more = {}) {
+export async function read(name, party, more = {}) {
   try {
     const r = await command(name, { party, ...more }, true);
     if (r && Array.isArray(r.concerns)) { keep(party, r); return r; }
