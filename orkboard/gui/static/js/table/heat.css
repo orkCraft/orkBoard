@@ -1,0 +1,14 @@
+/* Heat on a map's cards (docs/specs/117-each-lens-a-games-shape.md §4.1). orkUI's tokens only; the square is concerns.css's `.cn-hint` (hollow, 6 × 6, the muted ink): one for each kind of hint code found on the part, in the card's slot
+   at its top right, before a leader's mark. The squares take the pointer for their title (the hints' words); a press on them is the card's (heat.js forwards it where the slot lies beside a button). */
+.cn-slot__m { display: contents; }
+.cn-heat { display: inline-flex; align-items: center; gap: var(--ork-1); margin-right: var(--ork-2); color: var(--ork-ink-muted); pointer-events: auto; cursor: default; }
+.cn-heat:last-child { margin-right: 0; }
+.cn-heat > .cn-hint { flex: none; }
+
+/* the card's head leaves room for the squares (and, with a concern's mark beside them, for both) */
+[data-heat] > .mp-card__head { padding-right: 34px; }
+[data-concern="note"][data-heat] > .mp-card__head { padding-right: 48px; }
+[data-concern="alert"][data-heat] > .mp-card__head { padding-right: 78px; }
+
+/* while a map is in picking a press is a pick: the squares take none */
+.pick-host[data-picking] .cn-heat { pointer-events: none; }

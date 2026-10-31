@@ -12,7 +12,12 @@ export const fieldOff = signal("");            // the tab whose address the pers
 export const fieldRune = signal("");           // the rune the person chose in the field (pluscard.js, decisions §187.3): an element, "" the one the addressed party's goal would be given
 export const rite = signal("");                // the element of the goal just sent: the + card's seal plays the summoning rite in it for a moment (`summon`, decisions §187.4)
 export const markedTool = signal("");          // the AI tool whose potion is hovered or focused: the tabs outline its marks (mana.js, tabmarks.js; decisions §189.2)
+export const reachGoal = signal("");           // the goal whose card is under the pointer or focused in the hand: the table shows what it reaches on the open map (table/reach.js, spec 117 E)
 export const markedDefault = signal(false);    // that potion is the default's (the framed one): the tabs outline the marks that follow the default too (spec 114 §3.5, decisions §192.4)
+
+/** A goal's card in the hand is pointed at or focused: the table lights what it reaches. Unmarking clears only its own (a card entered before another is left). */
+export const markReach = (slug) => { reachGoal.value = slug || ""; };
+export const unmarkReach = (slug) => { if (reachGoal.value === slug) reachGoal.value = ""; };
 
 const RITE_MS = 1200;                          // orkUI's rite lasts about 1.1 s: the classes come off after it (orkUI 0.21.0 runes README)
 let riteTimer = 0;

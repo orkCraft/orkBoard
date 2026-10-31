@@ -16,6 +16,8 @@ import { mapOf } from "./maps.js";
 import "./mapparts.js";                                     // the parties' maps (spec 102)
 import { PickHost, PickStrip } from "./picking.js";         // picking on a party's map (spec 102 §6)
 import { Concerns } from "./concerns.js";               // the leader's concerns on its map: the strip, the marks (spec 108 B)
+import { Heat } from "./heat.js";                         // the hints code found on a part, drawn on its card (spec 117 E)
+import { Reach } from "./reach.js";                       // what the goal under the pointer in the hand, or picked, reaches on the map (spec 117 E)
 import { Header } from "./header.js";
 import { SystemPane, PartBack, LinkBack } from "./syspane.js";
 import { Lifted, OwnBack, TaskBack, litKey, mineKey } from "./card.js";
@@ -96,6 +98,9 @@ function Title({ parties, tab, narrow }) {
   </header>`;
 }
 
+/** A lens's map with its heat and its reach (spec 117 E): the boxes that paint its cards; a party with no map is left as it is. */
+const Lens = ({ g, children }) => (leadsSystem(g) || mapOf(g) ? html`<${Heat} g=${g}><${Reach} g=${g}>${children}<//><//>` : children);
+
 export function Pane({ parties, tab, narrow }) {
   const body = useRef(), o = over.value, g = parties.find((x) => x.slug === tab);
   const key = lifted.value, shown = mineKey(key) && !o ? backOf(key, parties, tab) : null;
@@ -108,7 +113,7 @@ export function Pane({ parties, tab, narrow }) {
           ${!parties.length && html`<div class="table-empty"><p>No parties yet</p>
             <p class="table-over__muted">Make a party, then write it a goal in plain words. Its orks do the work; you look at it before it goes in.</p>
             <p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`}`
-        : g ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${AskLine} key=${tab} tab=${tab} parties=${parties} /><${PickStrip} tab=${tab} /><${Concerns} key=${g.slug} g=${g}><${PickHost} key=${g.slug} g=${g}>${leadsSystem(g) ? html`<${SystemPane} key=${g.slug} g=${g} />` : mapOf(g) ? html`<${mapOf(g)} key=${g.slug} g=${g} narrow=${narrow} />` : null}<//><//>` : null}
+        : g ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${AskLine} key=${tab} tab=${tab} parties=${parties} /><${PickStrip} tab=${tab} /><${Concerns} key=${g.slug} g=${g}><${Lens} key=${g.slug} g=${g}><${PickHost} key=${g.slug} g=${g}>${leadsSystem(g) ? html`<${SystemPane} key=${g.slug} g=${g} />` : mapOf(g) ? html`<${mapOf(g)} key=${g.slug} g=${g} narrow=${narrow} />` : null}<//><//><//>` : null}
       ${shown && html`<${Lifted} host=${body} name=${shown[0]} narrow=${narrow}>${shown[1]}</${Lifted}>`}
       <${DiscardEnd} />
     </div>

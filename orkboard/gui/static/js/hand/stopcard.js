@@ -13,7 +13,7 @@ import { goalLine, goalsOfRow } from "../arena/collidewords.js";
 import { Answers } from "./answers.js";
 import { costOf, Gem, Spend } from "./cost.js";
 import { goalOfStop } from "./data.js";
-import { liftKey } from "./state.js";
+import { liftKey, markReach, unmarkReach } from "./state.js";
 import { leans } from "./motion.js";
 import { useAbout } from "./about.js";
 import { wayOf } from "./ways.js";
@@ -47,12 +47,13 @@ export const labelOf = (s) => `${s.label}${s.other && s.party?.name ? ` in ${s.p
 
 /** The card face of a stop `s` (docs/specs/101 §4.5). `top`: the front card of its stack. `onPress`: the press. */
 export function StopCard({ s, lit = false, slot = false, top = false, dealt = null, gone = false, onPress, onFocus, children }) {
-  const cost = costOf(s), head = headOf(s), element = s.node?.element || "";
+  const cost = costOf(s), head = headOf(s), element = s.node?.element || "", goal = goalOfStop(s);
+  const mark = () => { if (goal && !gone && !slot) markReach(goal); }, unmark = () => unmarkReach(goal);         // the table shows what the goal reaches while its card is pointed at or focused (table/reach.js)
   return html`<button type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop${element ? ` el-${element}` : ""}`, { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed", "is-on ork-picked": lit,
         "is-slot": slot, "is-gone": gone, "ork-deal": dealt != null })}
-      data-key=${s.key} data-kind=${s.kind} data-goal=${goalOfStop(s)} data-party=${s.party?.slug || ""} data-top=${top ? "1" : undefined}
+      data-key=${s.key} data-kind=${s.kind} data-goal=${goal} data-party=${s.party?.slug || ""} data-top=${top ? "1" : undefined}
       style=${dealt != null ? `--ork-deal-i:${dealt}` : undefined} aria-label=${labelOf(s)} title=${`${labelOf(s)}${s.text ? ` · ${s.text}` : ""}`.slice(0, 200)}
-      aria-haspopup="dialog" aria-expanded=${slot ? "true" : "false"} tabindex=${slot || gone ? -1 : undefined} inert=${gone || undefined} onClick=${onPress} onFocus=${onFocus} ...${leans}>
+      aria-haspopup="dialog" aria-expanded=${slot ? "true" : "false"} tabindex=${slot || gone ? -1 : undefined} inert=${gone || undefined} onClick=${onPress} onFocus=${(e) => { mark(); onFocus?.(e); }} onBlur=${unmark} onPointerEnter=${mark} ...${leans} onPointerLeave=${(e) => { unmark(); leans.onPointerLeave(e); }}>
     <span class="hand-card__head"><${ElemOf} s=${s} /><span class="hand-card__name">${s.title || s.full}</span></span>
     <span class="hand-card__window"><span class="hand-card__fig"><span class="hand-card__act"><${Mark} s=${s} big=${true} /></span>${head ? html`<span class="hand-card__asker"><${Head} race=${head.race} tier=${head.tier} /></span>` : null}</span></span>
     <span class="hand-card__label"><span class="hand-card__party">${s.party?.name || s.label}</span><span class="hand-card__gem"><${Gem} cost=${cost} /></span></span>

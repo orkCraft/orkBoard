@@ -1,0 +1,32 @@
+/* What a goal reaches on a map (docs/specs/117-each-lens-a-games-shape.md §4.3, mockup docs/mockups/tech-reach/). orkUI's tokens only: the edges wear the goal's element (`--ork-elem-*`), the rune is orkUI's `.ork-elem`, the sign
+   its `.ork-sign.shield`, the motion its `--ork-motion-*`. A card's edge is a child of the card, over its 1px border (`.rc-edge`, inside the card's box), never an outline: the card's notch would clip an outline. */
+[data-rc-host] { position: relative; }
+.rc-edge { position: absolute; inset: calc(var(--ork-line) * -1); z-index: 1; box-sizing: border-box; pointer-events: none; border: 2px solid var(--ork-ink); animation: rc-in var(--ork-motion-base) var(--ork-motion-ease) both; }
+.rc-edge[data-elem="meadow"] { border-color: var(--ork-elem-meadow); }
+.rc-edge[data-elem="ice"] { border-color: var(--ork-elem-ice); }
+.rc-edge[data-elem="dust"] { border-color: var(--ork-elem-dust); }
+.rc-edge[data-elem="void"] { border-color: var(--ork-elem-void); }
+.rc-edge[data-elem="lava"] { border-color: var(--ork-elem-lava); }
+.rc-edge[data-near="1"] { border-style: dashed; animation-delay: var(--ork-motion-quick); }
+.rc-edge[data-near="2"] { border-style: dotted; opacity: 0.7; animation-delay: calc(var(--ork-motion-quick) * 2); }
+@keyframes rc-in { from { opacity: 0; transform: scale(0.96); } }
+
+/* what the edge says at the card's top left: the goal's rune on the part it changes, on a reached part of System the shield (a test checks it) or *no test* */
+.rc-edge > .ork-elem { position: absolute; top: var(--ork-1); left: var(--ork-1); }
+.rc-guard { position: absolute; top: var(--ork-1); left: var(--ork-1); display: inline-flex; align-items: center; padding: 0 var(--ork-1); background: var(--ork-card); color: var(--ork-ink); font: var(--ork-type-caption); pointer-events: auto; }
+.rc-guard.is-none { color: var(--ork-ink-muted); }
+.rc-guard > .ork-sign { color: var(--ork-ink); }
+
+/* the others dim */
+[data-reach-dim] { opacity: 0.38; transition: opacity var(--ork-motion-quick) var(--ork-motion-ease); }
+
+/* the strip's line under the aspects: the rune, the goal, what it reaches */
+.rc-line { flex: 1 0 100%; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2) var(--ork-3); min-width: 0; padding-bottom: var(--ork-2); overflow-wrap: anywhere; }
+.rc-line > span { min-width: 0; }
+.rc-line b { font-weight: 600; }
+.rc-line[data-state="none"], .rc-line[data-state="no_will"] { color: var(--ork-ink-muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .rc-edge { animation: none; }
+  [data-reach-dim] { transition: none; }
+}

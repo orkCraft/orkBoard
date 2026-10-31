@@ -8,6 +8,8 @@
 // through the cards whose open concerns are of it, an aspect with no card is no button; a record with no `rubric`, from an older host, draws no row); `ConcernsBack` is the section a lifted card's back (card.js `Lifted`) gains: each
 // concern's what, why and fix and its aspect beside its level (*Alert · Hotspots*), **Make it a goal** and **Not a problem**. The record is the host's (`ideas.concerns`, `ideas.concerns_again`, `ideas.concern_dismiss`, `ideas.concern_goal`);
 // a host without the commands draws nothing and throws nothing. Picking wins: while a map is in picking a press is a pick, and the marks take no press.
+// The slot is shared with the heat (heat.js, docs/specs/117-each-lens-a-games-shape.md §4.1): `slotOf` makes it (for a card only heat is on too), the mark lives in the slot's own box `.cn-slot__m` (so a render of the mark leaves the heat's squares
+// alone), and `sync` keeps a slot while either has something in it. Under the aspects the strip says what the goal shown reaches (reach.js `ReachLine`, §4.4).
 import { render } from "preact";
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
@@ -20,6 +22,8 @@ import { leadsSystem } from "./data.js";
 import { mapOf } from "./maps.js";
 import { pickFor } from "./picking.js";
 import { cardEl } from "./pickbox.js";
+import { ReachLine } from "./reach.js";                      // the strip's line for the goal shown (spec 117 E); reach.js and heat.js read nothing of this module while they load, so the cycle is only in their functions
+import { heatNow } from "./heat.js";
 
 if (typeof document !== "undefined") {
   const href = new URL("./concerns.css", import.meta.url).href;
@@ -92,34 +96,58 @@ function Mark({ party, list, lead, nodes, mid }) {
 }
 
 /** The slot of a card: inside it, or, for a button, beside it in the box that holds it. Made, or found, or null. */
-function homeOf(card) {
+export function homeOf(card) {
   const home = card.tagName === "BUTTON" ? card.parentElement : card;
   if (home && getComputedStyle(home).position === "static") home.dataset.cnHost = "";
   return home;
 }
 
-/** Paints the marks of the party's record on the cards of `host`: a mark in a slot on each card a concern is on, nothing on the others, no slot left behind. `nodes`: the Board's goals (a mark made into a goal wears its element). */
+/** The slot of a card: the box in its home where a mark and the heat's squares lie (heat.js); made when missing. `id` the card's `data-pick-id`. Null for a card with no home. */
+export function slotOf(card, id) {
+  const home = homeOf(card);
+  if (!home) return null;
+  let slot = [...home.children].find((x) => x.classList?.contains("cn-slot") && x.dataset.cnFor === id);
+  if (!slot) {
+    slot = document.createElement("span");
+    slot.className = "cn-slot";
+    slot.dataset.cnFor = id;
+    home.appendChild(slot);
+  }
+  return slot;
+}
+
+/** The box of a slot that holds the mark (`display: contents`): a render into it leaves the heat's squares beside it alone. */
+const boxOf = (slot) => {
+  let box = slot.querySelector(":scope > .cn-slot__m");
+  if (!box) {
+    box = document.createElement("span");
+    box.className = "cn-slot__m";
+    slot.appendChild(box);
+  }
+  return box;
+};
+
+/** Paints the marks of the party's record on the cards of `host`: a mark in a slot on each card a concern is on, nothing on the others, no slot left behind (one the heat holds stays for it). `nodes`: the Board's goals (a mark made into a goal wears its element). */
 export function sync(host, party, lead, nodes) {
   const by = new Map(), marked = new Set(), used = new Set();
   for (const c of recordOf(party)?.concerns || []) by.set(c.on, [...(by.get(c.on) || []), c]);
   for (const w of host.querySelectorAll("[data-pick-id]")) {
     const list = by.get(w.dataset.pickId), card = cardEl(w), home = list && homeOf(card);
     if (!list || !home) continue;
-    let slot = [...home.children].find((x) => x.classList?.contains("cn-slot") && x.dataset.cnFor === w.dataset.pickId);
-    if (!slot) {
-      slot = document.createElement("span");
-      slot.className = "cn-slot";
-      slot.dataset.cnFor = w.dataset.pickId;
-      home.appendChild(slot);
-    }
+    const slot = slotOf(card, w.dataset.pickId);
     used.add(slot);
     marked.add(card);
     const mid = `cn-${party}-${encodeURIComponent(w.dataset.pickId).replace(/%/g, "_")}`, level = levelOf(list);
     if (card.dataset.concern !== level) card.dataset.concern = level;
-    render(html`<${Mark} party=${party} list=${list} lead=${lead} nodes=${nodes} mid=${mid} />`, slot);
+    render(html`<${Mark} party=${party} list=${list} lead=${lead} nodes=${nodes} mid=${mid} />`, boxOf(slot));
     if (!card.hasAttribute("aria-describedby") || card.dataset.cnDesc) { card.setAttribute("aria-describedby", mid); card.dataset.cnDesc = "1"; }      // the card says it has concerns, unless it describes itself already
   }
-  for (const slot of host.querySelectorAll(".cn-slot")) if (!used.has(slot)) { render(null, slot); slot.remove(); }
+  for (const slot of host.querySelectorAll(".cn-slot")) {
+    if (used.has(slot)) continue;
+    const box = slot.querySelector(":scope > .cn-slot__m");
+    if (box) { render(null, box); box.remove(); }
+    if (!slot.querySelector(".cn-heat")) slot.remove();
+  }
   for (const el of host.querySelectorAll("[data-concern], [data-cn-desc]")) {
     if (marked.has(el)) continue;
     delete el.dataset.concern;
@@ -205,6 +233,7 @@ function Strip({ g, lead }) {
       ${rubric.short && html`<span class="cn-aspects__short">${rubric.short}</span>`}
       ${rubric.aspects.map((a) => html`<${Aspect} key=${a.id} a=${a} card=${list.some((c) => c.aspect === a.id && c.on && !goalOf(party, c))} step=${step} />`)}
     </div>`}
+    <${ReachLine} party=${party} heat=${heatNow.value} />
   </div>`;
 }
 
@@ -218,7 +247,8 @@ function Inner({ g, children }) {
     if (!el) return undefined;
     let queued = false;
     const paint = () => { queued = false; sync(el, state.current.party, state.current.lead, mapData.peek()?.nodes || []); };
-    const ours = (m) => !!m.target.closest?.(".cn-slot") || (m.type === "childList" && m.addedNodes.length + m.removedNodes.length > 0 && [...m.addedNodes, ...m.removedNodes].every((n) => n.classList?.contains("cn-slot")));
+    const mine = (n) => n.classList?.contains("cn-slot") || n.classList?.contains("rc-edge");           // the slots, and the edges the reach draws inside a card (reach.js)
+    const ours = (m) => !!m.target.closest?.(".cn-slot, .rc-edge") || (m.type === "childList" && m.addedNodes.length + m.removedNodes.length > 0 && [...m.addedNodes, ...m.removedNodes].every(mine));
     const watch = new MutationObserver((list) => {
       if (queued || list.every(ours)) return;
       queued = true;
@@ -228,7 +258,7 @@ function Inner({ g, children }) {
     return () => { watch.disconnect(); };
   }, []);
   useLayoutEffect(() => { if (host.current) sync(host.current, g.slug, lead, nodes); }, [g.slug, rec, lead.name, lead.head?.race, lead.head?.tier, nodes]);
-  useEffect(() => () => { if (host.current) for (const slot of host.current.querySelectorAll(".cn-slot")) render(null, slot); }, []);
+  useEffect(() => () => { if (host.current) for (const box of host.current.querySelectorAll(".cn-slot__m")) render(null, box); }, []);
   return html`<${Strip} g=${g} lead=${lead} />
     <div ref=${host} class="cn-host" style="display:contents" data-concerns-map=${g.slug}>${children}</div>`;
 }
