@@ -11,7 +11,7 @@
 // unfinished landing out.
 // The seam with the play view (arena/play.js): three signals and the die's rectangle. `thrown`: the die is out on the pane (it flew from here and rolls), so this one is hidden (kept in its place: `visibility`) until the frame rises or the failure
 // takes its place; `playing`: the view is open and its build plays (the pips glow, the word says *Playing*); `warmed`: the view opened on a build already playing, so the die wobbles twice. `dieRect()` is where the throw starts.
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
 import { town } from "../link.js";
@@ -62,7 +62,7 @@ export function PlayDie() {
     return () => { rectOf = () => null; };
   }, []);
   const was = useRef(null);                                                           // the face before, null until a snapshot is known: the first one rolls nothing
-  useEffect(() => {
+  useLayoutEffect(() => {                                                             // before the paint: the new face is never seen standing for a frame before it rolls in
     const before = was.current;
     was.current = known ? face : null;
     if (before && before !== face && !reduced() && !gone && !asleep && wob.left === 0) setLand(true);
