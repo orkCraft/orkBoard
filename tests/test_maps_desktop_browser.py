@@ -241,7 +241,7 @@ def test_the_loops_lie_as_rings_one_in_another_the_core_inside_or_as_lists_at_th
         tags = [t.replace("\n", " ").lower() for t in pg.locator(".mp-ring__tag").all_inner_texts()]
         assert tags[0] == "core · seconds hold the tower" and "feeds the session loop" in pg.locator(".mp-ring__tag").first.get_attribute("title")
         assert tags[1].startswith("session · minutes a night of matches") and tags[2].startswith("meta · days and weeks the season")       # each ring: its span and its name
-        assert pg.locator(".mp-ring__chev").count() == 6 and pg.locator(".mp-ring[data-span=\"core\"] .mp-st").count() == 3
+        assert pg.locator(".mp-ring__chev").count() == 9 and pg.locator(".mp-ring__chev[data-close]").count() == 3 and pg.locator(".mp-ring[data-span=\"core\"] .mp-st").count() == 3      # a chevron a step: the last closes the ring (spec 117 H)
         ring = pg.locator(".mp-rings").bounding_box()
         cx, cy = centre(ring)
         far = {}
