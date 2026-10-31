@@ -194,6 +194,8 @@ it into the spec* (on the project's questions, *the leader keeps it for the proj
    **←** is the browser's back; *Stop all* at the end of the row of heads, the limits' chips in the Orkmaster's **…**.
    **A phone on its side is the table** (§150): a low window (under 500 px high) keeps the wide layout made compact,
    the hand a fan of overlapping cards, the + card and the discard at its ends; nothing locks the orientation.
+   **A phone** (a touch window, narrow or low, §180, §195) is not this: the crown's menu of the leaders and their goals, what
+   is picked in the middle (its top card answered there with one tap), the hand's row at the foot with the + card at its end.
 2. **The phone's app is a frame** (spec 94 §4): pairing, the cache, push, the update, what is kept with no signal.
 3. **VS Code** (§146): the Board in an editor tab, or in the side bar at the narrow width; reads open in the editor.
 

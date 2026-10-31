@@ -3999,3 +3999,36 @@ live, when hypotheses matter least. So:
 3. The aspect *Evidence* gains the hint *Rests on an untested hypothesis*.
 4. Spec 116, built by the cheaper model, without a mockup.
 The owner's call.
+
+## 195. The phone: a menu of the leaders from the crown, what is picked in the middle, the hand at the foot; the top card answered with one tap; the PWA first (31 October, the owner)
+
+Why: the owner, after living with the phone as the hand alone (§180.1 asked it again): *a left menu in place of the
+Orkmaster's tab: a list whose rows are the leaders' tabs (with their attack and defence) and under each the goals at work;
+the goals whose spec is still being found at the top; above the main area the mana's bottles, the die and the discard; in
+it, by what is picked, a leader's header and lens or a goal's description and its stages; at the foot the hand and a + for
+a new goal.* The phone today answers *what waits for me* and nothing else; *how is it going* sends the person to the
+computer. The menu is the Board turned on its side (a lane a row, a goal's cascade a row under it), so the phone gets the
+Board without a layout on its side. The owner's yes on `docs/mockups/phone/sidebar.html` (A, not B: the row of heads), and
+*yes* to keeping one tap for the top card. So (this changes §145.9 and §104.8 for a phone, §174.1, §178.2, §179.1,
+§180.1, §180.3–§180.6; the desktop is unchanged):
+1. **The crown opens the menu** (top left; never an edge swipe, the left edge is iOS's back): at its head the project with
+   its switcher, *Settings* and *Stop all* (what **…** held, §180.5); then **the Orkmaster's goals** (in Talk, in Spec, in
+   line with the moon); then **each party** its leader's head, its name, its sword and shield (§189, §192.4) and its goals at
+   work under it, each its element, its type's sign, its short name and its phase. **The menu is a way to look, never a place
+   where something waits**: no count, no alert, no *waits for you*; what waits is the hand's. A press picks and closes it.
+2. **The middle shows what is picked.** A goal: its name, its element and type, its phases, its route by its leaders'
+   heads, why, and the tasks of its step at work; **its top card in the hand lies on it with its answers, answered with one
+   tap** (§180's lifted card, in its place under the goal's name). A party: its leader's header (squad, size, the tools of
+   its sword and shield), its goals at work and its concerns (§183). **With nothing picked, the goal of the hand's first card
+   is picked**, so a push lands where it did; answering a goal's last card picks the next.
+3. **The top row**: the crown, the potions as bottles in two windows (§192, `.small`: this changes §179.1's marks), the
+   die (§190; on a phone it says *Play it on the computer*), the discard (pressed, it opens over the pane).
+4. **The hand at the foot**: one card an entry of §180.6 (a goal's top card, a card of no goal, a goal ready for main),
+   their upper parts in a row that scrolls sideways, the picked one raised; a press picks it. **The + card lies at the row's
+   right end**, under the thumb, never over a card (this replaces §180.4's deck). The arrows and the swipe go.
+5. **The map of a leader is not drawn on a phone yet** (neither as text nor as cards); asked again after the owner's week.
+   The quick question (§181) stays the desktop's.
+6. **The PWA first** (spec 94 D: `pwa/index.html` loads the page, the frame does only what a phone has); the native frame
+   (§174.4) later. The phone's old face stays until spec 94 E.
+7. Spec 117, built by the cheaper model.
+The owner's call.
