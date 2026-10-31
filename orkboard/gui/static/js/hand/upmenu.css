@@ -38,3 +38,7 @@
 .up-menu button.up-phone__row.is-danger { color: var(--ork-danger); }
 .up-menu button.up-phone__row:disabled { color: var(--ork-ink-muted); cursor: default; }
 .up-menu .up-phone__line { margin: 0; padding: 0 var(--ork-3) var(--ork-2); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+/* the fix's row (docs/specs/119-the-hammer-and-the-bug.md §4.2, upphone.js): above Notifications, only when the computer can fix; a tap opens the panel's content in the menu. Ready is the one state in a colour: the signal (as the bug's, table.css) */
+.up-menu button.up-phone__row.is-ready { color: var(--ork-alert); }
+.up-phone__fix { display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-2) var(--ork-3) var(--ork-3); }
+.up-phone__fix .table-logs__error { max-height: 120px; }

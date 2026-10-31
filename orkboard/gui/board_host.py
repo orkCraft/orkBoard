@@ -17,6 +17,7 @@ import argparse
 import datetime as dt
 import hashlib
 import json
+import os
 import sys
 import time
 import webbrowser
@@ -25,7 +26,7 @@ from typing import Any, Callable
 
 from orkboard import __version__, brand, settings
 from orkboard.core import bus as b
-from orkboard.core import crashes, treasury, updates as core_updates, usage
+from orkboard.core import crashes, repair as core_repair, treasury, updates as core_updates, usage
 from orkboard.core.board_limits import BoardLimits
 from orkboard.core.sign_ins import SignInError, SignIns
 from orkboard.gui import board_cli, command_log
@@ -150,7 +151,8 @@ class BoardPhone:
     snapshot's Board, small."""
 
     COMMANDS = ("mobile.hello", "mobile.snapshot", "halt", "projects.list", "projects.use", "mobile.push_key", "mobile.push_on",
-                "mobile.push_off", "mobile.push_quiet", "update.check", "update.install")
+                "mobile.push_off", "mobile.push_quiet", "update.check", "update.install",
+                "repair.start", "repair.stop", "repair.update")      # Fix it (spec 119 §3.3, decisions §197.4): the computer starts Claude Code, the phone edits nothing
     MARKDOWN = (".md", ".markdown")
 
     @classmethod
@@ -205,7 +207,7 @@ class Orkboard:
     def __init__(self, repo_root: Path | None = None, demo: bool = False, restore: bool = False) -> None:
         """`repo_root`: the folder opened and shown (refused in words: `ideas.IdeasError`); `restore`: the projects
         open when Orkboard last closed are opened again too (`orkboard` does it; a test's host has only its own)."""
-        from orkboard.gui import awake, board_files, board_git, board_projects, folder_dialog, keep_awake, logs_save, onboarding, ops, phone_push, updates
+        from orkboard.gui import awake, board_files, board_git, board_projects, folder_dialog, keep_awake, logs_save, onboarding, ops, phone_push, repair, updates
         self.demo = demo
         self.machine = settings.load()
         self.bus = b.Bus()
@@ -245,6 +247,8 @@ class Orkboard:
         self.commands.update(self.pusher.commands())
         self.updates = updates.Updates(self)
         self.commands.update(self.updates.commands())
+        self.repair = repair.Repair(self)             # Fix it: Claude Code started on Orkboard's own code (spec 119)
+        self.commands.update(self.repair.commands())
         # Anonymous usage stats and crash reports, one answer per machine with Orkline (core/usage.py, core/crashes.py)
         self.usage = usage.Usage(_Answer(self), face="gui", demo=demo)
         self.crashes = crashes.install(_Answer(self), face="gui", demo=demo)
@@ -365,7 +369,7 @@ class Orkboard:
         return {**board, "focus": "board", "onboarding": self.onboarding.snapshot(), "sign_in": sign_in,
                 "hud": {"show_gold": show_gold, "gold": gold, "lumber": lumber}, "rate": window_rate.shown(self.machine),
                 "repo": str(root) if root is not None else "", "projects": self.projects.list(),
-                "update": self.updates.snapshot(), "update_policy": self.machine.updates, "version": __version__,
+                "update": self.updates.snapshot(), "repair": self.repair.snapshot(), "update_policy": self.machine.updates, "version": __version__,
                 "usage_ask": self.usage.should_ask()}
 
     # What the page reads of the snapshot and a phone has no use for: the computer's own (spec 94 §2.3).
@@ -426,6 +430,7 @@ class Orkboard:
         self.limits.tick(now)
         self._follow_main()
         self.updates.tick(now)
+        self.repair.tick(now)
         self.usage.tick(now)
         self.projects.tick(now)           # every open project's Board: showing another stops nothing
         self.ops.tick(now)
@@ -482,13 +487,13 @@ class Orkboard:
 
     def command(self, name: str, args: dict | None = None) -> Any:
         from orkboard.core.op_commands import OpsError
-        from orkboard.gui import ideas, onboarding, phone_push, updates
+        from orkboard.gui import ideas, onboarding, phone_push, repair, updates
         fn = self.commands.get(name)
         if fn is None:
             raise CommandError(f"Unknown command: {name}")
         try:
             return fn(dict(args or {}))
-        except (ideas.IdeasError, onboarding.OnboardingError, updates.UpdateError, OpsError, phone_push.PushRefused,
+        except (ideas.IdeasError, onboarding.OnboardingError, updates.UpdateError, repair.RepairError, OpsError, phone_push.PushRefused,
                 SignInError) as e:
             raise CommandError(str(e)) from None
 
@@ -623,6 +628,7 @@ def run(repo_root: Path | None, browser: bool = False, port: int = 0, demo: bool
     server = Server(host, port)
     thread = server.start_thread()
     host.keep_awake.start()                     # the server is up: the computer is kept awake while a reason holds
+    core_repair.came_up()                       # …and a restart on a fix is proven (spec 119 §3.4)
     if serve:
         extension.serve(host, server, thread, _stop, stop=host.keep_awake.stop)
     else:
@@ -684,12 +690,20 @@ def main(argv: list[str] | None = None) -> int:
         if why:
             sys.stderr.write(f"orkline: {root}: {why}\n")
             return 1
-    code = run(root, browser=args.browser, port=args.port, serve=args.serve)
+    repaired = os.environ.pop(core_repair.REPAIRED_ENV, "")      # set by the restart that followed a fix's update (spec 119 §3.4)
+    again = [*(["--repo", str(root)] if root is not None else []),
+             *(["--browser"] if args.browser else []),
+             *(["--serve"] if args.serve else []),
+             *(["--port", str(args.port)] if args.port else [])]
+    try:
+        code = run(root, browser=args.browser, port=args.port, serve=args.serve)
+    except Exception as e:
+        if not repaired or not core_repair.pending(repaired):       # not a fix's restart, or it had come up: it is no rollback's
+            raise
+        return core_repair.fall_back(repaired, e, again)
     if code == core_updates.RESTART:            # the window installed an update: it opens again on it
-        core_updates.restart([*(["--repo", str(root)] if root is not None else []),
-                              *(["--browser"] if args.browser else []),
-                              *(["--serve"] if args.serve else []),
-                              *(["--port", str(args.port)] if args.port else [])])
+        core_repair.guard_environment()         # …guarded by the sha it came from, when it was a fix's update
+        core_updates.restart(again)
     return code
 
 
