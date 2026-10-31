@@ -3,6 +3,7 @@ confirms it with one button, and it is committed, numbered, to the project's dec
 
     keeper.decide(slug)                       # Talk's last round is done (core/idea_talk.py): one call of the Orkmaster in the background; the goal is then `decided`
     keeper.confirm(slug, text="", tree=None)  # *Confirm and start*: `text` the person's correction, kept as written; the entry appended and committed; then the sections
+    keeper.write_decision(title, body, tree=None)   # the entry alone, with no goal (`confirm` writes through it; so does a hypothesis's verdict, spec 116 §4): {number, commit, path, held, pages}
 
 - **The call** (step `decide`, the cheaper tier, **no tools**, the Orkmaster's voice): given the person's words, the leaders' stances, the questions with the answers and the
   defaults that closed the rest, and the decisions file's last ten headings (`decisions_log.context`). It answers a title, *Why* (a few lines) and its points; code sets
@@ -239,13 +240,15 @@ Answer with one JSON object and nothing else:
         d = spec_sections.record(self.state_dir, slug)["decision"]
         return {k: d.get(k) for k in ("number", "title", "commit", "held", "path", "pages")}
 
-    def _enter(self, slug: str, d: dict, text: str, tree) -> None:
-        """The entry written and committed; the decision kept as confirmed with its number, its commit and its path."""
+    def write_decision(self, title: str, body: str, tree=None) -> dict:
+        """One entry appended to the decisions file as the next number and committed to dev (`tree`: the Board's `BoardTree`; none, and the file is written in the working copy only).
+        No goal is needed: a goal's `_enter` and a hypothesis's verdict (spec 116 §4) both write this way. The number is read again inside the repository's lock.
+        `{number, commit, path, held, pages}`; KeeperError in plain words for no words or a file that could not be written."""
         kw = _kw()
-        title, body = corrected(text, d["title"]) if str(text or "").strip() else (d["title"], demote(d["text"]))
-        if not body.strip():
+        title, body = _line(title, TITLE_CHARS), demote(body)
+        if not title or not body.strip():
             raise kw.KeeperError("A decision needs its words")
-        base, rel = self._decisions()
+        _base, rel = self._decisions()
         made = {"number": 0}
 
         def append(old: str) -> str:
@@ -263,10 +266,19 @@ Answer with one JSON object and nothing else:
                 file.write_text(append(file.read_text("utf-8", errors="replace") if file.is_file() else ""), "utf-8")
         except (OSError, RuntimeError) as e:
             raise kw.KeeperError(f"The decision could not be written: {' '.join(str(e).split())[:200]}") from None
-        number = made["number"]
+        return {"number": made["number"], "commit": out.get("commit") or "", "path": rel, "held": out.get("held") or "", "pages": out.get("pages") or 0}
+
+    def _enter(self, slug: str, d: dict, text: str, tree) -> None:
+        """The entry written and committed (`write_decision`); the decision kept as confirmed with its number, its commit and its path."""
+        kw = _kw()
+        title, body = corrected(text, d["title"]) if str(text or "").strip() else (d["title"], demote(d["text"]))
+        if not body.strip():
+            raise kw.KeeperError("A decision needs its words")
+        out = self.write_decision(title, body, tree)
+        number = out["number"]
         with ideas.LOCK:
             way = spec_sections.record(self.state_dir, slug)
-            way["decision"] = {**d, "title": title, "text": body, "number": number, "confirmed": True, "path": rel, "commit": out.get("commit") or "", "held": out.get("held") or "", "pages": out.get("pages") or 0,
+            way["decision"] = {**d, "title": title, "text": body, "number": number, "confirmed": True, "path": out["path"], "commit": out["commit"], "held": out["held"], "pages": out["pages"],
                                "confirmed_at": dt.datetime.now().isoformat(timespec="seconds")}
             spec_sections.save_record(self.state_dir, slug, way)
         ideas.update(self.wiki_root(), slug, {}, [f"Decision {number}: {title}"])

@@ -144,7 +144,7 @@ class BoardMixin:
             mine = self._idea_needs(i, st, plan, asks, root)
             needs += mine
             rows.append(board_map.row(root, self.state_dir, i, st, plan, page, asks, states, mine + by_idea.get(slug, [])))      # …on its goal's place too (spec 98 §2.1)
-        needs += asked + board_rows.rows(self.state_dir) + self.paid_rows()         # the stacks of no goal's: the project's questions (spec 99 §8.2), the Orkmaster's *Go on paid?* (spec 105 §3)
+        needs += asked + board_rows.rows(self.state_dir, root) + self.paid_rows()         # the stacks of no goal's: the project's questions (spec 99 §8.2), the hypotheses to judge (spec 116 §4.1), the Orkmaster's *Go on paid?* (spec 105 §3)
         return {"tracks": goals, "ideas": rows, "needs_you": sort_needs(needs), **self.board_settings(),
                 "rev": self.rev, "demo": bool(self.host.demo)}
 
@@ -405,6 +405,6 @@ def sort_needs(needs: list[dict]) -> list[dict]:
     judged pitch (spec 65 §5) comes after the goals' own, before the proposals."""
     def key(n: dict) -> tuple:
         prio = n.get("priority") if n.get("priority") in ideas.PRIORITIES else "normal"
-        last = 2 if n["kind"] in ("proposal", "op_rules", "party", "project_q") else 1 if n["kind"] == "pitch" else 0
+        last = 2 if n["kind"] in ("proposal", "op_rules", "party", "project_q", "hypothesis") else 1 if n["kind"] == "pitch" else 0
         return last, not n.get("blocks"), ideas.PRIORITIES.index(prio), str(n.get("at") or "")
     return sorted(needs, key=key)
