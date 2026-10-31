@@ -165,6 +165,8 @@ def test_every_import_of_a_served_module_is_a_served_module_with_the_names_it_ta
             text = served[target].read_text(encoding="utf-8")
             has = {m[0] for m in exports.findall(text) if m[0]}
             has |= {x.split(" as ")[-1].strip() for m in exports.findall(text) if m[1] for x in m[1].split(",")}
+            for line in re.findall(r"^export\s+(?:const|let|var)\s+(.*)$", text, re.M):       # `export const A = 1, B = 2`: every name
+                has |= set(re.findall(r"(?:^|,)\s*([\w$]+)\s*=", line))
             for one in filter(None, (x.split(" as ")[0].strip() for x in names.split(","))):
                 assert one in has, f"{name} takes {one} from {target}, which does not export it"
 
