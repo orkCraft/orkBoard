@@ -40,7 +40,7 @@ RUBRICS = {
                 "short": "OST · JTBD · RICE",
                 "aspects": (_a("outcome", "Outcome", "Is the outcome one number the team can move?", "vague_outcome"),
                             _a("opportunities", "Opportunities", "Is every job served, and where do pains pile up?", "unserved", "pains", "pain_loose"),
-                            _a("evidence", "Evidence", "Is a bet tested by an experiment before it is built big?", "no_evidence"),
+                            _a("evidence", "Evidence", "Is a bet tested by an experiment before it is built big?", "no_evidence", "untested"),
                             _a("focus", "Focus", "Do the goals in line serve the outcome, the best bets first?", "off_tree"))},
     "game-design": {"framework": "MDA and the eight kinds of fun, core, session and meta loops, an economy of sources and sinks, flow, and why a player comes back",
                     "short": "MDA · loops · economy",

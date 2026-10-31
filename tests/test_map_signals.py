@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.realm import idea_lens, ideas, loop, map_parts, map_signals, map_signals_crafts, opportunity_tree as tree
+from orkboard.realm import hypotheses as hyp, idea_lens, ideas, loop, map_parts, map_signals, map_signals_crafts, opportunity_tree as tree
 
 PNG = b"\x89PNG\r\n\x1a\n" + struct.pack(">I", 13) + b"IHDR" + struct.pack(">IIBBBBB", 1, 1, 8, 2, 0, 0, 0) + b"\x00" * 4 + struct.pack(">I", 0) + b"IEND" + b"\x00" * 4
 
@@ -316,6 +316,53 @@ def test_an_outcome_with_no_number_a_job_with_two_goals_and_no_experiment_and_go
     assert "off_tree" not in kinds(map_signals.signals(state, repo, "product")), "off_tree needs the Board's pages"
     tree.attach(state, jobs[2], goals[4])
     assert "off_tree" not in kinds(map_signals.signals(state, repo, "product", pages)), "two goals off the tree are under OFF_TREE"
+
+
+def test_a_goal_in_line_or_at_work_on_an_open_hypothesis_with_no_test_is_untested_once_a_goal(repo, tmp_path):
+    """Spec 116 D: `untested`, on the goal's id as the tree names it (else ""), for the first such hypothesis."""
+    put(repo, APP)
+    state, pages = repo / ".orkcraft", tmp_path / "pages"
+    tree.keep(state, [{"text": "Cut the time to a first sketch to 2 minutes"}],
+              [{"when": "I start", "want": w, "so": "judge it", "segment": "founders"} for w in ("see a sketch", "share it", "compare two")], "person")
+    job = tree.read(state)["jobs"][0]["id"]
+    line, work, off = (ideas.add_idea(pages, t, "general", state) for t in ("Sketch pad", "Share links", "Loose goal"))
+    ideas.save_state(state, work, state="working")
+    tree.attach(state, job, line)
+    tree.attach(state, job, work)
+    first = hyp.add(state, "People want to share a sketch", "Three of five ask for a link", rests=[line, work])
+    hyp.add(state, "People draw on a phone", "A third open it there", rests=[line, off])
+    got = [s for s in map_signals.signals(state, repo, "product", pages) if s["kind"] == "untested"]
+    assert [(s["on"], s["words"]) for s in got] == [(line, f"Sketch pad rests on an untested hypothesis: {first['text']}"), (work, f"Share links rests on an untested hypothesis: {first['text']}"),
+                                                    ("", f"Loose goal rests on an untested hypothesis: People draw on a phone")], "one a goal, the first hypothesis; a goal off the tree is on no part"
+    assert {s["on"] for s in got} - {""} <= {p["id"] for p in map_parts.parts(state, repo, "product", pages)}
+    assert not [s for s in map_signals.signals(state, repo, "product") if s["kind"] == "untested"], "untested needs the Board's pages"
+
+
+def test_untested_is_off_for_a_hypothesis_with_a_test_that_is_held_or_proposed_and_for_a_goal_done_or_gone(repo, tmp_path):
+    put(repo, APP)
+    state, pages = repo / ".orkcraft", tmp_path / "pages"
+    mine, experiment = ideas.add_idea(pages, "Sketch pad", "general", state), ideas.add_idea(pages, "Ask five people", "general", state)
+    def untested() -> list[str]:
+        return [s["words"] for s in map_signals.signals(state, repo, "product", pages) if s["kind"] == "untested"]
+    one = hyp.add(state, "People want to share", "Links are asked for", rests=[mine])
+    assert len(untested()) == 1
+    hyp.attach(state, one["id"], test=experiment)
+    assert untested() == [], "a hypothesis with a test is no longer untested"
+    hyp.attach(state, "", test=experiment)
+    assert len(untested()) == 1
+    hyp.judge(state, one["id"], "held")
+    assert untested() == [], "a held hypothesis is not open"
+    hyp.drop(state, one["id"])
+    hyp.add(state, "People pay for it", "Two sign up", by="leader", party="product", rests=[mine])
+    assert untested() == [], "a proposed hypothesis is not yet the project's"
+    hyp.keep(state, "people-pay-for-it")
+    assert len(untested()) == 1
+    ideas.save_state(state, mine, state="done")
+    assert untested() == [], "a goal done is no longer built on it"
+    ideas.save_state(state, mine, state="")
+    assert len(untested()) == 1
+    hyp.edit(state, "people-pay-for-it", rests=["gone-from-the-board"])
+    assert untested() == [], "a goal the Board no longer has is none"
 
 
 # -- the rest ---------------------------------------------------------------------------------------------------------------------------
