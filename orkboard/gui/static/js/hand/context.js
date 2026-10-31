@@ -14,7 +14,7 @@ import { goalOfStop } from "./data.js";
 const WAITS = "The work waits for your answer";
 
 /** The Orkmaster's crowned head, as the map names it (the hand's `orkHead` for a stop with none of its own). */
-const orkHeadOf = () => {
+export const orkHeadOf = () => {
   const o = mapData.value?.project?.orkmaster || null;
   return { race: o?.race || "peon", tier: o?.tier || "crown" };
 };

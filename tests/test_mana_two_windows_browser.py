@@ -64,7 +64,7 @@ def open_mana(gui, limits, width="wide", mana=None, parties=None):
     for slug, more in (parties or {}).items():
         next(p for p in host.parties if p["slug"] == slug).update(more)
     pg, host, log = open_hand(gui, host, width)
-    pg.locator(".hand-mana .hand-pot").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".up-pot" if width == "phone" else ".hand-mana .hand-pot").first.wait_for(timeout=WAIT_MS)       # the phone's top row has bottles of its own (spec 117 B)
     pg.wait_for_timeout(300)
     return pg, host, log
 
@@ -310,12 +310,13 @@ def test_four_to_six_tools_keep_their_two_lines_in_two_small_rows(gui, width):
     assert not log, "\n".join(log)
 
 
-def test_upright_on_a_phone_a_tool_is_its_mark_and_its_now_share_in_the_colour_of_the_lower_share(gui):
+def test_upright_on_a_phone_a_tool_is_a_bottle_by_its_week_its_now_share_in_the_colour_of_the_lower_share(gui):
     pg, host, log = open_mana(gui, [two("claude", "Claude Code", 0.3, 0.82), two("agy", "Antigravity", 1.0, 0.04)], "phone")
     try:
-        tools = pg.locator(".hand-mana--tools .hand-pot--tool")
+        tools = pg.locator(".up-pots .up-pot")
         tools.first.wait_for(timeout=WAIT_MS)
-        assert [t.locator(".hand-pot__share").inner_text() for t in tools.all()] == ["30%", "100%"] and tools.locator(".ork-potion").count() == 0      # no bottle on the phone's first screen
+        assert [t.locator(".up-pot__share").inner_text() for t in tools.all()] == ["30%", "100%"] and tools.locator(".ork-potion.small").count() == 2      # a bottle each on the phone's top row (spec 117 B)
+        assert [t.get_attribute("data-size") for t in tools.all()] == ["large", "vial"]                                    # the bottle is the week's: 82% large, 4% the vial
         assert [t.get_attribute("data-level") for t in tools.all()] == ["ok", "danger"]                                  # a full tool whose week is spent is red
         assert tools.nth(0).get_attribute("aria-label").startswith("Claude Code: 30% of the 5 hours left") and "82% of the week" in tools.nth(0).get_attribute("aria-label")
         shot(pg, "phone-tools")
