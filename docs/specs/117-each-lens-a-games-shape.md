@@ -13,8 +13,15 @@ goal is under the pointer in the hand or picked. Not: a new tab, pane, column, d
 §145); a free graph (System stays its columns, `systemarch.js`: *never a diagram*); a spread that moves by itself, a timer, a
 score or a percentage of risk; a new colour (the edges wear the goal's element, §186); the games' names or words where a
 person reads; a reach for a goal whose spec does not yet say what will change; the phone's app (spec 103); Play (spec 115);
-the project's Board; the hypotheses' faces (spec 116 is not built: its cards become the tree's parts when it is, and take
-both rules through the kit with no more work).
+the project's Board; the hypotheses' faces (spec 116 E, built alongside: its cards are the tree's parts, `hyp:<id>`, and
+take both rules through the kit with no more work).
+
+**Alongside spec 116** (the owner, 31 October: the hypotheses are added to Product's lens in parallel). Its A–D are in `main`
+(`realm/hypotheses.py`, the hint `untested` on a goal); its E (the cards on the tree, `map_parts`' group `hypotheses`) is being
+built. So this spec builds on `main` with 116 in it: the tree's relation takes the hypotheses (§1.2), the heat of `untested`
+lies on the goals it names, and this spec's parts edit no file of 116 E's (`treemap.js`, `tree.css`, `map_parts.py`, the
+hand's hypothesis card). The files both specs touch (`realm/map_signals.py`, `tests/test_map_signals.py`, `gui/ideas.py`)
+are merged by the lead.
 
 | Part | What | Where (and its tests) |
 |---|---|---|
@@ -66,7 +73,7 @@ map_reach.guard(state_dir, root, ids, ref="dev") -> {id: bool}              # Sy
    |---|---|---|
    | system | what uses it (`used_by`) | the newest snapshot (`project_map`, as `ideas.system` reads it) |
    | screens | the screens that link to it | `screen_map.read`'s `links` (`from` of each link whose `to` is it) |
-   | product | a job its goals; a goal its job and its experiments; an experiment its goal | `opportunity_tree.read` (`serves`, `tests`) |
+   | product | a job its goals and its hypotheses; a goal its job, its experiments and the hypotheses it rests on or tests; an experiment its goal; a hypothesis (`hyp:<id>`) its job and the goals that rest on it or test it | `opportunity_tree.read` (`serves`, `tests`), `hypotheses.read` (`on`, `rests`, `tests`; the dropped not read) |
    | game-design | a step the next step of its loop (the last the first) and `cur:<id>` of each currency it gives; `cur:<id>` each step that takes it | `loop.read` |
    | release | a goal the goals `goal_main.plan(..., pick=False)` takes to main with it (its `goals` after the first) | computed for the touched goal only |
    | art, marketing | nothing | — |
