@@ -4,9 +4,11 @@ state for the desktop."""
 from __future__ import annotations
 
 import asyncio
+import base64
 import hashlib
 import http.client
 import json
+import posixpath
 import re
 import subprocess
 import threading
@@ -41,11 +43,14 @@ def _split(raw: bytes) -> tuple[str, bytes]:
 
 def test_the_app_is_its_own_files_and_nothing_else():
     names = set(pwa.files())
-    assert {"index.html", "board-app.js", "app.css", "manifest.webmanifest", "sw.js", "icon-192.png", "icon-512.png",
+    assert {"index.html", "old.html", "frame.js", "frame.css", "board-app.js", "app.css", "manifest.webmanifest", "sw.js", "icon-192.png", "icon-512.png",
             "apple-touch-icon.png"} <= names
-    head, body = _split(pwa.serve("GET", "/app/"))
-    assert head.startswith("HTTP/1.1 200") and b'src="board-app.js"' in body
-    assert "Content-Security-Policy: default-src 'self'; script-src 'self';" in head
+    head, body = _split(pwa.serve("GET", "/app/"))            # the desktop's page, in the frame (spec 117 A)
+    assert head.startswith("HTTP/1.1 200") and b'src="frame.js"' in body and b"board-app.js" not in body
+    assert "Content-Security-Policy: default-src 'self'; script-src 'self' 'sha256-" in head
+    head, body = _split(pwa.serve("GET", "/app/old.html"))     # the phone's old face, until spec 94 E
+    assert head.startswith("HTTP/1.1 200") and b'src="board-app.js"' in body and b"frame.js" not in body
+    assert "Content-Security-Policy: default-src 'self'; script-src 'self'; style-src" in head
     head, _ = _split(pwa.serve("GET", "/app/board-app.js"))
     assert "text/javascript" in head and "Content-Security-Policy" not in head
     assert "Service-Worker-Allowed: /app/" in _split(pwa.serve("GET", "/app/sw.js"))[0]
@@ -80,6 +85,68 @@ def test_the_app_is_its_own_files_and_nothing_else():
     assert head.startswith("HTTP/1.1 200") and body == b""
 
 
+def test_the_app_serves_the_desktops_page_its_import_map_by_hash_and_orkui_by_the_pages_own_address():
+    """Spec 117 A: the page's files from the one place the desktop has them, under /app/page/ (the old face's own board.js keeps /app/board.js),
+    Preact and the rest with their licences and no terminal, `roles.css` made from the tokens, and orkUI at /ds/orkui/ as `js/orkui.js` names it."""
+    from orkboard.gui import server
+    for name, source in {"page/board.js": "board.js", "page/page.css": "page.css", "page/js/link.js": "js/link.js", "page/js/hand/upright.js": "js/hand/upright.js",
+                         "page/vendor/preact.mjs": "vendor/preact.mjs", "page/vendor/LICENSE-preact.txt": "vendor/LICENSE-preact.txt"}.items():
+        head, body = _split(pwa.serve("GET", f"/app/{name}"))
+        assert head.startswith("HTTP/1.1 200") and body == (server.STATIC / source).read_bytes(), name
+        assert ("text/javascript" if name.endswith((".js", ".mjs")) else "text/css" if name.endswith(".css") else "text/plain") in head, name
+    assert _split(pwa.serve("GET", "/app/board.js"))[1] == (pwa.ROOT / "board.js").read_bytes()               # the old face's, untouched
+    for name in ("page/vendor/xterm.mjs", "page/vendor/xterm.css", "page/vendor/LICENSE-xterm.txt", "page/vendor/README.md", "page/play/probe.js", "page/js/../index.html"):
+        assert _split(pwa.serve("GET", f"/app/{name}"))[0].startswith("HTTP/1.1 404"), name
+    head, body = _split(pwa.serve("GET", "/app/roles.css"))
+    assert "text/css" in head and b".ok-font-status" in body and b".ok-tone-muted" in body
+    # every stylesheet and module the page links or imports by `new URL(…, import.meta.url)` is served
+    served = set(pwa.files())
+    for name, path in pwa.page_files().items():
+        for rel in re.findall(r'new URL\("(\./[^"]+\.css)", import\.meta\.url\)', path.read_text(encoding="utf-8")) if name.endswith(".js") else []:
+            assert posixpath.normpath(posixpath.join(posixpath.dirname(name), rel)) in served, f"{name} links {rel}"
+    # orkUI by the page's address: the same bytes as under /app/, only orkUI's files, nothing of the app's own
+    for name in ("races/elf-elder.png", "marks/harness-claude.png", "icons/icons.svg", "signs/check.svg", "elements/meadow.svg"):
+        assert _split(pwa.serve("GET", f"/ds/orkui/{name}")) == _split(pwa.serve("GET", f"/app/{name}")), name
+    for name in ("index.html", "frame.js", "sw.js", "board-app.js", "manifest.webmanifest", "page/board.js", "assets.json", ""):
+        assert _split(pwa.serve("GET", f"/ds/orkui/{name}"))[0].startswith("HTTP/1.1 404"), name
+    assert pwa.wants("/ds/orkui/races/x.png") and not pwa.wants("/ds/sprites/x.png") and not pwa.wants("/static/board.js")
+    head, _ = _split(pwa.serve("POST", "/ds/orkui/icons/icons.svg"))
+    assert head.startswith("HTTP/1.1 405")
+    # the import map is the one inline script, allowed by its hash; its addresses are the page's, relative to the app
+    head, body = _split(pwa.serve("GET", "/app/"))
+    maps = re.findall(rb'<script type="importmap">(.*?)</script>', body, re.S)
+    assert len(maps) == 1 and re.findall(rb"<script(?![^>]*\bsrc=)[^>]*>", body) == [b'<script type="importmap">']        # no other inline script
+    digest = base64.b64encode(hashlib.sha256(maps[0]).digest()).decode()
+    csp = next(line for line in head.splitlines() if line.startswith("Content-Security-Policy")).split(": ", 1)[1]
+    assert f"script-src 'self' 'sha256-{digest}';" in csp and "unsafe" not in csp and "style-src 'self';" in csp
+    imports = json.loads(maps[0])["imports"]
+    assert set(imports) == {"preact", "preact/hooks", "htm", "@preact/signals-core", "@preact/signals"}
+    for target in imports.values():
+        assert target.startswith("./page/vendor/") and posixpath.normpath(target[2:]) in served, target
+    assert pwa.csp(b"<html></html>") == pwa.CSP                                                                     # a page with none gets the plain one
+
+
+def test_every_picture_orkuis_components_draw_is_served_beside_it():
+    """The potions' bottles, a tool's rune, the big signs, the card backs: `components.css` masks them by relative address, so each must be there (the 404s of the first run of the page on a phone)."""
+    css = _split(pwa.serve("GET", "/app/components.css"))[1].decode()
+    wanted = {u for u in re.findall(r"url\(['\"]?([^)'\"]+)\)", css) if not u.startswith("data:")}
+    assert len(wanted) > 150 and wanted <= set(pwa.files()), sorted(wanted - set(pwa.files()))
+    for name in ("signs/big/bug.svg", "potion/body.svg", "runes/key.svg", "tools/bell-note.svg", "backs/back.svg"):
+        head, body = _split(pwa.serve("GET", f"/ds/orkui/{name}"))
+        assert head.startswith("HTTP/1.1 200") and "image/svg+xml" in head and b"<svg" in body, name
+    for name in ("potion/sizes.json", "potion/README.md", "tools/README.md", "die/die.json", "signs/big"):
+        assert _split(pwa.serve("GET", f"/ds/orkui/{name}"))[0].startswith("HTTP/1.1 404"), name
+
+
+def test_the_page_files_are_the_ones_the_desktop_serves_but_for_what_a_phone_has_no_use_of():
+    from orkboard.gui import server
+    on_phone = {name.removeprefix(pwa.PAGE) for name in pwa.page_files()}
+    on_desktop = {p.relative_to(server.STATIC).as_posix() for p in server.STATIC.rglob("*") if p.is_file()
+                  and (p.suffix in (".js", ".css", ".mjs", ".txt") or p.name == "board.js")}
+    left = on_desktop - on_phone
+    assert all(name.startswith(("vendor/xterm", "vendor/LICENSE-xterm", "play/", "pwa/")) or name == "index.html" or "/__" in name for name in left), left
+
+
 def test_every_import_of_a_served_module_is_a_served_module_with_the_names_it_takes():
     """The app's module graph, as the phone loads it (the owner's phone stuck on "Loading…" when the desktop's layout
     gained imports /app/ did not serve, and one name that resolved to the app's own ground.js): every relative import
@@ -103,16 +170,25 @@ def test_every_import_of_a_served_module_is_a_served_module_with_the_names_it_ta
 
 
 def test_the_service_worker_keeps_every_module_the_app_loads():
-    import re
+    """The frame's and the old face's modules are in the worker's own list; the page's are the list gui/pwa.py writes into the worker it serves (`PAGE`)."""
     sw = (pwa.ROOT / "sw.js").read_text(encoding="utf-8")
-    shell = set(re.findall(r'"([^"]+)"', sw[sw.index("SHELL"):sw.index("];")]))
-    assert {k for k in pwa.files() if k.endswith(".js") and k != "sw.js"} <= shell
+    shell = set(re.findall(r'"([^"]+)"', sw[sw.index("const SHELL"):sw.index("];", sw.index("const SHELL"))]))
+    assert {k for k in pwa.files() if k.endswith(".js") and k != "sw.js" and not k.startswith(pwa.PAGE)} <= shell
+    assert {"./", "frame.js", "frame.css", "old.html"} <= shell
+    served = _split(pwa.serve("GET", "/app/sw.js"))[1].decode()
+    page = set(json.loads(re.search(r"const PAGE = (\[.*?\]);", served).group(1)))
+    assert page == set(pwa.page_shell()) >= set(pwa.page_files()) | {"roles.css"}
+    assert {name for name in pwa.ds_files() if name not in pwa.STYLES} <= page                                     # orkUI's faces, heads, marks and pictures
+    assert {"fonts/ibm-plex-sans-latin-400-normal.woff2", "races/peon-crown@2x.png", "signs/big/bug.svg", "potion/body.svg"} <= page
+    assert {k for k in pwa.files() if k.startswith(pwa.PAGE) and k.endswith((".js", ".mjs", ".css"))} <= page
+    assert {"page/board.js", "page/js/link.js", "page/js/hand/upright.js", "page/vendor/preact.mjs", "page/page.css", "roles.css"} <= page
+    assert not any("xterm" in k for k in page)
 
 
 def test_the_service_worker_also_keeps_the_elements_and_the_signs_the_masks_draw():
     sw = (pwa.ROOT / "sw.js").read_text(encoding="utf-8")
-    shell = set(re.findall(r'"([^"]+)"', sw[sw.index("SHELL"):sw.index("];")]))
-    assert {k for k in pwa.files() if k.startswith(("elements/", "signs/"))} <= shell
+    shell = set(re.findall(r'"([^"]+)"', sw[sw.index("const SHELL"):sw.index("];", sw.index("const SHELL"))]))
+    assert {k for k in pwa.files() if k.startswith(("elements/", "signs/")) and k.count("/") == 1} <= shell      # (signs/big/ and the rest of orkUI's pictures are kept as they are first drawn)
 
 
 def test_the_manifest_carries_a_token_only_as_a_token():
@@ -144,6 +220,12 @@ async def test_the_listener_serves_the_app_and_a_browsers_socket(fake_repo):
         _, token = await _pair(server)
         status, headers, body = await asyncio.to_thread(_get, server.phones.address, "/app/")
         assert status == 200 and b"Orkboard" in body and "content-security-policy" in headers
+        for path, kind in (("/app/page/board.js", "text/javascript"), ("/app/page/vendor/preact.mjs", "text/javascript"), ("/app/roles.css", "text/css"),
+                           ("/ds/orkui/races/elf-elder.png", "image/png"), ("/ds/orkui/icons/icons.svg", "image/svg+xml"), ("/app/old.html", "text/html")):
+            status, headers, body = await asyncio.to_thread(_get, server.phones.address, path)       # the page's files and orkUI by the page's address, from the listener
+            assert status == 200 and kind in headers["content-type"] and body, path
+        assert (await asyncio.to_thread(_get, server.phones.address, "/ds/orkui/index.html"))[0] == 404
+        assert (await asyncio.to_thread(_get, server.phones.address, "/ds/sprites/orks/ork.png"))[0] == 404     # a camp's pictures are not the phone's
         async with connect(_ws_url(server), ssl=_pinned(), subprotocols=["orkcraft.v1", f"bearer.{token}"]) as ws:
             assert ws.subprotocol == "orkcraft.v1"
             first = json.loads(await asyncio.wait_for(ws.recv(), 5))
@@ -373,7 +455,7 @@ def test_the_workers_install_fills_its_cache_past_the_http_cache():
     sw = (pwa.ROOT / "sw.js").read_text(encoding="utf-8")
     install = sw[sw.index('addEventListener("install"'):sw.index('addEventListener("activate"')]
     assert "addAll" not in install                    # addAll fetches with the default cache mode
-    assert re.search(r'SHELL\.map\(async \(path\) => \{\s*const resp = await fetch\(path, \{ cache: "reload" \}\)',
+    assert re.search(r'\[\.\.\.new Set\(\[\.\.\.SHELL, \.\.\.PAGE\]\)\]\.map\(async \(path\) => \{\s*const resp = await fetch\(path, \{ cache: "reload" \}\)',
                      install)
     assert 'fetch("assets.json", { cache: "reload" })' in install
     assert 'put("assets.json"' in install
@@ -381,7 +463,7 @@ def test_the_workers_install_fills_its_cache_past_the_http_cache():
 
 def test_service_worker_names_cache_version_and_cache_first_prefixes():
     sw = (pwa.ROOT / "sw.js").read_text(encoding="utf-8")
-    assert "orkcraft-app-v103" in sw
+    assert "orkcraft-app-v104" in sw
     prefixes = sw[sw.index("CACHE_PREFIXES = ["):sw.index("];", sw.index("CACHE_PREFIXES = ["))]
     assert set(re.findall(r'"([^"]+)"', prefixes)) == set(pwa.CACHE_PREFIXES) == {"fonts/"}
 
