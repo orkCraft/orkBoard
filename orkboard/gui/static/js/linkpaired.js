@@ -80,7 +80,8 @@ export const store = {
  * - `opened(fn)` runs `fn(send)` each time the socket opens (the frame's push renewal), `news(fn)` each news item.
  */
 export function makePaired(page, device = store.get()) {
-  let ws = null, opened = false, retry = 1, retryTimer = 0, nextId = 1, board = null, seenAt = 0, flushing = false, closed = false;
+  let ws = null, opened = false, retry = 1, retryTimer = 0, nextId = 1, board = null, seenAt = 0, flushing = false, closed = false, toldAt = 0;
+  const TELL_S = 10;                               // "Not connected to the town" is toasted at most this often
   const waits = new Map();
   const onOpen = new Set(), onNews = new Set();
 
@@ -100,8 +101,9 @@ export function makePaired(page, device = store.get()) {
     const r = await send(name, args);
     if (r.ok) return r.result;
     const offline = r.error === "Not connected to the town";
-    if (offline) page.toast("Not connected to the town", "error");
-    else if (!quiet) page.toast(r.error, "error", name);
+    if (offline) {                                  // said once in a while: a page opened with no signal asks the Board's commands one after another, and the line over it says "As of …"
+      if (Date.now() - toldAt > TELL_S * 1000) { toldAt = Date.now(); page.toast("Not connected to the town", "error"); }
+    } else if (!quiet) page.toast(r.error, "error", name);
     throw Object.assign(new Error(offline ? "offline" : r.error || "Refused"), { refused: true });
   }
 

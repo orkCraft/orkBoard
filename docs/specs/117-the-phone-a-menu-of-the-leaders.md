@@ -135,3 +135,72 @@ The owner's phone, with the app added to its home screen from the paired link, o
 the discard at the top, the goal of the first card in the middle with its question answered by one tap, the menu from the
 crown with the leaders and their goals, a party's leader picked from it; the desktop unchanged. The critical tests pass
 (CLAUDE.md) and each part's tests above; each part writes its *As built* here.
+
+## As built A (the PWA loads the page)
+
+Built in `orkboard/gui/pwa.py` (changed), `gui/static/pwa/index.html` (now the page's), `pwa/old.html` (new: today's `index.html`, untouched), `pwa/frame.js`, `pwa/frame.css` (new), `pwa/sw.js` (changed) and
+`gui/static/js/linkpaired.js` (one line, below). `gui/phone_http.py` needed no change: it already hands every `pwa.wants(path)` to `pwa.serve`. Tests: `tests/test_pwa.py` (changed, three new),
+`tests/test_board_alone.py` (the page's `/app/` check), `tests/test_pwa_frame_browser.py` (new, 7 tests, Python Playwright at `narrow.NARROW`); `tests/test_pwa_shell_browser.py` (the base of the old face's browser
+tests) and `tests/test_board_browser.py` load `/app/old.html` (one line each; the other `test_pwa_*_browser.py` reach the app through the first). The old face (`board-app.js`, `shell-*.js`, `util.js`, `app.css`,
+`party.css`) is untouched.
+
+What it is, and what differs from §2 or is not said there:
+
+- **The page's files are served under `/app/page/`, not `/app/`.** The old face has its own `pwa/board.js`, which `old.html` still loads as `/app/board.js`; the page's `board.js` would have taken its name. So `board.js`,
+  `page.css`, `js/**` (every `.js` and `.css`) and `vendor/` (`*.mjs` and the licences; **no xterm**: its module, stylesheet and licence are left out) are served as `page/board.js`, `page/js/…`, `page/vendor/…`
+  (`pwa.page_files()`, read from `gui/static/`, so the phone never has an older copy than the desktop). The modules link their sheets with `new URL("./x.css", import.meta.url)`, which resolves under `/app/page/js/…`, so
+  nothing in the page changed. `roles.css` (the page's `ok-font-*` and `ok-tone-*`, which the desktop gets from `/roles.css`) is made from the tokens (`pwa.GENERATED`) and served as `/app/roles.css`.
+- **`/ds/orkui/…` is served by the phone listener too.** The page's code names orkUI by an absolute address (`js/orkui.js` `ORKUI = "/ds/orkui"`: the heads, the marks, the pixel icons; `table/card.js`), which `/app/`
+  does not cover, and the desktop is not to change. `pwa.wants` takes `/ds/orkui/` and `pwa.serve` answers it from the same files as `/app/<name>` (only orkUI's, `ds_files()`, never the app's own; `/ds/sprites/…`, a
+  camp's, is a 404). The worker answers it too, keeping each file under its `/app/<name>` key.
+- **More of orkUI is served than the old face needed.** `components.css` masks `signs/big/*.svg` (100 files), `potion/`, `runes/`, `tools/` and `backs/` by relative addresses, none of which `/app/` served (the first
+  browser run showed `signs/big/bug.svg` as 404s). `ds_files()` now serves them; `tests/test_pwa.py` checks every `url()` of `components.css` is served.
+- **CSP: the import map is allowed by its hash.** The page's import map has to be inline (an external one is not supported by browsers), so `script-src 'self' 'sha256-…'`: `pwa.csp(page)` hashes each
+  `<script type="importmap">` of the file it serves and adds it. It works in the preinstalled Chromium (build 1243). No `unsafe-inline`, no other inline script (`test_pwa.py` checks the page has exactly one); `old.html`
+  keeps the CSP as it was. The import map's addresses are relative (`./page/vendor/preact.mjs`, …). Styles stay `style-src 'self'`, and the page needed no inline style.
+- **`sw.js`: `CACHE` is `orkcraft-app-v104`; the page's list is written in by `pwa.serve`.** The file keeps a `const PAGE = [];` and `serve` fills it with `pwa.page_shell()`: the page's files, `roles.css`, and orkUI's
+  faces, heads, marks and pictures (about 490 files with the old face's `SHELL`, which stays for `old.html`, with `frame.js`, `frame.css` and `old.html` added). This differs from "list the page's files in `SHELL`": a new
+  module under `js/` (B, C and D add five) needs no edit of the worker, and the worker's bytes change with the list, so a browser installs the new one. Install fetches `[...new Set([...SHELL, ...PAGE])]` past the HTTP
+  cache, as before. Without orkUI's faces and pictures in the list the app offline lacked IBM Plex Sans (the old face did not use it), the heads and the bottles.
+- **`frame.js`** (what only a phone has; it draws nothing of the Board, only its own cards): reads the address (`#pair=` the code, `#k=` an iOS Home Screen app's token, `#from=push-<tag>`), wipes it, registers
+  `sw.js?app=board` (the same worker as `old.html`) and pairs as `board-app.js` did (`/api/version`, `/api/pair`; the cards *This phone is not paired with the board yet.*, *Pairing this phone*, *Paired: …* with the iOS
+  `handOff`). **Paired, it calls `pairWith(device)` and only then `import("./page/board.js")`**, so the page's first `connect()` goes by the phone's socket; `linkpaired.js` keeps the old face's `localStorage` keys, so the two
+  faces share one pairing. It draws: the pairing cards (`#phone`, over the page; `frame.css`, orkUI's tokens only); **a status line** (`#phone-status`, from `link.js` `offlineLine`: *As of 14:02. The board went
+  away: trying again…*), since no face draws it yet (spec 94 B left it to "part C"); and the card *The board forgot this phone. Pair it again to use it.* over the page when `forgotten` is set (a code scanned while the app is
+  open pairs again and the page starts anew). `frame.css` gives `body` the status bar's inset (`env(safe-area-inset-top)`: the installed app's bar is translucent) and makes `#app` the rest of the window; with nothing
+  hidden the page's `[data-frame]` fills the window exactly (a test).
+- **The arrival**: `#from=push-<tag>` (and the worker's `push-open` message when the app was open) logs `ideas.log {event: "opened", what: "push", ref: <tag>, device: "phone"}` once, as before, and a **`goal=<slug>`**
+  (new: in the push's address, `./#goal=<slug>`) picks that goal in `frame/state.js` `picked` as soon as `mapData` names it. **No push names a goal yet** (`gui/phone_push.py` sends `./#needs` and `./`), so today an
+  arrival only logs: the hand's first card is what the phone starts on anyway. Naming the goal in the push is left open.
+- **Push**: `renewPush` runs on every socket open (the subscription sent again). Turning it on and off and the quiet hours are `pushOn`, `pushOff`, `pushQuiet`, offered to the page as
+  **`globalThis.orkboardPhone.push`** (`state()`, `on()`, `off()`, `setQuiet(from, to)`) with **`orkboardPhone.unpair()`**. **Nothing in the page calls them yet**: the old face had a *This phone* row in its drawer
+  for them, the page has none. Until a face (the crown's menu *Settings*, C) calls them, a phone paired on the new app cannot turn notifications on or unpair itself (it can still be forgotten on the computer, and
+  `/app/old.html` has the rows). That row must also hide the computer-only rows by `can()` (spec 94 B's note).
+- **The update**: none of its own. The computer's update is the page's (`js/shell/update.js` `UpdateAsk`, in `Board`): it reads `town.update` from the paired snapshot and sends `update.install`, which a phone may.
+  The app's own files update by the worker (network first).
+- **`js/linkpaired.js`: "Not connected to the town" is toasted once in ten seconds.** A page opened with no signal asks the Board's commands (`ideas.map`, `ideas.board`, …) one after another and showed five error
+  toasts; the line over the page already says *As of …*. The paired link only; the desktop's link is unchanged.
+- **`pwa.serve`'s `entry`** (the listener's host's script, Orkline's `app.js`) now applies to `old.html` and `index.html` alike; `index.html` has no `board-app.js` any more, so Orkline's frozen phone would need its own
+  change (§121, later). The brand: `old.html` and the new `index.html` say the host's name as `index.html` did.
+
+Tests: `tests/test_pwa.py` (the files served and their types; the page's files byte for byte from `gui/static/`, no xterm; `roles.css`; orkUI by `/ds/orkui/` and only orkUI's; every `url()` of `components.css` served;
+the CSP with its one hash and no other inline script; the import map's addresses all served; every import of every served module resolves, the old test, now over the page too; the worker served with `PAGE` equal to the
+page's files; `old.html` served; and over the real TLS listener `/app/page/board.js`, `/ds/orkui/…` and `/app/old.html`). `tests/test_pwa_frame_browser.py`: paired, the upright hand is drawn from the stub host's snapshot
+over the phone's socket (`wss://…/ws`, `orkcraft.v1`, `bearer.<token>`) under the strict CSP with no console error, and *Passkey* pressed sends `ideas.talk_answer`; the frame adds nothing to the page's window; unpaired
+says so, opens no socket and loads no page; a code in the address pairs and the page opens; a notification's arrival logs once and picks the goal it names; forgotten says so, keeps nothing and a new code pairs again;
+the worker's cache holds every file it lists and, with the computer's files and socket both gone, the app opens from the cache on the kept snapshot with *As of …*, at most one "Not connected" toast and no console error.
+Its stand-in for the listener is `pwa.serve` through Playwright's `route` (so the CSP header is the real one) and `route_web_socket`, as `test_link_paired_browser.py`; it looks for `[data-frame][data-upright]` and the
+question's own words, not B's classes. Python Playwright 1.63 installed with pip and ran with the preinstalled Chromium (`PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers`); no Node run was needed.
+
+Not done / untested:
+
+- **No real phone.** Everything ran in Chromium (touch, `is_mobile`, 390 × 844). The worker's install on iOS Safari, the Home Screen app's `#k=` hand-off, `env(safe-area-inset-top)` under the translucent bar, the install's
+  weight over Tailscale (about 490 small requests once per version) and push on a device are untried. A one-off run (not committed) of the page through the **real phone listener over TLS** (paired by the code; the
+  page and its files from the listener, the worker in control) showed the page's start screen with the heads, no console error, and no request outside `/app/`, `/ds/` and `/api/`.
+- **Offline, the Board is not kept**, only the snapshot (`linkpaired.js` `kept`, spec 94 B): the page's goals, cards and hand come from commands (`ideas.map`, `ideas.board`, …), so an app opened with no signal draws
+  the potions (the snapshot's `mana`), the line *As of …* and an empty hand. Keeping `mapData` and `board` beside the snapshot is a change in `js/shell/store.js` and `linkpaired.js`, not A's.
+- Nothing greys the page or marks what waits to be sent (*Sent when the computer answers*, `link.js` `waiting`): spec 94 C, still no face.
+- The old face is served beside the page and shares its worker, so its files are in the install. Its removal (spec 94 E) takes `old.html`, `board-app.js`, the `shell-*.js`, the old `SHELL` entries and the `entry` line of
+  `pwa.serve`.
+- The old face's browser tests all ran against `old.html` (every `tests/test_pwa_*_browser.py`, `test_running_team_pwa_browser`, `test_gate_phone_browser`, `test_orkmaster_rows_91_phone_browser`, `test_board_browser`): green
+  once the service worker's version pins (`orkcraft-app-v103` → `v104`, five files) and `test_pwa_new_party_91_browser`'s read of `index.html` (now `old.html`) were moved. They take about 55 minutes together.

@@ -2,7 +2,10 @@
 prototype). No app store and no build: the phone opens the tailnet's address, pairs, and adds the page to its
 Home Screen. It speaks the protocol the phone listener speaks (gui/phones.py), with what a browser can say.
 
-    GET /app/                     the app's files (gui/static/pwa/): its page, script, style, manifest, worker, icons
+    GET /app/                     the app's files (gui/static/pwa/): its page, frame, style, manifest, worker, icons
+    GET /app/page/...             the desktop's page itself (gui/static/: board.js, js/**, page.css, vendor/), which the app's page loads
+    GET /app/old.html             the phone's old face (board-app.js, shell-*.js), kept until spec 94 E
+    GET /ds/orkui/...             orkUI by the address the page's code names (the same files as under /app/)
     GET /app/manifest.webmanifest?k=<device token>    the same manifest, its start_url carrying the token (iOS, below)
     /ws  Sec-WebSocket-Protocol: orkcraft.v1, bearer.<device token>   a browser cannot set Authorization
 
@@ -23,10 +26,16 @@ person adds opens with it once, keeps it, and wipes it from its address.
 
 The files are only the app's shell: what the town is comes over the socket, after the token. They are the
 same for everyone and say nothing of this town.
+
+The app is the desktop's page (docs/specs/117-the-phone-a-menu-of-the-leaders.md §2, spec 94 §4): `index.html` loads
+orkUI's styles, the page's, an import map of `page/vendor/` and `frame.js`, which pairs (js/link.js `pairWith`) and then
+imports `page/board.js`. The import map is an inline script, which the CSP allows by its sha256 (`csp`), computed from
+the file served: no other inline script is allowed.
 """
 from __future__ import annotations
 
 import asyncio
+import base64
 import hashlib
 import json
 import logging
@@ -49,14 +58,21 @@ MARKS = tokens.ORKUI / "marks"      # orkUI's marks (an AI tool's, a level's che
 ELEMENTS = tokens.ORKUI / "elements"   # orkUI's elements (a goal's mark, spec 50 §1), served as elements/<file>: `.ork-elem` masks them from beside components.css
 MOONS = tokens.ORKUI / "moons"      # orkUI's moons (a goal's progress, spec 74 §6), served as moons/<file>: `.ork-moon` masks them from beside components.css
 SIGNS = tokens.ORKUI / "signs"      # orkUI's signs (✓ ✗ ↻ the clock ! ⚑ ← →, spec 50 §1.6), served as signs/<file> for `.ork-sign`: a mask needs the page's own origin
+MASKS = ("backs", "potion", "runes", "tools")   # orkUI's other pictures (the card backs, the potions' bottles, a tool's rune and bell), which components.css draws from beside it
 STYLES = ("fonts.css", "tokens.css", "components.css")   # orkUI itself: its faces, colours and components
+STATIC = Path(__file__).resolve().parent / "static"   # the desktop's page: board.js, js/**, page.css, vendor/ (gui/server.py serves it as /static/)
+PAGE = "page/"                      # …and where the app serves it: beside the app's own board.js (the old face's), so no name is shared
+VENDOR_OUT = ("xterm",)             # a phone has no terminal: its module, stylesheet and licence are not served
 PREFIX = "/app/"
+DS = "/ds/orkui/"                   # orkUI by the address the page's code names (js/orkui.js `ORKUI`): its heads, marks and pixel icons
 SUBPROTOCOL = "orkcraft.v1"
 BEARER = "bearer."
 TOKEN = re.compile(r"[A-Za-z0-9_-]{20,128}")   # a device token as pairing makes it (token_urlsafe)
 TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
          ".css": "text/css; charset=utf-8", ".webmanifest": "application/manifest+json",
-         ".png": "image/png", ".webp": "image/webp", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".json": "application/json"}
+         ".png": "image/png", ".webp": "image/webp", ".svg": "image/svg+xml", ".woff2": "font/woff2", ".json": "application/json",
+         ".mjs": "text/javascript; charset=utf-8", ".txt": "text/plain; charset=utf-8"}
+GENERATED = {"roles.css": lambda: tokens.roles_css().encode("utf-8")}   # the page's `ok-font-*` and `ok-tone-*` (gui/server.py serves it as /roles.css)
 # The app's page loads only its own files and talks only to its own listener.
 CSP = ("default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' wss:; "
        "manifest-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; "
@@ -69,18 +85,36 @@ def files() -> dict[str, Path]:
     (docs/specs/40-design-system.md). Orkboard's phone is the shell alone (spec 37 §4): no camp file, no sprite but the heads and the marks."""
     own = {p.name: p for p in sorted(ROOT.iterdir()) if p.is_file() and p.suffix in TYPES}
     own |= {name: path for name in logo.PHONE if (path := logo.phone_icon(name))}      # Orkboard's mark, not Orkline's ork (spec 107 §12)
+    return {**own, **page_files(), **ds_files()}
+
+
+def page_files() -> dict[str, Path]:
+    """The desktop's page by the name it is served at (under PREFIX): `page/board.js`, `page/page.css`, `page/js/**` (its modules and
+    the sheets they link) and `page/vendor/` (Preact, htm and the signals, with their licences; no terminal). The files the desktop is
+    served, from one place, so the phone never has an older copy."""
+    out = {f"{PAGE}{name}": STATIC / name for name in ("board.js", "page.css")}
+    out |= {f"{PAGE}{p.relative_to(STATIC).as_posix()}": p for p in sorted((STATIC / "js").rglob("*")) if p.is_file() and p.suffix in (".js", ".css")}
+    out |= {f"{PAGE}vendor/{p.name}": p for p in sorted((STATIC / "vendor").iterdir())
+            if p.suffix in (".mjs", ".txt") and not p.name.removeprefix("LICENSE-").startswith(VENDOR_OUT)}
+    return out
+
+
+def ds_files() -> dict[str, Path]:
+    """orkUI's files by the name they are served at, under PREFIX and (`DS`) by the desktop's address: its styles, faces, race heads, marks,
+    elements, moons, signs (and the big ones), the potions, runes, tools and backs, and the pixel icons (docs/specs/40-design-system.md)."""
     styles = {name: tokens.ORKUI / name for name in STYLES}
     faces = {f"fonts/{p.name}": p for p in sorted(FONTS.iterdir()) if p.suffix == ".woff2"}
     heads = {f"races/{p.name}": p for p in sorted(RACES.iterdir()) if p.suffix == ".png"}
     marks = {f"marks/{p.name}": p for p in sorted(MARKS.iterdir()) if p.suffix == ".png"}
     elements = {f"elements/{p.name}": p for p in sorted(ELEMENTS.iterdir()) if p.suffix == ".svg"}
     moons = {f"moons/{p.name}": p for p in sorted(MOONS.iterdir()) if p.suffix == ".svg"}
-    signs = {f"signs/{p.name}": p for p in sorted(SIGNS.iterdir()) if p.suffix == ".svg"}
-    return {**own, **styles, **faces, **heads, **marks, **elements, **moons, **signs, "icons/icons.svg": tokens.ORKUI / "icons" / "icons.svg"}
+    signs = {f"signs/{p.relative_to(SIGNS).as_posix()}": p for p in sorted(SIGNS.rglob("*.svg"))}      # and signs/big/
+    masks = {f"{folder}/{p.name}": p for folder in MASKS for p in sorted((tokens.ORKUI / folder).glob("*.svg"))}
+    return {**styles, **faces, **heads, **marks, **elements, **moons, **signs, **masks, "icons/icons.svg": tokens.ORKUI / "icons" / "icons.svg"}
 
 
 def wants(path: str) -> bool:
-    return path == PREFIX.rstrip("/") or path.startswith(PREFIX)
+    return path == PREFIX.rstrip("/") or path.startswith((PREFIX, DS))
 
 
 CACHE_PREFIXES = ("fonts/",)
@@ -146,8 +180,9 @@ def serve(method: str, target: str, keep_alive: bool = False, entry: str = "boar
     if method not in ("GET", "HEAD"):
         return _head(HTTPStatus.METHOD_NOT_ALLOWED, "text/plain; charset=utf-8", 0, "Allow: GET, HEAD\r\n",
                      keep_alive=keep_alive)
-    name = parts.path[len(PREFIX):] or "index.html"
-    if name == "assets.json":
+    under_ds = parts.path.startswith(DS)             # orkUI by the page's own address: only orkUI's files, never the app's
+    name = parts.path[len(DS if under_ds else PREFIX):] or "index.html"
+    if name == "assets.json" and not under_ds:
         if _ASSETS is None:                  # the warm-up has not hashed yet: no map rather than a wrong one
             body = b"Not ready"
             head = _head(HTTPStatus.SERVICE_UNAVAILABLE, "text/plain; charset=utf-8", len(body), "Retry-After: 1\r\n",
@@ -156,23 +191,44 @@ def serve(method: str, target: str, keep_alive: bool = False, entry: str = "boar
         body = json.dumps(_ASSETS, ensure_ascii=False).encode("utf-8")
         head = _head(HTTPStatus.OK, "application/json", len(body), cache_first=False, keep_alive=keep_alive)
         return head if method == "HEAD" else head + body
-    path = files().get(name)
-    if path is None:
+    path = (ds_files() if under_ds else files()).get(name)
+    made = GENERATED.get(name) if not under_ds and path is None else None
+    if path is None and made is None:
         body = b"Not Found"
         return _head(HTTPStatus.NOT_FOUND, "text/plain; charset=utf-8", len(body), keep_alive=keep_alive) + body
-    body = path.read_bytes()
+    body = made() if made else path.read_bytes()
+    suffix = ".css" if made else path.suffix
     if name == "manifest.webmanifest":
         body = manifest(body, parts.query)
-    if name == "index.html" and entry != "board-app.js" and entry in files():
+    if name in ("index.html", "old.html") and entry != "board-app.js" and entry in files():
         body = body.replace(b'src="board-app.js"', f'src="{entry}"'.encode())
-    if name in ("index.html", "manifest.webmanifest", "sw.js") and brand.name() != brand.DEFAULT:   # Orkline's (§95)
+    if name == "sw.js":                      # the page's files, for the worker to keep (`page_shell`): they change with the page, not with this file
+        body = body.replace(b"const PAGE = [];", f"const PAGE = {json.dumps(page_shell())};".encode())
+    if name in ("index.html", "old.html", "manifest.webmanifest", "sw.js") and brand.name() != brand.DEFAULT:   # Orkline's (§95)
         body = body.replace(brand.DEFAULT.encode(), brand.name().encode())
-    extra = f"Content-Security-Policy: {CSP}\r\n" if path.suffix == ".html" else ""
+    extra = f"Content-Security-Policy: {csp(body)}\r\n" if suffix == ".html" else ""
     if name == "sw.js":
         extra += f"Service-Worker-Allowed: {PREFIX}\r\n"
     cf = is_cache_first(name)
-    head = _head(HTTPStatus.OK, TYPES[path.suffix], len(body), extra, cache_first=cf, keep_alive=keep_alive)
+    head = _head(HTTPStatus.OK, TYPES[suffix], len(body), extra, cache_first=cf, keep_alive=keep_alive)
     return head if method == "HEAD" else head + body
+
+
+def page_shell() -> list[str]:
+    """The names of the files the worker keeps for the page (sw.js `PAGE`): everything `page_files` serves, what is made for it, and orkUI's faces,
+    heads, marks and pictures the page draws (what `ds_files` serves, as /app/<name>), so the app opens with no signal and draws what it did."""
+    return [*page_files(), *GENERATED, *(name for name in ds_files() if name not in STYLES)]
+
+
+IMPORT_MAP = re.compile(rb'<script type="importmap">(.*?)</script>', re.S)
+
+
+def csp(page: bytes) -> str:
+    """The CSP for a page of the app: `CSP`, with `script-src` also allowing the page's import map by its sha256 (an import map is
+    an inline script; nothing else inline is allowed, so the hash is of exactly the text served). A page with none gets `CSP` as it is."""
+    hashes = [f"'sha256-{base64.b64encode(hashlib.sha256(m).digest()).decode()}'" for m in IMPORT_MAP.findall(page)]
+    allowed = " ".join(["script-src 'self'", *hashes])
+    return CSP.replace("script-src 'self';", f"{allowed};", 1)
 
 
 def ws_token(headers: dict[str, str]) -> str:

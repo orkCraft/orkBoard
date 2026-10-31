@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" data-look="office" data-product="Orkboard">
+<html lang="en" data-look="office" data-theme="office" data-product="Orkboard">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -15,11 +15,25 @@
 <link rel="stylesheet" href="fonts.css">
 <link rel="stylesheet" href="tokens.css">
 <link rel="stylesheet" href="components.css">
-<link rel="stylesheet" href="app.css">
-<link rel="stylesheet" href="party.css">
-<script type="module" src="board-app.js"></script>
+<link rel="stylesheet" href="roles.css">
+<link rel="stylesheet" href="page/page.css">
+<link rel="stylesheet" href="frame.css">
+<script type="importmap">
+{
+  "imports": {
+    "preact": "./page/vendor/preact.mjs",
+    "preact/hooks": "./page/vendor/preact-hooks.mjs",
+    "htm": "./page/vendor/htm.mjs",
+    "@preact/signals-core": "./page/vendor/signals-core.mjs",
+    "@preact/signals": "./page/vendor/preact-signals.mjs"
+  }
+}
+</script>
+<script type="module" src="frame.js"></script>
 </head>
 <body>
-<main id="app" class="app"><p class="muted">Loading…</p></main>
+<p id="phone-status" class="phone-status" role="status" hidden></p>
+<div id="app"></div>
+<main id="phone" class="phone-frame" hidden></main>
 </body>
 </html>
