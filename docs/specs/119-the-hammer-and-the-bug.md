@@ -219,3 +219,32 @@ restart; or the error and Try again). Save logs is not on the phone (a phone sav
 
 - **A cloud session** when the computer cannot (`claude --cloud "…"` from the checkout, with the logs scrubbed as crash reports
   are, never a person's paths or prompts): only if the local one proves not enough.
+
+## As built
+
+**Part B.** `core/repair.py` (no `gui/` import; every call takes `run` / `popen`): `checkout()` (the git method's `cwd`), `can(run, which, way, now, fresh)` (a git checkout, `main`, an `origin`, and the first word of the machine's `repair_command` on the PATH;
+the answer cached a minute, `forget_can()` clears it), `repair_dir()` · `worktree_dir()`, `brief(said, base, product)` (§2.3 verbatim; the line cut at 4000 characters, the whole of it is in the logs'
+`on-screen.txt`), `start(said, logs_zip, now, run, popen, cmd, way, settle)`: stops a fix that runs, fetches `origin main`, removes an older `worktree/` (`git worktree remove --force`, the folder if it was no
+worktree, `prune`), `worktree add --detach … origin/main`, appends `CLAUDE.local.md` and `.orkcraft-repair/` once to `<git-common-dir>/info/exclude`, writes the brief, unzips the logs (a name that leaves the folder is dropped, a bad zip leaves a
+`README.txt`), starts the command with `start_new_session=True`, stdin `/dev/null`, stdout and stderr in `claude.log`, waits `settle` (3 s) and writes `state.json` atomically (`{"started_at", "base", "said", "pid"}`); a process that exits in
+that time raises `RepairError` with the end of `claude.log` and the *Run `claude remote-control` once in …* line. `alive()` · `stop()` (SIGTERM to the process group, SIGKILL after 5 s, `pid` 0, the worktree stays; a child that ended is reaped
+first, or it would answer `kill 0` as a zombie for as long as Orkboard runs). `landed(base)` and `applied(base)` (§2.5). `update(run, way)` (§2.6): `_dirty`'s refusal, the method's steps, then `python -c "import orkboard.gui.board_host,
+orkboard.gui.server"` and `python -m <profile entry> --version` with `way.python or sys.executable` (60 s each); a failed step or check runs `rollback(old)` (`git reset --keep <old>` and the steps after the pull again) and says it in the result;
+never raises. `last-good.json` is `remember_good(old)` · `pending(old)` · `mark_rolled_back(old)` · `rolled_back()` · `told()` · `came_up()` · `guard_environment()`; `fall_back(old, why, argv)` is the guarded restart's rollback.
+`settings.py`: `repair_command` on `MachineSettings` (default `settings.REPAIR_COMMAND`, `clean_repair_command` for a broken value, in `to_dict` / `from_dict`).
+
+**Part C.** `gui/repair.py` `Repair(host, engine=core.repair)`: `repair.start` (refuses with `can()`'s reason; packs the logs with `logs_save.pack(host, 1, said, page=page)` on the host's loop, then `core.start` on a thread; the state is
+`working` at once, `failed` with the error as it is when the start fails), `repair.stop`, `repair.update` (`core.update` on a thread; on success `remember_good(head)`, a toast, `host.updates.restart_wanted = True`, `host.updates.quit()`; on failure
+`failed` with the output and a red toast). `snapshot()` is §3.2's; `tick(now)` asks `landed()` every 30 s on a thread, only while a fix runs (and, with something landed, only while its process lives). A fix's state is read from `state.json` when Orkboard
+opens; a copy already on the fix (`applied`) clears it. `board_host.py`: `self.repair` beside `self.updates`, its commands, `"repair"` in the one `snapshot()` (the project-less snapshot is the same return), the three commands in `BoardPhone.COMMANDS`
+(`repair` is not in `COMPUTER_ONLY`), `repair.RepairError` among the caught errors, `self.repair.tick(now)` beside the updates', `run()` calls `core_repair.came_up()` once the server serves, and `main()`: the restart after an update sets
+`ORKCRAFT_REPAIRED` from a fresh `last-good.json`; a `run` that raises while the variable names the sha `last-good.json` still holds goes to `core_repair.fall_back` (reset, install step, the variable removed, `rolled_back: true`, the same
+arguments restarted). The next start says §1's rollback words once and the state is `failed`. `realm/lexicon.py`: the term `fix`.
+Tests: `tests/test_repair.py` (real temporary repositories with a bare `origin`, a fake `popen`, the state folder the test's own; the host with a fake engine); `tests/test_board_alone.py` and `tests/test_mobile.py` gain the snapshot key and the phone's three commands.
+
+*Departures and choices.* (1) **`fix` was already a term** (Orkline's leftover: *a change to Orkline's source, sent as a pull request*, used by no code); its comment now says §1's meaning, its word stays *Fix* / *Fixes*, rather than a second
+key that would shadow it. (2) **`python -m orkboard --version`** is `python -m orkboard.gui.board_host --version` (the profile's `entry`): the package has no `__main__`. (3) `can()` looks for the first word of `repair_command`, not a fixed `claude`,
+so a machine that changed the command is not told Claude Code is missing. (4) `landed(base)` leaves out what `main` already had when the fix started (`origin/main ^HEAD ^base`), or a checkout behind `main` would show *ready* at once; with `base` empty
+or unknown it is `HEAD..origin/main`. (5) Commands run on the page's loop, so `repair.start` answers at once and does its fetch, worktree and 3-second wait on a thread; a process that ended with nothing landed turns the bug `failed` (*Claude Code stopped
+and nothing came in to main…*), which §3.2 leaves unsaid. (6) `last-good.json` older than ten minutes is not the restart that just happened, and carries `told` so the rollback is toasted once. (7) `board_host.py` was already over 600 lines
+(697); this adds about 30, the rollback itself lives in `core/repair.py`.

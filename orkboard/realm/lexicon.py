@@ -283,7 +283,7 @@ TERMS: tuple[Term, ...] = (
     _t("improve_orkcraft", "Improve Orkline"),                     # the comments and fixes of Orkline itself (gui/fixes.py)
     _t("remark", "Comment", "Comments"),                            # what the person said about a part of the window
     _t("comment_mode", "Comment mode"),                             # a press on any part of the window comments on it
-    _t("fix", "Fix", "Fixes"),                                      # a change to Orkline's source, sent as a pull request
+    _t("fix", "Fix", "Fixes"),                                      # Claude Code started on Orkboard's own code with the logs, to fix it and push to main (spec 119, decisions §197)
     # what is wanted, on the cart: it decides the Agent pool's path (docs/design/barracks-flows.md)
     _t("want", "Kind of work", "Kinds of work"),                    # `want`, set by a building, never by the text
     _t("want.change", "Code change"),                               # a branch and a pull request

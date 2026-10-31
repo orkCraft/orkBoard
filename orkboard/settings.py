@@ -51,6 +51,8 @@ BILLINGS = ("subscription", "api")
 PROFILE_TEXT = ("orchestration", "role", "role_other", "industry", "industry_other", "day_other", "kin")
 PROFILE_LISTS = ("day", "mcp")   # mcp: the MCP servers the orks may use (gui/onboarding.py)
 UPDATES = ("auto", "critical", "ask")   # core/updates.py POLICIES
+# Fix it (spec 119 §2.4, core/repair.py): the command that starts Claude Code's Remote Control on Orkboard's own code.
+REPAIR_COMMAND = ("claude", "remote-control", "--name", "Fix Orkboard", "--permission-mode", "auto")
 LOOKS = ("camp", "office", "shift")
 # When the computer is kept from sleeping (Orkboard's gui/keep_awake.py, Orkline's gui/away.py): never, while carts are
 # in work, or also while a phone is
@@ -136,6 +138,7 @@ class MachineSettings:
     awake_offered: bool = False   # "keep it awake for the phone" was asked once, when a phone paired (js/phones.js; gui/keep_awake.py `offer`)
     fire: bool = True             # flames over a building whose ork has waited a minute or more (the GUI's huts)
     updates: str = "critical"     # which updates install by themselves when the town opens (core/updates.py)
+    repair_command: list = field(default_factory=lambda: list(REPAIR_COMMAND))   # what Fix it starts on Orkboard's own code (core/repair.py, spec 119)
     main_tool: str = ""           # the tool decisions run on (realm/harnesses.py); "" the first one on
     # The phones paired with this machine's towns (docs/design/mobile.md §2): id, name, the SHA-256 of the
     # device token (never the token), when paired and when last seen. The Town Scroll never holds them.
@@ -171,6 +174,7 @@ class MachineSettings:
             "awake_offered": self.awake_offered,
             "review_notice": self.review_notice,
             "updates": self.updates,
+            "repair_command": list(self.repair_command),
             "main_tool": self.main_tool,
             "phones": [dict(p) for p in self.phones],
             "phone_port": self.phone_port,
@@ -211,6 +215,7 @@ class MachineSettings:
         s.awake_offered = data.get("awake_offered") is True
         s.review_notice = data.get("review_notice") is True
         s.updates = data["updates"] if data.get("updates") in UPDATES else "critical"
+        s.repair_command = clean_repair_command(data.get("repair_command"))
         s.main_tool = data["main_tool"] if data.get("main_tool") in TOOLS else ""
         s.phones = clean_phones(data.get("phones"))
         port = data.get("phone_port")
@@ -236,6 +241,13 @@ class MachineSettings:
             ok = isinstance(install_id, str) and re.fullmatch(r"[0-9a-f]{32}", install_id)
             s.install_id = install_id if ok else uuid.uuid4().hex
         return s
+
+
+def clean_repair_command(raw: object) -> list[str]:
+    """The command Fix it starts (spec 119 §2.4): a list of a few words, each a non-empty line of text; a broken value is the default."""
+    if isinstance(raw, list) and 1 <= len(raw) <= 24 and all(isinstance(w, str) and w.strip() and "\n" not in w and len(w) <= 500 for w in raw):
+        return [w.strip() for w in raw]
+    return list(REPAIR_COMMAND)
 
 
 def clean_tier_models(raw: object) -> dict[str, dict[str, str]]:
