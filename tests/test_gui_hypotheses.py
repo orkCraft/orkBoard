@@ -261,3 +261,73 @@ def test_the_keepers_proposal_is_asked_through_the_command_and_its_refusals_are_
 
     host.ideas.keeper.hypotheses_propose = refuse
     assert host.command("ideas.hypotheses_propose", {}) == {"ok": True, "asked": False, "why": "Today's spend limit is reached: the keeper waits"}
+
+
+# -- a goal sent with a hypothesis as a mark (spec 116 E) ------------------------------------------------------------------------------------------
+
+def product_party(host, team=("experimenter",), leader="product-manager"):
+    """A party with its leader and team, as Edit the party keeps them (no model): the experiment is one of its goal types."""
+    from orkboard.realm import goal_team, library
+
+    root, state = host.ideas.root(), host.ideas.state_dir
+    slug, _new = ideas.save_goal(root, None, "Product", "About Product", None, "normal")
+    library.install(state, [s for s in (*team, leader) if library.get(s) is not None])
+    goal_team.set_team(root, slug, list(team), leader=leader)
+    host.ideas.keeper.draft = lambda *a, **k: None                       # the draft is a model's
+    return slug
+
+
+def mark(item, name=""):
+    return {"map": "product", "id": f"hyp:{item['id']}", "name": name or item["text"]}
+
+
+def kept(host, id):
+    return next(i for i in hypotheses.read(host.ideas.state_dir)["items"] if i["id"] == id)
+
+
+def test_an_experiment_sent_with_a_hypothesis_marked_becomes_its_test(host):
+    party = product_party(host)
+    item = hold(host)
+    got = host.command("ideas.add", {"text": "Show the big code to half of the hosts", "track": party, "type": "experiment", "marks": [mark(item)]})
+    assert got["type"] == "experiment" and kept(host, item["id"])["tests"] == [got["slug"]] and kept(host, item["id"])["rests"] == []
+    assert ideas.state(host.ideas.state_dir, got["slug"])["marks"] == [{"map": "product", "name": item["text"], "id": f"hyp:{item['id']}"}], "the mark stays the goal's, as any picked part's"
+    assert host.command("ideas.hypotheses", {})["items"][0]["tests"][0]["slug"] == got["slug"]
+
+
+def test_any_other_goal_sent_with_a_hypothesis_marked_rests_on_it_and_a_job_marked_changes_nothing(host):
+    party = product_party(host)
+    item = hold(host)
+    job = {"map": "product", "id": "get-everyone-in", "name": "get everyone into the lobby fast"}
+    got = host.command("ideas.add", {"text": "Read the code aloud", "track": party, "marks": [job, mark(item)]})
+    assert kept(host, item["id"])["rests"] == [got["slug"]] and kept(host, item["id"])["tests"] == []
+    plain = host.command("ideas.add", {"text": "A goal for a job", "track": party, "marks": [job]})
+    assert plain["slug"] != got["slug"] and kept(host, item["id"])["rests"] == [got["slug"]]
+    other = host.command("ideas.add", {"text": "A goal of another map's", "track": party, "marks": [{"map": "screens", "id": f"hyp:{item['id']}", "name": "x"}]})
+    assert other["slug"] and kept(host, item["id"])["rests"] == [got["slug"]], "only a mark of Product's map is a hypothesis"
+
+
+def test_an_experiment_tests_the_first_hypothesis_marked_and_rests_on_the_others(host):
+    party = product_party(host)
+    a, b = hold(host, "Claim a", "signal a"), hold(host, "Claim b", "signal b")
+    got = host.command("ideas.add", {"text": "Try it with both", "track": party, "type": "experiment", "marks": [mark(a), mark(b)]})
+    assert kept(host, a["id"])["tests"] == [got["slug"]] and kept(host, b["id"])["tests"] == [] and kept(host, b["id"])["rests"] == [got["slug"]]
+
+
+def test_a_mark_of_a_hypothesis_gone_never_stops_the_goal_being_added(host):
+    party = product_party(host)
+    gone = hold(host, "Soon gone", "never")
+    live = hold(host)
+    host.command("ideas.hypothesis_drop", {"id": gone["id"]})
+    got = host.command("ideas.add", {"text": "Test what is left", "track": party, "type": "experiment", "marks": [mark(gone), mark(live)]})
+    assert got["slug"] and kept(host, live["id"])["tests"] == [got["slug"]], "the next one takes the test"
+    assert [i["id"] for i in hypotheses.read(host.ideas.state_dir)["items"]] == [live["id"]]
+
+
+def test_the_goal_that_tests_a_hypothesis_asks_did_it_hold_once_it_is_done(host):
+    """The two halves: *Test it* attaches the new goal; when it is done the hand's row comes (spec 116 C)."""
+    party = product_party(host)
+    item = hold(host)
+    got = host.command("ideas.add", {"text": "Show the big code to half of the hosts", "track": party, "type": "experiment", "marks": [mark(item)]})
+    assert hand(host) == []
+    ideas.save_state(host.ideas.state_dir, got["slug"], state="done")
+    assert [r["id"] for r in hand(host)] == [item["id"]]

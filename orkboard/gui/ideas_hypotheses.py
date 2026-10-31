@@ -172,6 +172,20 @@ class HypothesesMixin:
         self.changed("")
         return {"ok": True, "item": self._hyp_item(judged["id"]), **({"decision": {k: out.get(k) for k in ("number", "path", "commit", "held")}} if out else {})}
 
+    # -- a goal sent with a hypothesis as a mark ------------------------------------------------------------------------------------------------
+
+    def hypothesis_marked(self, slug: str, marks: list[dict], experiment: bool) -> None:
+        """A new goal sent with the mark of a hypothesis (`{map: "product", id: "hyp:<id>"}`: the tree's *Test it*, or a pick of its card): an experiment becomes the first hypothesis marked's
+        test, any other goal rests on each hypothesis marked. A hypothesis gone or full is left out: a mark is never a reason for the goal not to be added."""
+        ids = list(dict.fromkeys(str(m["id"])[4:] for m in marks if m.get("map") == "product" and str(m.get("id") or "").startswith("hyp:")))
+        tested = not experiment
+        for id in ids:
+            try:
+                hypotheses.attach(self.state_dir, id, **({"goal": slug} if tested else {"test": slug}))
+            except ValueError:
+                continue
+            tested = True
+
     # -- the leaders' proposal ------------------------------------------------------------------------------------------------------------------
 
     def hypotheses_propose(self, args: dict) -> dict:

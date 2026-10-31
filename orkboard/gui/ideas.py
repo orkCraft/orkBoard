@@ -441,6 +441,7 @@ class Ideas(FactsMixin, LoopFace, TreeFace, HypothesesMixin, ConcernsMixin, Maps
         idea_lens.save(self.state_dir, slug, pointed or (idea_lens.read(self.state_dir, pitch) if pitch else []))
         if picked:
             ideas.save_state(self.state_dir, slug, marks=picked)
+            self.hypothesis_marked(slug, picked, typed["key"] == "experiment")      # spec 116 E: a hypothesis among them: an experiment tests it, any other goal rests on it
         element = self.element_for(slug, pitch, chosen)    # the mark of every card of it (spec 50 §2.3); the one chosen, else a sent pitch's where it is free (spec 68 §2.3)
         ideas.add_turn(self.state_dir, slug, "you", self.with_asks(text, typed), "Gist")     # the person's own words, kept
         self._ev(event_log.IDEA_ADDED, args, idea=slug, track=track, chars=len(text), now=queue == "now",
