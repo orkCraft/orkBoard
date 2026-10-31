@@ -161,7 +161,7 @@ place before its first card (the discard's), a card's outline in pixel dashes, n
 face under it and its right face beside it, lit from above (a face darkens as it turns away). Its box is 23 x 24 cells at 3 px (**69 x 72**), `.big` 6 px (**138 x 144**), a face
 18 x 18 cells. It holds its cube and the cube's six faces: `<span class="ork-die face-5" aria-hidden="true"><span class="ork-die__cube"><i class="ork-die__face is-up"></i>`
 … `<i class="ork-die__face is-down"></i></span></span>`. The view, the shades, the marks and every pose are generated from `die/die.json` by `tools/build_die.py`. The up face
-shows `.face-1` to `.face-6` (pips in the muted ink), `.face-ok` (a tick in `--ork-success`) or `.face-no` (a cross in `--ork-danger`). `.is-playing` turns the pips and the edges to the ink
+shows `.face-1` to `.face-6` (pips in the muted ink), `.face-ok` (a tick in `--ork-success`), `.face-no` (a cross in `--ork-danger`) or `.face-new` (a spark in `--ork-ink`: news, not a warning). `.is-playing` turns the pips and the edges to the ink
 and makes the up face glow (six steps, 2.4 s); `.is-rolling` tumbles the cube, a quarter turn each 120 ms in three poses, until the class is taken off (the page then sets the face it
 stops on); `.is-wobbling` rocks it once on its edges, 300 ms in three poses; `.is-landing` rolls the up face in from the back and drops the cube, 300 ms in three poses. On the table
 the page turns it with the lean token. Nothing moves under reduced motion.
