@@ -4047,3 +4047,26 @@ says *something*, never *how much*. So (this makes §190.2 and §190.7 precise):
    since you last played*). The phone has no Play and gets none of it.
 5. Spec 118, built by the cheaper model.
 The owner's call.
+
+## 197. The hammer and the bug: Fix Orkboard starts Claude Code on its own code; the phone may ask for it (31 October, the owner)
+
+Why: the owner: *a tool that fixes the system: it takes the logs of the last hours, starts a new Claude session on the computer
+and says fix it; Claude fixes Orkboard and pushes; the computer offers to update, and the restart keeps the phone's link, so from
+work I press Fix, then Update and restart.* And: *a full Claude, not the limited agents; one that shows up in my Claude app as a
+Remote Control session.* And: *the hammer squashes the bug.* So:
+1. **The bug at the end of the tabs' row gains Fix it**, beside Save logs: the person's line and the logs since Orkboard last
+   started go into a git worktree of Orkboard's own checkout, and **Claude Code's Remote Control** starts there in full
+   (`--permission-mode auto`, not the Board's limited agents), named *Fix Orkboard*; the person says *go* in their Claude app.
+   Only a git checkout on `main` with Claude Code on the PATH offers it: the person who can push Orkboard's code.
+2. **Claude pushes to main after the critical tests**; Orkboard sees main move and the bug becomes **Update and restart**. The
+   person presses it: the hand decides, nothing restarts by itself.
+3. **The update is checked before the restart and rolled back after it**: the new code is imported and asked its version
+   first; when the window does not come up on it, the checkout goes back to the commit it came from and Orkboard opens again on
+   the same port, so the phone comes back.
+4. **An exception to spec 37 §8** (no edit and no git from the phone): the phone may start, stop and update a fix. It still
+   edits nothing and runs no git itself; Claude Code works on the computer, and the person tells it *go* in their own Claude app.
+5. **The hammer squashes the bug**: orkUI gains the icon `hammer` and the sign `bug-squashed`; the button raises the hammer while
+   Claude works and shows the squashed bug, in the signal, when the fix is in. Until orkUI's are copied, the button wears the
+   signs orkUI has (`work`, `check`, `cross`).
+6. Spec 119, built by the cheaper model. A cloud session is later, only if the computer's proves not enough.
+The owner's call.
