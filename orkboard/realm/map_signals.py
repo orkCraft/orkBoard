@@ -19,7 +19,8 @@ is about a part of another map (a pain piled on a screen) also has `map` (that m
   with no label). A screen whose file is not read (shared by several screens, over SCREEN_BYTES, missing) has neither of the last two.
 - `product` (the tree): `unserved` (a job no goal serves), `pains` (a screen or a step with PAINS_PILED pains or more pinned: on that screen, `map` "screens"), `pain_loose` (pains pinned to no
   screen or step: `on` ""), `vague_outcome` (an outcome whose text holds no number: `on` ""), `no_evidence` (a job served by EVIDENCE_GOALS goals or more, none tested by an experiment), `off_tree` (with
-  `pages`: OFF_TREE goals or more of the Board's line serve no job: `on` "").
+  `pages`: OFF_TREE goals or more of the Board's line serve no job: `on` ""), `untested` (with `pages`: a goal in line or at work that rests on a hypothesis still open with no test, the first such
+  one a goal; `on` the goal's id where the tree names it, else "": `realm/hypotheses.py`).
 - `art`, `release`, `marketing`: `realm/map_signals_crafts.py` (its module says which).
 """
 from __future__ import annotations
@@ -29,7 +30,7 @@ import re
 import subprocess
 from pathlib import Path, PurePosixPath
 
-from orkboard.realm import code_map, commit_goal, gate_config, goal_line, idea_lens, loop, map_signals_crafts, opportunity_tree, project_map, screen_map, system_overview
+from orkboard.realm import code_map, commit_goal, gate_config, goal_line, hypotheses, idea_lens, ideas, loop, map_signals_crafts, opportunity_tree, project_map, screen_map, system_overview
 
 MAX_SIGNALS = 20
 FAN_IN, FAN_OUT = 8, 12             # a part used by this many parts, one using this many
@@ -333,6 +334,29 @@ def _product(state_dir: Path, root: Path, pages: Path | None = None) -> list[dic
         off = [g["title"] for g in goal_line.line(Path(pages), state_dir) if g["slug"] not in on_tree]
         if len(off) >= OFF_TREE:
             out.append({"on": "", "kind": "off_tree", "words": f"{len(off)} goals in line serve no job: " + "; ".join(off[:3])})
+        out += _untested(state_dir, Path(pages), set(have or ()))
+    return out
+
+
+def _untested(state_dir: Path, pages: Path, named: set[str]) -> list[dict]:
+    """A goal in line or at work that rests on a hypothesis still open with no test: one hint a goal, for the first such hypothesis in the order kept; `on` the goal's id where the tree's parts
+    name it (`named`), else ""."""
+    out, seen = [], set()
+    for h in hypotheses.read(state_dir)["items"]:
+        if h["state"] != "open" or h["tests"]:
+            continue
+        for slug in h["rests"]:
+            if slug in seen:
+                continue
+            try:
+                page = ideas.idea_page(pages, slug)
+            except (OSError, ValueError):
+                page = None
+            if page is None or opportunity_tree.place_of(state_dir, slug) == "done":
+                continue
+            seen.add(slug)
+            title = " ".join((page.title or slug).split())[:80]
+            out.append({"on": slug if slug in named else "", "kind": "untested", "words": f"{title} rests on an untested hypothesis: {h['text']}"})
     return out
 
 

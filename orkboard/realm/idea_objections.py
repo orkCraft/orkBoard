@@ -22,7 +22,7 @@ from orkboard.realm.idea_words import short_of
 
 ANSWERS = ("drop", "smaller", "later", "go")      # in the order the card offers them
 TITLE_CHARS = 80
-LENS = {"product": "the goals in line and the product's aim: is this worth doing before them, now",
+LENS = {"product": "the goals in line and the product's aim: is this worth doing before them, now, and the open hypotheses: is this goal built on one no one has tested?",
         "tech": "the architecture on your map: does it add a caller, a cycle or a part that is already too big",
         "design": "the people's way through the screens: does it add a step, a screen or a look that gets in their way",
         "game-design": "the loop and its economy: does it break a step or a currency, or pad the loop",

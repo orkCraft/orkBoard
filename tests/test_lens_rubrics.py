@@ -10,7 +10,7 @@ CRAFTS = ("tech", "design", "product", "game-design", "art", "release", "marketi
 KINDS = {                        # the hints of code each craft has (spec 109 §3), every one in exactly one aspect of its craft
     "tech": ("cycle", "fan_in", "fan_out", "big", "shared_churn", "untested_churn", "hotspot", "unstable", "error", "failed", "slow"),
     "design": ("loose", "dead_end", "no_picture", "no_states", "a11y", "dead_press", "again"),
-    "product": ("unserved", "pains", "pain_loose", "vague_outcome", "no_evidence", "off_tree"),
+    "product": ("unserved", "pains", "pain_loose", "vague_outcome", "no_evidence", "off_tree", "untested"),
     "game-design": ("no_source", "pile_up", "no_reward", "unfed", "flat", "spike", "no_hook", "unground"),
     "art": ("mixed_sizes", "naming", "heavy", "unused"),
     "release": ("big_batch", "stale", "no_changelog", "reverts"),
@@ -114,6 +114,8 @@ def test_the_lens_in_talk_ends_with_the_framework_of_a_craft_that_has_a_rubric()
         assert idea_objections.lens(craft).endswith(f", as a senior of it would: by {rubrics.RUBRICS[craft]['framework']}"), craft
     assert idea_objections.lens("tech").startswith("the architecture on your map: ") and "C4's containers and parts" in idea_objections.lens("tech") and "hotspots" in idea_objections.lens("tech")
     assert idea_objections.lens("run").startswith("what is live:") and "SLOs and error budgets" in idea_objections.lens("run")
+    assert idea_objections.lens("product").startswith("the goals in line and the product's aim: is this worth doing before them, now, and the open hypotheses: is this goal built on one no one has tested?")
+    assert rubrics.aspect_of("product", "untested") == "evidence" and rubrics.aspect_of("product", "no_evidence") == "evidence", "Evidence holds both"
     assert idea_objections.lens("nowhere") == "what your party keeps" and idea_objections.lens("") == "what your party keeps", "a craft with no rubric is as it was"
 
 
