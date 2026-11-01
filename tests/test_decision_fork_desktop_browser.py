@@ -1,7 +1,8 @@
 """The decision and a fork on the window (docs/specs/100-a-goals-way-as-cards.md §3, part C; docs/specs/99-a-goals-way.md §6–§7), in a real browser against a stub host answering the rows `decision` and `fork`, `ideas.page` and
 the commands `ideas.confirm` and `ideas.fork_answer`, at the two widths of `tests/narrow.py`: the decision's card (its face *Decision <n>*, the Orkmaster's head, no gem, under the first lane; lifted its *Why* and its numbered points, *Edit*
 opening the entry as a field on the card and sent as `text`, one button **Confirm and start**), a fork (its face *<A> and <B> disagree*, a leader's head; lifted the two sides dealt as cards over the pane, each its leader's head, what
-it says, its why, a press answering with the side, *Other…* answering with the person's words) and the goal's Spec on the pane with the sections of the two sides lit. Screenshots to $DECISION_SHOTS when it is set."""
+it says, its why, a press throwing the side, *Or say it in your own words* throwing the person's words: spec 120 §6.7, `tests/test_hearing_browser.py` draws the hearing itself) and the goal's Spec on the pane with the sections of the two sides lit.
+Screenshots to $DECISION_SHOTS when it is set."""
 from __future__ import annotations
 
 import os
@@ -64,7 +65,9 @@ class DecisionHost(HandHost):
 
     def fork_row(self):
         f = self.forks[0]
-        return need("fork", "tech", "rooms", "Rooms hold more players", f["about"], id=f["id"], about=f["about"], sides=f["sides"])
+        sides = [{"dir": d, "kind": "side", "party": s["party"], "leaders": [s["party"]], "names": [s["leader"]], "also": [], "line": s["why"], "outcome": s["says"]} for s, d in zip(f["sides"], ("right", "left", "up"))]
+        hearing = {"moment": "fork", "id": f["id"], "about": f["about"], "title": " and ".join(s["leader"] for s in f["sides"]) + " disagree", "sides": sides, "left_out": [], "own": True}
+        return need("fork", "tech", "rooms", "Rooms hold more players", f["about"], id=f["id"], about=f["about"], sides=f["sides"], hearing=hearing)
 
     def handle(self, name, a):
         if name == "ideas.page":
@@ -76,6 +79,11 @@ class DecisionHost(HandHost):
                 return {"error": "The keeper is busy with this goal: a moment"}
             self.needs = [n for n in self.needs if n["kind"] != "decision"]
             return self.bump({"ok": True, "number": 118, "title": "Players chat in the lobby, one room each"})
+        if name == "ideas.throw":
+            self.log.append((name, a))
+            self.forks.pop(0)
+            self.needs = [n for n in self.needs if n["kind"] != "fork"] + ([self.fork_row()] if self.forks else [])
+            return self.bump({"ok": True})
         if name == "ideas.fork_answer":
             self.log.append((name, a))
             self.forks.pop(0)
@@ -230,23 +238,24 @@ def test_a_fork_is_a_card_saying_who_disagrees_with_a_leaders_head_under_the_fir
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_lifted_a_fork_deals_its_sides_as_cards_over_the_pane_with_the_spec_lit_under_them_and_a_press_answers(gui, width):
+def test_lifted_a_fork_is_a_hearing_over_the_pane_with_the_spec_lit_under_it_and_a_press_throws_a_side(gui, width):
     pg, host, log = open_decision(gui, width)
     try:
         press(pg, "rooms")
         pane = pg.locator('.table-over[data-kind="choose"]')
         pane.wait_for(timeout=WAIT_MS)
         assert pg.locator(".hand-lifted").count() == 0 or not pg.locator(".hand-lifted").first.is_visible(), "the sides are the pane's, not an aside"
-        assert pg.locator(".q-choose__q").inner_text().strip() == "How many players a room holds"
-        cards = pane.locator(".q-choose__row .q-card")
-        assert cards.count() == 3
-        a, b = cards.nth(0), cards.nth(1)
-        assert a.locator(".q-card__name").inner_text().strip() == "A room holds ten players" and b.locator(".q-card__name").inner_text().strip() == "The server holds six players in a room"
-        assert a.locator(".q-card__window .ork-race__head").count() == 1 and b.locator(".q-card__window .ork-race__head").count() == 1, "each its leader's head in its window"
-        assert a.locator(".q-card__foot").inner_text().strip() == "The game is no fun with six." and b.locator(".q-card__foot").inner_text().strip() == "One server process cannot carry more."
-        assert [a.locator(".q-card__by").text_content().strip(), b.locator(".q-card__by").text_content().strip()] == ["Design", "Tech"]
-        assert pane.locator(".q-card.is-pick").count() == 0, "no side is the leader's pick"
-        assert cards.nth(2).get_attribute("data-choice") == "other"
+        hr = pane.locator('.hr[data-moment="fork"]')
+        hr.wait_for(timeout=WAIT_MS)
+        assert hr.locator(".hr-title").text_content().strip() == "Design lead and Tech lead disagree"
+        sides = hr.locator(".hr-side")
+        assert sides.count() == 2
+        a, b = hr.locator('.hr-side[data-dir="right"]'), hr.locator('.hr-side[data-dir="left"]')
+        assert a.locator(".hr-out__words").text_content().strip() == "A room holds ten players" and b.locator(".hr-out__words").text_content().strip() == "The server holds six players in a room"
+        assert a.locator(".hr-head .ork-race__head").count() == 1 and b.locator(".hr-head .ork-race__head").count() == 1, "each its leader's head"
+        assert a.locator(".hr-says").text_content().strip() == "The game is no fun with six." and b.locator(".hr-says").text_content().strip() == "One server process cannot carry more."
+        assert [a.locator(".hr-who__names").text_content().strip(), b.locator(".hr-who__names").text_content().strip()] == ["Design lead", "Tech lead"]
+        assert hr.locator(".hr-own").text_content().strip() == "Or say it in your own words"
         # the Spec page under the sides, the two sections lit
         page = pane.locator('.spec-page[data-kind="spec"]')
         page.wait_for(timeout=WAIT_MS)
@@ -267,9 +276,9 @@ def test_lifted_a_fork_deals_its_sides_as_cards_over_the_pane_with_the_spec_lit_
             assert w["y"] > d["y"], "at the narrow width the one is under the other"
         shot(pg, f"{width}-fork-lifted-spec-lit")
         narrow.no_sideways(pg)
-        b.click()                                                                                   # a press on a side answers at once
-        got = _calls(pg, host, "ideas.fork_answer")
-        assert got == [{"idea": "rooms", "side": "tech"}], got
+        b.locator(".hr-side__btn").click()                                                          # a press on a side throws it at once
+        got = _calls(pg, host, "ideas.throw")
+        assert got == [{"idea": "rooms", "moment": "fork", "dir": "left"}], got
         pg.wait_for_function("() => !document.querySelector('.table-over[data-kind=\"choose\"]')", timeout=WAIT_MS)
         pg.wait_for_function("() => !document.querySelector('.hand-stack[data-goal=\"rooms\"]')", timeout=WAIT_MS)
     finally:
@@ -278,24 +287,24 @@ def test_lifted_a_fork_deals_its_sides_as_cards_over_the_pane_with_the_spec_lit_
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_other_answers_a_fork_with_the_persons_words_and_the_next_fork_takes_the_pane(gui, width):
+def test_the_persons_own_words_throw_a_fork_as_text_and_the_next_fork_takes_the_pane(gui, width):
     pg, host, log = open_decision(gui, width, two=True)
     try:
         press(pg, "rooms")
-        pg.locator('.table-over[data-kind="choose"]').wait_for(timeout=WAIT_MS)
-        pg.locator('.q-card[data-choice="other"]').click()
-        field = pg.locator(".q-card__field")
+        pg.locator('.table-over[data-kind="choose"] .hr').wait_for(timeout=WAIT_MS)
+        pg.get_by_role("button", name="Or say it in your own words").click()
+        field = pg.locator(".hr-field__text")
         field.wait_for(timeout=WAIT_MS)
         shot(pg, f"{width}-fork-other")
         field.fill("Eight players, and the server is told")
-        pg.locator('.q-card[data-choice="other"] .ork-btn.primary').click()
-        got = _calls(pg, host, "ideas.fork_answer")
-        assert got == [{"idea": "rooms", "text": "Eight players, and the server is told"}], got
-        pg.wait_for_function("() => document.querySelector('.q-choose__q')?.textContent.trim() === 'Who shows the clock'", timeout=WAIT_MS)
-        assert pg.locator(".q-choose__row .q-card .q-card__name").first.inner_text().strip() == "Show the clock on every phone", "the next fork is on the pane"
+        pg.locator(".hr-field .ork-btn.primary").click()
+        got = _calls(pg, host, "ideas.throw")
+        assert got == [{"idea": "rooms", "moment": "fork", "text": "Eight players, and the server is told"}], got
+        pg.wait_for_function("() => document.querySelector('.hr-title')?.textContent.trim() === 'Design lead and Tech lead disagree' && document.querySelector('.hr-side[data-dir=\"right\"] .hr-out__words')?.textContent.trim() === 'Show the clock on every phone'", timeout=WAIT_MS)
+        assert pg.locator(".hr-card").evaluate("(el) => !el.classList.contains('is-away')"), "the next fork's card is on the pane"
         pg.get_by_role("button", name="Put it back").click()
         pg.wait_for_function("() => !document.querySelector('.table-over[data-kind=\"choose\"]')", timeout=WAIT_MS)
-        assert [n for n, _a in host.log if n == "ideas.fork_answer"] == ["ideas.fork_answer"], "put back answers nothing"
+        assert [n for n, _a in host.log if n == "ideas.throw"] == ["ideas.throw"], "put back throws nothing"
         assert front(pg, "rooms").count() == 1, "the fork is still in the hand"
     finally:
         pg.close()
