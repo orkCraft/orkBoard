@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Goal Card and Piles</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* The mockup of the owner's notes of 2026-11-01: the + card turns over where it lies, the field's choices as squares in a row, the seal's ring whole,
+   corners that grow with the card, the Orkmaster's three piles, a goal that asks (yellow, it stays) and a goal that fails (red, thrown to the hand).
+   Every colour, face and motion time is orkUI's token; what is drawn here first (the stepped corner `.mk-r`, the busy ring `.mk-busy`, the stronger
+   glow `.mk-glow`, the whole ring `.mk-deco`) would go into orkUI first after a yes. */
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--ork-canvas); color-scheme: dark; }
+body { margin: 0; background: var(--ork-canvas); color: var(--ork-ink); font: var(--ork-type-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+p, ul, h1, h2 { margin: 0; padding: 0; }
+code { font-family: var(--ork-font-code); font-size: 0.92em; }
+.mk-bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 60; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3) var(--ork-6); padding-block: var(--ork-4);
+  background: var(--ork-canvas); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.mk-bar nav { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
+.mk-main { padding-block: var(--ork-6); display: flex; flex-direction: column; gap: var(--ork-8); }
+.mk-sec h1 { font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); margin-bottom: var(--ork-3); text-wrap: balance; }
+.mk-line { max-width: 100ch; margin-bottom: var(--ork-4); color: var(--ork-ink-read); }
+.mk-line b { color: var(--ork-ink); }
+.mk-row { display: flex; flex-wrap: wrap; gap: var(--ork-6); align-items: flex-start; }
+.mk-fig { display: flex; flex-direction: column; gap: var(--ork-3); margin: 0; min-width: 0; max-width: 100%; }
+.mk-fig > h2 { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.mk-fig > p { max-width: 300px; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.mk-fig > p b { color: var(--ork-ink); font-weight: 600; }
+.mk-acts { display: flex; flex-wrap: wrap; gap: var(--ork-2); margin-bottom: var(--ork-3); }
+.mk-notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--ork-3) var(--ork-6); margin-top: var(--ork-4); max-width: 1120px; }
+.mk-notes p { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.mk-notes p b { color: var(--ork-ink); font-weight: 600; }
+.mk-foot { max-width: 100ch; margin-bottom: var(--ork-8); padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.c-meadow { --c: var(--ork-elem-meadow); } .c-ice { --c: var(--ork-elem-ice); } .c-dust { --c: var(--ork-elem-dust); } .c-void { --c: var(--ork-elem-void); } .c-lava { --c: var(--ork-elem-lava); }
+
+/* ---------- the stepped corner: a quarter circle in 2 px cells, more cells the wider the card (script `round`), its line drawn in the same steps ---------- */
+.mk-r { position: relative; border-color: transparent !important; clip-path: var(--mk-clip, var(--ork-notch)); }
+.mk-r::after { content: ""; position: absolute; inset: 0; background: var(--mk-line, var(--ork-card-frame)); clip-path: var(--mk-ring1); pointer-events: none; z-index: 5; }
+.mk-r.thick::after { clip-path: var(--mk-ring2); }
+
+/* ---------- a card in the scene: 120 x 168 ---------- */
+.cd { position: relative; width: 120px; height: 168px; padding: 0; overflow: hidden; display: block; text-align: left; font: inherit; color: var(--ork-ink); }
+button.cd { cursor: pointer; width: 120px; flex: none; }                      /* orkUI's button.ork-card is 100 % wide */
+.cd.back .ork-sigil { width: 112px; height: 112px; top: 2px; bottom: auto; color: var(--ork-ink-faint); }
+.cd.back .ork-sigil__seal { left: 49px; top: 9px; }
+.cd.back .ork-sigil.is-waiting::after, .cd.back .ork-sigil.mk-busy::after { color: var(--c); }
+.plate { position: absolute; left: 6px; right: 6px; bottom: 6px; display: flex; gap: var(--ork-2); align-items: flex-start; padding: var(--ork-1) var(--ork-2); background: var(--ork-card); font: var(--ork-type-caption); }
+.plate .ork-elem { margin-top: 1px; }
+.plate .nm { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
+.cd.face { display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3); }
+.cd.face .hd { display: flex; gap: var(--ork-2); align-items: flex-start; font: var(--ork-type-caption); font-weight: 600; }
+.cd.face .hd .ork-elem { margin-top: 1px; flex: none; }
+.cd.face .hd .nm { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.cd.face .win { flex: 1; display: grid; place-items: center; border: var(--ork-line) solid var(--ork-card-frame); color: var(--ork-ink-muted); min-height: 0; }
+.cd.face .st { display: flex; gap: var(--ork-2); align-items: center; font: var(--ork-type-caption); color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; }
+.cd.face .st .ork-sign { flex: none; }
+/* asks: it stays where it is, its line and its stage in the alert colour, nothing moves on it (a thing standing still waits for you) */
+.cd.is-asks { --mk-line: var(--ork-alert); }
+.cd.is-asks .st { color: var(--ork-alert); }
+/* failed: red, not a glow: its line, a tint and its stage; it leaves the table for the hand */
+.cd.is-failed { --mk-line: var(--ork-danger); background: color-mix(in srgb, var(--ork-danger) 14%, var(--ork-card)); }
+.cd.is-failed .st, .cd.is-failed .win { color: var(--ork-danger); }
+.cd.is-failed .win { border-color: color-mix(in srgb, var(--ork-danger) 50%, transparent); }
+/* the question: from whom, the question, and the goal it is for, by its rune */
+.cd.q { display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3); --mk-line: var(--ork-alert); }
+.cd.q .who { display: flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-alert); }
+.cd.q .who img { width: 24px; height: 22px; image-rendering: pixelated; }
+.cd.q .qq { flex: 1; font: var(--ork-type-caption); display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+.cd.q .for { display: flex; gap: var(--ork-2); align-items: center; font: var(--ork-type-caption); color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; }
+.place { width: 120px; height: 168px; display: grid; place-items: center; color: var(--ork-ink-faint); font: var(--ork-type-caption); text-align: center; padding: var(--ork-3); }
+.cd.leans { transition: transform var(--ork-motion-base) var(--ork-motion-ease); }
+.cd.leans:hover, .cd.leans:focus-visible { transform: translateY(calc(var(--ork-motion-rise) * -2)); }
+
+/* ---------- the glow, stronger; the ring at work ---------- */
+.ork-elem.mk-glow { animation: mk-glow 2.4s steps(6) infinite; }
+@keyframes mk-glow { 0%, 100% { opacity: 0.3; } 50% { opacity: 1; } }
+.ork-sigil.mk-busy::after { --_rest: color-mix(in srgb, var(--ork-ink-faint) 60%, transparent); animation: ork-sigil-sweep 1.6s steps(8) infinite; }
+.ork-sigil.mk-stopped::after { --_rest: color-mix(in srgb, var(--ork-ink-faint) 60%, transparent); --_arc: 45deg; --_turn: 135deg; color: var(--ork-alert) !important; }
+@media (prefers-reduced-motion: reduce) { .ork-elem.mk-glow { animation: none; opacity: 1; } .ork-sigil.mk-busy::after { animation: none; --_arc: 45deg; } .cd.leans { transition: none; } }
+
+/* ---------- the scene: one window at 1120 x 680, scaled to the page ---------- */
+.scn-wrap { position: relative; max-width: 1120px; overflow-x: auto; overflow-y: hidden; outline: var(--ork-line) solid var(--ork-edge); }
+.scn { position: relative; width: 1120px; height: 680px; overflow: hidden; background: var(--ork-canvas); transform-origin: 0 0; }
+.tabs { position: absolute; left: 0; right: 0; top: 0; height: 40px; display: flex; align-items: stretch; gap: var(--ork-1); padding: 0 var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.tab { display: flex; align-items: center; gap: var(--ork-2); padding: 0 var(--ork-4); font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); }
+.tab.on { color: var(--ork-ink); box-shadow: inset 0 -2px 0 var(--ork-ink); }
+.tab img { width: 24px; height: 22px; image-rendering: pixelated; }
+.tbl { position: absolute; left: 0; right: 0; top: 40px; height: 440px; display: flex; gap: 0; padding: var(--ork-4); background: var(--ork-table); }
+.lane { display: flex; flex-direction: column; gap: var(--ork-3); padding: 0 var(--ork-5); border-left: var(--ork-line) solid var(--ork-frame); }
+.lane:first-child { border-left: 0; padding-left: 0; }
+.lane.done { margin-left: auto; }
+.lab { display: flex; align-items: center; gap: var(--ork-2); height: 24px; color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); white-space: nowrap; }
+.lab img { width: 24px; height: 22px; image-rendering: pixelated; }
+.goals { display: flex; flex-direction: column; gap: var(--ork-3); }
+.piles { display: flex; gap: var(--ork-8); }
+.pile { display: flex; flex-direction: column; gap: var(--ork-2); width: 120px; }
+.plab { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-faint); display: flex; align-items: center; gap: var(--ork-2); }
+.pstack { position: relative; width: 120px; height: 168px; }
+.pstack > .cd, .pstack > .place { position: absolute; left: 0; top: 0; }
+.pstack > .cd { transition: transform var(--ork-motion-base) var(--ork-motion-ease); transform: translate(calc(var(--i) * 4px), calc(var(--i) * 4px)); }
+.pstack:hover > .cd, .pstack:focus-within > .cd { transform: translate(0, calc(var(--i) * 26px)); }           /* the pile fans: each card under shows its plate, its rune and its name */
+.pstack.empty { border: var(--ork-line) dashed var(--ork-frame); }
+.punder { min-height: 32px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.punder.asks { color: var(--ork-alert); }
+.hnd { position: absolute; left: 0; right: 0; top: 480px; bottom: 0; display: flex; gap: var(--ork-4); align-items: flex-start; padding: var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame); }
+.plus-slot { width: 120px; height: 168px; flex: none; }
+.plus-slot .ork-plus { width: 120px; height: 168px; overflow: hidden; position: relative; border: var(--ork-double) double var(--ork-action); color: var(--ork-action); }       /* the hand's + card, as hand.css draws it */
+.plus-slot .ork-plus .ork-sigil { transform: scale(0.82); }
+.hcards { display: flex; gap: var(--ork-3); flex: 1; min-width: 0; }
+.mana { display: flex; gap: var(--ork-4); align-items: flex-end; align-self: flex-end; padding-bottom: var(--ork-2); }
+.pot { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); font: var(--ork-type-caption); }
+.pot b { font-weight: 600; } .pot span { color: var(--ork-ink-muted); }
+.pot .slot { display: grid; place-items: end center; width: 42px; height: 54px; }
+.layer { position: absolute; inset: 0; pointer-events: none; z-index: 30; }
+.layer > * { pointer-events: auto; }
+.flyer { position: absolute; z-index: 40; pointer-events: none; transform-origin: 0 0; }
+
+/* the lifted card's words, over the pane, at the card */
+.lift { position: absolute; width: 300px; display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4); background: var(--ork-raised); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); z-index: 35; }
+.lift .t { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); display: flex; gap: var(--ork-2); align-items: center; }
+.lift .t img { width: 24px; height: 22px; image-rendering: pixelated; }
+.lift ul { list-style: none; display: flex; flex-direction: column; gap: var(--ork-1); font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.lift li::before { content: "· "; color: var(--ork-ink-muted); }
+.lift .acts { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
+.lift .why { font: var(--ork-type-caption); color: var(--ork-danger); }
+
+/* ---------- the card-field: the + card turned over and grown where it lay, its foot under the window's edge ---------- */
+.grow { position: absolute; width: 340px; height: 476px; transform-origin: 0 0; perspective: 90em; z-index: 32; }
+.flip { position: absolute; inset: 0; transform-style: preserve-3d; }
+.flip > .side { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.flip > .side.b { transform: rotateY(180deg); }
+.side.b .scaled { width: 120px; height: 168px; transform: scale(calc(340 / 120)); transform-origin: 0 0; }
+.side.b .scaled > * { width: 120px; height: 168px; }
+.fld { width: 340px; height: 476px; display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4); background: var(--ork-raised); --mk-line: var(--ork-action); }
+.fld .ork-sigil.foot { top: auto; bottom: -20px; width: 136px; height: 136px; color: var(--ork-ink-faint); opacity: 0.6; }
+.sq-row { display: flex; gap: var(--ork-3); }
+.sq { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); }
+.sq > button, .ch > button { position: relative; display: grid; place-items: center; width: 44px; height: 44px; padding: 0; background: none; color: var(--ork-ink); border: var(--ork-line) solid var(--ork-frame); clip-path: var(--ork-notch); cursor: pointer; }
+.sq > button[aria-expanded="true"] { border: 2px solid var(--ork-ink); background: var(--ork-panel); }
+.sq > button img, .ch > button img { width: 28px; height: 26px; image-rendering: pixelated; }
+.sq > button .ork-icon, .ch > button .ork-icon { width: 24px; height: 24px; }
+.sq > button .n { position: absolute; right: 2px; bottom: 1px; font: var(--ork-type-label); color: var(--ork-ink-muted); }
+.sq .cap, .ch .cap { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-faint); white-space: nowrap; }
+.ch-row { display: flex; flex-direction: column; gap: var(--ork-2); }
+.ch-row[hidden] { display: none; }
+.ch-row .say { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.chs { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
+.ch { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); width: 48px; }
+.ch > button { width: 40px; height: 40px; }
+.ch > button[aria-checked="true"] { border: 2px solid var(--ork-ink); background: var(--ork-panel); }
+.ch > button.used .ork-elem { opacity: 0.3; }
+.ch > button:disabled { opacity: 0.35; cursor: default; }
+.ch .cap { white-space: normal; text-align: center; text-transform: none; letter-spacing: 0; font: var(--ork-type-caption); font-size: 11px; line-height: 13px; color: var(--ork-ink-muted); }
+.fld textarea { flex: none; height: 104px; resize: none; padding: var(--ork-3); font: var(--ork-type-body); }
+.fld:has(.ch-row:not([hidden])) textarea { height: 56px; }                 /* a row of choices open: the text gives it room, so Send stays above the window's edge */
+.files { display: flex; flex-wrap: wrap; gap: var(--ork-2); flex: 1; min-width: 0; }
+.files:empty { display: none; }
+.files .ork-chip, .files .chip { display: inline-flex; align-items: center; gap: var(--ork-1); height: 24px; padding: 0 var(--ork-2); border: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); max-width: 150px; }
+.files .chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.files .chip img { width: 18px; height: 18px; object-fit: cover; }
+.files .chip .ork-icon { width: 14px; height: 14px; }
+.fld .acts { display: flex; align-items: center; gap: var(--ork-3); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.fld .acts .ork-btn.primary { margin-left: auto; }
+
+/* ---------- the seal, the corners and the glow, compared ---------- */
+.cmp-card { width: 144px; height: 202px; }
+.cmp-card.ork-plus { position: relative; overflow: hidden; }
+.mk-deco { opacity: 0; }
+.mk-deco > .ork-rune { display: block; margin: 0 auto; color: var(--ork-ink-faint); }
+.ork-sigil__free.at-135 { left: 96px; top: 98px; --_i: 4; } .ork-sigil__free.at-225 { left: 28px; top: 98px; --_i: 5; } .ork-sigil__free.at-315 { left: 28px; top: 26px; --_i: 6; }
+.corners { display: flex; flex-direction: column; gap: var(--ork-5); padding: var(--ork-5); background: var(--ork-table); max-width: 100%; overflow-x: auto; }
+.corners .crow { display: flex; gap: var(--ork-5); align-items: flex-end; }
+.corners .crow > .lab { width: 80px; flex: none; align-self: center; }
+.corners .ork-card { padding: var(--ork-3); font: var(--ork-type-caption); color: var(--ork-ink-muted); aspect-ratio: 5 / 7; max-width: 100%; }
+.glows { display: flex; flex-wrap: wrap; gap: var(--ork-6); align-items: flex-start; padding: var(--ork-5); background: var(--ork-table); }
+.glows figure { margin: 0; display: flex; flex-direction: column; gap: var(--ork-2); align-items: center; width: 150px; text-align: center; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.glows .big28 { width: 28px; height: 28px; }
+.glows .under { min-height: 32px; }
+.glows .under.asks { color: var(--ork-alert); }
+@media (max-width: 720px) { .mk-main { padding-block: var(--ork-4); } }
+</style>
+</head>
+<body>
+<header class="mk-bar">
+  <span class="ork-label">Orkboard · the goal's card · mockup</span>
+  <nav aria-label="Sections"><a class="ork-btn" href="#window">1 · The window</a><a class="ork-btn" href="#seal">2 · The seal</a><a class="ork-btn" href="#corners">3 · Corners</a><a class="ork-btn" href="#glow">4 · At work, asks, failed</a></nav>
+</header>
+<main class="mk-main">
+
+<section class="mk-sec" id="window">
+  <h1>1 · The window, played</h1>
+  <p class="mk-line"><b>Press the + card</b> at the hand's left end. It turns over where it lies and grows up from there, its foot under the window's edge. Esc or a press away turns it back, keeping its words. The squares under its top open their choices in a row, as the rune does. <b>Send</b> turns it to its back, and it flies to the Orkmaster's <b>Next</b> pile. Hover a pile to fan it and read each card's name. Press the top of Next to read its spec.</p>
+  <div class="mk-acts" role="group" aria-label="Play the window">
+    <button class="ork-btn" type="button" data-do="spec">The Orkmaster finishes a spec</button>
+    <button class="ork-btn" type="button" data-do="ork-asks">The Orkmaster asks you</button>
+    <button class="ork-btn" type="button" data-do="asks">Tech asks you</button>
+    <button class="ork-btn" type="button" data-do="fail">A goal fails at Design</button>
+    <button class="ork-btn" type="button" data-do="reset">Start again</button>
+  </div>
+  <div class="scn-wrap" id="wrap"><div class="scn" id="scn">
+    <div class="tabs"><span class="tab on"><img src="../../../design-system/orkui/races/peon-crown@2x.png" alt="">The Orkmaster</span><span class="tab"><img src="../../../design-system/orkui/races/shaman-elder@2x.png" alt="">Tech</span><span class="tab"><img src="../../../design-system/orkui/races/dryad-elder@2x.png" alt="">Design</span></div>
+    <div class="tbl">
+      <div class="lane"><div class="lab"><img src="../../../design-system/orkui/races/peon-crown@2x.png" alt="">The Orkmaster</div>
+        <div class="piles">
+          <div class="pile"><div class="plab">At work</div><div class="pstack" id="p-work"></div><div class="punder" id="u-work"></div></div>
+          <div class="pile"><div class="plab">Next</div><div class="pstack" id="p-next"></div><div class="punder" id="u-next"></div></div>
+          <div class="pile"><div class="plab"><span class="ork-sign moon" aria-hidden="true"></span>Tonight</div><div class="pstack" id="p-night"></div><div class="punder" id="u-night">From 01:00</div></div>
+        </div>
+      </div>
+      <div class="lane"><div class="lab"><img src="../../../design-system/orkui/races/shaman-elder@2x.png" alt="">Tech</div><div class="goals" id="l-tech"></div></div>
+      <div class="lane"><div class="lab"><img src="../../../design-system/orkui/races/dryad-elder@2x.png" alt="">Design</div><div class="goals" id="l-design"></div></div>
+      <div class="lane done"><div class="lab">Done</div><div class="pstack" id="p-done"></div></div>
+    </div>
+    <div class="hnd">
+      <div class="plus-slot" id="plus-slot"></div>
+      <div class="hcards" id="hcards"></div>
+      <div class="mana" aria-label="What is left of your AI tools">
+        <div class="pot"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-claude.png" alt="" width="16" height="16"><span class="slot"><span class="ork-potion size-small" style="--ork-potion-left:1"></span></span><b>100%</b><span>week 16%</span></div>
+        <div class="pot"><img class="ork-mark" src="../../../design-system/orkui/marks/harness-agy.png" alt="" width="16" height="16"><span class="slot"><span class="ork-potion size-small" style="--ork-potion-left:0.4"></span></span><b>40%</b><span>week 28%</span></div>
+      </div>
+    </div>
+    <div class="layer" id="layer"></div>
+  </div></div>
+  <div class="mk-notes">
+    <p><b>At work</b> is the goal whose spec the Orkmaster writes now: face down, its ring runs round and its rune glows. Under it, in words: <i>Writing the spec</i>. Under reduced motion the ring stands lit at one place, and the words still say it.</p>
+    <p><b>Next</b> is the queue, by priority, the first on top. Its ring is the wait: it fills in eighths, and when it is whole the goal goes to work by itself as soon as the Orkmaster is free. A press on it reads the spec, with <i>Start now</i> and <i>Tonight</i>.</p>
+    <p><b>Tonight</b> waits for the night's window, with no ring. A goal moves there from Next with one press.</p>
+    <p><b>A question</b> leaves the goal: the card stays at its leader, yellow and still, and the question flies out of it into the hand. Answered, it flies back into the goal. When none is left, the yellow goes.</p>
+    <p><b>A failure</b> cannot go on at its leader: the card turns red and is thrown into the hand from where it lay. A dashed place stays in the lane, so <i>Try again</i> has somewhere to go back to.</p>
+    <p><b>The name on a back</b> is a plate at its foot: the rune and the short name, two lines. In a pile only the top's plate shows. Hovered, the pile fans and each card under shows its plate. The whole title is in the card's words for a screen reader and in its tooltip.</p>
+  </div>
+</section>
+
+<section class="mk-sec" id="seal">
+  <h1>2 · The seal: a whole ring</h1>
+  <p class="mk-line">The ring has eight places. Today, while the runes are offered, the decorations give way and only five places are lit, so the ring has gaps. Proposed: the five runes take five places, and orkUI's own three runes keep the other three. The ring is whole, and its eight places are also the wait's eight steps.</p>
+  <div class="mk-row">
+    <figure class="mk-fig"><h2>a · Today, choosing</h2><div id="seal-a"></div><p>Five of eight places. The three at the lower corners and the upper left are empty.</p></figure>
+    <figure class="mk-fig"><h2>b · Proposed, choosing</h2><div id="seal-b"></div><p>The five runes and three decorations: eight of eight.</p></figure>
+    <figure class="mk-fig"><h2>c · The same ring as the wait</h2><div id="seal-c"></div><p>A back in Next, three eighths of its wait gone: the ring is a clock of eight steps.</p></figure>
+  </div>
+</section>
+
+<section class="mk-sec" id="corners">
+  <h1>3 · Corners that grow with the card</h1>
+  <p class="mk-line">Today every card has the same 2 px corner, so a large card reads as a plain rectangle. Proposed: a quarter circle in 2 px cells, about one cell for every 40 px of width. A small card hardly changes, and a large one is plainly a card. The line follows the steps.</p>
+  <div class="corners" id="corners-row"></div>
+</section>
+
+<section class="mk-sec" id="glow">
+  <h1>4 · At work, asks, failed</h1>
+  <p class="mk-line">Today the glow goes from 62 % to full, on a 14 px rune, and it stops under reduced motion. That is easy to miss. Proposed: from 30 % to full, the ring running round on a back at work, and the state said in words under the card, so it is there without motion too. <b>Moving means at work, yellow and still means it waits for you, red means it failed and is in your hand.</b></p>
+  <div class="glows" id="glows"></div>
+</section>
+</main>
+<p class="mk-foot">This is a mockup and is not wired into the app. It is drawn with orkUI's tokens and pieces: <code>.ork-card</code>, <code>.ork-plus</code>, <code>.ork-sigil</code> (with <code>.is-waiting</code>), <code>.ork-elem</code>, <code>.ork-rune</code>, <code>.ork-sign</code>, <code>.ork-potion</code>, <code>.ork-btn</code>, <code>.ork-field</code>. The stepped corner, the busy ring, the stronger glow and the whole ring belong to this page; after a yes they go into orkUI first, then Orkboard copies them. Open it over http, not file://.</p>
+
+<script>
+(function () {
+  "use strict";
+  var B = "../../../design-system/orkui/";
+  var W = 1120, CW = 120, CH = 168;
+  var reduced = function () { return matchMedia("(prefers-reduced-motion: reduce)").matches; };
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) { return String(s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); };
+  var E = function (n, extra) { return '<span class="ork-elem ' + n + (extra ? " " + extra : "") + '" aria-hidden="true"></span>'; };
+  var S = function (n, extra) { return '<span class="ork-sign ' + n + (extra ? " " + extra : "") + '" aria-hidden="true"></span>'; };
+  var I = function (n) { return '<svg class="ork-icon pix" aria-hidden="true"><use href="' + B + "icons/icons.svg#" + n + '"/></svg>'; };
+  var HEAD = function (race) { return '<img src="' + B + "races/" + race + '@2x.png" alt="" draggable="false">'; };
+  var ELEMENTS = ["meadow", "ice", "dust", "void", "lava"];
+  var PARTIES = { ork: { name: "The Orkmaster decides", short: "Orkmaster", race: "peon-crown" }, tech: { name: "Tech", short: "Tech", race: "shaman-elder" },
+    design: { name: "Design", short: "Design", race: "dryad-elder" }, product: { name: "Product", short: "Product", race: "unicorn-elder" } };
+  var TYPES = { tech: [["feature", "Feature"], ["bug", "Bug"], ["tune", "Tuning"], ["restructure", "Clean-up"]],
+    design: [["screen", "Screen"], ["picture", "Picture"], ["character", "Character"]], product: [["feature", "Feature"], ["mechanic", "Mechanic"], ["sound", "Sound"]] };
+  var PROJECT_FILES = ["src/round.js", "docs/rules.md", "art/lobby.png"];
+
+  // ---------- the stepped corner: a quarter circle of n cells of 2 px, n by the width ----------
+  function corner(n) {
+    var c = 2, ins = [], j, pts;
+    for (j = 0; j < n; j++) ins.push(Math.max(0, Math.round(n - Math.sqrt(n * n - Math.pow(n - j - 0.5, 2)))));
+    pts = [[ins[0] * c, 0]];
+    for (j = 0; j < n; j++) { pts.push([ins[j] * c, (j + 1) * c]); pts.push([j + 1 < n ? ins[j + 1] * c : 0, (j + 1) * c]); }
+    return pts;                                                   // the top-left corner, from the top edge down to the left edge
+  }
+  function loop(n, o) {
+    var p = corner(n), X = function (v) { return (v + o) + "px"; }, R = function (v) { return "calc(100% - " + (v + o) + "px)"; }, out = [];
+    p.slice().reverse().forEach(function (q) { out.push(X(q[0]) + " " + X(q[1])); });          // top left, up to the top
+    p.forEach(function (q) { out.push(R(q[0]) + " " + X(q[1])); });                           // top right, down to the right
+    p.slice().reverse().forEach(function (q) { out.push(R(q[0]) + " " + R(q[1])); });          // bottom right, down to the bottom
+    p.forEach(function (q) { out.push(X(q[0]) + " " + R(q[1])); });                           // bottom left, up to the left
+    return out;
+  }
+  function round(root) {
+    (root.matches && root.matches(".mk-r") ? [root] : []).concat([].slice.call(root.querySelectorAll(".mk-r"))).forEach(function (el) {
+      var w = el.offsetWidth; if (!w) return;
+      var n = Math.max(1, Math.round(w / 40)), outer = loop(n, 0);
+      el.style.setProperty("--mk-clip", "polygon(" + outer.join(",") + ")");
+      [1, 2].forEach(function (t) { var inner = loop(n, t);
+        el.style.setProperty("--mk-ring" + t, "polygon(evenodd," + outer.join(",") + "," + outer[0] + "," + inner.join(",") + "," + inner[0] + "," + outer[0] + ")"); });
+    });
+  }
+
+  // ---------- the pieces ----------
+  function back(g, o) {
+    o = o || {};
+    var sig = "ork-sigil" + (o.busy ? " mk-busy" : "") + (o.stopped ? " mk-stopped" : "") + (o.wait != null ? " is-waiting" : "");
+    return '<' + (o.tag || "div") + ' class="ork-card mk-r cd back c-' + g.el + (o.cls ? " " + o.cls : "") + '"' + (o.i != null ? ' style="--i:' + o.i + '"' : "") + (o.attrs || "")
+      + ' title="' + esc(g.name) + '" aria-label="' + esc(g.name + (o.say ? ": " + o.say : "")) + '">'
+      + '<span class="' + sig + '" aria-hidden="true"' + (o.wait != null ? ' style="--ork-sigil-share:' + o.wait + '"' : "") + '><span class="ork-sigil__seal">' + E(g.el, o.glow ? "mk-glow" : "") + "</span></span>"
+      + '<span class="plate">' + E(g.el) + '<span class="nm">' + esc(g.short) + "</span></span></" + (o.tag || "div") + ">";
+  }
+  function face(g, o) {
+    o = o || {};
+    var st = g.state === "asks" ? S("question") + "Waits for you" : g.state === "failed" ? S("alert") + "Failed" : E(g.el, "mk-glow") + esc(g.stage);
+    return '<div class="ork-card mk-r cd face c-' + g.el + (g.state === "asks" ? " is-asks thick" : g.state === "failed" ? " is-failed thick" : "") + (o.cls ? " " + o.cls : "") + '" data-goal="' + g.id + '" title="' + esc(g.name) + '">'
+      + '<div class="hd">' + E(g.el) + '<span class="nm">' + esc(g.name) + "</span></div>"
+      + '<div class="win">' + S(g.sign, "big") + "</div>"
+      + '<div class="st">' + st + "</div></div>";
+  }
+  function qcard(q) {
+    var g = goalById(q.goal) || q.g;
+    return '<button type="button" class="ork-card mk-r cd q thick leans" data-q="' + q.id + '" aria-label="' + esc(PARTIES[q.by].short + " asks: " + q.q) + '">'
+      + '<span class="who">' + HEAD(PARTIES[q.by].race) + esc(q.by === "ork" ? "The Orkmaster" : PARTIES[q.by].short) + "</span>"
+      + '<span class="qq">' + esc(q.q) + "</span>"
+      + '<span class="for">' + E(g.el) + esc(g.short) + "</span></button>";
+  }
+  function plusCard(el) {
+    return '<button type="button" class="ork-card ork-plus" id="plus" aria-label="New goal" title="New goal" aria-haspopup="dialog"><span class="ork-sigil" aria-hidden="true"><span class="ork-sigil__seal">' + E(el) + "</span></span>" + I("plus") + "</button>";
+  }
+
+  // ---------- the state ----------
+  var S0 = function () {
+    return {
+      work: [{ id: "w1", el: "lava", short: "Who answered first", name: "Players see who answered first, a small crown over the name", party: "design", sign: "screen", stage: "Spec" }],
+      next: [{ id: "n1", el: "ice", short: "Round timer on phones", name: "The round's timer shows on every phone", party: "tech", sign: "feature", stage: "Build" },
+             { id: "n2", el: "dust", short: "A sound at round's end", name: "A sound when the round ends", party: "product", sign: "sound", stage: "Build" },
+             { id: "n3", el: "void", short: "Kick from the lobby", name: "The host can kick a player from the lobby", party: "tech", sign: "feature", stage: "Build" }],
+      night: [{ id: "t1", el: "meadow", short: "Tidy the scoring", name: "Tidy the scoring module", party: "tech", sign: "restructure", stage: "Build" },
+              { id: "t2", el: "ice", short: "Lobby in Polish", name: "The lobby in Polish", party: "design", sign: "screen", stage: "Build" }],
+      lanes: { tech: [{ id: "g1", el: "meadow", short: "Join by code", name: "Join a lobby by its code", sign: "feature", stage: "Build · 12 min", state: "work" },
+                      { id: "g2", el: "dust", short: "Answer streaks", name: "A streak counter for answers in a row", sign: "mechanic", stage: "Check · 3 min", state: "work" }],
+               design: [{ id: "g3", el: "void", short: "Results screen", name: "The results screen after a round", sign: "screen", stage: "Build · 6 min", state: "work" }] },
+      done: [{ id: "d1", el: "lava", short: "Lobby music", name: "Music in the lobby" }],
+      hand: [], places: {}, share: 0.25, orkAsks: false
+    };
+  };
+  var st = S0(), lifted = null, nextId = 1;
+  function goalById(id) { var all = [].concat(st.work, st.next, st.night, st.lanes.tech, st.lanes.design); for (var i = 0; i < all.length; i++) if (all[i].id === id) return all[i]; return null; }
+
+  // ---------- the scene's scale ----------
+  var scn = $("scn"), wrap = $("wrap"), sc = 1;
+  function fit() { sc = Math.max(0.62, Math.min(1, wrap.clientWidth / W)); scn.style.transform = "scale(" + sc + ")"; wrap.style.height = Math.ceil(680 * sc) + "px"; scn.style.marginRight = (W * sc - W) + "px"; }
+  function rel(el) { var r = el.getBoundingClientRect(), s = scn.getBoundingClientRect(); return { x: (r.left - s.left) / sc, y: (r.top - s.top) / sc, w: r.width / sc, h: r.height / sc }; }
+  window.addEventListener("resize", fit);
+
+  // ---------- drawing ----------
+  function drawPile(id, list, o) {
+    var el = $("p-" + id), shown = list.slice(0, 4), html = "";
+    el.classList.toggle("empty", !list.length);
+    for (var i = shown.length - 1; i >= 0; i--) html += back(shown[i], Object.assign({ i: i, tag: i === 0 ? "button" : "div", cls: i === 0 ? "" : "", attrs: i === 0 ? ' data-pile="' + id + '" type="button"' : ' aria-hidden="true"' }, i === 0 ? o : {}));
+    el.innerHTML = html;
+  }
+  function draw() {
+    var w = st.work[0];
+    drawPile("work", st.work, { busy: !st.orkAsks, stopped: st.orkAsks, glow: !st.orkAsks, cls: st.orkAsks ? "is-asks thick" : "", say: st.orkAsks ? "waits for your answer" : "writing the spec" });
+    $("p-work").querySelectorAll(".cd").forEach(function (c) { if (st.orkAsks) c.style.setProperty("--mk-line", "var(--ork-alert)"); });
+    $("u-work").textContent = !w ? "Free" : st.orkAsks ? "Waits for your answer" : "Writing the spec · for " + PARTIES[w.party].short;
+    $("u-work").classList.toggle("asks", !!st.orkAsks);
+    drawNext();
+    drawPile("night", st.night, { say: "tonight" });
+    drawPile("done", st.done, {});
+    ["tech", "design"].forEach(function (p) {
+      $("l-" + p).innerHTML = st.lanes[p].map(function (g) { return g.state === "place" ? '<div class="ork-card-place place" data-goal="' + g.id + '">Back here on <i>Try again</i></div>' : face(g); }).join("");
+    });
+    $("hcards").innerHTML = st.hand.map(function (h) { return h.kind === "q" ? qcard(h) : face(Object.assign({}, h.g, { state: "failed" }), { cls: "leans" }).replace('<div class="ork-card', '<button type="button" data-fail="' + h.id + '" class="ork-card').replace(/<\/div>$/, "</button>"); }).join("");
+    if (!$("plus")) $("plus-slot").innerHTML = plusCard(nextRune());
+    round(scn);
+  }
+  function drawNext() {
+    drawPile("next", st.next, { wait: st.share, say: "starts by itself" });
+    $("u-next").textContent = !st.next.length ? "" : st.share >= 1 ? (st.work.length ? "Starts when the Orkmaster is free" : "Starting…") : "Starts by itself in " + Math.ceil((1 - st.share) * 8 * 1.5) + " s";
+    round($("p-next"));
+  }
+  function nextRune() { var used = {}; [].concat(st.next, st.work).forEach(function (g) { used[g.el] = 1; }); return ELEMENTS.filter(function (e) { return !used[e]; })[0] || "meadow"; }
+
+  // ---------- a flight from one box to another, inside the scene ----------
+  function fly(html, from, to, o) {
+    o = o || {};
+    if (reduced() || !from || !to) return Promise.resolve();
+    var el = document.createElement("div"); el.className = "flyer"; el.innerHTML = html;
+    el.style.left = from.x + "px"; el.style.top = from.y + "px"; el.style.width = from.w + "px"; el.style.height = from.h + "px";
+    scn.appendChild(el); round(el);
+    var dx = to.x - from.x, dy = to.y - from.y, k = to.w / from.w;
+    var a = el.animate([{ transform: "none" }, { transform: "translate(" + dx * 0.5 + "px," + (dy * 0.5 - (o.arc || 60)) + "px) rotate(" + (o.spin || 6) + "deg) scale(" + (1 + k) / 2 * 1.08 + ")" },
+      { transform: "translate(" + dx + "px," + dy + "px) scale(" + k + ")" }], { duration: o.ms || 620, easing: "cubic-bezier(.3,1.2,.5,1)", fill: "forwards", delay: o.delay || 0 });
+    return a.finished.then(function () { el.remove(); });
+  }
+  function hideUntil(el, p) { if (!el) return p; el.style.visibility = "hidden"; return p.then(function () { el.style.visibility = ""; }); }
+
+  // ---------- the lifted card's words ----------
+  function closeLift() { var l = document.querySelector(".lift"); if (l) l.remove(); lifted = null; }
+  function lift(anchor, html) {
+    closeLift();
+    var r = rel(anchor), l = document.createElement("div"); l.className = "lift"; l.innerHTML = html; $("layer").appendChild(l);
+    var h = l.offsetHeight, x = Math.min(W - 316, r.x), y = r.y + r.h + 8 + h > 672 ? r.y - h - 8 : r.y + r.h + 8;
+    l.style.left = x + "px"; l.style.top = Math.max(48, y) + "px";
+    var first = l.querySelector("button"); if (first) first.focus({ preventScroll: true });
+    return l;
+  }
+
+  // ---------- the + card, turned over where it lies ----------
+  var F = null;                                                   // the open field: {el, text, rune, to, type, files, open}
+  var kept = { text: "Players see who answered first, with a small crown over their name", rune: "", to: "ork", type: "", files: [] };
+  var FX = 16, FY = 680 - 330;                                    // the grown card's place: its left edge where the + card's is, its top so 330 px show above the window's edge
+  function fieldHtml() {
+    var k = kept, rune = k.rune || nextRune(), p = PARTIES[k.to], types = TYPES[k.to] || [], ty = types.filter(function (t) { return t[0] === k.type; })[0];
+    return '<div class="ork-card mk-r thick fld" role="group" aria-label="The new goal’s card">'
+      + '<div class="sq-row">'
+      + '<div class="sq"><button type="button" data-sq="rune" aria-expanded="false" aria-label="Its rune, change it">' + E(rune, "big") + '</button><span class="cap">Rune</span></div>'
+      + '<div class="sq"><button type="button" data-sq="to" aria-expanded="false" aria-label="To: ' + esc(p.name) + ', change it">' + HEAD(p.race) + '</button><span class="cap">To</span></div>'
+      + '<div class="sq"><button type="button" data-sq="type" aria-expanded="false" aria-label="Its type: ' + (ty ? ty[1] : "chosen by its party") + ', change it">' + (ty ? S(ty[0], "big") : '<span class="ork-sign big feature" style="opacity:.3" aria-hidden="true"></span>') + '</button><span class="cap">Type</span></div>'
+      + '<div class="sq"><button type="button" data-sq="files" aria-expanded="false" aria-label="Attach files">' + I("file") + (k.files.length ? '<span class="n">' + k.files.length + "</span>" : "") + '</button><span class="cap">Files</span></div>'
+      + "</div>"
+      + '<div class="ch-row" id="ch" hidden></div>'
+      + '<textarea class="ork-field" id="fld-text" aria-label="Write a goal" placeholder="Write a goal…">' + esc(k.text) + "</textarea>"
+      + '<div class="acts"><div class="files" id="fld-files">' + k.files.map(function (f, i) { return '<span class="chip">' + (f.url ? '<img src="' + f.url + '" alt="">' : I("file")) + "<span>" + esc(f.name) + '</span><button type="button" class="ork-btn quiet" data-unfile="' + i + '" aria-label="Remove ' + esc(f.name) + '" style="height:20px;padding:0 4px">' + I("close") + "</button></span>"; }).join("") + "</div>" + (k.files.length ? "" : "<span>Enter sends · Esc keeps it</span>")
+      + '<button type="button" class="ork-btn primary" id="fld-send">Send</button></div>'
+      + '<span class="ork-sigil foot" aria-hidden="true"></span>'
+      + '<input type="file" id="fld-pick" multiple hidden></div>';
+  }
+  function choices(which) {
+    var k = kept, html = "", rune = k.rune || nextRune(), used = {};
+    st.next.concat(st.work).forEach(function (g) { used[g.el] = 1; });
+    if (which === "rune") html = '<span class="say">Its rune: given by rule; the faint ones are in use.</span><div class="chs" role="radiogroup" aria-label="Its rune">' + ELEMENTS.map(function (e, i) { return '<div class="ch"><button type="button" role="radio" data-rune="' + e + '" aria-checked="' + (e === rune) + '" aria-label="Rune ' + (i + 1) + '" class="' + (used[e] ? "used" : "") + '">' + E(e, "big") + "</button></div>"; }).join("") + "</div>";
+    if (which === "to") html = '<span class="say">Who it goes to. The Orkmaster finds its party when no one is named.</span><div class="chs" role="radiogroup" aria-label="To">' + Object.keys(PARTIES).map(function (p) { return '<div class="ch"><button type="button" role="radio" data-to="' + p + '" aria-checked="' + (p === k.to) + '" aria-label="' + PARTIES[p].name + '">' + HEAD(PARTIES[p].race) + '</button><span class="cap">' + PARTIES[p].short + "</span></div>"; }).join("") + "</div>";
+    if (which === "type") html = (TYPES[k.to] ? '<span class="say">' + PARTIES[k.to].short + "’s types, by their pictures.</span>" : '<span class="say">The party chooses the type. Name a party to choose it yourself.</span>')
+      + '<div class="chs" role="radiogroup" aria-label="Its type">' + (TYPES[k.to] || TYPES.tech).map(function (t) { return '<div class="ch"><button type="button" role="radio" data-type="' + t[0] + '" aria-checked="' + (t[0] === k.type) + '" aria-label="' + t[1] + '"' + (TYPES[k.to] ? "" : " disabled") + ">" + S(t[0], "big") + '</button><span class="cap">' + t[1] + "</span></div>"; }).join("") + "</div>";
+    if (which === "files") html = '<span class="say">Files go with the goal. A picture can be pasted into the text too.</span><div class="chs">'
+      + '<div class="ch"><button type="button" data-pick="disk" aria-label="From this computer">' + I("file") + '</button><span class="cap">From this computer</span></div>'
+      + PROJECT_FILES.map(function (f) { var on = k.files.some(function (x) { return x.name === f; }); return '<div class="ch"><button type="button" role="checkbox" data-proj="' + f + '" aria-checked="' + on + '" aria-label="' + f + '">' + I(/\.png$/.test(f) ? "eye" : "file") + '</button><span class="cap">' + f.split("/").pop() + "</span></div>"; }).join("") + "</div>";
+    return html;
+  }
+  function openField() {
+    if (F) return;
+    closeLift();
+    var plus = $("plus"), from = rel(plus), g = document.createElement("div");
+    g.className = "grow"; g.style.left = FX + "px"; g.style.top = FY + "px";
+    g.innerHTML = '<div class="flip"><div class="side f">' + fieldHtml() + '</div><div class="side b"><div class="scaled">' + plusCard(nextRune()).replace('id="plus"', 'tabindex="-1"') + "</div></div></div>";
+    $("layer").appendChild(g); round(g);
+    F = { el: g, open: "" };
+    plus.style.visibility = "hidden";
+    wireField();
+    var ta = $("fld-text"); ta.focus({ preventScroll: true }); ta.setSelectionRange(ta.value.length, ta.value.length);
+    if (reduced()) return;
+    var k = from.w / 340;
+    g.animate([{ transform: "translate(" + (from.x - FX) + "px," + (from.y - FY) + "px) scale(" + k + ")" }, { transform: "none" }], { duration: 460, easing: "cubic-bezier(.3,1.15,.5,1)" });
+    g.firstChild.animate([{ transform: "rotateY(180deg)" }, { transform: "rotateY(0deg)" }], { duration: 460, easing: "cubic-bezier(.3,1.1,.5,1)" });
+  }
+  function closeField() {
+    if (!F) return;
+    kept.text = $("fld-text").value;
+    var g = F.el, plus = $("plus"), to = rel(plus); F = null;
+    var done = function () { g.remove(); plus.style.visibility = ""; };
+    if (reduced()) return done();
+    var k = to.w / 340;
+    g.animate([{ transform: "none" }, { transform: "translate(" + (to.x - FX) + "px," + (to.y - FY) + "px) scale(" + k + ")" }], { duration: 360, easing: "cubic-bezier(.4,0,.2,1)", fill: "forwards" });
+    g.firstChild.animate([{ transform: "rotateY(0deg)" }, { transform: "rotateY(180deg)" }], { duration: 360, easing: "cubic-bezier(.4,0,.2,1)", fill: "forwards" }).finished.then(done);
+  }
+  function refreshField(open) {
+    if (!F) return;
+    kept.text = $("fld-text").value;
+    F.el.querySelector(".side.f").innerHTML = fieldHtml(); round(F.el); wireField();
+    if (open) toggle(open);
+  }
+  function toggle(which) {
+    var ch = $("ch"), btns = F.el.querySelectorAll("[data-sq]");
+    F.open = F.open === which ? "" : which;
+    btns.forEach(function (b) { b.setAttribute("aria-expanded", String(b.dataset.sq === F.open)); });
+    ch.hidden = !F.open; ch.innerHTML = F.open ? choices(F.open) : "";
+    var on = ch.querySelector('[aria-checked="true"], button:not(:disabled)'); if (on) on.focus({ preventScroll: true });
+  }
+  function wireField() {
+    var f = F.el;
+    f.querySelectorAll("[data-sq]").forEach(function (b) { b.addEventListener("click", function () { toggle(b.dataset.sq); }); });
+    $("ch").addEventListener("click", function (e) {
+      var b = e.target.closest("button"); if (!b || b.disabled) return;
+      if (b.dataset.rune) { kept.rune = b.dataset.rune; refreshField(); }
+      if (b.dataset.to) { kept.to = b.dataset.to; kept.type = ""; refreshField(); }
+      if (b.dataset.type) { kept.type = b.dataset.type; refreshField(); }
+      if (b.dataset.pick) $("fld-pick").click();
+      if (b.dataset.proj) { var i = kept.files.findIndex(function (x) { return x.name === b.dataset.proj; }); if (i >= 0) kept.files.splice(i, 1); else kept.files.push({ name: b.dataset.proj }); refreshField("files"); }
+    });
+    $("fld-pick").addEventListener("change", function (e) {
+      [].slice.call(e.target.files).slice(0, 6).forEach(function (fl) { kept.files.push({ name: fl.name, url: /^image\//.test(fl.type) ? URL.createObjectURL(fl) : "" }); });
+      refreshField("files");
+    });
+    $("fld-files").addEventListener("click", function (e) { var b = e.target.closest("[data-unfile]"); if (b) { kept.files.splice(+b.dataset.unfile, 1); refreshField(); } });
+    $("fld-send").addEventListener("click", send);
+    $("fld-text").addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); send(); }
+    });
+  }
+  function send() {
+    var text = $("fld-text").value.trim(); if (!text) return;
+    var el = kept.rune || nextRune(), words = text.split(/\s+/), g = { id: "new" + nextId++, el: el, short: words.slice(0, 4).join(" "), name: text, party: kept.to === "ork" ? "tech" : kept.to, sign: kept.type || "feature", stage: "Build" };
+    var grow = F.el; F = null;
+    kept = { text: "", rune: "", to: "ork", type: "", files: [] };
+    grow.querySelector(".side.b .scaled").innerHTML = back(g);                   // its back is the goal's now: its rune and its name
+    round(grow);
+    var land = function () {
+      grow.remove();
+      st.next.splice(Math.min(1, st.next.length), 0, g);                        // the Orkmaster puts it in Next by its priority: here, second
+      $("plus-slot").innerHTML = "";
+      draw();
+      var p = $("plus");
+      if (p && !reduced()) p.animate([{ transform: "translateY(60%)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 300, easing: "cubic-bezier(.3,1.3,.5,1)" });
+    };
+    if (reduced()) return land();
+    var to = rel($("p-next")), k = CW / 340;
+    grow.firstChild.animate([{ transform: "rotateY(0deg)" }, { transform: "rotateY(180deg)" }], { duration: 260, fill: "forwards" }).finished.then(function () {
+      return grow.animate([{ transform: "none" }, { transform: "translate(" + ((to.x - FX) * 0.5) + "px," + ((to.y - FY) * 0.5 - 60) + "px) scale(" + (k + 1) / 2 + ") rotate(4deg)" },
+        { transform: "translate(" + (to.x - FX) + "px," + (to.y - FY) + "px) scale(" + k + ")" }], { duration: 620, easing: "cubic-bezier(.3,1.1,.5,1)", fill: "forwards" }).finished;
+    }).then(land);
+  }
+
+  // ---------- what the window does: the timer, the spec, the questions, a failure ----------
+  function tick() {
+    if (!st.next.length) return;
+    if (st.share < 1) { st.share = Math.min(1, st.share + 1 / 8); drawNext(); }
+    if (st.share >= 1 && !st.work.length) toWork();
+  }
+  function toWork() {
+    var from = rel($("p-next")), g = st.next.shift(); st.share = 0; st.work = [g]; closeLift(); draw();
+    hideUntil($("p-work").querySelector(".cd"), fly(back(g), from, rel($("p-work")), { arc: 30 }));
+  }
+  function specDone() {
+    var w = st.work[0]; if (!w) return;
+    var from = rel($("p-work")), party = w.party === "product" ? "tech" : w.party;
+    st.work = []; st.orkAsks = false;
+    st.hand = st.hand.filter(function (h) { return h.goal !== w.id; });
+    var lane = st.lanes[party]; if (lane.length >= 2) { st.done.unshift(lane.shift()); }
+    var g = Object.assign({}, w, { stage: "Build · now", state: "work" }); lane.push(g); closeLift(); draw();
+    var dest = $("l-" + party).querySelector('[data-goal="' + g.id + '"]');
+    hideUntil(dest, fly(face(g), from, rel(dest), { ms: 700 }));
+    if (st.next.length && st.share >= 1) setTimeout(toWork, reduced() ? 0 : 750);
+  }
+  function ask(goalId, by, qs) {
+    var g = goalById(goalId); if (!g) return;
+    if (by === "ork") st.orkAsks = true; else g.state = "asks";
+    var cards = qs.map(function (q) { return { kind: "q", id: "q" + nextId++, goal: goalId, by: by, q: q[0], answers: q[1] }; });
+    st.hand = st.hand.concat(cards); draw();
+    var from = rel(by === "ork" ? $("p-work") : document.querySelector('.goals [data-goal="' + goalId + '"]'));
+    cards.forEach(function (c, i) { var dest = document.querySelector('[data-q="' + c.id + '"]'); hideUntil(dest, fly(qcard(c), from, rel(dest), { delay: i * 160, arc: 90 })); });
+  }
+  function answer(qid) {
+    var q = st.hand.filter(function (h) { return h.id === qid; })[0]; if (!q) return;
+    var from = rel(document.querySelector('[data-q="' + qid + '"]'));
+    st.hand = st.hand.filter(function (h) { return h.id !== qid; });
+    var left = st.hand.some(function (h) { return h.kind === "q" && h.goal === q.goal; }), g = goalById(q.goal);
+    closeLift(); draw();
+    var to = q.by === "ork" ? $("p-work") : document.querySelector('.goals [data-goal="' + q.goal + '"]');
+    var mini = { x: 0, y: 0, w: 0, h: 0 }, r = to ? rel(to) : null;
+    if (r) { mini = { x: r.x + r.w * 0.3, y: r.y + r.h * 0.3, w: r.w * 0.4, h: r.h * 0.4 }; }
+    fly(qcard(q), from, mini, { arc: 70, ms: 520 }).then(function () {
+      if (!left) { if (q.by === "ork") st.orkAsks = false; else if (g) g.state = "work"; draw(); }
+    });
+  }
+  function fail() {
+    var g = st.lanes.design.filter(function (x) { return x.state === "work"; })[0]; if (!g) return;
+    g.state = "failed"; draw();
+    setTimeout(function () {
+      var from = rel(document.querySelector('.goals [data-goal="' + g.id + '"]')), id = "f" + nextId++;
+      st.lanes.design = st.lanes.design.map(function (x) { return x.id === g.id ? { id: g.id, state: "place", g: g } : x; });
+      st.hand.push({ kind: "fail", id: id, goal: g.id, g: Object.assign({}, g), why: "Its checks went red twice: the results list is empty when a player leaves mid-round." });
+      draw();
+      var dest = document.querySelector('[data-fail="' + id + '"]');
+      hideUntil(dest, fly(face(Object.assign({}, g, { state: "failed" })), from, rel(dest), { arc: 80, spin: -8, ms: 700 }));
+    }, reduced() ? 0 : 650);
+  }
+  function retry(fid) {
+    var h = st.hand.filter(function (x) { return x.id === fid; })[0]; if (!h) return;
+    var from = rel(document.querySelector('[data-fail="' + fid + '"]'));
+    st.hand = st.hand.filter(function (x) { return x.id !== fid; });
+    var g = Object.assign({}, h.g, { state: "work", stage: "Build · again" });
+    ["tech", "design"].forEach(function (p) { st.lanes[p] = st.lanes[p].map(function (x) { return x.id === g.id ? g : x; }); });
+    closeLift(); draw();
+    var dest = document.querySelector('.goals [data-goal="' + g.id + '"]');
+    hideUntil(dest, fly(face(g), from, rel(dest), { arc: 60 }));
+  }
+  function drop(fid) {
+    var h = st.hand.filter(function (x) { return x.id === fid; })[0]; if (!h) return;
+    st.hand = st.hand.filter(function (x) { return x.id !== fid; });
+    ["tech", "design"].forEach(function (p) { st.lanes[p] = st.lanes[p].filter(function (x) { return x.id !== h.goal; }); });
+    closeLift(); draw();
+  }
+  function toNight() { var g = st.next.shift(); if (!g) return; var from = rel($("p-next")); st.share = 0; st.night.unshift(g); closeLift(); draw(); hideUntil($("p-night").querySelector(".cd"), fly(back(g), from, rel($("p-night")), { arc: 40 })); }
+  function startNow() { st.share = 1; closeLift(); if (!st.work.length) toWork(); else draw(); }
+
+  var acts = {
+    spec: specDone,
+    "ork-asks": function () { if (!st.work.length || st.orkAsks) return; ask(st.work[0].id, "ork", [["Is the crown for the first answer of the round, or of each question?", ["Of each question", "Of the round"]]]); },
+    asks: function () { var g = st.lanes.tech.filter(function (x) { return x.state === "work"; })[0]; if (!g) return;
+      ask(g.id, "tech", [["Who counts as first when two answers arrive within 50 ms?", ["The server's clock decides", "Both are first"]], ["Keep the crown when a player reconnects?", ["Keep it", "Lose it"]]]); },
+    fail: fail,
+    reset: function () { closeLift(); if (F) { F.el.remove(); F = null; } st = S0(); $("plus-slot").innerHTML = ""; draw(); }
+  };
+  document.querySelectorAll("[data-do]").forEach(function (b) { b.addEventListener("click", function () { acts[b.dataset.do](); }); });
+
+  // presses in the scene
+  scn.addEventListener("click", function (e) {
+    var t = e.target;
+    if (F) { if (e.composedPath().indexOf(F.el) < 0 && document.contains(t)) closeField(); return; }      // a press away turns it back; a press inside it (even one that redrew it) does not
+    if (t.closest("#plus")) { openField(); return; }
+    var lift0 = t.closest(".lift"); if (lift0) {
+      var b = t.closest("button"); if (!b) return;
+      if (b.dataset.ans) answer(b.dataset.ans);
+      if (b.dataset.retry) retry(b.dataset.retry);
+      if (b.dataset.drop) drop(b.dataset.drop);
+      if (b.dataset.now) startNow();
+      if (b.dataset.night) toNight();
+      if (b.dataset.close) closeLift();
+      return;
+    }
+    var q = t.closest("[data-q]");
+    if (q) { var Q = st.hand.filter(function (h) { return h.id === q.dataset.q; })[0], G = goalById(Q.goal);
+      if (lifted === q.dataset.q) return closeLift();
+      lift(q, '<div class="t">' + HEAD(PARTIES[Q.by].race) + (Q.by === "ork" ? "The Orkmaster" : PARTIES[Q.by].short) + ' asks</div><p>' + esc(Q.q) + '</p><p class="muted" style="font:var(--ork-type-caption);color:var(--ork-ink-muted)">For ' + E(G.el) + " " + esc(G.short) + '. The answer goes back to it.</p><div class="acts">'
+        + Q.answers.map(function (a) { return '<button type="button" class="ork-btn" data-ans="' + Q.id + '">' + esc(a) + "</button>"; }).join("") + "</div>");
+      lifted = q.dataset.q; return; }
+    var f = t.closest("[data-fail]");
+    if (f) { var H = st.hand.filter(function (h) { return h.id === f.dataset.fail; })[0];
+      if (lifted === f.dataset.fail) return closeLift();
+      lift(f, '<div class="t">' + S("alert") + " Failed: " + esc(H.g.short) + '</div><p class="why">' + esc(H.why) + '</p><div class="acts"><button type="button" class="ork-btn primary" data-retry="' + H.id + '">Try again</button><button type="button" class="ork-btn" data-close="1">Change the goal</button><button type="button" class="ork-btn" data-drop="' + H.id + '">Drop it</button></div>');
+      lifted = f.dataset.fail; return; }
+    var p = t.closest("[data-pile]");
+    if (p) {
+      if (lifted === p.dataset.pile) return closeLift();
+      if (p.dataset.pile === "next" && st.next[0]) { var n = st.next[0];
+        lift(p, '<div class="t">' + E(n.el) + " " + esc(n.short) + "</div><p>" + esc(n.name) + '</p><ul><li>One timer from the server, the same on every phone</li><li>It turns red in the last 5 seconds</li><li>Done when two phones show the same second</li></ul><div class="acts"><button type="button" class="ork-btn primary" data-now="1">Start now</button><button type="button" class="ork-btn" data-night="1">Tonight</button><button type="button" class="ork-btn quiet" data-close="1">Close</button></div>'); }
+      if (p.dataset.pile === "work" && st.work[0]) { var w = st.work[0];
+        lift(p, '<div class="t">' + E(w.el) + " " + esc(w.short) + "</div><p>" + esc(w.name) + '</p><p style="font:var(--ork-type-caption);color:var(--ork-ink-muted)">' + (st.orkAsks ? "The Orkmaster waits for your answer: it is in your hand." : "The Orkmaster is writing its spec for " + PARTIES[w.party].short + ".") + '</p><div class="acts"><button type="button" class="ork-btn quiet" data-close="1">Close</button></div>'); }
+      if (p.dataset.pile === "night") lift(p, '<div class="t">' + S("moon") + ' Tonight, from 01:00</div><ul>' + st.night.map(function (g) { return "<li>" + esc(g.name) + "</li>"; }).join("") + '</ul><div class="acts"><button type="button" class="ork-btn quiet" data-close="1">Close</button></div>');
+      lifted = p.dataset.pile;
+    }
+  });
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape") return;
+    if (F && F.open) { toggle(F.open); return; }
+    if (F) { closeField(); return; }
+    closeLift();
+  });
+
+  // ---------- 2 · the seal ----------
+  var free = ["meadow", "ice", "dust", "void"], at = ["at-90", "at-270", "at-180", "at-45"], deco = [["at-135", "eye"], ["at-225", "key"], ["at-315", "hourglass"]];
+  var seal = function (whole) {
+    return '<div class="ork-card ork-plus is-choosing cmp-card" aria-hidden="true"><span class="ork-sigil"><span class="ork-sigil__seal">' + E("lava") + "</span>"
+      + free.map(function (e, i) { return '<span class="ork-sigil__free ' + at[i] + '">' + E(e) + "</span>"; }).join("")
+      + (whole ? deco.map(function (d) { return '<span class="ork-sigil__free mk-deco ' + d[0] + '"><span class="ork-rune ' + d[1] + '"></span></span>'; }).join("") : "")
+      + "</span>" + I("plus") + "</div>";
+  };
+  $("seal-a").innerHTML = seal(false); $("seal-b").innerHTML = seal(true);
+  $("seal-c").innerHTML = '<div style="width:144px;height:202px">' + back({ el: "ice", short: "Round timer on phones", name: "The round's timer shows on every phone" }, { wait: 0.375 }).replace('class="ork-card mk-r cd', 'style="width:144px;height:202px" class="ork-card mk-r cd') + "</div>";
+
+  // ---------- 3 · the corners ----------
+  $("corners-row").innerHTML = [false, true].map(function (prop) {
+    return '<div class="crow"><span class="lab">' + (prop ? "Proposed" : "Today") + "</span>" + [104, 144, 240].map(function (w) {
+      return '<div class="ork-card' + (prop ? " mk-r" : "") + '" style="width:' + w + 'px">' + w + " px wide<br>" + (prop ? Math.max(1, Math.round(w / 40)) + " cells a corner" : "one cell a corner") + "</div>"; }).join("") + "</div>";
+  }).join("");
+
+  // ---------- 4 · at work, asks, failed ----------
+  var gl = { el: "lava", short: "Who answered first", name: "Players see who answered first" };
+  $("glows").innerHTML =
+    '<figure>' + E("lava", "big is-glowing") + '<span class="under">Today: 62 % to full</span></figure>'
+    + '<figure>' + E("lava", "big mk-glow") + '<span class="under">Proposed: 30 % to full</span></figure>'
+    + '<figure>' + back(gl, { busy: true, glow: true }) + '<span class="under">At work: the ring runs.<br>“Writing the spec”</span></figure>'
+    + '<figure>' + back(gl, { stopped: true, cls: "is-asks thick" }).replace('class="ork-card mk-r cd back', 'style="--mk-line:var(--ork-alert)" class="ork-card mk-r cd back') + '<span class="under asks">Asks: yellow, still.<br>“Waits for your answer”</span></figure>'
+    + '<figure>' + face({ id: "x", el: "void", name: "The results screen after a round", sign: "screen", state: "failed" }) + '<span class="under" style="color:var(--ork-danger)">Failed: red, in your hand</span></figure>';
+
+  fit(); draw(); round(document.body);
+  setInterval(tick, 1500);
+})();
+</script>
+</body>
+</html>
