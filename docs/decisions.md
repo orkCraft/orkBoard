@@ -4070,3 +4070,34 @@ Remote Control session.* And: *the hammer squashes the bug.* So:
    signs orkUI has (`work`, `check`, `cross`).
 6. Spec 119, built by the cheaper model. A cloud session is later, only if the computer's proves not enough.
 The owner's call.
+
+## 198. A goal heard at the Orkmaster: Talk by itself; an agreed goal starts by itself after a wait; a dispute is a hearing, thrown to a side (1 November, the owner)
+
+Why: the owner: *the green card's field is a card, the rune given by itself and changed only on a wish; sent, it goes to the
+Orkmaster's lane, and the Orkmaster holds the debate with the leaders, shown at the least; the leaders' questions come to the
+hand as cards while the spec's card stays at the Orkmaster; when all say yes, the card lies a while and the work begins by
+itself, weighed by priority against risk; when they disagree, the card in the middle, the leaders at its sides with their
+phrases, and you swipe it, as in Tinder on a phone, to the one whose arguments you take.* Today a goal with nothing to settle
+still waits for two presses (*Talk* on the route card, *Confirm and start* on the decision's), the leaders' verdicts are given
+before the person's answers and never again, a no is a card a leader and a doubt a line, a fork another face, and Product
+weighs only the goals its types name. So (this changes §118.1, §138.2, §147.3, §183.3 and §195.4):
+1. **The + card's field is a card**: the text its body, its rune large at its top, given by rule; a press on the rune changes it.
+2. **A routed goal goes to Talk by itself** when nothing stops it (the keeper may run, the limits are not low, nothing is
+   paid); else its route card as today. While the leaders talk, the goal's card in the Orkmaster's lane wears its rune's flame
+   and its route's heads, lit as each has said: no verdict, no count.
+3. **The leaders judge again after the answers**: those who doubted, said no, or saw their pick overridden.
+4. **Product's word is needed for a goal to start by itself**: a goal its types do not route to Product is weighed by
+   Product's leader anyway (a verdict and a priority, no question, no section). Tech's leader gives the risk; the rules of
+   `idea_risk` still raise it.
+5. **All agree → the wait**: a minute for a high priority at low risk, ten minutes for what the plan's autostart would start,
+   no wait for the rest (the decision's card as today). The wait runs only while a face is open; **Hold** stops it. At its
+   end the decision is written by itself, its heading *the leaders, all agreed*, and the sections follow.
+6. **Any no or doubt → a hearing**: the goal's card in the middle and at most **three sides** (*Do it* at the right; *Drop it*
+   or *After …* at the left; *Do the smaller one* at the top), each its leaders' heads and words; the middle takes the
+   person's own words. Thrown by a swipe or a drag (on the card only, never from the screen's edge), a key or a press (one tap
+   stays); a drop can be undone for six seconds. A fork after the sections is a hearing too, its sides the fork's.
+7. **The leader's call is measured before it is changed**: whether parallel calls write the same prefix again and whether
+   the map is read from the cache; a staggered start and the map in the system prompt only where the numbers say so.
+8. Spec 120, built by the cheaper model after the owner's yes on its mockup. A reply round between the leaders, a leader's
+   offers on its lens, Product's summary of the table and Art's sheet of assets are later.
+The owner's call.
