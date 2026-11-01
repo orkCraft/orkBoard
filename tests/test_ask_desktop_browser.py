@@ -1,5 +1,5 @@
 """The quick question as the open leader's bubble (docs/specs/123-the-leaders-at-the-table.md §6, which changes docs/specs/106-a-quick-question.md §3, decisions §181, §201), in a real browser against the table's stub host.
-The head that opens it is the tabs' (spec 123 F; it carries `data-ask-head="<tab>"`), so here a stand-in button with that attribute is put on the page and presses `openAsk` / `closeAsk` as the tabs' head will. The bubble stands under the head,
+The head that opens it is the tabs' (spec 123 F; the open tab's head is a button carrying `data-ask-head="<tab>"`); the tests press it. The bubble stands under the head,
 its tail under the head's centre, at most 440 px wide, kept inside the window; asking: the field focused in the press, Enter sends `ideas.ask` with the tab's party and empties it, an empty field sends nothing, the field is kept when it is closed;
 reading: the question muted and *The <Leader> is reading the map*; answered: the answer in the body face with its line breaks, its sources, **Make it a goal** (tells the host, opens the new goal's field with the line written) and *Ask more*;
 failed: its error; × on an answer sends `ideas.ask_clear`, Esc, × on the field and a press outside only close it, the focus back to the head; the foot (*Its seat: Claude · Veteran*, **Change** opens the seat's popover, Esc closes that first);
@@ -99,15 +99,7 @@ def start(gui, width, host=None, init=""):
 
 
 def heads(pg, tab="orkmaster", left=920, top=4):
-    """A stand-in for the tabs' open head (spec 123 F): a button carrying `data-ask-head="<tab>"`, the only one, pressing as the head will (open it, or put it away when it is open)."""
-    pg.evaluate("""([tab, left, top]) => {
-        document.querySelectorAll('[data-ask-head]').forEach((e) => e.remove());
-        const b = document.createElement('button');
-        b.type = 'button'; b.dataset.askHead = tab; b.textContent = 'head'; b.setAttribute('aria-label', `Ask the ${tab}`);
-        Object.assign(b.style, { position: 'fixed', left: left + 'px', top: top + 'px', width: '48px', height: '44px', zIndex: 5 });
-        b.addEventListener('click', () => import('/static/js/table/ask.js').then((m) => (m.askOpen.value === (tab === 'orkmaster' ? '' : tab) ? m.closeAsk() : m.openAsk(tab))));
-        document.body.append(b);
-    }""", [tab, left, top])
+    """The tabs' open head is the real head now (spec 123 F: a button carrying `data-ask-head="<tab>"` in the open tab's cell): nothing to stand in for it. Kept for the tests that name it."""
 
 
 def head(pg, tab="orkmaster"):
@@ -141,7 +133,7 @@ def focused(pg):
 
 @pytest.fixture
 def asked(gui):
-    """The window at the wide width against an AskHost, the stand-in heads in place: `(page, host, "wide")`; the page's errors are asserted at the end."""
+    """The window at the wide width against an AskHost: `(page, host, "wide")`; the page's errors are asserted at the end."""
     pg, host, errors = start(gui, "wide")
     heads(pg)
     yield pg, host, "wide"

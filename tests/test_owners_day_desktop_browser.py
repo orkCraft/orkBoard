@@ -2,7 +2,7 @@
 
 F: the System drawn at its natural size and scaled to the pane's width (never under 0.5, then it scrolls sideways and the scroll cue marks the right), its arrows still on the columns' tops, *Fit* and *100 %* in
 its corner (kept per project), a drag on empty ground panning. H: *+ Party*, the **▾** after the project's name opening the projects, a party's tab with an ork at work wearing `data-working` and its leader's head
-stepping (none under reduced motion). I: Play's pane filled by the build (the sheet came back), the project's logo on the start screen, *Full screen*."""
+standing still (its face says it: spec 123 §7.3). I: Play's pane filled by the build (the sheet came back), the project's logo on the start screen, *Full screen*."""
 from __future__ import annotations
 
 import base64
@@ -192,12 +192,12 @@ def tabs(gui, request):
 
 def test_plus_party_and_the_arrow_after_the_project_name_open_the_parties_and_the_projects(tabs):
     pg, host, w = tabs
-    plus = pg.locator(".table-tabs__end .table-plus")
-    assert " ".join(plus.inner_text().split()) == ("Party" if w == "wide" else "") and plus.get_attribute("aria-label") == "New party"      # a row of heads says the + alone
+    plus = pg.locator(".table-tabs__end .table-chair")
+    assert " ".join(plus.text_content().split()) == ("New party" if w == "wide" else "") and plus.get_attribute("aria-label") == "New party"      # the empty chair (spec 123 §7.5); a row of heads says the chair alone
     assert "primary" not in plus.get_attribute("class")
     arrow = pg.get_by_role("button", name="Switch project")
     assert arrow.count() == 1 and arrow.get_attribute("title") == "Switch project" and arrow.locator("use").get_attribute("href").endswith("#chevron-down")
-    first = tab(pg, "orkmaster").bounding_box()
+    first = pg.locator('.table-tabcell[data-cell="orkmaster"]').bounding_box()
     box = arrow.bounding_box()
     assert first["x"] <= box["x"] and box["x"] + box["width"] <= first["x"] + first["width"] + 1                       # after the name, inside the first tab's place
     shot(pg, f"owners-day-tabs-{w}.png")
@@ -211,15 +211,14 @@ def test_plus_party_and_the_arrow_after_the_project_name_open_the_parties_and_th
     pg.locator('.table-over[data-kind="parties"]').wait_for(timeout=WAIT_MS)
 
 
-def test_a_party_with_an_ork_at_work_has_data_working_and_its_leaders_head_steps(gui):
+def test_a_party_with_an_ork_at_work_has_data_working_and_its_leaders_head_stands_still(gui):
     errors: list[str] = []
     host = Host(n=3)
     pg = start(gui, {"width": 1280, "height": 800}, errors, host)
     pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
     assert tab(pg, "tech").get_attribute("data-working") is not None and tab(pg, "game").get_attribute("data-working") is not None
     assert tab(pg, "release").get_attribute("data-working") is None and tab(pg, "orkmaster").get_attribute("data-working") is None
-    style = tab(pg, "tech").locator(".ork-race__head").evaluate("e => { const s = getComputedStyle(e); return [s.animationName, s.animationDuration, s.animationTimingFunction]; }")
-    assert style == ["table-tab-step", "1.2s", "steps(2)"], style
+    assert tab(pg, "tech").locator(".ork-race__head").evaluate("e => getComputedStyle(e).animationName") == "none"          # a face changes with its state and stands still (spec 123 §7.3: the leader's *focused* face is what says it, the step is gone)
     assert tab(pg, "release").locator(".ork-race__head").evaluate("e => getComputedStyle(e).animationName") == "none"
     host.nodes = [n for n in host.nodes if not n.get("tasks")]                                                         # nothing at work any more: the heads stand still
     host.rev += 1

@@ -1,6 +1,6 @@
 """Spec 112 part B (docs/specs/112-the-bars-marks-and-the-play-die.md §3, decisions §190), Chromium against the table's stub host (tests/test_owners_day_desktop_browser.py `Host`, whose Play answers what a test sets).
 
-The bar: + Party wears orkUI's banner (unfurling once on hover, not under reduced motion), Stop all the boards across a pole before its word. Play is no button of the pane's head but a die in the hand, left of the potions, its word under it, turned by the lean token;
+The bar: New party is orkUI's empty chair (pulled out on hover, not under reduced motion; spec 123 §7.5, it was the banner), Stop all its door (it was the boards across a pole). Play is no button of the pane's head but a die in the hand, left of the potions, its word under it, turned by the lean token;
 it wobbles once on hover, opens the play view and closes it. A start is thrown: the die flies onto the black pane and rolls (no logo meanwhile), lands on the green tick (*It started*), then today's logo, the frame and the die in the hand glowing; a failed start lands on the
 red cross, tips over and today's failure takes its place; a build already playing opens at once and the die in the hand wobbles twice; under reduced motion it is today's start screen. Screenshots to the directory ORKCRAFT_SHOTS_DIR names when it is set."""
 from __future__ import annotations
@@ -69,31 +69,37 @@ def finish(pg, errors):
 # -- the bar ------------------------------------------------------------------------------------------------------------------------------------------
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_plus_party_wears_the_banner_and_stop_all_the_boards_before_its_word_and_the_pane_has_no_play(gui, width):
+def test_new_party_is_the_empty_chair_and_stop_all_a_door_and_the_pane_has_no_play(gui, width):
+    """Spec 123 §7.5–§7.6 (they were the banner and the boards, spec 112 §3.1): orkUI's empty chair and its door, small under 760 px, the door's word in the danger colour of the button."""
     pg, errors = window(gui, Host(), {"wide": WIDE, "narrow": {"width": 390, "height": 844}}[width])
-    plus, stop = pg.locator(".table-tabs__end .table-plus"), pg.locator(".table-tabs__end .table-stop")
-    assert plus.locator("use").get_attribute("href").endswith("/icons/icons.svg#banner") and plus.get_attribute("aria-label") == "New party"
-    assert stop.locator("use").get_attribute("href").endswith("/icons/icons.svg#boarded") and " ".join(stop.inner_text().split()) == "Stop all"
-    icon, word = stop.locator(".ork-icon").bounding_box(), stop.bounding_box()
-    assert word["x"] <= icon["x"] < word["x"] + word["width"] / 2                                                         # the boards stand before the word
-    assert stop.locator(".ork-icon").evaluate("e => getComputedStyle(e).color") == stop.evaluate("e => getComputedStyle(e).color")      # in the danger colour of the button
-    assert stop.evaluate("e => getComputedStyle(e).color") != pg.locator(".table-tab").first.evaluate("e => getComputedStyle(e).color")
+    chair, door = pg.locator(".table-tabs__end .table-chair"), pg.locator(".table-tabs__end .table-door")
+    small = width != "wide"
+    assert chair.locator(".ork-chair.is-empty").count() == 1 and chair.get_attribute("aria-label") == "New party" and chair.locator(".ork-chair.is-empty").evaluate("e => e.classList.contains('small')") == small
+    assert " ".join(chair.text_content().split()) == ("" if small else "New party")
+    assert door.locator(".ork-door").count() == 1 and door.get_attribute("aria-label") == "Stop all" and " ".join(door.text_content().split()) == ("Stop" if small else "Stop all")
+    pic, word = door.locator(".ork-door").bounding_box(), door.locator(".table-door__w").bounding_box()
+    assert (pic["width"], pic["height"]) == ((14, 20) if small else (28, 40)) and pic["x"] < word["x"]                     # the door stands before the word
+    assert door.evaluate("e => getComputedStyle(e).color") != pg.locator(".table-tab").first.evaluate("e => getComputedStyle(e).color")      # in the danger colour
     assert pg.locator(".table-play").count() == 0 and pg.locator(".table-title").get_by_role("button", name="Play").count() == 0       # Play left the pane's head
     assert not pg.locator(".table-title").inner_text().count("Play")
     shot(pg, f"b112-bar-{width}.png")
     finish(pg, errors)
 
 
-def test_the_banner_unfurls_once_on_hover_in_whole_steps_and_not_under_reduced_motion(gui):
+def test_the_empty_chair_is_pulled_out_on_hover_and_not_under_reduced_motion(gui):
+    """Spec 123 §7.8 (it was the banner unfurling on hover): orkUI's chair, lit, is pulled out from its foot only where motion is allowed."""
     pg, errors = window(gui, Host())
-    icon = pg.locator(".table-plus > .ork-icon")
-    assert icon.evaluate("e => getComputedStyle(e).animationName") == NO_ANIMATION
-    pg.locator(".table-plus").hover()
-    assert icon.evaluate("e => [getComputedStyle(e).animationName, getComputedStyle(e).animationIterationCount, getComputedStyle(e).animationDuration]") == ["table-banner-unfurl", "1", "0.36s"]
+    chair = pg.locator(".table-chair > .ork-chair")
+    assert chair.evaluate("e => getComputedStyle(e).transform") == "none" and not chair.evaluate("e => e.classList.contains('is-lit')")
+    pg.locator(".table-chair").hover()
+    pg.wait_for_function("() => document.querySelector('.table-chair > .ork-chair').classList.contains('is-lit')", timeout=WAIT_MS)
+    pg.wait_for_timeout(450)
+    assert chair.evaluate("e => getComputedStyle(e).transform") != "none"                                                 # up 2 px and turned
     pg.context.close()
     still, errs = window(gui, Host(), reduced_motion="reduce")
-    still.locator(".table-plus").hover()
-    assert still.locator(".table-plus > .ork-icon").evaluate("e => getComputedStyle(e).animationName") == NO_ANIMATION
+    still.locator(".table-chair").hover()
+    still.wait_for_function("() => document.querySelector('.table-chair > .ork-chair').classList.contains('is-lit')", timeout=WAIT_MS)
+    assert still.locator(".table-chair > .ork-chair").evaluate("e => getComputedStyle(e).transform") == "none"             # lit, not moved
     finish(still, errs)
     assert not errors, "\n".join(errors)
 

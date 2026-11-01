@@ -2,7 +2,7 @@
 page, spec 98 E), at both widths (`tests/narrow.py`: 1280 × 800, and 390 × 844 with touch), against a stub host of its own (a project of four parties: Game design, Tech led by the Architect, Art and Release; the Orkmaster reading two goals,
 routing one and joining one; tasks at work, failures, a check; three goals in line; Tech's System).
 
-The tabs in order with the project's first (its name), its **…** and its three places over the pane, **+**, *Stop all*; the Board's lanes under their tabs, the same widths; a task card's header, window and label row, a goal's strip and
+The tabs in order with the project's first (its name), its **…** and its three places over the pane, the empty chair (*New party*), *Stop all* as a door; the Board's lanes under their tabs, the same widths; a task card's header, window and label row, a goal's strip and
 cascade (its front by the rule, the others a fan behind it with a fixed turn by place, opened by a hover, an edge lifting its task, the picked goal's unfolded, a goal in two lanes lit in both); the first lane's cards and the line (the Orkmaster's order, the moon, a drag, *All · search*); a party's header with its
 groups, a seat's popover and its **Open**, another party's tab its header alone; Tech's System; a card lifted and lowered (Esc, a press away); a file opened over the pane, its title, **←** back to the card lit; a form in the pane, never a dialog; no
 sideways scroll at 390. Screenshots to the directory ORKCRAFT_SHOTS_DIR names when it is set.
@@ -290,6 +290,11 @@ def tab(pg, slug):
     return pg.locator(f'.table-tab[data-tab="{slug}"]')
 
 
+def cell(pg, slug):
+    """A tab's cell: the tab's button and, for the open tab, its head and marks beside it (spec 123 F: no button holds a button)."""
+    return pg.locator(f'.table-tabcell[data-cell="{slug}"]')
+
+
 def open_tab(pg, slug):
     tab(pg, slug).click()
     pg.locator(f'.table-tab[data-tab="{slug}"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
@@ -314,15 +319,15 @@ def test_the_tabs_in_order_the_projects_first_then_plus_and_stop_all(table):
     assert first.get_attribute("aria-label") == "shop · Does on Claude · Checks on Claude" and first.get_attribute("aria-selected") == "true"                # the first tab is the project's: its name (spec 101 §3.4, decisions §167.6) and the main tool on both (spec 111 §3.4)
     assert "Orkmaster" not in (first.get_attribute("title") or "") and first.locator(".table-tab__sub").count() == 0
     assert first.locator(".table-tab__main").text_content() == "shop"
-    assert "peon-crown" in first.locator(".ork-race__head").get_attribute("src")                                         # its crowned head
+    assert "peon-crown" in cell(pg, "orkmaster").locator(".ork-race__head").get_attribute("src")                          # its crowned head (the open tab's head is in its cell, beside its button)
     assert "knight-elder" in tab(pg, "game").locator(".ork-race__head").get_attribute("src")                             # a party's tab wears its leader's head
     assert tab(pg, "tech").get_attribute("aria-label") == "Tech · Does on Claude · Checks on Codex"                      # and its name, said also when only the head is drawn, with its sword and shield's words (spec 111 §3.4)
     assert tab(pg, "tech").get_attribute("title") == tab(pg, "tech").get_attribute("aria-label")
     assert pg.get_by_role("button", name="New party").count() == 1 and pg.get_by_role("button", name="Stop all").count() == 1
-    plus = pg.locator(".table-tabs__end .table-plus")
-    assert " ".join(plus.inner_text().split()) == ("Party" if wide(w) else "") and "primary" not in plus.get_attribute("class")                # spec 107 §8.1: + Party, green is New goal's
+    chair = pg.locator(".table-tabs__end .table-chair")
+    assert " ".join(chair.text_content().split()) == ("New party" if wide(w) else "") and "primary" not in chair.get_attribute("class")           # spec 123 §7.5: the empty chair, green is New goal's
     assert pg.get_by_role("button", name="Switch project").count() == 1                                                  # the ▾ after the project's name, its own button
-    assert pg.locator(".table-tabs__end .table-chip").count() == 0 and pg.locator(".table-tabs__end button").count() == 3 and pg.locator(".table-tabs__end .table-logs").count() == 1                  # the tabs' end keeps + and Stop all, then the bug under the glass (decisions §190.6): the limits are the hand's potions (spec 104 B)
+    assert pg.locator(".table-tabs__end .table-chip").count() == 0 and pg.locator(".table-tabs__end button").count() == 3 and pg.locator(".table-tabs__end .table-logs").count() == 1                  # the tabs' end keeps the empty chair and the door, then the bug under the glass (decisions §190.6): the limits are the hand's potions (spec 104 B)
     if not wide(w):
         assert tab(pg, "tech").locator(".table-tab__txt").is_hidden()                                                    # the tabs a row of heads
         assert all(t.bounding_box()["width"] >= 44 and t.bounding_box()["height"] >= 44 for t in tabs.all())             # a press 44 × 44 on a touch screen
@@ -413,8 +418,8 @@ def test_the_lanes_stand_under_their_tabs_every_lane_one_width_and_the_first_is_
     assert lanes.first.get_attribute("aria-label") == "shop"                                                             # the first lane is the whole project's
     for slug in ("orkmaster", "game", "tech", "art", "release"):
         lane = lanes.first if slug == "orkmaster" else pg.locator(f'.table-lane[data-party="{slug}"]')
-        t, l = tab(pg, slug).bounding_box(), lane.bounding_box()
-        assert abs(t["x"] - l["x"]) <= 1 and abs(t["width"] - l["width"]) <= 1, slug                                      # a tab is its lane's head: the same x, the same width
+        t, l = cell(pg, slug).bounding_box(), lane.bounding_box()
+        assert abs(t["x"] - l["x"]) <= 1 and abs(t["width"] - l["width"]) <= 1, slug                                      # a tab's cell is its lane's head: the same x, the same width (the open tab's head is in its cell, beside its button)
     widths = {round(l.bounding_box()["width"]) for l in lanes.all()[:5]}
     assert len(widths) == 1, widths                                                                                       # every lane the same width, the first too
     if wide(w):
@@ -1067,7 +1072,7 @@ def test_a_tab_has_a_second_line_the_sword_and_the_tool_its_does_run_on_the_shie
     assert line.get_attribute("aria-hidden") == "true"                                                                    # the words are the tab's label, the marks are drawn
     assert all(abs(b["width"] - 14) <= 1 and abs(b["height"] - 14) <= 1 for b in (e.bounding_box() for e in line.locator(".ork-sign, img").all()))        # 14 px, as the signs' small size
     head, name, tb = tab(pg, "tech").bounding_box(), tab(pg, "tech").locator(".table-tab__main").bounding_box(), line.bounding_box()
-    assert abs(head["height"] - 52) <= 1 and tb["y"] >= name["y"] + name["height"] - 1 and tb["y"] + tb["height"] <= head["y"] + head["height"] and abs(tb["x"] - name["x"]) <= 1      # under the name, inside the 52 px tab
+    assert head["height"] >= 60 and tb["y"] >= name["y"] + name["height"] - 1 and tb["y"] + tb["height"] <= head["y"] + head["height"] and abs(tb["x"] - name["x"]) <= 1      # under the name, inside the tab (the row is as high as the open head: spec 123 §7.1)
     ink = lambda slug, i: tab(pg, slug).locator(".table-tab__marks img").nth(i).get_attribute("src")                          # noqa: E731
     assert ink("tech", 0).endswith("/marks/harness-claude-ink.png") and ink("tech", 1).endswith("/marks/harness-codex-ink.png")      # in ink
     assert ink("orkmaster", 0).endswith("/marks/harness-claude.png") and ink("orkmaster", 1).endswith("/marks/harness-claude.png")     # the open tab's in colour
@@ -1308,7 +1313,7 @@ def test_every_press_is_44_by_44_on_a_touch_screen_and_nothing_is_said_only_on_h
     pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
     open_tab(pg, "tech")
     pg.locator('.table-seat[data-seat="grunt"]').wait_for(timeout=WAIT_MS)
-    for sel in (".table-tab", ".table-plus", ".table-stop", ".hand-die", ".table-menu__btn", ".table-seat", ".table-switch"):
+    for sel in (".table-tab", ".table-chair", ".table-door", ".hand-die", ".table-menu__btn", ".table-seat", ".table-switch"):
         for el in pg.locator(sel).all():
             box = el.bounding_box()
             assert box["width"] >= 43.5 and box["height"] >= 43.5, (sel, box)

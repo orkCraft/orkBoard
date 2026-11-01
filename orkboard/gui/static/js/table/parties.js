@@ -77,7 +77,7 @@ function useBeginning() {
 }
 
 /** The party the Board has of a preset: the one made from its recipe, else (a party made before recipes were kept) the one its leader leads. */
-const madeFrom = (p, tracks) => tracks.find((t) => t.recipe === p.id) || tracks.find((t) => !t.recipe && t.leader?.slug === p.leader && !tracks.some((o) => o.recipe === p.id)) || null;
+export const madeFrom = (p, tracks) => tracks.find((t) => t.recipe === p.id) || tracks.find((t) => !t.recipe && t.leader?.slug === p.leader && !tracks.some((o) => o.recipe === p.id)) || null;
 
 /** One party as the screen has it: ticked or not, its size, its squad (the person's changes are `edit`). */
 function viewOf(p, tracks, edit, stage) {

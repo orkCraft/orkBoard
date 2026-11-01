@@ -37,7 +37,7 @@ const drafts = {};
 
 const headOf = (tab) => (typeof document === "undefined" ? null : document.querySelector(`[data-ask-head="${CSS.escape(tab)}"]`));
 /** Whether a head may open a bubble: the wide width and a pointer that is not a finger. */
-const desk = () => wide.value && !(typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches);
+export const desk = () => wide.value && !(typeof matchMedia === "function" && matchMedia("(pointer: coarse)").matches);
 
 // -- the evening line, seen once a day a party ------------------------------------------------------------------------------------------------------------------------------------------
 const seenNow = new Set();

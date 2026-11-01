@@ -12,7 +12,8 @@
   --hc-rise: calc(var(--hc-h) - var(--hc-shown));                                                          /* what a card rises to show whole */
   --hc-room: calc(var(--hc-rise) + var(--ork-4)); }                                                        /* the room above the hand a risen card lies in */
 /* the discard on the table (table/discard.js) is a card of the hand's size: it reads the same sizes */
-.hand { position: relative; z-index: 2; min-width: 0; background: var(--ork-canvas); border-top: var(--ork-line) solid var(--ork-frame); padding-bottom: env(safe-area-inset-bottom, 0px); }
+/* the hand is a player's place, on orkUI's room with the table's rim over it (spec 123 §7.7, decisions §201.7) */
+.hand { position: relative; z-index: 2; min-width: 0; background: var(--ork-room); border-top: 3px solid var(--ork-table-rim); padding-bottom: env(safe-area-inset-bottom, 0px); }
 @media (max-width: 1023px) { .hand, .table-end, .table-body { --hc-head: 60px; } }                                                  /* the phone's type is a size up (tokens.css): three lines of 20 px */
 .hand[data-empty] { border-top: 0; }
 /* the cards' lower half lies under the window's edge: the places are clipped at the hand's height, with the room above for a card to rise into (it overlies the table's foot, nothing else there takes the pointer) */

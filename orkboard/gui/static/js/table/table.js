@@ -36,13 +36,13 @@ function useCompact(n, narrow) {
   const host = useRef(), [compact, set] = useState(false);
   useLayoutEffect(() => {
     const measure = () => {
-      const w = host.current?.querySelector(".table-tab")?.clientWidth || 0;
+      const w = host.current?.querySelector(".table-tabcell")?.clientWidth || 0;                 // the cell is the column's: the open tab's button is narrower by its head
       set(narrow || (w > 0 && w < FIT));
     };
     measure();
     const ro = typeof ResizeObserver === "function" ? new ResizeObserver(measure) : null;
     if (host.current) ro?.observe(host.current);
-    const first = host.current?.querySelector(".table-tab");
+    const first = host.current?.querySelector(".table-tabcell");
     if (first) ro?.observe(first);
     return () => ro?.disconnect();
   }, [n, narrow]);
@@ -95,7 +95,7 @@ export function Table() {
     return () => { clearInterval(poll); lit?.classList.remove("is-lit"); removeEventListener("pointerdown", off, true); removeEventListener("keydown", off, true); };
   }, [litKey.value]);
   return html`<div class="table" ref=${host} data-tab=${current} data-narrow=${String(narrow)} data-compact=${String(compact)}>
-    <${Tabs} parties=${tabs} current=${current} narrow=${narrow} compact=${compact} />
+    <${Tabs} parties=${tabs} all=${parties} current=${current} narrow=${narrow} compact=${compact} />
     <${Pane} parties=${parties} tab=${current} narrow=${narrow} />
   </div>`;
 }
