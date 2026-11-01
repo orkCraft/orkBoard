@@ -8,6 +8,7 @@ import { byUrgency, gateOf, goalsOf, nodesOf, paidStopsOf, resultStop, resultsOf
 import { ORKMASTER } from "../frame/state.js";
 import { partiesNow, roadSlugs } from "../table/data.js";
 import { hypothesisStops } from "./hypothesiscard.js";
+import { isHeld } from "./hearingstate.js";
 import { projectStops, questionStops } from "./questions.js";
 
 /** The parties of the map in the Board's order. */
@@ -43,8 +44,8 @@ export function readyWords(r) {
 /** Every stop of the project, the most urgent first, a to-do last of all: each Needs you row, a failed task and a pick, a result to look at, the tools' sign-ins
  *  (arenawords.js, as the old hand read them). `open`: the tab that is open: a party's slug, or "orkmaster" for the Board's (every party at once, so no card says its party:
  *  its leader's head does). On a party's tab a stop of another party says its party. */
-export function stopsOfProject(map = mapData.value, needs = board.value?.needs_you || [], open = "") {
-  const out = [], ork = map?.project?.orkmaster || null, byParty = partyBy(map), ctx = { party: (slug) => (slug ? byParty[slug] || null : null), open };
+export function stopsOfProject(map = mapData.value, rows = board.value?.needs_you || [], open = "") {
+  const needs = rows.filter((r) => !isHeld(r)), out = [], ork = map?.project?.orkmaster || null, byParty = partyBy(map), ctx = { party: (slug) => (slug ? byParty[slug] || null : null), open };
   for (const g of partiesOf(map)) {
     const nodes = nodesOf(map, g.slug), party = partyCard(g);
     const mine = [...stopsOf(needs, g, nodes, ork), ...resultsOf(nodes).map((r) => resultStop(r, nodes))];
@@ -63,7 +64,7 @@ export function stackKey(s) {
 }
 
 /** What is the whole goal's, not one party's: the route, Talk of several leaders, the decision, a fork, the Orkmaster's collision (docs/specs/101 §4.2) and its *Go on paid?* (docs/specs/105 §3): they lie under the first lane. */
-const WHOLE = new Set(["route", "talk", "objection", "decision", "fork", "collide", "paid"]);
+const WHOLE = new Set(["route", "talk", "hearing", "decision", "fork", "collide", "paid"]);
 
 /** The party a row belongs to ("" for a row of no party of its own). */
 const partyOfRow = (row) => row?.g?.slug || row?.row?.goal || row?.goal || "";

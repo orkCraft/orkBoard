@@ -1,0 +1,75 @@
+/* A hearing (docs/specs/120-a-goal-heard-and-thrown-to-a-side.md §6.7, decisions §198.6; the mockup docs/mockups/hearing/ 3): the goal's card in the middle, at most three sides around it (→ right, ← left, ↑ up), thrown by a drag, a press or a key.
+   Layout only: every colour, face, corner and motion is orkUI's (tokens.css, components.css: `.ork-card`, `.ork-btn`, `.ork-field`, `.ork-label`, the motion tokens). The card alone takes the pointer (`touch-action: none`); the page scrolls everywhere else. */
+
+.hr-pane { display: flex; flex-direction: column; gap: var(--ork-5); min-width: 0; }
+.hr { box-sizing: border-box; position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); grid-template-areas: "title title title" ". up ." "left card right" "hint hint hint" "back back back";
+  gap: var(--ork-4); align-items: center; justify-items: center; width: 100%; max-width: 960px; margin: 0 auto; padding: var(--ork-5); overflow: hidden; }          /* the wood is orkUI's `.ork-table` */
+.hr-title { grid-area: title; margin: 0; max-width: 100%; text-align: center; overflow-wrap: anywhere; color: var(--ork-ink-muted); font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.hr-hint { grid-area: hint; margin: 0; color: var(--ork-ink-muted); text-align: center; }
+.hr-back { grid-area: back; }
+
+/* a side: a button with its leaders' heads, their words and its outcome at its foot; the one the card nears grows */
+.hr-side { display: flex; flex-direction: column; gap: var(--ork-2); width: 100%; max-width: 230px; min-width: 0; align-self: center; }
+.hr-side--up { grid-area: up; align-self: end; }
+.hr-side--left { grid-area: left; justify-self: end; }
+.hr-side--right { grid-area: right; justify-self: start; }
+.hr-side__btn { display: flex; flex-direction: column; gap: var(--ork-2); box-sizing: border-box; width: 100%; min-height: var(--ork-tap); padding: var(--ork-3); text-align: left; background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame);
+  color: var(--ork-ink); font: inherit; cursor: pointer; clip-path: var(--ork-notch); transition: transform var(--ork-motion-quick) var(--ork-motion-ease), border-color var(--ork-motion-quick) linear; }
+.hr-side__btn:disabled { cursor: default; }
+.hr-side__btn:hover:not(:disabled), .hr-side.is-near .hr-side__btn { border-color: var(--ork-ink); transform: scale(1.04); }
+.hr-side__btn:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.hr-who { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2); min-width: 0; color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
+.hr-head { display: inline-flex; flex: none; }
+.hr-head .ork-race__head { width: 16px; height: 15px; }
+.hr-head.is-first .ork-race__head { width: 28px; height: 26px; }
+.hr-who__names { min-width: 0; overflow-wrap: anywhere; }
+.hr-says { display: block; font: var(--ork-type-body); overflow-wrap: anywhere; }
+.hr-doubt { display: block; color: var(--ork-ink-muted); font: var(--ork-type-caption); overflow-wrap: anywhere; }
+.hr-out { display: flex; align-items: center; gap: var(--ork-2); margin-top: auto; font: var(--ork-type-button); text-transform: var(--ork-type-button-case); letter-spacing: var(--ork-type-button-track); }
+.hr-out__words { min-width: 0; overflow-wrap: anywhere; }
+.hr-out__said { font: var(--ork-type-caption); font-weight: 600; text-transform: none; letter-spacing: normal; }               /* what a leader said is never in the pixel face */
+.hr-key { margin-left: auto; padding-left: var(--ork-2); color: var(--ork-ink-faint); font: var(--ork-type-caption); }
+.hr-more { align-self: flex-start; min-height: var(--ork-tap); }
+
+/* the goal's card in the middle: its rune and name, what it is done when (else its gist), the way to say it in the person's own words; dragged it follows the pointer and tilts, the outcome of the side it nears stamped on it */
+.hr-card { box-sizing: border-box; grid-area: card; position: relative; display: flex; flex-direction: column; gap: var(--ork-2); width: 168px; aspect-ratio: 5 / 7; min-height: 0; padding: var(--ork-3); overflow: hidden; touch-action: none; user-select: none; cursor: grab; }
+.hr-card.is-dragging { cursor: grabbing; }
+.hr-card.is-settling { transition: transform var(--ork-motion-base) var(--ork-motion-spring); }
+.hr-card.is-away { pointer-events: none; opacity: 0; transition: transform 360ms var(--ork-motion-ease), opacity 360ms linear; }
+.hr-card:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.hr-card__head { display: flex; align-items: flex-start; gap: var(--ork-2); min-width: 0; }
+.hr-card__head > .ork-elem { flex: none; margin-top: 1px; }
+.hr-card__name { min-width: 0; overflow-wrap: anywhere; font: var(--ork-type-caption); font-weight: 600; }
+.hr-card__lab { margin: 0; color: var(--ork-ink-muted); }
+.hr-card__done { display: flex; flex-direction: column; gap: var(--ork-1); margin: 0; padding: 0; list-style: none; font: var(--ork-type-caption); overflow: hidden; }
+.hr-card__done li::before { content: "· "; color: var(--ork-ink-muted); }
+.hr-card__gist { margin: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); overflow: hidden; overflow-wrap: anywhere; }
+.hr-own { margin-top: auto; padding: var(--ork-2) 0 0; border: 0; border-top: var(--ork-line) solid var(--ork-frame); background: none; color: var(--ork-ink-muted); font: var(--ork-type-caption); text-align: left; cursor: pointer; }
+.hr-own:hover { color: var(--ork-ink); }
+.hr-own:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.hr-field { display: flex; flex-direction: column; gap: var(--ork-2); margin-top: auto; min-height: 0; cursor: default; user-select: text; }
+.hr-field__text { box-sizing: border-box; width: 100%; resize: none; font: var(--ork-type-body); }
+.hr-field__acts { display: flex; justify-content: space-between; gap: var(--ork-2); }
+.hr-stamp { position: absolute; left: var(--ork-2); right: var(--ork-2); top: 40%; padding: var(--ork-2); border: 2px solid currentColor; background: var(--ork-card); color: var(--ork-ink); text-align: center; overflow-wrap: anywhere;
+  font: var(--ork-type-button); text-transform: var(--ork-type-button-case); letter-spacing: var(--ork-type-button-track); opacity: 0; transform: rotate(-8deg); pointer-events: none; }
+.hr-stamp[data-on="1"] { opacity: 1; }
+
+/* a phone-sized page (a touch phone or a narrow window): the goal's card in the middle, the side at the top above it, the other two under it side by side; a side's line wraps to three lines and opens whole on *More* */
+@media (max-width: 759.98px) {
+  .hr { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-areas: "title title" "up up" "card card" "left right" "hint hint" "back back"; padding: var(--ork-3); gap: var(--ork-3); }
+  .hr-side { max-width: none; }
+  .hr-side--up { align-self: stretch; }
+  .hr-side--left, .hr-side--right { justify-self: stretch; align-self: start; }
+  .hr-card { width: 150px; }
+  .hr-says { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; font: var(--ork-type-caption); }
+  .hr-side.is-open .hr-says { display: block; -webkit-line-clamp: unset; line-clamp: unset; overflow: visible; }
+  .hr-key { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hr-side__btn, .hr-card.is-settling, .hr-card.is-away { transition: none; }
+}
+
+/* a phone's middle: the hearing is the goal's top card; the lifted card's own head, window and foot are the hearing's (its title, the card in its middle) */
+.hand-lifted--up:has(> .hand-lifted__body > .hr) { display: block; padding: 0; background: none; border: 0; clip-path: none; box-shadow: none; }
+.hand-lifted--up:has(> .hand-lifted__body > .hr) > :is(.hand-card__head, .hand-card__window, .hand-card__label, .hand-lifted__kind) { display: none; }
+.hand-lifted--up .hand-lifted__body > .hr { max-width: none; }
