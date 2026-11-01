@@ -11,6 +11,7 @@ ROUTE = [{"party": "design", "leader": "ux", "head": {"race": "dryad", "tier": "
 
 def _seed(tmp_path: Path, monkeypatch, slug="dark"):
     monkeypatch.setattr(goal_route, "steps_of", lambda root, state_dir, st, settings=None: ROUTE)
+    monkeypatch.setattr(goal_route, "cost_of", lambda root, state_dir, st, settings=None: {"calls": 3, "usd_low": 0.1, "usd_high": 0.2})
     ideas.state_folder(tmp_path, slug).mkdir(parents=True, exist_ok=True)
     return tmp_path
 
@@ -27,6 +28,7 @@ def test_the_back_says_the_route_who_has_been_heard_and_the_stances_that_are_in(
     state = _seed(tmp_path, monkeypatch)
     idea_questions.save_record(state, "dark", {"mode": "talk", "round": 1, "heard": ["design"], "stances": []})
     back = board_back.of(tmp_path, state, "dark", {"state": "talk"})
+    assert back["cost"]["calls"] == 3 and back["offer"] == [] and back["short"] is False, "the route's cost, its offer and its way, as the route card's row has them"
     assert back["route"] == ROUTE and back["heard"] == ["design"] and back["stances"] == [] and back["ripe"] is None and back["round"] == 1
     idea_questions.save_record(state, "dark", {"mode": "talk", "round": 1, "heard": ["design", "tech"], "stances": [
         {"party": "design", "leader": "ux", "stance": "For it", "for": "x"}, {"party": "tech", "leader": "architect", "stance": "", "for": ""}]})

@@ -23,6 +23,7 @@ import { StopFace } from "./stopface.js";
 import { Stacks } from "./stacks.js";
 import { Upright } from "./upright.js";
 import { fieldOpen, stopKeyOf } from "./state.js";
+import { said } from "./motion.js";
 import "./wayparts.js";                                   // the goal's way's cards (spec 100)
 
 // The faces of what the hand opens over the pane; the table draws whichever `faceOf(kind)` has.
@@ -80,6 +81,7 @@ export function Hand() {
     ${fieldOpen.value && !middle && html`<${Field} />`}
     ${s && html`<${Lifted} s=${s} anchor=${anchor} />`}
     ${middle && html`<div class="hand-mana-only"><${PlayDie} /><${Mana} /></div>`}
+    <span class="hand-live" role="status" aria-live="polite">${said.value}</span>
     ${middle && html`<${Middle}>${fieldOpen.value ? html`<${Field} middle=${true} />` : html`<${PlusCard} large=${true} onPress=${plus} />`}<//>`}
   </footer>`;
 }

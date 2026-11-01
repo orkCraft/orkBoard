@@ -2,10 +2,10 @@
 // `{kind: "decision", idea, number, title, text, confirmed, error}` (`text`: *Why: …* and the points numbered, as the project's decisions file words them). Its face is the hand's card (stopcard.js): the sign `page`, the
 // Orkmaster's crowned head as its asker, *Decision <n>* at its foot, no gem (it spends nothing new), under the first lane. Lifted: its title (the card's own header), *Why* and its numbered points, *Edit*, which opens the whole
 // entry as a field on the card (what is written there is sent as `text`, kept as written), and one button, **Confirm and start** (`ideas.confirm`): the entry is written into the project's decisions file and committed, the leaders
-// write their sections. After a failed *Confirm* the entry is written already (`confirmed` and the `error`): the button asks the sections again and *Edit* is gone.
+// write their sections; **Start** instead when the leaders all agreed and the wait was held (spec 120 §6.8). After a failed *Confirm* the entry is written already (`confirmed` and the `error`): the button asks the sections again and *Edit* is gone.
 import { useEffect, useRef, useState } from "preact/hooks";
 import { html } from "../html.js";
-import { act } from "../shell/store.js";
+import { act, mapData } from "../shell/store.js";
 import { orkHead } from "./routecard.js";
 import { way } from "./ways.js";
 
@@ -23,8 +23,11 @@ export const decisionWords = (row) => (Number(row?.number) > 0 ? `Decision ${row
 /** The entry as a field opens it: its heading line (the title is its first line when it is a heading), then the body. */
 const entryOf = (row) => `## ${Number(row.number) > 0 ? `${row.number}. ` : ""}${row.title}\n\n${String(row.text || "").trim()}`;
 
+/** Whether the goal's wait was held (spec 120 §6.8): the leaders agreed, the person pressed **Hold** (or a stop or a spent window did), so the decision's one button says **Start**. */
+export const heldWait = (idea) => !!(mapData.value?.nodes || []).find((n) => n.slug === idea)?.back?.ripe?.held;
+
 export function DecisionLifted({ s, close }) {
-  const row = s.row || {}, body = bodyOf(row.text), [edit, setEdit] = useState(false), seed = entryOf(row), [text, setText] = useState(seed), [busy, setBusy] = useState(false), box = useRef();
+  const row = s.row || {}, held = heldWait(row.idea), body = bodyOf(row.text), [edit, setEdit] = useState(false), seed = entryOf(row), [text, setText] = useState(seed), [busy, setBusy] = useState(false), box = useRef();
   useEffect(() => { if (edit) box.current?.focus({ preventScroll: true }); }, [edit]);
   const confirm = async () => {
     setBusy(true);
@@ -40,10 +43,11 @@ export function DecisionLifted({ s, close }) {
           ${body.points.length > 0 && html`<ol class="hand-way__points" aria-label="The points">${body.points.map((p, i) => html`<li key=${i} class="body">${p}</li>`)}</ol>`}
           ${body.rest && html`<p class="body hand-way__words">${body.rest}</p>`}`
         : html`<p class="body hand-way__words">${String(row.text || "").trim()}</p>`}
+    ${held && !row.confirmed && html`<p class="cap hand-way__place" data-note="held">Held: start it when you are ready</p>`}
     ${row.confirmed && html`<p class="cap hand-way__place" data-note="written">${row.error ? `${row.error}. ` : ""}The decision is written already: Confirm and start asks the sections again.</p>`}
     <div class="hand-answers hand-way__acts" role="group" aria-label="Answers">
       <button type="button" class="ork-btn primary" disabled=${busy || (edit && !text.trim())}
-        title="The decision is written into the project’s decisions file and committed, then the leaders write their sections" onClick=${confirm}>Confirm and start</button>
+        title="The decision is written into the project’s decisions file and committed, then the leaders write their sections" onClick=${confirm}>${held ? "Start" : "Confirm and start"}</button>
       ${!row.confirmed && (edit ? html`<button type="button" class="ork-btn quiet" disabled=${busy} onClick=${() => { setEdit(false); setText(seed); }}>Cancel</button>`
         : html`<button type="button" class="ork-btn quiet" disabled=${busy} title="Change the words before they are written" onClick=${() => setEdit(true)}>Edit</button>`)}
     </div>

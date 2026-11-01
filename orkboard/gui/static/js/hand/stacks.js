@@ -5,8 +5,10 @@
 import { html, cls } from "../html.js";
 import { lift, lower, lifted, pick, picked } from "../frame/state.js";
 import { nameOf, partiesNow } from "../table/data.js";
-import { StopCard } from "./stopcard.js";
-import { Shards, useDealt, useGone } from "./motion.js";
+import { StopCard, askerOf, handsWords } from "./stopcard.js";
+import { goalOfStop } from "./data.js";
+import { mapData } from "../shell/store.js";
+import { Shards, fromWhere, useGone, useHanded } from "./motion.js";
 import { liftKey } from "./state.js";
 
 const EDGES = 5;                                  // the backs under a stack's top that show (the stack's depth, never a number)
@@ -14,9 +16,19 @@ const EDGES = 5;                                  // the backs under a stack's t
  *  The first two are cards seen, the rest hint at more by their edge. hand.css reads them as `--dx` and `--rot`, unitless. */
 const FAN = [null, [7, 3], [-7, -3], [10, 4], [-10, -4], [9, 2]];
 
-/** A stack's cards under its top, face down, laid as a fan. */
+/** A stack's cards under its top, face down, laid as a fan. (Only a stack's top card is handed: the cards under it lie as edges, so a stack that grows plays one flight.) */
 function Edges({ n }) {
   return Array.from({ length: n }, (_, k) => n - k).map((i) => html`<i key=${i} class="ork-card-back edge hand-back" style=${`--ork-deck-i:${i};--dx:${FAN[i][0]};--rot:${FAN[i][1]}`} aria-hidden="true"></i>`);
+}
+
+/** Who plays a stop, for where it comes from (motion.js `fromWhere`). */
+const whoOf = (s) => ({ goal: goalOfStop(s), party: s.party?.slug || s.row?.goal || "", ork: askerOf(s) === "the Orkmaster" });
+
+/** Where an answered card goes back to, the element of its origin; none for a card whose goal is gone (a dropped one crumbles where it lay: flying back means *answered*, crumbling *gone*) and for one with no origin in view (spec 120 §6.10). */
+function backTo(s) {
+  const goal = goalOfStop(s);
+  if (goal && !(mapData.value?.nodes || []).some((n) => n.slug === goal)) return null;
+  return fromWhere(whoOf(s))?.el || null;
 }
 
 function Stack({ stack, dealt, ghost = false }) {
@@ -28,14 +40,15 @@ function Stack({ stack, dealt, ghost = false }) {
     if (on === liftKey(s.key)) lower(); else lift(liftKey(s.key));
   };
   if (ghost) {                                                          // the last card of the stack was answered: it crumbles where it lay
-    return html`<div class="ork-deck hand-stack is-gone" data-stack=${stack.key} data-n="0"><${StopCard} s=${stack.cards[0]} gone=${true}><${Shards} /><//></div>`;
+    const to = backTo(stack.cards[0]);
+    return html`<div class="ork-deck hand-stack is-gone" data-stack=${stack.key} data-n="0"><${StopCard} s=${stack.cards[0]} gone=${true} back=${to}>${!to && html`<${Shards} />`}<//></div>`;
   }
   const top = live[0]?.item, under = Math.min(EDGES, Math.max(0, live.length - 1)), lit = !!goal && picked.value === goal;
   if (!top) return null;
   return html`<div class=${cls("ork-deck hand-stack", { "is-picked": lit })} data-stack=${stack.key} data-goal=${goal} data-n=${under} data-cards=${stack.cards.length}>
     <${Edges} n=${under} />
     <${StopCard} s=${top} top=${true} lit=${lit} slot=${on === liftKey(top.key)} dealt=${dealt[top.key] ?? null} onPress=${press(top)} />
-    ${cards.filter((c) => c.gone).map(({ item: s }) => html`<${StopCard} key=${s.key} s=${s} gone=${true}><${Shards} /><//>`)}
+    ${cards.filter((c) => c.gone).map(({ item: s }) => { const to = backTo(s); return html`<${StopCard} key=${s.key} s=${s} gone=${true} back=${to}>${!to && html`<${Shards} />`}<//>`; })}
   </div>`;
 }
 
@@ -47,7 +60,8 @@ function Slot({ at, of, z, behind = false, plus = false, children }) {
 /** The lanes of the hand, one under each tab of the Board (the first the project's), each a fan of its stacks (the most urgent in front); `plus`: the + card, which lies whole at the first lane's left end, never in its fan
  *  (spec 107 §13.2, decisions §182.4): the first lane's stacks fan to its right (hand.css gives the lane the room when it has any). */
 export function Stacks({ stacks, plus }) {
-  const parties = partiesNow(), count = parties.length + 1, items = useGone(stacks, (st) => st.key), dealt = useDealt(stacks.flatMap((st) => st.cards.map((s) => s.key)));
+  const parties = partiesNow(), count = parties.length + 1, items = useGone(stacks, (st) => st.key),
+    dealt = useHanded(stacks.flatMap((st) => st.cards.map((s, at) => ({ key: s.key, top: at === 0, ...whoOf(s), name: askerOf(s), words: handsWords(s) }))));
   const lanes = Array.from({ length: count }, () => []);
   for (const it of items) lanes[Math.min(it.item.lane || 0, count - 1)].push(it);
   const last = lanes[count - 1];

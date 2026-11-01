@@ -11,6 +11,7 @@ import { openOver, pick, picked } from "../frame/state.js";
 import { MANY, waitsWords } from "./data.js";
 import { TaskCard, TaskEdge, OwnCard, Token, BEHIND, aboutTokens, fanOf, leans } from "./card.js";
 import { moveGoal, neighbour } from "./line.js";
+import { useArrival, useDeparture } from "./flight.js";                // a goal that was face down flies from the Orkmaster's lane to its party's lane, once (spec 120 §6.5)
 import { GoalMenu } from "./dropgoal.js";
 
 const THRESHOLD = 6;                                               // px a pointer moves before a press is a drag
@@ -35,14 +36,18 @@ export function Cascade({ n, tasks }) {
 
 /** A goal in its party's lane: its strip (its rune and its name, once) over its cascade. At a lane a token wide, one token with its stack's edges. */
 export function GoalBlock({ n, tasks, tokens }) {
+  const ref = useRef();
+  useArrival(n.slug, ref);
   if (tokens) return html`<${Token} n=${n} tasks=${tasks} />`;
-  return html`<div class="table-goal" data-goal=${n.slug}><${GoalStrip} n=${n} /><${Cascade} n=${n} tasks=${tasks} /></div>`;
+  return html`<div class="table-goal" ref=${ref} data-goal=${n.slug}><${GoalStrip} n=${n} /><${Cascade} n=${n} tasks=${tasks} /></div>`;
 }
 
 /** A goal the Orkmaster reads, routes or joins itself, in the first lane: its card alone, no strip (the card is the goal's, decisions §187.1). */
 export function OwnBlock({ n, stage, tokens }) {
+  const ref = useRef();
+  useDeparture(n.slug, ref);
   if (tokens) return html`<${Token} n=${n} stage=${stage} />`;
-  return html`<div class="table-goal" data-goal=${n.slug}><div class="table-cardwrap"><${OwnCard} n=${n} stage=${stage} /><${GoalMenu} slug=${n.slug} where="card" /></div></div>`;
+  return html`<div class="table-goal" ref=${ref} data-goal=${n.slug}><div class="table-cardwrap"><${OwnCard} n=${n} stage=${stage} /><${GoalMenu} slug=${n.slug} where="card" /></div></div>`;
 }
 
 // -- the line ----------------------------------------------------------------------------------------------------------------------

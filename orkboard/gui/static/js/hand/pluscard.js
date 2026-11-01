@@ -16,7 +16,8 @@ import { toast } from "../link.js";
 import { act } from "../shell/store.js";
 import { MAX_PICTURES, PICTURE_TYPES, shrink } from "../board/pictures.js";
 import { tab } from "../frame/state.js";
-import { fieldOff, fieldOpen, fieldPhotos, fieldRune, fieldText, fieldType, rite, summon, withoutAddress } from "./state.js";
+import { fieldOff, fieldOpen, fieldPhotos, fieldRune, fieldRunes, fieldText, fieldType, rite, summon, withoutAddress } from "./state.js";
+import { focusInPress, growFrom, releaseProxy, sendBack, turnBack } from "./fieldturn.js";
 import { partiesOf, partyCard } from "./data.js";
 import { MarkChips, addressNow, marks, marksToSend, resetMarks } from "../table/picking.js";       // picking on the addressed party's map (spec 102 §6): its marks lie on the field as chips
 import { leans } from "./motion.js";
@@ -42,7 +43,7 @@ export function PlusCard({ large = false, onPress }) {
   const narrow = useNarrow(), address = addressNow(), r = runesOf(address), play = rite.value;
   const frees = r.free.filter((e) => e !== r.shown).slice(0, FREE_PLACES.length);
   return html`<button type="button" class=${cls("ork-card ork-plus ork-leans hand-plus", { "is-large": large, "is-choosing": fieldOpen.value })} aria-label="New goal" title="New goal" aria-haspopup="dialog"
-    aria-expanded=${fieldOpen.value ? "true" : "false"} onClick=${onPress} ...${leans}>
+    aria-expanded=${fieldOpen.value ? "true" : "false"} onClick=${(e) => { if (!fieldOpen.value) focusInPress(); onPress?.(e); }} ...${leans}>
     <span class=${cls("ork-sigil", { small: narrow, "is-summoning": !!play, [`rite-${play}`]: !!play })} aria-hidden="true"><span class="ork-sigil__seal">${r.shown && html`<${Elem} name=${r.shown} />`}</span>${!narrow && frees.map((e, i) => html`<span key=${e} class=${`ork-sigil__free ${FREE_PLACES[i]}`}><${Elem} name=${e} /></span>`)}</span><${Icon} name="plus" /></button>`;
 }
 
@@ -58,7 +59,14 @@ async function addPictures(files) {
 /** Where the goal in the field goes now: the party its text names, else the open tab's (unless taken off), else none. */
 export const useAddress = addressNow;
 
-export function closeField() { fieldOpen.value = false; }
+/** Esc or a press away: the card turns back into the + card where it lay, its text and rune kept (fieldturn.js). */
+export function closeField() {
+  const box = fieldOpen.value ? document.querySelector(".hand-field")?.getBoundingClientRect() : null;
+  fieldOpen.value = false;
+  fieldRunes.value = false;
+  releaseProxy();
+  if (box) turnBack(box);
+}
 export function openField(first = "") {
   if (first) fieldText.value += first;
   fieldOpen.value = true;
@@ -68,7 +76,9 @@ export function openField(first = "") {
  *  with no party addressed none is checked, and Tab enters on the first. The elements are never named: a screen reader hears *Rune 1* … *Rune 5*. */
 function RuneRow({ runes }) {
   const row = useRef();
+  useEffect(() => { row.current?.querySelector('[role=radio][tabindex="0"]')?.focus({ preventScroll: true }); }, []);       // opened by a press on the rune: the focus is in the row
   const move = (e) => {
+    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); fieldRunes.value = false; document.querySelector(".hand-field__rune")?.focus(); return; }          // Esc closes the row first, the card after
     const at = ELEMENTS.indexOf(runes.shown), forward = e.key === "ArrowRight" || e.key === "ArrowDown";
     if (!forward && e.key !== "ArrowLeft" && e.key !== "ArrowUp") return;
     e.preventDefault();
@@ -77,21 +87,31 @@ function RuneRow({ runes }) {
     fieldRune.value = ELEMENTS[next];
     row.current?.querySelectorAll("[role=radio]")[next]?.focus();
   };
-  return html`<div ref=${row} class="hand-field__runes" role="radiogroup" aria-label="Its rune" onKeyDown=${move}>
+  return html`<div ref=${row} id="hand-field-runes" class="hand-field__runes" role="radiogroup" aria-label="Its rune" onKeyDown=${move}>
     ${ELEMENTS.map((e, i) => html`<button key=${e} type="button" role="radio" class=${cls("hand-rune", { "is-used": runes.used.includes(e) })} data-rune=${e} aria-checked=${String(runes.shown === e)} aria-label=${`Rune ${i + 1}`}
-      tabindex=${(runes.shown ? runes.shown === e : i === 0) ? 0 : -1} onClick=${() => { fieldRune.value = e; }}><${Elem} name=${e} big=${true} /></button>`)}
+      tabindex=${(runes.shown ? runes.shown === e : i === 0) ? 0 : -1} onClick=${() => { fieldRune.value = e; fieldRunes.value = false; }}><${Elem} name=${e} big=${true} /></button>`)}
   </div>`;
+}
+
+/** The card's rune, large at its top left where a card's element stands (spec 120 §6.1): given by rule (the party's `next_element`), a press on it opens the five runes in a row under it; doing nothing keeps the rule. With no party addressed it is an empty place until one is chosen. */
+function RuneButton({ runes }) {
+  const at = ELEMENTS.indexOf(runes.shown), open = fieldRunes.value;
+  return html`<button type="button" class=${cls("hand-field__rune", { "is-open": open })} aria-label=${at >= 0 ? `Its rune: Rune ${at + 1}, change it` : "Its rune: none yet, choose one"} aria-expanded=${String(open)} aria-controls="hand-field-runes"
+    onClick=${() => { fieldRunes.value = !open; }}><${Elem} name=${runes.shown} big=${true} dim=${!runes.shown} /></button>`;
 }
 
 /** The field the + card grew into. `middle`: it grows in the pane's middle (no goal at all), else over the hand. */
 export function Field({ middle = false }) {
-  const area = useRef(), file = useRef(), [busy, setBusy] = useState(false), address = useAddress(), runes = runesOf(address);
+  const root = useRef(), area = useRef(), file = useRef(), [busy, setBusy] = useState(false), address = useAddress(), runes = runesOf(address);
   const mention = useMention(area, partiesOf(mapData.value).map((g) => ({ ...partyCard(g), types: g.types || [] })));
   const taken = fieldType.value && fieldType.value.party === address.party ? fieldType.value : null;     // the type taken with @ stays the goal's while it goes to the party it was taken from
+  useLayoutEffect(() => { growFrom(root.current); }, []);                              // it turns over and grows out of the + card (fieldturn.js)
   useEffect(() => {                                                                   // opened: the caret at the end of what was kept
     const el = area.current;
     if (!el) return;
+    fieldRunes.value = false;
     el.focus({ preventScroll: true });
+    releaseProxy();                                                                   // the focus the press gave moves here: the phone's keyboard stays up
     el.setSelectionRange(el.value.length, el.value.length);
   }, []);
   const send = async () => {
@@ -103,8 +123,10 @@ export function Field({ middle = false }) {
     const got = await act("ideas.add", { text, ...(address.party ? { party: address.party } : {}), ...(taken ? { type: taken.id } : {}), ...(chosen ? { element: chosen } : {}), ...(fieldPhotos.value.length ? { photos: fieldPhotos.value } : {}), ...(sent.length ? { marks: sent } : {}) });
     setBusy(false);
     if (!got) return;                                                                 // refused: the host said why in a toast, the words stay
-    fieldText.value = ""; fieldPhotos.value = []; resetMarks(); fieldType.value = null; fieldRune.value = ""; fieldOpen.value = false;
+    const box = root.current?.getBoundingClientRect(), goal = { slug: got.slug || "", element: got.element || chosen || runes.shown, name: text.replace(/\s+/g, " ").slice(0, 60) };
+    fieldText.value = ""; fieldPhotos.value = []; resetMarks(); fieldType.value = null; fieldRune.value = ""; fieldOpen.value = false; fieldRunes.value = false;
     summon(got.element || chosen);                                                    // the seal fills from the goal's rune (decisions §187.4)
+    if (box && goal.slug) sendBack(box, goal);                                        // it turns to its back and goes face down to the Orkmaster's lane (§6.2)
     toast(address.party ? `Sent to ${address.name}.` : "Sent: the Orkmaster finds its party in a moment.");
   };
   const off = () => { if (address.by === "text") fieldText.value = withoutAddress(fieldText.value, address.name); else fieldOff.value = tab.value; area.current?.focus(); };
@@ -118,8 +140,9 @@ export function Field({ middle = false }) {
     if (pics.length) { e.preventDefault(); addPictures(pics); }
   };
   const photos = fieldPhotos.value;
-  return html`<div class=${cls("ork-card hand-field", { "is-middle": middle })} role="group" aria-label="The new goal’s card, grown into the field"
+  return html`<div ref=${root} class=${cls("ork-card hand-field", { "is-middle": middle })} role="group" aria-label="The new goal’s card, grown into the field"
       onDragOver=${(e) => e.preventDefault()} onDrop=${(e) => { e.preventDefault(); addPictures([...(e.dataTransfer?.files || [])]); }}>
+    <div class="hand-field__top"><${RuneButton} runes=${runes} />
     ${(address.name || taken || photos.length > 0 || marks.value.length > 0) && html`<div class="hand-field__chips">
       ${address.name && html`<span class="ork-chip hand-chip" data-by=${address.by}><${Icon} name="arrow-right" />${address.name}
         <button type="button" class="ork-btn quiet hand-chip__off" aria-label=${`Take off ${address.name}`} title=${`Take off ${address.name}`} onClick=${off}><${Icon} name="close" /></button></span>`}
@@ -128,11 +151,11 @@ export function Field({ middle = false }) {
       <${MarkChips} />
       ${photos.map((url, i) => html`<span key=${i} class="hand-pic"><img src=${url} alt=${`Picture ${i + 1}`} draggable="false" />
         <button type="button" class="ork-btn quiet hand-chip__off" aria-label=${`Remove picture ${i + 1}`} onClick=${() => { fieldPhotos.value = photos.filter((_, k) => k !== i); }}><${Icon} name="close" /></button></span>`)}
-    </div>`}
+    </div>`}</div>
+    ${fieldRunes.value && html`<${RuneRow} runes=${runes} />`}
     <textarea ref=${area} class="ork-field hand-field__text" aria-label="Write a goal" placeholder="Write a goal…" rows="3" value=${fieldText.value}
       onInput=${(e) => { fieldText.value = e.currentTarget.value; mention.look(); }} onKeyDown=${key} onKeyUp=${mention.look} onClick=${mention.look} onFocus=${mention.look} onPaste=${paste}></textarea>
     <${MentionList} ...${mention} />
-    <${RuneRow} runes=${runes} />
     <div class="hand-field__row">
       <span class="cap hand-field__hint">Enter sends · Shift+Enter a new line</span>
       <button type="button" class="ork-btn quiet" disabled=${photos.length >= MAX_PICTURES} onClick=${() => file.current?.click()}>Add a picture</button>

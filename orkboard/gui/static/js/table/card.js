@@ -16,6 +16,9 @@ import { GoalMenu } from "./dropgoal.js";
 import { aliveState, useChanged, useWorked, workedWords } from "./worktime.js";
 import { ConcernsBack } from "./concerns.js";                       // a marked card's back lists its leader's concerns (spec 108 B)
 import { cascadeOf, footWords, doingWords, readTask, stageOf, typeSignOf, gemOf, STAGES } from "./data.js";
+import { BackCard, BackFace, backKind, everBack } from "./backcard.js";       // a goal talked over lies face down (spec 120 §6.3)
+
+const turnedUp = new Set();                                         // the goals whose back has turned up on this page
 
 /** The key of the card that was lit on the way back from a thing opened over the pane, "" none (a press or a key puts it out). */
 export const litKey = signal("");
@@ -94,8 +97,10 @@ export function TaskEdge({ n, t, hint = false }) {
 
 /** A goal the Orkmaster reads, routes or joins itself, as a card in the first lane (no strip over it: the card is the goal's): the same face with the goal's rune and its whole title in the header, its stage *Reading*, *Routing* or *Joining*. */
 export function OwnCard({ n, stage }) {
-  const key = ownKey(n), on = lifted.value === key;
-  return html`<button type="button" class=${cls("ork-card ork-leans table-card table-card--own", { "is-lifted": on, "is-lit": litKey.value === key, "ork-picked": picked.value === n.slug })} data-lkey=${key} data-goal=${n.slug} data-about=${aboutTokens(n)} data-state=${n.state}
+  const key = ownKey(n), on = lifted.value === key, kind = backKind(n), up = useRef(false);
+  if (!kind && everBack.has(n.slug) && !turnedUp.has(n.slug)) { turnedUp.add(n.slug); up.current = true; }       // the wait ended or the hearing was thrown: its back turns up where it lies, once (spec 120 §6.5)
+  if (kind) return html`<${BackCard} n=${n} kind=${kind} />`;                              // while its leaders talk it over and while it waits to start, the goal's card is its back
+  return html`<button type="button" class=${cls("ork-card ork-leans table-card table-card--own", { "is-lifted": on, "is-lit": litKey.value === key, "ork-picked": picked.value === n.slug, "is-turned-up": up.current })} data-lkey=${key} data-goal=${n.slug} data-about=${aboutTokens(n)} data-state=${n.state}
     data-stage=${stage} aria-pressed=${String(on)} aria-label=${`${n.title}: ${doingWords(n)}`} onClick=${() => lift(on ? "" : key)} ...${leans}>
     <span class="table-card__head"><${Elem} name=${n.element} dim=${!n.element || n.state === "reading"} /><span class="table-card__nm" title=${n.title}>${n.title}</span></span>
     <${Win} n=${n} sign=${n.type?.sign || ""} />
@@ -113,7 +118,7 @@ export function Token({ n, tasks = [], stage = "" }) {
     ${Array.from({ length: edges }, (_, k) => html`<i key=${k} class="ork-card table-edge" style=${`--ork-deck-i:${k + 1}`} aria-hidden="true"></i>`)}
     <button type="button" class=${cls("ork-card table-token", { fails: bad, "is-lifted": on, "is-lit": litKey.value === key, "ork-picked": picked.value === n.slug })} data-lkey=${key} data-goal=${n.slug} data-task=${front?.id}
       data-about=${aboutTokens(n, tasks)} data-state=${front ? front.state : n.state} data-stage=${st} aria-pressed=${String(on)} aria-label=${words} title=${words} onClick=${() => lift(lifted.value === key ? "" : key)}>
-      <span class="table-card__top"><${Elem} name=${n.element} dim=${!n.element} glowing=${!!front && aliveState(front.state)} /><${Sign} name=${(STAGES[st] || STAGES.routing).sign} /></span>
+      <span class="table-card__top"><${Elem} name=${n.element} dim=${!n.element} glowing=${(!!front && aliveState(front.state)) || (!front && backKind(n) === "talk")} /><${Sign} name=${(STAGES[st] || STAGES.routing).sign} /></span>
       <${Win} n=${n} sign=${front ? typeSignOf(n, front) : n.type?.sign || ""} danger=${bad} />
     </button>
   </span>`;
@@ -200,6 +205,7 @@ const OWN_CAP = { reading: "The Orkmaster is reading it.", routed: "The Orkmaste
 
 /** The back of a goal the Orkmaster reads, routes or waits on. **…** drops the goal (dropgoal.js). */
 export function OwnBack({ n }) {
+  if (backKind(n)) return html`<${BackFace} n=${n} />`;                                    // its back turned to its face: its words, its route, what its leaders said (backcard.js)
   return html`<h3 class="table-back__nm">${n.title}</h3>
     <p class="table-back__cap">${OWN_CAP[n.state] || "The Orkmaster is routing it: which party does what."}</p>
     <div class="table-back__acts"><${PickGoal} n=${n} /><${GoalMenu} slug=${n.slug} where="inline" /></div>`;

@@ -14,7 +14,7 @@ import { Answers } from "./answers.js";
 import { costOf, Gem, Spend } from "./cost.js";
 import { goalOfStop } from "./data.js";
 import { liftKey } from "./state.js";
-import { leans } from "./motion.js";
+import { between, boxIn, handedName, leans, reduced, useFlight } from "./motion.js";
 import { useAbout } from "./about.js";
 import { wayOf } from "./ways.js";
 
@@ -45,17 +45,34 @@ const footOf = (s) => wayOf(s.kind)?.foot?.(s) ?? (s.text || s.why || "");      
 /** What a card is called for a screen reader and a long press: *Asks you in Tech: The title*. */
 export const labelOf = (s) => `${s.label}${s.other && s.party?.name ? ` in ${s.party.name}` : ""}: ${s.full}`;
 
-/** The card face of a stop `s` (docs/specs/101 §4.5). `top`: the front card of its stack. `onPress`: the press. */
-export function StopCard({ s, lit = false, slot = false, top = false, dealt = null, gone = false, onPress, onFocus, children }) {
-  const cost = costOf(s), head = headOf(s), element = s.node?.element || "";
-  return html`<button type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop${element ? ` el-${element}` : ""}`, { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed", "is-on ork-picked": lit,
-        "is-slot": slot, "is-gone": gone, "ork-deal": dealt != null })}
-      data-key=${s.key} data-kind=${s.kind} data-goal=${goalOfStop(s)} data-party=${s.party?.slug || ""} data-top=${top ? "1" : undefined}
-      style=${dealt != null ? `--ork-deal-i:${dealt}` : undefined} aria-label=${labelOf(s)} title=${`${labelOf(s)}${s.text ? ` · ${s.text}` : ""}`.slice(0, 200)}
+/** Who hands a card (spec 120 §6.9): the Orkmaster for what the Orkmaster plays (a route, a decision, a hearing, a fork, a collision, *Go on paid?*), else the leader of the party that asks (its name). */
+const ORK_KINDS = ["route", "start", "decision", "fork", "collide", "paid", "hearing", "objection"];
+export const askerOf = (s) => (ORK_KINDS.includes(s.kind) ? "the Orkmaster" : s.party?.lead || s.party?.name || "the Orkmaster");
+
+/** What a card is, for the line said when it lands (*Sh.man hands you a question: …*). */
+export const handsWords = (s) => `${s.card ? "a question" : "a card"}: ${s.full}`.slice(0, 160);
+
+/** The card face of a stop `s` (docs/specs/101 §4.5). `top`: the front card of its stack. `onPress`: the press. `dealt`: it came (motion.js `useHanded`: `{i, el, hold}`; `el` the box it flies from, none: it is dealt from under its place). `gone`: it left;
+ *  `back`: the box it came from, when it was answered: it is played back there (spec 120 §6.10), else it crumbles where it lay (the shards are its children). */
+export function StopCard({ s, lit = false, slot = false, top = false, dealt = null, gone = false, back = null, onPress, onFocus, children }) {
+  const cost = costOf(s), head = headOf(s), element = s.node?.element || "", ref = useRef(), from = handedName(s.key), plain = !!dealt && !dealt.el && !dealt.hold;
+  useFlight(ref, dealt);
+  useLayoutEffect(() => {                                            // answered: it flies back into where it came from (orkUI's `.ork-play`, its end the origin's middle)
+    const el = ref.current, origin = gone && back && !reduced() ? boxIn(back) : null;
+    if (!el || !origin) return;
+    const v = between(el.getBoundingClientRect(), origin);
+    el.style.setProperty("--ork-play-x", `${v.x}px`);
+    el.style.setProperty("--ork-play-y", `${v.y}px`);
+    el.classList.add("ork-play");
+  }, [gone]);
+  return html`<button ref=${ref} type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop${element ? ` el-${element}` : ""}`, { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed", "is-on ork-picked": lit,
+        "is-slot": slot, "is-gone": gone, "ork-deal": plain })}
+      data-key=${s.key} data-kind=${s.kind} data-goal=${goalOfStop(s)} data-party=${s.party?.slug || ""} data-top=${top ? "1" : undefined} data-from=${from || undefined}
+      style=${dealt ? `--ork-deal-i:${dealt.i}` : undefined} aria-label=${`${labelOf(s)}${from ? `, from ${from}` : ""}`} title=${`${labelOf(s)}${s.text ? ` · ${s.text}` : ""}`.slice(0, 200)}
       aria-haspopup="dialog" aria-expanded=${slot ? "true" : "false"} tabindex=${slot || gone ? -1 : undefined} inert=${gone || undefined} onClick=${onPress} onFocus=${onFocus} ...${leans}>
     <span class="hand-card__head"><${ElemOf} s=${s} /><span class="hand-card__name">${s.title || s.full}</span></span>
     <span class="hand-card__window"><span class="hand-card__fig"><span class="hand-card__act"><${Mark} s=${s} big=${true} /></span>${head ? html`<span class="hand-card__asker"><${Head} race=${head.race} tier=${head.tier} /></span>` : null}</span></span>
-    <span class="hand-card__label"><span class="hand-card__party">${s.party?.name || s.label}</span><span class="hand-card__gem"><${Gem} cost=${cost} /></span></span>
+    <span class="hand-card__label"><span class="hand-card__party">${from ? `From ${from}` : s.party?.name || s.label}</span><span class="hand-card__gem"><${Gem} cost=${cost} /></span></span>
     <span class="hand-card__foot">${footOf(s)}</span>
     ${children}
   </button>`;

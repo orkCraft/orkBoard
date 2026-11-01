@@ -187,8 +187,8 @@ function Serves({ idea, busy }) {
   </label>`;
 }
 
-/** The route card lifted (in place of the plain answers; stopcard.js adds *Put it back*). */
-export function RouteLifted({ s, close }) {
+/** The route card lifted (in place of the plain answers; stopcard.js adds *Put it back*). `edit`: the route alone, to be edited while the leaders talk (the goal's own card turned to its face, table/backcard.js): its heads with their × and +, the route in words and the cost, no Talk, no place in line, no menu. */
+export function RouteLifted({ s, close, edit = false }) {
   const v = viewOf(s), idea = s.row.idea, [busy, setBusy] = useState(false), steps = v.route || [];
   const run = async (name, args, then) => {
     setBusy(true);
@@ -210,14 +210,14 @@ export function RouteLifted({ s, close }) {
       : html`<p class="body hand-way__words">${routeWords(steps)}</p>`}
     ${partyBy(s.row.goal)?.party_craft === PRODUCT && html`<${Serves} idea=${idea} busy=${busy} />`}
     <${CostLine} cost=${v.cost} />
-    ${v.place > 0 && html`<p class="cap hand-way__place">${ordinal(v.place)} in line</p>`}
-    <div class="hand-answers hand-way__acts" role="group" aria-label="Answers">
+    ${v.place > 0 && !edit && html`<p class="cap hand-way__place">${ordinal(v.place)} in line</p>`}
+    ${!edit && html`<div class="hand-answers hand-way__acts" role="group" aria-label="Answers">
       ${report ? html`<button type="button" class="ork-btn primary" disabled=${busy} title="The report has its failing test: the work starts, with no Talk" onClick=${start}>Start</button>
           <button type="button" class="ork-btn quiet" disabled=${busy} title="Talk first, then the decision and the sections" onClick=${talk}>The long way</button>`
         : html`<button type="button" class="ork-btn primary" disabled=${busy} title="The leaders answer in short; nothing is made yet" onClick=${talk}>Talk</button>
           ${v.low && html`<button type="button" class="ork-btn" disabled=${busy} title="The limits run low: it waits in line and talks by itself after they reset" onClick=${later}>Later, by itself</button>`}`}
-    </div>
-    <div class="hand-way__more"><${GoalMenu} slug=${idea} where="inline" /></div>
+    </div>`}
+    ${!edit && html`<div class="hand-way__more"><${GoalMenu} slug=${idea} where="inline" /></div>`}
   </div>`;
 }
 
