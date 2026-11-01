@@ -109,3 +109,34 @@ rubrics, the shorter way and the measures above come before new faces.
 - [BMAD Method: AI development](https://www.augmentcode.com/guides/bmad-method-ai-development)
 - [BMAD-METHOD: agents](https://www.mintlify.com/bmad-code-org/BMAD-METHOD/concepts/agents)
 - [Jam](https://www.jam.dev), [BugHerd](https://www.stork.ai/en/bugherd), [FeedBug](https://webcatalog.io/en/apps/feedbug)
+
+## H2. An indie maker's day is three jobs: feedback on the running product morning and evening, sketches by day on the phone, the building at night
+
+**Status:** testing (decision §199, spec 121). **Raised:** the owner, 1 November 2026.
+
+### The belief
+
+A maker who builds after a main job has few tokens and little time. They want, **morning and evening**, to run their product,
+see that all is well and give feedback fast (Play's marks, the lenses); **by day**, on the phone, to throw in ideas (UI and UX
+first) and touch quick sketches of them; **at night**, the building and the checks done without them. Talking and sketching
+are cheap and seen; building is dear: so splitting the day this way spends the subscription on what the person sees, and a
+day's good idea can still be built at once.
+
+### What would prove it, what would refute it
+
+- **Holds** when, over the owner's week with *Work at night* on: a goal's first sketch comes within 15 minutes; most sketches
+  are picked (not skipped, not sketched again three times); most of the building runs in the night's window; from the morning
+  card's opening to the first mark takes under two minutes; fewer goals fail or are reverted at night than by day; *Build it
+  now* is pressed now and then, not for most goals.
+- **Refuted** when sketches are mostly skipped (the day wants words, not pictures), when *Build it now* is pressed for most
+  goals (the night is not wanted), or when the morning card is closed unread (the feedback lives elsewhere).
+
+### How we test it
+
+The events of spec 121 §8 (`sketch_made`, `sketch_answered`, `sketch_skipped`, `night_held`, `night_started`, `built_now`,
+`night_card_opened`, `play_at_path`, `play_mark`), read after the owner's week on their game.
+
+### If it holds
+
+The phone becomes the day's table (sketches, hearings, the hand) and the computer the evening's; the leaders' voices (spec
+122) follow for the way to work. If it is refuted, the sketch goes back to Pick one's place inside the work.

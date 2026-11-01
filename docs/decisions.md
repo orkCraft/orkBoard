@@ -4111,3 +4111,34 @@ weighs only the goals its types name. So (this changes §118.1, §138.2, §147.3
 10. Spec 120, built by the cheaper model after the owner's yes on its mockup. A reply round between the leaders, a leader's
    offers on its lens, Product's summary of the table and Art's sheet of assets are later.
 The owner's call.
+
+## 199. Three jobs of an indie maker: the morning and the evening run the product and give feedback, the day touches sketches of its ideas on the phone, the night builds; a day's idea can still be built by day (1 November, the owner)
+
+Why: the owner: *an indie maker has little of two things: tokens (subscriptions to Claude, Codex and their kind, not always
+large ones) and time (they work at a main job). During the day you want to glance at something quickly in a light face, and
+at home to go deep. So it is a co-operative card game with friends: the leaders are your fellow players at the table, not
+rivals.* And the jobs, plainly: *morning and evening, run my product, see that all is well, and give feedback on it quickly
+and easily, through the lenses and Play; during the day, throw in my ideas, UI and UX first of all, and have quick prototypes
+of them to touch; at night, all the work and the checks.* And: *a good enough idea may come by day that you want built now,
+and its result by day, from the phone: that stays possible.* Talking costs little (a leader's call is the cheaper tier, no
+file read); building costs much: so the day is for what is cheap and seen, the night for what is dear. So:
+1. **The three jobs are the product's frame**: a feature serves one of them or waits. **Job 1, the morning and the evening**
+   (the computer): run the product, see that all is well, give feedback fast through Play's marks and the lenses. **Job 2, the
+   day** (the phone): throw in an idea and touch a quick sketch of it. **Job 3, the night**: the building and the checks.
+2. **The leaders are fellow players**: they still say no (§183), warmly, as players argue a move in a co-operative game; the
+   person plays the card.
+3. **A goal that is seen or heard gets a sketch before its spec**: two or three throwaway variants by its craft's leader (a
+   screen as one self-contained page, a picture, a loop on a page), kept beside the goal and never in the project's code,
+   served in a sandbox that reaches neither the Board nor the network, touched and picked on the phone; the spec rests on the
+   one picked. Pictures and sounds only with the media tools set up, and a paid one only with the person's yes.
+4. **Work at night** (a setting, off until the person says): what would start by itself waits for the night's window, in
+   Product's order; Talk, hearings, sketches and looks run by day. **The day's case stays whole**: *Build it now* on a goal
+   held for the night (today's *Start now*, widened) and *Pick and build now* on a sketch start at once, from the phone too;
+   the result is seen on the phone as its pictures and its ready card, Play staying the computer's. A bug's short way and any
+   press start at once, as today.
+5. **The morning's card** says what the night did, each goal with the screens it changed, and **Play it** opens Play on
+   that screen; a mark costs no work by day. **The evening line**: each leader's look says in a line whether what changed
+   since its last look went toward its aims, and what broke.
+6. **Measured** as hypothesis H2 (`docs/hypotheses.md`).
+7. Spec 121, built by the cheaper model. The leaders' voices, a hearing heard on the way, are spec 122, later.
+The owner's call.
