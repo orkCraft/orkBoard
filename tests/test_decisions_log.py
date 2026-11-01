@@ -136,3 +136,51 @@ def test_a_large_file_is_read_from_its_end(tmp_path):
     # an entry that is not in the end is found by reading the file whole
     assert dl.context(tmp_path, 1).split("This goal's decision:\n")[1].startswith("## 1. First")
     assert dl.next_number(dl._read(tmp_path / "docs/decisions.md")[0]) == 14
+
+
+# -- a project's own folder of ADR files (spec 126 D) ---------------------------------------------------------------------------------------------
+
+MADR = "---\nstatus: accepted\ndate: 2026-03-02\n---\n\n# {title}\n\n## Context and Problem Statement\n\nWhy {n}.\n\n## Decision Outcome\n\nChosen {n}.\n"
+
+
+def _adrs(root: Path, rel: str, n: int = 3) -> None:
+    for i in range(1, n + 1):
+        _put(root, f"{rel}/{i:04d}-title-{i}.md", MADR.format(title=f"Title {i}", n=i))
+
+
+def test_found_finds_a_folder_of_adr_files_in_docs_decisions_and_docs_architecture_decisions(tmp_path):
+    _put(tmp_path, "docs/decisions/README.md", "# Decisions\n")                    # no record in it: not a log
+    assert dl.found(tmp_path) == []
+    _adrs(tmp_path, "docs/decisions")
+    _adrs(tmp_path, "docs/architecture/decisions", 1)
+    _put(tmp_path, "docs/decisions.md")
+    assert dl.found(tmp_path) == ["docs/decisions.md", "docs/decisions", "docs/architecture/decisions"]
+
+
+def test_the_place_is_a_folder_when_chosen_or_when_it_is_the_only_log_and_the_default_file_is_not_there(tmp_path):
+    assert dl.is_folder(tmp_path) is False and dl.path(tmp_path) == tmp_path / "docs" / "decisions.md"
+    _adrs(tmp_path, "docs/decisions")
+    assert dl.is_folder(tmp_path) is True and dl.path(tmp_path) == tmp_path / "docs" / "decisions"
+    _put(tmp_path, "notes/adr.md", "x")
+    assert dl.is_folder(tmp_path, "notes/adr.md") is False and dl.is_folder(tmp_path, "docs/decisions") is True      # the person's choice
+    _put(tmp_path, "other/decisions.md")
+    assert dl.is_folder(tmp_path) is False                                                                          # two logs: none is the only one
+    _put(tmp_path, "docs/decisions.md")
+    assert dl.is_folder(tmp_path) is False and dl.path(tmp_path) == tmp_path / "docs" / "decisions.md"             # the file the Board writes is there
+
+
+def test_the_folders_records_give_the_next_number_the_headings_and_an_entry(tmp_path):
+    _adrs(tmp_path, "docs/decisions", 12)
+    folder = tmp_path / "docs" / "decisions"
+    assert dl.next_number(folder) == 13 and dl.next_number(tmp_path / "none") == 1
+    assert dl.headings(folder) == [f"{i}. Title {i}" for i in range(3, 13)] and dl.headings(folder, last=2) == ["11. Title 11", "12. Title 12"]
+    assert dl.entry(folder, 12).startswith("## 12. Title 12\n\n## Context and Problem Statement") and "Chosen 12." in dl.entry(folder, 12) and dl.entry(folder, 99) == ""
+    got = dl.context(tmp_path, 4)
+    assert got.startswith("The project's decisions (docs/decisions): the last ten:\n3. Title 3\n") and "This goal's decision:\n## 4. Title 4" in got
+    assert "This goal's decision" not in dl.context(tmp_path) and dl.context(tmp_path, 4, "docs/decisions") == got
+
+
+def test_the_one_file_log_is_read_as_it_was(tmp_path):
+    _put(tmp_path, "docs/decisions.md", SLICE)
+    assert dl.is_folder(tmp_path) is False and dl.next_number(SLICE) == 155
+    assert dl.context(tmp_path, 45).startswith("The project's decisions (docs/decisions.md): the last ten:\n45. v1 is three buildings")

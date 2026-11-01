@@ -584,6 +584,29 @@ class BoardTree:
             path.write_text(edit(old), "utf-8")
             return self.flush(force=True, message=message() if callable(message) else message, files=(path.relative_to(base).as_posix(),)) or {}
 
+    def add_file(self, folder: str, make, message) -> dict:
+        """A new file in a folder of the project (a decision as the next ADR file: spec 126 D) made in the tree and committed with the pages in one commit, the work branch
+        moved: `make(folder path)` is called under the repository's lock with the folder as the tree's branch holds it (made when missing) and answers `(file name,
+        text)`, so a number read in the folder is the branch's own at the commit. A file that is there already is never written over. Returns `flush`'s answer plus
+        `path`, the new file from the repository's root. RuntimeError for a folder outside the repository or a name that is taken."""
+        base = self.path.resolve()
+        where = (base / folder).resolve()
+        if where == base or not where.is_relative_to(base):
+            raise RuntimeError(f"{folder!r} is outside the project")
+        with self.git.lock:
+            self.follow()
+            where.mkdir(parents=True, exist_ok=True)
+            name, text = make(where)
+            if Path(name).name != name or not name:
+                raise RuntimeError(f"{name!r} is no file name")
+            try:
+                with (where / name).open("x", encoding="utf-8") as out:
+                    out.write(text)
+            except FileExistsError:
+                raise RuntimeError(f"{name} is there already") from None
+            rel = (where / name).relative_to(base).as_posix()
+            return {**(self.flush(force=True, message=message() if callable(message) else message, files=(rel,)) or {}), "path": rel}
+
     def land(self) -> str:
         """The work branch fast-forwarded to the tree: "" when it moved (or had nothing to take), else why it is held."""
         try:

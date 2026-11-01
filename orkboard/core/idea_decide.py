@@ -5,6 +5,7 @@ confirms it with one button, and it is committed, numbered, to the project's dec
     keeper.confirm(slug, text="", tree=None, by="person")  # *Confirm and start*: `text` the person's correction, kept as written; the entry appended and committed; then the goal's sketch when it gets one (spec 121 §2.2), else the sections;
                                               #   `by="leaders"`: a goal all the leaders agreed on, confirmed by itself when its wait ended (spec 120 §3.5)
     keeper.write_decision(title, body, tree=None)   # the entry alone, with no goal (`confirm` writes through it; so does a hypothesis's verdict, spec 116 §4): {number, commit, path, held, pages}
+                                              #   in a project whose decisions are a folder of ADR files (spec 126 D): the next `NNNN-title.md` of the folder, in its format
 
 - **The call** (step `decide`, the cheaper tier, **no tools**, the Orkmaster's voice): given the person's words, the leaders' stances, the questions with the answers and the
   defaults that closed the rest, and the decisions file's last ten headings (`decisions_log.context`). It answers a title, *Why* (a few lines) and its points; code sets
@@ -15,6 +16,10 @@ confirms it with one button, and it is committed, numbered, to the project's dec
   `<state_dir>/project.json` `decisions`, else `docs/decisions.md`; the file made with a one-line head when missing). The number is read again **at the commit**, inside
   the repository's lock, from the file as dev holds it (`BoardTree.edit_file`), so two goals never take one. The commit is the Board's (its pages and that one file) and moves
   dev. Without the Board's tree (the demo, a folder with no history) the file is written in the working copy and nothing is committed (the keeper never commits).
+- **A folder of ADR files** (spec 126 D: `decisions_log.is_folder`; the person chose a folder, or it is the only log the project keeps): the decision is a new file `NNNN-title.md`
+  (`doc_formats.file_name(doc_formats.next_number(folder), title)`, the number read again at the commit) in the folder's format (`doc_formats.folder_format`: MADR, else Nygard's;
+  MADR when the folder has none yet): `status: accepted`, today, `decision-makers`, the body as the *Decision Outcome*, `ork-goal` a goal's slug. It is made in the Board's tree and
+  committed with its pages (`BoardTree.add_file`); `path` is the new file. The leaders read the folder's records as they read the one file's entries.
 - **Never for a bug** (§158.3: a bug's Talk is its diagnosis and goes to `sections`) **nor a recurring round** (§122.6: not routed). Asking again of a decision confirmed
   already (the sections failed) writes nothing twice: it runs the sections again.
 
@@ -28,7 +33,7 @@ from pathlib import Path
 
 from orkboard import brand
 from orkboard.core import idea_journal
-from orkboard.realm import decisions_log, event_log, idea_objections, idea_questions, idea_ripe, idea_target, ideas, orkmaster, spec_sections
+from orkboard.realm import decisions_log, doc_formats, event_log, idea_objections, idea_questions, idea_ripe, idea_target, ideas, orkmaster, spec_sections
 from orkboard.realm.idea_talk_parse import total
 from orkboard.realm import journal_notes
 
@@ -38,6 +43,7 @@ FIRST_LINE = "# Decisions"                 # the head of a decisions file made w
 _HASHES = re.compile(r"^#{1,2}(?=[ \t])", re.M)
 _SIGNED = re.compile(r"\s*\([^()]*(?:the person and|the leaders, all agreed;) [^()]+\)\s*$")        # any host's name: the entry reads back whoever signed it
 _POINT = re.compile(r"^\d+\.", re.M)
+_NESTED = re.compile(r"^#{2,3}(?=[ \t])", re.M)
 
 
 def _kw():
@@ -140,8 +146,11 @@ class DecideMixin:
         file = decisions_log.path(self.repo_root, self._chosen())
         return base, file.relative_to(Path(self.repo_root)).as_posix()
 
-    def _log_text(self) -> str:
+    def _log_text(self) -> "str | Path":
+        """The decisions file's text; where the place is a folder of ADR files (spec 126 D), the folder (`decisions_log` reads its records in place of the text)."""
         base, rel = self._decisions()
+        if (base / rel).is_dir():
+            return base / rel
         try:
             return (base / rel).read_text("utf-8", errors="replace")
         except OSError:
@@ -261,16 +270,19 @@ Answer with one JSON object and nothing else:
         d = spec_sections.record(self.state_dir, slug)["decision"]
         return {k: d.get(k) for k in ("number", "title", "commit", "held", "path", "pages")}
 
-    def write_decision(self, title: str, body: str, tree=None, by: str = "person") -> dict:
+    def write_decision(self, title: str, body: str, tree=None, by: str = "person", goal: str = "") -> dict:
         """One entry appended to the decisions file as the next number and committed to dev (`tree`: the Board's `BoardTree`; none, and the file is written in the working copy only).
         No goal is needed: a goal's `_enter` and a hypothesis's verdict (spec 116 §4) both write this way. The number is read again inside the repository's lock.
-        `{number, commit, path, held, pages}`; KeeperError in plain words for no words or a file that could not be written."""
+        `{number, commit, path, held, pages}`; KeeperError in plain words for no words or a file that could not be written. Where the project keeps its decisions as a folder of
+        ADR files (spec 126 D) the entry is the folder's next file in its format (`goal`: the goal's slug, kept in a MADR file's front matter) and `path` is that file."""
         kw = _kw()
         title, body = _line(title, TITLE_CHARS), demote(body)
         if not title or not body.strip():
             raise kw.KeeperError("A decision needs its words")
         _base, rel = self._decisions()
         made = {"number": 0}
+        if decisions_log.is_folder(self.repo_root, self._chosen()):
+            return self._write_record(rel, title, body, tree, by, goal)
 
         def append(old: str) -> str:
             made["number"] = decisions_log.next_number(old)           # read again here, under the repository's lock: two goals never take one
@@ -289,6 +301,33 @@ Answer with one JSON object and nothing else:
             raise kw.KeeperError(f"The decision could not be written: {' '.join(str(e).split())[:200]}") from None
         return {"number": made["number"], "commit": out.get("commit") or "", "path": rel, "held": out.get("held") or "", "pages": out.get("pages") or 0}
 
+    def _write_record(self, rel: str, title: str, body: str, tree, by: str, goal: str) -> dict:
+        """A decision as the next ADR file of the folder `rel` (spec 126 D): in the folder's format, MADR when it has none yet; made through the Board's tree (one commit with its
+        pages, the number read again under the repository's lock) or, with no tree, written in the working copy and not committed."""
+        kw = _kw()
+        made = {"number": 0}
+
+        def make(folder: Path) -> tuple[str, str]:
+            made["number"] = doc_formats.next_number(folder)             # read again here, under the repository's lock: two goals never take one
+            rec = {"number": made["number"], "title": title, "status": "accepted", "date": dt.date.today().isoformat(), "context": "", "consequences": "",
+                   "deciders": ["the leaders" if by == "leaders" else "the person"], "extra": {"ork-goal": goal} if goal else {},
+                   "decision": _NESTED.sub("####", body)}                 # a heading of the body never splits the record's sections
+            render = doc_formats.render_nygard if doc_formats.folder_format(folder) == "nygard" else doc_formats.render_madr
+            return doc_formats.file_name(made["number"], title), render(rec)
+
+        try:
+            if tree is not None and tree.exists():
+                out = tree.add_file(rel, make, lambda: f"board: decision {made['number']} — {title}")
+                return {"number": made["number"], "commit": out.get("commit") or "", "path": out.get("path") or rel, "held": out.get("held") or "", "pages": out.get("pages") or 0}
+            folder = Path(self.repo_root) / rel
+            folder.mkdir(parents=True, exist_ok=True)
+            name, text = make(folder)
+            with (folder / name).open("x", encoding="utf-8") as f:
+                f.write(text)
+        except (OSError, RuntimeError) as e:
+            raise kw.KeeperError(f"The decision could not be written: {' '.join(str(e).split())[:200]}") from None
+        return {"number": made["number"], "commit": "", "path": f"{rel}/{name}", "held": "", "pages": 0}
+
     def _enter(self, slug: str, d: dict, text: str, tree, by: str = "person") -> None:
         """The entry written and committed (`write_decision`); the decision kept as confirmed with its number, its commit and its path, and who confirmed it (`by`)."""
         kw = _kw()
@@ -297,7 +336,7 @@ Answer with one JSON object and nothing else:
             body = leaders_body(body, idea_questions.record(self.state_dir, slug).get("stances") or [], self._name)
         if not body.strip():
             raise kw.KeeperError("A decision needs its words")
-        out = self.write_decision(title, body, tree, by)
+        out = self.write_decision(title, body, tree, by, slug)
         number = out["number"]
         with ideas.LOCK:
             way = spec_sections.record(self.state_dir, slug)

@@ -451,3 +451,93 @@ def test_a_goals_decision_and_a_goalless_one_share_the_numbers(host, parties, mo
     tree = host.ideas._decision_tree()
     assert host.ideas.keeper.write_decision("No goal", "Why: x.", tree)["number"] == 1
     assert host.command("ideas.confirm", {"idea": slug})["number"] == 2
+
+
+# -- a project whose decisions are a folder of ADR files (spec 126 D) ---------------------------------------------------------------------------------
+
+MADR_FILE = "---\nstatus: accepted\ndate: 2026-03-0{n}\n---\n\n# Title {n}\n\n## Context and Problem Statement\n\nWhy {n}.\n\n## Decision Outcome\n\nChosen {n}.\n"
+NYGARD_FILE = "# {n}. Title {n}\n\nDate: 2026-03-0{n}\n\n## Status\n\nAccepted\n\n## Context\n\nWhy {n}.\n\n## Decision\n\nChosen {n}.\n\n## Consequences\n\nNone.\n"
+
+
+def _adr_folder(host, rel, text, n=2):
+    """The project keeps its decisions as `rel`'s files (committed to dev, the Board's tree following it)."""
+    folder = host.repo_root / rel
+    folder.mkdir(parents=True)
+    for i in range(1, n + 1):
+        (folder / f"{i:04d}-title-{i}.md").write_text(text.format(n=i), encoding="utf-8")
+    git(host.repo_root, "add", "-A")
+    git(host.repo_root, "commit", "-qm", "adrs")
+    git(host.repo_root, "branch", "-f", "dev", "HEAD")
+    host.ideas.root()
+    host.ideas._board_tree.ensure()
+
+
+def test_a_decision_is_the_next_madr_file_of_the_projects_folder_committed_through_the_boards_tree(host):
+    from orkboard.realm import doc_formats
+    _adr_folder(host, "docs/decisions", MADR_FILE)
+    tree = host.ideas._decision_tree()
+    first = host.ideas.keeper.write_decision("Hypothesis held: People want a sketch", "Signal: most ask for one\n\n## Not a heading", tree)
+    second = host.ideas.keeper.write_decision("Teams want sharing", "Why: nobody asked.", tree, "leaders", "share-it")
+    assert (first["number"], second["number"]) == (3, 4) and first["path"] == "docs/decisions/0003-hypothesis-held-people-want-a-sketch.md" and first["commit"] and first["held"] == ""
+    assert second["path"] == "docs/decisions/0004-teams-want-sharing.md" and git(host.repo_root, "rev-parse", "dev") == second["commit"]
+    assert git(host.repo_root, "log", "-1", "--format=%s", "dev") == "board: decision 4 — Teams want sharing"
+    assert "docs/decisions/0004-teams-want-sharing.md" in git(host.repo_root, "show", "--name-only", "--format=", "dev").splitlines()
+    text = git(host.repo_root, "show", f"dev:{first['path']}")
+    assert text.startswith("---\nstatus: accepted\ndate: ") and "decision-makers: [the person]" in text and "ork-goal" not in text
+    assert not (host.repo_root / "docs" / "decisions" / "0003-hypothesis-held-people-want-a-sketch.md").exists()                    # the person's tree is not touched
+    rec = doc_formats.parse_record(text, "0003-x.md")
+    assert (rec["format"], rec["number"], rec["title"], rec["status"]) == ("madr", 3, "Hypothesis held: People want a sketch", "accepted")
+    assert rec["decision"].startswith("Signal: most ask for one") and "#### Not a heading" in rec["decision"]                  # a heading of the body never splits the record
+    other = doc_formats.parse_record(git(host.repo_root, "show", f"dev:{second['path']}"), "0004-x.md")
+    assert other["deciders"] == ["the leaders"] and other["extra"]["ork-goal"] == "share-it"
+    assert "docs/decisions.md" not in git(host.repo_root, "ls-tree", "--name-only", "dev", "docs/")                                # no one-file log was made beside the folder
+
+
+def test_a_decision_in_a_nygard_folder_is_a_nygard_file(host):
+    from orkboard.realm import doc_formats
+    _adr_folder(host, "docs/adr", NYGARD_FILE, 3)
+    got = host.ideas.keeper.write_decision("Keep one theme file", "Why: one place.\n\n1. Tech owns it.", host.ideas._decision_tree())
+    assert got["number"] == 4 and got["path"] == "docs/adr/0004-keep-one-theme-file.md"
+    text = git(host.repo_root, "show", f"dev:{got['path']}")
+    assert text.startswith("# 4. Keep one theme file\n\nDate: ") and "## Status\n\nAccepted" in text
+    rec = doc_formats.parse_record(text, "0004-x.md")
+    assert (rec["format"], rec["number"], rec["status"]) == ("nygard", 4, "accepted") and rec["decision"].endswith("1. Tech owns it.")
+    assert [r["number"] for r in doc_formats.records(host.repo_root / "docs" / "adr")] == [1, 2, 3]
+
+
+def test_a_chosen_folder_that_is_empty_gets_a_madr_file_in_the_working_copy_when_there_is_no_tree(host):
+    (host.ideas.state_dir).mkdir(parents=True, exist_ok=True)
+    (host.ideas.state_dir / "project.json").write_text(json.dumps({"decisions": "docs/adr"}), encoding="utf-8")
+    (host.repo_root / "docs" / "adr").mkdir()
+    got = host.ideas.keeper.write_decision("A decision", "Why: because.")
+    assert got["number"] == 1 and got["commit"] == "" and got["path"] == "docs/adr/0001-a-decision.md"
+    assert (host.repo_root / "docs" / "adr" / "0001-a-decision.md").read_text(encoding="utf-8").startswith("---\nstatus: accepted\n")
+    assert host.ideas.keeper.write_decision("Another", "Why: too.")["path"] == "docs/adr/0002-another.md"
+    assert not (host.repo_root / "docs" / "decisions.md").exists()
+
+
+def test_a_goals_confirm_in_a_folder_writes_the_file_with_the_goal_and_the_leaders_read_the_folder(host, parties, model):
+    _adr_folder(host, "docs/decisions", MADR_FILE)
+    slug = _decided(host, parties, model)
+    prompt = model.steps("decide")[0]["prompt"]
+    assert "(docs/decisions)" in prompt and "1. Title 1" in prompt and "2. Title 2" in prompt
+    assert spec_sections.record(host.ideas.state_dir, slug)["decision"]["number"] == 3                                    # the number the card shows
+    host.ideas.keeper.sections = lambda s: None
+    got = host.command("ideas.confirm", {"idea": slug})
+    assert got["number"] == 3 and got["path"] == "docs/decisions/0003-dark-mode-ships-as-a-setting.md" and got["commit"]
+    text = git(host.repo_root, "show", f"dev:{got['path']}")
+    assert f"ork-goal: {slug}" in text and "decision-makers: [the person]" in text and "## Decision Outcome\n\nWhy: People read at night" in text
+    assert "3. No scheduling." in text
+    assert spec_sections.record(host.ideas.state_dir, slug)["decision"]["path"] == got["path"]
+
+
+def test_the_number_of_a_file_is_read_again_at_the_commit(host):
+    _adr_folder(host, "docs/decisions", MADR_FILE)
+    tree = host.ideas._decision_tree()
+    tree.add_file("docs/decisions", lambda folder: ("0003-someone-else.md", MADR_FILE.format(n=3)), "someone else's")           # taken between the card and Confirm
+    got = host.ideas.keeper.write_decision("Mine", "Why: x.", tree)
+    assert got["number"] == 4 and got["path"] == "docs/decisions/0004-mine.md"
+    with pytest.raises(RuntimeError, match="there already"):
+        tree.add_file("docs/decisions", lambda folder: ("0003-someone-else.md", "x"), "again")
+    with pytest.raises(RuntimeError, match="outside"):
+        tree.add_file("../x", lambda folder: ("a.md", "x"), "no")

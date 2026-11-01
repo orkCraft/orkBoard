@@ -2,10 +2,15 @@
 
     decisions_log.path(root, chosen="")      the decisions file: the person's chosen path, else docs/decisions.md; never outside root
     decisions_log.found(root)                the logs of decisions the project keeps already (≤ 5), to be offered as the path
+    decisions_log.is_folder(root, chosen)    whether the decisions' place is a folder of ADR files (MADR or Nygard; spec 126 D), not one file
     decisions_log.next_number(text)          the last `## N.` heading plus one; 1 when there is none
     decisions_log.entry(text, n)             the section `## n.` up to the next `## ` heading ("" when there is none)
     decisions_log.headings(text, last=10)    the last headings, each "N. Title"
     decisions_log.context(root, n, chosen)   the text a leader's call is given: the last ten headings and goal n's entry
+
+`next_number`, `entry` and `headings` also take the folder (a `Path`) in place of the file's text: its records' numbers and titles (`doc_formats.records`), a
+record's text for an entry. The place is a folder when the person chose one, or when no file was chosen, `docs/decisions.md` is not there and the only log `found`
+finds is a folder.
 
 A heading is read at a line's start (`## 158. Title`); lines between ``` fences are never read, so a `## 12.` in an
 entry's code block misleads nothing. A file over 2 MB is read from its end.
@@ -15,6 +20,7 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from orkboard.realm import doc_formats
 from orkboard.realm.code_map import SKIP
 
 DEFAULT = "docs/decisions.md"
@@ -26,11 +32,13 @@ READ_MAX = 2 * 1024 * 1024
 CUT = "… (cut: read the file for the rest)"
 _NAMES = {"decisions.md", "DECISIONS.md"}
 _ADR = ("docs/adr", "doc/adr")
+_ADR_RECORDS = ("docs/decisions", "docs/architecture/decisions")           # found when they hold NNNN-*.md records
 _NUMBERED = re.compile(r"^## (\d+)\.[ \t]*(.*)$")
 
 
 def path(root, chosen: str = "") -> Path:
-    """The decisions file of the project at `root`: `chosen` when it lies inside the root, else `DEFAULT`."""
+    """The decisions file of the project at `root`: `chosen` when it lies inside the root, else `DEFAULT`; the only log the project keeps when it is a folder of
+    ADR files and `DEFAULT` is not there (spec 126 D)."""
     base = Path(root)
     chosen = str(chosen or "").strip()
     if chosen:
@@ -41,15 +49,29 @@ def path(root, chosen: str = "") -> Path:
                 return base / cand.relative_to(real)
         except (OSError, ValueError, RuntimeError):
             pass
+    elif not (base / DEFAULT).exists():
+        only = found(base)
+        if len(only) == 1 and (base / only[0]).is_dir():
+            return base / only[0]
     return base / DEFAULT
 
 
+def is_folder(root, chosen: str = "") -> bool:
+    """Whether the decisions' place is a folder of ADR files, not one file (spec 126 D)."""
+    got = path(root, chosen)
+    return got.is_dir() and not got.is_symlink()
+
+
 def found(root) -> list[str]:
-    """The decisions logs the project keeps already (paths from the root, ≤ 5, shallowest first): `docs/adr`, `doc/adr`, `decisions.md`."""
+    """The decisions logs the project keeps already (paths from the root, ≤ 5, shallowest first): `docs/adr`, `doc/adr`, `docs/decisions` and
+    `docs/architecture/decisions` holding ADR records, `decisions.md`."""
     base = Path(root)
     out: list[tuple[int, str]] = []
     for rel in _ADR:
         if (base / rel).is_dir() and not (base / rel).is_symlink():
+            out.append((rel.count("/") + 1, rel))
+    for rel in _ADR_RECORDS:
+        if (base / rel).is_dir() and not (base / rel).is_symlink() and doc_formats.records(base / rel):
             out.append((rel.count("/") + 1, rel))
     level = [base]
     for depth in range(DEPTH_MAX + 1):
@@ -85,8 +107,10 @@ def _lines(text: str):
             yield i, line
 
 
-def next_number(text: str) -> int:
-    """The last heading `## N.` plus one; 1 when there is none."""
+def next_number(text: "str | Path") -> int:
+    """The last heading `## N.` plus one; 1 when there is none. A folder (a `Path`): the highest `NNNN` of its files plus one."""
+    if isinstance(text, Path):
+        return doc_formats.next_number(text)
     last = 0
     for _, line in _lines(text):
         m = _NUMBERED.match(line)
@@ -95,8 +119,19 @@ def next_number(text: str) -> int:
     return last + 1
 
 
-def entry(text: str, n: int) -> str:
-    """The section `## n.` up to the next `## ` heading, cut at ENTRY_MAX; "" when there is none."""
+def _record(folder: Path, n: int) -> str:
+    """Record `n` of a folder as the entry a leader reads: its heading and its text, cut at ENTRY_MAX; "" when there is none."""
+    rec = next((r for r in doc_formats.records(folder) if r["number"] == n), None)
+    if rec is None:
+        return ""
+    body = f"## {rec['number']}. {rec['title']}\n\n{rec['body']}".strip()
+    return body[:ENTRY_MAX] + CUT if len(body) > ENTRY_MAX else body
+
+
+def entry(text: "str | Path", n: int) -> str:
+    """The section `## n.` up to the next `## ` heading, cut at ENTRY_MAX; "" when there is none. A folder (a `Path`): record `n`'s text."""
+    if isinstance(text, Path):
+        return _record(text, n)
     start = end = None
     for i, line in _lines(text):
         if start is None:
@@ -112,9 +147,12 @@ def entry(text: str, n: int) -> str:
     return body[:ENTRY_MAX] + CUT if len(body) > ENTRY_MAX else body
 
 
-def headings(text: str, last: int = 10) -> list[str]:
-    """The last `last` numbered headings, each `N. Title` (the title cut at 160 characters)."""
+def headings(text: "str | Path", last: int = 10) -> list[str]:
+    """The last `last` numbered headings, each `N. Title` (the title cut at 160 characters). A folder (a `Path`): its records'."""
     out = []
+    if isinstance(text, Path):
+        out = [f"{r['number']}. {r['title'][:TITLE_MAX].rstrip()}" for r in doc_formats.records(text)]
+        return out[-last:] if last > 0 else []
     for _, line in _lines(text):
         m = _NUMBERED.match(line)
         if m:
@@ -139,6 +177,11 @@ def context(root, n=None, chosen: str = "") -> str:
     """The text a leader's call is given: the last ten headings, and goal `n`'s entry when `n` is given; "" when the file is missing."""
     base = Path(root)
     file = path(base, chosen)
+    if is_folder(base, chosen):
+        last, got = headings(file), entry(file, n) if n is not None else ""
+        out = f"The project's decisions ({file.relative_to(base).as_posix()}): "
+        out += "the last ten:\n" + "\n".join(last) if last else "none numbered yet."
+        return out + ("\n\nThis goal's decision:\n" + got if got else "")
     try:
         if not file.is_file():
             return ""
