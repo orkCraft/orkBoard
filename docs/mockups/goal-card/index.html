@@ -94,7 +94,7 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
 
 /* ---------- the scene: one window at 1120 x 680, scaled to the page ---------- */
 .scn-wrap { position: relative; max-width: 1120px; overflow-x: auto; overflow-y: hidden; outline: var(--ork-line) solid var(--ork-edge); }
-.scn { position: relative; width: 1120px; height: 680px; overflow: hidden; background: var(--ork-canvas); transform-origin: 0 0; }
+.scn { position: relative; width: 1120px; height: 720px; overflow: hidden; background: var(--ork-canvas); transform-origin: 0 0; }
 .tabs { position: absolute; left: 0; right: 0; top: 0; height: 40px; display: flex; align-items: stretch; gap: var(--ork-1); padding: 0 var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-frame); }
 .tab { display: flex; align-items: center; gap: var(--ork-2); padding: 0 var(--ork-4); font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); }
 .tab.on { color: var(--ork-ink); box-shadow: inset 0 -2px 0 var(--ork-ink); }
@@ -194,7 +194,7 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
 @media (max-width: 720px) { .mk-main { padding-block: var(--ork-4); } }
 
 /* ---------- the window with the Orkmaster's column pinned (the owner's note of 2026-11-01): the column is the same on every tab; the tabs are whose eyes ---------- */
-.col { position: absolute; left: 0; top: 0; width: 176px; height: 500px; display: flex; flex-direction: column; gap: var(--ork-3); padding: 0 var(--ork-2) var(--ork-2); background: var(--ork-table);
+.col { position: absolute; left: 0; top: 0; width: 176px; height: 540px; display: flex; flex-direction: column; gap: var(--ork-3); padding: 0 var(--ork-2) var(--ork-2); background: var(--ork-table);
   border-right: var(--ork-line) solid var(--ork-frame); overflow-y: auto; overflow-x: hidden; z-index: 2; }
 .col-head { flex: none; display: flex; align-items: center; gap: var(--ork-2); height: 40px; margin: 0 calc(var(--ork-2) * -1); padding: 0 var(--ork-3); border-bottom: var(--ork-line) solid var(--ork-frame);
   font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); white-space: nowrap; }
@@ -234,7 +234,7 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
 button.tab { background: none; border: 0; cursor: pointer; }
 button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2px; }
 .tab.answers::after { content: "answering…"; font: var(--ork-type-caption); text-transform: none; letter-spacing: 0; color: var(--ork-alert); }
-.pane { position: absolute; left: 176px; right: 0; top: 40px; height: 460px; background: var(--ork-table); overflow: hidden; }
+.pane { position: absolute; left: 176px; right: 0; top: 40px; height: 500px; background: var(--ork-table); overflow: hidden; }
 .look { position: absolute; left: 0; right: 0; top: 0; height: 28px; display: flex; align-items: center; gap: var(--ork-2); padding: 0 var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); color: var(--ork-ink-muted); white-space: nowrap; }
 .look .chip { display: inline-flex; align-items: center; gap: var(--ork-2); height: 22px; padding: 0 2px 0 var(--ork-2); border: var(--ork-line) solid var(--c); color: var(--ork-ink); }
 .look .chip button { display: grid; place-items: center; width: 18px; height: 18px; padding: 0; background: none; border: 0; color: inherit; cursor: pointer; }
@@ -249,7 +249,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
 .bgrid { display: grid; grid-template-columns: repeat(2, 120px); gap: var(--ork-3); }
 .cd.is-dim { opacity: 0.3; }
 .cd.is-lit { --mk-line: var(--ork-ink); }
-.lmap { position: absolute; left: 0; top: 0; width: 944px; height: 432px; transform-origin: 0 0; transition: transform var(--ork-motion-play) var(--ork-motion-ease); }
+.lmap { position: absolute; left: 0; top: 20px; width: 944px; height: 432px; transform-origin: 0 0; transition: transform var(--ork-motion-play) var(--ork-motion-ease); }
 .lmap svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
 .lmap line { stroke: var(--ork-frame); stroke-width: 2; transition: opacity var(--ork-motion-sure) linear; }
 .lmap line.is-touched { stroke: var(--ork-ink-muted); } .lmap line.is-off { opacity: 0.15; }
@@ -273,8 +273,68 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
 .specp .cap, .lift .cap { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .states { display: flex; flex-wrap: wrap; gap: var(--ork-1); }
 .states span { display: inline-flex; align-items: center; height: 22px; padding: 0 var(--ork-2); border: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); }
-.scn .hnd { top: 500px; padding: var(--ork-2) var(--ork-4); z-index: 3; background: var(--ork-canvas); }
+.scn .hnd { top: 540px; padding: var(--ork-2) var(--ork-4); z-index: 3; background: var(--ork-canvas); }
 @media (prefers-reduced-motion: reduce) { .lmap, .specp, .lmap line, .node { transition: none; } }
+/* the column off the table: the canvas's black, like the hand; the table is the pane, its rim orkUI's (.ork-table) */
+.col { background: var(--ork-canvas); border-right: 0; }
+.scn.col-on-table .col { background: var(--ork-table); border-right: var(--ork-line) solid var(--ork-frame); }
+.scn.col-on-table .pane.ork-table { box-shadow: none; }
+.csec .plab .u { margin-left: auto; }
+.csec .plab .u.asks { color: var(--ork-alert); }
+.fan { position: relative; width: 100%; }
+.cd.cb { position: absolute; left: 0; width: 112px; height: 157px; transition: transform var(--ork-motion-base) var(--ork-motion-ease); }
+.cd.cb .ork-sigil { width: 112px; height: 112px; top: 2px; bottom: auto; left: 0; right: 0; margin: 0 auto; transform: scale(0.94); transform-origin: 50% 0; }
+.cd.cb:hover, .cd.cb:focus-visible { z-index: 40 !important; transform: translateX(52px) rotate(2deg); box-shadow: -4px 4px 0 var(--ork-scrim); }      /* a card of a pile, hovered: out of it, whole, its name whole */
+.cd.cb:first-child .cfoot, .cd.cb:hover .cfoot, .cd.cb:focus-visible .cfoot { height: auto; min-height: 17px; flex-wrap: wrap; padding-block: 1px; }
+.cd.cb:first-child .cfoot .nm, .cd.cb:hover .cfoot .nm, .cd.cb:focus-visible .cfoot .nm { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; flex-basis: calc(100% - 20px); }
+@media (prefers-reduced-motion: reduce) { .cd.cb { transition: none; } }
+.cfoot { position: absolute; left: 3px; right: 3px; bottom: 2px; height: 17px; display: flex; align-items: center; gap: var(--ork-1); padding: 0 var(--ork-1); background: var(--ork-card); font: var(--ork-type-caption); font-size: 11px; }
+.cfoot .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cfoot .hs { display: flex; flex: none; } .cfoot .hs img { width: 12px; height: 11px; image-rendering: pixelated; }
+.cfoot .when { flex: none; display: inline-flex; align-items: center; gap: 1px; color: var(--ork-ink-muted); }
+.cfoot .when .ork-sign { width: 10px; height: 10px; }
+.cfoot .ork-sign { flex: none; } .cfoot .mk-a { color: var(--ork-alert); } .cfoot .mk-q { color: var(--ork-ink-faint); } .cfoot .mk-f { color: var(--ork-danger); }
+.fan .edges { position: absolute; left: 3px; width: 106px; height: 6px; background: repeating-linear-gradient(var(--ork-card-frame) 0 1px, transparent 1px 3px); }
+.cpass { position: absolute; left: var(--ork-3); right: var(--ork-3); bottom: var(--ork-3); display: flex; flex-direction: column; gap: var(--ork-2); z-index: 20; }
+.cpass .cd.q.pass { rotate: -2deg; box-shadow: 0 4px 0 var(--ork-scrim); }
+.b-hint { position: absolute; left: var(--ork-4); bottom: var(--ork-4); max-width: 420px; margin: 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.lmap.is-away { opacity: 0; pointer-events: none; transform: scale(0.97); }
+.lmap { transition: opacity var(--ork-motion-sure) linear, transform var(--ork-motion-sure) var(--ork-motion-ease); }
+/* a goal picked, at a leader's tab: what it changes (its parts, each new, changed or read only), the contract's lines, and where it lies on the whole map */
+.chg { position: absolute; inset: 0; display: grid; grid-template-columns: 1fr 280px; gap: var(--ork-6); padding: var(--ork-5) var(--ork-6); overflow: hidden; }
+.chg[hidden] { display: none; }
+.chg-main { display: flex; flex-direction: column; gap: var(--ork-4); min-width: 0; overflow-y: auto; }
+.chg-title { display: flex; align-items: center; gap: var(--ork-4); }
+.chg-title b { display: block; font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.chg-title span { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.chg-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ork-4); }
+.chc { display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-4); }
+.chc .hd { display: flex; align-items: center; gap: var(--ork-3); }
+.chc .hd b { font: var(--ork-type-body); font-weight: 600; }
+.kind { margin-left: auto; padding: 0 var(--ork-2); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); border: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink-muted); }
+.kind.k-new { color: var(--ork-action); border-color: var(--ork-action); } .kind.k-changed { color: var(--ork-ink); border-color: var(--ork-edge); }
+.chc ul, .chg-side ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--ork-1); font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.chc li.l-add { color: var(--ork-action-hi); } .chc li.l-del { color: var(--ork-danger); }
+.chg-side li::before { content: "· "; color: var(--ork-ink-muted); }
+.diff { margin: 0; padding: var(--ork-3) var(--ork-4); background: var(--ork-canvas); border: var(--ork-line) solid var(--ork-frame); font: 400 12px/18px var(--ork-font-code); white-space: pre; overflow-x: auto; }
+.diff .add { color: var(--ork-action-hi); } .diff .del { color: var(--ork-danger); } .diff .ctx { color: var(--ork-ink-muted); }
+.chg-side { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; overflow-y: auto; }
+.chg-side h3 { margin: var(--ork-3) 0 0; font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.chg-side .cap { margin: 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.mini { position: relative; width: 280px; height: 128px; overflow: hidden; background: var(--ork-table); border: var(--ork-line) solid var(--ork-frame); }
+.mini-in { position: absolute; left: 4px; top: 4px; width: 944px; height: 432px; transform: scale(0.29); transform-origin: 0 0; }
+.mini-in.scr { transform: scale(0.34); }
+.mini .node { pointer-events: none; }
+.chg-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.scr-chg .pair { display: flex; align-items: center; gap: var(--ork-3); }
+.scr-chg figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.ph2 { display: flex; flex-direction: column; gap: 5px; width: 62px; height: 104px; padding: 8px 6px; border: var(--ork-line) solid var(--ork-frame); background: var(--ork-panel); }
+.ph2 i { display: block; height: 5px; background: var(--ork-frame); } .ph2 i.s { width: 60%; }
+.ph2 b { display: block; height: 12px; background: color-mix(in srgb, var(--c) 70%, transparent); }
+.ph2.will { border-color: var(--c); }
+.ph2 em { margin: auto; font-style: normal; font-size: 11px; color: var(--ork-ink-faint); }
+.scr-chg .arrow .ork-icon { width: 14px; height: 14px; color: var(--ork-ink-muted); }
+.chg-empty { grid-column: 1 / -1; align-self: center; justify-self: center; font: var(--ork-type-body); color: var(--ork-ink-muted); }
 </style>
 </head>
 <body>
@@ -286,30 +346,31 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
 
 <section class="mk-sec" id="window">
   <h1>1 · The window, played</h1>
-  <p class="mk-line"><b>The Orkmaster's column stays on every tab</b>: the goals, top to bottom by time (the one whose spec it writes, those at work, Next, Tonight). <b>The tabs are whose eyes</b>: the Board shows each leader's tasks, and Tech's and Design's tabs show their maps. <b>Press a goal</b> in the column: every tab looks at it. The Board lights its tasks, and a leader's map zooms to the parts it touches, its spec at that leader's level beside it. Esc or ✕ looks at the whole project again. The + card at the hand's left still turns over where it lies.</p>
+  <p class="mk-line"><b>The Orkmaster's column stays on every tab</b>, off the table on the canvas's black, as the hand is. It holds two piles of whole cards: <b>At work</b> (the goal whose spec it writes in front, its ring running, and under it the goals at the leaders) and <b>Next</b>, one pile in line where each card says when it starts (in seconds for the first, a time for the rest, the moon and 01:00 for the night's). Hover a card of a pile: it comes out whole. <b>The tabs are whose eyes</b>: the Board shows each leader's tasks; Tech's and Design's tabs show their maps of the whole project. <b>Press a goal</b>: a leader's tab turns to another view, what that goal changes at its level (its parts, new, changed or read only; the contract's lines; the screens now and as they will be), with where it lies on the whole map beside it. Esc or ✕ looks at the whole project again.</p>
   <div class="mk-acts" role="group" aria-label="Play the window">
     <button class="ork-btn" type="button" data-do="spec">The Orkmaster finishes a spec</button>
     <button class="ork-btn" type="button" data-do="ork-asks">The Orkmaster asks you</button>
     <button class="ork-btn" type="button" data-do="asks">Tech asks you</button>
     <button class="ork-btn" type="button" data-do="across">Design asks what Tech knows</button>
     <button class="ork-btn" type="button" data-do="fail">A task fails at Design</button>
+    <button class="ork-btn" type="button" data-do="colbg">Column: off the table</button>
     <button class="ork-btn" type="button" data-do="reset">Start again</button>
   </div>
   <div class="scn-wrap" id="wrap"><div class="scn" id="scn">
     <aside class="col" id="col" aria-label="The Orkmaster's goals">
       <div class="col-head"><img src="../../../design-system/orkui/races/peon-crown@2x.png" alt="">The Orkmaster</div>
-      <div class="csec"><div class="plab">At work</div><div id="c-spec"></div><div class="cstrips" id="c-work"></div></div>
-      <div class="csec" id="c-passsec" hidden><div class="plab">Passing on</div><div class="cstrips" id="c-pass"></div></div>
-      <div class="csec"><div class="plab">Next</div><div class="cstrips" id="c-next"></div><span class="plab"><span class="u" id="u-next"></span></span></div>
-      <div class="csec"><div class="plab"><span><span class="ork-sign moon" aria-hidden="true"></span> Tonight</span><span class="u">from 01:00</span></div><div class="cstrips" id="c-night"></div></div>
+      <div class="csec"><div class="plab">At work<span class="u" id="u-work"></span></div><div class="fan" id="c-work"></div></div>
+      <div class="csec"><div class="plab">Next<span class="u" id="u-next"></span></div><div class="fan" id="c-next"></div></div>
+      <div class="cpass" id="c-pass"></div>
     </aside>
     <div class="tabs" role="tablist"><button type="button" class="tab" role="tab" data-tab="board" id="tab-board">Board</button><button type="button" class="tab" role="tab" data-tab="tech" id="tab-tech"><img src="../../../design-system/orkui/races/shaman-elder@2x.png" alt="">Tech</button><button type="button" class="tab" role="tab" data-tab="design" id="tab-design"><img src="../../../design-system/orkui/races/dryad-elder@2x.png" alt="">Design</button></div>
-    <div class="pane">
+    <div class="pane ork-table">
       <div class="look" id="look"></div>
       <div class="view" id="v-board"><div class="blanes">
         <div class="blane"><div class="lab"><img src="../../../design-system/orkui/races/shaman-elder@2x.png" alt="">Tech</div><div class="bgrid" id="b-tech"></div></div>
         <div class="blane"><div class="lab"><img src="../../../design-system/orkui/races/dryad-elder@2x.png" alt="">Design</div><div class="bgrid" id="b-design"></div></div>
         <div class="blane done"><div class="lab">Done</div><div class="pstack" id="b-done"></div></div>
+        <p class="b-hint" id="b-hint" hidden>Its tasks are dealt to the leaders when its spec is written. Tech's and Design's tabs show what it will change.</p>
       </div></div>
       <div class="view" id="v-tech" hidden></div>
       <div class="view" id="v-design" hidden></div>
@@ -325,12 +386,12 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
     <div class="layer" id="layer"></div>
   </div></div>
   <div class="mk-notes">
-    <p><b>The column is the first lane, pinned.</b> It holds the goals, one card each, and it does not change when the tab does. A goal lies only here; its tasks lie only in its leaders' lanes. Nothing is drawn twice: here the goal, there its tasks, joined by the rune and by the pick.</p>
-    <p><b>At work</b>: the goal whose spec the Orkmaster writes is a whole card, its ring running. The goals at work at the leaders are strips with the heads of who works on them. When the spec is written, its card becomes a strip and its tasks are dealt to the leaders' lanes.</p>
-    <p><b>Next</b> and <b>Tonight</b> are strips, by priority. The first of Next has its wait as a thin bar in eighths, and starts by itself when the Orkmaster is free. A press reads it, with <i>Start now</i> and <i>Tonight</i>.</p>
-    <p><b>A goal's state shows in the column whatever the tab</b>: a yellow <i>?</i> when it waits for you, a faint <i>?</i> when it asked another leader, red when a task failed. A question flies from the task's card on the Board, or from the goal's strip on another tab.</p>
-    <p><b>The zoom</b>: a leader's tab looks at the whole project, or, with a goal picked, at that goal at its own level. Tech shows the parts of the system it touches, its contract and its <i>Done when</i>; Design its screens and their states. It is not a separate lens: the pick decides what every tab shows.</p>
-    <p><b>The hand gets only what needs you</b>: a choice only a person makes, a question no leader could answer, a failure. A question another leader can answer goes through <i>Passing on</i> in the column, where you can take it.</p>
+    <p><b>Whole cards, no strips.</b> A pile shows its front card whole and the foot of each card under it: the card's own frame, its rune, its short name and what it waits for. More than four: thin edges, no number. A card hovered or focused slides out of its pile whole, with its whole name.</p>
+    <p><b>One pile in line.</b> <i>Tonight</i> was a start time, not a place: the night's goals lie at the pile's end under the moon. A press reads a card: <i>Start now</i>, <i>Tonight</i>, or for a night's card <i>Today, in turn</i>. The first of the day's starts by itself when its ring is whole and the Orkmaster is free.</p>
+    <p><b>A goal lies only in the column</b>, its tasks only in its leaders' lanes, joined by the rune and the pick. When its spec is written its card goes under the front of At work and its tasks are dealt to the lanes. A goal's state shows on its card in the column whatever the tab: yellow when it waits for you, a faint <i>?</i> when it asked another leader, red when a task failed.</p>
+    <p><b>Two views at a leader's tab.</b> The whole project is the leader's map: what is. A goal picked is what it will change: Tech's parts of the system each marked new, changed or read only, with its lines (+ added, ~ changed) and the contract's diff; Design's screens now and as they will be, with their states. Beside it, a small whole map with its parts lit, its <i>Done when</i>, its tasks there.</p>
+    <p><b>Off the table.</b> The canvas and the table are near in colour; what makes the table read is its rim (orkUI's <code>.ork-table</code>). The column and the hand lie off it, on the canvas: the Orkmaster's and yours, around the leaders' play. <i>Column: off the table</i> above switches it, to compare.</p>
+    <p><b>The hand gets only what needs you</b>: a choice only a person makes, a question no leader could answer, a failure. A question another leader can answer passes over the column (<i>passing on</i>), where you can take it.</p>
   </div>
 </section>
 
@@ -472,6 +533,25 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
     t1: { touches: { tech: ["scoring"], design: [] }, tech: { will: ["Scoring split into points and streaks"], contract: "(no change)", done: ["Every scoring test still passes"] }, design: { will: [], states: [], done: [] } },
     t2: { touches: { tech: [], design: ["join", "lobby", "settings"] }, tech: { will: [], contract: "", done: [] }, design: { will: ["Every lobby string in Polish"], states: ["EN", "PL"], done: ["No string overflows its box"] } }
   };
+  // what a goal changes, at each leader's level: the parts it touches, each new, changed or read only, its lines (+ added, ~ changed, − removed); Design's with the states
+  var CHANGES = {
+    w1: { tech: [["rounds", "changed", ["+ keeps the first answer of each question", "~ an answer carries the server's time"]], ["scoring", "changed", ["+ marks the first with a crown"]], ["gate", "changed", ["~ passes at_ms through to Rounds"]], ["clock", "read", ["reads the server's time, unchanged"]]],
+      diff: ["  answer.accepted {", "    player: id,", "    at_ms: int,", "+   first: bool", "  }"],
+      design: [["question", "changed", ["+ a small crown beside the first answer"], ["First", "Tie"]], ["results", "changed", ["+ the crown over the winner's name", "+ a tie lights both names"], ["First", "Tie", "Reconnected"]]] },
+    g1: { tech: [["lobby", "new", ["+ a five-letter code for each lobby", "+ refuses a full lobby"]], ["gate", "changed", ["+ lobby.join"]], ["phone", "changed", ["+ the join form"]], ["store", "changed", ["+ lobby.code, unique"]]],
+      diff: ["+ lobby.join { code, name }", "+ lobby.joined { lobby, players }", "+ lobby.refused { why }"],
+      design: [["join", "new", ["+ the code field, letters only"], ["Empty", "Wrong code", "Full"]], ["lobby", "changed", ["~ the code at the top"], []]] },
+    g3: { tech: [["results", "new", ["+ GET /rounds/:id/results"]], ["scoring", "read", ["reads the round's points"]], ["store", "changed", ["+ a player who left keeps their row"]]],
+      diff: ["+ GET /rounds/:id/results", "+   → [{ player, points, left }]"],
+      design: [["results", "new", ["+ ranks, points and the crown", "+ a way back to the lobby"], ["Win", "Tie", "Player left"]], ["lobby", "changed", ["~ the last round's winner at the top"], []]] },
+    n1: { tech: [["clock", "changed", ["+ round.tick every second"]], ["rounds", "changed", ["~ a round ends on the clock, not the phones"]], ["gate", "changed", ["+ passes round.tick"]], ["phone", "changed", ["~ shows the server's second"]]],
+      diff: ["+ round.tick { left_ms }"],
+      design: [["question", "changed", ["+ the timer at the top, red in the last 5 s"], ["Running", "Last 5 s", "Up"]]] }
+  };
+  function changesOf(id, p) {
+    if (CHANGES[id] && CHANGES[id][p]) return CHANGES[id][p];
+    var s = specOf(id); return (s.touches[p] || []).map(function (n) { return [n, "changed", (s[p].will || []).slice(0, 2).map(function (x) { return "~ " + x; }), s[p].states || []]; });
+  }
   function specOf(id) { return SPECS[id] || { touches: { tech: ["rounds"], design: ["question"] }, tech: { will: ["Written by the Orkmaster when it starts"], contract: "", done: [] }, design: { will: ["Written by the Orkmaster when it starts"], states: [], done: [] } }; }
   var MAPS = {
     tech: { nodes: [["phone", "Phone app", "web, one per player", 30, 40], ["gate", "Socket gateway", "rooms, presence", 240, 40], ["lobby", "Lobby", "codes, hosts, kicks", 450, 20], ["rounds", "Rounds", "questions, answers", 450, 140],
@@ -484,8 +564,9 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
   var S0 = function () {
     G = JSON.parse(JSON.stringify(GOALS0));
     Object.keys(G).forEach(function (k) { G[k].id = k; });
+    G.t1.night = G.t2.night = true;                                 // Tonight is a start time, not a place: the night's goals lie in the one pile in line, last, under the moon
     return {
-      spec: "w1", work: ["g1", "g2", "g3"], next: ["n1", "n2", "n3"], night: ["t1", "t2"], done: ["d1"],
+      spec: "w1", work: ["g1", "g2", "g3"], next: ["n1", "n2", "n3", "t1", "t2"], done: ["d1"],
       tasks: [{ id: "k1", goal: "g1", party: "tech", name: "The join endpoint", sign: "feature", stage: "Build · 12 min", state: "work" },
               { id: "k2", goal: "g2", party: "tech", name: "Count answers in a row", sign: "mechanic", stage: "Check · 3 min", state: "work" },
               { id: "k6", goal: "g3", party: "tech", name: "Results for a player who left", sign: "feature", stage: "Plan", state: "work" },
@@ -500,7 +581,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
 
   // ---------- the scene's scale ----------
   var scn = $("scn"), wrap = $("wrap"), sc = 1;
-  function fit() { sc = Math.max(0.62, Math.min(1, wrap.clientWidth / W)); scn.style.transform = "scale(" + sc + ")"; wrap.style.height = Math.ceil(680 * sc) + "px"; scn.style.marginRight = (W * sc - W) + "px"; }
+  function fit() { sc = Math.max(0.62, Math.min(1, wrap.clientWidth / W)); scn.style.transform = "scale(" + sc + ")"; wrap.style.height = Math.ceil(720 * sc) + "px"; scn.style.marginRight = (W * sc - W) + "px"; }
   function rel(el) { var r = el.getBoundingClientRect(), s = scn.getBoundingClientRect(); return { x: (r.left - s.left) / sc, y: (r.top - s.top) / sc, w: r.width / sc, h: r.height / sc }; }
   window.addEventListener("resize", fit);
 
@@ -512,13 +593,29 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
     if (ts.some(function (t) { return t.state === "asked"; })) return "asked";
     return "";
   }
-  function strip(id, o) {
-    o = o || {};
-    var g = G[id], m = markOf(id), heads = "";
-    if (o.heads) { var ps = []; st.tasks.forEach(function (t) { if (t.goal === id && ps.indexOf(t.party) < 0) ps.push(t.party); }); heads = '<span class="hs">' + ps.map(function (p) { return HEAD(PARTIES[p].race); }).join("") + "</span>"; }
-    var sign = m === "asks" ? S("question", "mk-a") : m === "asked" ? S("question", "mk-q") : m === "failed" ? S("alert", "mk-f") : "";
-    return '<button type="button" class="strip c-' + g.el + (st.picked === id ? " is-picked" : "") + (m ? " is-" + m : "") + '" data-goal="' + id + '" title="' + esc(g.name) + '" aria-pressed="' + (st.picked === id) + '">'
-      + E(g.el) + '<span class="nm">' + esc(g.short) + "</span>" + heads + sign + (o.wait != null ? '<span class="bar"><i style="--s:' + o.wait + '"></i></span>' : "") + "</button>";
+  // a goal's card in the Orkmaster's column: a whole card, face down; in a pile the front one whole, each under it showing its foot (its rune, its name, and what it waits for)
+  var CH = 157, PEEK = 20;
+  function cback(id, o) {
+    var g = G[id], m = o.mark || "";
+    var sig = "ork-sigil" + (o.busy ? " mk-busy" : "") + (o.stopped ? " mk-stopped" : "") + (o.wait != null ? " is-waiting" : "");
+    var line = m === "asks" ? " is-asks thick" : m === "failed" ? " is-failed thick" : st.picked === id ? " is-lit thick" : "";
+    return '<button type="button" class="ork-card mk-r cd back cb c-' + g.el + line + '" data-goal="' + id + '" style="top:' + o.top + "px;z-index:" + o.z + '" title="' + esc(g.name) + '" aria-label="' + esc(g.name + (o.say ? ": " + o.say : "")) + '" aria-pressed="' + (st.picked === id) + '">'
+      + '<span class="' + sig + '" aria-hidden="true"' + (o.wait != null ? ' style="--ork-sigil-share:' + o.wait + '"' : "") + '><span class="ork-sigil__seal">' + E(g.el, o.glow ? "mk-glow" : "") + "</span></span>"
+      + '<span class="cfoot">' + E(g.el) + '<span class="nm">' + esc(g.short) + "</span>" + (o.extra || "") + "</span></button>";
+  }
+  function fan(el, items) {
+    var shown = items.slice(0, 4), n = items.length;
+    if (!n) { el.style.height = "auto"; el.innerHTML = '<div class="free">Nothing here</div>'; return; }
+    el.style.height = CH + (shown.length - 1) * PEEK + (n > 4 ? 6 : 0) + "px";
+    el.innerHTML = shown.map(function (it, i) { return cback(it.id, Object.assign({ top: i * PEEK, z: 10 - i }, it.o)); }).join("") + (n > 4 ? '<span class="edges" style="top:' + (CH + (shown.length - 1) * PEEK) + 'px" aria-hidden="true"></span>' : "");
+  }
+  function headsOf(id) { var ps = []; st.tasks.forEach(function (t) { if (t.goal === id && ps.indexOf(t.party) < 0) ps.push(t.party); }); return '<span class="hs">' + ps.map(function (p) { return HEAD(PARTIES[p].race); }).join("") + "</span>"; }
+  function markSign(m) { return m === "asks" ? S("question", "mk-a") : m === "asked" ? S("question", "mk-q") : m === "failed" ? S("alert", "mk-f") : ""; }
+  function whenOf(id, i) {                                        // one pile in line: when each starts, the night's with the moon
+    var g = G[id];
+    if (g.night) return '<span class="when">' + S("moon") + "01:00</span>";
+    if (i === 0) return '<span class="when">' + (st.share >= 1 ? (st.spec ? "next" : "now") : Math.ceil((1 - st.share) * 8 * 1.5) + " s") + "</span>";
+    return '<span class="when">~' + (14 + Math.floor((20 + 25 * (i - 1)) / 60)) + ":" + String((20 + 25 * (i - 1)) % 60).padStart(2, "0") + "</span>";
   }
   function tcard(t, o) {
     o = o || {};
@@ -534,86 +631,88 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
   function pcard(p, o) {
     var g = G[p.goal] || { el: "void" }, tag = o && o.div ? "div" : "button";
     return "<" + tag + (tag === "button" ? ' type="button"' : "") + ' class="ork-card cd q pass c-' + g.el + '" data-pass="' + p.id + '" aria-label="' + esc(PARTIES[p.by].short + " asks " + PARTIES[p.to].short + ": " + p.q) + '">'
-      + '<span class="who">' + E(g.el) + HEAD(PARTIES[p.by].race) + I("arrow-right") + HEAD(PARTIES[p.to].race) + '<span class="in">' + (p.left > 0 ? p.left + " s" : "…") + "</span></span>"
+      + '<span class="who">' + E(g.el) + HEAD(PARTIES[p.by].race) + I("arrow-right") + HEAD(PARTIES[p.to].race) + '<span class="in">' + (p.left > 0 ? "passing on · " + p.left + " s" : "…") + "</span></span>"
       + '<span class="qq">' + esc(p.q) + "</span></" + tag + ">";
   }
   function acard(p) {
     return '<div class="ork-card mk-r cd q ans thick"><span class="who">' + HEAD(PARTIES[p.to].race) + esc(PARTIES[p.to].short + " answers") + '</span><span class="qq">' + esc(p.answer) + "</span></div>";
   }
-  function drawPass() { $("c-passsec").hidden = !st.pass.length; $("c-pass").innerHTML = st.pass.map(function (x) { return pcard(x); }).join(""); }
+  function drawPass() { $("c-pass").innerHTML = st.pass.map(function (x) { return pcard(x); }).join(""); }
   function drawNext() {
-    $("c-next").innerHTML = st.next.map(function (id, i) { return strip(id, i === 0 ? { wait: st.share } : {}); }).join("");
-    $("u-next").textContent = !st.next.length ? "" : st.share >= 1 ? (st.spec ? "the first starts when the Orkmaster is free" : "starting…") : "the first starts in " + Math.ceil((1 - st.share) * 8 * 1.5) + " s";
+    fan($("c-next"), st.next.map(function (id, i) { return { id: id, o: { wait: i === 0 && !G[id].night ? st.share : null, extra: whenOf(id, i), say: G[id].night ? "tonight at 01:00" : i === 0 ? "starts by itself" : "in line" } }; }));
+    var first = st.next[0] && G[st.next[0]];
+    $("u-next").textContent = !first ? "" : first.night ? "tonight" : st.share >= 1 ? (st.spec ? "when it is free" : "starting…") : "the first in " + Math.ceil((1 - st.share) * 8 * 1.5) + " s";
+    round($("c-next"));
   }
   function nextRune() { var used = {}; liveGoals().forEach(function (g) { used[g.el] = 1; }); return ELEMENTS.filter(function (e) { return !used[e]; })[0] || "meadow"; }
   function draw() {
-    // the Orkmaster's column: the same on every tab
-    var sp = $("c-spec");
-    if (st.spec) {
-      var g = G[st.spec];
-      sp.innerHTML = back(g, { tag: "button", attrs: ' type="button" data-goal="' + st.spec + '"', busy: !st.orkAsks, stopped: st.orkAsks, glow: !st.orkAsks, cls: "small" + (st.orkAsks ? " is-asks thick" : st.picked === st.spec ? " is-lit thick" : ""), say: st.orkAsks ? "waits for your answer" : "the Orkmaster writes its spec" })
-        + '<span class="under' + (st.orkAsks ? " asks" : "") + '">' + (st.orkAsks ? "Waits for your answer" : "Writing its spec") + "</span>";
-    } else sp.innerHTML = '<div class="free">Free: the first of Next starts here</div>';
-    $("c-work").innerHTML = st.work.map(function (id) { return strip(id, { heads: true }); }).join("");
+    // the Orkmaster's column: the same on every tab. At work: the goal whose spec it writes in front, the goals at the leaders under it
+    var work = (st.spec ? [{ id: st.spec, o: { busy: !st.orkAsks, stopped: st.orkAsks, glow: !st.orkAsks, mark: st.orkAsks ? "asks" : "", say: st.orkAsks ? "waits for your answer" : "the Orkmaster writes its spec" } }] : [])
+      .concat(st.work.map(function (id) { var m = markOf(id); return { id: id, o: { mark: m, extra: headsOf(id) + markSign(m), say: "at work" } }; }));
+    fan($("c-work"), work);
+    $("u-work").textContent = st.spec ? (st.orkAsks ? "waits for you" : "writing a spec") : "free";
+    $("u-work").classList.toggle("asks", !!st.orkAsks);
     drawNext();
-    $("c-night").innerHTML = st.night.map(function (id) { return strip(id); }).join("");
     drawPass();
     // the tabs and the pane
     document.querySelectorAll("[data-tab]").forEach(function (b) { b.classList.toggle("on", b.dataset.tab === st.tab); b.setAttribute("aria-selected", String(b.dataset.tab === st.tab)); });
     ["board", "tech", "design"].forEach(function (v) { $("v-" + v).hidden = v !== st.tab; });
     var pg = st.picked ? G[st.picked] : null;
     $("look").innerHTML = (pg ? 'Looking at <span class="chip c-' + pg.el + '">' + E(pg.el) + esc(pg.short) + '<button type="button" data-unpick="1" aria-label="Look at the whole project">' + I("close") + "</button></span>" : "The whole project")
-      + '<span class="lens">' + { board: "Board: who does what", tech: "Tech · System" + (pg ? ": its part" : ""), design: "Design · Screens" + (pg ? ": its part" : "") }[st.tab] + (pg ? " · Esc: the whole project" : "") + "</span>";
+      + '<span class="lens">' + { board: "Board: who does what", tech: pg ? "Tech · what this goal changes" : "Tech · System", design: pg ? "Design · what this goal changes" : "Design · Screens" }[st.tab] + (pg ? " · Esc: the whole project" : "") + "</span>";
     ["tech", "design"].forEach(function (p) {
       $("b-" + p).innerHTML = st.tasks.filter(function (t) { return t.party === p; }).map(function (t) {
         return t.state === "place" ? '<div class="ork-card-place place" data-task="' + t.id + '" data-goal="' + t.goal + '">Back here on <i>Try again</i></div>' : tcard(t); }).join("");
     });
     $("b-done").innerHTML = st.done.slice(0, 3).map(function (id, i) { return back(G[id], { i: i, cls: st.picked && st.picked !== id ? "is-dim" : "" }); }).reverse().join("");
+    $("b-hint").hidden = !(pg && st.tab === "board" && !st.tasks.some(function (t) { return t.goal === st.picked; }));
     // the hand
     $("hcards").innerHTML = st.hand.map(function (h) { return h.kind === "q" ? qcard(h) : tcard(Object.assign({}, h.t, { state: "failed" }), { hand: h.id }); }).join("");
     if (!$("plus")) $("plus-slot").innerHTML = plusCard(nextRune());
     round(scn);
-    zoom();
+    lensView();
   }
-  // a leader's lens, zoomed to the picked goal: only the parts it touches, and its spec at that leader's level
+  // a leader's tab: the whole project is its map (what is); a goal picked is another view, what that goal changes at this leader's level (what will be, against what is)
+  function nodeName(p, id) { var n = MAPS[p].nodes.filter(function (x) { return x[0] === id; })[0]; return n ? n[1] : id; }
+  function mapHtml(p, touch) {
+    var m = MAPS[p], at = {}, w = m.screens ? 120 : 160, h = m.screens ? 210 : 56;
+    m.nodes.forEach(function (n) { at[n[0]] = n; });
+    var svg = '<svg aria-hidden="true">' + m.links.map(function (l) { var a = at[l[0]], b = at[l[1]]; return '<line class="' + (touch && touch.indexOf(l[0]) >= 0 && touch.indexOf(l[1]) >= 0 ? "is-touched" : touch ? "is-off" : "") + '" x1="' + (a[3] + w / 2) + '" y1="' + (a[4] + h / 2) + '" x2="' + (b[3] + w / 2) + '" y2="' + (b[4] + h / 2) + '"/>'; }).join("") + "</svg>";
+    return svg + m.nodes.map(function (n) { var on = touch && touch.indexOf(n[0]) >= 0;
+      return '<div class="node' + (m.screens ? " scr" : "") + (on ? " is-touched" : touch ? " is-off" : "") + '" style="left:' + n[3] + "px;top:" + n[4] + 'px"><b>' + n[1] + "</b><span>" + n[2] + "</span>" + (m.screens ? '<span class="ph"><i></i><i class="s"></i><i></i><i class="s"></i></span>' : "") + "</div>"; }).join("");
+  }
   function buildLenses() {
-    ["tech", "design"].forEach(function (p) {
-      var m = MAPS[p], at = {};
-      m.nodes.forEach(function (n) { at[n[0]] = n; });
-      var w = m.screens ? 120 : 160, h = m.screens ? 210 : 56;
-      var svg = '<svg aria-hidden="true">' + m.links.map(function (l) { var a = at[l[0]], b = at[l[1]]; return '<line data-a="' + l[0] + '" data-b="' + l[1] + '" x1="' + (a[3] + w / 2) + '" y1="' + (a[4] + h / 2) + '" x2="' + (b[3] + w / 2) + '" y2="' + (b[4] + h / 2) + '"/>'; }).join("") + "</svg>";
-      var nodes = m.nodes.map(function (n) { return '<div class="node' + (m.screens ? " scr" : "") + '" data-node="' + n[0] + '" style="left:' + n[3] + "px;top:" + n[4] + 'px"><b>' + n[1] + "</b><span>" + n[2] + "</span>" + (m.screens ? '<span class="ph"><i></i><i class="s"></i><i></i><i class="s"></i></span>' : "") + "</div>"; }).join("");
-      $("v-" + p).innerHTML = '<div class="lmap">' + svg + nodes + '</div><aside class="specp" id="s-' + p + '" aria-live="polite"></aside>';
-    });
+    ["tech", "design"].forEach(function (p) { $("v-" + p).innerHTML = '<div class="lmap">' + mapHtml(p, null) + '</div><div class="chg" id="chg-' + p + '" hidden></div>'; });
   }
-  function specHtml(id, p, touch) {
-    var g = G[id], s = specOf(id)[p] || {}, mine = st.tasks.filter(function (t) { return t.goal === id && t.party === p; });
-    var li = function (a) { return "<ul>" + a.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>"; };
-    if (!touch.length) return '<div class="t">' + E(g.el) + esc(g.short) + '</div><p class="cap">Nothing of this goal is on ' + PARTIES[p].short + "’s map.</p>";
-    return '<div class="t">' + E(g.el) + esc(g.short) + '</div><div class="lvl">' + PARTIES[p].short + "’s part of its spec</div>"
-      + (s.will && s.will.length ? "<h3>Will be</h3>" + li(s.will) : "")
-      + (s.contract ? "<h3>Contract</h3><code>" + esc(s.contract) + "</code>" : "")
-      + (s.states && s.states.length ? '<h3>States</h3><div class="states">' + s.states.map(function (x) { return "<span>" + esc(x) + "</span>"; }).join("") + "</div>" : "")
-      + (s.done && s.done.length ? "<h3>Done when</h3>" + li(s.done) : "")
-      + "<h3>Its tasks here</h3>" + (mine.length ? li(mine.map(function (t) { return t.name + " · " + (t.state === "work" ? t.stage : t.state === "asks" ? "waits for you" : t.state === "asked" ? "asked " + PARTIES[t.asked].short : "failed"); })) : '<p class="cap">None yet: they are dealt when its spec is written.</p>');
+  var KIND = { "new": "New", changed: "Changes", read: "Read only" };
+  function changeHtml(id, p) {
+    var g = G[id], s = specOf(id), sp = s[p] || {}, touch = s.touches[p] || [], ch = changesOf(id, p), mine = st.tasks.filter(function (t) { return t.goal === id && t.party === p; });
+    var li = function (a, cls) { return "<ul" + (cls ? ' class="' + cls + '"' : "") + ">" + a.map(function (x) { var k = x.charAt(0) === "+" ? "l-add" : x.charAt(0) === "~" ? "l-chg" : x.charAt(0) === "−" ? "l-del" : ""; return '<li class="' + k + '">' + esc(x) + "</li>"; }).join("") + "</ul>"; };
+    if (!touch.length) return '<div class="chg-empty">' + E(g.el) + " " + esc(g.short) + ": nothing of it is on " + PARTIES[p].short + "’s map. Its work is at the other leaders.</div>";
+    var cards = ch.map(function (c) {
+      if (p === "design") return '<div class="ork-card mk-r chc scr-chg c-' + g.el + '"><div class="hd"><b>' + esc(nodeName(p, c[0])) + '</b><span class="kind k-' + c[1] + '">' + KIND[c[1]] + '</span></div>'
+        + '<div class="pair"><figure><span class="ph2">' + (c[1] === "new" ? '<em>none</em>' : "<i></i><i class=s></i><i></i>") + '</span><figcaption>Now</figcaption></figure><span class="arrow">' + I("arrow-right") + '</span><figure><span class="ph2 will"><i></i><b></b><i class=s></i><i></i></span><figcaption>Will be</figcaption></figure></div>'
+        + li(c[2]) + (c[3] && c[3].length ? '<div class="states">' + c[3].map(function (x) { return "<span>" + esc(x) + "</span>"; }).join("") + "</div>" : "") + "</div>";
+      return '<div class="ork-card mk-r chc c-' + g.el + '"><div class="hd"><b>' + esc(nodeName(p, c[0])) + '</b><span class="kind k-' + c[1] + '">' + KIND[c[1]] + "</span></div>" + li(c[2]) + "</div>";
+    }).join("");
+    var diff = p === "tech" && (CHANGES[id] && CHANGES[id].diff || []);
+    return '<div class="chg-main"><div class="chg-title">' + E(g.el, "big") + "<div><b>" + esc(g.name) + "</b><span>What it changes, at " + PARTIES[p].short + "’s level</span></div></div>"
+      + '<div class="chg-grid' + (p === "design" ? " two" : "") + '">' + cards + "</div>"
+      + (diff && diff.length ? '<div class="plab">Contract</div><pre class="diff">' + diff.map(function (x) { return '<span class="' + (x.charAt(0) === "+" ? "add" : x.charAt(0) === "-" ? "del" : "ctx") + '">' + esc(x) + "</span>"; }).join("\n") + "</pre>" : "") + "</div>"
+      + '<aside class="chg-side"><div class="plab">Where, on the whole map</div><div class="mini"><div class="mini-in' + (p === "design" ? " scr" : "") + '">' + mapHtml(p, touch) + "</div></div>"
+      + (sp.done && sp.done.length ? "<h3>Done when</h3>" + li(sp.done) : "")
+      + "<h3>Its tasks here</h3>" + (mine.length ? li(mine.map(function (t) { return t.name + " · " + (t.state === "work" ? t.stage : t.state === "asks" ? "waits for you" : t.state === "asked" ? "asked " + PARTIES[t.asked].short : "failed"); })) : '<p class="cap">None yet: they are dealt when its spec is written.</p>') + "</aside>";
   }
-  function zoom() {
+  function lensView() {
     ["tech", "design"].forEach(function (p) {
-      var v = $("v-" + p), map = v.querySelector(".lmap"), panel = $("s-" + p), g = st.picked ? G[st.picked] : null, touch = g ? (specOf(st.picked).touches[p] || []) : [];
-      var nodes = [].slice.call(v.querySelectorAll(".node")), box = null;
-      nodes.forEach(function (n) {
-        var on = touch.indexOf(n.dataset.node) >= 0;
-        n.classList.toggle("is-touched", !!g && on); n.classList.toggle("is-off", !!g && touch.length > 0 && !on);
-        n.style.setProperty("--c", g ? "var(--ork-elem-" + g.el + ")" : "var(--ork-frame)");
-        if (g && on) { var x = n.offsetLeft, y = n.offsetTop, r = x + n.offsetWidth, b = y + n.offsetHeight; box = box ? { x: Math.min(box.x, x), y: Math.min(box.y, y), r: Math.max(box.r, r), b: Math.max(box.b, b) } : { x: x, y: y, r: r, b: b }; }
-      });
-      v.querySelectorAll("line").forEach(function (l) { var on = touch.indexOf(l.dataset.a) >= 0 && touch.indexOf(l.dataset.b) >= 0; l.classList.toggle("is-touched", !!g && on); l.classList.toggle("is-off", !!g && touch.length > 0 && !on); });
-      if (box) {
-        var mw = 944 - 344, mh = 432, pad = 28, bw = box.r - box.x + pad * 2, bh = box.b - box.y + pad * 2, k = Math.min(mw / bw, mh / bh, 1.3);
-        map.style.transform = "translate(" + ((mw - bw * k) / 2 - (box.x - pad) * k) + "px," + ((mh - bh * k) / 2 - (box.y - pad) * k) + "px) scale(" + k + ")";
-      } else map.style.transform = g ? "translate(0,0) scale(.62)" : "none";
-      panel.classList.toggle("on", !!g);
-      if (g) panel.innerHTML = specHtml(st.picked, p, touch);
+      var v = $("v-" + p), map = v.querySelector(".lmap"), chg = $("chg-" + p), on = !!st.picked;
+      map.classList.toggle("is-away", on); chg.hidden = !on;
+      if (on && chg.dataset.goal !== st.picked + "|" + st.tasks.length + "|" + JSON.stringify(st.tasks.filter(function (t) { return t.goal === st.picked; }).map(function (t) { return t.state; }))) {
+        chg.innerHTML = changeHtml(st.picked, p); chg.dataset.goal = st.picked + "|" + st.tasks.length + "|" + JSON.stringify(st.tasks.filter(function (t) { return t.goal === st.picked; }).map(function (t) { return t.state; }));
+        round(chg);
+        if (!reduced() && !v.hidden) chg.animate([{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "none" }], { duration: 250, easing: "cubic-bezier(.22,1,.36,1)" });
+      }
+      if (!on) chg.dataset.goal = "";
     });
   }
   function pick(id, keep) { st.picked = st.picked === id && !keep ? "" : id; closeLift(); draw(); }
@@ -637,7 +736,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
   function lift(anchor, html) {
     closeLift();
     var r = rel(anchor), l = document.createElement("div"); l.className = "lift"; l.innerHTML = html; $("layer").appendChild(l);
-    var h = l.offsetHeight, x = Math.min(W - 316, r.x), y = r.y + r.h + 8 + h > 672 ? r.y - h - 8 : r.y + r.h + 8;
+    var h = l.offsetHeight, x = Math.min(W - 316, r.x), y = r.y + r.h + 8 + h > 712 ? r.y - h - 8 : r.y + r.h + 8;
     l.style.left = x + "px"; l.style.top = Math.max(48, y) + "px";
     var first = l.querySelector("button"); if (first) first.focus({ preventScroll: true });
     return l;
@@ -646,7 +745,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
   // ---------- the + card, turned over where it lies ----------
   var F = null;                                                   // the open field: {el, text, rune, to, type, files, open}
   var kept = { text: "Players see who answered first, with a small crown over their name", rune: "", to: "ork", type: "", files: [] };
-  var FX = 16, FY = 680 - 330;                                    // the grown card's place: its left edge where the + card's is, its top so 330 px show above the window's edge
+  var FX = 16, FY = 720 - 330;                                    // the grown card's place: its left edge where the + card's is, its top so 330 px show above the window's edge
   function fieldHtml() {
     var k = kept, rune = k.rune || nextRune(), p = PARTIES[k.to], types = TYPES[k.to] || [], ty = types.filter(function (t) { return t[0] === k.type; })[0];
     return '<div class="ork-card mk-r thick fld" role="group" aria-label="The new goal’s card">'
@@ -765,7 +864,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
     return c || stripEl(t.goal);
   }
   function tick() {
-    if (!st.next.length) return;
+    if (!st.next.length || G[st.next[0]].night) return;               // the night's start by the clock, not by the wait
     if (st.share < 1) { st.share = Math.min(1, st.share + 1 / 8); drawNext(); }
     if (st.share >= 1 && !st.spec) toSpec();
   }
@@ -773,11 +872,11 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
     var id = st.next[0]; if (!id) return;
     var from = rel(stripEl(id, "#c-next"));
     st.next.shift(); st.spec = id; st.share = 0; closeLift(); draw();
-    hideUntil($("c-spec").firstElementChild, fly(back(G[id]), from, rel($("c-spec").firstElementChild), { arc: 20, ms: 520 }));
+    var dest = stripEl(id, "#c-work"); hideUntil(dest, fly(cback(id, { top: 0, z: 1 }), from, rel(dest), { arc: 20, ms: 520 }));
   }
   function specDone() {
     var id = st.spec; if (!id) return;
-    var from = rel($("c-spec").firstElementChild), g = G[id];
+    var from = rel(stripEl(id, "#c-work")), g = G[id];
     st.spec = ""; st.orkAsks = false;
     st.hand = st.hand.filter(function (h) { return !(h.kind === "q" && h.by === "ork"); });
     st.work.unshift(id);
@@ -792,7 +891,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
       }
     });
     closeLift(); draw();
-    var landed = stripEl(id, "#c-work"); if (landed) hideUntil(landed, fly(back(g), from, rel(landed), { arc: 10, ms: 420 }));
+    var landed = stripEl(id, "#c-work"); if (landed) hideUntil(landed, fly(cback(id, { top: 0, z: 1 }), from, rel(landed), { arc: 10, ms: 420 }));
     deal.forEach(function (t, i) {                                // its tasks are dealt to its leaders' lanes; on another tab, to the leader's tab
       var dest = st.tab === "board" ? document.querySelector('#v-board [data-task="' + t.id + '"]') : $("tab-" + t.party);
       var to = rel(dest); if (dest.matches(".tab")) to = { x: to.x + 8, y: to.y + 6, w: 30, h: 42 };
@@ -802,7 +901,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
     if (st.next.length && st.share >= 1) setTimeout(toSpec, reduced() ? 0 : 900);
   }
   function ask(t, by, qs) {
-    var src = by === "ork" ? $("c-spec").firstElementChild : srcOf(t), from = rel(src);
+    var src = by === "ork" ? stripEl(st.spec, "#c-work") : srcOf(t), from = rel(src);
     if (by === "ork") st.orkAsks = true; else t.state = "asks";
     var cards = qs.map(function (q) { return { kind: "q", id: "q" + nextId++, goal: by === "ork" ? st.spec : t.goal, task: t && t.id, by: by, q: q[0], answers: q[1] }; });
     st.hand = st.hand.concat(cards); draw();
@@ -814,7 +913,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
     st.hand = st.hand.filter(function (h) { return h.id !== qid; });
     var left = st.hand.some(function (h) { return h.kind === "q" && (q.by === "ork" ? h.by === "ork" : h.task === q.task); });
     closeLift(); draw();
-    var t = q.task ? taskById(q.task) : null, to = q.by === "ork" ? $("c-spec").firstElementChild : t ? srcOf(t) : null, r = to ? rel(to) : null;
+    var t = q.task ? taskById(q.task) : null, to = q.by === "ork" ? stripEl(q.goal, "#c-work") : t ? srcOf(t) : null, r = to ? rel(to) : null;
     fly(qcard(q), from, r ? { x: r.x + r.w * 0.3, y: r.y + r.h * 0.3, w: r.w * 0.4, h: r.h * 0.4 } : null, { arc: 70, ms: 520 }).then(function () {
       if (left) return;
       if (q.by === "ork") st.orkAsks = false; else if (t) t.state = "work";
@@ -890,8 +989,15 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
     if (!st.tasks.some(function (x) { return x.goal === h.t.goal; })) st.work = st.work.filter(function (x) { return x !== h.t.goal; });
     closeLift(); draw();
   }
-  function toNight(id) { var el = stripEl(id, "#c-next"); if (!el) return; var from = rel(el); if (st.next[0] === id) st.share = 0; st.next = st.next.filter(function (x) { return x !== id; }); st.night.unshift(id); closeLift(); draw(); var d = stripEl(id, "#c-night"); hideUntil(d, fly(strip(id), from, rel(d), { arc: 20, ms: 420 })); }
-  function startNow(id) { st.next = [id].concat(st.next.filter(function (x) { return x !== id; })); st.share = 1; closeLift(); if (!st.spec) toSpec(); else draw(); }
+  function toNight(id) {                                          // its start moves to the night: it goes to the pile's end, under the moon
+    if (st.next[0] === id) st.share = 0;
+    G[id].night = true; st.next = st.next.filter(function (x) { return x !== id; }).concat([id]); closeLift(); draw();
+  }
+  function today(id) {                                            // back in the day's turn: after the last of the day's
+    G[id].night = false; var rest = st.next.filter(function (x) { return x !== id; }), at = rest.filter(function (x) { return !G[x].night; }).length;
+    rest.splice(at, 0, id); st.next = rest; closeLift(); draw();
+  }
+  function startNow(id) { G[id].night = false; st.next = [id].concat(st.next.filter(function (x) { return x !== id; })); st.share = 1; closeLift(); if (!st.spec) toSpec(); else draw(); }
 
   var acts = {
     spec: specDone,
@@ -900,6 +1006,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
       ask(t, "tech", [["Who counts as first when two answers arrive within 50 ms?", ["The server's clock decides", "Both are first"]], ["Keep the crown when a player reconnects?", ["Keep it", "Lose it"]]]); },
     across: askAcross,
     fail: fail,
+    colbg: function () { scn.classList.toggle("col-on-table"); var on = scn.classList.contains("col-on-table"); document.querySelector('[data-do="colbg"]').textContent = on ? "Column: on the table (compare)" : "Column: off the table"; },
     reset: function () { closeLift(); if (F) { F.el.remove(); F = null; } st = S0(); $("plus-slot").innerHTML = ""; draw(); }
   };
   document.querySelectorAll("[data-do]").forEach(function (b) { b.addEventListener("click", function () { acts[b.dataset.do](); }); });
@@ -919,6 +1026,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
       if (b.dataset.drop) drop(b.dataset.drop);
       if (b.dataset.now) startNow(b.dataset.now);
       if (b.dataset.night) toNight(b.dataset.night);
+      if (b.dataset.today) today(b.dataset.today);
       if (b.dataset.take) takeIt(b.dataset.take);
       if (b.dataset.passnow) passOn(b.dataset.passnow);
       if (b.dataset.close) closeLift();
@@ -941,11 +1049,12 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
       lift(pq, '<div class="t">' + HEAD(PARTIES[P.by].race) + esc(PARTIES[P.by].short) + " asks " + esc(PARTIES[P.to].short) + "</div><p>" + esc(P.q) + '</p><p class="cap">' + esc(PARTIES[P.to].short) + " can answer it from the code, so the Orkmaster passes it on in a few seconds. Nothing waits for you.</p>"
         + '<div class="acts"><button type="button" class="ork-btn" data-take="' + P.id + '">Answer it myself</button><button type="button" class="ork-btn" data-passnow="' + P.id + '">Pass it now</button></div>');
       lifted = P.id; return; }
+    if (t.closest("[data-colbg]")) return;
     var nx = t.closest("#c-next [data-goal]");
     if (nx) { var id = nx.dataset.goal, N = G[id];
       if (lifted === id) { pick(""); return; }
       pick(id, true);
-      lift(stripEl(id, "#c-next"), '<div class="t">' + E(N.el) + " " + esc(N.short) + "</div><p>" + esc(N.name) + '</p><p class="cap">Its spec is written when it starts. The tabs show what each leader would do.</p><div class="acts"><button type="button" class="ork-btn primary" data-now="' + id + '">Start now</button><button type="button" class="ork-btn" data-night="' + id + '">Tonight</button></div>');
+      lift(stripEl(id, "#c-next"), '<div class="t">' + E(N.el) + " " + esc(N.short) + "</div><p>" + esc(N.name) + '</p><p class="cap">' + (N.night ? "Starts tonight at 01:00, in the night's window." : "Starts in its turn. Its spec is written when it starts.") + ' The tabs show what each leader would change.</p><div class="acts"><button type="button" class="ork-btn primary" data-now="' + id + '">Start now</button>' + (N.night ? '<button type="button" class="ork-btn" data-today="' + id + '">Today, in turn</button>' : '<button type="button" class="ork-btn" data-night="' + id + '">Tonight</button>') + "</div>");
       lifted = id; return; }
     var gl = t.closest("[data-goal]");
     if (gl && !gl.closest(".hnd")) { pick(gl.dataset.goal); return; }
