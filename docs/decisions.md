@@ -4241,3 +4241,33 @@ So:
 5. **What comes before new faces**, as H1 says, while it is tested: the brief's quality (§2), the stage-weighted rubrics,
    a shorter way for a goal one party can do alone, and the measures (§3) read weekly. Spec 124.
 The owner's call.
+
+## 203. The project keeps its journal and each leader its own: what was said and what came of it, written by code, read into every leader's call (1 November, the owner)
+
+Why: the owner: *in essence the main thing is to keep, all the time, the project's common history and the history of each of
+the leaders' views.* A crowd of personas is copied in an evening; a product's history kept for months, through each craft's
+eyes, is not. Today the pieces are scattered and mostly unread: the decisions file reaches a leader as its last ten headings,
+and never Talk; the brief is a state with no why of its change; a concern dismissed is kept, one fixed is forgotten; the
+evening line keeps only its last; a leader's no and what came of it live in the event log with no words; only a pitch passed
+keeps its why. So:
+1. **Two journals, one word** (`TERMS`: *journal*): **the project's journal** (what the project decided and what came of it:
+   a decision and its number, a goal in main, a goal dropped and why, a hypothesis judged, the brief changed, a pitch passed)
+   and **a leader's journal** (what its party's leader said and what came of it: its stance on a goal, its no heeded or
+   overruled, a goal it objected to that came back or went through at Review, a concern made a goal or called not a problem,
+   its evening line, its calibration). `realm/journals.py`, append only, beside the Board's state.
+2. **Written by code where the thing happens**, one line in the product's words with the goal, the map's parts and the
+   decision's number; never a model's call to write an entry. Nothing is rewritten: the person's *Not so* strikes an entry,
+   which is kept marked and never read into a call again.
+3. **Read into every leader's call**: its own journal (the digest, the entries on this goal and on the map's parts it
+   touches, then the latest) and the project's journal; a member reads none (its leader's brief carries what it needs). A
+   leader reads another leader's journal never: what another craft concluded reaches it through the project's journal.
+4. **The leader's digest**: when its journal has grown since its last one, the leader writes *in short* what its lens knows
+   of the product (900 characters at most), on the cheaper tier, no tools, in the background; the calls read the digest and
+   what came after it, so the journal grows and the prompt does not.
+5. **Calibration by code**: a leader's journal is given, as one line, how often its no was overruled and how many of those
+   goals came back at Review, beside the goals no one objected to (spec 124's measures, by party).
+6. **No new face now** (§104.0, §145): a quick question to a leader (its bubble) reads both journals, so *what did we decide
+   about the lobby?* is answered from them; the host has the commands to read a journal and strike an entry; where the
+   person reads and strikes in the window is a later spec, on the leader's lens.
+7. Spec 125, built by the cheaper model, the spec's author reviewing.
+The owner's call.
