@@ -11,6 +11,7 @@ leaders' calls (§156.1–§156.2, the model of realm/map_text.py's System) and 
     screen_map.step_id(1)                          # "step:1": a pain may be pinned to a screen's id or a step's
     screen_map.screen_of(state_dir, root, path, ref="dev")  # the screen a page's path reaches: {"id", "name", "step"} (`step` its number, from 1), None when it reaches none
     screen_map.file_of(root, screen_id, ref="dev")          # the file of a screen's component ("" for an id the newest screens do not have)
+    screen_map.flow(root, ref="dev")                        # `read` without the pictures (git alone is read), None with no screen: realm/goal_screens.py's
 
 A screen's id is its path as a word (`/` home, `/orders/:id` orders-id). The links are read from the screens' files by name (`navigate("/x")`,
 `router.push("/x")`, `<Link to="/x">`, `href="/x"`, `Navigator.pushNamed(context, "/x")`, `context.go("/x")`, `goto("/x")`), in the order they stand; a
@@ -317,6 +318,14 @@ def file_of(root: Path, screen_id: str, ref: str = REF) -> str:
     sha = head_of(root, ref)
     core = _core(root, sha) if sha else None
     return next((s["file"] for s in (core or {}).get("screens") or [] if s["id"] == screen_id), "")
+
+
+def flow(root: Path, ref: str = REF) -> dict | None:
+    """The screens, links and steps at `ref`'s head as `read` has them, with no picture (so nothing but git is read); None for a project with no `ref` or no screen. A copy: the caller may change it."""
+    root = Path(root)
+    sha = head_of(root, ref)
+    core = _core(root, sha) if sha else None
+    return copy.deepcopy(core) if core and core["screens"] else None
 
 
 def read(state_dir: Path, root: Path, ref: str = REF) -> dict:

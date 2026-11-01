@@ -9,6 +9,7 @@ from pathlib import Path
 import pytest
 
 from orkboard.realm import board_recap, event_log, idea_spend, ideas
+from tests.test_commit_goal import repo  # noqa: F401  (the fixture of the night's tests: a project on `dev`)
 
 NOW = dt.datetime(2026, 10, 20, 12, 0).astimezone()
 SINCE = NOW - dt.timedelta(hours=9)
@@ -163,3 +164,92 @@ def test_a_goals_flag_reads_in_main_beside_a_partys_old_flag_and_a_flag_alone_ma
     old, new = board_recap.build(root, state, SINCE, NOW, rows)["flags"]
     assert old == {"goal": "offline", "short": "Offline", "title": "Offline goal", "met": True, "by": "Product manager"}      # the old line keeps its fields
     assert new["idea"] == "csv" and "idea" not in old
+
+
+# -- Spec 121 D: the night (docs/specs/121-the-day-the-morning-and-the-night.md §5.2) --------------------------------------------------------------
+
+def _night_app(repo: Path) -> None:
+    from tests.test_commit_goal import commit
+    commit(repo, "package.json", json.dumps({"dependencies": {"react-router-dom": "6"}}))
+    commit(repo, "src/App.jsx", 'import { Routes, Route } from "react-router-dom";\nimport Home from "./Home";\nimport Cart from "./Cart";\n'
+                                'export default () => <Routes><Route path="/" element={<Home />} /><Route path="/cart" element={<Cart />} /></Routes>;\n')
+    commit(repo, "src/Home.jsx", 'export default () => <Link to="/cart">Cart</Link>;\n')
+    commit(repo, "src/Cart.jsx", "export default () => null;\n")
+
+
+def _clock(repo: Path, hours_ago: float, now: dt.datetime, event: str, **fields) -> None:
+    row = event_log.line(event, at=now - dt.timedelta(hours=hours_ago), **fields)
+    target = event_log.path(repo)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with target.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(row) + "\n")
+
+
+def test_the_night_is_the_recap_cut_to_the_window_goals_with_their_screens_failures_with_reasons_reverts_and_red_checks(repo):
+    from tests.test_commit_goal import commit, land, state
+    _night_app(repo)
+    s, now = state(repo), dt.datetime.now().astimezone() + dt.timedelta(minutes=1)
+    since = now - dt.timedelta(hours=8)
+    land(repo, "cart-total", "k1", {"src/Cart.jsx": "export default () => <b>total</b>;\n"})
+    land(repo, "dark-mode", "k1", {"notes/dark.md": "words\n"})                                  # a goal that changed no screen
+    commit(repo, "src/Home.jsx", 'export default () => <Link to="/cart">Cart!</Link>;\n', 'Revert "the cart link"')
+    _clock(repo, 6, now, "task_state", idea="cart-total", task="k1", state="merged", was="review", round=1)
+    _clock(repo, 5, now, "task_state", idea="dark-mode", task="k1", state="merged", was="review", round=1)
+    _clock(repo, 30, now, "task_state", idea="old-goal", task="k1", state="merged", was="review", round=1)       # before the window
+    _clock(repo, 4, now, "task_state", idea="export", task="k1", state="failed", was="running", round=1, error="Tests would not pass")
+    _clock(repo, 3, now, "task_state", idea="mended", task="k1", state="failed", was="running", round=1)
+    _clock(repo, 3.5, now, "gate_ran", idea="table", task="k1", round=1, attempt=1, command="npm test", exit=1, verdict="red")
+    _clock(repo, 2, now, "result_ready", idea="landed", task="k1", round=1, passed=0, failed=2, verdict="red")
+    _clock(repo, 1, now, "gate_ran", idea="landed", task="k1", round=2, attempt=1, command="npm test", exit=0, verdict="green")      # its last gate stands
+    for slug, tasks in (("export", [("k1", "Export", "failed")]), ("mended", [("k1", "Mended", "review")]),
+                        ("table", [("k1", "The table", "review")]), ("landed", [("k1", "Landed", "merged")])):
+        _plan(s, slug, *tasks)
+    plan = ideas.plan(s, "export")
+    plan["tasks"][0]["error"] = "Tests would not pass"
+    (s / "ideas" / "export" / "plan.json").write_text(json.dumps(plan))
+    rows = _rows(("cart-total", "working"), ("dark-mode", "done"), ("old-goal", "done"), ("export", "working"), ("mended", "working"), ("table", "working"), ("landed", "working"))
+    got = board_recap.night(repo, s, since, now, rows)
+    assert got["into"] == "dev" and got["hours"] == 8 and got["empty"] is False and got["play"] is None
+    assert got["goals"] == [{"slug": "cart-total", "short": "Cart-Total", "title": "Title of cart-total", "goal": "offline", "done": False,
+                             "screens": [{"screen": "cart", "name": "Cart", "path": "/cart"}]},
+                            {"slug": "dark-mode", "short": "Dark-Mode", "title": "Title of dark-mode", "goal": "offline", "done": True, "screens": []}]
+    assert got["failed"] == [{"slug": "export", "short": "Export", "title": "Title of export", "task": "Export", "why": "Tests would not pass"}]
+    assert got["checks"] == [{"slug": "table", "short": "Table", "title": "Title of table", "task": "The table", "check": "npm test"}]
+    assert [r["subject"] for r in got["reverts"]] == ['Revert "the cart link"'] and len(got["reverts"][0]["sha"]) == 7
+
+
+def test_the_night_carries_the_hints_of_the_last_play_and_a_quiet_night_is_empty(repo):
+    from tests.test_commit_goal import state
+    _night_app(repo)
+    now = dt.datetime.now().astimezone()
+    hints = [{"kind": "error", "on": None, "words": "An error here: boom", "at": 4.0}, {"kind": "dead_press", "on": {"selector": "button.pay", "rect": None}, "words": "A press did nothing", "at": 9.0}]
+    got = board_recap.night(repo, state(repo), now - dt.timedelta(hours=8), now, _rows(), hints=hints)
+    assert got["empty"] is True, "Play's hints alone make no card"
+    assert got["play"] == {"hints": [{"kind": "error", "words": "An error here: boom", "on": ""}, {"kind": "dead_press", "words": "A press did nothing", "on": "button.pay"}]}
+    assert board_recap.night(repo, state(repo), now - dt.timedelta(hours=8), now, _rows(), into="gone")["reverts"] == []             # a branch there is not
+
+
+def test_a_goal_the_board_lost_and_a_clean_check_are_left_out_of_the_night(repo):
+    from tests.test_commit_goal import state
+    now = dt.datetime.now().astimezone()
+    _clock(repo, 3, now, "task_state", idea="deleted", task="k1", state="merged", was="review", round=1)
+    _clock(repo, 2, now, "task_state", idea="queue", task="k2", state="merged", was="running", round=1, check=True, clean=True)
+    got = board_recap.night(repo, state(repo), now - dt.timedelta(hours=8), now, _rows(("queue", "working")))
+    assert got["goals"] == [] and got["empty"] is True
+
+
+def test_the_night_starts_at_the_last_windows_open_or_the_devices_last_look_whichever_is_later():
+    window = {"night": "01:00-07:00"}
+    morning = dt.datetime(2026, 10, 21, 9, 0).astimezone()
+    one = dt.datetime(2026, 10, 21, 1, 0).astimezone()
+    assert board_recap.night_start(window, morning) == one
+    assert board_recap.night_start(window, dt.datetime(2026, 10, 21, 3, 0).astimezone()) == one, "the night in progress counts"
+    assert board_recap.night_start(window, dt.datetime(2026, 10, 21, 0, 30).astimezone()) == dt.datetime(2026, 10, 20, 1, 0).astimezone()
+    assert board_recap.night_since(window, morning) == one
+    assert board_recap.night_since(window, morning, dt.datetime(2026, 10, 21, 6, 0).astimezone()) == dt.datetime(2026, 10, 21, 6, 0).astimezone()      # a look after the window opened
+    assert board_recap.night_since(window, morning, dt.datetime(2026, 10, 20, 23, 0).astimezone()) == one                                             # a look before it
+    crossing = {"night": "22:00-06:00"}
+    assert board_recap.night_start(crossing, dt.datetime(2026, 10, 21, 9, 0).astimezone()) == dt.datetime(2026, 10, 20, 22, 0).astimezone()
+    assert board_recap.night_start(crossing, dt.datetime(2026, 10, 21, 23, 0).astimezone()) == dt.datetime(2026, 10, 21, 22, 0).astimezone()
+    assert board_recap.night_start({"night": "bad"}, morning) is None and board_recap.night_start({}, morning) is None
+    assert board_recap.night_since({}, morning) == morning - board_recap.NO_WINDOW

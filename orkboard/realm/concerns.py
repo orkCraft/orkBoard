@@ -10,13 +10,18 @@ what would fix it, kept beside the Board's state. Read, kept and strictly parsed
     concerns.made_goal(state_dir, party, id, idea)       # the concern notes the goal made of it (`idea`: its slug) → the concern, or None
     concerns.counts(rec)                                 # {alerts, notes}: the concerns no goal was made of
     concerns.text(rec, parts)                            # the concerns as lines a leader reads in Talk (*Your concerns on your map*)
+    concerns.parse_since(answer)                         # the evening line (spec 121 §6): the leader's `since` strictly → {way, line} or None
 
 `<state_dir>/concerns/<party>.json` is `{at, map_hash, by (the leader's role), status ("" | "looking" | "ready" | "failed"), error, measure, concerns: [{id, on, name, level ("alert" | "note"), what, why,
-fix, signal, aspect, idea?}], dismissed: [{on, what, at, map_hash, part_hash}], hints: [{on, kind, aspect, words}]}`. `at` is when the last look ended (or failed): none before the first. A concern's `id` is a hash of its part and its
+fix, signal, aspect, idea?}], dismissed: [{on, what, at, map_hash, part_hash}], hints: [{on, kind, aspect, words}], head, since}`. `at` is when the last look ended (or failed): none before the first. A concern's `id` is a hash of its part and its
 words, so a look that says it again keeps the id; `signal` is the kind of hint of code (`realm/map_signals.py`) that is on its part, else "";
 `aspect` the id of the aspect of its craft's rubric (`realm/lens_rubrics.py`) it is about: the leader's, else the hint's, else "". `hints` are the hints of code the last look was given (at most HINTS, `on` "" for a hint of
 no part), kept with the concerns so the scorecard can say what code noticed and the leader let be. A concern dismissed is not raised again while its part is as
 it was (`part_hash`); the leader is told what was dismissed, and a concern that repeats one dismissed, its part unchanged, is dropped.
+
+**The evening line** (docs/specs/121-the-day-the-morning-and-the-night.md §6): when the map changed since the last look, the same call says whether what changed went toward what its craft keeps:
+`since` is `{way ("toward" · "away" · "unclear"), line (LINE characters at most), at (when the look ended), map_hash (the map the look read)}`, None when the map did not change since the look before.
+`head` is the commit of the work branch the look read, so the next look can be told what changed after it.
 """
 from __future__ import annotations
 
@@ -31,6 +36,7 @@ FOLDER = "concerns"
 MAX = 7                              # the most concerns a look keeps
 LINE = 200                           # a concern's what, why and fix: a line each, at most
 LEVELS = ("alert", "note")
+WAYS = ("toward", "away", "unclear")   # the evening line's way (spec 121 §6)
 HINTS = 20                           # the most hints of code a record keeps (map_signals.MAX_SIGNALS)
 DISMISSED = 40                       # the most dismissed concerns a record keeps (the newest)
 EVERY_S = 24 * 3600                  # a look again, a map changed: when the last look is this old
@@ -70,7 +76,7 @@ def now() -> str:
 # -- the record ------------------------------------------------------------------------------------------------------------------------
 
 def _empty() -> dict:
-    return {"at": "", "map_hash": "", "by": "", "status": "", "error": "", "measure": None, "concerns": [], "dismissed": [], "hints": []}
+    return {"at": "", "map_hash": "", "by": "", "status": "", "error": "", "measure": None, "concerns": [], "dismissed": [], "hints": [], "head": "", "since": None}
 
 
 def read(state_dir: Path, party: str) -> dict:
@@ -97,6 +103,10 @@ def read(state_dir: Path, party: str) -> dict:
         if isinstance(r, dict) and isinstance(r.get("on"), str) and _line(r.get("kind"), 40) and _line(r.get("words")):
             out["hints"].append({"on": _line(r["on"], 300), "kind": _line(r["kind"], 40), "aspect": _line(r.get("aspect"), 40), "words": _line(r["words"])})
     out["hints"] = out["hints"][:HINTS]
+    out["head"] = _line(raw.get("head"), 64)
+    if isinstance(raw.get("since"), dict) and _line(raw["since"].get("line")):
+        sin = raw["since"]
+        out["since"] = {"way": sin["way"] if sin.get("way") in WAYS else "unclear", "line": _line(sin["line"]), "at": _line(sin.get("at"), 40), "map_hash": _line(sin.get("map_hash"), 40)}
     return out
 
 
@@ -156,6 +166,15 @@ def parse(party: str, answer: object, parts: list[dict], dismissed: list[dict] |
                     "signal": hint.get(on, ""), "aspect": aspect if aspect in ids else lens_rubrics.aspect_of(craft, hint.get(on, ""))})
     out.sort(key=lambda c: LEVELS.index(c["level"]))
     return out[:MAX]
+
+
+def parse_since(answer: object) -> dict | None:
+    """The evening line of the leader's answer (`{"since": {"way", "line"}}`) strictly: `{way, line}`, a `way` that is none of WAYS taken as `unclear` and the line one line of LINE characters at most;
+    None when the answer has no `since`, or it says no line."""
+    raw = answer.get("since") if isinstance(answer, dict) else None
+    if not isinstance(raw, dict) or not _line(raw.get("line")):
+        return None
+    return {"way": raw["way"] if raw.get("way") in WAYS else "unclear", "line": _line(raw["line"])}
 
 
 # -- the person's answers ---------------------------------------------------------------------------------------------------------------
