@@ -14,7 +14,7 @@ import re
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import (board_rows, collide, goal_flags, goal_place, goal_route, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_checks, idea_flag, idea_pick, idea_questions, idea_shots,
+from orkboard.realm import (board_back, board_rows, collide, goal_flags, goal_place, goal_route, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_checks, idea_flag, idea_pick, idea_questions, idea_shots,
                             idea_hearing, idea_objections, idea_risk, idea_spend, idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles, spec_sections, tool_errors)
 from orkboard.realm.idea_words import short_of
 
@@ -447,7 +447,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                     "element": st.get("element") or "", "flag": (flag := flag_of(state_dir, slug, held)), "type": type_of(st),
                     "route": idea_route.route(root, state_dir, slug, page=page, st=st, plan=plan, held=held, flag=flag),
                     "goal_state": idea_route.goal_state(root, state_dir, slug, held) if ideation and r["state"] == "sent" else None,
-                    "release": release_of(releasing.get(slug)),
+                    "release": release_of(releasing.get(slug)), "back": board_back.of(root, state_dir, slug, st, settings),         # the goal's card face down at the Orkmaster (spec 120 §6.3)
                     "held_until": r["held_until"], **({"held_for": r["held_for"]} if r.get("held_for") else {}),
                     "start_at": r["start_at"], "night_by": r["night_by"],
                     "place": r["place"], "asks_you": r["asks_you"], "waits_as": r["waits_as"], "seen": r["seen"], "by_pace": bool((plan or {}).get("by_pace")),
