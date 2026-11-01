@@ -205,6 +205,12 @@ CONCERNS_MADE = "concerns_made"      # party, n (concerns kept), alerts, notes, 
 CONCERN_OPENED = "concern_opened"    # party, level: a concern's back was opened on its map
 CONCERN_GOAL = "concern_goal"        # party, level, idea: *Make it a goal* pressed on a concern
 CONCERN_DISMISSED = "concern_dismissed"   # party, level: *Not a problem* pressed on a concern
+# Spec 120 (decisions §198): a goal heard at the Orkmaster. Never a word of a leader's or the person's.
+TALK_HEARD = "talk_heard"        # idea, party, weigher (Product weighing a goal it is not routed on)
+TALK_VERDICT = "talk_verdict"    # idea, party, before, after (a leader's verdict after the person's answers: go · doubt · no)
+RIPE_STARTED = "ripe_started"    # idea, seconds (the wait), priority, risk
+RIPE_HELD = "ripe_held"          # idea, left_s (what was left of the wait when it was held), why ("person" · the reason a spent window or a stop gave)
+RIPE_DONE = "ripe_done"          # idea: the wait ended and the leaders' decision was written
 
 EVENTS = (ASKED, ASSUMED, ANSWERED, STOPPED, WAIT_SKIPPED, HELD_AT_WORK, CAMP_LEFT, CAMP_BACK, QUEST_STARTED,
           QUEST_DONE, QUEST_SKIPPED, BUILT, CART_MOVED, LOOKED, IDEA_ADDED, IDEA_SAID, KEEPER_STATE, PLAN_MADE, PLAN_PASSED,
@@ -214,7 +220,7 @@ EVENTS = (ASKED, ASSUMED, ANSWERED, STOPPED, WAIT_SKIPPED, HELD_AT_WORK, CAMP_LE
           GIT_PUSHED, OP_ADDED, OP_PREPARED, OP_CHECKED, OP_DONE, OP_FAILED, OP_DROPPED, OP_NOT_RIGHT, OP_LEARNED,
           OP_RULES_ANSWERED, OP_TRUST, OP_KEPT, OP_FORGOT, OP_STANDING, PUSH_SET, PUSH_SENT, PARTY_PROPOSED, PARTY_ANSWERED, PARTY_SAVED, PARTY_DROPPED, PARTY_REMOVED, NIGHT_ALLOWED, WEEK_RESET, IDEA_EDITED, PLAN_REVISED, PLAN_CHANGE_ANSWERED,
           PITCH_JUDGED, PITCH_SENT, PITCH_PASSED, PITCH_AGAIN, IDEA_MOVED, RELEASE_MADE, RELEASE_OUT, PARTY_SHOWN, COLLIDE_FOUND, COLLIDE_ANSWERED,
-          PROPOSALS_SHOWN, PROPOSAL_TAKEN, PARTY_RESIZED, CANVAS_MADE, CANVAS_SEEN, SHOT_TAKEN, PLAY_STARTED, PLAY_STOPPED, MAP_OPENED, MAP_PART_PRESSED, MAP_SNAPSHOT_FAILED, SIGN_IN_NEEDED, SIGNED_IN, SIGN_IN_FAILED, TOOL_MOVED, PAID_ANSWERED, BOARD_ASKED, ASK_MADE_GOAL, COMMAND_REFUSED, ERROR_SHOWN, LEADER_OBJECTED, OBJECTION_ANSWERED, CONCERNS_MADE, CONCERN_OPENED, CONCERN_GOAL, CONCERN_DISMISSED)
+          PROPOSALS_SHOWN, PROPOSAL_TAKEN, PARTY_RESIZED, CANVAS_MADE, CANVAS_SEEN, SHOT_TAKEN, PLAY_STARTED, PLAY_STOPPED, MAP_OPENED, MAP_PART_PRESSED, MAP_SNAPSHOT_FAILED, SIGN_IN_NEEDED, SIGNED_IN, SIGN_IN_FAILED, TOOL_MOVED, PAID_ANSWERED, BOARD_ASKED, ASK_MADE_GOAL, COMMAND_REFUSED, ERROR_SHOWN, LEADER_OBJECTED, OBJECTION_ANSWERED, CONCERNS_MADE, CONCERN_OPENED, CONCERN_GOAL, CONCERN_DISMISSED, TALK_HEARD, TALK_VERDICT, RIPE_STARTED, RIPE_HELD, RIPE_DONE)
 
 _LOCK = threading.Lock()
 

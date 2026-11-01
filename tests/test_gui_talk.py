@@ -113,6 +113,7 @@ def test_a_talk_from_the_press_to_the_decisions_seam_and_the_answers_are_events(
     went = []
     monkeypatch.setattr(host.ideas.keeper, "decide", lambda s: went.append((s, _state(host, s)["state"])), raising=False)      # part E's seam
     assert host.command("ideas.talk_answer", {"idea": slug, "answers": [{"id": row["questions"][0]["id"], "text": "Both, phone first"}]}) == {"ok": True}
+    _wait(host, slug)                                                                                     # Tech, whose pick was overridden, is heard again first (spec 120 §3.2)
     assert went == [(slug, "talk")] and _row(host, slug, "talk") is None
     said = [e for e in event_log.read(Path(host.town.repo_root)) if e["event"] == event_log.IDEA_ANSWERED]
     assert said and said[-1]["idea"] == slug and said[-1]["talk"] is True and said[-1]["typed"] == 1 and said[-1]["round"] == 1

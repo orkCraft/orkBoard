@@ -199,7 +199,7 @@ def test_the_row_is_the_stances_and_the_cards(host, parties, model):
     row = _row(host, slug, "talk")
     assert row["round"] == 1 and [s["party"] for s in row["stances"]] == [parties["product"], parties["tech"]]
     assert row["stances"][0] == {"party": parties["product"], "leader": "product-manager", "stance": "product stance", "for": "product for", "against": "product against",
-                                 "verdict": "go", "why": "", "instead": "", "after": ""}                                  # no verdict in the answer reads as go (spec 108 §4.1)
+                                 "verdict": "go", "why": "", "instead": "", "after": "", "craft": "product", "weigher": False, "priority": "", "risk": ""}      # no verdict in the answer reads as go (spec 108 §4.1)
     first = row["questions"][0]
     assert first == {"id": f"r1-{parties['product']}-1", "by": parties["product"], "leader": "product-manager", "q": "product question 0", "choices": ["A", "B"], "pick": 0,
                      "why": "because", "project": False}
@@ -290,6 +290,7 @@ def test_the_answers_are_taken_together_pick_or_text_or_decide_and_a_question_no
     sent = []
     monkeypatch.setattr(k, "decide", lambda s: sent.append(s))                                                         # E's seam: the decision is worded after the last answer
     k.talk_answer(slug, [{"id": cards[0]["id"], "pick": 1}, {"id": cards[1]["id"], "text": " my own  words "}, {"id": cards[2]["id"], "pick": 9, "text": ""}], decide=True)
+    _wait(host, slug)                                                                                                  # the leaders whose pick was overridden are heard again (spec 120 §3.2), then the decision
     rec = idea_questions.record(host.ideas.state_dir, slug)
     assert [(a["id"], a["answer"], a["how"]) for a in rec["answers"]] == [(cards[0]["id"], "B", "pick"), (cards[1]["id"], "my own words", "text"), (cards[2]["id"], "A", "decide")]
     assert rec["waiting"] == [] and rec["done"] is True and sent == [slug]
@@ -358,7 +359,7 @@ def test_a_second_round_only_when_a_leader_asked_for_it_given_the_answers_at_mos
     assert {d["q"] for d in rec["defaults"] if d["round"] == 2} == {"design again 1"}                                         # what is left takes the picks
     host.command("ideas.talk_answer", {"idea": slug, "answers": [{"id": c["id"], "pick": 0} for c in row["questions"]]})
     assert len(model.steps("talk_round")) == 5 and went == [slug] and _row(host, slug, "talk") is None                         # never a third round
-    assert _state(host, slug)["measure"]["step"] == "talk_round" and _state(host, slug)["measure"]["cost"] == 0.05            # every call measured
+    assert _state(host, slug)["measure"]["step"] == "talk_round" and _state(host, slug)["measure"]["cost"] == 0.06            # every call measured, Tech's too, heard again after its pick was overridden (spec 120 §3.2)
 
 
 def test_no_second_round_when_the_person_left_it_to_the_leaders_or_nobody_asked(host, parties, model, monkeypatch):
@@ -798,7 +799,7 @@ def test_each_assumes_is_kept_as_a_proposed_hypothesis_of_the_leader_that_rests_
         "Founders want a sketch first", "five of five ask for it", "proposed", "leader", parties["product"], [slug], [])
     assert (second["text"], second["state"], second["by"], second["party"], second["rests"]) == ("The canvas holds a thousand shapes", "proposed", "leader", parties["tech"], [slug])
     row = _row(host, slug, "talk")
-    assert [set(s) for s in row["stances"]] == [{"party", "leader", "stance", "for", "against", "verdict", "why", "instead", "after"}] * 3         # Talk's row is as it was
+    assert [set(s) for s in row["stances"]] == [{"party", "leader", "craft", "weigher", "stance", "for", "against", "verdict", "why", "instead", "after", "priority", "risk"}] * 3         # Talk's row is as it was, and says whose weight a stance has
 
 
 def test_a_bare_line_is_kept_with_a_signal_of_its_own_words_for_when_none_was_given(host, parties, model):

@@ -141,6 +141,15 @@ def tech_party(root: Path) -> str:
     return _tech(parties(root))
 
 
+def weigher_party(root: Path, route_: Iterable[Any], short: bool = False) -> str:
+    """The party whose leader weighs a goal it is not routed on (spec 120 §2.4, decisions §198.4): the project's first party whose craft is Product, when the route does not name it. "" with none, and
+    for the short way (a bug, a tidy, a balance pass have no weigher). `route_`: the route's steps (`{party}`) or their slugs."""
+    if short:
+        return ""
+    on = {r.get("party") if isinstance(r, dict) else r for r in route_ or ()}
+    return next((p["slug"] for p in parties(root) if p["slug"] not in on and goal_team.craft_of(root, p["slug"]) == "product"), "")
+
+
 def with_play(root: Path, state_dir: Path, slug: str, how: dict, route_: list[dict]) -> dict:
     """`how` (`route_how`) as it stands once the goal's kept play is read (docs/specs/115-the-live-product-under-each-leaders-eyes.md §5): a goal with a mark of the kind *Bug* is a bug
     whatever its words say, and a bug whose mark holds an error or a failed request has the failure its report would hold, so it `reproduces` (the short way skips the diagnosis call).
@@ -280,6 +289,10 @@ def cost(state_dir: Path, route_: list[dict], short: bool, *, root: Path | None 
             if step == "plan":
                 tier = idea_target.tier_of(idea_target.task_pick("warrior", target(slug))[0])
                 base += TASKS_PER_STEP * costs.get(tier, costs.get("warrior", 0.0))
+    if root is not None and (weigher := weigher_party(root, slugs if slugs != [""] else [], short)):      # Product weighs the goal as well (spec 120 §2.4): one more Talk round's call
+        if (got := idea_target.pick("talk_round", target(weigher))) is not None:
+            calls += 1
+            base += idea_target.floor(idea_target.tier_of(got[0]))
     return {"calls": calls, "usd_low": round(base * SPREAD[0], 2), "usd_high": round(base * SPREAD[1], 2)}
 
 

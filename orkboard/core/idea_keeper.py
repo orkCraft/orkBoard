@@ -52,6 +52,7 @@ from orkboard.core.idea_revise import ReviseMixin
 from orkboard.core.idea_sections import SectionsMixin
 from orkboard.core.idea_objection import ObjectionMixin
 from orkboard.core.idea_talk import TalkMixin
+from orkboard.core.idea_verdict import VerdictMixin
 from orkboard.core.idea_project_q import ProjectQMixin
 from orkboard.core.idea_ask import AskMixin
 from orkboard.core.idea_concerns import ConcernsMixin
@@ -112,7 +113,7 @@ def _iso(at: float) -> str:
     return dt.datetime.fromtimestamp(at).isoformat(timespec="seconds")
 
 
-class IdeaKeeper(SignInMixin, TalkMixin, ObjectionMixin, ProjectQMixin, AskMixin, LoopMixin, TreeMixin, HypothesesMixin, ConcernsMixin, DecideMixin, SectionsMixin, PlanMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
+class IdeaKeeper(SignInMixin, TalkMixin, VerdictMixin, ObjectionMixin, ProjectQMixin, AskMixin, LoopMixin, TreeMixin, HypothesesMixin, ConcernsMixin, DecideMixin, SectionsMixin, PlanMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
     def __init__(self, repo_root: Path, state_dir: Path, wiki_root: Callable[[], Path],
                  settings: Callable[[], dict], publish: Callable[[str], None] = lambda slug: None,
                  demo: bool = False, budget_ok: Callable[[], bool] = lambda: True,
@@ -153,7 +154,7 @@ class IdeaKeeper(SignInMixin, TalkMixin, ObjectionMixin, ProjectQMixin, AskMixin
         cancel = getattr(self._tls, "cancel", None) or self.cancel
         with telemetry.tagged(purpose, "board"), call_log.of_project(self.repo_root):     # its log and spend: ours
             got = jobs.run_read(tool, prompt, self.repo_root, cancel, h.pick(tier) if h else tier,
-                                env={"ORKCRAFT_ORC": "board/keeper", "ORKCRAFT_IDEA": getattr(self._tls, "slug", "")},
+                                env={"ORKCRAFT_ORC": "board/keeper", "ORKCRAFT_IDEA": getattr(self._tls, "slug", ""), "ORKCRAFT_STEP": self.measure()["step"], "ORKCRAFT_PARTY": getattr(self._tls, "party", "")},
                                 effort=effort, budget=budget, one_shot=True, tools=getattr(self._tls, "tools", True))
         self._tls.usage, self._tls.capped = jobs.last_usage(), bool(getattr(jobs.LAST, "capped", False))
         return got

@@ -9,6 +9,10 @@
                                                                 #   holds no failure goes to Talk, which is its diagnosis (D)
     ideas.start {idea}                                          # answers the `start` row (a route that changed after Talk, or a later step held for it: decisions §169.3); the plan's start otherwise
 
+**Talk by itself** (spec 120 §2.1, decisions §198.2): `ideas.add` of a routed goal calls `route_auto`, which sends it to Talk as **Talk** would when nothing stops it (`route_stop`: the keeper may run, the
+Claude window is not spent, the week's limits are not low, nothing is paid, and it is not the short way); else its route card is dealt as before. **The wait of an agreed goal** (§3.5): `ripe_tick`
+counts it down only while a face is open and has the leaders confirm the decision at its end; `ripe_hold_goal` is **Hold** (D's `ideas.ripe_hold` calls it).
+
 **The seams.** Until Talk (part D) and the sections (part E) are built, `ideas.talk` and `ideas.route_start` hand the goal to today's draft, so it still moves:
 `getattr(self.keeper, "talk" | "sections")` is called when the keeper has it, with the state already set (`talk` / `sections`); the route is in
 `state.route`, its facts in `state.route_how` (`short`, `kind`, `reproduces`: D tells a bug's diagnosis by them).
@@ -24,10 +28,14 @@ from typing import Any
 
 from orkboard.core import idea_keeper
 from orkboard.gui.ideas_args import IdeasError, _opt, _text
-from orkboard.realm import board_map, goal_route, idea_route, idea_target, ideas, orkmaster, pitches
+from orkboard.realm import board_map, event_log, goal_route, idea_ripe, idea_route, idea_target, ideas, orkmaster, pitches
 
 ROUTE_S = 30.0                    # how often a route waiting for its call, or put off to the reset, is looked at
 CONTEXT_S = 5.0                   # how long the Orkmaster's line is kept without a change (the limits move it)
+AUTO_TALK = True                  # a routed goal goes to Talk by itself when nothing stops it (spec 120 §2.1); False: every routed goal waits for its route card's Talk, as before
+RIPE_SCAN_S = 5.0                 # how often the goals whose wait counts down are looked for (an agreed goal's decision is worded in the background)
+RIPE_MAX_DT = 5.0                 # the most a tick takes from a wait: a computer that slept does not start a goal when it wakes
+RIPE_PUBLISH_S = 15.0             # how often the faces are told the time left of a wait that counts down
 
 
 def _iso(at: float) -> str:
@@ -97,6 +105,7 @@ class RouteMixin:
             how = {**st["route_how"], "by": by if route else "default"}
             how.update(goal_route.shape(root, how, route))
             ideas.save_state(self.state_dir, slug, route=route, route_how=how)
+        self._auto_set.add(slug)                    # the route is found: the goal goes to Talk by itself at the next tick, once this run has ended (spec 120 §2.1)
 
     # -- the Needs you rows ------------------------------------------------------------------------------------------------------------
 
@@ -233,11 +242,116 @@ class RouteMixin:
         except idea_keeper.KeeperError as e:
             ideas.save_state(self.state_dir, slug, error=str(e))
 
+    # -- Talk by itself (spec 120 §2.1) --------------------------------------------------------------------------------------------------
+
+    @property
+    def _auto_set(self) -> set:
+        """The goals whose route a call found, which go to Talk by themselves at the next tick."""
+        return self.__dict__.setdefault("_auto_pending", set())
+
+    def route_paid(self) -> bool:
+        """The work would be billed by an API: every subscription is out, or the work has moved onto a tool billed by its API (spec 105: *Go on paid?*). A Main tool billed by its API by
+        the person's own choice is not that."""
+        machine = getattr(self.host, "machine", None)
+        got = self.tool_now() if machine is not None else {}
+        if not got.get("main"):
+            return False
+        return got.get("now") is None or (got["now"] != got["main"] and getattr(machine.tools.get(got["now"]), "billing", "") == "api")
+
+    def route_stop(self, slug: str) -> str:
+        """Why a routed goal does not go to Talk by itself, in a few words ("" when nothing stops it): the keeper may not run (a demo, today's spend limit), the Claude window is spent,
+        the week's limits run low, the route is paid, the goal is put off, or the short way (a bug's way is the person's choice: its route card keeps *Start* and *Talk*)."""
+        st, k = self._state(slug), self.keeper
+        if st["state"] != "routed" or not st["route"]:
+            return "it has no route to talk through"
+        if st["route_how"].get("short"):
+            return "the short way keeps its card"
+        if st["held_until"]:
+            return "it is put off"
+        if why := k._may_run():
+            return why
+        if k.window_until() is not None or k.busy(slug):
+            return "the keeper cannot talk it through now"
+        if idea_target.reserve_held(self._raw_limits(), self.settings_now(), time.time()) is not None:
+            return "the week's limits run low"
+        return "every AI tool is out or paid" if self.route_paid() else ""
+
+    def route_auto(self, slug: str) -> bool:
+        """The goal goes to Talk by itself when nothing stops it (`route_stop`), as the route card's **Talk** would send it (`route_talk`); else its route card is dealt as before,
+        which says why. True when it is at Talk now."""
+        if not AUTO_TALK or self.route_stop(slug):
+            return False
+        try:
+            self.route_talk({"idea": slug})
+        except IdeasError:
+            return False
+        st = self._state(slug)
+        if st["state"] == "talk":
+            ideas.save_state(self.state_dir, slug, route_how={**st["route_how"], "auto": True})
+        return st["state"] == "talk"
+
+    # -- the wait of an agreed goal (spec 120 §3.5) -------------------------------------------------------------------------------------
+
+    def ripe_tick(self, now: float) -> None:
+        """The host's clock: the wait of each goal the leaders all agreed on counts down, **only while a face is open** (a goal never starts unseen: with no face the time left is kept).
+        A wait that runs out has the leaders confirm the decision (`confirm(by="leaders")`)."""
+        last, self.__dict__["_ripe_clock"] = self.__dict__.get("_ripe_clock"), now
+        if last is None or not self.host.faces():
+            return
+        if now - self.__dict__.get("_ripe_scan", float("-inf")) >= RIPE_SCAN_S:
+            self.__dict__["_ripe_scan"] = now
+            self.__dict__["_ripening"] = {i["slug"] for i in ideas.ideas(self.root(False)) if self._state(i["slug"])["state"] == "decided" and idea_ripe.running(self.state_dir, i["slug"])}
+        ripening = self.__dict__.get("_ripening") or set()
+        if not ripening:
+            return
+        for slug in idea_ripe.tick(self.state_dir, sorted(ripening), min(max(now - last, 0.0), RIPE_MAX_DT)):
+            ripening.discard(slug)
+            self.ripe_end(slug)
+        if now - self.__dict__.get("_ripe_told", float("-inf")) >= RIPE_PUBLISH_S:
+            self.__dict__["_ripe_told"] = now
+            for slug in ripening:
+                self.changed(slug)
+
+    def ripe_end(self, slug: str) -> None:
+        """The wait ran out: the leaders confirm the decision (the entry's heading says *the leaders, all agreed*) and the sections follow. A spent window, a stop or a tool that is out or paid holds
+        the goal instead, with why: it waits for the person's **Start** and is never started on paid."""
+        try:
+            if self.state_of(slug) != "decided" or not idea_ripe.running(self.state_dir, slug):
+                return
+            if self.route_paid():
+                raise IdeasError("Every AI tool is out of room or paid: start it when you are ready")
+            self.confirm_as(slug, "", "leaders")
+        except (idea_keeper.KeeperError, IdeasError) as e:
+            if "is busy" not in str(e):                  # a keeper busy for a moment is tried again at the next tick; any other reason holds the goal
+                self.ripe_hold_goal(slug, "stopped", str(e))
+
+    def state_of(self, slug: str) -> str:
+        return self._state(slug)["state"] if ideas.idea_page(self.root(False), slug) is not None else ""
+
+    def ripe_hold_goal(self, slug: str, by: str = "person", why: str = "") -> float | None:
+        """**Hold**: the wait of the goal stopped (`idea_ripe.hold`), the event `ripe_held`, the faces told. The time that was left; None when there was no wait to hold. `ideas.ripe_hold`
+        calls it for the person (`by` "person"); a window spent, a stop or a paid tool call it with the reason."""
+        left = idea_ripe.hold(self.state_dir, slug, by, why)
+        if left is not None:
+            self._ev(event_log.RIPE_HELD, idea=slug, left_s=left, why=by if not why else why)
+            self.changed(slug)
+        return left
+
+    def ripe_stop_all(self) -> None:
+        """Stop all: every wait that counts down is held, so no agreed goal starts after it."""
+        for i in ideas.ideas(self.root(False)):
+            if idea_ripe.running(self.state_dir, i["slug"]):
+                self.ripe_hold_goal(i["slug"], "stopped", "Stopped: start it when you are ready")
+
     # -- the clock -----------------------------------------------------------------------------------------------------------------------------
 
     def route_tick(self, now: float) -> None:
         """The host's clock: a route that waits for its call (the process closed meanwhile) is made; a goal put off with *Later, by itself* talks by itself at the
-        reset, unless the reserve is spent again (then it waits for the next reset). Looked at every ROUTE_S."""
+        reset, unless the reserve is spent again (then it waits for the next reset). Looked at every ROUTE_S. A goal whose route a call found goes to Talk by itself first."""
+        for slug in list(self._auto_set):
+            if not self.keeper.busy(slug):
+                self._auto_set.discard(slug)
+                self.route_auto(slug)
         if now - self._route_at < ROUTE_S:
             return
         self._route_at = now

@@ -1,7 +1,8 @@
 """A leader's answer in Talk, taken strictly (docs/specs/99-a-goals-way.md §5; decisions §121.2, §153.3, §153.5, §158.1): the model's answer is untrusted, so what a
 round or a bug's diagnosis keeps is what these functions let through. Pure code, no model, no face; `core/idea_talk.py` calls them.
 
-    clean_round(answer, party, leader, rnd, first, known, line)     # {stance, for, against, verdict, why, instead, after, assumes, cards: [(card, blocks, key)], more}, or None; the second round has no stance, verdict or assumes
+    clean_round(answer, party, leader, rnd, first, known, line, craft="", again=False)     # {stance, for, against, verdict, why, instead, after, priority, risk, assumes, cards: [(card, blocks, key)], more, rejudged}, or None; the second round has no stance, verdict or assumes (unless `again`)
+    clean_judgement(answer, craft, line)                      # a verdict alone, after the answers or from Product weighing a goal: {verdict, why, instead, after, priority, risk}, or None (spec 120 §3)
     clean_assumes(value)                                      # what a leader assumes about a goal: {text, signal} (a line each, 200 characters) or {} (spec 116 §3)
     pick_three(pool)                                          # the Orkmaster's rule for the three of all the leaders' cards: (chosen, closed)
     clean_diagnosis(answer, party, leader, root, first, known, again=False)    # a bug's {cause, where: [path], cards}, or None
@@ -21,6 +22,9 @@ MAX_CARDS = 3                      # a round's questions: the goal's three, the 
 MAX_GOAL = 3                       # a leader's questions about the goal, at most
 MAX_PROJECT = 2                    # … and about the project, at most (a bug's Tech: one it cannot do without)
 LINE = 200                         # a stance, a for, an against
+PRIORITIES = ("high", "normal", "low")       # Product's word on how the goal stands against the goals in line (spec 120 §3.1)
+RISKS = ("low", "medium", "high")            # Tech's word on what the change may break
+PRODUCT, TECH = "product", "tech"            # the crafts (`goal_team.craft_of`) whose leaders give a priority and a risk
 CAUSE_CHARS = 300
 WHERE = 5                          # the paths a cause names
 FAILURE_LINES, FAILURE_CHARS = 12, 1500
@@ -79,6 +83,24 @@ def clean_verdict(answer: dict, line: Iterable[str] = ()) -> dict:
     return {"verdict": verdict, "why": why, "instead": _line(answer.get("instead")), "after": after if verdict == "no" and after in set(line) else ""}
 
 
+def clean_weight(answer: dict, craft: str) -> dict:
+    """What only two leaders give (spec 120 §3.1), strictly: `{priority, risk}`. Product's leader (`craft` "product") gives a `priority` (high · normal · low), Tech's ("tech") a `risk`
+    (low · medium · high); a value out of its set is dropped (""), and every other leader gives neither."""
+    def one(key: str, allowed: tuple[str, ...], mine: bool) -> str:
+        got = answer.get(key)
+        got = got.strip().lower() if isinstance(got, str) else ""
+        return got if mine and got in allowed else ""
+    return {"priority": one("priority", PRIORITIES, craft == PRODUCT), "risk": one("risk", RISKS, craft == TECH)}
+
+
+def clean_judgement(answer: object, craft: str = "", line: Iterable[str] = ()) -> dict | None:
+    """A leader's verdict alone (spec 120 §3.2, §2.4), strictly: `{verdict, why, instead, after, priority, risk}`, the verdict as `clean_verdict` takes it and the weight as `clean_weight`
+    does. None when the answer is no object. A leader that doubted and says nothing against the goal now reads as `go`."""
+    if not isinstance(answer, dict):
+        return None
+    return {**clean_verdict(answer, line), **clean_weight(answer, craft)}
+
+
 def clean_assumes(value: object) -> dict:
     """What a leader says the goal rests on that no one has shown (spec 116 §3), strictly: `{text, signal}`, a line each of `LINE` characters at most, or `{}` when it says none. The
     shape asked for is an object (`text`: the assumption, `signal`: what would show it); a bare line is the text alone (`signal` is ""), as a leader that writes less still has said it."""
@@ -90,17 +112,22 @@ def clean_assumes(value: object) -> dict:
     return {"text": text, "signal": _line(value.get("signal"))} if text else {}
 
 
-def clean_round(answer: object, party: str, leader: str, rnd: int, first: bool, known: set[str], line: Iterable[str] = ()) -> dict | None:
-    """One leader's answer to a round, strictly: `{stance, for, against, verdict, why, instead, after, assumes, cards: [(card, blocks, key)], more}`; None when it is no object, or says no
-    stance in the first round. `assumes` is `{text, signal}` or `{}` (`clean_assumes`). The second round has no stance, no verdict and no question about the project; `more` is the leader asking for a second round (the first round's).
-    `line`: the slugs of the goals in line the leader was given (a `no` may name one as `after`)."""
+def clean_round(answer: object, party: str, leader: str, rnd: int, first: bool, known: set[str], line: Iterable[str] = (), craft: str = "", again: bool = False) -> dict | None:
+    """One leader's answer to a round, strictly: `{stance, for, against, verdict, why, instead, after, priority, risk, assumes, cards: [(card, blocks, key)], more, rejudged}`; None when it is no object, or says no
+    stance in the first round. `assumes` is `{text, signal}` or `{}` (`clean_assumes`). The second round has no stance, no verdict and no question about the project, unless it was asked to judge
+    again (`again`: its verdict is then taken and `rejudged` is true; spec 120 §3.2); `more` is the leader asking for a second round (the first round's).
+    `line`: the slugs of the goals in line the leader was given (a `no` may name one as `after`). `craft`: the leader's party's craft, which says whether it gives a `priority` or a `risk` (`clean_weight`)."""
     if not isinstance(answer, dict):
         return None
-    out: dict[str, Any] = {"stance": "", "for": "", "against": "", "verdict": "go", "why": "", "instead": "", "after": "", "assumes": {}, "more": rnd == 1 and answer.get("second_round") is True}
+    out: dict[str, Any] = {"stance": "", "for": "", "against": "", "verdict": "go", "why": "", "instead": "", "after": "", "priority": "", "risk": "", "assumes": {},
+                           "more": rnd == 1 and answer.get("second_round") is True, "rejudged": rnd == 2 and again}
     if rnd == 1:
-        out.update({"stance": _line(answer.get("stance")), "for": _line(answer.get("for")), "against": _line(answer.get("against")), **clean_verdict(answer, line), "assumes": clean_assumes(answer.get("assumes"))})
+        out.update({"stance": _line(answer.get("stance")), "for": _line(answer.get("for")), "against": _line(answer.get("against")), **clean_verdict(answer, line),
+                    **clean_weight(answer, craft), "assumes": clean_assumes(answer.get("assumes"))})
         if not out["stance"]:
             return None
+    elif again:
+        out.update({**clean_verdict(answer, line), **clean_weight(answer, craft)})
     cards = _cards(answer.get("questions"), party, leader, f"r{rnd}-{party}", MAX_GOAL)
     if rnd == 1 and first:
         cards += _cards(answer.get("project_questions"), party, leader, "", MAX_PROJECT, True, known)
