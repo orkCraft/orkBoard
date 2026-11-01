@@ -11,6 +11,7 @@ import { Notice } from "../table/notice.js";
 import { readyOf } from "./data.js";
 import { at, entriesOf, placeOf } from "./entries.js";
 import { fieldOpen } from "./state.js";
+import { said } from "./motion.js";
 import { DeckField } from "./updeck.js";
 import { Look, lookOf } from "./uplook.js";
 import { Sheet } from "./upmenu.js";
@@ -34,5 +35,6 @@ export function Upright({ root, stacks, plus }) {
     <${Row} entries=${entries} cur=${look.entry} plus=${plus} />
     <${Sheet} entries=${entries} look=${look} />
     ${field && html`<${DeckField} />`}
+    <span class="hand-live" role="status" aria-live="polite">${said.value}</span>
   </footer>`;
 }

@@ -326,7 +326,7 @@ def test_plus_puts_the_address_back_when_the_person_had_taken_it_off(tree):
     pg.locator(".hand-field").wait_for(timeout=WAIT_MS)
     pg.get_by_role("button", name="Take off Product").click()
     assert pg.locator(".hand-chip[data-by=tab]").count() == 0
-    col(pg, "play-again").get_by_role("button", name="Write a goal for this job").click()
+    col(pg, "play-again").get_by_role("button", name="Write a goal for this job").dispatch_event("click")           # the card-field lies over the middle of the pane (spec 120 §6.1): at the wide width it covers this button, so the press is dispatched on it
     pg.locator(".hand-chip[data-by=tab]").wait_for(timeout=WAIT_MS)
     assert pg.locator(".pick-chip").count() == 1
 

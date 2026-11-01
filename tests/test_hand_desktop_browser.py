@@ -658,6 +658,10 @@ def _frees(pg):
 
 
 def _radios(pg):
+    """The five runes of the field: they stand in a row once the card's rune is pressed (spec 120 §6.1), so the row is opened when it is not."""
+    if pg.locator(".hand-field").count() and not pg.locator(".hand-field .hand-field__runes").count():
+        pg.locator(".hand-field .hand-field__rune").click()
+        pg.locator(".hand-field .hand-field__runes").wait_for(timeout=WAIT_MS)
     return pg.locator(".hand-field .hand-field__runes [role=radio]")
 
 
@@ -719,9 +723,11 @@ def test_the_field_holds_a_row_of_five_runes_the_default_checked_the_used_faint_
         pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.ice')", timeout=WAIT_MS)
         _plus(pg).click(position={"x": 8, "y": 60})
         field, area = _field(pg)
+        assert field.locator(".hand-field__runes").count() == 0, "the five stand in a row only once the card's rune is pressed"
+        assert field.locator(".hand-field__rune").get_attribute("aria-label") == "Its rune: Rune 2, change it"
+        radios = _radios(pg)
         group = field.locator(".hand-field__runes")
         assert group.get_attribute("role") == "radiogroup" and group.get_attribute("aria-label") == "Its rune"
-        radios = _radios(pg)
         assert [r.get_attribute("aria-label") for r in radios.all()] == ["Rune 1", "Rune 2", "Rune 3", "Rune 4", "Rune 5"]      # the elements are never named (§63.4)
         assert [r.get_attribute("data-rune") for r in radios.all()] == ["meadow", "ice", "dust", "void", "lava"]
         assert all(r.get_attribute("role") == "radio" and r.locator(".ork-elem.big").count() == 1 for r in radios.all()) and _checked(pg) == ["ice"], "the default checked"
@@ -793,6 +799,7 @@ def test_a_party_named_in_the_text_changes_the_default_and_the_used_runes_and_al
         _plus(pg).click()
         field, area = _field(pg)
         area.fill("@Design ")
+        _radios(pg)
         pg.wait_for_function("() => document.querySelector('.hand-rune[aria-checked=\"true\"][data-rune=\"dust\"]')", timeout=WAIT_MS)
         assert [r.get_attribute("data-rune") for r in pg.locator(".hand-rune.is-used").all()] == ["meadow", "ice", "void"]       # Design's free runes are dust and lava
         area.fill("@Release ")
@@ -1299,7 +1306,8 @@ def test_a_pick_opened_over_the_pane_is_the_variants_large_and_a_note(gui):
     assert not log, "\n".join(log)
 
 
-def test_a_card_that_comes_is_dealt_from_under_the_windows_edge_and_a_card_that_goes_crumbles_where_it_lay(gui):
+def test_a_card_that_comes_is_handed_from_where_it_was_played_an_answered_one_is_played_back_there_and_one_that_goes_with_its_goal_crumbles_where_it_lay(gui):
+    """Spec 120 §6.9–§6.10 (tests/test_handed_browser.py has the rest): the card of a goal that lies in no lane of the table comes from its leader's tab, flying to its place; answered, it is played back toward it; with its goal gone it crumbles."""
     pg, host, log = open_hand(gui)
     try:
         pg.locator(".hand-stack").first.wait_for(timeout=WAIT_MS)
@@ -1310,8 +1318,20 @@ def test_a_card_that_comes_is_dealt_from_under_the_windows_edge_and_a_card_that_
         host.bump({})
         card = pg.locator('.hand-card[data-goal="mute"]')
         card.wait_for(timeout=WAIT_MS)
-        assert "ork-deal" in card.get_attribute("class") and card.evaluate("e => getComputedStyle(e).getPropertyValue('--ork-deal-y')").strip() != ""      # dealt, from under the window's edge
+        assert "ork-deal" in card.get_attribute("class") and card.evaluate("e => getComputedStyle(e).getPropertyValue('--ork-deal-y')").strip() != ""      # dealt, from its leader's tab
+        assert card.evaluate("e => e.style.getPropertyValue('--ork-deal-x') !== '' && e.style.getPropertyValue('--ork-deal-y').endsWith('px')"), "the vector to the Tech tab, set by the page"
         pg.wait_for_function("() => !document.querySelector('.hand-card.ork-deal')", timeout=WAIT_MS)
+        host.needs = [n for n in host.needs if n["idea"] != "mute"]                              # answered: the goal stays
+        host.bump({})
+        pg.locator(".hand-stack.is-gone .hand-card.ork-play").first.wait_for(timeout=WAIT_MS)
+        assert pg.locator(".hand-stack.is-gone .ork-crumble").count() == 0, "played back, not crumbled"
+        pg.wait_for_function("() => !document.querySelector('.hand-stack.is-gone')", timeout=WAIT_MS)
+        host.needs.append(need("asks", "tech", "mute", "Mute a noisy player", "Who may mute?", asked=[{"ask": "Who may mute?", "choices": ["The host"], "pick": None, "why": "", "by": None, "look": False}]))
+        host.bump({})
+        card.wait_for(timeout=WAIT_MS)
+        pg.wait_for_function("() => !document.querySelector('.hand-card.ork-deal')", timeout=WAIT_MS)
+        pg.wait_for_timeout(300)
+        host.nodes = [n for n in host.nodes if n["slug"] != "mute"]                              # dropped: its goal is gone with it
         host.needs = [n for n in host.needs if n["idea"] != "mute"]
         host.bump({})
         pg.locator(".hand-stack.is-gone .ork-crumble > i").first.wait_for(timeout=WAIT_MS)

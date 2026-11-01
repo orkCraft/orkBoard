@@ -1,0 +1,30 @@
+/* A goal's own card face down (docs/specs/120-a-goal-heard-and-thrown-to-a-side.md §6.3–§6.5, decisions §198.8): its sheet. Layout only; every colour, face, corner and motion is orkUI's (`.ork-card`, `.ork-leans`, `.ork-sigil`, `.ork-elem.is-glowing`, `.ork-race__head`).
+   The back is the + card's seal with the goal's own rune lit at its top and its short name at its foot (backbody.js); the seal's ring of runes is the wait: orkUI has no `.ork-sigil.is-waiting` yet, so the page sets orkUI's own `--_arc` from its share
+   (`--ork-sigil-share`, 0 to 1, in eighths), in the goal's colour (spec 120 §6.11). Nothing here moves on its own. */
+.table-card--back.ork-card { display: block; aspect-ratio: 5 / 7; padding: 0; overflow: hidden; transition: opacity var(--ork-motion-base) linear, transform var(--ork-motion-base) var(--ork-motion-spring); }
+.table-card--back.is-lifted { opacity: 0; }                                              /* turned to its face: the back and the face crossfade where the card lies */
+.table-back-sigil.ork-sigil { width: 112px; height: 112px; top: -18px; color: var(--ork-ink-faint); }
+.table-back-sigil > .ork-sigil__seal { left: 49px; top: 9px; }
+.table-back-nm { position: absolute; left: var(--ork-3); right: var(--ork-3); bottom: var(--ork-3); padding: var(--ork-1) var(--ork-2); background: var(--ork-card); color: var(--ork-ink); font: var(--ork-type-caption); text-align: center;
+  display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }                                  /* a person's words: the body face */
+/* the ring: lit runes in the goal's colour from the rune clockwise, the rest as orkUI's seal rests */
+.table-back-sigil.is-waiting::after { --_rest: color-mix(in srgb, var(--ork-ink-faint) 60%, transparent); --_arc: calc(var(--ork-sigil-share, 0) * 360deg); }
+.table-back-sigil.is-waiting.is-meadow::after { color: var(--ork-elem-meadow); }
+.table-back-sigil.is-waiting.is-ice::after { color: var(--ork-elem-ice); }
+.table-back-sigil.is-waiting.is-dust::after { color: var(--ork-elem-dust); }
+.table-back-sigil.is-waiting.is-void::after { color: var(--ork-elem-void); }
+.table-back-sigil.is-waiting.is-lava::after { color: var(--ork-elem-lava); }
+/* the route's heads under the card: small, faint until the leader has said */
+.table-back-heads { display: flex; justify-content: center; gap: var(--ork-1); min-height: 18px; }
+.table-back-head .ork-race__head { width: 18px; height: 16px; opacity: 0.3; filter: grayscale(1); transition: opacity var(--ork-motion-base) steps(3); }
+.table-back-head.is-said .ork-race__head { opacity: 1; filter: none; }
+.table-back-under { box-sizing: border-box; padding-right: var(--ork-6); text-align: center; color: var(--ork-ink-muted); font: var(--ork-type-caption); }      /* the **…** of the card lies at the lower right: the words keep clear of it */
+/* its face, drawn over the card where it lies (card.js `Lifted`) */
+.table-back__goal { overflow-wrap: anywhere; }
+.table-back__stances { display: flex; flex-direction: column; gap: var(--ork-1); margin: 0; padding: 0; list-style: none; }
+/* a goal's card that was face down turns up where it lies, once (a turn; orkUI has none yet: spec 120 G) */
+@media (prefers-reduced-motion: no-preference) {
+  .table-card.is-turned-up { animation: table-turn-up var(--ork-motion-play) var(--ork-motion-spring) both; }
+  @keyframes table-turn-up { from { transform: perspective(60em) rotateY(-90deg); opacity: 0.4; } to { transform: none; opacity: 1; } }
+}
+@media (prefers-reduced-motion: reduce) { .table-card--back.ork-card { transition: none; } .table-back-head .ork-race__head { transition: none; } }

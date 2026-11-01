@@ -8,6 +8,7 @@ import { useEffect, useRef } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
 import { Elem, Head, Icon, Sign } from "../orkui.js";
+import { backKind } from "../table/backcard.js";
 import { command } from "../link.js";
 import { openOver } from "../frame/state.js";
 import { currentProject } from "../shell/projects.js";
@@ -26,7 +27,7 @@ const phaseWord = (id) => (PHASES.find(([p]) => p === id) || [])[1] || "";
 export function talkedOf(map = mapData.value) {
   const working = new Set(partiesAll().flatMap((g) => laneOf(g).map(({ n }) => n.slug)));
   const talk = (map?.nodes || []).filter((n) => ["talk", "spec"].includes(phaseOf(n.slug)) && !["deck", "discard", "history"].includes(n.place) && !working.has(n.slug))
-    .map((n) => ({ slug: n.slug, name: nameOf(n), element: n.element || "", sign: typeSignOf(n), phase: phaseWord(phaseOf(n.slug)), moon: false }));
+    .map((n) => ({ slug: n.slug, name: nameOf(n), element: n.element || "", sign: typeSignOf(n), phase: phaseWord(phaseOf(n.slug)), moon: false, glowing: backKind(n) === "talk" }));       // a goal talked over: its rune glows, as on its back (spec 120 §6.3)
   const line = lineNow(map).map((g) => ({ slug: g.slug, name: g.title, element: g.element, sign: g.type?.sign || "", phase: "In line", moon: g.reset }));
   return [...talk, ...line];
 }
@@ -39,7 +40,7 @@ export function workOf(g) {
 /** One goal as a row: its element, its type's sign, its short name, the moon of one that waits for the reset, its phase at the right. */
 export function GoalRow({ r, on, onPress }) {
   return html`<button type="button" class=${cls("up-grow", { "is-on": on })} data-goal=${r.slug} aria-current=${on ? "true" : undefined} aria-label=${`${r.name}: ${r.moon ? "in line, waits for the reset" : r.phase}`} onClick=${onPress}>
-    <${Elem} name=${r.element} dim=${!r.element} />${r.sign ? html`<${Sign} name=${r.sign} />` : html`<span class="up-grow__none" aria-hidden="true"></span>`}<span class="up-grow__name">${r.name}</span>
+    <${Elem} name=${r.element} dim=${!r.element} glowing=${!!r.glowing} />${r.sign ? html`<${Sign} name=${r.sign} />` : html`<span class="up-grow__none" aria-hidden="true"></span>`}<span class="up-grow__name">${r.name}</span>
     ${r.moon && html`<${Sign} name="moon" />`}<span class="up-grow__phase">${r.phase}</span>
   </button>`;
 }

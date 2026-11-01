@@ -108,6 +108,7 @@ def test_arrows_move_tab_takes_and_esc_closes_the_list_only(gui):
         pg.locator(".hand-mention").wait_for(timeout=WAIT_MS)
         area.press("Tab")
         assert area.input_value() == "a @Design "
+        pg.locator(".hand-mention").wait_for(timeout=WAIT_MS)                       # its second step opens when the stub has answered
         area.press("Escape")                                                        # Design's second step (the stub gives every party parts) is a list too: Esc closes it first
         area.press("Escape")
         assert pg.locator(".hand-field").count() == 0, "Esc with no list closes the field"

@@ -6,7 +6,8 @@ import { useEffect, useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Elem, Head, Sign } from "../orkui.js";
 import { gateData } from "../shell/store.js";
-import { Mark, headOf, labelOf, upName } from "./stopcard.js";
+import { Mark, askerOf, handsWords, headOf, labelOf, upName, whoOf } from "./stopcard.js";
+import { handedName, useFlight, useHanded } from "./motion.js";
 import { pickEntry } from "./entries.js";
 import { PlusCard } from "./pluscard.js";
 
@@ -23,9 +24,10 @@ function faceOf(e) {
 }
 
 /** One entry as a card of the row. */
-function Entry({ e, on, onPick }) {
-  const f = faceOf(e);
-  return html`<button type="button" class=${cls("ork-card up-card", { asks: f.ask, fails: f.fail, "is-picked": on })} data-key=${e.key} data-kind=${e.kind} aria-label=${f.label} aria-pressed=${String(on)} onClick=${onPick}>
+function Entry({ e, on, onPick, dealt }) {
+  const f = faceOf(e), ref = useRef(), from = handedName(e.key);
+  useFlight(ref, dealt, true);                                         // a card handed from the crown (or the goal in the middle) flies as a copy over everything: the row clips what flies in it
+  return html`<button ref=${ref} type="button" class=${cls("ork-card up-card", { asks: f.ask, fails: f.fail, "is-picked": on })} data-key=${e.key} data-kind=${e.kind} data-from=${from || undefined} aria-label=${`${f.label}${from ? `, from ${from}` : ""}`} aria-pressed=${String(on)} onClick=${onPick}>
     <span class="up-card__head"><${Elem} name=${f.element} dim=${!f.element} /><span class="up-card__name">${f.name}</span></span>
     <span class="up-card__window">${f.sign ? html`<${Mark} s=${f.sign} big=${true} />` : html`<span class="hand-mark is-ok"><${Sign} name="check" big=${true} /></span>`}
       ${f.asker && html`<span class="up-card__asker"><${Head} race=${f.asker.race} tier=${f.asker.tier} /></span>`}</span>
@@ -34,7 +36,7 @@ function Entry({ e, on, onPick }) {
 
 /** The row: the entries' cards, the picked one (`cur`) raised and kept in view, the + card at the end. */
 export function Row({ entries, cur, plus }) {
-  const cards = useRef();
+  const cards = useRef(), dealt = useHanded(entries.filter((e) => e.kind !== "ready").map((e) => ({ key: e.key, top: true, ...whoOf(e.stops[0]), name: askerOf(e.stops[0]), words: handsWords(e.stops[0]) })));
   useEffect(() => {                                              // the picked card is kept inside the row's clear part (the + card lies over its right end)
     const row = cards.current, el = row?.querySelector('[aria-pressed="true"]');
     if (!row || !el) return;
@@ -43,7 +45,7 @@ export function Row({ entries, cur, plus }) {
     else if (c.right > r.right - plusW - gutter) row.scrollLeft += c.right - (r.right - plusW - gutter);
   }, [cur?.key, entries.length]);
   return html`<div class="up-row" role="group" aria-label="Cards in the hand">
-    <div class="up-cards" ref=${cards}>${entries.map((e) => html`<${Entry} key=${e.key} e=${e} on=${cur?.key === e.key} onPick=${() => pickEntry(e)} />`)}</div>
+    <div class="up-cards" ref=${cards}>${entries.map((e) => html`<${Entry} key=${e.key} e=${e} on=${cur?.key === e.key} onPick=${() => pickEntry(e)} dealt=${dealt[e.key] ?? null} />`)}</div>
     <div class="up-plus"><${PlusCard} onPress=${plus} /></div>
   </div>`;
 }
