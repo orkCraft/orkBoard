@@ -192,6 +192,89 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
 .glows .under { min-height: 32px; }
 .glows .under.asks { color: var(--ork-alert); }
 @media (max-width: 720px) { .mk-main { padding-block: var(--ork-4); } }
+
+/* ---------- the window with the Orkmaster's column pinned (the owner's note of 2026-11-01): the column is the same on every tab; the tabs are whose eyes ---------- */
+.col { position: absolute; left: 0; top: 0; width: 176px; height: 500px; display: flex; flex-direction: column; gap: var(--ork-3); padding: 0 var(--ork-2) var(--ork-2); background: var(--ork-table);
+  border-right: var(--ork-line) solid var(--ork-frame); overflow-y: auto; overflow-x: hidden; z-index: 2; }
+.col-head { flex: none; display: flex; align-items: center; gap: var(--ork-2); height: 40px; margin: 0 calc(var(--ork-2) * -1); padding: 0 var(--ork-3); border-bottom: var(--ork-line) solid var(--ork-frame);
+  font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); white-space: nowrap; }
+.col-head img { width: 24px; height: 22px; image-rendering: pixelated; }
+.csec { display: flex; flex-direction: column; gap: var(--ork-1); }
+.csec[hidden] { display: none; }
+.csec .plab { justify-content: space-between; }
+.csec .plab .u { font: var(--ork-type-caption); text-transform: none; letter-spacing: 0; color: var(--ork-ink-faint); }
+.cstrips { display: flex; flex-direction: column; gap: 2px; }
+.strip { position: relative; display: flex; align-items: center; gap: var(--ork-2); width: 100%; height: 22px; padding: 0 var(--ork-2); background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame);
+  clip-path: var(--ork-notch); color: var(--ork-ink); font: var(--ork-type-caption); text-align: left; cursor: pointer; }
+.strip:hover, .strip:focus-visible { border-color: var(--ork-edge); }
+.strip .nm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.strip .hs { display: flex; gap: 1px; flex: none; }
+.strip .hs img { width: 14px; height: 13px; image-rendering: pixelated; }
+.strip .ork-sign { flex: none; }
+.strip .mk-a { color: var(--ork-alert); } .strip .mk-q { color: var(--ork-ink-faint); } .strip .mk-f { color: var(--ork-danger); }
+.strip .bar { position: absolute; left: 2px; right: 2px; bottom: 1px; height: 2px; background: color-mix(in srgb, var(--ork-ink-faint) 30%, transparent); }
+.strip .bar i { display: block; height: 100%; width: calc(round(down, var(--s) * 8, 1) / 8 * 100%); background: var(--c); }
+.strip.is-picked { border-color: var(--ork-ink); box-shadow: inset 2px 0 0 var(--ork-ink); }
+.strip.is-asks { border-color: var(--ork-alert); box-shadow: inset 2px 0 0 var(--ork-alert); }
+.strip.is-failed { border-color: var(--ork-danger); box-shadow: inset 2px 0 0 var(--ork-danger); background: color-mix(in srgb, var(--ork-danger) 12%, var(--ork-card)); }
+#c-spec { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ork-1); }
+.cd.small { width: 104px; height: 146px; }
+.cd.small .ork-sigil { transform: scale(0.86); transform-origin: 50% 0; }
+#c-spec .under { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+#c-spec .under.asks { color: var(--ork-alert); }
+.free { width: 100%; padding: var(--ork-2); border: var(--ork-line) dashed var(--ork-frame); color: var(--ork-ink-faint); font: var(--ork-type-caption); }
+.cd.q.pass { width: 160px; height: 58px; padding: var(--ork-1) var(--ork-2); gap: 2px; --mk-line: var(--ork-edge); border-color: var(--ork-edge); }
+.cd.q.pass .who { color: var(--ork-ink-muted); gap: var(--ork-1); }
+.cd.q.pass .who img { width: 16px; height: 15px; } .cd.q.pass .who .ork-icon { width: 10px; height: 10px; }
+.cd.q.pass .who .in { margin-left: auto; font: var(--ork-type-caption); text-transform: none; letter-spacing: 0; }
+.cd.q.pass .qq { -webkit-line-clamp: 2; }
+.cd.q.ans { width: 200px; height: 64px; padding: var(--ork-2) var(--ork-3); --mk-line: var(--ork-action); }
+.cd.q.ans .who { color: var(--ork-action); }
+.scn .tabs { left: 176px; }
+button.tab { background: none; border: 0; cursor: pointer; }
+button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2px; }
+.tab.answers::after { content: "answering…"; font: var(--ork-type-caption); text-transform: none; letter-spacing: 0; color: var(--ork-alert); }
+.pane { position: absolute; left: 176px; right: 0; top: 40px; height: 460px; background: var(--ork-table); overflow: hidden; }
+.look { position: absolute; left: 0; right: 0; top: 0; height: 28px; display: flex; align-items: center; gap: var(--ork-2); padding: 0 var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); color: var(--ork-ink-muted); white-space: nowrap; }
+.look .chip { display: inline-flex; align-items: center; gap: var(--ork-2); height: 22px; padding: 0 2px 0 var(--ork-2); border: var(--ork-line) solid var(--c); color: var(--ork-ink); }
+.look .chip button { display: grid; place-items: center; width: 18px; height: 18px; padding: 0; background: none; border: 0; color: inherit; cursor: pointer; }
+.look .chip .ork-icon { width: 12px; height: 12px; }
+.look .lens { margin-left: auto; }
+.view { position: absolute; left: 0; right: 0; top: 28px; bottom: 0; }
+.view[hidden] { display: none; }
+.blanes { display: flex; height: 100%; padding: var(--ork-3) var(--ork-4); }
+.blane { display: flex; flex-direction: column; gap: var(--ork-2); padding: 0 var(--ork-5); border-left: var(--ork-line) solid var(--ork-frame); }
+.blane:first-child { border-left: 0; padding-left: 0; }
+.blane.done { margin-left: auto; }
+.bgrid { display: grid; grid-template-columns: repeat(2, 120px); gap: var(--ork-3); }
+.cd.is-dim { opacity: 0.3; }
+.cd.is-lit { --mk-line: var(--ork-ink); }
+.lmap { position: absolute; left: 0; top: 0; width: 944px; height: 432px; transform-origin: 0 0; transition: transform var(--ork-motion-play) var(--ork-motion-ease); }
+.lmap svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.lmap line { stroke: var(--ork-frame); stroke-width: 2; transition: opacity var(--ork-motion-sure) linear; }
+.lmap line.is-touched { stroke: var(--ork-ink-muted); } .lmap line.is-off { opacity: 0.15; }
+.node { position: absolute; width: 160px; height: 56px; display: flex; flex-direction: column; gap: 2px; padding: var(--ork-2) var(--ork-3); background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame);
+  clip-path: var(--ork-notch); transition: opacity var(--ork-motion-sure) linear; --c: var(--ork-frame); }
+.node b { font: var(--ork-type-caption); font-weight: 600; } .node > span { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.node.is-touched { border: 2px solid var(--c); background: color-mix(in srgb, var(--c) 12%, var(--ork-card)); }
+.node.is-off { opacity: 0.15; }
+.node.scr { width: 120px; height: 210px; }
+.node .ph { flex: 1; display: flex; flex-direction: column; gap: var(--ork-2); margin-top: var(--ork-2); padding: var(--ork-2); border: var(--ork-line) solid var(--ork-frame); }
+.node .ph i { display: block; height: 6px; background: var(--ork-frame); } .node .ph i.s { width: 60%; }
+.specp { position: absolute; right: var(--ork-3); top: var(--ork-2); bottom: var(--ork-3); width: 320px; display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-4); overflow-y: auto;
+  background: var(--ork-raised); border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); transform: translateX(calc(100% + 24px)); transition: transform var(--ork-motion-play) var(--ork-motion-ease); }
+.specp.on { transform: none; }
+.specp .t { display: flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.specp .lvl { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.specp h3 { margin: var(--ork-2) 0 0; font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.specp ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--ork-1); font: var(--ork-type-caption); color: var(--ork-ink-read); }
+.specp li::before { content: "· "; color: var(--ork-ink-muted); }
+.specp code { display: block; padding: var(--ork-1) var(--ork-2); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame); font: 400 12px/16px var(--ork-font-code); overflow-wrap: anywhere; }
+.specp .cap, .lift .cap { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.states { display: flex; flex-wrap: wrap; gap: var(--ork-1); }
+.states span { display: inline-flex; align-items: center; height: 22px; padding: 0 var(--ork-2); border: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); }
+.scn .hnd { top: 500px; padding: var(--ork-2) var(--ork-4); z-index: 3; background: var(--ork-canvas); }
+@media (prefers-reduced-motion: reduce) { .lmap, .specp, .lmap line, .node { transition: none; } }
 </style>
 </head>
 <body>
@@ -203,29 +286,33 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
 
 <section class="mk-sec" id="window">
   <h1>1 · The window, played</h1>
-  <p class="mk-line"><b>Press the + card</b> at the hand's left end. It turns over where it lies and grows up from there, its foot under the window's edge. Esc or a press away turns it back, keeping its words. The squares under its top open their choices in a row, as the rune does. <b>Send</b> turns it to its back, and it flies to the Orkmaster's <b>Next</b> pile. Hover a pile to fan it and read each card's name. Press the top of Next to read its spec.</p>
+  <p class="mk-line"><b>The Orkmaster's column stays on every tab</b>: the goals, top to bottom by time (the one whose spec it writes, those at work, Next, Tonight). <b>The tabs are whose eyes</b>: the Board shows each leader's tasks, and Tech's and Design's tabs show their maps. <b>Press a goal</b> in the column: every tab looks at it. The Board lights its tasks, and a leader's map zooms to the parts it touches, its spec at that leader's level beside it. Esc or ✕ looks at the whole project again. The + card at the hand's left still turns over where it lies.</p>
   <div class="mk-acts" role="group" aria-label="Play the window">
     <button class="ork-btn" type="button" data-do="spec">The Orkmaster finishes a spec</button>
     <button class="ork-btn" type="button" data-do="ork-asks">The Orkmaster asks you</button>
     <button class="ork-btn" type="button" data-do="asks">Tech asks you</button>
     <button class="ork-btn" type="button" data-do="across">Design asks what Tech knows</button>
-    <button class="ork-btn" type="button" data-do="fail">A goal fails at Design</button>
+    <button class="ork-btn" type="button" data-do="fail">A task fails at Design</button>
     <button class="ork-btn" type="button" data-do="reset">Start again</button>
   </div>
   <div class="scn-wrap" id="wrap"><div class="scn" id="scn">
-    <div class="tabs"><span class="tab on"><img src="../../../design-system/orkui/races/peon-crown@2x.png" alt="">The Orkmaster</span><span class="tab"><img src="../../../design-system/orkui/races/shaman-elder@2x.png" alt="">Tech</span><span class="tab"><img src="../../../design-system/orkui/races/dryad-elder@2x.png" alt="">Design</span></div>
-    <div class="tbl">
-      <div class="lane"><div class="lab"><img src="../../../design-system/orkui/races/peon-crown@2x.png" alt="">The Orkmaster</div>
-        <div class="piles">
-          <div class="pile"><div class="plab">At work</div><div class="pstack" id="p-work"></div><div class="punder" id="u-work"></div></div>
-          <div class="pile"><div class="plab">Next</div><div class="pstack" id="p-next"></div><div class="punder" id="u-next"></div></div>
-          <div class="pile"><div class="plab"><span class="ork-sign moon" aria-hidden="true"></span>Tonight</div><div class="pstack" id="p-night"></div><div class="punder" id="u-night">From 01:00</div></div>
-        </div>
-        <div class="plab">Passing on</div><div class="prow" id="p-pass"></div>
-      </div>
-      <div class="lane"><div class="lab" id="lab-tech"><img src="../../../design-system/orkui/races/shaman-elder@2x.png" alt="">Tech</div><div class="goals" id="l-tech"></div></div>
-      <div class="lane"><div class="lab" id="lab-design"><img src="../../../design-system/orkui/races/dryad-elder@2x.png" alt="">Design</div><div class="goals" id="l-design"></div></div>
-      <div class="lane done"><div class="lab">Done</div><div class="pstack" id="p-done"></div></div>
+    <aside class="col" id="col" aria-label="The Orkmaster's goals">
+      <div class="col-head"><img src="../../../design-system/orkui/races/peon-crown@2x.png" alt="">The Orkmaster</div>
+      <div class="csec"><div class="plab">At work</div><div id="c-spec"></div><div class="cstrips" id="c-work"></div></div>
+      <div class="csec" id="c-passsec" hidden><div class="plab">Passing on</div><div class="cstrips" id="c-pass"></div></div>
+      <div class="csec"><div class="plab">Next</div><div class="cstrips" id="c-next"></div><span class="plab"><span class="u" id="u-next"></span></span></div>
+      <div class="csec"><div class="plab"><span><span class="ork-sign moon" aria-hidden="true"></span> Tonight</span><span class="u">from 01:00</span></div><div class="cstrips" id="c-night"></div></div>
+    </aside>
+    <div class="tabs" role="tablist"><button type="button" class="tab" role="tab" data-tab="board" id="tab-board">Board</button><button type="button" class="tab" role="tab" data-tab="tech" id="tab-tech"><img src="../../../design-system/orkui/races/shaman-elder@2x.png" alt="">Tech</button><button type="button" class="tab" role="tab" data-tab="design" id="tab-design"><img src="../../../design-system/orkui/races/dryad-elder@2x.png" alt="">Design</button></div>
+    <div class="pane">
+      <div class="look" id="look"></div>
+      <div class="view" id="v-board"><div class="blanes">
+        <div class="blane"><div class="lab"><img src="../../../design-system/orkui/races/shaman-elder@2x.png" alt="">Tech</div><div class="bgrid" id="b-tech"></div></div>
+        <div class="blane"><div class="lab"><img src="../../../design-system/orkui/races/dryad-elder@2x.png" alt="">Design</div><div class="bgrid" id="b-design"></div></div>
+        <div class="blane done"><div class="lab">Done</div><div class="pstack" id="b-done"></div></div>
+      </div></div>
+      <div class="view" id="v-tech" hidden></div>
+      <div class="view" id="v-design" hidden></div>
     </div>
     <div class="hnd">
       <div class="plus-slot" id="plus-slot"></div>
@@ -238,14 +325,12 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
     <div class="layer" id="layer"></div>
   </div></div>
   <div class="mk-notes">
-    <p><b>At work</b> is the goal whose spec the Orkmaster writes now: face down, its ring runs round and its rune glows. Under it, in words: <i>Writing the spec</i>. Under reduced motion the ring stands lit at one place, and the words still say it.</p>
-    <p><b>Next</b> is the queue, by priority, the first on top. Its ring is the wait: it fills in eighths, and when it is whole the goal goes to work by itself as soon as the Orkmaster is free. A press on it reads the spec, with <i>Start now</i> and <i>Tonight</i>.</p>
-    <p><b>Tonight</b> waits for the night's window, with no ring. A goal moves there from Next with one press.</p>
-    <p><b>A question</b> leaves the goal: the card stays at its leader, yellow and still, and the question flies out of it into the hand. Answered, it flies back into the goal. When none is left, the yellow goes.</p>
-    <p><b>A question another leader can answer</b> does not come to you. It flies from its goal to the Orkmaster's <i>Passing on</i>, stays there a few seconds where you can see it (a press: <i>Answer it myself</i> or <i>Pass it now</i>), then goes to that leader, and the answer flies back into the goal. The goal never moves: it stays its leader's, and says <i>Asked Tech</i>. It is not yellow, because yellow means only one thing: you are needed.</p>
-    <p><b>The hand gets only what needs you</b>: a choice only a person makes (the look, money, the direction, anything that cannot be undone), a question no leader could answer, and a failure.</p>
-    <p><b>A failure</b> cannot go on at its leader: the card turns red and is thrown into the hand from where it lay. A dashed place stays in the lane, so <i>Try again</i> has somewhere to go back to.</p>
-    <p><b>The name on a back</b> is a plate at its foot: the rune and the short name, two lines. In a pile only the top's plate shows. Hovered, the pile fans and each card under shows its plate. The whole title is in the card's words for a screen reader and in its tooltip.</p>
+    <p><b>The column is the first lane, pinned.</b> It holds the goals, one card each, and it does not change when the tab does. A goal lies only here; its tasks lie only in its leaders' lanes. Nothing is drawn twice: here the goal, there its tasks, joined by the rune and by the pick.</p>
+    <p><b>At work</b>: the goal whose spec the Orkmaster writes is a whole card, its ring running. The goals at work at the leaders are strips with the heads of who works on them. When the spec is written, its card becomes a strip and its tasks are dealt to the leaders' lanes.</p>
+    <p><b>Next</b> and <b>Tonight</b> are strips, by priority. The first of Next has its wait as a thin bar in eighths, and starts by itself when the Orkmaster is free. A press reads it, with <i>Start now</i> and <i>Tonight</i>.</p>
+    <p><b>A goal's state shows in the column whatever the tab</b>: a yellow <i>?</i> when it waits for you, a faint <i>?</i> when it asked another leader, red when a task failed. A question flies from the task's card on the Board, or from the goal's strip on another tab.</p>
+    <p><b>The zoom</b>: a leader's tab looks at the whole project, or, with a goal picked, at that goal at its own level. Tech shows the parts of the system it touches, its contract and its <i>Done when</i>; Design its screens and their states. It is not a separate lens: the pick decides what every tab shows.</p>
+    <p><b>The hand gets only what needs you</b>: a choice only a person makes, a question no leader could answer, a failure. A question another leader can answer goes through <i>Passing on</i> in the column, where you can take it.</p>
   </div>
 </section>
 
@@ -346,24 +431,72 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
     return '<button type="button" class="ork-card ork-plus" id="plus" aria-label="New goal" title="New goal" aria-haspopup="dialog"><span class="ork-sigil" aria-hidden="true"><span class="ork-sigil__seal">' + E(el) + "</span></span>" + I("plus") + "</button>";
   }
 
-  // ---------- the state ----------
+  // ---------- the state: the goals by id; the Orkmaster's column holds the goals, the leaders' lanes their tasks ----------
+  var GOALS0 = {
+    w1: { el: "lava", short: "Who answered first", name: "Players see who answered first, a small crown over the name", parties: ["tech", "design"], sign: "screen" },
+    g1: { el: "meadow", short: "Join by code", name: "Join a lobby by its code", parties: ["tech"], sign: "feature" },
+    g2: { el: "dust", short: "Answer streaks", name: "A streak counter for answers in a row", parties: ["tech"], sign: "mechanic" },
+    g3: { el: "void", short: "Results screen", name: "The results screen after a round", parties: ["design", "tech"], sign: "screen" },
+    n1: { el: "ice", short: "Round timer on phones", name: "The round's timer shows on every phone", parties: ["tech", "design"], sign: "feature" },
+    n2: { el: "dust", short: "A sound at round's end", name: "A sound when the round ends", parties: ["design"], sign: "sound" },
+    n3: { el: "void", short: "Kick from the lobby", name: "The host can kick a player from the lobby", parties: ["tech"], sign: "feature" },
+    t1: { el: "meadow", short: "Tidy the scoring", name: "Tidy the scoring module", parties: ["tech"], sign: "restructure" },
+    t2: { el: "ice", short: "Lobby in Polish", name: "The lobby in Polish", parties: ["design"], sign: "screen" },
+    d1: { el: "lava", short: "Lobby music", name: "Music in the lobby", parties: ["design"], sign: "sound" }
+  };
+  var DEAL = {
+    w1: [["tech", "First answer by server time", "feature"], ["design", "A crown over the first name", "screen"]],
+    n1: [["tech", "One clock from the server", "feature"], ["design", "The timer on the phone", "screen"]],
+    n2: [["design", "The end-of-round sound", "sound"]],
+    n3: [["tech", "Kick over the socket", "feature"]]
+  };
+  // what each goal touches on each leader's map, and its spec at that leader's level (spec 127's Will be and Done when)
+  var SPECS = {
+    w1: { touches: { tech: ["gate", "rounds", "clock", "scoring"], design: ["question", "results"] },
+      tech: { will: ["Each answer is stamped with the server's time as it arrives", "Rounds keeps the first answer of each question", "Scoring marks the first with a crown"], contract: "answer.accepted { player, at_ms, first }", done: ["Two answers 30 ms apart: the earlier is first on every phone", "A player who reconnects keeps the crown"] },
+      design: { will: ["A small crown over the first player's name", "A tie: no crown, both names lit", "The crown stays after a reconnect"], states: ["First", "Tie", "Reconnected"], done: ["The crown reads at 360 px wide", "It never covers the score"] } },
+    g1: { touches: { tech: ["phone", "gate", "lobby", "store"], design: ["join", "lobby"] },
+      tech: { will: ["A five-letter code for each lobby", "Joining by code over the socket"], contract: "lobby.join { code, name } → lobby.joined", done: ["A wrong code says so in one line", "A full lobby refuses with its reason"] },
+      design: { will: ["The code field large, letters only"], states: ["Empty", "Wrong code", "Full"], done: ["Joins in two taps"] } },
+    g2: { touches: { tech: ["scoring", "store"], design: ["results"] },
+      tech: { will: ["Scoring counts right answers in a row", "The streak is kept per player per game"], contract: "score.streak { player, n }", done: ["A wrong answer resets it to 0"] },
+      design: { will: ["The streak beside the score, from 3"], states: ["2", "3+", "Broken"], done: ["It never pushes the name to a second line"] } },
+    g3: { touches: { tech: ["results", "scoring", "store"], design: ["results", "lobby"] },
+      tech: { will: ["The results come from Scoring after the round", "A player who left mid-round is listed, greyed"], contract: "GET /rounds/:id/results", done: ["Results show within 1 s of the round's end"] },
+      design: { will: ["Ranks, points and the crown", "A way back to the lobby"], states: ["Win", "Tie", "Player left"], done: ["Readable at 360 px wide"] } },
+    n1: { touches: { tech: ["phone", "gate", "rounds", "clock"], design: ["question"] },
+      tech: { will: ["One clock from the server, the phones follow it"], contract: "round.tick { left_ms }", done: ["Two phones show the same second"] },
+      design: { will: ["The timer at the question's top, red in the last 5 s"], states: ["Running", "Last 5 s", "Up"], done: ["Visible without covering the answers"] } },
+    n2: { touches: { tech: ["rounds"], design: ["results", "settings"] }, tech: { will: ["Rounds sends round.end"], contract: "round.end { id }", done: ["The sound plays once"] }, design: { will: ["A short sound, off in Settings"], states: ["On", "Off"], done: ["Off by default in a quiet room"] } },
+    n3: { touches: { tech: ["lobby", "gate"], design: ["lobby"] }, tech: { will: ["The host can remove a player"], contract: "lobby.kick { player }", done: ["A kicked player cannot rejoin that lobby"] }, design: { will: ["A ✕ beside each name, for the host only"], states: ["Host", "Player"], done: ["Asks once before kicking"] } },
+    t1: { touches: { tech: ["scoring"], design: [] }, tech: { will: ["Scoring split into points and streaks"], contract: "(no change)", done: ["Every scoring test still passes"] }, design: { will: [], states: [], done: [] } },
+    t2: { touches: { tech: [], design: ["join", "lobby", "settings"] }, tech: { will: [], contract: "", done: [] }, design: { will: ["Every lobby string in Polish"], states: ["EN", "PL"], done: ["No string overflows its box"] } }
+  };
+  function specOf(id) { return SPECS[id] || { touches: { tech: ["rounds"], design: ["question"] }, tech: { will: ["Written by the Orkmaster when it starts"], contract: "", done: [] }, design: { will: ["Written by the Orkmaster when it starts"], states: [], done: [] } }; }
+  var MAPS = {
+    tech: { nodes: [["phone", "Phone app", "web, one per player", 30, 40], ["gate", "Socket gateway", "rooms, presence", 240, 40], ["lobby", "Lobby", "codes, hosts, kicks", 450, 20], ["rounds", "Rounds", "questions, answers", 450, 140],
+      ["clock", "Clock", "the server's time", 660, 40], ["scoring", "Scoring", "points, streaks", 660, 220], ["store", "Storage", "Postgres", 450, 320], ["results", "Results API", "after a round", 240, 260]],
+      links: [["phone", "gate"], ["gate", "lobby"], ["gate", "rounds"], ["rounds", "clock"], ["rounds", "scoring"], ["scoring", "store"], ["lobby", "store"], ["results", "scoring"], ["phone", "results"]] },
+    design: { screens: true, nodes: [["join", "Join", "code, name", 30, 60], ["lobby", "Lobby", "players, host", 180, 60], ["question", "Question", "answers, timer", 330, 60], ["results", "Results", "ranks, crown", 480, 60], ["settings", "Settings", "sound, language", 630, 60]],
+      links: [["join", "lobby"], ["lobby", "question"], ["question", "results"], ["results", "lobby"]] }
+  };
+  var G = {};
   var S0 = function () {
+    G = JSON.parse(JSON.stringify(GOALS0));
+    Object.keys(G).forEach(function (k) { G[k].id = k; });
     return {
-      work: [{ id: "w1", el: "lava", short: "Who answered first", name: "Players see who answered first, a small crown over the name", party: "design", sign: "screen", stage: "Spec" }],
-      next: [{ id: "n1", el: "ice", short: "Round timer on phones", name: "The round's timer shows on every phone", party: "tech", sign: "feature", stage: "Build" },
-             { id: "n2", el: "dust", short: "A sound at round's end", name: "A sound when the round ends", party: "product", sign: "sound", stage: "Build" },
-             { id: "n3", el: "void", short: "Kick from the lobby", name: "The host can kick a player from the lobby", party: "tech", sign: "feature", stage: "Build" }],
-      night: [{ id: "t1", el: "meadow", short: "Tidy the scoring", name: "Tidy the scoring module", party: "tech", sign: "restructure", stage: "Build" },
-              { id: "t2", el: "ice", short: "Lobby in Polish", name: "The lobby in Polish", party: "design", sign: "screen", stage: "Build" }],
-      lanes: { tech: [{ id: "g1", el: "meadow", short: "Join by code", name: "Join a lobby by its code", sign: "feature", stage: "Build · 12 min", state: "work" },
-                      { id: "g2", el: "dust", short: "Answer streaks", name: "A streak counter for answers in a row", sign: "mechanic", stage: "Check · 3 min", state: "work" }],
-               design: [{ id: "g3", el: "void", short: "Results screen", name: "The results screen after a round", sign: "screen", stage: "Build · 6 min", state: "work" }] },
-      done: [{ id: "d1", el: "lava", short: "Lobby music", name: "Music in the lobby" }],
-      hand: [], pass: [], places: {}, share: 0.25, orkAsks: false
+      spec: "w1", work: ["g1", "g2", "g3"], next: ["n1", "n2", "n3"], night: ["t1", "t2"], done: ["d1"],
+      tasks: [{ id: "k1", goal: "g1", party: "tech", name: "The join endpoint", sign: "feature", stage: "Build · 12 min", state: "work" },
+              { id: "k2", goal: "g2", party: "tech", name: "Count answers in a row", sign: "mechanic", stage: "Check · 3 min", state: "work" },
+              { id: "k6", goal: "g3", party: "tech", name: "Results for a player who left", sign: "feature", stage: "Plan", state: "work" },
+              { id: "k3", goal: "g3", party: "design", name: "The results screen", sign: "screen", stage: "Build · 6 min", state: "work" }],
+      hand: [], pass: [], share: 0.25, orkAsks: false, picked: "", tab: "board"
     };
   };
   var st = S0(), lifted = null, nextId = 1;
-  function goalById(id) { var all = [].concat(st.work, st.next, st.night, st.lanes.tech, st.lanes.design); for (var i = 0; i < all.length; i++) if (all[i].id === id) return all[i]; return null; }
+  function goalById(id) { return G[id] || null; }
+  function taskById(id) { return st.tasks.filter(function (t) { return t.id === id; })[0] || null; }
+  function liveGoals() { return [st.spec].concat(st.work, st.next).filter(Boolean).map(function (id) { return G[id]; }); }
 
   // ---------- the scene's scale ----------
   var scn = $("scn"), wrap = $("wrap"), sc = 1;
@@ -372,46 +505,118 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
   window.addEventListener("resize", fit);
 
   // ---------- drawing ----------
-  function drawPile(id, list, o) {
-    var el = $("p-" + id), shown = list.slice(0, 4), html = "";
-    el.classList.toggle("empty", !list.length);
-    for (var i = shown.length - 1; i >= 0; i--) html += back(shown[i], Object.assign({ i: i, tag: i === 0 ? "button" : "div", cls: i === 0 ? "" : "", attrs: i === 0 ? ' data-pile="' + id + '" type="button"' : ' aria-hidden="true"' }, i === 0 ? o : {}));
-    el.innerHTML = html;
+  function markOf(id) {
+    var ts = st.tasks.filter(function (t) { return t.goal === id; });
+    if (ts.some(function (t) { return t.state === "failed" || t.state === "place"; })) return "failed";
+    if ((id === st.spec && st.orkAsks) || ts.some(function (t) { return t.state === "asks"; })) return "asks";
+    if (ts.some(function (t) { return t.state === "asked"; })) return "asked";
+    return "";
   }
-  function draw() {
-    var w = st.work[0];
-    drawPile("work", st.work, { busy: !st.orkAsks, stopped: st.orkAsks, glow: !st.orkAsks, cls: st.orkAsks ? "is-asks thick" : "", say: st.orkAsks ? "waits for your answer" : "writing the spec" });
-    $("p-work").querySelectorAll(".cd").forEach(function (c) { if (st.orkAsks) c.style.setProperty("--mk-line", "var(--ork-alert)"); });
-    $("u-work").textContent = !w ? "Free" : st.orkAsks ? "Waits for your answer" : "Writing the spec · for " + PARTIES[w.party].short;
-    $("u-work").classList.toggle("asks", !!st.orkAsks);
-    drawNext();
-    drawPile("night", st.night, { say: "tonight" });
-    drawPile("done", st.done, {});
-    ["tech", "design"].forEach(function (p) {
-      $("l-" + p).innerHTML = st.lanes[p].map(function (g) { return g.state === "place" ? '<div class="ork-card-place place" data-goal="' + g.id + '">Back here on <i>Try again</i></div>' : face(g); }).join("");
-    });
-    $("hcards").innerHTML = st.hand.map(function (h) { return h.kind === "q" ? qcard(h) : face(Object.assign({}, h.g, { state: "failed" }), { cls: "leans" }).replace('<div class="ork-card', '<button type="button" data-fail="' + h.id + '" class="ork-card').replace(/<\/div>$/, "</button>"); }).join("");
-    if (!$("plus")) $("plus-slot").innerHTML = plusCard(nextRune());
-    drawPass();
-    round(scn);
+  function strip(id, o) {
+    o = o || {};
+    var g = G[id], m = markOf(id), heads = "";
+    if (o.heads) { var ps = []; st.tasks.forEach(function (t) { if (t.goal === id && ps.indexOf(t.party) < 0) ps.push(t.party); }); heads = '<span class="hs">' + ps.map(function (p) { return HEAD(PARTIES[p].race); }).join("") + "</span>"; }
+    var sign = m === "asks" ? S("question", "mk-a") : m === "asked" ? S("question", "mk-q") : m === "failed" ? S("alert", "mk-f") : "";
+    return '<button type="button" class="strip c-' + g.el + (st.picked === id ? " is-picked" : "") + (m ? " is-" + m : "") + '" data-goal="' + id + '" title="' + esc(g.name) + '" aria-pressed="' + (st.picked === id) + '">'
+      + E(g.el) + '<span class="nm">' + esc(g.short) + "</span>" + heads + sign + (o.wait != null ? '<span class="bar"><i style="--s:' + o.wait + '"></i></span>' : "") + "</button>";
+  }
+  function tcard(t, o) {
+    o = o || {};
+    var g = G[t.goal], s = t.state;
+    var stx = s === "asks" ? S("question") + "Waits for you" : s === "asked" ? S("question") + "Asked " + esc(PARTIES[t.asked].short) : s === "failed" ? S("alert") + "Failed" : E(g.el, "mk-glow") + esc(t.stage);
+    var lit = st.picked === t.goal, dim = st.picked && !lit && !o.hand, tag = o.hand ? "button" : "div";
+    return "<" + tag + (o.hand ? ' type="button" data-fail="' + o.hand + '"' : "") + ' class="ork-card mk-r cd face c-' + g.el + (s === "asks" ? " is-asks thick" : s === "asked" ? " is-asked" : s === "failed" ? " is-failed thick" : "")
+      + (lit && !o.hand ? " is-lit thick" : "") + (dim ? " is-dim" : "") + (o.hand ? " leans" : "") + '" data-task="' + t.id + '" data-goal="' + t.goal + '" title="' + esc(g.name) + '">'
+      + '<div class="hd">' + E(g.el) + '<span class="nm">' + esc(t.name) + "</span></div>"
+      + '<div class="win">' + S(t.sign, "big") + "</div>"
+      + '<div class="st">' + stx + "</div></" + tag + ">";
   }
   function pcard(p, o) {
-    var g = goalById(p.goal) || { el: "void", short: "" };
-    return '<' + (o && o.div ? "div" : 'button type="button"') + ' class="ork-card mk-r cd q pass thick leans" data-pass="' + p.id + '" aria-label="' + esc(PARTIES[p.by].short + " asks " + PARTIES[p.to].short + ": " + p.q) + '">'
-      + '<span class="who">' + HEAD(PARTIES[p.by].race) + I("arrow-right") + HEAD(PARTIES[p.to].race) + esc(PARTIES[p.by].short + " asks " + PARTIES[p.to].short) + "</span>"
-      + '<span class="qq">' + esc(p.q) + "</span>"
-      + '<span class="for">' + E(g.el) + esc(p.left > 0 ? "To " + PARTIES[p.to].short + " in " + p.left + " s" : "Passing it on…") + "</span></" + (o && o.div ? "div" : "button") + ">";
+    var g = G[p.goal] || { el: "void" }, tag = o && o.div ? "div" : "button";
+    return "<" + tag + (tag === "button" ? ' type="button"' : "") + ' class="ork-card cd q pass c-' + g.el + '" data-pass="' + p.id + '" aria-label="' + esc(PARTIES[p.by].short + " asks " + PARTIES[p.to].short + ": " + p.q) + '">'
+      + '<span class="who">' + E(g.el) + HEAD(PARTIES[p.by].race) + I("arrow-right") + HEAD(PARTIES[p.to].race) + '<span class="in">' + (p.left > 0 ? p.left + " s" : "…") + "</span></span>"
+      + '<span class="qq">' + esc(p.q) + "</span></" + tag + ">";
   }
   function acard(p) {
     return '<div class="ork-card mk-r cd q ans thick"><span class="who">' + HEAD(PARTIES[p.to].race) + esc(PARTIES[p.to].short + " answers") + '</span><span class="qq">' + esc(p.answer) + "</span></div>";
   }
-  function drawPass() { $("p-pass").innerHTML = st.pass.map(function (x) { return pcard(x); }).join(""); round($("p-pass")); }
+  function drawPass() { $("c-passsec").hidden = !st.pass.length; $("c-pass").innerHTML = st.pass.map(function (x) { return pcard(x); }).join(""); }
   function drawNext() {
-    drawPile("next", st.next, { wait: st.share, say: "starts by itself" });
-    $("u-next").textContent = !st.next.length ? "" : st.share >= 1 ? (st.work.length ? "Starts when the Orkmaster is free" : "Starting…") : "Starts by itself in " + Math.ceil((1 - st.share) * 8 * 1.5) + " s";
-    round($("p-next"));
+    $("c-next").innerHTML = st.next.map(function (id, i) { return strip(id, i === 0 ? { wait: st.share } : {}); }).join("");
+    $("u-next").textContent = !st.next.length ? "" : st.share >= 1 ? (st.spec ? "the first starts when the Orkmaster is free" : "starting…") : "the first starts in " + Math.ceil((1 - st.share) * 8 * 1.5) + " s";
   }
-  function nextRune() { var used = {}; [].concat(st.next, st.work).forEach(function (g) { used[g.el] = 1; }); return ELEMENTS.filter(function (e) { return !used[e]; })[0] || "meadow"; }
+  function nextRune() { var used = {}; liveGoals().forEach(function (g) { used[g.el] = 1; }); return ELEMENTS.filter(function (e) { return !used[e]; })[0] || "meadow"; }
+  function draw() {
+    // the Orkmaster's column: the same on every tab
+    var sp = $("c-spec");
+    if (st.spec) {
+      var g = G[st.spec];
+      sp.innerHTML = back(g, { tag: "button", attrs: ' type="button" data-goal="' + st.spec + '"', busy: !st.orkAsks, stopped: st.orkAsks, glow: !st.orkAsks, cls: "small" + (st.orkAsks ? " is-asks thick" : st.picked === st.spec ? " is-lit thick" : ""), say: st.orkAsks ? "waits for your answer" : "the Orkmaster writes its spec" })
+        + '<span class="under' + (st.orkAsks ? " asks" : "") + '">' + (st.orkAsks ? "Waits for your answer" : "Writing its spec") + "</span>";
+    } else sp.innerHTML = '<div class="free">Free: the first of Next starts here</div>';
+    $("c-work").innerHTML = st.work.map(function (id) { return strip(id, { heads: true }); }).join("");
+    drawNext();
+    $("c-night").innerHTML = st.night.map(function (id) { return strip(id); }).join("");
+    drawPass();
+    // the tabs and the pane
+    document.querySelectorAll("[data-tab]").forEach(function (b) { b.classList.toggle("on", b.dataset.tab === st.tab); b.setAttribute("aria-selected", String(b.dataset.tab === st.tab)); });
+    ["board", "tech", "design"].forEach(function (v) { $("v-" + v).hidden = v !== st.tab; });
+    var pg = st.picked ? G[st.picked] : null;
+    $("look").innerHTML = (pg ? 'Looking at <span class="chip c-' + pg.el + '">' + E(pg.el) + esc(pg.short) + '<button type="button" data-unpick="1" aria-label="Look at the whole project">' + I("close") + "</button></span>" : "The whole project")
+      + '<span class="lens">' + { board: "Board: who does what", tech: "Tech · System" + (pg ? ": its part" : ""), design: "Design · Screens" + (pg ? ": its part" : "") }[st.tab] + (pg ? " · Esc: the whole project" : "") + "</span>";
+    ["tech", "design"].forEach(function (p) {
+      $("b-" + p).innerHTML = st.tasks.filter(function (t) { return t.party === p; }).map(function (t) {
+        return t.state === "place" ? '<div class="ork-card-place place" data-task="' + t.id + '" data-goal="' + t.goal + '">Back here on <i>Try again</i></div>' : tcard(t); }).join("");
+    });
+    $("b-done").innerHTML = st.done.slice(0, 3).map(function (id, i) { return back(G[id], { i: i, cls: st.picked && st.picked !== id ? "is-dim" : "" }); }).reverse().join("");
+    // the hand
+    $("hcards").innerHTML = st.hand.map(function (h) { return h.kind === "q" ? qcard(h) : tcard(Object.assign({}, h.t, { state: "failed" }), { hand: h.id }); }).join("");
+    if (!$("plus")) $("plus-slot").innerHTML = plusCard(nextRune());
+    round(scn);
+    zoom();
+  }
+  // a leader's lens, zoomed to the picked goal: only the parts it touches, and its spec at that leader's level
+  function buildLenses() {
+    ["tech", "design"].forEach(function (p) {
+      var m = MAPS[p], at = {};
+      m.nodes.forEach(function (n) { at[n[0]] = n; });
+      var w = m.screens ? 120 : 160, h = m.screens ? 210 : 56;
+      var svg = '<svg aria-hidden="true">' + m.links.map(function (l) { var a = at[l[0]], b = at[l[1]]; return '<line data-a="' + l[0] + '" data-b="' + l[1] + '" x1="' + (a[3] + w / 2) + '" y1="' + (a[4] + h / 2) + '" x2="' + (b[3] + w / 2) + '" y2="' + (b[4] + h / 2) + '"/>'; }).join("") + "</svg>";
+      var nodes = m.nodes.map(function (n) { return '<div class="node' + (m.screens ? " scr" : "") + '" data-node="' + n[0] + '" style="left:' + n[3] + "px;top:" + n[4] + 'px"><b>' + n[1] + "</b><span>" + n[2] + "</span>" + (m.screens ? '<span class="ph"><i></i><i class="s"></i><i></i><i class="s"></i></span>' : "") + "</div>"; }).join("");
+      $("v-" + p).innerHTML = '<div class="lmap">' + svg + nodes + '</div><aside class="specp" id="s-' + p + '" aria-live="polite"></aside>';
+    });
+  }
+  function specHtml(id, p, touch) {
+    var g = G[id], s = specOf(id)[p] || {}, mine = st.tasks.filter(function (t) { return t.goal === id && t.party === p; });
+    var li = function (a) { return "<ul>" + a.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>"; };
+    if (!touch.length) return '<div class="t">' + E(g.el) + esc(g.short) + '</div><p class="cap">Nothing of this goal is on ' + PARTIES[p].short + "’s map.</p>";
+    return '<div class="t">' + E(g.el) + esc(g.short) + '</div><div class="lvl">' + PARTIES[p].short + "’s part of its spec</div>"
+      + (s.will && s.will.length ? "<h3>Will be</h3>" + li(s.will) : "")
+      + (s.contract ? "<h3>Contract</h3><code>" + esc(s.contract) + "</code>" : "")
+      + (s.states && s.states.length ? '<h3>States</h3><div class="states">' + s.states.map(function (x) { return "<span>" + esc(x) + "</span>"; }).join("") + "</div>" : "")
+      + (s.done && s.done.length ? "<h3>Done when</h3>" + li(s.done) : "")
+      + "<h3>Its tasks here</h3>" + (mine.length ? li(mine.map(function (t) { return t.name + " · " + (t.state === "work" ? t.stage : t.state === "asks" ? "waits for you" : t.state === "asked" ? "asked " + PARTIES[t.asked].short : "failed"); })) : '<p class="cap">None yet: they are dealt when its spec is written.</p>');
+  }
+  function zoom() {
+    ["tech", "design"].forEach(function (p) {
+      var v = $("v-" + p), map = v.querySelector(".lmap"), panel = $("s-" + p), g = st.picked ? G[st.picked] : null, touch = g ? (specOf(st.picked).touches[p] || []) : [];
+      var nodes = [].slice.call(v.querySelectorAll(".node")), box = null;
+      nodes.forEach(function (n) {
+        var on = touch.indexOf(n.dataset.node) >= 0;
+        n.classList.toggle("is-touched", !!g && on); n.classList.toggle("is-off", !!g && touch.length > 0 && !on);
+        n.style.setProperty("--c", g ? "var(--ork-elem-" + g.el + ")" : "var(--ork-frame)");
+        if (g && on) { var x = n.offsetLeft, y = n.offsetTop, r = x + n.offsetWidth, b = y + n.offsetHeight; box = box ? { x: Math.min(box.x, x), y: Math.min(box.y, y), r: Math.max(box.r, r), b: Math.max(box.b, b) } : { x: x, y: y, r: r, b: b }; }
+      });
+      v.querySelectorAll("line").forEach(function (l) { var on = touch.indexOf(l.dataset.a) >= 0 && touch.indexOf(l.dataset.b) >= 0; l.classList.toggle("is-touched", !!g && on); l.classList.toggle("is-off", !!g && touch.length > 0 && !on); });
+      if (box) {
+        var mw = 944 - 344, mh = 432, pad = 28, bw = box.r - box.x + pad * 2, bh = box.b - box.y + pad * 2, k = Math.min(mw / bw, mh / bh, 1.3);
+        map.style.transform = "translate(" + ((mw - bw * k) / 2 - (box.x - pad) * k) + "px," + ((mh - bh * k) / 2 - (box.y - pad) * k) + "px) scale(" + k + ")";
+      } else map.style.transform = g ? "translate(0,0) scale(.62)" : "none";
+      panel.classList.toggle("on", !!g);
+      if (g) panel.innerHTML = specHtml(st.picked, p, touch);
+    });
+  }
+  function pick(id, keep) { st.picked = st.picked === id && !keep ? "" : id; closeLift(); draw(); }
 
   // ---------- a flight from one box to another, inside the scene ----------
   function fly(html, from, to, o) {
@@ -460,7 +665,7 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
   }
   function choices(which) {
     var k = kept, html = "", rune = k.rune || nextRune(), used = {};
-    st.next.concat(st.work).forEach(function (g) { used[g.el] = 1; });
+    liveGoals().forEach(function (g) { used[g.el] = 1; });
     if (which === "rune") html = '<span class="say">Its rune: given by rule; the faint ones are in use.</span><div class="chs" role="radiogroup" aria-label="Its rune">' + ELEMENTS.map(function (e, i) { return '<div class="ch"><button type="button" role="radio" data-rune="' + e + '" aria-checked="' + (e === rune) + '" aria-label="Rune ' + (i + 1) + '" class="' + (used[e] ? "used" : "") + '">' + E(e, "big") + "</button></div>"; }).join("") + "</div>";
     if (which === "to") html = '<span class="say">Who it goes to. The Orkmaster finds its party when no one is named.</span><div class="chs" role="radiogroup" aria-label="To">' + Object.keys(PARTIES).map(function (p) { return '<div class="ch"><button type="button" role="radio" data-to="' + p + '" aria-checked="' + (p === k.to) + '" aria-label="' + PARTIES[p].name + '">' + HEAD(PARTIES[p].race) + '</button><span class="cap">' + PARTIES[p].short + "</span></div>"; }).join("") + "</div>";
     if (which === "type") html = (TYPES[k.to] ? '<span class="say">' + PARTIES[k.to].short + "’s types, by their pictures.</span>" : '<span class="say">The party chooses the type. Name a party to choose it yourself.</span>')
@@ -532,21 +737,21 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
   }
   function send() {
     var text = $("fld-text").value.trim(); if (!text) return;
-    var el = kept.rune || nextRune(), words = text.split(/\s+/), g = { id: "new" + nextId++, el: el, short: words.slice(0, 4).join(" "), name: text, party: kept.to === "ork" ? "tech" : kept.to, sign: kept.type || "feature", stage: "Build" };
+    var el = kept.rune || nextRune(), words = text.split(/\s+/), g = { id: "new" + nextId++, el: el, short: words.slice(0, 4).join(" "), name: text, parties: kept.to === "tech" || kept.to === "design" ? [kept.to] : ["tech", "design"], sign: kept.type || "feature" };
     var grow = F.el; F = null;
     kept = { text: "", rune: "", to: "ork", type: "", files: [] };
     grow.querySelector(".side.b .scaled").innerHTML = back(g);                   // its back is the goal's now: its rune and its name
     round(grow);
     var land = function () {
       grow.remove();
-      st.next.splice(Math.min(1, st.next.length), 0, g);                        // the Orkmaster puts it in Next by its priority: here, second
+      G[g.id] = g; st.next.splice(Math.min(1, st.next.length), 0, g.id);                        // the Orkmaster puts it in Next by its priority: here, second
       $("plus-slot").innerHTML = "";
       draw();
       var p = $("plus");
       if (p && !reduced()) p.animate([{ transform: "translateY(60%)", opacity: 0 }, { transform: "none", opacity: 1 }], { duration: 300, easing: "cubic-bezier(.3,1.3,.5,1)" });
     };
     if (reduced()) return land();
-    var to = rel($("p-next")), k = CW / 340;
+    var tgt = $("c-next").children[Math.min(1, st.next.length - 1)] || $("c-next"), to = rel(tgt), k = to.w / 340;
     grow.firstChild.animate([{ transform: "rotateY(0deg)" }, { transform: "rotateY(180deg)" }], { duration: 260, fill: "forwards" }).finished.then(function () {
       return grow.animate([{ transform: "none" }, { transform: "translate(" + ((to.x - FX) * 0.5) + "px," + ((to.y - FY) * 0.5 - 60) + "px) scale(" + (k + 1) / 2 + ") rotate(4deg)" },
         { transform: "translate(" + (to.x - FX) + "px," + (to.y - FY) + "px) scale(" + k + ")" }], { duration: 620, easing: "cubic-bezier(.3,1.1,.5,1)", fill: "forwards" }).finished;
@@ -554,80 +759,73 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
   }
 
   // ---------- what the window does: the timer, the spec, the questions, a failure ----------
+  function stripEl(id, where) { return document.querySelector((where || "#col") + ' [data-goal="' + id + '"]'); }
+  function srcOf(t) {                                             // a task's card while the Board is shown, else its goal's strip in the column (always there)
+    var c = st.tab === "board" ? document.querySelector('#v-board [data-task="' + t.id + '"]') : null;
+    return c || stripEl(t.goal);
+  }
   function tick() {
     if (!st.next.length) return;
     if (st.share < 1) { st.share = Math.min(1, st.share + 1 / 8); drawNext(); }
-    if (st.share >= 1 && !st.work.length) toWork();
+    if (st.share >= 1 && !st.spec) toSpec();
   }
-  function toWork() {
-    var from = rel($("p-next")), g = st.next.shift(); st.share = 0; st.work = [g]; closeLift(); draw();
-    hideUntil($("p-work").querySelector(".cd"), fly(back(g), from, rel($("p-work")), { arc: 30 }));
+  function toSpec() {
+    var id = st.next[0]; if (!id) return;
+    var from = rel(stripEl(id, "#c-next"));
+    st.next.shift(); st.spec = id; st.share = 0; closeLift(); draw();
+    hideUntil($("c-spec").firstElementChild, fly(back(G[id]), from, rel($("c-spec").firstElementChild), { arc: 20, ms: 520 }));
   }
   function specDone() {
-    var w = st.work[0]; if (!w) return;
-    var from = rel($("p-work")), party = w.party === "product" ? "tech" : w.party;
-    st.work = []; st.orkAsks = false;
-    st.hand = st.hand.filter(function (h) { return h.goal !== w.id; });
-    var lane = st.lanes[party]; if (lane.length >= 2) { st.done.unshift(lane.shift()); }
-    var g = Object.assign({}, w, { stage: "Build · now", state: "work" }); lane.push(g); closeLift(); draw();
-    var dest = $("l-" + party).querySelector('[data-goal="' + g.id + '"]');
-    hideUntil(dest, fly(face(g), from, rel(dest), { ms: 700 }));
-    if (st.next.length && st.share >= 1) setTimeout(toWork, reduced() ? 0 : 750);
+    var id = st.spec; if (!id) return;
+    var from = rel($("c-spec").firstElementChild), g = G[id];
+    st.spec = ""; st.orkAsks = false;
+    st.hand = st.hand.filter(function (h) { return !(h.kind === "q" && h.by === "ork"); });
+    st.work.unshift(id);
+    var deal = (DEAL[id] || g.parties.map(function (p) { return [p, (p === "tech" ? "Build: " : "Draw: ") + g.short, g.sign]; })).map(function (d) {
+      return { id: "k" + nextId++, goal: id, party: d[0], name: d[1], sign: d[2], stage: "Plan · now", state: "work" }; });
+    st.tasks = st.tasks.concat(deal);
+    ["tech", "design"].forEach(function (p) {                     // a lane holds four: its oldest task at work is done, and a goal with no task left goes to the discard
+      while (st.tasks.filter(function (t) { return t.party === p; }).length > 4) {
+        var old = st.tasks.filter(function (t) { return t.party === p && t.state === "work" && t.goal !== id; })[0]; if (!old) break;
+        st.tasks = st.tasks.filter(function (t) { return t !== old; });
+        if (!st.tasks.some(function (t) { return t.goal === old.goal; })) { st.work = st.work.filter(function (x) { return x !== old.goal; }); st.done.unshift(old.goal); }
+      }
+    });
+    closeLift(); draw();
+    var landed = stripEl(id, "#c-work"); if (landed) hideUntil(landed, fly(back(g), from, rel(landed), { arc: 10, ms: 420 }));
+    deal.forEach(function (t, i) {                                // its tasks are dealt to its leaders' lanes; on another tab, to the leader's tab
+      var dest = st.tab === "board" ? document.querySelector('#v-board [data-task="' + t.id + '"]') : $("tab-" + t.party);
+      var to = rel(dest); if (dest.matches(".tab")) to = { x: to.x + 8, y: to.y + 6, w: 30, h: 42 };
+      var p = fly(tcard(t), from, to, { delay: 200 + i * 180, arc: 60 });
+      if (!dest.matches(".tab")) hideUntil(dest, p);
+    });
+    if (st.next.length && st.share >= 1) setTimeout(toSpec, reduced() ? 0 : 900);
   }
-  function ask(goalId, by, qs) {
-    var g = goalById(goalId); if (!g) return;
-    if (by === "ork") st.orkAsks = true; else g.state = "asks";
-    var cards = qs.map(function (q) { return { kind: "q", id: "q" + nextId++, goal: goalId, by: by, q: q[0], answers: q[1] }; });
+  function ask(t, by, qs) {
+    var src = by === "ork" ? $("c-spec").firstElementChild : srcOf(t), from = rel(src);
+    if (by === "ork") st.orkAsks = true; else t.state = "asks";
+    var cards = qs.map(function (q) { return { kind: "q", id: "q" + nextId++, goal: by === "ork" ? st.spec : t.goal, task: t && t.id, by: by, q: q[0], answers: q[1] }; });
     st.hand = st.hand.concat(cards); draw();
-    var from = rel(by === "ork" ? $("p-work") : document.querySelector('.goals [data-goal="' + goalId + '"]'));
     cards.forEach(function (c, i) { var dest = document.querySelector('[data-q="' + c.id + '"]'); hideUntil(dest, fly(qcard(c), from, rel(dest), { delay: i * 160, arc: 90 })); });
   }
   function answer(qid) {
     var q = st.hand.filter(function (h) { return h.id === qid; })[0]; if (!q) return;
     var from = rel(document.querySelector('[data-q="' + qid + '"]'));
     st.hand = st.hand.filter(function (h) { return h.id !== qid; });
-    var left = st.hand.some(function (h) { return h.kind === "q" && h.goal === q.goal; }), g = goalById(q.goal);
+    var left = st.hand.some(function (h) { return h.kind === "q" && (q.by === "ork" ? h.by === "ork" : h.task === q.task); });
     closeLift(); draw();
-    var to = q.by === "ork" ? $("p-work") : document.querySelector('.goals [data-goal="' + q.goal + '"]');
-    var mini = { x: 0, y: 0, w: 0, h: 0 }, r = to ? rel(to) : null;
-    if (r) { mini = { x: r.x + r.w * 0.3, y: r.y + r.h * 0.3, w: r.w * 0.4, h: r.h * 0.4 }; }
-    fly(qcard(q), from, mini, { arc: 70, ms: 520 }).then(function () {
-      if (!left) { if (q.by === "ork") st.orkAsks = false; else if (g) g.state = "work"; draw(); }
+    var t = q.task ? taskById(q.task) : null, to = q.by === "ork" ? $("c-spec").firstElementChild : t ? srcOf(t) : null, r = to ? rel(to) : null;
+    fly(qcard(q), from, r ? { x: r.x + r.w * 0.3, y: r.y + r.h * 0.3, w: r.w * 0.4, h: r.h * 0.4 } : null, { arc: 70, ms: 520 }).then(function () {
+      if (left) return;
+      if (q.by === "ork") st.orkAsks = false; else if (t) t.state = "work";
+      draw();
     });
   }
-  function fail() {
-    var g = st.lanes.design.filter(function (x) { return x.state === "work"; })[0]; if (!g) return;
-    g.state = "failed"; draw();
-    setTimeout(function () {
-      var from = rel(document.querySelector('.goals [data-goal="' + g.id + '"]')), id = "f" + nextId++;
-      st.lanes.design = st.lanes.design.map(function (x) { return x.id === g.id ? { id: g.id, state: "place", g: g } : x; });
-      st.hand.push({ kind: "fail", id: id, goal: g.id, g: Object.assign({}, g), why: "Its checks went red twice: the results list is empty when a player leaves mid-round." });
-      draw();
-      var dest = document.querySelector('[data-fail="' + id + '"]');
-      hideUntil(dest, fly(face(Object.assign({}, g, { state: "failed" })), from, rel(dest), { arc: 80, spin: -8, ms: 700 }));
-    }, reduced() ? 0 : 650);
-  }
-  function retry(fid) {
-    var h = st.hand.filter(function (x) { return x.id === fid; })[0]; if (!h) return;
-    var from = rel(document.querySelector('[data-fail="' + fid + '"]'));
-    st.hand = st.hand.filter(function (x) { return x.id !== fid; });
-    var g = Object.assign({}, h.g, { state: "work", stage: "Build · again" });
-    ["tech", "design"].forEach(function (p) { st.lanes[p] = st.lanes[p].map(function (x) { return x.id === g.id ? g : x; }); });
-    closeLift(); draw();
-    var dest = document.querySelector('.goals [data-goal="' + g.id + '"]');
-    hideUntil(dest, fly(face(g), from, rel(dest), { arc: 60 }));
-  }
-  function drop(fid) {
-    var h = st.hand.filter(function (x) { return x.id === fid; })[0]; if (!h) return;
-    st.hand = st.hand.filter(function (x) { return x.id !== fid; });
-    ["tech", "design"].forEach(function (p) { st.lanes[p] = st.lanes[p].filter(function (x) { return x.id !== h.goal; }); });
-    closeLift(); draw();
-  }
   function askAcross() {
-    var g = st.lanes.design.filter(function (x) { return x.state === "work"; })[0]; if (!g) return;
-    g.state = "asked"; g.asked = "tech";                                         // it waits for Tech, not for you: still, not yellow
-    var q = { id: "p" + nextId++, by: "design", to: "tech", goal: g.id, left: 8, q: "Which event tells the results screen that a player left mid-round?", answer: "player_left, sent by the server when a socket closes" };
-    var from = rel(document.querySelector('.goals [data-goal="' + g.id + '"]'));
+    var t = st.tasks.filter(function (x) { return x.party === "design" && x.state === "work"; })[0]; if (!t) return;
+    var from = rel(srcOf(t));
+    t.state = "asked"; t.asked = "tech";                            // it waits for Tech, not for you: still, not yellow
+    var q = { id: "p" + nextId++, by: "design", to: "tech", goal: t.goal, task: t.id, left: 8, q: "Which event tells the results screen that a player left mid-round?", answer: "player_left, sent by the server when a socket closes" };
     st.pass.push(q); draw();
     var dest = document.querySelector('[data-pass="' + q.id + '"]');
     hideUntil(dest, fly(pcard(q, { div: 1 }), from, rel(dest), { arc: 70 }));
@@ -638,22 +836,21 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
   }
   function passOn(id) {
     var q = st.pass.filter(function (x) { return x.id === id; })[0]; if (!q) return;
-    var el = document.querySelector('[data-pass="' + id + '"]'), from = el ? rel(el) : null, lab = $("lab-" + q.to), to = rel(lab);
+    var el = document.querySelector('[data-pass="' + id + '"]'), from = el ? rel(el) : null, tab = $("tab-" + q.to), to = rel(tab);
     q.left = 0; st.pass = st.pass.filter(function (x) { return x.id !== id; });
     if (lifted === id) closeLift();
     drawPass();
-    fly(pcard(q, { div: 1 }), from, { x: to.x, y: to.y, w: from ? from.w * 0.25 : 0, h: from ? from.h * 0.25 : 0 }, { arc: 50, ms: 560 }).then(function () {
-      lab.classList.add("answers");
+    fly(pcard(q, { div: 1 }), from, { x: to.x + 8, y: to.y + 4, w: from ? from.w * 0.25 : 0, h: from ? from.h * 0.25 : 0 }, { arc: 50, ms: 560 }).then(function () {
+      tab.classList.add("answers");
       return new Promise(function (r) { setTimeout(r, reduced() ? 0 : 1400); });
     }).then(function () {
-      lab.classList.remove("answers");
-      var g = goalById(q.goal), dest = document.querySelector('.goals [data-goal="' + q.goal + '"]');
-      if (!g || !dest) return;
-      var d = rel(dest), a = rel(lab);
-      return fly(acard(q), { x: a.x, y: a.y, w: 200, h: 64 }, { x: d.x + 10, y: d.y + 50, w: 100, h: 32 }, { arc: 40, ms: 560 }).then(function () {
-        if (st.hand.some(function (h) { return h.kind === "q" && h.goal === g.id; }) || st.pass.some(function (x) { return x.goal === g.id; })) return;
-        var was = g.stage; g.state = "work"; g.stage = PARTIES[q.to].short + " answered"; draw();
-        setTimeout(function () { if (g.stage.indexOf("Answered") === 0) { g.stage = was; draw(); } }, 3000);
+      tab.classList.remove("answers");
+      var t = taskById(q.task); if (!t) return;
+      var d = rel(srcOf(t)), a = rel(tab);
+      return fly(acard(q), { x: a.x, y: a.y, w: 200, h: 64 }, { x: d.x + 4, y: d.y + d.h / 3, w: Math.min(100, d.w), h: 32 }, { arc: 40, ms: 560 }).then(function () {
+        if (st.hand.some(function (h) { return h.task === t.id; }) || st.pass.some(function (x) { return x.task === t.id; })) return;
+        var was = t.stage; t.state = "work"; t.stage = PARTIES[q.to].short + " answered"; draw();
+        setTimeout(function () { if (t.stage.indexOf("answered") > 0) { t.stage = was; draw(); } }, 3000);
       });
     });
   }
@@ -661,22 +858,48 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
     var q = st.pass.filter(function (x) { return x.id === id; })[0]; if (!q) return;
     var from = rel(document.querySelector('[data-pass="' + id + '"]'));
     st.pass = st.pass.filter(function (x) { return x.id !== id; });
-    var c = { kind: "q", id: "q" + nextId++, goal: q.goal, by: q.by, q: q.q, answers: [q.answer, "Other…"] };
-    var gg = goalById(q.goal); if (gg) gg.state = "asks";                          // taken by the person: now it waits for you
+    var t = taskById(q.task); if (t) t.state = "asks";                    // taken by the person: now it waits for you
+    var c = { kind: "q", id: "q" + nextId++, goal: q.goal, task: q.task, by: q.by, q: q.q, answers: [q.answer, "Other…"] };
     st.hand.push(c); closeLift(); draw();
     var dest = document.querySelector('[data-q="' + c.id + '"]');
     hideUntil(dest, fly(qcard(c), from, rel(dest), { arc: 60 }));
   }
-  function toNight() { var g = st.next.shift(); if (!g) return; var from = rel($("p-next")); st.share = 0; st.night.unshift(g); closeLift(); draw(); hideUntil($("p-night").querySelector(".cd"), fly(back(g), from, rel($("p-night")), { arc: 40 })); }
-  function startNow() { st.share = 1; closeLift(); if (!st.work.length) toWork(); else draw(); }
+  function fail() {
+    var t = st.tasks.filter(function (x) { return x.party === "design" && x.state === "work"; })[0]; if (!t) return;
+    t.state = "failed"; draw();
+    setTimeout(function () {
+      var from = rel(srcOf(t)), id = "f" + nextId++;
+      st.hand.push({ kind: "fail", id: id, t: Object.assign({}, t), why: "Its checks went red twice: the results list is empty when a player leaves mid-round." });
+      t.state = "place"; draw();
+      var dest = document.querySelector('[data-fail="' + id + '"]');
+      hideUntil(dest, fly(tcard(Object.assign({}, t, { state: "failed" }), { hand: id }), from, rel(dest), { arc: 80, spin: -8, ms: 700 }));
+    }, reduced() ? 0 : 650);
+  }
+  function retry(fid) {
+    var h = st.hand.filter(function (x) { return x.id === fid; })[0]; if (!h) return;
+    var from = rel(document.querySelector('[data-fail="' + fid + '"]')), t = taskById(h.t.id);
+    st.hand = st.hand.filter(function (x) { return x.id !== fid; });
+    if (t) { t.state = "work"; t.stage = "Build · again"; }
+    closeLift(); draw();
+    if (t) { var dest = srcOf(t); if (dest.matches(".cd")) hideUntil(dest, fly(tcard(t), from, rel(dest), { arc: 60 })); else fly(tcard(t), from, rel(dest), { arc: 60 }); }
+  }
+  function drop(fid) {
+    var h = st.hand.filter(function (x) { return x.id === fid; })[0]; if (!h) return;
+    st.hand = st.hand.filter(function (x) { return x.id !== fid; });
+    st.tasks = st.tasks.filter(function (x) { return x.id !== h.t.id; });
+    if (!st.tasks.some(function (x) { return x.goal === h.t.goal; })) st.work = st.work.filter(function (x) { return x !== h.t.goal; });
+    closeLift(); draw();
+  }
+  function toNight(id) { var el = stripEl(id, "#c-next"); if (!el) return; var from = rel(el); if (st.next[0] === id) st.share = 0; st.next = st.next.filter(function (x) { return x !== id; }); st.night.unshift(id); closeLift(); draw(); var d = stripEl(id, "#c-night"); hideUntil(d, fly(strip(id), from, rel(d), { arc: 20, ms: 420 })); }
+  function startNow(id) { st.next = [id].concat(st.next.filter(function (x) { return x !== id; })); st.share = 1; closeLift(); if (!st.spec) toSpec(); else draw(); }
 
   var acts = {
     spec: specDone,
-    "ork-asks": function () { if (!st.work.length || st.orkAsks) return; ask(st.work[0].id, "ork", [["Is the crown for the first answer of the round, or of each question?", ["Of each question", "Of the round"]]]); },
-    asks: function () { var g = st.lanes.tech.filter(function (x) { return x.state === "work"; })[0]; if (!g) return;
-      ask(g.id, "tech", [["Who counts as first when two answers arrive within 50 ms?", ["The server's clock decides", "Both are first"]], ["Keep the crown when a player reconnects?", ["Keep it", "Lose it"]]]); },
-    fail: fail,
+    "ork-asks": function () { if (!st.spec || st.orkAsks) return; ask(null, "ork", [["Is the crown for the first answer of the round, or of each question?", ["Of each question", "Of the round"]]]); },
+    asks: function () { var t = st.tasks.filter(function (x) { return x.party === "tech" && x.state === "work"; })[0]; if (!t) return;
+      ask(t, "tech", [["Who counts as first when two answers arrive within 50 ms?", ["The server's clock decides", "Both are first"]], ["Keep the crown when a player reconnects?", ["Keep it", "Lose it"]]]); },
     across: askAcross,
+    fail: fail,
     reset: function () { closeLift(); if (F) { F.el.remove(); F = null; } st = S0(); $("plus-slot").innerHTML = ""; draw(); }
   };
   document.querySelectorAll("[data-do]").forEach(function (b) { b.addEventListener("click", function () { acts[b.dataset.do](); }); });
@@ -686,51 +909,53 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
     var t = e.target;
     if (F) { if (e.composedPath().indexOf(F.el) < 0 && document.contains(t)) closeField(); return; }      // a press away turns it back; a press inside it (even one that redrew it) does not
     if (t.closest("#plus")) { openField(); return; }
-    var lift0 = t.closest(".lift"); if (lift0) {
+    var tb = t.closest("[data-tab]"); if (tb) { st.tab = tb.dataset.tab; closeLift(); draw(); return; }
+    if (t.closest("[data-unpick]")) { pick(""); return; }
+    var lf = t.closest(".lift");
+    if (lf) {
       var b = t.closest("button"); if (!b) return;
       if (b.dataset.ans) answer(b.dataset.ans);
       if (b.dataset.retry) retry(b.dataset.retry);
       if (b.dataset.drop) drop(b.dataset.drop);
-      if (b.dataset.now) startNow();
-      if (b.dataset.night) toNight();
-      if (b.dataset.close) closeLift();
+      if (b.dataset.now) startNow(b.dataset.now);
+      if (b.dataset.night) toNight(b.dataset.night);
       if (b.dataset.take) takeIt(b.dataset.take);
       if (b.dataset.passnow) passOn(b.dataset.passnow);
+      if (b.dataset.close) closeLift();
       return;
     }
+    var q = t.closest("[data-q]");
+    if (q) { var Q = st.hand.filter(function (h) { return h.id === q.dataset.q; })[0], QG = G[Q.goal];
+      if (lifted === Q.id) return closeLift();
+      lift(q, '<div class="t">' + HEAD(PARTIES[Q.by].race) + (Q.by === "ork" ? "The Orkmaster" : PARTIES[Q.by].short) + " asks</div><p>" + esc(Q.q) + '</p><p class="cap">For ' + E(QG.el) + " " + esc(QG.short) + '. The answer goes back to it.</p><div class="acts">'
+        + Q.answers.map(function (a) { return '<button type="button" class="ork-btn" data-ans="' + Q.id + '">' + esc(a) + "</button>"; }).join("") + "</div>");
+      lifted = Q.id; return; }
+    var f = t.closest("[data-fail]");
+    if (f) { var H = st.hand.filter(function (h) { return h.id === f.dataset.fail; })[0];
+      if (lifted === H.id) return closeLift();
+      lift(f, '<div class="t">' + S("alert") + " Failed: " + esc(H.t.name) + '</div><p class="why">' + esc(H.why) + '</p><div class="acts"><button type="button" class="ork-btn primary" data-retry="' + H.id + '">Try again</button><button type="button" class="ork-btn" data-close="1">Change the goal</button><button type="button" class="ork-btn" data-drop="' + H.id + '">Drop it</button></div>');
+      lifted = H.id; return; }
     var pq = t.closest("[data-pass]");
     if (pq) { var P = st.pass.filter(function (x) { return x.id === pq.dataset.pass; })[0]; if (!P) return;
       if (lifted === P.id) return closeLift();
-      lift(pq, '<div class="t">' + HEAD(PARTIES[P.by].race) + esc(PARTIES[P.by].short) + " asks " + esc(PARTIES[P.to].short) + "</div><p>" + esc(P.q) + '</p><p style="font:var(--ork-type-caption);color:var(--ork-ink-muted)">' + esc(PARTIES[P.to].short) + " can answer it from the code, so the Orkmaster passes it on in a few seconds. Nothing waits for you.</p>"
+      lift(pq, '<div class="t">' + HEAD(PARTIES[P.by].race) + esc(PARTIES[P.by].short) + " asks " + esc(PARTIES[P.to].short) + "</div><p>" + esc(P.q) + '</p><p class="cap">' + esc(PARTIES[P.to].short) + " can answer it from the code, so the Orkmaster passes it on in a few seconds. Nothing waits for you.</p>"
         + '<div class="acts"><button type="button" class="ork-btn" data-take="' + P.id + '">Answer it myself</button><button type="button" class="ork-btn" data-passnow="' + P.id + '">Pass it now</button></div>');
       lifted = P.id; return; }
-    var q = t.closest("[data-q]");
-    if (q) { var Q = st.hand.filter(function (h) { return h.id === q.dataset.q; })[0], G = goalById(Q.goal);
-      if (lifted === q.dataset.q) return closeLift();
-      lift(q, '<div class="t">' + HEAD(PARTIES[Q.by].race) + (Q.by === "ork" ? "The Orkmaster" : PARTIES[Q.by].short) + ' asks</div><p>' + esc(Q.q) + '</p><p class="muted" style="font:var(--ork-type-caption);color:var(--ork-ink-muted)">For ' + E(G.el) + " " + esc(G.short) + '. The answer goes back to it.</p><div class="acts">'
-        + Q.answers.map(function (a) { return '<button type="button" class="ork-btn" data-ans="' + Q.id + '">' + esc(a) + "</button>"; }).join("") + "</div>");
-      lifted = q.dataset.q; return; }
-    var f = t.closest("[data-fail]");
-    if (f) { var H = st.hand.filter(function (h) { return h.id === f.dataset.fail; })[0];
-      if (lifted === f.dataset.fail) return closeLift();
-      lift(f, '<div class="t">' + S("alert") + " Failed: " + esc(H.g.short) + '</div><p class="why">' + esc(H.why) + '</p><div class="acts"><button type="button" class="ork-btn primary" data-retry="' + H.id + '">Try again</button><button type="button" class="ork-btn" data-close="1">Change the goal</button><button type="button" class="ork-btn" data-drop="' + H.id + '">Drop it</button></div>');
-      lifted = f.dataset.fail; return; }
-    var p = t.closest("[data-pile]");
-    if (p) {
-      if (lifted === p.dataset.pile) return closeLift();
-      if (p.dataset.pile === "next" && st.next[0]) { var n = st.next[0];
-        lift(p, '<div class="t">' + E(n.el) + " " + esc(n.short) + "</div><p>" + esc(n.name) + '</p><ul><li>One timer from the server, the same on every phone</li><li>It turns red in the last 5 seconds</li><li>Done when two phones show the same second</li></ul><div class="acts"><button type="button" class="ork-btn primary" data-now="1">Start now</button><button type="button" class="ork-btn" data-night="1">Tonight</button><button type="button" class="ork-btn quiet" data-close="1">Close</button></div>'); }
-      if (p.dataset.pile === "work" && st.work[0]) { var w = st.work[0];
-        lift(p, '<div class="t">' + E(w.el) + " " + esc(w.short) + "</div><p>" + esc(w.name) + '</p><p style="font:var(--ork-type-caption);color:var(--ork-ink-muted)">' + (st.orkAsks ? "The Orkmaster waits for your answer: it is in your hand." : "The Orkmaster is writing its spec for " + PARTIES[w.party].short + ".") + '</p><div class="acts"><button type="button" class="ork-btn quiet" data-close="1">Close</button></div>'); }
-      if (p.dataset.pile === "night") lift(p, '<div class="t">' + S("moon") + ' Tonight, from 01:00</div><ul>' + st.night.map(function (g) { return "<li>" + esc(g.name) + "</li>"; }).join("") + '</ul><div class="acts"><button type="button" class="ork-btn quiet" data-close="1">Close</button></div>');
-      lifted = p.dataset.pile;
-    }
+    var nx = t.closest("#c-next [data-goal]");
+    if (nx) { var id = nx.dataset.goal, N = G[id];
+      if (lifted === id) { pick(""); return; }
+      pick(id, true);
+      lift(stripEl(id, "#c-next"), '<div class="t">' + E(N.el) + " " + esc(N.short) + "</div><p>" + esc(N.name) + '</p><p class="cap">Its spec is written when it starts. The tabs show what each leader would do.</p><div class="acts"><button type="button" class="ork-btn primary" data-now="' + id + '">Start now</button><button type="button" class="ork-btn" data-night="' + id + '">Tonight</button></div>');
+      lifted = id; return; }
+    var gl = t.closest("[data-goal]");
+    if (gl && !gl.closest(".hnd")) { pick(gl.dataset.goal); return; }
   });
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Escape") return;
     if (F && F.open) { toggle(F.open); return; }
     if (F) { closeField(); return; }
-    closeLift();
+    if (lifted) { closeLift(); return; }
+    if (st.picked) pick("");
   });
 
   // ---------- 2 · the seal ----------
@@ -759,7 +984,7 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
     + '<figure>' + back(gl, { stopped: true, cls: "is-asks thick" }).replace('class="ork-card mk-r cd back', 'style="--mk-line:var(--ork-alert)" class="ork-card mk-r cd back') + '<span class="under asks">Asks: yellow, still.<br>“Waits for your answer”</span></figure>'
     + '<figure>' + face({ id: "x", el: "void", name: "The results screen after a round", sign: "screen", state: "failed" }) + '<span class="under" style="color:var(--ork-danger)">Failed: red, in your hand</span></figure>';
 
-  fit(); draw(); round(document.body);
+  buildLenses(); fit(); draw(); round(document.body);
   setInterval(tick, 1500);
   setInterval(passTick, 1000);
 })();
