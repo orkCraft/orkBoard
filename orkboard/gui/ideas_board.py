@@ -14,10 +14,24 @@ from typing import Any
 from orkboard import settings
 from orkboard.core import idea_keeper
 from orkboard.gui.ideas_args import IdeasError, _device, _opt, _text, _via
-from orkboard.realm import board_map, board_rows, collide, event_log, idea_photos, idea_questions, idea_risk, idea_secrets, idea_target, ideas
+from orkboard.realm import (board_map, board_rows, collide, event_log, idea_photos, idea_questions, idea_risk, idea_secrets, idea_target, ideas,
+                            night_order)
 from orkboard.realm.idea_git import BoardTree
 
 NEEDS_IDEA = ("asks", "plan", "failed", "proposed")
+
+# The Board's *Work at night* (docs/specs/121-the-day-the-morning-and-the-night.md §1, §4): its words, as a face shows them.
+WORK_AT_NIGHT = {"label": "Work at night",
+                 "hint": "What you decide by day is built in the night's window ({night}). Talk, hearings and sketches still run by day. "
+                         "A bug's short way, and anything you start with a press, starts at once.",
+                 "error": "Work at night is on or off",
+                 "waits": "Waits for the night ({start})", "now": "Build it now", "now_sketch": "Pick and build now"}
+
+
+def night_words(night: str) -> dict:
+    """The setting's words with the night's window said (`01:00-07:00`), and the held plan's line with its start (`01:00`)."""
+    return {**WORK_AT_NIGHT, "hint": WORK_AT_NIGHT["hint"].format(night=night.replace("-", "–")),
+            "waits": WORK_AT_NIGHT["waits"].format(start=night.split("-")[0])}
 
 
 class BoardMixin:
@@ -92,7 +106,8 @@ class BoardMixin:
         return {"target": s.get("target", settings.IDEAS["target"]), "autostart": bool(s.get("autostart", True)),
                 "night": s.get("night", settings.IDEAS["night"]), "review": bool(s.get("review", settings.IDEAS["review"])),
                 "review_notice": bool(getattr(getattr(self.host, "machine", None), "review_notice", False)),
-                "night_low": s.get("night_low") if isinstance(s.get("night_low"), bool) else None}      # None: not asked yet (spec 83)
+                "night_low": s.get("night_low") if isinstance(s.get("night_low"), bool) else None,      # None: not asked yet (spec 83)
+                "work_at_night": s.get("work_at_night") is True}                                         # spec 121 §4.1
 
     def night_allow(self, args: dict) -> dict:
         """`{"allow": bool}`: the answer of the phone's and Orkline's *Low work may run at night*, stored as `night_low` and read by
@@ -108,7 +123,7 @@ class BoardMixin:
         if args.get("review_notice") is False and getattr(getattr(self.host, "machine", None), "review_notice", False):      # said once (spec 84 §1)
             self.host.machine.review_notice = False
             settings.save(self.host.machine)
-        for key in ("target", "autostart", "night", "review"):
+        for key in ("target", "autostart", "night", "review", "work_at_night"):
             if key not in args:
                 continue
             got = settings.clean_ideas({key: args[key]})[key]
@@ -116,11 +131,14 @@ class BoardMixin:
                 raise IdeasError({"target": "The Target is thrift, balance or quality",
                                   "autostart": "Start plans by themselves is on or off",
                                   "night": "The night is HH:MM-HH:MM",
-                                  "review": "Looking at each result is on or off"}[key])
+                                  "review": "Looking at each result is on or off",
+                                  "work_at_night": WORK_AT_NIGHT["error"]}[key])
             mine[key] = got
         self.save_settings(mine)
         out = self.board_settings()
         self._ev(event_log.BOARD_SET, args, **out)
+        if "work_at_night" in args:
+            self.night_tick()                  # turned off: what was held goes at once, as every plan did before
         self.changed("")
         return out
 
@@ -175,13 +193,18 @@ class BoardMixin:
         page = ideas.idea_page(root, slug)
         if page is None:
             return (len(ideas.PRIORITIES), 0, 0)
+        plan = ideas.plan(self.state_dir, slug) or {}
+        if plan.get("ahead"):
+            return (night_order.AHEAD, 0, 0)          # *Build it now* on a plan held for the night: ahead of the night's queue (spec 121 §4.5)
         place = {t["slug"]: n for n, t in enumerate(ideas.tracks(root, make=False))}
         prio = page.get("priority") if page.get("priority") in ideas.PRIORITIES else "normal"
+        if plan.get("night_priority") in night_order.PRIORITIES:
+            prio = plan["night_priority"]             # a plan the night held starts in Product's order (spec 121 §4.3)
         return (ideas.PRIORITIES.index(prio), place.get(page.get("track") or ideas.GENERAL, len(place)), ideas._int(page.get("order")))
 
     def autostart(self, slug: str) -> str:
         """A plan made, or its idea's priority or risk changed: the board decides (code, no model) whether it starts
-        or waits for the person. What it did ("" nothing to decide)."""
+        or waits for the person. What it did ("" nothing to decide; "night": held for the night's window, spec 121 §4.2)."""
         if not bool(self.settings_now().get("autostart", True)):
             return "wait"
         plan, page = ideas.plan(self.state_dir, slug), ideas.idea_page(self.root(), slug)
@@ -189,14 +212,85 @@ class BoardMixin:
                 or ideas.state(self.state_dir, slug)["state"] != "plan":
             return ""
         if ideas.items(page.section("Open questions")) or collide.holds(self.root(), self.state_dir, slug):
+            self._release_night(slug)
             return "wait"                      # …or it waits for another party's goal until that goal's flag (spec 71 §4)
-        what = idea_risk.decide(page.get("risk"), page.get("priority"))
+        now = self._build_now_of(slug)          # *Pick and build now* on the goal's sketch: the day's case, a press (spec 121 §4.5)
+        hold = now is None and self._holds_for_night(slug)
+        what = idea_risk.decide(page.get("risk"), page.get("priority"), held_for_night=hold)
+        if what == "night" and hold:
+            self._hold_for_night(slug, plan)
+            return "night"
+        self._release_night(slug)               # decided anew: a hold that no longer holds is lifted
         if what != "wait":
             try:
                 self.pass_plan(slug, "auto")
             except IdeasError:
                 return "wait"
+            if plan.get("held_for_night") and self.settings_now().get("work_at_night") is True:
+                self._ev(event_log.NIGHT_STARTED, idea=slug)
+            if now is not None:
+                self._ev(event_log.BUILT_NOW, idea=slug, device=now.get("device") or "desktop", **{"from": "sketch"})
         return what
+
+    # -- Work at night (docs/specs/121-the-day-the-morning-and-the-night.md §4) --------------------------------
+
+    def _night_open(self) -> bool:
+        return idea_target.in_night(str(self.settings_now().get("night") or settings.IDEAS["night"]))
+
+    def _holds_for_night(self, slug: str) -> bool:
+        """*Work at night* is on, the night's window is not open, and the goal is not a bug's short way (which starts at once, as a press does)."""
+        if self.settings_now().get("work_at_night") is not True or self._night_open():
+            return False
+        how = ideas.state(self.state_dir, slug).get("route_how")
+        return not (isinstance(how, dict) and how.get("kind") == "bug" and how.get("short"))
+
+    def _hold_for_night(self, slug: str, plan: dict) -> None:
+        """The plan waits for the night's window: it says so (`start_at: "night"`, which the Board's faces read as *starts tonight*) and keeps Product's
+        priority, the night's order (§4.3). `night_held` once for each hold."""
+        priority = night_order.priority_of(idea_questions.record(self.state_dir, slug))
+        if not plan.get("held_for_night"):
+            self._ev(event_log.NIGHT_HELD, idea=slug)
+        if not (plan.get("held_for_night") and plan.get("night_priority") == priority):
+            ideas.edit_plan(self.state_dir, slug, lambda p: p.update(held_for_night=True, start_at="night", night_priority=priority))
+            self._publish(slug)
+
+    def _release_night(self, slug: str) -> None:
+        plan = ideas.plan(self.state_dir, slug)
+        if plan and plan.get("held_for_night") and not plan.get("passed_at"):
+            def lift(p: dict) -> None:
+                p.pop("held_for_night", None)
+                p["start_at"] = None
+            ideas.edit_plan(self.state_dir, slug, lift)
+
+    def _build_now_of(self, slug: str) -> dict | None:
+        """The person's *Pick and build now* kept with the goal (`{device}`), until its plan is passed; None without."""
+        got = (ideas._json(ideas.state_folder(self.state_dir, slug) / "state.json") or {}).get("build_now")
+        return got if isinstance(got, dict) else None
+
+    def keep_build_now(self, slug: str, args: dict) -> bool:
+        """`ideas.pick` with `now: true`: kept with the pick's answer, so the goal's plan is passed at once when it is made (`autostart`), unless
+        `AUTOSTART` says wait for the person. Nothing is kept for a goal whose plan is passed already (a task's pick in the work). Whether it was."""
+        plan = ideas.plan(self.state_dir, slug)
+        if plan is not None and plan.get("passed_at"):
+            return False
+        ideas.save_state(self.state_dir, slug, build_now={"device": _device(args)})
+        return True
+
+    def drop_build_now(self, slug: str) -> None:
+        if self._build_now_of(slug) is not None:
+            ideas.save_state(self.state_dir, slug, build_now=None)
+
+    def night_tick(self) -> int:
+        """The night's window is open (or *Work at night* is off): the plans it held are decided anew, in Product's priority and then their
+        place in line (§4.3); the runner takes them in that order, as many at once as `max_parallel` lets it. How many were passed."""
+        held = []
+        for i in ideas.ideas(self.root(make=False)):
+            plan = ideas.plan(self.state_dir, i["slug"])
+            if plan and plan.get("held_for_night") and not plan.get("passed_at") and ideas.state(self.state_dir, i["slug"])["state"] == "plan":
+                held.append((night_order.key(plan.get("night_priority"), self.rank(i["slug"])[1:]), i["slug"]))
+        if not held or (self.settings_now().get("work_at_night") is True and not self._night_open()):
+            return 0
+        return sum(1 for _key, slug in sorted(held) if self.autostart(slug) not in ("", "wait", "night"))
 
     def _on_plan(self, slug: str) -> None:
         """From the keeper's thread: the plan's autostart (a refusal leaves it waiting for the person)."""
@@ -219,6 +313,7 @@ class BoardMixin:
                 p.update(passed_at=time.strftime("%Y-%m-%dT%H:%M:%S"), passed_by=by)
                 p["start_at"] = None
                 p.pop("start_at_by", None)
+                p.pop("held_for_night", None)
                 p.pop("stopped", None)
             ideas.edit_plan(self.state_dir, slug, passing)
             self._ev(event_log.PLAN_PASSED, args, idea=slug, tasks=len(plan.get("tasks") or []), seconds=self._since(plan.get("made_at")),
@@ -226,6 +321,7 @@ class BoardMixin:
                      **({"via": _via(args)} if args is not None else {}))
         elif by == "person" and plan.get("start_at"):
             ideas.edit_plan(self.state_dir, slug, lambda p: p.update(start_at=None))
+        self.drop_build_now(slug)
         ideas.save_state(self.state_dir, slug, state="working", error="", queue="")
         runner.start(slug)
         self._publish(slug)
@@ -248,16 +344,27 @@ class BoardMixin:
                 self.runner(need=True).start(i["slug"])
                 self._publish(i["slug"])
                 started += 1
-        return started
+        return started + self.night_tick()          # what *Work at night* held goes when the window opens (spec 121 §4.3)
 
     def start_now(self, args: dict) -> dict:
         """Start now: a plan of before the night went, which starts at night, starts now; and a task the person's reserve or the week's pace holds (the owner, 26
         October: *now I have this state and I don't know what to do next*) goes on: the press is the person's, and the reserve is only for
-        what starts by itself (realm/idea_target.py `gate`)."""
+        what starts by itself (realm/idea_target.py `gate`). A plan held by *Work at night* is **Build it now** (spec 121 §4.5): it is passed at once, as
+        the person's, and runs ahead of the night's queue."""
         slug = _text(args, "slug", 100)
         plan = ideas.plan(self.state_dir, slug)
         held = [t for t in (plan or {}).get("tasks") or [] if isinstance(t, dict) and t.get("state") == "held"
                 and str(t.get("note") or "").startswith(("reserve", "week"))]
+        if plan and plan.get("held_for_night") and not plan.get("passed_at"):
+            if ideas.state(self.state_dir, slug)["state"] != "plan":
+                raise IdeasError("Its plan is not ready")
+            self.runner(need=True)
+            ideas.edit_plan(self.state_dir, slug, lambda p: p.update(ahead=True))
+            self._ev(event_log.PLAN_STARTED_NOW, args, idea=slug, via=_via(args), held=0)
+            self.pass_plan(slug, "person", args=args)
+            self._ev(event_log.BUILT_NOW, args, idea=slug, **{"from": "card"})
+            self.changed(slug)
+            return {"ok": True}
         if not plan or (plan.get("start_at") != "night" and not held):
             raise IdeasError("This plan does not wait for the night or for your reserve")
         ideas.edit_plan(self.state_dir, slug, lambda p: p.update(start_at=None, passed_by="person"))

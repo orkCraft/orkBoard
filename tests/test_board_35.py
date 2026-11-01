@@ -277,7 +277,8 @@ def test_queue_read_stop_and_board_set(host, model, runner):
     assert [(e["queue"], e["via"]) for e in _events(host, "idea_queued")] == [("hold", "idea"), ("now", "map")]   # spec 41 §4
     assert ideas.state(host.ideas.state_dir, slug)["state"] != "raw"
     got = host.command("ideas.board_set", {"target": "quality", "night": "22:00-05:00", "device": "phone"})
-    assert got == {"target": "quality", "autostart": True, "night": "22:00-05:00", "review": False, "review_notice": False, "night_low": True}      # spec 84 §4: review is off by default
+    assert got == {"target": "quality", "autostart": True, "night": "22:00-05:00", "review": False, "review_notice": False, "night_low": True,
+                   "work_at_night": False}      # spec 121 §4.1: off by default; spec 84 §4: review is off by default
     board = host.command("ideas.board")
     assert (board["target"], board["autostart"], board["night"]) == ("quality", True, "22:00-05:00")
     with pytest.raises(CommandError, match="thrift, balance or quality"):

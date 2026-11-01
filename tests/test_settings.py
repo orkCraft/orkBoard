@@ -61,7 +61,8 @@ def test_the_board_is_in_focus_by_default_and_its_settings_are_cleaned():
                                               "merge_into": "dev", "push": False, "review": False, "review_v": 2,      # spec 84 §1: off by default
                                               # spec 35 §12: the Board's Target, autostart, night, reserves, own paths
                                               "target": "balance", "autostart": True, "night": "01:00-07:00",
-                                              "reserve_day": 0.3, "reserve_night": 0.1, "risk_paths": [], "night_low": None}
+                                              "reserve_day": 0.3, "reserve_night": 0.1, "risk_paths": [], "night_low": None,
+                                              "work_at_night": False}      # spec 121 §4.1: off until the person says
     back = settings.MachineSettings.from_dict({"focus": "", "ideas": {"batch_minutes": 0, "max_parallel": 2,
                                                                       "merge_into": "../x", "push": "yes"}})
     assert back.focus == "" and back.ideas["max_parallel"] == 2 and back.ideas["batch_minutes"] == 30
@@ -114,3 +115,20 @@ def test_a_projects_board_json_naming_review_is_moved_off_once(tmp_path: Path):
     (other / ".orkcraft").mkdir(parents=True)
     (other / ".orkcraft" / "board.json").write_text(json.dumps({"push": True}), encoding="utf-8")
     assert settings.board_of(other, {**settings.IDEAS, "review": True})["review"] is True      # no `review` named: the machine's stands
+
+
+def test_work_at_night_is_off_by_default_cleaned_to_a_boolean_and_the_projects_own(tmp_path: Path):
+    """Spec 121 §4.1: the Board's setting, `False` until the person says; a value that is no boolean is the default; the project's `board.json` keeps it."""
+    assert settings.IDEAS["work_at_night"] is False and settings.MachineSettings().ideas["work_at_night"] is False
+    assert settings.clean_ideas({"work_at_night": True})["work_at_night"] is True
+    for broken in ("yes", 1, None, [], {"on": True}):
+        assert settings.clean_ideas({"work_at_night": broken})["work_at_night"] is False, broken
+    assert settings.MachineSettings.from_dict({"ideas": {"work_at_night": True}}).ideas["work_at_night"] is True
+    assert "work_at_night" in settings.BOARD
+    assert settings.board_of(tmp_path, settings.MachineSettings().ideas)["work_at_night"] is False
+    settings.save_board(tmp_path, {"work_at_night": True})
+    assert json.loads((tmp_path / ".orkcraft" / "board.json").read_text(encoding="utf-8"))["work_at_night"] is True
+    assert settings.board_of(tmp_path, settings.MachineSettings().ideas)["work_at_night"] is True
+    other = tmp_path / "other"                                                              # a project that names none: the machine's stands
+    other.mkdir()
+    assert settings.board_of(other, {**settings.IDEAS, "work_at_night": True})["work_at_night"] is True

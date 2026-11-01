@@ -11,7 +11,9 @@ with `/` or `..`, a file the pick does not list, or a path of another pick: 404.
 The file is the pick's own (realm/idea_pick.py): from its folder only, with the media type its `pick.json` stored, **Range** requests
 (206, so a sound or a clip seeks), `Cache-Control: private, max-age=31536000, immutable` (a round's files never change),
 `X-Content-Type-Options: nosniff` and `Content-Security-Policy: sandbox; default-src 'none'` with `Content-Disposition: inline`: an SVG
-opened on its own runs nothing. The phone's service worker never caches `/media/` (pwa/sw.js).
+opened on its own runs nothing. A sketch's page (a variant stored as `text/html`, spec 121 §3) has its own policy instead, `PAGE_CSP`: its
+style and script are its own, it reaches no address; a second policy, `sandbox allow-scripts`, keeps its origin opaque even when its address
+is opened on its own. The phone's service worker never caches `/media/` (pwa/sw.js).
 
 An asset of the project (docs/specs/88-assets-and-play.md §1, §4) is `GET /media/_asset/<commit>/<path>?s=<signature>`, signed the
 same way (`asset_url()`, gui/ideas_assets.py): the file as it is in that commit (dev's head, or the commit before), written once from
@@ -42,6 +44,15 @@ _SECRET = secrets.token_bytes(32)                      # the host's, for its lif
 _GOAL, _PICK, _FILE = re.compile(r"[a-z0-9-]{1,100}"), re.compile(r"[a-z0-9_-]{1,60}-r[0-9]{1,6}"), re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]{0,99}")
 HEADERS = [("Cache-Control", "private, max-age=31536000, immutable"), ("X-Content-Type-Options", "nosniff"),
            ("Content-Security-Policy", "sandbox; default-src 'none'")]
+# A sketch's page (docs/specs/121-the-day-the-morning-and-the-night.md §3, a pick variant whose stored type is `text/html`): it runs its own style and
+# script, and nothing it holds reaches the network; the faces put it in an `iframe sandbox="allow-scripts"` (no `allow-same-origin`), so its origin is
+# opaque and no script of it reaches the Board's page, storage, token or socket.
+PAGE = "text/html"
+PAGE_CSP = ("default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; font-src data:; media-src data:; "
+            "base-uri 'none'; form-action 'none'; frame-ancestors 'self'")
+PAGE_HEADERS = [("Cache-Control", "private, max-age=31536000, immutable"), ("X-Content-Type-Options", "nosniff"),
+                ("Content-Security-Policy", "sandbox allow-scripts"),       # …and when the address is opened on its own, not in a frame: the same opaque origin
+                ("Content-Security-Policy", PAGE_CSP)]                      # the page's policy, last: a reader of one header sees it
 
 
 def sign(path: str) -> str:
@@ -207,7 +218,8 @@ def _reply(method: str, path: Path, mime: str, name: str, range_header: str) -> 
         return _missing()
     kind = mime + ("; charset=utf-8" if mime.startswith("text/") else "")
     shown = re.sub(r"[^A-Za-z0-9._-]", "_", name)[:100] or "file"
-    base = [("Content-Type", kind), ("Accept-Ranges", "bytes"), *HEADERS, ("Content-Disposition", f'inline; filename="{shown}"')]
+    own = PAGE_HEADERS if mime.split(";")[0].strip().lower() == PAGE else HEADERS
+    base = [("Content-Type", kind), ("Accept-Ranges", "bytes"), *own, ("Content-Disposition", f'inline; filename="{shown}"')]
     wanted = span(range_header, size)
     if wanted == "unsatisfiable":
         return Reply(416, [base[0], ("Content-Range", f"bytes */{size}"), ("Content-Length", "0"), ("Cache-Control", "no-store")])
