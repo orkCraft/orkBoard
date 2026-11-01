@@ -6,7 +6,8 @@
 // (`is-asleep`: no wobble, no lift, no glow), its word still *Play*, its `title` *Nothing to play yet* (and ': say how the project opens' after it for a screen reader). Pressed, it opens the play view as always, which says *Nothing here yet* and how, and throws nothing.
 // **The up face** (docs/specs/118-the-dies-up-face.md, decisions §196): the die says by its up face what pressing Play would show, from the snapshot's `play_face` (the computer's alone): the cross (`face-no`) while the last start of dev's head failed,
 // the spark (`face-new`) when dev's head is a commit the person has not tried in Play yet, else today's five; asleep it is the five, whatever the snapshot says. Its `title` and `aria-label` then say it (*Play: it did not start last time*, *Play: dev has changed since you last
-// played*), after *Close the preview* and *Nothing to play yet*. When the face changes after the die was first drawn with a snapshot (not on the first one), the cube rolls onto it: `is-landing` is put on the die until the cube's `animationend` named `ork-die-land` (the faces'
+// played*), after *Close the preview* and *Nothing to play yet*. **The pips** (decisions §200.5): when the snapshot's `new_n` counts goals landed in dev since the last play, the up face is that many pips in the ink (`face-1` … `face-6`, six for six or more; `is-news` inks them,
+// mana.css) in place of the spark, and the `title` says it (*Play: 3 new goals in dev since you last played*); a `new_n` of 0 (only the person's own commits are new) keeps the spark. At rest the up face stays the five until orkUI has `face-play` (§200.1). When the face changes after the die was first drawn with a snapshot (not on the first one), the cube rolls onto it: `is-landing` is put on the die until the cube's `animationend` named `ork-die-land` (the faces'
 // shades end theirs as `ork-die-land-<side>`, ignored); not under reduced motion, not while the die is out on the pane or asleep. A wobble and a landing never run together (both are the cube's `animation`): a landing is skipped while a wobble runs, and a wobble (hover, a warm start) puts an
 // unfinished landing out.
 // The seam with the play view (arena/play.js): three signals and the die's rectangle. `thrown`: the die is out on the pane (it flew from here and rolls), so this one is hidden (kept in its place: `visibility`) until the frame rises or the failure
@@ -27,6 +28,9 @@ export const warmed = signal(0);              // counts the views opened on a bu
 export const PLAY = "Play", PLAYING = "Playing", PLAY_WORDS = "Play: the project's preview of dev", CLOSE_WORDS = "Close the preview";
 export const ASLEEP = "Nothing to play yet", ASLEEP_WORDS = `${ASLEEP}: say how the project opens`;
 export const FAILED_WORDS = "Play: it did not start last time", NEW_WORDS = "Play: dev has changed since you last played";
+export const PIPS_MAX = 6;
+/** *Play: 3 new goals in dev since you last played*, *Play: 1 new goal in dev …*. */
+export const newGoalsWords = (n) => `Play: ${n} new ${n === 1 ? "goal" : "goals"} in dev since you last played`;
 
 /** What orkUI's die holds (0.24.0): its cube and the cube's six faces; the die's classes (its face, its state) say which face is up and how it moves. */
 export const DieCube = () => html`<span class="ork-die__cube"><i class="ork-die__face is-up"></i><i class="ork-die__face is-front"></i><i class="ork-die__face is-right"></i><i class="ork-die__face is-back"></i><i class="ork-die__face is-left"></i><i class="ork-die__face is-down"></i></span>`;
@@ -38,8 +42,14 @@ let rectOf = () => null;
 /** Where the throw starts: the hand's die as a rectangle (null when it is not drawn). */
 export const dieRect = () => rectOf();
 
-/** The die's up face, from the snapshot's `play_face` ("failed" the cross, "new" the spark, else the five); asleep it is the five. */
-export const faceNow = () => (asleepNow() ? "5" : { failed: "no", new: "new" }[town.value?.play_face] || "5");
+/** How many goals landed in dev since the last play (the snapshot's `new_n`): 0 with the face not `new`, asleep, or no count. */
+export function newCount() {
+  const n = Math.floor(Number(town.value?.new_n));
+  return !asleepNow() && town.value?.play_face === "new" && Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+/** The die's up face, from the snapshot's `play_face` ("failed" the cross, "new" the spark, else the five) and `new_n` (a `new` face with goals landed is `1` … `6`: the pips in place of the spark); asleep it is the five. */
+export const faceNow = () => (asleepNow() ? "5" : newCount() ? String(Math.min(PIPS_MAX, newCount())) : { failed: "no", new: "new" }[town.value?.play_face] || "5");
 
 const reduced = () => { try { return !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches; } catch { return false; } };
 
@@ -56,7 +66,7 @@ export function pressPlay() {
 export function PlayDie() {
   const [wob, setWob] = useState({ key: 0, left: 0 }), [land, setLand] = useState(false), button = useRef(null);
   const asleep = asleepNow(), open = over.value?.kind === "play", glow = open && playing.value && !asleep, gone = thrown.value, face = faceNow(), known = !!town.value;
-  const said = face === "no" ? FAILED_WORDS : face === "new" ? NEW_WORDS : PLAY_WORDS, words = open ? CLOSE_WORDS : said;
+  const news = newCount(), said = face === "no" ? FAILED_WORDS : news ? newGoalsWords(news) : face === "new" ? NEW_WORDS : PLAY_WORDS, words = open ? CLOSE_WORDS : said;
   useEffect(() => {
     rectOf = () => button.current?.querySelector(".ork-die")?.getBoundingClientRect() || null;
     return () => { rectOf = () => null; };
@@ -76,7 +86,7 @@ export function PlayDie() {
   };
   return html`<button ref=${button} type="button" class=${cls("hand-die", { "is-gone": gone, "is-asleep": asleep })} data-open=${open ? "1" : undefined} aria-label=${asleep && !open ? ASLEEP_WORDS : words} title=${asleep && !open ? ASLEEP : words}
       onClick=${pressPlay} onPointerEnter=${hover}>
-    <span key=${wob.key} class=${cls(`ork-die face-${face}`, { "is-playing": glow, "is-wobbling": wob.left > 0 && !asleep, "is-landing": land && wob.left === 0 && !asleep })} aria-hidden="true" onAnimationEnd=${ended}><${DieCube} /></span>
+    <span key=${wob.key} class=${cls(`ork-die face-${face}`, { "is-playing": glow, "is-news": news > 0, "is-wobbling": wob.left > 0 && !asleep, "is-landing": land && wob.left === 0 && !asleep })} aria-hidden="true" onAnimationEnd=${ended}><${DieCube} /></span>
     <span class="hand-die__word">${glow ? PLAYING : PLAY}</span>
   </button>`;
 }

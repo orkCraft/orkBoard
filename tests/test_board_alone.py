@@ -85,6 +85,7 @@ def test_the_snapshot_holds_only_what_the_shell_reads(host):
                          "ask",                                            # spec 106 §2: the quick question kept, None when there is none
                          "preview",                                        # spec 113 §2: how the project opens a preview ("command" · "static" · ""), the Play die sleeps with none
                          "play_face",                                      # spec 118 §3: what the Play die's up face says ("failed" · "new" · "")
+                         "new_n",                                          # decisions §200.5: how many goals landed in dev since Play last tried it, the up face's pips
                          "repair",                                         # spec 119 §3.2: Fix it, the bug's state ("idle" · "working" · "ready" · "updating" · "failed")
                          "main_checks"}                                    # spec 111 §4.2: the checks on a goal's way into main, by goal (the face follows them here)
     assert set(snap["reserve"]) == {"share", "night"}                                  # spec 49 §2.3

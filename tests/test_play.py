@@ -18,7 +18,7 @@ from orkboard.core import idea_shot
 from orkboard.gui import ideas_assets
 from orkboard.gui.board_host import Orkboard
 from orkboard.gui.ideas import IdeasError
-from orkboard.realm import event_log
+from orkboard.realm import event_log, ideas
 
 PAGE = "<!doctype html><title>Game</title><h1>dev's build</h1>"
 
@@ -488,3 +488,71 @@ def test_the_face_is_said_before_any_play_exists_and_never_breaks_the_snapshot(h
 def test_the_phone_is_not_told_of_the_face(host):
     from orkboard.gui.board_host import BoardPhone
     assert "play_face" in host.snapshot() and "play_face" not in BoardPhone.phone_snapshot(host)
+
+
+# -- the die's pips: how many goals landed in dev since Play last tried it (decisions §200.5) --------------------------------------------------------
+
+def landed_goal(host, repo, slug, files):
+    """A goal's task landed in dev: its commit on dev and the plan the runner keeps (`commit`, `subjects`)."""
+    sha = commit(repo, files, f"{slug} work")
+    folder = ideas.state_folder(host.ideas.state_dir, slug)
+    folder.mkdir(parents=True, exist_ok=True)
+    plan = ideas.plan(host.ideas.state_dir, slug) or {"tasks": []}
+    plan["tasks"].append({"id": f"k{len(plan['tasks']) + 1}", "state": "merged", "commit": sha, "subjects": [f"{slug} work"]})
+    (folder / "plan.json").write_text(json.dumps(plan))
+    return sha
+
+
+def pips(host) -> tuple[str, int]:
+    host.ideas._head_seen = (0.0, "", "")
+    snap = host.snapshot()
+    return snap["play_face"], snap["new_n"]
+
+
+def tried_once(host):
+    host.command("ideas.play", {})
+    assert settle(host)["state"] == "playing"
+    host.command("ideas.play_stop", {})
+    host.ideas.player.wait()
+
+
+def test_the_snapshot_counts_the_goals_new_in_dev_since_the_last_play(host, repo):
+    assert pips(host) == ("", 0)                                                                                  # never tried: nothing is new
+    tried_once(host)
+    assert pips(host) == ("", 0)
+    landed_goal(host, repo, "dark-mode", {"dark.css": "a"})
+    assert pips(host) == ("new", 1)
+    landed_goal(host, repo, "sound", {"sound.js": "b"})
+    landed_goal(host, repo, "dark-mode", {"dark2.css": "c"})                                                      # the same goal again counts once
+    assert pips(host) == ("new", 2)
+    for n in range(3, 9):
+        landed_goal(host, repo, f"goal-{n}", {f"g{n}.txt": "x"})
+    assert pips(host) == ("new", 8)                                                                               # the face shows six for six or more; the count is the host's whole
+    host.command("ideas.play", {})
+    assert settle(host)["state"] == "playing"
+    assert pips(host) == ("", 0)                                                                                  # tried now
+
+
+def test_the_persons_own_commit_is_a_spark_and_no_pips(host, repo):
+    tried_once(host)
+    commit(repo, {"mine.txt": "mine"}, "mine")
+    assert pips(host) == ("new", 0)                                                                               # news, and no goal in it: the spark stays
+
+
+def test_a_failed_start_has_the_cross_and_no_pips(host, repo, monkeypatch):
+    tried_once(host)
+    landed_goal(host, repo, "dark-mode", {"dark.css": "a"})
+    assert pips(host) == ("new", 1)
+    monkeypatch.setattr(ideas_assets.Play, "_worktree", lambda self, c: (_ for _ in ()).throw(RuntimeError("disk full")))
+    host.command("ideas.play", {})
+    assert settle(host)["state"] == "failed"
+    assert pips(host) == ("failed", 0)                                                                            # the cross takes the pips' place
+
+
+def test_new_n_never_breaks_the_snapshot_and_the_phone_is_not_told(host, repo, monkeypatch):
+    from orkboard.gui.board_host import BoardPhone
+    tried_once(host)
+    landed_goal(host, repo, "dark-mode", {"dark.css": "a"})
+    monkeypatch.setattr(ideas_assets.commit_goal, "new_goals", lambda *a: (_ for _ in ()).throw(OSError("git")))
+    assert pips(host) == ("new", 0)
+    assert "new_n" in host.snapshot() and "new_n" not in BoardPhone.phone_snapshot(host)
