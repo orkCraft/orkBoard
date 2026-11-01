@@ -20,6 +20,15 @@ button.cn-aspect:focus-visible { outline: 0; clip-path: none; box-shadow: 0 0 0 
 .cn-aspect[data-state="clear"] > .ork-sign { color: var(--ork-ink); }
 .cn-hint { display: inline-block; flex: none; box-sizing: border-box; width: 6px; height: 6px; border: var(--ork-line) solid currentColor; background: none; }          /* a hollow square: code noticed it, the leader let it be */
 
+/* the evening line (spec 121 §6, §7.4): under the aspects' row, its way as orkUI's sign (the check in the ink, the alert in the alert's tone, the muted dot), the line in the body face */
+.cn-since { flex: 1 0 100%; margin: 0; display: flex; align-items: flex-start; gap: var(--ork-2); padding: var(--ork-2) 0; min-width: 0; font: var(--ork-type-body); }
+.cn-since__way { flex: none; display: inline-flex; align-items: center; min-height: 1.5em; }
+.cn-since__line { min-width: 0; overflow-wrap: anywhere; }
+.cn-since__line b { font-weight: 600; }
+.cn-since[data-way="toward"] .ork-sign { color: var(--ork-ink); }
+.cn-since[data-way="away"] .ork-sign { color: var(--ork-alert); }
+.cn-since[data-way="unclear"] .cn-dot { color: var(--ork-ink-muted); }
+
 /* a card with a concern: its slot at the top right, over the card's head; a press on it is a press on the card */
 [data-cn-host] { position: relative; }
 .cn-slot { position: absolute; top: var(--ork-1); right: var(--ork-2); z-index: 2; display: inline-flex; align-items: center; pointer-events: none; }

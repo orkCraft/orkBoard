@@ -162,6 +162,19 @@ function Aspect({ a, card, step }) {
     : html`<span role="img" ...${props}><${AspectMark} state=${a.state} />${a.name}</span>`;
 }
 
+/** The evening line (docs/specs/121-the-day-the-morning-and-the-night.md §6, §7.4, decisions §199.5): when the map changed since the leader's last look, the leader says in one line whether what changed went *toward* its aims, *away* from them or is *unclear*, and what broke.
+ *  Its way is orkUI's sign — the check in the ink, the alert in the alert's tone, the muted dot — and a word for a screen reader (`aria-label`); the line is in the body face. Nothing without `since` (the map did not change since the look before). `rec`: the party's record. */
+export const SINCE = "Since your last look:";
+export const WAY_WORDS = { toward: "toward", away: "away", unclear: "unclear" };
+export function Since({ rec }) {
+  const s = rec?.since, line = String(s?.line || "").trim();
+  if (!s || !line) return null;
+  const way = s.way === "toward" || s.way === "away" ? s.way : "unclear";
+  return html`<p class="cn-since" data-way=${way} data-concerns-since="">
+    <span class="cn-since__way" role="img" aria-label=${WAY_WORDS[way]}>${way === "toward" ? html`<${Sign} name="check" />` : way === "away" ? html`<${Sign} name="alert" />` : html`<i class="cn-dot" aria-hidden="true"></i>`}</span>
+    <span class="cn-since__line"><b>${SINCE}</b> ${line}</span></p>`;
+}
+
 /** The strip over the map: the leader's head and its counts (a press steps through the marked cards: each scrolled into view and lifted), **Ask again**. Nothing for a host that does not know concerns. */
 function Strip({ g, lead }) {
   const party = g.slug, rec = recordOf(party), rev = mapData.value?.rev, [tick, setTick] = useState(0), [asking, setAsking] = useState(false), at = useRef({ of: "", i: -1 });
@@ -208,6 +221,7 @@ function Strip({ g, lead }) {
       ${rubric.short && html`<span class="cn-aspects__short">${rubric.short}</span>`}
       ${rubric.aspects.map((a) => html`<${Aspect} key=${a.id} a=${a} card=${list.some((c) => c.aspect === a.id && c.on && !goalOf(party, c))} step=${step} />`)}
     </div>`}
+    <${Since} rec=${rec} />
   </div>`;
 }
 
