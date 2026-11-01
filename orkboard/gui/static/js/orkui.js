@@ -34,14 +34,34 @@ export function Chev({ dir = "down" }) {
   return html`<i class=${`ork-chev${dir === "down" ? "" : ` ${dir}`}`} aria-hidden="true"></i>`;
 }
 
+/** orkUI's chair (chair/, 0.27.0; docs/specs/123-the-leaders-at-the-table.md §7.4): a leader's seat at the table, drawn at a sign's weight. The back of an occupied chair (44 x 24, `big` 52 x 28 for the open leader's)
+ *  stands under a head; `empty` is the whole chair with nobody on it (36 x 36; `small` 18 x 18 at the narrow width), `lit` lights it (a hovered or focused one is lit by orkUI itself) and, under no-preference motion, pulls it out.
+ *  Never alone: its words are the button's it stands in. `aria-hidden`. */
+export function Chair({ big = false, empty = false, small = false, lit = false }) {
+  return html`<span class=${`ork-chair${big && !empty ? " big" : ""}${empty ? " is-empty" : ""}${empty && small ? " small" : ""}${lit ? " is-lit" : ""}`} aria-hidden="true"></span>`;
+}
+
+/** orkUI's door (door/, 0.27.0; spec 123 §7.6): Stop all's mark, 28 x 40 (`small` 14 x 20), shut at rest and `open` once everything is stopped; nothing swings. `lit` lights its frame (a hovered or focused one is lit by orkUI itself). `aria-hidden`; the word is the button's. */
+export function Door({ open = false, small = false, lit = false }) {
+  return html`<span class=${`ork-door${open ? " is-open" : ""}${small ? " small" : ""}${lit ? " is-lit" : ""}`} aria-hidden="true"></span>`;
+}
+
+// The races that have faces (orkUI 0.27.0 `races/<race>-<tier>-<mood>.png`): the leaders' (the higher forms, decisions §158) and the Orkmaster's crowned ork; a member's race has one face.
+const LEADER_RACES = ["shaman", "dryad", "imp", "fairy", "unicorn", "lich"];
+/** The moods a leader's face has besides calm (the plain file): focused, worried, no, pleased, asleep. */
+export const MOODS = ["focused", "worried", "no", "pleased", "asleep"];
+/** Whether a head has faces: a leader's race, or the crowned ork. */
+export const hasFaces = (race, tier) => LEADER_RACES.includes(race) || (race === "peon" && tier === "crown");
+
 /** A race's head (orkUI races/), pixelated: 24 x 22 (its @2x for a sharp screen), a pixel a cell, an accent in a line of text, `mid` 36 x 33
  *  (a member's head, from the @2x) or `big` 48 x 44 (the leader's); never 12 x 11 (spec 96 §2.1). A head is an accent, never a picture to
- *  look at: the smallest that says it. Its word goes beside it. */
-export function Head({ race, tier = "laborer", size = "", title = "" }) {
-  const sz = size, src = `${ORKUI}/races/${race}-${tier}`, from2x = sz === "mid" || sz === "big";
+ *  look at: the smallest that says it. Its word goes beside it. `mood` ("" calm, the plain file; else `focused`, `worried`, `no`, `pleased` or `asleep`): the face of a leader or the crown
+ *  (`races/<race>-<tier>-<mood>[@2x].png`); any other head keeps its one face (spec 123 §3). */
+export function Head({ race, tier = "laborer", size = "", title = "", mood = "" }) {
+  const sz = size, face = MOODS.includes(mood) && hasFaces(race, tier) ? mood : "", src = `${ORKUI}/races/${race}-${tier}${face ? `-${face}` : ""}`, from2x = sz === "mid" || sz === "big";
   const wide = { mid: 36, big: 48 }[sz] || 24, high = { mid: 33, big: 44 }[sz] || 22;
   return html`<img class=${`ork-race__head${sz ? ` ${sz}` : ""}`} src=${from2x ? `${src}@2x.png` : `${src}.png`} srcset=${sz || from2x ? undefined : `${src}@2x.png 2x`}
-    width=${wide} height=${high} alt="" title=${title || undefined} draggable="false" />`;
+    width=${wide} height=${high} alt="" title=${title || undefined} data-mood=${face || undefined} draggable="false" />`;
 }
 
 /** A switch of a few words, one picked: orkUI's buttons in a radiogroup (`role="radio"`, `aria-checked`), one tab stop, the arrows move the pick (Home and End too). `options`: [[id, word, sub?]]
