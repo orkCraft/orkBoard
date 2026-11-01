@@ -14,7 +14,7 @@ const SHELL = ["./", "frame.js", "frame.css", "old.html", "board-app.js", "util.
   "moons/disk.svg", "moons/crescent.svg", "moons/half.svg", "moons/gibbous.svg",
   "signs/check.svg", "signs/cross.svg", "signs/work.svg", "signs/night.svg", "signs/moon.svg", "signs/sword.svg", "signs/shield.svg", "signs/question.svg", "signs/compass.svg", "signs/steps.svg", "signs/alert.svg", "signs/flag.svg", "signs/before.svg", "signs/after.svg",
   "signs/play.svg", "signs/pause.svg", "signs/sound.svg", "signs/film.svg", "signs/text.svg",
-  "signs/feature.svg", "signs/bug.svg", "signs/tidy.svg", "signs/screen.svg", "signs/picture.svg", "signs/logo.svg",
+  "signs/feature.svg", "signs/bug.svg", "signs/bug-squashed.svg", "signs/tidy.svg", "signs/screen.svg", "signs/picture.svg", "signs/logo.svg",
   "signs/target.svg", "signs/flask.svg", "signs/horn.svg", "signs/chart.svg", "signs/page.svg",
   "signs/restructure.svg", "signs/abtest.svg", "signs/landing.svg", "signs/post.svg", "signs/tagline.svg",
   "signs/mechanic.svg", "signs/level.svg", "signs/balance.svg", "signs/character.svg", "signs/release.svg", "signs/store.svg", "signs/tune.svg",
