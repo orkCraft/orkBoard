@@ -4161,3 +4161,51 @@ face at rest is the five (§196), which says nothing of what the die does. So (t
    for the person (§145.3 stands for the deck and the tabs). The snapshot's `play_face` gains `new_n`; `face-1` … `face-6`, which
    orkUI has, draw it (the spark stays in orkUI, unused here).
 The owner's call.
+
+## 201. The leaders at the table: the open leader large with its marks and its bubble, the header one row, the leaders' faces as states, chairs and the empty chair, the dark edges, Stop all a door (1 November, the owner)
+
+Why: the owner: *the vibe went from a card battle to a co-operative game (§199.2), so the faces on the tabs are your
+companions at the table: the picked leader's face larger, its alerts and notes by its head; the heads could change their
+expression, as real players; the question asked on a lens a bubble rather than a line; no Leads on a leader's lens, the
+tab is the leader; the rest of the team named, with the sword and the shield by Does and Checks*. Then: *those who decide
+or advise sit at the table with you; those who do and check are the leader's squad, on its lens*; *make the squad smaller*;
+*the leaders sit on chairs above the table with the cards, and a new party is an empty chair*; *the back under the head,
+it looked like a little house*; *black behind the chairs and behind the hand*; *no lines between the leaders off the
+table*; *Stop all as a door*, *shut by default, opened when you press it*; *no lit box on the open tab, only the larger
+head*; *the chair's back a solid colour*. The mockup `docs/mockups/lens-heads/`, the owner's yes on it. So:
+1. **The open leader is its head, large** (48 x 44, the race sheet's @2x, §161), on the open tab, leaning in over the
+   table's rim; the other leaders' heads at 36 x 33 (3 px a cell); no lit box, no bar: the open tab is told by its head,
+   its party's name in the full ink with the leader's own name under it (§164), the others' muted. A tab grows in height,
+   never in width (§143).
+2. **Its concerns by its head**: the alert sign and the note's dot beside the open leader's head, each a press that steps
+   through the marked parts (as the strip's counts did); the strip over the map goes (its counts, §67), **Ask again** goes to
+   the party's **…**. The other tabs keep their alert sign.
+3. **The quick question is the leader's bubble** (this changes spec 106 §3): the open leader's head pressed opens a bubble
+   under it, the field focused (*Ask the Architect…*); the answer, *Make it a goal* and × in it; its foot the leader's seat
+   (*Its seat: Claude Code · Veteran*, a press its popover, §110.7). One bubble is the one way a leader speaks: the answer,
+   and later the evening line (spec 121 E) and a hearing's side (spec 120 §6.7). A member never speaks (§110.8). The
+   desktop only (§181.8).
+4. **The party's header is one row** (this changes §110.6, spec 95 §2.5): no *Leads* (the tab is the leader); **Does** with
+   orkUI's sword and **Checks** with its shield, the AI tool's mark once by each (a seat carries its own only where it runs on
+   another tool); each seat's role under its head in the muted caption; the size; the leader's aspects (spec 109 §4) at the
+   row's right. The squad stays at 24 x 22, the smallest size a head is crisp at with its gear read (§148.7): who decides is
+   larger, who does is not made smaller.
+5. **The leaders' faces are states, never an idle motion** (§149.1): calm, focused (a task of its party runs), worried (an
+   alert on its map), says no (its no in a hearing), pleased (its goal just done: a moment), asleep (its AI tool's window
+   spent, or no tool). Drawn in orkUI for the leaders and the Orkmaster on the heads' 12 x 11 grid; a member keeps one face.
+   A face is an accent: the alert sign and the words stay.
+6. **The leaders sit on chairs at the table's far edge**: a chair's back, solid, lower than the head, behind each leader's
+   head on the table's rim; the leader's lane on the Board is the table in front of its chair. **New party is the empty
+   chair** (this changes §190.1's banner): the whole chair, faint, hovered or focused pulled out a little, its label *New
+   party*; it stands only while a craft is not at the table. *Chair* is a picture, never a word (*seat* is the squad's).
+7. **The dark edges**: the leaders' side and the hand on orkUI's room, near black under its canvas (never #000), the table
+   lifted a step between, its rim on both sides; no line between the tabs off the table. The table is what is shared, the
+   dark edges are the players' places: the + card leaves the dark hand for the lit table when it is sent.
+8. **Stop all is a door** at the dark row's end (this changes §190.1's planks): shut at rest, whatever runs; pressed, it
+   opens (the orks go out), its word *All stopped*, a second press doing nothing; it shuts when work starts again. Its word
+   stays in the danger colour while it can be pressed. Not *Exit*: it halts, it closes nothing.
+9. **At the narrow width** the heads' row as today, the open head at 36 with its marks, no chairs; the empty chair and the
+   door as small marks before the row's end. The phone's menu (§195) is not changed here.
+10. Spec 123 (spec 122 stays the leaders' voices), orkUI first (the room token, the chair, the empty chair, the door, the
+   faces), built by the cheaper model, the spec's author reviewing.
+The owner's call.
