@@ -218,9 +218,20 @@ class GateMixin:
         self._ev(event_log.IDEA_FLAGGED, None, idea=slug, goal=party, by=by, tasks=got["tasks"], first_time=got["first_time"],
                  usd=got["usd"], days=got["days"])
         journal_notes.done(self.state_dir, root, slug)                  # the project's journal: the goal is in main (spec 125 B)
+        self._fold_spec(slug)
         self.changed(slug)
         self.collide_released(slug)             # the goals of other parties that waited for this flag may start (spec 71 §4)
         return True
+
+    def _fold_spec(self, slug: str) -> None:
+        """The goal reached main: its party's leader folds it into the product's living specs, in the background (spec 127 C.2). Quiet: busy, not allowed or broken, it is skipped, and the flag
+        is raised all the same."""
+        try:
+            fold = getattr(self.keeper, "fold", None)
+            if fold is not None:
+                fold(slug)
+        except Exception:
+            pass
 
     def _flag_after_gate(self, brought: list[dict], commit: str, git: IdeaGit, main: str) -> None:
         """After the press: each done goal without a flag that this merge brought commits of, all of whose commits are in main

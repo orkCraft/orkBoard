@@ -2,7 +2,7 @@
 once. No model, no network, no face.
 
     read_in.scan(root)                         # {found, decisions, specs, context, releases, journals}: what the project keeps, read from its files
-    read_in.take(root, state_dir, scan=None)   # {decisions, leaders, done, releases, journals}: the journals gain what is not in them yet (by `ref`), any number of times
+    read_in.take(root, state_dir, scan=None)   # {decisions, leaders, done, releases, journals, specs_read}: the journals gain what is not in them yet (by `ref`), any number of times
     read_in.first_start(root, state_dir)       # `take`, once for a project (a marker beside the journals): the first start's call
     read_in.start_context(root)                # the context files the brief's first reading is given (`project_facts.start_files`)
     read_in.run_cli(root, dry=False)           # `orkboard import`: (exit code, the lines to print)
@@ -22,7 +22,7 @@ import subprocess
 from pathlib import Path
 
 from orkboard.hooks.warder import is_secret
-from orkboard.realm import decisions_log, doc_formats, goal_team, ideas, journals
+from orkboard.realm import decisions_log, doc_formats, goal_team, ideas, journals, living_specs_io
 from orkboard.realm.code_map import SKIP
 
 MAX_BYTES = 1_000_000                # a file over this is never read
@@ -417,7 +417,8 @@ def _counts(rows: list[dict]) -> dict:
 
 def take(root: Path, state_dir: Path, scan: dict | None = None, board: Path | None = None) -> dict:
     """The journals gain what the project's documents say (spec 126 §B.2): a decision into the project's journal and its craft's leader's, a spec done, a release, an export's
-    entry as it was. `board`: where the Board's pages are, when not the folder's own. `{decisions, leaders, done, releases, journals}`: the entries added."""
+    entry as it was. `board`: where the Board's pages are, when not the folder's own. `{decisions, leaders, done, releases, journals, specs_read}`: the entries added, and the OpenSpec and Kiro
+    specs kept as living specs where none of that capability was kept (spec 127 C.4: `realm/living_specs_io.py`)."""
     kept = []
     for r in plan(root, state_dir, scan, board):
         try:
@@ -425,7 +426,11 @@ def take(root: Path, state_dir: Path, scan: dict | None = None, board: Path | No
                 kept.append(r)
         except ValueError:
             continue
-    return _counts(kept)
+    try:
+        specs_read = living_specs_io.take(Path(root), Path(board) if board else _board_root(Path(root)))
+    except Exception:                    # a spec that cannot be read in never stops the journals
+        specs_read = 0
+    return {**_counts(kept), "specs_read": specs_read}
 
 
 def first_start(root: Path, state_dir: Path, board: Path | None = None) -> dict | None:
@@ -457,10 +462,12 @@ def run_cli(root: Path, dry: bool = False) -> tuple[int, str]:
     if not got["found"]:
         return 0, f"Nothing to read in: looked in {root} for {LOOKED_FOR}."
     rows = plan(root, state_dir, got)
-    n = _counts(rows) if dry else take(root, state_dir, got)
+    n = {**_counts(rows), "specs_read": living_specs_io.take(root, _board_root(root), dry=True)} if dry else take(root, state_dir, got)
     lines = [f"{f['framework']} · {f['path']} · {_plural(f['n'], f['kind'])}" for f in got["found"]]
     parts = [_plural(n["decisions"], "decisions") + (f" ({n['leaders']} also into leaders' journals)" if n["leaders"] else ""),
              f"{_plural(n['done'], 'specs')} done", _plural(n["releases"], "releases")]
     if n["journals"]:
         parts.append(_plural(n["journals"], "journals"))
+    if n["specs_read"]:
+        parts.append(f"{n['specs_read']} living {'spec' if n['specs_read'] == 1 else 'specs'}")
     return 0, "\n".join(lines + [("Would read in: " if dry else "Read in: ") + ", ".join(parts)])

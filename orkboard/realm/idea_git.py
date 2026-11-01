@@ -511,7 +511,7 @@ class BoardTree:
         return self.path / self.wiki_rel
 
     def pages(self) -> list[str]:
-        return [f"{self.wiki_rel}/pages/tracks", f"{self.wiki_rel}/pages/ideas"]
+        return [f"{self.wiki_rel}/pages/tracks", f"{self.wiki_rel}/pages/ideas", f"{self.wiki_rel}/specs"]     # and the living specs (spec 127 C.1: `realm/living_specs.py`)
 
     def _tip(self) -> str:
         return _ok(_git(self.git.root, "rev-parse", f"refs/heads/{self.branch()}"))
@@ -625,7 +625,7 @@ class BoardTree:
         copied into the tree and committed; then, and only then, the person's untracked copies are removed (they would
         block a checkout of the work branch). Tracked copies are left alone."""
         copied = []
-        for folder in ("pages/tracks", "pages/ideas"):
+        for folder in ("pages/tracks", "pages/ideas", "specs"):
             for page in sorted((Path(legacy) / folder).glob("*.md")) if (Path(legacy) / folder).is_dir() else []:
                 target = self.root() / folder / page.name
                 if not target.exists():

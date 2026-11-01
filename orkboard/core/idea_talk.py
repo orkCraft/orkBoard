@@ -37,6 +37,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable
 
+from orkboard.core import idea_fold
 from orkboard.core import idea_journal
 from orkboard.realm import concerns, event_log, goal_line, goal_team, hypotheses, idea_objections, idea_questions, idea_target, ideas, map_text, project_facts, roles
 from orkboard.realm.idea_talk_parse import (CAUSE_CHARS, LINE, MAX_GOAL, MAX_PROJECT, WHERE, clean_diagnosis, clean_round, fact_text, failure_lines, pick_three,
@@ -233,6 +234,7 @@ class TalkMixin:
         if facts := project_facts.for_call(self.state_dir, party, route):
             parts.append(("What is known of the project", facts))
         parts += idea_journal.parts(self.state_dir, self.repo_root, party, slug)          # the leader's own journal and the project's (spec 125 §C), before the map
+        parts += idea_fold.parts(root, party)                                             # how the product works now (spec 127 §C.3), after the journals
         if line:                                     # before the map, which is the part that is cut when the context is full
             parts.append(("The goals in line, in order", "\n".join(f"- {g['slug']}: {g['title']} ({g['party_title']})" for g in line)))
         if self.map_in_prompt() and (text := self._map(party)):                  # in the system prompt instead when core/idea_verdict.py's switch is on

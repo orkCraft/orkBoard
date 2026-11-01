@@ -1,10 +1,11 @@
 """Write out (docs/specs/126-read-in-and-write-out.md §C; decisions §204): the Board's out in common formats, for any tool or person that reads Markdown: the project's
 decisions as MADR (or Nygard's) files, Cline's memory bank, and each journal as a Markdown file `read_in` reads back. No model, no network, no face.
 
-    write_out.write(root, state_dir, to=None, fmt="madr")   # {"decisions": n, "journals": n, "memory_bank": n, "path": to, "skipped": [...]}
+    write_out.write(root, state_dir, to=None, fmt="madr")   # {"decisions": n, "journals": n, "memory_bank": n, "specs": n, "path": to, "skipped": [...]}
     write_out.run_cli(root, to, fmt)                        # `orkboard export`: (0, "Wrote 14 decisions, 6 memory bank files and 5 journals to <to>")
 
-`to` is `<root>/.orkcraft/export` unless given. Only files inside it are written (`decisions/`, `memory-bank/`, `journals/`, each made when missing), each whole, and each says
+`to` is `<root>/.orkcraft/export` unless given. Only files inside it are written (`decisions/`, `memory-bank/`, `journals/`, and the living specs as `openspec/specs/<capability>/spec.md`: spec 127 C.4,
+`realm/living_specs_io.py`; each made when missing), each whole, and each says
 that Orkboard wrote it (a front matter key or the first line): **a file there that Orkboard did not write is never touched** (it is named in `skipped`), and one it wrote
 that no longer belongs (a decision gone, a title changed) is removed. Never into the project's own decisions folder (`docs/decisions`, `docs/adr` …): that is refused.
 
@@ -31,7 +32,7 @@ import json
 import re
 from pathlib import Path
 
-from orkboard.realm import decisions_log, doc_formats, journals, write_out_bank
+from orkboard.realm import decisions_log, doc_formats, journals, living_specs_io, write_out_bank
 
 DIR = ".orkcraft"
 EXPORT = "export"
@@ -225,7 +226,7 @@ def _journals(state_dir: Path, parties: list[dict], to: Path, out: dict) -> int:
 # -- the whole ---------------------------------------------------------------------------------------------------------------------------
 
 def write(root, state_dir, to=None, fmt: str = "madr") -> dict:
-    """The decisions, the memory bank and the journals of the project at `root` written into `to` (`<root>/.orkcraft/export`): `{decisions, journals, memory_bank, path, skipped}`.
+    """The decisions, the memory bank, the journals and the living specs of the project at `root` written into `to` (`<root>/.orkcraft/export`): `{decisions, journals, memory_bank, specs, path, skipped}`.
     ValueError for a format that is none, a `to` that is a file or lies in the project's own decisions folder; OSError where the disk refuses."""
     root, state_dir = Path(root), Path(state_dir)
     if fmt not in FORMATS:
@@ -236,7 +237,9 @@ def write(root, state_dir, to=None, fmt: str = "madr") -> dict:
     _guard(root, state_dir, to)
     out = {"skipped": []}
     got = {"decisions": _decisions(root, state_dir, to, fmt, out), "journals": 0, "memory_bank": _bank(root, state_dir, to, out)}
-    got["journals"] = _journals(state_dir, write_out_bank.parties(board_root(root, state_dir)), to, out)
+    board = board_root(root, state_dir)
+    got["journals"] = _journals(state_dir, write_out_bank.parties(board), to, out)
+    got["specs"] = living_specs_io.export(board, to, out["skipped"])                 # the living specs as OpenSpec's (spec 127 C.4)
     return {**got, "path": to, "skipped": out["skipped"]}
 
 
@@ -248,8 +251,10 @@ def run_cli(root, to, fmt: str = "madr") -> tuple[int, str]:
     """`orkboard export`: (0, the line to print); ValueError (a format or a folder that is none) is the caller's to say."""
     root = Path(root)
     got = write(root, root / DIR, to, fmt or "madr")
-    text = (f"Wrote {_count(got['decisions'], 'decision', 'decisions')}, {_count(got['memory_bank'], 'memory bank file', 'memory bank files')} and "
-            f"{_count(got['journals'], 'journal', 'journals')} to {got['path']}")
+    parts = [_count(got["decisions"], "decision", "decisions"), _count(got["memory_bank"], "memory bank file", "memory bank files"), _count(got["journals"], "journal", "journals")]
+    if got["specs"]:                                                         # the living specs (spec 127 C.4) are said when there are any
+        parts.append(_count(got["specs"], "spec", "specs"))
+    text = f"Wrote {', '.join(parts[:-1])} and {parts[-1]} to {got['path']}"
     if got["skipped"]:
         text += f"\nLeft as they were (Orkboard did not write them): {', '.join(got['skipped'][:5])}"
     return 0, text

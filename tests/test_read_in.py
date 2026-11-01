@@ -160,7 +160,7 @@ def test_madr_and_nygard_decisions_go_into_the_projects_journal_on_their_day_wit
     w(root, "docs/decisions/0003-buttons.md", UI_ADR)
     w(root, "doc/adr/0002-record.md", NYGARD)
     got = read_in.take(root, sd)
-    assert got == {"decisions": 4, "leaders": 0, "done": 0, "releases": 0, "journals": 0}
+    assert got == {"decisions": 4, "leaders": 0, "done": 0, "releases": 0, "journals": 0, "specs_read": 0}
     assert lines(sd) == [
         ("decision", "Decision 1: Use PostgreSQL for the data: Chosen option: \"PostgreSQL\", because it is boring and good.", "2026-03-04", "docs/decisions/0001-use-postgres.md"),
         ("decision", "Decision 2: Use SQLite for the data (superseded): Chosen option: \"PostgreSQL\", because it is boring and good.", "2026-01-10", "docs/decisions/0002-sqlite.md"),
@@ -201,7 +201,7 @@ def test_a_decision_also_goes_into_the_journal_of_the_projects_party_of_its_craf
     w(repo, "docs/decisions/0002-buttons.md", UI_ADR)
     w(repo, "docs/decisions/0003-pricing.md", "---\nstatus: accepted\n---\n\n# Pricing\n\n## Decision Outcome\n\nFree.\n")        # product: this project has no such party
     got = read_in.take(repo, sd, board=board)
-    assert got == {"decisions": 3, "leaders": 2, "done": 0, "releases": 0, "journals": 0}
+    assert got == {"decisions": 3, "leaders": 2, "done": 0, "releases": 0, "journals": 0, "specs_read": 0}
     assert [e["ref"] for e in journals.read(sd, parties["tech"])] == ["docs/decisions/0001-use-postgres.md"]
     assert [e["ref"] for e in journals.read(sd, parties["design"])] == ["docs/decisions/0002-buttons.md"]
     assert journals.read(sd, parties["tech"])[0]["kind"] == "decision" and journals.read(sd, parties["tech"])[0]["at"].startswith("2026-03-04")
@@ -329,8 +329,8 @@ def test_take_twice_reads_nothing_twice_and_a_struck_entry_is_not_read_again(roo
     w(root, "specs/001/tasks.md", "- [x] a\n")
     w(root, "CHANGELOG.md", "## [1.0.0] - 2026-01-01\n")
     first = read_in.take(root, sd)
-    assert first == {"decisions": 1, "leaders": 0, "done": 1, "releases": 1, "journals": 0}
-    assert read_in.take(root, sd) == {"decisions": 0, "leaders": 0, "done": 0, "releases": 0, "journals": 0}
+    assert first == {"decisions": 1, "leaders": 0, "done": 1, "releases": 1, "journals": 0, "specs_read": 0}
+    assert read_in.take(root, sd) == {"decisions": 0, "leaders": 0, "done": 0, "releases": 0, "journals": 0, "specs_read": 0}
     mine = journals.read(sd, journals.PROJECT)
     assert len(mine) == 3
     assert journals.strike(sd, journals.PROJECT, mine[0]["id"], "not so") is not None
@@ -412,8 +412,8 @@ def test_the_commands_scan_and_take(host, parties):
     w(repo, "docs/decisions/0001-use-postgres.md", MADR)
     got = host.commands["ideas.read_in_scan"]({})
     assert got == {"found": [{"framework": "ADRs (MADR)", "kind": "decisions", "path": "docs/decisions", "n": 1}]}
-    assert host.commands["ideas.read_in_take"]({}) == {"decisions": 1, "leaders": 1, "done": 0, "releases": 0, "journals": 0}
-    assert host.commands["ideas.read_in_take"]({}) == {"decisions": 0, "leaders": 0, "done": 0, "releases": 0, "journals": 0}
+    assert host.commands["ideas.read_in_take"]({}) == {"decisions": 1, "leaders": 1, "done": 0, "releases": 0, "journals": 0, "specs_read": 0}
+    assert host.commands["ideas.read_in_take"]({}) == {"decisions": 0, "leaders": 0, "done": 0, "releases": 0, "journals": 0, "specs_read": 0}
     assert len(journals.read(sd, journals.PROJECT)) == 1
 
 
