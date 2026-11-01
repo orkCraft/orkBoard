@@ -229,8 +229,21 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
 .ntab.empty .seatbox { width: 18px; height: 18px; --chair-post: var(--ork-frame); --chair-back: transparent; }
 .ntab.empty .seatbox > svg { height: 18px; }
 
+/* ---------- dark edges (the owner, 1 November): the room dark, the table lit between the leaders' side and the person's ----------
+   `--mk-dark` is this page's until orkUI has a step under its canvas (never #000: the office look lifts its ground so the screen does not glare); the faint
+   ink holds AA on it. The table is lifted a step (the panel's grey) so the edge reads with no gradient; the open leader's tab takes the table's grey, leaning in. */
+.dk { --mk-dark: #0e0d0c; --mk-table: var(--ork-panel); }
+.win.dk, .tbl.dk, .narrow.dk { background: var(--mk-dark); }
+.dk .tabs, .dk .ntabs { background: var(--mk-dark); }
+.dk .title, .dk .chrome, .dk .mapbox, .dk .lanes { background: var(--mk-table); }
+.dk .tab.is-on, .dk .ntab.is-on { background: var(--mk-table) !important; box-shadow: none !important; }
+.dk .tab.is-on .seatbox { --chair-back: var(--mk-dark); }
+.dk .ntabs { border-bottom: 3px solid var(--ork-table-rim); }
+.dk .hand { background: var(--mk-dark); border-top: 3px solid var(--ork-table-rim); }
+.dk .discard, .dk .disc { border-color: var(--ork-table-rim-hi); }
+
 /* ---------- the table: the Orkmaster's tab, the Board's lanes in front of the chairs ---------- */
-.tbl { width: 100%; max-width: 1240px; display: grid; grid-template-rows: auto auto 1fr; background: var(--ork-canvas); outline: var(--ork-line) solid var(--ork-edge); overflow: hidden; }
+.tbl { width: 100%; max-width: 1240px; display: grid; grid-template-rows: auto auto 1fr auto; background: var(--ork-canvas); outline: var(--ork-line) solid var(--ork-edge); overflow: hidden; }
 .lanes { display: grid; grid-template-columns: repeat(5, minmax(0, 180px)) minmax(0, 132px) 1fr; min-height: 330px; background: var(--ork-table); }
 .ln { display: flex; flex-direction: column; gap: var(--ork-4); padding: var(--ork-5) var(--ork-4); border-right: var(--ork-line) solid var(--ork-frame); min-width: 0; }
 .ln .lab { color: var(--ork-ink-faint); font: var(--ork-type-label); text-transform: uppercase; }
@@ -274,6 +287,7 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
     <button type="button" class="ork-btn" data-view="old" aria-pressed="false">Today</button>
     <button type="button" class="ork-btn" data-view="new" aria-pressed="true">Proposed</button>
     <button type="button" class="ork-btn" id="chairs" aria-pressed="true">Chairs</button>
+    <button type="button" class="ork-btn" data-dark aria-pressed="true">Dark edges</button>
     <span class="measure" id="measure"></span>
   </div>
   <div class="mk-acts" role="group" aria-label="Try">
@@ -313,11 +327,17 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
   chair</b>, and nothing has to say <i>no more</i>. It takes a narrower column and no lane. Release and Live keep their places in the portal's corners (§188): they
   come to the table only when there is something to do. The word stays <i>New party</i>: <i>seat</i> is the squad's word (a member's place), so the chair is a
   picture, never a new word.</p>
+  <p class="mk-line"><b>Dark edges</b> (the owner: <i>the back behind the chairs black, and the space behind the hand too</i>): the room is dark and the table
+  between lit, a step lighter, with its rim on both sides. <b>The table is what is shared</b> (the Board, the leaders' cards, the discard, the portal); <b>the dark
+  edges are the players' places</b>: the leaders across it on their chairs, the person on the near side with the hand. The + card does not lose its sense: it
+  is a card of the person's hand, and sent it leaves the dark for the lit table, face down in the Orkmaster's lane (spec 120 §6.2): played, seen. Nothing glows:
+  the lamp is only a step of grey. The dark is this page's token until orkUI draws a step under its canvas (never #000).</p>
   <div class="mk-acts" role="group" aria-label="The table's state">
     <span class="lab">State</span>
     <button type="button" class="ork-btn" data-tbl="hover" aria-pressed="false">The empty chair hovered</button>
     <button type="button" class="ork-btn" data-tbl="full" aria-pressed="false">The table full</button>
     <button type="button" class="ork-btn" data-tbl="spent" aria-pressed="false">The window spent</button>
+    <button type="button" class="ork-btn" data-dark aria-pressed="true">Dark edges</button>
   </div>
   <div class="tbl" id="tbl"></div>
 </section>
@@ -387,6 +407,8 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
     <li><b>A member never speaks</b> (§110.8): no bubble, no face but its one, its questions its leader's.</li>
     <li><b>No idle motion</b> (§149.1): faces are states; the head's beat plays once, when it hands a card (spec 120 §6.9's give) or answers; nothing under reduced motion.</li>
     <li><b>One look</b> (orkUI's office): the bubble on the raised panel with the edge, the faces drawn in orkUI first, nothing of the page's own colour.</li>
+    <li><b>Dark edges</b>: a step under orkUI's canvas for the leaders' side and the hand, the table lifted a step between, its rim on both sides; no glow, no
+      gradient, never #000; the faint ink holds AA on the dark. Made in orkUI first (a token), then copied.</li>
     <li><b>The chair is a thing drawn at a sign's weight</b>, as orkUI's banner, boards, die and potions are: the frame's greys, no colour, no legs, never a picture
       of furniture; still at rest. orkUI draws it (the occupied back and the empty chair), then it is copied.</li>
     <li><b>Who decides at the table, who does in the squad</b> (§104.0): leaders 36–48 px with faces and a voice; members 24 px, no face, no voice, their place
@@ -563,6 +585,7 @@ function render() {
   paint(win);
   showBubble(view === "new" ? bubState : "");
   measure();
+  if (typeof applyDark === "function") applyDark();
   const bh = document.getElementById("bighead");
   if (bh) bh.addEventListener("click", () => setBub(bubState ? "" : "ask"));
 }
@@ -634,13 +657,22 @@ function tblRender() {
       <div class="ln"><span class="lab">Nothing in play</span></div>
       <div class="ln free"></div>
       <div class="disc">Discard</div>
-    </div>`;
+    </div>
+    <div class="hand"><span class="ork-card-back" aria-hidden="true"></span><div class="ork-card hc">Keep the seat when a phone sleeps</div><span class="grow"></span><span class="lab">The hand</span></div>`;
   paint(el);
 }
 document.querySelectorAll("[data-tbl]").forEach((b) => b.addEventListener("click", () => {
   const k = b.dataset.tbl; tblState[k] = !tblState[k]; b.setAttribute("aria-pressed", String(tblState[k])); tblRender();
 }));
 tblRender();
+
+/* dark edges: one switch for every frame that shows the proposal */
+let dark = true;
+function applyDark() {
+  ["win", "tbl", "nnew", "nask"].forEach((id) => document.getElementById(id)?.classList.toggle("dk", dark && (id !== "win" || view === "new")));
+  document.querySelectorAll("[data-dark]").forEach((b) => b.setAttribute("aria-pressed", String(dark)));
+}
+document.querySelectorAll("[data-dark]").forEach((b) => b.addEventListener("click", () => { dark = !dark; if (view !== "new") { view = "new"; syncView(); render(); } applyDark(); }));
 
 /* the three things a leader says, side by side */
 document.getElementById("three").innerHTML = [
@@ -715,7 +747,7 @@ function narrowHtml(kind) {
   });
 });
 
-view = "old"; render(); view = "new"; render();
+view = "old"; render(); view = "new"; render(); applyDark();
 </script>
 </body>
 </html>
