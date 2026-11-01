@@ -4,7 +4,8 @@
 
     doc_formats.front_matter(text)            # ({key: str | [str]}, the text after it); ({}, text) when there is none
     doc_formats.parse_record(text, path)      # one ADR file → a record (MADR or Nygard, told by its shape); None for a file that is not one
-    doc_formats.parse_log(text, path)         # the Board's one file → [record], one an entry
+    doc_formats.parse_log(text, path)         # the Board's one file → [record], one an entry (with `day`, `who`, and `Status:` / `Changes:` lines read)
+    doc_formats.day_of("17 October 2026")     # "2026-10-17"; "" for a date with no year
     doc_formats.folder_format(folder)         # "madr" | "nygard" | "": the format the records in a folder are kept in (the most of them)
     doc_formats.next_number(folder)           # the highest NNNN of the folder's records, plus one
     doc_formats.file_name(n, title)           # "0012-no-accounts-in-the-first-release.md"
@@ -163,6 +164,11 @@ def parse_log(text: str, path: str = "") -> list[dict]:
     def close():
         if cur is not None:
             text_ = "\n".join(body).strip()
+            for line in text_.splitlines()[:4]:                     # the lines code writes under the heading (spec 127 A)
+                if m_ := _STATUS_LINE.match(line):
+                    cur["status"] = _status(m_.group(1)) or "accepted"
+                if m_ := _CHANGES_LINE.match(line):
+                    cur["extra"]["changes"] = [int(x) for x in re.findall(r"\d+", m_.group(1))]
             cur.update(body=_cut(text_, BODY_CHARS), decision=_cut(text_, PART_CHARS))
             out.append(cur)
 
@@ -177,12 +183,31 @@ def parse_log(text: str, path: str = "") -> list[dict]:
             if w:
                 when, title = w.group(1).strip(), title[:w.start()].strip()
             cur = {"number": int(m.group(1)), "title": _words(title, TITLE_CHARS), "status": "accepted", "date": _words(when, 80), "deciders": [],
-                   "context": "", "decision": "", "consequences": "", "body": "", "path": path, "format": "log", "extra": {}}
+                   "context": "", "decision": "", "consequences": "", "body": "", "path": path, "format": "log", "extra": {},
+                   "day": day_of(when), "who": _words(when.partition(",")[2], 80)}
             body = []
         elif cur is not None and not (not fenced and line.startswith("# ")):
             body.append(line)
     close()
     return out
+
+
+_MONTHS = {m: i for i, m in enumerate(("january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november",
+                                        "december"), start=1)}
+_DAY_TEXT = re.compile(r"\b(\d{1,2})\s+([A-Za-z]+)\s+(\d{4})\b|\b(\d{4})-(\d{2})-(\d{2})\b")
+_STATUS_LINE = re.compile(r"^\s*Status:\s*(.+?)\s*$", re.I)
+_CHANGES_LINE = re.compile(r"^\s*Changes:\s*(.+?)\s*$", re.I)
+
+
+def day_of(text: object) -> str:
+    """The day a date names, as `YYYY-MM-DD` (`17 October 2026` or `2026-10-17`); "" when it names none with its year."""
+    m = _DAY_TEXT.search(str(text or ""))
+    if not m:
+        return ""
+    if m.group(4):
+        return f"{m.group(4)}-{m.group(5)}-{m.group(6)}"
+    month = _MONTHS.get(m.group(2).lower())
+    return f"{m.group(3)}-{month:02d}-{int(m.group(1)):02d}" if month else ""
 
 
 def records(folder: Path) -> list[dict]:

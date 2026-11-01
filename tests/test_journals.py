@@ -87,3 +87,17 @@ def test_an_entry_read_in_keeps_the_day_it_happened_and_its_ref_is_known(sd):
     assert journals.add(sd, journals.PROJECT, "decision", "x", at="last spring")["at"] != "last spring"      # not a day: now
     journals.strike(sd, journals.PROJECT, e["id"])
     assert "docs/adr/0003-postgres.md" in journals.refs(sd, journals.PROJECT)                                   # struck, still known: never read in twice
+
+
+def test_each_journal_has_its_markdown_mirror_written_again_after_each_change(sd):
+    from orkboard.realm import read_in
+    a = journals.add(sd, "tech", "stance", "On “Lobby” you said no: the cache", idea="lobby", on=["cache"])
+    md = sd / "journals" / "tech.md"
+    assert md.is_file() and "orkboard-journal: tech" in md.read_text() and "On “Lobby” you said no: the cache" in md.read_text()
+    journals.strike(sd, "tech", a["id"])
+    assert "Lobby" not in md.read_text()                                                     # struck: gone from the mirror too
+    journals.add(sd, journals.PROJECT, "decision", "Decision 3: Postgres", ref="3")
+    journals.save_digest(sd, journals.PROJECT, "The project keeps its data in Postgres.", "x")
+    got = read_in.parse_export((sd / "journals" / "_project.md").read_text())
+    assert got["scope"] == journals.PROJECT and [e["text"] for e in got["entries"]] == ["Decision 3: Postgres"]
+    assert "digest:" in (sd / "journals" / "_project.md").read_text()

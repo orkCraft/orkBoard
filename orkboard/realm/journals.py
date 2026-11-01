@@ -12,6 +12,7 @@ journal is `core/idea_journal.py`'s; the host's commands `gui/ideas_journal.py`'
     journals.digest(state_dir, "tech") / save_digest(state_dir, "tech", text, upto)   # the leader's own summary of its journal up to an entry
     journals.since_digest(state_dir, "tech")          # the entries after the digest's last one
     journals.text(state_dir, "tech", idea=, on=, chars=)  # what a call is given: the digest, then this goal's and these parts' entries, then the latest
+    journals.mirror(state_dir, "tech")                # the Markdown mirror beside it, written again after each change (spec 127 D)
 
 **A scope** is `PROJECT` or a party's slug (`[a-z0-9-]`, as the Board's). **An entry** is `{id, at, kind, text, idea, on, ref}`: `kind` one of
 `KINDS[scope]` (a project's or a leader's), `text` one line in the product's words (at most `TEXT_CHARS`), `idea` the goal's slug or "", `on` the parts
@@ -93,7 +94,25 @@ def add(state_dir: Path, scope: str, kind: str, text: str, *, idea: str = "", on
                 out.write(json.dumps(entry, ensure_ascii=False) + "\n")
     except OSError:
         return None
+    mirror(state_dir, scope)
     return entry
+
+
+def mirror(state_dir: Path, scope: str) -> Path | None:
+    """The journal's Markdown mirror (spec 127 D), `<state_dir>/journals/<scope>.md`, written again whole after each change: the shape `orkboard export`
+    writes (`realm/write_out.py` `journal_file`), so a person reads it and `orkboard import` reads it back. The JSON lines stay the journal; a mirror that
+    cannot be written is skipped. The path, or None."""
+    try:
+        from orkboard.realm import write_out                    # here, not at the top: write_out reads the journals
+        title = "The project" if scope == PROJECT else scope
+        f = _file(state_dir, scope, ".md")
+        text = write_out.journal_file(state_dir, scope, title, "the Orkmaster" if scope == PROJECT else "", _now())
+        tmp = f.with_suffix(".md.tmp")
+        tmp.write_text(text, encoding="utf-8")
+        tmp.replace(f)
+        return f
+    except Exception:
+        return None
 
 
 def _lines(state_dir: Path, scope: str) -> list[dict]:
@@ -155,6 +174,7 @@ def strike(state_dir: Path, scope: str, entry_id: str, why: str = "") -> dict | 
                 out.write(json.dumps(line, ensure_ascii=False) + "\n")
     except OSError:
         return None
+    mirror(state_dir, scope)
     return {**mine, "struck": {"at": line["at"], "why": line["why"]}}
 
 
@@ -180,6 +200,7 @@ def save_digest(state_dir: Path, scope: str, text: str, upto: str) -> dict:
         tmp = f.with_suffix(".tmp")
         tmp.write_text(json.dumps(got, ensure_ascii=False), encoding="utf-8")
         tmp.replace(f)
+    mirror(state_dir, scope)
     return got
 
 

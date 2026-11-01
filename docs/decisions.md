@@ -7,7 +7,7 @@ Orkline goes on from it. Orkline's file stays the record of the decisions before
 below that name `docs/design/…`, `docs/specs/…` (other than specs 33–37) or Orkline's code point into that repository.
 A decision taken here from now on is added at the end of this file, numbered on from §50.
 
-## 45. v1 is three buildings in plain windows; Camp waits, its art goes on (17 October, the owner)
+## 45. v1 is three buildings in plain windows; Camp waits, its art goes on (17 October 2026, the owner)
 
 Why: the AgentCraft study (§37) shows a game image brings views (320k at launch) but not a habit (~200 npm installs a
 week, 309 in Discord eight months on). Without the core working, a fun UI does not get far. So the first version is
@@ -60,7 +60,7 @@ the core, drawn plainly, and the owner tests it before anything else is built. A
     screenshot of Camp and asked whether they would want it to look so: **two or more saying yes on their own** brings
     Camp back as the look over the working core.
 
-## 46. v1 round 2: goals and ideas by dialog, straight to the model; agents by task type (17 October, the owner)
+## 46. v1 round 2: goals and ideas by dialog, straight to the model; agents by task type (17 October 2026, the owner)
 
 From the owner's test of spec 33: (1) **a goal** is made in a dialog with metrics, a priority, links to documents and a
 deadline, and **goes to the keeper at once** on saving; (2) **an idea** is a short text with **Process now** or
@@ -70,7 +70,7 @@ text for people, research) is assigned a role, or a new one is made from there; 
 (4) every dialog and menu opens on a dimmed backdrop; (5) a phone is paired from the shell (QR, Tailscale said
 plainly). Spec 34. Improvements of v1's existing mechanics; the roles are §45.8's named exception to §27.
 
-## 47. The Board does the writing; it starts what is safe; the Target picks the minds; the low work waits for the night (18 October, the owner and the PM)
+## 47. The Board does the writing; it starts what is safe; the Target picks the minds; the low work waits for the night (18 October 2026, the owner and the PM)
 
 Why: after 34 the person still types what the model could write (a goal's title, metrics, links), and every idea waits
 on the person three times (the talk, Take it to work, passing the plan) even when it is small and safe. The person's
@@ -114,7 +114,7 @@ time and the window's daytime share are what is short; the night's window goes u
     person; the owner's repository works on `main` for now. This replaces §43.4's "the keeper never commits".
 Improvements of v1's existing mechanics (§27). Spec 35.
 
-## 48. Agents shows what each ork costs and how often it gets it right; Review's decisions are the signal (18 October, the owner and the PM)
+## 48. Agents shows what each ork costs and how often it gets it right; Review's decisions are the signal (18 October 2026, the owner and the PM)
 
 Why: the owner's ask (18 October). Agents is worth its place as the roles and what each does now; the money and the
 quality of every step should be seen by goal, idea, task and ork; and the person's decisions at Review should tell the
@@ -153,7 +153,7 @@ product whether a result failed on quality or cost too much. Prioritised hard: t
    starts plans without the person. The rest is spec 36, after 35 is merged.
 Improvements of v1's existing mechanics (§27); the roles stay §45.8's named exception. Spec 36.
 
-## 49. Two branches and the gate between them; orks never on the same files at once; checks by paths (18 October, the owner and the PM)
+## 49. Two branches and the gate between them; orks never on the same files at once; checks by paths (18 October 2026, the owner and the PM)
 
 Why: the owner's flow (18 October). The person sees two branches only, **dev** and **main**: no pull requests, no
 task branches. The orks' work lands in dev by itself when it holds; main moves only when the person passes it at the
@@ -199,7 +199,7 @@ spec 36 B and C without the Review card. Item 3 rides gate-kinds or the Board's 
 repository moves to dev with item 4 or stays on main through the alpha is the owner's call. Improvements of v1's
 existing mechanics (§27).
 
-## 50. Orkboard and Orkline: one engine, three slices; the loop is the graph's unit; the game only reads (18 October, the owner)
+## 50. Orkboard and Orkline: one engine, three slices; the loop is the graph's unit; the game only reads (18 October 2026, the owner)
 
 Why: the owner's plan (18 October). With specs 35 and 36 the four windows (the Board with its goals, the preview,
 Agents, Review) are a whole tool. The owner wants it every day, at work and at home, on other projects, and to go on
@@ -266,7 +266,7 @@ nothing of the other. So:
 Architecture and order, and for Orkboard the owner's named exception to §27 (item 10, as §45.8's roles); no new
 mechanic in Orkline before the testers. Spec 37.
 
-## 51. Operations: the person's everyday work by templates, across projects; a template checks with you until it may go by itself (18 October, the owner)
+## 51. Operations: the person's everyday work by templates, across projects; a template checks with you until it may go by itself (18 October 2026, the owner)
 
 Why: the owner wants Orkboard every day at work (§50), and most of a working day is small, frequent work that is no
 code and belongs to no repository: a Jira task to file with its priority and epic, an email to answer. The Board's loop
@@ -294,7 +294,7 @@ before it goes and no memory of how the person wants it. So:
    same form; what a source starts keeps the reserve (spec 35 §6).
 A new mechanic before the testers' numbers: the owner's named exception to §27 (as §45.8 and §50.10). Spec 38.
 
-## 52. The Map: a project's work on one screen; the preview becomes tabs; the skill tree is Camp's skin (19 October, the owner)
+## 52. The Map: a project's work on one screen; the preview becomes tabs; the skill tree is Camp's skin (19 October 2026, the owner)
 
 Why: since spec 35 plans start by themselves and work goes on at night, and since spec 37 D several projects are open at
 once; the Board still shows work as lists (Needs you, a goal's ideas, an idea's Stages). The owner wants to see a
@@ -314,7 +314,7 @@ ranks (*working 2/5*), a plan's estimate its cost, the night's proposals the ski
    (`opened` gains `via`).
 A view of existing data: an improvement of v1's existing mechanics (§27); the Camp skin waits as §50.8 says. Spec 39.
 
-## 53. Orkboard is drawn in orkUI; an agent's craft is its race, its tier the gear on its head (19 October, the owner)
+## 53. Orkboard is drawn in orkUI; an agent's craft is its race, its tier the gear on its head (19 October 2026, the owner)
 
 Why: the page and the phone were drawn in the old design system's Office theme on top of Orkline's twelve Camp sheets
 (the town, the yards, the kit), with its warm browns, a gold accent and four faces; orkUI (github.com/orkWorks/orkUI) is
@@ -346,7 +346,7 @@ agent's role and tier with the mascots, **orks the engineers, elves design, gobl
 An improvement of v1's existing mechanics (§27): the look and the words of what is there, one new field (`craft`).
 Spec 40.
 
-## 54. The phone, round 3: what waits for you is the signal, a name fits its chip, a question comes with its answer picked (20 October, the owner)
+## 54. The phone, round 3: what waits for you is the signal, a name fits its chip, a question comes with its answer picked (20 October 2026, the owner)
 
 Why: the owner's notes after a day on the phone. The top bar's ! repeats the Needs you tab's count and never says
 whether work stands still; the project switcher, the gear and the Board's heading and Target row take the room the goal's
@@ -386,7 +386,7 @@ answers are seldom the ones taken. So:
 An improvement of v1's existing mechanics (§27): the look, the words and the order of what is there; two fields
 (`short`, a question's `pick`), one command (`ideas.role_add`), one flag (`ideas.answer`'s `decide`). Spec 41.
 
-## 55. Coming back: the Board says what it did, not only what it costs; the game only reads, and rewards results and thrift (20 October, the owner and the PM)
+## 55. Coming back: the Board says what it did, not only what it costs; the game only reads, and rewards results and thrift (20 October 2026, the owner and the PM)
 
 Why: a product manager's review (20 October). The Board says loudly what it costs, what waits and what failed (the
 spend, the limits, Stop all, Needs you's warning) and quietly what it did: a merged result goes into *Done (n)*, the
@@ -414,7 +414,7 @@ The owner's call: all eight now, before the testers' numbers: a named exception 
 §51). Views of existing data, but C, which is how a question reaches the person, and two counters (`done_alone`,
 `alone_since`) in a template's trust. Spec 42.
 
-## 56. A goal's party is measured: a check says what it found, the party's work is shown, its price is seen before it starts (20 October, the owner and the PM)
+## 56. A goal's party is measured: a check says what it found, the party's work is shown, its price is seen before it starts (20 October 2026, the owner and the PM)
 
 Why: a product manager's review (20 October). A goal's party is a deck-builder at heart — a library to pick from, a
 craft, seats (one leader, three builders, two checkers), a party of each craft to start from, a checker's check that
@@ -443,7 +443,7 @@ Not a game's words: no cards, decks, mana or rarity in what a person reads (CLAU
 agent unlocked, no tier raised by use, no party ranked against another's. Built after spec 42, before the testers'
 numbers: the owner's named exception to §27 (as §55). Spec 43.
 
-## 57. Low work spends the week's room: by day when the week is ahead of its pace, at night when it is not behind (20 October, the owner and the PM)
+## 57. Low work spends the week's room: by day when the week is ahead of its pace, at night when it is not behind (20 October 2026, the owner and the PM)
 
 Why: the owner's idea (20 October): start waiting work while a window has room that would otherwise be lost. Today Low
 work waits for the night whatever the week says (`realm/idea_risk.py` `AUTOSTART`: low risk, Low priority → night), and
@@ -465,7 +465,7 @@ budget; the five hours are a rate that comes back. So:
    use.
 Improvements of v1's existing mechanics (§27): the same autostart, the same reserve, read against the week. Spec 44.
 
-## 58. A tool that is not signed in opens its own sign-in at once; the work that needs it waits for it (20 October, the owner)
+## 58. A tool that is not signed in opens its own sign-in at once; the work that needs it waits for it (20 October 2026, the owner)
 
 Why: the owner (20 October): when Claude Code's sign-in fails, Orkline only says so (*Sign in again in a terminal:
 claude, then /login*), and the task that hit it is failed. The person has to find a terminal, sign in, maybe in another
@@ -485,7 +485,7 @@ browser by themselves and take the answer back without a terminal (checked on 20
    sign-in, as a spent window holds it, and goes on by itself once the tool is signed in; at most a day.
 Improvements of v1's existing mechanics (§27): the same failure, the same hold, with the tool's own sign-in. Spec 45.
 
-## 59. A goal's trail: its party asks with its leader, its leader lays out its ideas as proposals, the desktop catches up with the phone (20 October, the owner)
+## 59. A goal's trail: its party asks with its leader, its leader lays out its ideas as proposals, the desktop catches up with the phone (20 October 2026, the owner)
 
 Why: the owner, after the phone's round 3 and a look at the desktop. A goal is read and asks its questions, then its
 Map is a flag with nothing on the way to it: its ideas come one by one from the person, or two a night (balance) from
@@ -513,7 +513,7 @@ a column of its own; the Map has no button. So:
 Improvements of v1's existing mechanics (§27): the goal's read, the night's proposals, the draft, the Map, and the
 phone's look on the desktop; two keeper steps (`ask`, in quality only; `trail`), no new setting. Spec 46.
 
-## 60. One product and its labs: Orkboard, OrkWiki and OrkWatch crystallise Orkline's buildings; a building's mechanic is the shape of its work (21 October, the owner and the PM)
+## 60. One product and its labs: Orkboard, OrkWiki and OrkWatch crystallise Orkline's buildings; a building's mechanic is the shape of its work (21 October 2026, the owner and the PM)
 
 Why: the owner (21 October), on the studio's positioning: a line of products on Orkline's engine, each joining a game's
 mechanic to a problem of orkestrating agents. Orkboard, a card game: planning and following the work of several agents.
@@ -608,7 +608,7 @@ four launches, one product and its labs. So:
 The line's frame and its page: no product's code and no spec. §27 and §50.8 stand (no new mechanic before the testers'
 numbers); a lab starts with a spec of its own, OrkWiki's first.
 
-## 61. The Map shows one goal: its ideas by stage, its party in lanes; results are merged on the idea; Review's column goes (21 October, the owner)
+## 61. The Map shows one goal: its ideas by stage, its party in lanes; results are merged on the idea; Review's column goes (21 October 2026, the owner)
 
 Why: the owner's notes on the trail Map (decisions §59, spec 46). It shows every goal at once and tells how far each is,
 but not who is on an idea now, in which step, and what waits for the person's look: for that the person leaves for
@@ -654,7 +654,7 @@ Main, States, Lanes and Phone were turned down). So:
 An improvement of v1's existing mechanics (§27) and a view's rewrite: the owner's call, before the testers' numbers, as
 §55 and §59. Spec 48.
 
-## 62. One window: the goals as tabs, Planning over the leader, the party at the foot, what waits for you along the bottom; the gate is built (21 October, the owner and the PM)
+## 62. One window: the goals as tabs, Planning over the leader, the party at the foot, what waits for you along the bottom; the gate is built (21 October 2026, the owner and the PM)
 
 Why: the owner's call to simplify the desktop radically, to one window (and the phone to one screen with no tabs). After
 spec 48 the person still moves between three regions (the Board's column with Needs you, the Map with its tab strip,
@@ -704,7 +704,7 @@ was turned down; C lists what was taken from the game). So:
 A new face over v1's mechanics and the gate decided in §49.5: the owner's call, before the testers' numbers, as §55,
 §59 and §61. Spec 49.
 
-## 63. Parties and goals: what was a goal is a party, what was an idea is a goal; a goal raises its flag in main; a party's goals are decks of one element (21 October, the owner)
+## 63. Parties and goals: what was a goal is a party, what was an idea is a goal; a goal raises its flag in main; a party's goals are decks of one element (21 October 2026, the owner)
 
 Why: the owner, on the one window's mockup. The goal on a tab is a container the person never really chooses: what they
 pick every day is **who works on it** (a leader, builders and checkers, the checks they hold the work to, what it
@@ -755,7 +755,7 @@ A new face and new words over v1's mechanics, two small additions to the host (a
 end of a model call (a party's acceptance): the owner's call, before the testers' numbers, as §55, §59, §61 and §62.
 Mockups E and F of *Orkboard: one window*. Spec 50.
 
-## 64. Pick one: a task may make a few variants of one kind (pictures, sounds, clips, texts) and the person picks one with a note (21 October, the owner)
+## 64. Pick one: a task may make a few variants of one kind (pictures, sounds, clips, texts) and the person picks one with a note (21 October 2026, the owner)
 
 Why: the owner. Some work is chosen by eye or by ear (an artist's logos, an icon, a jingle, a clip, a tagline), not
 reviewed as a change; one variant a round makes the person wait a round for each look. So:
@@ -772,7 +772,7 @@ reviewed as a change; one variant a round makes the person wait a round for each
 4. **Measured**: picks a week, taken at the first round or asked again, the time to pick, where, with a note or not.
 A new end for a task over v1's runner and the faces of §62–§63, the owner's call. Spec 51.
 
-## 65. The leader deals the goal types; a type says who the party needs; the stages wear the party's faces; a stop is counted only where it cannot be seen; the party switch is a deck (22 October, the owner)
+## 65. The leader deals the goal types; a type says who the party needs; the stages wear the party's faces; a stop is counted only where it cannot be seen; the party switch is a deck (22 October 2026, the owner)
 
 Why: the owner, on the one window as built. A new goal is a blank card, so the person writes from nothing what they
 already know (it is a logo, a bug, a landing page), and the party works it with whoever is in it: a logo asked of a party
@@ -808,7 +808,7 @@ the checkers'), not phases in order. So:
 A new start for a goal and a new place for the party switch and the counts over v1's mechanics, the owner's call before
 the testers' numbers, as §62–§64. Spec 52.
 
-## 66. The phone, simpler: the deck beside the party's name, the faces are the members, New goal at once with the party first, a goal's two marks on every card (22 October, the owner)
+## 66. The phone, simpler: the deck beside the party's name, the faces are the members, New goal at once with the party first, a goal's two marks on every card (22 October 2026, the owner)
 
 Why: the owner, on the phone as spec 52 built it: four bands before the first card, the party's faces twice (on the
 stage switch and in the members' strip under it), New goal behind two motions (≈ 1.2 s) and a form longer than the
@@ -831,7 +831,7 @@ screen that names the party twice. So:
 6. **Nothing flies** (§62.8 stays).
 The owner's call on the phone as built, before the testers' numbers, as §62–§65. Spec 53.
 
-## 67. One hand: every stop of the project in it, the most urgent in the middle, no count anywhere; every stop has a way out (22 October, the owner)
+## 67. One hand: every stop of the project in it, the most urgent in the middle, no count anywhere; every stop has a way out (22 October 2026, the owner)
 
 Why: the owner, on the window as specs 52–53 built it. An Artist asked for a reference picture as a plan's to-do; a file
 to-do was done only with a file, so the goal stood still. And what waits was split: the party shown's in the hand, the
@@ -849,7 +849,7 @@ others' as a number on the party's deck. So:
    keeps Stop all, Today and Spend at its head.
 The owner's call on the window as built, before the testers' numbers, as §62–§66. Spec 54.
 
-## 68. The type top right: a card's top right holds its goal's type, in its goal's colour; the state's sign leaves the top (22 October, the owner)
+## 68. The type top right: a card's top right holds its goal's type, in its goal's colour; the state's sign leaves the top (22 October 2026, the owner)
 
 Why: the owner, on the screenshots of spec 54: *where did the task type signs go on the cards? I see only the element;
 maybe remove the exclamation mark or the error sign at the right of a card and put the type there, the type and the
@@ -871,7 +871,7 @@ truncates the name. So:
    still never a colour of its own (§65.4): it takes its goal's. No orkUI change; the interface never names an element.
 The owner's call on the cards as built, before the testers' numbers, as §62–§67. Spec 55.
 
-## 69. Fantasy signs: each goal type its own sign, a thing of the realm, never a being; orkUI keeps a library (22 October, the owner)
+## 69. Fantasy signs: each goal type its own sign, a thing of the realm, never a being; orkUI keeps a library (22 October 2026, the owner)
 
 Why: the owner. A type's sign now stands on every card (§68), the most seen picture after the heads, and it is drawn
 as an office mark (a star, a display, bars) in a look whose world is orks and their camp. Creatures were weighed and
@@ -886,7 +886,7 @@ would say *urgent* or *frozen* where it means only *which goal*, and a second ki
 4. The elements, the state signs and the media tiles are unchanged.
 The owner's call on the look, before the testers' numbers, as §62–§68. Spec 56.
 
-## 70. The deal on Start: a plan started from the hand deals its tasks onto the field (22 October, the owner)
+## 70. The deal on Start: a plan started from the hand deals its tasks onto the field (22 October 2026, the owner)
 
 Why: the owner. *Start the work* is the moment the party is set to work and money starts to be spent, and its only sign
 is a stop that goes and tasks that rise where the eye is not. §62.9 already says *you deal the work*. So:
@@ -897,7 +897,7 @@ is a stop that goes and tasks that rise where the eye is not. §62.9 already say
    under the pointer; the phone deals only into the stage shown and never switches it.
 The owner's call, before the testers' numbers. Spec 57.
 
-## 71. A stop and its task: the link before the answer, one change after (22 October, the owner)
+## 71. A stop and its task: the link before the answer, one change after (22 October 2026, the owner)
 
 Why: the owner asked how an answered card in the hand could be read as landing on its task, more simply than a flight
 (§65.8 turned the flight and the lighting down). The link is wanted before the answer, not after it. So:
@@ -906,7 +906,7 @@ Why: the owner asked how an answered card in the hand could be read as landing o
 2. **An answered stop leaves where it stands, in the frame its task changes**: a fade in place, no removal before the
    Board is reread, so the eye reads one change; nothing flies, nothing is lit after (§65.8 stands).
 The owner's call, before the testers' numbers. Spec 58.
-## 72. Parties of mixed crafts first; the leader sets the stages and their seats; the goal types come from the team, not the leader (22 October, the owner)
+## 72. Parties of mixed crafts first; the leader sets the stages and their seats; the goal types come from the team, not the leader (22 October 2026, the owner)
 
 Why: the owner, going through the library's parties and their goal types: *the parties used most will be mixed ones, a
 game's (its leader a game designer) or a mobile app's (a product leader, and besides the code ASO and an Artist for the
@@ -936,7 +936,7 @@ whoever was in it; and every party had the same seats (one leader, three builder
 Steps of a type's own (a skeleton the plan must keep) wait for the numbers: first see where a typed goal's plans differ.
 The owner's call on the library before the testers' numbers, as §62–§71. Spec 59.
 
-## 73. The phone's members wear their tool and level again, beside their names (23 October, the owner)
+## 73. The phone's members wear their tool and level again, beside their names (23 October 2026, the owner)
 
 Why: the owner: *on the phone, while the party works, you cannot see each member's tool and level: only the heads on top
 and the names below; the desktop has them.* Spec 53 took the marks off with the members' strip (§66.2). So:
@@ -946,7 +946,7 @@ and the names below; the desktop has them.* Spec 53 took the marks off with the 
 3. Not on the stage switch's faces: they are its buttons, 24 px, with the state sign on them.
 Refines §66.2. The owner's call, before the testers' numbers. Spec 60.
 
-## 74. Your own goal, first (23 October, the owner)
+## 74. Your own goal, first (23 October 2026, the owner)
 
 Why: the owner: *a party's fixed set of goal types limits the person; leave a free goal, its card filled in by the
 person.* The free goal is there (*A blank goal* on the desktop, *No type* on the phone) but last, and named as empty. So:
@@ -958,7 +958,7 @@ person.* The free goal is there (*A blank goal* on the desktop, *No type* on the
    reads their words for the types the catalog lacks.
 The owner's call, before the testers' numbers. Spec 61.
 
-## 75. The spec after the start: talked over with the party's leader, and a change re-plans what is left (23 October, the owner)
+## 75. The spec after the start: talked over with the party's leader, and a change re-plans what is left (23 October 2026, the owner)
 
 Why: the owner: *I want to edit and discuss the spec with the leader, before the work starts and after it, ideally each
 point on its own, and it should change the work in progress.* The talk per section is there (spec 35), signed *the
@@ -975,7 +975,7 @@ Taskmaster* whoever leads; once a plan is passed, a changed spec reaches no task
 5. **Measured**: the goals whose spec changed after the start; the plan changes asked, taken and kept; what they add.
 The owner's call, before the testers' numbers. Spec 62.
 
-## 76. The party gathered: what it can take as it is picked; its heads gather into the deck; three moments travel (23 October, the owner)
+## 76. The party gathered: what it can take as it is picked; its heads gather into the deck; three moments travel (23 October 2026, the owner)
 
 Why: the owner: *put the accent on gathering the party, perhaps with a motion like folding into a deck, as a goal's start
 has; and one at a goal's end: then three big motions — the party picked, the work started, the work done; without
@@ -992,7 +992,7 @@ closes. So:
    person did not press or see, never in the way of a press. Everything else stays as §62.8 and §65.8 say: nothing flies.
 The owner's call, before the testers' numbers. Spec 63.
 
-## 77. The flags raised travel from the gate to the flag line (23 October, the owner)
+## 77. The flags raised travel from the gate to the flag line (23 October 2026, the owner)
 
 Why: the owner asked whether a goal's end has a motion, and whether it should. A merged task fades with a one-frame ✓
 and lights its member's number (§62.8); a goal's end, its flag raised in main (§63.3), only makes the flag line stand. So:
@@ -1004,7 +1004,7 @@ and lights its member's number (§62.8); a goal's end, its flag raised in main (
 3. The third of §76.3's three moments; no sound, no confetti, no colour but the office's.
 The owner's call, before the testers' numbers. Spec 64.
 
-## 78. Ideation: small ideas read from four sides, and the Investor invests or passes (23 October, the owner)
+## 78. Ideation: small ideas read from four sides, and the Investor invests or passes (23 October 2026, the owner)
 
 Why: the owner wants to drop small ideas and concepts and have them judged from the product's, marketing's, engineering's
 and design's side: where to take an idea, or why not to do it. A goal goes one way today, to code at Review and the gate;
@@ -1021,7 +1021,7 @@ a small idea has nothing to merge yet, and a dropped goal loses why it was not w
 5. The Investor wears the lich's head for now; a mummy or a ghost of its own is drawn in orkUI first.
 Spec 65.
 
-## 79. Team briefs: Operations prepare the daily, the retro, the refinement and a 1:1, never a judgement of a person (23 October, the owner)
+## 79. Team briefs: Operations prepare the daily, the retro, the refinement and a 1:1, never a judgement of a person (23 October 2026, the owner)
 
 Why: the owner wants help with people management: the team's work in Jira, GitHub and Slack, ready for the daily, the
 retro, the refinement and 1:1s. It belongs to no project and repeats every week: Operations' (§51). So:
@@ -1035,7 +1035,7 @@ retro, the refinement and 1:1s. It belongs to no project and repeats every week:
    What it reads is said on its form; **Forget** removes all that is kept about one person.
 Spec 66.
 
-## 80. A member struck by a failure, a member calling with a question (23 October, the owner)
+## 80. A member struck by a failure, a member calling with a question (23 October 2026, the owner)
 
 Why: the owner: *a short animation, as if it were hit, when an agent goes into a question or an error, as when a Pokémon
 takes a blow: short, but it catches the eye.* A member that stopped waits for the person, and today only its head's sign
@@ -1050,7 +1050,7 @@ says so. A question is not a blow (*a question costs nothing*), so the two are t
    stay three. No sound, no colour but the office's.
 The owner's call, before the testers' numbers. Spec 49 §11.7.
 
-## 81. The hand first on the phone: the field a board of tokens, every member on the screen, the most urgent stop answered where it stands (23 October, the owner)
+## 81. The hand first on the phone: the field a board of tokens, every member on the screen, the most urgent stop answered where it stands (23 October 2026, the owner)
 
 Why: the owner, on the phone's screenshots (the Design canvas *Orkboard — after the cleanup*): *the person will not read
 the task cards much; what matters are the cards in the hand. The target device is an iPhone: use its screen as
@@ -1070,7 +1070,7 @@ every answer took a raise first. And a waiting task said *after k1, k2*, ids the
    counted `via: "front"`.
 The desktop is unchanged but for item 3. The owner's call, before the testers' numbers. Spec 67.
 
-## 82. On a subscription a spend is a share of Claude's five-hour window, not ≈$ (23 October, the owner)
+## 82. On a subscription a spend is a share of Claude's five-hour window, not ≈$ (23 October 2026, the owner)
 
 Why: the owner: *money says nothing to me now: I don't know what the API costs.* §48.3 made ≈$ at API prices the one
 currency, said *not your bill*; on a subscription nobody pays it, and what runs out is the window the top bar already
@@ -1089,7 +1089,7 @@ shows in percents. So, while Claude is on a subscription:
    known.
 The owner's call, before the testers' numbers. Amends §48.3.
 
-## 83. A party is a team, a goal has a route: a goal keeps itself across parties; a Release party gathers the flags (23 October, the owner)
+## 83. A party is a team, a goal has a route: a goal keeps itself across parties; a Release party gathers the flags (23 October 2026, the owner)
 
 Why: the owner asked what if parties changed often: *ideation → a new mobile feature → ideation → a new feature →
 testing → release*, not one party for the mobile app. Read as parties, that chain is one thing's way, not a change of
@@ -1117,7 +1117,7 @@ version out in the stores (a phone app has a build, a store's review, its notes 
 7. **Measured first**: the party switches a day, by face and pair, so §63.11's *seldom* is read, not assumed.
 Spec 68.
 
-## 84. On the desktop the left column is the parties: a party a heading, its goals under it; the project takes the top line (24 October, the owner)
+## 84. On the desktop the left column is the parties: a party a heading, its goals under it; the project takes the top line (24 October 2026, the owner)
 
 Why: the owner, on the window as built: the left column's top line (*Контент для … 0/5 · Parties ⌄*) cuts the party's
 name and hides the other parties behind a deck, while a project has a few (Ideation, a product's party, Release, §83)
@@ -1136,7 +1136,7 @@ So (reverses §65.3 on the desktop; the phone keeps its deck and sheet):
    member's are. A new party's heads gather onto its heading's head (§76.3's moment, landing elsewhere).
 The owner's call. Spec 69.
 
-## 85. The project has a level of its own, and an ork for it: the Orkmaster deals the parties and a goal's party (24 October, the owner)
+## 85. The project has a level of its own, and an ork for it: the Orkmaster deals the parties and a goal's party (24 October 2026, the owner)
 
 Why: the owner: *one Orkmaster on the project, who keeps the parties and their goals in step; pressing it, the field
 shows one level more: the goals in the parties' columns; and creating or picking a party goes through it.* The Board has
@@ -1157,7 +1157,7 @@ goal. A member does tasks, a party's leader deals the goal types and plans; nobo
    goal's party, never a step on the way.
 The owner's call. Spec 70.
 
-## 86. The Orkmaster keeps the parties from colliding: what two goals both touch, a spec changed under another party, a goal that waits for another party's (24 October, the owner)
+## 86. The Orkmaster keeps the parties from colliding: what two goals both touch, a spec changed under another party, a goal that waits for another party's (24 October 2026, the owner)
 
 Why: the owner: *the Orkmaster coordinates the parties' work and the changes in their specs, so they do not collide.*
 Each leader sees its own party; two parties' goals that change the same thing meet only at the gate, when the work is
@@ -1175,7 +1175,7 @@ done twice or undone. So (after §85, on its level):
    nothing moves without the person's answer. Measured: its stops answered, taken or left.
 The owner's call, after spec 70 is seen at work. Spec 71.
 
-## 87. A closed party says what it is at work on, in one line (24 October, the owner)
+## 87. A closed party says what it is at work on, in one line (24 October 2026, the owner)
 
 Why: the owner: *the goals the parties are at work on, in the list?* Only the open party's goals are in the left column
 (§84); a closed party says *k/n* and one sign, so what the others are doing now needs a switch or the project's level.
@@ -1184,7 +1184,7 @@ register · Session cookies*), *and k more* when they do not fit; none at work, 
 party with the goal picked into the filter. On the phone the same line is under each party of the parties' sheet but
 the one shown. The owner's call. Spec 72.
 
-## 88. A lighter column: a goal is one line; the open party's heading is its leader; New and Flags are rows; New goal at the Orkmaster (24 October, the owner)
+## 88. A lighter column: a goal is one line; the open party's heading is its leader; New and Flags are rows; New goal at the Orkmaster (24 October 2026, the owner)
 
 Why: the owner, on the column as built: *the list is overloaded.* A goal row was a small deck with two lines, a mark and
 ›; under the open party's heading its leader had a card of its own, then *Process now*, then *Goals n*, and at the foot
@@ -1202,7 +1202,7 @@ Why: the owner, on the column as built: *the list is overloaded.* A goal row was
    FAB (the thumb's), whose form already starts with the party shown.
 The owner's call, on mockups G and H. Spec 73.
 
-## 89. Moments of magic, not a theme: the seal at Review, a collision that crumbles, the empty Board in the void, the moon (24 October, the owner)
+## 89. Moments of magic, not a theme: the seal at Review, a collision that crumbles, the empty Board in the void, the moon (24 October 2026, the owner)
 
 Why: the owner, on how the goals read: *it is really like spells; a little more mystery?* Talking to a model is more and
 more like casting. Weighed as a designer and a marketer (pixel faces, orks and races, the cards' game, now magic: four
@@ -1218,7 +1218,7 @@ layers on one screen), the line is **what explains stays, what decorates goes**.
    it shows in a few moments. *The orks do the work; the seal is yours.*
 The owner's call, on the mockups of *Orkboard — магия целей*. Spec 74.
 
-## 90. The Orkmaster fits the parties to the project, each in three sizes; a party's size is its Target (25 October, the owner)
+## 90. The Orkmaster fits the parties to the project, each in three sizes; a party's size is its Target (25 October 2026, the owner)
 
 Why: the owner: *the choice of a party now goes through the Orkmaster: prepare three kinds of party, thrift, standard and
 quality, as the toggle does now (it may go), one agent of the middle tier, a few with a leader of a high tier, a big set of
@@ -1243,7 +1243,7 @@ once whose effect is not seen where it acts. So:
    checks), never one per step.
 The owner's call. Spec 75.
 
-## 91. The Orkmaster is crowned: a rank, not a tier (25 October, the owner)
+## 91. The Orkmaster is crowned: a rank, not a tier (25 October 2026, the owner)
 
 Why: the owner: *the Orkmaster could be an ork with a crown, so it stands out at once.* The Orkmaster wore `peon` ·
 `elder`, the head the Taskmaster wears by default: on the project's line and at a party's heading the two stood side by
@@ -1257,7 +1257,7 @@ side, equal. So:
    gold and red toned to a muted brass and garnet under orkUI's race rules (as bright they would pass for signals).
 The owner's call. Spec 76.
 
-## 92. The field is a game table: Orkboard's wood, a surface and never a mark (25 October, the owner)
+## 92. The field is a game table: Orkboard's wood, a surface and never a mark (25 October 2026, the owner)
 
 Why: orkPage gave each tool its building's colour, and Orkboard's is the game table's wood (`#ac8266`, the Task Fields);
 the owner: find it a place in the product, *a nod to the table cards are played on*. The Board already plays as one:
@@ -1274,7 +1274,7 @@ goals are dealt, the hand lies at the bottom, a party switch is a deck. So:
 The owner's call. Spec 77.
 
 
-## 93. Canvases: what an AI tool draws outside the code is a card with the elf's head (25 October, the owner)
+## 93. Canvases: what an AI tool draws outside the code is a card with the elf's head (25 October 2026, the owner)
 
 Why: the owner: *can Orkboard catch a canvas made in Claude and show it as a card, an elf's, the designer's?* The models
 make more than code (a Claude artifact, a picture Antigravity or Codex generates, a file on Figma, tldraw or Canva), and
@@ -1288,7 +1288,7 @@ Orkboard saw none of it. So:
 4. **Not now**: a cloud session's canvases and a claude.ai chat's (nothing of them is on the machine), agy's plans,
    walkthroughs and recordings, a canvas drawn inside Orkboard.
 
-## 94. The project's level is played on the table too: its goals are the field's cards (25 October, the owner)
+## 94. The project's level is played on the table too: its goals are the field's cards (25 October 2026, the owner)
 
 Why: a press on the Orkmaster turned the cards into tickets: the level drew its goals as small decks in ruled columns
 on the bare canvas, a tracker's board and not the game the party's field is (§92). So:
@@ -1299,7 +1299,7 @@ on the bare canvas, a tracker's board and not the game the party's field is (§9
 3. **Not now**: the phone's project sheet keeps its rows.
 The owner's call. Spec 79.
 
-## 95. Orkboard is published on its own, as each building's product, under its own name (25 October, the owner)
+## 95. Orkboard is published on its own, as each building's product, under its own name (25 October 2026, the owner)
 
 Why: the owner: *Orkboard, like the other products of the buildings, will be published separately*; Orkboard first, in
 VS Code's Marketplace (the extension, `vscode/`), the week after. §50.1 kept Orkboard the owner's lab, not published, and
@@ -1319,7 +1319,7 @@ words and shape have settled enough for that. So:
    pane never names the other product.
 This supersedes §50.1's *not published* and §60.1's *a lab is not published*. The owner's call.
 
-## 96. Orkboard stays Apache-2.0; its names and the ork mark are not licensed; the licence is looked at again with running on our models (25 October, the owner)
+## 96. Orkboard stays Apache-2.0; its names and the ork mark are not licensed; the licence is looked at again with running on our models (25 October 2026, the owner)
 
 Why: Orkboard goes out on its own (§95), so others read its licence and its notices now. The owner asked the PM whether
 to keep it open for the community or keep room for money (a licence of the source-available kind, the FSL, AGPL with a
@@ -1339,7 +1339,7 @@ not carry. So:
    already out stays Apache-2.0 whatever is decided then: a licence given cannot be taken back.
 The owner's call.
 
-## 97. A party can be removed; its goals move to General or go with it, never while one is at work (25 October, the owner)
+## 97. A party can be removed; its goals move to General or go with it, never while one is at work (25 October 2026, the owner)
 
 Why: the owner asked whether a party can be removed: it cannot. A party is added (`ideas.track_add`) and edited, never
 taken off the Board, so a project keeps every party it ever tried; a person's own saved parties (spec 43 §6) are removed
@@ -1355,7 +1355,7 @@ that name it. So:
    the map, the project's level and the Orkmaster. Looked at again if people ask for a removed party back.
 Spec 80. The owner's call.
 
-## 98. A party picks its AI tool from a list; its size is how many agents it has and of what tiers (25 October, the owner and the PM)
+## 98. A party picks its AI tool from a list; its size is how many agents it has and of what tiers (25 October 2026, the owner and the PM)
 
 Why: the owner, testing: *when a party is made, pick its harness; the list of what is available may be long, so a list
 that drops down*; and *the size should change the party's size itself: Lean one agent, Standard either every agent on
@@ -1380,7 +1380,7 @@ and the switch in *About this party* changes the team only on a second confirm. 
    from every side itself, Standard two views and the skeptic, Full all of them.
 Spec 81.
 
-## 99. The field is read at a glance: a row is what runs at once; a card at work turns; members are faces over their columns (25 October, the owner)
+## 99. The field is read at a glance: a row is what runs at once; a card at work turns; members are faces over their columns (25 October 2026, the owner)
 
 Why: the owner, testing: *it is not clear which card is in progress; once every card on the field said wait*; *the
 members' cards are narrower than the columns: make a member a face and a rule the width of its column*; *cards that come
@@ -1406,7 +1406,7 @@ a new stop takes its place in the fan without a sign. So:
    several, one after another; under reduced motion its edge lights instead.
 Spec 82.
 
-## 100. New goal is one field on the desktop too; the night is only for Low work and only on the person's word (25 October, the owner)
+## 100. New goal is one field on the desktop too; the night is only for Low work and only on the person's word (25 October 2026, the owner)
 
 Why: the owner, testing: *New goal still shows its title and what it is for apart: one field*; *only Low work is offered
 the night, and only with the person's explicit permission*. The phone has had one field since §66.4, the desktop's typed
@@ -1425,7 +1425,7 @@ Ideation's *Tonight* and a held goal's *Tonight* take any priority. So:
 This supersedes §57.1 (the Board's own night, now on the person's standing word) and §66.4's *the desktop's New goal
 is unchanged for now*. The owner's call. Spec 83.
 
-## 101. The next task need not wait for your look: a safe result lands in dev by itself, and what depends on nothing runs beside it (25 October, the owner and the PM)
+## 101. The next task need not wait for your look: a safe result lands in dev by itself, and what depends on nothing runs beside it (25 October 2026, the owner and the PM)
 
 Why: the owner, testing: *why does the work go on only after a merge into dev?* Because three things meet: a task that
 comes `after` another starts from its merged work in dev (`core/idea_runner.py` `after_ok`, `realm/plans.py`); every
@@ -1442,7 +1442,7 @@ result waits at Review for the person's merge (`review` is on by default, `setti
    by itself; the setting stays for a person who wants to look at each one.
 The owner's call. Spec 84.
 
-## 102. Progress is seen: the elf asks about the look before it is built, and what changed shows its picture (25 October, the owner)
+## 102. Progress is seen: the elf asks about the look before it is built, and what changed shows its picture (25 October 2026, the owner)
 
 Why: the owner, testing: *users need more to look at and check; if this is a game the designer should send more questions
 about style, pictures and so on; I sit and watch the cards move and do not feel the work progress.* Today a person is
@@ -1460,7 +1460,7 @@ never what it looks like. So:
 5. Thrift holds (§49): questions and looks only for goals that change what people see, one round of each a goal.
 Spec 85.
 
-## 103. What the logs of the owner's day said: a task may run its project's commands, the gate runs the project's tests, a resumed session's cost is counted once, a send back that cannot help is not offered, a budget is never under its call's floor (25 October, the owner and the PM)
+## 103. What the logs of the owner's day said: a task may run its project's commands, the gate runs the project's tests, a resumed session's cost is counted once, a send back that cannot help is not offered, a budget is never under its call's floor (25 October 2026, the owner and the PM)
 
 Why: the owner's logs of 25 October (a Node game, two goals, 28 calls): the Board said **$11.22**, about **$4.5** was
 spent. Read call by call:
@@ -1499,7 +1499,7 @@ So:
    reading and plan on the Veteran.
 Spec 86.
 
-## 104. A party is a small team and a lens: its leader's map of the project, drawn as cards on the table; the field goes to the Orkmaster; the spec is read in the hand; the will-be map is the contract (26 October, the owner and the PM)
+## 104. A party is a small team and a lens: its leader's map of the project, drawn as cards on the table; the field goes to the Orkmaster; the spec is read in the hand; the will-be map is the contract (26 October 2026, the owner and the PM)
 
 Why: the owner, after a day of use: *everything is automated so far that you sit and do not understand what the system
 does: a card drips in now and then, a result lands in dev, the cards leave, and you never read the code.* Since §101 a
@@ -1620,7 +1620,7 @@ channels, the Release manager the versions); they say it as text nobody reads wh
     each in `TERMS` with the first spec; a part of a map is not called a *card* where a person reads it (spec 70 §0).
 The owner's call. The mockup *Orkboard — the map on the table* first; the specs are written from it.
 
-## 105. What the first look said: Play opens the page, not a port; the right column is where a thing opened is seen; Assets fills the table; a party is removed from its menu; System is the project's architecture, not its folders (26 October, the owner)
+## 105. What the first look said: Play opens the page, not a port; the right column is where a thing opened is seen; Assets fills the table; a party is removed from its menu; System is the project's architecture, not its folders (26 October 2026, the owner)
 
 Why: the owner opened their game (a Node party game: `client/` on Vite and React, `server/` on Express, `config/`
 shared) on the Orkboard of specs 87–89: *I could not find how to remove an old party; Assets is the right tab but its
@@ -1658,7 +1658,7 @@ was on another. So:
    like `config/balance.ts`, a part of its own: a change there touches both). The cards and the reveal stay §104.2's.
 Spec 90.
 
-## 106. Warm: easier on the eyes. The ground lifted, the ink softened, warm greys, the interface in IBM Plex Sans; the pixel face for titles, headings and buttons only (26 October, the owner)
+## 106. Warm: easier on the eyes. The ground lifted, the ink softened, warm greys, the interface in IBM Plex Sans; the pixel face for titles, headings and buttons only (26 October 2026, the owner)
 
 Why: the owner, on the Tech party's System: *the architecture reads badly: the pixel font tells on small modules, the
 text on the brown reads oddly, and white text on such a black screen strains the eyes.* Measured: full ink on the canvas
@@ -1676,7 +1676,7 @@ warm); the owner took soft (orkUI 0.12.0), then **warm** in its place (orkUI 0.1
 4. The heads whose edges fell under 3:1 on the lighter raised are one step lighter.
 orkUI 0.12.0 and 0.13.0; spec 40.
 
-## 107. The owner's list: the limits always seen and what used them, a quieter top bar, Play that breathes, an AI tool for each seat, New party in two halves, parties and goals beside the Orkmaster (26 October, the owner)
+## 107. The owner's list: the limits always seen and what used them, a quieter top bar, Play that breathes, an AI tool for each seat, New party in two halves, parties and goals beside the Orkmaster (26 October 2026, the owner)
 
 Why: the owner, after a day on their game: *I liked it when the limits' percentages were seen without opening anything;
 clean up the top right: Agents goes, Files goes into the Orkmaster's assets, Settings is a word after Orkboard, only the
@@ -1704,7 +1704,7 @@ drawn and agreed the same day. So:
    still run no command. The building's autonomy never reached a task's run, so it is no longer agy's condition.
 Spec 91.
 
-## 108. Running the project is a party by the project's kind; working with people is a party, Team; Operations are no longer a tab (26 October, the owner)
+## 108. Running the project is a party by the project's kind; working with people is a party, Team; Operations are no longer a tab (26 October 2026, the owner)
 
 Why: the owner: *Operations should not be a permanent tab but a party. We have LiveOps for games; something like it should
 exist for other kinds of project: apps, services, an LLM wiki, and managing a team of people.* A permanent row in every
@@ -1733,7 +1733,7 @@ had a party of its own (spec 91 §7). So:
    *Operations* stays the person's list, one for all projects, now reached through Team.
 Spec 92.
 
-## 109. A party does one kind of work and is its lens; a goal is one, and goes through the parties its work needs; the left column is the Orkmaster's goals; the Board is the Orkmaster's alone (27 October, the owner and the PM)
+## 109. A party does one kind of work and is its lens; a goal is one, and goes through the parties its work needs; the left column is the Orkmaster's goals; the Board is the Orkmaster's alone (27 October 2026, the owner and the PM)
 
 Why: the leaders' lenses (§104.1) quarrel with the parties as they are made. A party mixes crafts (the game's party: the
 Game designer leading Grunts and artists; the app's *features*: the Product manager leading code), and since §91.7 the
@@ -1774,7 +1774,7 @@ its party. So:
 8. **Measured**: the steps a goal takes, the calls each step costs against a goal in one party, and the forks asked back.
 The owner's call. Spec 93.
 
-## 110. The leaders are the pane's tabs; a party's header says what it does, holds its squad and its lenses' views as a segmented control; the left column is what is looked at, the tab who looks (27 October, the owner and the PM)
+## 110. The leaders are the pane's tabs; a party's header says what it does, holds its squad and its lenses' views as a segmented control; the left column is what is looked at, the tab who looks (27 October 2026, the owner and the PM)
 
 Why: after §109 a party is a way of looking, not a place: a row of it among the goals in the left column (§109.3) mixed
 two kinds of rows, goals pressed all day and parties seldom. A party's seats, their AI tools and tiers were behind *Edit
@@ -1820,7 +1820,7 @@ the party*, away from the map and from the limits they spend. So (this makes §1
    when three or four, else a list under the title (spec 67: no sideways scroll); the goals the first screen's list.
 The owner's call.
 
-## 111. Play is what is looked at, not a lens: the whole project or one goal, under every tab, opened where the goal changed it; Tech keeps how the project runs (27 October, the owner and the PM)
+## 111. Play is what is looked at, not a lens: the whole project or one goal, under every tab, opened where the goal changed it; Tech keeps how the project runs (27 October 2026, the owner and the PM)
 
 Why: §110.4 put *Play* among the Orkmaster's views, and the owner asked for it under Tech, to run *only what is new for a
 goal*. Play is the project itself, touched: the parties that need it most are Game design (a playtest), Design (the
@@ -1845,7 +1845,7 @@ play; and a goal's new part cannot run alone (waves need the whole game). What T
 6. **The phone**: Play stays the computer's (spec 88 §7); a goal's row says *Play it on the computer*.
 The owner's call.
 
-## 112. System reads what the project really is, a container a card first; a change on a map says who decided it; the lenses of judgement are drawn from what the project has, and the ones with nothing to read wait (27 October, the owner and the PM)
+## 112. System reads what the project really is, a container a card first; a change on a map says who decided it; the lenses of judgement are drawn from what the project has, and the ones with nothing to read wait (27 October 2026, the owner and the PM)
 
 Why: `system_overview.read` run on Orkboard itself (a Python host, a JavaScript page, a VS Code extension) found no link
 at all, though the host and the page talk all day over a WebSocket (`ask("ideas.x")`) and the extension starts the host
@@ -1887,7 +1887,7 @@ some with nothing in the project to read them from, which §104.3 forbids. So:
    never by testing which slug leads it.
 The owner's call.
 
-## 113. Play runs every process the project needs, a client and a server together; a mobile app plays as its web build in a phone's frame, and on the person's own phone over the local network when they allow it (27 October, the owner)
+## 113. Play runs every process the project needs, a client and a server together; a mobile app plays as its web build in a phone's frame, and on the person's own phone over the local network when they allow it (27 October 2026, the owner)
 
 Why: Play runs one command (`.orkcraft/checks.toml`'s `preview`, else the root's `dev|preview|start`) and shows the first
 port that answers a page (spec 90 §1). A project of a client and a server plays only when its root has a script that
@@ -1921,7 +1921,7 @@ preview (`127.0.0.1` only). So (this changes spec 88 §5 for the case in 3, and 
    today.
 The owner's call.
 
-## 114. A goal's row carries its signs: the hourglass while it works, a failure that does not look like closing; a sign pressed lifts its card in the hand, where Retry and Start are (27 October, the owner and the PM)
+## 114. A goal's row carries its signs: the hourglass while it works, a failure that does not look like closing; a sign pressed lifts its card in the hand, where Retry and Start are (27 October 2026, the owner and the PM)
 
 Why: the owner: a goal's red cross reads as closing the goal, and the hourglass and *Retry*/*Start* could be at each goal
 in the left column. ✗ is everywhere the sign of closing or removing, the more so at a row's end where a close stands;
@@ -1939,7 +1939,7 @@ precise):
    at once.
 The owner's call.
 
-## 115. Warm at half its tint, to be tried: the same lightness, half the warmth (27 October, the owner)
+## 115. Warm at half its tint, to be tried: the same lightness, half the warmth (27 October 2026, the owner)
 
 Why: the owner, after living with §106's warm: *it is too warm.* The warm greys tint the ground brown and the ink
 yellow. Taking half the tint off each token and keeping its lightness keeps §106's measures (the ink 13:1 on the canvas,
@@ -1953,7 +1953,7 @@ every text pair AA, the ink AAA), so only the hue moves. So (§106.1 and §106.2
 3. Colour stays a signal (§53.5); the pixel face, IBM Plex and the sizes of §106.3 are unchanged.
 The owner's call, after the side by side.
 
-## 116. Parties are made when a project is first opened, in the Orkmaster's tab; a new goal is the blank card of the hand; its kind is picked in two short rows: the whole way or one party, then that party's kinds (27 October, the owner and the PM)
+## 116. Parties are made when a project is first opened, in the Orkmaster's tab; a new goal is the blank card of the hand; its kind is picked in two short rows: the whole way or one party, then that party's kinds (27 October 2026, the owner and the PM)
 
 Why: the owner: parties are made far more seldom than goals, yet *New party* stands beside *New goal* (§107.6); the
 first goal's way is not understood, while people know writing at the foot of the window (Claude, Codex, Antigravity),
@@ -1981,7 +1981,7 @@ So (this changes §107.6 and §110.2):
    writes the Orkmaster lights the row's card it guesses (§107.6), a guess never picked for them.
 The owner's call.
 
-## 117. The Orkmaster routes and gathers, never writes a spec: each leader on a goal's route writes its own part, the Orkmaster joins the parts, and what they disagree on is a fork (27 October, the owner and the PM)
+## 117. The Orkmaster routes and gathers, never writes a spec: each leader on a goal's route writes its own part, the Orkmaster joins the parts, and what they disagree on is a fork (27 October 2026, the owner and the PM)
 
 Why: §109.2 had the first step's leader write the one spec, *its theses by craft*: a Game designer does not write what Tech
 must check in the architecture, so each step's own reviews were lost; and a goal sent as *The whole way* (§116.3) to the
@@ -2005,7 +2005,7 @@ Orkmaster alone would skip them too. The Orkmaster says what and who (§104.0), 
    later.
 The owner's call.
 
-## 118. A goal goes Idea → Talk → Decided → Spec → Work → Done; its decision is written in the project's docs/decisions.md in git; its spec is a common part and a part a party; a change while it works is a new idea of the goal; a bug goes straight to Tech (27 October, the owner and the PM)
+## 118. A goal goes Idea → Talk → Decided → Spec → Work → Done; its decision is written in the project's docs/decisions.md in git; its spec is a common part and a part a party; a change while it works is a new idea of the goal; a bug goes straight to Tech (27 October 2026, the owner and the PM)
 
 Why: the owner works this way with an agent today: an idea, talked through with the leaders, a decision written in git
 (this file), then the spec, then the work; and a change of a spec while it works goes through an idea again, never
@@ -2047,7 +2047,7 @@ Decisions). So (this makes §117 and §75 precise; spec 65's pitch flow is reuse
 8. **A spec from before** is read as one part of its party, as an older goal's sections are (`OLD_TRACK_SECTIONS`).
 The owner's call.
 
-## 119. The Orkmaster's views stay its tab's; *The whole project* opens that tab, and the tab reads as one with the Orkmaster's line (27 October, the owner and the PM)
+## 119. The Orkmaster's views stay its tab's; *The whole project* opens that tab, and the tab reads as one with the Orkmaster's line (27 October 2026, the owner and the PM)
 
 Why: the owner asked whether the Orkmaster's views (*Board*, *Assets*) could stand in the left column. There they would
 mix §110.1's two axes (a row of the left column is what is looked at; *Assets* through Tech means nothing), leave the
@@ -2062,7 +2062,7 @@ down. So (§110.3 made precise):
    window's default is asked again.
 The owner's call.
 
-## 120. No right column: a card of the map is lifted and turned where it lies; what is read long opens as the pane's one temporary tab; the window is three parts again (27 October, the owner and the PM)
+## 120. No right column: a card of the map is lifted and turned where it lies; what is read long opens as the pane's one temporary tab; the window is three parts again (27 October 2026, the owner and the PM)
 
 Why: after §110–§119 what stood in the right column (§105.2) has a better place each: the spec reads under the tabs
 (§118.4), Play is a temporary tab (§111), a result's acts are the hand's cards (§104.9), Agents went from the top bar and
@@ -2086,7 +2086,7 @@ pane's width each time it opened (§105.2), the reveal with it. So (this changes
    are screens of their own, as today.
 The owner's call.
 
-## 121. One word each for the new things; the hand is a stack a goal; a goal's cost is said before it is talked or started, and a goal may wait for the limits to reset; Orkline follows later (27 October, the owner and the PM)
+## 121. One word each for the new things; the hand is a stack a goal; a goal's cost is said before it is talked or started, and a goal may wait for the limits to reset; Orkline follows later (27 October 2026, the owner and the PM)
 
 Why: read together, §104–§120 used one word for two things (*part*: a part of the project on System, §89, and a party's
 part of a spec, §117–§118) and four words for one family (*stage*: a leader's seats, §104.1, the project's stages,
@@ -2113,7 +2113,7 @@ the same state. So:
    them when it is taken up again (in about two months); Orkboard keeps no reading of both until then.
 The owner's call.
 
-## 122. The parties that did not fit: General, Team and Ideation go; Release is called only to release; a recurring goal is decided once; the project's stage chooses the crafts (27 October, the owner)
+## 122. The parties that did not fit: General, Team and Ideation go; Release is called only to release; a recurring goal is decided once; the project's stage chooses the crafts (27 October 2026, the owner)
 
 Why: after §109 a party is a craft, a lens and a step of a route; General (§80.4: never removed, where a goal with no
 party goes), Team (§108.3: Operations, no goals), Ideation (its Investor's *Bets*, now each goal's *Talk*, §118.1) and
@@ -2136,7 +2136,7 @@ nothing need be carried over. So:
    the short way (§118.2).
 The owner's call.
 
-## 123. Three measures of §104–§122, read from the event log; the first slice is the parties by craft, the tabs, the sections and Talk on one real game; the rest after it is measured (27 October, the owner and the PM)
+## 123. Three measures of §104–§122, read from the event log; the first slice is the parties by craft, the tabs, the sections and Talk on one real game; the rest after it is measured (27 October 2026, the owner and the PM)
 
 Why: almost every decision from §104 ends *Measured*, yet none says which measures decide nor where they are read; and
 fourteen decisions (§109–§122) lean on each other, so built at once they could not be told apart when something is
@@ -2160,7 +2160,7 @@ better or worse. So:
    `.orkcraft/checks.toml` (§113.5).
 The owner's call.
 
-## 124. A new idea is written as a message: one field, Enter sends; no priority, no kind, no lens; *@party* or the open party's tab addresses it, and only then the party's views are pointed at (27 October, the owner and the PM)
+## 124. A new idea is written as a message: one field, Enter sends; no priority, no kind, no lens; *@party* or the open party's tab addresses it, and only then the party's views are pointed at (27 October 2026, the owner and the PM)
 
 Why: the owner: a general idea, not a party's, must be as seamless as writing to a chatbot. §116.3's two rows of kinds,
 the priority, and the lens switch of New goal (§53, §109.6: Text, Code, Screen, Pain) each ask the person to decide
@@ -2181,7 +2181,7 @@ types are chosen by the Orkmaster or the leader, no longer by the person):
    System, a screen or a pain pins it to the blank card as a mark. §53's Text, Code, Screen, Pain switch goes.
 The owner's call.
 
-## 125. The blank card takes a voice: a microphone writes the words into the field, never sends them; where the voice goes is said plainly (27 October, the owner)
+## 125. The blank card takes a voice: a microphone writes the words into the field, never sends them; where the voice goes is said plainly (27 October 2026, the owner)
 
 Why: the owner: an idea is often faster said than typed, as people talk to a chatbot today. So (§124.1 widened):
 1. **A microphone on the blank card**, beside the field: pressed (or held, on the phone), it listens and **writes what
@@ -2197,7 +2197,7 @@ Why: the owner: an idea is often faster said than typed, as people talk to a cha
    motion), so a microphone left on is never missed.
 The owner's call.
 
-## 126. Less to read twice: no top bar, a goal's row one sign, no Overview, a goal's pane follows its phase, nothing over System's table (27 October, the owner and the PM)
+## 126. Less to read twice: no top bar, a goal's row one sign, no Overview, a goal's pane follows its phase, nothing over System's table (27 October 2026, the owner and the PM)
 
 Why: read together, §104–§125 show some things twice: the top bar holds four things on a band of its own; a goal's row
 carries its element, route, phase, state and its group; a party's *Overview* repeats the left column, the hand and the
@@ -2221,7 +2221,7 @@ System's table has a bar of controls over it. So (this changes §107.1, §104.8,
    the tab's menu (**…**). The table begins under the header.
 The owner's call.
 
-## 127. No dialogs; Operations off the left column; one closed set of signs and motions; Settings only for what lives nowhere near the work (27 October, the owner and the PM)
+## 127. No dialogs; Operations off the left column; one closed set of signs and motions; Settings only for what lives nowhere near the work (27 October 2026, the owner and the PM)
 
 Why: after §109–§126 almost everything has a standing place (the pane, the temporary tab, a head's popover, a card in
 the hand); the dialogs left (*New party*, *Edit the party*, the question before removing a party) are a fourth way of
@@ -2244,7 +2244,7 @@ field's motions grew one decision at a time. And Settings still holds what moved
    party or a goal lives there, never in Settings.
 The owner's call.
 
-## 128. After the first slice, one face for the desktop and the phone: one page fitted to the width, the phone's app its frame (27 October, the owner and the PM)
+## 128. After the first slice, one face for the desktop and the phone: one page fitted to the width, the phone's app its frame (27 October 2026, the owner and the PM)
 
 Why: the desktop (`static/board.js`, `js/shell`, `js/board`, `js/arena`) and the phone (`pwa/board-app.js`,
 `pwa/shell-*.js`) are two faces of the same window; every decision says its phone's half (§110.9, §120.5, …) and is built
@@ -2260,7 +2260,7 @@ same parts a screen each. So:
    page's at the narrow width; `tests/test_architecture.py` keeps one face.
 The owner's call.
 
-## 129. No measures: the owner's yes or no after each slice is built (27 October, the owner)
+## 129. No measures: the owner's yes or no after each slice is built (27 October 2026, the owner)
 
 Why: the owner is the one person using Orkboard; a slice is judged by them using it, not by counted events. So (this
 changes §123.1 and every *Measured* of §104–§128: §104.14, §109.8, §117.6, §119.4, §120.4, §128.2):
@@ -2272,7 +2272,7 @@ changes §123.1 and every *Measured* of §104–§128: §104.14, §109.8, §117.
 3. Where a decision said *asked again if the measures show* (§119.4, §120.4), it is asked again when the owner says so.
 The owner's call.
 
-## 130. A goal done stays in the list until its result is seen, then leaves it; the done goals are a history, the temporary tab (27 October, the owner)
+## 130. A goal done stays in the list until its result is seen, then leaves it; the done goals are a history, the temporary tab (27 October 2026, the owner)
 
 Why: today a goal done goes to *Flags · n* folded at the foot of its party (`js/arena/goals.js` `FlagsFold`, spec 73 §3),
 with *k wait for main* over it: a fold seldom opened that only grows, two counts the list may not show (§67, §126.2), and
@@ -2287,7 +2287,7 @@ foot* and spec 73 §3):
    cost.
 The owner's call.
 
-## 131. What the new window does already goes: *Process now*, the night, the gate's line, collisions as stops, a goal type's sign, the row's peek, the analytics page, the canvases (27 October, the owner)
+## 131. What the new window does already goes: *Process now*, the night, the gate's line, collisions as stops, a goal type's sign, the row's peek, the analytics page, the canvases (27 October 2026, the owner)
 
 Why: each of these is done by a thing of §109–§130 or no longer needed. So:
 1. ***Process now* and *Judge now* go** (spec 73 §1, spec 65 §8): the Orkmaster routes a new idea by itself (§117,
@@ -2307,7 +2307,7 @@ Why: each of these is done by a thing of §109–§130 or no longer needed. So:
    project's.
 The owner's call.
 
-## 132. The window grows from what there is: no onboarding of its own; a part comes when it has something to hold, first the pane, then the goals, then the hand (27 October, the owner and the PM)
+## 132. The window grows from what there is: no onboarding of its own; a part comes when it has something to hold, first the pane, then the goals, then the hand (27 October 2026, the owner and the PM)
 
 Why: the owner: a new person meets the three parts of the window (§104.0) all at once, two of them empty; opened one a
 step (the Orkmaster and its tab, then the first goal, then the cards in the hand), each is learnt by using it. A tour
@@ -2336,7 +2336,7 @@ opens whole. So (this makes §116.1–§116.2 precise; part of the first slice, 
    parties from the first goal's route instead is asked again if the owner finds people stopping there (§129.3).
 The owner's call.
 
-## 133. A goal's first card is its route: the parties, the cost and one press before any call; the row's sign is the head of whoever has the goal now; a goal waiting for the reset may start now (27 October, the owner and the PM)
+## 133. A goal's first card is its route: the parties, the cost and one press before any call; the row's sign is the head of whoever has the goal now; a goal waiting for the reset may start now (27 October 2026, the owner and the PM)
 
 Why: the owner wrote the flow of a general goal as they expect it: the idea written on the blank card, routed by the
 Orkmaster on the cheaper tier, *a card in the hand: your idea was taken, these parties write its spec, it starts now or
@@ -2364,7 +2364,7 @@ gone (§131.1). So (this makes §116.2, §121.3 and §126.2 precise):
    (*Start now, from your reserve*).
 The owner's call.
 
-## 134. Less said twice: what waits is the hand's alone; a party is one map; its header is its name and its squad; *The whole project* is no goal picked; a goal with nothing to settle starts on its decision (27 October, the owner and the PM)
+## 134. Less said twice: what waits is the hand's alone; a party is one map; its header is its name and its squad; *The whole project* is no goal picked; a goal with nothing to settle starts on its decision (27 October 2026, the owner and the PM)
 
 Why: read as one window after §133: *waits for you* is said three times (the row's sign, §126.2; the tab's signal mark,
 §110.3; the goal's stack in the hand, §121.2); after §112.9 a party has one or two views, and the second is the first
@@ -2399,7 +2399,7 @@ route, its decision, *Start*) where nothing is left to settle after the second. 
    (§133.1) is the whole way's, so starting by itself spends nothing that was not said.
 The owner's call.
 
-## 135. The Orkmaster keeps *Board* alone; Assets is what is looked at, beside Play, under every tab; Art's map is the Assets of its kinds (27 October, the owner and the PM)
+## 135. The Orkmaster keeps *Board* alone; Assets is what is looked at, beside Play, under every tab; Art's map is the Assets of its kinds (27 October 2026, the owner and the PM)
 
 Why: the owner: after §134.2 every tab is one map but the Orkmaster's, which keeps *Board* and *Assets*; could Assets go
 to a party of its own, Art. Assets is not a craft's way of looking: it is the project's own material, the files with it
@@ -2419,7 +2419,7 @@ whose craft is exactly those assets, has had no map (§112.9). So (this changes 
    lie under the one picked (§104.11); an idea addressed to Art picks a card there (§124.5).
 The owner's call.
 
-## 136. What §132–§135 left uneven: one meaning for the hourglass, a cost said again when the route grows, no Assets button, recurring rounds and the wait as signs, how the project runs on System, Stop all on the phone, the picking mode, a goal at work through the Orkmaster is its Board, Agents goes; the first slice counted again (27 October, the owner and the PM)
+## 136. What §132–§135 left uneven: one meaning for the hourglass, a cost said again when the route grows, no Assets button, recurring rounds and the wait as signs, how the project runs on System, Stop all on the phone, the picking mode, a goal at work through the Orkmaster is its Board, Agents goes; the first slice counted again (27 October 2026, the owner and the PM)
 
 Why: §104–§135 read through once more: §133.3 gave the hourglass a second meaning (§127.3: one each); a leader may add
 a step after the route's press (§117.1) while *Confirm and start* (§134.5) leans on the cost said before it; under Art's
@@ -2480,7 +2480,7 @@ Agents repeats the Board, the limits' chips and the seats' popovers. So (this ch
       (§130.4), Settings made small (§127.4), the reveal *Since <version>* (§112.5).
 The owner's call.
 
-## 137. Release is in every project from its start and is the one way into main: its map is dev against main; *To main* by code, *Release a version* with its cost (27 October, the owner and the PM)
+## 137. Release is in every project from its start and is the one way into main: its map is dev against main; *To main* by code, *Release a version* with its cost (27 October 2026, the owner and the PM)
 
 Why: the owner: every other party lands its work in dev by itself (§101); let Release be the one party through which
 anything goes into main. Today dev → main is a card of no goal's in the hand (*n goals ready for main*, §104.9, §121.2)
@@ -2506,7 +2506,7 @@ production must reach main in one press. So (this changes §104.9, §116.1, §12
    *Release a version* after the slice, with the wait for the reset and recurring goals.
 The owner's call.
 
-## 138. *Done* is in dev; the route card comes first on the first start too; a goal's place is *in line*; a goal before *Work* opens on the Orkmaster's tab; files with no Tech nor Design are the Orkmaster's menu's; a recurring round waits for the reset; a decision is committed to dev (27 October, the owner and the PM)
+## 138. *Done* is in dev; the route card comes first on the first start too; a goal's place is *in line*; a goal before *Work* opens on the Orkmaster's tab; files with no Tech nor Design are the Orkmaster's menu's; a recurring round waits for the reset; a decision is committed to dev (27 October 2026, the owner and the PM)
 
 Why: read again after §137: §118.1's *Done* asked for a flag in main, which only Release writes now (§137.2), so goals
 would stay at work until *To main* and the left column (§130) would not clear; §132.4 dealt the leaders' questions first,
@@ -2533,7 +2533,7 @@ named. So (this changes §118.1, §124.2, §130.1, §132.4, §133.1, §136.3, §
    *To main* (§137.4).
 The owner's call.
 
-## 139. A goal of one party opens on that party's tab at every phase (27 October, the owner)
+## 139. A goal of one party opens on that party's tab at every phase (27 October 2026, the owner)
 
 Why: the owner: a goal that belongs to one party should open on its tab at once, whatever its phase. With one party on
 its route the Orkmaster's page of a phase says little (*Asked*, a *Gist*, a route of one step): its one section is its
@@ -2549,7 +2549,7 @@ at the left, its will-be on its map at the right, §118.4); an idea addressed to
    parties; steps taken off to one make it a goal of one. The tab the person has open is never switched under them.
 The owner's call.
 
-## 140. The Orkmaster's tier is not chosen; a head on the route card is taken off by its ×; *+* never offers Release; the picking mode ends on *Stop picking* (27 October, the owner and the PM)
+## 140. The Orkmaster's tier is not chosen; a head on the route card is taken off by its ×; *+* never offers Release; the picking mode ends on *Stop picking* (27 October 2026, the owner and the PM)
 
 Why: read again after §139: the Orkmaster's header offers its tier (§110.4, §135.1) though it routes and joins on the
 cheaper tier, never the stronger (§117.2–§117.3, §133.1), so the choice changes nothing; a head pressed on the route card
@@ -2565,7 +2565,7 @@ step (§137.1); and the picking mode's *Done* (spec 94 §1.5) is a goal's phase'
 4. **The picking mode ends on *Stop picking***, Esc, sending the idea or taking off its party's mark (spec 94 §1.5).
 The owner's call.
 
-## 141. An idea addressed to a party may pin any card of that party's map (27 October, the owner)
+## 141. An idea addressed to a party may pin any card of that party's map (27 October 2026, the owner)
 
 Why: §124.5 names what an addressed idea may point at (*a part of System, a screen or a pain*), written when those were
 the only maps; Art's map (§135.4), Game design's *Loop* (§112.8) and Release's map (§137.3) came after, and each would
@@ -2576,7 +2576,7 @@ need its line. So (this changes §124.5 and §135.4's last clause):
 2. A general idea (the Orkmaster's tab, no party addressed, §124.4) has no picking: it is its text alone.
 The owner's call.
 
-## 142. No temporary tab: the pane opens one thing over its map, with ← back; the tabs are the leaders alone (27 October, the owner and the PM)
+## 142. No temporary tab: the pane opens one thing over its map, with ← back; the tabs are the leaders alone (27 October 2026, the owner and the PM)
 
 Why: the owner: the temporary tab is a weak place. It stands in the row of who looks (§110.1) while it holds what is
 opened, and it has rules of its own to learn (replaced by the next, pinned, *Back*, §104.8, §120.2); on the phone it is
@@ -2603,7 +2603,7 @@ files with no Tech nor Design, *New party*), and Play. So (this changes §104.8,
 8. **Side by side and pinning** are not made; asked again when the owner says so (§120.4, §129.3).
 The owner's call.
 
-## 143. The Board's columns stand under the tabs: a tab is its column's head, the Board has no header of its own; the Orkmaster's column is its routing (27 October, the owner)
+## 143. The Board's columns stand under the tabs: a tab is its column's head, the Board has no header of its own; the Orkmaster's column is its routing (27 October 2026, the owner)
 
 Why: the Board is every party a column (§104.7), each headed by its leader's head and name, while the same heads stand
 in the row of tabs over it (§110.3): the leaders said twice. The members' heads on the task cards are not a repeat (who
@@ -2622,7 +2622,7 @@ does a task, not who leads). The owner chose the tabs as the columns' heads over
    tokens with their element, their member's head and their sign (the name on a lifted card, spec 94 §1.1).
 The owner's call.
 
-## 144. The card battler kept: a card is played onto its party's lane, a card that spends carries its cost in its corner, the lane it is about rises while it is held (27 October, the owner and the PM)
+## 144. The card battler kept: a card is played onto its party's lane, a card that spends carries its cost in its corner, the lane it is about rises while it is held (27 October 2026, the owner and the PM)
 
 Why: the owner wants the window to keep its reference to a card battler: the Board's columns under the leaders' heads
 (§143) are its lanes under the heroes, the hand at the foot and the field's motions (§89) its cards. Kept within the
@@ -2641,7 +2641,7 @@ is not a fight. So:
    it is about lie a little raised, as a battler shows where a card will be played; §89's *lifted*, no new motion.
 The owner's call.
 
-## 145. No left column: the window is two parts, the table and the hand; a goal lives in the deck, the hand, on the table or in the discard; the Orkmaster's line is its tab (27 October, the owner and the PM)
+## 145. No left column: the window is two parts, the table and the hand; a goal lives in the deck, the hand, on the table or in the discard; the Orkmaster's line is its tab (27 October 2026, the owner and the PM)
 
 Why: the owner: after §143–§144 the left column could go. What it holds is said elsewhere already: what waits for the
 person is the hand's (§121.2, §134.1), the goals at work are their cards in the lanes of the Board (§143–§144), a goal is
@@ -2684,7 +2684,7 @@ slice only starts (§136.12), so this is cheapest now. So (this changes §104.0,
    menu* where it read *the left column the Orkmaster's line and the goals*.
 The owner's call.
 
-## 146. In VS Code a read opens in the editor, not over the pane; the Board can stand in the editor's side bar, narrow (27 October, the owner and the PM)
+## 146. In VS Code a read opens in the editor, not over the pane; the Board can stand in the editor's side bar, narrow (27 October 2026, the owner and the PM)
 
 Why: the owner: Orkboard may well be a VS Code extension, and windows inside the window are not wanted there. The editor
 has its own explorer, its diff, its editors and its output; what the pane opens over its map (§142: a diff, a file, a
@@ -2703,7 +2703,7 @@ editor):
 4. **The extension's tests** (`cd vscode && npm test`) cover the asks it accepts and the ones it refuses.
 The owner's call.
 
-## 147. Operations leave Orkboard's window; the person reads four phases; the decision has one button; *Later* only when the limits run low (27 October, the owner and the PM)
+## 147. Operations leave Orkboard's window; the person reads four phases; the decision has one button; *Later* only when the limits run low (27 October 2026, the owner and the PM)
 
 Why: read once more as one window (spec 95), four things are still more than the work needs: *Operations* (the person's
 daily, 1:1s, retro, mail and Jira, spec 38) are no project's goals, and with Team gone (§122.2) they hang in the
@@ -2724,7 +2724,7 @@ phases as the person reads them, §122.2, §127.2, §133.1, §134.5, §145.6 and
    **Talk** (**Start** on the short way, §118.2).
 The owner's call.
 
-## 148. orkUI made to fit the new window: the half-tint warm taken; one moon; the icons at the signs' weight; the marks in ink; the elements apart from the signals; the heads at 16 px at least; the races, signs and emblems Orkboard draws; the preview the window as decided (27 October, the owner and the PM)
+## 148. orkUI made to fit the new window: the half-tint warm taken; one moon; the icons at the signs' weight; the marks in ink; the elements apart from the signals; the heads at 16 px at least; the races, signs and emblems Orkboard draws; the preview the window as decided (27 October 2026, the owner and the PM)
 
 Why: orkUI's whole set laid out on one sheet against spec 95: the frame holds (the pixel face for headings and buttons,
 IBM Plex for the rest, square notched corners, the warm ground of a tabletop game, which the indie developers it is for
@@ -2769,7 +2769,7 @@ this makes §115, §127.3 and §144.2 precise):
    (§136.12).
 The owner's call.
 
-## 149. The cards react as in Balatro, with no motion added; a hand card face down has one back; the heads on a 16 grid read by their silhouette; the detailed art is the marketing's (27 October, the owner and the PM)
+## 149. The cards react as in Balatro, with no motion added; a hand card face down has one back; the heads on a 16 grid read by their silhouette; the detailed art is the marketing's (27 October 2026, the owner and the PM)
 
 Why: the owner asked whether the heads and the cards should be drawn in more detail, as Slay the Spire's or Balatro's.
 Slay the Spire's card is a picture, each its own, and carries the game; ours carries what is read all day (a task's
@@ -2807,7 +2807,7 @@ closed set. So (made in orkUI first, then copied; this makes §89, §127.3, §14
    first slice's hand and table (§136.12); the marketing's art apart from the slices.
 The owner's call.
 
-## 150. The phone turned on its side is the table, as Balatro's: a low window keeps the wide layout made compact; upright stays the quick answer; nothing is locked (27 October, the owner and the PM)
+## 150. The phone turned on its side is the table, as Balatro's: a low window keeps the wide layout made compact; upright stays the quick answer; nothing is locked (27 October 2026, the owner and the PM)
 
 Why: the owner: a phone held on its side, as Balatro is played, would set Orkboard apart, and since the person types
 little, the keyboard costs little. On its side an iPhone is 844 × 390: the Board's columns under the tabs (§143) are six
@@ -2832,7 +2832,7 @@ half the 390 px above the keyboard. So (this makes spec 94 §3.1 and §6 precise
 6. **When**: with the phone's one page (§128, spec 94), after the first slice.
 The owner's call.
 
-## 151. A party's squad is who it has, its size how the work goes; a specialist's view is marks on its party's map; one place makes and edits the parties; Marketing comes back with UA (28 October, the owner and the PM)
+## 151. A party's squad is who it has, its size how the work goes; a specialist's view is marks on its party's map; one place makes and edits the parties; Marketing comes back with UA (28 October 2026, the owner and the PM)
 
 Why: the owner asked to bring the lenses back as the squad's members' (an ASO and a UA specialist in marketing, an
 accessibility check beside a designer). As tabs or screens a member that would be §134.2's segmented control again, and
@@ -2897,7 +2897,7 @@ was no party since §109.1 though its specialists are in the library, and UA is 
    the specialists' views with the other maps after it; Marketing and UA in the library and the recipes at any time.
 The owner's call.
 
-## 152. In picking, cards are taken with a box, as Warcraft's units; a box that takes a whole group pins the group (28 October, the owner and the PM)
+## 152. In picking, cards are taken with a box, as Warcraft's units; a box that takes a whole group pins the group (28 October 2026, the owner and the PM)
 
 Why: the owner: an idea addressed to a party could take its cards with a box, as units are taken in Warcraft, not only
 one press a card (§141). A change often touches several places at once (three screens of one flow, two parts of System),
@@ -2921,7 +2921,7 @@ only while picking, never against a touch screen's scroll, and never pinning a w
    staying the idea's marks.
 The owner's call.
 
-## 153. What a party asks of the project: Product at the start, each other leader at its party's first goal, inside a goal's three; a question is a card of up to four choices and *Other…*; a goal's questions a stack, one a card (28 October, the owner and the PM)
+## 153. What a party asks of the project: Product at the start, each other leader at its party's first goal, inside a goal's three; a question is a card of up to four choices and *Other…*; a goal's questions a stack, one a card (28 October 2026, the owner and the PM)
 
 Why: the owner asked whether each party's leader interviews the person about the project when it is first opened (what
 it is for, whom, what hurts them). None does: the first start reads the project's files (spec 75, no model) and asks one
@@ -2968,7 +2968,7 @@ makes spec 75 §2, spec 85 §1, §121.2, §132.4–§132.5 and §138.2 precise):
    one page (§128, §150.6).
 The owner's call.
 
-## 154. Product's party is the knights, Release's the undead: a lich leads it, skeletons are its hands; Orkboard draws six races (28 October, the owner)
+## 154. Product's party is the knights, Release's the undead: a lich leads it, skeletons are its hands; Orkboard draws six races (28 October 2026, the owner)
 
 Why: read again after §153, §148.8 keeps four races in Orkboard's copy (the ork, the elf, the goblin, the gnome) and
 leaves the knight, the lich and the skeleton to Orkline, while Product's leader is drawn a lich (`realm/roles.py`
@@ -2991,7 +2991,7 @@ of what is out. So (this changes §148.8 and makes §53 precise):
    parties (§136.12).
 The owner's call.
 
-## 155. A party's leader is its race's higher form, grown, not worn: the tier is what a head wears, the leader what grows out of it; Product's members are griffins (28 October, the owner and the PM)
+## 155. A party's leader is its race's higher form, grown, not worn: the tier is what a head wears, the leader what grows out of it; Product's members are griffins (28 October 2026, the owner and the PM)
 
 Why: the owner liked Release's lich and skeletons (§154.2) and asked for the same in every party, so its leader stands
 out by its silhouette. On a 16 px head (§148.7, §149.4) the tier is already the gear on top (the laborer's cap, the
@@ -3031,7 +3031,7 @@ Orkmaster's alone, colour a signal (§53.5). So (this changes §154.1 and §154.
    races (`realm/roles.py` `RACES`, the leader's form by its seat) with the first slice's parties (§136.12).
 The owner's call.
 
-## 156. A leader reads the project through its map: every call carries its map as text, read by code and current with dev; the parties are kept in step by the parts of their maps, never by reading each other's specs; what a call may read is bounded in fact (28 October, the owner)
+## 156. A leader reads the project through its map: every call carries its map as text, read by code and current with dev; the parties are kept in step by the parts of their maps, never by reading each other's specs; what a call may read is bounded in fact (28 October 2026, the owner)
 
 Why: the owner asked whether, on a project opened as it is, each party's leader reads what it needs without being
 flooded. It does not yet: the maps of §104.3 and §112 are read by code, but no call is given them; every leader's call
@@ -3095,7 +3095,7 @@ steps, and a goal of Product may touch no file at all. So (this makes §86, §10
    as they come (§104.14); 3–6 with the other maps; 10 with §153; 9 and 11 at any time, 9 after its measure.
 The owner's call.
 
-## 157. What §151–§156 left uneven: the project's questions are a stack among the stacks; Release's squad is its leader until seats are added; spec 95 read up to §157 (28 October, the owner and the PM)
+## 157. What §151–§156 left uneven: the project's questions are a stack among the stacks; Release's squad is its leader until seats are added; spec 95 read up to §157 (28 October 2026, the owner and the PM)
 
 Why: §151–§156 read against spec 95 and each other: §153.2 lays Product's questions *beside the blank card and Release's
 card*, §121.2's hand, while §145.3–§145.4 laid the hand anew (the blank card, the deck, the stacks, Release's card, the
@@ -3113,7 +3113,7 @@ says *the four crafts' races only*, §148.8, which §154.3 changed). So (this ma
    and the first slice with what joined it since §136.12.
 The owner's call.
 
-## 158. A bug's Talk finds its cause; a party's race is its party's, not its role's craft: six parties, six races, six leaders; the rest of the cast is the marketing's (28 October, the owner and the PM)
+## 158. A bug's Talk finds its cause; a party's race is its party's, not its role's craft: six parties, six races, six leaders; the rest of the cast is the marketing's (28 October 2026, the owner and the PM)
 
 Why: read after §157, two things were left open. A bug's short way skips Talk (§118.2), yet §153.3 asks a party's
 question about the project *in its first goal's Talk*, and a bug's report is often too vague for its fix to hit its
@@ -3166,7 +3166,7 @@ with it):
    and §148's orkUI release (0.15.0), as §154.5 and §155.7; the gallery apart from the slices.
 The owner's call.
 
-## 159. Release's card is the discard's: the goals done and those ready for main are one pile at the hand's right (28 October, the owner)
+## 159. Release's card is the discard's: the goals done and those ready for main are one pile at the hand's right (28 October 2026, the owner)
 
 Why: the owner, on S1's mockup (spec 98): *the bottom part with the cards is getting too complicated.* The hand held the
 blank card, the deck, the stacks, Release's card and the discard; Release's card (*n goals ready for main*, §137.5) and
@@ -3182,7 +3182,7 @@ person's look, the other for *To main*, side by side at the hand's right. So (th
    (§137.3); *Release a version* is unchanged (§137.4).
 The owner's call.
 
-## 160. The hand is three places: the deck with the new goal's card drawn off it, the stacks, the discard; the deck's back says the next goal; a card's face its gem, its words when lifted (28 October, the owner and the PM)
+## 160. The hand is three places: the deck with the new goal's card drawn off it, the stacks, the discard; the deck's back says the next goal; a card's face its gem, its words when lifted (28 October 2026, the owner and the PM)
 
 Why: the owner, on S1's mockup after §159: the blank card, the deck, the stacks and the discard are still four things to
 read at the hand's foot, and the deck's back says nothing (an ork mark on every one). A card battler's hand is three:
@@ -3209,7 +3209,7 @@ what is to come, what is played, what is done. The blank card is a goal to come;
    (§104.5). Every card of the hand has one size; what it asks is on its lifted state (§104.8).
 The owner's call.
 
-## 161. The heads keep their old drawing: the races are told by their faces and colours on the 12 × 11 grid, the leaders and the griffin drawn the same way (28 October, the owner)
+## 161. The heads keep their old drawing: the races are told by their faces and colours on the 12 × 11 grid, the leaders and the griffin drawn the same way (28 October 2026, the owner)
 
 Why: the owner, on orkUI 0.15.0's heads (§149.4, §155): *I do not like the new heads; bring the old ones back and make
 another pass; the decision that they stand apart by their silhouette should be looked at again.* The 16 × 16 heads were
@@ -3229,7 +3229,7 @@ of the heads the window had. So (this changes §148.7, §149.4 and §155.1–§1
    these.
 The owner's call.
 
-## 162. Product's party is the knights again, led by a golden unicorn knight with an angel's wings; the shaman without the war paint (28 October, the owner)
+## 162. Product's party is the knights again, led by a golden unicorn knight with an angel's wings; the shaman without the war paint (28 October 2026, the owner)
 
 Why: the owner, on orkUI 0.15.2's heads (§161): *the heads are good; the problem is the griffins.* A griffin among the
 humanoid heads reads as an animal in a row of people; the knights were Product's race before §155.4, and every other
@@ -3245,7 +3245,7 @@ unicorn knight, whose horn is one spike at its brow. So (this changes §155.2 an
    green (§155.2).
 The owner's call.
 
-## 163. A card is neutral on the warm table: the cards' own fill and frame, soft greys a step lighter (28 October, the owner)
+## 163. A card is neutral on the warm table: the cards' own fill and frame, soft greys a step lighter (28 October 2026, the owner)
 
 Why: a card on the table differed from it by its fill only 1.17:1 (`raised` on `table`), so the cards read as windows,
 not things on a table. Three ways were laid side by side on one window (orkUI's `docs/compare/cards.html`): A, the table
@@ -3261,7 +3261,7 @@ A. So (this makes §115, §148.1 and §149.3 precise):
 3. In orkUI's 0.15.x, with §162's heads, then copied here once (spec 96).
 The owner's call.
 
-## 164. The leaders have names of their own, said only where a party is made and edited (28 October, the owner)
+## 164. The leaders have names of their own, said only where a party is made and edited (28 October 2026, the owner)
 
 Why: the owner: the leaders' higher forms (§155, §162) are characters; a name of their own gives each a little life where
 the person chooses its party, without noise where the work is read. §154.4 and §158.7 say a role's name and never a race
@@ -3276,7 +3276,7 @@ one exception to §154.4 and §158.7):
 3. They are words of the interface, written where the face writes them; code, keys and files keep their names.
 The owner's call.
 
-## 165. Light cards are for later: §163's neutral cards stay; a light card asks its own heads and a second palette (28 October, the owner)
+## 165. Light cards are for later: §163's neutral cards stay; a light card asks its own heads and a second palette (28 October 2026, the owner)
 
 Why: a fourth way was drawn beside §163's (orkUI's `docs/compare/cards.html`, D): the cards the colour of today's ink
 (`#dedbd6`), their words dark. It reads as cards on a table most of all (12.8:1 against it, §163's A 1.30:1), but the
@@ -3287,7 +3287,7 @@ heads are drawn for dark grounds (25 of their 32 colours fall under 3:1 on the l
    elements and signals' kin for it, and both grounds measured; then the owner looks again.
 The owner's call.
 
-## 166. The cards a hint cold: a slate grey on the warm table (28 October, the owner)
+## 166. The cards a hint cold: a slate grey on the warm table (28 October 2026, the owner)
 
 Why: the owner, after §163's neutral cards: *let's try them colder.* Two cool tints of A were laid beside it at the same
 lightness (orkUI's `docs/compare/cards.html`): A1, a hint cold (CIELAB chroma about 3, hue about 250), and A2, cold
@@ -3299,7 +3299,7 @@ makes §163.1 precise):
 2. In orkUI 0.15.4, then copied here (spec 96).
 The owner's call.
 
-## 167. The cards read as a card game's, a goal lies as a cascade in its party's lane, the hand lies under the lanes, the deck goes into the first lane (28 October, the owner and the PM)
+## 167. The cards read as a card game's, a goal lies as a cascade in its party's lane, the hand lies under the lanes, the deck goes into the first lane (28 October 2026, the owner and the PM)
 
 Why: the owner, after five rounds of `docs/mockups/cards/` (drawn on a card game's anatomy at the owner's ask): the
 cards' face said too little at a glance and too much at once (a bright sign on black, a head on every card, the cost
@@ -3345,7 +3345,7 @@ hourglass, §144.1's members' heads and §144.2's cost place, §145.2, §153.5's
    on the Board one token with its stack's edges, a press opening its tasks.
 The owner's call.
 
-## 168. The cards' names in the body face; the + card turned and green; a stack and a goal's tasks as a fan (28 October, the owner)
+## 168. The cards' names in the body face; the + card turned and green; a stack and a goal's tasks as a fan (28 October 2026, the owner)
 
 Why: the owner, after spec 101's window: a goal's name is a person's words (CLAUDE.md: the pixel face is for headings
 and buttons); the + card should read as the one to play; and cards laid straight one on another read as a ticket board,
@@ -3361,7 +3361,7 @@ not as cards. So (this makes §167.1, §167.4, §167.5 and §167.7 precise):
    hover, which opens the fan, and on the picked goal, which unfolds as before. No strip of names (§167.4's strips go).
 The owner's call.
 
-## 169. S1 and S2b taken; seven seats; a risky step waits; the first start opens the parties' place; a fact can be added (28 October, the owner)
+## 169. S1 and S2b taken; seven seats; a risky step waits; the first start opens the parties' place; a fact can be added (28 October 2026, the owner)
 
 Why: the owner's answers to the lead's questions after specs 98–101. So:
 1. **S1 (the window: the table and the hand, spec 98, spec 101) and S2b (a goal's way as cards, spec 100) are taken** (§129):
@@ -3377,7 +3377,7 @@ Why: the owner's answers to the lead's questions after specs 98–101. So:
 7. **Release's leader on Seasoned, the Live crafts proposed Standard** (spec 99 A's picks) stay.
 The owner's call.
 
-## 170. orkUI 0.16 taken: the goal types' big signs in two tones, a pick's suits the asking party's race's tool (28 October, the owner)
+## 170. orkUI 0.16 taken: the goal types' big signs in two tones, a pick's suits the asking party's race's tool (28 October 2026, the owner)
 
 Why: the owner made orkUI 0.16.0 (its CHANGELOG): the signs at 28 px were coarse, and the choices of a pick wanted telling apart by
 their shape, with the craft of the race said with a joke. So (this makes §167.1–§167.2 precise):
@@ -3389,7 +3389,7 @@ their shape, with the craft of the race said with a joke. So (this makes §167.1
    where there is one.
 The owner's call.
 
-## 171. S3's faces as the mockup drew them; a task card's every kind in a two-tone drawing (29 October, the owner)
+## 171. S3's faces as the mockup drew them; a task card's every kind in a two-tone drawing (29 October 2026, the owner)
 
 Why: the owner's yes on `docs/mockups/s3/` (the other maps and picking on them), and *use the new pictures for the tasks' cards*. So:
 1. **S3's faces are built as `docs/mockups/s3/` draws them** (spec 102 §5–§6): every map's cards wear §167.1's face (System's parts
@@ -3402,7 +3402,7 @@ Why: the owner's yes on `docs/mockups/s3/` (the other maps and picking on them),
    crown, animation a picture); a 7 × 7 never stands at 28 px on a card.
 The owner's call.
 
-## 172. Product's map is an opportunity solution tree, its opportunities the users' jobs to be done; the pains along the journey are Design's (29 October, the owner and the PM)
+## 172. Product's map is an opportunity solution tree, its opportunities the users' jobs to be done; the pains along the journey are Design's (29 October 2026, the owner and the PM)
 
 Why: the owner: Product's map was meant to be the users' jobs to be done, not the pains met along the journey (those fit Design's
 screens); and asked the PM to pick a discovery framework for the case. The PM's pick: Teresa Torres' opportunity solution tree,
@@ -3420,7 +3420,7 @@ business, a story map would be Design's screens again. So (this changes §112.7'
 3. **The pains along the journey are Design's**: pinned to its screens and steps, the segment a filter over Design's map.
 The owner's call.
 
-## 173. A task card shows a drawing of the race that does it (29 October, the owner)
+## 173. A task card shows a drawing of the race that does it (29 October 2026, the owner)
 
 Why: the owner: a task's picture should follow the race that does it first (the knights a map, the gnomes rockets and
 firecrackers), and orkUI 0.16 already leans each party's things on its race and gives each race its tool. So (this makes §170.1
@@ -3435,7 +3435,7 @@ and §171.2 precise):
 The owner's call.
 
 
-## 174. The phone's app a native frame: upright it is the hand with the top card's context above, on its side the table without the hand; push through a relay that reads nothing, an answer from the notification, widgets (29 October, the owner)
+## 174. The phone's app a native frame: upright it is the hand with the top card's context above, on its side the table without the hand; push through a relay that reads nothing, an answer from the notification, widgets (29 October 2026, the owner)
 
 Why: the owner: the phone should be a real app (Capacitor), with notifications and widgets; upright its first screen the
 answers to the cards and a new goal, the Board by parties a screen of its own on its side, with no hand; and the top card's
@@ -3477,7 +3477,7 @@ cannot be handed to every person's computer, so it needs a server of ours, which
    asked again later.
 The owner's call.
 
-## 175. The tree as drawn; the AI tools' limits move to the hand as its mana (29 October, the owner)
+## 175. The tree as drawn; the AI tools' limits move to the hand as its mana (29 October 2026, the owner)
 
 Why: the owner's yes on Product's opportunity tree as `docs/mockups/s3/` draws it, and: *the limits should move down to the
 hand and look more like mana: there is no room at the top* (with six or seven parties the tabs' end clipped its chips). The
@@ -3492,7 +3492,7 @@ cards already carry their cost as a battler's mana (§144.2), so the pool they d
 The owner's call.
 
 
-## 176. The mana is blue, the potions lie flush right; the discard lies on the table; a lifted card is a card (29 October, the owner)
+## 176. The mana is blue, the potions lie flush right; the discard lies on the table; a lifted card is a card (29 October 2026, the owner)
 
 Why: the owner's yes on `docs/mockups/mana/` (the potion, flush against the window's right edge, six tools in two rows of
 three, each tool's mark in its own colour), and three more: *when the flask is full make the mana blue, a nod to it, only
@@ -3523,7 +3523,7 @@ discard in the hand, spec 101 §4.4–§4.5, spec 96 §2.3's monochrome marks, a
 5. Drawn in orkUI first (the potion and `--ork-mana`, §127.3), then here (spec 104).
 The owner's call.
 
-## 177. The default tool is the potion in the frame, and work goes on with the next when it runs dry; a goal is sent to main through a portal (29 October, the owner)
+## 177. The default tool is the potion in the frame, and work goes on with the next when it runs dry; a goal is sent to main through a portal (29 October 2026, the owner)
 
 Why: the owner: *mark the default harness's potion, and when the default runs out every harness moves on to the next, so
 the mark is seen to move*; and *make merging a portal: the cards are dropped into a portal that appears, at most two, main
@@ -3561,7 +3561,7 @@ view, §175.2 and §176.2, and spec 98 §2.3's *Switch* as the only way on):
    is spent (this makes 2 precise).
 The owner's call.
 
-## 178. The phone is the page first, then the native frame; upright the hand with the potions in its top row; the Board only on its side, with the discard and the portal (29 October, the owner)
+## 178. The phone is the page first, then the native frame; upright the hand with the potions in its top row; the Board only on its side, with the discard and the portal (29 October 2026, the owner)
 
 Why: read against §175–§177, spec 103 was written before the mana, the frame, the Orkmaster's line, the card *Go on paid?*
 and the portal, and the phone's own face (`pwa/board-app.js`, `pwa/shell-*.js`) knows none of them; spec 94's B–E, which
@@ -3588,7 +3588,7 @@ spec 94 §3.2 for a phone, and makes spec 105 As built C's *the phone has no car
    the Files pane's git and the terminal off the phone, not the Board's own merge).
 The owner's call.
 
-## 179. Upright the tools are their marks and shares, as tall as *The Board*; on its side the Board's foot is the goals' legend (29 October, the owner)
+## 179. Upright the tools are their marks and shares, as tall as *The Board*; on its side the Board's foot is the goals' legend (29 October 2026, the owner)
 
 Why: the owner on `docs/mockups/phone/` v3: the potions' row should be no taller than *The Board*, the bottles simplified or
 gone; and on its side, *since there are no cards in the hand at the bottom now, show the goals' legend: a sign, what goal it
@@ -3607,7 +3607,7 @@ So (this changes §178.2 and spec 103 §1.2.5 and §2.1; the desktop's potions, 
    alert's frame (the token's edge), a goal waiting for the reset the moon beside its name in the legend.
 The owner's call.
 
-## 180. The phone is the hand alone: no Board on it for now; the portal is a card of the hand; the top card narrower over a fan; New goal the green deck under the thumb; **…** for the rest (29 October, the owner)
+## 180. The phone is the hand alone: no Board on it for now; the portal is a card of the hand; the top card narrower over a fan; New goal the green deck under the thumb; **…** for the rest (29 October 2026, the owner)
 
 Why: the owner asked, as product, whether a phone needs the Board at all. The phone is the quick answer (§150); on the Board
 a phone can do two things, answer a stop and send a goal to main, and both can lie in the hand. The Board on its side costs
@@ -3637,7 +3637,7 @@ owner's yes on `docs/mockups/phone/portal.html` and `docs/mockups/phone/hand.htm
    written after your answers* and opens its questions.
 The owner's call.
 
-## 181. A quick question is asked, not played: one line on the open tab, answered once by whom the tab looks through, reading only; a question that hides work becomes a goal by one press (29 October, the owner and the PM)
+## 181. A quick question is asked, not played: one line on the open tab, answered once by whom the tab looks through, reading only; a question that hides work becomes a goal by one press (29 October 2026, the owner and the PM)
 
 Why: the owner, as product: *what if I have no idea and no task, only a quick question about the project; how is it
 played (not as a card), and is it worth it?* A card is what the person decides or plays (§104.0, §167): it has a phase,
@@ -3667,7 +3667,7 @@ decided), and every question asked is a sign of what the table does not show by 
 8. **The desktop only for now**; the phone is asked again with §180.1.
 The owner's call.
 
-## 182. A gate that cannot run is not red; the logs say the whole day; twelve looks of the owner's day (29 October, the owner)
+## 182. A gate that cannot run is not red; the logs say the whole day; twelve looks of the owner's day (29 October 2026, the owner)
 
 Why: the owner, after a day on a Node game, *errors all the time, I could not take one card to its end*, with the day's
 logs and twelve notes on the window. The logs: every result came red from `sh: vitest: command not found` (a folder never
@@ -3703,7 +3703,7 @@ installed, a task that may not install), and was sent back five times with the l
     in orkUI's pieces; offered to orkUI as `.ork-deck.is-main`.
 The owner's call.
 
-## 183. A leader says no, and shows where it hurts: objections in Talk, concerns on every map (29 October, the owner)
+## 183. A leader says no, and shows where it hurts: objections in Talk, concerns on every map (29 October 2026, the owner)
 
 Why: the owner: *the agents must not agree to every decision of the person: Product really prioritises and says no, this
 is not needed, because…; Tech says it makes the architecture worse. And not only the Architect: any leader looks at its
@@ -3731,7 +3731,7 @@ changed nothing; no map said where it hurt (§151.4's marks were left to S4 and 
 9. **Later**: specialists' concerns on the same rails (§151.4), the phone.
 The owner's call.
 
-## 184. Each leader looks as a senior of its craft: the lenses measured against the field's frameworks (29 October, the owner)
+## 184. Each leader looks as a senior of its craft: the lenses measured against the field's frameworks (29 October 2026, the owner)
 
 Why: the owner: *analyse every party leader's lens, compare it with the frameworks senior specialists use to review an
 architecture, a product, its marketing and the other crafts, and adapt them to our window.* Spec 108's look asked every
@@ -3756,7 +3756,7 @@ had no hint of code at all. Spec 109 builds it (its §0 is the comparison, craft
 8. **Measured**: concerns by aspect, made goals or dismissed.
 The owner's call.
 
-## 185. The table's end is always laid: the portal's ring of runes and the discard's place; the + card bears a seal of summoning (30 October, the owner)
+## 185. The table's end is always laid: the portal's ring of runes and the discard's place; the + card bears a seal of summoning (30 October 2026, the owner)
 
 Why: the owner: *what if the discard and the portal showed even while idle (the discard's place in a dashed line, the portal as
 runes round its edge)? The right of the table under Play and Stop all looks empty; not to make the window busier, only more
@@ -3790,7 +3790,7 @@ changes §145.9's *the discard when the first goal is done*, §177.4's *opens th
    `table/discard.js` and `table/portal.js`; the + card, `hand/pluscard.js` and `hand/hand.css`).
 The owner's call.
 
-## 186. A goal's element is a rune: five of the twelve, each tied to its colour; the + card and the portal hold the goal's rune (30 October, the owner)
+## 186. A goal's element is a rune: five of the twelve, each tied to its colour; the + card and the portal hold the goal's rune (30 October 2026, the owner)
 
 Why: the owner, after §185: *should the runes replace the elements' signs? Take the most different ones and tie them to the
 colours; on the + card and on the portal the goal's rune could be gold, but decide yourself.* An element is the mark that tells
@@ -3818,7 +3818,7 @@ nothing*, spec 50 §1.1's shapes, and orkUI's elements README):
 6. Drawn in orkUI first (0.20.0), then here; spec 110, built by the cheaper model and reviewed by the spec's author.
 The owner's call.
 
-## 187. A goal's rune from its summoning to main: one rune per stack, a flame at the stage at work, the rune chosen, the rite (30 October, the owner)
+## 187. A goal's rune from its summoning to main: one rune per stack, a flame at the stage at work, the rune chosen, the rite (30 October 2026, the owner)
 
 Why: the owner, on the stacks: *a stack's name is doubled; let the name stand on top only, and below a burning rune stand at
 the stage being worked on*; on the + card: *show the runes not yet on the Board, choose your next goal's rune, and when + is
@@ -3849,7 +3849,7 @@ at work moves twice, and the element is given, never chosen. The owner's yes on 
 5. Drawn in orkUI first, then here; spec 111.
 The owner's call.
 
-## 188. Release and Live wait at the portal: asleep in its corners, awake when there is something to do; each skeleton a check that blocks the way into main (30 October, the owner)
+## 188. Release and Live wait at the portal: asleep in its corners, awake when there is something to do; each skeleton a check that blocks the way into main (30 October 2026, the owner)
 
 Why: the owner: *the skeletons and the imps stand apart: they work after the release, or on it; take them out of the tabs, put
 the skeletons between the discard and the portal and the imps above the portal*; then *hide them, or show them only when
@@ -3878,7 +3878,7 @@ crafts, §177.4's sealed X, and §159.3's *Release keeps its tab*):
 6. Drawn in orkUI first, then here; spec 111.
 The owner's call.
 
-## 189. A party's sword and shield on its tab: the tools its Does and its Checks run on (30 October, the owner)
+## 189. A party's sword and shield on its tab: the tools its Does and its Checks run on (30 October 2026, the owner)
 
 Why: the owner: *on the tabs, mark attack and defence for the leaders, or the whole party, with the harnesses' small icons, as
 a card's elements of attack and defence.* A party's squad is two columns, **Does** under a sword and **Checks** under a shield
@@ -3895,7 +3895,7 @@ real one), and today it is read only in the party's editor. So:
 4. Built with spec 111.
 The owner's call.
 
-## 190. The bar's marks: a banner for + Party, boards across Stop all; Play is a die in the hand, thrown while the preview starts (31 October, the owner)
+## 190. The bar's marks: a banner for + Party, boards across Stop all; Play is a die in the hand, thrown while the preview starts (31 October 2026, the owner)
 
 Why: the owner: *style the Party and Play buttons, as an invite to a guild or a raid, as long as it is clear what each does*;
 then *the three as flags*; then *Play as a die, bigger, seen from above, by the potions: it shakes on hover, is thrown onto the
@@ -3928,7 +3928,7 @@ spec 107 §9.2's logo shown while it starts):
    lean and reduced motion are as in 2–4.
 The owner's call.
 
-## 191. A project with no preview or no gate: the die sleeps, and with no gate there is no ring and no Release corner (31 October, the owner)
+## 191. A project with no preview or no gate: the die sleeps, and with no gate there is no ring and no Release corner (31 October 2026, the owner)
 
 Why: the owner: *a project like a wiki will not have the die, right? And will it have Release, the portal and the skeletons?*
 Today Play is pressed before anyone knows there is nothing to open (*Nothing here yet*), so the die of §190 would be thrown and land
@@ -3945,7 +3945,7 @@ merge into main itself (no gate: `idea_gate.same`). So (this makes §185.2, §18
 4. Spec 113, built by the cheaper model.
 The owner's call.
 
-## 192. The mana in two windows: the liquid is the 5-hour window, the bottle the week; a tab says whether its party follows the default tool (31 October, the owner)
+## 192. The mana in two windows: the liquid is the 5-hour window, the bottle the week; a tab says whether its party follows the default tool (31 October 2026, the owner)
 
 Why: the owner: *let the 5-hour limit be the liquid's level in the mana's bottles and the weekly one the bottle's size*; and *a
 party may be set to the default tool: if it is, its tab should not just draw Claude*. A potion today is one share, the window that
@@ -3968,7 +3968,7 @@ apart. The owner's yes on `docs/mockups/mana-two/`. So (this changes §176.1's o
 5. Drawn in orkUI first (the three smaller bottles), then here; spec 114, built by the cheaper model.
 The owner's call.
 
-## 193. Play is a map for every leader's lens: marks on the live product, hints by code (31 October, the owner)
+## 193. Play is a map for every leader's lens: marks on the live product, hints by code (31 October 2026, the owner)
 
 Why: the owner: *Play today is only to poke at the product and come back with an idea; gather feedback while working with the
 running project, and let the person pick an area of a screen and a problem for a party's leader*; then: *it is the same work as
@@ -3985,7 +3985,7 @@ with the leaders' lenses, but on the live product.* So:
 5. Spec 115, built by the cheaper model; the owner sent it to the build without a review of its mockup.
 The owner's call.
 
-## 194. Hypotheses live on Product's tree: proposed by the leaders, tested by goals, judged in the hand (31 October, the owner)
+## 194. Hypotheses live on Product's tree: proposed by the leaders, tested by goals, judged in the hand (31 October 2026, the owner)
 
 Why: the owner: *do we have a place for hypotheses in the product? Maybe on the analytics' or the product's leader's tab.*
 There was none: the tree's experiments tie two goals, a goal's *Defaults* are lost in its spec, and the decisions file keeps
@@ -4000,7 +4000,7 @@ live, when hypotheses matter least. So:
 4. Spec 116, built by the cheaper model, without a mockup.
 The owner's call.
 
-## 195. The phone: a menu of the leaders from the crown, what is picked in the middle, the hand at the foot; the top card answered with one tap; the PWA first (31 October, the owner)
+## 195. The phone: a menu of the leaders from the crown, what is picked in the middle, the hand at the foot; the top card answered with one tap; the PWA first (31 October 2026, the owner)
 
 Why: the owner, after living with the phone as the hand alone (§180.1 asked it again): *a left menu in place of the
 Orkmaster's tab: a list whose rows are the leaders' tabs (with their attack and defence) and under each the goals at work;
@@ -4032,7 +4032,7 @@ Board without a layout on its side. The owner's yes on `docs/mockups/phone/sideb
    (§174.4) later. The phone's old face stays until spec 94 E.
 7. Spec 117, built by the cheaper model.
 
-## 196. The die's up face says what Play would show: the cross while the last start failed, a spark when dev is new (31 October, the owner)
+## 196. The die's up face says what Play would show: the cross while the last start failed, a spark when dev is new (31 October 2026, the owner)
 
 Why: the owner: *how else can the die be used while it just lies: show something useful on its up face*; of the ideas
 weighed (the last outcome, dev's news, the probe's alarms, an empty face asleep, the leader's head), *1 and 2*. The question a
@@ -4048,7 +4048,7 @@ says *something*, never *how much*. So (this makes §190.2 and §190.7 precise):
 5. Spec 118, built by the cheaper model.
 The owner's call.
 
-## 197. The hammer and the bug: Fix Orkboard starts Claude Code on its own code; the phone may ask for it (31 October, the owner)
+## 197. The hammer and the bug: Fix Orkboard starts Claude Code on its own code; the phone may ask for it (31 October 2026, the owner)
 
 Why: the owner: *a tool that fixes the system: it takes the logs of the last hours, starts a new Claude session on the computer
 and says fix it; Claude fixes Orkboard and pushes; the computer offers to update, and the restart keeps the phone's link, so from
@@ -4071,7 +4071,7 @@ Remote Control session.* And: *the hammer squashes the bug.* So:
 6. Spec 119, built by the cheaper model. A cloud session is later, only if the computer's proves not enough.
 The owner's call.
 
-## 198. A goal heard at the Orkmaster: Talk by itself; an agreed goal starts by itself after a wait; a dispute is a hearing, thrown to a side (1 November, the owner)
+## 198. A goal heard at the Orkmaster: Talk by itself; an agreed goal starts by itself after a wait; a dispute is a hearing, thrown to a side (1 November 2026, the owner)
 
 Why: the owner: *the green card's field is a card, the rune given by itself and changed only on a wish; sent, it goes to the
 Orkmaster's lane, and the Orkmaster holds the debate with the leaders, shown at the least; the leaders' questions come to the
@@ -4112,7 +4112,7 @@ weighs only the goals its types name. So (this changes §118.1, §138.2, §147.3
    offers on its lens, Product's summary of the table and Art's sheet of assets are later.
 The owner's call.
 
-## 199. Three jobs of an indie maker: the morning and the evening run the product and give feedback, the day touches sketches of its ideas on the phone, the night builds; a day's idea can still be built by day (1 November, the owner)
+## 199. Three jobs of an indie maker: the morning and the evening run the product and give feedback, the day touches sketches of its ideas on the phone, the night builds; a day's idea can still be built by day (1 November 2026, the owner)
 
 Why: the owner: *an indie maker has little of two things: tokens (subscriptions to Claude, Codex and their kind, not always
 large ones) and time (they work at a main job). During the day you want to glance at something quickly in a light face, and
@@ -4143,7 +4143,7 @@ file read); building costs much: so the day is for what is cheap and seen, the n
 7. Spec 121, built by the cheaper model. The leaders' voices, a hearing heard on the way, are spec 122, later.
 The owner's call.
 
-## 200. The die at rest shows the play arrow on its up face (1 November, the owner)
+## 200. The die at rest shows the play arrow on its up face (1 November 2026, the owner)
 
 Why: the owner: *by default the die's up face could show play as an arrow: it is clearer, and it suits the die.* Today the up
 face at rest is the five (§196), which says nothing of what the die does. So (this makes §196 precise):
@@ -4162,7 +4162,7 @@ face at rest is the five (§196), which says nothing of what the die does. So (t
    orkUI has, draw it (the spark stays in orkUI, unused here).
 The owner's call.
 
-## 201. The leaders at the table: the open leader large with its marks and its bubble, the header one row, the leaders' faces as states, chairs and the empty chair, the dark edges, Stop all a door (1 November, the owner)
+## 201. The leaders at the table: the open leader large with its marks and its bubble, the header one row, the leaders' faces as states, chairs and the empty chair, the dark edges, Stop all a door (1 November 2026, the owner)
 
 Why: the owner: *the vibe went from a card battle to a co-operative game (§199.2), so the faces on the tabs are your
 companions at the table: the picked leader's face larger, its alerts and notes by its head; the heads could change their
@@ -4210,7 +4210,7 @@ head*; *the chair's back a solid colour*. The mockup `docs/mockups/lens-heads/`,
    faces), built by the cheaper model, the spec's author reviewing.
 The owner's call.
 
-## 202. Orkboard is where a product is thought out with its leaders, not a crowd of agents at work: the brief every leader reads, the measures of the arguing, H1's trial (1 November, the owner)
+## 202. Orkboard is where a product is thought out with its leaders, not a crowd of agents at work: the brief every leader reads, the measures of the arguing, H1's trial (1 November 2026, the owner)
 
 Why: the owner: *as a product, Orkboard is not a crowd of agents doing the work, even the stages of an indie maker's; it is
 where you think out your product with a set of specialists who discuss your ideas, criticise them and polish them.* Read
@@ -4242,7 +4242,7 @@ So:
    a shorter way for a goal one party can do alone, and the measures (§3) read weekly. Spec 124.
 The owner's call.
 
-## 203. The project keeps its journal and each leader its own: what was said and what came of it, written by code, read into every leader's call (1 November, the owner)
+## 203. The project keeps its journal and each leader its own: what was said and what came of it, written by code, read into every leader's call (1 November 2026, the owner)
 
 Why: the owner: *in essence the main thing is to keep, all the time, the project's common history and the history of each of
 the leaders' views.* A crowd of personas is copied in an evening; a product's history kept for months, through each craft's
@@ -4272,7 +4272,7 @@ keeps its why. So:
 7. Spec 125, built by the cheaper model, the spec's author reviewing.
 The owner's call.
 
-## 204. A project's own documents are read in, and the Board's are written out, in the formats the field keeps them in (1 November, the owner)
+## 204. A project's own documents are read in, and the Board's are written out, in the formats the field keeps them in (1 November 2026, the owner)
 
 Why: the owner: *check how the existing frameworks organise this, and make our specs and journals ready in a convenient,
 common format, for a quick import of existing documentation and decisions into our product.* A project that comes to
@@ -4300,4 +4300,28 @@ memory bank: `memory-bank/{projectbrief,productContext,systemPatterns,techContex
 4. **The Board's own shapes stay** (`docs/decisions.md`, the goals' pages, the journals' JSON lines): the formats above are
    the doors in and out, not a new store.
 5. Spec 126: its formats module by the spec's author, the rest by the cheaper model.
+The owner's call.
+
+## 205. The best of the field's formats in the Board's own: a decision's year, status and what it changes; MADR for a new project; Done when as scenarios; living specs of how it works now; a journal readable as Markdown (1 November 2026, the owner)
+
+Why: the owner asked whether the Board's own formats are better or worse than the field's; the answer was mixed (§204):
+ours are better in substance (the owner's voice, points a later spec names, §183.4; a spec's table of parts, files and
+tests a cheaper model builds from; a journal kept append only with a digest over it), the field's in structure (a date
+with its year, a status and what supersedes what, read by code; acceptance as scenarios that become tests; OpenSpec's
+specs of **how the product works now** beside the changes to it; a memory a person can read). The owner: *do 127,
+build it, and into main.* So:
+1. **A decision's date has its year** (`1 November 2026`): the Board writes it so, and this file's 160 headings had it
+   added (all were of 2026). A decision the Board writes says, under its heading, **`Changes: 110, 183`** when it changes
+   earlier decisions (the Orkmaster names them from the headings it reads), and a `Status:` line when it is not accepted;
+   both are read by code (`doc_formats.parse_log`), and a leader reading the headings sees which were changed and by what.
+2. **A project with no decisions log gets MADR**: its first decision is `docs/decisions/0001-….md` (spec 126 D's folder),
+   read by every ADR tool; a project with a log keeps its own, this repository its one file.
+3. **Done when is written as scenarios** (*When …, then …*), each one a test can check; the bounds stay (five at most).
+4. **Living specs** (OpenSpec's `specs/`): when a goal reaches main, its leader folds what it did into the spec of the
+   capability it touched (*Requirement* and *Scenario*, added, changed or removed), kept with the Board's pages; the leaders
+   read how the product works now there instead of following a chain of changes; `orkboard export` writes them as
+   `openspec/specs/<capability>/spec.md`, and `orkboard import` reads OpenSpec's and Kiro's into them.
+5. **A journal is readable**: beside its JSON lines, a Markdown mirror in the export's shape, written again after each
+   change (`.orkcraft/journals/<scope>.md`).
+6. Spec 127: A and the mirror by the spec's author; B and C by the cheaper model.
 The owner's call.

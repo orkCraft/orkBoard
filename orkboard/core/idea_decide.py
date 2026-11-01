@@ -115,12 +115,12 @@ def corrected(text: str, title: str) -> tuple[str, str]:
 
 
 def entry_of(n: int, title: str, body: str, today: dt.date | None = None, host: str = "", by: str = "person") -> str:
-    """The entry as the file has it: `## <n>. <title> (<date>, the person and <host>)`, a blank line, the body. `host`: the name of the product that runs the Board
+    """The entry as the file has it: `## <n>. <title> (<day> <month> <year>, the person and <host>)` (the year since spec 127 A), a blank line, the body. `host`: the name of the product that runs the Board
     (decisions §169; `brand.name()`: Orkboard, or Orkline where Orkline runs these modules), else that. `by` "leaders": a goal the leaders all agreed on and the wait
     confirmed by itself (spec 120 §3.5): `(<date>, the leaders, all agreed; <host>)`."""
     day = today or dt.date.today()
     who = "the leaders, all agreed;" if by == "leaders" else "the person and"
-    return f"## {n}. {title} ({day.day} {day:%B}, {who} {(host or '').strip() or brand.name()})\n\n{body.strip()}\n"
+    return f"## {n}. {title} ({day.day} {day:%B} {day.year}, {who} {(host or '').strip() or brand.name()})\n\n{body.strip()}\n"
 
 
 def leaders_body(body: str, stances: list[dict], name_of) -> str:

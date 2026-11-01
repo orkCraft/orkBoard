@@ -385,7 +385,7 @@ def plan(root: Path, state_dir: Path, scan_: dict | None = None, board: Path | N
         if rec.get("format") != "log" and ("ork-goal" in (rec.get("extra") or {}) or str(rec.get("number") or "") in boards):
             continue                     # a record the Board wrote into the project's ADR folder (spec 126 D): its journal has it under its number already
         ref = f"{rec['path']}#{rec['number']}" if rec.get("format") == "log" else rec["path"]
-        line, at = decision_line(rec), _day_of(rec.get("date"))
+        line, at = decision_line(rec), rec.get("day") or _day_of(rec.get("date"))
         want("decisions", journals.PROJECT, "decision", line, ref, at)
         leader = parties.get(rec.get("craft") or "")
         if leader:

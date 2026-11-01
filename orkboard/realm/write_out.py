@@ -120,7 +120,7 @@ def kept_decisions(root: Path, state_dir: Path) -> list[dict]:
     out = []
     for r in doc_formats.parse_log(text, rel):
         when, _, who = r["date"].partition(", ")
-        r["date"] = when.strip()
+        r["date"] = r.get("day") or when.strip()                         # the ISO day when the entry names its year (spec 127 A)
         r["deciders"] = ["the leaders"] if who.startswith("the leaders") else ["the person"] if who.startswith("the person") else [who.strip()] if who.strip() else []
         r["decision"] = _NESTED.sub("####", r["body"])                       # a heading of the entry never splits the record's sections
         out.append({**r, "source": rel})
