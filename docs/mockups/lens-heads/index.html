@@ -83,8 +83,8 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
 .win.chairs .tab, .tbl .tab { align-items: flex-end; padding-top: var(--ork-2); padding-bottom: 0; }
 .win.chairs .tab .nm, .tbl .tab .nm { padding-bottom: var(--ork-3); }
 .win.chairs .tab > .flag, .tbl .tab > .flag { bottom: auto; top: var(--ork-2); }
-.seatbox { position: relative; flex: none; width: 52px; height: 36px; --chair-post: var(--ork-table-rim-hi); --chair-back: var(--ork-panel); }
-.seatbox.big { width: 60px; height: 46px; }
+.seatbox { position: relative; flex: none; width: 44px; height: 36px; --chair-post: var(--ork-table-rim-hi); --chair-back: var(--ork-panel); }
+.seatbox.big { width: 52px; height: 46px; }
 /* the back lower than the head (the owner: a back as tall as the head reads as a little house): the head stands over its rail, as one seated */
 .seatbox > svg { position: absolute; left: 0; bottom: 0; width: 100%; height: 24px; }
 .seatbox.big > svg { height: 28px; }
@@ -236,8 +236,8 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
 /* outside the table nothing divides the leaders: no line between the tabs, they sit in one dark room */
 .dk .tab, .dk .tab.empty, .dk .ntab, .dk .ntab.empty { border-right: 0; }
 
-/* ---------- Stop all as a door in the dark wall (this page's drawing until orkUI draws it): ajar while any work runs (a faint strip of the way out),
-   shut when nothing runs; pressed, it is shut and boarded, the planks of §190.1 in the danger colour. The word stays: *Stop all* ---------- */
+/* ---------- Stop all as a door in the dark wall (this page's drawing until orkUI draws it), the owner's way: shut at rest, whatever runs; pressed, it
+   opens (the orks are out: their heads leave the cards), the way out a faint light, the word *All stopped*; it shuts by itself when work is started again ---------- */
 .door-btn { display: inline-flex; align-items: flex-end; gap: var(--ork-3); align-self: stretch; padding: 0 var(--ork-2) 0 var(--ork-3); border: 0; background: none; cursor: pointer;
   color: var(--ork-danger); font: var(--ork-type-button); text-transform: uppercase; letter-spacing: var(--ork-type-button-track); }
 .door-btn > span { padding-bottom: var(--ork-3); white-space: nowrap; }
@@ -245,9 +245,9 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
 .door { display: block; width: 28px; height: 40px; flex: none; }
 .door .fr { fill: var(--ork-table-rim-hi); }
 .door .lf { fill: var(--ork-raised); }
-.door .gap { fill: var(--ork-ink-faint); }
+.door .gap { fill: var(--ork-ink-faint); opacity: 0.7; }
+.door-btn.is-open { color: var(--ork-ink-muted); cursor: default; }
 .door .kn { fill: var(--ork-ink-faint); }
-.door .bd { fill: var(--ork-danger); }
 .door-btn:hover .fr, .door-btn:focus-visible .fr { fill: var(--ork-edge); }
 .tabs-end.has-door { align-items: stretch; padding-right: var(--ork-4); }
 .ntab-end .door { width: 14px; height: 20px; }
@@ -365,10 +365,11 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
   the lamp is only a step of grey. <b>The open leader has no lit box</b>: it is told by its head, larger and leaning in over the table's rim, its name in the
   full ink with its own name under it, the others' muted. The dark is this page's token until orkUI draws a step under its canvas (near black, never #000). Outside the table nothing
   divides the leaders: <b>no line between the tabs</b>, they sit in one dark room; the lines stay on the table, between the lanes.</p>
-  <p class="mk-line"><b>Stop all is a door in the dark wall</b>, at the room's far end: <b>ajar while any work runs</b> (a faint strip of the way out, the orks
-  coming and going), <b>shut when nothing runs</b>, and pressed it is <b>shut and boarded</b>, the planks of §190.1 across it in the danger colour, until work is
-  started again. Not <i>Exit</i>: an exit says <i>leave the app</i>, and Stop all leaves nothing, it halts every ork, script and browser at once. The word stays
-  (<i>Stop all</i>, in the danger colour) and says what it does; the door is its mark, as the planks are today.</p>
+  <p class="mk-line"><b>Stop all is a door in the dark wall</b>, at the room's far end, the owner's way: <b>shut at rest</b>, whatever runs, so the row stays
+  quiet all day; <b>pressed, it opens</b>: the orks get up and go out (their heads leave the cards they worked on), the way out a faint light, the word
+  <i>All stopped</i>, a second press doing nothing; <b>it shuts by itself</b> when work is started again. The leaders stay at the table: Stop all halts every
+  ork, script and browser, it closes nothing. The only light in the dark row is then the open door, an exception worth seeing. Not <i>Exit</i>, and no planks:
+  on a door shut by default they would read <i>locked</i>; the danger colour stays on the word <i>Stop all</i>.</p>
   <div class="mk-acts" role="group" aria-label="The table's state">
     <span class="lab">State</span>
     <button type="button" class="ork-btn" data-tbl="hover" aria-pressed="false">The empty chair hovered</button>
@@ -378,9 +379,8 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
   </div>
   <div class="mk-acts" role="group" aria-label="The door">
     <span class="lab">Stop all</span>
-    <button type="button" class="ork-btn" data-door-state="open" aria-pressed="true">Work runs: ajar</button>
-    <button type="button" class="ork-btn" data-door-state="closed" aria-pressed="false">Nothing runs: shut</button>
-    <button type="button" class="ork-btn" data-door-state="boarded" aria-pressed="false">Stopped: boarded</button>
+    <button type="button" class="ork-btn" data-door-state="closed" aria-pressed="true">At rest: shut</button>
+    <button type="button" class="ork-btn" data-door-state="open" aria-pressed="false">Stop all pressed: open</button>
     <span class="cap muted">(or press the door itself)</span>
   </div>
   <div class="tbl" id="tbl"></div>
@@ -453,8 +453,8 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
     <li><b>One look</b> (orkUI's office): the bubble on the raised panel with the edge, the faces drawn in orkUI first, nothing of the page's own colour.</li>
     <li><b>Dark edges</b>: near black under orkUI's canvas for the leaders' side and the hand, the table lifted a step between, its rim on both sides; no glow, no
       gradient, never #000; the faint ink holds AA on the dark; no line between the tabs outside the table. Made in orkUI first (a token), then copied.</li>
-    <li><b>Stop all's door</b> keeps its word and its danger colour; ajar, shut and boarded are states, not motions (the door does not swing at rest); it changes
-      §190.1's mark (the planks on a pole become the planks across a door), drawn in orkUI first.</li>
+    <li><b>Stop all's door</b> keeps its word and its danger colour; shut and open are states (the door does not swing at rest); open it says <i>All stopped</i>
+      and shuts when work starts again; it changes §190.1's mark (the planks go: the door is the mark), drawn in orkUI first.</li>
     <li><b>The chair is a thing drawn at a sign's weight</b>, as orkUI's banner, boards, die and potions are: the frame's greys, no colour, no legs, never a picture
       of furniture; still at rest. orkUI draws it (the occupied back and the empty chair), then it is copied.</li>
     <li><b>Who decides at the table, who does in the squad</b> (§104.0): leaders 36–48 px with faces and a voice; members 24 px, no face, no voice, their place
@@ -542,20 +542,22 @@ function chairSvg(w, h, empty) {
   }
   return `<svg viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">${r.join("")}</svg>`;
 }
-const chairOf = (headHtml, big) => `<span class="seatbox ${big ? "big" : ""}">${chairSvg(big ? 30 : 26, big ? 14 : 12, false)}<span class="sit">${headHtml}</span></span>`;
+const chairOf = (headHtml, big) => `<span class="seatbox ${big ? "big" : ""}">${chairSvg(big ? 26 : 22, big ? 14 : 12, false)}<span class="sit">${headHtml}</span></span>`;
 const emptyChair = (cls = "") => `<button type="button" class="ork-tab tab empty ${cls}" aria-label="New party: an empty chair at the table" title="New party"><span class="seatbox">${chairSvg(18, 18, true)}</span><span class="nm"><b>New party</b></span></button>`;
-let chairs = true, doorState = "open";
-/* the door, in cells of 2 px: its frame, the leaf (ajar: a strip of the way out beyond it; shut: whole, its knob), the planks across when boarded */
+let chairs = true, doorState = "closed";
+/* the door, in cells of 2 px: its frame and its leaf, shut (whole, its knob) or open (the leaf swung in, seen edge on, and the way out a faint light) */
 function doorSvg(state) {
   const w = 14, h = 20, r = [], add = (x, y, ww, hh, c) => r.push(`<rect x="${x}" y="${y}" width="${ww}" height="${hh}" class="${c}"/>`);
   add(0, 0, 2, h, "fr"); add(w - 2, 0, 2, h, "fr"); add(0, 0, w, 2, "fr");
-  if (state === "open") { add(2, 2, 7, h - 2, "lf"); add(9, 2, 3, h - 2, "gap"); add(7, 10, 1, 1, "kn"); }
+  if (state === "open") { add(2, 2, w - 4, h - 2, "gap"); add(2, 2, 2, h - 2, "lf"); }
   else { add(2, 2, w - 4, h - 2, "lf"); add(9, 10, 2, 1, "kn"); }
-  if (state === "boarded") { add(0, 5, w, 2, "bd"); add(0, 13, w, 2, "bd"); }
   return `<svg class="door" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">${r.join("")}</svg>`;
 }
-const DOOR_TITLE = { open: "Stop every ork, script and browser at once", closed: "Nothing runs: Stop all stops what starts next", boarded: "Stopped: nothing runs until you start it again" };
-const doorBtn = (state, word = "Stop all") => `<button type="button" class="door-btn" data-door title="${DOOR_TITLE[state]}" aria-label="${word}: ${DOOR_TITLE[state]}">${doorSvg(state)}<span>${word}</span></button>`;
+const DOOR_TITLE = { closed: "Stop every ork, script and browser at once", open: "All stopped: the orks are out; the door shuts when you start work again" };
+const doorBtn = (state, short = false) => {
+  const word = state === "open" ? (short ? "Stopped" : "All stopped") : (short ? "Stop" : "Stop all");
+  return `<button type="button" class="door-btn ${state === "open" ? "is-open" : ""}" data-door ${state === "open" ? 'aria-disabled="true"' : ""} title="${DOOR_TITLE[state]}" aria-label="${word}: ${DOOR_TITLE[state]}">${doorSvg(state)}<span>${word}</span></button>`;
+};
 
 const PARTIES = [
   { slug: "shop", name: "Shop", head: "peon-crown", who: "the Orkmaster", d: "claude", c: "claude" },
@@ -699,14 +701,14 @@ document.addEventListener("keydown", (ev) => {
 });
 
 /* ---------- the table ---------- */
-const tblState = { hover: false, full: false, spent: false, door: "open" };
+const tblState = { hover: false, full: false, spent: false, door: "closed" };
 function tblRender() {
   const el = document.getElementById("tbl"), z = tblState.spent ? "asleep" : undefined;
   el.classList.toggle("full", tblState.full);
   const card = (t, ph, extra = "") => `<div class="ork-card gc"><b>${t}</b>${extra}<span class="ph">${ph}</span></div>`;
-  const idle = tblState.spent || tblState.door === "boarded";
+  const idle = tblState.spent || tblState.door === "open";
   const worker = (n, who) => idle ? "" : `<span class="wk" title="${who} is at work on it">${memberImg(n, "h24")}<span class="ork-busy"></span></span>`;
-  el.innerHTML = `<div class="tabs five">${tabsHtml(true, { on: "shop", chairs: true, hover: tblState.hover, mood: z, door: tblState.spent ? "closed" : tblState.door })}</div>
+  el.innerHTML = `<div class="tabs five">${tabsHtml(true, { on: "shop", chairs: true, hover: tblState.hover, mood: z, door: tblState.door })}</div>
     <div class="title"><span>The whole project · through the Orkmaster</span><span class="grow"></span>…</div>
     <div class="lanes">
       <div class="ln"><span class="lab">In line</span>${card("Round timer shows on every phone", "Talk")}${card("Results screen with the round's best answer", "Routing")}</div>
@@ -725,10 +727,10 @@ document.querySelectorAll("[data-door-state]").forEach((b) => b.addEventListener
   document.querySelectorAll("[data-door-state]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
   tblRender();
 }));
-/* the door pressed in the table: shut and boarded, as Stop all does */
+/* the door pressed in the table: it opens, the orks are out (pressed again here only to try it again: in the window it shuts when work starts) */
 document.getElementById("tbl").addEventListener("click", (e) => {
   if (!e.target.closest("[data-door]")) return;
-  tblState.door = tblState.door === "boarded" ? "open" : "boarded";
+  tblState.door = tblState.door === "open" ? "closed" : "open";
   document.querySelectorAll("[data-door-state]").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.doorState === tblState.door)));
   tblRender();
 });
@@ -796,7 +798,7 @@ function narrowHtml(kind) {
     if (p.on && isNew) return `<div class="ntab is-on"><span style="position:relative;display:flex">${leaderImg(p.head, "h36", "worried")}<span class="marks" style="right:-14px;top:-2px"><span class="mk-alert">${S("alert")}</span><span class="mk-note"></span></span></span></div>`;
     return `<div class="ntab" style="${p.on ? "background:var(--ork-raised);box-shadow:inset 0 -2px 0 var(--ork-ink)" : ""}">${leaderImg(p.head, "h24", isNew && p.flag ? "worried" : "calm")}${p.flag && !(p.on && isNew) ? `<span class="flag">${S("alert")}</span>` : ""}</div>`;
   }).join("") + (isNew ? `<button type="button" class="ntab empty" aria-label="New party: an empty chair at the table" title="New party"><span class="seatbox">${chairSvg(18, 18, true)}</span></button>` : "")
-    + `<div class="ntab-end">${isNew ? doorBtn("open", "Stop") : '<button type="button" class="ork-btn stop" style="--_fg:var(--ork-danger);--_bd:var(--ork-danger)">Stop</button>'}</div>`;
+    + `<div class="ntab-end">${isNew ? doorBtn("closed", true) : '<button type="button" class="ork-btn stop" style="--_fg:var(--ork-danger);--_bd:var(--ork-danger)">Stop</button>'}</div>`;
   const chrome = isNew ? `<div class="squad">${seatsNew(true)}</div>` : chromeHtml(false);
   const map = `<div class="mapbox" style="grid-template-columns:1fr"><div class="sys">
     <span class="ctn">server/</span><span class="ctn">client/</span>
