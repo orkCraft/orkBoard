@@ -86,18 +86,27 @@ def test_the_shortest_window_is_the_liquid_and_the_longest_the_bottle_whatever_t
         assert codex["now"]["window"] == "5h" and codex["week"]["window"] == "weekly" and codex["liquid"] == 1 and codex["size"] == "medium"
         grouped = windows(pg, limit("agy", "Antigravity", ("Gemini · week", 0.5, WEEK), ("Gemini · 5h", 0.2, SOON)))             # a group in front of the name does not hide its length
         assert grouped["two"] and grouped["liquid"] == 0.2 and grouped["size"] == "medium"
+        groups = [("Gemini Models · 5h", 1.0, SOON), ("Gemini Models · week", 0.9, WEEK), ("Claude and GPT models · 5h", 0.4, SOON), ("Claude and GPT models · week", 0.28, WEEK)]
+        for rows in (groups, groups[2:] + groups[:2], groups[::-1]):                                                              # several groups: the tightest of each length, whatever the groups' order
+            got = windows(pg, limit("agy", "Antigravity", *rows))
+            assert (got["now"]["window"], got["now"]["share"], got["week"]["window"], got["week"]["share"]) == ("Claude and GPT models · 5h", "40%", "Claude and GPT models · week", "28%")
+            assert got["liquid"] == 0.4 and got["size"] == "small"
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_a_tool_with_one_window_keeps_the_large_bottle_and_its_level_and_one_not_read_has_none(gui):
+def test_a_tool_with_one_window_keeps_its_level_its_bottle_sized_by_it_when_a_day_or_longer_and_one_not_read_has_none(gui):
     pg, host, log = open_mana(gui, [two("claude", "Claude Code", 0.3, 0.82)])
     try:
         one = windows(pg, limit("pi", "Pi", ("month", 0.55, WEEK)))
-        assert not one["two"] and one["week"] is None and one["size"] == "large" and one["liquid"] == 0.55 and one["level"] == "ok" and one["now"]["window"] == "month"
+        assert not one["two"] and one["week"] is None and one["size"] == "medium" and one["liquid"] == 0.55 and one["level"] == "ok" and one["now"]["window"] == "month"
+        week = windows(pg, limit("claude", "Claude Code", ("Current week (all models) · week", 0.16, WEEK)))                   # Claude's week alone (its 5 hours not begun): no full-sized bottle at 16 %
+        assert not week["two"] and week["size"] == "small" and week["liquid"] == 0.16 and week["level"] == "warn"
         low = windows(pg, limit("agy", "Antigravity", ("daily", 0.04, "")))
-        assert low["size"] == "large" and low["level"] == "danger"                                                                # one window: its own level, whatever its size
+        assert low["size"] == "vial" and low["level"] == "danger"                                                                 # one window a day long: its own level, and its size
+        short = windows(pg, limit("x", "X", ("5h", 0.3, SOON)))
+        assert short["size"] == "large" and short["level"] == "ok"                                                                # one window shorter than a day: the large bottle
         same = windows(pg, limit("agy", "Antigravity", ("daily", 0.9, SOON), ("daily", 0.15, SOON)))
         assert not same["two"] and same["liquid"] == 0.15 and same["level"] == "warn"                                             # two windows of one length are one: the tightest
         bare = windows(pg, {"provider": "x", "name": "X", "left": 0.4, "rows": []})
@@ -251,13 +260,13 @@ def test_the_potions_words_say_both_windows_and_when_each_comes_back(gui):
     assert not log, "\n".join(log)
 
 
-def test_a_tool_with_one_window_named_so_says_it_under_its_share_and_a_tool_not_read_stays_an_empty_potion(gui):
+def test_a_tool_with_one_window_named_so_says_it_under_its_share_its_bottle_its_size_and_a_tool_not_read_stays_an_empty_potion(gui):
     one = limit("pi", "Pi", ("month", 0.55, ""))
     off = {"provider": "codex", "name": "Codex", "left": None, "error": "Not logged in", "rows": []}
     pg, host, log = open_mana(gui, [two("claude", "Claude Code", 0.3, 0.82), one, off])
     try:
         b = pot(pg, "pi")
-        assert b.get_attribute("data-size") == "large" and b.locator(".hand-pot__share").inner_text() == "55%" and b.locator(".hand-pot__week").inner_text() == "of the month"
+        assert b.get_attribute("data-size") == "medium" and b.locator(".hand-pot__share").inner_text() == "55%" and b.locator(".hand-pot__week").inner_text() == "of the month"
         assert b.get_attribute("aria-label") == "Pi: 55% of the month left"
         assert "--ork-potion-left:0.55" in b.locator(".ork-potion").get_attribute("style").replace(" ", "")
         gone = pot(pg, "codex")

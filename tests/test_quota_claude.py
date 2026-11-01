@@ -201,3 +201,15 @@ def test_claude_runner_receives_correct_args_and_temp_cwd() -> None:
     ]
     assert captured["timeout"] == 25
     assert captured["cwd"] == tempfile.gettempdir()
+
+
+def test_claude_window_not_begun_has_no_reset_and_is_kept() -> None:
+    """A session not begun says no reset ("Current session: 0% used"): it is kept, with none, beside the week."""
+    result_text = (
+        "Current session: 0% used\n"
+        "Current week (all models): 84% used · resets Sep 30 at 1pm (Europe/Warsaw)\n"
+    )
+    payload = json.dumps({"result": result_text})
+    statuses = get_claude_quota(runner=lambda cmd, **kwargs: payload, now=datetime(2026, 9, 26, 12, 0, tzinfo=timezone.utc))
+    assert [(s.window, s.reset_time is None, s.error) for s in statuses] == [("session", True, None), ("weekly", False, None)]
+    assert statuses[0].remaining_fraction == pytest.approx(1.0) and statuses[1].remaining_fraction == pytest.approx(0.16)

@@ -1,9 +1,12 @@
 // A tool's two windows (docs/specs/114-the-mana-in-two-windows.md §3, decisions §192): from the rows of a limit (`l.rows`: each window's `window` name, its share `left` and its `reset`) the
 // **shortest window is the liquid** (Claude's 5 hours: *can I work now?*) and the **longest the bottle's size** (its week: *will I last until the reset?*): above 0.6 of the week left the large bottle, above 0.3
-// the medium, above 0.1 the small, else the vial. A tool with one window keeps the large bottle and its level; a tool whose limits were not read has no windows. The colour follows whichever runs out first
+// the medium, above 0.1 the small, else the vial. Of several rows of one length (Antigravity's model groups, Claude's week for all models and for one) the **tightest** stands for that length, so the
+// two shares never mix a group's 5 hours with another's week and do not change with the order the reader gives the groups in. A tool with one window keeps its level; its bottle is the large one when the
+// window is shorter than a day, else that window's size too (a week alone at 16 % is a small bottle, not a full-sized one); a tool whose limits were not read has no windows. The colour follows whichever runs out first
 // (`levelOf(min(now, week))`, the signals' levels as before). Pure: no signal, no DOM; mana.js and table/tabmarks.js draw and say it.
 import { levelOf } from "../arena/limits.js";
 
+const DAY = 24;                                                                                                       // a window this long or longer says *will I last*, not *can I work now*
 const HOURS = { session: 5, "5h": 5, daily: 24, day: 24, weekly: 168, week: 168, monthly: 720, month: 720 };       // the windows the readers name, their length in hours
 
 /** A window's name without its group (*Gemini · week* is *week*). */
@@ -44,14 +47,15 @@ export function windowsOf(l, at = new Date()) {
   const read = typeof l?.left === "number";
   if (!read) return { read: false, two: false, liquid: 0, size: "large", level: "unread", dry: false, now: null, week: null, back: "" };
   const rows = (l.rows || []).map((r) => ({ window: r.window || "", left: within(r.left), reset: r.reset || "", span: spanOf(r, at) })).filter((r) => r.left !== null)
-    .map((r, i) => ({ ...r, i })).sort((a, b) => (a.span === b.span ? a.i - b.i : a.span < b.span ? -1 : 1));          // the shortest first (Infinity - Infinity is no number)
+    .map((r, i) => ({ ...r, i })).sort((a, b) => (a.span === b.span ? a.left - b.left || a.i - b.i : a.span < b.span ? -1 : 1));      // the shortest first, the tightest first of one length (Infinity - Infinity is no number)
   const mark = (r) => ({ window: r.window, left: r.left, reset: r.reset, share: pct(r.left) });
-  const low = rows.length ? rows[0] : null, high = rows.length ? rows[rows.length - 1] : null;
+  const low = rows.length ? rows[0] : null, high = rows.length ? rows.find((r) => r.span === rows[rows.length - 1].span) : null;       // the longest length's tightest row
   const two = !!low && low.span !== high.span;
-  const only = rows.length ? [...rows].sort((a, b) => a.left - b.left)[0] : { window: "", left: within(l.left) ?? 0, reset: "" };         // one window (or equal ones): the tightest
+  const only = rows.length ? [...rows].sort((a, b) => a.left - b.left)[0] : { window: "", left: within(l.left) ?? 0, reset: "", span: Infinity };     // one window (or equal ones): the tightest
   const now = two ? mark(low) : mark(only), week = two ? mark(high) : null;
+  const long = !two && rows.length > 0 && only.span >= DAY;                                                         // one window of a day or more: its share is the bottle's size as well
   const level = levelOf(week ? Math.min(now.left, week.left) : now.left);
   const out = (two ? [low, high] : [only]).filter((r) => r.left <= 0);
   const back = out.map((r) => r.reset).filter((r) => r && Number.isFinite(new Date(r).getTime())).sort().pop() || "";
-  return { read: true, two, liquid: now.left, size: two ? sizeOf(week.left) : "large", level, dry: out.length > 0, now, week, back };
+  return { read: true, two, liquid: now.left, size: two ? sizeOf(week.left) : long ? sizeOf(now.left) : "large", level, dry: out.length > 0, now, week, back };
 }

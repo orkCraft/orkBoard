@@ -30,8 +30,8 @@ _MONTHS = {
 }
 
 _CLAUDE_LINE_RE = re.compile(
-    r"^Current\s+(?P<label>.+?):\s+(?P<pct>\d+)%\s+used\s+·\s+resets\s+(?P<mon>[A-Za-z]+)\s+(?P<day>\d{1,2})\s+at\s+(?P<hour>\d{1,2})(?::(?P<min>\d{2}))?(?P<ampm>[aApP][mM])\s+\((?P<tz>[^)]+)\)$"
-)
+    r"^Current\s+(?P<label>.+?):\s+(?P<pct>\d+)%\s+used(?:\s+·\s+resets\s+(?P<mon>[A-Za-z]+)\s+(?P<day>\d{1,2})\s+at\s+(?P<hour>\d{1,2})(?::(?P<min>\d{2}))?(?P<ampm>[aApP][mM])\s+\((?P<tz>[^)]+)\))?$"
+)  # a window not begun yet ("Current session: 0% used") says no reset: it is kept, with none, so the 5 hours never go missing
 
 
 def _said(output: str) -> str:
@@ -246,7 +246,7 @@ def get_claude_quota(
         pct = int(m.group("pct"))
         rem_frac = max(0.0, min(1.0, (100 - pct) / 100.0))
         try:
-            reset_dt = _parse_claude_reset(
+            reset_dt = None if m.group("mon") is None else _parse_claude_reset(
                 mon_str=m.group("mon"),
                 day_str=m.group("day"),
                 hour_str=m.group("hour"),
