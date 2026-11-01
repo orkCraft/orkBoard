@@ -1,0 +1,826 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orkboard leaders at the table, mockup</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* The mockup of the leaders at the table (the owner, 1 November: the leaders are fellow players, decisions §199.2): the open leader's head large in its tab
+   with its alerts and notes beside it, the quick question as the leader's speech bubble, the party's header one row (no *Leads*: the tab is the leader;
+   *Does* with orkUI's sword, *Checks* with its shield, each seat's role under its head), the leaders' faces as states. Layout only: every colour, face and
+   corner read through orkUI's tokens and classes (`.ork-tab`, `.ork-head`, `.ork-race__head`, `.ork-sign`, `.ork-chip`, `.ork-btn`, `.ork-field`, `.ork-card`,
+   `.ork-think`, `.ork-busy`, `.ork-mark`). What is drawn here for the first time (the bubble, the faces) is this page's until orkUI draws it: the faces are
+   sketched on the heads' own 12 × 11 grid from the race sheets' pixels, a few cells each, for orkUI to draw properly. The table (the owner, 1 November: *the leaders
+   sit on chairs above the table with the cards; a new party is an empty chair*): each tab a chair's back behind its leader's head on the table's rim, the
+   empty chair in place of *+ Party*, the leader's lane on the Board the table in front of its chair, a member at work its small head on the card it works on.
+   The chair is drawn here at a sign's weight in the frame's greys (its back lower than the head: posts, their knobs, the rail), until orkUI draws it. */
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--ork-canvas); }
+body { margin: 0; background: var(--ork-canvas); color: var(--ork-ink); font: var(--ork-type-body); }
+p, ul, ol, h1, h2, h3 { margin: 0; padding: 0; }
+code { font-family: var(--ork-font-code); font-size: 0.92em; }
+.mk-bar { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3) var(--ork-6); padding: var(--ork-4) var(--ork-6);
+  background: var(--ork-canvas); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.mk-bar nav { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
+.mk-main { padding: var(--ork-6); display: flex; flex-direction: column; gap: var(--ork-8); }
+.mk-sec h1 { font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); margin-bottom: var(--ork-3); }
+.mk-line { max-width: 112ch; margin-bottom: var(--ork-5); color: var(--ork-ink-read); }
+.mk-line b { color: var(--ork-ink); }
+.mk-acts { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2); margin-bottom: var(--ork-4); }
+.mk-acts .lab { color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: uppercase; margin-right: var(--ork-2); }
+.mk-acts .ork-btn[aria-pressed="true"] { --_bg: var(--ork-ink); --_fg: var(--ork-on-ink); --_bd: var(--ork-ink); }
+.mk-row { display: flex; flex-wrap: wrap; gap: var(--ork-6); align-items: flex-start; }
+.mk-fig { display: flex; flex-direction: column; gap: var(--ork-3); margin: 0; min-width: 0; }
+.mk-fig > h2 { font: var(--ork-type-label); text-transform: uppercase; color: var(--ork-ink-muted); }
+.mk-fig > p { max-width: 380px; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.mk-fig > p b { color: var(--ork-ink); font-weight: 600; }
+.mk-list { max-width: 112ch; display: flex; flex-direction: column; gap: var(--ork-2); padding-left: var(--ork-6); color: var(--ork-ink-read); }
+.mk-list b { color: var(--ork-ink); }
+.mk-foot { max-width: 112ch; margin: 0 var(--ork-6) var(--ork-8); padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.muted { color: var(--ork-ink-muted); } .cap { font: var(--ork-type-caption); }
+.px { image-rendering: pixelated; display: block; flex: none; }
+.h24 { width: 24px; height: 22px; } .h36 { width: 36px; height: 33px; } .h48 { width: 48px; height: 44px; } .h16 { width: 16px; height: 15px; } .h28 { width: 28px; height: 26px; }
+.measure { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.measure b { color: var(--ork-ink); font-weight: 600; }
+
+/* ---------- the window ---------- */
+.win { position: relative; width: 100%; max-width: 1240px; height: 760px; display: grid; grid-template-rows: auto auto auto 1fr auto; background: var(--ork-canvas);
+  outline: var(--ork-line) solid var(--ork-edge); overflow: hidden; --cols: 5; }
+.tabs { display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 180px)) 1fr; align-items: stretch; border-bottom: var(--ork-line) solid var(--ork-frame); background: var(--ork-canvas); }
+.tab { position: relative; display: flex; align-items: center; gap: var(--ork-4); min-width: 0; height: auto; padding: var(--ork-3) var(--ork-5); text-align: left; border-right: var(--ork-line) solid var(--ork-frame); }
+.tab .nm { display: flex; flex-direction: column; gap: var(--ork-1); min-width: 0; }
+.tab .nm > b { font: var(--ork-type-heading); text-transform: uppercase; letter-spacing: var(--ork-type-heading-track); font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tab .tools { display: flex; align-items: center; gap: var(--ork-3); color: var(--ork-ink-faint); }
+.tab .tools span { display: inline-flex; align-items: center; gap: var(--ork-1); }
+.tab .tools .ork-sign { width: 10px; height: 10px; }
+.tab .tools .ork-mark { width: 12px; height: 12px; }
+.tab .who { text-transform: none; letter-spacing: 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tab > .flag { position: absolute; right: var(--ork-3); bottom: var(--ork-2); color: var(--ork-alert); }
+.tabs-end { display: flex; align-items: center; justify-content: flex-end; gap: var(--ork-3); padding: 0 var(--ork-5); }
+.tabs-end .stop { --_fg: var(--ork-danger); --_bd: var(--ork-danger); }
+
+/* the open leader, large (proposed): the tab grows in height only, never in width (a tab is its column's head on the Board, decisions §143) */
+.headbtn { position: relative; display: grid; place-items: center; padding: 0; border: 0; background: none; cursor: pointer; color: inherit; }
+.headbtn:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
+.headbtn .say { position: absolute; left: -6px; top: -4px; width: 14px; height: 12px; opacity: 0; transition: opacity var(--ork-motion-quick) linear; color: var(--ork-ink-muted); }
+.headbtn:hover .say, .headbtn:focus-visible .say { opacity: 1; }
+.headbtn .say::before { content: ""; position: absolute; inset: 0 0 3px 0; border: var(--ork-line) solid currentColor; background: var(--ork-canvas); clip-path: var(--ork-notch); }
+.headbtn .say::after { content: ""; position: absolute; left: 3px; bottom: 0; width: 3px; height: 4px; background: currentColor; }
+.marks { position: absolute; right: -14px; top: -2px; display: flex; flex-direction: column; gap: var(--ork-1); }
+.mk-alert, .mk-note { display: grid; place-items: center; width: 16px; height: 16px; padding: 0; border: 0; background: var(--ork-canvas); cursor: pointer; }
+.mk-alert { color: var(--ork-alert); }
+.mk-alert .ork-sign { width: 12px; height: 12px; }
+.mk-note::before { content: ""; width: 6px; height: 6px; background: var(--ork-ink-muted); }
+.mk-alert:focus-visible, .mk-note:focus-visible { outline: 2px solid var(--ork-ink); }
+.win.is-new .tab.is-on { padding-top: var(--ork-4); padding-bottom: var(--ork-4); }
+.win.is-new .tab.is-on .nm { margin-left: var(--ork-6); }
+
+/* ---------- the chairs (this page's until orkUI draws them): a back in the frame's greys behind the head, on the table's rim ---------- */
+.win.chairs .tabs, .tbl .tabs { border-bottom: 3px solid var(--ork-table-rim); }
+.win.chairs .tab, .tbl .tab { align-items: flex-end; padding-top: var(--ork-2); padding-bottom: 0; }
+.win.chairs .tab .nm, .tbl .tab .nm { padding-bottom: var(--ork-3); }
+.win.chairs .tab > .flag, .tbl .tab > .flag { bottom: auto; top: var(--ork-2); }
+.seatbox { position: relative; flex: none; width: 44px; height: 36px; --chair-post: var(--ork-table-rim-hi); --chair-back: var(--ork-panel); }
+.seatbox.big { width: 52px; height: 46px; }
+/* the back lower than the head (the owner: a back as tall as the head reads as a little house): the head stands over its rail, as one seated */
+.seatbox > svg { position: absolute; left: 0; bottom: 0; width: 100%; height: 24px; }
+.seatbox.big > svg { height: 28px; }
+.tab.empty .seatbox { width: 36px; }
+.tab.empty .seatbox > svg { height: 36px; }
+.seatbox > svg .po { fill: var(--chair-post); }
+.seatbox > svg .bk { fill: var(--chair-back); }
+.seatbox > .sit { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); display: flex; }
+.tab.is-on .seatbox { --chair-back: var(--ork-canvas); }
+/* the empty chair: the whole chair, faint, nobody on it; hovered or focused it is pulled out a little (lifted, §89) */
+.tab.empty { appearance: none; border: 0; border-right: var(--ork-line) solid var(--ork-frame); background: none; color: var(--ork-ink-faint); cursor: pointer; font: inherit; }
+.tab.empty .seatbox { --chair-post: var(--ork-frame); --chair-back: transparent; }
+.tab.empty .seatbox > svg { transition: transform var(--ork-motion-base) var(--ork-motion-spring); transform-origin: 50% 100%; }
+.tab.empty:hover .seatbox, .tab.empty:focus-visible .seatbox, .tab.empty.is-hover .seatbox { --chair-post: var(--ork-edge); }
+.tab.empty:hover .seatbox > svg, .tab.empty:focus-visible .seatbox > svg, .tab.empty.is-hover .seatbox > svg { transform: translateY(-2px) rotate(-4deg); }
+.tab.empty:hover, .tab.empty:focus-visible, .tab.empty.is-hover { color: var(--ork-ink); }
+.tab.empty:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.tab.empty .nm b { font: var(--ork-type-button); text-transform: uppercase; letter-spacing: var(--ork-type-button-track); white-space: normal; overflow: visible; }
+@media (prefers-reduced-motion: reduce) { .tab.empty .seatbox > svg { transition: none; transform: none !important; } }
+.tabs.five { grid-template-columns: repeat(5, minmax(0, 180px)) minmax(0, 132px) 1fr; }
+/* a member at work: its small head on the card it works on (spec 95 §3.2's turned card), the busy mark beside it */
+.wk { position: absolute; right: var(--ork-3); bottom: var(--ork-3); display: flex; align-items: center; gap: var(--ork-1); }
+.wk .ork-busy { position: static; }
+.part .wk + .u { padding-right: 40px; }
+
+/* the pane */
+.title { display: flex; align-items: center; gap: var(--ork-4); min-height: var(--ork-bar); padding: 0 var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-frame);
+  font: var(--ork-type-heading); text-transform: uppercase; letter-spacing: var(--ork-type-heading-track); }
+.title .grow { flex: 1; }
+.chrome { display: flex; flex-direction: column; }
+.chrome > * { border-bottom: var(--ork-line) solid var(--ork-frame); }
+.squad { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3) var(--ork-6); padding: var(--ork-3) var(--ork-4); }
+.squad .party { font: var(--ork-type-heading); text-transform: uppercase; }
+.grp { display: flex; align-items: center; gap: var(--ork-4); padding-right: var(--ork-6); border-right: var(--ork-line) solid var(--ork-frame); }
+.grp:last-of-type { border-right: 0; }
+.grp > .ork-label { white-space: nowrap; }
+.grp > .side { display: inline-flex; align-items: center; gap: var(--ork-2); color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: uppercase; white-space: nowrap; }
+.grp > .side .ork-sign { width: 14px; height: 14px; color: var(--ork-ink); }
+.seat { display: flex; align-items: center; gap: var(--ork-1); padding: 0; border: 0; background: none; color: inherit; cursor: pointer; }
+.seat.role { flex-direction: column; gap: 0; align-items: center; min-width: 56px; }
+.seat.role .r { font: var(--ork-type-caption); color: var(--ork-ink-muted); white-space: nowrap; max-width: 76px; overflow: hidden; text-overflow: ellipsis; }
+.seat .hw { position: relative; display: flex; align-items: center; gap: var(--ork-1); }
+.seat .ork-busy { position: absolute; right: -4px; top: -4px; }
+.squad .grow { flex: 1; }
+.aspects { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.aspects .ork-chip { gap: var(--ork-2); }
+.aspects .ork-chip.al { color: var(--ork-ink); }
+.aspects .ork-chip.al .ork-sign { color: var(--ork-alert); }
+.aspects .ork-chip .dot { width: 6px; height: 6px; background: var(--ork-ink-muted); }
+.aspects .ork-chip .ork-sign { width: 10px; height: 10px; }
+.askrow { padding: var(--ork-3) var(--ork-4); }
+.strip { display: flex; align-items: center; gap: var(--ork-4); padding: var(--ork-3) var(--ork-4); }
+.strip a { color: var(--ork-ink); font: var(--ork-type-button); text-decoration: underline; }
+.strip .grow { flex: 1; }
+.aspectrow { padding: var(--ork-3) var(--ork-4); }
+
+/* the map (Tech's System, as today, cut down) and the discard's place */
+.mapbox { position: relative; display: grid; grid-template-columns: 1fr 200px; min-height: 0; background: var(--ork-table); }
+.sys { position: relative; padding: var(--ork-6) var(--ork-6); display: grid; grid-template-columns: 90px 1fr 1fr; gap: var(--ork-5) var(--ork-8); align-content: start; overflow: hidden; }
+.sys .ctn { font: var(--ork-type-caption); color: var(--ork-ink); text-align: center; border-bottom: 2px solid var(--ork-frame); padding-bottom: var(--ork-2); }
+.sys .lab { color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: uppercase; padding-top: var(--ork-3); }
+.sys .cell { display: flex; gap: var(--ork-4); }
+.part { position: relative; width: 128px; height: 150px; display: flex; flex-direction: column; gap: var(--ork-1); padding: var(--ork-3) var(--ork-4); background: var(--ork-card); border-color: var(--ork-card-frame); }
+.part b { font-weight: 600; font-size: 14px; }
+.part .f { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.part .u { margin-top: auto; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.part .cm { position: absolute; right: var(--ork-2); top: var(--ork-2); display: flex; align-items: center; gap: var(--ork-1); color: var(--ork-alert); }
+.part .cm .ork-sign { width: 12px; height: 12px; }
+.part .cn { position: absolute; right: var(--ork-3); top: var(--ork-3); width: 6px; height: 6px; background: var(--ork-ink-muted); }
+.part.is-lit { box-shadow: inset 0 0 0 2px var(--ork-ink); }   /* inset: the card's notch (clip-path) cuts an outline */
+.discard { margin: var(--ork-8) var(--ork-6) var(--ork-6) 0; border: var(--ork-line) dashed var(--ork-frame); display: grid; place-items: start center; padding-top: var(--ork-3); color: var(--ork-ink-faint); font: var(--ork-type-label); text-transform: uppercase; }
+.hand { display: flex; align-items: flex-end; gap: var(--ork-4); height: 104px; padding: var(--ork-3) var(--ork-4) 0; border-top: var(--ork-line) solid var(--ork-frame); overflow: hidden; }
+.hand .lab { align-self: center; color: var(--ork-ink-faint); font: var(--ork-type-label); text-transform: uppercase; }
+.hand .ork-card-back { width: 96px; height: 96px; }
+.hand .hc { width: 104px; height: 96px; padding: var(--ork-3); font: var(--ork-type-caption); }
+.hand .grow { flex: 1; }
+
+/* ---------- the speech bubble: the one way a leader speaks (the answer to a question, the evening line, a hearing's side) ---------- */
+.bubble { position: absolute; z-index: 20; width: min(440px, calc(100% - 32px)); display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4) var(--ork-5);
+  background: var(--ork-raised); border: var(--ork-line) solid var(--ork-edge); clip-path: none; box-shadow: 0 var(--ork-2) 0 var(--ork-scrim); }
+.bubble[hidden] { display: none; }
+.bubble::before, .bubble::after { content: ""; position: absolute; left: var(--tail, 28px); width: 0; height: 0; border: 8px solid transparent; }
+.bubble::before { top: -17px; border-bottom-color: var(--ork-edge); }
+.bubble::after { top: -15px; border-bottom-color: var(--ork-raised); }
+.bubble .who { display: flex; align-items: center; gap: var(--ork-3); font: var(--ork-type-label); text-transform: uppercase; color: var(--ork-ink-muted); }
+.bubble .who .grow { flex: 1; }
+.bubble .q { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.bubble .a { color: var(--ork-ink); font: var(--ork-type-body); }
+.bubble .src { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
+.bubble .src .ork-chip { font-family: var(--ork-font-code); }
+.bubble .acts { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3); }
+.bubble .acts .grow { flex: 1; }
+.bubble .seatline { display: flex; align-items: center; gap: var(--ork-2); color: var(--ork-ink-muted); font: var(--ork-type-caption); border-top: var(--ork-line) solid var(--ork-frame); padding-top: var(--ork-3); }
+.bubble .seatline .ork-mark { width: 14px; height: 14px; }
+.bubble .err { color: var(--ork-danger); }
+.bubble.flat { position: relative; left: auto; top: auto; width: 340px; margin-top: 16px; }
+@media (prefers-reduced-motion: no-preference) { .bubble.pop { animation: pop var(--ork-motion-sure) var(--ork-motion-spring); transform-origin: var(--tail, 28px) -8px; } }
+@keyframes pop { from { transform: scale(0.9); opacity: 0; } }
+
+/* the head's one beat (orkUI's `.ork-gives` to come, spec 120 §6.9): a step up and back, once; nothing under reduced motion */
+@media (prefers-reduced-motion: no-preference) { .beat { animation: beat var(--ork-motion-base) var(--ork-motion-spring) 2 alternate; } }
+@keyframes beat { to { transform: translateY(-3px); } }
+.asleep { filter: grayscale(1); opacity: 0.55; }
+
+/* ---------- the faces' sheet ---------- */
+.faces { border-collapse: collapse; }
+.faces th, .faces td { padding: var(--ork-3) var(--ork-5); border-bottom: var(--ork-line) solid var(--ork-frame); text-align: center; vertical-align: middle; }
+.faces thead th { font: var(--ork-type-label); text-transform: uppercase; color: var(--ork-ink); }
+.faces thead th span { display: block; max-width: 150px; margin: var(--ork-1) auto 0; font: var(--ork-type-caption); text-transform: none; color: var(--ork-ink-muted); font-weight: 400; }
+.faces tbody th { text-align: left; font: var(--ork-type-caption); color: var(--ork-ink-muted); white-space: nowrap; }
+.faces td img { margin: 0 auto; }
+.scroll { max-width: 100%; overflow-x: auto; }
+
+/* the events, a row of tabs reacting */
+.evtabs { display: flex; border: var(--ork-line) solid var(--ork-frame); width: fit-content; max-width: 100%; flex-wrap: wrap; }
+.evtab { display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); width: 120px; padding: var(--ork-4) var(--ork-3); border-right: var(--ork-line) solid var(--ork-frame); position: relative; }
+.evtab:last-child { border-right: 0; }
+.evtab b { font: var(--ork-type-heading); text-transform: uppercase; font-weight: 500; font-size: 12px; }
+.evtab .st { font: var(--ork-type-caption); color: var(--ork-ink-muted); min-height: 32px; text-align: center; }
+.evtab .flag { position: absolute; right: var(--ork-3); top: var(--ork-3); color: var(--ork-alert); }
+.evtab .flag .ork-sign { width: 12px; height: 12px; }
+.evtab .ork-busy { position: absolute; left: var(--ork-3); top: var(--ork-3); }
+
+/* ---------- the narrow width (390) ---------- */
+.narrow { width: 390px; max-width: 100%; height: 760px; display: grid; grid-template-rows: auto auto auto 1fr auto; outline: var(--ork-line) solid var(--ork-edge); overflow: hidden; position: relative; background: var(--ork-canvas); }
+.ntabs { display: flex; align-items: stretch; border-bottom: var(--ork-line) solid var(--ork-frame); }
+.ntab { position: relative; display: grid; place-items: center; width: 52px; min-height: 52px; border-right: var(--ork-line) solid var(--ork-frame); }
+.ntab.is-on { width: 72px; background: var(--ork-raised); box-shadow: inset 0 -2px 0 var(--ork-ink); }
+.ntab .flag { position: absolute; right: 4px; bottom: 4px; color: var(--ork-alert); }
+.ntab .flag .ork-sign { width: 10px; height: 10px; }
+.ntab .marks { right: 2px; top: 4px; }
+.ntab-end { margin-left: auto; display: flex; align-items: center; padding: 0 var(--ork-3); }
+.narrow .squad { gap: var(--ork-3) var(--ork-5); }
+.narrow .grp { padding-right: var(--ork-5); }
+.narrow .aspects { width: 100%; }
+/* at the narrow width the header keeps what speaks: the sword and the shield without their words (said in their title), the aspects with something on them */
+.narrow.is-new .side .w, .narrow.is-new .aspects .fw, .narrow.is-new .aspects .nil { display: none; }
+.narrow .sys { grid-template-columns: 1fr 1fr; padding: var(--ork-5); gap: var(--ork-4); }
+.narrow .part { width: 100%; height: 110px; }
+.narrow .bubble { left: var(--ork-4); top: 60px; width: calc(100% - 32px); }
+.ntab.empty { appearance: none; border: 0; border-right: var(--ork-line) solid var(--ork-frame); background: none; cursor: pointer; padding: 0; }
+.ntab.empty .seatbox { width: 18px; height: 18px; --chair-post: var(--ork-frame); --chair-back: transparent; }
+.ntab.empty .seatbox > svg { height: 18px; }
+
+/* ---------- dark edges (the owner, 1 November): the room dark, the table lit between the leaders' side and the person's ----------
+   `--mk-dark` is this page's until orkUI has a step under its canvas (never #000: the office look lifts its ground so the screen does not glare); the faint
+   ink holds AA on it. The table is lifted a step (the panel's grey) so the edge reads with no gradient; the open leader's tab takes the table's grey, leaning in. */
+.dk { --mk-dark: #090807; --mk-table: var(--ork-panel); }
+/* outside the table nothing divides the leaders: no line between the tabs, they sit in one dark room */
+.dk .tab, .dk .tab.empty, .dk .ntab, .dk .ntab.empty { border-right: 0; }
+
+/* ---------- Stop all as a door in the dark wall (this page's drawing until orkUI draws it), the owner's way: shut at rest, whatever runs; pressed, it
+   opens (the orks are out: their heads leave the cards), the way out a faint light, the word *All stopped*; it shuts by itself when work is started again ---------- */
+.door-btn { display: inline-flex; align-items: flex-end; gap: var(--ork-3); align-self: stretch; padding: 0 var(--ork-2) 0 var(--ork-3); border: 0; background: none; cursor: pointer;
+  color: var(--ork-danger); font: var(--ork-type-button); text-transform: uppercase; letter-spacing: var(--ork-type-button-track); }
+.door-btn > span { padding-bottom: var(--ork-3); white-space: nowrap; }
+.door-btn:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-danger); }
+.door { display: block; width: 28px; height: 40px; flex: none; }
+.door .fr { fill: var(--ork-table-rim-hi); }
+.door .lf { fill: var(--ork-raised); }
+.door .gap { fill: var(--ork-ink-faint); opacity: 0.7; }
+.door-btn.is-open { color: var(--ork-ink-muted); cursor: default; }
+.door .kn { fill: var(--ork-ink-faint); }
+.door-btn:hover .fr, .door-btn:focus-visible .fr { fill: var(--ork-edge); }
+.tabs-end.has-door { align-items: stretch; padding-right: var(--ork-4); }
+.ntab-end .door { width: 14px; height: 20px; }
+.ntab-end .door-btn > span { padding-bottom: 0; align-self: center; }
+.ntab-end .door-btn { align-items: center; gap: var(--ork-2); padding: 0 var(--ork-2); }
+.ntab-end { padding: 0 var(--ork-2) 0 0; flex: none; }
+.ntab.empty { width: 36px; }
+.narrow { grid-template-columns: minmax(0, 1fr); }
+.ntabs { min-width: 0; overflow: hidden; }
+.win.dk, .tbl.dk, .narrow.dk { background: var(--mk-dark); }
+.dk .tabs, .dk .ntabs { background: var(--mk-dark); }
+.dk .title, .dk .chrome, .dk .mapbox, .dk .lanes { background: var(--mk-table); }
+/* the open leader has no lit box (the owner): it is told by its head, larger and leaning in over the table's rim by 3 px, its name in the full ink with its own
+   name under it, the others' in the muted ink; aria-selected says it to a screen reader */
+.dk .tab.is-on, .dk .ntab.is-on { background: none !important; box-shadow: none !important; }
+/* the chair's back solid (the owner): its panel in the rim's grey, the posts and the rail half a step lighter so its shape reads; the empty chair the same, fainter */
+.dk .tab.is-on .seatbox, .dk .tab .seatbox { --chair-back: var(--ork-table-rim); --chair-post: var(--ork-table-rim-hi); }
+.dk .tab.empty .seatbox, .dk .ntab.empty .seatbox { --chair-back: var(--ork-raised); --chair-post: var(--ork-frame); }
+.dk .tab.empty:hover .seatbox, .dk .tab.empty:focus-visible .seatbox, .dk .tab.empty.is-hover .seatbox { --chair-back: var(--ork-table-rim); --chair-post: var(--ork-edge); }
+.dk .tab.is-on .seatbox > .sit { transform: translate(-50%, 3px); }
+.dk .ntab.is-on > span { transform: translateY(3px); }
+.dk .ntabs { border-bottom: 3px solid var(--ork-table-rim); }
+.dk .hand { background: var(--mk-dark); border-top: 3px solid var(--ork-table-rim); }
+.dk .discard, .dk .disc { border-color: var(--ork-table-rim-hi); }
+
+/* ---------- the table: the Orkmaster's tab, the Board's lanes in front of the chairs ---------- */
+.tbl { width: 100%; max-width: 1240px; display: grid; grid-template-rows: auto auto 1fr auto; background: var(--ork-canvas); outline: var(--ork-line) solid var(--ork-edge); overflow: hidden; }
+.lanes { display: grid; grid-template-columns: repeat(5, minmax(0, 180px)) minmax(0, 132px) 1fr; min-height: 330px; background: var(--ork-table); }
+.ln { display: flex; flex-direction: column; gap: var(--ork-4); padding: var(--ork-5) var(--ork-4); border-right: var(--ork-line) solid var(--ork-frame); min-width: 0; }
+.ln .lab { color: var(--ork-ink-faint); font: var(--ork-type-label); text-transform: uppercase; }
+.gc { position: relative; width: 100%; max-width: 150px; min-height: 96px; display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3); background: var(--ork-card); border-color: var(--ork-card-frame); font: var(--ork-type-caption); }
+.gc b { font-weight: 600; color: var(--ork-ink); }
+.gc .ph { margin-top: auto; color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: uppercase; }
+.gc .wk { bottom: var(--ork-2); right: var(--ork-2); }
+.tbl .disc { margin: var(--ork-5) var(--ork-5) var(--ork-5) auto; width: 140px; height: 170px; border: var(--ork-line) dashed var(--ork-frame); display: grid; place-items: start center; padding-top: var(--ork-3); color: var(--ork-ink-faint); font: var(--ork-type-label); text-transform: uppercase; }
+.tbl.full .tab.empty, .tbl.full .ln.free { visibility: hidden; }
+</style>
+</head>
+<body>
+<header class="mk-bar">
+  <b class="ork-head" style="border:0;padding:0;min-height:0">The leaders at the table · mockup</b>
+  <nav aria-label="Sections">
+    <a class="ork-btn quiet" href="#lens">1 · The lens</a>
+    <a class="ork-btn quiet" href="#table">2 · The table</a>
+    <a class="ork-btn quiet" href="#bubble">3 · The bubble</a>
+    <a class="ork-btn quiet" href="#faces">4 · The faces</a>
+    <a class="ork-btn quiet" href="#narrow">5 · Narrow</a>
+    <a class="ork-btn quiet" href="#rules">6 · Rules and what changes</a>
+  </nav>
+</header>
+
+<main class="mk-main">
+
+<section class="mk-sec" id="lens">
+  <h1>1 · A party's lens, today and proposed</h1>
+  <p class="mk-line">The owner: <i>the leaders are your fellow players at the table</i> (decisions §199.2). So the open tab is the player you are
+  looking through: <b>its head large</b> (48 × 44, the race sheet's @2x, §161), its alerts and notes <b>beside its head</b> instead of a strip over the map,
+  and the quick question <b>a bubble from its head</b> instead of a line always open. The party's header loses <i>Leads</i> (the tab is the leader), and
+  becomes one row: <b>Does</b> with orkUI's sword, <b>Checks</b> with its shield, each seat's role under its head, the leader's aspects at the row's right.
+  The tab grows in height only: a tab is its column's head on the Board (§143), so its width never changes.</p>
+  <p class="mk-line"><b>Who decides sits at the table; who does is the leader's squad.</b> The leaders sit on chairs at the table's far edge (the tabs, over
+  the table's rim), the other leaders at 36 × 33, the open one leaning in at 48 × 44. The squad stays at 24 × 22 (the smallest size a head is drawn crisp at
+  with its tier's gear readable, §161; 12 × 11 would break §148.7's 16 px), and is made lighter instead: the AI tool's mark once by the sword and once by the
+  shield (a head carries its own only when its seat runs on another tool), the role in the muted caption. A member at work is its small head on the card
+  it works on (Backend on <i>index.ts</i>). <i>+ Party</i> is the empty chair.</p>
+  <div class="mk-acts" role="group" aria-label="Which window">
+    <span class="lab">Show</span>
+    <button type="button" class="ork-btn" data-view="old" aria-pressed="false">Today</button>
+    <button type="button" class="ork-btn" data-view="new" aria-pressed="true">Proposed</button>
+    <button type="button" class="ork-btn" id="chairs" aria-pressed="true">Chairs</button>
+    <button type="button" class="ork-btn" data-dark aria-pressed="true">Dark edges</button>
+    <span class="measure" id="measure"></span>
+  </div>
+  <div class="mk-acts" role="group" aria-label="Try">
+    <span class="lab">Try</span>
+    <span class="cap muted">Press the Architect's head (it asks), the <span style="color:var(--ork-alert)">!</span> or the dot beside it (they step through the marked parts), a seat (its popover, as today).</span>
+  </div>
+  <div class="win is-new" id="win">
+    <div class="tabs" id="tabs"></div>
+    <div class="title"><span>The whole project · through Tech</span><span class="grow"></span><button type="button" class="ork-btn quiet" aria-label="Tech's menu">…</button></div>
+    <div class="chrome" id="chrome"></div>
+    <div class="mapbox">
+      <div class="sys" id="sys">
+        <span></span><span class="ctn">server/ · Express</span><span class="ctn">client/ · Vite</span>
+        <span class="lab">Its doors</span>
+        <div class="cell"><div class="ork-card part" data-part="index"><b>index.ts</b><span class="f">2 files</span><span class="wk" id="worker"></span><span class="u">Uses 1 · Used by 0</span></div></div>
+        <div class="cell"><div class="ork-card part" data-part="net"><b>net.ts</b><span class="f">2 files</span><span class="u">Uses 0 · Used by 0</span></div></div>
+        <span class="lab">Its data</span>
+        <div class="cell">
+          <div class="ork-card part" data-part="lobby" data-level="alert"><span class="cm"><img class="px h16" data-head="shaman-elder" alt=""><span class="ork-sign alert" aria-hidden="true"></span></span><b>lobby.ts</b><span class="f">2 files</span><span class="u">Uses 3 · Used by 11</span></div>
+          <div class="ork-card part" data-part="rooms" data-level="note"><span class="cn"></span><b>rooms.ts</b><span class="f">2 files</span><span class="u">Uses 1 · Used by 2</span></div>
+        </div>
+        <div class="cell"><div class="ork-card part" data-part="store" data-level="note"><span class="cn"></span><b>store.ts</b><span class="f">1 file</span><span class="u">Uses 0 · Used by 4</span></div></div>
+      </div>
+      <div class="discard">Discard</div>
+    </div>
+    <div class="hand"><span class="ork-card-back" aria-hidden="true"></span><div class="ork-card hc">Reset the round timer when a player rejoins</div><span class="grow"></span><span class="lab">The hand, as today</span></div>
+    <section class="bubble" id="bub" hidden aria-label="The Architect"></section>
+  </div>
+</section>
+
+<section class="mk-sec" id="table">
+  <h1>2 · The table: the leaders on their chairs, the empty chair</h1>
+  <p class="mk-line">Through the Orkmaster's tab the Board is the table itself: <b>each leader's lane is the table in front of its chair</b>, the cards it plays
+  lying before it, and a member at work is a small head on the card it works on, as a worker placed on a board. The Orkmaster's chair is like the others; its crown
+  says who leads the table. <b>The empty chair is <i>New party</i></b>: the whole chair, faint, nobody on it; hovered or focused it is pulled out a little; pressed,
+  the one place of the parties opens as <i>+ Party</i> opens it today (§151.5). It stands only while a craft is not at the table: <b>a full table has no empty
+  chair</b>, and nothing has to say <i>no more</i>. It takes a narrower column and no lane. Release and Live keep their places in the portal's corners (§188): they
+  come to the table only when there is something to do. The word stays <i>New party</i>: <i>seat</i> is the squad's word (a member's place), so the chair is a
+  picture, never a new word.</p>
+  <p class="mk-line"><b>Dark edges</b> (the owner: <i>the back behind the chairs black, and the space behind the hand too</i>): the room is dark and the table
+  between lit, a step lighter, with its rim on both sides. <b>The table is what is shared</b> (the Board, the leaders' cards, the discard, the portal); <b>the dark
+  edges are the players' places</b>: the leaders across it on their chairs, the person on the near side with the hand. The + card does not lose its sense: it
+  is a card of the person's hand, and sent it leaves the dark for the lit table, face down in the Orkmaster's lane (spec 120 §6.2): played, seen. Nothing glows:
+  the lamp is only a step of grey. <b>The open leader has no lit box</b>: it is told by its head, larger and leaning in over the table's rim, its name in the
+  full ink with its own name under it, the others' muted. The dark is this page's token until orkUI draws a step under its canvas (near black, never #000). Outside the table nothing
+  divides the leaders: <b>no line between the tabs</b>, they sit in one dark room; the lines stay on the table, between the lanes.</p>
+  <p class="mk-line"><b>Stop all is a door in the dark wall</b>, at the room's far end, the owner's way: <b>shut at rest</b>, whatever runs, so the row stays
+  quiet all day; <b>pressed, it opens</b>: the orks get up and go out (their heads leave the cards they worked on), the way out a faint light, the word
+  <i>All stopped</i>, a second press doing nothing; <b>it shuts by itself</b> when work is started again. The leaders stay at the table: Stop all halts every
+  ork, script and browser, it closes nothing. The only light in the dark row is then the open door, an exception worth seeing. Not <i>Exit</i>, and no planks:
+  on a door shut by default they would read <i>locked</i>; the danger colour stays on the word <i>Stop all</i>.</p>
+  <div class="mk-acts" role="group" aria-label="The table's state">
+    <span class="lab">State</span>
+    <button type="button" class="ork-btn" data-tbl="hover" aria-pressed="false">The empty chair hovered</button>
+    <button type="button" class="ork-btn" data-tbl="full" aria-pressed="false">The table full</button>
+    <button type="button" class="ork-btn" data-tbl="spent" aria-pressed="false">The window spent</button>
+    <button type="button" class="ork-btn" data-dark aria-pressed="true">Dark edges</button>
+  </div>
+  <div class="mk-acts" role="group" aria-label="The door">
+    <span class="lab">Stop all</span>
+    <button type="button" class="ork-btn" data-door-state="closed" aria-pressed="true">At rest: shut</button>
+    <button type="button" class="ork-btn" data-door-state="open" aria-pressed="false">Stop all pressed: open</button>
+    <span class="cap muted">(or press the door itself)</span>
+  </div>
+  <div class="tbl" id="tbl"></div>
+</section>
+
+<section class="mk-sec" id="bubble">
+  <h1>3 · The bubble: the one way a leader speaks</h1>
+  <p class="mk-line">Pressed, the leader's head opens a bubble under it with the field focused (<i>Ask the Architect…</i>); Enter sends, Esc or a press away
+  closes it, the text kept. The same bubble holds the answer (the question muted over it, the sources, <b>Make it a goal</b>, ×), the evening line once a day
+  (spec 121 E), and the leader's side in a hearing (spec 120 §6.7): <b>whatever a leader says comes out of its head, in one shape</b>. Its foot names the
+  leader's seat (<i>Claude Code · Elder</i>): pressed, the seat's popover as today, since the head itself now asks. Only a leader and the Orkmaster speak:
+  a member never (§110.8). On the phone there is no quick question (§181.8).</p>
+  <div class="mk-acts" role="group" aria-label="The bubble's state">
+    <span class="lab">State</span>
+    <button type="button" class="ork-btn" data-bub="" aria-pressed="true">Closed</button>
+    <button type="button" class="ork-btn" data-bub="ask" aria-pressed="false">Asking</button>
+    <button type="button" class="ork-btn" data-bub="reading" aria-pressed="false">Reading</button>
+    <button type="button" class="ork-btn" data-bub="answer" aria-pressed="false">Answered</button>
+    <button type="button" class="ork-btn" data-bub="evening" aria-pressed="false">The evening line</button>
+    <button type="button" class="ork-btn" data-bub="failed" aria-pressed="false">Failed</button>
+    <span class="cap muted">(drawn in the window above)</span>
+  </div>
+  <div class="mk-row" id="three"></div>
+</section>
+
+<section class="mk-sec" id="faces">
+  <h1>4 · The faces: a state, never an idle motion</h1>
+  <p class="mk-line">A leader's face says what happened to its party, and then <b>stands still</b>: §149.1's <i>no idle motion</i> holds (a tool looked at all
+  day never sways), so nothing blinks or breathes on a timer. A face changes only when its party's state does, and a change made while the page was hidden is
+  simply there on coming back (§89.0). The face is an accent: the alert sign and the words stay (a 24 px face is not a sign). Only the leaders and the
+  Orkmaster have faces; a member keeps one. Under reduced motion the faces still change (a swap is not a motion), the head's one beat does not play.
+  <b>Sketched here</b> on the heads' own 12 × 11 grid, a few cells each; orkUI draws them properly, then they are copied.</p>
+  <div class="scroll"><table class="faces" id="facetab"></table></div>
+  <h1 style="margin-top:var(--ork-8)">The tabs as the game goes</h1>
+  <p class="mk-line">Fire what happens; the heads answer once and keep the face while it holds. <i>Pleased</i> is the only face that passes by itself (it
+  is a moment: a goal done), back to calm when the person has seen the discard, here after a few seconds.</p>
+  <div class="mk-acts" role="group" aria-label="Events">
+    <span class="lab">Fire</span>
+    <button type="button" class="ork-btn" data-ev="work">A task starts on Tech</button>
+    <button type="button" class="ork-btn" data-ev="alert">The Architect finds an alert</button>
+    <button type="button" class="ork-btn" data-ev="no">Product says no in Talk</button>
+    <button type="button" class="ork-btn" data-ev="done">Art's goal is done</button>
+    <button type="button" class="ork-btn" data-ev="spent">The window runs out</button>
+    <button type="button" class="ork-btn quiet" data-ev="reset">Reset</button>
+  </div>
+  <div class="evtabs" id="evtabs"></div>
+</section>
+
+<section class="mk-sec" id="narrow">
+  <h1>5 · The narrow width (390 × 760)</h1>
+  <p class="mk-line">The tabs are a row of heads (as today); the open one is a step larger (36 × 33) with its <span style="color:var(--ork-alert)">!</span> and dot beside it. The
+  header is the same one row, wrapping: the sword's seats, the shield's, the aspects under them. No chairs at this width (a 52 px tab has no room for one):
+  the empty chair is a small sign before <i>Stop</i>, <i>New party</i> its label. The bubble spans the width under the heads. Above the map:
+  <b>measured on the right</b>.</p>
+  <div class="mk-row">
+    <figure class="mk-fig"><h2>Today</h2><div class="narrow" id="nold"></div></figure>
+    <figure class="mk-fig"><h2>Proposed</h2><div class="narrow" id="nnew"></div></figure>
+    <figure class="mk-fig"><h2>Proposed, asking</h2><div class="narrow" id="nask"></div></figure>
+  </div>
+</section>
+
+<section class="mk-sec" id="rules">
+  <h1>6 · Rules kept, and what this changes</h1>
+  <ul class="mk-list">
+    <li><b>The frame stays</b> (§104.0, §145): no new pane, column, drawer or dialog; the bubble is the head's popover, as a seat's is (§110.7).</li>
+    <li><b>A tab's width never changes</b> (§143): the open leader grows the tab row's height by about 16 px, not its column.</li>
+    <li><b>No count</b> (§67, §145.3): the strip's <i>1 alert, 2 notes</i> goes; the head shows the alert sign and the note's dot, a press steps through, the numbers live only in the label (<i>The Architect: 1 alert, 2 notes</i>).</li>
+    <li><b>A member never speaks</b> (§110.8): no bubble, no face but its one, its questions its leader's.</li>
+    <li><b>No idle motion</b> (§149.1): faces are states; the head's beat plays once, when it hands a card (spec 120 §6.9's give) or answers; nothing under reduced motion.</li>
+    <li><b>One look</b> (orkUI's office): the bubble on the raised panel with the edge, the faces drawn in orkUI first, nothing of the page's own colour.</li>
+    <li><b>Dark edges</b>: near black under orkUI's canvas for the leaders' side and the hand, the table lifted a step between, its rim on both sides; no glow, no
+      gradient, never #000; the faint ink holds AA on the dark; no line between the tabs outside the table. Made in orkUI first (a token), then copied.</li>
+    <li><b>Stop all's door</b> keeps its word and its danger colour; shut and open are states (the door does not swing at rest); open it says <i>All stopped</i>
+      and shuts when work starts again; it changes §190.1's mark (the planks go: the door is the mark), drawn in orkUI first.</li>
+    <li><b>The chair is a thing drawn at a sign's weight</b>, as orkUI's banner, boards, die and potions are: the frame's greys, no colour, no legs, never a picture
+      of furniture; still at rest. orkUI draws it (the occupied back and the empty chair), then it is copied.</li>
+    <li><b>Who decides at the table, who does in the squad</b> (§104.0): leaders 36–48 px with faces and a voice; members 24 px, no face, no voice, their place
+      the leader's lens and the cards they work on; never a tab of their own (§151.4).</li>
+    <li><b>Changes:</b> §110.6 and spec 95 §2.5 (the header's <i>Leads</i> goes: the tab is the leader; <i>Does</i> and <i>Checks</i> wear the sword and the shield of the tabs and the party's editor, §151.5; each seat's role under its head);
+      spec 106 §3 (the line <i>Ask the …</i> becomes the leader's bubble); spec 108 §3 (the strip over the map: its counts to the head, <b>Ask again</b> to the head's menu);
+      spec 109 §4 (the aspects' row joins the header's row); §149.4 (the leaders' and the Orkmaster's heads gain five faces each, in orkUI); the quick question's answer, the evening line and a hearing's side share one bubble;
+      spec 95 §2.2–§2.3 (the tabs: a leader's head at 36, the open one at 48, on a chair; <b>+</b> <i>New party</i> becomes the empty chair, before the limits and <i>Stop all</i>);
+      §192.4 and tabmarks.js (the tool's mark once a side in the header, on a head only where it differs).</li>
+    <li><b>Not here:</b> a member's task under its head (the header shows who works, never their tasks, §110.8); a leader's <i>Now</i> line (gone, spec 95 §10); voices (spec 122).</li>
+  </ul>
+</section>
+</main>
+<footer class="mk-foot">Orkboard, a mockup in orkUI's sheets only (layout of its own; the bubble and the faces sketched until orkUI draws them). For the owner's yes before a spec.</footer>
+
+<script>
+/* the leaders' heads as the race sheets draw them (12 × 11 cells, read from design-system/orkui/races/*.png), so a face can be sketched cell by cell with no canvas read of an image (a file:// page cannot read one) */
+const HEADS = {"shaman-elder":{"pal":["#d3c29a","#967b9e","#a8946a","#40836c","#886d91","#2f6b4f","#1a1813","#6b5a7e","#ece4cf","#8f7150"],"rows":["..aa....aa..",".aaa.bb.aaa.","aac.bbbb.caa","aa.bbbbbb.aa","aabbddddbbaa","adeffddffeda","aedggddggdea",".adhhddhhda.","..diddddid..",".jdiddddidj.",".i.dddddd.i."]},"peon-crown":{"pal":["#ac8b4d","#9a6050","#939e56","#7f8743","#1a1813","#6b5a7e","#ece4cf"],"rows":["............","...a.aa.a...","...aabbaa...","...cccccc...","c.cccccccc.c","cccddccddccc",".cceecceecc.","..cffccffc..","..cgccccgc..","..cgccccgc..","...cccccc..."]},"unicorn-elder":{"pal":["#f0ede4","#d9cdf2","#967b9e","#a99bd0","#aeb4c2","#d2ae6d","#886d91","#1a1813"],"rows":["a........b.a","a....cc.db.a","aa..cccdb.aa","aaecccccceaa","aecffffffcea","aagffffffgaa","aeghhhhhhgea","aegffffffgea","a.fhfhfhff.a","..ffffffff..","...ffffff..."]},"dryad-elder":{"pal":["#a98259","#967b9e","#d8c38a","#eadcc2","#886d91","#1a1813","#ac8b4d"],"rows":["a.a..bb..a.a","a.a.bbbb.a.a","aaabbbbbbaaa",".acccddccca.","aaddddddddaa","edddddddddde","eddffddffdde",".gddddddddg.",".gddddddddg.","...dddddd...","....dddd...."]},"fairy-elder":{"pal":["#d8e6ea","#967b9e","#e3b58c","#1a1813","#886d91","#c99a74","#ece4cf"],"rows":["..a..bb..a..",".aa.bbbb.aa.","aaabbbbbbaaa","aaaccccccaaa","aaccccccccaa","aacddccddcaa","aecccffcccea",".gcccffcccg.",".gggccccggg.","..gggggggg..","...gggggg..."]},"imp-elder":{"pal":["#967b9e","#d3c29a","#b07259","#9e686a","#886d91","#1a1813","#ece4cf"],"rows":["............",".....aa.....","b...aaaa...b",".b.aaaaaa.b.","cb.acccca.bc","decccccccced","ddcffccffcdd","ddccccccccdd","ddcfgfgfgcdd","d.dccccccd.d","............"]},"lich-elder":{"pal":["#967b9e","#8e88a8","#886d91","#1a1813","#ece4cf","#797293"],"rows":[".....aa.....","....aaaa....","..aaaaaaaa..",".abbbbbbbba.",".cdddbbdddc.",".cbbbbbbbbc.","..bbbddbbb..","..bebebebb..","...bbbbbb...","...ffffff...","...ff..ff..."]}};
+/* where each leader's eyes and mouth are: the eyes' row, their four cells, the mouth's row (none: the knight's helm), the skin */
+const FACE = {
+  "shaman-elder": { e: 6, xs: [3, 4, 7, 8], m: 9, skin: "#40836c" },
+  "peon-crown": { e: 6, xs: [3, 4, 7, 8], m: 9, skin: "#939e56" },
+  "unicorn-elder": { e: 6, xs: [3, 4, 7, 8], m: null, skin: "#d2ae6d" },
+  "dryad-elder": { e: 6, xs: [3, 4, 7, 8], m: 8, skin: "#eadcc2" },
+  "fairy-elder": { e: 5, xs: [3, 4, 7, 8], m: 8, skin: "#e3b58c" },
+  "imp-elder": { e: 6, xs: [3, 4, 7, 8], m: 8, skin: "#b07259", clear: [3, 8] },
+  "lich-elder": { e: 4, xs: [3, 4, 7, 8], m: 7, skin: "#8e88a8", clear: [3, 8] },
+};
+const MOODS = [
+  ["calm", "Calm", "nothing asks of it"],
+  ["focused", "Focused", "a task of its party runs"],
+  ["worried", "Worried", "an alert on its map, or its doubt in Talk"],
+  ["frown", "Says no", "its no in Talk; its side of a hearing"],
+  ["pleased", "Pleased", "its goal done, its checks green: a moment"],
+  ["asleep", "Asleep", "the window spent, the night held, no AI tool"],
+];
+const K = "#1a1813";
+const mix = (a, b) => { const p = (h) => [1, 3, 5].map((i) => parseInt(h.slice(i, i + 2), 16)); const x = p(a), y = p(b); return "#" + x.map((v, i) => Math.round((v * 2 + y[i]) / 3).toString(16).padStart(2, "0")).join(""); };
+const cache = {};
+function face(name, mood) {
+  const key = name + ":" + mood;
+  if (cache[key]) return cache[key];
+  const h = HEADS[name], f = FACE[name];
+  const g = h.rows.map((r) => [...r].map((ch) => (ch === "." ? null : h.pal["abcdefghij".indexOf(ch)])));
+  const set = (x, y, c) => { if (g[y] && x >= 0 && x < 12) g[y][x] = c; };
+  const [a, b, c, d] = f.xs, e = f.e, m = f.m, S = f.skin;
+  const clear = () => { if (f.clear) for (let x = f.clear[0]; x <= f.clear[1]; x++) set(x, m, S); };
+  if (mood === "focused") [a, b, c, d].forEach((x) => set(x, e - 1, K));
+  if (mood === "worried") { set(a, e, S); set(d, e, S); set(b, e - 1, K); set(c, e - 1, K); if (m != null) { clear(); set(5, m, K); set(6, m, K); } }
+  if (mood === "frown") { set(b, e - 1, K); set(c, e - 1, K); if (m != null) { clear(); for (let x = 4; x <= 7; x++) set(x, m, K); } }
+  if (mood === "pleased") { [a, b, c, d].forEach((x) => { set(x, e, S); set(x, e - 1, K); }); if (m != null) { clear(); set(4, m - 1, K); set(7, m - 1, K); set(5, m, K); set(6, m, K); } }
+  if (mood === "asleep") [a, b, c, d].forEach((x) => set(x, e, mix(S, K)));
+  const cv = document.createElement("canvas"); cv.width = 24; cv.height = 22;
+  const ctx = cv.getContext("2d");
+  g.forEach((row, y) => row.forEach((col, x) => { if (col) { ctx.fillStyle = col; ctx.fillRect(x * 2, y * 2, 2, 2); } }));
+  return (cache[key] = cv.toDataURL());
+}
+function paint(root = document) {
+  root.querySelectorAll("img[data-head]").forEach((img) => {
+    const mood = img.dataset.mood || "calm";
+    img.src = face(img.dataset.head, mood);
+    img.classList.toggle("asleep", mood === "asleep");
+  });
+}
+const RACE = (n) => `../../../design-system/orkui/races/${n}.png`;
+const MARK = (n) => `../../../design-system/orkui/marks/harness-${n}-ink.png`;
+const S = (n) => `<span class="ork-sign ${n}" aria-hidden="true"></span>`;
+const leaderImg = (n, cls, mood = "calm") => `<img class="px ${cls}" data-head="${n}" data-mood="${mood}" alt="">`;
+const memberImg = (n, cls) => `<img class="px ${cls}" src="${RACE(n)}" alt="">`;
+
+/* the chair, in cells of 2 px, its back lower than the head: an occupied chair is its back alone (two posts with their knobs, the top rail, the panel between),
+   the head standing over the rail; the empty chair is the whole chair, nobody on it (its back narrower than its seat, the seat, the front legs); both backs solid */
+function chairSvg(w, h, empty) {
+  const r = [], add = (x, y, ww, hh, c) => r.push(`<rect x="${x}" y="${y}" width="${ww}" height="${hh}" class="${c}"/>`);
+  if (!empty) {
+    add(2, 3, w - 4, h - 3, "bk");
+    add(0, 0, 2, h, "po"); add(w - 2, 0, 2, h, "po");
+    add(2, 1, w - 4, 2, "po");
+  } else {
+    add(4, 3, w - 8, 6, "bk");
+    add(2, 0, 2, 10, "po"); add(w - 4, 0, 2, 10, "po");
+    add(4, 1, w - 8, 2, "po");
+    add(0, 9, w, 2, "po");
+    add(1, 11, 2, h - 11, "po"); add(w - 3, 11, 2, h - 11, "po");
+  }
+  return `<svg viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">${r.join("")}</svg>`;
+}
+const chairOf = (headHtml, big) => `<span class="seatbox ${big ? "big" : ""}">${chairSvg(big ? 26 : 22, big ? 14 : 12, false)}<span class="sit">${headHtml}</span></span>`;
+const emptyChair = (cls = "") => `<button type="button" class="ork-tab tab empty ${cls}" aria-label="New party: an empty chair at the table" title="New party"><span class="seatbox">${chairSvg(18, 18, true)}</span><span class="nm"><b>New party</b></span></button>`;
+let chairs = true, doorState = "closed";
+/* the door, in cells of 2 px: its frame and its leaf, shut (whole, its knob) or open (the leaf swung in, seen edge on, and the way out a faint light) */
+function doorSvg(state) {
+  const w = 14, h = 20, r = [], add = (x, y, ww, hh, c) => r.push(`<rect x="${x}" y="${y}" width="${ww}" height="${hh}" class="${c}"/>`);
+  add(0, 0, 2, h, "fr"); add(w - 2, 0, 2, h, "fr"); add(0, 0, w, 2, "fr");
+  if (state === "open") { add(2, 2, w - 4, h - 2, "gap"); add(2, 2, 2, h - 2, "lf"); }
+  else { add(2, 2, w - 4, h - 2, "lf"); add(9, 10, 2, 1, "kn"); }
+  return `<svg class="door" viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">${r.join("")}</svg>`;
+}
+const DOOR_TITLE = { closed: "Stop every ork, script and browser at once", open: "All stopped: the orks are out; the door shuts when you start work again" };
+const doorBtn = (state, short = false) => {
+  const word = state === "open" ? (short ? "Stopped" : "All stopped") : (short ? "Stop" : "Stop all");
+  return `<button type="button" class="door-btn ${state === "open" ? "is-open" : ""}" data-door ${state === "open" ? 'aria-disabled="true"' : ""} title="${DOOR_TITLE[state]}" aria-label="${word}: ${DOOR_TITLE[state]}">${doorSvg(state)}<span>${word}</span></button>`;
+};
+
+const PARTIES = [
+  { slug: "shop", name: "Shop", head: "peon-crown", who: "the Orkmaster", d: "claude", c: "claude" },
+  { slug: "game", name: "Game design", head: "unicorn-elder", who: "Aurel, the Designer", d: "claude", c: "claude", flag: true },
+  { slug: "tech", name: "Tech", head: "shaman-elder", who: "Grukk", d: "claude", c: "codex", on: true, flag: true },
+  { slug: "art", name: "Art", head: "dryad-elder", who: "Lisse, the Art director", d: "claude", c: "claude" },
+  { slug: "mkt", name: "Marketing", head: "fairy-elder", who: "Pim, Growth", d: "claude", c: "claude" },
+];
+const SQUAD = { does: [["peon-warrior", "Backend", true], ["peon-laborer", "Frontend", false]], checks: [["peon-elder", "Reviewer", false]] };
+
+function tabsHtml(isNew, opts = {}) {
+  const onSlug = opts.on || "tech", withChairs = isNew && (opts.chairs ?? chairs), mood = opts.mood;
+  return PARTIES.map((p) => {
+    const on = p.slug === onSlug, big = isNew && on;
+    const m = mood || (isNew && p.flag ? "worried" : "calm");
+    const head = big && onSlug === "tech"
+      ? `<button type="button" class="headbtn" id="bighead" aria-label="Ask the Architect" aria-haspopup="dialog" aria-expanded="false">${leaderImg(p.head, "h48", mood || "worried")}<span class="say" aria-hidden="true"></span></button>
+         <span class="marks"><button type="button" class="mk-alert" data-step="alert" aria-label="The Architect: 1 alert, step through it">${S("alert")}</button><button type="button" class="mk-note" data-step="note" aria-label="The Architect: 2 notes, step through them"></button></span>`
+      : leaderImg(p.head, big ? "h48" : isNew ? "h36" : "h24", m);
+    const box = withChairs ? chairOf(head, big) : `<span style="position:relative;display:flex">${head}</span>`;
+    return `<div class="ork-tab tab ${on ? "is-on" : ""}" role="tab" aria-selected="${on ? "true" : "false"}">${box}
+      <span class="nm"><b>${p.name}</b>${big ? `<span class="who">${p.who}</span>` : ""}<span class="tools" title="Does on ${p.d} · Checks on ${p.c}"><span>${S("sword")}<img class="ork-mark" src="${MARK(p.d)}" alt=""></span><span>${S("shield")}<img class="ork-mark" src="${MARK(p.c)}" alt=""></span></span></span>
+      ${p.flag && !big ? `<span class="flag">${S("alert")}</span>` : ""}</div>`;
+  }).join("") + (withChairs ? emptyChair(opts.hover ? "is-hover" : "") : "")
+    + (withChairs ? `<div class="tabs-end has-door">${doorBtn(opts.door || doorState)}</div>`
+                  : `<div class="tabs-end"><button type="button" class="ork-btn">+ Party</button><button type="button" class="ork-btn stop">Stop all</button></div>`);
+}
+
+const ASPECTS = `<span class="fw">C4 · ISO 25010 · hotspots</span>
+  <button type="button" class="ork-chip nil">Modularity</button><button type="button" class="ork-chip al">${S("alert")}Coupling</button>
+  <button type="button" class="ork-chip"><span class="dot"></span>Hotspots</button><button type="button" class="ork-chip"><span class="dot"></span>Testability</button>
+  <span class="ork-chip nil">${S("check")}Security and reliability</span>`;
+
+function seatsOld() {
+  const seat = (n, busy, tool = "claude") => `<button type="button" class="seat"><span class="hw">${memberImg(n, "h24")}<img class="ork-mark" src="${MARK(tool)}" alt="">${busy ? '<span class="ork-busy" title="at work"></span>' : ""}</span></button>`;
+  return `<span class="party">Tech</span>
+    <div class="grp"><span class="ork-label">Leads</span><button type="button" class="seat"><span class="hw">${memberImg("shaman-elder", "h24")}<img class="ork-mark" src="${MARK("claude")}" alt=""></span></button></div>
+    <div class="grp"><span class="ork-label">Does</span>${SQUAD.does.map(([n, , b]) => seat(n, b)).join("")}</div>
+    <div class="grp"><span class="ork-label">Checks</span>${SQUAD.checks.map(([n]) => seat(n, false, "codex")).join("")}</div>
+    <span class="ork-chip">Standard</span><span class="grow"></span><button type="button" class="ork-btn quiet">…</button>`;
+}
+function seatsNew(narrow) {
+  const seat = (n, r, busy, tool) => `<button type="button" class="seat role" aria-label="${r}, runs on ${tool}"><span class="hw">${memberImg(n, "h24")}${busy ? '<span class="ork-busy" title="at work"></span>' : ""}</span><span class="r">${r}</span></button>`;
+  return `<div class="grp"><span class="side" title="Does on Claude Code">${S("sword")}<span class="w">Does</span><img class="ork-mark" src="${MARK("claude")}" alt=""></span>${SQUAD.does.map(([n, r, b]) => seat(n, r, b, "Claude Code")).join("")}</div>
+    <div class="grp"><span class="side" title="Checks on Codex">${S("shield")}<span class="w">Checks</span><img class="ork-mark" src="${MARK("codex")}" alt=""></span>${SQUAD.checks.map(([n, r]) => seat(n, r, false, "Codex")).join("")}<span class="ork-chip">Standard</span></div>
+    ${narrow ? "" : '<span class="grow"></span>'}<div class="aspects">${ASPECTS}</div>`;
+}
+function chromeHtml(isNew) {
+  if (isNew) return `<div class="squad">${seatsNew(false)}</div>`;
+  return `<div class="squad">${seatsOld()}</div>
+    <div class="askrow"><input class="ork-field" placeholder="Ask the Architect…" aria-label="Ask the Architect"></div>
+    <div class="strip"><img class="px h24" src="${RACE("shaman-elder")}" alt=""><a href="#lens">The Architect: 1 alert, 2 notes</a><span class="grow"></span><button type="button" class="ork-btn">Ask again</button></div>
+    <div class="aspectrow aspects">${ASPECTS}</div>`;
+}
+
+/* the bubble's content, by state */
+const ANSWER = "The round timer lives in rooms.ts (startRound, tickRound) and lobby.ts resets it on every join, which is why a player rejoining restarts the round for everyone. Keep the timer's start in the room and skip the reset when the seat is already in the round.";
+function bubbleHtml(state, who = "Grukk, the Architect", head = "shaman-elder") {
+  const top = (mood, extra = "") => `<div class="who">${leaderImg(head, "h24", mood)}<span>${who}</span><span class="grow"></span>${extra}<button type="button" class="ork-btn quiet" data-close aria-label="Put away">×</button></div>`;
+  const seat = `<div class="seatline">Its seat: <img class="ork-mark" src="${MARK("claude")}" alt="">Claude Code · Elder <button type="button" class="ork-btn quiet">Change</button></div>`;
+  if (state === "ask") return top("calm") + `<input class="ork-field" id="askf" placeholder="Ask the Architect…" aria-label="Ask the Architect">
+    <div class="acts"><span class="cap muted">Enter asks · a read: nothing changes, nothing is spent beyond one short call</span></div>` + seat;
+  if (state === "reading") return top("focused") + `<p class="q">Why does the round restart when a player rejoins?</p><p class="a ork-think">The Architect is reading the map</p>`;
+  if (state === "answer") return top("calm") + `<p class="q">Why does the round restart when a player rejoins?</p><p class="a">${ANSWER}</p>
+    <div class="src"><span class="ork-chip">server/rooms.ts</span><span class="ork-chip">server/lobby.ts</span></div>
+    <div class="acts"><button type="button" class="ork-btn primary">Make it a goal</button><span class="grow"></span><button type="button" class="ork-btn quiet" data-bub-go="ask">Ask more</button></div>`;
+  if (state === "evening") return top("worried", '<span class="cap muted">Since yesterday</span>') + `<p class="a">Two goals went toward clean edges: rooms.ts no longer reaches into the sockets. One broke: lobby.ts now holds the timer too, and eleven parts use it.</p>
+    <div class="acts"><button type="button" class="ork-btn" data-step="alert">Show it</button><span class="grow"></span><button type="button" class="ork-btn quiet" data-bub-go="ask">Ask</button></div>`;
+  if (state === "failed") return top("asleep") + `<p class="q">Why does the round restart when a player rejoins?</p><p class="a err" role="alert">No answer came: Claude's window is spent until 14:00. Ask again then.</p>`;
+  if (state === "hearing") return `<div class="who">${leaderImg("unicorn-elder", "h28", "frown")}<span>Aurel, the Designer</span></div><p class="a">Players don't rejoin mid-round in the tests we ran; a lobby that waits is the bigger pain.</p><div class="acts"><b class="cap">← After “A lobby that waits”</b></div>`;
+  return "";
+}
+
+/* ---------- the window ---------- */
+const win = document.getElementById("win"), bub = document.getElementById("bub");
+let view = "new", bubState = "", oldPx = 0, newPx = 0;
+function render() {
+  win.classList.toggle("is-new", view === "new");
+  win.classList.toggle("chairs", view === "new" && chairs);
+  const tabsEl = document.getElementById("tabs");
+  tabsEl.innerHTML = tabsHtml(view === "new");
+  tabsEl.classList.toggle("five", view === "new" && chairs);
+  document.getElementById("worker").innerHTML = view === "new" ? `${memberImg("peon-warrior", "h24")}<span class="ork-busy" title="Backend is at work on it"></span>` : "";
+  document.getElementById("chrome").innerHTML = chromeHtml(view === "new");
+  paint(win);
+  showBubble(view === "new" ? bubState : "");
+  measure();
+  if (typeof applyDark === "function") applyDark();
+  const bh = document.getElementById("bighead");
+  if (bh) bh.addEventListener("click", () => setBub(bubState ? "" : "ask"));
+}
+function measure() {
+  const top = win.querySelector(".tabs").getBoundingClientRect().top, map = win.querySelector(".mapbox").getBoundingClientRect().top;
+  const px = Math.round(map - top);
+  if (view === "old") oldPx = px; else newPx = px;
+  document.getElementById("measure").innerHTML = `From the window's top to the map: today <b>${oldPx} px</b> · proposed <b>${newPx} px</b>`;
+}
+function showBubble(state) {
+  if (!state) { bub.hidden = true; bub.innerHTML = ""; const bh = document.getElementById("bighead"); if (bh) bh.setAttribute("aria-expanded", "false"); return; }
+  const bh = document.getElementById("bighead");
+  bub.innerHTML = bubbleHtml(state);
+  paint(bub);
+  bub.hidden = false;
+  const r = bh.getBoundingClientRect(), w = win.getBoundingClientRect();
+  const left = Math.max(16, r.left - w.left - 12);
+  bub.style.left = left + "px"; bub.style.top = (r.bottom - w.top + 14) + "px";
+  bub.style.setProperty("--tail", (r.left - w.left + r.width / 2 - left - 8) + "px");
+  bub.classList.remove("pop"); void bub.offsetWidth; bub.classList.add("pop");
+  bh.setAttribute("aria-expanded", "true");
+  const big = bh.querySelector("img");
+  if (state === "reading") big.dataset.mood = "focused"; else if (state === "failed") big.dataset.mood = "asleep"; else big.dataset.mood = "worried";
+  paint(bh);
+  const f = document.getElementById("askf");
+  if (f) f.focus();
+}
+function setBub(state) {
+  bubState = state;
+  document.querySelectorAll("[data-bub]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.bub === state)));
+  if (view !== "new" && state) { view = "new"; syncView(); render(); return; }
+  showBubble(state);
+}
+function syncView() { document.querySelectorAll("[data-view]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === view))); }
+document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => { view = b.dataset.view; syncView(); render(); }));
+document.getElementById("chairs").addEventListener("click", (e) => { chairs = !chairs; e.currentTarget.setAttribute("aria-pressed", String(chairs)); if (view !== "new") { view = "new"; syncView(); } render(); });
+document.querySelectorAll("[data-bub]").forEach((b) => b.addEventListener("click", () => setBub(b.dataset.bub)));
+/* stepping through the marked parts: the alert's, then the notes' */
+const stepAt = { alert: -1, note: -1 };
+document.addEventListener("click", (ev) => {
+  const t = ev.target.closest("[data-step],[data-close],[data-bub-go]");
+  if (!t) return;
+  if (t.hasAttribute("data-close")) return setBub("");
+  if (t.dataset.bubGo) return setBub(t.dataset.bubGo);
+  const lvl = t.dataset.step, parts = [...win.querySelectorAll(`.part[data-level="${lvl}"]`)];
+  win.querySelectorAll(".part.is-lit").forEach((p) => p.classList.remove("is-lit"));
+  stepAt[lvl] = (stepAt[lvl] + 1) % parts.length;
+  parts[stepAt[lvl]].classList.add("is-lit");
+});
+document.addEventListener("keydown", (ev) => {
+  if (ev.key === "Escape" && bubState) setBub("");
+  if (ev.key === "Enter" && ev.target.id === "askf" && ev.target.value.trim()) { setBub("reading"); setTimeout(() => bubState === "reading" && setBub("answer"), 1600); }
+});
+
+/* ---------- the table ---------- */
+const tblState = { hover: false, full: false, spent: false, door: "closed" };
+function tblRender() {
+  const el = document.getElementById("tbl"), z = tblState.spent ? "asleep" : undefined;
+  el.classList.toggle("full", tblState.full);
+  const card = (t, ph, extra = "") => `<div class="ork-card gc"><b>${t}</b>${extra}<span class="ph">${ph}</span></div>`;
+  const idle = tblState.spent || tblState.door === "open";
+  const worker = (n, who) => idle ? "" : `<span class="wk" title="${who} is at work on it">${memberImg(n, "h24")}<span class="ork-busy"></span></span>`;
+  el.innerHTML = `<div class="tabs five">${tabsHtml(true, { on: "shop", chairs: true, hover: tblState.hover, mood: z, door: tblState.door })}</div>
+    <div class="title"><span>The whole project · through the Orkmaster</span><span class="grow"></span>…</div>
+    <div class="lanes">
+      <div class="ln"><span class="lab">In line</span>${card("Round timer shows on every phone", "Talk")}${card("Results screen with the round's best answer", "Routing")}</div>
+      <div class="ln">${card("Write the timer's rules: seconds in each phase", "Doing", worker("knight-warrior", "The Writer"))}</div>
+      <div class="ln">${card("Reset the round timer when a player rejoins", "Doing", worker("peon-warrior", "Backend"))}${card("Keep the seat when a phone sleeps", "Checking", worker("peon-elder", "Reviewer"))}</div>
+      <div class="ln">${card("Icons for the four rounds", "Doing", worker("elf-laborer", "The Icon artist"))}</div>
+      <div class="ln"><span class="lab">Nothing in play</span></div>
+      <div class="ln free"></div>
+      <div class="disc">Discard</div>
+    </div>
+    <div class="hand"><span class="ork-card-back" aria-hidden="true"></span><div class="ork-card hc">Keep the seat when a phone sleeps</div><span class="grow"></span><span class="lab">The hand</span></div>`;
+  paint(el);
+}
+document.querySelectorAll("[data-door-state]").forEach((b) => b.addEventListener("click", () => {
+  tblState.door = b.dataset.doorState;
+  document.querySelectorAll("[data-door-state]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+  tblRender();
+}));
+/* the door pressed in the table: it opens, the orks are out (pressed again here only to try it again: in the window it shuts when work starts) */
+document.getElementById("tbl").addEventListener("click", (e) => {
+  if (!e.target.closest("[data-door]")) return;
+  tblState.door = tblState.door === "open" ? "closed" : "open";
+  document.querySelectorAll("[data-door-state]").forEach((x) => x.setAttribute("aria-pressed", String(x.dataset.doorState === tblState.door)));
+  tblRender();
+});
+document.querySelectorAll("[data-tbl]").forEach((b) => b.addEventListener("click", () => {
+  const k = b.dataset.tbl; tblState[k] = !tblState[k]; b.setAttribute("aria-pressed", String(tblState[k])); tblRender();
+}));
+tblRender();
+
+/* dark edges: one switch for every frame that shows the proposal */
+let dark = true;
+function applyDark() {
+  ["win", "tbl", "nnew", "nask"].forEach((id) => document.getElementById(id)?.classList.toggle("dk", dark && (id !== "win" || view === "new")));
+  document.querySelectorAll("[data-dark]").forEach((b) => b.setAttribute("aria-pressed", String(dark)));
+}
+document.querySelectorAll("[data-dark]").forEach((b) => b.addEventListener("click", () => { dark = !dark; if (view !== "new") { view = "new"; syncView(); render(); } applyDark(); }));
+
+/* the three things a leader says, side by side */
+document.getElementById("three").innerHTML = [
+  ["The answer to a question", "answer"], ["The evening line (spec 121 E)", "evening"], ["A side of a hearing (spec 120 §6.7)", "hearing"],
+].map(([t, s]) => `<figure class="mk-fig"><h2>${t}</h2><section class="bubble flat" style="--tail:20px">${bubbleHtml(s)}</section></figure>`).join("");
+paint(document.getElementById("three"));
+
+/* ---------- the faces' sheet ---------- */
+const NAMES = { "peon-crown": "The Orkmaster", "shaman-elder": "Tech · ork shaman", "unicorn-elder": "Game design · unicorn knight", "dryad-elder": "Art · elf dryad",
+  "fairy-elder": "Marketing · gnome fairy", "imp-elder": "LiveOps · imp", "lich-elder": "Release · lich" };
+document.getElementById("facetab").innerHTML = `<thead><tr><th></th>${MOODS.map(([, n, w]) => `<th>${n}<span>${w}</span></th>`).join("")}</tr></thead>
+  <tbody>${Object.keys(NAMES).map((h) => `<tr><th>${NAMES[h]}</th>${MOODS.map(([m]) => `<td>${leaderImg(h, "h48", m)}</td>`).join("")}</tr>`).join("")}
+  <tr><th>at the tab's size</th>${MOODS.map(([m]) => `<td>${leaderImg("shaman-elder", "h24", m)}</td>`).join("")}</tr></tbody>`;
+paint(document.getElementById("facetab"));
+
+/* ---------- the events ---------- */
+const EV = [
+  { slug: "shop", name: "Shop", head: "peon-crown" }, { slug: "game", name: "Game design", head: "unicorn-elder" }, { slug: "tech", name: "Tech", head: "shaman-elder" },
+  { slug: "art", name: "Art", head: "dryad-elder" }, { slug: "mkt", name: "Marketing", head: "fairy-elder" },
+];
+let evState = {};
+function evRender(beat = "") {
+  document.getElementById("evtabs").innerHTML = EV.map((p) => {
+    const s = evState[p.slug] || {};
+    return `<div class="evtab">${s.busy ? '<span class="ork-busy" title="at work"></span>' : ""}${s.flag ? `<span class="flag">${S("alert")}</span>` : ""}
+      <img class="px h48 ${beat === p.slug ? "beat" : ""}" data-head="${p.head}" data-mood="${s.mood || "calm"}" alt=""><b>${p.name}</b><span class="st">${s.words || ""}</span></div>`;
+  }).join("");
+  paint(document.getElementById("evtabs"));
+}
+let pleasedTimer = 0;
+document.querySelectorAll("[data-ev]").forEach((b) => b.addEventListener("click", () => {
+  const ev = b.dataset.ev;
+  if (ev === "reset") { evState = {}; return evRender(); }
+  if (ev === "work") { evState.tech = { ...evState.tech, mood: evState.tech?.flag ? "worried" : "focused", busy: true, words: "Backend at work" }; return evRender("tech"); }
+  if (ev === "alert") { evState.tech = { ...evState.tech, mood: "worried", flag: true, words: "lobby.ts: an alert" }; return evRender("tech"); }
+  if (ev === "no") { evState.game = { mood: "frown", flag: true, words: "says no: a hearing in your hand" }; return evRender("game"); }
+  if (ev === "done") {
+    evState.art = { mood: "pleased", words: "its goal in the discard" }; evRender("art");
+    clearTimeout(pleasedTimer); pleasedTimer = setTimeout(() => { evState.art = { mood: "calm", words: "" }; evRender(); }, 4000);
+    return;
+  }
+  if (ev === "spent") { EV.forEach((p) => { evState[p.slug] = { ...evState[p.slug], mood: "asleep", busy: false, words: "waits for 14:00" }; }); return evRender(); }
+}));
+evRender();
+
+/* ---------- the narrow width ---------- */
+function narrowHtml(kind) {
+  const isNew = kind !== "old";
+  const tabs = PARTIES.map((p) => {
+    if (p.on && isNew) return `<div class="ntab is-on"><span style="position:relative;display:flex">${leaderImg(p.head, "h36", "worried")}<span class="marks" style="right:-14px;top:-2px"><span class="mk-alert">${S("alert")}</span><span class="mk-note"></span></span></span></div>`;
+    return `<div class="ntab" style="${p.on ? "background:var(--ork-raised);box-shadow:inset 0 -2px 0 var(--ork-ink)" : ""}">${leaderImg(p.head, "h24", isNew && p.flag ? "worried" : "calm")}${p.flag && !(p.on && isNew) ? `<span class="flag">${S("alert")}</span>` : ""}</div>`;
+  }).join("") + (isNew ? `<button type="button" class="ntab empty" aria-label="New party: an empty chair at the table" title="New party"><span class="seatbox">${chairSvg(18, 18, true)}</span></button>` : "")
+    + `<div class="ntab-end">${isNew ? doorBtn("closed", true) : '<button type="button" class="ork-btn stop" style="--_fg:var(--ork-danger);--_bd:var(--ork-danger)">Stop</button>'}</div>`;
+  const chrome = isNew ? `<div class="squad">${seatsNew(true)}</div>` : chromeHtml(false);
+  const map = `<div class="mapbox" style="grid-template-columns:1fr"><div class="sys">
+    <span class="ctn">server/</span><span class="ctn">client/</span>
+    <div class="ork-card part"><b>index.ts</b><span class="f">2 files</span></div><div class="ork-card part"><b>net.ts</b><span class="f">2 files</span></div>
+    <div class="ork-card part"><span class="cm"><img class="px h16" data-head="shaman-elder" alt="">${S("alert")}</span><b>lobby.ts</b><span class="f">2 files</span></div><div class="ork-card part"><span class="cn"></span><b>rooms.ts</b><span class="f">2 files</span></div></div></div>`;
+  const bubble = kind === "ask" ? `<section class="bubble" style="--tail:${52 * 2 + 28}px">${bubbleHtml("ask")}</section>` : "";
+  return `<div class="ntabs">${tabs}</div><div class="title" style="min-height:44px"><span>Whole project · Tech</span><span class="grow"></span>…</div><div class="chrome">${chrome}</div>${map}
+    <div class="hand" style="height:84px"><span class="ork-card-back" aria-hidden="true" style="width:72px;height:72px"></span><div class="ork-card hc" style="height:72px;width:96px">Reset the round timer…</div></div>${bubble}
+    <span class="nmeasure cap muted" style="position:absolute;right:8px;bottom:92px;background:var(--ork-canvas);padding:2px 4px"></span>`;
+}
+["old", "new", "ask"].forEach((k) => {
+  const el = document.getElementById("n" + k);
+  el.innerHTML = narrowHtml(k);
+  el.classList.toggle("is-new", k !== "old");
+  paint(el);
+  requestAnimationFrame(() => {
+    const px = Math.round(el.querySelector(".mapbox").getBoundingClientRect().top - el.getBoundingClientRect().top);
+    el.querySelector(".nmeasure").textContent = `${px} px above the map`;
+  });
+});
+
+view = "old"; render(); view = "new"; render(); applyDark();
+</script>
+</body>
+</html>

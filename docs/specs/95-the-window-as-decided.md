@@ -4,7 +4,7 @@ The owner and the PM, 27 October. `docs/decisions.md` is a log: from §104 to §
 hours before (§134 changes §133, §138 changes §136, §145 turns §104.0's frame round). This spec is that log read as one
 window, with no deltas, so that a slice's spec is written from it and not from forty entries. **Builds:** nothing by
 itself; each slice's spec builds a part of it. **When a decision after §146 changes the window, this spec is changed in
-the same commit**; where it and a decision differ, the decision is right and this spec is fixed. Read up to §167.
+the same commit**; where it and a decision differ, the decision is right and this spec is fixed. Read up to §167, and §201.
 
 **What it is, and is not:** the window as it will be, each part with the decisions it rests on. Not: how it is built
 (files, tests: the slices' specs), the phone's frame (spec 94), the engine's calls beyond what the person sees.
@@ -26,13 +26,20 @@ the same commit**; where it and a decision differ, the decision is right and thi
    tier always the cheaper, said in its popover (§140.1).
 2. **Then a tab a party**, its leader's head and the party's name (§110.3); more than fit, the heads alone, the name on
    hover and in the pane's title. A picked goal's route puts a dot on its parties' tabs, its step's in its element.
-3. **At the tabs' end**: **+** (*New party*), the AI tools' limits as chips (a press: what used them, §107.1) and **Stop
-   all** (§126.1).
+   **The tabs are the table's far side** (§201): each leader's head at 36 × 33 on a chair's back, solid and lower than the
+   head; the open one at 48 × 44, leaning in over the table's rim, with no lit box (its name in the ink, the leader's own
+   name under it), its alert and note beside its head (a press steps through), its head pressed opening its bubble (the quick
+   question, the answer, the evening line); the leaders' faces are states (calm, focused, worried, says no, pleased, asleep).
+   The row and the hand lie on orkUI's room, near black, the table lit between; no divider between the tabs.
+3. **At the tabs' end**: the empty chair (*New party*, while a craft is not at the table), the AI tools' limits as the
+   hand's mana (§107.1, spec 104) and **Stop all** as a door, shut at rest, open (*All stopped*) once pressed until work starts
+   again (§126.1, §201.8).
 4. **A tab is its column's head on the Board** (§143): the tabs, the Board's lanes and the hand share one grid, every
    lane a card and a quarter wide, narrowing to a card's width when they don't fit (§167.7).
-5. **A party's header is its name, its squad and its size** (§134.3, §151.3): the squad's heads at 24 px grouped
-   *Leads* | *Does* | *Checks* (at most seven), each with its tier's gear and its AI tool's mark, turned while it works,
-   the leader its race's higher form (§155); the size in one word beside them.
+5. **A party's header is one row: its squad, its size, its leader's aspects** (§134.3, §151.3, §201.4): no *Leads* (the
+   tab is the leader); **Does** with orkUI's sword and **Checks** with its shield, each with its AI tool's mark once, the
+   squad's heads at 24 px (at most six), each with its tier's gear, its role under it, turned while it works; the size in one
+   word; the leader's aspects at the row's right; the strip over the map is gone (§201.2).
    A head pressed opens its popover (§110.7): its role, what the party does, its AI tool, its tier and what it costs,
    *From the next task*, *Set* with *Undo*, *Take off the seat*, the role's text (§136.11), **Open its view** (§151.4).
    A party's menu (**…**): *Edit* (§151.5), change the leader, remove the party (§97, as a card in the hand, §127.1).

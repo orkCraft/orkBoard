@@ -1,15 +1,11 @@
 /* Concerns on a party's map (docs/specs/108-a-leader-says-no-and-shows-where-it-hurts.md §3, decisions §183.5). orkUI's tokens and pieces only: the alert sign in `--ork-alert`, a dot in the muted ink, the leader's small head, `.ork-busy`,
    `.ork-btn`, `.ork-chip`. A mark is not drawn by a map: concerns.js gives a card that has concerns a slot (`.cn-slot`) of its own. */
 
-/* the strip over the map, under the party's header */
+/* the strip of Play's lens (arena/playlens.js) is the one strip left: the leader's small head and its words in one line, under the page's bar */
 .cn-strip { flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-3) var(--ork-4); min-height: 36px; padding: 0 var(--ork-6); border-bottom: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-body); }
 .cn-strip__say { color: var(--ork-ink); display: inline-flex; align-items: center; gap: var(--ork-3); }
-.cn-strip[data-concerns="failed"] .cn-strip__say { color: var(--ork-alert); }
-.cn-strip__counts { padding: 0 var(--ork-1); color: var(--ork-ink); }
-.cn-strip__grow { flex: 1; min-width: 0; }
-.table-body:is([data-end="side"], [data-end="over"]) > .cn-strip { margin-right: calc(var(--table-end-w) * -1); }          /* like the party's header, the strip keeps the pane's whole width */
 
-/* the aspects the leader looks at (spec 109 §4): a row under the strip's line, wrapping at the narrow width; orkUI's chips, the state's small mark then the name; no count, nothing moves */
+/* the aspects the leader looks at (spec 109 §4), in the party's header (header.js, spec 123 §5) and under Play's lens strip: wrapping; orkUI's chips, the state's small mark then the name; no count, nothing moves */
 .cn-aspects { flex: 1 0 100%; display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-2) var(--ork-3); padding: var(--ork-2) 0; min-width: 0; }
 .cn-aspects__short { color: var(--ork-ink-muted); font: var(--ork-type-caption); margin-right: var(--ork-2); overflow-wrap: anywhere; }
 .cn-aspects .cn-aspect { gap: var(--ork-2); max-width: 100%; min-width: 0; cursor: default; }
@@ -20,8 +16,8 @@ button.cn-aspect:focus-visible { outline: 0; clip-path: none; box-shadow: 0 0 0 
 .cn-aspect[data-state="clear"] > .ork-sign { color: var(--ork-ink); }
 .cn-hint { display: inline-block; flex: none; box-sizing: border-box; width: 6px; height: 6px; border: var(--ork-line) solid currentColor; background: none; }          /* a hollow square: code noticed it, the leader let it be */
 
-/* the evening line (spec 121 §6, §7.4): under the aspects' row, its way as orkUI's sign (the check in the ink, the alert in the alert's tone, the muted dot), the line in the body face */
-.cn-since { flex: 1 0 100%; margin: 0; display: flex; align-items: flex-start; gap: var(--ork-2); padding: var(--ork-2) 0; min-width: 0; font: var(--ork-type-body); }
+/* the evening line (spec 121 §6, spec 123 §6.3): at the top of the leader's bubble (ask.js), its way as orkUI's sign (the check in the ink, the alert in the alert's tone, the muted dot), the line in the body face */
+.cn-since { margin: 0; display: flex; align-items: flex-start; gap: var(--ork-2); padding: var(--ork-2) 0; min-width: 0; font: var(--ork-type-body); }
 .cn-since__way { flex: none; display: inline-flex; align-items: center; min-height: 1.5em; }
 .cn-since__line { min-width: 0; overflow-wrap: anywhere; }
 .cn-since__line b { font-weight: 600; }
@@ -70,4 +66,3 @@ button.cn-aspect:focus-visible { outline: 0; clip-path: none; box-shadow: 0 0 0 
   .cn-aspects button.cn-aspect { min-height: var(--ork-tap); }
   .cn-mark.is-made { min-width: var(--ork-tap); min-height: var(--ork-tap); justify-content: center; }
 }
-@media (max-width: 759.98px) { .table-body:is([data-end="side"], [data-end="over"]) > .cn-strip { margin-right: 0; } }

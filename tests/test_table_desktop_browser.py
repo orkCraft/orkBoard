@@ -2,7 +2,7 @@
 page, spec 98 E), at both widths (`tests/narrow.py`: 1280 × 800, and 390 × 844 with touch), against a stub host of its own (a project of four parties: Game design, Tech led by the Architect, Art and Release; the Orkmaster reading two goals,
 routing one and joining one; tasks at work, failures, a check; three goals in line; Tech's System).
 
-The tabs in order with the project's first (its name), its **…** and its three places over the pane, **+**, *Stop all*; the Board's lanes under their tabs, the same widths; a task card's header, window and label row, a goal's strip and
+The tabs in order with the project's first (its name), its **…** and its three places over the pane, the empty chair (*New party*), *Stop all* as a door; the Board's lanes under their tabs, the same widths; a task card's header, window and label row, a goal's strip and
 cascade (its front by the rule, the others a fan behind it with a fixed turn by place, opened by a hover, an edge lifting its task, the picked goal's unfolded, a goal in two lanes lit in both); the first lane's cards and the line (the Orkmaster's order, the moon, a drag, *All · search*); a party's header with its
 groups, a seat's popover and its **Open**, another party's tab its header alone; Tech's System; a card lifted and lowered (Esc, a press away); a file opened over the pane, its title, **←** back to the card lit; a form in the pane, never a dialog; no
 sideways scroll at 390. Screenshots to the directory ORKCRAFT_SHOTS_DIR names when it is set.
@@ -290,6 +290,11 @@ def tab(pg, slug):
     return pg.locator(f'.table-tab[data-tab="{slug}"]')
 
 
+def cell(pg, slug):
+    """A tab's cell: the tab's button and, for the open tab, its head and marks beside it (spec 123 F: no button holds a button)."""
+    return pg.locator(f'.table-tabcell[data-cell="{slug}"]')
+
+
 def open_tab(pg, slug):
     tab(pg, slug).click()
     pg.locator(f'.table-tab[data-tab="{slug}"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
@@ -314,15 +319,15 @@ def test_the_tabs_in_order_the_projects_first_then_plus_and_stop_all(table):
     assert first.get_attribute("aria-label") == "shop · Does on Claude · Checks on Claude" and first.get_attribute("aria-selected") == "true"                # the first tab is the project's: its name (spec 101 §3.4, decisions §167.6) and the main tool on both (spec 111 §3.4)
     assert "Orkmaster" not in (first.get_attribute("title") or "") and first.locator(".table-tab__sub").count() == 0
     assert first.locator(".table-tab__main").text_content() == "shop"
-    assert "peon-crown" in first.locator(".ork-race__head").get_attribute("src")                                         # its crowned head
+    assert "peon-crown" in cell(pg, "orkmaster").locator(".ork-race__head").get_attribute("src")                          # its crowned head (the open tab's head is in its cell, beside its button)
     assert "knight-elder" in tab(pg, "game").locator(".ork-race__head").get_attribute("src")                             # a party's tab wears its leader's head
     assert tab(pg, "tech").get_attribute("aria-label") == "Tech · Does on Claude · Checks on Codex"                      # and its name, said also when only the head is drawn, with its sword and shield's words (spec 111 §3.4)
     assert tab(pg, "tech").get_attribute("title") == tab(pg, "tech").get_attribute("aria-label")
     assert pg.get_by_role("button", name="New party").count() == 1 and pg.get_by_role("button", name="Stop all").count() == 1
-    plus = pg.locator(".table-tabs__end .table-plus")
-    assert " ".join(plus.inner_text().split()) == ("Party" if wide(w) else "") and "primary" not in plus.get_attribute("class")                # spec 107 §8.1: + Party, green is New goal's
+    chair = pg.locator(".table-tabs__end .table-chair")
+    assert " ".join(chair.text_content().split()) == ("New party" if wide(w) else "") and "primary" not in chair.get_attribute("class")           # spec 123 §7.5: the empty chair, green is New goal's
     assert pg.get_by_role("button", name="Switch project").count() == 1                                                  # the ▾ after the project's name, its own button
-    assert pg.locator(".table-tabs__end .table-chip").count() == 0 and pg.locator(".table-tabs__end button").count() == 3 and pg.locator(".table-tabs__end .table-logs").count() == 1                  # the tabs' end keeps + and Stop all, then the bug under the glass (decisions §190.6): the limits are the hand's potions (spec 104 B)
+    assert pg.locator(".table-tabs__end .table-chip").count() == 0 and pg.locator(".table-tabs__end button").count() == 3 and pg.locator(".table-tabs__end .table-logs").count() == 1                  # the tabs' end keeps the empty chair and the door, then the bug under the glass (decisions §190.6): the limits are the hand's potions (spec 104 B)
     if not wide(w):
         assert tab(pg, "tech").locator(".table-tab__txt").is_hidden()                                                    # the tabs a row of heads
         assert all(t.bounding_box()["width"] >= 44 and t.bounding_box()["height"] >= 44 for t in tabs.all())             # a press 44 × 44 on a touch screen
@@ -413,8 +418,8 @@ def test_the_lanes_stand_under_their_tabs_every_lane_one_width_and_the_first_is_
     assert lanes.first.get_attribute("aria-label") == "shop"                                                             # the first lane is the whole project's
     for slug in ("orkmaster", "game", "tech", "art", "release"):
         lane = lanes.first if slug == "orkmaster" else pg.locator(f'.table-lane[data-party="{slug}"]')
-        t, l = tab(pg, slug).bounding_box(), lane.bounding_box()
-        assert abs(t["x"] - l["x"]) <= 1 and abs(t["width"] - l["width"]) <= 1, slug                                      # a tab is its lane's head: the same x, the same width
+        t, l = cell(pg, slug).bounding_box(), lane.bounding_box()
+        assert abs(t["x"] - l["x"]) <= 1 and abs(t["width"] - l["width"]) <= 1, slug                                      # a tab's cell is its lane's head: the same x, the same width (the open tab's head is in its cell, beside its button)
     widths = {round(l.bounding_box()["width"]) for l in lanes.all()[:5]}
     assert len(widths) == 1, widths                                                                                       # every lane the same width, the first too
     if wide(w):
@@ -833,16 +838,30 @@ def pick(pg, slug):
 
 # -- a party's tab -----------------------------------------------------------------------------------------------------------------------------------
 
-def test_a_partys_header_has_its_squad_in_three_groups_and_a_seat_pressed_opens_its_popover(table):
+def test_a_partys_header_is_one_row_of_its_squad_in_two_sides_with_a_role_under_each_head_and_a_seat_pressed_opens_its_popover(table):
     pg, host, w = table
     open_tab(pg, "tech")
     head = pg.locator('.table-head[data-party="tech"]')
-    assert head.locator(".table-head__name").text_content().strip() == "Tech"
-    assert [g.locator(".ork-label").text_content().strip() for g in head.locator(".table-group").all()] == ["Leads", "Does", "Checks"]
-    assert [g.locator(".table-seat").count() for g in head.locator(".table-group").all()] == [1, 2, 1]
+    assert head.locator(".table-head__name, h2").count() == 0, "no party name in the row: the tab and the title say it"
+    groups = head.locator(".table-group")
+    assert [g.get_attribute("aria-label") for g in groups.all()] == ["Does", "Checks"] and "Leads" not in head.inner_text(), "no Leads: the leader sits at the table"
+    assert [g.locator(".table-seat").count() for g in groups.all()] == [2, 1]
+    sides = [g.locator(".table-side") for g in groups.all()]
+    assert sides[0].locator(".ork-sign").count() == 1 and sides[1].locator(".ork-sign").count() == 1
+    assert sides[0].get_attribute("title") == "Does on Claude" and sides[1].get_attribute("title") == "Checks on Claude", "the tool in the title, one tool for the whole side"
+    assert "harness-claude-ink" in sides[0].locator(".ork-mark").get_attribute("src") and sides[0].locator(".table-side__w").text_content() == "Does"
     seat = head.locator('.table-seat[data-seat="grunt"]')
-    assert "peon-warrior" in seat.locator(".ork-race__head").get_attribute("src") and "harness-claude-ink" in seat.locator(".ork-mark").get_attribute("src")     # its tier's gear, its tool's mark in ink
+    assert "peon-warrior" in seat.locator(".ork-race__head").get_attribute("src") and seat.locator(".ork-mark").count() == 0, "its tool's mark is the side's: not on the seat"
+    assert seat.locator(".table-seat__role").inner_text() == "Grunts" and seat.get_attribute("aria-label") == "Grunts, runs on Claude", "the role under the head, in the label with its tool"
+    assert seat.locator(".ork-busy").count() == 1 and head.locator('.table-seat[data-seat="tester"] .ork-busy').count() == 0, "the busy mark on the one at work"
+    role = seat.locator(".table-seat__role")
+    assert role.evaluate("e => getComputedStyle(e).fontFamily") != pg.locator(".table-title__pt").evaluate("e => getComputedStyle(e).fontFamily"), "the body's face, never the pixel face"
+    assert role.evaluate("e => getComputedStyle(e).color") != seat.evaluate("e => getComputedStyle(e).color"), "muted"
+    assert role.evaluate("e => [getComputedStyle(e).textOverflow, getComputedStyle(e).maxWidth]") == ["ellipsis", "76px"]
+    box, rbox = seat.locator(".ork-race__head").bounding_box(), role.bounding_box()
+    assert rbox["y"] >= box["y"] + box["height"] - 1, "under the head"
     assert head.locator(".table-size").inner_text().strip() == "Standard"
+    assert head.get_by_role("button", name="Tech's menu").count() == 1
     shot(pg, f"table-tech-{w}.png")
     seat.click()
     pop = pg.locator(".table-seatpop")
@@ -869,6 +888,49 @@ def test_a_partys_header_has_its_squad_in_three_groups_and_a_seat_pressed_opens_
     assert title(pg) == "System · Grunts" and "You are the Grunts." in pg.locator(".table-over").inner_text()
     pg.locator(".table-title__back").click()
     pg.locator(".table-head").wait_for(timeout=WAIT_MS)
+
+
+def test_a_side_with_seats_on_several_tools_has_no_tool_of_its_own_and_each_seat_shows_its_mark(table):
+    pg, host, w = table
+    tech = next(p for p in host.parties if p["slug"] == "tech")
+    tech["tools"] = {"tester": "codex"}                                                                                   # one of Does' two seats runs on another tool
+    host.push()
+    open_tab(pg, "tech")
+    does = pg.locator('.table-head[data-party="tech"] .table-group[data-band="build"]')
+    does.locator(".table-seat").first.wait_for(timeout=WAIT_MS)
+    pg.wait_for_function("() => document.querySelector('.table-group[data-band=build] .table-seat .ork-mark')", timeout=WAIT_MS)
+    assert does.locator(".table-side .ork-mark").count() == 0 and does.locator(".table-side").get_attribute("title") == "Does"
+    assert "harness-claude-ink" in does.locator('.table-seat[data-seat="grunt"] .ork-mark').get_attribute("src")
+    assert "harness-codex-ink" in does.locator('.table-seat[data-seat="tester"] .ork-mark').get_attribute("src")
+    assert does.locator('.table-seat[data-seat="tester"]').get_attribute("aria-label") == "Tester, runs on Codex"
+
+
+def test_the_header_keeps_at_most_six_seats_and_never_the_leader(table):
+    pg, host, w = table
+    tech = next(p for p in host.parties if p["slug"] == "tech")
+    extra = [{**tech["party"][1], "slug": f"more{i}", "name": f"More {i}", "band": "build" if i % 2 else "check"} for i in range(5)]
+    tech["party"] = tech["party"] + extra
+    tech["team"] = tech["team"] + [{"slug": e["slug"], "name": e["name"], "head": e["head"], "checks": e["band"] == "check", "every": False} for e in extra]
+    host.push()
+    open_tab(pg, "tech")
+    pg.wait_for_function("() => document.querySelectorAll('.table-head .table-seat').length > 4", timeout=WAIT_MS)
+    assert pg.locator(".table-head .table-seat").count() == 6 and pg.locator('.table-head .table-seat[data-band="lead"]').count() == 0
+    narrow.no_sideways(pg)
+
+
+def test_at_the_narrow_width_the_sides_words_go_and_their_signs_stay_every_seat_44_px(table):
+    pg, host, w = table
+    open_tab(pg, "tech")
+    head = pg.locator('.table-head[data-party="tech"]')
+    head.locator(".table-seat").first.wait_for(timeout=WAIT_MS)
+    words = head.locator(".table-side__w")
+    assert all(x.is_visible() == wide(w) for x in words.all()), "the words are there at the wide width only"
+    assert all(x.locator(".ork-sign").is_visible() for x in head.locator(".table-side").all()) and head.locator(".table-side").first.get_attribute("title") == "Does on Claude"
+    if not wide(w):
+        assert all(x.bounding_box()["width"] >= 43.5 and x.bounding_box()["height"] >= 43.5 for x in head.locator(".table-seat").all())
+    box, row = head.bounding_box(), head.locator(".table-group").first.bounding_box()
+    assert box["height"] < 130 and row["y"] >= box["y"]
+    shot(pg, f"table-header-{w}.png")
 
 
 def test_a_seat_can_be_taken_off_and_its_tool_set_with_undo(table):
@@ -1010,7 +1072,7 @@ def test_a_tab_has_a_second_line_the_sword_and_the_tool_its_does_run_on_the_shie
     assert line.get_attribute("aria-hidden") == "true"                                                                    # the words are the tab's label, the marks are drawn
     assert all(abs(b["width"] - 14) <= 1 and abs(b["height"] - 14) <= 1 for b in (e.bounding_box() for e in line.locator(".ork-sign, img").all()))        # 14 px, as the signs' small size
     head, name, tb = tab(pg, "tech").bounding_box(), tab(pg, "tech").locator(".table-tab__main").bounding_box(), line.bounding_box()
-    assert abs(head["height"] - 52) <= 1 and tb["y"] >= name["y"] + name["height"] - 1 and tb["y"] + tb["height"] <= head["y"] + head["height"] and abs(tb["x"] - name["x"]) <= 1      # under the name, inside the 52 px tab
+    assert head["height"] >= 60 and tb["y"] >= name["y"] + name["height"] - 1 and tb["y"] + tb["height"] <= head["y"] + head["height"] and abs(tb["x"] - name["x"]) <= 1      # under the name, inside the tab (the row is as high as the open head: spec 123 §7.1)
     ink = lambda slug, i: tab(pg, slug).locator(".table-tab__marks img").nth(i).get_attribute("src")                          # noqa: E731
     assert ink("tech", 0).endswith("/marks/harness-claude-ink.png") and ink("tech", 1).endswith("/marks/harness-codex-ink.png")      # in ink
     assert ink("orkmaster", 0).endswith("/marks/harness-claude.png") and ink("orkmaster", 1).endswith("/marks/harness-claude.png")     # the open tab's in colour
@@ -1251,7 +1313,7 @@ def test_every_press_is_44_by_44_on_a_touch_screen_and_nothing_is_said_only_on_h
     pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
     open_tab(pg, "tech")
     pg.locator('.table-seat[data-seat="grunt"]').wait_for(timeout=WAIT_MS)
-    for sel in (".table-tab", ".table-plus", ".table-stop", ".hand-die", ".table-menu__btn", ".table-seat", ".table-switch"):
+    for sel in (".table-tab", ".table-chair", ".table-door", ".hand-die", ".table-menu__btn", ".table-seat", ".table-switch"):
         for el in pg.locator(sel).all():
             box = el.bounding_box()
             assert box["width"] >= 43.5 and box["height"] >= 43.5, (sel, box)

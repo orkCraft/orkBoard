@@ -55,6 +55,34 @@ def test_the_copy_is_orkui_0_15_3_with_the_ink_marks_the_moon_and_the_cards_toke
     assert "--ork-card:" in tokens_css and "--ork-card-frame:" in tokens_css
 
 
+def test_the_copy_is_orkui_0_27_0_with_the_room_the_chair_the_door_and_the_leaders_faces():
+    """Spec 123 B: `--ork-room`, `chair/`, `door/` and a face of each leader race and of the Orkmaster's crown, in five moods and at both sizes."""
+    stamp = orkui.stamp()
+    assert tuple(int(n) for n in stamp["version"].split(".")) >= (0, 27, 0) and len(stamp["commit"]) == 40
+    tokens_css = (orkui.ROOT / "tokens.css").read_text(encoding="utf-8")
+    assert "--ork-room: #090807;" in tokens_css and '"room": "#090807"' in (orkui.ROOT / "tokens.json").read_text(encoding="utf-8")
+    for name in ("chair/back-posts.svg", "chair/back-panel.svg", "chair/big-posts.svg", "chair/big-panel.svg", "chair/empty-posts.svg", "chair/empty-panel.svg", "door/frame.svg", "door/interior.svg"):
+        assert name in stamp["files"], name
+    css = (orkui.ROOT / "components.css").read_text(encoding="utf-8")
+    assert ".ork-chair" in css and ".ork-chair.is-empty" in css and ".ork-door" in css and ".ork-door.is-open" in css
+    for race in ("shaman", "dryad", "imp", "fairy", "unicorn", "lich"):
+        for mood in ("focused", "worried", "no", "pleased", "asleep"):
+            assert any(n.startswith(f"races/{race}-") and n.endswith(f"-{mood}.png") for n in stamp["files"]), (race, mood)
+            assert any(n.startswith(f"races/{race}-") and n.endswith(f"-{mood}@2x.png") for n in stamp["files"]), (race, mood, "@2x")
+    for mood in ("focused", "worried", "no", "pleased", "asleep"):
+        assert f"races/peon-crown-{mood}.png" in stamp["files"] and f"races/peon-crown-{mood}@2x.png" in stamp["files"], mood
+
+
+def test_head_draws_a_mood_only_for_a_leader_or_the_crown_and_chair_and_door_are_orkuis_spans():
+    js = (STATIC / "js" / "orkui.js").read_text(encoding="utf-8")
+    head = js.split("export function Head")[1].split("export function Switch")[0]
+    assert "mood" in head and "hasFaces(race, tier)" in head and 'LEADER_RACES = ["shaman", "dryad", "imp", "fairy", "unicorn", "lich"]' in js
+    assert 'race === "peon" && tier === "crown"' in js
+    chair = js.split("export function Chair")[1].split("export function Door")[0]
+    door = js.split("export function Door")[1].split("const LEADER_RACES")[0]
+    assert "ork-chair" in chair and "is-empty" in chair and "aria-hidden" in chair and "ork-door" in door and "is-open" in door and "aria-hidden" in door
+
+
 def test_the_page_draws_the_ink_marks_the_moon_and_no_head_at_12_x_11():
     js = STATIC / "js"
     for name in ("table/header.js", "table/tabs.js", "arena/limits.js"):
@@ -148,7 +176,7 @@ def test_the_field_is_orkuis_table_its_wood_a_surface_and_never_a_mark():
     pane = (STATIC / "js" / "table" / "pane.js").read_text(encoding="utf-8")
     assert re.search(r'<section class="table-pane ork-table"', pane)           # spec 98 §3: the table starts at the pane's top, the Board and what is opened over it on its wood
     sheets = "".join(p.read_text(encoding="utf-8") for p in SHEETS)
-    assert "--ork-table" not in sheets                                            # only orkUI's .ork-table draws the wood
+    assert "var(--ork-table)" not in sheets                                       # only orkUI's .ork-table draws the wood (the sheets use its rim: spec 123 §7.7)
 
 
 def test_a_task_cards_sign_is_one_of_orkuis_two_tone_drawings():

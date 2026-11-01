@@ -3,9 +3,11 @@
 // (`concerns[].on` is the card's id) and gives each a mark in a slot of its own — inside the card, or, for a card that is a button (System's part), beside it in the box that holds it, so the mark scales with the System's fit and a
 // button holds no button. An alert is orkUI's alert sign in the alert tone with the leader's small head beside it, a note a small dot in the muted ink; several on one card show the highest level and the count only in the label
 // (*2 concerns of the Architect*). A mark is decoration over a card (a press falls through to the card, which lifts); made into a goal it becomes a link to the goal in the goal's element's colour.
-// `Concerns` draws the strip over the map (the leader's head, *The Architect: 2 alerts, 3 notes*, **Ask again**; a press on the counts steps through the marked cards) and the host that paints; under the strip's line, the row of the
-// aspects the leader looks at (docs/specs/109-each-leader-looks-as-a-senior-of-its-craft.md §4: the rubric's `short`, then each aspect an orkUI chip with the small mark of its state, alert, note, hint, clear or none yet; a press on one steps
-// through the cards whose open concerns are of it, an aspect with no card is no button; a record with no `rubric`, from an older host, draws no row); `ConcernsBack` is the section a lifted card's back (card.js `Lifted`) gains: each
+// `Concerns` is the host that paints and reads: it asks for the party's record (`ideas.concerns`, again while a look is under way) and gives each card the record names its mark. The party's leader says the rest at the table
+// (docs/specs/123-the-leaders-at-the-table.md §4): there is no strip over the map any more; what the strip said is exported — `lookOf(party)` (the counts, the status, the failure, the evening line), `stepMarked(party, level, aspect)` (a press on a mark
+// or an aspect steps through the marked cards: each scrolled into view and lifted), `askAgain(party)` (the party's **…**) and `Aspects({g})` (the row of the aspects the leader looks at, in the party's header: docs/specs/109-each-leader-looks-as-a-senior-of-its-craft.md §4:
+// the rubric's `short`, then each aspect an orkUI chip with the small mark of its state, alert, note, hint, clear or none yet; a press on one steps through the cards whose open concerns are of it, an aspect with no card is no button; a record with no `rubric`,
+// from an older host, draws no row); `ConcernsBack` is the section a lifted card's back (card.js `Lifted`) gains: each
 // concern's what, why and fix and its aspect beside its level (*Alert · Hotspots*), **Make it a goal** and **Not a problem**. The record is the host's (`ideas.concerns`, `ideas.concerns_again`, `ideas.concern_dismiss`, `ideas.concern_goal`);
 // a host without the commands draws nothing and throws nothing. Picking wins: while a map is in picking a press is a pick, and the marks take no press.
 import { render } from "preact";
@@ -16,7 +18,7 @@ import { Head, Sign } from "../orkui.js";
 import { command } from "../link.js";
 import { pick, tab } from "../frame/state.js";
 import { act, mapData } from "../shell/store.js";
-import { leadsSystem } from "./data.js";
+import { leadsSystem, wide } from "./data.js";
 import { mapOf } from "./maps.js";
 import { pickFor } from "./picking.js";
 import { cardEl } from "./pickbox.js";
@@ -130,7 +132,7 @@ export function sync(host, party, lead, nodes) {
   }
 }
 
-// -- the strip and the host --------------------------------------------------------------------------------------------------------------------------------------------------
+// -- stepping, the aspects and the evening line --------------------------------------------------------------------------------------------------------------------------------------------------
 
 /** The cards marked now, the alerts first (in the order the map draws them). */
 const markedCards = () => {
@@ -175,61 +177,74 @@ export function Since({ rec }) {
     <span class="cn-since__line"><b>${SINCE}</b> ${line}</span></p>`;
 }
 
-/** The strip over the map: the leader's head and its counts (a press steps through the marked cards: each scrolled into view and lifted), **Ask again**. Nothing for a host that does not know concerns. */
-function Strip({ g, lead }) {
-  const party = g.slug, rec = recordOf(party), rev = mapData.value?.rev, [tick, setTick] = useState(0), [asking, setAsking] = useState(false), at = useRef({ of: "", i: -1 });
-  useEffect(() => {                                          // read when the map is opened and when the Board changes; asked again after a while while a look is under way
-    let live = true, timer = 0;
-    const go = async () => {
-      const r = await read("ideas.concerns", party);
-      if (live && r?.status === "looking") timer = setTimeout(go, POLL_MS);
-    };
-    go();
-    return () => { live = false; clearTimeout(timer); };
-  }, [party, rev, tick]);
-  useEffect(() => { at.current = { of: "", i: -1 }; }, [party]);
-  if (!rec) return null;
-  const name = theLeader(lead.name), list = rec.concerns || [], alerts = list.filter((c) => c.level === "alert").length, notes = list.length - alerts;
-  const rubric = rec.rubric && Array.isArray(rec.rubric.aspects) && rec.rubric.aspects.length ? rec.rubric : null;
-  const looking = rec.status === "looking", failed = rec.status === "failed";
-  const counts = [alerts && count(alerts, "alert", "alerts"), notes && count(notes, "note", "notes")].filter(Boolean).join(", ");
-  const again = async () => {
-    setAsking(true);
-    try { await read("ideas.concerns_again", party); } finally { setAsking(false); }
-    setTick((n) => n + 1);
-  };
-  const step = (only = "") => {
-    const cards = only ? aspectCards(party, only, markedCards()) : markedCards();
-    if (!cards.length) return;
-    if (at.current.of !== only) at.current = { of: only, i: -1 };                              // a press on another aspect (or on the counts) starts that round from its first card
-    at.current.i = (at.current.i + 1) % cards.length;
-    const el = cards[at.current.i];
-    el.scrollIntoView({ block: "center", inline: "center", behavior: reduced() ? "auto" : "smooth" });
-    if (!pickFor.value && !el.matches(".is-lifted, [aria-pressed=true]")) el.click();       // picking wins: there a press is a pick, and stepping only shows the card
-  };
-  const text = looking ? html`${name} is looking at the map…<span class="ork-busy" aria-hidden="true"></span>`
-    : failed ? `${name} could not look at the map${rec.error ? `: ${rec.error}` : ""}`
-    : list.length ? null : `${name} sees nothing wrong`;
-  return html`<div class="cn-strip" role="status" data-concerns=${looking ? "looking" : failed ? "failed" : list.length ? "some" : "none"} data-party=${party}>
-    ${lead.head && html`<${Head} race=${lead.head.race} tier=${lead.head.tier} />`}
-    ${text ? html`<span class="cn-strip__say">${text}</span>`
-      : html`<button type="button" class="ork-btn quiet cn-strip__counts" onClick=${() => step()} title="Step through the marked parts">${name}: ${counts}</button>`}
-    ${looking && list.length > 0 && html`<button type="button" class="ork-btn quiet cn-strip__counts" onClick=${() => step()} title="Step through the marked parts">${counts}</button>`}
-    <span class="cn-strip__grow"></span>
-    <button type="button" class="ork-btn cn-strip__again" disabled=${looking || asking} title=${`${name} looks at the map again`} onClick=${again}>Ask again</button>
-    ${rubric && html`<div class="cn-aspects" role="group" aria-label=${`What ${ofLeader(lead.name)} looks at`}>
-      ${rubric.short && html`<span class="cn-aspects__short">${rubric.short}</span>`}
-      ${rubric.aspects.map((a) => html`<${Aspect} key=${a.id} a=${a} card=${list.some((c) => c.aspect === a.id && c.on && !goalOf(party, c))} step=${step} />`)}
-    </div>`}
-    <${Since} rec=${rec} />
+/** The party's look as the table says it: `{status, alerts, notes, error, since}`. From the record when the page has read one (`ideas.concerns`); else the snapshot's count (`mapData` goals[].concerns: `{alerts, notes, status}`), `status` "" for a host that says nothing. */
+export function lookOf(party) {
+  const r = recordOf(party);
+  if (r) {
+    const list = r.concerns || [], alerts = list.filter((c) => c.level === "alert").length;
+    return { status: r.status || "ready", alerts, notes: list.length - alerts, error: r.error || "", since: r.since || null };
+  }
+  const c = (mapData.value?.goals || []).find((x) => x.slug === party)?.concerns;
+  return { status: c?.status || "", alerts: c?.alerts || 0, notes: c?.notes || 0, error: "", since: null };
+}
+
+/** Steps through the marked cards of the party's map, the alerts first: each scrolled into view and lifted (picking wins: there a press is a pick, and stepping only shows the card). `level` "alert" or "note" steps only through those marked so; `aspect` only
+ *  through the cards whose open concerns are of that aspect. A call with other words than the last starts that round from its first card. Returns whether a card was found. */
+const round = { key: "", i: -1 };
+export function stepMarked(party, level = "", aspect = "") {
+  let cards = aspect ? aspectCards(party, aspect, markedCards()) : markedCards();
+  if (level) cards = cards.filter((el) => el.dataset.concern === level);
+  if (!cards.length) return false;
+  const key = `${party}|${level}|${aspect}`;
+  if (round.key !== key) { round.key = key; round.i = -1; }
+  round.i = (round.i + 1) % cards.length;
+  const el = cards[round.i];
+  el.scrollIntoView({ block: "center", inline: "center", behavior: reduced() ? "auto" : "smooth" });
+  if (!pickFor.value && !el.matches(".is-lifted, [aria-pressed=true]")) el.click();
+  return true;
+}
+
+// the reading: a party's record is read while its map is open and asked after again while a look is under way
+const following = new Set(), timers = new Map(), latest = new Map();
+async function follow(party) {
+  clearTimeout(timers.get(party));
+  const mine = (latest.get(party) || 0) + 1;                // a later read supersedes this one: only the latest keeps asking
+  latest.set(party, mine);
+  const r = await read("ideas.concerns", party);
+  if (following.has(party) && latest.get(party) === mine && r?.status === "looking") timers.set(party, setTimeout(() => follow(party), POLL_MS));
+}
+
+/** The leader looks at the map again (`ideas.concerns_again`); nothing while it is looking already. */
+export async function askAgain(party) {
+  if (recordOf(party)?.status === "looking") return;
+  await read("ideas.concerns_again", party);
+  if (following.has(party)) follow(party);
+}
+
+/** The row of the aspects the leader looks at: the rubric's short words, then each aspect as an orkUI chip. Under 760 px only the aspects with an open concern are kept (and not the short words). Nothing for a record with no rubric. */
+export function Aspects({ g }) {
+  const party = g.slug, rec = recordOf(party), lead = leaderOf(g);
+  const rubric = rec?.rubric && Array.isArray(rec.rubric.aspects) && rec.rubric.aspects.length ? rec.rubric : null;
+  if (!rubric) return null;
+  const list = rec.concerns || [], narrow = !wide.value;
+  const shown = rubric.aspects.map((a) => ({ a, card: list.some((c) => c.aspect === a.id && c.on && !goalOf(party, c)) })).filter((x) => !narrow || x.card);
+  if (!shown.length) return null;
+  return html`<div class="cn-aspects" role="group" aria-label=${`What ${ofLeader(lead.name)} looks at`} data-party=${party}>
+    ${!narrow && rubric.short && html`<span class="cn-aspects__short">${rubric.short}</span>`}
+    ${shown.map(({ a, card }) => html`<${Aspect} key=${a.id} a=${a} card=${card} step=${(id) => stepMarked(party, "", id)} />`)}
   </div>`;
 }
 
-/** A party's map with its concerns: the strip over it and, around it, a box that paints the marks (no box of its own: `display: contents`). Drawn only for a party that has a map. */
+/** A party's map with its concerns: a box that reads the record and paints the marks (no box of its own: `display: contents`). Drawn only for a party that has a map. */
 function Inner({ g, children }) {
-  const host = useRef(), lead = leaderOf(g), rec = recordOf(g.slug), nodes = mapData.value?.nodes || [];
+  const host = useRef(), lead = leaderOf(g), rec = recordOf(g.slug), nodes = mapData.value?.nodes || [], rev = mapData.value?.rev;
   const state = useRef();
   state.current = { party: g.slug, lead };
+  useEffect(() => {                                          // read when the map is opened and when the Board changes; asked again after a while while a look is under way
+    following.add(g.slug);
+    follow(g.slug);
+    return () => { following.delete(g.slug); clearTimeout(timers.get(g.slug)); };
+  }, [g.slug, rev]);
   useEffect(() => {                                          // paint again whenever the map draws a card (marks are ours: they are not watched)
     const el = host.current;
     if (!el) return undefined;
@@ -246,8 +261,7 @@ function Inner({ g, children }) {
   }, []);
   useLayoutEffect(() => { if (host.current) sync(host.current, g.slug, lead, nodes); }, [g.slug, rec, lead.name, lead.head?.race, lead.head?.tier, nodes]);
   useEffect(() => () => { if (host.current) for (const slot of host.current.querySelectorAll(".cn-slot")) render(null, slot); }, []);
-  return html`<${Strip} g=${g} lead=${lead} />
-    <div ref=${host} class="cn-host" style="display:contents" data-concerns-map=${g.slug}>${children}</div>`;
+  return html`<div ref=${host} class="cn-host" style="display:contents" data-concerns-map=${g.slug}>${children}</div>`;
 }
 
 /** Whether a party's tab draws a map its leader looks at (Tech's System, or a craft's map). */

@@ -372,7 +372,7 @@ def test_a_side_that_follows_the_default_is_framed_with_the_tool_now_and_a_set_s
         assert got == ["1px", "solid", token(pg, "--ork-ink"), True]                                         # 1 px in the ink, orkUI's notch
         assert tab(pg, "design").locator(".table-tab__follow").count() == 1 and tab(pg, "product").locator(".table-tab__follow").count() == 0
         head, line_box = tab(pg, "tech").bounding_box(), tab(pg, "tech").locator(".table-tab__marks").bounding_box()
-        assert head["height"] == pytest.approx(52, abs=1) and line_box["y"] + line_box["height"] <= head["y"] + head["height"]      # the frame takes no room: the tab keeps its height
+        assert head["height"] >= 60 and line_box["y"] + line_box["height"] <= head["y"] + head["height"]      # the frame takes no room: the tab keeps its height (the row's, as high as the open head: spec 123 §7.1)
         assert tab(pg, "tech").locator(".table-tab__follow").first.evaluate("e => e.closest('.table-tab__marks').getAttribute('aria-hidden')") == "true"
         shot(pg, "wide-tabs-marks")
     finally:
@@ -506,10 +506,10 @@ def test_at_1280_by_800_two_rows_of_potions_leave_the_portal_ring_and_its_label_
     pg, host, log = open_mana(gui, (TOOLS + MORE)[:tools], "wide", mana_of("claude", "claude", paid=PAID if paid else None))
     try:
         pg.locator(".portal__label").wait_for(timeout=WAIT_MS)
-        label, ask, ring = pg.locator(".portal__label").bounding_box(), pg.locator(".table-ask").bounding_box(), pg.locator(".ork-portal-ring").bounding_box()
-        assert label["y"] >= ask["y"] + ask["height"] and ring["y"] >= label["y"] + label["height"]                # the label and the ring lie under the line that asks the Orkmaster, never over the pane's head
+        label, ask, ring = pg.locator(".portal__label").bounding_box(), pg.locator(".table-title").bounding_box(), pg.locator(".ork-portal-ring").bounding_box()
+        assert label["y"] >= ask["y"] + ask["height"] and ring["y"] >= label["y"] + label["height"]                # the label and the ring lie under the pane's title, never over the pane's head (the question is the Orkmaster's bubble now, spec 123 E)
         hand = pg.locator(".hand").bounding_box()
-        assert hand["height"] <= (190 if paid else 170)                                                          # the week's share lies beside the now share: two rows are no taller than with one share
+        assert hand["height"] <= (192 if paid else 172)                                                          # the week's share lies beside the now share: two rows are no taller than with one share (the hand's rim is 3 px now, spec 123 §7.7: 2 px more)
         assert pg.locator(".hand-pot__shares").first.evaluate("e => getComputedStyle(e).flexDirection") == "row"
         narrow.no_sideways(pg)
         shot(pg, f"fix-wide-two-rows-{tools}{'-paid' if paid else ''}")

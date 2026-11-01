@@ -2,16 +2,42 @@
    (its tokens and its classes: .ork-tab, .ork-head, .ork-card, .ork-picked, .ork-leans, .ork-frame, .ork-menu, .ork-chip, .ork-gem, .ork-table), the sizes are orkUI's spacing steps and the cards' own width (frame.css `--card-w`). The tabs, the Board's
    lanes and the hand read the frame's one `--cols` (every lane `--col-w`, a card and a quarter), so a tab stands over its lane. Under 760 px the tabs are a row of heads and a lane a token wide (tokens, no sideways scroll). */
 
-.table { display: flex; flex-direction: column; height: 100%; min-width: 0; min-height: 0; background: var(--ork-canvas); color: var(--ork-ink); }
+.table { display: flex; flex-direction: column; height: 100%; min-width: 0; min-height: 0; background: var(--ork-room); color: var(--ork-ink); }
 .table-grow { flex: 1; min-width: 0; }
 
 /* -- the tabs ------------------------------------------------------------------------------------------------------------------- */
-.table-tabs { flex: none; display: grid; grid-template-columns: var(--cols); padding: 0 var(--ork-4); min-width: 0; }
+/* the leaders' side of the table (spec 123 §7): the row and the hand lie on orkUI's room, near black, a 3 px rim of the table under the tabs and over the hand; nothing divides the leaders off the table (the lanes keep their lines); a tab is its column's head
+   (decisions §143), so only its height grows — the open leader's head is larger and 3 px lower, over the rim, and the open tab has no fill and no bar */
+.table-tabs { flex: none; display: grid; grid-template-columns: var(--cols); padding: 0 var(--ork-4); min-width: 0; background: var(--ork-room); border-bottom: 3px solid var(--ork-table-rim); }
 .table-tabs__list { display: contents; }
-.table-tab { position: relative; display: flex; align-items: center; gap: var(--ork-4); height: 52px; padding: 0 var(--ork-4); min-width: 0; text-align: left;
-  border-left: var(--ork-line) solid var(--ork-frame); }
-.table-tab__txt { display: flex; flex-direction: column; min-width: 0; }
+.table-tabcell { position: relative; display: flex; align-items: flex-end; min-width: 0; min-height: 60px; }
+.table-tabcell > .table-tab { flex: 1; align-self: stretch; }
+.table-tab { position: relative; display: flex; align-items: flex-end; gap: var(--ork-4); height: auto; min-height: 60px; padding: var(--ork-2) var(--ork-4) 0; min-width: 0; text-align: left; border: 0; }
+.table-tab[aria-selected="true"]:not(:focus-visible) { background: none; box-shadow: none; }
+.table-tab[aria-selected="true"]:hover { background: none; }
+.table-tab__txt { display: flex; flex-direction: column; justify-content: flex-end; gap: var(--ork-1); min-width: 0; padding-bottom: var(--ork-3); }
 .table-tab__main { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.table-tab__who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--ork-type-caption); text-transform: none; letter-spacing: 0; color: var(--ork-ink-muted); }
+/* a head on its chair (orkUI's `chair`, none under 760 px): the box is the chair's width, the back stands at its foot and the head over its rail; the open leader's is larger, its head 3 px lower over the rim */
+.table-seatbox { position: relative; z-index: 1; flex: none; display: flex; align-items: flex-end; justify-content: center; }
+.table-seatbox.has-chair { width: 44px; height: 36px; }
+.table-seatbox.has-chair.is-big { width: 52px; height: 46px; }
+.table-seatbox > .ork-chair { position: absolute; left: 0; bottom: 0; }
+.table-seatbox__sit { position: relative; display: flex; }
+.table-seatbox.is-on > .table-seatbox__sit { transform: translateY(3px); }
+/* the open head, a button of its own over the head's place (no button holds a button) */
+.table-askhead { appearance: none; display: flex; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; }
+.table-askhead.is-still { cursor: default; }
+.table-askhead:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 2px; }
+/* its marks, beside the head: an alert sign in the alert tone, a muted dot for a note, each a button stepping through the marked parts (concerns.js `stepMarked`) */
+.table-marks { position: absolute; left: 100%; top: -2px; margin-left: 2px; display: flex; flex-direction: column; gap: var(--ork-1); }
+.table-mark { appearance: none; display: grid; place-items: center; width: 16px; height: 16px; padding: 0; border: 0; background: none; color: var(--ork-ink-muted); cursor: pointer; }
+.table-mark.is-alert { color: var(--ork-alert); }
+.table-mark.is-alert .ork-sign { width: 12px; height: 12px; }
+.table-mark.is-note::before { content: ""; width: 6px; height: 6px; background: var(--ork-ink-muted); }
+.table-mark:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: 0; }
+.table-tabcell.is-open > .table-tab { padding-left: var(--ork-8); }
+.table-tabcell.is-open { padding-left: var(--ork-4); }
 /* the sword and the shield with the marks of the tools a party's Does and Checks run on (tabmarks.js, spec 111 §3.4, decisions §189): a second line under the name, 14 px, in ink; the open tab's marks are in colour; a column that mixes tools has a dot;
    a Lean party's shield is faint with no mark; a potion hovered outlines the marks of its tool (`is-marked`, 1 px of ink). A row of heads (the narrow width, a crowded row) has no second line (`.table-tab__txt` is hidden). */
 .table-tab__marks { display: flex; align-items: center; gap: var(--ork-2); margin-top: 2px; color: var(--ork-ink-faint); }
@@ -31,19 +57,33 @@
 .table-tab__dry .ork-sign { color: var(--ork-ink-muted); }
 .table-tab__dot { position: absolute; top: var(--ork-2); right: var(--ork-2); width: 6px; height: 6px; background: var(--ork-ink); }
 /* a party whose map has an alert (concerns.js `hasAlert`): orkUI's alert sign in the alert tone at the tab's foot, no count (decisions §145.3) */
-.table-tab__alert { position: absolute; right: var(--ork-2); bottom: var(--ork-2); display: inline-flex; color: var(--ork-alert); pointer-events: none; }
-.table[data-compact="true"] .table-tab { justify-content: center; padding: 0; }
+.table-tab__alert { position: absolute; right: var(--ork-2); top: var(--ork-2); display: inline-flex; color: var(--ork-alert); pointer-events: none; }
+.table[data-compact="true"] .table-tab { justify-content: center; padding: var(--ork-2) 0 0; }
 .table[data-compact="true"] .table-tab__txt { display: none; }
-.table-tabs__end { display: flex; align-items: center; justify-content: flex-end; gap: var(--ork-3); min-width: 0; padding-left: var(--ork-4); overflow: hidden;
-  border-left: var(--ork-line) solid var(--ork-frame); }
-.table-plus { padding: 0 var(--ork-2); flex: none; }
+/* a row of heads: the open head stands in the middle of its cell, the tab's button lies under it over the whole cell */
+.table[data-compact="true"] .table-tabcell.is-open { justify-content: center; padding-left: 0; }
+.table[data-compact="true"] .table-tabcell.is-open > .table-tab { position: absolute; inset: 0; padding: 0; }
+/* in a row of heads the cell is barely wider than the head: the marks stand in a row over it, never on its face */
+.table[data-compact="true"] .table-marks { left: 50%; right: auto; top: -18px; margin-left: 0; transform: translateX(-50%); flex-direction: row; gap: 0; }
+.table-tabs__end { display: flex; align-items: flex-end; justify-content: flex-end; gap: var(--ork-3); min-width: 0; padding-left: var(--ork-4); overflow: hidden; }
+.table-tabs__end > .table-logs { align-self: center; }
+/* the empty chair (chairs.js) and the door (door.js): orkUI's drawings, their words beside them */
+.table-chair { appearance: none; flex: 0 1 132px; display: flex; align-items: flex-end; gap: var(--ork-3); align-self: stretch; min-width: 0; padding: 0 var(--ork-2) 0 var(--ork-3); border: 0; background: none; color: var(--ork-ink-faint); cursor: pointer; text-align: left; }
+.table-chair__w { padding-bottom: var(--ork-3); min-width: 0; font: var(--ork-type-button); text-transform: uppercase; letter-spacing: var(--ork-type-button-track); }
+.table-chair:hover, .table-chair:focus-visible { color: var(--ork-ink); }
+.table-chair:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.table-door { appearance: none; flex: none; display: inline-flex; align-items: flex-end; gap: var(--ork-3); align-self: stretch; padding: 0 var(--ork-2) 0 var(--ork-3); border: 0; background: none; color: var(--ork-danger); cursor: pointer;
+  font: var(--ork-type-button); text-transform: uppercase; letter-spacing: var(--ork-type-button-track); }
+.table-door__w { padding-bottom: var(--ork-3); white-space: nowrap; }
+.table-door:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-danger); }
+.table-door.is-open { color: var(--ork-ink-muted); cursor: default; }
+.table-door.is-open:focus-visible { box-shadow: inset 0 0 0 2px var(--ork-ink); }
 .table-chip { cursor: pointer; white-space: nowrap; gap: 0; }
 button.table-chip { appearance: none; font: inherit; }
 .table-chip .ork-mark { margin-right: var(--ork-2); }
 .table-chip.is-warn { color: var(--ork-alert); }
 .table-chip.is-danger { color: var(--ork-danger); }
 .table-chip.is-unread { color: var(--ork-ink-muted); }
-.table-stop { flex: none; }
 .table[data-compact="true"] .table-tabs__end { gap: var(--ork-2); padding-left: var(--ork-2); }
 
 /* -- the pane ------------------------------------------------------------------------------------------------------------------- */
@@ -165,13 +205,19 @@ button.table-token.ork-card { position: relative; display: flex; flex-direction:
 }
 
 /* -- a party's header and its seats ------------------------------------------------------------------------------------------------ */
-.table-head { position: relative; flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-3) var(--ork-6); min-height: 44px; padding: 0 var(--ork-6); border-bottom: var(--ork-line) solid var(--ork-frame); }
-.table-head__name { border: 0; padding: 0; min-height: 0; }
+.table-head { position: relative; flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-2) var(--ork-5); min-height: 52px; padding: var(--ork-1) var(--ork-6); border-bottom: var(--ork-line) solid var(--ork-frame); }
 .table-squad { display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-2) var(--ork-5); min-width: 0; }
-.table-group { display: flex; align-items: center; gap: var(--ork-3); }
+.table-group { display: flex; align-items: center; gap: var(--ork-4); }
 .table-group + .table-group { padding-left: var(--ork-5); border-left: var(--ork-line) solid var(--ork-frame); }
-.table-seats { display: flex; align-items: center; gap: var(--ork-4); }
+.table-side { display: inline-flex; align-items: center; gap: var(--ork-2); flex: none; color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: uppercase; white-space: nowrap; }
+.table-side > .ork-sign { color: var(--ork-ink); }
+.table-seats { display: flex; align-items: center; gap: var(--ork-3); }
+.table-head .cn-aspects { flex: 0 1 auto; justify-content: flex-end; padding: 0; margin-left: auto; max-width: 100%; }
 .table-seat { appearance: none; position: relative; display: inline-flex; align-items: center; gap: var(--ork-1); padding: var(--ork-1); border: 0; background: none; color: inherit; cursor: pointer; }
+.table-seat.has-role { flex-direction: column; gap: 0; min-width: 56px; justify-content: center; }
+.table-seat__hw { position: relative; display: inline-flex; align-items: center; gap: var(--ork-1); }
+.table-seat__hw > .ork-busy { position: absolute; right: -4px; top: -4px; }
+.table-seat__role { max-width: 76px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
 .table-seat:hover, .table-seat.is-on { background: var(--ork-raised); }
 .table-seat:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 .table-seat.is-needs { box-shadow: inset 0 -2px 0 var(--ork-alert); }
@@ -228,10 +274,13 @@ button.table-token.ork-card { position: relative; display: flex; flex-direction:
 @media (max-width: 759px) {
   .table { --cols: repeat(var(--lanes, 5), minmax(0, calc(var(--ork-tap) + 2px))) minmax(0, 1fr); }
   .table-tabs { padding-left: var(--ork-2); padding-right: var(--ork-2); }
-  .table-tab { height: 48px; min-height: var(--ork-tap); justify-content: center; padding: 0; }
+  .table-tabcell, .table-tab { min-height: 52px; }                                                           /* the row grows to the open head (36 px here) and its rim, 52 px */
+  .table-tab { justify-content: center; padding: var(--ork-2) 0 0; }
   .table-tab__txt { display: none; }
-  .table-tabs__end { padding-left: var(--ork-1); gap: var(--ork-1); justify-content: space-between; }
-  .table-stop { padding: 0 var(--ork-2); }
+  .table-tabs__end { padding-left: var(--ork-1); gap: var(--ork-1); justify-content: space-between; align-items: center; }
+  .table-chair { flex: none; width: 36px; justify-content: center; align-items: center; align-self: auto; padding: 0; }
+  .table-door { align-items: center; align-self: auto; padding: 0 var(--ork-1); gap: var(--ork-2); }
+  .table-door__w { padding-bottom: 0; }
   .ork-btn.table-logs { margin-left: 0; min-width: 0; padding: 0 var(--ork-1); }                              /* the bug fits the row of heads after Stop all */
   .table-title { min-height: var(--ork-tap); padding-left: var(--ork-4); flex-wrap: wrap; }
   .table-phases { order: 9; flex: 1 0 100%; margin-left: 0; padding-bottom: var(--ork-2); }
@@ -241,40 +290,30 @@ button.table-token.ork-card { position: relative; display: flex; flex-direction:
   .table-lane { padding: var(--ork-3) 0; gap: var(--ork-3); }
   .table-line__row { gap: var(--ork-3); padding: var(--ork-3) var(--ork-4); }
   .table-line__place { display: none; }
-  .table-head { padding: var(--ork-2) var(--ork-4); }
-  .table-head { position: static; }
+  .table-head { padding: var(--ork-2) var(--ork-4); gap: var(--ork-2) var(--ork-4); position: static; }
+  .table-side__w { display: none; }                                         /* the sign and the tool's mark stay, the word is in the title and the group's label */
+  .table-group { gap: var(--ork-3); }
+  .table-group + .table-group { padding-left: var(--ork-4); }
+  .table-seat { min-width: var(--ork-tap); min-height: var(--ork-tap); }
+  .table-head .cn-aspects { flex: 1 0 100%; justify-content: flex-start; margin-left: 0; }
   .table-seatpop { left: 0; right: 0; top: auto; bottom: 0; width: auto; max-height: 80%; }
   .table-over { padding: var(--ork-4); }
 }
 
 /* a press is at least 44 x 44 on a touch screen (spec 94 §1.3): the drawn thing may be smaller, its target is not */
 @media (pointer: coarse) {
-  .table-tab, .table-seat, .table-menu__btn, .table-plus, .table-stop, .table-title__back, .table-chip, .table-back__x, button.table-phase { min-width: var(--ork-tap); min-height: var(--ork-tap); }
+  .table-tab, .table-seat, .table-menu__btn, .table-chair, .table-door, .table-title__back, .table-chip, .table-back__x, button.table-phase { min-width: var(--ork-tap); min-height: var(--ork-tap); }
   .table-seat { justify-content: center; }
   .table-menu__item { min-height: var(--ork-tap); }
 }
 
-/* -- spec 107 H: + Party, the project ▾, a party's leader head stepping while it works (docs/specs/107-what-the-owners-day-said.md §8) ---------------------------------------------------- */
-.table-tabcell { position: relative; display: flex; min-width: 0; }
-.table-tabcell > .table-tab { flex: 1; }
+/* -- the project ▾ (docs/specs/107-what-the-owners-day-said.md §8) ---------------------------------------------------- */
 .table-tab.has-switch { padding-right: var(--ork-8); }
-.ork-btn.table-switch { position: absolute; right: var(--ork-1); top: 50%; transform: translateY(-50%); width: 28px; min-width: 28px; height: 28px; min-height: 28px; padding: 0; text-decoration: none; }
-.table[data-compact="true"] .table-tab.has-switch { justify-content: flex-start; padding: 0 0 0 var(--ork-2); }
+.ork-btn.table-switch { position: absolute; z-index: 2; right: var(--ork-1); top: 50%; transform: translateY(-50%); width: 28px; min-width: 28px; height: 28px; min-height: 28px; padding: 0; text-decoration: none; }
+.table[data-compact="true"] .table-tab.has-switch { justify-content: flex-start; padding: var(--ork-2) 0 0 var(--ork-2); }
+.table[data-compact="true"] .table-tabcell.is-open:has(.table-switch) { justify-content: flex-start; padding-left: var(--ork-2); }
 .table[data-compact="true"] .ork-btn.table-switch { right: 0; width: 18px; min-width: 18px; }
 .table[data-compact="true"] .table-switch .ork-icon { --ork-icon: 14px; }
-.table-plus { padding: 0 var(--ork-3); gap: var(--ork-2); white-space: nowrap; }
-.table[data-compact="true"] .table-plus { padding: 0 var(--ork-2); }
-.table[data-compact="true"] .table-plus__w { display: none; }                  /* a row of heads: the banner alone, *New party* is still its label */
-/* the bar's marks (spec 112 §3.1, decisions §190.1): + Party wears orkUI's banner; hovered, the cloth unfurls once, from the pole, in three whole steps (a `clip-path` reveal: the icon is a sprite, its cloth cannot be scaled alone); Stop all wears
-   the boards across a pole before its word, in the danger colour it already has. Not under reduced motion. */
-.table-plus:is(:hover, :focus-visible) > .ork-icon { animation: table-banner-unfurl 360ms steps(1, end) 1 both; }
-@keyframes table-banner-unfurl { 0% { clip-path: inset(0 57.14% 0 0); } 33.33% { clip-path: inset(0 28.57% 0 0); } 66.67%, 100% { clip-path: inset(0 0 0 0); } }
-@media (prefers-reduced-motion: reduce) { .table-plus:is(:hover, :focus-visible) > .ork-icon { animation: none; } }
-.table-stop { gap: var(--ork-2); white-space: nowrap; }
-.table-plus > .ork-icon, .table-stop > .ork-icon { --ork-icon: 14px; flex: none; }                    /* two pixels a cell, as the mockup draws them (docs/mockups/buttons/) */
-.table-tab[data-working] .ork-race__head { animation: table-tab-step 1.2s steps(2) infinite; }
-@keyframes table-tab-step { 0% { transform: translateY(0); } 50% { transform: translateY(-1px); } 100% { transform: translateY(0); } }
-@media (prefers-reduced-motion: reduce) { .table-tab[data-working] .ork-race__head { animation: none; } }
 @media (pointer: coarse) { .table .ork-btn.table-switch, .table[data-compact="true"] .ork-btn.table-switch { width: var(--ork-tap); min-width: var(--ork-tap); height: var(--ork-tap); min-height: var(--ork-tap); } }
 
 /* the bug under the glass (spec 107 §10, hand/logsbtn.js; at the tabs' end since decisions §190.6, spec 112): a quiet icon button after Stop all, orkUI's sign `bug` and its icon `search` laid over its lower right; its panel is a small orkUI menu over it (fixed, opening downward from it, kept inside the window) */

@@ -1,22 +1,30 @@
-/* The quick question (docs/specs/106-a-quick-question.md §3, decisions §181): one line at the top of the pane and, under it, the answer on the tab it was asked on. Layout only: the field, the buttons, the chips, the busy mark and the panel's
-   colours are orkUI's (.ork-field, .ork-btn, .ork-chip, .ork-busy, --ork-panel); the answer is in the body face, never the pixel face. */
-.table-ask { flex: none; display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-3) var(--ork-6); border-bottom: var(--ork-line) solid var(--ork-frame); min-width: 0; }
-.table-ask__form { margin: 0; min-width: 0; }
-.table-ask__reading { display: flex; align-items: center; gap: var(--ork-3); margin: 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
-.table-ask__answer { position: relative; display: flex; flex-direction: column; gap: var(--ork-3); max-height: 40vh; overflow: auto; padding: var(--ork-4) calc(var(--ork-control) + var(--ork-4)) var(--ork-4) var(--ork-4);
-  background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink); font: var(--ork-type-body); }
-.table-ask__x { position: absolute; top: var(--ork-2); right: var(--ork-2); }
-.table-ask__who { display: flex; align-items: center; gap: var(--ork-3); min-width: 0; }
+/* The leader's bubble (docs/specs/123-the-leaders-at-the-table.md §6, mockup docs/mockups/lens-heads/): the quick question (docs/specs/106-a-quick-question.md), its answer and the evening line, on orkUI's raised panel with the edge, under the open leader's head,
+   its tail under the head's centre (ask.js sets the bubble's `left`, `top` and `width`, the tail's `left` and the room's `max-height` from the head's box). Layout only: the field, the buttons, the chips, the busy mark and the think mark are orkUI's (.ork-field, .ork-btn, .ork-chip,
+   .ork-think); the answer is in the body face, never the pixel face. The tail is two triangles, the edge's and the panel's. */
+.table-ask__bubble { position: fixed; z-index: 60; box-sizing: border-box; display: flex; flex-direction: column; padding: var(--ork-4) var(--ork-5); background: var(--ork-raised); border: var(--ork-line) solid var(--ork-edge);
+  color: var(--ork-ink); font: var(--ork-type-body); box-shadow: 0 var(--ork-2) 0 var(--ork-scrim); }
+.table-ask__tail { position: absolute; left: 28px; top: 0; width: 0; height: 0; }
+.table-ask__tail::before, .table-ask__tail::after { content: ""; position: absolute; left: 0; width: 0; height: 0; border: 8px solid transparent; }
+.table-ask__tail::before { top: -17px; border-bottom-color: var(--ork-edge); }
+.table-ask__tail::after { top: -15px; border-bottom-color: var(--ork-raised); }
+@media (prefers-reduced-motion: no-preference) {
+  .table-ask__bubble { animation: table-ask-pop var(--ork-motion-sure) var(--ork-motion-spring); transform-origin: 36px -8px; }
+  @keyframes table-ask-pop { from { transform: scale(0.9); opacity: 0; } }
+}
+.table-ask__in { display: flex; flex-direction: column; gap: var(--ork-3); max-height: 60vh; overflow: auto; min-width: 0; }
+.table-ask__who { display: flex; align-items: center; gap: var(--ork-3); min-width: 0; font: var(--ork-type-label); text-transform: uppercase; color: var(--ork-ink-muted); }
 .table-ask__who .ork-race__head { flex: none; }
+.table-ask__name { min-width: 0; overflow-wrap: anywhere; }
+.table-ask__grow { flex: 1; min-width: 0; }
+.table-ask__form { margin: 0; min-width: 0; }
+.table-ask__reading { margin: 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .table-ask__q { margin: 0; min-width: 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); overflow-wrap: anywhere; }
 .table-ask__text { margin: 0; font: var(--ork-type-body); white-space: pre-wrap; overflow-wrap: anywhere; }
 .table-ask__srcs { display: flex; flex-wrap: wrap; gap: var(--ork-2); margin: 0; padding: 0; list-style: none; }
 .table-ask__src { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
-.table-ask__goal { display: flex; }
+.table-ask__acts { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3); }
 .table-ask__err { margin: 0; font: var(--ork-type-body); color: var(--ork-alert); }
-.table-body:is([data-end="side"], [data-end="over"]) > .table-ask { margin-right: calc(var(--table-end-w) * -1); }          /* the line keeps the pane's whole width, as the party's header does (discard.css) */
-@media (max-width: 759.98px) {
-  .table-ask { padding: var(--ork-2) var(--ork-4); margin-right: 0; }
-  .table-body:is([data-end="side"], [data-end="over"]) > .table-ask { margin-right: 0; }
-  .table-ask__x { min-width: var(--ork-tap); min-height: var(--ork-tap); }
-}
+.table-ask__seat { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2); padding-top: var(--ork-3); border-top: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.table-ask__seat .ork-mark { width: 14px; height: 14px; }
+.table-ask__pop { position: fixed; z-index: 61; }
+.table-ask__pop .table-seatpop { position: static; width: auto; left: auto; top: auto; max-height: 60vh; overflow: auto; }

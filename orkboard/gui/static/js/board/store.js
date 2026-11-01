@@ -13,11 +13,14 @@ export const PROJECT = "@project";         // the project's level (spec 70): the
 
 export const BUSY = ["reading", "planning", "working"];
 
+const GOAL_STARTS = ["ideas.add", "ideas.start"];          // the commands that start a goal (table/door.js shuts its door on them)
+
 /** A command of the contract; a plain-words error comes back as a toast and a null. */
 export async function ask(name, args = {}) {
   try {
     const got = await command(name, args);
     if (got && got.error) { toast(got.error, "error"); return null; }
+    if (GOAL_STARTS.includes(name)) import("../table/door.js").then((m) => m.goalStarted());      // a goal is started from this page: Stop all's door shuts (spec 123 §7.6)
     return got || {};
   } catch { return null; }
 }

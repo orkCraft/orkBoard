@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Icon } from "../orkui.js";
 
-/** `items`: [[word, run, danger?, icon?]]; `top`: something drawn above the items (the limits' chips at the narrow width). */
+/** `items`: [[word, run, danger?, icon?, title?, disabled?]]; `top`: something drawn above the items (the limits' chips at the narrow width). */
 export function Menu({ label, items, top = null, onOpen = null }) {
   const [open, setOpen] = useState(false), box = useRef(), btn = useRef(), list = useRef();
   const close = (back = true) => { setOpen(false); if (back) btn.current?.focus(); };
@@ -27,7 +27,7 @@ export function Menu({ label, items, top = null, onOpen = null }) {
       onClick=${() => { if (!open && onOpen) onOpen(); setOpen(!open); }}><${Icon} name="more-horizontal" /></button>
     ${open && html`<div class="ork-menu table-menu__list" role="menu" aria-label=${label} ref=${list} onKeyDown=${keys}>
       ${top}
-      ${items.map(([word, run, danger, icon]) => html`<button type="button" key=${word} role="menuitem" class=${cls("ork-menu__item table-menu__item", { "is-danger": !!danger })}
+      ${items.map(([word, run, danger, icon, title, off]) => html`<button type="button" key=${word} role="menuitem" class=${cls("ork-menu__item table-menu__item", { "is-danger": !!danger })} title=${title || undefined} disabled=${!!off}
         onClick=${() => { close(false); run(); }}>${icon && html`<${Icon} name=${icon} />`}${word}</button>`)}
     </div>`}
   </span>`;

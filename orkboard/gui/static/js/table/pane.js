@@ -15,7 +15,7 @@ import { BoardMap } from "./boardmap.js";
 import { mapOf } from "./maps.js";
 import "./mapparts.js";                                     // the parties' maps (spec 102)
 import { PickHost, PickStrip } from "./picking.js";         // picking on a party's map (spec 102 §6)
-import { Concerns } from "./concerns.js";               // the leader's concerns on its map: the strip, the marks (spec 108 B)
+import { Concerns } from "./concerns.js";               // the leader's concerns on its map: the marks (spec 108 B, spec 123 C)
 import { Header } from "./header.js";
 import { SystemPane, PartBack, LinkBack } from "./syspane.js";
 import { Lifted, OwnBack, TaskBack, litKey, mineKey } from "./card.js";
@@ -24,7 +24,6 @@ import { Menu } from "./menu.js";
 import { isForm } from "./over.js";
 import { openParties } from "./parties.js";
 import { DiscardEnd } from "./discard.js";                // the discard at the last column's foot (spec 104 C)
-import { AskLine } from "./ask.js";                          // the quick question, one line at the top of the pane, under a party's header (spec 106 C)
 import { Notice } from "./notice.js";                    // the Orkmaster's line when the work moved to another tool (spec 105 D)
 
 /** ← or Esc: the map as it was left, the card the thing came from lit. */
@@ -104,11 +103,11 @@ export function Pane({ parties, tab, narrow }) {
     <${Title} parties=${parties} tab=${tab} narrow=${narrow} />
     ${!o && html`<${Notice} />`}
     <div class="table-body" ref=${body} data-end=${o && o.kind !== "discard" ? "over" : o || tab !== ORKMASTER ? "side" : "board"}>
-      ${o ? html`<${Over} />` : tab === ORKMASTER ? html`${parties.length > 0 && html`<${AskLine} key=${tab} tab=${tab} parties=${parties} />`}<${PickStrip} tab=${tab} /><${BoardMap} parties=${parties} narrow=${narrow} />
+      ${o ? html`<${Over} />` : tab === ORKMASTER ? html`<${PickStrip} tab=${tab} /><${BoardMap} parties=${parties} narrow=${narrow} />
           ${!parties.length && html`<div class="table-empty"><p>No parties yet</p>
             <p class="table-over__muted">Make a party, then write it a goal in plain words. Its orks do the work; you look at it before it goes in.</p>
             <p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`}`
-        : g ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${AskLine} key=${tab} tab=${tab} parties=${parties} /><${PickStrip} tab=${tab} /><${Concerns} key=${g.slug} g=${g}><${PickHost} key=${g.slug} g=${g}>${leadsSystem(g) ? html`<${SystemPane} key=${g.slug} g=${g} />` : mapOf(g) ? html`<${mapOf(g)} key=${g.slug} g=${g} narrow=${narrow} />` : null}<//><//>` : null}
+        : g ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${PickStrip} tab=${tab} /><${Concerns} key=${g.slug} g=${g}><${PickHost} key=${g.slug} g=${g}>${leadsSystem(g) ? html`<${SystemPane} key=${g.slug} g=${g} />` : mapOf(g) ? html`<${mapOf(g)} key=${g.slug} g=${g} narrow=${narrow} />` : null}<//><//>` : null}
       ${shown && html`<${Lifted} host=${body} name=${shown[0]} narrow=${narrow}>${shown[1]}</${Lifted}>`}
       <${DiscardEnd} />
     </div>
