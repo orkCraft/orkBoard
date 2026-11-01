@@ -29,6 +29,7 @@ from pathlib import Path
 from orkboard import brand
 from orkboard.realm import decisions_log, event_log, idea_objections, idea_questions, idea_ripe, idea_target, ideas, orkmaster, spec_sections
 from orkboard.realm.idea_talk_parse import total
+from orkboard.realm import journal_notes
 
 TITLE_CHARS, WHY_CHARS, POINT_CHARS, BODY_CHARS = 120, 700, 300, 6000
 POINTS = (2, 8)                            # the points of a decision: at least, at most
@@ -303,3 +304,4 @@ Answer with one JSON object and nothing else:
             spec_sections.save_record(self.state_dir, slug, way)
         ideas.update(self.wiki_root(), slug, {}, [f"Decision {number}: {title}"])
         ideas.add_turn(self.state_dir, slug, "keeper" if by == "leaders" else "you", f"Confirmed decision {number}: {title}" + (" (the leaders, all agreed)" if by == "leaders" else ""), "Decided")
+        journal_notes.decision(self.state_dir, self.wiki_root(), slug, number, title, idea_objections.lines(idea_questions.record(self.state_dir, slug), self._name)[0])      # the project's journal (spec 125 B)

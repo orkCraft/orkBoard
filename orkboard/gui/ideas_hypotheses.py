@@ -27,7 +27,7 @@ from typing import Any
 from orkboard.core.idea_decide import TITLE_CHARS
 from orkboard.core.idea_keeper import KeeperError
 from orkboard.gui.ideas_args import IdeasError, _str
-from orkboard.realm import board_rows, event_log, hypotheses, idea_element, ideas, opportunity_tree as tree
+from orkboard.realm import board_rows, event_log, hypotheses, idea_element, ideas, journal_notes, opportunity_tree as tree
 
 NO_PROPOSAL = "Proposing hypotheses is not in this build yet"
 _JUDGING = threading.Lock()                 # one verdict at a time: the decision is written once, then the hypothesis is judged with its number
@@ -169,6 +169,8 @@ class HypothesesMixin:
                 judged = hypotheses.judge(self.state_dir, id, state, why, out.get("number") or 0)
             except ValueError as e:
                 raise IdeasError(str(e)) from None
+        if state != "unsure":
+            journal_notes.hypothesis(self.state_dir, "", item["text"], state, why, out.get("number") or 0)      # the project's journal (spec 125 B)
         self.changed("")
         return {"ok": True, "item": self._hyp_item(judged["id"]), **({"decision": {k: out.get(k) for k in ("number", "path", "commit", "held")}} if out else {})}
 

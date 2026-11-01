@@ -18,7 +18,7 @@ from __future__ import annotations
 from typing import Any
 
 from orkboard.gui.ideas_args import IdeasError, _str, _text
-from orkboard.realm import ideas, project_facts, project_kind, project_questions
+from orkboard.realm import ideas, journal_notes, project_facts, project_kind, project_questions
 from orkboard.realm.idea_questions import talk_of
 
 
@@ -48,6 +48,8 @@ class FactsMixin:
                 dropped = project_facts.drop(self.state_dir, party, key)
         except ValueError as e:
             raise IdeasError(str(e)) from None
+        if text.strip() or dropped:                                      # the project's journal: a line of the brief the person set (spec 125 B)
+            journal_notes.brief(self.state_dir, key, text, dropped)
         self.changed("")
         return {"ok": True, **({"dropped": True} if dropped else {}), "facts": self._facts_of(project_facts.of(self.state_dir, party))}
 

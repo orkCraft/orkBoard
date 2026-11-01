@@ -15,7 +15,7 @@ from typing import Any
 
 from orkboard.core.idea_keeper import KeeperError
 from orkboard.gui.ideas_args import IdeasError
-from orkboard.realm import goal_team, idea_lens, project_facts, project_questions
+from orkboard.realm import goal_team, idea_lens, journal_notes, project_facts, project_questions
 
 SEGMENT_CHARS, PAIN_CHARS = 120, 300                 # `idea_lens`: a segment's name, a pain
 
@@ -57,6 +57,8 @@ class ProjectQMixin:
         party = str(rec.get("party") or "") or project_questions.ORKMASTER_FACT
         for a in taken:
             project_facts.keep(self.state_dir, party, a["key"], a["answer"], a["by"])
+            if a["by"] == "person":                                      # the project's journal: a line of the brief the person answered (spec 125 B)
+                journal_notes.brief(self.state_dir, a["key"], a["answer"])
         self._segment(party, {a["key"] for a in taken})
         project_questions.save_record(self.state_dir, {**rec, "status": "done", "questions": [], "answered": [{k: a[k] for k in ("key", "by")} for a in taken]})
         self.changed("")

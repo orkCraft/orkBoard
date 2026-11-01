@@ -40,6 +40,7 @@ from typing import Callable
 from orkboard.realm import concerns, event_log, goal_line, goal_team, hypotheses, idea_objections, idea_questions, idea_target, ideas, map_text, project_facts, roles
 from orkboard.realm.idea_talk_parse import (CAUSE_CHARS, LINE, MAX_GOAL, MAX_PROJECT, WHERE, clean_diagnosis, clean_round, fact_text, failure_lines, pick_three,
                                             said_lines, touched, total)
+from orkboard.realm import journal_notes
 
 
 UNSHOWN = "someone shows it"        # an assumption's signal when the leader named none (the face puts *We'll know when* before it)
@@ -302,6 +303,7 @@ Answer with one JSON object and nothing else:
             ideas.save_state(self.state_dir, slug, error="", measure=self._tls.measured)
         ideas.add_turn(self.state_dir, slug, "keeper", "\n".join(f"{self._name(s['leader'])}: {s['stance']}\n  For: {s['for'] or '—'}\n  Against: {s['against'] or '—'}"
                                                                 for s in stances), "Talk")
+        journal_notes.stances(self.state_dir, self.wiki_root(), slug, stances)                  # each leader's journal (spec 125 B)
         self._assumed(slug, [(e["party"], got["assumes"]) for e, got in heard])
         for s in stances:
             if s["verdict"] != "go":

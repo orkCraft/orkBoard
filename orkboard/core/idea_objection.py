@@ -24,6 +24,7 @@ from __future__ import annotations
 import time
 
 from orkboard.realm import collide, event_log, idea_hearing, idea_objections, idea_questions, ideas
+from orkboard.realm import journal_notes
 
 SAID = {"drop": "Drop the goal", "smaller": "Do the smaller one", "later": "Not now", "go": "Go on anyway"}      # what the person pressed, for the talk's record
 
@@ -44,6 +45,7 @@ class ObjectionMixin:
         text = str(text or "").strip()[:6000]
         if ideas.idea_page(root, slug) is None:
             raise kw.KeeperError("That goal is gone")
+        was = journal_notes.title_of(root, slug)                      # the goal as the leaders knew it (spec 125 B)
         with ideas.LOCK:
             rec = idea_questions.record(self.state_dir, slug)
             hearing = idea_objections.open_hearing(root, self.state_dir, slug, rec, self._name) if ideas.state(self.state_dir, slug)["state"] == "talk" else None
@@ -73,8 +75,11 @@ class ObjectionMixin:
             clear = rec.get("done") is True and not rec.get("waiting")           # Talk has nothing else to wait for
             who = next((x for x in rec.get("stances") or [] if isinstance(x, dict) and side and x.get("party") in mine), None)
         outcome = side["outcome"] if side else "Said in the person's own words"
+        whys = {o["party"]: o.get("why", "") for o in rec.get("objections") or [] if isinstance(o, dict)}
         for party, answer in answered:
             self._ev(event_log.OBJECTION_ANSWERED, idea=slug, party=party, answer=answer)
+            if party in mine or kind not in ("drop", "later"):          # a goal dropped or put later is none the others' no was overruled on (spec 125 B)
+                journal_notes.answered(self.state_dir, root, slug, party, answer, whys.get(party, ""), was)
         self._ev(event_log.HEARING_THROWN, idea=slug, moment="talk", kind=kind, dir="" if text else dir, leaders=len(mine))
         if kind == "drop":
             ideas.drop(root, slug, self.state_dir)
@@ -122,6 +127,7 @@ class ObjectionMixin:
             raise kw.KeeperError("That goal is gone")
         if answer not in idea_objections.ANSWERS:
             raise kw.KeeperError("The answer is drop, smaller, later or go")
+        was = journal_notes.title_of(root, slug)                      # the goal as the leader knew it (spec 125 B)
         with ideas.LOCK:
             rec = idea_questions.record(self.state_dir, slug)
             o = next((x for x in idea_objections.pending(rec) if x["party"] == party), None)
@@ -142,6 +148,7 @@ class ObjectionMixin:
             clear = rec.get("done") is True and not rec.get("waiting") and not idea_objections.pending(rec)        # Talk has nothing else to wait for
             go_on = answer in ("go", "smaller") and clear
         self._ev(event_log.OBJECTION_ANSWERED, idea=slug, party=party, answer=answer)
+        journal_notes.answered(self.state_dir, root, slug, party, answer, o.get("why", ""), was)        # the leader's journal (spec 125 B); before the goal's page may be gone
         self._left(slug, o, answer, after)
         if answer == "drop":
             ideas.drop(root, slug, self.state_dir)

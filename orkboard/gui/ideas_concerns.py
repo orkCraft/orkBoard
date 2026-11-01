@@ -20,7 +20,7 @@ from typing import Any
 
 from orkboard.core.idea_keeper import KeeperError
 from orkboard.gui.ideas_args import IdeasError, _str
-from orkboard.realm import concerns as store, event_log, goal_team, goal_types, ideas, lens_rubrics, map_parts
+from orkboard.realm import concerns as store, event_log, goal_team, goal_types, ideas, journal_notes, lens_rubrics, map_parts
 
 DEFAULT_TYPE = {"system": "restructure", "screens": "screen", "game-design": "balance"}      # a map's goal type, when its party is offered it
 
@@ -101,6 +101,7 @@ class ConcernsMixin:
         part = next((p for p in parts if p["id"] == found["on"]), {"id": found["on"], "name": found["name"]})
         store.dismiss(self.state_dir, party, found["id"], store.part_hash(text, part))
         self._ev(event_log.CONCERN_DISMISSED, args, party=party, level=found["level"])
+        journal_notes.concern_dismissed(self.state_dir, party, found["on"], found["name"], found["what"])         # the leader's journal (spec 125 B)
         self.changed("")
         return self._concern_reply(party, ok=True)
 
@@ -116,6 +117,7 @@ class ConcernsMixin:
                          **({"device": args["device"]} if "device" in args else {})})
         store.made_goal(self.state_dir, party, found["id"], made["slug"])
         self._ev(event_log.CONCERN_GOAL, args, party=party, level=found["level"], idea=made["slug"])
+        journal_notes.concern_goal(self.state_dir, root, party, found["on"], found["name"], made["slug"])         # the leader's journal (spec 125 B)
         self.changed("")
         return self._concern_reply(party, ok=True, idea=made["slug"], type=made.get("type", ""))
 

@@ -21,7 +21,7 @@ from typing import Any
 from orkboard import settings
 from orkboard.core import bus
 from orkboard.gui.ideas_args import IdeasError, _text
-from orkboard.realm import event_log, gate_config, goal_main, idea_flag, idea_gate, ideas, main_checks
+from orkboard.realm import event_log, gate_config, goal_main, idea_flag, idea_gate, ideas, journal_notes, main_checks
 from orkboard.realm.idea_git import IdeaGit, _git
 
 
@@ -217,6 +217,7 @@ class GateMixin:
         party = (ideas.idea_page(root, slug) or ideas.Page()).get("track") or ""
         self._ev(event_log.IDEA_FLAGGED, None, idea=slug, goal=party, by=by, tasks=got["tasks"], first_time=got["first_time"],
                  usd=got["usd"], days=got["days"])
+        journal_notes.done(self.state_dir, root, slug)                  # the project's journal: the goal is in main (spec 125 B)
         self.changed(slug)
         self.collide_released(slug)             # the goals of other parties that waited for this flag may start (spec 71 §4)
         return True

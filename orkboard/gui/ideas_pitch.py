@@ -17,7 +17,7 @@ from pathlib import Path
 
 from orkboard.core import idea_keeper
 from orkboard.gui.ideas_args import IdeasError, _opt, _text
-from orkboard.realm import event_log, idea_element, idea_route, ideas, pitches
+from orkboard.realm import event_log, idea_element, idea_route, ideas, journal_notes, pitches
 
 # The commands of a plan, of its tasks and of the talk: a pitch has none of them (spec 65 §2).
 PLAN_COMMANDS = ("ideas.plan", "ideas.start", "ideas.start_now", "ideas.stop", "ideas.revise", "ideas.revise_answer", "ideas.answer",
@@ -144,6 +144,7 @@ class PitchMixin:
         decided = (pitches.read(self.state_dir, slug)["decision"] or {}).get("answer") == "pass"
         pitches.save(self.state_dir, slug, passed={"why": why, "at": dt.datetime.now().isoformat(timespec="seconds"), "as_decided": decided})
         ideas.save_state(self.state_dir, slug, state="passed", error="")
+        journal_notes.pitch_passed(self.state_dir, root, slug, why)                         # the project's journal (spec 125 B)
         self._ev(event_log.PITCH_PASSED, args, goal=slug, as_decided=decided, has_reason=bool(why))
         dropped = []
         for old in pitches.over_cap(root, self.state_dir):

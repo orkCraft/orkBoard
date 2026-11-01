@@ -10,7 +10,7 @@ from pathlib import Path
 
 from orkboard import settings
 from orkboard.gui.ideas_args import IdeasError, _device, _text
-from orkboard.realm import event_log, idea_checks, idea_spend, ideas, library, roles
+from orkboard.realm import event_log, idea_checks, idea_spend, ideas, journal_notes, library, roles
 from orkboard.realm.idea_git import IdeaGit
 
 _NO_TESTS = {"passed": 0, "failed": 0, "failing": [], "tail": ""}
@@ -99,6 +99,7 @@ class ReviewMixin:
         if not isinstance(dear, bool):
             raise IdeasError("dear is true or false")
         commit = self.runner(need=True).merge(slug, tid, device=_device(args), **({"dear": True} if dear else {}))
+        journal_notes.at_review(self.state_dir, self.root(False), slug, "merge")                 # the leaders' journals (spec 125 B)
         self.changed(slug)
         return {"ok": True, "commit": commit}
 
@@ -107,7 +108,9 @@ class ReviewMixin:
         suggested = args.get("suggested", False)
         if not isinstance(suggested, bool):
             raise IdeasError("suggested is true or false")
-        self.runner(need=True).back(slug, tid, _text(args, "why", 1000), device=_device(args), **({"suggested": True} if suggested else {}))
+        why = _text(args, "why", 1000)
+        self.runner(need=True).back(slug, tid, why, device=_device(args), **({"suggested": True} if suggested else {}))
+        journal_notes.at_review(self.state_dir, self.root(False), slug, "back", why)             # the leaders' journals (spec 125 B)
         self.changed(slug)
         return {"ok": True}
 
@@ -122,8 +125,10 @@ class ReviewMixin:
         return {"ok": True}
 
     def drop_task(self, args: dict) -> dict:
-        slug, tid, _task, _plan = self._task(args)
+        slug, tid, task, _plan = self._task(args)
         self.runner(need=True).drop_task(slug, tid, device=_device(args))
+        if task.get("state") == "review":                                                        # a result dropped at Review (else it is not a result decided)
+            journal_notes.at_review(self.state_dir, self.root(False), slug, "drop")              # the leaders' journals (spec 125 B)
         self.changed(slug)
         return {"ok": True}
 
