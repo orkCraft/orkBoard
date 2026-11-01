@@ -34,6 +34,7 @@ export const token = (name, fallback) => {
 };
 export const tokenMs = (name, fallback) => parseFloat(token(name, `${fallback}ms`)) || fallback;
 export const spring = () => token("--ork-motion-spring", "cubic-bezier(.34,1.56,.64,1)");
+export const ease = () => token("--ork-motion-ease", "ease-out");               // no overshoot: what grows to the window's edge must not spill past it
 
 /** The box of `el` when it is in view, else null (a box with no size, or out of the window, is no place to fly from). */
 export function boxIn(el) {

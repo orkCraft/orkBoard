@@ -6,7 +6,7 @@
 // staying up (`releaseProxy`).
 import { render } from "preact";
 import { html } from "../html.js";
-import { boxIn, reduced, spring, token, tokenMs } from "./motion.js";
+import { boxIn, ease, reduced, spring, token, tokenMs } from "./motion.js";
 import { Elem } from "../orkui.js";
 import { BackBody } from "../table/backbody.js";
 
@@ -55,7 +55,7 @@ export function growFrom(el) {
   const plus = document.querySelector(".hand .hand-plus"), a = boxIn(plus), b = el?.getBoundingClientRect();
   if (!el || !a || !b?.width || reduced()) return;
   el.animate([{ transformOrigin: "0 0", transform: FROM(a, b, "90deg"), opacity: 0.4 }, { transformOrigin: "0 0", transform: "none", opacity: 1 }],
-    { duration: tokenMs("--ork-motion-play", 400) * 0.9, easing: spring() });
+    { duration: tokenMs("--ork-motion-play", 400) * 0.9, easing: ease() });         // the field grows to the gutters on a phone: a spring's overshoot would spill past the window
 }
 
 /** Esc or a press away: the field was taken off the page at once; a copy of the + card turns back from the field's box into the + card where it lay (the real one is hidden meanwhile). */
