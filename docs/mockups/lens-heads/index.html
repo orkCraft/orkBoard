@@ -260,8 +260,12 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
 .win.dk, .tbl.dk, .narrow.dk { background: var(--mk-dark); }
 .dk .tabs, .dk .ntabs { background: var(--mk-dark); }
 .dk .title, .dk .chrome, .dk .mapbox, .dk .lanes { background: var(--mk-table); }
-.dk .tab.is-on, .dk .ntab.is-on { background: var(--mk-table) !important; box-shadow: none !important; }
-.dk .tab.is-on .seatbox { --chair-back: var(--mk-dark); }
+/* the open leader has no lit box (the owner): it is told by its head, larger and leaning in over the table's rim by 3 px, its name in the full ink with its own
+   name under it, the others' in the muted ink; aria-selected says it to a screen reader */
+.dk .tab.is-on, .dk .ntab.is-on { background: none !important; box-shadow: none !important; }
+.dk .tab.is-on .seatbox, .dk .tab .seatbox { --chair-back: var(--mk-dark); }
+.dk .tab.is-on .seatbox > .sit { transform: translate(-50%, 3px); }
+.dk .ntab.is-on > span { transform: translateY(3px); }
 .dk .ntabs { border-bottom: 3px solid var(--ork-table-rim); }
 .dk .hand { background: var(--mk-dark); border-top: 3px solid var(--ork-table-rim); }
 .dk .discard, .dk .disc { border-color: var(--ork-table-rim-hi); }
@@ -355,7 +359,8 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
   between lit, a step lighter, with its rim on both sides. <b>The table is what is shared</b> (the Board, the leaders' cards, the discard, the portal); <b>the dark
   edges are the players' places</b>: the leaders across it on their chairs, the person on the near side with the hand. The + card does not lose its sense: it
   is a card of the person's hand, and sent it leaves the dark for the lit table, face down in the Orkmaster's lane (spec 120 §6.2): played, seen. Nothing glows:
-  the lamp is only a step of grey. The dark is this page's token until orkUI draws a step under its canvas (near black, never #000). Outside the table nothing
+  the lamp is only a step of grey. <b>The open leader has no lit box</b>: it is told by its head, larger and leaning in over the table's rim, its name in the
+  full ink with its own name under it, the others' muted. The dark is this page's token until orkUI draws a step under its canvas (near black, never #000). Outside the table nothing
   divides the leaders: <b>no line between the tabs</b>, they sit in one dark room; the lines stay on the table, between the lanes.</p>
   <p class="mk-line"><b>Stop all is a door in the dark wall</b>, at the room's far end: <b>ajar while any work runs</b> (a faint strip of the way out, the orks
   coming and going), <b>shut when nothing runs</b>, and pressed it is <b>shut and boarded</b>, the planks of §190.1 across it in the danger colour, until work is
