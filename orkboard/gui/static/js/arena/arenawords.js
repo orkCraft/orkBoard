@@ -432,6 +432,7 @@ export function stopsOf(needs, g, nodes, ork = null) {
     else if (row.kind === "pick") {                 // the gem is the count; the member's head; the ask is its line (spec 51 §6)
       base.gem = String(row.n); base.gemTip = kindCount(row); base.small = true; base.head = row.by?.head || lead; base.whoTip = row.by?.name ? `made by ${row.by.name}` : "";
       base.title = row.short || row.title; base.text = `“${row.ask}”`;
+      if (row.task === "sketch") { base.label = "Sketch"; base.text = `${row.by?.name || "Its leader"} sketched it`; base.whoTip = `sketched by ${row.by?.name || "its leader"}`; }      // a leader's sketch before the spec (spec 121 §2): the face says who made it
     }
     else if (row.kind === "proposal" || row.kind === "party") base.gemTip = "Not planned yet";
     out.push(base);
