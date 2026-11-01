@@ -8,7 +8,7 @@ project, and what was read from its files, each with the party it belongs to, ke
     project_facts.drop(state_dir, "tech", "stack")     # a fact dropped (the person's empty text): True when there was one
     project_facts.for_call(state_dir, "tech", route)   # a leader's: the common core, its party's, another party's only when the route has it
     project_facts.answered(state_dir)                  # the keys answered or read, so a question is never asked again
-    project_facts.start_files(root)                    # the README and docs/'s top level, chosen by code, for Product's reading at the start
+    project_facts.start_files(root)                    # the context files, the README and docs/'s top level, chosen by code, for Product's reading at the start
 
 The file is `{common: {for_whom, hurts, why_us, pillars, leaves_out, earns}, common_by: {key: {by, at}}, party: {<party>: [{key, text, by, at}]}}`. A common key kept
 sets `common` (its `by` and `at` beside it) and is kept in its party's list too; a fact read from the files never replaces an answer of the
@@ -189,14 +189,17 @@ def _head(root: Path, f: Path) -> str | None:
 
 
 def start_files(root: Path) -> list[dict]:
-    """`[{path, text}]`: the project's README and the Markdown files at the top of `docs/` (START_DOCS at most, by name), the first START_CHARS
-    characters of each, chosen by code; for the one call that reads them (spec 99 §8.1). The decisions file is never one
+    """`[{path, text}]`: the context files the project keeps (a constitution, the steering's product, a memory bank's brief and product context, OpenSpec's project, a PRD,
+    AGENTS.md: `read_in.start_context`, spec 126 B.3), then its README, then the Markdown files at the top of `docs/` (by name), START_DOCS of the context files and docs
+    at most in all, the first START_CHARS characters of each, chosen by code; for the one call that reads them (spec 99 §8.1). The decisions file is never one
     of them (spec 97 §1: a leader gets its entries by code)."""
+    from orkboard.realm import read_in
     root = Path(root)
     try:
         top = sorted(root.iterdir(), key=lambda e: e.name.lower())
     except OSError:
         return []
+    context = [(root / c["path"], c["text"][:START_CHARS]) for c in read_in.start_context(root)][:START_DOCS]
     paths = [next((e for e in top if e.name.lower() in README), None)]
     docs = root / "docs"
     try:
@@ -204,10 +207,14 @@ def start_files(root: Path) -> list[dict]:
             if docs.is_dir() and not docs.is_symlink() else []
     except OSError:
         found = []
-    out, docs_read = [], 0
+    out = [{"path": f.relative_to(root).as_posix(), "text": text} for f, text in context]
+    have = {e["path"] for e in out}
+    docs_read = len(out)
     for f in paths + found:
         if f is not None and f.parent == docs and docs_read >= START_DOCS:
             break
+        if f is not None and f.relative_to(root).as_posix() in have:
+            continue
         text = _head(root, f) if f is not None else None
         if text:
             out.append({"path": f.relative_to(root).as_posix(), "text": text})
