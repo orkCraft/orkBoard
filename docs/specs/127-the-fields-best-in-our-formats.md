@@ -129,3 +129,15 @@ of its own, *How the product works now*, after the journals and before the map; 
   tools; the answer cleaned and applied; nothing to fold, not called; a failed call keeps nothing; the trigger at the flag;
   the event; the part in Talk's and the sections' prompts; export and import of OpenSpec and Kiro).
 - The critical tests and the test files of every module touched.
+
+## As built (1 November 2026)
+
+- **B**: `clean_decision(answer, known)` leaves `changes` out when empty; `write_decision(..., changes=)` writes the `Changes:`
+  line (the one file) or `ork-changes` (MADR) / the line atop the Decision (Nygard); a person's correction that starts with
+  its own `Changes:` line sets them. `decisions_log.headings` says *(changed by N)* for both the one file and a folder. A new
+  project's path is `docs/decisions` (`decisions_log.NEW`); the test projects of the Board's own tests choose the one file
+  in `project.json`, so 27 tests' fixtures say so.
+- **C**: the specs live in the Board's pages root (`.orkcraft/board/llm-wiki/general/specs/`); `BoardTree.pages()` now adds
+  `<wiki>/specs` to what is committed (nothing did before). Export and import are `realm/living_specs_io.py`. **A goal that
+  reaches main while its party's leader is busy waits in `<state_dir>/fold_pending.json`** and is folded when that run ends,
+  each goal once (the review's fix: several goals of one party in one gate press were folded only the first).

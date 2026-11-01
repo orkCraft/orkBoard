@@ -509,3 +509,19 @@ def test_the_gui_reads_in_to_the_boards_pages(host):
     _w(root, "openspec/specs/auth/spec.md", OPENSPEC)
     got = host.command("ideas.read_in_take", {})
     assert got["specs_read"] == 1 and living_specs.read(board, "auth") is not None
+
+
+
+def test_goals_that_reach_main_while_their_leader_is_busy_are_each_folded_once_when_that_run_ends(host, tech, goal, model):
+    """Several goals of one party reach main in one press: each is folded, one after another (the review's fix of spec 127 C)."""
+    from orkboard.core import idea_fold
+    keeper = host.ideas.keeper
+    second = _goal(host, tech, "add a lobby", done="- When a player opens the game, then the lobby lists the open tables")
+    keeper._claim(f"goal:{tech}", "looking")
+    assert keeper.fold(second) is False and keeper.fold(goal) is False and model.calls == []      # both wait their turn
+    keeper._busy.pop(f"goal:{tech}")
+    keeper.fold(goal)                                                                              # the leader is free: goal, then the lobby
+    _wait(host, tech)
+    prompts = [c["prompt"] for c in model.calls]
+    assert len(prompts) == 2 and "add a magic link" in prompts[0] and "add a lobby" in prompts[1]     # each once, goal not twice
+    assert idea_fold._pending(keeper.state_dir, tech, pop=True) == ""

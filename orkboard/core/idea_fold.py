@@ -90,6 +90,25 @@ def _cut(text: str, n: int) -> str:
     return text if len(text) <= n else text[:n - 1].rstrip() + "…"
 
 
+PENDING = "fold_pending.json"
+
+
+def _pending(state_dir: Path, party: str, add: str = "", pop: bool = False) -> str:
+    """The goals waiting for their party's fold (`<state_dir>/fold_pending.json`, `{party: [slug]}`): `add` one (once), or `pop` the oldest ("" with none)."""
+    with ideas.LOCK:
+        f = Path(state_dir) / PENDING
+        got = ideas._json(f) or {}
+        rows = [s for s in got.get(party) or [] if isinstance(s, str)] if isinstance(got, dict) else []
+        out = ""
+        if add and add not in rows:
+            rows.append(add)
+        elif pop and rows:
+            out = rows.pop(0)
+        if add or pop:
+            ideas._write_json(f, {**(got if isinstance(got, dict) else {}), party: rows})
+        return out
+
+
 class FoldMixin:
     def fold_sections(self, slug: str) -> str:
         """The goal's sections the call reads: each party's *Why*, *Done when*, *Will be* and *Out*, under the party's name; "" when no section has a *Done when*."""
@@ -123,6 +142,8 @@ class FoldMixin:
             self.refuse_spent()
             self._start(party, "folding", lambda: self.fold_run(slug, party), key=f"goal:{party}")
         except kw.KeeperError:
+            if self.busy(f"goal:{party}"):                    # the leader is at another call: the goal waits its turn, folded when that run ends
+                _pending(self.state_dir, party, add=slug)
             return False
         return True
 
@@ -149,7 +170,17 @@ Answer with one JSON object and nothing else:
 {{"capability": "sign-in", "title": "Sign-in", "purpose": "How a player gets into a game.", "added": [{{"name": "…", "text": "The product SHALL …", "scenarios": [{{"name": "…", "when": "…", "then": "…"}}]}}], "modified": [], "removed": ["name"]}}"""
 
     def fold_run(self, slug: str, party: str) -> None:
-        """The fold's call, on this thread: applied to the specs; a call that failed (or a stop) keeps nothing."""
+        """The fold of `slug`, then of every goal of the party that waited while the leader was busy (several goals reach main in one press), one after another
+        on this thread."""
+        self._fold_one(slug, party)
+        done = {slug}
+        while (nxt := _pending(self.state_dir, party, pop=True)):
+            if nxt not in done and self.fold_sections(nxt):
+                self._fold_one(nxt, party)
+            done.add(nxt)
+
+    def _fold_one(self, slug: str, party: str) -> None:
+        """One goal's fold call: applied to the specs; a call that failed (or a stop) keeps nothing."""
         kw = _kw()
         measures_: list[dict] = []
         root = self.wiki_root()
