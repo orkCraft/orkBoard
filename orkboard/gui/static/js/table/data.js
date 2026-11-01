@@ -221,6 +221,17 @@ export function groupsOf(g) {
   return groups.map(([band, word, seats]) => { const kept = seats.slice(0, Math.max(0, left)); left -= kept.length; return { band, word, seats: kept }; }).filter((x) => x.seats.length);
 }
 
+/** A party's squad on its lens (docs/specs/123-the-leaders-at-the-table.md §5): *Does* and *Checks* with their seats, the leader left out (it sits at the table, in the tabs), at most six seats in all: [{band: "build" | "check", word, seats: [member]}]. */
+export function squadOf(g) {
+  const { members } = partyOf(g, nodesFor(g));
+  let left = 6;
+  return [["build", "Does"], ["check", "Checks"]].map(([band, word]) => {
+    const kept = members.filter((m) => m.band === band).slice(0, Math.max(0, left));
+    left -= kept.length;
+    return { band, word, seats: kept };
+  }).filter((x) => x.seats.length);
+}
+
 /** The AI tool a seat runs on: the seat's own, the party's, else the role's (the Main tool). {id, name} */
 export function toolOf(g, m) {
   const role = roleOf(agents.value, m.slug), id = g.tools?.[m.slug] || g.tool || role?.harness?.id || "claude";

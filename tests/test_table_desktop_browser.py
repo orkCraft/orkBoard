@@ -833,16 +833,30 @@ def pick(pg, slug):
 
 # -- a party's tab -----------------------------------------------------------------------------------------------------------------------------------
 
-def test_a_partys_header_has_its_squad_in_three_groups_and_a_seat_pressed_opens_its_popover(table):
+def test_a_partys_header_is_one_row_of_its_squad_in_two_sides_with_a_role_under_each_head_and_a_seat_pressed_opens_its_popover(table):
     pg, host, w = table
     open_tab(pg, "tech")
     head = pg.locator('.table-head[data-party="tech"]')
-    assert head.locator(".table-head__name").text_content().strip() == "Tech"
-    assert [g.locator(".ork-label").text_content().strip() for g in head.locator(".table-group").all()] == ["Leads", "Does", "Checks"]
-    assert [g.locator(".table-seat").count() for g in head.locator(".table-group").all()] == [1, 2, 1]
+    assert head.locator(".table-head__name, h2").count() == 0, "no party name in the row: the tab and the title say it"
+    groups = head.locator(".table-group")
+    assert [g.get_attribute("aria-label") for g in groups.all()] == ["Does", "Checks"] and "Leads" not in head.inner_text(), "no Leads: the leader sits at the table"
+    assert [g.locator(".table-seat").count() for g in groups.all()] == [2, 1]
+    sides = [g.locator(".table-side") for g in groups.all()]
+    assert sides[0].locator(".ork-sign").count() == 1 and sides[1].locator(".ork-sign").count() == 1
+    assert sides[0].get_attribute("title") == "Does on Claude" and sides[1].get_attribute("title") == "Checks on Claude", "the tool in the title, one tool for the whole side"
+    assert "harness-claude-ink" in sides[0].locator(".ork-mark").get_attribute("src") and sides[0].locator(".table-side__w").text_content() == "Does"
     seat = head.locator('.table-seat[data-seat="grunt"]')
-    assert "peon-warrior" in seat.locator(".ork-race__head").get_attribute("src") and "harness-claude-ink" in seat.locator(".ork-mark").get_attribute("src")     # its tier's gear, its tool's mark in ink
+    assert "peon-warrior" in seat.locator(".ork-race__head").get_attribute("src") and seat.locator(".ork-mark").count() == 0, "its tool's mark is the side's: not on the seat"
+    assert seat.locator(".table-seat__role").inner_text() == "Grunts" and seat.get_attribute("aria-label") == "Grunts, runs on Claude", "the role under the head, in the label with its tool"
+    assert seat.locator(".ork-busy").count() == 1 and head.locator('.table-seat[data-seat="tester"] .ork-busy').count() == 0, "the busy mark on the one at work"
+    role = seat.locator(".table-seat__role")
+    assert role.evaluate("e => getComputedStyle(e).fontFamily") != pg.locator(".table-title__pt").evaluate("e => getComputedStyle(e).fontFamily"), "the body's face, never the pixel face"
+    assert role.evaluate("e => getComputedStyle(e).color") != seat.evaluate("e => getComputedStyle(e).color"), "muted"
+    assert role.evaluate("e => [getComputedStyle(e).textOverflow, getComputedStyle(e).maxWidth]") == ["ellipsis", "76px"]
+    box, rbox = seat.locator(".ork-race__head").bounding_box(), role.bounding_box()
+    assert rbox["y"] >= box["y"] + box["height"] - 1, "under the head"
     assert head.locator(".table-size").inner_text().strip() == "Standard"
+    assert head.get_by_role("button", name="Tech's menu").count() == 1
     shot(pg, f"table-tech-{w}.png")
     seat.click()
     pop = pg.locator(".table-seatpop")
@@ -869,6 +883,49 @@ def test_a_partys_header_has_its_squad_in_three_groups_and_a_seat_pressed_opens_
     assert title(pg) == "System · Grunts" and "You are the Grunts." in pg.locator(".table-over").inner_text()
     pg.locator(".table-title__back").click()
     pg.locator(".table-head").wait_for(timeout=WAIT_MS)
+
+
+def test_a_side_with_seats_on_several_tools_has_no_tool_of_its_own_and_each_seat_shows_its_mark(table):
+    pg, host, w = table
+    tech = next(p for p in host.parties if p["slug"] == "tech")
+    tech["tools"] = {"tester": "codex"}                                                                                   # one of Does' two seats runs on another tool
+    host.push()
+    open_tab(pg, "tech")
+    does = pg.locator('.table-head[data-party="tech"] .table-group[data-band="build"]')
+    does.locator(".table-seat").first.wait_for(timeout=WAIT_MS)
+    pg.wait_for_function("() => document.querySelector('.table-group[data-band=build] .table-seat .ork-mark')", timeout=WAIT_MS)
+    assert does.locator(".table-side .ork-mark").count() == 0 and does.locator(".table-side").get_attribute("title") == "Does"
+    assert "harness-claude-ink" in does.locator('.table-seat[data-seat="grunt"] .ork-mark').get_attribute("src")
+    assert "harness-codex-ink" in does.locator('.table-seat[data-seat="tester"] .ork-mark').get_attribute("src")
+    assert does.locator('.table-seat[data-seat="tester"]').get_attribute("aria-label") == "Tester, runs on Codex"
+
+
+def test_the_header_keeps_at_most_six_seats_and_never_the_leader(table):
+    pg, host, w = table
+    tech = next(p for p in host.parties if p["slug"] == "tech")
+    extra = [{**tech["party"][1], "slug": f"more{i}", "name": f"More {i}", "band": "build" if i % 2 else "check"} for i in range(5)]
+    tech["party"] = tech["party"] + extra
+    tech["team"] = tech["team"] + [{"slug": e["slug"], "name": e["name"], "head": e["head"], "checks": e["band"] == "check", "every": False} for e in extra]
+    host.push()
+    open_tab(pg, "tech")
+    pg.wait_for_function("() => document.querySelectorAll('.table-head .table-seat').length > 4", timeout=WAIT_MS)
+    assert pg.locator(".table-head .table-seat").count() == 6 and pg.locator('.table-head .table-seat[data-band="lead"]').count() == 0
+    narrow.no_sideways(pg)
+
+
+def test_at_the_narrow_width_the_sides_words_go_and_their_signs_stay_every_seat_44_px(table):
+    pg, host, w = table
+    open_tab(pg, "tech")
+    head = pg.locator('.table-head[data-party="tech"]')
+    head.locator(".table-seat").first.wait_for(timeout=WAIT_MS)
+    words = head.locator(".table-side__w")
+    assert all(x.is_visible() == wide(w) for x in words.all()), "the words are there at the wide width only"
+    assert all(x.locator(".ork-sign").is_visible() for x in head.locator(".table-side").all()) and head.locator(".table-side").first.get_attribute("title") == "Does on Claude"
+    if not wide(w):
+        assert all(x.bounding_box()["width"] >= 43.5 and x.bounding_box()["height"] >= 43.5 for x in head.locator(".table-seat").all())
+    box, row = head.bounding_box(), head.locator(".table-group").first.bounding_box()
+    assert box["height"] < 130 and row["y"] >= box["y"]
+    shot(pg, f"table-header-{w}.png")
 
 
 def test_a_seat_can_be_taken_off_and_its_tool_set_with_undo(table):

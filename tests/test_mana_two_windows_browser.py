@@ -506,8 +506,8 @@ def test_at_1280_by_800_two_rows_of_potions_leave_the_portal_ring_and_its_label_
     pg, host, log = open_mana(gui, (TOOLS + MORE)[:tools], "wide", mana_of("claude", "claude", paid=PAID if paid else None))
     try:
         pg.locator(".portal__label").wait_for(timeout=WAIT_MS)
-        label, ask, ring = pg.locator(".portal__label").bounding_box(), pg.locator(".table-ask").bounding_box(), pg.locator(".ork-portal-ring").bounding_box()
-        assert label["y"] >= ask["y"] + ask["height"] and ring["y"] >= label["y"] + label["height"]                # the label and the ring lie under the line that asks the Orkmaster, never over the pane's head
+        label, ask, ring = pg.locator(".portal__label").bounding_box(), pg.locator(".table-title").bounding_box(), pg.locator(".ork-portal-ring").bounding_box()
+        assert label["y"] >= ask["y"] + ask["height"] and ring["y"] >= label["y"] + label["height"]                # the label and the ring lie under the pane's title, never over the pane's head (the question is the Orkmaster's bubble now, spec 123 E)
         hand = pg.locator(".hand").bounding_box()
         assert hand["height"] <= (190 if paid else 170)                                                          # the week's share lies beside the now share: two rows are no taller than with one share
         assert pg.locator(".hand-pot__shares").first.evaluate("e => getComputedStyle(e).flexDirection") == "row"

@@ -165,13 +165,19 @@ button.table-token.ork-card { position: relative; display: flex; flex-direction:
 }
 
 /* -- a party's header and its seats ------------------------------------------------------------------------------------------------ */
-.table-head { position: relative; flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-3) var(--ork-6); min-height: 44px; padding: 0 var(--ork-6); border-bottom: var(--ork-line) solid var(--ork-frame); }
-.table-head__name { border: 0; padding: 0; min-height: 0; }
+.table-head { position: relative; flex: none; display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-2) var(--ork-5); min-height: 52px; padding: var(--ork-1) var(--ork-6); border-bottom: var(--ork-line) solid var(--ork-frame); }
 .table-squad { display: flex; align-items: center; flex-wrap: wrap; gap: var(--ork-2) var(--ork-5); min-width: 0; }
-.table-group { display: flex; align-items: center; gap: var(--ork-3); }
+.table-group { display: flex; align-items: center; gap: var(--ork-4); }
 .table-group + .table-group { padding-left: var(--ork-5); border-left: var(--ork-line) solid var(--ork-frame); }
-.table-seats { display: flex; align-items: center; gap: var(--ork-4); }
+.table-side { display: inline-flex; align-items: center; gap: var(--ork-2); flex: none; color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: uppercase; white-space: nowrap; }
+.table-side > .ork-sign { color: var(--ork-ink); }
+.table-seats { display: flex; align-items: center; gap: var(--ork-3); }
+.table-head .cn-aspects { flex: 0 1 auto; justify-content: flex-end; padding: 0; margin-left: auto; max-width: 100%; }
 .table-seat { appearance: none; position: relative; display: inline-flex; align-items: center; gap: var(--ork-1); padding: var(--ork-1); border: 0; background: none; color: inherit; cursor: pointer; }
+.table-seat.has-role { flex-direction: column; gap: 0; min-width: 56px; justify-content: center; }
+.table-seat__hw { position: relative; display: inline-flex; align-items: center; gap: var(--ork-1); }
+.table-seat__hw > .ork-busy { position: absolute; right: -4px; top: -4px; }
+.table-seat__role { max-width: 76px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
 .table-seat:hover, .table-seat.is-on { background: var(--ork-raised); }
 .table-seat:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 .table-seat.is-needs { box-shadow: inset 0 -2px 0 var(--ork-alert); }
@@ -241,8 +247,12 @@ button.table-token.ork-card { position: relative; display: flex; flex-direction:
   .table-lane { padding: var(--ork-3) 0; gap: var(--ork-3); }
   .table-line__row { gap: var(--ork-3); padding: var(--ork-3) var(--ork-4); }
   .table-line__place { display: none; }
-  .table-head { padding: var(--ork-2) var(--ork-4); }
-  .table-head { position: static; }
+  .table-head { padding: var(--ork-2) var(--ork-4); gap: var(--ork-2) var(--ork-4); position: static; }
+  .table-side__w { display: none; }                                         /* the sign and the tool's mark stay, the word is in the title and the group's label */
+  .table-group { gap: var(--ork-3); }
+  .table-group + .table-group { padding-left: var(--ork-4); }
+  .table-seat { min-width: var(--ork-tap); min-height: var(--ork-tap); }
+  .table-head .cn-aspects { flex: 1 0 100%; justify-content: flex-start; margin-left: 0; }
   .table-seatpop { left: 0; right: 0; top: auto; bottom: 0; width: auto; max-height: 80%; }
   .table-over { padding: var(--ork-4); }
 }
