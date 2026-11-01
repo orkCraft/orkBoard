@@ -448,3 +448,43 @@ def test_at_the_narrow_width_a_goal_talked_over_is_one_token_its_rune_glowing(gu
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+def test_on_a_phone_the_plus_card_turns_into_a_field_the_screens_width_less_its_gutters_with_the_focus_given_in_the_press(gui):
+    pg, host, log = open_life(gui, width="phone")
+    try:
+        pg.locator(".up-plus .hand-plus").wait_for(timeout=WAIT_MS)
+        pg.evaluate("""() => { window.__atClick = []; document.addEventListener('click', () => window.__atClick.push(document.activeElement && document.activeElement.tagName), false); }""")
+        pg.locator(".up-plus .hand-plus").click()
+        assert pg.evaluate("() => window.__atClick[0]") in ("TEXTAREA", "INPUT"), "the phone's keyboard rises for a focus given inside the press"
+        field = pg.locator(".up-field .hand-field")
+        field.wait_for(timeout=WAIT_MS)
+        pg.wait_for_function("() => document.activeElement && document.activeElement.classList.contains('hand-field__text')", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelector('.hand-field').getAnimations().length === 0", timeout=WAIT_MS)
+        box = field.bounding_box()
+        assert abs(box["width"] - (pg.viewport_size["width"] - 16)) <= 2, f"the screen's width less the gutters: {box}"
+        assert field.locator(".hand-field__rune").count() == 1 and field.locator(".hand-field__runes").count() == 0
+        narrow.no_sideways(pg)
+        shot(pg, "phone-field")
+        pg.keyboard.press("Escape")
+        pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_on_a_phone_the_menus_row_of_a_goal_talked_over_shows_its_rune_glowing_and_a_goal_that_waits_does_not(gui):
+    pg, host, log = open_life(gui, width="phone")
+    try:
+        pg.locator(".up-crown").wait_for(timeout=WAIT_MS)
+        _talking(host)
+        host.put("timer", "Round timer shows on every phone", "decided", "ice", back=back(heard=["design", "tech"], ripe=ripe(60, 240)))
+        pg.locator(".up-crown").click()
+        menu = pg.locator(".up-menu")
+        menu.wait_for(timeout=WAIT_MS)
+        assert menu.locator('.up-grow[data-goal="dark"] .ork-elem.dust.is-glowing').count() == 1, "the back's rune glowing in the menu's row"
+        assert menu.locator('.up-grow[data-goal="timer"] .ork-elem.ice').count() == 1 and menu.locator('.up-grow[data-goal="timer"] .ork-elem.is-glowing').count() == 0
+        shot(pg, "phone-menu-glowing")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)

@@ -18,7 +18,7 @@
 .table-back-heads { display: flex; justify-content: center; gap: var(--ork-1); min-height: 18px; }
 .table-back-head .ork-race__head { width: 18px; height: 16px; opacity: 0.3; filter: grayscale(1); transition: opacity var(--ork-motion-base) steps(3); }
 .table-back-head.is-said .ork-race__head { opacity: 1; filter: none; }
-.table-back-under { text-align: center; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.table-back-under { box-sizing: border-box; padding-right: var(--ork-6); text-align: center; color: var(--ork-ink-muted); font: var(--ork-type-caption); }      /* the **…** of the card lies at the lower right: the words keep clear of it */
 /* its face, drawn over the card where it lies (card.js `Lifted`) */
 .table-back__goal { overflow-wrap: anywhere; }
 .table-back__stances { display: flex; flex-direction: column; gap: var(--ork-1); margin: 0; padding: 0; list-style: none; }

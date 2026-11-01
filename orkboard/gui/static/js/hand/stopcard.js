@@ -49,6 +49,9 @@ export const labelOf = (s) => `${s.label}${s.other && s.party?.name ? ` in ${s.p
 const ORK_KINDS = ["route", "start", "decision", "fork", "collide", "paid", "hearing", "objection"];
 export const askerOf = (s) => (ORK_KINDS.includes(s.kind) ? "the Orkmaster" : s.party?.lead || s.party?.name || "the Orkmaster");
 
+/** Who plays a stop, for where it comes from (motion.js `fromWhere`): its goal, its party, and whether the Orkmaster plays it (a card of a goal: the Orkmaster's tab is its origin when its goal's card is not in view; *Go on paid?* has no goal and no party: dealt from under its place). */
+export const whoOf = (s) => ({ goal: goalOfStop(s), party: (s.party?.name ? s.party.slug : "") || s.row?.goal || "", ork: askerOf(s) === "the Orkmaster" && !!goalOfStop(s) });
+
 /** What a card is, for the line said when it lands (*Sh.man hands you a question: …*). */
 export const handsWords = (s) => `${s.card ? "a question" : "a card"}: ${s.full}`.slice(0, 160);
 

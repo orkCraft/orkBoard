@@ -50,7 +50,7 @@ export function fromWhere({ goal = "", party = "", ork = false } = {}) {
     const mid = goal ? find(`.up-look[data-goal="${name}"]`) : null, crown = mid ? null : find(".up-crown");
     return mid ? { el: mid, at: "goal" } : crown ? { el: crown, at: "crown" } : null;
   }
-  const card = goal ? find(`.frame-table .table-card[data-goal="${name}"], .frame-table .table-token[data-goal="${name}"], .frame-table .table-goal[data-goal="${name}"]`) : null;
+  const card = goal ? [".table-card", ".table-token", ".table-goal"].map((k) => find(`.frame-table ${k}[data-goal="${name}"]`)).find(Boolean) : null;       // its own card, else its token, else its block
   if (card) return { el: card, at: "goal" };
   const slug = ork ? ORKMASTER : party, tab = slug ? find(`.frame-table .table-tab[data-tab="${CSS.escape(slug)}"]`) : null;
   return tab ? { el: tab, at: "tab" } : null;
@@ -113,7 +113,7 @@ export function useHanded(items) {
 
 /** A card handed from where it was played (`dealt` is its entry of `useHanded`): before the first paint the vector from its place to the origin is set (orkUI's `--ork-deal-x/-y`) and orkUI's deal begins; while a pointer is down in the hand it is held back
  *  (`data-handing`, drawn nowhere) and comes when the pointer is up. A card with no origin is dealt from under its place by the card's own class (hand.css). */
-export function useFlight(ref, dealt) {
+export function useFlight(ref, dealt, copy = false) {
   useLayoutEffect(() => {
     const el = ref.current;
     if (!el || !dealt) return undefined;
@@ -121,6 +121,7 @@ export function useFlight(ref, dealt) {
     el.removeAttribute("data-handing");
     if (!dealt.el) return undefined;
     const origin = boxIn(dealt.el);
+    if (copy && origin) return flyCopy(el, origin, dealt.i);
     if (origin) {
       const v = between(el.getBoundingClientRect(), origin);
       el.style.setProperty("--ork-deal-x", `${v.x}px`);
@@ -128,8 +129,25 @@ export function useFlight(ref, dealt) {
     }
     el.classList.add("ork-deal");
     const t = setTimeout(() => el.classList.remove("ork-deal"), DEAL_MS + (dealt.i + 1) * tokenMs("--ork-motion-deal-gap", 40));
-    return () => clearTimeout(t);
+    return () => { clearTimeout(t); el.classList.remove("ork-deal"); };                 // the deal is over (the card is not handed any more) or begins again
   }, [dealt?.hold, dealt?.el]);
+}
+
+/** A card whose row clips what flies in it (a phone's row scrolls sideways): a copy of it flies over everything from `origin` to its place while the real card is hidden, and takes the pointer when the copy has landed. */
+function flyCopy(el, origin, i = 0) {
+  const place = el.getBoundingClientRect(), g = el.cloneNode(true), v = between(place, origin);
+  for (const a of ["data-key", "aria-label", "id"]) g.removeAttribute(a);
+  g.classList.add("hand-ghost", "hand-ghost--handed");
+  g.setAttribute("aria-hidden", "true");
+  g.inert = true;
+  g.style.cssText = `position:fixed;left:${place.left}px;top:${place.top}px;width:${place.width}px;height:${place.height}px;margin:0;z-index:90;pointer-events:none;`;
+  document.body.appendChild(g);
+  el.style.visibility = "hidden";
+  const done = () => { g.remove(); el.style.visibility = ""; };
+  const a = g.animate([{ transform: `translate(${v.x}px, ${v.y}px) rotate(-6deg) scale(0.6)`, opacity: 0.6 }, { transform: "none", opacity: 1 }],
+    { duration: tokenMs("--ork-motion-play", 400) + 250, easing: spring(), delay: i * tokenMs("--ork-motion-deal-gap", 40), fill: "backwards" });
+  a.finished.then(done, done);
+  return () => { a.cancel(); done(); };
 }
 
 /** The keys that came since the last draw (not the first draw, not under reduced motion): they are dealt, one after another, for DEAL_MS. `{key: i}`. Read while drawing, so that

@@ -3,7 +3,7 @@
 // the seal is the wait (backbody.js), the words under the card *Starts by itself in 4 min*. Hovered, it only lifts (orkUI's `.ork-leans`); pressed (or Enter), it turns to its face (`BackFace`, drawn over the card where it lies like any lifted card: its words, the route
 // edited here with the route card's `RouteLifted`, what each leader that has said said, its cost; at the wait *All the leaders agreed* and **Hold**, held **Start**) and *Turn it back* turns it down again. The turn is the back and the face crossfading in place (spec 120 §6.11).
 // `back` is the node's (realm/board_back.py). `everBack` remembers the goals this page has seen face down, for the turn up at the wait's end and the flight to the lane (flight.js).
-import { useEffect, useState } from "preact/hooks";
+import { useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Head } from "../orkui.js";
 import { lift, lower, lifted, picked } from "../frame/state.js";
@@ -58,7 +58,6 @@ export function BackCard({ n, kind }) {
 /** The goal's card turned to its face, over the card where it lies (card.js `Lifted`). */
 export function BackFace({ n }) {
   const kind = backKind(n), b = n.back, [busy, setBusy] = useState(false), idea = n.slug;
-  useEffect(() => { if (!kind) lower(); }, [kind]);                                    // the leaders' wait ended: the face is the card's, not this one's
   const run = async (name) => { setBusy(true); try { if (await act(name, { idea })) lower(); } finally { setBusy(false); } };
   const row = rowOf(idea, "decision"), why = row ? bodyOf(row.text)?.why : "";
   const caption = kind === "talk" ? "The leaders are talking it over." : kind === "wait" ? "All the leaders agreed" : HELD;

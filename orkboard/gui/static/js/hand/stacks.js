@@ -5,7 +5,7 @@
 import { html, cls } from "../html.js";
 import { lift, lower, lifted, pick, picked } from "../frame/state.js";
 import { nameOf, partiesNow } from "../table/data.js";
-import { StopCard, askerOf, handsWords } from "./stopcard.js";
+import { StopCard, askerOf, handsWords, whoOf } from "./stopcard.js";
 import { goalOfStop } from "./data.js";
 import { mapData } from "../shell/store.js";
 import { Shards, fromWhere, useGone, useHanded } from "./motion.js";
@@ -20,9 +20,6 @@ const FAN = [null, [7, 3], [-7, -3], [10, 4], [-10, -4], [9, 2]];
 function Edges({ n }) {
   return Array.from({ length: n }, (_, k) => n - k).map((i) => html`<i key=${i} class="ork-card-back edge hand-back" style=${`--ork-deck-i:${i};--dx:${FAN[i][0]};--rot:${FAN[i][1]}`} aria-hidden="true"></i>`);
 }
-
-/** Who plays a stop, for where it comes from (motion.js `fromWhere`). */
-const whoOf = (s) => ({ goal: goalOfStop(s), party: s.party?.slug || s.row?.goal || "", ork: askerOf(s) === "the Orkmaster" });
 
 /** Where an answered card goes back to, the element of its origin; none for a card whose goal is gone (a dropped one crumbles where it lay: flying back means *answered*, crumbling *gone*) and for one with no origin in view (spec 120 §6.10). */
 function backTo(s) {

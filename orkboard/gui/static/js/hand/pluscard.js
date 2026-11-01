@@ -4,7 +4,7 @@
 // (`free_elements` of its map node; all five when none is free), except the one at the top — stand in the seal's band, at most four (`.ork-sigil__free`), shown when the card is hovered or focused and held while the field is open (`.is-choosing`); the choice itself is made in the field, a row of
 // five radios (*Its rune*: *Rune 1* … *Rune 5*, the elements never named, §63.4), each 40 x 40 with the rune at 28 px, the default checked, the used ones faint but possible; arrows move the choice, Tab leaves the row. Sending passes `element` to `ideas.add` only when the choice is not the default.
 // **The rite** (§3.3, decisions §187.4): when the goal is sent the seal plays orkUI's summoning rite in the goal's element (`is-summoning rite-<element>`, state.js `summon`), once, and nothing under reduced motion. The seal is `small` at the narrow width.
-// Pressed (or a key typed with nothing focused), it grows into the field over the hand: one field, *Write a goal…*. Enter sends, Shift+Enter is a new line, a picture pasted goes with
+// **The card-field** (docs/specs/120-a-goal-heard-and-thrown-to-a-side.md §6.1–§6.2, decisions §198.1, §198.8): the + card is a card's back; pressed (or a key typed with nothing focused), it turns over and grows into **a card** over the hand, 5 : 7, the screen's width less the gutters on a phone: *Write a goal…* its body, its rune large at its top left (given by rule; a press on it opens the five runes in a row under it, `RuneButton`), **Send** at its foot; the focus is taken inside the press itself (fieldturn.js), and Esc or a press away turns it back (`closeField`), Send turns it to its back and sends the back to the Orkmaster's lane. Its text: Enter sends, Shift+Enter is a new line, a picture pasted goes with
 // it (`photos`, as the old New goal took them), Esc or a press away closes it and keeps its text and its rune. No priority, no kind. On a party's tab it is addressed to that party (*→ Tech ×*,
 // one press takes it off); *@Tech* in the text addresses it too; on the Orkmaster's tab it is general and the Orkmaster routes it by code (`ideas.add` with no party). The page has no
 // microphone, so the field has none. While there is no goal at all, the + card lies large in the pane's middle. *@* in the text offers a party, a file or a folder, and a party's goal types and map parts (mention.js, spec 107 §11): a type
@@ -16,7 +16,7 @@ import { toast } from "../link.js";
 import { act } from "../shell/store.js";
 import { MAX_PICTURES, PICTURE_TYPES, shrink } from "../board/pictures.js";
 import { tab } from "../frame/state.js";
-import { fieldOff, fieldOpen, fieldPhotos, fieldRune, fieldRunes, fieldText, fieldType, rite, summon, withoutAddress } from "./state.js";
+import { fieldOff, fieldOpen, fieldPhotos, fieldRune, fieldRunes, fieldText, fieldType, plusDealt, rite, summon, withoutAddress } from "./state.js";
 import { focusInPress, growFrom, releaseProxy, sendBack, turnBack } from "./fieldturn.js";
 import { partiesOf, partyCard } from "./data.js";
 import { MarkChips, addressNow, marks, marksToSend, resetMarks } from "../table/picking.js";       // picking on the addressed party's map (spec 102 §6): its marks lie on the field as chips
@@ -42,7 +42,7 @@ export function runesOf(address) {
 export function PlusCard({ large = false, onPress }) {
   const narrow = useNarrow(), address = addressNow(), r = runesOf(address), play = rite.value;
   const frees = r.free.filter((e) => e !== r.shown).slice(0, FREE_PLACES.length);
-  return html`<button type="button" class=${cls("ork-card ork-plus ork-leans hand-plus", { "is-large": large, "is-choosing": fieldOpen.value })} aria-label="New goal" title="New goal" aria-haspopup="dialog"
+  return html`<button type="button" class=${cls("ork-card ork-plus ork-leans hand-plus", { "is-large": large, "is-choosing": fieldOpen.value, "ork-deal": plusDealt.value })} aria-label="New goal" title="New goal" aria-haspopup="dialog"
     aria-expanded=${fieldOpen.value ? "true" : "false"} onClick=${(e) => { if (!fieldOpen.value) focusInPress(); onPress?.(e); }} ...${leans}>
     <span class=${cls("ork-sigil", { small: narrow, "is-summoning": !!play, [`rite-${play}`]: !!play })} aria-hidden="true"><span class="ork-sigil__seal">${r.shown && html`<${Elem} name=${r.shown} />`}</span>${!narrow && frees.map((e, i) => html`<span key=${e} class=${`ork-sigil__free ${FREE_PLACES[i]}`}><${Elem} name=${e} /></span>`)}</span><${Icon} name="plus" /></button>`;
 }
@@ -126,6 +126,8 @@ export function Field({ middle = false }) {
     const box = root.current?.getBoundingClientRect(), goal = { slug: got.slug || "", element: got.element || chosen || runes.shown, name: text.replace(/\s+/g, " ").slice(0, 60) };
     fieldText.value = ""; fieldPhotos.value = []; resetMarks(); fieldType.value = null; fieldRune.value = ""; fieldOpen.value = false; fieldRunes.value = false;
     summon(got.element || chosen);                                                    // the seal fills from the goal's rune (decisions §187.4)
+    plusDealt.value = true;                                                           // a new + card is dealt at the lane's end, its rune the next goal's
+    setTimeout(() => { plusDealt.value = false; }, 700);
     if (box && goal.slug) sendBack(box, goal);                                        // it turns to its back and goes face down to the Orkmaster's lane (§6.2)
     toast(address.party ? `Sent to ${address.name}.` : "Sent: the Orkmaster finds its party in a moment.");
   };

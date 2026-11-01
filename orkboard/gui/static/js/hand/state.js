@@ -12,6 +12,7 @@ export const fieldOff = signal("");            // the tab whose address the pers
 export const fieldRunes = signal(false);       // the five runes of the card-field stand in a row under its rune (a press on the rune opens them: spec 120 §6.1)
 export const fieldRune = signal("");           // the rune the person chose in the field (pluscard.js, decisions §187.3): an element, "" the one the addressed party's goal would be given
 export const rite = signal("");                // the element of the goal just sent: the + card's seal plays the summoning rite in it for a moment (`summon`, decisions §187.4)
+export const plusDealt = signal(false);        // a new + card is dealt at the lane's end for a moment: the goal was sent (pluscard.js, spec 120 §6.2)
 export const markedTool = signal("");          // the AI tool whose potion is hovered or focused: the tabs outline its marks (mana.js, tabmarks.js; decisions §189.2)
 export const markedDefault = signal(false);    // that potion is the default's (the framed one): the tabs outline the marks that follow the default too (spec 114 §3.5, decisions §192.4)
 

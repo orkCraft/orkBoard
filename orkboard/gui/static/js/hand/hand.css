@@ -87,7 +87,7 @@
 .hand .hand-done.hand-back, .table-end .hand-done.hand-back { cursor: pointer; }
 .hand .hand-done.hand-back.is-on, .table-end .hand-done.hand-back.is-on { box-shadow: inset 2px 0 0 var(--ork-ink); }
 .hand-back__ready { display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); padding: var(--ork-3); color: var(--ork-ink-muted); text-align: center; }
-.hand .hand-card.ork-deal, .hand .hand-back.edge.ork-deal { --ork-deal-x: 0px; --ork-deal-y: calc(var(--hc-h) * 0.6); }
+.hand .hand-card.ork-deal, .hand .hand-back.edge.ork-deal, .hand .hand-plus.ork-deal { --ork-deal-x: 0px; --ork-deal-y: calc(var(--hc-h) * 0.6); }
 /* a card handed from where it was played (spec 120 §6.9, motion.js `useFlight`): it sets `--ork-deal-x/-y` itself, from its origin; held back (drawn nowhere) while a pointer is down in the hand */
 .hand [data-handing] { visibility: hidden; }
 .hand-live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
@@ -107,7 +107,7 @@
 
 /* the field the + card grows into */
 /* the field is a card (spec 120 §6.1, decisions §198.1): the + card turned over and grown, 5 : 7 at the wide width, its rune large at its top left where a card's element stands, the text its body, Send at its foot; the screen's width less the gutters on a phone */
-.hand .hand-field { position: absolute; left: var(--ork-4); bottom: 0; z-index: 50; display: flex; flex-direction: column; gap: var(--ork-3); box-sizing: border-box; width: min(300px, calc(100% - var(--ork-8))); aspect-ratio: 5 / 7;
+.hand .hand-field { position: absolute; left: 0; right: 0; margin-inline: auto; bottom: 0; z-index: 50; display: flex; flex-direction: column; gap: var(--ork-3); box-sizing: border-box; width: min(300px, calc(100% - var(--ork-8))); aspect-ratio: 5 / 7;
   padding: var(--ork-4); background: var(--ork-raised); border-color: var(--ork-action); }
 .hand .hand-field.is-middle { position: relative; width: min(300px, 100%); pointer-events: auto; }
 .hand-field__top { display: flex; align-items: flex-start; gap: var(--ork-3); min-width: 0; }

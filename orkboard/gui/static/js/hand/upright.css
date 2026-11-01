@@ -113,7 +113,7 @@ button.ork-card.up-card { position: relative; flex: none; width: 88px; height: 1
 
 /* the field over the keyboard, the microphone in its corner */
 .up-field { position: fixed; z-index: 40; left: 0; right: 0; bottom: 0; padding: var(--ork-3) var(--ork-4) calc(var(--ork-3) + env(safe-area-inset-bottom, 0px)); background: var(--ork-canvas); }
-.up-field .hand-field { position: static; box-sizing: border-box; width: 100%; max-width: none; aspect-ratio: auto; min-height: min(56dvh, 420px); }      /* the screen's width less the gutters; its height what the keyboard leaves (spec 120 §6.1) */
+.up-field .hand-field, .up-field .hand-field.is-middle { position: static; box-sizing: border-box; width: 100%; max-width: none; aspect-ratio: auto; min-height: min(56dvh, 420px); }      /* the screen's width less the gutters; its height what the keyboard leaves (spec 120 §6.1) */
 .up-mic { position: absolute; right: var(--ork-5); top: var(--ork-5); min-width: var(--ork-tap); min-height: var(--ork-tap); display: inline-flex; align-items: center; justify-content: center; }
 .up-mic.is-on { color: var(--ork-alert); }
 .up-mid { flex: 1 1 0; min-height: 0; display: flex; align-items: center; justify-content: center; padding: var(--ork-4); }
