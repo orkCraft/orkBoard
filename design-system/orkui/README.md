@@ -7,6 +7,8 @@ halfway to the neutral grey of its own lightness: parchment ink on dark greys wi
 canvas, panels, table and inks, never a mark), and the table is a warm grey a step above the canvas. Ink on canvas, panel,
 raised and table is 13.33, 12.30, 10.94 and 12.82:1; the muted ink 7.78, 7.17, 6.38, 7.48; the faint ink (0.15.3: `#98948e`, a step lighter, so it holds AA on the card) 6.10, 5.63, 5.01, 5.87 and 4.54 on the card;
 `edge` 5.39, 4.97, 4.42, 5.18 (3:1 holds on every ground).
+**`room`** (0.27.0, `#090807`: near black, a step under the canvas, never `#000`, so the screen does not glare) is the dark of the room the leaders sit in and of the hand's
+floor: the ink is 14.49:1 on it, the muted ink 8.45, the faint ink 6.63 (each holds AA 4.5:1) and the edge 5.85 (3:1 holds).
 The **pixel face** (Pixelify Sans) is for titles, headings and buttons only, never below 12 px, whole pixels, no ligatures, no
 faux bold, never for a number or a person's text. **The interface's text is IBM Plex Sans**: body 14/20, caption 12/16 and the
 label 12/16 in weight 600 and capitals (on the phone 16/22, 13/18 and 14/16). **IBM Plex Mono** stays the face of code, paths,
@@ -66,6 +68,12 @@ the head alone too (`.ork-race__head.big`); `.ork-race__head.bare` is the same b
 every race at every tier at 24 x 22 and 48 x 44, the six leaders in a row, and a window whose tabs wear the leaders by party (Game design
 the unicorn over knight members, Tech the shaman over peons, Art the dryad over elves, Release the lich over skeletons, the Orkmaster the
 crowned peon).
+
+**The faces** (0.27.0, Orkboard's decision §201): each leader race (shaman, dryad, imp, fairy, unicorn, lich), at every tier, and the Orkmaster's crown wear five faces besides
+the calm one, `focused`, `worried`, `no`, `pleased` and `asleep`: `races/<race>-<tier>-<mood>.png` and `@2x` (`races/shaman-elder-worried.png`, `races/peon-crown-no@2x.png`),
+the head's own grid with a few cells of its eyes' and mouth's rows edited (`faces` in `races/races.json`), 24 x 22 and 48 x 44 as every head. A face is a **state** the page
+chooses, never an idle motion; the unicorn's helm has no mouth; the members' races have none; the tier changes the gear and never the face. `<img class="ork-race__head" src="races/shaman-elder-worried.png"
+srcset="races/shaman-elder-worried@2x.png 2x" alt="">` draws one as it draws the calm head.
 
 ## The marks
 `marks/` holds the AI tools' marks (Claude, Codex, Antigravity, Cursor, Hermes, Pi, Pipeline) and the level chevrons (Novice,
@@ -165,6 +173,16 @@ shows `.face-1` to `.face-6` (pips in the muted ink), `.face-ok` (a tick in `--o
 and makes the up face glow (six steps, 2.4 s); `.is-rolling` tumbles the cube, a quarter turn each 120 ms in three poses, until the class is taken off (the page then sets the face it
 stops on); `.is-wobbling` rocks it once on its edges, 300 ms in three poses; `.is-landing` rolls the up face in from the back and drops the cube, 300 ms in three poses. On the table
 the page turns it with the lean token. Nothing moves under reduced motion.
+
+## The room, the chair and the door (0.27.0)
+**`--ork-room`** is the dark the leaders sit in (above). **`.ork-chair`** is a leader's seat at the table, drawn at a sign's weight in two greys (`chair/`, `chair/README.md`):
+`<span class="ork-chair" aria-hidden="true"></span>` is an occupied chair's back alone, 22 x 12 cells at 2 px (44 x 24), the head standing over it; `.big` 26 x 14 (52 x 28), the open
+leader's; `<span class="ork-chair is-empty" aria-hidden="true"></span>` the whole chair with nobody on it, 18 x 18 (36 x 36), `.small` 1 px a cell (18 x 18): a new party's place. The posts
+and the rail are `--ork-table-rim-hi` and the panel `--ork-table-rim` (an empty chair `--ork-frame` and `--ork-raised`); `.is-lit` (hovered or focused too) takes it to `--ork-edge`
+and `--ork-table-rim` and pulls it out from its foot (up 2 px, turned -4 degrees, on the base time and the spring), only inside `prefers-reduced-motion: no-preference`.
+**`.ork-door`** is Stop all's mark (`door/`, `door/README.md`): `<span class="ork-door" aria-hidden="true"></span>`, 14 x 20 cells at 2 px (28 x 40), `.small` 1 px; the frame
+in `--ork-table-rim-hi`, shut the leaf in `--ork-raised` with a knob in `--ork-ink-faint`; `.is-open` the opening in `--ork-ink-faint` at 0.7 and the leaf seen edge on. Shut and
+open are states, nothing swings. Both are masks (generated: `tools/build_chair.py`, `tools/build_door.py`), no colour of their own, no words inside.
 
 ## The icons
 `icons/icons.svg` is the sprite of the window's icons (`icons/README.md`). Fifteen are **orkUI's own** (0.15.0), drawn on the signs' 7 x 7 grid in solid pixels: `arrow-left`, `close` (×),
