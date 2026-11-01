@@ -4080,7 +4080,7 @@ itself, weighed by priority against risk; when they disagree, the card in the mi
 phrases, and you swipe it, as in Tinder on a phone, to the one whose arguments you take.* Today a goal with nothing to settle
 still waits for two presses (*Talk* on the route card, *Confirm and start* on the decision's), the leaders' verdicts are given
 before the person's answers and never again, a no is a card a leader and a doubt a line, a fork another face, and Product
-weighs only the goals its types name. So (this changes §118.1, §138.2, §147.3, §183.3 and §195.4):
+weighs only the goals its types name. So (this changes §118.1, §138.2, §147.3, §149.1, §183.3, §187.1, §187.3 and §195.4):
 1. **The + card's field is a card**: the text its body, its rune large at its top, given by rule; a press on the rune changes it.
 2. **A routed goal goes to Talk by itself** when nothing stops it (the keeper may run, the limits are not low, nothing is
    paid); else its route card as today. While the leaders talk, the goal's card in the Orkmaster's lane wears its rune's flame
@@ -4098,6 +4098,16 @@ weighs only the goals its types name. So (this changes §118.1, §138.2, §147.3
    stays); a drop can be undone for six seconds. A fork after the sections is a hearing too, its sides the fork's.
 7. **The leader's call is measured before it is changed**: whether parallel calls write the same prefix again and whether
    the map is read from the cache; a staggered start and the map in the system prompt only where the numbers say so.
-8. Spec 120, built by the cheaper model after the owner's yes on its mockup. A reply round between the leaders, a leader's
+8. **One card through a goal's life**: the + card is a card's back; pressed, it turns over into the card of the text; sent, it
+   turns back, its rune lit, and goes face down to the Orkmaster; talked over it lies face down (its own rune and name on its
+   back, never the + card's green), and **the seal's ring of runes is the wait**; at the wait's end it turns up and flies to
+   its lane. Hovered it only lifts; pressed it turns and shows its words, its route and what each leader said. A hearing
+   turns it up in the middle.
+9. **A card is handed from where it was played and played back there**: from the goal's card on the table, else the
+   leader's tab, else (the phone) the crown; the head that plays it gives one beat, the card flies face up with its asker's
+   head in its window and says *From <Leader>*; answered, it flies back into its origin; dropped, it crumbles where it lay.
+   Never for what came while the page was hidden, never while a pointer is down, three at most at once, nothing under
+   reduced motion. The turn, the slow seal and the give are drawn in orkUI first.
+10. Spec 120, built by the cheaper model after the owner's yes on its mockup. A reply round between the leaders, a leader's
    offers on its lens, Product's summary of the table and Art's sheet of assets are later.
 The owner's call.
