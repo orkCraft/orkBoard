@@ -297,9 +297,9 @@ Answer with one JSON object and nothing else:
                        second=[e["party"] for e, got in heard if got["more"]], defaults=[self._closed(c, 1) for c, _b, _k in closed],
                        keys={c["id"]: k for c, _b, k in pool if k}, done=not chosen)
             self.reweigh(slug, rec)
+            held = self._held(rec) if not chosen else bool(idea_objections.pending(rec))
             idea_questions.save_record(self.state_dir, slug, rec)
             ideas.save_state(self.state_dir, slug, error="", measure=self._tls.measured)
-            held = bool(idea_objections.pending(rec))
         ideas.add_turn(self.state_dir, slug, "keeper", "\n".join(f"{self._name(s['leader'])}: {s['stance']}\n  For: {s['for'] or '—'}\n  Against: {s['against'] or '—'}"
                                                                 for s in stances), "Talk")
         self._assumed(slug, [(e["party"], got["assumes"]) for e, got in heard])
@@ -358,10 +358,10 @@ Answer with one JSON object and nothing else:
             rec.update(round=2, waiting=[c for c, _b, _k in chosen], second=[], again=[], defaults=rec.get("defaults", []) + [self._closed(c, 2) for c, _b, _k in closed],
                        done=not chosen)
             rec["keys"] = {**rec.get("keys", {}), **{c["id"]: k for c, _b, k in chosen + closed if k}}
+            held = self._held(rec) if not chosen else bool(idea_objections.pending(rec))
             idea_questions.save_record(self.state_dir, slug, rec)
             if heard:
                 ideas.save_state(self.state_dir, slug, measure=self._and(slug, self._tls.measured))
-            held = bool(idea_objections.pending(rec))
         if not chosen and not held:
             after.append("decide")
 
@@ -433,14 +433,20 @@ Answer with one JSON object and nothing else:
                 pass
         self._finish(slug, "decide")
 
+    @staticmethod
+    def _held(rec: dict) -> bool:
+        """Whether the decision waits for the person's throw (spec 120 §3.4): a no unanswered, or a doubt alone, which opens the hearing (`rec["hearing"]`, set here) unless
+        the person has thrown it already."""
+        if not rec.get("thrown") and not idea_objections.pending(rec) and any(isinstance(s, dict) and s.get("verdict") == "doubt" and s.get("why") for s in rec.get("stances") or []):
+            rec["hearing"] = True
+        return bool(idea_objections.pending(rec)) or rec.get("hearing") is True
+
     def _finish(self, slug: str, way: str) -> None:
         with ideas.LOCK:
             rec = idea_questions.record(self.state_dir, slug)
             rec.update(done=True, waiting=[])
-            if way == "decide" and not idea_objections.pending(rec) and any(isinstance(s, dict) and s.get("verdict") == "doubt" and s.get("why") for s in rec.get("stances") or []):
-                rec["hearing"] = True                # a doubt alone is a hearing too (spec 120 §3.4): its throw goes on (core/idea_objection.py `throw`)
+            held = way == "decide" and self._held(rec)
             idea_questions.save_record(self.state_dir, slug, rec)
-            held = way == "decide" and (bool(idea_objections.pending(rec)) or rec.get("hearing") is True)
         if not held:                                 # a no unanswered holds the decision: its answer goes on (core/idea_objection.py)
             self._on(slug, way)
 

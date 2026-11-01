@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from orkboard.realm import event_log, goal_route, idea_questions, idea_target, ideas
+from orkboard.realm import idea_objections, event_log, goal_route, idea_questions, idea_target, ideas
 from orkboard.realm.idea_talk_parse import clean_judgement, clean_round
 from tests.test_idea_talk import TECH_NO, Model, _noes, _round_one, _row, _state, _talk, _wait, card, host, model, parties  # noqa: F401  (the fixtures and the helpers of Talk's tests)
 
@@ -18,7 +18,9 @@ def _events(host, name):
 
 
 def _objections(host, slug):
-    return [n for n in host.command("ideas.board")["needs_you"] if n["idea"] == slug and n["kind"] == "objection"]
+    """The leaders' noes still unanswered, while the goal's hearing row is in Needs you (spec 120 D: one row a goal, in place of a row a no)."""
+    rows = [n for n in host.command("ideas.board")["needs_you"] if n["idea"] == slug and n["kind"] == "hearing"]
+    return idea_objections.pending(_record(host, slug)) if rows else []
 
 
 def _record(host, slug):
@@ -241,17 +243,18 @@ def test_a_leader_whose_pick_was_overridden_is_heard_again_one_whose_pick_was_ta
 def test_nobody_is_heard_again_when_no_card_was_asked_or_the_person_left_every_one_to_the_leaders(host, parties, model, monkeypatch):
     _noes(model, parties, per=0, design={"verdict": "doubt", "why": "The contrast is low"})
     went = _decide_stub(host, monkeypatch)
-    slug = _talk(host, parties, ["design", "tech"])                               # a doubt, and nothing to ask
+    slug = _talk(host, parties, ["design", "tech"])                               # a doubt, and nothing to ask: a hearing (spec 120 §3.4), no decision yet
     for _ in range(300):
-        if went:
+        if host.command("ideas.hearing", {"idea": slug}):
             break
         time.sleep(0.01)
-    assert went == [slug] and model.steps("talk_verdict") == []
+    assert host.command("ideas.hearing", {"idea": slug}) and went == [] and model.steps("talk_verdict") == []
     _noes(model, parties, per=1, design={"verdict": "doubt", "why": "The contrast is low"})
     other = _talk(host, parties, ["design", "tech"], "add a light mode option")
     host.command("ideas.talk_answer", {"idea": other, "answers": [], "decide": True})                  # the leaders' own picks tell them nothing new
     _wait(host, other)
-    assert model.steps("talk_verdict") == [] and _gone(went, 2) == [slug, other] and _stance(host, other, parties["design"])["verdict"] == "doubt"
+    assert model.steps("talk_verdict") == [] and went == [] and _stance(host, other, parties["design"])["verdict"] == "doubt"
+    assert host.command("ideas.hearing", {"idea": other})
 
 
 def test_a_leader_in_the_second_round_and_heard_again_is_heard_once_the_rounds_prompt_asking_its_verdict_too(host, parties, model, monkeypatch):

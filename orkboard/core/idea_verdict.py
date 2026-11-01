@@ -215,8 +215,8 @@ Answer with one JSON object and nothing else:
         with ideas.LOCK:
             rec = idea_questions.record(self.state_dir, slug)
             rec.update(done=True, waiting=[], again=[])
+            held = self._held(rec)                 # a no unanswered, or a doubt alone: the hearing (core/idea_talk.py `_held`)
             idea_questions.save_record(self.state_dir, slug, rec)
-            held = bool(idea_objections.pending(rec))
         if not held:
             after.append("decide")
 
