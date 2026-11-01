@@ -75,6 +75,7 @@ from orkboard.gui.ideas_release import ReleaseMixin
 from orkboard.gui.ideas_review import ReviewMixin
 from orkboard.gui.ideas_route import RouteMixin, route_commands
 from orkboard.gui.ideas_running import RunningMixin
+from orkboard.gui.ideas_sketch import SketchMixin, sketch_commands
 from orkboard.gui.ideas_talk import TalkMixin, talk_commands
 from orkboard.gui.ideas_project_q import ProjectQMixin as ProjectQFace, project_q_commands
 from orkboard.gui.ideas_ask import AskMixin as AskFace, ask_commands
@@ -128,7 +129,7 @@ class _Hop:
         self.host.call(lambda: self.host.publish(topic, **data))
 
 
-class Ideas(PlayMarkMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, ConcernsMixin, MapsMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, AskFace, DecideMixin, LensMixin, LimitsMixin, ManaMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PickablesMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
+class Ideas(SketchMixin, PlayMarkMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, ConcernsMixin, MapsMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, AskFace, DecideMixin, LensMixin, LimitsMixin, ManaMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PickablesMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
             TypesMixin, CanvasesMixin, AssetsMixin, SystemMixin, BoardMixin):
     def __init__(self, host) -> None:
         """`host`: what the Board needs of whoever runs it, a `gui/board_host.py` `BoardHost` (spec 37 §4): Orkline's
@@ -379,7 +380,7 @@ class Ideas(PlayMarkMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, Conc
                 "state": st["state"], "size": page.get("size") if page.get("size") in ideas.SIZES else "",
                 "sections": [{"name": n, "thesis": ideas.thesis(page.section(n)), "text": page.section(n)}
                              for n in names],
-                "talk": ideas.talk(self.state_dir, slug),
+                "talk": ideas.talk(self.state_dir, slug), "sketching": self.sketching(slug),      # who is sketching it now (spec 121 §2.2)
                 "plan": {**self._with_heads(plan), "missing": self.plan_missing(slug, plan),         # read now (spec 52 §2.6)
                          "todo_lines": board_map.todo_lines(plan)} if plan else plan,                 # *Before <task>: <to-do>* (spec 87 §4.2)
                 "busy": bool(self.keeper.busy(slug)) or st["state"] in ("reading", "planning"), "repeat": recurring.every_of(root, slug),        # a recurring goal (spec 92 §2)
@@ -682,6 +683,7 @@ class Ideas(PlayMarkMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, Conc
                       "ideas.release_out": self.release_out, "ideas.release_candidates": self.release_candidates, "ideas.shown": self.shown,
                       "ideas.party_for": self.party_for, "ideas.kind_for": self.kind_for, "ideas.collide_answer": self.collide_answer,
                       "ideas.repeat": self.repeat, "ideas.team": self.team, "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, "ideas.party_presets": self.party_presets, **canvas_commands(self), **asset_commands(self), **system_commands(self), **usage_commands(self), **mana_commands(self), **route_commands(self), **talk_commands(self), **decide_commands(self), **stage_commands(self), **project_q_commands(self), **ask_commands(self), **facts_commands(self), **loop_commands(self), **maps_commands(self), **screens_commands(self), **pickables_commands(self), **concerns_commands(self), **tree_commands(self), **hypotheses_commands(self), **gate_commands(self), **play_mark_commands(self), **hearing_commands(self)})
+        table.update(sketch_commands(self))                # spec 121 A: *Sketch it first*, *No sketch* (gui/ideas_sketch.py)
         table["ideas.night"] = self.night                  # spec 121 D: what the night did, for the morning's card (gui/ideas_recap.py)
         return {name: guarded(name, fn) for name, fn in table.items()}
 

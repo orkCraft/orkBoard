@@ -27,7 +27,7 @@ GOAL_CHARS = 200                  # the goal the answer suggests
 BOARD_CHARS = 3000                # the Board as text, at most
 PARTIES_CHARS = 1000              # of BOARD_CHARS, the parties' lines at most
 TITLE_CHARS = 60
-PHASES = {"routed": "Talk", "talk": "Talk", "decided": "Spec", "sections": "Spec", "ready": "Work", "planning": "Work", "plan": "Work", "working": "Work",
+PHASES = {"routed": "Talk", "talk": "Talk", "decided": "Spec", "sketch": "Spec", "sections": "Spec", "ready": "Work", "planning": "Work", "plan": "Work", "working": "Work",
           "failed": "Work, failed", "done": "Done"}
 
 

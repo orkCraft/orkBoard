@@ -8,6 +8,7 @@
     idea_pick.current(state_dir, slug, task) # the pick of the task's round (pick.json), None before one
     idea_pick.answer(state_dir, slug, pick, picked="B", note="…")      # pick.json gains what the person said
     idea_pick.map_of(task)                   # {"n", "media", "round"} while the task is `picking`, else None
+    idea_pick.leader_task(n, kind, ask)      # a leader's sketch as a task (spec 121 §2.4): {"id": "sketch", "leader": True, "pick": {…, "target": ""}}, stored with `store(…, by="leader")`
 
 The task writes each variant as a file into `.orkcraft-pick/` at its worktree's root and a manifest `.orkcraft-pick.json`:
 `{"variants": [{"name": "<24 characters at most>", "file": "<its name in the folder>", "why": "<one line>"}]}`. Nothing of it
@@ -15,6 +16,10 @@ is committed (as a check's findings file, realm/idea_checks.py): it is read, mov
 with a `pick.json`, and the worktree is put back. A file's type is sniffed from its bytes (realm/media_sniff.py), never from its
 name: that a text is Markdown is the one thing the name says. A variant is stored as `<key>.<ext>` (`a.png`), so a name the task
 chose can never be a path, a dot-file or a surprise in a URL.
+
+**A sketch** (docs/specs/121-the-day-the-morning-and-the-night.md §2.4) is a pick a party's leader makes before the spec, as the task `sketch` (`leader_task`): its variants are the kinds above and **pages**
+(`page`: one self-contained HTML page, `text/html`, at most `PAGE_KB` KB, sniffed by its bytes), it has no target (it is never written into the project: it is thrown away with the goal's state) and
+its rounds are `sketch-r<round>`. The plan's tasks never make pages (`clean_ask` takes `page` only from a leader).
 
 No face, no model. The route that serves the files is gui/media.py.
 """
@@ -30,6 +35,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from orkboard.realm import ideas, media_sniff
+from orkboard.realm.sketches import PAGE_KB
 
 PICK_DIR = ".orkcraft-pick"                  # at the worktree's root: the variants
 PICK_FILE = ".orkcraft-pick.json"            # … and their manifest
@@ -42,7 +48,7 @@ PICK_MAX = 120 * MB                          # all the files of one pick
 VARIANT_KEYS = ("key", "name", "file", "mime", "bytes", "w", "h", "seconds", "why")
 EXT = {"image/png": "png", "image/jpeg": "jpg", "image/gif": "gif", "image/webp": "webp", "image/svg+xml": "svg",
        "audio/mpeg": "mp3", "audio/ogg": "ogg", "audio/wav": "wav", "audio/mp4": "m4a", "video/mp4": "mp4",
-       "video/webm": "webm", "text/plain": "txt", "text/markdown": "md"}
+       "video/webm": "webm", "text/plain": "txt", "text/markdown": "md", "text/html": "html"}
 MARKDOWN = (".md", ".markdown")
 
 
@@ -62,7 +68,9 @@ KINDS: dict[str, Kind] = {k.key: k for k in (
     Kind("audio", "sound", "sounds", ("audio/mpeg", "audio/ogg", "audio/wav", "audio/mp4"), 10 * MB, "MP3, OGG, WAV or M4A"),
     Kind("video", "clip", "clips", ("video/mp4", "video/webm"), 50 * MB, "MP4 or WEBM"),
     Kind("text", "text", "texts", ("text/plain", "text/markdown"), 4 * KB, "UTF-8 text or Markdown"),
+    Kind("page", "page", "pages", ("text/html",), PAGE_KB * KB, "one self-contained HTML page"),       # a leader's sketch only (spec 121 §2.4)
 )}
+LEADER_KINDS = ("page",)                       # …the kinds a plan's task never asks for
 
 
 def kind_of(mime: str) -> Kind | None:
@@ -106,22 +114,27 @@ def clean_target(value: object) -> str:
     return text
 
 
-def clean_ask(raw: object) -> dict | None:
+def clean_ask(raw: object, leader: bool = False) -> dict | None:
     """A plan's task `pick` as plan.json keeps it, `{"n": 2–6, "kind", "ask": one line, "target"}`; None for a missing one or one
     that is not (the task is then an ordinary task). `look: true` (spec 85 §2, a screen's look, made by code): the target has no
-    extension, the picked file keeps its own."""
+    extension, the picked file keeps its own. `leader` (a sketch, spec 121 §2.4): it may be a page, and it has no target (`""`)."""
     if not isinstance(raw, dict):
         return None
     n, kind = raw.get("n"), raw.get("kind")
-    ask, target = " ".join(str(raw.get("ask") or "").split())[:ASK_MAX], clean_target(raw.get("target"))
-    if isinstance(n, bool) or not isinstance(n, int) or not N_MIN <= n <= N_MAX or kind not in KINDS or not ask or not target:
+    ask, target = " ".join(str(raw.get("ask") or "").split())[:ASK_MAX], "" if leader else clean_target(raw.get("target"))
+    if isinstance(n, bool) or not isinstance(n, int) or not N_MIN <= n <= N_MAX or kind not in KINDS or not ask or (not target and not leader) or (kind in LEADER_KINDS and not leader):
         return None
-    return {"n": n, "kind": kind, "ask": ask, "target": target, **({"look": True} if raw.get("look") is True else {})}
+    return {"n": n, "kind": kind, "ask": ask, "target": target, **({"look": True} if raw.get("look") is True and not leader else {})}
 
 
 def ask_of(task: dict) -> dict | None:
     """The task's `pick` as it was kept (a task that makes variants), else None."""
-    return clean_ask(task.get("pick")) if isinstance(task, dict) else None
+    return clean_ask(task.get("pick"), leader=task.get("leader") is True) if isinstance(task, dict) else None
+
+
+def leader_task(n: int, kind: str, ask: str) -> dict:
+    """A party's leader's sketch as a task (spec 121 §2.4): `{"id": "sketch", "leader": True, "pick": {n, kind, ask, target: ""}}`, which `read` and `store` take as any task's."""
+    return {"id": "sketch", "leader": True, "title": "Sketch", "pick": {"n": n, "kind": kind, "ask": ask, "target": ""}}
 
 
 def picked_words(picked: dict) -> str:
@@ -290,6 +303,14 @@ def answer(state_dir: Path, slug: str, pick: dict, picked: str | None, note: str
     """The pick with what the person said: `picked` (a key, or null for none of them), `note`, and `at` the time of the answer
     (`asked_at` keeps the time it was asked)."""
     data = {**pick, "asked_at": pick.get("at"), "picked": picked, "note": note, "at": now or _now()}
+    _write(folder_of(state_dir, slug, str(pick["id"])) / "pick.json", data)
+    return data
+
+
+def reopen(state_dir: Path, slug: str, pick: dict) -> dict:
+    """A pick answered with *none of them* asked again, open for the person once more (a new round of a sketch could not be made, spec 121 §2.5): its answer leaves `pick.json`, `at` is the time it was asked."""
+    data = {k: v for k, v in pick.items() if k not in ("picked", "note", "asked_at")}
+    data["at"] = pick.get("asked_at") or pick.get("at")
     _write(folder_of(state_dir, slug, str(pick["id"])) / "pick.json", data)
     return data
 

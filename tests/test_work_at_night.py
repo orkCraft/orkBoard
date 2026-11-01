@@ -249,7 +249,8 @@ def answering(monkeypatch, runner):
 
 
 def raw_goal(host, text: str, goal: str) -> str:
-    """A goal that has not been drafted yet: what a sketch's pick leaves (its sections and plan come after the answer)."""
+    """A goal that has not been drafted yet: what a pick leaves (its sections and plan come after the answer). The pick is a task `k1`'s, answered by the runner stubbed here; a goal's own sketch
+    (the task `sketch`, spec 121 A) is answered by the keeper (tests/test_idea_sketch.py `test_pick_and_build_now_keeps_the_press_with_the_goal_and_a_refused_answer_builds_nothing`)."""
     slug = host.command("ideas.add", {"text": text, "track": goal})["slug"]
     ideas.save_state(host.ideas.state_dir, slug, state="raw", queue="now")
     return slug
@@ -264,9 +265,9 @@ def test_pick_and_build_now_passes_the_plan_at_once_when_it_is_made(host, model,
     on(host)
     g = _goal(host)
     plain, now = raw_goal(host, "plain pick", g), raw_goal(host, "pick and build now", g)
-    host.command("ideas.pick", {"slug": plain, "task": "sketch", "key": "A"})
-    host.command("ideas.pick", {"slug": now, "task": "sketch", "key": "B", "note": "bigger", "now": True, "device": "phone"})
-    assert answering.answers == [(plain, "sketch", "A", "", "desktop"), (now, "sketch", "B", "bigger", "phone")]
+    host.command("ideas.pick", {"slug": plain, "task": "k1", "key": "A"})
+    host.command("ideas.pick", {"slug": now, "task": "k1", "key": "B", "note": "bigger", "now": True, "device": "phone"})
+    assert answering.answers == [(plain, "k1", "A", "", "desktop"), (now, "k1", "B", "bigger", "phone")]
     build(host, plain)
     build(host, now)
     assert answering.started == [now] and plan_of(host, plain)["held_for_night"] is True      # the plain pick's plan waits for the night
@@ -280,7 +281,7 @@ def test_pick_and_build_now_leaves_it_to_the_person_when_autostart_says_wait(hos
     on(host)
     model.answers["draft"] = {**model.answers["draft"], "risk": "medium"}
     slug = raw_goal(host, "risky", _goal(host))
-    host.command("ideas.pick", {"slug": slug, "task": "sketch", "key": "A", "now": True})
+    host.command("ideas.pick", {"slug": slug, "task": "k1", "key": "A", "now": True})
     build(host, slug)
     assert answering.started == [] and plan_of(host, slug).get("passed_at") is None and not plan_of(host, slug).get("held_for_night")
     assert _events(host, "built_now") == []
@@ -292,15 +293,15 @@ def test_now_is_kept_only_with_a_picked_variant_and_a_refused_answer_builds_noth
     on(host)
     g = _goal(host)
     asked_again = raw_goal(host, "new ones asked", g)
-    host.command("ideas.pick", {"slug": asked_again, "task": "sketch", "key": None, "note": "other", "now": True})
+    host.command("ideas.pick", {"slug": asked_again, "task": "k1", "key": None, "note": "other", "now": True})
     assert host.ideas._build_now_of(asked_again) is None                                        # none picked: nothing to build yet
     refused = raw_goal(host, "refused", g)
     answering.refuse = True
     with pytest.raises(CommandError):
-        host.command("ideas.pick", {"slug": refused, "task": "sketch", "key": "A", "now": True})
+        host.command("ideas.pick", {"slug": refused, "task": "k1", "key": "A", "now": True})
     assert host.ideas._build_now_of(refused) is None
     with pytest.raises(CommandError, match="^now is on or off$"):
-        host.command("ideas.pick", {"slug": refused, "task": "sketch", "key": "A", "now": "yes"})
+        host.command("ideas.pick", {"slug": refused, "task": "k1", "key": "A", "now": "yes"})
     # a task's pick in the work of a plan passed already keeps nothing
     answering.refuse = False
     running = raw_goal(host, "running", g)
@@ -312,7 +313,7 @@ def test_now_is_kept_only_with_a_picked_variant_and_a_refused_answer_builds_noth
 
 def test_with_the_setting_off_pick_and_build_now_changes_nothing(host, model, answering, night):
     slug = raw_goal(host, "off", _goal(host))
-    host.command("ideas.pick", {"slug": slug, "task": "sketch", "key": "A", "now": True})
+    host.command("ideas.pick", {"slug": slug, "task": "k1", "key": "A", "now": True})
     build(host, slug)
     assert answering.started == [slug] and plan_of(host, slug)["passed_by"] == "auto"
     assert [e["from"] for e in _events(host, "built_now")] == ["sketch"]                      # (it started at once anyway: the event still says what the person pressed)
