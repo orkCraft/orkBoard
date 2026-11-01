@@ -15,6 +15,7 @@ import { uprightNow } from "../frame/upright.js";
 import { partiesNow } from "../table/data.js";
 import { partiesOf, stacksOf, stopByKey, stopsOfProject } from "./data.js";
 import { Mana } from "./mana.js";
+import { nightStops, useNight } from "./nightcard.js";             // the morning's card: the first of the hand's stops once the night did something (spec 121 §7.2)
 import { PlayDie } from "./playdie.js";
 import { Field, Middle, PlusCard, closeField, openField } from "./pluscard.js";
 import { ResultFace } from "./resultface.js";
@@ -64,7 +65,8 @@ function useKeys(root) {
 export function Hand() {
   const root = useRef(), map = mapData.value, needs = board.value?.needs_you || [], open = tab.value;
   useKeys(root);
-  const stops = stopsOfProject(map, needs, open), stacks = stacksOf(stops), key = stopKeyOf(lifted.value), s = stopByKey(stops, key);
+  useNight();
+  const stops = [...nightStops(), ...stopsOfProject(map, needs, open)], stacks = stacksOf(stops), key = stopKeyOf(lifted.value), s = stopByKey(stops, key);
   useEffect(() => { if (key && !s && map) lower(); }, [key, !s]);                      // the stop was answered: the card goes with it
   useEffect(() => { if (key) fieldOpen.value = false; }, [key]);
   if (!map) return null;

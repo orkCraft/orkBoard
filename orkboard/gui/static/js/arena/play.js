@@ -48,16 +48,27 @@ const POLL_MS = 1000, KEEP_MS = 60_000, FADE_MS = 450, TICK_MS = 500;           
 const FLY_MS = 420, HOLD_OK_MS = 600, HOLD_NO_MS = 700, LEAVE_OK_MS = 300, LEAVE_NO_MS = 360, INTRO_LOGO_MS = 1800, INTRO_NAME_MS = 1000;      // the throw: the flight; landed (the landing and a moment); leaving; the intro (the name shows after the logo's blinks)
 
 /** The build as the face shows it: `stopped`, `starting`, `playing` ({url, commit, short, dev}) or `failed` ({error, none}); what `ideas.play` answers, or `reading` before the first answer. */
-function useBuild() {
+function useBuild(at = {}) {
   const [b, setB] = useState({ state: "reading" }), live = useRef(true);
-  const take = (r) => { if (live.current) setB(r && r.state ? { ...r, at: Date.now() } : { state: "failed", error: r?.error || "did not open" }); };
+  const where = { ...(at.path ? { path: at.path } : {}), ...(at.idea ? { idea: at.idea } : {}) };                  // opened on a screen (spec 121 §5.3): its page first, the goal whose screen it is
+  const take = (r, peeked = false) => {
+    if (!live.current) return;
+    setB((was) => (r && r.state
+      ? { ...r, ...(peeked && at.path && was.state === "playing" && r.state === "playing" && was.url && was.commit === r.commit ? { url: was.url } : {}), at: Date.now() }      // a peek names the preview's own page: the frame at the path stays where it is
+      : { state: "failed", error: r?.error || "did not open" }));
+  };
   const fail = (e) => { if (live.current) setB({ state: "failed", error: e.message || "did not open" }); };
-  const ask = (args) => command("ideas.play", args, true).then(take).catch(fail);
-  const begin = (fresh) => { setB({ state: "starting", commit: "", short: "", stage: "worktree", since: 0, at: Date.now() }); ask(fresh ? { fresh: true } : {}); };
+  const ask = (args) => command("ideas.play", args, true).then((r) => take(r, args.peek === true)).catch(fail);
+  const begin = (fresh) => { setB({ state: "starting", commit: "", short: "", stage: "worktree", since: 0, at: Date.now() }); ask({ ...(fresh ? { fresh: true } : {}), ...where }); };
   useEffect(() => {                                   // the die was pressed: a build that is not running is started at once (spec 112 §3.4)
     live.current = true;
     if (asleepNow()) { setB({ state: "failed", none: true, error: "no preview" }); return () => { live.current = false; }; }      // the project has no preview (the die sleeps, spec 113 §3): *Nothing here yet*, nothing asked, nothing thrown
-    command("ideas.play", { peek: true }, true).then((r) => (r?.state === "stopped" && live.current ? begin(false) : take(r))).catch(fail);
+    command("ideas.play", { peek: true }, true).then((r) => {
+      if (!live.current) return;
+      if (r?.state === "stopped") begin(false);
+      else if (at.path && r?.state === "playing") ask(where);                       // a build playing already: its page at the path, no throw
+      else take(r);
+    }).catch(fail);
     return () => { live.current = false; };
   }, []);
   useEffect(() => {
@@ -207,8 +218,8 @@ function Playing({ b, open, stop, full, stage, story, name, done }) {
   </div>`;
 }
 
-export function Play() {
-  const { b, open, stop } = useBuild(), name = projectName(), stage = useRef(null), before = useRef("reading");
+export function Play({ at = {} }) {
+  const { b, open, stop } = useBuild(at), name = projectName(), stage = useRef(null), before = useRef("reading");
   const full = () => { try { stage.current?.requestFullscreen?.()?.catch?.(() => {}); } catch { /* the browser would not */ } };
   const [ph, setPh] = useState(""), motion = !reduced(), starting = b.state === "starting";
   const end = b.state === "playing" ? "ok" : b.state === "failed" ? "no" : "";                 // what the start came to, once the roll may stop on it

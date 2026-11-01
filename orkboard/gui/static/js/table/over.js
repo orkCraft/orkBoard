@@ -129,8 +129,8 @@ function PartyFace({ props }) {
 const faces = {
   file: FileFace, diff: DiffFace, log: (p) => html`<${TaskFace} ...${p} log=${true} />`, task: TaskFace, role: RoleFace,
   settings: () => html`<${SettingsPlace} />`, projects: ProjectsFace, files: FilesFace, party: PartyFace,
-  play: () => html`<${Play} />`, limits: LimitsFace, pair: () => html`<${PairPlace} />`, week: () => html`<${WeekView} />`,
-};
+  play: ({ props }) => html`<${Play} key=${props?.path || ""} at=${props || {}} />`, limits: LimitsFace, pair: () => html`<${PairPlace} />`, week: () => html`<${WeekView} />`,
+};                                                                                     // `play` opened on a screen (the morning's card, spec 121 §5.3) has `{path, idea}`: its first page is asked at the path
 for (const [kind, Face] of Object.entries(faces)) drawn(kind, Face);
 
 /** Whether a kind is a form in a `Place` (frame/place.js): it has its own padding and pins its buttons at its foot. */
