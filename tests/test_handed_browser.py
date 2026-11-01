@@ -218,7 +218,7 @@ def test_the_head_that_gives_is_the_leaders_under_the_card_else_the_tab_head_els
     try:
         talking(host)
         back_of(pg, "dark").wait_for(timeout=WAIT_MS)
-        head = "([who]) => import('/static/js/hand/motion.js').then((m) => { const h = m.headAt(m.fromWhere(who), who); return h ? h.closest('.table-back-head, .table-tab, .up-crown')?.className + ' ' + (h.closest('[data-party],[data-tab]')?.dataset.party || h.closest('[data-party],[data-tab]')?.dataset.tab) : null; })"
+        head = "([who]) => import('/static/js/hand/motion.js').then((m) => { const h = m.headAt(m.fromWhere(who), who); return h ? h.closest('.table-back-head, .table-tab, .table-tabcell, .up-crown')?.className + ' ' + (h.closest('[data-party],[data-tab]')?.dataset.party || h.closest('[data-party],[data-tab]')?.dataset.tab) : null; })"
         assert pg.evaluate(head, [{"goal": "dark", "party": "design"}]) == "table-back-head design", "the head under the face-down card"
         assert pg.evaluate(head, [{"goal": "gone", "party": "tech"}]).endswith("tech") and "table-tab" in pg.evaluate(head, [{"goal": "gone", "party": "tech"}]), "the leader's tab head"
         assert "table-tab" in pg.evaluate(head, [{"ork": True}]), "the Orkmaster's"

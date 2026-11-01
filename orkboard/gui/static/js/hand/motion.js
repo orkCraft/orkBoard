@@ -64,7 +64,8 @@ export function headAt(where, { party = "", ork = false } = {}) {
   if (where.at === "crown" || uprightNow.value) return head(document.querySelector(".up-crown"));
   const slug = ork ? ORKMASTER : party;
   const under = !ork && party && where.at === "goal" ? head(where.el.closest(".table-cardwrap")?.querySelector(`.table-back-head[data-party="${CSS.escape(party)}"]`)) : null;
-  return under || (slug ? head([...document.querySelectorAll(`.frame-table .table-tab[data-tab="${CSS.escape(slug)}"]`)].find((el) => boxIn(el))) : null);
+  const tab = slug ? [...document.querySelectorAll(`.frame-table .table-tab[data-tab="${CSS.escape(slug)}"]`)].find((el) => boxIn(el)) : null;
+  return under || (tab ? head(tab) || head(tab.closest(".table-tabcell")) : null);            // the open tab's head stands beside its button, in its cell (spec 123 §7.2)
 }
 
 /** One beat on a head: orkUI's `.ork-gives` is put on and taken off at its `animationend` named `ork-give` (nothing plays under reduced motion; orkUI's rule says so too, and the class is not put on). */
