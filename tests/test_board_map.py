@@ -698,7 +698,7 @@ def test_the_decision_and_fork_rows_are_the_wording_to_confirm_and_the_first_dis
     """Spec 99 §6–§7: `decision` {number, title, text, confirmed, error} on a goal `decided`; `fork` {id, about, sides} on a goal at `sections` while one is open."""
     root, state = _board(host)
     g = _goal(root, "Way")
-    assert board_map.NEEDS[:7] == ("route", "start", "talk", "objection", "cause", "decision", "fork")      # a leader's no between Talk and the decision (spec 108 §4.3)
+    assert board_map.NEEDS[:7] == ("route", "start", "talk", "hearing", "cause", "decision", "fork")      # a goal's hearing (once a leader's no, spec 108 §4.3) between Talk and the decision (spec 120 §4.4)
     route = [{"party": g, "leader": "taskmaster"}]
     a = _idea(root, state, g, "Decided", "decided", route=route)
     b = _idea(root, state, g, "Forked", "sections", route=route)
@@ -715,6 +715,7 @@ def test_the_decision_and_fork_rows_are_the_wording_to_confirm_and_the_first_dis
     assert set(rows) == {a, b} and rows[a]["kind"] == "decision" and rows[b]["kind"] == "fork"
     assert (rows[a]["number"], rows[a]["title"], rows[a]["text"], rows[a]["confirmed"], rows[a]["error"]) == (12, "Dark mode", "Why: x.\n\n1. One", False, "")
     assert (rows[b]["id"], rows[b]["about"], rows[b]["sides"], rows[b]["text"]) == ("f2", "Waves", sides, "Waves")                  # the first fork open, in the order the join found them
+    assert [(x["dir"], x["kind"], x["party"], x["outcome"]) for x in rows[b]["hearing"]["sides"]] == [("right", "side", g, "Ten waves"), ("left", "side", "art", "Six waves")]      # a fork's lifted face is a hearing (spec 120 §4.2)
     ideas.save_state(state, a, error="The sections failed: x")
     spec_sections.save_record(state, a, {"decision": {"title": "Dark mode", "text": "t", "number": 12, "confirmed": True}})
     row = next(r for r in host.command("ideas.board")["needs_you"] if r["idea"] == a and r["kind"] == "decision")
@@ -730,7 +731,7 @@ def test_the_talk_and_cause_rows_are_the_stances_with_the_cards_and_the_guess_wi
     """Spec 99 §5.3–§5.4: `talk` {round, stances, questions: [card]} and `cause` {cause, where, q: [card]} sit on a goal at Talk while something waits; none while the leaders are heard."""
     root, state = _board(host)
     g = _goal(root, "Way")
-    assert board_map.NEEDS[:5] == ("route", "start", "talk", "objection", "cause")
+    assert board_map.NEEDS[:5] == ("route", "start", "talk", "hearing", "cause")
     route = [{"party": g, "leader": "taskmaster"}]
     stances = [{"party": g, "leader": "taskmaster", "stance": "For it", "for": "Players want it", "against": "Costs a week"}]
     a = _idea(root, state, g, "A talk", "talk", route=route)
