@@ -52,6 +52,7 @@ _BOX = re.compile(r"^\s*(?:[-*+]|\d+\.)\s+\[([ xX\-])\]", re.M)
 _RELEASE = re.compile(r"^##\s+\[?v?(\d[^\]\s]*)\]?(?:\([^)]*\))?\s+[-–—]\s+(\d{4}-\d{2}-\d{2})\b")
 _ENTRY = re.compile(r"^- (\d{4}-\d{2}-\d{2}) · ([a-z_]+) · (.+?)\s*$")
 _META = re.compile(r"^<!--\s*(.*?)\s*-->\s*$")
+_INLINE = re.compile(r"\s*<!--\s*(id=.*?)\s*-->\s*$")
 _KEY = re.compile(r"(?:^|\s)(id|idea|on|ref)=")
 
 
@@ -238,9 +239,13 @@ def parse_export(text: str, path: str = "") -> dict | None:
         m = _ENTRY.match(line)
         if not m:
             continue
-        got = _meta(c.group(1)) if (c := _META.match(lines[i + 1].strip() if i + 1 < len(lines) else "")) else {}
-        key = got.get("id") or hashlib.sha1(f"{scope}|{m.group(1)}|{m.group(2)}|{m.group(3)}".encode()).hexdigest()[:12]
-        entries.append({"at": m.group(1), "kind": m.group(2), "text": m.group(3), "idea": got.get("idea", ""), "id": got.get("id", ""),
+        said, inline = m.group(3), _INLINE.search(m.group(3))                 # the writer's comment on the entry's own line (spec 126 C), or on the next
+        if inline:
+            said, got = said[:inline.start()].rstrip(), _meta(inline.group(1))
+        else:
+            got = _meta(c.group(1)) if (c := _META.match(lines[i + 1].strip() if i + 1 < len(lines) else "")) else {}
+        key = got.get("id") or hashlib.sha1(f"{scope}|{m.group(1)}|{m.group(2)}|{said}".encode()).hexdigest()[:12]
+        entries.append({"at": m.group(1), "kind": m.group(2), "text": said, "idea": got.get("idea", ""), "id": got.get("id", ""),
                         "on": [p.strip() for p in got.get("on", "").split(",") if p.strip()], "ref": key})
     return {"scope": scope.strip(), "path": path, "entries": entries}
 
@@ -375,7 +380,10 @@ def plan(root: Path, state_dir: Path, scan_: dict | None = None, board: Path | N
         known[scope].add(ref)
         out.append({"bucket": bucket, "scope": scope, "kind": kind, "text": text, "at": at, "idea": idea, "on": list(on), "ref": ref})
 
+    boards = {e["ref"] for e in journals.read(state_dir, journals.PROJECT, struck=True) if e["kind"] == "decision" and e["ref"].isdigit()}
     for rec in got.get("decisions", []):
+        if rec.get("format") != "log" and ("ork-goal" in (rec.get("extra") or {}) or str(rec.get("number") or "") in boards):
+            continue                     # a record the Board wrote into the project's ADR folder (spec 126 D): its journal has it under its number already
         ref = f"{rec['path']}#{rec['number']}" if rec.get("format") == "log" else rec["path"]
         line, at = decision_line(rec), _day_of(rec.get("date"))
         want("decisions", journals.PROJECT, "decision", line, ref, at)

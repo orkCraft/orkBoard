@@ -138,3 +138,17 @@ touched (each file it writes says so in its front matter or first line); never i
 - D: `found` finds a MADR folder; a decision written into a MADR folder and into a Nygard folder as the next file in its
   format, read back by `doc_formats.records`; `context`/`headings` from a folder; the one-file log unchanged.
 - The critical tests and the test files of every module touched.
+
+## As built (1 November)
+
+- **B** (`realm/read_in.py`): `scan` returns a sixth key, `journals` (an Orkboard export's); a marker `<state>/read_in.json` keeps the
+  first start's read-in to once; the brief's sources follow the table's order; an ADR folder's decisions default to Tech, the Board's
+  own file to no craft. **A record the Board wrote into the project's ADR folder (D) is never read in again**: one with `ork-goal`, or
+  whose number is already a decision in the project's journal, is skipped (the review's fix).
+- **C** (`realm/write_out.py`, `realm/write_out_bank.py`): an entry's comment stands on its own line's end
+  (`- 2026-10-30 · overruled · text <!-- id=… idea=… on=a,b ref=… -->`), which B's reader takes on the line or the next (the
+  review's fix, `tests/test_read_in_write_out.py`); the project's journal is `orkboard-journal: _project`; `to` is refused when it is
+  or holds one of the project's ADR folders; a file in `to` Orkboard did not write is left and named in `skipped`.
+- **D**: `BoardTree.add_file(folder, make, message)` (`realm/idea_git.py`) makes the next record under the repository's lock with an
+  exclusive create and commits it with the Board's pages; a decision written from the Board's one file keeps its date as written
+  (the one file had no year: spec 127 A).
