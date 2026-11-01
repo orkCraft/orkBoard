@@ -690,13 +690,22 @@ def test_a_no_answered_before_the_questions_waits_for_them_and_a_goal_with_no_qu
     assert went == [slug, other]
 
 
-def test_a_doubt_is_no_row_and_is_said_on_the_decision_alone(host, parties, model):
+def test_a_doubt_is_a_hearing_and_is_said_on_the_decision(host, parties, model):
     _noes(model, parties, design={"verdict": "doubt", "why": "The contrast is low"})
     model.said[("decide", "")] = DECIDED
+    host.ideas.keeper.sections = lambda s: None
     slug = _talk(host, parties, ["design", "tech"])
-    _until_state(host, slug, "decided")
-    assert _objections(host, slug) == [] and "Doubt from" in model.steps("decide")[0]["prompt"] and "The contrast is low" in model.steps("decide")[0]["prompt"]
-    assert f"Doubt from {host.ideas.keeper._name('product-designer')}: The contrast is low" in _row(host, slug, "decision")["text"]               # the entry says it, even when the Orkmaster did not
+    for _ in range(500):
+        if host.command("ideas.hearing", {"idea": slug}):
+            break
+        time.sleep(0.01)
+    assert len(_objections(host, slug)) == 1 and model.steps("decide") == []                                        # a doubt alone holds the decision: the hearing's row (spec 120 §3.4)
+    host.command("ideas.throw", {"idea": slug, "moment": "talk", "dir": "right"})
+    for _ in range(500):
+        if model.steps("decide"):
+            break
+        time.sleep(0.01)
+    assert "Doubt from" in model.steps("decide")[0]["prompt"] and "The contrast is low" in model.steps("decide")[0]["prompt"]
 
 
 def test_drop_the_goal_drops_it(host, parties, model):

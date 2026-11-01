@@ -196,6 +196,15 @@ def _decide_stub(host, monkeypatch):
     return went
 
 
+def _hearing(host, slug):
+    """The goal's hearing, once Talk has opened it (spec 120 §3.4: a doubt alone is a hearing too)."""
+    for _ in range(500):
+        if got := host.command("ideas.hearing", {"idea": slug}):
+            return got
+        time.sleep(0.01)
+    raise AssertionError("no hearing opened")
+
+
 def _gone(went: list, n: int = 1) -> list:
     """The decision is asked once the keeper has ended its run (the goal goes on after it): wait for the stub to be called."""
     for _ in range(300):
@@ -234,6 +243,8 @@ def test_a_leader_whose_pick_was_overridden_is_heard_again_one_whose_pick_was_ta
     went = _decide_stub(host, monkeypatch)
     slug = _talk(host, parties, ["product", "design", "tech"])
     _answer(host, slug, {"product question 0": 0, "design question 0": 1, "tech question 0": {"text": "something of my own"}})        # Product by its pick; Design another choice; Tech its own words
+    _hearing(host, slug)                                                                                                    # Tech now doubts: a hearing, thrown to *Do it*
+    host.command("ideas.throw", {"idea": slug, "moment": "talk", "dir": "right"})
     assert sorted(c["party"] for c in model.steps("talk_verdict")) == sorted([parties["design"], parties["tech"]]) and _gone(went) == [slug]
     assert _stance(host, slug, parties["tech"])["verdict"] == "doubt" and _stance(host, slug, parties["tech"])["why"] == "Now I am not sure"
     assert [(e["party"], e["before"], e["after"]) for e in _events(host, event_log.TALK_VERDICT)] == [(parties["design"], "go", "go"), (parties["tech"], "go", "doubt")] and "something of my own" in next(
@@ -311,6 +322,8 @@ def test_a_verdict_that_cannot_be_had_leaves_the_verdict_as_it_was_and_the_decis
     went = _decide_stub(host, monkeypatch)
     slug = _talk(host, parties, ["design", "tech"])
     _answer(host, slug, 0)
+    _hearing(host, slug)                                                                                                    # the doubt stands: a hearing, thrown to *Do it*
+    host.command("ideas.throw", {"idea": slug, "moment": "talk", "dir": "right"})
     assert _stance(host, slug, parties["design"])["verdict"] == "doubt" and _gone(went) == [slug] and _events(host, event_log.TALK_VERDICT) == []
     assert len(model.steps("talk_verdict")) == 2 and _state(host, slug)["state"] == "talk"                              # tried once more, then passed over
 

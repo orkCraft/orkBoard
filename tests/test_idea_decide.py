@@ -355,6 +355,14 @@ def _overruled(host, parties, model, answer=DECISION, **said):
     if said.get("verdict") == "no":
         assert _state(host, slug)["state"] == "talk" and model.steps("decide") == []                                  # the decision waits for the person's answer
         host.command("ideas.objection", {"idea": slug, "party": parties["tech"], "answer": "go"})
+    if said.get("verdict") == "doubt":                                                                                 # a doubt alone is a hearing (spec 120 §3.4): the person's throw
+        for _ in range(500):
+            if host.command("ideas.hearing", {"idea": slug}):
+                break
+            time.sleep(0.01)
+        assert model.steps("decide") == []
+        idea_questions.save_record(host.ideas.state_dir, slug, {**idea_questions.record(host.ideas.state_dir, slug), "hearing": False})
+        host.ideas.keeper._on(slug, "decide")                       # the hearing closed by hand (no throw, which would confirm at once), so the decision's card waits
     _until(host, slug, "decided")
     return slug
 

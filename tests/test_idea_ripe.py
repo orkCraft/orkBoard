@@ -173,8 +173,8 @@ def test_a_hearing_or_a_goal_nobody_could_weigh_begins_no_wait(host, tech, model
     model["talk_round"] = {**TECH_SAID, **said}
     slug = host.command("ideas.add", {"text": "add a dark mode option", "track": tech})["slug"]
     host.command("ideas.talk", {"idea": slug})
-    if said.get("verdict") == "no":
-        _until(host, slug, "talk")                                            # a no waits for the person's answer (spec 108): the decision is not worded
+    if said.get("verdict") in ("no", "doubt"):
+        _until(host, slug, "talk")                                            # a no or a doubt waits for the person's throw (spec 120 §3.4): the decision is not worded
     else:
         _until(host, slug, "decided")
     assert _ripe(host, slug) is None and _events(host, event_log.RIPE_STARTED) == []
