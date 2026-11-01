@@ -1,7 +1,8 @@
 """Spec 99 G (docs/specs/99-a-goals-way.md §8, decisions §153.1–§153.4, §157.1): the project's questions at the first start. Product's leader (in a game Game design's) is called once,
 cheaper tier, no tools, given the project's files by code, and asks two or three cards each only where the files do not say it (where they do, its reading is the card's pick); with
 neither party the Orkmaster's one card. The row `project_q` lies after the other stacks and holds nothing back; `ideas.project_answer` keeps the answers (`project_facts.keep`),
-Product's whom and hurts as a segment, and they are read into every leader's calls. The model call is stubbed (`keeper.call`).
+Product's whom and hurts as a segment, and they are read into every leader's calls. Spec 124 A: the brief's other half (why this, what it must always be, how it earns) is
+a second sitting, asked once when a goal is added after the first. The model call is stubbed (`keeper.call`).
 
 These tests compose the mixins onto the keeper and the host the way the lead's wiring does (the `host` fixture): they pass without that wiring in `core/idea_keeper.py` and `gui/ideas.py`.
 """
@@ -177,17 +178,72 @@ def test_a_call_that_does_not_answer_is_tried_once_more_and_then_asks_nothing_an
     assert _ask(host, product)["asked"] is True and project_questions.record(host.ideas.state_dir)["status"] == "waiting" and _row(host) is not None
 
 
-def test_a_project_is_asked_once_at_its_first_start(host, product, model):
+OTHER_HALF = {"questions": [card("why_us", choices=("One TV, no table", "No app to install")), card("pillars", choices=("Rounds under five minutes", "Anyone can join")),
+                            card("earns", choices=("A one-time purchase", "Nothing: a hobby"))]}
+
+
+def test_a_project_is_asked_once_at_its_first_start_and_the_briefs_other_half_once_after(host, product, model):
     assert _ask(host, product)["asked"] is True
     assert _ask(host, product)["asked"] is False and len(model.calls) == 1                                        # asked, waiting
     host.command("ideas.project_answer", {"answers": [], "decide": True})
-    assert _ask(host, product)["asked"] is False and len(model.calls) == 1 and _row(host) is None                 # answered or let go: never again
+    assert project_questions.record(host.ideas.state_dir)["sitting"] == 1 and _row(host) is None                  # answered or let go: the first sitting never again
+    model.answer = OTHER_HALF
+    assert _ask(host, product)["asked"] is True and len(model.calls) == 2                                         # spec 124 A: the brief's other half
+    p = model.calls[-1]["prompt"]
+    assert "still lacks" in p and all(f'"{k}"' in p for k in ("why_us", "pillars", "earns")) and '"for_whom": ' not in p
+    row = _row(host)
+    assert [q["id"] for q in row["questions"]] == ["project-why_us", "project-pillars", "project-earns"]
+    host.command("ideas.project_answer", {"answers": [], "decide": True})
+    assert project_questions.record(host.ideas.state_dir)["sitting"] == 2
+    assert _ask(host, product)["asked"] is False and len(model.calls) == 2 and _row(host) is None                 # both sittings done: never again
+    assert project_facts.answered(host.ideas.state_dir) == set(project_questions.BRIEF) == set(project_facts.COMMON_KEYS)
 
 
-def test_with_all_three_facts_answered_nothing_is_asked(host, product, model):
-    for k in project_questions.KEYS:
+def test_the_briefs_other_half_is_asked_when_a_goal_is_added_after_the_first_sitting_and_never_before(host, product, model):
+    slug = host.command("ideas.add", {"text": "add a score board", "track": product, "hold": True})["slug"]
+    assert slug and not model.steps("project_q") and project_questions.record(host.ideas.state_dir) == {}          # the first sitting is the first start's, never a goal's
+    _ask(host, product)
+    host.command("ideas.project_answer", {"answers": [], "decide": True})
+    model.answer = OTHER_HALF
+    host.command("ideas.add", {"text": "add a lobby", "track": product, "hold": True})
+    _wait(host, product)
+    assert len(model.steps("project_q")) == 2 and [q["id"] for q in _row(host)["questions"]] == ["project-why_us", "project-pillars", "project-earns"]
+    host.command("ideas.add", {"text": "add a timer", "track": product, "hold": True})                             # waiting: not asked twice
+    _wait(host, product)
+    assert len(model.steps("project_q")) == 2
+
+
+def test_a_second_sitting_that_is_stopped_or_cannot_begin_leaves_the_first_done(host, product, model, monkeypatch):
+    _ask(host, product)
+    host.command("ideas.project_answer", {"answers": [], "decide": True})
+    monkeypatch.setattr(host.ideas.keeper, "_may_run", lambda: "Today's spend limit is reached: the keeper waits")
+    assert _ask(host)["asked"] is False
+    rec = project_questions.record(host.ideas.state_dir)
+    assert (rec["status"], rec["sitting"]) == ("done", 1)                                                              # never the first start's questions again
+    from orkboard.core import idea_project_q
+    assert idea_project_q._before(2) == {"status": "done", "sitting": 1} and idea_project_q._before(1) == {}          # a stopped sitting leaves the one before it done
+    assert project_questions.due(project_questions.record(host.ideas.state_dir), project_facts.answered(host.ideas.state_dir)) == 2
+
+
+def test_the_sitting_due_is_the_first_with_a_hole_from_the_one_after_a_sitting_done():
+    due, first = project_questions.due, set(project_questions.SITTINGS[0])
+    assert due({}, set()) == 1 and due({}, first) == 2 and due({}, set(project_questions.BRIEF)) == 0
+    assert due({"status": "done"}, set()) == 2 and due({"status": "done", "sitting": 2}, set()) == 0              # a record of before the brief is the first sitting's
+    assert due({"status": "failed", "sitting": 2}, set()) == 2 and due({"status": "failed"}, set()) == 1
+    assert due({"status": "waiting", "sitting": 1}, set()) == 0 == due({"status": "asking", "sitting": 2}, set())
+    assert project_questions.keys_of(2, {"pillars"}) == ("why_us", "earns") and project_questions.keys_of(3, set()) == ()
+
+
+def test_with_the_whole_brief_answered_nothing_is_asked(host, product, model):
+    for k in project_questions.BRIEF:
         project_facts.keep(host.ideas.state_dir, product, k, "kept", "person")
     assert _ask(host)["asked"] is False and not model.calls and project_questions.record(host.ideas.state_dir) == {}
+
+
+def test_with_neither_party_the_briefs_other_half_is_not_asked(host, tech, model):
+    _ask(host)
+    host.command("ideas.project_answer", {"decide": True})
+    assert _ask(host)["asked"] is False and not model.calls
 
 
 def test_no_call_is_made_where_the_keeper_may_not_run_and_the_save_is_not_refused(host, product, model, monkeypatch):

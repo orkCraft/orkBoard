@@ -1,6 +1,12 @@
 # Orkboard
 
-Orkline's Board on its own: a project's parties and their goals, the goals' specs and plans, the agents at work and the results to review, on the desktop and on a paired phone.
+Orkboard is where you think out your product with a table of leaders — product, design, tech, art, marketing, release —
+who judge each goal against your real code and running product, say no where it hurts, and hand what you decide to your
+own AI tools to build and check. On the desktop, in VS Code and on a paired phone.
+
+It is Orkline's Board on its own: a project's parties and their goals, the goals' specs and plans, the agents at work and
+the results to review. `orkboard measures` says how the arguing turned out in a project (how often a leader's no was
+heeded, how often a goal is accepted the first time).
 
 Install it from git: `uv tool install 'orkboard[gui] @ git+https://github.com/orkCraft/orkBoard'` (`[gui]` brings the window
 elsewhere than a Mac, where it always comes, and the paired phone's TLS).

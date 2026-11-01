@@ -8,7 +8,7 @@ Status: **open** (not tested) · **testing** · **held** (became decision §N) �
 
 ## H1. Orkboard is a studio that sees your real product, not a board of agents nor a spec generator
 
-**Status:** open. **Raised:** the owner, 31 October 2026, after spec 115 (the live product under each leader's eyes).
+**Status:** open; ready to test (decision §202, spec 124: the brief, the measures, `orkboard trial`). **Raised:** the owner, 31 October 2026, after spec 115 (the live product under each leader's eyes).
 
 ### The belief
 
@@ -65,7 +65,7 @@ our Taskmaster's name).
 
 ### How we test it
 
-1. **The head-to-head** (first, cheapest, strongest): 10–15 real tasks on two or three real projects (a web app, a
+1. **The head-to-head** (first, cheapest, strongest; the protocol `docs/trials/h1-head-to-head.md`, the tally `orkboard trial`): 10–15 real tasks on two or three real projects (a web app, a
    mobile app, a game), each done twice: in Orkboard and with Claude Code's plan mode alone, the same model. Measured:
    accepted the first time (yes/no by the person, blind to which way made it), plan changes and forks after the start,
    questions asked during the work, goals back from the discard, the person's minutes, the tokens. **Holds** if
@@ -79,11 +79,12 @@ our Taskmaster's name).
 ### What already exists for it, and what is missing
 
 - **Exists:** the maps from code and their leaders' lenses (specs 89, 102, 108, 109); Talk, the decision, the sections,
-  forks (spec 99); the decisions log; the gate.
-- **Missing:** a one-page brief of the project every leader reads (whom, what hurts, why us, money, pillars, what we
-  leave out); rubrics weighted by the project's stage; a shorter way for a goal one party can do alone; Play as a map
-  (spec 115); **any measure of how good what was wanted turned out**: first-time acceptance, plan changes after the
-  start, forks, goals back from the discard.
+  forks (spec 99); the decisions log; the gate; Play as a map (§193). Since spec 124: **the brief** every leader and
+  Ideation reads (whom, what hurts, why this, what it must always be, what it leaves out, how it earns); **the measures**
+  (`orkboard measures`: a no heeded or overruled, an overruled no that came back at Review against the goals no one
+  objected to, first-time acceptance, changes after the start); **the trial's tally** (`orkboard trial`).
+- **Missing:** rubrics weighted by the project's stage; a shorter way for a goal one party can do alone; goals back from
+  the discard as a measure (no event says it yet); the leaders given their own measures to calibrate on.
 
 ### Risks
 

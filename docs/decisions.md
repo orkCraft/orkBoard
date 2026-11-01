@@ -4209,3 +4209,35 @@ head*; *the chair's back a solid colour*. The mockup `docs/mockups/lens-heads/`,
 10. Spec 123 (spec 122 stays the leaders' voices), orkUI first (the room token, the chair, the empty chair, the door, the
    faces), built by the cheaper model, the spec's author reviewing.
 The owner's call.
+
+## 202. Orkboard is where a product is thought out with its leaders, not a crowd of agents at work: the brief every leader reads, the measures of the arguing, H1's trial (1 November, the owner)
+
+Why: the owner: *as a product, Orkboard is not a crowd of agents doing the work, even the stages of an indie maker's; it is
+where you think out your product with a set of specialists who discuss your ideas, criticise them and polish them.* Read
+against the Board as it is: Ideation (spec 65), a leader's no (spec 108), the seniors' frameworks (spec 109), the hearing
+(spec 120) and the leaders as fellow players (§199.2, §201) already say so; hypothesis H1 states it, and lists what it lacks
+before more faces: a brief every leader reads, any measure of how good the arguing turned out, and the head-to-head. A
+team of personas alone reads as derivative (H1's table: BMAD); what may set Orkboard apart is the arguing grounded in the
+real product, a no that goes to the person, a memory of what was decided, and the loop closed through the work and the gate.
+So:
+1. **The README's first line says it** (no longer *the agents at work and the results to review*): a product thought out
+   with its leaders, who judge each goal against the real code and the live product, say no where it hurts, and hand it to
+   the person's own AI tools. H1 stays open: the line says what Orkboard does, not that it is proven better.
+2. **The brief every leader reads** (spec 124 A): the project's common core grows from three lines to six: whom it is for,
+   what hurts them, **why this and not what they use now**, **what it must always be**, what it leaves out, **how it earns**.
+   The first start asks the first three as before; the other half is a second sitting of the same call, asked once when a
+   goal is added after the first is answered or let go. Every leader's call already reads the core (`project_facts.for_call`);
+   Ideation's views, the Investor and the skeptic now read it too (they judged a pitch without knowing whom the product is for).
+   No new face: the cards are the hand's, the facts the parties form's.
+3. **The measures of the arguing** (spec 124 B): `realm/measures.py` reads the project's own event log, no new event: the
+   leaders' no and doubt and what the person did with them, the leaders who changed their verdict, and **an overruled no
+   that came back** (sent back, fixed or dropped at Review) beside the same share of the goals no leader objected to: the
+   calibration a no is worth its noise by; concerns made a goal or not a problem; the Investor's word taken; sketches picked;
+   **a goal accepted the first time**; the changes after the start. Read in the terminal (`orkboard measures`), never a count
+   in the window (§104.0, CLAUDE.md).
+4. **H1's head-to-head can be run** (spec 124 C): the protocol `docs/trials/h1-head-to-head.md`, and `orkboard trial`: a CSV
+   to fill with each way shown blind as A or B, its tally and H1's verdict (20 points of first-time acceptance at no more than
+   twice the minutes, over ten tasks at least). The trial itself is the owner's: real tasks, a person judging blind.
+5. **What comes before new faces**, as H1 says, while it is tested: the brief's quality (§2), the stage-weighted rubrics,
+   a shorter way for a goal one party can do alone, and the measures (§3) read weekly. Spec 124.
+The owner's call.

@@ -7,8 +7,12 @@ answers, `realm/board_rows.py` shows the row.
     project_questions.fallback(party="")                     # the Orkmaster's one card *What is this project for?* (a text field: no choices)
     project_questions.take(rec, answers, decide)             # the person's answers → [{id, key, answer, by}], `by` person | read; ValueError in plain words
     project_questions.record(state_dir) / save_record(...)   # <state_dir>/project_q.json: what the row shows and what was asked
+    project_questions.due(rec, known)                        # the sitting to ask now (1: the first start's, 2: the brief's other half), 0 for none
+    project_questions.keys_of(sitting, known)                # the keys of that sitting not answered yet, in the order they are asked
 
-The record is `{status: "asking"|"waiting"|"done"|"failed", party, leader, questions: [card], keys: {card id: key}, read: [card id], at, error}`. A card is
+The record is `{status: "asking"|"waiting"|"done"|"failed", sitting, party, leader, questions: [card], keys: {card id: key}, read: [card id], at, error}`; `sitting` is 1
+(the first start's: whom, hurts, what it leaves out) or 2 (the brief's other half, spec 124 A: why this, what it must always be, how it earns), 1 when a record has none.
+A sitting answered or let go is never asked again; the next is asked when a goal is added after it (`gui/ideas_project_q.py` `brief_more`). A card is
 `idea_questions.card`'s, `project: true`; `read` are the cards whose pick is the leader's reading of the files (`said`), which the person confirms with one press.
 """
 from __future__ import annotations
@@ -18,7 +22,10 @@ from pathlib import Path
 from orkboard.realm import goal_team, idea_questions, ideas, project_facts
 
 FILE = "project_q.json"
-KEYS = project_facts.COMMON_KEYS                 # whom it is for · what hurts them · what it leaves out, in the order they are asked
+SITTINGS = (("for_whom", "hurts", "leaves_out"),     # the first start: whom it is for · what hurts them · what it leaves out, in the order they are asked
+            ("why_us", "pillars", "earns"))          # the brief's other half (spec 124 A), at the next goal: why this · what it must always be · how it earns
+KEYS = SITTINGS[0]
+BRIEF = tuple(k for keys in SITTINGS for k in keys)  # every key of the brief (`project_facts.COMMON_KEYS`, in the order they are asked)
 MAX_CARDS = 3
 CRAFTS = ("product", "game-design")             # who asks: Product's leader, in a game Game design's (§153.1)
 ORKMASTER = "orkmaster"
@@ -32,19 +39,35 @@ def party_of(root: Path) -> str:
     return next((found[c] for c in CRAFTS if c in found), "")
 
 
+def keys_of(sitting: int, known: set[str]) -> tuple[str, ...]:
+    """The keys of `sitting` (1-based) not answered yet, in the order they are asked; () for a sitting that is none."""
+    return tuple(k for k in SITTINGS[sitting - 1] if k not in known) if 1 <= sitting <= len(SITTINGS) else ()
+
+
+def due(rec: dict, known: set[str]) -> int:
+    """The sitting to ask now: the first with a key not answered, from the one after a sitting done (or the same one, when it failed or was never begun);
+    0 while one is asked or waits, and when every key of the sittings left is answered."""
+    status = rec.get("status") if isinstance(rec, dict) else None
+    if status in ("asking", "waiting"):
+        return 0
+    last = rec.get("sitting") if isinstance(rec.get("sitting"), int) and not isinstance(rec.get("sitting"), bool) else 1
+    start = last + 1 if status == "done" else last if rec else 1
+    return next((n for n in range(max(1, start), len(SITTINGS) + 1) if keys_of(n, known)), 0)
+
+
 def clean(answer: object, party: str, leader: str, known: set[str]) -> list[tuple[dict, str, bool]]:
-    """The leader's answer, strictly: `[(card, key, said)]` for the keys not answered yet, in the order of `KEYS`, each key once, at most `MAX_CARDS`. A question that is
+    """The leader's answer, strictly: `[(card, key, said)]` for the keys of the brief not answered yet, in the order of `BRIEF`, each key once, at most `MAX_CARDS`. A question that is
     no card (`idea_questions.card`: two to four choices, one picked) is not one; `said` is the leader telling the files say it, its pick being the reading."""
     items = answer.get("questions") if isinstance(answer, dict) else None
     got: dict[str, tuple[dict, bool]] = {}
     for item in items if isinstance(items, list) else []:
         key = str(item.get("key") or "").strip().lower() if isinstance(item, dict) else ""
-        if key not in KEYS or key in known or key in got:
+        if key not in BRIEF or key in known or key in got:
             continue
         c = idea_questions.card(item, id=f"project-{key}", by=party, leader=leader, project=True)
         if c is not None:
             got[key] = (c, item.get("said") is True)
-    return [(got[k][0], k, got[k][1]) for k in KEYS if k in got][:MAX_CARDS]
+    return [(got[k][0], k, got[k][1]) for k in BRIEF if k in got][:MAX_CARDS]
 
 
 def fallback() -> dict:

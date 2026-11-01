@@ -666,7 +666,8 @@ def main(argv: list[str] | None = None) -> int:
     """`orkboard [board] [<folder>] [--repo DIR] [--browser | --serve] [--port N]`: Orkboard on that folder; without one
     the last shown project, else the one it was started in, else the start screen. `board` is the old habit of
     `orkcraft board`, and changes nothing. `--serve`: for the VS Code extension (gui/extension.py). `orkboard --make-app`: Orkboard.app in ~/Applications (gui/mac_app.py).
-    `orkboard usage …` and `orkboard update …`: the usage stats' answer and the updates (gui/board_cli.py). A critical
+    `orkboard usage …`, `orkboard update …`, `orkboard measures` and `orkboard trial …`: the usage stats' answer, the updates, the project's measures and H1's
+    head-to-head (gui/board_cli.py). A critical
     update installs before anything else loads, as the policy says (core/updates.py `at_launch`)."""
     from orkboard.realm import project_folder
     argv = sys.argv[1:] if argv is None else list(argv)

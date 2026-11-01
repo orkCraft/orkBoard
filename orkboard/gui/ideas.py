@@ -458,6 +458,10 @@ class Ideas(SketchMixin, PlayMarkMixin, FactsMixin, LoopFace, TreeFace, Hypothes
                  asks=typed["answered"], refs=len(photos) if typed["type"] and typed["type"].refs else 0,
                  joined=(joined or {}).get("add", ""), out=(joined or {}).get("out", ""))
         out = {"slug": slug, "queue": queue, "element": element, "type": typed["key"], "joined": joined}
+        try:
+            self.brief_more()                   # the brief's other half, once the first start's questions are done (spec 124 A); never troubles the goal
+        except Exception:
+            pass
         if routed:
             out["route"] = [r["party"] for r in routed["route"]]
             if not routed["route"]:

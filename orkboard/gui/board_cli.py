@@ -1,19 +1,27 @@
 """`orkboard usage …` and `orkboard update …` (docs/specs/41-orkget.md §7): the machine's answer about usage stats and
-crash reports, and the updates, from the terminal, as Orkline's `orkcraft usage` and `orkcraft update`. `main` in
-gui/board_host.py hands them over; a folder named `usage` or `update` opens as `orkboard ./usage`.
+crash reports, and the updates, from the terminal, as Orkline's `orkcraft usage` and `orkcraft update`. `orkboard measures` and
+`orkboard trial` (docs/specs/124-the-brief-the-measures-and-the-trial.md B, C): how the leaders' arguing turned out in a project, read
+from its own event log, and hypothesis H1's head-to-head tallied. `main` in gui/board_host.py hands them over; a folder named `usage`,
+`update`, `measures` or `trial` opens as `orkboard ./usage`.
 
     run(["usage", "on", "--id", "<32 hex>"])     # the installer's yes, with the id it drew (install.sh)
     run(["update", "check"])                     # what is out, nothing installed
+    run(["measures", "~/game", "--since", "2026-11-01"])   # the project's measures (realm/measures.py), `--json` as data
+    run(["trial", "new", "h1.csv", "--tasks", "tasks.txt"])  # a CSV to fill, each way shown as A or B (realm/trial.py)
+    run(["trial", "h1.csv"])                     # the tally and the verdict
 """
 from __future__ import annotations
 
 import argparse
+import json
 import sys
+from pathlib import Path
 
 from orkboard import __version__, settings
 from orkboard.core import updates, usage
+from orkboard.realm import measures, trial
 
-WORDS = ("usage", "update")
+WORDS = ("usage", "update", "measures", "trial")
 
 POLICY_WHAT = {
     "auto": "every update installs when Orkboard opens",
@@ -33,10 +41,56 @@ def run(argv: list[str]) -> int:
     up_p.add_argument("action", nargs="?", choices=("check", *updates.POLICIES), default=None,
                       help="check: only say what is out · auto | critical | ask: which updates install by themselves "
                            "when Orkboard opens (default: critical)")
+    m_p = sub.add_parser("measures", help="How the leaders' arguing turned out in a project, from its own event log")
+    m_p.add_argument("folder", nargs="?", default=".", help="The project's folder (default: this one)")
+    m_p.add_argument("--since", default="", metavar="DAY", help="From this day on (YYYY-MM-DD)")
+    m_p.add_argument("--until", default="", metavar="DAY", help="Before this day (YYYY-MM-DD)")
+    m_p.add_argument("--json", action="store_true", help="The measures as data")
+    t_p = sub.add_parser("trial", help="Hypothesis H1's head-to-head: a CSV to fill (new), or its tally and verdict")
+    t_p.add_argument("what", nargs="+", metavar="ARG", help="new <file.csv> --tasks <tasks.txt> · <file.csv>")
+    t_p.add_argument("--tasks", default=None, metavar="FILE", help="With new: the tasks, one a line")
+    t_p.add_argument("--seed", type=int, default=None, help="With new: the draw of A and B, to make it again")
+    t_p.add_argument("--json", action="store_true", help="The tally as data")
     args = parser.parse_args(argv)
     if args.word == "usage":
         return _usage(args.action, args.install_id)
+    if args.word == "measures":
+        return _measures(args.folder, args.since, args.until, args.json)
+    if args.word == "trial":
+        return _trial(args.what, args.tasks, args.seed, args.json)
     return _update(args.action)
+
+
+def _measures(folder: str, since: str, until: str, as_json: bool) -> int:
+    root = Path(folder).expanduser()
+    if not root.is_dir():
+        print(f"orkboard measures: no folder {folder}", file=sys.stderr)
+        return 2
+    got = measures.of(root, since, until)
+    print(json.dumps(got, indent=2) if as_json else measures.text(got))
+    return 0
+
+
+def _trial(what: list[str], tasks: str | None, seed: int | None, as_json: bool) -> int:
+    try:
+        if what[0] == "new":
+            if len(what) != 2 or not tasks:
+                print("orkboard trial: new <file.csv> --tasks <tasks.txt>", file=sys.stderr)
+                return 2
+            out = Path(what[1]).expanduser()
+            if out.exists():
+                print(f"orkboard trial: {out} is there already; name another file", file=sys.stderr)
+                return 2
+            names = [line for line in Path(tasks).expanduser().read_text(encoding="utf-8").splitlines() if line.strip()]
+            trial.template(out, names, seed)
+            print(f"{out}: {len(names)} tasks, two rows each; judge A and B blind, then fill accepted, changes, questions, minutes and tokens")
+            return 0
+        got = trial.tally(trial.read(Path(what[0]).expanduser()))
+    except (ValueError, OSError) as e:
+        print(f"orkboard trial: {e}", file=sys.stderr)
+        return 2
+    print(json.dumps(got, indent=2) if as_json else trial.text(got))
+    return 0
 
 
 def _usage(action: str, install_id: str | None = None) -> int:

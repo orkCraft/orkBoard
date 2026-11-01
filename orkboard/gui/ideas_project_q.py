@@ -1,6 +1,7 @@
 """The project's questions (docs/specs/99-a-goals-way.md §8), as `gui/ideas.py`'s `Ideas` has them: the commands the row `project_q` (realm/board_rows.py) is asked and answered by.
 
     ideas.project_ask {}                                         # begins the first start's questions (core/idea_project_q.py); `ideas.party_save` with `first: true` does the same
+    ideas_.brief_more()                                          # `ideas.add` after a goal is added: the brief's other half, once the first sitting is done (spec 124 A)
     ideas.project_answer {answers: [{id, pick?|text?}], decide?: bool}   # the cards of the `project_q` row, together; `decide` (*Let … decide*) answers the rest with the leader's picks
 
 `project_ask` answers `{"ok": true, "asked": bool, "why"?}`: a call that cannot be made (no model, a spent limit) is `asked: false` with why in plain words, never a refusal, so a
@@ -31,6 +32,13 @@ class ProjectQMixin:
             return {"asked": False, "why": str(e)}
         self.changed("")
         return {"asked": asked}
+
+    def brief_more(self) -> None:
+        """The brief's other half (spec 124 A): once the first start's questions are answered or let go, the next goal added asks the rest of the brief, quietly (no refusal,
+        no toast; a call that cannot be made now is asked at the goal after). Nothing before the first sitting is done: that one is the first start's."""
+        rec = project_questions.record(self.state_dir)
+        if rec.get("status") == "done" and project_questions.due(rec, project_facts.answered(self.state_dir)) > 1:
+            self.project_start()
 
     def project_ask(self, args: dict) -> dict:
         return {"ok": True, **self.project_start()}

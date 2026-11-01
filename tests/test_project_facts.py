@@ -1,6 +1,6 @@
 """Spec 99 B §2.2–§2.3 (docs/specs/99-a-goals-way.md, decisions §153.4, §156.7, §156.10): the project's facts by party, kept in
 `facts.json`: an answer or a fact read from the files with its party and who gave it; the common core (whom it is for, what hurts them, what it
-leaves out) in about 600 characters; what a leader's call is given (the core, its own party's, another party's only when the route has it, a member
+leaves out, and the brief's other half: why this, what it must always be, how it earns; spec 124 A) in about 1,000 characters; what a leader's call is given (the core, its own party's, another party's only when the route has it, a member
 none); a reading never replacing a person's answer; and the start's files, chosen by code. No model."""
 from __future__ import annotations
 
@@ -72,11 +72,26 @@ def test_the_common_core_is_whom_it_is_for_what_hurts_and_what_it_leaves_out(sd)
     assert project_facts.answered(sd) == {"for_whom", "hurts", "leaves_out"}
 
 
-def test_the_common_core_is_about_600_characters_at_most_each_share_cut_with_a_mark(sd):
+def test_the_brief_is_six_lines_in_its_order_why_this_and_what_it_must_always_be_before_what_it_leaves_out_and_how_it_earns(sd):
+    project_facts.keep(sd, "product", "earns", "A one-time purchase on Steam", "person")
+    project_facts.keep(sd, "product", "leaves_out", "Accounts", "person")
+    project_facts.keep(sd, "product", "pillars", "A round lasts under five minutes", "read")
+    project_facts.keep(sd, "product", "why_us", "Board games need a table; this needs a TV", "person")
+    project_facts.keep(sd, "product", "for_whom", "Friends at one TV", "person")
+    project_facts.keep(sd, "product", "hurts", "Slow rounds", "person")
+    assert project_facts.common(sd).splitlines() == ["Whom it is for: Friends at one TV", "What hurts them: Slow rounds",
+                                                     "Why this, not what they use now: Board games need a table; this needs a TV",
+                                                     "What it must always be: A round lasts under five minutes", "What it leaves out: Accounts",
+                                                     "How it earns: A one-time purchase on Steam"]
+    text = project_facts.for_call(sd, "tech", [{"party": "tech"}])
+    assert text.startswith("What the project is:\nWhom it is for") and "How it earns: A one-time purchase on Steam" in text      # every leader reads the whole brief
+
+
+def test_the_common_core_is_about_1000_characters_at_most_each_share_cut_with_a_mark(sd):
     for key in project_facts.COMMON_KEYS:
         project_facts.keep(sd, "product", key, "word " * 200, "person")
     core = project_facts.common(sd)
-    assert 0 < len(core) <= project_facts.COMMON_CHARS and core.count("…") == 3
+    assert 0 < len(core) <= project_facts.COMMON_CHARS and core.count("…") == len(project_facts.COMMON_KEYS) == 6
     project_facts.keep(sd, "product", "for_whom", "Short", "person")
     assert project_facts.common(sd).splitlines()[0] == "Whom it is for: Short"
 
@@ -175,7 +190,7 @@ def test_the_projects_answers_are_in_every_leaders_call_whatever_party_asked_and
         text = project_facts.for_call(sd, party, route(party))
         assert text == "What the project is:\nWhom it is for: Friends at one TV\nWhat hurts them: Slow rounds\nWhat it leaves out: Accounts"
     assert [(f["key"], f["by"]) for f in project_facts.of(sd, "product")] == [("for_whom", "person"), ("hurts", "read"), ("leaves_out", "person")]
-    assert project_facts.answered(sd) == set(project_facts.COMMON_KEYS)                    # a question answered is never asked again
+    assert project_facts.answered(sd) == {"for_whom", "hurts", "leaves_out"}                # a question answered is never asked again
     project_facts.keep(sd, "product", "hurts", "Another reading", "read")                  # a reading replaces a reading …
     assert project_facts.common(sd).splitlines()[1] == "What hurts them: Another reading"
     project_facts.keep(sd, "product", "hurts", "Players waiting", "person")

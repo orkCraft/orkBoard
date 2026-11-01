@@ -25,7 +25,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from orkboard.realm import event_log, idea_lens, idea_target, ideas, library, orkmaster, pitches, roles
+from orkboard.realm import event_log, idea_lens, idea_target, ideas, library, orkmaster, pitches, project_facts, roles
 
 AT_ONCE = 2                        # the views asked at once
 GOALS = 40                         # the goals done and in work a call reads
@@ -197,7 +197,7 @@ class JudgeMixin:
     # -- what each call is given ----------------------------------------------------------------------------------------
 
     def pitch_parts(self, root: Path, slug: str) -> list[tuple[str, str]]:
-        """What every call of a pitch reads: the pitch, the project's parties (name, Description's first lines, metrics), the goals
+        """What every call of a pitch reads: the pitch, the project's brief (`project_facts.common`, spec 124 A), the project's parties (name, Description's first lines, metrics), the goals
         done and in work (≤ 40), the pitches passed (title and why, ≤ 20, newest first)."""
         page = ideas.idea_page(root, slug)
         parties, goals = [], []
@@ -211,7 +211,8 @@ class JudgeMixin:
             st = ideas.state(self.state_dir, i["slug"])["state"]
             if len(goals) < GOALS and st not in ("proposed",) and not pitches.is_ideation(root, i["track"]):
                 goals.append(f"- {i['slug']}: {i['title']} ({'done' if st == 'done' else 'in work'}, party {i['track']})")
-        return [("The pitch, in the person's words", page.section("Gist") if page else ""),
+        brief = [("What the project is (its brief: judge the pitch against it)", core)] if (core := project_facts.common(self.state_dir)) else []
+        return [("The pitch, in the person's words", page.section("Gist") if page else ""), *brief,
                 ("The project's parties", "\n".join(parties)), ("The goals done and in work", "\n".join(goals)),
                 ("Pitches passed before, newest first (judge this one against them)", pitches.passed_lines(root, self.state_dir, slugs=True))]
 

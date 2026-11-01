@@ -2,14 +2,15 @@
 project, and what was read from its files, each with the party it belongs to, kept in `<state_dir>/facts.json` and read into a leader's call.
 
     project_facts.keep(state_dir, "product", "for_whom", "Players of party games", "person")   # an answer or a fact kept (`by`: person | read)
-    project_facts.common(state_dir)                    # the common core as text: whom it is for, what hurts them, what it leaves out (~600 chars)
+    project_facts.common(state_dir)                    # the common core as text, the project's brief (spec 124 A): whom it is for, what hurts them, why this and not
+                                                       #   what they use now, what it must always be, what it leaves out, how it earns (~1,000 chars)
     project_facts.of(state_dir, "tech")                # one party's facts: [{key, text, by, at}]
     project_facts.drop(state_dir, "tech", "stack")     # a fact dropped (the person's empty text): True when there was one
     project_facts.for_call(state_dir, "tech", route)   # a leader's: the common core, its party's, another party's only when the route has it
     project_facts.answered(state_dir)                  # the keys answered or read, so a question is never asked again
     project_facts.start_files(root)                    # the README and docs/'s top level, chosen by code, for Product's reading at the start
 
-The file is `{common: {for_whom, hurts, leaves_out}, common_by: {key: {by, at}}, party: {<party>: [{key, text, by, at}]}}`. A common key kept
+The file is `{common: {for_whom, hurts, why_us, pillars, leaves_out, earns}, common_by: {key: {by, at}}, party: {<party>: [{key, text, by, at}]}}`. A common key kept
 sets `common` (its `by` and `at` beside it) and is kept in its party's list too; a fact read from the files never replaces an answer of the
 person's. A member is given no fact (`for_call(..., member=True)`): its leader's brief carries what it needs. No model, no face.
 """
@@ -22,10 +23,11 @@ from orkboard.hooks.warder import is_secret
 from orkboard.realm import ideas
 
 FILE = "facts.json"
-COMMON_KEYS = ("for_whom", "hurts", "leaves_out")
-LABELS = {"for_whom": "Whom it is for", "hurts": "What hurts them", "leaves_out": "What it leaves out"}
+COMMON_KEYS = ("for_whom", "hurts", "why_us", "pillars", "leaves_out", "earns")      # the brief (spec 124 A), in the order it is read
+LABELS = {"for_whom": "Whom it is for", "hurts": "What hurts them", "why_us": "Why this, not what they use now",
+          "pillars": "What it must always be", "leaves_out": "What it leaves out", "earns": "How it earns"}
 BY = ("person", "read")
-COMMON_CHARS = 600                 # the common core as text, at most
+COMMON_CHARS = 1000                # the common core as text, at most
 FACT_CHARS = 300                   # a fact's text kept, at most
 PARTY_FACTS = 12                   # the most facts of one party read into a call
 PARTY_CHARS = 900                  # … and their text, at most
@@ -129,8 +131,8 @@ def answered(state_dir: Path) -> set[str]:
 
 
 def common(state_dir: Path) -> str:
-    """The common core as text, COMMON_CHARS at most: one line each of what is kept of whom it is for, what hurts them, what it leaves out;
-    "" when none is."""
+    """The common core as text, COMMON_CHARS at most: one line each of what is kept of the brief (`COMMON_KEYS`: whom it is for, what hurts them,
+    why this and not what they use now, what it must always be, what it leaves out, how it earns); "" when none is."""
     kept = _read(state_dir)["common"]
     have = [k for k in COMMON_KEYS if k in kept]
     if not have:
