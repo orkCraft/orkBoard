@@ -16,6 +16,7 @@ import { choiceOf } from "../arena/picks.js";
 import { manyWords, variantOf } from "../arena/pickwords.js";
 import { openOver } from "../frame/state.js";
 import { openParties } from "../table/parties.js";
+import { nightWordsOf } from "./nightwords.js";
 
 const SENT = "Sent: the Taskmaster answers in a moment.";
 
@@ -60,6 +61,10 @@ function PickAnswers({ s }) {
 
 function PlanAnswers({ s, slug, row, g, here }) {
   const miss = row?.missing || [], start = (args) => act("ideas.start", { slug, ...args, via: "hand" });
+  if (!miss.length && s.node?.start_at === "night") {            // a plan that starts tonight (*Work at night*, spec 121 §4.5): the day's case stays whole, a press builds it now, ahead of the night's queue
+    return html`<button type="button" class="ork-btn primary" data-answer="build-now" title="Starts the plan now, instead of tonight" onClick=${() => act("ideas.start_now", { slug, via: "hand" })}>${nightWordsOf().now}</button>
+      ${!here && html`<button type="button" class="ork-btn" title="The plan's tasks, over the pane" onClick=${() => openStop(s)}>Open the plan</button>`}`;
+  }
   if (miss.length) {
     const m = miss[0];
     const join = async () => { const got = await start({ join: { add: m.agent } }); if (got) toast(`${m.name} joined the party; the work started.`); };

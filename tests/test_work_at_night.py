@@ -43,6 +43,16 @@ def plan_of(host, slug: str) -> dict:
     return ideas.plan(host.ideas.state_dir, slug)
 
 
+def test_the_board_carries_the_settings_words_with_the_nights_hour_said(host):
+    """Spec 121 §1, §7.3: the faces read the setting's words from the host (`ideas.board`'s `night_words`), the night's window said in them."""
+    words = host.command("ideas.board", {})["night_words"]
+    assert words["label"] == "Work at night" and words["now"] == "Build it now" and words["now_sketch"] == "Pick and build now"
+    assert words["waits"] == "Waits for the night (01:00)" and "(01:00–07:00)" in words["hint"]
+    host.command("ideas.board_set", {"night": "22:30-06:00"})
+    words = host.command("ideas.board", {})["night_words"]
+    assert words["waits"] == "Waits for the night (22:30)" and "(22:30–06:00)" in words["hint"]
+
+
 def product(priority: str) -> list[dict]:
     """Talk's stances as spec 120 C keeps them: Product's carries `priority`."""
     return [{"party": "tech", "leader": "a", "verdict": "go"}, {"party": "product", "leader": "b", "verdict": "go", "priority": priority}]
