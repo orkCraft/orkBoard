@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orkboard hearing and sketch, mockup</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* The mockup of specs 120 and 121 (decisions §198, §199): layout only, every colour, face and corner read through orkUI's tokens and classes
+   (`.ork-card`, `.ork-card-back`, `.ork-plus`, `.ork-sigil`, `.ork-elem.is-glowing`, `.ork-race__head`, `.ork-btn`, `.ork-deal`, `.ork-play`,
+   `.ork-crumble`). What is drawn here for the first time (the turn, the slow seal, the give, the hearing's drag) is this page's until orkUI draws it. */
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--ork-canvas); }
+body { margin: 0; background: var(--ork-canvas); color: var(--ork-ink); font: var(--ork-type-body); }
+p, ul, h1, h2, h3 { margin: 0; padding: 0; }
+code { font-family: var(--ork-font-code); font-size: 0.92em; }
+.mk-bar { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3) var(--ork-6); padding: var(--ork-4) var(--ork-6);
+  background: var(--ork-canvas); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.mk-bar nav { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
+.mk-main { padding: var(--ork-6); display: flex; flex-direction: column; gap: var(--ork-8); }
+.mk-sec h1 { font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); margin-bottom: var(--ork-3); }
+.mk-line { max-width: 112ch; margin-bottom: var(--ork-5); }
+.mk-row { display: flex; flex-wrap: wrap; gap: var(--ork-6); align-items: flex-start; }
+.mk-fig { display: flex; flex-direction: column; gap: var(--ork-3); margin: 0; min-width: 0; }
+.mk-fig > h2 { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.mk-fig > p { max-width: 380px; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.mk-fig > p b { color: var(--ork-ink); font-weight: 600; }
+.mk-acts { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
+.mk-foot { max-width: 112ch; margin: 0 var(--ork-6) var(--ork-8); padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.muted { color: var(--ork-ink-muted); } .cap { font: var(--ork-type-caption); }
+.c-meadow { color: var(--ork-elem-meadow); } .c-ice { color: var(--ork-elem-ice); } .c-dust { color: var(--ork-elem-dust); } .c-void { color: var(--ork-elem-void); } .c-lava { color: var(--ork-elem-lava); }
+
+/* ---------- the table, a lane, the hand ---------- */
+.table { position: relative; background: var(--ork-table); outline: var(--ork-line) solid var(--ork-edge); padding: var(--ork-4); display: flex; flex-direction: column; gap: var(--ork-5); }
+.lanes { display: flex; gap: 0; }
+.lane { display: flex; flex-direction: column; gap: var(--ork-5); padding: 0 var(--ork-5); border-left: var(--ork-line) solid var(--ork-frame); min-width: 152px; }
+.lane:first-child { border-left: 0; padding-left: 0; }
+.lane > .lab { color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); }
+.hand { display: flex; align-items: flex-end; gap: var(--ork-3); min-height: 120px; padding-top: var(--ork-3); border-top: var(--ork-line) solid var(--ork-frame); }
+.hand > .lab { align-self: flex-start; color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); margin-right: var(--ork-3); }
+
+/* ---------- a card, its two sides and the turn (this page's `.turn` until orkUI's `.ork-turn`) ---------- */
+.slot { display: flex; flex-direction: column; gap: var(--ork-2); width: 144px; }
+.turn { position: relative; width: 144px; aspect-ratio: 5 / 7; perspective: 60em; cursor: pointer; }
+.turn > .side { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; transition: transform var(--ork-motion-play) var(--ork-motion-spring); }
+.turn > .face { transform: rotateY(180deg); }
+.turn.is-up > .back { transform: rotateY(-180deg); }
+.turn.is-up > .face { transform: none; }
+.turn:not(.is-up):hover > .back, .turn.is-peek > .back { transform: translateY(calc(var(--ork-motion-rise) * -1)) rotate(calc(var(--ork-motion-lean) * -1)) rotateX(8deg); box-shadow: 0 var(--ork-motion-rise) 0 var(--ork-scrim); }
+@media (prefers-reduced-motion: reduce) { .turn > .side { transition: opacity var(--ork-motion-base) linear; } .turn > .face { transform: none; opacity: 0; } .turn.is-up > .back { transform: none; opacity: 0; } .turn.is-up > .face { opacity: 1; }
+  .turn:not(.is-up):hover > .back, .turn.is-peek > .back { transform: none; } }
+
+/* the goal's back: the + card's face without its +, the seal holding its own rune lit at the seal's top, its short name at its foot; never the + card's green */
+.gback { position: relative; width: 100%; height: 100%; display: block; }
+.gback .ork-sigil { width: 112px; height: 112px; top: -18px; color: var(--ork-ink-faint); }
+.gback .ork-sigil__seal { left: 49px; top: 9px; }
+.gback .nm { position: absolute; left: var(--ork-3); right: var(--ork-3); bottom: var(--ork-3); text-align: center; font: var(--ork-type-caption); color: var(--ork-ink);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; background: var(--ork-card); padding: var(--ork-1) var(--ork-2); }
+.gback .when { position: absolute; left: 0; right: 0; top: 112px; text-align: center; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+/* the wait: the seal's runes fill from the goal's rune, clockwise, at the share left (this page drives orkUI's own `--_arc`; orkUI's `.is-waiting` later) */
+.gback .ork-sigil.wait::after { --_turn: 22.5deg; --_arc: var(--mk-arc, 0deg); --_rest: color-mix(in srgb, var(--ork-ink-faint) 60%, transparent); background: conic-gradient(from 0deg, var(--mk-c) 0 var(--mk-arc, 0deg), var(--_rest) var(--mk-arc, 0deg)); }
+.heads { display: flex; gap: var(--ork-1); justify-content: center; min-height: 18px; }
+.heads img { width: 18px; height: 16px; image-rendering: pixelated; opacity: 0.3; filter: grayscale(1); transition: opacity var(--ork-motion-base) steps(3); }
+.heads img.said { opacity: 1; filter: none; }
+.heads img.gives { animation: give var(--ork-motion-base) var(--ork-motion-spring) 2; }
+@keyframes give { 50% { transform: translateY(-4px); } }
+.under { text-align: center; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+
+/* the goal's face */
+.gface { position: absolute; inset: 0; display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3); overflow: hidden; }
+.gface .hd { display: flex; gap: var(--ork-2); align-items: flex-start; font-weight: 600; font: var(--ork-type-caption); color: var(--ork-ink); }
+.gface .hd .ork-elem { margin-top: 2px; flex: none; }
+.gface .st { display: flex; gap: var(--ork-2); align-items: flex-start; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.gface .st img { width: 18px; height: 16px; image-rendering: pixelated; flex: none; }
+.gface .foot { margin-top: auto; display: flex; justify-content: space-between; align-items: center; font: var(--ork-type-label); text-transform: var(--ork-type-label-case); color: var(--ork-ink-muted); }
+
+/* the + card (orkUI's) and the card-field it turns into */
+.plusbox { width: 144px; }
+.plusbox .ork-plus { width: 144px; }
+.field { width: min(340px, 100%); aspect-ratio: 5 / 7; display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4); border-color: var(--ork-action); background: var(--ork-raised); }
+.field .top { display: flex; align-items: center; gap: var(--ork-3); }
+.field .rune { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: var(--ork-line) solid var(--ork-frame); background: none; cursor: pointer; clip-path: var(--ork-notch); }
+.field .rune .ork-elem { width: 28px; height: 28px; }
+.field textarea { flex: 1; resize: none; padding: var(--ork-3); font: var(--ork-type-body); height: auto; }
+.field .runes { display: flex; gap: var(--ork-2); }
+.field .runes[hidden] { display: none; }
+.field .runes button { display: grid; place-items: center; width: 40px; height: 40px; padding: 0; border: var(--ork-line) solid var(--ork-frame); background: none; cursor: pointer; clip-path: var(--ork-notch); }
+.field .runes button .ork-elem { width: 28px; height: 28px; }
+.field .runes button[aria-checked="true"] { border: 2px solid var(--ork-ink); background: var(--ork-panel); }
+.field .runes button.used .ork-elem { opacity: 0.3; }
+.field .acts { display: flex; justify-content: space-between; align-items: center; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+
+/* ---------- the hand's card, handed ---------- */
+.hcard { position: relative; width: 104px; aspect-ratio: 5 / 7; display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-2); }
+.hcard .win { flex: 1; display: grid; place-items: center; border: var(--ork-line) solid var(--ork-card-frame); position: relative; }
+.hcard .win img { width: 36px; height: 33px; image-rendering: pixelated; }
+.hcard .q { font: var(--ork-type-caption); color: var(--ork-ink); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.hcard .from { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.flyer { position: fixed; z-index: 40; pointer-events: none; margin: 0; }
+.live { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+
+/* ---------- the hearing ---------- */
+.hearing { position: relative; display: grid; grid-template-columns: 1fr auto 1fr; grid-template-rows: auto auto auto; gap: var(--ork-4); align-items: center; justify-items: center;
+  padding: var(--ork-5); background: var(--ork-table); outline: var(--ork-line) solid var(--ork-edge); touch-action: pan-y; user-select: none; }
+.hearing .ttl { grid-column: 1 / -1; font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); }
+.side-btn { display: flex; flex-direction: column; gap: var(--ork-2); width: 100%; max-width: 230px; padding: var(--ork-3); text-align: left; background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame);
+  color: var(--ork-ink); font: inherit; cursor: pointer; clip-path: var(--ork-notch); transition: transform var(--ork-motion-quick) var(--ork-motion-ease), border-color var(--ork-motion-quick) linear; }
+.side-btn:hover, .side-btn.near { border-color: var(--ork-ink); transform: scale(1.04); }
+.side-btn .who { display: flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); color: var(--ork-ink-muted); }
+.side-btn .who img { image-rendering: pixelated; }
+.side-btn .who img.big { width: 28px; height: 26px; } .side-btn .who img.sm { width: 16px; height: 15px; }
+.side-btn .says { font: var(--ork-type-body); }
+.side-btn .out { display: flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-button); text-transform: var(--ork-type-button-case); letter-spacing: var(--ork-type-button-track); }
+.side-btn .key { margin-left: auto; color: var(--ork-ink-faint); font: var(--ork-type-caption); }
+.s-up { grid-column: 2; grid-row: 2; align-self: end; } .s-left { grid-column: 1; grid-row: 3; justify-self: end; } .s-right { grid-column: 3; grid-row: 3; justify-self: start; }
+.center { grid-column: 2; grid-row: 3; position: relative; width: 168px; aspect-ratio: 5 / 7; touch-action: none; cursor: grab; }
+.center .ork-card { position: absolute; inset: 0; display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3); }
+.center .ork-card ul { list-style: none; display: flex; flex-direction: column; gap: var(--ork-1); font: var(--ork-type-caption); }
+.center .ork-card li::before { content: "· "; color: var(--ork-ink-muted); }
+.center .own { margin-top: auto; padding: var(--ork-2) 0 0; border: 0; border-top: var(--ork-line) solid var(--ork-frame); background: none; color: var(--ork-ink-muted); font: var(--ork-type-caption); text-align: left; cursor: pointer; }
+.center .stamp { position: absolute; left: 8px; right: 8px; top: 40%; padding: var(--ork-2); text-align: center; border: 2px solid currentColor; font: var(--ork-type-button); text-transform: var(--ork-type-button-case);
+  background: var(--ork-card); opacity: 0; transform: rotate(-8deg); pointer-events: none; }
+.center.dragging { cursor: grabbing; }
+.hearing.is-thrown .center { transition: transform 360ms var(--ork-motion-ease), opacity 360ms linear; opacity: 0; }
+.toast { display: none; align-items: center; gap: var(--ork-4); padding: var(--ork-3) var(--ork-4); background: var(--ork-raised); border: var(--ork-line) solid var(--ork-edge); font: var(--ork-type-caption); }
+.toast.on { display: inline-flex; }
+@media (prefers-reduced-motion: reduce) { .side-btn, .hearing.is-thrown .center { transition: none; } }
+
+/* ---------- the phone ---------- */
+.phone { width: 390px; max-width: 100%; height: 760px; display: flex; flex-direction: column; background: var(--ork-canvas); outline: var(--ork-line) solid var(--ork-edge); overflow: hidden; }
+.phone .top { display: flex; align-items: center; gap: var(--ork-3); height: 52px; padding: 0 var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.phone .top img { width: 36px; height: 33px; image-rendering: pixelated; }
+.phone .mid { flex: 1; display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4); overflow: auto; }
+.phone .foot { display: flex; gap: var(--ork-2); padding: var(--ork-3) var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame); overflow-x: auto; }
+.phone .foot .mini { flex: none; width: 52px; aspect-ratio: 5 / 7; display: grid; place-items: center; }
+.phone .foot .mini img { width: 24px; height: 22px; image-rendering: pixelated; }
+.phone .foot .mini.on { outline: 2px solid var(--ork-ink); }
+.phone .hearing { grid-template-columns: 1fr 1fr; padding: var(--ork-3); gap: var(--ork-3); }
+.phone .hearing .s-up { grid-column: 1 / -1; grid-row: 2; }
+.phone .hearing .center { grid-column: 1 / -1; grid-row: 3; width: 150px; }
+.phone .hearing .s-left { grid-column: 1; grid-row: 4; justify-self: stretch; } .phone .hearing .s-right { grid-column: 2; grid-row: 4; justify-self: stretch; }
+.phone .hearing .side-btn .says { font: var(--ork-type-caption); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.phone .hearing .side-btn .key { display: none; }
+
+/* ---------- the sketch ---------- */
+.abc { display: flex; gap: var(--ork-2); }
+.abc .ork-btn[aria-pressed="true"] { --_bg: var(--ork-ink); --_fg: var(--ork-on-ink); }
+.sk-frame { width: 100%; height: 420px; border: var(--ork-line) solid var(--ork-frame); background: var(--ork-paper); display: block; }
+.sk-desk { display: flex; gap: var(--ork-4); flex-wrap: wrap; }
+.sk-desk figure { margin: 0; display: flex; flex-direction: column; gap: var(--ork-2); width: 200px; }
+.sk-desk iframe { width: 200px; height: 360px; border: var(--ork-line) solid var(--ork-frame); background: var(--ork-paper); }
+.sk-acts { display: flex; flex-direction: column; gap: var(--ork-2); }
+.sk-acts .ork-field { height: var(--ork-control); }
+
+/* ---------- the morning, the night, the evening ---------- */
+.lifted { width: min(440px, 100%); display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4); }
+.lifted .hd { display: flex; align-items: center; gap: var(--ork-3); font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.lifted .hd img { width: 36px; height: 33px; image-rendering: pixelated; }
+.nrow { display: flex; align-items: center; gap: var(--ork-3); padding: var(--ork-2) 0; border-top: var(--ork-line) solid var(--ork-frame); }
+.nrow .t { flex: 1; min-width: 0; } .nrow .t b { display: block; font-weight: 600; } .nrow .t span { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.nrow.bad .t b { color: var(--ork-danger); }
+.setting { width: min(520px, 100%); display: flex; gap: var(--ork-4); align-items: flex-start; padding: var(--ork-4); }
+.setting p { color: var(--ork-ink-muted); font: var(--ork-type-caption); margin-top: var(--ork-1); }
+.strip { width: min(560px, 100%); display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3) var(--ork-4); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame); }
+.strip .l1 { display: flex; align-items: center; gap: var(--ork-3); }
+.strip .l1 img { width: 24px; height: 22px; image-rendering: pixelated; }
+.strip .since { display: flex; align-items: flex-start; gap: var(--ork-2); font: var(--ork-type-caption); }
+.strip .since .ork-sign.check { color: var(--ork-ink); } .strip .since .ork-sign.alert { color: var(--ork-alert); }
+.dot { display: inline-block; width: 6px; height: 6px; background: var(--ork-ink-muted); margin: 5px 4px 0; flex: none; }
+/* ---------- the die's up face at rest: the play arrow (this page's `.face-play` until orkUI's, drawn as orkUI draws a face: 2 x 2 cell marks) ---------- */
+.ork-die.face-play .ork-die__face.is-up::before { background-image: linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)), linear-gradient(var(--_pip), var(--_pip)); background-position: calc(var(--_c) * 4) calc(var(--_c) * 2), calc(var(--_c) * 4) calc(var(--_c) * 4), calc(var(--_c) * 4) calc(var(--_c) * 6), calc(var(--_c) * 4) calc(var(--_c) * 8), calc(var(--_c) * 4) calc(var(--_c) * 10), calc(var(--_c) * 4) calc(var(--_c) * 12), calc(var(--_c) * 6) calc(var(--_c) * 3), calc(var(--_c) * 6) calc(var(--_c) * 5), calc(var(--_c) * 6) calc(var(--_c) * 7), calc(var(--_c) * 6) calc(var(--_c) * 9), calc(var(--_c) * 6) calc(var(--_c) * 11), calc(var(--_c) * 8) calc(var(--_c) * 5), calc(var(--_c) * 8) calc(var(--_c) * 7), calc(var(--_c) * 8) calc(var(--_c) * 9), calc(var(--_c) * 10) calc(var(--_c) * 6), calc(var(--_c) * 10) calc(var(--_c) * 8), calc(var(--_c) * 12) calc(var(--_c) * 7); }
+.dies { display: flex; flex-wrap: wrap; gap: var(--ork-8); align-items: flex-end; padding: var(--ork-5); background: var(--ork-table); outline: var(--ork-line) solid var(--ork-edge); }
+.dies figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: var(--ork-2); width: 150px; text-align: center; }
+.dies .ork-die { rotate: calc(var(--ork-motion-lean) * -1); }
+.nrow .ork-btn .ork-icon { width: 14px; height: 14px; }
+@media (max-width: 720px) { .mk-main { padding: var(--ork-4); } .hearing:not(.phone .hearing) { grid-template-columns: 1fr; } .hearing:not(.phone .hearing) > * { grid-column: 1 !important; grid-row: auto !important; justify-self: stretch !important; } }
+</style>
+</head>
+<body>
+<header class="mk-bar">
+  <span class="ork-label">Orkboard · specs 120 and 121</span>
+  <nav aria-label="Sections"><a class="ork-btn" href="#life">1 · One card</a><a class="ork-btn" href="#handed">2 · Handed</a><a class="ork-btn" href="#hearing">3 · The hearing</a><a class="ork-btn" href="#sketch">4 · The sketch</a><a class="ork-btn" href="#morning">5 · Morning, night, evening</a><a class="ork-btn" href="#die">6 · The die</a></nav>
+</header>
+<main class="mk-main">
+
+<section class="mk-sec" id="life">
+  <h1>1 · One card through a goal's life</h1>
+  <p class="mk-line">The + card is a card's back. Pressed, it turns over into the card of the text (the field has the focus from the press itself, so a phone's keyboard rises). Sent, it turns back with its rune lit and goes <b>face down</b> to the Orkmaster. While the leaders talk it over, its rune glows, and their heads under it light up as each has spoken. Several goals at the Orkmaster are told apart by their rune and short name, and none is green. Hovered, a back only lifts at a corner. Pressed, it turns. When everyone agrees, <b>the seal's own runes are the wait</b>. When the wait ends, the card turns face up and flies to its lane.</p>
+  <div class="mk-row">
+    <figure class="mk-fig"><h2>a · The + card</h2><div class="plusbox" id="plus-a"></div><p>As today: orkUI's <code>.ork-plus</code>, its seal holding the rune the next goal would be given.</p></figure>
+    <figure class="mk-fig"><h2>b · Turned: the card of the text</h2><div id="field-b"></div><p>The rune is <b>given by itself</b>. A press on it opens the five. Esc turns the card back, keeping the text.</p></figure>
+    <figure class="mk-fig"><h2>c · At the Orkmaster, face down</h2><div class="table"><div class="lanes" id="lane-c"></div></div><p>Three goals: <b>one being talked over</b> (its rune glowing, two of three heads lit), one waiting (its seal filling), one held. <b>Hover</b> lifts a card, and <b>a press turns it</b>: try it.</p></figure>
+    <figure class="mk-fig"><h2>d · The wait, at a share</h2><div id="wait-d"></div><div class="mk-acts"><input type="range" min="0" max="100" value="62" id="wait-range" aria-label="Share of the wait gone"></div><p>The ring fills clockwise from the rune, in the goal's colour, in eight steps over the wait (one minute or ten). It stands still while held or while no face is open. Under reduced motion it is drawn at its share.</p></figure>
+  </div>
+  <div class="mk-row" style="margin-top:var(--ork-6)">
+    <figure class="mk-fig"><h2>e · The life, played</h2><div class="table" id="life-e"><div class="lanes"><div class="lane" id="e-ork"><span class="lab">The Orkmaster</span></div><div class="lane" id="e-design"><span class="lab">Design</span></div></div><div class="hand" id="e-hand"><span class="lab">Hand</span></div></div>
+      <div class="mk-acts"><button class="ork-btn" type="button" data-life="press">1 · Press +</button><button class="ork-btn" type="button" data-life="send">2 · Send</button><button class="ork-btn" type="button" data-life="talk">3 · The leaders talk</button><button class="ork-btn" type="button" data-life="wait">4 · All agree: the wait</button><button class="ork-btn" type="button" data-life="go">5 · Turned up, flown</button><button class="ork-btn" type="button" data-life="reset">Again</button></div>
+      <p>Each step plays once. In the real face the steps follow the host: a press, the leaders' answers, the wait's time, its end.</p></figure>
+  </div>
+</section>
+
+<section class="mk-sec" id="handed">
+  <h1>2 · A card handed from where it was played, and played back there</h1>
+  <p class="mk-line">Today a card leaves a leader and something appears in the hand, and the two never touch. <b>Proposed:</b> the head of the one who plays it gives one beat. The card then flies from the goal's card to its place in the hand, face up, with the asker's head already in its window, and says <i>From &lt;Leader&gt;</i>. <b>Answered</b>, it flies back into the goal. <b>Dropped</b>, it crumbles where it lay. With the goal out of view, it comes from the leader's tab. On the phone it comes from the crown. Never for what came while the page was hidden, never while a finger is down, at most three at once, and nothing moves under reduced motion.</p>
+  <div class="mk-row">
+    <figure class="mk-fig"><h2>On the table</h2><div class="table" id="h-table"><div class="lanes"><div class="lane" id="h-ork"><span class="lab">The Orkmaster</span></div></div><div class="hand" id="h-hand"><span class="lab">Hand</span></div><span class="live" aria-live="polite" id="h-live"></span></div>
+      <div class="mk-acts"><button class="ork-btn" type="button" id="h-ask">Sh.man and the Dryad ask</button><button class="ork-btn" type="button" id="h-answer">Answer the first</button><button class="ork-btn" type="button" id="h-drop">Drop the last</button><button class="ork-btn" type="button" id="h-reset">Again</button></div>
+      <p>Two questions, a deal gap apart, in the route's order. The goal stays face down at the Orkmaster: only its questions come to the hand.</p></figure>
+    <figure class="mk-fig"><h2>On the phone: from the crown</h2><div class="phone" id="h-phone"></div><p>No lanes on a phone: the card falls from the crown into the hand's row. If it lands outside the row's view, nothing scrolls, and the row's edge cue lights once.</p></figure>
+  </div>
+</section>
+
+<section class="mk-sec" id="hearing">
+  <h1>3 · The hearing: thrown to the side you take</h1>
+  <p class="mk-line">When a leader says no or doubts, the face-down card turns up in the middle, with at most three sides around it. <b>Do it</b> is on the right. <b>Drop it</b> or <b>After …</b> is on the left. <b>The smaller one</b> is at the top. Each side shows its leaders' heads and their own words. The middle takes your own words. <b>Drag or swipe</b> the card past a third of the way, <b>press</b> a side (one tap stays), or use the <b>keys</b> → ← ↑. Short of a third, the card comes back, and down does nothing. The toast has <i>Undo</i>, and a drop is sent only when the toast goes.</p>
+  <div class="mk-row">
+    <figure class="mk-fig" style="flex:1 1 640px"><h2>On the desktop, over the pane</h2><div id="hear-desk"></div><div class="toast" id="toast-desk" role="status"><span></span><button class="ork-btn" type="button">Undo</button></div></figure>
+    <figure class="mk-fig"><h2>On the phone, the middle</h2><div class="phone" id="hear-phone"></div><div class="toast" id="toast-phone" role="status"><span></span><button class="ork-btn" type="button">Undo</button></div></figure>
+  </div>
+  <div class="mk-row" style="margin-top:var(--ork-6)">
+    <figure class="mk-fig" style="flex:1 1 640px"><h2>One leader: its outcomes are the sides</h2><div id="hear-one"></div><p>Sh.man alone said no, with a smaller goal. The sides are his outcomes: <b>Drop it</b>, <b>The smaller one</b> and <b>Do it anyway</b> (no head: nobody argued for it).</p><div class="toast" id="toast-one" role="status"><span></span><button class="ork-btn" type="button">Undo</button></div></figure>
+  </div>
+</section>
+
+<section class="mk-sec" id="sketch">
+  <h1>4 · The sketch: touched on the phone before the spec</h1>
+  <p class="mk-line">A goal that is seen or heard gets two or three throwaway variants from its craft's leader, before its spec. Here it is the Dryad's: each variant is <b>one self-contained page</b>, kept beside the goal and never in the project's code. It is served in a sandbox (<code>sandbox="allow-scripts"</code> with no same origin, and a CSP with no network), so it reaches neither the Board nor the internet. On the phone you see one variant at a time, at the screen's width, and press it as you would the real thing. <b>A · B · C</b> are buttons, never a swipe, because the frame takes the gestures. The variants below are live: press them.</p>
+  <div class="mk-row">
+    <figure class="mk-fig"><h2>On the phone</h2><div class="phone" id="sk-phone"></div></figure>
+    <figure class="mk-fig"><h2>On the desktop: side by side</h2><div class="sk-desk" id="sk-desk"></div><p>Each frame is at a phone's width. A picture or a sound sketch is drawn as Pick one draws it today. With <i>Work at night</i> on, <b>Pick and build now</b> sits beside <b>Pick this one</b>, quieter.</p></figure>
+  </div>
+</section>
+
+<section class="mk-sec" id="morning">
+  <h1>5 · The morning, the night, the evening</h1>
+  <p class="mk-line"><b>Morning:</b> the first card after the night says what the night did, and <b>Play it</b> opens Play on the screen each goal changed. <b>Night:</b> with <i>Work at night</i> on, what would start by itself waits for the night's window. <b>Build it now</b> still starts it by day, from the phone too. <b>Evening:</b> each leader's look says in a line whether what changed went toward its aims, and what broke.</p>
+  <div class="mk-row">
+    <figure class="mk-fig"><h2>The morning's card, lifted (desktop)</h2><div id="m-card"></div></figure>
+    <figure class="mk-fig"><h2>Work at night, and a goal held for it</h2><div id="n-set"></div><div id="n-held" style="margin-top:var(--ork-4)"></div></figure>
+    <figure class="mk-fig"><h2>The evening line, on a leader's strip</h2><div id="e-strip"></div></figure>
+  </div>
+</section>
+<section class="mk-sec" id="die">
+  <h1>6 · The die: the play arrow on top</h1>
+  <p class="mk-line">The owner: <i>by default the die's top face could show play as an arrow; it is clearer and suits the die</i>. Today the top face at rest shows the five, which says nothing. <b>Proposed:</b> at rest it shows the <b>play arrow</b>, drawn in the die's own pips (2 × 2 cells, the muted ink, the ink while it plays). The cross (the last start failed) and the spark (dev is new) stay as they are, because they say more than the arrow. <b>Asleep</b> (no preview: nothing to play) it stays the five, so the arrow never promises a Play that cannot start. The other faces keep the die's numbers, so it still reads as a die when it rolls.</p>
+  <div class="dies">
+    <figure><span class="ork-die big face-5" aria-hidden="true"><span class="ork-die__cube"><i class="ork-die__face is-up"></i><i class="ork-die__face is-front"></i><i class="ork-die__face is-right"></i><i class="ork-die__face is-back"></i><i class="ork-die__face is-left"></i><i class="ork-die__face is-down"></i></span></span><span class="cap muted">Today, at rest: the five</span></figure>
+    <figure><span class="ork-die big face-play" aria-hidden="true"><span class="ork-die__cube"><i class="ork-die__face is-up"></i><i class="ork-die__face is-front"></i><i class="ork-die__face is-right"></i><i class="ork-die__face is-back"></i><i class="ork-die__face is-left"></i><i class="ork-die__face is-down"></i></span></span><span class="cap"><b>Proposed, at rest: play</b></span></figure>
+    <figure><span class="ork-die big face-play is-playing" aria-hidden="true"><span class="ork-die__cube"><i class="ork-die__face is-up"></i><i class="ork-die__face is-front"></i><i class="ork-die__face is-right"></i><i class="ork-die__face is-back"></i><i class="ork-die__face is-left"></i><i class="ork-die__face is-down"></i></span></span><span class="cap muted">Playing: the arrow in the ink, glowing</span></figure>
+    <figure><span class="ork-die big face-new" aria-hidden="true"><span class="ork-die__cube"><i class="ork-die__face is-up"></i><i class="ork-die__face is-front"></i><i class="ork-die__face is-right"></i><i class="ork-die__face is-back"></i><i class="ork-die__face is-left"></i><i class="ork-die__face is-down"></i></span></span><span class="cap muted">Dev is new: the spark (as today)</span></figure>
+    <figure><span class="ork-die big face-no" aria-hidden="true"><span class="ork-die__cube"><i class="ork-die__face is-up"></i><i class="ork-die__face is-front"></i><i class="ork-die__face is-right"></i><i class="ork-die__face is-back"></i><i class="ork-die__face is-left"></i><i class="ork-die__face is-down"></i></span></span><span class="cap muted">The last start failed: the cross (as today)</span></figure>
+    <figure style="opacity:.55"><span class="ork-die big face-5" aria-hidden="true"><span class="ork-die__cube"><i class="ork-die__face is-up"></i><i class="ork-die__face is-front"></i><i class="ork-die__face is-right"></i><i class="ork-die__face is-back"></i><i class="ork-die__face is-left"></i><i class="ork-die__face is-down"></i></span></span><span class="cap muted">Asleep, no preview: the five, grey</span></figure>
+  </div>
+</section>
+</main>
+<p class="mk-foot">This is a mockup and is not wired into the app. It is drawn with orkUI's tokens and pieces: <code>.ork-card</code>, <code>.ork-card-back</code>, <code>.ork-plus</code>, <code>.ork-sigil</code>, <code>.ork-elem.is-glowing</code>, <code>.ork-race__head</code>, <code>.ork-btn</code> and <code>.ork-crumble</code>. The turn, the seal as the wait, the give and the hearing's drag belong to this page. After the owner's yes they would go into orkUI first (spec 120 part G): <code>.ork-turn</code>, <code>.ork-sigil.is-waiting</code>, <code>.ork-gives</code>. The sketches' pages here are written by hand for the mockup. Open it over http, not file://.</p>
+
+<script>
+(function () {
+  "use strict";
+  var B = "../../../design-system/orkui/";
+  var reduced = function () { return matchMedia("(prefers-reduced-motion: reduce)").matches; };
+  var $ = function (id) { return document.getElementById(id); };
+  var E = function (n, extra) { return '<span class="ork-elem ' + n + (extra ? " " + extra : "") + '" aria-hidden="true"></span>'; };
+  var S = function (n) { return '<span class="ork-sign ' + n + '" aria-hidden="true"></span>'; };
+  var ICON = function (n) { return '<svg class="ork-icon pix" aria-hidden="true"><use href="' + B + "icons/icons.svg#" + n + '"/></svg>'; };
+  var H = function (race, cls, title) { return '<img class="' + (cls || "") + '" src="' + B + "races/" + race + '@2x.png" alt="" title="' + (title || "") + '" draggable="false">'; };
+  var L = { tech: { race: "shaman-warrior", name: "Sh.man", role: "Architect" }, design: { race: "dryad-warrior", name: "Pixel-Perfect Dryad", role: "Product designer" },
+            product: { race: "unicorn-warrior", name: "Angel Invest Knight", role: "Product manager" }, run: { race: "imp-warrior", name: "Uptime Imp", role: "Run" },
+            ork: { race: "peon-crown", name: "the Orkmaster" } };
+  var short = function (k) { return { tech: "Sh.man", design: "the Dryad", product: "the Angel", run: "the Imp", ork: "the Orkmaster" }[k]; };
+
+  // ---------- the pieces ----------
+  function plus(el) { return '<button type="button" class="ork-card ork-plus" aria-label="New goal"><span class="ork-sigil" aria-hidden="true"><span class="ork-sigil__seal">' + E(el) + "</span></span>" + ICON("plus") + "</button>"; }
+  function gback(g) {
+    var glow = g.talking ? " is-glowing" : "", wait = g.wait != null;
+    return '<div class="ork-card gback"><span class="ork-sigil' + (wait ? " wait" : "") + '" aria-hidden="true" style="--mk-c:var(--ork-elem-' + g.el + ");--mk-arc:" + (wait ? Math.round(g.wait * 360 / 45) * 45 : 0) + 'deg"><span class="ork-sigil__seal">' + E(g.el, glow) + "</span></span>"
+      + (g.when ? '<span class="when">' + g.when + "</span>" : "") + '<span class="nm">' + g.name + "</span></div>";
+  }
+  function gface(g) {
+    var st = (g.said || []).map(function (s) { return '<div class="st">' + H(L[s[0]].race) + "<span>" + s[1] + "</span></div>"; }).join("");
+    return '<div class="ork-card gface"><div class="hd">' + E(g.el) + "<span>" + g.name + "</span></div>" + st + '<div class="foot"><span>' + (g.foot || "Talk") + '</span><button class="ork-btn" type="button" data-back>Turn it back</button></div></div>';
+  }
+  function heads(g) { return '<div class="heads">' + g.route.map(function (k, i) { return H(L[k].race, i < (g.n || 0) ? "said" : "", L[k].name); }).join("") + "</div>"; }
+  function slot(g) {
+    return '<div class="slot" data-goal="' + g.id + '"><div class="turn" tabindex="0" role="button" aria-label="' + g.name + ': ' + (g.talking ? "the leaders are talking it over, " + (g.n || 0) + " of " + g.route.length + " have said" : (g.when || "")) + '">'
+      + '<div class="side back">' + gback(g) + '</div><div class="side face">' + gface(g) + "</div></div>" + heads(g) + (g.under ? '<div class="under">' + g.under + "</div>" : "") + "</div>";
+  }
+  function hcard(c) {
+    return '<div class="ork-card hcard" data-card="' + c.id + '"><div class="win">' + H(L[c.by].race) + '</div><div class="q">' + c.q + '</div><div class="from">From ' + L[c.by].name + "</div></div>";
+  }
+  function field(el) {
+    var all = ["meadow", "ice", "dust", "void", "lava"];
+    return '<div class="ork-card field"><div class="top"><button type="button" class="rune" aria-label="Its rune: Rune ' + (all.indexOf(el) + 1) + ', change it" aria-expanded="false">' + E(el) + '</button><span class="cap muted">→ the Orkmaster</span></div>'
+      + '<div class="runes" role="radiogroup" aria-label="Its rune" hidden>' + all.map(function (n, i) { return '<button type="button" role="radio" aria-label="Rune ' + (i + 1) + '" aria-checked="' + (n === el) + '" class="' + (i < 2 ? "used" : "") + '">' + E(n) + "</button>"; }).join("") + "</div>"
+      + '<textarea class="ork-field" placeholder="Write a goal…" aria-label="The goal">Players see who answered first, with a small crown over their name</textarea>'
+      + '<div class="acts"><span>Enter sends · Esc keeps it</span><button class="ork-btn primary" type="button">Send</button></div></div>';
+  }
+  function wireField(root) {
+    root.querySelectorAll(".field").forEach(function (f) {
+      var r = f.querySelector(".rune"), row = f.querySelector(".runes");
+      r.addEventListener("click", function () { row.hidden = !row.hidden; r.setAttribute("aria-expanded", String(!row.hidden)); });
+      row.querySelectorAll("button").forEach(function (b) { b.addEventListener("click", function () {
+        row.querySelectorAll("button").forEach(function (x) { x.setAttribute("aria-checked", "false"); }); b.setAttribute("aria-checked", "true");
+        r.innerHTML = b.innerHTML; row.hidden = true; r.setAttribute("aria-expanded", "false"); }); });
+    });
+  }
+  function wireTurns(root) {
+    root.querySelectorAll(".turn").forEach(function (t) {
+      var flip = function (e) { if (e.target.closest("[data-back]")) { t.classList.remove("is-up"); e.stopPropagation(); return; } t.classList.add("is-up"); };
+      t.addEventListener("click", flip);
+      t.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); t.classList.toggle("is-up"); } if (e.key === "Escape") t.classList.remove("is-up"); });
+    });
+  }
+
+  // a flight from one box to another (the page's FLIP until orkUI's `.ork-deal` / `.ork-play` take the origins)
+  function fly(html, from, to, opts) {
+    opts = opts || {};
+    if (reduced() || !from || !to) return Promise.resolve();
+    var a = from.getBoundingClientRect(), b = to.getBoundingClientRect(), el = document.createElement("div");
+    el.className = "flyer"; el.innerHTML = html; document.body.appendChild(el);
+    var w = el.firstElementChild.getBoundingClientRect().width || b.width;
+    el.style.left = b.left + "px"; el.style.top = b.top + "px";
+    var sx = a.width / w, dx = a.left - b.left, dy = a.top - b.top;
+    var anim = el.animate([{ transform: "translate(" + dx + "px," + dy + "px) scale(" + sx + ") rotate(-3deg)", offset: 0 },
+                           { transform: "translate(" + dx * 0.5 + "px," + (dy * 0.5 - 30) + "px) scale(" + (sx + 1) / 2 + ") rotate(2deg)", offset: 0.45 },
+                           { transform: "none", offset: 1 }], { duration: opts.ms || 560, easing: "cubic-bezier(.3,1.3,.5,1)", fill: "both", delay: opts.delay || 0 });
+    if (opts.reverse) anim.reverse();
+    return anim.finished.then(function () { el.remove(); });
+  }
+  function crumble(el) {
+    if (reduced()) { el.remove(); return; }
+    el.style.position = "relative"; el.insertAdjacentHTML("beforeend", '<span class="ork-crumble">' + "<i></i>".repeat(6) + "</span>");
+    el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 700, fill: "forwards" }).finished.then(function () { el.remove(); });
+  }
+
+  // ---------- 1 · the life ----------
+  $("plus-a").innerHTML = plus("dust");
+  $("field-b").innerHTML = field("dust"); wireField($("field-b"));
+  var C = [
+    { id: "c1", el: "dust", name: "Players see who answered first", route: ["product", "design", "tech"], n: 2, talking: true,
+      said: [["product", "Go: it serves the job ‘feel the race to answer’."], ["design", "Doubt: a crown over a name crowds the small screens."]] },
+    { id: "c2", el: "ice", name: "Round timer shows on every phone", route: ["product", "tech"], n: 2, wait: 0.62, under: "Starts by itself in 4 min", foot: "All the leaders agreed",
+      said: [["product", "Go, high: the most asked thing."], ["tech", "Go, low risk: one event, one view."]] },
+    { id: "c3", el: "void", name: "A sound when the round ends", route: ["product", "design"], n: 2, under: "Held: start it when you are ready", foot: "Held",
+      said: [["product", "Go, normal."], ["design", "Go."]] }
+  ];
+  $("lane-c").innerHTML = '<div class="lane"><span class="lab">The Orkmaster</span>' + C.map(slot).join("") + "</div>";
+  wireTurns($("lane-c"));
+  function drawWait(v) { $("wait-d").innerHTML = slot({ id: "d", el: "ice", name: "Round timer shows on every phone", route: ["product", "tech"], n: 2, wait: v / 100,
+    under: v >= 100 ? "Starting…" : "Starts by itself in " + Math.max(1, Math.round((100 - v) / 100 * 10)) + " min", said: [], foot: "All the leaders agreed" }); wireTurns($("wait-d")); }
+  drawWait(62); $("wait-range").addEventListener("input", function (e) { drawWait(+e.target.value); });
+
+  // the life, played
+  var G = { id: "e", el: "lava", name: "Players see who answered first", route: ["product", "design", "tech"], n: 0, talking: false, said: [] };
+  function lifeReset() {
+    $("e-ork").innerHTML = '<span class="lab">The Orkmaster</span>'; $("e-design").innerHTML = '<span class="lab">Design</span>';
+    $("e-hand").innerHTML = '<span class="lab">Hand</span><div class="plusbox" id="e-plus">' + plus("lava") + "</div>";
+    G.n = 0; G.talking = false; G.wait = null; G.under = "";
+  }
+  lifeReset();
+  var life = {
+    press: function () {
+      var p = $("e-plus"); if (!p || $("e-field")) return;
+      var f = document.createElement("div"); f.id = "e-field"; f.innerHTML = field("lava"); $("e-hand").appendChild(f); wireField(f);
+      f.querySelector("textarea").focus();                       // the focus in the press itself: a phone's keyboard rises
+      if (!reduced()) f.animate([{ transform: "perspective(60em) rotateY(90deg) scale(.45)", transformOrigin: "left bottom", opacity: .4 }, { transform: "none", opacity: 1 }], { duration: 360, easing: "cubic-bezier(.3,1.3,.5,1)" });
+    },
+    send: function () {
+      var f = $("e-field"); if (!f) return;
+      G.talking = true; G.n = 0;
+      var to = document.createElement("div"); to.innerHTML = slot(G); var s = to.firstElementChild; s.style.visibility = "hidden"; $("e-ork").appendChild(s); wireTurns(s);
+      var from = f.firstElementChild;
+      var go = reduced() ? Promise.resolve() : from.animate([{ transform: "none" }, { transform: "perspective(60em) rotateY(90deg)" }], { duration: 180, fill: "forwards" }).finished;
+      go.then(function () { var r = from; var p = fly('<div style="width:144px;aspect-ratio:5/7">' + gback(G) + "</div>", r, s.querySelector(".turn"), { ms: 520 }); f.remove(); return p; })
+        .then(function () { s.style.visibility = ""; });
+    },
+    talk: function () {
+      var s = document.querySelector('#e-ork [data-goal="e"]'); if (!s) return;
+      var imgs = s.querySelectorAll(".heads img"), i = 0;
+      (function next() { if (i >= imgs.length) return; imgs[i].classList.add("said"); i++; setTimeout(next, reduced() ? 0 : 700); })();
+    },
+    wait: function () {
+      var s = document.querySelector('#e-ork [data-goal="e"]'); if (!s) return;
+      G.talking = false; G.n = 3; G.wait = 0; G.under = "Starts by itself in 1 min";
+      var t0 = performance.now(), dur = reduced() ? 0 : 4000;
+      (function tick(now) {
+        var v = dur ? Math.min(1, (now - t0) / dur) : 1; G.wait = v; G.under = v >= 1 ? "Starting…" : "Starts by itself in " + Math.ceil((1 - v) * 60) + " s";
+        var d = document.createElement("div"); d.innerHTML = slot(G); s.replaceWith(d.firstElementChild); s = document.querySelector('#e-ork [data-goal="e"]'); wireTurns(s);
+        if (v < 1) requestAnimationFrame(tick);
+      })(t0);
+    },
+    go: function () {
+      var s = document.querySelector('#e-ork [data-goal="e"]'); if (!s) return;
+      var t = s.querySelector(".turn"); G.said = [["product", "Go, high."], ["design", "Go."], ["tech", "Go, low risk."]]; G.foot = "Sections";
+      t.querySelector(".face").innerHTML = gface(G); t.classList.add("is-up");
+      setTimeout(function () {
+        var to = document.createElement("div"); to.innerHTML = '<div class="slot"><div class="ork-card gface" style="position:relative;width:144px;aspect-ratio:5/7"><div class="hd">' + E("lava", "is-glowing") + "<span>" + G.name + '</span></div><div class="st"><span>Spec · the sections</span></div></div></div>';
+        var dst = to.firstElementChild; dst.style.visibility = "hidden"; $("e-design").appendChild(dst);
+        fly('<div class="ork-card gface" style="position:relative;width:144px;aspect-ratio:5/7"><div class="hd">' + E("lava") + "<span>" + G.name + "</span></div></div>", t, dst.firstElementChild, { ms: 600 })
+          .then(function () { dst.style.visibility = ""; s.remove(); });
+      }, reduced() ? 0 : 700);
+    },
+    reset: lifeReset
+  };
+  document.querySelectorAll("[data-life]").forEach(function (b) { b.addEventListener("click", function () { life[b.dataset.life](); }); });
+
+  // ---------- 2 · handed ----------
+  var HG = { id: "h", el: "dust", name: "Players see who answered first", route: ["product", "design", "tech"], n: 3, talking: true, said: [] };
+  var Q = [{ id: "q1", by: "tech", q: "Who counts as first when two answers arrive within 50 ms?" }, { id: "q2", by: "design", q: "The crown over the name, or a gold frame on the card?" }];
+  function hReset() { $("h-ork").innerHTML = '<span class="lab">The Orkmaster</span>' + slot(HG); $("h-hand").innerHTML = '<span class="lab">Hand</span>'; wireTurns($("h-ork")); }
+  hReset();
+  function give(img) { if (!img || reduced()) return; img.classList.remove("gives"); void img.offsetWidth; img.classList.add("gives"); }
+  $("h-ask").addEventListener("click", function () {
+    var goal = $("h-ork").querySelector(".turn"); var imgs = $("h-ork").querySelectorAll(".heads img");
+    Q.forEach(function (c, i) {
+      if ($("h-hand").querySelector('[data-card="' + c.id + '"]')) return;
+      setTimeout(function () {
+        give(imgs[c.by === "tech" ? 2 : 1]);
+        var d = document.createElement("div"); d.innerHTML = hcard(c); var card = d.firstElementChild; card.style.visibility = "hidden"; $("h-hand").appendChild(card);
+        fly(hcard(c), goal, card, { ms: 560 }).then(function () { card.style.visibility = ""; $("h-live").textContent = L[c.by].name + " hands you a question: " + c.q; });
+      }, i * (reduced() ? 0 : 260));
+    });
+  });
+  $("h-answer").addEventListener("click", function () {
+    var card = $("h-hand").querySelector(".hcard"); if (!card) return;
+    var goal = $("h-ork").querySelector(".turn"), c = Q.filter(function (x) { return x.id === card.dataset.card; })[0];
+    card.style.visibility = "hidden";
+    fly(hcard(c), goal, card, { ms: 480, reverse: true }).then(function () { card.remove(); });
+  });
+  $("h-drop").addEventListener("click", function () { var cs = $("h-hand").querySelectorAll(".hcard"); if (cs.length) crumble(cs[cs.length - 1]); });
+  $("h-reset").addEventListener("click", hReset);
+  $("h-phone").innerHTML = '<div class="top">' + H("peon-crown", "", "The crown: the menu of the leaders") + '<span class="cap muted">Party quiz</span></div>'
+    + '<div class="mid"><div class="ork-card" style="padding:var(--ork-3)"><div class="cap muted">Players see who answered first</div><div style="margin-top:var(--ork-2)">The leaders are talking it over</div><div class="heads" style="justify-content:flex-start;margin-top:var(--ork-2)">'
+    + H(L.product.race, "said") + H(L.design.race, "said") + H(L.tech.race, "said") + "</div></div><p class='cap muted'>A press on the crown opens the menu of the leaders (spec 117). The question below fell from it.</p></div>"
+    + '<div class="foot"><div class="ork-card mini on">' + H(L.tech.race) + '</div><div class="ork-card mini">' + H(L.design.race) + '</div><div class="ork-card ork-plus mini" style="width:52px">' + ICON("plus") + "</div></div>";
+
+  // ---------- 3 · the hearing ----------
+  var SIDES = {
+    right: { out: "Do it", sign: "check", key: "→", leaders: ["product"], says: "It serves the job ‘feel the race to answer’; the most asked thing this week." },
+    left: { out: "After ‘Round timer shows on every phone’", sign: "moon", key: "←", leaders: ["tech"], says: "‘First’ needs the server's clock; the timer goal brings it. Wait for it." },
+    up: { out: "Do the smaller one: a gold frame, no crown", sign: "tidy", key: "↑", leaders: ["design"], says: "A crown over a name crowds the small screens; a frame says the same and fits." }
+  };
+  var ONE = {
+    right: { out: "Do it anyway", sign: "check", key: "→", leaders: [], says: "Nobody argued for it: the goal as you wrote it." },
+    left: { out: "Drop it", sign: "cross", key: "←", leaders: ["tech"], says: "Rewriting the lobby's socket layer adds a cycle between rooms and lobby." },
+    up: { out: "Do the smaller one: move the reconnect into rooms", sign: "tidy", key: "↑", leaders: ["tech"], says: "The same fix, one part, no cycle." }
+  };
+  function sideHtml(dir, s) {
+    var hs = s.leaders.map(function (k, i) { return H(L[k].race, i ? "sm" : "big", L[k].name); }).join("");
+    var names = s.leaders.map(function (k) { return L[k].name; }).join(" and ");
+    return '<button type="button" class="side-btn s-' + dir + '" data-dir="' + dir + '" aria-label="' + s.out + (names ? ", argued by " + names : "") + '"><span class="who">' + hs + "<span>" + (names || "No one") + "</span></span>"
+      + '<span class="says">' + s.says + '</span><span class="out">' + S(s.sign) + "<span>" + s.out + '</span><span class="key">' + s.key + "</span></span></button>";
+  }
+  function hearingHtml(title, sides, theses) {
+    return '<div class="hearing" tabindex="0" aria-label="' + title + ': throw the card to the side you take"><div class="ttl">' + title + "</div>" + sideHtml("up", sides.up) + sideHtml("left", sides.left)
+      + '<div class="center"><div class="ork-card"><div class="cap" style="display:flex;gap:var(--ork-2);font-weight:600">' + E("dust") + "<span>Players see who answered first</span></div><ul>"
+      + theses.map(function (t) { return "<li>" + t + "</li>"; }).join("") + '</ul><button type="button" class="own">Or say it in your own words</button><span class="stamp"></span></div></div>'
+      + sideHtml("right", sides.right) + "</div>";
+  }
+  function wireHearing(host, sides, toast) {
+    var hr = host.querySelector(".hearing"), ctr = hr.querySelector(".center"), card = ctr.querySelector(".ork-card"), stamp = card.querySelector(".stamp");
+    var btn = function (d) { return hr.querySelector('.side-btn[data-dir="' + d + '"]'); };
+    var start = null, dx = 0, dy = 0;
+    function near(d) { ["up", "left", "right"].forEach(function (k) { btn(k).classList.toggle("near", k === d); }); stamp.style.opacity = d ? "1" : "0"; stamp.textContent = d ? sides[d].out : ""; }
+    function dirOf(x, y) { var w = hr.clientWidth / 3; if (-y > Math.abs(x) && -y > w * 0.6) return "up"; if (x > w * 0.5) return "right"; if (x < -w * 0.5) return "left"; return ""; }
+    function lean(x, y) { var d = (-y > Math.abs(x)) ? "up" : x > 20 ? "right" : x < -20 ? "left" : ""; return d; }
+    function throwTo(d) {
+      near(d); var b = btn(d).getBoundingClientRect(), c = ctr.getBoundingClientRect();
+      ctr.style.transform = "translate(" + (b.left + b.width / 2 - c.left - c.width / 2) + "px," + (b.top + b.height / 2 - c.top - c.height / 2) + "px) rotate(" + (d === "left" ? -14 : d === "right" ? 14 : 0) + "deg) scale(.6)";
+      hr.classList.add("is-thrown");
+      var t = $(toast); t.querySelector("span").textContent = (sides[d].leaders.length ? "Thrown to " + L[sides[d].leaders[0]].name + ": " : "") + sides[d].out + (d === "left" && sides[d].out === "Drop it" ? ". Dropped in 6 s" : "");
+      t.classList.add("on");
+      t.querySelector("button").onclick = back;
+    }
+    function back() { hr.classList.remove("is-thrown"); ctr.style.transform = ""; near(""); $(toast).classList.remove("on"); }
+    ctr.addEventListener("pointerdown", function (e) { if (e.target.closest(".own")) return; start = { x: e.clientX, y: e.clientY }; ctr.setPointerCapture(e.pointerId); ctr.classList.add("dragging"); });
+    ctr.addEventListener("pointermove", function (e) {
+      if (!start) return; dx = e.clientX - start.x; dy = e.clientY - start.y; if (dy > 0) dy = dy * 0.3;
+      ctr.style.transform = reduced() ? "" : "translate(" + dx + "px," + dy + "px) rotate(" + dx / 18 + "deg)"; near(lean(dx, dy));
+    });
+    function end() { if (!start) return; start = null; ctr.classList.remove("dragging"); var d = dirOf(dx, dy); dx = dy = 0; if (d) throwTo(d); else { ctr.style.transform = ""; near(""); } }
+    ctr.addEventListener("pointerup", end); ctr.addEventListener("pointercancel", end);
+    ["up", "left", "right"].forEach(function (d) { btn(d).addEventListener("click", function () { throwTo(d); }); });
+    hr.addEventListener("keydown", function (e) { var d = { ArrowRight: "right", ArrowLeft: "left", ArrowUp: "up" }[e.key]; if (d) { e.preventDefault(); throwTo(d); } });
+    card.querySelector(".own").addEventListener("click", function () { var t = $(toast); t.querySelector("span").textContent = "The field for your own words opens on the card"; t.classList.add("on"); t.querySelector("button").onclick = back; });
+  }
+  var TH = ["Done when the first answer's player wears a mark for the round", "The mark is gone when the next round starts", "Works on a phone 360 px wide"];
+  $("hear-desk").innerHTML = hearingHtml("Sh.man and the Dryad disagree", SIDES, TH); wireHearing($("hear-desk"), SIDES, "toast-desk");
+  $("hear-phone").innerHTML = '<div class="top">' + H("peon-crown") + '<span class="cap muted">Party quiz</span></div><div class="mid">' + hearingHtml("Sh.man and the Dryad disagree", SIDES, TH.slice(0, 2)) + "</div>"
+    + '<div class="foot"><div class="ork-card mini on">' + H(L.tech.race) + '</div><div class="ork-card mini">' + H(L.design.race) + '</div><div class="ork-card ork-plus mini" style="width:52px">' + ICON("plus") + "</div></div>";
+  wireHearing($("hear-phone"), SIDES, "toast-phone");
+  $("hear-one").innerHTML = hearingHtml("Sh.man says no", ONE, ["Done when a player who drops comes back to the same seat", "No new part, no new caller"]); wireHearing($("hear-one"), ONE, "toast-one");
+
+  // ---------- 4 · the sketch ----------
+  var css = "body{margin:0;font:15px/1.4 system-ui,sans-serif;background:#141821;color:#e9e6df}.bar{padding:14px 16px;font-weight:700;letter-spacing:.04em}"
+    + ".p{display:flex;align-items:center;gap:12px;margin:8px 12px;padding:12px;border-radius:10px;background:#222838}.p b{flex:1}.p i{font-style:normal;opacity:.7}"
+    + ".t{margin:12px 16px;opacity:.7;font-size:13px}button{font:inherit;color:inherit;background:#33405c;border:0;border-radius:8px;padding:10px 14px;margin:12px 16px}";
+  var V = {
+    A: { name: "A · the crown", why: "A small crown over the first player's name, for the round.",
+         html: '<div class="bar">ROUND 3 · RESULTS</div><div class="p"><b>👑 Masha</b><i>1.2 s</i></div><div class="p"><b>Oleg</b><i>1.9 s</i></div><div class="p"><b>Ira</b><i>2.4 s</i></div><button onclick="this.textContent=\'Next round…\'">Next round</button>' },
+    B: { name: "B · the gold frame", why: "The first player's row framed in gold; nothing over the name.",
+         html: '<div class="bar">ROUND 3 · RESULTS</div><div class="p" style="outline:2px solid #e3b341"><b>Masha</b><i>1.2 s · first</i></div><div class="p"><b>Oleg</b><i>1.9 s</i></div><div class="p"><b>Ira</b><i>2.4 s</i></div><button onclick="this.textContent=\'Next round…\'">Next round</button>' },
+    C: { name: "C · the moment", why: "A one-second banner as the answers close, then the list as today.",
+         html: '<div class="bar">ROUND 3</div><div id="b" style="margin:40px 16px;padding:28px;text-align:center;border-radius:12px;background:#e3b341;color:#141821;font-weight:800;font-size:22px">MASHA WAS FIRST</div><div class="t">The list follows in a second.</div><button onclick="document.getElementById(\'b\').textContent=\'1.2 s!\'">Replay</button>' }
+  };
+  var page = function (v) { return '<!doctype html><meta name="viewport" content="width=device-width"><style>' + css + "</style>" + v.html; };
+  var frame = function (k, cls, title) { var f = document.createElement("iframe"); f.className = cls; f.setAttribute("sandbox", "allow-scripts"); f.title = title; f.srcdoc = page(V[k]); return f; };
+  $("sk-phone").innerHTML = '<div class="top">' + H("peon-crown") + '<span class="cap muted">Party quiz</span></div><div class="mid"><div class="cap muted">' + H(L.design.race, "", "") .replace("<img", '<img style="width:18px;height:16px;vertical-align:-3px;image-rendering:pixelated"')
+    + " The Dryad sketched it · From Pixel-Perfect Dryad</div><div class='abc' role='group' aria-label='Variants'>" + ["A", "B", "C"].map(function (k, i) { return '<button class="ork-btn" type="button" data-v="' + k + '" aria-pressed="' + (i === 0) + '">' + k + "</button>"; }).join("")
+    + '</div><div id="sk-holder"></div><div class="cap" id="sk-why"></div><div class="sk-acts"><input class="ork-field" placeholder="A note (optional)" aria-label="A note"><button class="ork-btn primary" type="button">Pick this one</button><button class="ork-btn" type="button">Pick and build now</button>'
+    + '<div class="mk-acts"><button class="ork-btn" type="button">Sketch again</button><button class="ork-btn" type="button">No sketch: go on</button></div></div></div>';
+  function showV(k) { var h = $("sk-holder"); h.innerHTML = ""; h.appendChild(frame(k, "sk-frame", "Sketch " + k + " by Pixel-Perfect Dryad")); $("sk-why").textContent = V[k].why;
+    $("sk-phone").querySelectorAll("[data-v]").forEach(function (b) { b.setAttribute("aria-pressed", String(b.dataset.v === k)); }); }
+  $("sk-phone").querySelectorAll("[data-v]").forEach(function (b) { b.addEventListener("click", function () { showV(b.dataset.v); }); }); showV("A");
+  ["A", "B", "C"].forEach(function (k) { var fig = document.createElement("figure"); fig.appendChild(frame(k, "", "Sketch " + k + " by Pixel-Perfect Dryad"));
+    fig.insertAdjacentHTML("beforeend", '<div class="cap"><b>' + V[k].name + '</b></div><div class="cap muted">' + V[k].why + '</div><button class="ork-btn' + "" + '" type="button">Pick this one</button>'); $("sk-desk").appendChild(fig); });
+
+  // ---------- 5 · morning, night, evening ----------
+  $("m-card").innerHTML = '<div class="ork-card lifted"><div class="hd">' + H("peon-crown") + "<span>The night: 3 goals in dev</span></div>"
+    + [["dust", "Players see who answered first", "Results · Lobby"], ["ice", "Round timer shows on every phone", "Round"], ["meadow", "Sound when the round ends", "Round"]].map(function (r) {
+      return '<div class="nrow">' + E(r[0]) + '<div class="t"><b>' + r[1] + "</b><span>" + r[2] + '</span></div><button class="ork-btn" type="button">' + ICON("play") + " Play it</button></div>"; }).join("")
+    + '<div class="nrow bad">' + S("cross") + '<div class="t"><b>Failed: Keep the seat on rejoin</b><span>The check ‘rejoin keeps the seat’ is red: the seat is freed after 5 s</span></div><button class="ork-btn" type="button">Open</button></div>'
+    + '<div style="display:flex;justify-content:space-between;align-items:center"><span class="cap muted">On the phone: Play it on the computer</span><button class="ork-btn primary" type="button">Done</button></div></div>';
+  $("n-set").innerHTML = '<div class="ork-card setting"><div style="flex:1"><b>Work at night</b><p>What you decide by day is built in the night\'s window (01:00–07:00). Talk, hearings and sketches still run by day. A bug\'s short way, and anything you start with a press, starts at once.</p></div>'
+    + '<div role="radiogroup" aria-label="Work at night" class="mk-acts"><button class="ork-btn primary" role="radio" aria-checked="true" type="button">On</button><button class="ork-btn" role="radio" aria-checked="false" type="button">Off</button></div></div>';
+  $("n-held").innerHTML = '<div class="ork-card lifted" style="width:min(360px,100%)"><div class="cap" style="display:flex;gap:var(--ork-2);font-weight:600">' + E("void") + "<span>A sound when the round ends</span></div>"
+    + '<div class="cap muted">' + S("moon") + " Waits for the night (01:00)</div><div style=\"display:flex;align-items:center;gap:var(--ork-3)\"><button class='ork-btn' type='button'>Build it now</button><span class='cap muted'>about 6 % of the 5-hour window</span></div></div>";
+  $("e-strip").innerHTML = '<div class="strip"><div class="l1">' + H(L.design.race) + '<span>The Product designer: 1 alert, 2 notes</span><button class="ork-btn" type="button" style="margin-left:auto">Ask again</button></div>'
+    + '<div class="since">' + S("check") + "<span><b>Since your last look:</b> the results screen now says who was first, toward a clearer way through; the lobby's back button lost its label.</span></div>"
+    + '<div class="since"><span class="dot"></span><span class="muted">Other ways: an alert sign (away from its aims) or the muted dot (unclear).</span></div></div>'
+    + '<div class="strip" style="margin-top:var(--ork-3)"><div class="l1">' + H(L.product.race) + '<span>The Product manager sees nothing wrong</span></div><div class="since">' + S("alert")
+    + "<span><b>Since your last look:</b> three goals went to the lobby's look; none to the outcome ‘a second round played’, which did not move.</span></div></div>";
+})();
+</script>
+</body>
+</html>

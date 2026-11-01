@@ -4142,3 +4142,15 @@ file read); building costs much: so the day is for what is cheap and seen, the n
 6. **Measured** as hypothesis H2 (`docs/hypotheses.md`).
 7. Spec 121, built by the cheaper model. The leaders' voices, a hearing heard on the way, are spec 122, later.
 The owner's call.
+
+## 200. The die at rest shows the play arrow on its up face (1 November, the owner)
+
+Why: the owner: *by default the die's up face could show play as an arrow: it is clearer, and it suits the die.* Today the up
+face at rest is the five (§196), which says nothing of what the die does. So (this makes §196 precise):
+1. **At rest the up face is the play arrow**, drawn in the die's own marks (2 x 2 cells, the pips' muted ink; the ink and the
+   glow while it plays): orkUI's new face `face-play`, made in orkUI first (`die/die.json`, `tools/build_die.py`), then copied.
+2. **The cross and the spark stay** (§196.1–§196.2): they say more than the arrow, so they take its place while they hold.
+3. **Asleep** (no preview, spec 113) the up face stays the five, grey: the arrow never promises a Play that cannot start.
+4. The other faces keep the die's numbers, so it still reads as a die when it rolls. `playdie.js` `faceNow` gives `play` where it
+   gives `5` today for a die awake; drawn in `docs/mockups/hearing/` §6.
+The owner's call.
