@@ -280,6 +280,76 @@ def _phone_keepalive(server, targets: list[str]) -> bytes:
     return raw
 
 
+# -- a sketch's page (docs/specs/121-the-day-the-morning-and-the-night.md §3) ------------------------------------------------------
+
+PAGE_HTML = b"<!doctype html><title>A</title><style>b{color:red}</style><b>Hi</b><script>document.title='B'</script>"
+PAGE_CSP = ("default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data:; font-src data:; media-src data:; "
+            "base-uri 'none'; form-action 'none'; frame-ancestors 'self'")
+
+
+def all_values(pairs, name: str) -> list[str]:
+    return [v for k, v in pairs if k.lower() == name.lower()]
+
+
+def test_a_sketchs_page_is_served_with_its_own_policy_and_nosniff_and_a_picture_keeps_the_old_one(host, tmp_path):
+    pf.make_page_pick(host.ideas.state_dir, tmp_path / 'pg', PAGE_HTML)
+    reply = get(host, media.url("sketched", "sketch-r1", "a.html"))
+    assert reply.status == 200 and reply.read() == PAGE_HTML
+    h = headers(reply)
+    assert h["content-type"] == "text/html; charset=utf-8" and h["x-content-type-options"] == "nosniff"
+    assert h["content-security-policy"] == PAGE_CSP == media.PAGE_CSP                             # the policy of §3.1, exactly (the last one a reader of one header sees)
+    assert all_values(reply.headers, "Content-Security-Policy") == ["sandbox allow-scripts", PAGE_CSP]      # …and an opaque origin when opened on its own
+    assert h["cache-control"] == "private, max-age=31536000, immutable" and h["content-disposition"].startswith("inline; filename=")
+    assert "connect-src" not in PAGE_CSP and "default-src 'none'" in PAGE_CSP and "unsafe-eval" not in PAGE_CSP      # nothing it holds reaches the network
+    other = get(host, media.url("sketched", "sketch-r1", "b.png"))                                # a picture of the same pick: as before
+    assert all_values(other.headers, "Content-Security-Policy") == ["sandbox; default-src 'none'"]
+    head = get(host, media.url("sketched", "sketch-r1", "a.html"), method="HEAD")
+    assert head.read() == b"" and all_values(head.headers, "Content-Security-Policy")[-1] == PAGE_CSP
+    assert get(host, media.url("sketched", "sketch-r1", "a.html"), "bytes=0-4").read() == PAGE_HTML[:5]
+
+
+def _fetch_pairs(origin: str, target: str, https_context=None) -> tuple[int, list[tuple[str, str]], bytes]:
+    host, port = origin.removeprefix("https://").removeprefix("http://").rsplit(":", 1)
+    conn = http.client.HTTPSConnection(host, int(port), context=https_context, timeout=5) if https_context else http.client.HTTPConnection(host, int(port), timeout=5)
+    try:
+        conn.request("GET", target)
+        r = conn.getresponse()
+        return r.status, r.getheaders(), r.read()
+    finally:
+        conn.close()
+
+
+def test_the_pages_server_serves_a_sketchs_page_with_its_headers(host, tmp_path):
+    pf.make_page_pick(host.ideas.state_dir, tmp_path / 'pg', PAGE_HTML)
+    server = Server(host)
+    thread = server.start_thread()
+    try:
+        status, pairs, body = _fetch_pairs(server.origin, media.url("sketched", "sketch-r1", "a.html"))
+        assert (status, body) == (200, PAGE_HTML)
+        assert all_values(pairs, "Content-Security-Policy") == ["sandbox allow-scripts", PAGE_CSP]
+        assert all_values(pairs, "X-Content-Type-Options") == ["nosniff"] and "text/html" in all_values(pairs, "Content-Type")[0]
+        assert _fetch_pairs(server.origin, "/media/sketched/sketch-r1/a.html")[0] == 404                      # unsigned: no page
+    finally:
+        server.stop()
+        thread.join(10)
+
+
+@pytest.mark.asyncio
+async def test_the_phones_listener_serves_a_sketchs_page_with_its_headers(fake_repo, tmp_path):
+    server, task = await _serve(fake_repo)
+    try:
+        await _pair(server)
+        pf.make_page_pick(server.host.ideas.state_dir, tmp_path / 'pg', PAGE_HTML)
+        status, pairs, body = await asyncio.to_thread(_fetch_pairs, server.phones.address, media.url("sketched", "sketch-r1", "a.html"), _pinned())
+        assert (status, body) == (200, PAGE_HTML)
+        assert all_values(pairs, "Content-Security-Policy") == ["sandbox allow-scripts", PAGE_CSP]
+        assert all_values(pairs, "X-Content-Type-Options") == ["nosniff"] and "text/html" in all_values(pairs, "Content-Type")[0]
+        assert (await asyncio.to_thread(_fetch_pairs, server.phones.address, "/media/sketched/sketch-r1/a.html?s=0", _pinned()))[0] == 404
+    finally:
+        server.stop()
+        await asyncio.wait_for(task, 10)
+
+
 # -- an asset of the project (docs/specs/88-assets-and-play.md §1, §4) ----------------------------------------------------------
 
 def _commit_assets(repo: Path, files: dict[str, bytes]) -> str:

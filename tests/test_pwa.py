@@ -126,6 +126,15 @@ def test_the_app_serves_the_desktops_page_its_import_map_by_hash_and_orkui_by_th
     assert pwa.csp(b"<html></html>") == pwa.CSP                                                                     # a page with none gets the plain one
 
 
+def test_the_apps_csp_lets_it_frame_its_own_origin_for_a_sketch_and_nothing_else():
+    """Spec 121 §3.2: `frame-src 'self'` (the sketches' sandboxed frames of /media/), not wider; the app itself can still be framed by none."""
+    for csp in (pwa.CSP, pwa.csp(b'<script type="importmap">{}</script>')):
+        assert "frame-src 'self';" in csp and "frame-src *" not in csp and "frame-src https" not in csp
+        assert "frame-ancestors 'none'" in csp and "default-src 'self'" in csp and "object-src 'none'" in csp
+    head, _ = _split(pwa.serve("GET", "/app/"))
+    assert "frame-src 'self';" in next(line for line in head.splitlines() if line.startswith("Content-Security-Policy"))
+
+
 def test_every_picture_orkuis_components_draw_is_served_beside_it():
     """The potions' bottles, a tool's rune, the big signs, the card backs: `components.css` masks them by relative address, so each must be there (the 404s of the first run of the page on a phone)."""
     css = _split(pwa.serve("GET", "/app/components.css"))[1].decode()

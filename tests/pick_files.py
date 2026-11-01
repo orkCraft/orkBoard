@@ -127,3 +127,15 @@ def make_pick(state_dir: Path, scratch: Path, files: dict[str, bytes], slug: str
     pick = idea_pick.store(state_dir, slug, t, rnd, variants, by=by)
     idea_pick.discard(scratch)
     return pick
+
+
+def make_page_pick(state_dir: Path, scratch: Path, html: bytes, slug: str = "sketched", tid: str = "sketch") -> dict:
+    """A pick whose first variant is a page (`a.html`, stored as `text/html`), as a sketch (docs/specs/121-the-day-the-morning-and-the-night.md §2.4) leaves it: made as a pick of
+    two pictures with the first one's file and stored type changed, so the serving stands whatever adds the kind `page` to realm/idea_pick.py."""
+    pick = make_pick(state_dir, scratch, {"a.png": png(5, 4), "b.png": png(3, 3)}, slug=slug, tid=tid)
+    folder = state_dir / "ideas" / slug / "picks" / pick["id"]
+    (folder / "a.png").unlink()
+    (folder / "a.html").write_bytes(html)
+    pick["variants"][0].update(file="a.html", mime="text/html", bytes=len(html))
+    (folder / "pick.json").write_text(json.dumps(pick), encoding="utf-8")
+    return pick
