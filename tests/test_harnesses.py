@@ -334,6 +334,27 @@ def test_a_read_only_calls_floor_is_no_mcp_and_no_skills_only_when_the_cli_lists
         assert "--disable-slash-commands" not in other                          # only the read-only call is bare
 
 
+def test_a_read_only_calls_system_prompt_is_appended_only_when_asked_for_and_the_cli_lists_the_flag(tmp_path, monkeypatch):
+    """Spec 120 §5.3: a leader's map and rubric in `--append-system-prompt`, behind a switch (core/idea_verdict.py `SYSTEM_PROMPT`); the argv has it only inside `system_prompt(...)`."""
+    from orkboard.realm import harness_claude
+    h = harnesses.get("claude")
+    listed = {"--append-system-prompt"}
+    monkeypatch.setattr(harness_claude, "cli_has", lambda h, flag: flag in listed)
+    assert "--append-system-prompt" not in h.read("p", tmp_path, "opus")                                       # nothing asks for it
+    with harness_claude.system_prompt("Your party's map:\ncontainers: web"):
+        argv = h.read("p", tmp_path, "opus")
+        assert _flag_values(argv, "--append-system-prompt") == ["Your party's map:\ncontainers: web"]
+        assert argv[argv.index("-p") + 1] == "p"                                                               # the goal's words stay in -p
+        with harness_claude.system_prompt(""):
+            assert "--append-system-prompt" not in h.read("p", tmp_path, "opus")                               # a block that says none says none
+        assert _flag_values(h.read("p", tmp_path, "opus"), "--append-system-prompt")                          # …and the outer one is back
+        for other in (h.work("p", tmp_path, "opus"), h.call("p", tmp_path, [], "opus"), h.ask("p", tmp_path, "opus")):
+            assert "--append-system-prompt" not in other                                                       # only the read-only call
+        listed.clear()
+        assert "--append-system-prompt" not in h.read("p", tmp_path, "opus")                                   # an installed CLI that lists no such flag gets none
+    assert "--append-system-prompt" not in h.read("p", tmp_path, "opus")
+
+
 def test_a_read_only_call_prints_its_events_and_the_other_calls_keep_their_output(tmp_path):
     h = harnesses.get("claude")
     read = h.read("p", tmp_path, "opus")

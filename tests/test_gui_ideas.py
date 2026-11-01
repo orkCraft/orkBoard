@@ -892,7 +892,7 @@ def _says(host, command, args):
 def test_a_goal_of_a_type_keeps_its_id_and_a_type_the_party_is_not_offered_or_unknown_is_refused(host):
     ship = _party(host, leader="architect")
     got = _new(host, ship, type="restructure")
-    assert got["type"] == "restructure" and got["joined"] is None and set(got) == {"slug", "queue", "element", "type", "joined", "route"}
+    assert got["type"] == "restructure" and got["joined"] is None and set(got) == {"slug", "queue", "element", "type", "joined", "route", "talk"}
     assert got["route"] == [ship]                                                        # routed to the party it was sent to, no call (spec 99 §4)
     assert ideas.state(host.ideas.state_dir, got["slug"])["type"] == "restructure"
     blank = _new(host, ship, "A blank one")

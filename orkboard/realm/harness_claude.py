@@ -8,6 +8,8 @@ registry that wires them to a `Harness` stays in realm/harnesses.py, which re-ex
 """
 from __future__ import annotations
 
+import contextlib
+import contextvars
 import json
 from pathlib import Path
 
@@ -70,10 +72,31 @@ def _claude_read_tools(web: bool) -> list[str]:
     return tools
 
 
+_SYSTEM: contextvars.ContextVar[str] = contextvars.ContextVar("orkcraft_claude_system", default="")     # what this thread's read calls add to Claude's system prompt
+
+
+@contextlib.contextmanager
+def system_prompt(text: str):
+    """The read calls made in this block, on this thread, add `text` to Claude's system prompt (`--append-system-prompt`) where the installed CLI lists the flag, so what is stable between a
+    leader's calls (its map, its rubric) is read from the cache by the next (spec 120 §5.3; core/idea_verdict.py `SYSTEM_PROMPT`, off until the numbers say so)."""
+    token = _SYSTEM.set(str(text or ""))
+    try:
+        yield
+    finally:
+        _SYSTEM.reset(token)
+
+
+def claude_system(h) -> list[str]:
+    """`--append-system-prompt <text>` for the text `system_prompt` set, only when the installed CLI lists the flag; else nothing (the caller asks `cli_has` first, so it keeps the text in its
+    prompt when the flag is missing)."""
+    text = _SYSTEM.get()
+    return ["--append-system-prompt", text] if text and cli_has(h, "--append-system-prompt") else []
+
+
 def _claude_read(h, prompt, workdir, model, web):
     """Its tool calls are in the output (stream-json, spec 97 §3), so what it read is counted."""
     return [h.bin, "-p", prompt, "--output-format", "stream-json", "--verbose", *_claude_read_tools(web),
-            *_model("--model", model), *claude_floor(h)[0]]
+            *_model("--model", model), *claude_floor(h)[0], *claude_system(h)]
 
 
 # Every built-in tool a carrier must not have; MCP tools not in --allowedTools are refused in -p (their schemas are

@@ -59,4 +59,6 @@ orkboard = ["schemas/*.json", "design/*.json", "design/buildings/*.json", "desig
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["browser: drives the page in Chromium (Playwright); skipped without Playwright or Chromium"]
+markers = ["browser: drives the page in Chromium (Playwright); skipped without Playwright or Chromium",
+           "weighs: Product weighs a goal it is not routed on (spec 120 §2.4); every other test counts the calls of the route's leaders alone (tests/conftest.py)",
+           "talks_by_itself: a goal sent goes to Talk by itself (spec 120 §2.1); every other test keeps the route card first (tests/conftest.py)"]

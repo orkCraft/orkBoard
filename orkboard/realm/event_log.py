@@ -214,6 +214,12 @@ NIGHT_CARD_OPENED = "night_card_opened"   # goals (how many goals the night's re
 PLAY_AT_PATH = "play_at_path"     # idea ("" when the press had no goal), path (the page's path Play was asked to open first, cut), device: *Play it* on a goal's screen
 # Spec 120 D (decisions §198.6): a hearing thrown to a side (never a word of the goal's, a leader's or the person's).
 HEARING_THROWN = "hearing_thrown"    # idea, moment ("talk" or "fork"), kind ("go" · "drop" · "smaller" · "later" · "side" · "own"), dir ("right" · "left" · "up" · "" for the person's words), leaders (how many stood on that side)
+# Spec 120 (decisions §198): a goal heard at the Orkmaster. Never a word of a leader's or the person's.
+TALK_HEARD = "talk_heard"        # idea, party, weigher (Product weighing a goal it is not routed on)
+TALK_VERDICT = "talk_verdict"    # idea, party, before, after (a leader's verdict after the person's answers: go · doubt · no)
+RIPE_STARTED = "ripe_started"    # idea, seconds (the wait), priority, risk
+RIPE_HELD = "ripe_held"          # idea, left_s (what was left of the wait when it was held), why ("person" · the reason a spent window or a stop gave)
+RIPE_DONE = "ripe_done"          # idea: the wait ended and the leaders' decision was written
 
 EVENTS = (ASKED, ASSUMED, ANSWERED, STOPPED, WAIT_SKIPPED, HELD_AT_WORK, CAMP_LEFT, CAMP_BACK, QUEST_STARTED,
           QUEST_DONE, QUEST_SKIPPED, BUILT, CART_MOVED, LOOKED, IDEA_ADDED, IDEA_SAID, KEEPER_STATE, PLAN_MADE, PLAN_PASSED,
@@ -223,7 +229,7 @@ EVENTS = (ASKED, ASSUMED, ANSWERED, STOPPED, WAIT_SKIPPED, HELD_AT_WORK, CAMP_LE
           GIT_PUSHED, OP_ADDED, OP_PREPARED, OP_CHECKED, OP_DONE, OP_FAILED, OP_DROPPED, OP_NOT_RIGHT, OP_LEARNED,
           OP_RULES_ANSWERED, OP_TRUST, OP_KEPT, OP_FORGOT, OP_STANDING, PUSH_SET, PUSH_SENT, PARTY_PROPOSED, PARTY_ANSWERED, PARTY_SAVED, PARTY_DROPPED, PARTY_REMOVED, NIGHT_ALLOWED, WEEK_RESET, IDEA_EDITED, PLAN_REVISED, PLAN_CHANGE_ANSWERED,
           PITCH_JUDGED, PITCH_SENT, PITCH_PASSED, PITCH_AGAIN, IDEA_MOVED, RELEASE_MADE, RELEASE_OUT, PARTY_SHOWN, COLLIDE_FOUND, COLLIDE_ANSWERED,
-          PROPOSALS_SHOWN, PROPOSAL_TAKEN, PARTY_RESIZED, CANVAS_MADE, CANVAS_SEEN, SHOT_TAKEN, PLAY_STARTED, PLAY_STOPPED, MAP_OPENED, MAP_PART_PRESSED, MAP_SNAPSHOT_FAILED, SIGN_IN_NEEDED, SIGNED_IN, SIGN_IN_FAILED, TOOL_MOVED, PAID_ANSWERED, BOARD_ASKED, ASK_MADE_GOAL, COMMAND_REFUSED, ERROR_SHOWN, LEADER_OBJECTED, OBJECTION_ANSWERED, CONCERNS_MADE, CONCERN_OPENED, CONCERN_GOAL, CONCERN_DISMISSED, HEARING_THROWN)
+          PROPOSALS_SHOWN, PROPOSAL_TAKEN, PARTY_RESIZED, CANVAS_MADE, CANVAS_SEEN, SHOT_TAKEN, PLAY_STARTED, PLAY_STOPPED, MAP_OPENED, MAP_PART_PRESSED, MAP_SNAPSHOT_FAILED, SIGN_IN_NEEDED, SIGNED_IN, SIGN_IN_FAILED, TOOL_MOVED, PAID_ANSWERED, BOARD_ASKED, ASK_MADE_GOAL, COMMAND_REFUSED, ERROR_SHOWN, LEADER_OBJECTED, OBJECTION_ANSWERED, CONCERNS_MADE, CONCERN_OPENED, CONCERN_GOAL, CONCERN_DISMISSED, HEARING_THROWN, TALK_HEARD, TALK_VERDICT, RIPE_STARTED, RIPE_HELD, RIPE_DONE)
 EVENTS += (NIGHT_HELD, NIGHT_STARTED, BUILT_NOW)       # spec 121 C
 EVENTS += (NIGHT_CARD_OPENED, PLAY_AT_PATH)       # spec 121 D
 

@@ -2,7 +2,8 @@
 confirms it with one button, and it is committed, numbered, to the project's decisions file in dev. A mixin of `IdeaKeeper`, as `idea_talk.py` is.
 
     keeper.decide(slug)                       # Talk's last round is done (core/idea_talk.py): one call of the Orkmaster in the background; the goal is then `decided`
-    keeper.confirm(slug, text="", tree=None)  # *Confirm and start*: `text` the person's correction, kept as written; the entry appended and committed; then the sections
+    keeper.confirm(slug, text="", tree=None, by="person")  # *Confirm and start*: `text` the person's correction, kept as written; the entry appended and committed; then the sections;
+                                              #   `by="leaders"`: a goal all the leaders agreed on, confirmed by itself when its wait ended (spec 120 §3.5)
     keeper.write_decision(title, body, tree=None)   # the entry alone, with no goal (`confirm` writes through it; so does a hypothesis's verdict, spec 116 §4): {number, commit, path, held, pages}
 
 - **The call** (step `decide`, the cheaper tier, **no tools**, the Orkmaster's voice): given the person's words, the leaders' stances, the questions with the answers and the
@@ -26,14 +27,15 @@ import re
 from pathlib import Path
 
 from orkboard import brand
-from orkboard.realm import decisions_log, idea_objections, idea_questions, idea_target, ideas, orkmaster, spec_sections
+from orkboard.realm import decisions_log, event_log, idea_objections, idea_questions, idea_ripe, idea_target, ideas, orkmaster, spec_sections
 from orkboard.realm.idea_talk_parse import total
 
 TITLE_CHARS, WHY_CHARS, POINT_CHARS, BODY_CHARS = 120, 700, 300, 6000
 POINTS = (2, 8)                            # the points of a decision: at least, at most
 FIRST_LINE = "# Decisions"                 # the head of a decisions file made when the project has none
 _HASHES = re.compile(r"^#{1,2}(?=[ \t])", re.M)
-_SIGNED = re.compile(r"\s*\([^()]*the person and [^()]+\)\s*$")        # any host's name: the entry reads back whoever signed it
+_SIGNED = re.compile(r"\s*\([^()]*(?:the person and|the leaders, all agreed;) [^()]+\)\s*$")        # any host's name: the entry reads back whoever signed it
+_POINT = re.compile(r"^\d+\.", re.M)
 
 
 def _kw():
@@ -104,11 +106,21 @@ def corrected(text: str, title: str) -> tuple[str, str]:
     return title, demote(text)
 
 
-def entry_of(n: int, title: str, body: str, today: dt.date | None = None, host: str = "") -> str:
+def entry_of(n: int, title: str, body: str, today: dt.date | None = None, host: str = "", by: str = "person") -> str:
     """The entry as the file has it: `## <n>. <title> (<date>, the person and <host>)`, a blank line, the body. `host`: the name of the product that runs the Board
-    (decisions §169; `brand.name()`: Orkboard, or Orkline where Orkline runs these modules), else that."""
+    (decisions §169; `brand.name()`: Orkboard, or Orkline where Orkline runs these modules), else that. `by` "leaders": a goal the leaders all agreed on and the wait
+    confirmed by itself (spec 120 §3.5): `(<date>, the leaders, all agreed; <host>)`."""
     day = today or dt.date.today()
-    return f"## {n}. {title} ({day.day} {day:%B}, the person and {(host or '').strip() or brand.name()})\n\n{body.strip()}\n"
+    who = "the leaders, all agreed;" if by == "leaders" else "the person and"
+    return f"## {n}. {title} ({day.day} {day:%B}, {who} {(host or '').strip() or brand.name()})\n\n{body.strip()}\n"
+
+
+def leaders_body(body: str, stances: list[dict], name_of) -> str:
+    """The body of an agreed goal's entry: the Orkmaster's words, then a point for each leader who said what speaks for the goal (*For <Leader>: <for>*), numbered on from the last;
+    a weigher has said none (spec 120 §3.5)."""
+    n = len(_POINT.findall(body))
+    more = [_line(f"For {name_of(s['leader'])}: {s['for']}", POINT_CHARS) for s in stances if isinstance(s, dict) and s.get("for")]
+    return body.rstrip() + "".join(f"\n{n + k}. {p}" for k, p in enumerate(more, start=1))
 
 
 class DecideMixin:
@@ -153,8 +165,8 @@ class DecideMixin:
         root = self.wiki_root()
         page = ideas.idea_page(root, slug) or ideas.Page()
         titles = [(ideas.track_page(root, r["party"]).title or r["party"]) for r in route]
-        stances = "\n".join(f"- {self._name(s['leader'])} ({s['party']}): {s['stance']} For: {s.get('for') or '—'} Against: {s.get('against') or '—'}"
-                            for s in rec.get("stances") or [] if isinstance(s, dict))
+        stances = "\n".join(f"- {self._name(s['leader'])} ({s['party']}): {s['stance'] or 'weighed the goal: ' + (s.get('verdict') or 'go') + (' — ' + s['why'] if s.get('why') else '')}"
+                            f" For: {s.get('for') or '—'} Against: {s.get('against') or '—'}" for s in rec.get("stances") or [] if isinstance(s, dict))
         answers = "\n".join(f"- {a['q']} — {a['answer']}" for a in rec.get("answers") or [] if isinstance(a, dict))
         defaults = "\n".join(f"- {d['q']} — {d['answer']}" for d in rec.get("defaults") or [] if isinstance(d, dict))
         base, _rel = self._decisions()
@@ -213,12 +225,14 @@ Answer with one JSON object and nothing else:
             spec_sections.save_record(self.state_dir, slug, way)
             ideas.save_state(self.state_dir, slug, state="decided", error="", **({"measure": total("decide", [measure])} if measure else {}))
         ideas.add_turn(self.state_dir, slug, "keeper", f"Decision {number}: {got['title']}", "Decided")
+        self.ripe_begin(slug)                                                              # the leaders all agreed: the wait before it starts by itself (spec 120 §3.5)
 
     # -- Confirm and start --------------------------------------------------------------------------------------------------------------------
 
-    def confirm(self, slug: str, text: str = "", tree=None) -> dict:
+    def confirm(self, slug: str, text: str = "", tree=None, by: str = "person") -> dict:
         """**Confirm and start**: the decision (or the person's `text`, kept as written, its first line a heading being the title) appended to the decisions file as the next
         entry and committed to dev with the Board's pages (`tree`: the Board's `BoardTree`; none, and the file is written in the working copy only); then the sections at once.
+        `by` "leaders": the leaders all agreed and the wait ended (spec 120 §3.5): the heading says so and the points are the leaders' stances too; the person's `text` is never theirs.
         `{number, title, commit, held, path}`. A decision confirmed already writes nothing twice: the sections are asked again (they failed). KeeperError in plain words."""
         kw = _kw()
         root = self.wiki_root()
@@ -234,13 +248,18 @@ Answer with one JSON object and nothing else:
             if self.busy(slug):
                 raise kw.KeeperError("The keeper is busy with this goal: a moment")
             self.refuse_spent()
-            self._enter(slug, d, text, tree)
+            self._enter(slug, d, "" if by == "leaders" else text, tree, by)
+        if by == "leaders":                                        # the wait is over, whoever ended it
+            idea_ripe.done(self.state_dir, slug)
+            self._ev(event_log.RIPE_DONE, idea=slug)
+        else:
+            idea_ripe.drop(self.state_dir, slug)
         ideas.save_state(self.state_dir, slug, state="sections", error="")
         self.sections(slug)
         d = spec_sections.record(self.state_dir, slug)["decision"]
         return {k: d.get(k) for k in ("number", "title", "commit", "held", "path", "pages")}
 
-    def write_decision(self, title: str, body: str, tree=None) -> dict:
+    def write_decision(self, title: str, body: str, tree=None, by: str = "person") -> dict:
         """One entry appended to the decisions file as the next number and committed to dev (`tree`: the Board's `BoardTree`; none, and the file is written in the working copy only).
         No goal is needed: a goal's `_enter` and a hypothesis's verdict (spec 116 §4) both write this way. The number is read again inside the repository's lock.
         `{number, commit, path, held, pages}`; KeeperError in plain words for no words or a file that could not be written."""
@@ -254,7 +273,7 @@ Answer with one JSON object and nothing else:
         def append(old: str) -> str:
             made["number"] = decisions_log.next_number(old)           # read again here, under the repository's lock: two goals never take one
             head = old if old.strip() else FIRST_LINE + "\n"
-            return head.rstrip("\n") + "\n\n" + entry_of(made["number"], title, body, host=brand.name())
+            return head.rstrip("\n") + "\n\n" + entry_of(made["number"], title, body, host=brand.name(), by=by)
 
         out: dict = {}
         try:
@@ -268,18 +287,20 @@ Answer with one JSON object and nothing else:
             raise kw.KeeperError(f"The decision could not be written: {' '.join(str(e).split())[:200]}") from None
         return {"number": made["number"], "commit": out.get("commit") or "", "path": rel, "held": out.get("held") or "", "pages": out.get("pages") or 0}
 
-    def _enter(self, slug: str, d: dict, text: str, tree) -> None:
-        """The entry written and committed (`write_decision`); the decision kept as confirmed with its number, its commit and its path."""
+    def _enter(self, slug: str, d: dict, text: str, tree, by: str = "person") -> None:
+        """The entry written and committed (`write_decision`); the decision kept as confirmed with its number, its commit and its path, and who confirmed it (`by`)."""
         kw = _kw()
         title, body = corrected(text, d["title"]) if str(text or "").strip() else (d["title"], demote(d["text"]))
+        if by == "leaders":                                        # the leaders' stances are among its points (spec 120 §3.5)
+            body = leaders_body(body, idea_questions.record(self.state_dir, slug).get("stances") or [], self._name)
         if not body.strip():
             raise kw.KeeperError("A decision needs its words")
-        out = self.write_decision(title, body, tree)
+        out = self.write_decision(title, body, tree, by)
         number = out["number"]
         with ideas.LOCK:
             way = spec_sections.record(self.state_dir, slug)
             way["decision"] = {**d, "title": title, "text": body, "number": number, "confirmed": True, "path": out["path"], "commit": out["commit"], "held": out["held"], "pages": out["pages"],
-                               "confirmed_at": dt.datetime.now().isoformat(timespec="seconds")}
+                               "confirmed_at": dt.datetime.now().isoformat(timespec="seconds"), "confirmed_by": by}
             spec_sections.save_record(self.state_dir, slug, way)
         ideas.update(self.wiki_root(), slug, {}, [f"Decision {number}: {title}"])
-        ideas.add_turn(self.state_dir, slug, "you", f"Confirmed decision {number}: {title}", "Decided")
+        ideas.add_turn(self.state_dir, slug, "keeper" if by == "leaders" else "you", f"Confirmed decision {number}: {title}" + (" (the leaders, all agreed)" if by == "leaders" else ""), "Decided")

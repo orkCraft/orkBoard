@@ -9,12 +9,11 @@ sides its leaders argue (`realm/idea_hearing.py`), thrown to the one the person 
 `instead` and does the same, `later` waits on the goal named, `drop` drops the goal, `text` confirms with the person's words as written. A fork's throw is `fork_answer(side=)` or
 `fork_answer(text=)`. A throw of a hearing no longer open is refused in plain words: *This was decided already*. Each answers `{ok: true, moment, kind, dir, outcome, to: [name]}`.
 
-**The seam of the wait** (spec 120 §3.5, part C): `ideas.ripe_hold` calls the keeper's `ripe_hold(slug)` when it has one, else `idea_ripe.hold(state_dir, slug)` of `realm/idea_ripe.py` when
-that module has one; with neither the goal is told nothing waits to start by itself.
+**The wait** (spec 120 §3.5, part C): `ideas.ripe_hold` is the host's `ripe_hold_goal` (gui/ideas_route.py): the wait held, `ripe_held`, the faces told; a goal with no wait
+running is told nothing waits to start by itself.
 """
 from __future__ import annotations
 
-import importlib
 from typing import Any
 
 from orkboard.gui.ideas_args import IdeasError, _text
@@ -83,21 +82,11 @@ class Hearing:
         return {"ok": True, **done}
 
     def ripe_hold(self, args: dict) -> dict:
+        """*Hold* on a goal waiting to start by itself: the host's `ripe_hold_goal` (gui/ideas_route.py: the wait held, `ripe_held`, the faces told)."""
         slug = self._goal(args)
-        keeper_hold = getattr(self.i.keeper, "ripe_hold", None)
-        if callable(keeper_hold):
-            keeper_hold(slug)
-        else:
-            try:
-                module_hold = getattr(importlib.import_module("orkboard.realm.idea_ripe"), "hold", None)
-            except ImportError:
-                module_hold = None
-            if not callable(module_hold):
-                raise IdeasError(NOTHING_WAITS)
-            module_hold(self.i.state_dir, slug)
-        self.i.changed(slug)
+        if self.i.ripe_hold_goal(slug, "person") is None:
+            raise IdeasError(NOTHING_WAITS)
         return {"ok": True}
-
 
 def hearing_commands(ideas_: Any) -> dict:
     """The hearing's commands by name (`gui/ideas.py` adds them to its table)."""

@@ -155,7 +155,7 @@ def test_a_kind_that_is_none_is_refused_in_plain_words_and_nothing_is_kept(host)
 
 def test_a_goal_not_talked_has_an_empty_talk_and_a_goal_that_is_gone_is_refused(host, tech):
     slug = host.command("ideas.add", {"text": "add a dark mode option", "track": tech})["slug"]
-    assert host.command("ideas.talk_read", {"idea": slug}) == {"idea": slug, "mode": "", "round": 1, "done": False, "stances": [], "cause": None}
+    assert host.command("ideas.talk_read", {"idea": slug}) == {"idea": slug, "mode": "", "round": 1, "done": False, "heard": [], "stances": [], "cause": None}
     with pytest.raises(CommandError, match="That goal is gone"):
         host.command("ideas.talk_read", {"idea": "nobody"})
     with pytest.raises(CommandError, match="idea is missing"):

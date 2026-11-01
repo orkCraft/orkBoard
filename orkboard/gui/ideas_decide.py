@@ -29,15 +29,19 @@ class DecideMixin:
         text = args.get("text", "")
         if not isinstance(text, str):
             raise IdeasError("text is not text")
+        return {"ok": True, **self.confirm_as(slug, text[:TEXT_CHARS], "person")}
+
+    def confirm_as(self, slug: str, text: str, by: str) -> dict:
+        """The decision confirmed by `by` ("person": the command's; "leaders": the wait of an agreed goal ended, spec 120 §3.5): the entry committed, its events, the sections begun."""
         began = time.monotonic()
-        got = self.keeper.confirm(slug, text[:TEXT_CHARS], self._decision_tree())
+        got = self.keeper.confirm(slug, text, self._decision_tree(), by)
         if got.get("commit"):
             self._ev(event_log.BOARD_COMMITTED, commit=got["commit"], pages=got.get("pages") or 0, what="decision", seconds=round(time.monotonic() - began, 2))
         if got.get("held"):
             self._ev(event_log.BOARD_HELD, why=got["held"])
         self._what[slug] = "decided"
         self.changed(slug)
-        return {"ok": True, **got}
+        return got
 
     def fork_answer(self, args: dict) -> dict:
         slug = _text(args, "idea", 100)

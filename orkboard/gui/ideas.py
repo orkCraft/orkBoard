@@ -296,6 +296,7 @@ class Ideas(PlayMarkMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, Conc
         except Exception as e:                  # a tool that cannot be read never stops the clock
             self.host.toast(f"{type(e).__name__}: {e}", title="The tools", severity="error")
         self.route_tick(now)                    # a route waiting for its call, a goal put off to the reset (spec 99 §4)
+        self.ripe_tick(now)                     # the wait of a goal the leaders agreed on, while a face is open (spec 120 §3.5)
         self.routines_tick(now)                 # a recurring goal that was done a period ago comes back (spec 92 §2)
         self.canvas_tick(now)                   # what the AI tools drew outside the code (spec 78)
         self.play_tick(now)                     # Play stops after ten minutes with no face asking (spec 88 §5)
@@ -316,6 +317,7 @@ class Ideas(PlayMarkMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, Conc
     def stop_all(self, device: str = "desktop") -> None:
         self._ev(event_log.STOP_ALL, count=self.running(), device=device or "desktop")
         self.keeper.stop_all()
+        self.ripe_stop_all()                    # no agreed goal starts after it (spec 120 §3.5)
         if self._runner is not None:
             try:
                 self._runner.stop_all()
@@ -458,6 +460,8 @@ class Ideas(PlayMarkMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, Conc
             out["route"] = [r["party"] for r in routed["route"]]
             if not routed["route"]:
                 self.route_call(slug, text)     # code found no party: the one call on the cheaper tier, in the background
+            else:
+                out["talk"] = self.route_auto(slug)     # nothing stops it: it goes to Talk by itself (spec 120 §2.1); else its route card, as before
         elif queue == "now":                    # drafted at once, in the background (held in a spent window)
             try:
                 self.keeper.draft(slug)

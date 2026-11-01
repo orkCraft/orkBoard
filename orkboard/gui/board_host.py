@@ -90,6 +90,15 @@ class BoardHost:
         """The host's Operations (gui/ops.py), which are the person's, one for all projects; None in a host with none (Orkline's page has no Operations)."""
         return getattr(self._owner, "ops", None)
 
+    def faces(self) -> int:
+        """How many faces are open on this host now (the page's sockets and a paired phone's: the owner's `faces`, which `gui/server.py` sets); 0 in a host with none. A goal the leaders
+        agreed on starts by itself only while one is open (spec 120 §3.5)."""
+        count = getattr(self._owner, "faces", None)
+        try:
+            return int(count()) if callable(count) else 0
+        except Exception:                          # a socket count that cannot be read counts as no face
+            return 0
+
     def open_boards(self) -> list[Any]:
         """Every project open on this machine (this one among them), each with its `root`, `name` and `ideas`; `[]` in a host
         that has only the one Board (spec 91 §2: what used a limit, in all projects)."""
@@ -215,6 +224,7 @@ class Orkboard:
         self.on_change: Callable[[], None] = lambda: None
         self.on_toast: Callable[[dict], None] = lambda data: None
         self.on_detail: Callable[[str], None] = lambda building_id: None
+        self.faces: Callable[[], int] = lambda: 0                     # how many faces are open (the server's sockets and the phones': gui/server.py)
         self.sessions = None                                          # no terminal sessions in Orkboard
         self.run_id = telemetry.new_run_id()
         self.telemetry: telemetry.Telemetry | None = None             # this run's spend, in the shown project

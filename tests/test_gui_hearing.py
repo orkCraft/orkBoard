@@ -3,9 +3,7 @@ it says (go and the person's words confirm the decision once it is worded, small
 refused in plain words; the seam of the wait. The model call is stubbed (`keeper.call`) as Talk's tests do."""
 from __future__ import annotations
 
-import sys
 import time
-import types
 
 import pytest
 
@@ -269,17 +267,16 @@ def test_a_fork_thrown_again_after_it_was_answered_is_refused(host, parties, mod
 
 # -- the wait's seam ----------------------------------------------------------------------------------------------------------------------------
 
-def test_hold_calls_the_keeper_or_the_ripe_module_and_says_so_plainly_when_neither_is_there(host, parties, model, monkeypatch):
+def test_hold_holds_a_running_wait_and_says_so_plainly_when_none_runs(host, parties, model):
+    from orkboard.realm import idea_ripe
     slug = host.command("ideas.add", {"text": "add a dark mode option", "track": parties["tech"]})["slug"]
-    monkeypatch.setitem(sys.modules, "orkboard.realm.idea_ripe", types.ModuleType("orkboard.realm.idea_ripe"))        # a module that has no `hold` yet
     with pytest.raises(CommandError, match="Nothing waits to start by itself"):
         host.command("ideas.ripe_hold", {"idea": slug})
-    held = []
-    sys.modules["orkboard.realm.idea_ripe"].hold = lambda state_dir, s: held.append(("module", s))
-    assert host.command("ideas.ripe_hold", {"idea": slug}) == {"ok": True} and held == [("module", slug)]
-    host.ideas.keeper.ripe_hold = lambda s: held.append(("keeper", s))
-    host.command("ideas.ripe_hold", {"idea": slug})
-    assert held[-1] == ("keeper", slug)
+    assert idea_ripe.begin(host.ideas.state_dir, slug, "high", "low") is not None
+    assert host.command("ideas.ripe_hold", {"idea": slug}) == {"ok": True}
+    assert idea_ripe.of(host.ideas.state_dir, slug)["held"] is True
+    with pytest.raises(CommandError, match="Nothing waits to start by itself"):
+        host.command("ideas.ripe_hold", {"idea": slug})                                                                       # held already
     with pytest.raises(CommandError, match="That goal is gone"):
         host.command("ideas.ripe_hold", {"idea": "nobody"})
 

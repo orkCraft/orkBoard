@@ -129,6 +129,7 @@ class Server:
         host.on_change = self._changed
         host.on_detail = self._detail_changed
         host.on_toast = lambda data: self._send_all({"t": "toast", **data})
+        host.faces = lambda: len(self.clients) + len(self.phones.phones)      # the faces open now: a goal the leaders agreed on starts by itself only while one is (spec 120 §3.5)
         # The listener for phones (gui/phones.py): on the LAN, TLS, a device token; only while one is paired.
         self.phones = phones.Listener(host)
         host.commands.update(self.phones.commands())

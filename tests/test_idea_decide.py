@@ -195,6 +195,45 @@ def test_the_decision_is_asked_only_of_a_goal_at_talk(host, parties, model):
 
 # -- Confirm and start --------------------------------------------------------------------------------------------------------------------------
 
+def test_an_agreed_goals_entry_is_signed_by_the_leaders_and_a_correction_reads_back_either_signature():
+    """Spec 120 §3.5: `## <n>. <title> (<date>, the leaders, all agreed; <host>)`."""
+    import datetime as dt
+    from orkboard.core.idea_decide import leaders_body
+    day = dt.date(2026, 11, 1)
+    assert entry_of(7, "T", "b", day, by="leaders") == "## 7. T (1 November, the leaders, all agreed; Orkboard)\n\nb\n"
+    assert entry_of(7, "T", "b", day, host="Orkline", by="leaders").startswith("## 7. T (1 November, the leaders, all agreed; Orkline)")
+    assert entry_of(7, "T", "b", day, by="person").startswith("## 7. T (1 November, the person and Orkboard)")                  # as it was
+    assert corrected("## 7. A title (1 November, the leaders, all agreed; Orkboard)\nWhy: x.", "Old") == ("A title", "Why: x.")
+    body = leaders_body("Why: x.\n\n1. One.\n2. Two.", [{"leader": "architect", "for": "It helps at night", "stance": "s"}, {"leader": "product-manager", "for": ""},
+                                                         {"leader": "designer", "for": "The look holds"}, "nonsense"], lambda leader: leader.title())
+    assert body == "Why: x.\n\n1. One.\n2. Two.\n3. For Architect: It helps at night\n4. For Designer: The look holds"          # numbered on from the Orkmaster's; a leader with nothing for it adds none
+    assert leaders_body("Why: x.", [], str) == "Why: x."
+
+
+def test_confirm_by_the_leaders_writes_the_agreed_heading_with_their_stances_among_the_points_then_the_sections_follow(host, parties, model):
+    slug = _decided(host, parties, model)
+    sections = []
+    host.ideas.keeper.sections = lambda s: sections.append((s, _state(host, s)["state"]))
+    got = host.ideas.keeper.confirm(slug, "my words are not theirs", host.ideas._decision_tree(), "leaders")        # the person's text is the person's: the leaders confirm what was worded
+    assert got["number"] == 1 and got["title"] == DECISION["title"] and got["commit"] and sections == [(slug, "sections")]
+    entry = git(host.repo_root, "show", "dev:docs/decisions.md")
+    head = next(line for line in entry.splitlines() if line.startswith("## 1. "))
+    assert head.startswith("## 1. Dark mode ships as a setting (") and head.endswith(", the leaders, all agreed; Orkboard)") and "the person" not in head
+    assert "my words are not theirs" not in entry and "3. No scheduling.\n4. For " in entry and ": tech for" in entry                # the leaders' stances, numbered on
+    d = spec_sections.record(host.ideas.state_dir, slug)["decision"]
+    assert d["confirmed"] is True and d["confirmed_by"] == "leaders" and "For" in d["text"]
+    assert ideas.talk(host.ideas.state_dir, slug)[-1]["who"] == "keeper" and "the leaders, all agreed" in ideas.talk(host.ideas.state_dir, slug)[-1]["text"]
+
+
+def test_the_person_s_confirm_is_signed_as_it_was(host, parties, model):
+    slug = _decided(host, parties, model)
+    host.ideas.keeper.sections = lambda s: None
+    host.ideas.keeper.confirm(slug, "", host.ideas._decision_tree())
+    entry = git(host.repo_root, "show", "dev:docs/decisions.md")
+    assert ", the person and Orkboard)" in entry and "the leaders" not in entry and "For tech" not in entry
+    assert spec_sections.record(host.ideas.state_dir, slug)["decision"]["confirmed_by"] == "person"
+
+
 def test_confirm_appends_the_numbered_entry_and_commits_it_to_dev_with_the_pages_then_the_sections_follow(host, parties, model):
     slug = _decided(host, parties, model)
     sections = []

@@ -335,6 +335,69 @@ def test_the_floor_command_prints_the_last_seven_days_of_a_project(tmp_path, cap
     assert len(call_log.week(tmp_path, 7)) == 2 and len(call_log.week(tmp_path, 8)) == 3 and call_log.week(tmp_path / "none") == []
 
 
+# -- spec 120 part E: a leader's call in Talk, measured before it is changed -------------------------------------------------
+
+def _talk(n, at, idea, party, made=0, read=0, step="talk_round", code=0):
+    """A keeper's Talk line: `at` seconds past a fixed minute, the goal, the party, what the call wrote to and read from the cache."""
+    stamp = dt.datetime(2026, 11, 1, 9, 0, 0) + dt.timedelta(seconds=at)
+    return {"n": n, "at": stamp.isoformat(timespec="seconds"), "mode": "read", "tool": "claude", "step": step, "idea": idea, "party": party, "code": code,
+            "usage": {"cache_creation_input_tokens": made, "cache_read_input_tokens": read}}
+
+
+def test_a_keepers_call_line_says_its_step_and_its_party_the_floor_reads_them(tmp_path, tool):
+    with call_log.kept(tmp_path / "calls", "board"):
+        jobs.run_read("claude", "prompt", tmp_path, threading.Event(), "opus", env={"ORKCRAFT_ORC": "board/keeper", "ORKCRAFT_IDEA": "a-goal", "ORKCRAFT_STEP": "talk_round",
+                                                                                   "ORKCRAFT_PARTY": "tech"})
+        jobs.run_read("claude", "prompt", tmp_path, threading.Event(), "opus", env={"ORKCRAFT_ORC": "board/keeper", "ORKCRAFT_IDEA": "a-goal"})
+    first, second = call_log.read(tmp_path / "calls")
+    assert (first["idea"], first["step"], first["party"]) == ("a-goal", "talk_round", "tech") and "step" not in second and "party" not in second       # a line of before has neither
+
+
+def test_the_talk_floor_groups_a_goals_calls_into_rounds_and_says_which_wrote_the_cache_anew():
+    lines = [_talk(1, 0, "g1", "product", made=9000), _talk(2, 1, "g1", "design", made=8000), _talk(3, 2, "g1", "tech", made=8500),               # a round: the first writes, the rest write again
+             _talk(4, 3, "g2", "product", made=9000), _talk(5, 4, "g2", "tech", made=7000, read=1000),
+             _talk(6, 400, "g1", "product", made=500, read=8000),                                                                                   # a second round of g1, Product's next call
+             _talk(7, 401, "g1", "tech", made=500, read=7000),
+             _talk(8, 5, "g1", "x", made=1, step="plan"), _talk(9, 6, "g1", "tech", made=9, code=1)]                                                 # not Talk's, not ended well
+    got = call_log.talk_floor(lines)
+    assert (got["calls"], got["goals"], got["rounds"]) == (7, 2, 3)                                                  # g1's two rounds (a gap of minutes between them) and g2's
+    assert got["first"]["calls"] == 3 and got["first"]["wrote"] == 2 and got["first"]["read"] == 1                  # g1's first round and g2's begin by writing; g1's second begins by reading
+    assert got["rest"]["calls"] == 4 and got["rest"]["wrote"] == 2 and got["rest"]["read"] == 2 and got["rest"]["cache_creation_input_tokens"] == 7500
+    assert got["again"]["calls"] == 2 and got["again"]["read"] == 1                                                  # g2's Product and Tech, each within five minutes of its own call on g1
+
+
+def test_the_talk_floor_says_a_staggered_start_would_pay_only_when_the_rest_wrote_again_and_the_system_prompt_only_when_the_map_was_not_read():
+    def round_of(n, idea, at, made=8000, read=0):
+        return [_talk(n, at, idea, "product", made=9000), _talk(n + 1, at + 1, idea, "design", made=made, read=read), _talk(n + 2, at + 2, idea, "tech", made=made, read=read)]
+
+    writes = [x for k in range(3) for x in round_of(10 * k, f"g{k}", 1000 * k)]
+    assert call_log.talk_floor(writes)["stagger"] is True and call_log.talk_floor(writes)["system_prompt"] is False        # no leader called twice inside five minutes: nothing to say
+    reads = [x for k in range(3) for x in round_of(10 * k, f"g{k}", 1000 * k, made=100, read=8000)]
+    got = call_log.talk_floor(reads)
+    assert got["stagger"] is False and got["rest"]["read"] == 6                                                           # the rest read what the first wrote
+    twice = [x for k in range(2) for x in round_of(10 * k, "g", 10 * k * 6, made=8000, read=0)]                            # one goal, two rounds a minute apart: Product's, Design's, Tech's second calls
+    got = call_log.talk_floor(twice)
+    assert got["again"]["calls"] == 3 and got["again"]["read"] == 0 and got["system_prompt"] is True                      # the map was not read from the cache between a leader's calls
+    assert call_log.talk_floor(writes[:2])["stagger"] is False                                                           # too few calls to say
+    assert call_log.talk_floor([]) == {"calls": 0, "goals": 0, "rounds": 0, "stagger": False, "system_prompt": False,
+                                       "first": {"calls": 0, "wrote": 0, "read": 0, "cache_creation_input_tokens": None, "cache_read_input_tokens": None},
+                                       "rest": {"calls": 0, "wrote": 0, "read": 0, "cache_creation_input_tokens": None, "cache_read_input_tokens": None},
+                                       "again": {"calls": 0, "wrote": 0, "read": 0, "cache_creation_input_tokens": None, "cache_read_input_tokens": None}}
+
+
+def test_the_talk_command_prints_the_last_seven_days_of_a_project(tmp_path, capsys):
+    today = dt.date.today()
+    folder = call_log.day_folder(tmp_path, today.isoformat(), "board")
+    folder.mkdir(parents=True)
+    rows = [_talk(1, 0, "g", "product", made=9000), _talk(2, 1, "g", "design", made=8000), _talk(3, 2, "g", "tech", made=8000), _talk(4, 3, "g", "release", made=8000)]
+    (folder / call_log.LINES).write_text("\n".join(json.dumps(r) for r in rows) + "\n")
+    assert call_log.main(["talk", str(tmp_path)]) == 0
+    out = capsys.readouterr().out.splitlines()
+    assert out[0] == "4 talk_round calls · 1 goals · 1 rounds" and out[1].startswith("first") and "1 calls" in out[1]
+    assert out[2].startswith("rest") and "3 calls · wrote the cache anew: 3" in out[2] and "yes: a staggered start would pay" in out[4] and "no (or too few calls to say)" in out[5]
+    assert call_log.main(["talk"]) == 2 and call_log.main(["nothing", str(tmp_path)]) == 2
+
+
 def test_a_recorded_read_of_before_the_one_json_object_still_plays_back_and_reads(tmp_path):
     """A cassette recorded before spec 97 holds the single JSON envelope; the read argv now asks for stream-json, and the reader takes both."""
     calls = tmp_path / "calls"

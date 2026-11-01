@@ -11,6 +11,8 @@
     call_log.totals(lines)                               by side, ork and purpose: calls, seconds, tokens, $
     call_log.floor(lines)                                a keeper's read calls before and after the bare floor (spec 97 §4)
     python -m orkboard.realm.call_log floor <project>    … of the project's last 7 days
+    call_log.talk_floor(lines)                           a Talk round's calls by their place in the round, and a leader's calls that follow each other (spec 120 §5.1)
+    python -m orkboard.realm.call_log talk <project>     … of the project's last 7 days
 
 `calls.jsonl` holds one line per call: when, which side, who (an ork, the steward), what it was for, the tool and
 model, its seconds, exit code, cost, tokens and the usage the tool printed (input, output, cache). The call itself
@@ -216,7 +218,7 @@ def record(env: dict | None, mode: str, harness: str, model: str, prompt: str, s
             "purpose": purpose or telemetry.purpose_now(), "mode": mode, "tool": harness, "model": model,
             "seconds": round(seconds, 1), "code": code, "cost": cost, "tokens": tokens, "usage": usage_of(stdout),
             "session": session, "prompt_chars": len(prompt or ""), "output_chars": len(stdout or ""), "raw": raw}
-    for key, name in (("idea", "ORKCRAFT_IDEA"), ("task", "ORKCRAFT_TASK")):     # the board's calls join the event log
+    for key, name in (("idea", "ORKCRAFT_IDEA"), ("task", "ORKCRAFT_TASK"), ("step", "ORKCRAFT_STEP"), ("party", "ORKCRAFT_PARTY")):     # the board's calls join the event log; a keeper's say their step and party (`talk_floor`)
         if (env or {}).get(name):
             line[key] = str(env[name])
     if mode == "read":
@@ -359,6 +361,69 @@ def floor(lines: list[dict]) -> dict:
             for side, rows in sides.items()}
 
 
+TALK_STEP = "talk_round"      # the keeper's step a leader's call in Talk is (core/idea_talk.py); its line says so (`step`) and says the party (`party`)
+ROUND_GAP_S = 90              # calls of one goal that end further apart than this are not one round's
+CACHE_TTL_S = 300             # Claude's prompt cache lives five minutes: a leader's next call inside it can read what the first wrote
+SAY_FROM = 3                  # the least calls a side needs for the floor to say what it does
+
+
+def _stamp(line: dict) -> float:
+    try:
+        return dt.datetime.fromisoformat(str(line.get("at"))).timestamp()
+    except ValueError:
+        return 0.0
+
+
+def _cache(line: dict, key: str) -> int:
+    got = (line.get("usage") or {}).get(key)
+    return got if isinstance(got, int) and not isinstance(got, bool) else 0
+
+
+def _usage_of(rows: list[dict]) -> dict:
+    """`{calls, wrote, read, cache_creation_input_tokens, cache_read_input_tokens}`: how many calls wrote the cache anew (a creation and no read) and how many read it, and the medians of both counts."""
+    made, read = "cache_creation_input_tokens", "cache_read_input_tokens"
+    return {"calls": len(rows), "wrote": sum(_cache(r, made) > 0 and _cache(r, read) == 0 for r in rows), "read": sum(_cache(r, read) > 0 for r in rows),
+            made: _median([_cache(r, made) for r in rows]), read: _median([_cache(r, read) for r in rows])}
+
+
+def talk_floor(lines: list[dict]) -> dict:
+    """What a leader's call in Talk does to the cache (spec 120 §5.1), from the `talk_round` lines (a line says its `step` and `party`): grouped by goal into rounds (a party twice, or a gap above
+    `ROUND_GAP_S`, begins the next), each call by its place in its round (`first`, `rest`), and the calls of one leader that follow a call of its own within `CACHE_TTL_S` (`again`).
+    `{calls, goals, rounds, first, rest, again, stagger, system_prompt}`, each side as `_usage_of` has it. `stagger` is true when most of the `rest` wrote the shared prefix again (a creation and
+    no read: starting the first leader alone would let the rest read it); `system_prompt` is true when most of the `again` read nothing (the map is not read from a cache between two calls of one
+    leader: its text belongs in the system prompt). Both are false with fewer than `SAY_FROM` calls to say it. A line from before lines said their step is not counted."""
+    rows = sorted((r for r in lines if r.get("step") == TALK_STEP and r.get("idea") and not r.get("code")), key=lambda r: (_stamp(r), r.get("n") or 0))
+    first: list[dict] = []
+    rest: list[dict] = []
+    rounds = 0
+    by_goal: dict[str, list[dict]] = {}
+    for r in rows:
+        by_goal.setdefault(str(r["idea"]), []).append(r)
+    for goal in by_goal.values():
+        seen: set[str] = set()
+        last = 0.0
+        for r in goal:
+            at, party = _stamp(r), str(r.get("party") or "")
+            if not seen or party in seen or at - last > ROUND_GAP_S:
+                seen, rounds = set(), rounds + 1
+                first.append(r)
+            else:
+                rest.append(r)
+            seen.add(party)
+            last = at
+    again: list[dict] = []
+    before: dict[str, float] = {}
+    for r in rows:
+        who = str(r.get("party") or "")
+        if who and who in before and _stamp(r) - before[who] <= CACHE_TTL_S:
+            again.append(r)
+        before[who] = _stamp(r)
+    out = {"calls": len(rows), "goals": len(by_goal), "rounds": rounds, "first": _usage_of(first), "rest": _usage_of(rest), "again": _usage_of(again)}
+    out["stagger"] = out["rest"]["calls"] >= SAY_FROM and out["rest"]["wrote"] * 2 > out["rest"]["calls"]
+    out["system_prompt"] = out["again"]["calls"] >= SAY_FROM and out["again"]["read"] * 2 < out["again"]["calls"]
+    return out
+
+
 def week(root: Path, days: int = 7, today: dt.date | None = None) -> list[dict]:
     """The lines of the project's last `days` days (`.orkcraft/logs/<day>/*/calls.jsonl`)."""
     since = ((today or dt.date.today()) - dt.timedelta(days=days - 1)).isoformat()
@@ -374,12 +439,22 @@ def week(root: Path, days: int = 7, today: dt.date | None = None) -> list[dict]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    """`python -m orkboard.realm.call_log floor <project>`: the measure of the project's last 7 days, printed."""
+    """`python -m orkboard.realm.call_log floor <project>`: the measure of the project's last 7 days, printed; `talk <project>`: a Talk round's calls and the cache (spec 120 §5.1)."""
     import sys
     args = list(sys.argv[1:] if argv is None else argv)
-    if len(args) != 2 or args[0] != "floor":
-        print("usage: python -m orkboard.realm.call_log floor <project>", file=sys.stderr)
+    if len(args) != 2 or args[0] not in ("floor", "talk"):
+        print("usage: python -m orkboard.realm.call_log floor|talk <project>", file=sys.stderr)
         return 2
+    if args[0] == "talk":
+        got = talk_floor(week(Path(args[1])))
+        print(f"{got['calls']} talk_round calls · {got['goals']} goals · {got['rounds']} rounds")
+        for side, what in (("first", "the first call of a round"), ("rest", "the calls after the first"), ("again", "a leader's next call within five minutes")):
+            row = got[side]
+            print(f"{side} ({what}): {row['calls']} calls · wrote the cache anew: {row['wrote']} · read it: {row['read']}"
+                  f" · written, median: {row['cache_creation_input_tokens']} · read, median: {row['cache_read_input_tokens']}")
+        print(f"the calls after the first write the shared prefix again: {'yes: a staggered start would pay' if got['stagger'] else 'no (or too few calls to say)'}")
+        print(f"a leader's map is not read from the cache between its calls: {'yes: the system prompt would pay' if got['system_prompt'] else 'no (or too few calls to say)'}")
+        return 0
     got = floor(week(Path(args[1])))
     for side, what in (("before", "without the bare floor"), ("after", "on the bare floor")):
         row = got[side]
