@@ -62,6 +62,7 @@ from orkboard.gui.ideas_concerns import ConcernsMixin, concerns_commands
 from orkboard.gui.ideas_decide import DecideMixin, decide_commands
 from orkboard.gui.ideas_gate import GateMixin, gate_commands
 from orkboard.gui.ideas_goals import GoalsMixin
+from orkboard.gui.ideas_hearing import hearing_commands
 from orkboard.gui.ideas_map import MapMixin
 from orkboard.gui.ideas_party import PartyMixin, stage_commands
 from orkboard.gui.ideas_pick import PickMixin
@@ -676,7 +677,7 @@ class Ideas(PlayMarkMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, Conc
                       "ideas.pitch_pass": self.pitch_pass,
                       "ideas.release_out": self.release_out, "ideas.release_candidates": self.release_candidates, "ideas.shown": self.shown,
                       "ideas.party_for": self.party_for, "ideas.kind_for": self.kind_for, "ideas.collide_answer": self.collide_answer,
-                      "ideas.repeat": self.repeat, "ideas.team": self.team, "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, "ideas.party_presets": self.party_presets, **canvas_commands(self), **asset_commands(self), **system_commands(self), **usage_commands(self), **mana_commands(self), **route_commands(self), **talk_commands(self), **decide_commands(self), **stage_commands(self), **project_q_commands(self), **ask_commands(self), **facts_commands(self), **loop_commands(self), **maps_commands(self), **screens_commands(self), **pickables_commands(self), **concerns_commands(self), **tree_commands(self), **hypotheses_commands(self), **gate_commands(self), **play_mark_commands(self)})
+                      "ideas.repeat": self.repeat, "ideas.team": self.team, "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, "ideas.party_presets": self.party_presets, **canvas_commands(self), **asset_commands(self), **system_commands(self), **usage_commands(self), **mana_commands(self), **route_commands(self), **talk_commands(self), **decide_commands(self), **stage_commands(self), **project_q_commands(self), **ask_commands(self), **facts_commands(self), **loop_commands(self), **maps_commands(self), **screens_commands(self), **pickables_commands(self), **concerns_commands(self), **tree_commands(self), **hypotheses_commands(self), **gate_commands(self), **play_mark_commands(self), **hearing_commands(self)})
         table["ideas.night"] = self.night                  # spec 121 D: what the night did, for the morning's card (gui/ideas_recap.py)
         return {name: guarded(name, fn) for name, fn in table.items()}
 

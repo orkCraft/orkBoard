@@ -556,7 +556,7 @@ TECH_NO = {"verdict": "no", "why": "It adds a third caller to server/ws", "inste
 
 
 def _objections(host, slug):
-    return [n for n in host.command("ideas.board")["needs_you"] if n["idea"] == slug and n["kind"] == "objection"]
+    return [n for n in host.command("ideas.board")["needs_you"] if n["idea"] == slug and n["kind"] == "hearing"]            # spec 120 §4.4: one row a goal, in place of a row a no
 
 
 def _until_state(host, slug, state):
@@ -585,24 +585,26 @@ def test_a_verdict_is_taken_strictly_a_doubt_or_a_no_without_its_why_reads_as_go
     assert fields(clean_round({"verdict": "no", "why": "w", "questions": []}, "tech", "architect", 2, False, set())) == ("go", "", "", "")      # the second round has no verdict
 
 
-def test_a_no_is_a_row_of_its_own_one_a_leader_in_the_routes_order_and_the_decision_waits_for_each(host, parties, model, monkeypatch):
+def test_a_no_is_one_hearing_row_a_goal_with_the_leaders_sides_and_the_decision_waits_for_each_answer(host, parties, model, monkeypatch):
     _noes(model, parties, per=1, product={"verdict": "no", "why": "Not worth it before the lobby", "instead": "Only the setting"}, tech=TECH_NO,
           design={"verdict": "doubt", "why": "The contrast is low"})
     went = []
     monkeypatch.setattr(host.ideas.keeper, "decide", lambda s: went.append(s))
     slug = _talk(host, parties, ["product", "design", "tech"])
-    rows = _objections(host, slug)
-    assert [r["party"] for r in rows] == [parties["product"], parties["tech"]]                                      # the route's order; a doubt is no row
-    assert rows[0]["why"] == "Not worth it before the lobby" and rows[0]["instead"] == "Only the setting" and rows[0]["leader"] == "product-manager"
-    assert rows[0]["answers"] == ["drop", "smaller", "go"] and rows[1]["answers"] == ["drop", "smaller", "go"] and rows[0]["after"] == "" and rows[0]["text"] == rows[0]["why"]
-    assert rows[0]["goal"] == parties["product"] and rows[0]["title"] and rows[0]["blocks"] is False
+    (row,) = _objections(host, slug)                                                                                 # one row a goal, whatever the leaders said
+    assert row["moment"] == "talk" and row["goal"] == parties["product"] and row["title"] and row["blocks"] is False
+    sides = {s["dir"]: s for s in row["sides"]}
+    assert sorted(sides) == ["right", "up"] and sides["up"]["kind"] == "smaller" and sides["up"]["outcome"] == "Do the smaller one: Only the setting"
+    assert sides["up"]["leaders"] == [parties["product"]] and sides["up"]["line"] == "Not worth it before the lobby"
+    assert [d["why"] for d in sides["right"]["doubts"]] == ["The contrast is low"]                                    # a doubt with neither instead nor after is a line of go's side
+    assert row["heading"].endswith(" disagree") and row["text"] == row["heading"]
     rec = idea_questions.record(host.ideas.state_dir, slug)
     assert [(s["party"], s["verdict"]) for s in rec["stances"]] == [(parties["product"], "no"), (parties["design"], "doubt"), (parties["tech"], "no")]    # kept with the stances
     assert next(n for n in host.command("ideas.board")["ideas"] if n["slug"] == slug)["asks_you"] is True
     host.command("ideas.talk_answer", {"idea": slug, "answers": [], "decide": True})                                 # every question answered: the no still holds the decision
-    assert went == [] and _row(host, slug, "talk") is None and len(_objections(host, slug)) == 2
+    assert went == [] and _row(host, slug, "talk") is None and len(_objections(host, slug)) == 1
     host.command("ideas.objection", {"idea": slug, "party": parties["product"], "answer": "go"})
-    assert went == [] and [r["party"] for r in _objections(host, slug)] == [parties["tech"]]
+    assert went == [] and len(_objections(host, slug)) == 1                                                          # Tech's no is still open: the hearing too
     host.command("ideas.objection", {"idea": slug, "party": parties["tech"], "answer": "go"})
     assert went == [slug] and _objections(host, slug) == []                                                          # the last answer goes on to the decision
 
@@ -685,7 +687,8 @@ def test_not_now_is_offered_for_a_product_no_that_names_a_goal_in_line_and_the_g
     assert first not in by[parties["tech"]] and "The goals in line" not in by[parties["tech"]]                        # only Product weighs the goal against the line
     assert slug not in by[parties["product"]].split("The goals in line")[1].split("Rules:")[0]                       # the goal itself is not in line
     (row,) = _objections(host, slug)
-    assert row["after"] == first and row["after_title"] == "add a lobby for the party game" and row["answers"] == ["drop", "later", "go"]
+    side = next(x for x in row["sides"] if x["kind"] == "later")
+    assert side["after"] == first and side["after_title"] == "add a lobby for the party game" and side["outcome"] == "After add a lobby for the party game" and side["dir"] == "left"
     host.command("ideas.objection", {"idea": slug, "party": parties["product"], "answer": "later"})
     node = next(n for n in host.command("ideas.map")["nodes"] if n["slug"] == slug)
     assert node["waits_on"] == [first] and node["depends_on"] == [first] and node["place"] == "deck" and node["state"] == "raw" and node["queue"] == "hold"
@@ -703,7 +706,7 @@ def test_the_goals_in_line_are_the_decks_in_the_boards_order_at_most_ten_and_a_g
     assert len(got) == 10 and started not in [g["slug"] for g in got] and got[0]["party"] == parties["product"] and got[0]["party_title"] == "Product"
     _noes(model, parties, product={"verdict": "no", "why": "w", "after": started})
     slug = _talk(host, parties, ["product"], "add a dark mode option")
-    assert _objections(host, slug)[0]["after"] == "" and _objections(host, slug)[0]["answers"] == ["drop", "go"]
+    assert [x["kind"] for x in _objections(host, slug)[0]["sides"]] == ["go", "drop"]                                 # a goal not in line is no goal to wait for: the no is a plain drop
 
 
 def test_an_answer_that_does_not_apply_is_refused_in_plain_words_and_nothing_changes(host, parties, model):
@@ -714,7 +717,7 @@ def test_an_answer_that_does_not_apply_is_refused_in_plain_words_and_nothing_cha
                                (parties["design"], "go", "no objection"), (parties["tech"], "later", "does not apply")):
         with pytest.raises(idea_keeper.KeeperError, match=why):
             k.objection_answer(slug, party, answer)
-    assert len(_objections(host, slug)) == 2
+    assert len(idea_objections.pending(idea_questions.record(host.ideas.state_dir, slug))) == 2 and len(_objections(host, slug)) == 1
     k.objection_answer(slug, parties["tech"], "go")
     with pytest.raises(idea_keeper.KeeperError, match="no objection"):
         k.objection_answer(slug, parties["tech"], "go")                                                              # answered once

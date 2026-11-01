@@ -247,6 +247,7 @@ TERMS: tuple[Term, ...] = (
     _t("project_stage", "stage", "stages"),                        # how far the project is: idea, being made, live (realm/project_stage.py); a party's `stage` is the other word above
     _t("will_be", "Will be"),                                      # the change a section promises, on the maps it touches
     _t("fork", "fork", "forks"),                                   # two sections that disagree: the person decides, and only the sections it touches are written again
+    _t("hearing", "hearing", "hearings"),                          # a goal's card in the middle and the sides its leaders argue, thrown to the one the person takes (spec 120 §1); not a fork, which stays two sections that disagree, nor a council, the Review board's
     _t("out_of_contract", "out of the contract"),                  # a task whose work goes past what its section promised: it waits for the person
     _t("release_version", "Release a version"),                    # the Release party's act: a version goes out (not a step of a route)
     _t("other_choice", "Other…"),                                  # a question card's last choice: the person's own words
