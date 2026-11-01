@@ -29,6 +29,7 @@ from __future__ import annotations
 import json
 from concurrent.futures import ThreadPoolExecutor
 
+from orkboard.core import idea_fold
 from orkboard.core import idea_journal
 from orkboard.realm import decisions_log, idea_questions, idea_risk, idea_target, ideas, map_text, orkmaster, project_facts, sketches, spec_sections
 from orkboard.realm.idea_talk_parse import failure_lines, said_lines, total, touched
@@ -139,6 +140,7 @@ class SectionsMixin:
         if facts := project_facts.for_call(self.state_dir, party, route):
             parts.append(("What is known of the project", facts))
         parts += idea_journal.parts(self.state_dir, self.repo_root, party, slug)          # the leader's own journal and the project's (spec 125 §C), before the map
+        parts += idea_fold.parts(root, party)                                             # how the product works now (spec 127 §C.3), after the journals
         sketch = sketches.context(self.state_dir, slug)             # the sketch the person picked, before the map (spec 121 §2.6)
         if sketch:
             parts.append(("The sketch the person picked", sketch))

@@ -228,6 +228,9 @@ RIPE_DONE = "ripe_done"          # idea: the wait ended and the leaders' decisio
 # Spec 125 D (decisions §203): a leader's digest of its own journal, written in the background. Never a word of the journal or of the digest.
 JOURNAL_DIGESTED = "journal_digested"   # party, entries (how many the call read), chars (of the digest kept), seconds, cost (None: unrecorded)
 
+# Spec 127 C (decisions §205): a goal that reached main folded into the product's living specs, in the background. Never a word of the goal or of a spec.
+SPEC_FOLDED = "spec_folded"   # idea, capability (its slug), added, modified, removed (how many requirements), cost (None: unrecorded)
+
 EVENTS = (ASKED, ASSUMED, ANSWERED, STOPPED, WAIT_SKIPPED, HELD_AT_WORK, CAMP_LEFT, CAMP_BACK, QUEST_STARTED,
           QUEST_DONE, QUEST_SKIPPED, BUILT, CART_MOVED, LOOKED, IDEA_ADDED, IDEA_SAID, KEEPER_STATE, PLAN_MADE, PLAN_PASSED,
           TODO_DONE, TASK_STATE, CHECK_DONE, RESULT_READY, GATE_RAN, RESULT_DECIDED, TASK_STOPPED, TASK_SKIPPED, CHECK_SKIPPED, STOP_ALL, INTO_CHANGED, GATE_MERGED, GOAL_TO_MAIN, IDEA_FLAGGED, PICK_ASKED, PICK_ANSWERED, OPENED, LIMITS_READ, GOAL_SAVED, GOAL_READ, GOAL_ACCEPTED, ROLE_SAVED,
@@ -241,6 +244,7 @@ EVENTS += (NIGHT_HELD, NIGHT_STARTED, BUILT_NOW)       # spec 121 C
 EVENTS += (NIGHT_CARD_OPENED, PLAY_AT_PATH)       # spec 121 D
 EVENTS += (SKETCH_MADE, SKETCH_ANSWERED, SKETCH_SKIPPED)       # spec 121 A
 EVENTS += (JOURNAL_DIGESTED,)       # spec 125 D
+EVENTS += (SPEC_FOLDED,)            # spec 127 C
 
 _LOCK = threading.Lock()
 

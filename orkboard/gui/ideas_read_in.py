@@ -2,7 +2,7 @@
 a changelog) and the person's *read it in* of them into the journals. The reading is `realm/read_in.py`'s.
 
     ideas.read_in_scan {}      # → {found: [{framework, kind, path, n}]}: the shapes the project keeps
-    ideas.read_in_take {}      # → {decisions, leaders, done, releases, journals}: the entries added to the journals (a thing read in once is never read in twice)
+    ideas.read_in_take {}      # → {decisions, leaders, done, releases, journals, specs_read}: the entries added to the journals (a thing read in once is never read in twice)
 
 The host returns data, never interface words.
 """
@@ -20,6 +20,8 @@ class ReadInMixin:
 
     def read_in_take(self, args: dict) -> dict:
         got = read_in.take(Path(self.host.repo_root), self.state_dir, board=self.root(False))
+        if got.get("specs_read"):
+            self.tree_note("", "specs read in")             # the living specs read in are committed with the Board's pages (spec 127 C.4)
         return got
 
 
