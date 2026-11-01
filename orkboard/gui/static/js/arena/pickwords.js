@@ -3,7 +3,7 @@
 // the bottom) and shell/pickview.js (the drawer's Pick one) draw what these say.
 
 /** A kind's word: one, many (*4 pictures*, *3 sounds*, *2 clips*, *3 texts*). */
-export const MEDIA = { image: ["picture", "pictures"], audio: ["sound", "sounds"], video: ["clip", "clips"], text: ["text", "texts"] };
+export const MEDIA = { image: ["picture", "pictures"], audio: ["sound", "sounds"], video: ["clip", "clips"], text: ["text", "texts"], page: ["sketch", "sketches"] };      // `page`: a leader's sketch of a screen, one HTML page a variant (spec 121 §2.4)
 
 export const NEEDS_NOTE = "A note says what to change: write one first";
 export const NONE = "None of them: make new ones";

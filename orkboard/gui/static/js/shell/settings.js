@@ -1,5 +1,6 @@
 // Settings (docs/specs/33-v1-shell.md §4, §9; spec 34 §5–§6), a place over the pane (docs/specs/98-the-table-and-the-hand.md §7): Push after merging, Download
-// today's logs, Pair a phone, Keep the computer awake (spec 47 §5), the updates (js/shell/update.js). The theme follows the system.
+// today's logs, Pair a phone, Keep the computer awake (spec 47 §5), the updates (js/shell/update.js). The theme follows the system. **Work at night** (docs/specs/121 §4.1, §7.3; words: hand/nightwords.js) sits with the Board's
+// settings: what would start by itself waits for the night's window; it says plainly what still runs by day and what starts at once.
 import { useEffect, useState } from "preact/hooks";
 import { html } from "../html.js";
 import { command, PRODUCT } from "../link.js";
@@ -10,6 +11,7 @@ import { Place, closePlace, openPlace } from "../frame/place.js";
 import { currentProject } from "./projects.js";
 import { saveLogs } from "./errors.js";
 import { UpdatesField } from "./update.js";
+import { nightWordsOf, workAtNight } from "../hand/nightwords.js";
 
 
 const AWAKE_MODES = [["off", "Never"], ["carts", "While the orks work"], ["phone", "Stay reachable from your phone"]];
@@ -50,7 +52,7 @@ function AwakeField() {
 
 export function SettingsPlace() {
   const push = !!review.value?.push;
-  const b = board.value;
+  const b = board.value, night = nightWordsOf(b);
   return html`<${Place} title="Settings" foot=${html`<button type="button" class="ork-btn primary" onClick=${closePlace}>Done</button>`}>
     <div class="shell-form">
       ${currentProject.value && html`<p class="ok-font-status ok-tone-muted" data-settings="project">The Board's settings are for this project: ${currentProject.value.name}.</p>`}
@@ -62,6 +64,10 @@ export function SettingsPlace() {
           <input type="checkbox" class="gui-onb__hide" checked=${!!b.autostart} onChange=${(e) => act("ideas.board_set", { autostart: e.target.checked })} />
           <i>${b.autostart ? "✓" : ""}</i><span>Start plans by themselves</span></label>
         <span class="ok-font-status ok-tone-muted">Low-risk plans start alone; the rest wait for you.</span>
+        <label class="ok-check" data-settings="work-at-night">
+          <input type="checkbox" class="gui-onb__hide" checked=${workAtNight(b)} onChange=${(e) => act("ideas.board_set", { work_at_night: e.target.checked })} />
+          <i>${workAtNight(b) ? "✓" : ""}</i><span>${night.label}</span></label>
+        <span class="ok-font-status ok-tone-muted" data-settings="work-at-night-hint">${night.hint}</span>
         <label class="ok-check" data-settings="lands">
           <input type="checkbox" class="gui-onb__hide" checked=${!b.review} onChange=${(e) => act("ideas.board_set", { review: !e.target.checked })} />
           <i>${!b.review ? "✓" : ""}</i><span>A result that holds lands in dev by itself</span></label>

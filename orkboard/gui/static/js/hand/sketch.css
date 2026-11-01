@@ -1,0 +1,35 @@
+/* A leader's sketch (docs/specs/121-the-day-the-morning-and-the-night.md §7.1, decisions §199.3; mockup docs/mockups/hearing/ §4; hand/sketchcard.js). Layout only: every colour, face and corner is orkUI's. The frame holds
+   the product's own page (it draws its own look); the card around it is orkUI's. */
+
+/* a sketch's page in its sandbox: at the width of its box; the page is drawn at a phone's width first */
+.sk-frame { display: block; box-sizing: border-box; width: 100%; max-width: 100%; height: min(56vh, 420px); border: var(--ork-line) solid var(--ork-frame); background: var(--ork-paper); }     /* short enough that the answers under it are a short scroll away: a swipe on the frame is the page's own */
+
+/* A · B · C: buttons, never a sideways swipe (the frame takes the gestures) */
+.sk-abc { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
+.sk-abc .ork-btn { min-width: var(--ork-control); justify-content: center; }
+.sk-abc .ork-btn[aria-pressed="true"] { --_bg: var(--ork-ink); --_fg: var(--ork-on-ink); --_bd: var(--ork-ink); }
+.sk-line { margin: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); overflow-wrap: anywhere; }
+.sk-line b { color: var(--ork-ink); font-weight: 600; }
+
+/* the note, Sketch again's field and the answers under them */
+.sk-acts { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; }
+.sk-acts .ork-field { width: 100%; box-sizing: border-box; }
+.sk-rounds { margin: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+
+/* over the pane: the variants side by side, each frame at about a phone's width */
+.sk-pane { display: flex; flex-direction: column; gap: var(--ork-5); min-width: 0; padding: var(--ork-5); }
+.sk-title { display: flex; align-items: center; gap: var(--ork-3); margin: 0; font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.sk-title .cap { margin-left: var(--ork-2); color: var(--ork-ink-muted); text-transform: none; letter-spacing: 0; font: var(--ork-type-caption); }
+.sk-desk { display: flex; flex-wrap: wrap; align-items: flex-start; gap: var(--ork-4); min-width: 0; }
+.sk-one { flex: 1 1 280px; max-width: 390px; min-width: 0; margin: 0; display: flex; flex-direction: column; gap: var(--ork-2); }
+.sk-one .sk-frame { height: min(50vh, 440px); }
+.sk-one figcaption { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; }
+.sk-one .hand-answers { margin-top: var(--ork-1); }
+.sk-pane .sk-acts { max-width: 390px; }
+
+/* on a touch screen, or a window as narrow as a phone: every target 44 px */
+@media (pointer: coarse), (max-width: 759.98px) {
+  .sk-acts .ork-btn, .sk-one .ork-btn, .sk-abc .ork-btn { min-height: var(--ork-tap); }
+  .sk-abc .ork-btn { min-width: var(--ork-tap); }
+  .sk-acts .ork-field { min-height: var(--ork-tap); }
+}

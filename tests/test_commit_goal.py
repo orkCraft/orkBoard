@@ -133,6 +133,25 @@ def test_the_last_commit_that_touched_each_file(repo):
     assert commit_goal.last_touch(repo, "dev", "not-a-sha") == {}
 
 
+def test_goals_that_landed_after_a_commit_are_counted_once_each_and_the_persons_own_commits_none(repo):
+    tried = git(repo, "rev-parse", "HEAD")
+    assert commit_goal.new_goals(state(repo), repo, tried, "dev") == 0                                       # nothing since
+    land(repo, "dark-mode", "k1", {"x.css": "x\n", "y.css": "y\n"})                                          # a goal of two commits is one goal
+    commit(repo, "mine.txt", "mine\n")                                                                       # the person's own: no goal's
+    assert commit_goal.new_goals(state(repo), repo, tried, "dev") == 1
+    land(repo, "sound", "k1", {"s.ogg": "s\n"})
+    land(repo, "dark-mode", "k2", {"z.css": "z\n"})                                                          # a second task of the same goal
+    assert commit_goal.new_goals(state(repo), repo, tried, "dev") == 2
+    assert commit_goal.new_goals(state(repo), repo, git(repo, "rev-parse", "dev"), "dev") == 0
+
+
+def test_the_count_of_new_goals_is_zero_for_what_is_no_commit_or_no_branch(repo):
+    land(repo, "dark-mode", "k1", {"x.css": "x\n"})
+    for since in ("", "dev", "not-a-sha", "0" * 40, "--output=x"):
+        assert commit_goal.new_goals(state(repo), repo, since, "dev") == 0, since
+    assert commit_goal.new_goals(state(repo), repo, git(repo, "rev-parse", "main"), "nope") == 0
+
+
 def test_the_maps_read_the_branch_results_land_in_and_dev_when_none_or_not_a_branch():
     assert commit_goal.work_ref({"merge_into": "main"}) == "main"
     assert commit_goal.work_ref({}) == commit_goal.work_ref(None) == commit_goal.work_ref({"merge_into": ""}) == "dev"

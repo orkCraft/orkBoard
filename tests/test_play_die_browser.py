@@ -375,10 +375,11 @@ class PreviewHost(Host):
     """The table's host whose snapshot says how the project opens a preview (`preview`: "command" · "static" · ""; None leaves the key out, as before the first snapshot) and, since spec 118, the die's up face
     (`play_face`: "failed" · "new" · ""; None leaves the key out)."""
 
-    def __init__(self, preview: str | None = "", play_face: str | None = None, **kw):
+    def __init__(self, preview: str | None = "", play_face: str | None = None, new_n: int | None = None, **kw):
         super().__init__(**kw)
         self.preview = preview
         self.play_face = play_face
+        self.new_n = new_n                                                                                              # decisions §200.5: the goals landed in dev since the last play (None leaves the key out)
 
     def snapshot(self):
         doc = super().snapshot()
@@ -386,6 +387,8 @@ class PreviewHost(Host):
             doc["state"]["preview"] = self.preview
         if self.play_face is not None:
             doc["state"]["play_face"] = self.play_face
+        if self.new_n is not None:
+            doc["state"]["new_n"] = self.new_n
         return doc
 
 
@@ -470,6 +473,54 @@ def test_the_die_wears_the_face_the_snapshot_says_and_says_it_in_words(gui, play
     assert d.get_attribute("title") == words and d.get_attribute("aria-label") == words and d.locator(".hand-die__word").inner_text() == "Play"
     assert "is-landing" not in classes                                                                                # the first snapshot rolls nothing
     shot(pg, f"c118-die-{play_face or 'five'}.png")
+    finish(pg, errors)
+
+
+def pips_of(pg) -> int:
+    """How many marks the up face draws: the layers of its ::before (the die's pips are background layers of 2 x 2 cells)."""
+    return pg.evaluate("() => getComputedStyle(document.querySelector('.hand-die .ork-die__face.is-up'), '::before').backgroundImage.split('linear-gradient').length - 1")
+
+
+@pytest.mark.parametrize("new_n, face, words", [(1, "face-1", "Play: 1 new goal in dev since you last played"), (3, "face-3", "Play: 3 new goals in dev since you last played"),
+                                                (5, "face-5", "Play: 5 new goals in dev since you last played"), (6, "face-6", "Play: 6 new goals in dev since you last played"),
+                                                (9, "face-6", "Play: 9 new goals in dev since you last played")])
+def test_goals_new_in_dev_are_pips_on_the_up_face_six_at_most_and_the_title_counts_them_all(gui, new_n, face, words):
+    pg, errors = window(gui, PreviewHost("command", "new", new_n))
+    d = die(pg)
+    classes = face_of(pg)
+    assert face in classes and "face-new" not in classes and len([c for c in classes if c.startswith("face-")]) == 1 and "is-news" in classes
+    assert d.get_attribute("title") == words and d.get_attribute("aria-label") == words and d.locator(".hand-die__word").inner_text() == "Play"
+    assert pips_of(pg) == int(face[-1])
+    assert pg.locator(".hand-die .ork-die__face.is-up").evaluate("e => getComputedStyle(e).getPropertyValue('--_pip').trim()") == pg.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--ork-ink').trim()"), "in the ink"
+    assert pg.locator(".hand-die .ork-die__face.is-front").evaluate("e => getComputedStyle(e).getPropertyValue('--_pip').trim()") != pg.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--ork-ink').trim()"), "the other faces keep the muted pips"
+    shot(pg, f"c200-die-pips-{new_n}.png")
+    finish(pg, errors)
+
+
+@pytest.mark.parametrize("play_face, new_n, face", [("new", 0, "face-new"), ("new", None, "face-new"), ("", 4, "face-5"), (None, 4, "face-5"), ("failed", 4, "face-no")])
+def test_no_count_or_a_count_with_another_face_keeps_the_spark_the_five_and_the_cross(gui, play_face, new_n, face):
+    pg, errors = window(gui, PreviewHost("command", play_face, new_n))
+    classes = face_of(pg)
+    assert face in classes and "is-news" not in classes
+    assert die(pg).get_attribute("title") == {"face-new": NEW_WORDS, "face-5": TODAYS_WORDS, "face-no": FAILED_WORDS}[face]
+    finish(pg, errors)
+
+
+def test_asleep_wins_over_the_pips_and_the_cube_rolls_from_one_count_onto_another(gui):
+    host = PreviewHost("", "new", 3)
+    pg, errors = window(gui, host)
+    assert "face-5" in face_of(pg) and "is-news" not in face_of(pg) and die(pg).get_attribute("title") == ASLEEP
+    pg.context.close()
+    host = PreviewHost("command", "new", 2)
+    pg, errors = window(gui, host)
+    assert "face-2" in face_of(pg) and "is-landing" not in face_of(pg)                                                   # the first snapshot rolls nothing
+    watch_landing(pg)
+    host.new_n = 4
+    host.push()
+    pg.wait_for_function("() => document.querySelector('.hand-die .ork-die').classList.contains('face-4')", timeout=WAIT_MS)
+    pg.wait_for_function("() => window.__landed === true", timeout=WAIT_MS)                                             # another count is another face: the cube rolls onto it
+    pg.wait_for_function("() => !document.querySelector('.hand-die .ork-die.is-landing')", timeout=WAIT_MS)
+    assert die(pg).get_attribute("title") == "Play: 4 new goals in dev since you last played"
     finish(pg, errors)
 
 

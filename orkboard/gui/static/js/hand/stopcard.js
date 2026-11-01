@@ -17,6 +17,8 @@ import { liftKey } from "./state.js";
 import { leans } from "./motion.js";
 import { useAbout } from "./about.js";
 import { wayOf } from "./ways.js";
+import { nightWordsOf } from "./nightwords.js";
+import { SketchLifted, isSketch } from "./sketchcard.js";
 
 /** The action's sign of a stop and its tone: the alert of a failure and of a sign-in, the question of a question, the check (or cross) of a result, else the sign of what is asked (a plan's page, a pick's picture, a to-do's flag). */
 export function actionOf(s) {
@@ -26,6 +28,7 @@ export function actionOf(s) {
   if (s.kind === "sign_in") return { sign: "alert", tone: "alert" };
   if (s.kind === "result") return { sign: s.gem?.sign || "check", tone: s.gem?.sign === "cross" ? "danger" : "ok" };
   if (s.kind === "asks" || s.kind === "goal" || s.kind === "collide") return { sign: "question", tone: "" };
+  if (isSketch(s)) return { sign: s.row.media === "page" ? "page" : "picture", tone: "" };           // a leader's sketch is a pick made before the spec (spec 121 §7.1): a page, else a picture
   if (s.kind === "pick") return { sign: "picture", tone: "" };
   if (s.kind === "plan" || s.kind === "change") return { sign: "page", tone: "" };
   return { sign: "flag", tone: "" };
@@ -70,6 +73,7 @@ function Body({ s }) {
     ${s.kind !== "pick" && s.text && html`<p class="body hand-lifted__text">${s.text}</p>`}
     ${s.why && html`<p class="cap hand-lifted__why">${s.why}</p>`}
     ${s.kind === "plan" && (s.row?.missing || []).length > 0 && html`<p class="cap hand-lifted__why">${missingWords(s.row.missing)}</p>`}
+    ${s.kind === "plan" && !(s.row?.missing || []).length && s.node?.start_at === "night" && html`<p class="cap hand-lifted__why" data-night="waits">${nightWordsOf().waits}</p>`}
     ${s.kind === "pick" && html`<p class="body hand-lifted__text">${s.text}</p><${Tiles} row=${s.row} />`}`;
 }
 
@@ -93,7 +97,7 @@ export function Lifted({ s, anchor, inline = false }) {
     return () => window.removeEventListener("resize", place);
   }, [s.key, anchor, inline]);
   useEffect(() => { if (!inline) box.current?.focus({ preventScroll: true }); }, [s.key]);
-  const tone = s.tone === "danger" ? "danger" : s.tone === "alert" ? "alert" : "", Way = wayOf(s.kind)?.Lifted;
+  const tone = s.tone === "danger" ? "danger" : s.tone === "alert" ? "alert" : "", Way = wayOf(s.kind)?.Lifted || (isSketch(s) ? SketchLifted : null);
   return html`<aside ref=${box} class=${cls(`ork-card hand-card hand-card--stop hand-card--big hand-lifted${inline ? " hand-lifted--up" : ""}${element ? ` el-${element}` : ""}`, tone, { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed" })}
       role="dialog" tabindex="-1" aria-label=${`Lifted: ${labelOf(s)}`} data-key=${s.key} data-kind=${s.kind}
       style=${at ? `left:${at.left}px;--hc-lean:${at.lean}` : undefined}>

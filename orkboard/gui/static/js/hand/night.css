@@ -1,0 +1,17 @@
+/* The morning's card lifted (docs/specs/121-the-day-the-morning-and-the-night.md §7.2; mockup docs/mockups/hearing/ §5; hand/nightcard.js). Layout only: every colour, face and corner is orkUI's. */
+.hand-way--night { gap: var(--ork-3); }
+.nt-rows { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; min-width: 0; }
+.nt-row { display: flex; align-items: center; gap: var(--ork-3); min-width: 0; padding: var(--ork-2) 0; border-top: var(--ork-line) solid var(--ork-frame); }
+.nt-row:first-child { border-top: 0; }
+.nt-row > .ork-elem, .nt-row > .ork-sign { flex: none; }
+.nt-t { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.nt-t b { font-weight: 600; overflow-wrap: anywhere; }
+.nt-t span { color: var(--ork-ink-muted); font: var(--ork-type-caption); overflow-wrap: anywhere; }
+.nt-row.is-bad > .ork-sign, .nt-row.is-bad .nt-t b { color: var(--ork-danger); }
+.nt-row .ork-btn { flex: none; }
+.nt-row .ork-btn .ork-sign { margin-right: var(--ork-1); }
+.nt-phone { margin: 0; color: var(--ork-ink-muted); }
+
+/* on the phone's middle the rows stack their press under them, every target 44 px */
+.hand-lifted--up .nt-row { flex-wrap: wrap; }
+.hand-lifted--up .nt-row .ork-btn { min-height: var(--ork-tap); }

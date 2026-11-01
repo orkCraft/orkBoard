@@ -8,7 +8,8 @@ made of, seen and touched, and its own preview of dev. Read from the files, git 
 
 The snapshot carries `preview` (`preview_kind`: `command` · `static` · ""), whether the project has a preview to play: the Play die sleeps with none (spec 113).
 It carries `play_face` (`play_face`: `failed` · `new` · ""), what the die's up face says (docs/specs/118-the-dies-up-face.md §3): the last start of dev's head failed, or dev's head is
-a commit Play has not tried yet. Play keeps the commit last tried (a start that came to playing or failed) in `<state_dir>/play_tried.json`.
+a commit Play has not tried yet; and `new_n` (`new_n`), how many goals landed in dev since the commit last tried (decisions §200.5: the up face shows that many pips; 0 while the face is not
+`new`, and with only the person's own commits new). Play keeps the commit last tried (a start that came to playing or failed) in `<state_dir>/play_tried.json`.
 While it starts and plays, `logo` is the address of the project's logo in dev's head (realm/assets.py `logo`, served as an asset of that commit), "" with none:
 Play's start screen shows it (docs/specs/107-what-the-owners-day-said.md §9.2).
 
@@ -326,6 +327,7 @@ class AssetsMixin:
 
     _play: Play | None = None
     _head_seen: tuple[float, str, str] = (0.0, "", "")       # when, which ref and what dev's head was when the die's face last read it
+    _new_seen: tuple[str, str, int] = ("", "", 0)            # the commit last tried, dev's head and the goals that landed between them (the die's pips)
 
     def _ref(self) -> str:
         return commit_goal.work_ref(self.settings_now())
@@ -410,6 +412,22 @@ class AssetsMixin:
         except Exception:                          # a snapshot is never broken by the die's face
             pass
         return ""
+
+    def new_n(self) -> int:
+        """How many goals dev's head holds that the person has not tried in Play, for the snapshot (decisions §200.5): the pips the die's up face shows when the face is `new` (the spark with none: only
+        the person's own commits are new). 0 while the face says anything else. Kept for the pair (the commit last tried, dev's head). Never raises."""
+        try:
+            if self.play_face() != "new":
+                return 0
+            play = self._play
+            tried, tip = play.tried if play is not None else tried_commit(self.state_dir), self._head_now()
+            kept = self._new_seen
+            if kept[:2] != (tried, tip):
+                kept = (tried, tip, commit_goal.new_goals(self.state_dir, Path(self.host.repo_root), tried, self._ref()))
+                self._new_seen = kept
+            return kept[2]
+        except Exception:                          # a snapshot is never broken by the die's face
+            return 0
 
     @property
     def player(self) -> Play:

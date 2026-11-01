@@ -6,6 +6,7 @@ head of its branch as `commit` and the subjects it brought as `subjects` (core/i
     commit_goal.index(state_dir, root, "dev")         # {sha: {"goal", "task"}}: every commit of dev a task brought (cached by dev's head)
     commit_goal.resolve(root, "2026-10-26T09:00", "dev")   # the commit `since` names: a sha, or dev's last commit at or before a time
     commit_goal.last_touch(root, "dev", since)        # {path: {"sha", "at"}}: the last commit of since..dev (or of dev) that touched each file
+    commit_goal.new_goals(state_dir, root, sha, "dev")   # how many goals landed in dev after the commit `sha` (the die's pips, decisions §200.5)
     commit_goal.work_ref(settings)                    # the branch the maps read: the project's `merge_into` ("dev" when unset or not a branch's name)
 
 Read from git and the goals' plan.json, no model, no face. Every git call has fixed arguments (no shell), `--` before a path.
@@ -159,6 +160,23 @@ def of(state_dir: Path, root: Path, sha: str, ref: str = "dev") -> dict:
             return {}
         sha = got.stdout.strip() if got.returncode == 0 else ""
     return dict(index(state_dir, root, ref).get(sha) or {})
+
+
+def new_goals(state_dir: Path, root: Path, since: str, ref: str = "dev") -> int:
+    """How many goals have a commit in `since..ref` (the commits of `ref` the commit `since` does not reach): the goals that landed in dev since the commit last tried in Play
+    (decisions §200.5). A goal counts once however many of its commits there are; a commit no task brought (the person's own) counts none. 0 for a `since` that is not a commit, a
+    `ref` with no commit and a git that fails."""
+    tip = head(root, ref)
+    if not tip or not FULL_SHA.fullmatch(since or ""):
+        return 0
+    try:
+        got = git(root, "rev-list", f"-n{LOG_MAX}", f"{since}..{tip}")
+    except (OSError, subprocess.SubprocessError):
+        return 0
+    if got.returncode != 0:
+        return 0
+    landed_in = index(state_dir, root, ref)
+    return len({landed_in[sha]["goal"] for sha in got.stdout.split() if sha in landed_in})
 
 
 def last_touch(root: Path, ref: str = "dev", since: str = "", limit: int = LOG_MAX) -> dict[str, dict]:

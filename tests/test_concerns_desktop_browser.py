@@ -167,7 +167,7 @@ def strip(pg):
 
 def say(pg):
     """What the strip says on its line: the head's words, the counts, Ask again (not the aspects' row under it)."""
-    return " ".join(strip(pg).evaluate("e => [...e.children].filter((c) => !c.matches('.cn-aspects')).map((c) => c.innerText).join(' ')").split())
+    return " ".join(strip(pg).evaluate("e => [...e.children].filter((c) => !c.matches('.cn-aspects, .cn-since')).map((c) => c.innerText).join(' ')").split())
 
 
 def row(pg):
@@ -652,3 +652,82 @@ def test_every_aspect_chip_that_is_a_button_is_44_px_at_the_narrow_width(gui):
     finally:
         pg.context.close()
     assert not errors, "\n".join(errors)
+
+
+# -- spec 121 part F (docs/specs/121-the-day-the-morning-and-the-night.md §6, §7.4): the evening line ----------------------------------------------------------------------
+
+SINCE_LINE = "The results screen now says who was first, a clearer way through; the lobby's back button lost its label."
+
+
+def since(way, line=SINCE_LINE):
+    return {"way": way, "line": line, "at": "2026-11-01T18:00:00", "map_hash": "h2"}
+
+
+def evening(pg):
+    return pg.locator(".cn-since")
+
+
+def test_the_evening_line_lies_under_the_aspects_row_with_the_check_in_the_ink_for_toward(desk):
+    pg, host, w = desk
+    host.records["tech"]["since"] = since("toward")
+    system(pg)
+    evening(pg).wait_for(timeout=WAIT_MS)
+    line = evening(pg)
+    assert line.get_attribute("data-way") == "toward" and " ".join(line.locator(".cn-since__line").inner_text().split()) == f"Since your last look: {SINCE_LINE}"
+    mark = line.locator(".cn-since__way")
+    assert mark.get_attribute("role") == "img" and mark.get_attribute("aria-label") == "toward", "its way as a word for a screen reader"
+    assert mark.locator(".ork-sign.check").count() == 1
+    assert mark.locator(".ork-sign").evaluate("e => getComputedStyle(e).color") == line.locator("b").evaluate("e => getComputedStyle(e).color"), "the check is in the ink, as the words are"
+    assert line.evaluate("e => getComputedStyle(e).fontFamily") == pg.evaluate("() => getComputedStyle(document.body).fontFamily") != pg.locator(".cn-strip__counts").evaluate("e => getComputedStyle(e).fontFamily"), "the line is in the body face, not the pixel one"
+    assert row(pg).bounding_box()["y"] + row(pg).bounding_box()["height"] <= line.bounding_box()["y"] + 1, "under the aspects' row"
+    assert say(pg) == "The Architect: 1 alert, 2 notes Ask again", "the strip's own line is as before"
+    narrow.no_sideways(pg)
+    shot(pg, f"concerns-evening-toward-{w}.png")
+
+
+def test_away_is_the_alert_sign_in_the_alert_tone_and_unclear_the_muted_dot(desk):
+    pg, host, w = desk
+    host.records["tech"]["since"] = since("away", "The lobby lost its back button and the room codes broke.")
+    system(pg)
+    evening(pg).wait_for(timeout=WAIT_MS)
+    away = evening(pg)
+    assert away.get_attribute("data-way") == "away" and away.locator(".cn-since__way").get_attribute("aria-label") == "away" and away.locator(".ork-sign.alert").count() == 1
+    alert = pg.locator(".cn-aspect[data-state='alert'] .ork-sign").first
+    assert away.locator(".ork-sign.alert").evaluate("e => getComputedStyle(e).color") == alert.evaluate("e => getComputedStyle(e).color"), "the alert's tone"
+    assert away.locator(".ork-sign.alert").evaluate("e => getComputedStyle(e).color") != away.locator("b").evaluate("e => getComputedStyle(e).color")
+    shot(pg, f"concerns-evening-away-{w}.png")
+    host.records["tech"]["since"] = since("unclear", "Nothing it can tell yet.")
+    push(pg, host)
+    pg.wait_for_function("() => document.querySelector('.cn-since')?.dataset.way === 'unclear'", timeout=WAIT_MS)
+    dot = evening(pg).locator(".cn-since__way")
+    assert dot.get_attribute("aria-label") == "unclear" and dot.locator(".cn-dot").count() == 1 and dot.locator(".ork-sign").count() == 0
+    assert dot.locator(".cn-dot").evaluate("e => getComputedStyle(e).backgroundColor") == pg.locator(".cn-aspect[data-state='note'] .cn-dot").first.evaluate("e => getComputedStyle(e).backgroundColor"), "the muted ink"
+    host.records["tech"]["since"] = since("sideways")                                                           # a way out of the three is read as unclear
+    push(pg, host)
+    pg.wait_for_function("() => document.querySelector('.cn-since__way')?.getAttribute('aria-label') === 'unclear'", timeout=WAIT_MS)
+    assert evening(pg).get_attribute("data-way") == "unclear"
+
+
+def test_no_line_without_since_and_one_that_goes_when_the_next_look_has_none(desk):
+    pg, host, w = desk
+    system(pg)
+    assert evening(pg).count() == 0, "the map did not change since the look before"
+    host.records["tech"]["since"] = since("toward")
+    push(pg, host)
+    evening(pg).wait_for(timeout=WAIT_MS)
+    host.records["tech"]["since"] = None
+    push(pg, host)
+    evening(pg).wait_for(state="detached", timeout=WAIT_MS)
+    host.records["tech"]["since"] = {"way": "toward", "line": "   "}                                              # a line that says nothing is no line
+    push(pg, host)
+    pg.wait_for_timeout(300)
+    assert evening(pg).count() == 0
+
+
+def test_the_evening_line_also_lies_under_a_strip_with_no_aspects(desk):
+    pg, host, w = desk
+    del host.records["tech"]["rubric"]
+    host.records["tech"]["since"] = since("away")
+    system(pg)
+    evening(pg).wait_for(timeout=WAIT_MS)
+    assert row(pg).count() == 0 and evening(pg).locator(".ork-sign.alert").count() == 1
