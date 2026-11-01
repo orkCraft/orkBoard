@@ -1,7 +1,7 @@
 """Pick one (docs/specs/51-pick-one.md §2.3, §2.4) as `gui/ideas.py`'s `Ideas` has it: `ideas.pick`, the person's answer to a task that
 made variants, and the Needs you row such a task puts on the Board. Split from ideas.py to keep it under ~600 lines.
 
-    ideas.pick {slug, task, key, note, via}    # key: a variant's letter, or null for none of them (then a note is required)
+    ideas.pick {slug, task, key, note, via, now?}    # key: a variant's letter, or null for none of them (then a note is required)
 
 The row (kind `pick`) carries the variants with their signed addresses (gui/media.py); a text's words come inline. Its tasks are
 the runner's (core/idea_picking.py): the Board only reads them and says what the person answered.
@@ -22,7 +22,9 @@ class PickMixin:
     def pick(self, args: dict) -> dict:
         """`{"slug", "task", "key", "note"?, "via"?}`: the person's answer to a task that waits for a pick. `key`: the variant's letter,
         or null for none of them, which asks for new ones and needs a `note` (at most 2 000 characters). `via`: `hand` (the stop's card),
-        `drawer` or `screen` (the phone's own screen); another is read as the idea's screen."""
+        `drawer` or `screen` (the phone's own screen); another is read as the idea's screen. `now: true` (spec 121 §4.5, *Pick and build now* on a
+        sketch): kept with the answer, so the goal's plan is passed at once when it is made, unless `AUTOSTART` makes it wait for the person
+        (gui/ideas_board.py `autostart`); a goal whose plan is passed already keeps nothing."""
         slug, tid = _text(args, "slug", 100), _text(args, "task", 40)
         key, note = args.get("key"), args.get("note", "")
         if key is not None and not isinstance(key, str):
@@ -31,7 +33,16 @@ class PickMixin:
             raise IdeasError("note is not text")
         via = args.get("via")
         via = via if isinstance(via, str) and via in (*VIA, *PICK_VIA) else "idea"
-        self.runner(need=True).pick(slug, tid, key, note[:idea_pick.NOTE_MAX], device=_device(args), via=via)
+        now = args.get("now", False)
+        if not isinstance(now, bool):
+            raise IdeasError("now is on or off")
+        kept = now and key is not None and self.keep_build_now(slug, args)      # before the answer: the plan may be made at once; none for a pick of new ones
+        try:
+            self.runner(need=True).pick(slug, tid, key, note[:idea_pick.NOTE_MAX], device=_device(args), via=via)
+        except Exception:
+            if kept:
+                self.drop_build_now(slug)               # a refused answer builds nothing
+            raise
         self.changed(slug)
         return {"ok": True}
 
