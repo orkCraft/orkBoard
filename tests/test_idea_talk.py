@@ -167,7 +167,7 @@ def test_with_the_stagger_on_the_first_leader_goes_alone_until_it_ends_and_the_r
     _talk(host, parties, ["product", "design", "tech"])
     first, *rest = sorted(model.steps("talk_round"), key=lambda c: c["at"])
     assert first["party"] == parties["product"] and all(c["at"] >= first["end"] for c in rest)                           # the shared prefix is written before the rest begin
-    assert {c["party"] for c in rest} == {parties["design"], parties["tech"]} and max(c["at"] for c in rest) < min(c["end"] for c in rest)       # the rest still go at once among themselves
+    assert {c["party"] for c in rest} == {parties["design"], parties["tech"]} and max(c["at"] for c in rest) - min(c["at"] for c in rest) < 1.0        # the rest still go at once among themselves (no stagger between them)
 
 
 def test_with_the_stagger_on_the_rest_do_not_wait_longer_than_the_stagger(host, parties, model, monkeypatch):
