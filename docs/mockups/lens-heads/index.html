@@ -16,7 +16,7 @@
    sketched on the heads' own 12 × 11 grid from the race sheets' pixels, a few cells each, for orkUI to draw properly. The table (the owner, 1 November: *the leaders
    sit on chairs above the table with the cards; a new party is an empty chair*): each tab a chair's back behind its leader's head on the table's rim, the
    empty chair in place of *+ Party*, the leader's lane on the Board the table in front of its chair, a member at work its small head on the card it works on.
-   The chair is drawn here at a sign's weight in the frame's greys (posts, rail, crest), until orkUI draws it. */
+   The chair is drawn here at a sign's weight in the frame's greys (its back lower than the head: posts, their knobs, the rail), until orkUI draws it. */
 *, *::before, *::after { box-sizing: border-box; }
 html { background: var(--ork-canvas); }
 body { margin: 0; background: var(--ork-canvas); color: var(--ork-ink); font: var(--ork-type-body); }
@@ -83,9 +83,13 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
 .win.chairs .tab, .tbl .tab { align-items: flex-end; padding-top: var(--ork-2); padding-bottom: 0; }
 .win.chairs .tab .nm, .tbl .tab .nm { padding-bottom: var(--ork-3); }
 .win.chairs .tab > .flag, .tbl .tab > .flag { bottom: auto; top: var(--ork-2); }
-.seatbox { position: relative; flex: none; width: 52px; height: 48px; --chair-post: var(--ork-table-rim-hi); --chair-back: var(--ork-panel); }
-.seatbox.big { width: 60px; height: 56px; }
-.seatbox > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.seatbox { position: relative; flex: none; width: 52px; height: 36px; --chair-post: var(--ork-table-rim-hi); --chair-back: var(--ork-panel); }
+.seatbox.big { width: 60px; height: 46px; }
+/* the back lower than the head (the owner: a back as tall as the head reads as a little house): the head stands over its rail, as one seated */
+.seatbox > svg { position: absolute; left: 0; bottom: 0; width: 100%; height: 24px; }
+.seatbox.big > svg { height: 28px; }
+.tab.empty .seatbox { width: 36px; }
+.tab.empty .seatbox > svg { height: 36px; }
 .seatbox > svg .po { fill: var(--chair-post); }
 .seatbox > svg .bk { fill: var(--chair-back); }
 .seatbox > .sit { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); display: flex; }
@@ -222,7 +226,8 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
 .narrow .part { width: 100%; height: 110px; }
 .narrow .bubble { left: var(--ork-4); top: 60px; width: calc(100% - 32px); }
 .ntab.empty { appearance: none; border: 0; border-right: var(--ork-line) solid var(--ork-frame); background: none; cursor: pointer; padding: 0; }
-.ntab.empty .seatbox { width: 26px; height: 24px; --chair-post: var(--ork-frame); --chair-back: transparent; }
+.ntab.empty .seatbox { width: 18px; height: 18px; --chair-post: var(--ork-frame); --chair-back: transparent; }
+.ntab.empty .seatbox > svg { height: 18px; }
 
 /* ---------- the table: the Orkmaster's tab, the Board's lanes in front of the chairs ---------- */
 .tbl { width: 100%; max-width: 1240px; display: grid; grid-template-rows: auto auto 1fr; background: var(--ork-canvas); outline: var(--ork-line) solid var(--ork-edge); overflow: hidden; }
@@ -452,17 +457,25 @@ const S = (n) => `<span class="ork-sign ${n}" aria-hidden="true"></span>`;
 const leaderImg = (n, cls, mood = "calm") => `<img class="px ${cls}" data-head="${n}" data-mood="${mood}" alt="">`;
 const memberImg = (n, cls) => `<img class="px ${cls}" src="${RACE(n)}" alt="">`;
 
-/* the chair, in cells of 2 px: the posts, the top rail and its crest, the back's panel (an occupied chair) or the seat's edge (the empty one) */
+/* the chair, in cells of 2 px, its back lower than the head: an occupied chair is its back alone (two posts with their knobs, the top rail, the panel between),
+   the head standing over the rail; the empty chair is the whole chair, nobody on it (the back with two slats, the seat, the front legs) */
 function chairSvg(w, h, empty) {
   const r = [], add = (x, y, ww, hh, c) => r.push(`<rect x="${x}" y="${y}" width="${ww}" height="${hh}" class="${c}"/>`);
-  add(2, 4, w - 4, h - 4, "bk");
-  add(0, 1, 2, h - 1, "po"); add(w - 2, 1, 2, h - 1, "po");
-  add(0, 3, w, 2, "po"); add(3, 1, w - 6, 2, "po"); add(Math.floor(w / 2) - 4, 0, 8, 1, "po");
-  if (empty) { add(0, h - 6, w, 2, "po"); add(2, h - 4, 2, 4, "po"); add(w - 4, h - 4, 2, 4, "po"); add(4, 8, 2, h - 14, "po"); add(w - 6, 8, 2, h - 14, "po"); }
+  if (!empty) {
+    add(2, 3, w - 4, h - 3, "bk");
+    add(0, 0, 2, h, "po"); add(w - 2, 0, 2, h, "po");
+    add(2, 1, w - 4, 2, "po");
+  } else {
+    add(0, 0, 2, 11, "po"); add(w - 2, 0, 2, 11, "po");
+    add(2, 1, w - 4, 2, "po");
+    add(Math.floor(w / 2) - 1, 3, 2, 7, "po");
+    add(0, 10, w, 2, "po");
+    add(1, 12, 2, h - 12, "po"); add(w - 3, 12, 2, h - 12, "po");
+  }
   return `<svg viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">${r.join("")}</svg>`;
 }
-const chairOf = (headHtml, big) => `<span class="seatbox ${big ? "big" : ""}">${chairSvg(big ? 30 : 26, big ? 28 : 24, false)}<span class="sit">${headHtml}</span></span>`;
-const emptyChair = (cls = "") => `<button type="button" class="ork-tab tab empty ${cls}" aria-label="New party: an empty chair at the table" title="New party"><span class="seatbox">${chairSvg(26, 24, true)}</span><span class="nm"><b>New party</b></span></button>`;
+const chairOf = (headHtml, big) => `<span class="seatbox ${big ? "big" : ""}">${chairSvg(big ? 30 : 26, big ? 14 : 12, false)}<span class="sit">${headHtml}</span></span>`;
+const emptyChair = (cls = "") => `<button type="button" class="ork-tab tab empty ${cls}" aria-label="New party: an empty chair at the table" title="New party"><span class="seatbox">${chairSvg(18, 18, true)}</span><span class="nm"><b>New party</b></span></button>`;
 let chairs = true;
 
 const PARTIES = [
@@ -679,7 +692,7 @@ function narrowHtml(kind) {
   const tabs = PARTIES.map((p) => {
     if (p.on && isNew) return `<div class="ntab is-on"><span style="position:relative;display:flex">${leaderImg(p.head, "h36", "worried")}<span class="marks" style="right:-14px;top:-2px"><span class="mk-alert">${S("alert")}</span><span class="mk-note"></span></span></span></div>`;
     return `<div class="ntab" style="${p.on ? "background:var(--ork-raised);box-shadow:inset 0 -2px 0 var(--ork-ink)" : ""}">${leaderImg(p.head, "h24", isNew && p.flag ? "worried" : "calm")}${p.flag && !(p.on && isNew) ? `<span class="flag">${S("alert")}</span>` : ""}</div>`;
-  }).join("") + (isNew ? `<button type="button" class="ntab empty" aria-label="New party: an empty chair at the table" title="New party"><span class="seatbox">${chairSvg(26, 24, true)}</span></button>` : "")
+  }).join("") + (isNew ? `<button type="button" class="ntab empty" aria-label="New party: an empty chair at the table" title="New party"><span class="seatbox">${chairSvg(18, 18, true)}</span></button>` : "")
     + `<div class="ntab-end"><button type="button" class="ork-btn stop" style="--_fg:var(--ork-danger);--_bd:var(--ork-danger)">Stop</button></div>`;
   const chrome = isNew ? `<div class="squad">${seatsNew(true)}</div>` : chromeHtml(false);
   const map = `<div class="mapbox" style="grid-template-columns:1fr"><div class="sys">
