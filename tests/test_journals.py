@@ -25,7 +25,8 @@ def test_a_scope_and_a_kind_must_be_ones_and_a_project_kind_is_not_a_leaders(sd)
     with pytest.raises(ValueError):
         journals.add(sd, "Tech!", "stance", "x")
     with pytest.raises(ValueError):
-        journals.add(sd, "tech", "decision", "x")                                                 # a project's kind
+        journals.add(sd, "tech", "done", "x")                                                     # a project's kind
+    assert journals.add(sd, "tech", "decision", "ADR 3: Postgres")["kind"] == "decision"             # a decision of its craft, read in (spec 126 B)
     with pytest.raises(ValueError):
         journals.add(sd, journals.PROJECT, "overruled", "x")
     assert journals.add(sd, journals.PROJECT, "decision", "Decision 4: no accounts", ref="4")["kind"] == "decision"
