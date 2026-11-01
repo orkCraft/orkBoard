@@ -159,9 +159,14 @@ class RouteMixin:
         how = {**st["route_how"], "by": "person"}
         how.update(goal_route.shape(root, how, route))
         said = [s["party"] for s in how.get("said_route") or []]
-        if st["state"] != "routed" and isinstance(how.get("said"), dict):
+        talking = st["state"] == "talk" and self.keeper.talk_open(slug)
+        if talking:                                   # Talk is still going: the edit is Talk's own (spec 120 §2.2), the person is told the new cost and nothing is a step added after it
+            how.update(said=goal_route.cost_of(root, self.state_dir, {**st, "route": route, "route_how": how}, self.settings_now()), said_route=route, changed=False)
+        elif st["state"] != "routed" and isinstance(how.get("said"), dict):
             how["changed"] = [s["party"] for s in route] != said
         ideas.save_state(self.state_dir, slug, route=route, route_how=how)
+        if talking:
+            self.keeper.talk_route(slug)              # a party taken off is dropped with its answer and its cards; one put on is heard alone
         self.changed(slug)
         return self._answer(slug, {**st, "route": route, "route_how": how})
 

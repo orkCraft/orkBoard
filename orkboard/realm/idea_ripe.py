@@ -51,9 +51,10 @@ def outcome(rec: dict, has_product: bool) -> str:
 def wait_s(priority: str, risk: str, night: bool = False) -> int | None:
     """The seconds the wait lasts (spec 120 §3.5): `idea_risk.decide` says `start` or `night`, a minute for high priority at low risk and ten minutes otherwise; `wait` (the plan would wait for
     the person anyway): None, no wait."""
+    priority = priority if priority in ideas.PRIORITIES else "normal"          # a priority nobody knows reads as normal
     if idea_risk.decide(risk, priority, night) == "wait":
         return None
-    return HURRY_S if idea_risk.level(risk) == "low" and str(priority) == "high" else USUAL_S
+    return HURRY_S if idea_risk.level(risk) == "low" and priority == "high" else USUAL_S
 
 
 # -- the wait, kept beside the decision ------------------------------------------------------------------------------------------------

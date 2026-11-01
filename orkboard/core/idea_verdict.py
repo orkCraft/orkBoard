@@ -28,7 +28,7 @@ from concurrent.futures import wait
 from typing import Any
 
 from orkboard.realm import event_log, goal_route, goal_team, harness_claude, idea_objections, idea_questions, idea_ripe, idea_target, ideas, project_facts
-from orkboard.realm.idea_talk_parse import LINE, clean_judgement, said_lines
+from orkboard.realm.idea_talk_parse import LINE, MAX_CARDS, clean_judgement, pick_three, said_lines, total
 
 STAGGER, STAGGER_S = False, 4.0          # spec 120 §5.2: the first leader goes alone for this long (or until it ends), then the rest; off until the numbers say the shared prefix is written again
 SYSTEM_PROMPT = False                    # spec 120 §5.3: the map and the rubric in `--append-system-prompt`; off until the numbers say the map is not read from the cache
@@ -237,15 +237,92 @@ Answer with one JSON object and nothing else:
                     continue
                 changes.append((s["party"], str(s.get("verdict") or "go"), got["verdict"]))
                 s.update(**{k: got[k] for k in ("verdict", "why", "instead", "after")}, **{k: got[k] for k in ("priority", "risk") if got.get(k)})
-            old = {o["party"]: o for o in rec.get("objections") or [] if isinstance(o, dict)}
-            rec["objections"] = [{**o, "answer": old[o["party"]].get("answer", "")} if o["party"] in old else o for o in idea_objections.made(stances)]
             rec["stances"] = stances
-            self.reweigh(slug, rec)
+            self._remake(slug, rec)
             idea_questions.save_record(self.state_dir, slug, rec)
             if measure and heard:
                 ideas.save_state(self.state_dir, slug, measure=self._and(slug, measure))
         for party, before, now in changes:
             self._ev(event_log.TALK_VERDICT, idea=slug, party=party, before=before, after=now)
+
+    def _remake(self, slug: str, rec: dict) -> None:
+        """The record's objections made again from its stances, an answer already given kept, and its weight worked out again (`rec` is held under `ideas.LOCK` by the caller)."""
+        old = {o["party"]: o for o in rec.get("objections") or [] if isinstance(o, dict)}
+        rec["objections"] = [{**o, "answer": old[o["party"]].get("answer", "")} if o["party"] in old else o for o in idea_objections.made(rec.get("stances") or [])]
+        self.reweigh(slug, rec)
+
+    # -- the route edited while Talk runs (spec 120 §2.2) --------------------------------------------------------------------------------
+
+    def hear_whole(self, slug: str, route: list[dict]) -> list[tuple[dict, dict]]:
+        """The first round: the route's leaders and Product weighing the goal, at once (a weigher that does not answer is passed over). A party put on the route while they were heard is
+        heard alone, one call, and one taken off is dropped with its answer and its cards."""
+        heard = [(e, got) for e, got in self._hear(slug, route + self.weighers(slug), 1, "") if got is not None]
+        now = self._route(slug)
+        on = {r["party"] for r in now}
+        heard = [(e, got) for e, got in heard if (e["party"] not in on if e.get("weigher") else e["party"] in on)]       # a weigher put on the route is a leader now
+        late = [r for r in now if r["party"] not in {e["party"] for e, _got in heard}]
+        if late:
+            first = getattr(self._tls, "measured", None)
+            heard += [(e, got) for e, got in self._hear(slug, late, 1, "", now) if got is not None]
+            self._tls.measured = total("talk_round", [m for m in (first, self._tls.measured) if m])
+        with ideas.LOCK:                           # whoever was heard and then taken off is not heard any more
+            rec = idea_questions.record(self.state_dir, slug)
+            if rec:
+                rec["heard"] = [p for p in rec.get("heard") or [] if p in {e["party"] for e, _got in heard}]
+                idea_questions.save_record(self.state_dir, slug, rec)
+        return heard
+
+    def talk_open(self, slug: str) -> bool:
+        """Talk is still going: the leaders are heard or the person's answers are waited for (its record is not `done`); an edit of the route is then Talk's own, not a step added after it."""
+        rec = idea_questions.record(self.state_dir, slug)
+        return ideas.state(self.state_dir, slug)["state"] == "talk" and rec.get("mode") == "talk" and rec.get("done") is False
+
+    def talk_route(self, slug: str) -> None:
+        """The route was edited while Talk waits for the person's answers: a party taken off has its stance, its answers and its cards dropped; a party put on is heard alone, in the
+        background, its stance and its cards added (the three of all, as before: those that do not fit are closed by its picks). A round that is still being heard reconciles at its end
+        (`hear_whole`)."""
+        if not self.talk_open(slug) or self.busy(slug):
+            return
+        on = {r["party"] for r in self._route(slug)}
+        with ideas.LOCK:
+            rec = idea_questions.record(self.state_dir, slug)
+            gone = {s["party"] for s in rec.get("stances") or [] if isinstance(s, dict) and s["party"] not in on and not s.get("weigher")}
+            gone |= {s["party"] for s in rec.get("stances") or [] if isinstance(s, dict) and s.get("weigher") and s["party"] in on}       # Product put on the route speaks as a leader
+            if gone:
+                for key in ("stances", "waiting", "defaults", "answers"):
+                    rec[key] = [x for x in rec.get(key) or [] if not isinstance(x, dict) or (x.get("party") or x.get("by")) not in gone]
+                rec["heard"] = [p for p in rec.get("heard") or [] if p not in gone]
+                rec["second"] = [p for p in rec.get("second") or [] if p not in gone]
+                self._remake(slug, rec)
+                idea_questions.save_record(self.state_dir, slug, rec)
+            late = [r["party"] for r in self._route(slug) if r["party"] not in {s["party"] for s in rec.get("stances") or [] if isinstance(s, dict)}]
+        if late:
+            self._begin(slug, lambda s, after: self._add_run(s, late))
+        self.publish(slug)
+
+    def _add_run(self, slug: str, parties: list[str]) -> None:
+        """The parties put on the route, heard alone on this thread, one call each; their stances and the cards that fit among the three are added to the Talk's record."""
+        whole = self._route(slug)
+        try:
+            heard = [(e, got) for e, got in self._hear(slug, [r for r in whole if r["party"] in parties], 1, "", whole) if got is not None]
+        except InterruptedError as e:
+            self._lost(slug, e)
+            return
+        except Exception:                          # a leader that does not answer: the person can edit the route again
+            return
+        with ideas.LOCK:
+            rec = idea_questions.record(self.state_dir, slug)
+            if rec.get("mode") != "talk" or rec.get("done") is not False:
+                return
+            chosen, closed = pick_three([x for _e, got in heard for x in got["cards"]], max(MAX_CARDS - len(rec.get("waiting") or []), 0))
+            rec.update(stances=[*(rec.get("stances") or []), *(self._stance(e, got) for e, got in heard)], waiting=[*(rec.get("waiting") or []), *(c for c, _b, _k in chosen)],
+                       defaults=[*(rec.get("defaults") or []), *(self._closed(c, 1) for c, _b, _k in closed)], second=[*(rec.get("second") or []), *(e["party"] for e, got in heard if got["more"])],
+                       keys={**(rec.get("keys") or {}), **{c["id"]: k for c, _b, k in [*chosen, *closed] if k}})
+            self._remake(slug, rec)
+            idea_questions.save_record(self.state_dir, slug, rec)
+            if heard:
+                ideas.save_state(self.state_dir, slug, measure=self._and(slug, self._tls.measured))
+        self._assumed(slug, [(e["party"], got["assumes"]) for e, got in heard])
 
     # -- the wait ---------------------------------------------------------------------------------------------------------------------------
 

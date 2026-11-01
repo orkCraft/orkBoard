@@ -284,7 +284,7 @@ Answer with one JSON object and nothing else:
         """The first round, on this thread: the leaders heard, the three cards picked, the rest closed by their picks; the stances and the cards kept for the row."""
         try:
             route = self._route(slug)
-            heard = [(e, got) for e, got in self._hear(slug, route + self.weighers(slug), 1, "") if got is not None]        # Product weighs every goal (a weigher that fails is passed over)
+            heard = self.hear_whole(slug, route)                 # the leaders of the route and Product weighing the goal; a party put on or taken off meanwhile (core/idea_verdict.py)
         except Exception as e:
             self._lost(slug, e)
             return

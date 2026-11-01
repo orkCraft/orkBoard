@@ -138,7 +138,7 @@ def fresh_tool_now():
 @pytest.fixture(autouse=True)
 def route_card_first(monkeypatch, request):
     """A routed goal waits at its route card until **Talk** is pressed, as the tests written before spec 120 have it: a goal sent goes to Talk by itself (`gui/ideas_route.py` `AUTO_TALK`)
-    only in the tests that ask for it (the mark `talks_by_itself`, tests/test_gui_route.py); and Product weighs no goal it is not routed on (`goal_route.weigher_party`, spec 120 §2.4), so
+    only in the tests that ask for it (the mark `talks_by_itself`, tests/test_gui_auto_talk.py); and Product weighs no goal it is not routed on (`goal_route.weigher_party`, spec 120 §2.4), so
     the tests that count the calls of a route's leaders keep counting them, unless a test asks (the mark `weighs`, tests/test_idea_verdict.py)."""
     if request.node.get_closest_marker("talks_by_itself") is None:
         monkeypatch.setattr("orkboard.gui.ideas_route.AUTO_TALK", False)
