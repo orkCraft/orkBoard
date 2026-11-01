@@ -4153,4 +4153,11 @@ face at rest is the five (§196), which says nothing of what the die does. So (t
 3. **Asleep** (no preview, spec 113) the up face stays the five, grey: the arrow never promises a Play that cannot start.
 4. The other faces keep the die's numbers, so it still reads as a die when it rolls. `playdie.js` `faceNow` gives `play` where it
    gives `5` today for a die awake; drawn in `docs/mockups/hearing/` §6.
+5. **The spark becomes how many**: the owner, *the spark could be something plainer, +3 when there are three new features*. When dev's
+   head holds goals the person has not tried in Play, the up face shows **that many pips** (one to five; six for six or more), in
+   the ink, the die's own way of saying a number: a digit would not fit a face of 18 cells drawn in 2 x 2 marks, and pips read as a
+   die. The arrow at rest (1) is what tells them from a roll. Its `title` says it (*Play: 3 new goals in dev since you last
+   played*). This changes §196.2, and for the die alone §196's *never how much*: it counts what is new to play, never what waits
+   for the person (§145.3 stands for the deck and the tabs). The snapshot's `play_face` gains `new_n`; `face-1` … `face-6`, which
+   orkUI has, draw it (the spark stays in orkUI, unused here).
 The owner's call.
