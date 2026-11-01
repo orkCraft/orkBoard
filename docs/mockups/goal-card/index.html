@@ -71,6 +71,16 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
 .cd.q .who img { width: 24px; height: 22px; image-rendering: pixelated; }
 .cd.q .qq { flex: 1; font: var(--ork-type-caption); display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
 .cd.q .for { display: flex; gap: var(--ork-2); align-items: center; font: var(--ork-type-caption); color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; }
+/* a question passed on: it leaves its goal for the Orkmaster, waits a little where the person can see it, then goes to the leader who can answer */
+.cd.q.pass { width: 232px; height: 92px; padding: var(--ork-2) var(--ork-3); gap: var(--ork-1); --mk-line: var(--ork-edge); }          /* not yellow: nothing waits for you */
+.cd.q.pass .who { color: var(--ork-ink-muted); }
+.cd.is-asked .st { color: var(--ork-ink-muted); }
+.cd.q.pass .who img { width: 18px; height: 16px; } .cd.q.pass .who .ork-icon { width: 12px; height: 12px; }
+.cd.q.pass .qq { -webkit-line-clamp: 2; }
+.cd.q.ans { width: 200px; height: 64px; padding: var(--ork-2) var(--ork-3); --mk-line: var(--ork-action); }
+.cd.q.ans .who { color: var(--ork-action); }
+.prow { display: flex; gap: var(--ork-2); min-height: 92px; }
+.lab.answers::after { content: "· answering…"; text-transform: none; letter-spacing: 0; font: var(--ork-type-caption); color: var(--ork-alert); }
 .place { width: 120px; height: 168px; display: grid; place-items: center; color: var(--ork-ink-faint); font: var(--ork-type-caption); text-align: center; padding: var(--ork-3); }
 .cd.leans { transition: transform var(--ork-motion-base) var(--ork-motion-ease); }
 .cd.leans:hover, .cd.leans:focus-visible { transform: translateY(calc(var(--ork-motion-rise) * -2)); }
@@ -198,6 +208,7 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
     <button class="ork-btn" type="button" data-do="spec">The Orkmaster finishes a spec</button>
     <button class="ork-btn" type="button" data-do="ork-asks">The Orkmaster asks you</button>
     <button class="ork-btn" type="button" data-do="asks">Tech asks you</button>
+    <button class="ork-btn" type="button" data-do="across">Design asks what Tech knows</button>
     <button class="ork-btn" type="button" data-do="fail">A goal fails at Design</button>
     <button class="ork-btn" type="button" data-do="reset">Start again</button>
   </div>
@@ -210,9 +221,10 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
           <div class="pile"><div class="plab">Next</div><div class="pstack" id="p-next"></div><div class="punder" id="u-next"></div></div>
           <div class="pile"><div class="plab"><span class="ork-sign moon" aria-hidden="true"></span>Tonight</div><div class="pstack" id="p-night"></div><div class="punder" id="u-night">From 01:00</div></div>
         </div>
+        <div class="plab">Passing on</div><div class="prow" id="p-pass"></div>
       </div>
-      <div class="lane"><div class="lab"><img src="../../../design-system/orkui/races/shaman-elder@2x.png" alt="">Tech</div><div class="goals" id="l-tech"></div></div>
-      <div class="lane"><div class="lab"><img src="../../../design-system/orkui/races/dryad-elder@2x.png" alt="">Design</div><div class="goals" id="l-design"></div></div>
+      <div class="lane"><div class="lab" id="lab-tech"><img src="../../../design-system/orkui/races/shaman-elder@2x.png" alt="">Tech</div><div class="goals" id="l-tech"></div></div>
+      <div class="lane"><div class="lab" id="lab-design"><img src="../../../design-system/orkui/races/dryad-elder@2x.png" alt="">Design</div><div class="goals" id="l-design"></div></div>
       <div class="lane done"><div class="lab">Done</div><div class="pstack" id="p-done"></div></div>
     </div>
     <div class="hnd">
@@ -230,6 +242,8 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
     <p><b>Next</b> is the queue, by priority, the first on top. Its ring is the wait: it fills in eighths, and when it is whole the goal goes to work by itself as soon as the Orkmaster is free. A press on it reads the spec, with <i>Start now</i> and <i>Tonight</i>.</p>
     <p><b>Tonight</b> waits for the night's window, with no ring. A goal moves there from Next with one press.</p>
     <p><b>A question</b> leaves the goal: the card stays at its leader, yellow and still, and the question flies out of it into the hand. Answered, it flies back into the goal. When none is left, the yellow goes.</p>
+    <p><b>A question another leader can answer</b> does not come to you. It flies from its goal to the Orkmaster's <i>Passing on</i>, stays there a few seconds where you can see it (a press: <i>Answer it myself</i> or <i>Pass it now</i>), then goes to that leader, and the answer flies back into the goal. The goal never moves: it stays its leader's, and says <i>Asked Tech</i>. It is not yellow, because yellow means only one thing: you are needed.</p>
+    <p><b>The hand gets only what needs you</b>: a choice only a person makes (the look, money, the direction, anything that cannot be undone), a question no leader could answer, and a failure.</p>
     <p><b>A failure</b> cannot go on at its leader: the card turns red and is thrown into the hand from where it lay. A dashed place stays in the lane, so <i>Try again</i> has somewhere to go back to.</p>
     <p><b>The name on a back</b> is a plate at its foot: the rune and the short name, two lines. In a pile only the top's plate shows. Hovered, the pile fans and each card under shows its plate. The whole title is in the card's words for a screen reader and in its tooltip.</p>
   </div>
@@ -315,8 +329,8 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
   }
   function face(g, o) {
     o = o || {};
-    var st = g.state === "asks" ? S("question") + "Waits for you" : g.state === "failed" ? S("alert") + "Failed" : E(g.el, "mk-glow") + esc(g.stage);
-    return '<div class="ork-card mk-r cd face c-' + g.el + (g.state === "asks" ? " is-asks thick" : g.state === "failed" ? " is-failed thick" : "") + (o.cls ? " " + o.cls : "") + '" data-goal="' + g.id + '" title="' + esc(g.name) + '">'
+    var st = g.state === "asks" ? S("question") + "Waits for you" : g.state === "asked" ? S("question") + "Asked " + esc(PARTIES[g.asked].short) : g.state === "failed" ? S("alert") + "Failed" : E(g.el, "mk-glow") + esc(g.stage);
+    return '<div class="ork-card mk-r cd face c-' + g.el + (g.state === "asks" ? " is-asks thick" : g.state === "asked" ? " is-asked" : g.state === "failed" ? " is-failed thick" : "") + (o.cls ? " " + o.cls : "") + '" data-goal="' + g.id + '" title="' + esc(g.name) + '">'
       + '<div class="hd">' + E(g.el) + '<span class="nm">' + esc(g.name) + "</span></div>"
       + '<div class="win">' + S(g.sign, "big") + "</div>"
       + '<div class="st">' + st + "</div></div>";
@@ -345,7 +359,7 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
                       { id: "g2", el: "dust", short: "Answer streaks", name: "A streak counter for answers in a row", sign: "mechanic", stage: "Check · 3 min", state: "work" }],
                design: [{ id: "g3", el: "void", short: "Results screen", name: "The results screen after a round", sign: "screen", stage: "Build · 6 min", state: "work" }] },
       done: [{ id: "d1", el: "lava", short: "Lobby music", name: "Music in the lobby" }],
-      hand: [], places: {}, share: 0.25, orkAsks: false
+      hand: [], pass: [], places: {}, share: 0.25, orkAsks: false
     };
   };
   var st = S0(), lifted = null, nextId = 1;
@@ -378,8 +392,20 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
     });
     $("hcards").innerHTML = st.hand.map(function (h) { return h.kind === "q" ? qcard(h) : face(Object.assign({}, h.g, { state: "failed" }), { cls: "leans" }).replace('<div class="ork-card', '<button type="button" data-fail="' + h.id + '" class="ork-card').replace(/<\/div>$/, "</button>"); }).join("");
     if (!$("plus")) $("plus-slot").innerHTML = plusCard(nextRune());
+    drawPass();
     round(scn);
   }
+  function pcard(p, o) {
+    var g = goalById(p.goal) || { el: "void", short: "" };
+    return '<' + (o && o.div ? "div" : 'button type="button"') + ' class="ork-card mk-r cd q pass thick leans" data-pass="' + p.id + '" aria-label="' + esc(PARTIES[p.by].short + " asks " + PARTIES[p.to].short + ": " + p.q) + '">'
+      + '<span class="who">' + HEAD(PARTIES[p.by].race) + I("arrow-right") + HEAD(PARTIES[p.to].race) + esc(PARTIES[p.by].short + " asks " + PARTIES[p.to].short) + "</span>"
+      + '<span class="qq">' + esc(p.q) + "</span>"
+      + '<span class="for">' + E(g.el) + esc(p.left > 0 ? "To " + PARTIES[p.to].short + " in " + p.left + " s" : "Passing it on…") + "</span></" + (o && o.div ? "div" : "button") + ">";
+  }
+  function acard(p) {
+    return '<div class="ork-card mk-r cd q ans thick"><span class="who">' + HEAD(PARTIES[p.to].race) + esc(PARTIES[p.to].short + " answers") + '</span><span class="qq">' + esc(p.answer) + "</span></div>";
+  }
+  function drawPass() { $("p-pass").innerHTML = st.pass.map(function (x) { return pcard(x); }).join(""); round($("p-pass")); }
   function drawNext() {
     drawPile("next", st.next, { wait: st.share, say: "starts by itself" });
     $("u-next").textContent = !st.next.length ? "" : st.share >= 1 ? (st.work.length ? "Starts when the Orkmaster is free" : "Starting…") : "Starts by itself in " + Math.ceil((1 - st.share) * 8 * 1.5) + " s";
@@ -597,6 +623,50 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
     ["tech", "design"].forEach(function (p) { st.lanes[p] = st.lanes[p].filter(function (x) { return x.id !== h.goal; }); });
     closeLift(); draw();
   }
+  function askAcross() {
+    var g = st.lanes.design.filter(function (x) { return x.state === "work"; })[0]; if (!g) return;
+    g.state = "asked"; g.asked = "tech";                                         // it waits for Tech, not for you: still, not yellow
+    var q = { id: "p" + nextId++, by: "design", to: "tech", goal: g.id, left: 8, q: "Which event tells the results screen that a player left mid-round?", answer: "player_left, sent by the server when a socket closes" };
+    var from = rel(document.querySelector('.goals [data-goal="' + g.id + '"]'));
+    st.pass.push(q); draw();
+    var dest = document.querySelector('[data-pass="' + q.id + '"]');
+    hideUntil(dest, fly(pcard(q, { div: 1 }), from, rel(dest), { arc: 70 }));
+  }
+  function passTick() {
+    st.pass.slice().forEach(function (q) { if (q.left > 0) { q.left--; if (q.left === 0) passOn(q.id); } });
+    if (st.pass.length) drawPass();
+  }
+  function passOn(id) {
+    var q = st.pass.filter(function (x) { return x.id === id; })[0]; if (!q) return;
+    var el = document.querySelector('[data-pass="' + id + '"]'), from = el ? rel(el) : null, lab = $("lab-" + q.to), to = rel(lab);
+    q.left = 0; st.pass = st.pass.filter(function (x) { return x.id !== id; });
+    if (lifted === id) closeLift();
+    drawPass();
+    fly(pcard(q, { div: 1 }), from, { x: to.x, y: to.y, w: from ? from.w * 0.25 : 0, h: from ? from.h * 0.25 : 0 }, { arc: 50, ms: 560 }).then(function () {
+      lab.classList.add("answers");
+      return new Promise(function (r) { setTimeout(r, reduced() ? 0 : 1400); });
+    }).then(function () {
+      lab.classList.remove("answers");
+      var g = goalById(q.goal), dest = document.querySelector('.goals [data-goal="' + q.goal + '"]');
+      if (!g || !dest) return;
+      var d = rel(dest), a = rel(lab);
+      return fly(acard(q), { x: a.x, y: a.y, w: 200, h: 64 }, { x: d.x + 10, y: d.y + 50, w: 100, h: 32 }, { arc: 40, ms: 560 }).then(function () {
+        if (st.hand.some(function (h) { return h.kind === "q" && h.goal === g.id; }) || st.pass.some(function (x) { return x.goal === g.id; })) return;
+        var was = g.stage; g.state = "work"; g.stage = PARTIES[q.to].short + " answered"; draw();
+        setTimeout(function () { if (g.stage.indexOf("Answered") === 0) { g.stage = was; draw(); } }, 3000);
+      });
+    });
+  }
+  function takeIt(id) {
+    var q = st.pass.filter(function (x) { return x.id === id; })[0]; if (!q) return;
+    var from = rel(document.querySelector('[data-pass="' + id + '"]'));
+    st.pass = st.pass.filter(function (x) { return x.id !== id; });
+    var c = { kind: "q", id: "q" + nextId++, goal: q.goal, by: q.by, q: q.q, answers: [q.answer, "Other…"] };
+    var gg = goalById(q.goal); if (gg) gg.state = "asks";                          // taken by the person: now it waits for you
+    st.hand.push(c); closeLift(); draw();
+    var dest = document.querySelector('[data-q="' + c.id + '"]');
+    hideUntil(dest, fly(qcard(c), from, rel(dest), { arc: 60 }));
+  }
   function toNight() { var g = st.next.shift(); if (!g) return; var from = rel($("p-next")); st.share = 0; st.night.unshift(g); closeLift(); draw(); hideUntil($("p-night").querySelector(".cd"), fly(back(g), from, rel($("p-night")), { arc: 40 })); }
   function startNow() { st.share = 1; closeLift(); if (!st.work.length) toWork(); else draw(); }
 
@@ -606,6 +676,7 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
     asks: function () { var g = st.lanes.tech.filter(function (x) { return x.state === "work"; })[0]; if (!g) return;
       ask(g.id, "tech", [["Who counts as first when two answers arrive within 50 ms?", ["The server's clock decides", "Both are first"]], ["Keep the crown when a player reconnects?", ["Keep it", "Lose it"]]]); },
     fail: fail,
+    across: askAcross,
     reset: function () { closeLift(); if (F) { F.el.remove(); F = null; } st = S0(); $("plus-slot").innerHTML = ""; draw(); }
   };
   document.querySelectorAll("[data-do]").forEach(function (b) { b.addEventListener("click", function () { acts[b.dataset.do](); }); });
@@ -623,8 +694,16 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
       if (b.dataset.now) startNow();
       if (b.dataset.night) toNight();
       if (b.dataset.close) closeLift();
+      if (b.dataset.take) takeIt(b.dataset.take);
+      if (b.dataset.passnow) passOn(b.dataset.passnow);
       return;
     }
+    var pq = t.closest("[data-pass]");
+    if (pq) { var P = st.pass.filter(function (x) { return x.id === pq.dataset.pass; })[0]; if (!P) return;
+      if (lifted === P.id) return closeLift();
+      lift(pq, '<div class="t">' + HEAD(PARTIES[P.by].race) + esc(PARTIES[P.by].short) + " asks " + esc(PARTIES[P.to].short) + "</div><p>" + esc(P.q) + '</p><p style="font:var(--ork-type-caption);color:var(--ork-ink-muted)">' + esc(PARTIES[P.to].short) + " can answer it from the code, so the Orkmaster passes it on in a few seconds. Nothing waits for you.</p>"
+        + '<div class="acts"><button type="button" class="ork-btn" data-take="' + P.id + '">Answer it myself</button><button type="button" class="ork-btn" data-passnow="' + P.id + '">Pass it now</button></div>');
+      lifted = P.id; return; }
     var q = t.closest("[data-q]");
     if (q) { var Q = st.hand.filter(function (h) { return h.id === q.dataset.q; })[0], G = goalById(Q.goal);
       if (lifted === q.dataset.q) return closeLift();
@@ -682,6 +761,7 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
 
   fit(); draw(); round(document.body);
   setInterval(tick, 1500);
+  setInterval(passTick, 1000);
 })();
 </script>
 </body>
