@@ -41,7 +41,7 @@ def test_a_name_never_decides_and_what_is_not_a_known_type_is_none(tmp_path):
     # an SVG is XML whose root is <svg: a declaration, a comment and a doctype may come first
     doc = b'<!DOCTYPE svg [<!ENTITY a "b">]>\n<svg viewBox="0 0 1 1"/>'
     assert media_sniff.sniff(pf.write(tmp_path, "d.svg", doc)) == "image/svg+xml"
-    assert media_sniff.sniff(pf.write(tmp_path, "h.svg", b"<html><svg></svg></html>")) == "text/plain"   # not its root
+    assert media_sniff.sniff(pf.write(tmp_path, "h.svg", b"<html><svg></svg></html>")) == "text/html"     # not an SVG (its root is html): a page (spec 121 §2.4)
     assert media_sniff.sniff(pf.write(tmp_path, "b.svg", b"\xef\xbb\xbf" + pf.svg())) == "image/svg+xml"
 
 
@@ -72,12 +72,12 @@ def test_a_cut_file_reads_as_null_never_as_an_error(tmp_path):
 
 def test_the_kinds_have_their_words_types_and_limits():
     k = idea_pick.KINDS
-    assert list(k) == ["image", "audio", "video", "text"]
+    assert list(k) == ["image", "audio", "video", "text", "page"]
     assert (k["image"].word, k["audio"].many, k["video"].word, k["text"].many) == ("picture", "sounds", "clip", "texts")
     assert k["image"].mimes == ("image/png", "image/jpeg", "image/gif", "image/webp", "image/svg+xml")
     assert k["audio"].mimes == ("audio/mpeg", "audio/ogg", "audio/wav", "audio/mp4")
     assert k["video"].mimes == ("video/mp4", "video/webm") and k["text"].mimes == ("text/plain", "text/markdown")
-    assert [k[x].limit for x in k] == [10 * 2**20, 10 * 2**20, 50 * 2**20, 4096] and idea_pick.PICK_MAX == 120 * 2**20
+    assert k["page"].mimes == ("text/html",) and [k[x].limit for x in k] == [10 * 2**20, 10 * 2**20, 50 * 2**20, 4096, 60 * 1024] and idea_pick.PICK_MAX == 120 * 2**20
     assert lexicon.term("pick") == "pick" and lexicon.term("pick", many=True) == "picks"
 
 
@@ -803,3 +803,75 @@ def test_the_push_says_who_asks_to_pick_one_and_a_pick_that_waits_is_an_answer_t
     ideas.edit_plan(host.ideas.state_dir, slug, lambda p: p["tasks"][0].update(state="review"))
     host.ideas.rev += 1
     assert pusher._first() is None and pusher.words_needs(1) == "1 waits for your answer"
+
+
+# -- a leader's sketch: the kind `page` (spec 121 A, docs/specs/121-the-day-the-morning-and-the-night.md §2.4) -------------------------------------
+
+PAGE = b"<!doctype html><html><body><button>Press</button></body></html>"
+
+
+def _sketch_task(n=2, kind="page", ask="A list of goals"):
+    return idea_pick.leader_task(n, kind, ask)
+
+
+def test_a_sketch_is_a_task_of_a_leader_with_no_target_and_a_plans_task_never_asks_for_a_page():
+    t = _sketch_task()
+    assert t == {"id": "sketch", "leader": True, "title": "Sketch", "pick": {"n": 2, "kind": "page", "ask": "A list of goals", "target": ""}}
+    assert idea_pick.ask_of(t) == {"n": 2, "kind": "page", "ask": "A list of goals", "target": ""}
+    page = {"n": 2, "kind": "page", "ask": "x", "target": "docs/x.html"}
+    assert idea_pick.clean_ask(page) is None and idea_pick.ask_of({"pick": page}) is None                    # a plan's task makes no pages
+    assert idea_pick.clean_ask(page, leader=True)["kind"] == "page" and idea_pick.clean_ask({**page, "target": "../etc"}, leader=True)["target"] == ""       # a leader's has no target
+    assert idea_pick.ask_of({**t, "leader": False}) is None and idea_pick.ask_of({"id": "sketch", "pick": t["pick"]}) is None                # only a task marked a leader's
+    assert idea_pick.clean_ask({"n": 7, "kind": "page", "ask": "x"}, leader=True) is None and idea_pick.clean_ask({"n": 2, "kind": "page", "ask": " "}, leader=True) is None
+    assert idea_pick.clean_ask({"n": 2, "kind": "code", "ask": "x"}, leader=True) is None
+    assert idea_pick.clean_ask({"n": 3, "kind": "image", "ask": "x", "target": "a.png", "look": True}, leader=True) == {"n": 3, "kind": "image", "ask": "x", "target": ""}
+
+
+def test_a_page_is_read_stored_by_its_leader_and_never_written_into_a_project(tmp_path):
+    tree, state = tmp_path / "scratch", tmp_path / "state"
+    leave(tree, {"a.html": PAGE, "b.html": PAGE + b"<!-- b -->"}, names={"a.html": "Quiet", "b.html": "Loud"})
+    got, why = idea_pick.read(tree, _sketch_task())
+    assert why == "" and [(v["key"], v["name"], v["file"], v["mime"], v["w"], v["h"]) for v in got] == [("A", "Quiet", "a.html", "text/html", None, None), ("B", "Loud", "b.html", "text/html", None, None)]
+    pick = idea_pick.store(state, "g", _sketch_task(), 1, got, by="leader")
+    assert pick["id"] == "sketch-r1" and pick["by"] == "leader" and pick["kind"] == "page" and pick["target"] == "" and pick["task"] == "sketch" and pick["round"] == 1
+    folder = state / "ideas" / "g" / "picks" / "sketch-r1"
+    assert sorted(p.name for p in folder.iterdir()) == ["a.html", "b.html", "pick.json"] and (folder / "a.html").read_bytes() == PAGE
+    idea_pick.discard(tree)
+    assert not (tree / idea_pick.PICK_DIR).exists() and not (tree / idea_pick.PICK_FILE).exists()
+    assert idea_pick.load(state, "g", "sketch-r1")["variants"][0]["mime"] == "text/html" and idea_pick.history(state, "g", "sketch")[0]["id"] == "sketch-r1"
+
+
+def test_a_page_over_its_limit_a_picture_called_a_page_and_a_page_among_pictures_are_refused_in_words(tmp_path):
+    big = b"<!doctype html><body>" + b"a" * (60 * 1024) + b"</body>"
+    leave(tmp_path, {"a.html": PAGE, "b.html": big})
+    got, why = idea_pick.read(tmp_path, _sketch_task())
+    assert got == [] and why.startswith("B is 60") and why.endswith("a page is at most 60 KB")
+    leave(tmp_path / "t2", {"a.html": PAGE, "b.png": pf.png()})
+    got, why = idea_pick.read(tmp_path / "t2", _sketch_task())
+    assert got == [] and why == "B is a picture, not a page"
+    leave(tmp_path / "t3", {"a.html": pf.text("only words"), "b.html": PAGE})
+    got, why = idea_pick.read(tmp_path / "t3", _sketch_task())
+    assert got == [] and why == "A is a text, not a page"
+    leave(tmp_path / "t4", {"a.png": pf.png(), "b.png": pf.png(3, 3)})
+    got, why = idea_pick.read(tmp_path / "t4", _sketch_task(kind="image"))
+    assert why == "" and [v["mime"] for v in got] == ["image/png", "image/png"]                              # an Art sketch is a pick of pictures
+    got, why = idea_pick.read(tmp_path / "t4", _sketch_task(n=3, kind="image"))
+    assert got == [] and why == "The task left 2 pictures; its plan asked for 3"
+
+
+def test_a_page_is_no_text_of_a_plans_pick(tmp_path):
+    leave(tmp_path, {"a.txt": PAGE, "b.txt": pf.text("words")})
+    got, why = idea_pick.read(tmp_path, task(2, "text"))
+    assert got == [] and why == "A is a page, not a text"
+
+
+def test_a_round_answered_with_none_is_open_again_when_the_new_round_could_not_be_made(tmp_path):
+    tree, state = tmp_path / "scratch", tmp_path / "state"
+    leave(tree, {"a.html": PAGE, "b.html": PAGE + b"<!-- b -->"})
+    got, _ = idea_pick.read(tree, _sketch_task())
+    pick = idea_pick.store(state, "g", _sketch_task(), 1, got, by="leader")
+    said = idea_pick.answer(state, "g", pick, None, "rounder")
+    assert idea_pick.answered(said) and said["note"] == "rounder" and said["asked_at"] == pick["at"]
+    again = idea_pick.reopen(state, "g", said)
+    assert not idea_pick.answered(again) and "note" not in again and "asked_at" not in again and again["at"] == pick["at"]
+    assert idea_pick.load(state, "g", "sketch-r1") == again

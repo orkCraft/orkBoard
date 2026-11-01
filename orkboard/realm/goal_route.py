@@ -37,7 +37,7 @@ from orkboard.realm import goal_team, goal_types, idea_play, idea_route, idea_sp
 CRAFT_ORDER = ("product", "design", "engineering", "data", "marketing")      # the product's craft, the look's, the code's, the running's, the marketing's
 OFFER_SHORT = ("tidy", "balance")                                              # a small goal the short way is offered for (a bug is always short): §118.2
 BY = ("party", "code", "call", "default", "person")
-ROUTE_STATES = ("routed", "talk", "decided", "sections")                       # a goal's route may change until its work starts
+ROUTE_STATES = ("routed", "talk", "decided", "sketch", "sections")                       # a goal's route may change until its work starts
 LINE_STATES = ("raw", "reading", "asks", "ready", "planning", "plan") + ROUTE_STATES      # a goal not started: in the Orkmaster's line
 TALK_ROUNDS = 1                                                                # the calls Talk is counted at: one round (a second only when asked, §121.2)
 TASKS_PER_STEP = 2                                                             # the tasks a step's plan is counted at
@@ -360,7 +360,7 @@ def rows(root: Path, state_dir: Path, i: dict, st: dict, ctx: dict | None = None
         return [{"kind": "route", "idea": i["slug"], "route": steps, "cost": cost_of(root, state_dir, st, settings),
                  "place": ctx["order"].get(i["slug"], 0), "short": bool(how.get("short")), "reproduces": bool(how.get("reproduces")),
                  "low": bool(ctx["low"]), "offer": list(how.get("offer") or []), "type": type_id(st), "text": "Route: " + ", then ".join(names)}]
-    if state in ("talk", "decided", "sections") and how.get("changed") and isinstance(how.get("said"), dict):
+    if state in ("talk", "decided", "sketch", "sections") and how.get("changed") and isinstance(how.get("said"), dict):
         return [{"kind": "start", "idea": i["slug"], "cost": cost_of(root, state_dir, st, settings), "was": how["said"],
                  "text": "A step was added to the route"}]
     return []

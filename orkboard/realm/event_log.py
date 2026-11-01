@@ -212,6 +212,10 @@ BUILT_NOW = "built_now"           # idea, from ("card": Build it now on a held p
 # Spec 121 D (decisions §199.5): the morning's card, and Play opened on a screen (the time to the first mark is read from `play_mark`; never a word of anyone's).
 NIGHT_CARD_OPENED = "night_card_opened"   # goals (how many goals the night's record held), device: the morning's card was lifted
 PLAY_AT_PATH = "play_at_path"     # idea ("" when the press had no goal), path (the page's path Play was asked to open first, cut), device: *Play it* on a goal's screen
+# Spec 121 A (decisions §199.3): a goal's sketch, made before its spec by its craft's leader. Never a word of the goal's, the leader's or the person's (the note is counted, as a pick's is).
+SKETCH_MADE = "sketch_made"             # idea, craft ("design" · "game-design" · "art"), kind ("page" · "image" · "audio"), n (variants), round, seconds, cost (None: unrecorded)
+SKETCH_ANSWERED = "sketch_answered"     # idea, answer ("picked" · "again" · "skipped"), round, minutes_since_goal (from the goal's being added to the answer; None when unknown), note_chars, via, device
+SKETCH_SKIPPED = "sketch_skipped"       # idea, why (a few words: "the person said no" · "the media tools are not set up" · "it would be paid" · "the window is spent" · "the call failed" …)
 # Spec 120 D (decisions §198.6): a hearing thrown to a side (never a word of the goal's, a leader's or the person's).
 HEARING_THROWN = "hearing_thrown"    # idea, moment ("talk" or "fork"), kind ("go" · "drop" · "smaller" · "later" · "side" · "own"), dir ("right" · "left" · "up" · "" for the person's words), leaders (how many stood on that side)
 # Spec 120 (decisions §198): a goal heard at the Orkmaster. Never a word of a leader's or the person's.
@@ -232,6 +236,7 @@ EVENTS = (ASKED, ASSUMED, ANSWERED, STOPPED, WAIT_SKIPPED, HELD_AT_WORK, CAMP_LE
           PROPOSALS_SHOWN, PROPOSAL_TAKEN, PARTY_RESIZED, CANVAS_MADE, CANVAS_SEEN, SHOT_TAKEN, PLAY_STARTED, PLAY_STOPPED, MAP_OPENED, MAP_PART_PRESSED, MAP_SNAPSHOT_FAILED, SIGN_IN_NEEDED, SIGNED_IN, SIGN_IN_FAILED, TOOL_MOVED, PAID_ANSWERED, BOARD_ASKED, ASK_MADE_GOAL, COMMAND_REFUSED, ERROR_SHOWN, LEADER_OBJECTED, OBJECTION_ANSWERED, CONCERNS_MADE, CONCERN_OPENED, CONCERN_GOAL, CONCERN_DISMISSED, HEARING_THROWN, TALK_HEARD, TALK_VERDICT, RIPE_STARTED, RIPE_HELD, RIPE_DONE)
 EVENTS += (NIGHT_HELD, NIGHT_STARTED, BUILT_NOW)       # spec 121 C
 EVENTS += (NIGHT_CARD_OPENED, PLAY_AT_PATH)       # spec 121 D
+EVENTS += (SKETCH_MADE, SKETCH_ANSWERED, SKETCH_SKIPPED)       # spec 121 A
 
 _LOCK = threading.Lock()
 

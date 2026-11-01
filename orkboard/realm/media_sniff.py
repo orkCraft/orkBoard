@@ -4,10 +4,11 @@ so. No external tool, no model, no face.
 
     sniff(path)                  # "image/png" · "image/jpeg" · "image/gif" · "image/webp" · "image/svg+xml"
                                  # "audio/mpeg" · "audio/ogg" · "audio/wav" · "audio/mp4" · "video/mp4" · "video/webm"
-                                 # "text/plain" (UTF-8 without control characters) · None for anything else
+                                 # "text/plain" (UTF-8 without control characters) · "text/html" (a page: spec 121 §2.4) · None for anything else
     measure(path, mime)          # {"w", "h", "seconds"}: each an int or float when the header gives it, else None
 
-A text is `text/plain` here; that a text is Markdown is its name's to say (realm/idea_pick.py): the bytes cannot. An MP4 is a
+A text is `text/plain` here; that a text is Markdown is its name's to say (realm/idea_pick.py): the bytes cannot. **A page** (a sketch's,
+docs/specs/121-the-day-the-morning-and-the-night.md §2.4) is a UTF-8 text whose first thing, past a byte-order mark, white space and comments, is `<!doctype html` or `<html`: `text/html`. An MP4 is a
 sound or a clip by its tracks (`moov`), else by its brand (`M4A `, `M4B ` a sound). A WEBM is a clip, an OGG a sound.
 Every read is bounded; a file that is cut or odd reads as null, never as an error.
 """
@@ -25,6 +26,7 @@ NONE = {"w": None, "h": None, "seconds": None}
 
 _SVG = re.compile(r"\A﻿?\s*(?:<\?xml[^>]*\?>\s*|<!--.*?-->\s*|<!DOCTYPE[^>\[]*(?:\[.*?\])?\s*>\s*)*<svg[\s>/]", re.S)
 _SVG_TAG = re.compile(r"<svg\b([^>]*)>", re.S)
+_HTML = re.compile(r"\A﻿?\s*(?:<!--.*?-->\s*)*(?:<!doctype\s+html[\s>]|<html[\s>])", re.S | re.I)
 _CONTROL = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 _NUMBER = re.compile(r"\s*([0-9]*\.?[0-9]+)\s*(?:px)?\s*\Z")
 _MP3_RATES = {3: (44100, 48000, 32000), 2: (22050, 24000, 16000), 0: (11025, 12000, 8000)}     # by the version bits
@@ -86,7 +88,9 @@ def sniff(path: Path) -> str | None:
         return None
     if _SVG.match(head.decode("utf-8", "replace")):
         return "image/svg+xml"
-    return "text/plain" if _is_text(head, size <= len(head)) else None
+    if not _is_text(head, size <= len(head)):
+        return None
+    return "text/html" if _HTML.match(head.decode("utf-8", "replace")) else "text/plain"
 
 
 # -- measuring -----------------------------------------------------------------------------------------------

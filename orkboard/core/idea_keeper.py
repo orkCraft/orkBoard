@@ -50,6 +50,7 @@ from orkboard.core.idea_judge import JudgeMixin
 from orkboard.core.idea_lead import LeadMixin
 from orkboard.core.idea_revise import ReviseMixin
 from orkboard.core.idea_sections import SectionsMixin
+from orkboard.core.idea_sketch import SketchMixin
 from orkboard.core.idea_objection import ObjectionMixin
 from orkboard.core.idea_talk import TalkMixin
 from orkboard.core.idea_verdict import VerdictMixin
@@ -113,7 +114,7 @@ def _iso(at: float) -> str:
     return dt.datetime.fromtimestamp(at).isoformat(timespec="seconds")
 
 
-class IdeaKeeper(SignInMixin, TalkMixin, VerdictMixin, ObjectionMixin, ProjectQMixin, AskMixin, LoopMixin, TreeMixin, HypothesesMixin, ConcernsMixin, DecideMixin, SectionsMixin, PlanMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
+class IdeaKeeper(SignInMixin, TalkMixin, VerdictMixin, SketchMixin, ObjectionMixin, ProjectQMixin, AskMixin, LoopMixin, TreeMixin, HypothesesMixin, ConcernsMixin, DecideMixin, SectionsMixin, PlanMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
     def __init__(self, repo_root: Path, state_dir: Path, wiki_root: Callable[[], Path],
                  settings: Callable[[], dict], publish: Callable[[str], None] = lambda slug: None,
                  demo: bool = False, budget_ok: Callable[[], bool] = lambda: True,
@@ -134,6 +135,7 @@ class IdeaKeeper(SignInMixin, TalkMixin, VerdictMixin, ObjectionMixin, ProjectQM
         self.limits = limits or (lambda: [])
         self.on_plan = on_plan or (lambda slug: None)
         self.call: Call = self._claude                # tests swap the model call here
+        self.work_call: Callable[..., tuple[str, Any, Any, str]] = self._claude_work      # …and the call that works in a folder (an Art sketch, spec 121 §2.3): (tier, prompt, effort, budget, workdir, task)
         self.cancel = threading.Event()
         self._tls = threading.local()               # the idea a model call is for (its record in realm/call_log.py names it)
         self._lock = threading.Lock()
@@ -158,6 +160,20 @@ class IdeaKeeper(SignInMixin, TalkMixin, VerdictMixin, ObjectionMixin, ProjectQM
                                 effort=effort, budget=budget, one_shot=True, tools=getattr(self._tls, "tools", True))
         self._tls.usage, self._tls.capped = jobs.last_usage(), bool(getattr(jobs.LAST, "capped", False))
         return got
+
+    def _claude_work(self, tier: str, prompt: str, effort: str = "", budget: float | None = None, workdir: Path | None = None, task: dict | None = None) -> tuple[str, Any, Any, str]:
+        """One shot that may make files, only inside `workdir` (a folder of the goal's state, never the project's tree), with the commands of `task` (a pick task's: the media tools): an Art
+        sketch (spec 121 §2.3). Fresh, no session kept."""
+        from orkboard.realm import harnesses, jobs
+        from orkboard.sources import telemetry
+        tool = self.tool_now()
+        self._tls.tool = tool
+        h = harnesses.get(tool)
+        cancel = getattr(self._tls, "cancel", None) or self.cancel
+        with telemetry.tagged("plan", "board"), call_log.of_project(self.repo_root):
+            return jobs.run_work(tool, prompt, Path(workdir), cancel, h.pick(tier) if h else tier,
+                                 env={"ORKCRAFT_ORC": "board/keeper", "ORKCRAFT_IDEA": getattr(self._tls, "slug", ""), "ORKCRAFT_STEP": self.measure()["step"], "ORKCRAFT_PARTY": getattr(self._tls, "party", "")},
+                                 effort=effort, task=task, root=self.repo_root)
 
     def tool_now(self) -> str:
         """The AI tool the running step goes to: its goal's leader's seat's, else its party's (set on purpose, never moved), else the Main tool, or the tool
@@ -189,11 +205,12 @@ class IdeaKeeper(SignInMixin, TalkMixin, VerdictMixin, ObjectionMixin, ProjectQM
         lead = self.leader()
         return idea_target.keeper_pick(step, self.target(), (lead.get("model") or idea_target.TIER_ROLE) if lead else self.taskmaster())
 
-    def ask(self, step: str, prompt: str, tools: bool = True, as_role: str = "", reads: int | None = None) -> tuple[str, Any, Any, str]:
+    def ask(self, step: str, prompt: str, tools: bool = True, as_role: str = "", reads: int | None = None, work: tuple[Path, dict] | None = None) -> tuple[str, Any, Any, str]:
         """One model call on a step, measured; a run stopped meanwhile (its own cancel or Stop all) raises
         InterruptedError; one that ran out of its budget with nothing to use raises KeeperError with BUDGET_LINE.
         `as_role`: a role's slug the call speaks as, not the goal's leader (a pitch's views: core/idea_judge.py).
-        `reads`: how many files it may read when the step's own count is not the call's (`idea_target.reads_of`)."""
+        `reads`: how many files it may read when the step's own count is not the call's (`idea_target.reads_of`). `work`: `(folder, task)`, the call makes files in that folder
+        with the commands of that task (`work_call`) instead of only reading."""
         got = self.pick_as(step, as_role) if as_role else self.pick(step)
         if got is None:
             raise KeeperError(f"The Target {self.target()} makes no {step} call")
@@ -208,7 +225,8 @@ class IdeaKeeper(SignInMixin, TalkMixin, VerdictMixin, ObjectionMixin, ProjectQM
         self._tls.measure = {"step": step, "prompt_chars": len(prompt), "tokens": None, "cost": None}
         try:
             with call_log.bounded(idea_target.READS.get(step) if reads is None else reads):       # the files its prompt names: its line says if it read more
-                text, cost, tokens, session = self.call(got[0], prompt, got[1], idea_target.budget(step, self.target()))
+                text, cost, tokens, session = (self.call(got[0], prompt, got[1], idea_target.budget(step, self.target())) if work is None
+                                               else self.work_call(got[0], prompt, got[1], idea_target.budget(step, self.target()), *work))
         except Exception as e:
             if "budget" in str(e).lower() and not isinstance(e, InterruptedError):
                 raise KeeperError(BUDGET_LINE) from None
@@ -341,6 +359,8 @@ class IdeaKeeper(SignInMixin, TalkMixin, VerdictMixin, ObjectionMixin, ProjectQM
                 st = ideas.state(self.state_dir, slug)
                 if st["state"] == "working" and not st["error"] and not self.busy(slug) and not self.signed_out():
                     started |= self._quiet(lambda: self.plan_next(slug))      # its step is merged in dev and the route has another: that party plans it (spec 99 §9.1)
+                    continue
+                if st["state"] == "sketch" and self.sketch_lost(slug):     # its run was lost with the process: back at its decision (spec 121 §2.2)
                     continue
                 if self.busy(slug) or (not st["held_until"] and (st["error"] or st["state"] != "raw")):
                     continue

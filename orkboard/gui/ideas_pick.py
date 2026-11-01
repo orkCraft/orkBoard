@@ -2,6 +2,7 @@
 made variants, and the Needs you row such a task puts on the Board. Split from ideas.py to keep it under ~600 lines.
 
     ideas.pick {slug, task, key, note, via, now?}    # key: a variant's letter, or null for none of them (then a note is required)
+                                                       # task `sketch`: a goal's sketch before its spec (spec 121 §2.5, gui/ideas_sketch.py): `skip: true` = *No sketch: go on*
 
 The row (kind `pick`) carries the variants with their signed addresses (gui/media.py); a text's words come inline. Its tasks are
 the runner's (core/idea_picking.py): the Board only reads them and says what the person answered.
@@ -33,6 +34,8 @@ class PickMixin:
             raise IdeasError("note is not text")
         via = args.get("via")
         via = via if isinstance(via, str) and via in (*VIA, *PICK_VIA) else "idea"
+        if tid == "sketch":                                         # a goal's sketch (spec 121 §2.5), not a task of a plan: the keeper answers it (gui/ideas_sketch.py)
+            return self.sketch_pick(args, slug, key, note, via)
         now = args.get("now", False)
         if not isinstance(now, bool):
             raise IdeasError("now is on or off")
@@ -50,7 +53,7 @@ class PickMixin:
         """One variant as a face reads it: `{key, name, why, url, mime, w, h, seconds, text?}`."""
         row = {"key": v["key"], "name": v["name"], "why": v.get("why") or "", "url": media.url(slug, str(pick["id"]), str(v["file"])),
                "mime": v["mime"], "w": v.get("w"), "h": v.get("h"), "seconds": v.get("seconds")}
-        if str(v["mime"]).startswith("text/"):
+        if v["mime"] in ("text/plain", "text/markdown"):            # a page (`text/html`, a sketch's) is never inline: its `url` goes in a sandboxed frame
             try:
                 raw = (idea_pick.folder_of(self.state_dir, slug, str(pick["id"])) / str(v["file"])).read_bytes()[:TEXT_INLINE]
                 row["text"] = raw.decode("utf-8", "replace")
@@ -69,8 +72,8 @@ class PickMixin:
         """The Needs you rows of a goal's tasks that wait for a pick, in the plan's order (realm/idea_pick.py `current`): kind `pick`,
         `slug` (the goal) and `task`, `title` (the task's), the member it ran as, the ask, the variants, the round and when it was asked.
         It blocks the goal's work in progress, so it sorts first."""
-        out, slug = [], i["slug"]
-        waiting = [t for t in (plan or {}).get("tasks") or [] if isinstance(t, dict) and t.get("state") == "picking"]
+        out, slug = self.sketch_rows(i), i["slug"]                  # a goal's sketch that waits for the person (spec 121 §2.5: gui/ideas_sketch.py)
+        waiting =[t for t in (plan or {}).get("tasks") or [] if isinstance(t, dict) and t.get("state") == "picking"]
         if not waiting:
             return out
         read, target = roles.known(self.state_dir), self.target_of_idea(slug)

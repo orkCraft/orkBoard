@@ -6,6 +6,7 @@ those, never the whole page. A page of before (one section of its party, nothing
     contract(text)                    # a section's *Done when* and *Will be*, as its leader wrote them ("" when it has neither)
     note(page, heading)               # the sentence a task's prompt says of the spec's reading ("" for a page of before, or a task with no section)
     page_of(repo_root, state_dir, path)  # the spec's page as a task's worktree holds it (`idea_git.spec_paths` gives the path), None when it is not there
+    sketch_note(state_dir, slug)         # the sketch the person picked, named by its file's path as a reference for a task to follow (spec 121 §2.6), "" with none
 """
 from __future__ import annotations
 
@@ -45,6 +46,19 @@ def note(page: idea_page.Page, heading: str) -> str:
     return (f"read the common part ({names}), your party's section `## {got['own'][0]}` whole"
             + (f", and of the other sections ({others}) only their `### Done when` and `### Will be`: they are the contract your work must not break" if others else "")
             + ". Read nothing else of it: the other parties' sections are theirs.")
+
+
+def sketch_note(state_dir: Path, slug: str) -> str:
+    """What a task is told of the sketch the person picked (spec 121 §2.6): its name and the person's note, and the path of its file in the goal's state folder, to follow as the picture of what to build — a reference, never
+    a file to copy into the project. "" when no sketch was picked."""
+    from orkboard.realm import sketches
+    got, path = sketches.picked(state_dir, slug), sketches.reference(state_dir, slug)
+    if got is None or path is None:
+        return ""
+    note = f' The person said: "{got["note"]}".' if got.get("note") else ""
+    what = "a page" if got.get("mime") == "text/html" else "a sound" if got.get("kind") == "audio" else "a picture"
+    return (f"# The sketch the person picked\n\nBefore this goal's spec was written, the person picked a sketch of it: {got.get('key')} · {got.get('name')}" + (f" — {got['why']}" if got.get("why") else "") + f".{note}\n"
+            f"It is {what} at `{path}` (outside this worktree; you may read it). Follow it as the picture of what to build: its look, its steps, its words. It is a throwaway sketch, not code: never copy it into the project.")
 
 
 def page_of(repo_root: Path, state_dir: Path, path: str) -> idea_page.Page | None:

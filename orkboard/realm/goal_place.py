@@ -20,7 +20,7 @@ WAITS_AS = ("reset", "held", "line")
 
 _AT_WORK = ("reading", "planning", "working", "judging")        # the Orkmaster reads, plans or judges it; or its tasks run
 _ASKING = ("asks", "failed", "proposed", "judged")               # not at work: the person answers
-_WAY = ("talk", "decided", "sections")                           # a goal's way before its work (spec 99 §4–§7): the leaders talk, the decision, the sections
+_WAY = ("talk", "decided", "sketch", "sections")                           # a goal's way before its work (spec 99 §4–§7): the leaders talk, the decision, the sections
 _FINISHED = ("sent", "passed")                                   # a pitch since sent on or passed: nothing more to do with it
 
 

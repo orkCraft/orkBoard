@@ -128,7 +128,7 @@ def test_state_talk_and_plan_beside_the_page(tmp_path):
 
 def test_a_goal_has_its_route_and_the_states_of_its_way_beside_its_page(tmp_path):
     """Spec 99 §4: the states `routed` · `talk` · `decided` · `sections`, and `route` (the parties, in order) with `route_how` in the state; an older state reads none."""
-    assert ideas.STATES[-4:] == ("routed", "talk", "decided", "sections")
+    assert ideas.STATES[-5:] == ("routed", "talk", "decided", "sketch", "sections")
     assert ideas.STATE_DEFAULT["route"] == [] and ideas.STATE_DEFAULT["route_how"] == {}
     state = tmp_path / "state"
     assert ideas.state(state, "a")["route"] == []

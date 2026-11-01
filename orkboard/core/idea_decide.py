@@ -2,7 +2,7 @@
 confirms it with one button, and it is committed, numbered, to the project's decisions file in dev. A mixin of `IdeaKeeper`, as `idea_talk.py` is.
 
     keeper.decide(slug)                       # Talk's last round is done (core/idea_talk.py): one call of the Orkmaster in the background; the goal is then `decided`
-    keeper.confirm(slug, text="", tree=None, by="person")  # *Confirm and start*: `text` the person's correction, kept as written; the entry appended and committed; then the sections;
+    keeper.confirm(slug, text="", tree=None, by="person")  # *Confirm and start*: `text` the person's correction, kept as written; the entry appended and committed; then the goal's sketch when it gets one (spec 121 §2.2), else the sections;
                                               #   `by="leaders"`: a goal all the leaders agreed on, confirmed by itself when its wait ended (spec 120 §3.5)
     keeper.write_decision(title, body, tree=None)   # the entry alone, with no goal (`confirm` writes through it; so does a hypothesis's verdict, spec 116 §4): {number, commit, path, held, pages}
 
@@ -18,7 +18,7 @@ confirms it with one button, and it is committed, numbered, to the project's dec
 - **Never for a bug** (§158.3: a bug's Talk is its diagnosis and goes to `sections`) **nor a recurring round** (§122.6: not routed). Asking again of a decision confirmed
   already (the sections failed) writes nothing twice: it runs the sections again.
 
-`self` has the keeper's `ask`, `measure`, `_begin`, `_route`, `_lost`, `_name`, `sections`, `_may_run`, `busy`, `refuse_spent`, `wiki_root`, `state_dir`, `repo_root`, `publish`.
+`self` has the keeper's `ask`, `measure`, `_begin`, `_route`, `_lost`, `_name`, `after_decision` (a goal that is seen or heard is sketched before its sections, core/idea_sketch.py), `sections`, `_may_run`, `busy`, `refuse_spent`, `wiki_root`, `state_dir`, `repo_root`, `publish`.
 """
 from __future__ import annotations
 
@@ -254,8 +254,7 @@ Answer with one JSON object and nothing else:
             self._ev(event_log.RIPE_DONE, idea=slug)
         else:
             idea_ripe.drop(self.state_dir, slug)
-        ideas.save_state(self.state_dir, slug, state="sections", error="")
-        self.sections(slug)
+        self.after_decision(slug)                                  # a goal that is seen or heard is sketched first (spec 121 §2.2: core/idea_sketch.py); else the sections follow at once
         d = spec_sections.record(self.state_dir, slug)["decision"]
         return {k: d.get(k) for k in ("number", "title", "commit", "held", "path", "pages")}
 

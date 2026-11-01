@@ -305,6 +305,8 @@ class TaskMixin:
                                   + "".join(f" It depends on `{d}`." for d in deps) if spec else "(its spec was not found)"),
             f"# Your task: {task.get('title', '')}\n\n{task.get('brief', '')}",
         ]
+        if sketch := task_brief.sketch_note(self.state_dir, slug):        # the sketch the person picked: a reference to follow (spec 121 §2.6)
+            parts.insert(len(parts) - 1, sketch)
         if done:
             parts.append("# The tasks before yours\n\n" + "\n".join(done))
         if secrets:
