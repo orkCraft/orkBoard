@@ -1,5 +1,5 @@
 // How the hand's cards answer the hand (docs/specs/98-the-table-and-the-hand.md §6.1, decisions §149.1; docs/specs/120-a-goal-heard-and-thrown-to-a-side.md §6.9–§6.10, decisions §198.9): orkUI draws every motion (`.ork-leans`, `.ork-deal`,
-// `.ork-play`, `.ork-fan`, `.ork-crumble`: its tokens, its keyframes, nothing under reduced motion); the page only says when and from where. A card leans toward the pointer (`lean`), a card that
+// `.ork-play`, `.ork-fan`, `.ork-crumble`, `.ork-gives`, `.ork-turn`: its tokens, its keyframes, nothing under reduced motion); the page only says when and from where. A card leans toward the pointer (`lean`), a card that
 // comes is handed from where it was played (`useHanded`: the goal's card on the table, else the leader's tab, else on a phone the goal in the middle or the crown; `fromWhere`), a card that is
 // answered is played back there (stopcard.js, `between`), a card that goes crumbles where it lay (`useGone`). At rest and under reduced motion nothing moves: the hooks add no class then.
 import { h } from "preact";
@@ -56,6 +56,26 @@ export function fromWhere({ goal = "", party = "", ork = false } = {}) {
   return tab ? { el: tab, at: "tab" } : null;
 }
 
+/** The head of who plays a card, at its origin (spec 120 §6.9): the leader's head under the goal's face-down card (`.table-back-head`), else the leader's tab head (the Orkmaster's for what the Orkmaster plays); on the phone the crown's. `where`: `fromWhere`'s. */
+export function headAt(where, { party = "", ork = false } = {}) {
+  if (!where?.el) return null;
+  const head = (root) => root?.querySelector?.(".ork-race__head") || null;
+  if (where.at === "crown" || uprightNow.value) return head(document.querySelector(".up-crown"));
+  const slug = ork ? ORKMASTER : party;
+  const under = !ork && party && where.at === "goal" ? head(where.el.closest(".table-cardwrap")?.querySelector(`.table-back-head[data-party="${CSS.escape(party)}"]`)) : null;
+  return under || (slug ? head([...document.querySelectorAll(`.frame-table .table-tab[data-tab="${CSS.escape(slug)}"]`)].find((el) => boxIn(el))) : null);
+}
+
+/** One beat on a head: orkUI's `.ork-gives` is put on and taken off at its `animationend` named `ork-give` (nothing plays under reduced motion; orkUI's rule says so too, and the class is not put on). */
+export function give(head) {
+  if (!head || reduced()) return;
+  head.classList.remove("ork-gives");
+  void head.offsetWidth;                                                              // a second give while the first plays begins again
+  const off = (e) => { if (e.animationName !== "ork-give") return; head.classList.remove("ork-gives"); head.removeEventListener("animationend", off); };
+  head.addEventListener("animationend", off);
+  head.classList.add("ork-gives");
+}
+
 /** The vector from the middle of the box `a` to the middle of `b`, in px. */
 export const between = (a, b) => ({ x: Math.round(b.left + b.width / 2 - (a.left + a.width / 2)), y: Math.round(b.top + b.height / 2 - (a.top + a.height / 2)) });
 
@@ -93,7 +113,7 @@ export function useHanded(items) {
       came.forEach((c, i) => {
         const where = flying < FLY_MAX ? fromWhere(c) : null;
         if (where) flying++;
-        live.current[c.key] = { i, ...(where ? { el: where.el } : {}), ...(hold ? { hold: true } : {}) };
+        live.current[c.key] = { i, ...(where ? { el: where.el, head: headAt(where, c) } : {}), ...(hold ? { hold: true } : {}) };
       });
       const begin = (drawing = false) => {                                    // the deal begins (while this very draw, or when the pointer is up)
         if (begun) return;
@@ -111,7 +131,7 @@ export function useHanded(items) {
   return { ...live.current };
 }
 
-/** A card handed from where it was played (`dealt` is its entry of `useHanded`): before the first paint the vector from its place to the origin is set (orkUI's `--ork-deal-x/-y`) and orkUI's deal begins; while a pointer is down in the hand it is held back
+/** A card handed from where it was played (`dealt` is its entry of `useHanded`: `{i, el, head, hold}`): before the first paint the vector from its place to the origin is set (orkUI's `--ork-deal-x/-y`) and orkUI's deal begins; while a pointer is down in the hand it is held back
  *  (`data-handing`, drawn nowhere) and comes when the pointer is up. A card with no origin is dealt from under its place by the card's own class (hand.css). */
 export function useFlight(ref, dealt, copy = false) {
   useLayoutEffect(() => {
@@ -121,6 +141,7 @@ export function useFlight(ref, dealt, copy = false) {
     el.removeAttribute("data-handing");
     if (!dealt.el) return undefined;
     const origin = boxIn(dealt.el);
+    if (origin) give(dealt.head);                                                       // the head of who plays it gives it: one beat at the origin, as the card is let go
     if (copy && origin) return flyCopy(el, origin, dealt.i);
     if (origin) {
       const v = between(el.getBoundingClientRect(), origin);

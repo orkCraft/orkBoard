@@ -119,6 +119,8 @@
 /* a copy of a card that turns back or flies on (fieldturn.js): over everything, taking no press; the + card's copy wears the + card's frame */
 .hand-ghost { pointer-events: none; }
 .hand-ghost.ork-plus { rotate: calc(var(--ork-motion-lean) * -1); border: var(--ork-double) double var(--ork-action); color: var(--ork-action); overflow: hidden; }
+.hand-ghost__face { display: flex; flex-direction: column; gap: var(--ork-3); box-sizing: border-box; padding: var(--ork-3); overflow: hidden; }       /* the card of the words as it turns to its back (fieldturn.js `sendBack`): its rune, its words in the body face */
+.hand-ghost__words { font: var(--ork-type-caption); color: var(--ork-ink); overflow-wrap: anywhere; }
 .hand-field__chips { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
 .hand-chip { display: inline-flex; align-items: center; gap: var(--ork-2); white-space: nowrap; }
 .hand-chip__off { padding: 0; min-width: 24px; }

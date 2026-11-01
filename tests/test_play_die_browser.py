@@ -464,7 +464,7 @@ def watch_landing(pg):
       new MutationObserver(note).observe(document.querySelector('.hand-die'), { subtree: true, attributes: true, attributeFilter: ['class'], childList: true }); note(); }""")
 
 
-@pytest.mark.parametrize("play_face, face, words", [("failed", "face-no", FAILED_WORDS), ("new", "face-new", NEW_WORDS), ("", "face-5", TODAYS_WORDS), (None, "face-5", TODAYS_WORDS)])
+@pytest.mark.parametrize("play_face, face, words", [("failed", "face-no", FAILED_WORDS), ("new", "face-new", NEW_WORDS), ("", "face-play", TODAYS_WORDS), (None, "face-play", TODAYS_WORDS)])
 def test_the_die_wears_the_face_the_snapshot_says_and_says_it_in_words(gui, play_face, face, words):
     pg, errors = window(gui, PreviewHost("command", play_face))
     d = die(pg)
@@ -497,19 +497,19 @@ def test_goals_new_in_dev_are_pips_on_the_up_face_six_at_most_and_the_title_coun
     finish(pg, errors)
 
 
-@pytest.mark.parametrize("play_face, new_n, face", [("new", 0, "face-new"), ("new", None, "face-new"), ("", 4, "face-5"), (None, 4, "face-5"), ("failed", 4, "face-no")])
-def test_no_count_or_a_count_with_another_face_keeps_the_spark_the_five_and_the_cross(gui, play_face, new_n, face):
+@pytest.mark.parametrize("play_face, new_n, face", [("new", 0, "face-new"), ("new", None, "face-new"), ("", 4, "face-play"), (None, 4, "face-play"), ("failed", 4, "face-no")])
+def test_no_count_or_a_count_with_another_face_keeps_the_spark_the_play_arrow_and_the_cross(gui, play_face, new_n, face):
     pg, errors = window(gui, PreviewHost("command", play_face, new_n))
     classes = face_of(pg)
     assert face in classes and "is-news" not in classes
-    assert die(pg).get_attribute("title") == {"face-new": NEW_WORDS, "face-5": TODAYS_WORDS, "face-no": FAILED_WORDS}[face]
+    assert die(pg).get_attribute("title") == {"face-new": NEW_WORDS, "face-play": TODAYS_WORDS, "face-no": FAILED_WORDS}[face]
     finish(pg, errors)
 
 
 def test_asleep_wins_over_the_pips_and_the_cube_rolls_from_one_count_onto_another(gui):
     host = PreviewHost("", "new", 3)
     pg, errors = window(gui, host)
-    assert "face-5" in face_of(pg) and "is-news" not in face_of(pg) and die(pg).get_attribute("title") == ASLEEP
+    assert "face-5" in face_of(pg) and "face-play" not in face_of(pg) and "is-news" not in face_of(pg) and die(pg).get_attribute("title") == ASLEEP
     pg.context.close()
     host = PreviewHost("command", "new", 2)
     pg, errors = window(gui, host)
@@ -537,7 +537,7 @@ def test_while_the_view_is_open_the_die_says_close_the_preview_whatever_its_face
 def test_the_cube_rolls_onto_a_new_face_and_the_landing_is_taken_off_after(gui):
     host = PreviewHost("command", "")
     pg, errors = window(gui, host)
-    assert "face-5" in face_of(pg) and "is-landing" not in face_of(pg)
+    assert "face-play" in face_of(pg) and "is-landing" not in face_of(pg)
     watch_landing(pg)
     host.play_face = "new"
     host.push()
@@ -603,4 +603,12 @@ def test_a_hover_wobble_and_a_landing_do_not_run_together(gui):
     assert pg.evaluate("() => { const c = document.querySelector('.hand-die .ork-die').classList; return !(c.contains('is-wobbling') && c.contains('is-landing')); }")
     pg.wait_for_function("() => !document.querySelector('.hand-die .ork-die.is-wobbling')", timeout=WAIT_MS)
     assert "is-landing" not in face_of(pg)                                                                              # the landing was skipped while it wobbled
+    finish(pg, errors)
+
+
+def test_an_awake_die_at_rest_shows_orkuis_play_arrow_drawn_in_its_seventeen_marks(gui):
+    pg, errors = window(gui, PreviewHost("command", ""))
+    arrow = "() => { const e = document.querySelector('.hand-die .ork-die__face.is-up'); const c = getComputedStyle(e, '::before'); return [c.backgroundImage.split('linear-gradient').length - 1, c.getPropertyValue('--_pip').trim() || getComputedStyle(e.closest('.ork-die')).getPropertyValue('--_pip').trim()]; }"
+    marks, _pip = pg.evaluate(arrow)
+    assert "face-play" in face_of(pg) and marks == 17, "the arrow: orkUI's seventeen marks (decisions §200.1)"
     finish(pg, errors)

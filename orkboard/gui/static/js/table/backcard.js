@@ -1,11 +1,12 @@
 // A goal's own card face down (docs/specs/120-a-goal-heard-and-thrown-to-a-side.md §6.3–§6.5, decisions §198.8): while its leaders talk it over (`talk`) and while its wait runs (`wait`) or is held (`held`), the goal's card in the Orkmaster's lane is its back — the
 // + card's seal with its own rune lit (glowing while the leaders talk), its short name at the foot, never the + card's green — and under it its route's heads, small, faint until `back.heard` names them. No verdict, no tick, no count is drawn (§145.3): the ring of
 // the seal is the wait (backbody.js), the words under the card *Starts by itself in 4 min*. Hovered, it only lifts (orkUI's `.ork-leans`); pressed (or Enter), it turns to its face (`BackFace`, drawn over the card where it lies like any lifted card: its words, the route
-// edited here with the route card's `RouteLifted`, what each leader that has said said, its cost; at the wait *All the leaders agreed* and **Hold**, held **Start**) and *Turn it back* turns it down again. The turn is the back and the face crossfading in place (spec 120 §6.11).
+// edited here with the route card's `RouteLifted`, what each leader that has said said, its cost; at the wait *All the leaders agreed* and **Hold**, held **Start**) and *Turn it back* turns it down again. The turn is orkUI's `.ork-turn` (0.28.0), in place (`Turning`).
 // `back` is the node's (realm/board_back.py). `everBack` remembers the goals this page has seen face down, for the turn up at the wait's end and the flight to the lane (flight.js).
-import { useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Head } from "../orkui.js";
+import { reduced, tokenMs } from "../hand/motion.js";
 import { lift, lower, lifted, picked } from "../frame/state.js";
 import { act } from "../shell/store.js";
 import { board } from "../board/store.js";
@@ -38,21 +39,56 @@ export function underWords(kind, ripe) {
   return kind === "wait" ? `Starts by itself in ${leftWords(ripe?.left_s)}` : kind === "held" ? HELD : "";
 }
 
-/** The goal's card face down, its route's heads under it and the wait's words under them. */
-export function BackCard({ n, kind }) {
-  const key = ownKey(n), on = lifted.value === key, b = n.back, route = b.route || [], heard = new Set(b.heard || []), said = route.filter((s) => heard.has(s.party)).length;
-  everBack.add(n.slug);
+/** What the back says of the goal now (kind, the wait's share, its label), kept by `Turning` while the card turns up. */
+function backOf(n, kind) {
+  const b = n.back, route = b.route || [], heard = new Set(b.heard || []), said = route.filter((s) => heard.has(s.party)).length;
   let share = null;
   if (kind === "wait") { share = shareOf(b.ripe); shares.set(n.slug, share); } else if (kind === "held") share = shares.get(n.slug) ?? 0;
-  const asked = !!rowOf(n.slug, "talk", "hearing", "cause"), under = underWords(kind, b.ripe);
+  const under = underWords(kind, b.ripe);
   const label = kind === "talk" ? `${n.title}: the leaders are talking it over${route.length ? ` · ${said} of ${route.length} leaders have said` : ""}`
     : kind === "wait" ? `${n.title}: all the leaders agreed. ${under}` : `${n.title}: ${HELD}`;
-  return html`<button type="button" class=${cls("ork-card ork-leans table-card table-card--back", { "is-lifted": on, "is-lit": litKey.value === key, "ork-picked": picked.value === n.slug })} data-lkey=${key} data-goal=${n.slug} data-state=${n.state} data-back=${kind}
-      data-about=${aboutTokens(n)} aria-pressed=${String(on)} aria-label=${label} onClick=${() => lift(on ? "" : key)} ...${leans}>
-    <${BackBody} element=${n.element} name=${n.short || n.title} glowing=${kind === "talk" && !asked} waiting=${share} />
-  </button>
-  <span class="table-back-heads" data-heard=${said} aria-hidden="true">${route.map((s) => html`<span key=${s.party} class=${cls("table-back-head", { "is-said": heard.has(s.party) })} data-party=${s.party}>${s.head && html`<${Head} race=${s.head.race} tier=${s.head.tier} title=${partyName(s.party)} />`}</span>`)}</span>
-  ${under && html`<span class="table-back-under" data-wait=${kind}>${under}</span>`}`;
+  return { kind, route, heard, said, share, under, label, asked: !!rowOf(n.slug, "talk", "hearing", "cause") };
+}
+
+/** The goal's card face down: the back itself, a button. */
+function BackButton({ n, back, on, live }) {
+  const key = ownKey(n);
+  return html`<button type="button" class=${cls("ork-card ork-leans table-card table-card--back", { "is-lifted": on, "is-lit": litKey.value === key, "ork-picked": picked.value === n.slug })} data-lkey=${key} data-goal=${n.slug} data-state=${n.state} data-back=${back.kind}
+      data-about=${aboutTokens(n)} aria-pressed=${String(on)} aria-label=${back.label} tabindex=${live ? undefined : -1} onClick=${() => lift(on ? "" : key)} ...${leans}>
+    <${BackBody} element=${n.element} name=${n.short || n.title} glowing=${back.kind === "talk" && !back.asked} waiting=${back.share} />
+  </button>`;
+}
+
+/** Under the back: its route's heads, small, faint until the leader has said, and the wait's words. */
+function BackFoot({ back }) {
+  return html`<span class="table-back-heads" data-heard=${back.said} aria-hidden="true">${back.route.map((s) => html`<span key=${s.party} class=${cls("table-back-head", { "is-said": back.heard.has(s.party) })} data-party=${s.party}>${s.head && html`<${Head} race=${s.head.race} tier=${s.head.tier} title=${partyName(s.party)} />`}</span>`)}</span>
+  ${back.under && html`<span class="table-back-under" data-wait=${back.kind}>${back.under}</span>`}`;
+}
+
+/** A goal's own card that wears a back at some time on this page (spec 120 §6.3–§6.5, §6.11): orkUI's `.ork-turn`, its back the goal face down and its face (`children`) the card face up, **in place**. It is face down while the goal's leaders talk it over and its wait runs
+ *  (`kind`), and face up otherwise; a press on the back turns it to its face (the lifted card draws its details over it) and *Turn it back* turns it down; when the wait ends the back turns up where it lies. The back is kept while it turns, then taken away. Under reduced motion
+ *  orkUI swaps the two sides at once. Its heads and its wait's words lie under it while it is a back. */
+export function Turning({ n, kind, children }) {
+  const key = ownKey(n), on = lifted.value === key, root = useRef(), kept = useRef(null), [held, setHeld] = useState(!!kind);
+  everBack.add(n.slug);
+  if (kind) kept.current = backOf(n, kind);
+  useEffect(() => {
+    if (kind) { setHeld(true); return undefined; }
+    const t = setTimeout(() => setHeld(false), reduced() ? 0 : tokenMs("--ork-motion-play", 400) + 100);          // the back stays while it turns away
+    return () => clearTimeout(t);
+  }, [kind]);
+  const up = !kind || on, back = kept.current && (kind || held) ? kept.current : null, was = useRef(up);
+  useEffect(() => {                                                                  // the side the focus was on turns away: the focus goes to the side that shows
+    if (was.current === up) return;
+    was.current = up;
+    const el = root.current, at = document.activeElement;
+    if (el && at && el.contains(at)) requestAnimationFrame(() => el.querySelector(`.ork-turn__${up ? "face" : "back"} > .table-card`)?.focus({ preventScroll: true }));
+  }, [up]);
+  return html`<div ref=${root} class=${cls("ork-turn table-turn", { "is-up": up })} data-turn=${up ? "face" : "back"}>
+      ${back && html`<div class="ork-turn__back"><${BackButton} n=${n} back=${back} on=${on} live=${!!kind} /></div>`}
+      <div class="ork-turn__face">${children}</div>
+    </div>
+    ${kind && back && html`<${BackFoot} back=${back} />`}`;
 }
 
 /** The goal's card turned to its face, over the card where it lies (card.js `Lifted`). */

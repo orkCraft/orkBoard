@@ -14,7 +14,7 @@ export const flights = { now: 0, done: 0 };               // how many fly now, h
 /** The Orkmaster's lane gives its card up (the goal's work is planned, it lies in a party's lane): its box and a copy of it are kept for the lane that takes it. `ref`: the card's wrapper. */
 export function useDeparture(slug, ref) {
   useLayoutEffect(() => () => {
-    const el = ref.current?.querySelector(".table-card");
+    const el = ref.current?.querySelector(".table-card--own") || ref.current?.querySelector(".table-card");
     const rect = el && everBack.has(slug) ? boxIn(el) : null;
     if (rect) left.set(slug, { rect: { left: rect.left, top: rect.top, width: rect.width, height: rect.height }, copy: el.cloneNode(true), at: Date.now() });
   }, [slug]);
