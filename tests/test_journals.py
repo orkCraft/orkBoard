@@ -78,3 +78,11 @@ def test_a_call_is_given_the_digest_then_this_goals_and_these_parts_entries_then
     assert journals.text(sd, journals.PROJECT) == ""
     journals.add(sd, journals.PROJECT, "decision", "Decision 3: no accounts", ref="3")
     assert journals.text(sd, journals.PROJECT).startswith("What the project decided and what came of it")
+
+
+def test_an_entry_read_in_keeps_the_day_it_happened_and_its_ref_is_known(sd):
+    e = journals.add(sd, journals.PROJECT, "decision", "Decision 3: Postgres", ref="docs/adr/0003-postgres.md", at="2024-05-02")
+    assert e["at"] == "2024-05-02"
+    assert journals.add(sd, journals.PROJECT, "decision", "x", at="last spring")["at"] != "last spring"      # not a day: now
+    journals.strike(sd, journals.PROJECT, e["id"])
+    assert "docs/adr/0003-postgres.md" in journals.refs(sd, journals.PROJECT)                                   # struck, still known: never read in twice

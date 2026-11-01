@@ -9,6 +9,8 @@ from its own event log, and hypothesis H1's head-to-head tallied. `main` in gui/
     run(["measures", "~/game", "--since", "2026-11-01"])   # the project's measures (realm/measures.py), `--json` as data
     run(["trial", "new", "h1.csv", "--tasks", "tasks.txt"])  # a CSV to fill, each way shown as A or B (realm/trial.py)
     run(["trial", "h1.csv"])                     # the tally and the verdict
+    run(["import", "~/game", "--dry-run"])       # what of the project's own documents would be read in (realm/read_in.py, spec 126 B)
+    run(["export", "~/game", "--to", "out"])     # the decisions, the brief and the journals written out in common formats (realm/write_out.py, spec 126 C)
 """
 from __future__ import annotations
 
@@ -21,7 +23,7 @@ from orkboard import __version__, settings
 from orkboard.core import updates, usage
 from orkboard.realm import measures, trial
 
-WORDS = ("usage", "update", "measures", "trial")
+WORDS = ("usage", "update", "measures", "trial", "import", "export")
 
 POLICY_WHAT = {
     "auto": "every update installs when Orkboard opens",
@@ -51,7 +53,16 @@ def run(argv: list[str]) -> int:
     t_p.add_argument("--tasks", default=None, metavar="FILE", help="With new: the tasks, one a line")
     t_p.add_argument("--seed", type=int, default=None, help="With new: the draw of A and B, to make it again")
     t_p.add_argument("--json", action="store_true", help="The tally as data")
+    i_p = sub.add_parser("import", help="Read a project's own decisions, specs and notes (ADRs, Spec Kit, Kiro, OpenSpec, BMAD, a memory bank…) into its journals")
+    i_p.add_argument("folder", nargs="?", default=".", help="The project's folder (default: this one)")
+    i_p.add_argument("--dry-run", action="store_true", help="Only say what would be read in")
+    e_p = sub.add_parser("export", help="Write the project's decisions, brief and journals out in common formats (MADR, a memory bank, Markdown)")
+    e_p.add_argument("folder", nargs="?", default=".", help="The project's folder (default: this one)")
+    e_p.add_argument("--to", default="", metavar="DIR", help="Where to write (default: <folder>/.orkcraft/export)")
+    e_p.add_argument("--as", dest="fmt", choices=("madr", "nygard"), default="madr", help="The decisions' format (default: madr)")
     args = parser.parse_args(argv)
+    if args.word in ("import", "export"):
+        return _read_or_write(args)
     if args.word == "usage":
         return _usage(args.action, args.install_id)
     if args.word == "measures":
@@ -59,6 +70,26 @@ def run(argv: list[str]) -> int:
     if args.word == "trial":
         return _trial(args.what, args.tasks, args.seed, args.json)
     return _update(args.action)
+
+
+def _read_or_write(args) -> int:
+    """`orkboard import` (realm/read_in.py `run_cli`) and `orkboard export` (realm/write_out.py `run_cli`): each answers (exit code, the lines to print)."""
+    root = Path(args.folder).expanduser()
+    if not root.is_dir():
+        print(f"orkboard {args.word}: no folder {args.folder}", file=sys.stderr)
+        return 2
+    try:
+        if args.word == "import":
+            from orkboard.realm import read_in
+            code, text = read_in.run_cli(root, dry=args.dry_run)
+        else:
+            from orkboard.realm import write_out
+            code, text = write_out.run_cli(root, Path(args.to).expanduser() if args.to else None, args.fmt)
+    except (ValueError, OSError) as e:
+        print(f"orkboard {args.word}: {e}", file=sys.stderr)
+        return 2
+    print(text, file=sys.stdout if code == 0 else sys.stderr)
+    return code
 
 
 def _measures(folder: str, since: str, until: str, as_json: bool) -> int:

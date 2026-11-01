@@ -4271,3 +4271,33 @@ keeps its why. So:
    person reads and strikes in the window is a later spec, on the leader's lens.
 7. Spec 125, built by the cheaper model, the spec's author reviewing.
 The owner's call.
+
+## 204. A project's own documents are read in, and the Board's are written out, in the formats the field keeps them in (1 November, the owner)
+
+Why: the owner: *check how the existing frameworks organise this, and make our specs and journals ready in a convenient,
+common format, for a quick import of existing documentation and decisions into our product.* A project that comes to
+Orkboard has a history already, kept in one of a few shapes: **ADRs** (Nygard's, by adr-tools: `doc/adr/NNNN-title.md` with
+*Status, Context, Decision, Consequences*; **MADR 4**: `docs/decisions/NNNN-title.md` with YAML front matter `status`,
+`date`, `decision-makers`, `consulted`, `informed`, and *Context and Problem Statement, Considered Options, Decision
+Outcome, Consequences*); **spec kits** (GitHub Spec Kit: `.specify/memory/constitution.md` and `specs/NNN-feature/{spec,
+plan,tasks}.md`; Kiro: `.kiro/steering/{product,tech,structure}.md` and `.kiro/specs/<name>/{requirements,design,tasks}.md`;
+OpenSpec: `openspec/project.md`, `openspec/specs/<capability>/spec.md`, `openspec/changes/<id>/{proposal,tasks}.md` and
+their archive; BMAD: `docs/prd.md`, `docs/architecture.md`, `docs/stories/*.story.md`); **an agent's memory** (Cline's
+memory bank: `memory-bank/{projectbrief,productContext,systemPatterns,techContext,activeContext,progress}.md`; `AGENTS.md`,
+`CLAUDE.md`); and **a changelog** (Keep a Changelog). Each is plain Markdown, most with a number and a date. So:
+1. **Read in by code, no model** (spec 126 B): `orkboard import` and, once, the first start find the shapes above and read
+   each decision into the project's journal on its own day (`decision`, its status said: *superseded*, *rejected*), a
+   decision of one craft also into that leader's journal, a spec whose tasks are all done and a release of the changelog as
+   `done`; nothing is read in twice. The documents that say what the product is (a constitution, the steering's product, a
+   memory bank's brief and product context, OpenSpec's project, a PRD, `AGENTS.md`) are what Product's leader reads at the
+   first start, so the brief's cards come as *the files say* (spec 99 §8, spec 124 A), one press each to confirm.
+2. **Written out in the same shapes** (spec 126 C): `orkboard export` writes the decisions as MADR 4 files (or Nygard's),
+   the brief and the journals as a Cline memory bank, and each journal as Markdown with front matter that `orkboard import`
+   reads back: what Orkboard knows of a project is never locked in it.
+3. **A project that keeps its decisions as ADRs keeps them so** (spec 126 D): the Board's decision is written as the
+   folder's next `NNNN-title.md`, in the folder's own format (MADR or Nygard), not appended to one file; the leaders read
+   the folder's records as they read the one file.
+4. **The Board's own shapes stay** (`docs/decisions.md`, the goals' pages, the journals' JSON lines): the formats above are
+   the doors in and out, not a new store.
+5. Spec 126: its formats module by the spec's author, the rest by the cheaper model.
+The owner's call.

@@ -7,6 +7,7 @@ journal is `core/idea_journal.py`'s; the host's commands `gui/ideas_journal.py`'
     journals.add(state_dir, "tech", "overruled", "You said no to “Add a lobby” …", idea="add-lobby", on=["cache"])
     journals.read(state_dir, "tech")                  # the entries, oldest first, struck ones left out (`struck=True`: with them, marked)
     journals.of_goal(state_dir, "tech", "add-lobby")  # one goal's entries
+    journals.refs(state_dir, journals.PROJECT)        # the refs kept (what was read in from the project's documents is never read in twice)
     journals.strike(state_dir, "tech", entry_id, why) # the person's *Not so*: the entry is never read into a call again (kept, marked)
     journals.digest(state_dir, "tech") / save_digest(state_dir, "tech", text, upto)   # the leader's own summary of its journal up to an entry
     journals.since_digest(state_dir, "tech")          # the entries after the digest's last one
@@ -31,11 +32,12 @@ PROJECT = "_project"                      # the project's own journal (no party'
 DIR = "journals"
 TEXT_CHARS = 300                          # an entry's line, at most
 DIGEST_CHARS = 900                        # a digest, at most
-KEEP = 2000                               # the entries a read keeps, the newest
+KEEP = 5000                               # the entries a read keeps, the newest
 CALL_CHARS = 1500                         # what a call is given of one journal, at most
 ON_MAX = 8
 PROJECT_KINDS = ("decision", "done", "dropped", "hypothesis", "brief", "pitch_passed")
-LEADER_KINDS = ("stance", "heeded", "overruled", "came_back", "went_through", "concern_goal", "concern_dismissed", "since", "calibration")
+LEADER_KINDS = ("stance", "heeded", "overruled", "came_back", "went_through", "concern_goal", "concern_dismissed", "since", "calibration",
+                "decision")                     # a decision of its craft read in from the project's documents (spec 126 B)
 KINDS = {"project": PROJECT_KINDS, "leader": LEADER_KINDS}
 HEADS = {"project": "What the project decided and what came of it (its journal, newest last)",
          "leader": "What you said before and what came of it (your journal, newest last)"}
@@ -70,15 +72,16 @@ def _now() -> str:
     return dt.datetime.now().isoformat(timespec="seconds")
 
 
-def add(state_dir: Path, scope: str, kind: str, text: str, *, idea: str = "", on: object = (), ref: str = "") -> dict | None:
-    """One entry appended to `scope`'s journal: the entry, or None when there is nothing to keep (no words) or the disk refused. ValueError for a scope
-    or a kind that is none (a writer's mistake, never the person's)."""
+def add(state_dir: Path, scope: str, kind: str, text: str, *, idea: str = "", on: object = (), ref: str = "", at: str = "") -> dict | None:
+    """One entry appended to `scope`'s journal: the entry, or None when there is nothing to keep (no words) or the disk refused. `at`: when it happened, for
+    an entry read in from a project's documents (spec 126 B: an ISO day or time; else now). ValueError for a scope or a kind that is none (a writer's mistake,
+    never the person's)."""
     if kind not in KINDS[kind_of(scope)]:
         raise ValueError(f"No kind {kind!r} in a {kind_of(scope)}'s journal")
     line = _words(text, TEXT_CHARS)
     if not line:
         return None
-    at = _now()
+    at = _words(at, 25) if re.fullmatch(r"\d{4}-\d{2}-\d{2}(T[\d:]{5,8})?", _words(at, 25)) else _now()
     parts = [p for p in (on if isinstance(on, (list, tuple)) else ()) if isinstance(p, str) and p.strip()][:ON_MAX]
     entry = {"id": "", "at": at, "kind": kind, "text": line, "idea": _words(idea, 80), "on": [_words(p, 120) for p in parts], "ref": _words(ref, 60)}
     entry["id"] = hashlib.sha1(json.dumps(entry, sort_keys=True).encode()).hexdigest()[:12]
@@ -127,6 +130,11 @@ def read(state_dir: Path, scope: str, struck: bool = False) -> list[dict]:
             e["struck"] = strikes[e["id"]]
         out.append(e)
     return out[-KEEP:]
+
+
+def refs(state_dir: Path, scope: str) -> set[str]:
+    """The `ref` of every entry, struck ones too: what was read in once is never read in twice (spec 126 B)."""
+    return {e["ref"] for e in read(state_dir, scope, struck=True) if e["ref"]}
 
 
 def of_goal(state_dir: Path, scope: str, idea: str) -> list[dict]:
