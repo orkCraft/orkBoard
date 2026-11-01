@@ -111,7 +111,7 @@ def concern(on, level="alert", what="It hurts", **more):
 # -- the record ---------------------------------------------------------------------------------------------------------------------------------
 
 def test_the_record_is_kept_checked_and_read_back(tmp_path):
-    assert store.read(tmp_path, "design") == {"at": "", "map_hash": "", "by": "", "status": "", "error": "", "measure": None, "concerns": [], "dismissed": [], "hints": []}
+    assert store.read(tmp_path, "design") == {"at": "", "map_hash": "", "by": "", "status": "", "error": "", "measure": None, "concerns": [], "dismissed": [], "hints": [], "head": "", "since": None}
     saved = store.save(tmp_path, "design", at="2026-10-29T10:00:00", map_hash="abc", by="product-designer", status="ready", concerns=[
         {"id": "c-1", "on": "cart", "name": "Cart", "level": "alert", "what": "No way back", "why": "People get stuck", "fix": "Add a back link", "signal": "dead_end"},
         {"id": "c-2", "on": "x", "name": "X", "level": "worry", "what": "A made-up level"}, {"id": "c-3", "on": "", "name": "", "level": "note", "what": "No part"}])
@@ -497,3 +497,112 @@ def test_design_reads_the_pictures_of_the_screens_kept_since_its_last_look_and_n
     assert second["tools"] is False and "Pictures of the screens" not in second["prompt"] and "Read no file" in second["prompt"], "nothing changed since the last look"
     _look(host, tech)
     assert model.looks[-1]["tools"] is False and "Pictures" not in model.looks[-1]["prompt"]
+
+
+# -- Spec 121 E: the evening line (docs/specs/121-the-day-the-morning-and-the-night.md §6) -----------------------------------------------------------
+
+def test_the_evening_line_is_parsed_strictly_a_way_out_of_the_three_is_unclear_and_the_line_is_cut():
+    assert store.parse_since({"concerns": [], "since": {"way": "toward", "line": "Checkout got shorter"}}) == {"way": "toward", "line": "Checkout got shorter"}
+    assert store.parse_since({"since": {"way": "away", "line": "The cart lost its back link"}})["way"] == "away"
+    assert store.parse_since({"since": {"way": "sideways", "line": "Who can say"}}) == {"way": "unclear", "line": "Who can say"}
+    assert store.parse_since({"since": {"line": "No way said"}}) == {"way": "unclear", "line": "No way said"}
+    assert store.parse_since({"since": {"way": "toward", "line": "  one \n line  " + "x" * 400}})["line"].startswith("one line xxx") and len(store.parse_since({"since": {"line": "y" * 400}})["line"]) == store.LINE == 200
+    for none in ({}, {"since": None}, {"since": "toward"}, {"since": {"way": "toward"}}, {"since": {"way": "toward", "line": "  "}}, {"since": {"way": "toward", "line": 7}}, "since", None, []):
+        assert store.parse_since(none) is None, none
+
+
+def test_the_record_keeps_the_evening_line_checked_and_none_without_one(tmp_path):
+    assert store.read(tmp_path, "design")["since"] is None and store.read(tmp_path, "design")["head"] == ""
+    saved = store.save(tmp_path, "design", head="a" * 40, since={"way": "away", "line": "It broke", "at": "2026-10-30T20:00:00", "map_hash": "abc"})
+    assert saved["since"] == {"way": "away", "line": "It broke", "at": "2026-10-30T20:00:00", "map_hash": "abc"} and saved["head"] == "a" * 40
+    assert store.read(tmp_path, "design") == saved
+    store.save(tmp_path, "design", since={"way": "worse", "line": "A made-up way", "at": "t", "map_hash": "h"})
+    assert store.read(tmp_path, "design")["since"]["way"] == "unclear", "a way out of the three reads as unclear"
+    for bad in ("toward", {"way": "toward", "line": ""}, {"way": "toward"}, ["toward"]):
+        store.save(tmp_path, "design", since=bad)
+        assert store.read(tmp_path, "design")["since"] is None, bad
+
+
+def _change_map(host) -> None:
+    """A screen comes to dev: the map of Design is not what it was."""
+    repo = Path(host.ideas.keeper.repo_root)
+    (repo / "src/Help.jsx").write_text("export default () => null;\n")
+    (repo / "src/App.jsx").write_text(APP["src/App.jsx"].replace('<Route path="/about"', '<Route path="/help" element={<Help />} /><Route path="/about"').replace(
+        'import About from "./About";', 'import About from "./About";\nimport Help from "./Help";'))
+    run(repo, "add", "-A")
+    run(repo, "commit", "-q", "-m", "a help screen")
+
+
+def _a_day_ago(host, party) -> None:
+    store.save(host.ideas.state_dir, party, at=(dt.datetime.now() - dt.timedelta(days=2)).isoformat(timespec="seconds"))
+
+
+def test_the_first_look_asks_for_no_evening_line_and_keeps_none(host, design, model):
+    model.answer = {"concerns": [], "since": {"way": "toward", "line": "Nothing to compare yet"}}
+    got = _look(host, design)
+    (call,) = model.looks
+    assert "`since`" not in call["prompt"] and '"since"' not in call["prompt"], "there is no look before it"
+    rec = host.command("ideas.concerns", {"party": design})
+    assert rec["since"] is None and got["since"] is None and rec["head"], "the dev commit the look read is kept"
+
+
+def test_a_look_of_a_map_that_changed_asks_for_the_line_and_keeps_it_with_its_time_and_map(host, design, model):
+    _look(host, design)
+    first = store.read(host.ideas.state_dir, design)
+    _change_map(host)
+    _a_day_ago(host, design)
+    model.answer = {"concerns": [], "since": {"way": "toward", "line": "Help is a step nearer, nothing broke"}}
+    _look(host, design)
+    p = model.looks[1]["prompt"]
+    assert '"since": {"way": "toward"' in p and "`toward` the way through the screens" in p and f"{store.LINE} characters" in p
+    assert "What changed since your last look" in p and "Changed since your last call:" in p and "new screen" in p and "Help" in p, "it is given what changed, with the map"
+    rec = host.command("ideas.concerns", {"party": design})
+    assert rec["since"]["way"] == "toward" and rec["since"]["line"] == "Help is a step nearer, nothing broke"
+    assert rec["since"]["map_hash"] == rec["map_hash"] != first["map_hash"] and rec["since"]["at"] == rec["at"]
+    assert rec["head"] != first["head"]
+    row = [r for r in event_log.read(host.ideas.keeper.repo_root) if r["event"] == event_log.CONCERNS_MADE][-1]
+    assert row["since"] == "toward" and "Help is a step" not in json.dumps(row), "the log says the way, never the leader's words"
+
+
+def test_a_bad_way_is_unclear_and_a_look_that_says_no_line_keeps_none(host, design, model):
+    _look(host, design)
+    _change_map(host)
+    _a_day_ago(host, design)
+    model.answer = {"concerns": [], "since": {"way": "better", "line": "Hard to say"}}
+    _look(host, design)
+    assert host.command("ideas.concerns", {"party": design})["since"]["way"] == "unclear"
+    _a_day_ago(host, design)
+    store.save(host.ideas.state_dir, design, map_hash="a map that was")
+    model.answer = {"concerns": []}
+    _look(host, design)
+    assert host.command("ideas.concerns", {"party": design})["since"] is None
+
+
+def test_no_line_without_a_change_a_look_again_of_the_same_map_keeps_none(host, design, model):
+    _look(host, design)
+    model.answer = {"concerns": [], "since": {"way": "away", "line": "It broke"}}
+    again = host.command("ideas.concerns_again", {"party": design})
+    _wait(host, design)
+    assert again["asked"] is True and "`since`" not in model.looks[1]["prompt"], "the map did not change since the look before"
+    assert host.command("ideas.concerns", {"party": design})["since"] is None, "an answer to a question not asked is not kept"
+
+
+def test_the_line_stays_until_the_next_look_and_every_concern_command_carries_it(host, design, model):
+    _look(host, design)
+    _change_map(host)
+    _a_day_ago(host, design)
+    model.answer = {"concerns": [concern("about", "note", "Nothing leads here")], "since": {"way": "away", "line": "Cart lost its way back"}}
+    _look(host, design)
+    cid = host.command("ideas.concerns", {"party": design})["concerns"][0]["id"]
+    assert host.command("ideas.concerns", {"party": design})["since"]["line"] == "Cart lost its way back"
+    assert host.command("ideas.concern_dismiss", {"party": design, "id": cid})["since"]["way"] == "away"
+
+
+def test_a_failed_look_keeps_no_line_and_the_next_one_is_not_asked_one(host, design, model):
+    _look(host, design)
+    _change_map(host)
+    _a_day_ago(host, design)
+    model.answer = "not json at all"
+    _look(host, design)
+    rec = host.command("ideas.concerns", {"party": design})
+    assert rec["status"] == "failed" and rec["since"] is None and rec["map_hash"] == ""
