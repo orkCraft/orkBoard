@@ -314,7 +314,7 @@ chosen in a field over the hand: now on the card's face, by a press on the rune)
 ## As built
 
 Built by the cheaper model, a part a branch (B, C and E in one; D; F's §6.7; F's card life and handing), each reviewed and merged by
-the spec's author on `claude/leaders-lenses-system-55m0qp`. G (orkUI) is not built: the faces draw what orkUI has (§6.11).
+the spec's author on `claude/leaders-lenses-system-55m0qp`. G (orkUI 0.28.0) is built and copied.
 
 - **B, C** (`core/idea_verdict.py`, `realm/idea_ripe.py`; `core/idea_talk.py` 598 lines): `ideas.add` answers `talk` when Talk began by
   itself (`route_how.auto`); a route found by the Orkmaster's call goes to Talk at the next `route_tick`. *Paid* is every subscription
@@ -345,5 +345,4 @@ the spec's author on `claude/leaders-lenses-system-55m0qp`. G (orkUI) is not bui
   to the lane plays when the goal first has a card in its party's lane (between, it is the Orkmaster's face-up card while the sections
   are written). Only a stack's top card flies, so *three at most* counts stacks. A held wait's ring: the host zeroes `left_s`, so a
   page loaded while held draws it empty. On the phone a handed card flies as a copy over the row; the row's edge cue is not done.
-- **Waiting for orkUI** (G): `.ork-turn`, `.ork-sigil.is-waiting` (the page sets orkUI's own `--_arc` from `--ork-sigil-share`, in
-  eighths), `.ork-gives` (the give is nothing yet).
+- **G, drawn by orkUI 0.28.0** (§6.11's stand-ins are gone): the card turning in place is `.ork-turn` (a goal's own card in `table/backcard.js` `Turning`; the field's card turning to its back in `sendBack`), the wait's ring `.ork-sigil.is-waiting` with `--ork-sigil-share`, the give `.ork-gives` on the head of who plays the card (`motion.js` `give`), the die at rest `face-play`. The flights, and the field's growth out of the + card, stay Web Animations (orkUI has no flight with unknown end points); the phone's small die still shows the five.

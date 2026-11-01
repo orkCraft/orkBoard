@@ -43,6 +43,8 @@ def talk_questions(host, slug="dark", cards=(C1, C2, C3)):
 FROM_JS = """([who]) => import('/static/js/hand/motion.js').then((m) => { const w = m.fromWhere(who); return w ? { at: w.at, tag: w.el.className, goal: w.el.dataset.goal || '', tab: w.el.dataset.tab || '' } : null; })"""
 DEAL_X = "() => [...document.querySelectorAll('.hand-card')].filter((e) => e.style.getPropertyValue('--ork-deal-x')).map((e) => [e.dataset.key, e.style.getPropertyValue('--ork-deal-x'), e.style.getPropertyValue('--ork-deal-y'), e.style.getPropertyValue('--ork-deal-i')])"
 
+GAVE = "() => { window.__gave = []; document.addEventListener('animationstart', (e) => { if (e.animationName === 'ork-give') window.__gave.push(e.target.closest('.table-back-head, .table-tab, .up-crown')?.className || '?'); }, true); }"
+
 
 def talking(host):
     host.put("dark", "Players see who answered first", "talk", "dust", back=back(route=("design", "tech")))
@@ -92,9 +94,14 @@ def test_a_card_that_comes_flies_from_the_goals_card_says_from_its_leader_and_is
         talking(host)
         back_of(pg, "dark").wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(300)
+        pg.evaluate(GAVE)
         talk_questions(host)
         host.bump({})
         pg.wait_for_function("() => document.querySelector('.hand-card[data-kind=\"talk\"]')", timeout=WAIT_MS)
+        pg.wait_for_function("() => window.__gave.length > 0", timeout=WAIT_MS)
+        assert pg.evaluate("() => window.__gave") == ["table-back-head"], "the head of who plays it, under the face-down card, gives it: one beat of orkUI's `.ork-gives`"
+        pg.wait_for_function("() => !document.querySelector('.ork-gives')", timeout=WAIT_MS)
+        assert pg.evaluate("() => window.__gave.length") == 1, "once, and the class is taken off at the animationend"
         pg.wait_for_function(DEAL_X, timeout=WAIT_MS)
         got = pg.evaluate(DEAL_X)
         assert len(got) == 1, "a goal's questions are one stack: its top card flies"
@@ -194,11 +201,28 @@ def test_none_for_what_came_while_the_page_was_hidden_the_cards_are_there_each_s
         assert hidden == [False, "", "From Design lead"], f"there, saying whose it is, with no flight: {hidden}"
         pg.evaluate("() => { delete document.hidden; }")
         pg.emulate_media(reduced_motion="reduce")
+        pg.evaluate(GAVE)
         asks_goal(host, "g0", "Goal number 0")
         host.bump({})
         pg.wait_for_function("() => document.querySelector('.hand-card[data-goal=\"g0\"]')", timeout=WAIT_MS)
         pg.wait_for_timeout(300)
         assert pg.evaluate("() => { const e = document.querySelector('.hand-card[data-goal=\"g0\"]'); return [e.classList.contains('ork-deal'), e.style.getPropertyValue('--ork-deal-x'), e.querySelector('.hand-card__party').textContent]; }") == [False, "", "From Design lead"]
+        assert pg.evaluate("() => [window.__gave.length, document.querySelectorAll('.ork-gives').length]") == [0, 0], "no give under reduced motion"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_head_that_gives_is_the_leaders_under_the_card_else_the_tab_head_else_the_crown(gui):
+    pg, host, log = open_life(gui)
+    try:
+        talking(host)
+        back_of(pg, "dark").wait_for(timeout=WAIT_MS)
+        head = "([who]) => import('/static/js/hand/motion.js').then((m) => { const h = m.headAt(m.fromWhere(who), who); return h ? h.closest('.table-back-head, .table-tab, .up-crown')?.className + ' ' + (h.closest('[data-party],[data-tab]')?.dataset.party || h.closest('[data-party],[data-tab]')?.dataset.tab) : null; })"
+        assert pg.evaluate(head, [{"goal": "dark", "party": "design"}]) == "table-back-head design", "the head under the face-down card"
+        assert pg.evaluate(head, [{"goal": "gone", "party": "tech"}]).endswith("tech") and "table-tab" in pg.evaluate(head, [{"goal": "gone", "party": "tech"}]), "the leader's tab head"
+        assert "table-tab" in pg.evaluate(head, [{"ork": True}]), "the Orkmaster's"
+        assert pg.evaluate(head, [{}]) is None
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -239,10 +263,13 @@ def test_on_a_phone_a_card_handed_flies_from_the_crown_as_a_copy_over_the_row_an
     try:
         pg.locator(".up-crown").wait_for(timeout=WAIT_MS)
         pg.wait_for_timeout(300)
+        pg.evaluate(GAVE)
         asks_goal(host, "g0", "Goal number 0")
         host.bump({})
         card = pg.locator(".up-card")
         card.first.wait_for(timeout=WAIT_MS)
+        pg.wait_for_function("() => window.__gave.length > 0", timeout=WAIT_MS)
+        assert pg.evaluate("() => window.__gave") == ["up-crown"], "the crown's head gives it"
         pg.wait_for_function("() => document.querySelector('body > .hand-ghost--handed') || document.querySelector('.up-card[data-from]')", timeout=WAIT_MS)
         assert card.first.get_attribute("data-from") == "Design lead" and card.first.get_attribute("aria-label").endswith(", from Design lead")
         pg.wait_for_function("() => document.querySelector('.hand-live').textContent.includes('Design lead hands you')", timeout=WAIT_MS)

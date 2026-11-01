@@ -1,0 +1,8 @@
+{
+  "note": "The source of office/door/*.svg (python tools/build_door.py). The door is one grid of 14 x 20 cells. `frame` (rectangles `[x, y, width, height]` of cells: the two posts, 2 cells wide, and the lintel, 2 rows) is the first mask, `frame.svg`; `interior` is the rectangle the frame encloses, the second mask, `interior.svg`, and what a state draws inside it. Shut: the whole interior is the leaf and the knob (2 x 1 cells) a lighter tone on it. Open: the interior is the opening, and the leaf, seen edge on, stands at its left (`edge`). Both states are drawn inside `interior` by background layers at these cells in components.css; nothing swings. Drawn from Orkboard's mockup docs/mockups/lens-heads/ (`doorSvg`), decisions 201.",
+  "w": 14, "h": 20,
+  "frame": [[0, 0, 2, 20], [12, 0, 2, 20], [0, 0, 14, 2]],
+  "interior": [2, 2, 10, 18],
+  "shut": {"knob": [9, 10, 2, 1]},
+  "open": {"edge": [2, 2, 2, 18]}
+}

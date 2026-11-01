@@ -160,3 +160,20 @@ def test_a_task_cards_sign_is_one_of_orkuis_two_tone_drawings():
     from pathlib import Path
     big = Path(__file__).resolve().parents[1] / "design-system" / "orkui" / "signs" / "big"
     assert signs and all((big / f"{s}.svg").is_file() and (big / f"{s}-light.svg").is_file() for s in signs), sorted(s for s in signs if not (big / f"{s}.svg").is_file())
+
+
+def test_the_copy_is_orkui_0_28_0_with_the_turn_the_wait_the_give_and_the_dies_play_arrow():
+    stamp = orkui.stamp()
+    assert tuple(int(n) for n in stamp["version"].split(".")) >= (0, 28, 0) and len(stamp["commit"]) == 40
+    css = (orkui.ROOT / "components.css").read_text(encoding="utf-8")
+    for piece in (".ork-turn {", ".ork-turn__back", ".ork-turn__face", ".ork-sigil.is-waiting::after", "--ork-sigil-share", ".ork-gives {", "@keyframes ork-give", ".ork-die.face-play"):
+        assert piece in css, piece
+
+
+def test_the_page_draws_the_turn_the_wait_the_give_and_the_play_arrow_with_orkui_and_keeps_no_stand_in():
+    sheets = "\n".join(re.sub(r"/\*.*?\*/", "", p.read_text(encoding="utf-8"), flags=re.S) for p in SHEETS)
+    assert "--_arc" not in sheets and "--_rest" not in sheets, "the wait's ring is orkUI's `.ork-sigil.is-waiting`: the page sets the share and the colour only"
+    assert "is-turned-up" not in sheets and "table-turn-up" not in sheets and "perspective(" not in sheets, "the card turns in orkUI's `.ork-turn`"
+    js = "\n".join(p.read_text(encoding="utf-8") for p in (STATIC / "js").rglob("*.js"))
+    assert "is-turned-up" not in js and "ork-gives" in js and "ork-turn" in js
+    assert '"play"' in (STATIC / "js" / "hand" / "playdie.js").read_text(encoding="utf-8")

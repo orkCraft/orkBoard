@@ -1,0 +1,20 @@
+{
+  "note": "The source of office/chair/*.svg (python tools/build_chair.py). Each chair is a grid of cells (`w` x `h`) and, for each of its two tones, rectangles `[x, y, width, height]` of cells (the tones do not overlap). `posts` is the lighter tone (the posts, the top rail and, on the empty chair, the seat and the front legs), `panel` the darker one (the back between the posts, under the rail). `back` is an occupied chair's back alone (the head stands over it, 22 x 12; `big` 26 x 14, for the open leader); `empty` is the whole chair with nobody on it (18 x 18). Drawn from Orkboard's mockup docs/mockups/lens-heads/ (`chairSvg`), decisions 201.",
+  "chairs": {
+    "back": {
+      "w": 22, "h": 12,
+      "posts": [[0, 0, 2, 12], [20, 0, 2, 12], [2, 1, 18, 2]],
+      "panel": [[2, 3, 18, 9]]
+    },
+    "big": {
+      "w": 26, "h": 14,
+      "posts": [[0, 0, 2, 14], [24, 0, 2, 14], [2, 1, 22, 2]],
+      "panel": [[2, 3, 22, 11]]
+    },
+    "empty": {
+      "w": 18, "h": 18,
+      "posts": [[2, 0, 2, 10], [14, 0, 2, 10], [4, 1, 10, 2], [0, 9, 18, 2], [1, 11, 2, 7], [15, 11, 2, 7]],
+      "panel": [[4, 3, 10, 6]]
+    }
+  }
+}

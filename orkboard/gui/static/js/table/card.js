@@ -3,7 +3,7 @@
 // at the signs' big size, toned down — the task's type —, and its label row: the stage's small sign and word, the gem at its right when it spends. **A task at work shows the flame**: the goal's rune, glowing (orkUI's `.is-glowing`), takes the place of the stage's
 // small sign, on its card and on its edge; it is the card's only motion of the work, and it stands still under reduced motion. The tasks behind the front one lie as a fan (`fanOf`, `TaskEdge`): an edge holds the stage's sign (and the flame) and, once the fan is opened, the task's
 // name. **A card that is the goal itself** (`OwnCard`: the Orkmaster reading, routing or joining it) has no strip over it: its header holds the goal's rune and its whole title, and it wears the pick (`ork-picked`) a strip would, so a goal in two lanes is lit alike. No foot and no head: who works is on its back and in its party's header.
-// **While its leaders talk it over and while it waits to start by itself** the goal's own card is its back (backcard.js, spec 120 §6.3–§6.5): the seal with its rune lit, its name at the foot, the wait the seal's ring; it turns up where it lies when the wait ends or a hearing is thrown, and flies once to its party's lane (flight.js).
+// **While its leaders talk it over and while it waits to start by itself** the goal's own card is its back (backcard.js, spec 120 §6.3–§6.5): the seal with its rune lit, its name at the foot, the wait the seal's ring; it turns up where it lies (orkUI's `.ork-turn`) when the wait ends or a hearing is thrown, and flies once to its party's lane (flight.js).
 // A card is **lifted where it lies** and turns over (`Lifted`): its back the details and **Open**; Esc or a press away lowers it, one at a time. A card leans toward the pointer and rises on orkUI's motion tokens (`.ork-leans`, the page sets `--ork-lean-x/-y`); nothing moves under
 // reduced motion (orkUI's own rule). At the narrow width a lane a token wide lays a goal as one token (`Token`, its rune kept, glowing while its front task is at work) with its stack's edges, and what is lifted is a screen.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
@@ -17,9 +17,7 @@ import { GoalMenu } from "./dropgoal.js";
 import { aliveState, useChanged, useWorked, workedWords } from "./worktime.js";
 import { ConcernsBack } from "./concerns.js";                       // a marked card's back lists its leader's concerns (spec 108 B)
 import { cascadeOf, footWords, doingWords, readTask, stageOf, typeSignOf, gemOf, STAGES } from "./data.js";
-import { BackCard, BackFace, backKind, everBack } from "./backcard.js";       // a goal talked over lies face down (spec 120 §6.3)
-
-const turnedUp = new Set();                                         // the goals whose back has turned up on this page
+import { BackFace, Turning, backKind, everBack } from "./backcard.js";       // a goal talked over lies face down (spec 120 §6.3)
 
 /** The key of the card that was lit on the way back from a thing opened over the pane, "" none (a press or a key puts it out). */
 export const litKey = signal("");
@@ -98,15 +96,15 @@ export function TaskEdge({ n, t, hint = false }) {
 
 /** A goal the Orkmaster reads, routes or joins itself, as a card in the first lane (no strip over it: the card is the goal's): the same face with the goal's rune and its whole title in the header, its stage *Reading*, *Routing* or *Joining*. */
 export function OwnCard({ n, stage }) {
-  const key = ownKey(n), on = lifted.value === key, kind = backKind(n), up = useRef(false);
-  if (!kind && everBack.has(n.slug) && !turnedUp.has(n.slug)) { turnedUp.add(n.slug); up.current = true; }       // the wait ended or the hearing was thrown: its back turns up where it lies, once (spec 120 §6.5)
-  if (kind) return html`<${BackCard} n=${n} kind=${kind} />`;                              // while its leaders talk it over and while it waits to start, the goal's card is its back
-  return html`<button type="button" class=${cls("ork-card ork-leans table-card table-card--own", { "is-lifted": on, "is-lit": litKey.value === key, "ork-picked": picked.value === n.slug, "is-turned-up": up.current })} data-lkey=${key} data-goal=${n.slug} data-about=${aboutTokens(n)} data-state=${n.state}
+  const key = ownKey(n), on = lifted.value === key, kind = backKind(n), turns = useRef(false);
+  if (kind || everBack.has(n.slug)) turns.current = true;                                // a goal that wears a back at some time is orkUI's `.ork-turn`: it turns up where it lies when the wait ends or a hearing is thrown, once (spec 120 §6.5, §6.11)
+  const face = html`<button type="button" class=${cls("ork-card ork-leans table-card table-card--own", { "is-lifted": on, "is-lit": litKey.value === key, "ork-picked": picked.value === n.slug })} data-lkey=${key} data-goal=${n.slug} data-about=${aboutTokens(n)} data-state=${n.state}
     data-stage=${stage} aria-pressed=${String(on)} aria-label=${`${n.title}: ${doingWords(n)}`} onClick=${() => lift(on ? "" : key)} ...${leans}>
     <span class="table-card__head"><${Elem} name=${n.element} dim=${!n.element || n.state === "reading"} /><span class="table-card__nm" title=${n.title}>${n.title}</span></span>
     <${Win} n=${n} sign=${n.type?.sign || ""} />
     <span class="table-card__row"><${Stage} stage=${stage} /></span>
   </button>`;
+  return turns.current ? html`<${Turning} n=${n} kind=${kind}>${face}</${Turning}>` : face;
 }
 
 /** The same at a lane a token wide (spec 101 §5): a goal is one token with its stack's edges — its element, its front task's type and stage —; a press lifts the front task, whose back lists the goal's tasks.

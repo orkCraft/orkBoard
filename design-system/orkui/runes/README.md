@@ -113,6 +113,18 @@ steps over `calc(var(--ork-motion-base) * 3.5)` (about 630 ms); the colour then 
 fill's last step and keeps it until the class is taken off. It plays once and holds its end, so **the caller takes the classes off** after (the last `animationend`, or a timer of 1.2 s).
 Nothing plays under reduced motion. The ring's rite needs `.is-open`.
 
+**The wait** (0.27.0, Orkboard's decision §198.8, its spec 120 part G) is the seal's ring of runes held at a share: the rite, slowed to the page's pace and stopped where it is. Put **`.is-waiting`** on the sigil and
+set **`--ork-sigil-share`** (0 to 1) on it:
+
+    <span class="ork-sigil is-waiting" style="--ork-sigil-share:.375" aria-hidden="true"><span class="ork-sigil__seal"><span class="ork-elem ice" aria-hidden="true"></span></span></span>
+
+The ring (the sigil's `::after`) is lit from the goal's rune at the top, clockwise, in `currentColor`, the rest in the faint ink (`--ork-ink-faint` at 60 %). It is lit **in eighths**: the share is rounded down to an
+eighth (`round(down, ..., 1)`, so 0.45 is 3/8, a share outside 0 to 1 is held to it) and an eighth is one place of the band, the rite's sectors of 45 degrees with their edges between the places, so a rune is lit whole or
+not at all. The first place is the goal's own (its rune is in `.ork-sigil__seal`, lit at full strength already), so the ring shows one rune a step from 2/8, 7/8 leaves the last rune dark and **only the share 1
+closes the ring**: 0 and 1/8 show no rune, 3/8 two, 6/8 five, 1 all seven. Nothing moves by itself: the page changes the share, and the ring stands where it is, the same under reduced motion. To keep the seal's
+lines in the faint ink and light the runes in the goal's colour, set the faint ink as the sigil's `color` and the goal's token as `color` of `.ork-sigil.is-waiting::after`; `color` on the sigil alone colours both.
+`.small` has no ring; `.is-summoning` paints its own. It needs `round()` in CSS (as the potion's rows do).
+
 **The ring's corners** hold the party before main and the party past it. `.ork-portal-ring__before` (lower left) and `.ork-portal-ring__after` (upper right, its heads in
 reverse order) are boxes the caller makes a button; each holds heads of 24 x 22 with 2 px between, each head in a `.ork-portal-ring__guard` box so it can carry a mark:
 

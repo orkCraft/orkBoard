@@ -1,12 +1,13 @@
 // The turns of the card-field (docs/specs/120-a-goal-heard-and-thrown-to-a-side.md §6.1–§6.2, decisions §198.8): the + card is a card's back; pressed, it turns over and grows into the card of the text (`growFrom`: one motion, the turn, the growth and the
 // travel from its place, about 360 ms); Esc or a press away turns it back into the + card where it lay (`turnBack`: its text and rune kept by the field's own state); **Send** turns it to its back and carries the back to its place in the Orkmaster's lane
-// (`sendBack`). orkUI has no turn yet (`.ork-turn`, spec 120 G): the page animates with the Web Animations API, in orkUI's tokens (read where it needs them: motion.js `tokenMs`, `spring`), and nothing under reduced motion. What flies is a copy over
+// (`sendBack`). **The turn in place is orkUI's** (`.ork-turn`, 0.28.0: the card of the words turns to its back where the field lay); the turns that are also a growth and a travel from a place (the field out of the + card, the field back into it) and the flights stay Web Animations, as orkUI has no flight whose end points are not known before the cards are drawn, in orkUI's tokens (read where it needs them: motion.js `tokenMs`, `spring`), and nothing under reduced motion. What flies is a copy over
 // everything (`.hand-ghost`: the real card is gone or hidden meanwhile and takes the pointer only when the copy lands), never what the person presses.
 // **The focus in the press** (`focusInPress`): on iOS a keyboard rises only for a focus given inside the press itself, and the field is drawn after it; so the press focuses a field of its own (drawn nowhere), and the real field takes the focus from it, the keyboard
 // staying up (`releaseProxy`).
 import { render } from "preact";
 import { html } from "../html.js";
 import { boxIn, reduced, spring, token, tokenMs } from "./motion.js";
+import { Elem } from "../orkui.js";
 import { BackBody } from "../table/backbody.js";
 
 let proxy = null;
@@ -76,14 +77,17 @@ const cardWidth = () => parseFloat(token("--card-w", "") || getComputedStyle(doc
 export async function sendBack(box, goal) {
   if (reduced() || !box?.width) return;
   const w = cardWidth(), h = w * 7 / 5, g = document.createElement("div"), at = { left: box.left + box.width / 2 - w / 2, top: box.top + box.height / 2 - h / 2, width: w, height: h };
-  g.className = "ork-card table-card table-card--back hand-ghost";
+  g.className = "ork-turn hand-ghost is-up";
   g.setAttribute("aria-hidden", "true");
-  place(g, at, "transform-origin:50% 50%;");
-  render(html`<${BackBody} element=${goal.element} name=${goal.name} />`, g);
-  document.body.appendChild(g);
   const big = Math.max(box.width / w, 0.5), play = tokenMs("--ork-motion-play", 400);
+  place(g, at, `transform-origin:50% 50%;transform:scale(${big});`);
+  render(html`<div class="ork-turn__back ork-card table-card--back"><${BackBody} element=${goal.element} name=${goal.name} /></div>
+    <div class="ork-turn__face ork-card hand-ghost__face"><${Elem} name=${goal.element} big=${true} dim=${!goal.element} /><span class="hand-ghost__words">${goal.name}</span></div>`, g);
+  document.body.appendChild(g);
   try {
-    await g.animate([{ transform: `perspective(60em) rotateY(90deg) scale(${big})` }, { transform: `perspective(60em) rotateY(0deg) scale(${big})` }], { duration: play * 0.5, easing: spring(), fill: "forwards" }).finished;
+    void g.offsetWidth;                                                                  // the card of the words lies face up first; taking `is-up` off is orkUI's turn, played once
+    g.classList.remove("is-up");
+    await new Promise((r) => { const t = setTimeout(r, play + 60); g.addEventListener("transitionend", (e) => { if (e.propertyName === "transform") { clearTimeout(t); r(); } }, { once: true }); });
     let target = null;
     for (let tries = 0; tries < 20 && !target; tries++) {                                // the Board answers in a moment: the goal's card is drawn in the lane
       target = [...document.querySelectorAll(`.frame-table .table-card[data-goal="${CSS.escape(goal.slug)}"]`)].find((el) => boxIn(el)) || null;

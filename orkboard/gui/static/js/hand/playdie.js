@@ -5,9 +5,9 @@
 // **Asleep** (docs/specs/113-a-project-with-no-preview-or-no-gate.md §3, decisions §191.1): a project with no preview (the snapshot's `preview` is "": no checks.toml `preview`, no index.html, no dev script) has a die that sleeps: grey and still
 // (`is-asleep`: no wobble, no lift, no glow), its word still *Play*, its `title` *Nothing to play yet* (and ': say how the project opens' after it for a screen reader). Pressed, it opens the play view as always, which says *Nothing here yet* and how, and throws nothing.
 // **The up face** (docs/specs/118-the-dies-up-face.md, decisions §196): the die says by its up face what pressing Play would show, from the snapshot's `play_face` (the computer's alone): the cross (`face-no`) while the last start of dev's head failed,
-// the spark (`face-new`) when dev's head is a commit the person has not tried in Play yet, else today's five; asleep it is the five, whatever the snapshot says. Its `title` and `aria-label` then say it (*Play: it did not start last time*, *Play: dev has changed since you last
+// the spark (`face-new`) when dev's head is a commit the person has not tried in Play yet, else the play arrow (`face-play`, orkUI 0.28.0, decisions §200.1); asleep it is the five, whatever the snapshot says. Its `title` and `aria-label` then say it (*Play: it did not start last time*, *Play: dev has changed since you last
 // played*), after *Close the preview* and *Nothing to play yet*. **The pips** (decisions §200.5): when the snapshot's `new_n` counts goals landed in dev since the last play, the up face is that many pips in the ink (`face-1` … `face-6`, six for six or more; `is-news` inks them,
-// mana.css) in place of the spark, and the `title` says it (*Play: 3 new goals in dev since you last played*); a `new_n` of 0 (only the person's own commits are new) keeps the spark. At rest the up face stays the five until orkUI has `face-play` (§200.1). When the face changes after the die was first drawn with a snapshot (not on the first one), the cube rolls onto it: `is-landing` is put on the die until the cube's `animationend` named `ork-die-land` (the faces'
+// mana.css) in place of the spark, and the `title` says it (*Play: 3 new goals in dev since you last played*); a `new_n` of 0 (only the person's own commits are new) keeps the spark. At rest an awake die shows the play arrow (the pips' muted ink; the ink and the glow while it plays), a sleeping one the five. When the face changes after the die was first drawn with a snapshot (not on the first one), the cube rolls onto it: `is-landing` is put on the die until the cube's `animationend` named `ork-die-land` (the faces'
 // shades end theirs as `ork-die-land-<side>`, ignored); not under reduced motion, not while the die is out on the pane or asleep. A wobble and a landing never run together (both are the cube's `animation`): a landing is skipped while a wobble runs, and a wobble (hover, a warm start) puts an
 // unfinished landing out.
 // The seam with the play view (arena/play.js): three signals and the die's rectangle. `thrown`: the die is out on the pane (it flew from here and rolls), so this one is hidden (kept in its place: `visibility`) until the frame rises or the failure
@@ -48,8 +48,8 @@ export function newCount() {
   return !asleepNow() && town.value?.play_face === "new" && Number.isFinite(n) && n > 0 ? n : 0;
 }
 
-/** The die's up face, from the snapshot's `play_face` ("failed" the cross, "new" the spark, else the five) and `new_n` (a `new` face with goals landed is `1` … `6`: the pips in place of the spark); asleep it is the five. */
-export const faceNow = () => (asleepNow() ? "5" : newCount() ? String(Math.min(PIPS_MAX, newCount())) : { failed: "no", new: "new" }[town.value?.play_face] || "5");
+/** The die's up face, from the snapshot's `play_face` ("failed" the cross, "new" the spark, else the play arrow at rest) and `new_n` (a `new` face with goals landed is `1` … `6`: the pips in place of the spark); asleep it is the five, grey: the arrow never promises a Play that cannot start. */
+export const faceNow = () => (asleepNow() ? "5" : newCount() ? String(Math.min(PIPS_MAX, newCount())) : { failed: "no", new: "new" }[town.value?.play_face] || "play");
 
 const reduced = () => { try { return !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches; } catch { return false; } };
 

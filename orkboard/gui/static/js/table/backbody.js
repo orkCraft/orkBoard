@@ -1,6 +1,5 @@
 // What a goal's back is drawn of (docs/specs/120-a-goal-heard-and-thrown-to-a-side.md §6.3–§6.4, decisions §198.8): the seal of summoning (orkUI's `.ork-sigil`, the + card's), **its own rune lit at the seal's top** in its colour (glowing while the leaders talk it over:
-// orkUI's `.is-glowing`), **its short name at the back's foot**, no +. While the goal waits to start by itself the seal's ring of runes is the wait: it fills clockwise from the rune in eight steps, its share the page's `--ork-sigil-share` (orkUI's
-// `.ork-sigil.is-waiting` will read it; until it is copied, table.css sets orkUI's own `--_arc` from it, spec 120 §6.11). A leaf: the card (backcard.js) and the copy that flies from the field (hand/fieldturn.js) both draw it.
+// orkUI's `.is-glowing`), **its short name at the back's foot**, no +. While the goal waits to start by itself the seal's ring of runes is the wait: it fills clockwise from the rune in eight steps, its share the page's `--ork-sigil-share` (orkUI's `.ork-sigil.is-waiting`, 0.28.0, lights the ring from it, rounded down to eighths; back.css only gives the lit runes the goal's colour). A leaf: the card (backcard.js) and the copy that flies from the field (hand/fieldturn.js) both draw it.
 import { html, cls } from "../html.js";
 import { Elem } from "../orkui.js";
 
