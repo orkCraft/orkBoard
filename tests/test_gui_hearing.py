@@ -22,7 +22,12 @@ def _throw(host, slug, **args):
 
 
 def _until_sections(host, slug):
-    _until_state(host, slug, "sections")
+    """The sections were asked for (the stub saw the goal), not only its state `sections`: the state is saved just before they are."""
+    for _ in range(1000):
+        if slug in host.ideas.keeper.sections.seen and not host.ideas.keeper.busy(slug):
+            return
+        time.sleep(0.01)
+    raise AssertionError(f"the sections were never asked for: {_state(host, slug)['state']} {_state(host, slug)['error']}")
 
 
 @pytest.fixture
@@ -30,6 +35,7 @@ def sections(host):
     """The sections stubbed: the goal only reaches `sections`, as Confirm and start leaves it."""
     seen = []
     host.ideas.keeper.sections = lambda s: seen.append(s)
+    host.ideas.keeper.sections.seen = seen
     return seen
 
 
