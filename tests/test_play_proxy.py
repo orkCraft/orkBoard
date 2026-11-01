@@ -20,6 +20,7 @@ import pytest
 
 from orkboard.gui import ideas_assets, play_lines, play_proxy
 from orkboard.gui.board_host import Orkboard
+from orkboard.realm import event_log
 
 PAGE = b'<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><title>Game</title></head><body><h1>dev build</h1></body></html>'
 PLAIN = b"<!doctype html><title>no head</title><p>hello"
@@ -362,3 +363,103 @@ def test_play_keeps_the_lines_of_a_command_that_prints(fake_repo, tmp_path):
 
 def test_play_module_is_not_too_long():
     assert len(Path(ideas_assets.__file__).read_text().splitlines()) < 600
+
+
+# -- Play at a path (spec 121 §5.3) --------------------------------------------------------------------------------------------------------------
+
+APP_FILES = {
+    "package.json": '{"dependencies": {"react-router-dom": "6"}}',
+    "src/App.jsx": 'import { Routes, Route } from "react-router-dom";\nimport Home from "./Home";\nimport Order from "./Order";\n'
+                   'export default () => <Routes><Route path="/" element={<Home />} /><Route path="/orders/:id" element={<Order />} /></Routes>;\n',
+    "src/Home.jsx": 'export default () => <Link to="/orders/7">Order</Link>;\n',
+    "src/Order.jsx": "export default () => null;\n",
+}
+
+
+@pytest.fixture
+def app_host(host):
+    """The host with screens in dev (a React Router app beside the static page that plays)."""
+    repo = Path(host.repo_root)
+    for name, text in APP_FILES.items():
+        (repo / name).parent.mkdir(parents=True, exist_ok=True)
+        (repo / name).write_text(text)
+    git(repo, "add", "-A")
+    git(repo, "commit", "-q", "-m", "an app")
+    return host
+
+
+def test_a_screens_route_is_a_pages_path_a_parameter_takes_a_value():
+    page = play_proxy.page_path
+    assert page("/") == "/" and page("/orders") == "/orders" and page(" /orders/ ") == "/orders/"
+    assert page("/orders/:id") == "/orders/1" and page("/u/[id]/edit") == "/u/1/edit" and page("/docs/*") == "/docs"
+    assert page("/a?x=1&y=2") == "/a?x=1&y=2" and page("/#/orders") == "/#/orders"
+    for bad in ("", "orders", "//evil.example/x", "/../etc", "/a b", "/a\nb", "/<script>", None, 7, "/" + "a" * 400):
+        assert page(bad) == "", bad
+
+
+def test_the_proxy_opens_the_page_at_the_path_asked(proxy):
+    assert proxy.url_of("/orders/1") == proxy.origin + "/orders/1" and proxy.url_of("orders") == proxy.origin + "/"
+
+
+def test_play_opens_its_first_page_at_the_path_of_a_screen(app_host):
+    host = app_host
+    first = host.command("ideas.play", {"path": "/orders/:id", "idea": "cart-total"})
+    assert first["state"] == "starting"
+    got = settle(host)
+    assert got["state"] == "playing" and got["url"].endswith("/orders/1") and got["url"].startswith("http://127.0.0.1:")
+    rows = [e for e in event_log.read(host.repo_root) if e["event"] == event_log.PLAY_AT_PATH]
+    assert [(r["idea"], r["path"]) for r in rows] == [("cart-total", "/orders/:id")]
+    assert [e["event"] for e in event_log.read(host.repo_root)].count(event_log.PLAY_STARTED) == 1
+
+
+def test_play_that_plays_already_is_answered_at_the_new_path_and_not_started_again(app_host):
+    host = app_host
+    host.command("ideas.play", {})
+    base = settle(host)
+    assert base["url"].endswith("/") and not base["url"].endswith("/orders/1")
+    again = host.command("ideas.play", {"path": "/orders/:id"})
+    assert again["state"] == "playing" and again["url"] == base["url"].rstrip("/") + "/orders/1" and again["commit"] == base["commit"]
+    assert [e["event"] for e in event_log.read(host.repo_root)].count(event_log.PLAY_STARTED) == 1
+    assert host.command("ideas.play", {})["url"] == base["url"], "asked with no path it is the preview's own again"
+
+
+def test_a_start_still_going_opens_at_the_page_last_asked(app_host):
+    host = app_host
+    host.command("ideas.play", {})
+    second = host.command("ideas.play", {"path": "/orders/:id"})               # a fast preview may be playing by now: then this answer carries the page
+    assert (second if second["state"] == "playing" else settle(host))["url"].endswith("/orders/1")
+
+
+def test_without_the_probe_the_previews_own_address_takes_the_path(app_host):
+    host = app_host
+    host.ideas.state_dir.mkdir(parents=True, exist_ok=True)
+    (host.ideas.state_dir / "checks.toml").write_text("preview_probe = false\n")
+    host.command("ideas.play", {"path": "/orders/:id"})
+    got = settle(host)
+    assert got["probe"] is False and got["url"] == f"http://127.0.0.1:{host.ideas.player.port}/orders/1"
+
+
+def test_a_path_no_screen_has_is_refused_in_words_before_the_start(app_host):
+    host = app_host
+    with pytest.raises(Exception, match="There is no screen at /nowhere"):
+        host.command("ideas.play", {"path": "/nowhere"})
+    with pytest.raises(Exception, match="is not the path of a page"):
+        host.command("ideas.play", {"path": "//evil.example"})
+    with pytest.raises(Exception, match="path is not text"):
+        host.command("ideas.play", {"path": 7})
+    assert host.ideas._play is None, "nothing was started"
+    assert [e for e in event_log.read(host.repo_root) if e["event"] == event_log.PLAY_AT_PATH] == []
+    assert host.command("ideas.play", {"path": "/"})["state"] == "starting", "the preview's own page is always there"
+
+
+def test_a_project_with_no_screen_takes_the_root_alone(host):
+    with pytest.raises(Exception, match="There is no screen at /orders"):
+        host.command("ideas.play", {"path": "/orders"})
+    assert host.ideas._play is None
+    assert host.command("ideas.play", {"path": "/"})["state"] == "starting"
+
+
+def test_a_phone_is_refused_with_a_path_too(app_host):
+    with pytest.raises(Exception, match="Play on the computer"):
+        app_host.command("ideas.play", {"device": "phone", "path": "/orders/:id"})
+    assert app_host.ideas._play is None

@@ -140,7 +140,9 @@ class PlayMarkMixin:
         with _LOCK:
             rings = self.__dict__.setdefault("_play_rings", {})
             for key in [k for k in rings if k != current]:
-                del rings[key]
+                gone = rings.pop(key)
+                if len(gone):                     # the hints of the last play stay for the morning's card (spec 121 §5.2), in memory
+                    self.__dict__["_play_last"] = play_signals.hints(gone.events(), "", self._slow_ms())
             if not current or (play_id and play_id != current):
                 return None
             return rings.setdefault(current, play_signals.Ring())
@@ -161,6 +163,13 @@ class PlayMarkMixin:
     def _slow_ms(self) -> float:
         got = _num(idea_shot._config(self.state_dir).get("preview_slow_ms"))
         return got if got and got > 0 else play_signals.SLOW_MS
+
+    def last_play_hints(self) -> list[dict]:
+        """The hints of the play that plays now, else of the last play there was (kept in memory when its ring was dropped); [] with none. For the morning's card (spec 121 §5.2)."""
+        ring = self._ring()
+        if ring is not None and len(ring):
+            return play_signals.hints(ring.events(), "", self._slow_ms())
+        return list(self.__dict__.get("_play_last") or [])
 
     def play_hints(self, args: dict) -> dict:
         self._computer(args)

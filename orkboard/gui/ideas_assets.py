@@ -3,7 +3,7 @@ made of, seen and touched, and its own preview of dev. Read from the files, git 
 
     ideas.assets {since?}             # the assets of dev's head by kind, each with its signed address and, since `since`, what changed and its goal
     ideas.asset_before {path, since}  # the signed address of the file as it was at `since`; url "" when it was added since
-    ideas.play {fresh?, peek?}        # the project's preview of dev's head on 127.0.0.1: starting {stage, command, ports, since} → playing {url, commit, probe, play} or failed {error, tail}
+    ideas.play {fresh?, peek?, path?, idea?}   # the project's preview of dev's head on 127.0.0.1: starting {stage, command, ports, since} → playing {url, commit, probe, play} or failed {error, tail}
     ideas.play_stop {}                # it stops and its worktree goes
 
 The snapshot carries `preview` (`preview_kind`: `command` · `static` · ""), whether the project has a preview to play: the Play die sleeps with none (spec 113).
@@ -21,6 +21,9 @@ last `idea_shot.TAIL_LINES` lines of the command's output (`tail`, colour codes 
 in front of the preview's page, which puts gui/static/play/probe.js in every HTML answer; `probe` says so and `play` is the id its messages carry. `.orkcraft/checks.toml`
 `preview_probe = false` turns the proxy off (`url` is the preview's own, `probe` false), and a proxy that cannot start does the same, saying why in the log. While it plays the
 command's output lines are kept with their time (gui/play_lines.py), `lines_before(t, n=40)` reads them, and the proxy stops with Play.
+**At a path** (spec 121 §5.3): `ideas.play {path}` opens the first page at the route `path` (a screen's, `/orders` or `/orders/:id`; a parameter is given a value, `gui/play_proxy.py` `page_path`) instead of the preview's own;
+a path no screen of dev's head has is refused in words before the start (a project with no screen takes `/` alone), and the press is one `play_at_path` (`idea`, the goal whose screen it is, when the face says). A Play that
+plays already is answered with its page at `path` and is not started again.
 One Play a project: a second `ideas.play` while it starts or
 plays answers the same (and says dev's head now, `dev`); `fresh: true` starts it anew when dev moved. `ideas.play_stop`, closing the
 project (`play_close`), quitting, its command ending, or IDLE_S with no face asking (`ideas.play`, `peek` too) stops it and removes the
@@ -41,8 +44,8 @@ from typing import Any
 
 from orkboard.core import idea_shot
 from orkboard.gui import media, play_lines, play_proxy
-from orkboard.gui.ideas_args import IdeasError, _device, _str, _text
-from orkboard.realm import assets, commit_goal, dep_links, event_log, idea_element, idea_git, ideas
+from orkboard.gui.ideas_args import IdeasError, _device, _opt, _str, _text
+from orkboard.realm import assets, commit_goal, dep_links, event_log, idea_element, idea_git, ideas, screen_map
 
 IDLE_S = 600.0                       # ten minutes with no face asking: Play stops
 PLAY_OPEN_S = 60.0                   # Play's wait for a page (a dev server's first build is slow); the picture's stays `idea_shot.OPEN_S`
@@ -88,6 +91,7 @@ class Play:
         self._stop = threading.Event()
         self._why = ""
         self.state, self.commit, self.url, self.error, self.none = "", "", "", "", False
+        self.first = ""                                  # the page the last ask wanted first (a path, spec 121 §5.3); "" for the preview's own
         self.logo = ""                                   # the project's logo in dev's head, the address its start screen shows (spec 107 §9.2); "" when it has none
         self.ports: list[int] = []                       # the ports asked so far (stage `page`); a start that gave no page (`nopage`): the ports it asked (spec 90 §1)
         self.stage, self.command = "", ""                # while it starts: worktree · command · page (spec 91 §5), and the command as words
@@ -134,8 +138,15 @@ class Play:
 
     # -- start and stop --------------------------------------------------------------------------------------
 
-    def start(self, ref: str, fresh: bool = False) -> dict:
-        """Starts the preview of `ref`'s head unless it starts or plays already (`fresh`: anew, when `ref` moved since)."""
+    def at(self, answer: dict, path: str) -> dict:
+        """`answer` with the page of a Play that plays asked at `path` (its proxy's address, else the preview's own); the answer of any other state as it is."""
+        if not path or answer.get("state") != "playing" or not (self.port or self._proxy):
+            return answer
+        proxy = self._proxy
+        return {**answer, "url": proxy.url_of(path) if proxy is not None else idea_shot.url_of(self.port, path)}
+
+    def start(self, ref: str, fresh: bool = False, path: str = "") -> dict:
+        """Starts the preview of `ref`'s head unless it starts or plays already (`fresh`: anew, when `ref` moved since). `path`: the page to open first (a path `play_proxy.page_path` made), else the preview's own."""
         self.seen_at = time.monotonic()
         with self._lock:
             busy = self.state in ("starting", "playing")
@@ -144,7 +155,9 @@ class Play:
             self.stop("again", wait=True)
             busy = False
         if busy:
-            return self.answer(ref)
+            if path:
+                self.first = path                        # a start still going opens at the page last asked
+            return self.at(self.answer(ref), path)
         self._join()
         if not tip:
             self._set("failed", error=f"There is no {ref} branch yet")
@@ -152,6 +165,7 @@ class Play:
         with self._lock:
             self._stop = threading.Event()
             self.state, self.commit, self.url, self.error, self.none, self.port, self._why = "starting", tip, "", "", False, None, ""
+            self.first = path
             self.logo = self._logo_of(tip)
             self.ports, self.tail, self.stage, self.command, self.began = [], play_lines.Tail(), "worktree", "", time.monotonic()
             self._thread =threading.Thread(target=self._run, args=(tip, self._stop), name="play", daemon=True)
@@ -237,7 +251,8 @@ class Play:
                 self._alive_at = time.monotonic()
                 proxy = self._proxied(port)
                 try:
-                    self._set("playing", port=port, url=proxy.url_of(path) if proxy else idea_shot.url_of(port, path), probe=proxy is not None,
+                    shown = self.first or path               # the page asked at a path (spec 121 §5.3), else the preview's own
+                    self._set("playing", port=port, url=proxy.url_of(shown) if proxy else idea_shot.url_of(port, shown), probe=proxy is not None,
                               play_id=proxy.play_id if proxy else "", _proxy=proxy)
                     if self.state == "playing":
                         self._tried_now(commit)
@@ -404,14 +419,32 @@ class AssetsMixin:
             self._play = Play(Path(self.host.repo_root), self.state_dir, lambda e, **f: self._ev(e, **f), publish)
         return self._play
 
+    def _play_path(self, args: dict) -> tuple[str, str]:
+        """(the route the face asked, the page's path Play opens first) of `args["path"]`: ("", "") with none. A path that is no page's, or that no screen of dev's head has, is refused in words (`/` is always the preview's own)."""
+        raw = args.get("path")
+        if raw is None or raw == "":
+            return "", ""
+        if not isinstance(raw, str):
+            raise IdeasError("path is not text")
+        page = play_proxy.page_path(raw)
+        if not page:
+            raise IdeasError(f"{raw[:80]} is not the path of a page")
+        if page != "/" and screen_map.screen_of(self.state_dir, Path(self.host.repo_root), raw.strip(), self._ref()) is None:
+            raise IdeasError(f"There is no screen at {raw.strip()[:80]}")
+        return raw.strip()[:300], page
+
     def play(self, args: dict) -> dict:
-        """`{fresh?, peek?}`: the preview of dev's head (`peek`: only what it is now). The phone is refused: it is the machine's own address."""
+        """`{fresh?, peek?, path?, idea?}`: the preview of dev's head (`peek`: only what it is now), its first page at `path` (a screen's route; refused in words when none has it). The phone is refused: it is the machine's own address."""
         if _device(args) == "phone":
             raise IdeasError("Play on the computer")
         if args.get("peek") is True:
             self.player.seen_at = time.monotonic()
             return self.player.answer(self._ref())
-        return self.player.start(self._ref(), fresh=args.get("fresh") is True)
+        route, page = self._play_path(args)
+        got = self.player.start(self._ref(), fresh=args.get("fresh") is True, path=page)
+        if route:
+            self._ev(event_log.PLAY_AT_PATH, args, idea=_opt(args, "idea"), path=route[:200])
+        return got
 
     def play_stop(self, args: dict) -> dict:
         if _device(args) == "phone":

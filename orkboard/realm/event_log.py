@@ -201,10 +201,13 @@ ERROR_SHOWN = "error_shown"       # title, text: a toast of severity error the p
 LEADER_OBJECTED = "leader_objected"          # idea, party, verdict ("doubt" or "no"), has_instead (it named a smaller or other goal that would serve)
 OBJECTION_ANSWERED = "objection_answered"    # idea, party, answer ("drop", "smaller", "later" or "go": the person went on anyway)
 # Spec 108 A (decisions §183.4–§183.6, §183.8): a leader's look at its own map, and what the person did with its concerns (never a word of the leader's or the person's).
-CONCERNS_MADE = "concerns_made"      # party, n (concerns kept), alerts, notes, signals (hints of code it was given), seconds, cost (None: unrecorded), why ("open" · "again")
+CONCERNS_MADE = "concerns_made"      # party, n (concerns kept), alerts, notes, signals (hints of code it was given), seconds, cost (None: unrecorded), why ("open" · "again"), since (the evening line's way: toward · away · unclear, else "": spec 121 §6)
 CONCERN_OPENED = "concern_opened"    # party, level: a concern's back was opened on its map
 CONCERN_GOAL = "concern_goal"        # party, level, idea: *Make it a goal* pressed on a concern
 CONCERN_DISMISSED = "concern_dismissed"   # party, level: *Not a problem* pressed on a concern
+# Spec 121 D (decisions §199.5): the morning's card, and Play opened on a screen (the time to the first mark is read from `play_mark`; never a word of anyone's).
+NIGHT_CARD_OPENED = "night_card_opened"   # goals (how many goals the night's record held), device: the morning's card was lifted
+PLAY_AT_PATH = "play_at_path"     # idea ("" when the press had no goal), path (the page's path Play was asked to open first, cut), device: *Play it* on a goal's screen
 
 EVENTS = (ASKED, ASSUMED, ANSWERED, STOPPED, WAIT_SKIPPED, HELD_AT_WORK, CAMP_LEFT, CAMP_BACK, QUEST_STARTED,
           QUEST_DONE, QUEST_SKIPPED, BUILT, CART_MOVED, LOOKED, IDEA_ADDED, IDEA_SAID, KEEPER_STATE, PLAN_MADE, PLAN_PASSED,
@@ -215,6 +218,7 @@ EVENTS = (ASKED, ASSUMED, ANSWERED, STOPPED, WAIT_SKIPPED, HELD_AT_WORK, CAMP_LE
           OP_RULES_ANSWERED, OP_TRUST, OP_KEPT, OP_FORGOT, OP_STANDING, PUSH_SET, PUSH_SENT, PARTY_PROPOSED, PARTY_ANSWERED, PARTY_SAVED, PARTY_DROPPED, PARTY_REMOVED, NIGHT_ALLOWED, WEEK_RESET, IDEA_EDITED, PLAN_REVISED, PLAN_CHANGE_ANSWERED,
           PITCH_JUDGED, PITCH_SENT, PITCH_PASSED, PITCH_AGAIN, IDEA_MOVED, RELEASE_MADE, RELEASE_OUT, PARTY_SHOWN, COLLIDE_FOUND, COLLIDE_ANSWERED,
           PROPOSALS_SHOWN, PROPOSAL_TAKEN, PARTY_RESIZED, CANVAS_MADE, CANVAS_SEEN, SHOT_TAKEN, PLAY_STARTED, PLAY_STOPPED, MAP_OPENED, MAP_PART_PRESSED, MAP_SNAPSHOT_FAILED, SIGN_IN_NEEDED, SIGNED_IN, SIGN_IN_FAILED, TOOL_MOVED, PAID_ANSWERED, BOARD_ASKED, ASK_MADE_GOAL, COMMAND_REFUSED, ERROR_SHOWN, LEADER_OBJECTED, OBJECTION_ANSWERED, CONCERNS_MADE, CONCERN_OPENED, CONCERN_GOAL, CONCERN_DISMISSED)
+EVENTS += (NIGHT_CARD_OPENED, PLAY_AT_PATH)       # spec 121 D
 
 _LOCK = threading.Lock()
 

@@ -5,6 +5,7 @@ preview's page port while Play plays. The page in Play's frame is the proxy's, s
     proxy.start()                    # listening; `proxy.url_of("/")` is the address Play's frame opens
     proxy.stop()                     # closes the listener and every connection through it
     inject(html: bytes, tag: bytes)  # the document with `tag` as the first child of `<head>` (else after `<html>`, the doctype, or at the start)
+    page_path("/orders/:id")         # "/orders/1": a screen's route as the page's path Play opens first (spec 121 §5.3); "" for text that is no path
 
 Every request goes to the preview as it is and every answer comes back as it is, but:
   - a `text/html` answer (the preview is asked with `Accept-Encoding: identity`; a gzip one is unpacked, a chunked one read whole) gets
@@ -49,6 +50,24 @@ _HEAD = re.compile(rb"<head(?:\s[^>]*)?>", re.I)
 _HTML = re.compile(rb"<html(?:\s[^>]*)?>", re.I)
 _DOCTYPE = re.compile(rb"<!doctype[^>]*>", re.I)
 BOM = b"\xef\xbb\xbf"
+
+
+_PATH = re.compile(r"/[A-Za-z0-9_./#?=&%~+-]{0,299}")
+_PARAM = re.compile(r"(?::[A-Za-z_]\w*|\[\w+\]|\$\{[^}]*\})")
+
+
+def page_path(route: object) -> str:
+    """The path Play opens first for a screen's route (`/orders`, `/orders/:id`, `/docs/*`): a parameter (`:id`, `[id]`) takes the value `1`, a `*` is left off; a query or a `#` part stays. "" for anything that is not
+    a path of a page: not text, not starting with a single `/`, a `..` segment, a character a path does not hold, or over 300 characters."""
+    if not isinstance(route, str):
+        return ""
+    text = route.strip()
+    if not text.startswith("/") or text.startswith("//"):
+        return ""
+    cut = min([i for i in (text.find("?"), text.find("#")) if i >= 0], default=len(text))
+    segs = ["1" if _PARAM.fullmatch(seg) else seg for seg in text[:cut].split("/")[1:] if seg != "*"]
+    out = "/" + "/".join(segs) + text[cut:]
+    return "" if ".." in segs or len(out) > 300 or not _PATH.fullmatch(out) else out
 
 
 def tag_of(page_origin: str, play_id: str) -> bytes:

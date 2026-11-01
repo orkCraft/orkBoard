@@ -1,5 +1,5 @@
 """Coming back (docs/specs/42-coming-back.md) as `gui/ideas.py`'s `Ideas` has it: `ideas.recap`, what the Board did since a
-device's last look (realm/board_recap.py), and `ideas.today`, today's events as rows (spec 49 §2.2, realm/board_today.py). It
+device's last look (realm/board_recap.py), `ideas.night`, what the night did for the morning's card (spec 121 §5), and `ideas.today`, today's events as rows (spec 49 §2.2, realm/board_today.py). It
 reads and changes nothing; B, F, G and H add their readers here. Split from ideas.py to keep it under ~600 lines.
 """
 from __future__ import annotations
@@ -31,6 +31,32 @@ class RecapMixin:
         snap = self.snapshot()
         got["waits"] = {"you": int(snap.get("needs_you") or 0), "review": int(snap.get("review_count") or 0)}
         got["nights"] = board_week.streak(Path(self.host.repo_root), self.settings_now(), now)
+        return got
+
+    def night(self, args: dict) -> dict | None:
+        """`{"since"?: <ms since the epoch>, "opened"?: true}`: what the night did, for the morning's card (spec 121 §5.2, realm/board_recap.py `night`): from the last night's window, or the device's last look
+        (`since`) when that is later, to now. None when the night did nothing (no goal reached dev, none failed, no revert, no red check). `opened`: the face lifted the card (event `night_card_opened`)."""
+        now = dt.datetime.now().astimezone()
+        seen = None
+        if (ms := args.get("since")) is not None:
+            if not isinstance(ms, (int, float)) or isinstance(ms, bool):
+                raise IdeasError("`since` is the last look, in milliseconds")
+            try:
+                seen = dt.datetime.fromtimestamp(ms / 1000).astimezone()
+            except (OverflowError, OSError, ValueError):
+                raise IdeasError("`since` is the last look, in milliseconds") from None
+            if seen > now:
+                raise IdeasError("`since` is ahead of now")
+        since = max(board_recap.night_since(self.settings_now(), now, seen), now - dt.timedelta(days=RECAP_DAYS))
+        try:
+            hints = self.last_play_hints()
+        except Exception:                                  # Play's hints are a help; the card does not wait for them
+            hints = []
+        got = board_recap.night(Path(self.host.repo_root), self.state_dir, since, now, self.board(make=False), into=self._ref(), hints=hints)
+        if got["empty"]:
+            return None
+        if args.get("opened") is True:
+            self._ev(event_log.NIGHT_CARD_OPENED, args, goals=len(got["goals"]))
         return got
 
     def today(self, args: dict) -> dict:
