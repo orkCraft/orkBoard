@@ -3,6 +3,8 @@ project's own event log (`realm/event_log.py`), by code. No model, no face, no n
 
     measures.of(root, since="2026-11-01")     # {talk, concerns, pitches, sketches, results, after_start, since, until}
     measures.text(m)                          # the same as lines a person reads (`orkboard measures`)
+    measures.of_party(root, "tech")           # one party's own record of its no's (spec 125 §C): what a leader's call is told of its calibration
+    measures.calibration(m)                   # … as the one line a call is given, "" until a no of the party was overruled and decided
 
 What a measure says (H1: *what would prove it*):
 
@@ -124,6 +126,35 @@ def of(root: Path, since: str = "", until: str = "") -> dict[str, Any]:
             "talk": _talk(rows, back), "concerns": _concerns(rows), "pitches": _pitches(rows), "sketches": _sketches(rows),
             "results": {"decided": len(first), "first_time": sum(first.values()), "first_time_share": _share(sum(first.values()), len(first))},
             "after_start": _after_start(rows)}
+
+
+def of_party(root: Path, party: str) -> dict[str, Any]:
+    """One party's record of its objections (spec 125 §C; decisions §203.5), from the party's own `leader_objected` / `objection_answered` lines and the goals' `result_decided`:
+    `objections` (its doubts and no's), `overruled` (answered *go on anyway*), `overruled_decided` (of the goals it was overruled on, those decided at Review),
+    `overruled_came_back` (of those, sent back, fixed or dropped) and `unobjected_came_back_share` (the same share over the goals no leader objected to; None with none)."""
+    rows = event_log.read(Path(root))
+    back = _came_back(rows)
+    mine = [r for r in rows if r.get("party") == party]
+    objections = sum(r["event"] == event_log.LEADER_OBJECTED for r in mine)
+    overruled = [r for r in mine if r["event"] == event_log.OBJECTION_ANSWERED and r.get("answer") == OVERRULED]
+    decided = [i for i in {r.get("idea") for r in overruled} if i in back]
+    objected_any = {r.get("idea") for r in rows if r["event"] == event_log.LEADER_OBJECTED}
+    calm = [i for i in back if i not in objected_any]
+    return {"objections": objections, "overruled": len(overruled), "overruled_decided": len(decided),
+            "overruled_came_back": sum(back[i] for i in decided), "unobjected_came_back_share": _share(sum(back[i] for i in calm), len(calm))}
+
+
+def calibration(m: dict[str, Any]) -> str:
+    """The line a leader's call is given of its record (`of_party`), "" until it has had a no overruled and decided at Review: *Your record: 3 of your 5 no's were overruled;
+    2 of the 3 decided came back at Review (67 %), against 20 % of the goals no one objected to.*"""
+    decided = int(m.get("overruled_decided") or 0)
+    if decided <= 0:
+        return ""
+    came = int(m.get("overruled_came_back") or 0)
+    other = m.get("unobjected_came_back_share")
+    against = f", against {_pct(other)} of the goals no one objected to" if other is not None else ""
+    return (f"Your record: {int(m.get('overruled') or 0)} of your {int(m.get('objections') or 0)} no's were overruled; {came} of the {decided} decided "
+            f"came back at Review ({_pct(_share(came, decided))}){against}.")
 
 
 def _pct(x: float | None) -> str:
