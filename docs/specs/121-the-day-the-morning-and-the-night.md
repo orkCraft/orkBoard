@@ -222,3 +222,33 @@ go to the sketch when the goal has one), spec 42 §1 (the recap gains the night 
 - **The leaders' voices** (spec 122): a hearing and a sketch's lines heard on the way, each leader its own voice on the device.
 - A sketch of a marketing page or a store page (Marketing's) and of a sound by a free tool on the machine.
 - A sketch kept as the screen's *before → will be* on Design's map (spec 104 §5), a ghost until the work lands.
+
+## As built
+
+Built by the cheaper model, a part a branch (B and C; D and E; A; F), each reviewed and merged by the spec's author on
+`claude/leaders-lenses-system-55m0qp`.
+
+- **A** (`realm/sketches.py`, `core/idea_sketch.py`, `gui/ideas_sketch.py`): `after_decision` is called by `confirm`, so the wait's end,
+  a hearing's throw and *Confirm and start* all go through it. The step `sketch` runs on the elder tier at balance (warrior at thrift);
+  Design reads one picture: the newest kept picture of a screen whose name is in the goal's words (no touches exist before the spec).
+  *The media tools set up* is read as `task_commands.MEDIA`: pictures need python3, node or ffmpeg, sounds ffmpeg or sox (the owner's
+  to confirm). Art's pick task runs in a scratch folder under the goal's state, not a worktree, once. No sketching craft on the route:
+  a type that names one asks the project's first party of it; *Sketch it first* with none falls back to Design, Game design, Art. A
+  first round that fails skips the sketch; a later one reopens the round before with its error and spends no round. Stop all puts the
+  goal back at `decided`. A project with no look, screens, preview or assets gets none unless asked. The record is `sketch.json`.
+- **B**: besides §3.1's policy a page gets `Content-Security-Policy: sandbox allow-scripts` first, so its address opened on its own
+  keeps an opaque origin. `realm/sketches.outside` refuses outside addresses before the page is kept, character references resolved.
+- **C** (`realm/night_order.py`): `work_at_night` is a Board setting (per project). Held plans reuse `start_at: "night"`; the clock's
+  `older_night_plans` passes them when the window opens (a plan made inside the window starts at once). Only a press on the plan and a
+  bug's short way start at once: *Do it* and *Confirm and start* lead to a plan that is held. `night_started` has no `at` field (the
+  line's own). The onboarding's *Do you build at night?* is not done.
+- **D, E**: `board_recap.night` takes the Board's rows, `into` and `hints`; `night_since` is the later of the night's start and the
+  device's last look (12 hours back with no window). `ideas.play {path}` turns a route into a page's path (`:id` and `[id]` → `1`) and
+  refuses a path no screen has; a Play already playing is answered at the path. The concerns record gains `head` (the commit a look
+  read, so the next look is given *Changed since your last call*); Product, Marketing and Release keep no change log, so their line
+  rests on the hash alone. A look of an unchanged map clears `since`. Play's last hints are kept in memory after Play stops.
+- **F**: the setting is in `js/shell/settings.js`; *Waits for the night* and **Build it now** are on the hand's `plan` stop; the sketch is
+  the pick card's lifted face (`kind: "pick"`, `task: "sketch"`), the variants over the pane on the desktop (`choose`, source
+  `sketch`), one at a time at 56vh on the phone; *Sketch again* past three rounds is not offered. The morning's card is put first by
+  `hand.js`; *Done* is kept per night in `localStorage`. The evening line is the desktop strip's only. The die (§200.5): `new_n` in the
+  snapshot (computer only), pips 1–6 in the ink on the up face; at rest it stays the five until orkUI has `face-play`.

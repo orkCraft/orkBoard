@@ -310,3 +310,40 @@ chosen in a field over the hand: now on the card's face, by a press on the rune)
   serves; taken, a goal whose author's Talk is already `go`.
 - **Product's summary of the table** (a line a party: its open alerts, Play's newest hints, what waits in line) in Product's
   calls; **Art's sheet** (one picture of the changed assets' thumbnails) in Art's look and Talk.
+
+## As built
+
+Built by the cheaper model, a part a branch (B, C and E in one; D; F's §6.7; F's card life and handing), each reviewed and merged by
+the spec's author on `claude/leaders-lenses-system-55m0qp`. G (orkUI) is not built: the faces draw what orkUI has (§6.11).
+
+- **B, C** (`core/idea_verdict.py`, `realm/idea_ripe.py`; `core/idea_talk.py` 598 lines): `ideas.add` answers `talk` when Talk began by
+  itself (`route_how.auto`); a route found by the Orkmaster's call goes to Talk at the next `route_tick`. *Paid* is every subscription
+  out or the work moved onto an API-billed tool; *limits low* is `idea_target.reserve_held`. Stances carry `craft`, `weigher`,
+  `priority`, `risk`; the weight is `rec["weight"]`. `outcome` returns `hearing` · `agreed` · `decision`. Nobody is heard again when
+  every card was left to the leaders. The wait counts down only while `host.faces()` (the page's sockets and the paired phones) is
+  above 0, at most 5 s a tick (a computer that slept starts nothing); at its end a spent window, a paid tool or Stop all hold it with
+  why. The leaders' heading reads `## n. title (D Month, the leaders, all agreed; Host)`. A route edited while Talk runs: a party
+  taken off is dropped with its stance and cards, one put on is heard alone.
+- **Joined by the author**: **a doubt alone opens the hearing** (`TalkMixin._held`: `rec["hearing"]`, unless the person has thrown it
+  already), as §3.4 says; *Hold* is the host's `ripe_hold_goal` (the event, the faces told).
+- **D** (`realm/idea_hearing.py`, `gui/ideas_hearing.py`, `core/idea_objection.py` `throw`): the row's own title is `heading` (a row's
+  `title` is the goal's); sides carry `names` and `also`; `left_out` lists the kinds past three. A mixed `instead` stands on the
+  smaller side only when it is the same words. A throw to *Do it*, *the smaller one* or the person's words **confirms the decision as
+  soon as it is worded** (the throw is the person's yes), through the Board's tree kept in memory; after a restart the decision's card
+  waits for a press. A fork's hearing acts on its first open fork. `objection_rows` stays for `ideas.objection`.
+- **E**: `STAGGER` and `SYSTEM_PROMPT` are module switches, off. With the system prompt on, the map's text and the lens line go in
+  `--append-system-prompt`; the voice stays first in `-p`. The keeper's call line gains `step` and `party`; `talk_floor` groups a
+  goal's calls into rounds. **The owner's numbers are still to read** (`python -m orkboard.realm.call_log talk <project>`): lines
+  older than this have no `step` and are not counted.
+- **F §6.7** (`js/hand/hearing.js`, `hearingstate.js`, `hearing.css`; `objectioncard.js` gone): **Undo is a drop's only** — the host
+  has no command to take a throw back, so a drop waits 6 s, its row held back, and its toast says *Dropped in 6 s*; other throws are
+  sent at once. The leader's words are in the body face, only *Do the smaller one:* and *After* in the button face. A drag never
+  starts within 20 px of the screen's edge. A drop still held when the page closes is not sent. The phone: no flight.
+- **F card life and handing** (`realm/board_back.py` gives each routed, talking or decided node its `back`; `table/backcard.js`,
+  `backbody.js`, `flight.js`, `back.css`; `hand/fieldturn.js`; `hand/motion.js` `fromWhere`, `useHanded`, `useFlight`): the turn is a
+  Web Animations copy over the page; the field takes the focus in the press through a throwaway textarea that hands it on. The flight
+  to the lane plays when the goal first has a card in its party's lane (between, it is the Orkmaster's face-up card while the sections
+  are written). Only a stack's top card flies, so *three at most* counts stacks. A held wait's ring: the host zeroes `left_s`, so a
+  page loaded while held draws it empty. On the phone a handed card flies as a copy over the row; the row's edge cue is not done.
+- **Waiting for orkUI** (G): `.ork-turn`, `.ork-sigil.is-waiting` (the page sets orkUI's own `--_arc` from `--ork-sigil-share`, in
+  eighths), `.ork-gives` (the give is nothing yet).
