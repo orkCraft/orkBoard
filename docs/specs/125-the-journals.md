@@ -115,3 +115,16 @@ goal's route whose journal is due, quietly (`try`/`except`), as `brief_more` is.
   failed call keeps nothing; the trigger on `ideas.add`; the event.
 - The critical tests (`tests/test_architecture.py`, `tests/test_board_alone.py`, `tests/test_updates.py`) and the test files
   of every module touched.
+
+## As built (1 November)
+
+- **B** (`realm/journal_notes.py` holds every line's words and the wrapper that swallows a failure, so each hook is one line;
+  `gui/ideas_journal.py` the commands). Where it differs: in a hearing thrown to *drop* or *later*, only the leaders on the
+  chosen side get `heeded`, the others no `overruled` (the goal was not gone on with), so the journals and spec 124's
+  measures may count an overruled no a little differently; Review cannot tell a *fix* from a *back* on the host's side, both
+  are `came_back`; a goal dropped by a hearing writes `heeded` but no project `dropped` (only `ideas.drop` does); the evening
+  line names the map (*the screens map*).
+- **C** (`core/idea_journal.py` `parts`): in a quick question the journals follow the facts, which already follow the map,
+  so they come after the map there; a leader with a record line and an empty journal still gets the part with the line;
+  `realm/idea_spend.py` `STEP_STAGE` gains `journal` (its cost in the *spec* stage).
+- **D** as written. `measures.of_party` reads the whole event log at each call: a cache is for when the log grows large.
