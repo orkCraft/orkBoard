@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import time
 
+from orkboard.core import idea_journal
 from orkboard.realm import board_ask, decisions_log, event_log, goal_team, idea_target, ideas, orkmaster, project_facts
 
 KEY = "ask"                      # the busy key: one question at a time for the whole Board
@@ -77,6 +78,7 @@ class AskMixin:
             facts = project_facts.for_call(self.state_dir, "")
         if facts:
             parts.append(("What is known of the project", facts))
+        parts += idea_journal.parts(self.state_dir, self.repo_root, party)       # the asked leader's journal and the project's; the Orkmaster's tab: the project's alone (spec 125 §C)
         if beads := decisions_log.headings(self._log_text(), last=HEADINGS):
             parts.append(("The decisions, the latest", "\n".join(beads)))
         if party and not parts[0][1]:

@@ -27,6 +27,7 @@ import re
 from pathlib import Path
 
 from orkboard import brand
+from orkboard.core import idea_journal
 from orkboard.realm import decisions_log, event_log, idea_objections, idea_questions, idea_ripe, idea_target, ideas, orkmaster, spec_sections
 from orkboard.realm.idea_talk_parse import total
 from orkboard.realm import journal_notes
@@ -176,6 +177,7 @@ class DecideMixin:
                  ("Where each leader stands", stances), ("The questions and the person's answers", answers), ("Closed by their leaders' picks", defaults)]
         if over or doubts:                                                                    # spec 108 §4.4: the person went on against a no, or a leader doubted
             parts.append(("Leaders the person overruled, and those who doubted", "\n".join(f"- {x}" for x in [*over, *doubts])))
+        parts += idea_journal.parts(self.state_dir, self.repo_root, "", slug)                 # the project's journal (spec 125 §C), before the decisions file
         parts.append(("The project's decisions file", decisions_log.context(base, None, self._chosen())))
         context = idea_target.cut(parts, idea_target.CONTEXT["decide"])
         overruled_rule = ("\n- Each line under *Leaders the person overruled, and those who doubted* is a point of its own, word for word: the person went on against that leader's no "

@@ -463,6 +463,12 @@ class Ideas(SketchMixin, PlayMarkMixin, JournalFace, FactsMixin, LoopFace, TreeF
             self.brief_more()                   # the brief's other half, once the first start's questions are done (spec 124 A); never troubles the goal
         except Exception:
             pass
+        try:
+            digest = getattr(self.keeper, "journal_digest_for", None)       # the digest of each leader of the route whose journal is due (spec 125 D), quietly
+            if digest is not None:
+                digest([r["party"] for r in (routed or {}).get("route") or []] or [track])
+        except Exception:
+            pass
         if routed:
             out["route"] = [r["party"] for r in routed["route"]]
             if not routed["route"]:

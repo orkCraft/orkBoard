@@ -230,7 +230,7 @@ def test_talks_steps_are_the_cheaper_tier_the_rounds_with_no_tools_and_no_reads_
             assert idea_target.tier_of(idea_target.pick(step, target)[0]) != "elder"                 # never the dearest tier
     assert idea_target.pick("talk_round", "balance") == ("warrior", "low") and idea_target.pick("talk_round", "thrift") == ("laborer", "")
     assert idea_target.READS["talk_round"] == 0 and idea_target.READS["diagnose"] == 4
-    assert idea_target.CONTEXT["talk_round"] >= 5_000 and idea_target.CONTEXT["diagnose"] >= idea_target.CONTEXT["talk_round"]       # a map's text (3,000) and the facts fit
+    assert idea_target.CONTEXT["talk_round"] >= 5_000 and idea_target.CONTEXT["diagnose"] >= idea_target.CONTEXT["talk_round"] - 3_000       # (the last 3,000 of a round are the journals': spec 125 §C) a map's text (3,000) and the facts fit
     assert idea_target.CAPS["talk_round"] <= idea_target.CAPS["diagnose"] <= 0.25
     assert idea_target.budget("talk_round", "balance") == 0.15 and idea_target.budget("diagnose", "balance") == 0.2        # never under 1.5 floors (a warrior's call costs $0.10)
 
