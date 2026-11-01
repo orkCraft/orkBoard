@@ -13,7 +13,10 @@
    *Does* with orkUI's sword, *Checks* with its shield, each seat's role under its head), the leaders' faces as states. Layout only: every colour, face and
    corner read through orkUI's tokens and classes (`.ork-tab`, `.ork-head`, `.ork-race__head`, `.ork-sign`, `.ork-chip`, `.ork-btn`, `.ork-field`, `.ork-card`,
    `.ork-think`, `.ork-busy`, `.ork-mark`). What is drawn here for the first time (the bubble, the faces) is this page's until orkUI draws it: the faces are
-   sketched on the heads' own 12 × 11 grid from the race sheets' pixels, a few cells each, for orkUI to draw properly. */
+   sketched on the heads' own 12 × 11 grid from the race sheets' pixels, a few cells each, for orkUI to draw properly. The table (the owner, 1 November: *the leaders
+   sit on chairs above the table with the cards; a new party is an empty chair*): each tab a chair's back behind its leader's head on the table's rim, the
+   empty chair in place of *+ Party*, the leader's lane on the Board the table in front of its chair, a member at work its small head on the card it works on.
+   The chair is drawn here at a sign's weight in the frame's greys (posts, rail, crest), until orkUI draws it. */
 *, *::before, *::after { box-sizing: border-box; }
 html { background: var(--ork-canvas); }
 body { margin: 0; background: var(--ork-canvas); color: var(--ork-ink); font: var(--ork-type-body); }
@@ -74,6 +77,34 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
 .mk-alert:focus-visible, .mk-note:focus-visible { outline: 2px solid var(--ork-ink); }
 .win.is-new .tab.is-on { padding-top: var(--ork-4); padding-bottom: var(--ork-4); }
 .win.is-new .tab.is-on .nm { margin-left: var(--ork-6); }
+
+/* ---------- the chairs (this page's until orkUI draws them): a back in the frame's greys behind the head, on the table's rim ---------- */
+.win.chairs .tabs, .tbl .tabs { border-bottom: 3px solid var(--ork-table-rim); }
+.win.chairs .tab, .tbl .tab { align-items: flex-end; padding-top: var(--ork-2); padding-bottom: 0; }
+.win.chairs .tab .nm, .tbl .tab .nm { padding-bottom: var(--ork-3); }
+.win.chairs .tab > .flag, .tbl .tab > .flag { bottom: auto; top: var(--ork-2); }
+.seatbox { position: relative; flex: none; width: 52px; height: 48px; --chair-post: var(--ork-table-rim-hi); --chair-back: var(--ork-panel); }
+.seatbox.big { width: 60px; height: 56px; }
+.seatbox > svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.seatbox > svg .po { fill: var(--chair-post); }
+.seatbox > svg .bk { fill: var(--chair-back); }
+.seatbox > .sit { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); display: flex; }
+.tab.is-on .seatbox { --chair-back: var(--ork-canvas); }
+/* the empty chair: the whole chair, faint, nobody on it; hovered or focused it is pulled out a little (lifted, §89) */
+.tab.empty { appearance: none; border: 0; border-right: var(--ork-line) solid var(--ork-frame); background: none; color: var(--ork-ink-faint); cursor: pointer; font: inherit; }
+.tab.empty .seatbox { --chair-post: var(--ork-frame); --chair-back: transparent; }
+.tab.empty .seatbox > svg { transition: transform var(--ork-motion-base) var(--ork-motion-spring); transform-origin: 50% 100%; }
+.tab.empty:hover .seatbox, .tab.empty:focus-visible .seatbox, .tab.empty.is-hover .seatbox { --chair-post: var(--ork-edge); }
+.tab.empty:hover .seatbox > svg, .tab.empty:focus-visible .seatbox > svg, .tab.empty.is-hover .seatbox > svg { transform: translateY(-2px) rotate(-4deg); }
+.tab.empty:hover, .tab.empty:focus-visible, .tab.empty.is-hover { color: var(--ork-ink); }
+.tab.empty:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.tab.empty .nm b { font: var(--ork-type-button); text-transform: uppercase; letter-spacing: var(--ork-type-button-track); white-space: normal; overflow: visible; }
+@media (prefers-reduced-motion: reduce) { .tab.empty .seatbox > svg { transition: none; transform: none !important; } }
+.tabs.five { grid-template-columns: repeat(5, minmax(0, 180px)) minmax(0, 132px) 1fr; }
+/* a member at work: its small head on the card it works on (spec 95 §3.2's turned card), the busy mark beside it */
+.wk { position: absolute; right: var(--ork-3); bottom: var(--ork-3); display: flex; align-items: center; gap: var(--ork-1); }
+.wk .ork-busy { position: static; }
+.part .wk + .u { padding-right: 40px; }
 
 /* the pane */
 .title { display: flex; align-items: center; gap: var(--ork-4); min-height: var(--ork-bar); padding: 0 var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-frame);
@@ -190,6 +221,20 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
 .narrow .sys { grid-template-columns: 1fr 1fr; padding: var(--ork-5); gap: var(--ork-4); }
 .narrow .part { width: 100%; height: 110px; }
 .narrow .bubble { left: var(--ork-4); top: 60px; width: calc(100% - 32px); }
+.ntab.empty { appearance: none; border: 0; border-right: var(--ork-line) solid var(--ork-frame); background: none; cursor: pointer; padding: 0; }
+.ntab.empty .seatbox { width: 26px; height: 24px; --chair-post: var(--ork-frame); --chair-back: transparent; }
+
+/* ---------- the table: the Orkmaster's tab, the Board's lanes in front of the chairs ---------- */
+.tbl { width: 100%; max-width: 1240px; display: grid; grid-template-rows: auto auto 1fr; background: var(--ork-canvas); outline: var(--ork-line) solid var(--ork-edge); overflow: hidden; }
+.lanes { display: grid; grid-template-columns: repeat(5, minmax(0, 180px)) minmax(0, 132px) 1fr; min-height: 330px; background: var(--ork-table); }
+.ln { display: flex; flex-direction: column; gap: var(--ork-4); padding: var(--ork-5) var(--ork-4); border-right: var(--ork-line) solid var(--ork-frame); min-width: 0; }
+.ln .lab { color: var(--ork-ink-faint); font: var(--ork-type-label); text-transform: uppercase; }
+.gc { position: relative; width: 100%; max-width: 150px; min-height: 96px; display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3); background: var(--ork-card); border-color: var(--ork-card-frame); font: var(--ork-type-caption); }
+.gc b { font-weight: 600; color: var(--ork-ink); }
+.gc .ph { margin-top: auto; color: var(--ork-ink-muted); font: var(--ork-type-label); text-transform: uppercase; }
+.gc .wk { bottom: var(--ork-2); right: var(--ork-2); }
+.tbl .disc { margin: var(--ork-5) var(--ork-5) var(--ork-5) auto; width: 140px; height: 170px; border: var(--ork-line) dashed var(--ork-frame); display: grid; place-items: start center; padding-top: var(--ork-3); color: var(--ork-ink-faint); font: var(--ork-type-label); text-transform: uppercase; }
+.tbl.full .tab.empty, .tbl.full .ln.free { visibility: hidden; }
 </style>
 </head>
 <body>
@@ -197,10 +242,11 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
   <b class="ork-head" style="border:0;padding:0;min-height:0">The leaders at the table · mockup</b>
   <nav aria-label="Sections">
     <a class="ork-btn quiet" href="#lens">1 · The lens</a>
-    <a class="ork-btn quiet" href="#bubble">2 · The bubble</a>
-    <a class="ork-btn quiet" href="#faces">3 · The faces</a>
-    <a class="ork-btn quiet" href="#narrow">4 · Narrow</a>
-    <a class="ork-btn quiet" href="#rules">5 · Rules and what changes</a>
+    <a class="ork-btn quiet" href="#table">2 · The table</a>
+    <a class="ork-btn quiet" href="#bubble">3 · The bubble</a>
+    <a class="ork-btn quiet" href="#faces">4 · The faces</a>
+    <a class="ork-btn quiet" href="#narrow">5 · Narrow</a>
+    <a class="ork-btn quiet" href="#rules">6 · Rules and what changes</a>
   </nav>
 </header>
 
@@ -213,10 +259,16 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
   and the quick question <b>a bubble from its head</b> instead of a line always open. The party's header loses <i>Leads</i> (the tab is the leader), and
   becomes one row: <b>Does</b> with orkUI's sword, <b>Checks</b> with its shield, each seat's role under its head, the leader's aspects at the row's right.
   The tab grows in height only: a tab is its column's head on the Board (§143), so its width never changes.</p>
+  <p class="mk-line"><b>Who decides sits at the table; who does is the leader's squad.</b> The leaders sit on chairs at the table's far edge (the tabs, over
+  the table's rim), the other leaders at 36 × 33, the open one leaning in at 48 × 44. The squad stays at 24 × 22 (the smallest size a head is drawn crisp at
+  with its tier's gear readable, §161; 12 × 11 would break §148.7's 16 px), and is made lighter instead: the AI tool's mark once by the sword and once by the
+  shield (a head carries its own only when its seat runs on another tool), the role in the muted caption. A member at work is its small head on the card
+  it works on (Backend on <i>index.ts</i>). <i>+ Party</i> is the empty chair.</p>
   <div class="mk-acts" role="group" aria-label="Which window">
     <span class="lab">Show</span>
     <button type="button" class="ork-btn" data-view="old" aria-pressed="false">Today</button>
     <button type="button" class="ork-btn" data-view="new" aria-pressed="true">Proposed</button>
+    <button type="button" class="ork-btn" id="chairs" aria-pressed="true">Chairs</button>
     <span class="measure" id="measure"></span>
   </div>
   <div class="mk-acts" role="group" aria-label="Try">
@@ -231,7 +283,7 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
       <div class="sys" id="sys">
         <span></span><span class="ctn">server/ · Express</span><span class="ctn">client/ · Vite</span>
         <span class="lab">Its doors</span>
-        <div class="cell"><div class="ork-card part" data-part="index"><b>index.ts</b><span class="f">2 files</span><span class="u">Uses 1 · Used by 0</span></div></div>
+        <div class="cell"><div class="ork-card part" data-part="index"><b>index.ts</b><span class="f">2 files</span><span class="wk" id="worker"></span><span class="u">Uses 1 · Used by 0</span></div></div>
         <div class="cell"><div class="ork-card part" data-part="net"><b>net.ts</b><span class="f">2 files</span><span class="u">Uses 0 · Used by 0</span></div></div>
         <span class="lab">Its data</span>
         <div class="cell">
@@ -247,8 +299,26 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
   </div>
 </section>
 
+<section class="mk-sec" id="table">
+  <h1>2 · The table: the leaders on their chairs, the empty chair</h1>
+  <p class="mk-line">Through the Orkmaster's tab the Board is the table itself: <b>each leader's lane is the table in front of its chair</b>, the cards it plays
+  lying before it, and a member at work is a small head on the card it works on, as a worker placed on a board. The Orkmaster's chair is like the others; its crown
+  says who leads the table. <b>The empty chair is <i>New party</i></b>: the whole chair, faint, nobody on it; hovered or focused it is pulled out a little; pressed,
+  the one place of the parties opens as <i>+ Party</i> opens it today (§151.5). It stands only while a craft is not at the table: <b>a full table has no empty
+  chair</b>, and nothing has to say <i>no more</i>. It takes a narrower column and no lane. Release and Live keep their places in the portal's corners (§188): they
+  come to the table only when there is something to do. The word stays <i>New party</i>: <i>seat</i> is the squad's word (a member's place), so the chair is a
+  picture, never a new word.</p>
+  <div class="mk-acts" role="group" aria-label="The table's state">
+    <span class="lab">State</span>
+    <button type="button" class="ork-btn" data-tbl="hover" aria-pressed="false">The empty chair hovered</button>
+    <button type="button" class="ork-btn" data-tbl="full" aria-pressed="false">The table full</button>
+    <button type="button" class="ork-btn" data-tbl="spent" aria-pressed="false">The window spent</button>
+  </div>
+  <div class="tbl" id="tbl"></div>
+</section>
+
 <section class="mk-sec" id="bubble">
-  <h1>2 · The bubble: the one way a leader speaks</h1>
+  <h1>3 · The bubble: the one way a leader speaks</h1>
   <p class="mk-line">Pressed, the leader's head opens a bubble under it with the field focused (<i>Ask the Architect…</i>); Enter sends, Esc or a press away
   closes it, the text kept. The same bubble holds the answer (the question muted over it, the sources, <b>Make it a goal</b>, ×), the evening line once a day
   (spec 121 E), and the leader's side in a hearing (spec 120 §6.7): <b>whatever a leader says comes out of its head, in one shape</b>. Its foot names the
@@ -268,7 +338,7 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
 </section>
 
 <section class="mk-sec" id="faces">
-  <h1>3 · The faces: a state, never an idle motion</h1>
+  <h1>4 · The faces: a state, never an idle motion</h1>
   <p class="mk-line">A leader's face says what happened to its party, and then <b>stands still</b>: §149.1's <i>no idle motion</i> holds (a tool looked at all
   day never sways), so nothing blinks or breathes on a timer. A face changes only when its party's state does, and a change made while the page was hidden is
   simply there on coming back (§89.0). The face is an accent: the alert sign and the words stay (a 24 px face is not a sign). Only the leaders and the
@@ -291,9 +361,10 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
 </section>
 
 <section class="mk-sec" id="narrow">
-  <h1>4 · The narrow width (390 × 760)</h1>
+  <h1>5 · The narrow width (390 × 760)</h1>
   <p class="mk-line">The tabs are a row of heads (as today); the open one is a step larger (36 × 33) with its <span style="color:var(--ork-alert)">!</span> and dot beside it. The
-  header is the same one row, wrapping: the sword's seats, the shield's, the aspects under them. The bubble spans the width under the heads. Above the map:
+  header is the same one row, wrapping: the sword's seats, the shield's, the aspects under them. No chairs at this width (a 52 px tab has no room for one):
+  the empty chair is a small sign before <i>Stop</i>, <i>New party</i> its label. The bubble spans the width under the heads. Above the map:
   <b>measured on the right</b>.</p>
   <div class="mk-row">
     <figure class="mk-fig"><h2>Today</h2><div class="narrow" id="nold"></div></figure>
@@ -303,7 +374,7 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
 </section>
 
 <section class="mk-sec" id="rules">
-  <h1>5 · Rules kept, and what this changes</h1>
+  <h1>6 · Rules kept, and what this changes</h1>
   <ul class="mk-list">
     <li><b>The frame stays</b> (§104.0, §145): no new pane, column, drawer or dialog; the bubble is the head's popover, as a seat's is (§110.7).</li>
     <li><b>A tab's width never changes</b> (§143): the open leader grows the tab row's height by about 16 px, not its column.</li>
@@ -311,9 +382,15 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
     <li><b>A member never speaks</b> (§110.8): no bubble, no face but its one, its questions its leader's.</li>
     <li><b>No idle motion</b> (§149.1): faces are states; the head's beat plays once, when it hands a card (spec 120 §6.9's give) or answers; nothing under reduced motion.</li>
     <li><b>One look</b> (orkUI's office): the bubble on the raised panel with the edge, the faces drawn in orkUI first, nothing of the page's own colour.</li>
+    <li><b>The chair is a thing drawn at a sign's weight</b>, as orkUI's banner, boards, die and potions are: the frame's greys, no colour, no legs, never a picture
+      of furniture; still at rest. orkUI draws it (the occupied back and the empty chair), then it is copied.</li>
+    <li><b>Who decides at the table, who does in the squad</b> (§104.0): leaders 36–48 px with faces and a voice; members 24 px, no face, no voice, their place
+      the leader's lens and the cards they work on; never a tab of their own (§151.4).</li>
     <li><b>Changes:</b> §110.6 and spec 95 §2.5 (the header's <i>Leads</i> goes: the tab is the leader; <i>Does</i> and <i>Checks</i> wear the sword and the shield of the tabs and the party's editor, §151.5; each seat's role under its head);
       spec 106 §3 (the line <i>Ask the …</i> becomes the leader's bubble); spec 108 §3 (the strip over the map: its counts to the head, <b>Ask again</b> to the head's menu);
-      spec 109 §4 (the aspects' row joins the header's row); §149.4 (the leaders' and the Orkmaster's heads gain five faces each, in orkUI); the quick question's answer, the evening line and a hearing's side share one bubble.</li>
+      spec 109 §4 (the aspects' row joins the header's row); §149.4 (the leaders' and the Orkmaster's heads gain five faces each, in orkUI); the quick question's answer, the evening line and a hearing's side share one bubble;
+      spec 95 §2.2–§2.3 (the tabs: a leader's head at 36, the open one at 48, on a chair; <b>+</b> <i>New party</i> becomes the empty chair, before the limits and <i>Stop all</i>);
+      §192.4 and tabmarks.js (the tool's mark once a side in the header, on a head only where it differs).</li>
     <li><b>Not here:</b> a member's task under its head (the header shows who works, never their tasks, §110.8); a leader's <i>Now</i> line (gone, spec 95 §10); voices (spec 122).</li>
   </ul>
 </section>
@@ -375,6 +452,19 @@ const S = (n) => `<span class="ork-sign ${n}" aria-hidden="true"></span>`;
 const leaderImg = (n, cls, mood = "calm") => `<img class="px ${cls}" data-head="${n}" data-mood="${mood}" alt="">`;
 const memberImg = (n, cls) => `<img class="px ${cls}" src="${RACE(n)}" alt="">`;
 
+/* the chair, in cells of 2 px: the posts, the top rail and its crest, the back's panel (an occupied chair) or the seat's edge (the empty one) */
+function chairSvg(w, h, empty) {
+  const r = [], add = (x, y, ww, hh, c) => r.push(`<rect x="${x}" y="${y}" width="${ww}" height="${hh}" class="${c}"/>`);
+  add(2, 4, w - 4, h - 4, "bk");
+  add(0, 1, 2, h - 1, "po"); add(w - 2, 1, 2, h - 1, "po");
+  add(0, 3, w, 2, "po"); add(3, 1, w - 6, 2, "po"); add(Math.floor(w / 2) - 4, 0, 8, 1, "po");
+  if (empty) { add(0, h - 6, w, 2, "po"); add(2, h - 4, 2, 4, "po"); add(w - 4, h - 4, 2, 4, "po"); add(4, 8, 2, h - 14, "po"); add(w - 6, 8, 2, h - 14, "po"); }
+  return `<svg viewBox="0 0 ${w} ${h}" shape-rendering="crispEdges" aria-hidden="true">${r.join("")}</svg>`;
+}
+const chairOf = (headHtml, big) => `<span class="seatbox ${big ? "big" : ""}">${chairSvg(big ? 30 : 26, big ? 28 : 24, false)}<span class="sit">${headHtml}</span></span>`;
+const emptyChair = (cls = "") => `<button type="button" class="ork-tab tab empty ${cls}" aria-label="New party: an empty chair at the table" title="New party"><span class="seatbox">${chairSvg(26, 24, true)}</span><span class="nm"><b>New party</b></span></button>`;
+let chairs = true;
+
 const PARTIES = [
   { slug: "shop", name: "Shop", head: "peon-crown", who: "the Orkmaster", d: "claude", c: "claude" },
   { slug: "game", name: "Game design", head: "unicorn-elder", who: "Aurel, the Designer", d: "claude", c: "claude", flag: true },
@@ -384,17 +474,21 @@ const PARTIES = [
 ];
 const SQUAD = { does: [["peon-warrior", "Backend", true], ["peon-laborer", "Frontend", false]], checks: [["peon-elder", "Reviewer", false]] };
 
-function tabsHtml(isNew) {
+function tabsHtml(isNew, opts = {}) {
+  const onSlug = opts.on || "tech", withChairs = isNew && (opts.chairs ?? chairs), mood = opts.mood;
   return PARTIES.map((p) => {
-    const big = isNew && p.on;
-    const head = big
-      ? `<button type="button" class="headbtn" id="bighead" aria-label="Ask the Architect" aria-haspopup="dialog" aria-expanded="false">${leaderImg(p.head, "h48", "worried")}<span class="say" aria-hidden="true"></span></button>
+    const on = p.slug === onSlug, big = isNew && on;
+    const m = mood || (isNew && p.flag ? "worried" : "calm");
+    const head = big && onSlug === "tech"
+      ? `<button type="button" class="headbtn" id="bighead" aria-label="Ask the Architect" aria-haspopup="dialog" aria-expanded="false">${leaderImg(p.head, "h48", mood || "worried")}<span class="say" aria-hidden="true"></span></button>
          <span class="marks"><button type="button" class="mk-alert" data-step="alert" aria-label="The Architect: 1 alert, step through it">${S("alert")}</button><button type="button" class="mk-note" data-step="note" aria-label="The Architect: 2 notes, step through them"></button></span>`
-      : leaderImg(p.head, "h24", isNew && p.flag ? "worried" : "calm");
-    return `<div class="ork-tab tab ${p.on ? "is-on" : ""}" role="tab" aria-selected="${p.on ? "true" : "false"}"><span style="position:relative;display:flex">${head}</span>
+      : leaderImg(p.head, big ? "h48" : isNew ? "h36" : "h24", m);
+    const box = withChairs ? chairOf(head, big) : `<span style="position:relative;display:flex">${head}</span>`;
+    return `<div class="ork-tab tab ${on ? "is-on" : ""}" role="tab" aria-selected="${on ? "true" : "false"}">${box}
       <span class="nm"><b>${p.name}</b>${big ? `<span class="who">${p.who}</span>` : ""}<span class="tools" title="Does on ${p.d} · Checks on ${p.c}"><span>${S("sword")}<img class="ork-mark" src="${MARK(p.d)}" alt=""></span><span>${S("shield")}<img class="ork-mark" src="${MARK(p.c)}" alt=""></span></span></span>
       ${p.flag && !big ? `<span class="flag">${S("alert")}</span>` : ""}</div>`;
-  }).join("") + `<div class="tabs-end"><button type="button" class="ork-btn">+ Party</button><button type="button" class="ork-btn stop">Stop all</button></div>`;
+  }).join("") + (withChairs ? emptyChair(opts.hover ? "is-hover" : "") : "")
+    + `<div class="tabs-end">${withChairs ? "" : '<button type="button" class="ork-btn">+ Party</button>'}<button type="button" class="ork-btn stop">Stop all</button></div>`;
 }
 
 const ASPECTS = `<span class="fw">C4 · ISO 25010 · hotspots</span>
@@ -403,17 +497,17 @@ const ASPECTS = `<span class="fw">C4 · ISO 25010 · hotspots</span>
   <span class="ork-chip nil">${S("check")}Security and reliability</span>`;
 
 function seatsOld() {
-  const seat = (n, busy) => `<button type="button" class="seat"><span class="hw">${memberImg(n, "h24")}<img class="ork-mark" src="${MARK("claude")}" alt="">${busy ? '<span class="ork-busy" title="at work"></span>' : ""}</span></button>`;
+  const seat = (n, busy, tool = "claude") => `<button type="button" class="seat"><span class="hw">${memberImg(n, "h24")}<img class="ork-mark" src="${MARK(tool)}" alt="">${busy ? '<span class="ork-busy" title="at work"></span>' : ""}</span></button>`;
   return `<span class="party">Tech</span>
     <div class="grp"><span class="ork-label">Leads</span><button type="button" class="seat"><span class="hw">${memberImg("shaman-elder", "h24")}<img class="ork-mark" src="${MARK("claude")}" alt=""></span></button></div>
     <div class="grp"><span class="ork-label">Does</span>${SQUAD.does.map(([n, , b]) => seat(n, b)).join("")}</div>
-    <div class="grp"><span class="ork-label">Checks</span>${SQUAD.checks.map(([n]) => seat(n)).join("")}</div>
+    <div class="grp"><span class="ork-label">Checks</span>${SQUAD.checks.map(([n]) => seat(n, false, "codex")).join("")}</div>
     <span class="ork-chip">Standard</span><span class="grow"></span><button type="button" class="ork-btn quiet">…</button>`;
 }
 function seatsNew(narrow) {
-  const seat = (n, r, busy) => `<button type="button" class="seat role" aria-label="${r}, runs on Claude Code"><span class="hw">${memberImg(n, "h24")}<img class="ork-mark" src="${MARK("claude")}" alt="">${busy ? '<span class="ork-busy" title="at work"></span>' : ""}</span><span class="r">${r}</span></button>`;
-  return `<div class="grp"><span class="side" title="Does">${S("sword")}<span class="w">Does</span></span>${SQUAD.does.map(([n, r, b]) => seat(n, r, b)).join("")}</div>
-    <div class="grp"><span class="side" title="Checks">${S("shield")}<span class="w">Checks</span></span>${SQUAD.checks.map(([n, r]) => seat(n, r)).join("")}<span class="ork-chip">Standard</span></div>
+  const seat = (n, r, busy, tool) => `<button type="button" class="seat role" aria-label="${r}, runs on ${tool}"><span class="hw">${memberImg(n, "h24")}${busy ? '<span class="ork-busy" title="at work"></span>' : ""}</span><span class="r">${r}</span></button>`;
+  return `<div class="grp"><span class="side" title="Does on Claude Code">${S("sword")}<span class="w">Does</span><img class="ork-mark" src="${MARK("claude")}" alt=""></span>${SQUAD.does.map(([n, r, b]) => seat(n, r, b, "Claude Code")).join("")}</div>
+    <div class="grp"><span class="side" title="Checks on Codex">${S("shield")}<span class="w">Checks</span><img class="ork-mark" src="${MARK("codex")}" alt=""></span>${SQUAD.checks.map(([n, r]) => seat(n, r, false, "Codex")).join("")}<span class="ork-chip">Standard</span></div>
     ${narrow ? "" : '<span class="grow"></span>'}<div class="aspects">${ASPECTS}</div>`;
 }
 function chromeHtml(isNew) {
@@ -447,7 +541,11 @@ const win = document.getElementById("win"), bub = document.getElementById("bub")
 let view = "new", bubState = "", oldPx = 0, newPx = 0;
 function render() {
   win.classList.toggle("is-new", view === "new");
-  document.getElementById("tabs").innerHTML = tabsHtml(view === "new");
+  win.classList.toggle("chairs", view === "new" && chairs);
+  const tabsEl = document.getElementById("tabs");
+  tabsEl.innerHTML = tabsHtml(view === "new");
+  tabsEl.classList.toggle("five", view === "new" && chairs);
+  document.getElementById("worker").innerHTML = view === "new" ? `${memberImg("peon-warrior", "h24")}<span class="ork-busy" title="Backend is at work on it"></span>` : "";
   document.getElementById("chrome").innerHTML = chromeHtml(view === "new");
   paint(win);
   showBubble(view === "new" ? bubState : "");
@@ -487,6 +585,7 @@ function setBub(state) {
 }
 function syncView() { document.querySelectorAll("[data-view]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.view === view))); }
 document.querySelectorAll("[data-view]").forEach((b) => b.addEventListener("click", () => { view = b.dataset.view; syncView(); render(); }));
+document.getElementById("chairs").addEventListener("click", (e) => { chairs = !chairs; e.currentTarget.setAttribute("aria-pressed", String(chairs)); if (view !== "new") { view = "new"; syncView(); } render(); });
 document.querySelectorAll("[data-bub]").forEach((b) => b.addEventListener("click", () => setBub(b.dataset.bub)));
 /* stepping through the marked parts: the alert's, then the notes' */
 const stepAt = { alert: -1, note: -1 };
@@ -504,6 +603,31 @@ document.addEventListener("keydown", (ev) => {
   if (ev.key === "Escape" && bubState) setBub("");
   if (ev.key === "Enter" && ev.target.id === "askf" && ev.target.value.trim()) { setBub("reading"); setTimeout(() => bubState === "reading" && setBub("answer"), 1600); }
 });
+
+/* ---------- the table ---------- */
+const tblState = { hover: false, full: false, spent: false };
+function tblRender() {
+  const el = document.getElementById("tbl"), z = tblState.spent ? "asleep" : undefined;
+  el.classList.toggle("full", tblState.full);
+  const card = (t, ph, extra = "") => `<div class="ork-card gc"><b>${t}</b>${extra}<span class="ph">${ph}</span></div>`;
+  const worker = (n, who) => tblState.spent ? "" : `<span class="wk" title="${who} is at work on it">${memberImg(n, "h24")}<span class="ork-busy"></span></span>`;
+  el.innerHTML = `<div class="tabs five">${tabsHtml(true, { on: "shop", chairs: true, hover: tblState.hover, mood: z })}</div>
+    <div class="title"><span>The whole project · through the Orkmaster</span><span class="grow"></span>…</div>
+    <div class="lanes">
+      <div class="ln"><span class="lab">In line</span>${card("Round timer shows on every phone", "Talk")}${card("Results screen with the round's best answer", "Routing")}</div>
+      <div class="ln">${card("Write the timer's rules: seconds in each phase", "Doing", worker("knight-warrior", "The Writer"))}</div>
+      <div class="ln">${card("Reset the round timer when a player rejoins", "Doing", worker("peon-warrior", "Backend"))}${card("Keep the seat when a phone sleeps", "Checking", worker("peon-elder", "Reviewer"))}</div>
+      <div class="ln">${card("Icons for the four rounds", "Doing", worker("elf-laborer", "The Icon artist"))}</div>
+      <div class="ln"><span class="lab">Nothing in play</span></div>
+      <div class="ln free"></div>
+      <div class="disc">Discard</div>
+    </div>`;
+  paint(el);
+}
+document.querySelectorAll("[data-tbl]").forEach((b) => b.addEventListener("click", () => {
+  const k = b.dataset.tbl; tblState[k] = !tblState[k]; b.setAttribute("aria-pressed", String(tblState[k])); tblRender();
+}));
+tblRender();
 
 /* the three things a leader says, side by side */
 document.getElementById("three").innerHTML = [
@@ -555,7 +679,8 @@ function narrowHtml(kind) {
   const tabs = PARTIES.map((p) => {
     if (p.on && isNew) return `<div class="ntab is-on"><span style="position:relative;display:flex">${leaderImg(p.head, "h36", "worried")}<span class="marks" style="right:-14px;top:-2px"><span class="mk-alert">${S("alert")}</span><span class="mk-note"></span></span></span></div>`;
     return `<div class="ntab" style="${p.on ? "background:var(--ork-raised);box-shadow:inset 0 -2px 0 var(--ork-ink)" : ""}">${leaderImg(p.head, "h24", isNew && p.flag ? "worried" : "calm")}${p.flag && !(p.on && isNew) ? `<span class="flag">${S("alert")}</span>` : ""}</div>`;
-  }).join("") + `<div class="ntab-end"><button type="button" class="ork-btn stop" style="--_fg:var(--ork-danger);--_bd:var(--ork-danger)">Stop</button></div>`;
+  }).join("") + (isNew ? `<button type="button" class="ntab empty" aria-label="New party: an empty chair at the table" title="New party"><span class="seatbox">${chairSvg(26, 24, true)}</span></button>` : "")
+    + `<div class="ntab-end"><button type="button" class="ork-btn stop" style="--_fg:var(--ork-danger);--_bd:var(--ork-danger)">Stop</button></div>`;
   const chrome = isNew ? `<div class="squad">${seatsNew(true)}</div>` : chromeHtml(false);
   const map = `<div class="mapbox" style="grid-template-columns:1fr"><div class="sys">
     <span class="ctn">server/</span><span class="ctn">client/</span>
