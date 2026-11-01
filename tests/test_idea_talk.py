@@ -20,6 +20,7 @@ from orkboard.realm.idea_talk_parse import clean_assumes, clean_diagnosis, clean
 @pytest.fixture
 def host(fake_repo) -> Orkboard:
     h = Orkboard(fake_repo)
+    (h.ideas.state_dir / "project.json").write_text('{"decisions": "docs/decisions.md"}', encoding="utf-8")        # this project keeps its decisions as one file (a project with no log gets a MADR folder: spec 127 B.4)
     yield h
     sys.modules.pop("orkboard.core.idea_runner", None)
 

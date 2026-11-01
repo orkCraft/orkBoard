@@ -21,6 +21,7 @@ TECH_SAID = {"stance": "For it", "for": "A dark mode helps at night", "against":
 @pytest.fixture
 def host(fake_repo) -> Orkboard:
     h = Orkboard(fake_repo)
+    (h.ideas.state_dir / "project.json").write_text('{"decisions": "docs/decisions.md"}', encoding="utf-8")        # this project keeps its decisions as one file (a project with no log gets a MADR folder: spec 127 B.4)
     h.command("ideas.board_set", {"autostart": False})          # a plan made is not started: no runner here
     h.faces = lambda: 0                                          # no face is open until a test opens one
     yield h

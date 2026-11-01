@@ -19,7 +19,8 @@ COMMANDS = {"ideas.hypotheses", "ideas.hypothesis_set", "ideas.hypothesis_keep",
 @pytest.fixture
 def host(fake_repo) -> Orkboard:
     h = Orkboard(fake_repo)
-    h.ideas.root()                                                     # the Board's tree stands: a decision is committed to dev
+    (h.ideas.state_dir / "project.json").write_text('{"decisions": "docs/decisions.md"}', encoding="utf-8")        # this project keeps its decisions as one file (a project with no log gets a MADR folder: spec 127 B.4)
+    h.ideas.root()                                                    # the Board's tree stands: a decision is committed to dev
     yield h
     sys.modules.pop("orkboard.core.idea_runner", None)
 

@@ -5,12 +5,14 @@
     decisions_log.is_folder(root, chosen)    whether the decisions' place is a folder of ADR files (MADR or Nygard; spec 126 D), not one file
     decisions_log.next_number(text)          the last `## N.` heading plus one; 1 when there is none
     decisions_log.entry(text, n)             the section `## n.` up to the next `## ` heading ("" when there is none)
-    decisions_log.headings(text, last=10)    the last headings, each "N. Title"
+    decisions_log.headings(text, last=10)    the last headings, each "N. Title" (then ` (changed by 205)` where a later entry's `Changes:` names it; spec 127 B.3)
+    decisions_log.numbers(text, last=10)     the numbers of those headings
+    decisions_log.changes_of(rec)            the numbers a record of a folder says it changes (`ork-changes`, or a `Changes:` line at the top of its Decision)
     decisions_log.context(root, n, chosen)   the text a leader's call is given: the last ten headings and goal n's entry
 
 `next_number`, `entry` and `headings` also take the folder (a `Path`) in place of the file's text: its records' numbers and titles (`doc_formats.records`), a
 record's text for an entry. The place is a folder when the person chose one, or when no file was chosen, `docs/decisions.md` is not there and the only log `found`
-finds is a folder.
+finds is a folder; **a new project** (nothing chosen, no `docs/decisions.md`, no log `found`) gets the MADR folder `docs/decisions`, made by its first decision (spec 127 B.4).
 
 A heading is read at a line's start (`## 158. Title`); lines between ``` fences are never read, so a `## 12.` in an
 entry's code block misleads nothing. A file over 2 MB is read from its end.
@@ -24,6 +26,7 @@ from orkboard.realm import doc_formats
 from orkboard.realm.code_map import SKIP
 
 DEFAULT = "docs/decisions.md"
+NEW = "docs/decisions"                    # the folder a project with no log at all gets (spec 127 B.4)
 ENTRY_MAX = 4000
 TITLE_MAX = 160
 FOUND_MAX = 5
@@ -34,11 +37,12 @@ _NAMES = {"decisions.md", "DECISIONS.md"}
 _ADR = ("docs/adr", "doc/adr")
 _ADR_RECORDS = ("docs/decisions", "docs/architecture/decisions")           # found when they hold NNNN-*.md records
 _NUMBERED = re.compile(r"^## (\d+)\.[ \t]*(.*)$")
+_CHANGES = re.compile(r"^\s*Changes:\s*(.+?)\s*$", re.I)
 
 
 def path(root, chosen: str = "") -> Path:
     """The decisions file of the project at `root`: `chosen` when it lies inside the root, else `DEFAULT`; the only log the project keeps when it is a folder of
-    ADR files and `DEFAULT` is not there (spec 126 D)."""
+    ADR files and `DEFAULT` is not there (spec 126 D); the folder `NEW` where the project keeps no log at all (spec 127 B.4)."""
     base = Path(root)
     chosen = str(chosen or "").strip()
     if chosen:
@@ -53,13 +57,17 @@ def path(root, chosen: str = "") -> Path:
         only = found(base)
         if len(only) == 1 and (base / only[0]).is_dir():
             return base / only[0]
+        if not only and not (base / NEW).is_file():
+            return base / NEW
     return base / DEFAULT
 
 
 def is_folder(root, chosen: str = "") -> bool:
     """Whether the decisions' place is a folder of ADR files, not one file (spec 126 D)."""
     got = path(root, chosen)
-    return got.is_dir() and not got.is_symlink()
+    if got.is_dir() and not got.is_symlink():
+        return True
+    return got == Path(root) / NEW and not got.exists() and not got.is_symlink() and not str(chosen or "").strip()      # the new project's, not made yet
 
 
 def found(root) -> list[str]:
@@ -147,17 +155,54 @@ def entry(text: "str | Path", n: int) -> str:
     return body[:ENTRY_MAX] + CUT if len(body) > ENTRY_MAX else body
 
 
+def changes_of(rec: dict) -> list[int]:
+    """The numbers a record of a folder says it changes: MADR's `ork-changes` front matter, else a `Changes: 110, 183.` line at the top of its Decision (a Nygard record)."""
+    got = (rec.get("extra") or {}).get("ork-changes")
+    if got:
+        return [int(x) for x in re.findall(r"\d+", " ".join(got) if isinstance(got, list) else str(got))]
+    for line in str(rec.get("decision") or "").splitlines()[:3]:
+        if m := _CHANGES.match(line):
+            return [int(x) for x in re.findall(r"\d+", m.group(1))]
+    return []
+
+
+def _changed_by(rows: list[tuple[int, list[int]]]) -> dict[int, list[int]]:
+    """`{n: [the later entries whose Changes name n]}`, from `[(number, its changes)]`."""
+    out: dict[int, list[int]] = {}
+    for number, names in rows:
+        for n in names:
+            if n < number and number not in out.setdefault(n, []):
+                out[n].append(number)
+    return out
+
+
+def _heading(number: int, title: str, by: dict[int, list[int]]) -> str:
+    out = f"{number}. {title[:TITLE_MAX].rstrip()}"
+    return out + f" (changed by {', '.join(str(x) for x in sorted(by[number]))})" if by.get(number) else out
+
+
 def headings(text: "str | Path", last: int = 10) -> list[str]:
-    """The last `last` numbered headings, each `N. Title` (the title cut at 160 characters). A folder (a `Path`): its records'."""
-    out = []
+    """The last `last` numbered headings, each `N. Title` (the title cut at 160 characters), then ` (changed by 205)` for a heading a later entry's `Changes:` names (spec 127 B.3).
+    A folder (a `Path`): its records' (`ork-changes`)."""
+    if last <= 0:
+        return []
     if isinstance(text, Path):
-        out = [f"{r['number']}. {r['title'][:TITLE_MAX].rstrip()}" for r in doc_formats.records(text)]
-        return out[-last:] if last > 0 else []
+        recs = doc_formats.records(text)
+        by = _changed_by([(r["number"], changes_of(r)) for r in recs])
+        return [_heading(r["number"], r["title"], by) for r in recs][-last:]
+    rows = []
     for _, line in _lines(text):
         m = _NUMBERED.match(line)
         if m:
-            out.append(f"{m.group(1)}. {m.group(2).strip()[:TITLE_MAX].rstrip()}")
-    return out[-last:] if last > 0 else []
+            rows.append((int(m.group(1)), m.group(2).strip()))
+    changes = {r["number"]: r["extra"].get("changes") or [] for r in doc_formats.parse_log(text)} if "Changes:" in text else {}
+    by = _changed_by([(n, changes.get(n, [])) for n, _t in rows])
+    return [_heading(n, t, by) for n, t in rows][-last:]
+
+
+def numbers(text: "str | Path", last: int = 10) -> list[int]:
+    """The numbers of the last `last` headings: what a decision can say it changes."""
+    return [int(h.split(".", 1)[0]) for h in headings(text, last)]
 
 
 def _read(file: Path) -> tuple[str, bool]:
@@ -178,6 +223,8 @@ def context(root, n=None, chosen: str = "") -> str:
     base = Path(root)
     file = path(base, chosen)
     if is_folder(base, chosen):
+        if not file.exists():
+            return ""
         last, got = headings(file), entry(file, n) if n is not None else ""
         out = f"The project's decisions ({file.relative_to(base).as_posix()}): "
         out += "the last ten:\n" + "\n".join(last) if last else "none numbered yet."

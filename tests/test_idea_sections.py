@@ -390,6 +390,17 @@ def test_a_bugs_why_is_the_cause_talk_found_set_by_code(host, parties, model):
     assert _page(host, slug).parts("Tech")["Why"] == "the timer is not reset on reconnect" and model.steps("decide") == []
 
 
+def test_the_prompt_asks_each_done_when_as_a_scenario_and_the_page_keeps_whatever_line_comes_back(host, parties, model):
+    """Spec 127 B.5: *Done when* is asked as `When …, then …`, five at most; the plan's and the checks' prompts are as they were; any line is taken."""
+    scenario = "When a player picks Dark in Settings, then the lobby is drawn in the dark theme"
+    model.said[("section", "")] = section("Tech's why.", [scenario, "An older thesis, as a plain line"])
+    slug = _confirmed(host, parties, model, ("product", "tech"))
+    prompt = model.steps("section")[0]["prompt"]
+    assert "`done_when`: one to 5 scenarios" in prompt and "`When <a person or the product does something>, then <what is seen or kept>`" in prompt and "checkable by a test" in prompt
+    assert _page(host, slug).parts("Tech")["Done when"] == f"- {scenario}\n- An older thesis, as a plain line"
+    assert "When <a person" not in model.steps("plan")[0]["prompt"]
+
+
 def test_defaults_are_seen_in_the_section_and_what_a_leader_assumed_with_them_and_no_question_is_ever_written(host, parties, model):
     model.said[("section", "")] = section("Tech's why.", ["The theme is one file"], assumed=["the theme file is CSS"], questions=[{"ask": "Which?", "choices": ["a", "b"]}])
     slug = _confirmed(host, parties, model, ("product", "tech"), per=3)                       # six questions, the three the person is dealt are Product's: Tech's are closed by its picks

@@ -2,7 +2,7 @@
 at the place where it happened (`core/idea_decide.py`, `core/idea_talk.py`, `core/idea_objection.py`, `core/idea_concerns.py`, `gui/ideas*.py`). No model, no face. **A journal never
 fails what it records**: every function here swallows what goes wrong (a scope that is none, a disk that refuses), so a place calls one in a single line.
 
-    journal_notes.decision(state_dir, root, slug, number, title, overruled)   # project · decision: `Decision 12: title (against Tech: why)`
+    journal_notes.decision(state_dir, root, slug, number, title, overruled, changes)   # project · decision: `Decision 12: title (against Tech: why) (changes 110, 183)`
     journal_notes.stances(state_dir, root, slug, stances)                     # each leader's party · stance, after Talk's first round
     journal_notes.answered(state_dir, root, slug, party, answer, why)         # that party · heeded | overruled, after the person's answer to its no
     journal_notes.at_review(state_dir, root, slug, decision, why)             # the parties that doubted or said no · came_back | went_through, once a goal
@@ -62,11 +62,15 @@ def _kinds(state_dir: Path, scope: str, slug: str) -> set[str]:
 
 # -- the project's --------------------------------------------------------------------------------------------------------------------
 
-def decision(state_dir: Path, root: Path, slug: str, number: int, title: str, overruled: list[str]) -> None:
-    """A decision confirmed: `Decision <n>: <title>` and, when the person overruled leaders, ` (against <Leader>: <why>; …)`. `overruled`: `idea_objections.lines`' first list."""
+def decision(state_dir: Path, root: Path, slug: str, number: int, title: str, overruled: list[str], changes: list[int] = ()) -> None:
+    """A decision confirmed: `Decision <n>: <title>` and, when the person overruled leaders, ` (against <Leader>: <why>; …)`, and, when it changes earlier decisions, ` (changes 110, 183)`
+    (spec 127 B.3). `overruled`: `idea_objections.lines`' first list."""
     try:
         over = "; ".join(o[:1].lower() + o[1:] for o in overruled if o)
-        note(state_dir, journals.PROJECT, "decision", f"Decision {number}: {_fit(title, 120)}" + (f" ({_fit(over, OVER_CHARS)})" if over else ""), idea=slug, ref=str(number))
+        nums = ", ".join(str(n) for n in changes if isinstance(n, int))
+        head, tail = f"Decision {number}: {_fit(title, 120)}", (f" (changes {nums})" if nums else "")
+        room = min(OVER_CHARS, journals.TEXT_CHARS - len(head) - len(tail) - 3)             # the line is cut at TEXT_CHARS: the overruled give way, the numbers stay
+        note(state_dir, journals.PROJECT, "decision", head + (f" ({_fit(over, room)})" if over and room > 10 else "") + tail, idea=slug, ref=str(number))
     except Exception:
         pass
 

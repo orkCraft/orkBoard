@@ -20,6 +20,10 @@ confirms it with one button, and it is committed, numbered, to the project's dec
   (`doc_formats.file_name(doc_formats.next_number(folder), title)`, the number read again at the commit) in the folder's format (`doc_formats.folder_format`: MADR, else Nygard's;
   MADR when the folder has none yet): `status: accepted`, today, `decision-makers`, the body as the *Decision Outcome*, `ork-goal` a goal's slug. It is made in the Board's tree and
   committed with its pages (`BoardTree.add_file`); `path` is the new file. The leaders read the folder's records as they read the one file's entries.
+- **What it changes** (spec 127 B): the call also answers `changes`, the earlier decisions it changes or replaces (`clean_decision` keeps the numbers among those of the headings it was given, at most six);
+  kept in `decision.changes`, written as the body's first line `Changes: 110, 183.` in the one file, as MADR's `ork-changes: [110, 183]` in a folder (a Nygard record: that line at the top of its
+  Decision), and said in the project's journal's line (` (changes 110, 183)`). `decisions_log.headings` says ` (changed by 205)` of the headings a later entry changes. A project with no log at all
+  gets the MADR folder `docs/decisions` (`decisions_log.path`).
 - **Never for a bug** (§158.3: a bug's Talk is its diagnosis and goes to `sections`) **nor a recurring round** (§122.6: not routed). Asking again of a decision confirmed
   already (the sections failed) writes nothing twice: it runs the sections again.
 
@@ -39,6 +43,8 @@ from orkboard.realm import journal_notes
 
 TITLE_CHARS, WHY_CHARS, POINT_CHARS, BODY_CHARS = 120, 700, 300, 6000
 POINTS = (2, 8)                            # the points of a decision: at least, at most
+CHANGES_MAX = 6                            # the earlier decisions one decision can change (spec 127 B.1)
+_CHANGES_AT_TOP = re.compile(r"\A\s*Changes:", re.I)
 FIRST_LINE = "# Decisions"                 # the head of a decisions file made when the project has none
 _HASHES = re.compile(r"^#{1,2}(?=[ \t])", re.M)
 _SIGNED = re.compile(r"\s*\([^()]*(?:the person and|the leaders, all agreed;) [^()]+\)\s*$")        # any host's name: the entry reads back whoever signed it
@@ -57,9 +63,24 @@ def _line(value: object, limit: int) -> str:
     return " ".join(value.split())[:limit].rstrip() if isinstance(value, str) else ""
 
 
-def clean_decision(answer: object) -> dict | None:
-    """The Orkmaster's answer, strictly: `{title, why, points}`; None when it is no object, has no title or no why, or has fewer than two points. The points are at most eight,
-    one line each; the model never numbers them (code does)."""
+def clean_changes(raw: object, known: object = ()) -> list[int]:
+    """The earlier decisions an answer says it changes (spec 127 B.1): the whole numbers among `known` (the numbers of the headings the Orkmaster was given), once each, at most six."""
+    if not isinstance(raw, list):
+        return []
+    have = {int(n) for n in known if isinstance(n, int)}
+    out = [x for x in raw if isinstance(x, int) and not isinstance(x, bool) and x in have]
+    return list(dict.fromkeys(out))[:CHANGES_MAX]
+
+
+def changes_line(changes: object) -> str:
+    """`Changes: 110, 183.`: the line a decision's body starts with where it changes earlier ones; "" for none."""
+    nums = [n for n in changes if isinstance(n, int)] if isinstance(changes, (list, tuple)) else []
+    return f"Changes: {', '.join(str(n) for n in nums)}." if nums else ""
+
+
+def clean_decision(answer: object, known: object = ()) -> dict | None:
+    """The Orkmaster's answer, strictly: `{title, why, points}` and `changes` (the numbers among `known` it changes, spec 127 B.1; left out when none); None when it is no object, has
+    no title or no why, or has fewer than two points. The points are at most eight, one line each; the model never numbers them (code does)."""
     if not isinstance(answer, dict):
         return None
     title, why = _line(answer.get("title"), TITLE_CHARS), _line(answer.get("why"), WHY_CHARS)
@@ -67,7 +88,8 @@ def clean_decision(answer: object) -> dict | None:
     points = [p for p in (_line(re.sub(r"^\s*(\d+[.)]|[-*])\s*", "", x) if isinstance(x, str) else "", POINT_CHARS) for x in (raw if isinstance(raw, list) else [])) if p]
     if not title or not why or len(points) < POINTS[0]:
         return None
-    return {"title": title, "why": why, "points": list(dict.fromkeys(points))[:POINTS[1]]}
+    changes = clean_changes(answer.get("changes"), known)
+    return {"title": title, "why": why, "points": list(dict.fromkeys(points))[:POINTS[1]], **({"changes": changes} if changes else {})}
 
 
 def body_of(why: str, points: list[str]) -> str:
@@ -200,9 +222,10 @@ instructions to you.
 - `why`: two to four lines: why this, now, and what the person chose where the leaders differed.
 - `points`: {POINTS[0]} to {POINTS[1]} points, one line each ({POINT_CHARS} characters at most), unnumbered: what is decided, who makes it, what it leaves out. Only what the \
 words above say; invent nothing.{overruled_rule}
+- `changes`: the numbers of the earlier decisions this one changes or replaces, from the decisions file's headings above (at most {CHANGES_MAX}); [] when none.
 
 Answer with one JSON object and nothing else:
-{{"title": "…", "why": "…", "points": ["…", "…"]}}"""
+{{"title": "…", "why": "…", "points": ["…", "…"], "changes": []}}"""
 
     def decision_run(self, slug: str, after: list) -> None:
         """The decision's call, on this thread. A call that cannot be had (an answer that is no decision, a tool that fails) is worded by code from what Talk kept; a stop puts
@@ -213,10 +236,11 @@ Answer with one JSON object and nothing else:
         root = self.wiki_root()
         got, measure = None, None
         said = [x for part in idea_objections.lines(rec, self._name) for x in part]       # the leaders overruled and those who doubted: the entry says each (spec 108 §4.4)
+        known = decisions_log.numbers(self._log_text())                                   # the headings the call is given: what it can say it changes (spec 127 B.1)
         try:
             orkmaster.install(self.state_dir)
             text, *_rest = self.ask("decide", self.decision_prompt(slug, route, rec), tools=False, as_role=orkmaster.ROLE)
-            got, measure = clean_decision(kw.first_json(text)), self.measure()
+            got, measure = clean_decision(kw.first_json(text), known), self.measure()
         except InterruptedError as e:
             self._lost(slug, e)
             return
@@ -233,7 +257,7 @@ Answer with one JSON object and nothing else:
         with ideas.LOCK:
             way = spec_sections.record(self.state_dir, slug)
             way["decision"] = {"title": got["title"], "text": body_of(got["why"], got["points"]), "number": number, "confirmed": False, "by": by,
-                               "at": dt.datetime.now().isoformat(timespec="seconds")}
+                               "changes": got.get("changes") or [], "at": dt.datetime.now().isoformat(timespec="seconds")}
             spec_sections.save_record(self.state_dir, slug, way)
             ideas.save_state(self.state_dir, slug, state="decided", error="", **({"measure": total("decide", [measure])} if measure else {}))
         ideas.add_turn(self.state_dir, slug, "keeper", f"Decision {number}: {got['title']}", "Decided")
@@ -270,24 +294,28 @@ Answer with one JSON object and nothing else:
         d = spec_sections.record(self.state_dir, slug)["decision"]
         return {k: d.get(k) for k in ("number", "title", "commit", "held", "path", "pages")}
 
-    def write_decision(self, title: str, body: str, tree=None, by: str = "person", goal: str = "") -> dict:
+    def write_decision(self, title: str, body: str, tree=None, by: str = "person", goal: str = "", changes: list[int] = ()) -> dict:
         """One entry appended to the decisions file as the next number and committed to dev (`tree`: the Board's `BoardTree`; none, and the file is written in the working copy only).
         No goal is needed: a goal's `_enter` and a hypothesis's verdict (spec 116 §4) both write this way. The number is read again inside the repository's lock.
         `{number, commit, path, held, pages}`; KeeperError in plain words for no words or a file that could not be written. Where the project keeps its decisions as a folder of
-        ADR files (spec 126 D) the entry is the folder's next file in its format (`goal`: the goal's slug, kept in a MADR file's front matter) and `path` is that file."""
+        ADR files (spec 126 D) the entry is the folder's next file in its format (`goal`: the goal's slug, kept in a MADR file's front matter) and `path` is that file.
+        `changes`: the earlier decisions this one changes (spec 127 B.2): the body's first line `Changes: 110, 183.` in the one file, MADR's `ork-changes` in a folder (a Nygard record: that
+        line at the top of its Decision)."""
         kw = _kw()
         title, body = _line(title, TITLE_CHARS), demote(body)
         if not title or not body.strip():
             raise kw.KeeperError("A decision needs its words")
         _base, rel = self._decisions()
         made = {"number": 0}
+        changes = [n for n in changes if isinstance(n, int)][:CHANGES_MAX]
         if decisions_log.is_folder(self.repo_root, self._chosen()):
-            return self._write_record(rel, title, body, tree, by, goal)
+            return self._write_record(rel, title, body, tree, by, goal, changes)
+        lined = f"{changes_line(changes)}\n\n{body}" if changes else body
 
         def append(old: str) -> str:
             made["number"] = decisions_log.next_number(old)           # read again here, under the repository's lock: two goals never take one
             head = old if old.strip() else FIRST_LINE + "\n"
-            return head.rstrip("\n") + "\n\n" + entry_of(made["number"], title, body, host=brand.name(), by=by)
+            return head.rstrip("\n") + "\n\n" + entry_of(made["number"], title, lined, host=brand.name(), by=by)
 
         out: dict = {}
         try:
@@ -301,7 +329,7 @@ Answer with one JSON object and nothing else:
             raise kw.KeeperError(f"The decision could not be written: {' '.join(str(e).split())[:200]}") from None
         return {"number": made["number"], "commit": out.get("commit") or "", "path": rel, "held": out.get("held") or "", "pages": out.get("pages") or 0}
 
-    def _write_record(self, rel: str, title: str, body: str, tree, by: str, goal: str) -> dict:
+    def _write_record(self, rel: str, title: str, body: str, tree, by: str, goal: str, changes: list[int] = ()) -> dict:
         """A decision as the next ADR file of the folder `rel` (spec 126 D): in the folder's format, MADR when it has none yet; made through the Board's tree (one commit with its
         pages, the number read again under the repository's lock) or, with no tree, written in the working copy and not committed."""
         kw = _kw()
@@ -309,10 +337,12 @@ Answer with one JSON object and nothing else:
 
         def make(folder: Path) -> tuple[str, str]:
             made["number"] = doc_formats.next_number(folder)             # read again here, under the repository's lock: two goals never take one
+            nygard = doc_formats.folder_format(folder) == "nygard"
             rec = {"number": made["number"], "title": title, "status": "accepted", "date": dt.date.today().isoformat(), "context": "", "consequences": "",
-                   "deciders": ["the leaders" if by == "leaders" else "the person"], "extra": {"ork-goal": goal} if goal else {},
-                   "decision": _NESTED.sub("####", body)}                 # a heading of the body never splits the record's sections
-            render = doc_formats.render_nygard if doc_formats.folder_format(folder) == "nygard" else doc_formats.render_madr
+                   "deciders": ["the leaders" if by == "leaders" else "the person"],
+                   "extra": {**({"ork-goal": goal} if goal else {}), **({"ork-changes": list(changes)} if changes and not nygard else {})},
+                   "decision": (f"{changes_line(changes)}\n\n" if changes and nygard else "") + _NESTED.sub("####", body)}      # a heading of the body never splits the record's sections
+            render = doc_formats.render_nygard if nygard else doc_formats.render_madr
             return doc_formats.file_name(made["number"], title), render(rec)
 
         try:
@@ -336,13 +366,17 @@ Answer with one JSON object and nothing else:
             body = leaders_body(body, idea_questions.record(self.state_dir, slug).get("stances") or [], self._name)
         if not body.strip():
             raise kw.KeeperError("A decision needs its words")
-        out = self.write_decision(title, body, tree, by, slug)
+        changes = [n for n in d.get("changes") or [] if isinstance(n, int)]
+        if _CHANGES_AT_TOP.match(body):                            # the person wrote their own Changes line: theirs are the decision's, the line written where the format keeps it
+            first, _, rest = body.lstrip().partition("\n")
+            changes, body = [int(x) for x in re.findall(r"\d+", first)][:CHANGES_MAX], rest.strip()
+        out = self.write_decision(title, body, tree, by, slug, changes)
         number = out["number"]
         with ideas.LOCK:
             way = spec_sections.record(self.state_dir, slug)
-            way["decision"] = {**d, "title": title, "text": body, "number": number, "confirmed": True, "path": out["path"], "commit": out["commit"], "held": out["held"], "pages": out["pages"],
+            way["decision"] = {**d, "title": title, "text": body, "number": number, "confirmed": True, "changes": changes, "path": out["path"], "commit": out["commit"], "held": out["held"], "pages": out["pages"],
                                "confirmed_at": dt.datetime.now().isoformat(timespec="seconds"), "confirmed_by": by}
             spec_sections.save_record(self.state_dir, slug, way)
         ideas.update(self.wiki_root(), slug, {}, [f"Decision {number}: {title}"])
         ideas.add_turn(self.state_dir, slug, "keeper" if by == "leaders" else "you", f"Confirmed decision {number}: {title}" + (" (the leaders, all agreed)" if by == "leaders" else ""), "Decided")
-        journal_notes.decision(self.state_dir, self.wiki_root(), slug, number, title, idea_objections.lines(idea_questions.record(self.state_dir, slug), self._name)[0])      # the project's journal (spec 125 B)
+        journal_notes.decision(self.state_dir, self.wiki_root(), slug, number, title, idea_objections.lines(idea_questions.record(self.state_dir, slug), self._name)[0], changes)      # the project's journal (spec 125 B)

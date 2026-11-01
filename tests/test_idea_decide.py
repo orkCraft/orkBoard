@@ -21,6 +21,7 @@ from orkboard.realm import decisions_log, goal_team, idea_questions, idea_target
 @pytest.fixture
 def host(fake_repo) -> Orkboard:
     h = Orkboard(fake_repo)
+    (h.ideas.state_dir / "project.json").write_text('{"decisions": "docs/decisions.md"}', encoding="utf-8")        # this project keeps its decisions as one file (a project with no log gets a MADR folder: spec 127 B.4)
     yield h
     sys.modules.pop("orkboard.core.idea_runner", None)
 
@@ -461,6 +462,7 @@ NYGARD_FILE = "# {n}. Title {n}\n\nDate: 2026-03-0{n}\n\n## Status\n\nAccepted\n
 
 def _adr_folder(host, rel, text, n=2):
     """The project keeps its decisions as `rel`'s files (committed to dev, the Board's tree following it)."""
+    (host.ideas.state_dir / "project.json").unlink(missing_ok=True)              # the project chose no file: the folder is the only log it keeps
     folder = host.repo_root / rel
     folder.mkdir(parents=True)
     for i in range(1, n + 1):

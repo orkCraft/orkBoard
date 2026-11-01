@@ -37,8 +37,11 @@ def _put(root: Path, rel: str, text: str = "x") -> None:
 
 
 def test_path_default_chosen_and_never_outside(tmp_path):
-    assert dl.path(tmp_path) == tmp_path / "docs/decisions.md"
-    assert dl.path(tmp_path, "  ") == tmp_path / "docs/decisions.md"
+    assert dl.path(tmp_path) == tmp_path / "docs/decisions"                       # a project with no log at all: the MADR folder (spec 127 B.4)
+    assert dl.path(tmp_path, "  ") == tmp_path / "docs/decisions"
+    _put(tmp_path, "docs/decisions.md")
+    assert dl.path(tmp_path) == tmp_path / "docs/decisions.md" and dl.path(tmp_path, "  ") == tmp_path / "docs/decisions.md"
+    (tmp_path / "docs/decisions.md").unlink()
     assert dl.path(tmp_path, "notes/log.md") == tmp_path / "notes/log.md"
     for bad in ("../x.md", "a/../../x.md", str(tmp_path.parent / "x.md"), "/etc/passwd", "."):
         assert dl.path(tmp_path, bad) == tmp_path / dl.DEFAULT
@@ -158,7 +161,8 @@ def test_found_finds_a_folder_of_adr_files_in_docs_decisions_and_docs_architectu
 
 
 def test_the_place_is_a_folder_when_chosen_or_when_it_is_the_only_log_and_the_default_file_is_not_there(tmp_path):
-    assert dl.is_folder(tmp_path) is False and dl.path(tmp_path) == tmp_path / "docs" / "decisions.md"
+    assert dl.is_folder(tmp_path) is True and dl.path(tmp_path) == tmp_path / "docs" / "decisions"                 # nothing kept: the new project's folder, not made yet
+    assert dl.is_folder(tmp_path, "docs/decisions") is False                                                      # a choice of that name that is no folder is a file
     _adrs(tmp_path, "docs/decisions")
     assert dl.is_folder(tmp_path) is True and dl.path(tmp_path) == tmp_path / "docs" / "decisions"
     _put(tmp_path, "notes/adr.md", "x")
