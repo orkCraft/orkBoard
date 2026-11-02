@@ -52,6 +52,37 @@ last steps, all `done`.
    rule present in each tool's working prompt, the exclude line, a landing refusing the file, the snapshot's shape.
    The Claude Code working run's result still read from stream-json (its tests kept green).
 
+**As built (H1).** `realm/task_steps.py` is the pure part: `RULE` (the sentence of 1, put into `_prompt` of `core/idea_task.py`
+after *When you are done*, so Claude Code, Codex and agy all get it; a resumed send back already has it), `clean`, `read_file`,
+`reader_for`, `activity`, `merge`, `finished`. `realm/task_steps_run.py` is the look while a task works: a `Watch` per session
+turn (made in `core/idea_session.py`, ended in its `finally`, so the run's end, a failure and Stop all all end it) with a
+thread polling every `EVERY_S` = 3 s, the file read only when its (mtime, size) changed, the tool's output handed to it by
+`jobs.run_work(on_output=…)`; it clears the earlier round's file and kept steps when it starts, and keeps the merged shape
+at `<state_dir>/ideas/<slug>/<tid>.steps.json` only when it changed (then the Board hears `ideas.changed`). The output is
+read **as it is written** through `tool_run.Tail`: `run_proc` still writes the tool's stdout to an anonymous temporary file, and a
+thread `pread`s the new bytes every 0.5 s (the offset the tool writes at is never moved; where the platform has no `pread`, nothing
+is read until the end and the file is the source). The readers: **Claude Code** reads each `assistant` event's `tool_use` of
+`TodoWrite` (`input.todos`; the step now by its `activeForm`) and notes a `Bash` tool_use as the last command; its working run
+is now `--output-format stream-json --verbose` and its result still comes from the last `result` event
+(`harnesses.claude_envelope`/`claude_result`, nothing else changed). **Codex** reads `item.started|updated|completed` events of
+`item.type == "todo_list"` (`items[{text, completed}]`, the first not completed being the one now), an `update_plan`-style
+`plan[{step, status}]` on an item or in its `arguments` (an object or a JSON string), and a `command_execution` item starting as the
+last command (the `/bin/zsh -lc '…'` wrapper taken off). **agy** has no reader (`NoReader`): its one envelope at the end holds no
+list, the file is its source. The exclude line is written by `realm/steps_git.py` into `.git/info/exclude` (the repository's,
+shared by its worktrees, said once) when `IdeaGit.prepare`/`reopen` make the worktree and before `commit_left`; `IdeaGit.land` first
+calls `steps_git.leave`: the file is taken off the disk and, if the worker committed it anyway, out of the branch with a commit of its
+own, unless `dev` already has a file of that name. `board_map.steps_of` gives `steps` to a task `running`, `testing`, `review` or
+`merged` (a merged one all `done`, its `now` -1) and nothing otherwise. `orkboard steps-check` (`realm/steps_check.py`,
+`gui/board_cli.py`) makes a scratch repository with `calc.py` and `test_calc.py`, a worktree through `IdeaGit.prepare`, and runs
+`jobs.run_work` with the real argv and the rule; it prints each update (*+9.2s file 1/2 Add test in test_calc.py*) and `ok`
+or `not ok` with why; its task tells the worker to write the two files and run nothing, since a scratch project has no command
+a `-p` run may use (a first try that asked for a test run came back with a step *Run test (needs approval)*, the last list not all
+done). Run on Claude Code here (signed in): `ok`, 5 updates, all from the steps file, none from the tool's own list: **this
+Claude Code lists no `TodoWrite` tool** (its `init` event names `Task`, `Bash`, `Edit`, `Write`… and no to-do tool), so the file
+is what carries its steps on this version, as the rule is made for; the `TodoWrite` reader is checked on a recorded stream only.
+Codex and agy are not installed here: their readers are checked on recorded outputs written from the formats this spec names
+(`tests/fixtures/steps/`), not on a live run; `steps-check --tool codex` and `--tool agy` are for a machine where they are signed in.
+
 ## H2. Steps on the page
 
 1. **The label row** of a task's card (the front card of a cascade, the lifted one, the plan's cards of spec 128 F):

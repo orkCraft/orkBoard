@@ -85,10 +85,51 @@ def codex_thread_usage(thread: str, env: dict | None = None) -> dict | None:
     return usage
 
 
+class Tail:
+    """The output a process writes to `out`, handed to `on_output` as it is written (a task's steps are read from it while
+    it runs, realm/task_steps_run.py). It reads with `pread`, so the offset the process writes at is never moved; where
+    the platform has none, nothing is read until the end."""
+
+    def __init__(self, out, on_output: Callable[[str], None], every: float = 0.5) -> None:
+        import codecs
+        self.fd, self.on_output, self.every, self.pos = out.fileno(), on_output, every, 0
+        self.text = codecs.getincrementaldecoder("utf-8")("replace")
+        self.end = threading.Event()
+        self.thread = threading.Thread(target=self._loop, daemon=True, name="tail-output")
+        if hasattr(os, "pread"):
+            self.thread.start()
+
+    def _loop(self) -> None:
+        while not self.end.wait(self.every):
+            self._drain()
+
+    def _drain(self) -> None:
+        while True:
+            try:
+                chunk = os.pread(self.fd, 1 << 16, self.pos)
+            except OSError:
+                return
+            if not chunk:
+                return
+            self.pos += len(chunk)
+            try:
+                self.on_output(self.text.decode(chunk))
+            except Exception:
+                pass                        # whoever reads along never stops the run
+
+    def stop(self) -> None:
+        self.end.set()
+        if self.thread.is_alive():
+            self.thread.join(10)
+            self._drain()
+
+
 def run_proc(cmd: list[str], cwd: Path, env: dict, stdin: str | None,
-             wait: Callable[[subprocess.Popen], None], harness: str = "") -> tuple[int, str, str]:
+             wait: Callable[[subprocess.Popen], None], harness: str = "",
+             on_output: Callable[[str], None] | None = None) -> tuple[int, str, str]:
     """(exit code, stdout, stderr) of one harness call. Its output goes to temporary files, so a
-    long answer or a stream of events never fills a pipe while `wait` polls the process."""
+    long answer or a stream of events never fills a pipe while `wait` polls the process. `on_output` is handed the
+    stdout as it is written (`Tail`), for whoever reads a stream along the way."""
     with tempfile.TemporaryFile("w+") as out, tempfile.TemporaryFile("w+") as err:
         try:
             proc = subprocess.Popen(cmd, cwd=cwd, env=env, stdin=subprocess.PIPE if stdin is not None else None,
@@ -101,7 +142,12 @@ def run_proc(cmd: list[str], cwd: Path, env: dict, stdin: str | None,
                 proc.stdin.close()
             except (BrokenPipeError, OSError):
                 pass
-        wait(proc)
+        tail = Tail(out, on_output) if on_output is not None else None
+        try:
+            wait(proc)
+        finally:
+            if tail is not None:
+                tail.stop()
         out.seek(0)
         err.seek(0)
         return proc.returncode, out.read(), err.read()

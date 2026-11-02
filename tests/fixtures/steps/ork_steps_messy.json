@@ -1,0 +1,33 @@
+{
+  "steps": [
+    {
+      "step": "Read the whole of the project's sources and its tests, in order to understand how it is put together",
+      "state": "done"
+    },
+    {
+      "step": "a",
+      "state": "in_progress"
+    },
+    {
+      "step": "b",
+      "state": "now"
+    },
+    {
+      "step": "c",
+      "state": "whatever"
+    },
+    {
+      "step": "",
+      "state": "done"
+    },
+    "d",
+    {
+      "step": "e",
+      "state": "next"
+    },
+    {
+      "step": "f",
+      "state": "next"
+    }
+  ]
+}

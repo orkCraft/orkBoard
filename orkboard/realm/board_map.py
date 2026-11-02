@@ -15,7 +15,7 @@ from pathlib import Path
 from typing import Any, Callable
 
 from orkboard.realm import (board_back, board_rows, collide, goal_flags, goal_place, goal_route, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_checks, leader_change, idea_flag, idea_pick, idea_questions, idea_shots,
-                            idea_hearing, idea_objections, idea_risk, idea_spend, idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles, spec_sections, tool_errors)
+                            idea_hearing, idea_objections, idea_risk, idea_spend, idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles, spec_sections, task_steps, tool_errors)
 from orkboard.realm.idea_words import short_of
 
 NEEDS = ("route", "start", "talk", "hearing", "cause", "decision", "fork", "asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide", "leader_change")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71; a route and a step added after Talk: spec 99 §4; Talk's cards and a bug's cause: §5; a goal's hearing in Talk, once a leader's no: spec 108 §4, spec 120 §4; the decision to confirm and a fork to settle: §6, §7)
@@ -183,6 +183,19 @@ def flag_of(state_dir: Path, slug: str, held: dict[str, list[dict]]) -> dict | N
 def release_of(r: dict | None) -> dict | None:
     """A release goal's node carries its file: `{version, goals: [slugs], out}`; None for any other goal (spec 68 §3.3)."""
     return None if r is None else {"version": r["version"], "goals": list(r["goals"]), "out": r["out"]}
+
+
+STEPS_STATES = ("running", "testing", "review", "merged")      # a task at work or checked has steps (spec 129); a done one keeps its last, all done
+
+
+def steps_of(state_dir: Path, slug: str, t: dict) -> dict:
+    """{"steps": {items, now, done, total, source, doing}} of a task at work, at the gate or at Review, from what the runner kept beside its log
+    (realm/task_steps_run.py); a merged task keeps its last steps, all done. {} when nothing is known: the key is absent."""
+    if t.get("state") not in STEPS_STATES or goal_types.is_dropped(t):
+        return {}
+    kept = task_steps.read_kept(state_dir / "ideas" / slug, str(t.get("id")))
+    got = task_steps.finished(kept) if t.get("state") == "merged" else kept
+    return {"steps": got} if got else {}
 
 
 def task_short(t: dict) -> str:
@@ -469,7 +482,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                                "head": roles.task_head(state_dir, t, target, read, tiers),
                                "by": _by(t, read), "band": "check" if map_stage.is_check(t) else "build", "wave": waves[str(t.get("id"))],
                                "row": rows[str(t.get("id"))],
-                               **_run_of(t), "pick": idea_pick.map_of(t), "shot": idea_shots.map_of(t), "made": made_of(t),
+                               **_run_of(t), **steps_of(state_dir, slug, t), "pick": idea_pick.map_of(t), "shot": idea_shots.map_of(t), "made": made_of(t),
                                "tag": roles.KIND_LABELS.get(str(t.get("kind") or ""), roles.KIND_LABELS[roles.DEFAULT_KIND])} for t in tasks],
                     "checks": idea_checks.status(idea_checks.kept(list_of_dicts(page.get("checks")) if page else [], checks),
                                                  checks, tasks) if checks else [],

@@ -1,0 +1,18 @@
+[
+  {
+    "step": "Read calc.py and its test",
+    "state": "done"
+  },
+  {
+    "step": "Add double() to calc.py",
+    "state": "done"
+  },
+  {
+    "step": "Write a test for double()",
+    "state": "done"
+  },
+  {
+    "step": "Run the tests",
+    "state": "done"
+  }
+]
