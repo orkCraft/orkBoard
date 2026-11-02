@@ -4409,3 +4409,50 @@ inside a task its worker goes through steps of its own. So:
    where the tool is signed in.
 4. Spec 129 builds it by the cheaper model, the host and the page side by side.
 The owner's call.
+
+## 208. The Tech lens measured against how small teams keep architecture: one map read from the code, what changes together, a load-bearing part being changed, quiet while a part is young, and the engines read (2 November 2026, the owner)
+
+Changes: 89, 90, 109.
+
+Why: the owner had a research run on how the crafts' frameworks are drawn and which of them indie developers keep (a
+prompt to Gemini, its answer for Tech). What it said, unsourced and so taken as a hypothesis, not as evidence: a small team
+keeps an architecture picture past a week only when it is very high (five to twelve blocks for the whole project) or
+drawn from the repository with no one's hand; class diagrams and C4's third level kept by hand die at the first
+prototype, when a game's architecture is rewritten in an evening; Tornhill's behavioural analysis (hotspots and
+**temporal coupling**: two files changed in the same commits with no reference between them) is the part worth having,
+since an import graph never shows it; Martin's metrics shrink to one rule: a part everything stands on that keeps
+changing is the risk. It proposed a second map (a 2×2 of churn against complexity), files as small cards inside a
+module's card, a phone list of *hot nodes of the week* ranked by a risk index, and a look of its own (a hex grey,
+glows, red and amber outlines, a *God Object* badge). Measured against what is built (spec 89's System, spec 90's
+containers and layers with the uses drawn on hover, spec 109's hints), the main map it recommends is the one we have.
+So:
+1. **System stays the one map, read from the code.** No second map and no new tab: the 2×2 is an analyst's chart of the
+   same parts, and spec 109's aspect chips already narrow the map (a press on *Hotspots* leaves the hot cards and dims the
+   rest). No files as cards inside a part's card: a part's files are seen when it is opened in the right column. The
+   first question stays spec 89's, *what changed since your last look, and which goal changed it*; where a game's
+   architecture moves in an evening, that is worth more than where it hurts.
+2. **What changes together** (`co_change`, a new hint in *Coupling*): two parts changed together in most of the commits
+   that touch either (a share and a least count of commits in the last CHURN_DAYS days), with no use between them either
+   way. Spec 90's `shared_churn` stays for the containers. Its line between the two parts is drawn only while its concern
+   is open or its card is hovered, dashed, never on the table at rest.
+3. **A load-bearing part being changed** (`bearing`, in *Hotspots*) **takes `unstable`'s place**: a part used by many
+   parts (fan-in at least BEARING_IN) changed many times in the last CHURN_DAYS days. Its words name both numbers
+   (*9 parts use it; it was changed 14 times in 30 days*). Martin's instability is not shown to the person. The layers
+   already lay what most use at the bottom (spec 90 §6.5), so nothing new is drawn: the hint lies on the bottom card.
+   The hints stay at eight kinds.
+4. **Quiet while a part is young**: a part placed in the layout less than YOUNG_DAYS ago gives no hint of change
+   (`hotspot`, `co_change`, `untested_churn`); `bearing` alone speaks of it. A prototype is changed everywhere, and a
+   lens that says so of every card is no longer looked at.
+5. **The engines are read**: System reads Godot (`project.godot`, its autoloads, a scene and the scripts it holds,
+   GDScript's `preload` and `extends`), Unity (each `.asmdef` a container, its references its links, C#'s `using`
+   between parts) and Unreal (`.uproject`, each module's `.Build.cs` and its dependencies). Today `code_map` reads Python
+   and JS/TS alone and the containers are found by `package.json`, `pyproject.toml`, `go.mod` and `Cargo.toml`, so a
+   game made in an engine gets an empty System: for indie game development this comes before every hint above.
+6. **The look is orkUI's**: the tokens alone, colour a signal, no glow; a hint's words say what happens, in numbers and
+   plain words, never a label (no *God Object*). The phone gets no list of parts and no risk index: a concern that needs
+   the person comes to the hand as a card, as every concern does.
+7. **The evidence is asked for before the spec**: the research is asked again for its sources (GDC talks, postmortems,
+   posts of indie teams on keeping or dropping their architecture pictures). Where they say otherwise, this decision is
+   changed before it is built.
+8. The spec that builds 2–6 comes in a few days, the engines (5) a part of their own.
+The owner's call.
