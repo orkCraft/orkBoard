@@ -4542,3 +4542,46 @@ So:
 8. **The evidence is asked for before the spec**, as §208.7: the post-mortems and Intercom's own words it speaks of,
    named. The spec builds 2–5 with §208's and §209's.
 The owner's call.
+
+## 211. The Game design lens measured against how small teams keep their loops: the hooks by how the game earns, the pillars over the loop, a currency's config and who changed it (2 November 2026, the owner)
+
+Changes: 109, 156, 210.
+
+Why: the same research as §208, for Game design (a prompt to Gemini, its answer unsourced and so taken as a
+hypothesis; its figures of a *GDC 2023 survey*, 85% of AAA studios and 67% of indie teams keeping a design document,
+68% drawing the core loop before code, are most likely made up and are checked first). What it said: the long design
+document gave way to living pages and Stone Librande's one-page designs (GDC 2010); design pillars and non-goals at the
+top (Tim Keenan, *Duskers*); a demo that ends abruptly loses the players a closing scene would have kept; small teams
+seldom keep a Machinations graph beside the code, because the real numbers live in ScriptableObjects, Godot's
+resources or JSON tables, so the economy's map should read the repository's configs. It proposed the loops as
+concentric rings under the pillars, each card tied to its scenes and scripts; a second map (the currencies with their
+sources and sinks read from the configs, a delta along the progression, and a flow curve with the players' deaths and
+quits from PostHog or GameAnalytics laid over the designed difficulty), badges (*Currency Inflation* when a currency's
+sinks vanish late in the game), a peak marked where players drop in the first fifteen minutes or at the demo's end,
+and on the phone a playtest's summary. Measured against what is built (§156.3's loops one in another, each step tied to
+the files it rests on, its feeling and intensity the designed curve; the currencies with what gives and takes them;
+hooks D1, D7, D30; spec 109's `no_source`, `pile_up`, `no_reward`, `unfed`, `flat`; the leader reading the balance
+configs), the map is the one we have. So:
+1. **Loop stays the one map, laid out as today**: no rings (words along arcs read badly, the space is lost, a narrow
+   width breaks them; `feeds` already says which loop feeds which) and no second map.
+2. **The hooks by how the game earns**: the brief's *earns* (*How it earns*, spec 124) chooses them. A game sold once
+   (Steam, a console, itch) has **the demo's end** (what makes a player wishlist it), **the first two hours** (Steam
+   refunds a game played under two hours and bought under fourteen days ago) and **the ending**; a free game with
+   purchases or ads keeps D1, D7, D30. The leader proposes the hooks that fit; zero to three as today, a hook's `when`
+   one of the six.
+3. **The pillars over the loop**: the brief's *pillars* and *leaves_out* lie as thin strips along the map's top edge,
+   read from the brief, never kept twice; Game design's leader judges a step and a goal against them in its look and in
+   Talk, as §210.3 (a concern that quotes the pillar, never a block).
+4. **A currency rests on its config, and its change is seen**: a currency gains `rests_on` (the config files its
+   numbers live in: a JSON or YAML table, a Godot `.tres`, a Unity ScriptableObject's `.asset`), checked against dev's
+   tree as a step's are. A currency whose file changed since the person's last look says so on its card, with the goal
+   that changed it (*Changed by <goal>*): an agent that quietly changed what a repair costs is seen. The numbers
+   themselves are not parsed by code: every game keeps them its own way.
+5. **Not taken now**: the inflation of a currency late in the game (it needs a simulation along the progression;
+   `pile_up` keeps the static case); the flow curve with the players' deaths and quits, and a playtest's summary on the
+   phone (the project's analytics are not read yet: the later spec of spec 115, PostHog or GameAnalytics among them).
+6. **The look is orkUI's and the words plain**: the tokens alone; *Nothing takes Scrap after the second act*, never
+   *Currency Inflation*.
+7. **The evidence is asked for before the spec**, as §208.7: the survey's figures and the post-mortem it speaks of,
+   named. The spec builds 2–4 with §208's, §209's and §210's.
+The owner's call.
