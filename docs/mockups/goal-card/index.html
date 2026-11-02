@@ -94,7 +94,7 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
 
 /* ---------- the scene: one window at 1120 x 680, scaled to the page ---------- */
 .scn-wrap { position: relative; max-width: 1120px; overflow-x: auto; overflow-y: hidden; outline: var(--ork-line) solid var(--ork-edge); }
-.scn { position: relative; width: 1120px; height: 720px; overflow: hidden; background: var(--ork-canvas); transform-origin: 0 0; }
+.scn { position: relative; width: 1120px; height: 800px; overflow: hidden; background: var(--ork-canvas); transform-origin: 0 0; }
 .tabs { position: absolute; left: 0; right: 0; top: 0; height: 40px; display: flex; align-items: stretch; gap: var(--ork-1); padding: 0 var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-frame); }
 .tab { display: flex; align-items: center; gap: var(--ork-2); padding: 0 var(--ork-4); font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); }
 .tab.on { color: var(--ork-ink); box-shadow: inset 0 -2px 0 var(--ork-ink); }
@@ -194,7 +194,7 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
 @media (max-width: 720px) { .mk-main { padding-block: var(--ork-4); } }
 
 /* ---------- the window with the Orkmaster's column pinned (the owner's note of 2026-11-01): the column is the same on every tab; the tabs are whose eyes ---------- */
-.col { position: absolute; left: 0; top: 0; width: 176px; height: 540px; display: flex; flex-direction: column; gap: var(--ork-3); padding: 0 var(--ork-2) var(--ork-2); background: var(--ork-table);
+.col { position: absolute; left: 0; top: 0; width: 176px; height: 620px; display: flex; flex-direction: column; gap: var(--ork-3); padding: 0 var(--ork-2) var(--ork-2); background: var(--ork-table);
   border-right: var(--ork-line) solid var(--ork-frame); overflow-y: auto; overflow-x: hidden; z-index: 2; }
 .col-head { flex: none; display: flex; align-items: center; gap: var(--ork-2); height: 40px; margin: 0 calc(var(--ork-2) * -1); padding: 0 var(--ork-3); border-bottom: var(--ork-line) solid var(--ork-frame);
   font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); white-space: nowrap; }
@@ -237,7 +237,7 @@ button.col-head:focus-visible { outline: 2px solid var(--ork-ink); outline-offse
 button.tab { background: none; border: 0; cursor: pointer; }
 button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2px; }
 .tab.answers::after { content: "answering…"; font: var(--ork-type-caption); text-transform: none; letter-spacing: 0; color: var(--ork-alert); }
-.pane { position: absolute; left: 176px; right: 0; top: 40px; height: 500px; background: var(--ork-table); overflow: hidden; }
+.pane { position: absolute; left: 176px; right: 0; top: 40px; height: 580px; background: var(--ork-table); overflow: hidden; }
 .look { position: absolute; left: 0; right: 0; top: 0; height: 28px; display: flex; align-items: center; gap: var(--ork-2); padding: 0 var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); color: var(--ork-ink-muted); white-space: nowrap; }
 .look .chip { display: inline-flex; align-items: center; gap: var(--ork-2); height: 22px; padding: 0 2px 0 var(--ork-2); border: var(--ork-line) solid var(--c); color: var(--ork-ink); }
 .look .chip button { display: grid; place-items: center; width: 18px; height: 18px; padding: 0; background: none; border: 0; color: inherit; cursor: pointer; }
@@ -276,7 +276,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
 .specp .cap, .lift .cap { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .states { display: flex; flex-wrap: wrap; gap: var(--ork-1); }
 .states span { display: inline-flex; align-items: center; height: 22px; padding: 0 var(--ork-2); border: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); }
-.scn .hnd { top: 540px; padding: var(--ork-2) var(--ork-4); z-index: 3; background: var(--ork-canvas); }
+.scn .hnd { top: 620px; padding: var(--ork-2) var(--ork-4); z-index: 3; background: var(--ork-canvas); }
 @media (prefers-reduced-motion: reduce) { .lmap, .specp, .lmap line, .node { transition: none; } }
 /* a goal's rune: its shape (the element's rune) in its own colour, one of the five */
 .ork-elem.k-meadow { background: var(--ork-elem-meadow); } .ork-elem.k-ice { background: var(--ork-elem-ice); } .ork-elem.k-dust { background: var(--ork-elem-dust); }
@@ -339,6 +339,16 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
 .ask-hint { display: inline-flex; align-items: center; gap: var(--ork-1); margin-top: var(--ork-1); font: var(--ork-type-caption); color: var(--ork-ink-faint); }
 .ask-hint .ork-icon { width: 10px; height: 10px; }
 .chc[data-part]:hover .ask-hint { color: var(--ork-ink); }
+/* three piles: In analysis (sideways, face down, nameless: a tight pile), To review (still, its wait a bar), At work · later (its rune glowing; or its time) */
+.cfoot .wbar { position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: color-mix(in srgb, var(--ork-ink-faint) 30%, transparent); }
+.cfoot .wbar i { display: block; height: 100%; width: calc(round(down, var(--s) * 8, 1) / 8 * 100%); background: var(--c); }
+.plab.an { flex-wrap: wrap; row-gap: 0; }
+.plab.an .u { flex-basis: 100%; margin-left: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.queue { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--ork-2); font: var(--ork-type-caption); }
+.queue li { display: flex; align-items: center; gap: var(--ork-2); }
+.queue li .nm { flex: 1; min-width: 0; }
+.queue .qa { display: flex; gap: var(--ork-1); } .queue .qa .ork-btn { height: 24px; padding: 0 var(--ork-2); }
+.cd.cb.land .ork-sigil { right: 22px; }
 /* the column off the table: the canvas's black, like the hand; the table is the pane, its rim orkUI's (.ork-table) */
 .col { background: var(--ork-canvas); border-right: 0; }
 .scn.col-on-table .col { background: var(--ork-table); border-right: var(--ork-line) solid var(--ork-frame); }
@@ -414,7 +424,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
 
 <section class="mk-sec" id="window">
   <h1>1 · The window, played</h1>
-  <p class="mk-line"><b>The Orkmaster's column</b>, the same on every tab. <b>Its head is the Orkmaster's tab</b>, open at first: who does what, every leader's lane. <b>In analysis</b> its cards lie sideways, a quarter turned (busy, not to be played) and face down; when a spec is written the card turns upright, then face up, and joins <b>Spec ready</b>: at work, or put off to a time or the night. <b>Press a face-up card</b>: the Orkmaster's tab shows its plan with arrows, a leader's tab what it will change. <b>Talking to a leader is one way everywhere</b>: press the open tab's head again (the Orkmaster's too), or a part of a change, and a bubble opens under the head, about what is picked. The answer reads and changes nothing; <i>Make it a change</i> or <i>Make it a goal</i> makes it a card.</p>
+  <p class="mk-line"><b>The Orkmaster's column</b>, the same on every tab; <b>its head is the Orkmaster's tab</b> (who does what; a goal picked, its plan with arrows). It holds three piles, top to bottom as a goal lives. <b>In analysis</b>: sideways and face down, a tight pile with no names (its words are on its other side); the one being written is named under the pile's title, and a press reads the pile out in order. <b>To review</b>: face up and still, its spec ready, each with its wait (a bar in eighths, then a time); it starts by itself. <b>At work · later</b>: at work (its rune glowing, its leaders' heads), then put off (a time today, or the moon). A spec written: the card turns upright and face up into To review; its wait over: it moves to At work and its tasks go to the leaders. <b>Talking to a leader</b> is one way everywhere: the open tab's head pressed again, or a part of a change, opens its bubble.</p>
   <div class="mk-acts" role="group" aria-label="Play the window">
     <button class="ork-btn" type="button" data-do="spec">The Orkmaster finishes a spec</button>
     <button class="ork-btn" type="button" data-do="land">A task lands</button>
@@ -429,8 +439,9 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
   <div class="scn-wrap" id="wrap"><div class="scn" id="scn">
     <aside class="col" id="col" aria-label="The Orkmaster's goals">
       <button type="button" class="col-head" role="tab" data-tab="board" id="tab-board" title="The Orkmaster: who does what; pressed again, ask it"><img src="../../../design-system/orkui/races/peon-crown@2x.png" alt="">The Orkmaster</button>
-      <div class="csec"><div class="plab">In analysis<span class="u" id="u-analysis"></span></div><div class="fan" id="c-analysis"></div></div>
-      <div class="csec"><div class="plab">Spec ready<span class="u" id="u-ready"></span></div><div class="fan" id="c-ready"></div></div>
+      <div class="csec"><div class="plab an">In analysis<span class="u" id="u-analysis"></span></div><div class="fan" id="c-analysis"></div></div>
+      <div class="csec"><div class="plab">To review<span class="u" id="u-review"></span></div><div class="fan" id="c-review"></div></div>
+      <div class="csec"><div class="plab">At work · later</div><div class="fan" id="c-work"></div></div>
       <div class="cpass" id="c-pass"></div>
     </aside>
     <div class="tabs" role="tablist"><button type="button" class="tab" role="tab" data-tab="tech" id="tab-tech"><img src="../../../design-system/orkui/races/shaman-elder@2x.png" alt="">Tech</button><button type="button" class="tab" role="tab" data-tab="design" id="tab-design"><img src="../../../design-system/orkui/races/dryad-elder@2x.png" alt="">Design</button></div>
@@ -458,7 +469,8 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
   </div></div>
   <div class="mk-notes">
     <p><b>No Board tab.</b> The column is the Orkmaster, so its head is its tab: with nothing picked, every leader's lane (who does what); with a goal picked, its plan with arrows. The tabs at the top are the leaders' only.</p>
-    <p><b>Sideways while in analysis.</b> A card turned a quarter is busy, as in a card game: a face-down goal the Orkmaster is still writing. It saves a third of the height, and the two kinds read apart at a glance. Its name is written upright; the round seal does not mind the turn. Pressed, it says what it is; it cannot be picked.</p>
+    <p><b>Sideways and nameless while in analysis.</b> A card turned a quarter is busy, as in a card game, and a face-down card has nothing to read yet: so no name on it, only its seal and rune, upright. With nothing to show at their feet the cards lie as a tight pile, edges only, which leaves room for the two piles under it. The one being written is named under the title; a press lists the pile in the Orkmaster's order, with <i>Next</i> and <i>Remove</i>.</p>
+    <p><b>To review, or at work: still or moving.</b> A card to review is still and shows its wait; a card at work has its rune glowing and its leaders' heads at its foot, which shows even on a card's visible foot in a pile. Put off cards lie after the ones at work, with their time or the moon; <i>Later today</i>, <i>Tonight</i> and <i>Back to review</i> move them.</p>
     <p><b>One way to talk to a leader.</b> The open tab's head pressed again opens its bubble (decisions §181); a part of a change pressed opens it with the part as a mark. It is about what is picked: nothing, the project; a goal, that goal. The leader answers in words, reading only.</p>
     <p><b>A card only when something would change.</b> Under an answer: <i>Make it a change</i> for a goal whose spec is ready (a decision card in the hand: its plan now and proposed, its cost; Design's three looks), <i>Make it a goal</i> for the project or a goal done (the + card opens with the words in it). The + card is for new goals only.</p>
     <p><b>The discard</b> picked: what the goal changed against its spec, and the die in its rune. <b>The night</b>: its goals done fly to the discard under a moon, a failure comes to the hand.</p>
@@ -668,9 +680,10 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
   function liveGoals() { return st.analysis.concat(st.ready).map(function (id) { return G[id]; }); }
   function readyOrder() {                                         // at work first, then the ones put off by their turn, the night's last
     var w = st.ready.filter(atWork), off = st.ready.filter(function (id) { return !atWork(id); });
-    return w.concat(off.filter(function (id) { return !G[id].night; }), off.filter(function (id) { return G[id].night; }));
+    return w.concat(off.filter(function (id) { return !putOff(id); }), off.filter(function (id) { return G[id].later && !G[id].night; }), off.filter(function (id) { return G[id].night; }));
   }
-  function firstOff() { return readyOrder().filter(function (id) { return !atWork(id) && !G[id].night; })[0] || ""; }
+  function putOff(id) { return !!(G[id].night || G[id].later); }
+  function firstOff() { return readyOrder().filter(function (id) { return !atWork(id) && !putOff(id); })[0] || ""; }
   function freshRune() {                                          // the shape used least, then the colour used least, among the open goals and the results not yet seen
     var held = liveGoals().concat(st.done.filter(function (id) { return st.moon[id] || id === st.done[0]; }).map(function (id) { return G[id]; }));
     var by = function (key, list) { return ELEMENTS.slice().sort(function (a, b) { return list.filter(function (g) { return g[key] === a; }).length - list.filter(function (g) { return g[key] === b; }).length || ELEMENTS.indexOf(a) - ELEMENTS.indexOf(b); })[0]; };
@@ -679,7 +692,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
   }
   // ---------- the scene's scale ----------
   var scn = $("scn"), wrap = $("wrap"), sc = 1;
-  function fit() { sc = Math.max(0.62, Math.min(1, wrap.clientWidth / W)); scn.style.transform = "scale(" + sc + ")"; wrap.style.height = Math.ceil(720 * sc) + "px"; scn.style.marginRight = (W * sc - W) + "px"; }
+  function fit() { sc = Math.max(0.62, Math.min(1, wrap.clientWidth / W)); scn.style.transform = "scale(" + sc + ")"; wrap.style.height = Math.ceil(800 * sc) + "px"; scn.style.marginRight = (W * sc - W) + "px"; }
   function rel(el) { var r = el.getBoundingClientRect(), s = scn.getBoundingClientRect(); return { x: (r.left - s.left) / sc, y: (r.top - s.top) / sc, w: r.width / sc, h: r.height / sc }; }
   window.addEventListener("resize", fit);
 
@@ -698,8 +711,9 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
     var g = G[id];
     if (atWork(id)) return headsOf(id);
     if (g.night) return '<span class="when">' + S("moon") + "01:00</span>";
+    if (g.later) return '<span class="when">' + S("pause") + g.later + "</span>";
     if (id === firstOff()) return '<span class="when">' + (st.share >= 1 ? "now" : Math.ceil((1 - st.share) * 8 * 1.5) + " s") + "</span>";
-    var i = readyOrder().filter(function (x) { return !atWork(x) && !G[x].night; }).indexOf(id);
+    var i = readyOrder().filter(function (x) { return !atWork(x) && !putOff(x); }).indexOf(id);
     return '<span class="when">~' + (15 + Math.floor((25 * i) / 60)) + ":" + String((25 * i) % 60).padStart(2, "0") + "</span>";
   }
   // the column's cards, 112 x 157: face down while there is no spec (its seal; the one being written with its ring running), face up once there is (its name, its type, who works on it or when it starts)
@@ -708,19 +722,18 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
     var g = G[id], m = o.mark || "";
     var sig = "ork-sigil" + (o.busy ? " mk-busy" : "") + (o.stopped ? " mk-stopped" : "");
     return '<button type="button" class="ork-card mk-r cd back cb land c-' + g.col + (m === "asks" ? " is-asks thick" : "") + '" data-goal="' + id + '" data-down="1" style="top:' + o.top + "px;z-index:" + o.z + '" title="' + esc(g.name) + '" aria-label="' + esc(g.name + ": " + (o.say || "waits for its spec")) + '">'
-      + '<span class="' + sig + '" aria-hidden="true"><span class="ork-sigil__seal">' + EG(g, o.glow ? "mk-glow" : "") + "</span></span>"
-      + '<span class="cfoot">' + EG(g) + '<span class="nm">' + esc(g.short) + "</span>" + (o.extra || "") + "</span></button>";
+      + '<span class="' + sig + '" aria-hidden="true"><span class="ork-sigil__seal">' + EG(g, o.glow ? "mk-glow" : "") + "</span></span></button>";
   }
   function cface(id, o) {
     var g = G[id], m = markOf(id), moon = st.moon[id];
     var line = m === "asks" ? " is-asks thick" : m === "failed" ? " is-failed thick" : st.picked === id ? " is-lit thick" : "";
     return '<button type="button" class="ork-card mk-r cd face cf c-' + g.col + line + (o.cls ? " " + o.cls : "") + '" data-goal="' + id + '" style="top:' + o.top + "px;z-index:" + o.z + '" title="' + esc(g.name) + '" aria-pressed="' + (st.picked === id) + '" aria-label="' + esc(g.name + ": " + (o.say || "")) + '">'
-      + '<div class="hd">' + EG(g) + '<span class="nm">' + esc(g.short) + "</span></div>"
+      + '<div class="hd">' + EG(g, o.work ? "mk-glow" : "") + '<span class="nm">' + esc(g.short) + "</span></div>"
       + '<div class="win">' + S(g.sign, "big") + (moon ? '<span class="moonmark">' + S("moon") + "</span>" : "") + "</div>"
-      + '<span class="cfoot">' + EG(g) + '<span class="nm">' + esc(g.short) + "</span>" + (o.extra || "") + markSign(m) + "</span></button>";
+      + '<span class="cfoot">' + EG(g, o.work ? "mk-glow" : "") + '<span class="nm">' + esc(g.short) + "</span>" + (o.extra || "") + markSign(m) + (o.wait != null ? '<span class="wbar"><i style="--s:' + o.wait + '"></i></span>' : "") + "</span></button>";
   }
-  function fan(el, items, maker, ch, max) {
-    ch = ch || CH; max = max || 4;
+  function fan(el, items, maker, ch, max, peek) {
+    ch = ch || CH; max = max || 4; var PEEK = peek || 20;
     var shown = items.slice(0, max), n = items.length;
     if (!n) { el.style.height = "auto"; el.innerHTML = '<div class="free">Nothing here</div>'; return; }
     el.style.height = ch + (shown.length - 1) * PEEK + (n > max ? 6 : 0) + "px";
@@ -758,18 +771,19 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
   }
   function acard(p) { return '<div class="ork-card mk-r cd q ans thick"><span class="who">' + HEAD(PARTIES[p.to].race) + esc(PARTIES[p.to].short + " answers") + '</span><span class="qq">' + esc(p.answer) + "</span></div>"; }
   function drawPass() { $("c-pass").innerHTML = st.pass.map(function (x) { return pcard(x); }).join(""); }
-  function drawReady() {
-    fan($("c-ready"), readyOrder().map(function (id) { return { id: id, o: { extra: whenOf(id), say: atWork(id) ? "at work" : G[id].night ? "starts tonight at 01:00" : "starts in its turn" } }; }), cface, CH, 6);
-    var f = firstOff();
-    $("u-ready").textContent = f ? (st.share >= 1 ? "one starts now" : "next in " + Math.ceil((1 - st.share) * 8 * 1.5) + " s") : "";
-    round($("c-ready"));
+  function drawReady() {                                          // To review: specs ready, still, each its wait; At work · later: at work (its rune glowing, its leaders' heads), then put off (its time, or the moon)
+    var order = readyOrder(), f = firstOff();
+    fan($("c-review"), order.filter(function (id) { return !atWork(id) && !putOff(id); }).map(function (id) { return { id: id, o: { extra: whenOf(id), wait: id === f ? st.share : null, say: "its spec is ready; it starts in its turn" } }; }), cface, CH, 3);
+    fan($("c-work"), order.filter(function (id) { return atWork(id) || putOff(id); }).map(function (id) { return { id: id, o: { extra: whenOf(id), work: atWork(id), say: atWork(id) ? "at work" : G[id].night ? "put off to tonight, 01:00" : "put off to " + G[id].later } }; }), cface, CH, 4);
+    $("u-review").textContent = f ? (st.share >= 1 ? "starts now" : "next in " + Math.ceil((1 - st.share) * 8 * 1.5) + " s") : "";
+    round($("c-review")); round($("c-work"));
   }
   var drawNext = drawReady;
   function nextRune() { return freshRune().el; }
   function draw() {
     // the Orkmaster's column, the same on every tab
-    fan($("c-analysis"), st.analysis.map(function (id, i) { return { id: id, o: i === 0 && st.busy ? { busy: !st.orkAsks, stopped: st.orkAsks, glow: !st.orkAsks, mark: st.orkAsks ? "asks" : "", say: st.orkAsks ? "waits for your answer" : "the Orkmaster is writing its spec" } : { say: "waits for the Orkmaster" } }; }), cback, 112, 4);
-    $("u-analysis").textContent = st.analysis.length ? (st.orkAsks ? "waits for you" : "writing a spec") : "free";
+    fan($("c-analysis"), st.analysis.map(function (id, i) { return { id: id, o: i === 0 && st.busy ? { busy: !st.orkAsks, stopped: st.orkAsks, glow: !st.orkAsks, mark: st.orkAsks ? "asks" : "", say: st.orkAsks ? "waits for your answer" : "the Orkmaster is writing its spec" } : { say: "waits for the Orkmaster" } }; }), cback, 112, 4, 4);
+    $("u-analysis").textContent = st.analysis.length ? (st.orkAsks ? "waits for you" : "writing: " + G[st.analysis[0]].short) : "free";
     $("u-analysis").classList.toggle("asks", !!st.orkAsks);
     drawReady(); drawPass();
     // the tabs and the pane
@@ -883,7 +897,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
   function lift(anchor, html) {
     closeLift();
     var r = rel(anchor), l = document.createElement("div"); l.className = "lift"; l.innerHTML = html; $("layer").appendChild(l);
-    var h = l.offsetHeight, x = Math.min(W - 316, r.x), y = r.y + r.h + 8 + h > 712 ? r.y - h - 8 : r.y + r.h + 8;
+    var h = l.offsetHeight, x = Math.min(W - 316, r.x), y = r.y + r.h + 8 + h > 792 ? r.y - h - 8 : r.y + r.h + 8;
     l.style.left = x + "px"; l.style.top = Math.max(48, y) + "px";
     var first = l.querySelector("button"); if (first) first.focus({ preventScroll: true });
     return l;
@@ -892,7 +906,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
   // ---------- the + card, turned over where it lies ----------
   var F = null;                                                   // the open field: {el, text, rune, to, type, files, open}
   var kept = { text: "Players see who answered first, with a small crown over their name", rune: "", to: "ork", type: "", files: [] };
-  var FX = 16, FY = 720 - 330;                                    // the grown card's place: its left edge where the + card's is, its top so 330 px show above the window's edge
+  var FX = 16, FY = 800 - 330;                                    // the grown card's place: its left edge where the + card's is, its top so 330 px show above the window's edge
   function fieldHtml() {
     if (talk) {
       var tg = G[talk.goal], lp = PARTIES[talk.party];
@@ -1073,7 +1087,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
   function makeGoal() { var a = askAt; closeAsk(); kept.text = a.q; kept.to = a.who === "board" ? "ork" : a.who; kept.type = ""; openField(); }
 
   // ---------- what the window does ----------
-  function colCard(id) { return document.querySelector('#col [data-goal="' + id + '"]') || (st.analysis.indexOf(id) >= 0 ? $("c-analysis") : $("c-ready")); }      // its card, or its pile when it lies deeper than the four shown
+  function colCard(id) { return document.querySelector('#col [data-goal="' + id + '"]') || (st.analysis.indexOf(id) >= 0 ? $("c-analysis") : st.ready.indexOf(id) >= 0 && (atWork(id) || putOff(id)) ? $("c-work") : $("c-review")); }      // its card, or its pile when it lies deeper than the four shown
   function srcOf(t) { var c = st.tab === "board" ? document.querySelector('#v-board [data-task="' + t.id + '"]') : null; return c || colCard(t.goal); }
   function wake(id) {                                             // the tasks whose waits are over start
     tasksOf(id).forEach(function (t) { if (t.state === "planned" && (t.after || []).every(function (a) { var x = taskById(a); return !x || x.state === "done"; })) { t.state = "work"; t.stage = "Build · now"; } });
@@ -1085,6 +1099,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
   }
   function startGoal(id) {                                        // its wait is over: its first tasks go to its leaders' lanes
     var from = rel(colCard(id)); wake(id); st.share = 0; closeLift(); draw();
+    var moved = colCard(id); if (moved && moved.matches(".cd")) hideUntil(moved, fly(cface(id, { top: 0, z: 1, work: true }).replace(/style="[^"]*"/, 'style="position:relative"'), from, rel(moved), { arc: 20, ms: 520 }));
     tasksOf(id).filter(inPlay).forEach(function (t, i) {
       var dest = st.tab === "board" ? document.querySelector('#v-board [data-task="' + t.id + '"]') : $("tab-" + t.party);
       if (!dest) return; var to = rel(dest); if (dest.matches(".tab")) to = { x: to.x + 8, y: to.y + 6, w: 30, h: 42 };
@@ -1212,9 +1227,11 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
     if (!tasksOf(h.t.goal).length) st.ready = st.ready.filter(function (x) { return x !== h.t.goal; });
     closeLift(); draw();
   }
-  function toNight(id) { if (id === firstOff()) st.share = 0; G[id].night = true; closeLift(); draw(); }
-  function today(id) { G[id].night = false; closeLift(); draw(); }
-  function startNow(id) { G[id].night = false; st.ready = st.ready.filter(atWork).concat([id], st.ready.filter(function (x) { return !atWork(x) && x !== id; })); st.share = 1; closeLift(); startGoal(id); }
+  function moveCard(id, change) { var from = colCard(id), a = from && from.matches(".cd") ? rel(from) : null; change(); closeLift(); draw(); var to = colCard(id); if (a && to && to.matches(".cd")) hideUntil(to, fly(cface(id, { top: 0, z: 1 }).replace(/style="[^"]*"/, 'style="position:relative"'), a, rel(to), { arc: 30, ms: 480 })); }
+  function toNight(id) { moveCard(id, function () { if (id === firstOff()) st.share = 0; G[id].night = true; G[id].later = ""; }); }
+  function toLater(id) { moveCard(id, function () { if (id === firstOff()) st.share = 0; G[id].later = "17:00"; G[id].night = false; }); }
+  function today(id) { moveCard(id, function () { G[id].night = false; G[id].later = ""; }); }
+  function startNow(id) { G[id].night = false; G[id].later = ""; st.ready = st.ready.filter(atWork).concat([id], st.ready.filter(function (x) { return !atWork(x) && x !== id; })); st.share = 1; closeLift(); startGoal(id); }
   function analyseFirst(id) { st.analysis = [st.analysis[0]].concat([id], st.analysis.slice(1).filter(function (x) { return x !== id; })).filter(function (x, i, a) { return a.indexOf(x) === i; }); closeLift(); draw(); }
   function removeGoal(id) { if (id === st.analysis[0]) return; st.analysis = st.analysis.filter(function (x) { return x !== id; }); closeLift(); draw(); }
 
@@ -1278,7 +1295,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
     var lf = t.closest(".lift");
     if (lf) {
       var b = t.closest("button"); if (!b) return; var ds = b.dataset;
-      if (ds.ans) answer(ds.ans); if (ds.retry) retry(ds.retry); if (ds.drop) drop(ds.drop); if (ds.now) startNow(ds.now); if (ds.night) toNight(ds.night); if (ds.today) today(ds.today);
+      if (ds.ans) answer(ds.ans); if (ds.retry) retry(ds.retry); if (ds.drop) drop(ds.drop); if (ds.now) startNow(ds.now); if (ds.night) toNight(ds.night); if (ds.today) today(ds.today); if (ds.later) toLater(ds.later);
       if (ds.take) takeIt(ds.take); if (ds.passnow) passOn(ds.passnow); if (ds.first) analyseFirst(ds.first); if (ds.remove) removeGoal(ds.remove);
       if (ds.accept) settle(ds.accept); if (ds.look) settle(ds.dec, ds.look); if (ds.keep) keepSpec(ds.keep); if (ds.more) { var D = st.hand.filter(function (h) { return h.id === ds.more; })[0]; keepSpec(ds.more); if (D) { if (st.picked !== D.goal) pick(D.goal, true); st.tab = D.party; draw(); openAsk(D.party, D.part); } }
       if (ds.close) closeLift();
@@ -1317,18 +1334,18 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
       lift(pq, '<div class="t">' + HEAD(PARTIES[P.by].race) + esc(PARTIES[P.by].short) + " asks " + esc(PARTIES[P.to].short) + "</div><p>" + esc(P.q) + '</p><p class="cap">' + esc(PARTIES[P.to].short) + ' can answer it from the code, so the Orkmaster passes it on in a few seconds. Nothing waits for you.</p><div class="acts"><button type="button" class="ork-btn" data-take="' + P.id + '">Answer it myself</button><button type="button" class="ork-btn" data-passnow="' + P.id + '">Pass it now</button></div>');
       lifted = P.id; return; }
     var dn = t.closest("[data-down]");
-    if (dn) { var id0 = dn.dataset.goal, A = G[id0], writing = id0 === st.analysis[0] && st.busy;
-      if (lifted === id0) return closeLift();
-      lift(dn, '<div class="t">' + EG(A) + " " + esc(A.short) + "</div><p>" + esc(A.name) + '</p><p class="cap">' + (writing ? "The Orkmaster is writing its spec. Nothing to look at on the tabs yet: it turns face up when its spec is ready." : "Its spec is not written yet, so the tabs have nothing to show. It turns face up when its spec is ready.") + "</p>"
-        + (writing ? "" : '<div class="acts"><button type="button" class="ork-btn" data-first="' + id0 + '">Analyse it next</button><button type="button" class="ork-btn quiet" data-remove="' + id0 + '">Remove</button></div>'));
-      lifted = id0; return; }
-    var rc = t.closest("#c-ready [data-goal]");
+    if (dn) { if (lifted === "analysis") return closeLift();
+      lift($("c-analysis"), '<div class="t">In analysis</div><p class="cap">Face down: their specs are not written yet, so the tabs have nothing to show and their names are on their other side. In the Orkmaster’s order:</p><ol class="queue">'
+        + st.analysis.map(function (id, i) { var A = G[id]; return "<li>" + EG(A) + '<span class="nm">' + esc(A.name) + "</span>" + (i === 0 && st.busy ? '<span class="cap">writing</span>' : '<span class="qa">' + (i > 1 ? '<button type="button" class="ork-btn quiet" data-first="' + id + '">Next</button>' : "") + '<button type="button" class="ork-btn quiet" data-remove="' + id + '">Remove</button></span>') + "</li>"; }).join("") + "</ol>");
+      lifted = "analysis"; return; }
+    var rc = t.closest("#c-review [data-goal], #c-work [data-goal]");
     if (rc) { var id1 = rc.dataset.goal, R = G[id1];
       if (atWork(id1)) { pick(id1); return; }
       if (lifted === id1) { pick(""); return; }
       pick(id1, true);
-      lift(rc, '<div class="t">' + EG(R) + " " + esc(R.short) + "</div><p>" + esc(R.name) + '</p><p class="cap">Its spec is ready. ' + (R.night ? "It starts tonight at 01:00." : "It starts in its turn.") + " The tabs show what it will change; talk to a leader there to change it.</p>"
-        + '<div class="acts"><button type="button" class="ork-btn primary" data-now="' + id1 + '">Start now</button>' + (R.night ? '<button type="button" class="ork-btn" data-today="' + id1 + '">Today, in turn</button>' : '<button type="button" class="ork-btn" data-night="' + id1 + '">Tonight</button>') + "</div>");
+      var off = putOff(id1);
+      lift(colCard(id1), '<div class="t">' + EG(R) + " " + esc(R.short) + "</div><p>" + esc(R.name) + '</p><p class="cap">Its spec is ready. ' + (R.night ? "Put off to tonight, 01:00." : R.later ? "Put off to " + R.later + "." : "It starts by itself in its turn; read it first on the tabs, and ask a leader there to change it.") + "</p>"
+        + '<div class="acts"><button type="button" class="ork-btn primary" data-now="' + id1 + '">Start now</button>' + (off ? '<button type="button" class="ork-btn" data-today="' + id1 + '">Back to review</button>' : '<button type="button" class="ork-btn" data-later="' + id1 + '">Later today</button><button type="button" class="ork-btn" data-night="' + id1 + '">Tonight</button>') + "</div>");
       lifted = id1; return; }
     var gl = t.closest("[data-goal]");
     if (gl && !gl.closest(".hnd")) { pick(gl.dataset.goal); return; }
