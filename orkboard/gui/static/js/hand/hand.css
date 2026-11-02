@@ -154,6 +154,8 @@
 .hand-chip__off { padding: 0; min-width: 24px; }
 .hand-pic { position: relative; display: inline-flex; align-items: center; gap: var(--ork-1); }
 .hand-pic img { display: block; width: 36px; height: 36px; object-fit: cover; image-rendering: auto; }
+@media (min-width: 760px) { .hand .hand-field.is-picking { top: calc(100dvh - 210px); }      /* picking on a map (spec 102 §6): the card lies lower, the map above it free to press */
+  .hand .hand-field.is-picking .hand-field__text { height: 48px; } }
 .hand .hand-field .hand-field__text { flex: none; height: 104px; min-height: 0; resize: none; padding: var(--ork-3); font: var(--ork-type-body); }
 .hand .hand-field.has-row .hand-field__text { height: 56px; }                                  /* a row of choices open: the words give it room, so *Send* stays above the window's edge */
 .hand .hand-field.is-middle .hand-field__text { flex: 1; height: auto; min-height: 88px; }       /* in the pane's middle and on a phone the card fills its height */

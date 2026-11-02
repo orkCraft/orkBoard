@@ -25,7 +25,7 @@ import { fieldFiles, fieldOff, fieldOpen, fieldPhotos, fieldRow, fieldRune, fiel
 import { focusInPress, growFrom, placeField, releaseProxy, sendBack, turnBack } from "./fieldturn.js";
 import { Choices, ELEMENTS, FileChips, Squares, closeRow } from "./fieldsquares.js";
 import { partiesOf, partyCard } from "./data.js";
-import { MarkChips, addressNow, marks, marksToSend, resetMarks } from "../table/picking.js";       // picking on the addressed party's map (spec 102 §6): its marks lie on the field as chips
+import { MarkChips, addressNow, marks, marksToSend, pickFor, resetMarks } from "../table/picking.js";       // picking on the addressed party's map (spec 102 §6): its marks lie on the field as chips
 import { leans } from "./motion.js";
 import { MentionList, useMention } from "./mention.js";
 import { mapData } from "../shell/store.js";
@@ -139,7 +139,7 @@ export function Field({ middle = false }) {
     if (pics.length) { e.preventDefault(); addPictures(pics); }
   };
   const attached = fieldPhotos.value.length + fieldFiles.value.length > 0;
-  return html`<div ref=${root} class=${cls("ork-card hand-field", { "is-middle": middle, "has-row": !!fieldRow.value })} role="group" aria-label="The new goal’s card, grown into the field"
+  return html`<div ref=${root} class=${cls("ork-card hand-field", { "is-middle": middle, "has-row": !!fieldRow.value, "is-picking": !!pickFor.value })} role="group" aria-label="The new goal’s card, grown into the field"
       onDragOver=${(e) => e.preventDefault()} onDrop=${(e) => { e.preventDefault(); addPictures([...(e.dataTransfer?.files || [])]); }}>
     <div class="hand-field__top"><${Squares} runes=${runes} address=${address} parties=${parties} taken=${taken} />
     ${(address.name || taken || marks.value.length > 0) && html`<div class="hand-field__chips">
