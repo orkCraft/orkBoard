@@ -125,7 +125,7 @@ export function Token({ n, tasks = [], stage = "" }) {
       data-about=${aboutTokens(n, tasks)} data-state=${front ? front.state : n.state} data-stage=${st} aria-pressed=${String(on)} aria-label=${said} title=${said} onClick=${() => lift(lifted.value === key ? "" : key)}>
       <span class="table-card__top"><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} glowing=${(!!front && aliveState(front.state)) || (!front && backKind(n) === "talk")} /><${Sign} name=${(STAGES[st] || STAGES.routing).sign} /></span>
       <${Win} n=${n} sign=${front ? typeSignOf(n, front) : n.type?.sign || ""} danger=${bad} />
-      <${Pips} st=${steps} element=${n.element} alive=${!!front && aliveState(front.state)} small=${true} />
+      <${Pips} st=${steps} element=${n.hue || n.element} alive=${!!front && aliveState(front.state)} small=${true} />
     </button>
   </span>`;
 }
