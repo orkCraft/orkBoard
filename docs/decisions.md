@@ -4677,3 +4677,54 @@ Measured against what is built (§137's map, the goals in dev and not in main ti
 8. **The look is orkUI's and the words plain**, as §208.6.
 9. **The evidence is asked for before the spec**, as §208.7. The spec builds 2–6 with §208's to §212's.
 The owner's call.
+
+## 214. The Marketing lens measured against how small teams are found: the Steam page read as the store, the app's hints silent for a game sold once, the positioning whole over the map, one or two channels in focus (2 November 2026, the owner)
+
+Changes: 109, 124, 151, 210, 211.
+
+Why: the same research as §208, for Marketing (a prompt to Gemini, its answer unsourced and so taken as a hypothesis;
+its figures for *The Last Cat in the Universe*, 4,500 wishlists at launch and 4,000 copies sold in the first week, are
+unlikely, a first week usually selling well under the wishlists, and are checked first). What it said: for a small team
+marketing is where time is burnt and wasted: short videos for YouTube and TikTok cost much and moved few wishlists,
+while personal ties with streamers, bundles with other indie games and a demo's ending carried the launch; April
+Dunford: a product fails at the door when it keeps the category of its first day and looks a weak copy of the leader,
+instead of starting from what only it has and the value that gives a segment; Gabriel Weinberg's Bullseye: most
+companies cannot make one channel work, one channel at the centre is enough, and spreading over several at once fails.
+It proposed the way in as one chain (Dunford's five cards, then a card of the live store page with its capsule, the
+trailer's date, the first four screenshots, the short description and the tags, then AARRR's five cards of visits,
+wishlists, a demo played over fifteen minutes, sales, reviews and bundles), a second map (three rings: at most two
+channels at the centre with their conversion by UTM, up to three experiments in the middle, the other of the nineteen
+channels frozen outside), signals (screenshots or a trailer older than the game's visual commits, a unique attribute
+not in the trailer's first seconds or the store's text, work started on a frozen channel), and on the phone the week's
+change in wishlists and sales. Measured against what is built (§151.7's way in, read by the files' names: channels, the
+store's metadata from `fastlane` or a site's pages, the install, the first session; spec 109's hints `no_channel`,
+`aso_title`, `aso_short`, `no_shots`, `no_onboarding`, `no_return`, `no_share`, `no_revenue`; spec 124's brief with
+*Whom it is for*, *What hurts them*, *Why this, not what they use now*), the map is the one we have, but it knows an
+app's stores alone: an indie game's store is Steam, and Steam's page is not in the repository. So:
+1. **The way in stays the one map.** No rings, no second map, no funnel of numbers.
+2. **The Steam page read as the store**: when the project names its Steam app (its id in the project's settings, or a
+   `steam_appid.txt` in its tree), the store step holds the page as Steam's public store API gives it, with no key (the
+   name, the short description, the capsule, the screenshots, the trailers, the tags, the release date), read at most
+   once a day and kept as a snapshot. Nothing is sent to Steam but the id. A new hint `store_behind` (in the store's
+   aspect): the game's screens or assets changed by STORE_GOALS goals or more since the store's screenshots last
+   changed in the snapshots kept (*The store's screenshots are older than the game: 7 goals changed what players see
+   since*). `aso_short` and `no_shots` read Steam's page too.
+3. **An app's hints are silent for a game sold once**: by the brief's *earns* (as §211.2), `no_return` (a push, a daily
+   reward, a streak), `no_share` and `no_revenue` (a payment library) say nothing of a game sold once on a store,
+   where the store takes the payment and the player returns for other reasons.
+4. **The positioning whole over the map**: Dunford's five are the brief's *Why this, not what they use now* (the
+   alternatives) and *Whom it is for*, with three of Marketing's own records (spec 124's party records): **What only it
+   has**, **What that gives them**, **Its shelf** (the category, a game's genre). The five lie as thin strips along the
+   map's top edge, as the pillars do (§210.3). Marketing's leader judges the store's short description against *What
+   only it has* in its look and in Talk (*What only it has is not said in the store's text*): a model's judgement.
+5. **One or two channels in focus** (Bullseye): the person may mark up to two channels as the ones worked now (as
+   §210.2's job); a new hint `spread` when goals at work reach CHANNELS_SPREAD channels or more beyond them (*Goals
+   are at work on five channels; the focus is two*). With none marked it is silent.
+6. **Not taken now**: AARRR's numbers, conversion by UTM and the week's change on the phone (Steam's wishlists and sales
+   are Steamworks', behind a partner's key, and the project's analytics are not read yet: the later spec of spec 115);
+   whether the trailer's first seconds show what only it has (it needs the video read: later); the field's practice of
+   Steam marketing (a creator's outreach, festivals, bundles over short videos: Chris Zukowski's *How To Market A Game*
+   among others) lives in Marketing's rubric for a game, never as a rule of the map.
+7. **The look is orkUI's and the words plain**, as §208.6.
+8. **The evidence is asked for before the spec**, as §208.7. The spec builds 2–5 with §208's to §213's.
+The owner's call.
