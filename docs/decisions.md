@@ -4498,3 +4498,47 @@ spec 109's `no_states` and `a11y`, spec 115's marks on Play held by the element)
    own words on keeping or dropping their screen maps.
 8. The spec that builds 2–6 comes with §208's, the engines (5) in their part.
 The owner's call.
+
+## 210. The Product lens measured against how small teams keep their tree: one job in focus, a goal judged against the project's pillars, a solution posing as a job, a test's state on its goal; no score (2 November 2026, the owner)
+
+Changes: 102, 109, 124, 172.
+
+Why: the same research as §208, for Product (a prompt to Gemini, its answer unsourced and so taken as a hypothesis).
+What it said: in small teams a RICE table and a sprawling opportunity tree die of the gap between the board one thinks
+on (Miro) and the code; a RICE score demanded of every ticket cuts *shipping fast* off from *shipping right*, and a
+feature scored high locally wears away the product's identity and positioning; RICE's own authors at Intercom say the
+score is no hard rule (a low one is often what a large goal stands on, or table stakes), and a low *Confidence* is a
+call for a quick experiment, not a factor. Torres' tree fits cards when the focus is narrow: one **target
+opportunity** at a time, three competing solutions under it, a test of the riskiest assumption under each. It proposed
+a four-tier tree under a North Star card with a live metric's line and three input metrics, one opportunity in focus
+with lines only from it, a second map (a 2×2 of impact against evidence the assumptions are dragged onto), badges
+(*Solution in Disguise*), a lit link when commits start on a solution whose riskiest test is not passed, a *blocking*
+pin when a solution breaks the design pillars, and on the phone the branch in focus alone, for a pivot after a
+playtest. Measured against what is built (§172's tree: one or two outcomes, three to seven jobs in JTBD's sentence, the
+Board's goals serving them, experiments testing them; spec 109's `vague_outcome`, `no_evidence`, `off_tree`,
+`untested`; spec 124's brief with *pillars* and *leaves_out*), the map is the one we have, and nothing of ours scores.
+So:
+1. **The Tree stays the one map, and nothing is scored**: no RICE or ICE anywhere, not on a goal, a job or a card. No
+   second map: the 2×2's question is the *Evidence* aspect, and a test's state lies on the tree (4).
+2. **One job in focus**: the person may mark one job the job now (one at a time; marking another moves it). Then the
+   tree draws its lines from that job alone, its goals and their tests under it, the other jobs folded to their one
+   line. A new hint in *Focus*, `off_focus`: goals at work that serve another job (a number of them, its words naming
+   both jobs). With no job marked the tree is as today and the hint is silent.
+3. **A goal judged against the project's pillars**: Product's leader reads the brief's *pillars* (*What it must always
+   be*) and *leaves_out* (*What it leaves out*) in its look and in Talk, and a goal that goes against one is a concern
+   that quotes it (*This goes against "What it must always be: …"*). A model's judgement, never by code; a concern like
+   any other, never a block: the person decides, in the hand.
+4. **A test's state on its goal's card**: a corner saying *no test*, *testing*, *held* or *failed* (the experiment's and
+   the hypothesis' state, `realm/hypotheses.py`), so what is built on faith shows on the tree itself. `untested` stays
+   the hint for a goal at work on an open hypothesis with no test.
+5. **A solution posing as a job**: when a job's *I want to* names a feature rather than what the person is after, the
+   leader asks in its look *This is a solution: what does it let them do?* (in *Opportunities*). A model's judgement.
+6. **Not taken now**: the North Star's live line and input metrics (the project's analytics are not read yet: the
+   later spec of spec 115 that reads PostHog, Sentry or Firebase); jobs gathered from Steam reviews and Discord (a
+   connector of their own, later); three competing solutions as the tree's rule (an agent's variants are cheap, and a
+   pick of variants is spec 51's); a view of its own on the phone (a pivot after a playtest is a card in the hand).
+7. **The look is orkUI's and the words plain**: the tokens alone, the job in focus by the signal's token, never a badge
+   in English jargon (*Solution in Disguise*).
+8. **The evidence is asked for before the spec**, as §208.7: the post-mortems and Intercom's own words it speaks of,
+   named. The spec builds 2–5 with §208's and §209's.
+The owner's call.
