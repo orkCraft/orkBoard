@@ -4439,7 +4439,7 @@ So:
    parts (fan-in at least BEARING_IN) changed many times in the last CHURN_DAYS days. Its words name both numbers
    (*9 parts use it; it was changed 14 times in 30 days*). Martin's instability is not shown to the person. The layers
    already lay what most use at the bottom (spec 90 §6.5), so nothing new is drawn: the hint lies on the bottom card.
-   The hints stay at eight kinds.
+   Tech's hints are nine kinds, one more than today.
 4. **Quiet while a part is young**: a part placed in the layout less than YOUNG_DAYS ago gives no hint of change
    (`hotspot`, `co_change`, `untested_churn`); `bearing` alone speaks of it. A prototype is changed everywhere, and a
    lens that says so of every card is no longer looked at.
