@@ -199,6 +199,9 @@ button.cd { cursor: pointer; width: 120px; flex: none; }                      /*
 .col-head { flex: none; display: flex; align-items: center; gap: var(--ork-2); height: 40px; margin: 0 calc(var(--ork-2) * -1); padding: 0 var(--ork-3); border-bottom: var(--ork-line) solid var(--ork-frame);
   font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); white-space: nowrap; }
 .col-head img { width: 24px; height: 22px; image-rendering: pixelated; }
+button.col-head { width: calc(100% + var(--ork-2) * 2); background: none; border: 0; border-bottom: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink-muted); cursor: pointer; text-align: left; }
+button.col-head.on { color: var(--ork-ink); box-shadow: inset 0 -2px 0 var(--ork-ink); }
+button.col-head:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2px; }
 .csec { display: flex; flex-direction: column; gap: var(--ork-1); }
 .csec[hidden] { display: none; }
 .csec .plab { justify-content: space-between; }
@@ -317,6 +320,25 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
 .runegrid .rrow { display: flex; gap: var(--ork-5); }
 .runeorder { display: flex; gap: var(--ork-4); padding: var(--ork-5); background: var(--ork-table); flex-wrap: wrap; }
 .runeorder .ro { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+/* the bubble under a head: one way to talk to a leader, about what is picked */
+.bubble { position: absolute; width: 400px; display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4); background: var(--ork-raised); border: var(--ork-line) solid var(--ork-edge); z-index: 45; }
+.bubble::before { content: ""; position: absolute; top: -7px; left: var(--tail, 20px); width: 12px; height: 12px; background: var(--ork-raised); border-left: var(--ork-line) solid var(--ork-edge); border-top: var(--ork-line) solid var(--ork-edge); rotate: 45deg; }
+.bubble .bh { display: flex; align-items: center; gap: var(--ork-3); }
+.bubble .bh img { width: 24px; height: 22px; image-rendering: pixelated; }
+.bubble .bh b { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.bubble .bx { margin-left: auto; height: 24px; padding: 0 var(--ork-2); }
+.bubble .files { flex: none; } .bubble .chip { border-color: var(--c, var(--ork-frame)); }
+.bubble .chip button { display: grid; place-items: center; width: 16px; height: 16px; padding: 0; background: none; border: 0; color: inherit; cursor: pointer; } .bubble .chip .ork-icon { width: 12px; height: 12px; }
+.bubble .q { margin: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.bubble .ans { margin: 0; font: var(--ork-type-body); }
+.bubble .cap { margin: 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.bubble .think { animation: mk-glow 2.4s steps(6) infinite; }
+.bubble .acts { display: flex; gap: var(--ork-2); flex-wrap: wrap; }
+.chc[data-part] { cursor: pointer; }
+.chc[data-part]:hover, .chc[data-part]:focus-visible { --mk-line: var(--ork-edge); outline: none; }
+.ask-hint { display: inline-flex; align-items: center; gap: var(--ork-1); margin-top: var(--ork-1); font: var(--ork-type-caption); color: var(--ork-ink-faint); }
+.ask-hint .ork-icon { width: 10px; height: 10px; }
+.chc[data-part]:hover .ask-hint { color: var(--ork-ink); }
 /* the column off the table: the canvas's black, like the hand; the table is the pane, its rim orkUI's (.ork-table) */
 .col { background: var(--ork-canvas); border-right: 0; }
 .scn.col-on-table .col { background: var(--ork-table); border-right: var(--ork-line) solid var(--ork-frame); }
@@ -326,6 +348,10 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
 .fan { position: relative; width: 100%; }
 .cd.cb { position: absolute; left: 0; width: 112px; height: 157px; transition: transform var(--ork-motion-base) var(--ork-motion-ease); }
 .cd.cb .ork-sigil { width: 112px; height: 112px; top: 2px; bottom: auto; left: 0; right: 0; margin: 0 auto; transform: scale(0.94); transform-origin: 50% 0; }
+.cd.cb.land { width: 157px; height: 112px; }
+.cd.cb.land .ork-sigil { left: auto; right: -2px; top: 0; margin: 0; transform: scale(0.94); transform-origin: 100% 0; }
+.cd.cb.land .cfoot { right: 58px; }
+.cd.cb.land:hover, .cd.cb.land:focus-visible { transform: translateX(6px); }
 .cd.cb:hover, .cd.cb:focus-visible { z-index: 40 !important; transform: translateX(52px) rotate(2deg); box-shadow: -4px 4px 0 var(--ork-scrim); }      /* a card of a pile, hovered: out of it, whole, its name whole */
 .cd.cb:first-child .cfoot, .cd.cb:hover .cfoot, .cd.cb:focus-visible .cfoot { height: auto; min-height: 17px; flex-wrap: wrap; padding-block: 1px; }
 .cd.cb:first-child .cfoot .nm, .cd.cb:hover .cfoot .nm, .cd.cb:focus-visible .cfoot .nm { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; flex-basis: calc(100% - 20px); }
@@ -388,7 +414,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
 
 <section class="mk-sec" id="window">
   <h1>1 · The window, played</h1>
-  <p class="mk-line"><b>The Orkmaster's column</b>, the same on every tab, holds two piles. <b>In analysis</b>: face down, no spec yet (the one being written in front, its ring running); pressed, it says so, and the tabs do not change. <b>Spec ready</b>: face up, at work (who works on it at its foot) or put off (its start: a time, or the moon at 01:00); the wait now runs between the spec and the work, so you can read it first. <b>Press a face-up card</b>: the Board shows its plan only, in its leaders' lanes, its order as arrows; Tech's and Design's tabs show what it will change, and <i>Talk to Tech</i> on a part opens the + card's field to that leader, whose answer comes to your hand as a decision. <b>Press a card in the discard</b>: the tabs show what it changed against what its spec promised, and the die wears its rune.</p>
+  <p class="mk-line"><b>The Orkmaster's column</b>, the same on every tab. <b>Its head is the Orkmaster's tab</b>, open at first: who does what, every leader's lane. <b>In analysis</b> its cards lie sideways, a quarter turned (busy, not to be played) and face down; when a spec is written the card turns upright, then face up, and joins <b>Spec ready</b>: at work, or put off to a time or the night. <b>Press a face-up card</b>: the Orkmaster's tab shows its plan with arrows, a leader's tab what it will change. <b>Talking to a leader is one way everywhere</b>: press the open tab's head again (the Orkmaster's too), or a part of a change, and a bubble opens under the head, about what is picked. The answer reads and changes nothing; <i>Make it a change</i> or <i>Make it a goal</i> makes it a card.</p>
   <div class="mk-acts" role="group" aria-label="Play the window">
     <button class="ork-btn" type="button" data-do="spec">The Orkmaster finishes a spec</button>
     <button class="ork-btn" type="button" data-do="land">A task lands</button>
@@ -402,12 +428,12 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
   </div>
   <div class="scn-wrap" id="wrap"><div class="scn" id="scn">
     <aside class="col" id="col" aria-label="The Orkmaster's goals">
-      <div class="col-head"><img src="../../../design-system/orkui/races/peon-crown@2x.png" alt="">The Orkmaster</div>
+      <button type="button" class="col-head" role="tab" data-tab="board" id="tab-board" title="The Orkmaster: who does what; pressed again, ask it"><img src="../../../design-system/orkui/races/peon-crown@2x.png" alt="">The Orkmaster</button>
       <div class="csec"><div class="plab">In analysis<span class="u" id="u-analysis"></span></div><div class="fan" id="c-analysis"></div></div>
       <div class="csec"><div class="plab">Spec ready<span class="u" id="u-ready"></span></div><div class="fan" id="c-ready"></div></div>
       <div class="cpass" id="c-pass"></div>
     </aside>
-    <div class="tabs" role="tablist"><button type="button" class="tab" role="tab" data-tab="board" id="tab-board">Board</button><button type="button" class="tab" role="tab" data-tab="tech" id="tab-tech"><img src="../../../design-system/orkui/races/shaman-elder@2x.png" alt="">Tech</button><button type="button" class="tab" role="tab" data-tab="design" id="tab-design"><img src="../../../design-system/orkui/races/dryad-elder@2x.png" alt="">Design</button></div>
+    <div class="tabs" role="tablist"><button type="button" class="tab" role="tab" data-tab="tech" id="tab-tech"><img src="../../../design-system/orkui/races/shaman-elder@2x.png" alt="">Tech</button><button type="button" class="tab" role="tab" data-tab="design" id="tab-design"><img src="../../../design-system/orkui/races/dryad-elder@2x.png" alt="">Design</button></div>
     <div class="pane ork-table">
       <div class="look" id="look"></div>
       <div class="view" id="v-board"><svg id="b-arrows" aria-hidden="true"></svg><div class="blanes">
@@ -431,12 +457,12 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
     <div class="layer" id="layer"></div>
   </div></div>
   <div class="mk-notes">
-    <p><b>Face down until there is a spec, face up once there is.</b> The card turns over where it lies when its spec is written, and joins Spec ready, first of those put off. A face-down card cannot be picked: there is nothing on the tabs to show.</p>
-    <p><b>The plan on the Board.</b> A goal picked hides every other goal's tasks: its own lie in their leaders' lanes, planned ones faint, done ones grey, the one at work glowing, and the arrows say what waits for what. <i>A task lands</i> moves it on; when its last lands, the goal goes to the discard.</p>
-    <p><b>Talk to a leader</b> about a spec that is ready: <i>Talk to Tech</i> on a part opens the one field (the + card's) addressed to that leader, the goal and the part as marks. The answer is a decision card in the hand: Tech's plan now and proposed, with what it costs; Design's three looks to choose from. Accepted, it is written into what the goal will change.</p>
-    <p><b>The discard</b> can be picked: Tech's and Design's tabs show what the goal changed against what its spec promised (✓ as promised, ≠ not quite, + more than promised, ✗ not done) and its <i>Done when</i>, checked. The die in the hand wears its rune: Play opens the product with that goal in it, as dev is now or as it was when it landed.</p>
-    <p><b>The night</b>: in the morning its goals done fly to the discard under a small moon, until seen; a night's failure comes to the hand red, with its reason. No morning report: the table says it.</p>
-    <p><b>The hand gets only what needs you</b>: a choice only a person makes, a question no leader could answer, a decision you asked a leader for, a failure.</p>
+    <p><b>No Board tab.</b> The column is the Orkmaster, so its head is its tab: with nothing picked, every leader's lane (who does what); with a goal picked, its plan with arrows. The tabs at the top are the leaders' only.</p>
+    <p><b>Sideways while in analysis.</b> A card turned a quarter is busy, as in a card game: a face-down goal the Orkmaster is still writing. It saves a third of the height, and the two kinds read apart at a glance. Its name is written upright; the round seal does not mind the turn. Pressed, it says what it is; it cannot be picked.</p>
+    <p><b>One way to talk to a leader.</b> The open tab's head pressed again opens its bubble (decisions §181); a part of a change pressed opens it with the part as a mark. It is about what is picked: nothing, the project; a goal, that goal. The leader answers in words, reading only.</p>
+    <p><b>A card only when something would change.</b> Under an answer: <i>Make it a change</i> for a goal whose spec is ready (a decision card in the hand: its plan now and proposed, its cost; Design's three looks), <i>Make it a goal</i> for the project or a goal done (the + card opens with the words in it). The + card is for new goals only.</p>
+    <p><b>The discard</b> picked: what the goal changed against its spec, and the die in its rune. <b>The night</b>: its goals done fly to the discard under a moon, a failure comes to the hand.</p>
+    <p><b>The hand gets only what needs you</b>: a choice only a person makes, a question no leader could answer, a decision you made from a talk, a failure.</p>
   </div>
 </section>
 
@@ -681,7 +707,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
   function cback(id, o) {
     var g = G[id], m = o.mark || "";
     var sig = "ork-sigil" + (o.busy ? " mk-busy" : "") + (o.stopped ? " mk-stopped" : "");
-    return '<button type="button" class="ork-card mk-r cd back cb c-' + g.col + (m === "asks" ? " is-asks thick" : "") + '" data-goal="' + id + '" data-down="1" style="top:' + o.top + "px;z-index:" + o.z + '" title="' + esc(g.name) + '" aria-label="' + esc(g.name + ": " + (o.say || "waits for its spec")) + '">'
+    return '<button type="button" class="ork-card mk-r cd back cb land c-' + g.col + (m === "asks" ? " is-asks thick" : "") + '" data-goal="' + id + '" data-down="1" style="top:' + o.top + "px;z-index:" + o.z + '" title="' + esc(g.name) + '" aria-label="' + esc(g.name + ": " + (o.say || "waits for its spec")) + '">'
       + '<span class="' + sig + '" aria-hidden="true"><span class="ork-sigil__seal">' + EG(g, o.glow ? "mk-glow" : "") + "</span></span>"
       + '<span class="cfoot">' + EG(g) + '<span class="nm">' + esc(g.short) + "</span>" + (o.extra || "") + "</span></button>";
   }
@@ -693,11 +719,12 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
       + '<div class="win">' + S(g.sign, "big") + (moon ? '<span class="moonmark">' + S("moon") + "</span>" : "") + "</div>"
       + '<span class="cfoot">' + EG(g) + '<span class="nm">' + esc(g.short) + "</span>" + (o.extra || "") + markSign(m) + "</span></button>";
   }
-  function fan(el, items, maker) {
-    var shown = items.slice(0, 4), n = items.length;
+  function fan(el, items, maker, ch, max) {
+    ch = ch || CH; max = max || 4;
+    var shown = items.slice(0, max), n = items.length;
     if (!n) { el.style.height = "auto"; el.innerHTML = '<div class="free">Nothing here</div>'; return; }
-    el.style.height = CH + (shown.length - 1) * PEEK + (n > 4 ? 6 : 0) + "px";
-    el.innerHTML = shown.map(function (it, i) { return (it.maker || maker)(it.id, Object.assign({ top: i * PEEK, z: 10 - i }, it.o)); }).join("") + (n > 4 ? '<span class="edges" style="top:' + (CH + (shown.length - 1) * PEEK) + 'px" aria-hidden="true"></span>' : "");
+    el.style.height = ch + (shown.length - 1) * PEEK + (n > max ? 6 : 0) + "px";
+    el.innerHTML = shown.map(function (it, i) { return (it.maker || maker)(it.id, Object.assign({ top: i * PEEK, z: 10 - i }, it.o)); }).join("") + (n > max ? '<span class="edges" style="top:' + (ch + (shown.length - 1) * PEEK) + 'px" aria-hidden="true"></span>' : "");
   }
   function stageWords(t) { return t.state === "planned" ? S("pause") + "Planned" : t.state === "done" ? S("check") + "Done" : t.state === "asks" ? S("question") + "Waits for you" : t.state === "asked" ? S("question") + "Asked " + esc(PARTIES[t.asked].short) : t.state === "failed" ? S("alert") + "Failed" : EG(G[t.goal], "mk-glow") + esc(t.stage || "Build"); }
   function tcard(t, o) {
@@ -732,7 +759,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
   function acard(p) { return '<div class="ork-card mk-r cd q ans thick"><span class="who">' + HEAD(PARTIES[p.to].race) + esc(PARTIES[p.to].short + " answers") + '</span><span class="qq">' + esc(p.answer) + "</span></div>"; }
   function drawPass() { $("c-pass").innerHTML = st.pass.map(function (x) { return pcard(x); }).join(""); }
   function drawReady() {
-    fan($("c-ready"), readyOrder().map(function (id) { return { id: id, o: { extra: whenOf(id), say: atWork(id) ? "at work" : G[id].night ? "starts tonight at 01:00" : "starts in its turn" } }; }), cface);
+    fan($("c-ready"), readyOrder().map(function (id) { return { id: id, o: { extra: whenOf(id), say: atWork(id) ? "at work" : G[id].night ? "starts tonight at 01:00" : "starts in its turn" } }; }), cface, CH, 6);
     var f = firstOff();
     $("u-ready").textContent = f ? (st.share >= 1 ? "one starts now" : "next in " + Math.ceil((1 - st.share) * 8 * 1.5) + " s") : "";
     round($("c-ready"));
@@ -741,7 +768,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
   function nextRune() { return freshRune().el; }
   function draw() {
     // the Orkmaster's column, the same on every tab
-    fan($("c-analysis"), st.analysis.map(function (id, i) { return { id: id, o: i === 0 && st.busy ? { busy: !st.orkAsks, stopped: st.orkAsks, glow: !st.orkAsks, mark: st.orkAsks ? "asks" : "", say: st.orkAsks ? "waits for your answer" : "the Orkmaster is writing its spec" } : { say: "waits for the Orkmaster" } }; }), cback);
+    fan($("c-analysis"), st.analysis.map(function (id, i) { return { id: id, o: i === 0 && st.busy ? { busy: !st.orkAsks, stopped: st.orkAsks, glow: !st.orkAsks, mark: st.orkAsks ? "asks" : "", say: st.orkAsks ? "waits for your answer" : "the Orkmaster is writing its spec" } : { say: "waits for the Orkmaster" } }; }), cback, 112, 4);
     $("u-analysis").textContent = st.analysis.length ? (st.orkAsks ? "waits for you" : "writing a spec") : "free";
     $("u-analysis").classList.toggle("asks", !!st.orkAsks);
     drawReady(); drawPass();
@@ -750,7 +777,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
     ["board", "tech", "design"].forEach(function (v) { $("v-" + v).hidden = v !== st.tab; });
     var pg = st.picked ? G[st.picked] : null, isDone = pg && st.done.indexOf(st.picked) >= 0;
     $("look").innerHTML = (pg ? 'Looking at <span class="chip c-' + pg.col + '">' + EG(pg) + esc(pg.short) + (isDone ? " · done" : "") + '<button type="button" data-unpick="1" aria-label="Look at the whole project">' + I("close") + "</button></span>" : "The whole project")
-      + '<span class="lens">' + (st.tab === "board" ? (pg ? "Board: its plan, in order" : "Board: who does what") : PARTIES[st.tab].short + " · " + (pg ? (isDone ? "what it changed, against its spec" : "what it will change") : st.tab === "tech" ? "System" : "Screens")) + (pg ? " · Esc: the whole project" : "") + "</span>";
+      + '<span class="lens">' + (st.tab === "board" ? (pg ? "The Orkmaster · its plan, in order" : "The Orkmaster · who does what") : PARTIES[st.tab].short + " · " + (pg ? (isDone ? "what it changed, against its spec" : "what it will change") : st.tab === "tech" ? "System" : "Screens")) + (pg ? " · Esc: the whole project" : "") + "</span>";
     // the Board: every leader's tasks in play; a goal picked: its plan only, in its leaders' lanes, its order as arrows
     ["tech", "design"].forEach(function (p) {
       var list = pg ? tasksOf(st.picked).filter(function (t) { return t.party === p; }) : st.tasks.filter(function (t) { return t.party === p && inPlay(t); });
@@ -807,11 +834,11 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
     var g = G[id], touch = specOf(id).touches[p] || [], ch = changesOf(id, p);
     if (!touch.length) return '<div class="chg-empty">' + EG(g) + " " + esc(g.short) + ": nothing of it is on " + PARTIES[p].short + "’s map. Its work is at the other leaders.</div>";
     var cards = ch.map(function (c) {
-      var talk = '<button type="button" class="ork-btn quiet talk" data-talk="' + p + "|" + c[0] + '">' + HEAD(PARTIES[p].race) + "Talk to " + PARTIES[p].short + "</button>";
-      if (p === "design") return '<div class="ork-card mk-r chc scr-chg c-' + g.col + '"><div class="hd"><b>' + esc(nodeName(p, c[0])) + '</b><span class="kind k-' + c[1] + '">' + KIND[c[1]] + "</span></div>"
+      var talk = '<span class="ask-hint">' + I("arrow-right") + "Ask " + PARTIES[p].short + " about it</span>";
+      if (p === "design") return '<div class="ork-card mk-r chc scr-chg c-' + g.col + '" role="button" tabindex="0" data-part="' + p + "|" + c[0] + '"><div class="hd"><b>' + esc(nodeName(p, c[0])) + '</b><span class="kind k-' + c[1] + '">' + KIND[c[1]] + "</span></div>"
         + '<div class="pair"><figure><span class="ph2">' + (c[1] === "new" ? "<em>none</em>" : "<i></i><i class=s></i><i></i>") + '</span><figcaption>Now</figcaption></figure><span class="arrow">' + I("arrow-right") + '</span><figure><span class="ph2 will"><i></i><b></b><i class=s></i><i></i></span><figcaption>Will be</figcaption></figure></div>'
         + li(c[2]) + (c[3] && c[3].length ? '<div class="states">' + c[3].map(function (x) { return "<span>" + esc(x) + "</span>"; }).join("") + "</div>" : "") + talk + "</div>";
-      return '<div class="ork-card mk-r chc c-' + g.col + '"><div class="hd"><b>' + esc(nodeName(p, c[0])) + '</b><span class="kind k-' + c[1] + '">' + KIND[c[1]] + "</span></div>" + li(c[2]) + talk + "</div>";
+      return '<div class="ork-card mk-r chc c-' + g.col + '" role="button" tabindex="0" data-part="' + p + "|" + c[0] + '"><div class="hd"><b>' + esc(nodeName(p, c[0])) + '</b><span class="kind k-' + c[1] + '">' + KIND[c[1]] + "</span></div>" + li(c[2]) + talk + "</div>";
     }).join("");
     var diff = p === "tech" && (CHANGES[id] && CHANGES[id].diff || []);
     return '<div class="chg-main"><div class="chg-title">' + EG(g, "big") + "<div><b>" + esc(g.name) + "</b><span>What it will change, at " + PARTIES[p].short + "’s level · its spec is ready</span></div></div>"
@@ -836,7 +863,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
       if (!on) chg.dataset.key = "";
     });
   }
-  function pick(id, keep) { st.picked = st.picked === id && !keep ? "" : id; if (st.picked && st.moon[st.picked]) delete st.moon[st.picked]; closeLift(); draw(); }
+  function pick(id, keep) { if (askAt && !keep) closeAsk(); st.picked = st.picked === id && !keep ? "" : id; if (st.picked && st.moon[st.picked]) delete st.moon[st.picked]; closeLift(); draw(); }
   // ---------- a flight from one box to another, inside the scene ----------
   function fly(html, from, to, o) {
     o = o || {};
@@ -989,6 +1016,62 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
     }).then(land);
   }
 
+  // ---------- one way to talk to a leader (decisions §181, spec 123 §6): the open leader's head pressed, a bubble under it ----------
+  // What is picked is what it is about (nothing: the project; a goal; a part of its change, pressed, as a mark). The leader answers in words, reading only. When the words would change something,
+  // one press makes it a card: *Make it a goal* (about the project, or a goal done), *Make it a change* (a goal whose spec is ready or at work: a decision in the hand, its plan now and proposed).
+  var askAt = null;                                               // { who: "board" | "tech" | "design", part, q, phase: "asking" | "reading" | "answered", answer }
+  function whoName(w) { return w === "board" ? "the Orkmaster" : PARTIES[w].short; }
+  function openAsk(who, part) {
+    if (F) return; closeLift();
+    askAt = { who: who, part: part || "", q: askAt && askAt.who === who ? askAt.q : "", phase: "asking", answer: "" };
+    drawAsk();
+  }
+  function closeAsk() { askAt = null; var b = document.querySelector(".bubble"); if (b) b.remove(); }
+  function answerOf(a) {
+    var g = st.picked ? G[st.picked] : null, isDone = g && st.done.indexOf(st.picked) >= 0;
+    if (a.who === "board") {
+      if (!g) { var w = st.ready.filter(atWork).map(function (id) { return G[id].short; }), f = firstOff();
+        return w.length + " goals are at work: " + w.join(", ") + ". " + (f ? G[f].short + " starts next. " : "") + (st.analysis.length ? "I am writing the spec of " + G[st.analysis[0]].short + "." : ""); }
+      var ts = tasksOf(st.picked), dn = ts.filter(function (t) { return t.state === "done"; }).length;
+      return g.short + (isDone ? " is done: its " + ts.length + " tasks landed." : " has " + ts.length + " tasks, " + dn + " done. " + (atWork(st.picked) ? "Its leaders are on it now." : "It starts in its turn."));
+    }
+    var nm = a.part ? nodeName(a.who, a.part) : "";
+    if (!g) return a.who === "tech" ? "Every event goes through the Socket gateway; Rounds and Scoring share Storage. Today Rounds and Lobby change, the rest stays." : "Five screens: Join, Lobby, Question, Results, Settings. Today Results and Question change.";
+    if (isDone) return "It changed " + (nm || "what its spec promised") + ". " + (RESULTS[st.picked] && RESULTS[st.picked][a.who] && RESULTS[st.picked][a.who].some(function (r) { return r[1] === "differs"; }) ? "One thing differs from its spec: " + RESULTS[st.picked][a.who].filter(function (r) { return r[1] === "differs"; })[0][2] + ". A new goal would fix it." : "Nothing differs from its spec.");
+    return (nm ? "In " + nm + ", it " + ((changesOf(st.picked, a.who).filter(function (c) { return c[0] === a.part; })[0] || [0, 0, ["~ changes little"]])[2][0].replace(/^[+~] /, "")) + ". " : "") + "What you ask would change its plan: " + tasksOf(st.picked).filter(function (t) { return t.party === a.who && t.state === "planned"; }).length + " of my tasks not started would be planned again.";
+  }
+  function drawAsk() {
+    var old = document.querySelector(".bubble"); if (old) old.remove();
+    if (!askAt) return;
+    var a = askAt, g = st.picked ? G[st.picked] : null, isDone = g && st.done.indexOf(st.picked) >= 0, head = a.who === "board" ? $("tab-board") : $("tab-" + a.who), r = rel(head);
+    var race = a.who === "board" ? "peon-crown" : PARTIES[a.who].race, b = document.createElement("div");
+    b.className = "bubble"; b.setAttribute("role", "dialog"); b.setAttribute("aria-label", "Ask " + whoName(a.who));
+    var chips = (g ? '<span class="chip c-' + g.col + '">' + EG(g) + "<span>" + esc(g.short) + "</span></span>" : '<span class="chip">The whole project</span>')
+      + (a.part ? '<span class="chip">' + I("map") + "<span>" + esc(nodeName(a.who, a.part)) + '</span><button type="button" data-unpart="1" aria-label="Take the part off">' + I("close") + "</button></span>" : "");
+    var acts = "";
+    if (a.phase === "answered") {
+      if (g && !isDone && a.who !== "board" && st.ready.indexOf(st.picked) >= 0) acts += '<button type="button" class="ork-btn primary" data-mkchange="1">Make it a change</button>';
+      if (!g || isDone) acts += '<button type="button" class="ork-btn" data-mkgoal="1">Make it a goal</button>';
+    }
+    b.innerHTML = '<div class="bh">' + HEAD(race) + "<b>Ask " + esc(whoName(a.who)) + '</b><button type="button" class="ork-btn quiet bx" data-closeask="1" aria-label="Close">' + I("close") + "</button></div>"
+      + '<div class="files">' + chips + "</div>"
+      + (a.phase === "asking" ? '<input class="ork-field" id="ask-q" aria-label="Your question" placeholder="' + (a.part ? "What about " + esc(nodeName(a.who, a.part)) + "?" : g ? "What about " + esc(g.short) + "?" : "Ask about the project…") + '" value="' + esc(a.q) + '"><p class="cap">Enter asks. The answer only reads; it changes nothing.</p>'
+        : '<p class="q">' + esc(a.q) + "</p>" + (a.phase === "reading" ? '<p class="cap think">' + esc(whoName(a.who).replace(/^the /, "The ")) + " is reading " + (a.who === "board" ? "the Board" : "its map") + "…</p>" : '<p class="ans">' + esc(a.answer) + "</p>" + (acts ? '<div class="acts">' + acts + "</div>" : "")));
+    $("layer").appendChild(b);
+    var x = Math.max(8, Math.min(W - b.offsetWidth - 8, r.x)); b.style.left = x + "px"; b.style.top = (r.y + r.h + 10) + "px"; b.style.setProperty("--tail", Math.max(16, r.x + 18 - x) + "px");
+    var inp = $("ask-q");
+    if (inp) { inp.focus({ preventScroll: true }); inp.addEventListener("input", function () { askAt.q = inp.value; });
+      inp.addEventListener("keydown", function (e) { if (e.key === "Enter" && inp.value.trim()) { e.preventDefault(); askAt.q = inp.value.trim(); askAt.phase = "reading"; drawAsk();
+        setTimeout(function () { if (!askAt || askAt.phase !== "reading") return; askAt.answer = answerOf(askAt); askAt.phase = "answered"; drawAsk(); }, reduced() ? 0 : 1100); } }); }
+  }
+  function makeChange() {                                         // the words become a decision: its plan now and proposed, in the hand
+    var a = askAt, head = rel($("tab-" + a.who)), part = a.part || (specOf(st.picked).touches[a.who] || [])[0] || "";
+    var d = { kind: "dec", id: "d" + nextId++, goal: st.picked, party: a.who, part: part, text: a.q, say: (part ? nodeName(a.who, part) + ": " : "") + (a.who === "design" ? "three looks to choose from" : "the plan changed as you asked") };
+    closeAsk(); st.hand.push(d); draw();
+    var dest = document.querySelector('[data-dec="' + d.id + '"]'); hideUntil(dest, fly(dcard(d), { x: head.x, y: head.y, w: 40, h: 56 }, rel(dest), { arc: 60 }));
+  }
+  function makeGoal() { var a = askAt; closeAsk(); kept.text = a.q; kept.to = a.who === "board" ? "ork" : a.who; kept.type = ""; openField(); }
+
   // ---------- what the window does ----------
   function colCard(id) { return document.querySelector('#col [data-goal="' + id + '"]') || (st.analysis.indexOf(id) >= 0 ? $("c-analysis") : $("c-ready")); }      // its card, or its pile when it lies deeper than the four shown
   function srcOf(t) { var c = st.tab === "board" ? document.querySelector('#v-board [data-task="' + t.id + '"]') : null; return c || colCard(t.goal); }
@@ -1008,18 +1091,19 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
       var p = fly(tcard(t), from, to, { delay: i * 160, arc: 60 }); if (!dest.matches(".tab")) hideUntil(dest, p);
     });
   }
-  function flipFly(fromEl, backHtml, faceHtml, toEl) {            // a card turns over where it lies, then goes to its place
+  function flipFly(fromEl, backHtml, faceHtml, toEl) {            // the sideways card turns upright where it lies, turns face up, then goes to its place
     if (reduced() || !fromEl || !toEl) return Promise.resolve();
-    var a = rel(fromEl), b = rel(toEl), el = document.createElement("div");
-    el.className = "flyer"; el.style.cssText = "left:" + a.x + "px;top:" + a.y + "px;width:" + a.w + "px;height:" + a.h + "px;perspective:60em"; el.innerHTML = backHtml; scn.appendChild(el); round(el);
-    return el.animate([{ transform: "rotateY(0)" }, { transform: "rotateY(90deg)" }], { duration: 160, easing: "ease-in", fill: "forwards" }).finished.then(function () {
-      el.innerHTML = faceHtml; round(el);
-      return el.animate([{ transform: "rotateY(-90deg)" }, { transform: "rotateY(0)", offset: 0.35 }, { transform: "translate(" + (b.x - a.x) + "px," + (b.y - a.y) + "px)" }], { duration: 620, easing: "cubic-bezier(.3,1.1,.5,1)", fill: "forwards" }).finished;
+    var a = rel(fromEl), b = rel(toEl), el = document.createElement("div"), cx = a.x + a.w / 2, cy = a.y + a.h / 2;
+    el.className = "flyer"; el.style.cssText = "left:" + a.x + "px;top:" + a.y + "px;width:" + a.w + "px;height:" + a.h + "px;transform-origin:50% 50%"; el.innerHTML = backHtml; scn.appendChild(el); round(el);
+    return el.animate([{ transform: "rotate(0)" }, { transform: "rotate(-90deg)" }], { duration: 240, easing: "cubic-bezier(.3,1.2,.5,1)", fill: "forwards" }).finished.then(function () {
+      el.remove(); el = document.createElement("div"); var x = cx - b.w / 2, y = cy - b.h / 2;
+      el.className = "flyer"; el.style.cssText = "left:" + x + "px;top:" + y + "px;width:" + b.w + "px;height:" + b.h + "px;perspective:60em;transform-origin:50% 50%"; el.innerHTML = faceHtml; scn.appendChild(el); round(el);
+      return el.animate([{ transform: "rotateY(90deg)" }, { transform: "rotateY(0)", offset: 0.35 }, { transform: "translate(" + (b.x - x) + "px," + (b.y - y) + "px)" }], { duration: 640, easing: "cubic-bezier(.3,1.1,.5,1)", fill: "forwards" }).finished;
     }).then(function () { el.remove(); });
   }
   function specDone() {                                           // the Orkmaster has written the spec: the card turns face up and joins Spec ready, first of those put off
     var id = st.analysis[0]; if (!id || !st.busy) return;
-    var front = colCard(id), backHtml = front ? front.outerHTML.replace(/style="[^"]*"/, 'style="top:0;left:0;position:relative"') : "";
+    var front = colCard(id), backHtml = front ? front.outerHTML.replace(/style="[^"]*"/, 'style="top:0;left:0;position:relative;width:157px;height:112px"') : "";
     st.analysis.shift(); st.orkAsks = false; st.hand = st.hand.filter(function (h) { return !(h.kind === "q" && h.by === "ork"); });
     var plan = DEAL[id] || G[id].parties.map(function (p) { return [p, (p === "tech" ? "Build: " : "Draw: ") + G[id].short, G[id].sign]; }), ids = plan.map(function () { return "k" + nextId++; });
     plan.forEach(function (d, i) { st.tasks.push({ id: ids[i], goal: id, party: d[0], name: d[1], sign: d[2], state: "planned", after: (d[3] || []).map(function (j) { return ids[j]; }) }); });
@@ -1174,7 +1258,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
       ask(t, "tech", [["Who counts as first when two answers arrive within 50 ms?", ["The server's clock decides", "Both are first"]], ["Keep the crown when a player reconnects?", ["Keep it", "Lose it"]]]); },
     across: askAcross, fail: fail, morning: morning,
     colbg: function () { scn.classList.toggle("col-on-table"); var on = scn.classList.contains("col-on-table"); document.querySelector('[data-do="colbg"]').textContent = on ? "Column: on the table (compare)" : "Column: off the table"; },
-    reset: function () { closeLift(); if (F) { F.el.remove(); F = null; } talk = null; st = S0(); CHANGES = JSON.parse(CHANGES0); $("plus-slot").innerHTML = ""; draw(); }
+    reset: function () { closeLift(); closeAsk(); if (F) { F.el.remove(); F = null; } talk = null; st = S0(); CHANGES = JSON.parse(CHANGES0); $("plus-slot").innerHTML = ""; draw(); }
   };
   var CHANGES0 = JSON.stringify(CHANGES);
   document.querySelectorAll("[data-do]").forEach(function (b) { b.addEventListener("click", function () { acts[b.dataset.do](); }); });
@@ -1183,14 +1267,20 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
     var t = e.target;
     if (F) { if (e.composedPath().indexOf(F.el) < 0 && document.contains(t)) closeField(); return; }
     if (t.closest("#plus")) { openField(); return; }
-    var tb = t.closest("[data-tab]"); if (tb) { st.tab = tb.dataset.tab; closeLift(); draw(); return; }
+    var bb = t.closest(".bubble");
+    if (bb) { var bt = t.closest("button"); if (!bt) return;
+      if (bt.dataset.closeask) closeAsk(); if (bt.dataset.unpart) { askAt.part = ""; drawAsk(); } if (bt.dataset.mkchange) makeChange(); if (bt.dataset.mkgoal) makeGoal(); return; }
+    var tb = t.closest("[data-tab]");
+    if (tb) { if (st.tab === tb.dataset.tab) { if (askAt && askAt.who === st.tab) closeAsk(); else openAsk(st.tab); return; } closeAsk(); st.tab = tb.dataset.tab; closeLift(); draw(); return; }
+    var pt = t.closest("[data-part]"); if (pt) { var pp2 = pt.dataset.part.split("|"); openAsk(pp2[0], pp2[1]); return; }
+    if (askAt) closeAsk();
     if (t.closest("[data-unpick]")) { pick(""); return; }
     var lf = t.closest(".lift");
     if (lf) {
       var b = t.closest("button"); if (!b) return; var ds = b.dataset;
       if (ds.ans) answer(ds.ans); if (ds.retry) retry(ds.retry); if (ds.drop) drop(ds.drop); if (ds.now) startNow(ds.now); if (ds.night) toNight(ds.night); if (ds.today) today(ds.today);
       if (ds.take) takeIt(ds.take); if (ds.passnow) passOn(ds.passnow); if (ds.first) analyseFirst(ds.first); if (ds.remove) removeGoal(ds.remove);
-      if (ds.accept) settle(ds.accept); if (ds.look) settle(ds.dec, ds.look); if (ds.keep) keepSpec(ds.keep); if (ds.more) { var D = st.hand.filter(function (h) { return h.id === ds.more; })[0]; keepSpec(ds.more); if (D) { st.picked = D.goal; openTalk(D.party, D.part); } }
+      if (ds.accept) settle(ds.accept); if (ds.look) settle(ds.dec, ds.look); if (ds.keep) keepSpec(ds.keep); if (ds.more) { var D = st.hand.filter(function (h) { return h.id === ds.more; })[0]; keepSpec(ds.more); if (D) { if (st.picked !== D.goal) pick(D.goal, true); st.tab = D.party; draw(); openAsk(D.party, D.part); } }
       if (ds.close) closeLift();
       return;
     }
@@ -1202,7 +1292,6 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
         : '<div class="t">' + S("play") + ' Play</div><p class="cap">The project’s preview of dev. Pick a goal at work or in the discard to play it.</p><div class="acts"><button type="button" class="ork-btn primary" data-close="1">Play dev</button></div>');
       lifted = "die"; return;
     }
-    var tk = t.closest("[data-talk]"); if (tk) { var pp = tk.dataset.talk.split("|"); openTalk(pp[0], pp[1]); return; }
     var q = t.closest("[data-q]");
     if (q) { var Q = st.hand.filter(function (h) { return h.id === q.dataset.q; })[0], QG = G[Q.goal];
       if (lifted === Q.id) return closeLift();
@@ -1246,6 +1335,7 @@ button.tab:focus-visible { outline: 2px solid var(--ork-ink); outline-offset: -2
   });
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Escape") return;
+    if (askAt) { closeAsk(); return; }
     if (F && F.open) { toggle(F.open); return; }
     if (F) { closeField(); return; }
     if (lifted) { closeLift(); return; }
