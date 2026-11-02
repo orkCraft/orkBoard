@@ -178,6 +178,6 @@ def test_on_the_computer_the_link_is_not_paired(gui):
     server, browser = gui
     pg = narrow.page(browser, "wide")
     pg.goto(server.url)
-    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
     assert pg.evaluate("() => import('/static/js/link.js').then((l) => [l.isPaired(), l.can('phones.pair'), l.stale.value])") == [False, True, False]
     pg.context.close()

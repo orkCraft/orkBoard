@@ -114,7 +114,7 @@ export async function sendBack(box, goal) {
     await new Promise((r) => { const t = setTimeout(r, play + 60); g.addEventListener("transitionend", (e) => { if (e.propertyName === "transform") { clearTimeout(t); r(); } }, { once: true }); });
     let target = null;
     for (let tries = 0; tries < 20 && !target; tries++) {                                // the Board answers in a moment: the goal's card is drawn in the lane
-      target = [...document.querySelectorAll(`.frame-table .table-card[data-goal="${CSS.escape(goal.slug)}"]`)].find((el) => boxIn(el)) || null;
+      target = [...document.querySelectorAll(`.frame-column .col-card[data-goal="${CSS.escape(goal.slug)}"], .frame-table .table-card[data-goal="${CSS.escape(goal.slug)}"]`)].find((el) => boxIn(el)) || null;      // its card in the column (spec 128 B), else in the Orkmaster's lane
       if (!target) await new Promise((r) => setTimeout(r, 100));
     }
     const to = target?.getBoundingClientRect();

@@ -239,7 +239,7 @@ def start(gui, width, errors, **kw):
     watch(pg, errors)
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
-    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
     pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
     if width == "wide":                                                                                                   # a failed task's card lies as a place while its failure is in the hand (spec 128 C.2: tests/test_thrown_browser.py);
         pg.locator(".table-thrown").first.wait_for(timeout=WAIT_MS)                                                       # this file looks at the cards themselves, so they are put back in their lanes
@@ -291,17 +291,18 @@ def anim(el, pseudo=""):
 
 
 def tab(pg, slug):
-    return pg.locator(f'.table-tab[data-tab="{slug}"]')
+    """A tab: a leader's in the row, the Orkmaster's the column's head at the wide width (spec 128 B.2) and the row's first at the narrow."""
+    return pg.locator(f'.table-tab[data-tab="{slug}"], .col-head__tab[data-tab="{slug}"]')
 
 
 def cell(pg, slug):
-    """A tab's cell: the tab's button and, for the open tab, its head and marks beside it (spec 123 F: no button holds a button)."""
-    return pg.locator(f'.table-tabcell[data-cell="{slug}"]')
+    """A tab's cell: the tab's button and, for the open tab, its head and marks beside it (spec 123 F: no button holds a button); the Orkmaster's at the wide width is the column's head."""
+    return pg.locator(f'.table-tabcell[data-cell="{slug}"], .col-head') if slug == "orkmaster" else pg.locator(f'.table-tabcell[data-cell="{slug}"]')
 
 
 def open_tab(pg, slug):
     tab(pg, slug).click()
-    pg.locator(f'.table-tab[data-tab="{slug}"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
+    pg.locator(f'.table-tab[data-tab="{slug}"][aria-selected="true"], .col-head__tab[data-tab="{slug}"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
 
 
 def title(pg):
@@ -318,11 +319,15 @@ def open_menu(pg):
 def test_the_tabs_in_order_the_projects_first_then_plus_and_stop_all(table):
     pg, host, w = table
     tabs = pg.locator(".table-tab")
-    assert [t.get_attribute("data-tab") for t in tabs.all()] == ["orkmaster", "game", "tech", "art", "release"]         # the project's first, then the Board's order
+    assert [t.get_attribute("data-tab") for t in tabs.all()] == (["game", "tech", "art", "release"] if wide(w) else ["orkmaster", "game", "tech", "art", "release"])         # the project's first at the narrow width, then the Board's order; the leaders' alone at the wide (the Orkmaster's tab is the column's head: spec 128 B.2)
     first = tab(pg, "orkmaster")
-    assert first.get_attribute("aria-label") == "shop · Does on Claude · Checks on Claude" and first.get_attribute("aria-selected") == "true"                # the first tab is the project's: its name (spec 101 §3.4, decisions §167.6) and the main tool on both (spec 111 §3.4)
-    assert "Orkmaster" not in (first.get_attribute("title") or "") and first.locator(".table-tab__sub").count() == 0
-    assert first.locator(".table-tab__main").text_content() == "shop"
+    if wide(w):
+        assert first.get_attribute("aria-selected") == "true" and first.get_attribute("role") == "tab" and "the orkmaster" in first.text_content().lower()
+        assert first.get_attribute("aria-label") == "The Orkmaster · shop" and first.evaluate("e => !!e.closest('.frame-column')")
+    else:
+        assert first.get_attribute("aria-label") == "shop · Does on Claude · Checks on Claude" and first.get_attribute("aria-selected") == "true"                # the first tab is the project's: its name (spec 101 §3.4, decisions §167.6) and the main tool on both (spec 111 §3.4)
+        assert "Orkmaster" not in (first.get_attribute("title") or "") and first.locator(".table-tab__sub").count() == 0
+        assert first.locator(".table-tab__main").text_content() == "shop"
     assert "peon-crown" in cell(pg, "orkmaster").locator(".ork-race__head").get_attribute("src")                          # its crowned head (the open tab's head is in its cell, beside its button)
     assert "knight-elder" in tab(pg, "game").locator(".ork-race__head").get_attribute("src")                             # a party's tab wears its leader's head
     assert tab(pg, "tech").get_attribute("aria-label") == "Tech · Does on Claude · Checks on Codex"                      # and its name, said also when only the head is drawn, with its sword and shield's words (spec 111 §3.4)
@@ -345,12 +350,15 @@ def test_a_tab_is_the_persons_the_open_one_is_kept_and_nothing_switches_it_under
     open_tab(pg, "tech")
     assert title(pg) == "The whole project · through Tech"
     pg.reload()
-    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
     assert tab(pg, "tech").get_attribute("aria-selected") == "true"                                                      # kept for the project on this device
     tab(pg, "tech").focus()
     pg.keyboard.press("ArrowLeft")
     assert tab(pg, "game").get_attribute("aria-selected") == "true"                                                      # the arrows move between tabs
     pg.keyboard.press("Home")
+    if wide(w):
+        assert tab(pg, "game").get_attribute("aria-selected") == "true"                                                  # the row is the leaders': Home is the first leader
+        pg.keyboard.press("ArrowLeft")                                                                                   # and the arrow before it is the Orkmaster's tab, the column's head
     assert tab(pg, "orkmaster").get_attribute("aria-selected") == "true"
     host.rev += 1
     host.ws.send(json.dumps(host.snapshot()))                                                                            # the Board changes under them
@@ -418,20 +426,24 @@ def keys(pg, scope):
 def test_the_lanes_stand_under_their_tabs_every_lane_one_width_and_the_first_is_the_projects(table):
     pg, host, w = table
     lanes = pg.locator(".table-lane")
-    assert lanes.first.get_attribute("data-lane") == "first" and [l.get_attribute("data-party") for l in lanes.all()[1:5]] == ["game", "tech", "art", "release"]
-    assert lanes.first.get_attribute("aria-label") == "shop"                                                             # the first lane is the whole project's
-    for slug in ("orkmaster", "game", "tech", "art", "release"):
+    k = 4 if wide(w) else 5                                                                                              # the lanes: the project's first at the narrow width; at the wide the project's is the Orkmaster's column (spec 128 B.1)
+    if wide(w):
+        assert pg.locator(".table-lane--first").count() == 0 and [l.get_attribute("data-party") for l in lanes.all()[:4]] == ["game", "tech", "art", "release"]
+    else:
+        assert lanes.first.get_attribute("data-lane") == "first" and [l.get_attribute("data-party") for l in lanes.all()[1:5]] == ["game", "tech", "art", "release"]
+        assert lanes.first.get_attribute("aria-label") == "shop"                                                         # the first lane is the whole project's
+    for slug in ("orkmaster", "game", "tech", "art", "release")[1 if wide(w) else 0:]:
         lane = lanes.first if slug == "orkmaster" else pg.locator(f'.table-lane[data-party="{slug}"]')
         t, l = cell(pg, slug).bounding_box(), lane.bounding_box()
         assert abs(t["x"] - l["x"]) <= 1 and abs(t["width"] - l["width"]) <= 1, slug                                      # a tab's cell is its lane's head: the same x, the same width (the open tab's head is in its cell, beside its button)
-    widths = {round(l.bounding_box()["width"]) for l in lanes.all()[:5]}
+    widths = {round(l.bounding_box()["width"]) for l in lanes.all()[:k]}
     assert len(widths) == 1, widths                                                                                       # every lane the same width, the first too
     if wide(w):
         assert abs(widths.pop() - 180) <= 1                                                                              # a card and a quarter (frame.css `--col-w`)
     else:
         assert widths.pop() <= 48                                                                                        # a token wide
     assert pg.locator(".table-board").evaluate("e => e.scrollWidth <= e.clientWidth + 1")                                # no sideways scroll
-    assert pg.locator(".table-board").evaluate("e => getComputedStyle(e).gridTemplateColumns.split(' ').length") == 6    # the five lanes and the tabs' end: the frame's `--cols`, no `--tabs`
+    assert pg.locator(".table-board").evaluate("e => getComputedStyle(e).gridTemplateColumns.split(' ').length") == (5 if wide(w) else 6)    # the lanes and the tabs' end: the frame's `--cols`, no `--tabs`
 
 
 def test_a_task_card_has_its_header_its_window_with_the_types_sign_and_its_label_row_and_no_head(table):
@@ -600,11 +612,12 @@ def test_a_goal_picked_unfolds_its_cascade_and_is_lit_in_both_its_lanes_the_othe
     pg, host, w = table
     assert pg.locator(".ork-picked").count() == 0
     pick(pg, "bar")                                                                                                       # in the first lane it is being joined, in Art's it is at work
-    pg.wait_for_function("() => document.querySelectorAll('.table .ork-picked').length === 2", timeout=WAIT_MS)
+    pg.wait_for_function("(n) => document.querySelectorAll('.table .ork-picked').length === n", arg=1 if wide(w) else 2, timeout=WAIT_MS)
     assert title(pg) == "A timer bar that drains · through the Orkmaster"
-    lit = pg.locator(".ork-picked")
-    assert [l.get_attribute("data-goal") for l in lit.all()] == ["bar", "bar"]                                            # its strip (or token) in both lanes, lit alike
-    assert pg.locator('.table-lane[data-lane="first"] .ork-picked').count() == 1 and pg.locator('.table-lane[data-party="art"] .ork-picked').count() == 1
+    lit = pg.locator(".table .ork-picked")
+    assert [l.get_attribute("data-goal") for l in lit.all()] == (["bar"] if wide(w) else ["bar", "bar"])                  # its strip (or token) in both lanes, lit alike; at the wide width its card is in the Orkmaster's column, lit there
+    assert pg.locator('.table-lane[data-party="art"] .ork-picked').count() == 1
+    assert pg.locator('.table-lane[data-lane="first"] .ork-picked').count() == (0 if wide(w) else 1)               # the first lane's card at the narrow width; at the wide the goal's card is the column's (a pile shows four cards: tests/test_column_browser.py)
     if wide(w):
         bar = pg.locator('.table-casc[data-goal="bar"]')
         assert bar.get_attribute("data-open") == "true" and bar.locator(".table-card").count() == 3 and bar.locator(".table-tedge").count() == 0 and pg.locator('.table-casc[data-goal="bar"] .table-fan').count() == 0       # unfolded into whole cards, no fan
@@ -613,7 +626,6 @@ def test_a_goal_picked_unfolds_its_cascade_and_is_lit_in_both_its_lanes_the_othe
         assert pg.locator('.table-casc[data-goal="seat"]').get_attribute("data-open") == "false"                          # the others stay collapsed
         assert pg.locator('.table-casc[data-goal="seat"] .table-tedge').count() == 1
         assert pg.locator('.table-lane[data-party="art"] .table-gstrip.ork-picked').evaluate("e => e.getAttribute('aria-pressed')") == "true"
-        assert pg.locator('.table-lane[data-lane="first"] .table-card--own.ork-picked').get_attribute("data-goal") == "bar"       # in the first lane the goal has no strip: its own card wears the pick (spec 111 §3.1)
     shot(pg, f"table-picked-{w}.png")
     pick(pg, "")
     pg.wait_for_function("() => document.querySelectorAll('.table .ork-picked').length === 0", timeout=WAIT_MS)
@@ -621,6 +633,10 @@ def test_a_goal_picked_unfolds_its_cascade_and_is_lit_in_both_its_lanes_the_othe
 
 def test_the_first_lane_holds_what_is_the_whole_projects_the_goals_read_routed_and_joined_then_the_line(table):
     pg, host, w = table
+    if wide(w):
+        assert pg.locator(".table-lane--first").count() == 0 and pg.locator(".table-card--own").count() == 0       # the Orkmaster's goals are the column's at the wide width (spec 128 B; tests/test_column_browser.py)
+        assert pg.locator('.frame-column .col-card[data-goal="timer"]').count() == 1 and pg.locator('.frame-column .col-card[data-goal="results"]').count() == 1
+        return
     first = pg.locator('.table-lane[data-lane="first"]')
     assert keys(pg, '.table-lane[data-lane="first"]') == ["t:orc:timer", "t:orc:results", "t:orc:bar"]                      # what the Orkmaster does itself, in the Board's order
     assert [o.get_attribute("data-stage") for o in first.locator("[data-lkey]").all()] == ["reading", "routing", "joining"]
@@ -665,82 +681,25 @@ def line_slugs(pg):
 def test_the_line_is_the_first_lanes_last_cascade_in_the_orkmasters_order_with_the_moon_on_a_goal_that_waits(table):
     pg, host, w = table
     if wide(w):
-        assert line_slugs(pg) == ["ln3", "ln2", "ln1"]                                                                    # the farthest at the top, the next to start whole in front
-        front = pg.locator(".table-card--line")
-        assert front.get_attribute("data-slug") == "ln1" and abs(front.bounding_box()["width"] - 144) <= 1
-        assert front.locator(".ork-elem.dust").count() == 1 and "Chat in the lobby" in front.locator(".table-card__nm").inner_text()      # its element, its name
-        assert front.locator(".table-card__win .ork-sign.feature").count() == 1 and front.locator(".table-card__row").inner_text().strip().lower() == "in line"
-        edge = pg.locator('.table-ledge[data-slug="ln2"]')
-        assert edge.locator(".ork-elem.ice").count() == 1 and edge.evaluate("e => getComputedStyle(e.querySelector('.table-fan__nm')).opacity") == "0"      # the goal's element, its name read only on a hover
-        assert pg.locator(".table-casc--line .table-fan").count() == 1 and edge.evaluate("e => getComputedStyle(e).transform") != "none"                                # a fan behind the front one, turned
-        moon = edge.locator(".ork-sign.moon")
-        assert moon.count() == 1 and moon.get_attribute("title") == "Waits for the reset, from 06:00"                       # the moon, its hour on hover
-        assert pg.locator('.table-ledge[data-slug="ln3"] .ork-sign.moon').count() == 0 and front.locator(".ork-sign.moon").count() == 0
-        pg.locator(".table-casc--line .table-fan").hover(position={"x": 70, "y": 3})                                          # the fan opens
-        pg.wait_for_timeout(400)
-        assert "Round music" in edge.inner_text() and edge.evaluate("e => getComputedStyle(e.querySelector('.table-fan__nm')).opacity") == "1"
-        shot(pg, f"table-line-fan-{w}.png")
-        pg.locator('.table-ledge[data-slug="ln3"]').click(position={"x": 40, "y": 8})                                        # an edge pressed picks its goal
-        pg.wait_for_function("() => document.querySelector('.table-ledge[data-slug=\"ln3\"]').classList.contains('ork-picked')", timeout=WAIT_MS)
-        assert title(pg) == "A banner for the lobby · through the Orkmaster"
-        pg.locator('.table-ledge[data-slug="ln3"]').click(position={"x": 40, "y": 8})
-        pg.wait_for_function("() => !document.querySelector('.table-ledge[data-slug=\"ln3\"]').classList.contains('ork-picked')", timeout=WAIT_MS)
-        pg.locator(".table-board").evaluate("e => { e.scrollTop = e.scrollHeight; }")
-        shot(pg, f"table-line-{w}.png")
-    else:
-        assert line_slugs(pg) == ["ln1", "ln2", "ln3"]                                                                    # a token a goal (no drag here: the list over the pane has its arrows)
-        t2 = pg.locator('.table-line-tokens [data-slug="ln2"]')
-        assert t2.locator(".ork-sign.moon").count() == 1 and t2.locator(".ork-sign.sound").count() == 1 and t2.locator(".ork-elem.ice").count() == 1
-        t2.click()
-        pg.wait_for_function("() => document.querySelector('.table-line-tokens [data-slug=\"ln2\"]').classList.contains('ork-picked')", timeout=WAIT_MS)
-        pg.locator(".table-board").evaluate("e => { e.scrollTop = e.scrollHeight; }")
-        shot(pg, f"table-line-{w}.png")
+        return                                                                                                            # at the wide width the line is the column's In analysis (spec 128 B.3; tests/test_column_browser.py)
+    assert line_slugs(pg) == ["ln1", "ln2", "ln3"]                                                                    # a token a goal (no drag here: the list over the pane has its arrows)
+    t2 = pg.locator('.table-line-tokens [data-slug="ln2"]')
+    assert t2.locator(".ork-sign.moon").count() == 1 and t2.locator(".ork-sign.sound").count() == 1 and t2.locator(".ork-elem.ice").count() == 1
+    t2.click()
+    pg.wait_for_function("() => document.querySelector('.table-line-tokens [data-slug=\"ln2\"]').classList.contains('ork-picked')", timeout=WAIT_MS)
+    pg.locator(".table-board").evaluate("e => { e.scrollTop = e.scrollHeight; }")
+    shot(pg, f"table-line-{w}.png")
 
 
 def test_a_goal_dragged_among_the_line_moves_with_ideas_move_and_a_drop_among_other_partys_goals_goes_back(lined):
     pg, host, w = lined
-    if not wide(w):
-        return                                                                                                            # a touch screen scrolls the lane: its moves are the list's arrows
-    assert line_slugs(pg) == ["ln4", "ln3", "ln2", "ln1"]
-    host.log.clear()
-
-    def drag(slug, onto):
-        pg.locator(".table-board").evaluate("e => { e.scrollTop = e.scrollHeight; }")                                    # the line is the first lane's last cascade
-        pg.locator(".table-casc--line .table-fan").hover(position={"x": 70, "y": 3})
-        pg.wait_for_timeout(400)                                                                                         # the fan is open: an edge is its top 30 px
-        a, b = pg.locator(f'[data-line-item][data-slug="{slug}"]').bounding_box(), pg.locator(f'[data-line-item][data-slug="{onto}"]').bounding_box()
-        pg.mouse.move(a["x"] + a["width"] / 2, a["y"] + 8)
-        pg.mouse.down()
-        pg.mouse.move(a["x"] + a["width"] / 2, a["y"] + 20, steps=4)
-        pg.mouse.move(b["x"] + b["width"] / 2, b["y"] + b["height"] - 4, steps=8)
-        pg.wait_for_selector(".table-casc--line.is-dragging", timeout=WAIT_MS)                                           # the cascade shows the drag
-        pg.mouse.up()
-    drag("ln3", "ln1")                                                                                                    # Art's goal among Tech's and Game design's: it goes back
-    pg.wait_for_timeout(300)
-    assert not [a for n, a in host.log if n == "ideas.move"] and line_slugs(pg) == ["ln4", "ln3", "ln2", "ln1"]
-    assert pg.locator(".table-casc--line.is-dragging").count() == 0 and not pg.locator('[data-line-item][data-slug="ln3"]').evaluate("e => e.parentElement.style.transform")
-    assert title(pg) == "The whole project · through the Orkmaster"                                                       # the press that ended the drag picked nothing
-    drag("ln4", "ln1")                                                                                                    # Tech's other goal before it: the front
-    for _ in range(40):
-        if any(n == "ideas.move" for n, _ in host.log):
-            break
-        pg.wait_for_timeout(50)
-    assert [a for n, a in host.log if n == "ideas.move"] == [{"slug": "ln4", "before": "ln1"}]
-    pg.wait_for_function("() => document.querySelector('.table-card--line').dataset.slug === 'ln4'", timeout=WAIT_MS)
-    assert line_slugs(pg) == ["ln3", "ln2", "ln1", "ln4"]                                                                 # the Orkmaster's order is the host's: ln4 first
-    assert title(pg) == "The whole project · through the Orkmaster"
-    pg.locator('[data-line-item][data-slug="ln1"]').focus()                                                               # no move needs a pointer: Alt and the arrows
-    host.log.clear()
-    pg.keyboard.press("Alt+ArrowDown")                                                                                    # down is toward the front: earlier in line, before ln4
-    for _ in range(40):
-        if any(n == "ideas.move" for n, _ in host.log):
-            break
-        pg.wait_for_timeout(50)
-    assert [a for n, a in host.log if n == "ideas.move"] == [{"slug": "ln1", "before": "ln4"}]
+    pytest.skip("the line's drag lived in the first lane's cascade; at the wide width the column's In analysis has Next (spec 128 B.3, tests/test_column_browser.py), at the narrow a touch screen scrolls the lane and its moves are the list's arrows")
 
 
 def test_past_seven_goals_all_search_opens_the_line_over_the_pane(crowded):
     pg, host, w = crowded
+    if wide(w):
+        return                                                                                                            # the column holds the line at the wide width (spec 128 B.3)
     items = line_slugs(pg)
     assert len(items) == 7 and set(items) == {"ln1", "ln2", "ln3", "ln4", "ln5", "ln6", "ln7"}                            # seven at most
     all_ = pg.locator(".table-lstrip--all, .table-token--all")
@@ -1065,7 +1024,7 @@ def test_a_tab_has_a_second_line_the_sword_and_the_tool_its_does_run_on_the_shie
         return
     assert marks_of(pg, "game") == [["sword", ""], ["tool", "claude"], ["shield", ""], ["tool", "claude"]]
     assert marks_of(pg, "tech") == [["sword", ""], ["tool", "claude"], ["shield", ""], ["tool", "codex"]]
-    assert marks_of(pg, "orkmaster") == [["sword", ""], ["tool", "claude"], ["shield", ""], ["tool", "claude"]]            # the project's tab: the main tool on both
+    assert pg.locator('.col-head__tab .table-tab__marks').count() == 0                                                    # the Orkmaster's tab is the column's head: no sword and shield (the project's tool is the hand's potions)
     assert marks_of(pg, "art") == [["sword", ""], ["tool", "claude"], ["off", "shield"]]                                  # Lean: the shield faint, no mark
     assert marks_of(pg, "release") == [["sword", ""], ["tool", "codex"], ["more", ""], ["shield", ""], ["tool", "claude"]]    # a dot: one of its roles runs on another tool
     assert tab(pg, "art").locator(".table-tab__off").evaluate("e => getComputedStyle(e).opacity") == "0.35"
@@ -1078,12 +1037,12 @@ def test_a_tab_has_a_second_line_the_sword_and_the_tool_its_does_run_on_the_shie
     head, name, tb = tab(pg, "tech").bounding_box(), tab(pg, "tech").locator(".table-tab__main").bounding_box(), line.bounding_box()
     assert head["height"] >= 60 and tb["y"] >= name["y"] + name["height"] - 1 and tb["y"] + tb["height"] <= head["y"] + head["height"] and abs(tb["x"] - name["x"]) <= 1      # under the name, inside the tab (the row is as high as the open head: spec 123 §7.1)
     ink = lambda slug, i: tab(pg, slug).locator(".table-tab__marks img").nth(i).get_attribute("src")                          # noqa: E731
+    gone = lambda slug: tab(pg, slug).locator(".table-tab__marks img").count() == 0                                           # noqa: E731
     assert ink("tech", 0).endswith("/marks/harness-claude-ink.png") and ink("tech", 1).endswith("/marks/harness-codex-ink.png")      # in ink
-    assert ink("orkmaster", 0).endswith("/marks/harness-claude.png") and ink("orkmaster", 1).endswith("/marks/harness-claude.png")     # the open tab's in colour
     assert tab(pg, "tech").locator(".table-tab__marks img").first.get_attribute("srcset").endswith("harness-claude-ink@2x.png 2x")
     open_tab(pg, "tech")
     assert ink("tech", 0).endswith("/marks/harness-claude.png") and ink("tech", 1).endswith("/marks/harness-codex.png")               # Tech is open: its marks in colour
-    assert ink("orkmaster", 0).endswith("/marks/harness-claude-ink.png") and ink("game", 0).endswith("/marks/harness-claude-ink.png")  # and the others back in ink
+    assert gone("orkmaster") and ink("game", 0).endswith("/marks/harness-claude-ink.png")  # and the others back in ink
     shot(pg, "table-tabs-marks-wide.png")
 
 
@@ -1097,7 +1056,7 @@ def test_a_potion_hovered_or_focused_outlines_its_tools_marks_on_the_tabs_and_sa
     claude.hover()
     pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length > 0", timeout=WAIT_MS)
     got = outlined()
-    assert sorted(got) == sorted([["orkmaster", "claude"], ["orkmaster", "claude"], ["game", "claude"], ["game", "claude"], ["tech", "claude"], ["art", "claude"], ["release", "claude"]])       # every mark of Claude, none of Codex
+    assert sorted(got) == sorted([["game", "claude"], ["game", "claude"], ["tech", "claude"], ["art", "claude"], ["release", "claude"]])       # every mark of Claude, none of Codex
     assert pg.locator('.table-tab[data-tab="tech"] img.is-marked').evaluate("e => [getComputedStyle(e).outlineWidth, getComputedStyle(e).outlineStyle]") == ["1px", "solid"]
     pg.mouse.move(5, 300)
     pg.wait_for_function("() => document.querySelectorAll('.table-tab .is-marked').length === 0", timeout=WAIT_MS)
@@ -1176,7 +1135,7 @@ def way(gui, width, errors, **kw):
     watch(pg, errors)
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
-    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
     pg.locator(".table-card, .table-token, .hand-card").first.wait_for(timeout=WAIT_MS)
     return pg, host
 
@@ -1281,7 +1240,7 @@ def test_ctrl_o_opens_a_project_in_the_pane_and_another_project_is_shown_from_it
         pg.wait_for_timeout(50)
     assert ("projects.use", {"path": "/work/other"}) in host.log
     pg.locator(".table-board").wait_for(timeout=WAIT_MS)                                                                 # another project: the map again, nothing open
-    assert tab(pg, "orkmaster").get_attribute("aria-label") == "other · Does on Claude · Checks on Claude"
+    assert tab(pg, "orkmaster").get_attribute("aria-label") == ("The Orkmaster · other" if wide(w) else "other · Does on Claude · Checks on Claude")
 
 
 def test_nothing_moves_under_reduced_motion_and_a_card_turns_on_orkuis_tokens_otherwise(table):
@@ -1313,7 +1272,7 @@ def test_every_press_is_44_by_44_on_a_touch_screen_and_nothing_is_said_only_on_h
     watch(pg, errors)
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
-    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
     pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
     open_tab(pg, "tech")
     pg.locator('.table-seat[data-seat="grunt"]').wait_for(timeout=WAIT_MS)
@@ -1323,7 +1282,7 @@ def test_every_press_is_44_by_44_on_a_touch_screen_and_nothing_is_said_only_on_h
             assert box["width"] >= 43.5 and box["height"] >= 43.5, (sel, box)
     for el in pg.locator(".table-tab").all():
         assert el.get_attribute("aria-label") and el.get_attribute("title")                                              # a tab's name is its label too, not only a tooltip
-    pg.locator(".table-tab").nth(3).dispatch_event("pointerdown", {"pointerType": "touch"})                              # a long press says the name
+    pg.locator('.table-tab[data-tab="art"]').dispatch_event("pointerdown", {"pointerType": "touch"})                     # a long press says the name
     pg.locator(".gui-toast").wait_for(timeout=WAIT_MS)
     assert "Art" in pg.locator(".gui-toast").text_content()
     pg.context.close()

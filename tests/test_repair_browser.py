@@ -84,7 +84,7 @@ def window(gui, host, width=WIDE, **ctx):
     watch(pg, errors)
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
-    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
     pg.locator(".table-logs").wait_for(timeout=WAIT_MS)
     return pg, errors
 

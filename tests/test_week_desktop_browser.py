@@ -40,7 +40,7 @@ def _open(gui, host=None):
     pg.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
-    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
     return pg, host, errors
 
 

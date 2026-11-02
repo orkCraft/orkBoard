@@ -54,9 +54,9 @@ export function fromWhere({ goal = "", party = "", ork = false, task = "" } = {}
   }
   const own = goal && task ? find(`.frame-table [data-goal="${name}"][data-task="${CSS.escape(String(task))}"]`) : null;                  // the asking (or failed) task's own card first
   if (own) return { el: own, at: "goal" };
-  const card = goal ? [".table-card", ".table-token", ".table-goal"].map((k) => find(`.frame-table ${k}[data-goal="${name}"]`)).find(Boolean) : null;       // its own card, else its token, else its block
+  const card = goal ? [".frame-table .table-card", ".frame-table .table-token", ".frame-table .table-goal", ".frame-column .col-card"].map((k) => find(`${k}[data-goal="${name}"]`)).find(Boolean) : null;       // its own card, else its token, else its block, else its card in the Orkmaster's column (spec 128 B)
   if (card) return { el: card, at: "goal" };
-  const slug = ork ? ORKMASTER : party, tab = slug ? find(`.frame-table .table-tab[data-tab="${CSS.escape(slug)}"]`) : null;
+  const slug = ork ? ORKMASTER : party, tab = slug ? find(`.frame-table .table-tab[data-tab="${CSS.escape(slug)}"], .frame-column .col-head__tab[data-tab="${CSS.escape(slug)}"]`) : null;
   return tab ? { el: tab, at: "tab" } : null;
 }
 
@@ -67,7 +67,7 @@ export function headAt(where, { party = "", ork = false } = {}) {
   if (where.at === "crown" || uprightNow.value) return head(document.querySelector(".up-crown"));
   const slug = ork ? ORKMASTER : party;
   const under = !ork && party && where.at === "goal" ? head(where.el.closest(".table-cardwrap")?.querySelector(`.table-back-head[data-party="${CSS.escape(party)}"]`)) : null;
-  const tab = slug ? [...document.querySelectorAll(`.frame-table .table-tab[data-tab="${CSS.escape(slug)}"]`)].find((el) => boxIn(el)) : null;
+  const tab = slug ? [...document.querySelectorAll(`.frame-table .table-tab[data-tab="${CSS.escape(slug)}"], .frame-column .col-head__tab[data-tab="${CSS.escape(slug)}"]`)].find((el) => boxIn(el)) : null;
   return under || (tab ? head(tab) || head(tab.closest(".table-tabcell")) : null);            // the open tab's head stands beside its button, in its cell (spec 123 §7.2)
 }
 

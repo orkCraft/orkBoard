@@ -34,7 +34,7 @@ def test_save_logs_sends_the_pages_state_and_its_last_twenty_errors(gui):
     pg.on("pageerror", lambda e: seen.append(str(e)))
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
-    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
     pg.evaluate("""() => {
       for (let i = 0; i < 25; i++) console.error(new TypeError('boom ' + i));
       console.error('plain words', { a: 1 });
@@ -59,7 +59,7 @@ def test_the_pages_face_is_the_editors_in_a_frame_and_the_apps_in_its_window(gui
     pg.route_web_socket("**/ws*", host.on_socket)
     face = "import('/static/js/shell/errors.js').then((m) => m.pageState().face)"
     pg.goto(server.url + "&app=1")
-    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
     assert pg.evaluate(face) == "app"
     pg.evaluate("(url) => { const f = document.createElement('iframe'); f.id = 'f'; f.src = url; document.body.append(f); }",
                 server.url + "&app=1")                                  # the editor's panel shows the page in a frame

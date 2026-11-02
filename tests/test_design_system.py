@@ -145,6 +145,7 @@ def test_orkboards_own_sheets_carry_no_colour_no_font_and_no_corner_of_their_own
                                                                    "--dx", "--s", "--delay",                    # spec 57: a dealt card's travel (--dy as the fan's), scale and delay
                                                                    "--lanes", "--card-w", "--col-w"}            # decisions §167.7: the lanes, a card's and a lane's width
         legacy -= {"--at", "--of", "--span"} | {f"--hc-{n}" for n in ("w", "h", "pad", "gap", "head", "window", "label", "top", "edge", "tight", "shown", "rise", "room", "tabs", "lean", "cap", "pots", "pot1", "first", "rest", "lead")}   # spec 101 §4: the hand's sizes and a lane's fan; spec 104 §5: the tabs' height a lifted card stays under, its lean; §3: the mana's caption and potions
+        legacy -= {"--c", "--h", "--i", "--peek"}   # spec 128 B: the Orkmaster's column's card colour, a pile's height, a card's place in it and the foot showing of each (table/column.css)
         legacy -= {"--cue-v", "--cue-h"}   # spec 107 §6.2: the scroll cue's two layers, one for each axis (page.css `.gui-scrolls`)
         legacy -= {"--table-end-w", "--table-end-h"}   # spec 104 §4: the room the table keeps beside and above the discard (table/discard.css)
         legacy -= {"--hf-left", "--hf-w"}   # spec 128 A.1: where the field lies, its left edge on the + card's and its width (hand/fieldturn.js `placeField`)

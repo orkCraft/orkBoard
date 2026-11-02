@@ -12,7 +12,7 @@ from orkboard.realm import event_log, idea_questions, ideas, spec_sections
 from tests.test_idea_decide import git  # noqa: F401
 from tests.test_idea_talk import DECIDED, TECH_NO, _noes, _objections, _row, _state, _talk, _until_state, host, model, parties  # noqa: F401  (the fixtures)
 
-COMMANDS = {"ideas.hearing", "ideas.throw", "ideas.ripe_hold"}
+COMMANDS = {"ideas.hearing", "ideas.throw", "ideas.ripe_hold", "ideas.ripe_back"}
 
 
 def _throw(host, slug, **args):

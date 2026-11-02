@@ -1,7 +1,7 @@
 """One card through a goal's life (docs/specs/120-a-goal-heard-and-thrown-to-a-side.md §6.1–§6.5, §6.8, §6.11; decisions §198.8), in a real browser against a stub host: the + card turned into the field with the field focused in the press itself, its rune large and
-the five on a press of it, Esc turning it back with its text and rune kept; Send turning it to its back and the back lying in the Orkmaster's lane, its rune lit and its name at its foot, never the + card's green; hover lifting and not turning, a press turning it to
-its face (its words, its route, what each leader said); the route's heads lit as `heard` grows; the seal's ring as the wait (its share following `left_s`, its words), Hold and Start; the wait's end turning the back up and one flight at a time to the lane, none for
-a hidden page, none under reduced motion. Screenshots to $LIFE_SHOTS when it is set."""
+the five on a press of it, Esc turning it back with its text and rune kept; Send turning it to its back and the back lying in the Orkmaster's column (spec 128 B.3: face down and sideways, its rune lit, no name, never the + card's green); a held goal's decision card in the hand;
+at the narrow width the goal talked over a token with its rune glowing, and on a phone the field and the menu's row. What lay in the Orkmaster's lane at the wide width (the back's face, the route's heads, the wait as the seal's ring, the turn up and the flight to the lane) is the column's
+now: tests/test_column_browser.py. Screenshots to $LIFE_SHOTS when it is set."""
 from __future__ import annotations
 
 import os
@@ -78,11 +78,8 @@ def open_life(gui, width="wide", host=None):
 
 
 def back_of(pg, slug):
-    return pg.locator(f'.frame-table .table-card--back[data-goal="{slug}"]')
-
-
-def at_rest(pg, ms=900):
-    pg.wait_for_timeout(ms)
+    """A goal's card face down in the Orkmaster's column (spec 128 B.3: the card of In analysis, sideways, with no name)."""
+    return pg.locator(f'.frame-column .col-card--down[data-goal="{slug}"]')
 
 
 # -- the + card turned into the card of the text (§6.1) ---------------------------------------------------------------------------------------
@@ -166,7 +163,8 @@ def test_under_reduced_motion_the_card_is_there_with_no_turn_and_no_growth_and_n
 
 # -- sent: it turns back and goes face down to the Orkmaster (§6.2) --------------------------------------------------------------------------
 
-def test_sent_the_card_turns_to_its_back_and_the_back_lies_in_the_orkmasters_lane_its_rune_lit_its_name_at_its_foot_never_green(gui):
+def test_sent_the_card_turns_to_its_back_and_the_back_lies_in_the_orkmasters_column_its_rune_lit_and_no_name_never_green(gui):
+    """Spec 128 B.3: the goal sent lies face down and sideways in the column's In analysis, its rune lit at the seal's top, glowing while it is talked over, with no name (the name is on its other side)."""
     pg, host, log = open_life(gui)
     try:
         pg.locator(".hand .hand-plus").click(position={"x": 8, "y": 60})
@@ -176,22 +174,15 @@ def test_sent_the_card_turns_to_its_back_and_the_back_lies_in_the_orkmasters_lan
         field.get_by_role("textbox", name="Write a goal").press("Enter")
         assert _sent(pg, host, ("ideas.add", {"text": "Players see who answered first, with a small crown over their name"}))
         pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
-        flyer = pg.locator("body > .hand-ghost.ork-turn")
-        try:
-            flyer.wait_for(state="attached", timeout=2000)
-            assert flyer.get_attribute("aria-hidden") == "true" and flyer.locator(".ork-turn__back .ork-sigil__seal .ork-elem.ice").count() == 1 and flyer.locator(".ork-turn__face").count() == 1, "orkUI's turn: a copy of the back, in the goal's rune, and the card of the words, over everything"
-            shot(pg, "send-flying")
-        except Exception:                                                        # it may already have landed on a quick machine
-            pass
-        card = back_of(pg, "new-goal")
+        card = pg.locator('.frame-column .col-card--down[data-goal="new-goal"]')
         card.wait_for(timeout=WAIT_MS)
-        pg.wait_for_function("() => !document.querySelector('.hand-ghost') && document.querySelector('.table-card--back').style.visibility !== 'hidden'", timeout=WAIT_MS)
+        pg.wait_for_function("() => !document.querySelector('.hand-ghost')", timeout=WAIT_MS)
         assert card.locator(".ork-sigil__seal .ork-elem.ice.is-glowing").count() == 1, "its own rune lit at the seal's top, glowing while it is talked over"
-        assert card.locator(".table-back-nm").inner_text().startswith("Players see who answered first")
+        assert card.inner_text().strip() == "" and pg.locator(".table-back-nm").count() == 0, "no name on the face-down card"
         assert card.locator(".ork-plus, .ork-icon").count() == 0, "no +: the + card alone keeps that"
         colours = card.evaluate("e => { const c = getComputedStyle(e); const action = getComputedStyle(document.documentElement).getPropertyValue('--ork-action').trim(); const probe = document.createElement('i'); probe.style.color = action; document.body.appendChild(probe); const a = getComputedStyle(probe).color; probe.remove(); return [c.borderTopColor, c.color, c.backgroundColor, a]; }")
         assert colours[3] not in colours[:3], f"never the + card's green: {colours}"
-        assert pg.locator(".frame-table .table-lane--first .table-card--back").count() == 1, "in the Orkmaster's lane"
+        assert pg.locator('.frame-column .col-sec[data-pile="analysis"] .col-card').count() == 1 and pg.locator(".frame-table .table-card--back").count() == 0, "in the column, not the Orkmaster's lane"
         assert pg.locator(".hand .hand-plus").count() == 1, "a new + card lies at the lane's end"
         shot(pg, "send-landed")
     finally:
@@ -203,157 +194,6 @@ def test_sent_the_card_turns_to_its_back_and_the_back_lies_in_the_orkmasters_lan
 
 def _talking(host, **more):
     host.put("dark", "Players see who answered first", "talk", "dust", back=back(**more))
-
-
-def test_a_goal_talked_over_lies_face_down_with_its_rune_glowing_and_its_routes_heads_lit_as_each_leader_has_said(gui):
-    pg, host, log = open_life(gui)
-    try:
-        _talking(host, route=("design", "tech", "product"))
-        card = back_of(pg, "dark")
-        card.wait_for(timeout=WAIT_MS)
-        assert card.get_attribute("data-back") == "talk" and card.get_attribute("aria-label") == "Players see who answered first: the leaders are talking it over · 0 of 3 leaders have said"
-        assert card.locator(".ork-elem.dust.is-glowing").count() == 1 and card.locator(".table-back-nm").inner_text() == "Players see who answered first"
-        heads = pg.locator('.frame-table [data-goal="dark"] ~ .table-back-heads .table-back-head, .frame-table .table-back-heads .table-back-head')
-        assert heads.count() == 3 and pg.locator(".table-back-head.is-said").count() == 0, "faint until `heard` names them"
-        opacity = lambda: [float(h.evaluate("e => getComputedStyle(e.querySelector('img')).opacity")) for h in heads.all()]  # noqa: E731
-        assert opacity() == [0.3, 0.3, 0.3]
-        assert card.locator(".ork-sigil.is-waiting").count() == 0, "never on the ring: the ring has one meaning at a time"
-        host.change("dark", back=back(route=("design", "tech", "product"), heard=["design"]))
-        pg.wait_for_function("() => document.querySelectorAll('.table-back-head.is-said').length === 1", timeout=WAIT_MS)
-        pg.wait_for_timeout(400)                                                  # the head lights in three steps
-        assert card.get_attribute("aria-label").endswith("1 of 3 leaders have said") and opacity() == [1.0, 0.3, 0.3]
-        host.change("dark", back=back(route=("design", "tech", "product"), heard=["design", "tech", "product"]))
-        pg.wait_for_function("() => document.querySelectorAll('.table-back-head.is-said').length === 3", timeout=WAIT_MS)
-        pg.wait_for_timeout(400)
-        assert card.get_attribute("aria-label").endswith("3 of 3 leaders have said") and opacity() == [1.0, 1.0, 1.0]
-        assert not pg.locator(".table-back-heads").inner_text().strip(), "no verdict, no tick, no count is drawn"
-        shot(pg, "talk-heads")
-        host.put("second", "A sound when the round ends", "talk", "void", back=back(route=("design",)))
-        back_of(pg, "second").wait_for(timeout=WAIT_MS)
-        assert pg.locator(".table-card--back .ork-elem.void").count() == 1 and pg.locator(".table-card--back .ork-elem.dust").count() == 1, "told apart by their rune"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_hovering_a_back_only_lifts_it_and_a_press_turns_it_to_its_face_with_its_words_its_route_what_each_leader_said_and_turn_it_back(gui):
-    pg, host, log = open_life(gui)
-    try:
-        _talking(host, stances=[("design", "Yes, with a frame"), ("tech", "Yes, one event")], heard=["design", "tech"])
-        card = back_of(pg, "dark")
-        card.wait_for(timeout=WAIT_MS)
-        assert card.evaluate("e => getComputedStyle(e).transform") == "none"
-        card.hover(position={"x": 30, "y": 60})
-        pg.wait_for_timeout(400)
-        assert card.evaluate("e => getComputedStyle(e).transform") != "none", "it lifts and leans (orkUI's `.ork-leans`)"
-        assert pg.locator(".table-back").count() == 0 and card.get_attribute("aria-pressed") == "false", "a pointer crossing the lane turns nothing"
-        card.click(position={"x": 30, "y": 60})
-        face = pg.locator(".table-back")
-        face.wait_for(timeout=WAIT_MS)
-        assert face.get_attribute("aria-label") == "Players see who answered first, turned over"
-        turn = pg.locator(".frame-table .table-turn")
-        assert turn.get_attribute("class").split()[:2] == ["ork-turn", "table-turn"] and "is-up" in turn.get_attribute("class").split() and turn.evaluate("e => getComputedStyle(e).aspectRatio") == "5 / 7", "orkUI's turn, 5 : 7, face up in place"
-        assert face.locator(".table-back__goal").inner_text() == "Players see who answered first"
-        assert face.locator(".hand-route__steps .hand-route__step").count() == 3, "the route's heads with their + (two parties and the +)"
-        assert face.get_by_role("button", name="Take Design off the route").count() == 1 and face.get_by_role("button", name="Add a party to the route").count() == 1
-        assert face.locator(".hand-way__acts").count() == 0, "no Talk on a goal that is talking"
-        stances = face.locator(".table-back__stances li")
-        assert [s.inner_text().strip() for s in stances.all()] == ["Design Yes, with a frame", "Tech Yes, one event"], "what each leader that has said said, a line each"
-        assert face.locator(".hand-way__cost").count() == 1, "its cost"
-        shot(pg, "talk-face")
-        face.get_by_role("button", name="Take Tech off the route").click()
-        assert _sent(pg, host, ("ideas.route_set", {"idea": "dark", "route": ["design"]}))
-        face.get_by_role("button", name="Turn it back").click()
-        pg.wait_for_function("() => !document.querySelector('.table-back')", timeout=WAIT_MS)
-        assert "is-up" not in turn.get_attribute("class").split(), "turned down again, in place"
-        assert card.get_attribute("aria-pressed") == "false"
-        pg.wait_for_function("() => getComputedStyle(document.querySelector('.table-card--back')).visibility === 'visible'", timeout=WAIT_MS)       # orkUI's turn shows the side it turns to at once
-        card.focus()
-        pg.keyboard.press("Enter")                                               # Enter turns it too
-        pg.locator(".table-back").wait_for(timeout=WAIT_MS)
-        pg.keyboard.press("Escape")
-        pg.wait_for_function("() => !document.querySelector('.table-back')", timeout=WAIT_MS)
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-# -- the wait (§6.4) -------------------------------------------------------------------------------------------------------------------------
-
-def _waiting(host, left, seconds=240, **more):
-    host.put("timer", "Round timer shows on every phone", "decided", "ice", back=back(heard=["design", "tech"], ripe=ripe(left, seconds, **more)))
-
-
-SHARE = "e => e.style.getPropertyValue('--ork-sigil-share')"
-ARC = "() => getComputedStyle(document.querySelector('.table-card--back .ork-sigil'), '::after').getPropertyValue('--_arc').trim()"
-
-
-def test_the_seals_ring_is_the_wait_its_share_following_the_time_left_in_eight_steps_and_the_words_under_the_card(gui):
-    pg, host, log = open_life(gui)
-    try:
-        _waiting(host, 240)
-        card = back_of(pg, "timer")
-        card.wait_for(timeout=WAIT_MS)
-        sigil = card.locator(".ork-sigil")
-        assert card.get_attribute("data-back") == "wait" and "is-waiting" in sigil.get_attribute("class").split()
-        assert pg.locator(".table-back-under").inner_text() == "Starts by itself in 4 min"
-        assert sigil.evaluate(SHARE) == "0", "nothing of the wait is gone yet"
-        assert card.locator(".ork-elem.ice.is-glowing").count() == 0, "the rune stands lit, still: it is not talked over any more"
-        assert pg.evaluate(ARC) == "0deg"
-        host.change("timer", back=back(heard=["design", "tech"], ripe=ripe(60, 240)))
-        pg.wait_for_function("() => document.querySelector('.table-back-under').innerText === 'Starts by itself in 1 min'", timeout=WAIT_MS)
-        assert sigil.evaluate(SHARE) == "0.75" and pg.evaluate(ARC) == "270deg", "three quarters gone: six steps of eight"
-        host.change("timer", back=back(heard=["design", "tech"], ripe=ripe(40, 240)))
-        pg.wait_for_function("() => document.querySelector('.table-back-under').innerText === 'Starts by itself in 40 s'", timeout=WAIT_MS)
-        assert sigil.evaluate(SHARE) == "0.875"
-        shot(pg, "wait-ring")
-        steps = []
-        for left in (240, 210, 200, 120, 30, 1, 0):                              # eighths of 240 s are 30 s: the ring stands where its step is, between two steps it does not move
-            host.change("timer", back=back(heard=["design", "tech"], ripe=ripe(left, 240)))
-            pg.wait_for_function("(l) => !!document.querySelector('.table-card--back')", arg=left, timeout=WAIT_MS)
-            pg.wait_for_timeout(120)
-            steps.append(sigil.evaluate(SHARE))
-        assert steps == ["0", "0.125", "0.25", "0.5", "0.875", "1", "1"], steps
-        sigil.evaluate("e => e.style.setProperty('--ork-sigil-share', '0.45')")
-        assert pg.evaluate(ARC) == "135deg", "orkUI rounds the share down to an eighth (0.45 is 3/8): the page sets the share and nothing else"
-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.table-card--back .ork-sigil'), '::after').color") != pg.evaluate("() => getComputedStyle(document.querySelector('.table-card--back .ork-sigil')).color"), "the lit runes wear the goal's colour, the sigil's own colour is the faint ink"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_a_held_wait_stands_where_it_was_and_says_so_and_pressed_the_waiting_card_has_hold_and_the_held_one_start(gui):
-    pg, host, log = open_life(gui)
-    try:
-        _waiting(host, 90)
-        host.needs = [need("decision", "design", "timer", "Round timer shows on every phone", "Why: Every phone should agree.\n\n1. Tech counts on the server.\n2. Phones show it.", number=201, confirmed=False, error="")]
-        host.bump({})
-        card = back_of(pg, "timer")
-        card.wait_for(timeout=WAIT_MS)
-        card.click(position={"x": 30, "y": 60})
-        face = pg.locator(".table-back")
-        face.wait_for(timeout=WAIT_MS)
-        assert "All the leaders agreed" in face.inner_text() and face.locator('[data-caption="wait"]').inner_text() == "All the leaders agreed"
-        assert "Every phone should agree." in face.inner_text(), "the decision's words"
-        assert face.get_by_role("button", name="Hold").count() == 1 and face.get_by_role("button", name="Start").count() == 0
-        shot(pg, "wait-face")
-        face.get_by_role("button", name="Hold").click()
-        assert _sent(pg, host, ("ideas.ripe_hold", {"idea": "timer"}))
-        pg.wait_for_function("() => !document.querySelector('.table-back')", timeout=WAIT_MS)
-        host.change("timer", back=back(heard=["design", "tech"], ripe=ripe(0, 240, held=True)))
-        pg.wait_for_function("() => document.querySelector('.table-back-under').innerText === 'Held: start it when you are ready'", timeout=WAIT_MS)
-        assert back_of(pg, "timer").get_attribute("data-back") == "held"
-        assert back_of(pg, "timer").locator(".ork-sigil").evaluate(SHARE) == "0.625", "the ring stands where the wait was held (90 s of 240 left: the share seen)"
-        card.click(position={"x": 30, "y": 60})
-        face = pg.locator(".table-back")
-        face.wait_for(timeout=WAIT_MS)
-        assert face.get_by_role("button", name="Start").count() == 1 and face.get_by_role("button", name="Hold").count() == 0
-        assert "Held: start it when you are ready" in face.inner_text()
-        face.get_by_role("button", name="Start").click()
-        assert _sent(pg, host, ("ideas.confirm", {"idea": "timer"}))
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
 
 
 def test_a_held_goals_decision_card_in_the_hand_says_start_and_a_decision_with_no_wait_says_confirm_and_start(gui):
@@ -376,73 +216,6 @@ def test_a_held_goals_decision_card_in_the_hand_says_start_and_a_decision_with_n
         host.bump({})
         pg.locator('.hand-card[data-kind="decision"]').click(position={"x": 10, "y": 20})
         assert pg.locator(".hand-lifted").get_by_role("button", name="Confirm and start").count() == 1
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-# -- the wait's end: turned up, then flown to its lane (§6.5) ------------------------------------------------------------------------------
-
-def _worked(host, slug, party="design"):
-    host.change(slug, state="working", goal=party, back=None, tasks=[task("t1", "Draw the crown", "running")], stage="implementation")
-
-
-def test_the_waits_end_turns_the_back_up_where_it_lies_and_the_card_then_flies_to_its_lane_once_and_a_second_waits_for_the_first(gui):
-    pg, host, log = open_life(gui)
-    try:
-        _waiting(host, 5)
-        host.put("sound", "A sound when the round ends", "decided", "void", party="tech", back=back(route=("tech",), heard=["tech"], ripe=ripe(5, 600)))
-        back_of(pg, "timer").wait_for(timeout=WAIT_MS)
-        back_of(pg, "sound").wait_for(timeout=WAIT_MS)
-        pg.evaluate("() => { window.__fl = { max: 0, seen: 0 }; setInterval(() => { const n = document.querySelectorAll('body > .table-flyer').length; window.__fl.max = Math.max(window.__fl.max, n); window.__fl.seen += n ? 1 : 0; }, 16); }")
-        host.change("timer", state="sections", back=None)                                       # the wait ended: the leaders confirmed
-        host.change("sound", state="sections", back=None)
-        pg.wait_for_function("() => document.querySelectorAll('.table-turn.is-up .table-card--own').length === 2", timeout=WAIT_MS)
-        assert pg.locator(".table-turn.ork-turn").count() == 2 and pg.locator(".table-turn.is-up .ork-turn__face .table-card--own").count() == 2, "turned up where they lay: orkUI's `.ork-turn`, in place"
-        pg.wait_for_function("() => !document.querySelector('.table-card--back')", timeout=WAIT_MS)
-        assert pg.locator(".table-turn .ork-turn__back").count() == 0, "the back is taken away when it has turned"
-        assert pg.locator(".table-turn.is-up .table-card--own .table-card__nm").first.inner_text(), "the goal's header, its rune, its name"
-        pg.wait_for_timeout(500)
-        assert pg.evaluate("() => window.__fl.seen") == 0, "no flight yet: the goals are not in a lane"
-        _worked(host, "timer", "design")
-        _worked(host, "sound", "tech")
-        pg.wait_for_function("() => window.__fl.seen > 0", timeout=WAIT_MS)
-        pg.wait_for_function("() => document.querySelectorAll('body > .table-flyer').length === 0 && window.__fl.seen > 5", timeout=WAIT_MS * 2)
-        pg.wait_for_timeout(1500)
-        assert pg.evaluate("() => window.__fl.max") == 1, "one card flies at a time"
-        assert pg.evaluate("() => import('/static/js/table/flight.js').then((m) => m.flights.done)") == 2, "each flew once"
-        assert pg.locator('.frame-table .table-lane[data-party="design"] .table-goal[data-goal="timer"]').count() == 1
-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.table-goal[data-goal=\"timer\"]')).visibility") == "visible", "and lies in its lane when it has landed"
-        assert pg.locator(".table-lane--first .table-goal").count() == 0, "the lane it left closed behind it"
-    finally:
-        pg.close()
-    assert not log, "\n".join(log)
-
-
-def test_nothing_flies_for_a_hidden_page_or_under_reduced_motion_the_card_is_in_its_lane(gui):
-    pg, host, log = open_life(gui)
-    try:
-        _waiting(host, 5)
-        back_of(pg, "timer").wait_for(timeout=WAIT_MS)
-        pg.evaluate("() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => true }); }")
-        host.change("timer", state="sections", back=None)
-        pg.wait_for_function("() => !document.querySelector('.table-card--back')", timeout=WAIT_MS)
-        _worked(host, "timer")
-        pg.wait_for_function("() => document.querySelector('.table-lane[data-party=\"design\"] .table-goal[data-goal=\"timer\"]')", timeout=WAIT_MS)
-        pg.wait_for_timeout(300)
-        assert pg.locator("body > .table-flyer").count() == 0 and pg.evaluate("() => import('/static/js/table/flight.js').then((m) => m.flights.done)") == 0, "not seen: no flight"
-        assert pg.evaluate("() => getComputedStyle(document.querySelector('.table-goal[data-goal=\"timer\"]')).visibility") == "visible"
-        pg.evaluate("() => { delete document.hidden; }")
-        pg.emulate_media(reduced_motion="reduce")
-        host.put("sound", "A sound when the round ends", "decided", "void", party="tech", back=back(route=("tech",), heard=["tech"], ripe=ripe(5, 600)))
-        back_of(pg, "sound").wait_for(timeout=WAIT_MS)
-        host.change("sound", state="sections", back=None)
-        pg.wait_for_function("() => !document.querySelector('.table-card--back')", timeout=WAIT_MS)
-        assert pg.locator(".table-turn.is-up").evaluate("e => e.querySelector('.ork-turn__face').getAnimations().length + (getComputedStyle(e.querySelector('.ork-turn__face')).transform === 'none' ? 0 : 1)") == 0, "no turn under reduced motion: orkUI swaps the sides at once"
-        _worked(host, "sound", "tech")
-        pg.wait_for_function("() => document.querySelector('.table-lane[data-party=\"tech\"] .table-goal[data-goal=\"sound\"]')", timeout=WAIT_MS)
-        pg.wait_for_timeout(300)
-        assert pg.locator("body > .table-flyer").count() == 0 and pg.evaluate("() => import('/static/js/table/flight.js').then((m) => m.flights.done)") == 0
     finally:
         pg.close()
     assert not log, "\n".join(log)

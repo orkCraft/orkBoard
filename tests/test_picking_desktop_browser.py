@@ -56,7 +56,7 @@ def picking(gui, request):
     pg.on("console", lambda m: m.type == "error" and not m.text.startswith("Failed to load resource") and errors.append(f"console: {m.text}"))
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
-    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
     pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
     yield pg, host, request.param
     narrow.no_sideways(pg)
@@ -388,7 +388,7 @@ def test_a_party_named_with_at_is_picked_on_its_own_map_and_the_strip_on_another
     strip = pg.locator(".pick-strip")
     strip.wait_for(timeout=WAIT_MS)
     link = strip.get_by_role("button", name="Open Tech's map to pick")
-    assert pg.locator(".table-tab[aria-selected=true]").get_attribute("data-tab") == "orkmaster", "the person's tab is kept"
+    assert pg.locator(".table-tab[aria-selected=true], .col-head__tab[aria-selected=true]").get_attribute("data-tab") == "orkmaster", "the person's tab is kept"
     shot(pg, f"picking-open-link-{w}.png")
     link.click()
     pg.locator(".table-tab[data-tab=tech][aria-selected=true]").wait_for(timeout=WAIT_MS)

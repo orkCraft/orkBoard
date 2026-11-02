@@ -92,7 +92,7 @@ def start(gui, width, host=None, **context):
     watch(pg, errors)
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
-    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
     pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
     return pg, host, errors
 
@@ -116,13 +116,14 @@ def wide(gui):
 
 
 def cell(pg, slug):
-    return pg.locator(f'.table-tabcell[data-cell="{slug}"]')
+    """A tab's cell; the Orkmaster's at the wide width is the column's head (spec 128 B.2)."""
+    return pg.locator(f'.table-tabcell[data-cell="{slug}"], .col-head') if slug == "orkmaster" else pg.locator(f'.table-tabcell[data-cell="{slug}"]')
 
 
 def go(pg, slug):
     tab(pg, slug).click()
-    pg.locator(f'.table-tab[data-tab="{slug}"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
-    pg.wait_for_function("(s) => document.querySelector(`.table-tabcell[data-cell=\"${s}\"] img.ork-race__head`)?.complete", arg=slug, timeout=WAIT_MS)
+    pg.locator(f'.table-tab[data-tab="{slug}"][aria-selected="true"], .col-head__tab[data-tab="{slug}"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
+    pg.wait_for_function("(s) => document.querySelector(`.table-tabcell[data-cell=\"${s}\"] img.ork-race__head, .col-head img.ork-race__head`)?.complete", arg=slug, timeout=WAIT_MS)
 
 
 def face(pg, slug):
@@ -140,7 +141,7 @@ def paint(pg, token, prop="color"):
 
 
 def waits(pg, slug, want):
-    pg.wait_for_function("([s, m]) => document.querySelector(`.table-tabcell[data-cell=\"${s}\"] img.ork-race__head`)?.dataset.mood === (m || undefined)", arg=[slug, want], timeout=WAIT_MS)
+    pg.wait_for_function("([s, m]) => document.querySelector(s === 'orkmaster' ? '.col-head img.ork-race__head, .table-tabcell[data-cell=orkmaster] img.ork-race__head' : `.table-tabcell[data-cell=\"${s}\"] img.ork-race__head`)?.dataset.mood === (m || undefined)", arg=[slug, want], timeout=WAIT_MS)
 
 
 # -- the heads ----------------------------------------------------------------------------------------------------------------------------------------
@@ -152,7 +153,7 @@ def test_the_open_head_is_large_the_others_36_the_open_tab_has_no_fill_and_the_l
     box = lambda slug: cell(pg, slug).locator("img.ork-race__head").bounding_box()          # noqa: E731
     assert (box("tech")["width"], box("tech")["height"]) == ((48, 44) if big else (36, 33))
     for slug in ("orkmaster", "game", "art", "market"):
-        assert (box(slug)["width"], box(slug)["height"]) == (36, 33), slug
+        assert (box(slug)["width"], box(slug)["height"]) == ((24, 22) if big and slug == "orkmaster" else (36, 33)), slug      # the Orkmaster's head in the column (spec 128 B.2) is the small size
     nav, rim = pg.locator(".table-tabs").bounding_box(), pg.locator(".table-tabs").evaluate("e => parseFloat(getComputedStyle(e).borderBottomWidth)")
     assert rim == 3 and abs(box("tech")["y"] + box("tech")["height"] - (nav["y"] + nav["height"])) <= 1, "the open head 3 px lower, over the table's rim"
     assert abs(box("game")["y"] + box("game")["height"] - (nav["y"] + nav["height"] - 3)) <= 1, "the others stand on the rim"
@@ -165,7 +166,8 @@ def test_the_open_head_is_large_the_others_36_the_open_tab_has_no_fill_and_the_l
         assert tab(pg, "game").locator(".table-tab__main").evaluate("e => getComputedStyle(e).color") == paint(pg, "--ork-ink-muted")
         assert open_tab_box.locator(".table-tab__who").evaluate("e => getComputedStyle(e).color") == paint(pg, "--ork-ink-muted")
         go(pg, "orkmaster")
-        assert cell(pg, "orkmaster").locator(".table-tab__who").text_content() == "the Orkmaster"
+        assert "the orkmaster" in cell(pg, "orkmaster").text_content().lower() and cell(pg, "orkmaster").evaluate("e => !!e.closest('.frame-column')")      # the column's head, in the room's colour: no fill but the underline
+        assert tab(pg, "orkmaster").evaluate("e => getComputedStyle(e).backgroundColor") == "rgba(0, 0, 0, 0)"
     shot(pg, f"leaders-tabs-{w}.png")
 
 
@@ -192,7 +194,9 @@ def test_the_open_head_is_a_button_of_its_own_beside_the_tab_s_and_no_button_hol
     assert head.evaluate("e => !e.closest('[role=tab]')") and head.locator("img.ork-race__head").count() == 1
     assert pg.locator("[data-ask-head]").count() == 1, "the open tab's head only"
     go(pg, "orkmaster")
-    assert pg.locator("[data-ask-head]").get_attribute("data-ask-head") == "orkmaster" and pg.locator("[data-ask-head]").get_attribute("aria-label") == "Ask the Orkmaster"
+    ask = pg.locator("[data-ask-head]")
+    assert ask.get_attribute("data-ask-head") == "orkmaster" and ask.get_attribute("aria-haspopup") == "dialog" and ask.get_attribute("role") == "tab", "the Orkmaster's head is its tab, the column's (spec 128 B.2): pressed again it asks"
+    assert ask.get_attribute("aria-label") == "The Orkmaster · shop" and "Press again to ask it" in ask.get_attribute("title")
 
 
 def test_the_head_pressed_opens_the_bubble_focused_enter_asks_the_answer_makes_a_goal_and_esc_closes_it(wide):
@@ -343,7 +347,7 @@ def test_a_chair_stands_under_each_head_at_the_wide_width_and_none_under_760(des
     go(pg, "tech")
     chairs = pg.locator(".table-tabcell .ork-chair:not(.is-empty)")
     if w == "wide":
-        assert chairs.count() == 5 and pg.locator(".ork-chair.big").count() == 1 and cell(pg, "tech").locator(".ork-chair.big").count() == 1       # the open leader's is the large one
+        assert chairs.count() == 4 and pg.locator(".ork-chair.big").count() == 1 and cell(pg, "tech").locator(".ork-chair.big").count() == 1       # the open leader's is the large one
         box = cell(pg, "game").locator(".ork-chair").bounding_box()
         assert (box["width"], box["height"]) == (44, 24) and (cell(pg, "tech").locator(".ork-chair.big").bounding_box()["width"], cell(pg, "tech").locator(".ork-chair.big").bounding_box()["height"]) == (52, 28)
         head, back = cell(pg, "game").locator("img.ork-race__head").bounding_box(), cell(pg, "game").locator(".ork-chair").bounding_box()

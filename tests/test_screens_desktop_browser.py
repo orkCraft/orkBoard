@@ -120,7 +120,7 @@ def start(gui, width, errors, tab="design", **kw):
     watch(pg, errors)
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
-    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
     pg.locator(f'.table-tab[data-tab="{tab}"]').click()
     pg.locator(f'.table-tab[data-tab="{tab}"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
     return pg, host
@@ -171,7 +171,9 @@ def test_the_steps_are_columns_left_to_right_and_at_the_narrow_width_top_to_bott
     if wide(w):
         assert all(a["x"] < b["x"] for a, b in zip(boxes, boxes[1:]))                                              # left to right
         assert all(abs(a["y"] - boxes[0]["y"]) < 2 for a in boxes)                                                 # on one line
-        assert all(inside(pg, s) for s in steps.all())                                                              # none cut off at 1280
+        pg.set_viewport_size({"width": 1460, "height": 800})                                                        # the Orkmaster's column takes 180 px of the 1280 the five steps had (spec 128 B.1)
+        pg.wait_for_timeout(300)
+        assert all(inside(pg, s) for s in steps.all())                                                              # none cut off at 1460 less the column
     else:
         assert all(a["y"] < b["y"] for a, b in zip(boxes, boxes[1:]))                                              # top to bottom
         assert all(abs(a["x"] - boxes[0]["x"]) < 2 for a in boxes)

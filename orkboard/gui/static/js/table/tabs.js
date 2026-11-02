@@ -9,7 +9,7 @@
 // The dark edges (table.css): the row and the hand on orkUI's room, a rim under the tabs and over the hand, no line between the tabs. Under 760 px the tabs are a row of heads (the open one at 36 with its marks), the chair and the door small, and the limits are in the Orkmaster's **…**
 // as chips (pane.js) and in the hand as small potions. The tabs, the Board's lanes and the hand read the frame's one `--cols`, so a tab stands over its lane. A party's tab carries a dot when the picked goal's route has it.
 // At the wide width Release's and Live's are not in the row (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §4.1, decisions §188.1): they wait in the portal ring's corners (road.js, portal.js) and open their view in the pane from there; `parties` is the tabs' (data.js `partiesNow`).
-// The open tab is the person's: nothing here switches it. A name is also said on a long press (nothing only on hover: spec 94 §1.1).
+// **With the Orkmaster's column pinned (spec 128 B, the wide width) the row is the leaders' alone**: the Orkmaster's tab is the column's head (table/column.js), the project's name and its ▾ with it. The open tab is the person's: nothing here switches it. A name is also said on a long press (nothing only on hover: spec 94 §1.1).
 import { useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Chair, Head, Icon, Sign } from "../orkui.js";
@@ -64,11 +64,11 @@ function LookMarks({ slug, who }) {
 }
 
 /** One tab in its cell. `g`: the party (null for the project's); the open tab's head is not in its button but beside it, in the cell. */
-function Tab({ slug, g = null, on, name, who = "", head, dot = false, working = false, alert = "", switcher = false, marks = null, compact, narrow, onPick, after = null }) {
+function Tab({ slug, g = null, on, name, who = "", head, dot = false, working = false, alert = "", switcher = false, marks = null, compact, narrow, onPick, after = null, stop = false }) {
   const press = usePressName(name), said = marks ? `${name} · ${marksWords(marks)}` : name, mood = moodOf(g), chair = !narrow;
   const size = on && !narrow ? "big" : "mid", key = slug === ORKMASTER ? "" : slug, leader = roleWord(g ? g.leader?.name : "Orkmaster");
   const looking = g ? lookOf(slug).status === "looking" : false, ask = desk() && !!head;
-  const button = html`<button type="button" class=${cls("ork-tab table-tab", { "is-compact": compact, "has-switch": switcher, "is-open": on })} role="tab" id=${`tab-${slug}`} data-tab=${slug} data-working=${working ? "" : undefined} aria-selected=${String(on)} tabindex=${on ? 0 : -1}
+  const button = html`<button type="button" class=${cls("ork-tab table-tab", { "is-compact": compact, "has-switch": switcher, "is-open": on })} role="tab" id=${`tab-${slug}`} data-tab=${slug} data-working=${working ? "" : undefined} aria-selected=${String(on)} tabindex=${on || stop ? 0 : -1}
     aria-label=${said} title=${said} aria-controls="table-pane" onClick=${onPick} ...${press}>
     ${!on && head && html`<${Sit} head=${head} mood=${mood} size=${size} chair=${chair} />`}
     <span class="table-tab__txt"><span class="table-tab__main">${name}</span>${on && who && html`<span class="table-tab__who">${who}</span>`}<${Marks} m=${marks} on=${on} /></span>
@@ -93,23 +93,24 @@ function LimitChip({ l, from }) {
     ${MARKED.includes(l.provider) && html`<img class="ork-mark" src=${markSrc(l.provider)} srcset=${`${markSrc(l.provider, true)} 2x`} alt="" draggable="false" />`}${words}</button>`;
 }
 
-export function Tabs({ parties, all = parties, current, narrow, compact }) {
+export function Tabs({ parties, all = parties, current, narrow, compact, column = false }) {
   const project = currentProject.value?.name || "The project", route = routeParties(picked.value), offer = useOffer();
   const from = { title: mapName(current, all), key: "" };
-  const slugs = [ORKMASTER, ...parties.map((g) => g.slug)];
+  const slugs = [ORKMASTER, ...parties.map((g) => g.slug)], first = column ? 1 : 0;       // with the Orkmaster's column pinned its tab is the column's head (column.js), outside this row: the row is the leaders'
   const keys = (e) => {
     if (e.target.getAttribute?.("role") !== "tab") return;           // the head's and the marks' buttons beside a tab take their own keys
-    const at = slugs.indexOf(current), to = e.key === "Home" ? 0 : e.key === "End" ? slugs.length - 1 : { ArrowRight: at + 1, ArrowLeft: at - 1 }[e.key];
+    const at = slugs.indexOf(current), to = e.key === "Home" ? first : e.key === "End" ? slugs.length - 1 : { ArrowRight: at + 1, ArrowLeft: at - 1 }[e.key];
     if (to === undefined || to < 0 || to >= slugs.length) return;
     e.preventDefault();
     openTab(slugs[to]);
-    e.currentTarget.querySelectorAll("[role=tab]")[to]?.focus();
+    if (column && to === 0) document.getElementById(`tab-${ORKMASTER}`)?.focus();             // the column's head is a tab of the same set
+    else e.currentTarget.querySelectorAll("[role=tab]")[to - first]?.focus();
   };
   const switcher = html`<button type="button" class="ork-btn quiet table-switch" aria-label="Switch project" title="Switch project" onClick=${() => openOver("projects", {}, from, "Projects")}><${Icon} name="chevron-down" /></button>`;
   return html`<nav class="table-tabs" aria-label="Parties" data-compact=${String(compact)}>
     <div class="table-tabs__list" role="tablist" aria-label="Parties" onKeyDown=${keys}>
-      <${Tab} slug=${ORKMASTER} on=${current === ORKMASTER} name=${project} who="the Orkmaster" head=${CROWN} switcher=${true} marks=${projectMarks()} compact=${compact} narrow=${narrow} onPick=${() => openTab(ORKMASTER)} after=${switcher} />
-      ${parties.map((g) => html`<${Tab} key=${g.slug} slug=${g.slug} g=${g} on=${current === g.slug} name=${nameOf(g)} who=${g.leader?.name || ""} head=${g.leader?.head} dot=${route.has(g.slug)} working=${isWorking(g)} marks=${marksOf(g)}
+      ${!column && html`<${Tab} slug=${ORKMASTER} on=${current === ORKMASTER} name=${project} who="the Orkmaster" head=${CROWN} switcher=${true} marks=${projectMarks()} compact=${compact} narrow=${narrow} onPick=${() => openTab(ORKMASTER)} after=${switcher} />`}
+      ${parties.map((g, i) => html`<${Tab} key=${g.slug} slug=${g.slug} g=${g} on=${current === g.slug} stop=${column && current === ORKMASTER && i === 0} name=${nameOf(g)} who=${g.leader?.name || ""} head=${g.leader?.head} dot=${route.has(g.slug)} working=${isWorking(g)} marks=${marksOf(g)}
         alert=${hasAlert(g) ? `${theLeader(g.leader?.name)} has an alert on the map` : ""} compact=${compact} narrow=${narrow} onPick=${() => openTab(g.slug)} />`)}
     </div>
     <div class="table-tabs__end">
