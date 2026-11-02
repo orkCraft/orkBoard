@@ -19,6 +19,9 @@
 .table-end .hand-card .hand-mark.is-ok { color: var(--ork-success); }
 .table-end .hand-card .hand-mark .ork-sign { opacity: 0.85; }
 .table-end .hand-card .is-ok { color: var(--ork-success); }
+/* A goal done in the night wears a small moon until its result is seen (docs/specs/128 C.3, decisions §206.9; table/discard.js): orkUI's `moon` sign in the quiet ink, at the corner of the card's window, and at the end of its row over the pane. */
+.table-end .hand-done__moon { position: absolute; top: var(--ork-1); right: var(--ork-1); display: inline-flex; color: var(--ork-ink-muted); }
+.hand-drow__moon { display: inline-flex; flex: none; color: var(--ork-ink-muted); }
 
 .table-body:is([data-end="side"], [data-end="over"]) { padding-right: var(--table-end-w); }
 .table-body:is([data-end="side"], [data-end="over"]) > :is(.table-head, .pick-strip) { margin-right: calc(var(--table-end-w) * -1); }          /* the party's header and the pick strip keep the pane's whole width */

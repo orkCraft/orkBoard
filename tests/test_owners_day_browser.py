@@ -346,6 +346,7 @@ def test_a_task_card_at_work_shows_the_flame_and_says_the_time_it_has_worked_and
     assert words.lower().startswith("doing · 1 m "), words
     ticked = card.locator(".table-stage").inner_text()
     pg.wait_for_function("([sel, was]) => document.querySelector(sel + ' .table-stage').innerText !== was", arg=['.table-card[data-task="r1"]', ticked], timeout=3000)   # it ticks
+    pg.evaluate("() => import('/static/js/table/flight.js').then((m) => { m.thrown.value = new Map(); })")           # (a failed task's card lies as a place while its failure is in the hand, spec 128 C.2: here it is put back to be looked at)
     waiting = pg.locator('.table-card[data-state="failed"]').first
     assert waiting.locator(".ork-elem").count() == 0 and waiting.locator(".table-stage .ork-sign").count() == 1, "what does not work shows no flame"
     assert "·" not in waiting.locator(".table-stage").inner_text(), "and counts no time"

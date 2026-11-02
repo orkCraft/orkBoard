@@ -18,6 +18,7 @@ import { aliveState, useChanged, useWorked, workedWords } from "./worktime.js";
 import { ConcernsBack } from "./concerns.js";                       // a marked card's back lists its leader's concerns (spec 108 B)
 import { cascadeOf, footWords, doingWords, readTask, stageOf, typeSignOf, gemOf, STAGES } from "./data.js";
 import { BackFace, Turning, backKind, everBack } from "./backcard.js";       // a goal talked over lies face down (spec 120 §6.3)
+import { ThrownPlace, thrown } from "./flight.js";                         // a failed task's card thrown to the hand leaves its place (spec 128 C.2)
 
 /** The key of the card that was lit on the way back from a thing opened over the pane, "" none (a press or a key puts it out). */
 export const litKey = signal("");
@@ -56,7 +57,8 @@ function Win({ n, sign, moon = false, danger = false }) {
  *  worked; a card whose state changed flashes its frame once (spec 107 §7, table.css; the flash is not played under reduced motion, the time still ticks). */
 export function TaskCard({ n, t }) {
   const key = taskKey(n, t), on = lifted.value === key, bad = t.state === "failed", asks = t.state === "picking", gem = gemOf(t);
-  const said = `${t.title}, ${n.short || n.title}: ${footWords(t)}`, worked = useWorked(t.started, aliveState(t.state)), changed = useChanged(t.state);
+  const said = `${t.title}, ${n.short || n.title}: ${footWords(t)}`, worked = useWorked(t.started, aliveState(t.state)), changed = useChanged(t.state), away = thrown.value.get(`${n.slug}/${t.id}`);
+  if (away) return html`<${ThrownPlace} n=${n} t=${t} h=${away.h} />`;
   return html`<button type="button" class=${cls("ork-card ork-leans table-card", { fails: bad, asks, "is-lifted": on, "is-lit": litKey.value === key, "is-changed": changed })} data-lkey=${key} data-goal=${n.slug} data-task=${t.id}
     data-about=${aboutTokens(n, [t])} data-state=${t.state} data-stage=${stageOf(t)} aria-pressed=${String(on)} aria-label=${said} title=${n.title} onClick=${() => lift(on ? "" : key)} ...${leans}>
     <span class="table-card__head"><span class="table-card__nm" title=${t.title}>${t.short || t.title}</span></span>

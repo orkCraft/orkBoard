@@ -1,0 +1,4 @@
+/* A failure thrown to the hand leaves its place in the lane (docs/specs/128 C.2, decisions §206.7; table/flight.js `ThrownPlace`): orkUI's `.ork-card-place` (the card's outline in dashes, 5 : 7) as wide as the card was and as high (the page sets
+   the height it measured), its words in the caption's face, *Try again* the quieter ink's. Layout only: every colour, face and corner is orkUI's. */
+.table-thrown { display: grid; place-items: center; width: 100%; flex: none; padding: var(--ork-3); color: var(--ork-ink-faint); font: var(--ork-type-caption); text-align: center; }
+.table-thrown i { font-style: normal; color: var(--ork-ink-muted); }

@@ -99,6 +99,10 @@ def window(gui, request):
     pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
     pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
     pg.locator(".hand-card").first.wait_for(timeout=WAIT_MS)
+    if request.param == "wide":                                                                                          # a failed task's card lies as a place while its failure is in the hand (spec 128 C.2, tests/test_thrown_browser.py);
+        pg.locator(".table-thrown").first.wait_for(timeout=WAIT_MS)                                                      # these tests look at the table's cards themselves, so they are put back in their lanes
+        pg.evaluate("() => import('/static/js/table/flight.js').then((m) => { m.thrown.value = new Map(); })")
+        pg.locator('[data-lkey="t:task:seat/s2"]').wait_for(timeout=WAIT_MS)
     yield pg, host, request.param
     narrow.no_sideways(pg)
     pg.context.close()
