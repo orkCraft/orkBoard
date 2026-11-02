@@ -4580,7 +4580,7 @@ configs), the map is the one we have. So:
 5. **Not taken now**: the inflation of a currency late in the game (it needs a simulation along the progression;
    `pile_up` keeps the static case); the flow curve with the players' deaths and quits, and a playtest's summary on the
    phone (the project's analytics are not read yet: the later spec of spec 115, PostHog or GameAnalytics among them).
-6. **The look is orkUI's and the words plain**: the tokens alone; *Nothing takes Scrap after the second act*, never
+6. **The look is orkUI's and the words plain**: the tokens alone; *Scrap is only earned: nothing takes it*, never
    *Currency Inflation*.
 7. **The evidence is asked for before the spec**, as §208.7: the survey's figures and the post-mortem it speaks of,
    named. The spec builds 2–4 with §208's, §209's and §210's.
