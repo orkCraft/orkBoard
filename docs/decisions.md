@@ -4849,3 +4849,51 @@ second for Play: what the probe sees is shown in the lens of the party whose asp
 7. The spec that reads the sources is spec 115's later one (Sentry, Crashlytics, PostHog, GameAnalytics, Discord, Steam
    reviews); this decision is its routing. Steam's wishlists and sales stay behind Steamworks' partner key (§214.6).
 The owner's call.
+
+## 218. Where Orkboard stands after the field was measured: the maps are what is ours, the indie game developer with a day job is whom it is for, the phone is half the product, the engines come first, nothing is promised before it is built (2 November 2026, the owner)
+
+Changes: 95, 208, 209, 214.
+
+Why: a market research (a prompt to Gemini with strict rules on sources; its answer, with first sources and dates, is
+the best of the series, its vendors' own claims marked as such) checked four claims against 26 products: the agents'
+runners (Conductor, Vibe Kanban, Sculptor, Multica, Cursor, Claude Code, Codex, Devin, Factory, OpenHands, Jules,
+Copilot), trackers with agents (Linear, Jira with Rovo), companies of agents (MetaGPT, ChatDev, CrewAI,
+Claude-Code-Game-Studios, Turnstone), game trackers (Codecks, HacknPlan), AI for games (Unity AI, Rosebud, Ludo, Bezi)
+and code's maps (CodeSee, Swimm, Sourcegraph, CodeScene). Its verdicts: **H1, each craft's own map of the project read
+from the code with its rubric, holds wholly**: every company of agents makes a role a prompt; CodeScene maps Tech
+alone; CodeSee closed in 2024. **H2, standing roles for the whole product, holds in part**: Claude-Code-Game-Studios
+(open source, said to be past 25,000 stars, living in the repository) keeps 49 roles from game design and art to
+release and LiveOps, reads Godot, Unity and Unreal, and has `/balance-check`, `/asset-audit`, `/launch-checklist`; it
+has no Marketing and no map. **H3, the person only decides, holds in part**: the idea is said by others (*you still make
+every decision*; Multica's inbox that pings only for a call), our way of it (a hand of decisions, no chat with a member)
+is ours. **H4, the indie game on Steam, holds in part**: the engines and a release's checklist are there; Steam's
+refund window, Next Fest, the Deck, the placeholders and the loudness are not. The platforms are taking the running of
+agents (worktrees, teams of agents, a phone that pings). The owner, on the phone: an indie developer most often has a
+day job, and wants to turn to their own project for a few minutes during the day. So:
+1. **The maps are what is ours**: each craft seeing the project its own way, read from the code, judged by its craft's
+   rubric, is the one claim no product shares. The work goes there first. The running of agents (worktrees, parallel
+   tasks, the tools' adapters) is kept working and well, but is not where Orkboard means to be ahead.
+2. **Whom it is for: the indie game developer with a day job**. Their project works while they are at work; they turn
+   to it in a few minutes between other things, and decide.
+3. **The phone is half the product, not a remote**: it is where that person decides during the day. What it holds is
+   what a few minutes need: the hand (the decisions, each answerable in under a minute, with the map's part it is about
+   shown small beside it) and **what changed since your last look** on each lens, said in a line each, with the goal
+   that changed it. It is not a terminal of agents (that is what the platforms' phones already do) and not a whole map.
+   Measured: a decision taken on the phone, and the time it took.
+4. **The engines come first** (§208.5, §209.5): Godot, Unity and Unreal read for System and Screens before any new hint;
+   without them an engine's game gets empty maps, and Claude-Code-Game-Studios already reads them.
+5. **Steam and Marketing early** (§214): no product reads a game's Steam page or keeps a Marketing party with a map;
+   §214.2–§214.4 come right after the engines.
+6. **Nothing is promised before it is built**: the README and the store's words say the maps and the hand as they are;
+   Steam, the loudness, the refund window and the Deck are named only once they work. The line it stands on: *Orkboard
+   shows each craft's leader your game as a map read from its code (the system, the screens, the loops, the assets) and
+   brings you decisions, not a chat.*
+7. **The models' rules are kept, not worked around**: a model may refuse to recreate an existing game; an original game,
+   a genre and a mechanic described in its own words are made as ever. That Orkboard runs Claude Code, Codex and
+   Antigravity gives a choice of model and of price; it is never said to be a way round a vendor's rules.
+8. **Claude-Code-Game-Studios as a neighbour, not a rival**: its knowledge is in text files, ours is the maps and the
+   hand. A project that uses it is to open in Orkboard with its agents read as members of the parties, once its licence
+   is read and allows it.
+9. **Checked before it is relied on**: Claude-Code-Game-Studios' licence, its stars, whether it has a Marketing role;
+   Conductor's *100,000 users* (the vendor's own).
+The owner's call.
