@@ -4809,3 +4809,43 @@ decides*, not Codecks' *what I take today*), the frame stays, and what is missin
 7. **The evidence is asked for before the spec**, as §208.7 (Codecks' own pages and the teams' words on scope drift).
    The spec builds 2–5 with §215's.
 The owner's call.
+
+## 217. The product's voice: one door for the project, many owners; a signal goes to the lens where its place on the map is, LiveOps keeps time, the talk with players, what no one else takes and the fire now (2 November 2026, the owner)
+
+Changes: 115, 206, 210, 215.
+
+Why: the owner, after what Codecks teaches (players' bugs and words land on the board from Discord and the game
+itself): where do the crashes (Sentry, Firebase Crashlytics), the product's analytics (PostHog and the like) and the
+players' words (Discord, Steam reviews, a form in the game) come in? Into LiveOps, there is one way in; but then one
+party holds the code's crashes, the product's numbers and the players' words, and each craft's leader judges its own
+better. The two questions are apart: **where a signal comes in** and **who judges it**. Spec 115 already answers the
+second for Play: what the probe sees is shown in the lens of the party whose aspect it is. So:
+1. **One door, the project's**: the sources are connected once, in the project's settings, never inside a party
+   (their tokens in the keychain's `orkcraft-ideas`, as every secret). The person need not know whose a signal is to
+   connect it.
+2. **Many owners: a signal goes to the lens where its place on the map is**:
+   - a crash or an error → **Tech**, on the System part its stack's top file belongs to (a file to its part, as
+     `realm/play_place.py` takes an element to its parts);
+   - where players drop (a funnel, D1) → **Product** for an app, **Game design** for a game, on the screen or the
+     loop's step where they leave;
+   - the store's visits and wishlists → **Marketing**, on the way in's step;
+   - a player's words: a bug → **Tech**; the interface, *I don't get it* → **Design** (a game has none: **Art** for the
+     look, **Game design** for what it asks of the player); balance, *boring*, *too hard* → **Game design**, on the
+     loop's step or the currency; *I wish…* → **Product**, at the job it serves on the tree.
+   The numbers are sorted by code, by rule, as hints; the words by a model, as the Orkmaster routes a goal (§206.1).
+   Words about one thing are **one concern pinned once**, with how many said it and a few of their words quoted as
+   written, never a card each.
+3. **LiveOps keeps four things**: **time** (§215's line: under a patch or an event the line of crashes and players, so
+   *when* and *after what* it broke shows; Tech judges the cause, LiveOps sees its time); **the talk with players**
+   (answering on Discord, the patch notes that say *we fixed what you wrote*: the voice going out); **what no one else
+   takes** (a signal the model cannot place, or one whose party the project has not, goes to LiveOps, never to the
+   person's hand); **the fire now** (a spike of crashes after a release: LiveOps brings it to the hand as a card, *Roll
+   back* or *Fix it*, the person's decision). An app's project has Run in LiveOps' place.
+4. **Only decisions reach the hand**: a signal is a leader's concern on its map; a member never asks the person
+   (decisions §104.0); the hand gets what needs the person, as every concern.
+5. **The players' words keep their words**: quoted as written, never retold in the Board's wording; what identifies a
+   player (a name, an id) is not kept beyond the source's own link.
+6. **The look is orkUI's and the words plain**, as §208.6.
+7. The spec that reads the sources is spec 115's later one (Sentry, Crashlytics, PostHog, GameAnalytics, Discord, Steam
+   reviews); this decision is its routing. Steam's wishlists and sales stay behind Steamworks' partner key (§214.6).
+The owner's call.
