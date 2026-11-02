@@ -31,7 +31,7 @@ export function routeOf(n) {
 export function GoalHead({ n }) {
   const phase = phaseOf(n.slug), line = n.place === "deck", at = routeOf(n).find((r) => r.state === "now") || routeOf(n)[0];
   const where = line ? "In line" : phase === "work" ? `at work in ${at?.name || nameOf(partyBy(n.goal))}` : phaseWord(phase);
-  return html`<header class="up-gh"><${Elem} name=${n.element || ""} big=${true} dim=${!n.element} />
+  return html`<header class="up-gh"><${Elem} name=${n.element || ""} hue=${n.hue || ""} big=${true} dim=${!n.element} />
     <div class="up-gh__txt"><h2 class="up-gh__name">${nameOf(n)}</h2><p class="up-gh__type">${n.type?.sign && html`<${Sign} name=${n.type.sign} />`}<span>${[n.type?.name, where].filter(Boolean).join(" · ")}</span></p></div></header>`;
 }
 

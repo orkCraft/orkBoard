@@ -193,7 +193,7 @@ export function phaseOf(m, gi, step) {
  *  `many` > 1: the front of a stack (edges behind it, ×n; a press opens it). */
 export function Part({ c, m, goal, phase, dim, on, lit, place, deal, many = 0, onPress, onHover }) {
   const marked = phase === "marked" || phase === "sealed" || phase === "dealt" || phase === "crumble";
-  const by = m ? (m.goal ? changedBy(goal?.title || m.goal) : BY_YOU) : "", el = goal?.element || "";
+  const by = m ? (m.goal ? changedBy(goal?.title || m.goal) : BY_YOU) : "", el = goal?.element || "", hue = goal?.hue || el;
   const edges = Math.min(2, many - 1), said = [c.name, filesWords(c.count), usesWords(c.uses.length, c.used_by.length), m && `${KIND_WORDS[m.kind]}, ${by}`,
     many > 1 && `and ${many - 1} more of ${c.area}: a press shows them`].filter(Boolean).join(", ");
   const hover = (by) => () => onHover(c.path, by), leave = () => onHover("", "");
@@ -206,12 +206,12 @@ export function Part({ c, m, goal, phase, dim, on, lit, place, deal, many = 0, o
       aria-pressed=${many > 1 ? undefined : String(!!on)} aria-expanded=${many > 1 ? "false" : undefined} aria-hidden=${phase === "unborn" || phase === "left" ? "true" : undefined}
       tabindex=${phase === "unborn" || phase === "left" ? -1 : undefined}
       onClick=${() => onPress(c)} onMouseEnter=${hover("pointer")} onMouseLeave=${leave} onFocus=${hover("focus")} onBlur=${leave}>
-      <span class="arena-task__top">${marked && m && html`${m.goal ? html`<${Elem} name=${el} dim=${dim || !el} />` : null}<span class="arena-task__phase sys-part__kind">${KIND_WORDS[m.kind]}</span>`}</span>
+      <span class="arena-task__top">${marked && m && html`${m.goal ? html`<${Elem} name=${el} hue=${hue} dim=${dim || !el} />` : null}<span class="arena-task__phase sys-part__kind">${KIND_WORDS[m.kind]}</span>`}</span>
       <span class="arena-task__name sys-part__name">${c.name}</span>
       <span class="arena-task__count sys-part__files">${filesWords(c.count)}</span>
       <span class="arena-task__foot sys-part__uses"><span>Uses ${c.uses.length} ·</span> <span>Used by ${c.used_by.length}</span></span>
       ${many > 1 && html`<span class="arena-stk__n">×${many}</span>`}
-      ${phase === "sealed" && html`<span class="sys-seal" aria-hidden="true"><${Elem} name=${el} dim=${!el} big=${true} /></span>`}
+      ${phase === "sealed" && html`<span class="sys-seal" aria-hidden="true"><${Elem} name=${el} hue=${hue} dim=${!el} big=${true} /></span>`}
     </button>
   </div>`;
 }
@@ -269,7 +269,7 @@ function PartSide({ path, party, since, look, names, onPart }) {
       <p class="arena-cap sys-side__path">${p.path}${p.kind && html` · <b class="sys-side__kind">${KIND_WORDS[p.kind]}</b>`}</p>
       ${p.changes.length > 0 && html`<section class="sys-side__sec" data-sec="changes"><h3 class="arena-sec">${look?.at ? sinceWords(timeWords(look.at)) : KIND_WORDS[p.kind] || ""}</h3>
         <ul class="sys-side__changes">${p.changes.map((c, i) => html`<li key=${i} class="sys-change">
-          ${c.goal ? html`<button type="button" class="sys-change__goal" data-goal=${c.goal} onClick=${() => pickGoal(c.goal)}><${Elem} name=${goals[c.goal]?.element || ""} />${goals[c.goal]?.title || c.goal}</button>`
+          ${c.goal ? html`<button type="button" class="sys-change__goal" data-goal=${c.goal} onClick=${() => pickGoal(c.goal)}><${Elem} name=${goals[c.goal]?.element || ""} hue=${goals[c.goal]?.hue || ""} />${goals[c.goal]?.title || c.goal}</button>`
             : html`<span class="sys-change__goal is-you">${BY_YOU}</span>`}
           ${c.made && html`<span class="sys-change__made"><b>What it made</b> ${c.made}</span>`}</li>`)}</ul></section>`}
       <section class="sys-side__sec" data-sec="files"><h3 class="arena-sec">${filesWords(p.count)}</h3>
@@ -296,7 +296,7 @@ function usesOf(host, doc, path) {
   };
   const me = box(path);
   if (!me) return [];
-  const fresh = new Map((doc.uses_changed || []).filter((u) => u.kind === "new").map((u) => [`${u.from}>${u.to}`, doc.goals?.[u.goal]?.element || ""]));
+  const fresh = new Map((doc.uses_changed || []).filter((u) => u.kind === "new").map((u) => [`${u.from}>${u.to}`, doc.goals?.[u.goal]?.hue || doc.goals?.[u.goal]?.element || ""]));
   const pairs = [...card.uses.filter((u) => u !== path).map((u) => [path, u]), ...card.used_by.filter((u) => u !== path).map((u) => [u, path])];
   const out = [];
   for (const [from, to] of pairs) {
@@ -317,7 +317,7 @@ export function SysBar({ doc, look, order, pick, setPick, rearrange }) {
     ${doc.since && (order.length ? html`<span class="sys-since">${since}</span>
       <div class="sys-goals" role="group" aria-label=${since}>${order.map((o) => html`<button type="button" key=${o.goal || "@you"} class="ork-btn quiet sys-goal" data-goal=${o.goal}
         aria-pressed=${String(pick === (o.goal || "@you"))} onClick=${() => setPick(pick === (o.goal || "@you") ? "" : o.goal || "@you")}>
-        ${o.goal ? html`<${Elem} name=${goals[o.goal]?.element || ""} />${goals[o.goal]?.title || o.goal}` : BY_YOU}</button>`)}</div>`
+        ${o.goal ? html`<${Elem} name=${goals[o.goal]?.element || ""} hue=${goals[o.goal]?.hue || ""} />${goals[o.goal]?.title || o.goal}` : BY_YOU}</button>`)}</div>`
       : html`<span class="sys-since is-none">${NOTHING_CHANGED}</span>`)}
     <span class="arena-spacer"></span>
     ${rearrange && html`<button type="button" class="ork-btn sys-rearrange" onClick=${rearrange}>${REARRANGE}</button>`}

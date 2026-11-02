@@ -164,7 +164,7 @@ function Bubble({ tab, party, g, parties, look }) {
           <button type="button" class="ork-btn quiet table-ask__x" aria-label="Put away" title="Put away" onClick=${away}><${Icon} name="close" /></button></div>
         ${look?.since && html`<${Since} rec=${look} />`}
         <div class="table-ask__about" aria-label="What it is about">
-          <span class="ork-chip table-ask__chip" data-about=${goalNode ? "goal" : "project"}>${goalNode && html`<${Elem} name=${goalNode.element || ""} />`}<span>${aboutGoal}</span></span>
+          <span class="ork-chip table-ask__chip" data-about=${goalNode ? "goal" : "project"}>${goalNode && html`<${Elem} name=${goalNode.element || ""} hue=${goalNode.hue || ""} />`}<span>${aboutGoal}</span></span>
           ${part && html`<span class="ork-chip table-ask__chip" data-about="part" title="A part of its change"><${Icon} name="map" /><span>${part.name}</span>
             <button type="button" class="table-ask__unpart" aria-label="Take the part off" title="Take the part off" onClick=${() => { askPart.value = null; }}><${Icon} name="close" /></button></span>`}
         </div>

@@ -105,8 +105,8 @@ export async function sendBack(box, goal) {
   g.setAttribute("aria-hidden", "true");
   const big = Math.max(box.width / w, 0.5), play = tokenMs("--ork-motion-play", 400);
   place(g, at, `transform-origin:50% 50%;transform:scale(${big});`);
-  render(html`<div class="ork-turn__back ork-card table-card--back"><${BackBody} element=${goal.element} name=${goal.name} /></div>
-    <div class="ork-turn__face ork-card hand-ghost__face"><${Elem} name=${goal.element} big=${true} dim=${!goal.element} /><span class="hand-ghost__words">${goal.name}</span></div>`, g);
+  render(html`<div class="ork-turn__back ork-card table-card--back"><${BackBody} element=${goal.element} hue=${goal.hue} name=${goal.name} /></div>
+    <div class="ork-turn__face ork-card hand-ghost__face"><${Elem} name=${goal.element} hue=${goal.hue} big=${true} dim=${!goal.element} /><span class="hand-ghost__words">${goal.name}</span></div>`, g);
   document.body.appendChild(g);
   try {
     void g.offsetWidth;                                                                  // the card of the words lies face up first; taking `is-up` off is orkUI's turn, played once

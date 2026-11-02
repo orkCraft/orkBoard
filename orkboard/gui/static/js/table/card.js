@@ -45,7 +45,7 @@ export const aboutTokens = (n, tasks = []) => `idea:${n.slug}${tasks.map((t) => 
 /** The stage's small sign (14 px) and its word, as a label row or a strip says it. `flame`: the goal's element (`{name}`), glowing in the sign's place while the task is at work (decisions §187.2). */
 export function Stage({ stage, worked = -1, flame = null }) {
   const s = STAGES[stage] || STAGES.routing;
-  return html`<span class=${cls("table-stage", { "is-timed": worked >= 0 })}>${flame ? html`<${Elem} name=${flame.name} dim=${!flame.name} glowing=${true} />` : html`<${Sign} name=${s.sign} />`}<span class="table-stage__w">${worked >= 0 ? `${s.word} · ${workedWords(worked)}` : s.word}</span></span>`;
+  return html`<span class=${cls("table-stage", { "is-timed": worked >= 0 })}>${flame ? html`<${Elem} name=${flame.name} hue=${flame.hue} dim=${!flame.name} glowing=${true} />` : html`<${Sign} name=${s.sign} />`}<span class="table-stage__w">${worked >= 0 ? `${s.word} · ${workedWords(worked)}` : s.word}</span></span>`;
 }
 
 /** The card's window: one sign at the signs' big size, in the goal's colour toned down (an opacity on orkUI's token, table.css). `moon`: the moon beside it (a goal that waits for the reset). */
@@ -63,7 +63,7 @@ export function TaskCard({ n, t }) {
     data-about=${aboutTokens(n, [t])} data-state=${t.state} data-stage=${stageOf(t)} aria-pressed=${String(on)} aria-label=${said} title=${n.title} onClick=${() => lift(on ? "" : key)} ...${leans}>
     <span class="table-card__head"><span class="table-card__nm" title=${t.title}>${t.short || t.title}</span></span>
     <${Win} n=${n} sign=${typeSignOf(n, t)} />
-    <span class="table-card__row"><${Stage} stage=${stageOf(t)} worked=${worked} flame=${aliveState(t.state) ? { name: n.element } : null} />${gem &&html`<span class="ork-gem share" data-cost=${gem}>${gem}</span>`}</span>
+    <span class="table-card__row"><${Stage} stage=${stageOf(t)} worked=${worked} flame=${aliveState(t.state) ? { name: n.element, hue: n.hue } : null} />${gem &&html`<span class="ork-gem share" data-cost=${gem}>${gem}</span>`}</span>
   </button>`;
 }
 
@@ -93,7 +93,7 @@ export function TaskEdge({ n, t, hint = false }) {
   const key = taskKey(n, t), on = lifted.value === key, bad = t.state === "failed", asks = t.state === "picking", alive = aliveState(t.state);
   return html`<button type="button" class=${cls("ork-card table-fan__card table-tedge", { fails: bad, asks, "is-lifted": on, "is-lit": litKey.value === key, "is-hint": hint })} data-lkey=${key} data-goal=${n.slug} data-task=${t.id}
     data-about=${aboutTokens(n, [t])} data-state=${t.state} data-stage=${stageOf(t)} aria-pressed=${String(on)} aria-label=${`${t.title}: ${STAGES[stageOf(t)].word}${bad ? ", failed" : ""}`} title=${t.title}
-    onClick=${() => lift(on ? "" : key)}>${alive && html`<${Elem} name=${n.element} dim=${!n.element} glowing=${true} />`}<span class="table-fan__nm">${t.short || t.title}</span><${Sign} name=${STAGES[stageOf(t)].sign} /></button>`;
+    onClick=${() => lift(on ? "" : key)}>${alive && html`<${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} glowing=${true} />`}<span class="table-fan__nm">${t.short || t.title}</span><${Sign} name=${STAGES[stageOf(t)].sign} /></button>`;
 }
 
 /** A goal the Orkmaster reads, routes or joins itself, as a card in the first lane (no strip over it: the card is the goal's): the same face with the goal's rune and its whole title in the header, its stage *Reading*, *Routing* or *Joining*. */
@@ -102,7 +102,7 @@ export function OwnCard({ n, stage }) {
   if (kind || everBack.has(n.slug)) turns.current = true;                                // a goal that wears a back at some time is orkUI's `.ork-turn`: it turns up where it lies when the wait ends or a hearing is thrown, once (spec 120 §6.5, §6.11)
   const face = html`<button type="button" class=${cls("ork-card ork-leans table-card table-card--own", { "is-lifted": on, "is-lit": litKey.value === key, "ork-picked": picked.value === n.slug })} data-lkey=${key} data-goal=${n.slug} data-about=${aboutTokens(n)} data-state=${n.state}
     data-stage=${stage} aria-pressed=${String(on)} aria-label=${`${n.title}: ${doingWords(n)}`} onClick=${() => lift(on ? "" : key)} ...${leans}>
-    <span class="table-card__head"><${Elem} name=${n.element} dim=${!n.element || n.state === "reading"} /><span class="table-card__nm" title=${n.title}>${n.title}</span></span>
+    <span class="table-card__head"><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element || n.state === "reading"} /><span class="table-card__nm" title=${n.title}>${n.title}</span></span>
     <${Win} n=${n} sign=${n.type?.sign || ""} />
     <span class="table-card__row"><${Stage} stage=${stage} /></span>
   </button>`;
@@ -119,7 +119,7 @@ export function Token({ n, tasks = [], stage = "" }) {
     ${Array.from({ length: edges }, (_, k) => html`<i key=${k} class="ork-card table-edge" style=${`--ork-deck-i:${k + 1}`} aria-hidden="true"></i>`)}
     <button type="button" class=${cls("ork-card table-token", { fails: bad, "is-lifted": on, "is-lit": litKey.value === key, "ork-picked": picked.value === n.slug })} data-lkey=${key} data-goal=${n.slug} data-task=${front?.id}
       data-about=${aboutTokens(n, tasks)} data-state=${front ? front.state : n.state} data-stage=${st} aria-pressed=${String(on)} aria-label=${words} title=${words} onClick=${() => lift(lifted.value === key ? "" : key)}>
-      <span class="table-card__top"><${Elem} name=${n.element} dim=${!n.element} glowing=${(!!front && aliveState(front.state)) || (!front && backKind(n) === "talk")} /><${Sign} name=${(STAGES[st] || STAGES.routing).sign} /></span>
+      <span class="table-card__top"><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} glowing=${(!!front && aliveState(front.state)) || (!front && backKind(n) === "talk")} /><${Sign} name=${(STAGES[st] || STAGES.routing).sign} /></span>
       <${Win} n=${n} sign=${front ? typeSignOf(n, front) : n.type?.sign || ""} danger=${bad} />
     </button>
   </span>`;

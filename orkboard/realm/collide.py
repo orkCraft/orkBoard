@@ -23,7 +23,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from orkboard.realm import event_log, idea_flag, ideas, pitches, releases
+from orkboard.realm import event_log, idea_element, idea_flag, ideas, pitches, releases
 
 FILE = "collide.json"
 KEEP = 200                         # the answers kept
@@ -252,7 +252,7 @@ def _goal(root: Path, state_dir: Path, slug: str, parties: dict[str, str], state
     if page is None or st.get("state") in NOT_OPEN:
         return None
     party = page.get("track") or ideas.GENERAL
-    return {"idea": slug, "party": party, "party_name": parties.get(party, party), "title": page.title, "element": st.get("element") or ""}
+    return {"idea": slug, "party": party, "party_name": parties.get(party, party), "title": page.title, "element": st.get("element") or "", "hue": idea_element.hue_in(st)}
 
 
 def rows(root: Path, state_dir: Path, *, tracks: list[dict] | None = None, state_of: Any = None) -> list[dict]:

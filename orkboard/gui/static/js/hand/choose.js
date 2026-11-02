@@ -61,10 +61,10 @@ function Window({ c, i = 0, picked, head }) {
   </span>`;
 }
 
-export function ChoiceCard({ c, i, picked, element, by, head, onPress }) {
-  return html`<button type="button" class=${cls(`ork-card q-card ork-deal${element ? ` el-${element}` : ""}`, { "is-pick ork-picked": picked })} data-choice=${c.id} data-pick=${picked ? "1" : undefined}
+export function ChoiceCard({ c, i, picked, element, hue = "", by, head, onPress }) {
+  return html`<button type="button" class=${cls(`ork-card q-card ork-deal${element ? ` el-${hue || element}` : ""}`, { "is-pick ork-picked": picked })} data-choice=${c.id} data-pick=${picked ? "1" : undefined}
       style=${`--ork-deal-i:${i}`} aria-label=${`${c.name}${picked ? ", the leader’s pick" : ""}${c.gem ? `, about ${c.gem}` : ""}`} title=${c.name} onClick=${onPress} ...${leans}>
-    <span class="q-card__head"><${Elem} name=${element || ""} dim=${!element} /><span class="q-card__name">${c.name}</span></span>
+    <span class="q-card__head"><${Elem} name=${element || ""} hue=${hue || element || ""} dim=${!element} /><span class="q-card__name">${c.name}</span></span>
     <${Window} c=${c} i=${i} picked=${picked} head=${head} />
     <span class="q-card__label"><span class="q-card__by">${c.by || by || ""}</span>${c.gem && html`<span class="ork-gem share" data-cost=${c.gem}>${c.gem}</span>`}</span>
     <span class="q-card__foot">${c.why || ""}</span>
@@ -96,14 +96,14 @@ export function OtherCard({ i, seed, onOther }) {
 }
 
 /** A question and its choices dealt as cards (the props are the file's top). */
-export function Choose({ question, choices, pick = "", onChoose, onOther, decide, together, onBack, by = "", element = "", head = null, hint = "" }) {
+export function Choose({ question, choices, pick = "", onChoose, onOther, decide, together, onBack, by = "", element = "", hue = "", head = null, hint = "" }) {
   const root = useRef(), seed = (choices.find((c) => c.id === pick) || choices[0] || {}).name || "";
   useEffect(() => { (root.current?.querySelector(".q-card.is-pick") || root.current?.querySelector(".q-card"))?.focus({ preventScroll: true }); }, [question]);
   return html`<section class="q-choose" ref=${root} data-kind="choose" aria-label=${question}>
     <div class="ork-frame q-choose__q" role="heading" aria-level="2">${question}</div>
     ${hint && html`<p class="cap q-choose__hint">${hint}</p>`}
     <div class="q-choose__row" role="group" aria-label="Choices" key=${question}>
-      ${choices.map((c, i) => html`<${ChoiceCard} key=${c.id} c=${c} i=${i} picked=${c.id === pick} element=${element} by=${by} head=${head} onPress=${() => onChoose(c.id)} />`)}
+      ${choices.map((c, i) => html`<${ChoiceCard} key=${c.id} c=${c} i=${i} picked=${c.id === pick} element=${element} hue=${hue} by=${by} head=${head} onPress=${() => onChoose(c.id)} />`)}
       ${onOther && html`<${OtherCard} key="other" i=${choices.length} seed=${seed} onOther=${onOther} />`}
     </div>
     <div class="q-choose__acts">

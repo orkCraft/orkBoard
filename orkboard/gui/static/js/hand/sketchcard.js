@@ -138,7 +138,7 @@ function Desk({ row }) {
   const a = useAnswers(row), night = workAtNight() ? nightWordsOf().now_sketch : "", node = (mapData.value?.nodes || []).find((n) => n.slug === row.slug) || null, head = row.by?.head || null;
   return html`<section class="sk-pane" data-kind="sketch" data-round=${row.round || 1} aria-label=${sketchedWords(row)}>
     <h2 class="sk-title">${head && html`<${Head} race=${head.race} tier=${head.tier} />`}<span>${sketchedWords(row)}</span>
-      <span class="cap">${node && html`<${Elem} name=${node.element || ""} dim=${!node.element} /> `}${node?.short || node?.title || row.short || row.idea_title || ""}</span></h2>
+      <span class="cap">${node && html`<${Elem} name=${node.element || ""} hue=${node.hue || ""} dim=${!node.element} /> `}${node?.short || node?.title || row.short || row.idea_title || ""}</span></h2>
     <div class="sk-desk" role="group" aria-label="The variants">${row.variants.map((v) => html`<figure key=${`${row.round || 1}/${v.key}`} class="sk-one" data-variant=${v.key}>
       <${Frame} row=${row} v=${v} />
       <figcaption><span class="sk-line"><b>${labelOf(v)}</b></span>${v.why && html`<span class="sk-line">${v.why}</span>`}

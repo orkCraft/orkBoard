@@ -17,10 +17,10 @@ const ASKS = ["asks", "goal", "pick", "collide"];
 function faceOf(e) {
   if (e.kind === "ready") {
     const name = `${e.name} is ready for ${gateData.value?.main || "main"}`;
-    return { name, label: name, element: e.element, asker: e.head, sign: null, ask: false, fail: false };
+    return { name, label: name, element: e.element, hue: e.hue || "", asker: e.head, sign: null, ask: false, fail: false };
   }
   const s = e.stops[0];
-  return { name: upName(s), label: labelOf(s), element: s.node?.element || "", asker: headOf(s), sign: s, ask: ASKS.includes(s.kind), fail: s.kind === "failed" };
+  return { name: upName(s), label: labelOf(s), element: s.node?.element || "", hue: s.node?.hue || "", asker: headOf(s), sign: s, ask: ASKS.includes(s.kind), fail: s.kind === "failed" };
 }
 
 /** One entry as a card of the row. */
@@ -28,7 +28,7 @@ function Entry({ e, on, onPick, dealt }) {
   const f = faceOf(e), ref = useRef(), from = handedName(e.key);
   useFlight(ref, dealt, true);                                         // a card handed from the crown (or the goal in the middle) flies as a copy over everything: the row clips what flies in it
   return html`<button ref=${ref} type="button" class=${cls("ork-card up-card", { asks: f.ask, fails: f.fail, "is-picked": on })} data-key=${e.key} data-kind=${e.kind} data-from=${from || undefined} aria-label=${`${f.label}${from ? `, from ${from}` : ""}`} aria-pressed=${String(on)} onClick=${onPick}>
-    <span class="up-card__head"><${Elem} name=${f.element} dim=${!f.element} /><span class="up-card__name">${f.name}</span></span>
+    <span class="up-card__head"><${Elem} name=${f.element} hue=${f.hue} dim=${!f.element} /><span class="up-card__name">${f.name}</span></span>
     <span class="up-card__window">${f.sign ? html`<${Mark} s=${f.sign} big=${true} />` : html`<span class="hand-mark is-ok"><${Sign} name="check" big=${true} /></span>`}
       ${f.asker && html`<span class="up-card__asker"><${Head} race=${f.asker.race} tier=${f.asker.tier} /></span>`}</span>
   </button>`;

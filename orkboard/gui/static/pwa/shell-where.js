@@ -70,7 +70,7 @@ export function makeWhere(core, ctx) {
     const words = `At work: ${at.map((n) => n.title).join(", ")}`;
     const go = (picks) => { sh.close(); shown(c.slug); st.picks = { ...(st.picks || {}), [c.slug]: picks }; core.pick(c.slug); };
     const kids = at.slice(0, WORK_SHOWN).map((n) => h("button", { class: "where-work__goal", type: "button", "data-idea": n.slug, "aria-label": n.title, title: n.title, onclick: () => go([n.slug]) },
-      elem(n.element), h("span", {}, n.short || n.title)));
+      elem(n.element, { hue: n.hue }), h("span", {}, n.short || n.title)));
     const more = at.length - kids.length;
     if (more > 0) kids.push(h("button", { class: "where-work__more", type: "button", "data-act": "at-work-more", onclick: () => go([]) }, `and ${more} more`));
     return h("div", { class: "where-work", role: "group", "data-for": c.slug, "aria-label": words, title: words }, sign("work"),

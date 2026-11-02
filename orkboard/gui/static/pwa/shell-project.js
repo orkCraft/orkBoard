@@ -219,11 +219,11 @@ export function makeProject(core, act) {
 
   /** A goal's row: its element, its type's sign and title, its state's words, its mark; a tap opens the goal's screen. */
   const row = (r) => h("button", { class: "pj-row", type: "button", "data-idea": r.slug, title: `${r.title} · ${r.line}`, onclick: () => { sh.close(); core.open(r.open, "map"); } },
-    elem(r.element, { dim: r.raw }) || h("span", { class: "pj-row__none" }),
-    h("span", { class: "pj-row__body" }, h("span", { class: "pj-row__title" }, r.type ? h("span", { class: `dk__type ${typeTone(r.element, r.raw)}`, "data-type": r.type.id }, sign(r.type.sign, r.type.name)) : null, r.title),
+    elem(r.element, { dim: r.raw, hue: r.hue }) || h("span", { class: "pj-row__none" }),
+    h("span", { class: "pj-row__body" }, h("span", { class: "pj-row__title" }, r.type ? h("span", { class: `dk__type ${typeTone(r.hue || r.element, r.raw)}`, "data-type": r.type.id }, sign(r.type.sign, r.type.name)) : null, r.title),
       h("span", { class: "pj-row__line" }, r.line)),
     r.mark ? h("span", { class: "dk__mark" }, sign(r.mark, r.markTip)) : null, h("i", { class: "ork-chev right", "aria-hidden": "true" }));
-  const flagRow = (f) => row({ slug: f.slug, title: f.short, element: f.element, raw: false, type: null, line: flagTally(f), mark: "flag", markTip: "flag", open: { kind: "idea", slug: f.slug } });
+  const flagRow = (f) => row({ slug: f.slug, title: f.short, element: f.element, hue: f.hue, raw: false, type: null, line: flagTally(f), mark: "flag", markTip: "flag", open: { kind: "idea", slug: f.slug } });
 
   /** A fold shut by default: a 44 px button, its count, then its rows. */
   function fold(c, key, words, rows, count = true) {

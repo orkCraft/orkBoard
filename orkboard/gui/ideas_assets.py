@@ -338,7 +338,7 @@ class AssetsMixin:
         for slug in sorted(s for s in slugs if s):
             try:
                 page = ideas.idea_page(root, slug)
-                out[slug] = {"title": (page.title if page else "") or slug, "element": idea_element.of(self.state_dir, slug)}
+                out[slug] = {"title": (page.title if page else "") or slug, "element": idea_element.of(self.state_dir, slug), "hue": idea_element.hue_of(self.state_dir, slug)}
             except ValueError:
                 continue
         return out

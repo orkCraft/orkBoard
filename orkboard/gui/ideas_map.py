@@ -4,8 +4,8 @@ time the Map reads it one is given and stored (once, ever; `ideas_rev` does not 
 §2.4: its leader's set, the most used first, with what each misses of the party), read here with the map: the pure
 `board_map.build` reads no runs. Split from ideas.py to keep it under ~600 lines.
 
-A party carries what its tab needs besides (spec 111 B): `free_elements`, the runes none of its open goals has (the + card's free runes and the field's row; empty
-when none is free), beside `next_element`; and its sword and shield (decisions §189): `does_tool` and `checks_tool`, the AI tools its Does and its Checks run on (a
+A party carries what its tab needs besides (spec 111 B): `free_elements`, the shapes no goal of the project holds (the + card's free runes and the field's row; empty
+when none is free; a rune is unique across the project, spec 128 G), beside `next_element` (a shape) and `next_hue`; and its sword and shield (decisions §189): `does_tool` and `checks_tool`, the AI tools its Does and its Checks run on (a
 `harnesses` id, the Main tool resolved), `does_mixed` / `checks_mixed` when a column's roles run on more than one, and `lean` (no separate check: `checks_tool` is ""); and, per side,
 whether it follows the default tool (spec 114 B, decisions §192.4): `does_default`, `checks_default` (neither the party nor any seat of that side is set to a tool; a Lean party's check never is).
 """
@@ -34,10 +34,9 @@ class MapMixin:
         if any(t["state"] == "review" for n in got["nodes"] for t in n["tasks"]):          # the results at Review, each on its idea (spec 48 §1)
             for r in self.results():
                 waiting.setdefault(r["idea"], []).append(r)
-        used: dict[str, list[str]] = {}                                  # each party's open goals' elements, as they are given
-        for n in got["nodes"]:
-            if n["element"] and n["state"] != "done":
-                used.setdefault(n["goal"], []).append(n["element"])
+        # the runes the project's goals hold (open, or done and its result not yet seen: `idea_element.holds`), as they are given; one party's Map reads the others' from their states
+        used: list[tuple[str, str]] = ([(n["element"], n["hue"]) for n in got["nodes"] if n["element"] and (n["state"] != "done" or not n["seen"])]
+                                       if goal is None else idea_element.open_runes(root, self.state_dir))
         for n in got["nodes"]:
             for t in n["tasks"]:                                         # a task's picture gets its signed address (spec 85 §3)
                 if t.get("shot") and not t["shot"].get("none"):
@@ -45,15 +44,17 @@ class MapMixin:
             n["results"] = waiting.get(n["slug"], [])
             if not n["element"]:                                         # a goal of before: one is given now, once
                 try:
-                    n["element"] = idea_element.give(root, self.state_dir, n["slug"], used.setdefault(n["goal"], []))
+                    n["element"] = idea_element.give(root, self.state_dir, n["slug"], used)
                 except (OSError, ValueError):
                     continue                                             # a disk that refuses: the faces draw it dim, the next read tries again
-                if n["state"] != "done":
-                    used[n["goal"]].append(n["element"])
+                n["hue"] = idea_element.hue_of(self.state_dir, n["slug"])
+                if n["state"] != "done" or not n["seen"]:
+                    used.append((n["element"], n["hue"]))
         main = machine.main_tool(getattr(self.host, "machine", None))              # what a party with no tool of its own runs on
+        next_element, next_hue = idea_element.pick_rune(used)                           # what a new goal would be given (`idea_element.next_rune_for`, from the runes read above)
+        free_elements = idea_element.free([e for e, _h in used])                        # the shapes no goal holds (`idea_element.free_for`): [] when none is free
         for g in got["goals"]:
-            g["next_element"] = idea_element.pick(used.get(g["slug"], []))                 # what a new goal of this party would be given (`idea_element.next_for`, from the elements read above)
-            g["free_elements"] = idea_element.free(used.get(g["slug"], []))                # the runes none of its open goals has (`idea_element.free_for`): [] when none is free
+            g["next_element"], g["next_hue"], g["free_elements"] = next_element, next_hue, free_elements       # the project's, the same at every party
             g.update(self.marks_of(g, main))                                                # its sword and shield on its tab (decisions §189)
             g["types"] = self.types_of(root, g["slug"], [n["slug"] for n in got["nodes"] if n["goal"] == g["slug"]])
             g["stages"] = self.stages_of(root, g["slug"])

@@ -92,7 +92,7 @@ export function PlayDie() {
     if (e.animationName === "ork-die-wobble") setWob((w) => (w.left > 1 ? { key: w.key + 1, left: w.left - 1 } : { key: w.key, left: 0 }));
     else if (e.animationName === "ork-die-land") setLand(false);
   };
-  return html`<button ref=${button} type="button" class=${cls("hand-die", { "is-gone": gone, "is-asleep": asleep })} data-open=${open ? "1" : undefined} data-elem=${goal?.element || undefined} data-goal=${goal?.slug || undefined} aria-label=${asleep && !open ? ASLEEP_WORDS : words} title=${asleep && !open ? ASLEEP : words}
+  return html`<button ref=${button} type="button" class=${cls("hand-die", { "is-gone": gone, "is-asleep": asleep })} data-open=${open ? "1" : undefined} data-elem=${goal?.hue || goal?.element || undefined} data-goal=${goal?.slug || undefined} aria-label=${asleep && !open ? ASLEEP_WORDS : words} title=${asleep && !open ? ASLEEP : words}
       onClick=${() => pressPlay(goal)} onPointerEnter=${hover}>
     <span key=${wob.key} class=${cls(`ork-die face-${face}`, { "is-playing": glow, "is-news": news > 0, "is-wobbling": wob.left > 0 && !asleep, "is-landing": land && wob.left === 0 && !asleep })} aria-hidden="true" onAnimationEnd=${ended}><${DieCube} /></span>
     <span class="hand-die__word">${glow ? PLAYING : PLAY}</span>

@@ -99,27 +99,27 @@ function Heads({ n }) {
 
 /** A card face down, sideways (157 x 112): the seal with its rune at the seal's top, upright; **no name** (it is on the card's other side, and in its label). The front one's ring runs while the Orkmaster or its leaders are on it; yellow and still while it waits for the person. */
 function DownCard({ n, i, front, onPress, open }) {
-  const asks = front && (n.asks_you || n.state === "asks"), busy = front && !asks && ACTIVE.includes(n.state), el = n.element || "";
+  const asks = front && (n.asks_you || n.state === "asks"), busy = front && !asks && ACTIVE.includes(n.state), el = n.element || "", hue = n.hue || el;
   everBack.add(n.slug);                                                                                  // seen face down: its turn up and its flight to a lane are played once (backcard.js)
   return html`<button type="button" class=${cls("ork-card col-card col-card--down", { asks })} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state} data-pile="analysis" data-down="1" style=${`--i:${i}`}
     tabindex=${front ? undefined : -1} aria-hidden=${front ? undefined : "true"} aria-haspopup=${front ? "dialog" : undefined} aria-expanded=${front ? String(open) : undefined}
     aria-label=${front ? `${n.title}: ${sayOf(n, "analysis")}; press for the list in order` : undefined} onClick=${() => onPress(n, "analysis")}>
-    <span class=${cls(`ork-sigil table-back-sigil col-sigil${el ? ` is-${el}` : ""}`, { "col-busy": busy, "col-stopped": asks })} aria-hidden="true"><span class="ork-sigil__seal"><${Elem} name=${el} dim=${!el} glowing=${busy} /></span></span>
+    <span class=${cls(`ork-sigil table-back-sigil col-sigil${el ? ` is-${hue}` : ""}`, { "col-busy": busy, "col-stopped": asks })} aria-hidden="true"><span class="ork-sigil__seal"><${Elem} name=${el} hue=${hue} dim=${!el} glowing=${busy} /></span></span>
   </button>`;
 }
 
 /** A card face up (112 x 157): its rune and short name at its top, its type in the window, and its foot (20 px: rune, short name, then its time or its leaders' heads, the sign of its state). `first`: the front of To review shows the wait as a bar in eighths and its time left. */
 function UpCard({ n, i, pile, off, first, onPress }) {
-  const el = n.element || "", on = picked.value === n.slug, work = pile === "work" && !off, ripe = n.back?.ripe, running = pile === "review" && ripe && !ripe.by && !ripe.held;
+  const el = n.element || "", hue = n.hue || el, on = picked.value === n.slug, work = pile === "work" && !off, ripe = n.back?.ripe, running = pile === "review" && ripe && !ripe.by && !ripe.held;
   if (pile === "review") everBack.add(n.slug);
   const sign = n.type?.sign || "", moon = off === "night";
   const extra = pile === "review" ? (running ? (first ? html`<span class="col-when">${leftWords(ripe.left_s)}</span>` : html`<span class="col-when">~${clock(ripe.left_s)}</span>`) : null)
     : off === "held" ? html`<span class="col-when"><${Sign} name="pause" />Held</span>` : moon ? html`<span class="col-when"><${Sign} name="moon" />${night()}</span>` : html`<${Heads} n=${n} />`;
   return html`<button type="button" class=${cls("ork-card col-card col-card--up", { "ork-picked": on, asks: !!n.asks_you && !failed(n), fails: failed(n), "is-off": !!off })} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state} data-pile=${pile} data-off=${off || undefined} style=${`--i:${i}`}
     aria-pressed=${String(on)} aria-label=${`${n.title}: ${sayOf(n, pile, off, first)}`} onClick=${() => onPress(n, pile, off)}>
-    <span class="col-hd"><${Elem} name=${el} dim=${!el} glowing=${work} /><span class="col-nm">${n.short || n.title}</span></span>
+    <span class="col-hd"><${Elem} name=${el} hue=${hue} dim=${!el} glowing=${work} /><span class="col-nm">${n.short || n.title}</span></span>
     <span class=${cls("table-card__win col-win", `is-${typeTone(n)}`)}>${sign && (sign.startsWith("tool:") ? html`<span class=${`ork-tool ${sign.slice(5)}`} aria-hidden="true"></span>` : html`<${Sign} name=${sign} big=${true} />`)}${moon && html`<${Sign} name="moon" big=${true} />`}</span>
-    <span class=${cls("col-foot", `col-c-${el || "dust"}`)}><${Elem} name=${el} dim=${!el} glowing=${work} /><span class="col-fnm">${n.short || n.title}</span>${extra}<${Mark} n=${n} />
+    <span class=${cls("col-foot", `col-c-${hue || "dust"}`)}><${Elem} name=${el} hue=${hue} dim=${!el} glowing=${work} /><span class="col-fnm">${n.short || n.title}</span>${extra}<${Mark} n=${n} />
       ${first && running && html`<span class="col-wbar" style=${`--s:${shareOf(ripe)}`} aria-hidden="true"><i></i></span>`}</span>
   </button>`;
 }

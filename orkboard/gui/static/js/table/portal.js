@@ -107,7 +107,7 @@ export async function play() {
   const got = await ask("ideas.to_main", { idea: slug });                                   // an error is toasted by `ask`, as every failed act of the page is
   if (!got) return;
   if (got.note) toast(got.note, "warning");
-  const element = (mapData.value?.nodes || []).find((n) => n.slug === slug)?.element || "";
+  const sent = (mapData.value?.nodes || []).find((n) => n.slug === slug), element = sent?.hue || sent?.element || "";
   if (element && !reduced() && document.querySelector(".portal-host.is-ring")) sending.value = element;       // the rite in the ring, in the goal's colour
   const card = document.querySelector(`[data-portal-card="${CSS.escape(slug)}"]`), door = document.querySelector(".portal-host .ork-portal");
   if (card && door && !reduced()) {
@@ -188,7 +188,7 @@ function PortalDoor() {
   const button = html`<button type="button" ref=${door} class=${cls("ork-portal", { small: narrow, "is-taking": taking.value, "is-sealed": shut, "is-guarded": guard, "is-new": first.value })}
       aria-label=${none ? `Choose a goal done to send it to ${main}` : checking ? CHECKING : red ? `Sealed: ${reason}` : labelOf(p, slug, main)} aria-disabled=${waits ? "true" : undefined} onClick=${none ? openDiscard : play}
       onDragEnter=${held} onDragOver=${held} onDragLeave=${left} onDrop=${drop}></button>`;
-  const element = open ? (mapData.value?.nodes || []).find((n) => n.slug === slug)?.element || "" : "";
+  const goalNode = open ? (mapData.value?.nodes || []).find((n) => n.slug === slug) : null, element = goalNode?.element || "", sealHue = goalNode?.hue || element;
   const label = main === "main" ? "Main" : main;
   const hint = first.value && !shut && (ready || open) && html`<p class="portal__hint">${narrow ? "Tap the portal to send it to main" : "Drag a goal done into the portal to send it to main"}</p>`;
   const reasoned = html`<p class="portal__sealed" role="status" aria-live="polite">${sealed && said}</p>`;
@@ -207,7 +207,7 @@ function PortalDoor() {
     <span class=${cls("ork-portal-ring", { "is-open": (ready && !shut) || !!sending.value, "is-sealed": shut, "is-waking": ready && first.value && !woke.value, "is-taking": taking.value, "is-sending": !!sending.value, [`rite-${sending.value}`]: !!sending.value })}
         aria-hidden=${ready || corners ? undefined : "true"} onAnimationEnd=${(e) => { if (e.animationName === "ork-ring-eye") woke.value = true; }}>
       ${ready && button}
-      <span class="ork-portal-ring__seal" aria-hidden="true">${element && html`<${Elem} name=${element} />`}</span>
+      <span class="ork-portal-ring__seal" aria-hidden="true">${element && html`<${Elem} name=${element} hue=${sealHue} />`}</span>
       <${Corner} side="before" words="Release: open its view" c=${road.release} passed=${passed} />
       <${Corner} side="after" words="Live: open its view" c=${road.live} />
       ${guard && html`<${Gate} skeletons=${skeletons} onPress=${play} drag=${{ onDragEnter: held, onDragOver: held, onDragLeave: left, onDrop: drop }} />`}
@@ -223,12 +223,12 @@ export function ReadyCards({ goals, main }) {
   return html`<ul class="portal-cards" aria-label=${`Goals ready for ${main}`}>${goals.map((g) => {
     const n = nodes[g.slug] || {}, on = held === g.slug, gone = going.value === g.slug;
     return html`<li key=${g.slug}><button type="button" data-portal-card=${g.slug} draggable="true" aria-pressed=${on ? "true" : "false"}
-        class=${cls(`ork-card ork-leans hand-card hand-card--stop${n.element ? ` el-${n.element}` : ""}`, { "ork-picked": on, "is-going": gone })}
+        class=${cls(`ork-card ork-leans hand-card hand-card--stop${n.element ? ` el-${n.hue || n.element}` : ""}`, { "ork-picked": on, "is-going": gone })}
         aria-label=${`${g.title}, ready for ${main}`}
         onClick=${() => { if (!on) choose(g.slug); else document.querySelector(".portal-host .ork-portal")?.focus(); }}
         onDragStart=${(e) => { choose(g.slug); if (e.dataTransfer) { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", g.slug); } }}
         onDragEnd=${() => { taking.value = false; }} ...${leans}>
-      <span class="hand-card__head"><${Elem} name=${n.element} dim=${!n.element} /><span class="hand-card__name">${g.title}</span></span>
+      <span class="hand-card__head"><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} /><span class="hand-card__name">${g.title}</span></span>
       <span class="hand-card__window"><span class="hand-card__act"><span class="hand-mark is-ok"><${Sign} name="check" big=${true} label="Done" /></span></span></span>
       <span class="hand-card__label"><span class="hand-card__party">Done</span></span>
       <span class="hand-card__foot">Ready for ${main}</span>

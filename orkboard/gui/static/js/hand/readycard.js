@@ -27,9 +27,9 @@ export function ReadyCard({ e }) {
   const sealed = p?.state === "fail" || !!p?.sealed, reason = reasonOf(p), name = `${e.name} is ready for ${main}`;
   const line = p?.state === "ok" ? lineOf(p, slug, main) : p?.state === "fail" ? `Into ${main}: ${e.name}` : `Checking ${e.name}…`;
   const state = p?.state === "ok" ? (sealed ? "sealed" : "open") : p?.state || "wait";
-  return html`<aside class=${cls(`ork-card hand-card hand-card--stop hand-card--big hand-lifted hand-lifted--up hand-ready${e.element ? ` el-${e.element}` : ""}`, { "is-new": first.value })}
+  return html`<aside class=${cls(`ork-card hand-card hand-card--stop hand-card--big hand-lifted hand-lifted--up hand-ready${e.element ? ` el-${e.hue || e.element}` : ""}`, { "is-new": first.value })}
       role="group" tabindex="-1" aria-label=${name} data-key=${e.key} data-kind="ready" data-portal=${state}>
-    <span class="hand-card__head"><${Elem} name=${e.element} dim=${!e.element} /><span class="hand-card__name hand-lifted__title">${name}</span></span>
+    <span class="hand-card__head"><${Elem} name=${e.element} hue=${e.hue} dim=${!e.element} /><span class="hand-card__name hand-lifted__title">${name}</span></span>
     <span class="hand-card__window"><span class="hand-card__fig"><span class="hand-card__act"><span class="hand-mark is-ok"><${Sign} name="check" big=${true} /></span></span><span class="hand-card__asker"><${Head} race=${e.head.race} tier=${e.head.tier} /></span></span></span>
     <span class="hand-card__label"><span class="hand-card__party">Release</span></span>
     <div class="hand-lifted__body hand-ready__body">

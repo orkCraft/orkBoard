@@ -36,7 +36,7 @@ const when = (at) => { const t = Date.parse(at); return Number.isNaN(t) ? 0 : t;
 /** The flags of the goals among `nodes`, newest first: [{slug, title, short, element, at, tasks, first_time, usd, days, release, own}]. `release`: the last release that holds the goal (spec 68: `{goal, party, version, out}`)
  *  or none; `own`: the goal is itself a release (`{version, goals, out}`), else null. */
 export function flagsOf(nodes) {
-  return (nodes || []).filter((n) => n.flag).map((n) => ({ slug: n.slug, title: n.title, short: n.short || n.title, element: n.element || "", ...n.flag, own: n.release || null }))
+  return (nodes || []).filter((n) => n.flag).map((n) => ({ slug: n.slug, title: n.title, short: n.short || n.title, element: n.element || "", hue: n.hue || "", ...n.flag, own: n.release || null }))
     .sort((a, b) => when(b.at) - when(a.at));
 }
 
@@ -105,7 +105,7 @@ export function goalsOf(st, model) {
   const nodes = model.nodes;
   const done = (n) => n.state === "done";
   const edges = (n) => Math.min(3, (n.tasks || []).filter((t) => t.state !== "merged" && t.state !== "dropped").length);
-  const row = (n, rest) => ({ slug: n.slug, title: n.title, short: n.short || n.title, element: n.element || "", raw: n.state === "raw", moon: moonOf(n), edges: edges(n), open: { kind: "idea", slug: n.slug },
+  const row = (n, rest) => ({ slug: n.slug, title: n.title, short: n.short || n.title, element: n.element || "", hue: n.hue || "", raw: n.state === "raw", moon: moonOf(n), edges: edges(n), open: { kind: "idea", slug: n.slug },
     type: n.type?.sign ? n.type : null, care: false, mark: "", markTip: "", ...rest, ...waiting(n, rest) });
   /** A goal that waits for another party's goal (spec 71 §6): orkUI's ← sign is its state sign when nothing louder is, *waits for <party> · <goal>* is in its words. */
   const waiting = (n, rest) => {
@@ -222,7 +222,7 @@ const PITCH_RANK = { judged: 0, judging: 1, failed: 2, raw: 3, sent: 4 };
 /** What the goals bar's sheet lists for Ideation: its pitches but the passed ones, the judged first, all under Planning (a pitch has no task: nothing of it is at work, waits for main or raises a flag). */
 function pitchesOf(model, name) {
   const rows = model.nodes.filter((n) => n.state !== "passed").sort((a, b) => (PITCH_RANK[a.state] ?? 5) - (PITCH_RANK[b.state] ?? 5)).map((n) => ({
-    slug: n.slug, title: n.title, short: n.short || n.title, element: n.element || "", raw: n.state === "raw", edges: 0, open: { kind: "idea", slug: n.slug }, type: null,
+    slug: n.slug, title: n.title, short: n.short || n.title, element: n.element || "", hue: n.hue || "", raw: n.state === "raw", edges: 0, open: { kind: "idea", slug: n.slug }, type: null,
     line: pitchLine(n, "", name), care: n.state === "judged", mark: n.state === "failed" ? "cross" : n.state === "judged" ? "alert" : n.state === "judging" ? "work" : "",
     markTip: n.state === "failed" ? "failed" : n.state === "judged" ? "waits for you" : n.state === "judging" ? "being judged" : "" }));
   return { atWork: [], planning: rows, waits: [], flags: [], all: rows, asking: rows.filter((r) => r.care).length, n: rows.length };

@@ -535,6 +535,7 @@ def drop(root: Path, slug: str, state_dir: Path | None = None) -> None:
 STATE_DEFAULT = {"state": "raw", "session": "", "session_at": "", "context": 0, "batch_at": "", "error": "",
                  "queue": "", "held_until": "", "held_for": "", "measure": None, "night_by": "",
                  "element": "",                       # a goal's element (realm/idea_element.py, spec 50 §2.3): given once, never changes
+                 "hue": "",                           # its colour (spec 128 G): given with the element; "" for a goal of before, which wears its element's colour
                  "type": "",                          # its type's key "<leader>/<id>" (realm/goal_types.py, spec 52 §2.2): given once by ideas.add
                  "asks_by": [],                       # who asks each open question of the draft, by role slug ("" the goal's leader): the look's by the design member (spec 85 §1)
                  "asks_look": 0,                      # how many of those, the first ones, are of the look (spec 85 §1): the faces say *<Name> asks about the look*

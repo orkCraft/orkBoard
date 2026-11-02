@@ -271,7 +271,7 @@ def test_ideas_system_answers_the_columns_what_changed_and_the_goals(host, repo)
     assert by["game"]["parts"][0] == {"path": "src/game", "name": "game", "count": 1, "uses": ["src/ui"], "used_by": [], "row": 0, "gone": False}
     assert got["uses_changed"] == [{"from": "src/game", "to": "src/ui", "kind": "new", "goal": "waves", "task": "k1",
                                     "at": got["changed"]["src/game"]["at"]}]
-    assert set(got["goals"]) == {"waves"} and set(got["goals"]["waves"]) == {"title", "element"}
+    assert set(got["goals"]) == {"waves"} and set(got["goals"]["waves"]) == {"title", "element", "hue"}
     opened = [e for e in event_log.read(repo) if e["event"] == "map_opened"]
     assert [(e["lens"], e["party"], e["changed"]) for e in opened] == [("system", "tech", 0), ("system", "tech", 2)]
     assert opened[0]["hours"] is None and isinstance(opened[1]["hours"], float) and opened[1]["parts"] == 3

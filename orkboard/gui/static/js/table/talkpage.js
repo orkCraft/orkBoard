@@ -76,7 +76,7 @@ export function TalkPage({ props, close }) {
   const kept = useKept(props.idea, row ? row.questions.map((c) => c.id).join("|") : "");
   const g = (slug) => parties.find((x) => x.slug === slug);
   const title = node?.title || row?.title || "";
-  const head = html`<header class="talk-page__head"><${Elem} name=${node?.element || ""} dim=${!node?.element} /><h2 class="talk-page__title">${title}</h2><span class="ork-label">Talk</span></header>`;
+  const head = html`<header class="talk-page__head"><${Elem} name=${node?.element || ""} hue=${node?.hue || ""} dim=${!node?.element} /><h2 class="talk-page__title">${title}</h2><span class="ork-label">Talk</span></header>`;
   const kq = (party) => (kept?.stances || []).find((x) => x.party === party)?.questions || [];       // the kept questions of a party, with how each stands
   if (!row) {                                                                                           // nothing waits: the Talk as kept
     const stances = (kept?.stances || []).filter((x) => x.stance || x.questions.length);

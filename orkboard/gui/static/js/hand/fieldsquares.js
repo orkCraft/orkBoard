@@ -41,7 +41,7 @@ export function Squares({ runes, address, parties, taken }) {
   const at = ELEMENTS.indexOf(runes.shown), who = address.party ? parties.find((g) => g.slug === address.party) : null, kinds = who?.types || [];
   const count = fieldPhotos.value.length + fieldFiles.value.length;
   return html`<div class="hand-field__squares" role="group" aria-label="Its choices">
-    <${Square} id="rune" caption="Rune" label=${at >= 0 ? `Its rune: Rune ${at + 1}, change it` : "Its rune: none yet, choose one"}><${Elem} name=${runes.shown} big=${true} dim=${!runes.shown} /><//>
+    <${Square} id="rune" caption="Rune" label=${at >= 0 ? `Its rune: Rune ${at + 1}, change it` : "Its rune: none yet, choose one"}><${Elem} name=${runes.shown} hue=${runes.hue} big=${true} dim=${!runes.shown} /><//>
     <${Square} id="to" caption="To" label=${`To: ${address.name || "the Orkmaster"}, change it`}>${who?.head ? html`<${Head} race=${who.head.race} tier=${who.head.tier} />` : html`<${Head} race=${CROWN.race} tier=${CROWN.tier} />`}<//>
     <${Square} id="type" caption="Type" faint=${!taken} label=${taken ? `Its type: ${taken.name}, change it` : kinds.length ? "Its type: chosen by its party, change it" : "Its type: name a party to choose it"}><${Sign} name=${taken ? taken.sign : "feature"} big=${true} /><//>
     <${Square} id="files" caption="Files" badge=${count} label=${count ? `Files: ${count} attached, change them` : "Attach files"}><${Icon} name="file" /><//>

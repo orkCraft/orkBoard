@@ -204,7 +204,7 @@ export const MANY = 7;                         // the line's cascade shows this 
 export function lineNow(map = mapData.value) {
   const parties = Object.fromEntries((map?.goals || []).map((g) => [g.slug, g]));
   return (map?.nodes || []).filter((n) => n.place === "deck").map((n) => ({
-    slug: n.slug, title: n.short || n.title, full: n.title, element: n.element || "", party: n.goal, partyName: parties[n.goal]?.short || parties[n.goal]?.title || "", type: n.type || null,
+    slug: n.slug, title: n.short || n.title, full: n.title, element: n.element || "", hue: n.hue || "", party: n.goal, partyName: parties[n.goal]?.short || parties[n.goal]?.title || "", type: n.type || null,
     waits: n.waits_as || "", reset: n.waits_as === "reset", at: n.held_until || n.start_at || "", state: n.state }));
 }
 

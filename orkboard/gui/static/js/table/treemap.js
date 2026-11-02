@@ -52,8 +52,8 @@ function GoalCard({ g, group, groupName, test = false }) {
   const on = picked.value === g.goal, [sign, word] = PLACES[g.place] || PLACES.line;
   return html`<${Pickable} map=${MAP} id=${g.goal} name=${g.title} group=${group} groupName=${groupName}>
     <article class=${cls("ork-card ork-leans mp-card tr-goal", { "is-lit": on, "is-test": test })} data-id=${g.goal} data-place=${g.place} data-test=${test ? "1" : undefined} onClick=${() => pick(g.goal)}>
-      <h3 class="mp-card__head">${g.element && html`<${Elem} name=${g.element} />`}<button type="button" class="mp-card__nm" aria-pressed=${String(on)} title=${g.title}>${g.title}</button></h3>
-      <${Win} tone=${g.element || ""}><${Sign} name=${signOf(g.goal, test ? "abtest" : "feature")} big=${true} /></${Win}>
+      <h3 class="mp-card__head">${g.element && html`<${Elem} name=${g.element} hue=${g.hue} />`}<button type="button" class="mp-card__nm" aria-pressed=${String(on)} title=${g.title}>${g.title}</button></h3>
+      <${Win} tone=${g.hue || g.element || ""}><${Sign} name=${signOf(g.goal, test ? "abtest" : "feature")} big=${true} /></${Win}>
       <div class="mp-card__row"><span class="mp-card__l tr-place"><${Sign} name=${sign} />${word}</span></div>
     </article>
   </${Pickable}>`;

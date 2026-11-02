@@ -57,7 +57,7 @@ function List({ items, place, close }) {
     <p class="col-lift__cap">Face down: their specs are not written yet, so their names are on their other side. In the Orkmaster's order:</p>
     <ol class="col-list__rows">${items.map(({ n }, i) => {
       const writing = i === 0 && (n.state === "reading" || n.state === "planning" || n.state === "talk") && !n.asks_you;
-      return html`<li key=${n.slug} class="col-list__row" data-goal=${n.slug}><${Elem} name=${n.element} dim=${!n.element} /><span class="col-list__nm">${n.title}</span>
+      return html`<li key=${n.slug} class="col-list__row" data-goal=${n.slug}><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} /><span class="col-list__nm">${n.title}</span>
         ${writing ? html`<span class="col-lift__cap">${n.state === "talk" ? "talked over" : "writing"}</span>`
           : html`<span class="col-list__acts">${before(i) && html`<button type="button" class="ork-btn quiet" data-next=${n.slug} aria-label=${`Next: ${n.title}`} onClick=${() => act("ideas.move", { slug: n.slug, before: before(i) })}>Next</button>`}<${Remove} n=${n} /></span>`}</li>`;
     })}</ol>
@@ -71,7 +71,7 @@ function Acts({ n, off, place, close }) {
   const run = (name) => async () => { setBusy(true); try { if (await act(name, { idea: n.slug })) close(); } finally { setBusy(false); } };
   const cap = off === "held" ? "Held: nothing starts it until you press Start now." : off === "night" ? "Put off to the night's window." : n.back?.ripe && !n.back.ripe.by ? "Its spec is ready. It starts by itself in its turn; read it on the tabs, and ask a leader there to change it." : "Its spec is ready. It waits for your word to start.";
   return html`<div class="ork-frame col-lift col-acts" role="dialog" aria-label=${`${n.title}: when it starts`} data-lift="acts" data-goal=${n.slug} style=${place}>
-    <h3 class="col-lift__t"><${Elem} name=${n.element} dim=${!n.element} />${n.short || n.title}</h3>
+    <h3 class="col-lift__t"><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} />${n.short || n.title}</h3>
     <p class="col-lift__cap">${n.title}</p>
     <p class="col-lift__cap">${cap}</p>
     <div class="col-lift__acts">

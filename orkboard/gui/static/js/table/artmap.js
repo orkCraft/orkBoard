@@ -58,7 +58,7 @@ function Pic({ a, big = false }) {
 }
 
 function AssetCard({ a, goals, narrow }) {
-  const goal = a.goal && goals[a.goal], element = goal?.element || "", on = playing.value === a.id;
+  const goal = a.goal && goals[a.goal], element = goal?.element || "", hue = goal?.hue || element, on = playing.value === a.id;
   const gem = a.change === "added" ? "new" : a.change === "changed" ? "changed" : "";
   const play = (e) => {
     e.stopPropagation();
@@ -66,8 +66,8 @@ function AssetCard({ a, goals, narrow }) {
     else { wantPlay = a.id; lift(keyOf(MAP, a.id)); }
   };
   const pic = a.kind === "art" || a.kind === "screen";
-  return html`<${MapCard} map=${MAP} id=${a.id} name=${a.name} code=${true} element=${element} group=${a.kind} gem=${gem} row=${sizeWords(a)} rowCode=${true} className="mp-asset">
-    <${Win} tone=${element} tall=${true} pic=${pic}>
+  return html`<${MapCard} map=${MAP} id=${a.id} name=${a.name} code=${true} element=${element} hue=${hue} group=${a.kind} gem=${gem} row=${sizeWords(a)} rowCode=${true} className="mp-asset">
+    <${Win} tone=${hue} tall=${true} pic=${pic}>
       ${pic ? html`<${Pic} a=${a} />`
         : a.kind === "clip" ? html`<video class="mp-pic" src=${`${a.url}#t=0.001`} preload="metadata" muted playsinline aria-hidden="true"></video>`
         : html`<${Sign} name=${SIGNS[a.kind] || "picture"} big=${true} />`}
@@ -97,7 +97,7 @@ function Back({ a, goals }) {
   const key = keyOf(MAP, a.id), goal = a.goal && goals[a.goal], picked = a.others && goals[a.others.goal], vs = a.others?.variants || [], auto = wantPlay === a.id;
   useEffect(() => { wantPlay = ""; }, []);
   useEffect(() => stop, []);
-  return html`<div class="mp-back__top">${goal?.element && html`<${Elem} name=${goal.element} />`}<h3 class="mp-back__nm is-code">${a.name}</h3></div>
+  return html`<div class="mp-back__top">${goal?.element && html`<${Elem} name=${goal.element} hue=${goal.hue} />`}<h3 class="mp-back__nm is-code">${a.name}</h3></div>
     <div class=${cls("mp-back__body", { "is-media": !(a.kind === "art" || a.kind === "screen") })}>
       <div class="mp-big">
         ${a.kind === "art" || a.kind === "screen" ? html`<${Pic} a=${a} big=${true} />`

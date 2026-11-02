@@ -240,7 +240,7 @@ export function taskItem(n, t, now = Date.now(), low = lowWave(n)) {
   const phase = phaseOf(t, low), when = PHASES[phase];
   const after = afterWords(t, n) ? ` · ${afterWords(t, n)}` : "";
   return {
-    key: `${n.slug}/${t.id}`, idea: n.slug, id: t.id, ideaTitle: short(n), type: typeOf(n), title: short(t), wave: t.wave || 1, phase, phaseWord: when, element: n.element || "", state: t.state,
+    key: `${n.slug}/${t.id}`, idea: n.slug, id: t.id, ideaTitle: short(n), type: typeOf(n), title: short(t), wave: t.wave || 1, phase, phaseWord: when, element: n.element || "", hue: n.hue || "", state: t.state,
     words, value: valueOf(t, words), dep: depWords(n, t), count: goalDone(n), shot: t.shot?.url || "", made: t.made || "",
     tip: t.state === "failed" ? `${t.title} · ${t.error || "failed"}` : t.state === "held" ? `${t.title} · ${words}` : `${t.title} · ${when}${after}`,
     label: `${t.title} (${n.title}${typeOf(n) ? `, ${typeOf(n).name}` : ""}): ${words}${phase ? `, ${when}` : ""}`,
@@ -269,7 +269,7 @@ export function planningItems(nodes, lead, titleOf = (slug) => slug) {
     else if (raw) words = n.queue === "night" || n.waits?.kind === "night" ? "new · tonight" : `new · ${who} reads it later`;
     else { const s = rowState(n, titleOf).text, w = waitsWords(n); words = w && !s.includes(w) ? `${s} · ${w}` : s; }
     const type = typeOf(n), said = type ? `${n.title}, ${type.name}` : n.title;
-    return { key: n.slug, idea: n.slug, title: short(n), type, element: n.element || "", raw,
+    return { key: n.slug, idea: n.slug, title: short(n), type, element: n.element || "", hue: n.hue || "", raw,
       kind: stop ? "stop" : busy ? "busy" : "quiet", words, tip: `${said} · ${words}`, label: `${said}: ${words}`, open: { kind: n.needs_you === "plan" ? "plan" : "idea", slug: n.slug } };
   };
   const rank = (i) => (i.kind === "stop" ? 0 : i.kind === "busy" ? 1 : 2);

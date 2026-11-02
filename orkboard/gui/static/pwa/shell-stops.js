@@ -117,7 +117,7 @@ export function makeStops(core, ctx, needs, ops) {
         const goalName = node ? node.short || node.title : "", t = task ? (node?.tasks || []).find((x) => x.id === task) : null;
         return [goalName, task ? (t ? t.short || t.title : fallback) : "", t?.by?.name || ""].filter(Boolean);
       };
-      const tag = (it, node, at, goalName, link = []) => ({ ...it, element: node?.element || "", at: at || "", party, goalName: goalName || "", link: party || !link.length ? null : link });
+      const tag = (it, node, at, goalName, link = []) => ({ ...it, element: node?.element || "", hue: node?.hue || "", at: at || "", party, goalName: goalName || "", link: party || !link.length ? null : link });
       for (const n of needsOf(st, slug).filter((x) => keep(x.idea))) {
         const link = n.kind === "party" ? [] : n.kind === "goal" ? [goal.short || goal.title] : about(nodes[n.idea], n.kind === "pick" ? n.task : "", n.short || n.title);
         out.push(tag(needItem(n, nodes[n.idea], goal, lead), nodes[n.idea], n.at, n.idea ? nodes[n.idea]?.short || nodes[n.idea]?.title || n.title : "", link));
@@ -228,7 +228,7 @@ export function makeStops(core, ctx, needs, ops) {
     const buttons = () => answers.map((a) => { const w = how(a); return btn(w.label, say(a, w.said), { primary: a === (first ? `first:${first}` : "replan"), text: true, tip: w.tip, attrs: { "data-answer": a } }); });
     return { ...base, key: `collide:${c.id}`, gem: { text: "·", tip: "It holds nothing: the goals wait for your answer" }, small: null, big: null, head, text: n.text || "", why: c.why || "", open: null,
       more: () => h("div", { class: "cl-goals", role: "group", "aria-label": "The two goals" }, ...goals.map((g) => h("button", { class: "ork-btn cl-goal", type: "button", "data-goal": g.idea, "data-party": g.party,
-        "aria-label": `${g.party_name} · ${g.title}: open it`, onclick: openGoal(g) }, g.element ? elem(g.element) : null, h("span", { class: "cl-goal__words" }, h("b", {}, g.party_name), " · ", g.title), h("i", { class: "ork-chev right", "aria-hidden": "true" })))),
+        "aria-label": `${g.party_name} · ${g.title}: open it`, onclick: openGoal(g) }, g.element ? elem(g.element, { hue: g.hue }) : null, h("span", { class: "cl-goal__words" }, h("b", {}, g.party_name), " · ", g.title), h("i", { class: "ork-chev right", "aria-hidden": "true" })))),
       quickLabel: "Answer in one tap", quick: buttons };
   }
 
@@ -297,7 +297,7 @@ export function makeStops(core, ctx, needs, ops) {
   function card(it, place, n, ghost = null, front = false) {
     const f = fan(place, n, front), right = !front && f.d > 0;
     const cls = `${ghost ? "hcg" : "hc"} ${it.cls || ""}${front ? " is-front" : ""}${front && it.miss ? " has-miss" : ""}${right ? " is-right" : ""}${!ghost && st.hand === it.key ? " is-up" : ""}`.trim();
-    const face = [h("span", { class: "hc__top" }, gemOf(it.gem), front ? h("span", { class: `hc__kind${it.tone === "danger" ? " no" : it.tone === "look" ? " muted" : ""}` }, KIND[it.kind]) : null, elem(it.element)),
+    const face = [h("span", { class: "hc__top" }, gemOf(it.gem), front ? h("span", { class: `hc__kind${it.tone === "danger" ? " no" : it.tone === "look" ? " muted" : ""}` }, KIND[it.kind]) : null, elem(it.element, { hue: it.hue })),
       it.party ? h("span", { class: "hc__party", "data-party": it.party.ops ? "ops" : it.party.slug, title: it.party.name }, partyMark(it.party)) : null,
       h("span", { class: "hc__banner" }, it.title), front ? h("span", { class: "hc__text" }, it.plain ?? it.text) : null, front && it.miss ? h("span", { class: "hc__miss" }, it.miss) : null];      // a plan that gives work to no one says so on the front card (spec 52 §5.7)
     const own = { "data-kind": it.kind, "data-place": String(place) };
@@ -340,7 +340,7 @@ export function makeStops(core, ctx, needs, ops) {
     const quick = h("div", { class: "raised__quick", role: "group", "aria-label": it.quickLabel }, ...it.quick());
     const raised = h("div", { class: `raised ork-frame${frame}${it.kind === "pick" ? " is-pick" : ""}${it.kind === "collide" ? " is-collide" : ""}`, role: "document", "data-stop": it.key, "data-kind": it.kind },
       h("div", { class: "raised__top" }, gemOf(it.gem),
-        h("span", { class: `raised__kind${it.tone === "danger" ? " no" : it.tone === "look" ? " muted" : ""}` }, KIND[it.kind]), elem(it.element), h("span", { class: "spacer" }),
+        h("span", { class: `raised__kind${it.tone === "danger" ? " no" : it.tone === "look" ? " muted" : ""}` }, KIND[it.kind]), elem(it.element, { hue: it.hue }), h("span", { class: "spacer" }),
         it.small ? whoHead(it.small, false) : null,
         h("button", { class: "ork-btn quiet", type: "button", "aria-label": "Put it back", onclick: lower }, icon("close"))),
       it.big ? h("span", { class: "art" }, midHead(it.big)) : it.head ? h("span", { class: "art" }, it.head()) : null,

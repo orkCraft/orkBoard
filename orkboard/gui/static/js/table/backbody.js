@@ -19,7 +19,7 @@ export function leftWords(left_s) {
 }
 
 /** The back's body: the seal with the goal's rune and the short name. `waiting`: the share of the wait (0 to 1) when the ring is the wait, null otherwise; `glowing`: the leaders are talking it over. */
-export function BackBody({ element = "", name = "", glowing = false, waiting = null }) {
-  return html`<span class=${cls(`ork-sigil table-back-sigil${element ? ` is-${element}` : ""}`, { "is-waiting": waiting != null })} style=${waiting != null ? `--ork-sigil-share:${waiting}` : undefined} aria-hidden="true"><span class="ork-sigil__seal"><${Elem} name=${element} dim=${!element} glowing=${glowing} /></span></span>
+export function BackBody({ element = "", hue = "", name = "", glowing = false, waiting = null }) {
+  return html`<span class=${cls(`ork-sigil table-back-sigil${element ? ` is-${hue || element}` : ""}`, { "is-waiting": waiting != null })} style=${waiting != null ? `--ork-sigil-share:${waiting}` : undefined} aria-hidden="true"><span class="ork-sigil__seal"><${Elem} name=${element} hue=${hue} dim=${!element} glowing=${glowing} /></span></span>
     <span class="table-back-nm">${name}</span>`;
 }

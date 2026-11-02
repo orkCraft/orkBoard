@@ -182,6 +182,19 @@ to come), *As it was when it landed* on the die (the host cannot build a goal's 
 3. A browser test: two goals of one shape and different hues are drawn in their hues; the first five goals given differ
    in shape.
 
+**As built (G).** *G.1.* `realm/idea_element.py`: a goal's `state.json` keeps `hue` beside `element` (`ideas.STATE_DEFAULT`, "" for a goal of before); `hue_in(st)` / `hue_of` read the hue, else the element. The rune is picked
+against the **project's** goals that hold one (`holds`: an element and open, or done with `seen_at` empty; a done goal seen frees its rune), not the party's: `pick_rune(used, want)` is the shape used least (`want`: the shape
+chosen, `ideas.add`'s `element`), then `pick_hue` the hue used least among the runes of that shape, ties in `ELEMENTS`' order, so the first five goals differ in shape (each first of its shape wears the first hue, meadow), the
+sixth repeats a shape in the next hue, and 25 goals are 25 runes. `open_runes`, `open_elements`, `next_for` / `next_hue_for` / `next_rune_for` and `free_for` lost their party argument (the project's, the same at every party).
+A pitch sent as a goal keeps the pitch's rune (shape and hue) when no other goal of the project holds its shape. *G.2.* The snapshot gives `hue` beside every `element` it gives for a goal (the Map's nodes, `ideas.add`'s and
+`play_mark`'s answers, `ideas.assets`, `ideas.hypotheses`, `ideas.tree`, `ideas.release_map`, `ideas.release_candidates`, `ideas.flags`, `ideas.collide`'s goals); a party carries `next_element`, `next_hue` and `free_elements`
+(shapes, the project's). On the desktop `Elem` (`orkui.js`) takes `hue` and adds `k-<hue>` when it is another than the shape, `page.css` draws `.ork-elem.k-<hue>:not(.dim)` as `background: var(--ork-elem-<hue>)` (orkUI's
+token, nothing of its own; a dim rune stays faint); every `Elem` of a goal, the cards' `el-<hue>` marks, the sigils' `is-<hue>` / `col-c-<hue>`, a window's tone, the Play die's `data-elem`, the rites, and the phone's `elem()`
+(`pwa/shell-marks.js`, its rows and cards) pass the goal's `hue` (the page falls back to the element when a node has none). The + card's seal shows the next goal's shape in `next_hue` (a rune the person chose stands in its own colour
+until the host has picked its hue); its free runes and the field's choices stay shapes in their own colours. *G.3.* Tests: `tests/test_idea_element.py` (the rule, the old goal without a hue, a seen goal freeing its rune, the
+snapshot's `hue`), `tests/test_rune_hue_browser.py` (two goals of one shape and two hues drawn in two colours in the column and on a task card; the seal in `next_hue`). **Not built:** the field's *Rune* square and its radios do not
+show the hue the host will pick (the host picks it once the goal is sent), and the phone's `nextElement` (a helper nothing reads) still counts by party.
+
 ## Tests and wording
 
 Each part adds its tests beside the files it touches and keeps the critical ones green (`tests/test_architecture.py`,

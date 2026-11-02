@@ -146,7 +146,7 @@ def candidates(root: Path, state_dir: Path, party: str, rows: list[dict] | None 
             if flag is None or i["slug"] in isrelease or (last and str(flag["at"]) <= last):
                 continue
             out.append({"goal": i["slug"], "title": i["title"], "party": p, "party_name": names.get(p, p),
-                        "element": idea_element.of(state_dir, i["slug"]), "at": flag["at"], "commit": str(flag.get("commit") or ""),
+                        "element": idea_element.of(state_dir, i["slug"]), "hue": idea_element.hue_of(state_dir, i["slug"]), "at": flag["at"], "commit": str(flag.get("commit") or ""),
                         "held": held.get(i["slug"], "")})
     return sorted(out, key=lambda c: (c["at"], c["goal"]), reverse=True)
 

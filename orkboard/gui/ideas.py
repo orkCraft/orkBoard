@@ -409,7 +409,7 @@ class Ideas(GoalViewMixin, ChangeMixin, SketchMixin, PlayMarkMixin, JournalFace,
         **no model call** (spec 99 §4): it waits as `routed` with its route until `ideas.talk` (gui/ideas_route.py); only a goal kept on `hold`, a pitch, a
         release or a goal sent from a pitch is drafted at once, whatever its priority (spec 99 §3: the night is gone, so there is no `night` and
         Low waits for nothing). `element`: the rune the person chose in the field (one of `idea_element.ELEMENTS`, else refused in words; decisions §187.3, spec 111 B): the goal is
-        given it at once; without it the goal is given the one its party uses least, as before. The answer's `element` is the one it wears (the + card's seal plays its rite in it). `marks`: the places of its party's map the goal points at, `[{map, id, name, group?}]` or `[{map, group, name}]` (spec 102 §6): kept in its state as `marks`
+        given it at once; without it the goal is given the shape the project's goals use least (spec 128 G). The answer's `element` (its shape) and `hue` (its colour) are the rune it wears (the + card's seal plays its rite in it). `marks`: the places of its party's map the goal points at, `[{map, id, name, group?}]` or `[{map, group, name}]` (spec 102 §6): kept in its state as `marks`
         (realm/idea_lens.py `clean_marks`), read into its calls' prompts (`idea_lens.attached`), and the parts of System among them offer Tech on its route. `photos`
         (the phone's, base64) are kept beside it for the Taskmaster to read (realm/idea_photos.py), and `lens`, what the
         person pointed at with the lens of the goal's party (realm/idea_lens.py). Spec 52 §2.3: `type` (one of the party's
@@ -469,7 +469,7 @@ class Ideas(GoalViewMixin, ChangeMixin, SketchMixin, PlayMarkMixin, JournalFace,
                  priority=priority, queue=queue, photos=len(photos), files=files, lens=[a["kind"] for a in pointed], type=typed["key"],
                  asks=typed["answered"], refs=len(photos) if typed["type"] and typed["type"].refs else 0,
                  joined=(joined or {}).get("add", ""), out=(joined or {}).get("out", ""))
-        out = {"slug": slug, "queue": queue, "element": element, "type": typed["key"], "joined": joined}
+        out = {"slug": slug, "queue": queue, "element": element, "hue": idea_element.hue_of(self.state_dir, slug), "type": typed["key"], "joined": joined}
         try:
             self.brief_more()                   # the brief's other half, once the first start's questions are done (spec 124 A); never troubles the goal
         except Exception:

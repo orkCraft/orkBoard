@@ -213,7 +213,7 @@ export function makeParty(core, ctx) {
   function flagNode(slug) {
     if (!st.flagLine) return null;
     const words = flagLine(st.flagLine.flags);
-    const row = h("span", { class: "flagline__row", "aria-hidden": "true" }, ...st.flagLine.flags.slice(0, FLAG_ROW).map((f) => elem(f.element)));       // the seventh and the rest are in the words
+    const row = h("span", { class: "flagline__row", "aria-hidden": "true" }, ...st.flagLine.flags.slice(0, FLAG_ROW).map((f) => elem(f.element, { hue: f.hue })));       // the seventh and the rest are in the words
     const line = h("div", { class: "flagline", role: "status", "data-act": "flag-line" },
       h("button", { class: "flagline__body", type: "button", "aria-label": `${words.head} · ${words.tail}. Its flags`, onclick: () => open(slug, "Its flags") },
         sign("flag"), row, h("span", { class: "flagline__words" }, h("b", {}, words.head), ` · ${words.tail}`)),

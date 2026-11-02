@@ -78,9 +78,9 @@ export function Discard({ dealing = "" }) {
   const lich = lichOf();
   return html`<div class="ork-deck table-discard" data-n=${under} title="Done">
     ${Array.from({ length: under }, (_, k) => under - k).map((i) => html`<i key=${i} class="ork-card-back edge hand-back" style=${`--ork-deck-i:${i}`} aria-hidden="true"></i>`)}
-    ${top ? html`<button key=${dealing ? top.slug : "top"} type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop hand-done${top.element ? ` el-${top.element}` : ""}`, { "is-on": lit, "ork-deal": !!dealing })} data-slug=${top.slug} data-moon=${moon ? "1" : undefined} data-dealt=${dealing || undefined}
+    ${top ? html`<button key=${dealing ? top.slug : "top"} type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop hand-done${top.element ? ` el-${top.hue || top.element}` : ""}`, { "is-on": lit, "ork-deal": !!dealing })} data-slug=${top.slug} data-moon=${moon ? "1" : undefined} data-dealt=${dealing || undefined}
         aria-label=${label} aria-expanded=${lit ? "true" : "false"} onClick=${press} ...${leans}>
-        <span class="hand-card__head"><${Elem} name=${top.element} dim=${!top.element} /><span class="hand-card__name">${top.title}</span></span>
+        <span class="hand-card__head"><${Elem} name=${top.element} hue=${top.hue} dim=${!top.element} /><span class="hand-card__name">${top.title}</span></span>
         <span class="hand-card__window"><span class="hand-card__act"><span class="hand-mark is-ok"><${Sign} name="check" big=${true} label="Done" /></span></span>
           ${moon && html`<span class="hand-done__moon" title="Done in the night"><${Sign} name="moon" label="Done in the night" /></span>`}
           ${words && html`<span class="hand-card__asker"><${Head} race=${lich.race} tier=${lich.tier} /></span>`}</span>
@@ -101,7 +101,7 @@ export function DiscardView() {
     ${done.length > 0 && html`<section class="hand-part" aria-label="Done, not yet seen">
       <h2 class="ork-label">Done, not yet seen</h2>
       <ul class="hand-rows">${done.map((g) => html`<li key=${g.slug}><button type="button" class="ork-row hand-drow" data-slug=${g.slug} onClick=${() => seeResult(g)}>
-        <${Elem} name=${g.element} dim=${!g.element} /><span class="hand-drow__text"><span class="body">${g.full}</span></span>
+        <${Elem} name=${g.element} hue=${g.hue} dim=${!g.element} /><span class="hand-drow__text"><span class="body">${g.full}</span></span>
         ${moons.has(g.slug) && html`<span class="hand-drow__moon" data-moon="1" title="Done in the night"><${Sign} name="moon" label="Done in the night" /></span>`}
         ${g.type?.sign && html`<span class="hand-drow__type" title=${g.type.name}><${Sign} name=${g.type.sign} /></span>`}
         <span class="cap hand-drow__place">Result<i class="ork-chev right" aria-hidden="true"></i></span></button></li>`)}</ul></section>`}

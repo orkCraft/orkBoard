@@ -10,7 +10,7 @@ product by. Data only; a refusal is an `IdeasError` in plain words. The phone ha
         #   the Orkmaster routes it; a Bug goes to Tech); `under`: the probe's elements under the box; `picture`: {html, w, h} the probe's snapshot; `state`: the game's; `viewport`: {w, h} of
         #   the frame, for a page drawn anew; `with`: the chips left on, of screen · part · errors · requests · lines · state (omitted: all);
         #   `add_to`: the slug of a goal not started, instead of a new goal.
-        # → {slug, title, party, party_title, type, element, route?, joined, kept: {picture, errors, requests, lines, state, under, marks}}
+        # → {slug, title, party, party_title, type, element, hue, route?, joined, kept: {picture, errors, requests, lines, state, under, marks}}
     ideas.play_mark_offer {path, kind}     # → {goal: {slug, title}} or {}: a goal not started with a mark of the same kind on the same screen, by code
 
 **What a chip keeps.** `screen`: the lens `{kind: "screen", screen, marks: [{x, y, w, h, note: text}]}` with its picture (realm/idea_lens.py), kept for the project as the screens kept are; the picture is the
@@ -321,7 +321,7 @@ class PlayMarkMixin:
         mark["picture"] = next((a["screen"] for a in idea_lens.read(self.state_dir, slug) if a["kind"] == "screen"), "")
         idea_play.save(self.state_dir, slug, mark)
         self._read_play(slug)
-        return {"slug": slug, "type": made["type"], "element": made["element"], "joined": False, **({"route": made["route"]} if "route" in made else {})}
+        return {"slug": slug, "type": made["type"], "element": made["element"], "hue": made.get("hue") or made["element"], "joined": False, **({"route": made["route"]} if "route" in made else {})}
 
     @staticmethod
     def _types_for(kind: str) -> list[str]:
@@ -367,7 +367,7 @@ class PlayMarkMixin:
         ideas.add_turn(self.state_dir, slug, "you", mark["text"], "Gist")
         idea_play.save(self.state_dir, slug, mark)
         self._read_play(slug)
-        return {"slug": slug, "type": ideas.state(self.state_dir, slug).get("type") or "", "element": idea_element.of(self.state_dir, slug), "joined": True}
+        return {"slug": slug, "type": ideas.state(self.state_dir, slug).get("type") or "", "element": idea_element.of(self.state_dir, slug), "hue": idea_element.hue_of(self.state_dir, slug), "joined": True}
 
     def play_mark_offer(self, args: dict) -> dict:
         """A goal not started that has a mark of this kind on this screen (else on this page), the latest first; `{}` with none."""

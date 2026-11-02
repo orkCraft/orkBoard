@@ -31,7 +31,8 @@ export function hypothesisStops(rows, ctx) {
 }
 
 /** The element of the goal an evidence line came from (`ref` is its slug), "" for a line from no goal the Board has. */
-const elementOf = (ref) => (ref ? (mapData.value?.nodes || []).find((n) => n.slug === ref)?.element || "" : "");
+const nodeOf = (ref) => (ref ? (mapData.value?.nodes || []).find((n) => n.slug === ref) : null);
+const elementOf = (ref) => nodeOf(ref)?.element || "";
 
 /** The lifted card: the hypothesis, its signal, what was found, the tests, a *Why* line and the three answers. */
 export function HypothesisLifted({ s, close }) {
@@ -47,7 +48,7 @@ export function HypothesisLifted({ s, close }) {
     <p class="body hand-lifted__text hand-way__words" data-part="text">${row.text}</p>
     <div class="hand-way__why" data-part="signal"><span class="ork-label">We'll know when</span><p class="body">${row.signal}</p></div>
     ${found.length > 0 && html`<div class="hand-way__why" data-part="evidence"><span class="ork-label">What was found</span>
-      <ul class="hand-way__points" aria-label="What was found">${found.map((e, i) => html`<li key=${i} class="body">${elementOf(e.ref) && html`<${Elem} name=${elementOf(e.ref)} /> `}${e.text}</li>`)}</ul></div>`}
+      <ul class="hand-way__points" aria-label="What was found">${found.map((e, i) => html`<li key=${i} class="body">${elementOf(e.ref) && html`<${Elem} name=${elementOf(e.ref)} hue=${nodeOf(e.ref)?.hue || ""} /> `}${e.text}</li>`)}</ul></div>`}
     ${tests.length > 0 && html`<div class="hand-way__why" data-part="tests"><span class="ork-label">Tested by</span>
       <ul class="hand-way__points" aria-label="Tested by">${tests.map((t) => html`<li key=${t.slug} class="body">${t.title}</li>`)}</ul></div>`}
     <label class="hand-way__why"><span class="ork-label">Why</span>

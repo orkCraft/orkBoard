@@ -56,7 +56,7 @@ function GoalResult({ idea }) {
   if (!n) return html`<p class="ok-tone-muted">This goal is gone.</p>`;
   const made = (n.tasks || []).filter((t) => t.state === "merged");
   return html`<div class="hand-result" data-idea=${idea}>
-    <header class="hand-result__head"><${Elem} name=${n.element || ""} dim=${!n.element} /><h2 class="hand-result__title">${n.title}</h2></header>
+    <header class="hand-result__head"><${Elem} name=${n.element || ""} hue=${n.hue || ""} dim=${!n.element} /><h2 class="hand-result__title">${n.title}</h2></header>
     <p class="cap">${party ? `${party.name} · ` : ""}Done${n.updated ? ` · ${String(n.updated).slice(0, 10)}` : ""}</p>
     ${spend && html`<p class="cap" title="At API prices, not your bill">${spendWords(spend)}</p>`}
     <h3 class="board-sub">What it made</h3>

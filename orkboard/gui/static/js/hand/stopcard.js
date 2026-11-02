@@ -41,7 +41,7 @@ export function Mark({ s, big = false }) {
 }
 
 /** The goal's element, bare; dim while it has none (a stop of no goal). */
-export const ElemOf = ({ s }) => html`<${Elem} name=${s.node?.element || ""} dim=${!s.node?.element} />`;
+export const ElemOf = ({ s }) => html`<${Elem} name=${s.node?.element || ""} hue=${s.node?.hue || ""} dim=${!s.node?.element} />`;
 
 export const headOf = (s) => wayOf(s.kind)?.head?.(s) || s.head || s.party?.head || null;           // a goal's way's card may name its asker (spec 100: the route's is the Orkmaster)
 const footOf = (s) => wayOf(s.kind)?.foot?.(s) ?? (s.text || s.why || "");           // a goal's way's card may say its own foot (spec 100 C: *Decision 118*, *Design and Tech disagree*)
@@ -61,7 +61,7 @@ export const handsWords = (s) => `${s.card ? "a question" : "a card"}: ${s.full}
 /** The card face of a stop `s` (docs/specs/101 §4.5). `top`: the front card of its stack. `onPress`: the press. `dealt`: it came (motion.js `useHanded`: `{i, el, hold}`; `el` the box it flies from, none: it is dealt from under its place). `gone`: it left;
  *  `back`: the box it came from, when it was answered: it is played back there (spec 120 §6.10), else it crumbles where it lay (the shards are its children). */
 export function StopCard({ s, lit = false, slot = false, top = false, dealt = null, gone = false, back = null, onPress, onFocus, children }) {
-  const cost = costOf(s), head = headOf(s), element = s.node?.element || "", ref = useRef(), from = handedName(s.key), plain = !!dealt && !dealt.el && !dealt.hold;
+  const cost = costOf(s), head = headOf(s), element = s.node?.element || "", hue = s.node?.hue || element, ref = useRef(), from = handedName(s.key), plain = !!dealt && !dealt.el && !dealt.hold;
   useFlight(ref, dealt);
   useLayoutEffect(() => {                                            // answered: it flies back into where it came from (orkUI's `.ork-play`, its end the origin's middle)
     const el = ref.current, origin = gone && back && !reduced() ? boxIn(back) : null;
@@ -71,7 +71,7 @@ export function StopCard({ s, lit = false, slot = false, top = false, dealt = nu
     el.style.setProperty("--ork-play-y", `${v.y}px`);
     el.classList.add("ork-play");
   }, [gone]);
-  return html`<button ref=${ref} type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop${element ? ` el-${element}` : ""}`, { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed", "is-on ork-picked": lit,
+  return html`<button ref=${ref} type="button" class=${cls(`ork-card ork-leans hand-card hand-card--stop${element ? ` el-${hue}` : ""}`, { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed", "is-on ork-picked": lit,
         "is-slot": slot, "is-gone": gone, "ork-deal": plain })}
       data-key=${s.key} data-kind=${s.kind} data-goal=${goalOfStop(s)} data-party=${s.party?.slug || ""} data-top=${top ? "1" : undefined} data-from=${from || undefined}
       style=${dealt ? `--ork-deal-i:${dealt.i}` : undefined} aria-label=${`${labelOf(s)}${from ? `, from ${from}` : ""}`} title=${`${labelOf(s)}${s.text ? ` · ${s.text}` : ""}`.slice(0, 200)}
@@ -102,7 +102,7 @@ function Body({ s }) {
  * *Put it back*, and scrolls inside when the card reaches its most height; its foot says what the card is. `anchor`: the element of the card it lies for (its left edge is the lifted card's, its side the card's lean).
  * `inline` (upright on a touch phone, hand/upright.js): the top of the one stack, drawn in its place with its answers on it, nothing to put back. */
 export function Lifted({ s, anchor, inline = false }) {
-  const box = useRef(), [at, setAt] = useState(null), cost = costOf(s), head = headOf(s), element = s.node?.element || "";
+  const box = useRef(), [at, setAt] = useState(null), cost = costOf(s), head = headOf(s), element = s.node?.element || "", hue = s.node?.hue || element;
   useAbout(inline ? null : s);
   useLayoutEffect(() => {                                              // over its stack, kept inside the hand's width; it leans toward the side of the hand its stack lies on
     if (inline) return undefined;                                      // upright on a touch phone the card is the stack's top, in its place (hand/upright.js)
@@ -118,7 +118,7 @@ export function Lifted({ s, anchor, inline = false }) {
   }, [s.key, anchor, inline]);
   useEffect(() => { if (!inline) box.current?.focus({ preventScroll: true }); }, [s.key]);
   const tone = s.tone === "danger" ? "danger" : s.tone === "alert" ? "alert" : "", Way = wayOf(s.kind)?.Lifted || (isSketch(s) ? SketchLifted : null);
-  return html`<aside ref=${box} class=${cls(`ork-card hand-card hand-card--stop hand-card--big hand-lifted${inline ? " hand-lifted--up" : ""}${element ? ` el-${element}` : ""}`, tone, { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed" })}
+  return html`<aside ref=${box} class=${cls(`ork-card hand-card hand-card--stop hand-card--big hand-lifted${inline ? " hand-lifted--up" : ""}${element ? ` el-${hue}` : ""}`, tone, { asks: ["asks", "goal", "pick", "collide"].includes(s.kind), fails: s.kind === "failed" })}
       role="dialog" tabindex="-1" aria-label=${`Lifted: ${labelOf(s)}`} data-key=${s.key} data-kind=${s.kind}
       style=${at ? `left:${at.left}px;--hc-lean:${at.lean}` : undefined}>
     <span class="hand-card__head"><${ElemOf} s=${s} /><span class="hand-card__name hand-lifted__title">${inline ? upName(s) : s.title || s.full}</span></span>

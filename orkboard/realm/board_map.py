@@ -14,7 +14,7 @@ import re
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import (board_back, board_rows, collide, goal_flags, goal_place, goal_route, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_checks, leader_change, idea_flag, idea_pick, idea_questions, idea_shots,
+from orkboard.realm import (board_back, board_rows, collide, goal_flags, goal_place, goal_route, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_element, idea_checks, leader_change, idea_flag, idea_pick, idea_questions, idea_shots,
                             idea_hearing, idea_objections, idea_risk, idea_spend, idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles, spec_sections, tool_errors)
 from orkboard.realm.idea_words import short_of
 
@@ -445,7 +445,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
             waves, rows = map_stage.waves_of(tasks), map_stage.row_of(tasks)
             pitch = pitches.face(root, state_dir, slug, r["state"], target, offered) if ideation else None
             node = {"slug": slug, "goal": g["slug"], "title": i["title"], "short": i["short"], "state": r["state"], "queue": r["queue"],
-                    "element": st.get("element") or "", "flag": (flag := flag_of(state_dir, slug, held)), "type": type_of(st),
+                    "element": st.get("element") or "", "hue": idea_element.hue_in(st), "flag": (flag := flag_of(state_dir, slug, held)), "type": type_of(st),
                     "route": idea_route.route(root, state_dir, slug, page=page, st=st, plan=plan, held=held, flag=flag),
                     "goal_state": idea_route.goal_state(root, state_dir, slug, held) if ideation and r["state"] == "sent" else None,
                     "release": release_of(releasing.get(slug)), "back": board_back.of(root, state_dir, slug, st, settings),         # the goal's card face down at the Orkmaster (spec 120 §6.3)

@@ -17,8 +17,8 @@ export function cardFace(it, { planning = false, spread = false } = {}) {
   if (it.shot && !planning) cls.push("has-shot");
   return h("span", { class: cls.filter(Boolean).join(" ") },
     it.shot && !planning ? h("img", { class: "tcard__shot", src: it.shot, alt: "", draggable: "false" }) : null,
-    h("span", { class: "tcard__top" }, elem(it.element, { dim: Boolean(it.raw) }), spread && !planning ? h("span", { class: "tcard__phase" }, it.phaseWord) : null,
-      it.type ? h("span", { class: `tcard__type ${typeTone(it.element, it.raw)}`, "data-type": it.type.id }, sign(it.type.sign, it.type.name)) : null),
+    h("span", { class: "tcard__top" }, elem(it.element, { dim: Boolean(it.raw), hue: it.hue }), spread && !planning ? h("span", { class: "tcard__phase" }, it.phaseWord) : null,
+      it.type ? h("span", { class: `tcard__type ${typeTone(it.hue || it.element, it.raw)}`, "data-type": it.type.id }, sign(it.type.sign, it.type.name)) : null),
     spread ? h("span", { class: "tcard__idea" }, planning ? (it.type ? it.type.name : "Goal") : it.ideaTitle) : null,        // the field's token has no goal's line (spec 67 §2.2)
     h("span", { class: "tcard__name" }, it.title), !planning && it.count ? h("span", { class: "tcard__count" }, it.count) : null, ...dep, spread ? h("span", { class: "tcard__foot" }, it.words) : it.value ? h("span", { class: "tcard__foot" }, it.value) : null);
 }
@@ -37,7 +37,7 @@ export function deckNode(stack, { press, planning = false, drawn = false, ghost 
   if (drawn) cls.push("is-drawn");
   if (ghost) {
     return h("div", { class: `${cls.join(" ")} is-leaving`, "aria-hidden": "true", "data-ghost": stack.key, "data-sign": ghost.sign || "" }, ...kids,
-      ghost.sign && ghost.sign !== "back" ? h("span", { class: "deck__flash" }, (ghost.sign === "check" && elem(top.element, { big: true, dim: Boolean(top.raw) })) || sign(ghost.sign, "", { big: true })) : null,
+      ghost.sign && ghost.sign !== "back" ? h("span", { class: "deck__flash" }, (ghost.sign === "check" && elem(top.element, { big: true, dim: Boolean(top.raw), hue: top.hue })) || sign(ghost.sign, "", { big: true })) : null,
       ghost.sign === "check" && ghost.made ? h("span", { class: "deck__made", "data-made": "true" }, h("b", {}, "What it made"), h("span", {}, ghost.made)) : null);
   }
   return h("button", { class: cls.join(" "), type: "button", title: top.tip, "aria-label": label || top.label, "data-key": stack.key, "data-idea": stack.idea, "data-phase": stack.phase || null,
