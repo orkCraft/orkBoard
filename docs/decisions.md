@@ -4632,3 +4632,48 @@ what is missing is the placeholders and any measure of sound. So:
 7. **The evidence is asked for before the spec**, as §208.7: the solo developers' words on placeholders, Codecks'
    pages, the Wwise course and the platform's loudness guideline, named. The spec builds 2–4 with §208's to §211's.
 The owner's call.
+
+## 213. The Release lens measured against how small teams ship: readiness gathered from every lens, a save broken by a patch, strings not translated, the changes drafted by Keep a Changelog, and a game not yet out on its own rhythm (2 November 2026, the owner)
+
+Changes: 90, 109, 137, 212.
+
+Why: the same research as §208, for Release (a prompt to Gemini, its answer unsourced and so taken as a hypothesis; its
+*stress-free launch* is Codecks' own advertising, not a post-mortem). What it said: before a release a small team is
+under the most strain, and one thing forgotten (a button the Steam Deck cannot press, a demo that ends abruptly) costs
+wishlists and sales; milestones with the commits tied to their cards carry a launch through; DORA's four keys fit a
+project by its kind: a web app's way to production, a game's rhythm of internal builds (dev, a playtest branch), the
+project buildable and runnable at any moment. It proposed a bridge of three cards (dev with its changes sorted live by
+Keep a Changelog's *Added*, *Changed*, *Fixed*; a *Go / No-Go* gate holding a check from every party: the build and a
+smoke test from Tech, the controller and the screens' states from Design, no placeholder and no clipped sound from Art,
+the saves' compatibility by semantic versioning and the store page from Marketing; main with the live version), a
+second map (four DORA cards with a trend line of four weeks each: build cadence, commit to playable, broken builds,
+recovery), a red *NO-GO* with a thread to the card at fault when one check fails (a save broken in a patch, new strings
+not translated), and on the phone the release candidate with its gate and its patch notes approved in one tap.
+Measured against what is built (§137's map, the goals in dev and not in main ticked, *To main* by the gate's merge,
+*Since <version>*; spec 109's `big_batch`, `stale`, `no_changelog`, `reverts`; the gate's checks; spec 90's hand card
+*n goals ready for main*), the map is the one we have. So:
+1. **Dev and main stays the one map.** No bridge of three cards (the map is dev against main already), no second map of
+   DORA cards with trend lines (a dashboard of counts; the aspects *Batch size*, *Lead time*, *Change failure* are
+   there).
+2. **The gate and readiness are two things**: the **gate** is the tests, red and hard, the one thing that stops a merge;
+   **readiness** (*Readiness*) gathers the hints of every lens on the files that go to main (Art's placeholders,
+   §212.2; a sound off the target, §212.4; a screen's state not found, §209.2; a currency's config changed, §211.4;
+   and the two below), each naming its lens and opened on that lens's card. Readiness never turns the merge red and
+   draws no *NO-GO*: the person weighs it, in the hand.
+3. **A save broken by a patch** (`save_change`, a new hint in *Readiness*): a file that keeps or reads the player's
+   save (a path word `save`, `savegame`, `persist`, `serializ…`) changed among the commits waiting for main. Its words:
+   *The save's format may have changed: players' saves from <version> may not load.* By code; the leader judges it.
+4. **Strings not translated** (`untranslated`, in *Readiness*): where the project keeps translations (`locales/` or
+   `i18n/` JSON or YAML, gettext `.po`, Godot's translation CSV), the keys of its first language that another language
+   lacks among what waits. Its words name the languages and the count.
+5. **The changes drafted by Keep a Changelog**: the goals waiting are sorted under *Added*, *Changed*, *Fixed* by their
+   type (`realm/goal_types.py`); the draft rides on the hand's card *n goals ready for main*, the person edits it and
+   it lands in `CHANGELOG.md` with the merge. The words for players (a store's patch notes) stay the *Release notes*
+   agent's.
+6. **A game not yet out on its own rhythm**: while no version is out (*Since* has none), `stale` and `big_batch` are
+   silent (dev is where the game lives until its first release); Release's question is then whether dev builds and
+   runs (the gate's last run on dev), and its *Lead time* is to a playable dev, not to main.
+7. **Not taken**: a view of its own on the phone (the release candidate is the hand's card, with its draft, as 5).
+8. **The look is orkUI's and the words plain**, as §208.6.
+9. **The evidence is asked for before the spec**, as §208.7. The spec builds 2–6 with §208's to §212's.
+The owner's call.
