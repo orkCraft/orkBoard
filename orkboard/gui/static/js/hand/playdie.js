@@ -10,16 +10,19 @@
 // mana.css) in place of the spark, and the `title` says it (*Play: 3 new goals in dev since you last played*); a `new_n` of 0 (only the person's own commits are new) keeps the spark. At rest an awake die shows the play arrow (the pips' muted ink; the ink and the glow while it plays), a sleeping one the five. When the face changes after the die was first drawn with a snapshot (not on the first one), the cube rolls onto it: `is-landing` is put on the die until the cube's `animationend` named `ork-die-land` (the faces'
 // shades end theirs as `ork-die-land-<side>`, ignored); not under reduced motion, not while the die is out on the pane or asleep. A wobble and a landing never run together (both are the cube's `animation`): a landing is skipped while a wobble runs, and a wobble (hover, a warm start) puts an
 // unfinished landing out.
+// **The die in a goal's rune** (spec 128 F.3, decisions §206.8): with a goal done or at work picked, the die wears its rune's colour (`data-elem`: mana.css gives the pips and the edge orkUI's element token), its `title` and `aria-label` say *Play: <goal>* (the rest of
+// the words keep their order: *Close the preview* while it is open, *Nothing to play yet* asleep), and pressed it plays dev with that goal in it (`ideas.play {idea}`).
 // The seam with the play view (arena/play.js): three signals and the die's rectangle. `thrown`: the die is out on the pane (it flew from here and rolls), so this one is hidden (kept in its place: `visibility`) until the frame rises or the failure
 // takes its place; `playing`: the view is open and its build plays (the pips glow, the word says *Playing*); `warmed`: the view opened on a build already playing, so the die wobbles twice. `dieRect()` is where the throw starts.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html, cls } from "../html.js";
 import { town } from "../link.js";
-import { closeOver, openOver, over, tab } from "../frame/state.js";
+import { closeOver, openOver, over, picked, tab } from "../frame/state.js";
 import { leaving } from "../shell/store.js";
 import { litKey } from "../table/card.js";
 import { mapName, partiesAll } from "../table/data.js";
+import { nodeOf, playable } from "../table/goalmap.js";
 
 export const thrown = signal(false);          // the die is out on the pane: this one is hidden
 export const playing = signal(false);         // the play view is open and its build plays
@@ -53,20 +56,25 @@ export const faceNow = () => (asleepNow() ? "5" : newCount() ? String(Math.min(P
 
 const reduced = () => { try { return !!window.matchMedia?.("(prefers-reduced-motion: reduce)").matches; } catch { return false; } };
 
-/** Opens the play view over the pane, or closes it when it is the one open. */
-export function pressPlay() {
+/** The goal picked when the die wears its rune (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md F.3, decisions §206.8): a goal done or at work; null for none. */
+export const runeGoal = () => { const n = nodeOf(picked.value); return playable(n) ? n : null; };
+/** *Play: Lobby music*: the die's words while a goal done or at work is picked. */
+export const goalPlayWords = (n) => `Play: ${n.short || n.title}`;
+
+/** Opens the play view over the pane, or closes it when it is the one open. With a goal done or at work picked (`goal`, its node) the view plays dev with that goal in it: `ideas.play {idea}`, as the night's card plays a goal (hand/nightcard.js `playIt`). */
+export function pressPlay(goal = null) {
   const o = over.peek();
   if (o?.kind === "play") {
     leaving(() => { const key = closeOver(); if (key) litKey.value = key; });
     return;
   }
-  openOver("play", {}, o?.from || { title: mapName(tab.peek(), partiesAll()), key: "" }, "Play");
+  openOver("play", goal ? { idea: goal.slug } : {}, o?.from || { title: mapName(tab.peek(), partiesAll()), key: "" }, "Play");
 }
 
 export function PlayDie() {
   const [wob, setWob] = useState({ key: 0, left: 0 }), [land, setLand] = useState(false), button = useRef(null);
   const asleep = asleepNow(), open = over.value?.kind === "play", glow = open && playing.value && !asleep, gone = thrown.value, face = faceNow(), known = !!town.value;
-  const news = newCount(), said = face === "no" ? FAILED_WORDS : news ? newGoalsWords(news) : face === "new" ? NEW_WORDS : PLAY_WORDS, words = open ? CLOSE_WORDS : said;
+  const news = newCount(), goal = asleep ? null : runeGoal(), said = goal ? goalPlayWords(goal) : face === "no" ? FAILED_WORDS : news ? newGoalsWords(news) : face === "new" ? NEW_WORDS : PLAY_WORDS, words = open ? CLOSE_WORDS : said;
   useEffect(() => {
     rectOf = () => button.current?.querySelector(".ork-die")?.getBoundingClientRect() || null;
     return () => { rectOf = () => null; };
@@ -84,8 +92,8 @@ export function PlayDie() {
     if (e.animationName === "ork-die-wobble") setWob((w) => (w.left > 1 ? { key: w.key + 1, left: w.left - 1 } : { key: w.key, left: 0 }));
     else if (e.animationName === "ork-die-land") setLand(false);
   };
-  return html`<button ref=${button} type="button" class=${cls("hand-die", { "is-gone": gone, "is-asleep": asleep })} data-open=${open ? "1" : undefined} aria-label=${asleep && !open ? ASLEEP_WORDS : words} title=${asleep && !open ? ASLEEP : words}
-      onClick=${pressPlay} onPointerEnter=${hover}>
+  return html`<button ref=${button} type="button" class=${cls("hand-die", { "is-gone": gone, "is-asleep": asleep })} data-open=${open ? "1" : undefined} data-elem=${goal?.element || undefined} data-goal=${goal?.slug || undefined} aria-label=${asleep && !open ? ASLEEP_WORDS : words} title=${asleep && !open ? ASLEEP : words}
+      onClick=${() => pressPlay(goal)} onPointerEnter=${hover}>
     <span key=${wob.key} class=${cls(`ork-die face-${face}`, { "is-playing": glow, "is-news": news > 0, "is-wobbling": wob.left > 0 && !asleep, "is-landing": land && wob.left === 0 && !asleep })} aria-hidden="true" onAnimationEnd=${ended}><${DieCube} /></span>
     <span class="hand-die__word">${glow ? PLAYING : PLAY}</span>
   </button>`;

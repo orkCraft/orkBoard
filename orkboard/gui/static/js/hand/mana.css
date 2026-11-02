@@ -65,6 +65,10 @@
 .hand-die.is-asleep:is(:hover, :focus-visible) .ork-die { transform: none; }
 .hand-die.is-asleep .hand-die__word { color: var(--ork-ink-faint); }
 .hand-die__word { font-weight: 600; white-space: nowrap; }
+/* the die in a goal's rune (spec 128 F.3, decisions §206.8): with a goal done or at work picked, its pips and edge take the rune's colour, orkUI's element token */
+.hand-die[data-elem] .ork-die { --_pip: var(--c); --_edge: var(--c); }
+.hand-die[data-elem="ice"] { --c: var(--ork-elem-ice); } .hand-die[data-elem="dust"] { --c: var(--ork-elem-dust); } .hand-die[data-elem="void"] { --c: var(--ork-elem-void); }
+.hand-die[data-elem="lava"] { --c: var(--ork-elem-lava); } .hand-die[data-elem="meadow"] { --c: var(--ork-elem-meadow); }
 
 /* a hand with no goal at all has no cards: its die and potions lie alone at the right end */
 .hand-mana-only { display: flex; justify-content: flex-end; align-items: flex-start; gap: var(--ork-4); }

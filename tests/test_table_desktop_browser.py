@@ -593,10 +593,10 @@ def test_an_edge_lifts_its_task_and_a_goals_strip_picks_the_goal(table):
         pg.wait_for_selector(".table-back", state="detached", timeout=WAIT_MS)
         assert title(pg) == "The whole project · through the Orkmaster"
         pg.locator('.table-casc[data-goal="seat"]').locator("xpath=..").locator(".table-gstrip").click()                  # the strip of a goal picks it
-        pg.wait_for_function("() => document.querySelector('.table-casc[data-goal=\"seat\"]').dataset.open === 'true'", timeout=WAIT_MS)
+        pg.wait_for_selector('.table-board--plan[data-plan="seat"]', timeout=WAIT_MS)                                       # the goal picked: the Board is its plan alone (spec 128 F.1; tests/test_plan_arrows_browser.py)
         assert title(pg) == "Keep the seat when a socket reconnects · through the Orkmaster"
-        pg.locator('.table-casc[data-goal="seat"]').locator("xpath=..").locator(".table-gstrip").click()                  # and again puts it down
-        pg.wait_for_function("() => document.querySelector('.table-casc[data-goal=\"seat\"]').dataset.open === 'false'", timeout=WAIT_MS)
+        pg.locator(".table-title__unpick").click()                                                                        # and the title's cross puts it down
+        pg.wait_for_selector(".table-board:not(.table-board--plan)", timeout=WAIT_MS)
     else:
         pg.locator('[data-lkey="t:task:bar/a2"]').click()                                                                 # a token lifts its front task: a screen over the pane, its tasks listed
         back = pg.locator(".table-back.is-screen")
@@ -612,20 +612,23 @@ def test_a_goal_picked_unfolds_its_cascade_and_is_lit_in_both_its_lanes_the_othe
     pg, host, w = table
     assert pg.locator(".ork-picked").count() == 0
     pick(pg, "bar")                                                                                                       # in the first lane it is being joined, in Art's it is at work
-    pg.wait_for_function("(n) => document.querySelectorAll('.table .ork-picked').length === n", arg=1 if wide(w) else 2, timeout=WAIT_MS)
+    if wide(w):                                                                                                          # the Orkmaster's tab, a goal picked: its plan alone (spec 128 F.1: its tasks in their leaders' lanes, no strip, no fan; tests/test_plan_arrows_browser.py)
+        pg.wait_for_selector('.table-board--plan[data-plan="bar"]', timeout=WAIT_MS)
+        assert title(pg) == "A timer bar that drains · through the Orkmaster"
+        assert pg.locator(".table .ork-picked").count() == 0 and pg.locator(".table-gstrip, .table-fan, .table-casc").count() == 0
+        assert sorted(keys(pg, '.table-lane[data-party="art"]')) == ["t:task:bar/a1", "t:task:bar/a2", "t:task:bar/a3"]
+        assert pg.locator('[data-lkey="t:task:bar/a1"] .ork-sign.picture').count() == 1                                  # a task of a kind of its own: its kind's sign, not the goal's
+        assert pg.locator('[data-lkey^="t:task:seat/"]').count() == 0                                                     # the other goals' tasks are not drawn
+        shot(pg, f"table-picked-{w}.png")
+        pick(pg, "")
+        pg.wait_for_selector(".table-board:not(.table-board--plan)", timeout=WAIT_MS)
+        return
+    pg.wait_for_function("(n) => document.querySelectorAll('.table .ork-picked').length === n", arg=2, timeout=WAIT_MS)
     assert title(pg) == "A timer bar that drains · through the Orkmaster"
     lit = pg.locator(".table .ork-picked")
-    assert [l.get_attribute("data-goal") for l in lit.all()] == (["bar"] if wide(w) else ["bar", "bar"])                  # its strip (or token) in both lanes, lit alike; at the wide width its card is in the Orkmaster's column, lit there
+    assert [l.get_attribute("data-goal") for l in lit.all()] == ["bar", "bar"]                                          # its token in both lanes, lit alike
     assert pg.locator('.table-lane[data-party="art"] .ork-picked').count() == 1
-    assert pg.locator('.table-lane[data-lane="first"] .ork-picked').count() == (0 if wide(w) else 1)               # the first lane's card at the narrow width; at the wide the goal's card is the column's (a pile shows four cards: tests/test_column_browser.py)
-    if wide(w):
-        bar = pg.locator('.table-casc[data-goal="bar"]')
-        assert bar.get_attribute("data-open") == "true" and bar.locator(".table-card").count() == 3 and bar.locator(".table-tedge").count() == 0 and pg.locator('.table-casc[data-goal="bar"] .table-fan').count() == 0       # unfolded into whole cards, no fan
-        assert keys(pg, '.table-casc[data-goal="bar"]') == ["t:task:bar/a3", "t:task:bar/a1", "t:task:bar/a2"]               # in the same order
-        assert bar.locator('[data-lkey="t:task:bar/a1"] .ork-sign.picture').count() == 1                                  # a task of a kind of its own: its kind's sign, not the goal's
-        assert pg.locator('.table-casc[data-goal="seat"]').get_attribute("data-open") == "false"                          # the others stay collapsed
-        assert pg.locator('.table-casc[data-goal="seat"] .table-tedge').count() == 1
-        assert pg.locator('.table-lane[data-party="art"] .table-gstrip.ork-picked').evaluate("e => e.getAttribute('aria-pressed')") == "true"
+    assert pg.locator('.table-lane[data-lane="first"] .ork-picked').count() == 1
     shot(pg, f"table-picked-{w}.png")
     pick(pg, "")
     pg.wait_for_function("() => document.querySelectorAll('.table .ork-picked').length === 0", timeout=WAIT_MS)
@@ -782,15 +785,21 @@ def test_open_on_a_task_card_opens_its_log_or_its_task_over_the_pane_and_back_li
     pg.locator(".table-board").wait_for(timeout=WAIT_MS)
 
 
-def test_a_goal_picked_through_the_orkmasters_tab_keeps_every_goal_on_the_board_and_unfolds_its_own(table):
+def test_a_goal_picked_through_the_orkmasters_tab_is_its_plan_alone_at_the_wide_width_and_keeps_every_goal_on_the_board_at_the_narrow(table):
     pg, host, w = table
     cards = pg.locator("[data-lkey]").count()
     pick(pg, "seat")
+    if wide(w):                                                                                                          # the wide width: its plan alone (spec 128 F.1)
+        pg.wait_for_selector('.table-board--plan[data-plan="seat"]', timeout=WAIT_MS)
+        assert title(pg) == "Keep the seat when a socket reconnects · through the Orkmaster"
+        assert sorted(keys(pg, ".table-board--plan")) == ["t:task:seat/s1", "t:task:seat/s2"], "its tasks only: every other goal's are not drawn"
+        pick(pg, "")
+        pg.wait_for_selector(".table-board:not(.table-board--plan)", timeout=WAIT_MS)
+        assert pg.locator("[data-lkey]").count() == cards
+        return
     pg.wait_for_function("() => document.querySelector('.table-casc[data-goal=\"seat\"], .table-token[data-goal=\"seat\"]') !== null && document.querySelectorAll('.table .ork-picked').length === 1", timeout=WAIT_MS)
     assert title(pg) == "Keep the seat when a socket reconnects · through the Orkmaster"
     assert pg.locator("[data-lkey]").count() >= cards                                                                    # nothing is hidden for it (a picked goal's unfolded cascade only adds cards)
-    if wide(w):
-        assert keys(pg, '.table-casc[data-goal="seat"]') == ["t:task:seat/s1", "t:task:seat/s2"] and pg.locator('.table-casc[data-goal="seat"] .table-card').count() == 2
     pick(pg, "")
     pg.wait_for_function("() => document.querySelectorAll('.table .ork-picked').length === 0", timeout=WAIT_MS)
 

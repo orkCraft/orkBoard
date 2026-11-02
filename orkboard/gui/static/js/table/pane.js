@@ -7,7 +7,7 @@ import { useRef } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { Icon } from "../orkui.js";
 import { town } from "../link.js";
-import { ORKMASTER, closeOver, lifted, openOver, over, picked } from "../frame/state.js";
+import { ORKMASTER, closeOver, lifted, openOver, over, pick, picked } from "../frame/state.js";
 import { KINDS, faceOf } from "../frame/kinds.js";
 import { mapData, leaving } from "../shell/store.js";
 import { PHASES, leadsSystem, mapName, paneTitle, phaseOf } from "./data.js";
@@ -18,6 +18,8 @@ import { PickHost, PickStrip } from "./picking.js";         // picking on a part
 import { Concerns } from "./concerns.js";               // the leader's concerns on its map: the marks (spec 108 B, spec 123 C)
 import { Header } from "./header.js";
 import { SystemPane, PartBack, LinkBack } from "./syspane.js";
+import { GoalView } from "./goalview.js";             // a goal picked, at a leader: what it will change, or what it changed against its spec (spec 128 F.2–F.3)
+import { nodeOf, viewable } from "./goalmap.js";
 import { Lifted, OwnBack, TaskBack, litKey, mineKey } from "./card.js";
 import { LimitChip } from "./tabs.js";
 import { Menu } from "./menu.js";
@@ -89,6 +91,7 @@ function Title({ parties, tab, narrow }) {
     ${o && html`<button type="button" class="ork-btn quiet table-title__back" aria-label="Back" title="Back" onClick=${back}><${Icon} name="arrow-left" /></button>`}
     <span class="table-title__pt" data-title>${o ? html`${where && html`${where} · `}<span class=${code ? "table-pathcase" : undefined}>${o.title}</span>` : paneTitle(picked.value, tab, parties)}</span>
     ${picked.value && html`<${Phases} goal=${picked.value} from=${from} />`}
+    ${picked.value && !o && html`<button type="button" class="ork-btn quiet table-title__unpick" data-unpick="1" aria-label="Look at the whole project" title="Look at the whole project (Esc)" onClick=${() => pick("")}><${Icon} name="close" /></button>`}
     <span class="table-grow"></span>
     ${!o && tab === ORKMASTER && html`<${Menu} label="The Orkmaster's menu" items=${items}
       top=${narrow && limits.length > 0 ? html`<div class="table-menu__limits"><span class="ork-label">Limits</span><div class="table-menu__chips">${limits.map((l) => html`<${LimitChip} key=${l.provider} l=${l} from=${from} />`)}</div></div>` : null} />`}
@@ -98,7 +101,7 @@ function Title({ parties, tab, narrow }) {
 export function Pane({ parties, tab, narrow, column = false }) {
   const body = useRef(), o = over.value, g = parties.find((x) => x.slug === tab);
   const key = lifted.value, shown = mineKey(key) && !o ? backOf(key, parties, tab) : null;
-  const from = { title: mapName(tab, parties), key: "" };
+  const from = { title: mapName(tab, parties), key: "" }, picks = nodeOf(picked.value), view = picks && viewable(picks) ? picks : null;     // a goal picked that is agreed, at work or done has a view of its own at each leader
   return html`<section class="table-pane ork-table" id="table-pane" role="tabpanel" aria-labelledby=${`tab-${tab}`}>
     <${Title} parties=${parties} tab=${tab} narrow=${narrow} />
     ${!o && html`<${Notice} />`}
@@ -107,6 +110,7 @@ export function Pane({ parties, tab, narrow, column = false }) {
           ${!parties.length && html`<div class="table-empty"><p>No parties yet</p>
             <p class="table-over__muted">Make a party, then write it a goal in plain words. Its orks do the work; you look at it before it goes in.</p>
             <p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`}`
+        : g && view ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${GoalView} key=${`${g.slug}:${view.slug}`} g=${g} n=${view} />`
         : g ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${PickStrip} tab=${tab} /><${Concerns} key=${g.slug} g=${g}><${PickHost} key=${g.slug} g=${g}>${leadsSystem(g) ? html`<${SystemPane} key=${g.slug} g=${g} />` : mapOf(g) ? html`<${mapOf(g)} key=${g.slug} g=${g} narrow=${narrow} />` : null}<//><//>` : null}
       ${shown && html`<${Lifted} host=${body} name=${shown[0]} narrow=${narrow}>${shown[1]}</${Lifted}>`}
       <${DiscardEnd} />

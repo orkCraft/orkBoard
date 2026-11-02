@@ -79,9 +79,10 @@ export function readSpec(page, parties, home) {
 export const forkOf = (idea) => (board.value?.needs_you || []).find((r) => r.kind === "fork" && r.idea === idea) || null;
 
 /** The page of a goal, read now and again when the Board changes. */
-function usePage(idea) {
+export function usePage(idea) {
   const [page, setPage] = useState(undefined), rev = board.value?.rev;
   useEffect(() => {
+    if (!idea) { setPage(undefined); return undefined; }                        // no goal to read
     let live = true;
     command("ideas.page", { slug: idea }, true).then((p) => { if (live) setPage(p && !p.error ? p : null); }).catch(() => { if (live) setPage((was) => was || null); });
     return () => { live = false; };

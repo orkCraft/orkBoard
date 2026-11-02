@@ -13,13 +13,14 @@ import { html, cls } from "../html.js";
 import { Elem, Head, Sign } from "../orkui.js";
 import { act, mapData } from "../shell/store.js";
 import { mergeGate } from "../arena/gate.js";
-import { closeOver, openOver, over } from "../frame/state.js";
+import { closeOver, openOver, over, picked } from "../frame/state.js";
 import { drawn } from "../frame/kinds.js";
 import { doneOf, readyOf, readyWords } from "../hand/data.js";
 import { DEAL_MS, leans } from "../hand/motion.js";
 import { nightFirst, nightMoons } from "../hand/nightcard.js";
 import { Portal, ReadyCards, useNarrow } from "./portal.js";
 import { noGate } from "./data.js";
+import { columnPick } from "./column.js";                 // the goal a press in the discard picks does not move the open tab (the leaders' tabs all show it)
 import { uprightNow } from "../frame/upright.js";
 
 const LICH = { race: "lich", tier: "elder" };
@@ -55,8 +56,11 @@ export function lichOf() {
   return g?.leader?.head || LICH;
 }
 
-/** A goal done and not yet seen is opened as its Result, then it is seen and leaves the discard. */
+/** A goal done and not yet seen is opened as its Result, then it is seen and leaves the discard. **It is also the goal picked** (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md F.3): when the Result is put away, each leader's tab shows
+ *  what the goal changed against what its spec promised (goalview.js), and the Play die wears its rune. */
 export async function seeResult(g) {
+  columnPick.slug = g.slug;
+  picked.value = g.slug;
   openOver("result", { idea: g.slug }, null, g.full || g.title);
   await act("ideas.seen", { idea: g.slug });
 }

@@ -465,6 +465,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
                     "asked": _asked(st, asks, by_slug, lead, target) if r["state"] == "asks" else [],
                     "tasks": [{"id": t.get("id"), "title": t.get("title") or "", "short": task_short(t), "state": "dropped" if goal_types.is_dropped(t) else t.get("state") or "waiting",
                                "after": list(t.get("after") or []), "tier": t.get("tier") or "",
+                               "party": str(t.get("party") or ""), "step": t["step"] if isinstance(t.get("step"), int) else 0,       # the leader's party it is the work of (the plan's step, spec 128 F.1): "" for a plan of before
                                "head": roles.task_head(state_dir, t, target, read, tiers),
                                "by": _by(t, read), "band": "check" if map_stage.is_check(t) else "build", "wave": waves[str(t.get("id"))],
                                "row": rows[str(t.get("id"))],
