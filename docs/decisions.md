@@ -4771,3 +4771,41 @@ ready, and on the phone a pager (the players online, the budget left, the next e
 6. **The look is orkUI's and the words plain**, as §208.6.
 7. **The evidence is asked for before the spec**, as §208.7. The spec builds 1–4 with §208's to §214's.
 The owner's call.
+
+## 216. The Orkmaster measured against the game trackers: a dated event is the milestone, the scope's drift said in words, a decision in the hand when the date is lost, goals the milestone does not wait on (2 November 2026, the owner)
+
+Changes: 167, 206, 210, 215.
+
+Why: the same research as §208, for the Orkmaster (a prompt to Gemini, its answer unsourced and so taken as a
+hypothesis). What it said: in Codecks (a card-based tracker made for games) a card goes down a funnel of growing
+commitment, a deck, a milestone (*what we ship, and by when*), a run (*this week*), a person's hand (*what I take
+today*, at most seven), started, and a solo developer skips the steps between; the threat at the project's level that
+trackers ignore is **scope drift**: cards added all the time turn a plan of three months into eighteen, and the
+Orkmaster should watch it by itself. It proposed a round table (the milestone in the middle with three to five hero
+cards and bars of their tasks, the parties' sectors around it, each with a fan of one to five cards at work), whose hand
+a card is in drawn by its outline, a second map (the milestone's budget of scope against what was added, the cards
+that broke it, the stuck ones in Codecks' *Beast Mode*, the ones blocked between parties), a hand over seven cards
+glowing and refusing more, and on the phone a stand-up console with the sprint's health. Measured against what is
+built (§206's Orkmaster's column pinned at the left, three piles of whole cards, *In analysis*, *To review*, *At work ·
+later*; §167's goal on the table, in the hand or in the discard; §207's steps of a task; our hand being *what the person
+decides*, not Codecks' *what I take today*), the frame stays, and what is missing is a milestone and its drift. So:
+1. **The frame stays**: no round table, no sectors (the first lane is pinned and the leaders are tabs, §206); whose a
+   goal is shows by where it lies (the table, the hand, the discard), never by an outline; no limit on the hand and no
+   refusal (our hand is the person's decisions); a goal stuck is §207's steps; no second map; no health or count on
+   the phone, whose hand is already what waits for the person.
+2. **A dated event is the milestone**: §215's event, its date and the goals it waits on (*The demo for Next Fest, 10
+   June*), is the milestone; no new kind of thing. The Orkmaster, saying *what and who*, sets it with the person; a goal
+   is tied to it as to an event.
+3. **The scope's drift said in words** (`drift`, the Orkmaster's hint): for a milestone, the goals tied to it since it
+   was set, the ones done, and the pace of the last DRIFT_WEEKS weeks (goals done a week); when at that pace it lands
+   after its date the Orkmaster says so (*Since the demo was set, 14 goals were added and 6 done: at this pace it lands
+   5 weeks after its date*). By code; a concern in words, never a scale, a bar or a count on the table.
+4. **A decision in the hand when the date is lost**: the drift's concern comes to the hand as a card, its answers *Put
+   these off*, *Move the date*, *Keep it*; the Orkmaster proposes the goals to put off, those that least serve the job in
+   focus (§210.2) or the milestone.
+5. **Goals the milestone does not wait on** (`off_milestone`, of the kind of §210.2's `off_focus`): with a milestone
+   set, goals at work tied neither to it nor to the job in focus (*4 goals at work that the demo does not wait on*).
+6. **The look is orkUI's and the words plain**, as §208.6.
+7. **The evidence is asked for before the spec**, as §208.7 (Codecks' own pages and the teams' words on scope drift).
+   The spec builds 2–5 with §215's.
+The owner's call.
