@@ -4456,3 +4456,45 @@ So:
    changed before it is built.
 8. The spec that builds 2–6 comes in a few days, the engines (5) a part of their own.
 The owner's call.
+
+## 209. The Design lens measured against how small teams keep their screens: the states as a stack under a screen, the controller and the Deck, the focus path and contrast on Play, and a game's scenes read as its screens (2 November 2026, the owner)
+
+Changes: 102, 109, 115, 208.
+
+Why: the same research as §208, for Design (a prompt to Gemini, its answer unsourced and so taken as a hypothesis).
+What it said: a map of screens kept by hand in Figma or FigJam lives only until the layout moves into code or an
+engine's scene editor, so the map must be read from the code's router and the build's pictures; even indie games well
+reviewed on Steam are faulted most for the controller and the states (an upgrade window *B* does not close on the
+Steam Deck, *A* that starts what it should not, a window the D-pad cannot walk through). It proposed a *flow and state
+atlas* (the screens left to right, each screen's states as a fanned stack of corners under its card, a missing one
+dashed), a second map (a *focus and accessibility X-ray*: an enlarged copy of a screen laid beside it, the Tab or D-pad
+path drawn over it, the contrast and small targets marked), pins by the model at a control's coordinates labelled
+*H3 / Steam Deck: No B-button binding*, a hex grey, and a phone carousel of the screens with pins unresolved. Measured
+against what is built (spec 102's Screens read from the router with the build's pictures and the steps left to right,
+spec 109's `no_states` and `a11y`, spec 115's marks on Play held by the element), the main map is the one we have. So:
+1. **Screens stays the one map, read from the code.** No second map, no copy of a card laid beside it.
+2. **A screen's states as a stack under its card**: corners *Loading*, *Empty*, *Error* under the card, each solid when
+   its file names that state, dashed when it does not (`no_states` split by state: its words name the states missing).
+   The reading stays words in the screen's own file, not a syntax tree; a state handled in a child component or a hook
+   is not seen, so the words say *not found in its file*, and a dashed corner is never red alone. *Empty* is shown only
+   for a screen that loads something (a fetch, a query, a loader in its file).
+3. **The controller and the Deck in Accessibility** for a game (a project whose stack has the role *game*, or an
+   engine's): the rubric gains Valve's Steam Deck Verified points: *B* goes back and closes, every element is reached by
+   the D-pad, the game is played with no keyboard, the glyphs are the controller's, the text is readable at 1280×800.
+   They judge in the look and in Talk; by code only what a file says (a back or cancel action bound, the glyphs' assets
+   present).
+4. **The focus path and contrast on Play, under Design's tab**: the probe walks the page by Tab and draws the path over
+   the live page, an element no Tab reaches and a target under 24 px marked as hints; the contrast checked on the
+   rendered page by axe-core (copied unchanged into `gui/static/vendor/`, its licence beside it, a line in `NOTICE`).
+   This is what spec 109 left for want of a rendered page. A pin is held by the element the probe knows, never by a
+   model's coordinates on a picture.
+5. **A game's scenes are its screens**: with no router, Screens reads an engine's scenes (Godot: a `.tscn` whose root is
+   a `Control`, the moves by `change_scene_to_file` and `change_scene_to_packed`; Unity: the scenes in the build
+   settings, UI Toolkit's `.uxml`, the moves by `SceneManager.LoadScene`). §208.5's engines are read for Screens too.
+6. **The look is orkUI's and the words plain**: the tokens alone; a hint says what happens (*B does not close the
+   upgrade window*), never a code (*H3*). The phone gets no carousel: a concern that needs the person comes to the hand
+   as a card, and the phone has no Play (spec 112 §3.3).
+7. **The evidence is asked for before the spec**, as §208.7: the Steam reviews it speaks of, named, and the indie teams'
+   own words on keeping or dropping their screen maps.
+8. The spec that builds 2–6 comes with §208's, the engines (5) in their part.
+The owner's call.
