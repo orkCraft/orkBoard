@@ -6,6 +6,7 @@ import { mapData, agents, roles, gateData } from "../shell/store.js";
 import { board, goalList, hhmm } from "../board/store.js";
 import { goalsOf, nodesOf, atWork, openTasks, partyOf, roleOf } from "../arena/arenawords.js";
 import { ORKMASTER } from "../frame/state.js";
+import { uprightNow } from "../frame/upright.js";
 import { ORKUI } from "../orkui.js";
 import { TARGETS } from "../board/target.js";
 import { command, toast } from "../link.js";
@@ -23,6 +24,9 @@ const WIDE = typeof matchMedia === "function" ? matchMedia("(min-width: 760px)")
 /** Whether the window is at the wide width (760 px and up), where Release and Live wait in the portal ring's corners; the narrow width keeps them as tabs. */
 export const wide = signal(WIDE ? WIDE.matches : true);
 WIDE?.addEventListener?.("change", () => { wide.value = WIDE.matches; });
+
+/** Whether the Orkmaster's column is pinned at the window's left (spec 128 B.1): the wide width, and not a phone held on its side or upright. Under it the Orkmaster's tab and first lane stay as the phone has them. */
+export const columnOn = () => wide.value && !uprightNow.value;
 
 /** Every party of the project in the Board's order, General left out: what everything that looks a party up by its slug needs (a map's name, a question's party, the open tab). */
 export const partiesAll = () => goalsOf(mapData.value, goalList().map((x) => x.slug)).filter((g) => g.slug !== GENERAL);

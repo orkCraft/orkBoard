@@ -186,7 +186,7 @@ def maps(gui, request):
     pg.add_init_script("window.__played = []; const play = HTMLMediaElement.prototype.play; HTMLMediaElement.prototype.play = function () { window.__played.push(this.src.slice(0, 20)); return Promise.resolve(); };")
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
-    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
     yield pg, host, request.param
     narrow.no_sideways(pg)
     pg.context.close()
@@ -203,7 +203,7 @@ def go(pg, slug):
         pg.locator('.table[data-tab="release"]').wait_for(timeout=WAIT_MS)
         return
     tab(pg, slug).click()
-    pg.locator(f'.table-tab[data-tab="{slug}"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
+    pg.locator(f'.table-tab[data-tab="{slug}"][aria-selected="true"], .col-head__tab[data-tab="{slug}"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
 
 
 def card(pg, cid):
@@ -284,6 +284,8 @@ def test_the_economy_the_feeling_and_what_the_loop_says(maps):
     ys = [float(p.locator(".mp-feel__dot").get_attribute("y")) for p in pg.locator(".mp-feel__pt").all()]
     assert ys[0] > ys[1] > ys[2]                                                                                             # the more intense, the higher
     if wide(w):
+        pg.set_viewport_size({"width": 1460, "height": 800})                                                                 # the map puts the economy at the right from 900 px of its own width: the Orkmaster's column takes 180 of the 1280 (spec 128 B.1)
+        pg.wait_for_function("() => document.querySelector('.mp-loopbody.is-side')", timeout=WAIT_MS)
         rings, eco, box = pg.locator(".mp-rings").bounding_box(), pg.locator(".mp-eco").bounding_box(), pg.locator(".mp-feel").bounding_box()
         assert eco["x"] >= rings["x"] + rings["width"] - 1 and box["y"] >= rings["y"] + rings["height"] - 1                  # the economy at the right, the feeling under the rings
     else:

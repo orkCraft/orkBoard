@@ -199,7 +199,7 @@ def open_play(gui, host, tab: str = "", width=WIDE, **ctx):
     pg.on("console", lambda m: m.type == "error" and m.location.get("url", "").startswith(server.url.split("?")[0]) and errors.append(f"console: {m.text}"))
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
-    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
     pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
     if tab:
         open_tab(pg, tab)

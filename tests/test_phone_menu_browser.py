@@ -347,7 +347,7 @@ def test_the_desktop_and_a_narrow_window_with_a_mouse_have_no_crown_and_no_menu(
     pg, host, errors = start(gui, kind)
     try:
         assert pg.locator(".up-crown, .up-menu, .up-scrim, .up-top").count() == 0 and pg.get_by_role("button", name=MENU).count() == 0
-        assert pg.locator(".table-tab").count() >= 5 and pg.locator(".table-tabs").is_visible(), "the tabs, as before"
+        assert pg.locator(".table-tab, .col-head__tab").count() >= 5 and pg.locator(".table-tabs").is_visible(), "the tabs, as before (the Orkmaster's the column's head at the wide width: spec 128 B.2)"
     finally:
         pg.close()
     assert not errors, "\n".join(errors)

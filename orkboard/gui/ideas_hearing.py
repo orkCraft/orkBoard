@@ -4,6 +4,7 @@ sides its leaders argue (`realm/idea_hearing.py`), thrown to the one the person 
     ideas.hearing {idea}                          # the goal's open hearing, Talk's first, else its first open fork: {idea, moment, id?, title, sides, left_out, own}; null with none
     ideas.throw {idea, moment, dir | text}        # `moment`: "talk" or "fork"; `dir`: right · left · up, the side's place; `text`: the person's own words (they win over `dir`)
     ideas.ripe_hold {idea}                        # *Hold* on a goal waiting to start by itself (the part that runs the wait: `keeper.ripe_hold` or `realm/idea_ripe.hold`)
+    ideas.ripe_back {idea}                        # *Back to review* on a goal held at its wait: the wait begins again as the leaders' weight made it (spec 128 B.5)
 
 `ideas.throw` of a Talk's hearing is `keeper.throw` (core/idea_objection.py): `go` confirms the decision once it is worded and the sections follow, `smaller` words the goal as the side's
 `instead` and does the same, `later` waits on the goal named, `drop` drops the goal, `text` confirms with the person's words as written. A fork's throw is `fork_answer(side=)` or
@@ -17,11 +18,12 @@ from __future__ import annotations
 from typing import Any
 
 from orkboard.gui.ideas_args import IdeasError, _text
-from orkboard.realm import event_log, idea_hearing, idea_objections, idea_questions, ideas, spec_sections
+from orkboard.realm import event_log, idea_hearing, idea_objections, idea_questions, idea_ripe, ideas, spec_sections
 
 TEXT_CHARS = 6000
 MOMENTS = ("talk", "fork")
 NOTHING_WAITS = "Nothing waits to start by itself here"
+NOTHING_HELD = "Nothing is held here"
 
 
 class Hearing:
@@ -88,7 +90,21 @@ class Hearing:
             raise IdeasError(NOTHING_WAITS)
         return {"ok": True}
 
+    def ripe_back(self, args: dict) -> dict:
+        """*Back to review* (the Orkmaster's column, spec 128 B.5): the goal of a held wait is `To review` again, its wait begun again from the priority and the risk it was kept with (`idea_ripe.begin`)."""
+        slug = self._goal(args)
+        held = idea_ripe.of(self.i.state_dir, slug)
+        if held is None or not held.get("held") or ideas.state(self.i.state_dir, slug)["state"] != "decided":
+            raise IdeasError(NOTHING_HELD)
+        got = idea_ripe.begin(self.i.state_dir, slug, str(held.get("priority") or "normal"), str(held.get("risk") or "low"))
+        if got is None:                                         # the weight no longer has a wait: it stays held, for the person's Start
+            raise IdeasError(NOTHING_HELD)
+        self.i._ev(event_log.RIPE_STARTED, args, idea=slug, seconds=got["seconds"], priority=got["priority"], risk=got["risk"])
+        self.i.changed(slug)
+        return {"ok": True}
+
+
 def hearing_commands(ideas_: Any) -> dict:
     """The hearing's commands by name (`gui/ideas.py` adds them to its table)."""
     h = Hearing(ideas_)
-    return {"ideas.hearing": h.hearing, "ideas.throw": h.throw, "ideas.ripe_hold": h.ripe_hold}
+    return {"ideas.hearing": h.hearing, "ideas.throw": h.throw, "ideas.ripe_hold": h.ripe_hold, "ideas.ripe_back": h.ripe_back}

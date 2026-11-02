@@ -82,7 +82,7 @@ def srcs(loc):
 
 
 def tabs(pg):
-    return pg.locator(".table-tab[data-tab]").evaluate_all("els => els.map((e) => e.dataset.tab)")
+    return pg.locator(".col-head__tab[data-tab], .table-tab[data-tab]").evaluate_all("els => els.map((e) => e.dataset.tab)")
 
 
 def settle(pg, ms=300):
@@ -95,7 +95,7 @@ def test_at_the_wide_width_release_and_live_are_no_tabs_and_have_no_lanes_and_at
     pg, log = open_page(gui, RoadHost(bare=True))
     try:
         assert tabs(pg) == ["orkmaster", "tech", "design", "product"]
-        assert pg.evaluate("() => document.querySelector('.frame').style.getPropertyValue('--lanes')") == "4", "the project's lane and three parties'"
+        assert pg.evaluate("() => document.querySelector('.frame').style.getPropertyValue('--lanes')") == "3", "three parties' lanes: the project's is the Orkmaster's column at the wide width (spec 128 B.1)"
         assert pg.locator(".hand-lane").count() == 4 and pg.locator(".table-lane[data-party]").count() == 3
         assert pg.locator('.table-lane[data-party="release"], .table-lane[data-party="live"]').count() == 0
     finally:
@@ -222,7 +222,7 @@ def test_with_no_gate_there_is_no_ring_and_release_and_live_stay_tabs_with_their
         pg.wait_for_timeout(400)
         assert tabs(pg) == ["orkmaster", "tech", "design", "product", "release", "live"], "in the row of heads as at the narrow width"
         assert pg.locator(".ork-portal-ring, .portal-host, .ork-portal, .ork-portal-ring__before, .ork-portal-ring__after").count() == 0
-        assert pg.evaluate("() => document.querySelector('.frame').style.getPropertyValue('--lanes')") == "6", "the project's lane and five parties'"
+        assert pg.evaluate("() => document.querySelector('.frame').style.getPropertyValue('--lanes')") == ("5" if width == "wide" else "6"), "five parties' lanes, and the project's at the narrow width (at the wide it is the Orkmaster's column: spec 128 B.1)"
         assert pg.locator(".hand-lane").count() == 6
         if width == "wide":
             label, place = pg.locator(".table-end .table-end__label"), pg.locator(".table-end .ork-card-place")

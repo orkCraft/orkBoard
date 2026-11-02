@@ -134,7 +134,7 @@ def start(gui, width, host=None, **context):
     pg.add_init_script("window.__scrolls = []; const into = Element.prototype.scrollIntoView; Element.prototype.scrollIntoView = function (o) { window.__scrolls.push(o && o.behavior); return into.call(this, o); };")
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
-    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
     return pg, host, errors
 
 
@@ -150,7 +150,7 @@ def desk(gui, request):
 
 def go(pg, slug):
     tab(pg, slug).click()
-    pg.locator(f'.table-tab[data-tab="{slug}"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
+    pg.locator(f'.table-tab[data-tab="{slug}"][aria-selected="true"], .col-head__tab[data-tab="{slug}"][aria-selected="true"]').wait_for(timeout=WAIT_MS)
 
 
 def cn(pg):

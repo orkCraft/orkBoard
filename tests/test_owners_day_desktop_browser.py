@@ -66,7 +66,7 @@ def start(gui, width, errors, host, **ctx):
     watch(pg, errors)
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
-    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
     return pg
 
 
@@ -147,7 +147,7 @@ def test_fit_and_100_percent_in_the_corner_the_choice_kept_for_the_project(gui):
     pg.locator(".arch").wait_for(timeout=WAIT_MS)
     assert scale_of(pg) == 1
     pg.reload()
-    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
     open_system(pg)
     assert scale_of(pg) == 1
     pg.get_by_role("button", name="Fit").click()
@@ -168,7 +168,7 @@ def test_a_system_refused_its_storage_still_fits(gui):
     pg.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
-    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
     open_system(pg)
     assert scale_of(pg) < 1
     pg.get_by_role("button", name="100 %").click()
@@ -197,7 +197,7 @@ def test_plus_party_and_the_arrow_after_the_project_name_open_the_parties_and_th
     assert "primary" not in plus.get_attribute("class")
     arrow = pg.get_by_role("button", name="Switch project")
     assert arrow.count() == 1 and arrow.get_attribute("title") == "Switch project" and arrow.locator("use").get_attribute("href").endswith("#chevron-down")
-    first = pg.locator('.table-tabcell[data-cell="orkmaster"]').bounding_box()
+    first = pg.locator('.table-tabcell[data-cell="orkmaster"], .col-head').bounding_box()                              # the Orkmaster's tab: the column's head at the wide width (spec 128 B.2)
     box = arrow.bounding_box()
     assert first["x"] <= box["x"] and box["x"] + box["width"] <= first["x"] + first["width"] + 1                       # after the name, inside the first tab's place
     shot(pg, f"owners-day-tabs-{w}.png")

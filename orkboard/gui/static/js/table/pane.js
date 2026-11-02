@@ -95,7 +95,7 @@ function Title({ parties, tab, narrow }) {
   </header>`;
 }
 
-export function Pane({ parties, tab, narrow }) {
+export function Pane({ parties, tab, narrow, column = false }) {
   const body = useRef(), o = over.value, g = parties.find((x) => x.slug === tab);
   const key = lifted.value, shown = mineKey(key) && !o ? backOf(key, parties, tab) : null;
   const from = { title: mapName(tab, parties), key: "" };
@@ -103,7 +103,7 @@ export function Pane({ parties, tab, narrow }) {
     <${Title} parties=${parties} tab=${tab} narrow=${narrow} />
     ${!o && html`<${Notice} />`}
     <div class="table-body" ref=${body} data-end=${o && o.kind !== "discard" ? "over" : o || tab !== ORKMASTER ? "side" : "board"}>
-      ${o ? html`<${Over} />` : tab === ORKMASTER ? html`<${PickStrip} tab=${tab} /><${BoardMap} parties=${parties} narrow=${narrow} />
+      ${o ? html`<${Over} />` : tab === ORKMASTER ? html`<${PickStrip} tab=${tab} /><${BoardMap} parties=${parties} narrow=${narrow} column=${column} />
           ${!parties.length && html`<div class="table-empty"><p>No parties yet</p>
             <p class="table-over__muted">Make a party, then write it a goal in plain words. Its orks do the work; you look at it before it goes in.</p>
             <p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`}`

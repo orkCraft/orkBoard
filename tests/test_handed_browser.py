@@ -43,7 +43,7 @@ def talk_questions(host, slug="dark", cards=(C1, C2, C3)):
 FROM_JS = """([who]) => import('/static/js/hand/motion.js').then((m) => { const w = m.fromWhere(who); return w ? { at: w.at, tag: w.el.className, goal: w.el.dataset.goal || '', tab: w.el.dataset.tab || '' } : null; })"""
 DEAL_X = "() => [...document.querySelectorAll('.hand-card')].filter((e) => e.style.getPropertyValue('--ork-deal-x')).map((e) => [e.dataset.key, e.style.getPropertyValue('--ork-deal-x'), e.style.getPropertyValue('--ork-deal-y'), e.style.getPropertyValue('--ork-deal-i')])"
 
-GAVE = "() => { window.__gave = []; document.addEventListener('animationstart', (e) => { if (e.animationName === 'ork-give') window.__gave.push(e.target.closest('.table-back-head, .table-tab, .up-crown')?.className || '?'); }, true); }"
+GAVE = "() => { window.__gave = []; document.addEventListener('animationstart', (e) => { if (e.animationName === 'ork-give') window.__gave.push(e.target.closest('.table-back-head, .table-tab, .col-head__tab, .up-crown')?.className || '?'); }, true); }"
 
 
 def talking(host):
@@ -56,7 +56,7 @@ def test_the_origin_is_the_goals_own_card_then_the_leaders_tab_then_none(gui):
         talking(host)
         back_of(pg, "dark").wait_for(timeout=WAIT_MS)
         got = pg.evaluate(FROM_JS, [{"goal": "dark", "party": "design"}])
-        assert got["at"] == "goal" and got["goal"] == "dark" and "table-card--back" in got["tag"], "the goal's own card on the table: its back at the Orkmaster"
+        assert got["at"] == "goal" and got["goal"] == "dark" and "col-card--down" in got["tag"], "the goal's own card: its back in the Orkmaster's column (spec 128 B.3)"
         got = pg.evaluate(FROM_JS, [{"goal": "gone", "party": "design"}])
         assert got["at"] == "tab" and got["tab"] == "design" and "table-tab" in got["tag"], "else the leader's tab"
         got = pg.evaluate(FROM_JS, [{"party": "tech"}])
@@ -99,7 +99,7 @@ def test_a_card_that_comes_flies_from_the_goals_card_says_from_its_leader_and_is
         host.bump({})
         pg.wait_for_function("() => document.querySelector('.hand-card[data-kind=\"talk\"]')", timeout=WAIT_MS)
         pg.wait_for_function("() => window.__gave.length > 0", timeout=WAIT_MS)
-        assert pg.evaluate("() => window.__gave") == ["table-back-head"], "the head of who plays it, under the face-down card, gives it: one beat of orkUI's `.ork-gives`"
+        assert ["table-tab" in c.split() for c in pg.evaluate("() => window.__gave")] == [True], "the head of who plays it, on its leader's tab (the face-down card of the column has no heads under it), gives it: one beat of orkUI's `.ork-gives`"
         pg.wait_for_function("() => !document.querySelector('.ork-gives')", timeout=WAIT_MS)
         assert pg.evaluate("() => window.__gave.length") == 1, "once, and the class is taken off at the animationend"
         pg.wait_for_function(DEAL_X, timeout=WAIT_MS)
@@ -218,10 +218,10 @@ def test_the_head_that_gives_is_the_leaders_under_the_card_else_the_tab_head_els
     try:
         talking(host)
         back_of(pg, "dark").wait_for(timeout=WAIT_MS)
-        head = "([who]) => import('/static/js/hand/motion.js').then((m) => { const h = m.headAt(m.fromWhere(who), who); return h ? h.closest('.table-back-head, .table-tab, .table-tabcell, .up-crown')?.className + ' ' + (h.closest('[data-party],[data-tab]')?.dataset.party || h.closest('[data-party],[data-tab]')?.dataset.tab) : null; })"
-        assert pg.evaluate(head, [{"goal": "dark", "party": "design"}]) == "table-back-head design", "the head under the face-down card"
+        head = "([who]) => import('/static/js/hand/motion.js').then((m) => { const h = m.headAt(m.fromWhere(who), who); return h ? h.closest('.table-back-head, .table-tab, .col-head__tab, .table-tabcell, .up-crown')?.className + ' ' + (h.closest('[data-party],[data-tab]')?.dataset.party || h.closest('[data-party],[data-tab]')?.dataset.tab) : null; })"
+        assert "table-tab" in pg.evaluate(head, [{"goal": "dark", "party": "design"}]), "the leader's tab head: the column's face-down card has no heads under it"
         assert pg.evaluate(head, [{"goal": "gone", "party": "tech"}]).endswith("tech") and "table-tab" in pg.evaluate(head, [{"goal": "gone", "party": "tech"}]), "the leader's tab head"
-        assert "table-tab" in pg.evaluate(head, [{"ork": True}]), "the Orkmaster's"
+        assert "col-head__tab" in pg.evaluate(head, [{"ork": True}]), "the Orkmaster's: its tab, the column's head"
         assert pg.evaluate(head, [{}]) is None
     finally:
         pg.close()
@@ -239,7 +239,7 @@ def test_an_answered_card_is_played_back_to_its_origin_and_a_dropped_one_crumble
         host.needs = [n for n in host.needs if n["kind"] != "talk"]                                    # answered: the goal stays, its card goes
         host.bump({})
         pg.wait_for_function("() => document.querySelector('.hand-card.is-gone.ork-play')", timeout=WAIT_MS)
-        got = pg.evaluate("() => { const e = document.querySelector('.hand-card.is-gone'); e.getAnimations().forEach((a) => a.cancel()); const r = e.getBoundingClientRect(); const o = document.querySelector('.table-card--back[data-goal=\"dark\"]').getBoundingClientRect();"
+        got = pg.evaluate("() => { const e = document.querySelector('.hand-card.is-gone'); e.getAnimations().forEach((a) => a.cancel()); const r = e.getBoundingClientRect(); const o = document.querySelector('.col-card[data-goal=\"dark\"]').getBoundingClientRect();"
                           " return { x: e.style.getPropertyValue('--ork-play-x'), y: e.style.getPropertyValue('--ork-play-y'), shards: e.querySelectorAll('.ork-crumble').length, dx: o.left + o.width / 2 - (r.left + r.width / 2), dy: o.top + o.height / 2 - (r.top + r.height / 2) }; }")
         assert got["shards"] == 0, "flying back means answered, not gone"
         assert abs(float(got["x"].removesuffix("px")) - got["dx"]) <= 4 and abs(float(got["y"].removesuffix("px")) - got["dy"]) <= 4, f"toward its origin: {got}"

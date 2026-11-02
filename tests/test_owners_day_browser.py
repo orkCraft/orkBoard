@@ -1,8 +1,9 @@
 """Spec 107 parts D, E and G (docs/specs/107-what-the-owners-day-said.md §4, §5, §7; decisions §182.3, §182.4, §182.7), in a real browser against stub hosts, at the two widths of `tests/narrow.py`:
 
-D, a goal dropped from its card: **…** on the Orkmaster's lane's card (its back at the narrow width), on the line's cards, on the route card lifted and on a goal's face over the pane, its one item *Drop this goal…*,
+D, a goal dropped from its card: **…** on the Orkmaster's lane's card at the narrow width (its back), on the route card lifted and on a goal's face over the pane, its one item *Drop this goal…*; at the wide width the Orkmaster's goals are the
+column's (spec 128 B) and a goal in analysis is dropped with **Remove** in its list, one of To review or put off from the choices its card lifts (tests/test_column_browser.py),
 the question asked in place (*Drop this goal?*, *Keep it* · *Drop it*, *Its work stops first.* while tasks run), `ideas.stop` then `ideas.drop`, the host's refusal said in the card, a 44 px target under touch;
-E, a goal sent lies in the Orkmaster's lane at once and its route card stays in the hand;
+E, a goal sent lies in the Orkmaster's lane (the column's In analysis at the wide width) at once and its route card stays in the hand;
 G, what works shows: a task card at work shows the flame (its goal's rune glowing, spec 111 §3.1; it replaced the stepping drawing and the dotted line of before), says the time it has worked and ticks it, a card whose state changed
 flashes its frame once, the flash off and the flame still under reduced motion (the time still ticks)."""
 from __future__ import annotations
@@ -107,6 +108,18 @@ def first(pg):
     return pg.locator('.table-lane[data-lane="first"]')
 
 
+def column_ask(pg, slug):
+    """At the wide width: the face-down pile's list over the pane and **Remove** on `slug`'s row, which asks in place; returns the list (the question lies in it) and the question."""
+    lift = pg.locator('.col-lift[data-lift="list"]')
+    if not lift.count():
+        pg.locator(".col-card--down").first.click()
+        lift.wait_for(timeout=WAIT_MS)
+    lift.locator(f'[data-remove="{slug}"]').click()
+    ask = lift.get_by_role("alertdialog")
+    ask.wait_for(timeout=WAIT_MS)
+    return lift, ask
+
+
 def ask_drop(box):
     """Press the **…** in `box` and its one item; the question it asks in place."""
     box.locator(".table-dropper .table-menu__btn").first.click()
@@ -122,12 +135,16 @@ def ask_drop(box):
 
 def test_a_goal_sent_lies_in_the_orkmasters_lane_at_once_and_in_no_partys(day):
     pg, host, w = day
-    keys = [e.get_attribute("data-lkey") for e in first(pg).locator("[data-lkey]").all()]
-    assert "t:orc:fresh" in keys, keys
     assert pg.locator('.table-lane[data-party] [data-goal="fresh"]').count() == 0, "not drawn in a party's lane too"
     if wide(w):
-        card = first(pg).locator('.table-goal[data-goal="fresh"] .table-card--own')
-        assert card.get_attribute("data-stage") == "routed" and card.locator(".table-stage").inner_text().strip().lower() == "routed"
+        pg.locator(".col-card--down").first.click()                                                                       # a pile shows four cards, its list all of them
+        row = pg.locator('.col-lift[data-lift="list"] .col-list__row[data-goal="fresh"]')
+        row.wait_for(timeout=WAIT_MS)
+        assert pg.locator('.frame-column [data-pile="analysis"] .col-card--down').count() >= 1, "face down in the column's In analysis (spec 128 B.3)"
+        assert pg.locator('.table-lane [data-lkey="t:orc:fresh"]').count() == 0
+        return
+    keys = [e.get_attribute("data-lkey") for e in first(pg).locator("[data-lkey]").all()]
+    assert "t:orc:fresh" in keys, keys
     pg.locator('[data-lkey="t:orc:fresh"]').click()
     back = pg.locator(".table-back")
     back.wait_for(timeout=WAIT_MS)
@@ -139,8 +156,11 @@ def test_a_goal_sent_stays_a_route_card_in_the_hand_while_it_lies_in_the_orkmast
     host = DayRoute()
     pg, log = open_route(gui, host, width)
     try:
-        pg.locator('[data-lkey="t:orc:fresh"]').wait_for(timeout=WAIT_MS)
-        assert pg.locator('.table-lane[data-lane="first"] [data-lkey="t:orc:fresh"]').count() == 1
+        if width == "wide":
+            pg.locator('.frame-column .col-card--down').first.wait_for(timeout=WAIT_MS)
+        else:
+            pg.locator('[data-lkey="t:orc:fresh"]').wait_for(timeout=WAIT_MS)
+            assert pg.locator('.table-lane[data-lane="first"] [data-lkey="t:orc:fresh"]').count() == 1
         assert pg.locator('.hand-lane[data-lane="0"] .hand-card[data-kind="route"][data-goal="fresh"]').count() == 1, "its route card is in the hand too"
     finally:
         pg.close()
@@ -155,9 +175,9 @@ def test_drop_this_goal_asks_in_place_keep_it_changes_nothing_and_drop_it_sends_
         pg.locator('[data-lkey="t:orc:fresh"]').click()
         box = pg.locator(".table-back")
         box.wait_for(timeout=WAIT_MS)
+        ask = ask_drop(box)
     else:
-        box = first(pg).locator('.table-goal[data-goal="fresh"]')
-    ask = ask_drop(box)
+        box, ask = column_ask(pg, "fresh")                                                                                # the column's In analysis: Remove asks the same question
     text = ask.locator(".table-drop__text").text_content()
     assert ask.locator(".table-drop__title").text_content() == "Drop this goal?" and text == "Its page and its plan go; what it spent stays counted."
     assert ask.get_by_role("button", name="Keep it").count() == 1 and "danger" in ask.get_by_role("button", name="Drop it").get_attribute("class")
@@ -165,21 +185,20 @@ def test_drop_this_goal_asks_in_place_keep_it_changes_nothing_and_drop_it_sends_
     box.get_by_role("alertdialog").wait_for(state="detached", timeout=WAIT_MS)
     pg.wait_for_timeout(200)
     assert not [n for n, _ in host.log if n in ("ideas.drop", "ideas.stop")]
-    ask = ask_drop(box)
+    ask = ask_drop(box) if not wide(w) else column_ask(pg, "fresh")[1]
     ask.get_by_role("button", name="Drop it").click()
     assert _calls(pg, host, "ideas.drop") == [{"slug": "fresh"}] and not [n for n, _ in host.log if n == "ideas.stop"]
-    pg.locator('[data-lkey="t:orc:fresh"]').wait_for(state="detached", timeout=WAIT_MS)
+    pg.locator('[data-lkey="t:orc:fresh"], .col-card[data-goal="fresh"]').wait_for(state="detached", timeout=WAIT_MS)
 
 
 def test_a_goal_with_tasks_running_stops_its_work_first_and_says_so(day):
     pg, host, w = day
     assert any(t["state"] == "running" for n in host.nodes if n["slug"] == "bar" for t in n["tasks"])
-    if not wide(w):
-        pg.locator('[data-lkey="t:orc:bar"]').click()
-        box = pg.locator(".table-back")
-        box.wait_for(timeout=WAIT_MS)
-    else:
-        box = first(pg).locator('.table-goal[data-goal="bar"]')
+    if wide(w):
+        pytest.skip("a goal at work lies in the column's At work pile (spec 128 B.3) and is not dropped from it: its work stops with Stop all")
+    pg.locator('[data-lkey="t:orc:bar"]').click()
+    box = pg.locator(".table-back")
+    box.wait_for(timeout=WAIT_MS)
     ask = ask_drop(box)
     assert ask.locator(".table-drop__text").text_content() == "Its page and its plan go; what it spent stays counted. Its work stops first."
     ask.get_by_role("button", name="Drop it").click()
@@ -195,14 +214,14 @@ def test_a_refusal_is_said_in_the_card_the_orkmaster_reading_it_in_its_own_words
         pg.locator('[data-lkey="t:orc:fresh"]').click()
         box = pg.locator(".table-back")
         box.wait_for(timeout=WAIT_MS)
+        ask = ask_drop(box)
     else:
-        box = first(pg).locator('.table-goal[data-goal="fresh"]')
-    ask = ask_drop(box)
+        box, ask = column_ask(pg, "fresh")
     ask.get_by_role("button", name="Drop it").click()
     ask.get_by_role("alert").wait_for(timeout=WAIT_MS)
     assert ask.get_by_role("alert").inner_text() == SAID, "the host's words are said in the person's"
     assert ask.get_by_role("button", name="Drop it").is_enabled() and box.get_by_role("alertdialog").count() == 1, "the question stays; the goal is still there"
-    assert pg.locator('[data-lkey="t:orc:fresh"]').count() == 1
+    assert pg.locator('[data-lkey="t:orc:fresh"], .col-list__row[data-goal="fresh"]').count() == 1
     host.refuse = "Nothing to drop here"
     ask.get_by_role("button", name="Drop it").click()
     pg.get_by_text("Nothing to drop here").wait_for(timeout=WAIT_MS)                                                      # any other refusal is said as it came
@@ -212,51 +231,16 @@ def test_a_refusal_is_said_in_the_card_the_orkmaster_reading_it_in_its_own_words
 
 def test_esc_closes_the_question_and_gives_the_focus_back_to_the_menu_button(day):
     pg, host, w = day
-    if not wide(w):
-        pg.locator('[data-lkey="t:orc:fresh"]').click()
-        box = pg.locator(".table-back")
-    else:
-        box = first(pg).locator('.table-goal[data-goal="fresh"]')
+    if wide(w):
+        pytest.skip("the column's Remove opens the question with the same Keep it focused; Esc keeps the goal (tests/test_column_browser.py)")
+    pg.locator('[data-lkey="t:orc:fresh"]').click()
+    box = pg.locator(".table-back")
     ask_drop(box)
     assert pg.evaluate("() => document.activeElement.textContent.trim()") == "Keep it", "the safe answer has the focus"
     pg.keyboard.press("Escape")
     box.get_by_role("alertdialog").wait_for(state="detached", timeout=WAIT_MS)
     assert "table-menu__btn" in pg.evaluate("() => document.activeElement.className")
     assert not [n for n, _ in host.log if n == "ideas.drop"]
-
-
-def test_the_line_cards_have_the_menu_too_the_front_one_and_the_edges_behind_it(gui):
-    errors: list[str] = []
-    pg, host = start(gui, "wide", errors, line=4)
-    try:
-        front = first(pg).locator(".table-line-item:not(.table-fan__slot)")
-        assert front.locator(".table-dropper").count() == 1
-        edges = first(pg).locator(".table-line-item.table-fan__slot")
-        assert edges.count() == 3 and edges.locator(".table-dropper").count() >= 1, "an edge behind the front one has it (a hint, the farthest, has not)"
-    finally:
-        pg.context.close()
-    assert not errors, "\n".join(errors)
-
-
-def test_a_line_goal_is_dropped_from_its_front_card(gui):
-    errors: list[str] = []
-    server, browser = gui
-    host = DayHost(line=4)
-    pg = narrow.page(browser, "wide")
-    pg.on("pageerror", lambda e: errors.append(f"pageerror: {e}"))
-    pg.route_web_socket("**/ws*", host.on_socket)
-    pg.goto(server.url)
-    try:
-        front = first(pg).locator(".table-line-item:not(.table-fan__slot)")
-        front.wait_for(timeout=WAIT_MS)
-        slug = front.locator("[data-slug]").first.get_attribute("data-slug")
-        ask = ask_drop(front)
-        ask.get_by_role("button", name="Drop it").click()
-        assert _calls(pg, host, "ideas.drop") == [{"slug": slug}]
-        pg.locator(f'[data-line-item][data-slug="{slug}"]').wait_for(state="detached", timeout=WAIT_MS)
-    finally:
-        pg.context.close()
-    assert not errors, "\n".join(errors)
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
@@ -295,7 +279,7 @@ def test_a_goals_face_over_the_pane_has_the_menu_in_its_head(gui):
 
 
 def test_under_touch_the_menu_button_and_the_answers_are_44_by_44(gui):
-    """A touch screen wide enough for the table (1280 px); the **…** of a card and of a line edge, the item and the two answers are each a 44 px target (spec 94 §1.3)."""
+    """A touch screen wide enough for the table (1280 px); **Remove** in the column's list and the two answers are each a 44 px target (spec 94 §1.3)."""
     server, browser = gui
     errors: list[str] = []
     host = DayHost(line=4)
@@ -305,16 +289,18 @@ def test_under_touch_the_menu_button_and_the_answers_are_44_by_44(gui):
     pg.goto(server.url)
     try:
         pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
-        for el in pg.locator(".table-dropper .table-menu__btn").all():
+        pg.locator(".col-card--down").first.click()
+        lift = pg.locator('.col-lift[data-lift="list"]')
+        lift.wait_for(timeout=WAIT_MS)
+        for el in lift.locator("[data-remove]").all():
             box = el.bounding_box()
-            assert box["width"] >= 43.5 and box["height"] >= 43.5, box
-        assert pg.locator(".table-dropper .table-menu__btn").count() >= 2
-        box = first(pg).locator('.table-goal[data-goal="fresh"]')
-        ask = ask_drop(box)
+            assert box["height"] >= 43.5, box
+        assert lift.locator("[data-remove]").count() >= 1
+        ask = column_ask(pg, "fresh")[1]
         for el in ask.get_by_role("button").all():
             b = el.bounding_box()
             assert b["height"] >= 43.5, b
-        assert box.get_by_role("alertdialog").count() == 1
+        assert lift.get_by_role("alertdialog").count() == 1
     finally:
         pg.context.close()
     assert not errors, "\n".join(errors)

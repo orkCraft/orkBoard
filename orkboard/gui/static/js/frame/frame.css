@@ -5,3 +5,7 @@
   display: grid; grid-template-rows: minmax(0, 1fr) auto; height: 100vh; height: 100dvh; min-width: 0; background: var(--ork-room); }
 .frame-table { min-height: 0; min-width: 0; overflow: hidden; }
 .frame-hand { min-width: 0; }
+/* the Orkmaster's column pinned at the window's left (spec 128 B.1, decisions §206.2): the table's height, off the table on orkUI's room as the hand is, a lane's width (so the hand's first lane lies under it); the table to its right, the hand under both */
+.frame[data-column] { grid-template-columns: var(--col-w) minmax(0, 1fr); }
+.frame[data-column] > .frame-hand { grid-column: 1 / -1; }
+.frame-column { position: relative; z-index: 1; min-width: 0; min-height: 0; background: var(--ork-room); }

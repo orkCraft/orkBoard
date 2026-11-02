@@ -96,7 +96,7 @@ def window(gui, request):
     pg.on("response", lambda r: r.status >= 400 and errors.append(f"{r.status}: {r.url}"))
     pg.route_web_socket("**/ws*", host.on_socket)
     pg.goto(server.url)
-    pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".table-tab, .col-head__tab").first.wait_for(timeout=WAIT_MS)
     pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
     pg.locator(".hand-card").first.wait_for(timeout=WAIT_MS)
     yield pg, host, request.param
@@ -269,7 +269,7 @@ def test_a_hand_card_lifted_raises_its_card_of_the_table(window):
     pg, host, w = window
     card = pg.locator('[data-lkey="t:task:seat/s2"]')
     assert "idea:seat" in card.get_attribute("data-about") and "task:seat/s2" in card.get_attribute("data-about")        # a task card says what it is about
-    assert "idea:timer" in pg.locator('[data-lkey="t:orc:timer"]').get_attribute("data-about")                            # a goal's other card says its goal
+    assert "idea:timer" in pg.locator('[data-lkey="t:orc:timer"], .col-card[data-goal="timer"]').first.get_attribute("data-about")                            # a goal's other card says its goal
     pg.locator('.hand-card[data-kind="failed"]').click(position=EDGE)
     pg.locator(".hand-lifted").wait_for(timeout=WAIT_MS)
     pg.wait_for_function("() => document.querySelector('[data-lkey=\"t:task:seat/s2\"]').classList.contains('is-about')", timeout=WAIT_MS)
@@ -279,7 +279,7 @@ def test_a_hand_card_lifted_raises_its_card_of_the_table(window):
     pg.keyboard.press("Escape")
     pg.wait_for_function("() => !document.querySelector('[data-lkey=\"t:task:seat/s2\"]').classList.contains('is-about')", timeout=WAIT_MS)
     pg.locator('.hand-card[data-kind="asks"]').click(position=EDGE)                                                                   # a question is about its goal's cards
-    pg.wait_for_function("() => document.querySelector('[data-lkey=\"t:orc:timer\"]').classList.contains('is-about')", timeout=WAIT_MS)
+    pg.wait_for_function("() => document.querySelector('[data-lkey=\"t:orc:timer\"], .col-card[data-goal=\"timer\"]').classList.contains('is-about')", timeout=WAIT_MS)
 
 
 def test_tech_with_a_hand_card_lifted(window):

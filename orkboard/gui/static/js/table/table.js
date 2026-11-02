@@ -12,6 +12,7 @@ import { Pane, back } from "./pane.js";
 import { litKey, elOf, mineKey, useLowering } from "./card.js";
 import { openTabOf, partiesAll, partiesNow } from "./data.js";
 import { useFirstStart } from "./parties.js";
+import { columnPick } from "./column.js";                  // a goal the Orkmaster's column picked does not move the open tab (the column is on every tab)
 import "./wayparts.js";                                   // the goal's way's pages over the pane (spec 100)
 
 const NARROW = "(max-width: 759px)";                       // spec 94: the phone's width is the narrow one
@@ -63,14 +64,14 @@ function useBackButton(open, narrow) {
   }, []);
 }
 
-export function Table() {
+export function Table({ column = false }) {
   const parties = partiesAll(), tabs = partiesNow(), current = openTabOf(tab.value, parties), narrow = useNarrow(), [host, compact] = useCompact(tabs.length, narrow);   // `tabs`: Release and Live are in the portal ring's corners at the wide width (spec 111 §4.1), but a press there opens their view in the pane
   const project = currentProject.value?.path || "";
   useEffect(() => { restoreTab(); picked.value = ""; lower(); closeOver(); }, [project]);   // another project: its tab, nothing picked, nothing open
   useFirstStart(parties);                                                                  // no party yet: the parties' place opens at once (decisions §169.4)
   useEffect(() => {                                                                        // a goal picked in the hand opens on its party's tab (unless the Orkmaster's Board is shown: it shows its tasks alone)
     const n = picked.value && (mapData.value?.nodes || []).find((x) => x.slug === picked.value);
-    if (n && tab.value !== ORKMASTER && tab.value !== n.goal && parties.some((g) => g.slug === n.goal)) openTab(n.goal);
+    if (n && columnPick.slug !== n.slug && tab.value !== ORKMASTER && tab.value !== n.goal && parties.some((g) => g.slug === n.goal)) openTab(n.goal);
   }, [picked.value]);
   useEffect(() => {                                                                        // Esc: lowers a lifted card of the table, else goes back from what is over the pane (the hand's own is its)
     const key = (e) => {
@@ -95,7 +96,7 @@ export function Table() {
     return () => { clearInterval(poll); lit?.classList.remove("is-lit"); removeEventListener("pointerdown", off, true); removeEventListener("keydown", off, true); };
   }, [litKey.value]);
   return html`<div class="table" ref=${host} data-tab=${current} data-narrow=${String(narrow)} data-compact=${String(compact)}>
-    <${Tabs} parties=${tabs} all=${parties} current=${current} narrow=${narrow} compact=${compact} />
-    <${Pane} parties=${parties} tab=${current} narrow=${narrow} />
+    <${Tabs} parties=${tabs} all=${parties} current=${current} narrow=${narrow} compact=${compact} column=${column} />
+    <${Pane} parties=${parties} tab=${current} narrow=${narrow} column=${column} />
   </div>`;
 }
