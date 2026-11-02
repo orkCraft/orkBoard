@@ -21,6 +21,7 @@ import threading
 import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
+from typing import Callable
 
 from orkboard.realm import call_log, halt, harnesses, task_commands, tool_errors, tool_run  # noqa: F401  (halt: its runs wait under it, tool_run.wait)
 from orkboard.realm.gate_config import test_argv
@@ -115,11 +116,12 @@ def run_work(harness: str, prompt: str, workdir: Path, cancel: threading.Event, 
              env: dict | None = None, resume: str = "",
              timeout_s: int = WORK_TIMEOUT_S, dirs: tuple = (),
              free: bool = False, effort: str = "", task: dict | None = None, root: Path | None = None,
-             before_cost: float | None = None) -> tuple[str, float | None, int | None, str]:
+             before_cost: float | None = None, on_output: Callable[[str], None] | None = None) -> tuple[str, float | None, int | None, str]:
     """(text, cost, tokens, session) of an agent working in `workdir` (and reading `dirs` too); `effort`: the model's
     reasoning, where the tool takes one (spec 35 §1); `task`, `root`: whose commands it may run (see `work_cmd`). `cost` is the tool's
     figure; for a resumed Claude session that is the session's running total, so `before_cost` (the total after its last call) makes the
-    call's own cost, the one logged as `cost_own` and charged."""
+    call's own cost, the one logged as `cost_own` and charged. `on_output` is handed the tool's stdout as it is written (a
+    task's steps are read along the way, realm/task_steps_run.py)."""
     harness = tool_run.resolve(harness)
     cmd = work_cmd(harness, prompt, workdir, model, resume, dirs, free, effort, task, root)
     h = harnesses.get(harness)
@@ -130,7 +132,7 @@ def run_work(harness: str, prompt: str, workdir: Path, cancel: threading.Event, 
     start = time.monotonic()
     code, out, err = call_log.answer("work", prompt) or tool_run.run_proc(
         cmd, workdir, run_env, tool_run.harness_stdin(harness, prompt),
-        lambda proc: _wait(proc, cancel, timeout_s, run_env.get("ORKCRAFT_ORC") or harness, True), harness)
+        lambda proc: _wait(proc, cancel, timeout_s, run_env.get("ORKCRAFT_ORC") or harness, True), harness, **({"on_output": on_output} if on_output is not None else {}))
     if code != 0:
         call_log.record(env, "work", harness, model, prompt, out, err, code, time.monotonic() - start, workdir=workdir)
         raise tool_run.failure(harness, code, out, err)

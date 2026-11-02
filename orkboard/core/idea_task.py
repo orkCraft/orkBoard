@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 
 from orkboard.core.idea_landing import COULD_NOT_RUN
-from orkboard.realm import dep_links, event_log, gate_config, gate_env, idea_checks, idea_pick, idea_secrets, idea_target, task_brief
+from orkboard.realm import dep_links, event_log, gate_config, gate_env, idea_checks, idea_pick, idea_secrets, idea_target, task_brief, task_steps
 from orkboard.realm.idea_git import BOARD_PAGE, env_name, has_summary, parse_tests, read_secret, spec_paths
 
 
@@ -297,6 +297,7 @@ class TaskMixin:
             parts.append(f"# Your role: {role['name']}\n\n{instruction}")
         parts.append("# When you are done\n\nCommit your work with git if you can, with clear messages; what you "
                      f"leave changed is committed for you under the task's title. {gate_words(gate_config.read(self.repo_root))}")
+        parts.append(task_steps.RULE)                                    # every tool's working prompt: its steps in a file (spec 129 H1.1)
         parts += [
             f"You do one task of the idea `{slug}` in this repository: a git worktree on branch "
             f"`idea/{slug}/{task.get('id')}`, cut from `{_r().setting(self.settings, 'merge_into') or 'main'}`. "

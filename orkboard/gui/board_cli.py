@@ -11,6 +11,7 @@ from its own event log, and hypothesis H1's head-to-head tallied. `main` in gui/
     run(["trial", "h1.csv"])                     # the tally and the verdict
     run(["import", "~/game", "--dry-run"])       # what of the project's own documents would be read in (realm/read_in.py, spec 126 B)
     run(["export", "~/game", "--to", "out"])     # the decisions, the brief and the journals written out in common formats (realm/write_out.py, spec 126 C)
+    run(["steps-check", "--tool", "codex"])      # one small real task on that tool: which steps its card would show, from where (realm/steps_check.py, spec 129 H1.6)
 """
 from __future__ import annotations
 
@@ -23,7 +24,7 @@ from orkboard import __version__, settings
 from orkboard.core import updates, usage
 from orkboard.realm import measures, trial
 
-WORDS = ("usage", "update", "measures", "trial", "import", "export")
+WORDS = ("usage", "update", "measures", "trial", "import", "export", "steps-check")
 
 POLICY_WHAT = {
     "auto": "every update installs when Orkboard opens",
@@ -60,7 +61,13 @@ def run(argv: list[str]) -> int:
     e_p.add_argument("folder", nargs="?", default=".", help="The project's folder (default: this one)")
     e_p.add_argument("--to", default="", metavar="DIR", help="Where to write (default: <folder>/.orkcraft/export)")
     e_p.add_argument("--as", dest="fmt", choices=("madr", "nygard"), default="madr", help="The decisions' format (default: madr)")
+    s_p = sub.add_parser("steps-check", help="Run one small real task on an AI tool in a scratch folder and say which steps a card would show, from where")
+    s_p.add_argument("--tool", required=True, choices=("claude", "codex", "agy"), help="The tool to check (it must be installed and signed in)")
+    s_p.add_argument("--yes", action="store_true", help="Do not ask before spending a little of the tool's limit")
     args = parser.parse_args(argv)
+    if args.word == "steps-check":
+        from orkboard.realm import steps_check
+        return steps_check.run(args.tool, args.yes)
     if args.word in ("import", "export"):
         return _read_or_write(args)
     if args.word == "usage":

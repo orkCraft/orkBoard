@@ -29,7 +29,7 @@ import time
 from pathlib import Path
 from typing import NamedTuple
 
-from orkboard.realm import dep_links, gate_config, gate_env, jobs, worktrees
+from orkboard.realm import dep_links, gate_config, gate_env, jobs, steps_git, worktrees
 
 GIT_TIMEOUT_S = 60
 PUSH_TIMEOUT_S = 120
@@ -114,6 +114,7 @@ class IdeaGit:
             self.remove(path)
             path.parent.mkdir(parents=True, exist_ok=True)
             _ok(_git(self.root, "worktree", "add", "-B", branch, str(path), base))
+            steps_git.exclude(path)
             dep_links.link(self.root, path)          # the main checkout's node_modules and .venv, linked (spec 86 §2)
         return path, branch
 
@@ -143,7 +144,9 @@ class IdeaGit:
 
     def commit_left(self, path: Path, message: str) -> bool:
         """Commit what the session left uncommitted (a session in `acceptEdits` edits files but may not run git):
-        True when it made a commit. Orkline is its author; ignored files stay out, as `git add -A` leaves them."""
+        True when it made a commit. Orkline is its author; ignored files stay out, as `git add -A` leaves them (the steps file
+        too, `steps_git.exclude`)."""
+        steps_git.exclude(path)
         if not self.dirty(path):
             return False
         _ok(_git(path, "add", "-A"))
@@ -260,6 +263,7 @@ class IdeaGit:
             self.remove(path)
             path.parent.mkdir(parents=True, exist_ok=True)
             _ok(_git(self.root, "worktree", "add", str(path), branch))
+        steps_git.exclude(path)
         return path
 
     def merge_in(self, path: Path, into: str) -> list[str]:
@@ -329,6 +333,7 @@ class IdeaGit:
         (the new head of `into`, the subjects it brought, a note). Raises Conflict on a conflicting rebase,
         RuntimeError when `into` cannot move; either way `into` is as it was."""
         with self.lock:
+            steps_git.leave(path, into)
             if self.dirty(path):
                 raise RuntimeError("the task left uncommitted changes")
             # a branch that already holds `into` (a conflict fixed by merging it in) is fast-forwarded as it is

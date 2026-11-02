@@ -193,7 +193,9 @@ def _claude_work_rules(allow: list[str], deny: list[str]) -> list[str]:
 
 
 def _claude_work(h, prompt, workdir, model, resume):
-    return [h.bin, "-p", prompt, "--output-format", "json", "--permission-mode", "acceptEdits",
+    """A working task's run streams its events (stream-json), so its own to-do list (`TodoWrite`) is read as it works
+    (realm/task_steps.py, spec 129); its result is the last `result` event (`claude_envelope`), as a reading run's."""
+    return [h.bin, "-p", prompt, "--output-format", "stream-json", "--verbose", "--permission-mode", "acceptEdits",
             *_model("--model", model), *(["--resume", resume] if resume else []), *_claude_mcp()]
 
 

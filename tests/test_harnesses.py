@@ -355,12 +355,13 @@ def test_a_read_only_calls_system_prompt_is_appended_only_when_asked_for_and_the
     assert "--append-system-prompt" not in h.read("p", tmp_path, "opus")
 
 
-def test_a_read_only_call_prints_its_events_and_the_other_calls_keep_their_output(tmp_path):
+def test_a_read_only_call_and_a_working_task_print_their_events_and_the_other_calls_keep_their_output(tmp_path):
     h = harnesses.get("claude")
     read = h.read("p", tmp_path, "opus")
     assert read[read.index("--output-format") + 1] == "stream-json" and "--verbose" in read
     assert _flag_values(h.ask("p", tmp_path), "--output-format") == ["json"]
-    assert _flag_values(h.work("p", tmp_path), "--output-format") == ["json"]
+    work = h.work("p", tmp_path)                                  # a task's own to-do list streams (spec 129 H1.3)
+    assert _flag_values(work, "--output-format") == ["stream-json"] and "--verbose" in work
 
 
 def test_claude_envelope_is_the_last_result_of_a_stream_the_one_object_or_nothing():

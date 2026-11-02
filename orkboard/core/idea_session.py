@@ -9,11 +9,23 @@ from pathlib import Path
 
 from orkboard.core.idea_holds import Held
 from orkboard.core.sign_ins import HOLD_H
-from orkboard.realm import call_log, idea_spend, jobs, sketches, status, tool_errors, tool_run
+from orkboard.realm import call_log, gate_config, idea_spend, jobs, sketches, status, task_steps, task_steps_run, tool_errors, tool_run
 
 
 class SessionMixin:
     """Needs the runner's `repo_root`, `state_dir`, `plan`, `_set_task`, `_log`, `sign_ins`, `_read_limits` and `tool_of`."""
+
+    def _watch(self, slug: str, tid: str, tool: str, path: Path) -> task_steps_run.Watch:
+        """The look at this turn's steps (realm/task_steps_run.py): its steps file, its tool's own list and what it is doing,
+        kept at `<state_dir>/ideas/<slug>/<tid>.steps.json`; the Board hears when they change."""
+        try:
+            gate = gate_config.read(self.repo_root).run
+        except Exception:
+            gate = ""
+        watch = task_steps_run.Watch(tool_run.resolve(tool), path, task_steps.kept_path(self._dir(slug), tid), gate,
+                                     on_change=lambda _steps: self._changed(slug))
+        watch.start()
+        return watch
 
     def _session(self, slug: str, tid: str, path: Path, cancel: threading.Event, model: str, env: dict,
                  prompt: str, resume: str, spent: dict, effort: str = "", step: str = "task") -> str:
@@ -27,11 +39,13 @@ class SessionMixin:
         tool = self.tool_of(slug, task)               # its taker's seat's AI tool, else its party's, else the Main tool (spec 81 §1.2, spec 91 §6)
         total = task.get("session_total")
         before = float(total) if resume and isinstance(total, (int, float)) and not isinstance(total, bool) else None
+        watch = self._watch(slug, tid, tool, path)
         try:
             with call_log.of_project(self.repo_root), tool_errors.doing("task"):     # its log and spend: this project's
                 _text, cost, tokens, session = jobs.run_work(tool, prompt, path, cancel, model=model, env=env,
                                                              resume=resume, effort=effort, before_cost=before,
-                                                             task=task, root=self.repo_root, dirs=sketches.reference_dirs(self.state_dir, slug))      # a picked sketch is read where it lies (spec 121 §2.6)
+                                                             task=task, root=self.repo_root, dirs=sketches.reference_dirs(self.state_dir, slug),      # a picked sketch is read where it lies (spec 121 §2.6)
+                                                             on_output=watch.feed)
         except tool_errors.ToolError as e:
             if e.kind != tool_errors.LIMIT:
                 if self.sign_ins is not None and self.sign_ins.holds(e):      # its sign-in helps: the task waits for it
@@ -40,6 +54,8 @@ class SessionMixin:
             now = time.time()
             raise Held(status.reset_of(self._read_limits(now), tool, now, 1.0)
                          or now + status.UNKNOWN_RESET_S) from e
+        finally:
+            watch.stop()                                     # the run's end, Stop all or a failure: the look at its steps ends (spec 129 H1.2)
         own = tool_run.cost_once(cost, before)
         for key, value in (("cost", own), ("tokens", tokens)):
             if value is not None:
