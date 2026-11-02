@@ -18,10 +18,10 @@ export function refusalWords(text) {
 export const worksNow = (slug) => ((mapData.value?.nodes || []).find((n) => n.slug === slug)?.tasks || []).some((t) => t.state === "running" || t.state === "testing");
 
 /** The question asked in place, *Drop this goal?*: what goes and what stays, **Keep it** (`onKeep`, and Esc) · **Drop it**; the one thing a **…** (`GoalMenu`) or the Orkmaster's column's **Remove** opens. */
-export function DropAsk({ slug, onKeep }) {
+export function DropAsk({ slug, onKeep, onDone }) {
   const [busy, setBusy] = useState(false), [said, setSaid] = useState(""), keep = useRef();
   const works = worksNow(slug);
-  useEffect(() => { keep.current?.focus(); }, []);
+  useEffect(() => { keep.current?.focus(); const f = requestAnimationFrame(() => keep.current?.focus()); return () => cancelAnimationFrame(f); }, []);      // the safe answer focused, again after the frame's other effects
   const drop = async () => {
     setBusy(true);
     setSaid("");
@@ -35,6 +35,7 @@ export function DropAsk({ slug, onKeep }) {
     }
     if (picked.value === slug) pick(slug);                    // the goal is gone: what was picked is put down
     lower();
+    onDone?.();                                               // dropped: the question goes (the column's list keeps the other goals)
     await refreshShell();
   };
   const keys = (e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); onKeep(); } };

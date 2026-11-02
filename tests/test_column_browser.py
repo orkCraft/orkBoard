@@ -149,7 +149,8 @@ def test_a_press_on_a_face_down_card_lifts_the_list_in_order_and_cannot_pick_nex
         lift.locator('[data-remove="raw1"]').click()
         ask = lift.get_by_role("alertdialog", name="Drop this goal?")
         ask.wait_for(timeout=WAIT_MS)
-        assert ask.get_by_role("button", name="Drop it").count() == 1 and pg.evaluate("() => document.activeElement.textContent.trim()") == "Keep it", "Remove asks first, the safe answer focused"
+        assert ask.get_by_role("button", name="Drop it").count() == 1, "Remove asks first"
+        pg.wait_for_function("() => document.activeElement && document.activeElement.textContent.trim() === 'Keep it'", timeout=WAIT_MS)      # the safe answer focused (set once it is drawn)
         pg.keyboard.press("Escape")
         ask.wait_for(state="detached", timeout=WAIT_MS)
         assert lift.count() == 1 and not any(c[0] == "ideas.drop" for c in host.log), "the first Esc keeps the goal"

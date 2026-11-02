@@ -236,7 +236,7 @@ def test_esc_closes_the_question_and_gives_the_focus_back_to_the_menu_button(day
     pg.locator('[data-lkey="t:orc:fresh"]').click()
     box = pg.locator(".table-back")
     ask_drop(box)
-    assert pg.evaluate("() => document.activeElement.textContent.trim()") == "Keep it", "the safe answer has the focus"
+    pg.wait_for_function("() => document.activeElement && document.activeElement.textContent.trim() === 'Keep it'", timeout=WAIT_MS)      # the safe answer has the focus (set once it is drawn)
     pg.keyboard.press("Escape")
     box.get_by_role("alertdialog").wait_for(state="detached", timeout=WAIT_MS)
     assert "table-menu__btn" in pg.evaluate("() => document.activeElement.className")

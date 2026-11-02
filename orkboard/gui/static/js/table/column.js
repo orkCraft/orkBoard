@@ -45,7 +45,7 @@ function Top({ parties, all }) {
 /** **Remove** on a goal's row of the list: asks in place (*Drop this goal?*, dropgoal.js `DropAsk`) and drops it as the goal's menu does (the goal's work stops first). */
 function Remove({ n }) {
   const [asking, setAsking] = useState(false);
-  return asking ? html`<${DropAsk} slug=${n.slug} onKeep=${() => setAsking(false)} />`
+  return asking ? html`<${DropAsk} slug=${n.slug} onKeep=${() => setAsking(false)} onDone=${() => setAsking(false)} />`
     : html`<button type="button" class="ork-btn quiet" data-remove=${n.slug} onClick=${() => setAsking(true)}>Remove</button>`;
 }
 
@@ -102,11 +102,11 @@ export function Column() {
   useEffect(() => { if (gone || (lift?.kind === "list" && !piles.analysis.length)) setLift(null); });
   useEffect(() => {                                                                    // Esc or a press away puts the lifted thing away
     if (!lift) return undefined;
-    const key = (e) => { if (e.key === "Escape" && !e.defaultPrevented) { e.preventDefault(); setLift(null); } };
+    const key = (e) => { if (e.key === "Escape" && !e.defaultPrevented && !e.target.closest?.(".table-drop")) { e.preventDefault(); setLift(null); } };
     const away = (e) => { if (!e.target.closest?.(".col-lift, .col-card")) setLift(null); };
-    addEventListener("keydown", key);
+    addEventListener("keydown", key, true);                                             // first: what the column lifted is the topmost thing (a question asked in it takes its own Esc first)
     document.addEventListener("pointerdown", away, true);
-    return () => { removeEventListener("keydown", key); document.removeEventListener("pointerdown", away, true); };
+    return () => { removeEventListener("keydown", key, true); document.removeEventListener("pointerdown", away, true); };
   }, [lift?.kind, lift?.slug]);
   const press = (n, pile, off) => {
     if (pile === "analysis") { setLift(lift?.kind === "list" ? null : { kind: "list" }); return; }              // face down: it cannot be picked, its press lifts the pile's list
