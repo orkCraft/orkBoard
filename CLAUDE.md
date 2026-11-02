@@ -23,8 +23,9 @@ other way round**: nothing here imports Orkline's package (`orkcraft`).
   why*, through whose eyes, the goals in line in its first lane) and the hand (*what the person decides*, under the
   lanes, with the AI tools' mana at its right); the discard of goals done lies on the table, at its right; a goal is on the
   table, in the hand or in the discard (decisions §167, §176); at the wide width Release and Live are no tabs, they wait in the portal ring's corners (decisions §188). The Orkmaster says what and who, a
-  party's leader how, what changes and why, a member does (and asks only its leader). New faces keep to it: no left
-  column, no drawer, no count of what waits, no question from a member straight to the person.
+  party's leader how, what changes and why, a member does (and asks only its leader). New faces keep to it: no list
+  column (the Orkmaster's column is the first lane pinned, whole cards: decisions §206), no drawer, no count of what waits, no
+  question from a member straight to the person.
 - **Orks by their orkish names, everything else by what it does**: the Taskmaster, a Grunt; the Board, Play, Release,
   Stop all. Never the other way round: no ork gets a job title, no window a camp name.
   `orkboard/realm/lexicon.py` `TERMS` is the glossary: a new concept gets its one word there, and new code writes that
