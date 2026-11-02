@@ -192,6 +192,8 @@ PAID_ANSWERED = "paid_answered"   # tool, yes (go on, paid) or no (wait), device
 
 # Spec 106 (decisions §181.7): a quick question on the open tab, and the press that turns its answer into a goal.
 BOARD_ASKED = "board_asked"       # party (its slug, or "orkmaster"), chars, text (the question, cut at 300), ok (it was answered), seconds, step, prompt_chars, tokens, cost
+LEADER_CHANGE_ASKED = "leader_change_asked"   # idea, party, shape ("plan" · "looks"), chars (the person's words), ok (the leader answered), changed_n (its tasks it changes), step, prompt_chars, tokens, cost
+LEADER_CHANGE_ANSWERED = "leader_change_answered"   # idea, party, take (Accept) or kept (Keep the spec, Talk more), look (the look's key taken, "" for a plan), added, changed_n, dropped, via, device
 ASK_MADE_GOAL = "ask_made_goal"   # party ("" for the Orkmaster's tab), device: *Make it a goal* pressed under an answer
 
 # Spec 107 §2 (decisions §182.2): what the logs lacked of a day. A command the host refused, and an error the person was shown.
@@ -247,6 +249,7 @@ EVENTS += (JOURNAL_DIGESTED,)       # spec 125 D
 QUESTION_PASSED = "question_passed"      # spec 128 D: a leader's question passed through the Orkmaster: idea, party (who asked), to (the party it was for), how ("answered" · "cannot" · "failed" · "taken" · "stopped"), seconds, step, prompt_chars, tokens, cost (never a word of the question)
 EVENTS += (QUESTION_PASSED,)       # spec 128 D
 EVENTS += (SPEC_FOLDED,)            # spec 127 C
+EVENTS += (LEADER_CHANGE_ASKED, LEADER_CHANGE_ANSWERED)      # spec 128 E
 
 _LOCK = threading.Lock()
 

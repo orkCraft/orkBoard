@@ -48,7 +48,8 @@ export function stopsOfProject(map = mapData.value, rows = board.value?.needs_yo
   const needs = rows.filter((r) => !isHeld(r)), out = [], ork = map?.project?.orkmaster || null, byParty = partyBy(map), ctx = { party: (slug) => (slug ? byParty[slug] || null : null), open };
   for (const g of partiesOf(map)) {
     const nodes = nodesOf(map, g.slug), party = partyCard(g);
-    const mine = [...stopsOf(needs, g, nodes, ork), ...resultsOf(nodes).map((r) => resultStop(r, nodes))];
+    const whole = (s) => (s.kind === "leader_change" && !s.node ? { ...s, node: (map?.nodes || []).find((n) => n.slug === s.row?.idea) || null } : s);      // a change asked of this leader about a goal that lies in another party's lane: the goal's rune is still its card's
+    const mine = [...stopsOf(needs, g, nodes, ork).map(whole), ...resultsOf(nodes).map((r) => resultStop(r, nodes))];
     out.push(...mine.flatMap((s) => questionStops({ ...s, g, party, other: open !== ORKMASTER && open !== party.slug }, ctx)));      // a Talk's and a bug's questions: one card a question (questions.js)
   }
   out.push(...signInStopsOf(needs, open), ...paidStopsOf(needs, open, ork));

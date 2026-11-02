@@ -28,3 +28,9 @@
 .table-ask__seat .ork-mark { width: 14px; height: 14px; }
 .table-ask__pop { position: fixed; z-index: 61; }
 .table-ask__pop .table-seatpop { position: static; width: auto; left: auto; top: auto; max-height: 60vh; overflow: auto; }
+/* What it is about (spec 128 E): the picked goal (its rune and name) or the whole project, and the part of a change it carries, each an orkUI chip; × takes the part off. */
+.table-ask__about { display: flex; flex-wrap: wrap; gap: var(--ork-2); min-width: 0; }
+.table-ask__chip { display: inline-flex; align-items: center; gap: var(--ork-2); max-width: 100%; min-width: 0; }
+.table-ask__chip > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.table-ask__unpart { display: inline-flex; align-items: center; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; }
+.table-ask__unpart .ork-icon { width: 14px; height: 14px; }

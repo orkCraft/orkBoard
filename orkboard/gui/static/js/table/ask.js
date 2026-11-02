@@ -7,16 +7,20 @@
 // The evening line (`Since`, concerns.js) is drawn at the bubble's top whenever the party's record has it; the bubble opens by itself once a day for a party, when its tab is open and the person has not seen the line today (a `localStorage` key a party a day,
 // a convenience only: without it, once while the page lasts). The foot (a party's, not the Orkmaster's): *Its seat: <tool> · <tier>* and **Change**, which opens the leader's seat's popover (seatpop.js).
 // Esc, × or a press outside closes it; the head keeps the focus. The desktop only: under 760 px wide and on a touch screen (§181.8) no head opens a bubble. Nothing over an open page: opening one puts the bubble away.
+// **What it is about** (spec 128 E, decisions §206.5): under the head row (and the evening line) a chip says what is picked, the goal's rune and name or *The whole project*, and, when `openAsk(tab, part)` carried one (a part of a goal's change, pressed on a leader's tab),
+// a chip of the part with × that takes it off. The answer stays a read. Under an answer: **Make it a goal** when nothing, or a goal done, is picked; **Make it a change** when a goal that is agreed or at work is picked on a leader's tab (never the Orkmaster's): it sends
+// `ideas.change {idea, party, part?, text}` with the person's question as the words, the answer is put away, and the leader's decision comes to the hand (hand/changecard.js: *Now* and *Proposed*, or Design's three looks).
 // Typing here never opens the new goal's field: the hand opens it on a key typed with nothing focused (hand/hand.js), and this field has the focus.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html } from "../html.js";
-import { Head, Icon, TIER_WORDS } from "../orkui.js";
+import { Elem, Head, Icon, TIER_WORDS } from "../orkui.js";
 import { command, town } from "../link.js";
-import { ORKMASTER, over } from "../frame/state.js";
+import { mapData } from "../shell/store.js";
+import { ORKMASTER, over, picked } from "../frame/state.js";
 import { fieldText } from "../hand/state.js";
 import { openField } from "../hand/pluscard.js";
-import { groupsOf, mapName, toolOf, wide } from "./data.js";
+import { WHOLE, groupsOf, mapName, toolOf, wide } from "./data.js";
 import { Since, lookOf } from "./concerns.js";
 import { SeatPop } from "./seatpop.js";
 import { ToolMark } from "./header.js";
@@ -28,9 +32,20 @@ const WIDTH = 440, EDGE = 16, TAIL = 28;                              // the bub
 /** The tab whose bubble is open: a party's slug, "" for the Orkmaster's, null while none is. */
 export const askOpen = signal(null);
 const keyOf = (tab) => (!tab || tab === ORKMASTER ? "" : tab);
-/** Opens the bubble of a tab (`ORKMASTER`, "" or a party's slug); the head that carries `data-ask-head` is what it stands under. */
-export const openAsk = (tab) => { askOpen.value = keyOf(tab); };
-export const closeAsk = () => { askOpen.value = null; };
+/** The part of a goal's change the bubble is about: `{id, name}`, null for none. */
+export const askPart = signal(null);
+/** The states of a goal that is agreed or at work: *Make it a change* may be asked of a leader about it (as realm/leader_change.py `CHANGE_STATES`). */
+export const AGREED = ["decided", "sketch", "sections", "planning", "plan", "working"];
+
+/** Opens the bubble of a tab (`ORKMASTER`, "" or a party's slug); the head that carries `data-ask-head` is what it stands under. `part`: a part of a goal's change it is about (its name, or `{id, name}`), a chip with ×;
+ *  `words`: what the field starts with (*Talk more* gives the words it was asked with back). Exported so another part (a part of a change pressed, a decision card's *Talk more*) can open it. */
+export function openAsk(tab, part = null, words = "") {
+  const p = typeof part === "string" ? { id: part, name: part } : part && (part.id || part.name) ? { id: String(part.id ?? part.name), name: String(part.name || part.id) } : null;
+  askPart.value = p;
+  if (words) drafts[keyOf(tab)] = String(words);
+  askOpen.value = keyOf(tab);
+}
+export const closeAsk = () => { askOpen.value = null; askPart.value = null; };
 
 /** What the field kept when its bubble was closed, a party's (the Orkmaster's under ""). */
 const drafts = {};
@@ -74,6 +89,8 @@ function Bubble({ tab, party, g, parties, look }) {
   const ask = town.value?.ask || null, here = askerOf(party, parties);
   const reading = ask?.status === "asking", readBy = reading ? askerOf(ask.party || "", parties) : null, mine = !!ask && (ask.party || "") === party;
   const state = reading && mine ? "reading" : mine && !reading && !more ? (ask.status === "failed" ? "failed" : "answered") : "asking";
+  const goalNode = picked.value ? (mapData.value?.nodes || []).find((x) => x.slug === picked.value) || null : null, part = askPart.value;
+  const aboutGoal = goalNode ? goalNode.short || goalNode.title || WHOLE : WHOLE, canChange = !!goalNode && !!party && AGREED.includes(goalNode.state), canGoal = !goalNode || goalNode.state === "done";
   const words = `Ask the ${here.name}`, seatOf = g ? here.seat : null, from = { title: mapName(tab, parties), key: "" };
 
   const place = () => {                                              // under the head, the tail under its centre, inside the window
@@ -94,7 +111,7 @@ function Bubble({ tab, party, g, parties, look }) {
     return () => { removeEventListener("resize", place); removeEventListener("scroll", place, true); };
   }, [tab]);
 
-  const close = (back = true) => { askOpen.value = null; if (back) headOf(tab)?.focus?.(); };
+  const close = (back = true) => { closeAsk(); if (back) headOf(tab)?.focus?.(); };
   const wasSeat = useRef(false);
   wasSeat.current = seat;
   useLayoutEffect(() => {                                            // Esc and a press outside put it away (the seat's popover first, on its own Esc); listening from the first frame it is drawn
@@ -124,6 +141,14 @@ function Bubble({ tab, party, g, parties, look }) {
     if (state === "answered" || state === "failed") command("ideas.ask_clear", {}).catch(() => {});
     close(true);
   };
+  const change = async () => {                                      // the person's words become a decision in the hand: the leader replans its part (ideas.change); the answer is put away
+    if (sending) return;
+    setSending(true);
+    try { await command("ideas.change", { idea: goalNode.slug, party, ...(part ? { part: part.id } : {}), text: ask.q }); } catch { setSending(false); return; }       // refused: the host's words are in a toast, the answer stays
+    setSending(false);
+    command("ideas.ask_clear", {}).catch(() => {});
+    close(false);
+  };
   const goal = () => {
     command("ideas.ask_goal", {}).catch(() => {});
     fieldText.value = ask.goal;
@@ -138,8 +163,13 @@ function Bubble({ tab, party, g, parties, look }) {
         <div class="table-ask__who">${here.head && html`<${Head} race=${here.head.race} tier=${here.head.tier} />`}<span class="table-ask__name">${whoWords(party, g, here)}</span><span class="table-ask__grow"></span>
           <button type="button" class="ork-btn quiet table-ask__x" aria-label="Put away" title="Put away" onClick=${away}><${Icon} name="close" /></button></div>
         ${look?.since && html`<${Since} rec=${look} />`}
+        <div class="table-ask__about" aria-label="What it is about">
+          <span class="ork-chip table-ask__chip" data-about=${goalNode ? "goal" : "project"}>${goalNode && html`<${Elem} name=${goalNode.element || ""} />`}<span>${aboutGoal}</span></span>
+          ${part && html`<span class="ork-chip table-ask__chip" data-about="part" title="A part of its change"><${Icon} name="map" /><span>${part.name}</span>
+            <button type="button" class="table-ask__unpart" aria-label="Take the part off" title="Take the part off" onClick=${() => { askPart.value = null; }}><${Icon} name="close" /></button></span>`}
+        </div>
         ${state === "asking" && html`<form class="table-ask__form" onSubmit=${send}>
-          <input type="text" class="ork-field table-ask__field" ref=${field} aria-label=${words} placeholder=${`${words}…`} maxlength=${Q_CHARS} autocomplete="off" enterkeyhint="send"
+          <input type="text" class="ork-field table-ask__field" ref=${field} aria-label=${words} placeholder=${part ? `What about ${part.name}?` : goalNode ? `What about ${aboutGoal}?` : `${words}…`} maxlength=${Q_CHARS} autocomplete="off" enterkeyhint="send"
             value=${q} disabled=${reading} onInput=${(e) => { setQ(e.currentTarget.value); drafts[party] = e.currentTarget.value; }} />
         </form>`}
         ${state === "asking" && reading && html`<p class="table-ask__reading ork-think" role="status">The ${readBy.name} is reading the map</p>`}
@@ -147,7 +177,8 @@ function Bubble({ tab, party, g, parties, look }) {
         ${state === "answered" && html`<p class="table-ask__q">${ask.q}</p>
           <p class="table-ask__text">${ask.answer}</p>
           ${sources.length > 0 && html`<ul class="table-ask__srcs" aria-label="Where it is said">${sources.map((s) => html`<li key=${s} class="ork-chip table-ask__src">${s}</li>`)}</ul>`}
-          <div class="table-ask__acts">${ask.goal && html`<button type="button" class="ork-btn primary" title=${ask.goal} onClick=${goal}>Make it a goal</button>`}<span class="table-ask__grow"></span>
+          <div class="table-ask__acts">${canChange && html`<button type="button" class="ork-btn primary" disabled=${sending} title=${`${here.name} replans its part of ${aboutGoal} from your words; you decide in the hand`} onClick=${change}>Make it a change</button>`}
+            ${canGoal && ask.goal && html`<button type="button" class="ork-btn primary" title=${ask.goal} onClick=${goal}>Make it a goal</button>`}<span class="table-ask__grow"></span>
             <button type="button" class="ork-btn quiet" onClick=${() => setMore(true)}>Ask more</button></div>`}
         ${state === "failed" && html`<p class="table-ask__q">${ask.q}</p><p class="table-ask__err" role="alert">${ask.error || "No answer came: ask again"}</p>
           <div class="table-ask__acts"><span class="table-ask__grow"></span><button type="button" class="ork-btn quiet" onClick=${() => setMore(true)}>Ask again</button></div>`}
@@ -163,7 +194,7 @@ function Bubble({ tab, party, g, parties, look }) {
 export function AskBubble({ tab, parties }) {
   const key = keyOf(tab), g = key ? parties.find((x) => x.slug === key) : null, ok = desk() && (key ? !!g : parties.length > 0) && !over.value;
   const look = key ? lookOf(key) : null, line = String(look?.since?.line || "").trim(), open = askOpen.value;
-  useEffect(() => { if (open !== null && (open !== key || !ok)) askOpen.value = null; }, [key, ok, open]);        // another tab, a page over the pane, a window too narrow: put away
+  useEffect(() => { if (open !== null && (open !== key || !ok)) closeAsk(); }, [key, ok, open]);        // another tab, a page over the pane, a window too narrow: put away
   useEffect(() => {                                                  // the evening line: open once a day a party, when its tab is open
     if (!key || !line || !ok || askOpen.peek() !== null || !headOf(tab) || seen(key)) return;
     seeing(key);

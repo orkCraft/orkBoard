@@ -5,6 +5,7 @@ import "./questioncard.js";
 import "./causecard.js";
 import "./decisioncard.js";
 import "./forkcard.js";
+import "./changecard.js";
 import "./hearing.js";
 import "./paidcard.js";
 import "./hypothesiscard.js";

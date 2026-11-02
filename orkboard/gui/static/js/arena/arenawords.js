@@ -350,7 +350,7 @@ export function limitLine(l, reserve, resetOf) {
 
 // -- the stops: the bottom row (§6) -------------------------------------------------------------------------------------------------
 
-export const KIND_WORD = { plan: "Plan ready", change: "Plan change", asks: "Asks you", goal: "Asks you", proposal: "Proposed", party: "Proposed", todo: "A to-do", failed: "Failed",
+export const KIND_WORD = { plan: "Plan ready", change: "Plan change", leader_change: "A change", asks: "Asks you", goal: "Asks you", proposal: "Proposed", party: "Proposed", todo: "A to-do", failed: "Failed",
   pick: "Pick one", pitch: "Pitch judged", collide: "Orkmaster asks", sign_in: "Sign in", gate: "Ready for main",
   route: "Route", start: "Start", talk: "Talk", cause: "The cause", decision: "Decision", hearing: "Hearing", fork: "A fork", project_q: "About the project", paid: "Orkmaster asks" };       // a goal's way (spec 100): what the card is, in plain words (a question's own label is "Question")
 const GEM = { plan: "", change: "", asks: "?", goal: "?", proposal: "—", party: "—", todo: "·", failed: { sign: "cross" }, pick: "", pitch: "", collide: "", sign_in: { sign: "alert" }, paid: "" };
@@ -414,6 +414,8 @@ export function stopsOf(needs, g, nodes, ork = null) {
       base.gemTip = base.gem ? `What the change should ${row.usd_high < 0 ? "save" : row.usd_low < 0 ? "cost or save" : "cost"}, at API prices` : "";
       base.why = row.why || "";
       base.small = true; base.whoTip = `proposed by ${g?.leader?.name || "Taskmaster"}`;        // the leader's small head on the top row: the card has no room for its art
+    } else if (row.kind === "leader_change") {        // a change the person asked this leader for (spec 128 E): the leader's small head, the words it gave; the price is the way's (hand/changecard.js)
+      base.small = true; base.whoTip = `proposed by ${g?.leader?.name || "its leader"}`; base.why = row.why || "";
     } else if (row.kind === "collide") {               // the Orkmaster asks (spec 71): its head, the statement as the stop's name, the judge's why as its note; its goals and answers are collide.js
       base.key = `collide/${row.idea}/${row.collide?.id || ""}`;
       base.head = ork ? { race: ork.race || "peon", tier: ork.tier || "crown" } : null; base.small = true; base.whoTip = "asked by the Orkmaster";

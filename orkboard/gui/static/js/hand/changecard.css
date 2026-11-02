@@ -1,0 +1,20 @@
+/* A change asked of a leader, lifted in the hand (docs/specs/128 E; hand/changecard.js; mockup docs/mockups/goal-card/): *Now* and *Proposed* side by side, or Design's three looks as choices. Layout only: every colour, face and corner is orkUI's. */
+.hand-change { gap: var(--ork-3); }
+.hand-change__said { color: var(--ork-ink-muted); overflow-wrap: anywhere; }
+.hand-change__part { display: inline-flex; align-items: center; gap: var(--ork-1); }
+.hand-change__part .ork-icon { width: 14px; height: 14px; }
+.hand-change__ba { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--ork-3); min-width: 0; }
+.hand-change__side { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; padding: var(--ork-2) var(--ork-3); background: var(--ork-raised); border: var(--ork-line) solid var(--ork-frame); }
+.hand-change__side[data-side="proposed"] { border-color: var(--ork-ink); }
+.hand-change__lab { color: var(--ork-ink-muted); }
+.hand-change__list { display: flex; flex-direction: column; gap: var(--ork-1); margin: 0; padding: 0; list-style: none; min-width: 0; }
+.hand-change__list li { display: flex; gap: var(--ork-2); min-width: 0; overflow-wrap: anywhere; }
+.hand-change__mark { flex: none; width: 1ch; color: var(--ork-ink-muted); }
+.hand-change__task.is-gone { color: var(--ork-ink-muted); text-decoration: line-through; }
+.hand-change__lines { padding-top: var(--ork-1); border-top: var(--ork-line) solid var(--ork-frame); }
+.hand-change__none { margin: 0; color: var(--ork-ink-muted); }
+.hand-change__looks { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; }
+.hand-change__look { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ork-1); width: 100%; min-width: 0; text-align: left; white-space: normal; }
+.hand-change__lookname { font: var(--ork-type-label); text-transform: uppercase; }
+.hand-change__lookline { color: var(--ork-ink-muted); overflow-wrap: anywhere; }
+@media (max-width: 560px) { .hand-change__ba { grid-template-columns: minmax(0, 1fr); } }
