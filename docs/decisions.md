@@ -4385,3 +4385,27 @@ promised; the five runes repeated in the Orkmaster's column; the morning's card 
     no corner of their own). The rest is drawn here from orkUI's pieces and tokens: the busy ring is orkUI's sweep, the
     whole ring orkUI's runes in their places, a hue an element's token.
 The owner's call.
+
+## 207. A task shows its steps: what its worker is on now, the same on Claude Code, Codex and Antigravity (2 November 2026, the owner)
+
+Changes: 167.
+
+Why: the owner: a task's card says *Doing · 12 min* and nothing of what is being done; the person cannot tell a task
+that moves from one that is stuck, nor see early that it went the wrong way. A card is a task, not a member (§167.1);
+inside a task its worker goes through steps of its own. So:
+1. **A task has steps while it is at work**: at most six, each *done*, *now* or *next*, in the worker's own short words.
+   On its card the label row reads *Doing 2/5 · tests for join*: small square pips (the one now glowing: moving is at
+   work) and the step now in one line; the time goes to the card's words. Lifted, the card lists its steps (✓ done, the
+   one now lit, the next faint) beside its *Done when*. The goal's card in the Orkmaster's column says its tasks' count
+   (*3/7*). Only a cascade's front card shows the line; under 760 px only the pips.
+2. **The same on the three main tools** (Claude Code, Codex, Antigravity), so a step is read by one rule wherever the
+   task runs: **the worker keeps its steps in a file of its worktree** (`.ork-steps.json`, never landed), told so in
+   every working prompt; the runner reads it as the task runs. Where a tool streams its own to-do list (Claude Code's
+   `TodoWrite` in stream-json, Codex's plan in `exec --json`) it is read too and fills in while the file is missing;
+   with neither, the step is **what it is doing**, from the worktree's changed files and the last command it ran
+   (*edits lobby.ts*). No model call reads steps.
+3. **Checked on all three**: recorded outputs of each tool in the tests, and `orkboard steps-check --tool <tool>`,
+   which runs one small real task in a scratch repository and says which steps it saw and from where, run on a machine
+   where the tool is signed in.
+4. Spec 129 builds it by the cheaper model, the host and the page side by side.
+The owner's call.
