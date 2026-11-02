@@ -241,6 +241,10 @@ def start(gui, width, errors, **kw):
     pg.goto(server.url)
     pg.locator(".table-tab").first.wait_for(timeout=WAIT_MS)
     pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
+    if width == "wide":                                                                                                   # a failed task's card lies as a place while its failure is in the hand (spec 128 C.2: tests/test_thrown_browser.py);
+        pg.locator(".table-thrown").first.wait_for(timeout=WAIT_MS)                                                       # this file looks at the cards themselves, so they are put back in their lanes
+        pg.evaluate("() => import('/static/js/table/flight.js').then((m) => { m.thrown.value = new Map(); })")
+        pg.locator('[data-lkey="t:task:seat/s2"]').wait_for(timeout=WAIT_MS)
     return pg, host
 
 

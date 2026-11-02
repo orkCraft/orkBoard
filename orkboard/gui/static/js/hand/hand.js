@@ -1,6 +1,6 @@
 // The hand (docs/specs/101 §4, docs/specs/98-the-table-and-the-hand.md §4, decisions §116.2, §121.2, §124, §144.2, §145.3–§145.4, §159, §160, §167): under the table's lanes, on the grid the tabs and the Board stand on (the frame's `--cols`).
 // At the first lane's left end the + card, whole, with the Orkmaster's stacks fanned to its right (spec 107 M); under each party's lane the stacks of who asks there (stacks.js: a goal a stack, two goals under one lane a fan); at the right end the Play die (playdie.js: Play is a die lying in the hand, left of the potions, its word under it; spec 112 §3.3, decisions §190.2) and the AI tools' limits as
-// the mana's potions, flush against the window's edge (mana.js: spec 104 B). The bug under the glass (Save logs) left the hand's end for the end of the tabs' row, to make room for the die (table/tabs.js, hand/logsbtn.js: decisions §190.6). The discard of the goals done lies on the table, not here (table/discard.js: spec 104 C). No deck: the goals in line lie on the table. A card shows its header and its window; the rest lies under the window's edge until it rises (hand.css). A card pressed is lifted
+// the mana's potions, flush against the window's edge (mana.js: spec 104 B). The bug under the glass (Save logs) left the hand's end for the end of the tabs' row, to make room for the die (table/tabs.js, hand/logsbtn.js: decisions §190.6). A failure comes after a beat, thrown from its card (flight.js). The discard of the goals done lies on the table, not here (table/discard.js: spec 104 C). No deck: the goals in line lie on the table. A card shows its header and its window; the rest lies under the window's edge until it rises (hand.css). A card pressed is lifted
 // over the pane's foot with its answers and its cost's words; the cards of the table it is about rise (about.js). With no
 // goal at all the + card lies large in the pane's middle. What is opened over the pane (`result`, `stop`) is drawn by the faces registered below (frame/kinds.js).
 // On a touch phone (frame/upright.js, docs/specs/103 §1, decisions §180) the hand is the whole screen instead (upright.js): the tools' row and the …, the top card's context between the arrows, one goal's cards, the green deck for a new goal.
@@ -15,7 +15,8 @@ import { uprightNow } from "../frame/upright.js";
 import { partiesNow } from "../table/data.js";
 import { partiesOf, stacksOf, stopByKey, stopsOfProject } from "./data.js";
 import { Mana } from "./mana.js";
-import { nightStops, useNight } from "./nightcard.js";             // the morning's card: the first of the hand's stops once the night did something (spec 121 §7.2)
+import { useNight } from "./nightcard.js";                       // the night's record: its goals done go to the discard under a moon (spec 128 C.3; no card of the morning's)
+import { useThrown } from "../table/flight.js";                   // a failure is thrown to the hand from its lane's card, which leaves a place (spec 128 C.2)
 import { PlayDie } from "./playdie.js";
 import { Field, Middle, PlusCard, closeField, openField } from "./pluscard.js";
 import { ResultFace } from "./resultface.js";
@@ -67,7 +68,7 @@ export function Hand() {
   const root = useRef(), map = mapData.value, needs = board.value?.needs_you || [], open = tab.value;
   useKeys(root);
   useNight();
-  const stops = [...nightStops(), ...stopsOfProject(map, needs, open)], stacks = stacksOf(stops), key = stopKeyOf(lifted.value), s = stopByKey(stops, key);
+  const all = stopsOfProject(map, needs, open), stops = useThrown(all, !!map), stacks = stacksOf(stops), key = stopKeyOf(lifted.value), s = stopByKey(stops, key);
   useEffect(() => { if (key && !s && map) lower(); }, [key, !s]);                      // the stop was answered: the card goes with it
   useEffect(() => { if (key) fieldOpen.value = false; }, [key]);
   if (!map) return null;

@@ -1,7 +1,7 @@
 // The stacks (docs/specs/101 §4.3, decisions §167.7; docs/specs/98-the-table-and-the-hand.md §4.2, decisions §121.2): one a goal and a lane that has Needs you rows, under the lane of who asks (data.js `laneOf`), its most
 // urgent card face up and the cards under it face down (orkUI's backs laid as a fan, five edges at most, never a number), the stacks in the order of their top cards' urgency (data.js `stacksOf`). Two goals under one lane fan within its
-// width: the urgent in front at the lane's right, those behind it to the left, showing their edge and their element only, each rising whole on hover, on focus or on a tap (hand.css); the + card lies whole at the first lane's left end, not in its fan. A stack pressed picks its goal and lifts its top card (stopcard.js), answered one a press; a picked goal's stacks are lit alike (`.ork-picked`). A card that comes is dealt, a card that goes crumbles where it lay,
-// none of it under reduced motion (motion.js).
+// width: the urgent in front at the lane's right, those behind it to the left, showing their edge and their element only, each rising whole on hover, on focus or on a tap (hand.css); the + card lies whole at the first lane's left end, not in its fan. A stack pressed picks its goal and lifts its top card (stopcard.js), answered one a press; a picked goal's stacks are lit alike (`.ork-picked`). A card that comes is dealt, from the card of the task that asks or failed (a failure is thrown from its lane's card, which leaves a place: table/flight.js `useThrown`; hand.js), a card that goes crumbles where it lay
+// (an answered one flies back into its goal's card), none of it under reduced motion (motion.js).
 import { html, cls } from "../html.js";
 import { lift, lower, lifted, pick, picked } from "../frame/state.js";
 import { nameOf, partiesNow } from "../table/data.js";
@@ -21,11 +21,14 @@ function Edges({ n }) {
   return Array.from({ length: n }, (_, k) => n - k).map((i) => html`<i key=${i} class="ork-card-back edge hand-back" style=${`--ork-deck-i:${i};--dx:${FAN[i][0]};--rot:${FAN[i][1]}`} aria-hidden="true"></i>`);
 }
 
+/** Who plays a stop and where it comes from and goes back to (`whoOf`, and its task: the card of the task that asks or failed is the origin, not the first card of its goal: spec 128 C). */
+const whereOf = (s) => ({ ...whoOf(s), task: s.task?.id || s.row?.task || "" });
+
 /** Where an answered card goes back to, the element of its origin; none for a card whose goal is gone (a dropped one crumbles where it lay: flying back means *answered*, crumbling *gone*) and for one with no origin in view (spec 120 §6.10). */
 function backTo(s) {
   const goal = goalOfStop(s);
   if (goal && !(mapData.value?.nodes || []).some((n) => n.slug === goal)) return null;
-  return fromWhere(whoOf(s))?.el || null;
+  return fromWhere(whereOf(s))?.el || null;
 }
 
 function Stack({ stack, dealt, ghost = false }) {
@@ -58,7 +61,7 @@ function Slot({ at, of, z, behind = false, plus = false, children }) {
  *  (spec 107 §13.2, decisions §182.4): the first lane's stacks fan to its right (hand.css gives the lane the room when it has any). */
 export function Stacks({ stacks, plus }) {
   const parties = partiesNow(), count = parties.length + 1, items = useGone(stacks, (st) => st.key),
-    dealt = useHanded(stacks.flatMap((st) => st.cards.map((s, at) => ({ key: s.key, top: at === 0, ...whoOf(s), name: askerOf(s), words: handsWords(s) }))));
+    dealt = useHanded(stacks.flatMap((st) => st.cards.map((s, at) => ({ key: s.key, top: at === 0, ...whereOf(s), name: askerOf(s), words: handsWords(s) }))));
   const lanes = Array.from({ length: count }, () => []);
   for (const it of items) lanes[Math.min(it.item.lane || 0, count - 1)].push(it);
   const last = lanes[count - 1];

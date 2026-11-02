@@ -42,15 +42,18 @@ export function boxIn(el) {
   return r && r.width > 0 && r.height > 0 && r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth ? r : null;
 }
 
-/** Where a card played by `who` comes from, the first in view of: the goal's own card or stack on the table (`[data-goal]` of the table: its back at the Orkmaster for Talk's questions, the front card of a stack in its party's lane);
- *  the leader's tab (`[data-tab]`; the Orkmaster's for what the Orkmaster plays); on a phone, which has no lanes, the goal picked in the middle when it is the card's goal, else the crown. `who`: `{goal, party, ork}`.
+/** Where a card played by `who` comes from, the first in view of: the task's own card on the table when it has one (`[data-goal][data-task]`: the card of the task that asks or failed, its place (`.ork-card-place`) when it was thrown to the hand, its edge
+ *  in the fan), the goal's own card or stack on the table (`[data-goal]` of the table: its back at the Orkmaster for Talk's questions, the front card of a stack in its party's lane);
+ *  the leader's tab (`[data-tab]`; the Orkmaster's for what the Orkmaster plays); on a phone, which has no lanes, the goal picked in the middle when it is the card's goal, else the crown. `who`: `{goal, party, ork, task}`.
  *  Returns `{el, at: "goal" | "tab" | "crown"}`, null for a card of no goal and no party (it is dealt from under its place, as it was). */
-export function fromWhere({ goal = "", party = "", ork = false } = {}) {
+export function fromWhere({ goal = "", party = "", ork = false, task = "" } = {}) {
   const find = (sel) => [...document.querySelectorAll(sel)].find((el) => boxIn(el)) || null, name = goal ? CSS.escape(goal) : "";
   if (uprightNow.value) {
     const mid = goal ? find(`.up-look[data-goal="${name}"]`) : null, crown = mid ? null : find(".up-crown");
     return mid ? { el: mid, at: "goal" } : crown ? { el: crown, at: "crown" } : null;
   }
+  const own = goal && task ? find(`.frame-table [data-goal="${name}"][data-task="${CSS.escape(String(task))}"]`) : null;                  // the asking (or failed) task's own card first
+  if (own) return { el: own, at: "goal" };
   const card = goal ? [".table-card", ".table-token", ".table-goal"].map((k) => find(`.frame-table ${k}[data-goal="${name}"]`)).find(Boolean) : null;       // its own card, else its token, else its block
   if (card) return { el: card, at: "goal" };
   const slug = ork ? ORKMASTER : party, tab = slug ? find(`.frame-table .table-tab[data-tab="${CSS.escape(slug)}"]`) : null;
