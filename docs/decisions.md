@@ -4728,3 +4728,46 @@ app's stores alone: an indie game's store is Steam, and Steam's page is not in t
 7. **The look is orkUI's and the words plain**, as §208.6.
 8. **The evidence is asked for before the spec**, as §208.7. The spec builds 2–5 with §208's to §213's.
 The owner's call.
+
+## 215. Run's and LiveOps' first map: a line of time with *Now* across it, a dated event that warns when its goal is not ready, what runs and where, and the players' numbers left for when they are read (2 November 2026, the owner)
+
+Changes: 90, 109, 184.
+
+Why: the same research as §208, for Run and LiveOps (a prompt to Gemini, its answer unsourced and so taken as a
+hypothesis; its free tiers, Unity Cloud's fifty concurrent players in Relay, fifty thousand users a month, a hundred
+thousand transactions and five gigabytes, change more often than anything and are not to be kept in code). §184.7 left
+*Run's map of services and SLOs, LiveOps' calendar* for later; Run and LiveOps are the only crafts with no map, and
+LiveOps is one of a game's six parties from its start (`party_recipes.GAME`), while most indie games run no server.
+What it said: cloud servers cost a small studio too much and servers switched off for want of money kill a game, so
+the indie stack is Steamworks' free peer to peer, servers on demand (Edgegap) or generous free tiers (Unity Cloud;
+Photon Fusion or Nakama with PostHog, Sentry, Upstash, Cloudflare); an online game that does not reach its critical
+mass in its first hour falls into matchmaking's death spiral (matches of the strong and the weak, players leaving,
+waits without end); a spike in load or crashes almost always follows a patch, an event or a sale, so the stability
+signals laid under the calendar show the cause at once. It proposed a line of time with *Now* across it (fourteen days
+back, thirty ahead: the events, updates, streams and sales above; the four golden signals below, *Traffic*, *Errors*,
+*Latency*, *Saturation*, from Sentry and the like), a second map (a monthly crash-free budget, a monitor of the free
+tiers, the matchmaking's critical mass), a warning when an event comes within forty-eight hours and its assets are not
+ready, and on the phone a pager (the players online, the budget left, the next event). So:
+1. **The map is a line of time with *Now* across it**, Run's and LiveOps' alike: behind *Now* (about two weeks) the
+   versions that went out (`realm/releases.py`'s, Release's), ahead of it (about a month) **dated events**: a launch, a
+   demo in a festival, a store's sale, an in-game event, a content update, a stream. An event is a card put by the
+   person or proposed by the leader, with its date and the goal it waits on; kept by the party, read by code. One line
+   of cards along time, never a list or a calendar's grid.
+2. **An event that warns when its goal is not ready** (`not_ready`, a new hint): an event within EVENT_DAYS days whose
+   goal is not in main (*Next Fest is in 2 days and "the demo's ending" is still at work*). By code, from the Board.
+3. **What runs and where**, only for a project that runs something: a strip along the map's top, by code, as the
+   pillars lie on the other maps: spec 90's containers that serve (a server, a realtime stack) and the outside services
+   the manifests and configs name (an error tracker, analytics, a game server or relay, a database, a host: Sentry,
+   PostHog, Photon, Nakama, Supabase, Firebase, Steamworks' networking, `fly.toml`, `wrangler.toml` and the like, a
+   list kept beside `stacks_known`), each with what it is for. A free tier's limits are the leader's knowledge, dated,
+   in Talk; never a number on a card.
+4. **Matchmaking in the rubric**: for an online game, LiveOps' leader (and Game design's before launch) asks whether
+   there will be players enough for matchmaking in the first hour, and what holds it if not (bots, an asynchronous
+   mode, crossplay): a judgement in the look and in Talk, never a part of the map.
+5. **The players' numbers left for when they are read**: the four golden signals under the past, the crash-free budget,
+   the free tiers' use and the matchmaking's critical mass need Sentry, PostHog and the services' APIs read; the line
+   keeps their place under the past, filled by the later spec of spec 115 that reads them. No second map, and no pager
+   on the phone: when they are read, a spike is a card in the hand or a push, never a view of its own.
+6. **The look is orkUI's and the words plain**, as §208.6.
+7. **The evidence is asked for before the spec**, as §208.7. The spec builds 1–4 with §208's to §214's.
+The owner's call.
