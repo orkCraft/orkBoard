@@ -4585,3 +4585,50 @@ configs), the map is the one we have. So:
 7. **The evidence is asked for before the spec**, as §208.7: the survey's figures and the post-mortem it speaks of,
    named. The spec builds 2–4 with §208's, §209's and §210's.
 The owner's call.
+
+## 212. The Art lens measured against how small teams keep their assets: the placeholders found, the look's anchors over the map, the loudness measured against the game's target (2 November 2026, the owner)
+
+Changes: 88, 109, 210.
+
+Why: the same research as §208, for Art (a prompt to Gemini, its answer unsourced and so taken as a hypothesis). What
+it said: in a game one thing (a ghost, a weapon, a menu) is worked on at once by code, art, animation and sound, so a
+relay board (design, code, art, QA) or a board per craft loses the thing whole; a solo developer cannot write code and
+draw final art in one sitting, so the way that works is to code on **placeholders** and keep a plain register of what
+is still to be replaced; Codecks' *hero cards* and *journeys* give a thing's card its sub-cards for code, sprite or
+mesh, animation, dialogue and sound; a small team seldom does the long capture of the master bus that console
+guidelines ask for, and Wwise 201 reads loudness **relative to the project's target** (the target is 0 LU, a sound
+*+3 LU* above it) rather than as an absolute *−23 LUFS*. It proposed the art bible's anchors along the top (the palette,
+a reference sprite with its grid, the audio target: −24 LUFS for PC and consoles, −18 for mobile and handhelds, true
+peak −1 dBTP), the game's things as hero cards with slots *Code*, *Sprite/Mesh*, *Anim*, *Audio*, *VFX* (dashed where
+a placeholder stands); a second map (a treemap of the build's weight on disk and in VRAM, and the audio groups on a
+scale centred on 0 LU with their range, LRA); signals for a placeholder on a release scene, a budget broken, a sound
+over the true peak or off the target by more than 2 LU; and on the phone a feed of the newest assets to accept.
+Measured against what is built (spec 88's assets in lanes by kind with their variants under a pick; spec 109's aspects
+*Style, Pipeline, Budget, Sound* and the hints `mixed_sizes`, `naming`, `heavy`, `unused`), the map is the one we have;
+what is missing is the placeholders and any measure of sound. So:
+1. **Assets stays the one map, in lanes by kind.** No second map, no treemap (`heavy` says what weighs; the memory a
+   picture takes on the card is not read from the repository).
+2. **The placeholders found** (`placeholder`, a new hint in *Pipeline*): an asset whose name or folder says it is
+   temporary (`placeholder`, `temp`, `tmp`, `wip`, `dummy`, `todo`, as a word of its path), or an engine's default
+   picture standing where art should (Godot's `icon.svg` named by a scene or a script other than the project's own
+   settings). Its words say where it is used. **Release counts them**: a goal waiting for main that brings or keeps a
+   placeholder in a file its changes touch says so in Release's *Readiness* (*3 placeholders go to main*). Agents
+   make placeholders too, so the register is kept by code, never by hand.
+3. **The look's anchors over the map**: the person may mark up to three assets as **the look** (a key sprite, the
+   palette, a frame of the game); they lie as thin strips along the map's top edge, as the pillars do (§210.3,
+   §211.3). Art's leader reads them beside the newest pictures in its look and judges new art against them (*Style*):
+   the art bible as three files marked, not a document.
+4. **The loudness measured against the game's target** (`loud`, a new hint in *Sound*), when `ffmpeg` is on the
+   machine (its `ebur128` filter; with none the hint is silent, as any hint that cannot be read): only a sound of
+   LOUD_MIN_S seconds or more (music, ambience, a voice; a short effect's integrated loudness says little). The target
+   by the platform the brief names: −24 LUFS for a computer or a console, −18 for a phone or a handheld; the true peak
+   at most −1 dBTP. A sound off the target by more than 2 LU, or over the peak, says it **relative to the target**, as
+   Wwise reads it: *boss.ogg is 4 LU louder than the game's target*, never the absolute number alone.
+5. **Not taken**: hero cards with slots (a thing worked on by several crafts at once is a **goal** already, its tasks
+   in different parties, spec 59; guessing a thing from its files' names and drawing its empty slots would lie: not every
+   thing has a sound); the loudness of buses and the range of loudness (a bus exists only in the running game); a feed
+   of assets on the phone (accepting an asset is a decision, a *look* card in the hand as today).
+6. **The look is orkUI's and the words plain**, as §208.6.
+7. **The evidence is asked for before the spec**, as §208.7: the solo developers' words on placeholders, Codecks'
+   pages, the Wwise course and the platform's loudness guideline, named. The spec builds 2–4 with §208's to §211's.
+The owner's call.
