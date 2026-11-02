@@ -95,7 +95,7 @@ def test_a_failure_turns_its_card_red_then_is_thrown_to_the_hand_and_leaves_a_pl
         hand_failure(pg).wait_for(timeout=WAIT_MS)                                                            # ... then it is in the hand
         place = pg.locator('.table-thrown[data-goal="work"][data-task="w1"]')
         place.wait_for(timeout=WAIT_MS)
-        assert "ork-card-place" in place.get_attribute("class") and place.inner_text().strip() == "Back here on Try again", "a dashed place in its lane, saying where it comes back"
+        assert "ork-card-place" in place.get_attribute("class") and place.inner_text().strip() == "Back here on Start again", "a dashed place in its lane, saying where it comes back"
         assert pg.locator('[data-lkey="t:task:work/w1"]').count() == 0, "the card is in the hand, not in the lane"
         assert place.evaluate("(e) => e.closest('.table-lane') !== null"), "the place lies in the lane the card lay in"
         assert place.bounding_box()["width"] > 100 and place.bounding_box()["height"] > 60, "as large as the card was"
@@ -167,7 +167,7 @@ def test_a_failure_there_when_the_page_is_drawn_is_in_the_hand_with_its_place_in
     try:
         pg.locator('.table-thrown[data-task="w1"]').wait_for(timeout=WAIT_MS)
         assert hand_failure(pg).count() == 1 and pg.locator(".hand-card.ork-deal").count() == 0 and pg.locator('[data-lkey="t:task:work/w1"]').count() == 0
-        assert pg.locator('.table-thrown[data-task="w1"]').inner_text().strip() == "Back here on Try again"
+        assert pg.locator('.table-thrown[data-task="w1"]').inner_text().strip() == "Back here on Start again"
     finally:
         pg.close()
     assert not log, "\n".join(log)

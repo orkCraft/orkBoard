@@ -88,7 +88,7 @@ G last (it touches every `Elem`). Each part merged into main as soon as its own 
    flies back into the goal's card and leaves the hand; when none is left the yellow goes.
 2. **A failure**: a task failed (its checks red twice, as today) turns its card red (`fails`), and after a beat the card
    is thrown from where it lay into the hand (a flight with a turn), a dashed place (orkUI's `.ork-card-place`) left in
-   its lane with *Back here on Try again*. *Try again* flies it back to its place.
+   its lane with *Back here on Start again* (the failure card's button, as it is named today). *Start again* flies it back to its place.
 3. **The night**: the goals done in the night's window (`ideas.night`'s `goals` with `done`) go to the discard, each
    with a small moon on its card until its result is seen (§130.1); on the first look at the project after the night
    they are dealt into the discard one by one. A night's failure comes to the hand as a failure (2). The morning's card

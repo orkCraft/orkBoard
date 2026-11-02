@@ -55,7 +55,7 @@ async function fly(was, root) {
 
 // -- a failure thrown to the hand (docs/specs/128 C.2, decisions §206.7) -------------------------------------------------------------------------------------------------------------------
 // A task that failed turns its card red where it lies (`fails`); after a beat the hand takes the failure as a card, dealt from that card (hand/motion.js `useHanded`, orkUI's `.ork-deal`, which turns a little as it flies), and the lane's card leaves a dashed place
-// (orkUI's `.ork-card-place`) saying *Back here on Try again*, for as long as the failure lies in the hand. Answered, the failure card flies back to the place (hand/stacks.js: its origin is the task's own card or its place) and the card returns.
+// (orkUI's `.ork-card-place`) saying *Back here on Start again* (the failure card's button), for as long as the failure lies in the hand. Answered, the failure card flies back to the place (hand/stacks.js: its origin is the task's own card or its place) and the card returns.
 // The hand calls `useThrown(stops)`: it holds a fresh failure back for the beat (the card is red meanwhile), and keeps `thrown` (the lane's tasks that lie in the hand, `goal/task` → the card's height) that `TaskCard` reads. A failure already there when the
 // page is drawn, one the page was not shown for, one of a task with no card in view (another tab, a phone) and reduced motion: no beat, no flight: the failure is in the hand and the place is in the lane.
 
@@ -116,5 +116,5 @@ export function useThrown(stops, ready = true) {
 /** A lane's place for a failure that lies in the hand: orkUI's card outline where the card lay, its height kept, *Back here on Try again*. */
 export function ThrownPlace({ n, t, h = 0 }) {
   return html`<div class="ork-card-place table-thrown" data-goal=${n.slug} data-task=${t.id} data-about=${`idea:${n.slug} task:${n.slug}/${t.id}`} data-place="thrown" style=${h ? `height:${h}px` : undefined} aria-label=${`${t.title}: back here when you try again`}>
-    <span>Back here on <i>Try again</i></span></div>`;
+    <span>Back here on <i>Start again</i></span></div>`;
 }
