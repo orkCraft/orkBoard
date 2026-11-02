@@ -267,7 +267,7 @@ def goals(state_dir: Path, pages: Path) -> dict[str, dict]:
         except (OSError, ValueError):
             page = None
         if page is not None:
-            out[slug] = {"slug": slug, "title": _words(page.title or slug, 80), "element": idea_element.of(state_dir, slug), "place": place_of(state_dir, slug)}
+            out[slug] = {"slug": slug, "title": _words(page.title or slug, 80), "element": idea_element.of(state_dir, slug), "hue": idea_element.hue_of(state_dir, slug), "place": place_of(state_dir, slug)}
     return out
 
 

@@ -83,9 +83,9 @@ export function GoalView({ g, n }) {
   const lit = will.filter((w) => w.id && w.kind), read = cards.filter((c) => c.kind === "read").map((c) => ({ id: c.id }));
   const says = done ? `What it changed at ${nameOf(g)}’s level, against what its spec promised` : `What it will change, at ${nameOf(g)}’s level${n.state === "working" ? "" : " · its spec is ready"}`;
   const empty = !loading && !cards.length && !dones.length && !tasks.length;
-  return html`<section class="gv" data-goal=${n.slug} data-party=${g.slug} data-view=${done ? "changed" : "will"} data-elem=${n.element || undefined} aria-label=${`${n.title}: ${says}`}>
+  return html`<section class="gv" data-goal=${n.slug} data-party=${g.slug} data-view=${done ? "changed" : "will"} data-elem=${n.hue || n.element || undefined} aria-label=${`${n.title}: ${says}`}>
     <div class="gv-main">
-      <header class="gv-title"><${Elem} name=${n.element} dim=${!n.element} big=${true} /><div><b>${n.title}</b><span>${says}</span></div></header>
+      <header class="gv-title"><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} big=${true} /><div><b>${n.title}</b><span>${says}</span></div></header>
       ${loading ? html`<p class="gv-empty" data-state="loading">Reading the spec…</p>`
         : empty ? html`<p class="gv-empty" data-state="none">${n.short || n.title}: nothing of it ${done ? "was" : "is"} on ${nameOf(g)}’s map. Its work is at the other leaders.</p>`
         : html`${cards.length > 0 ? html`<div class="gv-grid">${cards.map((c) => html`<${PartCard} key=${`${c.id}:${c.verdict || c.kind}`} g=${g} part=${c} info=${info} done=${done} />`)}</div>`

@@ -5,9 +5,10 @@ import { h } from "./util.js";
 
 export const ELEMENTS = ["meadow", "ice", "dust", "void", "lava"];
 
-/** A goal's element as a node (null when the goal has none yet); `dim`: it is not read yet, drawn in the faint ink; `big`: 28 px (else 14). */
-export function elem(name, { dim = false, big = false } = {}) {
-  return ELEMENTS.includes(name) ? h("span", { class: `ork-elem ${name}${big ? " big" : ""}${dim ? " dim" : ""}`, "aria-hidden": "true" }) : null;
+/** A goal's rune as a node (null when the goal has none yet): its shape `name` in its colour `hue` (spec 128 G; one of ELEMENTS, else the shape's own; page.css `.ork-elem.k-<hue>`); `dim`: it is not read yet, drawn in the faint ink; `big`: 28 px (else 14). */
+export function elem(name, { dim = false, big = false, hue = "" } = {}) {
+  const colour = ELEMENTS.includes(hue) && hue !== name ? ` k-${hue}` : "";
+  return ELEMENTS.includes(name) ? h("span", { class: `ork-elem ${name}${colour}${big ? " big" : ""}${dim ? " dim" : ""}`, "aria-hidden": "true" }) : null;
 }
 
 /** A goal's moon (spec 74 §6) as a node, 14 px (`big`: 28 px): `phase` is new, crescent, half, gibbous or full; null (no node) for a goal that has none. Shown, never named: `aria-hidden`. */

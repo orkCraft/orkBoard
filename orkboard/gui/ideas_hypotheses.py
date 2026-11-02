@@ -42,7 +42,7 @@ class HypothesesMixin:
         out: dict[str, dict] = {}
         for slug, place in board_rows.places_of(self.state_dir, pages, slugs).items():
             page = ideas.idea_page(Path(pages), slug)
-            out[slug] = {"slug": slug, "title": " ".join(((page.title if page else "") or slug).split())[:80], "element": idea_element.of(self.state_dir, slug), "place": place}
+            out[slug] = {"slug": slug, "title": " ".join(((page.title if page else "") or slug).split())[:80], "element": idea_element.of(self.state_dir, slug), "hue": idea_element.hue_of(self.state_dir, slug), "place": place}
         return out
 
     def _hyp_shown(self, items: list[dict]) -> list[dict]:

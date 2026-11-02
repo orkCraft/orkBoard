@@ -50,7 +50,7 @@ export function waitsOf(s) {
 /** What the context says of `s`, as data: `{head, who, goal: {name, element, sign} | null, project, why, pick, waits, idea}`. */
 export function contextOf(s) {
   const party = s.party || {}, ork = s.kind === "paid" || s.kind === "sign_in" || !party.name, project = currentProject.value?.name || "", node = s.node || null;
-  const goal = node ? { name: node.short || node.title || s.title || "", element: node.element || "", sign: node.type?.sign || "" } : null;
+  const goal = node ? { name: node.short || node.title || s.title || "", element: node.element || "", hue: node.hue || "", sign: node.type?.sign || "" } : null;
   return { head: ork ? orkHeadOf() : party.head || null, who: ork ? (project ? `Orkmaster · ${project}` : "Orkmaster") : party.name, goal, project: !goal && !ork ? project : "",
     why: whyOf(s), pick: pickOf(s), waits: waitsOf(s), idea: goalOfStop(s) };
 }
@@ -65,7 +65,7 @@ export function Context({ s, bare = false }) {
     openOver(pageOf(c.idea), { idea: c.idea }, { title: "", key: "" }, word);      // no upright Board to name: the title says the page
   } : null;
   const inner = html`<span class="up-ctx__who ork-race">${c.head && html`<${Head} race=${c.head.race} tier=${c.head.tier} />`}<span class="ork-race__word">${c.who}</span></span>
-    ${c.goal && !bare && html`<span class="up-ctx__goal"><${Elem} name=${c.goal.element} dim=${!c.goal.element} />${c.goal.sign && html`<${Sign} name=${c.goal.sign} />`}<span class="up-ctx__name">${c.goal.name}</span></span>`}
+    ${c.goal && !bare && html`<span class="up-ctx__goal"><${Elem} name=${c.goal.element} hue=${c.goal.hue} dim=${!c.goal.element} />${c.goal.sign && html`<${Sign} name=${c.goal.sign} />`}<span class="up-ctx__name">${c.goal.name}</span></span>`}
     ${c.project && html`<span class="up-ctx__goal"><span class="up-ctx__name">${c.project}</span></span>`}
     ${c.why && html`<span class="up-ctx__why">${c.why}</span>`}
     ${c.pick && html`<span class="up-ctx__rec">Recommended: ${c.pick}</span>`}

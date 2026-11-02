@@ -187,7 +187,7 @@ def test_ideas_move_goes_through_the_route_keeps_the_element_and_says_idea_moved
 
 # -- §2.3: a sent pitch's goal keeps its element when it is free -----------------------------------------------------------
 
-def test_a_sent_pitchs_goal_keeps_the_pitchs_element_where_no_open_goal_wears_it_else_the_one_used_least(host):
+def test_a_sent_pitchs_goal_keeps_the_pitchs_element_where_no_other_goal_wears_it_else_the_one_used_least(host):
     h = host
     one = pitch(h, "Free one")
     ideas.save_state(h.state, one, element="dust")
@@ -198,9 +198,9 @@ def test_a_sent_pitchs_goal_keeps_the_pitchs_element_where_no_open_goal_wears_it
     ideas.save_state(h.state, two, element="dust")
     taken = h.command("ideas.pitch_send", {"slug": two, "party": h.app})
     wait(h, taken["slug"])
-    assert ideas.state(h.state, taken["slug"])["element"] == "meadow"                                  # "dust" is worn by an open goal of the party
+    assert ideas.state(h.state, taken["slug"])["element"] == "meadow"                                  # "dust" is worn by another goal of the project (spec 128 G)
     done = goal(h, h.web, "Done one", state="done")
-    ideas.save_state(h.state, done, element="void")                                                    # a done goal does not wear it
+    ideas.save_state(h.state, done, element="void", seen_at="2026-11-02T10:00:00+00:00")                # a done goal whose result is seen does not wear it
     three = pitch(h, "Done one's element")
     ideas.save_state(h.state, three, element="void")
     free = h.command("ideas.pitch_send", {"slug": three, "party": h.web})

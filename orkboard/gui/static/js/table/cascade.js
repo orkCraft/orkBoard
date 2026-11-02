@@ -20,7 +20,7 @@ const THRESHOLD = 6;                                               // px a point
 export function GoalStrip({ n }) {
   const on = picked.value === n.slug;
   return html`<button type="button" class=${cls("ork-card table-gstrip", { "ork-picked": on, "is-on": on })} data-goal=${n.slug} data-about=${`idea:${n.slug}`} aria-pressed=${String(on)}
-    aria-label=${n.title} title=${n.title} onClick=${() => pick(n.slug)}><${Elem} name=${n.element} dim=${!n.element} /><span class="table-gstrip__nm">${n.short || n.title}</span></button>`;
+    aria-label=${n.title} title=${n.title} onClick=${() => pick(n.slug)}><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} /><span class="table-gstrip__nm">${n.short || n.title}</span></button>`;
 }
 
 /** A goal's tasks, the front one first: collapsed, the front one whole and the others behind it as a fan (turned a little, their edges the element and the stage's sign, the nearest to the front the next in turn; hover or focus opens it and
@@ -63,8 +63,8 @@ function LineCard({ g, grip }) {
   const sign = g.type?.sign || "";
   return html`<button type="button" class=${cls("ork-card ork-leans table-card table-card--line", { "ork-picked": picked.value === g.slug })} data-line-item="1" data-slug=${g.slug} data-party=${g.party} data-about=${`idea:${g.slug}`}
     aria-label=${wordsOf(g)} title=${wordsOf(g)} ...${grip}>
-    <span class="table-card__head"><${Elem} name=${g.element} dim=${!g.element} /><span class="table-card__nm">${g.title}</span></span>
-    <span class=${`table-card__win is-${g.element || "none"}`}>${sign && html`<${Sign} name=${sign} big=${true} />`}${g.reset && html`<${Sign} name="moon" big=${true} label=${waitsWords(g)} />`}</span>
+    <span class="table-card__head"><${Elem} name=${g.element} hue=${g.hue} dim=${!g.element} /><span class="table-card__nm">${g.title}</span></span>
+    <span class=${`table-card__win is-${g.hue || g.element || "none"}`}>${sign && html`<${Sign} name=${sign} big=${true} />`}${g.reset && html`<${Sign} name="moon" big=${true} label=${waitsWords(g)} />`}</span>
     <span class="table-card__row"><span class="table-stage">In line</span></span>
   </button>`;
 }
@@ -73,7 +73,7 @@ function LineCard({ g, grip }) {
 function LineEdge({ g, grip, hint }) {
   const on = picked.value === g.slug;
   return html`<button type="button" class=${cls("ork-card table-fan__card table-ledge", { "ork-picked": on, "is-on": on, "is-hint": hint })} data-line-item="1" data-slug=${g.slug} data-party=${g.party} data-about=${`idea:${g.slug}`}
-    aria-label=${wordsOf(g)} title=${wordsOf(g)} ...${grip}><${Elem} name=${g.element} dim=${!g.element} /><span class="table-fan__nm">${g.title}</span>${moon(g)}</button>`;
+    aria-label=${wordsOf(g)} title=${wordsOf(g)} ...${grip}><${Elem} name=${g.element} hue=${g.hue} dim=${!g.element} /><span class="table-fan__nm">${g.title}</span>${moon(g)}</button>`;
 }
 
 const openLine = () => openOver("line", {}, { title: "Board", key: "" }, "In line");
@@ -83,8 +83,8 @@ function LineTokens({ shown }) {
   return html`<div class="table-line-tokens" role="group" aria-label="In line">
     ${shown.map((g) => html`<button type="button" key=${g.slug} class=${cls("ork-card table-token", { "ork-picked": picked.value === g.slug })} data-slug=${g.slug} data-party=${g.party} data-about=${`idea:${g.slug}`}
       aria-label=${wordsOf(g)} title=${wordsOf(g)} aria-pressed=${String(picked.value === g.slug)} onClick=${() => pick(g.slug)}>
-      <span class="table-card__top"><${Elem} name=${g.element} dim=${!g.element} />${moon(g)}</span>
-      <span class=${`table-card__win is-${g.element || "none"}`}>${g.type?.sign && html`<${Sign} name=${g.type.sign} big=${true} />`}</span>
+      <span class="table-card__top"><${Elem} name=${g.element} hue=${g.hue} dim=${!g.element} />${moon(g)}</span>
+      <span class=${`table-card__win is-${g.hue || g.element || "none"}`}>${g.type?.sign && html`<${Sign} name=${g.type.sign} big=${true} />`}</span>
     </button>`)}
     <button type="button" class="ork-card table-token table-token--all" aria-label="All goals in line, with a search" title="All · search" onClick=${openLine}><${Icon} name="search" /></button>
   </div>`;

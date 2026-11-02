@@ -42,8 +42,8 @@ def test_the_goals_in_dev_and_not_in_main_newest_landing_first_ticked_with_their
     commit(repo, "mine.txt", "my own\n")                                             # the person's own commit: no goal's
     got = release_map.read(state(repo), repo, pages)
     assert got == {"into": "dev", "main": "main", "same": False, "commits": 4, "files": 4, "since": None,
-                   "goals": [{"idea": one, "title": "Dark mode", "element": "ice", "commit": c, "ticked": True},
-                             {"idea": two, "title": "Faster pages", "element": "", "commit": b, "ticked": True}]}
+                   "goals": [{"idea": one, "title": "Dark mode", "element": "ice", "hue": "ice", "commit": c, "ticked": True},
+                             {"idea": two, "title": "Faster pages", "element": "", "hue": "", "commit": b, "ticked": True}]}
     assert a != c
 
 
@@ -133,5 +133,5 @@ def test_the_command_answers_what_the_gate_would_merge(host, fake_repo):
     got = host.command("ideas.release_map", {})
     gate = host.command("ideas.gate", {})
     assert (got["into"], got["main"], got["commits"], got["files"]) == (gate["into"], gate["main"], gate["commits"], gate["files"])
-    assert got["goals"] == [{"idea": slug, "title": "Dark mode", "element": idea_element.of(host.ideas.state_dir, slug), "commit": sha, "ticked": True}]
+    assert got["goals"] == [{"idea": slug, "title": "Dark mode", "element": idea_element.of(host.ideas.state_dir, slug), "hue": idea_element.hue_of(host.ideas.state_dir, slug), "commit": sha, "ticked": True}]
     assert [g["slug"] for g in gate["ideas"]] == [slug]

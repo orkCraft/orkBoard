@@ -35,8 +35,8 @@ export function makeGoals(core, about, process = () => {}) {
     const words = `${r.title} · ${r.line}`;
     return h("div", { class: `dk${on ? " is-on" : ""}`, "data-idea": r.slug },
       h("button", { class: "dk__main", type: "button", "aria-pressed": String(on), "data-idea": r.slug, "aria-label": words, title: words, onclick: () => toggle(r.slug) },
-        h("span", { class: "dk__elem", "aria-hidden": "true" }, elem(r.element, { dim: r.raw })),
-        r.type ? h("span", { class: `dk__type ${typeTone(r.element, r.raw)}`, "data-type": r.type.id }, sign(r.type.sign, r.type.name)) : h("span", { class: "dk__gap", "aria-hidden": "true" }),
+        h("span", { class: "dk__elem", "aria-hidden": "true" }, elem(r.element, { dim: r.raw, hue: r.hue })),
+        r.type ? h("span", { class: `dk__type ${typeTone(r.hue || r.element, r.raw)}`, "data-type": r.type.id }, sign(r.type.sign, r.type.name)) : h("span", { class: "dk__gap", "aria-hidden": "true" }),
         h("span", { class: "dk__title" }, r.title), moon(r.moon),
         r.mark ? h("span", { class: "dk__mark" }, sign(r.mark, r.markTip)) : null, on ? h("span", { class: "dk__check" }, sign("check", "picked")) : null),
       h("button", { class: "dk__open", type: "button", "aria-label": `Open ${r.title}`, onclick: () => { sh.close(); core.open(r.open, "map"); } }, h("i", { class: "ork-chev right", "aria-hidden": "true" })));
@@ -114,7 +114,7 @@ export function makeGoals(core, about, process = () => {}) {
     shown = { m, list };
     const head = on.length
       ? h("button", { class: "gbar__head", type: "button", "aria-haspopup": "dialog", "data-act": "goals", "aria-label": `${filterWords(on, list)}: only their tasks are shown. Goals`, onclick: () => open() },
-        h("i", { class: "ork-chev", "aria-hidden": "true" }), h("span", { class: "gbar__lbl" }, barName(m.goal)), h("span", { class: "gbar__els" }, ...on.map((s) => elem(m.nodes.find((n) => n.slug === s)?.element, { dim: false }))),
+        h("i", { class: "ork-chev", "aria-hidden": "true" }), h("span", { class: "gbar__lbl" }, barName(m.goal)), h("span", { class: "gbar__els" }, ...on.map((s) => elem(m.nodes.find((n) => n.slug === s)?.element, { hue: m.nodes.find((n) => n.slug === s)?.hue, dim: false }))),
         h("span", { class: "gbar__words" }, filterWords(on, list)))
       : h("button", { class: "gbar__head", type: "button", "aria-haspopup": "dialog", "data-act": "goals", title: "The goals: a tap on one shows only its tasks",
         onclick: () => open() },

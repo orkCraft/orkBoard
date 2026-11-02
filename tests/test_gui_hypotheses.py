@@ -111,8 +111,8 @@ def test_a_goal_rests_on_a_hypothesis_and_a_test_tests_it_each_with_its_title_el
     test = make_goal(host, "Interview five founders", element="ice")
     host.command("ideas.hypothesis_attach", {"id": item["id"], "goal": rests})
     got = host.command("ideas.hypothesis_attach", {"id": item["id"], "test": test})["item"]
-    assert got["rests"] == [{"slug": rests, "title": "Dark mode", "element": "lava", "place": "work"}]
-    assert got["tests"] == [{"slug": test, "title": "Interview five founders", "element": "ice", "place": "line"}]
+    assert got["rests"] == [{"slug": rests, "title": "Dark mode", "element": "lava", "hue": "lava", "place": "work"}]
+    assert got["tests"] == [{"slug": test, "title": "Interview five founders", "element": "ice", "hue": "ice", "place": "line"}]
     assert got["state"] == "testing"                                                                  # a test is in line: shown as testing, kept as open
     assert hypotheses.read(host.ideas.state_dir)["items"][0]["state"] == "open"
     ideas.save_state(host.ideas.state_dir, test, state="done")

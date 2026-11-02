@@ -46,7 +46,7 @@ def test_a_release_party_releases_from_every_party_but_ideation_and_itself_newes
     assert releases.releases_from(h.root, h.rel) == [] and releases.sources(h.root, h.rel) == [h.app, h.web]
     got = releases.candidates(h.root, h.state, h.rel)
     assert ids(got) == [h.a2, h.w1, h.a1]                                              # the pitch's flag, an unflagged goal: not listed
-    assert got[0] == {"goal": h.a2, "title": "Dark mode", "party": h.app, "party_name": "Mobile app", "element": "", "at": A2, "commit": "c" * 40, "held": ""}
+    assert got[0] == {"goal": h.a2, "title": "Dark mode", "party": h.app, "party_name": "Mobile app", "element": "", "hue": "", "at": A2, "commit": "c" * 40, "held": ""}
     assert releases.since(h.root, h.state, h.rel) is None                              # before the first release: all of them
     assert releases.sources(h.root, h.app) == [h.app] and releases.sources(h.root, h.talk) == [h.talk]      # any other party: itself
 
@@ -176,7 +176,7 @@ def test_release_candidates_answers_what_goes_in_for_the_dialog(board):
     got = h.command("ideas.release_candidates", {"party": h.rel})
     assert set(got) == {"since", "releases_from", "candidates"} and got["since"] == {"version": "1.3", "out": "2026-10-21T12:00:00"}
     assert got["releases_from"] == [] and [(c["goal"], c["held"]) for c in got["candidates"]] == [(h.a2, "1.4")]
-    assert set(got["candidates"][0]) == {"goal", "title", "party", "party_name", "element", "at", "commit", "held"}
+    assert set(got["candidates"][0]) == {"goal", "title", "party", "party_name", "element", "hue", "at", "commit", "held"}
     assert h.command("ideas.release_candidates", {"party": h.app})["since"] is None and r and open_
     with pytest.raises(CommandError, match="That party is gone"):
         h.command("ideas.release_candidates", {"party": "nowhere"})

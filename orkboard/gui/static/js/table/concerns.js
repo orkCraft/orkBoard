@@ -89,7 +89,7 @@ function Mark({ party, list, lead, nodes, mid }) {
   const face = html`${level === "alert" ? html`<${Sign} name="alert" />` : html`<i class="cn-dot" aria-hidden="true"></i>`}`;
   if (all) {
     const words = `${label}: made into the goal ${node?.title || slug}`;
-    return html`<button type="button" id=${mid} class="cn-mark is-made" data-level=${level} data-elem=${node?.element || "dust"} data-nopress="" aria-label=${words} title=${`${words}. Pick the goal`}
+    return html`<button type="button" id=${mid} class="cn-mark is-made" data-level=${level} data-elem=${node?.hue || node?.element || "dust"} data-nopress="" aria-label=${words} title=${`${words}. Pick the goal`}
       onClick=${(e) => { e.stopPropagation(); pick(slug); }}>${level === "alert" && lead.head && html`<${Head} race=${lead.head.race} tier=${lead.head.tier} />`}${face}</button>`;
   }
   return html`<span id=${mid} class="cn-mark" role="img" data-level=${level} data-count=${list.length} aria-label=${label} title=${`${level === "alert" ? "An alert" : "A note"}: ${label}`}>

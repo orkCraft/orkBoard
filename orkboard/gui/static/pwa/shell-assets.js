@@ -75,7 +75,7 @@ function token(a, goals, press) {
   const label = `${a.name}${changed && goal ? ` · ${changedBy(goal)}` : ""}`;
   return h("button", { class: `as-token${changed ? " is-changed" : ""}`, type: "button", "data-id": a.id, "data-kind": a.kind, "data-change": a.change || null, "data-goal": changed ? a.goal || null : null,
     title: label, "aria-label": label, onclick: () => press(a) },
-  h("span", { class: "as-face" }, ...faceOf(a), changed && goal ? h("span", { class: "as-mark" }, elem(goal.element)) : null, h("span", { class: "as-name" }, a.name)));
+  h("span", { class: "as-face" }, ...faceOf(a), changed && goal ? h("span", { class: "as-mark" }, elem(goal.element, { hue: goal.hue })) : null, h("span", { class: "as-name" }, a.name)));
 }
 
 /** A file that was removed since the last look: a dashed ghost with its goal's element, nothing to press. */
@@ -83,7 +83,7 @@ function ghost(r, goals) {
   const goal = goals[r.goal];
   const name = baseName(r.id);
   return h("div", { class: "as-token is-removed", "data-id": r.id, "data-kind": r.kind, "data-change": "removed", "data-goal": r.goal || null, title: goal ? `${name} · ${changedBy(goal)}` : name, role: "group", "aria-label": name },
-    h("span", { class: "as-face" }, sign("cross", "", { big: true }), goal ? h("span", { class: "as-mark" }, elem(goal.element)) : null, h("span", { class: "as-name" }, name)));
+    h("span", { class: "as-face" }, sign("cross", "", { big: true }), goal ? h("span", { class: "as-mark" }, elem(goal.element, { hue: goal.hue })) : null, h("span", { class: "as-name" }, name)));
 }
 
 /** A stack: the front token (the first), edges behind it and *×n*; a press opens it in place. */
@@ -94,7 +94,7 @@ function stackToken(e, goals, press) {
   return h("button", { class: `as-token is-many${changed ? " is-changed" : ""}`, type: "button", "data-stack": e.stack, "data-kind": front.kind, "data-n": String(e.items.length), title: e.stack, "aria-label": `${folderName(e.stack)} ×${e.items.length}`,
     "aria-expanded": "false", onclick: press },
   ...Array.from({ length: edges }, (_, i) => h("i", { class: `deck__edge e${edges - i}`, "aria-hidden": "true" })),
-  h("span", { class: "as-face" }, ...faceOf(front), changed && goal ? h("span", { class: "as-mark" }, elem(goal.element)) : null, h("span", { class: "as-name" }, folderName(e.stack))),
+  h("span", { class: "as-face" }, ...faceOf(front), changed && goal ? h("span", { class: "as-mark" }, elem(goal.element, { hue: goal.hue })) : null, h("span", { class: "as-name" }, folderName(e.stack))),
   h("span", { class: "ork-gem deck__n", "aria-hidden": "true" }, `×${e.items.length}`));
 }
 
@@ -173,7 +173,7 @@ export function makeAssets(core) {
       nodes.push(ver);
     }
     nodes.push(stage);
-    if (a.change && goal) nodes.push(h("p", { class: "as-by" }, elem(goal.element), h("span", {}, changedBy(goal))));
+    if (a.change && goal) nodes.push(h("p", { class: "as-by" }, elem(goal.element, { hue: goal.hue }), h("span", {}, changedBy(goal))));
     const others = a.others?.variants || [];
     if (others.length) {
       const group = tiles({ media: MEDIA_OF[a.kind] || "image", variants: others }, {});

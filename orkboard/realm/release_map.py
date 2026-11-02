@@ -52,7 +52,7 @@ def _waiting(state_dir: Path, shas: list[str], pages: Path | None) -> list[dict]
             if page is None:
                 continue                            # a goal dropped from the Board waits for nothing
             title = " ".join((page.title or slug).split())
-        out.append({"idea": slug, "title": title, "element": idea_element.of(state_dir, slug), "commit": commit, "ticked": True})
+        out.append({"idea": slug, "title": title, "element": idea_element.of(state_dir, slug), "hue": idea_element.hue_of(state_dir, slug), "commit": commit, "ticked": True})
     return out
 
 

@@ -54,7 +54,7 @@ function QuestionHere({ s }) {
   const a = asking(top, mine, { title: mapName(tab.value, partiesAll()), key: "" }), seed = (a.choices[a.c.pick] || a.choices[0] || {}).name || "";
   return html`<div class="q-choose q-here" data-kind="choose" role="group" aria-label="Choices">
     <div class="q-choose__row" key=${a.c.q}>
-      ${a.choices.map((c, i) => html`<${ChoiceCard} key=${c.id} c=${{ ...c, why: "" }} i=${i} picked=${c.id === String(a.c.pick)} element=${top.node?.element || ""} by=${top.party?.name || ""} head=${top.head}
+      ${a.choices.map((c, i) => html`<${ChoiceCard} key=${c.id} c=${{ ...c, why: "" }} i=${i} picked=${c.id === String(a.c.pick)} element=${top.node?.element || ""} hue=${top.node?.hue || ""} by=${top.party?.name || ""} head=${top.head}
         onPress=${() => a.answer({ pick: Number(c.id) })} />`)}
       <${OtherCard} key="other" i=${a.choices.length} seed=${seed} onOther=${(text) => a.answer({ text })} />
     </div>
@@ -68,7 +68,7 @@ function Questions({ props, close }) {
   useLayoutEffect(() => { if (!top) close(); }, [!top]);
   if (!top) return null;
   const a = asking(top, mine, over.value?.from || { title: mapName(tab.value, partiesAll()), key: "" });
-  return html`<${Choose} question=${a.c.q} choices=${a.choices} pick=${String(a.c.pick)} by=${top.party?.name || ""} element=${top.node?.element || ""} head=${top.head}
+  return html`<${Choose} question=${a.c.q} choices=${a.choices} pick=${String(a.c.pick)} by=${top.party?.name || ""} element=${top.node?.element || ""} hue=${top.node?.hue || ""} head=${top.head}
     hint=${a.first && a.row.kind !== "cause" ? hintOf(top) : ""} onChoose=${(id) => a.answer({ pick: Number(id) })} onOther=${(text) => a.answer({ text })}
     decide=${a.decide} together=${a.together} onBack=${close} />`;
 }

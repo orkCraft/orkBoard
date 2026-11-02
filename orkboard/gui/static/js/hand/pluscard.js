@@ -35,13 +35,14 @@ import { useNarrow } from "../table/portal.js";
 const FREE_PLACES = ["at-90", "at-270", "at-180", "at-45"];                  // the seal's band, in the order the free runes use it (orkUI 0.21.0)
 const DECO = [["at-135", "eye"], ["at-225", "key"], ["at-315", "hourglass"]];     // the three places left, held by orkUI's own runes (spec 128 A.4; hand.css gives their places)
 
-/** The runes of the goal being written (decisions §187.3), for the address `address` (`addressNow()`): `base` the one it would be given (the party's `next_element`, "" with no party), `shown` the one the seal holds and the field checks (the person's
+/** The runes of the goal being written (decisions §187.3), for the address `address` (`addressNow()`): `base` the one it would be given (the project's `next_element`, "" with no party), `hue` the colour of `shown` (`next_hue` while it is `base`, else its own), `shown` the one the seal holds and the field checks (the person's
  *  choice, else `base`), `free` the party's free runes (all five when none is free), `used` the elements to show faint in the field (none when all five are used: nothing then tells them apart). */
 export function runesOf(address) {
   const g = address.party ? partiesOf(mapData.value).find((x) => x.slug === address.party) : null;
   const base = g?.next_element || "", shown = fieldRune.value || base;
+  const hue = shown === base ? g?.next_hue || base : shown;                       // the goal's own colour is picked by the host; a rune the person chose stands in its own colour until then
   const free = g ? ((g.free_elements || []).length ? g.free_elements : ELEMENTS) : [];
-  return { base, shown, free, used: g && (g.free_elements || []).length ? ELEMENTS.filter((e) => !g.free_elements.includes(e)) : [] };
+  return { base, shown, hue, free, used: g && (g.free_elements || []).length ? ELEMENTS.filter((e) => !g.free_elements.includes(e)) : [] };
 }
 
 /** The + card. `large`: the card in the pane's middle, with no goal at all. While the field is open the card lies under it, unseen (`is-under`, hand.css): the field grew out of it and turns back into it. */
@@ -50,12 +51,12 @@ export function PlusCard({ large = false, onPress }) {
   const frees = r.free.filter((e) => e !== r.shown).slice(0, FREE_PLACES.length);
   return html`<button type="button" class=${cls("ork-card ork-plus ork-leans hand-plus", { "is-large": large, "is-choosing": fieldOpen.value, "is-under": fieldOpen.value, "ork-deal": plusDealt.value })} aria-label="New goal" title="New goal" aria-haspopup="dialog"
     aria-expanded=${fieldOpen.value ? "true" : "false"} onClick=${(e) => { if (!fieldOpen.value) focusInPress(); onPress?.(e); }} ...${leans}>
-    <${Seal} narrow=${narrow} play=${play} shown=${r.shown} frees=${frees} /><${Icon} name="plus" /></button>`;
+    <${Seal} narrow=${narrow} play=${play} shown=${r.shown} hue=${r.hue} frees=${frees} /><${Icon} name="plus" /></button>`;
 }
 
 /** The seal of summoning on the + card: the goal's rune at its top, the party's free runes in the band's places and, when there are some, orkUI's own runes in the three places left, so the ring is whole (spec 128 A.4). */
-function Seal({ narrow, play, shown, frees }) {
-  return html`<span class=${cls("ork-sigil", { small: narrow, "is-summoning": !!play, [`rite-${play}`]: !!play })} aria-hidden="true"><span class="ork-sigil__seal">${shown && html`<${Elem} name=${shown} />`}</span>${!narrow && frees.map((e, i) => html`<span key=${e} class=${`ork-sigil__free ${FREE_PLACES[i]}`}><${Elem} name=${e} /></span>`)}${!narrow && frees.length > 0 && DECO.map(([at, name]) => html`<span key=${at} class=${`ork-sigil__free ${at} hand-deco`}><span class=${`ork-rune ${name}`}></span></span>`)}</span>`;
+function Seal({ narrow, play, shown, hue, frees }) {
+  return html`<span class=${cls("ork-sigil", { small: narrow, "is-summoning": !!play, [`rite-${play}`]: !!play })} aria-hidden="true"><span class="ork-sigil__seal">${shown && html`<${Elem} name=${shown} hue=${hue} />`}</span>${!narrow && frees.map((e, i) => html`<span key=${e} class=${`ork-sigil__free ${FREE_PLACES[i]}`}><${Elem} name=${e} /></span>`)}${!narrow && frees.length > 0 && DECO.map(([at, name]) => html`<span key=${at} class=${`ork-sigil__free ${at} hand-deco`}><span class=${`ork-rune ${name}`}></span></span>`)}</span>`;
 }
 
 /** Pictures pasted or chosen: shrunk as the old form shrank them, at most four. */
@@ -115,9 +116,9 @@ export function Field({ middle = false }) {
     const got = await act("ideas.add", { text, ...(address.party ? { party: address.party } : {}), ...(taken ? { type: taken.id } : {}), ...(chosen ? { element: chosen } : {}), ...(fieldPhotos.value.length ? { photos: fieldPhotos.value } : {}), ...(sent.length ? { marks: sent } : {}) });
     setBusy(false);
     if (!got) return;                                                                 // refused: the host said why in a toast, the words stay
-    const box = root.current?.getBoundingClientRect(), goal = { slug: got.slug || "", element: got.element || chosen || runes.shown, name: words.replace(/\s+/g, " ").slice(0, 60) };
+    const box = root.current?.getBoundingClientRect(), goal = { slug: got.slug || "", element: got.element || chosen || runes.shown, hue: got.hue || "", name: words.replace(/\s+/g, " ").slice(0, 60) };
     fieldText.value = ""; fieldPhotos.value = []; fieldFiles.value = []; resetMarks(); fieldType.value = null; fieldRune.value = ""; fieldTo.value = ""; fieldOpen.value = false; fieldRow.value = "";
-    summon(got.element || chosen);                                                    // the seal fills from the goal's rune (decisions §187.4)
+    summon(got.hue || got.element || chosen);                                                    // the seal fills from the goal's rune (decisions §187.4)
     plusDealt.value = true;                                                           // a new + card is dealt at the lane's end, its rune the next goal's
     setTimeout(() => { plusDealt.value = false; }, 700);
     if (box && goal.slug) sendBack(box, goal);                                        // it turns to its back and goes face down to the Orkmaster's lane (§6.2)

@@ -253,7 +253,7 @@ def test_ideas_assets_answers_the_assets_signed_with_what_changed_and_the_goals(
         screen = rows["screen:dark-mode/k1"]
         assert screen["url"] == media.url("dark-mode", "k1-shot-r1", "shot.png") and "shot" not in screen
         assert [(r["id"], r["goal"]) for r in got["removed"]] == [("art/old.png", "")]
-        assert set(got["goals"]) == {"dark-mode"} and set(got["goals"]["dark-mode"]) == {"title", "element"}
+        assert set(got["goals"]) == {"dark-mode"} and set(got["goals"]["dark-mode"]) == {"title", "element", "hue"}
         assert media.serve("GET", hero["url"], "", media.state_dirs(host)).read() == pf.png(8, 8)
         plain = host.command("ideas.assets", {})
         assert plain["since"] == "" and plain["removed"] == [] and all(r["change"] == "" for r in plain["assets"])

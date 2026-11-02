@@ -108,7 +108,7 @@ export function useMark({ stage, probe, where, lens, g, said, enabled, made }) {
       const r = await command("ideas.play_mark", { text, kind: m.kind, path: pk, box: { x: share(box.x, W), y: share(box.y, H), w: share(box.w, W), h: share(box.h, H) }, viewport: { w: W, h: H }, with: keep,
         under: (m.under || []).slice(0, 3), ...(picture ? { picture } : {}), ...(state !== undefined ? { state } : {}), ...(by ? { party: g.slug } : {}), ...(m.offer && m.add ? { add_to: m.offer.slug } : {}) }, true);
       if (!alive.current) return;
-      setM({ mode: "sent", box, element: r?.element || "dust" });
+      setM({ mode: "sent", box, element: r?.hue || r?.element || "dust" });
       if (m.hint) made?.(m.hint);
       said(sentWords(r?.party_title || (by ? g.short || g.title : "") || "the Orkmaster", r?.title || r?.slug || ""));
       refreshShell();

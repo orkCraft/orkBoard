@@ -235,14 +235,14 @@ export function Hearing({ row, reopen, onFly, close }) {
     else if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendText(); }
   };
 
-  const name = nameOf(node) || node?.title || row.title || "", element = node?.element || "", stamped = near ? by[near] || null : null;
+  const name = nameOf(node) || node?.title || row.title || "", element = node?.element || "", hue = node?.hue || element, stamped = near ? by[near] || null : null;
   return html`<section ref=${root} class=${cls("ork-table hr", { "is-thrown": away })} data-kind="hearing" data-moment=${h.moment} data-goal=${h.idea} aria-label=${`${name}: ${h.title}`} onKeyDown=${key}>
     <h2 class="hr-title">${h.title}</h2>
     ${DIRS.map((dir) => by[dir] && html`<${Side} key=${`${h.moment}/${h.id}/${dir}`} side=${by[dir]} near=${near === dir} busy=${busy || away} onThrow=${throwSide} />`)}
-    <div ref=${card} class=${cls(`ork-card hr-card${element ? ` el-${element}` : ""}`, { "is-away": away })} tabindex="0" role="group" data-near=${near || undefined}
+    <div ref=${card} class=${cls(`ork-card hr-card${element ? ` el-${hue}` : ""}`, { "is-away": away })} tabindex="0" role="group" data-near=${near || undefined}
       aria-label=${`${name}: throw it to a side with the arrow keys${h.own ? ", or press Enter to say it in your own words" : ""}`}
       onPointerDown=${down} onPointerMove=${move} onPointerUp=${up} onPointerCancel=${up}>
-      <span class="hr-card__head"><${Elem} name=${element} dim=${!element} /><span class="hr-card__name">${name}</span></span>
+      <span class="hr-card__head"><${Elem} name=${element} hue=${hue} dim=${!element} /><span class="hr-card__name">${name}</span></span>
       ${words.done.length > 0 ? html`<p class="ork-label hr-card__lab">Done when</p><ul class="hr-card__done">${words.done.map((l, i) => html`<li key=${i}>${l}</li>`)}</ul>`
         : words.gist && html`<p class="hr-card__gist">${words.gist}</p>`}
       ${h.own && !typing && html`<button type="button" class="hr-own" onClick=${() => setTyping(true)}>${OWN}</button>`}

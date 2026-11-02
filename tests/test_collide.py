@@ -116,9 +116,9 @@ def test_the_stop_is_a_needs_you_row_on_the_later_goal_with_the_shape_of_the_spe
         "kind": "collide", "idea": h.screen, "goal": h.app, "title": "Sign-in screen", "priority": "normal", "blocks": False, "at": rows[0]["at"],
         "text": "Mobile app «Sign-in screen» and Website «Auth API» change the same thing",
         "collide": {"id": pair, "by": "plan", "why": "Both change how a session token is issued", "first": h.api,
-                    "goals": [{"idea": h.api, "party": h.web, "party_name": "Website", "title": "Auth API", "element": rows[0]["collide"]["goals"][0]["element"]},
+                    "goals": [{"idea": h.api, "party": h.web, "party_name": "Website", "title": "Auth API", "element": rows[0]["collide"]["goals"][0]["element"], "hue": rows[0]["collide"]["goals"][0]["hue"]},
                               {"idea": h.screen, "party": h.app, "party_name": "Mobile app", "title": "Sign-in screen",
-                               "element": rows[0]["collide"]["goals"][1]["element"]}],
+                               "element": rows[0]["collide"]["goals"][1]["element"], "hue": rows[0]["collide"]["goals"][1]["hue"]}],
                     "answers": [f"first:{h.api}", f"first:{h.screen}", "one", "leave"]}}]
     assert rows[0]["at"] and len(rows[0]["collide"]["why"]) <= 200
     assert pair == f"{h.api}|{h.screen}"

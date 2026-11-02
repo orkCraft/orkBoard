@@ -142,3 +142,10 @@ body:has(.gui-toast) .gui-modal .gui-dialog { max-height: calc(100vh - 2 * var(-
 .shell-error__acts { flex: none; display: inline-flex; gap: var(--ork-2); }
 .shell-ctx { position: fixed; inset: 0; z-index: 120; }
 .shell-ctx__menu { position: fixed; }
+
+/* A rune's colour (spec 128 G, decisions §206.10): the shape's mask (orkUI's `.ork-elem.<shape>`) drawn in the goal's hue, `.ork-elem.k-<hue>`, orkUI's element token and nothing else; a dim one stays faint. */
+.ork-elem.k-meadow:not(.dim) { background: var(--ork-elem-meadow); }
+.ork-elem.k-ice:not(.dim) { background: var(--ork-elem-ice); }
+.ork-elem.k-dust:not(.dim) { background: var(--ork-elem-dust); }
+.ork-elem.k-void:not(.dim) { background: var(--ork-elem-void); }
+.ork-elem.k-lava:not(.dim) { background: var(--ork-elem-lava); }

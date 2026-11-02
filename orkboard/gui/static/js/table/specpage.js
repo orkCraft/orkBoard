@@ -119,7 +119,7 @@ export function SpecPage({ props }) {
   if (!page) return html`<p class="table-over__muted" data-kind="spec">The spec could not be read now.</p>`;
   const { common, sections } = readSpec(page, parties, parties.find((g) => g.slug === node?.goal) || null);
   return html`<article class="spec-page" data-kind="spec" data-idea=${idea} aria-label="Spec">
-    <header class="spec-page__head"><${Elem} name=${node?.element || ""} dim=${!node?.element} /><h2 class="spec-page__title">${node?.title || page.title || idea}</h2><span class="ork-label">Spec</span></header>
+    <header class="spec-page__head"><${Elem} name=${node?.element || ""} hue=${node?.hue || ""} dim=${!node?.element} /><h2 class="spec-page__title">${node?.title || page.title || idea}</h2><span class="ork-label">Spec</span></header>
     ${common.length > 0 && html`<dl class="spec-common">${common.map((c) => html`<div class="spec-common__one" key=${c.name} data-part=${c.name}><dt class="ork-label">${c.name}</dt><dd class="body">${c.text.trim()}</dd></div>`)}</dl>`}
     ${sections.length > 0
       ? html`<ol class="spec-sections" aria-label="The sections">${sections.map((sec, i) => {

@@ -24,7 +24,7 @@ export function entriesOf(stops, readyGoals = [], hidden = later.value) {
     if (!by.has(key)) {
       const c = contextOf(s);
       by.set(key, out.length);
-      out.push({ key, kind: "stops", stops: [], head: c.head, element: s.node?.element || "", name: c.goal?.name || c.project || s.title || s.full || "" });
+      out.push({ key, kind: "stops", stops: [], head: c.head, element: s.node?.element || "", hue: s.node?.hue || "", name: c.goal?.name || c.project || s.title || s.full || "" });
     }
     out[by.get(key)].stops.push(s);
   }
@@ -32,7 +32,7 @@ export function entriesOf(stops, readyGoals = [], hidden = later.value) {
   for (const g of readyGoals) {
     if (hidden.includes(g.slug)) continue;
     const n = nodes[g.slug] || { slug: g.slug, title: g.title };
-    out.push({ key: `ready:${g.slug}`, kind: "ready", stops: [], ready: g, node: n, head: lichOf(), element: n.element || "", name: n.short || n.title || g.title });
+    out.push({ key: `ready:${g.slug}`, kind: "ready", stops: [], ready: g, node: n, head: lichOf(), element: n.element || "", hue: n.hue || "", name: n.short || n.title || g.title });
   }
   return out;
 }

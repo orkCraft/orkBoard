@@ -22,11 +22,14 @@ export function Sign({ name, big = false, label = "" }) {
   return html`<span class=${`ork-sign ${name}${big ? " big" : ""}`} aria-hidden="true" title=${label || undefined}></span>`;
 }
 
-/** A goal's element (orkUI's elements/, spec 50 §1): meadow, ice, dust, void or lava, 14 x 14 (`big` 28 x 28); `dim` while the goal is not
+/** A goal's rune (orkUI's elements/, spec 50 §1; spec 128 G, decisions §206.10): its shape `name` (meadow, ice, dust, void or lava, 14 x 14; `big` 28 x 28) drawn in its colour `hue`
+ *  (one of the same five names: orkUI's `--ork-elem-<hue>`, the class `k-<hue>` of page.css); without a hue, or in the shape's own, in the shape's own colour; `dim` while the goal is not
  *  yet read. Shown, never named: `aria-hidden`. A goal the host has not given one yet is drawn dim. `glowing`: the flame of a task at work (orkUI 0.21.0
  *  `.is-glowing`, decisions §187.2): its strength from about 62 % to full and back, only its opacity; it stands under reduced motion. */
-export function Elem({ name = "", big = false, dim = false, glowing = false }) {
-  return html`<span class=${`ork-elem ${name || "dust"}${big ? " big" : ""}${dim || !name ? " dim" : ""}${glowing ? " is-glowing" : ""}`} aria-hidden="true"></span>`;
+export const HUES = ["meadow", "ice", "dust", "void", "lava"];
+export function Elem({ name = "", hue = "", big = false, dim = false, glowing = false }) {
+  const colour = name && HUES.includes(hue) && hue !== name ? ` k-${hue}` : "";
+  return html`<span class=${`ork-elem ${name || "dust"}${colour}${big ? " big" : ""}${dim || !name ? " dim" : ""}${glowing ? " is-glowing" : ""}`} aria-hidden="true"></span>`;
 }
 
 /** orkUI's chevron: down (a menu, an open fold), up, right (a closed fold) or left. */

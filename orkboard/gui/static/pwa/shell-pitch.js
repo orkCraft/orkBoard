@@ -52,7 +52,7 @@ export function makePitchField(core) {
       : n.state === "failed" ? h("span", { class: "pitchrow__mark" }, sign("cross", "failed")) : n.state === "sent" ? h("span", { class: "pitchrow__mark" }, sign("after", "sent")) : null;
     return h("button", { class: `pitchrow is-${n.state}`, type: "button", "data-idea": n.slug, "data-state": n.state, "aria-label": `${n.title}: ${n.state === "judged" && d ? `${d.word}, ` : ""}${line}`,
       onclick: () => core.openPitch(n.slug, "map") },
-    elem(n.element, { dim: n.state === "raw" }),
+    elem(n.element, { dim: n.state === "raw", hue: n.hue }),
     h("span", { class: "pitchrow__body" }, h("span", { class: "pitchrow__title" }, n.short || n.title), h("span", { class: "pitchrow__line" }, line), judging ? viewHeads(n) : null),
     end);
   }

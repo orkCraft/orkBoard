@@ -15,10 +15,10 @@ const MAP = "release", SHORT = 7;
 const typeOf = (slug) => (mapData.value?.nodes || []).find((n) => n.slug === slug)?.type?.sign || "release";   // the goal's own type while the Board still holds it, else a release's sign
 
 function GoalCard({ g, group }) {
-  return html`<${MapCard} map=${MAP} id=${g.idea} name=${g.title} element=${g.element || ""} group=${group} className=${cls("mp-goal", { "is-out": !g.ticked })} ghost=${!g.ticked}
+  return html`<${MapCard} map=${MAP} id=${g.idea} name=${g.title} element=${g.element || ""} hue=${g.hue || ""} group=${group} className=${cls("mp-goal", { "is-out": !g.ticked })} ghost=${!g.ticked}
     row=${String(g.commit || "").slice(0, SHORT)} rowCode=${true}
     mark=${html`<span class=${cls("mp-tick", { "is-off": !g.ticked })} role="img" aria-label=${g.ticked ? "In the merge" : "Not in the merge"}><${Sign} name="check" /></span>`}>
-    <${Win} tone=${g.element || ""}><${Sign} name=${typeOf(g.idea)} big=${true} /></${Win}>
+    <${Win} tone=${g.hue || g.element || ""}><${Sign} name=${typeOf(g.idea)} big=${true} /></${Win}>
   </${MapCard}>`;
 }
 

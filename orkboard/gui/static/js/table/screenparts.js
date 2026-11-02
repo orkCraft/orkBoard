@@ -22,11 +22,19 @@ if (typeof document !== "undefined") {
 /** The key of a lifted screen (the table's: card.js `mineKey`, so Esc and a press away lower it). */
 export const screenKey = (party, id) => `t:screen:${party}:${id}`;
 
-/** The element of the goal that changed a screen (its newest picture is a task's shot of that goal), "" when no goal did. */
-export function elementOf(s) {
+/** The goal that changed a screen (its newest picture is a task's shot of that goal), null when no goal did. */
+const goalOf = (s) => {
   const goal = s.picture?.kind === "shot" ? s.picture.goal : "";
-  return goal ? (mapData.value?.nodes || []).find((n) => n.slug === goal)?.element || "" : "";
+  return goal ? (mapData.value?.nodes || []).find((n) => n.slug === goal) || null : null;
+};
+
+/** The element of the goal that changed a screen, "" when no goal did. */
+export function elementOf(s) {
+  return goalOf(s)?.element || "";
 }
+
+/** Its hue: the colour the rune is drawn in. */
+export const hueOf = (s) => goalOf(s)?.hue || elementOf(s);
 
 const LENS = new Map();                                    // a kept screen's picture, fetched once: id → data address
 /** The address of a screen's picture: a shot's signed url, a lens picture fetched with `ideas.lens_screen` (once), "" when it has none. */
@@ -59,7 +67,7 @@ export function ScreenCard({ s, party, step, on, carry, over, onPress }) {
   const el = elementOf(s), key = screenKey(party, s.id);
   const card = html`<button type="button" class=${cls("ork-card ork-leans scr-card", { "is-lifted": on, "is-lit": litKey.value === key, "is-aim": carry, "is-over": over })} data-lkey=${key} data-screen=${s.id} data-drop=${s.id} data-step=${step}
     aria-pressed=${String(on)} aria-label=${`${s.name}, ${s.path}${carry ? ": pin the pain here" : ""}`} title=${carry ? `Pin the pain to ${s.name}` : s.file} onClick=${onPress} ...${leans}>
-    <span class="scr-card__head">${el && html`<${Elem} name=${el} />`}<span class="scr-card__nm">${s.name}</span></span>
+    <span class="scr-card__head">${el && html`<${Elem} name=${el} hue=${hueOf(s)} />`}<span class="scr-card__nm">${s.name}</span></span>
     <${Window} s=${s} />
     <span class="scr-card__row"><${Sign} name="screen" /><span class="scr-card__path" title=${s.path}>${s.path}</span></span>
   </button>`;
@@ -82,7 +90,7 @@ export function ScreenBack({ s, doc, party, from, pains, byId, lift }) {
   const ins = (doc.links || []).filter((l) => l.to === s.id && byId.has(l.from)), outs = (doc.links || []).filter((l) => l.from === s.id && byId.has(l.to));
   const file = () => openOver("file", { path: s.file }, from, s.file);
   return html`<div class="scr-back">
-    <div class="scr-back__top">${el && html`<${Elem} name=${el} />`}<h3 class="scr-back__nm">${s.name}</h3></div>
+    <div class="scr-back__top">${el && html`<${Elem} name=${el} hue=${hueOf(s)} />`}<h3 class="scr-back__nm">${s.name}</h3></div>
     <div class=${cls("scr-bigpic", { "is-none": !src })} style=${src ? `aspect-ratio:${ratio}` : undefined}>${src ? html`<img src=${src} alt=${`${s.name}, as it looks`} />` : html`<${Sign} name="screen" big=${true} />`}</div>
     <${Sec} label="Path"><span class="scr-back__code">${s.path}</span></${Sec}>
     <${Sec} label="File"><button type="button" class="ork-btn quiet scr-back__file" title="Open the file over the pane" onClick=${file}>${s.file}</button></${Sec}>

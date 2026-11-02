@@ -46,7 +46,7 @@ export function LineList() {
     ${!found.length && html`<p class="table-over__muted">${line.length ? "No goal in line matches." : "Nothing is in line."}</p>`}
     <ul class="table-line__rows">${found.map((g) => html`<li key=${g.slug} class="table-line__item">
       <button type="button" class=${cls("ork-row table-line__row", { "is-on": picked.value === g.slug })} data-slug=${g.slug} onClick=${() => pick(g.slug)}>
-        <${Elem} name=${g.element} dim=${!g.element} /><span class="table-line__text"><span class="body">${g.full}</span><span class="cap table-line__sub">${g.partyName}</span></span>
+        <${Elem} name=${g.element} hue=${g.hue} dim=${!g.element} /><span class="table-line__text"><span class="body">${g.full}</span><span class="cap table-line__sub">${g.partyName}</span></span>
         <span class="cap table-line__place">${g.reset && html`<${Sign} name="moon" /> `}${waitsWords(g)}</span>
       </button>
       <button type="button" class="ork-btn quiet" aria-label=${`Move earlier: ${g.full}`} disabled=${neighbour(line, g.slug, -1) < 0} onClick=${() => moveGoal(line, g.slug, neighbour(line, g.slug, -1))}><${Icon} name="chevron-up" /></button>

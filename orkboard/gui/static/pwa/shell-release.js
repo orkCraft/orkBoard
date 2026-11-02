@@ -20,7 +20,7 @@ export function makeGoesIn(core) {
     const box = h("input", { type: "checkbox", "data-goal": r.goal, "aria-label": r.title, ...(on ? { checked: true } : {}), ...(held ? { disabled: true } : {}) });
     box.addEventListener("change", () => { if (box.checked) ticked.add(r.goal); else ticked.delete(r.goal); });
     return h("label", { class: `goesin__row${held ? " is-held" : ""}`, "data-goal": r.goal },
-      box, elem(r.element, { dim: held }), h("span", { class: "goesin__text" }, h("b", { class: "goesin__title" }, r.title),
+      box, elem(r.element, { dim: held, hue: r.hue }), h("span", { class: "goesin__text" }, h("b", { class: "goesin__title" }, r.title),
         h("small", { class: "muted goesin__meta" }, [r.party_name || r.party, flagDate(r.at), held ? `In ${r.held} already` : ""].filter(Boolean).join(" · "))));
   }
   function draw() {

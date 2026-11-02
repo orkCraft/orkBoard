@@ -84,7 +84,7 @@ def goals(root: Path, state_dir: Path) -> list[dict]:
         flag = idea_flag.flag_of(state_dir, i["slug"])
         if flag is not None:
             out.append({"slug": i["slug"], "title": i["title"], "short": i["short"], "goal": i["track"],
-                        "element": idea_element.of(state_dir, i["slug"]), "at": flag["at"],
+                        "element": idea_element.of(state_dir, i["slug"]), "hue": idea_element.hue_of(state_dir, i["slug"]), "at": flag["at"],
                         "release": releases.step_of(held[i["slug"]][-1]) if held.get(i["slug"]) else None,        # spec 68 §6
                         **{k: flag.get(k) for k in ("tasks", "first_time", "usd", "days")}})
     return sorted(out, key=lambda f: (board_recap.when(f["at"]) or dt.datetime.fromtimestamp(0).astimezone()).timestamp(), reverse=True)

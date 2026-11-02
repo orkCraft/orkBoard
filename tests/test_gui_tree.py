@@ -241,19 +241,19 @@ def test_a_goal_is_attached_under_a_job_with_the_boards_title_element_and_place_
     host.command("ideas.tree_set", {"outcomes": OUT, "jobs": THREE})
     dark, fast = make_goal(host, "Dark mode", element="ice"), make_goal(host, "Faster pages", "working")
     got = host.command("ideas.tree_attach", {"job": "see-a-sketch", "goal": dark})
-    assert got == {"ok": True, "serves": [{"job": "see-a-sketch", "goal": dark, "title": "Dark mode", "element": "ice", "place": "line"}]}
+    assert got == {"ok": True, "serves": [{"job": "see-a-sketch", "goal": dark, "title": "Dark mode", "element": "ice", "hue": "ice", "place": "line"}]}
     host.command("ideas.tree_attach", {"job": "see-a-sketch", "goal": fast})
     moved = host.command("ideas.tree_attach", {"job": "share-it-with-a-friend", "goal": dark})
     assert [(s["job"], s["goal"], s["place"]) for s in moved["serves"]] == [("see-a-sketch", fast, "work"), ("share-it-with-a-friend", dark, "line")]
     ideas.save_state(host.ideas.state_dir, fast, state="done")
     assert host.command("ideas.tree", {})["serves"][0]["place"] == "done"
-    assert host.command("ideas.tree_attach", {"job": "", "goal": dark})["serves"] == [{"job": "see-a-sketch", "goal": fast, "title": "Faster pages", "element": "", "place": "done"}]
+    assert host.command("ideas.tree_attach", {"job": "", "goal": dark})["serves"] == [{"job": "see-a-sketch", "goal": fast, "title": "Faster pages", "element": "", "hue": "", "place": "done"}]
 
 
 def test_an_experiment_is_set_on_a_goal_and_taken_off_it(host, product):
     dark, test, other = make_goal(host, "Dark mode"), make_goal(host, "Try dark mode on ten people", "working"), make_goal(host, "Try contrast")
     got = host.command("ideas.tree_attach", {"goal": dark, "experiment": test})
-    assert got == {"ok": True, "tests": [{"goal": dark, "experiment": test, "title": "Try dark mode on ten people", "element": "", "place": "work"}]}
+    assert got == {"ok": True, "tests": [{"goal": dark, "experiment": test, "title": "Try dark mode on ten people", "element": "", "hue": "", "place": "work"}]}
     host.command("ideas.tree_attach", {"goal": dark, "experiment": other})
     assert [t["experiment"] for t in host.command("ideas.tree", {})["tests"]] == [test, other]
     assert [t["experiment"] for t in host.command("ideas.tree_attach", {"goal": dark, "experiment": ""})["tests"]] == []

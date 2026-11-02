@@ -42,15 +42,14 @@ class PitchMixin:
 
     def element_for(self, slug: str, pitch: str = "", chosen: str = "") -> str:
         """A new goal's element (spec 50 §2.3): the one it has, else the one the person chose (`ideas.add`'s `element`, decisions §187.3), else, for a goal
-        sent from a pitch, the pitch's own when no open goal of the target party wears it (spec 68 §2.3), else the one used least."""
+        sent from a pitch, the pitch's own rune when no other goal of the project holds its shape (spec 68 §2.3, spec 128 G), else the one used least."""
         root = self.root()
         if chosen:
             return idea_element.give(root, self.state_dir, slug, want=chosen)       # (`ideas.add` stored it with the goal already: this is the one it has)
         mine = idea_element.of(self.state_dir, pitch) if pitch else ""
         if mine and not idea_element.of(self.state_dir, slug):
-            page = ideas.idea_page(root, slug)
-            if mine not in idea_element.open_elements(root, self.state_dir, (page.get("track") if page else "") or ideas.GENERAL, besides=slug):
-                return idea_element.give(root, self.state_dir, slug, [e for e in idea_element.ELEMENTS if e != mine])    # `mine` the least used
+            if mine not in idea_element.open_elements(root, self.state_dir, besides=(slug, pitch)):
+                return idea_element.give(root, self.state_dir, slug, want=mine, want_hue=idea_element.hue_of(self.state_dir, pitch))
         return idea_element.give(root, self.state_dir, slug)
 
     def _pitch(self, args: dict, *states: str) -> tuple[Path, str, ideas.Page]:

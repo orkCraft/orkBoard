@@ -30,8 +30,8 @@ class TreeMixin:
     def _tree_rows(self, rec: dict) -> dict:
         """The record's `serves` and `tests` with each goal's title, element and place from the Board; a goal the Board no longer has is left out."""
         known = self._tree_goals()
-        serves = [{**s, **{k: known[s["goal"]][k] for k in ("title", "element", "place")}} for s in rec["serves"] if s["goal"] in known]
-        tests = [{**t, **{k: known[t["experiment"]][k] for k in ("title", "element", "place")}} for t in rec["tests"] if t["goal"] in known and t["experiment"] in known]
+        serves = [{**s, **{k: known[s["goal"]][k] for k in ("title", "element", "hue", "place")}} for s in rec["serves"] if s["goal"] in known]
+        tests = [{**t, **{k: known[t["experiment"]][k] for k in ("title", "element", "hue", "place")}} for t in rec["tests"] if t["goal"] in known and t["experiment"] in known]
         return {"serves": serves, "tests": tests}
 
     def tree(self, args: dict) -> dict:

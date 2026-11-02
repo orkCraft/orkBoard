@@ -794,7 +794,7 @@ def test_the_gate_and_the_strip_are_opened_and_logged_through_ideas_log(host):
 
 def test_a_new_goal_answers_with_its_element_and_every_card_of_it_will_wear_it(host):
     first, second = _add(host, "Dark mode for the night"), _add(host, "Larger text")
-    assert (first["element"], second["element"]) == ("meadow", "ice") and set(first) == {"slug", "queue", "element", "type", "joined"}
+    assert (first["element"], second["element"]) == ("meadow", "ice") and set(first) == {"slug", "queue", "element", "hue", "type", "joined"}
     assert ideas.state(host.ideas.state_dir, first["slug"])["element"] == "meadow"
     nodes = {n["slug"]: n["element"] for n in host.command("ideas.map", {})["nodes"]}
     assert nodes == {first["slug"]: "meadow", second["slug"]: "ice"}
@@ -814,7 +814,7 @@ def test_ideas_flags_gains_the_goals_flags_every_partys_newest_first_and_keeps_t
     got = host.command("ideas.flags", {})
     json.dumps(got)
     assert got["flags"] == [] and [g["slug"] for g in got["goals"]] == [b, d, a]                      # newest first, every party's
-    assert got["goals"][0] == {"slug": b, "title": "Larger text", "short": "Larger text", "goal": "first-goal", "element": "ice",
+    assert got["goals"][0] == {"slug": b, "title": "Larger text", "short": "Larger text", "goal": "first-goal", "element": "ice", "hue": "meadow",
                                "release": None, "at": "2026-10-21T09:00:00", "tasks": 0, "first_time": 0, "usd": None, "days": got["goals"][0]["days"]}
     assert got["goals"][1]["goal"] == "second-party" and c not in {g["slug"] for g in got["goals"]}
 
@@ -892,7 +892,7 @@ def _says(host, command, args):
 def test_a_goal_of_a_type_keeps_its_id_and_a_type_the_party_is_not_offered_or_unknown_is_refused(host):
     ship = _party(host, leader="architect")
     got = _new(host, ship, type="restructure")
-    assert got["type"] == "restructure" and got["joined"] is None and set(got) == {"slug", "queue", "element", "type", "joined", "route", "talk"}
+    assert got["type"] == "restructure" and got["joined"] is None and set(got) == {"slug", "queue", "element", "hue", "type", "joined", "route", "talk"}
     assert got["route"] == [ship]                                                        # routed to the party it was sent to, no call (spec 99 §4)
     assert ideas.state(host.ideas.state_dir, got["slug"])["type"] == "restructure"
     blank = _new(host, ship, "A blank one")
