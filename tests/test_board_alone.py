@@ -83,6 +83,7 @@ def test_the_snapshot_holds_only_what_the_shell_reads(host):
                          "sign_in",                                        # spec 45: a tool's own sign-in
                          "mana",                                           # spec 105 §2.5: the tool now, beside the limits
                          "ask",                                            # spec 106 §2: the quick question kept, None when there is none
+                         "passing",                                        # spec 128 D: a leader's question being passed to another party, [] with none
                          "preview",                                        # spec 113 §2: how the project opens a preview ("command" · "static" · ""), the Play die sleeps with none
                          "play_face",                                      # spec 118 §3: what the Play die's up face says ("failed" · "new" · "")
                          "new_n",                                          # decisions §200.5: how many goals landed in dev since Play last tried it, the up face's pips

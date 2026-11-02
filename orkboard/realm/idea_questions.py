@@ -8,7 +8,8 @@ the one it recommends and why — taken strictly from the model's answer, kept i
     idea_questions.parse(line)   # {"ask", "choices", "pick", "why"}; a line of before ("… (one / other)") too
     idea_questions.picks(lines)  # each question's recommended choice ("" where it has none): Let the Taskmaster decide
     idea_questions.tally(lines, answers)   # how the person answered: picked, recommended, typed
-    idea_questions.card(raw, id=, by=, leader=, project=)   # a leader's question as a hand's card (spec 99 §5.2): {id, by, leader, q, choices, pick, why, project}
+    idea_questions.card(raw, id=, by=, leader=, project=)   # a leader's question as a hand's card (spec 99 §5.2): {id, by, leader, q, choices, pick, why, project[, for]}; `for` (spec 128 D) only when it names a party
+    idea_questions.for_of(raw)   # whom a question is for: a party's slug, else "person"
     idea_questions.record(state_dir, slug) / save_record(…)  # what a goal's Talk keeps beside its state (talk.json: the cards waiting, the answers, the defaults, the cause)
     idea_questions.talk_of(state_dir, slug)                  # …read as data for the stances' *More*: {mode, round, done, heard, stances: [{…, questions: [..]}], cause}
 
@@ -143,8 +144,23 @@ def card(raw: object, *, id: str, by: str, leader: str, project: bool = False) -
         pick = next((n for n, c in enumerate(choices) if c.lower() == " ".join(pick.split()).lower()), None)
     if not isinstance(pick, int) or isinstance(pick, bool) or not 0 <= pick < len(choices):
         return None
-    return {"id": str(id), "by": str(by), "leader": str(leader), "q": q, "choices": choices, "pick": pick,
-            "why": _plain(raw.get("why"), WHY_CHARS), "project": bool(project)}
+    out = {"id": str(id), "by": str(by), "leader": str(leader), "q": q, "choices": choices, "pick": pick,
+           "why": _plain(raw.get("why"), WHY_CHARS), "project": bool(project)}
+    if (to := for_of(raw)) != PERSON:
+        out["for"] = to                                   # a party that may answer it (spec 128 D.1): kept only when it is one; no `for` is the person's
+    return out
+
+
+PERSON = "person"
+_FOR = re.compile(r"[a-z0-9][a-z0-9_-]{0,59}")
+
+
+def for_of(raw: object) -> str:
+    """Whom a leader's question is for (spec 128 D.1), from the model's answer: a party's slug (a lowercase word of letters, digits, `-` and `_`), else `PERSON` (what only the person
+    can choose, `""`, or anything that is none). Whether the party exists, and whether the question may be passed at all, is `realm/idea_pass.py`'s."""
+    got = raw.get("for") if isinstance(raw, dict) else None
+    got = got.strip().lower() if isinstance(got, str) else ""
+    return got if got != PERSON and _FOR.fullmatch(got) else PERSON
 
 
 def default_of(c: dict) -> str:
@@ -199,6 +215,8 @@ def _asked(c: dict, state: str) -> dict:
         out["round"] = 2 if c.get("round") == 2 else 1
     if state == "answered":
         out["how"] = str(c.get("how") or "pick")
+        if c.get("answered_by"):
+            out["answered_by"] = str(c["answered_by"])      # a party's leader answered it for the person (spec 128 D.2)
     return out
 
 

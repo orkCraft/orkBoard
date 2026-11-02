@@ -79,6 +79,7 @@ from orkboard.gui.ideas_sketch import SketchMixin, sketch_commands
 from orkboard.gui.ideas_talk import TalkMixin, talk_commands
 from orkboard.gui.ideas_project_q import ProjectQMixin as ProjectQFace, project_q_commands
 from orkboard.gui.ideas_ask import AskMixin as AskFace, ask_commands
+from orkboard.gui.ideas_pass import PassMixin as PassFace, pass_commands
 from orkboard.gui.ideas_facts import FactsMixin, facts_commands
 from orkboard.gui.ideas_loop import LoopMixin as LoopFace, loop_commands
 from orkboard.gui.ideas_hypotheses import HypothesesMixin, hypotheses_commands
@@ -131,7 +132,7 @@ class _Hop:
         self.host.call(lambda: self.host.publish(topic, **data))
 
 
-class Ideas(SketchMixin, PlayMarkMixin, JournalFace, ReadInMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, ConcernsMixin, MapsMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, AskFace, DecideMixin, LensMixin, LimitsMixin, ManaMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PickablesMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
+class Ideas(SketchMixin, PlayMarkMixin, JournalFace, ReadInMixin, FactsMixin, LoopFace, TreeFace, HypothesesMixin, ConcernsMixin, MapsMixin, ScreensMixin, RouteMixin, TalkMixin, ProjectQFace, AskFace, PassFace, DecideMixin, LensMixin, LimitsMixin, ManaMixin, GateMixin, GoalsMixin, MapMixin, PartyMixin, PickMixin, PickablesMixin, PitchMixin, ProjectMixin, RecapMixin, ReleaseMixin, RolesMixin, RunningMixin, TrackMixin, ReviewMixin, ReviseMixin,
             TypesMixin, CanvasesMixin, AssetsMixin, SystemMixin, BoardMixin):
     def __init__(self, host) -> None:
         """`host`: what the Board needs of whoever runs it, a `gui/board_host.py` `BoardHost` (spec 37 §4): Orkline's
@@ -346,8 +347,15 @@ class Ideas(SketchMixin, PlayMarkMixin, JournalFace, ReadInMixin, FactsMixin, Lo
         return {"focus": focus_of(self.host.machine), "ideas_rev": self.rev, **self._cache[2], "main_checks": self.main_checks_now(),
                 "play_face": self.play_face(),                   # what the die's up face says: Play's state changes without the Board's rev (spec 118 §3)
                 "new_n": self.new_n(),                           # …and how many goals landed in dev since Play last tried it: the pips of the up face (decisions §200.5)
-                "limits": self.limits(), "mana": self.mana(), "ask": board_ask.record(self.state_dir), "reserve": self.reserve(), "canvases_new": self.canvas_store.new_count(),
+                "limits": self.limits(), "mana": self.mana(), "ask": board_ask.record(self.state_dir), "passing": self.passing_rows(), "reserve": self.reserve(), "canvases_new": self.canvas_store.new_count(),
                 "canvases_rev": self.canvas_store.rev}
+
+    def passing_rows(self) -> list[dict[str, Any]]:
+        """The snapshot's `passing` (spec 128 D.2, `realm/idea_pass.row`): the leaders' questions waiting to be passed on, read at each snapshot (the clock moves `left_s`, not a change)."""
+        try:
+            return self.keeper.passing_rows()
+        except Exception:                       # a question that cannot be read never breaks the snapshot
+            return []
 
     def reserve(self) -> dict[str, Any]:
         """`{share, night}` (spec 49 §2.3): the part of the AI tool's window the Board keeps from work that starts by
@@ -696,7 +704,7 @@ class Ideas(SketchMixin, PlayMarkMixin, JournalFace, ReadInMixin, FactsMixin, Lo
                       "ideas.pitch_pass": self.pitch_pass,
                       "ideas.release_out": self.release_out, "ideas.release_candidates": self.release_candidates, "ideas.shown": self.shown,
                       "ideas.party_for": self.party_for, "ideas.kind_for": self.kind_for, "ideas.collide_answer": self.collide_answer,
-                      "ideas.repeat": self.repeat, "ideas.team": self.team, "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, "ideas.party_presets": self.party_presets, **canvas_commands(self), **asset_commands(self), **system_commands(self), **usage_commands(self), **mana_commands(self), **route_commands(self), **talk_commands(self), **decide_commands(self), **stage_commands(self), **project_q_commands(self), **ask_commands(self), **facts_commands(self), **loop_commands(self), **maps_commands(self), **screens_commands(self), **pickables_commands(self), **concerns_commands(self), **tree_commands(self), **hypotheses_commands(self), **journal_commands(self), **read_in_commands(self), **gate_commands(self), **play_mark_commands(self), **hearing_commands(self)})
+                      "ideas.repeat": self.repeat, "ideas.team": self.team, "ideas.proposals": self.proposals, "ideas.tools": self.tools, "ideas.party_sizes": self.party_sizes, "ideas.party_presets": self.party_presets, **canvas_commands(self), **asset_commands(self), **system_commands(self), **usage_commands(self), **mana_commands(self), **route_commands(self), **talk_commands(self), **decide_commands(self), **stage_commands(self), **project_q_commands(self), **ask_commands(self), **pass_commands(self), **facts_commands(self), **loop_commands(self), **maps_commands(self), **screens_commands(self), **pickables_commands(self), **concerns_commands(self), **tree_commands(self), **hypotheses_commands(self), **journal_commands(self), **read_in_commands(self), **gate_commands(self), **play_mark_commands(self), **hearing_commands(self)})
         table.update(sketch_commands(self))                # spec 121 A: *Sketch it first*, *No sketch* (gui/ideas_sketch.py)
         table["ideas.night"] = self.night                  # spec 121 D: what the night did, for the morning's card (gui/ideas_recap.py)
         return {name: guarded(name, fn) for name, fn in table.items()}

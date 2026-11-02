@@ -56,6 +56,7 @@ from orkboard.core.idea_talk import TalkMixin
 from orkboard.core.idea_verdict import VerdictMixin
 from orkboard.core.idea_project_q import ProjectQMixin
 from orkboard.core.idea_ask import AskMixin
+from orkboard.core.idea_pass import PassMixin
 from orkboard.core.idea_concerns import ConcernsMixin
 from orkboard.core.idea_loop import LoopMixin
 from orkboard.core.idea_tree import TreeMixin
@@ -116,7 +117,7 @@ def _iso(at: float) -> str:
     return dt.datetime.fromtimestamp(at).isoformat(timespec="seconds")
 
 
-class IdeaKeeper(SignInMixin, TalkMixin, VerdictMixin, SketchMixin, ObjectionMixin, ProjectQMixin, AskMixin, LoopMixin, TreeMixin, HypothesesMixin, ConcernsMixin, JournalMixin, FoldMixin, DecideMixin, SectionsMixin, PlanMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
+class IdeaKeeper(SignInMixin, TalkMixin, VerdictMixin, SketchMixin, ObjectionMixin, ProjectQMixin, AskMixin, PassMixin, LoopMixin, TreeMixin, HypothesesMixin, ConcernsMixin, JournalMixin, FoldMixin, DecideMixin, SectionsMixin, PlanMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
     def __init__(self, repo_root: Path, state_dir: Path, wiki_root: Callable[[], Path],
                  settings: Callable[[], dict], publish: Callable[[str], None] = lambda slug: None,
                  demo: bool = False, budget_ok: Callable[[], bool] = lambda: True,
@@ -144,6 +145,7 @@ class IdeaKeeper(SignInMixin, TalkMixin, VerdictMixin, SketchMixin, ObjectionMix
         self._busy: dict[str, str] = {}             # key → drafting | talking | planning | goal
         self._cancels: dict[str, threading.Event] = {}   # key → its run's own cancel (read_stop)
         self._tick_at = float("-inf")
+        self._pass_init()                           # spec 128 D: the questions passing on
 
     # -- the model call -------------------------------------------------------------------------------------
 
@@ -298,6 +300,7 @@ class IdeaKeeper(SignInMixin, TalkMixin, VerdictMixin, SketchMixin, ObjectionMix
             runs = list(self._cancels.values())
         for ev in runs:
             ev.set()
+        self.pass_stop_all()                         # the questions waiting to be passed on go to the person
 
     def read_stop(self, slug: str) -> bool:
         """The person stops the keeper's run on this idea (its own cancel, not Stop all's); its queue is `hold`, so

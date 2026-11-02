@@ -383,7 +383,7 @@ class Orkboard:
                 "usage_ask": self.usage.should_ask()}
 
     # What the page reads of the snapshot and a phone has no use for: the computer's own (spec 94 §2.3).
-    COMPUTER_ONLY = ("onboarding", "sign_in", "main_checks", "repo", "usage_ask", "update_policy", "ask", "preview", "play_face", "new_n")      # "preview", "play_face", "new_n": the phone has no Play (specs 113, 118); "ask": the quick question is the desktop's for now (spec 106, decisions §181.8)
+    COMPUTER_ONLY = ("onboarding", "sign_in", "main_checks", "repo", "usage_ask", "update_policy", "ask", "passing", "preview", "play_face", "new_n")      # "preview", "play_face", "new_n": the phone has no Play (specs 113, 118); "ask": the quick question is the desktop's for now (spec 106, decisions §181.8); "passing": so is the Orkmaster's column (spec 128 D.3)
 
     def phone_snapshot(self) -> dict[str, Any]:
         """The snapshot as a phone gets it (spec 94 §2.3): the page's own (`snapshot()`: the Board's counts, the limits, the mana

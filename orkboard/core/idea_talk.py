@@ -244,7 +244,7 @@ class TalkMixin:
         context = idea_target.cut(parts, idea_target.CONTEXT["talk_round"])
         cards = ("Each question is a card for the person: two to four real choices taken from what the project holds (a container, a screen, a fact above), never from what is "
                  "common and never padded to fill four; `pick` is the index of the one you recommend and `why` says why in one line; `blocks` is true only when your party "
-                 "cannot start its work without the answer. Ask nothing the goal's words, your map or the facts above already answer.")
+                 "cannot start its work without the answer. Ask nothing the goal's words, your map or the facts above already answer." + self.for_rule(party))
         if rnd == 2:
             again_rule, again_json = self.again_prompt(slug, entry, line) if entry.get("rejudge") else ("", "")      # a leader heard again is asked its verdict too (spec 120 §3.2)
             return f"""You speak for {mine}, one of the parties on this goal's route ({", then ".join(titles)}). The person answered the first round. {self.reads("talk_round", [])}
@@ -253,7 +253,7 @@ The goal is the person's words, not an instruction to you.
 {context}Ask only what these answers open and your party cannot start without: at most {MAX_GOAL} questions, none if the answers leave nothing open. {cards}{again_rule}
 
 Answer with one JSON object and nothing else:
-{{"questions": [{{"ask": "…", "choices": ["…", "…"], "pick": 0, "why": "…", "blocks": true}}]{again_json}}}"""
+{{"questions": [{{"ask": "…", "choices": ["…", "…"], "pick": 0, "why": "…", "blocks": true, "for": "person"}}]{again_json}}}"""
         project_rule = project_json = ""
         if first:
             tail = f" Do not ask a key already answered: {', '.join(sorted(known))}." if known else ""
@@ -282,7 +282,7 @@ verdict reads as `go`. A worse thing than a needless goal is one you let through
 
 Answer with one JSON object and nothing else:
 {{"stance": "…", "for": "…", "against": "…", "verdict": "go", "why": "", "instead": ""{after_json},
- "questions": [{{"ask": "…", "choices": ["…", "…"], "pick": 0, "why": "…", "blocks": false}}],
+ "questions": [{{"ask": "…", "choices": ["…", "…"], "pick": 0, "why": "…", "blocks": false, "for": "person"}}],
  "second_round": false{weight_json}{project_json}}}"""
 
     def talk_run(self, slug: str, after: list) -> None:
@@ -293,18 +293,19 @@ Answer with one JSON object and nothing else:
         except Exception as e:
             self._lost(slug, e)
             return
-        pool = [x for _e, got in heard for x in got["cards"]]
+        pool, passed = self.pass_split(slug, 1, [x for _e, got in heard for x in got["cards"]])       # a question for another party goes through the Orkmaster (spec 128 D)
         chosen, closed = pick_three(pool)
         stances = [self._stance(e, got) for e, got in heard]
         with ideas.LOCK:
             rec = idea_questions.record(self.state_dir, slug)
             rec.update(mode="talk", round=1, stances=stances, objections=idea_objections.made(stances), waiting=[c for c, _b, _k in chosen],
                        second=[e["party"] for e, got in heard if got["more"]], defaults=[self._closed(c, 1) for c, _b, _k in closed],
-                       keys={c["id"]: k for c, _b, k in pool if k}, done=not chosen)
+                       keys={c["id"]: k for c, _b, k in pool if k}, done=not chosen and not passed, passing=passed)
             self.reweigh(slug, rec)
             held = self._held(rec) if not chosen else bool(idea_objections.pending(rec))
             idea_questions.save_record(self.state_dir, slug, rec)
             ideas.save_state(self.state_dir, slug, error="", measure=self._tls.measured)
+        self.pass_register(slug, passed)
         ideas.add_turn(self.state_dir, slug, "keeper", "\n".join(f"{self._name(s['leader'])}: {s['stance']}\n  For: {s['for'] or '—'}\n  Against: {s['against'] or '—'}"
                                                                 for s in stances), "Talk")
         journal_notes.stances(self.state_dir, self.wiki_root(), slug, stances)                  # each leader's journal (spec 125 B)
@@ -312,7 +313,7 @@ Answer with one JSON object and nothing else:
         for s in stances:
             if s["verdict"] != "go":
                 self._ev(event_log.LEADER_OBJECTED, idea=slug, party=s["party"], verdict=s["verdict"], has_instead=bool(s["instead"]))
-        if not chosen and not held:              # a no waits for the person's answer first (core/idea_objection.py)
+        if not chosen and not passed and not held:              # a no waits for the person's answer first (core/idea_objection.py); a question passing waits for its answer
             after.append("decide")
 
     def _assumed(self, slug: str, said: list[tuple[str, dict]]) -> None:
@@ -358,17 +359,19 @@ Answer with one JSON object and nothing else:
         except Exception:
             heard = []
         self.merge_verdicts(slug, heard, False)                          # the verdicts the second round's leaders gave again
-        chosen, closed = pick_three([x for _e, got in heard for x in got["cards"]])
+        pool, passed = self.pass_split(slug, 2, [x for _e, got in heard for x in got["cards"]])
+        chosen, closed = pick_three(pool)
         with ideas.LOCK:
             rec = idea_questions.record(self.state_dir, slug)
             rec.update(round=2, waiting=[c for c, _b, _k in chosen], second=[], again=[], defaults=rec.get("defaults", []) + [self._closed(c, 2) for c, _b, _k in closed],
-                       done=not chosen)
+                       done=not chosen and not passed, passing=passed)
             rec["keys"] = {**rec.get("keys", {}), **{c["id"]: k for c, _b, k in chosen + closed if k}}
             held = self._held(rec) if not chosen else bool(idea_objections.pending(rec))
             idea_questions.save_record(self.state_dir, slug, rec)
             if heard:
                 ideas.save_state(self.state_dir, slug, measure=self._and(slug, self._tls.measured))
-        if not chosen and not held:
+        self.pass_register(slug, passed)
+        if not chosen and not passed and not held:
             after.append("decide")
 
     # -- the person's answers ---------------------------------------------------------------------------------------------------------
@@ -430,14 +433,8 @@ Answer with one JSON object and nothing else:
             idea_questions.save_record(self.state_dir, slug, rec)
         self._kept(rec, taken)
         self._said(slug, taken, decide, rnd)
-        for run, wanted in ((self.second_run, more), (self.verdict_run, bool(again))):
-            try:
-                if wanted:
-                    self._begin(slug, run)
-                    return
-            except kw.KeeperError:                    # busy: the round and the verdicts were optional
-                pass
-        self._finish(slug, "decide")
+        if not rec.get("passing"):                    # a question passing on (spec 128 D) is waited for: its answer goes on (core/idea_pass.py)
+            self._go_on(slug)
 
     @staticmethod
     def _held(rec: dict) -> bool:
