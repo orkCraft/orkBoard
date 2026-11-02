@@ -654,7 +654,7 @@ def test_the_plus_card_grows_into_the_field_enter_sends_shift_enter_a_new_line_e
 
 def _frees(pg):
     """The free runes lying in the + card's seal, in the places of the band: `[place, element]`."""
-    return pg.locator(".hand .hand-plus .ork-sigil > .ork-sigil__free").evaluate_all("els => els.map((e) => [e.classList[1], e.firstElementChild.classList[1]])")
+    return pg.locator(".hand .hand-plus .ork-sigil > .ork-sigil__free:not(.hand-deco)").evaluate_all("els => els.map((e) => [e.classList[1], e.firstElementChild.classList[1]])")     # the three of orkUI's own runes (`.hand-deco`) are the ring's whole, not free runes
 
 
 def _radios(pg):
@@ -678,7 +678,7 @@ def test_the_seal_holds_the_free_runes_of_the_addressed_party_at_most_four_none_
         pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__free')", timeout=WAIT_MS)
         assert _frees(pg) == [["at-90", "void"], ["at-270", "lava"]], "the default stays in the seal, the others in the band's places in order of use"
         assert _seal(pg) == "ice"
-        free = pg.locator(".hand .hand-plus .ork-sigil__free").first
+        free = pg.locator(".hand .hand-plus .ork-sigil__free:not(.hand-deco)").first
         assert free.evaluate("e => getComputedStyle(e).opacity") == "0" and free.locator(".ork-elem[aria-hidden='true']").count() == 1      # hidden at rest
         _plus(pg).hover()
         pg.wait_for_function("() => getComputedStyle(document.querySelector('.hand .hand-plus .ork-sigil__free')).opacity === '0.75'", timeout=WAIT_MS)     # shown on hover, at 75 %
@@ -686,13 +686,13 @@ def test_the_seal_holds_the_free_runes_of_the_addressed_party_at_most_four_none_
         shot(pg, "wide-plus-free-runes")
         pg.mouse.move(5, 5)
         call(pg, "frame/state.js", "openTab", "design")                                                                    # free: dust (the default), lava
-        pg.wait_for_function("() => document.querySelectorAll('.hand .hand-plus .ork-sigil__free').length === 1", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelectorAll('.hand .hand-plus .ork-sigil__free:not(.hand-deco)').length === 1", timeout=WAIT_MS)
         assert _frees(pg) == [["at-90", "lava"]]
         call(pg, "frame/state.js", "openTab", "product")                                                                   # only its default is free: nothing in the band
         pg.wait_for_function("() => document.querySelector('.hand .hand-plus .ork-sigil__seal .ork-elem.void')", timeout=WAIT_MS)
         assert _frees(pg) == []
         call(pg, "frame/state.js", "openTab", "release")                                                                   # none free: the four others, in the four places in order
-        pg.wait_for_function("() => document.querySelectorAll('.hand .hand-plus .ork-sigil__free').length === 4", timeout=WAIT_MS)
+        pg.wait_for_function("() => document.querySelectorAll('.hand .hand-plus .ork-sigil__free:not(.hand-deco)').length === 4", timeout=WAIT_MS)
         assert _frees(pg) == [["at-90", "meadow"], ["at-270", "ice"], ["at-180", "dust"], ["at-45", "void"]] and _seal(pg) == "lava"
         _plus(pg).click()                                                                                                  # the field open: the card holds the choice (`is-choosing`)
         _field(pg)

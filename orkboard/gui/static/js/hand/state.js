@@ -9,7 +9,9 @@ export const fieldText = signal("");           // what was written, kept when th
 export const fieldPhotos = signal([]);         // the pictures pasted, as data URLs (board/pictures.js `shrink`)
 export const fieldType = signal(null);        // the goal type taken with @ (mention.js): {id, name, sign, party}; sent as `type` while the goal is addressed to that party
 export const fieldOff = signal("");            // the tab whose address the person took off (*→ Tech ×*): the goal is then general
-export const fieldRunes = signal(false);       // the five runes of the card-field stand in a row under its rune (a press on the rune opens them: spec 120 §6.1)
+export const fieldRow = signal("");            // the square of the card-field whose row of choices is open under the squares: "" none, "rune", "to", "type" or "files" (fieldsquares.js; spec 128 A.2)
+export const fieldTo = signal("");             // the leader the person chose with the *To* square: a party's slug, "ork" the Orkmaster (a general goal), "" none chosen (the text's *@Tech*, else the open tab's, addresses it)
+export const fieldFiles = signal([]);          // the project's files taken with the *Files* square: [{path, dir}], written as *@path* after the words when the goal is sent (what *@* gives today; realm/goal_mentions.py)
 export const fieldRune = signal("");           // the rune the person chose in the field (pluscard.js, decisions §187.3): an element, "" the one the addressed party's goal would be given
 export const rite = signal("");                // the element of the goal just sent: the + card's seal plays the summoning rite in it for a moment (`summon`, decisions §187.4)
 export const plusDealt = signal(false);        // a new + card is dealt at the lane's end for a moment: the goal was sent (pluscard.js, spec 120 §6.2)
@@ -30,15 +32,18 @@ export const HAND = "hand:";
 export const liftKey = (stopKey) => `${HAND}${stopKey}`;
 export const stopKeyOf = (lifted) => (String(lifted || "").startsWith(HAND) ? lifted.slice(HAND.length) : "");
 
-/** Where a goal written in the field goes: the party named with *@Tech* in the text, else the party whose tab is open (unless the person took it off), else
+/** Where a goal written in the field goes: the party named with *@Tech* in the text, else the one the *To* square chose (`to`), else the party whose tab is open (unless the person took it off), else
  *  none: the Orkmaster routes it by code (`ideas.add` with no party). `parties`: [{slug, name}]. Returns {party, name, by: "text" | "tab" | ""}. */
-export function addressOf(text, tab, off, parties) {
+export function addressOf(text, tab, off, parties, to = "") {
   const lower = String(text || "").toLowerCase();
   const named = [...parties].sort((a, b) => b.name.length - a.name.length).find((p) => {
     const at = lower.indexOf(`@${p.name.toLowerCase()}`);
     return at >= 0 && (at === 0 || /\s/.test(lower[at - 1])) && !/[\w-]/.test(lower[at + 1 + p.name.length] || "");
   });
   if (named) return { party: named.slug, name: named.name, by: "text" };
+  if (to === "ork") return { party: "", name: "", by: "to" };                                 // the *To* square: the Orkmaster decides
+  const chosen = to ? parties.find((p) => p.slug === to) : null;
+  if (chosen) return { party: chosen.slug, name: chosen.name, by: "to" };
   const open = parties.find((p) => p.slug === tab);
   if (open && tab !== ORKMASTER && off !== tab) return { party: open.slug, name: open.name, by: "tab" };
   return { party: "", name: "", by: "" };

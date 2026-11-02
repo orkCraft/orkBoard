@@ -12,7 +12,7 @@ import { html, cls } from "../html.js";
 import { Icon } from "../orkui.js";
 import { openTab, tab } from "../frame/state.js";
 import { mapData } from "../shell/store.js";
-import { addressOf, fieldOff, fieldOpen, fieldText } from "../hand/state.js";
+import { addressOf, fieldOff, fieldOpen, fieldText, fieldTo } from "../hand/state.js";
 import { partiesOf, partyCard } from "../hand/data.js";
 import { leadsSystem, mapName, partiesAll } from "./data.js";
 import { mapOf, pickWith } from "./maps.js";
@@ -41,7 +41,7 @@ effect(() => { if (!fieldOpen.value) { pickOff.value = ""; chipsAll.value = fals
 
 /** Where the goal in the field goes now (hand/state.js `addressOf`): the party its text names, else the open tab's, unless taken off. Reads the signals, so it can be used outside a component. */
 export function addressNow() {
-  return addressOf(fieldText.value, tab.value, fieldOff.value, partiesOf(mapData.value).map(partyCard));
+  return addressOf(fieldText.value, tab.value, fieldOff.value, partiesOf(mapData.value).map(partyCard), fieldTo.value);
 }
 
 /** The party whose map is in picking now (`{party, name}`), or null: the field is open, addressed to a party with a map, and picking not ended. */

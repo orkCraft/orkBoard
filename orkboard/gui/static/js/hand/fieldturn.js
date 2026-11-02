@@ -1,4 +1,4 @@
-// The turns of the card-field (docs/specs/120-a-goal-heard-and-thrown-to-a-side.md §6.1–§6.2, decisions §198.8): the + card is a card's back; pressed, it turns over and grows into the card of the text (`growFrom`: one motion, the turn, the growth and the
+// The turns of the card-field (docs/specs/120-a-goal-heard-and-thrown-to-a-side.md §6.1–§6.2, docs/specs/128 A, decisions §198.8, §206.1): the + card is a card's back; pressed, it turns over where it lies and grows into the card of the text (`placeField` lays the field with its left edge on the card's and its foot under the window's edge; `growFrom`: a turn of 180° in two halves, the card's back and then the field, and the growth from the card's box through both, the
 // travel from its place, about 360 ms); Esc or a press away turns it back into the + card where it lay (`turnBack`: its text and rune kept by the field's own state); **Send** turns it to its back and carries the back to its place in the Orkmaster's lane
 // (`sendBack`). **The turn in place is orkUI's** (`.ork-turn`, 0.28.0: the card of the words turns to its back where the field lay); the turns that are also a growth and a travel from a place (the field out of the + card, the field back into it) and the flights stay Web Animations, as orkUI has no flight whose end points are not known before the cards are drawn, in orkUI's tokens (read where it needs them: motion.js `tokenMs`, `spring`), and nothing under reduced motion. What flies is a copy over
 // everything (`.hand-ghost`: the real card is gone or hidden meanwhile and takes the pointer only when the copy lands), never what the person presses.
@@ -50,12 +50,36 @@ function place(g, b, extra = "") {
   g.style.cssText = `position:fixed;left:${b.left}px;top:${b.top}px;width:${b.width}px;height:${b.height}px;margin:0;z-index:90;pointer-events:none;transform-origin:0 0;${extra}`;
 }
 
-/** The field has just been drawn: it grows out of the + card, turning over (a turn, a growth and a travel at once; the + card lies under it). */
+const GROW = 2.8, SHOWN = 330, NARROW = "(max-width: 759.98px)";   // the field is about 2.8 times the + card's width; so much of it shows above the window's edge (spec 128 A.1)
+
+/** Where the field lies (wide width, `.hand-field` not in the pane's middle): its left edge on the + card's (its layout box, not the turned box), its width 2.8 times the card's; hand.css puts its top `SHOWN` px above the window's foot, so its foot goes under the edge.
+ *  The phone's width keeps the field as wide as the screen (hand.css); a + card out of view leaves the field where hand.css lays it. */
+export function placeField(el) {
+  if (!el) return;
+  const plus = document.querySelector(".hand .hand-plus"), box = boxIn(plus);
+  if (!box || (typeof matchMedia === "function" && matchMedia(NARROW).matches)) { el.style.removeProperty("--hf-left"); el.style.removeProperty("--hf-w"); return; }
+  const w = Math.min(plus.offsetWidth * GROW, innerWidth - 16), left = Math.max(8, Math.min(box.left + box.width / 2 - plus.offsetWidth / 2, innerWidth - w - 8));
+  el.style.setProperty("--hf-left", `${left}px`);
+  el.style.setProperty("--hf-w", `${w}px`);
+}
+
+/** A turn about the vertical line through the middle of a box `w` wide (the box grows from its corner, so the turn's own pivot is moved to its middle). */
+const TURN = (w, deg) => `translateX(${w / 2}px) perspective(60em) rotateY(${deg}) translateX(${-w / 2}px)`;
+
+/** The field has just been drawn: the + card turns over and grows into it, from where it lies. A copy of the + card (the card's back) turns away over the first half while the field, edge-on until then, turns in over the second: a half turn and a half turn, 180° in all,
+ *  and the growth from the + card's box to the field's runs through both (`translate` and `scale`, which leave the turn its own `transform`). Nothing under reduced motion. */
 export function growFrom(el) {
   const plus = document.querySelector(".hand .hand-plus"), a = boxIn(plus), b = el?.getBoundingClientRect();
   if (!el || !a || !b?.width || reduced()) return;
-  el.animate([{ transformOrigin: "0 0", transform: FROM(a, b, "90deg"), opacity: 0.4 }, { transformOrigin: "0 0", transform: "none", opacity: 1 }],
-    { duration: tokenMs("--ork-motion-play", 400) * 0.9, easing: ease() });         // the field grows to the gutters on a phone: a spring's overshoot would spill past the window
+  const time = tokenMs("--ork-motion-play", 400) * 0.9, half = time / 2, origin = { transformOrigin: "0 0" };       // the field grows to the gutters on a phone: a spring's overshoot would spill past the window
+  const move = (f, t) => [{ translate: `${f.x}px ${f.y}px`, scale: `${f.kx} ${f.ky}`, ...origin }, { translate: `${t.x}px ${t.y}px`, scale: `${t.kx} ${t.ky}`, ...origin }];
+  el.animate(move({ x: a.left - b.left, y: a.top - b.top, kx: a.width / b.width, ky: a.height / b.height }, { x: 0, y: 0, kx: 1, ky: 1 }), { duration: time, easing: ease() });
+  el.animate([{ transform: TURN(b.width, "-90deg"), ...origin }, { transform: TURN(b.width, "0deg"), ...origin }], { duration: half, delay: half, fill: "backwards", easing: "ease-out" });
+  const g = copyOf(plus, a);                                                          // the back, plus-sized, grown by the same steps to the field's box
+  document.body.appendChild(g);
+  const done = () => g.remove();
+  g.animate(move({ x: 0, y: 0, kx: 1, ky: 1 }, { x: b.left - a.left, y: b.top - a.top, kx: b.width / a.width, ky: b.height / a.height }), { duration: time, easing: ease() }).finished.then(done, done);
+  g.animate([{ transform: TURN(a.width, "0deg"), ...origin }, { transform: TURN(a.width, "90deg"), ...origin }], { duration: half, easing: "ease-in", fill: "forwards" }).finished.then(done, done);
 }
 
 /** Esc or a press away: the field was taken off the page at once; a copy of the + card turns back from the field's box into the + card where it lay (the real one is hidden meanwhile). */
