@@ -68,3 +68,17 @@ last steps, all `done`.
 6. **Tests** (`tests/test_task_steps_browser.py`, a fake host with `steps` on tasks): the label row's text and pips,
    the glowing one, activity without pips, the lifted list and its source, the column's count, the narrow pips, no
    steps → today's label.
+
+**As built (H2).** `table/steps.js` holds the page's reading of `steps` (`stepsOf`: at most six items, numbers in range, an activity only with a `doing` line; none → null, so a task with no steps keeps today's label) and the little components:
+`Pips` (orkUI's `.ork-pips`, squares of `--ork-3` = 6 px with `--ork-1` = 2 px between; the one now takes the goal's element colour and, while the task is at work, glows with orkUI's own `ork-glow` keyframes, 2.4 s in six steps, still under
+reduced motion; done in the ink, next in the faint `--ork-frame`), `StepNow` (the body face, one line, ellipsis; the muted ink for an activity) and `StepsList`. The sheet is `table/steps.css`, linked after `goalview.css` in `frame/frame.js`.
+- **The label** is three short lines in the card's 144 px, not one: the stage row (*Doing 2/5*, the flame, the gem at the right), under it the pips, under them the step now (the pips beside the stage word did not fit: *Doing 2…*). It
+  shows only while the stage is *Doing* or *Checking* (a failed task stays *Doing*, its pip now lit but not glowing); a task waiting to start or done keeps today's label. The whole line (*Doing 2/5 · tests for join*) is the card's
+  `aria-label`, with *worked 1 m 12 s* after it, and the time is in the `title` too (*the goal · worked 1 m 12 s*); a task with steps no longer says the time on its label, one without keeps *Doing · 1 m 12 s*. The plan's cards are the same
+  `TaskCard`; a cascade's strips (`TaskEdge`) are untouched. With every step done and none now it reads *Checking 4/4* (no step line, no pip glowing).
+- **The lifted card** (`TaskBack`) has a *Steps* section after *Does it*: ✓ done muted, the one now in the ink (`aria-current="step"`), the next faint, and under them the source small (`file` *from its steps file*, `todo` *from its own
+  list*, `activity` *what it is doing*, its `doing` line lit, no list). A task's back has no *Done when* of its own (that is the goal's, in its spec and at the leader), so the list stands where the task's own facts are.
+- **The column** (`table/piles.js` `tasksCount`): the foot of a card of a goal at work (not put off) says *done/total* of its tasks (merged of those not dropped), with `title` and `aria-label` *1 of 3 tasks finished* (not *done*: that
+  matched the *Done* button's name in older tests).
+- **Under 760 px** the token (`Token`) draws the pips alone, in 4 px squares so six lie in its 36 px; its label and title carry the line.
+- Tests: `tests/test_task_steps_browser.py`, a `StepsHost` whose tasks carry `steps` (a steps file, an activity, a tool's list with a long step, a check with all steps done, a task with none).

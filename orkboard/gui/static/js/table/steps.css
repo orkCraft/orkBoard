@@ -1,0 +1,38 @@
+/* A task's steps (docs/specs/129-a-tasks-steps.md part H2, decisions §207.1; steps.js). Linked after column.css and goalview.css (frame/frame.js); orkUI's tokens and classes only: the pips are orkUI's `.ork-pips` squares at 6 x 6 (three of its 2 px cells) and 2 px apart,
+   the one now glowing with orkUI's own `ork-glow` rhythm (the keyframes of `.ork-elem.is-glowing`: six steps over 2.4 s, still under reduced motion). The step is a person's word: the body face, never the pixel one. */
+
+/* -- the label of a task's card: the stage and its count on the label row (the gem at its right), under it the pips and, under them, the step now in one line -------------------------------------- */
+.table-card > .table-pips { align-self: flex-start; }
+.table-steps__now { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ork-ink); font: var(--ork-type-caption); text-align: left; }
+.table-steps__now.is-activity { color: var(--ork-ink-muted); }
+
+/* -- the pips: done filled in the ink, the one now in the goal's colour (glowing while the task is at work), the next faint ------------------------------------------------------------ */
+.ork-pips.table-pips { flex: none; align-items: center; }
+.ork-pips.table-pips > i { width: var(--ork-3); height: var(--ork-3); }
+.ork-pips.table-pips > i.n { background: var(--ork-ink); }
+.ork-pips.table-pips > i.n.is-meadow { background: var(--ork-elem-meadow); }
+.ork-pips.table-pips > i.n.is-ice { background: var(--ork-elem-ice); }
+.ork-pips.table-pips > i.n.is-dust { background: var(--ork-elem-dust); }
+.ork-pips.table-pips > i.n.is-void { background: var(--ork-elem-void); }
+.ork-pips.table-pips > i.n.is-lava { background: var(--ork-elem-lava); }
+.ork-pips.table-pips > i.is-glowing { animation: ork-glow 2.4s steps(6) infinite; }
+@media (prefers-reduced-motion: reduce) { .ork-pips.table-pips > i.is-glowing { animation: none; opacity: 1; } }
+/* under 760 px a goal is a token a tap wide: its pips alone, in 4 px squares so six lie in its 36 px */
+.table-token .ork-pips.table-pips { max-width: 100%; }
+.table-token .ork-pips.table-pips.is-small > i { width: var(--ork-2); height: var(--ork-2); }
+
+/* -- the lifted card's steps: ✓ done in the muted ink, the one now lit, the next faint, and where they come from said small --------------------------------------------------------------- */
+.table-steps { display: flex; flex-direction: column; gap: var(--ork-1); min-width: 0; }
+.table-steps__list { display: flex; flex-direction: column; gap: var(--ork-1); margin: 0; padding: 0; list-style: none; }
+.table-steps__item { display: flex; align-items: baseline; gap: var(--ork-2); min-width: 0; }
+.table-steps__mark { flex: none; width: var(--ork-4); text-align: center; }
+.table-steps__text, .table-steps__line { min-width: 0; overflow-wrap: anywhere; }
+.table-steps__item.is-done { color: var(--ork-ink-muted); }
+.table-steps__item.is-now, .table-steps__line.is-now { color: var(--ork-ink); }
+.table-steps__item.is-now .table-steps__mark { align-self: center; height: var(--ork-3); background: var(--ork-ink); }
+.table-steps__item.is-next { color: var(--ork-ink-faint); }
+.table-steps__src { color: var(--ork-ink-faint); font: var(--ork-type-caption); font-size: 11px; }
+
+/* -- the Orkmaster's column: a card of a goal at work says its tasks done of all at its foot (spec 129 H2.3) ---------------------------------------------------------------------------------- */
+.col-foot > .col-count { flex: none; margin-left: auto; color: var(--ork-ink-muted); white-space: nowrap; }
+.col-foot > .col-count + .col-heads, .col-foot > .col-count + .col-mark { margin-left: var(--ork-1); }

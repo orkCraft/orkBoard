@@ -78,6 +78,12 @@ export function sayOf(n, pile, off, first) {
 
 const failed = (n) => n.state === "failed" || (n.tasks || []).some((t) => t.state === "failed");
 
+/** A goal at work's tasks done of all (spec 129 H2.3): `{done, total}` over its tasks that were not dropped (done: merged), null when it has none yet. */
+export function tasksCount(n) {
+  const all = (n.tasks || []).filter((t) => t.state !== "dropped");
+  return all.length ? { done: all.filter((t) => t.state === "merged").length, total: all.length } : null;
+}
+
 /** The sign of a card's state on its foot: yellow `question` while it waits for the person (the faint one will be for a question passed on to another leader, part D), `alert` in danger while a task failed. */
 function Mark({ n }) {
   if (failed(n)) return html`<span class="col-mark is-failed" title="A task failed"><${Sign} name="alert" /></span>`;
@@ -112,14 +118,14 @@ function DownCard({ n, i, front, onPress, open }) {
 function UpCard({ n, i, pile, off, first, onPress }) {
   const el = n.element || "", on = picked.value === n.slug, work = pile === "work" && !off, ripe = n.back?.ripe, running = pile === "review" && ripe && !ripe.by && !ripe.held;
   if (pile === "review") everBack.add(n.slug);
-  const sign = n.type?.sign || "", moon = off === "night";
+  const sign = n.type?.sign || "", moon = off === "night", tasks = work ? tasksCount(n) : null;                    // a goal at work says its tasks done of all at its foot (spec 129 H2.3)
   const extra = pile === "review" ? (running ? (first ? html`<span class="col-when">${leftWords(ripe.left_s)}</span>` : html`<span class="col-when">~${clock(ripe.left_s)}</span>`) : null)
     : off === "held" ? html`<span class="col-when"><${Sign} name="pause" />Held</span>` : moon ? html`<span class="col-when"><${Sign} name="moon" />${night()}</span>` : html`<${Heads} n=${n} />`;
   return html`<button type="button" class=${cls("ork-card col-card col-card--up", { "ork-picked": on, asks: !!n.asks_you && !failed(n), fails: failed(n), "is-off": !!off })} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state} data-pile=${pile} data-off=${off || undefined} style=${`--i:${i}`}
-    aria-pressed=${String(on)} aria-label=${`${n.title}: ${sayOf(n, pile, off, first)}`} onClick=${() => onPress(n, pile, off)}>
+    aria-pressed=${String(on)} aria-label=${`${n.title}: ${sayOf(n, pile, off, first)}${tasks ? `, ${tasks.done} of ${tasks.total} tasks finished` : ""}`} onClick=${() => onPress(n, pile, off)}>
     <span class="col-hd"><${Elem} name=${el} dim=${!el} glowing=${work} /><span class="col-nm">${n.short || n.title}</span></span>
     <span class=${cls("table-card__win col-win", `is-${typeTone(n)}`)}>${sign && (sign.startsWith("tool:") ? html`<span class=${`ork-tool ${sign.slice(5)}`} aria-hidden="true"></span>` : html`<${Sign} name=${sign} big=${true} />`)}${moon && html`<${Sign} name="moon" big=${true} />`}</span>
-    <span class=${cls("col-foot", `col-c-${el || "dust"}`)}><${Elem} name=${el} dim=${!el} glowing=${work} /><span class="col-fnm">${n.short || n.title}</span>${extra}<${Mark} n=${n} />
+    <span class=${cls("col-foot", `col-c-${el || "dust"}`)}><${Elem} name=${el} dim=${!el} glowing=${work} /><span class="col-fnm">${n.short || n.title}</span>${tasks && html`<span class="col-count" data-count=${`${tasks.done}/${tasks.total}`} title=${`${tasks.done} of ${tasks.total} tasks finished`}>${tasks.done}/${tasks.total}</span>`}${extra}<${Mark} n=${n} />
       ${first && running && html`<span class="col-wbar" style=${`--s:${shareOf(ripe)}`} aria-hidden="true"><i></i></span>`}</span>
   </button>`;
 }

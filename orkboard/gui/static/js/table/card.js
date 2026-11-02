@@ -17,6 +17,7 @@ import { GoalMenu } from "./dropgoal.js";
 import { aliveState, useChanged, useWorked, workedWords } from "./worktime.js";
 import { ConcernsBack } from "./concerns.js";                       // a marked card's back lists its leader's concerns (spec 108 B)
 import { cascadeOf, footWords, doingWords, readTask, stageOf, typeSignOf, gemOf, STAGES } from "./data.js";
+import { Pips, StepNow, StepsList, labelWords, countWords, showsSteps, stepsOf } from "./steps.js";       // a task's steps: the label row's count, pips and step now, the lifted card's list (spec 129 H2)
 import { BackFace, Turning, backKind, everBack } from "./backcard.js";       // a goal talked over lies face down (spec 120 §6.3)
 import { ThrownPlace, thrown } from "./flight.js";                         // a failed task's card thrown to the hand leaves its place (spec 128 C.2)
 
@@ -42,10 +43,10 @@ export const mineKey = (key) => typeof key === "string" && key.startsWith("t:");
 /** What a card of this goal says it is about (the hand's lifted card marks it, hand/about.js): the goal and, for a task, itself. */
 export const aboutTokens = (n, tasks = []) => `idea:${n.slug}${tasks.map((t) => ` task:${n.slug}/${t.id}`).join("")}`;
 
-/** The stage's small sign (14 px) and its word, as a label row or a strip says it. `flame`: the goal's element (`{name}`), glowing in the sign's place while the task is at work (decisions §187.2). */
-export function Stage({ stage, worked = -1, flame = null }) {
+/** The stage's small sign (14 px) and its word, as a label row or a strip says it. `flame`: the goal's element (`{name}`), glowing in the sign's place while the task is at work (decisions §187.2). `count`: its steps' *2/5* after the word (the time worked is then in the card's words, spec 129 H2). */
+export function Stage({ stage, worked = -1, flame = null, count = "" }) {
   const s = STAGES[stage] || STAGES.routing;
-  return html`<span class=${cls("table-stage", { "is-timed": worked >= 0 })}>${flame ? html`<${Elem} name=${flame.name} dim=${!flame.name} glowing=${true} />` : html`<${Sign} name=${s.sign} />`}<span class="table-stage__w">${worked >= 0 ? `${s.word} · ${workedWords(worked)}` : s.word}</span></span>`;
+  return html`<span class=${cls("table-stage", { "is-timed": worked >= 0 })}>${flame ? html`<${Elem} name=${flame.name} dim=${!flame.name} glowing=${true} />` : html`<${Sign} name=${s.sign} />`}<span class="table-stage__w">${worked >= 0 ? `${s.word} · ${workedWords(worked)}` : count ? `${s.word} ${count}` : s.word}</span></span>`;
 }
 
 /** The card's window: one sign at the signs' big size, in the goal's colour toned down (an opacity on orkUI's token, table.css). `moon`: the moon beside it (a goal that waits for the reset). */
@@ -57,13 +58,16 @@ function Win({ n, sign, moon = false, danger = false }) {
  *  worked; a card whose state changed flashes its frame once (spec 107 §7, table.css; the flash is not played under reduced motion, the time still ticks). */
 export function TaskCard({ n, t }) {
   const key = taskKey(n, t), on = lifted.value === key, bad = t.state === "failed", asks = t.state === "picking", gem = gemOf(t);
-  const said = `${t.title}, ${n.short || n.title}: ${footWords(t)}`, worked = useWorked(t.started, aliveState(t.state)), changed = useChanged(t.state), away = thrown.value.get(`${n.slug}/${t.id}`);
+  const worked = useWorked(t.started, aliveState(t.state)), changed = useChanged(t.state), away = thrown.value.get(`${n.slug}/${t.id}`);
+  const st = showsSteps(t) ? stepsOf(t) : null, time = st && worked >= 0 ? `worked ${workedWords(worked)}` : "";                    // with steps the time worked is in the card's words, not on its label (spec 129 H2.1)
+  const said = st ? `${t.title}, ${n.short || n.title}: ${labelWords(t)}${bad ? ", failed" : ""}${time && `, ${time}`}` : `${t.title}, ${n.short || n.title}: ${footWords(t)}`;
   if (away) return html`<${ThrownPlace} n=${n} t=${t} h=${away.h} />`;
   return html`<button type="button" class=${cls("ork-card ork-leans table-card", { fails: bad, asks, "is-lifted": on, "is-lit": litKey.value === key, "is-changed": changed })} data-lkey=${key} data-goal=${n.slug} data-task=${t.id}
-    data-about=${aboutTokens(n, [t])} data-state=${t.state} data-stage=${stageOf(t)} aria-pressed=${String(on)} aria-label=${said} title=${n.title} onClick=${() => lift(on ? "" : key)} ...${leans}>
+    data-about=${aboutTokens(n, [t])} data-state=${t.state} data-stage=${stageOf(t)} aria-pressed=${String(on)} aria-label=${said} title=${time ? `${n.title} · ${time}` : n.title} onClick=${() => lift(on ? "" : key)} ...${leans}>
     <span class="table-card__head"><span class="table-card__nm" title=${t.title}>${t.short || t.title}</span></span>
     <${Win} n=${n} sign=${typeSignOf(n, t)} />
-    <span class="table-card__row"><${Stage} stage=${stageOf(t)} worked=${worked} flame=${aliveState(t.state) ? { name: n.element } : null} />${gem &&html`<span class="ork-gem share" data-cost=${gem}>${gem}</span>`}</span>
+    <span class="table-card__row"><${Stage} stage=${stageOf(t)} worked=${st ? -1 : worked} count=${countWords(st)} flame=${aliveState(t.state) ? { name: n.element } : null} />${gem &&html`<span class="ork-gem share" data-cost=${gem}>${gem}</span>`}</span>
+    <${Pips} st=${st} element=${n.element} alive=${aliveState(t.state)} /><${StepNow} st=${st} />
   </button>`;
 }
 
@@ -114,13 +118,14 @@ export function OwnCard({ n, stage }) {
 export function Token({ n, tasks = [], stage = "" }) {
   const front = tasks[0], key = front ? taskKey(n, front) : ownKey(n), on = lifted.value === key || tasks.some((t) => lifted.value === taskKey(n, t)), bad = tasks.some((t) => t.state === "failed");
   const st = front ? stageOf(front) : stage, words = front ? `${n.title}: ${footWords(front)}` : `${n.title}: ${doingWords(n)}`;
-  const edges = Math.min(5, Math.max(0, tasks.length - 1));
+  const edges = Math.min(5, Math.max(0, tasks.length - 1)), steps = front && showsSteps(front) ? stepsOf(front) : null, said = steps ? `${words} · ${labelWords(front)}` : words;       // under 760 px the pips alone (spec 129 H2.4)
   return html`<span class="table-stack" data-n=${edges}>
     ${Array.from({ length: edges }, (_, k) => html`<i key=${k} class="ork-card table-edge" style=${`--ork-deck-i:${k + 1}`} aria-hidden="true"></i>`)}
     <button type="button" class=${cls("ork-card table-token", { fails: bad, "is-lifted": on, "is-lit": litKey.value === key, "ork-picked": picked.value === n.slug })} data-lkey=${key} data-goal=${n.slug} data-task=${front?.id}
-      data-about=${aboutTokens(n, tasks)} data-state=${front ? front.state : n.state} data-stage=${st} aria-pressed=${String(on)} aria-label=${words} title=${words} onClick=${() => lift(lifted.value === key ? "" : key)}>
+      data-about=${aboutTokens(n, tasks)} data-state=${front ? front.state : n.state} data-stage=${st} aria-pressed=${String(on)} aria-label=${said} title=${said} onClick=${() => lift(lifted.value === key ? "" : key)}>
       <span class="table-card__top"><${Elem} name=${n.element} dim=${!n.element} glowing=${(!!front && aliveState(front.state)) || (!front && backKind(n) === "talk")} /><${Sign} name=${(STAGES[st] || STAGES.routing).sign} /></span>
       <${Win} n=${n} sign=${front ? typeSignOf(n, front) : n.type?.sign || ""} danger=${bad} />
+      <${Pips} st=${steps} element=${n.element} alive=${!!front && aliveState(front.state)} small=${true} />
     </button>
   </span>`;
 }
@@ -192,6 +197,7 @@ export function TaskBack({ n, t, mapName }) {
     <p class="table-back__cap">${n.title}</p>
     <${Sec} label="State"><span data-state=${t.state}>${TASK_STATE[t.state] || t.state}${t.note ? ` · ${t.note}` : ""}</span></${Sec}>
     ${t.head && html`<${Sec} label="Does it"><span class="table-back__who"><${WhoHead} head=${t.head} /> ${t.by?.name || ""} <span class="table-back__muted">${headWords(t.head)}</span></span></${Sec}>`}
+    ${stepsOf(t) && html`<${Sec} label="Steps"><${StepsList} st=${stepsOf(t)} /></${Sec}>`}
     ${error && html`<${Sec} label="What went wrong"><span class="is-danger">${error}</span></${Sec}>`}
     ${full?.brief && html`<${Sec} label="Brief"><span class="table-back__text">${full.brief}</span></${Sec}>`}
     ${t.made && html`<${Sec} label="What it made"><span>${t.made}</span></${Sec}>`}
