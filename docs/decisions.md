@@ -4325,3 +4325,63 @@ build it, and into main.* So:
    change (`.orkcraft/journals/<scope>.md`).
 6. Spec 127: A and the mirror by the spec's author; B and C by the cheaper model.
 The owner's call.
+
+## 206. The Orkmaster's column on every tab, three piles of whole cards; the + card turned where it lies; one way to talk to a leader; a goal picked is a view of its own at each leader; the discard picked against its spec; the night's goals to the discard; a rune is a shape and a colour (2 November 2026, the owner)
+
+Changes: 145, 160, 167, 181, 186, 187, 198.
+
+Why: the owner, over a day of mockups (`docs/mockups/goal-card/`): the field for a new goal opened in the window's middle
+while the + card stayed where it lay, which looked broken; the Orkmaster's goals moved away whenever another leader's tab
+was opened, so what is at work and what is next was out of sight; the goals the Orkmaster still reads, the ones the
+leaders agreed and the ones at work looked alike; a question the person cannot answer came to the hand; the project's
+question and a change to a goal were asked two different ways; a goal done could not be looked at against what it
+promised; the five runes repeated in the Orkmaster's column; the morning's card repeated the discard. So:
+1. **The + card turns over where it lies** and grows up from there, its foot under the window's edge; Esc or a press away
+   turns it back with its words. Its choices are squares in a row, as the rune is: *Rune*, *To* (the leaders' heads; the
+   Orkmaster decides when none), *Type* (the party's types by their pictures), *Files* (from this computer, or a file of
+   the project). The seal's ring is whole: the five runes and three of orkUI's own, eight places, which are also the
+   wait's eight steps.
+2. **The Orkmaster's column is pinned at the window's left**, off the table on the canvas (as the hand is), the same on
+   every tab; **its head is the Orkmaster's tab** (the Board: who does what), and the tabs at the top are the leaders'
+   only. *No left column* (§145) still holds for a list or a drawer: this is the first lane, pinned, of whole cards.
+3. **Three piles, top to bottom as a goal lives**: **In analysis** (not yet agreed: in line, read, routed, talked over),
+   its cards **sideways and face down, with no name** (a tight pile; the one being worked on named under the title; a
+   press reads the pile out in order, with *Next* and *Remove*); **To review** (agreed, its wait running: face up and
+   still, its wait a bar in eighths, then a time; it starts by itself); **At work · later** (at work: its rune glowing,
+   its leaders' heads at its foot; then put off: a time today, or the moon). A pile shows its front card whole and the
+   foot of each card under it, then thin edges, never a count. A card agreed turns upright and face up into To review;
+   its wait over, it moves to At work and its tasks are dealt to its leaders' lanes. A face-down card cannot be picked.
+4. **A goal lies only in the column, its tasks only in its leaders' lanes.** Picked, every tab looks at it: **the
+   Orkmaster's tab shows its plan alone**, its tasks in their leaders' lanes, their order as arrows; **a leader's tab
+   shows another view, what it will change** at that leader's level (its parts, new, changed or read only, their lines,
+   the contract's; Design's screens now and as they will be, with their states), a small whole map beside it with its
+   parts lit, its *Done when*, its tasks there. With nothing picked a leader's tab is its map of the whole project.
+5. **One way to talk to a leader** (§181 stays): the open tab's head pressed again (the Orkmaster's too), or a part of a
+   change pressed, opens the bubble under the head, about what is picked (nothing: the project; a goal; the part as a
+   mark). The answer reads and changes nothing; **a card only when something would change**: *Make it a goal* (the + card
+   opens with the words in it) or *Make it a change* (a goal agreed or at work: the leader's plan now and proposed, and
+   what it costs, a decision in the hand; Design's three looks to choose from). The + card is for new goals only.
+6. **The hand gets only what needs the person**: a choice only a person makes, a question no leader could answer, a
+   decision the person asked for, a failure. **A question another leader can answer goes through the Orkmaster**: it
+   leaves its goal for the column (*passing on*), stays a few seconds where the person can take it (*Answer it myself*,
+   *Pass it now*), goes to that leader, and the answer goes back into the goal; the goal says *Asked Tech* and is not
+   yellow (yellow means only: you are needed). One hop: a leader that cannot answer sends it to the person.
+7. **A question for the person leaves its goal**: the goal stays at its leader, yellow and still, and the question flies
+   out of it into the hand, and back into it when answered. **A failure** turns its card red and throws it from where it
+   lay into the hand; a dashed place stays in the lane for *Try again*.
+8. **The discard can be picked**: the leaders' tabs show what the goal changed against what its spec promised (✓ as
+   promised, ≠ not quite, + more than promised, ✗ not done) and its *Done when*, checked; **the Play die wears its
+   rune** and plays the product with it (dev now, at its screen; or as it was when it landed). A rune is the goal's
+   version of the product, never called a branch: the person sees dev and main only (§49).
+9. **The night's goals done go to the discard** under a small moon until seen; a night's failure comes to the hand red;
+   the morning's card goes (§199.5).
+10. **A rune is a shape and a colour** (§186 changes): five shapes, five colours, 25, unique across the project's open
+    goals and the results not yet seen; a new goal takes the shape used least, then the colour used least, so the first
+    five differ by shape. orkUI draws an element's shape in any of the five colours.
+11. **Cards in analysis lie sideways only while face down**; a face-up card is never turned (its text and its rune would
+    turn with it). Moving is at work, still is waiting, yellow is you, red is a failure.
+12. Spec 128 builds it, its parts by the cheaper model, into main as each is green (the critical tests). **orkUI's own
+    changes wait for orkUI**: the stepped corner that grows with a card and the stronger glow (Orkboard's sheets carry
+    no corner of their own). The rest is drawn here from orkUI's pieces and tokens: the busy ring is orkUI's sweep, the
+    whole ring orkUI's runes in their places, a hue an element's token.
+The owner's call.
