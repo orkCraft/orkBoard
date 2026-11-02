@@ -14,11 +14,11 @@ import re
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import (board_back, board_rows, collide, goal_flags, goal_place, goal_route, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_checks, idea_flag, idea_pick, idea_questions, idea_shots,
+from orkboard.realm import (board_back, board_rows, collide, goal_flags, goal_place, goal_route, goal_team, goal_types, goal_verdict, harnesses, idea_change, idea_checks, leader_change, idea_flag, idea_pick, idea_questions, idea_shots,
                             idea_hearing, idea_objections, idea_risk, idea_spend, idea_route, idea_target, ideas, library, map_party, map_stage, pitches, releases, roles, spec_sections, tool_errors)
 from orkboard.realm.idea_words import short_of
 
-NEEDS = ("route", "start", "talk", "hearing", "cause", "decision", "fork", "asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71; a route and a step added after Talk: spec 99 §4; Talk's cards and a bug's cause: §5; a goal's hearing in Talk, once a leader's no: spec 108 §4, spec 120 §4; the decision to confirm and a fork to settle: §6, §7)
+NEEDS = ("route", "start", "talk", "hearing", "cause", "decision", "fork", "asks", "plan", "change", "todo", "failed", "proposal", "pitch", "collide", "leader_change")        # the Needs you kinds that sit on an idea, as a node names them (a plan change: spec 62; a judged pitch: spec 65; a collision: spec 71; a route and a step added after Talk: spec 99 §4; Talk's cards and a bug's cause: §5; a goal's hearing in Talk, once a leader's no: spec 108 §4, spec 120 §4; the decision to confirm and a fork to settle: §6, §7)
 _HELD_FILES = re.compile(r"^files(?: beside)? · (.+)$")
 _AFTER = re.compile(r"after (\d{1,2}:\d{2})")
 SIGN_IN_TOOL = "claude"          # what the Board runs by itself runs on Claude (core/idea_runner.py `HARNESS`)
@@ -130,6 +130,7 @@ def idea_needs(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None
         said = idea_change.summary(change, plan)
         out.append({**base, "kind": "change", "text": idea_change.text_of(said), "at": said["made_at"] or base["at"], "why": said["why"],
                     **{k: said[k] for k in ("added", "changed", "dropped", "usd_low", "usd_high")}})
+    out += [{**base, **n} for n in leader_change.rows(state_dir, slug)]        # a change the person asked a leader for, waiting as a decision (spec 128 E)
     if state == "proposed":
         out.append({**base, "kind": "proposal", "text": ideas.thesis(
             (ideas.idea_page(root, slug) or ideas.Page()).section("Gist")) or "The keeper proposes this"})

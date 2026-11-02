@@ -128,6 +128,12 @@ G last (it touches every `Elem`). Each part merged into main as soon as its own 
    *Accept* (the plan and the spec take it; written into the goal's decisions as the person's), *Talk more* (the bubble
    again, the part kept), *Keep the spec* (nothing changes). Design's: the three looks as cards, *Let Design decide*.
 
+**As built.** The row is a kind of its own, `leader_change` (in `board_map.NEEDS`; kind `change` is the goal's plan change of spec 62, one a goal, with its own answers), kept in the goal's state folder
+(`realm/leader_change.py`: `leader_changes.json`) and made by the party's leader (`core/idea_leader_change.py`: step `plan`, no tools, one call; its tasks not started by their role, its own *Will be* lines of the spec).
+Commands: `ideas.change {idea, party, part?, text}` → `{ok, id}`; `ideas.change_take {idea, id, look?, decide?}` (the runner's `revise_tasks`, the party's *Will be* written, *The person decided …* in Decisions);
+`ideas.change_keep {idea, id}`. The row: `{kind, id, task (= id), idea, goal = party, party, part, said, shape: plan | looks, status: ready | failed, text, why, before, after: {tasks: [{id, title, short, op}], lines}, looks:
+[{key, name, why, lines}], usd_low, usd_high, error}`. Design's looks are three text looks (its sketch's pages are too heavy for one call here); each is its lines of the goal's *Will be*. The card is `hand/changecard.js`.
+
 ## F. A goal picked at every leader
 
 1. **The Orkmaster's tab, a goal picked**: the Board shows that goal's tasks only (every other goal's are not drawn), in
