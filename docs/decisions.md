@@ -4983,3 +4983,49 @@ needs its editor and a licence in batch mode, its WebGL build takes minutes, its
 7. **Checked before it is built**: Godot's web export of C# in its current version; Unity's batch-mode build without a
    paid licence; Flutter's semantics tree in its web build.
 The owner's call.
+
+## 221. A goal dropped from the phone: through the mailbox; the Orkmaster's reading at once on Seasoned, the leaders' sections and plan on Veteran when the limits allow; the join raised to Veteran only on a sign; work stops before reading does; where it went said in a line (3 November 2026, the owner)
+
+Changes: 121, 180, 206, 216, 218, 219; spec 94, spec 100.
+
+Why: the owner: *this is how work from the phone should go: the person drops a goal, it goes through its first reading
+and into line, and its making may wait, for the limits for one*; then: do the leaders not need Veteran models to write
+a good spec, and does the Orkmaster need one at all, when it only passes a goal to the right leaders and checks that
+their decisions agree? `realm/idea_target.py`'s `MATRIX` already answers most of it: on *balance* the Orkmaster's
+`route`, `decide`, `join` and `collide`, and Talk's rounds and verdicts, run on Seasoned; a leader's first section
+(`section_first`), its reading of a goal (`goal`) and its plan on Veteran (about $0.18–0.22 a call, spec 86 §5). The
+interface was read for this way: the phone's + card takes a goal with its rune, its leader, its type and its files
+(`js/hand/pluscard.js`; the page has no microphone, the native frame's widget will, §174.7); the route card is dealt to
+the hand as soon as the Orkmaster has routed it, with its cost and **Talk**, and **Later, by itself** when the limits run
+low (`js/hand/routecard.js`); a hearing is lifted on a phone in the middle (`js/hand/hearing.js`); the computer's sleep
+is a setting of three modes (`js/shell/settings.js`). What it lacks: upright the phone is the hand alone (§180), so once
+Talk is pressed the person sees nothing of where the goal went, nor that its work waits for the reset; with no signal
+the phone says *Cannot reach the board: is it running, and Tailscale on?* (`js/linkpaired.js`) and takes no goal; and
+analysis waits on the route card's press. So:
+1. **A goal from the phone goes through the mailbox** (§219.2), as an answer does: sent sealed, taken when the computer
+   wakes. With no signal the + card still sends; the phone says *Your computer is asleep or offline: the goal will reach
+   it when it wakes*, never the Tailscale line (which stays only for the whole Board, §219.5).
+2. **The Orkmaster's reading at once, on Seasoned**, as today (`route`): the route card comes to the hand with whose the
+   goal is and what it costs. The Orkmaster stays on Seasoned for routing and joining; a Veteran is not its seat's.
+3. **The leaders' sections and plan on Veteran**, as today; they run at once when the limits allow, else after the reset
+   and before any work, said on the route card (*Read after the reset, Mon 09:00*).
+4. **The join raised to Veteran only on a sign**: `join` runs on Seasoned unless code finds a reason, then once on
+   Veteran: two sections touch the same parts or files; a leader doubted or said no in Talk; a concern quotes a pillar
+   (§210.3, §211.3); the route has three parties or more.
+5. **Work stops before reading does**: when the week's limits run low the work waits first (its threshold
+   WORK_FLOOR), the Orkmaster's reading and the leaders' sections go on to a lower one (READ_FLOOR), so a goal dropped at
+   the week's end is read and costed, and only its making waits. A setting says it plainly: *Keep for reading new goals:
+   10% of the week*.
+6. **Reading on another tool, only if the person said so**: when one tool's week runs low, the reading and the sections
+   may run on another tool's Veteran (Codex, Antigravity) if it is connected and the person turned it on (*Read goals
+   on Codex when Claude runs low*); never by itself, since a spec's quality differs by model.
+7. **Talk by itself under a cost the person set**: the route card waits for its press, as the money rule asks
+   (§121.3), unless the person set a ceiling (*Start Talk by itself up to 2% of the week*, off at first); then a goal
+   dropped and left is read through and its questions come to the hand.
+8. **Where it went, in a line**: the phone's *what changed since your last look* (§218.3) says each goal's place in one
+   line (*"The double jump": Game design and Tech, about 6 calls, starts by itself after the reset, Mon 09:00*); a push
+   only for what needs the person (a question of Talk, a hearing, a decision), never for a goal put in line.
+9. **After the reset, the line in order**: the goals a milestone waits on first (§216.2), then those that serve the job
+   in focus (§210.2), then the rest in the Orkmaster's order.
+10. The spec builds 1, 3–5, 7–9 with §219's (the phone and its mailbox); 6 when a second tool is connected.
+The owner's call.
