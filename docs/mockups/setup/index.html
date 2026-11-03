@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orkboard first open and AI tools, mockup</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* The mockup's own CSS (decisions §232): layout only, every colour, face and corner read through orkUI's tokens and classes. Heads and
+   tool marks are orkUI's own pictures; the script at the foot only fills their src. Each window is the wide width, 1280 x 800. */
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--ork-canvas); }
+body { margin: 0; min-height: 100vh; background: var(--ork-canvas); color: var(--ork-ink); font: var(--ork-type-body); }
+p, ul, h1, h2, h3, figure { margin: 0; padding: 0; }
+ul { list-style: none; }
+code { font-family: var(--ork-font-code); font-size: 0.92em; }
+.mk-bar { position: sticky; top: 0; z-index: 50; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-4) var(--ork-6);
+  padding: var(--ork-4) var(--ork-6); background: var(--ork-canvas); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.mk-bar nav { display: flex; flex-wrap: wrap; gap: var(--ork-3); }
+.mk-bar b { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.mk-main { padding: var(--ork-6); display: flex; flex-direction: column; gap: var(--ork-8); }
+.mk-sec { display: flex; flex-direction: column; gap: var(--ork-4); scroll-margin-top: 72px; }
+.mk-sec > h1 { font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); }
+.mk-line { max-width: 120ch; color: var(--ork-ink); }
+.mk-line.mute { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.mk-row { display: flex; flex-wrap: wrap; gap: var(--ork-8) var(--ork-6); align-items: flex-start; }
+.mk-fig { display: flex; flex-direction: column; gap: var(--ork-3); }
+.mk-fig > figcaption { max-width: 360px; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.mk-fig > figcaption b { color: var(--ork-ink); font-weight: 600; }
+.mk-scroll { overflow-x: auto; padding-bottom: var(--ork-3); }
+.mk-foot { max-width: 120ch; margin: 0 var(--ork-6) var(--ork-8); padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.mk-foot li { margin-bottom: var(--ork-2); }
+.cap { font: var(--ork-type-caption); }
+.mute { color: var(--ork-ink-muted); }
+.faint { color: var(--ork-ink-faint); }
+.lab { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.ok { color: var(--ork-success); }
+.wait { color: var(--ork-alert); }
+
+/* ---------- the window: the leaders' row on the room, the Orkmaster's column on the canvas, the table, the hand ---------- */
+.win { position: relative; width: 1280px; height: 800px; flex: none; display: grid; grid-template-columns: 208px minmax(0, 1fr); grid-template-rows: 72px minmax(0, 1fr) 216px;
+  overflow: hidden; outline: var(--ork-line) solid var(--ork-edge); background: var(--ork-room); }
+.w-top { grid-column: 1 / -1; display: grid; grid-template-columns: 208px minmax(0, 1fr) auto; align-items: end; border-bottom: 3px solid var(--ork-table-rim); }
+.w-om { display: flex; align-items: flex-end; gap: var(--ork-3); padding: 0 var(--ork-4); height: 100%; }
+.w-om .word { padding-bottom: var(--ork-3); font: var(--ork-type-caption); }
+.w-om .word b { display: block; font-weight: 600; }
+.w-tabs { display: flex; align-items: flex-end; gap: var(--ork-2); min-width: 0; padding-left: var(--ork-4); border-left: var(--ork-line) solid var(--ork-frame); height: 100%; }
+.w-tab { display: flex; align-items: flex-end; gap: var(--ork-3); padding: 0 var(--ork-4); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.w-tab.on { color: var(--ork-ink); background: var(--ork-canvas); }
+.w-tab > span:last-child { padding-bottom: var(--ork-3); white-space: nowrap; }
+.w-end { display: flex; align-items: flex-end; gap: var(--ork-4); padding: 0 var(--ork-6) 0 var(--ork-4); height: 100%; }
+.w-end .door-w { display: inline-flex; align-items: flex-end; gap: var(--ork-3); color: var(--ork-danger); font: var(--ork-type-button); text-transform: uppercase; letter-spacing: var(--ork-type-button-track); }
+.w-end .door-w > span:last-child { padding-bottom: var(--ork-3); white-space: nowrap; }
+.sit { position: relative; flex: none; width: 52px; height: 46px; }
+.sit.mid { width: 44px; height: 36px; }
+.sit > .ork-chair { position: absolute; left: 0; bottom: 0; }
+.sit > img { position: absolute; left: 50%; bottom: 0; transform: translateX(-50%); }
+
+.w-col { position: relative; background: var(--ork-canvas); border-right: var(--ork-line) solid var(--ork-frame); padding: var(--ork-5) var(--ork-4); display: flex; flex-direction: column; gap: var(--ork-4); }
+.pile-h { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.w-table { position: relative; min-width: 0; }
+.w-table .t-head { display: flex; align-items: center; gap: var(--ork-4); height: 40px; padding: 0 var(--ork-6); border-bottom: var(--ork-line) solid var(--ork-frame); background: var(--ork-canvas); }
+.w-table .t-head .t { font: var(--ork-type-caption); color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.w-table .t-head .grow { flex: 1; }
+.t-end { position: absolute; right: var(--ork-8); bottom: var(--ork-4); display: flex; flex-direction: column; align-items: center; gap: var(--ork-3); width: 192px; }
+.t-end .tl { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-faint); opacity: 0.6; }
+.t-end .ork-card-place { width: 120px; align-self: flex-start; margin-left: 36px; }
+
+/* the hand: the + card and the deck at the left, the stacks, the AI tools flush right */
+.w-hand { grid-column: 1 / -1; position: relative; display: grid; grid-template-columns: 208px minmax(0, 1fr) auto; column-gap: var(--ork-6); align-items: start;
+  padding: var(--ork-4) 0 0 0; border-top: var(--ork-line) solid var(--ork-frame); }
+.w-hand .left { display: flex; justify-content: center; }
+.w-hand .stacks { position: relative; display: flex; gap: var(--ork-6); justify-content: center; min-width: 0; }
+.hcard { position: relative; width: 120px; height: 168px; display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-4); flex: none; }
+.hcard .top { display: flex; align-items: center; justify-content: space-between; min-height: 14px; }
+.hcard .nm { font: var(--ork-type-caption); overflow-wrap: anywhere; }
+.hcard .foot { margin-top: auto; display: flex; align-items: center; gap: var(--ork-3); }
+.w-hand .left .ork-plus.hcard { width: 120px; align-items: center; justify-content: center; }
+.ork-plus.lit { color: var(--ork-action); border-color: var(--ork-action); box-shadow: 0 0 0 2px color-mix(in srgb, var(--ork-action) 35%, transparent); }
+
+/* the AI tools: one slot a tool (its mark, its potion, its shares), the main tool's slot framed, then the empty slot */
+.belt { display: flex; align-items: flex-start; gap: var(--ork-2); padding: 0 var(--ork-6) 0 var(--ork-4); }
+.slot { position: relative; width: 64px; display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); padding: var(--ork-2) 0; border: 2px solid transparent; font: var(--ork-type-caption); background: none; color: var(--ork-ink); }
+.slot .ork-mark { margin-bottom: 2px; }
+.slot.is-default { border-color: var(--ork-ink); clip-path: var(--ork-notch); background: var(--ork-panel); }
+.slot.is-pressed { background: var(--ork-raised); border-color: var(--ork-ink); clip-path: var(--ork-notch); }
+.slot .pct { font-weight: 600; font-variant-numeric: tabular-nums; }
+.slot .sub { color: var(--ork-ink-muted); font-size: 11px; }
+.slot .empty { width: 42px; height: 54px; margin-top: 18px; display: flex; align-items: center; justify-content: center; color: var(--ork-ink-faint);
+  background: repeating-linear-gradient(90deg, var(--ork-edge) 0 3px, transparent 3px 6px) left 0 top 0 / 100% 2px no-repeat,
+    repeating-linear-gradient(90deg, var(--ork-edge) 0 3px, transparent 3px 6px) left 0 bottom 0 / 100% 2px no-repeat,
+    repeating-linear-gradient(0deg, var(--ork-edge) 0 3px, transparent 3px 6px) left 0 top 0 / 2px 100% no-repeat,
+    repeating-linear-gradient(0deg, var(--ork-edge) 0 3px, transparent 3px 6px) right 0 top 0 / 2px 100% no-repeat; opacity: 0.7; }
+.slot.add .empty { opacity: 1; color: var(--ork-ink-muted); }
+.slot.add.lit .empty { color: var(--ork-ink);
+  background: repeating-linear-gradient(90deg, var(--ork-ink) 0 3px, transparent 3px 6px) left 0 top 0 / 100% 2px no-repeat,
+    repeating-linear-gradient(90deg, var(--ork-ink) 0 3px, transparent 3px 6px) left 0 bottom 0 / 100% 2px no-repeat,
+    repeating-linear-gradient(0deg, var(--ork-ink) 0 3px, transparent 3px 6px) left 0 top 0 / 2px 100% no-repeat,
+    repeating-linear-gradient(0deg, var(--ork-ink) 0 3px, transparent 3px 6px) right 0 top 0 / 2px 100% no-repeat; }
+.slot .empty .ork-icon { width: 14px; height: 14px; }
+.belt-word { position: absolute; right: var(--ork-6); bottom: var(--ork-3); font: var(--ork-type-caption); color: var(--ork-ink-faint); }
+
+/* the Orkmaster's bubble: orkUI's raised panel, its tail under the head */
+.bubble { position: absolute; z-index: 20; width: 400px; padding: var(--ork-4) var(--ork-5); background: var(--ork-raised); border: var(--ork-line) solid var(--ork-edge);
+  clip-path: none; display: flex; flex-direction: column; gap: var(--ork-2); }
+.bubble::before { content: ""; position: absolute; top: -8px; left: 26px; width: 14px; height: 8px; background: var(--ork-edge); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.bubble::after { content: ""; position: absolute; top: -6px; left: 28px; width: 10px; height: 7px; background: var(--ork-raised); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.bubble .who { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.bubble p { font: var(--ork-type-body); }
+
+/* a card lifted from the hand: a card, about twice the hand card, its foot on the hand's line, turned a degree */
+.lifted { position: absolute; z-index: 30; width: 300px; padding: var(--ork-4); display: flex; flex-direction: column; gap: var(--ork-3); transform: rotate(-1deg); transform-origin: bottom center; }
+.lifted .top { display: flex; align-items: center; justify-content: space-between; min-height: 14px; }
+.lifted .q { display: flex; gap: var(--ork-3); align-items: flex-start; }
+.lifted .q p { flex: 1; font: var(--ork-type-body); }
+.choices { display: flex; flex-direction: column; gap: var(--ork-2); }
+.choice { display: flex; flex-direction: column; gap: 2px; padding: var(--ork-2) var(--ork-3); border: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); background: none; color: var(--ork-ink); text-align: left; }
+.choice .c1 { display: flex; align-items: center; gap: var(--ork-2); }
+.choice .c1 .ork-icon { width: 14px; height: 14px; }
+.choice .why { color: var(--ork-ink-muted); }
+.choice.pick { background: var(--ork-raised); border-color: var(--ork-ink); }
+.choice.other { color: var(--ork-ink-muted); border-style: dashed; }
+.chips { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
+.chips .ork-chip { font: var(--ork-type-caption); text-transform: none; letter-spacing: 0; color: var(--ork-ink-muted); }
+
+/* the shelf: every AI tool found, in its groups */
+.shelf { width: 380px; }
+.shelf .grp { display: flex; flex-direction: column; gap: var(--ork-2); }
+.trow { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: center; gap: var(--ork-2) var(--ork-3); padding: var(--ork-2) 0; border-top: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); }
+.trow .nm b { font-weight: 600; }
+.trow .nm .st { display: block; }
+.trow .acts { display: flex; gap: var(--ork-2); align-items: center; }
+.trow .ork-select { width: 118px; }
+.trow .ork-field { height: 28px; font: var(--ork-type-caption); }
+.trow.is-off { color: var(--ork-ink-faint); }
+.trow.is-off .ork-mark { opacity: 0.45; }
+.ork-btn.sm { min-height: 28px; padding: 0 var(--ork-3); font-size: 11px; }
+
+/* a tool's card, pressed on its potion */
+.toolcard { position: relative; width: 320px; transform: none; }
+.toolcard .head { display: flex; gap: var(--ork-4); align-items: flex-end; }
+.toolcard .head .nm { display: flex; flex-direction: column; gap: 2px; }
+.toolcard .head .nm b { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.field { display: flex; flex-direction: column; gap: var(--ork-2); }
+.seg { display: inline-flex; border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); }
+.seg > span { padding: var(--ork-1) var(--ork-4); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.seg > span + span { border-left: var(--ork-line) solid var(--ork-edge); }
+.seg > span.on { background: var(--ork-ink); color: var(--ork-on-ink); }
+.order { display: flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-caption); }
+.order .ork-mark { opacity: 0.9; }
+.order .me { padding: 2px var(--ork-2); border: 2px solid var(--ork-ink); clip-path: var(--ork-notch); }
+
+/* the parties: the Orkmaster's large card, lying on the table */
+.partycard { position: absolute; z-index: 25; left: 16px; top: 14px; width: 800px; padding: var(--ork-4) var(--ork-5); display: flex; flex-direction: column; gap: var(--ork-2); }
+.later { display: flex; align-items: center; gap: var(--ork-3); padding: var(--ork-2) 0; border-top: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.later img { opacity: 0.6; }
+.pc-head { display: flex; align-items: flex-end; gap: var(--ork-5); }
+.pc-head h2 { font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); }
+.pc-head .grow { flex: 1; }
+.pc-kind { display: grid; grid-template-columns: auto 220px minmax(0, 1fr); align-items: center; gap: var(--ork-4); }
+.pc-kind .ork-select .ork-field { height: 32px; }
+.stage { display: flex; align-items: center; gap: var(--ork-4); padding-top: var(--ork-2); }
+.stage h3 { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); }
+.stage.here h3 { color: var(--ork-ink); }
+.stage .here-w { font: var(--ork-type-caption); padding: 1px var(--ork-3); border: var(--ork-line) solid var(--ork-ink); clip-path: var(--ork-notch); }
+.stage .set-w { font: var(--ork-type-caption); color: var(--ork-ink-faint); text-decoration: underline; }
+.prow { display: grid; grid-template-columns: 18px 48px minmax(0, 1fr) 176px 196px 84px; align-items: center; gap: var(--ork-3) var(--ork-4);
+  padding: var(--ork-2) 0; border-top: var(--ork-line) solid var(--ork-frame); }
+.tick { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-edge); font-size: 12px; }
+.tick.on { border-color: var(--ork-ink); }
+.tick.locked { border-style: dashed; color: var(--ork-ink-muted); }
+.prow.off { color: var(--ork-ink-muted); }
+.prow.off img { opacity: 0.45; }
+.prow .who b { display: block; font-weight: 600; }
+.prow .who span { display: block; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.prow .team { display: flex; align-items: flex-end; gap: 2px; margin-top: var(--ork-2); }
+.prow .team img { image-rendering: pixelated; }
+.prow .team .hd { position: relative; display: inline-block; padding: 1px; }
+.prow .team .hd.lead { padding-right: var(--ork-3); margin-right: var(--ork-2); border-right: var(--ork-line) solid var(--ork-frame); }
+.prow .team .hd.on { outline: 2px solid var(--ork-ink); outline-offset: 0; }
+.prow .team .hd .own { position: absolute; right: -3px; bottom: -3px; width: 12px; height: 12px; background: var(--ork-canvas); border: 1px solid var(--ork-edge); }
+.prow .team .hd .own img { width: 10px; height: 10px; display: block; }
+.sizes { display: inline-flex; border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); }
+.sizes > span { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--ork-1) var(--ork-2); font: var(--ork-type-caption); color: var(--ork-ink-muted); min-width: 56px; }
+.sizes > span + span { border-left: var(--ork-line) solid var(--ork-edge); }
+.sizes > span.on { background: var(--ork-raised); color: var(--ork-ink); box-shadow: inset 0 -2px 0 var(--ork-ink); }
+.sizes .pips { display: flex; gap: 2px; }
+.sizes .pips i { width: 5px; height: 5px; background: var(--ork-edge); }
+.sizes > span.on .pips i { background: var(--ork-ink); }
+.sizes.locked > span:not(.on) { opacity: 0.35; }
+.ptool { display: flex; align-items: center; gap: var(--ork-2); }
+.ptool .fr { display: inline-flex; padding: 2px; border: 2px solid var(--ork-ink); clip-path: var(--ork-notch); }
+.ptool .ork-select { flex: 1; min-width: 0; }
+.ptool .ork-field { height: 28px; font: var(--ork-type-caption); }
+.price { text-align: right; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.price .ork-gem { margin-bottom: 2px; }
+.pc-foot { display: flex; align-items: center; gap: var(--ork-5); padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-edge); }
+.pc-foot .grow { flex: 1; }
+
+/* a head pressed: its seat's popover */
+.seatpop { position: absolute; z-index: 40; width: 300px; padding: var(--ork-4); display: flex; flex-direction: column; gap: var(--ork-3); background: var(--ork-raised); border: var(--ork-line) solid var(--ork-edge); }
+.seatpop .role { display: flex; gap: var(--ork-3); align-items: center; }
+.seatpop .role b { display: block; font-weight: 600; }
+.tiers { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--ork-2); }
+.tiers > span { display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); padding: var(--ork-2) 0 var(--ork-1); border: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.tiers > span.on { border: 2px solid var(--ork-ink); color: var(--ork-ink); background: var(--ork-panel); clip-path: var(--ork-notch); }
+.tiers .px { font-variant-numeric: tabular-nums; font-size: 11px; }
+
+/* Settings over the whole table: no piles' place taken, no discard, no ring beside it */
+.place { position: absolute; inset: 0; z-index: 25; display: flex; flex-direction: column; background: var(--ork-canvas); }
+.place .p-head { display: flex; align-items: center; gap: var(--ork-4); height: 40px; padding: 0 var(--ork-6); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.place .p-head b { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.place .p-body { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: var(--ork-8); padding: var(--ork-6); overflow: hidden; }
+.place .p-foot { display: flex; justify-content: flex-end; padding: var(--ork-3) var(--ork-6); border-top: var(--ork-line) solid var(--ork-frame); }
+.sgrp { display: flex; flex-direction: column; gap: var(--ork-4); }
+.sgrp h3 { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink-muted); padding-bottom: var(--ork-2); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.chk { display: grid; grid-template-columns: 18px 1fr; gap: var(--ork-1) var(--ork-3); font: var(--ork-type-caption); }
+.chk i { width: 16px; height: 16px; border: var(--ork-line) solid var(--ork-edge); display: flex; align-items: center; justify-content: center; font-style: normal; font-size: 11px; }
+.chk .h { grid-column: 2; color: var(--ork-ink-muted); }
+.moved { display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3) var(--ork-4); border: var(--ork-line) dashed var(--ork-edge); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.moved b { color: var(--ork-ink); font-weight: 600; }
+
+/* the laid table: what appears at Start */
+.appear { outline: 2px dashed color-mix(in srgb, var(--ork-ink) 40%, transparent); outline-offset: 6px; }
+.tag { position: absolute; z-index: 45; padding: 2px var(--ork-2); background: var(--ork-ink); color: var(--ork-on-ink); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); white-space: nowrap; }
+.mapstub { position: absolute; left: 40px; top: 64px; right: 260px; bottom: 24px; display: flex; flex-direction: column; align-items: flex-start; gap: var(--ork-3); padding: var(--ork-5); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.mapstub .lanes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; width: 100%; flex: 1; }
+.mapstub .lanes > div { border-left: var(--ork-line) solid var(--ork-frame); padding: var(--ork-3); display: flex; flex-direction: column; gap: var(--ork-2); align-items: flex-start; }
+</style>
+</head>
+<body>
+<header class="mk-bar">
+  <b>First open and the AI tools</b>
+  <nav>
+    <a class="ork-btn quiet" href="#ask">1 · The project</a>
+    <a class="ork-btn quiet" href="#read">2 · Read</a>
+    <a class="ork-btn quiet" href="#shelf">3 · The AI tools</a>
+    <a class="ork-btn quiet" href="#tool">4 · A tool</a>
+    <a class="ork-btn quiet" href="#parties">5 · The parties</a>
+    <a class="ork-btn quiet" href="#seat">6 · A head</a>
+    <a class="ork-btn quiet" href="#laid">7 · Start</a>
+    <a class="ork-btn quiet" href="#settings">8 · Settings</a>
+  </nav>
+  <span class="cap mute">decisions §232 · a draft for the owner's yes · 1280 × 800</span>
+</header>
+
+<main class="mk-main">
+
+<!-- ======================================================= 1 ======================================================= -->
+<section class="mk-sec" id="ask">
+  <h1>1 · The Orkmaster asks for the project</h1>
+  <p class="mk-line">The window opens in its frame, <b>not yet laid</b>: the Orkmaster alone in the leaders' row, its column empty of piles, the table bare (no ring, no discard), the hand without the + card. The Orkmaster's question comes to the hand as a card, the way every question for the person comes; its line is in its bubble. The AI tools' slots are already at the hand's right, empty and still.</p>
+  <div class="mk-scroll">
+  <div class="win">
+    <div class="w-top">
+      <div class="w-om"><span class="sit"><span class="ork-chair big" aria-hidden="true"></span><img class="ork-race__head big" data-h="peon-crown" alt=""></span><span class="word"><b>Orkmaster</b><span class="mute">no project yet</span></span></div>
+      <div class="w-tabs"></div>
+      <div class="w-end"></div>
+    </div>
+    <aside class="w-col">
+      <div class="bubble" style="left:16px;top:8px"><span class="who">Orkmaster</span><p>Which project shall we work on? I'll read it and seat the parties it needs.</p></div>
+    </aside>
+    <div class="w-table ork-table"></div>
+    <footer class="w-hand">
+      <div class="left"></div>
+      <div class="stacks">
+        <article class="ork-card ork-leans asks lifted" style="left:calc(50% - 150px);bottom:-180px" aria-label="The Orkmaster's question">
+          <div class="top"><span class="lab">The project</span><span class="is-alert"><span class="ork-sign question" aria-hidden="true"></span></span></div>
+          <div class="q"><p>Which project shall we work on?</p><img class="ork-race__head big" data-h="peon-crown" alt=""></div>
+          <div class="choices">
+            <button class="choice pick"><span class="c1"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#folder"/></svg>Open a folder…</span><span class="why">A project you have: code, a game, a wiki, design files.</span></button>
+            <button class="choice"><span class="c1"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg>A new, empty folder…</span></button>
+            <button class="choice"><span class="c1">skyhop</span><span class="why">~/games/skyhop · opened Tuesday</span></button>
+            <button class="choice"><span class="c1">team-wiki</span><span class="why">~/work/team-wiki · opened 12 Oct</span></button>
+          </div>
+        </article>
+      </div>
+      <div class="belt" aria-label="AI tools">
+        <span class="slot"><span class="empty"></span></span>
+        <span class="slot"><span class="empty"></span></span>
+        <span class="slot add"><span class="empty"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg></span></span>
+      </div>
+      <span class="belt-word">AI tools</span>
+    </footer>
+  </div>
+  </div>
+  <p class="mk-line mute">No git in the folder: the next card is <i>No git in skyhop yet. Start git here?</i> with <b>Start git here</b> and <b>Choose another folder</b>, as the Open folder form asks today. The folder's own dialog is the system's, opened from the card.</p>
+</section>
+
+<!-- ======================================================= 2 ======================================================= -->
+<section class="mk-sec" id="read">
+  <h1>2 · What the Orkmaster read</h1>
+  <p class="mk-line">The Orkmaster reads the folder (names and counts only, spec 75 §1) and asks once whether it read it right. The signs it saw are the card's chips. <b>It is something else</b> opens the list of kinds in the card itself; an empty folder asks <i>What is it for?</i> in one line instead.</p>
+  <div class="mk-row">
+    <figure class="mk-fig">
+      <article class="ork-card ork-leans asks lifted" style="position:relative;transform:rotate(-1deg)">
+        <div class="top"><span class="lab">The project</span><span class="is-alert"><span class="ork-sign question" aria-hidden="true"></span></span></div>
+        <div class="q"><p>skyhop is a game, made in Godot. Right?</p><img class="ork-race__head big" data-h="peon-crown" alt=""></div>
+        <div class="chips"><span class="ork-chip">project.godot</span><span class="ork-chip">export_presets.cfg</span><span class="ork-chip">212 pictures</span><span class="ork-chip">no store page</span></div>
+        <div class="choices">
+          <button class="choice pick"><span class="c1"><span class="ork-sign check is-ok" aria-hidden="true"></span>Yes, a game</span><span class="why">Being made: it has code, and nothing is out yet.</span></button>
+          <button class="choice other"><span class="c1">It is something else…</span></button>
+        </div>
+      </article>
+      <figcaption><b>Read right.</b> Its stage comes with it (<i>Being made</i>); the parties card can still move it.</figcaption>
+    </figure>
+    <figure class="mk-fig">
+      <article class="ork-card ork-leans asks lifted" style="position:relative;transform:rotate(-1deg)">
+        <div class="top"><span class="lab">The project</span><span class="is-alert"><span class="ork-sign question" aria-hidden="true"></span></span></div>
+        <div class="q"><p>The folder is empty. What is it for?</p><img class="ork-race__head big" data-h="peon-crown" alt=""></div>
+        <input class="ork-field" value="" placeholder="A line is enough: a mobile app for…, our team's wiki, my design files">
+        <div style="display:flex;gap:var(--ork-3)"><button class="ork-btn primary">Read it</button><button class="ork-btn quiet">Pick a kind instead</button></div>
+      </article>
+      <figcaption><b>An empty folder:</b> one line, read by one cheap call (spec 75's), then the same card as the left.</figcaption>
+    </figure>
+    <figure class="mk-fig">
+      <div class="bubble" style="position:relative;width:340px"><span class="who">Orkmaster</span><p class="ork-think">Reading skyhop</p></div>
+      <figcaption><b>While it reads</b>, its bubble says so; the card comes when it is done (under a second for a folder of names).</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ======================================================= 3 ======================================================= -->
+<section class="mk-sec" id="shelf">
+  <h1>3 · The AI tools: the empty slot lifts the shelf</h1>
+  <p class="mk-line">The Orkmaster asks who the orks run on, and the empty slot at the hand's right is lit. Pressing it lifts <b>the shelf</b>: every AI tool found on this computer, in the three groups the party's tool list already has. <b>Use</b> puts a tool in the hand, at the end of the row; the first one used is the main tool (framed). A tool is in the hand or on the shelf: there is no third state. The same shelf opens from the same slot every day after.</p>
+  <div class="mk-scroll">
+  <div class="win">
+    <div class="w-top">
+      <div class="w-om"><span class="sit"><span class="ork-chair big" aria-hidden="true"></span><img class="ork-race__head big" data-h="peon-crown" alt=""></span><span class="word"><b>Orkmaster</b><span class="mute">skyhop · a game</span></span></div>
+      <div class="w-tabs"></div>
+      <div class="w-end"></div>
+    </div>
+    <aside class="w-col">
+      <div class="bubble" style="left:16px;top:8px"><span class="who">Orkmaster</span><p>Who shall the orks run on? Put your AI tools in your hand: the work starts on the first, and goes on with the next when one runs dry.</p></div>
+    </aside>
+    <div class="w-table ork-table"></div>
+    <footer class="w-hand">
+      <div class="left"></div>
+      <div class="stacks"></div>
+      <div class="belt" aria-label="AI tools">
+        <button class="slot is-default" title="Claude Code: the main tool; 100% of the 5 hours left, 100% of the week"><img class="ork-mark" data-m="claude" alt=""><span class="ork-potion" style="--ork-potion-left:1" aria-hidden="true"></span><span class="pct">100%</span><span class="sub">week 100%</span></button>
+        <span class="slot"><span class="empty"></span></span>
+        <button class="slot add lit" title="Add an AI tool"><span class="empty"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg></span></button>
+      </div>
+      <article class="ork-card ork-leans lifted shelf" style="right:244px;bottom:16px" aria-label="AI tools">
+        <div class="top"><span class="lab">AI tools</span><button class="ork-btn quiet sm">Close</button></div>
+        <p class="cap mute">Found on this computer. Nothing was run and no key was read; <b>Check</b> sends one short request to the tool's lightest model.</p>
+        <div class="grp">
+          <span class="lab">Ready</span>
+          <div class="trow"><img class="ork-mark" data-m="claude" alt=""><span class="nm"><b>Claude Code</b> <span class="mute">2.4.1</span><span class="st ok">✓ in your hand · the main tool</span></span><span class="acts"><span class="ork-select"><select class="ork-field" aria-label="How Claude Code is paid"><option>Subscription</option><option>API</option></select></span></span></div>
+          <div class="trow"><img class="ork-mark" data-m="codex" alt=""><span class="nm"><b>Codex</b> <span class="mute">0.61</span><span class="st ok">✓ signed in</span></span><span class="acts"><span class="ork-select"><select class="ork-field" aria-label="How Codex is paid"><option>Subscription</option><option>API</option></select></span><button class="ork-btn primary sm">Use</button></span></div>
+        </div>
+        <div class="grp">
+          <span class="lab">Not signed in</span>
+          <div class="trow"><img class="ork-mark" data-m="agy" alt=""><span class="nm"><b>Antigravity</b><span class="st wait">⚠ not signed in</span></span><span class="acts"><button class="ork-btn sm">Sign in</button></span></div>
+        </div>
+        <div class="grp">
+          <span class="lab">Not installed</span>
+          <div class="trow is-off"><img class="ork-mark" data-m="cursor" alt=""><span class="nm"><b>Cursor</b><span class="st">Install its command line (cursor-agent) to run orks on it.</span></span><span class="acts"></span></div>
+        </div>
+        <div style="display:flex;gap:var(--ork-3);align-items:center"><button class="ork-btn primary">Done</button><button class="ork-btn quiet">Request a tool</button></div>
+      </article>
+    </footer>
+  </div>
+  </div>
+  <p class="mk-line mute">An experimental tool asks its warning first (<i>Turn on … at my own risk</i>), as the onboarding does today. <b>Done</b> with no tool used says plainly what follows: <i>No AI tool: the Board opens, and nothing is worked on until you put one in your hand.</i></p>
+</section>
+
+<!-- ======================================================= 4 ======================================================= -->
+<section class="mk-sec" id="tool">
+  <h1>4 · A tool pressed: its own card</h1>
+  <p class="mk-line">During the work, a press on a potion lifts that tool's card over the hand: how it is paid, whether it is the main tool, where it stands in the order the work moves on in, Check, and <b>Put back</b>. What used it (today's view) is one link on it. Taking a tool away takes effect between tasks, never inside one, and the card says what happens to a party set to it.</p>
+  <div class="mk-row">
+    <figure class="mk-fig">
+      <article class="ork-card ork-leans toolcard" style="padding:var(--ork-4);display:flex;flex-direction:column;gap:var(--ork-3)">
+        <div class="head"><span class="ork-potion" style="--ork-potion-left:.3" aria-hidden="true"></span><span class="nm"><span style="display:flex;gap:var(--ork-2);align-items:center"><img class="ork-mark" data-m="claude" alt=""><b>Claude Code</b></span><span class="cap"><b>30%</b> of the 5 hours left, until 18:40</span><span class="cap mute">82% of the week left, until Thu 09:00</span></span></div>
+        <div class="field"><span class="lab">Paid by</span><span class="seg"><span class="on">Subscription</span><span>API</span></span></div>
+        <div class="field"><span class="lab">The order the work moves on in</span>
+          <span class="order"><span class="me"><img class="ork-mark" data-m="claude" alt=""></span>→<img class="ork-mark" data-m="codex" alt="">Codex <span class="grow"></span><button class="ork-btn sm" title="Move left">←</button><button class="ork-btn sm" title="Move right">→</button></span>
+          <span class="cap mute">The main tool: the work starts on it. When it is out, the work goes on with Codex.</span></div>
+        <div style="display:flex;gap:var(--ork-3);flex-wrap:wrap"><button class="ork-btn sm">Check</button><button class="ork-btn sm">What used it</button></div>
+        <div class="field" style="border-top:var(--ork-line) solid var(--ork-frame);padding-top:var(--ork-3)">
+          <button class="ork-btn danger sm" style="align-self:flex-start">Put back</button>
+          <span class="cap mute">The orks stop using it after the task at work. Art is set to Claude Code: it goes on with Codex, the next in your hand.</span></div>
+      </article>
+      <figcaption><b>The main tool, pressed.</b> Drag the potions to change the order too; ← → are the keyboard's and the phone's way.</figcaption>
+    </figure>
+    <figure class="mk-fig">
+      <div style="display:flex;gap:var(--ork-2);padding:var(--ork-3);background:var(--ork-room);outline:var(--ork-line) solid var(--ork-edge)">
+        <button class="slot is-default"><img class="ork-mark" data-m="claude" alt=""><span class="ork-potion is-warn" style="--ork-potion-left:.3" aria-hidden="true"></span><span class="pct wait">30%</span><span class="sub">week 82%</span></button>
+        <button class="slot is-pressed"><img class="ork-mark" data-m="codex" alt=""><span class="ork-potion size-medium" style="--ork-potion-left:.75" aria-hidden="true"></span><span class="pct">75%</span><span class="sub">week 44%</span></button>
+        <button class="slot add" title="Add an AI tool"><span class="empty"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg></span></button>
+      </div>
+      <figcaption><b>The row during the work</b>: the main tool framed, a tool pressed raised, the empty slot always last, faint until hovered. Six tools fill the row (§177.8); then the slot goes into the <b>+n</b> place.</figcaption>
+    </figure>
+    <figure class="mk-fig">
+      <article class="ork-card ork-leans toolcard" style="padding:var(--ork-4);display:flex;flex-direction:column;gap:var(--ork-3)">
+        <div class="top" style="display:flex;justify-content:space-between"><span class="lab">Put back the last tool?</span></div>
+        <p class="cap">Claude Code is the only tool in your hand. Without it nothing is worked on: goals wait in the Orkmaster's column until you put a tool back.</p>
+        <div style="display:flex;gap:var(--ork-3)"><button class="ork-btn danger sm">Put it back anyway</button><button class="ork-btn sm">Keep it</button></div>
+      </article>
+      <figcaption><b>The last tool</b> asks before it goes; any other goes at once, with Undo in the toast.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ======================================================= 5 ======================================================= -->
+<section class="mk-sec" id="parties">
+  <h1>5 · The parties: the Orkmaster's large card on the table</h1>
+  <p class="mk-line">The Orkmaster deals one large card onto the table: what the project is at its top (the list, read from the folder), then the stages, each party a row. A row is <b>its leader and its team as heads</b>, its <b>size</b> as three steps drawn in heads (Lean one, Standard four, Full the whole craft), its <b>AI tool</b> from the tools in the hand (the framed mark follows the main tool), and its price a goal. Pressing a head opens its seat (6). The card is the same later, from the empty chair and a party's <i>Edit</i>.</p>
+  <div class="mk-scroll">
+  <div class="win">
+    <div class="w-top">
+      <div class="w-om"><span class="sit"><span class="ork-chair big" aria-hidden="true"></span><img class="ork-race__head big" data-h="peon-crown" alt=""></span><span class="word"><b>Orkmaster</b><span class="mute">skyhop · a game</span></span></div>
+      <div class="w-tabs"></div>
+      <div class="w-end"></div>
+    </div>
+    <aside class="w-col">
+      <div class="bubble" style="left:16px;top:8px;width:184px"><span class="who">Orkmaster</span><p class="cap">For a game being made, I'd seat these. Change what you like.</p></div>
+    </aside>
+    <div class="w-table ork-table">
+      <article class="ork-card partycard" aria-label="The parties for skyhop">
+        <div class="pc-head"><h2>The parties for skyhop</h2><span class="grow"></span><span class="cap mute">who sits at the table, how many, on which AI tool</span></div>
+        <div class="pc-kind"><span class="lab">The project is</span><span class="ork-select"><select class="ork-field"><option>A game</option></select></span><span class="cap mute">read from project.godot, 212 pictures</span></div>
+
+        <div class="stage"><h3>Idea</h3><span class="cap mute">the concept's crafts</span></div>
+        <div class="prow">
+          <span class="tick on">✓</span>
+          <img class="ork-race__head big" data-h="unicorn-elder" alt="">
+          <span class="who"><b>Game design</b><span>The rules, the loop and the balance</span><span class="team"><span class="hd lead"><img class="ork-race__head" data-h="unicorn-elder" alt=""></span><span class="hd"><img class="ork-race__head" data-h="knight-warrior" alt=""></span><span class="hd"><img class="ork-race__head" data-h="knight-warrior" alt=""></span><span class="hd on"><img class="ork-race__head" data-h="knight-laborer" alt=""></span></span></span>
+          <span class="sizes"><span class="">Lean<span class="pips"><i></i></span></span><span class="on">Standard<span class="pips"><i></i><i></i><i></i><i></i></span></span><span class="">Full<span class="pips"><i></i><i></i><i></i><i></i><i></i></span></span></span>
+          <span class="ptool"><span class=fr><img class="ork-mark" data-m="claude" alt=""></span><span class="ork-select"><select class="ork-field"><option>Main tool (Claude Code)</option></select></span></span>
+          <span class="price"><span class="ork-gem dim">≈$0.40–0.90</span><br>a goal</span>
+        </div>
+        <div class="prow">
+          <span class="tick on">✓</span>
+          <img class="ork-race__head big" data-h="dryad-elder" alt="">
+          <span class="who"><b>Art</b><span>Pictures, motion, sounds and music</span><span class="team"><span class="hd lead"><img class="ork-race__head" data-h="dryad-warrior" alt=""></span></span></span>
+          <span class="sizes"><span class="on">Lean<span class="pips"><i></i></span></span><span class="">Standard<span class="pips"><i></i><i></i><i></i><i></i></span></span><span class="">Full<span class="pips"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span></span>
+          <span class="ptool"><img class="ork-mark" data-m="codex" alt=""><span class="ork-select"><select class="ork-field"><option>Codex · set for Art</option></select></span></span>
+          <span class="price"><span class="ork-gem dim">≈$0.20–0.50</span><br>a goal</span>
+        </div>
+        <div class="prow">
+          <span class="tick on locked" title="In every project">✓</span>
+          <img class="ork-race__head big" data-h="lich-elder" alt="">
+          <span class="who"><b>Release</b><span>In every project: the one way into main</span><span class="team"><span class="hd lead"><img class="ork-race__head" data-h="lich-warrior" alt=""></span></span></span>
+          <span class="sizes locked"><span class="on">Lean<span class="pips"><i></i></span></span><span class="">Standard<span class="pips"><i></i><i></i><i></i><i></i></span></span><span class="">Full<span class="pips"><i></i><i></i><i></i><i></i></span></span></span>
+          <span class="ptool"><span class=fr><img class="ork-mark" data-m="claude" alt=""></span><span class="ork-select"><select class="ork-field"><option>Main tool (Claude Code)</option></select></span></span>
+          <span class="price"><span class="ork-gem dim">≈$0.10–0.20</span><br>a goal</span>
+        </div>
+
+        <div class="stage here"><h3>Being made</h3><span class="here-w">The project is here</span></div>
+        <div class="prow">
+          <span class="tick on">✓</span>
+          <img class="ork-race__head big" data-h="shaman-elder" alt="">
+          <span class="who"><b>Tech</b><span>Its parts, its tests, the build</span><span class="team"><span class="hd lead"><img class="ork-race__head" data-h="shaman-elder" alt=""></span><span class="hd"><img class="ork-race__head" data-h="peon-warrior" alt=""></span><span class="hd"><img class="ork-race__head" data-h="peon-warrior" alt=""></span><span class="hd"><img class="ork-race__head" data-h="peon-warrior" alt=""><span class="own"><img data-m="codex" alt=""></span></span></span></span>
+          <span class="sizes"><span class="">Lean<span class="pips"><i></i></span></span><span class="on">Standard<span class="pips"><i></i><i></i><i></i><i></i></span></span><span class="">Full<span class="pips"><i></i><i></i><i></i><i></i><i></i><i></i></span></span></span>
+          <span class="ptool"><span class=fr><img class="ork-mark" data-m="claude" alt=""></span><span class="ork-select"><select class="ork-field"><option>Main tool (Claude Code)</option></select></span></span>
+          <span class="price"><span class="ork-gem dim">≈$0.60–1.40</span><br>a goal</span>
+        </div>
+
+        <div class="stage"><h3>Live</h3><span class="set-w">Set the project here</span></div>
+        <div class="later"><span class="tick"></span><img class="ork-race__head" data-h="imp-elder" alt=""><span>LiveOps</span><span class="tick"></span><img class="ork-race__head" data-h="fairy-elder" alt=""><span>Marketing</span><span class="cap mute">· offered when the project is live; tick one to seat it now</span></div>
+
+        <div class="pc-foot"><span class="cap">Together <b>≈ $1.30–3.00 a goal</b> at the API's prices. On a subscription it is taken from its limits instead; nothing is paid by the API without your yes.</span><span class="grow"></span><button class="ork-btn primary">Start</button></div>
+      </article>
+    </div>
+    <footer class="w-hand">
+      <div class="left"></div>
+      <div class="stacks"></div>
+      <div class="belt" aria-label="AI tools">
+        <button class="slot is-default"><img class="ork-mark" data-m="claude" alt=""><span class="ork-potion" style="--ork-potion-left:1" aria-hidden="true"></span><span class="pct">100%</span><span class="sub">week 100%</span></button>
+        <button class="slot"><img class="ork-mark" data-m="codex" alt=""><span class="ork-potion" style="--ork-potion-left:1" aria-hidden="true"></span><span class="pct">100%</span><span class="sub">week 100%</span></button>
+        <button class="slot add" title="Add an AI tool"><span class="empty"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg></span></button>
+      </div>
+    </footer>
+  </div>
+  </div>
+  <p class="mk-line mute">The team's heads are the seats the size gives (spec 81 §2): Standard is the leader on Veteran, the first two who do and the first who checks on Seasoned. A head set by hand keeps a mark (the small Codex mark on Tech's third head: its own tool) and the size stays picked: a hand-set seat keeps what was set, as Agents' tiers do today. The narrow width: the card is the screen, one party a block, its size and tool under its name.</p>
+</section>
+
+<!-- ======================================================= 6 ======================================================= -->
+<section class="mk-sec" id="seat">
+  <h1>6 · A head pressed: its AI tool and its level</h1>
+  <p class="mk-line">A press (hover only marks it) on any head of a row, the leader's too, opens its seat: its role, <b>its AI tool</b> (a list of the tools in the hand, the party's first), and <b>its level as three heads</b>, the same race in its three gears, each with its word and what a task costs at it. The leader's seat has no <i>Take off</i>. This is today's seat popover (seatpop.js), given the level.</p>
+  <div class="mk-row">
+    <figure class="mk-fig">
+      <div class="seatpop" style="position:relative">
+        <div class="role"><img class="ork-race__head big" data-h="knight-laborer" alt=""><span><b>Level designer</b><span class="cap mute">Game design · does: levels, their pacing, their first pass</span></span></div>
+        <div class="field"><span class="lab">Its AI tool</span><span class="ork-select"><select class="ork-field"><option>As the party (Main tool: Claude Code)</option><option>Claude Code</option><option>Codex</option></select></span></div>
+        <div class="field"><span class="lab">Its level</span>
+          <div class="tiers">
+            <span class="on"><img class="ork-race__head big" data-h="knight-laborer" alt="">Novice<span class="px mute">≈$0.03 a task</span></span>
+            <span><img class="ork-race__head big" data-h="knight-warrior" alt="">Seasoned<span class="px mute">≈$0.10 a task</span></span>
+            <span><img class="ork-race__head big" data-h="knight-elder" alt="">Veteran<span class="px mute">≈$0.35 a task</span></span>
+          </div></div>
+        <div style="display:flex;gap:var(--ork-3)"><button class="ork-btn quiet sm">Its role's text</button><span style="flex:1"></span><button class="ork-btn danger sm">Take off the seat</button></div>
+      </div>
+      <figcaption><b>A member's seat.</b> The level is the gear on the head: the picture says it before the word does.</figcaption>
+    </figure>
+    <figure class="mk-fig">
+      <div class="seatpop" style="position:relative">
+        <div class="role"><img class="ork-race__head big" data-h="unicorn-elder" alt=""><span><b>Game designer</b><span class="cap mute">Game design's leader · how, what changes and why</span></span></div>
+        <div class="field"><span class="lab">Its AI tool</span><span class="ork-select"><select class="ork-field"><option>As the party (Main tool: Claude Code)</option></select></span></div>
+        <div class="field"><span class="lab">Its level</span>
+          <div class="tiers">
+            <span><img class="ork-race__head big" data-h="unicorn-laborer" alt="">Novice<span class="px mute">≈$0.05 a step</span></span>
+            <span><img class="ork-race__head big" data-h="unicorn-warrior" alt="">Seasoned<span class="px mute">≈$0.15 a step</span></span>
+            <span class="on"><img class="ork-race__head big" data-h="unicorn-elder" alt="">Veteran<span class="px mute">≈$0.50 a step</span></span>
+          </div></div>
+        <span class="cap mute">A leader on Novice reads less of the project before it plans: fine for a small project, weak for a large one.</span>
+      </div>
+      <figcaption><b>The leader's seat:</b> the same, without Take off; a line says what a low level costs in quality, plainly.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<!-- ======================================================= 7 ======================================================= -->
+<section class="mk-sec" id="laid">
+  <h1>7 · Start: the table is laid</h1>
+  <p class="mk-line">At <b>Start</b> the parties sit down and the table is laid, once, as a card game's places are laid before the first card: the leaders come to their chairs, the empty chair and the door appear, the ring and the discard's place appear at the table's end, and the + card comes to the hand with its seal lit once. The column's piles appear with their first goal, never empty. (The dashed outlines here only mark what appears; they are not drawn.)</p>
+  <div class="mk-scroll">
+  <div class="win">
+    <div class="w-top">
+      <div class="w-om"><span class="sit"><span class="ork-chair big" aria-hidden="true"></span><img class="ork-race__head big" data-h="peon-crown" alt=""></span><span class="word"><b>Orkmaster</b><span class="mute">skyhop · a game</span></span></div>
+      <div class="w-tabs appear">
+        <span class="w-tab"><span class="sit mid"><span class="ork-chair" aria-hidden="true"></span><img class="ork-race__head mid" data-h2="unicorn-elder" alt=""></span><span>Game design</span></span>
+        <span class="w-tab"><span class="sit mid"><span class="ork-chair" aria-hidden="true"></span><img class="ork-race__head mid" data-h2="dryad-elder" alt=""></span><span>Art</span></span>
+        <span class="w-tab"><span class="sit mid"><span class="ork-chair" aria-hidden="true"></span><img class="ork-race__head mid" data-h2="shaman-elder" alt=""></span><span>Tech</span></span>
+        <span class="w-tab"><span class="sit mid"><span class="ork-chair is-empty" aria-hidden="true"></span></span><span class="faint">+ party</span></span>
+      </div>
+      <div class="w-end appear"><span class="door-w"><span class="ork-door" aria-hidden="true"></span><span>Stop all</span></span></div>
+    </div>
+    <aside class="w-col">
+      <div class="bubble" style="left:16px;top:8px;width:184px"><span class="who">Orkmaster</span><p class="cap">The table is laid. What shall we make first? Play the + card.</p></div>
+    </aside>
+    <div class="w-table ork-table">
+      <div class="t-head"><span class="t">The whole project · through the Orkmaster</span><span class="grow"></span></div>
+      <div class="mapstub"><span>The Orkmaster's map: the parties, who does what. Empty until the first goal.</span>
+        <div class="lanes"><div><span class="lab">Game design</span></div><div><span class="lab">Art</span></div><div><span class="lab">Tech</span></div><div><span class="lab">Release</span></div></div></div>
+      <div class="t-end appear"><span class="tl">Main</span><span class="ork-portal-ring" aria-hidden="true"></span><span class="tl" style="align-self:flex-start;margin-left:36px">Discard</span><span class="ork-card-place" aria-hidden="true"></span></div>
+    </div>
+    <footer class="w-hand">
+      <div class="left appear"><button class="ork-card ork-plus hcard lit" aria-label="New goal"><span class="ork-sigil" aria-hidden="true"></span><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg></button></div>
+      <div class="stacks"></div>
+      <div class="belt" aria-label="AI tools">
+        <button class="slot is-default"><img class="ork-mark" data-m="claude" alt=""><span class="ork-potion" style="--ork-potion-left:1" aria-hidden="true"></span><span class="pct">100%</span><span class="sub">week 100%</span></button>
+        <button class="slot"><img class="ork-mark" data-m="codex" alt=""><span class="ork-potion" style="--ork-potion-left:1" aria-hidden="true"></span><span class="pct">100%</span><span class="sub">week 100%</span></button>
+        <button class="slot add" title="Add an AI tool"><span class="empty"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg></span></button>
+      </div>
+    </footer>
+  </div>
+  </div>
+</section>
+
+<!-- ======================================================= 8 ======================================================= -->
+<section class="mk-sec" id="settings">
+  <h1>8 · Settings: over the whole table, nothing of the table beside it</h1>
+  <p class="mk-line">A place over the pane (Settings, Open a project, the update) covers the whole table, its end included: <b>no ring and no discard beside a form</b>. The column and the hand stay, since the work goes on under it. Settings loses what moved out: the AI tools live in the hand, the parties on their card; a line says where they went.</p>
+  <div class="mk-scroll">
+  <div class="win">
+    <div class="w-top">
+      <div class="w-om"><span class="sit"><span class="ork-chair big" aria-hidden="true"></span><img class="ork-race__head big" data-h="peon-crown" alt=""></span><span class="word"><b>Orkmaster</b><span class="mute">skyhop · a game</span></span></div>
+      <div class="w-tabs">
+        <span class="w-tab"><span class="sit mid"><span class="ork-chair" aria-hidden="true"></span><img class="ork-race__head mid" data-h2="unicorn-elder" alt=""></span><span>Game design</span></span>
+        <span class="w-tab"><span class="sit mid"><span class="ork-chair" aria-hidden="true"></span><img class="ork-race__head mid" data-h2="dryad-elder" alt=""></span><span>Art</span></span>
+        <span class="w-tab"><span class="sit mid"><span class="ork-chair" aria-hidden="true"></span><img class="ork-race__head mid" data-h2="shaman-elder" alt=""></span><span>Tech</span></span>
+        <span class="w-tab"><span class="sit mid"><span class="ork-chair is-empty" aria-hidden="true"></span></span><span class="faint">+ party</span></span>
+      </div>
+      <div class="w-end"><span class="door-w"><span class="ork-door" aria-hidden="true"></span><span>Stop all</span></span></div>
+    </div>
+    <aside class="w-col">
+      <span class="pile-h">At work · later</span>
+      <article class="ork-card hcard" style="width:100%;height:96px"><div class="top"><span class="ork-elem ice" aria-hidden="true"></span><span class="ork-sign feature" aria-hidden="true"></span></div><p class="nm">Wall jump with a short grace time</p><div class="foot"><img class="ork-race__head" data-h="shaman-elder" alt=""><img class="ork-race__head" data-h="unicorn-elder" alt=""></div></article>
+    </aside>
+    <div class="w-table ork-table">
+      <div class="place">
+        <div class="p-head"><button class="ork-btn quiet sm" title="Back to the map"><svg class="ork-icon" aria-hidden="true" style="width:14px;height:14px"><use href="../../../design-system/orkui/icons/icons.svg#arrow-left"/></svg></button><b>Settings</b><span class="cap mute">The Board's settings are for this project: skyhop.</span></div>
+        <div class="p-body">
+          <div class="sgrp"><h3>This project</h3>
+            <div class="chk"><i>✓</i><span>Start plans by themselves</span><span class="h">Low-risk plans start alone; the rest wait for you.</span></div>
+            <div class="chk"><i></i><span>Work at night</span><span class="h">What would start by itself waits for the night's window.</span></div>
+            <div class="chk"><i>✓</i><span>A result that holds lands in dev by itself</span><span class="h">Its tests ran and are green, nothing is left to fix, it touches no risk path.</span></div>
+            <div class="chk"><i></i><span>Push after merging (sends your code to origin)</span></div>
+            <div class="moved"><span><b>AI tools</b> are in your hand: press a potion, or the empty slot beside them.</span><span><b>Parties</b>, their size and their AI tool: the empty chair, or a party's <i>Edit</i>.</span></div>
+          </div>
+          <div class="sgrp"><h3>This computer</h3>
+            <div class="field"><span class="lab">Keep the computer awake</span><span class="seg"><span>Never</span><span class="on">While the orks work</span><span>Stay reachable from your phone</span></span></div>
+            <div class="field"><span class="lab">Your phone</span><span><button class="ork-btn sm">Pair a phone</button></span></div>
+            <div class="field"><span class="lab">Updates</span><span class="cap mute">Orkboard 0.42.0 · up to date</span></div>
+            <div class="field"><span class="lab">Download today's logs</span><span style="display:flex;gap:var(--ork-2)"><button class="ork-btn sm">Today</button><button class="ork-btn sm">The last 7 days</button></span></div>
+          </div>
+        </div>
+        <div class="p-foot"><button class="ork-btn primary">Done</button></div>
+      </div>
+    </div>
+    <footer class="w-hand">
+      <div class="left"><button class="ork-card ork-plus hcard" aria-label="New goal"><span class="ork-sigil" aria-hidden="true"></span><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg></button></div>
+      <div class="stacks"></div>
+      <div class="belt" aria-label="AI tools">
+        <button class="slot is-default"><img class="ork-mark" data-m="claude" alt=""><span class="ork-potion is-warn" style="--ork-potion-left:.3" aria-hidden="true"></span><span class="pct wait">30%</span><span class="sub">week 82%</span></button>
+        <button class="slot"><img class="ork-mark" data-m="codex" alt=""><span class="ork-potion size-medium" style="--ork-potion-left:.75" aria-hidden="true"></span><span class="pct">75%</span><span class="sub">week 44%</span></button>
+        <button class="slot add" title="Add an AI tool"><span class="empty"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg></span></button>
+      </div>
+    </footer>
+  </div>
+  </div>
+</section>
+</main>
+
+<footer class="mk-foot">
+  <ul>
+    <li><b>What is drawn here and is not orkUI's yet</b>: the empty slot (a potion's place in pixel dashes, as the discard's place is a card's), the bubble's tail, the size's three steps with their pips, the three tiers' tiles. orkUI draws them first (§127.3); until then the page's own layout with orkUI's tokens.</li>
+    <li><b>Prices</b> are made up for the picture; the real ones are <code>ideas.party_price</code>'s, said as they are today.</li>
+    <li>The heads are orkUI's: the Orkmaster the crowned ork, the leaders the races' higher forms (unicorn, dryad, shaman, lich, imp, fairy), the members their races in three gears.</li>
+  </ul>
+</footer>
+
+<script>
+// Fills the heads' and the marks' sources from orkUI's copy: data-h at 48 x 44 or 24 x 22 (the @2x image), data-h2 at 36 x 33, data-m an AI tool's mark.
+const UI = "../../../design-system/orkui/";
+document.querySelectorAll("img[data-h]").forEach((i) => { const n = i.dataset.h; i.src = `${UI}races/${n}.png`; i.srcset = `${UI}races/${n}@2x.png 2x`; });
+document.querySelectorAll("img[data-h2]").forEach((i) => { i.src = `${UI}races/${i.dataset.h2}@2x.png`; });
+document.querySelectorAll("img[data-m]").forEach((i) => { const n = i.dataset.m; i.src = `${UI}marks/harness-${n}.png`; i.srcset = `${UI}marks/harness-${n}@2x.png 2x`; });
+</script>
+</body>
+</html>

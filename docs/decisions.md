@@ -5409,3 +5409,108 @@ stay**, and a clip can ask that before any Camp is built. So:
    as ANSI colours and its 7 × 7 marks in half blocks (▀ ▄ █), never emoji (they differ by terminal, break the grid and
    colour what is no signal).
 The owner's call.
+
+## 232. The first open is the Orkmaster's: the project asked as a card, the AI tools put in the hand from a shelf, the parties on its large card with each head's tool and level; a table is laid only at Start, and nothing of it lies beside a form (3 November 2026, the owner; a draft for the owner's yes)
+
+Changes: 145.9, 169.4, 175.2, 176.2, 176.4, 177.1, 185, 192.4; spec 75 §5, spec 81 §4, spec 100 §4; the onboarding's first screen (spec 33 §1).
+
+Why: the owner, as a designer and a product: *the AI tools can be turned on and off, added and removed while working on a
+project, not only at the start: in Settings, better straight from the bottles*; *show adding the tools through the bottles in
+the onboarding too, so it is clear later (a nod to a shop in Diablo)*; *opening the project's folder could be a talk with the
+Orkmaster, like the questions with the leaders, which also teaches them*; *picking the parties as a card: the project's kind
+in a list at the top, the stages and their parties under it, each row with its tool and its size, the size as the team's
+heads*; *a head pressed, the leader's or a member's, picks its tool and under it its level as three heads with their words*;
+*while the project is set up, no In analysis or To review at the left and no discard*; *never the discard beside Settings: it
+looks like a bug*. Today the tools are set once, on a table of checkboxes before the Board opens (`onboarding.js`
+`ToolsStep`), and later only in Settings' rows, while the window's picture of them, the potions, can only be read; the folder
+is a form and the parties a place of two halves, so the first thing a person meets is three forms and not one of the
+window's own ways; the empty piles and the empty table's end are the first open's noise; and a place over the pane leaves
+the ring and the discard standing beside a form. So:
+1. **A table is laid at Start.** Until the project's first **Start** (8) the window is in its frame but **not yet laid**:
+   the leaders' row holds the Orkmaster alone (no tabs, no empty chair, no door, no die); its column holds no pile, only its
+   bubble; the table's end has neither the ring nor the discard's place; the hand has no + card and no deck, only the
+   Orkmaster's cards and the AI tools at its right. At **Start** the table is laid once, in order: the leaders sit down in
+   their chairs, the empty chair and the door appear, the ring and the discard's place appear at the table's end, the + card
+   comes to the hand with its seal lit once (§185.4's hover, played by itself), and the Orkmaster says *The table is laid.
+   What shall we make first?* in its bubble. Reduced motion: all at once. **A pile's heading appears with its first card**,
+   never empty (this makes §206.3 precise). §185's *always laid* holds from Start on.
+2. **Nothing of the table lies beside a form.** A place over the pane (§142: Settings, Open a project, the update, Pair a
+   phone, Remove party) covers the whole table, **its end included**: no ring and no discard beside it. The Orkmaster's
+   column and the hand stay as they are, since the work goes on under it (§142's *nothing traps the focus*).
+3. **The Orkmaster asks for the project as cards in the hand**, the way every question for the person comes (§206.6), its
+   line in its bubble (§201): *Which project shall we work on?* with **Open a folder…** (the system's dialog, opened from
+   the card), **A new, empty folder…** and the recent projects as answers; then, for a folder with no git, *No git in
+   <name> yet. Start git here?* (**Start git here**, **Choose another folder**); while it reads, its bubble says *Reading
+   <name>* (`ork-think`); then *<name> is <kind>, <how>. Right?* with the signs it saw as chips (`project_kind.read`'s,
+   spec 75 §1) and the stage read with it, answered **Yes** or **It is something else…** (the kinds' list in the card); an
+   empty folder asks *What is it for?* in one line (spec 75's cheap call). No answer is typed that a press could give. The
+   start screen and the Open folder form (projects.js) are this card when no project is open; with a project open, *Open a
+   project…* stays a place (2).
+4. **The AI tools are put in the hand from a shelf.** The potions' row (§176.2) ends with **an empty slot**: a potion's
+   place in pixel dashes with a +, faint at rest (§185.1), lit when the Orkmaster asks for a tool. Pressed, it lifts **the
+   shelf**, a card (§176.4) listing every AI tool found on this computer in today's three groups (*Ready*, *Not signed in*,
+   *Not installed*: toolpick.js's), each with its mark, its version, how it is paid (*Subscription* or *API*) and **Use**,
+   **Sign in** or how to install it; *Found on this computer. Nothing was run and no key was read*, **Request a tool** and
+   an experimental tool's warning first, as the onboarding has them. **Use** puts the tool in the hand at the end of the
+   row; the first tool used is the main tool. **A tool is in the hand or on the shelf**: there is no third state (*on*
+   but not used). The interface says *AI tools*, *Use*, *Put back*, never *shop*, *buy* or *belt*: the nod to the potion
+   belt and the merchant's shelf is in the shape, not in the words (CLAUDE.md's *everything else by what it does*; §231).
+5. **A potion pressed lifts its tool's card** (what a press did, *what used it*, becomes a link on it): the tool's mark,
+   name and potion, its two shares in words (§192.3); **Paid by** *Subscription · API*; **the order the work moves on in**,
+   the hand's potions as marks with this one framed and **←** **→** (dragging a potion does the same; §177.1's order is the
+   person's now, kept as `machine.tool_order`), the main tool the first; **Check** (one short request to its lightest
+   model); its tiers' models (Settings' *AI tools* rows, moved here); and **Put back**, with what follows said under it:
+   *The orks stop using it after the task at work* and each party set to it by name (*Art is set to Claude Code: it goes on
+   with Codex, the next in your hand*). A tool is put back **between tasks, never inside one** (§177.2), with **Undo** in
+   the toast; **the last tool** asks first (*Without it nothing is worked on: goals wait in the Orkmaster's column until you
+   put a tool back*). The shelf and the tool's card are the only places the tools are set: Settings' tool rows go (9).
+6. **The parties are the Orkmaster's large card on the table** (the one place of the parties, spec 100 §4, becomes it):
+   dealt from the Orkmaster's head onto the table, the same card the first time and later from the empty chair and a
+   party's *Edit*. It is wider than a lifted card (§176.4's *never grows wider* is a hand card's), about 800 px at the wide
+   width, its foot over the empty hand; its right edge never covers the potions. At its top **The project is** and the
+   kinds' list, with what it was read from; under it the stages (*Idea*, *Being made*, *Live*), the stage the project is
+   at marked *The project is here* and set by a press on another's heading; Release under its stage ticked and locked. **A
+   party is a row**: its tick, its leader's head, its name and line with **its team as heads** under them (the leader
+   first, then the seats its size gives, spec 81 §2), **its size** as three steps (*Lean*, *Standard*, *Full*, each with
+   its heads' count as pips), **its AI tool** (a list of the tools in the hand: *Main tool (<name>)* first, with the
+   framed mark that follows the main tool, else a bare mark, *set for <party>*: §192.4's words) and **its price a goal**
+   (`ideas.party_price`). The stages not reached lie in one line of heads and names (*offered when the project is live;
+   tick one to seat it now*). At its foot what the ticked parties cost together, said plainly (*at the API's prices. On a
+   subscription it is taken from its limits instead; nothing is paid by the API without your yes*), and **Start** the
+   first time (it makes them, then `ideas.project_ask`, as today), **Save** after (*From the next task*). The narrow width:
+   the card is the screen, one party a block.
+7. **A head pressed opens its seat** (seatpop.js, §110.7), any head of a row, the leader's too; hover only marks it, so a
+   phone and a keyboard reach it. The seat says its role and what it does, **Its AI tool** (*As the party (<tool>)* first,
+   then the tools in the hand) and **Its level as three heads**, the seat's race in its three gears (§158's tier is the
+   gear on the head), each with its word (*Novice*, *Seasoned*, *Veteran*) and what a task costs at it; a leader's step is
+   priced as a step, and under a leader set to Novice a line says the cost in plain words (*reads less of the project before
+   it plans*). **Take off the seat** for a member, never for the leader. A head set by hand keeps a small mark of its own
+   tool, and its party's size stays picked: a seat set by hand keeps what was set, as Agents' tiers do (spec 81 §2).
+8. **The first open, in order**: the window not yet laid (1) → the project (3) → the AI tools (4), **only when the hand is
+   empty** (the tools are this computer's: the second project skips it) → the parties' card (6) → **Start** → the table
+   laid (1). The onboarding's table of checkboxes, its Next and its Skip go; *Open the board without AI* is the shelf's
+   **Done** with no tool used, which says *No AI tool: the Board opens, and nothing is worked on until you put one in your
+   hand*. The Security reviewer's hooks (today's onboarding checkbox, off in focus) are not asked here.
+9. **Settings keeps what is neither a tool nor a party**, in two groups, **This project** (Start plans by themselves, Work
+   at night, A result that holds lands in dev, Push after merging, the Target) and **This computer** (Keep the computer
+   awake, Your phone, Updates, the logs), and one line where the rest went: *AI tools are in your hand: press a potion, or the
+   empty slot beside them. Parties, their size and their AI tool: the empty chair, or a party's Edit.* A card it is not: a
+   card is a decision waiting for the person (§206.6), and Settings is not one.
+10. **The phone** shows the tools as today (§223's bottle) and sets none of them; nothing of this is built on the phone now.
+11. **The words** (`TERMS`): `tool_shelf` (*the AI tools*: the tools found on this computer, used or not; never said
+    *shelf* in the interface), `tool_order` (*the order the work moves on in*); *Use*, *Put back*, *Which project shall we
+    work on?*, *The project is*, *The project is here*, *Its level*, *The table is laid*.
+12. **Drawn first** (`docs/mockups/setup/`, eight looks), built after the owner's yes. orkUI draws first (§127.3): the
+    empty slot (`.ork-potion.is-empty`: the silhouette in pixel dashes, `.is-lit` in the ink), the size's three steps with
+    their pips, the three levels' tiles, the bubble's tail if orkUI lacks it; until orkUI has them, the page's own layout
+    with orkUI's tokens. Built in four parts, each into main as its critical tests are green: **A. Host** (`machine.tool_order`
+    in `settings.py` with `harnesses.main` reading it; the tools' commands out of `gui/onboarding.py` into a `tools.*` of
+    their own: `tools.shelf`, `tools.use`, `tools.put_back` (between tasks, refused for the last without `sure`),
+    `tools.order`, `tools.billing`, `tools.check`; the project's questions as Orkmaster cards: `projects.*` answered from a
+    card; the *laid* state, `board.laid`, false until the first Start); **B. The hand** (`hand/mana.js`: the empty slot, the
+    shelf and the tool's card; `hand/state.js`: the Orkmaster's setup cards); **C. The table** (`table/parties.js` and
+    `partyseats2.js` as the large card, `seatpop.js` with the level, `frame/place.js` and `table/table.js` covering the
+    table's end, `table/column.js` and `table/piles.js` with no empty pile, the laying's motion); **D. Settings and the
+    onboarding** (`shell/settings.js` and `js/settings.js` lose the tools' rows, `onboarding.js`'s `ToolsStep` goes,
+    `shell/projects.js`'s start screen becomes the card). Each part's tests are its files' tests, and a browser test of the
+    first open from an empty folder to the laid table.
