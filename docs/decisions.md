@@ -5203,3 +5203,34 @@ so a second wait asks for a look already given. So (this changes §224.3 and §2
    one is free. *Talk more* and *Drop it* as §224.4.
 4. The mockup `docs/mockups/phone/goal-lens-v4.html` is changed to say it.
 The owner's call.
+
+## 226. The phone in daylight: the dark look pushed (brighter ink, every edge that tells something on orkUI's edge, the type a size up, nothing under 14 px, a goal's slice one column); no light look for now (3 November 2026, the owner)
+
+Changes: 222, 223; spec 40.
+
+Why: the owner, looking at the phone's mockups: there will be trouble with contrast on a phone, which is used in the
+street on a sunny day, and the type seems small for it. Measured on orkUI 0.28's office tokens: text holds well (ink
+12.8:1 on the table, 9.9:1 on a card; muted 7.5:1 and 5.8:1; faint 5.9:1 and 4.5:1, on the edge); what does not hold is
+what is drawn by a line or a shade alone: `frame` 1.5:1 on the table and `card-frame` 1.25:1 on a card, under WCAG 1.4.11's
+3:1 for a part's edge or its state; the canvas, the table and the panel 1.05–1.1:1 apart and a card 1.3:1 from the table,
+one black plane in daylight; and the mockups' own 10–11 px text, under orkUI's phone scale. orkUI already has an
+`edge` at 5.2:1, used for no edge that matters. The mockups `docs/mockups/phone/goal-lens-v5.html` (now and proposed)
+and `goal-lens-v6.html` (now, dark for daylight, light for daylight) showed three ways; the owner chose the dark one and
+put the light one off. So:
+1. **The look stays orkUI's office, dark** (spec 40, CLAUDE.md); **no light look for now**. Glare washes a dark screen
+   most, so a light look following the phone's own setting stays the one asked again later, as orkUI's second look.
+2. **Asked of orkUI** (the look is changed there and copied, never here): on a phone, the ink and the muted ink brighter
+   (about 15:1 and 10:1 on the table); **every edge that tells a part or a state on `edge`** (at least 3:1 on the table,
+   the panel and a card: a switch, an aspect's chip, a container, a read-only part, a card's own frame), `frame` kept for
+   dividers; the panel a step lighter; **the phone's type a size up**: body 17 px, captions 15, labels 14 bold, a part's
+   name 16, a goal's name 19; IBM Plex Sans 500 added (the copy has 400 and 600 only). Until orkUI has it, the phone's
+   sheets ask for nothing of their own (Orkboard carries no colour, font or corner).
+3. **The phone's rules, in Orkboard's spec**: **no text under 14 px** on a phone; **a state is never told by an edge or a
+   shade alone**: a word (*changed*, *new*, *read*), a sign or an ink line as well; the changed and the new 2 px;
+   **a goal's slice one column, a row a part** (44 px at least), the lens scrolling more rather than shrinking; a rune
+   always its shape and its colour, never its colour alone (the runes stand near the signals: dust near alert, lava near
+   danger, meadow near success).
+4. **A test of the tokens' contrast** (`tests/test_design_system.py`: text 4.5:1 on every ground, the ink 7:1, an edge,
+   a signal and a rune 3:1) comes with the spec that takes orkUI's new copy.
+5. **Checked on a phone in the sun** before the spec is closed: the mockup v6 opened outdoors, at the phone's own brightness.
+The owner's call.
