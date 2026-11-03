@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orkboard phone, daylight, mockup v6</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* v4: the header of four places, the Orkmaster above the leaders, a spec in To review and its change through the Orkmaster (decisions §224). v3: the project's screen with the leaders on top (decisions §222 as amended); its parts kept from v2. v2 of goal-lens.html (decisions §222, the owner's review of 3 November): one header (the crown, the goal, the bottle of the
+   tool it runs on, a press its picker); no die and no discard in it; the hand at the foot between the + card and the die, the
+   picked goal's stack raised with its question and the leader's pick one tap away, the other stacks narrow; the die faint,
+   white or in the goal's rune; the menu the Orkmaster's three piles and Done, a question sign (never a number) on a goal that
+   asks; the menu the first screen when nothing is to be decided. orkUI's classes and tokens only. */
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; background: var(--ork-canvas); color: var(--ork-ink); }
+p, h1, h2, h3, ul { margin: 0; padding: 0; }
+ul { list-style: none; }
+button { margin: 0; color: inherit; font: inherit; }
+img { display: block; }
+.mute { color: var(--ork-ink-muted); }
+.cap { font: var(--ork-type-caption); }
+.lab { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+
+.mk-bar { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: var(--ork-6); padding: var(--ork-4) var(--ork-6);
+  background: var(--ork-canvas); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.mk-line { max-width: 110ch; padding: var(--ork-4) var(--ork-6) 0; font: var(--ork-type-body); }
+.mk-main { display: flex; flex-wrap: wrap; gap: var(--ork-8); padding: var(--ork-6); }
+.mk-st { display: flex; flex-direction: column; gap: var(--ork-3); width: 390px; max-width: 100%; }
+.mk-st h2 { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.mk-st > p { font: var(--ork-type-caption); color: var(--ork-ink-muted); min-height: 80px; }
+
+/* the phone: 390 x 844 */
+.ph { position: relative; width: 390px; height: 844px; max-width: 100%; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--ork-table); border: var(--ork-line) solid var(--ork-frame); }
+.sb { flex: none; height: 47px; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.hb { flex: none; height: 34px; display: flex; align-items: center; justify-content: center; }
+.hb::after { content: ""; width: 134px; height: 5px; background: var(--ork-ink-faint); }
+
+/* the one header: the crown, the goal, the bottle */
+.hdr { flex: none; display: flex; align-items: center; gap: var(--ork-2); height: 64px; padding: 0 var(--ork-3); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.crown { flex: none; width: 44px; height: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-frame); background: var(--ork-panel); }
+.gname { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.gname .r1 { display: flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-body); font-size: 18px; line-height: 22px; font-weight: 600; }
+.gname .r1 .t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gname .r1 .ork-sign { flex: none; color: var(--ork-ink-muted); }
+.gname .r2 { display: flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-caption); color: var(--ork-ink-muted); white-space: nowrap; }
+.gname .r2 .ork-sign, .gname .r2 .ork-icon { color: var(--ork-ink-muted); width: 12px; height: 12px; }
+.gname .r2 .ork-gem { min-width: 18px; height: 18px; font-size: 10px; }
+.proj { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--ork-2); height: 44px; padding: 0 var(--ork-2); border: 0; background: none; text-align: left; font: var(--ork-type-body); font-weight: 600; }
+.proj .ork-icon { width: 16px; height: 16px; color: var(--ork-ink-muted); }
+.ico { flex: none; width: 44px; height: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: 0; background: none; color: var(--ork-ink-muted); }
+.ico.stop { color: var(--ork-danger); }
+.ico .ork-icon { width: 20px; height: 20px; }
+.pot { position: relative; flex: none; width: 48px; height: 56px; padding: 2px 0 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 1px;
+  border: 2px solid var(--ork-ink); clip-path: var(--ork-notch); background: var(--ork-panel); --pc: var(--ork-ink); }
+.pot .slot { height: 36px; display: flex; align-items: flex-end; justify-content: center; }
+.pot .ork-mark { position: absolute; left: 2px; top: 2px; width: 12px; height: 12px; }
+.pot .pct { color: var(--pc); font: var(--ork-type-caption); font-size: 11px; line-height: 13px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.pot.low { --pc: var(--ork-alert); border-color: var(--ork-alert); }
+.pot.bare { border-color: transparent; background: none; clip-path: none; }
+.away { flex: none; display: flex; align-items: center; gap: var(--ork-2); min-height: 32px; padding: 0 var(--ork-4); border-bottom: var(--ork-line) solid var(--ork-frame);
+  background: var(--ork-panel); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.away .ork-icon { width: 16px; height: 16px; }
+
+/* the leaders as tabs */
+.tabs { flex: none; display: flex; height: 56px; border-bottom: var(--ork-line) solid var(--ork-frame); }
+.tb { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 0; border-left: var(--ork-line) solid var(--ork-frame); background: none;
+  font: var(--ork-type-caption); font-size: 11px; color: var(--ork-ink-muted); }
+.tb:first-child { border-left: 0; }
+.tb.is-on { background: var(--ork-panel); box-shadow: inset 0 -3px 0 var(--ork-ink); color: var(--ork-ink); font-weight: 600; }
+
+/* a tab's content */
+.mid { position: relative; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-3) var(--ork-4); }
+.seg { align-self: flex-start; display: inline-flex; border: var(--ork-line) solid var(--ork-frame); }
+.seg button { height: 36px; padding: 0 var(--ork-4); border: 0; background: none; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.seg button + button { border-left: var(--ork-line) solid var(--ork-frame); }
+.seg .is-on { background: var(--ork-panel); color: var(--ork-ink); font-weight: 600; box-shadow: inset 0 -2px 0 var(--ork-ink); }
+.segrow { display: flex; align-items: center; gap: var(--ork-3); }
+.segrow .cap { margin-left: auto; }
+.sec { display: flex; flex-direction: column; gap: var(--ork-2); }
+.sys { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ork-2); }
+.ctr { display: flex; flex-direction: column; gap: var(--ork-1); padding: var(--ork-2); border: var(--ork-line) solid var(--ork-frame); }
+.ctr > .lab { margin-bottom: 2px; }
+.pt { position: relative; display: flex; align-items: center; gap: var(--ork-2); min-height: 34px; padding: 0 var(--ork-2); border: var(--ork-line) solid var(--ork-card-frame);
+  background: var(--ork-card); clip-path: var(--ork-notch); font: var(--ork-type-caption); }
+.pt .k { margin-left: auto; font-size: 10px; letter-spacing: .04em; text-transform: uppercase; color: var(--ork-ink-muted); }
+.pt.new { border-color: var(--ork-success); } .pt.new .k { color: var(--ork-success); }
+.pt.changed { border-color: var(--ork-ink); } .pt.changed .k { color: var(--ork-ink); }
+.pt.read { background: none; border-style: dashed; color: var(--ork-ink-muted); }
+.pt .ork-sign.alert { color: var(--ork-alert); width: 12px; height: 12px; }
+.done li { display: flex; gap: var(--ork-2); font: var(--ork-type-body); }
+.done li .ork-sign { margin-top: 4px; color: var(--ork-ink-muted); }
+.conc li { display: flex; gap: var(--ork-3); padding: var(--ork-2) 0; font: var(--ork-type-body); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.conc li .ork-sign { margin-top: 4px; color: var(--ork-alert); }
+.conc li .on { display: block; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+
+/* the foot: the + card, the hand, the die */
+.foot { flex: none; position: relative; height: 172px; border-top: var(--ork-line) solid var(--ork-frame); }
+.foot.low { height: 112px; }
+.plus { position: absolute; left: var(--ork-3); bottom: var(--ork-3); width: 58px; height: 84px; display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--ork-action); background: var(--ork-card); clip-path: var(--ork-notch); color: var(--ork-action); transform: rotate(calc(var(--ork-motion-lean) * -.5)); }
+.plus .ork-icon { width: 26px; height: 26px; }
+.plus::before { content: ""; position: absolute; inset: 4px 4px -6px -6px; z-index: -1; border: var(--ork-line) solid var(--ork-action); }
+.plus.big { width: 64px; height: 92px; box-shadow: 0 0 0 4px var(--ork-canvas), 0 0 0 5px var(--ork-action); }
+.hand { position: absolute; left: 80px; right: 72px; bottom: 0; top: 0; display: flex; align-items: flex-end; gap: 6px; padding-bottom: var(--ork-3); }
+.qstack { position: relative; flex: none; width: 150px; height: 156px; align-self: flex-end; }
+.qstack::before, .qstack::after { content: ""; position: absolute; inset: 0; border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-card); clip-path: var(--ork-notch); }
+.qstack::before { transform: translate(5px, 4px) rotate(2.5deg); }
+.qstack::after { transform: translate(2px, 2px) rotate(1deg); }
+.qc { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; gap: var(--ork-1); padding: var(--ork-2); border-color: var(--ork-alert);
+  box-shadow: inset 0 0 0 1px var(--ork-alert); transform: rotate(-1deg); }
+.qc .h { display: flex; align-items: center; gap: var(--ork-1); }
+.qc .h .ork-sign { color: var(--ork-alert); }
+.qc .h .ork-race__head { margin-left: auto; width: 20px; height: 19px; }
+.qc .q { font: var(--ork-type-caption); font-size: 12px; line-height: 15px; font-weight: 600; }
+.qc .why { font: var(--ork-type-caption); font-size: 10px; line-height: 13px; color: var(--ork-ink-muted); }
+.qc .take { margin-top: auto; height: 40px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; padding: 0 var(--ork-2);
+  border: var(--ork-line) solid var(--ork-ink); background: var(--ork-panel); font: var(--ork-type-caption); font-weight: 600; text-align: left; }
+.qc .take small { font-weight: 400; font-size: 10px; color: var(--ork-ink-muted); }
+.stub { position: relative; flex: none; width: 34px; height: 64px; display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); padding: var(--ork-2) 0;
+  border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-card); clip-path: var(--ork-notch); transform: rotate(var(--a, 0deg)); }
+.stub .ork-sign { color: var(--ork-ink-muted); }
+.stub.asks .ork-sign { color: var(--ork-alert); }
+.stub.ready .ork-sign { color: var(--ork-success); }
+.calm { align-self: center; margin: 0 auto; font: var(--ork-type-caption); color: var(--ork-ink-muted); text-align: center; }
+
+/* the die: faint, white, or in the goal's rune */
+.die { position: absolute; right: var(--ork-3); bottom: var(--ork-3); width: 56px; height: 64px; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; gap: 2px;
+  border: 0; background: none; font: var(--ork-type-caption); font-size: 10px; color: var(--ork-ink-muted); }
+.die .ork-die { --_n: 2; rotate: calc(var(--ork-motion-lean) * -1); }
+.die.off { opacity: .35; }
+.die.ink .ork-die { --_pip: var(--ork-ink); --_edge: var(--ork-ink); }
+.die.rune { color: var(--ork-elem-dust); }
+.die.rune .ork-die { --_pip: var(--ork-elem-dust); --_edge: var(--ork-elem-dust); --_face: var(--ork-elem-dust); filter: drop-shadow(0 0 6px var(--ork-elem-dust)); }
+
+/* the menu: the Orkmaster's three piles and Done, the leaders at its foot */
+.scrim { position: absolute; inset: 0; z-index: 8; background: var(--ork-scrim); }
+.menu { position: absolute; left: 0; top: 47px; bottom: 34px; z-index: 9; width: 312px; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--ork-canvas); border-right: var(--ork-line) solid var(--ork-edge); }
+.menu.home { position: static; width: auto; flex: 1; min-height: 0; border-right: 0; background: none; }
+.mh { flex: none; display: flex; align-items: center; gap: var(--ork-2); height: 64px; padding: 0 var(--ork-3); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.piles { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+.grp { padding: var(--ork-1) 0; border-bottom: var(--ork-line) solid var(--ork-frame); }
+.sub { padding: var(--ork-2) var(--ork-3) var(--ork-1); }
+.gr { width: 100%; display: flex; align-items: center; gap: var(--ork-2); min-height: 44px; padding: 0 var(--ork-3); border: 0; background: none; text-align: left; font: var(--ork-type-body); }
+.gr .nm2 { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.gr .ork-sign { color: var(--ork-ink-muted); }
+.gr .ork-sign.question { color: var(--ork-alert); }
+.gr .ph2 { display: inline-flex; align-items: center; gap: 4px; font: var(--ork-type-caption); color: var(--ork-ink-muted); white-space: nowrap; }
+.gr .ph2 .ork-sign { width: 12px; height: 12px; }
+.gr .hs { display: inline-flex; }
+.gr .hs .ork-race__head { width: 18px; height: 17px; margin-left: -4px; }
+.gr.is-on { background: var(--ork-panel); box-shadow: inset 3px 0 0 var(--ork-ink); }
+.an { display: flex; align-items: center; gap: var(--ork-2); min-height: 44px; padding: 0 var(--ork-3); }
+.an .backs { position: relative; flex: none; width: 34px; height: 40px; }
+.an .backs .ork-card-back { position: absolute; width: 26px; height: 36px; }
+.an .backs .ork-card-back:nth-child(1) { left: 0; top: 2px; transform: rotate(-6deg); }
+.an .backs .ork-card-back:nth-child(2) { left: 5px; top: 1px; transform: rotate(2deg); }
+.an .backs .ork-card-back:nth-child(3) { left: 9px; top: 3px; transform: rotate(8deg); }
+.an .rd { flex: 1; min-width: 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.an .rd b { display: block; font: var(--ork-type-body); font-weight: 600; color: var(--ork-ink); }
+.down { width: 100%; display: flex; align-items: center; gap: var(--ork-2); min-height: 40px; padding: 0 var(--ork-3) 0 52px; border: 0; background: none; text-align: left;
+  font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.down .ork-card-back { flex: none; width: 14px; height: 20px; }
+.down > span:nth-child(2) { flex: 1; min-width: 0; font: var(--ork-type-body); color: var(--ork-ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.down .ork-icon { width: 16px; height: 16px; }
+.donepile { display: flex; align-items: center; gap: var(--ork-3); min-height: 52px; padding: 0 var(--ork-3); }
+.donepile .dp { position: relative; flex: none; width: 34px; height: 44px; }
+.donepile .dp > * { position: absolute; width: 28px; height: 38px; }
+.donepile .dp .ork-card-back { left: 4px; top: 4px; transform: rotate(6deg); }
+.donepile .dp .ork-card { left: 0; top: 0; display: flex; align-items: center; justify-content: center; clip-path: var(--ork-notch); }
+.donepile .dp .ork-sign { color: var(--ork-success); }
+.donepile .ls { flex: 1; min-width: 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.donepile .ls b { display: block; font: var(--ork-type-body); color: var(--ork-ink); font-weight: 400; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.leaders { flex: none; border-top: var(--ork-line) solid var(--ork-frame); }
+.leaders .sub { padding-bottom: 0; }
+.lrow { display: flex; padding: var(--ork-2); }
+.lrow button { flex: 1; height: 52px; display: flex; align-items: center; justify-content: center; border: 0; background: none; }
+
+/* sheets: the bottle's picker from the top, the die's from the foot */
+.drop { position: absolute; left: 0; right: 0; top: 111px; z-index: 9; display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3) var(--ork-4) var(--ork-4);
+  background: var(--ork-canvas); border-bottom: var(--ork-line) solid var(--ork-edge); }
+.tool { display: flex; align-items: center; gap: var(--ork-3); min-height: 64px; padding: 0 var(--ork-2); border: var(--ork-line) solid var(--ork-frame); }
+.tool.is-on { border-color: var(--ork-ink); background: var(--ork-panel); }
+.tool .nm { flex: 1; min-width: 0; font: var(--ork-type-body); font-weight: 600; }
+.tool .nm small { display: block; font: var(--ork-type-caption); font-weight: 400; color: var(--ork-ink-muted); }
+.tool .tag { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.drop .ork-btn { height: 44px; }
+.sheet { position: absolute; left: 0; right: 0; bottom: 34px; z-index: 9; display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-4);
+  background: var(--ork-canvas); border-top: var(--ork-line) solid var(--ork-edge); }
+.sheet .grab { align-self: center; width: 40px; height: 4px; background: var(--ork-ink-faint); }
+.sheet .sh-h { display: flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-body); font-weight: 600; }
+.sheet .sh-h .lab { margin-left: auto; }
+.sheet .line { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.shots { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--ork-2); }
+.shot { display: flex; flex-direction: column; gap: var(--ork-1); padding: 0; border: 0; background: none; text-align: left; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.shot .pic { position: relative; height: 120px; border: var(--ork-line) solid var(--ork-frame); background: repeating-linear-gradient(135deg, var(--ork-panel) 0 8px, var(--ork-card) 8px 16px); }
+.shot .pic .ork-sign { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--ork-ink-faint); }
+.shot.changed .pic { border-color: var(--ork-elem-dust); }
+.shot.marked .pic::after { content: ""; position: absolute; left: 18%; top: 54%; width: 58%; height: 22%; border: 2px dashed var(--ork-alert); }
+.sheet .acts { display: flex; gap: var(--ork-2); }
+.sheet .acts .ork-btn { height: 44px; }
+.sheet .acts .grow { flex: 1; }
+/* a card lifted for its other answers */
+.lift { position: absolute; left: 50%; top: 150px; z-index: 9; width: 320px; transform: translateX(-50%) rotate(-0.8deg); display: flex; flex-direction: column; gap: var(--ork-3);
+  padding: var(--ork-4); border-color: var(--ork-alert); }
+.lift .h { display: flex; align-items: flex-start; gap: var(--ork-3); font: var(--ork-type-body); font-size: 17px; line-height: 23px; font-weight: 600; }
+.lift .h .ork-race__head { margin-left: auto; }
+.lift .why { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.chs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ork-2); }
+.ch { display: flex; flex-direction: column; gap: var(--ork-1); min-height: 72px; padding: var(--ork-2); text-align: left; }
+.ch .n { font: var(--ork-type-body); font-weight: 600; }
+.ch .w { font: var(--ork-type-caption); color: var(--ork-ink-muted); margin-top: auto; }
+.ch.pick { border-color: var(--ork-ink); box-shadow: inset 0 0 0 1px var(--ork-ink); }
+.ch.other { border-style: dashed; background: none; color: var(--ork-ink-muted); align-items: center; justify-content: center; }
+.lift .decide { align-self: center; height: 44px; }
+/* the empty project */
+.first { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--ork-4); padding: var(--ork-6); text-align: center; }
+.first h3 { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.first p { font: var(--ork-type-body); color: var(--ork-ink-muted); max-width: 30ch; }
+.first .lrow { width: 100%; }
+.first .lrow button { flex-direction: column; gap: 2px; height: 64px; font: var(--ork-type-caption); font-size: 10px; color: var(--ork-ink-muted); }
+
+
+/* v4: the header of four places, the Orkmaster above the leaders, a spec in To review and its change through the Orkmaster (decisions §224). v3: the project's screen */
+.ptabs { flex: none; display: flex; height: 52px; border-bottom: var(--ork-line) solid var(--ork-frame); }
+.ptabs button { flex: 1; display: flex; align-items: center; justify-content: center; border: 0; border-left: var(--ork-line) solid var(--ork-frame); background: none; }
+.ptabs button:first-child { border-left: 0; }
+.ptabs button.is-on { background: var(--ork-panel); box-shadow: inset 0 -3px 0 var(--ork-ink); }
+.ptitle { flex: none; display: flex; align-items: baseline; gap: var(--ork-2); padding: var(--ork-2) var(--ork-4) 0; }
+.ptitle b { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.ptitle span { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.home2 { flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+.since li { display: flex; gap: var(--ork-2); padding: var(--ork-1) 0; font: var(--ork-type-body); }
+.since li .k { flex: none; width: 74px; padding-top: 3px; font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.since li .k.new { color: var(--ork-success); }
+.since li .by { display: block; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.since li .by .ork-elem { width: 10px; height: 10px; display: inline-block; vertical-align: -1px; margin-right: 2px; }
+.aspects { display: flex; flex-wrap: wrap; gap: var(--ork-1); }
+.asp { display: inline-flex; align-items: center; gap: var(--ork-1); height: 32px; padding: 0 var(--ork-2); border: var(--ork-line) solid var(--ork-frame); background: none; font: var(--ork-type-caption); }
+.asp .ork-sign, .asp .ork-icon { width: 12px; height: 12px; color: var(--ork-ink-muted); }
+.asp.alert { border-color: var(--ork-alert); } .asp.alert .ork-sign { color: var(--ork-alert); }
+.asp.ok .ork-sign { color: var(--ork-success); }
+.asp.unseen { border-style: dashed; color: var(--ork-ink-muted); }
+.asp.is-on { background: var(--ork-panel); box-shadow: inset 0 -2px 0 var(--ork-ink); }
+.cmap { display: flex; flex-direction: column; gap: var(--ork-2); }
+.cmap .ctr2 { display: flex; flex-direction: column; gap: var(--ork-1); padding: var(--ork-2); border: var(--ork-line) solid var(--ork-frame); }
+.cmap .row { display: flex; flex-wrap: wrap; gap: var(--ork-1); }
+.chipp { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 var(--ork-2); border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-card);
+  clip-path: var(--ork-notch); font: var(--ork-type-caption); }
+.chipp.new { border-color: var(--ork-success); }
+.chipp.changed { border-color: var(--ork-ink); }
+.chipp.dim { background: none; color: var(--ork-ink-muted); }
+.chipp .ork-sign { width: 11px; height: 11px; color: var(--ork-alert); }
+.loopr { display: flex; flex-direction: column; gap: var(--ork-1); padding: var(--ork-2); border: var(--ork-line) solid var(--ork-frame); }
+.loopr .steps { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; font: var(--ork-type-caption); }
+.loopr .steps .st2 { padding: 4px var(--ork-2); border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-card); clip-path: var(--ork-notch); }
+.loopr .steps .st2.changed { border-color: var(--ork-ink); }
+.loopr .steps .ar { color: var(--ork-ink-faint); }
+.cur { display: flex; gap: var(--ork-2); flex-wrap: wrap; }
+.cur span { display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 var(--ork-2); border: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); }
+.cur .ork-sign { width: 11px; height: 11px; color: var(--ork-alert); }
+.yours { font: var(--ork-type-body); padding: var(--ork-3); border: var(--ork-line) solid var(--ork-frame); }
+.sheet .add { min-height: 80px; }
+.sheet .warn { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.sheet .warn b { color: var(--ork-ink); font-weight: 600; }
+.crown.home { box-shadow: inset 0 0 0 1px var(--ork-ink); }
+
+/* v4: the header of four places */
+.gr .ph2 .ork-icon { width: 12px; height: 12px; }
+.up { flex: none; width: 44px; height: 44px; padding: 0; display: inline-flex; align-items: center; justify-content: center; border: 0; background: none; color: var(--ork-ink-muted); }
+.up .ork-icon { width: 22px; height: 22px; }
+.crown.on { background: var(--ork-panel); box-shadow: inset 0 0 0 2px var(--ork-ink); border-color: var(--ork-ink); }
+.crown.off { background: none; }
+.ptl { flex: 1; min-width: 0; font: var(--ork-type-body); font-size: 18px; line-height: 22px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.otitle { flex: none; padding: var(--ork-2) var(--ork-4) 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.otitle b { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); color: var(--ork-ink); margin-right: var(--ork-2); }
+.tb span { line-height: 12px; text-align: center; }
+/* a spec in To review: its start, its acts */
+.start { display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3); border: var(--ork-line) solid var(--ork-frame); }
+.start .when { display: flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-body); font-weight: 600; }
+.start .when .ork-icon { width: 18px; height: 18px; color: var(--ork-ink-muted); }
+.qbar { height: 4px; background: var(--ork-frame); }
+.qbar i { display: block; height: 100%; width: 38%; background: var(--ork-ink-muted); }
+.qbar.held i { background: var(--ork-ink-faint); }
+.start .cap { color: var(--ork-ink-muted); }
+.acts2 { display: flex; gap: var(--ork-2); }
+.acts2 .ork-btn { height: 44px; }
+.acts2 .grow { flex: 1; }
+.plan2 li { display: flex; align-items: center; gap: var(--ork-3); min-height: 40px; padding: 0 var(--ork-3); border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-card);
+  clip-path: var(--ork-notch); font: var(--ork-type-body); }
+.plan2 li + li { margin-top: var(--ork-1); }
+.plan2 li > span:nth-child(2) { flex: 1; min-width: 0; }
+.plan2 .st { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+/* the change written to the Orkmaster */
+.to { display: flex; align-items: center; gap: var(--ork-2); flex-wrap: wrap; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.to .ork-race__head { width: 20px; height: 19px; }
+.to .ork-gem { min-width: 18px; height: 18px; font-size: 10px; }
+.held { display: flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.held .ork-icon { width: 14px; height: 14px; }
+/* the change back: one card for its leaders */
+.cstack { position: relative; flex: none; width: 150px; height: 140px; align-self: flex-end; }
+.cstack::before { content: ""; position: absolute; inset: 0; border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-card); clip-path: var(--ork-notch); transform: translate(4px, 3px) rotate(2deg); }
+.cc { position: absolute; inset: 0; z-index: 1; display: flex; flex-direction: column; gap: var(--ork-1); padding: var(--ork-2); border-color: var(--ork-ink); transform: rotate(-1deg); }
+.cc .h { display: flex; align-items: center; gap: var(--ork-1); }
+.cc .h .ork-sign { color: var(--ork-ink); }
+.cc .q { font: var(--ork-type-caption); font-size: 12px; line-height: 15px; font-weight: 600; }
+.cc .hs2 { display: flex; gap: 2px; margin-top: auto; }
+.cc .hs2 .ork-race__head { width: 20px; height: 19px; }
+.cc .look { font: var(--ork-type-caption); font-size: 10px; color: var(--ork-ink-muted); }
+.clift { position: absolute; left: 50%; top: 128px; z-index: 9; width: 340px; transform: translateX(-50%) rotate(-0.6deg); display: flex; flex-direction: column; gap: var(--ork-3);
+  padding: var(--ork-4); border-color: var(--ork-ink); }
+.clift .h { display: flex; align-items: center; gap: var(--ork-2); font: var(--ork-type-body); font-size: 17px; line-height: 22px; font-weight: 600; }
+.clift .said { font: var(--ork-type-body); padding: var(--ork-2) var(--ork-3); border-left: 3px solid var(--ork-frame); color: var(--ork-ink-muted); }
+.itabs { display: flex; border-bottom: var(--ork-line) solid var(--ork-frame); }
+.itabs button { flex: 1; display: flex; align-items: center; justify-content: center; gap: var(--ork-1); height: 40px; border: 0; background: none; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.itabs .is-on { color: var(--ork-ink); font-weight: 600; box-shadow: inset 0 -3px 0 var(--ork-ink); }
+.np { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ork-2); }
+.np > div { display: flex; flex-direction: column; gap: var(--ork-1); padding: var(--ork-2); border: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); }
+.np > div.pr { border-color: var(--ork-ink); }
+.np .t { font-size: 13px; line-height: 17px; color: var(--ork-ink); }
+.np .t .op { display: inline-block; width: 12px; color: var(--ork-ink-muted); }
+.np .t .op.add { color: var(--ork-success); }
+.clift .cost { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.clift .acts2 .ork-btn { height: 44px; }
+
+/* v5: now and proposed side by side */
+.mk-pair { display: flex; flex-direction: column; gap: var(--ork-3); width: 100%; }
+.mk-pair h2 { font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.mk-pair > p { font: var(--ork-type-caption); color: var(--ork-ink-muted); max-width: 90ch; }
+.pair { display: flex; flex-wrap: wrap; gap: var(--ork-6); }
+.pair figure { margin: 0; display: flex; flex-direction: column; gap: var(--ork-2); }
+.pair figcaption { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.pair figure.prop figcaption { color: var(--ork-ink); }
+/* the proposal, as tokens orkUI would give */
+.prop .ph { --ork-card-frame: #7c8389; --ork-frame-strong: #6e6a62; --ork-panel: #2a2826; }
+.prop .seg, .prop .asp, .prop .ctr, .prop .ctr2, .prop .pt.read, .prop .start, .prop .tool, .prop .np > div, .prop .chipp.dim, .prop .loopr,
+.prop .crown, .prop .cur span, .prop .shot .pic, .prop .yours, .prop .ork-field { border-color: var(--ork-frame-strong); }
+.prop .seg button + button { border-left-color: var(--ork-frame-strong); }
+.prop .asp.alert { border-color: var(--ork-alert); }
+.prop .crown.on { border-color: var(--ork-ink); }
+.prop .tb, .prop .tb span, .prop .pt .k, .prop .pot .pct, .prop .qc .why, .prop .qc .take small, .prop .cc .look, .prop .die, .prop .hc .n,
+.prop .qc .q, .prop .cc .q, .prop .gname .r2 .ork-gem, .prop .np .t { font-size: 12px; line-height: 15px; }
+.prop .gname .r2 .ork-gem { min-width: 22px; height: 18px; }
+.prop .pt { min-height: 36px; }
+.prop .qstack, .prop .cstack { width: 156px; height: 170px; }
+.prop .qc .take { height: auto; min-height: 44px; padding: 4px var(--ork-2); }
+
+/* v6: daylight */
+.trio .pair { gap: var(--ork-5); }
+.day .ph { --ork-ink: #f3f0eb; --ork-ink-muted: #c9c5be; --ork-ink-faint: #a8a49d; --ork-card-frame: var(--ork-edge); --ork-frame-strong: var(--ork-edge); --ork-panel: #2a2826;
+  --ork-type-body: 400 17px/24px var(--ork-font-read); --ork-type-caption: 400 15px/20px var(--ork-font-read);
+  --ork-type-label: 600 14px/18px var(--ork-font-read); --ork-type-heading: 500 18px/22px var(--ork-font-pixel); --ork-type-label-track: 0.06em; }
+.light .ph { --ork-canvas: #f4f1ec; --ork-table: #ece8e1; --ork-panel: #ffffff; --ork-card: #ffffff; --ork-card-frame: #6b665e; --ork-frame: #c9c4bb; --ork-frame-strong: #6b665e;
+  --ork-edge: #6b665e; --ork-ink: #161412; --ork-ink-muted: #3f3b35; --ork-ink-faint: #5a554d; --ork-scrim: rgb(0 0 0 / 0.35);
+  --ork-alert: #8a5a00; --ork-success: #2c6e1c; --ork-danger: #b0261c; --ork-action: #2f7a1e;
+  --ork-elem-meadow: #23705f; --ork-elem-ice: #2a55b8; --ork-elem-dust: #84581a; --ork-elem-void: #4f4870; --ork-elem-lava: #93402f; }
+.light .ph { --ork-type-body: 400 17px/24px var(--ork-font-read); --ork-type-caption: 400 15px/20px var(--ork-font-read);
+  --ork-type-label: 600 14px/18px var(--ork-font-read); --ork-type-heading: 500 18px/22px var(--ork-font-pixel); --ork-type-label-track: 0.06em; }
+.day .ph, .light .ph { color: var(--ork-ink); }
+:is(.day, .light) .seg, :is(.day, .light) .asp, :is(.day, .light) .ctr, :is(.day, .light) .ctr2, :is(.day, .light) .pt.read, :is(.day, .light) .chipp.dim,
+:is(.day, .light) .crown, :is(.day, .light) .loopr, :is(.day, .light) .start { border-color: var(--ork-frame-strong); }
+:is(.day, .light) .seg button + button { border-left-color: var(--ork-frame-strong); }
+:is(.day, .light) .asp.alert { border-color: var(--ork-alert); border-width: 2px; }
+:is(.day, .light) .sys { grid-template-columns: 1fr; }
+:is(.day, .light) .pt { min-height: 44px; font-size: 16px; }
+:is(.day, .light) .pt .k { font-size: 13px; font-weight: 600; letter-spacing: .04em; }
+:is(.day, .light) .pt.changed { border-width: 2px; }
+:is(.day, .light) .pt.new { border-width: 2px; }
+:is(.day, .light) .pt .ork-sign.alert { width: 16px; height: 16px; }
+:is(.day, .light) .chipp { height: 36px; font-size: 15px; }
+:is(.day, .light) .chipp.new, :is(.day, .light) .chipp.changed { border-width: 2px; }
+:is(.day, .light) .asp { height: 40px; font-size: 15px; }
+:is(.day, .light) .tabs { height: 64px; }
+:is(.day, .light) .tb, :is(.day, .light) .tb span { font-size: 13px; line-height: 16px; }
+:is(.day, .light) .tb.is-on { box-shadow: inset 0 -4px 0 var(--ork-ink); }
+:is(.day, .light) .seg button { height: 40px; font-size: 15px; }
+:is(.day, .light) .gname .r1 { font-size: 19px; line-height: 24px; }
+:is(.day, .light) .gname .r2 { font-size: 14px; }
+:is(.day, .light) .pot .pct { font-size: 13px; }
+:is(.day, .light) .since li .k { width: 86px; }
+:is(.day, .light) .qstack { width: 168px; height: 176px; }
+:is(.day, .light) .qc .q { font-size: 15px; line-height: 19px; }
+:is(.day, .light) .qc .why { font-size: 13px; line-height: 16px; }
+:is(.day, .light) .qc .take { height: auto; min-height: 48px; padding: 4px var(--ork-2); font-size: 15px; }
+:is(.day, .light) .qc .take small { font-size: 13px; }
+:is(.day, .light) .calm, :is(.day, .light) .die { font-size: 14px; }
+.light .hb::after { background: var(--ork-ink-faint); }
+.light .ork-card-back { filter: invert(.9) hue-rotate(180deg); }
+.note { padding: var(--ork-3) var(--ork-6) var(--ork-8); max-width: 110ch; font: var(--ork-type-body); }
+.note li { margin: var(--ork-2) 0 0 var(--ork-6); list-style: disc; }
+</style>
+</head>
+<body>
+<header class="mk-bar"><span class="ork-label">Orkboard · the phone · daylight: dark and light · v6</span></header>
+<p class="mk-line">v6: the phone in a sunny street. Each lens three times: <b>now</b> (orkUI 0.28), <b>dark, for daylight</b> (the same look pushed:
+ink <code>#f3f0eb</code> 15.6:1, muted <code>#c9c5be</code> 10.3:1, every edge that tells a part or a state on orkUI's own <code>edge</code> 5.2:1, the
+changed and the new 2 px; the type a size up: body 17 px, captions 15, labels 14 bold, part names 16, nothing under 14; System's slice one
+column, a row a part), and <b>light, for daylight</b> (an option, not orkUI's today: dark ink on a light table, which glare washes less;
+it would change the rule that the phone is always drawn dark). 390 × 844. A stand-in party game. Not decided.</p>
+<main class="mk-main" id="main"></main>
+<section class="note">
+<p><b>Open for the owner</b></p>
+<ul>
+<li><b>Dark for daylight</b> keeps the look and orkUI's own colours (its <code>edge</code> for every edge that matters), and takes a bigger type: an orkUI phone scale a size up, and IBM Plex Sans 500 added (orkUI has 400 and 600 only).</li>
+<li><b>Light for daylight</b> reads best in the sun (glare washes dark screens most), but it is a second look for orkUI to make and keep, and it changes CLAUDE.md's <i>the page and the phone are always drawn in it [dark]</i>. Follow the phone's own light or dark setting, a switch in Settings, or never?</li>
+<li>A bigger type means fewer lines on a screen: the lens scrolls more. Acceptable for a few minutes' look?</li>
+</ul>
+</section>
+<script>
+const O = "../../../design-system/orkui/";
+const head = (f, cls = "") => `<img class="ork-race__head ${cls}" src="${O}races/${f}.png" srcset="${O}races/${f}@2x.png 2x" alt="">`;
+const mark = (id, ink = false) => `<img class="ork-mark" src="${O}marks/harness-${id}${ink ? "-ink" : ""}.png" srcset="${O}marks/harness-${id}${ink ? "-ink" : ""}@2x.png 2x" alt="">`;
+const icon = (id) => `<svg class="ork-icon" aria-hidden="true"><use href="${O}icons/icons.svg#${id}"/></svg>`;
+const sign = (s, cls = "") => `<span class="ork-sign ${s} ${cls}" aria-hidden="true"></span>`;
+const elem = (e, big = false) => e ? `<span class="ork-elem ${e}${big ? " big" : ""}"></span>` : `<span class="ork-elem" style="visibility:hidden"></span>`;
+const SB = `<div class="sb"><span>12:47</span><span>●●● 5G ▮</span></div>`;
+const HB = `<div class="hb"></div>`;
+
+const bottle = (id, now, cls = "") => `<button class="pot ${cls}" aria-label="${id}: ${now}% of the 5 hours left; press for every tool">${mark(id)}
+  <span class="slot"><span class="ork-potion small${cls.includes("low") ? " is-warn" : ""}" style="--ork-potion-left:${now / 100}"></span></span><span class="pct">${now}%</span></button>`;
+
+// the one header: the crown, the goal, its tool's bottle
+const HDR = (g, b = bottle("claude", 12, "low")) => `<div class="hdr"><button class="crown" aria-label="The Orkmaster's goals">${head("peon-crown")}</button>
+  <div class="gname"><p class="r1">${elem(g.e)}${sign(g.s)}<span class="t">${g.n}</span></p><p class="r2">${g.meta}</p></div>${b}</div>`;
+const JUMP = { e: "meadow", s: "mechanic", n: "Double jump", meta: `Spec<span>·</span>${sign("moon")}Mon 09:00<span>·</span><span class="ork-gem share">4%</span>about 6 calls` };
+const RECON = { e: "dust", s: "feature", n: "Reconnect", meta: `Work · Tech<span>·</span>in dev since 11:20` };
+
+const TABS = (on, ls) => `<div class="tabs" role="tablist">${ls.map(([h, n], i) =>
+  `<button class="tb${i === on ? " is-on" : ""}" role="tab">${head(h)}<span>${n}</span></button>`).join("")}</div>`;
+const JUMP_TABS = [["peon-crown", "Plan"], ["unicorn-elder", "Game design"], ["shaman-elder", "Tech"], ["dryad-elder", "Art"]];
+const RECON_TABS = [["peon-crown", "Plan"], ["shaman-elder", "Tech"], ["lich-elder", "Release"]];
+
+const TECH = `<div class="mid">
+  <div class="segrow"><div class="seg"><button>Now</button><button class="is-on">Will be</button></div><span class="cap mute">System · 4 parts</span></div>
+  <div class="sys">
+    <div class="ctr"><span class="lab">client</span><div class="pt changed">player/move<span class="k">changed</span></div>
+      <div class="pt new">player/jump<span class="k">new</span></div><div class="pt read">input<span class="k">read</span></div></div>
+    <div class="ctr"><span class="lab">server</span><div class="pt changed">${sign("alert")}physics<span class="k">changed</span></div>
+      <div class="pt read">rooms<span class="k">read</span></div></div></div>
+  <div class="sec"><p class="lab">Tech's concerns here</p><ul class="conc">
+    <li>${sign("alert")}<span>physics is used by 9 parts and was changed 14 times in 30 days.<span class="on">server · physics · Hotspots</span></span></li></ul></div>
+  <div class="sec"><p class="lab">Done when</p><ul class="done">
+    <li>${sign("check")}<span>A second press in the air jumps again, once, half as high.</span></li>
+    <li>${sign("check")}<span>The server agrees with the client on where the player lands.</span></li></ul></div>
+</div>`;
+const TECH_AFTER = `<div class="mid">
+  <div class="segrow"><div class="seg"><button>Before</button><button class="is-on">After</button></div><span class="cap mute">System · in dev</span></div>
+  <div class="sys">
+    <div class="ctr"><span class="lab">client</span><div class="pt changed">net/socket<span class="k">changed</span></div><div class="pt new">net/resume<span class="k">new</span></div></div>
+    <div class="ctr"><span class="lab">server</span><div class="pt new">sessions<span class="k">new</span></div><div class="pt changed">rooms<span class="k">changed</span></div>
+      <div class="pt new">redis<span class="k">new</span></div></div></div>
+  <div class="sec"><p class="lab">Done when</p><ul class="done">
+    <li>${sign("check")}<span>A player who loses the network for 20 s is back in the same room.</span></li></ul></div>
+</div>`;
+
+// the foot: the + card, the hand, the die
+const DIE = (st, word) => `<button class="die ${st}" aria-label="Play: ${word}"><span class="ork-die face-5" aria-hidden="true"><span class="ork-die__cube"><i class="ork-die__face is-up"></i><i class="ork-die__face is-front"></i><i class="ork-die__face is-right"></i><i class="ork-die__face is-back"></i><i class="ork-die__face is-left"></i><i class="ork-die__face is-down"></i></span></span><span>${word}</span></button>`;
+const QSTACK = `<div class="qstack"><article class="ork-card qc"><p class="h">${elem("meadow")}${sign("question")}${head("unicorn-elder")}</p>
+  <p class="q">How high is the second jump?</p><p class="why">Tech waits for it.</p>
+  <button class="take">Half<small>Game design's pick · one tap</small></button></article></div>`;
+const stub = (e, s, cls = "", a = 0) => `<button class="stub ${cls}" style="--a:${a}deg">${elem(e)}${sign(s)}</button>`;
+const STUBS = stub("ice", "question", "asks", 1.5) + stub("dust", "release", "ready", -1);
+const FOOT = (hand, die, cls = "") => `<div class="foot ${cls}"><button class="plus" aria-label="New goal">${icon("plus")}</button><div class="hand">${hand}</div>${die}</div>`;
+
+// the menu
+const gr = (e, s, n, right, cls = "") => `<button class="gr ${cls}">${elem(e)}${sign(s)}<span class="nm2">${n}</span>${right}</button>`;
+const hs = (...h) => `<span class="hs">${h.map((x) => head(x)).join("")}</span>`;
+const ask = sign("question");
+const PILES = `<div class="piles">
+  <div class="grp"><p class="sub lab">In analysis</p>
+    <div class="an"><span class="backs"><span class="ork-card-back"></span><span class="ork-card-back"></span><span class="ork-card-back"></span></span>
+      <span class="rd">Being read<b>Coins in the sky</b></span></div>
+    <button class="down"><span class="ork-card-back"></span><span>Pause menu sounds</span>${icon("pencil")}</button></div>
+  <div class="grp"><p class="sub lab">To review</p>
+    ${gr("meadow", "mechanic", "Double jump", `<span class="ph2">${ask}${sign("moon")}Mon 09:00</span>`, "%ON%")}
+    ${gr("lava", "chart", "Leaderboard", `<span class="ph2">in 3 h</span>`)}</div>
+  <div class="grp"><p class="sub lab">At work · later</p>
+    ${gr("dust", "feature", "Reconnect", hs("shaman-elder", "lich-elder"))}
+    ${gr("ice", "screen", "Lobby", `<span class="ph2">${ask}</span>${hs("dryad-elder")}`)}
+    ${gr("void", "sound", "Sound pass", `<span class="ph2">${sign("moon")}tonight</span>`)}</div>
+  <div class="grp"><p class="sub lab">Done</p>
+    <div class="donepile"><span class="dp"><span class="ork-card-back"></span><span class="ork-card">${sign("check")}</span></span>
+      <span class="ls"><b>Sign-in</b>and Combo scoring, this week</span></div></div>
+</div>
+<div class="leaders"><p class="sub lab">The leaders</p><div class="lrow">
+  <button aria-label="Game design">${head("unicorn-elder")}</button><button aria-label="Tech">${head("shaman-elder")}</button><button aria-label="Art">${head("dryad-elder")}</button>
+  <button aria-label="Release">${head("lich-elder")}</button><button aria-label="LiveOps">${head("imp-elder")}</button><button aria-label="Marketing">${head("fairy-elder")}</button></div></div>`;
+const MH = (b) => `<div class="mh">${head("peon-crown")}<button class="proj">Party game ${icon("chevron-down")}</button>
+  <button class="ico" aria-label="Settings">${icon("sliders")}</button><button class="ico stop" aria-label="Stop all">${icon("boarded")}</button>${b || ""}</div>`;
+const MENU_OVER = `<div class="scrim"></div><nav class="menu" aria-label="The Orkmaster's goals">${MH()}${PILES.replace("%ON%", "is-on")}</nav>`;
+const MENU_HOME = `<nav class="menu home" aria-label="The Orkmaster's goals">${PILES.replace("%ON%", "").replace(ask + sign("moon"), sign("moon")).replace(`<span class="ph2">${ask}</span>`, "")}</nav>`;
+
+const PICKER = `<div class="scrim" style="top:111px"></div><div class="drop" role="dialog" aria-label="The tools">
+  <p class="lab">The tools · Double jump runs on Claude Code</p>
+  <div class="tool is-on">${bottle("claude", 12, "low")}<span class="nm">Claude Code<small>5 hours: 12% left · week: 31% left · resets Mon 09:00</small></span><span class="tag">this goal</span></div>
+  <div class="tool">${bottle("codex", 58, "bare")}<span class="nm">Codex<small>5 hours: 58% left · week: 70% left</small></span></div>
+  <div class="tool">${bottle("cursor", 80, "bare")}<span class="nm">Cursor<small>5 hours: 80% left · week: 91% left</small></span></div>
+  <button class="ork-btn">Read and make Double jump on Codex</button>
+  <p class="cap mute">A spec may read differently on another model. Claude Code stays the default.</p></div>`;
+
+const LIFT = `<div class="scrim"></div><article class="ork-card lift"><p class="h">${elem("meadow")}<span>How high is the second jump?</span>${head("unicorn-elder")}</p>
+  <p class="why">Tech waits for it to write the jump. Game design's pick: half the first.</p>
+  <div class="chs"><button class="ork-card ch pick"><span class="n">Half</span><span class="w">Game design's pick</span></button>
+    <button class="ork-card ch"><span class="n">The same</span><span class="w">Easier to reach coins</span></button>
+    <button class="ork-card ch"><span class="n">A third</span><span class="w">A small correction only</span></button>
+    <button class="ork-card ch other">${icon("plus")}<span class="n">Other…</span></button></div>
+  <button class="ork-btn quiet decide">Let Game design decide</button></article>`;
+
+const PLAYSHEET = `<div class="scrim"></div><div class="sheet" role="dialog" aria-label="Play Reconnect">
+  <span class="grab"></span>
+  <p class="sh-h">${elem("dust")}Reconnect is in dev<span class="lab">away from home</span></p>
+  <p class="line">The build runs on your computer, by its own command. Away from home it sends pictures of the screens this goal changes; at home, on its Wi-Fi, the game opens here.</p>
+  <div class="shots"><button class="shot changed"><span class="pic">${sign("big screen")}</span>Lobby</button>
+    <button class="shot changed marked"><span class="pic">${sign("big screen")}</span>Reconnecting…</button>
+    <button class="shot changed"><span class="pic">${sign("big screen")}</span>Back in the room</button></div>
+  <p class="line">Press a picture and draw round a place to tell a leader what is wrong there.</p>
+  <div class="acts"><button class="ork-btn grow">Mark on Reconnecting…</button><button class="ork-btn quiet danger">${icon("stop")}Stop the build</button></div></div>`;
+
+const EMPTY = `<div class="first"><h3>Party game</h3><p>Your leaders are ready. Drop a goal: a line is enough, the Orkmaster finds whose it is.</p>
+  <div class="lrow">${[["unicorn-elder", "Game design"], ["shaman-elder", "Tech"], ["dryad-elder", "Art"], ["lich-elder", "Release"], ["imp-elder", "LiveOps"], ["fairy-elder", "Marketing"]]
+    .map(([h, n]) => `<button>${head(h)}<span>${n}</span></button>`).join("")}</div></div>`;
+
+
+// v3: the project's screen
+const PILES_ONLY = PILES.slice(0, PILES.indexOf('<div class="leaders">')).replace("%ON%", "");
+const PILES_CALM = PILES_ONLY.replace(ask + sign("moon"), sign("moon")).replace(`<span class="ph2">${ask}</span>`, "");
+const HOME_HDR = (b = bottle("claude", 62)) => `<div class="hdr"><button class="proj">Party game ${icon("chevron-down")}</button>
+  <button class="ico" aria-label="Settings">${icon("sliders")}</button><button class="ico stop" aria-label="Stop all">${icon("boarded")}</button>${b}</div>`;
+const LEADS = [["peon-crown", "The Orkmaster"], ["unicorn-elder", "Game design"], ["shaman-elder", "Tech"], ["dryad-elder", "Art"], ["lich-elder", "Release"], ["imp-elder", "LiveOps"], ["fairy-elder", "Marketing"]];
+const PTABS = (on) => `<div class="ptabs" role="tablist">${LEADS.map(([h, n], i) => `<button class="${i === on ? "is-on" : ""}" role="tab" aria-label="${n}">${head(h)}</button>`).join("")}</div>`;
+const PTITLE = (n, w) => `<p class="ptitle"><b>${n}</b><span>${w}</span></p>`;
+
+const HOME_BOARD = (calm) => PTABS(0) + PTITLE("The Orkmaster", "what, and who") + `<div class="home2">${calm ? PILES_CALM : PILES_ONLY}</div>`;
+const asp = (n, st, sg) => `<button class="asp ${st}">${sg === "eye" ? icon("eye") : sign(sg)}${n}</button>`;
+const HOME_TECH = PTABS(2) + PTITLE("Tech", "how it is built") + `<div class="mid">
+  <div class="sec"><p class="lab">Since your last look · 09:12</p><ul class="since">
+    <li><span class="k new">new</span><span>net/resume, sessions, redis<span class="by">${elem("dust")}by Reconnect</span></span></li>
+    <li><span class="k">changed</span><span>rooms<span class="by">${elem("dust")}by Reconnect</span></span></li>
+    <li><span class="k">changed</span><span>physics<span class="by">by you, 2 commits</span></span></li></ul></div>
+  <div class="sec"><p class="lab">Concerns by Tech's rubric</p><div class="aspects">
+    ${asp("Hotspots", "alert is-on", "alert")}${asp("Coupling", "", "flag")}${asp("Modularity", "ok", "check")}${asp("Testability", "", "flag")}${asp("Security", "unseen", "eye")}</div>
+    <ul class="conc"><li>${sign("alert")}<span>physics is used by 9 parts and was changed 14 times in 30 days.<span class="on">server · physics</span></span></li></ul></div>
+  <div class="sec"><p class="lab">System</p><div class="cmap">
+    <div class="ctr2"><span class="lab">client · React</span><div class="row">
+      <span class="chipp">pages</span><span class="chipp">player/move</span><span class="chipp">input</span><span class="chipp new">net/resume</span><span class="chipp changed">net/socket</span><span class="chipp dim">ui</span></div></div>
+    <div class="ctr2"><span class="lab">server · Express, socket.io</span><div class="row">
+      <span class="chipp changed">rooms</span><span class="chipp">${sign("alert")}physics</span><span class="chipp new">sessions</span><span class="chipp new">redis</span><span class="chipp dim">routes</span></div></div>
+    <div class="ctr2"><span class="lab">shared</span><div class="row"><span class="chipp">config</span><span class="chipp dim">types</span></div></div></div></div>
+</div>`;
+const HOME_GD = PTABS(1) + PTITLE("Game design", "what it is to play") + `<div class="mid">
+  <div class="sec"><p class="lab">Since your last look · 09:12</p><ul class="since">
+    <li><span class="k">changed</span><span>Core · Move: feeling Challenge, 3 → 4<span class="by">${elem("meadow")}proposed by Double jump</span></span></li></ul></div>
+  <div class="sec"><p class="lab">Concerns by Game design's rubric</p><div class="aspects">
+    ${asp("Economy", "alert is-on", "alert")}${asp("Loops", "ok", "check")}${asp("Flow", "", "flag")}${asp("Hooks", "unseen", "eye")}</div>
+    <ul class="conc"><li>${sign("alert")}<span>Coins are only earned: nothing takes them.<span class="on">currency · Coins</span></span></li></ul></div>
+  <div class="sec"><p class="lab">Loop</p>
+    <div class="loopr"><span class="lab">Core · seconds</span><div class="steps"><span class="st2 changed">Move</span><span class="ar">→</span><span class="st2">Grab a coin</span><span class="ar">→</span><span class="st2">Dodge</span></div></div>
+    <div class="loopr"><span class="lab">Session · minutes</span><div class="steps"><span class="st2">Join a room</span><span class="ar">→</span><span class="st2">Round</span><span class="ar">→</span><span class="st2">Scores</span></div></div>
+    <div class="loopr"><span class="lab">Meta · days</span><div class="steps"><span class="st2">Daily quests</span><span class="ar">→</span><span class="st2">Cosmetics</span></div></div>
+    <div class="cur"><span>${sign("alert")}Coins</span><span>Stars</span></div></div>
+</div>`;
+
+const CROWN_HOME = (h) => h.replace('<button class="crown" aria-label="The Orkmaster\'s goals">', '<button class="crown home" aria-label="Back to the project">');
+const EDIT = `<div class="scrim"></div><div class="sheet" role="dialog" aria-label="Your goal">
+  <span class="grab"></span>
+  <p class="sh-h"><span class="ork-card-back" style="width:14px;height:20px"></span>Pause menu sounds<span class="lab">In analysis · yours</span></p>
+  <p class="yours">The pause menu should sound like the rest: the clicks are louder than the music and the back sound is missing.</p>
+  <textarea class="ork-field add" placeholder="Add to it: a line its leaders take at their next step">Only on the pause menu, not the title screen.</textarea>
+  <div class="acts"><button class="ork-btn primary grow">Add to it</button><button class="ork-btn quiet">${icon("pencil")}Rewrite</button><button class="ork-btn quiet danger" aria-label="Remove">${icon("trash")}</button></div>
+  <p class="warn">Adding starts nothing again. <b>Rewrite</b> starts the reading again: the leaders began, about 2 calls spent so far.</p></div>`;
+const EMPTY_BOARD = PTABS(0) + PTITLE("The Orkmaster", "what, and who") + `<div class="first"><p>No goal yet. Drop one: a line is enough, the Orkmaster finds whose it is.</p>
+  <p class="cap mute">Meanwhile your leaders have read the project: open one above.</p></div>`;
+const EMPTY_TECH = HOME_TECH.replace(/<div class="sec"><p class="lab">Since your last look[\s\S]*?<\/ul><\/div>/, `<div class="sec"><p class="lab">First look</p><p class="cap mute">Tech read your code: 2 containers, what they share, 10 parts. Nothing has changed yet.</p></div>`)
+  .replace(/<span class="chipp new">[^<]*<\/span>/g, "").replace(/chipp changed/g, "chipp");
+
+
+// v4: the header of four places; the tabs the leaders' only
+const UP = (ic, l) => `<button class="up" aria-label="${l}">${icon(ic)}</button>`;
+const CROWN = (on) => `<button class="crown ${on ? "on" : "off"}" aria-label="The Orkmaster" aria-pressed="${on}">${head("peon-crown")}</button>`;
+const H_PROJ = (on, b = bottle("claude", 62)) => `<div class="hdr">${UP("folder", "Your projects")}${CROWN(on)}<p class="ptl">Party game</p>
+  <button class="ico" aria-label="Settings">${icon("sliders")}</button><button class="ico stop" aria-label="Stop all">${icon("boarded")}</button>${b}</div>`;
+const H_GOAL = (g, on, b = bottle("claude", 62)) => `<div class="hdr">${UP("chevron-left", "Back to the project")}${CROWN(on)}
+  <div class="gname"><p class="r1">${elem(g.e)}${sign(g.s)}<span class="t">${g.n}</span></p><p class="r2">${g.meta}</p></div>${b}</div>`;
+const ALL = [["unicorn-elder", "Game design"], ["shaman-elder", "Tech"], ["dryad-elder", "Art"], ["lich-elder", "Release"], ["imp-elder", "LiveOps"], ["fairy-elder", "Marketing"]];
+const LB = { e: "lava", s: "chart", n: "Leaderboard", meta: `To review<span>·</span>${icon("clock")}13:40<span>·</span><span class="ork-gem share">3%</span>5 calls` };
+const LB_HELD = { ...LB, meta: `To review<span>·</span>held<span>·</span><span class="ork-gem share">3%</span>5 calls` };
+const LB_TABS = [["shaman-elder", "Tech"], ["dryad-elder", "Art"], ["imp-elder", "LiveOps"]];
+const J_TABS = [["unicorn-elder", "Game design"], ["shaman-elder", "Tech"], ["dryad-elder", "Art"]];
+const OTITLE = (b, w) => `<p class="otitle"><b>${b}</b>${w}</p>`;
+
+const PILES4 = PILES_CALM.replace(`<span class="ph2">in 3 h</span>`, `<span class="ph2">${icon("clock")}13:40</span>`);
+const PROJ_BOARD = OTITLE("The Orkmaster", "what, and who") + `<div class="home2">${PILES4}</div>`;
+const TECH_LENS = HOME_TECH.replace(PTABS(2) + PTITLE("Tech", "how it is built"), "");
+
+const PLAN_LB = `<div class="sec"><p class="lab">The plan</p><ul class="plan2">
+    <li>${head("shaman-laborer")}<span>Scores table and its API</span><span class="st">Tech</span></li>
+    <li>${head("dryad-laborer")}<span>The board's screen in the lobby</span><span class="st">Art</span></li>
+    <li>${head("imp-laborer")}<span>A season's reset, on the calendar</span><span class="st">LiveOps</span></li></ul></div>
+  <div class="sec"><p class="lab">Done when</p><ul class="done"><li>${sign("check")}<span>A player sees the top ten and their own place after a round.</span></li></ul></div>`;
+const START = (held) => `<div class="start">
+    <p class="when">${icon("clock")}${held ? "Held while you write" : "Starts by itself at 13:40"}</p>
+    <div class="qbar${held ? " held" : ""}"><i></i></div>
+    <p class="cap">${held ? "It will not start until you send or close the change." : "If you do not look, it starts: you give every spec 2 hours (Settings)."}</p>
+    ${held ? "" : `<div class="acts2"><button class="ork-btn grow">${icon("pencil")}Change the spec</button><button class="ork-btn quiet">Start now</button><button class="ork-btn quiet">Later</button></div>`}</div>`;
+const ORK_REVIEW = (held) => OTITLE("The Orkmaster", "the plan of this goal") + `<div class="mid">${START(held)}${PLAN_LB}</div>`;
+
+const CHANGE = `<div class="scrim" style="top:111px"></div><div class="sheet" role="dialog" aria-label="Change the spec">
+  <span class="grab"></span>
+  <p class="sh-h">${elem("lava")}Change the spec<span class="lab">to the Orkmaster</span></p>
+  <textarea class="ork-field add">Weekly, not all-time: the board starts again on Monday, and the top three wear a crown in the lobby.</textarea>
+  <p class="to">It goes to ${head("shaman-elder")}Tech ${head("dryad-elder")}Art ${head("imp-elder")}LiveOps · <span class="ork-gem share">1%</span>about 3 calls</p>
+  <p class="cap mute">The Orkmaster passes it to the leaders whose sections it touches. To ask one leader, write @Tech.</p>
+  <div class="acts"><button class="ork-btn primary grow">Send to the Orkmaster</button><button class="ork-btn quiet">Close</button></div></div>`;
+
+const CSTACK = `<div class="cstack"><article class="ork-card cc"><p class="h">${elem("lava")}${sign("page")}<span style="margin-left:auto">${head("peon-crown")}</span></p>
+  <p class="q">Leaderboard: your change, in 3 sections</p><span class="hs2">${head("shaman-elder")}${head("dryad-elder")}${head("imp-elder")}</span>
+  <span class="look">Press to look</span></article></div>`;
+const CLIFT = `<div class="scrim"></div><article class="ork-card clift">
+  <p class="h">${elem("lava")}${sign("page")}Leaderboard: your change<span style="margin-left:auto">${head("peon-crown")}</span></p>
+  <p class="said">Weekly, not all-time: the board starts again on Monday, and the top three wear a crown in the lobby.</p>
+  <div class="itabs"><button class="is-on">${head("shaman-elder")}Tech</button><button>${head("dryad-elder")}Art</button><button>${head("imp-elder")}LiveOps</button></div>
+  <div class="np"><div><span class="lab">Now</span><span class="t"><span class="op"> </span>One scores table, all-time</span><span class="t"><span class="op"> </span>Its API: the top ten</span></div>
+    <div class="pr"><span class="lab">Proposed</span><span class="t"><span class="op">~</span>A table a week</span><span class="t"><span class="op add">+</span>Reset on Monday 00:00</span><span class="t"><span class="op">~</span>Its API: this week's ten</span></div></div>
+  <p class="cost">The three sections agree (the Orkmaster joined them). About 2 calls more. Accepted, it starts now: about 5 calls · 3% of Claude's week.</p>
+  <div class="acts2"><button class="ork-btn primary grow">Accept and start</button><button class="ork-btn quiet">Talk more</button><button class="ork-btn quiet danger">Drop it</button></div></article>`;
+
+const FOOTL = (hand, die) => FOOT(hand, die, "low");
+const pairs = [
+  ["1 · The project: Tech's lens", "What changed, the concerns by aspect, the map made small. Dark for daylight: the edges on orkUI's edge, the type a size up. Light for daylight: the same on a light table.",
+    H_PROJ(false) + TABS(1, ALL) + TECH_LENS + FOOTL(`<p class="calm">Nothing to decide</p>`, DIE("ink", "dev"))],
+  ["2 · A goal's slice: Tech, Will be", "The slice one column, a row a part, its word bold; the changed and the new 2 px; the raised question's lines 13–15 px.",
+    H_GOAL(JUMP, false, bottle("claude", 12, "low")) + TABS(1, J_TABS) + TECH + FOOT(QSTACK + STUBS, DIE("off", "spec"))],
+];
+document.getElementById("main").innerHTML = pairs.map(([t, p, body]) =>
+  `<section class="mk-pair trio"><h2>${t}</h2><p>${p}</p><div class="pair">
+    <figure><figcaption>Now (orkUI 0.28)</figcaption><div class="ph">${SB}${body}${HB}</div></figure>
+    <figure class="day"><figcaption>Dark, for daylight</figcaption><div class="ph">${SB}${body}${HB}</div></figure>
+    <figure class="light"><figcaption>Light, for daylight (an option)</figcaption><div class="ph">${SB}${body}${HB}</div></figure></div></section>`).join("");
+</script>
+</body>
+</html>
