@@ -4897,3 +4897,53 @@ day job, and wants to turn to their own project for a few minutes during the day
 9. **Checked before it is relied on**: Claude-Code-Game-Studios' licence, its stars, whether it has a Marketing role;
    Conductor's *100,000 users* (the vendor's own).
 The owner's call.
+
+## 219. The phone's app comes up the line; away from home the hand goes through a sealed mailbox (Cloudflare Durable Objects behind our own `mailbox`), push through FCM; Tailscale stays an optional way to the whole Board, which is the app's next wave; a sleeping computer and what the mailbox sees are said plainly (3 November 2026, the owner)
+
+Changes: 174, 180, 218; spec 34, spec 103.
+
+Why: after §218 (the indie developer with a day job, the phone half the product) the owner asked whether the phone needs
+a full native app rather than the PWA, then whether Tailscale can be replaced with no loss of safety, whether the relay
+could be Firebase, and which of Google, Amazon and Microsoft fits by price and by what it can do. What was found: the
+native frame is already decided (§174, spec 103: Capacitor round the one page, iOS first) but not built (no `mobile/`);
+an installed web app on an iPhone has no action in a notification, no widget, and push only once added to the home
+screen, the three things a few minutes at work rest on; and today the phone reaches the computer only on the same
+network or through Tailscale on both (spec 34), while §174's relay carries push alone, so away from home a
+notification arrives and cannot be answered without Tailscale, which a work phone may not allow. The trust is already
+made at pairing: the phone pins the computer's certificate from the QR on its screen, so what carries the bytes need
+not be trusted. Measured for our load (a computer on line all day and quiet, a phone or two now and then, small
+messages): Firebase's Realtime Database is a mailbox with a good SDK but no stream, under Google's SDK and rules;
+Amazon (API Gateway's WebSockets with Lambda and DynamoDB, or IoT Core) fits but is several services and IAM to keep;
+Microsoft's Web PubSub has a paid unit a day whatever the load and no queue of its own, its Notification Hubs no public
+price; Cloudflare's Durable Objects give one object a pair (a mailbox, its WebSockets, its storage, its alarms), an idle
+hibernating connection billed by no time, and can later splice a stream. So:
+1. **The native frame comes up the line**: spec 103's `mobile/` (Capacitor, iOS first, then Android) is built beside the
+   engines (§218.4), the two sharing no file. Capacitor stays: the page is the one face (a React Native or Flutter app
+   would be a second one); native code only where the page cannot (opening a sealed push, the widgets, a notification's
+   actions, the orientation).
+2. **Away from home, the hand through a sealed mailbox**: the phone's hand (its answers, a small snapshot of the hand,
+   the lines of *what changed since your last look*, §218.3) goes through a mailbox of ours, each message sealed end to
+   end with keys made at pairing (libsodium: X25519 and XChaCha20-Poly1305 or Noise, never our own crypto), a counter
+   inside the seal against replays. The computer opens no port for it: it holds an outgoing connection. **A message waits
+   while the computer sleeps** and is taken when it wakes, then deleted (an alarm deletes what is left after
+   MAILBOX_TTL); nothing is kept beyond its delivery.
+3. **The mailbox is Cloudflare Durable Objects, behind our own interface** (`mailbox`: put, take, delete, present): one
+   object a paired computer and its phones; only a pair registered at pairing gets in (the phone proves it by the key the
+   pairing gave it), with limits, so it is never a free tunnel; a phone removed from the paired list is cut from the
+   mailbox at once. Firebase is the way back if Cloudflare fails a region or a price; the interface keeps the change in
+   one module.
+4. **Push through FCM** for Android and iOS (FCM delivers to iOS through APNs); §174.5's checks stand (the push sealed to
+   the device, signed by the paired computer, checked before it is passed on), done by the same Worker, so the relay of
+   §174 and the mailbox are one service of ours.
+5. **Tailscale stays an optional way to the whole Board**, direct, as spec 34 has it. **The whole Board away from home
+   is the app's next wave**: then the same Durable Object splices the phone's and the computer's streams and the
+   pinned TLS runs through it untouched (a blind relay, as TURN is); not before the hand works through the mailbox.
+6. **Said plainly**: in Settings, *Away from home your phone talks to this computer through Orkboard's relay; what it
+   carries is sealed, the relay sees only that you are in touch, and keeps nothing*; and on the phone, when the computer
+   is not present, *Your computer is asleep or offline: work waits, your answers will reach it when it wakes*. Settings
+   offer to keep the computer awake while work runs.
+7. **Checked before it is built**: Cloudflare's and FCM's reach in the countries of the people it is for; the prices on
+   the official pages (Durable Objects' requests and duration, FCM's none); Apple's and Google's accounts (about $99 a
+   year, $25 once).
+8. The spec builds 1–4 and 6 (spec 103 widened: the relay part becomes the mailbox's Worker); 5's stream is a later spec.
+The owner's call.
