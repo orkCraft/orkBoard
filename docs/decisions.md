@@ -5558,7 +5558,8 @@ others; a spec is harder: the leaders are asked again and the project's state ch
 decisions on its spec, each decision cut into the leaders' slices, the key conclusion for that slice and a link to its
 reason, and can change decisions in a cascade from its craft*. Then, asked three things: *every leader the decision
 touches, not only the route's: more tokens, but every leader sure to get the right context*; *only the new ones, from this
-decision on*; *deeper, with a reasonable limit*. Today the decision's call reads the decisions file's last ten headings
+decision on*; *deeper, with a reasonable limit*; and, asked whether a leader so knows every decision and every later change of its
+slice: *yes: add what a slice replaced, and fold what passes the bound instead of cutting it*. Today the decision's call reads the decisions file's last ten headings
 only (spec 99 §6.1) and a section its own goal's decision (§7.2): a conflict with an earlier decision shows as a fork
 after the sections are paid for, or not at all, and a leader that finds a decision wrong for its craft can only ask.
 Changing decisions is cheap and rewriting sections dear, so the cascade runs deep in the decisions and touches the
@@ -5570,12 +5571,18 @@ sections once, at its end. So:
    the decision touches gets one, on the goal's route or not, Release too; *none* is an answer and is kept, so no leader
    is left out unseen. One call a decision, not one a leader.
 2. **A slice is never edited**, by the person or a leader: a change is a new decision (5–8), and its cut replaces the
-   slices that rest on the points it changes (`replaced_by`), the old ones kept and no longer read. Slices are kept beside
+   slices that rest on the points it changes (`replaced_by`), the old ones kept and no longer read. **The new slice says
+   once what it replaced**: *the screen holds 6 seconds (§240.2); was 10 seconds (§159.1)*, so the leader knows what moved
+   and why and does not propose the old one back; the *was* goes at the slice's next replacement. Slices are kept beside
    the facts (§153.4), `<state_dir>/slices.json`, `{party: [{decision, points, says, at, replaced_by}]}`; they are derived,
    so a missing file is cut again from the decisions file (for the decisions this one covers, 4).
 3. **Read into every leader's call** beside its facts (`project_facts.for_call`): its standing slices, the newest first,
-   each with its link, bounded as the brief is (about 1,000 characters; beyond it, the oldest as their links alone). A
-   member reads none: its leader's brief carries what it needs. **The decision's call reads them too**: the standing
+   each with its link, bounded as the brief is (about 1,000 characters). **Past the bound they are folded, not cut**: one
+   call of the leader on the cheaper tier, no tools (step `slice_digest`, as the journal's digest, spec 125 §D), given its
+   old digest and the slices past the bound, writes its craft's digest of them with their links; the call then reads the
+   digest and the newest slices whole, and the folded slices are kept and no longer read one by one. A slice replaced
+   later is folded out of the digest at the next fold. A member reads none: its leader's brief carries what it needs.
+   **The decision's call reads them too**: the standing
    slices of the route's leaders and of those whose parts of the map the goal touches, so a conflict with an earlier
    decision is seen and said in the decision, before any section is written.
 4. **Only the new**: decisions from this one on are cut; the earlier are not. Until the slices fill, the last ten headings
@@ -5608,7 +5615,8 @@ sections once, at its end. So:
 11. **The words** (`TERMS`): `slice` (*slice*: a leader's part of a decision), `cascade` (*cascade*); *Proposes*,
     *Agrees*, *Disagrees*, *Stopped after <n> steps*.
 12. **Built** by a spec of its own (spec 131), its parts by the cheaper model: **A. Slices** (the cut, the store, the
-    reading into the calls and the decision's call: host only, no face; merged on its own, useful alone); **B. The
+    *was* line, the fold, the reading into the calls and the decision's call: host only, no face; merged on its own, useful
+    alone); **B. The
     proposal and the cascade** (host: the proposal in a leader's answer, the links followed, the steps, the bounds, the
     card's row); **C. Faces** (the card in the hand, the slices in the one place of the parties). Each part merged into
     main as its own tests and the critical ones are green.
