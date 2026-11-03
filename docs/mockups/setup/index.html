@@ -125,7 +125,8 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
 .chips { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
 .chips .ork-chip { font: var(--ork-type-caption); text-transform: none; letter-spacing: 0; color: var(--ork-ink-muted); }
 
-/* the shelf: every AI tool found, in its groups */
+/* the card that adds one AI tool */
+.addcard { width: 300px; }
 .shelf { width: 380px; }
 .shelf .grp { display: flex; flex-direction: column; gap: var(--ork-2); }
 .trow { display: grid; grid-template-columns: 20px minmax(0, 1fr) auto; align-items: center; gap: var(--ork-2) var(--ork-3); padding: var(--ork-2) 0; border-top: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); }
@@ -153,7 +154,7 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
 .order .me { padding: 2px var(--ork-2); border: 2px solid var(--ork-ink); clip-path: var(--ork-notch); }
 
 /* the parties: the Orkmaster's large card, lying on the table */
-.partycard { position: absolute; z-index: 25; left: 16px; top: 14px; width: 800px; padding: var(--ork-4) var(--ork-5); display: flex; flex-direction: column; gap: var(--ork-2); }
+.partycard { position: absolute; z-index: 25; left: 24px; top: 14px; width: 620px; padding: var(--ork-4) var(--ork-5); display: flex; flex-direction: column; gap: var(--ork-2); }
 .later { display: flex; align-items: center; gap: var(--ork-3); padding: var(--ork-2) 0; border-top: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .later img { opacity: 0.6; }
 .pc-head { display: flex; align-items: flex-end; gap: var(--ork-5); }
@@ -166,36 +167,33 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
 .stage.here h3 { color: var(--ork-ink); }
 .stage .here-w { font: var(--ork-type-caption); padding: 1px var(--ork-3); border: var(--ork-line) solid var(--ork-ink); clip-path: var(--ork-notch); }
 .stage .set-w { font: var(--ork-type-caption); color: var(--ork-ink-faint); text-decoration: underline; }
-.prow { display: grid; grid-template-columns: 18px 48px minmax(0, 1fr) 176px 196px 84px; align-items: center; gap: var(--ork-3) var(--ork-4);
-  padding: var(--ork-2) 0; border-top: var(--ork-line) solid var(--ork-frame); }
+.prow { display: grid; grid-template-columns: 18px 56px minmax(0, 1fr) auto; grid-template-areas: "t l n s" ". l m m"; align-items: center; gap: var(--ork-1) var(--ork-4);
+  padding: var(--ork-3) 0; border-top: var(--ork-line) solid var(--ork-frame); }
+.prow > .tick { grid-area: t; }
+.prow > .lead { grid-area: l; position: relative; align-self: start; width: 48px; }
+.prow > .pname { grid-area: n; font-weight: 600; }
+.prow > .sizes { grid-area: s; }
+.prow > .team { grid-area: m; display: flex; align-items: center; gap: var(--ork-5); }
+.lmark { position: absolute; right: -6px; bottom: -6px; display: flex; padding: 1px; background: var(--ork-card); border: 1px solid var(--ork-edge); }
+.lmark.fr { border: 2px solid var(--ork-ink); clip-path: var(--ork-notch); }
+.lmark img { width: 16px; height: 16px; image-rendering: pixelated; display: block; }
+.team .grp { display: flex; align-items: center; gap: 3px; }
+.team .grp .ork-sign { margin-right: var(--ork-2); color: var(--ork-ink-muted); }
+.team .grp + .grp { padding-left: var(--ork-5); border-left: var(--ork-line) solid var(--ork-frame); }
+.team .grp.dim { opacity: 0.55; }
+.team .hd { position: relative; display: inline-block; }
+.team .hd img { image-rendering: pixelated; display: block; }
+.team .hd.empty img { filter: brightness(0); opacity: 0.45; }
+.team .hd .own { position: absolute; right: -4px; bottom: -4px; padding: 1px; background: var(--ork-card); border: 1px solid var(--ork-edge); }
+.team .hd .own img { width: 10px; height: 10px; }
+.sizes { display: inline-flex; border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); }
+.sizes > span { padding: 1px var(--ork-3); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); line-height: 18px; }
+.sizes > span + span { border-left: var(--ork-line) solid var(--ork-edge); }
+.sizes > span.on { background: var(--ork-ink); color: var(--ork-on-ink); }
+.sizes.locked > span:not(.on) { opacity: 0.35; }
 .tick { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border: var(--ork-line) solid var(--ork-edge); font-size: 12px; }
 .tick.on { border-color: var(--ork-ink); }
 .tick.locked { border-style: dashed; color: var(--ork-ink-muted); }
-.prow.off { color: var(--ork-ink-muted); }
-.prow.off img { opacity: 0.45; }
-.prow .who b { display: block; font-weight: 600; }
-.prow .who span { display: block; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
-.prow .team { display: flex; align-items: flex-end; gap: 2px; margin-top: var(--ork-2); }
-.prow .team img { image-rendering: pixelated; }
-.prow .team .hd { position: relative; display: inline-block; padding: 1px; }
-.prow .team .hd.lead { padding-right: var(--ork-3); margin-right: var(--ork-2); border-right: var(--ork-line) solid var(--ork-frame); }
-.prow .team .hd.on { outline: 2px solid var(--ork-ink); outline-offset: 0; }
-.prow .team .hd .own { position: absolute; right: -3px; bottom: -3px; width: 12px; height: 12px; background: var(--ork-canvas); border: 1px solid var(--ork-edge); }
-.prow .team .hd .own img { width: 10px; height: 10px; display: block; }
-.sizes { display: inline-flex; border: var(--ork-line) solid var(--ork-edge); clip-path: var(--ork-notch); }
-.sizes > span { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: var(--ork-1) var(--ork-2); font: var(--ork-type-caption); color: var(--ork-ink-muted); min-width: 56px; }
-.sizes > span + span { border-left: var(--ork-line) solid var(--ork-edge); }
-.sizes > span.on { background: var(--ork-raised); color: var(--ork-ink); box-shadow: inset 0 -2px 0 var(--ork-ink); }
-.sizes .pips { display: flex; gap: 2px; }
-.sizes .pips i { width: 5px; height: 5px; background: var(--ork-edge); }
-.sizes > span.on .pips i { background: var(--ork-ink); }
-.sizes.locked > span:not(.on) { opacity: 0.35; }
-.ptool { display: flex; align-items: center; gap: var(--ork-2); }
-.ptool .fr { display: inline-flex; padding: 2px; border: 2px solid var(--ork-ink); clip-path: var(--ork-notch); }
-.ptool .ork-select { flex: 1; min-width: 0; }
-.ptool .ork-field { height: 28px; font: var(--ork-type-caption); }
-.price { text-align: right; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
-.price .ork-gem { margin-bottom: 2px; }
 .pc-foot { display: flex; align-items: center; gap: var(--ork-5); padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-edge); }
 .pc-foot .grow { flex: 1; }
 
@@ -236,7 +234,7 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
   <nav>
     <a class="ork-btn quiet" href="#ask">1 · The project</a>
     <a class="ork-btn quiet" href="#read">2 · Read</a>
-    <a class="ork-btn quiet" href="#shelf">3 · The AI tools</a>
+    <a class="ork-btn quiet" href="#shelf">3 · Add a tool</a>
     <a class="ork-btn quiet" href="#tool">4 · A tool</a>
     <a class="ork-btn quiet" href="#parties">5 · The parties</a>
     <a class="ork-btn quiet" href="#seat">6 · A head</a>
@@ -324,8 +322,8 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
 
 <!-- ======================================================= 3 ======================================================= -->
 <section class="mk-sec" id="shelf">
-  <h1>3 · The AI tools: the empty slot lifts the shelf</h1>
-  <p class="mk-line">The Orkmaster asks who the orks run on, and the empty slot at the hand's right is lit. Pressing it lifts <b>the shelf</b>: every AI tool found on this computer, in the three groups the party's tool list already has. <b>Use</b> puts a tool in the hand, at the end of the row; the first one used is the main tool (framed). A tool is in the hand or on the shelf: there is no third state. The same shelf opens from the same slot every day after.</p>
+  <h1>3 · The AI tools: one tool a card, from the empty slot</h1>
+  <p class="mk-line">The Orkmaster asks who the orks run on, and the empty slot at the hand's right is lit. Its card adds <b>one tool</b>: <b>AI tool</b> (a list: the tools found, ready first; one not installed shown and not picked), <b>Paid by</b> (<i>Subscription</i> or <i>API key</i>) and a third line that follows them: signed in, <b>Sign in</b>, or the key found in the environment. <b>Test &amp; add</b> sends one short request; if it answers, its potion comes into the hand and the card turns: <i>Add another AI tool?</i> Up to six. The first tool added is the main tool (framed). The same card opens from the same slot every day after.</p>
   <div class="mk-scroll">
   <div class="win">
     <div class="w-top">
@@ -334,39 +332,72 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
       <div class="w-end"></div>
     </div>
     <aside class="w-col">
-      <div class="bubble" style="left:16px;top:8px"><span class="who">Orkmaster</span><p>Who shall the orks run on? Put your AI tools in your hand: the work starts on the first, and goes on with the next when one runs dry.</p></div>
+      <div class="bubble" style="left:16px;top:8px"><span class="who">Orkmaster</span><p>Who shall the orks run on? Add your AI tools: the work starts on the first, and goes on with the next when one runs dry.</p></div>
     </aside>
     <div class="w-table ork-table"></div>
     <footer class="w-hand">
       <div class="left"></div>
       <div class="stacks"></div>
       <div class="belt" aria-label="AI tools">
-        <button class="slot is-default" title="Claude Code: the main tool; 100% of the 5 hours left, 100% of the week"><img class="ork-mark" data-m="claude" alt=""><span class="ork-potion" style="--ork-potion-left:1" aria-hidden="true"></span><span class="pct">100%</span><span class="sub">week 100%</span></button>
+        <span class="slot"><span class="empty"></span></span>
         <span class="slot"><span class="empty"></span></span>
         <button class="slot add lit" title="Add an AI tool"><span class="empty"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg></span></button>
       </div>
-      <article class="ork-card ork-leans lifted shelf" style="right:244px;bottom:16px" aria-label="AI tools">
-        <div class="top"><span class="lab">AI tools</span><button class="ork-btn quiet sm">Close</button></div>
-        <p class="cap mute">Found on this computer. Nothing was run and no key was read; <b>Check</b> sends one short request to the tool's lightest model.</p>
-        <div class="grp">
-          <span class="lab">Ready</span>
-          <div class="trow"><img class="ork-mark" data-m="claude" alt=""><span class="nm"><b>Claude Code</b> <span class="mute">2.4.1</span><span class="st ok">✓ in your hand · the main tool</span></span><span class="acts"><span class="ork-select"><select class="ork-field" aria-label="How Claude Code is paid"><option>Subscription</option><option>API</option></select></span></span></div>
-          <div class="trow"><img class="ork-mark" data-m="codex" alt=""><span class="nm"><b>Codex</b> <span class="mute">0.61</span><span class="st ok">✓ signed in</span></span><span class="acts"><span class="ork-select"><select class="ork-field" aria-label="How Codex is paid"><option>Subscription</option><option>API</option></select></span><button class="ork-btn primary sm">Use</button></span></div>
-        </div>
-        <div class="grp">
-          <span class="lab">Not signed in</span>
-          <div class="trow"><img class="ork-mark" data-m="agy" alt=""><span class="nm"><b>Antigravity</b><span class="st wait">⚠ not signed in</span></span><span class="acts"><button class="ork-btn sm">Sign in</button></span></div>
-        </div>
-        <div class="grp">
-          <span class="lab">Not installed</span>
-          <div class="trow is-off"><img class="ork-mark" data-m="cursor" alt=""><span class="nm"><b>Cursor</b><span class="st">Install its command line (cursor-agent) to run orks on it.</span></span><span class="acts"></span></div>
-        </div>
-        <div style="display:flex;gap:var(--ork-3);align-items:center"><button class="ork-btn primary">Done</button><button class="ork-btn quiet">Request a tool</button></div>
+      <article class="ork-card ork-leans lifted addcard" style="right:244px;bottom:16px" aria-label="Add an AI tool">
+        <div class="top"><span class="lab">Add an AI tool · 1 of up to 6</span><button class="ork-btn quiet sm">Close</button></div>
+        <div class="field"><span class="lab">AI tool</span><span class="ork-select"><select class="ork-field"><optgroup label="Ready"><option selected>Claude Code 2.4.1</option><option>Codex 0.61</option></optgroup><optgroup label="Not signed in"><option>Antigravity</option></optgroup><optgroup label="Not installed"><option disabled>Cursor · install its command line</option></optgroup></select></span></div>
+        <div class="field"><span class="lab">Paid by</span><span class="ork-select"><select class="ork-field"><option selected>Subscription</option><option>API key</option></select></span></div>
+        <div class="field"><span class="cap ok">✓ Signed in to your subscription</span></div>
+        <div class="field"><button class="ork-btn primary" style="align-self:flex-start">Test &amp; add</button><span class="cap mute">Sends one short request to its lightest model. Nothing else was run, and no key was read.</span></div>
       </article>
     </footer>
   </div>
   </div>
-  <p class="mk-line mute">An experimental tool asks its warning first (<i>Turn on … at my own risk</i>), as the onboarding does today. <b>Done</b> with no tool used says plainly what follows: <i>No AI tool: the Board opens, and nothing is worked on until you put one in your hand.</i></p>
+  <div class="mk-row">
+    <figure class="mk-fig">
+      <article class="ork-card ork-leans lifted addcard" style="position:relative;transform:rotate(-1deg)" aria-label="Add an AI tool">
+        <div class="top"><span class="lab">Add an AI tool · 2 of up to 6</span></div>
+        <div class="field"><span class="lab">AI tool</span><span class="ork-select"><select class="ork-field"><option>Antigravity</option></select></span></div>
+        <div class="field"><span class="lab">Paid by</span><span class="ork-select"><select class="ork-field"><option>Subscription</option></select></span></div>
+        <div class="field"><span class="cap wait">⚠ Not signed in</span><button class="ork-btn sm" style="align-self:flex-start">Sign in</button></div>
+        <div class="field"><button class="ork-btn primary is-disabled" disabled style="align-self:flex-start">Test &amp; add</button><span class="cap mute">After the sign-in.</span></div>
+      </article>
+      <figcaption><b>Subscription, not signed in:</b> its sign-in opens (spec 45's); Test &amp; add waits for it.</figcaption>
+    </figure>
+    <figure class="mk-fig">
+      <article class="ork-card ork-leans lifted addcard" style="position:relative;transform:rotate(-1deg)" aria-label="Add an AI tool">
+        <div class="top"><span class="lab">Add an AI tool · 2 of up to 6</span></div>
+        <div class="field"><span class="lab">AI tool</span><span class="ork-select"><select class="ork-field"><option>Codex 0.61</option></select></span></div>
+        <div class="field"><span class="lab">Paid by</span><span class="ork-select"><select class="ork-field"><option>API key</option></select></span></div>
+        <div class="field"><span class="cap ok">✓ Uses the key in your environment: CODEX_API_KEY</span><span class="cap mute">Paid per token, by that key. A key typed here comes later.</span></div>
+        <div class="field"><button class="ork-btn primary" style="align-self:flex-start">Test &amp; add</button><span class="cap mute">Sends one short request to its lightest model: about $0.001.</span></div>
+      </article>
+      <figcaption><b>API key:</b> only a key already in the environment, named; none there says <i>No key found: set CODEX_API_KEY in your environment, then Test again</i>.</figcaption>
+    </figure>
+    <figure class="mk-fig">
+      <article class="ork-card ork-leans lifted addcard" style="position:relative;transform:rotate(-1deg)" aria-label="Add an AI tool">
+        <div class="top"><span class="lab">Add an AI tool · 1 of up to 6</span></div>
+        <div class="field"><span class="lab">AI tool</span><span class="ork-select"><select class="ork-field"><option>Claude Code 2.4.1</option></select></span></div>
+        <div class="field"><span class="lab">Paid by</span><span class="ork-select"><select class="ork-field"><option>Subscription</option></select></span></div>
+        <div class="field"><span class="cap wait">⚠ ANTHROPIC_API_KEY is set in your environment: Claude Code uses it before your subscription and is paid per token.</span></div>
+        <div class="field"><button class="ork-btn primary" style="align-self:flex-start">Test &amp; add</button></div>
+      </article>
+      <figcaption><b>A key in the way:</b> said before it costs, never after.</figcaption>
+    </figure>
+    <figure class="mk-fig">
+      <div style="display:flex;gap:var(--ork-4);align-items:flex-end">
+      <article class="ork-card ork-leans lifted addcard" style="position:relative;transform:rotate(-1deg);width:250px" aria-label="Add an AI tool">
+        <div class="top"><span class="lab">AI tools</span></div>
+        <p>Claude Code is in your hand. Add another AI tool?</p>
+        <span class="cap mute">The work moves on to the next one when Claude Code runs dry.</span>
+        <div style="display:flex;flex-direction:column;gap:var(--ork-2)"><button class="ork-btn">Add another</button><button class="ork-btn primary">Go on to the parties</button></div>
+      </article>
+      <div class="belt" style="padding:0"><button class="slot is-default"><img class="ork-mark" data-m="claude" alt=""><span class="ork-potion" style="--ork-potion-left:1" aria-hidden="true"></span><span class="pct">100%</span><span class="sub">week 100%</span></button><button class="slot add"><span class="empty"><svg class="ork-icon" aria-hidden="true"><use href="../../../design-system/orkui/icons/icons.svg#plus"/></svg></span></button></div>
+      </div>
+      <figcaption><b>Added:</b> the potion comes into the hand, framed as the main tool, and the card turns. At the sixth tool it goes on to the parties by itself.</figcaption>
+    </figure>
+  </div>
+  <p class="mk-line mute">A test that fails says why on the card, in the tool's words, and no potion comes. An experimental tool asks its warning first (<i>Turn on … at my own risk</i>). <b>Close</b> with no tool added says plainly what follows: <i>No AI tool: the Board opens, and nothing is worked on until you add one.</i></p>
 </section>
 
 <!-- ======================================================= 4 ======================================================= -->
@@ -410,7 +441,7 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
 <!-- ======================================================= 5 ======================================================= -->
 <section class="mk-sec" id="parties">
   <h1>5 · The parties: the Orkmaster's large card on the table</h1>
-  <p class="mk-line">The Orkmaster deals one large card onto the table: what the project is at its top (the list, read from the folder), then the stages, each party a row. A row is <b>its leader and its team as heads</b>, its <b>size</b> as three steps drawn in heads (Lean one, Standard four, Full the whole craft), its <b>AI tool</b> from the tools in the hand (the framed mark follows the main tool), and its price a goal. Pressing a head opens its seat (6). The card is the same later, from the empty chair and a party's <i>Edit</i>.</p>
+  <p class="mk-line">The Orkmaster deals one large card onto the table: what the project is at its top, then the stages, <b>a party one line</b>: its tick, its leader's head with <b>its AI tool's mark in the corner</b> (framed: it follows the main tool; bare: set for the party), its name and its size, small, on the same line. Under it its team, <b>Does</b> under the sword and <b>Checks</b> under the shield, the seats its size leaves empty as shadows (not pressed, for now). Changing the size changes the heads at once. A party's price is in its size's words (hover); the card's foot says what they cost together. The card is the same later, from the empty chair and a party's <i>Edit</i>.</p>
   <div class="mk-scroll">
   <div class="win">
     <div class="w-top">
@@ -423,49 +454,43 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
     </aside>
     <div class="w-table ork-table">
       <article class="ork-card partycard" aria-label="The parties for skyhop">
-        <div class="pc-head"><h2>The parties for skyhop</h2><span class="grow"></span><span class="cap mute">who sits at the table, how many, on which AI tool</span></div>
+        <div class="pc-head"><h2>The parties for skyhop</h2></div>
         <div class="pc-kind"><span class="lab">The project is</span><span class="ork-select"><select class="ork-field"><option>A game</option></select></span><span class="cap mute">read from project.godot, 212 pictures</span></div>
-
-        <div class="stage"><h3>Idea</h3><span class="cap mute">the concept's crafts</span></div>
+        <div class="stage"><h3>Idea</h3></div>
         <div class="prow">
           <span class="tick on">✓</span>
-          <img class="ork-race__head big" data-h="unicorn-elder" alt="">
-          <span class="who"><b>Game design</b><span>The rules, the loop and the balance</span><span class="team"><span class="hd lead"><img class="ork-race__head" data-h="unicorn-elder" alt=""></span><span class="hd"><img class="ork-race__head" data-h="knight-warrior" alt=""></span><span class="hd"><img class="ork-race__head" data-h="knight-warrior" alt=""></span><span class="hd on"><img class="ork-race__head" data-h="knight-laborer" alt=""></span></span></span>
-          <span class="sizes"><span class="">Lean<span class="pips"><i></i></span></span><span class="on">Standard<span class="pips"><i></i><i></i><i></i><i></i></span></span><span class="">Full<span class="pips"><i></i><i></i><i></i><i></i><i></i></span></span></span>
-          <span class="ptool"><span class=fr><img class="ork-mark" data-m="claude" alt=""></span><span class="ork-select"><select class="ork-field"><option>Main tool (Claude Code)</option></select></span></span>
-          <span class="price"><span class="ork-gem dim">≈$0.40–0.90</span><br>a goal</span>
+          <span class="lead"><img class="ork-race__head big" data-h="unicorn-elder" alt=""><span class="lmark fr"><img data-m="claude" alt=""></span></span>
+          <b class="pname">Game design</b>
+          <span class="sizes sm"><span class="" title="Lean: ≈$0.20–0.40 a goal">Lean</span><span class="on" title="Standard: ≈$0.40–0.90 a goal">Standard</span><span class="" title="Full: ≈$0.70–1.60 a goal">Full</span></span>
+          <span class="team"><span class="grp"><span class="ork-sign sword" aria-hidden="true" title="Does"></span><span class="hd"><img class="ork-race__head" data-h="knight-warrior" alt=""></span><span class="hd"><img class="ork-race__head" data-h="knight-warrior" alt=""></span><span class="hd empty" title="an empty seat"><img class="ork-race__head" data-h="knight-warrior" alt=""></span></span><span class="grp"><span class="ork-sign shield" aria-hidden="true" title="Checks"></span><span class="hd"><img class="ork-race__head" data-h="knight-warrior" alt=""></span></span></span>
         </div>
         <div class="prow">
           <span class="tick on">✓</span>
-          <img class="ork-race__head big" data-h="dryad-elder" alt="">
-          <span class="who"><b>Art</b><span>Pictures, motion, sounds and music</span><span class="team"><span class="hd lead"><img class="ork-race__head" data-h="dryad-warrior" alt=""></span></span></span>
-          <span class="sizes"><span class="on">Lean<span class="pips"><i></i></span></span><span class="">Standard<span class="pips"><i></i><i></i><i></i><i></i></span></span><span class="">Full<span class="pips"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span></span>
-          <span class="ptool"><img class="ork-mark" data-m="codex" alt=""><span class="ork-select"><select class="ork-field"><option>Codex · set for Art</option></select></span></span>
-          <span class="price"><span class="ork-gem dim">≈$0.20–0.50</span><br>a goal</span>
+          <span class="lead"><img class="ork-race__head big" data-h="dryad-elder" alt=""><span class="lmark"><img data-m="codex" alt=""></span></span>
+          <b class="pname">Art</b>
+          <span class="sizes sm"><span class="on" title="Lean: ≈$0.20–0.50 a goal">Lean</span><span class="" title="Standard: ≈$0.50–1.10 a goal">Standard</span><span class="" title="Full: ≈$0.90–2.00 a goal">Full</span></span>
+          <span class="team"><span class="grp"><span class="ork-sign sword" aria-hidden="true" title="Does"></span><span class="hd empty" title="an empty seat"><img class="ork-race__head" data-h="elf-warrior" alt=""></span><span class="hd empty" title="an empty seat"><img class="ork-race__head" data-h="elf-warrior" alt=""></span><span class="hd empty" title="an empty seat"><img class="ork-race__head" data-h="elf-warrior" alt=""></span><span class="hd empty" title="an empty seat"><img class="ork-race__head" data-h="elf-warrior" alt=""></span><span class="hd empty" title="an empty seat"><img class="ork-race__head" data-h="elf-warrior" alt=""></span></span><span class="grp dim"><span class="ork-sign shield" aria-hidden="true" title="Checks"></span><span class="hd empty" title="an empty seat"><img class="ork-race__head" data-h="elf-warrior" alt=""></span></span><span class="cap mute">Lean: the leader does it, and checks it itself</span></span>
         </div>
         <div class="prow">
           <span class="tick on locked" title="In every project">✓</span>
-          <img class="ork-race__head big" data-h="lich-elder" alt="">
-          <span class="who"><b>Release</b><span>In every project: the one way into main</span><span class="team"><span class="hd lead"><img class="ork-race__head" data-h="lich-warrior" alt=""></span></span></span>
-          <span class="sizes locked"><span class="on">Lean<span class="pips"><i></i></span></span><span class="">Standard<span class="pips"><i></i><i></i><i></i><i></i></span></span><span class="">Full<span class="pips"><i></i><i></i><i></i><i></i></span></span></span>
-          <span class="ptool"><span class=fr><img class="ork-mark" data-m="claude" alt=""></span><span class="ork-select"><select class="ork-field"><option>Main tool (Claude Code)</option></select></span></span>
-          <span class="price"><span class="ork-gem dim">≈$0.10–0.20</span><br>a goal</span>
+          <span class="lead"><img class="ork-race__head big" data-h="lich-elder" alt=""><span class="lmark fr"><img data-m="claude" alt=""></span></span>
+          <b class="pname">Release</b>
+          <span class="sizes sm locked"><span class="on" title="Lean: ≈$0.10–0.20 a goal">Lean</span><span class="" title="Standard:  a goal">Standard</span><span class="" title="Full:  a goal">Full</span></span>
+          <span class="team"><span class="grp"><span class="ork-sign sword" aria-hidden="true" title="Does"></span><span class="hd empty" title="an empty seat"><img class="ork-race__head" data-h="skeleton-warrior" alt=""></span><span class="hd empty" title="an empty seat"><img class="ork-race__head" data-h="skeleton-warrior" alt=""></span><span class="hd empty" title="an empty seat"><img class="ork-race__head" data-h="skeleton-warrior" alt=""></span></span><span class="grp dim"><span class="ork-sign shield" aria-hidden="true" title="Checks"></span><span class="hd empty" title="an empty seat"><img class="ork-race__head" data-h="skeleton-warrior" alt=""></span></span><span class="cap mute">in every project</span></span>
         </div>
 
         <div class="stage here"><h3>Being made</h3><span class="here-w">The project is here</span></div>
         <div class="prow">
           <span class="tick on">✓</span>
-          <img class="ork-race__head big" data-h="shaman-elder" alt="">
-          <span class="who"><b>Tech</b><span>Its parts, its tests, the build</span><span class="team"><span class="hd lead"><img class="ork-race__head" data-h="shaman-elder" alt=""></span><span class="hd"><img class="ork-race__head" data-h="peon-warrior" alt=""></span><span class="hd"><img class="ork-race__head" data-h="peon-warrior" alt=""></span><span class="hd"><img class="ork-race__head" data-h="peon-warrior" alt=""><span class="own"><img data-m="codex" alt=""></span></span></span></span>
-          <span class="sizes"><span class="">Lean<span class="pips"><i></i></span></span><span class="on">Standard<span class="pips"><i></i><i></i><i></i><i></i></span></span><span class="">Full<span class="pips"><i></i><i></i><i></i><i></i><i></i><i></i></span></span></span>
-          <span class="ptool"><span class=fr><img class="ork-mark" data-m="claude" alt=""></span><span class="ork-select"><select class="ork-field"><option>Main tool (Claude Code)</option></select></span></span>
-          <span class="price"><span class="ork-gem dim">≈$0.60–1.40</span><br>a goal</span>
+          <span class="lead"><img class="ork-race__head big" data-h="shaman-elder" alt=""><span class="lmark fr"><img data-m="claude" alt=""></span></span>
+          <b class="pname">Tech</b>
+          <span class="sizes sm"><span class="" title="Lean: ≈$0.30–0.60 a goal">Lean</span><span class="on" title="Standard: ≈$0.60–1.40 a goal">Standard</span><span class="" title="Full: ≈$1.10–2.60 a goal">Full</span></span>
+          <span class="team"><span class="grp"><span class="ork-sign sword" aria-hidden="true" title="Does"></span><span class="hd"><img class="ork-race__head" data-h="peon-warrior" alt=""></span><span class="hd"><img class="ork-race__head" data-h="peon-warrior" alt=""><span class="own"><img data-m="codex" alt=""></span></span></span><span class="grp"><span class="ork-sign shield" aria-hidden="true" title="Checks"></span><span class="hd"><img class="ork-race__head" data-h="peon-warrior" alt=""></span><span class="hd empty" title="an empty seat"><img class="ork-race__head" data-h="peon-warrior" alt=""></span></span></span>
         </div>
 
         <div class="stage"><h3>Live</h3><span class="set-w">Set the project here</span></div>
-        <div class="later"><span class="tick"></span><img class="ork-race__head" data-h="imp-elder" alt=""><span>LiveOps</span><span class="tick"></span><img class="ork-race__head" data-h="fairy-elder" alt=""><span>Marketing</span><span class="cap mute">· offered when the project is live; tick one to seat it now</span></div>
-
-        <div class="pc-foot"><span class="cap">Together <b>≈ $1.30–3.00 a goal</b> at the API's prices. On a subscription it is taken from its limits instead; nothing is paid by the API without your yes.</span><span class="grow"></span><button class="ork-btn primary">Start</button></div>
+        <div class="later"><span class="tick"></span><img class="ork-race__head" data-h="imp-elder" alt=""><span>LiveOps</span><span class="tick"></span><img class="ork-race__head" data-h="fairy-elder" alt=""><span>Marketing</span><span class="cap mute">· offered when the project is live</span></div>
+        <div class="pc-foot"><span class="cap">Together <b>≈ $1.30–3.00 a goal</b> at the API's prices. On a subscription it is taken from its limits instead.</span><span class="grow"></span><button class="ork-btn primary">Start</button></div>
       </article>
     </div>
     <footer class="w-hand">
@@ -479,13 +504,13 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
     </footer>
   </div>
   </div>
-  <p class="mk-line mute">The team's heads are the seats the size gives (spec 81 §2): Standard is the leader on Veteran, the first two who do and the first who checks on Seasoned. A head set by hand keeps a mark (the small Codex mark on Tech's third head: its own tool) and the size stays picked: a hand-set seat keeps what was set, as Agents' tiers do today. The narrow width: the card is the screen, one party a block, its size and tool under its name.</p>
+  <p class="mk-line mute">The seats are spec 81 §2's: Standard is the leader on Veteran, the first two who do and the first who checks on Seasoned; Full every seat up to five who do and two who check. A member on a tool of its own wears that tool's mark (Tech's second: Codex); the same tool as the party's shows none. Pressing a head or a mark opens its seat (6). The narrow width: the card is the screen, one party a block.</p>
 </section>
 
 <!-- ======================================================= 6 ======================================================= -->
 <section class="mk-sec" id="seat">
   <h1>6 · A head pressed: its AI tool and its level</h1>
-  <p class="mk-line">A press (hover only marks it) on any head of a row, the leader's too, opens its seat: its role, <b>its AI tool</b> (a list of the tools in the hand, the party's first), and <b>its level as three heads</b>, the same race in its three gears, each with its word and what a task costs at it. The leader's seat has no <i>Take off</i>. This is today's seat popover (seatpop.js), given the level.</p>
+  <p class="mk-line">A press (hover only marks it) on any head of a row or on a tool's mark opens its seat: its role, <b>its AI tool</b> (the leader's is <b>the party's</b>: the members set to <i>As the party</i> follow it; a member's is its own), and <b>its level as three heads</b>, the same race in its three gears, each with its word and what a task costs at it. The leader's seat has no <i>Take off</i>. This is today's seat popover (seatpop.js), given the level.</p>
   <div class="mk-row">
     <figure class="mk-fig">
       <div class="seatpop" style="position:relative">
@@ -504,7 +529,7 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
     <figure class="mk-fig">
       <div class="seatpop" style="position:relative">
         <div class="role"><img class="ork-race__head big" data-h="unicorn-elder" alt=""><span><b>Game designer</b><span class="cap mute">Game design's leader · how, what changes and why</span></span></div>
-        <div class="field"><span class="lab">Its AI tool</span><span class="ork-select"><select class="ork-field"><option>As the party (Main tool: Claude Code)</option></select></span></div>
+        <div class="field"><span class="lab">The party's AI tool</span><span class="ork-select"><select class="ork-field"><option>Main tool (Claude Code): follows it</option><option>Claude Code</option><option>Codex</option></select></span><span class="cap mute">The leader and every member set to As the party run on it.</span></div>
         <div class="field"><span class="lab">Its level</span>
           <div class="tiers">
             <span><img class="ork-race__head big" data-h="unicorn-laborer" alt="">Novice<span class="px mute">≈$0.05 a step</span></span>
@@ -513,7 +538,7 @@ code { font-family: var(--ork-font-code); font-size: 0.92em; }
           </div></div>
         <span class="cap mute">A leader on Novice reads less of the project before it plans: fine for a small project, weak for a large one.</span>
       </div>
-      <figcaption><b>The leader's seat:</b> the same, without Take off; a line says what a low level costs in quality, plainly.</figcaption>
+      <figcaption><b>The leader's seat:</b> its tool is the party's; no Take off; a line says what a low level costs in quality, plainly.</figcaption>
     </figure>
   </div>
 </section>
