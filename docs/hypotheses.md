@@ -172,3 +172,52 @@ the arm's tag, carried only with the person's yes (`orkboard usage`); at least 2
 
 The clips and landings are made in Camp; the product stays orkUI's office. If the gap refutes it, Camp is built as a look
 over the same core (§50.5), office the default.
+
+## H4. A weekly push with a reason from the project, from the leader of the person's strongest craft, gets more goals landed, not only more opens
+
+**Status:** open. **Raised:** the owner, 3 November 2026, doubting it first: *find the areas where the person is most
+grown or most interested, make ideas in them and send them as pushes; it is a dark game flow, but it would work*.
+
+### The belief
+
+In its first form the idea is a hook: it brings the person back for our sake, on their own AI tools' limits (an idea
+written in the background is a call on their subscription), at hours an indie maker with a day job has least (§218), and
+it aims at what the person already likes, which makes a lopsided project more lopsided. Its core is sound: **coming to the
+person with something worth it, in a voice they answer**. So the belief is the honest form of it, which keeps the core
+and changes the reason, the cost, the rhythm and the measure:
+
+1. **The reason is in the project, never in a profile of interests**: a finding of the Quality level (§234.3), a
+   hypothesis that can now be tested (§194), a change that reached a slice (§233), the week's limits reset with goals
+   waiting in the column.
+2. **It costs nothing until it is pressed**: the push is made of what is counted already (the leaders' concerns, the
+   lenses' alarms, the hypotheses, the findings); no call runs to write it. An idea is written only on the person's
+   press, its cost said first.
+3. **The person's rhythm**: off by default, or one a week as a digest when the person turns it on; *Do not disturb*
+   holds; one press turns it off.
+4. **The voice of the strongest craft, the subject of the project's need**: it comes from the leader of the craft the
+   person answers most (their Talk answers, picks and goals confirmed over the last four weeks, counted on their machine),
+   because they answer that leader; it speaks of what the project needs now, a weak craft's too (*Marketing is empty and
+   the build is ready for a store page: shall I sketch one?*).
+
+### What would prove it, what would refute it
+
+- **Holds** when, over four weeks, the people with the push land at least 20% more goals into main than those without,
+  drop no more goals (not more by a tenth), and fewer than one in five turns it off.
+- **Refuted, the hook**: the people with the push open Orkboard more often but land no more goals: it brings people back
+  and gives them nothing, so it is not built, whatever it does to retention.
+- **Refuted, the noise**: one in five or more turns it off within two weeks, or the goals started from a push are dropped
+  at least 1.5 times as often as the others: the reasons are not worth the interruption.
+
+### How we test it
+
+Two arms by install, the push's arm told what it is and turning it on itself; at least 50 people an arm who opened a
+project of their own; four weeks. Counted on the person's machine and carried only with their yes (`orkboard usage`):
+opens, goals started from a push, goals landed into main, goals dropped, the push turned off, and what the pushes' ideas
+cost once pressed. The phone's push is the paired phone's (§218: the phone is half the product).
+
+### If it holds
+
+A decision makes the push a setting of its own (*A weekly word from your leaders*), off until the person turns it on,
+built on the Quality level's findings (§234) and the slices (§233). If the hook refutes it, the idea is dropped and that is
+said here; if the noise refutes it, only the reasons that were pressed are kept, and the rest wait in the column for the
+person to come.
