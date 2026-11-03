@@ -5744,3 +5744,27 @@ Orkboard does, has them twice. The owner's *yes* to all three and to this. So:
    3: the measure, the due, the values read by a leader or asked, the card against the bars); **C. The file** (6:
    read in, written out, committed); **D. Refuted as a finding** (5, on §234's way up). A first; C stands alone.
 The owner's call.
+
+## 236. The Orkmaster's column narrows to its upright card: a face-down card lies tucked under the window's left edge, its seal whole in what shows; the column has a width of its own (3 November 2026, the owner)
+
+Changes: 206.2, 206.3; spec 128 B.1, B.3.
+
+Why: the owner: *what if the cards turned by 90° in the Orkmaster's column were not shown whole but cut a little on their
+left, so the ring of runes is seen but they do not take so much room across*; and, told that a cut alone frees nothing,
+since the column's width is a lane's (`--col-w`, 180 px, `frame/frame.css`) and not its widest card's: *yes*, both together.
+Today a face-up card is 112 px wide and a face-down one 157 px, so the column has two right edges and 68 px empty beside
+every face-up card. A face-down card carries no name, only its seal (§206.3): what a cut takes is its frame. So:
+1. **A face-down card lies tucked under the window's left edge**: about 45 px of it under the edge, **112 px showing**,
+   the face-up cards' width; the cut is the window's own edge (the canvas ends there: no margin, no frame at its left),
+   so it reads as a deck slid under the table's edge, never as a box cut short. **Its seal is whole in what shows**,
+   centred in the shown part (not the card's), its rune upright and the running ring (`ork-sigil-sweep`) never under the
+   edge. The pile's thin edges are cut the same.
+2. **Hovered or focused it slides out whole**, to the right over the table (a transform; at once under reduced motion),
+   and goes back when left; its focus ring is drawn inside what shows. A press does what it does (§206.3: the pile's list).
+3. **The column has a width of its own**: the upright card's width and its gutters, about **128 px** (`--column-w`), no
+   longer a lane's (`--col-w`); the table gains what the column gives up. The three piles share one right edge.
+4. **Unchanged**: sideways is still *not agreed yet* (§206.3), the card's size (157 × 112), the piles' order and moves; the
+   narrow width has no column.
+5. **Drawn first**: the column at 45 px and at 30 px tucked, the owner's pick; built with spec 130's first part, its tests
+   the column's browser test (the seal whole in the shown part, the slide on hover and focus, the width).
+The owner's call.
