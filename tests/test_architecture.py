@@ -65,6 +65,7 @@ def test_the_terminal_ui_stays_gone():
 # `realm/halt.py`, the one list of what runs: the HUD counts agents from it and 🛑 Stop all kills what is on it.
 # These start only short commands that are not agents, or keep their own list (tech-debt T13).
 STARTS_WITHOUT_HALT = {
+    "gui/drive.py": "a browser for a picture of the page (Node's Playwright); it names the agent tools only to hide them",
     "realm/model_families.py": "asks a tool for its model list; no model runs",
     "sources/sessions.py": "git log",
     "tools.py": "a tool's version and login state",

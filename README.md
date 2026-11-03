@@ -94,6 +94,7 @@ From the terminal:
 | `orkboard export [folder]` | Writes the decisions, the brief and the journals out in common formats (`--as madr` or `nygard`) |
 | `orkboard update [check]` | Says what is out, and installs it |
 | `orkboard usage on\|off\|status` | Anonymous usage stats and crash reports: share them, stop, or see what is set |
+| `orkboard drive start\|call\|wait\|run\|shot\|stop` | Drives a project from the terminal by the page's own commands, for an agent testing Orkboard; the AI tools stay hidden unless `--real-tools` |
 
 It is drawn in [orkUI](https://github.com/orkCraft/orkUI)'s office look: dark, monochrome, colour a signal, its only
 pictures the races' heads.

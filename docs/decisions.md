@@ -5234,3 +5234,39 @@ put the light one off. So:
    a signal and a rune 3:1) comes with the spec that takes orkUI's new copy.
 5. **Checked on a phone in the sun** before the spec is closed: the mockup v6 opened outdoors, at the phone's own brightness.
 The owner's call.
+
+## 227. Orkboard driven from a terminal, by the page's own commands: an agent can serve a project, drop a goal, wait for its steps, run a scenario and take pictures of the page, with the AI tools hidden unless asked for; a stand-in tool for every step comes next (3 November 2026, the owner)
+
+Changes: spec 37 §4, spec 107 §2.
+
+Why: the owner: can Orkboard be changed so that an agent (Claude, in a session like this one) drives all its flows from
+code, by console commands rather than the interface: create a goal and take it through the whole team, so the first
+testing is done by the agent alone. Most of it was there: `orkboard --serve` serves a project with no window and says
+its address (gui/extension.py); every act of the page is a command on one socket (gui/server.py: `ideas.add`,
+`ideas.answer`, `ideas.start_now`, `ideas.gate_merge` and the rest); `/api/version` is the handshake for a client other
+than the page; `command_log` records what is refused. Tried in this session on a fresh project: a party made, a goal
+dropped, routed by code; but where an agent CLI was on the PATH the host ran Talk's first round on it at once (one call,
+Sonnet, about 35 000 tokens), on the owner's limits. So:
+1. **`orkboard drive`** (gui/drive.py), a client of the page's socket: `start` (the project served with no window, its
+   address kept in `<project>/.orkcraft/drive.json`, readable by its owner alone, gone when it stops), `call` (one
+   command, its answer as JSON, `--path` for one value), `state`, `wait` (a command asked again until the value at a path
+   `--is`, `--has` or is `--not` something), `watch`, `run` (a scenario: steps and what each must find, a JSON line a
+   step and a summary, the first failure ending it), `shot` (a picture of the page at a phone's size or the desktop's,
+   by Playwright, Python's or Node's), `stop`. **It never has a way of its own**: each act is one of the page's commands,
+   so a drive goes where a person's presses go and tests the real flow. The server stays on 127.0.0.1 with its token
+   and Origin, as for the page.
+2. **The AI tools are hidden unless asked for**: `drive start` runs with a PATH holding no agent CLI and no `gh` and
+   reads no limits or model list, so a step that would ask a model waits or fails as a missing tool, spending nothing;
+   `--real-tools` lets it run the tools it finds, said plainly that they spend their limits.
+3. **Scenarios are tests too**: `tests/scenarios/a-goal-routed.json` (a party, a goal dropped, routed by code, its route
+   card in the hand, the phone's and the desktop's pictures) is run by `tests/test_drive.py` against a real host and server
+   (its pictures left out).
+4. **Next, a stand-in tool for every step** (a spec of its own): a tool on the PATH, on when an environment variable
+   says so and never shown in the interface, answering each call by its step (`route`, `talk_round`, `section`, `join`,
+   `plan`, a task's work committing a file) in the form its reader takes, so a goal goes the whole way (route → Talk →
+   sections → To review → work → the gate → ready for main) in seconds with no model, in CI and in a cloud session. Until
+   then the whole way runs with `--real-tools` on the owner's machine, on a tool that has limits to spare.
+5. **What the first drive found** (for the phone's spec, §222–§226): the route card's cost is said in dollars at API
+   prices when no limits are read, not as a share of a tool's week; the desktop's discard writes *1 commit ready for
+   master* past its card's edge.
+The owner's call.

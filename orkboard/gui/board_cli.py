@@ -12,6 +12,7 @@ from its own event log, and hypothesis H1's head-to-head tallied. `main` in gui/
     run(["import", "~/game", "--dry-run"])       # what of the project's own documents would be read in (realm/read_in.py, spec 126 B)
     run(["export", "~/game", "--to", "out"])     # the decisions, the brief and the journals written out in common formats (realm/write_out.py, spec 126 C)
     run(["steps-check", "--tool", "codex"])      # one small real task on that tool: which steps its card would show, from where (realm/steps_check.py, spec 129 H1.6)
+    run(["drive", "call", "ideas.board"])        # the page's own commands from a terminal or an agent (gui/drive.py, decisions §227)
 """
 from __future__ import annotations
 
@@ -24,7 +25,7 @@ from orkboard import __version__, settings
 from orkboard.core import updates, usage
 from orkboard.realm import measures, trial
 
-WORDS = ("usage", "update", "measures", "trial", "import", "export", "steps-check")
+WORDS = ("usage", "update", "measures", "trial", "import", "export", "steps-check", "drive")
 
 POLICY_WHAT = {
     "auto": "every update installs when Orkboard opens",
@@ -34,6 +35,9 @@ POLICY_WHAT = {
 
 
 def run(argv: list[str]) -> int:
+    if argv and argv[0] == "drive":                      # decisions §227: the page's commands from a terminal (gui/drive.py)
+        from orkboard.gui import drive
+        return drive.main(argv[1:])
     parser = argparse.ArgumentParser(prog="orkboard")
     sub = parser.add_subparsers(dest="word", required=True)
     usage_p = sub.add_parser("usage", help="Anonymous usage stats and crash reports: share them, stop, or see what is set")

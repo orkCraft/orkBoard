@@ -1,0 +1,11 @@
+{
+  "about": "A goal dropped on a project with one party: routed by code with no model call, its route card in the hand. Runs with the AI tools hidden (decisions §227); `orkboard drive run` takes the pictures, the tests leave them out.",
+  "steps": [
+    {"say": "a party, as New party makes it", "call": "ideas.goal_save", "args": {"preset": "tech", "title": "Tech"}, "keep": {"party": "slug"}},
+    {"say": "a goal dropped", "call": "ideas.add", "args": {"text": "Add a pause menu"}, "keep": {"goal": "slug"}, "expect": {"path": "route", "has": "tech"}},
+    {"say": "it waits, routed", "wait": "ideas.board", "path": "ideas[slug=${goal}].state", "is": "routed", "timeout": 30},
+    {"say": "its route card is in the hand", "call": "ideas.board", "expect": {"path": "needs_you[idea=${goal}].kind", "is": "route"}},
+    {"say": "the phone shows it", "shot": "phone", "width": 390, "height": 844},
+    {"say": "the desktop shows it", "shot": "desktop", "width": 1360, "height": 860}
+  ]
+}
