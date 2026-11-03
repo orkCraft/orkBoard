@@ -5290,3 +5290,35 @@ call shows why it matters: a Talk round on Sonnet wrote 34 637 tokens to the cac
    call's prompt and answer at hand in the day log.
 4. **Later**: the same in the page's *Spend* and on the phone, when the phone's spec (§222–§226) is built.
 The owner's call.
+
+## 229. The project's journal on its own remote: asked for once, a branch of its own, what it holds small and with no code, sent by code and never by a model, the Orkmaster's to keep (3 November 2026, the owner)
+
+Changes: 227, 228; spec 41.
+
+Why: the owner, before running the other decisions on Codex while away from the computer: the status, the logs and the
+errors should go to the remote by default, as one more duty of the Orkmaster. What already leaves the machine: usage
+stats and crash reports, to Orkboard's makers, only on a yes (`orkboard usage`); a goal's branches, to origin, when
+`push` is on. Nothing tells the project's own remote how the work goes, so from a phone, from another machine or from an
+agent's session in the cloud it cannot be read. But sending is publishing (a public repository shows it to everyone; the
+day logs hold the project's code in their prompts and the models' answers, and a test may print a secret into a tool's
+output), and a commit every few minutes is noise and, where CI runs on every branch, minutes spent. So:
+1. **Asked for once, per project, in plain words**, never on by itself: `[journal]` in `orkcraft.toml` (`remote`, the
+   remote's name, `origin` at first; `branch`; `every`, minutes; `prompts`, false). The page's Settings asks it in its
+   words when it is built (*Send this project's journal to origin: its status, its errors and what its calls spent; no
+   code and no prompts*); until then the file says it.
+2. **A branch of its own**, `orkboard/journal` at first: it shares no history with the code, is never merged, holds no
+   workflow, so no CI runs for it; it is committed by git's plumbing (no checkout, the working tree untouched) and pushed
+   without force.
+3. **What it holds**: `status.md` (the goals by pile and phase, what waits in the hand, what failed, when it was written);
+   the event log's lines of the last days; `spend.json` and `spend.txt` (§228, with *worth a look*); the calls' metadata
+   (tool, model, step, tokens, cost, exit code). **Never** the server's token (`drive.json`), an `.env`, a key; every
+   line is read for a secret's shape (a provider's key, a token, a private key) and held back in words if it has one.
+   The calls' whole prompts and answers only with `prompts = true`, said to be for a private repository.
+4. **When**: when something changed since the last sending, at most every `every` minutes (15 at first), and at once when a
+   goal fails, a gate turns red or a command breaks; nothing to send, nothing sent. Offline, it waits; a sending that
+   fails troubles no work, and is said in the event log.
+5. **Sent by code, no model**: it is the Orkmaster's duty (it says *what and who*, and keeps the record of it), done by
+   code at no token's cost. The page shows it on the Orkmaster's head later (*Journal sent at 14:02*; a failure a card in
+   the hand), with the phone's spec (§222–§226).
+6. **From a terminal**: `orkboard drive journal` (`--dry-run`: what would go; `--now`: send it now).
+The owner's call.
