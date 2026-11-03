@@ -141,3 +141,34 @@ The events of spec 121 §8 (`sketch_made`, `sketch_answered`, `sketch_skipped`, 
 
 The phone becomes the day's table (sketches, hearings, the hand) and the computer the evening's; the leaders' voices (spec
 122) follow for the way to work. If it is refuted, the sketch goes back to Pick one's place inside the work.
+
+## H3. Camp's orks bring more people to Orkboard than the office does, and they stay when they meet the office
+
+**Status:** testing (decision §231). **Raised:** the owner, 3 November 2026.
+
+### The belief
+
+The office says *a serious tool*; the camp's orks, with their humour, are remembered and shared. A clip in Camp's look
+gets more people to try Orkboard for the same money, and what keeps them is the work itself (a goal of their own taken
+through to a merge), not the look they came by. If so, Camp belongs to marketing, and the product need not carry a second
+look.
+
+### What would prove it, what would refute it
+
+- **Holds** when the Camp clip's install costs at least 30% less than the Work clip's and its people activate and come
+  back within 7 days nearly as often (not worse by more than a tenth).
+- **Refuted, the look**: the Camp clip is dearer and brings no one better: the clips stay Work.
+- **Refuted, the gap**: the Camp clip is cheaper, but its people drop on the first day at least 1.5 times as often as the
+  Work clip's, or come back within 7 days at most two thirds as often: the orks they came for are missing, and Camp is
+  built in the product (§231.6).
+
+### How we test it
+
+Each product's clip and landing in two looks with one script, both leading to the same product (§231.1–§231.3); the views,
+clicks and the cost of an install per arm from the ads' platforms; activation, coming back and the first day's drop from
+the arm's tag, carried only with the person's yes (`orkboard usage`); at least 20 000 views and 100 installs per arm.
+
+### If it holds
+
+The clips and landings are made in Camp; the product stays orkUI's office. If the gap refutes it, Camp is built as a look
+over the same core (§50.5), office the default.

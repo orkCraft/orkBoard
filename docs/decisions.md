@@ -5362,3 +5362,50 @@ needs a forge. And a beta needs a third: a tester who does not touch the code bu
 7. **Builds**: the forge's face and its settings, then the bug's bundle and Fix it from the cloud, after the beta's run;
    Send to the makers with the beta. The look by orkUI first (the anvil).
 The owner's call.
+
+## 231. Camp is tested in marketing, not in the product: each product's clips and landing in two looks, Work and Camp, both leading to the same product in orkUI's office; Camp is built in the product only if the gap between the Camp clip and the product loses the people it brings (3 November 2026, the owner)
+
+Changes: 45 (item 11's measure), 50.8, 89.4; hypothesis H3.
+
+Why: the owner proposed three looks of orkUI: *terminal* (every icon an emoji, the kit drawn in a terminal), *work*
+(today's office) and *camp* (art in the look of the first orkcraft site, its humorous orks), with the trailers of Orkboard
+and the other products A/B tested in the last two. Weighed as a designer and a marketer: three looks triple every
+component, test and screenshot while the core changes every day; and the AgentCraft study (§45) already says a game's
+picture brings views, not a habit. So what Camp has to show is not that it is watched more but that it **brings people who
+stay**, and a clip can ask that before any Camp is built. So:
+1. **Camp is tested in marketing alone**: the clips (trailers) and landing pages of Orkboard, then of each product as it
+   ships (OrkWiki, OrkMine, OrkWatch), are made in two looks, **Work** (orkUI's office, as the product is) and **Camp** (the
+   first site's orks with their humour, the art made for the clips). The product, the page and the phone stay in orkUI's
+   office alone (§53.1): no look switch, no camp file in the package.
+2. **Both arms lead to the same product.** So the test measures exactly what Camp would cost: a person brought by orks
+   meeting an office. The landing shows the real product's picture above its install in both arms; nobody installs
+   expecting a game.
+3. **One script for both**: the same beats, the same shots of the product, the same words; only the wrapping differs (the
+   first seconds, the frame around the product's shots, the characters, the music). Otherwise the script is tested, not
+   the look. In the Camp clip the humour is in the wrapping, never in what is said of money or safety (CLAUDE.md).
+4. **Measured past the views**, per arm: the first three seconds held, the clicks, the cost of an install or a letter on
+   the waitlist; then **activation**, a goal of the person's own taken through to a merge (§45.11's first measure), and
+   **coming back within 7 days**; and **the gap**: those who open Orkboard once and drop no goal on the first day. The
+   arm goes with the link (`?via=camp`, `?via=work`) to the landing, the waitlist's letter and the install command, and
+   reaches Orkboard only with the person's yes (`orkboard usage`, spec 41), never by itself.
+5. **Decided beforehand** (first numbers, the owner's to move; at least 20 000 views per arm for the clicks, at least 100
+   installs per arm before the later measures count, below that they are a direction and the test goes on):
+   - **Camp wins the marketing** when its install costs at least 30% less and its activation and coming back are not
+     worse by more than a tenth: the clips and landings are made in Camp from then on; the product stays office.
+   - **The gap loses people** when Camp's installs are cheaper but its people drop on the first day at least 1.5 times
+     as often as Work's, or come back within 7 days at most two thirds as often: **Camp is built in the product** (6).
+   - **Camp loses** when it is dearer and no better: the clips stay Work; Camp stays frozen (§45.10).
+6. **When Camp is built**, it is §50.5's Camp: a look and a reader over the same core, never a mechanic of its own.
+   orkUI gets a second look, `camp` (its tokens and art made in orkUI first, then copied); Orkboard's sheets read it as
+   they read office; a switch in Settings, office the default; what the clip showed first. Words about money and safety
+   stay plain in it. A spec of its own then; §53.1's *one look* is amended by it, not before.
+7. **The clips' art is made once, for both**: a sheet of the races (§53, §158) in the first site's humour, so the clips and
+   a later Camp are one world; kept in orkUI as the clips' library (as §69's emblems), never loaded by the product. In
+   the realm's own look, never another studio's.
+8. **Replaces §45.11's screenshot shown to the testers** as the measure that brings Camp back. The order of §50.8 stands
+   for the product; the clips are made beside it, and §27 is untouched (no mechanic is built for them).
+9. **Not taken now: the terminal look.** Orkboard draws no face in a terminal (`tests/test_architecture.py`). What was
+   weighed is kept for when the terminal's output (`orkboard drive`, `measures`, `spend`) is worked on: orkUI's tokens
+   as ANSI colours and its 7 × 7 marks in half blocks (▀ ▄ █), never emoji (they differ by terminal, break the grid and
+   colour what is no signal).
+The owner's call.
