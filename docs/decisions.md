@@ -5029,3 +5029,56 @@ analysis waits on the route card's press. So:
    in focus (§210.2), then the rest in the Orkmaster's order.
 10. The spec builds 1, 3–5, 7–9 with §219's (the phone and its mailbox); 6 when a second tool is connected.
 The owner's call.
+
+## 222. The phone around a goal: the crown's menu is the Orkmaster's three piles, the leaders a row of heads at its foot; a goal in analysis is the person's own words to add to, rewrite or remove; a goal picked is its header, its waiting card and its leaders as tabs, each showing its slice of its map, now and as it will be; no table and no chairs on a phone (3 November 2026, the owner)
+
+Changes: 195, 206, 219, 221.
+
+Why: the owner, after §221: the phone's interface has to be remade around a goal: the side menu is the Orkmaster's
+column, its goals grouped as a spec still being made, specs waiting for their making, specs being made (the first not
+pickable); a goal picked closes it and a header shows the goal (its rune, its cost and the rest); under it the faces of
+the leaders working on it as tabs, and a leader picked shows its lens, as it was and as it will be; and, while a spec is
+still being made, the person's own text can be edited, or the goal removed. Should the phone refer to the desktop's
+table and chairs? What is built (§195, spec 117): the crown opens a sheet from the left (`js/hand/upmenu.js`) holding the
+Orkmaster's goals and then each party with its goals at work; the middle shows a goal (its phases, its route, why, its
+tasks) or a party (`js/hand/upparty.js`: its header, squad, tools, concerns), the top card answered with one tap; and
+§195.5 left a leader's map off the phone. The desktop already shows a goal picked as each leader's view of what it will
+change (§206.4; `js/table/goalmap.js`, pure functions over the spec and the maps). So (this changes §195.1, §195.2 and
+§195.5 for a phone; the desktop is unchanged):
+1. **The crown's menu is the Orkmaster's column, three piles**, as the desktop's (§206.3): **In analysis**, **To review**,
+   **At work · later**; no count anywhere, a way to look and never where something waits (§195.1 holds). The parties'
+   groups leave it: **the leaders are a row of heads at its foot**, a head pressed opening that leader (its header,
+   squad, tools and concerns, `upparty.js` as built), so the concerns of §208–§217 keep a home on the phone. At its head
+   the project, *Settings* and *Stop all*, as built.
+2. **In analysis is not pickable**: its goals lie face down, the one being read named (*Being read: "The double jump"*),
+   so the person sees that a goal dropped arrived (§221.8). **A goal in analysis pressed opens the person's own words**,
+   at the foot as a sheet, with three acts:
+   - **Add to it**: a line added to the goal's text, taken by its leaders at their next step; nothing starts again, nothing
+     spent is lost. It is the act offered first, since a goal is most often missing a word, not wrong.
+   - **Rewrite**: the text edited whole; the reading starts again from the Orkmaster's. Once a leader has begun its
+     section the sheet says what is lost (*The leaders began reading: rewriting starts again; about 2 calls spent so
+     far*). Before the Orkmaster has read it (in the mailbox, or in line), rewriting costs nothing and says so.
+   - **Remove**: *Press again to remove*, never a dialog; a toast with *Undo* for a few seconds; what was spent stays
+     spent, and the sheet says it when anything was.
+   Away from home the three go through the mailbox in order (§219.2), taken when the computer wakes. Once a goal has left
+   In analysis a change to it is a change of the goal, asked as it is today, never this sheet.
+3. **A goal picked closes the menu; its header** at the top: its element (its rune), its type's sign, its short name, its
+   phase, its cost (*about 6 calls · 4% of Claude's week*, the gem's), and its start or wait (*Starts by itself in 3 h*,
+   *after the reset, Mon 09:00*). **Its waiting card lies under the header**, answered with one tap (§195.2 holds), above
+   the tabs: a decision before anything to read.
+4. **The goal's leaders as tabs**, their heads in a row: first **the Orkmaster's** (the plan: the tasks by leader in their
+   order, each task's steps, §207), then each leader of its route. **A leader picked shows its slice of its own map for
+   this goal**, `goalmap.js`'s, drawn narrow: the parts the goal touches marked *new*, *changed*, *gone* or *read only*,
+   its *Done when*, and the leader's concerns on those parts. **Now | Will be** is a switch, never side by side (the
+   width), *Will be* first, while the goal is not yet in dev; **Before | After** once its changes land. A craft whose map
+   the host does not read from the files yet (Product, Game design, Art) shows its *Will be* lines, plainly, until its
+   map is read for a goal. This lifts §195.5 for a goal's slice; a leader's whole map stays off the phone.
+5. **Away from home**: a goal's slice comes through the mailbox when it is picked, kept on the phone, and shown with its
+   time while the computer is not present (*As of 14:02*); a screen's pictures as small ones (this widens §219.2 by the
+   picked goal's slice, never the whole Board).
+6. **No table and no chairs on a phone**: the same things, not the same room. The cards, the runes, the leaders' heads,
+   the hand's fan, the discard and the potions are Orkboard's words and look the same on both; the wooden table and its
+   seats are a room, which a six-inch screen pays for in space and gains nothing by. The heads as tabs are the seats.
+   The table stays for a phone on its side, in the next wave (§219.5).
+7. **The mockup** is `docs/mockups/phone/goal-lens.html`; the spec after the owner's look at it.
+The owner's call.
