@@ -5322,3 +5322,43 @@ output), and a commit every few minutes is noise and, where CI runs on every bra
    the hand), with the phone's spec (§222–§226).
 6. **From a terminal**: `orkboard drive journal` (`--dry-run`: what would go; `--now`: send it now).
 The owner's call.
+
+## 230. Who the person is to Orkboard itself: a user, a beta tester, a contributor; the bug for the first two, the hammer and the anvil, a forge, for the third: the journal's sync, its rhythm, where it goes, what is ready, Fix it here or from the cloud (3 November 2026, the owner)
+
+Changes: 197, 229; spec 119.
+
+Why: the owner, after §229: with a private repository the journal's sending could join the bug with the hammer (spec 119:
+**Save logs**, and **Fix it**, which starts Claude Code on Orkboard's own code, only from a git checkout of Orkboard with
+`claude` on that computer; a cloud session was left for later, §7); and then: a setting at the start, *become an Orkboard
+contributor*, that turns the bug into a hammer with an anvil, where the journal's rhythm is set and the last sync is shown.
+The bug today mixes two worlds: an indie developer needs to save the logs and say something broke; whoever makes Orkboard
+needs a forge. And a beta needs a third: a tester who does not touch the code but whose reports must reach the makers. So:
+1. **Three ways a person stands to Orkboard**, in Settings (*Orkboard itself*): **a user** (the default), **a beta tester**,
+   **a contributor**. Nothing is asked of everyone at the start: when Orkboard runs from a git checkout of orkBoard it
+   offers once *You work on Orkboard itself? Turn the forge on*; an installed copy (uv, brew, pipx) asks nothing, and the
+   choice is in Settings for whoever wants it.
+2. **A user: the bug**, as built: *What went wrong?*, **Save logs**.
+3. **A beta tester: the bug and Send to the makers**: the person's line and the logs scrubbed (§229.3's shapes held back),
+   no code and no prompts, shown before it goes and asked each time; through the channel the crash reports already use
+   (`orkboard usage`, spec 41), as a report of its own kind. Its spec comes with the beta.
+4. **A contributor: the hammer and the anvil, the forge**: the bug's button turns into a hammer over an anvil (orkUI's
+   `hammer` exists; the anvil is drawn in orkUI first, then copied). Pressed, a panel, as the bug's is (no drawer):
+   - **the sync**, its first line: *Journal sent at 14:02* with a check, or *Not sent at 14:02: <git's words>* in the alert's
+     colour, and **Send now**; a state, never a count;
+   - **the rhythm**, a choice of a few: *every 5 min · 15 · an hour · only when something fails*;
+   - **where it goes**: the remote's name and **This repository is private**, the person's word for it (Orkboard cannot
+     know); only with it does a bug's bundle go (5);
+   - **what is ready**, a short list of ✓ and ✗: *Orkboard's checkout found · claude on this computer · the journal set ·
+     the last beta run*, so a Fix it that cannot run says why;
+   - **Fix it**, here (spec 119, as built) or **from the cloud** (5).
+5. **The bug's bundle, the contributor's alone, to a private journal only**: a press of the hammer sends the journal at once
+   with `bugs/<time>/` in it: the person's line, Orkboard's own log since it started (what Save logs packs), the traces,
+   a snapshot of what was shown. **Fix it from the cloud** (spec 119 §7): a cloud Claude session reads that folder, fixes
+   Orkboard's code, runs the critical tests and pushes to main; Orkboard sees main move and offers **Update and restart**,
+   as built. Without *This repository is private* the hammer saves the logs here, and the journal goes without a bundle.
+6. **§229 moves into the forge**: `[journal]` in orkcraft.toml stays what lies under it (the forge writes it); the journal
+   is a contributor's tool for now; a user follows a project from the phone (§219, §222–§226), and the journal is offered to
+   users only if they ask for it.
+7. **Builds**: the forge's face and its settings, then the bug's bundle and Fix it from the cloud, after the beta's run;
+   Send to the makers with the beta. The look by orkUI first (the anvil).
+The owner's call.
