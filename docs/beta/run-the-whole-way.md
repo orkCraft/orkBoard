@@ -42,8 +42,11 @@ questions, one answered) · **the sections** (the spec) · **To review** (its st
 
 ## 3. What is written down
 
-`beta-run/report.md` in the project (not committed): for each stage its time, the tool and model of each call, its cost
-(`.orkcraft/spend/calls.jsonl`), the pictures; every refusal and every broken command (`command_refused` in the event
+`beta-run/report.md` in the project (not committed): for each stage its time, the tool and model of each call, its cost,
+the pictures; `orkboard drive spend --goal <slug>` (decisions §228) for the goal's tokens and money by tool, step and
+call, and **what is worth a look**: failed calls, a big cache written and none read, heavy reads with a short answer, a
+step asked again (each with its tokens; a call's whole prompt and answer are in `.orkcraft/logs/<day>/board/`, beside
+its line); every refusal and every broken command (`command_refused` in the event
 log), every error toast; what was done by hand and why; what looked wrong in a picture.
 
 ## 4. The verdict: beta when all hold
@@ -53,6 +56,6 @@ log), every error toast; what was done by hand and why; what looked wrong in a p
 3. No broken command (a `broken` refusal) and no error toast left unexplained.
 4. Each stage's pictures, phone and desktop, show the stage as the decisions describe it, nothing cut or overlapping.
 5. The gate ran the project's critical tests (`orkcraft.toml`'s `always`) and they passed.
-6. What the run cost is known per tool.
+6. What the run cost is known per tool, and each line of *worth a look* is explained or made a goal of its own.
 
 Not beta: say which of the six failed, with its picture and its log lines.

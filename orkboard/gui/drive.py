@@ -11,6 +11,7 @@ same socket the page uses (gui/server.py): every act is one of the page's own co
     orkboard drive run scenarios/goal.json           # steps and what each must find; a JSON line a step, then the summary
     orkboard drive shot out.png --width 390          # the page as a phone sees it (Playwright, where it is installed)
     orkboard drive stop                              # the served project stopped
+    orkboard drive spend --since 2026-11-03          # what the calls spent, and where tokens went for nothing (realm/spend_report.py)
 
 The served project's address (its token inside) is kept in `<project>/.orkcraft/drive.json`, readable by its owner alone,
 removed when it stops; `--url` names a server instead (an editor's `--serve`). **The AI tools are hidden unless asked for**:
@@ -470,6 +471,11 @@ def main(argv: list[str]) -> int:
     r.add_argument("scenario")
     r.add_argument("--shots", default=None, help="Where its pictures go (default: beside the scenario)")
     where(r)
+    sp = sub.add_parser("spend", help="What the project's model calls spent, by tool, step and goal, and what is worth a look")
+    sp.add_argument("--folder", default=None, help="The project (default: the one this folder is in)")
+    sp.add_argument("--since", default="", metavar="DAY", help="From this day on (YYYY-MM-DD)")
+    sp.add_argument("--goal", default="", help="One goal's calls only (its slug)")
+    sp.add_argument("--json", action="store_true", help="As data")
     p = sub.add_parser("shot", help="A picture of the page (a phone's size by default)")
     p.add_argument("file")
     p.add_argument("--width", type=int, default=390)
@@ -481,6 +487,11 @@ def main(argv: list[str]) -> int:
             return start(find_root(a.folder), a.port, real_tools=a.real_tools)
         if a.act == "stop":
             return stop(find_root(a.folder))
+        if a.act == "spend":
+            from orkboard.realm import spend_report
+            found = spend_report.report(spend_report.lines_of(find_root(a.folder), a.since), a.goal)
+            print(json.dumps(found, ensure_ascii=False, indent=2) if a.json else spend_report.text(found))
+            return 0
         if a.act == "shot":
             url = a.url or read_session(find_root(a.folder))["url"]
             print(shoot(url, Path(a.file), a.width, a.height))

@@ -5270,3 +5270,23 @@ Sonnet, about 35 000 tokens), on the owner's limits. So:
    prices when no limits are read, not as a share of a tool's week; the desktop's discard writes *1 commit ready for
    master* past its card's edge.
 The owner's call.
+
+## 228. What the calls spent, in one command: by tool, step and goal, the dearest calls, and what is worth a look, read from the day logs with no model (3 November 2026, the owner)
+
+Changes: 227; spec 36.
+
+Why: the owner, before the beta's run: the usage logs must be at hand, to watch the tokens and not spend them for
+nothing. Every call is kept already (`.orkcraft/logs/<day>/<building>/calls.jsonl`, realm/call_log.py: its tool, model,
+step, goal, seconds, exit code, cost and the usage its tool printed, the prompt and the whole answer gzipped beside it;
+and each goal's ledger, realm/idea_spend.py), but nothing added it up for a terminal or an agent. The first drive's one
+call shows why it matters: a Talk round on Sonnet wrote 34 637 tokens to the cache and read none. So:
+1. **`orkboard drive spend`** (realm/spend_report.py, printed by gui/drive.py, no server needed): the total (calls,
+   tokens in, out, read from the cache and written to it, the share read from the cache, $ at API prices, the unpriced
+   counted apart, never as $0), by tool and model, by step, by goal; the five dearest calls; `--since`, `--goal`, `--json`.
+2. **What is worth a look**, named by rule and never a verdict: failed calls and their cost; a call that wrote a big cache
+   (20 000 tokens or more) and read none; a heavy read with a short answer (60 000 in, under 1 000 out); a step asked
+   again (three calls or more of one step for one goal). Each is a line to explain or a goal to make.
+3. **The beta's run reports it** (`docs/beta/run-the-whole-way.md`): the goal's spend and every line worth a look, its
+   call's prompt and answer at hand in the day log.
+4. **Later**: the same in the page's *Spend* and on the phone, when the phone's spec (§222–§226) is built.
+The owner's call.
