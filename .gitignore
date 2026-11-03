@@ -20,3 +20,6 @@ venv/
 
 # Claude Code agents' worktrees (parallel work on this repo)
 .claude/worktrees/
+
+# The beta's run (docs/beta/run-the-whole-way.md): its pictures and report stay local
+beta-run/
