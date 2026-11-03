@@ -1,4 +1,4 @@
-"""📒 The local event log (docs/design/dogfood-logs.md §3): every product event, exact, on this machine only.
+"""📒 The local event log (docs/design/dogfood-logs.md §3): every product event, exact, on this machine, and to the project's own remote only when it asks.
 
     event_log.record(root, event_log.ASKED, building="pool", ork="Grunt", task="t1", text="Which port?")
     event_log.read(root, since="2026-10-14")       # the lines, oldest first
@@ -6,8 +6,9 @@
     event_log.summary(root, since=…)               # the counts the owner reads after a week (`orkcraft usage local`)
 
 It sits beside the anonymous usage stats (core/usage.py) and is not them: whatever the person said to sharing,
-these lines are written to `.orkcraft/usage/events.jsonl` in the town's folder and never leave the machine — no
-proxy, no batch, no network. They may hold the town's own words (a question an ork asked, its options), because
+these lines are written to `.orkcraft/usage/events.jsonl` in the town's folder and no longer leave the machine by
+themselves — no proxy, no batch: they go to the project's own remote only when `[journal]` in orkcraft.toml asks for
+it (realm/remote_journal.py, decisions §229). They may hold the town's own words (a question an ork asked, its options), because
 only the person who owns the town reads them, by hand or in the analytics zip (realm/analytics.py).
 
 A closed list of events (`EVENTS`); an unknown one is not written. A field is kept as it is when it is plain data
@@ -250,6 +251,8 @@ QUESTION_PASSED = "question_passed"      # spec 128 D: a leader's question passe
 EVENTS += (QUESTION_PASSED,)       # spec 128 D
 EVENTS += (SPEC_FOLDED,)            # spec 127 C
 EVENTS += (LEADER_CHANGE_ASKED, LEADER_CHANGE_ANSWERED)      # spec 128 E
+JOURNAL_SENT = "journal_sent"      # decisions §229: the journal sent to the project's remote (or not): sent, remote, branch, files, held_back (lines held for a secret's shape), commit, why (a failure's words, "nothing changed")
+EVENTS += (JOURNAL_SENT,)
 
 _LOCK = threading.Lock()
 

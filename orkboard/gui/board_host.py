@@ -447,6 +447,33 @@ class Orkboard:
         self.pusher.tick()
         self.keep_awake.tick(now)
         self.sign_ins.tick()
+        self._journal_tick()
+
+    def _journal_tick(self) -> None:
+        """Each open project that asked for a `[journal]` (realm/remote_journal.py, decisions §229) sends it when due, in a
+        daemon thread of its own (one at a time), never blocking the clock and never raising into it. Next step, §229.4:
+        *at once on a failure* (a goal that failed, a gate gone red, a command broken): `due(..., urgent=True)`."""
+        import datetime as dt
+        import threading
+        from orkboard.realm import remote_journal
+        try:
+            busy = getattr(self, "_journal_threads", None)
+            if busy is None:
+                busy = self._journal_threads = {}
+            now = dt.datetime.now()
+            for p in list(getattr(self.projects, "open_ones", None) or []):
+                if busy.get(p.path) is not None and busy[p.path].is_alive():
+                    continue
+                config = remote_journal.read_config(p.root)
+                state = Path(p.ideas.state_dir)
+                if config is None or not remote_journal.due(state, config, now):
+                    continue
+                pages = p.ideas.root(False)
+                busy[p.path] = t = threading.Thread(target=remote_journal.send, args=(p.root, state, config, now),
+                                                    kwargs={"pages": pages}, daemon=True, name="orkboard-journal")
+                t.start()
+        except Exception:                         # a journal that cannot be sent troubles no work
+            pass
 
     def _mana(self) -> dict[str, Any]:
         """The tool now with no project open: the Main tool, nothing moved (a Board's own is `Ideas.mana`)."""

@@ -12,6 +12,7 @@ same socket the page uses (gui/server.py): every act is one of the page's own co
     orkboard drive shot out.png --width 390          # the page as a phone sees it (Playwright, where it is installed)
     orkboard drive stop                              # the served project stopped
     orkboard drive spend --since 2026-11-03          # what the calls spent, and where tokens went for nothing (realm/spend_report.py)
+    orkboard drive journal --dry-run                 # what `[journal]` in orkcraft.toml would send to the project's remote (--now: send it now; decisions §229)
 
 The served project's address (its token inside) is kept in `<project>/.orkcraft/drive.json`, readable by its owner alone,
 removed when it stops; `--url` names a server instead (an editor's `--serve`). **The AI tools are hidden unless asked for**:
@@ -78,6 +79,33 @@ def socket_of(url: str, origin: str = "") -> tuple[str, str]:
     origin = origin or f"{parts.scheme}://{parts.netloc}"
     scheme = "wss" if parts.scheme == "https" else "ws"
     return f"{scheme}://{parts.netloc}/ws?t={token}", origin
+
+
+def journal(root: Path, dry_run: bool = False, now: bool = False) -> int:
+    """`drive journal`: what the project's `[journal]` would send (`--dry-run`), or its sending (due, else `--now`)."""
+    import datetime as dt
+    from orkboard.realm import remote_journal as rj
+    config = rj.read_config(root)
+    if config is None:
+        print("This project has no journal: nothing is sent. To turn it on, add a [journal] table to orkcraft.toml "
+              "(remote = \"origin\", branch = \"orkboard/journal\", every = 15, prompts = false).")
+        return 0
+    state = root / ".orkcraft"
+    if dry_run:
+        files, held = rj.pack_counted(root, state, prompts=config.prompts)
+        for name, body in files.items():
+            print(f"{name}  {len(body)} bytes")
+        print(f"{len(files)} files; {held} lines held back (they looked like a secret). Would go to {config.remote} "
+              f"as {config.branch}. Nothing was sent.")
+        return 0
+    when = dt.datetime.now()
+    if not now and not rj.due(state, config, when):
+        print(f"Not due yet (every {config.every} minutes); --now sends it anyway.")
+        return 0
+    result = rj.send(root, state, config, when)
+    print(f"Sent {result['files']} files as {result['commit'][:10]} to {config.remote}/{config.branch} "
+          f"({result['held_back']} lines held back)." if result["sent"] else f"Not sent: {result['why']}")
+    return 0 if result["sent"] or result["why"] == "nothing changed" else 1
 
 
 def find_root(folder: str | None) -> Path:
@@ -476,6 +504,10 @@ def main(argv: list[str]) -> int:
     sp.add_argument("--since", default="", metavar="DAY", help="From this day on (YYYY-MM-DD)")
     sp.add_argument("--goal", default="", help="One goal's calls only (its slug)")
     sp.add_argument("--json", action="store_true", help="As data")
+    jn = sub.add_parser("journal", help="The project's journal on its own remote (needs [journal] in orkcraft.toml)")
+    jn.add_argument("--folder", default=None, help="The project (default: the one this folder is in)")
+    jn.add_argument("--dry-run", action="store_true", help="Say what would go (names, sizes, lines held back); send nothing")
+    jn.add_argument("--now", action="store_true", help="Send it now, even if it is not due")
     p = sub.add_parser("shot", help="A picture of the page (a phone's size by default)")
     p.add_argument("file")
     p.add_argument("--width", type=int, default=390)
@@ -492,6 +524,8 @@ def main(argv: list[str]) -> int:
             found = spend_report.report(spend_report.lines_of(find_root(a.folder), a.since), a.goal)
             print(json.dumps(found, ensure_ascii=False, indent=2) if a.json else spend_report.text(found))
             return 0
+        if a.act == "journal":
+            return journal(find_root(a.folder), a.dry_run, a.now)
         if a.act == "shot":
             url = a.url or read_session(find_root(a.folder))["url"]
             print(shoot(url, Path(a.file), a.width, a.height))

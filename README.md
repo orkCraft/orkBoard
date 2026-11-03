@@ -96,6 +96,7 @@ From the terminal:
 | `orkboard usage on\|off\|status` | Anonymous usage stats and crash reports: share them, stop, or see what is set |
 | `orkboard drive start\|call\|wait\|run\|shot\|stop` | Drives a project from the terminal by the page's own commands, for an agent testing Orkboard; the AI tools stay hidden unless `--real-tools` |
 | `orkboard drive spend [--since DAY] [--goal SLUG]` | What the project's model calls spent, by tool, step and goal, and where tokens went for nothing |
+| `orkboard drive journal [--dry-run] [--now]` | The project's status, events and spend sent to its own remote's `orkboard/journal` branch, only when `[journal]` in `orkcraft.toml` asks for it |
 
 It is drawn in [orkUI](https://github.com/orkCraft/orkUI)'s office look: dark, monochrome, colour a signal, its only
 pictures the races' heads.
