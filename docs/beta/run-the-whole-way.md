@@ -59,3 +59,34 @@ log), every error toast; what was done by hand and why; what looked wrong in a p
 6. What the run cost is known per tool, and each line of *worth a look* is explained or made a goal of its own.
 
 Not beta: say which of the six failed, with its picture and its log lines.
+
+## 5. Sending it, whatever the verdict
+
+The run's results go to a branch of their own on origin, so they can be read from anywhere; never to main, never forced,
+on a pass and on a failure alike (a failure most of all). The driving session does it as its last act, or as soon as the
+run cannot go on.
+
+```bash
+orkboard drive stop                                       # first: nothing is written while it is sent
+orkboard drive spend --goal <slug> --json > beta-run/spend.json
+orkboard drive spend --goal <slug> > beta-run/spend.txt
+mkdir -p beta-run/calls && for f in .orkcraft/logs/*/*/calls.jsonl; do \
+  d=$(basename "$(dirname "$(dirname "$f")")"); b=$(basename "$(dirname "$f")"); cp "$f" "beta-run/calls/$d-$b.jsonl"; done
+branch="beta-run/$(date +%Y-%m-%d)-<slug>"
+git switch -c "$branch"
+git add -f beta-run/                                      # beta-run/ is ignored on main: added here alone
+git diff --cached --name-only | grep -v '^beta-run/' && echo "STOP: something else is staged" && exit 1
+git diff --cached --name-only | grep -E 'drive\.json|\.env|credentials|\.pem$' && echo "STOP: a secret is staged" && exit 1
+git commit -m "Beta run <date>: <pass | fails on condition n>, <slug>"
+git push -u origin "$branch"
+git switch -                                              # back where it was; main untouched
+```
+
+- **What goes**: `report.md`, the pictures, `drive-log.jsonl`, `spend.json` and `spend.txt`, and each day's `calls.jsonl`
+  (a call's tool, model, step, tokens, cost, exit code: no prompt and no answer). **What never goes**: `.orkcraft/drive.json`
+  (it holds the server's token), anything outside `beta-run/`, a credential. The calls' whole prompts and answers
+  (`.orkcraft/logs/<day>/<building>/*.json.gz`) go only when the owner says so: they hold the project's code and the
+  models' answers.
+- **The goal's own work**: the branches Orkboard made for it (the report names them) are pushed as they are, also never
+  into main: `git push origin <its branch>`.
+- **The last line of the report and of the session**: the branch's name, the verdict, and the condition that failed.
