@@ -5768,3 +5768,44 @@ every face-up card. A face-down card carries no name, only its seal (§206.3): w
 5. **Drawn first**: the column at 45 px and at 30 px tucked, the owner's pick; built with spec 130's first part, its tests
    the column's browser test (the seal whole in the shown part, the slide on hover and focus, the width).
 The owner's call.
+
+## 237. Today's decisions made lighter to use, nothing of what they can do lost: one quality card a goal, two buttons on a finding, one Change on the decision, the hypothesis short until More, no list of slices, and the hand kept for what is urgent (3 November 2026, the owner)
+
+Changes: 233.8, 233.10, 234.3, 234.4, 234.5, 234.8, 235.1, 235.3.
+
+Why: the owner, reading §233–§236 back: do they make the interface lighter or give the person more? Mostly more: only
+§236 makes it lighter, and three of them bring the hand new cards (a cascade, a finding, a hypothesis due), the hypothesis
+a form three times its size, the decision card a second button beside *Edit*. *If the person's way can be made lighter
+without losing what it can do or its quality, put it in the decisions.* So:
+1. **One quality card a goal** (this changes §234.3–§234.4): a goal's findings come to the hand **together**, as one card,
+   *Quality of <goal>*, once the goal's checks, lenses and verdict against its spec are in (not a card a finding); lifted,
+   its findings in order of their level (Decision first), each a line with the finder's head, the level's sign and its
+   two answers. A finding of no goal (a lens's alarm or a concern outside a goal's work) is a card of its own, as §234.3.
+2. **Two answers on a finding**: **Fix it there** and **Not now**; *Another level…* moves to the finding's **…** (it is
+   the rare one). On the quality card, **Fix all there** answers every finding of it at once, its cost said first.
+3. **One *Change* on the decision** (this changes §234.5): the decision's card has one button beside *Confirm and start*,
+   **Change…**: the entry opens as a field (as *Edit* did), and under it one line, *Or say what to change*: what is typed
+   in the field is kept as written; what is said in the line is worded again by the Orkmaster (one `decide` call, its
+   cost said). *Edit* and *Change it in words* are this one button. *Add to the goal* stays in the bubble.
+4. **A hypothesis is short until More** (this changes §235.1, §235.3 on the page; the file keeps its whole form):
+   adding one asks only *We believe* and *Holds when*; **More** opens *Refuted when*, the measures with their date and
+   *If it holds*. A leader's proposal answers all of them, shown short the same way. *Did it hold?* shows the values
+   against the bars in one line each, the draft of the decision under *More*. **A refuted hypothesis is one card**: its
+   verdict card carries the Orkmaster's level of the finding (§235.5) as its *Fix it there*, not a second card.
+5. **No list of slices** (this changes §233.10): a leader's slices are not drawn in the one place of the parties; the
+   leader's bubble answers from them (*what do you hold about the timer?*), and a slice's link in any answer opens its
+   decision. Nothing of the slices is lost: they are read into every call as §233.3 says.
+6. **A cascade folds when all agree** (this makes §233.8 shorter): with no fork, the card says the new decision and one
+   line, *Tech and Art agree*, the chain before and after under **More**; with a fork, the fork first, as §233.8.
+7. **A change says its cost in one line** (§234.2): *About 4% of Claude's week: 2 sections, 3 tasks*; what each is, under
+   **More**.
+8. **The hand is kept for what is urgent**: the cards of today's decisions (a cascade, a quality card, a hypothesis due)
+   are never urgent. They lie in the hand **after** a failure and a question (the hand's order, `piles.js`), push nothing
+   to the phone and show no toast; **at most one of each kind a goal** is in the hand (a second finding joins its goal's
+   quality card, a second cascade on the same points waits for the first); **Not now** takes a card out of the hand and
+   keeps it where it belongs (the quality record, the hypothesis open), from where it is taken again with no new call.
+9. **The words** (`TERMS`): *Quality of <goal>*, *Fix all there*, *Change…*, *Or say what to change*, *<A> and <B>
+   agree*; *Another level…*, *Edit* and *Change it in words* are said no more on a card's face.
+10. **Built** with the specs of the decisions it lightens (spec 131 for 5–6, spec 132 for 1–3, 7–8, spec 133 for 4), each
+   written to this decision, not to the heavier text before it.
+The owner's call.
