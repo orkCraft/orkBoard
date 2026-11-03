@@ -5692,3 +5692,55 @@ levels: *yes*. So:
    down** (2: what a change pulls, said on every change card); **D. Findings and the quality record** (3, 4: the steps
    `finding` and `finding_level`, the record, the card, the *Quality* page). A and B first: they stand alone.
 The owner's call.
+
+## 235. A hypothesis says when it holds and each way it is refuted, is tested by a goal, a measure or both, says what changes if it holds, and is read from the project's own hypotheses file; refuted, it is a finding (3 November 2026, the owner)
+
+Changes: 194.1, 194.2; spec 116 §2, §6.2.
+
+Why: the owner asked how hypotheses are present in Orkboard, after writing H4 in Orkboard's own `docs/hypotheses.md`.
+Read side by side: Orkboard's hypothesis (§194, spec 116) is *We believe …* and one line *We'll know when …*, tested by
+goals and judged *Did it hold?* when they are done; the hypotheses Orkboard itself is run by (H1–H4) say apart **when
+they hold and each way they are refuted, with what each way teaches** (H4's *the hook* and *the noise*), are tested by
+**measures over weeks** (an install's cost, coming back within 7 days, goals landed), and say **what changes if they
+hold**. None of H3 or H4 can be kept in Orkboard as it is: it has no condition apart from the signal, no test but a goal,
+no date to judge by and no draft of the decision it would write; and a project that keeps its hypotheses as a file, as
+Orkboard does, has them twice. The owner's *yes* to all three and to this. So:
+1. **Two conditions in place of one signal**: **Holds when …** (one line) and **Refuted when …**, one to three ways, each
+   one line and named by what it would teach (*the hook*, *the noise*). An item kept before reads its `signal` as its
+   *Holds when* and has no refuted way until one is written. A leader's proposal (spec 116 §3) answers both.
+2. **A test is a goal, a measure, or both.** A measure: what is counted, where it is read from, its threshold in each
+   condition, and **a date**: the span from the test's start (*four weeks*), the date kept. Its values come **from the
+   leader whose map holds the source** (one call on the date, the cheaper tier: Run's or LiveOps' live product at the
+   stage *live*, spec 115; Marketing's store page, §214), else **from the person**, asked on the card at the date (a number
+   for each measure, the one answer here that is typed). No measure is shown counting before its date (no number in the
+   window: CLAUDE.md's frame).
+3. ***Did it hold?* comes when it is due**: every test goal done, or a measure's date reached, whichever is later of the
+   two when it has both. Its card shows the values against each condition's threshold, code marking the condition they
+   meet (*Holds: +24%, the bar 20%*; *Refuted, the noise: 1 in 4 turned it off*), and the person judges: **Held**,
+   **Refuted** with its way (the met one picked), **Not sure yet** with a new date (the why kept as evidence, as today).
+4. **If it holds, if it is refuted**: a hypothesis says **what changes if it holds**, and may say what changes for a
+   refuted way; that text is **the draft of the decision** the verdict writes. *Held* or *Refuted* shows the draft on the
+   card (*Edit*, *Change it in words*: §234.5) and writes it in the same press; a hypothesis with no such text is worded
+   by the Orkmaster's `decide` call from the hypothesis, its evidence and the verdict, as today.
+5. **Refuted, it is a finding** (§234.3): Product's leader gives its content (what was believed, what was measured, what
+   the goals resting on it assumed) and the Orkmaster sorts its level; the goals that rest on it (`rests`) are named in
+   it, so a decision they stood on reaches them by §233's cascade. **Held**, its decision is cut into slices (§233.1) like
+   any other.
+6. **The project's own hypotheses file** is the source, as its decisions file is (spec 126's read in and write out): a
+   Markdown file of numbered hypotheses (`## H<n>. <title>`, *Status*, *The belief*, *What would prove it, what would
+   refute it*, *How we test it*, *If it holds*), found and chosen as the decisions file is (the person's chosen path,
+   else `docs/hypotheses.md` when it is there). Read in, each section is an item (the belief its text, the conditions
+   from its list, the measures from *How we test it* where a line names one, *If it holds* its draft); a change made in
+   Orkboard (kept, judged, evidence) is written back to its section and committed to dev with the Board's pages, as a
+   decision is. `hypotheses.json` follows the file: it keeps only what the file has no place for (the goals attached, the
+   proposal's status). A project with no file keeps them in `hypotheses.json` as today. So Orkboard, worked on in
+   Orkboard, shows H1–H4 on its Product's tree.
+7. **The bounds stay** (seven open or testing, spec 116 §2): a file that holds more opens the newest seven and reads the
+   others as *waiting*, never dropped.
+8. **The words** (`TERMS`): `refuted_way` (*way it is refuted*), `measure` (*measure*); *Holds when*, *Refuted when*,
+   *If it holds*, *Read on <date>*, *The bar*, *Not sure yet: look again on <date>*.
+9. **Built** by spec 133 (after spec 132 D for 5), its parts by the cheaper model: **A. Conditions and the draft** (1,
+   4: `realm/hypotheses.py`'s item, the proposal's answer, the tree's lines, the card); **B. Measures and the date** (2,
+   3: the measure, the due, the values read by a leader or asked, the card against the bars); **C. The file** (6:
+   read in, written out, committed); **D. Refuted as a finding** (5, on §234's way up). A first; C stands alone.
+The owner's call.
