@@ -5548,3 +5548,68 @@ the pane leaves the ring and the discard standing beside a form. The owner's yes
     the card). Each part merged into main as its own tests and the critical ones are green, with a browser test of the first
     open from an empty folder to the laid table.
 The owner's call.
+
+## 233. Every leader keeps its slice of each decision: the decision cut once into a slice for each leader it touches, the slice's key conclusion and its reason's link; a leader proposes a change from its craft, and the change cascades through the slices that rest on it, three steps at most, to one card in the hand (3 November 2026, the owner)
+
+Changes: 153.4, 206.5; spec 99 §6.1, §7.2.
+
+Why: the owner, on what a step costs: *a decision costs the least: it is quick and cheap to change or to sync with the
+others; a spec is harder: the leaders are asked again and the project's state checked*. So: *every leader keeps all the
+decisions on its spec, each decision cut into the leaders' slices, the key conclusion for that slice and a link to its
+reason, and can change decisions in a cascade from its craft*. Then, asked three things: *every leader the decision
+touches, not only the route's: more tokens, but every leader sure to get the right context*; *only the new ones, from this
+decision on*; *deeper, with a reasonable limit*. Today the decision's call reads the decisions file's last ten headings
+only (spec 99 §6.1) and a section its own goal's decision (§7.2): a conflict with an earlier decision shows as a fork
+after the sections are paid for, or not at all, and a leader that finds a decision wrong for its craft can only ask.
+Changing decisions is cheap and rewriting sections dear, so the cascade runs deep in the decisions and touches the
+sections once, at its end. So:
+1. **The decision is the source; a slice is cut from it.** At **Confirm and start** (`ideas.confirm`), once the entry is
+   committed, one call of the Orkmaster on the cheaper tier, no tools (step `slice`), given the entry and **every leader
+   of the project** with its map in one line (`map_text`'s), answers for each leader either **its slice**, the key
+   conclusion for its craft in one or two lines and the points it rests on (the link, *§240.2*), or **none**. Every leader
+   the decision touches gets one, on the goal's route or not, Release too; *none* is an answer and is kept, so no leader
+   is left out unseen. One call a decision, not one a leader.
+2. **A slice is never edited**, by the person or a leader: a change is a new decision (5–8), and its cut replaces the
+   slices that rest on the points it changes (`replaced_by`), the old ones kept and no longer read. Slices are kept beside
+   the facts (§153.4), `<state_dir>/slices.json`, `{party: [{decision, points, says, at, replaced_by}]}`; they are derived,
+   so a missing file is cut again from the decisions file (for the decisions this one covers, 4).
+3. **Read into every leader's call** beside its facts (`project_facts.for_call`): its standing slices, the newest first,
+   each with its link, bounded as the brief is (about 1,000 characters; beyond it, the oldest as their links alone). A
+   member reads none: its leader's brief carries what it needs. **The decision's call reads them too**: the standing
+   slices of the route's leaders and of those whose parts of the map the goal touches, so a conflict with an earlier
+   decision is seen and said in the decision, before any section is written.
+4. **Only the new**: decisions from this one on are cut; the earlier are not. Until the slices fill, the last ten headings
+   stay in every call as today; they go when a decision says so.
+5. **A leader proposes, never changes** (§104: *what* and *why* are the Orkmaster's and the person's). When a leader is
+   called anyway (writing its section, planning or checking a task, answering in Talk) and finds a standing slice of its
+   own wrong for its craft (the project says otherwise, the work ran into it), its answer carries **a proposal**: the
+   slice as it would read, why, and the link it changes. No call is made to look for one: nothing runs in the background
+   (spec 99 §3). A proposal changes nothing by itself.
+6. **The cascade, by code and short answers**: code finds the other leaders' standing slices that rest on the points the
+   proposal changes (by their links, no model); each such leader answers in a sentence (the cheaper tier, no tools, given
+   its slice and the change): **agrees**, with its slice as it would read, or **disagrees**, and why. An agreeing leader's
+   changed slice is the next step: the slices resting on it are found and asked in turn. A disagreement is **a fork**, as
+   spec 99 §7.3's, for the person.
+7. **Its bounds**: **three steps** at most from the proposing leader; **a point changed once in a cascade is not changed
+   again in it** (a second change of it is a fork); and **a price**: each step priced before it is asked, the cascade
+   stopping at **2% of the main tool's week** (a default, tuned by H1's trial, spec 124 C), whichever comes first. Where it
+   stopped is said on its card (*Stopped after three steps: Marketing was not asked*).
+8. **One card in the hand**: a decision card, as *Make it a change*'s (§206.5) but proposed by the leader: the new
+   decision worded by the Orkmaster's `decide` step, its `Changes:` line naming the decisions it changes; the chain as the
+   leaders' heads in order, each slice before and after; the forks to answer first; the cost of what follows (the
+   sections to write again); **Confirm and start** and **Put it back**. Until Confirm nothing changes: put back, every
+   slice stands.
+9. **After Confirm**: the entry appended and committed (spec 99 §6.2), cut (1); then only **the goals not done** whose
+   sections rest on a changed point have those sections written again, one call a section (as a fork's answer, spec 99
+   §7.3), a goal at work re-planning what is left (spec 62). **Goals in the discard are not touched**: each is checked
+   against the spec it was built to (§206.8).
+10. **Seen**: a leader's slices are read (never edited) in the one place of the parties under its leader's row, beside
+    its facts (§153.4), each a link to its decision; the leader's bubble (§206.5) answers from them.
+11. **The words** (`TERMS`): `slice` (*slice*: a leader's part of a decision), `cascade` (*cascade*); *Proposes*,
+    *Agrees*, *Disagrees*, *Stopped after <n> steps*.
+12. **Built** by a spec of its own (spec 131), its parts by the cheaper model: **A. Slices** (the cut, the store, the
+    reading into the calls and the decision's call: host only, no face; merged on its own, useful alone); **B. The
+    proposal and the cascade** (host: the proposal in a leader's answer, the links followed, the steps, the bounds, the
+    card's row); **C. Faces** (the card in the hand, the slices in the one place of the parties). Each part merged into
+    main as its own tests and the critical ones are green.
+The owner's call.
