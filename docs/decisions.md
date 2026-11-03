@@ -4947,3 +4947,39 @@ hibernating connection billed by no time, and can later splice a stream. So:
    year, $25 once).
 8. The spec builds 1–4 and 6 (spec 103 widened: the relay part becomes the mailbox's Worker); 5's stream is a later spec.
 The owner's call.
+
+## 220. What a project is built with: Play's contract is a web build made from the command line, Godot the engine best seen, a canvas marked by its coordinates, Play's proxy cross-origin isolated, a device before a release (3 November 2026, the owner)
+
+Changes: 193, 208, 209, 213; spec 115.
+
+Why: the owner asked whether Orkboard should offer cross-platform engines (Flutter, Unity, Godot) so that no Android or
+iOS emulator need run. What spares the emulator is not being cross-platform but **a web build the agents can make with
+no window and Play can open** (spec 115: Play is the machine's web preview; the probe, a task's pictures and the marks
+live there); and the maps are read from the code (§208.5, §209.5), so a project read as text is seen better. Measured:
+a web stack (React, Phaser, PixiJS, Three.js) builds natively and its DOM shows the probe everything; Godot exports
+from the command line (`--headless --export-release`), its scenes and scripts plain text (`.tscn`, `.gd`), but draws on
+a canvas; Flutter builds for the web (`flutter build web`), on a canvas, with a semantics tree when asked for; Unity
+needs its editor and a licence in batch mode, its WebGL build takes minutes, its scenes are large YAML of GUIDs with
+`.meta` files beside them, on a canvas; a native Swift or Kotlin app has no web build, so no Play. So:
+1. **Play's contract is a web build made from the command line**: a project gets Play when its agents can build it for
+   the web with no window and the build serves a page; not by its engine. A project without one is told so, with the
+   engine's own way to add it (*Play needs a web build: add a Web export* and the line for Godot, Unity, Flutter or Expo).
+   A native app is told plainly that Play and the live checks are not there for it, the other maps are.
+2. **Godot is the engine best seen**: free, built from the command line, its project plain text, so its maps are the
+   fullest; §208.5's and §209.5's engines are built Godot first, then Unity, then Unreal. Godot 4's C# does not export to
+   the web: a C# project has no Play until it does, and is told so.
+3. **Said at the start, never forbidden**: a new project hears *Orkboard sees web projects and Godot best; Unity and
+   Flutter work, with some checks not there*; the person chooses.
+4. **A canvas is marked by its coordinates**: an engine drawing on a canvas has no DOM elements, so on it §209.4's focus
+   path and contrast and spec 115's marks held by an element are not there; a mark is held by its place on the canvas
+   and the moment, with the screen's picture. A Flutter web build is built with its semantics tree on, and the probe
+   reads it as elements where it is.
+5. **Play's proxy is cross-origin isolated** when the build asks for it (`Cross-Origin-Opener-Policy: same-origin`,
+   `Cross-Origin-Embedder-Policy: require-corp`), as Godot's threaded web export and other WebAssembly builds need
+   (SharedArrayBuffer); Godot's single-threaded export needs none.
+6. **A device before a release, in Readiness** (§213.2): the daily loop needs no emulator, but a release to phones asks
+   for a run on a real device (touch, permissions, speed; an iOS build needs macOS with Xcode), and one to Steam for a run
+   of the Linux build where the Deck is meant; Readiness says *Not yet run on a device* until the person ticks it.
+7. **Checked before it is built**: Godot's web export of C# in its current version; Unity's batch-mode build without a
+   paid licence; Flutter's semantics tree in its web build.
+The owner's call.
