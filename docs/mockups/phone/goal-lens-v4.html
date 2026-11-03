@@ -338,12 +338,10 @@ ringed while open), <b>the middle</b> (the project, or the goal), <b>the bottle<
 the leaders it touches, and comes back as one card for all of them. 390 × 844. A stand-in party game. Not decided.</p>
 <main class="mk-main" id="main"></main>
 <section class="note">
-<p><b>Open for the owner</b></p>
+<p><b>Decided on v4</b> (decisions §225): one setting for the wait; the change comes back as one card from the Orkmaster; accepting it starts the work at once when the limits allow.</p>
+<p><b>Still open</b></p>
 <ul>
-<li>The time a spec waits for a look before it starts by itself: by its size (as drawn: 2 h for this one), or one setting for all?</li>
-<li>A change through the Orkmaster comes back as one card with every leader's section inside it (as drawn); or as each leader's card, stacked on the goal?</li>
-<li>Accepting a change starts the wait again from its accepting (as drawn), or keeps the old start time?</li>
-<li>The + card's side, the spines' names and a lens's order stay open from v3.</li>
+<li>The + card's side for a right thumb; the spines' names; a lens's order (from v3).</li>
 </ul>
 </section>
 <script>
@@ -540,7 +538,7 @@ const PLAN_LB = `<div class="sec"><p class="lab">The plan</p><ul class="plan2">
 const START = (held) => `<div class="start">
     <p class="when">${icon("clock")}${held ? "Held while you write" : "Starts by itself at 13:40"}</p>
     <div class="qbar${held ? " held" : ""}"><i></i></div>
-    <p class="cap">${held ? "It will not start until you send or close the change." : "If you do not look, it starts: Settings give a spec this size 2 hours."}</p>
+    <p class="cap">${held ? "It will not start until you send or close the change." : "If you do not look, it starts: you give every spec 2 hours (Settings)."}</p>
     ${held ? "" : `<div class="acts2"><button class="ork-btn grow">${icon("pencil")}Change the spec</button><button class="ork-btn quiet">Start now</button><button class="ork-btn quiet">Later</button></div>`}</div>`;
 const ORK_REVIEW = (held) => OTITLE("The Orkmaster", "the plan of this goal") + `<div class="mid">${START(held)}${PLAN_LB}</div>`;
 
@@ -552,17 +550,17 @@ const CHANGE = `<div class="scrim" style="top:111px"></div><div class="sheet" ro
   <p class="cap mute">The Orkmaster passes it to the leaders whose sections it touches. To ask one leader, write @Tech.</p>
   <div class="acts"><button class="ork-btn primary grow">Send to the Orkmaster</button><button class="ork-btn quiet">Close</button></div></div>`;
 
-const CSTACK = `<div class="cstack"><article class="ork-card cc"><p class="h">${elem("lava")}${sign("page")}</p>
+const CSTACK = `<div class="cstack"><article class="ork-card cc"><p class="h">${elem("lava")}${sign("page")}<span style="margin-left:auto">${head("peon-crown")}</span></p>
   <p class="q">Leaderboard: your change, in 3 sections</p><span class="hs2">${head("shaman-elder")}${head("dryad-elder")}${head("imp-elder")}</span>
   <span class="look">Press to look</span></article></div>`;
 const CLIFT = `<div class="scrim"></div><article class="ork-card clift">
-  <p class="h">${elem("lava")}${sign("page")}Leaderboard: your change</p>
+  <p class="h">${elem("lava")}${sign("page")}Leaderboard: your change<span style="margin-left:auto">${head("peon-crown")}</span></p>
   <p class="said">Weekly, not all-time: the board starts again on Monday, and the top three wear a crown in the lobby.</p>
   <div class="itabs"><button class="is-on">${head("shaman-elder")}Tech</button><button>${head("dryad-elder")}Art</button><button>${head("imp-elder")}LiveOps</button></div>
   <div class="np"><div><span class="lab">Now</span><span class="t"><span class="op"> </span>One scores table, all-time</span><span class="t"><span class="op"> </span>Its API: the top ten</span></div>
     <div class="pr"><span class="lab">Proposed</span><span class="t"><span class="op">~</span>A table a week</span><span class="t"><span class="op add">+</span>Reset on Monday 00:00</span><span class="t"><span class="op">~</span>Its API: this week's ten</span></div></div>
-  <p class="cost">The three sections agree (the Orkmaster joined them). About 2 calls more · accepted, it waits again and starts at 15:40.</p>
-  <div class="acts2"><button class="ork-btn primary grow">Accept</button><button class="ork-btn quiet">Talk more</button><button class="ork-btn quiet danger">Drop it</button></div></article>`;
+  <p class="cost">The three sections agree (the Orkmaster joined them). About 2 calls more. Accepted, it starts now: about 5 calls · 3% of Claude's week.</p>
+  <div class="acts2"><button class="ork-btn primary grow">Accept and start</button><button class="ork-btn quiet">Talk more</button><button class="ork-btn quiet danger">Drop it</button></div></article>`;
 
 const FOOTL = (hand, die) => FOOT(hand, die, "low");
 const screens = [
@@ -574,9 +572,9 @@ const screens = [
     H_GOAL(LB, true) + TABS(-1, LB_TABS) + ORK_REVIEW(false) + FOOTL(STUBS, DIE("off", "spec"))],
   ["4 · A change written to the Orkmaster", "Change the spec opens a field to the Orkmaster: it names the leaders it will go to and the cost before it is sent. While you write, the spec is held and will not start.",
     H_GOAL(LB_HELD, true) + TABS(-1, LB_TABS) + ORK_REVIEW(true) + FOOTL(STUBS, DIE("off", "spec")) + CHANGE],
-  ["5 · The change back: one card", "The leaders rewrote their sections and the Orkmaster joined them: one card for the goal, in the hand, raised; the spec still held until it is answered.",
+  ["5 · The change back: one card", "The leaders rewrote their sections and the Orkmaster joined them: one card for the goal from the Orkmaster (the crown its asker, the leaders inside), in the hand, raised; the spec still held until it is answered.",
     H_GOAL(LB_HELD, true) + TABS(-1, LB_TABS) + ORK_REVIEW(true) + FOOT(CSTACK + STUBS, DIE("off", "spec"))],
-  ["6 · The change looked at", "Pressed, the card lifts: your words, then each leader's section as a tab, Now and Proposed, whether they agree, the cost, and Accept, Talk more or Drop it. Accepted, the spec waits again from now.",
+  ["6 · The change looked at", "Pressed, the card lifts: your words, then each leader's section as a tab, Now and Proposed, whether they agree, the cost, and Accept and start, Talk more or Drop it. Accepting is the look: the work starts at once when the limits allow, else after the reset.",
     H_GOAL(LB_HELD, true) + TABS(-1, LB_TABS) + ORK_REVIEW(true) + FOOT(`<div class="cstack" style="visibility:hidden"></div>` + STUBS, DIE("off", "spec")) + CLIFT],
   ["7 · A leader asks: its tab and its card", "A goal still in Spec with Tech's tab open: the crown not ringed, the leader's question raised in the hand with its pick one tap away, as v3.",
     H_GOAL(JUMP, false, bottle("claude", 12, "low")) + TABS(1, J_TABS) + TECH + FOOT(QSTACK + STUBS, DIE("off", "spec"))],

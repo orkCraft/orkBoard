@@ -5181,3 +5181,25 @@ goal's spec; the desktop follows in 3–6):
 7. **The mockup**: `docs/mockups/phone/goal-lens-v4.html` (v1–v3 kept beside it). Open in it: the wait by size or one
    setting; one card for the change or a leader's card each; the wait after accepting from then or kept; and v3's own.
 The owner's call.
+
+## 225. One setting for a spec's wait; a change comes back as one card from the Orkmaster; accepting a change is the look, so the work starts at once when the limits allow (3 November 2026, the owner)
+
+Changes: 121, 221, 224.
+
+Why: the owner's answers to §224's open questions: one setting is simpler to understand than a wait by the spec's size;
+the change should come back as one card from the Orkmaster; and after *Accept*, rather than a new wait, the work could
+start at once when the limits allow. A wait by size cannot be told in advance (*why did this one start before that
+one?*), and the spec's size is already said by its cost; a person who has read a change and accepted it has looked,
+so a second wait asks for a look already given. So (this changes §224.3 and §224.4):
+1. **One setting for the wait**, for every spec: *Give me time to look: 30 min · 2 h · until tonight · do not wait*, 2 h
+   at first; the line under the start says it (*If you do not look, it starts: you give every spec 2 hours*). The wait by
+   size goes.
+2. **A change comes back as one card from the Orkmaster**: its asker on the card's face is the Orkmaster's crowned head
+   (the change was routed and joined by it); the leaders whose sections changed are inside it, a tab each, *Now* and
+   *Proposed*.
+3. **Accepting is the look**: the act says what follows, **Accept and start** when the limits allow (the card already
+   says its cost, so the money rule holds, §121.3); when they run low, *Accept · starts after the reset, Mon 09:00*, the
+   work waiting and the reading not (§221.5); when every seat is taken, the goal goes first in line and starts as soon as
+   one is free. *Talk more* and *Drop it* as §224.4.
+4. The mockup `docs/mockups/phone/goal-lens-v4.html` is changed to say it.
+The owner's call.
