@@ -5621,3 +5621,74 @@ sections once, at its end. So:
     card's row); **C. Faces** (the card in the hand, the slices in the one place of the parties). Each part merged into
     main as its own tests and the critical ones are green.
 The owner's call.
+
+## 234. Four levels, decision, spec, work and quality, ordered by their weight on the product and the cost of a change; a change goes down and redoes only what it touches; a finding goes up to the level that holds its cause, its content from the leader where it was found and its level the Orkmaster's; a goal is refined freely before Confirm; the phase marks are the levels (3 November 2026, the owner)
+
+Changes: 126.4, 206.5, 206.8; spec 100 §5.
+
+Why: the owner, on how the owner and Claude work on Orkboard itself (an idea, a decision, a spec, its build): *we have
+three, even four levels: decision, spec, implementation, quality and improvements; they are sorted by their effect on the
+system and by how hard and costly a change is; I want this scheme wholly present in Orkboard*. And, on a goal before its
+decision: the column's face-down card cannot be picked, a leader's bubble on it changes nothing, *Make it a change* waits
+for a goal agreed, Talk is one round and the decision is corrected by hand only, so the cheapest level is the least open
+to change. Today the four are there as four mechanisms that do not know of each other: a decision (spec 99 §6, §233), a
+section (spec 99 §7, §206.5's change), a task (spec 62's re-plan, a failure's *Start again*), and quality scattered over
+the discard against its spec (§206.8), the checkers, the lenses (§208–§214), a leader's concerns (spec 108), the
+hypotheses (§194) and the measures (§202). A change does not say its level, and a finding has no way up to its cause:
+a ≠ in the discard becomes a new goal whether the code, the spec or the decision was wrong. Asked who sorts a finding:
+*the Orkmaster, but the leader where it was found gives its whole content*. Asked whether the phase marks become the
+levels: *yes*. So:
+1. **The four levels**, heaviest and cheapest to change first: **Decision** (what and why: the decisions file and the
+   leaders' slices, §233; the person and the Orkmaster; a change is one call without tools), **Spec** (how, by craft: the
+   goal's sections; the leaders; a change is a leader's call reading its map), **Work** (the tasks and the code; the
+   members; a change is a re-plan and the tasks again), **Quality** (what came out against what was promised; the
+   checkers and the person through Play; a finding is cheap, its fix is at the level of its cause). The rule: **change at
+   the highest level that holds the cause; redo below it only what the change touches; take a finding up to its cause.**
+2. **A change goes down, and redoes only what it touches**: a decision changed (§233's cascade) → the sections resting on
+   its changed points → the tasks of those sections not done (spec 62's re-plan) → their *Done when* checked again; a
+   section changed (§206.5) → its tasks → their checks; a task changed → its checks. Nothing above the level a change
+   enters is redone, nor what the change does not touch. **Every change card says its level and what it pulls after
+   it**: its level's sign, then plainly *Changes the decision: 2 sections and 3 tasks to redo, about 4% of Claude's week*,
+   the cost of the whole way down said before it is spent.
+3. **A finding goes up to the level that holds its cause.** A finding is any of: a ≠ or ✗ of the discard against its spec
+   (§206.8), a check red, a lens's alarm on a part the goal touched (§208–§214), a leader's concern (spec 108), a
+   hypothesis refuted (§194), a measure missed (§202). **The leader of the craft where it was found gives its whole
+   content** (one call, the cheaper tier, its map and the few files that show it: step `finding`): what was found, what
+   shows it (the check, the screen, the part, the number), what was promised there (the *Done when*, the section, the
+   slice), and its own reading of the cause. A member's finding goes to its leader (a member asks only its leader). Then
+   **the Orkmaster sorts it** (one call, the cheaper tier, no tools: step `finding_level`), given that content, the
+   decision's entry and the slices it rests on, the section and the task: **its level** (*Work*: the code missed what the
+   spec said; *Spec*: the spec said the wrong thing or left it out; *Decision*: the decision was wrong) and what would
+   change there. The card in the hand: *<Party> found: …*, the finder's head, the level's sign, *The cause is in the
+   spec*, the cost of the fix and of everything below it (2); **Fix it there** (Work: a fix goal on the same route,
+   short; Spec: the section's change, as §206.5's; Decision: a proposal into §233's cascade), **Another level…** (the
+   person moves it; the cost said again), **Not now** (kept in the goal's quality record, 4). A failure while a goal is at
+   work stays as today (its checks red twice, the failure card): this is for what a goal did once it landed, and for
+   findings from outside a goal's work.
+4. **Quality is one place, a goal's quality record**: once a goal is in the discard, its record gathers its verdict
+   against its spec (✓ ≠ + ✗ by *Done when*), its checkers' results, the lenses' alarms on the parts it touched and a
+   hypothesis's outcome when it tested one; each finding with its level and what became of it (fixed there, put off, moved
+   by the person). Picked in the discard, the *Quality* page shows the record (it replaces *Done*'s result, §126.4). The
+   findings put off stay on their goal's record, never in a list of their own (no list column, no count: CLAUDE.md's
+   frame).
+5. **A goal is refined freely before Confirm**, as the cheapest level should be: in a leader's or the Orkmaster's bubble
+   about a goal in analysis, **Add to the goal** writes the person's words into its *Asked* (kept as written) and, when
+   its decision is worded already, words it again (one `decide` call); on the decision's card, beside *Edit*, **Change it
+   in words**: the person says what to change and the Orkmaster words the decision again (one `decide` call, the
+   person's words given with the old entry). Neither has a bound of rounds; each card says its cost (one call). Talk's
+   rounds stay as §121.2 has them: refining is the decision's, not a third round of the leaders'.
+6. **The phase marks are the levels**: the pane's title says **Decision · Spec · Work · Quality** (§126.4's *Talk ·
+   Spec · Work · Done*): *Talk* is the Decision mark's page (the stances), and the decision's entry is on it once worded;
+   *Quality* is the record (4). A mark is lit when its level holds an open change or finding of the goal picked (no
+   number); a press opens its page as today.
+7. **§233 is the Decision level's mechanism** (its slices and cascade); §206.5's *Make it a change* is the Spec level's;
+   spec 62's re-plan the Work level's; this decision adds the Quality level and the way up.
+8. **The words** (`TERMS`): `level` (*level*), `finding` (*finding*), `quality_record` (*quality record*); *Decision*,
+   *Spec*, *Work*, *Quality* (the marks); *<Party> found: …*, *The cause is in the code / the spec / the decision*, *Fix it
+   there*, *Another level…*, *Not now*, *Add to the goal*, *Change it in words*, *Changes the <level>: …*. The tests that
+   check the marks' words say them (`tests/test_gui_wording.py`, the table's browser tests).
+9. **Built** by a spec of its own (spec 132, after spec 131), its parts by the cheaper model: **A. Refining** (5: the
+   bubble's *Add to the goal*, the decision's *Change it in words*; host and face); **B. The marks** (6); **C. The way
+   down** (2: what a change pulls, said on every change card); **D. Findings and the quality record** (3, 4: the steps
+   `finding` and `finding_level`, the record, the card, the *Quality* page). A and B first: they stand alone.
+The owner's call.
