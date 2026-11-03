@@ -5138,3 +5138,46 @@ moment to show the lenses of the whole project. A count of the other goals' ques
    card's side for a right thumb; the spines with or without short names; a lens's order (what changed or concerns first);
    the tabs' names under the heads.
 The owner's call.
+
+## 224. A header of four places on both of the phone's screens, the Orkmaster above the leaders; a spec in To review starts at a clock time, never by a countdown, and is held while it is being changed; a change to a spec is written to the Orkmaster, who passes it to the leaders it touches, and comes back as one card (3 November 2026, the owner)
+
+Changes: 121, 195, 206, 222, 223; spec 128.
+
+Why: the owner, before v4 of the phone's mockup: should the Orkmaster stand above the leaders in the header, beside the
+project's or the goal's name, on both screens (though in v3's row of tabs it set the two screens apart); would a Back
+button make the header jump; and, for the whole flow, not the phone alone: a spec waits in To review with a timer
+between its making (the cards face down) and its work. Would the timer strain the person? Yet a spec the person does
+not look at must start by itself. And a spec's feedback meant for several leaders at once has no way: §206.5 gives one
+way to talk to a leader, and *Make it a change* is one leader's card (`js/hand/changecard.js`, `realm/leader_change.py`);
+*more and more it seems a spec's improvements should go through the Orkmaster and its routing, not as questions to the
+leaders*. On the desktop the Orkmaster is no tab among the leaders: its column is pinned, its head is its tab, *the tabs
+at the top are the leaders' only* (§206.2). So (this changes §223.1–§223.3 and §223.5, §206.3's wait and §206.5 for a
+goal's spec; the desktop follows in 3–6):
+1. **The header has four places on both screens**, the crown and the bottle never moving: **up** (on the project's
+   screen *Your projects*, the switcher; on a goal's, *Back to the project*), **the crown**, **the middle** (the project's
+   name with *Settings* and *Stop all*; or the goal: its rune, type and short name, under it its phase, its start or wait,
+   its share), **the bottle** (§223.5). Only the middle changes between the screens; the system's back (iOS's edge, Android's
+   button) does what up does on a goal's screen.
+2. **The crown is the Orkmaster's view of the level**, ringed while it is open: on the project's screen the three piles
+   and Done (§223.1), on a goal's its plan. **The tabs are the leaders' only**, each head named under it: every leader on
+   the project's screen, the route's leaders on a goal's. With no leader's tab open, the crown's view is shown.
+3. **A spec in To review starts at a clock time**: *Starts by itself at 13:40*, a quiet bar with no number, and *If you
+   do not look, it starts*; never a countdown in minutes, never a push that it is about to start (a line in *what changed*
+   only). **The wait is by the spec's size and the person's setting** (*Give me time to look: 30 min · 2 h · until
+   tonight · do not wait*), longer for a costlier spec. Its acts: **Change the spec**, *Start now*, *Later*. **Looking
+   does not hold it; writing a change does**: from the first word until it is sent or closed, and while the change is
+   being made, the spec is held (*Held while you write*, *Held while its leaders rewrite*).
+4. **A change to a spec is written to the Orkmaster**, from the crown's view of the goal (the phone) or the Orkmaster's
+   head on a goal picked (the desktop): before it is sent it says which leaders it will go to and its cost (*It goes to
+   Tech, Art, LiveOps · about 3 calls*); the Orkmaster routes it (Seasoned, as `route`) to the leaders whose sections it
+   touches; they rewrite them; the join joins them (raised to Veteran on §221.4's signs). **It comes back as one card**
+   for the goal, raised in the hand: lifted, the person's words, then each leader's section as a tab with *Now* and
+   *Proposed*, whether the sections agree, the cost, and *Accept*, *Talk more*, *Drop it*. Accepted, the sections and the
+   person's decision are written into the spec, and **the wait starts again from the accepting** (a new clock time).
+5. **One leader directly stays**: from its tab, or *@Tech* in the words, it is §206.5's change of one leader, as built. The
+   Orkmaster's way is the default; the leaders' own questions to the person stay their cards in the hand (§221, §222).
+6. **The person's words on a goal before its work, one sheet**: in analysis *Add to it*, *Rewrite*, *Remove* (§222.2); in
+   To review *Change the spec*, *Start now*, *Later*; at work a change of the plan, as built (spec 128 E).
+7. **The mockup**: `docs/mockups/phone/goal-lens-v4.html` (v1–v3 kept beside it). Open in it: the wait by size or one
+   setting; one card for the change or a leader's card each; the wait after accepting from then or kept; and v3's own.
+The owner's call.
