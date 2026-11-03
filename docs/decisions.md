@@ -5082,3 +5082,59 @@ change (§206.4; `js/table/goalmap.js`, pure functions over the spec and the map
    The table stays for a phone on its side, in the next wave (§219.5).
 7. **The mockup** is `docs/mockups/phone/goal-lens.html`; the spec after the owner's look at it.
 The owner's call.
+
+## 223. The phone's two screens, one shape (this amends §222): the project's screen with the Orkmaster and every leader as tabs on top, a leader's tab its lens of the whole project; a goal's screen one level down; no side menu; one header with the bottle of the goal's tool; the hand between the + card and the die, the picked goal's question raised; the die faint, white or in the goal's rune (3 November 2026, the owner)
+
+Changes: 121, 195, 206, 218, 219, 220, 222.
+
+Why: the owner's review of §222's mockups (`docs/mockups/phone/goal-lens.html` v1, `goal-lens-v2.html`,
+`goal-lens-v3.html`): in v1 the goal's header, its waiting card and the tabs took near half the screen and the slice was
+left little; the owner asked the header be one row with the bottles as a picker (not all of them shown), the rune and the
+type in it with the Orkmaster, the moon and the share; the leader's question a card of the hand raised above the others;
+the foot as the desktop's, the + card at the left, the hand, the die at the right, the die white while the spec is still
+being made and in the rune's colour when something of the goal can be run, so the person can start the build on the
+computer from the phone and leave feedback; the discard into the menu; the menu the first screen when there is no goal;
+then, seeing v2: the leaders on top of that screen, which is no longer a menu but the project's main screen, and the
+moment to show the lenses of the whole project. A count of the other goals' questions in the menu was weighed and left out
+(§67, §121.2, §174.6: no count of what waits). So:
+1. **The project's screen**, when no goal is picked: its header (the project and its switcher, *Settings*, *Stop all*,
+   the default tool's bottle); under it **the Orkmaster and every leader as tabs**, their heads, the open one named under
+   the row. **The Orkmaster's tab** is the three piles of §222.1 and **Done** as their last pile (the discard leaves the
+   header). **A leader's tab is its lens of the whole project**, made for a few minutes: **what changed since your last
+   look** (a line a part or step, with the goal that changed it or *by you*), **its concerns by its rubric's aspects** (spec
+   109 C's chips, each in its state; pressed, its cards), and **its map made small** (Tech's containers and parts as
+   chips, Game design's loops and currencies, Design's screens as small pictures), the changed and the hinted marked.
+   This gives §218.3's *what changed* its place and replaces §222.4's *a leader's whole map stays off the phone*: the map
+   made small is on it; the desktop's whole map is not. A leader with no map yet (Run and LiveOps until §215's line)
+   shows its lines and concerns.
+2. **A goal's screen is the same shape one level down** (§222.3–§222.4): the goal's header, its route's leaders as tabs
+   (the Orkmaster's the plan), each its slice, *Now | Will be*, *Before | After*.
+3. **No side menu**: the crown takes a goal's screen back to the project's, on the Orkmaster's tab always, so another
+   goal is two taps away as it was through a menu. This replaces §195.1's and §222.1's sheet; the frame's *no drawer*
+   holds on the phone too. A face-down goal in analysis on the Orkmaster's tab opens the person's own words as §222.2.
+4. **The first screen**: a card in the hand → its goal's screen (§195.2 holds, a push lands there); nothing to decide → the
+   project's screen on the Orkmaster's tab; no goal at all → the Orkmaster's tab invites the first goal, the + card large,
+   and says the leaders have already read the project: their tabs hold their first look, read from the code, before any
+   goal.
+5. **One header on a goal's screen**: the crown; the goal (its rune, its type's sign, its short name; under it its phase,
+   its wait with the moon, its share as the gem); **the bottle of the tool the goal runs on**, its alert colour when low,
+   pressed **a picker** of every tool's bottle (its 5 hours, its week, its reset; the goal's one marked; moving the goal's
+   reading and making to another as §221.6 says it). No die and no discard in a header.
+6. **The foot as the desktop's**: the + card at the left, the hand, the die at the right. The hand is a stack a goal
+   (§121.2): **the picked goal's stack raised**, its top card the leader's question with **its pick one tap away**
+   (*Half · Game design's pick*); the card pressed lifts with every answer (two taps for any other); the other goals'
+   stacks as narrow spines (the rune and the card's sign); never a count. On the Orkmaster's tab a goal that asks
+   shows the question sign on its row, never a number: the hand's mirror, not a place where something waits (this
+   softens §195.1). With nothing raised the foot is lower.
+7. **The die**: **faint** when nothing can be run (no web build, §220.1, or its last build failed); **white** when dev
+   runs and holds nothing of this goal yet; **in the goal's rune** when a build that runs holds its change. Pressed it
+   starts the project's own build command on the computer, said plainly, *Stop the build* beside it. At home on the
+   computer's network the build opens on the phone and is marked as on the desktop (spec 115; Play's port on the local
+   network only). Away from home the computer sends small pictures of the screens the goal changes through the mailbox
+   (§219.2), and a mark is a place drawn round on a picture (§220.4); live play away is the next wave (§219.5).
+8. **Away from home** a leader's lens of the project comes as a goal's slice does (§222.5): on request through the
+   mailbox, kept with its time; Design's pictures small.
+9. **The mockups**: `docs/mockups/phone/goal-lens-v3.html` (v1 and v2 kept beside it). Open in it, for the spec: the +
+   card's side for a right thumb; the spines with or without short names; a lens's order (what changed or concerns first);
+   the tabs' names under the heads.
+The owner's call.
