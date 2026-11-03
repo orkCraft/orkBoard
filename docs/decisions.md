@@ -5412,7 +5412,7 @@ The owner's call.
 
 ## 232. The first open is the Orkmaster's: the project asked as cards in the hand; the AI tools added one a card from the potions' empty slot; the parties on the Orkmaster's large card, a party one line with its heads; a table is laid only at Start, and nothing of it lies beside a form (3 November 2026, the owner)
 
-Changes: 145.9, 169.4, 175.2, 176.2, 176.4, 177.1, 185, 192.4, 206.3; spec 75 §5, spec 81 §4, spec 100 §4; the onboarding's
+Changes: 145.9, 151.1, 169.4, 175.2, 176.2, 176.4, 177.1, 185, 192.4, 206.3; spec 75 §5, spec 81 §4, spec 100 §4; the onboarding's
 first screen (spec 33 §1).
 
 Why: the owner, as a designer and a product: *the AI tools can be turned on and off, added and removed while working on a
@@ -5481,8 +5481,9 @@ the pane leaves the ring and the discard standing beside a form. The owner's yes
    **the order the work moves on in**, the hand's potions as marks with this one framed and **←** **→** (dragging a potion
    does the same; §177.1's order is the person's now, kept as `machine.tool_order`), the main tool the first; **Check**;
    its tiers' models (Settings' *AI tools* rows, moved here); and **Put back**, with what follows said under it: *The orks
-   stop using it after the task at work* and each party set to it by name (*Art is set to Claude Code: it goes on with
-   Codex, the next in your hand*). A tool is put back **between tasks, never inside one** (§177.2), with **Undo** in the
+   stop using it after the task at work* and each party or seat set to it by name (*Art is set to Claude Code: it follows
+   the main tool, now Codex*): **a party or a seat set to a tool that is not in the hand follows the main tool**, with no
+   rewrite of its page, until the person sets another or adds that tool back. A tool is put back **between tasks, never inside one** (§177.2), with **Undo** in the
    toast; **the last tool** asks first (*Without it nothing is worked on: goals wait in the Orkmaster's column until you add
    a tool*). The adding card and the tool's card are the only places the tools are set: Settings' tool rows go (9).
 6. **The parties are the Orkmaster's large card on the table** (the one place of the parties, spec 100 §4, becomes it):
@@ -5497,9 +5498,13 @@ the pane leaves the ring and the discard standing beside a form. The owner's yes
      is the switch's words (hover and the screen reader: *Standard: about $0.40–0.90 a goal*, `ideas.party_price`). Its
      line of what it does is the name's words (hover), not drawn.
    - **Under it, its team**: **Does** after orkUI's sword and **Checks** after its shield (§189's), each a row of the
-     seats' heads at the small size (24 × 22), the seats the size gives (spec 81 §2) as heads and **the seats the craft has
-     and the size leaves empty as shadows** (the head's silhouette, dark, no face and no gear), up to five who do and two
-     who check. **Changing the size changes the heads at once**, nothing saved until Start or Save. Under *Lean* the
+     seats' heads at the small size (24 × 22), the squad as heads and **the craft's seats not in the squad as shadows**
+     (the head's silhouette, dark, no face and no gear), up to five who do and two who check. **A size pressed in the card
+     puts that size's squad in the draft**, the heads changing at once: *Lean* the leader alone, *Standard* the recipe's
+     squad (`squad_of`), *Full* every seat of the craft; its tiers `tiers_for`'s. Only the card's draft: **§151 stands**
+     (this makes §151.1 precise): what is saved is the squad on the screen, a size never changes a saved squad, and the
+     size stays how the work goes (`goal_team.WAY`); nothing in the runner, `sized` or `tiers_for` changes. Nothing is
+     saved until Start or Save. Under *Lean* the
      Checks are dimmed with *Lean: the leader does it, and checks it itself*. **A shadow is not pressed**, for now.
    - **A member's head wears a tool's mark only when its tool differs from the party's**; the same tool shows none.
    - **Release** is ticked and locked (*in every project*), its size locked at Lean. **The stages not reached** lie in one
@@ -5515,8 +5520,8 @@ the pane leaves the ring and the discard standing beside a form. The owner's yes
    hand); and **its level as three heads**, the seat's race in its three gears (§158's tier is the gear on the head), each
    with its word (*Novice*, *Seasoned*, *Veteran*) and what a task (a leader's step) costs at it; under a leader set to
    Novice a line says the cost in quality plainly (*reads less of the project before it plans*). **Take off the seat** for a
-   member, never for the leader. A seat set by hand keeps what was set and the party's size stays picked, as Agents' tiers do
-   (spec 81 §2).
+   member, never for the leader. A seat set by hand keeps what was set while a seat it is, and the party's size stays
+   picked, as Agents' tiers do; a size pressed afterwards keeps the levels and tools of the seats that stay.
 8. **The first open, in order**: the window not yet laid (1) → the project (3) → the AI tools (4), **only when the hand is
    empty** (the tools are this computer's: the second project skips it) → the parties' card (6) → **Start** → the table
    laid (1). The onboarding's table of checkboxes, its Next and its Skip go; closing the adding card with no tool added says
@@ -5536,11 +5541,13 @@ the pane leaves the ring and the discard standing beside a form. The owner's yes
 12. **Drawn first** (`docs/mockups/setup/`, eight looks); a spec of its own builds it (spec 130), its parts by the cheaper
     model. orkUI draws first (§127.3): the empty slot (`.ork-potion.is-empty`: the silhouette in pixel dashes, `.is-lit` in
     the ink), the small size switch, a head's shadow (`.ork-race__head.is-empty`), the three levels' tiles; until orkUI has
-    them, the page's own layout with orkUI's tokens. Its parts: **A. Host** (`machine.tool_order` in `settings.py`, read by
-    `harnesses.main`; the tools' commands out of `gui/onboarding.py` into `tools.*` of their own: the adding card's rows,
-    the key found in the environment by name and never its value, test and add, put back between tasks with the last one
-    refused without `sure`, order, billing; the project's questions answered from a card; the *laid* state, false until the
-    first Start); **B. The hand** (`hand/mana.js`: the empty slot, the adding card, the tool's card; `hand/state.js`: the
+    them, the page's own layout with orkUI's tokens. Its parts: **A1. Host: the tools, the project, the parties**
+    (`machine.tool_order` in `settings.py`, read by `harnesses.main`; the tools' commands out of `gui/onboarding.py` into
+    `tools.*` of their own: the adding card's rows, the key found in the environment by name and never its value, test and
+    add, put back with the last one refused without `sure`, order, billing; the project's questions answered from a card;
+    the parties' draft and its save; the *laid* state, false until the first Start); **A2. Host: the work between tasks**
+    (the runner, the keeper and the operations: a task's tool captured when it starts, nothing started with an empty hand,
+    a pin out of the hand following the main tool; built by a stronger model than the rest); **B. The hand** (`hand/mana.js`: the empty slot, the adding card, the tool's card; `hand/state.js`: the
     Orkmaster's setup cards); **C. The table** (`table/parties.js` and `partyseats2.js` as the large card, `seatpop.js` with
     the party's tool and the level, `frame/place.js` and `table/table.js` covering the table's end, `table/column.js` and
     `table/piles.js` with no empty pile, the laying's motion); **D. Settings and the onboarding** (`shell/settings.js` and

@@ -1,7 +1,7 @@
 # 130. The first open and the AI tools
 
-Decisions §232 (1–12), changing §142, §176, §177, §185, §192 and §206. **Builds:** the cheaper model, part by part,
-the spec's author reviewing and merging · **Review:** the critical tests and each part's own · P1.
+Decisions §232 (1–12), changing §142, §176, §177, §185, §192 and §206. **Builds:** the cheaper model, part by part (A2 and C
+a middle model: they touch the most that already runs), the spec's author reviewing and merging · **Review:** the critical tests and each part's own · P1.
 The look is `docs/mockups/setup/index.html`, its eight looks. Copy the look into Preact, not the mockup's HTML.
 This spec supplies the contracts and implementation choices: a builder needs CLAUDE.md, §232 and this spec, then the
 source files named in its part. Specs 75, 81 and 100 §4 are replaced where described below; spec 128 is the format.
@@ -9,7 +9,8 @@ source files named in its part. Specs 75, 81 and 100 §4 are replaced where desc
 | Part | What | Where (and its tests) |
 |---|---|---|
 | **0. orkUI first** | the empty potion place, small size switch, head shadow, three levels | request in orkUI; local fallback in B's and C's sheets; `tests/test_design_system.py` |
-| **A. Host** | ordered tools, discover/test/add/remove/billing/models; project answers, parties saved, laid state | `orkboard/settings.py`, `orkboard/realm/harnesses.py`; new `orkboard/realm/tool_settings.py`, `orkboard/gui/tools.py`, `orkboard/gui/tools_check.py`, `orkboard/gui/tools_models.py`, `orkboard/gui/setup.py`, `orkboard/gui/ideas_setup.py`, `orkboard/realm/project_setup.py`; exact seams in A; new `tests/test_tools_hand.py`, `tests/test_first_open.py`, `tests/test_setup_parties.py` |
+| **A1. Host: the tools, the project, the parties** | ordered tools, discover/test/add/remove/billing/models/undo; project answers; the parties' draft and save; laid state | the A.1 rows marked **A1**: `orkboard/settings.py`, `orkboard/realm/harnesses.py`; new `orkboard/realm/tool_settings.py`, `orkboard/gui/tools.py`, `orkboard/gui/tools_check.py`, `orkboard/gui/tools_models.py`, `orkboard/gui/setup.py`, `orkboard/gui/ideas_setup.py`, `orkboard/gui/ideas_party_save.py`, `orkboard/realm/project_setup.py`; new `tests/test_tools_hand.py`, `tests/test_first_open.py`, `tests/test_setup_parties.py` |
+| **A2. Host: the work between tasks** | a task's tool captured when it starts; no model work with an empty hand; a pin out of the hand follows the main tool; seat levels in task selection | the A.1 rows marked **A2**: `orkboard/realm/tool_now.py`, `orkboard/gui/ideas_mana.py`, `orkboard/core/idea_runner.py`, `orkboard/core/idea_keeper.py`, `orkboard/core/op_runner.py`, `orkboard/realm/tool_run.py`, `orkboard/gui/ideas_roles.py`, `orkboard/core/idea_lead.py`; new `tests/test_tools_between_tasks.py` |
 | **B. The hand** | project questions, empty slot, adding card, tool card | `orkboard/gui/static/js/hand/mana.js`, `hand/state.js`, `hand/hand.js`; new `hand/setupcards.js`, `hand/toolcards.js`, `hand/toolbilling.js`, `hand/toolmodels.js`, `hand/toolcards.css`; new `tests/test_setup_hand_browser.py`, `tests/test_tools_hand_browser.py` |
 | **C. The table** | large parties card, heads and seats, covered end, no empty piles, laying | `orkboard/gui/static/js/table/parties.js`, `table/partyseats2.js`, `table/seatpop.js`, `table/table.js`, `table/column.js`, `table/piles.js`, `frame/place.js`; exact seams in C; new `tests/test_setup_table_browser.py`, `tests/test_setup_seats_browser.py` |
 | **D. Settings and the onboarding** | two Settings groups, old tool rows and first screen removed, common frame without a project | `orkboard/gui/static/board.js`, `js/shell/settings.js`, `js/settings.js`, `js/onboarding.js`, `shell/projects.js`, `shell/shell.js`; new `tests/test_setup_settings_browser.py`, `tests/test_first_open_browser.py` |
@@ -20,12 +21,13 @@ In the table and below, `hand/`, `table/`, `frame/` and `shell/` expand to
 Every function named **new** is to be added, not searched for as an existing function. No module grows past about
 600 lines: the new modules named here take the extracted responsibilities.
 
-**Order.** Agree these contracts, request 0, then A, B and C can be built side by side. B uses the A replies below;
-C uses the same replies and its own fixture for the laying phases. D's Settings and removal of the old screen can be
-built alongside them against snapshots, but D's final wiring and first-open browser test follow A, B and C.
-Merge A, then B and C in either order, then D; each part is a separate merge as soon as its tests and the critical
-ones pass. B owns all `hand/` files, C owns all `table/` and `frame/` files, D owns the listed `shell/` files and
-`js/settings.js` / `js/onboarding.js`, A owns Python and the glossary. B's new model editor does not import the old
+**Order.** Agree these contracts, request 0, then A1, B and C can be built side by side. A2 follows A1 (it reads
+A1's `tool_settings` and `machine.tool_order`). B uses the A replies below; C uses the same replies and its own fixture
+for the laying phases. D's Settings and removal of the old screen can be built alongside them against snapshots, but
+D's final wiring and first-open browser test follow A1, A2, B and C. Merge A1, then A2, B and C in any order, then D;
+each part is a separate merge as soon as its tests and the critical ones pass. B owns all `hand/` files, C owns all
+`table/` and `frame/` files, D owns the listed `shell/` files and `js/settings.js` / `js/onboarding.js`; A1 owns the
+Python files its A.1 rows name and the glossary, A2 only the files its rows name. B's new model editor does not import the old
 Settings editor; D removes the latter. No two parts edit the same production file.
 
 **Scope and precedence.** Desktop and the VS Code page, at wide and narrow widths. No new phone controls, cache
@@ -79,33 +81,36 @@ stamp, replace the four fallback selectors with those classes, and run `tests/te
 
 ### A.1. Files and ownership
 
-| File | Functions/classes to change or add |
+| File (part) | Functions/classes to change or add |
 |---|---|
-| `orkboard/settings.py` | `MachineSettings`, `to_dict`, `from_dict`, `main_tool`, `tool_order`: persist the order and removal redirects below. Extract tool cleaning to the new module so this already 600-line file does not grow. |
-| new `orkboard/realm/tool_settings.py` | `clean_order`, `order_of`, `main_of`, `effective_tool`, `key_names`, `billing_of`, `put_back`, `restore`: pure machine-data transformations; no GUI imports. |
-| `orkboard/realm/harnesses.py` | `main(enabled, chosen="", order=None)` accepts the order, keeps old two-argument callers; `for_party` gains optional enabled ids, no implicit Claude for an empty explicit set. |
-| new `orkboard/gui/tools.py` | `Tools` with `commands`, `snapshot`, `detect`, `test_add`, `check`, `cancel`, `order`, `billing`, `put_back`, `undo`, `request`; one service per `Orkboard`, usable with no project and no onboarding. |
-| new `orkboard/gui/tools_check.py` | `CheckRunner.start`, `cancel`, `_run`, `_finish`; extract `Onboarding.check`, `_check_run`, `_checked` here, keep injectable ask/clock and host-thread completion. |
-| new `orkboard/gui/tools_models.py` | `rows(machine, tool)` and `set_model(machine, tool, tier, model)` supply the tier editor's reads/writes. |
-| `orkboard/gui/onboarding.py` | `Onboarding.wanted`, `commands`, `_save_machine`: Orkboard with the new service has no active tools step or auto-enabled detection; old command aliases delegate explicitly to the service, never bulk-enable discovered tools. Keep public constants and non-Board subclass hooks. |
-| `orkboard/gui/board_host.py` | `Orkboard.__init__`, `snapshot`, `shown`, `command`, `tick`, `_mana`, `_follow_main`, `COMPUTER_ONLY`; register tools/setup, publish their state, catch their errors, refresh completion; `BoardPhone.allowed` denies the new commands. Extract registration/snapshot helpers into `gui/setup.py` and `gui/tools.py`, not more logic in this already large host. |
-| `orkboard/gui/board_projects.py` | `Projects._open_cmd`, `_show`, `_start_git`, `commands`; new `_create_cmd` for an empty child folder, notify setup when a project changes. |
-| new `orkboard/gui/setup.py` | `Setup.enter`, `snapshot`, `commands`, `answer`, `tools_done`, `_read`, `_read_done`; machine-host coordinator of the project questions, not the later `project_q` questions. |
-| new `orkboard/realm/project_setup.py` | `read`, `begin`, `confirm`, `laid`, `finish`: merge keys in `.orkcraft/project.json`, keeping kind, stage and other existing keys. |
-| new `orkboard/gui/ideas_setup.py` | `SetupMixin.setup_parties`, `setup_save`, `seat_price`, `setup_commands`; validate a whole parties draft before writing it; added to `Ideas` in `orkboard/gui/ideas.py`. |
-| `orkboard/gui/ideas_project.py`, `orkboard/gui/ideas_party.py`, `orkboard/gui/ideas_goals.py` | `ProjectMixin.tools`, `party_presets`; `PartyMixin.party_price`; `GoalsMixin.goal_save`, `_tool_asked`, `_tools_asked`, `_tiers_kept`, `_size_kept`: enabled tools only for new picks, explicit seat levels preserved, price the actual draft. Extract shared validation/application into new `orkboard/gui/ideas_party_save.py` `prepare` / `apply` for both single saves and setup saves. |
-| `orkboard/realm/party_recipes.py`, `orkboard/realm/party_presets.py`, `orkboard/realm/goal_team.py` | `sized`, `tiers_for`, `_row`; `tiers_of`, `set_tiers`, `seat_role`, new `tier_overrides_of` / `set_tier_overrides`: occupied teams and hand-set levels below. |
-| `orkboard/realm/party_price.py` | `price`, `task_usd`, new `seat_price`: use explicit tool and level when quoting a draft; do not price a different saved team. |
-| `orkboard/gui/ideas_roles.py`, `orkboard/core/idea_lead.py` | `RolesMixin.party_of_idea`, `tiers_of_idea`; `LeadMixin.leader`: pass explicit seat overrides into `goal_team.seat_role(r, tiers, tier_overrides=None)` for actual task/leader selection as well as heads. |
-| `orkboard/realm/tool_now.py`, `orkboard/gui/ideas_mana.py` | `now`, `api_tool`, `follow`; `ManaMixin.tool_now`, `mana`, `mana_tick`: order, effective billing, removed pins and no-tool holds. |
-| `orkboard/core/idea_runner.py`, `orkboard/core/idea_keeper.py` | runner `tick`, `tool_of`, `pinned_tool`, `_launch`, `_work`; keeper `_may_run`, `tool_now`, `_claim`, `_claude`, `_claude_work`: resolve before launch, freeze a task/step's tool, model and billing; no new model work with an empty hand. |
-| `orkboard/core/op_runner.py`, `orkboard/realm/tool_run.py` | `OpRunner.tick` and `tool_run.resolve` / `ask`: use the same empty-hand guard for automatic operations and direct `main` calls; explicit test calls are the exception. |
-| `orkboard/gui/ideas_map.py`, `orkboard/realm/board_map.py`, `orkboard/realm/lexicon.py` | `MapMixin.project_of`, `marks_of`, `board_map.build`, `TERMS`: laid and effective seat data, the words above. |
+| `orkboard/settings.py` | `MachineSetting **A1** |, `to_dict`, `from_dict`, `main_tool`, `tool_order`: persist the order below. Extract tool cleaning to the new module so this already 600-line file does not grow. |
+| new `orkboard/realm/tool_settings.py` **A1** | `clean_order`, `order_of`, `main_of`, `effective_tool`, `key_names`, `billing_of`, `put_back`, `restore`: pure machine-data transformations; no GUI imports. |
+| `orkboard/realm/harnesses.py` **A1** | `main(enabled, chosen="", order=None)` accepts the order, keeps old two-argument callers; `for_party` gains optional enabled ids, no implicit Claude for an empty explicit set. |
+| new `orkboard/gui/tools.py` **A1** | `Tools` with `commands`, `snapshot`, `detect`, `test_add`, `check`, `cancel`, `order`, `billing`, `put_back`, `undo`, `request`; one service per `Orkboard`, usable with no project and no onboarding. |
+| new `orkboard/gui/tools_check.py` **A1** | `CheckRunner.start`, `cancel`, `_run`, `_finish`; extract `Onboarding.check`, `_check_run`, `_checked` here, keep injectable ask/clock and host-thread completion. |
+| new `orkboard/gui/tools_models.py` **A1** | `rows(machine, tool)` and `set_model(machine, tool, tier, model)` supply the tier editor's reads/writes. |
+| `orkboard/gui/onboarding.py` **A1** | `Onboarding.wanted`, `commands`, `_save_machine`: Orkboard with the new service has no active tools step or auto-enabled detection; old command aliases delegate explicitly to the service, never bulk-enable discovered tools. Keep public constants and non-Board subclass hooks. |
+| `orkboard/gui/board_host.py` **A1** | `Orkboard.__init__`, `snapshot`, `shown`, `command`, `tick`, `_mana`, `_follow_main`, `COMPUTER_ONLY`; register tools/setup, publish their state, catch their errors, refresh completion; `BoardPhone.allowed` denies the new commands. Extract registration/snapshot helpers into `gui/setup.py` and `gui/tools.py`, not more logic in this already large host. |
+| `orkboard/gui/board_projects.py` **A1** | `Projects._open_cmd`, `_show`, `_start_git`, `commands`; new `_create_cmd` for an empty child folder, notify setup when a project changes. |
+| new `orkboard/gui/setup.py` **A1** | `Setup.enter`, `snapshot`, `commands`, `answer`, `tools_done`, `_read`, `_read_done`; machine-host coordinator of the project questions, not the later `project_q` questions. |
+| new `orkboard/realm/project_setup.py` **A1** | `read`, `begin`, `confirm`, `laid`, `finish`: merge keys in `.orkcraft/project.json`, keeping kind, stage and other existing keys. |
+| new `orkboard/gui/ideas_setup.py` **A1** | `SetupMixin.setup_parties`, `setup_save`, `seat_price`, `setup_commands`; validate a whole parties draft before writing it; added to `Ideas` in `orkboard/gui/ideas.py`. |
+| `orkboard/gui/ideas_project.py`, `orkboard/gui/ideas_party.py`, `orkboard/gui/ideas_goals.py` **A1** | `ProjectMixin.tools`, `party_presets`; `PartyMixin.party_price`; `GoalsMixin.goal_save`, `_tool_asked`, `_tools_asked`, `_tiers_kept`, `_size_kept`: enabled tools only for new picks, explicit seat levels preserved, price the actual draft. Extract shared validation/application into new `orkboard/gui/ideas_party_save.py` `prepare` / `apply` for both single saves and setup saves. |
+| `orkboard/realm/party_recipes.py`, `orkboard/realm/party_presets.py`, `orkboard/realm/goal_team.py` **A1** | new `party_recipes.preset` only (A.4.9: `sized`, `tiers_for` and `goal_team.WAY` do not change); `goal_team` `tiers_of`, `set_tiers`, `seat_role`, new `tier_overrides_of` / `set_tier_overrides`: hand-set levels below. |
+| `orkboard/realm/party_price.py` **A1** | `price`, `task_usd`, new `seat_price`: use explicit tool and level when quoting a draft; do not price a different saved team. |
+| `orkboard/gui/ideas_roles.py`, `orkboard/core/idea_lead.py` **A2** | `RolesMixin.party_of_idea`, `tiers_of_idea`; `LeadMixin.leader`: pass explicit seat overrides into `goal_team.seat_role(r, tiers, tier_overrides=None)` for actual task/leader selection as well as heads. |
+| `orkboard/realm/tool_now.py`, `orkboard/gui/ideas_mana.py` **A2** | `now`, `api_tool`, `follow`; `ManaMixin.tool_now`, `mana`, `mana_tick`: order, effective billing, removed pins and no-tool holds. |
+| `orkboard/core/idea_runner.py`, `orkboard/core/idea_keeper.py` **A2** | runner `tick`, `tool_of`, `pinned_tool`, `_launch`, `_work`; keeper `_may_run`, `tool_now`, `_claim`, `_claude`, `_claude_work`: resolve before launch, freeze a task/step's tool, model and billing; no new model work with an empty hand. |
+| `orkboard/core/op_runner.py`, `orkboard/realm/tool_run.py` **A2** | `OpRunner.tick` and `tool_run.resolve` / `ask`: use the same empty-hand guard for automatic operations and direct `main` calls; explicit test calls are the exception. |
+| `orkboard/gui/ideas_map.py`, `orkboard/realm/board_map.py`, `orkboard/realm/lexicon.py` **A1** | `MapMixin.project_of`, `marks_of`, `board_map.build`, `TERMS`: laid and effective seat data, the words above. |
 
 ### A.2. Machine tools and the boundary between tasks
 
-1. Persist `machine.tool_order: [id]` and `machine.tool_replacements: {removed_id: next_id | ""}` beside existing
-   `tools`, `main_tool`, `tier_models`; they live in the same `~/.config/orkcraft/settings.json`. `tools[id].enabled`
+Items 1–3, 6 and 7 are A1's (`tool_settings`, `settings`, `tools`); items 4 and 5, and the use of 3's
+`effective_tool` in the runner, the keeper and the operations, are A2's.
+
+
+1. Persist `machine.tool_order: [id]` beside existing `tools`, `main_tool`, `tier_models`; they live in the same `~/.config/orkcraft/settings.json`. `tools[id].enabled`
    means exactly **in the hand**. Keep disabled entries' billing/models for a later add; no other enabled bit.
    `clean_order` removes unknown/duplicate/off ids and appends enabled ids missing from an explicit order in registry
    order. With no saved order, migrate the old enabled `main_tool` first, then the other enabled ids in registry order.
@@ -119,12 +124,12 @@ stamp, replace the four fallback selectors with those classes, and run `tests/te
    existing paid card; reorder/removal never supplies that yes. An API tool chosen as main by the person is an
    explicit paid choice. Effective API billing from an environment key counts as API for this rule too.
 3. Removing a tool disables it and removes it from the order immediately for future launches; it never cancels a
-   running process. Record a redirect to the next remaining id after its old position, wrapping once; `""` if none.
-   `effective_tool` resolves a pin through these redirects, detects cycles, and returns `""` with no tool. If the
-   redirect ends empty and tools have since been added, use the new main. A pin whose id is enabled resolves to itself.
-   This machine-local redirect covers closed projects when they reopen without rewriting their party pages. Its
-   effective tool is shown on the head; saving a new pick replaces the old pin. Re-adding a removed tool clears its
-   redirect. A removal redirect is an explicit change, distinct from a dry pinned subscription waiting.
+   running process. **A pin out of the hand follows the main tool** (§232.5): `effective_tool(pin, machine)` is the
+   pin when it is in the hand, else what a party following the main tool runs on now (`tool_now`'s resolution), else
+   `""` with no tool. Nothing is stored for it and no party page is rewritten, so open and closed projects behave
+   alike. The head shows the effective tool, its words naming the pin (**Set to <Tool>, not in your hand: follows the
+   main tool**); saving a new pick replaces the pin; adding the tool back makes the pin effective again. A pin out
+   of the hand is not a dry pinned subscription: a dry one in the hand still waits.
 4. Resolve and capture `tool`, `model`, `billing` at `_launch`, in the plan task, and at `_claim` in the keeper's
    thread-local step context. `_work` uses the captured values: today it resolves again, which can switch a task
    after its launch. The task's internal retry and gate keep them. A new task/step resolves again; a person starting
@@ -187,14 +192,15 @@ registry has no tiers. Only a press sends this one request, never opening a card
 | `tools.card` → new `Tools.card` | `{tool}` | `{tool:ToolRow, models:[ModelRow], affected:[AffectedRow], next:id\|"", last:bool, rev}`; no run. Read for one tool in hand, fresh before removal. |
 | `tools.model` → new `Tools.model` | `{tool, tier:"laborer"\|"warrior"\|"elder", model:string, rev}` | `{ok:true, models:[ModelRow], tools:ToolState}`; `""` resets to latest; validate through `settings.clean_tier_models`, preserve the other tools/tiers. |
 | `tools.put_back` → `put_back` | `{tool, rev, sure?:true}` | Last tool without `sure`: `{ok:false, code:"last_tool", error:<A.5's last-tool words>, last:true, affected:[AffectedRow], rev}`. Success `{ok:true, tools:ToolState, undo:<token>, affected:[AffectedRow]}`; no process stopped. |
-| `tools.undo` → `undo` | `{token}` | `{ok:true, tools:ToolState}`; restore removed membership, billing, redirect and its old position (bounded by today's list), preserving unrelated changes. Token lives 30 seconds; duplicate use is idempotent. Refuse full hand or a later edit to the same id with `stale`; never overwrite that edit. |
+| `tools.undo` → `undo` | `{token}` | `{ok:true, tools:ToolState}`; puts the tool back in the hand at its old place in the order (bounded by today's list), with its billing, **with no test**. The token lives while the toast does (30 seconds); a second use does nothing; a full hand refuses with `full`. |
 | `tools.request` → `request` | `{name:string, link?:string, note?:string}` | `{url:string}`; reuse `Onboarding.request`'s 80/300/1,000-character bounds and issue URL construction. Opens a filled request only; sends nothing. |
 
 `AffectedRow` is `{project:<folder name>, path:<open project path>, party:<slug>, name:<party name>,
 seat:<role slug>|"", seat_name:string, from:id, to:id|"", running:bool}`. List each explicit party/seat pin on the
-tool in **all open projects**, not only the current tab. Closed projects use the persisted redirect when opened.
-`next` is the immediate next remaining tool in order, not a claimed available subscription; a dry one still waits,
-and an API successor still follows the paid-consent rule. A row with `seat:""` is the party's own pin.
+tool in **all open projects**, not only the current tab; closed projects follow the same rule when opened, with
+nothing stored. `to` and `next` are the main tool once this tool is out of the hand (the next in order when this one
+is the main tool), `""` when none; a dry one still waits, and an API one still follows the paid-consent rule. A row
+with `seat:""` is the party's own pin.
 
 `ModelRow` is `{tier, label, chosen:string, now:string, options:[[value,label]], price:string}`. Keep the Settings
 editor's shape; build options from `Harness.models`, `Harness.families` and `model_families`' cached catalogue,
@@ -260,7 +266,7 @@ may delegate for old callers; `.tools` and `.skip` must never enable untested to
    unreadable parent, then opens it through Projects.open. Never erase or reuse a nonempty folder. The native picker
    cancel changes nothing; unsupported native dialog exposes the path field on the card (**Folder**, **Open folder**).
 8. New `ideas.setup_parties {kind?:id}` → `{kind:{id,words,signs}, stage:{stage,read,kept}, laid:bool,
-   parties:[PartyDraft], revision:string}`. A preview `kind` reads that kind's recipes without saving it. `PartyDraft`
+   parties:[PartyDraft]}`. A preview `kind` reads that kind's recipes without saving it. `PartyDraft`
    is `{id,slug:string,name,line,craft,stage,locked:bool,on:bool,leader,build:[role],check:[role],size,team:[role],
    every:[role],tool:id|"",tools:{role:id},tiers:{role:tier},tier_overrides:{role:tier},
    sizes:{lean|standard|full:{leader,team,tiers,size}},seats:[Seat]}`. Include every existing party, also custom/old
@@ -268,30 +274,33 @@ may delegate for old callers; `.tools` and `.skip` must never enable untested to
    party. `slug:""` means not yet made. `Seat` is `{slug,name,band:"lead"|"build"|"check",does:string,
    head:{race,tier},tool:id|"",tool_effective:id|"",follows:"main"|"party"|"own",tier_override:tier|""}`;
    seats includes candidate empty roles, leader first. `build` / `check` are the craft's candidates, not occupancy.
-   `revision` is a digest of the project's kind, stage and party configurations; stale saves are refused.
-9. Size semantics here restore spec 81 §2 as §232 requires: Lean leader only, Seasoned; Standard leader Veteran,
-   first two builders and first checker Seasoned; Full up to five builders Seasoned and two checkers Veteran,
-   leader Veteran. Release stays leader only, Lean, Seasoned by default. `party_recipes.sized` currently returns the
-   same squad at every size: change that, and `tiers_for`'s current Standard first-builder-only result. Existing
-   parties are not resized on reading. A press on a size replaces its draft team with that size's team; hand-set
-   levels and tools of seats that remain survive. Keep explicit levels separately as `tier_overrides` in party
-   front matter, over size tiers; no write to a shared Agents role. `seat_role` honours this explicit override first,
-   then an existing hand-set Agents model, then size tiers. Removing a seat prunes its tool/level overrides.
-10. New `ideas.setup_save {path, revision, request:<id>, first:bool, kind:id, stage:id, parties:[{id,slug,on,
-    name,line,leader,size,team,every,tool,tools,tier_overrides}]}` → `{ok:true, saved:[{id,slug}], laid:bool,
-    laid_id:string, project_ask:{ok:true,asked:bool,why?:string}}` or `{ok:false,code,error,party?:id,saved?:[{id,slug}]}`.
+   No revision: Start/Save is checked against the parties as they are when it arrives (A.4.10).
+9. **The size and the squad stay apart in the engine** (§151, §232.6). `party_recipes.sized`, `tiers_for`,
+   `goal_team.WAY` and the runner do not change. New `party_recipes.preset(recipe, size)` → `{leader, team, tiers}` for
+   the card's draft only: **lean** `team = []` (the leader alone: `goal_team.lean_role` already gives it every task);
+   **standard** `squad_of(recipe)`; **full** every `build` (at most five) and every `check` (at most two) of the
+   recipe; `tiers = tiers_for(leader, team, size)`. Release's preset is its leader alone at every size. `PartyDraft.sizes`
+   is these three presets. A press on a size replaces the draft team with that preset; hand-set levels and tools of
+   seats that remain survive. What is saved is the draft's squad (`goal_save`'s `team`, as today); a saved squad is
+   never changed by a size, and existing parties are not resized on reading. Keep explicit levels as `tier_overrides`
+   in party front matter, over the size's tiers; no write to a shared Agents role. `seat_role` honours the explicit
+   override first, then an existing hand-set Agents model, then the size's tiers. Removing a seat prunes its tool and
+   level overrides.
+10. New `ideas.setup_save {path, first:bool, kind:id, stage:id, parties:[{id,slug,on,name,line,leader,size,team,
+    every,tool,tools,tier_overrides}]}` → `{ok:true, saved:[{id,slug}], laid:bool, laid_id:string,
+    project_ask:{ok:true,asked:bool,why?:string}}` or `{ok:false,code,error,party?:id,saved?:[{id,slug}]}`.
     Only on rows are created/updated; made rows cannot be unticked here (Remove party remains its own place).
     Validate the whole draft first: exact role ids, at most five/two, tool membership, tiers, valid kind/stage,
     Release present/locked/Lean, no removal of a member with work open (**<Name> has work open: it cannot leave**).
     The leader cannot be removed. Save through shared `prepare` / `apply`, suppress per-party model reads until the
-    batch finishes. Keep a `.orkcraft/setup-save.json` journal of request, normalized draft and saved id→slug rows;
-    retry of the same request resumes without making duplicate parties. On write failure return `save_failed`,
-    keep explicit laid false on first Start and keep the journal. Do not claim a failed Save rolled back completed
-    filesystem writes; return `saved` with the error for retry. Block a different request until it is recovered.
-    On all saves succeeding keep kind/stage, then `project_setup.finish` records laid true and first request as
-    laid_id; only the first Start calls existing `ideas.project_ask {}` (via `ProjectQMixin.project_ask`). Its reply
-    is `{ok:true,asked:bool,why?:string}`; no tool/error there does not undo Start. Retry returns the stored result
-    and never asks twice. Save after Start does not ask it. Machine onboarded becomes true at successful Start.
+    batch finishes. **The save is idempotent**: a row with a `slug`, or whose recipe the project already has
+    (`party_recipes.has`), is updated, never made a second time, so pressing Start again after a failure makes no
+    duplicate. No journal file, no request id, no revision. On a write failure return `save_failed` with the `saved`
+    rows so far and keep laid false on a first Start; the card says the reason and Start can be pressed again. On all
+    saves succeeding keep kind/stage, then `project_setup.finish` records laid true and a new `laid_id` (a fresh id per
+    successful first Start). Only the Start that turns laid from false to true calls existing `ideas.project_ask {}`
+    (via `ProjectQMixin.project_ask`); its reply is `{ok:true,asked:bool,why?:string}`; no tool/error there does not
+    undo Start. A Save after Start does not ask it. Machine onboarded becomes true at successful Start.
 11. New `ideas.seat_price {leader,team,size,seat,tool,tiers}` → `{unit:"task"|"step", levels:[{tier,usd:number|null}]}`,
     three levels in Novice/Seasoned/Veteran order. Use `party_price.seat_price` with `idea_target.floor(tier, tool)`
     for an unmeasured seat, and matching tool/tier measurements when present; never use another tier's average.
@@ -320,24 +329,28 @@ New tests, with fake harnesses/clocks/environment and temporary settings/project
 - `tests/test_tools_hand.py`: migration and cleaning, explicit empty order, first-added main, exact reorder and
   stale rev, six including pending adds, duplicate request, cancel/late success, missing/not-signed-in/risky cases,
   environment names but no values in JSON/events/settings/errors, precedence warning/ack, effective API excluded
-  from subscription fallback, models saved/reset, last removal with/without sure, Undo and concurrent edits. Remove
-  with two projects open and one closed; named party/member consequences, redirected pin on reopen. Freeze the tool
-  through a launch race/internal retry; subsequent task/step uses the new tool; empty hand invokes no keeper,
-  runner or Operations model; after add work can proceed. Preserve the all-dry paid permission and pinned-dry wait.
+  from subscription fallback, models saved/reset, last removal with/without sure, Undo (old place, no test, full
+  hand refused). Remove with two projects open; named party/member consequences; a pin out of the hand reads as the
+  main tool and is effective again when the tool is added back. (A1)
+- `tests/test_tools_between_tasks.py` (A2): freeze the tool through a launch race/internal retry; the next task/step
+  uses the new tool; a pin out of the hand runs on the main tool; an empty hand invokes no keeper, runner or
+  Operations model and leaves goals queued, not failed; after an add the work proceeds. Preserve the all-dry paid
+  permission and the pinned-dry wait.
 - `tests/test_first_open.py`: no project, native cancel/failure, create child/refuse existing path, no-git yes/no,
   read/signs/stage, stale reading completion on switch, empty-folder line once/no-tool fallback, kind confirm,
   second project's tools skip, close with zero tools, setup restart, imported parties immediately laid, explicit
   false after interrupted Start, true after all parties later leave. No model call before an explicit test/about
   or Start; phone rejects all new mutations and receives no setup/tool detail.
-- `tests/test_setup_parties.py`: all three teams/tiers, Release, draft read writes nothing, custom parties retained,
-  size change preserves seat overrides and independent Agents roles, seat pricing by tool/tier, invalid/busy last
-  row refuses before any write, write failure/retry avoids duplicates, first Start asks once and stays successful
+- `tests/test_setup_parties.py`: the three presets (lean the leader alone, standard `squad_of`, full every seat) with
+  `tiers_for`'s tiers, and `sized`/`tiers_for` unchanged for their callers; Release; draft read writes nothing; custom
+  parties retained; size change preserves seat overrides and independent Agents roles; seat pricing by tool/tier;
+  invalid/busy last row refuses before any write; a failed save pressed again makes no duplicate party; first Start asks once and stays successful
   when project_ask cannot call a model. Snapshot marks match the effective party/member tools and levels.
 - Existing regression files: `tests/test_settings.py`, `tests/test_tools.py`, `tests/test_tool_now.py`,
   `tests/test_sign_in.py`, `tests/test_projects.py`, `tests/test_party_tool.py`, `tests/test_seat_tool.py`,
   `tests/test_party_recipes.py`, `tests/test_party_presets.py`, `tests/test_party_size.py`, `tests/test_party_price.py`,
   `tests/test_project_kind.py`, `tests/test_project_stage.py`, `tests/test_idea_project_q.py`, `tests/test_gui_ideas.py`.
-  Update expectations that size keeps the whole squad; do not silently change old saved parties in fixtures.
+  `sized` still keeps the whole squad in every size: those expectations stay; no old saved party changes.
 
 ## B. The hand
 
@@ -424,8 +437,8 @@ New tests, with fake harnesses/clocks/environment and temporary settings/project
    **Reset to latest**, **Runs on <model>**; tool without tiers: **Runs its own model**. Send tools.model; this card
    is the only tier-model editor on the new page. Keep **What used it** as the limits link.
 4. **Put back** has **The orks stop using it after the task at work** below it. Each affected party says
-   **<Party> is set to <Tool>: it goes on with <Next>, the next in your hand**; a seat says
-   **<Party> · <Role> is set to <Tool>: it goes on with <Next>, the next in your hand**. Prefix another open project's
+   **<Party> is set to <Tool>: it follows the main tool, now <Next>**; a seat says
+   **<Party> · <Role> is set to <Tool>: it follows the main tool, now <Next>**. Prefix another open project's
    name. No successor: **<Party> waits until you add an AI tool**. Add **It waits for its limit** for a dry pinned
    successor and **Paid work still waits for your yes** where automatic movement would use API without permission.
 5. LastToolAsk stays on the card: **Put back the last tool?**, A.5's sentence, **Put it back anyway** sends sure true,
@@ -474,9 +487,9 @@ B owns browser tests with an injected `town.tools`/`town.setup` and recording co
 2. `useDraft` reads ideas.setup_parties once on opening. All changes remain local until Start/Save, including seats,
    kind/stage, and new parties. Kind change previews `ideas.setup_parties {kind}`; retain edits for matching ids and
    all made parties, drop only unmade proposals not offered by the new kind. Stage change ticks newly reached
-   unmade parties unless the person explicitly unticked one; never unticks a made/explicitly picked party. Keep
-   the original revision for Save. A stale reply shows **The parties changed. Read them again.** and **Read again**
-   reloads with the draft retained until that press. No goal_save per size/head click.
+   unmade parties unless the person explicitly unticked one; never unticks a made/explicitly picked party. A Save
+   refused because the parties changed meanwhile (a member's work opened, a party removed elsewhere) shows the host's
+   reason and **Read again**, which reloads the parties keeping the draft's own changes where they still apply. No goal_save per size/head click.
 3. `table/parties.css`: one `.ork-card` about 620 px wide, dealt from the Orkmaster head, inside the table, never
    overlapping the potions. Table scrolls when its height is insufficient; the card's foot/Start remains reachable.
    At under 760 px it fills the pane width, each party a block, one continuous card: remove the old left/right
@@ -497,8 +510,8 @@ B owns browser tests with an injected `town.tools`/`town.setup` and recording co
    being made**); ticking expands that party now. A member's mark is drawn only if its effective tool differs
    from the party's. The leader's framed mark follows main, bare mark is pinned; no tool means no fictional mark.
 6. Foot **Together ≈ $<low>–<high> a goal at the API's prices. On a subscription it is taken from its limits instead.**
-   Unknown: **Together: a price is not known for every party yet.** Start/Save calls ideas.setup_save exactly once
-   with the draft, path, revision and stable request id retained for retry. While saving **Saving…**; error stays
+   Unknown: **Together: a price is not known for every party yet.** Start/Save calls ideas.setup_save once a press
+   with the draft and path; pressing again after a failure sends the same draft (the host's save is idempotent). While saving **Saving…**; error stays
    on the card and no laying begins. On success close, refreshShell; first Start's host already called project_ask,
    so do not call it a second time in JS. Later Save says **From the next task**. Preserve existing party facts via
    `Facts` in an expandable **What it keeps of the project** in that party's leader seat, after its main controls;
@@ -518,8 +531,8 @@ then **From the next task** and Undo restoring only the changed fields. It never
   `tools[leader]`; clear any old leader-specific entry when the person applies this choice. No tool: **Main tool
   (none yet): follows it**. Legacy conflicting leader override remains visible until that explicit choice.
 - Member: **Its AI tool**, first **As the party (<tool>)**, value `""` deletes its tools entry; own picks set it.
-  Disabled removed values are shown as **<Tool> is out of your hand** until the person changes them, with the effective
-  successor's words. Tool choice never adds a tool or opens sign-in: adding belongs to the empty slot.
+  A pin out of the hand is shown as **Set to <Tool>, not in your hand: follows the main tool** until the person
+  changes it. Tool choice never adds a tool or opens sign-in: adding belongs to the empty slot.
 - **Its level**, three buttons using the seat's race/higher leader race and laborer/warrior/elder gear. New
   `table/seatlevels.css` owns fallback tiles. Each label includes Novice/Seasoned/Veteran and **≈$<price> a task**
   or **a step** for the leader, from ideas.seat_price. Unknown: **Price not known**. Selected radio, one tab stop,
