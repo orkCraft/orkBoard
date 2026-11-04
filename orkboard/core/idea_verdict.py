@@ -27,6 +27,7 @@ import contextlib
 from concurrent.futures import wait
 from typing import Any
 
+from orkboard.core import idea_cascade
 from orkboard.core import idea_journal
 from orkboard.core import idea_slices
 from orkboard.realm import event_log, goal_route, goal_team, harness_claude, idea_objections, idea_questions, idea_ripe, idea_target, ideas, project_facts
@@ -116,11 +117,12 @@ class VerdictMixin:
     def _judge_rules(self, party: str, mine: str, line: list[dict]) -> tuple[str, str]:
         """`(rules, json)` of a verdict asked alone."""
         wrule, wjson = self.weight_prompt(party)
+        prule, pjson = idea_cascade.propose_rule(self.state_dir, party)           # a slice it holds that is wrong for its craft (spec 131 §B.1)
         after = "\n- `after` (with a `no` only, optional): the slug of one goal in line above that this goal should wait for; else leave it out." if line else ""
         rules = (f"\n- You are not here to agree. Judge the goal as the one who answers for {mine}, against {idea_objections.lens(self._craft(party))}. `verdict` is `go`, `doubt` or `no`. "
                  f"`why` (one line, {LINE} characters at most) is needed for a `doubt` and a `no`: say what it rests on; without it your verdict reads as `go`."
-                 f"\n- `instead` (optional, one line): a smaller or different goal that would serve.{after}{wrule}")
-        return rules, '{"verdict": "go", "why": "", "instead": ""' + (', "after": ""' if line else "") + wjson + "}"
+                 f"\n- `instead` (optional, one line): a smaller or different goal that would serve.{after}{wrule}{prule}")
+        return rules, '{"verdict": "go", "why": "", "instead": ""' + (', "after": ""' if line else "") + wjson + pjson + "}"
 
     def weigh_prompt(self, slug: str, entry: dict, route: list[dict], line: list[dict]) -> str:
         """What Product's leader is told when it weighs a goal it is not routed on (after its voice): the task and the rules (no file is read, no question is asked), the context cut to
@@ -167,7 +169,8 @@ Answer with one JSON object and nothing else:
         craft, slugs = self._craft(party), [g["slug"] for g in line]
         try:
             with self._system(entry):
-                got = self._tried(lambda: clean_judgement(kw.first_json(self.ask("talk_round" if weigher else "talk_verdict", prompt, tools=False)[0]), craft, slugs), mine,
+                got = self._tried(lambda: clean_judgement(self.cascade_seen(kw.first_json(self.ask("talk_round" if weigher else "talk_verdict", prompt, tools=False)[0]), party,
+                                                                                  "talk_round" if weigher else "talk_verdict", slug), craft, slugs), mine,
                                   self._name(entry["leader"]))
         except InterruptedError:
             raise

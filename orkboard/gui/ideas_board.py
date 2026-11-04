@@ -528,6 +528,6 @@ def sort_needs(needs: list[dict]) -> list[dict]:
     judged pitch (spec 65 §5) comes after the goals' own, before the proposals."""
     def key(n: dict) -> tuple:
         prio = n.get("priority") if n.get("priority") in ideas.PRIORITIES else "normal"
-        last = 2 if n["kind"] in ("proposal", "op_rules", "party", "project_q", "hypothesis", "quality", "finding") else 1 if n["kind"] == "pitch" else 0
+        last = 2 if n["kind"] in ("proposal", "op_rules", "party", "project_q", "hypothesis", "quality", "finding", "cascade") else 1 if n["kind"] == "pitch" else 0
         return last, not n.get("blocks"), ideas.PRIORITIES.index(prio), str(n.get("at") or "")
     return sorted(needs, key=key)

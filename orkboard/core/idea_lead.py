@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from orkboard.core import idea_cascade
 from orkboard.core import idea_slices
 from orkboard.realm import event_log, goal_team, goal_verdict, idea_target, ideas, own_parties, roles
 
@@ -74,22 +75,24 @@ class LeadMixin:
                                    ("Its metrics", metrics), ("Its ideas done, with their Done when", shipped),
                                    ("Its ideas not done", "\n".join(f"- {i['title']}" for i in mine if i not in done))],
                                   idea_target.CONTEXT["accept"])
+        prop_rule, prop_json = idea_cascade.propose_rule(self.state_dir, slug)       # a slice it holds that is wrong for its craft (spec 131 §B.1)
+        rules = f"Rules:{prop_rule}\n\n" if prop_rule else ""
         return f"""You are the keeper of this project's Task board. The ideas of the goal {g['title']} are done: accept the goal or
 not, against its metrics, not against the work done. You may read the repository (read only) to see what shipped.
 {self.reads("accept", [])}
 
-{context}Answer with one JSON object and nothing else:
+{context}{rules}Answer with one JSON object and nothing else:
 {{"met": true or false,
  "verdict": "two or three lines: whether the goal is reached, and why",
  "metrics": [{{"name": "a metric as named", "status": "met, not met or unknown", "why": "one line: the number, or what is missing to count it"}}],
- "next": ["zero to three next ideas, one line each, when the goal is not reached"]}}
+ "next": ["zero to three next ideas, one line each, when the goal is not reached"]{prop_json}}}
 """
 
     def accept_one(self, slug: str) -> None:
         root = self.wiki_root()
         try:
             text, *_rest = self.ask("accept", self.accept_prompt(root, slug))
-            got = goal_verdict.save(self.state_dir, slug, self.parse(text), by=self.leader_name(slug))
+            got = goal_verdict.save(self.state_dir, slug, self.cascade_seen(self.parse(text), slug, "accept"), by=self.leader_name(slug))
         except Exception as e:
             if not isinstance(e, InterruptedError):
                 ideas.save_goal_state(self.state_dir, slug, error=f"Not accepted: {_kw()._why(e)}")

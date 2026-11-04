@@ -251,7 +251,14 @@ TERMS: tuple[Term, ...] = (
     _t("add_to_goal", "Add to the goal"),                          # the bubble's line on a goal not yet agreed (spec 132 A)
     _t("change_decision", "Change…"),                              # the decision's one button beside *Confirm and start* (decisions §237.3)
     _t("or_say_change", "Or say what to change"),                  # the line under the decision's field
-    _t("aspect", "aspect", "aspects"),                             # one thing a craft's senior looks at on its map (*Hotspots*, *Accessibility*, *Economy*), with the question it asks; a concern names its aspect; never a check (the gate's) nor a finding (spec 109, decisions §184.2)
+    _t("proposes", "Proposes"),                                    # what a leader's card says of its proposal to change a slice of the decisions (spec 131 B.4, decisions §233.8)
+    _t("agrees", "Agrees"),                                        # … of a leader that agrees with the change in its own slice
+    _t("disagrees", "Disagrees"),                                  # … of a leader that does not: a fork for the person
+    _t("stopped_after_steps", "Stopped after <n> steps"),          # where a cascade stopped at its bound of steps, with who was not asked (decisions §233.7)
+    _t("stopped_at_price", "Stopped at its price"),                # … or at the price it may spend, 2 % of the main tool's week
+    _t("agree_line", "<A> and <B> agree"),                         # the card's one line when no leader disagreed: *Tech and Art agree* (decisions §237.6)
+    _t("answer_the_fork_first", "Answer the fork first"),          # what Confirm says while a leader's disagreement has no answer
+    _t("aspect", "aspect", "aspects"),                            # one thing a craft's senior looks at on its map (*Hotspots*, *Accessibility*, *Economy*), with the question it asks; a concern names its aspect; never a check (the gate's) nor a finding (spec 109, decisions §184.2)
     _t("hint", "hint", "hints"),                                   # what code noticed and no one said: a map's hint of code (spec 109 §3), a press that did nothing on Play (spec 115 §4)
     _t("play_mark", "mark", "marks"),                              # a box the person drew on Play with a line: the live product's own picking (spec 115 §5)
     _t("hypothesis", "hypothesis", "hypotheses"),                  # what the project believes and has not shown, with the signal that would show it, on Product's tree; tested by goals, judged in the hand (spec 116)
@@ -259,7 +266,7 @@ TERMS: tuple[Term, ...] = (
     _t("squad", "squad", "squads"),                                # a party's seats together, grouped *Leads* | *Does* | *Checks*
     _t("size", "size", "sizes"),                                   # how large a party is, in one word: lean, standard or full (the Target's, spec 75)
     _t("in_line", "in line", "", "deck", "decks"),                 # a goal not started, waiting its turn: the first lane's last cascade (decisions §167.5; it was the *deck*, whose place value `deck` the code keeps)
-    _t("cascade", "cascade", "cascades"),                          # a goal's tasks laid in its party's lane, the front one whole and the others as strips (decisions §167.4)
+    _t("cascade", "cascade", "cascades"),                          # a goal's tasks laid in its party's lane, the front one whole and the others as strips (decisions §167.4); and what a leader's proposal changes in the other leaders' slices, step by step, before it is a decision (spec 131 B, decisions §233.6): one word for both
     _t("hold", "Hold"),                                            # keep a goal in line: nothing reads it until the person says (the queue `hold`; a raw `night` reads so)
     # A goal's way (docs/specs/99-a-goals-way.md §10; decisions §117, §118, §121.1): the words of the route, Talk, the decision and the spec, each once
     _t("route", "route", "routes"),                                # the parties that write a goal's spec and do its work, in order; the Orkmaster routes a goal, never a job title

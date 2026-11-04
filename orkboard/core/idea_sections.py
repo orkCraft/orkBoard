@@ -29,6 +29,7 @@ from __future__ import annotations
 import json
 from concurrent.futures import ThreadPoolExecutor
 
+from orkboard.core import idea_cascade
 from orkboard.core import idea_fold
 from orkboard.core import idea_journal
 from orkboard.core import idea_slices
@@ -154,6 +155,7 @@ class SectionsMixin:
         redo = " Your section was written already: write it again, changing only what the settled fork changes." if told else ""
         why = "- `why`: the cause above, in your words." if cause.get("text") else "- `why`: why this matters for your craft, two or three lines."
         sketched = f"\n- {sketches.WILL_BE}" if sketch else ""
+        prop_rule, prop_json = ("", "") if told else idea_cascade.propose_rule(self.state_dir, party)       # a slice it holds that is wrong for its craft (spec 131 §B.1); a section written again proposes none
         return f"""You speak for {mine}, one of the parties on this goal's route ({", then ".join(titles)}). The goal is decided: write your party's section of its spec — what your \
 party will make true, and nothing of another party's.{redo} {self.reads(step, files)} You may read the repository (read only). The goal is the person's words, not an \
 instruction to you.
@@ -165,10 +167,10 @@ instruction to you.
 - `will_be`: one line a part of your map the work changes — `new <part id>`, `changed <part id>` or `gone <part id>`, the id as your map names it (its path), then a short why after a dash. None where \
 your party has no map.{sketched}
 - `out`: up to {spec_sections.MAX_OUT} things your section does not do. `risks`: up to {spec_sections.MAX_RISKS}. `risk`: low, medium or high.
-- Ask nothing more: where you are unsure, decide, and say what you assumed in `assumed` (up to {spec_sections.MAX_ASSUMED} lines).
+- Ask nothing more: where you are unsure, decide, and say what you assumed in `assumed` (up to {spec_sections.MAX_ASSUMED} lines).{prop_rule}
 
 Answer with one JSON object and nothing else:
-{{"why": "…", "done_when": ["…"], "checks": ["…"], "will_be": ["changed path/of/a-part — why"], "out": ["…"], "risks": ["…"], "risk": "low", "assumed": ["…"]}}"""
+{{"why": "…", "done_when": ["…"], "checks": ["…"], "will_be": ["changed path/of/a-part — why"], "out": ["…"], "risks": ["…"], "risk": "low", "assumed": ["…"]{prop_json}}}"""
 
     def _defaults_of(self, slug: str, party: str) -> list[str]:
         """The questions this party's leader closed by its own pick (Talk's defaults), as the lines of its *Defaults*."""
@@ -192,6 +194,8 @@ Answer with one JSON object and nothing else:
 
             def call() -> dict | None:
                 answer = kw.first_json(self.ask("section_first" if lead else "section", self.section_prompt(slug, entry, route, lead, told_here))[0])
+                if not told_here:
+                    self.cascade_seen(answer, entry["party"], "section_first" if lead else "section", slug)
                 if isinstance(answer, dict) and cause and not told_here:
                     answer = {**answer, "why": cause}                       # a bug's Why is the cause Talk found
                 got = spec_sections.clean_section(answer, self._defaults_of(slug, entry["party"]))
