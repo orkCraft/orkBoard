@@ -1,0 +1,9 @@
+/* The door as the person (presence.js, spec 139 C.2): orkUI's door and its word. Layout only; every colour, face and size is orkUI's. */
+.presence-door { appearance: none; flex: none; display: flex; align-items: center; gap: var(--ork-3); margin: 0; padding: var(--ork-1) var(--ork-2); border: 0; background: none; color: var(--ork-ink); cursor: pointer; text-align: left; }
+.presence-door:hover .ork-door, .presence-door:focus-visible .ork-door { --_frame: var(--ork-edge); }
+.presence-door:focus-visible { outline: 2px solid var(--ork-ink); }
+.presence-door__words { display: flex; flex-direction: column; font: var(--ork-type-caption); }
+.presence-door__word { font: var(--ork-type-button); text-transform: uppercase; letter-spacing: var(--ork-type-button-track); }
+.presence-door__line { color: var(--ork-ink-muted); white-space: nowrap; }
+.presence-door.is-away .presence-door__word { color: var(--ork-ink-muted); }
+.presence-door.is-small { gap: var(--ork-2); min-width: 44px; min-height: 44px; }
