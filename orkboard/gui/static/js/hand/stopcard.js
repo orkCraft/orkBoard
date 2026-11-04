@@ -13,6 +13,7 @@ import { missingWords } from "../arena/arenawords.js";
 import { goalLine, goalsOfRow } from "../arena/collidewords.js";
 import { Answers } from "./answers.js";
 import { costOf, Gem, Spend } from "./cost.js";
+import { OWN_LINES, WayLine } from "./wayline.js";
 import { goalOfStop } from "./data.js";
 import { liftKey } from "./state.js";
 import { between, boxIn, handedName, leans, reduced, useFlight } from "./motion.js";
@@ -135,7 +136,7 @@ export function Lifted({ s, anchor, inline = false }) {
     <div class="hand-lifted__body">
       ${Way ? html`<${Way} s=${s} close=${lower} />` : html`<${Body} s=${s} />
       <div class="hand-answers" role="group" aria-label="Answers"><${Answers} s=${s} /></div>`}
-      <${Spend} cost=${cost} />
+      ${s.row?.level && s.row?.pulls && !OWN_LINES.has(s.kind) ? html`<${WayLine} row=${s.row} own=${cost?.words || ""} />` : html`<${Spend} cost=${cost} />`}
       ${!inline && html`<button type="button" class="ork-btn hand-put" onClick=${lower}>Put it back</button>`}
     </div>
     <span class="hand-card__foot hand-lifted__kind">${s.label}</span>

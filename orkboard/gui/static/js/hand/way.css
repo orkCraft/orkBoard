@@ -51,3 +51,13 @@ span.hand-route__head { cursor: default; }
 
 /* a leader's no lifted (docs/specs/108 §4.3): who says it, its why, the smaller goal it would do */
 .hand-way__instead { color: var(--ork-ink-muted); overflow-wrap: anywhere; }
+
+/* a change's way down in one line (hand/wayline.js, spec 132 C.2): the level's sign, the words, More; what each is under it */
+.hand-wayline { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; }
+.hand-wayline p { margin: 0; }
+.hand-wayline__line { display: flex; align-items: flex-start; gap: var(--ork-3); color: var(--ork-ink-muted); }
+.hand-wayline__sign { display: inline-flex; flex: none; color: var(--ork-ink); }
+.hand-wayline__words { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.hand-wayline__more { flex: none; }
+.hand-wayline__list { margin: 0; padding-left: var(--ork-5); color: var(--ork-ink-muted); }
+.hand-wayline__list li { overflow-wrap: anywhere; }
