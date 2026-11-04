@@ -6334,3 +6334,42 @@ hover. So:
    `.ork-taken`), each with its module's browser test (picked: the rune lit and not pulsing, the card risen, no brackets;
    taken in picking: the brackets).
 The owner's call.
+
+## 249. A card's window is where it has something to show: the Orkmaster's column and the hand without one, the hand's kind a sign in its corner and who asks a small head beside it; the leaders' lanes keep it as a window onto the work, by its state and its craft, read from what the Board has (4 November 2026, the owner)
+
+Changes: 236.4, 247.9; spec 101 §2, spec 128 B.3, spec 129 H2.
+
+Why: the review's first point (§247): half of every upright card and every hand card is a window, and it is empty or holds
+a sign and a small head; the column is 128 px wide and its cards 157 px tall; the hand's titles are cut in the middle of a
+line. The owner, after `docs/mockups/card-windows/`: *remove them in the Orkmaster's column, and in the hand keep only the
+kind in a corner (a question, a fork, an error); but for the leaders' lanes I would not remove them, rather make them more
+interesting*. The three places say three things: the column *where* a goal is (its pile, rune, name and foot say it), the
+hand *what is asked and by whom*, the lanes *the work itself*, and only the last has something a window can show. A lane
+card's window that shows a picture for its own sake breaks the one look (CLAUDE.md: the races' heads the only pictures);
+one that shows the work (what it made, how far it is) is the work's content, not the interface's picture. So:
+1. **The column's upright card has no window**: its rune and its whole name (three lines at most; a longer one grows the
+   card by a line, never cuts it), then its foot as today (the wait's bar and time, the leaders' heads at work, the count);
+   its width 112 px (§236.3), its height its content's. The face-down cards keep their seal and size (§206.3, §236.1, §241).
+2. **The hand's card has no window**: **its kind a sign in its top left corner** in its signal's colour (a question and
+   a hearing the alert's, a failure the danger's, a fork, a decision, a hypothesis due, a cost grown, a change the muted
+   ink's), **who asks a small head (16 px) in its top right corner**, never lost (a member asks only its leader, §104);
+   under them **the title in three whole lines**, then the label row (the party, the gem when it spends). The card is
+   about two thirds of today's height; the hand is as tall as the potions and the die set it. The + card and the lifted
+   card (which shows what is asked whole) are unchanged.
+3. **A lane's card keeps its window, a window onto the work**, by the task's state: **waiting**, the head of the seat
+   that will take it, faint (*an elf takes it next*); **at work**, its steps (§207: the pips, the step now, who does it
+   with the busy mark); **failed**, the alert and its reason in one line; **done or being checked**, **what it made, by its
+   craft**: **Tech** the files it touched with their lines added and taken as pixel bars (`git diff --numstat` of the
+   task's commits, three files at most); **Design** the screen it changed, before → after when both are known (Play's shot
+   or the sketch's canvas); **Art** the asset itself at its pixels (the file the work made, an image); **Release** its
+   checks on the way into main (§188.3: the skeletons' ticks); **Product** the hypothesis it tests and its state (§235);
+   **Run** and **LiveOps** the dated event it waits for (§215). A craft or a task with nothing of these keeps today's
+   type sign. Never a picture for its own sake; all of it read by code from what the Board has, no call to a model.
+4. **One face**: every card keeps the frame, the header and the label row, so the short cards and the tall ones read as
+   one deck; the height says where the work is.
+5. **The words** (`TERMS`): *takes it next*; the craft windows' words are their data's.
+6. **Built** by spec 142: **A.** the column's card and **B.** the hand's card (the page), each with its browser test;
+   **C.** the lane's windows of waiting, at work and failed (the page, from the snapshot's task as it is); **D.** the craft
+   windows (the host serves a task's `made`: Tech's numstat, Design's and Art's image paths, read by code; the page draws
+   them). The mockup is the look: `docs/mockups/card-windows/`.
+The owner's call.
