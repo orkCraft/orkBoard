@@ -8,6 +8,8 @@ A party carries what its tab needs besides (spec 111 B): `free_elements`, the sh
 when none is free; a rune is unique across the project, spec 128 G), beside `next_element` (a shape) and `next_hue`; and its sword and shield (decisions §189): `does_tool` and `checks_tool`, the AI tools its Does and its Checks run on (a
 `harnesses` id, the Main tool resolved), `does_mixed` / `checks_mixed` when a column's roles run on more than one, and `lean` (no separate check: `checks_tool` is ""); and, per side,
 whether it follows the default tool (spec 114 B, decisions §192.4): `does_default`, `checks_default` (neither the party nor any seat of that side is set to a tool; a Lean party's check never is).
+
+A task done or at Review carries `craft_made` (spec 142 D, decisions §249.3; `made_for`, realm/task_made.py): what it made by its party's craft, read by code, the key absent where a craft has none.
 """
 from __future__ import annotations
 
@@ -18,7 +20,7 @@ from pathlib import Path
 from orkboard import settings as machine
 from orkboard.gui import media
 from orkboard.gui.ideas_args import IdeasError, _opt
-from orkboard.realm import board_map, collide, goal_team, goal_types, idea_element, ideas, library, orkmaster, party_recipes
+from orkboard.realm import board_map, collide, goal_team, goal_types, hypotheses, idea_element, ideas, library, orkmaster, party_recipes, task_made
 
 
 class MapMixin:
@@ -50,6 +52,7 @@ class MapMixin:
                 n["hue"] = idea_element.hue_of(self.state_dir, n["slug"])
                 if n["state"] != "done" or not n["seen"]:
                     used.append((n["element"], n["hue"]))
+        self.made_for(got)
         main = machine.main_tool(getattr(self.host, "machine", None))              # what a party with no tool of its own runs on
         next_element, next_hue = idea_element.pick_rune(used)                           # what a new goal would be given (`idea_element.next_rune_for`, from the runes read above)
         free_elements = idea_element.free([e for e, _h in used])                        # the shapes no goal holds (`idea_element.free_for`): [] when none is free
@@ -62,6 +65,31 @@ class MapMixin:
             g["ops"] = goal_team.recipe_of(root, g["slug"]) == party_recipes.TEAM_ID         # the Team party: its Board is the person's Operations (spec 92 §3)
         got["project"] = self.project_of(root, got, goal)
         return got
+
+    def made_for(self, got: dict) -> None:
+        """Each task done or at Review gets `craft_made` by its party's craft (realm/task_made.py, spec 142 D): Tech's files and Art's image from git (cached per tip commit), Design's shot (signed
+        above), Release's checks on the way into main, Product's hypothesis. Never a failure of the Map: a kind that cannot be read leaves the key out."""
+        craft = {g["slug"]: g.get("party_craft") or "" for g in got["goals"]}
+        wanted = [(n, t) for n in got["nodes"] for t in n["tasks"] if t.get("state") in task_made.MADE_STATES and craft.get(n["goal"])]
+        if not wanted:
+            return
+        checks = self.main_checks_now() if any(craft[n["goal"]] == "release" for n, _t in wanted) else {}
+        hyps = hypotheses.read(self.state_dir)["items"] if any(craft[n["goal"]] == "product" for n, _t in wanted) else []
+        for n, t in wanted:
+            kind, made = craft[n["goal"]], None
+            try:
+                if kind in ("tech", "art"):
+                    made = task_made.git_made(Path(self.host.repo_root), n["slug"], t, kind, media.asset_url)
+                elif kind == "design":
+                    made = task_made.screen_of("", (t.get("shot") or {}).get("url") or "")
+                elif kind == "release":
+                    made = task_made.checks_of(checks.get(n["slug"]))
+                elif kind == "product":
+                    made = task_made.hypothesis_of(hyps, n["slug"])
+            except (OSError, ValueError, KeyError):
+                made = None
+            if made:
+                t["craft_made"] = made
 
     @staticmethod
     def marks_of(g: dict, main: str) -> dict:

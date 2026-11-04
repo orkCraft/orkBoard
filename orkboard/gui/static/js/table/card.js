@@ -1,5 +1,5 @@
 // A card of the Board (docs/specs/101-the-cards-the-cascade-and-the-hand-under-the-lanes.md §2, decisions §167.1; the lifting of docs/specs/98-the-table-and-the-hand.md §3.5, §6, decisions §120.1; one rune per stack: docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §3.1,
-// decisions §187.1–§187.2): 144 wide, its task's name at the top of its header (the pixel face is never used for it; three lines at most; **no rune**: the goal's rune stands once, on the strip over its stack), under it a window (the card's own fill, a hairline, 92 px high) that is a window onto the work by the task's state (spec 142 C, decisions §249.3): waiting, the head of the seat that takes it, faint; at work, its steps; failed, the alert and its reason; else one sign
+// decisions §187.1–§187.2): 144 wide, its task's name at the top of its header (the pixel face is never used for it; three lines at most; **no rune**: the goal's rune stands once, on the strip over its stack), under it a window (the card's own fill, a hairline, 92 px high) that is a window onto the work by the task's state (spec 142 C, decisions §249.3): waiting, the head of the seat that takes it, faint; at work, its steps; failed, the alert and its reason; done or at Review, what it made by its craft (made.js, spec 142 D: Tech's files as bars, Art's image, Design's screen, Release's checks, Product's hypothesis); else one sign
 // at the signs' big size, toned down — the task's type —, and its label row: the stage's small sign and word, the gem at its right when it spends. **A task at work shows the flame**: the goal's rune, glowing (orkUI's `.is-glowing`), takes the place of the stage's
 // small sign, on its card and on its edge; it is the card's only motion of the work, and it stands still under reduced motion. The tasks behind the front one lie as a fan (`fanOf`, `TaskEdge`): an edge holds the stage's sign (and the flame) and, once the fan is opened, the task's
 // name. **A card that is the goal itself** (`OwnCard`: the Orkmaster reading, routing or joining it) has no strip over it: its header holds the goal's rune and its whole title, and it wears the pick (`ork-picked`) a strip would, so a goal in two lanes is lit alike. No foot and no head: who works is on its back and in its party's header.
@@ -18,6 +18,7 @@ import { aliveState, useChanged, useWorked, workedWords } from "./worktime.js";
 import { ConcernsBack } from "./concerns.js";                       // a marked card's back lists its leader's concerns (spec 108 B)
 import { cascadeOf, footWords, doingWords, readTask, stageOf, typeSignOf, gemOf, STAGES } from "./data.js";
 import { Pips, StepsList, StepsWindow, WaitingWindow, FailedWindow, labelWords, countWords, showsSteps, stepsOf } from "./steps.js";       // a task's steps: the label row's count, pips and step now, the lifted card's list (spec 129 H2)
+import { MadeWindow, madeOf } from "./made.js";                           // what a task done or at Review made, by its craft (spec 142 D)
 import { BackFace, Turning, backKind, everBack } from "./backcard.js";       // a goal talked over lies face down (spec 120 §6.3)
 import { ThrownPlace, thrown } from "./flight.js";                         // a failed task's card thrown to the hand leaves its place (spec 128 C.2)
 
@@ -58,9 +59,10 @@ function Win({ n, sign, moon = false, danger = false }) {
  *  faint; otherwise the type's sign. Its height is fixed (table/work.css), so a lane's cards line up. */
 const AT_WORK = ["doing", "checking"];
 function TaskWin({ n, t, st, alive }) {
-  const sign = typeSignOf(n, t), doing = String(t.steps?.doing ?? "").trim();
+  const sign = typeSignOf(n, t), doing = String(t.steps?.doing ?? "").trim(), made = madeOf(t);
   let inside = null, kind = "sign";
   if (t.state === "failed") { inside = html`<${FailedWindow} reason=${t.error} />`; kind = "fail"; }
+  else if (made) { inside = html`<${MadeWindow} t=${t} />`; kind = "made"; }
   else if (st) { inside = html`<${StepsWindow} st=${st} head=${t.head} element=${n.hue || n.element} alive=${alive} />`; kind = "steps"; }
   else if (doing && AT_WORK.includes(stageOf(t))) { inside = html`<${StepsWindow} st=${{ items: [], now: -1, done: 0, total: 0, source: "activity", doing }} head=${t.head} alive=${alive} />`; kind = "steps"; }
   else if (t.state === "waiting" || t.state === "ready") { inside = html`<${WaitingWindow} head=${t.head} />`; kind = inside ? "wait" : "sign"; }
