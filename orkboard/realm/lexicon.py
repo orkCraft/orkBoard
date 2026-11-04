@@ -230,6 +230,7 @@ TERMS: tuple[Term, ...] = (
     _t("taken", "taken"),                                          # a goal from the inbox read by the computer or a cloud session and laid on the Board, said in the journal first (spec 136 B, decisions §243.4); *Waiting to be taken* until then
     _t("waiting_to_be_taken", "Waiting to be taken"),              # what a goal in the inbox says on the phone until the computer or a cloud session has taken it (spec 136 C.4, decisions §243.3)
     _t("as_of", "As of"),                                          # what the phone's screens say before the journal's time (*As of 14:02*): what it shows was true then, never now (spec 136 C.4, decisions §243.5)
+    _t("slice", "slice", "slices"),                                # a leader's part of a decision: the key conclusion for its craft and the points it rests on, cut once at Confirm and read into the leader's calls (spec 131, decisions §233.1); not shown yet
     _t("aspect", "aspect", "aspects"),                             # one thing a craft's senior looks at on its map (*Hotspots*, *Accessibility*, *Economy*), with the question it asks; a concern names its aspect; never a check (the gate's) nor a finding (spec 109, decisions §184.2)
     _t("hint", "hint", "hints"),                                   # what code noticed and no one said: a map's hint of code (spec 109 §3), a press that did nothing on Play (spec 115 §4)
     _t("play_mark", "mark", "marks"),                              # a box the person drew on Play with a line: the live product's own picking (spec 115 §5)

@@ -257,7 +257,7 @@ def test_the_step_has_its_tables_and_its_tier():
     assert idea_target.pick("fold", "thrift") == ("laborer", "") and idea_target.pick("fold", "quality") == ("warrior", "medium")
     assert idea_target.READS["fold"] == 0 and idea_target.CONTEXT["fold"] == 12_000 and idea_target.CAPS["fold"] == 0.05
     assert idea_target.budget("fold", "balance") == 0.15
-    assert [idea_target.CONTEXT[s] for s in ("talk_round", "section_first", "section")] == [8_000 + 3_000 + 2_500, 12_000 + 3_000 + 2_500, 12_000 + 3_000 + 2_500]
+    assert [idea_target.CONTEXT[s] for s in ("talk_round", "section_first", "section")] == [8_000 + 3_000 + 2_500 + 1_200, 12_000 + 3_000 + 2_500 + 1_200, 12_000 + 3_000 + 2_500 + 1_200]
 
 
 # -- the trigger ---------------------------------------------------------------------------------------------------------------------------

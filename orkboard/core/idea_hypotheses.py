@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from orkboard.core import idea_slices
 from orkboard.realm import goal_team, hypotheses, idea_target, ideas, opportunity_tree as tree, project_facts, project_stage, spec_sections
 
 ASSUMED_GOALS = 10                 # the goals whose Defaults the leader is told, at most
@@ -138,6 +139,7 @@ class HypothesesMixin:
             parts.append(("The tree's ids, for `on`", "\n".join(ids)))
         if facts := project_facts.for_call(self.state_dir, party):
             parts.append(("What is known of the project", facts))
+        parts += idea_slices.parts(self.state_dir, party)                           # what the leader holds of the decisions (spec 131 §A.4)
         parts.append(("What the leaders assumed (the defaults of the goals in line and at work; the name before the colon is the goal's)", self.assumed_text()))
         context = idea_target.cut(parts, idea_target.CONTEXT["hypotheses"])
         first = (f"\n- The project is at the stage idea and no hypothesis is kept: name one for each axis that matters most to this project, {room} at most, from "

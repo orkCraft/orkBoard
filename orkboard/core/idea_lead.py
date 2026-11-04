@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from orkboard.core import idea_slices
 from orkboard.realm import event_log, goal_team, goal_verdict, idea_target, ideas, own_parties, roles
 
 
@@ -69,6 +70,7 @@ class LeadMixin:
         shipped = "\n\n".join(f"{i['title']}\n" + (ideas.idea_page(root, i["slug"]) or ideas.Page()).section("Done when")
                               for i in done)
         context = idea_target.cut([("The goal", f"{g['title']}\n{g['about']}"), ("Its summary", g["summary"]),
+                                   *idea_slices.parts(self.state_dir, slug),                  # what the leader holds of the decisions (spec 131 §A.4)
                                    ("Its metrics", metrics), ("Its ideas done, with their Done when", shipped),
                                    ("Its ideas not done", "\n".join(f"- {i['title']}" for i in mine if i not in done))],
                                   idea_target.CONTEXT["accept"])

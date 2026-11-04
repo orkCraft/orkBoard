@@ -198,8 +198,8 @@ def test_a_members_call_is_given_none(host, tech, goal):
 def test_the_context_of_each_step_that_reads_the_journals_grew_by_three_thousand():
     before = {"talk_round": 8_000, "talk_verdict": 6_000, "section_first": 12_000, "section": 12_000, "concerns": 12_000, "ask": 8_000, "decide": 8_000}
     for step, was in before.items():
-        assert idea_target.CONTEXT[step] == was + 3_000 + (2_500 if step in ("talk_round", "section_first", "section") else 0), step      # (and 2,500 more for the living specs: spec 127 C.3)
-    assert idea_target.CONTEXT["join"] == 8_000 and idea_target.CONTEXT["project_q"] == 12_000      # the rest stay
+        assert idea_target.CONTEXT[step] == was + 3_000 + (2_500 if step in ("talk_round", "section_first", "section") else 0) + (2_500 if step == "decide" else 1_200), step      # (and 2,500 more for the living specs: spec 127 C.3; the leaders' slices: spec 131 A.4)
+    assert idea_target.CONTEXT["join"] == 8_000 and idea_target.CONTEXT["project_q"] == 12_000 + 1_200      # the rest stay (project_q grew for the slices: spec 131 A.4)
 
 
 def test_what_fit_before_is_not_cut_now(host, tech, goal):

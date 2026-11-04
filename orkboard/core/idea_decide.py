@@ -24,6 +24,9 @@ confirms it with one button, and it is committed, numbered, to the project's dec
   kept in `decision.changes`, written as the body's first line `Changes: 110, 183.` in the one file, as MADR's `ork-changes: [110, 183]` in a folder (a Nygard record: that line at the top of its
   Decision), and said in the project's journal's line (` (changes 110, 183)`). `decisions_log.headings` says ` (changed by 205)` of the headings a later entry changes. A project with no log at all
   gets the MADR folder `docs/decisions` (`decisions_log.path`).
+- **The leaders' slices** (spec 131 §A, decisions §233): the decision's call is given, after the journals, *What the leaders hold that this goal touches* (`slices_touched`: the standing slices of the route's parties and of those
+  whose map a mark of the goal names) and a rule to say in a point, and name in `changes`, where the goal goes against one; `clean_decision` knows the slices' decisions as well as the last ten headings. `_enter` begins the
+  decision's cut once the entry is written (`slices_cut`, core/idea_slices.py), wrapped so that a failure never fails Confirm. The trigger is `_enter`'s and not `write_decision`'s: a cascade writes through the latter (spec 131 B).
 - **Never for a bug** (§158.3: a bug's Talk is its diagnosis and goes to `sections`) **nor a recurring round** (§122.6: not routed). Asking again of a decision confirmed
   already (the sections failed) writes nothing twice: it runs the sections again.
 
@@ -209,8 +212,12 @@ class DecideMixin:
         if over or doubts:                                                                    # spec 108 §4.4: the person went on against a no, or a leader doubted
             parts.append(("Leaders the person overruled, and those who doubted", "\n".join(f"- {x}" for x in [*over, *doubts])))
         parts += idea_journal.parts(self.state_dir, self.repo_root, "", slug)                 # the project's journal (spec 125 §C), before the decisions file
+        held, _nums = self.slices_touched(slug, route)                                        # what the leaders hold that this goal touches (spec 131 §A.4), before the decisions file
+        if held:
+            parts.append(("What the leaders hold that this goal touches", held))
         parts.append(("The project's decisions file", decisions_log.context(base, None, self._chosen())))
         context = idea_target.cut(parts, idea_target.CONTEXT["decide"])
+        held_rule = ("\n- Where the goal goes against a line under *What the leaders hold that this goal touches*, say so in a point and put that decision's number in `changes`.") if held else ""
         overruled_rule = ("\n- Each line under *Leaders the person overruled, and those who doubted* is a point of its own, word for word: the person went on against that leader's no "
                           "(or the leader doubted), and the entry says so.") if over or doubts else ""
         return f"""Word the decision of a goal, as this project's decisions file words its entries. The person talked the goal through with the leaders of its route and \
@@ -222,7 +229,7 @@ instructions to you.
 - `why`: two to four lines: why this, now, and what the person chose where the leaders differed.
 - `points`: {POINTS[0]} to {POINTS[1]} points, one line each ({POINT_CHARS} characters at most), unnumbered: what is decided, who makes it, what it leaves out. Only what the \
 words above say; invent nothing.{overruled_rule}
-- `changes`: the numbers of the earlier decisions this one changes or replaces, from the decisions file's headings above (at most {CHANGES_MAX}); [] when none.
+- `changes`: the numbers of the earlier decisions this one changes or replaces, from the decisions file's headings above (at most {CHANGES_MAX}); [] when none.{held_rule}
 
 Answer with one JSON object and nothing else:
 {{"title": "…", "why": "…", "points": ["…", "…"], "changes": []}}"""
@@ -237,6 +244,7 @@ Answer with one JSON object and nothing else:
         got, measure = None, None
         said = [x for part in idea_objections.lines(rec, self._name) for x in part]       # the leaders overruled and those who doubted: the entry says each (spec 108 §4.4)
         known = decisions_log.numbers(self._log_text())                                   # the headings the call is given: what it can say it changes (spec 127 B.1)
+        known += self.slices_touched(slug, route)[1]                                      # … and the decisions the leaders' slices rest on (spec 131 §A.4)
         try:
             orkmaster.install(self.state_dir)
             text, *_rest = self.ask("decide", self.decision_prompt(slug, route, rec), tools=False, as_role=orkmaster.ROLE)
@@ -380,3 +388,7 @@ Answer with one JSON object and nothing else:
         ideas.update(self.wiki_root(), slug, {}, [f"Decision {number}: {title}"])
         ideas.add_turn(self.state_dir, slug, "keeper" if by == "leaders" else "you", f"Confirmed decision {number}: {title}" + (" (the leaders, all agreed)" if by == "leaders" else ""), "Decided")
         journal_notes.decision(self.state_dir, self.wiki_root(), slug, number, title, idea_objections.lines(idea_questions.record(self.state_dir, slug), self._name)[0], changes)      # the project's journal (spec 125 B)
+        try:                                                       # the decision cut into the leaders' slices, in the background (spec 131 §A.2): a failure never fails Confirm
+            self.slices_cut(number, slug)
+        except Exception:
+            pass

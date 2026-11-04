@@ -18,6 +18,7 @@
 """
 from __future__ import annotations
 
+from orkboard.core import idea_slices
 from orkboard.realm import goal_team, idea_target, ideas, loop, project_facts
 
 CRAFT = "game-design"
@@ -69,6 +70,7 @@ class LoopMixin:
         parts = []
         if facts := project_facts.for_call(self.state_dir, party):
             parts.append(("What is known of the project", facts))
+        parts += idea_slices.parts(self.state_dir, party)                           # what the leader holds of the decisions (spec 131 §A.4)
         parts.append(("The project's config files (by name)", "\n".join(names) or "(none: no balance file, config folder or levels folder)"))
         parts += [(f"File {path} (its first lines)", text) for path, text in loop.heads(self.repo_root, names, ref).items()]
         parts += [(f"File {f['path']} (its first part)", f["text"]) for f in project_facts.start_files(self.repo_root)]
