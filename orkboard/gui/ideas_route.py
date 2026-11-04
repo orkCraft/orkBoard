@@ -5,6 +5,7 @@
     ideas.route_set {idea, route: [party]}                      # a party off, one added, any of the project's but Release; the cost answered again, no call
     ideas.talk {idea}                                           # Talk: the state is `talk`; D's `keeper.talk(slug)` takes it from there
     ideas.route_later {idea}                                    # *Later, by itself*, only when the week's limits run low: `held_until` at the reset
+    ideas.route_hold {idea}                                     # **Hold**, at any time (spec 130 E.3, decisions §239.3, §247.2): `held_for` "hold": nothing starts it until the person's **Talk**, and nothing is spent
     ideas.route_start {idea}                                    # the short way's Start: no Talk, no decision (E's `keeper.sections(slug)`); a bug whose report
                                                                 #   holds no failure goes to Talk, which is its diagnosis (D)
     ideas.start {idea}                                          # answers the `start` row (a route that changed after Talk, or a later step held for it: decisions §169.3); the plan's start otherwise
@@ -220,6 +221,16 @@ class RouteMixin:
         self.changed(slug)
         return {"ok": True, "held_until": _iso(until)}
 
+    def route_hold(self, args: dict) -> dict:
+        """`{idea}`: **Hold** (spec 130 E.3): the goal lies in the pile with no start of its own, until the person presses **Talk** (`route_talk` clears it). Nothing is spent: `route_stop` says it is held, so
+        `route_auto` does not send it to Talk, and the queue after the reset reads `held_until`, which it has none of. Its route card leaves the hand (`goal_route.rows`), and the pile's list says *Held* with **Talk**."""
+        slug, _st = self._routed(args)
+        self._auto_set.discard(slug)
+        ideas.save_state(self.state_dir, slug, held_for="hold", held_until="")
+        self._ev(event_log.ROUTE_HELD, idea=slug)
+        self.changed(slug)
+        return {"ok": True}
+
     def route_answer(self, args: dict) -> dict | None:
         """The answer of the `start` row (`ideas.start {idea}`): the person agrees to the new cost. None when `args` is no such answer (the plan's start)."""
         slug = args.get("idea")
@@ -273,10 +284,12 @@ class RouteMixin:
 
     def route_stop(self, slug: str) -> str:
         """Why a routed goal does not go to Talk by itself, in a few words ("" when nothing stops it): the keeper may not run (a demo, today's spend limit), the Claude window is spent,
-        the week's limits run low, the route is paid, the goal is put off, or the short way (a bug's way is the person's choice: its route card keeps *Start* and *Talk*)."""
+        the week's limits run low, the route is paid, the goal is put off or held, or the short way (a bug's way is the person's choice: its route card keeps *Start* and *Talk*)."""
         st, k = self._state(slug), self.keeper
         if st["state"] != "routed" or not st["route"]:
             return "it has no route to talk through"
+        if st["held_for"] == "hold":
+            return "it is held"
         if st["route_how"].get("short"):
             return "the short way keeps its card"
         if st["held_until"]:
@@ -467,4 +480,4 @@ class RouteMixin:
 def route_commands(ideas_: Any) -> dict:
     """The route's commands by name (`gui/ideas.py` adds them to its table)."""
     return {"ideas.route_set": ideas_.route_set, "ideas.talk": ideas_.route_talk, "ideas.route_later": ideas_.route_later,
-            "ideas.route_start": ideas_.route_start}
+            "ideas.route_hold": ideas_.route_hold, "ideas.route_start": ideas_.route_start}

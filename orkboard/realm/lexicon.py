@@ -287,6 +287,7 @@ TERMS: tuple[Term, ...] = (
     _t("go_on_to_the_parties", "Go on to the parties"),            # the first open's way from the AI tools to the parties' card (later *Done*)
     _t("put_back", "Put back"),                                    # a tool taken out of the hand between tasks, with Undo in the toast; the last one asks first
     _t("which_project", "Which project shall we work on?"),        # the Orkmaster's first question, its answers cards in the hand
+    _t("waits_for_the_reset", "waits for the reset"),              # the line under In analysis while goals put off wait: *waits for the reset · Mon 09:00*, a state, never a count (decisions §239.4)
     _t("table_laid", "The table is laid"),                         # what the Orkmaster says at the project's first Start: the leaders sit down, the table is drawn once
     # A goal's way (docs/specs/99-a-goals-way.md §10; decisions §117, §118, §121.1): the words of the route, Talk, the decision and the spec, each once
     _t("route", "route", "routes"),                                # the parties that write a goal's spec and do its work, in order; the Orkmaster routes a goal, never a job title

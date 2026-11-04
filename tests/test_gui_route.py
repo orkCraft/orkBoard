@@ -13,7 +13,7 @@ from orkboard.gui.board_host import BoardPhone, CommandError, Orkboard
 from orkboard.realm import goal_route, goal_team, idea_spend, ideas, library
 from orkboard.sources.limits import Limit
 
-ROUTE_COMMANDS = {"ideas.route_set", "ideas.talk", "ideas.route_later", "ideas.route_start"}
+ROUTE_COMMANDS = {"ideas.route_set", "ideas.talk", "ideas.route_later", "ideas.route_hold", "ideas.route_start"}
 
 
 @pytest.fixture

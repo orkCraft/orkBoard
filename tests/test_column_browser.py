@@ -67,7 +67,7 @@ def test_the_column_lies_left_of_the_table_the_table_height_and_its_head_is_the_
         col = pg.locator(".frame-column")
         col.wait_for(timeout=WAIT_MS)
         c, t, h = col.bounding_box(), pg.locator(".frame-table").bounding_box(), pg.locator(".frame-hand").bounding_box()
-        assert c["x"] == 0 and c["x"] + c["width"] <= t["x"] + 1 and 170 <= c["width"] <= 190, (c, t)
+        assert c["x"] == 0 and c["x"] + c["width"] <= t["x"] + 1 and 120 <= c["width"] <= 136, (c, t)
         assert abs(c["height"] - t["height"]) <= 1 and c["y"] + c["height"] <= h["y"] + 1, "the table's height, the hand under both"
         assert h["x"] == 0 and h["width"] >= c["width"] + t["width"] - 1
         tab = col.get_by_role("tab")
@@ -361,7 +361,7 @@ def test_an_agreed_decision_whose_wait_runs_is_not_in_the_hand_and_the_column_sa
         card = pg.locator('.col-card[data-goal="agreed"]')
         assert "its decision is agreed; its spec starts by itself at " in card.get_attribute("aria-label")
         assert card.locator(".col-stopped").count() == 0, "it asks nothing: its ring is not yellow"
-        card.click(position={"x": 8, "y": 8})          # beside the play in its middle
+        card.click(position={"x": 53, "y": 8})          # beside the play in its middle
         rows = pg.locator(".col-list__row")
         assert rows.count() == 2
         agreed = pg.locator('.col-list__row[data-goal="agreed"]')
@@ -382,7 +382,7 @@ def test_start_now_on_an_agreed_decision_confirms_it(gui):
     pg, host, log = open_column(gui, host=AgreedHost())
     try:
         pg.wait_for_selector(".col-card", timeout=WAIT_MS)
-        pg.locator('.col-card[data-goal="agreed"]').click(position={"x": 8, "y": 8})      # beside the play in its middle
+        pg.locator('.col-card[data-goal="agreed"]').click(position={"x": 53, "y": 8})      # beside the play in its middle
         pg.locator('.col-list__row[data-goal="agreed"]').get_by_role("button", name="Start now").click()
         assert _sent(pg, host, ("ideas.confirm", {"idea": "agreed"}))
         pg.wait_for_selector(".col-list", state="detached", timeout=WAIT_MS)
@@ -395,7 +395,7 @@ def test_change_on_an_agreed_decision_holds_its_wait_and_brings_its_card_into_th
     pg, host, log = open_column(gui, host=AgreedHost())
     try:
         pg.wait_for_selector(".col-card", timeout=WAIT_MS)
-        pg.locator('.col-card[data-goal="agreed"]').click(position={"x": 8, "y": 8})      # beside the play in its middle
+        pg.locator('.col-card[data-goal="agreed"]').click(position={"x": 53, "y": 8})      # beside the play in its middle
         pg.locator('.col-list__row[data-goal="agreed"]').get_by_role("button", name="Change…").click()
         assert _sent(pg, host, ("ideas.ripe_hold", {"idea": "agreed"}))
         pg.locator(".hand-lifted").wait_for(timeout=WAIT_MS)
@@ -533,7 +533,7 @@ def test_an_agreed_decision_shows_a_play_whose_ring_counts_the_wait_and_a_press_
         assert play.count() == 1 and play.locator(".ork-sign.play").count() == 1 and play.evaluate("e => e.tagName") == "BUTTON"
         assert card.locator("button").count() == 0, "never a button inside the card's button"
         b, c = play.bounding_box(), card.bounding_box()
-        assert abs(b["x"] + b["width"] / 2 - (c["x"] + c["width"] / 2)) <= 2 and abs(b["y"] + b["height"] / 2 - (c["y"] + c["height"] / 2)) <= 2, "in the ring's middle"
+        assert abs(b["x"] + b["width"] / 2 - (c["x"] + c["width"] + max(c["x"], 0)) / 2) <= 2 and abs(b["y"] + b["height"] / 2 - (c["y"] + c["height"] / 2)) <= 2, "in the ring's middle"
         sigil = card.locator(".col-sigil")
         assert "is-waiting" in sigil.get_attribute("class") and "col-stopped" not in sigil.get_attribute("class")
         arc = pg.evaluate("() => getComputedStyle(document.querySelector('.col-card--down[data-goal=g] .col-sigil'), '::after').getPropertyValue('--_arc')")
@@ -542,7 +542,7 @@ def test_an_agreed_decision_shows_a_play_whose_ring_counts_the_wait_and_a_press_
         play.click()
         assert _sent(pg, host, ("ideas.confirm", {"idea": "g"}))
         assert pg.locator(".col-list").count() == 0 and pg.locator(".col-lift").count() == 0, "it does not open the pile's list"
-        card.click(position={"x": 8, "y": 8})
+        card.click(position={"x": 53, "y": 8})
         pg.locator(".col-list").wait_for(timeout=WAIT_MS)
     finally:
         pg.close()

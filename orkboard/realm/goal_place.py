@@ -53,6 +53,8 @@ def place_of(row: dict, kinds: Iterable[str], *, passed: bool = False, picking: 
             return hand if kinds - {"plan"} else _deck(row, "reset")
         return table if passed or not kinds else hand
     if state == "routed":                                          # a goal routed lies on the Orkmaster's lane at once and asks for the person's Talk (its route card is in the hand too); put off with *Later, by itself* it waits in the deck (spec 99 §4, spec 107 §5)
+        if row.get("held_for") == "hold":                          # **Hold** (spec 130 E.3): it lies in the pile until the person's Talk, and asks nothing
+            return _deck(row, "held")
         return _deck(row, "reset") if row.get("held_until") else {"place": "table", "asks_you": True, "waits_as": ""}
     if state in _WAY:                                              # Talk, the decision, the sections: on the table, asking when a row waits (Talk's cards: `talk`, a bug's `cause`: spec 99 §5)
         return table

@@ -1,42 +1,48 @@
 /* The Orkmaster's column (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md part B; mockup docs/mockups/goal-card/): pinned at the window's left, the table's height, on orkUI's room as the hand is (frame/frame.css gives its place). Layout only: every colour, face,
    corner and motion is orkUI's (`.ork-tab`, `.ork-card`, `.ork-sigil`, `.ork-elem`, `.ork-frame`, `.ork-btn`, `.ork-picked`, `ork-sigil-sweep`, the tokens). Its head is the Orkmaster's tab; under it three piles of cards (112 px wide face up, its height its content's, 157 x 112 face down and sideways), the foot
-   of each under the one above it (20 px; 4 px in the pile face down), then thin edges. A card hovered or focused slides out of its pile whole, and not under reduced motion. */
-.col { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 0; box-sizing: border-box; background: var(--ork-room); color: var(--ork-ink); }
+   of each under the one above it (20 px; 4 px in the pile face down), then thin edges. A card hovered or focused slides out of its pile whole; under reduced motion a face-up card stays and a face-down one is whole at once.
+   **A face-down card lies tucked under the window's left edge** (spec 130 E.2, decisions §236): `--column-tuck` of it under the edge, its seal whole in the shown part; the three piles share one right edge (`--col-edge`). */
+.col { --col-shown: calc(157px - var(--column-tuck)); --col-edge: max(112px, var(--col-shown)); --col-out: 72px;      /* what a face-down card shows, the piles' one right edge, the room over the table a card slides out into */
+  position: relative; display: flex; flex-direction: column; height: 100%; min-height: 0; box-sizing: border-box; background: var(--ork-room); color: var(--ork-ink); }
 
 /* -- the head: the Orkmaster's tab ------------------------------------------------------------------------------------------------- */
 .col-head { position: relative; flex: none; display: flex; align-items: stretch; min-height: 63px; box-sizing: border-box; border-bottom: var(--ork-line) solid var(--ork-frame); }
-.ork-tab.col-head__tab { flex: 1; min-width: 0; height: auto; display: flex; align-items: center; gap: var(--ork-3); padding: 0 var(--ork-8) 0 var(--ork-4); text-align: left; }
+.ork-tab.col-head__tab { flex: 1; min-width: 0; height: auto; display: flex; align-items: center; gap: var(--ork-2); padding: 0 var(--ork-1) 0 var(--ork-2); text-align: left; }
 .ork-tab.col-head__tab[aria-selected="true"]:not(:focus-visible) { background: none; }       /* no fill: the open tab is underlined (orkUI's) */
 .ork-tab.col-head__tab .ork-race__head { flex: none; }
-.col-head__nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+.col-head__nm { min-width: 0; overflow-wrap: normal; line-height: 1.2; font: var(--ork-type-heading); text-transform: var(--ork-type-heading-case); letter-spacing: var(--ork-type-heading-track); }
+
+@media not (pointer: coarse) { .ork-btn.table-switch.col-head__switch { top: var(--ork-1); right: 0; transform: none; width: 18px; min-width: 18px; height: 18px; min-height: 18px; } }      /* the name takes two lines in a column of its own width; the project's ▾ in the corner over the first */
 
 /* -- the piles ------------------------------------------------------------------------------------------------------------------------ */
-.col-scroll { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(--ork-5); padding: var(--ork-3) var(--ork-2) var(--ork-5); overflow-x: hidden; overflow-y: auto; }
+.col-scroll { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(--ork-5); padding: var(--ork-3) calc(var(--column-w) - var(--col-edge)) var(--ork-5) 0; overflow-x: hidden; overflow-y: auto; scrollbar-width: none; }      /* no margin at its left: the window's own edge cuts a face-down card */
+.col-scroll:has(.col-card:is(:hover, :focus-visible)) { margin-right: calc(var(--col-out) * -1); padding-right: calc(var(--column-w) - var(--col-edge) + var(--col-out)); }      /* a card slid out lies over the table, not clipped by the pile's box */
 @media (min-width: 760px) { .col-scroll { padding-bottom: 88px; } }                                 /* the column's last card scrolls clear of the + card, which stands 78 px over the table's foot (hand/hand.css) */
 .col-sec { flex: none; display: flex; flex-direction: column; gap: var(--ork-1); min-width: 0; }
-.col-plab { display: flex; align-items: baseline; gap: var(--ork-2); min-width: 0; font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-faint); }
+.col-plab { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 var(--ork-2); min-width: 0; padding-left: var(--ork-2); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-faint); }
 .col-plab__t { flex: none; white-space: nowrap; }
-.col-under { min-width: 0; margin-left: auto; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--ork-type-caption); text-transform: none; letter-spacing: 0; color: var(--ork-ink-faint); }
+.col-under { min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-caption); text-transform: none; letter-spacing: 0; color: var(--ork-ink-faint); }
 .col-under.is-asks { color: var(--ork-alert); }
-.col-none { margin: 0; padding: var(--ork-2); border: var(--ork-line) dashed var(--ork-frame); color: var(--ork-ink-faint); font: var(--ork-type-caption); }
-.col-pile { position: relative; width: 100%; height: var(--h); }
+.col-none { margin: 0 0 0 var(--ork-2); padding: var(--ork-2); border: var(--ork-line) dashed var(--ork-frame); color: var(--ork-ink-faint); font: var(--ork-type-caption); }
+.col-pile { position: relative; width: var(--col-edge); height: var(--h); }
 /* face up (decisions §249.1, spec 142 A): the cards lie in one grid cell, each `--i` x `--peek` lower than the one above it, every card the height of the pile's tallest content (no fixed 157 px); the pile is that tall and what lies under the front */
-.col-pile.is-up { display: grid; height: auto; padding-bottom: var(--under); box-sizing: border-box; }
+.col-pile.is-up { display: grid; justify-items: end; height: auto; padding-bottom: var(--under); box-sizing: border-box; }
 .col-pile.is-up > .col-card.ork-card { position: relative; grid-area: 1 / 1; top: calc(var(--i) * var(--peek)); height: 100%; }
-.col-pile.is-up > .col-edges { top: auto; bottom: 0; }
+.col-pile.is-up > .col-edges { top: auto; bottom: 0; left: auto; right: 3px; }
 .col-edges { position: absolute; left: 3px; width: 106px; height: 6px; background: repeating-linear-gradient(var(--ork-card-frame) 0 1px, transparent 1px 3px); pointer-events: none; }
-.col-pile.is-down .col-edges { width: 151px; }
+.col-pile.is-down .col-edges { left: calc(3px - var(--column-tuck)); width: 151px; }      /* cut by the window's edge, as the cards are */
 
 /* a card: stacked by `--i` (its foot under the one above it), the front on top */
 .col-card.ork-card { position: absolute; left: 0; top: calc(var(--i) * var(--peek)); z-index: calc(10 - var(--i)); box-sizing: border-box; width: 112px; height: auto; padding: 0; overflow: hidden; text-align: left; transition: transform var(--ork-motion-base) var(--ork-motion-ease); }
 .col-card.ork-card:hover, .col-card.ork-card:focus-visible { z-index: 40; transform: translateX(36px) rotate(2deg); box-shadow: -4px 4px 0 var(--ork-scrim); }      /* out of its pile, whole */
-.col-card--down.ork-card { width: 157px; height: 112px; }
+.col-card--down.ork-card { left: calc(var(--column-tuck) * -1); width: 157px; height: 112px; }
 .col-card.ork-card.is-dim { opacity: 0.6; }      /* a potion hovered: the cards whose goal does not wait for its tool step back, never hidden (spec 138 A.2, lit.js) */
-.col-card--down.ork-card:hover, .col-card--down.ork-card:focus-visible { transform: translateX(6px); }
-@media (prefers-reduced-motion: reduce) { .col-card.ork-card { transition: none; } .col-card.ork-card:hover, .col-card.ork-card:focus-visible { transform: none; } }
+.col-card--down.ork-card:hover, .col-card--down.ork-card:focus-visible { transform: translateX(var(--column-tuck)); }      /* slid out whole, over the table */
+.col-card--down.ork-card:focus-visible { box-shadow: inset 0 0 0 2px var(--ork-ink), -4px 4px 0 var(--ork-scrim); }           /* the focus ring inside what shows */
+@media (prefers-reduced-motion: reduce) { .col-card.ork-card { transition: none; } .col-card--up.ork-card:hover, .col-card--up.ork-card:focus-visible { transform: none; } }
 
-/* face down, sideways: the seal in the card's middle with its rune at the seal's top, upright; no name. The front card's ring runs (orkUI's sweep, in the goal's colour), and is still and yellow while the goal waits for the person */
-.col-card--down .table-back-sigil.ork-sigil.col-sigil { top: 50%; left: 50%; right: auto; margin: 0; transform: translate(-50%, -50%) scale(0.94); transform-origin: 50% 50%; }
+/* face down, sideways: the seal in the middle of the part that shows with its rune at the seal's top, upright; no name. The front card's ring runs (orkUI's sweep, in the goal's colour), and is still and yellow while the goal waits for the person */
+.col-card--down .table-back-sigil.ork-sigil.col-sigil { top: 50%; left: calc(var(--column-tuck) + var(--col-shown) / 2); right: auto; margin: 0; transform: translate(-50%, -50%) scale(0.94); transform-origin: 50% 50%; }
 .col-sigil.col-busy:not(.is-still)::after { animation: ork-sigil-sweep 1.6s steps(8) infinite; }      /* one place moves at a time (spec 140 C3): the ring runs on the goal picked, else the first at work (lit.js `movesOn`); the others stand still, the ring kept */
 .col-sigil.col-stopped::after { color: var(--ork-alert); }
 .col-sigil:is(.col-busy, .is-waiting).is-meadow::after { color: var(--ork-elem-meadow); }      /* the ring in the goal's colour: running, counting a wait down, or filled as its spec is written */
@@ -45,6 +51,8 @@
 .col-sigil:is(.col-busy, .is-waiting).is-void::after { color: var(--ork-elem-void); }
 .col-sigil:is(.col-busy, .is-waiting).is-lava::after { color: var(--ork-elem-lava); }
 @media (prefers-reduced-motion: reduce) { .col-sigil.col-busy:not(.is-still)::after { animation: none; } }
+
+.col-down-held { position: absolute; right: var(--ork-2); bottom: var(--ork-1); font: var(--ork-type-caption); font-size: 11px; }      /* a goal the person holds (spec 130 E.3): its card says so, its name is on its other side */
 
 /* the middle of the front card's ring (decisions §241): the heads of who has the goal, laid by how many (a 2 x 2 grid of the head's size: one large in the middle, two a row, three a pyramid, four a square, more the fourth place's head with the rest fanned behind it), or the play of an agreed decision */
 .col-mid { --hw: 24px; --hh: 22px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: grid; grid-template-columns: repeat(4, calc(var(--hw) / 2)); justify-items: center; align-items: center; gap: var(--ork-1) 2px; pointer-events: none; }
@@ -62,9 +70,8 @@
 .col-mid__fan > .col-mid__h:not([style*="--k:0"]) { filter: brightness(0.75); }
 .col-mid__h.is-working { animation: ork-guard-step 1.2s steps(2) infinite; }                  /* orkUI's step of a head at work (the portal's corners) */
 @media (prefers-reduced-motion: reduce) { .col-mid__h.is-working { animation: none; } }
-.ork-btn.quiet.col-play { position: absolute; z-index: 45; left: 78px; top: 56px; width: 40px; height: 40px; margin: -20px 0 0 -20px; padding: 0; }
-.col-card--down:is(:hover, :focus-visible) + .col-play { transform: translateX(6px); }
-@media (prefers-reduced-motion: reduce) { .col-card--down:is(:hover, :focus-visible) + .col-play { transform: none; } }
+.ork-btn.quiet.col-play { position: absolute; z-index: 45; left: calc(var(--col-shown) / 2); top: 56px; width: 40px; height: 40px; margin: -20px 0 0 -20px; padding: 0; }
+.col-card--down:is(:hover, :focus-visible) + .col-play { transform: translateX(var(--column-tuck)); }
 
 /* face up: its rune and short name at the top, its type in the window, its foot at the bottom */
 .col-card--up.ork-card { display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3) var(--ork-3) 22px; }

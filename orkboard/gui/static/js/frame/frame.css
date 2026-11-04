@@ -1,11 +1,13 @@
 /* The window as two parts (docs/specs/98-the-table-and-the-hand.md §7): the table over the hand, the hand at the foot under
    everything opened (decisions §142.6). Layout only: every colour, face and corner is orkUI's. */
 .frame { --card-w: 144px; --col-w: calc(var(--card-w) * 1.25);      /* a lane a card and a quarter wide, room for a fan (decisions §167.7) */
+  --column-tuck: 45px;                                                /* how much of a face-down card lies under the window's left edge (spec 130 E.2, decisions §236.1): the owner's pick between 45 and 30 is this one line */
+  --column-w: calc(max(112px, 157px - var(--column-tuck)) + 16px);    /* the Orkmaster's column, a width of its own (spec 130 E.1, §236.3): the upright card's, or the face-down card's shown part if wider, and its gutters */
   --cols: repeat(var(--lanes, 5), minmax(0, var(--col-w))) minmax(280px, 1fr);   /* the lanes, then the tabs' end; lanes narrow when they don't fit, never a sideways scroll */
   display: grid; grid-template-rows: minmax(0, 1fr) auto; height: 100vh; height: 100dvh; min-width: 0; background: var(--ork-room); }
 .frame-table { min-height: 0; min-width: 0; overflow: hidden; }
 .frame-hand { min-width: 0; }
-/* the Orkmaster's column pinned at the window's left (spec 128 B.1, decisions §206.2): the table's height, off the table on orkUI's room as the hand is, a lane's width (so the hand's first lane lies under it); the table to its right, the hand under both */
-.frame[data-column] { grid-template-columns: var(--col-w) minmax(0, 1fr); }
+/* the Orkmaster's column pinned at the window's left (spec 128 B.1, decisions §206.2): the table's height, off the table on orkUI's room as the hand is, its own width (`--column-w`; the hand's first track follows it, so its lanes stand under the table's: hand/hand.css); the table to its right, the hand under both */
+.frame[data-column] { grid-template-columns: var(--column-w) minmax(0, 1fr); }
 .frame[data-column] > .frame-hand { grid-column: 1 / -1; }
 .frame-column { position: relative; z-index: 1; min-width: 0; min-height: 0; background: var(--ork-room); }

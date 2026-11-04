@@ -153,6 +153,7 @@ def test_orkboards_own_sheets_carry_no_colour_no_font_and_no_corner_of_their_own
         legacy -= {f"--hc-{n}" for n in ("face", "big", "corner", "fgap", "lh", "title", "lines")}   # spec 142 B: the hand's card with no window, its face's height, the lifted card's, the corner, the fan's gap, the title's lines
         legacy -= {"--under"}   # spec 142 A: the room under a face-up pile's front card, its cards' feet (table/column.css `.col-pile.is-up`)
         legacy -= {"--hf-left", "--hf-w"}   # spec 128 A.1: where the field lies, its left edge on the + card's and its width (hand/fieldturn.js `placeField`)
+        legacy -= {"--column-tuck", "--column-w", "--col-shown", "--col-edge", "--col-out"}   # spec 130 E: the column's width of its own, a face-down card's tuck, what shows of it, the piles' right edge, the room a card slides out into (frame/frame.css, table/column.css)
         assert not legacy, (path.name, legacy)
 
 

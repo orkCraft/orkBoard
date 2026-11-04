@@ -343,7 +343,7 @@ def type_id(st: dict) -> str:
 
 def rows(root: Path, state_dir: Path, i: dict, st: dict, ctx: dict | None = None, settings: dict | None = None) -> list[dict]:
     """The Needs you rows a goal on its route has, as `board_map.idea_needs` adds them: the `route` row of a goal `routed` that waits for the person (not one
-    put off with *Later, by itself*), and the `start` row of a goal whose route grew since the person said Talk (§136.2). Each is data; the face words it.
+    put off with *Later, by itself*, nor one held: spec 130 E.3), and the `start` row of a goal whose route grew since the person said Talk (§136.2). Each is data; the face words it.
 
         {kind: "route", idea, route: [{party, leader, head}], cost: {calls, usd_low, usd_high}, place, short, reproduces, low, offer: [party], type, text}
 
@@ -351,7 +351,7 @@ def rows(root: Path, state_dir: Path, i: dict, st: dict, ctx: dict | None = None
         {kind: "start", idea, cost, was, text}
     """
     state, how = st.get("state"), st.get("route_how") or {}
-    if state == "routed" and st.get("route") and not st.get("held_until"):
+    if state == "routed" and st.get("route") and not st.get("held_until") and st.get("held_for") != "hold":
         steps = steps_of(root, state_dir, st, settings)
         if not steps:
             return []

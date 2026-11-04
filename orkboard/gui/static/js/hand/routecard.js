@@ -2,7 +2,7 @@
 // Orkmaster has routed it. Its face is the card of spec 101 (stopcard.js): the goal's element and name, the route's sign in its window with the Orkmaster's crowned head in its corner, the gem of its cost in the
 // label row. Lifted (`RouteLifted`, in place of the plain answers): the route as the leaders' heads in order, each with a small × (a press on the head opens its seat popover as the table's does), a **+** offering
 // the project's parties but Release (those the goal's marks touch first), the route in words, the cost (the gem and its words, said again from the answer of an edit), its place in line, and its one act: **Talk**
-// (with **Later** only when the limits run low). A bug is Tech alone: *finding the cause* with **Talk**, or, when its report holds a failing test, **Start** with *The long way* beside it; another short goal (the row's `type`: a clean-up, a balance pass) says *<Party> alone* and its own line, with **Talk**.
+// (with **Hold**, at any time, and **Later** only when the limits run low). A bug is Tech alone: *finding the cause* with **Talk**, or, when its report holds a failing test, **Start** with *The long way* beside it; another short goal (the row's `type`: a clean-up, a balance pass) says *<Party> alone* and its own line, with **Talk**.
 // Registers itself with ways.js (`route`); startcard.js (the `start` row) reads the same helpers. The sheet is way.css, linked as hand.css is (frame/frame.js).
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
@@ -200,6 +200,7 @@ export function RouteLifted({ s, close, edit = false }) {
   };
   const talk = async () => { if (await run("ideas.talk", {})) close?.(); };
   const start = async () => { if (await run("ideas.route_start", {})) close?.(); };
+  const hold = async () => { if (await run("ideas.route_hold", {})) { toast("Held: nothing starts it until you press Talk, in the pile's list."); close?.(); } };
   const later = async () => {
     if (await run("ideas.route_later", {})) { toast("In line: it talks by itself after the limits reset."); close?.(); }
   };
@@ -215,6 +216,7 @@ export function RouteLifted({ s, close, edit = false }) {
       ${report ? html`<button type="button" class="ork-btn primary" disabled=${busy} title="The report has its failing test: the work starts, with no Talk" onClick=${start}>Start</button>
           <button type="button" class="ork-btn quiet" disabled=${busy} title="Talk first, then the decision and the sections" onClick=${talk}>The long way</button>`
         : html`<button type="button" class="ork-btn primary" disabled=${busy} title="The leaders answer in short; nothing is made yet" onClick=${talk}>Talk</button>
+          <button type="button" class="ork-btn" data-hold="1" disabled=${busy} title="Nothing starts it until you press Talk" onClick=${hold}>Hold</button>
           ${v.low && html`<button type="button" class="ork-btn" disabled=${busy} title="The limits run low: it waits in line and talks by itself after they reset" onClick=${later}>Later</button>`}`}
     </div>`}
     ${!edit && html`<div class="hand-way__more"><${GoalMenu} slug=${idea} where="inline" /></div>`}

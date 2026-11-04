@@ -79,6 +79,7 @@ const clock = (left_s) => { const d = new Date(Date.now() + Math.max(0, Number(l
 /** What a card says of its state, for a screen reader and its title: *its spec is ready; it starts by itself in 4 min*. */
 export function sayOf(n, pile, off, first) {
   if (pile === "analysis") {
+    if (n.held_for === "hold") return "held: nothing starts it until you press Talk";
     if (waitRuns(n)) return `its decision is agreed; its spec starts by itself at ${clock(n.back.ripe.left_s)}`;
     if (n.state === "decided") return "its decision waits for your word";
     if (waitsYou(n)) return "waits for your answer";
@@ -129,6 +130,7 @@ function DownCard({ n, i, front, onPress, open }) {
     tabindex=${front ? undefined : -1} aria-hidden=${front ? undefined : "true"} aria-haspopup=${front ? "dialog" : undefined} aria-expanded=${front ? String(open) : undefined}
     aria-label=${front ? `${n.title}: ${sayOf(n, "analysis")}; press for the list in order` : undefined} onClick=${() => onPress(n, "analysis")}>
     <span class=${cls(`ork-sigil table-back-sigil col-sigil${el ? ` is-${hue}` : ""}`, { "col-busy": busy, "is-still": still, "col-stopped": asks, "is-waiting": share != null })} style=${share != null ? `--ork-sigil-share:${share}` : undefined} data-share=${share != null ? share : undefined} aria-hidden="true"><span class="ork-sigil__seal"><${Elem} name=${el} hue=${hue} dim=${!el} glowing=${busy && !still} /></span>${mid && !wait && html`<${MidHeads} heads=${mid.heads} />`}</span>
+    ${front && n.held_for === "hold" && html`<span class="col-when col-down-held"><${Sign} name="pause" />Held</span>`}
   </button>`;
   return wait ? html`${card}<${Play} n=${n} />` : card;
 }

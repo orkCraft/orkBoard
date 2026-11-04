@@ -237,7 +237,7 @@ def row(root: Path, state_dir: Path, i: dict, st: dict, plan: dict | None, page:
             "progress": {"done": sum(1 for t in tasks if t.get("state") == "merged"), "total": sum(1 for t in tasks if not goal_types.is_dropped(t))},
             "updated": ideas.touched_at(root, state_dir, slug) if at is None else at,
             "queue": ideas.queue_of(st), "held_until": st["held_until"],
-            **({"held_for": st["held_for"]} if st.get("held_for") and st["held_until"] else {}),
+            **({"held_for": st["held_for"]} if st.get("held_for") and (st["held_until"] or st["held_for"] == "hold") else {}),
             "risk": idea_risk.level(page.get("risk")) if page and page.get("risk") else "",
             "risk_triggers": list_of(page.get("risk_triggers")) if page else [],
             "depends_on": depends,

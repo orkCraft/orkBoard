@@ -86,7 +86,7 @@ class RouteHost(HandHost):
             self.needs = [self.row()]
             row = self.needs[0]
             return self.bump({"ok": True, "route": row["route"], "cost": row["cost"], "short": row["short"], "reproduces": row["reproduces"], "offer": row["offer"], "changed": False})
-        if name in ("ideas.talk", "ideas.route_start", "ideas.route_later", "ideas.start"):
+        if name in ("ideas.talk", "ideas.route_start", "ideas.route_later", "ideas.route_hold", "ideas.start"):
             self.log.append((name, a))
             self.needs = []
             return self.bump({"ok": True})
@@ -245,6 +245,24 @@ def test_later_by_itself_is_offered_only_when_the_limits_run_low(gui, width):
         shot(pg, f"{width}-route-low")
         later.click()
         assert _sent(pg, host, ("ideas.route_later", {"idea": "fresh"}))
+        pg.locator(".hand-lifted").wait_for(state="detached", timeout=WAIT_MS)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_hold_is_offered_at_any_time_beside_talk_and_says_what_it_does(gui, width):
+    host = RouteHost()
+    pg, log = open_route(gui, host, width)
+    try:
+        lifted = lift(pg)
+        hold = lifted.get_by_role("button", name="Hold")
+        assert hold.count() == 1 and hold.get_attribute("title") == "Nothing starts it until you press Talk"
+        assert lifted.get_by_role("button", name="Later").count() == 0 and lifted.get_by_role("button", name="Keep it").count() == 0
+        fits(pg)
+        hold.click()
+        assert _sent(pg, host, ("ideas.route_hold", {"idea": "fresh"}))
         pg.locator(".hand-lifted").wait_for(state="detached", timeout=WAIT_MS)
     finally:
         pg.close()

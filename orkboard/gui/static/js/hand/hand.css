@@ -30,6 +30,9 @@
 .hand-lane { position: relative; height: var(--hc-h); min-width: 0; container-type: inline-size; --span: max(0px, calc(100cqw - var(--hc-w) - var(--hc-edge))); }
 /* New goal lies whole at the first lane's left end (spec 107 §13.2); the first lane's stacks, when it has any, fan to its right: the lane's track grows by a card and a gap, the parties' lanes after it keep their widths */
 .hand-row:has(.hand-lane[data-lane="0"] > .hand-slot:not(.is-plus)) { --hc-first: minmax(0, calc(var(--hc-w) + var(--ork-4) + var(--col-w))); }
+.frame[data-column] .hand-row { --hc-first: minmax(0, var(--column-w)); }      /* the first lane lies under the Orkmaster's column, so the parties' lanes stand under the table's (spec 130 E.1) */
+.frame[data-column] .hand-slot.is-plus { width: var(--hc-w); }      /* the + card keeps its whole width where the first lane is narrower than a card (decisions §249.2): its turned corners stay in the window, its right edge lies a little into the first party's lane */
+.frame[data-column] .hand-slot.is-plus:not(:hover, :focus-within) { z-index: 0; }      /* under that lane's cards at rest: the edge of a card behind another is never covered */
 .hand-lane[data-lane="0"] { --hc-lead: calc(var(--hc-w) + var(--ork-4)); --span: max(0px, calc(100cqw - var(--hc-lead) - var(--hc-w) - var(--hc-edge))); }
 .hand-lane[data-lane="0"] > .hand-slot:not(.is-plus) { left: calc(var(--hc-lead) + var(--span) * var(--at) / var(--of)); }
 .hand-slot.is-plus { left: 0; }

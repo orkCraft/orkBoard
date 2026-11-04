@@ -18,7 +18,7 @@ import { Said } from "../hand/sayonce.js";
 import { ACTIVE, Pile, PILES, nextWords, pilesOf, underOf } from "./piles.js";
 import { useColumnMotion } from "./colmotion.js";
 import { moodOf } from "./moods.js";
-import { holdWords } from "./holdwords.js";
+import { holdWords, waitsWords } from "./holdwords.js";
 
 const CROWN = { race: "peon", tier: "crown" };                   // the Orkmaster's head
 export const columnPick = { slug: "" };                          // the goal the column picked last: the table does not move to its party's tab for it (table.js), the column is on every tab
@@ -62,7 +62,14 @@ function Agreed({ n, close }) {
     <button type="button" class="ork-btn quiet" data-start=${n.slug} disabled=${busy} title="Confirm the decision now: its leaders write the spec" onClick=${run("ideas.confirm")}>Start now</button>`;
 }
 
-/** In analysis, read out over the pane in the Orkmaster's order: each goal's rune and whole title; the one being written says so, a goal put off says **not before 14:05** (holdwords.js, spec 138 B.5), the others have **Next** (after the front one) and **Remove**. */
+/** **Talk** on the row of a goal the person holds (spec 130 E.3): the route card left the hand, so its way back is here. */
+function Talk({ n, close }) {
+  const [busy, setBusy] = useState(false);
+  const run = async () => { setBusy(true); try { if (await act("ideas.talk", { idea: n.slug })) close(); } finally { setBusy(false); } };
+  return html`<button type="button" class="ork-btn quiet" data-talk=${n.slug} disabled=${busy} title="The leaders answer in short; nothing is made yet" onClick=${run}>Talk</button>`;
+}
+
+/** In analysis, read out over the pane in the Orkmaster's order: each goal's rune and whole title; the one being written says so, a goal put off says **not before 14:05** (holdwords.js, spec 138 B.5), a goal held says **Held** and has **Talk** (spec 130 E.3), the others have **Next** (after the front one) and **Remove**. */
 function List({ items, place, close }) {
   const before = (i) => items.slice(0, i).find(({ n }) => n.goal === items[i].n.goal && !ACTIVE.includes(n.state))?.n.slug;           // *Next*: before the first goal of its own party still waiting its turn (the Board moves a goal among its party's, `ideas.move`)
   return html`<div class="ork-frame col-lift col-list" role="dialog" aria-label="In analysis, in order" data-lift="list" style=${place}>
@@ -72,7 +79,7 @@ function List({ items, place, close }) {
       const writing = i === 0 && ACTIVE.includes(n.state) && !n.asks_you;
       return html`<li key=${n.slug} class="col-list__row" data-goal=${n.slug}><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} /><span class="col-list__nm">${n.title}</span>
         ${writing ? html`<span class="col-lift__cap">${n.state === "talk" ? "talked over" : "writing"}</span>`
-          : html`${holdWords(n) && html`<span class="col-lift__cap col-list__hold" data-hold=${n.slug}>${holdWords(n)}</span>`}<span class="col-list__acts">${waitRuns(n) && html`<${Agreed} n=${n} close=${close} />`}${before(i) && html`<button type="button" class="ork-btn quiet" data-next=${n.slug} aria-label=${`Next: ${n.title}`} onClick=${() => act("ideas.move", { slug: n.slug, before: before(i) })}>Next</button>`}<${Remove} n=${n} /></span>`}</li>`;
+          : html`${holdWords(n) && html`<span class="col-lift__cap col-list__hold" data-hold=${n.slug}>${holdWords(n)}</span>`}<span class="col-list__acts">${waitRuns(n) && html`<${Agreed} n=${n} close=${close} />`}${n.held_for === "hold" && html`<${Talk} n=${n} close=${close} />`}${before(i) && html`<button type="button" class="ork-btn quiet" data-next=${n.slug} aria-label=${`Next: ${n.title}`} onClick=${() => act("ideas.move", { slug: n.slug, before: before(i) })}>Next</button>`}<${Remove} n=${n} /></span>`}</li>`;
     })}</ol>
     <div class="col-lift__acts"><button type="button" class="ork-btn quiet" onClick=${close}>Close</button></div>
   </div>`;
@@ -131,7 +138,7 @@ export function Column() {
     if (picked.value !== n.slug) pick(n.slug);
   };
   const place = useBeside(root, `${lift?.kind}:${lift?.slug}`, lift?.kind === "acts" ? `.col-card[data-goal="${lift.slug}"]` : '.col-sec[data-pile="analysis"]');
-  const under = { analysis: underOf(piles.analysis), review: nextWords(piles.review), work: "" }, item = lift?.kind === "acts" ? nodes.find((n) => n.slug === lift.slug) : null;
+  const under = { analysis: underOf(piles.analysis) || waitsWords(piles.analysis.map((x) => x.n)), review: nextWords(piles.review), work: "" }, item = lift?.kind === "acts" ? nodes.find((n) => n.slug === lift.slug) : null;
   return html`<div class="col" ref=${root} data-col="1">
     <${Top} parties=${parties} all=${all} />
     <div class="col-scroll">${PILES.map(([id, title]) => html`<${Pile} key=${id} id=${id} title=${title} items=${piles[id]} under=${under[id]} onPress=${press} open=${lift?.kind === "list"} />`)}</div>

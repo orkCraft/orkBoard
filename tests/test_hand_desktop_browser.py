@@ -295,7 +295,7 @@ def test_the_hand_lies_under_the_lanes_one_size_two_thirds_as_tall_and_nothing_s
         assert hand["height"] <= (150 if width == "wide" else 100), "the hand is short: the table gains what it gave back"
         if width == "wide":
             cols = pg.locator(".hand-row").evaluate("e => getComputedStyle(e).gridTemplateColumns.split(' ').map(parseFloat)")
-            assert len(cols) == 6 and len(set(cols[:5])) == 1 and cols[0] == 180, f"every lane one width, a card and a quarter, then the tabs' end: {cols}"
+            assert len(cols) == 6 and cols[0] == 128 and len(set(cols[1:5])) == 1 and cols[1] == 180, f"the first under the Orkmaster's column (its own width, spec 130 E.1), every lane one width, a card and a quarter, then the tabs' end: {cols}"
             boxes = [lane(pg, i).bounding_box() for i in range(5)]
             assert all(abs(boxes[i + 1]["x"] - (boxes[i]["x"] + boxes[i]["width"])) <= 1 for i in range(4)), "the lanes are side by side on the grid"
             mana = pg.locator(".hand-mana").bounding_box()
