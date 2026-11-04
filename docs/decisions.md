@@ -6180,3 +6180,68 @@ So:
    nothing is not; no hours set is today's); **C.** the day over the pane (6). **Drawn first**, `docs/mockups/day/`: the
    column with a potion hovered, the potion's hour, the line over the pane; the owner's pick.
 The owner's call.
+
+## 246. The die is what moves, the door is the person, the bug hides: the die's up face Play and its front face the orks' work (*Stop all*, then *Resume*), rolled by the Board and never by the person; the door says whether the person is *Here* or *Away*, and the Board plans by it; the bug leaves the top row for the Orkmaster's menu and the place where something broke (4 November 2026, the owner)
+
+Changes: 182.12, 190.2, 196, 197, 201.8, 230, 245.5; spec 112 §3, spec 118, spec 119 §4, spec 123 §7.6.
+
+Why: the owner, after a review of the window as a product manager and a designer: *Stop all could go onto the die: its faces
+turned, Stop all, Resume and starting the project; only I do not know how to make it clear*; *the door at the top could then
+switch modes, at home or at work, and the Board would take it into account when it plans and how often it asks*; *and hide
+the bug, I do not like it at the top any more*. Read against the frame: Play opens the game (dev's preview), Stop all stops
+the orks; two things, often wanted at once (the orks work while the person plays the build), so one face cannot hold both,
+and Stop all must stay one press and always seen (CLAUDE.md: money and safety always visible). A face turned by the person
+is a hidden control (a face not up is never found; a turn is a different gesture on a mouse, a touchpad and a finger, and
+nothing for a screen reader) and a toggle's old doubt (does the face say the state or what a press does?). But the die is
+drawn from above (§190, orkUI's `.ork-die`, a cube in CSS 3D): **two faces are seen at once**, the up one and the front
+one, and the up face already says what Play would show and rolls when it changes (§196, §200). Stop all is red whenever it
+can be pressed (`table/door.js`), so the danger's colour sits in the corner while nothing runs and stops meaning anything
+(spec 40: colour is a signal); and a halt is a moment, not a state: it kills what runs (`realm/halt.py`) and the Board's
+clock starts new work by itself a minute later. An open door is an office's *come in*, a shut one its *do not disturb*: the
+door says the person far better than it says a halt, and it is the face §245.5's hours lacked. The bug (§182.12, §197,
+§230) is for a rare act about Orkboard itself, not about the project, and sits in the top row all day. So:
+1. **The die's two faces**: the **up face is Play**, as §196 and §200 have it (the arrow, the spark or the pips, the cross,
+   asleep the five); **the front face is the orks' work**: **■ Stop all**, muted while nothing runs, in the danger's colour
+   only while something runs and spends; after a press **↻ Resume**. Each face is a button of its own (its own words and
+   `aria-label`: *Play*, *Stop all: stop every run of this project's orks*, *Resume*); under the die two words, as under a
+   potion: *Play · Stop all* (*Playing*, *Stopped*). On a phone the die is drawn large enough that the front face is at
+   least 44 px.
+2. **The Board rolls the die, never the person**: nothing is turned by a drag, a swipe or a key; when a face's state
+   changes, the cube rolls onto it (`is-landing`, §200), so the roll is the answer to a press, seen once (§89.0; at once
+   under reduced motion).
+3. **Stopped is a state, Resume ends it**: *Stop all* kills what runs as today (`halt_all`) and the project is **stopped**:
+   nothing starts by itself (no route, Talk, spec, plan or task, no queue of §239 or §245) until **Resume**, which starts
+   again what the halt stopped (each task killed back in its place, started from its start, what it committed kept) and
+   lets the Board's clock go on. A goal the person starts by hand while stopped resumes the project, said in one line
+   (*The orks are back at work*). The host keeps what the halt stopped (`halt.py` grows a list of it), so Resume knows.
+4. **The door is the person: *Here* or *Away***, at the top row's right end where Stop all stood (orkUI's `door/`, §201.8):
+   **open, *Here***; **shut, *Away until 19:00*** (the hour from §245.5's hours when they are set, else no hour). Pressed it
+   opens or shuts. **The hours lead, the door overrides**: with §245.5's *When I am at the computer* set, the door opens and
+   shuts by it; a press holds the other state until the next edge of the hours (as a pause of notifications *until…*), then
+   the hours lead again. With no hours set the door is the person's alone, open at first. One state for the person, the
+   same on the computer and the phone (the phone's top row has the door too).
+5. **What the door changes**: **Here**, as today: a step that asks starts when its turn comes and its cards come to the
+   hand. **Away**: a step that will ask (Talk's rounds, a review the work waits for) is laid at the first reset after the
+   door opens or the hours begin (§245.5), a step that asks nothing goes on (§245.5); the cards already in the hand stay
+   there and send no push; a push is sent only for money and safety (a cost grown past what was agreed, paid going on, a
+   run that must be stopped). Coming back the person finds what waits in the hand, never a count of it (§67).
+6. **The bug hides as an icon**: it leaves the top row, and the top row's end is the door alone, the leaders' tabs the
+   rest. **Report a problem…** is an item of the Orkmaster's menu (`table/menu.js`, beside Settings and Files; on the
+   phone the crown's menu, `hand/upmenu.js`), opening the same panel (*What went wrong? (optional)*, **Fix it** when
+   `repair.can`, §197). **Where something broke, it is offered there**: a crash the page caught (`crashes.js`) or a run of
+   Orkboard's own that failed says *Report* (and *Fix it*) in its own line or card, its logs with it. **While a fix runs**
+   the Orkmaster's line says it under the pane's title (`table/notice.js`: *Fixing Orkboard: …*); **a fix ready** is the
+   person's move (§240), a card in the hand. The contributor's forge (§230) is reached the same way.
+7. **Not now**: *Away, but ask me on the phone* (questions to the phone at chosen hours while away) is a decision of its
+   own, when the door has been used; the door opening by itself when the person works at the computer while it is shut,
+   the same; a third face of the die (its right one) for anything: no, the die is what moves.
+8. **The words** (`TERMS`): *Here*, *Away*, *Away until 19:00*, *Stop all*, *Stopped*, *Resume*, *The orks are back at
+   work*, *Report a problem…*, *Fixing Orkboard: …*.
+9. **Built** by spec 139: **A.** the die's front face, its colours, words and rolls, and the bug moved (page); **B.**
+   Stopped as a state and Resume (host: `halt.py`'s list, the clock held, the tasks started again), its tests (nothing
+   starts while stopped; Resume starts what was killed; a goal started by hand resumes); **C.** the door, Here and Away,
+   with §245's part B (host and page, the phone's top row), its tests (the hours lead, a press holds until the next
+   edge, Away lays a step that asks in the hours and sends no push but money's and safety's). **Drawn first**,
+   `docs/mockups/die-and-door/`: the die with both faces in each state, the roll after Stop all, the door open and shut
+   with its line; the owner's pick.
+The owner's call.
