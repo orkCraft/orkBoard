@@ -29,7 +29,7 @@ lines; the card is shorter than 157 px.
    at 16 px top right (`hand-card__asker`, kept when there is a head).
 3. **The title** three whole lines (`line-clamp: 3`), never cut mid-line; the label row as today (the party, the gem).
 4. The card's height about two thirds of today's; the stacks' fan (`stacks.js`, `hand.css`) and the hand's row height
-   follow; the + card the same height. The lifted card (`hand-lifted`) is unchanged. The narrow width (`upright`, under
+   follow; the + card keeps its 5 : 7, standing up from the window's foot over the table's foot (§249.2). The lifted card (`hand-lifted`) is unchanged. The narrow width (`upright`, under
    760 px) keeps its own sizes, the same anatomy.
 5. Tests: no `.hand-card__window`; the corner has the sign and the head; a three-line title is not clipped
    (`scrollHeight <= clientHeight` on the title); the hand is shorter than before.

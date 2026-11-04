@@ -113,6 +113,8 @@
    the card on hover are gone (§185.4): on hover the seal's runes light once round the circle, orkUI's. To be offered to orkUI as `.ork-deck.is-main` at its next copy. */
 .hand .hand-plus { position: relative; cursor: pointer; rotate: calc(var(--ork-motion-lean) * -1); border: var(--ork-double) double var(--ork-action); color: var(--ork-action); overflow: hidden; }
 .hand .hand-plus > .ork-icon { width: 42px; height: 42px; position: relative; z-index: 1; }
+/* The + card keeps its 5 : 7 and its whole seal (decisions §249.2) where the hand's other cards are shorter: it stands up from the window's foot over the table's foot, its turned corners in the window; the column's scroll leaves room for it (table/column.css) */
+@media (min-width: 760px) { .hand .hand-plus { height: var(--hc-big); } .hand-slot.is-plus { margin: calc(var(--hc-h) - var(--hc-big) - var(--ork-4)) 0 0 var(--ork-1); } }
 .hand .hand-plus::after, .hand-ghost.ork-plus::after { content: ""; position: absolute; inset: 0; pointer-events: none; background-repeat: no-repeat;
   background-image: linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action)),
     linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action)), linear-gradient(var(--ork-action), var(--ork-action));

@@ -278,9 +278,15 @@ def test_the_hand_lies_under_the_lanes_one_size_two_thirds_as_tall_and_nothing_s
         assert pg.locator(".hand-deckback, .hand-deck, .hand-end--deck").count() == 0, "no deck: the goals in line lie on the table"
         assert pg.evaluate("() => import('/static/js/frame/kinds.js').then((m) => 'deck' in m.KINDS)") is False
         assert pg.locator(".hand-lane").count() == 5 and pg.locator(".hand-end").count() == 1, "a lane under each tab (the project's first, four parties) and the mana's place"
-        sizes = set(map(tuple, pg.evaluate("() => [...document.querySelectorAll('.hand .hand-card, .hand .hand-back:not(.edge), .hand .hand-plus')].map((e) => [e.offsetWidth, e.offsetHeight])")))
+        sizes = set(map(tuple, pg.evaluate("() => [...document.querySelectorAll('.hand .hand-card, .hand .hand-back:not(.edge)')].map((e) => [e.offsetWidth, e.offsetHeight])")))
         assert len(sizes) == 1, f"one card size, got {sizes}"
         assert sizes == ({(144, 128)} if width == "wide" else {(80, 112)}), sizes          # spec 142 B.4: about two thirds of the 202 px it was; the narrow card keeps its 80 x 112
+        plus_size = tuple(pg.evaluate("() => { const e = document.querySelector('.hand .hand-plus'); return [e.offsetWidth, e.offsetHeight]; }"))
+        assert plus_size == ((144, 202) if width == "wide" else (80, 112)), plus_size      # decisions §249.2: the + card keeps its 5 : 7
+        if width == "wide":
+            plus_box = pg.locator(".hand-plus").bounding_box()
+            assert plus_box["y"] + plus_box["height"] <= size["height"] + 1, "the + card lies whole in the window, its turned corners too"
+            assert pg.locator(".hand-plus .ork-sigil").evaluate("e => e.offsetHeight <= e.parentElement.clientHeight"), "its whole seal shows"
         hand = pg.locator(".hand").bounding_box()
         card = pg.locator('.hand-card[data-goal="timer"]').bounding_box()
         assert pg.locator(".hand .hand-card__window").count() == 0, "no window on a card of the hand (spec 142 B.1)"
