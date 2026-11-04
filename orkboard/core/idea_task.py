@@ -22,6 +22,9 @@ FINDINGS_ASK = (
     '`"env"` when it could not be done here, in the place you ran in (a command was refused, a tool is missing, there is no device or '
     'no network): a person can fix the code, not the place, so never write a finding about the place as `"code"`.')
 NO_BROWSER = "Browser tests did not run: no Chromium here."     # spec 143 B.3
+# The reasons a browser module gives when it is skipped for want of a browser (tests/browser_kit.py, `pytest.importorskip`), which the gate's
+# `-rfEs` prints: a test's own skip (a case that does not apply at a width) is never read as *no Chromium here*.
+NO_BROWSER_SKIP = re.compile(r"no Chromium|could not import 'playwright", re.I)
 LEAN_DOES = "You do this task yourself. It is not to be planned: make the change it asks for, in this worktree."     # spec 143 A.2
 NO_FINDINGS = "You left no findings file and changed no file. Write your findings file, as the task asks."
 FRESH_TOKENS = 150_000            # a session that read more than this in its last call is not resumed again: a send back starts a fresh one (spec 86 §4)
@@ -129,7 +132,7 @@ class TaskMixin:
                 tests["setup"] = gate_env.python_setup(self.repo_root)        # spec 143 C.2: the command for the person to run; nothing runs it
         if run and run.docs:
             tests["docs"] = True
-        if run and run.browser and tests["green"] and run.ran and (tests.get("skipped") or 0) > 0:
+        if run and run.browser and tests["green"] and run.ran and (tests.get("skipped") or 0) > 0 and NO_BROWSER_SKIP.search(out):
             tests["no_browser"] = True                 # spec 143 B.3: a browser module skipped for want of a Chromium is not a pass; it does not hold the merge
         return tests
 

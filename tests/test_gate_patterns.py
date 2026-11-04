@@ -62,12 +62,14 @@ def run_tests_of(tmp_path: Path, out: str, browser: tuple[str, ...]) -> dict:
 
 def test_a_green_run_that_skipped_browser_files_says_no_browser_and_one_that_ran_or_had_none_does_not(tmp_path):
     toml(tmp_path, '[gate]\nbrowser = ["tests/x_browser.py"]\n')
-    skipped = "$ pytest\n2 passed, 3 skipped in 0.4s\n"
+    skipped = "$ pytest\nSKIPPED [3] tests/browser_kit.py:47: no Chromium for Playwright here\n2 passed, 3 skipped in 0.4s\n"
     got = run_tests_of(tmp_path, skipped, ("tests/test_table_browser.py",))
     assert got["skipped"] == 3 and got["passed"] == 2 and got["green"] is True and got["no_browser"] is True
     ran = run_tests_of(tmp_path, "5 passed in 40s\n", ("tests/test_table_browser.py",))
     assert ran["skipped"] == 0 and "no_browser" not in ran
     assert "no_browser" not in run_tests_of(tmp_path, skipped, ())                    # no file of `browser` was in the run
+    own = "$ pytest\nSKIPPED [3] tests/test_table_browser.py:702: the drag is gone at this width\n2 passed, 3 skipped in 0.4s\n"
+    assert "no_browser" not in run_tests_of(tmp_path, own, ("tests/test_table_browser.py",))      # a test's own skip is not a missing browser
 
 
 def test_the_plans_rules_keep_a_code_task_with_the_tests_its_change_breaks(board):

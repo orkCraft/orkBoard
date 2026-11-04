@@ -220,7 +220,7 @@ class IdeaGit:
         else:
             line = f"python -m pytest -q {' '.join(files)}"
             # No cache, no bytecode: the gate leaves the worktree as the session left it (land checks it is clean).
-            argv = [self.python(), "-m", "pytest", "-q", "-p", "no:cacheprovider", *files] if files else []
+            argv = [self.python(), "-m", "pytest", "-q", "-rfEs", "-p", "no:cacheprovider", *files] if files else []   # -rfEs: the failed and errored as by default, and why a module was skipped (spec 143 B.3)
         if not argv:
             return GateRun(True, f"no tests ran: no test file maps to what the task touched{note}", False, line or gate.run)
         if gate.timeout_min:
