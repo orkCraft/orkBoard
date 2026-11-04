@@ -200,14 +200,15 @@ def test_a_put_off_card_lifts_start_now_and_back_to_review_and_says_held_or_the_
         pg.wait_for_selector(".col-card--up", timeout=WAIT_MS)
         held, late = pg.locator('.col-card[data-goal="held"]'), pg.locator('.col-card[data-goal="late"]')
         assert "Held" in held.locator(".col-foot").inner_text() and held.locator(".col-foot .ork-sign.pause, .col-foot [class*=pause]").count() >= 0
-        assert "01:00" in late.locator(".col-foot").inner_text() and late.locator(".col-win .ork-sign").count() >= 1
-        held.click(position={"x": 20, "y": 150})                                  # its foot shows under the card above it
+        assert "01:00" in late.locator(".col-foot").inner_text() and late.locator(".col-foot .ork-sign").count() >= 1
+        assert pg.locator(".col-card--up .col-win, .col-card--up .table-card__win, .col-fnm").count() == 0, "spec 142 A, 140 A2: no window, no name in a foot"
+        held.click(position={"x": 20, "y": held.bounding_box()["height"] - 8})   # its foot shows under the card above it
         acts = pg.locator('.col-lift[data-lift="acts"]')
         acts.wait_for(timeout=WAIT_MS)
         assert [t for t in acts.get_by_role("button").all_inner_texts() if t.strip()][:2] == ["Start now", "Back to review"]
         acts.get_by_role("button", name="Back to review").click()
         assert _sent(pg, host, ("ideas.ripe_back", {"idea": "held"}))
-        late.click(position={"x": 20, "y": 150})
+        late.click(position={"x": 20, "y": late.bounding_box()["height"] - 8})
         acts.wait_for(timeout=WAIT_MS)
         assert [t for t in acts.get_by_role("button").all_inner_texts() if t.strip()] == ["Start now"], "the night's own: only Start now"
     finally:
@@ -225,14 +226,15 @@ def test_a_pile_shows_its_front_card_whole_and_the_foot_of_each_under_it_then_ed
         cards = pg.locator('.col-sec[data-pile="review"] .col-card')
         assert cards.count() == 4, "the front and three under it, no count"
         boxes = [cards.nth(i).bounding_box() for i in range(4)]
-        assert abs(boxes[0]["width"] - 112) <= 1 and abs(boxes[0]["height"] - 157) <= 1, boxes[0]
+        assert abs(boxes[0]["width"] - 112) <= 1 and boxes[0]["height"] < 157 - 20, f"112 wide, no window: shorter than the old 157 px {boxes[0]}"
+        assert abs(boxes[1]["height"] - boxes[0]["height"]) <= 1, "a pile's cards are as tall as its tallest content"
         assert [round(b["y"] - boxes[0]["y"]) for b in boxes] == [0, 20, 40, 60], "the foot of each, 20 px"
         assert pg.locator('.col-sec[data-pile="review"] .col-edges').count() == 1, "then thin edges"
         assert "2 min" in cards.first.locator(".col-foot").inner_text() and cards.first.locator(".col-wbar").count() == 1, "the first's wait as a bar and its time"
         assert cards.nth(1).locator(".col-wbar").count() == 0 and "~" in cards.nth(1).locator(".col-foot").inner_text(), "the others the time they would start"
         assert pg.locator(".col-sec .col-plab").first.inner_text() and "More" not in pg.locator(".col-scroll").inner_text()
         before = cards.nth(2).bounding_box()
-        cards.nth(2).hover(position={"x": 30, "y": 150})
+        cards.nth(2).hover(position={"x": 30, "y": boxes[2]["height"] - 6})
         pg.wait_for_function("([x]) => { const e = document.querySelectorAll('.col-sec[data-pile=review] .col-card')[2]; return e.getBoundingClientRect().x > x + 20; }", arg=[before["x"]], timeout=WAIT_MS)
     finally:
         pg.close()
@@ -545,6 +547,30 @@ def test_a_decision_with_no_wait_shows_no_play_and_its_ring_is_yellow_and_still(
         assert pg.locator(".col-play").count() == 0 and pg.locator(".col-card--down[data-goal=g] .col-mid").count() == 0
         assert pg.locator(".col-card--down[data-goal=g] .col-sigil.col-stopped").count() == 1
         shoot(pg, "decision-no-wait-yellow-still")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_face_up_card_has_no_window_its_whole_name_in_three_lines_and_a_foot_without_a_name(gui):
+    """Spec 142 A and spec 140 A2 (decisions §249.1, §247.4): rune and whole name, then the foot; the name only in the foot's title and aria-label."""
+    long = "Rename every room after it is made so the whole line of the name has to be said in three lines of the card"
+    host = ColumnHost()
+    host.nodes.append(node("longone", "tech", long, "table", state="ready", agreed=True, element="ice", back=back(ripe=ripe(700))))
+    pg, host, log = open_column(gui, host=host)
+    try:
+        pg.wait_for_selector(".col-card--up", timeout=WAIT_MS)
+        card = pg.locator('.col-card[data-goal="longone"]')
+        assert pg.locator(".col-card--up .col-win, .col-card--up .table-card__win").count() == 0
+        assert pg.locator(".col-card--up .col-fnm").count() == 0, "no name text in a foot"
+        foot = card.locator(".col-foot")
+        assert foot.get_attribute("title") == long and foot.get_attribute("aria-label") == long
+        assert foot.locator(".ork-elem").count() == 1, "the rune stays in the foot"
+        nm = card.locator(".col-nm")
+        assert nm.inner_text().strip() == long, "the name whole in the DOM"
+        lines = nm.evaluate("e => Math.round(e.getBoundingClientRect().height / parseFloat(getComputedStyle(e).lineHeight))")
+        assert lines <= 3
+        assert card.bounding_box()["width"] > 0 and abs(card.bounding_box()["width"] - 112) <= 1 and card.bounding_box()["height"] < 157
     finally:
         pg.close()
     assert not log, "\n".join(log)

@@ -1,5 +1,5 @@
 /* The Orkmaster's column (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md part B; mockup docs/mockups/goal-card/): pinned at the window's left, the table's height, on orkUI's room as the hand is (frame/frame.css gives its place). Layout only: every colour, face,
-   corner and motion is orkUI's (`.ork-tab`, `.ork-card`, `.ork-sigil`, `.ork-elem`, `.ork-frame`, `.ork-btn`, `.ork-picked`, `ork-sigil-sweep`, the tokens). Its head is the Orkmaster's tab; under it three piles of cards (112 x 157 face up, 157 x 112 face down and sideways), the foot
+   corner and motion is orkUI's (`.ork-tab`, `.ork-card`, `.ork-sigil`, `.ork-elem`, `.ork-frame`, `.ork-btn`, `.ork-picked`, `ork-sigil-sweep`, the tokens). Its head is the Orkmaster's tab; under it three piles of cards (112 px wide face up, its height its content's, 157 x 112 face down and sideways), the foot
    of each under the one above it (20 px; 4 px in the pile face down), then thin edges. A card hovered or focused slides out of its pile whole, and not under reduced motion. */
 .col { position: relative; display: flex; flex-direction: column; height: 100%; min-height: 0; box-sizing: border-box; background: var(--ork-room); color: var(--ork-ink); }
 
@@ -19,11 +19,15 @@
 .col-under.is-asks { color: var(--ork-alert); }
 .col-none { margin: 0; padding: var(--ork-2); border: var(--ork-line) dashed var(--ork-frame); color: var(--ork-ink-faint); font: var(--ork-type-caption); }
 .col-pile { position: relative; width: 100%; height: var(--h); }
+/* face up (decisions §249.1, spec 142 A): the cards lie in one grid cell, each `--i` x `--peek` lower than the one above it, every card the height of the pile's tallest content (no fixed 157 px); the pile is that tall and what lies under the front */
+.col-pile.is-up { display: grid; height: auto; padding-bottom: var(--under); box-sizing: border-box; }
+.col-pile.is-up > .col-card.ork-card { position: relative; grid-area: 1 / 1; top: calc(var(--i) * var(--peek)); height: 100%; }
+.col-pile.is-up > .col-edges { top: auto; bottom: 0; }
 .col-edges { position: absolute; left: 3px; width: 106px; height: 6px; background: repeating-linear-gradient(var(--ork-card-frame) 0 1px, transparent 1px 3px); pointer-events: none; }
 .col-pile.is-down .col-edges { width: 151px; }
 
 /* a card: stacked by `--i` (its foot under the one above it), the front on top */
-.col-card.ork-card { position: absolute; left: 0; top: calc(var(--i) * var(--peek)); z-index: calc(10 - var(--i)); box-sizing: border-box; width: 112px; height: 157px; padding: 0; overflow: hidden; text-align: left; transition: transform var(--ork-motion-base) var(--ork-motion-ease); }
+.col-card.ork-card { position: absolute; left: 0; top: calc(var(--i) * var(--peek)); z-index: calc(10 - var(--i)); box-sizing: border-box; width: 112px; height: auto; padding: 0; overflow: hidden; text-align: left; transition: transform var(--ork-motion-base) var(--ork-motion-ease); }
 .col-card.ork-card:hover, .col-card.ork-card:focus-visible { z-index: 40; transform: translateX(36px) rotate(2deg); box-shadow: -4px 4px 0 var(--ork-scrim); }      /* out of its pile, whole */
 .col-card--down.ork-card { width: 157px; height: 112px; }
 .col-card--down.ork-card:hover, .col-card--down.ork-card:focus-visible { transform: translateX(6px); }
@@ -64,11 +68,8 @@
 .col-card--up.ork-card { display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3) var(--ork-3) 22px; }
 .col-hd { display: flex; align-items: flex-start; gap: var(--ork-2); font: var(--ork-type-caption); font-weight: 600; }
 .col-hd .ork-elem { flex: none; margin-top: 1px; }
-.col-nm { min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
-.col-card .table-card__win.col-win { position: relative; flex: 1; height: auto; min-height: 0; }
+.col-nm { min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; overflow-wrap: anywhere; }
 .col-foot { position: absolute; left: 3px; right: 3px; bottom: 2px; height: 17px; box-sizing: border-box; display: flex; align-items: center; gap: var(--ork-1); padding: 0 var(--ork-1); background: var(--ork-card); font: var(--ork-type-caption); font-size: 11px; }
-.col-fnm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.col-card--up:first-child .col-fnm, .col-card--up:hover .col-fnm, .col-card--up:focus-visible .col-fnm { display: none; flex: 0; }      /* whole, its name is at its top */
 .col-foot > .col-when, .col-foot > .col-heads { margin-left: auto; }
 .col-when { flex: none; display: inline-flex; align-items: center; gap: 1px; color: var(--ork-ink-muted); white-space: nowrap; }
 .col-when .ork-sign { width: 10px; height: 10px; }
@@ -78,7 +79,7 @@
 .col-when + .col-mark, .col-heads + .col-mark { margin-left: 0; }
 .col-mark.is-asks { color: var(--ork-alert); }
 .col-mark.is-failed { color: var(--ork-danger); }
-.col-card--up.is-off .col-hd, .col-card--up.is-off .col-win { opacity: 0.6; }
+.col-card--up.is-off .col-hd { opacity: 0.6; }
 /* the wait as a bar in eighths along the front card's foot (the goal's colour); its width is the share the page sets (`shareOf` rounds it to eighths) */
 .col-wbar { position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: color-mix(in srgb, var(--ork-ink-faint) 30%, transparent); }
 .col-wbar > i { display: block; height: 100%; width: calc(var(--s) * 100%); background: var(--c); }
