@@ -112,15 +112,16 @@ export const phaseOf = (picked) => PHASE_OF[(mapData.value?.nodes || []).find((x
 /** The stages a card says on the Board: its small sign and its word. The first lane's are the Orkmaster's (reading, routing, joining); a party's are its tasks'. */
 export const STAGES = {
   planning: { word: "Planning", sign: "page" }, doing: { word: "Doing", sign: "sword" }, checking: { word: "Checking", sign: "shield" },
+  review: { word: "To look at", sign: "page" }, done: { word: "Done", sign: "check" },          // a task waiting for the person's look, and one merged: never *Planning* (spec 143 F.1, decisions §250.7)
   reading: { word: "Reading", sign: "page" }, routing: { word: "Routing", sign: "page" }, joining: { word: "Joining", sign: "page" },
   routed: { word: "Routed", sign: "page" }, talking: { word: "Talking", sign: "page" }, decided: { word: "Decided", sign: "page" },
 };
 
 /** The stage a task is in: a check (the checker's band, or testing) is *Checking*, one being done or failed *Doing*, one that asks the person's pick or waits to start *Planning*. */
-export const stageOf = (t) => (t.band === "check" || t.state === "testing" ? "checking" : t.state === "running" || t.state === "failed" ? "doing" : "planning");
+export const stageOf = (t) => (t.state === "review" ? "review" : t.state === "merged" ? "done" : t.band === "check" || t.state === "testing" ? "checking" : t.state === "running" || t.state === "failed" ? "doing" : "planning");
 
 /** Where a task stands in a cascade, the front lowest: a failed check, any failure, *Checking*, *Doing*, *Planning*. */
-const FRONT = { checking: 2, doing: 3, planning: 4 };
+const FRONT = { review: 1.5, checking: 2, doing: 3, planning: 4, done: 5 };         // *To look at* in front of *Checking*, *Done* last (spec 143 F.1)
 const rankOf = (t) => (t.state === "failed" ? (t.band === "check" ? 0 : 1) : FRONT[stageOf(t)]);
 
 /** A goal's tasks that the Board draws, the front one first: by the rule above, the most recent first among equals (a later task of the plan is a more recent one). */

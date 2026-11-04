@@ -1400,3 +1400,25 @@ def test_a_goals_own_stack_lies_in_front_of_a_party_question_that_blocks_nothing
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+def test_the_plus_cards_turned_corner_lies_clear_of_the_first_lanes_stacks_at_1440_by_900(gui):
+    """Spec 143 F.6 (decisions §250.7): `--hc-lead` allows for the + card turned (its corner reaches about 164 px): at 1440 x 900 the left edge of the first lane's farthest stack is clear of it, not within the + 6 the wide test grants."""
+    server, browser = gui
+    host = HandHost(extra=True)
+    ctx = browser.new_context(viewport={"width": 1440, "height": 900})
+    pg = ctx.new_page()
+    log: list[str] = []
+    pg.on("pageerror", lambda e: log.append(f"pageerror: {e}"))
+    pg.route_web_socket("**/ws*", host.on_socket)
+    pg.goto(server.url)
+    try:
+        pg.wait_for_selector(".hand-lane[data-lane='0'] .hand-stack", timeout=WAIT_MS)
+        plus = pg.locator(".hand-plus").bounding_box()
+        lefts = [s.bounding_box()["x"] for s in lane(pg, 0).locator(".hand-stack").all()]
+        assert len(lefts) >= 2, "two stacks fan in the first lane"
+        assert min(lefts) >= plus["x"] + plus["width"], f"the stack's left edge {min(lefts)} is clear of the turned corner at {plus['x'] + plus['width']}"
+        shot(pg, "wide-1440-plus-corner")
+    finally:
+        ctx.close()
+    assert not log, "\n".join(log)

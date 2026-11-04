@@ -351,3 +351,24 @@ def test_a_card_lifted_from_the_hand_stands_over_the_pile(gui, width):
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+def test_the_piles_words_stay_inside_its_card_and_the_whole_sentence_is_its_title(gui):
+    """Spec 143 F.5 (decisions §250.7): what is ready for main, said on the back of the pile (no goal done to show), wraps inside the card's art and is cut with its whole sentence in `title`, however long the branch's name."""
+    server, browser = gui
+    host = HandHost()
+    host.nodes = [n for n in host.nodes if n["place"] != "discard"]
+    host.gate_doc = {"into": "dev", "main": "release-candidate-2026", "same": False, "commits": 12, "files": 9, "ideas": []}
+    pg = browser.new_context(viewport={"width": 1440, "height": 900}).new_page()
+    pg.route_web_socket("**/ws*", host.on_socket)
+    pg.goto(server.url)
+    try:
+        pg.wait_for_selector(".table-discard .hand-back__ready .cap", timeout=WAIT_MS)
+        cap, card = pg.locator(".table-discard .hand-back__ready .cap"), pg.locator(".table-discard .hand-done").first
+        c, k = cap.bounding_box(), card.bounding_box()
+        assert c["x"] >= k["x"] + 12 and c["x"] + c["width"] <= k["x"] + k["width"] - 12, f"the words lie inside the frame of the art: {c} in {k}"
+        assert cap.evaluate("e => e.scrollWidth <= e.clientWidth + 1"), "no word runs past its line"
+        assert cap.get_attribute("title") == "12 commits ready for release-candidate-2026", "the whole sentence is its title"
+        shot(pg, "wide-discard-words")
+    finally:
+        pg.context.close()

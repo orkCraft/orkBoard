@@ -1394,3 +1394,13 @@ def test_a_project_opened_laid_is_laid_at_once_with_no_motion(desk, tmp_path):
     pg.locator(".hand-plus").wait_for(timeout=WAIT_MS)
     assert pg.locator(".frame[data-laying]").count() == 0 and pg.locator(".fo-bubble").count() == 0
     assert not d.errors, d.errors
+
+
+def test_a_task_to_look_at_and_a_merged_one_have_stage_words_of_their_own_never_planning(table):
+    """Spec 143 F.1 (decisions §250.7): *To look at* (the word the result card says) and *Done* (the finished card's check), and the rest as they were."""
+    pg, host, w = table
+    got = pg.evaluate("""async () => { const d = await import('/static/js/table/data.js');
+      const of = (state, band = '') => { const k = d.stageOf({ state, band }); return [k, d.STAGES[k].word, d.STAGES[k].sign]; };
+      return [of('review'), of('merged'), of('merged', 'check'), of('testing'), of('running'), of('failed'), of('waiting'), of('picking')]; }""")
+    assert got == [["review", "To look at", "page"], ["done", "Done", "check"], ["done", "Done", "check"], ["checking", "Checking", "shield"], ["doing", "Doing", "sword"],
+                   ["doing", "Doing", "sword"], ["planning", "Planning", "page"], ["planning", "Planning", "page"]]

@@ -19,7 +19,7 @@ import re
 from typing import Any, Iterable
 
 from orkboard.realm import worktrees
-from orkboard.realm.idea_git import PUSH_TIMEOUT_S, IdeaGit, _git, _ok
+from orkboard.realm.idea_git import BOARD_PAGE, PUSH_TIMEOUT_S, IdeaGit, _git, _ok
 
 _SHA = re.compile(r"[0-9a-f]{7,64}")
 
@@ -96,6 +96,24 @@ def waiting_by_patch(git: IdeaGit, into: str, main: str) -> tuple[list[str], int
         return shas, files
     pending = set(cherry(git, into, main)[0])
     kept = [s for s in shas if s in pending]
+    if len(kept) == len(shas):
+        return shas, files
+    return kept, _count_files(git, kept) if kept else 0
+
+
+def without_board_pages(git: IdeaGit, shas: list[str], files: int) -> tuple[list[str], int]:
+    """`shas`, less the Board's own commits (those that touch only Board pages, `idea_git.BOARD_PAGE`: a laid table with no work has none to carry,
+    spec 143 F.4, decisions §247.1): they go into main with the next goal as they always did. A commit of code that belongs to no goal stays, and
+    so does one that changes no file (a merge). Gives (the kept commits, the count of files they change; `files` as given when none is left out)."""
+    if not shas:
+        return shas, files
+    changed: dict[str, list[str]] = {}
+    for at in range(0, len(shas), 200):
+        out = _git(git.root, "-c", "core.quotePath=false", "log", "--no-walk=unsorted", "--no-renames", "--name-only", "--format=%x00%H", *shas[at:at + 200], "--").stdout
+        for chunk in out.split("\0")[1:]:
+            sha, _, names = chunk.partition("\n")
+            changed[sha.strip()] = [n for n in names.splitlines() if n]
+    kept = [s for s in shas if not changed.get(s) or any(not BOARD_PAGE.search(n) for n in changed[s])]
     if len(kept) == len(shas):
         return shas, files
     return kept, _count_files(git, kept) if kept else 0

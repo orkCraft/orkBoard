@@ -85,10 +85,10 @@ export function Discard({ dealing = "" }) {
           ${moon && html`<span class="hand-done__moon" title="Done in the night"><${Sign} name="moon" label="Done in the night" /></span>`}
           ${words && html`<span class="hand-card__asker"><${Head} race=${lich.race} tier=${lich.tier} /></span>`}</span>
         <span class="hand-card__label"><span class="hand-card__party">Done</span></span>
-        <span class="hand-card__foot">${words}</span>
+        <span class="hand-card__foot" title=${words || undefined}>${words}</span>
       </button>`
       : html`<button type="button" class=${cls("ork-card-back hand-back hand-done", { "is-on": lit })} aria-label=${label} aria-expanded=${lit ? "true" : "false"} onClick=${press}>
-        <span class="hand-back__ready"><${Head} race=${lich.race} tier=${lich.tier} /><span class="cap">${words}</span></span></button>`}
+        <span class="hand-back__ready"><${Head} race=${lich.race} tier=${lich.tier} /><span class="cap" title=${words || undefined}>${words}</span></span></button>`}
   </div>`;
 }
 

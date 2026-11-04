@@ -26,6 +26,12 @@
 .table-body:is([data-end="side"], [data-end="over"]):has(> .table-end) { padding-right: var(--table-end-w); }          /* the room is kept only while the end is laid (decisions §247.1: with nothing in it the table gains the width) */
 .table-body:is([data-end="side"], [data-end="over"]):has(> .table-end) > :is(.table-head, .pick-strip) { margin-right: calc(var(--table-end-w) * -1); }          /* the party's header and the pick strip keep the pane's whole width */
 
+/* Words stay inside the card (spec 143 F.5, decisions §250.7): the back that says only what is ready for main (no goal done to show) holds its sentence inside the frame of its art, wrapped, a long branch's name broken, and cut at the
+   fourth line with the whole sentence in its `title`; the front card's foot is cut the same way at its second line (hand.css). */
+.table-end .hand-done.hand-back { grid-template-columns: minmax(0, 1fr); }
+.table-end .hand-back__ready { box-sizing: border-box; min-width: 0; max-width: 100%; padding: var(--ork-4) var(--ork-5); }
+.table-end .hand-back__ready .cap { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; line-clamp: 4; max-width: 100%; overflow: hidden; overflow-wrap: anywhere; }
+
 @media (min-width: 760px) {
   .table-body { --table-end-w: max(var(--hc-w) + var(--ork-8) * 2, 192px); }
   .table-end { right: calc((var(--table-end-w) - max(var(--hc-w) + var(--ork-8), 192px)) / 2); width: max(var(--hc-w) + var(--ork-8), 192px); align-items: center; }
@@ -33,6 +39,7 @@
 
 @media (max-width: 759.98px) {
   .table-end { right: var(--ork-4); gap: var(--ork-2); }
+  .table-end .hand-back__ready { padding: var(--ork-1); }
   .table-body:is([data-end="side"], [data-end="over"]) { padding-right: 0; }
   .table-body:is([data-end="side"], [data-end="over"]) > :is(.table-head, .pick-strip) { margin-right: 0; }
   .table-body[data-end="side"]:has(> .table-end) { padding-bottom: var(--table-end-h); }

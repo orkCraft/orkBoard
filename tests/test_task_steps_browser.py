@@ -327,3 +327,36 @@ def test_a_failed_card_says_its_reason_and_one_with_nothing_to_say_keeps_the_typ
     finally:
         pg.close()
     assert not log, "\n".join(log)
+
+
+class LeaderHost(StepsHost):
+    """A goal whose plan holds a task merged, one to look at, one waiting for its party's leader (a shaman: Tech's leader does it, as at Lean) and one waiting for a Grunt, and one at work."""
+
+    def __init__(self):
+        super().__init__()
+        self.nodes = [node("mix", "tech", "Mark words", "table", state="working", stage="implementation", element="ice", tasks=[
+            task("m1", "Change the terms", "merged"), task("v1", "Level the marks", "review"), task("r1", "Mark coverage", "running", started=since()),
+            task("l1", "Review the marks", "waiting", head={**head("shaman", tier="warrior"), "leader": True}), task("l2", "Count the marks", "ready", head=head("peon", tier="laborer"))])]
+
+
+def test_a_task_to_look_at_says_to_look_at_a_merged_one_done_and_a_leaders_seat_says_its_leader_takes_it_next(gui):
+    """Spec 143 F.1, F.2 (decisions §250.7): never *Planning* for a task merged or to look at, never *a Grunt* for a leader's seat; a member's word stands for a member."""
+    pg, host, log = open_hand(gui, host=LeaderHost(), width="wide")
+    try:
+        pg.wait_for_selector(".table-card", timeout=WAIT_MS)
+        pg.locator('.col-card[data-goal="mix"]').click()
+        pg.wait_for_selector(".table-board--plan", timeout=WAIT_MS)
+        stage = lambda tid: card(pg, "mix", tid).locator(".table-stage").inner_text().strip().lower()      # noqa: E731
+        assert (stage("m1"), stage("v1"), stage("l1")) == ("done", "to look at", "planning")
+        assert card(pg, "mix", "m1").get_attribute("data-stage") == "done" and card(pg, "mix", "v1").get_attribute("data-stage") == "review"
+        lead, grunt = (pg.locator(f'.plan-slot[data-plan-task="{i}"] .table-card__win .table-win__line') for i in ("l1", "l2"))
+        assert lead.inner_text().strip() == "Its leader takes it next", "a leader's seat never says a member's word"
+        assert grunt.inner_text().strip() == "a Grunt takes it next", "a member's stands"
+        # the pure rule: the stages by state, and the cascade's rank (to look at before Checking, done last)
+        got = pg.evaluate("""async () => { const d = await import('/static/js/table/data.js'), s = await import('/static/js/table/steps.js');
+          return [['review', ''], ['merged', ''], ['testing', 'check'], ['running', ''], ['waiting', ''], ['failed', '']].map(([state, band]) => d.stageOf({ state, band }))
+            .concat(['shaman', 'dryad', 'imp', 'fairy', 'unicorn', 'lich', 'peon', 'elf'].map((race) => s.seatWords({ race, tier: 'warrior' }))); }""")
+        assert got == ["review", "done", "checking", "doing", "planning", "doing", *["its leader"] * 6, "a Grunt", "an elf"]
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)

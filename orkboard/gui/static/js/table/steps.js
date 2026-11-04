@@ -54,14 +54,17 @@ export const sourceWords = (st) => SOURCE_WORDS[st?.source] || "";
 const MARK = { done: "d", now: "n", next: "" };
 
 /** The race of a head as a seat's word with its article, *an elf*, *a Grunt* (an ork of the code craft is a Grunt: CLAUDE.md, Orks by their orkish names; TERMS `race.*`, `orc.barracks`); a leader's higher form is its race's word. "" with no head. */
-const SEAT = { peon: "a Grunt", shaman: "a Grunt", elf: "an elf", dryad: "an elf", goblin: "a goblin", imp: "a goblin", gnome: "a gnome", fairy: "a gnome", knight: "a knight", unicorn: "a knight", skeleton: "a skeleton", lich: "a lich" };
-export const seatWords = (head) => SEAT[String(head?.race || "").split("-")[0]] || "";
+const SEAT = { peon: "a Grunt", elf: "an elf", goblin: "a goblin", gnome: "a gnome", knight: "a knight", skeleton: "a skeleton" };
+/** The forms a party's leader wears, the higher forms of its race (decisions §154, §162): a leader's seat is *its leader*, never a member's word (spec 143 F.2). The host marks the head too (`leader: true`, `roles.task_head`). */
+const LEADER_FORMS = new Set(["shaman", "dryad", "imp", "fairy", "unicorn", "lich"]);
+export const isLeader = (head) => !!head && (head.leader === true || LEADER_FORMS.has(String(head.race || "").split("-")[0]));
+export const seatWords = (head) => (isLeader(head) ? "its leader" : SEAT[String(head?.race || "").split("-")[0]] || "");
 
 /** The window of a task waiting to start: the head of the seat that will take it, faint, and *an elf takes it next* under it. A task with no head has no such window (null). */
 export function WaitingWindow({ head }) {
   const who = seatWords(head);
   if (!head || !who) return null;
-  return html`<span class="table-win table-win--wait"><span class="table-win__faint"><${WhoHead} head=${head} size="mid" /></span><span class="table-win__line">${who} takes it next</span></span>`;
+  return html`<span class="table-win table-win--wait"><span class="table-win__faint"><${WhoHead} head=${head} size="mid" /></span><span class="table-win__line">${isLeader(head) ? "Its leader" : who} takes it next</span></span>`;
 }
 
 /** The window of a task at work: the pips, the step now in two lines, and who does it (its head, its word, the busy mark glowing with orkUI's rhythm while the task is at work). */

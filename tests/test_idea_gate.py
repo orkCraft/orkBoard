@@ -64,10 +64,11 @@ def idea(host, text: str) -> str:
     return host.command("ideas.add", {"text": text, "track": goal, "hold": True})["slug"]
 
 
-def merged(host, slug: str, **commits: str) -> None:
+def merged(host, slug: str, review: bool = True, **commits: str) -> None:
     """The idea's plan: a merged task per `id=commit` (a commit of "" for a check that landed nothing), a task at Review."""
     tasks = [{"id": tid, "title": f"Task {tid}", "state": "merged", "commit": c, "after": []} for tid, c in commits.items()]
-    tasks.append({"id": "rv", "title": "Waiting", "state": "review", "commit": "", "after": []})
+    if review:
+        tasks.append({"id": "rv", "title": "Waiting", "state": "review", "commit": "", "after": []})
     ideas.save_plan(host.ideas.state_dir, slug, {"idea": slug, "made_at": "2026-10-21T09:00:00", "passed_at": None, "tasks": tasks})
 
 
@@ -81,7 +82,7 @@ def work(host, repo):
     first, second = idea(host, "Sync the queue\nwith the server"), idea(host, "Retry on failure")
     c1 = land(repo, first, "k1", "q.txt", "queue\n")
     c2 = land(repo, first, "k2", "r.txt", "retry\n")
-    merged(host, first, k1=c1, k2=c2)
+    merged(host, first, review=False, k1=c1, k2=c2)
     merged(host, second, k1=git(repo, "rev-parse", "main"), c1="")
     return first, second, c1, c2
 

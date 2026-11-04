@@ -21,7 +21,7 @@ from typing import Any
 from orkboard import settings
 from orkboard.core import bus
 from orkboard.gui.ideas_args import IdeasError, _text
-from orkboard.realm import event_log, findings_gather, gate_config, goal_main, idea_flag, idea_gate, ideas, journal_notes, main_checks, party_recipes
+from orkboard.realm import event_log, findings_gather, gate_config, goal_main, goal_types, idea_flag, idea_gate, ideas, journal_notes, main_checks, party_recipes
 from orkboard.realm.idea_git import IdeaGit, _git
 
 
@@ -55,10 +55,26 @@ class GateMixin:
             shas, files = idea_gate.waiting_by_patch(git, into, main)      # a goal sent alone is not counted again
         except Exception:                       # a repository git cannot read: nothing waits that the Board can see
             return out
-        brought = self._gate_ideas(shas)
+        try:
+            shas, files = idea_gate.without_board_pages(git, shas, files)      # the Board's own commits are no pile: they go with the next goal (spec 143 F.4, §247.1)
+        except Exception:
+            pass
+        brought = self._ready_ideas(self._gate_ideas(shas))
         if brought:
             self._release_reads()                # a goal is ready for main: Release has something to ask about (spec 143 E.1)
         return {**out, "commits": len(shas), "files": files, "ideas": brought}
+
+    NOT_YET = ("failed", "waiting", "ready", "running", "testing", "picking", "review")        # a task in one of these is not done: its goal is not ready for main
+
+    def _ready_ideas(self, rows: list[dict]) -> list[dict]:
+        """Of the goals with work in dev, those ready for main: none of its tasks is failed, waiting, ready, running or to look at (spec 143 F.3,
+        decisions §250.7). The page reads this answer; it decides nothing."""
+        out = []
+        for r in rows:
+            plan = ideas.plan(self.state_dir, r["slug"]) or {}
+            if not any(t.get("state") in self.NOT_YET and not goal_types.is_dropped(t) for t in plan.get("tasks") or []):
+                out.append(r)
+        return out
 
     def _release_reads(self) -> None:
         try:

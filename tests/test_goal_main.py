@@ -344,3 +344,37 @@ def test_the_commands_round_trip_and_the_phone_may_send_them(host, repo, work):
     done = host.command("ideas.to_main", {"idea": lobby})
     assert done["ok"] is True and done["goals"] == [lobby, chat]
     assert host.command("ideas.to_main_plan", {"idea": chat})["sealed"] == f"{short(host, chat)} is in main already"
+
+
+# -- ready for main (spec 143 F.3, F.4) ---------------------------------------------------------------------------
+
+def test_a_goal_with_a_task_failed_or_still_to_do_is_not_ready_for_main(host, repo, work):
+    lobby, chat, *_ = work
+    assert [i["slug"] for i in host.command("ideas.gate")["ideas"]] == [lobby, chat]
+    for state in ("failed", "waiting", "ready", "running", "review"):
+        plan = ideas.plan(host.ideas.state_dir, lobby)
+        plan["tasks"] = [t for t in plan["tasks"] if t["id"] != "later"] + [{"id": "later", "title": "Later", "state": state, "commit": "", "after": [], "round": 1}]
+        ideas.save_plan(host.ideas.state_dir, lobby, plan)
+        got = host.command("ideas.gate")
+        assert [i["slug"] for i in got["ideas"]] == [chat], f"a task {state}: Lobby is not ready for main"
+        assert got["commits"] == 5, "its commits are dev's all the same"
+    plan = ideas.plan(host.ideas.state_dir, lobby)
+    plan["tasks"][-1]["state"] = "dropped"
+    ideas.save_plan(host.ideas.state_dir, lobby, plan)
+    assert [i["slug"] for i in host.command("ideas.gate")["ideas"]] == [lobby, chat], "a dropped task holds nothing back"
+
+
+def test_the_boards_own_commits_are_no_pile_but_a_code_commit_of_no_goal_is(host, repo):
+    git(repo, "checkout", "-q", "dev")
+    commit_in(repo, "wiki/pages/tracks/tech.md", "# Tech\n", "The Board lays the table")
+    commit_in(repo, "wiki/pages/ideas/first.md", "# First\n", "The Board writes a goal")
+    git(repo, "checkout", "-q", "main")
+    got = host.command("ideas.gate")
+    assert got["commits"] == 0 and got["files"] == 0 and got["ideas"] == [], "a laid table with no work has no pile"
+    git(repo, "checkout", "-q", "dev")
+    commit_in(repo, "own.txt", "the person's own commit\n")
+    git(repo, "checkout", "-q", "main")
+    got = host.command("ideas.gate")
+    assert got["commits"] == 1 and got["files"] == 1, "a commit of code that belongs to no goal still counts, the Board's two do not"
+    host.command("ideas.gate_merge")
+    assert (repo / "wiki" / "pages" / "tracks" / "tech.md").exists(), "they go into main with the next merge"

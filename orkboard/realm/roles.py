@@ -422,7 +422,10 @@ def task_head(state_dir: Path, task: dict, target: str, read: tuple[dict, dict] 
     party, leader = party or str(task.get("craft") or ""), leader or str(task.get("leader") or "")
     by_slug, _kinds = read = read or known(state_dir)
     r = by_slug.get(task_slug(task, read)) or by_slug.get(GRUNT) or role(state_dir, GRUNT)
-    got = head(goal_team.seat_role(r, tiers or {}), target, str(task.get("tier") or "warrior"), party, bool(leader) and r.get("slug") == leader)
+    lead = bool(leader) and r.get("slug") == leader
+    got = head(goal_team.seat_role(r, tiers or {}), target, str(task.get("tier") or "warrior"), party, lead)
+    if lead:
+        got["leader"] = True            # the head of the party's leader: the page says *its leader takes it next*, never a member's word (spec 143 F.2)
     if task.get("ran_tier") in TIERS:
         got["tier"] = task["ran_tier"]
     return got
