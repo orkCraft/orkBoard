@@ -255,6 +255,12 @@ QUESTION_PASSED = "question_passed"      # spec 128 D: a leader's question passe
 EVENTS += (QUESTION_PASSED,)       # spec 128 D
 EVENTS += (SPEC_FOLDED,)            # spec 127 C
 EVENTS += (SLICES_CUT, SLICES_FOLDED)       # spec 131 A
+# Spec 131 B (decisions §233.5–§233.9): a leader's proposal to change a slice of its own, the cascade it runs in the background, the card's two answers. Never a word of a slice or of a decision.
+SLICE_PROPOSED = "slice_proposed"         # party, from_step (the call it came in: talk_round · talk_verdict · section_first · section · plan · accept · ask · finding), dropped ("" kept · open · bad · blocked · gone)
+CASCADE_READY = "cascade_ready"           # party, steps (leaders asked), agreed, forks, stopped ("" · steps · price), sections (what follows), changes (decisions changed), seconds, cost (None: unrecorded)
+CASCADE_CONFIRMED = "cascade_confirmed"   # party, decision (its number), slices (replaced), forks (answered), sections (written again), left (goals busy), via, device
+CASCADE_PUT_BACK = "cascade_put_back"     # party, forks, via, device
+EVENTS += (SLICE_PROPOSED, CASCADE_READY, CASCADE_CONFIRMED, CASCADE_PUT_BACK)       # spec 131 B
 EVENTS += (LEADER_CHANGE_ASKED, LEADER_CHANGE_ANSWERED)      # spec 128 E
 JOURNAL_SENT = "journal_sent"      # decisions §229: the journal sent to the project's remote (or not): sent, remote, branch, files, held_back (lines held for a secret's shape), commit, why (a failure's words, "nothing changed")
 EVENTS += (JOURNAL_SENT,)

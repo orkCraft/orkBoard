@@ -37,6 +37,7 @@ import threading
 from concurrent.futures import ThreadPoolExecutor
 from typing import Callable
 
+from orkboard.core import idea_cascade
 from orkboard.core import idea_fold
 from orkboard.core import idea_journal
 from orkboard.core import idea_slices
@@ -179,8 +180,8 @@ class TalkMixin:
                     got = self.hear_verdict(slug, entry, whole or route, lines[entry["party"]], mine)
                 else:
                     with self._system(entry):
-                        got = self._tried(lambda: clean_round(kw.first_json(self.ask("talk_round", self.round_prompt(slug, entry, whole or route, rnd, said, firsts[entry["party"]],
-                                                                                                                     known, lines[entry["party"]]), tools=False)[0]),
+                        got = self._tried(lambda: clean_round(self.cascade_seen(kw.first_json(self.ask("talk_round", self.round_prompt(slug, entry, whole or route, rnd, said, firsts[entry["party"]],
+                                                                                                                     known, lines[entry["party"]]), tools=False)[0]), entry["party"], "talk_round", slug),
                                                               entry["party"], entry["leader"], rnd, firsts[entry["party"]], known, [g["slug"] for g in lines[entry["party"]]],
                                                               self._craft(entry["party"]), bool(entry.get("rejudge"))),
                                           mine, self.role_as(entry["leader"])["name"])
@@ -265,6 +266,7 @@ Answer with one JSON object and nothing else:
             project_json = ',\n "project_questions": [{"key": "stack", "ask": "…", "choices": ["…", "…"], "pick": 0, "why": "…", "blocks": false}]'
         after_rule = after_json = ""
         weight_rule, weight_json = self.weight_prompt(party)                 # Product's priority, Tech's risk (spec 120 §3.1)
+        prop_rule, prop_json = idea_cascade.propose_rule(self.state_dir, party)      # a slice it holds that is wrong for its craft (spec 131 §B.1)
         if line:
             after_rule = "\n- `after` (with a `no` only, optional): the slug of one goal in line above that this goal should wait for; else leave it out."
             after_json = ', "after": ""'
@@ -279,13 +281,13 @@ it rests on: a no without one is not a no. `doubt` is for a goal you would do on
 verdict reads as `go`. A worse thing than a needless goal is one you let through in silence.
 - `instead` (optional, one line): a smaller or different goal that would serve, when you can name one.{after_rule}
 - If this goal rests on something no one has shown, say it in `assumes`: `{{"text": "what it rests on", "signal": "what would show it"}}`, a line each, {LINE} characters at most; else leave it out.
-- Ask at most {MAX_GOAL} questions about the goal. {cards}{project_rule}{weight_rule}
+- Ask at most {MAX_GOAL} questions about the goal. {cards}{project_rule}{weight_rule}{prop_rule}
 - `second_round` is true only when the answers to your questions may open a question your party cannot start without; else false.
 
 Answer with one JSON object and nothing else:
 {{"stance": "…", "for": "…", "against": "…", "verdict": "go", "why": "", "instead": ""{after_json},
  "questions": [{{"ask": "…", "choices": ["…", "…"], "pick": 0, "why": "…", "blocks": false, "for": "person"}}],
- "second_round": false{weight_json}{project_json}}}"""
+ "second_round": false{weight_json}{project_json}{prop_json}}}"""
 
     def talk_run(self, slug: str, after: list) -> None:
         """The first round, on this thread: the leaders heard, the three cards picked, the rest closed by their picks; the stances and the cards kept for the row."""

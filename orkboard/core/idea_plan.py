@@ -23,6 +23,7 @@ import json
 import re
 from pathlib import Path
 
+from orkboard.core import idea_cascade
 from orkboard.core import idea_slices
 from orkboard.realm import (collide, goal_team, goal_types, idea_change, idea_checks, idea_lens, idea_look, idea_risk, idea_route, idea_spend, idea_target, ideas, plans, releases, roles,
                             spec_sections, task_brief, tool_errors)
@@ -172,6 +173,7 @@ class PlanMixin:
             if text := self._map(party):
                 parts.append(("Your party's map", text))
         context = idea_target.cut(parts, idea_target.CONTEXT["plan"])
+        prop_rule, prop_json = idea_cascade.propose_rule(self.state_dir, party)       # a slice it holds that is wrong for its craft (spec 131 §B.1)
         touches = [t for t in json.loads(page.get("touches") or "[]") if isinstance(t, str)] if page.get("touches", "").startswith("[") else []
         kinds = "; ".join(f'"{k}" ({roles.KIND_LINES[k]})' for k in roles.TASK_KINDS)
         team_of = goal_team.team_of(root, party)
@@ -209,12 +211,12 @@ Rules:
   e.g. API_KEY), a decision ("choice", with its choices), a yes ("confirm"), steps a person does ("instructions"), a
   file the person gives ("file": its title says what the file is, e.g. the Firebase config, google-services.json;
   `accept` the extensions it may have). Any kind may carry `steps` when the person has to do something first. Most
-  plans need none. `for`: the tasks that wait for it.
+  plans need none. `for`: the tasks that wait for it.{prop_rule}
 
 Answer with one JSON object and nothing else:
 {{"tasks": [{{"id": "k1", "title": "…", "short": "two or three words, 24 characters at most", "brief": "…", "kind": "code",
              "tier": "warrior", "after": []}}],
- "todos": [{{"id": "t1", "title": "…", "kind": "confirm", "why": "…", "choices": [], "steps": [], "accept": [], "for": ["k1"]}}]}}
+ "todos": [{{"id": "t1", "title": "…", "kind": "confirm", "why": "…", "choices": [], "steps": [], "accept": [], "for": ["k1"]}}]{prop_json}}}
 """
 
     # -- the plan ------------------------------------------------------------------------------------------------------------------------
@@ -231,7 +233,7 @@ Answer with one JSON object and nothing else:
         try:
             track = self._into(slug, n)
             text, *_rest = self.ask("plan", self.plan_prompt(root, slug, n))
-            data = kw.make_plan(slug, self.parse(text), look="" if later else idea_look.screen_title(self.state_dir, root, slug))
+            data = kw.make_plan(slug, self.cascade_seen(self.parse(text), self._step_party(slug, n), "plan", slug), look="" if later else idea_look.screen_title(self.state_dir, root, slug))
             data["tasks"] = idea_checks.with_check_tasks(data["tasks"], self.idea_checks(root, slug), self.team_checks(root, slug), _task)
             team = goal_team.for_idea(root, slug)
             lead = goal_team.leader_of(root, track)
