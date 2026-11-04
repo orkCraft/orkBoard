@@ -534,6 +534,7 @@ def drop(root: Path, slug: str, state_dir: Path | None = None) -> None:
 
 STATE_DEFAULT = {"state": "raw", "session": "", "session_at": "", "context": 0, "batch_at": "", "error": "",
                  "queue": "", "held_until": "", "held_for": "", "measure": None, "night_by": "",
+                 "from_backlog": False,               # Talk was started by the host's clock for a goal put off with *Later, by itself* (decisions §239): the queue starts the next only when none is in Talk
                  "element": "",                       # a goal's element (realm/idea_element.py, spec 50 §2.3): given once, never changes
                  "hue": "",                           # its colour (spec 128 G): given with the element; "" for a goal of before, which wears its element's colour
                  "type": "",                          # its type's key "<leader>/<id>" (realm/goal_types.py, spec 52 §2.2): given once by ideas.add

@@ -258,3 +258,90 @@ def test_a_goal_kept_on_hold_and_a_pitch_are_not_routed(host, parties, calls):
     pitch = host.command("ideas.add", {"text": "a pitch about a thing", "track": ideation})
     assert _state(host, pitch["slug"])["state"] != "routed" and "route" not in pitch
     assert ideas.idea_page(root, held["slug"]) is not None
+
+
+# -- decisions §239: the goals put off start Talk one at a time, in the Orkmaster's order, by the week's pace ------------------------------------
+
+def _put_off(host, parties, n=3):
+    """`n` goals put off with *Later, by itself*, in the Orkmaster's order (the line: priority, then the person's order), their reset passed."""
+    slugs = [host.command("ideas.add", {"text": f"idea number {k}", "track": parties["tech"]})["slug"] for k in range(n)]
+    gone = (dt.datetime.now() - dt.timedelta(minutes=1)).isoformat(timespec="seconds")
+    for s in slugs:
+        ideas.save_state(host.ideas.state_dir, s, held_until=gone)
+    root = host.ideas.root()
+    found = ideas.ideas(root)
+    order = goal_route.context(found, {i["slug"]: ideas.state(host.ideas.state_dir, i["slug"]) for i in found})["order"]
+    return sorted(slugs, key=lambda s: order[s])
+
+
+@pytest.fixture
+def went(host, monkeypatch):
+    seen = []
+    monkeypatch.setattr(host.ideas.keeper, "talk", lambda s: seen.append(s), raising=False)
+    return seen
+
+
+def _pass(host, k):
+    host.ideas._route_at = float("-inf")
+    host.ideas.route_tick(time.monotonic() + 1000 * k)
+
+
+def test_goals_put_off_start_talk_one_per_pass_the_first_in_the_orkmasters_order(host, parties, calls, went):
+    first, second, third = _put_off(host, parties)
+    _pass(host, 1)
+    assert went == [first] and _state(host, first)["state"] == "talk" and _state(host, first)["from_backlog"] is True
+    assert _state(host, second)["state"] == "routed" and _state(host, third)["state"] == "routed"
+    _pass(host, 2)
+    assert went == [first]                                                      # the first is still in Talk: the next waits
+    ideas.save_state(host.ideas.state_dir, first, state="decided")              # out of its Talk
+    _pass(host, 3)
+    assert went == [first, second] and _state(host, first)["from_backlog"] is False
+    _pass(host, 4)
+    assert went == [first, second]
+    ideas.save_state(host.ideas.state_dir, second, state="decided")
+    _pass(host, 5)
+    assert went == [first, second, third]
+
+
+def test_a_high_priority_goal_added_last_goes_first(host, parties, calls, went):
+    slugs = _put_off(host, parties, 2)
+    late = host.command("ideas.add", {"text": "urgent one", "track": parties["tech"], "priority": "high"})["slug"]
+    ideas.save_state(host.ideas.state_dir, late, held_until=_state(host, slugs[0])["held_until"])
+    _pass(host, 1)
+    assert went == [late]
+
+
+def test_a_goal_started_by_hand_does_not_hold_the_queue(host, parties, calls, went):
+    first, second, _third = _put_off(host, parties)
+    ideas.save_state(host.ideas.state_dir, second, held_until="")
+    host.command("ideas.talk", {"idea": second})                                # the person's own Talk: state `talk`, no backlog flag
+    assert _state(host, second)["state"] == "talk" and _state(host, second)["from_backlog"] is False
+    went.clear()
+    _pass(host, 1)
+    assert went == [first] and _state(host, first)["from_backlog"] is True
+
+
+def test_the_pace_behind_starts_none_and_ahead_or_unknown_starts_one(host, parties, calls, went, monkeypatch):
+    first, *_ = _put_off(host, parties)
+    for pace in ("behind", "even"):
+        monkeypatch.setattr("orkboard.realm.idea_target.pace", lambda limits, now, pace=pace: pace)
+        if pace == "behind":
+            _pass(host, 1)
+            assert went == [] and _state(host, first)["state"] == "routed" and _state(host, first)["held_until"]    # looked at again at the next pass
+    monkeypatch.setattr("orkboard.realm.idea_target.pace", lambda limits, now: "ahead")
+    _pass(host, 2)
+    assert went == [first]
+    ideas.save_state(host.ideas.state_dir, first, state="decided")
+    monkeypatch.setattr("orkboard.realm.idea_target.pace", lambda limits, now: None)    # unknown
+    _pass(host, 3)
+    assert len(went) == 2
+
+
+def test_the_reserve_still_held_moves_every_goal_put_off_to_the_next_reset(host, parties, calls, went, monkeypatch):
+    slugs = _put_off(host, parties)
+    reset = dt.datetime.now() + dt.timedelta(hours=2)
+    monkeypatch.setattr(host, "limits", lambda: [Limit("claude", "", "session", 0.1, reset)])
+    _pass(host, 1)
+    assert went == []
+    for s in slugs:
+        assert _state(host, s)["state"] == "routed" and _state(host, s)["held_until"] > dt.datetime.now().isoformat(timespec="seconds")

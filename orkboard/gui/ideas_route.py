@@ -361,21 +361,44 @@ class RouteMixin:
             return
         self._route_at = now
         root, wall = self.root(False), time.time()
-        for i in ideas.ideas(root):
-            st = ideas.state(self.state_dir, i["slug"])
-            if st["state"] != "routed" or self.keeper.busy(i["slug"]):
-                continue
+        found, states, ripe = ideas.ideas(root), {}, []
+        for i in found:
+            st = states[i["slug"]] = ideas.state(self.state_dir, i["slug"])
             slug = i["slug"]
+            if st["from_backlog"] and st["state"] != "talk":
+                ideas.save_state(self.state_dir, slug, from_backlog=False)           # out of its Talk: the queue goes on
+                st["from_backlog"] = False
+            if st["state"] != "routed" or self.keeper.busy(slug):
+                continue
             if not st["route"]:
                 page = ideas.idea_page(root, slug)
                 self.route_call(slug, page.section("Gist") if page else "")
             elif st["held_until"] and self._passed(st["held_until"], wall):
-                until = idea_target.reserve_held(self._raw_limits(), self.settings_now(), wall)
-                if until is not None:
-                    ideas.save_state(self.state_dir, slug, held_until=_iso(until))
-                    self.changed(slug)
-                elif not self.keeper.window_until():
-                    self.route_talk({"idea": slug})
+                ripe.append(slug)
+        if ripe:
+            self._backlog_next(found, states, ripe, wall)
+
+    def _backlog_next(self, found: list[dict], states: dict, ripe: list[str], wall: float) -> None:
+        """Decisions §239: of the goals put off whose reset has passed, **one** starts Talk per pass, the first in the Orkmaster's order (`goal_route.context`), and the next
+        only when no goal started this way is still in Talk (its calls running or its questions waiting: its state stays `talk`). The week's pace is read again before the
+        start: *behind*, nothing starts and the queue is looked at again at the next pass. A goal the person starts by hand (`ideas.talk`) is not in this queue."""
+        if any(st["from_backlog"] and st["state"] == "talk" for st in states.values()):
+            return
+        limits, settings = self._raw_limits(), self.settings_now()
+        if idea_target.pace(limits, wall) == "behind":
+            return
+        until = idea_target.reserve_held(limits, settings, wall)
+        if until is not None:                                                       # the reserve is spent again: each waits for the next reset
+            for slug in ripe:
+                ideas.save_state(self.state_dir, slug, held_until=_iso(until))
+                self.changed(slug)
+            return
+        if self.keeper.window_until():
+            return
+        order = goal_route.context(found, states, settings, limits, wall)["order"]
+        first = min(ripe, key=lambda s: order.get(s, len(order) + 1))
+        self.route_talk({"idea": first})
+        ideas.save_state(self.state_dir, first, from_backlog=True)
 
     @staticmethod
     def _passed(iso: str, now: float) -> bool:
