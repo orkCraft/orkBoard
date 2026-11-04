@@ -467,11 +467,12 @@ def test_a_task_card_has_its_header_its_window_with_the_types_sign_and_its_label
     pixel = pg.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--ork-font-pixel').split(',')[0].trim().replace(/[\"']/g, '')")
     assert pixel and pixel not in nm.evaluate("e => getComputedStyle(e).fontFamily")                                      # a person's words: the body face, never the pixel one (CLAUDE.md, the owner)
     win = failed.locator(".table-card__win")
-    assert abs(win.bounding_box()["height"] - 70) <= 1                                                                   # about 70 px high
-    assert win.locator(".ork-sign.feature.big").count() == 1 and win.locator(".ork-sign").count() == 1                  # one sign at the big size: the goal's type (the task has no kind of its own)
-    assert win.evaluate("e => e.querySelector('.ork-sign').offsetWidth") == 28 and win.evaluate("e => getComputedStyle(e.querySelector('.ork-sign')).opacity") == "0.6"      # 28 px, toned down
+    assert abs(win.bounding_box()["height"] - 92) <= 1                                                                   # 92 px high, fixed (spec 142 C), so a lane's cards line up
+    assert win.get_attribute("data-window") == "fail" and win.locator(".ork-sign.alert").count() == 1 and win.locator(".ork-sign").count() == 1      # a failed task: orkUI's alert sign and its reason (spec 142 C, decisions §249.3)
+    danger = pg.evaluate("() => { const d = document.createElement('i'); d.style.color = 'var(--ork-danger)'; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; }")
+    assert win.locator(".table-win__reason").inner_text().strip() and win.evaluate("e => getComputedStyle(e.querySelector('.ork-sign')).color") == danger      # its reason, the sign in the danger colour
     assert win.evaluate("e => getComputedStyle(e).borderTopWidth") == "1px"                                              # a hairline
-    assert failed.locator(".ork-race__head").count() == 0                                                                # no head on a card of the Board: who works is on its back
+    assert failed.locator(".ork-race__head").count() == 0                                                                # no head on a failed card: who works is on its back
     row = failed.locator(".table-card__row")
     assert row.locator(".table-stage").inner_text().strip().lower() == "doing" and row.locator(".table-stage .ork-sign.sword").count() == 1      # the stage's small sign and word
     assert abs(row.locator(".table-stage .ork-sign").bounding_box()["width"] - 14) <= 1
@@ -479,7 +480,7 @@ def test_a_task_card_has_its_header_its_window_with_the_types_sign_and_its_label
     assert "fails" in failed.get_attribute("class")                                                                      # a failure: orkUI's danger frame
     check = pg.locator('[data-lkey="t:task:recheck/c2"]')                                                                 # a failed check
     assert "fails" in check.get_attribute("class") and check.locator(".table-stage .ork-sign.shield").count() == 1 and check.locator(".ork-gem").count() == 0     # no gem: it is not a retry
-    assert check.locator(".table-stage").inner_text().strip().lower() == "checking" and check.locator(".table-card__win .ork-sign.bug").count() == 1
+    assert check.locator(".table-stage").inner_text().strip().lower() == "checking" and check.locator(".table-card__win .ork-sign.alert").count() == 1
     shot(pg, f"table-cards-{w}.png")
 
 

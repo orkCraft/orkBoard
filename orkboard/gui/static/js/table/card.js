@@ -1,5 +1,5 @@
 // A card of the Board (docs/specs/101-the-cards-the-cascade-and-the-hand-under-the-lanes.md §2, decisions §167.1; the lifting of docs/specs/98-the-table-and-the-hand.md §3.5, §6, decisions §120.1; one rune per stack: docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §3.1,
-// decisions §187.1–§187.2): 144 wide, its task's name at the top of its header (the pixel face is never used for it; three lines at most; **no rune**: the goal's rune stands once, on the strip over its stack), under it a window (the card's own fill, a hairline) with one sign
+// decisions §187.1–§187.2): 144 wide, its task's name at the top of its header (the pixel face is never used for it; three lines at most; **no rune**: the goal's rune stands once, on the strip over its stack), under it a window (the card's own fill, a hairline, 92 px high) that is a window onto the work by the task's state (spec 142 C, decisions §249.3): waiting, the head of the seat that takes it, faint; at work, its steps; failed, the alert and its reason; else one sign
 // at the signs' big size, toned down — the task's type —, and its label row: the stage's small sign and word, the gem at its right when it spends. **A task at work shows the flame**: the goal's rune, glowing (orkUI's `.is-glowing`), takes the place of the stage's
 // small sign, on its card and on its edge; it is the card's only motion of the work, and it stands still under reduced motion. The tasks behind the front one lie as a fan (`fanOf`, `TaskEdge`): an edge holds the stage's sign (and the flame) and, once the fan is opened, the task's
 // name. **A card that is the goal itself** (`OwnCard`: the Orkmaster reading, routing or joining it) has no strip over it: its header holds the goal's rune and its whole title, and it wears the pick (`ork-picked`) a strip would, so a goal in two lanes is lit alike. No foot and no head: who works is on its back and in its party's header.
@@ -17,7 +17,7 @@ import { GoalMenu } from "./dropgoal.js";
 import { aliveState, useChanged, useWorked, workedWords } from "./worktime.js";
 import { ConcernsBack } from "./concerns.js";                       // a marked card's back lists its leader's concerns (spec 108 B)
 import { cascadeOf, footWords, doingWords, readTask, stageOf, typeSignOf, gemOf, STAGES } from "./data.js";
-import { Pips, StepNow, StepsList, labelWords, countWords, showsSteps, stepsOf } from "./steps.js";       // a task's steps: the label row's count, pips and step now, the lifted card's list (spec 129 H2)
+import { Pips, StepsList, StepsWindow, WaitingWindow, FailedWindow, labelWords, countWords, showsSteps, stepsOf } from "./steps.js";       // a task's steps: the label row's count, pips and step now, the lifted card's list (spec 129 H2)
 import { BackFace, Turning, backKind, everBack } from "./backcard.js";       // a goal talked over lies face down (spec 120 §6.3)
 import { ThrownPlace, thrown } from "./flight.js";                         // a failed task's card thrown to the hand leaves its place (spec 128 C.2)
 
@@ -54,6 +54,19 @@ function Win({ n, sign, moon = false, danger = false }) {
   return html`<span class=${cls("table-card__win", `is-${typeTone(n)}`, { "is-danger": danger })}>${sign && (sign.startsWith("tool:") ? html`<span class=${`ork-tool ${sign.slice(5)}`} aria-hidden="true"></span>` : html`<${Sign} name=${sign} big=${true} />`)}${moon && html`<${Sign} name="moon" big=${true} />`}</span>`;
 }
 
+/** A lane card's window by its task's state, from the snapshot as it is (spec 142 C, decisions §249.3): failed, the alert and its reason; at work, the steps (else its doing line, else today's sign); waiting, the head of the seat that takes it,
+ *  faint; otherwise the type's sign. Its height is fixed (table/work.css), so a lane's cards line up. */
+const AT_WORK = ["doing", "checking"];
+function TaskWin({ n, t, st, alive }) {
+  const sign = typeSignOf(n, t), doing = String(t.steps?.doing ?? "").trim();
+  let inside = null, kind = "sign";
+  if (t.state === "failed") { inside = html`<${FailedWindow} reason=${t.error} />`; kind = "fail"; }
+  else if (st) { inside = html`<${StepsWindow} st=${st} head=${t.head} element=${n.hue || n.element} alive=${alive} />`; kind = "steps"; }
+  else if (doing && AT_WORK.includes(stageOf(t))) { inside = html`<${StepsWindow} st=${{ items: [], now: -1, done: 0, total: 0, source: "activity", doing }} head=${t.head} alive=${alive} />`; kind = "steps"; }
+  else if (t.state === "waiting" || t.state === "ready") { inside = html`<${WaitingWindow} head=${t.head} />`; kind = inside ? "wait" : "sign"; }
+  return html`<span class=${cls("table-card__win is-window", `is-${typeTone(n)}`, { "is-danger": kind === "fail" })} data-window=${kind}>${inside || (sign && (sign.startsWith("tool:") ? html`<span class=${`ork-tool ${sign.slice(5)}`} aria-hidden="true"></span>` : html`<${Sign} name=${sign} big=${true} />`))}</span>`;
+}
+
 /** A task, as a card in its goal's cascade: the task's name (no rune: the goal's is on its strip), the type in the window, the stage and, at its right, the gem when it spends. A task at work shows the flame in the stage's sign's place and says the time it has
  *  worked; a card whose state changed flashes its frame once (spec 107 §7, table.css; the flash is not played under reduced motion, the time still ticks). */
 export function TaskCard({ n, t }) {
@@ -65,9 +78,8 @@ export function TaskCard({ n, t }) {
   return html`<button type="button" class=${cls("ork-card ork-leans table-card", { fails: bad, asks, "is-lifted": on, "is-lit": litKey.value === key, "is-changed": changed })} data-lkey=${key} data-goal=${n.slug} data-task=${t.id}
     data-about=${aboutTokens(n, [t])} data-state=${t.state} data-stage=${stageOf(t)} aria-pressed=${String(on)} aria-label=${said} title=${time ? `${n.title} · ${time}` : n.title} onClick=${() => lift(on ? "" : key)} ...${leans}>
     <span class="table-card__head"><span class="table-card__nm" title=${t.title}>${t.short || t.title}</span></span>
-    <${Win} n=${n} sign=${typeSignOf(n, t)} />
+    <${TaskWin} n=${n} t=${t} st=${st} alive=${aliveState(t.state)} />
     <span class="table-card__row"><${Stage} stage=${stageOf(t)} worked=${st ? -1 : worked} count=${countWords(st)} flame=${aliveState(t.state) ? { name: n.element, hue: n.hue } : null} />${gem &&html`<span class="ork-gem share" data-cost=${gem}>${gem}</span>`}</span>
-    <${Pips} st=${st} element=${n.hue || n.element} alive=${aliveState(t.state)} /><${StepNow} st=${st} />
   </button>`;
 }
 

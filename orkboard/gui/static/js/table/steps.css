@@ -2,9 +2,6 @@
    the one now glowing with orkUI's own `ork-glow` rhythm (the keyframes of `.ork-elem.is-glowing`: six steps over 2.4 s, still under reduced motion). The step is a person's word: the body face, never the pixel one. */
 
 /* -- the label of a task's card: the stage and its count on the label row (the gem at its right), under it the pips and, under them, the step now in one line -------------------------------------- */
-.table-card > .table-pips { align-self: flex-start; }
-.table-steps__now { display: block; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ork-ink); font: var(--ork-type-caption); text-align: left; }
-.table-steps__now.is-activity { color: var(--ork-ink-muted); }
 
 /* -- the pips: done filled in the ink, the one now in the goal's colour (glowing while the task is at work), the next faint ------------------------------------------------------------ */
 .ork-pips.table-pips { flex: none; align-items: center; }

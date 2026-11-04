@@ -1,5 +1,5 @@
 // Picking on a party's map (docs/specs/102-the-other-maps-and-picking-on-them.md §6, decisions §141, §152, docs/mockups/s3/ state 7). While the + card's field is addressed to a party (*→ Tech ×* or *@Tech*), that
-// party's map is in picking: the strip over it (*Pick a part to point at it* · *Stop picking*; with another tab open, *Open Tech's map to pick*), a press on a card toggles it as a mark (orkUI's `.ork-picked` brackets, lifted),
+// party's map is in picking: the strip over it (*Pick a part to point at it* · *Stop picking*; with another tab open, *Open Tech's map to pick*), a press on a card toggles it as a mark (orkUI's `.ork-taken` brackets, lifted: decisions §248, spec 141 P),
 // a drag from the map's empty place draws the box and takes what it covers (pickbox.js: Shift adds; on a touch screen a long press on the empty place, then a drag), a box that takes a whole group pins the group
 // (one mark `{map, group, name}`), the whole map *all of <map>* (read as no mark, sent as none). The marks lie on the field as chips (a name and ×; past five, the first five and *and n more*). Picking ends with *Stop
 // picking*, Esc, sending, or the address taken off; what was taken stays the idea's marks until it is sent.
@@ -112,7 +112,7 @@ export const takeOff = (m) => { marks.value = marks.value.filter((x) => x !== m)
 export function sync(host, on, list) {
   for (const w of host.querySelectorAll("[data-pick-id]")) {
     const el = cardEl(w), marked = on && isMarked(list, { map: w.dataset.pickMap, id: w.dataset.pickId, group: w.dataset.pickGroup || "" });
-    if (el.classList.contains("ork-picked") !== marked) el.classList.toggle("ork-picked", marked);
+    if (el.classList.contains("ork-taken") !== marked) el.classList.toggle("ork-taken", marked);
     if (el.classList.contains("pick-lifted") !== marked) el.classList.toggle("pick-lifted", marked);
     if ((el.dataset.picked === "true") !== marked) { if (marked) el.dataset.picked = "true"; else delete el.dataset.picked; }
   }
