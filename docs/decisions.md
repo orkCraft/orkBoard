@@ -5906,3 +5906,44 @@ that asks nothing: the eye reads every step as a confirmation. The column alread
 4. **The words**: *decided: <short> · starts its spec at <time>*, *Change…*, *Start now*.
 5. **Built at once**, on the page (the hand's rows, the pile's line and list), its tests the hand's and the column's.
 The owner's call.
+
+## 241. The face-down card's ring says where the goal is: the heads of who has it in its middle, laid by how many; a play in its middle while an agreed decision waits, its ring counting the wait; filled in the rune's colour as the spec is written (4 November 2026, the owner)
+
+Changes: 206.3, 240.2; spec 128 B.3.
+
+Why: the owner: *how does the way from an idea and its Talk to the spec being made look now? We do not throw cards to
+the leaders. I see it so: while Talk runs (the cheapest of our steps) the middle of the back shows the heads of the
+leaders it talks with (empty for the Orkmaster); once the idea is talked through a play appears in the middle of the
+ring, and a press starts the work on the spec; then the leaders' faces show in the middle again, and the ring fills with
+the rune's colour.* Today the face-down card has three looks only (its ring running, yellow and still, at rest), and the
+middle of its ring is empty; cards fly to the leaders' lanes only at work. Agreed, with three changes: the leaders of
+Talk answer at once (a call each, in threads, `core/idea_talk.py`), so their heads stand together rather than take turns;
+the play is the agreed decision's *Start now* (§240), its ring counting the wait, not a question; the ring fills by what
+is written, never by the clock. And, for the heads: *not in a row: laid by how many, up to four: one large in the middle,
+two a row, three a pyramid, four a square*; past four, the owner offered *+2* in the last place; the house says no number
+(the stacks' *edges, never a number*), so the heads past four lie as a fan behind the fourth. So:
+1. **The middle holds the heads of who has the goal now** (§133.3's rule, on the column's card): the route's leaders
+   while it is in Talk and while its spec is written; **empty** while the Orkmaster reads and routes it (its ring runs,
+   as today). Laid by how many: **one** large in the middle; **two** side by side; **three** a pyramid (one over two);
+   **four** a square, two by two; **more than four**, the square with the fourth place's head fanned over the rest (their
+   edges behind it, as a stack's), **no number**. A head whose call is still running steps (`.is-working`, as at the
+   portal's corners); one that has answered or written stands still. Reduced motion: none steps.
+2. **A play in the middle while an agreed decision waits** (§240): the heads give way to orkUI's play sign, and the
+   ring counts the wait down in its eight places (the eighths the ring was drawn for, §232.4); the pile's line says
+   *decided: <short> · starts its spec at <time>* as §240 has it. A press on the play is **Start now** (`ideas.confirm`):
+   the one press a face-down card takes besides the pile's list (§206.3: the card itself is still never picked).
+   *Change…* stays in the pile's list. A decision with a leader's no, a hearing or a fork shows no play: its ring is
+   yellow and still, and the move is in the hand.
+3. **The ring fills in the rune's colour as the spec is written**: once confirmed, the share of the ring filled is the
+   share of the route's sections written, the Orkmaster's join the last share (`sections` and `sketch`); the heads in the
+   middle are those still writing. Filled whole, the card turns face up into *To review* (§224). The fill is what is
+   written, never the time passed.
+4. **Only the pile's front card** shows this; the cards under it show their edges as today. It holds under §236 (the
+   ring centred in the part that shows).
+5. **orkUI's own parts**: the sigil's arc (`--_arc`), the rune's colour (`.rite-<element>`, `--_rite`), the play sign and
+   the heads; the heads' places in the ring are the page's layout (no colour, font or corner of its own). Anything the
+   ring needs that orkUI lacks is drawn in orkUI first, then copied.
+6. **Built** after §240, on the page (`table/piles.js` `DownCard`, the column's sheet) with what the snapshot gives (the
+   route's leaders, who has answered in Talk, which sections are written; a field added to the node where it lacks one),
+   its tests the column's browser test.
+The owner's call.
