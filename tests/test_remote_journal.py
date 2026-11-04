@@ -71,7 +71,7 @@ def test_a_config_reads_with_defaults_and_ignores_a_bad_value(tmp_path):
 def test_pack_holds_the_listed_files_and_never_the_token(town):
     repo, _, state = town
     files = rj.pack(repo, state, NOW)
-    assert set(files) == {"status.md", "events.jsonl", "spend.json", "spend.txt", "calls/2026-11-03-board.jsonl"}
+    assert set(files) == {"status.md", "status.json", "taken.json", "events.jsonl", "spend.json", "spend.txt", "calls/2026-11-03-board.jsonl"}
     assert not any("drive" in n or ".env" in n for n in files)
     status = files["status.md"]
     assert "jump" in status and "failed" in status and "unreadable" in status
@@ -99,7 +99,7 @@ def test_send_makes_the_branch_and_touches_nothing_of_the_person(town):
     before = (git(repo, "status", "--porcelain"), git(repo, "rev-parse", "HEAD"), git(repo, "branch", "--show-current"))
     cfg = rj.read_config(repo)
     got = rj.send(repo, state, cfg, NOW)
-    assert got["sent"] is True and got["files"] == 5
+    assert got["sent"] is True and got["files"] == 7
     assert (git(repo, "status", "--porcelain"), git(repo, "rev-parse", "HEAD"), git(repo, "branch", "--show-current")) == before
     assert "status.md" in git(origin, "ls-tree", "--name-only", "orkboard/journal")
     assert "drive.json" not in git(origin, "ls-tree", "-r", "--name-only", "orkboard/journal")
@@ -153,3 +153,61 @@ def test_drive_journal_dry_run_lists_and_sends_nothing(town, capsys):
     out = capsys.readouterr().out
     assert "status.md" in out and "bytes" in out and "held back" in out and "drive.json" not in out
     assert git(origin, "branch", "--list", "orkboard/journal").strip() == ""
+
+
+def test_status_json_is_the_data_status_md_is_written_from(town):
+    repo, _, state = town
+    (state / "ideas" / "jump" / "state.json").write_text(json.dumps({"state": "working", "error": ""}))
+    data = rj.status_data(repo, state, NOW, repo, needs={"jump"})
+    goals = {g["slug"]: g for party in data["parties"] for g in party["goals"]}
+    assert data["v"] == 1 and data["written"] == "2026-11-03T12:00:00" and data["failed"] == [] and data["taken"] == []
+    assert goals["jump"] == {"slug": "jump", "title": "jump", "state": "working", "phase": "work", "needs_you": True, "error": ""}
+    assert goals["broken"]["state"] == "unreadable" and goals["broken"]["needs_you"] is False
+    (state / "ideas" / "jump" / "state.json").write_text(json.dumps({"state": "failed", "error": "the gate\nwas red"}))
+    data = rj.status_data(repo, state, NOW, repo)
+    assert data["failed"] == [{"slug": "jump", "title": "jump", "error": "the gate was red"}]
+    md = rj.status_md(data)
+    assert "- jump (`jump`): failed" in md and "Written 2026-11-03 12:00:00." in md and "the gate was red" in md
+    files = rj.pack(repo, state, NOW, needs={"broken"})
+    assert any(g["needs_you"] for party in json.loads(files["status.json"])["parties"] for g in party["goals"] if g["slug"] == "broken")
+    assert files["status.md"].startswith("# Orkboard journal")
+
+
+def test_taken_json_keeps_thirty_days_and_status_json_seven(town):
+    repo, _, state = town
+    day = lambda n: (NOW - dt.timedelta(days=n)).isoformat()      # noqa: E731
+    rj.write_taken(state, [{"id": f"id{n}", "by": "mac", "at": day(n), "slug": "s", "error": ""} for n in (1, 6, 8, 29, 31)])
+    files = rj.pack(repo, state, NOW)
+    assert [r["id"] for r in json.loads(files["taken.json"])["taken"]] == ["id1", "id6", "id8", "id29"]
+    assert [r["id"] for r in json.loads(files["status.json"])["taken"]] == ["id1", "id6"]
+    assert json.loads(files["taken.json"])["v"] == 1
+
+
+def test_status_json_and_taken_json_are_scrubbed_as_every_file_is(town):
+    repo, _, state = town
+    rj.write_taken(state, [{"id": "id1", "by": "mac", "at": NOW.isoformat(), "slug": "", "error": "ghp_" + "c" * 32}])
+    files, held = rj.pack_counted(repo, state, NOW)
+    assert "ghp_" not in files["taken.json"] + files["status.json"] and held >= 2
+
+
+def test_a_change_of_taken_is_news_and_the_written_time_is_not(town):
+    repo, origin, state = town
+    config = rj.JournalConfig()
+    assert rj.send(repo, state, config, NOW)["sent"]
+    assert rj.send(repo, state, config, NOW + dt.timedelta(minutes=20))["why"] == "nothing changed"
+    rj.write_taken(state, [{"id": "id1", "by": "mac", "at": NOW.isoformat(), "slug": "a-goal", "error": ""}])
+    assert rj.send(repo, state, config, NOW + dt.timedelta(minutes=21))["sent"]
+    assert json.loads(git(origin, "show", "orkboard/journal:taken.json"))["taken"][0]["slug"] == "a-goal"
+
+
+def test_turn_on_writes_the_journal_table_with_the_inbox(tmp_path):
+    assert rj.read_config(tmp_path) is None
+    assert rj.turn_on(tmp_path).inbox == "orkboard/inbox"
+    text = (tmp_path / "orkcraft.toml").read_text()
+    assert "[journal]" in text and 'inbox = "orkboard/inbox"' in text and "every = 15" in text
+    other = tmp_path / "other"
+    other.mkdir()
+    (other / "orkcraft.toml").write_text('[gate]\nalways = ["x"]\n\n[journal]\nevery = 5\n\n[more]\na = 1\n')
+    c = rj.turn_on(other)
+    assert (c.every, c.inbox) == (5, "orkboard/inbox") and "[gate]" in (other / "orkcraft.toml").read_text()
+    assert rj.turn_on(other).inbox == "orkboard/inbox" and (other / "orkcraft.toml").read_text().count("inbox =") == 1

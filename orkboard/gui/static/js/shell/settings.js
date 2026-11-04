@@ -11,6 +11,7 @@ import { Place, closePlace, openPlace } from "../frame/place.js";
 import { currentProject } from "./projects.js";
 import { saveLogs } from "./errors.js";
 import { UpdatesField } from "./update.js";
+import { JournalAsk } from "./journalask.js";
 import { nightWordsOf, workAtNight } from "../hand/nightwords.js";
 
 
@@ -77,6 +78,7 @@ export function SettingsPlace() {
       <${UpdatesField} />
       <div class="shell-field"><span class="ok-font-label">Your phone</span>
         <span><button type="button" class="ork-btn" onClick=${() => openPlace("pair", {}, "Pair a phone")}>Pair a phone</button></span></div>
+      <${JournalAsk} />
       <${AwakeField} />
       <div class="shell-gear__logs"><span class="ok-font-label">Download today's logs</span>
         <button type="button" class="ork-btn" onClick=${() => saveLogs("", 1)}>Today</button>

@@ -12,7 +12,7 @@
     remote_journal.due(state_dir, config, now)                # `every` minutes since the last attempt?
     remote_journal.send(root, state_dir, config)              # {"sent": True, "commit": …, "files": n, "held_back": n}
 
-What goes: `status.md` (when it was written, the parties and their goals by state, what failed), `events.jsonl` (the event
+What goes: `status.md` and `status.json` (spec 136 A: when it was written, the parties and their goals by state and phase, which need the person, what failed; the Markdown is written from the data), `taken.json` (the goals of the phone's inbox taken, decisions §243.4, realm/remote_inbox.py), `events.jsonl` (the event
 log's lines of the last 3 days), `spend.json` and `spend.txt` (realm/spend_report.py, the last 7 days) and
 `calls/<day>-<building>.jsonl` (each call's tool, model, step, tokens, cost and exit code, the last 3 days). Only with
 `prompts = true`, the `*.json.gz` call files beside them. **Never** `.orkcraft/drive.json` (the server's token), an `.env` or
@@ -62,6 +62,7 @@ class JournalConfig:
     branch: str = "orkboard/journal"
     every: int = 15
     prompts: bool = False
+    inbox: str = ""             # the branch the phone drops goals into (decisions §243.2, spec 136): "" reads none
 
 
 def read_config(root: Path) -> JournalConfig | None:
@@ -73,12 +74,30 @@ def read_config(root: Path) -> JournalConfig | None:
     if not isinstance(table, dict):
         return None
     d = JournalConfig()
-    remote, branch, every, prompts = (table.get(k, v) for k, v in
-                                      (("remote", d.remote), ("branch", d.branch), ("every", d.every), ("prompts", d.prompts)))
+    remote, branch, every, prompts, inbox = (table.get(k, v) for k, v in
+                                             (("remote", d.remote), ("branch", d.branch), ("every", d.every), ("prompts", d.prompts), ("inbox", d.inbox)))
     ok = lambda s: isinstance(s, str) and re.fullmatch(r"[A-Za-z0-9._/-]{1,100}", s) and not s.startswith("-") and ".." not in s
     return JournalConfig(remote if ok(remote) else d.remote, branch if ok(branch) else d.branch,
                          every if isinstance(every, int) and not isinstance(every, bool) and every >= 1 else d.every,
-                         prompts if isinstance(prompts, bool) else d.prompts)
+                         prompts if isinstance(prompts, bool) else d.prompts, inbox if ok(inbox) and inbox != branch else d.inbox)
+
+
+def turn_on(root: Path, inbox: str = "orkboard/inbox") -> JournalConfig:
+    """Write `[journal]` with `inbox` into `orkcraft.toml` (spec 136 A.2; the person said yes): the table made when missing, `inbox` added to
+    one that has none, every other line kept. Raises OSError when the file cannot be written."""
+    path = Path(root) / FILE
+    try:
+        text = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        text = ""
+    if not re.search(r"^\[journal\]\s*$", text, flags=re.M):
+        text += ("\n" if text and not text.endswith("\n") else "") + ("\n" if text else "") + \
+            f'[journal]\nremote = "origin"\nbranch = "orkboard/journal"\nevery = 15\ninbox = "{inbox}"\n'
+    elif not re.search(r"^inbox\s*=", text.split("[journal]", 1)[1].split("\n[", 1)[0], flags=re.M):
+        text = re.sub(r"^\[journal\]\s*$", lambda m: m.group(0) + f'\ninbox = "{inbox}"', text, count=1, flags=re.M)
+    path.write_text(text, encoding="utf-8")
+    return read_config(root) or JournalConfig(inbox=inbox)
+
 
 
 def scrub(text: str) -> tuple[str, int]:
@@ -97,7 +116,49 @@ def _day(now: dt.datetime, back: int) -> str:
     return (now - dt.timedelta(days=back)).strftime("%Y-%m-%d")
 
 
-def _status(root: Path, state_dir: Path, now: dt.datetime, pages: Path) -> str:
+PHASES = {"routed": "talk", "talk": "talk", "decided": "talk", "raw": "spec", "reading": "spec", "asks": "spec", "ready": "spec",
+          "sketch": "spec", "sections": "spec", "planning": "work", "plan": "work", "working": "work", "failed": "work", "done": "done"}
+TAKEN_FILE, TAKEN_DAYS, TAKEN_SHOWN_DAYS = "taken.json", 30, 7
+
+
+def _naive(t: dt.datetime) -> dt.datetime:
+    return t.astimezone().replace(tzinfo=None) if t.tzinfo else t
+
+
+def read_taken(state_dir: Path, now: dt.datetime | None = None, days: int = TAKEN_DAYS) -> list[dict]:
+    """The goals taken from the inbox (decisions §243.4), as this machine keeps them in `<state_dir>/taken.json`:
+    `[{id, by, at, slug, error}]`, the last `days` days. Spec 136 A."""
+    try:
+        data = json.loads((Path(state_dir) / TAKEN_FILE).read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    rows = data.get("taken") if isinstance(data, dict) else data
+    cut = _naive(now or dt.datetime.now()) - dt.timedelta(days=days)
+    out = []
+    for r in rows if isinstance(rows, list) else []:
+        if not isinstance(r, dict) or not isinstance(r.get("id"), str):
+            continue
+        try:
+            if _naive(dt.datetime.fromisoformat(str(r.get("at") or ""))) < cut:
+                continue
+        except ValueError:
+            pass                                    # no readable time: kept, it is not old for that
+        out.append({"id": r["id"], "by": str(r.get("by") or ""), "at": str(r.get("at") or ""), "slug": str(r.get("slug") or ""),
+                    "error": str(r.get("error") or "")})
+    return out
+
+
+def write_taken(state_dir: Path, taken: list[dict]) -> None:
+    Path(state_dir).mkdir(parents=True, exist_ok=True)
+    tmp = Path(state_dir) / (TAKEN_FILE + ".tmp")
+    tmp.write_text(json.dumps({"v": 1, "taken": taken}, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
+    os.replace(tmp, Path(state_dir) / TAKEN_FILE)
+
+
+def status_data(root: Path, state_dir: Path, now: dt.datetime, pages: Path, needs: frozenset[str] | set[str] = frozenset()) -> dict:
+    """What `status.json` holds (spec 136 A): `{v, written, parties: [{slug, title, goals: [{slug, title, state, phase, needs_you,
+    error}]}], failed: [{slug, title, error}], taken}`. `needs`: the slugs of the goals a card waits for in the hand (the host
+    reads them from the Board's Needs you; this module knows no face). `status.md` is written from it."""
     try:
         parties = ideas.tracks(pages, make=False)
     except Exception:
@@ -106,8 +167,8 @@ def _status(root: Path, state_dir: Path, now: dt.datetime, pages: Path) -> str:
         titles = {i["slug"]: (i["title"], i["track"]) for i in ideas.ideas(pages)}
     except Exception:
         titles = {}
-    by_party: dict[str, list[str]] = {}
-    failed: list[str] = []
+    by_party: dict[str, list[dict]] = {}
+    failed: list[dict] = []
     folder = Path(state_dir) / "ideas"
     for d in sorted(folder.iterdir()) if folder.is_dir() else []:
         title, party = titles.get(d.name, (d.name, ""))
@@ -117,31 +178,46 @@ def _status(root: Path, state_dir: Path, now: dt.datetime, pages: Path) -> str:
             err = str(st.get("error") or "") if isinstance(st, dict) else ""
         except (OSError, ValueError):
             word, err = "unreadable", ""
-        by_party.setdefault(party, []).append(f"- {title} (`{d.name}`): {word}")
+        err = " ".join(err.split())[:200]
+        by_party.setdefault(party, []).append({"slug": d.name, "title": title, "state": word, "phase": PHASES.get(word, ""),
+                                               "needs_you": d.name in needs, "error": err})
         if word == "failed":
-            failed.append(f"- {title} (`{d.name}`)" + (f": {' '.join(err.split())[:200]}" if err else ""))
-    lines = ["# Orkboard journal", "", f"Written {now.strftime('%Y-%m-%d %H:%M:%S')}.", "", "## Parties and goals", ""]
+            failed.append({"slug": d.name, "title": title, "error": err})
     names = {p["slug"]: p["title"] for p in parties}
-    for slug in [*names, *(k for k in by_party if k not in names)]:
-        if slug in by_party or slug in names:
-            lines += [f"### {names.get(slug) or slug or 'No party'}", "", *(by_party.get(slug) or ["- no goals"]), ""]
-    if not by_party and not names:
+    out = [{"slug": slug, "title": names.get(slug) or slug or "No party", "goals": by_party.get(slug, [])}
+           for slug in [*names, *(k for k in by_party if k not in names)]]
+    return {"v": 1, "written": now.isoformat(timespec="seconds"), "parties": out, "failed": failed,
+            "taken": read_taken(state_dir, now, TAKEN_SHOWN_DAYS)}
+
+
+def status_md(data: dict) -> str:
+    """`status.md`, from `status_data`'s data."""
+    written = str(data.get("written") or "").replace("T", " ")[:19]
+    lines = ["# Orkboard journal", "", f"Written {written}.", "", "## Parties and goals", ""]
+    for party in data["parties"]:
+        lines += [f"### {party['title']}", "", *([f"- {g['title']} (`{g['slug']}`): {g['state']}" for g in party["goals"]] or ["- no goals"]), ""]
+    if not data["parties"]:
         lines += ["No parties or goals yet.", ""]
-    lines += ["## Failed", "", *(failed or ["Nothing failed."]), ""]
+    lines += ["## Failed", "", *([f"- {f['title']} (`{f['slug']}`)" + (f": {f['error']}" if f["error"] else "") for f in data["failed"]]
+                                 or ["Nothing failed."]), ""]
     return "\n".join(lines)
 
 
 def pack(root: Path, state_dir: Path, now: dt.datetime | None = None, pages: Path | None = None,
-         prompts: bool = False) -> dict[str, str | bytes]:
-    """The files to send, path -> text (bytes for a `.json.gz`). `pages`: where the Board's pages are (default `root`)."""
-    return pack_counted(root, state_dir, now, pages, prompts)[0]
+         prompts: bool = False, needs: frozenset[str] | set[str] = frozenset()) -> dict[str, str | bytes]:
+    """The files to send, path -> text (bytes for a `.json.gz`). `pages`: where the Board's pages are (default `root`);
+    `needs`: the goals a card waits for in the hand (`status_data`)."""
+    return pack_counted(root, state_dir, now, pages, prompts, needs)[0]
 
 
 def pack_counted(root: Path, state_dir: Path, now: dt.datetime | None = None, pages: Path | None = None,
-                 prompts: bool = False) -> tuple[dict[str, str | bytes], int]:
+                 prompts: bool = False, needs: frozenset[str] | set[str] = frozenset()) -> tuple[dict[str, str | bytes], int]:
     """`pack` and how many lines were held back."""
     root, now = Path(root), now or dt.datetime.now()
-    files: dict[str, str | bytes] = {"status.md": _status(root, Path(state_dir), now, Path(pages or root))}
+    data = status_data(root, Path(state_dir), now, Path(pages or root), needs)
+    files: dict[str, str | bytes] = {"status.md": status_md(data),
+                                     "status.json": json.dumps(data, ensure_ascii=False, indent=1) + "\n",
+                                     TAKEN_FILE: json.dumps({"v": 1, "taken": read_taken(state_dir, now)}, ensure_ascii=False, indent=1) + "\n"}
     try:
         events = [r for r in event_log.read(root, since=_day(now, EVENT_DAYS)) if r.get("event") != event_log.JOURNAL_SENT]   # its own line would change what it sends
         files["events.jsonl"] = "".join(json.dumps(r, ensure_ascii=False) + "\n" for r in events)
@@ -199,7 +275,10 @@ def _digest(files: dict[str, str | bytes], where: str = "") -> str:
     h = hashlib.sha256(where.encode())
     for name in sorted(files):
         body = files[name]
-        body = re.sub(r"^Written .*$", "", body, count=1, flags=re.M) if isinstance(body, str) and name == "status.md" else body
+        if isinstance(body, str) and name == "status.md":
+            body = re.sub(r"^Written .*$", "", body, count=1, flags=re.M)
+        elif isinstance(body, str) and name == "status.json":
+            body = re.sub(r'^ *"written": .*$', "", body, count=1, flags=re.M)
         h.update(name.encode() + b"\0" + (body if isinstance(body, bytes) else body.encode("utf-8")) + b"\0")
     return h.hexdigest()
 
@@ -227,13 +306,13 @@ def _git(root: Path, run: Callable, env: dict, *args: str, data: bytes | None = 
 
 
 def send(root: Path, state_dir: Path, config: JournalConfig, now: dt.datetime | None = None,
-         run: Callable = subprocess.run, pages: Path | None = None) -> dict:
+         run: Callable = subprocess.run, pages: Path | None = None, needs: frozenset[str] | set[str] = frozenset()) -> dict:
     """Pack, commit to the journal branch by plumbing and push without force. Never raises."""
     now = now or dt.datetime.now()
     root, state_dir = Path(root), Path(state_dir)
     index = state_dir / "journal.index"
     try:
-        result = _send(root, state_dir, config, now, run, pages, index)
+        result = _send(root, state_dir, config, now, run, pages, index, needs)
         digest = result.pop("digest", "")
     except Exception as e:                      # offline, no right, no such remote, no git: said, not raised
         result, digest = {"sent": False, "why": " ".join(str(e).split())[:300] or type(e).__name__}, ""
@@ -249,8 +328,9 @@ def send(root: Path, state_dir: Path, config: JournalConfig, now: dt.datetime | 
     return result
 
 
-def _send(root: Path, state_dir: Path, config: JournalConfig, now: dt.datetime, run: Callable, pages: Path | None, index: Path) -> dict:
-    files, held = pack_counted(root, state_dir, now, pages, config.prompts)
+def _send(root: Path, state_dir: Path, config: JournalConfig, now: dt.datetime, run: Callable, pages: Path | None, index: Path,
+          needs: frozenset[str] | set[str] = frozenset()) -> dict:
+    files, held = pack_counted(root, state_dir, now, pages, config.prompts, needs)
     state_dir.mkdir(parents=True, exist_ok=True)
     digest = _digest(files, f"{config.remote}:{config.branch}")
     if digest == _stamp(state_dir).get("digest"):
