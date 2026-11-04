@@ -223,17 +223,19 @@ def test_a_full_vial_is_danger_and_the_week_that_is_low_warns_the_whole_potion(g
 
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_two_shares_stand_under_the_potion_the_now_share_bold_and_the_weeks_muted(gui, width):
+def test_the_now_share_stands_under_the_potion_bold_and_the_weeks_muted_only_while_the_week_runs_out_first(gui, width):
     pg, host, log = open_mana(gui, TOOLS[:3], width)
     try:
-        b = pot(pg, "claude")
+        assert pot(pg, "claude").locator(".hand-pot__week").count() == 0 and pot(pg, "claude").locator(".hand-pot__share").inner_text() == "30%"      # 30 % now, 82 % of the week: the now share alone (spec 140 C1)
+        assert "82% of the week" in pot(pg, "claude").get_attribute("aria-label")                                       # the week stays in the words
+        b = pot(pg, "codex")
         share, week = b.locator(".hand-pot__share"), b.locator(".hand-pot__week")
-        assert share.inner_text() == "30%" and share.evaluate("e => getComputedStyle(e).fontWeight") == "600"
-        assert week.inner_text() == ("82%" if width == "narrow" else "week 82%")                                         # the phone's width keeps the share alone, the words are on the control
+        assert share.inner_text() == "100%" and share.evaluate("e => getComputedStyle(e).fontWeight") == "600"
+        assert week.inner_text() == ("45%" if width == "narrow" else "week 45%")                                         # the phone's width keeps the share alone, the words are on the control
         assert week.evaluate("e => getComputedStyle(e).color") == token(pg, "--ork-ink-muted") and week.evaluate("e => getComputedStyle(e).fontWeight") != "600"
         assert share.bounding_box()["y"] < week.bounding_box()["y"]                                                      # the week's under the now share
         assert [x.locator(".hand-pot__share").inner_text() for x in pg.locator(".hand-pot").all()] == ["30%", "100%", "70%"]
-        assert [x.locator(".hand-pot__week").inner_text().replace("week ", "") for x in pg.locator(".hand-pot").all()] == ["82%", "45%", "18%"]
+        assert [x.locator(".hand-pot__week").inner_text().replace("week ", "") if x.locator(".hand-pot__week").count() else "" for x in pg.locator(".hand-pot").all()] == ["", "45%", "18%"]
         if width == "wide":
             assert pg.locator(".hand-mana").bounding_box()["x"] + pg.locator(".hand-mana").bounding_box()["width"] == pytest.approx(pg.viewport_size["width"], abs=1)
         narrow.no_sideways(pg)
@@ -270,8 +272,8 @@ def test_a_tool_with_one_window_named_so_says_it_under_its_share_its_bottle_its_
         assert b.get_attribute("aria-label") == "Pi: 55% of the month left"
         assert "--ork-potion-left:0.55" in b.locator(".ork-potion").get_attribute("style").replace(" ", "")
         gone = pot(pg, "codex")
-        assert gone.locator(".hand-pot__share").inner_text() == "?" and gone.locator(".hand-pot__week").count() == 0 and gone.get_attribute("aria-label") == "Codex: limits not read yet"
-        assert "--ork-potion-left:0" in gone.locator(".ork-potion").get_attribute("style").replace(" ", "") and gone.locator(".ork-potion").get_attribute("class").split() == ["ork-potion"]
+        assert gone.locator(".hand-pot__share").inner_text() == "" and gone.locator(".hand-pot__week").count() == 0 and gone.get_attribute("aria-label") == "Codex: Limits not read"
+        assert gone.locator(".ork-potion").count() == 0                                                                  # no bottle (spec 140 C1)
         shot(pg, "wide-one-window")
     finally:
         pg.close()
@@ -283,7 +285,7 @@ def test_a_dry_potion_is_an_empty_bottle_of_the_weeks_size_in_the_danger_colour(
     try:
         hermes = pot(pg, "hermes")
         assert hermes.get_attribute("data-size") == "medium" and "--ork-potion-left:0" in hermes.locator(".ork-potion").get_attribute("style").replace(" ", "")
-        assert hermes.get_attribute("data-level") == "danger" and hermes.locator(".hand-pot__share").inner_text() == "0%"
+        assert hermes.get_attribute("data-level") == "danger" and hermes.locator(".hand-pot__share").inner_text() == f"back {SOON_SAID}"     # empty: the hour it comes back stands in the share's place (spec 138 A.5)
         assert hermes.get_attribute("aria-label") == f"Hermes: 0% of the 5 hours left, until {SOON_SAID}; 50% of the week, until {WEEK_SAID}"
         assert pot(pg, "agy").get_attribute("data-size") == "vial"
         shot(pg, "wide-dry")
@@ -296,7 +298,7 @@ def test_a_card_that_spends_hatches_the_liquid_the_now_share_shows(gui):
     pg, host, log = open_mana(gui, [two("claude", "Claude Code", 0.5, 0.82), two("codex", "Codex", 1.0, 0.45)])
     try:
         pg.locator(".hand-pot").first.wait_for(timeout=WAIT_MS)
-        assert pot(pg, "claude").locator(".hand-pot__took").count() == 0 and pot(pg, "claude").locator(".hand-pot__week").inner_text() == "week 82%"
+        assert pot(pg, "claude").locator(".hand-pot__took").count() == 0 and pot(pg, "claude").locator(".hand-pot__week").count() == 0
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -324,7 +326,7 @@ def test_upright_on_a_phone_a_tool_is_a_bottle_by_its_week_its_now_share_in_the_
     try:
         tools = pg.locator(".up-pots .up-pot")
         tools.first.wait_for(timeout=WAIT_MS)
-        assert [t.locator(".up-pot__share").inner_text() for t in tools.all()] == ["30%", "100%"] and tools.locator(".ork-potion.small").count() == 2      # a bottle each on the phone's top row (spec 117 B)
+        assert [t.locator(".up-pot__share").inner_text() for t in tools.all()] == ["30%", f"back {WEEK_SAID}"] and tools.locator(".ork-potion.small").count() == 2      # a bottle each on the phone's top row (spec 117 B)
         assert [t.get_attribute("data-size") for t in tools.all()] == ["large", "vial"]                                    # the bottle is the week's: 82% large, 4% the vial
         assert [t.get_attribute("data-level") for t in tools.all()] == ["ok", "danger"]                                  # a full tool whose week is spent is red
         assert tools.nth(0).get_attribute("aria-label").startswith("Claude Code: 30% of the 5 hours left") and "82% of the week" in tools.nth(0).get_attribute("aria-label")
@@ -497,7 +499,7 @@ def test_a_full_week_is_a_large_full_bottle_and_a_low_five_hours_a_large_bottle_
         full, low = pot(pg, "claude"), pot(pg, "codex")
         assert full.get_attribute("data-size") == "large" and full.get_attribute("data-level") == "ok" and "--ork-potion-left:1" in full.locator(".ork-potion").get_attribute("style").replace(" ", "")
         assert low.get_attribute("data-size") == "large" and low.get_attribute("data-level") == "danger"                  # the week is plentiful, the 5 hours are not: a large bottle, one row of red
-        assert low.locator(".hand-pot__share").inner_text() == "4%" and low.locator(".hand-pot__week").inner_text() == "week 90%"
+        assert low.locator(".hand-pot__share").inner_text() == f"back {SOON_SAID}" and low.locator(".hand-pot__week").count() == 0
         shot(pg, "wide-full-and-five-hours-low")
     finally:
         pg.close()
@@ -558,6 +560,18 @@ def test_at_390_three_tools_take_no_more_width_than_before_so_the_die_overlaps_t
         assert die["x"] + die["width"] <= mana["x"] + 1 and die["x"] >= 200, die                                  # the die ends where the potions begin, as far right as on main
         assert pots[0].locator(".hand-pot__slot").bounding_box()["width"] == 28
         shot(pg, "fix-narrow-die")
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_the_hour_a_tool_comes_back_stands_under_the_potion_at_the_dangers_level_and_not_above_it(gui):
+    pg, host, log = open_mana(gui, [two("claude", "Claude Code", 0.3, 0.82), two("codex", "Codex", 0.04, 0.9), two("hermes", "Hermes", 0.5, 0.0, later=WEEK)])
+    try:
+        assert pot(pg, "claude").locator(".hand-pot__share").inner_text() == "30%"                                       # above the danger's level: the share
+        assert pot(pg, "codex").locator(".hand-pot__share").inner_text() == f"back {SOON_SAID}"                          # 4 % of the 5 hours: back at its reset, today as HH:MM
+        assert pot(pg, "hermes").locator(".hand-pot__share").inner_text() == f"back {WEEK_SAID}"                        # the week is out: back on its day
+        assert "4% of the 5 hours" in pot(pg, "codex").get_attribute("aria-label") and "90% of the week" in pot(pg, "codex").get_attribute("aria-label")      # the words keep both shares
     finally:
         pg.close()
     assert not log, "\n".join(log)

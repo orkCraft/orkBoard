@@ -7,7 +7,6 @@ import { html, cls } from "../html.js";
 import { Elem, Head, Sign } from "../orkui.js";
 import { picked } from "../frame/state.js";
 import { board } from "../board/store.js";
-import { typeTone } from "../arena/goalwords.js";
 import { everBack } from "./backcard.js";
 import { leftWords, shareOf } from "./backbody.js";
 import { waitRuns } from "./data.js";
@@ -126,18 +125,17 @@ function DownCard({ n, i, front, onPress, open }) {
   return wait ? html`${card}<${Play} n=${n} />` : card;
 }
 
-/** A card face up (112 x 157): its rune and short name at its top, its type in the window, and its foot (20 px: rune, short name, then its time or its leaders' heads, the sign of its state). `first`: the front of To review shows the wait as a bar in eighths and its time left. */
+/** A card face up (112 px wide, its height its content's: decisions §249.1, spec 142 A): **no window**; its rune and its whole name at its top (three lines at most, `line-clamp: 3`; the short name only where the title is missing), and its foot (20 px: the rune, the tasks done, then its time or its leaders' heads, the sign of its state; **no name in it**, spec 140 A2: the whole name is in the foot's `title` and `aria-label`). `first`: the front of To review shows the wait as a bar in eighths and its time left. */
 function UpCard({ n, i, pile, off, first, onPress }) {
   const el = n.element || "", hue = n.hue || el, on = picked.value === n.slug, work = pile === "work" && !off, ripe = n.back?.ripe, running = pile === "review" && ripe && !ripe.by && !ripe.held;
   if (pile === "review") everBack.add(n.slug);
-  const sign = n.type?.sign || "", moon = off === "night", tasks = work ? tasksCount(n) : null;                    // a goal at work says its tasks done of all at its foot (spec 129 H2.3)
+  const moon = off === "night", name = n.title || n.short || "", tasks = work ? tasksCount(n) : null;                    // a goal at work says its tasks done of all at its foot (spec 129 H2.3)
   const extra = pile === "review" ? (running ? (first ? html`<span class="col-when">${leftWords(ripe.left_s)}</span>` : html`<span class="col-when">~${clock(ripe.left_s)}</span>`) : null)
     : off === "held" ? html`<span class="col-when"><${Sign} name="pause" />Held</span>` : moon ? html`<span class="col-when"><${Sign} name="moon" />${night()}</span>` : html`<${Heads} n=${n} />`;
   return html`<button type="button" class=${cls("ork-card col-card col-card--up", { "ork-picked": on, asks: !!n.asks_you && !failed(n), fails: failed(n), "is-off": !!off })} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state} data-pile=${pile} data-off=${off || undefined} style=${`--i:${i}`}
     aria-pressed=${String(on)} aria-label=${`${n.title}: ${sayOf(n, pile, off, first)}${tasks ? `, ${tasks.done} of ${tasks.total} tasks finished` : ""}`} onClick=${() => onPress(n, pile, off)}>
-    <span class="col-hd"><${Elem} name=${el} hue=${hue} dim=${!el} glowing=${work} /><span class="col-nm">${n.short || n.title}</span></span>
-    <span class=${cls("table-card__win col-win", `is-${typeTone(n)}`)}>${sign && (sign.startsWith("tool:") ? html`<span class=${`ork-tool ${sign.slice(5)}`} aria-hidden="true"></span>` : html`<${Sign} name=${sign} big=${true} />`)}${moon && html`<${Sign} name="moon" big=${true} />`}</span>
-    <span class=${cls("col-foot", `col-c-${hue || "dust"}`)}><${Elem} name=${el} hue=${hue} dim=${!el} glowing=${work} /><span class="col-fnm">${n.short || n.title}</span>${tasks && html`<span class="col-count" data-count=${`${tasks.done}/${tasks.total}`} title=${`${tasks.done} of ${tasks.total} tasks finished`}>${tasks.done}/${tasks.total}</span>`}${extra}<${Mark} n=${n} />
+    <span class="col-hd"><${Elem} name=${el} hue=${hue} dim=${!el} glowing=${work} /><span class="col-nm">${name}</span></span>
+    <span class=${cls("col-foot", `col-c-${hue || "dust"}`)} title=${name} aria-label=${name}><${Elem} name=${el} hue=${hue} dim=${!el} glowing=${work} />${tasks && html`<span class="col-count" data-count=${`${tasks.done}/${tasks.total}`} title=${`${tasks.done} of ${tasks.total} tasks finished`}>${tasks.done}/${tasks.total}</span>`}${extra}<${Mark} n=${n} />
       ${first && running && html`<span class="col-wbar" style=${`--s:${shareOf(ripe)}`} aria-hidden="true"><i></i></span>`}</span>
   </button>`;
 }
@@ -145,12 +143,12 @@ function UpCard({ n, i, pile, off, first, onPress }) {
 /** One pile: its title and, under it, what it says (*writing: Round timer*), its cards stacked by `--i` (the foot of each under the one above it), the thin edges when more lie under them. Empty: *Nothing here*. */
 export function Pile({ id, title, items, under = "", onPress, open = false }) {
   const shown = items.slice(0, SHOWN), down = id === "analysis", peek = down ? 4 : PEEK, tall = down ? 112 : 157, edges = items.length > SHOWN;
-  const height = tall + (shown.length - 1) * peek + (edges ? EDGES : 0);
+  const beneath = (shown.length - 1) * peek + (edges ? EDGES : 0), height = tall + beneath;      // face up the height is the cards' own: only what lies under the front is known (`--under`)
   return html`<section class="col-sec" data-pile=${id} aria-label=${title}>
     <div class="col-plab"><span class="col-plab__t">${title}</span><span class=${cls("col-under", { "is-asks": under === "waits for you" })} data-under=${id}>${under}</span></div>
-    ${shown.length ? html`<div class=${cls("col-pile", { "is-down": down })} style=${`--h:${height}px;--peek:${peek}px`} data-count=${items.length}>
+    ${shown.length ? html`<div class=${cls("col-pile", { "is-down": down, "is-up": !down })} style=${down ? `--h:${height}px;--peek:${peek}px` : `--under:${beneath}px;--peek:${peek}px`} data-count=${items.length}>
       ${shown.map(({ n, off }, i) => (down ? html`<${DownCard} key=${n.slug} n=${n} i=${i} front=${i === 0} onPress=${onPress} open=${open} />` : html`<${UpCard} key=${n.slug} n=${n} i=${i} pile=${id} off=${off} first=${i === 0} onPress=${onPress} />`))}
-      ${edges && html`<span class="col-edges" style=${`top:${tall + (shown.length - 1) * peek}px`} aria-hidden="true"></span>`}
+      ${edges && html`<span class="col-edges" style=${down ? `top:${height - (edges ? EDGES : 0)}px` : undefined} aria-hidden="true"></span>`}
     </div>` : html`<p class="col-none">Nothing here</p>`}
   </section>`;
 }

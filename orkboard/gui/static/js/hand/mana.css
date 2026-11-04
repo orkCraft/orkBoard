@@ -25,13 +25,14 @@
 .hand-pot .ork-mark { display: block; }
 .hand-pot__initial { display: block; height: 16px; color: var(--ork-ink-muted); font: var(--ork-type-body); font-weight: 600; line-height: 16px; }
 .hand-pot__share { color: var(--ork-ink); font: var(--ork-type-caption); font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; text-align: center; }
+.hand-pot__pct { display: none; }                                                                                  /* the share stands again where the hour does not fit (the narrow width) */
 .hand-pot__took { color: var(--ork-ink-muted); font-weight: 400; }
 .hand-pot__week { color: var(--ork-ink-muted); font: var(--ork-type-caption); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: center; }
 .hand-pot__slot { display: flex; flex: none; align-items: flex-end; justify-content: center; width: 42px; height: 54px; }                       /* the large bottle's box at 3 px a cell (orkUI: 14 x 18) */
 .hand-pot__slot.is-small { width: 28px; height: 36px; }                                                                                 /* and at the small size, 2 px a cell */
 .hand-pot.is-warn .hand-pot__share { color: var(--ork-alert); }
 .hand-pot.is-danger .hand-pot__share { color: var(--ork-danger); }
-.hand-pot.is-unread .hand-pot__share { color: var(--ork-ink-muted); }
+.hand-pot.is-unread .ork-mark, .hand-pot.is-unread .hand-pot__initial { opacity: 0.5; }                                      /* a tool whose limits were not read: its mark muted, no bottle (spec 140 C1) */
 .hand-pot--more { align-self: center; justify-content: center; min-height: 44px; }
 .hand-pot--more .hand-pot__initial { color: var(--ork-ink-muted); font: var(--ork-type-caption); font-weight: 600; height: auto; line-height: 16px; }
 
@@ -80,6 +81,7 @@
   .hand-die { order: 101; margin-left: auto; }                                                                    /* the die's own 69 px; a crowded row has no room to spare: the cards tighten to their edges first, then the room kept for the last card gives way (hand.css) and the die lies over that card's edge */
   .hand-row:has(.hand-mana[data-rows="2"]) .hand-die { margin-right: -6px; }                                      /* four tools and more (two rows of potions, wider): the die's edge lies over the first potion's empty border, the row has no room else */
   .hand-die + .hand-mana { margin-left: 0; }                                                                    /* the die and the potions stand together at the row's end */
-  .hand-pot__week-name, .hand-pot__week--of { display: none; }                                              /* the phone's potions keep their narrow width: the week's share alone under the now share (its words are on the control) */
+  .hand-pot__pct { display: inline; }                                                                          /* the hour a tool comes back (*back 14:00*) is too wide for a crowded row: the share stands, the reset is in the words on the control */
+  .hand-pot__week-name, .hand-pot__week--of, .hand-pot__back { display: none; }                                              /* the phone's potions keep their narrow width: the week's share alone under the now share (its words are on the control); */
   .hand-pot { min-width: 0; padding-inline: var(--ork-1); }                                                                                /* the cards of the row tighten for them: a potion is as wide as its share (tall past 44) */
 }

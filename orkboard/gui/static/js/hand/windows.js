@@ -3,7 +3,8 @@
 // the medium, above 0.1 the small, else the vial. Of several rows of one length (Antigravity's model groups, Claude's week for all models and for one) the **tightest** stands for that length, so the
 // two shares never mix a group's 5 hours with another's week and do not change with the order the reader gives the groups in. A tool with one window keeps its level; its bottle is the large one when the
 // window is shorter than a day, else that window's size too (a week alone at 16 % is a small bottle, not a full-sized one); a tool whose limits were not read has no windows. The colour follows whichever runs out first
-// (`levelOf(min(now, week))`, the signals' levels as before). Pure: no signal, no DOM; mana.js and table/tabmarks.js draw and say it.
+// (`levelOf(min(now, week))`, the signals' levels as before). `weekFirst` says whether the week is the window that runs out first (its share the lower: docs/specs/140 C1, decisions §247.3: only then is it said under the
+// potion), `lowReset` the reset of the window that is lower (the week's when `weekFirst`, else the now window's; the last to come back while a window is dry: spec 138 A.5, decisions §245.3). Pure: no signal, no DOM; mana.js and table/tabmarks.js draw and say it.
 import { levelOf } from "../arena/limits.js";
 
 const DAY = 24;                                                                                                       // a window this long or longer says *will I last*, not *can I work now*
@@ -38,14 +39,14 @@ const pct = (left) => `${Math.round(left * 100)}%`;
 const within = (v) => (typeof v === "number" && Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : null);
 
 /**
- * What a tool's limit says of its windows: `{read, two, liquid, size, level, dry, now, week, back}`.
+ * What a tool's limit says of its windows: `{read, two, liquid, size, level, dry, now, week, back, weekFirst, lowReset}`.
  * `read`: whether the host read it (`l.left` a number); `two`: whether it has two windows of different length; `liquid`: the shortest window's share (0 to 1; the one window's with one), the potion's liquid;
  * `size`: `large`, `medium`, `small` or `vial`; `level`: `ok`, `warn`, `danger` or `unread`, by the lower of the two shares; `dry`: a window is at 0 and the tool takes no work (`back`: when the last of them
  * comes back, an ISO time or ""); `now` and `week`: each window `{window, left, reset, share}` (`week` null with one window; `now` is then the one window, its name `window` kept for *of the month*).
  */
 export function windowsOf(l, at = new Date()) {
   const read = typeof l?.left === "number";
-  if (!read) return { read: false, two: false, liquid: 0, size: "large", level: "unread", dry: false, now: null, week: null, back: "" };
+  if (!read) return { read: false, two: false, liquid: 0, size: "large", level: "unread", dry: false, now: null, week: null, back: "", weekFirst: false, lowReset: "" };
   const rows = (l.rows || []).map((r) => ({ window: r.window || "", left: within(r.left), reset: r.reset || "", span: spanOf(r, at) })).filter((r) => r.left !== null)
     .map((r, i) => ({ ...r, i })).sort((a, b) => (a.span === b.span ? a.left - b.left || a.i - b.i : a.span < b.span ? -1 : 1));      // the shortest first, the tightest first of one length (Infinity - Infinity is no number)
   const mark = (r) => ({ window: r.window, left: r.left, reset: r.reset, share: pct(r.left) });
@@ -57,5 +58,6 @@ export function windowsOf(l, at = new Date()) {
   const level = levelOf(week ? Math.min(now.left, week.left) : now.left);
   const out = (two ? [low, high] : [only]).filter((r) => r.left <= 0);
   const back = out.map((r) => r.reset).filter((r) => r && Number.isFinite(new Date(r).getTime())).sort().pop() || "";
-  return { read: true, two, liquid: now.left, size: two ? sizeOf(week.left) : long ? sizeOf(now.left) : "large", level, dry: out.length > 0, now, week, back };
+  const weekFirst = !!week && week.left < now.left, lowReset = out.length ? back : (weekFirst ? week.reset : now.reset);
+  return { read: true, two, liquid: now.left, size: two ? sizeOf(week.left) : long ? sizeOf(now.left) : "large", level, dry: out.length > 0, now, week, back, weekFirst, lowReset };
 }

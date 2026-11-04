@@ -114,7 +114,7 @@ def test_the_die_lies_in_the_hand_left_of_the_potions_with_its_word_under_it_ask
     assert d.evaluate("e => e.closest('.hand') !== null") and d.get_attribute("aria-label") == "Play: the project's preview of dev" and d.get_attribute("title") == d.get_attribute("aria-label")
     assert d.locator(".hand-die__word").inner_text() == "Play" and d.locator(".ork-die").get_attribute("aria-hidden") == "true"
     box, mana, word = d.locator(".ork-die").bounding_box(), pg.locator(".hand-mana").bounding_box(), d.locator(".hand-die__word").bounding_box()
-    assert 66 <= box["width"] <= 80 and 69 <= box["height"] <= 82                                                      # 69 x 72 (3 px a cell), turned a little: it keeps its size at the narrow width too
+    assert 70 <= box["width"] <= 86 and 86 <= box["height"] <= 100                                                     # 72 x 90 (3 px a cell; orkUI 0.29.0's steeper view, decisions §246), turned a little: it keeps its size at the narrow width too
     assert d.bounding_box()["x"] + d.bounding_box()["width"] <= mana["x"] + 7 and box["x"] < mana["x"]                    # left of the potions (at the narrow width its edge lies over the first potion's empty border)
     assert word["y"] >= box["y"] + 56                                                                                   # its word under it
     assert d.locator(".ork-die").evaluate("e => getComputedStyle(e).rotate") == "-6deg"                                 # the lean token the other way
@@ -183,7 +183,7 @@ def test_a_start_is_thrown_rolls_without_the_logo_lands_on_the_tick_then_the_log
     pane.wait_for(timeout=WAIT_MS)
     pg.locator('.play-throw[data-phase="roll"]').wait_for(timeout=WAIT_MS)
     rolling = pg.locator(".playpane .ork-die.big.is-rolling")
-    assert rolling.count() == 1 and rolling.evaluate("e => [e.offsetWidth, e.offsetHeight]") == [138, 144]                                    # orkUI's big die
+    assert rolling.count() == 1 and rolling.evaluate("e => [e.offsetWidth, e.offsetHeight]") == [144, 180]                                    # orkUI's big die (0.29.0: 24 x 30 cells at 6 px)
     cube = rolling.locator(".ork-die__cube")
     assert cube.evaluate("e => getComputedStyle(e).animationName") == "ork-die-roll"                                                         # the cube tumbles in 3D
     poses = {cube.evaluate("e => getComputedStyle(e).transform") for _ in range(6) if pg.wait_for_timeout(45) is None}
@@ -224,13 +224,17 @@ def test_a_start_is_thrown_rolls_without_the_logo_lands_on_the_tick_then_the_log
 
 
 def interior_colors(pg):
-    """How many colours the up face shows in a stretch free of pips, tick and edges, low on its left (a clean die: its one fill; seams: more). orkUI's die is a cube (0.24.0): the stretch is
-    taken from the up face's own rectangle."""
+    """How many colours the up face shows in a stretch free of pips, tick and edges (a clean die: its one fill; seams: more). orkUI's die is a cube (0.24.0), seen at 34° since 0.29.0, so its
+    up face is a quadrilateral, not its bounding box: the stretch is taken in the face's own cells (rows 14, columns 7 to 9 of its 16, under every face's marks), by a transparent probe laid
+    there, measured, and taken away before the picture."""
     import io
     from PIL import Image
-    x, y, w, h = pg.evaluate("() => { const r = document.querySelector('.play-die > .ork-die .ork-die__face.is-up').getBoundingClientRect(); return [r.x, r.y, r.width, r.height]; }")
+    x0, y0, x1, y1 = pg.evaluate("""() => { const f = document.querySelector('.play-die > .ork-die .ork-die__face.is-up'), p = document.createElement('i');
+        p.style.cssText = 'position:absolute;left:43.75%;top:87.5%;width:12.5%;height:3%;pointer-events:none'; f.appendChild(p);
+        const r = p.getBoundingClientRect(); p.remove(); return [r.left, r.top, r.right, r.bottom]; }""")
     shot_ = Image.open(io.BytesIO(pg.screenshot())).convert("RGB")
-    region = shot_.crop((round(x + 0.16 * w), round(y + 0.82 * h), round(x + 0.3 * w), round(y + 0.9 * h))).tobytes()
+    cx, cy = (x0 + x1) / 2, (y0 + y1) / 2                                                                                  # the probe's middle, and a small square round it
+    region = shot_.crop((round(cx - 3), round(cy - 1), round(cx + 3), round(cy + 1))).tobytes()
     return len({region[i:i + 3] for i in range(0, len(region), 3)})
 
 
