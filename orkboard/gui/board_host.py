@@ -282,6 +282,8 @@ class Orkboard:
         self.board_sync = board_sync.BoardSync(self)      # spec 137 B: the Board's branch, held and pushed (nothing runs without `[board]`)
         from orkboard.gui import phone_journal
         self.commands.update(phone_journal.commands(self))   # journal.phone_ask · turn_on · not_now: Settings' one-time question (spec 136 A.2)
+        from orkboard.gui import board_switch
+        self.commands.update(board_switch.commands(self))    # board.switch · turn_on · not_now: Settings' Keep the Board in the repository (spec 137 E)
         shown_board = self.commands["ideas.board"]
         self.commands["ideas.board"] = lambda a: self._with_ops(shown_board(a))
         if restore:

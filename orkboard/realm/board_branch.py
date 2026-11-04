@@ -110,6 +110,38 @@ def private_check(root: Path, config: BoardConfig, get: Callable[[str], int] = h
     return True, ""
 
 
+def turn_on(root: Path, config: BoardConfig | None = None) -> BoardConfig:
+    """Write `[board]` into `orkcraft.toml` (spec 137 E; the person said yes, and `private_check` let it): the table made when missing, every other
+    line kept, a `[board]` already there left as it is. Raises OSError when the file cannot be written."""
+    config = config or BoardConfig()
+    path = Path(root) / FILE
+    try:
+        text = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        text = ""
+    if not re.search(r"^\[board\]\s*$", text, flags=re.M):
+        text += ("\n" if text and not text.endswith("\n") else "") + ("\n" if text else "") + \
+            f'[board]\nremote = "{config.remote}"\nbranch = "{config.branch}"\n'
+        path.write_text(text, encoding="utf-8")
+    return read_config(root) or config
+
+
+def turn_on(root: Path, config: BoardConfig | None = None) -> BoardConfig:
+    """Write `[board]` into `orkcraft.toml` (spec 137 E; the person said yes, and `private_check` let it): the table made when missing, every other
+    line kept, a `[board]` already there left as it is. Raises OSError when the file cannot be written."""
+    config = config or BoardConfig()
+    path = Path(root) / FILE
+    try:
+        text = path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        text = ""
+    if not re.search(r"^\[board\]\s*$", text, flags=re.M):
+        text += ("\n" if text and not text.endswith("\n") else "") + ("\n" if text else "") + \
+            f'[board]\nremote = "{config.remote}"\nbranch = "{config.branch}"\n'
+        path.write_text(text, encoding="utf-8")
+    return read_config(root) or config
+
+
 # -- what goes ------------------------------------------------------------------------------------------------------
 
 def _page_roots(wiki_rel: str) -> tuple[str, str]:
