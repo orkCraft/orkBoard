@@ -12,7 +12,7 @@
     remote_journal.due(state_dir, config, now)                # `every` minutes since the last attempt?
     remote_journal.send(root, state_dir, config)              # {"sent": True, "commit": …, "files": n, "held_back": n}
 
-What goes: `status.md` (when it was written, the parties and their goals by state, what failed), `events.jsonl` (the event
+What goes: `status.md` and `status.json` (spec 136 A: when it was written, the parties and their goals by state and phase, which need the person, what failed; the Markdown is written from the data), `taken.json` (the goals of the phone's inbox taken, decisions §243.4, realm/remote_inbox.py), `events.jsonl` (the event
 log's lines of the last 3 days), `spend.json` and `spend.txt` (realm/spend_report.py, the last 7 days) and
 `calls/<day>-<building>.jsonl` (each call's tool, model, step, tokens, cost and exit code, the last 3 days). Only with
 `prompts = true`, the `*.json.gz` call files beside them. **Never** `.orkcraft/drive.json` (the server's token), an `.env` or

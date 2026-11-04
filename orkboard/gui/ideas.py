@@ -45,6 +45,7 @@ from __future__ import annotations
 import base64
 import datetime as dt
 import os
+import re
 import threading
 import time
 from pathlib import Path
@@ -453,6 +454,8 @@ class Ideas(GoalViewMixin, ChangeMixin, SketchMixin, PlayMarkMixin, JournalFace,
                 self.route_save(slug, routed)         # waits as `routed`, nothing drafts it (spec 99 §4)
             if typed["key"] or pitch:
                 ideas.save_state(self.state_dir, slug, type=typed["key"], from_pitch=pitch)
+            if args.get("via") == "inbox" and re.fullmatch(r"[A-Za-z0-9_-]{8,40}", str(args.get("inbox_id") or "")):
+                ideas.save_state(self.state_dir, slug, via="inbox", inbox_id=str(args["inbox_id"]))     # laid from the phone's inbox: once (spec 136 B.4)
             if rel is not None:
                 self.release_made(args, slug, track, rel)
         if joined:

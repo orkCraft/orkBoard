@@ -1,7 +1,7 @@
-"""The journal for a paired phone (spec 136 A.2, A.3; decisions §229, §243.8).
+"""The journal and the inbox, for a paired phone (spec 136 A.2, A.3, B; decisions §229, §243).
 
     phone_journal.commands(host)       # journal.phone_ask · journal.turn_on · journal.not_now (the desktop's Settings; not a phone's)
-    phone_journal.tick(host)           # each open project with a `[journal]`: the journal sent when due, or at once
+    phone_journal.tick(host)           # each open project with a `[journal]`: the inbox read and taken, the journal sent when due
 
 **Asked once.** Settings' *Your phone* asks, once per project, whether to follow it from the phone away from home, when a
 phone is paired, the project's `origin` is on github.com, it has no `[journal]` yet and the person has not answered before.
@@ -9,21 +9,24 @@ phone is paired, the project's `origin` is on github.com, it has no `[journal]` 
 `<state_dir>/journal_asked.json` and asks no more (Settings keep the switch).
 
 **When.** `every` 15 minutes for a user; at once (`urgent`) when a card that needs the person came to the hand since the last
-look. One thread a project at a time; a journal
-that cannot be sent troubles no work.
+look, and the inbox's own taking sends the journal at once (realm/remote_inbox.py). One thread a project at a time; a journal
+that cannot be sent, or an inbox that cannot be read, troubles no work.
 
+**Laying a goal.** `lay` is `Ideas.add` as the + card calls it, with `via = "inbox"` and the `inbox_id` it came with, which the add
+keeps in the goal's `state.json`; `find` reads the Board for a goal with that id, so one is never laid twice.
 """
 from __future__ import annotations
 
 import datetime as dt
 import json
+import socket
 import subprocess
 import threading
 import time
 from pathlib import Path
 from typing import Any, Callable
 
-from orkboard.realm import remote_journal
+from orkboard.realm import goal_types, ideas, remote_inbox, remote_journal
 
 ASKED_FILE = "journal_asked.json"
 ASK_LINE = ("Follow this project from your phone away from home? Its status goes to a branch of its own on origin, "
@@ -116,11 +119,37 @@ class PhoneJournal:
         self._needs[p.path] = (now, cards, goals)
         return cards, goals, before is not None and bool(cards - before[1])
 
+    def lay(self, p: Any) -> Callable[[dict, str], str]:
+        def lay(goal: dict, inbox_id: str) -> str:
+            return str(p.ideas.add({**goal, "via": "inbox", "inbox_id": inbox_id})["slug"])
+        return lay
+
+    @staticmethod
+    def find(p: Any) -> Callable[[str], str]:
+        def find(inbox_id: str) -> str:
+            folder = Path(p.ideas.state_dir) / "ideas"
+            for d in sorted(folder.iterdir()) if folder.is_dir() else []:
+                try:
+                    if json.loads((d / "state.json").read_text(encoding="utf-8")).get("inbox_id") == inbox_id:
+                        return d.name
+                except (OSError, ValueError, AttributeError):
+                    continue
+            return ""
+        return find
+
+    def context(self, p: Any) -> remote_inbox.Context:
+        root, state = p.ideas.root(False), Path(p.ideas.state_dir)
+        parties = {t["slug"] for t in ideas.tracks(root, make=False)}
+        return remote_inbox.Context(parties=parties, types=lambda party: {t.id for t, _ in goal_types.offered(state, root, party)})
+
     def run(self, p: Any, config: remote_journal.JournalConfig, now: dt.datetime, needs: frozenset[str], urgent: bool) -> None:
-        """The journal sent when due (or `urgent`). Never raises."""
+        """The inbox read and taken (when the project has one), then the journal sent when due (or `urgent`). Never raises."""
         try:
             state = Path(p.ideas.state_dir)
             pages = p.ideas.root(False)
+            if config.inbox:
+                remote_inbox.take(p.root, state, config, self.context(p), self.lay(p), self.find(p), socket.gethostname(), now,
+                                  pages=pages, needs=needs)
             if remote_journal.due(state, config, now, urgent):
                 remote_journal.send(p.root, state, config, now, pages=pages, needs=needs)
         except Exception:
@@ -141,7 +170,8 @@ class PhoneJournal:
                     _, needs, urgent = self._cards(p, time.monotonic())
                 except Exception:
                     needs, urgent = frozenset(), False
-                if not remote_journal.due(state, config, now, urgent):
+                inbox_due = bool(config.inbox) and remote_inbox.due(state, now)
+                if not (inbox_due or remote_journal.due(state, config, now, urgent)):
                     continue
                 self._threads[p.path] = t = threading.Thread(target=self.run, args=(p, config, now, needs, urgent), daemon=True,
                                                              name="orkboard-journal")

@@ -253,6 +253,8 @@ EVENTS += (SPEC_FOLDED,)            # spec 127 C
 EVENTS += (LEADER_CHANGE_ASKED, LEADER_CHANGE_ANSWERED)      # spec 128 E
 JOURNAL_SENT = "journal_sent"      # decisions §229: the journal sent to the project's remote (or not): sent, remote, branch, files, held_back (lines held for a secret's shape), commit, why (a failure's words, "nothing changed")
 EVENTS += (JOURNAL_SENT,)
+INBOX_TAKEN = "inbox_taken"      # spec 136 B, decisions §243.4: a goal of the phone's inbox taken (or the inbox not read): id, by, slug (the goal's on the Board, "" when not laid), error (the words, "" when none), ok (False: the fetch or the taking failed)
+EVENTS += (INBOX_TAKEN,)
 
 _LOCK = threading.Lock()
 

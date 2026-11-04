@@ -545,6 +545,8 @@ STATE_DEFAULT = {"state": "raw", "session": "", "session_at": "", "context": 0, 
                  "route": [],                         # the parties that write its spec and do its work, in order: [{party, leader}] (realm/goal_route.py, spec 99 §4)
                  "marks": [],                         # the places of its party's map it points at: [{map, id, name, group?}] and [{map, group, name}] (spec 102 §6; realm/idea_lens.py `clean_marks`), kept by ideas.add
                  "route_how": {},                     # how it was routed and what the person was told of it: by, kind, short, reproduces, offer, said, said_route, changed
+                 "via": "",                           # how it came: "inbox" for a goal the phone dropped into the project's inbox and the host laid (spec 136 B, decisions §243.4)
+                 "inbox_id": "",                      # the inbox file's id it was laid from, so one is never laid twice (spec 136 B.4)
                  "from_pitch": ""}                    # the pitch it was sent from (spec 65 §5): its views and decision go to its draft
 
 
