@@ -170,12 +170,13 @@ place is the goal's own, as in the rite), the rest in the faint ink. Nothing mov
 
 ## The die (0.22.0, a cube since 0.24.0)
 `.ork-die` is Play as a die (`die/`, `die/README.md`): since 0.24.0 a cube in CSS 3D, six faces seen from above and before under a perspective, its up face large, its front
-face under it and its right face beside it, lit from above (a face darkens as it turns away). Its box is 23 x 24 cells at 3 px (**69 x 72**), `.big` 6 px (**138 x 144**), a face
-18 x 18 cells. It holds its cube and the cube's six faces: `<span class="ork-die face-5" aria-hidden="true"><span class="ork-die__cube"><i class="ork-die__face is-up"></i>`
+face under it and its right face beside it, lit from above (a face darkens as it turns away). Its box is 24 x 30 cells at 3 px (**72 x 90**), `.big` 6 px (**144 x 180**), a face
+18 x 18 cells (0.29.0: seen steeper, 34 degrees from above and turned 20, the box taller to hold it). It holds its cube and the cube's six faces: `<span class="ork-die face-5" aria-hidden="true"><span class="ork-die__cube"><i class="ork-die__face is-up"></i>`
 … `<i class="ork-die__face is-down"></i></span></span>`. The view, the shades, the marks and every pose are generated from `die/die.json` by `tools/build_die.py`. The up face
 shows `.face-1` to `.face-6` (pips in the muted ink), `.face-ok` (a tick in `--ork-success`), `.face-no` (a cross in `--ork-danger`) `.face-new` (a spark in `--ork-ink`: news, not a warning) or `.face-play` (0.27.0: the play arrow, a right-pointing triangle in the pips' colour, so the muted ink at rest and the ink and the glow while `.is-playing`). `.is-playing` turns the pips and the edges to the ink
 and makes the up face glow (six steps, 2.4 s); `.is-rolling` tumbles the cube, a quarter turn each 120 ms in three poses, until the class is taken off (the page then sets the face it
-stops on); `.is-wobbling` rocks it once on its edges, 300 ms in three poses; `.is-landing` rolls the up face in from the back and drops the cube, 300 ms in three poses. On the table
+stops on); `.is-wobbling` rocks it once on its edges, 300 ms in three poses; `.is-landing` rolls the up face in from the back and drops the cube, 300 ms in three poses. `.front-stop` and `.front-resume` (0.29.0) put the orks' mark on the front face, in `--_front` (the muted ink; `.is-orks-running` the danger's, `.is-orks-stopped` the ink), and the right face is then blank;
+`.is-turning` turns the cube a quarter round its up axis, once. On the table
 the page turns it with the lean token. Nothing moves under reduced motion.
 
 ## The room, the chair and the door (0.27.0)
@@ -197,8 +198,9 @@ Pixelarticons (MIT), kept for Orkline. The gallery shows both.
 `.ork-gem` a price, a share of the limits or a mark before a move (inverted, 22 px; `.alert`, `.danger`, `.dim`; 24 px on a phone; **`.share`** a share of the limits, *4%*,
 in the label's token on the frame's colour, and `.share.alert` / `.share.danger` when it warns) · `.ork-stat` a
 measured number (outlined, 20 px) · `.ork-crystals` a row of `<i>` diamonds for what is left of a tool (`.on`, `.kept` hatched
-for what is kept for tonight) · `.ork-frame` the double frame of a raised thing (`.alert`, `.danger`) · **`.ork-picked`** a card taken: pixel brackets at its four corners,
-2 px thick and 8 px long, in the ink only · **`.ork-box`** the box being drawn: a dashed 2 px line in the ink. Tokens only, as every
+for what is kept for tonight) · `.ork-frame` the double frame of a raised thing (`.alert`, `.danger`) · **`.ork-picked`** a card with a rune, picked (0.29.0, Orkboard's decisions §248): the card risen by `--ork-motion-rise` (a place, never a scale: the pixel grid), its edge in the ink with a
+shadow under it, the rune inside it (`.ork-elem`) lit and still; a rune at work (`.is-glowing`) keeps its pulse; the rise stays under reduced motion · **`.ork-taken`** a map's part taken in picking
+(a part has no rune of its own): pixel brackets at its four corners, 2 px thick and 8 px long, in the ink only (what `.ork-picked` drew before 0.29.0) · **`.ork-box`** the box being drawn: a dashed 2 px line in the ink. Tokens only, as every
 component: ink, alert and danger are the signals, nothing new.
 
 ## The motions
