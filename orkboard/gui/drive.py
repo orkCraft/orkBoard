@@ -13,6 +13,7 @@ same socket the page uses (gui/server.py): every act is one of the page's own co
     orkboard drive stop                              # the served project stopped
     orkboard drive spend --since 2026-11-03          # what the calls spent, and where tokens went for nothing (realm/spend_report.py)
     orkboard drive journal --dry-run                 # what `[journal]` in orkcraft.toml would send to the project's remote (--now: send it now; decisions §229)
+    orkboard drive cloud-run --usd 1                 # what the workflow on GitHub Actions runs: takes the Board, reads the goals, never the work, gives it back (spec 137 D, decisions §244.6)
 
 The served project's address (its token inside) is kept in `<project>/.orkcraft/drive.json`, readable by its owner alone,
 removed when it stops; `--url` names a server instead (an editor's `--serve`). **The AI tools are hidden unless asked for**:
@@ -510,6 +511,9 @@ def main(argv: list[str]) -> int:
     jn.add_argument("--folder", default=None, help="The project (default: the one this folder is in)")
     jn.add_argument("--dry-run", action="store_true", help="Say what would go (names, sizes, lines held back); send nothing")
     jn.add_argument("--now", action="store_true", help="Send it now, even if it is not due")
+    cr = sub.add_parser("cloud-run", help="A cloud run: the Board taken, the inbox and the goals read (never the work), the Board given back")
+    cr.add_argument("--folder", default=None, help="The project (default: the one this folder is in)")
+    cr.add_argument("--usd", type=float, default=0.0, help="At most this many dollars of the API key's calls in this run (0: no ceiling; a subscription has none)")
     p = sub.add_parser("shot", help="A picture of the page (a phone's size by default)")
     p.add_argument("file")
     p.add_argument("--width", type=int, default=390)
@@ -528,6 +532,9 @@ def main(argv: list[str]) -> int:
             return 0
         if a.act == "journal":
             return journal(find_root(a.folder), a.dry_run, a.now)
+        if a.act == "cloud-run":
+            from orkboard.gui import cloud_run_host
+            return cloud_run_host.command(find_root(a.folder), a.usd)
         if a.act == "shot":
             url = a.url or read_session(find_root(a.folder))["url"]
             print(shoot(url, Path(a.file), a.width, a.height))
