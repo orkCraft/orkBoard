@@ -350,7 +350,7 @@ export function limitLine(l, reserve, resetOf) {
 
 // -- the stops: the bottom row (§6) -------------------------------------------------------------------------------------------------
 
-export const KIND_WORD = { plan: "Plan ready", change: "Plan change", leader_change: "A change", asks: "Asks you", goal: "Asks you", proposal: "Proposed", party: "Proposed", todo: "A to-do", failed: "Failed",
+export const KIND_WORD = { plan: "Plan ready", change: "Plan change", leader_change: "A change", spec_change: "A change", asks: "Asks you", goal: "Asks you", proposal: "Proposed", party: "Proposed", todo: "A to-do", failed: "Failed",
   pick: "Pick one", pitch: "Pitch judged", collide: "Orkmaster asks", sign_in: "Sign in", gate: "Ready for main",
   route: "Route", start: "Start", talk: "Talk", cause: "The cause", decision: "Decision", hearing: "Hearing", fork: "A fork", project_q: "About the project", paid: "Orkmaster asks" };       // a goal's way (spec 100): what the card is, in plain words (a question's own label is "Question")
 KIND_WORD.quality = "Quality"; KIND_WORD.finding = "Finding";        // a goal's quality card and a finding of no goal's (spec 132 D.3: hand/qualitycard.js)
@@ -418,6 +418,8 @@ export function stopsOf(needs, g, nodes, ork = null) {
       base.small = true; base.whoTip = `proposed by ${g?.leader?.name || "Taskmaster"}`;        // the leader's small head on the top row: the card has no room for its art
     } else if (row.kind === "leader_change") {        // a change the person asked this leader for (spec 128 E): the leader's small head, the words it gave; the price is the way's (hand/changecard.js)
       base.small = true; base.whoTip = `proposed by ${g?.leader?.name || "its leader"}`; base.why = row.why || "";
+    } else if (row.kind === "spec_change") {          // a change to a spec asked of the Orkmaster (spec 144 D): its crowned head, the join's line is the foot; the price is the way's (hand/specchangecard.js)
+      base.head = ork ? { race: ork.race || "peon", tier: ork.tier || "crown" } : null; base.small = true; base.whoTip = "asked by the Orkmaster"; base.why = row.text || "";
     } else if (row.kind === "collide") {               // the Orkmaster asks (spec 71): its head, the statement as the stop's name, the judge's why as its note; its goals and answers are collide.js
       base.key = `collide/${row.idea}/${row.collide?.id || ""}`;
       base.head = ork ? { race: ork.race || "peon", tier: ork.tier || "crown" } : null; base.small = true; base.whoTip = "asked by the Orkmaster";

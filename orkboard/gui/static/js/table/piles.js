@@ -96,6 +96,7 @@ export function sayOf(n, pile, off, first) {
     return n.state === "reading" || n.state === "planning" ? "the Orkmaster is writing its spec" : "waits for the Orkmaster";
   }
   if (pile === "review") {
+    if (n.changing) return "Held while its leaders rewrite";                      // a change to its spec is open (spec 144 D.1): nothing starts it until the person answers
     if (lookAt(n)) return `Starts by itself at ${lookAt(n)}`;
     const r = n.back?.ripe;
     return r && !r.by && !r.held ? `its spec is ready; it ${first ? `starts by itself in ${leftWords(r.left_s)}` : `starts by itself about ${clock(r.left_s)}`}` : "its spec is ready; it waits for your word to start";
@@ -149,8 +150,8 @@ function UpCard({ n, i, pile, off, first, onPress }) {
   const el = n.element || "", hue = n.hue || el, on = picked.value === n.slug, work = pile === "work" && !off, glow = work && movesOn(n.slug), own = lit(n), ripe = n.back?.ripe, running = pile === "review" && ripe && !ripe.by && !ripe.held;
   if (pile === "review") everBack.add(n.slug);
   const moon = off === "night", name = n.title || n.short || "", tasks = work ? tasksCount(n) : null;                    // a goal at work says its tasks done of all at its foot (spec 129 H2.3)
-  const looks = pile === "review" ? lookAt(n) : "";
-  const extra = pile === "review" ? (looks ? html`<span class="col-when" data-look=${looks}>${looks}</span>` : running ? (first ? html`<span class="col-when">${leftWords(ripe.left_s)}</span>` : html`<span class="col-when">~${clock(ripe.left_s)}</span>`) : null)
+  const changing = pile === "review" && !!n.changing, looks = pile === "review" && !changing ? lookAt(n) : "";
+  const extra = pile === "review" ? (changing ? html`<span class="col-when" data-changing="1"><${Sign} name="pause" />Held</span>` : looks ? html`<span class="col-when" data-look=${looks}>${looks}</span>` : running ? (first ? html`<span class="col-when">${leftWords(ripe.left_s)}</span>` : html`<span class="col-when">~${clock(ripe.left_s)}</span>`) : null)
     : off === "held" ? html`<span class="col-when"><${Sign} name="pause" />Held</span>` : moon ? html`<span class="col-when"><${Sign} name="moon" />${night()}</span>` : html`<${Heads} n=${n} />`;
   return html`<button type="button" class=${cls("ork-card col-card col-card--up", { "ork-picked": on, asks: !!n.asks_you && !failed(n), fails: failed(n), "is-off": !!off, "is-dim": own.dim })} ...${own.hatch} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state} data-pile=${pile} data-off=${off || undefined} style=${`--i:${i}`}
     aria-pressed=${String(on)} aria-label=${`${n.title}: ${sayOf(n, pile, off, first)}${tasks ? `, ${tasks.done} of ${tasks.total} tasks finished` : ""}`} onClick=${() => onPress(n, pile, off)}>

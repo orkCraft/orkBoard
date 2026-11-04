@@ -38,7 +38,7 @@ export const lineWords = (text) => { const m = LINE.exec(String(text || "")); re
 const taskName = (t) => t.short || t.title;
 
 /** One side of Now · Proposed. */
-function Side({ label, side, now }) {
+export function Side({ label, side, now }) {
   const tasks = side?.tasks || [], lines = side?.lines || [];
   return html`<div class="hand-change__side" data-side=${now ? "now" : "proposed"}><span class="ork-label hand-change__lab">${label}</span>
     ${tasks.length > 0 && html`<ul class="hand-change__list" aria-label=${`${label}: its tasks`}>${tasks.map((t, i) => html`<li key=${`${t.id}${i}`} class=${cls("hand-change__task", { "is-gone": t.op === "drop" && now })} data-op=${t.op || undefined}>

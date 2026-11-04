@@ -23,6 +23,8 @@
 .table-ask__srcs { display: flex; flex-wrap: wrap; gap: var(--ork-2); margin: 0; padding: 0; list-style: none; }
 .table-ask__src { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .table-ask__acts { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3); }
+.table-ask__spec { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2); min-width: 0; }          /* the change to a spec: where it goes, then the act (spec 144 D.1) */
+.table-ask__goes { flex: 1 1 100%; margin: 0; color: var(--ork-ink-muted); overflow-wrap: anywhere; }
 .table-ask__err { margin: 0; font: var(--ork-type-body); color: var(--ork-alert); }
 .table-ask__seat { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2); padding-top: var(--ork-3); border-top: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
 .table-ask__seat .ork-mark { width: 14px; height: 14px; }

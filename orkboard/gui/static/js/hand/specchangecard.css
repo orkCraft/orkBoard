@@ -1,0 +1,7 @@
+/* A change to a spec asked of the Orkmaster, lifted in the hand (docs/specs/144 D; hand/specchangecard.js): a tab a leader, its section Now and Proposed (changecard.css lays those out), the join's line. Layout only: every colour, face and corner is orkUI's. */
+.hand-spec { gap: var(--ork-3); }
+.hand-spec__tabs { display: flex; flex-wrap: wrap; gap: var(--ork-2); min-width: 0; }
+.hand-spec__tab { display: inline-flex; align-items: center; gap: var(--ork-2); min-width: 0; }
+.hand-spec__pane { display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; }
+.hand-spec__agree { margin: 0; color: var(--ork-ink-muted); overflow-wrap: anywhere; }
+.hand-spec__agree.is-apart { color: var(--ork-ink); }

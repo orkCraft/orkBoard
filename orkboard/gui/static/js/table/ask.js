@@ -38,6 +38,14 @@ const keyOf = (tab) => (!tab || tab === ORKMASTER ? "" : tab);
 export const askPart = signal(null);
 /** The states of a goal that is agreed or at work: *Make it a change* may be asked of a leader about it (as realm/leader_change.py `CHANGE_STATES`). */
 export const AGREED = ["decided", "sketch", "sections", "planning", "plan", "working"];
+/** The states of a goal whose spec is made or being made: the Orkmaster's head offers *Change the spec* about it (spec 144 D.1; as realm/spec_change.py `CHANGE_STATES`: not a goal at work, whose change is its leader's). */
+export const SPEC_STATES = ["decided", "sketch", "sections", "planning", "plan", "ready"];
+
+/** Where a change to a spec would go, as the field says it before it is sent: *It goes to Tech, Art · about 3 calls*; "" while the host has not read it. */
+export function goesWords(pre) {
+  const names = (pre?.parties || []).map((p) => p.title || p.party).filter(Boolean), calls = Number(pre?.estimate?.calls);
+  return names.length ? `It goes to ${names.join(", ")}${calls > 0 ? ` · about ${calls} ${calls === 1 ? "call" : "calls"}` : ""}` : "";
+}
 
 /** Opens the bubble of a tab (`ORKMASTER`, "" or a party's slug); the head that carries `data-ask-head` is what it stands under. `part`: a part of a goal's change it is about (its name, or `{id, name}`), a chip with ×;
  *  `words`: what the field starts with (*Talk more* gives the words it was asked with back). Exported so another part (a part of a change pressed, a decision card's *Talk more*) can open it. */
@@ -93,6 +101,14 @@ function Bubble({ tab, party, g, parties, look }) {
   const state = reading && mine ? "reading" : mine && !reading && !more ? (ask.status === "failed" ? "failed" : "answered") : "asking";
   const goalNode = picked.value ? (mapData.value?.nodes || []).find((x) => x.slug === picked.value) || null : null, part = askPart.value;
   const aboutGoal = goalNode ? goalNode.short || goalNode.title || WHOLE : WHOLE, canChange = !!goalNode && !!party && AGREED.includes(goalNode.state), canGoal = !goalNode || goalNode.state === "done";
+  const specGoal = !party && !!goalNode && SPEC_STATES.includes(goalNode.state), [pre, setPre] = useState(null);
+  useEffect(() => {                                                  // under the field, where the words would go (debounced: nothing is started by it)
+    const text = q.trim();
+    if (!specGoal || !text) { setPre(null); return undefined; }
+    let live = true;
+    const t = setTimeout(() => { command("ideas.spec_change_preview", { idea: goalNode.slug, text }).then((got) => { if (live) setPre(got); }, () => { if (live) setPre(null); }); }, 300);
+    return () => { live = false; clearTimeout(t); };
+  }, [q, specGoal, goalNode?.slug]);
   const words = `Ask the ${here.name}`, seatOf = g ? here.seat : null, from = { title: mapName(tab, parties), key: "" };
 
   const place = () => {                                              // under the head, the tail under its centre, inside the window
@@ -138,6 +154,16 @@ function Bubble({ tab, party, g, parties, look }) {
     setSending(true);
     try { await command("ideas.ask", { party, q: text }); setQ(""); drafts[party] = ""; } catch { /* refused: the host's words are in a toast, the question stays */ }
     setSending(false);
+  };
+  const changeSpec = async () => {                                  // the words go to the Orkmaster to route to the leaders whose sections they touch; one card comes back to the hand
+    const text = q.trim();
+    if (!text || sending || reading) return;
+    setSending(true);
+    try { await command("ideas.spec_change", { idea: goalNode.slug, text }); } catch { setSending(false); return; }       // refused: the host's words are in a toast, the words stay
+    setSending(false);
+    setQ("");
+    drafts[party] = "";
+    close(false);
   };
   const away = () => {                                               // × on an answer puts it away; on the rest it only closes
     if (state === "answered" || state === "failed") command("ideas.ask_clear", {}).catch(() => {});
@@ -186,6 +212,9 @@ function Bubble({ tab, party, g, parties, look }) {
           <input type="text" class="ork-field table-ask__field" ref=${field} aria-label=${words} placeholder=${part ? `What about ${part.name}?` : goalNode ? `What about ${aboutGoal}?` : `${words}…`} maxlength=${Q_CHARS} autocomplete="off" enterkeyhint="send"
             value=${q} disabled=${reading} onInput=${(e) => { setQ(e.currentTarget.value); drafts[party] = e.currentTarget.value; }} />
         </form>`}
+        ${state === "asking" && specGoal && html`<div class="table-ask__spec" data-spec-change>
+          ${goesWords(pre) && html`<p class="cap table-ask__goes" role="status" data-spec-goes>${goesWords(pre)}</p>`}
+          <button type="button" class="ork-btn primary" data-spec-send disabled=${!q.trim() || sending || reading} title="The Orkmaster sends your words to the leaders whose sections they touch; you decide in the hand" onClick=${changeSpec}>Change the spec</button></div>`}
         ${state === "asking" && reading && html`<p class="table-ask__reading ork-think" role="status">The ${readBy.name} is reading the map</p>`}
         ${state === "reading" && html`<p class="table-ask__q">${ask.q}</p><p class="table-ask__reading ork-think" role="status">The ${here.name} is reading the map</p>`}
         ${state === "answered" && html`<p class="table-ask__q">${ask.q}</p>
