@@ -41,9 +41,10 @@ class FindingsMixin:
             raise IdeasError(GONE)
         return f
 
-    def _open_finding(self, args: dict) -> dict:
+    def _open_finding(self, args: dict, again: bool = False) -> dict:
+        """The finding, one not answered; with `again` one put off (*Not now*) too: it is taken again from the goal's quality record with no new call (spec 132 D.3)."""
         f = self._finding(args)
-        if f["status"] == "answered":
+        if f["status"] == "answered" and not (again and f["answer"] == "later"):
             raise IdeasError(DONE)
         return f
 
@@ -118,7 +119,7 @@ class FindingsMixin:
         return level, fix
 
     def finding_fix(self, args: dict) -> dict:
-        f = self._open_finding(args)
+        f = self._open_finding(args, again=True)
         level, fix = self._fix(f)
         self.changed(f["idea"])
         if fix.get("idea"):

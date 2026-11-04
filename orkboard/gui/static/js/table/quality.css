@@ -1,0 +1,18 @@
+/* The Quality page on the pane (docs/specs/132-four-levels-the-way-down-and-findings.md D.4): layout only. Every colour, face, corner and motion is orkUI's tokens. */
+
+.quality-page { display: flex; flex-direction: column; gap: var(--ork-5); width: 100%; max-width: 1040px; min-width: 0; margin: 0 auto; }
+.quality-page p, .quality-page ul, .quality-page h2, .quality-page h3 { margin: 0; padding: 0; }
+.quality-page__head { display: flex; align-items: center; gap: var(--ork-3); min-width: 0; }
+.quality-page__title { flex: 1; min-width: 0; font: var(--ork-type-body); font-weight: 600; overflow-wrap: anywhere; }
+.quality-sec { box-sizing: border-box; display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; padding: var(--ork-4); background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame); }
+.quality-party { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; }
+.quality-party__nm { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.quality-list { display: flex; flex-direction: column; gap: var(--ork-2); list-style: none; }
+.quality-line { display: flex; align-items: baseline; gap: var(--ork-3); min-width: 0; overflow-wrap: anywhere; }
+.quality-line > span:not(.cap) { flex: 1; min-width: 0; }
+.quality-line__sign { flex: none; width: 1.2em; text-align: center; }
+.quality-line__word { flex: none; color: var(--ork-ink-muted); }
+.quality-finding { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; padding: var(--ork-2) 0; }
+.quality-finding__who { display: flex; align-items: center; gap: var(--ork-3); min-width: 0; }
+.quality-finding__fate { color: var(--ork-ink); }
+.quality-finding__acts { display: flex; gap: var(--ork-3); }

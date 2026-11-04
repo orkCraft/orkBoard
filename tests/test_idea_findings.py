@@ -403,6 +403,19 @@ def test_not_now_keeps_the_finding_on_the_record_and_out_of_the_hand(host, tech)
         _cmd(host, "ideas.finding_later", id="f-nothing")
 
 
+def test_a_finding_put_off_is_taken_again_from_the_record_with_fix_it_there_and_no_new_call(host, tech, started):
+    """Spec 132 D.3: *Not now* keeps it on the quality record; the *Quality* page's *Fix it there* takes it again (one fix goal, no call of a leader's)."""
+    sd = host.ideas.state_dir
+    slug = _done_goal(host, tech)
+    f = _sorted_finding(host, slug, tech, "work")
+    _cmd(host, "ideas.finding_later", id=f["id"])
+    got = _cmd(host, "ideas.finding_fix", id=f["id"])
+    assert got["ok"] and got["level"] == "work" and started == [got["fix"]["idea"]]
+    assert findings.get(sd, f["id"])["answer"] == "fix" and findings.get(sd, f["id"])["fix"] == got["fix"]
+    with pytest.raises(IdeasError, match="answered already"):
+        _cmd(host, "ideas.finding_fix", id=f["id"])                          # a fixed one is not fixed twice
+
+
 def test_fix_all_there_answers_each_finding_of_the_card_and_says_what_it_could_not(host, tech, started, monkeypatch):
     sd = host.ideas.state_dir
     slug = _done_goal(host, tech)

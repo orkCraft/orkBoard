@@ -2,3 +2,4 @@
 import "./talkpage.js";
 import "./specpage.js";
 import "./parties.js";
+import "./qualitypage.js";

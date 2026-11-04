@@ -52,11 +52,11 @@ export function wayWords(pulls, own = "") {
   return head && sum ? `${head}: ${sum}` : head || (sum ? sum.charAt(0).toUpperCase() + sum.slice(1) : "Nothing below it is redone");
 }
 
-/** The one line of a change on its lifted card: its level's sign, the words, **More** when something is pulled. `row` carries `level` and `pulls`; `own`: what the change itself costs, in the gems' words; `extra`: `[label, text]` lines that go under More first (a finding's *What shows it*). */
-export function WayLine({ row, own = "", extra = [] }) {
+/** The one line of a change on its lifted card: its level's sign, the words, **More** when something is pulled. `row` carries `level` and `pulls`; `own`: what the change itself costs, in the gems' words; `signless`: the card draws the level's sign beside it already; `extra`: `[label, text]` lines that go under More first (a finding's *What shows it*). */
+export function WayLine({ row, own = "", extra = [], signless = false }) {
   const [more, setMore] = useState(false), lines = [...extra.filter(([, t]) => t).map(([label, t]) => ({ key: `x:${label}`, kind: "extra", text: `${label}: ${t}` })), ...pullsLines(row?.pulls)];
   return html`<div class="hand-wayline" data-level=${row?.level} data-part="way">
-    <p class="hand-wayline__line cap"><${LevelSign} level=${row?.level} /><span class="hand-wayline__words">${wayWords(row?.pulls, own)}</span>
+    <p class="hand-wayline__line cap">${!signless && html`<${LevelSign} level=${row?.level} />`}<span class="hand-wayline__words">${wayWords(row?.pulls, own)}</span>
       ${lines.length > 0 && html`<button type="button" class="ork-btn quiet hand-wayline__more" aria-expanded=${more} onClick=${() => setMore(!more)}>${more ? "Less" : "More"}</button>`}</p>
     ${more && lines.length > 0 && html`<ul class="hand-wayline__list" aria-label="What it pulls">${lines.map((l) => html`<li key=${l.key} class="cap" data-kind=${l.kind}>${l.text}</li>`)}</ul>`}
   </div>`;

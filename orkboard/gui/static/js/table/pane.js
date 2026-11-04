@@ -71,17 +71,17 @@ function Over() {
 }
 
 /** The picked goal's phases in the pane's title, *Talk · Spec · Work · Done*: the current one marked, the ones gone by lit; *Talk* and *Spec* are pages (the stances, the sections), opened by a press once the goal is at them or past them
- *  (decisions §126.4). Work and Done are marks alone: their pane is the Board's. `from`: where the pane was (the page opened says it came from there). */
+ *  (decisions §126.4). Work is a mark alone: its pane is the Board's; *Done*, once the goal is done, opens its quality record (qualitypage.js, spec 132 D.4: it replaces the result). `from`: where the pane was (the page opened says it came from there). */
 function Phases({ goal, from }) {
-  const now = phaseOf(goal), at = PHASES.findIndex(([id]) => id === now), shown = over.value?.kind;
+  const now = phaseOf(goal), at = PHASES.findIndex(([id]) => id === now), shown = over.value?.kind === "quality" ? "done" : over.value?.kind;     // the Done mark opens the `quality` page
   if (at < 0) return null;
   return html`<nav class="table-phases" aria-label="The goal's phases" data-phase=${now}>${PHASES.map(([id, word], i) => {
-    const state = i < at ? "past" : i === at ? "now" : "next", page = id === "talk" || id === "spec";
+    const state = i < at ? "past" : i === at ? "now" : "next", page = id === "talk" || id === "spec" || id === "done";
     const cls_ = cls("table-phase", { "is-past": state === "past", "is-now": state === "now", "is-open": shown === id });
     const said = `${word}${state === "now" ? ", now" : state === "past" ? ", done" : ""}`;
     return page && state !== "next"
       ? html`<button type="button" key=${id} class=${cls("ork-btn quiet", cls_)} data-phase=${id} aria-current=${state === "now" ? "step" : undefined} aria-pressed=${String(shown === id)} aria-label=${said}
-          title=${`${word}: open it`} onClick=${() => { if (shown !== id) openOver(id, { idea: goal }, over.peek()?.from || from, word); }}>${word}</button>`
+          title=${`${word}: open it`} onClick=${() => { if (shown !== id) openOver(id === "done" ? "quality" : id, { idea: goal }, over.peek()?.from || from, id === "done" ? "Quality" : word); }}>${word}</button>`
       : html`<span key=${id} class=${cls_} data-phase=${id} aria-current=${state === "now" ? "step" : undefined} aria-label=${said}>${word}</span>`;
   })}</nav>`;
 }

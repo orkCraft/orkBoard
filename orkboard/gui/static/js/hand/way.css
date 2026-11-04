@@ -61,3 +61,13 @@ span.hand-route__head { cursor: default; }
 .hand-wayline__more { flex: none; }
 .hand-wayline__list { margin: 0; padding-left: var(--ork-5); color: var(--ork-ink-muted); }
 .hand-wayline__list li { overflow-wrap: anywhere; }
+
+/* a goal's quality card and a finding of no goal's (hand/qualitycard.js, spec 132 D.3): one block a finding, the finder's head, the level's sign, the cause, the way down in one line, two answers and the finding's … */
+.hand-quality__list { display: flex; flex-direction: column; gap: var(--ork-4); margin: 0; padding: 0; list-style: none; min-width: 0; }
+.hand-finding { display: flex; flex-direction: column; gap: var(--ork-2); min-width: 0; }
+.hand-finding p { margin: 0; }
+.hand-finding__who { display: flex; align-items: center; gap: var(--ork-3); min-width: 0; }
+.hand-finding__what { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.hand-finding__cause, .hand-finding__change { color: var(--ork-ink-muted); overflow-wrap: anywhere; }
+.hand-finding__levels { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3); }
+.hand-finding__dots { margin-left: auto; }

@@ -1193,7 +1193,7 @@ def test_a_goal_picked_has_its_phase_marks_in_the_title_the_current_one_marked_a
 
 
 @pytest.mark.parametrize("state,now,pages", [("routed", "talk", ["talk"]), ("talk", "talk", ["talk"]), ("decided", "spec", ["talk", "spec"]), ("sections", "spec", ["talk", "spec"]),
-                                              ("plan", "work", ["talk", "spec"]), ("done", "done", ["talk", "spec"])])
+                                              ("plan", "work", ["talk", "spec"]), ("done", "done", ["talk", "spec", "done"])])
 def test_the_current_phase_follows_the_goals_state(gui, state, now, pages):
     errors: list[str] = []
     pg, host = way(gui, "wide", errors, state=state)
