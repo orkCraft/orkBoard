@@ -44,7 +44,7 @@ def test_the_row_appears_when_the_last_test_is_done_and_not_before(host):
                    "evidence": [{"text": "Four of five asked", "ref": first, "at": row["evidence"][0]["at"]}],
                    "tests": [{"slug": first, "title": "Interview five founders"}, {"slug": second, "title": "Playtest the sketch"}],
                    "party": "", "leader": "orkmaster", "blocks": False, "priority": "normal", "at": item["at"],
-                   "refuted": [], "if_holds": "", "draft": {"held": "", "refuted": {}}}
+                   "measures": [], "met": {"holds": None, "refuted": []}, "refuted": [], "if_holds": "", "draft": {"held": "", "refuted": {}}}
 
 
 def test_a_test_gone_from_the_board_is_not_done(host):

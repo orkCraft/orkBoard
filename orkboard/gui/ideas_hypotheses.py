@@ -9,10 +9,15 @@ them by. The record is `realm/hypotheses.py`'s; the row *Did it hold?* that asks
     ideas.hypothesis_drop {id}                # the hypothesis gone → {ok}
     ideas.hypothesis_attach {id, goal?, test?}   # `goal` rests on it, `test` tests it (a goal tests one hypothesis at most: it moves); an empty `id` detaches the goal / the test → {ok, item | null}
     ideas.hypothesis_evidence {id, text, ref?}   # a line of what was found → {ok, item}
-    ideas.hypothesis_judge {id, state, why?, way?, draft?}  # `state` held | refuted | unsure → {ok, item, decision?, way?}. Held and refuted write a decision (`keeper.write_decision`: `Hypothesis held: <text>`,
+    ideas.hypothesis_judge {id, state, why?, way?, draft?, date?}  # `state` held | refuted | unsure → {ok, item, decision?, way?}. Held and refuted write a decision (`keeper.write_decision`: `Hypothesis held: <text>`,
                                               #    its body the draft (`draft`, the person's own words, else `hypotheses.draft`: what changes if it holds / if it is refuted this way), then the signal, the evidence,
                                               #    the tests' titles and the why; a refuted one with a way opens with `Refuted: <name> — <when>`) and keep its number in the verdict; `way` the way it is
-                                              #    refuted that was met (spec 133 A.1); unsure keeps it open, the why its evidence
+                                              #    refuted that was met (spec 133 A.1); unsure keeps it open, the why its evidence, `date` the day to look again (*Not sure yet: look again on <date>*, after today: spec 133 B.2)
+    ideas.hypothesis_measure_set {id, measure?, what, from?, by?, holds?, refuted?, span_days?, date?}   # a measure of the hypothesis (spec 133 B.1): a new one, or the one named by `measure` changed; `holds` is
+                                              #    a bar `{op, n, unit?}`, `refuted` a list of `{way, op, n, unit?}`; the date is the day the hypothesis was kept and the span, unless `date` is given → {ok, item}
+    ideas.hypothesis_measure_drop {id, measure}   # → {ok, item}
+    ideas.hypothesis_value {id, measure, n, from?}   # the value of a measure typed by the person (*the one answer here that is typed*) → {ok, item}; `item.measures[].value` is None for a measure whose
+                                              #    date is not reached: no number is shown counting before its date (CLAUDE.md's frame)
     ideas.hypotheses_propose {}               # the leaders' proposal (core/idea_hypotheses.py) → {ok, asked: bool, why?}
 
 **The project's own hypotheses file** (spec 133 C): where the project keeps one (`<state>/project.json` `hypotheses`, else `docs/hypotheses.md`, read in the Board's tree as the decisions file is) it is the source:
@@ -33,7 +38,8 @@ from typing import Any
 from orkboard.core.idea_decide import TITLE_CHARS
 from orkboard.core.idea_keeper import KeeperError
 from orkboard.gui.ideas_args import IdeasError, _str
-from orkboard.realm import board_rows, event_log, findings, findings_gather, hypotheses, hypotheses_bind, hypotheses_file, idea_element, ideas, journal_notes, opportunity_tree as tree
+from orkboard.realm import (board_rows, event_log, findings, findings_gather, hypotheses, hypotheses_bind, hypotheses_file, hypothesis_measures, idea_element, ideas, journal_notes,
+                            opportunity_tree as tree)
 
 DRAFT_WORDS = 6000                          # the person's own words for the decision, at most (as the decision card's text)
 NO_PROPOSAL = "Proposing hypotheses is not in this build yet"
@@ -56,7 +62,9 @@ class HypothesesMixin:
         """The items with `state` as shown and each goal of `tests` and `rests` with its title, element and place."""
         known = self._hyp_goals([s for i in items for s in (*i["tests"], *i["rests"])])
         places = {s: g["place"] for s, g in known.items()}
-        return [{**i, "state": hypotheses.state_of(i, places), "tests": [known[s] for s in i["tests"] if s in known], "rests": [known[s] for s in i["rests"] if s in known]} for i in items]
+        today = hypothesis_measures.day(ideas._now())
+        return [{**hypothesis_measures.shown(i, today), "state": hypotheses.state_of(i, places), "tests": [known[s] for s in i["tests"] if s in known], "rests": [known[s] for s in i["rests"] if s in known]}
+                for i in items]
 
     def _hyp_item(self, id: str) -> dict:
         return self._hyp_shown([next(i for i in hypotheses.read(self.state_dir)["items"] if i["id"] == id)])[0]
@@ -165,6 +173,43 @@ class HypothesesMixin:
         self.changed("")
         return {"ok": True, "item": self._hyp_item(item["id"]) if item else None}
 
+    def hypothesis_measure_set(self, args: dict) -> dict:
+        self._hyp_ready()
+        id = _str(args, "id", 60).strip()
+        given = {k: _str(args, k, 120) for k in ("what", "from", "by") if k in args}
+        for k in ("holds", "refuted", "span_days"):
+            if k in args:
+                given[k] = args[k]
+        if "date" in args:
+            given["date"] = _str(args, "date", 10)
+        bars = {k: given.pop(k) for k in ("holds", "refuted") if k in given}
+        if bars:
+            given["bars"] = bars
+        try:
+            item = hypotheses.measure_set(self.state_dir, id, _str(args, "measure", 20).strip(), **given)
+        except ValueError as e:
+            raise IdeasError(str(e)) from None
+        self.changed("")
+        return {"ok": True, "item": self._hyp_item(item["id"])}
+
+    def hypothesis_measure_drop(self, args: dict) -> dict:
+        self._hyp_ready()
+        try:
+            item = hypotheses.measure_drop(self.state_dir, _str(args, "id", 60).strip(), _str(args, "measure", 20).strip())
+        except ValueError as e:
+            raise IdeasError(str(e)) from None
+        self.changed("")
+        return {"ok": True, "item": self._hyp_item(item["id"])}
+
+    def hypothesis_value(self, args: dict) -> dict:
+        self._hyp_ready()
+        try:
+            item = hypotheses.value(self.state_dir, _str(args, "id", 60).strip(), _str(args, "measure", 20).strip(), args.get("n"), "person", _str(args, "from", 120))
+        except ValueError as e:
+            raise IdeasError(str(e)) from None
+        self.changed("")
+        return {"ok": True, "item": self._hyp_item(item["id"])}
+
     def hypothesis_evidence(self, args: dict) -> dict:
         self._hyp_ready()
         try:
@@ -197,7 +242,7 @@ class HypothesesMixin:
     def hypothesis_judge(self, args: dict) -> dict:
         id, state = _str(args, "id", 60).strip(), _str(args, "state", 20).strip()
         why = " ".join(_str(args, "why", 400).split())[:hypotheses.TEXT_CHARS]
-        way, draft = _str(args, "way", 80).strip(), _str(args, "draft", DRAFT_WORDS)
+        way, draft, date = _str(args, "way", 80).strip(), _str(args, "draft", DRAFT_WORDS), _str(args, "date", 10).strip()
         self._hyp_ready()
         if state not in hypotheses.VERDICTS:
             raise IdeasError("A hypothesis held, was refuted or is not sure yet")
@@ -229,7 +274,7 @@ class HypothesesMixin:
                 except Exception:
                     pass
             try:
-                judged = hypotheses.judge(self.state_dir, id, state, why, out.get("number") or 0, way)
+                judged = hypotheses.judge(self.state_dir, id, state, why, out.get("number") or 0, way, date)
             except ValueError as e:
                 raise IdeasError(str(e)) from None
         if state != "unsure":
@@ -287,5 +332,6 @@ class HypothesesMixin:
 def hypotheses_commands(ideas_: Any) -> dict:
     """The hypotheses' commands by name (`gui/ideas.py` adds them to its table: `**hypotheses_commands(self)`)."""
     return {"ideas.hypotheses": ideas_.hypotheses, "ideas.hypothesis_set": ideas_.hypothesis_set, "ideas.hypothesis_keep": ideas_.hypothesis_keep, "ideas.hypothesis_drop": ideas_.hypothesis_drop,
-            "ideas.hypothesis_attach": ideas_.hypothesis_attach, "ideas.hypothesis_evidence": ideas_.hypothesis_evidence, "ideas.hypothesis_judge": ideas_.hypothesis_judge,
+            "ideas.hypothesis_attach": ideas_.hypothesis_attach, "ideas.hypothesis_evidence": ideas_.hypothesis_evidence, "ideas.hypothesis_judge": ideas_.hypothesis_judge, "ideas.hypothesis_measure_set": ideas_.hypothesis_measure_set,
+            "ideas.hypothesis_measure_drop": ideas_.hypothesis_measure_drop, "ideas.hypothesis_value": ideas_.hypothesis_value,
             "ideas.hypotheses_propose": ideas_.hypotheses_propose}

@@ -7,7 +7,7 @@ has one signal, a goal for a test, no date and no draft. **Builds:** A, C and D 
 reviewing and merging), B's code with them, then B's leaders' call and every face on the cheaper model · **Review:** the
 critical tests and each part's own · P1. After spec 116 (the record this spec widens) and spec 132 D (`findings.add`, where
 D hands a refuted hypothesis). No new pane, column, drawer or dialog (§104.0, §145); no list and no count of hypotheses
-(CLAUDE.md's frame). The host returns keys and data, never the words of §8.
+(CLAUDE.md's frame). The host returns keys and data, never the words of §5.
 
 | Part | What | Where (and its tests) |
 |---|---|---|
@@ -45,7 +45,7 @@ side by side; D shares only `gui/ideas_hypotheses.py`.
   it by its party's leader (step `finding`) and sorts it by the Orkmaster (`finding_level`) (`core/idea_findings.py`
   `findings_begin("")`), and `findings.rows` lays it as a `finding` row once sorted.
 - **`measures`** (`realm/measures.py`, `TERMS` key `measure`) are how the arguing turned out, read from the event log: **not
-  this spec's measure**. This spec's is `realm/hypothesis_measures.py`, its word the key `test_measure` (§8).
+  this spec's measure**. This spec's is `realm/hypothesis_measures.py`, its word the key `test_measure` (§5).
 
 ## A. Conditions and the draft (§235.1, §235.4, §237.4)
 
@@ -160,7 +160,7 @@ future. An item with no test is never due, as today. *Not sure yet* (`judge(...,
 `look_on` to the day given (the why kept as evidence, as today; a day in the past or not a day is a ValueError, *Pick a day
 to look again*); with none given nothing is set. `hypotheses.value(state_dir, id, mid, n, by, source="")` keeps a value
 (`by` the party's slug or `person`; ValueError for a measure gone or a number that is none); `hypotheses.measure_set(state_dir,
-id, **measure)` and `measure_drop(state_dir, id, mid)` keep the measures (`MAX_MEASURES`; a measure of a hypothesis judged is
+id, mid="", **measure)` (`mid` the measure changed; none, a new one) and `measure_drop(state_dir, id, mid)` keep the measures (`MAX_MEASURES`; a measure of a hypothesis judged is
 not changed).
 
 ### B.3 The values: a leader, else the person (the call: the cheaper model builds it)
@@ -307,14 +307,14 @@ and commits it with the Board's pages in one commit (`git log` names the file), 
   `tests/test_gui_hypotheses.py` (a refuted verdict returns the finding's id and the goals' quality record holds the outcome; a
   held verdict adds no finding; a failing gatherer never fails the verdict).
 
-## 8. The words (`realm/lexicon.py` `TERMS`)
+## 5. The words (`realm/lexicon.py` `TERMS`)
 
 New keys (checked free; none renamed): `refuted_way` (*way it is refuted*, *ways it is refuted*), `test_measure` (*measure*, *measures*: **`measure` is the table's already**, `realm/measures.py`, which Orkline
 reads, so a hypothesis's measure takes this key). The face's lines (not in this spec's host parts): *Holds when*, *Refuted
 when*, *If it holds*, *If it is refuted*, *Read on <date>*, *The bar*, *Not sure yet: look again on <date>*, *More*; the
 verdicts *Held*, *Refuted* with its way picked, *Not sure yet*. The host returns keys and data, never these words.
 
-## 9. Not here
+## 6. Not here
 
 The faces (the card's *More*, the conditions' fields, the measures' list, the values typed, the verdict card turning into the
 finding's); the Orkmaster's `decide` call wording a decision from a hypothesis with no draft (§235.4's last clause; today
@@ -322,7 +322,17 @@ code words the body); a measure read from an analytics service (§235.2 reads it
 *measure* finding source (§202: a measure missed); Talk's `assumes` carrying conditions (a proposal does; Talk's is as spec 116
 §3.2 made it).
 
-## 10. Tests
+## 7. As built (the host, by Claude Opus 5.5)
+
+**A** (`realm/hypotheses.py`, `core/idea_hypotheses.py`, `realm/board_rows.py`, `gui/ideas_hypotheses.py`) as written. **C** (`realm/hypotheses_file.py`, `realm/hypotheses_bind.py`): the file is read where the decisions
+file is (`hypotheses_bind.base`); the record keeps its whole copy and the file overlays it (C.3); `bind` adopts by title (an item whose title is a section's keeps its goals); a section with no *Holds when*
+is skipped by `parse` and left untouched by `apply`; a verdict with a why or a way has a `### Verdict` line, one with only a decision has its number in the Status line. **D** as written: `verdict.finding`
+is in the record only. **B**, the code that is not a call: `realm/hypothesis_measures.py`, `hypotheses.due(.., today)`, `value`, `measure_set`, `measure_drop`, `judge(.., date)` (*look again on*), the row's
+`measures` and `met`, the commands `ideas.hypothesis_measure_set`, `ideas.hypothesis_measure_drop`, `ideas.hypothesis_value`, the values hidden until the date (`hypothesis_measures.shown`).
+**Not built yet** (for the cheaper model): B.3's leader reading (`core/idea_hypothesis_values.py`, the step `measure_read`, its events) and C.2's `- Measure:` lines of *How we test it* (read and written: a bound
+file's measures live in the record until then).
+
+## 8. Tests
 
 Each part's above; the critical tests (`tests/test_architecture.py`: `realm/hypotheses_file.py` and
 `realm/hypothesis_measures.py` import no `gui/`), `tests/test_board_alone.py`, `tests/test_updates.py`, `tests/test_lexicon.py`,

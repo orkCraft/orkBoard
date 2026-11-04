@@ -471,3 +471,41 @@ def test_a_held_verdict_adds_no_finding_and_a_gatherer_that_fails_never_fails_th
     other_id, _ = with_test(host, text="Refuted one")
     got = host.command("ideas.hypothesis_judge", {"id": other_id, "state": "refuted"})
     assert got["ok"] is True and got["item"]["state"] == "refuted" and "finding" not in got and findings.of_goal(host.ideas.state_dir, "") == []
+
+
+# -- spec 133 B: measures, the date, the values typed ------------------------------------------------------------------------------------------
+
+BAR = {"op": "<=", "n": 70, "unit": "%"}
+
+
+def test_a_measure_is_set_dropped_and_its_value_typed_and_no_number_is_shown_before_its_date(host):
+    item = hold(host, refuted=WAYS)
+    got = host.command("ideas.hypothesis_measure_set", {"id": item["id"], "what": "the cost of an install", "from": "the ads' platforms", "holds": BAR,
+                                                        "refuted": [{"way": "the noise", "op": ">", "n": 100}], "span_days": 28})["item"]
+    (m,) = got["measures"]
+    assert m["id"] == "m1" and m["date"] > item["at"][:10] and m["bars"]["holds"]["n"] == 70 and m["bars"]["refuted"][0]["way"] == "the noise"
+    typed = host.command("ideas.hypothesis_value", {"id": item["id"], "measure": "m1", "n": 64, "from": "the dashboard"})["item"]
+    assert typed["measures"][0]["value"] is None                                                       # its date is not reached: the number is kept, not shown
+    assert hypotheses.read(host.ideas.state_dir)["items"][0]["measures"][0]["value"]["n"] == 64.0
+    assert host.command("ideas.hypotheses", {})["items"][0]["measures"][0]["value"] is None
+    changed = host.command("ideas.hypothesis_measure_set", {"id": item["id"], "measure": "m1", "date": "2020-01-01"})["item"]["measures"][0]
+    assert changed["date"] == "2020-01-01" and changed["value"]["n"] == 64.0 and changed["bars"]["refuted"]                                  # a date reached: the value is shown
+    refused(host, "ideas.hypothesis_value", {"id": item["id"], "measure": "m1", "n": "lots"}, "is a number")
+    refused(host, "ideas.hypothesis_measure_set", {"id": item["id"], "what": "x"}, "its bar")
+    refused(host, "ideas.hypothesis_measure_drop", {"id": item["id"], "measure": "m9"}, "That measure is gone")
+    assert host.command("ideas.hypothesis_measure_drop", {"id": item["id"], "measure": "m1"})["item"]["measures"] == []
+
+
+def test_a_measure_alone_makes_it_due_on_its_date_and_the_row_carries_the_values_against_the_bars(host):
+    item = hold(host)
+    host.command("ideas.hypothesis_measure_set", {"id": item["id"], "what": "the cost of an install", "holds": BAR, "refuted": [{"way": "", "op": ">", "n": 100}], "date": "2999-01-01"})
+    assert hand(host) == []                                                                              # the date is not reached
+    host.command("ideas.hypothesis_measure_set", {"id": item["id"], "measure": "m1", "date": "2020-01-01"})
+    (row,) = hand(host)
+    assert row["tests"] == [] and row["met"] == {"holds": None, "refuted": []} and row["measures"][0]["value"] is None
+    host.command("ideas.hypothesis_value", {"id": item["id"], "measure": "m1", "n": 64})
+    (row,) = hand(host)
+    assert row["met"] == {"holds": True, "refuted": []} and row["measures"][0]["value"]["n"] == 64.0
+    got = host.command("ideas.hypothesis_judge", {"id": item["id"], "state": "unsure", "why": "look again", "date": "2099-01-01"})
+    assert got["item"]["state"] == "open" and hand(host) == []
+    refused(host, "ideas.hypothesis_judge", {"id": item["id"], "state": "unsure", "date": "2001-01-01"}, "Pick a day to look again")

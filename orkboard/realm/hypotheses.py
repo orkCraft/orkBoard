@@ -9,10 +9,11 @@ on and the goals that test it. Kept by the person and by the leaders (who propos
     hypotheses.evidence(state_dir, id, text, ref="") -> item   # a line of what was found (`ref` a goal's slug, a mark's, or none), at most 12, the newest kept
     hypotheses.judge(state_dir, id, state, why="", decision=0) -> item   # "held" | "refuted" (with the decision's number) | "unsure" (stays open; the why becomes evidence)
     hypotheses.state_of(item, places)                  # the state as shown: "testing" for an open one while a test goal is in line or at work (`places`: {slug: "line"|"work"|"done"})
-    hypotheses.due(state_dir, places)                  # the open items with a test, every test done, not judged: what the hand asks *Did it hold?* about
+    hypotheses.due(state_dir, places, today="")        # the open items with a test (a goal, a measure), every test goal done and every measure's date reached, not judged, not put off: what the hand asks *Did it hold?* about
     hypotheses.text(state_dir, places)                 # for a leader's call: the open and testing ones, a line each, ~800 characters at most; "" with none
     hypotheses.parse(answer)                           # a leader's proposal, strictly → [{text, signal, axis, on, rests, refuted, if_holds}] (three at most) or None
     hypotheses.draft(item, state, way="")              # the draft of the decision a verdict writes: `if_holds` for held, the way's `change` for refuted (spec 133 A.1)
+    hypotheses.measure_set(state_dir, id, mid="", **measure) / measure_drop(state_dir, id, mid) / value(state_dir, id, mid, n, by, source="")   # the measures a hypothesis is tested by besides goals (spec 133 B; realm/hypothesis_measures.py)
     hypotheses.bind(state_dir, rel) / hypotheses.set_writer(state_dir, put)   # the project's own hypotheses file is the source (spec 133 C; realm/hypotheses_file.py, realm/hypotheses_bind.py)
 
 Spec 133 C: **with a file bound** `read` gives the file's items (in its order), each overlaid on the record's copy of the same id for what the file has no place for (`axis`, `on`, `rests`, `tests`, `by`,
@@ -32,10 +33,11 @@ judged is judged once. The order is the order kept; nothing here depends on the 
 """
 from __future__ import annotations
 
+import datetime
 import re
 from pathlib import Path
 
-from orkboard.realm import ideas
+from orkboard.realm import hypothesis_measures as hm, ideas
 
 FILE = "hypotheses.json"
 AXES = ("desirable", "viable", "feasible", "usable")
@@ -154,7 +156,8 @@ def _read_record(state_dir: Path) -> list[dict]:
                       "tests": [s for s in dict.fromkeys(r["tests"] if isinstance(r.get("tests"), list) else []) if isinstance(s, str) and _SLUG.fullmatch(s)][:GOALS],
                       "by": r["by"] if r.get("by") in BY else "person", "party": _words(r.get("party"), 80) if isinstance(r.get("party"), str) and _SLUG.fullmatch(r["party"]) else "",
                       "state": r["state"], "evidence": _evidence(r.get("evidence")), "verdict": _verdict(r.get("verdict")), "at": str(r.get("at") or ""),
-                      "refuted": _clean_ways(r.get("refuted")), "if_holds": _words(r.get("if_holds"), DRAFT_CHARS)})
+                      "refuted": _clean_ways(r.get("refuted")), "if_holds": _words(r.get("if_holds"), DRAFT_CHARS), "measures": hm.lenient(r.get("measures")), "look_on": hm.day(r.get("look_on")),
+                      "started": hm.day(r.get("started"))})
     return items
 
 
@@ -169,7 +172,7 @@ def read(state_dir: Path) -> dict:
     mine = {i["id"]: i for i in items}
     out = []
     for f in hypotheses_file.parse(got)["items"]:
-        base = mine.get(f["id"]) or {"axis": "", "on": "", "rests": [], "tests": [], "by": "person", "party": "", "at": ""}
+        base = mine.get(f["id"]) or {"axis": "", "on": "", "rests": [], "tests": [], "by": "person", "party": "", "at": "", "measures": [], "look_on": "", "started": ""}
         out.append({**base, **{k: f[k] for k in ("id", "text", "signal", "refuted", "if_holds", "state", "evidence", "verdict")}})
         if f["verdict"] and (base.get("verdict") or {}).get("finding"):                     # the file has no place for the finding a refuted verdict became (spec 133 D): the record's copy keeps it
             out[-1]["verdict"] = {**f["verdict"], "finding": base["verdict"]["finding"]}
@@ -306,7 +309,8 @@ def _make_room(items: list[dict]) -> list[dict]:
     return items
 
 
-def add(state_dir: Path, text: str, signal: str, *, axis: str = "", on: str = "", rests: object = (), by: str = "person", party: str = "", refuted: object = (), if_holds: str = "") -> dict:
+def add(state_dir: Path, text: str, signal: str, *, axis: str = "", on: str = "", rests: object = (), by: str = "person", party: str = "", refuted: object = (), if_holds: str = "",
+        measures: object = ()) -> dict:
     """One more hypothesis → the item: a person's is `open` at once, a leader's `proposed` (by `party`, its slug). ValueError in plain words for no words, an axis or a job that is none, a `by`
     that is none, and past the bounds (seven open or testing, twelve proposed, forty in all: with every one of them kept and none judged)."""
     if by not in BY:
@@ -314,6 +318,8 @@ def add(state_dir: Path, text: str, signal: str, *, axis: str = "", on: str = ""
     text = _need(text, "A hypothesis says what we believe")
     signal = _need(signal, "A hypothesis says what we'll know when")
     axis, on, rests, ways = _axis(axis), _on(on), _rests(rests), _ways(refuted)
+    started = hm.day(ideas._now()) if by == "person" else ""
+    meas = _dated(hm.clean(measures), started)
     party = party.strip() if by == "leader" and isinstance(party, str) and _SLUG.fullmatch(party.strip()) else ""
     state = "open" if by == "person" else "proposed"
     with ideas.LOCK:
@@ -321,7 +327,7 @@ def add(state_dir: Path, text: str, signal: str, *, axis: str = "", on: str = ""
         _room(items, state)
         items = items if _bound(state_dir) else _make_room(items)             # a bound file's judged sections are never the ones to go
         item = {"id": _id_of(text, {i["id"] for i in items}), "text": text, "signal": signal, "axis": axis, "on": on, "rests": rests, "tests": [], "by": by, "party": party, "state": state,
-                "evidence": [], "verdict": {}, "at": ideas._now(), "refuted": ways, "if_holds": _words(if_holds, DRAFT_CHARS)}
+                "evidence": [], "verdict": {}, "at": ideas._now(), "refuted": ways, "if_holds": _words(if_holds, DRAFT_CHARS), "measures": meas, "look_on": "", "started": started}
         _put(state_dir, items + [item], "added" if state == "open" else "", id=item["id"])
     return item
 
@@ -361,6 +367,8 @@ def keep(state_dir: Path, id: str) -> dict:
         if item["state"] == "proposed":
             _room(items, "open")
             item["state"] = "open"
+            item["started"] = item["started"] or hm.day(ideas._now())
+            item["measures"] = _dated(item["measures"], item["started"])
             _put(state_dir, items, "kept", id=id)
     return item
 
@@ -423,13 +431,15 @@ def evidence(state_dir: Path, id: str, text: str, ref: str = "") -> dict:
     return item
 
 
-def judge(state_dir: Path, id: str, state: str, why: str = "", decision: int = 0, way: str = "") -> dict:
+def judge(state_dir: Path, id: str, state: str, why: str = "", decision: int = 0, way: str = "", date: str = "") -> dict:
     """The person's answer to *Did it hold?* → the item. "held" and "refuted" end it (`verdict` {state, why, decision, at}: `decision` the number of the decision written, 0 with none); "unsure"
     keeps it open and adds the why, if there is one, to the evidence. `way` (spec 133 A.1): the name of the way it is refuted that was met, for "refuted" only: an item with ways takes one of
     theirs ("" for an item with one way), an item with none takes "". ValueError for a hypothesis gone, a state that is none, one still only proposed, one judged already, and a way that does not fit."""
     if state not in VERDICTS:
         raise ValueError("A hypothesis held, was refuted or is not sure yet")
     why, way = _words(why, TEXT_CHARS), _words(way, NAME_CHARS)
+    if state == "unsure" and date and (not hm.day(date) or hm.day(date) <= hm.day(ideas._now())):
+        raise ValueError("Pick a day to look again, after today")
     with ideas.LOCK:
         items = read(state_dir)["items"]
         item = _find(items, id)
@@ -441,6 +451,9 @@ def judge(state_dir: Path, id: str, state: str, why: str = "", decision: int = 0
         way = _pick_way(item, state, way)
         now = ideas._now()
         if state == "unsure":
+            if date:                                                        # *Not sure yet: look again on <date>* (spec 133 B.2)
+                item["look_on"] = hm.day(date)
+                item["measures"] = [{**m, "date": max(m["date"], hm.day(date)), "value": None if m["date"] < hm.day(date) else m["value"]} for m in item["measures"]]
             if why:
                 item["evidence"] = (item["evidence"] + [{"text": why, "ref": "", "at": now}])[-EVIDENCE:]
         else:
@@ -499,9 +512,76 @@ def state_of(item: dict, places: dict) -> str:
     return item.get("state", "")
 
 
-def due(state_dir: Path, places: dict) -> list[dict]:
-    """The open hypotheses that have a test, every test done, and that are not judged: what the hand asks *Did it hold?* about, in the order kept."""
-    return [i for i in read(state_dir)["items"] if i["state"] == "open" and i["tests"] and all(places.get(t) == "done" for t in i["tests"])]
+def due(state_dir: Path, places: dict, today: str = "") -> list[dict]:
+    """The open hypotheses that have a test, that are not judged and not put off: what the hand asks *Did it hold?* about, in the order kept. A test is a goal or a measure (spec 133 B.2): every test
+    goal is done and every measure's date is reached (the later of the two when it has both), and its `look_on` is not in the future. `today` is `YYYY-MM-DD` (the clock's when empty)."""
+    today = hm.day(today) or hm.day(ideas._now())
+    return [i for i in read(state_dir)["items"] if i["state"] == "open" and (i["tests"] or i["measures"]) and all(places.get(t) == "done" for t in i["tests"])
+            and all(hm.reached(m, today) for m in i["measures"]) and (not i["look_on"] or i["look_on"] <= today)]
+
+
+def _dated(measures: list[dict], started: str) -> list[dict]:
+    """Each measure with its date: the `started` day (today when none) and its span, kept where it was given."""
+    return [m if m["date"] else {**m, "date": hm.date_of(started or hm.day(ideas._now()), m["span_days"])} for m in measures]
+
+
+def _changeable(item: dict) -> None:
+    if item["state"] in JUDGED:
+        raise ValueError("That hypothesis is judged already")
+    _kept_up(item)
+
+
+def measure_set(state_dir: Path, id: str, mid: str = "", **measure: object) -> dict:
+    """A measure kept on a hypothesis (spec 133 B.1): a new one, or the one with the `id` given changed (`mid`; its words, bars, span, date; the value stays unless it is given). Its date is the hypothesis's
+    `started` day and its span, unless a `date` is given (the span then follows). → the item. ValueError for a hypothesis gone or judged, a measure that is none, and more than four."""
+    with ideas.LOCK:
+        items = read(state_dir)["items"]
+        item = _find(items, id)
+        _changeable(item)
+        mid = mid.strip() if isinstance(mid, str) else ""
+        old = next((m for m in item["measures"] if m["id"] == mid), None) if mid else None
+        raw = {**(old or {}), **{k: v for k, v in measure.items() if v is not None}}
+        if old is not None and isinstance(measure.get("bars"), dict):                    # a bar given changes that bar only
+            raw["bars"] = {**old["bars"], **measure["bars"]}
+        if hm.day(measure.get("date")) and "span_days" not in measure:                # a day set by the person: the span follows
+            raw["span_days"] = max(1, (datetime.date.fromisoformat(hm.day(measure["date"])) - datetime.date.fromisoformat(hm.day(item["started"] or ideas._now()))).days)
+        elif "span_days" in measure or old is None:                                      # a span (or a new one): the date is worked out again
+            raw["date"] = hm.day(measure.get("date")) or ""
+        got = hm.clean([raw])[0]
+        item["measures"] = hm.clean([got if old is not None and m["id"] == mid else m for m in item["measures"]] + ([] if old is not None else [got]))
+        item["started"] = item["started"] or (hm.day(ideas._now()) if item["state"] == "open" else "")
+        item["measures"] = _dated(item["measures"], item["started"])
+        _save(state_dir, items)
+    return item
+
+
+def measure_drop(state_dir: Path, id: str, mid: str) -> dict:
+    """A measure taken off a hypothesis. ValueError for a hypothesis gone or judged and a measure gone."""
+    with ideas.LOCK:
+        items = read(state_dir)["items"]
+        item = _find(items, id)
+        _changeable(item)
+        if not any(m["id"] == mid for m in item["measures"]):
+            raise ValueError("That measure is gone")
+        item["measures"] = [m for m in item["measures"] if m["id"] != mid]
+        _save(state_dir, items)
+    return item
+
+
+def value(state_dir: Path, id: str, mid: str, n: object, by: str = "person", source: str = "") -> dict:
+    """The value of a measure (a leader's reading, or the person's: *the one answer here that is typed*): `{n, by, at, from}`. ValueError for a hypothesis gone, not open, a measure gone and a number that is none."""
+    if hm._num(n) is None:
+        raise ValueError("A measure's value is a number")
+    with ideas.LOCK:
+        items = read(state_dir)["items"]
+        item = _find(items, id)
+        _changeable(item)
+        got = next((m for m in item["measures"] if m["id"] == mid), None)
+        if got is None:
+            raise ValueError("That measure is gone")
+        got["value"] = {"n": hm._num(n), "by": _words(by, 40) or "person", "at": ideas._now(), "from": _words(source, hm.LINE)}
+        _save(state_dir, items)
+    return item
 
 
 def _shown(items: list[dict], places: dict, states: tuple[str, ...]) -> list[tuple[dict, str]]:
