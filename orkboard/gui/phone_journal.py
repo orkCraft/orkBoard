@@ -33,7 +33,7 @@ ASK_LINE = ("Follow this project from your phone away from home? Its status goes
             "orkboard/journal, and goals from your phone come through orkboard/inbox. No code and no prompts. "
             "The repository must be private.")
 NEEDS_EVERY_S = 20                       # the hand's cards are looked at this often per project, for `urgent`
-NOT_A_CARD = ("proposal", "party", "pitch", "project_q", "hypothesis")        # the snapshot's own count leaves these out of what needs the person
+NOT_A_CARD = ("proposal", "party", "pitch", "project_q", "hypothesis", "quality", "finding")        # the snapshot's own count leaves these out of what needs the person
 
 
 def _asked(state_dir: Path) -> str:

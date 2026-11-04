@@ -116,7 +116,7 @@ def test_a_members_call_is_given_none(host, tech, goal):
     """Only the leaders' prompts ask for the slices: no module of a member's call (a task's prompt, the Taskmaster's runner) reads `idea_slices`."""
     from pathlib import Path
     users = sorted(p.name for p in Path(idea_slices.__file__).parent.glob("*.py") if p.name != "idea_slices.py" and "idea_slices" in p.read_text(encoding="utf-8"))
-    assert users == ["idea_ask.py", "idea_concerns.py", "idea_decide.py", "idea_hypotheses.py", "idea_keeper.py", "idea_lead.py", "idea_leader_change.py", "idea_loop.py", "idea_pass.py",
+    assert users == ["idea_ask.py", "idea_concerns.py", "idea_decide.py", "idea_findings.py", "idea_hypotheses.py", "idea_keeper.py", "idea_lead.py", "idea_leader_change.py", "idea_loop.py", "idea_pass.py",
                      "idea_plan.py", "idea_project_q.py", "idea_sections.py", "idea_talk.py", "idea_tree.py", "idea_verdict.py"]
 
 

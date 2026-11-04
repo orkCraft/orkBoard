@@ -64,6 +64,7 @@ from orkboard.core.idea_tree import TreeMixin
 from orkboard.core.idea_hypotheses import HypothesesMixin
 from orkboard.core.idea_journal import JournalMixin
 from orkboard.core.idea_slices import SlicesMixin
+from orkboard.core.idea_findings import FindingsMixin
 from orkboard.core.idea_fold import FoldMixin
 from orkboard.core.idea_plan import PlanMixin, _task, _why, estimate, readiness  # noqa: F401  (the plan's small helpers: the callers and tests use them from here)
 from orkboard.realm import (call_log, commit_goal, event_log, goal_team, idea_change, idea_checks, idea_look, idea_pick, idea_spend, idea_target, ideas,
@@ -119,7 +120,7 @@ def _iso(at: float) -> str:
     return dt.datetime.fromtimestamp(at).isoformat(timespec="seconds")
 
 
-class IdeaKeeper(LeaderChangeMixin, SignInMixin, TalkMixin, VerdictMixin, SketchMixin, ObjectionMixin, ProjectQMixin, AskMixin, PassMixin, LoopMixin, TreeMixin, HypothesesMixin, ConcernsMixin, JournalMixin, SlicesMixin, FoldMixin, DecideMixin, SectionsMixin, PlanMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
+class IdeaKeeper(LeaderChangeMixin, SignInMixin, TalkMixin, VerdictMixin, SketchMixin, ObjectionMixin, ProjectQMixin, AskMixin, PassMixin, LoopMixin, TreeMixin, HypothesesMixin, ConcernsMixin, JournalMixin, SlicesMixin, FindingsMixin, FoldMixin, DecideMixin, SectionsMixin, PlanMixin, DraftMixin, GoalMixin, LeadMixin, ReviseMixin, JudgeMixin):
     def __init__(self, repo_root: Path, state_dir: Path, wiki_root: Callable[[], Path],
                  settings: Callable[[], dict], publish: Callable[[str], None] = lambda slug: None,
                  demo: bool = False, budget_ok: Callable[[], bool] = lambda: True,
@@ -384,6 +385,7 @@ class IdeaKeeper(LeaderChangeMixin, SignInMixin, TalkMixin, VerdictMixin, Sketch
                     started |= self._quiet(lambda: self.draft(slug))
                 elif st["state"] == "ready" and st["held_until"] and ideas.plan(self.state_dir, slug) is None:
                     started |= self._quiet(lambda: self.plan(slug, auto=True))
+        started |= bool(self.findings_due())                    # a done goal's findings told and sorted once they are in (spec 132 D.2); quiet, throttled
         return started
 
     def _quiet(self, fn: Callable[[], Any]) -> bool:

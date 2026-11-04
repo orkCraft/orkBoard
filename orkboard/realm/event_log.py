@@ -255,6 +255,11 @@ QUESTION_PASSED = "question_passed"      # spec 128 D: a leader's question passe
 EVENTS += (QUESTION_PASSED,)       # spec 128 D
 EVENTS += (SPEC_FOLDED,)            # spec 127 C
 EVENTS += (SLICES_CUT, SLICES_FOLDED)       # spec 131 A
+
+# Spec 132 D (decisions §234.3): a goal's findings told by their leaders and sorted by the Orkmaster, in the background. Never a word of a finding.
+FINDINGS_TOLD = "findings_told"      # idea (the goal's slug, "" for findings of no goal), party, findings (how many), seconds, cost (None: unrecorded), failed (true: code's words kept)
+FINDINGS_SORTED = "findings_sorted"  # idea, findings (how many), levels ({work, spec, decision} counts), seconds, cost (None: unrecorded), failed (true: all left at work)
+EVENTS += (FINDINGS_TOLD, FINDINGS_SORTED)       # spec 132 D
 EVENTS += (LEADER_CHANGE_ASKED, LEADER_CHANGE_ANSWERED)      # spec 128 E
 JOURNAL_SENT = "journal_sent"      # decisions §229: the journal sent to the project's remote (or not): sent, remote, branch, files, held_back (lines held for a secret's shape), commit, why (a failure's words, "nothing changed")
 EVENTS += (JOURNAL_SENT,)
