@@ -1,6 +1,6 @@
 """The mana in the hand (docs/specs/104-the-mana-the-discard-on-the-table-a-lifted-card.md §3, §7; decisions §175.2, §176.1–§176.2), in a real browser against a stub host, at the two widths of `tests/narrow.py`: the AI tools' limits
 as potions at the hand's right end, flush against the window's edge: one potion a tool in the chips' order, one row of up to three at the default size and two rows of two small ones for four and of three for five or six, the first five and a
-*+n* for more, each tool's mark in its own colour above it and its share under it, the chip's words on the button, a press opening what used the tool over the pane, a tool not read an empty potion with *?*, a card lifted
+*+n* for more, each tool's mark in its own colour above it and its share under it, the chip's words on the button, a press opening what used the tool over the pane, a tool not read its mark alone, *Limits not read*, a card lifted
 that spends hatching its share off its tool's potion; the tabs' end holds no chip. Spec 111 B (decisions §189.2): a potion hovered or focused outlines its tool's marks on the tabs and its words say how many parties do and check
 on it. Screenshots to $MANA_SHOTS when it is set."""
 from __future__ import annotations
@@ -161,13 +161,13 @@ def test_a_press_opens_what_used_the_tool_over_the_pane(gui, width):
     assert not log, "\n".join(log)
 
 
-def test_a_tool_whose_limits_were_not_read_is_an_empty_potion_and_a_question_mark(gui):
+def test_a_tool_whose_limits_were_not_read_is_its_mark_alone_and_its_words_say_so(gui):
     pg, host, log = open_mana(gui, [tool("claude", "Claude Code", 0.62), tool("codex", "Codex", None)])
     try:
         p = pots(pg)
         codex = p.nth(1)
-        assert codex.locator(".hand-pot__share").inner_text() == "?" and codex.get_attribute("aria-label") == "Codex: limits not read yet"
-        assert "--ork-potion-left:0" in codex.locator(".ork-potion").get_attribute("style").replace(" ", "") and "is-warn" not in codex.locator(".ork-potion").get_attribute("class")
+        assert codex.locator(".hand-pot__share").inner_text() == "" and codex.get_attribute("aria-label") == "Codex: Limits not read"
+        assert codex.locator(".ork-potion").count() == 0                                                           # no bottle (spec 140 C1)
         assert p.nth(0).locator(".hand-pot__share").inner_text() == "62%"
         shot(pg, "wide-unread")
     finally:

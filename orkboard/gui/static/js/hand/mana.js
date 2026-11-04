@@ -3,9 +3,10 @@
 // those levels (`levelOf`).
 // Two windows in one potion (docs/specs/114-the-mana-in-two-windows.md §3, decisions §192, hand/windows.js): the liquid is the tool's shortest window (the 5 hours: the now share), the bottle's size its longest (the week: large above 0.6,
 // medium above 0.3, small above 0.1, else the vial: orkUI's `size-*`), every bottle standing on its floor in a slot of the large bottle's size, so the row never moves; the colour follows whichever runs out first (`levelOf` of the lower
-// share); under the potion the now share in bold and the week's muted (*week 82%*), the words saying both and when each comes back. One to three tools lie in one row at the default size; four in two rows of two and five or six in two rows of three, small (decisions §177.8); more than six: the first five and a sixth place *+n* that opens all of them over the pane. At the narrow
+// share); under the potion the now share alone (docs/specs/140 C1, decisions §247.3): *week 80%* muted under it only while the week is the window that runs out first (its share the lower), else only in the words, which say both and when each comes back;
+// at the danger's level or empty the now share's place says *back 14:00* (spec 138 A.5, decisions §245.3: the lower window's reset in the machine's local time, *back Mon 09:00* when it is not today); on a crowded narrow width the share stays (mana.css). One to three tools lie in one row at the default size; four in two rows of two and five or six in two rows of three, small (decisions §177.8); more than six: the first five and a sixth place *+n* that opens all of them over the pane. At the narrow
 // width (under 760 px, spec 94) every potion is small.
-// A potion is a button, its words the chip's (*Claude Code: 62% of the week left*, `potionOf`); a press opens what used it over the pane, as the chip did. A tool whose limits were not read is an empty potion with *?*.
+// A potion is a button, its words the chip's (*Claude Code: 62% of the week left*, `potionOf`); a press opens what used it over the pane, as the chip did. A tool whose limits were not read is its mark, muted, with no bottle, its words *Limits not read* (spec 140 C1).
 // A card lifted that spends (`costOf`) hatches its share off its tool's top, and the share reads `62% −4%`. The words are said on the control, the potion itself is `aria-hidden` (orkUI's potion/README.md).
 // The default (docs/specs/105-the-default-tool-moving-on-and-the-portal.md §4, decisions §177.1): the potion of the tool the open tab's work goes to carries a frame, a hotbar's chosen slot (orkUI's ink and edge, its notch, on the
 // panel), and its words add *, the default*. On the project's tab it is the tool now (`town.mana.now`, else the Main tool, else the first); on a party's tab the tool the party is set to when it has one, else the same. One frame
@@ -53,16 +54,17 @@ const until = (reset) => { const at = untilWords(reset); return at ? `, until ${
 const sentence = (text) => `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
 
 /** What a tool's potion says: `{read, share, week, of, size, liquid, level, dry, took, words}`; `cost` (from `costOf`) is the lifted card's, when it takes from this tool; `framed` adds *, the default*; `uses` (from `usesWords`) the parties that do and check on it.
- *  `share` is the now share (the shortest window's), `week` what stands muted under it, `{name, share}` (*week 82%*) and, for a tool with one window named so, `of` (*of the month*); the words say both: *Claude Code: 30% of the 5 hours left, until 18:40; 82% of the week, until Thu 09:00*. */
+ *  `share` is the now share (the shortest window's), `back` (*14:00*, said after *back*, "" above the danger's level) what stands in its place at the danger's level or empty, `week` what stands muted under it only while the week runs out first, `{name, share}` (*week 82%*) and, for a tool with one window named so, `of` (*of the month*); the words say both: *Claude Code: 30% of the 5 hours left, until 18:40; 82% of the week, until Thu 09:00*. */
 export function potionOf(l, cost = null, framed = false, uses = "") {
   const w = windowsOf(l), took = w.read && cost?.spend ? cost.taken : "";
-  if (!w.read) return { read: false, share: "?", week: null, of: "", size: "large", liquid: 0, level: "unread", dry: false, took: "", words: `${l.name}: limits not read yet${framed ? ", the default" : ""}${uses ? `. ${sentence(uses)}` : ""}` };
+  if (!w.read) return { read: false, share: "", back: "", week: null, of: "", size: "large", liquid: 0, level: "unread", dry: false, took: "", words: `${l.name}: Limits not read${framed ? ", the default" : ""}${uses ? `. ${sentence(uses)}` : ""}` };
   const nowWin = windowWords(w.now.window), weekWin = w.week ? windowWords(w.week.window) : "";
   const first = `${l.name}: ${w.now.share} ${nowWin ? `of ${nowWin} ` : ""}left${until(w.now.reset)}`;
   const said = w.week ? `${first}; ${w.week.share} ${weekWin ? `of ${weekWin}` : "left"}${until(w.week.reset)}` : first;
   const left = framed ? `${said}, the default` : said, spent = took ? `${left}. This card takes about ${took} of it` : left;
-  const week = w.week ? { name: weekWin.replace(/^the /, "") || "week", share: w.week.share } : null, of = !w.week && nowWin ? `of ${nowWin}` : "";
-  return { read: true, share: w.now.share, week, of, size: w.size, liquid: w.liquid, level: w.level, dry: w.dry, took, words: uses ? `${spent}. ${sentence(uses)}` : spent };
+  const back = w.level === "danger" && w.lowReset ? untilWords(w.lowReset) : "";                                       // the hour a tool at the danger's level or empty comes back (spec 138 A.5)
+  const week = w.week && w.weekFirst ? { name: weekWin.replace(/^the /, "") || "week", share: w.week.share } : null, of = !w.week && nowWin ? `of ${nowWin}` : "";
+  return { read: true, share: w.now.share, back, week, of, size: w.size, liquid: w.liquid, level: w.level, dry: w.dry, took, words: uses ? `${spent}. ${sentence(uses)}` : spent };
 }
 
 /** One tool's mark in its own colour (orkUI's `marks/harness-<id>.png`, not the ink one); its initial in the body face with no mark. */
@@ -80,8 +82,8 @@ function Pot({ l, cost, small, from, framed, parties = [] }) {
       title=${p.words} aria-label=${p.words} onClick=${() => openOver("limits", { provider: l.provider }, from, `${l.name}: what used it`)}
       onPointerEnter=${mark} onPointerLeave=${unmark} onFocus=${mark} onBlur=${unmark}>
     <${Who} l=${l} />
-    <span class=${cls("hand-pot__slot", { "is-small": small })}><span class=${cls("ork-potion", { [`size-${p.size}`]: p.size !== "large", small, "is-warn": p.level === "warn", "is-danger": p.level === "danger" })} style=${style} aria-hidden="true"></span></span>
-    <span class="hand-pot__shares"><span class="hand-pot__share">${p.share}${p.took && html` <span class="hand-pot__took">−${p.took}</span>`}</span>
+    <span class=${cls("hand-pot__slot", { "is-small": small })}>${p.read && html`<span class=${cls("ork-potion", { [`size-${p.size}`]: p.size !== "large", small, "is-warn": p.level === "warn", "is-danger": p.level === "danger" })} style=${style} aria-hidden="true"></span>`}</span>
+    <span class="hand-pot__shares"><span class="hand-pot__share">${p.back ? html`<span class="hand-pot__back">back ${p.back}</span><span class="hand-pot__pct">${p.share}</span>` : p.share}${p.took && html` <span class="hand-pot__took">−${p.took}</span>`}</span>
     ${p.week && html`<span class="hand-pot__week"><span class="hand-pot__week-name">${p.week.name} </span>${p.week.share}</span>`}
     ${p.of && html`<span class="hand-pot__week hand-pot__week--of">${p.of}</span>`}</span>
   </button>`;

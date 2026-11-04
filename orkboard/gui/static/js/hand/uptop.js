@@ -15,14 +15,14 @@ import { Crown } from "./upmenu.js";
 const PLACES_UP = 4;                                    // the potions' places on a phone (the desktop's six, two rows of three, do not fit a row of the top)
 export const PLAY_UP = "Play it on the computer";       // the die's line on a phone
 
-/** One tool as a bottle: its mark small at the corner, the bottle in a slot of the large one's size, its now share under it, in the warn or the danger colour as it runs low. A press opens what used it over the pane. */
+/** One tool as a bottle: its mark small at the corner, the bottle in a slot of the large one's size, its now share (at the danger's level *back 14:00*, spec 138 A.5; an unread tool no bottle, spec 140 C1) under it, in the warn or the danger colour as it runs low. A press opens what used it over the pane. */
 function Bottle({ l, from, framed }) {
   const p = potionOf(l, null, framed);
   return html`<button type="button" class=${cls(`up-pot is-${p.level}`, { "is-default": framed })} data-provider=${l.provider} data-level=${p.level} data-size=${p.size} data-default=${framed ? "1" : undefined}
       title=${p.words} aria-label=${p.words} onClick=${() => openOver("limits", { provider: l.provider }, from, `${l.name}: what used it`)}>
     <${Who} l=${l} />
-    <span class="up-pot__slot"><span class=${cls("ork-potion small", { [`size-${p.size}`]: p.size !== "large", "is-warn": p.level === "warn", "is-danger": p.level === "danger" })} style=${`--ork-potion-left:${p.liquid}`} aria-hidden="true"></span></span>
-    <span class="up-pot__share">${p.share}</span>
+    <span class="up-pot__slot">${p.read && html`<span class=${cls("ork-potion small", { [`size-${p.size}`]: p.size !== "large", "is-warn": p.level === "warn", "is-danger": p.level === "danger" })} style=${`--ork-potion-left:${p.liquid}`} aria-hidden="true"></span>`}</span>
+    <span class="up-pot__share">${p.back ? `back ${p.back}` : p.share}</span>
   </button>`;
 }
 
