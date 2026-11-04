@@ -6300,3 +6300,37 @@ them: it lays a lifted card back in the hand and stays. So:
     **B.** 2 (the words, the commands kept: `ideas.ripe_hold` is Hold, `ideas.route_later` is Later); **C.** 3, 7, 8 (the
     potions, the tabs, the motion).
 The owner's call.
+
+## 248. A card with a rune is picked by its rune: lit and still, the card risen and its edge in the ink; the corner brackets are only for a map's parts taken in picking (4 November 2026, the owner)
+
+Changes: 152.4; spec 101 §2, spec 128 B, orkUI's `.ork-picked`.
+
+Why: the owner: *picking a card lights its corners, which falls out of our window; it would be more natural to pick by
+lighting its rune, and maybe a card a little larger*. The brackets came with §152.4, for picking: a map's parts (System's
+containers, Design's screens) taken with a box as Warcraft's units, several at once and with no rune of their own, and
+there they are right. Then orkUI's one `.ork-picked` came to mark everything picked: a goal's card in the column
+(`table/piles.js`, `backcard.js`), on the lanes (`card.js`, `cascade.js`), its stacks in the hand (`hand/stacks.js`,
+`stopcard.js`), a goal at the portal (`portal.js`), an answer chosen (`hand/choose.js`). A goal has a face of its own, its
+rune (§206: a rune is a shape and a colour), and a frame drawn round it says what the rune can say from inside. Three
+things are in the way and decide the look: a rune's glow, pulsing, already says *at work* (`ork-glow`, and §247.8 keeps one
+place moving); orkUI is a pixel grid, so a card scaled by 1.04 blurs its pixel face and its heads; and a card hovered
+already rises (a stack whole, the column's card sliding out, §236.2), so a pick that only rises cannot be told from a
+hover. So:
+1. **A card that carries a rune is picked by it**: the rune **lit and still**, at its full brightness (no pulse); **the
+   card risen** by 3–4 px with its shadow, as a lifted card (§89), never scaled; **its edge in the ink**. It stays when the
+   pointer leaves, which a hover does not. Every card of the picked goal is lit alike, in the column, on the lanes and in
+   the hand, as today.
+2. **The pulse stays *at work***: a picked goal at work pulses (§247.8 moves it, being picked); a picked goal at rest is
+   lit and still; a goal not picked keeps its rune as it is. Light is the pick, the pulse the work.
+3. **The brackets are only for picking** (§152.4): a map's part taken with a box or a press, with no rune, carries them;
+   in orkUI a class of their own (`.ork-taken`), used by `table/picking.js` alone.
+4. **An answer chosen** (`hand/choose.js`): its card carries its goal's rune, so it is picked as 1 says; the choices not
+   taken stay as they lie.
+5. **Said beside the look**: `aria-pressed` and `aria-current` as today; the pick is told by brightness and place, never by
+   a hue alone (spec 40).
+6. **Drawn in orkUI first** (CLAUDE.md: the design system is orkUI's): `.ork-picked` redrawn as 1, the brackets moved to
+   `.ork-taken`, then copied (`python -m orkboard.design.orkui`); built by spec 141 on the page (`piles.js`, `backcard.js`,
+   `card.js`, `cascade.js`, `stacks.js`, `stopcard.js`, `portal.js`, `choose.js` keep `.ork-picked`; `picking.js` takes
+   `.ork-taken`), each with its module's browser test (picked: the rune lit and not pulsing, the card risen, no brackets;
+   taken in picking: the brackets).
+The owner's call.
