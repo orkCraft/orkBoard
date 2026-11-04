@@ -13,8 +13,8 @@ import { setupNow, setupAsk } from "./setupcards.js";
 const GROUPS = [["ready", "Ready"], ["signed_out", "Not signed in"], ["not_installed", "Not installed"]];
 const FOUND = "Found on this computer. Nothing else was run, and no key was read.";
 
-/** The Orkmaster asks for a tool (`first_open.ask`'s step): the card goes on to the parties when it is done, and closing it empty says what follows. */
-const asking = () => setupNow.value?.step === "tools";
+/** The first open: the Orkmaster asked for a tool, or the first one was just added and the parties come next: the card goes on to them when it is done. */
+const firstOpen = () => ["tools", "parties"].includes(setupNow.value?.step);
 
 /** `tools.card`, asked when the card opens, when the tools were still being looked for and the page was pushed, when a sign-in moved and when the hand changed. */
 function useCard(tick) {
@@ -51,7 +51,7 @@ function ThirdLine({ row, billing }) {
 
 /** The card turned: the tool is in the hand. */
 function Added({ out, onAnother, onDone }) {
-  const first = asking();
+  const first = firstOpen();
   const full = !!out.full;
   useEffect(() => { if (full) onDone(); }, [full]);                      // at the sixth tool it goes on by itself
   return html`<div class="hand-tool__turned" data-turned="1">

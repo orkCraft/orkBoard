@@ -128,7 +128,8 @@ def test_test_and_add_turns_the_card_and_go_on_leaves_the_first_potion_framed(de
     assert pot.get_attribute("data-default") == "1", "the first tool is the main tool"
     turned.get_by_role("button", name="Add another").click()
     pg.locator(TEST).wait_for(timeout=WAIT_MS)
-    assert pg.locator(f"{ADD} select[name=tool]").input_value() == "codex" and pg.locator(f'{ADD} option[value="claude"]').count() == 0, "without the tools in the hand"
+    pg.wait_for_function("(s) => document.querySelector(s).value === 'codex'", arg=f"{ADD} select[name=tool]", timeout=WAIT_MS)
+    assert pg.locator(f'{ADD} option[value="claude"]').count() == 0, "without the tools in the hand"
     pg.locator(TEST).click()
     pg.locator(f'{ADD} [data-done="1"]').wait_for(timeout=WAIT_MS)
     assert pg.locator(f'{ADD} [data-done="1"]').inner_text().upper() == "GO ON TO THE PARTIES"
