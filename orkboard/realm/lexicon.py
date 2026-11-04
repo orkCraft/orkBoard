@@ -292,6 +292,11 @@ TERMS: tuple[Term, ...] = (
     _t("sketch", "sketch", "sketches"),                            # a goal's throwaway variants, made by its craft's leader before its spec is written, touched and one picked (spec 121 §1); not a pick, which a task makes inside the work, nor a mockup, the word of the docs' own drawings
     _t("out_of_contract", "out of the contract"),                 # a task whose work goes past what its section promised: it waits for the person
     _t("release_version", "Release a version"),                    # the Release party's act: a version goes out (not a step of a route)
+    _t("chronicle", "Chronicle"),                                  # Release's past: a chapter a version, the goals that went through the portal in it and the decisions written in its span (spec 134, decisions §238)
+    _t("chronicle_earlier", "Earlier"),                            # the lens's one line: *Earlier: v0.3 · 28 Oct ›* (spec 134 B)
+    _t("chronicle_week", "The week of"),                           # a chapter of a project with no version yet: *The week of 3 Nov* (spec 134 A.4)
+    _t("how_works_now", "How it works now"),                       # a goal's row in the chronicle opens the living spec of its part (spec 127, spec 134 A.5)
+    _t("changed_by", "changed by"),                                # a spec or a decision a later decision changed: *changed by §238* (spec 134 A.5)
     _t("other_choice", "Other…"),                                  # a question card's last choice: the person's own words
     _t("to_main", "To main"),                                     # merge what is ready in dev into main, by code (the discard's button)
     # Operations (docs/specs/38-operations.md §0): the person's everyday work by templates, across projects

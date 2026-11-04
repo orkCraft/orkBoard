@@ -262,3 +262,9 @@ def test_hold_and_later_are_the_words_of_decisions_247():
     assert rows["save"] == ("Save", "") and rows["limits_not_read"] == ("Limits not read", "")
     assert lexicon.words("Later today") == "Hold" and lexicon.words("Later, by itself") == "Later"
     assert lexicon.words("Keep it") == "Keep it"                      # the drop question's own words stay
+
+
+def test_the_chronicles_words_spec_134():
+    assert [lexicon.term(k) for k in ("chronicle", "chronicle_earlier", "chronicle_week", "how_works_now", "changed_by")] == [
+        "Chronicle", "Earlier", "The week of", "How it works now", "changed by"]
+    assert lexicon.words("Chronicle") == "Chronicle" and lexicon.term("chronicles") == "History"          # the town's *Chronicles* keep their word
