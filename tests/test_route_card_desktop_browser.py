@@ -1,7 +1,7 @@
 """The route card and the start card (docs/specs/100-a-goals-way-as-cards.md §1, part A; docs/specs/99-a-goals-way.md §4), in a real browser against a stub host that answers spec 99's `route` and `start` rows and
 their commands, at the two widths of `tests/narrow.py`: the card's face (the goal's element and name, the route's sign, the Orkmaster's crowned head, the cost's gem), the lifted card (the leaders' heads in order with
 a × each, a head's popover and its Esc, the + with no Release and the offered parties first, the route in words, the cost in gem and words said again from the answer of an edit, its place in line, **Talk**,
-**Later, by itself** only when the limits run low), a bug's two cards (*finding the cause* + **Talk**; *the report has a failing test*, **Start** and *The long way*), the start card's two costs. No sideways scroll.
+**Later** only when the limits run low), a bug's two cards (*finding the cause* + **Talk**; *the report has a failing test*, **Start** and *The long way*), the start card's two costs. No sideways scroll.
 Screenshots to $ROUTE_SHOTS when it is set."""
 from __future__ import annotations
 
@@ -164,7 +164,7 @@ def test_the_lifted_route_card_has_the_heads_the_words_the_cost_its_place_and_ta
         assert lifted.locator(".hand-way__cost .hand-spend__words").inner_text() == "about 6 calls, about 3–9% of Claude's week" and lifted.locator(".hand-way__cost .ork-gem.share").inner_text() == "3–9%"
         assert pg.locator(".hand-lifted .hand-spend:visible").count() == 1, "the cost is said once"
         assert lifted.locator(".hand-way__place").inner_text() == "3rd in line"
-        assert lifted.get_by_role("button", name="Talk").count() == 1 and lifted.get_by_role("button", name="Later, by itself").count() == 0, "Later only when the limits run low"
+        assert lifted.get_by_role("button", name="Talk").count() == 1 and lifted.get_by_role("button", name="Later").count() == 0, "Later only when the limits run low"
         assert lifted.get_by_role("button", name="Put it back").count() == 1
         assert lifted.locator("img[src*='/races/peon-crown']").count() >= 1
         fits(pg)
@@ -239,7 +239,7 @@ def test_later_by_itself_is_offered_only_when_the_limits_run_low(gui, width):
     pg, log = open_route(gui, host, width)
     try:
         lifted = lift(pg)
-        later = lifted.get_by_role("button", name="Later, by itself")
+        later = lifted.get_by_role("button", name="Later")
         assert later.count() == 1 and lifted.get_by_role("button", name="Talk").count() == 1
         fits(pg)
         shot(pg, f"{width}-route-low")

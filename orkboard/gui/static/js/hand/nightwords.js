@@ -10,7 +10,7 @@ export function nightWordsOf(b = board.value) {
   return {
     label: "Work at night",
     hint: `What you decide by day is built in the night's window (${night.replace("-", "–")}). Talk, hearings and sketches still run by day. A bug's short way, and anything you start with a press, starts at once.`,
-    waits: `Waits for the night (${start})`,
+    waits: `Later, tonight ${start}`,
     now: "Build it now",
     now_sketch: "Pick and build now",
     ...Object.fromEntries(Object.entries(own).filter(([, v]) => typeof v === "string" && v)),

@@ -78,7 +78,7 @@ export function TodoForm({ idea, todo, lead, done: closed = () => {} }) {
         <input class="ork-field" type="password" autocomplete="off" autofocus value=${value} aria-label=${`Value of ${todo.title}`}
           placeholder=${say("Kept on this machine, never in a prompt")} onInput=${(e) => setValue(e.target.value)}
           onKeyDown=${(e) => { if (e.key === "Enter" && value) done({ value }); }} />
-        <span><button type="button" class="ork-btn primary" disabled=${!value || busy} onClick=${() => done({ value })}>Keep it</button></span></label>`}
+        <span><button type="button" class="ork-btn primary" disabled=${!value || busy} onClick=${() => done({ value })}>Save</button></span></label>`}
       ${kind === "choice" && html`<div class="shell-field"><span class="ok-font-label">Pick one</span>
         <div class="board-row">${(todo.choices || []).map((c) => html`<button type="button" key=${c} class="ork-btn" disabled=${busy}
           onClick=${() => done({ value: c })}>${c}</button>`)}</div></div>`}

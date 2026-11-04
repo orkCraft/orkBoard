@@ -47,10 +47,10 @@ def test_the_board_carries_the_settings_words_with_the_nights_hour_said(host):
     """Spec 121 §1, §7.3: the faces read the setting's words from the host (`ideas.board`'s `night_words`), the night's window said in them."""
     words = host.command("ideas.board", {})["night_words"]
     assert words["label"] == "Work at night" and words["now"] == "Build it now" and words["now_sketch"] == "Pick and build now"
-    assert words["waits"] == "Waits for the night (01:00)" and "(01:00–07:00)" in words["hint"]
+    assert words["waits"] == "Later, tonight 01:00" and "(01:00–07:00)" in words["hint"]
     host.command("ideas.board_set", {"night": "22:30-06:00"})
     words = host.command("ideas.board", {})["night_words"]
-    assert words["waits"] == "Waits for the night (22:30)" and "(22:30–06:00)" in words["hint"]
+    assert words["waits"] == "Later, tonight 22:30" and "(22:30–06:00)" in words["hint"]
 
 
 def product(priority: str) -> list[dict]:
@@ -91,7 +91,7 @@ def test_the_settings_words_say_the_window_and_what_still_runs_by_day():
     assert words["label"] == "Work at night" and "(01:00–07:00)" in words["hint"]
     assert words["hint"].startswith("What you decide by day is built in the night's window") and "Talk, hearings and sketches still run by day" in words["hint"]
     assert "A bug's short way, and anything you start with a press, starts at once." in words["hint"]
-    assert words["waits"] == "Waits for the night (01:00)" and words["now"] == "Build it now" and words["now_sketch"] == "Pick and build now"
+    assert words["waits"] == "Later, tonight 01:00" and words["now"] == "Build it now" and words["now_sketch"] == "Pick and build now"
 
 
 # -- what is held, and what is not -----------------------------------------------------------------------------------------

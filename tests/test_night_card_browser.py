@@ -2,7 +2,7 @@
 
 There is no morning's card any more (§199.5 goes): when `ideas.night` returns a record, the goals done in the night lie in the discard each with a small moon on its card until its result is seen (and a moon on its row over the pane), on the first look after the night
 they are dealt into the discard one by one (once for a night, kept on this device; none under reduced motion), the host is told once (`ideas.night {opened: true}`), and a night's failure is a failed task, a card of the hand like any other (tests/test_thrown_browser.py).
-A host with no record, or without the command, draws nothing and no error. **Work at night** in Settings with the host's words; a plan held for the night says *Waits for the night (01:00)* and **Build it now** (`ideas.start_now`). Screenshots to $NIGHT_SHOTS when it is set."""
+A host with no record, or without the command, draws nothing and no error. **Work at night** in Settings with the host's words; a plan held for the night says *Later, tonight 01:00* and **Build it now** (`ideas.start_now`). Screenshots to $NIGHT_SHOTS when it is set."""
 from __future__ import annotations
 
 import base64
@@ -310,7 +310,7 @@ def test_a_plan_that_starts_tonight_says_so_and_build_it_now_starts_it_at_once(g
         else:
             pg.locator('.hand-card[data-kind="plan"]').first.click(position={"x": 10, "y": 24})
         pg.locator('.hand-lifted [data-night="waits"]').wait_for(timeout=WAIT_MS)
-        assert pg.locator('.hand-lifted [data-night="waits"]').text_content().strip() == "Waits for the night (01:00)"
+        assert pg.locator('.hand-lifted [data-night="waits"]').text_content().strip() == "Later, tonight 01:00"
         now = pg.locator('.hand-lifted [data-answer="build-now"]')
         assert now.text_content().strip() == "Build it now" and "primary" in now.get_attribute("class")
         assert pg.get_by_role("button", name="Start the work").count() == 0

@@ -267,7 +267,10 @@ TERMS: tuple[Term, ...] = (
     _t("size", "size", "sizes"),                                   # how large a party is, in one word: lean, standard or full (the Target's, spec 75)
     _t("in_line", "in line", "", "deck", "decks"),                 # a goal not started, waiting its turn: the first lane's last cascade (decisions §167.5; it was the *deck*, whose place value `deck` the code keeps)
     _t("cascade", "cascade", "cascades"),                          # a goal's tasks laid in its party's lane, the front one whole and the others as strips (decisions §167.4); and what a leader's proposal changes in the other leaders' slices, step by step, before it is a decision (spec 131 B, decisions §233.6): one word for both
-    _t("hold", "Hold"),                                            # keep a goal in line: nothing reads it until the person says (the queue `hold`; a raw `night` reads so)
+    _t("hold", "Hold", "", "Later today"),                         # put a goal off until the person presses Start now (`ideas.ripe_hold`); its card says Held (decisions §247.2; the queue `hold`, a raw `night` reads so)
+    _t("later", "Later", "", "Later, by itself"),                  # a goal that starts by itself at an hour the Board says: after the reset, in the person's hours, tonight (`ideas.route_later`; decisions §247.2)
+    _t("save", "Save"),                                            # the to-do form's button (was *Keep it*, which is now only the drop question's *do not drop it*; decisions §247.2)
+    _t("limits_not_read", "Limits not read"),                      # a potion's words for an AI tool whose limits were not read (hand/mana.js; decisions §247.3)
     # A goal's way (docs/specs/99-a-goals-way.md §10; decisions §117, §118, §121.1): the words of the route, Talk, the decision and the spec, each once
     _t("route", "route", "routes"),                                # the parties that write a goal's spec and do its work, in order; the Orkmaster routes a goal, never a job title
     _t("route_card", "route card", "route cards"),                 # a goal's first card: its route, the cost said before, its place in line, and Talk (the `route` row)

@@ -1,6 +1,6 @@
 """Spec 128 part B (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md, decisions §206.2–§206.3; mockup docs/mockups/goal-card/), in a real browser against a stub host: the Orkmaster's column pinned at the window's left, its head the Orkmaster's tab
 (open at first, underlined, the tabs at the top the leaders' alone), its three piles by the goals' states (In analysis face down with no name, To review face up with its wait, At work · later), what a press does (a face-down card lifts the pile's list with Next and
-Remove, a face-up card picks its goal, a card of To review lifts Start now and Later today, a put-off one Start now and Back to review), the foot of each card under the front one, the moves between piles, and the phone (under 760 px: no column, the Orkmaster's tab and lane as they were)."""
+Remove, a face-up card picks its goal, a card of To review lifts Start now and Hold, a put-off one Start now and Back to review), the foot of each card under the front one, the moves between piles, and the phone (under 760 px: no column, the Orkmaster's tab and lane as they were)."""
 from __future__ import annotations
 
 import os
@@ -182,7 +182,7 @@ def test_a_face_up_card_picks_its_goal_and_a_card_of_to_review_lifts_start_now_a
         assert sig(pg, "frame/state.js", "picked") == "timer"
         acts = pg.locator('.col-lift[data-lift="acts"]')
         acts.wait_for(timeout=WAIT_MS)
-        assert [t for t in acts.get_by_role("button").all_inner_texts() if t.strip() not in ("", "…")][:2] == ["Start now", "Later today"] and acts.locator(".table-dropper").count() == 1, "and the goal's menu: it can be dropped"
+        assert [t for t in acts.get_by_role("button").all_inner_texts() if t.strip() not in ("", "…")][:2] == ["Start now", "Hold"] and acts.locator(".table-dropper").count() == 1, "and the goal's menu: it can be dropped"
         # a lifted card says its title once (spec 140 A4, decisions §247.6): the whole title is its heading, no line repeats it, what it says is one sentence and the rest is behind its …
         assert acts.locator(".col-lift__t").inner_text().strip() == "Round timer on phones" and acts.get_by_text("Round timer on phones").count() == 1
         said = acts.locator("[data-said]")
@@ -190,7 +190,7 @@ def test_a_face_up_card_picks_its_goal_and_a_card_of_to_review_lifts_start_now_a
         more = said.get_by_role("button", name="More")
         more.click()
         assert "ask a leader there to change it" in said.inner_text() and said.get_by_role("button", name="Less").count() == 1
-        acts.get_by_role("button", name="Later today").click()
+        acts.get_by_role("button", name="Hold").click()
         assert _sent(pg, host, ("ideas.ripe_hold", {"idea": "timer"}))
         timer.click()
         acts.wait_for(timeout=WAIT_MS)

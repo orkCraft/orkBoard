@@ -25,7 +25,7 @@ WORK_AT_NIGHT = {"label": "Work at night",
                  "hint": "What you decide by day is built in the night's window ({night}). Talk, hearings and sketches still run by day. "
                          "A bug's short way, and anything you start with a press, starts at once.",
                  "error": "Work at night is on or off",
-                 "waits": "Waits for the night ({start})", "now": "Build it now", "now_sketch": "Pick and build now"}
+                 "waits": "Later, tonight {start}", "now": "Build it now", "now_sketch": "Pick and build now"}
 
 
 def night_words(night: str) -> dict:

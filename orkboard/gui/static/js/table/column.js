@@ -1,7 +1,7 @@
 // The Orkmaster's column (docs/specs/128-the-orkmasters-column-and-a-goal-at-every-leader.md part B, decisions §206.2–§206.3; mockup docs/mockups/goal-card/): pinned at the window's left at the wide width (frame/frame.js), the table's height, the same on every tab, off the table on
 // orkUI's room as the hand is. **Its head is the Orkmaster's tab** — the crown and *The Orkmaster*, `role="tab"`, open at first, underlined when open; pressed again, the open tab's head asks (ask.js `data-ask-head`) — and under it three piles of the project's goals (piles.js):
 // *In analysis*, *To review*, *At work · later*. **What a press does**: a face-down card cannot be picked, its press lifts the pile's list over the pane in the Orkmaster's order (**Next** moves a goal before the first goal of its own party that waits its turn, with `ideas.move` as dragging does; **Remove** drops it, as the
-// goal's menu does); a face-up card picks its goal (`picked`, as a stack does); a card of To review lifts **Start now** (`ideas.confirm`) and **Later today** (`ideas.ripe_hold`: the wait held, it starts when the person presses Start now), a put-off one **Start now** and
+// goal's menu does); a face-up card picks its goal (`picked`, as a stack does); a card of To review lifts **Start now** (`ideas.confirm`) and **Hold** (`ideas.ripe_hold`: the wait held, it starts when the person presses Start now), a put-off one **Start now** and
 // **Back to review** (`ideas.ripe_back`). *Tonight* waits for a host command that puts an agreed goal off to the night (none yet). Esc or a press away puts the lifted thing away. The moves between piles are colmotion.js's.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
@@ -9,6 +9,7 @@ import { Elem, Head, Icon } from "../orkui.js";
 import { ORKMASTER, openOver, openTab, pick, picked, tab } from "../frame/state.js";
 import { currentProject } from "../shell/projects.js";
 import { act, mapData } from "../shell/store.js";
+import { board } from "../board/store.js";
 import { openTabOf, partiesAll, partiesNow, mapName, waitRuns } from "./data.js";
 import { askOpen, closeAsk, desk, openAsk } from "./ask.js";
 import { DropAsk, GoalMenu } from "./dropgoal.js";
@@ -77,12 +78,12 @@ function List({ items, place, close }) {
   </div>`;
 }
 
-/** A card's choices, beside it: **Start now** and **Later today** on a card of To review, **Start now** and **Back to review** on a put-off one. The commands are the wait's own (`ideas.confirm`, `ideas.ripe_hold`, `ideas.ripe_back`). */
+/** A card's choices, beside it: **Start now** and **Hold** on a card of To review, **Start now** and **Back to review** on a put-off one. The commands are the wait's own (`ideas.confirm`, `ideas.ripe_hold`, `ideas.ripe_back`). */
 function Acts({ n, off, place, close }) {
   const [busy, setBusy] = useState(false);
   const run = (name) => async () => { setBusy(true); try { if (await act(name, { idea: n.slug })) close(); } finally { setBusy(false); } };
   const ripe = n.back?.ripe && !n.back.ripe.by, title = n.title || n.short || "";           // a lifted card says its title once (docs/specs/140 A4, decisions §247.6): its heading is the whole title, a line that repeats it is not drawn, what it says is one sentence and the rest is behind its …
-  const cap = off === "held" ? "Held: nothing starts it until you press Start now." : off === "night" ? "Put off to the night's window."
+  const cap = off === "held" ? "Held: nothing starts it until you press Start now." : off === "night" ? `Later, tonight ${String(board.value?.night || "01:00-07:00").split("-")[0]}: it starts by itself in the night's window.`
     : ripe ? "Its spec is ready; it starts by itself in its turn. Read it on the tabs, and ask a leader there to change it." : "Its spec is ready; it waits for your word to start.";
   return html`<div class="ork-frame col-lift col-acts" role="dialog" aria-label=${`${n.title}: when it starts`} data-lift="acts" data-goal=${n.slug} style=${place}>
     <h3 class="col-lift__t"><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} />${title}</h3>
@@ -90,7 +91,7 @@ function Acts({ n, off, place, close }) {
     <div class="col-lift__acts">
       <button type="button" class="ork-btn primary" data-now=${n.slug} disabled=${busy} title="Its sections are written now" onClick=${run("ideas.confirm")}>Start now</button>
       ${off ? (off === "held" && html`<button type="button" class="ork-btn" data-back=${n.slug} disabled=${busy} title="Its wait begins again" onClick=${run("ideas.ripe_back")}>Back to review</button>`)
-        : html`<button type="button" class="ork-btn" data-later=${n.slug} disabled=${busy} title="Hold it: nothing starts it until you press Start now" onClick=${run("ideas.ripe_hold")}>Later today</button>`}
+        : html`<button type="button" class="ork-btn" data-later=${n.slug} disabled=${busy} title="Nothing starts it until you press Start now" onClick=${run("ideas.ripe_hold")}>Hold</button>`}
       <${GoalMenu} slug=${n.slug} where="inline" />
     </div>
   </div>`;

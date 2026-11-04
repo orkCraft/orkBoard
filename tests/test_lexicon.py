@@ -200,7 +200,7 @@ def test_the_table_and_the_hand_are_the_words_of_spec_98():
     """Spec 98 §2.4: each word of the frame has its key, today's word and no old spelling; each is one line of `TERMS`."""
     keys = {"table": "table", "hand": "hand", "discard": "discard", "lane": "lane", "blank_card": "blank card",
             "lifted_card": "lifted card", "map": "map", "seat": "seat", "squad": "squad", "size": "size",
-            "hold": "Hold", "to_main": "To main"}
+            "to_main": "To main"}
     rows = {key: (word, was) for key, word, was in lexicon.glossary()}
     for key, word in keys.items():
         assert lexicon.term(key) == word and rows[key] == (word, ""), key
@@ -253,3 +253,12 @@ def test_the_inbox_and_the_taken_are_the_words_of_spec_136():
     lines = Path(lexicon.__file__).read_text(encoding="utf-8").splitlines()
     for key in keys:
         assert "#" in next(l for l in lines if l.lstrip().startswith(f'_t("{key}"')), key
+
+
+def test_hold_and_later_are_the_words_of_decisions_247():
+    """Decisions §247.2, §247.10: *Hold* (was *Later today*), *Later* (was *Later, by itself*), *Save* and *Limits not read*; each one line of `TERMS`."""
+    rows = {key: (word, was) for key, word, was in lexicon.glossary()}
+    assert rows["hold"] == ("Hold", "Later today") and rows["later"] == ("Later", "Later, by itself")
+    assert rows["save"] == ("Save", "") and rows["limits_not_read"] == ("Limits not read", "")
+    assert lexicon.words("Later today") == "Hold" and lexicon.words("Later, by itself") == "Later"
+    assert lexicon.words("Keep it") == "Keep it"                      # the drop question's own words stay
