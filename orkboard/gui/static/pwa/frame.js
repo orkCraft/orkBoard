@@ -8,6 +8,8 @@ import { effect } from "@preact/signals";
 import { forgotten, offlineLine, pairWith } from "./page/js/link.js";
 import { store } from "./page/js/linkpaired.js";
 import { picked } from "./page/js/frame/state.js";
+import { makeRemote } from "./shell-remote.js";
+import { settingsNode } from "./shell-remote-settings.js";
 
 const PRODUCT = document.documentElement.dataset.product || "Orkboard";
 const API = 1;
@@ -42,6 +44,7 @@ function guessName() {
 const read = () => new URLSearchParams(location.hash.slice(1));
 const hash = read();
 let device = store.get();
+const remote = makeRemote({ device: () => device });      // the project's own remote (docs/specs/136 C): its repository and token live here, the page asks this frame for them
 if (hash.get("k") && !device) {                       // an iOS Home Screen app's first start (gui/pwa.py `manifest`)
   device = { id: "", token: hash.get("k"), name: guessName() };
   store.set(device);
@@ -68,7 +71,8 @@ function unpaired(note = "") {
     note && h("p", { class: "warn" }, note),
     h("p", {}, "This phone is not paired with the board yet."),
     h("p", { class: "muted" }, "On the computer: the gear → Phones → Pair a phone, then scan the second QR code, "
-      + "“Open in the phone’s browser”, with this phone’s camera. Both need Tailscale, logged in, with HTTPS certificates on."));
+      + "“Open in the phone’s browser”, with this phone’s camera. Both need Tailscale, logged in, with HTTPS certificates on."),
+    h("details", { class: "remote-away" }, h("summary", {}, "Your repository, for away from home"), settingsNode(remote)));
 }
 
 /** Opened from the computer's QR code: it pairs at once, by the phone's kind as its name. */
@@ -96,6 +100,7 @@ async function pair(pairCode, name, msg, button) {
     if (!r.ok) throw new Error(body.error || `Not paired (${r.status})`);
     device = { id: body.id, token: body.token, name: body.name };
     store.set(device);
+    remote.prefill(body.remote);                       // the repository of the computer's project, when it has one (gui/phones.py `_pair`)
     if (IOS && !STANDALONE()) homeScreen();
     else go();
   } catch (e) {
@@ -244,9 +249,17 @@ globalThis.orkboardPhone = Object.freeze({
   async unpair() {
     await dropPush();
     link?.unpair();
+    remote.wipe();
     device = null;
     unpaired();
   },
+  /** The project's own remote (spec 136 C): what the page may ask of it. The token is never handed over. */
+  remote: Object.freeze({
+    ready: () => remote.ready(),
+    settingsNode: () => settingsNode(remote),
+    state: () => ({ ...remote.settings(), line: remote.line() }),
+    subscribe: (fn) => remote.subscribe(fn),
+  }),
   push: Object.freeze({
     async state() {
       const why = pushUnsupported();

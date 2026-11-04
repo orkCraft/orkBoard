@@ -365,7 +365,18 @@ class Listener:
             return _json(HTTPStatus.FORBIDDEN, {"error": str(e)})
         self.host.town.toast(f"{name} is paired: it can answer the orks' questions and stop all",
                              title="Phone paired")
-        return _json(HTTPStatus.OK, {"id": device_id, "token": token, "name": name})
+        return _json(HTTPStatus.OK, {"id": device_id, "token": token, "name": name, "remote": await asyncio.to_thread(self._remote)})
+
+    def _remote(self) -> str:
+        """`owner/name` of the shown project's origin on GitHub, "" when it has none: the phone's repository field starts with it (spec 136 C.1)."""
+        project = getattr(self.host, "project", None)
+        if project is None:
+            return ""
+        from orkboard.gui import phone_journal
+        try:
+            return phone_journal.github_repo(project.root)
+        except Exception:
+            return ""
 
     async def _place(self, method: str, headers: dict[str, str], reader: asyncio.StreamReader) -> bytes:
         post = getattr(self.host, "place_post", None)            # Orkline's places (gui/places.py); none in Orkboard

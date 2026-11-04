@@ -35,5 +35,24 @@ export function PhoneRows() {
     <button type="button" class="up-phone__row" role="switch" aria-checked=${String(on)} disabled=${!!why || busy} onClick=${flip}>
       <span class="up-phone__name">Notifications</span><span class="up-phone__state">${on ? "On" : "Off"}</span></button>
     ${(why || line) && html`<p class="up-phone__line" role="status">${why || line}</p>`}
+    <${RepoRows} p=${p} />
     <button type="button" class="up-phone__row is-danger" onClick=${unpair}>${sure ? "Press again to unpair" : "Unpair this phone"}</button></section>`;
+}
+
+/** *Your repository* (docs/specs/136 C.1): the project's own remote, for when the computer cannot be reached. The frame draws the fields (pwa/shell-remote-settings.js); the row opens them in the menu. */
+function RepoRows({ p }) {
+  const [open, setOpen] = useState(false), [, tick] = useState(0), box = useRef();
+  const remote = p.remote;
+  useEffect(() => remote?.subscribe(() => tick((n) => n + 1)), []);
+  useEffect(() => {
+    if (!open || !box.current || !remote) return;
+    box.current.replaceChildren(remote.settingsNode());
+    box.current.scrollIntoView?.({ block: "nearest" });
+  }, [open]);
+  if (!remote) return null;
+  const set = remote.state();
+  return html`<button type="button" class="up-phone__row" aria-expanded=${String(open)} aria-controls="up-phone-repo" onClick=${() => setOpen(!open)}>
+      <span class="up-phone__name">Your repository</span><span class="up-phone__state">${set.token && set.repo ? "Set" : "Not set"}</span></button>
+    ${set.line && html`<p class="up-phone__line" role="status">${set.line}</p>`}
+    ${open && html`<div id="up-phone-repo" class="up-phone__fix" ref=${box}></div>`}`;
 }

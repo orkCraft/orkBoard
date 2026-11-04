@@ -14,3 +14,13 @@ body { box-sizing: border-box; display: flex; flex-direction: column; padding-to
 .phone-card .muted { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
 .phone-card .warn { color: var(--ork-alert); font: var(--ork-type-caption); }
 .phone-card .ork-btn { align-self: flex-start; }
+
+/* The repository and its token (pwa/shell-remote-settings.js, docs/specs/136 C.1): in the card before pairing and in the crown's menu. */
+.remote-settings { display: flex; flex-direction: column; gap: var(--ork-2); font: var(--ork-type-body); }
+.remote-label { font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.remote-say { margin: 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.remote-row { display: flex; gap: var(--ork-3); flex-wrap: wrap; }
+.remote-line { margin: 0; min-height: 1.2em; font: var(--ork-type-caption); color: var(--ork-ink-muted); overflow-wrap: anywhere; }
+.remote-line.is-bad { color: var(--ork-alert); }
+.remote-away summary { min-height: var(--ork-tap); display: flex; align-items: center; cursor: pointer; }
+.remote-away[open] summary { margin-bottom: var(--ork-2); }

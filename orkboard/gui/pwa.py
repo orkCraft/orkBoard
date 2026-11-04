@@ -74,7 +74,7 @@ TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=u
          ".mjs": "text/javascript; charset=utf-8", ".txt": "text/plain; charset=utf-8"}
 GENERATED = {"roles.css": lambda: tokens.roles_css().encode("utf-8")}   # the page's `ok-font-*` and `ok-tone-*` (gui/server.py serves it as /roles.css)
 # The app's page loads only its own files and talks only to its own listener.
-CSP = ("default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' wss:; "
+CSP = ("default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self' wss: https://api.github.com; "
        "manifest-src 'self'; worker-src 'self'; frame-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; "
        "form-action 'none'")      # `frame-src 'self'`: the sketches' sandboxed frames of /media/ alone (spec 121 §3.2); the page's own CSP is the frame's, gui/media.py
 

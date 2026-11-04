@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import re
 import socket
 import subprocess
 import threading
@@ -60,6 +61,20 @@ def origin_on_github(root: Path, run: Callable = subprocess.run) -> bool:
         return False
     url = done.stdout.decode("utf-8", "replace") if isinstance(done.stdout, bytes) else str(done.stdout or "")
     return done.returncode == 0 and "github.com" in url.lower()
+
+
+_GITHUB = re.compile(r"github\.com[:/]+([A-Za-z0-9_.-]+)/([A-Za-z0-9_.-]+?)(?:\.git)?/?$", re.I)
+
+
+def github_repo(root: Path, run: Callable = subprocess.run) -> str:
+    """`owner/name` of the project's `origin` when it is on github.com, else "" (the phone's repository field is filled with it at pairing, spec 136 C.1)."""
+    try:
+        done = run(["git", "remote", "get-url", "origin"], cwd=str(root), capture_output=True, timeout=20)
+    except Exception:
+        return ""
+    url = (done.stdout.decode("utf-8", "replace") if isinstance(done.stdout, bytes) else str(done.stdout or "")).strip()
+    m = _GITHUB.search(url) if done.returncode == 0 else None
+    return f"{m.group(1)}/{m.group(2)}" if m else ""
 
 
 def paired() -> bool:
