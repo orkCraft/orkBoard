@@ -5809,3 +5809,46 @@ without losing what it can do or its quality, put it in the decisions.* So:
 10. **Built** with the specs of the decisions it lightens (spec 131 for 5–6, spec 132 for 1–3, 7–8, spec 133 for 4), each
    written to this decision, not to the heavier text before it.
 The owner's call.
+
+## 238. The past lives past the portal: the discard stays a pile that empties; Release keeps the chronicle, its lens showing what is not out yet and one line of the last version, the chronicle over the pane a chapter a version, the newest open, with a search (4 November 2026, the owner)
+
+Why: the owner: *if decisions map to cards face up, and the specs being written and in review to the Orkmaster's piles,
+is there a point in a page to look over all the past decisions or all the past specs?* Read against the window: the past
+has no home in it. The discard holds only the goals done and not yet seen (`table/discard.js`, `ideas.seen`): once its
+result is seen a goal leaves it, and its spec, its decision and its result are found only in the repository's files. A
+person needs the past three ways: *why is it so* (answered in place, by a leader's bubble from its slices, §233, §237),
+*what did we decide about X* (a search), *what was done this week or this version* (a timeline, which is also Release's
+changelog, §213); reading every decision in a row is the decisions file's, not the window's. A pile of the past in the
+discard was proposed first; the owner: *won't a pile that is always there in the discard weigh on the person? We meant
+to tie into the wish to throw the discard into the portal*: the discard is an inbox that empties, and emptying it is the
+reward. So the past goes where what is played goes, past the portal, to Release (the lich keeps what is gone); and, asked
+whether the whole list then lies in the lich's lens: *no*, the lens keeps its own work. So:
+1. **The discard is unchanged**: the goals done and not yet seen, and *Ready for main*; a goal seen leaves it, and the
+   portal takes what is ready. It never holds the past.
+2. **Release keeps the chronicle.** In Release's lens (its corner of the portal ring, §188; its tab where a project has no
+   gate, spec 113) under what it shows today (the readiness, the draft *Unreleased* of the changelog, §213), **one line**:
+   *Earlier: <the last version> · <its date> ›*. No list and no count in the lens. *Unreleased* is the chronicle's next
+   chapter, not out yet: at a release it leaves the lens and becomes the chronicle's top chapter.
+3. **The chronicle opens over the pane** (kind `chronicle`, as the pile's list and the place of the parties open; ← or
+   Esc back to the lens): **a chapter a version**, the newest first and **the newest open**; each older chapter one line,
+   *v0.3 · 28 Oct*, opened by a press. A chapter holds the goals that went through the portal in it and the decisions
+   written in its span, by time; a decision of no goal (a hypothesis's verdict, a cascade, §233, §235) is a row of its own.
+   **A search** at its top over the goals' titles, the decisions and the sections; its finds shown by chapter, the
+   chapters with none folded away.
+4. **A goal's row** opens the goal as it was: its spec as built (marked *changed by §<n>* where a later decision changed a
+   point it rests on), its decision, its quality record (§234.4), and **How it works now ›**, the living spec of its part
+   (spec 127). **A decision's row** opens its entry; its *Changes* and *changed by* are links, so a decision's history is
+   walked without reading the list.
+5. **What a version is**: the project's own (its release tags, else its changelog's headings); a project with none yet has
+   chapters by week (*The week of 3 Nov*) until its first version. A goal seen but not through the portal is not in the
+   chronicle: only what was played to the end is history.
+6. **Not**: a tab or a page of its own for decisions (a second way into the same, and against the frame: no list column,
+   no drawer, §206.2); a list of specs apart from their goals (a spec without its goal and its result says little); the
+   chronicle on the phone, for now.
+7. **The words** (`TERMS`): `chronicle` (*Chronicle*); *Earlier: <version> · <date>*, *The week of <date>*, *How it
+   works now*, *changed by §<n>*.
+8. **Built** by spec 134 (its goal row's quality record after spec 132 D; the rest stands alone), its parts by the
+   cheaper model: **A. The host** (the chapters from the tags, the changelog or the weeks; the goals through the portal;
+   the decisions by their dates; the search); **B. The face** (the line in Release's lens, the chronicle over the pane,
+   a goal's and a decision's rows).
+The owner's call.
