@@ -18,9 +18,9 @@ from __future__ import annotations
 
 from pathlib import PurePosixPath
 
-from orkboard.realm import engine_godot
+from orkboard.realm import engine_godot, engine_unity
 
-ENGINES = {"godot": engine_godot}
+ENGINES = {"godot": engine_godot, "unity": engine_unity}
 CODE = {".gd", ".tscn", ".cs", ".asmdef", ".h", ".hpp", ".cpp", ".uproject", ".godot", ".csproj", ".uxml", ".unity"}
 TREE_SUFFIXES = (".gd", ".tscn", ".godot", ".cs", ".unity", ".uxml")
 TREE_NAMES = ("EditorBuildSettings.asset",)

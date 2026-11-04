@@ -1,0 +1,4 @@
+{
+  "name": "Game.Gameplay",
+  "references": ["Game.Core", "Unity.TextMeshPro"]
+}
