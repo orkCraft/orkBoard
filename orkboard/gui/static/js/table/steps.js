@@ -1,9 +1,12 @@
 // A task's steps on the page (docs/specs/129-a-tasks-steps.md part H2, decisions §207.1): the snapshot's task carries, while it is at work or checked, `steps` — `{items: [{text, state}], now, done, total, source, doing}`, `items` at most six, `state` `done`,
 // `now` or `next`, `source` `file`, `todo` or `activity` — and the page says them three ways. **The label row** of a task's card: *Doing 2/5* (the stage's word and `done + 1` of `total`), the pips (6 x 6 squares, 2 px apart: done filled in the ink, the one
-// now in the goal's colour and glowing with orkUI's own rhythm while the task is at work, the next faint) and, under them, the step now in one line (the body face: a person's words, never the pixel one). With `source: "activity"` there are no pips, the
+// now in the goal's colour and glowing with orkUI's own rhythm while the task is at work, the next faint) and, under them, the step now in one line (the body face: a person's words, never the pixel one; since spec 142 C they stand in the card's window, `StepsWindow`). With `source: "activity"` there are no pips, the
 // `doing` line stands in the muted ink. **The lifted card** lists the steps (✓ done muted, the one now lit, the next faint) and says its source small. **A token** (under 760 px) shows the pips only. A task without `steps` has today's label.
+// **A lane card's window by its state** (docs/specs/142-a-cards-window-where-it-has-something-to-show.md part C, decisions §249.3): the pips and the step now (two lines) stand in the window of a task at work (`StepsWindow`), with the worker's
+// head, its word and the busy mark; a task waiting has the head of the seat that will take it, faint, and *an elf takes it next* (`WaitingWindow`, `seatWords`); a failed one the alert in the danger colour and its reason in one or two lines (`FailedWindow`).
 // Pure functions first (`stepsOf`, `countWords`, `labelWords`, `sourceWords`), then the little components card.js and the lifted card draw.
 import { html, cls } from "../html.js";
+import { Sign, WhoHead } from "../orkui.js";
 import { STAGES, stageOf } from "./data.js";
 
 /** The stages that carry the steps on the label row: a task at work or being checked (a failed one stays *Doing*, with the step where it stopped). A task waiting to start has none to show. */
@@ -50,18 +53,38 @@ export const sourceWords = (st) => SOURCE_WORDS[st?.source] || "";
 
 const MARK = { done: "d", now: "n", next: "" };
 
+/** The race of a head as a seat's word with its article, *an elf*, *a Grunt* (an ork of the code craft is a Grunt: CLAUDE.md, Orks by their orkish names; TERMS `race.*`, `orc.barracks`); a leader's higher form is its race's word. "" with no head. */
+const SEAT = { peon: "a Grunt", shaman: "a Grunt", elf: "an elf", dryad: "an elf", goblin: "a goblin", imp: "a goblin", gnome: "a gnome", fairy: "a gnome", knight: "a knight", unicorn: "a knight", skeleton: "a skeleton", lich: "a lich" };
+export const seatWords = (head) => SEAT[String(head?.race || "").split("-")[0]] || "";
+
+/** The window of a task waiting to start: the head of the seat that will take it, faint, and *an elf takes it next* under it. A task with no head has no such window (null). */
+export function WaitingWindow({ head }) {
+  const who = seatWords(head);
+  if (!head || !who) return null;
+  return html`<span class="table-win table-win--wait"><span class="table-win__faint"><${WhoHead} head=${head} size="mid" /></span><span class="table-win__line">${who} takes it next</span></span>`;
+}
+
+/** The window of a task at work: the pips, the step now in two lines, and who does it (its head, its word, the busy mark glowing with orkUI's rhythm while the task is at work). */
+export function StepsWindow({ st, head, element = "", alive = false }) {
+  const text = nowWords(st);
+  return html`<span class="table-win table-win--steps">
+    <${Pips} st=${st} element=${element} alive=${alive} />
+    ${text && html`<span class=${cls("table-win__now", { "is-activity": st.source === "activity" })} title=${text}>${text}</span>`}
+    ${head && html`<span class="table-win__by"><${WhoHead} head=${head} /><span class="table-win__who">${seatWords(head)}</span><i class=${cls("table-win__busy", { "is-glowing": alive })} aria-hidden="true"></i></span>`}
+  </span>`;
+}
+
+/** The window of a failed task: orkUI's alert sign in the danger colour and the reason in one or two lines (the task's error, as the lifted card says it). */
+export function FailedWindow({ reason = "" }) {
+  const text = String(reason || "").trim().split("\n")[0] || "It failed";
+  return html`<span class="table-win table-win--fail"><${Sign} name="alert" /><span class="table-win__reason" title=${text}>${text}</span></span>`;
+}
+
 /** The pips: one square a step (done filled, the one now in the goal's colour, glowing while the task is at work, the next faint). Shown, never named: the words say it. Nothing for an activity (it has no steps to count). `small`: the token's size. */
 export function Pips({ st, element = "", alive = false, small = false }) {
   if (!st || !st.items.length) return null;
   return html`<span class=${cls("ork-pips table-pips", { "is-small": small })} aria-hidden="true" data-n=${st.items.length}>${st.items.map((it, k) =>
     html`<i key=${k} data-state=${it.state} class=${cls(MARK[it.state], { [`is-${element}`]: it.state === "now" && !!element, "is-glowing": it.state === "now" && alive })}></i>`)}</span>`;
-}
-
-/** The step now under the label's first line, cut to one line by the card's width; an activity's line in the muted ink. */
-export function StepNow({ st }) {
-  const text = nowWords(st);
-  if (!text) return null;
-  return html`<span class=${cls("table-steps__now", { "is-activity": st.source === "activity" })} title=${text}>${text}</span>`;
 }
 
 /** A lifted task's steps: the list (✓ done, the one now lit, the next faint) and the source said small; an activity is its one line. */

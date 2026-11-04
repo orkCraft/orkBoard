@@ -78,7 +78,7 @@ def test_the_label_row_says_the_stage_the_step_of_the_whole_the_pips_and_the_ste
         c.wait_for(timeout=WAIT_MS)
         row = c.locator(".table-card__row")
         assert row.locator(".table-stage").inner_text().strip().lower() == "doing 2/5", "the stage's word and done + 1 of the whole"
-        assert c.locator(".table-steps__now").inner_text().strip() == "tests for join", "the step now, under the stage"
+        assert c.locator(".table-win__now").inner_text().strip() == "tests for join", "the step now, under the stage"
         assert row.locator(".table-stage .ork-elem.is-glowing").count() == 1, "the flame is still the goal's rune"
         pips = c.locator(".table-pips > i")
         assert pips.count() == 5 and [p.get_attribute("data-state") for p in pips.all()] == ["done", "now", "next", "next", "next"]
@@ -93,25 +93,28 @@ def test_the_label_row_says_the_stage_the_step_of_the_whole_the_pips_and_the_ste
         assert "worked 1 m" in said and "worked 1 m" in titled and "Let a player rejoin" in titled, "the time worked moved to the card's words"
         assert not re.search(r"\d+ [ms]\b", row.inner_text().lower()), "no time on the label"
         pixel = pg.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--ork-font-pixel').split(',')[0].trim().replace(/[\"']/g, '')")
-        assert pixel and pixel not in css(c.locator(".table-steps__now"), "fontFamily"), "a person's words: the body face"
-        box, now = c.bounding_box(), c.locator(".table-steps__now").bounding_box()
+        assert pixel and pixel not in css(c.locator(".table-win__now"), "fontFamily"), "a person's words: the body face"
+        box, now = c.bounding_box(), c.locator(".table-win__now").bounding_box()
         assert now["x"] >= box["x"] and now["x"] + now["width"] <= box["x"] + box["width"] and row.bounding_box()["x"] + row.bounding_box()["width"] <= box["x"] + box["width"] + 0.5, "inside the card"
     finally:
         pg.close()
     assert not log, "\n".join(log)
 
 
-def test_the_step_now_is_cut_to_one_line_with_an_ellipsis(gui):
+def test_the_step_now_is_cut_to_two_lines_in_the_window_and_read_whole_by_a_screen_reader(gui):
     pg, host, log = open_steps(gui)
     try:
         c = card(pg, "long", "d1")
         c.wait_for(timeout=WAIT_MS)
-        now = c.locator(".table-steps__now")
-        assert now.inner_text().strip() == "reconnect every socket after the lobby restarts", "the host cut it to 40 characters; the page cuts it to the card's width"
-        assert css(now, "whiteSpace") == "nowrap" and css(now, "textOverflow") == "ellipsis" and css(now, "overflow") == "hidden"
-        assert now.evaluate("e => e.scrollWidth > e.clientWidth"), "longer than the card: cut"
-        assert now.bounding_box()["height"] < 24, "one line"
+        now = c.locator(".table-win__now")
+        assert now.inner_text().strip() == "reconnect every socket after the lobby restarts", "the host cut it to 40 characters; the page cuts it to two lines"
+        assert css(now, "overflow") == "hidden" and now.evaluate("e => getComputedStyle(e).webkitLineClamp") == "2", "two lines at most"
+        assert now.bounding_box()["height"] <= 31, "the step now takes two lines at most"
+        win = c.locator(".table-card__win")
+        assert abs(win.bounding_box()["height"] - 92) <= 1 and win.get_attribute("data-window") == "steps", "the window is 92 px high and holds the steps"
+        assert win.locator(".table-win__by .ork-race__head").count() == 1 and win.locator(".table-win__busy.is-glowing").count() == 1, "the worker's head with the busy mark"
         assert "Doing 2/3 · reconnect every socket after the lobby restarts" in c.get_attribute("aria-label"), "a screen reader reads it whole"
+        assert abs(card(pg, "plain", "e1").locator(".table-card__win").bounding_box()["height"] - 92) <= 1, "every lane card has the same window height"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -142,7 +145,7 @@ def test_a_check_with_every_step_done_says_checking_and_the_whole_and_no_pip_glo
         c.wait_for(timeout=WAIT_MS)
         assert c.locator(".table-stage").inner_text().strip().lower() == "checking 4/4"
         assert [p.get_attribute("data-state") for p in c.locator(".table-pips > i").all()] == ["done"] * 4
-        assert c.locator(".table-pips > i.is-glowing").count() == 0 and c.locator(".table-steps__now").count() == 0, "nothing is now: no step line"
+        assert c.locator(".table-pips > i.is-glowing").count() == 0 and c.locator(".table-win__now").count() == 0, "nothing is now: no step line"
         assert "Checking 4/4" in c.get_attribute("aria-label")
     finally:
         pg.close()
@@ -156,10 +159,10 @@ def test_an_activity_has_no_pips_and_its_line_in_the_muted_ink(gui):
         c.wait_for(timeout=WAIT_MS)
         assert c.locator(".table-pips").count() == 0
         assert c.locator(".table-stage").inner_text().strip().lower() == "doing", "no count: there is no whole"
-        now = c.locator(".table-steps__now")
+        now = c.locator(".table-win__now")
         assert now.inner_text().strip() == "edits lobby.ts" and css(now, "color") == token(pg, "--ork-ink-muted")
         assert "Doing · edits lobby.ts" in c.get_attribute("aria-label") and "worked" in c.get_attribute("aria-label")
-        assert css(c.locator(".table-steps__now"), "color") != css(card(pg, "join", "a1").locator(".table-steps__now"), "color"), "a step is lit, an activity is not"
+        assert css(c.locator(".table-win__now"), "color") != css(card(pg, "join", "a1").locator(".table-win__now"), "color"), "a step is lit, an activity is not"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -172,7 +175,7 @@ def test_a_task_without_steps_keeps_todays_label_with_the_time_in_it(gui):
         c.wait_for(timeout=WAIT_MS)
         text = c.locator(".table-stage").inner_text().strip()
         assert re.fullmatch(r"doing · 1 m \d+ s", text.lower()), text
-        assert c.locator(".table-pips").count() == 0 and c.locator(".table-steps__now").count() == 0
+        assert c.locator(".table-pips").count() == 0 and c.locator(".table-win__now").count() == 0
         assert c.get_attribute("aria-label") == "Plain work, A plain goal: Doing" and c.get_attribute("title") == "A plain goal"
     finally:
         pg.close()
@@ -183,7 +186,7 @@ def test_a_task_behind_the_front_one_keeps_its_stage_sign_only(gui):
     pg, host, log = open_steps(gui)
     try:
         pg.wait_for_selector(".table-tedge", timeout=WAIT_MS)
-        assert pg.locator(".table-tedge .table-pips, .table-tedge .table-steps__now").count() == 0, "the strips of a cascade keep their stage sign only"
+        assert pg.locator(".table-tedge .table-pips, .table-tedge .table-win__now").count() == 0, "the strips of a cascade keep their stage sign only"
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -250,7 +253,7 @@ def test_the_plans_cards_wear_the_same_label_row(gui):
         pg.wait_for_selector(".table-board--plan", timeout=WAIT_MS)
         c = pg.locator('.plan-slot[data-plan-task="a1"] .table-card')
         assert c.locator(".table-stage").inner_text().strip().lower() == "doing 2/5" and c.locator(".table-pips > i").count() == 5
-        assert c.locator(".table-steps__now").inner_text().strip() == "tests for join"
+        assert c.locator(".table-win__now").inner_text().strip() == "tests for join"
         assert pg.locator('.plan-slot[data-plan-task="a3"] .table-pips').count() == 0, "a task still waiting has no steps"
     finally:
         pg.close()
@@ -264,13 +267,63 @@ def test_under_760_px_the_token_shows_the_pips_only(gui):
         tok = pg.locator('.table-token[data-goal="join"]')
         pips = tok.locator(".table-pips > i")
         assert pips.count() == 5 and [p.get_attribute("data-state") for p in pips.all()] == ["done", "now", "next", "next", "next"]
-        assert tok.locator(".table-steps__now").count() == 0 and tok.locator(".table-stage").count() == 0, "no line, no words"
+        assert tok.locator(".table-win__now").count() == 0 and tok.locator(".table-stage").count() == 0, "no line, no words"
         assert tok.locator(".table-pips > i.is-glowing").count() == 1
         box, last = tok.bounding_box(), pips.nth(4).bounding_box()
         assert last["x"] + last["width"] <= box["x"] + box["width"] + 0.5, "the pips lie inside the token"
         assert "Doing 2/5 · tests for join" in tok.get_attribute("aria-label")
         assert pg.locator('.table-token[data-goal="lobby"] .table-pips, .table-token[data-goal="plain"] .table-pips').count() == 0, "an activity and a task with no steps have none"
         assert pg.evaluate("() => document.documentElement.scrollWidth - document.documentElement.clientWidth") <= 0
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+class WindowHost(StepsHost):
+    """A goal with only a task waiting (an elf's, then a Grunt's), one failed with its reason and one at work with neither steps nor a doing line."""
+
+    def __init__(self):
+        super().__init__()
+        self.nodes = [
+            node("wait", "design", "Draw the loop", "table", state="working", stage="implementation", element="meadow", tasks=[
+                task("r1", "Sketch the loop", "running", started=since()), task("w1", "Make the loop", "waiting", head=head("elf", craft="design", tier="laborer")),
+                task("w2", "Wire the timer", "ready", head=head("peon", tier="laborer"))]),
+            node("fail", "tech", "Tests of the loop", "table", state="working", stage="implementation", element="dust", tasks=[
+                task("f1", "Fix the tests", "failed", started=since(), error="Tests: 2 fail in audio.test.ts (the loop's end clicks)\nsecond line of the log")]),
+            node("bare", "tech", "A bare goal", "table", state="working", stage="implementation", element="void", tasks=[task("n1", "Bare work", "running", started=since())]),
+        ]
+
+
+def test_a_waiting_task_shows_the_head_of_the_seat_that_takes_it_faint_and_says_who_takes_it_next(gui):
+    pg, host, log = open_hand(gui, host=WindowHost(), width="wide")
+    try:
+        pg.wait_for_selector(".table-card", timeout=WAIT_MS)
+        pg.locator('.col-card[data-goal="wait"]').click()                                                              # a task waiting is drawn on its goal's plan, not in a lane
+        pg.wait_for_selector(".table-board--plan", timeout=WAIT_MS)
+        wait, grunt = (pg.locator(f'.plan-slot[data-plan-task="{i}"] .table-card__win') for i in ("w1", "w2"))
+        assert wait.get_attribute("data-window") == "wait" and wait.locator(".table-win__line").inner_text().strip() == "an elf takes it next"
+        assert wait.locator(".ork-race__head").count() == 1 and float(css(wait.locator(".table-win__faint"), "opacity")) < 0.5, "the seat's head, faint"
+        assert grunt.locator(".table-win__line").inner_text().strip() == "a Grunt takes it next"
+        assert [round(w.bounding_box()["height"]) for w in (wait, grunt)] == [92, 92], "the window's height is fixed, so the cards line up"
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def test_a_failed_card_says_its_reason_and_one_with_nothing_to_say_keeps_the_type_sign(gui):
+    pg, host, log = open_hand(gui, host=WindowHost(), width="wide")
+    try:
+        pg.wait_for_selector(".table-card", timeout=WAIT_MS)
+        pg.locator(".table-thrown").first.wait_for(timeout=WAIT_MS)                                                     # a failure lies in the hand after its beat (spec 128 C.2): the card is put back in its lane
+        pg.evaluate("() => import('/static/js/table/flight.js').then((m) => { m.thrown.value = new Map(); })")
+        fail = card(pg, "fail", "f1").locator(".table-card__win")
+        assert fail.get_attribute("data-window") == "fail" and fail.locator(".ork-sign.alert").count() == 1
+        reason = fail.locator(".table-win__reason")
+        assert reason.inner_text().strip() == "Tests: 2 fail in audio.test.ts (the loop's end clicks)", "the reason, its first line"
+        assert css(reason, "overflow") == "hidden" and reason.evaluate("e => getComputedStyle(e).webkitLineClamp") == "2" and reason.bounding_box()["height"] <= 31
+        assert css(fail.locator(".ork-sign"), "color") == token(pg, "--ork-danger")
+        bare = card(pg, "bare", "n1").locator(".table-card__win")
+        assert bare.get_attribute("data-window") == "sign" and bare.locator(".table-win").count() == 0, "at work with nothing to say: today's sign (the stub's goal has no type, so none is drawn)"
     finally:
         pg.close()
     assert not log, "\n".join(log)
