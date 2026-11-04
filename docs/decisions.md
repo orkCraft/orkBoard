@@ -5852,3 +5852,31 @@ whether the whole list then lies in the lich's lens: *no*, the lens keeps its ow
    the decisions by their dates; the search); **B. The face** (the line in Release's lens, the chronicle over the pane,
    a goal's and a decision's rows).
 The owner's call.
+
+## 239. A pile that waits for the limits: goals put off start one at a time after the reset, in the Orkmaster's order and by the week's pace; Keep it puts a goal by with no start of its own; the pile says why it waits (4 November 2026, the owner)
+
+Changes: 133.1; spec 100 §1.
+
+Why: the owner: *what if the face-down pile grows large, as now: our limits run out but ideas keep coming, and we do not
+want to spend limits on their specs yet?* Dropping a goal costs nothing (no call before *Talk*, §133) and the pile does not
+grow on the screen (its front card, three feet, thin edges, no count): so a large pile is fine, as long as nothing spends
+by itself. Read in the code, something does: at the reset every goal put off with *Later, by itself* starts Talk **in the
+same pass** of the host's clock (`gui/ideas_route.py` `route_tick`), with no queue and no bound, the reserve read from one
+snapshot that does not yet see the calls just begun. Twenty ideas put off spend the new week's first hour on the backlog
+and fill the hand with twenty goals' questions at once. And *Later* is offered only when the limits run low, so a person
+cannot simply put an idea by without it starting by itself one day. So:
+1. **After the reset, one at a time**: the goals put off start Talk one after another, **in the Orkmaster's order** (the
+   pile's, the person's *Next* sets it); the next starts only when the one before is out of its Talk (its round's calls
+   done and its questions answered, or it left Talk): the hand holds one backlog goal's questions at a time. A goal the
+   person starts by hand is not in this queue.
+2. **By the week's pace**: before each start the week's pace is read again (`idea_target.pace`): *ahead*, the next goes;
+   *behind*, the queue waits and is looked at again on the clock's next pass; the reserve held as today. The backlog never
+   spends the week the work needs.
+3. **Keep it**: the route card offers **Keep it** at any time (beside *Talk*; *Later, by itself* stays beside it when the
+   limits run low): the goal lies in the pile with no start of its own, until the person presses *Talk*. Nothing is spent.
+4. **The pile says why it waits**: under *In analysis*, while goals put off wait for the reset, its line says *waits for
+   the reset · <day> <time>* (a state, never a count), as *writing: …* and *talked over: …* say what it is on.
+5. **The words** (`TERMS`): *Keep it*; *waits for the reset · <day> <time>*.
+6. **Built**: 1–2 at once, on the host (`route_tick`), with their tests (the backlog's order, one at a time, the pace
+   behind holding the queue); 3–4 with spec 130's first part.
+The owner's call.
