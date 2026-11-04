@@ -151,8 +151,8 @@ def write_lines(root: Path, slug: str, party: str, lines: list[str]) -> bool:
 
 # -- the Needs you rows -----------------------------------------------------------------------------------------------------------------------
 
-def rows(state_dir: Path, slug: str) -> list[dict]:
-    """The rows of the goal's changes that wait for the person (one that is still asked is none yet): `{kind: "leader_change", id, task (the id again, the stop's key), goal (the
+def rows(state_dir: Path, slug: str, root: Path | None = None) -> list[dict]:
+    """The rows of the goal's changes that wait for the person (one that is still asked is none yet): `{kind: "leader_change", level: "spec", pulls (realm/way_down.py: the party's open tasks the change pulls after it, and their price; `root` given), id, task (the id again, the stop's key), goal (the
     party asked: the card lies under its lane), party, part, said, shape, status, text, why, before, after, looks, usd_low, usd_high, error, at}`."""
     out = []
     for r in read(state_dir, slug):
@@ -165,5 +165,17 @@ def rows(state_dir: Path, slug: str) -> list[dict]:
                     "text": str(r.get("error") or "No change came: ask again") if r["status"] == "failed" else str(r.get("why") or r.get("text") or ""),
                     "why": str(r.get("why") or ""), "before": r.get("before") or {"tasks": [], "lines": []}, "after": r.get("after") or {"tasks": [], "lines": []},
                     "looks": r.get("looks") or [], "usd_low": est.get("usd_low"), "usd_high": est.get("usd_high"), "error": str(r.get("error") or ""),
-                    "at": str(r.get("made_at") or "")})
+                    "at": str(r.get("made_at") or ""), "level": "spec",
+                    "pulls": _pulls(state_dir, root, slug, str(r.get("party") or ""))})
     return out
+
+
+def _pulls(state_dir: Path, root: Path | None, slug: str, party: str) -> dict:
+    """What a change of the party's section pulls (spec 132 C.2); nothing pulled when the root is not given or a read fails (a row is never lost to its price)."""
+    from orkboard.realm import way_down                     # way_down reads this module's `owned`
+    if root is None:
+        return way_down.empty("spec")
+    try:
+        return way_down.pulls(state_dir, root, "spec", slug=slug, party=party)
+    except Exception:
+        return way_down.empty("spec")
