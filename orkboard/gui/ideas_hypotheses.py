@@ -3,13 +3,16 @@ them by. The record is `realm/hypotheses.py`'s; the row *Did it hold?* that asks
 
     ideas.hypotheses {}                       # → {items: [item], party, proposing, status}; an item is the record's with `state` as shown (`testing` while a test is in line or at work)
                                               #    and `tests`/`rests` as [{slug, title, element, place}] ("line" | "work" | "done"; a goal gone from the Board is left out)
-    ideas.hypothesis_set {id?, text, signal, axis?, on?}   # the person's: no `id`, a new one, `open` at once; with an `id`, the words changed (those given) → {ok, item}
+    ideas.hypothesis_set {id?, text, signal, axis?, on?, refuted?, if_holds?}   # the person's: no `id`, a new one, `open` at once; with an `id`, the words changed (those given) → {ok, item}
+                                              #    `signal` is *Holds when*; `refuted` a list of `{name, when, change?}` (one to three ways it is refuted), `if_holds` what changes if it holds (spec 133 A)
     ideas.hypothesis_keep {id}                # a proposed one becomes open → {ok, item}
     ideas.hypothesis_drop {id}                # the hypothesis gone → {ok}
     ideas.hypothesis_attach {id, goal?, test?}   # `goal` rests on it, `test` tests it (a goal tests one hypothesis at most: it moves); an empty `id` detaches the goal / the test → {ok, item | null}
     ideas.hypothesis_evidence {id, text, ref?}   # a line of what was found → {ok, item}
-    ideas.hypothesis_judge {id, state, why?}  # `state` held | refuted | unsure → {ok, item, decision?}. Held and refuted write a decision (`keeper.write_decision`: `Hypothesis held: <text>`,
-                                              #    its body the signal, the evidence, the tests' titles and the why) and keep its number in the verdict; unsure keeps it open, the why its evidence
+    ideas.hypothesis_judge {id, state, why?, way?, draft?}  # `state` held | refuted | unsure → {ok, item, decision?, way?}. Held and refuted write a decision (`keeper.write_decision`: `Hypothesis held: <text>`,
+                                              #    its body the draft (`draft`, the person's own words, else `hypotheses.draft`: what changes if it holds / if it is refuted this way), then the signal, the evidence,
+                                              #    the tests' titles and the why; a refuted one with a way opens with `Refuted: <name> — <when>`) and keep its number in the verdict; `way` the way it is
+                                              #    refuted that was met (spec 133 A.1); unsure keeps it open, the why its evidence
     ideas.hypotheses_propose {}               # the leaders' proposal (core/idea_hypotheses.py) → {ok, asked: bool, why?}
 
 `hypotheses` is data only: `party` is Product's party (or ""), `proposing` true while a proposal runs, `status` the last proposal's ("" · asking · done · failed, `core/idea_hypotheses.py`) with its `error` when it has one. Every command but `hypotheses_propose`
@@ -29,6 +32,7 @@ from orkboard.core.idea_keeper import KeeperError
 from orkboard.gui.ideas_args import IdeasError, _str
 from orkboard.realm import board_rows, event_log, hypotheses, idea_element, ideas, journal_notes, opportunity_tree as tree
 
+DRAFT_WORDS = 6000                          # the person's own words for the decision, at most (as the decision card's text)
 NO_PROPOSAL = "Proposing hypotheses is not in this build yet"
 _JUDGING = threading.Lock()                 # one verdict at a time: the decision is written once, then the hypothesis is judged with its number
 
@@ -69,7 +73,11 @@ class HypothesesMixin:
 
     def hypothesis_set(self, args: dict) -> dict:
         id = _str(args, "id", 60).strip()
-        words = {k: _str(args, k, 400) for k in ("text", "signal", "axis", "on") if k in args}
+        words: dict = {k: _str(args, k, 400) for k in ("text", "signal", "axis", "on", "if_holds") if k in args}
+        if "refuted" in args:
+            if not isinstance(args["refuted"], list):
+                raise IdeasError("refuted is not a list of ways")
+            words["refuted"] = args["refuted"]
         if "on" in words:
             words["on"] = words["on"].strip()
             self._hyp_on(words["on"])
@@ -77,7 +85,8 @@ class HypothesesMixin:
             if id:
                 item = hypotheses.edit(self.state_dir, id, **words)
             else:
-                item = hypotheses.add(self.state_dir, words.get("text", ""), words.get("signal", ""), axis=words.get("axis", ""), on=words.get("on", ""))
+                item = hypotheses.add(self.state_dir, words.get("text", ""), words.get("signal", ""), axis=words.get("axis", ""), on=words.get("on", ""), refuted=words.get("refuted", ()),
+                                      if_holds=words.get("if_holds", ""))
         except ValueError as e:
             raise IdeasError(str(e)) from None
         self.changed("")
@@ -129,10 +138,16 @@ class HypothesesMixin:
 
     # -- the verdict ----------------------------------------------------------------------------------------------------------------------------
 
-    def _hyp_body(self, item: dict, why: str) -> str:
-        """The decision's body: the signal, the evidence's lines, the tests' titles and the why (each part only when there is one)."""
+    def _hyp_body(self, item: dict, why: str, state: str = "", way: str = "", draft: str = "") -> str:
+        """The decision's body: the draft (the person's own words, else what the item says changes), a refuted way's line, then the signal, the evidence's lines, the tests' titles and the why
+        (each part only when there is one; with no draft and no way it is as it was before spec 133)."""
         titles = [g["title"] for g in self._hyp_goals(item["tests"]).values()]
-        parts = [f"Signal: {item['signal']}"]
+        parts = [draft.strip() or hypotheses.draft(item, state, way)] if state else []
+        ways = {w["name"]: w for w in item["refuted"]}
+        if state == "refuted" and way in ways:
+            parts.append(f"Refuted: {way + ' — ' if way else ''}{ways[way]['when']}")
+        parts = [p for p in parts if p]
+        parts.append(f"Signal: {item['signal']}")
         if item["evidence"]:
             parts.append("Evidence:\n" + "\n".join(f"- {e['text']}" + (f" ({e['ref']})" if e["ref"] else "") for e in item["evidence"]))
         if titles:
@@ -144,6 +159,7 @@ class HypothesesMixin:
     def hypothesis_judge(self, args: dict) -> dict:
         id, state = _str(args, "id", 60).strip(), _str(args, "state", 20).strip()
         why = " ".join(_str(args, "why", 400).split())[:hypotheses.TEXT_CHARS]
+        way, draft = _str(args, "way", 80).strip(), _str(args, "draft", DRAFT_WORDS)
         if state not in hypotheses.VERDICTS:
             raise IdeasError("A hypothesis held, was refuted or is not sure yet")
         with _JUDGING:
@@ -154,11 +170,15 @@ class HypothesesMixin:
                 raise IdeasError("Keep the hypothesis before judging it")
             if item["state"] in hypotheses.JUDGED:
                 raise IdeasError("That hypothesis is judged already")
+            try:                                                               # a way that does not fit is refused before any decision is written
+                way = hypotheses._pick_way(item, state, way)
+            except ValueError as e:
+                raise IdeasError(str(e)) from None
             out: dict = {}
             if state != "unsure":
                 began = time.monotonic()
                 try:
-                    out = self.keeper.write_decision(f"Hypothesis {state}: {item['text']}"[:TITLE_CHARS], self._hyp_body(item, why), self._decision_tree())
+                    out = self.keeper.write_decision(f"Hypothesis {state}: {item['text']}"[:TITLE_CHARS], self._hyp_body(item, why, state, way, draft), self._decision_tree())
                 except KeeperError as e:
                     raise IdeasError(str(e)) from None
                 if out.get("commit"):
@@ -170,13 +190,13 @@ class HypothesesMixin:
                 except Exception:
                     pass
             try:
-                judged = hypotheses.judge(self.state_dir, id, state, why, out.get("number") or 0)
+                judged = hypotheses.judge(self.state_dir, id, state, why, out.get("number") or 0, way)
             except ValueError as e:
                 raise IdeasError(str(e)) from None
         if state != "unsure":
             journal_notes.hypothesis(self.state_dir, "", item["text"], state, why, out.get("number") or 0)      # the project's journal (spec 125 B)
         self.changed("")
-        return {"ok": True, "item": self._hyp_item(judged["id"]), **({"decision": {k: out.get(k) for k in ("number", "path", "commit", "held")}} if out else {})}
+        return {"ok": True, "item": self._hyp_item(judged["id"]), **({"decision": {k: out.get(k) for k in ("number", "path", "commit", "held")}} if out else {}), **({"way": way} if state == "refuted" else {})}
 
     # -- a goal sent with a hypothesis as a mark ------------------------------------------------------------------------------------------------
 

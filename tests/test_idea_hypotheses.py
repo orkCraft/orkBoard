@@ -349,3 +349,15 @@ def test_the_mixin_is_a_base_of_the_keeper_and_the_status_is_kept_beside_the_ite
     assert idea_hypotheses.proposal(host.ideas.state_dir)["status"] == "failed" and idea_hypotheses.proposal(host.ideas.state_dir)["kept"] == 2
     idea_hypotheses.save_proposal(host.ideas.state_dir, "")
     assert idea_hypotheses.proposal(host.ideas.state_dir)["status"] == "" and len(_items(host)) == 2
+
+
+# -- spec 133 A: the proposal answers when it holds, each way it is refuted and what changes ---------------------------------------------
+
+def test_the_prompt_asks_for_the_ways_and_the_draft_and_the_proposal_is_kept_with_them(host, product, model):
+    model.answer = {"hypotheses": [{**hyp("Solo founders want a sketch"), "refuted": [{"name": "the hook", "when": "they look and do not pick"}, {"name": "the noise", "when": "most skip it"}],
+                                    "if_holds": "Sketch first for every goal."}]}
+    _propose(host, product)
+    p = model.calls[0]["prompt"]
+    assert '"refuted"' in p and '"if_holds"' in p and "ways it would be refuted" in p and "what would change if it holds" in p
+    (item,) = _items(host)
+    assert item["state"] == "proposed" and [w["name"] for w in item["refuted"]] == ["the hook", "the noise"] and item["if_holds"] == "Sketch first for every goal."

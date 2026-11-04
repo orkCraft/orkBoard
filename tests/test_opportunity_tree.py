@@ -313,3 +313,12 @@ def test_when_the_jobs_alone_fill_the_text_the_last_hypotheses_go_before_a_job_i
         hyp.add(state, f"Claim {n} " + words, "signal " + words, on=tree.read(state)["jobs"][n]["id"])
     got = tree.text(state, state, pages=pages)
     assert len(got) <= tree.LIMIT and "7. When" in got and got.count("Hypothesis (open)") < hyp.MAX_OPEN and got == tree.text(state, state, pages=pages)
+
+
+def test_a_hypothesis_with_ways_says_them_in_the_trees_line_and_one_without_has_the_line_it_had(state, pages):
+    tree.keep(state, OUT, THREE, "person")
+    hyp.add(state, "A push helps", "goals land", on="see-a-sketch", refuted=[{"name": "the hook", "when": "opens only"}, {"name": "the noise", "when": "switched off"}])
+    hyp.add(state, "Plain one", "it shows", on="see-a-sketch")
+    got = tree.text(state, state, pages=pages)
+    assert "   Hypothesis (open): A push helps — we'll know when goals land — refuted when the hook: opens only / the noise: switched off\n" in got
+    assert "   Hypothesis (open): Plain one — we'll know when it shows\n" in got

@@ -11,7 +11,11 @@ on and the goals that test it. Kept by the person and by the leaders (who propos
     hypotheses.state_of(item, places)                  # the state as shown: "testing" for an open one while a test goal is in line or at work (`places`: {slug: "line"|"work"|"done"})
     hypotheses.due(state_dir, places)                  # the open items with a test, every test done, not judged: what the hand asks *Did it hold?* about
     hypotheses.text(state_dir, places)                 # for a leader's call: the open and testing ones, a line each, ~800 characters at most; "" with none
-    hypotheses.parse(answer)                           # a leader's proposal, strictly → [{text, signal, axis, on, rests}] (three at most) or None
+    hypotheses.parse(answer)                           # a leader's proposal, strictly → [{text, signal, axis, on, rests, refuted, if_holds}] (three at most) or None
+    hypotheses.draft(item, state, way="")              # the draft of the decision a verdict writes: `if_holds` for held, the way's `change` for refuted (spec 133 A.1)
+
+Spec 133 A: `signal` is the *Holds when* (its key stays); `refuted` is one to three ways it is refuted, `[{name, when, change}]` (`name` what the way would teach, `when` required, `change` what changes if it is
+refuted this way); `if_holds` what changes if it holds. An item kept before has neither (`[]`, ""); a verdict keeps the `way` the person picked.
 
 `<state_dir>/hypotheses.json` is `{items}`; the file is not trusted (what is not of the shape reads as absent). An item's `id` is its text's slug and stays when its words change; `text` and
 `signal` are one line of 200 characters at most (the face puts *We believe* and *We'll know when* before them); `axis` is one of desirable, viable, feasible, usable, or ""; `on` is a job's id or an
@@ -38,7 +42,8 @@ TEXT_CHARS, GOALS, EVIDENCE = 200, 12, 12                    # a hypothesis's te
 MAX_PROPOSE = 3                                               # a leader's proposal, at most
 LIMIT = 800                                                   # the text, at most
 CAPS = (TEXT_CHARS, 90, 50, 30)                               # the text's and signal's length in `text`, tried in turn until the lines fit
-FIELDS = ("text", "signal", "axis", "on", "rests")
+FIELDS = ("text", "signal", "axis", "on", "rests", "refuted", "if_holds")
+NAME_CHARS, DRAFT_CHARS, MAX_WAYS = 40, 600, 3                # a refuted way's name, a draft of the decision (what changes if it holds / if refuted this way), the ways a hypothesis is refuted in (spec 133 A.1)
 _ID = re.compile(r"[a-z0-9][a-z0-9-]{0,39}")
 _SLUG = re.compile(r"[a-z0-9-]{1,80}")
 _WORDS = re.compile(r"[a-z0-9]+")
@@ -82,7 +87,44 @@ def _verdict(value: object) -> dict:
         return {}
     decision = value.get("decision")
     return {"state": value["state"], "why": _words(value.get("why"), TEXT_CHARS), "decision": decision if isinstance(decision, int) and not isinstance(decision, bool) and decision > 0 else 0,
-            "at": str(value.get("at") or "")}
+            "way": _words(value.get("way"), NAME_CHARS), "at": str(value.get("at") or "")}
+
+
+def _way(raw: object) -> dict | None:
+    """One way it is refuted, `{name, when, change}`, or None when it is none (no `when`)."""
+    if not isinstance(raw, dict):
+        return None
+    when = _words(raw.get("when"), TEXT_CHARS)
+    return {"name": _words(raw.get("name"), NAME_CHARS), "when": when, "change": _words(raw.get("change"), DRAFT_CHARS)} if when else None
+
+
+def _clean_ways(value: object) -> list[dict]:
+    """The ways of a record read, leniently: what is not a way is dropped, a name twice keeps the first, three at most."""
+    out: list[dict] = []
+    for raw in value if isinstance(value, list) else []:
+        w = _way(raw)
+        if w and (not w["name"] or w["name"].lower() not in {x["name"].lower() for x in out}):
+            out.append(w)
+    return out[:MAX_WAYS]
+
+
+def _ways(value: object) -> list[dict]:
+    """The ways a person or code gives, strictly: ValueError in plain words for more than three, one with no `when` and a name twice."""
+    if value in (None, ""):
+        return []
+    if not isinstance(value, (list, tuple)):
+        raise ValueError("A hypothesis is refuted in ways: a list of when and what it would teach")
+    if len(value) > MAX_WAYS:
+        raise ValueError(f"A hypothesis is refuted in {MAX_WAYS} ways at most")
+    out: list[dict] = []
+    for raw in value:
+        w = _way(raw)
+        if w is None:
+            raise ValueError("A way it is refuted says when")
+        if w["name"] and w["name"].lower() in {x["name"].lower() for x in out}:
+            raise ValueError("Two ways it is refuted have the same name")
+        out.append(w)
+    return out
 
 
 # -- the record kept ------------------------------------------------------------------------------------------------------------------
@@ -105,7 +147,8 @@ def read(state_dir: Path) -> dict:
                       "rests": [s for s in dict.fromkeys(r["rests"] if isinstance(r.get("rests"), list) else []) if isinstance(s, str) and _SLUG.fullmatch(s)][:GOALS],
                       "tests": [s for s in dict.fromkeys(r["tests"] if isinstance(r.get("tests"), list) else []) if isinstance(s, str) and _SLUG.fullmatch(s)][:GOALS],
                       "by": r["by"] if r.get("by") in BY else "person", "party": _words(r.get("party"), 80) if isinstance(r.get("party"), str) and _SLUG.fullmatch(r["party"]) else "",
-                      "state": r["state"], "evidence": _evidence(r.get("evidence")), "verdict": _verdict(r.get("verdict")), "at": str(r.get("at") or "")})
+                      "state": r["state"], "evidence": _evidence(r.get("evidence")), "verdict": _verdict(r.get("verdict")), "at": str(r.get("at") or ""),
+                      "refuted": _clean_ways(r.get("refuted")), "if_holds": _words(r.get("if_holds"), DRAFT_CHARS)})
     return {"items": items[:MAX_ALL]}
 
 
@@ -184,14 +227,14 @@ def _make_room(items: list[dict]) -> list[dict]:
     return items
 
 
-def add(state_dir: Path, text: str, signal: str, *, axis: str = "", on: str = "", rests: object = (), by: str = "person", party: str = "") -> dict:
+def add(state_dir: Path, text: str, signal: str, *, axis: str = "", on: str = "", rests: object = (), by: str = "person", party: str = "", refuted: object = (), if_holds: str = "") -> dict:
     """One more hypothesis → the item: a person's is `open` at once, a leader's `proposed` (by `party`, its slug). ValueError in plain words for no words, an axis or a job that is none, a `by`
     that is none, and past the bounds (seven open or testing, twelve proposed, forty in all: with every one of them kept and none judged)."""
     if by not in BY:
         raise ValueError(f"A hypothesis is kept by the person or a leader, not {by!r}")
     text = _need(text, "A hypothesis says what we believe")
     signal = _need(signal, "A hypothesis says what we'll know when")
-    axis, on, rests = _axis(axis), _on(on), _rests(rests)
+    axis, on, rests, ways = _axis(axis), _on(on), _rests(rests), _ways(refuted)
     party = party.strip() if by == "leader" and isinstance(party, str) and _SLUG.fullmatch(party.strip()) else ""
     state = "open" if by == "person" else "proposed"
     with ideas.LOCK:
@@ -199,13 +242,13 @@ def add(state_dir: Path, text: str, signal: str, *, axis: str = "", on: str = ""
         _room(items, state)
         items = _make_room(items)
         item = {"id": _id_of(text, {i["id"] for i in items}), "text": text, "signal": signal, "axis": axis, "on": on, "rests": rests, "tests": [], "by": by, "party": party, "state": state,
-                "evidence": [], "verdict": {}, "at": ideas._now()}
+                "evidence": [], "verdict": {}, "at": ideas._now(), "refuted": ways, "if_holds": _words(if_holds, DRAFT_CHARS)}
         _save(state_dir, items + [item])
     return item
 
 
 def edit(state_dir: Path, id: str, **fields: object) -> dict:
-    """The words of a hypothesis changed (`text`, `signal`, `axis`, `on`, `rests`; only the ones given) → the item; its id stays. ValueError for a hypothesis gone, any other field, no words."""
+    """The words of a hypothesis changed (`text`, `signal`, `axis`, `on`, `rests`, `refuted`, `if_holds`; only the ones given) → the item; its id stays. ValueError for a hypothesis gone, any other field, no words."""
     other = sorted(set(fields) - set(FIELDS))
     if other:
         raise ValueError(f"A hypothesis's {other[0]} is not changed this way")
@@ -222,6 +265,10 @@ def edit(state_dir: Path, id: str, **fields: object) -> dict:
             item["on"] = _on(fields["on"])
         if "rests" in fields:
             item["rests"] = _rests(fields["rests"])
+        if "refuted" in fields:
+            item["refuted"] = _ways(fields["refuted"])
+        if "if_holds" in fields:
+            item["if_holds"] = _words(fields["if_holds"], DRAFT_CHARS)
         _save(state_dir, items)
     return item
 
@@ -294,12 +341,13 @@ def evidence(state_dir: Path, id: str, text: str, ref: str = "") -> dict:
     return item
 
 
-def judge(state_dir: Path, id: str, state: str, why: str = "", decision: int = 0) -> dict:
+def judge(state_dir: Path, id: str, state: str, why: str = "", decision: int = 0, way: str = "") -> dict:
     """The person's answer to *Did it hold?* → the item. "held" and "refuted" end it (`verdict` {state, why, decision, at}: `decision` the number of the decision written, 0 with none); "unsure"
-    keeps it open and adds the why, if there is one, to the evidence. ValueError for a hypothesis gone, a state that is none, one still only proposed, and one judged already."""
+    keeps it open and adds the why, if there is one, to the evidence. `way` (spec 133 A.1): the name of the way it is refuted that was met, for "refuted" only: an item with ways takes one of
+    theirs ("" for an item with one way), an item with none takes "". ValueError for a hypothesis gone, a state that is none, one still only proposed, one judged already, and a way that does not fit."""
     if state not in VERDICTS:
         raise ValueError("A hypothesis held, was refuted or is not sure yet")
-    why = _words(why, TEXT_CHARS)
+    why, way = _words(why, TEXT_CHARS), _words(way, NAME_CHARS)
     with ideas.LOCK:
         items = read(state_dir)["items"]
         item = _find(items, id)
@@ -307,15 +355,43 @@ def judge(state_dir: Path, id: str, state: str, why: str = "", decision: int = 0
             raise ValueError("Keep the hypothesis before judging it")
         if item["state"] in JUDGED:
             raise ValueError("That hypothesis is judged already")
+        way = _pick_way(item, state, way)
         now = ideas._now()
         if state == "unsure":
             if why:
                 item["evidence"] = (item["evidence"] + [{"text": why, "ref": "", "at": now}])[-EVIDENCE:]
         else:
             item["state"] = state
-            item["verdict"] = {"state": state, "why": why, "decision": decision if isinstance(decision, int) and not isinstance(decision, bool) and decision > 0 else 0, "at": now}
+            item["verdict"] = {"state": state, "why": why, "decision": decision if isinstance(decision, int) and not isinstance(decision, bool) and decision > 0 else 0, "way": way, "at": now}
         _save(state_dir, items)
     return item
+
+
+def _pick_way(item: dict, state: str, way: str) -> str:
+    """The way a verdict names, checked against the item's: "" for held and unsure with none given; ValueError in plain words otherwise (spec 133 A.1)."""
+    if state != "refuted":
+        if way:
+            raise ValueError("Only a refuted hypothesis has a way it is refuted")
+        return ""
+    ways = item["refuted"]
+    if not ways:
+        return ""
+    if not way and len(ways) == 1:
+        return ways[0]["name"]
+    if not any(w["name"].lower() == way.lower() for w in ways):
+        raise ValueError("Pick the way it is refuted: " + ", ".join(w["name"] or w["when"] for w in ways))
+    return next(w["name"] for w in ways if w["name"].lower() == way.lower())
+
+
+def draft(item: dict, state: str, way: str = "") -> str:
+    """The draft of the decision a verdict writes (spec 133 A.1): the item's `if_holds` for "held"; for "refuted" the named way's `change` (the only way's when `way` is "" and the item has one); "" with none."""
+    if state == "held":
+        return item.get("if_holds", "")
+    if state != "refuted":
+        return ""
+    ways = item.get("refuted", [])
+    got = next((w for w in ways if way and w["name"].lower() == way.lower()), ways[0] if len(ways) == 1 and not way else None)
+    return got["change"] if got else ""
 
 
 # -- as shown, and what is due ----------------------------------------------------------------------------------------------------------
@@ -339,8 +415,12 @@ def _shown(items: list[dict], places: dict, states: tuple[str, ...]) -> list[tup
 
 
 def _sentence(item: dict, state: str, cap: int = TEXT_CHARS) -> str:
-    """`Hypothesis (open): <text> — we'll know when <signal>`, each of the two cut to `cap`."""
-    return f"Hypothesis ({state}): {_cut(item['text'], cap)} — we'll know when {_cut(item['signal'], cap)}"
+    """`Hypothesis (open): <text> — we'll know when <signal>` (then ` — refuted when <name>: <when> / …` when it has ways), each cut to `cap`."""
+    line = f"Hypothesis ({state}): {_cut(item['text'], cap)} — we'll know when {_cut(item['signal'], cap)}"
+    ways = item.get("refuted") or []
+    if ways:                                                                     # spec 133 A.2: an item with no way has the line it had
+        line += " — refuted when " + " / ".join((f"{w['name']}: " if w["name"] else "") + _cut(w["when"], cap) for w in ways)
+    return line
 
 
 def text(state_dir: Path, places: dict) -> str:
@@ -362,7 +442,7 @@ def text(state_dir: Path, places: dict) -> str:
 # -- a leader's proposal ------------------------------------------------------------------------------------------------------------------
 
 def parse(answer: object) -> list[dict] | None:
-    """A leader's proposal, strictly: `{"hypotheses": [{text, signal, axis?, on?, rests?}]}` → `[{text, signal, axis, on, rests}]`, three at most (the riskiest come first, so the first three).
+    """A leader's proposal, strictly: `{"hypotheses": [{text, signal, axis?, on?, rests?, refuted?, if_holds?}]}` → `[{text, signal, axis, on, rests, refuted, if_holds}]`, three at most (the riskiest come first, so the first three).
     What is not of the shape is dropped: an item with no text or no signal, an axis that is none, an `on` or goals' names that are none, one the same as an earlier. None for an answer that is not
     that, a list that is not one, and when nothing is left."""
     if not isinstance(answer, dict) or not isinstance(answer.get("hypotheses"), list):
@@ -376,8 +456,9 @@ def parse(answer: object) -> list[dict] | None:
             axis, on, rests = _axis(r.get("axis")), _on(r.get("on")), _rests(r.get("rests"))
         except ValueError:
             continue
+        ways = _clean_ways([{"name": w.get("name"), "when": w.get("when")} for w in r["refuted"] if isinstance(w, dict)] if isinstance(r.get("refuted"), list) else [])
         if not (text and signal) or text.lower() in seen:
             continue
         seen.add(text.lower())
-        out.append({"text": text, "signal": signal, "axis": axis, "on": on, "rests": rests})
+        out.append({"text": text, "signal": signal, "axis": axis, "on": on, "rests": rests, "refuted": ways, "if_holds": _words(r.get("if_holds"), DRAFT_CHARS)})
     return out[:MAX_PROPOSE] or None

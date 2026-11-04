@@ -15,7 +15,8 @@ It holds nothing back (`blocks` false: the first goal is sent with it unanswered
 (`hypotheses.due`; the places are the goals' on the Board's pages). `text` is the hypothesis's own words, the top line a face that does not draw the kind shows (as `project_q`'s is its top
 card's question; the face words the question). `signal` and `evidence` ({text, ref, at}) are what would show it and what was found; `tests` the goals that
 tested it, `[{slug, title}]`; `party` is the party that proposed it ("" the person's own) and `leader` that party's leader (the Orkmaster's for the person's). It holds nothing back (`blocks`
-false) and lies after the others; judged (`ideas.hypothesis_judge`), it leaves the hand.
+false) and lies after the others; judged (`ideas.hypothesis_judge`), it leaves the hand. Spec 133 A.3: `refuted` (the ways it is refuted, `[{name, when, change}]`), `if_holds` and `draft`
+(`{held, refuted: {<way's name>: <what changes>}}`: what the verdict writes as the decision, shown under *More*).
 """
 from __future__ import annotations
 
@@ -54,7 +55,9 @@ def hypothesis(state_dir: Path, pages: Path | None = None) -> list[dict]:
         tests = [{"slug": t, "title": " ".join((ideas.idea_page(Path(pages), t).title or t).split())[:80]} for t in item["tests"]]      # `due` has every test in `places`: its page is there
         party = item["party"]
         out.append({"kind": "hypothesis", "id": item["id"], "text": item["text"], "signal": item["signal"], "evidence": item["evidence"], "tests": tests, "party": party,
-                    "leader": goal_team.leader_of(Path(pages), party) if party else "orkmaster", "blocks": False, "priority": "normal", "at": item["at"]})
+                    "leader": goal_team.leader_of(Path(pages), party) if party else "orkmaster", "blocks": False, "priority": "normal", "at": item["at"],
+                    "refuted": item["refuted"], "if_holds": item["if_holds"],      # spec 133 A.3: the ways and the draft the verdict writes
+                    "draft": {"held": hypotheses.draft(item, "held"), "refuted": {w["name"]: w["change"] for w in item["refuted"]}}})
     return out
 
 

@@ -332,3 +332,46 @@ def test_the_goal_that_tests_a_hypothesis_asks_did_it_hold_once_it_is_done(host)
     assert hand(host) == []
     ideas.save_state(host.ideas.state_dir, got["slug"], state="done")
     assert [r["id"] for r in hand(host)] == [item["id"]]
+
+# -- spec 133 A: the ways it is refuted and the draft of the decision ----------------------------------------------------------------------
+
+WAYS = [{"name": "the hook", "when": "opens rise, goals do not", "change": "Do not build the push."}, {"name": "the noise", "when": "one in five turns it off"}]
+
+
+def test_a_hypothesis_is_set_with_its_ways_and_its_draft_and_a_bad_list_is_refused(host):
+    item = hold(host, refuted=WAYS, if_holds="Make it a setting.")
+    assert [w["name"] for w in item["refuted"]] == ["the hook", "the noise"] and item["if_holds"] == "Make it a setting."
+    got = host.command("ideas.hypothesis_set", {"id": item["id"], "refuted": [WAYS[1]], "if_holds": ""})["item"]
+    assert [w["name"] for w in got["refuted"]] == ["the noise"] and got["if_holds"] == "" and got["signal"] == item["signal"]
+    refused(host, "ideas.hypothesis_set", {"id": item["id"], "refuted": "no"}, "not a list of ways")
+    refused(host, "ideas.hypothesis_set", {"id": item["id"], "refuted": [{"name": "x"}]}, "says when")
+    assert host.command("ideas.hypotheses")["items"][0]["refuted"] == got["refuted"]
+
+
+def test_the_verdict_writes_the_draft_as_the_decision_with_the_way_it_was_refuted(host):
+    item_id, _goal = with_test(host, refuted=WAYS, if_holds="Make it a setting.")
+    refused(host, "ideas.hypothesis_judge", {"id": item_id, "state": "refuted", "way": "the cold"}, "Pick the way it is refuted")
+    assert hypotheses.read(host.ideas.state_dir)["items"][0]["state"] == "open"
+    got = host.command("ideas.hypothesis_judge", {"id": item_id, "state": "refuted", "way": "the hook", "why": "Only opens rose"})
+    assert got["way"] == "the hook" and got["item"]["verdict"]["way"] == "the hook"
+    log = git(host.repo_root, "show", "dev:docs/decisions.md")
+    body = log[log.rindex("## 1. "):].split("\n", 1)[1].strip()
+    assert body.startswith("Do not build the push.") and "Refuted: the hook — opens rise, goals do not" in body and body.index("Do not build") < body.index("Refuted:") < body.index("Signal:")
+
+
+def test_a_held_verdict_writes_the_saved_draft_or_the_persons_own_words_over_it(host):
+    a, _ = with_test(host, text="Alpha holds", if_holds="Saved draft.")
+    host.command("ideas.hypothesis_judge", {"id": a, "state": "held"})
+    b, _ = with_test(host, text="Beta holds", if_holds="Saved draft.")
+    host.command("ideas.hypothesis_judge", {"id": b, "state": "held", "draft": "My own words."})
+    log = git(host.repo_root, "show", "dev:docs/decisions.md")
+    first, second = log[log.index("## 1. "):log.index("## 2. ")], log[log.index("## 2. "):]
+    assert "Saved draft." in first and "Saved draft." not in second and "My own words." in second and "Signal:" in second
+
+
+def test_with_no_draft_the_body_is_as_it_was(host):
+    item_id, _ = with_test(host)
+    host.command("ideas.hypothesis_judge", {"id": item_id, "state": "held", "why": "Clear"})
+    log = git(host.repo_root, "show", "dev:docs/decisions.md")
+    assert log[log.rindex("## 1. "):].split("\n", 1)[1].strip().startswith("Signal:")
+    refused(host, "ideas.hypothesis_judge", {"id": hold(host, text="Other")["id"], "state": "held", "way": "x"}, "Only a refuted")

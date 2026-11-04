@@ -262,6 +262,8 @@ TERMS: tuple[Term, ...] = (
     _t("hint", "hint", "hints"),                                   # what code noticed and no one said: a map's hint of code (spec 109 §3), a press that did nothing on Play (spec 115 §4)
     _t("play_mark", "mark", "marks"),                              # a box the person drew on Play with a line: the live product's own picking (spec 115 §5)
     _t("hypothesis", "hypothesis", "hypotheses"),                  # what the project believes and has not shown, with the signal that would show it, on Product's tree; tested by goals, judged in the hand (spec 116)
+    _t("refuted_way", "way it is refuted", "ways it is refuted"),  # one of the one to three conditions that would refute a hypothesis, named by what it would teach (the hook, the noise); the verdict picks the one that was met (decisions §235.1, spec 133 A)
+    _t("test_measure", "measure", "measures"),                     # what a hypothesis is tested by besides a goal: a thing counted, where it is read from, its bar in each condition and the date it is read on (decisions §235.2, spec 133 B); `measure` is the table's own
     _t("seat", "seat", "seats"),                                  # one place in a party: its leader's, a builder's, a checker's; a head sits in it
     _t("squad", "squad", "squads"),                                # a party's seats together, grouped *Leads* | *Does* | *Checks*
     _t("size", "size", "sizes"),                                   # how large a party is, in one word: lean, standard or full (the Target's, spec 75)
