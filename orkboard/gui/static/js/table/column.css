@@ -12,6 +12,7 @@
 
 /* -- the piles ------------------------------------------------------------------------------------------------------------------------ */
 .col-scroll { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: var(--ork-5); padding: var(--ork-3) var(--ork-2) var(--ork-5); overflow-x: hidden; overflow-y: auto; }
+@media (min-width: 760px) { .col-scroll { padding-bottom: 88px; } }                                 /* the column's last card scrolls clear of the + card, which stands 78 px over the table's foot (hand/hand.css) */
 .col-sec { flex: none; display: flex; flex-direction: column; gap: var(--ork-1); min-width: 0; }
 .col-plab { display: flex; align-items: baseline; gap: var(--ork-2); min-width: 0; font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-faint); }
 .col-plab__t { flex: none; white-space: nowrap; }
