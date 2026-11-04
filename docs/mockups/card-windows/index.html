@@ -1,0 +1,260 @@
+<!doctype html>
+<html lang="en" data-look="office">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Card Windows</title>
+<link rel="stylesheet" href="../../../design-system/orkui/fonts.css">
+<link rel="stylesheet" href="../../../design-system/orkui/tokens.css">
+<link rel="stylesheet" href="../../../design-system/orkui/components.css">
+<style>
+/* The mockup of the owner's note of 2026-11-04: a card's window is where it has something to show. The Orkmaster's column and the hand lose it (the hand's
+   kind a sign in the corner, who asks a small head beside it); the leaders' lanes keep it and make it a window onto the work itself: who will do it, its
+   steps, and what it made, by craft. Every colour, face and size is orkUI's token; the cards' anatomy is drawn here first and would go into orkUI after a yes. */
+*, *::before, *::after { box-sizing: border-box; }
+html { background: var(--ork-canvas); color-scheme: dark; }
+body { margin: 0; background: var(--ork-canvas); color: var(--ork-ink); font: var(--ork-type-body);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+p, h1, h2 { margin: 0; }
+.mk-bar { position: sticky; top: 0; z-index: 60; display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-3) var(--ork-6); padding-block: var(--ork-4);
+  background: var(--ork-canvas); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.mk-bar nav { display: flex; flex-wrap: wrap; gap: var(--ork-2); }
+.mk-main { padding-block: var(--ork-6); display: flex; flex-direction: column; gap: var(--ork-8); }
+.mk-sec h1 { font: var(--ork-type-title); text-transform: var(--ork-type-title-case); letter-spacing: var(--ork-type-title-track); margin-bottom: var(--ork-3); }
+.mk-line { max-width: 100ch; margin-bottom: var(--ork-5); color: var(--ork-ink-read); }
+.mk-line b { color: var(--ork-ink); }
+.mk-row { display: flex; flex-wrap: wrap; gap: var(--ork-6); align-items: flex-start; }
+.mk-fig { margin: 0; display: flex; flex-direction: column; gap: var(--ork-3); }
+.mk-fig > h2 { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.mk-fig > p { max-width: 300px; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.mk-fig > p b { color: var(--ork-ink); font-weight: 600; }
+.mk-vs { display: flex; gap: var(--ork-8); flex-wrap: wrap; align-items: flex-start; }
+.mk-vs > div { display: flex; flex-direction: column; gap: var(--ork-3); }
+.mk-tag { font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); }
+.mk-tag.new { color: var(--ork-ink); }
+.mk-notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: var(--ork-3) var(--ork-6); margin-top: var(--ork-5); max-width: 1120px; }
+.mk-notes p { color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.mk-notes p b { color: var(--ork-ink); font-weight: 600; }
+.mk-foot { max-width: 100ch; margin-bottom: var(--ork-8); padding-top: var(--ork-4); border-top: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.mk-h { display: inline-block; width: 16px; height: 16px; image-rendering: pixelated; flex: none; }
+.mk-h.m { width: 24px; height: 24px; } .mk-h.l { width: 32px; height: 32px; }
+.c-meadow { --c: var(--ork-elem-meadow); } .c-ice { --c: var(--ork-elem-ice); } .c-dust { --c: var(--ork-elem-dust); } .c-void { --c: var(--ork-elem-void); } .c-lava { --c: var(--ork-elem-lava); }
+
+/* ---------- the column's card: today (112 x 157, a window) and proposed (no window) ---------- */
+.cc { position: relative; width: 112px; display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-2); border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-card); font: var(--ork-type-caption); }
+.cc.old { height: 157px; }
+.cc .hd { display: flex; gap: var(--ork-2); align-items: flex-start; font-weight: 600; font-size: 12px; line-height: 16px; }
+.cc .hd .nm { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.cc .win { flex: 1; border: var(--ork-line) solid var(--ork-card-frame); display: grid; place-items: center; color: var(--ork-ink-faint); }
+.cc .ft { display: flex; align-items: center; gap: var(--ork-2); color: var(--ork-ink-muted); white-space: nowrap; }
+.cc .ft .t { margin-left: auto; }
+.cc .bar { height: 3px; background: var(--ork-frame); } .cc .bar i { display: block; height: 100%; width: 62%; background: var(--c); }
+.cc .feet { display: flex; flex-direction: column; }
+.pile { display: flex; flex-direction: column; gap: 0; width: 112px; }
+.pile .ttl { display: flex; flex-wrap: wrap; justify-content: space-between; column-gap: var(--ork-2); margin-bottom: var(--ork-2); font: var(--ork-type-label); text-transform: var(--ork-type-label-case); letter-spacing: var(--ork-type-label-track); color: var(--ork-ink-muted); white-space: nowrap; }
+.pile .foot { display: flex; align-items: center; gap: var(--ork-2); height: 20px; padding: 0 var(--ork-2); border: var(--ork-line) solid var(--ork-card-frame); border-top: 0; background: var(--ork-card); font: var(--ork-type-caption); color: var(--ork-ink-muted); white-space: nowrap; overflow: hidden; }
+.pile .foot .t { margin-left: auto; }
+.pile .foot .cut { overflow: hidden; text-overflow: ellipsis; }
+
+/* ---------- the hand's card: today (a window with the kind and who asks) and proposed (the kind in the corner) ---------- */
+.hc { position: relative; width: 132px; display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3); border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-card); font: var(--ork-type-caption); }
+.hc.old { height: 150px; }
+.hc.ask { border-color: var(--ork-alert); } .hc.bad { border-color: var(--ork-danger); }
+.hc .ti { font-weight: 600; font-size: 13px; line-height: 17px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.hc.old .ti { -webkit-line-clamp: 2; }
+.hc .win { flex: 1; min-height: 0; border: var(--ork-line) solid var(--ork-card-frame); display: flex; align-items: center; justify-content: center; gap: 2px; }
+.hc .corner { display: flex; align-items: center; gap: var(--ork-1); }
+.hc .corner .ork-sign { color: var(--ork-ink-muted); }
+.hc.ask .corner .ork-sign { color: var(--ork-alert); } .hc.bad .corner .ork-sign { color: var(--ork-danger); }
+.hc .corner .who { margin-left: auto; display: flex; align-items: center; gap: 4px; color: var(--ork-ink-muted); }
+.hc .lb { display: flex; align-items: center; gap: var(--ork-2); margin-top: auto; color: var(--ork-ink-muted); font-family: var(--ork-font-pixel); font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; }
+.hc .lb .gem { margin-left: auto; font-family: var(--ork-font-body, inherit); text-transform: none; color: var(--ork-mana); font-size: 11px; }
+
+/* ---------- the lane's card: a window onto the work ---------- */
+.lc { position: relative; width: 156px; display: flex; flex-direction: column; gap: var(--ork-2); padding: var(--ork-3); border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-card); font: var(--ork-type-caption); }
+.lc .ti { font-weight: 600; font-size: 13px; line-height: 17px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.lc .win { position: relative; height: 92px; border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-table); overflow: hidden; }
+.lc .lb { display: flex; align-items: center; gap: var(--ork-2); color: var(--ork-ink-muted); font-family: var(--ork-font-pixel); font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; }
+.lc .lb .r { margin-left: auto; font-family: inherit; text-transform: none; }
+.lc.bad { border-color: var(--ork-danger); }
+/* waiting: who will take it, faint, at the table */
+.w-wait { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--ork-1); color: var(--ork-ink-faint); }
+.w-wait .mk-h { opacity: 0.45; }
+/* at work: its steps */
+.w-steps { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: var(--ork-2); padding: var(--ork-2) var(--ork-3); }
+.w-steps .pips { display: flex; gap: 2px; } .w-steps .pips i { width: 6px; height: 6px; background: var(--ork-ink-faint); } .w-steps .pips i.d { background: var(--ork-ink); } .w-steps .pips i.n { background: var(--c); }
+.w-steps .now { color: var(--ork-ink-read); line-height: 15px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.w-steps .by { display: flex; align-items: center; gap: var(--ork-2); color: var(--ork-ink-muted); }
+.w-steps .by .busy { width: 6px; height: 6px; background: var(--c); animation: busy 2.4s steps(6) infinite; }
+@keyframes busy { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .w-steps .by .busy { animation: none; } }
+/* Tech: the files it touched, + and − as pixel bars */
+.w-diff { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: 5px; padding: var(--ork-2) var(--ork-3); font-family: var(--ork-font-code); font-size: 10px; color: var(--ork-ink-muted); }
+.w-diff div { display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+.w-diff span.f { width: 74px; overflow: hidden; text-overflow: ellipsis; }
+.w-diff i { display: inline-block; width: 4px; height: 6px; margin-right: 1px; }
+.w-diff i.a { background: var(--ork-success); } .w-diff i.x { background: var(--ork-danger); } .w-diff i.o { background: var(--ork-frame); }
+/* Design: the screen it made, a thumbnail (here a pixel wireframe) */
+.w-screen { position: absolute; inset: 6px; display: flex; justify-content: center; gap: 8px; }
+.w-screen .ph { width: 44px; height: 78px; border: 2px solid var(--ork-edge); background: var(--ork-canvas); display: flex; flex-direction: column; gap: 3px; padding: 3px; }
+.w-screen .ph i { display: block; background: var(--ork-frame); height: 4px; }
+.w-screen .ph i.big { height: 18px; background: color-mix(in srgb, var(--c) 55%, var(--ork-frame)); }
+.w-screen .ph i.btn { height: 8px; margin-top: auto; background: var(--ork-ink-faint); }
+.w-screen .ph.was { opacity: 0.45; }
+.w-screen .arr { align-self: center; color: var(--ork-ink-faint); }
+/* Art: the asset itself, at its pixels */
+.w-asset { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: var(--ork-4); background:
+  repeating-conic-gradient(var(--ork-table) 0 25%, color-mix(in srgb, var(--ork-ink) 4%, var(--ork-table)) 0 50%) 0 0 / 8px 8px; }
+.w-asset canvas { image-rendering: pixelated; width: 64px; height: 64px; }
+.w-asset span { color: var(--ork-ink-muted); font-family: var(--ork-font-code); font-size: 10px; line-height: 14px; }
+/* Release: the checks on the way into main */
+.w-checks { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: var(--ork-2) var(--ork-3); }
+.w-checks div { display: flex; align-items: center; gap: var(--ork-2); color: var(--ork-ink-read); }
+.w-checks .ork-sign.check { color: var(--ork-success); } .w-checks .run { color: var(--ork-ink-muted); }
+/* Product: the hypothesis and its state */
+.w-hyp { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: var(--ork-2); padding: var(--ork-2) var(--ork-3); }
+.w-hyp q { color: var(--ork-ink-read); line-height: 15px; quotes: "“" "”"; }
+.w-hyp .st { display: flex; align-items: center; gap: var(--ork-2); }
+.w-hyp .st .ork-chip { height: 18px; font-size: 10px; }
+.w-hyp .meter { flex: 1; height: 4px; background: var(--ork-frame); } .w-hyp .meter i { display: block; height: 100%; width: 40%; background: var(--c); }
+/* a failure: the reason in one line */
+.w-fail { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; gap: var(--ork-2); padding: var(--ork-2) var(--ork-3); }
+.w-fail .ork-sign { color: var(--ork-danger); }
+.w-fail span { color: var(--ork-ink-read); line-height: 15px; }
+
+/* ---------- the window as a whole, proposed ---------- */
+.win-all { width: min(1220px, 100%); border: var(--ork-line) solid var(--ork-edge); background: var(--ork-table); display: grid; grid-template-columns: 128px minmax(0, 1fr); grid-template-rows: auto 104px; }
+.win-all .col { grid-row: 1; padding: var(--ork-3) var(--ork-2); border-right: var(--ork-line) solid var(--ork-frame); background: var(--ork-canvas); display: flex; flex-direction: column; gap: var(--ork-4); }
+.win-all .lanes { grid-row: 1; display: grid; grid-template-columns: repeat(4, minmax(170px, 1fr)); overflow: hidden; }
+.win-all .lane { display: flex; flex-direction: column; gap: var(--ork-3); padding: var(--ork-3); border-right: var(--ork-line) solid var(--ork-frame); min-height: 420px; }
+.win-all .lane .who { display: flex; align-items: center; gap: var(--ork-2); font-family: var(--ork-font-pixel); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ork-ink-muted); }
+.win-all .strip { display: flex; align-items: center; gap: var(--ork-2); padding: 2px var(--ork-2); border: var(--ork-line) solid var(--ork-card-frame); background: var(--ork-card); font: var(--ork-type-caption); color: var(--ork-ink-read); width: 156px; }
+.win-all .hand { grid-column: 1 / -1; display: flex; align-items: flex-start; gap: var(--ork-4); padding: var(--ork-3); border-top: var(--ork-line) solid var(--ork-frame); background: var(--ork-canvas); }
+.win-all .hand .plus { width: 92px; height: 88px; border: 2px solid var(--ork-success); display: grid; place-items: center; color: var(--ork-success); font-size: 32px; font-weight: 700; }
+.win-all .hand .end { margin-left: auto; display: flex; gap: var(--ork-3); align-items: flex-end; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
+.win-all .hand .end .pool { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+</style>
+</head>
+<body>
+<header class="mk-bar"><span class="ork-label">Orkboard · a card's window is where it has something to show</span>
+  <nav><a class="ork-btn" href="#column">1 · The column</a><a class="ork-btn" href="#hand">2 · The hand</a><a class="ork-btn" href="#lanes">3 · The lanes</a><a class="ork-btn" href="#whole">4 · The whole window</a></nav></header>
+<main class="mk-main">
+
+  <section class="mk-sec" id="column">
+    <h1>1 · The Orkmaster's column: no window</h1>
+    <p class="mk-line">The column says <b>where</b> a goal is, and its pile, its rune, its name and its foot say it already. Today half of every upright card is an empty window. Without it the card
+      is its rune and its whole name (three lines), and its foot: the wait as a bar, the time, the leaders' heads at work. A pile shows more cards in the same height, and the face-down
+      cards of <i>In analysis</i> keep their seal (they have nothing else).</p>
+    <div class="mk-vs" id="col-vs"></div>
+  </section>
+
+  <section class="mk-sec" id="hand">
+    <h1>2 · The hand: the kind in the corner, who asks beside it</h1>
+    <p class="mk-line">The hand says <b>what is asked of you and by whom</b>. The kind is a sign in the card's corner (<b>a question</b>, <b>a fork</b>, <b>it failed</b>, <b>a hypothesis due</b>,
+      <b>a cost grown</b>), in its signal's colour; <b>who asks</b> is a small head beside it, never lost (a member asks only its leader, and the hand says which leader). The title gets
+      three whole lines: no title cut in the middle of a line. The card is about two thirds of today's height, so the hand is lower and the table taller.</p>
+    <div class="mk-vs" id="hand-vs"></div>
+  </section>
+
+  <section class="mk-sec" id="lanes">
+    <h1>3 · The leaders' lanes: a window onto the work</h1>
+    <p class="mk-line">Here the window keeps its place and shows <b>the work itself, never a picture for its own sake</b> (the one look: the races' heads the only pictures): who will
+      take it while it waits, its steps while it is at work (§207), <b>what it made</b> when it is done or checked, by its craft, and a failure's reason. All of it is read from what the Board
+      already has (git, the steps, the files the work made, the gate's checks, the hypotheses), with no call to a model.</p>
+    <div class="mk-row" id="lane-cards"></div>
+  </section>
+
+  <section class="mk-sec" id="whole">
+    <h1>4 · The whole window, proposed</h1>
+    <p class="mk-line">The column of short cards, the lanes of tall ones, the hand of short ones under them. <b>The cards keep one face</b> (frame, header, label row), so they still read as
+      one deck: the height says where the work is. The hand is about as tall as the potions and the die now set it.</p>
+    <div class="win-all" id="all"></div>
+    <div class="mk-notes">
+      <p><b>What changes</b>: decisions §236.4's size of the upright card (157 × 112) for the column; the hand card's window (spec 101 §2); a lane card's window becomes the work's (spec 128).</p>
+      <p><b>What stays</b>: the face-down cards and their seal (§206.3, §241); the + card; the picked card lit by its rune (§248); the lifted card in the hand, which shows what is asked in full.</p>
+      <p><b>The thumbnails</b> come from what exists: Design's screen from Play's shot or the sketch's canvas, Art's asset from the file the work made, Tech's bars from <code>git diff --numstat</code> on the task's commits.</p>
+      <p><b>Open</b>: Product's window (a hypothesis) and Run's and LiveOps' (the next dated event, §215) are drawn for one; Marketing's waits for its map.</p>
+    </div>
+  </section>
+
+  <p class="mk-foot">Drawn for the owner's note of 4 November 2026 (a card's window where it has something to show), before its decision. Drawn here first, for orkUI after a yes:
+    the short card (column and hand), the corner of the hand's card, the lane card's windows by state and craft.</p>
+</main>
+<script>
+(function () {
+  var B = "../../../design-system/orkui/";
+  var head = function (n, cls) { return '<img class="mk-h ' + (cls || "") + '" src="' + B + "races/" + n + '.png" alt="">'; };
+  var elem = function (e) { return '<i class="ork-elem ' + e + '"></i>'; };
+  var sign = function (s, big) { return '<i class="ork-sign ' + s + (big ? " big" : "") + '"></i>'; };
+
+  // 1 · the column
+  function colOld(e, name, foot) { return '<div class="cc old c-' + e + '"><div class="hd">' + elem(e) + '<span class="nm">' + name + '</span></div><div class="win"></div>' + foot + "</div>"; }
+  function colNew(e, name, foot) { return '<div class="cc c-' + e + '"><div class="hd">' + elem(e) + '<span class="nm">' + name + "</span></div>" + foot + "</div>"; }
+  var waitFoot = '<div class="bar"><i></i></div><div class="ft">' + elem("ice") + '<span class="t">2 min</span></div>';
+  var workFoot = '<div class="ft">' + head("dryad-elder") + head("elf-laborer") + '<span class="t">0/1</span></div>';
+  var oldFeet = '<div class="foot">' + elem("dust") + '<span class="cut">Tidy th…</span><span class="t">~10:02</span></div>';
+  var newFeet = '<div class="foot" title="Tidy the scoring module">' + elem("dust") + '<span class="t">~10:02</span></div>';
+  var oldFeet2 = '<div class="foot">' + elem("void") + '<span class="cut">Lobby i…</span><span class="t">Held</span></div><div class="foot">' + elem("lava") + '<span class="cut">Rena…</span><span class="t">' + sign("moon") + ' 01:00</span></div>';
+  var newFeet2 = '<div class="foot" title="Lobby in Polish">' + elem("void") + '<span class="t">Held</span></div><div class="foot" title="Rename a room after it is made">' + elem("lava") + '<span class="t">' + sign("moon") + ' 01:00</span></div>';
+  function piles(card, a, b) {
+    return '<div class="pile"><div class="ttl"><span>To review</span><span>next in 2 min</span></div>' + card("ice", "Round timer on phones", waitFoot) + a + "</div>"
+      + '<div class="pile" style="margin-top:var(--ork-5)"><div class="ttl"><span>At work · later</span></div>' + card("meadow", "Music in the lobby", workFoot) + b + "</div>";
+  }
+  document.getElementById("col-vs").innerHTML =
+    '<div><span class="mk-tag">Today</span>' + piles(colOld, oldFeet, oldFeet2) + "</div>"
+    + '<div><span class="mk-tag new">Proposed</span>' + piles(colNew, newFeet, newFeet2) + '</div>'
+    + '<div class="mk-fig" style="max-width:300px"><p><b>The pile\'s foot</b> loses the cut name (§247.4): the rune, the time or the heads, the state; the name on hover and for a screen reader.</p>'
+    + '<p><b>A long name</b> (<i>Players see who answered first in the round</i>) takes its three lines; the card grows by a line, never cuts one.</p></div>';
+
+  // 2 · the hand
+  var H = [["ask", "question", "The timer doesn't reset after a reconnect: which do we keep?", "shaman-elder", "Tech", "Tech", ""],
+           ["", "balance", "Two ways for the lobby's music: a loop or a playlist", "dryad-elder", "Design", "Design", "≈ 3%"],
+           ["bad", "alert", "It failed: Make the loop", "dryad-elder", "Design", "Design", ""],
+           ["", "flask", "Is a visible timer ending rounds on time? Its measure is in", "unicorn-elder", "Product", "Product", ""],
+           ["", "work", "Pick the theme of the first week costs more now", "unicorn-elder", "Product", "Product", "≈ 6%"]];
+  function handOld(h) { return '<div class="hc old ' + h[0] + '"><span class="ti">' + h[2] + '</span><div class="win">' + sign(h[1], true) + head(h[3], "l") + '</div><div class="lb">' + (h[4] || "Orkmaster") + (h[6] ? '<span class="gem">' + h[6] + "</span>" : "") + "</div></div>"; }
+  function handNew(h) { return '<div class="hc ' + h[0] + '"><div class="corner">' + sign(h[1]) + '<span class="who">' + head(h[3]) + "</span></div><span class=\"ti\">" + h[2] + '</span><div class="lb">' + (h[4] || "Orkmaster") + (h[6] ? '<span class="gem">' + h[6] + "</span>" : "") + "</div></div>"; }
+  document.getElementById("hand-vs").innerHTML =
+    '<div><span class="mk-tag">Today</span><div class="mk-row" style="gap:var(--ork-3)">' + H.slice(0, 3).map(handOld).join("") + "</div></div>"
+    + '<div><span class="mk-tag new">Proposed</span><div class="mk-row" style="gap:var(--ork-3)">' + H.map(handNew).join("") + "</div></div>";
+
+  // 3 · the lanes
+  var pips = function (done, total) { var s = ""; for (var i = 0; i < total; i++) s += "<i" + (i < done ? ' class="d"' : i === done ? ' class="n"' : "") + "></i>"; return '<span class="pips">' + s + "</span>"; };
+  var bars = function (a, x) { var s = ""; for (var i = 0; i < 6; i++) s += '<i class="' + (i < a ? "a" : i < a + x ? "x" : "o") + '"></i>'; return s; };
+  var L = [
+    ["Waiting", "meadow", "Make the loop", '<div class="w-wait">' + head("elf-laborer", "l") + "<span>an elf takes it next</span></div>", "Waiting", ""],
+    ["At work", "ice", "Wire the timer to the round", '<div class="w-steps">' + pips(2, 5) + '<span class="now">Now: resets the clock when a player reconnects</span><span class="by">' + head("peon-laborer") + 'a Grunt<i class="busy"></i></span></div>', "Doing 3/5", "4 min"],
+    ["Tech · done", "ice", "Keep the round's time on the server", '<div class="w-diff"><div><span class="f">round.ts</span>' + bars(4, 1) + "</div><div><span class=\"f\">lobby/sync.ts</span>" + bars(2, 2) + "</div><div><span class=\"f\">round.test.ts</span>" + bars(5, 0) + "</div></div>", "Checking", ""],
+    ["Design · done", "void", "The round's end screen", '<div class="w-screen"><span class="ph was"><i></i><i class="big"></i><i></i><i class="btn"></i></span><span class="arr">→</span><span class="ph"><i></i><i class="big"></i><i></i><i></i><i class="btn"></i></span></div>', "Done", ""],
+    ["Art · done", "dust", "A coin for the round's winner", '<div class="w-asset"><canvas width="16" height="16" data-sprite="coin"></canvas><span>coin.png<br>16 × 16</span></div>', "Done", ""],
+    ["Release", "lava", "Ready for main: Round timer", '<div class="w-checks"><div>' + sign("check") + "The merge</div><div>" + sign("check") + 'Tests</div><div class="run">' + head("skeleton-laborer") + "Regression · running</div></div>", "Checking", ""],
+    ["Product", "meadow", "Players finish more rounds", '<div class="w-hyp"><q>A visible timer makes a round end on time</q><span class="st"><span class="ork-chip">Testing</span><span class="meter"><i></i></span></span></div>', "Hypothesis", ""],
+    ["Failed", "meadow", "Make the loop", '<div class="w-fail">' + sign("alert") + "<span>Tests: 2 fail in audio.test.ts (the loop's end clicks)</span></div>", "Failed", ""]];
+  document.getElementById("lane-cards").innerHTML = L.map(function (l) {
+    return '<figure class="mk-fig"><h2>' + l[0] + '</h2><div class="lc c-' + l[1] + (l[0] === "Failed" ? " bad" : "") + '"><span class="ti">' + l[2] + '</span><div class="win">' + l[3] + '</div><div class="lb">' + l[4] + (l[5] ? '<span class="r">' + l[5] + "</span>" : "") + "</div></div></figure>";
+  }).join("");
+
+  // a sprite drawn at its pixels: the coin the Art party made
+  var COIN = ["......####......", "....##$$$$##....", "...#$$$$$$$$#...", "..#$$**$$$$$$#..", "..#$*$$$$$$$$#..", ".#$$*$$##$$$$$#.", ".#$$$$#..#$$$$#.", ".#$$$$#..#$$$$#.", ".#$$$$$##$$$$$#.", ".#$$$$$$$$$$$$#.", "..#$$$$$$$$$$#..", "..#$$$$$$$$$$#..", "...#$$$$$$$$#...", "....##$$$$##....", "......####......", "................"];
+  [].slice.call(document.querySelectorAll("canvas[data-sprite]")).forEach(function (c) {
+    var g = c.getContext("2d"), cs = getComputedStyle(document.documentElement);
+    var col = { "#": cs.getPropertyValue("--ork-edge"), "$": cs.getPropertyValue("--ork-elem-dust"), "*": cs.getPropertyValue("--ork-ink") };
+    COIN.forEach(function (row, y) { for (var x = 0; x < 16; x++) if (col[row[x]]) { g.fillStyle = col[row[x]].trim(); g.fillRect(x, y, 1, 1); } });
+  });
+
+  // 4 · the whole window
+  var lane = function (who, leader, cards) { return '<div class="lane"><span class="who">' + head(leader, "m") + who + "</span>" + cards + "</div>"; };
+  var card = function (i) { var l = L[i]; return '<div class="lc c-' + l[1] + (l[0] === "Failed" ? " bad" : "") + '"><span class="ti">' + l[2] + '</span><div class="win">' + l[3] + '</div><div class="lb">' + l[4] + (l[5] ? '<span class="r">' + l[5] + "</span>" : "") + "</div></div>"; };
+  var strip = function (e, n) { return '<span class="strip">' + elem(e) + n + "</span>"; };
+  document.getElementById("all").innerHTML =
+    '<div class="col"><div class="pile"><div class="ttl"><span>To review</span></div>' + colNew("ice", "Round timer on phones", waitFoot) + newFeet + '</div><div class="pile"><div class="ttl"><span>At work · later</span></div>' + colNew("meadow", "Music in the lobby", workFoot) + newFeet2 + "</div></div>"
+    + '<div class="lanes">' + lane("Tech", "shaman-elder", strip("ice", "Round timer on phones") + card(1) + card(2)) + lane("Design", "dryad-elder", strip("meadow", "Music in the lobby") + card(0) + strip("void", "End of the round") + card(3))
+    + lane("Art", "dryad-warrior", strip("dust", "The winner's coin") + card(4)) + lane("Product", "unicorn-elder", card(6)) + "</div>"
+    + '<div class="hand"><span class="plus">+</span>' + H.slice(0, 3).map(handNew).join("") + '<span class="end"><span style="width:69px;height:72px;display:grid;place-items:center;border:1px dashed var(--ork-frame)">die</span>'
+    + '<span class="pool"><img class="ork-mark" src="' + B + 'marks/harness-claude.png" alt=""><span class="ork-potion small" style="--ork-potion-left:.62"></span><b>62%</b></span></span></div>';
+  // the whole window's coin, drawn again
+  [].slice.call(document.querySelectorAll("#all canvas[data-sprite]")).forEach(function (c) { var src = document.querySelector("#lane-cards canvas"); c.getContext("2d").drawImage(src, 0, 0); });
+})();
+</script>
+</body>
+</html>
