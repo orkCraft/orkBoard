@@ -545,7 +545,7 @@ def main_tool(machine: MachineSettings | None = None) -> str:
     """The machine's main tool (read from disk when not given: the chosen one if it is on, else the first on);
     Claude Code when none is on, as before there was a choice."""
     machine = machine or cached()
-    return harnesses.main([t for t, c in machine.tools.items() if c.enabled], machine.main_tool, machine.tool_order) or "claude"
+    return harnesses.main([t for t, c in machine.tools.items() if c.enabled], machine.main_tool, getattr(machine, "tool_order", ()) or ()) or "claude"     # settings of before spec 130 (Orkline's copy, a test's) have no order
 
 
 def tool_order(machine: MachineSettings | None = None) -> list[str]:
@@ -554,7 +554,8 @@ def tool_order(machine: MachineSettings | None = None) -> list[str]:
     decisions §232.5, spec 130 A.1). Read from disk when not given."""
     machine = machine or cached()
     on = [t for t, c in machine.tools.items() if c.enabled]
-    return sorted(on, key=lambda t: machine.tool_order.index(t) if t in machine.tool_order else len(machine.tool_order))   # a stable sort: the registry's order within the rest
+    order = list(getattr(machine, "tool_order", ()) or ())                 # settings of before spec 130 have none
+    return sorted(on, key=lambda t: order.index(t) if t in order else len(order))   # a stable sort: the registry's order within the rest
 
 
 def preset_role(role_id: str, file: Path | None = None, kin: str = "") -> bool:
