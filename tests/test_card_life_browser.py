@@ -172,7 +172,7 @@ def test_sent_the_card_turns_to_its_back_and_the_back_lies_in_the_orkmasters_col
         field.wait_for(timeout=WAIT_MS)
         field.get_by_role("textbox", name="Write a goal").fill("Players see who answered first, with a small crown over their name")
         field.get_by_role("textbox", name="Write a goal").press("Enter")
-        assert _sent(pg, host, ("ideas.add", {"text": "Players see who answered first, with a small crown over their name"}))
+        assert _sent(pg, host, ("ideas.add", {"match": True, "text": "Players see who answered first, with a small crown over their name"}))
         pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
         card = pg.locator('.frame-column .col-card--down[data-goal="new-goal"]')
         card.wait_for(timeout=WAIT_MS)

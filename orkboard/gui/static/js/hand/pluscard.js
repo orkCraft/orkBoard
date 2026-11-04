@@ -14,6 +14,8 @@
 // one press takes it off); *@Tech* in the text addresses it too, and the *To* square chooses a leader; on the Orkmaster's tab it is general and the Orkmaster routes it by code (`ideas.add` with no party). The page has no
 // microphone, so the field has none. While there is no goal at all, the + card lies large in the pane's middle (and the field grows there, as it did). *@* in the text offers a party, a file or a folder, and a party's goal types and map parts (mention.js, spec 107 §11): a type
 // taken is a chip and `type` of `ideas.add`, a part a mark as picking's; a project file taken with *Files* is written *@path* after the words when it is sent, as the *@* list writes it.
+// **A goal that looks like part of another** (docs/specs/135 A.5, decisions §242): Send asks with `match: true`; when the host answers `{match}` nothing was added and the field stays open, its words, rune and files kept, and says
+// *Looks like part of: <title>* with **Add to it** (`ideas.add_to_goal`) and **Keep apart** (sent again with `apart`) under the text (fieldmatch.js); changing the words puts the line away, sending again looks again. The phone's field is this one.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { laying } from "../table/laying.js";
 import { html, cls } from "../html.js";
@@ -25,6 +27,7 @@ import { tab } from "../frame/state.js";
 import { fieldFiles, fieldOff, fieldOpen, fieldPhotos, fieldRow, fieldRune, fieldText, fieldTo, fieldType, plusDealt, rite, summon, withoutAddress } from "./state.js";
 import { focusInPress, growFrom, placeField, releaseProxy, sendBack, turnBack } from "./fieldturn.js";
 import { Choices, ELEMENTS, FileChips, Squares, closeRow } from "./fieldsquares.js";
+import { MatchLine } from "./fieldmatch.js";
 import { partiesOf, partyCard } from "./data.js";
 import { MarkChips, addressNow, marks, marksToSend, pickFor, resetMarks } from "../table/picking.js";       // picking on the addressed party's map (spec 102 §6): its marks lie on the field as chips
 import { leans } from "./motion.js";
@@ -87,7 +90,7 @@ export function openField(first = "") {
 
 /** The field the + card grew into. `middle`: it grows in the pane's middle (no goal at all) or in the phone's deck, else it lies where the + card lay (placeField). */
 export function Field({ middle = false }) {
-  const root = useRef(), area = useRef(), file = useRef(), [busy, setBusy] = useState(false), address = useAddress(), runes = runesOf(address);
+  const root = useRef(), area = useRef(), file = useRef(), [busy, setBusy] = useState(false), [match, setMatch] = useState(null), address = useAddress(), runes = runesOf(address);
   const parties = partiesOf(mapData.value).map((g) => ({ ...partyCard(g), types: g.types || [] }));
   const mention = useMention(area, parties);
   const taken = fieldType.value && fieldType.value.party === address.party ? fieldType.value : null;     // the type taken with @ or the *Type* square stays the goal's while it goes to the party it was taken from
@@ -107,23 +110,40 @@ export function Field({ middle = false }) {
     releaseProxy();                                                                   // the focus the press gave moves here: the phone's keyboard stays up
     el.setSelectionRange(el.value.length, el.value.length);
   }, []);
-  const send = async () => {
+  const wordsOf = () => {
     const words = withoutAddress(fieldText.value, address.by === "text" ? address.name : "");
+    return { words, text: fieldFiles.value.length ? `${words} ${fieldFiles.value.map((f) => `@${f.path}`).join(" ")}` : words };     // a file of the project is written as the @ list writes it (the host turns it into the path)
+  };
+  const emptied = () => { fieldText.value = ""; fieldPhotos.value = []; fieldFiles.value = []; resetMarks(); fieldType.value = null; fieldRune.value = ""; fieldTo.value = ""; fieldOpen.value = false; fieldRow.value = ""; setMatch(null); };
+  /** Sends the goal. It asks `match: true` (spec 135 A.5): a goal that looks like part of one lying face down is not added, the field stays open and says so (`match`); *Keep apart* sends it again with `apart` and the goal it was offered. */
+  const send = async (more = {}) => {
+    const { words, text } = wordsOf();
     if (!words || busy) return;
-    const text = fieldFiles.value.length ? `${words} ${fieldFiles.value.map((f) => `@${f.path}`).join(" ")}` : words;     // a file of the project is written as the @ list writes it (the host turns it into the path)
     setBusy(true);
     const sent = marksToSend();
     const chosen = fieldRune.value && fieldRune.value !== runes.base ? fieldRune.value : "";            // the rune goes only when it is not the one the goal would be given anyway
-    const got = await act("ideas.add", { text, ...(address.party ? { party: address.party } : {}), ...(taken ? { type: taken.id } : {}), ...(chosen ? { element: chosen } : {}), ...(fieldPhotos.value.length ? { photos: fieldPhotos.value } : {}), ...(sent.length ? { marks: sent } : {}) });
+    const got = await act("ideas.add", { text, match: true, ...more, ...(address.party ? { party: address.party } : {}), ...(taken ? { type: taken.id } : {}), ...(chosen ? { element: chosen } : {}), ...(fieldPhotos.value.length ? { photos: fieldPhotos.value } : {}), ...(sent.length ? { marks: sent } : {}) });
     setBusy(false);
     if (!got) return;                                                                 // refused: the host said why in a toast, the words stay
+    if (got.match) { setMatch(got.match); return; }                                   // it looks like part of another: nothing was added, the words, the rune and the files stay
     const box = root.current?.getBoundingClientRect(), goal = { slug: got.slug || "", element: got.element || chosen || runes.shown, hue: got.hue || "", name: words.replace(/\s+/g, " ").slice(0, 60) };
-    fieldText.value = ""; fieldPhotos.value = []; fieldFiles.value = []; resetMarks(); fieldType.value = null; fieldRune.value = ""; fieldTo.value = ""; fieldOpen.value = false; fieldRow.value = "";
+    emptied();
     summon(got.hue || got.element || chosen);                                                    // the seal fills from the goal's rune (decisions §187.4)
     plusDealt.value = true;                                                           // a new + card is dealt at the lane's end, its rune the next goal's
     setTimeout(() => { plusDealt.value = false; }, 700);
     if (box && goal.slug) sendBack(box, goal);                                        // it turns to its back and goes face down to the Orkmaster's lane (§6.2)
     toast(address.party ? `Sent to ${address.name}.` : "Sent: the Orkmaster finds its party in a moment.");
+  };
+  /** *Add to it*: the words join the goal the field named (`ideas.add_to_goal`, via `match`), with the rune the person chose, else the one the goal would have been given. The field closes by doing it. */
+  const addTo = async () => {
+    const { text } = wordsOf();
+    if (!text.trim() || !match || busy) return;
+    setBusy(true);
+    const got = await act("ideas.add_to_goal", { idea: match.idea, text, via: "match", ...((fieldRune.value || runes.shown) ? { element: fieldRune.value || runes.shown } : {}) });
+    setBusy(false);
+    if (!got) return;                                                                 // refused in words (the goal moved on): the host said why in a toast, the line stays
+    emptied();
+    toast(got.why ? `Added to ${match.title}. ${got.why}` : `Added to ${match.title}.`);
   };
   const off = () => {
     if (address.by === "text") fieldText.value = withoutAddress(fieldText.value, address.name);
@@ -141,7 +161,7 @@ export function Field({ middle = false }) {
     if (pics.length) { e.preventDefault(); addPictures(pics); }
   };
   const attached = fieldPhotos.value.length + fieldFiles.value.length > 0;
-  return html`<div ref=${root} class=${cls("ork-card hand-field", { "is-middle": middle, "has-row": !!fieldRow.value, "is-picking": !!pickFor.value })} role="group" aria-label="The new goal’s card, grown into the field"
+  return html`<div ref=${root} class=${cls("ork-card hand-field", { "is-middle": middle, "has-row": !!fieldRow.value, "is-picking": !!pickFor.value, "has-match": !!match })} role="group" aria-label="The new goal’s card, grown into the field"
       onDragOver=${(e) => e.preventDefault()} onDrop=${(e) => { e.preventDefault(); addPictures([...(e.dataTransfer?.files || [])]); }}>
     <div class="hand-field__top"><${Squares} runes=${runes} address=${address} parties=${parties} taken=${taken} />
     ${(address.name || taken || marks.value.length > 0) && html`<div class="hand-field__chips">
@@ -153,11 +173,12 @@ export function Field({ middle = false }) {
     </div>`}</div>
     <${Choices} runes=${runes} address=${address} parties=${parties} taken=${taken} pick=${() => file.current?.click()} />
     <textarea ref=${area} class="ork-field hand-field__text" aria-label="Write a goal" placeholder="Write a goal…" rows="3" value=${fieldText.value}
-      onInput=${(e) => { fieldText.value = e.currentTarget.value; mention.look(); }} onKeyDown=${key} onKeyUp=${mention.look} onClick=${mention.look} onFocus=${mention.look} onPaste=${paste}></textarea>
+      onInput=${(e) => { fieldText.value = e.currentTarget.value; if (match) setMatch(null); mention.look(); }} onKeyDown=${key} onKeyUp=${mention.look} onClick=${mention.look} onFocus=${mention.look} onPaste=${paste}></textarea>
     <${MentionList} ...${mention} />
+    ${match && html`<${MatchLine} match=${match} busy=${busy} onAdd=${addTo} onApart=${() => send({ apart: true, with: match.idea })} />`}
     <div class="hand-field__row">
       ${attached ? html`<${FileChips} />` : html`<span class="cap hand-field__hint">Enter sends · Shift+Enter a new line</span>`}
-      <button type="button" class="ork-btn primary" disabled=${!fieldText.value.trim() || busy} onClick=${send}>Send</button>
+      <button type="button" class="ork-btn primary" disabled=${!fieldText.value.trim() || busy} onClick=${() => send()}>Send</button>
       <input ref=${file} type="file" accept=${PICTURE_TYPES.join(",")} multiple hidden onChange=${(e) => { addPictures([...e.currentTarget.files]); e.currentTarget.value = ""; }} />
     </div>
   </div>`;

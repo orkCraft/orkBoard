@@ -20,7 +20,7 @@ export async function ask(name, args = {}) {
   try {
     const got = await command(name, args);
     if (got && got.error) { toast(got.error, "error"); return null; }
-    if (GOAL_STARTS.includes(name)) import("../table/door.js").then((m) => m.goalStarted());      // a goal is started from this page: Stop all's door shuts (spec 123 §7.6)
+    if (GOAL_STARTS.includes(name) && !got?.match) import("../table/door.js").then((m) => m.goalStarted());      // a goal is started from this page: Stop all's door shuts (spec 123 §7.6)
     return got || {};
   } catch { return null; }
 }

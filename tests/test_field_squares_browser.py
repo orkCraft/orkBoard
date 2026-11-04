@@ -175,7 +175,7 @@ def test_to_addresses_a_leader_its_types_come_by_their_signs_and_a_type_chosen_i
         assert field.locator(".hand-chip[data-type=mechanic]").count() == 1
         area.fill("Round timer")
         area.press("Enter")
-        assert _calls(pg, host, "ideas.add")[-1] == {"text": "Round timer", "party": "game", "type": "mechanic"}
+        assert _calls(pg, host, "ideas.add")[-1] == {"match": True, "text": "Round timer", "party": "game", "type": "mechanic"}
         pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
         field, area = _open(pg)
         assert field.locator(".hand-chip").count() == 0, "the next goal starts general again"

@@ -538,7 +538,7 @@ def test_with_no_goal_at_all_the_plus_card_lies_large_in_the_panes_middle(gui):
         assert "is-middle" in field.get_attribute("class") and big.count() == 0
         area.fill("My first goal")
         area.press("Enter")
-        assert _sent(pg, host, ("ideas.add", {"text": "My first goal"}))
+        assert _sent(pg, host, ("ideas.add", {"match": True, "text": "My first goal"}))
     finally:
         pg.close()
     assert not log, "\n".join(log)
@@ -646,7 +646,7 @@ def test_the_plus_card_grows_into_the_field_enter_sends_shift_enter_a_new_line_e
         _, area = _field(pg)
         assert area.input_value() == "Show the round number\nabove the timer"
         area.press("Enter")                                                        # Enter sends: general on the Orkmaster's tab, no party
-        assert _sent(pg, host, ("ideas.add", {"text": "Show the round number\nabove the timer"}))
+        assert _sent(pg, host, ("ideas.add", {"match": True, "text": "Show the round number\nabove the timer"}))
         pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)             # sent: the field closes with its text gone
         _plus(pg).click(position={"x": 8, "y": 60})
         assert _field(pg)[1].input_value() == ""
@@ -760,7 +760,7 @@ def test_the_field_holds_a_row_of_five_runes_the_default_checked_the_used_faint_
         assert _checked(pg) == ["meadow"] and _seal(pg) == "meadow"
         area.fill("The rune is meadow")
         area.press("Enter")
-        assert _sent(pg, host, ("ideas.add", {"text": "The rune is meadow", "party": "tech", "element": "meadow"}))         # sent: the choice differs from the default
+        assert _sent(pg, host, ("ideas.add", {"match": True, "text": "The rune is meadow", "party": "tech", "element": "meadow"}))         # sent: the choice differs from the default
         pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
         _plus(pg).click(position={"x": 8, "y": 60})
         _field(pg)
@@ -788,7 +788,7 @@ def test_with_no_party_addressed_no_rune_is_checked_the_arrows_begin_at_the_firs
         area.fill("A general goal in lava")
         _radios(pg).nth(4).click()
         area.press("Enter")
-        assert _sent(pg, host, ("ideas.add", {"text": "A general goal in lava", "element": "lava"}))
+        assert _sent(pg, host, ("ideas.add", {"match": True, "text": "A general goal in lava", "element": "lava"}))
         pg.wait_for_function("() => !document.querySelector('.hand-field')", timeout=WAIT_MS)
     finally:
         pg.close()
@@ -873,14 +873,14 @@ def test_the_field_is_addressed_by_the_open_tab_and_by_an_at_sign_and_a_press_ta
         shot(pg, "wide-field-addressed")
         area.fill("Reset the clock after a reconnect")
         area.press("Enter")
-        assert _sent(pg, host, ("ideas.add", {"text": "Reset the clock after a reconnect", "party": "tech"}))
+        assert _sent(pg, host, ("ideas.add", {"match": True, "text": "Reset the clock after a reconnect", "party": "tech"}))
         _plus(pg).click()
         field, area = _field(pg)
         field.get_by_role("button", name="Take off Tech").click()                  # one press takes it off: general
         assert field.locator(".hand-chip").count() == 0
         area.fill("A general goal")
         area.press("Enter")
-        assert _sent(pg, host, ("ideas.add", {"text": "A general goal"}))
+        assert _sent(pg, host, ("ideas.add", {"match": True, "text": "A general goal"}))
         _plus(pg).click()
         field, area = _field(pg)
         assert field.locator(".hand-chip").count() == 0                            # taken off for that tab: still off on it
@@ -891,7 +891,7 @@ def test_the_field_is_addressed_by_the_open_tab_and_by_an_at_sign_and_a_press_ta
         chip = field.locator(".hand-chip")
         assert chip.inner_text().strip() == "Product" and chip.get_attribute("data-by") == "text"
         area.press("Enter")
-        assert _sent(pg, host, ("ideas.add", {"text": "pick the first theme", "party": "product"}))
+        assert _sent(pg, host, ("ideas.add", {"match": True, "text": "pick the first theme", "party": "product"}))
     finally:
         pg.close()
     assert not log, "\n".join(log)
