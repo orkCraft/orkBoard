@@ -254,6 +254,33 @@ def test_the_orkmasters_line_while_a_fix_runs_with_no_line_of_the_persons_says_w
     finish(pg, errors)
 
 
+def test_a_fix_that_is_in_has_the_orkmasters_line_restart_to_take_it_until_it_is_put_away(gui):
+    """Spec 139 A.5: the host sends no card for a fix that is in, so the Orkmaster's line says *Orkboard was fixed: restart to take it*, until the viewer puts it away (a newer fix shows again)."""
+    host = RepairHost(WORKING)
+    pg, errors = window(gui, host)
+    solved = pg.locator(".table-notice[data-solved]")
+    assert solved.count() == 0, "a fix that runs says it is being fixed, not that it was"
+    host.say(**READY)
+    solved.wait_for(timeout=WAIT_MS)
+    assert words(solved.locator(".table-notice__line")) == "Orkboard was fixed: restart to take it" and solved.get_attribute("role") == "status"
+    assert solved.locator(".ork-race__head").count() == 1 and pg.locator(".table-notice[data-fixing]").count() == 0
+    shot(pg, "s139-fixed-line.png")
+    host.say(**UPDATING)                                                                                                    # the restart is on its way: the line of the fix running says so, this one is not asked
+    pg.wait_for_function("() => document.querySelector('.table-notice[data-fixing]')", timeout=WAIT_MS)
+    host.say(**READY)
+    solved.wait_for(timeout=WAIT_MS)
+    solved.get_by_role("button", name="Dismiss").click()
+    pg.wait_for_function("() => !document.querySelector('.table-notice[data-solved]')", timeout=WAIT_MS)
+    host.say(**READY)                                                                                                      # the same fix again: still put away
+    pg.wait_for_timeout(200)
+    assert solved.count() == 0
+    host.say(started_at=1_761_999_999.0)                                                                                   # a newer fix shows again
+    solved.wait_for(timeout=WAIT_MS)
+    host.say(state="idle", started_at=None)
+    pg.wait_for_function("() => !document.querySelector('.table-notice[data-solved]')", timeout=WAIT_MS)
+    finish(pg, errors)
+
+
 def test_enter_in_the_line_presses_fix_it_and_with_no_fix_it_save_logs(gui):
     host = RepairHost(CAN)
     pg, errors = window(gui, host)
