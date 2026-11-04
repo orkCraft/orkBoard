@@ -119,13 +119,16 @@ def report(lines: list[dict], goal: str = "") -> dict:
                       "asked_again": [{"goal": g, "step": s, "calls": n} for (g, s), n in sorted(counts.items()) if n >= AGAIN]}}
 
 
-def _usd(cost: float, unpriced: int) -> str:
-    return f"${cost:.2f}" + (f" (+{unpriced} unpriced)" if unpriced else "")
+def _usd(cost: float, unpriced: int, calls: int | None = None) -> str:
+    """Unknown is not zero (spec 143 G.2): with every call of `calls` unpriced there is no figure, only that no price is known."""
+    if unpriced and calls is not None and unpriced >= calls:
+        return "no price known for these models"
+    return f"${cost:.2f}" + (f" + {unpriced} call{'s' if unpriced != 1 else ''} with no price known" if unpriced else "")
 
 
 def text(r: dict) -> str:
     t = r["total"]
-    out = [f"{t['calls']} calls{' for ' + r['goal'] if r['goal'] else ''}: {t['tokens']:,} tokens, {_usd(t['cost'], t['unpriced'])} at API prices, "
+    out = [f"{t['calls']} calls{' for ' + r['goal'] if r['goal'] else ''}: {t['tokens']:,} tokens, {_usd(t['cost'], t['unpriced'], t['calls'])}{'' if t['unpriced'] >= t['calls'] and t['unpriced'] else ' at API prices'}, "
            f"{t['seconds']:g} s",
            f"  in {t['in']:,} · out {t['out']:,} · cache read {t['cache_read']:,} · cache written {t['cache_write']:,}"
            + (f" · read from the cache: {t['cache_share']:.0%}" if t["cache_share"] is not None else "")]
@@ -134,11 +137,11 @@ def text(r: dict) -> str:
         if rows:
             out.append(title)
             out += [f"  {' '.join(str(row[k]) for k in keys if row.get(k)):<32} {row['calls']:>4} calls {row['tokens']:>11,} tokens  "
-                    f"{_usd(row['cost'], row['unpriced'])}" for row in rows]
+                    f"{_usd(row['cost'], row['unpriced'], row['calls'])}" for row in rows]
     if r["dearest"]:
         out.append("The dearest calls")
         out += [f"  {d['at']}  {d.get('idea') or '-'} · {d.get('step') or d.get('purpose') or '?'} · {d['tool']} {d.get('model') or ''}: "
-                f"{d['tokens']:,} tokens, {_usd(float(d.get('cost') or 0), 0 if d.get('cost') is not None else 1)}" for d in r["dearest"]]
+                f"{d['tokens']:,} tokens, {_usd(float(d.get('cost') or 0), 0 if d.get('cost') is not None else 1, 1)}" for d in r["dearest"]]
     w = r["waste"]
     out.append("Worth a look")
     out.append(f"  failed calls: {w['failed']['calls']} ({_usd(w['failed']['cost'], 0)})")

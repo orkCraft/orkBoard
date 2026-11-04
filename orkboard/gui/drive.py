@@ -475,7 +475,9 @@ def main(argv: list[str]) -> int:
     s.add_argument("--port", type=int, default=0)
     s.add_argument("--real-tools", action="store_true",
                    help="Let it run the AI tools it finds: they spend their limits (without it they are hidden)")
-    sub.add_parser("stop", help="Stop the served project").add_argument("folder", nargs="?", default=".")
+    st = sub.add_parser("stop", help="Stop the served project")
+    st.add_argument("folder", nargs="?", default=None, help="The project, as `start` takes it (`--folder` names it too, as on the other acts)")
+    st.add_argument("--folder", dest="folder_opt", default=None, help="The project (default: the one this folder is in)")
     c = sub.add_parser("call", help="One of the page's commands; its answer as JSON")
     c.add_argument("name")
     c.add_argument("--args", default=None, help="Its arguments, a JSON object")
@@ -518,7 +520,7 @@ def main(argv: list[str]) -> int:
         if a.act == "start":
             return start(find_root(a.folder), a.port, real_tools=a.real_tools)
         if a.act == "stop":
-            return stop(find_root(a.folder))
+            return stop(find_root(a.folder_opt or a.folder))
         if a.act == "spend":
             from orkboard.realm import spend_report
             found = spend_report.report(spend_report.lines_of(find_root(a.folder), a.since), a.goal)

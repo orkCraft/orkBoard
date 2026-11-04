@@ -55,6 +55,24 @@ def test_one_goal_alone_and_the_text_says_it_plainly(tmp_path):
     assert text.startswith("1 calls for menu") and "failed calls: 1" in text and "at API prices" in text
 
 
+def test_unknown_is_not_zero_in_the_totals(tmp_path):
+    _log(tmp_path, "2026-11-03", "board", [dict(CODEX_WORK, at=f"2026-11-03T1{i}:00:00") for i in range(2)])
+    text = spend_report.text(spend_report.report(spend_report.lines_of(tmp_path)))
+    assert "no price known for these models" in text and "$0.00" not in text.split("Worth a look")[0]
+    _log(tmp_path, "2026-11-04", "board", [CLAUDE_TALK])
+    text = spend_report.text(spend_report.report(spend_report.lines_of(tmp_path)))
+    assert "$0.15 + 2 calls with no price known" in text and "unpriced" not in text
+
+
+def test_the_top_bars_gold_never_says_zero_plus_alone():
+    from orkboard.core import treasury
+    from orkboard.sources import telemetry
+    snap = telemetry.Snapshot(sessions=1, unpriced={"gpt-6-luna"})
+    assert treasury.words(snap, 20.0, 1000)[0] == "no price known / $20.00"
+    snap = telemetry.Snapshot(spent_usd=1.2, sessions=1, unpriced={"gpt-6-luna"})
+    assert treasury.words(snap, 20.0, 1000)[0] == "$1.20+ / $20.00"
+
+
 def test_no_logs_is_nothing_spent(tmp_path):
     r = spend_report.report(spend_report.lines_of(tmp_path))
     assert r["total"]["calls"] == 0 and r["total"]["cache_share"] is None and r["dearest"] == []

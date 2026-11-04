@@ -117,3 +117,12 @@ def test_the_command_line_calls_a_served_project_and_prints_the_answer(served, c
     assert json.loads(capsys.readouterr().out) == "general"
     assert drive.main(["call", "ideas.nothing", "--url", served.url]) == 1
     assert "ideas.nothing" in capsys.readouterr().err
+
+
+def test_stop_takes_folder_as_the_other_acts_do_and_keeps_its_positional(tmp_path, monkeypatch):
+    (tmp_path / ".git").mkdir()
+    stopped = []
+    monkeypatch.setattr(drive, "stop", lambda root: stopped.append(root) or 0)
+    assert drive.main(["stop", "--folder", str(tmp_path)]) == 0
+    assert drive.main(["stop", str(tmp_path)]) == 0
+    assert [Path(r).resolve() for r in stopped] == [tmp_path.resolve()] * 2

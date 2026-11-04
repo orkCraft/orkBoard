@@ -202,24 +202,36 @@ def call(h: harnesses.Harness, prompt: str, model: str | None) -> subprocess.Com
             raise halt.Stopped() from e
 
 
+def _ran_model(h: harnesses.Harness, model: str | None) -> str:
+    """The model `h` runs for `model` (`Harness.pick`: a tier word becomes the model of that tier on this tool), "" when it cannot be told
+    (no model asked for, or the tool lists none): spec 143 G.3, a record said `codex laborer` beside `codex gpt-6-luna`."""
+    if not model:
+        return ""
+    try:
+        return h.pick(model) or ""
+    except Exception:                                        # a record is not lost for a model list that could not be read
+        return "" if model in harnesses.TIERS else model
+
+
 def ask(harness_id: str, prompt: str, model: str | None = None,
         call: Callable[[harnesses.Harness, str, str | None], subprocess.CompletedProcess] = call) -> tuple[str, float | None]:
     """One answer of a tool in an empty folder (`model`: its own, a tier word, or another tool's model
     — harnesses.model_on; None keeps its default). Raises RuntimeError on failure."""
     h = harnesses.need(harness_id)
     start = time.monotonic()
+    ran = _ran_model(h, model)                               # what a call's record names: the model the tool ran, never a tier word
     replayed = call_log.answer("ask", prompt)                # a recorded answer, when a check plays one back
     proc = subprocess.CompletedProcess([], *replayed) if replayed is not None else call(h, prompt, model)
     if proc.returncode != 0:
-        call_log.record(None, "ask", h.id, model or "", prompt, proc.stdout, proc.stderr, proc.returncode,
+        call_log.record(None, "ask", h.id, ran, prompt, proc.stdout, proc.stderr, proc.returncode,
                         time.monotonic() - start, who=f"{h.id} -p")
         why = h.error(proc.stdout) or (proc.stderr or proc.stdout).strip()
         raise tool_errors.ToolError(h.id, why, proc.returncode)
     tool_errors.ran(h.id)
     text, cost, tokens, _ = h.outcome(proc.stdout, 0, model or "")
-    call_log.record(None, "ask", h.id, model or "", prompt, proc.stdout, proc.stderr, proc.returncode,
+    call_log.record(None, "ask", h.id, ran, prompt, proc.stdout, proc.stderr, proc.returncode,
                     time.monotonic() - start, cost, tokens, who=f"{h.id} -p")
     if not text.strip() and (why := h.error(proc.stdout)):
         raise tool_errors.ToolError(h.id, f"{h.id} gave no answer: {why}")
-    telemetry.charge(cost, f"{h.id} -p {model or 'default'}", tokens=tokens, model=model or "")   # no transcript: 🪙 here
+    telemetry.charge(cost, f"{h.id} -p {ran or 'default'}", tokens=tokens, model=ran)   # no transcript: 🪙 here
     return text, cost

@@ -14,7 +14,7 @@ not in the table is priced as the nearest version of its family that is (`claude
 in the table is unknown (None) — never $0.
 
 OpenAI's prices (Codex runs) are a second table, `OPENAI_PRICES`, with its own source and date. It is
-filled only from OpenAI's pricing page read first-hand by a person; until then it stays empty and
+filled only from OpenAI's pricing page read first-hand (the module text below says whether it was); until then it stays empty and
 every Codex run is unpriced (docs/design/codex-limits.md §4, §5.2).
 """
 from __future__ import annotations
@@ -162,8 +162,11 @@ def context_of(usage: dict) -> int:
 
 
 # -- OpenAI (Codex) ---------------------------------------------------------------------------------
-# Read first-hand from the page below, with the date it was read. Empty: not read yet (openai.com
-# could not be reached from where this was built), so Codex runs stay unpriced (`+`), never guessed.
+# Read first-hand from the page below, with the date it was read. Empty: spec 143 G.1 tried on 2026-11-04 and
+# the page could not be reached (openai.com, platform.openai.com and developers.openai.com did not resolve from
+# the cloud session that built it), and a search engine's summary of it is not the page. So no model has a price
+# here, none is guessed, and every Codex run stays unpriced (`+`, "no price known"). A person fills it in from the
+# page, with the date they read it (`OPENAI_PRICES_AS_OF`).
 OPENAI_PRICES_SOURCE = "https://developers.openai.com/api/docs/pricing"
 OPENAI_PRICES_AS_OF = ""
 

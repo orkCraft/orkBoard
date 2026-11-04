@@ -65,8 +65,12 @@ def words(snap: telemetry.Snapshot, gold_limit_usd: float, lumber_limit_tokens: 
     the `active` session's context, else the fullest one's."""
     gold_limit = f"${gold_limit_usd:.2f}"
     if snap.sessions or snap.unpriced or snap.side_usd:
-        # "+" marks spend that could not be priced (agy, or a model with no published price).
-        gold = f"${snap.spent_usd:.2f}{'+' if snap.unpriced else ''} / {gold_limit}"
+        # Unknown is not zero (spec 143 G.2): with nothing priced the gold says no price is known, never `$0.00+`; with some, `+` marks what
+        # could not be priced (agy, or a model with no published price).
+        if snap.unpriced and not snap.spent_usd:
+            gold = f"no price known / {gold_limit}"
+        else:
+            gold = f"${snap.spent_usd:.2f}{'+' if snap.unpriced else ''} / {gold_limit}"
     else:
         gold = f"$— / {gold_limit}"
     gold_level = telemetry.level(snap.spent_usd, gold_limit_usd)

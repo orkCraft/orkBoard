@@ -170,3 +170,15 @@ def test_a_resumed_worker_whose_thread_is_not_found_stays_unpriced(priced, tmp_p
     _, cost, tokens, _ = jobs.run_work("codex", "go on", tmp_path, threading.Event(), model="gpt-6-luna",
                                        resume="th-gone", env={"ORKCRAFT_RUN": "x"})
     assert tokens == 12 and cost is None
+
+
+def test_a_call_names_the_model_that_ran_never_its_tier(monkeypatch):
+    import subprocess
+    from orkboard.realm import call_log
+    kept = []
+    monkeypatch.setattr(call_log, "record", lambda env, mode, harness, model, *a, **k: kept.append((harness, model)))
+    monkeypatch.setattr(harnesses.Harness, "pick", lambda self, model="", chosen=None: "gpt-6-luna" if model == "laborer" else model)
+    done = lambda h, prompt, model: subprocess.CompletedProcess([], 0, '{"type":"turn.completed"}\n', "")
+    tool_run.ask("codex", "hi", "laborer", call=done)
+    tool_run.ask("codex", "hi", None, call=done)
+    assert kept == [("codex", "gpt-6-luna"), ("codex", "")]
