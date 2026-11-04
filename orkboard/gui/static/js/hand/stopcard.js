@@ -57,7 +57,7 @@ const footOf = (s) => wayOf(s.kind)?.foot?.(s) ?? (s.text || s.why || "");      
 export const labelOf = (s) => `${s.label}${s.other && s.party?.name ? ` in ${s.party.name}` : ""}: ${s.full}`;
 
 /** Who hands a card (spec 120 §6.9): the Orkmaster for what the Orkmaster plays (a route, a decision, a hearing, a fork, a collision, *Go on paid?*), else the leader of the party that asks (its name). */
-const ORK_KINDS = ["route", "start", "decision", "fork", "collide", "paid", "hearing", "objection"];
+const ORK_KINDS = ["route", "start", "decision", "fork", "collide", "paid", "hearing", "objection", "groups"];
 export const askerOf = (s) => (ORK_KINDS.includes(s.kind) ? "the Orkmaster" : s.party?.lead || s.party?.name || "the Orkmaster");
 
 /** Who plays a stop, for where it comes from (motion.js `fromWhere`): its goal, its party, and whether the Orkmaster plays it (a card of a goal: the Orkmaster's tab is its origin when its goal's card is not in view; *Go on paid?* has no goal and no party: dealt from under its place). */

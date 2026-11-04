@@ -7,6 +7,7 @@ import { gateData, mapData } from "../shell/store.js";
 import { byUrgency, gateOf, goalsOf, nodesOf, paidStopsOf, resultStop, resultsOf, signInStopsOf, stopsOf, todoLast } from "../arena/arenawords.js";
 import { ORKMASTER } from "../frame/state.js";
 import { partiesNow, roadSlugs, waitRuns } from "../table/data.js";
+import { groupsStops } from "./groupscard.js";
 import { hypothesisStops } from "./hypothesiscard.js";
 import { isHeld } from "./hearingstate.js";
 import { projectStops, questionStops } from "./questions.js";
@@ -55,7 +56,7 @@ export function stopsOfProject(map = mapData.value, rows = board.value?.needs_yo
   }
   out.push(...signInStopsOf(needs, open), ...paidStopsOf(needs, open, ork));
   const after = { ...ctx, goal: (slug) => partiesOf(map).find((g) => g.slug === slug) || null, ork };
-  return [...todoLast(byUrgency(out)), ...projectStops(needs, after), ...hypothesisStops(needs, after)];          // the project's questions hold nothing back: after the others, under their leader's party's lane; so does *Did it hold?* (spec 116 E)
+  return [...todoLast(byUrgency(out)), ...projectStops(needs, after), ...hypothesisStops(needs, after), ...groupsStops(needs, after)];          // the project's questions hold nothing back: after the others, under their leader's party's lane; so does *Did it hold?* (spec 116 E)
 }
 
 /** The goal a stop belongs to ("" for a stop of no goal), and the stack it lies in: a goal's; a party's own question (`party:<slug>`); a sign-in alone. */
@@ -66,7 +67,7 @@ export function stackKey(s) {
 }
 
 /** What is the whole goal's, not one party's: the route, Talk of several leaders, the decision, a fork, the Orkmaster's collision (docs/specs/101 §4.2) and its *Go on paid?* (docs/specs/105 §3): they lie under the first lane. */
-const WHOLE = new Set(["route", "talk", "hearing", "decision", "fork", "collide", "paid"]);
+const WHOLE = new Set(["route", "talk", "hearing", "decision", "fork", "collide", "paid", "groups"]);
 
 /** The party a row belongs to ("" for a row of no party of its own). */
 const partyOfRow = (row) => row?.g?.slug || row?.row?.goal || row?.goal || "";
