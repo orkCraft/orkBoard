@@ -178,19 +178,19 @@ def test_refusals_are_in_plain_words(host, tech, design):
 
 # -- the acts -------------------------------------------------------------------------------------------------------------------------------
 
-def test_accept_writes_both_sections_and_one_decisions_line_and_the_wait_begins_again(host, tech, design, clock):
+def test_accept_writes_both_sections_and_one_decisions_line_and_is_the_look_no_new_wait(host, tech, design, clock):
     host.command("ideas.board_set", {"look_wait": "2h"})
     slug = made(host, tech, design)
     speaks(host, tech, design)
     ideas.edit_plan(host.ideas.state_dir, slug, lambda p: p.update(look_until=NOW - 5000, look_done=True))      # an earlier look was given
     got = ask(host, slug)
     done = host.command("ideas.spec_change_take", {"idea": slug, "id": got["id"], "via": "idea"})
-    assert done["ok"] and done["starts"] == "wait"
+    assert done["ok"] and done["starts"] in ("now", "")       # accepting is the look (decisions §225.3): no new wait; it starts when autostart lets it
     text = page_text(host, slug)
     assert "changed Results — the winner first" in text and "new Winner banner — drawn above the list" in text and "plain list" not in text and "changed Banner — none" not in text
     assert text.count("The person decided, Tech, Design: " + SAID) == 1
     plan = plan_of(host, slug)
-    assert plan["look_until"] == NOW + 7200 and plan["start_at"] == "2026-11-04T14:00:00" and "look_done" not in plan and plan.get("passed_at") is None
+    assert "look_until" not in plan and (plan.get("look_done") is True or plan.get("passed_at"))
     assert spec_change.read(host.ideas.state_dir, slug) == [] and rows(host, slug) == []
     (answered,) = _events(host, event_log.SPEC_CHANGE_ANSWERED)
     assert answered["answer"] == "take" and answered["parties"] == [tech, design]

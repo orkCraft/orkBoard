@@ -8,7 +8,7 @@ A, then B, then C, then D, each its own commit into `main` as its tests and the 
 |---|---|---|
 | **A. The look's wait (host)** | the setting *Give me time to look*; a spec made waits for it before its plan is passed by itself; a clock time, kept with the plan; written and ticked by code | `settings.py` (`IDEAS`, `BOARD`), `gui/ideas_board.py` (`autostart`, a `look_tick` beside `night_tick`), `gui/ideas_route.py` (the host's clock), `realm/event_log.py`, `gui/ideas_roles.py` / `realm/board_map.py` (the node's `start_at`); new `tests/test_look_wait.py` |
 | **B. The look's wait (page)** | the setting in Settings; To review's card and line at a clock time, never a countdown | `gui/static/js/shell/settings.js`, `table/piles.js`, `table/column.js`, `realm/lexicon.py`; `tests/test_column_browser.py`, the settings' browser test |
-| **C. A change through the Orkmaster (host)** | `ideas.spec_change`: the Orkmaster routes the person's words to the leaders whose sections they touch; they rewrite; one record; Accept writes them all and begins the wait again | new `realm/spec_change.py`, new `core/idea_spec_change.py`, new `gui/ideas_spec_change.py`, `realm/board_map.py` (its Needs you row); new `tests/test_spec_change.py` |
+| **C. A change through the Orkmaster (host)** | `ideas.spec_change`: the Orkmaster routes the person's words to the leaders whose sections they touch; they rewrite; one record; Accept writes them all and is the look (§225.3): it starts when the limits allow | new `realm/spec_change.py`, new `core/idea_spec_change.py`, new `gui/ideas_spec_change.py`, `realm/board_map.py` (its Needs you row); new `tests/test_spec_change.py` |
 | **D. A change through the Orkmaster (page)** | the field on the Orkmaster's head of a goal picked; *It goes to …* before it is sent; one card in the hand, a tab a leader, *Now* and *Proposed*; *Accept and start* | `gui/static/js/hand/*` (a card beside `changecard.js`), `table/*` (the Orkmaster's head of a goal picked, `ask.js`); new `tests/test_spec_change_browser.py` |
 
 **Not this spec:** the phone's screens of §222–§224 (they wait for the owner's look at `docs/mockups/phone/goal-lens-v4.html`);
@@ -45,8 +45,8 @@ leader (§224.5: spec 128 E, as built).
    countdown: the time passes with no face open too (§224.3 says *starts by itself at 13:40*; the decision's wait keeps its
    *only while a face is open*). The event `look_ended` (idea, how: `started` · `night` · `wait`).
 4. **Held while it is being changed** (§224.3): while a change through the Orkmaster (C) is open on the goal (from the first
-   word sent until Accept, Drop it or a failure), `look_tick` skips it; Accept begins the wait again from the accepting (a new
-   `look_until`, C.5).
+   word sent until Accept, Drop it or a failure), `look_tick` skips it; Accept is the look (§225.3, which changes §224.4's *the wait starts again*): no
+   new wait, C.4.
 5. **The node.** The plan's `start_at` and `look_until` reach the snapshot as the night's `start_at` does (`gui/ideas_roles.py:246`
    and wherever the column's node is built); `start_at == "night"` keeps its meaning.
 6. **Tests** (`tests/test_look_wait.py`, a fake clock): `"none"` passes at once as today; `"30m"` writes `look_until` 1800 s ahead and
@@ -81,14 +81,15 @@ leader (§224.5: spec 128 E, as built).
    `{id, idea, text, status (asking · ready · failed), parties: [{party, before: {lines}, after: {lines}, change}], agree, estimate,
    made_at, error}`. Its Needs you row is `kind: "spec_change"`, asked by the Orkmaster (`asker: "orkmaster"`), one a goal.
 4. **The acts.** `ideas.spec_change_take {idea, id}`: every party's lines written into its section (`leader_change.write_lines`), each
-   plan change taken (`idea_change`), the person's words written into the goal's Decisions once; then A.4's wait begins again from
-   now (`look_until` anew) and, when the limits run low, the plan waits as the hand's *after the reset* does (§221.5: the reading
-   done, the work waiting). `ideas.spec_change_more {idea, id}` (*Talk more*): the record dropped, the field opened with the words.
+   plan change taken (`idea_change`), the person's words written into the goal's Decisions once; then **accepting is the look**
+   (§225.3): no new wait, the plan decided at once with its look done (`look_done`, so `autostart`'s money rule, night, collisions
+   and open questions still hold it) when the limits allow, and when they run low it waits for their reset alone (`look_until` the
+   reset; §221.5: the reading done, the work waiting). As built first, Accept began a new wait; corrected the same day. `ideas.spec_change_more {idea, id}` (*Talk more*): the record dropped, the field opened with the words.
    `ideas.spec_change_drop {idea, id}` (*Drop it*): dropped, nothing else changes. Events `spec_change_asked`, `spec_change_answered`
    (take · more · drop), in `realm/event_log.py`.
 5. **Tests** (`tests/test_spec_change.py`, the tools faked as `tests/test_tools_host.py` does): a change touching two sections goes to
-   their two parties, comes back as one record with two tabs' lines, Accept writes both sections and one Decisions line and sets a
-   new `look_until`; *Drop it* changes no file; `@Tech` goes to `ideas.change`; a failed route is `failed` with the tool's words;
+   their two parties, comes back as one record with two tabs' lines, Accept writes both sections and one Decisions line and sets
+   no new wait (the look is given), or waits for the reset alone when the limits run low; *Drop it* changes no file; `@Tech` goes to `ideas.change`; a failed route is `failed` with the tool's words;
    while the record is `asking` the look's tick skips the goal.
 
 ## D. A change through the Orkmaster (page) (§224.4, §225.2–3)

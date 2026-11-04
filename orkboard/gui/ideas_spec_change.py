@@ -5,8 +5,8 @@ field on the Orkmaster's head of a goal picked and the one card in the hand send
     ideas.spec_change_preview {idea, text}   # nothing started: `{ok, id: "", parties: [{party, title}], estimate: {calls, usd_low, usd_high}, via}`, read by code: *It goes to Tech, Art · about 3 calls*
     ideas.spec_change {idea, text}           # the Orkmaster routes the words to the leaders whose sections they touch (in the background); the same answer, with the record's `id`. `@Tech` in the
                                              # words is §224.5's one leader: it goes to `ideas.change` as built (`via: "change"`)
-    ideas.spec_change_take {idea, id, via?}  # *Accept*: every party's lines written into its section, each plan change taken, the person's words written into the goal's Decisions once; then the wait
-                                             # begins again from now (`look_until` anew), and when the limits run low not before their reset. `{ok, added, changed, dropped, left, starts}`
+    ideas.spec_change_take {idea, id, via?}  # *Accept*: every party's lines written into its section, each plan change taken, the person's words written into the goal's Decisions once; accepting is
+                                             # the look (§225.3): it starts when the limits allow, else after their reset (`starts`: now · reset · ""). `{ok, added, changed, dropped, left, starts}`
     ideas.spec_change_more {idea, id, via?}  # *Talk more*: the record dropped; `{ok, text}`, the words, for the field to open with
     ideas.spec_change_drop {idea, id, via?}  # *Drop it*: the record dropped, nothing else changes; `{ok}`
 """
@@ -91,17 +91,24 @@ class SpecChangeFace:
         return {"ok": True, **got, "starts": starts}
 
     def _look_after_change(self, slug: str) -> str:
-        """The wait begins again from the accepting (C.4): `look_until` anew, and when the limits run low not before their reset (the reading is done, the work waits: §221.5). Where there is no wait to set
-        (`do not wait`, the limits fine) the plan is decided at once. What it did: "wait" · "reset" · "now" · "".
+        """Accepting is the look (decisions §225.3, which changes §224.4's *the wait starts again*): no new wait. When the limits allow, the plan is decided at once with its
+        look done (*Accept and start*: the money rule, the night, the collisions and the open questions still hold it, as `autostart` holds any plan); when they run low, it
+        waits for their reset (*Accept · starts after the reset*: the reading is done, the work waits, §221.5). What it did: "reset" · "now" · "".
 
-        The plan is decided again with its look not done: a plan of a goal with none (the spec is still being made) waits for `autostart` when it is made."""
+        A plan of a goal with none (the spec is still being made) waits for `autostart` when it is made."""
         plan = ideas.plan(self.state_dir, slug)
         if plan is None or plan.get("passed_at"):
             return ""
         until = idea_target.reserve_held(self._raw_limits(), self.settings_now(), time.time())
-        ideas.edit_plan(self.state_dir, slug, lambda p: (p.pop("look_done", None), p.pop("look_until", None)))
-        if self.look_again(slug, floor=until):
-            return "reset" if until is not None else "wait"
+        if until is not None:
+            self.look_until_reset(slug, until)
+            return "reset"
+        def looked(p: dict) -> None:
+            if p.get("look_until") and p.get("start_at") == look_wait.iso(p["look_until"]):
+                p["start_at"] = None
+            p.pop("look_until", None)
+            p["look_done"] = True
+        ideas.edit_plan(self.state_dir, slug, looked)
         what = self.autostart(slug)
         return "now" if what not in ("", "wait", "night", "look") else ""
 

@@ -4,7 +4,7 @@ local time the faces read); it passes with no face open too. A mixin of `Ideas`,
 
     look_begin(slug, plan)        # `autostart`'s: True when the plan now waits for its look (written, published, `look_waits`); False when it goes on to be decided
     look_tick(now=None)           # the host's clock: each plan whose look ended is decided again by `autostart` with the wait done (`look_done`); how many ended
-    look_again(slug)              # a new look from now (an accepted change begins the wait again, C.4); False with no wait
+    look_until_reset(slug, reset)  # an accepted change when the limits run low: the plan waits for their reset, its look given (decisions §225.3: accepting is the look)
 """
 from __future__ import annotations
 
@@ -42,19 +42,11 @@ class LookMixin:
         self._look_set(slug, look_wait.until(choice, now, str(self.settings_now().get("night") or settings.IDEAS["night"])), choice)
         return True
 
-    def look_again(self, slug: str, floor: float | None = None) -> bool:
-        """The wait begins again from now (an accepted change: C.4); `floor`, an epoch time before which the plan does not start (the limits' reset, C.4). False when there is no wait to set (`look_wait` is
-        `none` and no floor, or the goal has no plan yet): the caller decides the plan at once."""
-        choice = self._look_choice()
-        if ideas.plan(self.state_dir, slug) is None:
-            return False
-        end = look_wait.until(choice, self._wall(), str(self.settings_now().get("night") or settings.IDEAS["night"]))
-        if floor is not None:
-            end = max(end or 0.0, floor)
-        if end is None:
-            return False
-        self._look_set(slug, end, choice)
-        return True
+    def look_until_reset(self, slug: str, reset: float) -> None:
+        """An accepted change when the limits run low (spec 144 C.4, decisions §225.3): the plan waits for the limits' reset, an epoch time, and no longer; its look is
+        given (the tick then decides it with the look done)."""
+        if ideas.plan(self.state_dir, slug) is not None:
+            self._look_set(slug, float(reset), "reset")
 
     def look_drop(self, slug: str) -> None:
         """A plan passed by the person: its wait is dropped with it."""
