@@ -47,7 +47,7 @@ class GoalHost(HandHost):
                  task("m4", "Name the theme", "waiting", party="product", step=3, after=["m3"])]
         music = node("music", "tech", "Music in the lobby", "table", state="working", element="meadow", stage="implementation", tasks=tasks)
         timer = node("timer", "tech", "The clock after a reconnect", "table", state="working", element="dust", stage="implementation", tasks=[task("t1", "Reset the clock", "running", party="tech", step=1)])
-        fresh = node("fresh", "design", "Host can skip a round", "table", state="decided", element="void", back={"route": [], "cost": None, "offer": [], "short": False, "heard": [], "stances": [], "round": 1,
+        fresh = node("fresh", "design", "Host can skip a round", "table", state="ready", agreed=True, element="void", back={"route": [], "cost": None, "offer": [], "short": False, "heard": [], "stances": [], "round": 1,
                                                                                                                   "ripe": {"left_s": 120, "seconds": 240, "risk": "low", "priority": "high", "held": False, "by": "", "why": ""}})
         codes = node("codes", "tech", "Room codes without look-alikes", "discard", state="done", element="ice", updated="2026-10-20T12:00:00",
                      tasks=[task("c1", "Make the codes", "merged", party="tech", step=1, made="four letters")])
