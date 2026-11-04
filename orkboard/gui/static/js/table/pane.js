@@ -27,6 +27,8 @@ import { isForm } from "./over.js";
 import { openParties } from "./parties.js";
 import { DiscardEnd } from "./discard.js";                // the discard at the last column's foot (spec 104 C)
 import { openReport } from "../hand/logsbtn.js";      // the bug's panel opens from the Orkmaster's … (spec 139 A.5)
+import { laidNow } from "./laying.js";
+import { setupNow } from "../hand/setupcards.js";
 import { Notice } from "./notice.js";                    // the Orkmaster's line when the work moved to another tool (spec 105 D)
 
 /** ← or Esc: the map as it was left, the card the thing came from lit. */
@@ -103,19 +105,20 @@ function Title({ parties, tab, narrow }) {
 export function Pane({ parties, tab, narrow, column = false }) {
   const body = useRef(), o = over.value, g = parties.find((x) => x.slug === tab);
   const key = lifted.value, shown = mineKey(key) && !o ? backOf(key, parties, tab) : null;
+  const bare = !laidNow(), form = isForm(o);                // not laid yet: the table is bare (spec 130 C.6); a form covers the whole table, its end included (C.5)
   const from = { title: mapName(tab, parties), key: "" }, picks = nodeOf(picked.value), view = picks && viewable(picks) ? picks : null;     // a goal picked that is agreed, at work or done has a view of its own at each leader
   return html`<section class="table-pane ork-table" id="table-pane" role="tabpanel" aria-labelledby=${`tab-${tab}`}>
     <${Title} parties=${parties} tab=${tab} narrow=${narrow} />
-    ${!o && html`<${Notice} />`}
-    <div class="table-body" ref=${body} data-end=${o && o.kind !== "discard" ? "over" : o || tab !== ORKMASTER ? "side" : "board"}>
-      ${o ? html`<${Over} />` : tab === ORKMASTER ? html`<${PickStrip} tab=${tab} /><${BoardMap} parties=${parties} narrow=${narrow} column=${column} />
+    ${!o && !bare && html`<${Notice} />`}
+    <div class="table-body" ref=${body} data-end=${form ? "form" : o && o.kind !== "discard" ? "over" : o || tab !== ORKMASTER ? "side" : "board"}>
+      ${o ? html`<${Over} />` : bare ? (setupNow.value?.step === "parties" && html`<div class="table-empty"><p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`) : tab === ORKMASTER ? html`<${PickStrip} tab=${tab} /><${BoardMap} parties=${parties} narrow=${narrow} column=${column} />
           ${!parties.length && html`<div class="table-empty"><p>No parties yet</p>
             <p class="table-over__muted">Make a party, then write it a goal in plain words. Its orks do the work; you look at it before it goes in.</p>
             <p><button type="button" class="ork-btn primary" onClick=${() => openParties({ first: true }, from)}>Choose the parties</button></p></div>`}`
         : g && view ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${GoalView} key=${`${g.slug}:${view.slug}`} g=${g} n=${view} />`
         : g ? html`<${Header} key=${g.slug} g=${g} from=${from} /><${PickStrip} tab=${tab} /><${Concerns} key=${g.slug} g=${g}><${PickHost} key=${g.slug} g=${g}>${leadsSystem(g) ? html`<${SystemPane} key=${g.slug} g=${g} />` : mapOf(g) ? html`<${mapOf(g)} key=${g.slug} g=${g} narrow=${narrow} />` : null}<//><//>` : null}
       ${shown && html`<${Lifted} host=${body} name=${shown[0]} narrow=${narrow}>${shown[1]}</${Lifted}>`}
-      <${DiscardEnd} />
+      ${!bare && !form && html`<${DiscardEnd} />`}
     </div>
   </section>`;
 }

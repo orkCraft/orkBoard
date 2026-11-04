@@ -23,7 +23,6 @@
 .col-plab__t { flex: none; white-space: nowrap; }
 .col-under { min-width: 0; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; font: var(--ork-type-caption); text-transform: none; letter-spacing: 0; color: var(--ork-ink-faint); }
 .col-under.is-asks { color: var(--ork-alert); }
-.col-none { margin: 0 0 0 var(--ork-2); padding: var(--ork-2); border: var(--ork-line) dashed var(--ork-frame); color: var(--ork-ink-faint); font: var(--ork-type-caption); }
 .col-pile { position: relative; width: var(--col-edge); height: var(--h); }
 /* face up (decisions §249.1, spec 142 A): the cards lie in one grid cell, each `--i` x `--peek` lower than the one above it, every card the height of the pile's tallest content (no fixed 157 px); the pile is that tall and what lies under the front */
 .col-pile.is-up { display: grid; justify-items: end; height: auto; padding-bottom: var(--under); box-sizing: border-box; }

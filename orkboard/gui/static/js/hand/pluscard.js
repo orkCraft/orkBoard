@@ -15,6 +15,7 @@
 // microphone, so the field has none. While there is no goal at all, the + card lies large in the pane's middle (and the field grows there, as it did). *@* in the text offers a party, a file or a folder, and a party's goal types and map parts (mention.js, spec 107 §11): a type
 // taken is a chip and `type` of `ideas.add`, a part a mark as picking's; a project file taken with *Files* is written *@path* after the words when it is sent, as the *@* list writes it.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { laying } from "../table/laying.js";
 import { html, cls } from "../html.js";
 import { Icon, Sign } from "../orkui.js";
 import { toast } from "../link.js";
@@ -49,7 +50,7 @@ export function runesOf(address) {
 export function PlusCard({ large = false, onPress }) {
   const narrow = useNarrow(), address = addressNow(), r = runesOf(address), play = rite.value;
   const frees = r.free.filter((e) => e !== r.shown).slice(0, FREE_PLACES.length);
-  return html`<button type="button" class=${cls("ork-card ork-plus ork-leans hand-plus", { "is-large": large, "is-choosing": fieldOpen.value, "is-under": fieldOpen.value, "ork-deal": plusDealt.value })} aria-label="New goal" title="New goal" aria-haspopup="dialog"
+  return html`<button type="button" class=${cls("ork-card ork-plus ork-leans hand-plus", { "is-large": large, "is-choosing": fieldOpen.value || laying.value, "is-under": fieldOpen.value, "ork-deal": plusDealt.value })} aria-label="New goal" title="New goal" aria-haspopup="dialog"
     aria-expanded=${fieldOpen.value ? "true" : "false"} onClick=${(e) => { if (!fieldOpen.value) focusInPress(); onPress?.(e); }} ...${leans}>
     <${Seal} narrow=${narrow} play=${play} shown=${r.shown} hue=${r.hue} frees=${frees} /><${Icon} name="plus" /></button>`;
 }

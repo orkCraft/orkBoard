@@ -94,7 +94,8 @@ class ProjectMixin:
         stages (Ideation, Concept, Build, Release, LiveOps), the crafts and the person's own, each with its leader, its builders and checkers and its three sizes' teams and tiers
         (realm/party_presets.py). It writes nothing."""
         kind, _facts = self.kind_now()
-        return {"kind": {"id": kind["id"], "words": kind["words"]}, "presets": party_presets.listed(kind["id"], self.team_at(), ops=self._ops_base() is not None)}
+        read = project_kind.folder_read(self.host.repo_root)                        # what the folder says, also when the person answered Yes to it (a kind kept has no signs of its own)
+        return {"kind": {"id": kind["id"], "words": kind["words"], "how": ", ".join(read["signs"]) if read["kind"] == kind["id"] else ""}, "presets": party_presets.listed(kind["id"], self.team_at(), ops=self._ops_base() is not None)}
 
     # -- a party's AI tool and its size's team (spec 81) ---------------------------------------------------------------------------------
 

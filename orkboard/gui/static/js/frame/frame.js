@@ -10,6 +10,7 @@ import { CrashNote } from "../crashes.js";
 import { over } from "./state.js";
 import { uprightNow } from "./upright.js";
 import { SetupWatch } from "../hand/setupcards.js";     // what the Orkmaster asks now, on the first open (spec 130 B.4)
+import { laidNow, laying, useLaying } from "../table/laying.js";   // the window not yet laid, and the laying at Start (spec 130 C.6)
 
 const sheets = ["./frame.css", "../table/table.css", "../table/work.css", "../table/made.css", "../table/discard.css", "../table/portal.css", "../table/notice.css", "../table/ask.css", "../table/back.css", "../table/column.css", "../table/goalview.css", "../table/steps.css", "../table/presence.css", "../table/dayline.css", "../hand/hand.css", "../hand/mana.css", "../hand/upright.css", "../hand/upmenu.css", "../hand/uplook.css"].map((p) => new URL(p, import.meta.url).href);
 if (typeof document !== "undefined") {
@@ -28,7 +29,8 @@ if (typeof document !== "undefined") {
 // decisions §206.2) at the wide width, and at the narrow one the Board's first lane (its tab the first), counted in `--lanes`.
 export function Frame() {
   const column = columnOn();
-  return html`<div class="frame" data-frame="1" data-column=${column ? "1" : undefined} data-upright=${uprightNow.value ? "1" : undefined} data-over=${uprightNow.value && over.value ? "1" : undefined} style=${`--lanes:${partiesNow().length + (column ? 0 : 1)}`}>
+  useLaying();
+  return html`<div class="frame" data-frame="1" data-laid=${laidNow() ? "1" : "0"} data-laying=${laying.value ? "1" : undefined} data-column=${column ? "1" : undefined} data-upright=${uprightNow.value ? "1" : undefined} data-over=${uprightNow.value && over.value ? "1" : undefined} style=${`--lanes:${partiesNow().length + (column ? 0 : 1)}`}>
     ${column && html`<aside class="frame-column" aria-label="The Orkmaster's goals"><${Column} /></aside>`}
     <div class="frame-table"><${Table} column=${column} /></div>
     <div class="frame-hand"><${Hand} /></div>

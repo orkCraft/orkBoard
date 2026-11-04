@@ -230,17 +230,23 @@ def keep(state_dir: Path, kind: str) -> str:
     return kind
 
 
-def read_full(root: Path, fresh: bool = False, state_dir: Path | None = None) -> dict[str, Any]:
-    """`{"kind", "signs", "facts"}`; the kind the person kept (`kept`) wins over the files, with no signs and `kept: True`. The folder's own read is cached as `read` says."""
+def folder_read(root: Path, fresh: bool = False) -> dict[str, Any]:
+    """What the folder itself says, whatever the person kept: `scan`'s, cached as `read` says."""
     key = str(Path(root))
     stamp = _stamp(Path(root))
     got = _cache.get(key)
     if got is None or got[0] != stamp or fresh:
         got = _cache[key] = (stamp, scan(Path(root)))
+    return got[1]
+
+
+def read_full(root: Path, fresh: bool = False, state_dir: Path | None = None) -> dict[str, Any]:
+    """`{"kind", "signs", "facts"}`; the kind the person kept (`kept`) wins over the files, with no signs and `kept: True`. The folder's own read is cached as `read` says."""
+    found = folder_read(root, fresh)
     mine = kept(state_dir if state_dir is not None else Path(root) / ".orkcraft")
     if not mine:
-        return got[1]
-    facts = {**got[1]["facts"], "code": 0} if mine == "empty" else got[1]["facts"]
+        return found
+    facts = {**found["facts"], "code": 0} if mine == "empty" else found["facts"]
     return {"kind": mine, "signs": [], "facts": facts, "kept": True}
 
 

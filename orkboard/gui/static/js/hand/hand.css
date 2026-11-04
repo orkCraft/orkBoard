@@ -339,5 +339,7 @@
 .fo-bubble { position: absolute; z-index: 30; top: 68px; left: var(--ork-2); box-sizing: border-box; display: flex; flex-direction: column; gap: var(--ork-1); width: 320px; padding: var(--ork-3) var(--ork-4); background: var(--ork-raised); border: var(--ork-line) solid var(--ork-edge); pointer-events: none; }
 .fo-bubble::before { content: ""; position: absolute; top: -8px; left: 16px; width: 14px; height: 8px; background: var(--ork-edge); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
 .fo-bubble > p { margin: 0; font: var(--ork-type-body); }
+.col > .fo-bubble:is([data-step="parties"], [data-step="laid"]) { left: var(--ork-1); width: calc(var(--column-w) - var(--ork-2)); padding: var(--ork-2); }      /* the table is in use: it stays in the column */
+.col > .fo-bubble:is([data-step="parties"], [data-step="laid"]) > p { font: var(--ork-type-caption); }
 .hand > .fo-bubble { top: auto; bottom: 100%; left: var(--ork-2); max-width: calc(100% - var(--ork-4)); }
 @media (max-width: 759px) { .hand .hand-tool, .hand .fo-card { left: var(--ork-2); right: var(--ork-2); width: auto; max-height: 80dvh; } }

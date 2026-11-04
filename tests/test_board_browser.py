@@ -19,6 +19,7 @@ pw = pytest.importorskip("playwright.async_api")
 from orkboard.gui import phone_tls  # noqa: E402
 from orkboard.gui.board_host import Orkboard  # noqa: E402
 from orkboard.gui.server import Server  # noqa: E402
+from orkboard.realm import project_kind  # noqa: E402
 from orkboard.realm import jobs  # noqa: E402
 from tests.test_phones import _listening  # noqa: E402
 from tests.browser_kit import CHROMIUM, WAIT_MS, launch, spki  # noqa: E402
@@ -45,7 +46,10 @@ def board(tmp_path, monkeypatch):
     subprocess.run([*git, "add", "-A"], cwd=repo, check=True)
     subprocess.run([*git, "commit", "-qm", "init"], cwd=repo, check=True)
     monkeypatch.setattr(jobs, "run_read", lambda *a, **k: (json.dumps(GOAL), 0.01, 10, "s-1"))
-    return Orkboard(repo)
+    host = Orkboard(repo)
+    project_kind.keep(host.ideas.state_dir, "code")                                               # the first open's questions answered (spec 130): the Orkmaster comes to the parties
+    host.first_open.tools_skipped = True
+    return host
 
 
 def _camp(urls: list[str]) -> list[str]:
@@ -70,11 +74,10 @@ def test_orkboard_on_the_desktop_the_four_panes_a_goal_saved_and_needs_you_no_ca
             assert pg.evaluate("document.documentElement.dataset.look") == "office"
             assert pg.locator(".gui-hud, .gui-camp, .gui-town, .gui-foot").count() == 0
             pg.keyboard.press("Escape")                                                             # Esc leaves it to the empty Board (the window: the table and the hand, no party yet: spec 98 E) ...
-            pg.get_by_text("No parties yet").wait_for(timeout=WAIT_MS)
             pg.locator(".table-empty").get_by_role("button", name="Choose the parties", exact=True).click()       # ... whose note opens the one place of the parties over the pane again
             pg.locator('.parties[data-first="true"]').wait_for(timeout=WAIT_MS)
             assert pg.locator(".place, .shell-craft-tile").count() == 0 and pg.get_by_role("button", name="Start", exact=True).is_visible()
-            pg.locator('.parties__row[data-party="marketing"] [role="checkbox"]').click()          # a party of a stage not reached yet: ticked by the person
+            pg.locator('.pc-later__one[data-party="marketing"] [role="checkbox"]').click()          # a party of a stage not reached yet: ticked by the person
             pg.get_by_role("button", name="Start", exact=True).click()                              # makes the ticked parties, each with its leader, builders and checkers
             pg.locator(".parties").wait_for(state="detached", timeout=WAIT_MS)
             for pane in (".table-tabs", ".table-pane"):                # the window's two parts, on the real host's data

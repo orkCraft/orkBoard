@@ -29,6 +29,7 @@ import { AddTool } from "./addtool.js";
 import { ToolCard } from "./toolcard.js";
 import { SetupBubble, SetupCard, setupNow } from "./setupcards.js";
 import { columnOn } from "../table/data.js";
+import { laidNow, layLine } from "../table/laying.js";
 import { said } from "./motion.js";
 import "./wayparts.js";                                   // the goal's way's cards (spec 100)
 
@@ -79,15 +80,17 @@ export function Hand() {
   const want = liftDecision.value, dealt = want ? stops.find((x) => x.kind === "decision" && x.row?.idea === want) : null;
   useEffect(() => { if (dealt) { liftDecision.value = ""; lift(liftKey(dealt.key)); } }, [dealt?.key]);        // *Change…* in the column: the decision's card, dealt now its wait is held, comes up (decisions §240.2)
   useEffect(() => { if (key) fieldOpen.value = false; }, [key]);
-  if (!map) return null;
-  const none = !(map.nodes || []).length, parties = partiesOf(map).length > 0, middle = none && parties && !stacks.length;      // no goal at all and nothing asked: the + card lies large in the pane
+  const bare = !laidNow();                                                              // not laid yet: only the Orkmaster's cards and the AI tools (spec 130 C.6)
+  useEffect(() => { if (layLine.value && (fieldOpen.value || (map?.nodes || []).length)) layLine.value = ""; }, [fieldOpen.value, (map?.nodes || []).length]);      // the laid table's line goes with the first goal
+  if (!map && !bare) return null;
+  const none = !(map?.nodes || []).length, parties = partiesOf(map).length > 0, middle = none && parties && !stacks.length && !bare && !layLine.value;      // no goal at all and nothing asked: the + card lies large in the pane
   const plus = () => { lower(); fieldOpen.value = true; };
   if (uprightNow.value) return html`<${Upright} root=${root} stacks=${stacks} plus=${plus} />`;                  // a touch phone upright: the hand is the first screen (upright.js)
   const anchor = key ? root.current?.querySelector(`.hand-places .hand-card[data-key="${CSS.escape(key)}"]`) : null;
   return html`<footer ref=${root} class="hand" aria-label="The hand" data-empty=${middle ? "1" : undefined}>
     ${!middle && html`<div class="hand-places"><div class="hand-row" style=${`--hc-rest:${Math.max(1, partiesNow().length)}`}>
-      <${Stacks} stacks=${stacks} plus=${html`<${PlusCard} onPress=${plus} />`} />
-      <div class="hand-end"><${PlayDie} /><${Mana} lifted=${s} /></div>
+      <${Stacks} stacks=${stacks} plus=${bare ? null : html`<${PlusCard} onPress=${plus} />`} />
+      <div class="hand-end">${!bare && html`<${PlayDie} />`}<${Mana} lifted=${s} /></div>
     </div></div>`}
     ${fieldOpen.value && !middle && html`<${Field} />`}
     ${s && html`<${Lifted} s=${s} anchor=${anchor} />`}

@@ -5,7 +5,7 @@
 from __future__ import annotations
 
 from orkboard.gui.ideas_args import IdeasError, _device, _opt, _text
-from orkboard.realm import (event_log, goal_team, goal_types, idea_target, ideas, library, own_parties, party_hints, party_price, party_proposals, party_recipes, party_work,
+from orkboard.realm import (event_log, goal_team, goal_types, idea_spend, idea_target, ideas, library, own_parties, party_hints, party_price, party_proposals, party_recipes, party_work,
                             project_kind, project_stage, releases, roles)
 
 
@@ -16,6 +16,11 @@ class PartyMixin:
         if ideas.track_page(self.root(False), goal) is None:
             raise IdeasError("That party is gone")
         return party_work.work(self.root(False), self.state_dir, goal, self.target_of_goal(goal))
+
+    def seat_price(self, args: dict) -> dict:
+        """`ideas.seat_price {}` (spec 130 C.4): what a task, a leader's step, costs at each of the three levels, `{laborer, warrior, elder}` in dollars: the project's own learnt prices, else the first guess (`idea_spend.tier_costs`). Nothing is saved."""
+        costs = idea_spend.tier_costs(self.state_dir)
+        return {t: round(float(costs[t]), 2) for t in ("laborer", "warrior", "elder") if t in costs}
 
     def party_price(self, args: dict) -> dict:
         """`{"leader", "team", "every", "craft"?, "size"?}`: about what an idea costs with this party, before it starts (spec 43 §3.1; at `size`'s Target when given, spec 75 §3.3), `hints`, at

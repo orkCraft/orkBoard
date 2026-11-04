@@ -1,80 +1,103 @@
-// The right half of the one place of the parties (docs/specs/100-a-goals-way-as-cards.md §4, decisions §151.5, §164): the party that is open — the size (*Lean · Standard · Full*, each its line and what it costs a goal:
-// `ideas.party_price`), the leader's row (its head, its name of its own beside its role, its map in one line, its AI tool's mark in ink and its tier), what the leader keeps of the project (read and changed here, *From the next goal*), and the squad in two columns, **Does** under orkUI's sword and **Checks** under its shield, of the craft's role cards (head, role, tool's mark, the gear of its tier), each ticked or not
-// (at most five who do, two who check). A tick is the squad's; a press on the card opens the seat's popover (seatpop.js) when the party is made and the seat is in it, else it ticks the card. Under *Lean* the *Checks*
-// column is dimmed (*No separate check: the doer runs its own tests*). The leaders' names (§164) are said here and nowhere else. The squad is drawn from a view of the party (parties.js `viewOf`); nothing here saves.
+// One party on the Orkmaster's large card (docs/specs/130-the-first-open-is-the-orkmasters.md C.2, decisions §232.6; mockup docs/mockups/setup/ #parties): **one line**, its tick, its leader's head with its AI tool's mark in the corner (framed when the party follows the main tool, bare when a tool is set for it), its name (its line of what it does is the name's words) and its size, a small switch whose words
+// say a goal's price (`ideas.party_price`); **under it its team**, *Does* after orkUI's sword and *Checks* after its shield, the seats the size gives as heads and the seats the craft has and the size leaves empty as shadows, up to five who do and two who check. Changing the size changes the heads at once, nothing saved. Under *Lean* the Checks are dimmed. A shadow is not pressed, for now. A member's head wears a tool's mark only when its tool differs from the party's. **Release** is ticked and locked, its size locked at Lean.
+// A head or a mark pressed opens its seat (seatpop.js `SeatDraft`). What the leader keeps of the project (`Facts`) is said on the leader's seat of a party that is made. Nothing here saves. orkUI first: `.ork-race__head.is-empty`, the small size switch.
 import { useEffect, useState } from "preact/hooks";
 import { html, cls } from "../html.js";
 import { command } from "../link.js";
-import { Head, Sign, TIER_WORDS } from "../orkui.js";
+import { Head, Sign } from "../orkui.js";
 import { ask } from "../board/store.js";
 import { roles } from "../shell/store.js";
-import { costOf } from "../hand/cost.js";
-import { MARKED, markSrc, toolOf } from "./data.js";
+import { MARKED, markSrc } from "./data.js";
 
 /** Every seat of a party wears its craft's race, its leader that race's higher form (`realm/roles.py` `PARTY_RACES`): [seat, leader]. */
 const RACES = { product: ["knight", "unicorn"], "game-design": ["knight", "unicorn"], tech: ["peon", "shaman"], design: ["elf", "dryad"], art: ["elf", "dryad"], run: ["goblin", "imp"],
   liveops: ["goblin", "imp"], marketing: ["gnome", "fairy"], release: ["skeleton", "lich"] };
 
-/** The leaders' names of their own (decisions §164): said on the leader's row of this place and nowhere else. */
-const LEADERS = { product: "Angel Invest Knight", "game-design": "Dungeon Master Knight", tech: "Sh.man", design: "Pixel-Perfect Dryad", art: "Sprite Dryad", run: "Uptime Imp",
+/** The leaders' names of their own (decisions §164): said on the leader's seat and nowhere else. */
+export const LEADERS = { product: "Angel Invest Knight", "game-design": "Dungeon Master Knight", tech: "Sh.man", design: "Pixel-Perfect Dryad", art: "Sprite Dryad", run: "Uptime Imp",
   liveops: "Event Imp", marketing: "Growth Hack Gnome", release: "Release Night King" };
 
-/** The leader's map in one line, for the parties that have a map today (Tech's System); the others' are not read yet. */
-const MAPS = { tech: "System, the code's containers and their links" };
-
-export const SIZES = [["lean", "Lean", "plan → do, one at once"], ["standard", "Standard", "plan → do → one check, two at once"], ["full", "Full", "plan → do → every check it concerns, three at once"]];
-export const CHECKS_WORDS = { lean: "No separate check: the doer runs its own tests", standard: "One checker checks each task", full: "Every checker a task concerns" };
+export const SIZES = [["lean", "Lean"], ["standard", "Standard"], ["full", "Full"]];
+export const LEAN_LINE = "Lean: the leader does it, and checks it itself";
 export const MAX = { build: 5, check: 2 };
-const LIMIT_WORDS = { build: "At most five who do", check: "At most two who check" };
 
 export const libOf = (id) => (roles.value?.library || []).find((a) => a.id === id);
 export const nameOf = (id) => libOf(id)?.name || id;
 
-/** The head of a seat of the party `recipe`: its race, the tier the size gives it (else the library's). */
+/** The head of a seat of the party `v`: its race; the tier set by hand, else the one the size gives it, else the library's. */
 export function headOf(v, slug, size, lead = false) {
   const [seat, higher] = RACES[v.p.id] || ["peon", "shaman"];
-  return { race: lead ? higher : seat, tier: v.p.sizes?.[size]?.tiers?.[slug] || libOf(slug)?.tier || "warrior" };
+  return { race: lead ? higher : seat, tier: v.tiers?.[slug] || v.p.sizes?.[size]?.tiers?.[slug] || libOf(slug)?.tier || "warrior" };
 }
 
-/** The AI tool a seat runs on: its own, the party's, else the Main tool; `{id, name}`. A made party has it from the table's data (`g`). */
-export function toolFor(v, slug, tools, g) {
-  if (g) return toolOf(g, { slug });
-  const id = v.track?.tools?.[slug] || v.track?.tool || tools?.main || "claude";
-  return { id, name: tools?.tools?.find((t) => t.id === id)?.name || id.charAt(0).toUpperCase() + id.slice(1) };
+/** The race's three gears of a seat (§158: its tier is the gear on its head). */
+export const raceOf = (v, lead = false) => { const [seat, higher] = RACES[v.p.id] || ["peon", "shaman"]; return lead ? higher : seat; };
+
+/** Whether a seat is one who checks. */
+export const bandOf = (v, slug) => (libOf(slug)?.band === "check" || (v.p.check || []).includes(slug) ? "check" : "build");
+
+/** The seats of a band in a size (spec 81 §2, decisions §232.6): `{on, shadows}`. Lean: the leader does it, every seat a shadow. Standard: the first two who do and the first who checks. Full: the whole squad. The seats the craft has and the size leaves empty are shadows, up to five who do and two who check. */
+export function seatsOf(v, band, size) {
+  const squad = (v.squad || []).filter((s) => bandOf(v, s) === band), craft = [...new Set([...(band === "build" ? v.p.build : v.p.check) || [], ...squad])];
+  const on = size === "lean" ? [] : size === "standard" ? squad.slice(0, band === "build" ? 2 : 1) : squad;
+  return { on, shadows: craft.filter((s) => !on.includes(s)).slice(0, Math.max(0, MAX[band] - on.length)) };
 }
 
 /** A tick's box: ticked shows orkUI's check, not ticked an empty box, a locked one dashed. */
 export const Tick = ({ on, locked = false }) => html`<span class=${cls("parties__tick", { off: !on, locked })} aria-hidden="true"><${Sign} name="check" /></span>`;
 
-const Mark = ({ tool }) => (MARKED.includes(tool.id) ? html`<img class="ork-mark" src=${markSrc(tool.id)} srcset=${`${markSrc(tool.id, true)} 2x`} alt="" draggable="false" />` : null);
+/** A tool's mark, in its own colours. */
+const Mark = ({ id }) => (MARKED.includes(id) ? html`<img src=${markSrc(id, false, true)} srcset=${`${markSrc(id, true, true)} 2x`} alt="" draggable="false" />` : null);
 
-/** What a size costs a goal, as a gem and its words, from `ideas.party_price`'s answer (`{low, high}` in dollars); null with none. */
-export const costWords = (price) => (price ? costOf({ kind: "change", row: { usd_low: price.low, usd_high: price.high } }) : null);
+/** Dollars as a card says them: *$0.40–0.90*; "" with none. */
+export const usdWords = (p) => (p ? `$${Number(p.low).toFixed(2)}–${Number(p.high).toFixed(2)}` : "");
 
-// -- the size ---------------------------------------------------------------------------------------------------------------------------------
-
-/** *Lean · Standard · Full*, each its line and its price a goal. Release works Lean always (decisions §151.6). */
-export function SizeSwitch({ size, onPick, prices, locked }) {
-  return html`<div class="parties__sizes" role="radiogroup" aria-label="Size">${SIZES.map(([id, word, line]) => {
-    const c = costWords(prices?.[id]);
-    return html`<button type="button" key=${id} role="radio" class=${cls("ork-row parties__size", { "is-on": size === id })} data-size=${id} aria-checked=${String(size === id)}
-      disabled=${locked && id !== "lean"} onClick=${() => onPick(id)}>
-      <b class="parties__size-nm">${word}</b><span class="parties__size-line">${line}</span>
-      <span class="parties__size-cost">${c ? html`<span class="ork-gem share" data-cost=${c.gem}>${c.gem}</span> a goal` : " "}</span></button>`;
-  })}</div>`;
+/** *Lean · Standard · Full*, one line high; its words say what a goal costs. Release works Lean always (decisions §151.6). */
+export function SizeSwitch({ size, onPick, prices, locked, name }) {
+  return html`<span class=${cls("pc-sizes", { "is-locked": locked })} role="radiogroup" aria-label=${`${name}: its size`}>${SIZES.map(([id, word]) => {
+    const said = prices?.[id] ? `${word}: about ${usdWords(prices[id])} a goal` : word;
+    return html`<button type="button" key=${id} role="radio" class=${cls("pc-size", { "is-on": size === id })} data-size=${id} aria-checked=${String(size === id)} aria-label=${said} title=${said} disabled=${locked && id !== "lean"} onClick=${() => onPick(id)}>${word}</button>`;
+  })}</span>`;
 }
 
-// -- the leader's row, what it keeps --------------------------------------------------------------------------------------------------------
+/** One head of the team: a seat given, pressed to open it; a shadow is the head's silhouette, not pressed. */
+function Seat({ v, slug, size, shadow, own, open, onSeat }) {
+  const head = headOf(v, slug, size), name = nameOf(slug);
+  if (shadow) return html`<span class="pc-hd is-empty" data-shadow=${slug} title=${`${name}: an empty seat`}><${Head} race=${head.race} tier=${head.tier} /></span>`;
+  return html`<button type="button" class=${cls("pc-hd", { "is-open": open })} data-seat=${slug} aria-haspopup="dialog" aria-expanded=${String(open)} aria-label=${`${name}: its seat`} title=${name} onClick=${() => onSeat(slug)}>
+    <${Head} race=${head.race} tier=${head.tier} />${own && html`<span class="pc-own"><${Mark} id=${own} /></span>`}</button>`;
+}
 
-/** The leader: its head, its name of its own beside its role (*Sh.man · Architect*), its map where it has one, its AI tool's mark and its tier. Pressed, it opens its popover when the party is made. */
-export function LeaderRow({ v, size, tools, g, onOpen, open }) {
-  const lead = v.p.leader, head = headOf(v, lead, size, true), tool = toolFor(v, lead, tools, g), map = MAPS[v.p.id];
-  const inner = html`<${Head} race=${head.race} tier=${head.tier} size="mid" />
-    <span class="parties__lead-tx"><span class="parties__lead-nm"><b>${LEADERS[v.p.id] || nameOf(lead)}</b> · ${nameOf(lead)}</span>
-      ${map && html`<span class="parties__muted">Map: ${map}</span>`}</span>
-    <span class="parties__tool"><${Mark} tool=${tool} />${tool.name} · ${TIER_WORDS[head.tier] || ""}</span>`;
-  return g ? html`<button type="button" class="ork-card parties__lead" data-seat=${lead} aria-haspopup="dialog" aria-expanded=${String(open)} onClick=${() => onOpen(lead)}>${inner}</button>`
-    : html`<div class="ork-card parties__lead" data-seat=${lead}>${inner}</div>`;
+function Team({ v, band, size, partyTool, open, onSeat }) {
+  const { on, shadows } = seatsOf(v, band, size), word = band === "build" ? "Does" : "Checks";
+  return html`<span class=${cls("pc-grp", { "is-dim": band === "check" && size === "lean" })} role="group" aria-label=${word} data-band=${band}><span title=${word}><${Sign} name=${band === "build" ? "sword" : "shield"} /></span>
+    ${on.map((s) => { const own = v.tools?.[s] || ""; return html`<${Seat} key=${s} v=${v} slug=${s} size=${size} own=${own && own !== partyTool ? own : ""} open=${open === s} onSeat=${onSeat} />`; })}
+    ${shadows.map((s) => html`<${Seat} key=${s} v=${v} slug=${s} size=${size} shadow=${true} />`)}</span>`;
+}
+
+/** One party: its line and its team. `main`: the main tool's id; `prices`: size → `{low, high}`. */
+export function PartyRow({ v, main, prices, open, onTick, onSize, onSeat }) {
+  const { p } = v, stuck = p.locked || v.made, size = v.size, lead = p.leader, leadHead = headOf(v, lead, size, true), partyTool = v.tool || "", shows = partyTool || main;
+  return html`<div class="pc-row" data-party=${p.id} data-on=${String(v.on)} data-locked=${String(!!p.locked)} data-size=${size}>
+    <button type="button" class="parties__tickbtn" role="checkbox" aria-checked=${String(v.on)} aria-label=${`In the project: ${p.name}`} aria-disabled=${stuck ? "true" : undefined}
+      title=${p.locked ? "In every project" : v.made ? "It is made: remove it from its tab's menu" : undefined} onClick=${() => !stuck && onTick(p.id)}><${Tick} on=${v.on} locked=${stuck} /></button>
+    <button type="button" class=${cls("pc-lead", { "is-open": open === lead })} data-seat=${lead} aria-haspopup="dialog" aria-expanded=${String(open === lead)} aria-label=${`${nameOf(lead)}: its seat`} title=${nameOf(lead)} onClick=${() => onSeat(lead)}>
+      <${Head} race=${leadHead.race} tier=${leadHead.tier} size="big" />${shows && html`<span class=${cls("pc-lmark", { "is-framed": !partyTool })} data-tool=${shows} data-follows=${partyTool ? undefined : "1"}><${Mark} id=${shows} /></span>`}</button>
+    <b class="pc-name" title=${p.line}>${p.name}</b>
+    <${SizeSwitch} size=${size} onPick=${onSize} prices=${prices} locked=${p.locked} name=${p.name} />
+    <span class="pc-team">
+      <${Team} v=${v} band="build" size=${size} partyTool=${shows} open=${open} onSeat=${onSeat} />
+      <${Team} v=${v} band="check" size=${size} partyTool=${shows} open=${open} onSeat=${onSeat} />
+      ${p.locked ? html`<span class="pc-muted">in every project</span>` : size === "lean" && html`<span class="pc-muted" data-lean="1">${LEAN_LINE}</span>`}
+    </span>
+  </div>`;
+}
+
+/** The parties of a stage not reached, in one line of heads and names; a tick seats one now. */
+export function LaterRow({ views, words, onTick }) {
+  return html`<div class="pc-later" data-later="1">${views.map((v) => { const h = headOf(v, v.p.leader, v.size, true); return html`<span class="pc-later__one" key=${v.p.id} data-party=${v.p.id} data-on=${String(v.on)}>
+      <button type="button" class="parties__tickbtn" role="checkbox" aria-checked=${String(v.on)} aria-label=${`In the project: ${v.p.name}`} onClick=${() => onTick(v.p.id)}><${Tick} on=${v.on} /></button><${Head} race=${h.race} tier=${h.tier} /><span>${v.p.name}</span></span>`; })}
+    <span class="pc-muted">${words}</span></div>`;
 }
 
 /** The keys a party's fact may not take: the project's common core (`realm/project_facts.py` `COMMON_KEYS`) is not a party's to replace. */
@@ -133,44 +156,4 @@ export function Facts({ party }) {
           <button type="button" class="ork-btn primary" disabled=${busy || !draft.trim()} onClick=${add}>Add</button></div>`
       : html`<div><button type="button" class="ork-btn quiet" data-act="add-fact" onClick=${() => setAdding(true)}>Add a fact</button></div>`}
     <p class="parties__muted">From the next goal</p></section>`;
-}
-
-// -- the squad: Does and Checks ---------------------------------------------------------------------------------------------------------------
-
-function RoleCard({ v, slug, size, tools, g, on, full, onTick, onPress }) {
-  const head = headOf(v, slug, size), tool = toolFor(v, slug, tools, g), name = nameOf(slug), made = !!g && (g.party || []).some((m) => m.slug === slug);
-  const stuck = !on && full;                                                                         // the column is full: this card cannot be ticked
-  return html`<div class=${cls("parties__role", { "is-off": !on })} data-seat=${slug} data-on=${String(on)}>
-    <button type="button" class="parties__tickbtn" role="checkbox" aria-checked=${String(on)} aria-label=${`${name}: in the squad`} disabled=${stuck} title=${stuck ? LIMIT_WORDS[libOf(slug)?.band === "check" ? "check" : "build"] : undefined}
-      onClick=${() => onTick(slug)}><${Tick} on=${on} /></button>
-    <button type="button" class="ork-row parties__seat" aria-haspopup=${made ? "dialog" : undefined} onClick=${() => (made ? onPress(slug) : onTick(slug))} disabled=${stuck && !made}>
-      <${Head} race=${head.race} tier=${head.tier} /><span class="parties__seat-nm">${name}</span><${Mark} tool=${tool} /></button></div>`;
-}
-
-function Column({ band, v, slug, size, tools, g, squad, onTick, onPress, dim }) {
-  const seats = [...new Set([...(v.p[band] || []), ...squad.filter((s) => (libOf(s)?.band || "build") === band)])];
-  const ticked = seats.filter((s) => squad.includes(s)).length, full = ticked >= MAX[band];
-  const word = band === "build" ? "Does" : "Checks", hint = band === "build" ? "The leader gives each task to the one it is for." : CHECKS_WORDS[size];
-  return html`<div class=${cls("parties__col", { "is-dim": dim })} data-band=${band} aria-label=${word} role="group">
-    <h3 class="parties__col-h"><${Sign} name=${band === "build" ? "sword" : "shield"} /> ${word}</h3>
-    ${seats.map((s) => html`<${RoleCard} key=${s} v=${v} slug=${s} size=${size} tools=${tools} g=${g} on=${squad.includes(s)} full=${full} onTick=${onTick} onPress=${onPress} />`)}
-    <p class="parties__hint">${hint}</p></div>`;
-}
-
-/** The party that is open, at the right. `prices`: size → `{low, high}`; `g`: the table's data of the party when it is made (its seats' popovers); `popover`: the popover, drawn by the page. */
-export function PartyRight({ v, size, setSize, setSquad, prices, tools, g, onOpen, open }) {
-  const bandOf = (s) => (libOf(s)?.band === "check" || v.p.check.includes(s) ? "check" : "build");
-  const tick = (slug) => {
-    const squad = v.squad, band = bandOf(slug);
-    if (squad.includes(slug)) setSquad(squad.filter((s) => s !== slug));
-    else if (squad.filter((s) => bandOf(s) === band).length < MAX[band]) setSquad([...squad, slug]);
-  };
-  return html`<div class="parties__party" data-party=${v.p.id} data-size=${size}>
-    <${SizeSwitch} size=${size} onPick=${setSize} prices=${prices} locked=${v.p.locked} />
-    <${LeaderRow} v=${v} size=${size} tools=${tools} g=${g} onOpen=${onOpen} open=${open === v.p.leader} />
-    <${Facts} party=${v.track?.slug || ""} />
-    <div class="parties__cols">
-      <${Column} band="build" v=${v} size=${size} tools=${tools} g=${g} squad=${v.squad} onTick=${tick} onPress=${onOpen} dim=${false} />
-      <${Column} band="check" v=${v} size=${size} tools=${tools} g=${g} squad=${v.squad} onTick=${tick} onPress=${onOpen} dim=${size === "lean"} />
-    </div></div>`;
 }

@@ -322,3 +322,17 @@ button.table-token.ork-card { position: relative; display: flex; flex-direction:
 .table-crash { position: fixed; right: var(--ork-4); top: 56px; z-index: 69; display: flex; flex-direction: column; gap: var(--ork-3); width: 360px; max-width: calc(100vw - 16px); padding: var(--ork-3) var(--ork-4); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); pointer-events: auto; }
 .table-crash__why { margin: 0; font: var(--ork-type-body); overflow-wrap: anywhere; }
 .table-crash__acts { display: flex; gap: var(--ork-2); }
+
+/* the laying (spec 130 C.6, decisions §232.1): at the first Start, once, in order: the leaders sit down, the empty chair and the door and the die appear, the + card comes to the hand. Reduced motion: all at once (`data-laying` is not set) */
+@keyframes table-lay-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.frame[data-laying] .table-tabcell, .frame[data-laying] .table-chair, .frame[data-laying] .table-tabs__end > :not(.table-grow), .frame[data-laying] .hand-end > :not(.hand-mana), .frame[data-laying] .hand-slot.is-plus { animation: table-lay-in var(--ork-motion-base) var(--ork-motion-ease) both; }
+.frame[data-laying] .table-tabcell:nth-child(1) { animation-delay: 0ms; }
+.frame[data-laying] .table-tabcell:nth-child(2) { animation-delay: 150ms; }
+.frame[data-laying] .table-tabcell:nth-child(3) { animation-delay: 300ms; }
+.frame[data-laying] .table-tabcell:nth-child(4) { animation-delay: 450ms; }
+.frame[data-laying] .table-tabcell:nth-child(n+5) { animation-delay: 600ms; }
+.frame[data-laying] .table-chair, .frame[data-laying] .table-tabs__end > :not(.table-grow) { animation-delay: 800ms; }
+.frame[data-laying] .hand-end > :not(.hand-mana) { animation-delay: 950ms; }
+.frame[data-laying] .hand-slot.is-plus { animation-delay: 1100ms; }
+@media (prefers-reduced-motion: reduce) { .frame[data-laying] * { animation: none !important; } }
+.frame[data-laid="0"] .table-tabs { min-height: 63px; box-sizing: border-box; }      /* not laid yet: the row is there, empty, the Orkmaster alone at its left (spec 130 C.6) */

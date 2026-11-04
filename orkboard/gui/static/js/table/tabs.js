@@ -23,6 +23,7 @@ import { Marks, marksOf, marksWords, projectMarks, runsOn } from "./tabmarks.js"
 import { AskBubble, askOpen, closeAsk, desk, openAsk } from "./ask.js";
 import { EmptyChair, useOffer } from "./chairs.js";
 import { PresenceDoor } from "./presence.js";
+import { laidNow } from "./laying.js";
 import { isWorking, moodOf } from "./moods.js";
 
 export { isWorking };                                            // the tabs' word for it was here first (road.js)
@@ -93,7 +94,7 @@ function LimitChip({ l, from }) {
 }
 
 export function Tabs({ parties, all = parties, current, narrow, compact, column = false }) {
-  const project = currentProject.value?.name || "The project", route = routeParties(picked.value), offer = useOffer();
+  const project = currentProject.value?.name || "The project", route = routeParties(picked.value), offerOpen = useOffer(), laid = laidNow(), offer = offerOpen && laid;      // not laid yet: the Orkmaster alone in the row (spec 130 C.6)
   const from = { title: mapName(current, all), key: "" };
   const slugs = [ORKMASTER, ...parties.map((g) => g.slug)], first = column ? 1 : 0;       // with the Orkmaster's column pinned its tab is the column's head (column.js), outside this row: the row is the leaders'
   const keys = (e) => {
@@ -115,7 +116,7 @@ export function Tabs({ parties, all = parties, current, narrow, compact, column 
     <div class="table-tabs__end">
       ${offer && html`<${EmptyChair} from=${from} narrow=${narrow} />`}
       <span class="table-grow"></span>
-      <${PresenceDoor} small=${narrow} />
+      ${laid && html`<${PresenceDoor} small=${narrow} />`}
     </div>
   </nav>
   <${AskBubble} tab=${current} parties=${all} />`;

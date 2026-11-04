@@ -150,15 +150,16 @@ function UpCard({ n, i, pile, off, first, onPress }) {
   </button>`;
 }
 
-/** One pile: its title and, under it, what it says (*writing: Round timer*), its cards stacked by `--i` (the foot of each under the one above it), the thin edges when more lie under them. Empty: *Nothing here*. */
+/** One pile: its title and, under it, what it says (*writing: Round timer*), its cards stacked by `--i` (the foot of each under the one above it), the thin edges when more lie under them. **A pile's heading appears with its first card**, never empty (spec 130 C.6). */
 export function Pile({ id, title, items, under = "", onPress, open = false }) {
+  if (!items.length) return null;
   const shown = items.slice(0, SHOWN), down = id === "analysis", peek = down ? 4 : PEEK, tall = down ? 112 : 157, edges = items.length > SHOWN;
   const beneath = (shown.length - 1) * peek + (edges ? EDGES : 0), height = tall + beneath;      // face up the height is the cards' own: only what lies under the front is known (`--under`)
   return html`<section class="col-sec" data-pile=${id} aria-label=${title}>
     <div class="col-plab"><span class="col-plab__t">${title}</span><span class=${cls("col-under", { "is-asks": under === "waits for you" })} data-under=${id}>${under}</span></div>
-    ${shown.length ? html`<div class=${cls("col-pile", { "is-down": down, "is-up": !down })} style=${down ? `--h:${height}px;--peek:${peek}px` : `--under:${beneath}px;--peek:${peek}px`} data-count=${items.length}>
+    ${html`<div class=${cls("col-pile", { "is-down": down, "is-up": !down })} style=${down ? `--h:${height}px;--peek:${peek}px` : `--under:${beneath}px;--peek:${peek}px`} data-count=${items.length}>
       ${shown.map(({ n, off }, i) => (down ? html`<${DownCard} key=${n.slug} n=${n} i=${i} front=${i === 0} onPress=${onPress} open=${open} />` : html`<${UpCard} key=${n.slug} n=${n} i=${i} pile=${id} off=${off} first=${i === 0} onPress=${onPress} />`))}
       ${edges && html`<span class="col-edges" style=${down ? `top:${height - (edges ? EDGES : 0)}px` : undefined} aria-hidden="true"></span>`}
-    </div>` : html`<p class="col-none">Nothing here</p>`}
+    </div>`}
   </section>`;
 }

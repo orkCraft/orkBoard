@@ -23,6 +23,7 @@ pytest.importorskip("playwright.sync_api")
 
 from orkboard.realm import library  # noqa: E402
 from tests import narrow  # noqa: E402
+from tests.first_open_kit import desk  # noqa: E402,F401  (fixture)
 from tests.browser_kit import WAIT_MS, gui  # noqa: E402,F401  (fixture)
 
 pytestmark = pytest.mark.browser
@@ -1298,3 +1299,98 @@ def test_every_press_is_44_by_44_on_a_touch_screen_and_nothing_is_said_only_on_h
     assert "Art" in pg.locator(".gui-toast").text_content()
     pg.context.close()
     assert not errors, "\n".join(errors)
+
+
+# -- spec 130 C.5–C.6: nothing of the table lies beside a form; the window not yet laid, and the laying (decisions §232.1, §232.2, §247.1) -----------------------------------------
+
+def test_a_form_over_the_pane_covers_the_tables_end_and_the_column_and_the_hand_stay(gui):
+    from tests.test_discard_table_browser import open_maps
+    pg, host, log = open_maps(gui, "wide")
+    try:
+        pg.locator(".table-end").wait_for(timeout=WAIT_MS)
+        pg.get_by_role("button", name="The Orkmaster's menu").click()
+        pg.get_by_role("menuitem", name="Settings").click()
+        pg.locator('.table-over[data-kind="settings"]').wait_for(timeout=WAIT_MS)
+        assert pg.locator(".table-end, .ork-portal-ring").count() == 0 and pg.locator('.table-body[data-end="form"]').count() == 1, "no ring and no discard beside a form"
+        assert pg.locator(".frame-column").count() == 1 and pg.locator(".hand-plus").count() == 1
+        pg.keyboard.press("Escape")
+        pg.locator(".table-end").wait_for(timeout=WAIT_MS)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+def unlaid(desk, tmp_path, hand=("claude",), **more):
+    from orkboard.realm import project_kind
+    from tests.first_open_kit import git_repo
+    from tests.test_add_tool_browser import fill_hand
+    d = desk(git_repo(tmp_path / "skyhop", "project.godot", "[application]\n"), **more)
+    project_kind.keep(d.host.ideas.state_dir, "game")
+    fill_hand(d.host, *hand)
+    return d
+
+
+def test_the_window_not_yet_laid_holds_the_orkmaster_alone(desk, tmp_path):
+    d = unlaid(desk, tmp_path)
+    pg = d.open()
+    pg.locator('.frame[data-laid="0"]').wait_for(timeout=WAIT_MS)
+    pg.locator(".fo-bubble").wait_for(timeout=WAIT_MS)
+    assert pg.locator(".col-head__tab").count() == 1 and pg.locator(".table-tabcell").count() == 0, "no tabs"
+    assert pg.locator(".table-chair, .table-door, .hand-die, .ork-die, .hand-plus, .col-scroll, .col-sec, .table-end, .ork-portal-ring").count() == 0, "no empty chair, door, die, ring, + card or piles"
+    assert pg.locator(".hand-pot").count() >= 1 and pg.locator("[data-empty-slot]").count() == 1, "the AI tools at the hand's right"
+    assert not d.errors, d.errors
+
+
+def test_settings_stays_reachable_before_start_over_the_whole_table(desk, tmp_path):
+    d = unlaid(desk, tmp_path)
+    pg = d.open()
+    pg.locator(".parties.ork-card").wait_for(timeout=WAIT_MS)
+    pg.keyboard.press("Escape")
+    pg.locator(".parties.ork-card").wait_for(state="detached", timeout=WAIT_MS)
+    pg.get_by_role("button", name="The Orkmaster's menu").click()
+    pg.get_by_role("menuitem", name="Settings").click()
+    pg.locator('.table-over[data-kind="settings"]').wait_for(timeout=WAIT_MS)
+    assert not d.errors, d.errors
+
+
+def test_start_lays_the_table_in_order_and_says_so_and_the_ring_waits_for_its_first_content(desk, tmp_path):
+    d = unlaid(desk, tmp_path)
+    pg = d.open()
+    pg.locator('[data-act="start"]').wait_for(timeout=WAIT_MS)
+    pg.locator('[data-act="start"]').click()
+    pg.locator(".frame[data-laying] .table-tabcell").first.wait_for(timeout=WAIT_MS)
+    delays = pg.evaluate("""() => { const ms = (s) => parseFloat(getComputedStyle(document.querySelector(s)).animationDelay) * 1000; return { tab: ms('.table-tabcell'), chair: ms('.table-chair'), die: ms('.hand-end > :not(.hand-mana)'), plus: ms('.hand-slot.is-plus') }; }""")
+    assert delays["tab"] < delays["chair"] < delays["die"] < delays["plus"], delays
+    assert pg.locator(".hand-plus").evaluate("e => e.classList.contains('is-choosing')"), "its seal lit once"
+    assert "The table is laid. What shall we make first? Play the + card." in pg.locator(".fo-bubble").inner_text()
+    assert pg.locator(".table-end__label, .ork-card-place").count() == 0, "§247.1: the discard's place comes with its first content"
+    pg.locator('.frame:not([data-laying])').wait_for(timeout=WAIT_MS)
+    assert pg.locator(".hand-plus").evaluate("e => !e.classList.contains('is-choosing')")
+    pg.locator(".hand-plus").click()
+    pg.locator(".fo-bubble").wait_for(state="detached", timeout=WAIT_MS)
+    assert not d.errors, d.errors
+
+
+def test_under_reduced_motion_the_table_is_laid_all_at_once(desk, tmp_path):
+    d = unlaid(desk, tmp_path)
+    pg = d.pg
+    pg.emulate_media(reduced_motion="reduce")
+    d.open()
+    pg.locator('[data-act="start"]').wait_for(timeout=WAIT_MS)
+    pg.locator('[data-act="start"]').click()
+    pg.locator(".table-tabcell").first.wait_for(timeout=WAIT_MS)
+    pg.locator(".hand-plus").wait_for(timeout=WAIT_MS)
+    assert pg.locator(".frame[data-laying]").count() == 0
+    assert "The table is laid." in pg.locator(".fo-bubble").inner_text()
+    assert not d.errors, d.errors
+
+
+def test_a_project_opened_laid_is_laid_at_once_with_no_motion(desk, tmp_path):
+    from orkboard.realm import first_open
+    d = unlaid(desk, tmp_path)
+    first_open.lay(d.host.ideas.state_dir)
+    pg = d.open()
+    pg.locator('.frame[data-laid="1"]').wait_for(timeout=WAIT_MS)
+    pg.locator(".hand-plus").wait_for(timeout=WAIT_MS)
+    assert pg.locator(".frame[data-laying]").count() == 0 and pg.locator(".fo-bubble").count() == 0
+    assert not d.errors, d.errors

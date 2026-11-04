@@ -7,6 +7,7 @@ import { html } from "../html.js";
 import { command, town } from "../link.js";
 import { Head, Icon, Sign } from "../orkui.js";
 import { ask } from "../board/store.js";
+import { layLine } from "../table/laying.js";
 import { chooseFolder, closeProject, currentProject, openFolder, startGit } from "../shell/projects.js";
 
 export const setupNow = signal(null);                 // what `first_open.ask` said last: {step, line, name, recent, kind, hand, laid}; null while it was not asked, or on a host with no first open
@@ -39,9 +40,9 @@ export function SetupWatch() {
 
 /** The Orkmaster's line in its bubble (spec 123 §201's): its question, or *Reading <name>* while it reads. */
 export function SetupBubble() {
-  const s = setupNow.value, line = reading.value ? `Reading ${reading.value}` : s?.line || "";
-  if (!line || s?.step === "laid") return null;
-  return html`<div class="fo-bubble" role="status" aria-live="polite" data-step=${s?.step || ""}><span class="ork-label">Orkmaster</span><p class=${reading.value ? "ork-think" : undefined}>${line}</p></div>`;
+  const s = setupNow.value, laid = layLine.value, line = reading.value ? `Reading ${reading.value}` : laid || (s?.step === "laid" ? "" : s?.line || "");
+  if (!line) return null;
+  return html`<div class="fo-bubble" role="status" aria-live="polite" data-step=${laid ? "laid" : s?.step || ""}><span class="ork-label">Orkmaster</span><p class=${reading.value ? "ork-think" : undefined}>${line}</p></div>`;
 }
 
 const Choice = ({ icon, sign, word, why, pick, onPress, busy, ...more }) => html`<button type="button" class=${`fo-choice${pick ? " is-pick" : ""}`} disabled=${busy} onClick=${onPress} ...${more}>

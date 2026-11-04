@@ -82,7 +82,7 @@ class GoalsMixin:
         return {"ok": True}
 
     def goal_save(self, args: dict) -> dict:
-        """`{"slug"?, "about", "priority", "title"?, "craft"?, "team"?, "every"?, "leader"?, "size"?, "tool"?, "tools"?}`: a party (realm/goal_team.py:
+        """`{"slug"?, "about", "priority", "title"?, "craft"?, "team"?, "every"?, "leader"?, "size"?, "tool"?, "tools"?, "tiers"?}`: a party (realm/goal_team.py:
         a leader, builders and checkers in their seats); its agents of the library are made
         roles of the project (realm/library.py), the person's own agents taken as they are; `every`: the team's checkers
         whose check applies to every idea, not only where it applies (realm/idea_checks.py): a title typed is the person's (never rewritten); spec 34's
@@ -160,6 +160,8 @@ class GoalsMixin:
             self._size_kept(args, got, size, before)
         elif team is not None or leader is not None:
             self._tiers_kept(got)                           # a party with a size: its seats' tiers follow its team (spec 81 §2)
+        if isinstance(args.get("tiers"), dict):              # a seat's level set by hand (spec 130 C.4): it keeps what was set, and the party's size stays picked
+            goal_team.set_tiers(self.root(), got, {**goal_team.tiers_of(self.root(), got), **goal_team.clean_tiers(args["tiers"])})
         if "releases_from" in args:                          # a Release party's sources (spec 68 §3.2)
             self.save_releases_from(got, args["releases_from"])
         if before is None and recipe in party_recipes.CRAFTS and not goal_team.recipe_of(self.root(), got):
