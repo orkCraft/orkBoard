@@ -311,7 +311,7 @@ def test_plus_on_an_empty_job_opens_the_field_addressed_to_product_with_the_job_
     assert field.locator(".hand-chip[data-by=tab]").inner_text().strip() == "Product", "addressed to Product"
     chip = field.locator(".pick-chip")
     assert chip.count() == 1 and chip.get_attribute("data-mark") == "play-again" and chip.inner_text().strip() == "play again with the same group"
-    assert "ork-picked" in job(pg, "play-again").get_attribute("class"), "Product's map is in picking: the job is marked"
+    assert "ork-taken" in job(pg, "play-again").get_attribute("class"), "Product's map is in picking: the job is marked"
     shot(pg, f"tree-plus-{w}.png")
     pg.locator(".hand-field__text").fill("Play again in one press")
     pg.locator(".hand-field__text").press("Enter")

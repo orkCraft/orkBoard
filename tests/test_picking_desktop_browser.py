@@ -168,14 +168,14 @@ def test_a_press_marks_a_part_with_the_brackets_and_again_takes_it_off(picking):
     lobby.click()
     pg.locator(".pick-chip").wait_for(timeout=WAIT_MS)
     assert chips(pg) == ["server/lobby.ts"] and "server/lobby.ts" in pg.locator(".pick-chip").inner_text()
-    assert "ork-picked" in lobby.get_attribute("class") and "pick-lifted" in lobby.get_attribute("class"), "orkUI's brackets, lifted"
+    assert "ork-taken" in lobby.get_attribute("class") and "pick-lifted" in lobby.get_attribute("class"), "orkUI's brackets, lifted"
     assert pg.locator(".table-back").count() == 0, "a press in picking marks, it does not lift the card"
     assert field(pg).count() == 1, "a press on the map does not close the field"
-    assert part(pg, "server/index.ts").get_attribute("class").count("ork-picked") == 0
+    assert part(pg, "server/index.ts").get_attribute("class").count("ork-taken") == 0
     shot(pg, f"picking-one-{w}.png")
     lobby.click()
     pg.wait_for_selector(".pick-chip", state="detached", timeout=WAIT_MS)
-    pg.wait_for_function("() => !document.querySelector('.sys-part.ork-picked')", timeout=WAIT_MS)
+    pg.wait_for_function("() => !document.querySelector('.sys-part.ork-taken')", timeout=WAIT_MS)
 
 
 def test_the_marks_go_with_the_idea_and_are_gone_after_it(picking):
@@ -192,7 +192,7 @@ def test_the_marks_go_with_the_idea_and_are_gone_after_it(picking):
     sent = host.sent()[-1]
     assert sent["party"] == "tech" and sent["text"] == "Players who drop out get their seat back"
     assert sent["marks"] == [{"map": "system", "id": "server/lobby.ts", "name": "server/lobby.ts", "group": "server"}, {"map": "system", "id": "client/net.ts", "name": "client/net.ts", "group": "client"}]
-    assert pg.locator(".ork-picked").count() == 0
+    assert pg.locator(".ork-taken").count() == 0
     open_field(pg)
     assert pg.locator(".pick-chip").count() == 0, "sent: nothing left marked"
 
@@ -243,10 +243,10 @@ def test_a_box_that_takes_a_whole_container_pins_it_and_one_over_the_whole_map_p
     open_field(pg, "A goal for the server")
     drag(pg, *around(pg, PARTS["server"]))
     assert chips(pg) == ["server"] and pg.locator(".pick-chip").inner_text().strip() == "server/", "all of a container's parts pin the container"
-    assert all("ork-picked" in part(pg, p).get_attribute("class") for p in PARTS["server"])
+    assert all("ork-taken" in part(pg, p).get_attribute("class") for p in PARTS["server"])
     shot(pg, f"picking-group-{w}.png")
     pg.get_by_role("button", name="Take server/ off").click()
-    assert chips(pg) == [] and pg.locator(".ork-picked").count() == 0
+    assert chips(pg) == [] and pg.locator(".ork-taken").count() == 0
     drag(pg, *around(pg, PARTS["server"] + PARTS["client"]))
     assert chips(pg) == ["all"] and pg.locator(".pick-chip").inner_text().strip() == "all of System"
     shot(pg, f"picking-map-{w}.png")
@@ -271,7 +271,7 @@ def test_a_press_on_a_part_of_a_pinned_group_leaves_the_others_marked(picking):
     assert chips(pg) == ["all"]
     part(pg, "client/hud.ts").click()
     assert chips(pg) == ["server", "client/net.ts", "client/menu.ts"], "the server stays a group, the client's other parts are marked one by one"
-    assert "ork-picked" not in part(pg, "client/hud.ts").get_attribute("class")
+    assert "ork-taken" not in part(pg, "client/hud.ts").get_attribute("class")
 
 
 def test_a_drag_that_starts_on_a_part_draws_no_box_and_marks_nothing(picking):
@@ -357,7 +357,7 @@ def test_esc_with_the_focus_on_the_map_ends_picking_and_keeps_the_marks_and_the_
     pg.keyboard.press("Escape")
     pg.wait_for_selector(".pick-strip", state="detached", timeout=WAIT_MS)
     assert field(pg).count() == 1 and chips(pg) == ["server/lobby.ts"], "picking ended; what was taken stays the idea's marks"
-    assert pg.locator(".ork-picked").count() == 0, "the brackets are for a map in picking"
+    assert pg.locator(".ork-taken").count() == 0, "the brackets are for a map in picking"
 
 
 def test_taking_the_address_off_ends_picking_and_the_text_addressing_it_again_begins_it(picking):
@@ -415,7 +415,7 @@ def test_a_map_drawn_with_pickable_is_picked_the_same_a_lane_a_group_the_map_all
     open_field(pg, "Art for the towers")
     card = lambda i: pg.locator(f'[data-card="{i}"]')  # noqa: E731
     card("hero.png").click()
-    assert chips(pg) == ["hero.png"] and "ork-picked" in card("hero.png").get_attribute("class")
+    assert chips(pg) == ["hero.png"] and "ork-taken" in card("hero.png").get_attribute("class")
     if w == "wide":
         a = card("hit.wav").bounding_box()
         b = card("win.wav").bounding_box()
