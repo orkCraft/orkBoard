@@ -12,6 +12,8 @@
 // panel), and its words add *, the default*. On the project's tab it is the tool now (`town.mana.now`, else the Main tool, else the first); on a party's tab the tool the party is set to when it has one, else the same. One frame
 // element slides between the places (a transform, `--ork-motion-base`; not under reduced motion); every potion keeps a transparent border of the frame's width, so nothing shifts. While going on paid holds (`town.mana.paid`)
 // the tool billed by its API is a slot after the potions: its mark, orkUI's coins, *API* and the price under it, and the frame on it.
+// A potion hovered or focused also lights the column's cards (spec 138 A, decisions §245.2): `litTool` is its provider, the column dims the cards whose goal does not wait for that tool (table/lit.js `waitTool`), the words add *Goals wait for its reset* when any does (never how many);
+// a column card hovered hatches its next step's share off its tool's potion as a lifted card does (`hatched`, hand/cost.js `cardCost`).
 // Who drinks from it (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §3.4, decisions §189.2): a potion hovered or focused marks its tool's marks on the tabs (`markedTool`, the tabs' second line: table/tabmarks.js, a 1 px outline), and its words add the parties
 // that do and that check on it (*2 parties do on it, 1 party checks on it*; `usesWords`).
 // The Play die lies at the potions' left (playdie.js, docs/specs/112-the-bars-marks-and-the-play-die.md §3.3, decisions §190.2): the same row, the same top edge; at the narrow width the two stand together at the row's end (mana.css).
@@ -23,7 +25,9 @@ import { town } from "../link.js";
 import { untilWords } from "../arena/arenawords.js";
 import { MARKED, mapName, openTabOf, partiesAll } from "../table/data.js";
 import { ORKMASTER, openOver, tab } from "../frame/state.js";
-import { markedDefault, markedTool } from "./state.js";
+import { hatched, litTool, markedDefault, markedTool } from "./state.js";
+import { waitTool, defaultTool } from "../table/lit.js";
+import { mapData } from "../shell/store.js";
 import { windowWords, windowsOf } from "./windows.js";
 import { costOf } from "./cost.js";
 import { priceWords } from "./paidcard.js";
@@ -55,16 +59,17 @@ const sentence = (text) => `${text.charAt(0).toUpperCase()}${text.slice(1)}`;
 
 /** What a tool's potion says: `{read, share, week, of, size, liquid, level, dry, took, words}`; `cost` (from `costOf`) is the lifted card's, when it takes from this tool; `framed` adds *, the default*; `uses` (from `usesWords`) the parties that do and check on it.
  *  `share` is the now share (the shortest window's), `back` (*14:00*, said after *back*, "" above the danger's level) what stands in its place at the danger's level or empty, `week` what stands muted under it only while the week runs out first, `{name, share}` (*week 82%*) and, for a tool with one window named so, `of` (*of the month*); the words say both: *Claude Code: 30% of the 5 hours left, until 18:40; 82% of the week, until Thu 09:00*. */
-export function potionOf(l, cost = null, framed = false, uses = "") {
+export function potionOf(l, cost = null, framed = false, uses = "", waiting = false) {
+  const wait = waiting ? ". Goals wait for its reset" : "";
   const w = windowsOf(l), took = w.read && cost?.spend ? cost.taken : "";
-  if (!w.read) return { read: false, share: "", back: "", week: null, of: "", size: "large", liquid: 0, level: "unread", dry: false, took: "", words: `${l.name}: Limits not read${framed ? ", the default" : ""}${uses ? `. ${sentence(uses)}` : ""}` };
+  if (!w.read) return { read: false, share: "", back: "", week: null, of: "", size: "large", liquid: 0, level: "unread", dry: false, took: "", words: `${l.name}: Limits not read${framed ? ", the default" : ""}${uses ? `. ${sentence(uses)}` : ""}${wait}` };
   const nowWin = windowWords(w.now.window), weekWin = w.week ? windowWords(w.week.window) : "";
   const first = `${l.name}: ${w.now.share} ${nowWin ? `of ${nowWin} ` : ""}left${until(w.now.reset)}`;
   const said = w.week ? `${first}; ${w.week.share} ${weekWin ? `of ${weekWin}` : "left"}${until(w.week.reset)}` : first;
   const left = framed ? `${said}, the default` : said, spent = took ? `${left}. This card takes about ${took} of it` : left;
   const back = w.level === "danger" && w.lowReset ? untilWords(w.lowReset) : "";                                       // the hour a tool at the danger's level or empty comes back (spec 138 A.5)
   const week = w.week && w.weekFirst ? { name: weekWin.replace(/^the /, "") || "week", share: w.week.share } : null, of = !w.week && nowWin ? `of ${nowWin}` : "";
-  return { read: true, share: w.now.share, back, week, of, size: w.size, liquid: w.liquid, level: w.level, dry: w.dry, took, words: uses ? `${spent}. ${sentence(uses)}` : spent };
+  return { read: true, share: w.now.share, back, week, of, size: w.size, liquid: w.liquid, level: w.level, dry: w.dry, took, words: `${uses ? `${spent}. ${sentence(uses)}` : spent}${wait}` };
 }
 
 /** One tool's mark in its own colour (orkUI's `marks/harness-<id>.png`, not the ink one); its initial in the body face with no mark. */
@@ -75,9 +80,10 @@ export function Who({ l }) {
 }
 
 function Pot({ l, cost, small, from, framed, parties = [] }) {
-  const p = potionOf(l, cost && cost.tool === l.provider ? cost : null, framed, usesWords(l.provider, parties));
+  const dflt = defaultTool(), waiting = (mapData.value?.nodes || []).some((n) => waitTool(n, dflt) === l.provider);                  // a goal waits for this tool's reset: said, never how many (spec 138 A.3, decisions §67)
+  const p = potionOf(l, cost && cost.tool === l.provider ? cost : null, framed, usesWords(l.provider, parties), waiting);
   const style = `--ork-potion-left:${p.liquid}${p.took ? `;--ork-potion-spend:${cost.spend}` : ""}`;
-  const mark = () => { markedTool.value = l.provider; markedDefault.value = framed; }, unmark = () => { if (markedTool.value === l.provider) { markedTool.value = ""; markedDefault.value = false; } };
+  const mark = () => { markedTool.value = l.provider; markedDefault.value = framed; litTool.value = l.provider; }, unmark = () => { if (markedTool.value === l.provider) { markedTool.value = ""; markedDefault.value = false; } if (litTool.value === l.provider) litTool.value = ""; };
   return html`<button type="button" class=${cls("hand-pot", `is-${p.level}`, { "is-default": framed, "is-dry": p.dry })} data-provider=${l.provider} data-level=${p.level} data-size=${p.size} data-default=${framed ? "1" : undefined}
       title=${p.words} aria-label=${p.words} onClick=${() => openOver("limits", { provider: l.provider }, from, `${l.name}: what used it`)}
       onPointerEnter=${mark} onPointerLeave=${unmark} onFocus=${mark} onBlur=${unmark}>
@@ -148,7 +154,7 @@ export function Mana({ lifted = null }) {
   const key = framedOf({ limits, mana, open, parties, shown });
   useFrame(box, frame, key, [narrow, places, lifted ? 1 : 0, paid?.usd_task ?? ""]);
   if (!limits.length && !paid) return null;
-  const cost = lifted ? costOf(lifted) : null, from = { title: mapName(tab.value, parties), key: "" };
+  const cost = lifted ? costOf(lifted) : hatched.value, from = { title: mapName(tab.value, parties), key: "" };
   return html`<div class="hand-mana" ref=${box} role="group" aria-label="What is left of your AI tools" data-rows=${rows} data-n=${places} data-paid=${paid ? "1" : undefined} data-default=${key || undefined}>
     <span class="hand-mana__frame" ref=${frame} aria-hidden="true" hidden></span>
     ${shown.map((l) => html`<${Pot} key=${l.provider} l=${l} cost=${cost} small=${small} from=${from} framed=${key === l.provider} parties=${parties} />`)}

@@ -20,6 +20,7 @@ import { cascadeOf, footWords, doingWords, readTask, stageOf, typeSignOf, gemOf,
 import { Pips, StepsList, StepsWindow, WaitingWindow, FailedWindow, labelWords, countWords, showsSteps, stepsOf } from "./steps.js";       // a task's steps: the label row's count, pips and step now, the lifted card's list (spec 129 H2)
 import { MadeWindow, madeOf } from "./made.js";                           // what a task done or at Review made, by its craft (spec 142 D)
 import { BackFace, Turning, backKind, everBack } from "./backcard.js";       // a goal talked over lies face down (spec 120 §6.3)
+import { movesOn } from "./lit.js";                                  // a rune glows only on the goal that moves: the one picked, else the first at work (spec 140 C3)
 import { ThrownPlace, thrown } from "./flight.js";                         // a failed task's card thrown to the hand leaves its place (spec 128 C.2)
 
 /** The key of the card that was lit on the way back from a thing opened over the pane, "" none (a press or a key puts it out). */
@@ -47,7 +48,7 @@ export const aboutTokens = (n, tasks = []) => `idea:${n.slug}${tasks.map((t) => 
 /** The stage's small sign (14 px) and its word, as a label row or a strip says it. `flame`: the goal's element (`{name}`), glowing in the sign's place while the task is at work (decisions §187.2). `count`: its steps' *2/5* after the word (the time worked is then in the card's words, spec 129 H2). */
 export function Stage({ stage, worked = -1, flame = null, count = "" }) {
   const s = STAGES[stage] || STAGES.routing;
-  return html`<span class=${cls("table-stage", { "is-timed": worked >= 0 })}>${flame ? html`<${Elem} name=${flame.name} hue=${flame.hue} dim=${!flame.name} glowing=${true} />` : html`<${Sign} name=${s.sign} />`}<span class="table-stage__w">${worked >= 0 ? `${s.word} · ${workedWords(worked)}` : count ? `${s.word} ${count}` : s.word}</span></span>`;
+  return html`<span class=${cls("table-stage", { "is-timed": worked >= 0 })}>${flame ? html`<${Elem} name=${flame.name} hue=${flame.hue} dim=${!flame.name} glowing=${!!flame.glowing} />` : html`<${Sign} name=${s.sign} />`}<span class="table-stage__w">${worked >= 0 ? `${s.word} · ${workedWords(worked)}` : count ? `${s.word} ${count}` : s.word}</span></span>`;
 }
 
 /** The card's window: one sign at the signs' big size, in the goal's colour toned down (an opacity on orkUI's token, table.css). `moon`: the moon beside it (a goal that waits for the reset). */
@@ -81,7 +82,7 @@ export function TaskCard({ n, t }) {
     data-about=${aboutTokens(n, [t])} data-state=${t.state} data-stage=${stageOf(t)} aria-pressed=${String(on)} aria-label=${said} title=${time ? `${n.title} · ${time}` : n.title} onClick=${() => lift(on ? "" : key)} ...${leans}>
     <span class="table-card__head"><span class="table-card__nm" title=${t.title}>${t.short || t.title}</span></span>
     <${TaskWin} n=${n} t=${t} st=${st} alive=${aliveState(t.state)} />
-    <span class="table-card__row"><${Stage} stage=${stageOf(t)} worked=${st ? -1 : worked} count=${countWords(st)} flame=${aliveState(t.state) ? { name: n.element, hue: n.hue } : null} />${gem &&html`<span class="ork-gem share" data-cost=${gem}>${gem}</span>`}</span>
+    <span class="table-card__row"><${Stage} stage=${stageOf(t)} worked=${st ? -1 : worked} count=${countWords(st)} flame=${aliveState(t.state) ? { name: n.element, hue: n.hue, glowing: movesOn(n.slug) } : null} />${gem &&html`<span class="ork-gem share" data-cost=${gem}>${gem}</span>`}</span>
   </button>`;
 }
 
@@ -111,7 +112,7 @@ export function TaskEdge({ n, t, hint = false }) {
   const key = taskKey(n, t), on = lifted.value === key, bad = t.state === "failed", asks = t.state === "picking", alive = aliveState(t.state);
   return html`<button type="button" class=${cls("ork-card table-fan__card table-tedge", { fails: bad, asks, "is-lifted": on, "is-lit": litKey.value === key, "is-hint": hint })} data-lkey=${key} data-goal=${n.slug} data-task=${t.id}
     data-about=${aboutTokens(n, [t])} data-state=${t.state} data-stage=${stageOf(t)} aria-pressed=${String(on)} aria-label=${`${t.title}: ${STAGES[stageOf(t)].word}${bad ? ", failed" : ""}`} title=${t.title}
-    onClick=${() => lift(on ? "" : key)}>${alive && html`<${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} glowing=${true} />`}<span class="table-fan__nm">${t.short || t.title}</span><${Sign} name=${STAGES[stageOf(t)].sign} /></button>`;
+    onClick=${() => lift(on ? "" : key)}>${alive && html`<${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} glowing=${movesOn(n.slug)} />`}<span class="table-fan__nm">${t.short || t.title}</span><${Sign} name=${STAGES[stageOf(t)].sign} /></button>`;
 }
 
 /** A goal the Orkmaster reads, routes or joins itself, as a card in the first lane (no strip over it: the card is the goal's): the same face with the goal's rune and its whole title in the header, its stage *Reading*, *Routing* or *Joining*. */
@@ -137,7 +138,7 @@ export function Token({ n, tasks = [], stage = "" }) {
     ${Array.from({ length: edges }, (_, k) => html`<i key=${k} class="ork-card table-edge" style=${`--ork-deck-i:${k + 1}`} aria-hidden="true"></i>`)}
     <button type="button" class=${cls("ork-card table-token", { fails: bad, "is-lifted": on, "is-lit": litKey.value === key, "ork-picked": picked.value === n.slug })} data-lkey=${key} data-goal=${n.slug} data-task=${front?.id}
       data-about=${aboutTokens(n, tasks)} data-state=${front ? front.state : n.state} data-stage=${st} aria-pressed=${String(on)} aria-label=${said} title=${said} onClick=${() => lift(lifted.value === key ? "" : key)}>
-      <span class="table-card__top"><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} glowing=${(!!front && aliveState(front.state)) || (!front && backKind(n) === "talk")} /><${Sign} name=${(STAGES[st] || STAGES.routing).sign} /></span>
+      <span class="table-card__top"><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} glowing=${((!!front && aliveState(front.state)) || (!front && backKind(n) === "talk")) && movesOn(n.slug)} /><${Sign} name=${(STAGES[st] || STAGES.routing).sign} /></span>
       <${Win} n=${n} sign=${front ? typeSignOf(n, front) : n.type?.sign || ""} danger=${bad} />
       <${Pips} st=${steps} element=${n.hue || n.element} alive=${!!front && aliveState(front.state)} small=${true} />
     </button>

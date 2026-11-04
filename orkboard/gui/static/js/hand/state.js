@@ -17,6 +17,8 @@ export const fieldRune = signal("");           // the rune the person chose in t
 export const rite = signal("");                // the element of the goal just sent: the + card's seal plays the summoning rite in it for a moment (`summon`, decisions §187.4)
 export const plusDealt = signal(false);        // a new + card is dealt at the lane's end for a moment: the goal was sent (pluscard.js, spec 120 §6.2)
 export const markedTool = signal("");          // the AI tool whose potion is hovered or focused: the tabs outline its marks (mana.js, tabmarks.js; decisions §189.2)
+export const litTool = signal("");             // the provider of the potion hovered or focused, "" otherwise: the column dims the cards whose goal does not wait for it (mana.js, table/lit.js, spec 138 A.1–A.2, decisions §245.2)
+export const hatched = signal(null);           // the cost of the column card hovered or focused, {tool, spend, taken}: its tool's potion hatches that share as a lifted card's does (table/piles.js, hand/cost.js `cardCost`, spec 138 A.4)
 export const markedDefault = signal(false);    // that potion is the default's (the framed one): the tabs outline the marks that follow the default too (spec 114 §3.5, decisions §192.4)
 
 const RITE_MS = 1200;                          // orkUI's rite lasts about 1.1 s: the classes come off after it (orkUI 0.21.0 runes README)

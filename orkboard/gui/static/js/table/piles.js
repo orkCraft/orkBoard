@@ -2,6 +2,7 @@
 // **In analysis** (the idea, Talk, the decision and the spec being written: decisions §224), its cards face down and sideways with no name; **To review** (the spec is made and waits for its work, which starts by itself): face up, still, its wait a bar in eighths and a time;
 // **At work · later** (at work, its rune glowing and its leaders' heads at its foot; then put off: held, or to the night). A pile shows its front card whole (112 x 157) and the 20 px foot of each card under it (at most three), then thin edges, never a count; a card hovered or
 // focused slides out of its pile whole (column.css). A face-down card cannot be picked (a press lifts the pile's list); a face-up card pressed picks its goal, a card of To review or a put-off one also lifts its choices (column.js).
+// A potion hovered dims the cards whose goal does not wait for its tool, a card hovered hatches its next step off its tool's potion (spec 138 A.2, A.4, decisions §245.2; lit.js); a rune's glow and the ring's sweep run only on the goal that moves: the one picked, else the first at work (spec 140 C3, §247.8).
 // This file classifies (`kindOf`, `pilesOf`: pure, over a node) and draws the piles and their cards; what a press does is passed in (`onPress`), so the piles hold no state of their own.
 import { html, cls } from "../html.js";
 import { Elem, Head, Sign } from "../orkui.js";
@@ -11,6 +12,9 @@ import { everBack } from "./backcard.js";
 import { leftWords, shareOf } from "./backbody.js";
 import { waitRuns } from "./data.js";
 import { MidHeads, Play, middleOf } from "./downmid.js";
+import { litTool, hatched } from "../hand/state.js";
+import { cardCost } from "../hand/cost.js";
+import { defaultTool, movesOn, waitTool } from "./lit.js";
 
 export const ANALYSIS = ["raw", "reading", "asks", "routed", "talk", "decided", "sketch", "sections"];     // the idea, Talk, the decision and the spec being written (decisions §224); `ready`, `planning` and `plan` are the spec made: To review
 const SPEC_MADE = ["ready", "planning", "plan"];                                                       // the Orkmaster's draft is `planning` (face down: it is being written); once `agreed` (a decision confirmed, the leaders wrote the spec) they are To review
@@ -46,6 +50,10 @@ export function pilesOf(nodes) {
   out.work = out.work.map((x, i) => ({ ...x, i })).sort((a, b) => rank[a.off] - rank[b.off] || a.i - b.i);
   return out;
 }
+
+/** The card's dim and its hatch (spec 138 A.2, A.4): while a potion is hovered (`litTool`) a card whose goal does not wait for that tool is dimmed (`.is-dim`, never hidden); a card hovered or focused hatches its next step's share off its tool's potion (`hatched`). */
+const lit = (n) => ({ dim: !!litTool.value && waitTool(n, defaultTool()) !== litTool.value,
+  hatch: { onPointerEnter: () => { hatched.value = cardCost(n); }, onPointerLeave: () => { hatched.value = null; }, onFocus: () => { hatched.value = cardCost(n); }, onBlur: () => { hatched.value = null; } } });
 
 const waitsYou = (n) => !waitRuns(n) && (!!n.asks_you || n.state === "asks");                                              // a question or the decision to confirm waits for the person (`goal_place`: `asks_you`)
 
@@ -114,28 +122,28 @@ function Heads({ n }) {
 
 /** A card face down, sideways (157 x 112): the seal with its rune at the seal's top, upright; **no name** (it is on the card's other side, and in its label). The front one's ring runs while the Orkmaster or its leaders are on it; yellow and still while it waits for the person. */
 function DownCard({ n, i, front, onPress, open }) {
-  const asks = front && waitsYou(n), wait = front && waitRuns(n), mid = front ? middleOf(n) : null, filling = mid?.fill != null, busy = front && !asks && !wait && !filling && ACTIVE.includes(n.state), el = n.element || "", hue = n.hue || el;
+  const asks = front && waitsYou(n), wait = front && waitRuns(n), mid = front ? middleOf(n) : null, filling = mid?.fill != null, busy = front && !asks && !wait && !filling && ACTIVE.includes(n.state), still = busy && !movesOn(n.slug), el = n.element || "", hue = n.hue || el, own = lit(n);
   const share = wait ? mid.wait : filling ? mid.fill : null;                                              // the ring as a share (orkUI's `.is-waiting`, in eighths): what is left of the wait, or what is written of the spec
   everBack.add(n.slug);                                                                                  // seen face down: its turn up and its flight to a lane are played once (backcard.js)
-  const card = html`<button type="button" class=${cls("ork-card col-card col-card--down", { asks })} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state} data-pile="analysis" data-down="1" style=${`--i:${i}`}
+  const card = html`<button type="button" class=${cls("ork-card col-card col-card--down", { asks, "is-dim": own.dim })} ...${own.hatch} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state} data-pile="analysis" data-down="1" style=${`--i:${i}`}
     tabindex=${front ? undefined : -1} aria-hidden=${front ? undefined : "true"} aria-haspopup=${front ? "dialog" : undefined} aria-expanded=${front ? String(open) : undefined}
     aria-label=${front ? `${n.title}: ${sayOf(n, "analysis")}; press for the list in order` : undefined} onClick=${() => onPress(n, "analysis")}>
-    <span class=${cls(`ork-sigil table-back-sigil col-sigil${el ? ` is-${hue}` : ""}`, { "col-busy": busy, "col-stopped": asks, "is-waiting": share != null })} style=${share != null ? `--ork-sigil-share:${share}` : undefined} data-share=${share != null ? share : undefined} aria-hidden="true"><span class="ork-sigil__seal"><${Elem} name=${el} hue=${hue} dim=${!el} glowing=${busy} /></span>${mid && !wait && html`<${MidHeads} heads=${mid.heads} />`}</span>
+    <span class=${cls(`ork-sigil table-back-sigil col-sigil${el ? ` is-${hue}` : ""}`, { "col-busy": busy, "is-still": still, "col-stopped": asks, "is-waiting": share != null })} style=${share != null ? `--ork-sigil-share:${share}` : undefined} data-share=${share != null ? share : undefined} aria-hidden="true"><span class="ork-sigil__seal"><${Elem} name=${el} hue=${hue} dim=${!el} glowing=${busy && !still} /></span>${mid && !wait && html`<${MidHeads} heads=${mid.heads} />`}</span>
   </button>`;
   return wait ? html`${card}<${Play} n=${n} />` : card;
 }
 
 /** A card face up (112 px wide, its height its content's: decisions §249.1, spec 142 A): **no window**; its rune and its whole name at its top (three lines at most, `line-clamp: 3`; the short name only where the title is missing), and its foot (20 px: the rune, the tasks done, then its time or its leaders' heads, the sign of its state; **no name in it**, spec 140 A2: the whole name is in the foot's `title` and `aria-label`). `first`: the front of To review shows the wait as a bar in eighths and its time left. */
 function UpCard({ n, i, pile, off, first, onPress }) {
-  const el = n.element || "", hue = n.hue || el, on = picked.value === n.slug, work = pile === "work" && !off, ripe = n.back?.ripe, running = pile === "review" && ripe && !ripe.by && !ripe.held;
+  const el = n.element || "", hue = n.hue || el, on = picked.value === n.slug, work = pile === "work" && !off, glow = work && movesOn(n.slug), own = lit(n), ripe = n.back?.ripe, running = pile === "review" && ripe && !ripe.by && !ripe.held;
   if (pile === "review") everBack.add(n.slug);
   const moon = off === "night", name = n.title || n.short || "", tasks = work ? tasksCount(n) : null;                    // a goal at work says its tasks done of all at its foot (spec 129 H2.3)
   const extra = pile === "review" ? (running ? (first ? html`<span class="col-when">${leftWords(ripe.left_s)}</span>` : html`<span class="col-when">~${clock(ripe.left_s)}</span>`) : null)
     : off === "held" ? html`<span class="col-when"><${Sign} name="pause" />Held</span>` : moon ? html`<span class="col-when"><${Sign} name="moon" />${night()}</span>` : html`<${Heads} n=${n} />`;
-  return html`<button type="button" class=${cls("ork-card col-card col-card--up", { "ork-picked": on, asks: !!n.asks_you && !failed(n), fails: failed(n), "is-off": !!off })} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state} data-pile=${pile} data-off=${off || undefined} style=${`--i:${i}`}
+  return html`<button type="button" class=${cls("ork-card col-card col-card--up", { "ork-picked": on, asks: !!n.asks_you && !failed(n), fails: failed(n), "is-off": !!off, "is-dim": own.dim })} ...${own.hatch} data-goal=${n.slug} data-about=${`idea:${n.slug}`} data-state=${n.state} data-pile=${pile} data-off=${off || undefined} style=${`--i:${i}`}
     aria-pressed=${String(on)} aria-label=${`${n.title}: ${sayOf(n, pile, off, first)}${tasks ? `, ${tasks.done} of ${tasks.total} tasks finished` : ""}`} onClick=${() => onPress(n, pile, off)}>
-    <span class="col-hd"><${Elem} name=${el} hue=${hue} dim=${!el} glowing=${work} /><span class="col-nm">${name}</span></span>
-    <span class=${cls("col-foot", `col-c-${hue || "dust"}`)} title=${name} aria-label=${name}><${Elem} name=${el} hue=${hue} dim=${!el} glowing=${work} />${tasks && html`<span class="col-count" data-count=${`${tasks.done}/${tasks.total}`} title=${`${tasks.done} of ${tasks.total} tasks finished`}>${tasks.done}/${tasks.total}</span>`}${extra}<${Mark} n=${n} />
+    <span class="col-hd"><${Elem} name=${el} hue=${hue} dim=${!el} glowing=${glow} /><span class="col-nm">${name}</span></span>
+    <span class=${cls("col-foot", `col-c-${hue || "dust"}`)} title=${name} aria-label=${name}><${Elem} name=${el} hue=${hue} dim=${!el} glowing=${glow} />${tasks && html`<span class="col-count" data-count=${`${tasks.done}/${tasks.total}`} title=${`${tasks.done} of ${tasks.total} tasks finished`}>${tasks.done}/${tasks.total}</span>`}${extra}<${Mark} n=${n} />
       ${first && running && html`<span class="col-wbar" style=${`--s:${shareOf(ripe)}`} aria-hidden="true"><i></i></span>`}</span>
   </button>`;
 }

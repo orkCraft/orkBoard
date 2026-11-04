@@ -14,6 +14,7 @@ import { CostLine, RouteLifted, costLine, partyName, routeWords } from "../hand/
 import { bodyOf } from "../hand/decisioncard.js";
 import { BackBody, leftWords, shareOf } from "./backbody.js";
 import { GoalMenu } from "./dropgoal.js";
+import { movesOn } from "./lit.js";
 import { PickGoal, Sec, aboutTokens, leans, litKey, ownKey } from "./card.js";
 
 /** The goals this page has seen face down (their turn up and their flight to a lane are played once, never for what changed unseen). */
@@ -55,7 +56,7 @@ function BackButton({ n, back, on, live }) {
   const key = ownKey(n);
   return html`<button type="button" class=${cls("ork-card ork-leans table-card table-card--back", { "is-lifted": on, "is-lit": litKey.value === key, "ork-picked": picked.value === n.slug })} data-lkey=${key} data-goal=${n.slug} data-state=${n.state} data-back=${back.kind}
       data-about=${aboutTokens(n)} aria-pressed=${String(on)} aria-label=${back.label} tabindex=${live ? undefined : -1} onClick=${() => lift(on ? "" : key)} ...${leans}>
-    <${BackBody} element=${n.element} hue=${n.hue} name=${n.short || n.title} glowing=${back.kind === "talk" && !back.asked} waiting=${back.share} />
+    <${BackBody} element=${n.element} hue=${n.hue} name=${n.short || n.title} glowing=${back.kind === "talk" && !back.asked && movesOn(n.slug)} waiting=${back.share} />
   </button>`;
 }
 

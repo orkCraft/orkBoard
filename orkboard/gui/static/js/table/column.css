@@ -30,19 +30,20 @@
 .col-card.ork-card { position: absolute; left: 0; top: calc(var(--i) * var(--peek)); z-index: calc(10 - var(--i)); box-sizing: border-box; width: 112px; height: auto; padding: 0; overflow: hidden; text-align: left; transition: transform var(--ork-motion-base) var(--ork-motion-ease); }
 .col-card.ork-card:hover, .col-card.ork-card:focus-visible { z-index: 40; transform: translateX(36px) rotate(2deg); box-shadow: -4px 4px 0 var(--ork-scrim); }      /* out of its pile, whole */
 .col-card--down.ork-card { width: 157px; height: 112px; }
+.col-card.ork-card.is-dim { opacity: 0.6; }      /* a potion hovered: the cards whose goal does not wait for its tool step back, never hidden (spec 138 A.2, lit.js) */
 .col-card--down.ork-card:hover, .col-card--down.ork-card:focus-visible { transform: translateX(6px); }
 @media (prefers-reduced-motion: reduce) { .col-card.ork-card { transition: none; } .col-card.ork-card:hover, .col-card.ork-card:focus-visible { transform: none; } }
 
 /* face down, sideways: the seal in the card's middle with its rune at the seal's top, upright; no name. The front card's ring runs (orkUI's sweep, in the goal's colour), and is still and yellow while the goal waits for the person */
 .col-card--down .table-back-sigil.ork-sigil.col-sigil { top: 50%; left: 50%; right: auto; margin: 0; transform: translate(-50%, -50%) scale(0.94); transform-origin: 50% 50%; }
-.col-sigil.col-busy::after { animation: ork-sigil-sweep 1.6s steps(8) infinite; }
+.col-sigil.col-busy:not(.is-still)::after { animation: ork-sigil-sweep 1.6s steps(8) infinite; }      /* one place moves at a time (spec 140 C3): the ring runs on the goal picked, else the first at work (lit.js `movesOn`); the others stand still, the ring kept */
 .col-sigil.col-stopped::after { color: var(--ork-alert); }
 .col-sigil:is(.col-busy, .is-waiting).is-meadow::after { color: var(--ork-elem-meadow); }      /* the ring in the goal's colour: running, counting a wait down, or filled as its spec is written */
 .col-sigil:is(.col-busy, .is-waiting).is-ice::after { color: var(--ork-elem-ice); }
 .col-sigil:is(.col-busy, .is-waiting).is-dust::after { color: var(--ork-elem-dust); }
 .col-sigil:is(.col-busy, .is-waiting).is-void::after { color: var(--ork-elem-void); }
 .col-sigil:is(.col-busy, .is-waiting).is-lava::after { color: var(--ork-elem-lava); }
-@media (prefers-reduced-motion: reduce) { .col-sigil.col-busy::after { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .col-sigil.col-busy:not(.is-still)::after { animation: none; } }
 
 /* the middle of the front card's ring (decisions §241): the heads of who has the goal, laid by how many (a 2 x 2 grid of the head's size: one large in the middle, two a row, three a pyramid, four a square, more the fourth place's head with the rest fanned behind it), or the play of an agreed decision */
 .col-mid { --hw: 24px; --hh: 22px; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: grid; grid-template-columns: repeat(4, calc(var(--hw) / 2)); justify-items: center; align-items: center; gap: var(--ork-1) 2px; pointer-events: none; }

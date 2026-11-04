@@ -67,6 +67,15 @@ export function costOf(s) {
   return { gem: `${sign}${gem}`, words, share: rated(), saves: !!p.saves, tool: toolId(), spend, taken: spend ? pctShort(high).replace(/\s+%$/, "%") : "" };
 }
 
+/** What a column card's next step would take (spec 138 A.4): its node's estimate (`plan_estimate`, `estimate`, else `back.cost`) as a plan's, `{tool, spend, taken, ...}` as `costOf` says it; null when the node carries no cost or the share is not known.
+ *  The potion of its tool hatches `spend` while the card is hovered (mana.js, `hatched`). */
+export function cardCost(n) {
+  const e = n?.plan_estimate || n?.estimate || n?.back?.cost;
+  if (!e || !Number.isFinite(Number(e.usd_low))) return null;
+  const c = costOf({ kind: "plan", node: { plan_estimate: e } });
+  return c && c.spend ? c : null;
+}
+
 /** The gem on a card: nothing for a card that spends nothing. */
 export function Gem({ cost }) {
   if (!cost) return null;
