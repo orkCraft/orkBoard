@@ -56,7 +56,7 @@ function List({ items, place, close }) {
     <h3 class="col-lift__t">In analysis</h3>
     <p class="col-lift__cap">Face down: their specs are not written yet, so their names are on their other side. In the Orkmaster's order:</p>
     <ol class="col-list__rows">${items.map(({ n }, i) => {
-      const writing = i === 0 && (n.state === "reading" || n.state === "planning" || n.state === "talk") && !n.asks_you;
+      const writing = i === 0 && ACTIVE.includes(n.state) && !n.asks_you;
       return html`<li key=${n.slug} class="col-list__row" data-goal=${n.slug}><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} /><span class="col-list__nm">${n.title}</span>
         ${writing ? html`<span class="col-lift__cap">${n.state === "talk" ? "talked over" : "writing"}</span>`
           : html`<span class="col-list__acts">${before(i) && html`<button type="button" class="ork-btn quiet" data-next=${n.slug} aria-label=${`Next: ${n.title}`} onClick=${() => act("ideas.move", { slug: n.slug, before: before(i) })}>Next</button>`}<${Remove} n=${n} /></span>`}</li>`;

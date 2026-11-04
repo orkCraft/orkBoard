@@ -27,8 +27,8 @@ class ColumnHost(HandHost):
 
     def __init__(self):
         super().__init__(bare=True)
-        timer = node("timer", "tech", "Round timer on phones", "table", state="decided", element="ice", back=back(ripe=ripe(120)))
-        scoring = node("scoring", "tech", "Tidy the scoring module", "table", state="decided", element="dust", back=back(ripe=ripe(480)))
+        timer = node("timer", "tech", "Round timer on phones", "table", state="ready", agreed=True, element="ice", back=back(ripe=ripe(120)))
+        scoring = node("scoring", "tech", "Tidy the scoring module", "table", state="ready", agreed=True, element="dust", back=back(ripe=ripe(480)))
         held = node("held", "design", "Lobby in Polish", "table", state="decided", element="void", back=back(ripe=ripe(0, held=True)))
         late = node("late", "tech", "Rename a room after it is made", "table", state="plan", element="lava", start_at="night", waits={"kind": "night", "ref": "", "title": "", "until": ""})
         work = node("music", "design", "Music in the lobby", "table", state="working", element="meadow", stage="implementation", tasks=[task("m1", "Make the loop", "running", head=head("dryad", "design"))])
@@ -216,7 +216,7 @@ def test_a_put_off_card_lifts_start_now_and_back_to_review_and_says_held_or_the_
 def test_a_pile_shows_its_front_card_whole_and_the_foot_of_each_under_it_then_edges_and_a_card_hovered_slides_out(gui):
     host = ColumnHost()
     for i in range(6):
-        host.nodes.append(node(f"more{i}", "tech", f"Another goal {i}", "table", state="decided", element="ice", back=back(ripe=ripe(600 + i))))
+        host.nodes.append(node(f"more{i}", "tech", f"Another goal {i}", "table", state="ready", agreed=True, element="ice", back=back(ripe=ripe(600 + i))))
     pg, host, log = open_column(gui, host=host)
     try:
         pg.wait_for_selector(".col-card--up", timeout=WAIT_MS)
@@ -241,7 +241,7 @@ def test_a_goal_agreed_moves_from_in_analysis_to_to_review_and_its_wait_over_to_
     pg, host, log = open_column(gui)
     try:
         pg.wait_for_selector(".col-card--down", timeout=WAIT_MS)
-        host.nodes[2].update(state="decided", back=back(ripe=ripe(60)))
+        host.nodes[2].update(state="ready", agreed=True, back=back(ripe=ripe(60)))
         host.bump({})
         pg.wait_for_function("() => document.querySelector('.col-sec[data-pile=review] [data-goal=raw1]')", timeout=WAIT_MS)
         assert "raw1" not in goals(pg, "analysis") and pg.locator('.col-card[data-goal="raw1"]').get_attribute("class").count("col-card--up") == 1, "turned up where it lay"
@@ -253,6 +253,45 @@ def test_a_goal_agreed_moves_from_in_analysis_to_to_review_and_its_wait_over_to_
         host.nodes[2].update(state="done", tasks=[])
         host.bump({})
         pg.wait_for_function("() => !document.querySelector('.col-card[data-goal=raw1]')", timeout=WAIT_MS)
+    finally:
+        pg.close()
+    assert not log, "\n".join(log)
+
+
+class SortHost(ColumnHost):
+    """Decisions §224: the idea, Talk, the decision and the spec being written lie face down; a spec made lies face up in To review; held is put off."""
+
+    def __init__(self):
+        super().__init__()
+        self.nodes = [
+            node("decide", "tech", "Round timer on phones", "table", state="decided", element="ice", asks_you=True, needs_you="decision", back=back(ripe=None)),
+            node("sect", "design", "A timer bar that drains", "table", state="sections", element="void"),
+            node("sketch", "design", "Sketch the bar", "table", state="sketch", element="meadow"),
+            node("draft", "tech", "Orkmaster's own draft", "table", state="planning", element="dust"),
+            node("made", "tech", "Spec made by its leaders", "table", state="plan", element="lava", agreed=True),
+            node("heldd", "tech", "Held decision", "table", state="decided", element="ice", back=back(ripe=ripe(0, held=True))),
+        ]
+
+
+def test_a_decision_and_a_spec_being_written_lie_face_down_and_a_spec_made_in_to_review_face_up(gui):
+    pg, host, log = open_column(gui, host=SortHost())
+    try:
+        pg.wait_for_selector(".col-card", timeout=WAIT_MS)
+        assert sorted(goals(pg, "analysis")) == ["decide", "draft", "sect", "sketch"], "decided, sections, sketch and the Orkmaster's own planning: face down"
+        assert goals(pg, "review") == ["made"], "a spec made by its leaders (agreed) waits in To review, face up"
+        assert goals(pg, "work") == ["heldd"], "a decided goal held stays put off"
+        assert pg.locator('.col-card[data-goal="made"]').get_attribute("class").count("col-card--up") == 1
+        assert "writing: " in pg.locator('[data-under="analysis"]').inner_text() and pg.locator(".col-card--down").first.locator(".col-sigil.col-busy").count() == 1, "the leaders writing its spec: the ring runs and the title says it"
+        pg.locator('.col-sec[data-pile="analysis"] .col-card--down').first.click()
+        assert len(pg.locator(".col-list__row").all_inner_texts()) == 4
+        pg.keyboard.press("Escape")
+        for n in host.nodes[1:4]:
+            n.update(state="done", folded=True)
+        host.bump({})
+        pg.wait_for_function("() => document.querySelectorAll('.col-sec[data-pile=analysis] .col-card').length === 1", timeout=WAIT_MS)
+        card = pg.locator('.col-card[data-goal="decide"]')
+        assert "its decision waits for your word" in card.get_attribute("aria-label") and "waits for you" in pg.locator('[data-under="analysis"]').inner_text()
+        assert card.locator(".col-sigil.col-stopped").count() == 1 and card.locator(".col-busy").count() == 0, "yellow and still: it waits for the person"
     finally:
         pg.close()
     assert not log, "\n".join(log)

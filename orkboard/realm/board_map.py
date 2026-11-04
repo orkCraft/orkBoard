@@ -458,6 +458,7 @@ def build(root: Path, state_dir: Path, settings: dict | None = None, limits: lis
             waves, rows = map_stage.waves_of(tasks), map_stage.row_of(tasks)
             pitch = pitches.face(root, state_dir, slug, r["state"], target, offered) if ideation else None
             node = {"slug": slug, "goal": g["slug"], "title": i["title"], "short": i["short"], "state": r["state"], "queue": r["queue"],
+                    "agreed": r["state"] in ("ready", "planning", "plan") and bool((spec_sections.record(state_dir, slug).get("decision") or {}).get("confirmed")),      # a decision confirmed: the spec was made by the leaders (the new way); false for the Orkmaster's own draft (decisions §224)
                     "element": st.get("element") or "", "hue": idea_element.hue_in(st), "flag": (flag := flag_of(state_dir, slug, held)), "type": type_of(st),
                     "route": idea_route.route(root, state_dir, slug, page=page, st=st, plan=plan, held=held, flag=flag),
                     "goal_state": idea_route.goal_state(root, state_dir, slug, held) if ideation and r["state"] == "sent" else None,

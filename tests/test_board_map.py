@@ -723,6 +723,20 @@ def test_the_decision_and_fork_rows_are_the_wording_to_confirm_and_the_first_dis
     assert row["confirmed"] is True and row["error"] == "The sections failed: x"
 
 
+def test_a_node_says_agreed_for_a_spec_the_leaders_made_and_not_for_the_orkmasters_own_draft(host):
+    """Decisions §224: `agreed` is true for `ready`, `planning` and `plan` of a goal whose decision was confirmed (the new way); false for the Orkmaster's draft and for any other state."""
+    root, state = _board(host)
+    g = _goal(root, "Way")
+    new = _idea(root, state, g, "New way", "ready")
+    old = _idea(root, state, g, "Old flow", "planning")
+    plan = _idea(root, state, g, "New plan", "plan")
+    sec = _idea(root, state, g, "Sections", "sections")
+    for slug in (new, plan, sec):
+        spec_sections.save_record(state, slug, {"decision": {"title": "T", "text": "t", "number": 1, "confirmed": True}})
+    n = {x["slug"]: x for x in host.command("ideas.map", {})["nodes"]}
+    assert (n[new]["agreed"], n[old]["agreed"], n[plan]["agreed"], n[sec]["agreed"]) == (True, False, True, False)
+
+
 def _cards(party, n=3):
     return [{"id": f"r1-{party}-{k}", "by": party, "leader": "taskmaster", "q": f"Question {k}?", "choices": ["A", "B"], "pick": 0, "why": "because", "project": False}
             for k in range(1, n + 1)]

@@ -23,9 +23,9 @@ class HueHost(ColumnHost):
     def __init__(self):
         super().__init__()
         self.nodes = [
-            node("one", "tech", "Round timer on phones", "table", state="decided", element="ice", hue="ice", back=back(ripe=ripe(120))),
-            node("two", "tech", "Tidy the scoring module", "table", state="decided", element="ice", hue="lava", back=back(ripe=ripe(480))),
-            node("old", "design", "Lobby in Polish", "table", state="decided", element="void", back=back(ripe=ripe(300))),
+            node("one", "tech", "Round timer on phones", "table", state="ready", agreed=True, element="ice", hue="ice", back=back(ripe=ripe(120))),
+            node("two", "tech", "Tidy the scoring module", "table", state="ready", agreed=True, element="ice", hue="lava", back=back(ripe=ripe(480))),
+            node("old", "design", "Lobby in Polish", "table", state="ready", agreed=True, element="void", back=back(ripe=ripe(300))),
             node("wa", "tech", "Make the loop", "table", state="working", element="meadow", hue="meadow", stage="implementation", tasks=[task("a1", "Write the loop", "running", head=head("peon", "tech"))]),
             node("wb", "tech", "Make the lobby", "table", state="working", element="meadow", hue="void", stage="implementation", tasks=[task("b1", "Write the lobby", "running", head=head("peon", "tech"))]),
         ]
