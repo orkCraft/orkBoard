@@ -529,7 +529,7 @@ def test_picking_still_works_on_a_marked_card_and_wins_over_the_back(desk):
     open_field(pg)
     pg.locator(".pick-strip").wait_for(timeout=WAIT_MS)
     part(pg, LOBBY).click()
-    assert part(pg, LOBBY).get_attribute("data-picked") == "true" and "ork-picked" in part(pg, LOBBY).get_attribute("class")
+    assert part(pg, LOBBY).get_attribute("data-picked") == "true" and "ork-taken" in part(pg, LOBBY).get_attribute("class")
     assert back(pg).count() == 0, "a press in picking is a pick: the card does not lift"
     assert part(pg, LOBBY).get_attribute("data-concern") == "alert" and pg.locator('.cn-mark[data-level="alert"]').count() == 1
     assert pg.locator('.cn-mark[data-level="alert"]').evaluate("e => getComputedStyle(e).pointerEvents") == "none"

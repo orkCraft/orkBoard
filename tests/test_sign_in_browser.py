@@ -280,6 +280,7 @@ def test_the_need_is_a_stop_of_the_hand_with_sign_in(gui):
         card.click()                                                       # lifted with its answer (docs/specs/98-the-table-and-the-hand.md §4.4)
         lifted = pg.locator(".hand-lifted[data-kind=\"sign_in\"]")
         lifted.wait_for(timeout=WAIT_MS)
+        lifted.locator(".hand-more").first.click()                         # one sentence, the rest behind its … (spec 140 A4, decisions §247.6)
         text = " ".join(lifted.inner_text().split())
         assert "Sign in" in text and "Claude Code" in text and "is not signed in, or its sign-in has expired" in text and "2 tasks wait for it" in text
         lifted.get_by_role("button", name="Sign in to Claude Code").click()

@@ -325,7 +325,8 @@ def test_a_task_card_at_work_shows_the_flame_and_says_the_time_it_has_worked_and
     flame = card.locator(".table-stage .ork-elem.is-glowing")                                                          # the goal's rune glowing, in the stage's sign's place (spec 111 §3.1, decisions §187.2)
     assert flame.count() == 1 and card.locator(".table-stage .ork-sign").count() == 0
     name, duration, timing = anim(flame)
-    assert name == "ork-glow" and duration == "2.4s" and timing.startswith("steps(6"), (name, duration, timing)
+    still = "is-still" in flame.get_attribute("class")                                                                    # one place moves at a time (spec 140 C3): a goal that does not move keeps its flame lit, still
+    assert name == ("none" if still else "ork-glow") and (still or (duration == "2.4s" and timing.startswith("steps(6"))), (name, duration, timing)
     assert anim(card.locator(DRAWING).first)[0] == "none" and anim(card, "::after")[0] == "none", "the stepping drawing and the dotted line of before are gone"
     assert card.evaluate("e => getComputedStyle(e, '::after').backgroundImage") in ("none", "")
     words = card.locator(".table-stage").inner_text().strip()
@@ -344,7 +345,7 @@ def test_a_token_at_work_has_its_rune_glow_at_the_narrow_width(day):
         pytest.skip("the narrow width's")
     token = pg.locator('.table-token[data-state="running"]').first
     token.wait_for(timeout=WAIT_MS)
-    assert anim(token.locator(".ork-elem"))[0] == "ork-glow" and anim(token.locator(DRAWING).first)[0] == "none"
+    assert anim(token.locator(".ork-elem"))[0] == ("none" if "is-still" in token.locator(".ork-elem").get_attribute("class") else "ork-glow") and anim(token.locator(DRAWING).first)[0] == "none"
     assert anim(pg.locator('.table-token[data-state="failed"]').first.locator(".ork-elem"))[0] == "none"
 
 
