@@ -19,6 +19,7 @@ import { PairPlace } from "../shell/pair.js";
 import { WeekView } from "../board/week.js";
 import { openPlace } from "../frame/place.js";
 import { Limits } from "../arena/limits.js";
+import { DayLine } from "./dayline.js";
 import { Play } from "../arena/play.js";
 import { drawn } from "../frame/kinds.js";
 import { openOver, over } from "../frame/state.js";
@@ -114,10 +115,10 @@ function FilesFace() {
   return html`<div class="table-over__files" data-kind="files"><${FilesPane} onFile=${(path) => openOver("file", { path }, from, path)} onDiff=${(path) => openOver("diff", { path }, from, path)} /></div>`;
 }
 
-/** The AI tools' limits: what is left of one and what used it, with today's spend and the week's work (a place of its own). */
+/** The AI tools' limits: over a tool pressed the day as a line with *Now* across it (dayline.js, spec 138 C), and under it what is left of it and what used it, with today's spend and the week's work (a place of its own). */
 function LimitsFace({ props }) {
   const hud = town.value?.hud || {}, spend = hud.show_gold ? hud.gold : hud.lumber;
-  return html`<div class="table-over__limits"><${Limits} provider=${props.provider || ""} />
+  return html`<div class="table-over__limits">${props.provider && html`<${DayLine} provider=${props.provider} />`}<${Limits} provider=${props.provider || ""} />
     <p><button type="button" class="ork-btn" aria-label=${`Spend today: ${spend ?? "—"}. This week's work`} onClick=${() => openPlace("week", {}, "This week")}>Spend today <b>${spend ?? "—"}</b> · This week's work</button></p></div>`;
 }
 

@@ -1,0 +1,30 @@
+/* The day over the pane (docs/specs/138-the-day-read-from-the-resets.md C, decisions §245.6; mockup docs/mockups/die-and-door/ section 4; table/dayline.js): a line of time, a row a tool, *Now* across all of them. Layout and orkUI's tokens only:
+   no colour, face or corner of its own. The tool's name in a column at the left, its track at the right (midnight today to the end of tomorrow); the person's hours a lighter band under the track's marks, what used the tool today a bar behind *Now*,
+   the resets marks in the mana's blue with the goals' cards under them. */
+.dayline { position: relative; display: flex; flex-direction: column; gap: var(--ork-3); padding-bottom: var(--ork-3); border-bottom: var(--ork-line) solid var(--ork-frame); }
+.dayline__axis, .dayline__row, .dayline__over { display: grid; grid-template-columns: 7rem minmax(0, 1fr); column-gap: var(--ork-3); }
+.dayline__over { position: absolute; inset: 0; pointer-events: none; }
+.dayline__ticks { position: relative; height: var(--ork-5); font: var(--ork-type-caption); color: var(--ork-ink-faint); }
+.dayline__ticks span { position: absolute; top: 0; white-space: nowrap; }
+.dayline__tool { display: inline-flex; align-items: center; align-self: start; gap: var(--ork-2); min-width: 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
+.dayline__tool span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dayline__row[data-first] .dayline__tool { color: var(--ork-ink); }
+.dayline__track { position: relative; min-height: calc(var(--ork-6)); border-top: var(--ork-line) solid var(--ork-frame); }
+.dayline__hours { position: absolute; top: 0; bottom: 0; background: var(--ork-frame); opacity: .5; pointer-events: none; }
+.dayline__used { position: absolute; top: var(--ork-2); height: var(--ork-2); display: flex; gap: var(--ork-line); }
+.dayline__used i { display: block; min-width: var(--ork-1); background: var(--ork-ink-muted); }
+.dayline__reset { position: absolute; top: 0; bottom: 0; width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--ork-2); border-left: var(--ork-line) solid var(--ork-mana); }
+.dayline__reset > b { margin-left: var(--ork-1); font: var(--ork-type-caption); font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ork-mana); }
+.dayline__reset.is-own { border-left-style: dotted; }
+.dayline__reset.is-late { align-items: flex-end; }
+.dayline__reset.is-late > b { margin-left: 0; margin-right: var(--ork-1); }
+.dayline__card { display: inline-flex; align-items: center; gap: var(--ork-2); max-width: 11rem; margin: 0 var(--ork-1); padding: var(--ork-1) var(--ork-2); font: var(--ork-type-caption); color: var(--ork-ink); background: var(--ork-card); border: var(--ork-line) solid var(--ork-card-frame); cursor: pointer; }
+.dayline__card:hover { border-color: var(--ork-ink-muted); }
+.dayline__card:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.dayline__nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dayline__step { flex: none; color: var(--ork-ink-muted); }
+.dayline__plane { position: relative; }
+.dayline__now { position: absolute; top: 0; bottom: 0; width: 0; border-left: var(--ork-line) solid var(--ork-ink); }
+.table-over__limits:has(.dayline) { max-width: none; }                                   /* the line takes the pane's width; the list under it keeps its measure */
+.table-over__limits:has(.dayline) > :not(.dayline) { max-width: 60ch; }
+.dayline__nowword { position: absolute; top: 0; transform: translateX(-50%); padding: 0 var(--ork-1); font: var(--ork-type-caption); font-weight: 600; color: var(--ork-on-ink); background: var(--ork-ink); }
