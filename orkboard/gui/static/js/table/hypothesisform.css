@@ -1,0 +1,19 @@
+/* A hypothesis past its two lines (docs/specs/146-a-hypothesis-on-the-page.md A; decisions §235, §237.4). Layout only: every colour, face and corner is orkUI's (.ork-field, .ork-label, .ork-btn, .ork-select),
+   the sizes its spacing steps. The card grows in its own place; the fields stack in the card's width (a job's column is narrow), a bar's three parts wrapping rather than scrolling. */
+
+.hy-way .tr-k { white-space: nowrap; }
+.hy-measure { color: var(--ork-ink-muted); }
+
+.hf-form { gap: var(--ork-4); }
+.hf-group { display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; margin: 0; padding: 0; border: 0; }
+.hf-group > legend { padding: 0; margin-bottom: var(--ork-2); }
+.hf-way, .hf-measure { display: flex; flex-direction: column; gap: var(--ork-3); min-width: 0; margin: 0; padding: var(--ork-3); border: var(--ork-line) solid var(--ork-edge); box-sizing: border-box; }
+.hf-bar { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2); min-width: 0; }
+.hf-bar__l { flex: 1 1 100%; font: var(--ork-type-caption); color: var(--ork-ink-muted); overflow-wrap: anywhere; }
+.hf-bar .ork-select { flex: 1 1 96px; min-width: 0; }
+.hf-bar__n { flex: 1 1 56px; min-width: 0; width: 56px; }
+.hf-bar__u { flex: 2 1 80px; min-width: 0; width: 80px; }
+.hf-when { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ork-2); min-width: 0; }
+.hf-when .ork-select, .hf-when input { flex: 1 1 100px; min-width: 0; }
+.hf-add, .hf-remove { align-self: flex-start; }
+@media (pointer: coarse) { .hf-add, .hf-remove, .hy-more { min-height: var(--ork-tap); } }

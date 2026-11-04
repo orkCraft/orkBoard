@@ -146,9 +146,9 @@ def test_a_card_says_we_believe_and_we_will_know_when_each_keyword_muted_and_the
     pg, host, w = hyps
     c = card(pg, "code-big")
     lines = [" ".join(p.inner_text().split()) for p in c.locator(".hy-line").all()]
-    assert lines == ["We believe A big room code is read aloud and typed right", "We'll know when nine of ten join on the first try"]
+    assert lines == ["We believe A big room code is read aloud and typed right", "Holds when nine of ten join on the first try"]
     keys = c.locator(".tr-k")
-    assert keys.all_text_contents() == ["We believe", "We'll know when"]
+    assert keys.all_text_contents() == ["We believe", "Holds when"]
     assert css(pg, ".hy-card .hy-line", "color") != keys.first.evaluate("e => getComputedStyle(e).color"), "the keywords are muted"
     assert "pixel" not in c.locator(".hy-line").first.evaluate("e => getComputedStyle(e).fontFamily").lower(), "a person's words are in the body face"
 
@@ -178,8 +178,8 @@ def test_a_hypothesis_a_leader_proposed_has_its_leaders_small_head_and_says_who_
 def test_keep_and_drop_are_a_proposed_ones_and_test_it_an_open_ones_and_a_testing_or_judged_one_has_none(hyps):
     pg, host, w = hyps
     labels = lambda hid: [b.inner_text().strip() for b in card(pg, hid).locator(".hy-acts .ork-btn").all()]  # noqa: E731
-    assert labels("sketch-first") == ["Keep", "Drop"] and labels("code-big") == ["Test it"] and labels("loose-one") == ["Test it"]
-    assert labels("calm-answers") == [] and labels("seat-kept") == [] and labels("late-bar") == []
+    assert labels("sketch-first") == ["Keep", "Drop", "More"] and labels("code-big") == ["Test it", "More"] and labels("loose-one") == ["Test it", "More"]
+    assert labels("calm-answers") == ["More"] and labels("seat-kept") == [] and labels("late-bar") == []                    # More is spec 146 A's: a judged one has none
     box = card(pg, "sketch-first").get_by_role("button", name="Keep the hypothesis: People want a sketch before anything else").bounding_box()
     assert box["height"] >= (44 if not wide(w) else 20), "a press the finger can find"
 
@@ -189,7 +189,7 @@ def test_keep_sends_the_command_and_the_card_becomes_an_open_one(hyps):
     card(pg, "sketch-first").get_by_role("button", name="Keep").click()
     pg.wait_for_function("() => document.querySelector('.hy-card[data-hyp=\"sketch-first\"]')?.dataset.state === 'open'", timeout=WAIT_MS)
     assert sent(host, "ideas.hypothesis_keep") == [{"id": "sketch-first"}]
-    assert [b.inner_text().strip() for b in card(pg, "sketch-first").locator(".hy-acts .ork-btn").all()] == ["Test it"]
+    assert [b.inner_text().strip() for b in card(pg, "sketch-first").locator(".hy-acts .ork-btn").all()] == ["Test it", "More"]
 
 
 def test_drop_sends_the_command_and_the_card_goes(hyps):
@@ -214,7 +214,7 @@ def test_plus_hypothesis_at_the_end_of_a_jobs_opens_a_small_field_and_save_keeps
     mine.get_by_role("button", name="+ Hypothesis").click()
     form = mine.locator(".hy-form")
     form.wait_for(timeout=WAIT_MS)
-    assert [x.lower() for x in form.locator(".ork-label").all_text_contents()] == ["we believe", "we'll know when"]
+    assert [x.lower() for x in form.locator(".ork-label").all_text_contents()] == ["we believe", "holds when"]
     assert form.get_by_role("button", name="Save").is_disabled(), "both lines are wanted"
     form.locator('textarea[name="text"]').fill("A short round brings them back")
     form.locator('textarea[name="signal"]').fill("most start a second round")

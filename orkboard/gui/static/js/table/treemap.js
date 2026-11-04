@@ -4,7 +4,7 @@
 // *No goal serves this yet* with a **+** that opens the + card's field addressed to Product with the job noted as a mark (hand/state.js `fieldOpen`, table/picking.js `marks`: the field is Product's tab's own, the mark is
 // read into the goal's route as any picked part of a map is). With nothing kept, **Propose** (`ideas.tree_propose`: one call of Product's leader, never made unasked). Every job and goal card is wrapped in `Pickable`
 // (map `product`; a job's id is its own, its name its want). Under a job, before its goals, its hypotheses (docs/specs/116-hypotheses-on-products-tree.md §6.1, decisions §194; `ideas.hypotheses`, read beside the tree) as
-// small cards — *We believe* then the text, *We'll know when* then the signal (both keywords muted), the state as an orkUI chip (*Proposed* dashed, *Open*, *Testing*, *Held*, *Refuted*), the head of the leader that
+// small cards — *We believe* then the text, *Holds when* then the signal (both keywords muted), a line a way it is refuted and a line a measure with its day, **More** for the rest (table/hypothesisform.js, spec 146 A), the state as an orkUI chip (*Proposed* dashed, *Open*, *Testing*, *Held*, *Refuted*), the head of the leader that
 // proposed it with *Proposed by …* —; a proposed one has **Keep** and **Drop**, an open one **Test it** (the + card's field addressed to Product, the type *Try an experiment* and the hypothesis as a mark: the host
 // attaches the goal it makes as the hypothesis's test, `ideas.add`), and **+ Hypothesis** at the end of a job's opens a small field. Those of no job lie in a row under the outcome, where **Propose hypotheses**
 // (`ideas.hypotheses_propose`: one call of Product's leader, never made unasked) stands while none is kept. Each is `Pickable` (id `hyp:<id>`, group `hypotheses`, name its text). No count of them anywhere.
@@ -20,6 +20,7 @@ import { nameOf, partiesAll } from "./data.js";
 import { Pickable, mapFor } from "./maps.js";
 import { MapFrame, Nothing, Win, countWords, useRead } from "./mapkit.js";
 import { marks, pickOff } from "./picking.js";
+import { Conditions, HypMore } from "./hypothesisform.js";
 
 if (typeof document !== "undefined") {                                  // the sheet, once, as frame.js links the others
   const href = new URL("./tree.css", import.meta.url).href;
@@ -144,23 +145,26 @@ function proposer(h) {
 
 /** A hypothesis as a small card (the Board's card, but a press on it picks nothing: only picking on the map does). `h.act(name, args)` runs one of its commands, `h.test(item)` opens the field to test it. */
 function HypCard({ x, h }) {
-  const by = proposer(x), state = STATES[x.state] ? x.state : "open";
+  const by = proposer(x), state = STATES[x.state] ? x.state : "open", [more, setMore] = useState(false), judged = state === "held" || state === "refuted";
   return html`<${Pickable} map=${MAP} id=${`hyp:${x.id}`} name=${x.text} group="hypotheses" groupName="Hypotheses">
     <article class="ork-card mp-card hy-card" data-hyp=${x.id} data-state=${state}>
       <div class="mp-card__row hy-card__top"><span class=${cls("ork-chip hy-chip", `is-${state}`)}>${STATES[state]}</span>
         ${by && html`<span class="hy-by">${by.head && html`<${Head} race=${by.head.race} tier=${by.head.tier} />`}<span class="mp-cap">Proposed by ${by.name}</span></span>`}</div>
       <p class="hy-line"><span class="tr-k">We believe</span> ${x.text}</p>
-      <p class="hy-line"><span class="tr-k">We'll know when</span> ${x.signal}</p>
-      ${(state === "proposed" || state === "open") && html`<div class="mp-acts hy-acts">
+      ${more ? html`<${HypMore} x=${x} onClose=${() => setMore(false)} onSaved=${() => { setMore(false); h.reload(); }} />` : html`
+      <p class="hy-line"><span class="tr-k">Holds when</span> ${x.signal}</p>
+      <${Conditions} x=${x} />
+      ${(state === "proposed" || state === "open" || state === "testing") && html`<div class="mp-acts hy-acts">
         ${state === "proposed" && html`<button type="button" class="ork-btn primary" aria-label=${`Keep the hypothesis: ${x.text}`} onClick=${() => h.act("ideas.hypothesis_keep", { id: x.id })}>Keep</button>
           <button type="button" class="ork-btn" aria-label=${`Drop the hypothesis: ${x.text}`} onClick=${() => h.act("ideas.hypothesis_drop", { id: x.id })}>Drop</button>`}
         ${state === "open" && html`<button type="button" class="ork-btn" aria-label=${`Test it: ${x.text}`} title="Write an experiment that tests it" onClick=${() => h.test(x)}>Test it</button>`}
-      </div>`}
+        ${!judged && html`<button type="button" class="ork-btn quiet hy-more" aria-label=${`More about the hypothesis: ${x.text}`} onClick=${() => setMore(true)}>More</button>`}
+      </div>`}`}
     </article>
   </${Pickable}>`;
 }
 
-/** The small field of a new hypothesis: *We believe*, *We'll know when*, **Save**, **Cancel**; `onSave(form)` throws a plain message when the host refuses. */
+/** The small field of a new hypothesis: *We believe*, *Holds when*, **Save**, **Cancel**; `onSave(form)` throws a plain message when the host refuses. */
 function HypForm({ onSave, onCancel }) {
   const [form, setForm] = useState({ text: "", signal: "" }), [err, setErr] = useState(""), [busy, setBusy] = useState(false), first = useRef();
   useEffect(() => { first.current?.focus({ preventScroll: true }); }, []);
@@ -172,7 +176,7 @@ function HypForm({ onSave, onCancel }) {
   };
   return html`<form class="mp-form hy-form" onSubmit=${(e) => { e.preventDefault(); save(); }}>
     <label class="mp-sec"><span class="ork-label">We believe</span><textarea ref=${first} class="ork-field" name="text" maxlength="200" rows="2" value=${form.text} onInput=${set("text")} required></textarea></label>
-    <label class="mp-sec"><span class="ork-label">We'll know when</span><textarea class="ork-field" name="signal" maxlength="200" rows="2" value=${form.signal} onInput=${set("signal")} required></textarea></label>
+    <label class="mp-sec"><span class="ork-label">Holds when</span><textarea class="ork-field" name="signal" maxlength="200" rows="2" value=${form.signal} onInput=${set("signal")} required></textarea></label>
     ${err && html`<p class="mp-err" role="alert">${err}</p>`}
     <div class="mp-acts"><button type="submit" class="ork-btn primary" disabled=${busy || !form.text.trim() || !form.signal.trim()}>Save</button>
       <button type="button" class="ork-btn" onClick=${onCancel}>Cancel</button></div>
@@ -288,6 +292,7 @@ export function TreeMap({ g, narrow }) {
       reloadHyps();
     },
     add: async (f) => { await command("ideas.hypothesis_set", f, true); reloadHyps(); },
+    reload: reloadHyps,
     test: (x) => openField({ id: `hyp:${x.id}`, name: x.text }, { ...TEST_TYPE, party: g.slug }),
   };
   const loose = items.filter((x) => !jobs.some((j) => j.id === x.on));         // those on the outcome, or on a job that is gone: a row under the outcome
