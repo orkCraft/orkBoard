@@ -15,7 +15,7 @@ import { askOpen, closeAsk, desk, openAsk } from "./ask.js";
 import { DropAsk, GoalMenu } from "./dropgoal.js";
 import { liftDecision } from "../hand/state.js";
 import { Said } from "../hand/sayonce.js";
-import { ACTIVE, Pile, PILES, nextWords, pilesOf, underOf } from "./piles.js";
+import { ACTIVE, Pile, PILES, lookAt, nextWords, pilesOf, underOf } from "./piles.js";
 import { useColumnMotion } from "./colmotion.js";
 import { moodOf } from "./moods.js";
 import { holdWords, waitsWords } from "./holdwords.js";
@@ -90,16 +90,18 @@ function List({ items, place, close }) {
 /** A card's choices, beside it: **Start now** and **Hold** on a card of To review, **Start now** and **Back to review** on a put-off one. The commands are the wait's own (`ideas.confirm`, `ideas.ripe_hold`, `ideas.ripe_back`). */
 function Acts({ n, off, place, close }) {
   const [busy, setBusy] = useState(false);
-  const run = (name) => async () => { setBusy(true); try { if (await act(name, { idea: n.slug })) close(); } finally { setBusy(false); } };
+  const look = lookAt(n);                                                  // a spec made waits for its look (spec 144 B.2): Start now passes its plan (`ideas.start_now`), and there is no Hold of a decision's wait
+  const run = (name, args) => async () => { setBusy(true); try { if (await act(name, args || { idea: n.slug })) close(); } finally { setBusy(false); } };
   const ripe = n.back?.ripe && !n.back.ripe.by, title = n.title || n.short || "";           // a lifted card says its title once (docs/specs/140 A4, decisions §247.6): its heading is the whole title, a line that repeats it is not drawn, what it says is one sentence and the rest is behind its …
   const cap = off === "held" ? "Held: nothing starts it until you press Start now." : off === "night" ? `Later, tonight ${String(board.value?.night || "01:00-07:00").split("-")[0]}: it starts by itself in the night's window.`
+    : look ? `Starts by itself at ${look}. Read it on the tabs, and ask the Orkmaster to change it.`
     : ripe ? "Its spec is ready; it starts by itself in its turn. Read it on the tabs, and ask a leader there to change it." : "Its spec is ready; it waits for your word to start.";
   return html`<div class="ork-frame col-lift col-acts" role="dialog" aria-label=${`${n.title}: when it starts`} data-lift="acts" data-goal=${n.slug} style=${place}>
     <h3 class="col-lift__t"><${Elem} name=${n.element} hue=${n.hue} dim=${!n.element} />${title}</h3>
     <${Said} key=${n.slug} title=${[n.title, n.short]} lines=${[cap]} tag="col-lift__cap" />
     <div class="col-lift__acts">
-      <button type="button" class="ork-btn primary" data-now=${n.slug} disabled=${busy} title="Its sections are written now" onClick=${run("ideas.confirm")}>Start now</button>
-      ${off ? (off === "held" && html`<button type="button" class="ork-btn" data-back=${n.slug} disabled=${busy} title="Its wait begins again" onClick=${run("ideas.ripe_back")}>Back to review</button>`)
+      <button type="button" class="ork-btn primary" data-now=${n.slug} disabled=${busy} title="Its sections are written now" onClick=${look ? run("ideas.start_now", { slug: n.slug }) : run("ideas.confirm")}>Start now</button>
+      ${look ? null : off ? (off === "held" && html`<button type="button" class="ork-btn" data-back=${n.slug} disabled=${busy} title="Its wait begins again" onClick=${run("ideas.ripe_back")}>Back to review</button>`)
         : html`<button type="button" class="ork-btn" data-later=${n.slug} disabled=${busy} title="Nothing starts it until you press Start now" onClick=${run("ideas.ripe_hold")}>Hold</button>`}
       <${GoalMenu} slug=${n.slug} where="inline" />
     </div>

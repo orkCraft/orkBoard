@@ -91,6 +91,7 @@
 /* the wait as a bar in eighths along the front card's foot (the goal's colour); its width is the share the page sets (`shareOf` rounds it to eighths) */
 .col-wbar { position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: color-mix(in srgb, var(--ork-ink-faint) 30%, transparent); }
 .col-wbar > i { display: block; height: 100%; width: calc(var(--s) * 100%); background: var(--c); }
+.col-wbar.is-quiet > i { width: 100%; background: transparent; }          /* a spec waiting for its look: the bar is quiet, a clock time and no count (spec 144 B.2) */
 .col-c-meadow { --c: var(--ork-elem-meadow); }
 .col-c-ice { --c: var(--ork-elem-ice); }
 .col-c-dust { --c: var(--ork-elem-dust); }

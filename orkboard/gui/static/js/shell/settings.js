@@ -7,6 +7,7 @@ import { command, PRODUCT } from "../link.js";
 import { review, act } from "./store.js";
 import { board } from "../board/store.js";
 import { TargetSetting } from "../board/target.js";
+import { LookWaitSetting } from "../board/lookwait.js";
 import { Place, closePlace, openPlace } from "../frame/place.js";
 import { currentProject } from "./projects.js";
 import { saveLogs } from "./errors.js";
@@ -73,6 +74,7 @@ export function SettingsPlace() {
             <input type="checkbox" class="gui-onb__hide" checked=${!b.review} onChange=${(e) => act("ideas.board_set", { review: !e.target.checked })} />
             <i>${!b.review ? "✓" : ""}</i><span>A result that holds lands in dev by itself</span></label>
           <span class="ok-font-status ok-tone-muted">Its tests ran and are green, nothing is left to fix, it touches no risk path and holds no pictures. Anything else waits for your look; off, every result does.</span>
+          <${LookWaitSetting} />
           <${TargetSetting} />
         </div>`}
         ${currentProject.value && html`<label class="ok-check">
