@@ -356,7 +356,7 @@ LIMITS = [two("claude", "Claude Code", 0.0, 0.5, soon=WEEK), two("codex", "Codex
 
 def open_tabs(gui, limits=LIMITS, mana=None, width="wide"):
     pg, host, log = open_mana(gui, limits, width, mana or mana_of("claude", "codex", until=WEEK), PARTY_MARKS)
-    pg.locator('.table-tab[data-tab="design"] .table-tab__marks').wait_for(state="attached", timeout=WAIT_MS)
+    pg.locator('.table-tab[data-tab="product"] .table-tab__marks').wait_for(state="attached", timeout=WAIT_MS)       # Product sets both sides: it differs from any default (decisions §247.7)
     return pg, host, log
 
 
