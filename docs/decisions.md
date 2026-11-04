@@ -5985,3 +5985,141 @@ two things glued into one goal, its spec written about both, a goal too big to l
    route's parties and parts; the field's line; *Add to it* through §234.5); **B. The backlog's groups** (the one call,
    the card, the queue's wait); **C. Split**. A first: it stands alone, and §234.5's *Add to the goal* is built with it.
 The owner's call.
+
+## 243. The project's own remote is the phone's way away from home: the phone drops goals into a branch of their own and reads the journal; whoever works takes a goal, the computer or a cloud session, and says so in the journal; a private repository only; the mailbox waits; the Board on a branch is the next step (4 November 2026, the owner)
+
+Changes: 219.2, 219.3, 219.8, 221.1, 229, 230.6; spec 103, spec 136.
+
+Why: the owner, after the phone was made half the product (§218): *let the phone be more on its own: tied straight to
+the repository, it reads the status from there and puts goals into it, marked as not yet read by AI; the work on the
+computer or in cloud sessions changes git now and then, and the phone shows it.* Read in the code: half of it is built.
+The journal (§229, `realm/remote_journal.py`) already sends the project's status, its events and its spend to a branch of
+its own, `orkboard/journal`, by git's plumbing and without force; what is missing is the other way (the phone to the
+repository) and the phone reading the journal. The mailbox of §219 is not built (no `mailbox/`, no `relay/`, no
+`mobile/`), and with it a goal dropped away from home waits until the person's computer wakes; through the repository it
+can be taken by whoever works: the computer at home, or a cloud session while the computer sleeps, which is the indie
+developer with a day job (§218) at work. What the repository cannot be: live (a commit every few seconds is noise, and the
+journal goes every 15 minutes, §229.4), a push to the phone, or private by itself (a public repository shows the goals to
+everyone). A token on the phone can write the whole repository, the code too: a fine-grained token is given per
+repository, never per branch. And the Board itself lives in `.orkcraft/`, which git ignores: a cloud session has no Board
+to lay a goal on. So:
+1. **The project's remote is the phone's way away from home**, for what can wait: the phone drops goals into it and reads
+   the journal from it. On the same network, or through Tailscale, the phone talks to the computer as today (spec 34),
+   and that stays the way of the live hand. **The mailbox of §219.2–3 waits**: it is built only if the repository's way
+   falls short (a project with no remote on GitHub, a person who will not give the phone a token). Push through FCM
+   (§219.4) stays, for what needs the person now.
+2. **The goals go to a branch of their own**, `orkboard/inbox`: it shares no history with the code, is never merged,
+   holds no workflow, so no CI runs for it (as §229.2). The phone writes **one file a goal**, `inbox/<device>/<id>.json`
+   (its words, its rune, its party, its type, its marks, when; its photos beside it), and **only adds**: it never edits
+   or removes a file. Nothing else writes that branch.
+3. **"Not yet read" is no mark in the file**: a goal is in the inbox and the journal has not named it. The phone shows it
+   as a face-down card with the person's own words (§222.2), *Waiting to be taken: your computer or a cloud session will
+   read it*.
+4. **Whoever works takes a goal, and says so in the journal**: the computer (and, in the next step, a cloud session)
+   reads the inbox at its rhythm, writes each goal not taken into the journal's `taken.json` (the goal's id, who took it,
+   when), and **lays it on the Board only once that push went through**, through `ideas.add` as the + card does; its slug
+   on the Board goes into the next journal. **The journal's push without force is the lock**: two that take the same goal
+   both commit, one push is refused, that one reads the journal again, finds the goal taken, and lays nothing. A goal is
+   taken once; one taken and not laid (the add refused) is said in the journal and on the phone, with the add's words.
+5. **The phone reads the journal**: `status.json` beside `status.md` (the goals by pile and phase, what waits in the hand
+   and needs the person, what failed, the taken goals, when it was written), read through GitHub's API with its ETag, so a
+   read with nothing new costs nothing; every minute while the app is open, never in the background. What it shows says
+   when it was written (*As of 14:02*), never as if it were now.
+6. **A private repository only**: GitHub's API says whether a repository is private, so here Orkboard knows it (§230.4's
+   *the person's word* is for a remote it cannot ask). On a public one the phone refuses in plain words: *This repository
+   is public: goals sent through it would be seen by everyone. Make it private, or use the phone at home.*
+7. **The token is said plainly and kept where it is safest**: a fine-grained token for that one repository, *Contents:
+   read and write*; Settings and the phone say what it can do (*This token can change any file of the repository, the
+   code too; Orkboard writes only orkboard/inbox*) and advise a rule on `main` (a pull request needed). It is kept in the
+   native frame's Keychain (spec 103), in the installed web app's storage until then, said so; removed from the phone, it
+   is gone from it. Signing in through GitHub, when the native frame is built (its device flow does not answer a web page).
+8. **The journal becomes the user's too** (this changes §230.6): it is asked for when the phone is paired with a remote,
+   in the words of §229.1, and its rhythm is the forge's for a contributor; for a user, 15 minutes, and at once when a
+   goal is taken or something needs the person.
+9. **The next step, not this one: the Board on a branch**, so a cloud session can carry a goal through Talk, the spec and
+   the work, not only take it: what of `.orkcraft/` goes, how two writers share it, what stays local (the tokens, the
+   sign-ins). A decision of its own, after the first step is used.
+10. **The words** (`TERMS`): *inbox* (the branch the phone drops goals into), *taken*, *Waiting to be taken*, *As of*.
+11. **Built** by spec 136: **A.** the journal's `status.json` and `taken.json`; **B.** the inbox read and taken on the
+    host, with the lock; **C.** the phone's way through the repository (its settings, its reads, its + card); **D.** the
+    words. Spec 103's relay stays for push; §219's mailbox is not built until (1) says so.
+The owner's call.
+
+## 244. The Board lives in the project's repository: its whole state on a branch of its own, `orkboard/board`, one holder at a time by a lease; the computer and a cloud run on GitHub Actions are two workers of one Board; the phone's answers go through the inbox too; secrets, sign-ins and logs stay on the machine (4 November 2026, the owner)
+
+Changes: 219, 229, 243.4, 243.9; spec 35 §13, spec 136; spec 137.
+
+Why: the owner, after §243: *GitHub itself can run AI in CI, on a push to a branch?*, and then: *the Board must be kept
+in the repository, that is the key decision here.* Read in the code: half of the Board is in git already. Its pages (the
+parties, the goals, their sections: the specs) live in a worktree of their own, `<state_dir>/board/`, and every change is
+a commit on the work branch (spec 35 §13), so the orks read each other's specs; they are pushed only by `ideas.push`. What
+is not in git is the Board's state: each goal's `state.json` (its phase), `plan.json`, `route.json`, `talk.jsonl`,
+`pick.json`, `lens.json`, the parties' `goals/`, `roles/`, `kinds.json`, `project.json`; without them a worker that is not
+the person's computer has the specs and no Board. Beside them lie what must never leave the machine: a goal's
+`secrets.json`, `sign-in/`, the server's `drive.json`, the worktrees, the logs (prompts and answers, §229.3). GitHub
+Actions can run Claude Code on a runner (the CLI, signed in by a secret), but a push to a branch runs the workflow of the
+commit pushed, never `main`'s: an orphan branch with no workflow runs nothing (§243.2 rests on it), and the phone's token
+cannot add one (a workflow file needs the *Workflows* right, which *Contents* does not give). A workflow on `main` is run
+by `workflow_dispatch` (an API call) or on a `schedule` (GitHub may delay it); each run is billed by the minute, rounded
+up a job, so a run every few minutes that finds nothing spends a quota on nothing. So:
+1. **The Board lives in the repository**: its pages **and** its state on a branch of its own, `orkboard/board`, sharing
+   no history with the code, never merged, holding no workflow, so no CI runs for it (as §229.2, §243.2). It is the truth;
+   `.orkcraft/` on a machine is that machine's working copy of it. The work branch keeps the pages as spec 35 §13 has it,
+   written from the Board's branch by whoever holds the Board, since the orks' worktrees are cut from it. What goes:
+   `pages/` (parties and goals, as today), `ideas/<slug>/` (all but `secrets.json` and the worktree), `goals/`, `roles/`,
+   `kinds.json`, `segments.json`, `project.json`, `checks.toml`, `canvases.jsonl`, the goals' photos (each at most 2 MB).
+   **Never**: `secrets.json`, `sign-in/`, `drive.json`, `worktrees/`, `logs/`, `usage/`, `crashes/`, `repair/`,
+   `screens/`, `claims.json`, anything not listed; every file read for a secret's shape before it is committed (§229.3's
+   `scrub`), one that has it held back and said.
+2. **One holder at a time, by a lease**: `lease.json` on the Board's branch (`by`, the machine's or the run's name; `kind`,
+   *computer* or *cloud run*; `until`, ten minutes ahead). Only the holder writes the Board; the lease is taken and renewed
+   by a push without force, so two cannot hold it at once (§243.4's lock, grown to the whole Board). The computer with
+   Orkboard open renews it every three minutes and so holds the Board while it is awake; asleep, the lease runs out and a
+   cloud run may take it; a cloud run gives it back when it ends. The computer that wakes while a cloud run holds the Board
+   reads it and waits, said in a line: *A cloud run has the Board: it gives it back when it ends (at most 30 min)*. The
+   phone holds nothing: it only reads and drops into the inbox.
+3. **The holder pushes the Board**: its writes stay one commit for 10 s (spec 35 §13), and the branch is pushed at most every
+   two minutes while it changes, at once when a card for the person comes to the hand, and when the lease is given back. A
+   worker that takes the lease fetches the branch first and works only from it.
+4. **The taking of a goal is the holder's** (this changes §243.4): the holder reads the inbox and lays its goals on the
+   Board it holds; `taken.json` stays, as what the phone reads, no longer as a lock.
+5. **The phone's answers go through the inbox too** (§243.2 widened): an answer to a card of the hand (a question of Talk,
+   a hearing, a decision) is a file of its own beside the goals, `inbox/<device>/<id>.answer.json` (the card's id, the
+   answer), taken by the holder as a goal is. The hand works away from home with nothing of ours in the way; push (FCM,
+   §219.4) only says that something waits.
+6. **A cloud run on GitHub Actions**, the second worker: a workflow on the default branch, `.github/workflows/orkboard.yml`,
+   written by Orkboard only on the person's yes and committed as the person commits (it is their repository's file). It runs
+   on `workflow_dispatch` (the phone calls it when it drops a goal or an answer, if its token has *Actions: read and write*;
+   else it does not) and on a `schedule` the person chooses (*every 2 hours* at first, *never* offered); `concurrency` one
+   run at a time. Its first step asks the lease: held by an awake computer, it ends at once (the computer does the work). It
+   installs Orkboard and Claude Code, takes the lease, reads the inbox, carries each goal as far as the limits allow, pushes
+   the Board, gives the lease back; the job's timeout, 30 minutes.
+7. **What a cloud run does, for now**: the reading of a goal, all of it (the Orkmaster's route, Talk's rounds, the leaders'
+   sections, the plan), and the person's answers taken in; **not the work**: a task writes code, lands it through the gate
+   and is seen in Play, which want the person's computer, its tools and its secrets. A goal whose next step is work waits
+   for the computer, said on its card (*Planned: the work starts on your computer*). The work in a cloud run is a decision
+   of its own, when the reading has been used.
+8. **What it spends, said plainly**: the run's minutes (the plan's quota of Actions for a private repository, then by the
+   minute) and the model's calls: **either** the person's subscription (`claude setup-token`, the secret
+   `CLAUDE_CODE_OAUTH_TOKEN`), which shares the week's limits with the computer (§239 counts them as one), **or** an API
+   key (`ANTHROPIC_API_KEY`), paid by the token, with a ceiling a run the person sets (*At most $1 a cloud run*), at first
+   $1. Settings say which, and what a scheduled run costs when it finds nothing (*about a minute of Actions*).
+9. **The secrets stay on the machine, so does what needs them**: the Board's branch holds no secret, a cloud run gets only
+   the model's secret from GitHub; a goal that needs a secret of its own is not read in a cloud run past the step that needs it.
+10. **The work branch and a rule on `main`**: the Board's pages are committed to the work branch by its holder (spec 35
+    §13); a project that keeps a rule on `main` (§243.7's advice) keeps `dev` as its work branch, so the pages land there.
+    A cloud run writes the work branch's pages only; never code.
+11. **A private repository only**, as §243.6: the Board holds the goals' words, their specs and Talk. On a public one the
+    Board's branch is refused in words, and the computer keeps the Board as today.
+12. **Orkline reads the same Board** (CLAUDE.md: the state keeps Orkline's names): the Board's branch is laid out as
+    `.orkcraft/` is, so a working copy is the branch's files and nothing is renamed.
+13. **The journal stays the phone's** (§229, §243.5): small, the Board's status for a phone; the Board's branch is the
+    workers'. The mailbox (§219.2–3) moves further off: the inbox and the Board's branch do its work.
+14. **The words** (`TERMS`): *the Board's branch*, *holds the Board*, *cloud run*; *A cloud run has the Board…*,
+    *Planned: the work starts on your computer*, *At most $1 a cloud run*.
+15. **Built** by spec 137, after spec 136's A and B: **A.** the Board's branch (what goes and what never does, the
+    working copy kept from it, the scrub); **B.** the lease and the pushes; **C.** the answers through the inbox (host and
+    phone); **D.** the cloud run (the workflow written on a yes, its steps, the ceiling, `orkboard drive cloud-run`);
+    **E.** Settings and the words. Checked before it is built: Actions' quota and price on GitHub's own page; Claude Code
+    signed in on a runner by both secrets.
+The owner's call.
