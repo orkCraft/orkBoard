@@ -139,6 +139,7 @@ class IdeaKeeper(LeaderChangeMixin, SignInMixin, TalkMixin, VerdictMixin, Sketch
         self.limits = limits or (lambda: [])
         self.on_plan = on_plan or (lambda slug: None)
         self.call: Call = self._claude                # tests swap the model call here
+        self.board_held: Callable[[], str] = lambda: ""      # spec 137 B: the words when another worker holds the Board (a cloud run), else "": nothing that writes runs then
         self.work_call: Callable[..., tuple[str, Any, Any, str]] = self._claude_work      # …and the call that works in a folder (an Art sketch, spec 121 §2.3): (tier, prompt, effort, budget, workdir, task)
         self.cancel = threading.Event()
         self._tls = threading.local()               # the idea a model call is for (its record in realm/call_log.py names it)
@@ -321,6 +322,8 @@ class IdeaKeeper(LeaderChangeMixin, SignInMixin, TalkMixin, VerdictMixin, Sketch
             return bool(self._busy)
 
     def _may_run(self) -> str:
+        if why := self.board_held():
+            return why
         if self.demo:
             return "The demo runs no model: the keeper only reads goals in a real town"
         if not self.budget_ok():

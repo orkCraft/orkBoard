@@ -255,6 +255,12 @@ JOURNAL_SENT = "journal_sent"      # decisions §229: the journal sent to the pr
 EVENTS += (JOURNAL_SENT,)
 INBOX_TAKEN = "inbox_taken"      # spec 136 B, decisions §243.4: a goal of the phone's inbox taken (or the inbox not read): id, by, slug (the goal's on the Board, "" when not laid), error (the words, "" when none), ok (False: the fetch or the taking failed)
 EVENTS += (INBOX_TAKEN,)
+BOARD_TAKEN = "board_taken"      # spec 137 B, decisions §244.2: this computer (or a run) took the Board's lease: by, kind ("computer" | "cloud run"), files (what the branch held)
+BOARD_PUSHED = "board_pushed"      # the Board pushed to its branch (or not): commit, files, held_back (files or lines held for a secret's shape or a size), why (a failure's words, "")
+BOARD_REFUSED = "board_refused"      # the lease is held by another and was not taken: by, kind, until (never a word of the Board)
+BOARD_GIVEN_BACK = "board_given_back"      # the lease given back: by, kind
+BOARD_ASIDE = "board_aside"      # another worker had the Board while this one was away: its changes since `since` kept aside, whole: by, files, since
+EVENTS += (BOARD_TAKEN, BOARD_PUSHED, BOARD_REFUSED, BOARD_GIVEN_BACK, BOARD_ASIDE)
 
 _LOCK = threading.Lock()
 

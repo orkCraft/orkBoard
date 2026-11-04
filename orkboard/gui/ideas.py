@@ -161,7 +161,9 @@ class Ideas(GoalViewMixin, ChangeMixin, SketchMixin, PlayMarkMixin, JournalFace,
             demo=bool(self.host.demo), budget_ok=lambda: self.host.budget_ok(), limits=lambda: list(self.host.limits() or []),
             on_plan=self._on_plan, events=not self.host.demo,
             sign_ins=getattr(self.host, "sign_ins", None), follow=self.follow)
+        self.board_held = ""                  # spec 137 B (gui/board_sync.py): the words while another worker holds the Board; nothing that writes runs then
         self.keeper.index_root = self.wiki
+        self.keeper.board_held = lambda: self.board_held
         self.host.bus.subscribe(idea_keeper.CHANGED, self._changed)
 
     # -- the project's Board settings (spec 37 §8) --------------------------------------------------------------
@@ -271,6 +273,7 @@ class Ideas(GoalViewMixin, ChangeMixin, SketchMixin, PlayMarkMixin, JournalFace,
                                           events=not self.host.demo, on_held=lambda: self.log_limits(force=True),
                                           rank=self.rank, size_of=self.size_of_idea, party_of=self.party_of_idea,
                                           sign_ins=getattr(self.host, "sign_ins", None), follow=self.follow)
+                self._runner.board_held = lambda: self.board_held
             except ImportError:
                 self._runner_error = "The runner is not in this build yet: plans cannot start"
             except Exception as e:              # a runner that cannot start never stops the board
