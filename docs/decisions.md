@@ -6245,3 +6245,58 @@ door says the person far better than it says a halt, and it is the face §245.5'
    `docs/mockups/die-and-door/`: the die with both faces in each state, the roll after Stop all, the door open and shut
    with its line; the owner's pick.
 The owner's call.
+
+## 247. The window made lighter, nothing it does lost: the portal and the discard drawn only when they hold something; two words for putting a goal off, *Hold* and *Later*; the potions' sizes kept, the week said in words only when it is what runs out; a pile's foot without a cut name; the pane's title only for a goal; a lifted card says its title once; a tab's tool marks only where they differ; one place moves at a time (4 November 2026, the owner)
+
+Changes: 176.3, 188.1, 189, 189.2, 192.1, 206.3, 239.3, 239.5; spec 104 §4, spec 111 §3.4, spec 114 §3, spec 128 B.3.
+
+Why: a review of the window as a product manager and a designer (4 November 2026, the page at 1440 and 390 px on the column's
+stub host, `tests/test_column_browser.py` `ColumnHost`), eleven points; the owner took 2, 3, 4 (keeping the bottles' sizes:
+*three bottles of one size look dead*), 6, 7, 8, 10 and 11; 5 (Stop all always red) went to §246.1; 9 (two menus at the
+Orkmaster) is not a double: the ▾ switches the project, the **…** holds Settings and Files, two jobs; 1 (the card's empty
+window, half of every card) the owner looks at again. What was found: the portal's ring (*Main*) and the discard's dashed
+frame take the table's right ~200 px on every tab while nothing is ready for main and nothing is done; the potion says two
+shares four ways (the liquid, the bottle's size, *62%*, *week 80%*) and an unread tool is a bottle with *?*; a pile's foot
+cuts a goal's name to seven letters (*Tidy th…*, *Rena…*), which says nothing; the pane's title on a tab with no goal picked
+(*The whole project · through the Orkmaster*) repeats the open tab; a lifted card of To review says its goal's name twice,
+its title and the line under it; the tabs' sword and shield (§189) say the same tool on every tab when every party runs on
+one, and a potion hovered outlines them by 1 px, which the eye does not see; the running ring and the glowing runes move on
+several cards at once and pull the eye from the side. And the words for putting a goal off, read in the code: **Later
+today** (To review, `ideas.ripe_hold`) holds a goal **until Start now**, not until today ends; **Keep it** (§239.3) would
+do the same and is already *do not drop it* (`table/dropgoal.js`) and *save this to-do* (`hand/todoform.js`): one word,
+three meanings; *Later, by itself* (§121.3) starts it at the reset; the night's moon at an hour. *Put it back* is not one of
+them: it lays a lifted card back in the hand and stays. So:
+1. **The portal and the discard are drawn only when they hold something**: the ring with *Main* while a goal is ready for
+   main or its checks run (§188.3–4), else no ring; Release's and Live's heads stay where its corners are (§188.1–2), asleep
+   alone. The discard is drawn from its first goal done (the goal's flight lays it, §176.3); empty, nothing lies there, no
+   frame and no word. The table gains the width.
+2. **Two words for putting a goal off, each one meaning**: **Hold**: nothing starts it until *Start now* (today's *Later
+   today*, and §239.3's *Keep it*); its card says *Held*; on a held card of To review *Back to review* stays its way back.
+   **Later**: it starts by itself at an hour the Board says (*after the reset*, *in my hours* §245.5, *tonight*), the hour on
+   its row as *not before 14:05* (§245.4); today's *Later, by itself* and the night are its cases. *Keep it* is only *do not
+   drop it*; the to-do form's button is **Save**.
+3. **The potions keep their sizes** (§192: the bottle the week, the liquid the 5 hours); under a potion **the now share
+   alone**; the week's words (*week 80%*) only while the week is what runs out first, else in the potion's words for hover
+   and a screen reader as today. **A tool whose limits were not read**: its mark, muted, with no bottle, its words *Limits
+   not read*.
+4. **A pile's foot without a cut name**: the rune, the time or the leaders' heads, the sign of its state (spec 128 B.3); the
+   goal's name in the foot's `title` and words, and whole on hover as the card slides out (§236.2).
+5. **The pane's title only for a goal**: on a tab with no goal picked the title says nothing (the open tab says whose eyes);
+   the row keeps its back arrow and its **…**; a goal picked, its name and its phases as today.
+6. **A lifted card says its title once**: a line that repeats the title is not drawn, and what the card says is one
+   sentence (*Its spec is ready; it starts by itself in its turn.*), the rest behind its **…**.
+7. **A tab's tool marks only where they differ**: the sword and shield's marks (§189) are drawn on a party's tab only when
+   its Does or its Checks run on another tool than the project's default (§177.1), or on more than one (the dot); a Lean
+   party keeps its faint shield. A potion hovered lights the goals that wait for it (§245.2) and the tabs whose parties run
+   on it, as a tab is lit, not by a 1 px outline.
+8. **One place moves at a time**: a motion that runs on (the ring's sweep, a rune's glow, a leader stepping) runs only on
+   the goal picked, else on the first goal at work in the Orkmaster's order; every other card is still, its state said by
+   its sign. A motion played once (a card turning, a flight, the die's roll) is §89.0's, unchanged.
+9. **Unchanged**: the two menus at the Orkmaster (▾ the projects; **…** Settings, Files, and *Report a problem…* of
+   §246.6); the card's size and window (§236.4) until the owner's look at the review's first point.
+10. **The words** (`TERMS`): *Hold*, *Held*, *Later*, *Back to review*, *Save*, *Limits not read*; *Later today*, *Later,
+    by itself* and §239's *Keep it* in `was`.
+11. **Built** by spec 140, on the page, each with its module's browser test: **A.** 1, 4, 5, 6 (the table and the column);
+    **B.** 2 (the words, the commands kept: `ideas.ripe_hold` is Hold, `ideas.route_later` is Later); **C.** 3, 7, 8 (the
+    potions, the tabs, the motion).
+The owner's call.
