@@ -165,6 +165,7 @@ function journalFrom() {
     queueMicrotask(() => { if (lost && !was) remote.kick(); if (!lost) seeBoard = false; was = lost; drawJournal(); });
   });
   const wake = () => { if (document.visibilityState === "visible") { remote.flush?.(); remote.kick(); drawJournal(); } };
+  remote.flush();                                 // what waited for the network goes now
   document.addEventListener("visibilitychange", wake);
   addEventListener("online", wake);
 }
@@ -294,6 +295,10 @@ globalThis.orkboardPhone = Object.freeze({
     settingsNode: () => settingsNode(remote),
     state: () => ({ ...remote.settings(), line: remote.line() }),
     subscribe: (fn) => remote.subscribe(fn),
+    sendGoal: (goal) => remote.sendGoal(goal),
+    sendAnswer: (name, args) => remote.sendAnswer(name, args),
+    answers: (name) => remote.answers(name),
+    hint: () => remote.hint(),
   }),
   push: Object.freeze({
     async state() {

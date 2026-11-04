@@ -5,6 +5,7 @@
 import { client, cleanRepo } from "./shell-remote-api.js";
 import { makeKeep } from "./shell-remote-keep.js";
 import { journalPart } from "./shell-remote-journal.js";
+import { sendPart } from "./shell-remote-send.js";
 import * as say from "./shell-remote-words.js";
 
 export const clock = (ms) => new Date(ms).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -78,5 +79,6 @@ export function makeRemote({ fetch: fetcher = globalThis.fetch?.bind(globalThis)
     wipe() { keep.wipe(); me.refused = false; me.limitUntil = 0; emit(); },
   };
   journalPart(remote);
+  sendPart(remote);
   return remote;
 }

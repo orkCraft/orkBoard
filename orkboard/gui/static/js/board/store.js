@@ -2,6 +2,7 @@
 // the open idea, and the one way to ask the host. The v1 shell (js/shell/store.js) refreshes it with Review.
 import { signal, batch } from "@preact/signals";
 import { command, toast, say } from "../link.js";
+import { answerThrough } from "../remoteway.js";
 
 export const board = signal(null);          // ideas.board
 export const opened = signal("");           // slug of the idea in the preview (the shell sets it)
@@ -17,6 +18,8 @@ const GOAL_STARTS = ["ideas.add", "ideas.start"];          // the commands that 
 
 /** A command of the contract; a plain-words error comes back as a toast and a null. */
 export async function ask(name, args = {}) {
+  const way = await answerThrough(name, args);            // a phone whose computer cannot be reached answers a card of the hand through the project's inbox (spec 137 C)
+  if (way !== undefined) return way;
   try {
     const got = await command(name, args);
     if (got && got.error) { toast(got.error, "error"); return null; }

@@ -21,6 +21,7 @@ import { laying } from "../table/laying.js";
 import { html, cls } from "../html.js";
 import { Icon, Sign } from "../orkui.js";
 import { toast } from "../link.js";
+import { goalThrough } from "../remoteway.js";
 import { act } from "../shell/store.js";
 import { MAX_PICTURES, PICTURE_TYPES, shrink } from "../board/pictures.js";
 import { tab } from "../frame/state.js";
@@ -122,7 +123,9 @@ export function Field({ middle = false }) {
     setBusy(true);
     const sent = marksToSend();
     const chosen = fieldRune.value && fieldRune.value !== runes.base ? fieldRune.value : "";            // the rune goes only when it is not the one the goal would be given anyway
-    const got = await act("ideas.add", { text, match: true, ...more, ...(address.party ? { party: address.party } : {}), ...(taken ? { type: taken.id } : {}), ...(chosen ? { element: chosen } : {}), ...(fieldPhotos.value.length ? { photos: fieldPhotos.value } : {}), ...(sent.length ? { marks: sent } : {}) });
+    const payload = { text, ...(address.party ? { party: address.party } : {}), ...(taken ? { type: taken.id } : {}), ...(chosen ? { element: chosen } : {}), ...(fieldPhotos.value.length ? { photos: fieldPhotos.value } : {}), ...(sent.length ? { marks: sent } : {}) };
+    const through = await goalThrough(payload);                                          // the computer cannot be reached and the project's repository is set: the goal goes into its inbox (spec 136 C.5)
+    const got = through ? (through.ok ? {} : null) : await act("ideas.add", { match: true, ...more, ...payload });
     setBusy(false);
     if (!got) return;                                                                 // refused: the host said why in a toast, the words stay
     if (got.match) { setMatch(got.match); return; }                                   // it looks like part of another: nothing was added, the words, the rune and the files stay
@@ -132,7 +135,8 @@ export function Field({ middle = false }) {
     plusDealt.value = true;                                                           // a new + card is dealt at the lane's end, its rune the next goal's
     setTimeout(() => { plusDealt.value = false; }, 700);
     if (box && goal.slug) sendBack(box, goal);                                        // it turns to its back and goes face down to the Orkmaster's lane (§6.2)
-    toast(address.party ? `Sent to ${address.name}.` : "Sent: the Orkmaster finds its party in a moment.");
+    toast(through ? (through.kept ? "Waits for the network" : "Sent through your repository: your computer or a cloud session will take it")
+      : address.party ? `Sent to ${address.name}.` : "Sent: the Orkmaster finds its party in a moment.");
   };
   /** *Add to it*: the words join the goal the field named (`ideas.add_to_goal`, via `match`), with the rune the person chose, else the one the goal would have been given. The field closes by doing it. */
   const addTo = async () => {
