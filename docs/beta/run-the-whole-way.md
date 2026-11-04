@@ -90,3 +90,26 @@ git switch -                                              # back where it was; m
 - **The goal's own work**: the branches Orkboard made for it (the report names them) are pushed as they are, also never
   into main: `git push origin <its branch>`.
 - **The last line of the report and of the session**: the branch's name, the verdict, and the condition that failed.
+
+## 6. The plan around the run (the owner, 4 November 2026)
+
+In this order, each step after the one before it:
+
+1. **The column by §224** (built before the run): a goal lies face down from its idea to its spec written (Talk, the
+   decision, the sections), face up in *To review* while its spec waits to start, and in *At work* once its tasks run.
+2. **Spec 130's first part**: a party's AI tool and a seat's level (§232.6–§232.7), and the column narrowed (§236), so the
+   run can move a party between Codex and Antigravity in the window. Settings' tool rows stay until §232's last part, so
+   §1 above holds.
+3. **The run as the base**: this document, on the build as it is then. Its verdict, its pictures and its spend are what the
+   later runs are measured against.
+4. **The goals are Orkboard's own**: each decision not yet built (§233–§238, and the earlier ones the owner picks) is
+   dropped as a goal on Orkboard's own Board, its leaders writing its sections on Codex and Antigravity. Two or three first
+   (§236 and §237 are small), then the rest.
+5. **The spec format, looked at again**: for those two or three goals, Orkboard's spec page (spec 99 §7.1: *Asked*, *Gist*,
+   *Route*, *Decisions*, a section a party with *Why*, *Done when*, *Will be*, *Out*, *Risks*, *Plan*) beside the spec
+   Claude would write for the same decision in `docs/specs/` (parts, waves, files, tests, *As built*), blind where it can be
+   (`orkboard trial`, H1). What each misses is said; **how Orkboard's format can be made better** (a section's *Files* and
+   *Tests*, parts that can be built at once, notes as built) becomes a decision of its own. Only then is the project's own
+   documentation written in Orkboard's format from that day on.
+6. **The second run** after spec 131 A (slices) and spec 132 A–B (refining before Confirm, the levels' marks), on the same
+   goal as the base: its tokens (`drive spend`), its steps asked again, its forks, its verdict, against the base's.
