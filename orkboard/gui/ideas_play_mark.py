@@ -33,7 +33,7 @@ from typing import Any
 
 from orkboard.core import idea_shot
 from orkboard.gui.ideas_args import IdeasError, _device, _opt, _text
-from orkboard.realm import goal_route, goal_types, idea_element, idea_lens, idea_photos, idea_play, ideas, pitches, play_place, play_signals
+from orkboard.realm import event_log, goal_route, goal_types, idea_element, idea_lens, idea_photos, idea_play, ideas, pitches, play_place, play_signals
 
 KIND_TYPE = {"bug": "bug", "looks": "", "missing": "feature", "confusing": "pain"}      # the kind's goal type; *Looks wrong* has none: its party's own
 WITH = ("screen", "part", "errors", "requests", "lines", "state")
@@ -297,6 +297,7 @@ class PlayMarkMixin:
         page = ideas.idea_page(root, slug)
         track = (page.get("track") if page else "") or ""
         tp = ideas.track_page(root, track) if track else None
+        self._ev(event_log.PLAY_MARK, args, idea=slug, kind=kind, joined=bool(add_to), minutes_since_open=self.card_minutes())      # H2 (spec 121 G): never a word of the mark's
         self.changed(slug)
         return {**out, "title": (page.title if page else "") or slug, "party": track, "party_title": (tp.title if tp else "") or track,
                 "kept": {"picture": bool(mark["picture"]), "errors": len(mark["errors"]), "requests": len(mark["requests"]), "lines": len(mark["lines"]),

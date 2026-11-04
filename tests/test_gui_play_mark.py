@@ -464,3 +464,20 @@ def test_the_play_is_in_the_goals_calls_after_its_lens(host, parties, drawn):
     got = mark(host, party=parties["tech"], picture={"html": SNAP, "w": 900, "h": 600})
     text = idea_lens.attached(host.ideas.state_dir, got["slug"])
     assert text.index("The screen \"Orders\"") < text.index("The person marked places on the running product") and "TypeError: x is undefined" in text
+
+
+# -- the mark as an event (spec 121 G, hypothesis H2) ---------------------------------------------------------------------------------------------
+
+def test_a_mark_is_one_event_without_a_word_of_it_and_the_first_after_the_morning_card_says_the_minutes(host, parties, drawn):
+    import datetime as dt
+    from orkboard.realm import event_log
+    marks = lambda: [e for e in event_log.read(Path(host.ideas.host.repo_root)) if e["event"] == event_log.PLAY_MARK]       # noqa: E731
+    first = mark(host, party=parties["tech"], text="A secret word of mine")
+    assert [(e["idea"], e["kind"], e["joined"], e["minutes_since_open"]) for e in marks()] == [(first["slug"], "bug", False, None)], "no card was lifted: no minutes"
+    host.ideas.__dict__["_card_opened_at"] = dt.datetime.now().astimezone() - dt.timedelta(seconds=90)               # the morning's card was lifted a minute and a half ago
+    second = mark(host, party=parties["tech"], text="Another one")
+    third = mark(host, party=parties["tech"], text="And a third")
+    got = marks()
+    assert [e["idea"] for e in got] == [first["slug"], second["slug"], third["slug"]]
+    assert 1.4 <= got[1]["minutes_since_open"] <= 1.7 and got[2]["minutes_since_open"] is None, "only the first mark after an opening is timed"
+    assert "A secret word of mine" not in str(got) and event_log.PLAY_MARK in event_log.EVENTS

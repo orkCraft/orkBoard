@@ -57,7 +57,17 @@ class RecapMixin:
             return None
         if args.get("opened") is True:
             self._ev(event_log.NIGHT_CARD_OPENED, args, goals=len(got["goals"]))
+            self.__dict__["_card_opened_at"] = now                   # the first mark on Play after it says how long it took (`card_minutes`)
         return got
+
+    def card_minutes(self) -> float | None:
+        """The minutes since the morning's card was lifted, once: the first mark made on Play after it (spec 121 G, hypothesis H2: from the card's opening to the first mark). None when the card was not
+        lifted (or not in the last `RECAP_DAYS` days) or when an earlier mark has taken it: only the first mark after an opening is timed."""
+        at = self.__dict__.pop("_card_opened_at", None)
+        if at is None:
+            return None
+        minutes = (dt.datetime.now().astimezone() - at).total_seconds() / 60
+        return round(minutes, 1) if 0 <= minutes <= RECAP_DAYS * 24 * 60 else None
 
     def today(self, args: dict) -> dict:
         """`{}`: `{events: [{at, mark, tone, words, title, goal, idea, task, open}]}`, the event log since local midnight,

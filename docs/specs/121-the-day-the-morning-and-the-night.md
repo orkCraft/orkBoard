@@ -252,3 +252,10 @@ Built by the cheaper model, a part a branch (B and C; D and E; A; F), each revie
   `sketch`), one at a time at 56vh on the phone; *Sketch again* past three rounds is not offered. The morning's card is put first by
   `hand.js`; *Done* is kept per night in `localStorage`. The evening line is the desktop strip's only. The die (§200.5): `new_n` in the
   snapshot (computer only), pips 1–6 in the ink on the up face; at rest it stays the five until orkUI has `face-play`.
+- **G** (`realm/measures.py` `day`, `orkboard measures`; `play_mark` in `realm/event_log.py`): H2's criteria are computed from the log and shown in `orkboard measures` (and `--json`) under *The day, the morning and the night (H2)*, each with its
+  numbers and `holds` (None until there is something to read). A goal's first sketch is the minutes from its `idea_added` to its first `sketch_made` (median within 15 holds); sketches picked of the answers (most picked holds,
+  most skipped refutes); building: of the goals started while *Work at night* was on (a `board_set` that said so, or a night event, which proves it), those started in the window (`night_started`) against *Build it now* (`built_now`)
+  and the rest (most at night holds; *Build it now* for most of the held goals refutes); went wrong: goals started at night against by day, each with a task failed or a result sent back, fixed or dropped (the night's share smaller
+  holds). **The one event that was not recorded anywhere was `play_mark`:** it is now written by `ideas.play_mark` (idea, kind, joined, `minutes_since_open`: the minutes since the morning's card was lifted, on the first mark after
+  an opening only; None for any other) and the median under 2 minutes holds. The card is *lifted* at `ideas.night {opened: true}`, kept in memory (`card_minutes`). "Most" is more than half. **Not measured:** *the morning card closed
+  unread* (H2's refutation): the log has no event of a card closed.

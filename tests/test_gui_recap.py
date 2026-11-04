@@ -110,3 +110,14 @@ def test_the_hints_of_the_last_play_stay_for_the_card_after_the_play_stops(host)
     ideas_._play = None                                                              # Play stopped: its ring is dropped, its hints are kept
     assert [h["kind"] for h in ideas_.last_play_hints()] == ["error"]
     assert host.command("ideas.night", {})["play"]["hints"][0]["kind"] == "error"
+
+
+def test_the_card_lifted_is_kept_so_the_first_mark_on_play_after_it_is_timed_once(host):
+    _merge(host, 1)
+    assert host.ideas.card_minutes() is None, "nothing was lifted"
+    host.command("ideas.night", {})
+    assert host.ideas.card_minutes() is None, "reading the record is no opening"
+    host.command("ideas.night", {"opened": True})
+    first = host.ideas.card_minutes()
+    assert first is not None and 0 <= first < 1 and host.ideas.card_minutes() is None, "timed once: only the first mark after an opening"
+
