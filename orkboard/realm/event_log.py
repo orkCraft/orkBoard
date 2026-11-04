@@ -278,6 +278,9 @@ BOARD_REFUSED = "board_refused"      # the lease is held by another and was not 
 BOARD_GIVEN_BACK = "board_given_back"      # the lease given back: by, kind
 BOARD_ASIDE = "board_aside"      # another worker had the Board while this one was away: its changes since `since` kept aside, whole: by, files, since
 EVENTS += (BOARD_TAKEN, BOARD_PUSHED, BOARD_REFUSED, BOARD_GIVEN_BACK, BOARD_ASIDE)
+GOAL_ADDED_TO = "goal_added_to"      # spec 132 A: words added to a goal in analysis (*Add to the goal*): idea, chars, reworded (its decision was worded again), device
+DECISION_CHANGED = "decision_changed"      # spec 132 A: the decision's one *Change…*: idea, kept (the person's text, as written), said (worded again by the Orkmaster), device
+EVENTS += (GOAL_ADDED_TO, DECISION_CHANGED)
 
 _LOCK = threading.Lock()
 
