@@ -2,12 +2,14 @@
 // title: its crowned head and the line in the body face (*Claude Code is out until Thu 18:00: the work goes on with Codex.*). The host keeps the last move in the snapshot (`town.mana.moved = {from, to, until, at, line}`).
 // It is shown while this viewer has not put it away (its close button; a newer move shows again) and for a day after `at`, then it is gone. What a viewer put away is a per-viewer convenience kept in `localStorage`, per project,
 // in try/catch: without it the line shows until the day is out. Not a toast: it stays where it is until it is put away.
+// **While a fix runs** (docs/specs/139-the-die-the-door-and-the-bug.md A.5, decisions §246.6) the Orkmaster says that too, above the other: *Fixing Orkboard: <its line>* (hand/logsbtn.js `fixingLine`, from `town.repair.state`); it is no line to put away, it goes when the fix does.
 import { useEffect, useState } from "preact/hooks";
 import { signal } from "@preact/signals";
 import { html } from "../html.js";
 import { Head, Icon } from "../orkui.js";
 import { town } from "../link.js";
 import { currentProject } from "../shell/projects.js";
+import { fixingLine } from "../hand/logsbtn.js";
 
 export const DAY_MS = 24 * 60 * 60 * 1000;
 const KEPT = "orkboard.mana.seen";
@@ -37,11 +39,15 @@ export function Notice() {
     const t = setTimeout(() => again((n) => n + 1), Math.min(left + 50, 2 ** 31 - 1));
     return () => clearTimeout(t);
   }, [at]);
-  const line = lineOf(moved, seen.value[project]);
-  if (!line) return null;
-  return html`<div class="table-notice" role="status" data-at=${moved.at}>
-    <${Head} race="peon" tier="crown" />
-    <p class="table-notice__line">${line}</p>
-    <button type="button" class="ork-btn quiet table-notice__x" aria-label="Dismiss" title="Dismiss" onClick=${() => dismiss(project, moved.at)}><${Icon} name="close" /></button>
-  </div>`;
+  const line = lineOf(moved, seen.value[project]), fixing = fixingLine();
+  if (!line && !fixing) return null;
+  return html`${fixing && html`<div class="table-notice" role="status" data-fixing="1">
+      <${Head} race="peon" tier="crown" />
+      <p class="table-notice__line">${fixing}</p>
+    </div>`}
+    ${line && html`<div class="table-notice" role="status" data-at=${moved.at}>
+      <${Head} race="peon" tier="crown" />
+      <p class="table-notice__line">${line}</p>
+      <button type="button" class="ork-btn quiet table-notice__x" aria-label="Dismiss" title="Dismiss" onClick=${() => dismiss(project, moved.at)}><${Icon} name="close" /></button>
+    </div>`}`;
 }

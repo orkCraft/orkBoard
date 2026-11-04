@@ -5,7 +5,7 @@
 // The open tab has no fill and no bar: its head is `big` (48 x 44) and 3 px lower, over the table's rim, its name in the ink and the leader's own name under it (*the Orkmaster* on the project's), the others' names muted. The open head is a **button of its own** in the
 // tab's cell, not inside the tab's button (a button holds no button), over the head's place: it opens the leader's bubble (ask.js; `data-ask-head`; the desktop only, as the bubble is), and beside it the leader's marks, each a button stepping through the marked parts of its map
 // (concerns.js `stepMarked`): orkUI's alert sign in the alert's tone for an alert, a muted dot for a note; while the leader looks, `title` says so. The other tabs keep their alert sign. A tab's width is its column's (decisions §143): only its height grows.
-// At the end: **New party**, the empty chair (chairs.js, where *+ Party* was), **Stop all**, a door (door.js, where the planks were) and, last, the bug under the glass (*Save the logs*, hand/logsbtn.js: decisions §190.6); the AI tools' limits are the hand's mana (hand/mana.js, spec 104 B).
+// At the end: **New party**, the empty chair (chairs.js, where *+ Party* was) and nothing after it: *Stop all* is the die's front face (hand/playdie.js) and the bug is *Report a problem…* in the Orkmaster's **…** (docs/specs/139-the-die-the-door-and-the-bug.md A.4–A.5, decisions §246); the AI tools' limits are the hand's mana (hand/mana.js, spec 104 B).
 // The dark edges (table.css): the row and the hand on orkUI's room, a rim under the tabs and over the hand, no line between the tabs. Under 760 px the tabs are a row of heads (the open one at 36 with its marks), the chair and the door small, and the limits are in the Orkmaster's **…**
 // as chips (pane.js) and in the hand as small potions. The tabs, the Board's lanes and the hand read the frame's one `--cols`, so a tab stands over its lane. A party's tab carries a dot when the picked goal's route has it.
 // At the wide width Release's and Live's are not in the row (docs/specs/111-a-goals-rune-release-and-live-at-the-portal.md §4.1, decisions §188.1): they wait in the portal ring's corners (road.js, portal.js) and open their view in the pane from there; `parties` is the tabs' (data.js `partiesNow`).
@@ -22,9 +22,7 @@ import { hasAlert, lookOf, stepMarked, theLeader } from "./concerns.js";
 import { Marks, marksOf, marksWords, projectMarks, runsOn } from "./tabmarks.js";
 import { AskBubble, askOpen, closeAsk, desk, openAsk } from "./ask.js";
 import { EmptyChair, useOffer } from "./chairs.js";
-import { StopDoor } from "./door.js";
 import { isWorking, moodOf } from "./moods.js";
-import { LogsButton } from "../hand/logsbtn.js";                // the bug under the glass, the last of the row (decisions §190.6)
 
 export { isWorking };                                            // the tabs' word for it was here first (road.js)
 
@@ -116,8 +114,6 @@ export function Tabs({ parties, all = parties, current, narrow, compact, column 
     <div class="table-tabs__end">
       ${offer && html`<${EmptyChair} from=${from} narrow=${narrow} />`}
       <span class="table-grow"></span>
-      <${StopDoor} narrow=${narrow} />
-      <${LogsButton} />
     </div>
   </nav>
   <${AskBubble} tab=${current} parties=${all} />`;

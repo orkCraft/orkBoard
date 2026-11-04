@@ -212,16 +212,17 @@ def test_the_play_die_wears_the_picked_goals_rune_says_play_and_the_goal_and_pla
     pg, host, log = open_goals(gui)
     try:
         die = pg.locator(".hand-die")
+        play = pg.locator(".hand-die__play")
         die.wait_for(timeout=WAIT_MS)
-        assert die.get_attribute("data-elem") is None and die.get_attribute("aria-label").startswith("Play"), "nothing picked: the die as it was"
+        assert die.get_attribute("data-elem") is None and play.get_attribute("aria-label").startswith("Play"), "nothing picked: the die as it was"
         plain = pg.evaluate("() => getComputedStyle(document.querySelector('.hand-die .ork-die')).getPropertyValue('--_pip')")
         pick_music(pg)
         pg.wait_for_selector('.hand-die[data-elem="meadow"]', timeout=WAIT_MS)
-        assert die.get_attribute("aria-label") == "Play: Music in the lobby" and die.get_attribute("title") == "Play: Music in the lobby"
+        assert play.get_attribute("aria-label") == "Play: Music in the lobby" and play.get_attribute("title") == "Play: Music in the lobby"
         token = pg.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--ork-elem-meadow').trim()")
         worn = pg.evaluate("() => [getComputedStyle(document.querySelector('.hand-die .ork-die')).getPropertyValue('--_pip').trim(), getComputedStyle(document.querySelector('.hand-die .ork-die')).getPropertyValue('--_edge').trim()]")
         assert token and worn == [token, token] and worn[0] != plain.strip(), "the pips and the edge in orkUI's element token"
-        die.click()
+        play.click()
         pg.wait_for_function("() => document.querySelector('.hand-die[data-open]')", timeout=WAIT_MS)
         for _ in range(100):
             asked = [a for n, a in host.log if n == "ideas.play" and not a.get("peek")]
@@ -229,12 +230,12 @@ def test_the_play_die_wears_the_picked_goals_rune_says_play_and_the_goal_and_pla
                 break
             pg.wait_for_timeout(50)
         assert asked and asked[0].get("idea") == "music", asked
-        assert die.get_attribute("aria-label") == "Close the preview"
-        die.click()                                                                              # closes it as ever
+        assert play.get_attribute("aria-label") == "Close the preview"
+        play.click()                                                                              # closes it as ever
         pg.wait_for_function("() => !document.querySelector('.hand-die[data-open]')", timeout=WAIT_MS)
         pg.keyboard.press("Escape")                                                               # nothing picked: the die as it was
         pg.wait_for_function("() => !document.querySelector('.hand-die').dataset.elem", timeout=WAIT_MS)
-        assert die.get_attribute("aria-label").startswith("Play") and ":" not in die.get_attribute("aria-label").replace("Play: the project", "")
+        assert play.get_attribute("aria-label").startswith("Play") and ":" not in play.get_attribute("aria-label").replace("Play: the project", "")
         # a goal not yet at work does not give the die its rune
         pg.locator('.col-card[data-goal="fresh"]').click()
         pg.wait_for_selector('.col-card[data-goal="fresh"].ork-picked, .col-card[data-goal="fresh"][aria-pressed="true"], [data-lift="acts"]', timeout=WAIT_MS)

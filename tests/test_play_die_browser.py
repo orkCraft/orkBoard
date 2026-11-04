@@ -1,6 +1,6 @@
 """Spec 112 part B (docs/specs/112-the-bars-marks-and-the-play-die.md §3, decisions §190), Chromium against the table's stub host (tests/test_owners_day_desktop_browser.py `Host`, whose Play answers what a test sets).
 
-The bar: New party is orkUI's empty chair (pulled out on hover, not under reduced motion; spec 123 §7.5, it was the banner), Stop all its door (it was the boards across a pole). Play is no button of the pane's head but a die in the hand, left of the potions, its word under it, turned by the lean token;
+The bar: New party is orkUI's empty chair (pulled out on hover, not under reduced motion; spec 123 §7.5, it was the banner); Stop all is no door of it any more but the die's front face (spec 139 A, decisions §246: two buttons in the die, the front's mark in the danger colour only while a task runs). Play is no button of the pane's head but a die in the hand, left of the potions, its word under it, turned by the lean token;
 it wobbles once on hover, opens the play view and closes it. A start is thrown: the die flies onto the black pane and rolls (no logo meanwhile), lands on the green tick (*It started*), then today's logo, the frame and the die in the hand glowing; a failed start lands on the
 red cross, tips over and today's failure takes its place; a build already playing opens at once and the die in the hand wobbles twice; under reduced motion it is today's start screen. Screenshots to the directory ORKCRAFT_SHOTS_DIR names when it is set."""
 from __future__ import annotations
@@ -36,7 +36,7 @@ def die(pg):
 
 
 def press(pg):
-    die(pg).click()
+    die(pg).locator(".hand-die__play").click()
     pg.locator('.table-over[data-kind="play"]').wait_for(timeout=WAIT_MS)
 
 
@@ -69,17 +69,15 @@ def finish(pg, errors):
 # -- the bar ------------------------------------------------------------------------------------------------------------------------------------------
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_new_party_is_the_empty_chair_and_stop_all_a_door_and_the_pane_has_no_play(gui, width):
-    """Spec 123 §7.5–§7.6 (they were the banner and the boards, spec 112 §3.1): orkUI's empty chair and its door, small under 760 px, the door's word in the danger colour of the button."""
+def test_new_party_is_the_empty_chair_and_the_top_row_has_no_door_and_no_bug_and_the_pane_has_no_play(gui, width):
+    """Spec 123 §7.5 (it was the banner, spec 112 §3.1): orkUI's empty chair, small under 760 px. Spec 139 A.4–A.5 (decisions §246): Stop all is no door of the top row (the die's front face), the bug is no button of it (the Orkmaster's …); Play is not in the pane's head."""
     pg, errors = window(gui, Host(), {"wide": WIDE, "narrow": {"width": 390, "height": 844}}[width])
-    chair, door = pg.locator(".table-tabs__end .table-chair"), pg.locator(".table-tabs__end .table-door")
+    chair = pg.locator(".table-tabs__end .table-chair")
     small = width != "wide"
     assert chair.locator(".ork-chair.is-empty").count() == 1 and chair.get_attribute("aria-label") == "New party" and chair.locator(".ork-chair.is-empty").evaluate("e => e.classList.contains('small')") == small
     assert " ".join(chair.text_content().split()) == ("" if small else "New party")
-    assert door.locator(".ork-door").count() == 1 and door.get_attribute("aria-label") == "Stop all" and " ".join(door.text_content().split()) == ("Stop" if small else "Stop all")
-    pic, word = door.locator(".ork-door").bounding_box(), door.locator(".table-door__w").bounding_box()
-    assert (pic["width"], pic["height"]) == ((14, 20) if small else (28, 40)) and pic["x"] < word["x"]                     # the door stands before the word
-    assert door.evaluate("e => getComputedStyle(e).color") != pg.locator(".table-tab").first.evaluate("e => getComputedStyle(e).color")      # in the danger colour
+    assert pg.locator(".table-door, .table-logs, .ork-door").count() == 0, "no door and no bug in the top row"
+    assert pg.locator(".table-tabs").get_by_role("button", name="Stop all").count() == 0
     assert pg.locator(".table-play").count() == 0 and pg.locator(".table-title").get_by_role("button", name="Play").count() == 0       # Play left the pane's head
     assert not pg.locator(".table-title").inner_text().count("Play")
     shot(pg, f"b112-bar-{width}.png")
@@ -104,6 +102,102 @@ def test_the_empty_chair_is_pulled_out_on_hover_and_not_under_reduced_motion(gui
     assert not errors, "\n".join(errors)
 
 
+# -- the die's front face: Stop all (spec 139 A.1-A.4, decisions §246.1-§246.3) -----------------------------------------------------------------------
+
+STOP_WORDS = "Stop all: stop every run of this project's orks"
+
+
+def front_colour(pg):
+    return pg.locator(".hand-die .ork-die").evaluate("e => getComputedStyle(e).getPropertyValue('--_front').trim()")
+
+
+def token(pg, name):
+    return pg.evaluate("(n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim()", name)
+
+
+def nothing_runs(host):
+    host.nodes = [n for n in host.nodes if not n.get("tasks")]
+    host.rev += 1
+    host.ws.send(__import__("json").dumps(host.snapshot()))
+
+
+@pytest.mark.parametrize("width", narrow.WIDTHS)
+def test_the_die_has_two_buttons_the_front_one_over_the_front_face_and_two_words_under_it(gui, width):
+    host = Host(n=3)
+    pg, errors = window(gui, host, {"wide": WIDE, "narrow": {"width": 390, "height": 844}}[width])
+    d = die(pg)
+    play, stop = d.locator(".hand-die__play"), d.locator(".hand-die__stop")
+    assert play.get_attribute("aria-label") == "Play: the project's preview of dev"
+    assert stop.get_attribute("aria-label") == STOP_WORDS and stop.get_attribute("title") == STOP_WORDS
+    assert d.locator("button").count() == 2 and d.locator(".ork-die").get_attribute("aria-hidden") == "true"
+    assert "front-stop" in d.locator(".ork-die").get_attribute("class")
+    front, up, hit = d.locator(".ork-die__face.is-front").bounding_box(), d.locator(".ork-die__face.is-up").bounding_box(), stop.bounding_box()
+    assert abs(hit["x"] - front["x"]) <= 1 and abs(hit["width"] - front["width"]) <= 1, "laid over the front face's projected box"
+    assert up["y"] + up["height"] / 2 < hit["y"] < front["y"] + front["height"] and abs(hit["y"] + hit["height"] - (front["y"] + front["height"])) <= 1, "from between the faces to the front's foot"
+    assert hit["height"] >= 20
+    words = d.locator(".hand-die__words")
+    assert " ".join(words.inner_text().split()) == ("Play · Stop all" if width == "wide" else "Play Stop all")        # the narrow width drops the dot: the die keeps its own width
+    assert d.locator(".hand-die__word").inner_text() == "Play" and d.locator(".hand-die__orks").inner_text() == "Stop all"
+    w, box = words.bounding_box(), d.locator(".ork-die").bounding_box()
+    assert w["y"] >= box["y"] + 56, "under the die"
+    pg.set_viewport_size({"width": 1000, "height": 700} if width == "wide" else {"width": 360, "height": 800})                          # laid again on a resize
+    pg.wait_for_timeout(150)
+    front, hit = d.locator(".ork-die__face.is-front").bounding_box(), stop.bounding_box()
+    assert abs(hit["x"] - front["x"]) <= 1 and abs(hit["width"] - front["width"]) <= 1
+    finish(pg, errors)
+
+
+def test_the_fronts_mark_and_word_are_the_dangers_only_while_a_task_runs(gui):
+    host = Host(n=3)
+    pg, errors = window(gui, host)
+    d = die(pg)
+    danger, muted = token(pg, "--ork-danger"), token(pg, "--ork-ink-muted")
+    pg.wait_for_function("() => document.querySelector('.hand-die .ork-die.is-orks-running')", timeout=WAIT_MS)                    # tech and game have a task at work
+    assert front_colour(pg) == danger
+    assert d.locator(".hand-die__orks").evaluate("e => getComputedStyle(e).color") == pg.evaluate("(c) => { const i = document.createElement('i'); i.style.color = c; document.body.append(i); const v = getComputedStyle(i).color; i.remove(); return v; }", danger)
+    nothing_runs(host)
+    pg.wait_for_function("() => !document.querySelector('.hand-die .ork-die.is-orks-running')", timeout=WAIT_MS)
+    assert front_colour(pg) == muted and d.locator(".hand-die__orks").inner_text() == "Stop all"
+    shot(pg, "s139-die-idle.png")
+    finish(pg, errors)
+
+
+def test_a_press_on_the_front_sends_halt_says_stopped_and_goes_back_when_work_starts(gui):
+    host = Host(n=3)
+    pg, errors = window(gui, host)
+    d = die(pg)
+    pg.wait_for_function("() => document.querySelector('.hand-die .ork-die.is-orks-running')", timeout=WAIT_MS)
+    shot(pg, "s139-die-running.png")
+    d.locator(".hand-die__stop").click()
+    pg.wait_for_function("() => document.querySelector('.hand-die__orks')?.textContent === 'Stopped'", timeout=WAIT_MS)
+    assert [c for c in host.log if c[0] == "halt"] == [("halt", {})]
+    assert d.locator(".hand-die__stop").get_attribute("aria-disabled") == "true" and "is-orks-running" not in d.locator(".ork-die").get_attribute("class")
+    assert pg.locator('.table-over[data-kind="play"]').count() == 0, "the front is not Play"
+    shot(pg, "s139-die-stopped.png")
+    d.locator(".hand-die__stop").click(force=True)
+    pg.wait_for_timeout(300)
+    assert len([c for c in host.log if c[0] == "halt"]) == 1, "a second press does nothing"
+    nothing_runs(host)                                                                                                       # the map is seen with none at work ...
+    pg.wait_for_timeout(300)
+    assert d.locator(".hand-die__orks").inner_text() == "Stopped"
+    pg.evaluate("() => import('/static/js/board/store.js').then((m) => m.ask('ideas.add', { text: 'A new goal' }))")                  # a goal is started from this page: Stopped goes
+    pg.wait_for_function("() => document.querySelector('.hand-die__orks')?.textContent === 'Stop all'", timeout=WAIT_MS)
+    finish(pg, errors)
+
+
+def test_the_play_press_does_not_halt_and_the_stop_press_opens_no_preview(gui):
+    host = Host(n=3, play=PLAYING)
+    pg, errors = window(gui, host)
+    press(pg)
+    assert not [c for c in host.log if c[0] == "halt"]
+    die(pg).locator(".hand-die__play").click()
+    pg.wait_for_selector(".table-over", state="detached", timeout=WAIT_MS)
+    die(pg).locator(".hand-die__stop").click()
+    pg.wait_for_function("() => document.querySelector('.hand-die__orks')?.textContent === 'Stopped'", timeout=WAIT_MS)
+    assert pg.locator(".table-over").count() == 0
+    finish(pg, errors)
+
+
 # -- the die in the hand ------------------------------------------------------------------------------------------------------------------------------
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
@@ -111,7 +205,7 @@ def test_the_die_lies_in_the_hand_left_of_the_potions_with_its_word_under_it_ask
     pg, errors = window(gui, Host(), {"wide": WIDE, "narrow": {"width": 390, "height": 844}}[width])
     d = die(pg)
     pg.locator(".hand-mana .hand-pot").first.wait_for(timeout=WAIT_MS)
-    assert d.evaluate("e => e.closest('.hand') !== null") and d.get_attribute("aria-label") == "Play: the project's preview of dev" and d.get_attribute("title") == d.get_attribute("aria-label")
+    assert d.evaluate("e => e.closest('.hand') !== null") and d.locator(".hand-die__play").get_attribute("aria-label") == "Play: the project's preview of dev" and d.locator(".hand-die__play").get_attribute("title") == d.locator(".hand-die__play").get_attribute("aria-label")
     assert d.locator(".hand-die__word").inner_text() == "Play" and d.locator(".ork-die").get_attribute("aria-hidden") == "true"
     box, mana, word = d.locator(".ork-die").bounding_box(), pg.locator(".hand-mana").bounding_box(), d.locator(".hand-die__word").bounding_box()
     assert 70 <= box["width"] <= 86 and 86 <= box["height"] <= 100                                                     # 72 x 90 (3 px a cell; orkUI 0.29.0's steeper view, decisions §246), turned a little: it keeps its size at the narrow width too
@@ -130,17 +224,17 @@ def test_the_die_wobbles_once_on_hover_stays_lifted_and_presses_open_and_closed(
     pg, errors = window(gui, Host(play=PLAYING))
     d = die(pg)
     d.evaluate("e => { window.__wobbles = 0; e.addEventListener('animationstart', (ev) => { if (ev.animationName === 'ork-die-wobble') window.__wobbles++; }); }")
-    d.hover()
+    d.locator(".hand-die__play").hover()
     pg.wait_for_function("() => window.__wobbles === 1", timeout=WAIT_MS)
     pg.wait_for_function("() => !document.querySelector('.hand-die .ork-die.is-wobbling')", timeout=WAIT_MS)             # taken off at animationend
-    assert d.locator(".ork-die").evaluate("e => getComputedStyle(e).transform") != "none"                               # and stays lifted while hovered
+    assert d.locator(".hand-die__box").evaluate("e => getComputedStyle(e).transform") != "none"                          # and stays lifted while hovered (the die with its presses: spec 139)
     assert pg.evaluate("() => window.__wobbles") == 1
-    d.click()
+    d.locator(".hand-die__play").click()
     pg.locator('.table-over[data-kind="play"]').wait_for(timeout=WAIT_MS)
-    assert d.get_attribute("aria-label") == "Close the preview" and d.get_attribute("title") == "Close the preview"
-    d.click()
+    assert d.locator(".hand-die__play").get_attribute("aria-label") == "Close the preview" and d.locator(".hand-die__play").get_attribute("title") == "Close the preview"
+    d.locator(".hand-die__play").click()
     pg.wait_for_selector(".table-over", state="detached", timeout=WAIT_MS)
-    assert d.get_attribute("aria-label") == "Play: the project's preview of dev" and d.locator(".hand-die__word").inner_text() == "Play"
+    assert d.locator(".hand-die__play").get_attribute("aria-label") == "Play: the project's preview of dev" and d.locator(".hand-die__word").inner_text() == "Play"
     finish(pg, errors)
 
 
@@ -178,7 +272,7 @@ def test_a_start_is_thrown_rolls_without_the_logo_lands_on_the_tick_then_the_log
     pg, errors = window(gui, host)
     d = die(pg)
     record_phases(pg)
-    d.click()
+    d.locator(".hand-die__play").click()
     pane = pg.locator('.playpane[data-state="starting"]')
     pane.wait_for(timeout=WAIT_MS)
     pg.locator('.play-throw[data-phase="roll"]').wait_for(timeout=WAIT_MS)
@@ -215,9 +309,9 @@ def test_a_start_is_thrown_rolls_without_the_logo_lands_on_the_tick_then_the_log
     assert frame.is_visible() and pg.locator(".playpane").get_attribute("data-state") == "playing" and pg.locator(".playpane").get_attribute("data-throw") is None
     assert pg.locator(".play-frame").count() == 1                                                                                             # the same iframe all through: never reloaded
     assert "is-gone" not in d.get_attribute("class") and "is-playing" in d.locator(".ork-die").get_attribute("class") and d.locator(".hand-die__word").inner_text() == "Playing"
-    assert d.get_attribute("aria-label") == "Close the preview"
+    assert d.locator(".hand-die__play").get_attribute("aria-label") == "Close the preview"
     shot(pg, "b112-frame.png")
-    d.click()
+    d.locator(".hand-die__play").click()
     pg.wait_for_selector(".table-over", state="detached", timeout=WAIT_MS)
     assert "is-playing" not in d.locator(".ork-die").get_attribute("class") and d.locator(".hand-die__word").inner_text() == "Play"
     finish(pg, errors)
@@ -244,7 +338,7 @@ def test_the_thrown_die_shows_no_seams_between_its_cells_while_it_rolls_and_on_t
     pytest.importorskip("PIL")
     host = Host(play=STARTING)
     pg, errors = window(gui, host)
-    die(pg).click()
+    die(pg).locator(".hand-die__play").click()
     pg.locator('.play-throw[data-phase="roll"]').wait_for(timeout=WAIT_MS)
     pg.wait_for_timeout(500)
     pg.add_style_tag(content=".play-die, .play-die .ork-die__cube, .play-die .ork-die__face::after { animation: none !important; }")              # one pose, the cube at rest, so the stretch measured lies where it is expected
@@ -276,7 +370,7 @@ def test_a_start_that_fails_lands_on_the_cross_tips_over_and_todays_failure_take
     pg, errors = window(gui, host)
     d = die(pg)
     record_phases(pg)
-    d.click()
+    d.locator(".hand-die__play").click()
     pg.locator('.play-throw[data-phase="roll"]').wait_for(timeout=WAIT_MS)
     assert "is-gone" in d.get_attribute("class")
     host.play = FAILED
@@ -299,7 +393,7 @@ def test_a_start_that_fails_lands_on_the_cross_tips_over_and_todays_failure_take
 def test_a_build_already_playing_opens_at_once_with_no_throw_no_intro_and_the_die_wobbles_twice(gui):
     pg, errors = window(gui, Host(play={**PLAYING, "logo": LOGO}))
     pg.evaluate("() => { window.__wobbles = 0; document.addEventListener('animationstart', (ev) => { if (ev.animationName === 'ork-die-wobble') window.__wobbles++; }, true); }")
-    die(pg).focus()
+    die(pg).locator(".hand-die__play").focus()
     pg.keyboard.press("Enter")                                                                                                                # no hover: only the warm start's wobbles count
     pg.locator('.table-over[data-kind="play"]').wait_for(timeout=WAIT_MS)
     pg.locator(".play-frame").wait_for(timeout=WAIT_MS)
@@ -327,7 +421,7 @@ def test_a_start_stopped_while_it_rolls_ends_the_throw_and_brings_the_hands_die_
     host = Host(play=STARTING)
     pg, errors = window(gui, host)
     d = die(pg)
-    d.click()
+    d.locator(".hand-die__play").click()
     pg.locator('.play-throw[data-phase="roll"]').wait_for(timeout=WAIT_MS)
     host.play = {"state": "stopped"}
     pg.wait_for_selector(".play-throw", state="detached", timeout=WAIT_MS)
@@ -353,9 +447,9 @@ def test_under_reduced_motion_it_is_todays_start_screen_with_no_die_on_the_pane_
     host = Host(play={**STARTING, "logo": LOGO})
     pg, errors = window(gui, host, reduced_motion="reduce")
     d = die(pg)
-    d.hover()
+    d.locator(".hand-die__play").hover()
     assert pg.locator(".hand-die .ork-die.is-wobbling").count() == 0
-    d.click()
+    d.locator(".hand-die__play").click()
     pg.locator('.playpane[data-state="starting"]').wait_for(timeout=WAIT_MS)
     pg.locator(".play-intro.has-logo .play-logo__img").wait_for(timeout=WAIT_MS)                                                              # the logo while it starts, as before
     assert pg.locator(".playpane .ork-die").count() == 0 and pg.locator(".play-throw").count() == 0 and pg.locator(".playpane").get_attribute("data-throw") is None
@@ -412,13 +506,13 @@ def test_with_no_preview_the_die_sleeps_grey_and_still_and_says_nothing_to_play_
     pg, errors = window(gui, host, {"wide": WIDE, "narrow": {"width": 390, "height": 844}}[width])
     d, face = die(pg), die(pg).locator(".ork-die")
     assert "is-asleep" in d.get_attribute("class") and d.locator(".hand-die__word").inner_text() == "Play"
-    assert d.get_attribute("title") == ASLEEP and d.get_attribute("aria-label") == f"{ASLEEP}: say how the project opens"
-    assert face.evaluate("e => [getComputedStyle(e).filter, getComputedStyle(e).opacity]") == ["grayscale(1)", "0.4"]
-    d.hover()
+    assert d.locator(".hand-die__play").get_attribute("title") == ASLEEP and d.locator(".hand-die__play").get_attribute("aria-label") == f"{ASLEEP}: say how the project opens"
+    assert face.locator(".ork-die__face.is-up").evaluate("e => [getComputedStyle(e).filter, getComputedStyle(e).opacity]") == ["grayscale(1)", "0.4"]          # the up face sleeps (spec 139: Stop all stays what it is)
+    d.locator(".hand-die__play").hover()
     pg.wait_for_timeout(150)
-    assert pg.locator(".hand-die .ork-die.is-wobbling").count() == 0 and face.evaluate("e => getComputedStyle(e).transform") == "none" and face.evaluate("e => getComputedStyle(e).animationName") == NO_ANIMATION
+    assert pg.locator(".hand-die .ork-die.is-wobbling").count() == 0 and d.locator(".hand-die__box").evaluate("e => getComputedStyle(e).transform") == "none" and face.evaluate("e => getComputedStyle(e).animationName") == NO_ANIMATION
     shot(pg, f"c113-die-asleep-{width}.png")
-    d.click()                                                                                                       # pressed it opens the view that says so, with no throw
+    d.locator(".hand-die__play").click()                                                                                                       # pressed it opens the view that says so, with no throw
     pg.locator('.table-over[data-kind="play"]').wait_for(timeout=WAIT_MS)
     pg.locator('.playpane[data-state="none"]').wait_for(timeout=WAIT_MS)
     assert pg.locator(".assets-none__title").text_content() == NOTHING and "checks.toml" in pg.locator(".assets-none .arena-cap").text_content()
@@ -427,9 +521,9 @@ def test_with_no_preview_the_die_sleeps_grey_and_still_and_says_nothing_to_play_
     assert not [c for c in host.log if c[0] == "ideas.play"], "a project with no preview is not asked to start one"
     assert "is-playing" not in face.get_attribute("class") and d.locator(".hand-die__word").inner_text() == "Play"
     shot(pg, f"c113-die-asleep-pressed-{width}.png")
-    d.click()                                                                                                       # and pressed again it closes the view, as the die always does
+    d.locator(".hand-die__play").click()                                                                                                       # and pressed again it closes the view, as the die always does
     pg.wait_for_selector(".table-over", state="detached", timeout=WAIT_MS)
-    assert d.get_attribute("title") == ASLEEP
+    assert d.locator(".hand-die__play").get_attribute("title") == ASLEEP
     finish(pg, errors)
 
 
@@ -438,9 +532,9 @@ def test_with_a_preview_or_before_the_first_snapshot_the_die_is_awake_as_before(
     host = PreviewHost(preview, play=PLAYING)
     pg, errors = window(gui, host)
     d = die(pg)
-    assert "is-asleep" not in d.get_attribute("class") and d.get_attribute("title") == "Play: the project's preview of dev" and d.get_attribute("aria-label") == d.get_attribute("title")
+    assert "is-asleep" not in d.get_attribute("class") and d.locator(".hand-die__play").get_attribute("title") == "Play: the project's preview of dev" and d.locator(".hand-die__play").get_attribute("aria-label") == d.locator(".hand-die__play").get_attribute("title")
     assert d.locator(".ork-die").evaluate("e => [getComputedStyle(e).filter, getComputedStyle(e).opacity]") == ["none", "1"]
-    d.click()
+    d.locator(".hand-die__play").click()
     pg.locator(".play-frame").wait_for(timeout=WAIT_MS)                                                             # opens the preview, not the empty view
     assert pg.locator('.playpane[data-state="none"]').count() == 0
     finish(pg, errors)
@@ -453,7 +547,7 @@ def test_the_die_wakes_when_the_snapshot_says_the_project_has_a_preview_now(gui)
     host.preview = "command"
     host.push()
     pg.wait_for_function("() => !document.querySelector('.hand-die').classList.contains('is-asleep')", timeout=WAIT_MS)
-    assert die(pg).get_attribute("title") == "Play: the project's preview of dev"
+    assert die(pg).locator(".hand-die__play").get_attribute("title") == "Play: the project's preview of dev"
     finish(pg, errors)
 
 
@@ -480,7 +574,7 @@ def test_the_die_wears_the_face_the_snapshot_says_and_says_it_in_words(gui, play
     d = die(pg)
     classes = face_of(pg)
     assert face in classes and len([c for c in classes if c.startswith("face-")]) == 1
-    assert d.get_attribute("title") == words and d.get_attribute("aria-label") == words and d.locator(".hand-die__word").inner_text() == "Play"
+    assert d.locator(".hand-die__play").get_attribute("title") == words and d.locator(".hand-die__play").get_attribute("aria-label") == words and d.locator(".hand-die__word").inner_text() == "Play"
     assert "is-landing" not in classes                                                                                # the first snapshot rolls nothing
     shot(pg, f"c118-die-{play_face or 'five'}.png")
     finish(pg, errors)
@@ -499,7 +593,7 @@ def test_goals_new_in_dev_are_pips_on_the_up_face_six_at_most_and_the_title_coun
     d = die(pg)
     classes = face_of(pg)
     assert face in classes and "face-new" not in classes and len([c for c in classes if c.startswith("face-")]) == 1 and "is-news" in classes
-    assert d.get_attribute("title") == words and d.get_attribute("aria-label") == words and d.locator(".hand-die__word").inner_text() == "Play"
+    assert d.locator(".hand-die__play").get_attribute("title") == words and d.locator(".hand-die__play").get_attribute("aria-label") == words and d.locator(".hand-die__word").inner_text() == "Play"
     assert pips_of(pg) == int(face[-1])
     assert pg.locator(".hand-die .ork-die__face.is-up").evaluate("e => getComputedStyle(e).getPropertyValue('--_pip').trim()") == pg.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--ork-ink').trim()"), "in the ink"
     assert pg.locator(".hand-die .ork-die__face.is-front").evaluate("e => getComputedStyle(e).getPropertyValue('--_pip').trim()") != pg.evaluate("() => getComputedStyle(document.documentElement).getPropertyValue('--ork-ink').trim()"), "the other faces keep the muted pips"
@@ -512,14 +606,14 @@ def test_no_count_or_a_count_with_another_face_keeps_the_spark_the_play_arrow_an
     pg, errors = window(gui, PreviewHost("command", play_face, new_n))
     classes = face_of(pg)
     assert face in classes and "is-news" not in classes
-    assert die(pg).get_attribute("title") == {"face-new": NEW_WORDS, "face-play": TODAYS_WORDS, "face-no": FAILED_WORDS}[face]
+    assert die(pg).locator(".hand-die__play").get_attribute("title") == {"face-new": NEW_WORDS, "face-play": TODAYS_WORDS, "face-no": FAILED_WORDS}[face]
     finish(pg, errors)
 
 
 def test_asleep_wins_over_the_pips_and_the_cube_rolls_from_one_count_onto_another(gui):
     host = PreviewHost("", "new", 3)
     pg, errors = window(gui, host)
-    assert "face-5" in face_of(pg) and "face-play" not in face_of(pg) and "is-news" not in face_of(pg) and die(pg).get_attribute("title") == ASLEEP
+    assert "face-5" in face_of(pg) and "face-play" not in face_of(pg) and "is-news" not in face_of(pg) and die(pg).locator(".hand-die__play").get_attribute("title") == ASLEEP
     pg.context.close()
     host = PreviewHost("command", "new", 2)
     pg, errors = window(gui, host)
@@ -530,16 +624,16 @@ def test_asleep_wins_over_the_pips_and_the_cube_rolls_from_one_count_onto_anothe
     pg.wait_for_function("() => document.querySelector('.hand-die .ork-die').classList.contains('face-4')", timeout=WAIT_MS)
     pg.wait_for_function("() => window.__landed === true", timeout=WAIT_MS)                                             # another count is another face: the cube rolls onto it
     pg.wait_for_function("() => !document.querySelector('.hand-die .ork-die.is-landing')", timeout=WAIT_MS)
-    assert die(pg).get_attribute("title") == "Play: 4 new goals in dev since you last played"
+    assert die(pg).locator(".hand-die__play").get_attribute("title") == "Play: 4 new goals in dev since you last played"
     finish(pg, errors)
 
 
 def test_while_the_view_is_open_the_die_says_close_the_preview_whatever_its_face(gui):
     pg, errors = window(gui, PreviewHost("command", "failed", play=PLAYING))
     d = die(pg)
-    d.click()
+    d.locator(".hand-die__play").click()
     pg.locator('.table-over[data-kind="play"]').wait_for(timeout=WAIT_MS)
-    assert d.get_attribute("aria-label") == "Close the preview" and d.get_attribute("title") == "Close the preview"
+    assert d.locator(".hand-die__play").get_attribute("aria-label") == "Close the preview" and d.locator(".hand-die__play").get_attribute("title") == "Close the preview"
     assert "face-no" in face_of(pg)
     finish(pg, errors)
 
@@ -554,14 +648,14 @@ def test_the_cube_rolls_onto_a_new_face_and_the_landing_is_taken_off_after(gui):
     pg.wait_for_function("() => document.querySelector('.hand-die .ork-die').classList.contains('face-new')", timeout=WAIT_MS)
     pg.wait_for_function("() => window.__landed === true", timeout=WAIT_MS)
     pg.wait_for_function("() => !document.querySelector('.hand-die .ork-die.is-landing')", timeout=WAIT_MS)             # taken off at the cube's animationend
-    assert "face-new" in face_of(pg) and die(pg).get_attribute("title") == NEW_WORDS
+    assert "face-new" in face_of(pg) and die(pg).locator(".hand-die__play").get_attribute("title") == NEW_WORDS
     watch_landing(pg)                                                                                                   # and again, onto the cross
     host.play_face = "failed"
     host.push()
     pg.wait_for_function("() => document.querySelector('.hand-die .ork-die').classList.contains('face-no')", timeout=WAIT_MS)
     pg.wait_for_function("() => window.__landed === true", timeout=WAIT_MS)
     pg.wait_for_function("() => !document.querySelector('.hand-die .ork-die.is-landing')", timeout=WAIT_MS)
-    assert die(pg).get_attribute("aria-label") == FAILED_WORDS
+    assert die(pg).locator(".hand-die__play").get_attribute("aria-label") == FAILED_WORDS
     finish(pg, errors)
 
 
@@ -592,12 +686,12 @@ def test_asleep_wins_over_the_face_and_a_face_said_asleep_rolls_nothing(gui):
     pg, errors = window(gui, host)
     d = die(pg)
     assert "face-5" in face_of(pg) and "face-no" not in face_of(pg) and "is-asleep" in d.get_attribute("class")
-    assert d.get_attribute("title") == ASLEEP and d.get_attribute("aria-label") == f"{ASLEEP}: say how the project opens"
+    assert d.locator(".hand-die__play").get_attribute("title") == ASLEEP and d.locator(".hand-die__play").get_attribute("aria-label") == f"{ASLEEP}: say how the project opens"
     watch_landing(pg)
     host.play_face = "new"
     host.push()
     pg.wait_for_timeout(500)
-    assert "face-5" in face_of(pg) and pg.evaluate("() => window.__landed") is False and d.get_attribute("title") == ASLEEP
+    assert "face-5" in face_of(pg) and pg.evaluate("() => window.__landed") is False and d.locator(".hand-die__play").get_attribute("title") == ASLEEP
     finish(pg, errors)
 
 
@@ -605,7 +699,7 @@ def test_a_hover_wobble_and_a_landing_do_not_run_together(gui):
     host = PreviewHost("command", "")
     pg, errors = window(gui, host)
     d = die(pg)
-    d.hover()
+    d.locator(".hand-die__play").hover()
     pg.locator(".hand-die .ork-die.is-wobbling").wait_for(timeout=WAIT_MS)
     host.play_face = "failed"
     host.push()

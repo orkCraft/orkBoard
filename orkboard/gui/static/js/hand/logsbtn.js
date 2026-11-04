@@ -1,14 +1,15 @@
-// The bug under the glass (docs/specs/107-what-the-owners-day-said.md §10, decisions §182.12; moved by decisions §190.6, docs/specs/112-the-bars-marks-and-the-play-die.md As built; made the fix's by docs/specs/119-the-hammer-and-the-bug.md §4, decisions §197):
-// a quiet icon button with no word at the end of the tabs' row (table/tabs.js, after *Stop all*). Its picture and its panel follow `town.repair.state` (the host's snapshot; an old host sends none: idle, cannot):
-// - idle: orkUI's sign `bug` with its icon `hammer` laid over its lower right; the panel is *What went wrong? (optional)*, one line, **Fix it** (only when `repair.can`: it starts Claude Code on this program's own code with the line and the logs,
-//   `repair.start`) and **Save logs** (`saveLogs`, shell/errors.js: the day's logs with the line, then where they were saved; the primary when Fix it is not offered, and then a line says why: `repair.why`). Enter presses the primary;
+// The bug's panel (docs/specs/107-what-the-owners-day-said.md §10, decisions §182.12; made the fix's by docs/specs/119-the-hammer-and-the-bug.md §4, decisions §197; **no button of the top row any more**: docs/specs/139-the-die-the-door-and-the-bug.md A.5, decisions §246.6).
+// The bug left the tabs' row: its panel opens from **Report a problem…**, an item of the Orkmaster's **…** (table/pane.js) and of the phone's crown menu (hand/upmenu.js), and from the **Report** button of a crash the page shows (crashes.js), with the crash's text in its line:
+// `openReport(line)`; `ReportPanel` (mounted once by frame/frame.js) draws it, fixed at the window's top right, over everything. Its content follows `town.repair.state` (the host's snapshot; an old host sends none: idle, cannot):
+// - idle: *What went wrong? (optional)*, one line, **Fix it** (only when `repair.can`: it starts Claude Code on this program's own code with the line and the logs, `repair.start`) and **Save logs** (`saveLogs`, shell/errors.js: the day's logs with the line, then where they were saved;
+//   the primary when Fix it is not offered, and then a line says why: `repair.why`). Enter presses the primary;
 // - working (and updating): the hammer strikes (orkUI's `is-striking`; it stands raised under reduced motion); the panel says where to follow it (the Claude app), since when, and **Stop the fix** (`repair.stop`);
-// - ready: orkUI's sign `bug-squashed` under the hammer, in the signal colour (`is-ready`, table.css): main moved; the panel says what came in and **Update and restart** (`repair.update`, the restart updates already make: the phone comes back by itself);
+// - ready: orkUI's sign `bug-squashed` under the hammer: the fix is in; the panel says what came in and **Update and restart** (`repair.update`, the restart updates already make: the phone comes back by itself);
 // - failed: the bug with a `cross` over it; the panel says the error as it is, **Try again** (a new fix with the line last sent) and **Save logs**.
-// `PICTURES` is the one map of pictures by state (docs/specs/119 §4.3, orkUI 0.26.0). `RepairBody` is the panel's content, which the phone's menu shows too
-// (upphone.js; without Save logs: a phone saves nothing on the computer). Esc or a press away closes the panel. The panel is fixed, opens downward from the button's foot and is kept inside the window.
-// On a touch phone upright there is no tabs' row: *Settings* saves the logs there (as Stop all is in the **…** menu), and the paired app's menu has the fix's row.
+// `PICTURES` is the one map of pictures by state (docs/specs/119 §4.3, orkUI 0.26.0), drawn at the panel's head. While a fix runs the Orkmaster's line under the pane's title says it (table/notice.js, `fixingLine`). `RepairBody` is the panel's content, which the phone's menu shows too
+// (upphone.js; without Save logs: a phone saves nothing on the computer). Esc or a press away closes the panel, the focus goes back to where it was.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
+import { signal } from "@preact/signals";
 import { html } from "../html.js";
 import { command, town, PRODUCT } from "../link.js";
 import { Icon, Sign } from "../orkui.js";
@@ -84,34 +85,45 @@ export function RepairBody({ r, line, setLine, fieldId, field, done = () => {}, 
     ${save && html`<button type="button" class=${r.can ? "ork-btn quiet" : "ork-btn primary"} data-repair="save" onClick=${save}>Save logs</button>`}`;
 }
 
+/** The panel's state: null while it is shut, else `{line, key}`: the words it opens with (a crash's text, else none) and a number that is new with each opening (a new opening starts the line again). */
+export const report = signal(null);
+let opened = 0;
+
+/** Opens the bug's panel (from the menus, from a crash's Report): `line` is what its line starts with. */
+export function openReport(line = "") { report.value = { line: String(line || "").slice(0, LINE_MAX), key: ++opened }; }
+export const closeReport = () => { report.value = null; };
+
+/** What the Orkmaster's line says while a fix runs (docs/specs/139 A.5): *Fixing Orkboard: <its line>*, or "" when none runs. Its line is the one last sent with Fix it (what went wrong), else where it runs. */
+export function fixingLine() {
+  const r = repairOf();
+  if (r.state !== "working" && r.state !== "updating") return "";
+  return `Fixing ${PRODUCT}: ${r.state === "updating" ? "updating with the fix" : lastSaid || "Claude is on it in the Claude app"}`;
+}
+
 function Picture({ state }) {
   const p = PICTURES[state] || PICTURES.idle;
   return html`<span class="table-logs__pic" aria-hidden="true"><${Sign} name=${p.base} big=${true} />${p.over && (p.over[0] === "icon" ? html`<${Icon} name=${p.over[1]} cls=${p.over[2] || ""} />` : html`<${Sign} name=${p.over[1]} />`)}</span>`;
 }
 
-export function LogsButton() {
-  const [open, setOpen] = useState(false), [line, setLine] = useState(""), [at, setAt] = useState(null), button = useRef(), panel = useRef(), field = useRef();
-  const r = repairOf(), title = repairTitle(r), mark = r.state === "updating" ? "working" : r.state;
-  const close = (back = true) => { setOpen(false); setAt(null); if (back) button.current?.focus(); };
-  useLayoutEffect(() => {                                                              // the panel lies under the button: its right edge on the button's, its top below the button's foot
-    if (!open || !button.current) return;
-    const b = button.current.getBoundingClientRect();
-    setAt({ right: Math.max(8, Math.min(window.innerWidth - 288, window.innerWidth - b.right)), top: Math.max(8, b.bottom + 8) });
-  }, [open]);
-  useEffect(() => { if (open && at) (field.current || panel.current?.querySelector("[data-primary], button"))?.focus(); }, [open, !!at, r.state]);      // once it is placed (a hidden field takes no focus); a new state puts it on its primary
-  useEffect(() => {
-    if (!open) return undefined;
-    const away = (e) => { if (!panel.current?.contains(e.target) && !button.current?.contains(e.target)) close(false); };
+/** The panel, once on the page: nothing while it is shut. */
+export function ReportPanel() {
+  const at = report.value;
+  return at ? html`<${Panel} key=${at.key} first=${at.line} />` : null;
+}
+
+function Panel({ first }) {
+  const [line, setLine] = useState(first), panel = useRef(), field = useRef(), back = useRef(document.activeElement), r = repairOf(), title = repairTitle(r), mark = r.state === "updating" ? "working" : r.state;
+  const close = (focus = true) => { const to = back.current; closeReport(); if (focus && to?.isConnected) to.focus?.(); };
+  useEffect(() => { (field.current || panel.current?.querySelector("[data-primary], button"))?.focus(); }, [r.state]);      // a new state puts the focus on its primary
+  useLayoutEffect(() => {                                                                                              // listening the moment it is drawn: a press just after it opens is already one away
+    const away = (e) => { if (!panel.current?.contains(e.target)) close(false); };
     document.addEventListener("pointerdown", away, true);
     return () => document.removeEventListener("pointerdown", away, true);
-  }, [open]);
-  const save = () => { const said = line.trim(); close(false); setLine(""); saveLogs(said); };
-  const key = (e) => {
-    if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(); }
-  };
-  return html`<button ref=${button} type="button" class=${`ork-btn quiet table-logs${mark === "idle" ? "" : ` is-${mark}`}`} aria-label=${title} title=${title} aria-haspopup="dialog" aria-expanded=${open ? "true" : "false"} data-repair-state=${r.state}
-      onClick=${() => (open ? close(false) : setOpen(true))}><${Picture} state=${r.state} /></button>
-    ${open && html`<div ref=${panel} class="ork-menu table-logs__panel" role="dialog" aria-label=${title} style=${at ? `right:${at.right}px;top:${at.top}px` : "visibility:hidden"} onKeyDown=${key}>
-      <${RepairBody} r=${r} line=${line} setLine=${setLine} fieldId="table-logs-line" field=${field} done=${() => close(false)} save=${save} />
-    </div>`}`;
+  }, []);
+  const save = () => { const said = line.trim(); close(false); saveLogs(said); };
+  const key = (e) => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(); } };
+  return html`<div ref=${panel} class=${`ork-menu table-logs__panel${mark === "idle" ? "" : ` is-${mark}`}`} role="dialog" aria-label="Report a problem" data-repair-state=${r.state} onKeyDown=${key}>
+    <p class="table-logs__head"><${Picture} state=${r.state} /><span>${title}</span></p>
+    <${RepairBody} r=${r} line=${line} setLine=${setLine} fieldId="table-logs-line" field=${field} done=${() => close(false)} save=${save} />
+  </div>`;
 }

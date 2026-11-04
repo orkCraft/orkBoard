@@ -5,6 +5,8 @@ import { Table } from "../table/table.js";
 import { Hand } from "../hand/hand.js";
 import { Column } from "../table/column.js";
 import { columnOn, partiesNow } from "../table/data.js";
+import { ReportPanel } from "../hand/logsbtn.js";           // the bug's panel and a crash's card, once on the page (spec 139 A.5)
+import { CrashNote } from "../crashes.js";
 import { over } from "./state.js";
 import { uprightNow } from "./upright.js";
 
@@ -29,5 +31,6 @@ export function Frame() {
     ${column && html`<aside class="frame-column" aria-label="The Orkmaster's goals"><${Column} /></aside>`}
     <div class="frame-table"><${Table} column=${column} /></div>
     <div class="frame-hand"><${Hand} /></div>
+    <${CrashNote} /><${ReportPanel} />
   </div>`;
 }

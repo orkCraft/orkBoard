@@ -53,19 +53,30 @@
   .hand:has(.hand-mana[data-rows="1"]) .hand-places { height: max(calc(var(--hc-room) + var(--hc-top) + var(--hc-shown)), calc(var(--hc-room) + var(--hc-top) + var(--hc-pot1))); }
 }
 
-/* the Play die (spec 112 §3.3, decisions §190.2, hand/playdie.js): orkUI's `.ork-die` (a cube in CSS 3D since orkUI 0.24.0, a box of 69 x 72, 3 px a cell) lying in the hand left of the potions, turned by the lean token, its word under it as a potion's share is. Hovered or focused it stays lifted by
+/* the Play die (spec 112 §3.3, decisions §190.2, hand/playdie.js): orkUI's `.ork-die` (a cube in CSS 3D since orkUI 0.24.0, a box of 72 x 90, 3 px a cell) lying in the hand left of the potions, turned by the lean token, its word under it as a potion's share is. Hovered or focused it stays lifted by
    the rise token (the wobble itself is orkUI's `.is-wobbling`, put on at pointer enter); thrown onto the pane it is hidden, kept in its place. At the narrow width it keeps its 3 px and stands beside the potions as they stand. */
-.hand-die { appearance: none; position: relative; z-index: 1; flex: none; pointer-events: auto; display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); margin: 0; padding: var(--ork-1) 0; border: 0;
-  background: none; color: var(--ork-ink); font: var(--ork-type-caption); cursor: pointer; }
-.hand-die:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
+.hand-die { position: relative; z-index: 1; flex: none; pointer-events: auto; display: flex; flex-direction: column; align-items: center; gap: var(--ork-1); margin: 0; padding: var(--ork-1) 0;
+  color: var(--ork-ink); font: var(--ork-type-caption); }
+/* two presses (spec 139 A, decisions §246.1): the Play press over the whole die, the Stop all press over the front face (playdie.js `lay` puts its box); orkUI's die is 72 x 90 */
+.hand-die__box { position: relative; display: block; flex: none; }
+.hand-die__box > .ork-die { display: block; }
+.hand-die__play, .hand-die__stop { appearance: none; position: absolute; margin: 0; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; }
+.hand-die__play { inset: 0; }
+.hand-die__stop { z-index: 1; left: 0; top: 0; width: 0; height: 0; }
+.hand-die__stop[aria-disabled="true"] { cursor: default; }
+.hand-die__play:focus-visible, .hand-die__stop:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
 .hand-die .ork-die { rotate: calc(var(--ork-motion-lean) * -1); }
-.hand-die:is(:hover, :focus-visible) .ork-die:not(.is-wobbling) { transform: translateY(calc(var(--ork-motion-rise) * -1)); }
+.hand-die:has(.hand-die__play:is(:hover, :focus-visible)) .hand-die__box:not(:has(.is-wobbling)) { transform: translateY(calc(var(--ork-motion-rise) * -1)); }
 .hand-die.is-gone .ork-die { visibility: hidden; }
 .hand-die .ork-die.is-news .ork-die__face.is-up { --_pip: var(--ork-ink); }                                        /* the pips of the new goals (decisions §200.5) stand in the ink, news and not a roll; the other faces keep the muted pips */
-.hand-die.is-asleep .ork-die { filter: grayscale(1); opacity: 0.4; }                                              /* no preview to play (spec 113 §3): grey and still, as Release and Live sleep in the ring's corners; pressed it still opens the view that says so */
-.hand-die.is-asleep:is(:hover, :focus-visible) .ork-die { transform: none; }
+.hand-die.is-asleep .ork-die__face.is-up { filter: grayscale(1); opacity: 0.4; }                                  /* no preview to play (spec 113 §3): the up face grey and still, as Release and Live sleep in the ring's corners; pressed it still opens the view that says so; Stop all stays what it is */
+.hand-die.is-asleep:has(.hand-die__play:is(:hover, :focus-visible)) .hand-die__box { transform: none; }
 .hand-die.is-asleep .hand-die__word { color: var(--ork-ink-faint); }
-.hand-die__word { font-weight: 600; white-space: nowrap; }
+.hand-die__words { display: flex; gap: var(--ork-2); white-space: nowrap; }
+.hand-die__word, .hand-die__orks { font-weight: 600; white-space: nowrap; cursor: pointer; }
+.hand-die__dot { font-style: normal; color: var(--ork-ink-faint); }
+.hand-die__orks { color: var(--ork-ink-muted); }                                                                    /* Stop all is the danger's only while something runs (decisions §246.1), Stopped is muted */
+.hand-die.is-orks-running .hand-die__orks { color: var(--ork-danger); }
 /* the die in a goal's rune (spec 128 F.3, decisions §206.8): with a goal done or at work picked, its pips and edge take the rune's colour, orkUI's element token */
 .hand-die[data-elem] .ork-die { --_pip: var(--c); --_edge: var(--c); }
 .hand-die[data-elem="ice"] { --c: var(--ork-elem-ice); } .hand-die[data-elem="dust"] { --c: var(--ork-elem-dust); } .hand-die[data-elem="void"] { --c: var(--ork-elem-void); }
@@ -80,6 +91,8 @@
   .hand-mana { order: 101; margin-left: auto; }
   .hand-die { order: 101; margin-left: auto; }                                                                    /* the die's own 69 px; a crowded row has no room to spare: the cards tighten to their edges first, then the room kept for the last card gives way (hand.css) and the die lies over that card's edge */
   .hand-row:has(.hand-mana[data-rows="2"]) .hand-die { margin-right: -6px; }                                      /* four tools and more (two rows of potions, wider): the die's edge lies over the first potion's empty border, the row has no room else */
+  .hand-die__words { gap: var(--ork-1); }                                                                         /* the two words under the die keep about the die's own width at the narrow width: no dot between them, their colours part them (spec 139 A.3) */
+  .hand-die__dot { display: none; }
   .hand-die + .hand-mana { margin-left: 0; }                                                                    /* the die and the potions stand together at the row's end */
   .hand-pot__pct { display: inline; }                                                                          /* the hour a tool comes back (*back 14:00*) is too wide for a crowded row: the share stands, the reset is in the words on the control */
   .hand-pot__week-name, .hand-pot__week--of, .hand-pot__back { display: none; }                                              /* the phone's potions keep their narrow width: the week's share alone under the now share (its words are on the control); */

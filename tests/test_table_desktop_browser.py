@@ -2,7 +2,7 @@
 page, spec 98 E), at both widths (`tests/narrow.py`: 1280 × 800, and 390 × 844 with touch), against a stub host of its own (a project of four parties: Game design, Tech led by the Architect, Art and Release; the Orkmaster reading two goals,
 routing one and joining one; tasks at work, failures, a check; three goals in line; Tech's System).
 
-The tabs in order with the project's first (its name), its **…** and its three places over the pane, the empty chair (*New party*), *Stop all* as a door; the Board's lanes under their tabs, the same widths; a task card's header, window and label row, a goal's strip and
+The tabs in order with the project's first (its name), its **…** and its three places over the pane, the empty chair (*New party*), *Stop all* in the die's front face (spec 139 A); the Board's lanes under their tabs, the same widths; a task card's header, window and label row, a goal's strip and
 cascade (its front by the rule, the others a fan behind it with a fixed turn by place, opened by a hover, an edge lifting its task, the picked goal's unfolded, a goal in two lanes lit in both); the first lane's cards and the line (the Orkmaster's order, the moon, a drag, *All · search*); a party's header with its
 groups, a seat's popover and its **Open**, another party's tab its header alone; Tech's System; a card lifted and lowered (Esc, a press away); a file opened over the pane, its title, **←** back to the card lit; a form in the pane, never a dialog; no
 sideways scroll at 390. Screenshots to the directory ORKCRAFT_SHOTS_DIR names when it is set.
@@ -316,7 +316,7 @@ def open_menu(pg):
 
 # -- the tabs ----------------------------------------------------------------------------------------------------------------------------------------
 
-def test_the_tabs_in_order_the_projects_first_then_plus_and_stop_all(table):
+def test_the_tabs_in_order_the_projects_first_then_plus_and_no_stop_all_in_the_row(table):
     pg, host, w = table
     tabs = pg.locator(".table-tab")
     assert [t.get_attribute("data-tab") for t in tabs.all()] == (["game", "tech", "art", "release"] if wide(w) else ["orkmaster", "game", "tech", "art", "release"])         # the project's first at the narrow width, then the Board's order; the leaders' alone at the wide (the Orkmaster's tab is the column's head: spec 128 B.2)
@@ -332,11 +332,11 @@ def test_the_tabs_in_order_the_projects_first_then_plus_and_stop_all(table):
     assert "knight-elder" in tab(pg, "game").locator(".ork-race__head").get_attribute("src")                             # a party's tab wears its leader's head
     assert tab(pg, "tech").get_attribute("aria-label") == "Tech · Does on Claude · Checks on Codex"                      # and its name, said also when only the head is drawn, with its sword and shield's words (spec 111 §3.4)
     assert tab(pg, "tech").get_attribute("title") == tab(pg, "tech").get_attribute("aria-label")
-    assert pg.get_by_role("button", name="New party").count() == 1 and pg.get_by_role("button", name="Stop all").count() == 1
+    assert pg.get_by_role("button", name="New party").count() == 1 and pg.locator(".table-tabs").get_by_role("button", name="Stop all").count() == 0 and pg.locator(".hand-die").get_by_role("button", name="Stop all").count() == 1       # Stop all is the die's front face (spec 139 A)
     chair = pg.locator(".table-tabs__end .table-chair")
     assert " ".join(chair.text_content().split()) == ("New party" if wide(w) else "") and "primary" not in chair.get_attribute("class")           # spec 123 §7.5: the empty chair, green is New goal's
     assert pg.get_by_role("button", name="Switch project").count() == 1                                                  # the ▾ after the project's name, its own button
-    assert pg.locator(".table-tabs__end .table-chip").count() == 0 and pg.locator(".table-tabs__end button").count() == 3 and pg.locator(".table-tabs__end .table-logs").count() == 1                  # the tabs' end keeps the empty chair and the door, then the bug under the glass (decisions §190.6): the limits are the hand's potions (spec 104 B)
+    assert pg.locator(".table-tabs__end .table-chip").count() == 0 and pg.locator(".table-tabs__end button").count() == 1 and pg.locator(".table-logs").count() == 0                  # the tabs' end keeps the empty chair and the door, then the bug under the glass (decisions §190.6): the limits are the hand's potions (spec 104 B)
     if not wide(w):
         assert tab(pg, "tech").locator(".table-tab__txt").is_hidden()                                                    # the tabs a row of heads
         assert all(t.bounding_box()["width"] >= 44 and t.bounding_box()["height"] >= 44 for t in tabs.all())             # a press 44 × 44 on a touch screen
@@ -366,12 +366,12 @@ def test_a_tab_is_the_persons_the_open_one_is_kept_and_nothing_switches_it_under
     assert tab(pg, "orkmaster").get_attribute("aria-selected") == "true"
 
 
-def test_the_orkmasters_menu_has_settings_and_files_and_the_projects_are_the_arrow_after_the_name(table):
+def test_the_orkmasters_menu_has_settings_files_and_report_a_problem_and_the_projects_are_the_arrow_after_the_name(table):
     """Spec 107 §8.2: *Switch project* left the Orkmaster's **…** for the **▾** after the project's name."""
     pg, host, w = table
     open_menu(pg)
     menu = pg.get_by_role("menu")
-    assert [i.inner_text().strip() for i in menu.get_by_role("menuitem").all()] == ["Settings", "Files"]
+    assert [i.inner_text().strip() for i in menu.get_by_role("menuitem").all()] == ["Settings", "Files", "Report a problem…"]
     if not wide(w):
         assert [c.inner_text().strip() for c in menu.locator(".table-chip").all()] == ["Claude 62% left", "Codex 18% left"]       # the limits' chips in the Orkmaster's …
     pg.keyboard.press("Escape")
@@ -1287,7 +1287,7 @@ def test_every_press_is_44_by_44_on_a_touch_screen_and_nothing_is_said_only_on_h
     pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
     open_tab(pg, "tech")
     pg.locator('.table-seat[data-seat="grunt"]').wait_for(timeout=WAIT_MS)
-    for sel in (".table-tab", ".table-chair", ".table-door", ".hand-die", ".table-menu__btn", ".table-seat", ".table-switch"):
+    for sel in (".table-tab", ".table-chair", ".hand-die", ".table-menu__btn", ".table-seat", ".table-switch"):
         for el in pg.locator(sel).all():
             box = el.bounding_box()
             assert box["width"] >= 43.5 and box["height"] >= 43.5, (sel, box)

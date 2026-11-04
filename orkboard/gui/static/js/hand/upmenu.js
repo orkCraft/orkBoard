@@ -1,6 +1,6 @@
 // The phone's menu of the leaders (docs/specs/117-the-phone-a-menu-of-the-leaders.md §4, docs/mockups/phone/sidebar.html A2, decisions §195.1): the Board turned on its side, a way to look, never a place where something waits. **The crown** (the Orkmaster's crowned
 // head, 44 px, at the top row's left) opens a sheet from the left, 312 px (at most 80% of the width), over orkUI's scrim; the scrim's press, Esc, the phone's back (one history entry while it is open) and any pick close it, the focus goes into it and back to the
-// crown. Never an edge swipe: the left edge is the system's back. At its head: the project's name with a chevron (*Switch project*, over the pane), *Settings* and *Stop all* (the tabs' own halt: no confirm, as on the desktop). Under it the Orkmaster's goals — those
+// crown. Never an edge swipe: the left edge is the system's back. At its head: the project's name with a chevron (*Switch project*, over the pane), *Settings* and *Stop all* (the die's own halt: no confirm, as on the desktop). At its foot *Report a problem…* (docs/specs/139 A.5, the bug's panel). Under it the Orkmaster's goals — those
 // in Talk and in Spec in the Board's order, then those in line with the moon beside the name of one that waits for the reset — then each party, Release too, its leader's head, its name, its sword and shield as the tabs draw them (table/tabmarks.js) and its goals at
 // work under it, each its element, its type's sign, its short name and its phase (Work, or Checks while the front task is checking). **No count, no alert, no *waits for you* anywhere here**: what waits is the hand's. A press on a goal picks it (entries.js `pickGoal`:
 // the entry of the goal on the screen when it has one), on a party picks the party (`pickParty`: `tab` its slug, `picked` emptied); the menu closes. The picked row has the ink's bar at its left and the panel's fill. Layout only (upmenu.css).
@@ -18,6 +18,7 @@ import { Marks, marksOf, marksWords } from "../table/tabmarks.js";
 import { orkHeadOf } from "./context.js";
 import { pickGoal, pickParty } from "./entries.js";
 import { PhoneRows } from "./upphone.js";
+import { openReport } from "./logsbtn.js";
 
 export const menuOpen = signal(false);                           // the sheet is open
 export const MENU = "The leaders and their goals";               // the crown's words
@@ -119,6 +120,7 @@ function Open({ entries, look }) {
       ${parties.map((g) => html`<section key=${g.slug} class="up-group" aria-label=${nameOf(g)}>
         <${PartyRow} g=${g} on=${partyOn(g.slug)} onPress=${() => close(() => pickParty(g.slug))} />
         ${workOf(g).map((r) => html`<${GoalRow} key=${r.slug} r=${r} on=${goalOn(r.slug)} onPress=${() => close(() => pickGoal(entries, r.slug))} />`)}</section>`)}
+      <section class="up-report" aria-label="Report a problem"><button type="button" class="up-menu__report" onClick=${() => close(() => openReport())}><${Sign} name="bug" /><span>Report a problem…</span></button></section>
       <${PhoneRows} />
     </aside>`;
 }

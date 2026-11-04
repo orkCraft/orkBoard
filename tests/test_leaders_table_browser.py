@@ -5,7 +5,7 @@ The open head is 48 x 44 and the others 36 x 33 (36 at the narrow width), the op
 names muted; the party's header has no *Leads*, the sword and the shield with their tools, a role under each head; the open head is a button of its own in the tab's cell (no button holds a button): pressed it opens the bubble, the field focused,
 Enter asks, the answer and *Make it a goal*, Esc closes it and the head has the focus; its marks (the alert sign, the dot) are buttons stepping through the marked parts; the faces by mood (a party's tasks at work focused, an alert worried,
 a spent tool asleep, a hearing's drop no, a goal done while the page was open pleased and none for what was found there); a chair under each head at the wide width and none under 760 px; the empty chair opens the parties' place and is gone when
-every craft is at the table, and stays when the host gives no list; the door halts, opens (*All stopped*, `aria-disabled`), refuses a second press and shuts when a task runs or a goal is started; the tabs' row and the hand on the room's
+every craft is at the table, and stays when the host gives no list; the die's front face halts (spec 139 A, decisions §246: no door in the top row), says *Stopped* (`aria-disabled`), refuses a second press and goes back when a task runs or a goal is started; the tabs' row and the hand on the room's
 colour with a 3 px rim, no divider between the tabs (the lanes keep theirs); no sideways scroll; under reduced motion nothing is pulled out. Screenshots to the directory ORKCRAFT_SHOTS_DIR names when it is set."""
 from __future__ import annotations
 
@@ -388,7 +388,7 @@ def test_the_empty_chair_opens_the_parties_place_lit_by_hover_and_by_focus_and_i
     host.change()
     pg.locator('.table-tab[data-tab="run"]').wait_for(timeout=WAIT_MS)
     pg.wait_for_function("() => !document.querySelector('.table-tabs__end .table-chair')", timeout=WAIT_MS)
-    assert pg.locator(".table-tabs__end .table-door").count() == 1
+    assert pg.locator(".table-tabs__end .table-door").count() == 0, "Stop all is the die's front face, no door of the top row (spec 139 A.4)"
     pg.context.close()
     assert not errors and not errs, "\n".join(errors + errs)
 
@@ -418,44 +418,40 @@ def test_under_reduced_motion_the_empty_chair_is_lit_and_not_pulled_out(gui):
     assert not errors, "\n".join(errors)
 
 
-# -- the door -----------------------------------------------------------------------------------------------------------------------------------------
+# -- Stop all: the die's front face (it was a door of the top row: spec 139 A.4, decisions §246.1) --------------------------------------------------------
 
-def test_the_door_halts_opens_says_all_stopped_refuses_a_second_press_and_shuts_when_a_task_runs(desk):
+def test_the_dies_front_halts_says_stopped_refuses_a_second_press_and_goes_back_when_a_task_runs(desk):
     pg, host, w = desk
-    door = pg.locator(".table-tabs__end .table-door")
-    assert door.get_attribute("aria-label") == "Stop all" and door.get_attribute("title") == "Stop every ork, script and browser at once" and door.get_attribute("aria-disabled") is None
-    assert door.locator(".ork-door").evaluate("e => e.classList.contains('is-open')") is False
-    assert door.evaluate("e => getComputedStyle(e).color") == paint(pg, "--ork-danger")
-    shot(pg, f"leaders-door-shut-{w}.png")
-    door.click()
-    pg.wait_for_function("() => document.querySelector('.table-door').classList.contains('is-open')", timeout=WAIT_MS)
-    assert host.halted == 1 and door.get_attribute("aria-label") == "All stopped" and door.get_attribute("aria-disabled") == "true"
-    assert " ".join(door.text_content().split()) == "All stopped" and door.get_attribute("title") == "All stopped: the door shuts when work starts again"
-    assert door.evaluate("e => getComputedStyle(e).color") == paint(pg, "--ork-ink-muted") and door.locator(".ork-door").evaluate("e => e.classList.contains('is-open')")
-    shot(pg, f"leaders-door-open-{w}.png")
-    door.dispatch_event("click")
-    door.focus()
+    stop, word = pg.locator(".hand-die__stop"), pg.locator(".hand-die__orks")
+    assert stop.get_attribute("aria-label") == "Stop all: stop every run of this project's orks" and stop.get_attribute("aria-disabled") is None and word.inner_text() == "Stop all"
+    assert word.evaluate("e => getComputedStyle(e).color") == paint(pg, "--ork-danger"), "in the danger colour while a task runs"
+    shot(pg, f"leaders-die-running-{w}.png")
+    stop.click()
+    pg.wait_for_function("() => document.querySelector('.hand-die__orks').textContent === 'Stopped'", timeout=WAIT_MS)
+    assert host.halted == 1 and stop.get_attribute("aria-disabled") == "true"
+    assert word.evaluate("e => getComputedStyle(e).color") == paint(pg, "--ork-ink-muted"), "Stopped is muted"
+    shot(pg, f"leaders-die-stopped-{w}.png")
+    stop.click(force=True)
+    stop.focus()
     pg.keyboard.press("Enter")
     pg.wait_for_timeout(300)
     assert host.halted == 1, "a second press does nothing"
     pg.wait_for_function("() => !document.querySelector('.table-lane [data-state=running]')", timeout=WAIT_MS)
     pg.wait_for_timeout(300)
-    assert door.get_attribute("aria-disabled") == "true", "nothing runs: it stays open"
+    assert stop.get_attribute("aria-disabled") == "true", "nothing runs: it stays stopped"
     seat = next(n for n in host.nodes if n["slug"] == "rules")
     seat["tasks"][0]["state"] = "running"                                                                                # a task runs again
     host.change()
-    pg.wait_for_function("() => !document.querySelector('.table-door').classList.contains('is-open')", timeout=WAIT_MS)
-    assert door.get_attribute("aria-label") == "Stop all" and door.get_attribute("aria-disabled") is None and door.locator(".ork-door").evaluate("e => e.classList.contains('small')") == (w != "wide")
-    assert " ".join(door.text_content().split()) == ("Stop all" if w == "wide" else "Stop")
+    pg.wait_for_function("() => document.querySelector('.hand-die__orks').textContent === 'Stop all'", timeout=WAIT_MS)
+    assert stop.get_attribute("aria-disabled") is None
 
 
-def test_the_door_shuts_when_a_goal_is_started_from_the_page(wide):
+def test_the_dies_stopped_goes_back_when_a_goal_is_started_from_the_page(wide):
     pg, host = wide
-    door = pg.locator(".table-door")
-    door.click()
-    pg.wait_for_function("() => document.querySelector('.table-door').classList.contains('is-open')", timeout=WAIT_MS)
+    pg.locator(".hand-die__stop").click()
+    pg.wait_for_function("() => document.querySelector('.hand-die__orks').textContent === 'Stopped'", timeout=WAIT_MS)
     pg.evaluate("() => import('/static/js/board/store.js').then((m) => m.ask('ideas.add', { text: 'A new goal' }))")
-    pg.wait_for_function("() => !document.querySelector('.table-door').classList.contains('is-open')", timeout=WAIT_MS)
+    pg.wait_for_function("() => document.querySelector('.hand-die__orks').textContent === 'Stop all'", timeout=WAIT_MS)
 
 
 # -- the dark edges -------------------------------------------------------------------------------------------------------------------------------------
@@ -471,6 +467,5 @@ def test_the_tabs_row_the_hand_and_the_frame_lie_on_the_room_with_a_rim_and_no_d
     assert pg.locator(".table-tabs__end").evaluate("e => getComputedStyle(e).borderLeftWidth") == "0px"
     assert pg.locator(".table-lane").first.evaluate("e => getComputedStyle(e).borderLeftWidth") == "1px", "the lanes keep theirs"
     assert pg.locator(".table-pane").evaluate("e => getComputedStyle(e).backgroundColor") == paint(pg, "--ork-table", "backgroundColor"), "the table as it is"
-    logs = pg.locator(".table-tabs__end .table-logs").bounding_box()
-    assert logs["x"] >= pg.locator(".table-door").bounding_box()["x"], "the logs' bug after the door"
+    assert pg.locator(".table-tabs__end .table-logs, .table-tabs__end .table-door").count() == 0, "the top row's end has neither the bug nor the door"
     shot(pg, f"leaders-room-{w}.png")

@@ -355,7 +355,7 @@ def test_none_over_an_open_page(asked):
     pg, host, w = asked
     host.put(record("answered", ""))
     opened(pg)
-    pg.locator(".hand-die").click()                                                                                              # Play, the die in the hand, opens over the pane
+    pg.locator(".hand-die__play").click()                                                                                              # Play, the die in the hand, opens over the pane
     pg.locator(".table-over").wait_for(timeout=WAIT_MS)
     assert bubble(pg).count() == 0
     pg.get_by_role("button", name="Back").click()

@@ -1,5 +1,5 @@
 // The pane (docs/specs/98-the-table-and-the-hand.md §3.2–§3.6, decisions §110, §142): its title — *<the picked goal> · through <whom>*, said **only for a goal picked** (decisions §247.5, spec 140 A3: with none picked the open tab already says whose eyes, so the title says nothing and the row keeps its back arrow and its …), or, with a thing opened over it, **←** and
-// where it came from (*← System · server/lobby.ts*) — and, on the Orkmaster's tab, its **…** (the projects, Settings, Files; under 760 px also the AI tools' limits). Play is no button of the title any more: it is the die in the hand (hand/playdie.js, spec 112 §3.2–§3.3,
+// where it came from (*← System · server/lobby.ts*) — and, on the Orkmaster's tab, its **…** (the projects, Settings, Files, *Report a problem…*; under 760 px also the AI tools' limits). Play is no button of the title any more: it is the die in the hand (hand/playdie.js, spec 112 §3.2–§3.3,
 // decisions §190.2), which opens and closes the same `play` view over this pane; under it the tab's map — the Board for the
 // Orkmaster, a party's header and, for Tech, its System — or the one thing opened over it (`Over`, which draws whatever kind `frame/kinds.js` knows, the table's and the hand's). A card lifted where it lies is drawn over
 // the map (card.js `Lifted`).
@@ -26,6 +26,7 @@ import { Menu } from "./menu.js";
 import { isForm } from "./over.js";
 import { openParties } from "./parties.js";
 import { DiscardEnd } from "./discard.js";                // the discard at the last column's foot (spec 104 C)
+import { openReport } from "../hand/logsbtn.js";      // the bug's panel opens from the Orkmaster's … (spec 139 A.5)
 import { Notice } from "./notice.js";                    // the Orkmaster's line when the work moved to another tool (spec 105 D)
 
 /** ← or Esc: the map as it was left, the card the thing came from lit. */
@@ -86,7 +87,8 @@ function Phases({ goal, from }) {
 function Title({ parties, tab, narrow }) {
   const o = over.value, where = o?.from?.title || "", code = o && (o.kind === "file" || (o.kind === "diff" && o.props?.path));
   const limits = town.value?.limits || [], from = { title: mapName(tab, parties), key: "" };
-  const items = [["Settings", () => openOver("settings", {}, from, "Settings"), false, "sliders"], ["Files", () => openOver("files", {}, from, "Files"), false, "folder"]];   // Switch project is the ▾ after the project's name (tabs.js, spec 107 §8.2)
+  const items = [["Settings", () => openOver("settings", {}, from, "Settings"), false, "sliders"], ["Files", () => openOver("files", {}, from, "Files"), false, "folder"],
+    ["Report a problem…", () => openReport(), false, "sign:bug"]];     // the bug left the top row (spec 139 A.5, decisions §246.6)   // Switch project is the ▾ after the project's name (tabs.js, spec 107 §8.2)
   return html`<header class="ork-head table-title">
     ${o && html`<button type="button" class="ork-btn quiet table-title__back" aria-label="Back" title="Back" onClick=${back}><${Icon} name="arrow-left" /></button>`}
     <span class="table-title__pt" data-title>${o ? html`${where && html`${where} · `}<span class=${code ? "table-pathcase" : undefined}>${o.title}</span>` : picked.value ? paneTitle(picked.value, tab, parties) : ""}</span>

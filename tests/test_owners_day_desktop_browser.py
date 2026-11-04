@@ -241,7 +241,7 @@ def test_the_head_stands_still_under_reduced_motion(gui):
 # -- I: Play ---------------------------------------------------------------------------------------------------------------------------------------------
 
 def open_play(pg):
-    pg.locator(".hand-die").click()
+    pg.locator(".hand-die__play").click()
     pg.locator('.table-over[data-kind="play"]').wait_for(timeout=WAIT_MS)
 
 

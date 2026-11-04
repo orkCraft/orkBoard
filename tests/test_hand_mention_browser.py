@@ -209,32 +209,32 @@ def test_a_word_that_names_a_type_offers_it_with_its_party_and_takes_both(gui):
     assert not log, "\n".join(log)
 
 
-# -- J: the bug under the glass -----------------------------------------------------------------------------------------------------------------
+# -- J: the bug's panel (it was a button under the glass; spec 139 A.5, decisions §246.6: it opens from the Orkmaster's …) ---------------------------------------------
+
+def _open_report(pg):
+    pg.get_by_role("button", name="The Orkmaster's menu").click()
+    pg.get_by_role("menuitem", name="Report a problem…").click()
+    panel = pg.locator(".table-logs__panel")
+    panel.wait_for(timeout=WAIT_MS)
+    return panel
+
 
 @pytest.mark.parametrize("width", narrow.WIDTHS)
-def test_the_logs_button_ends_the_tabs_row_after_stop_all_opens_its_panel_downward_and_saves_with_the_line(gui, width):
+def test_the_bug_is_no_button_of_the_top_row_its_panel_opens_from_the_orkmasters_menu_and_saves_with_the_line(gui, width):
     pg, host, log = open_hand(gui, host=MentionHost(), width=width)
     try:
-        button = pg.locator(".table-tabs__end .table-logs")
-        button.wait_for(timeout=WAIT_MS)
-        assert pg.locator(".hand .table-logs, .hand-end .table-logs").count() == 0, "not in the hand any more (decisions §190.6)"
-        assert button.get_attribute("aria-label") == "Save the logs" and button.get_attribute("title") == "Save the logs" and button.inner_text().strip() == "", "an icon with no word"
-        assert button.locator(".ork-sign.bug").count() == 1 and button.locator("svg.ork-icon use").get_attribute("href").endswith("#hammer")      # the hammer over the bug since spec 119 (orkUI 0.26.0); it was the glass
-        b, stop = button.bounding_box(), pg.locator(".table-door").bounding_box()
-        assert b["x"] >= stop["x"] + stop["width"] - 1, "after Stop all (the door)"
-        button.click()
-        panel = pg.locator(".table-logs__panel")
-        panel.wait_for(timeout=WAIT_MS)
-        assert "What went wrong? (optional)" in panel.inner_text() and panel.locator("input").evaluate("e => e === document.activeElement")
+        pg.get_by_role("button", name="The Orkmaster's menu").wait_for(timeout=WAIT_MS)
+        assert pg.locator(".table-tabs .table-logs, .hand .table-logs, .hand-end .table-logs").count() == 0, "not in the top row, not in the hand (decisions §190.6, §246.6)"
+        panel = _open_report(pg)
+        assert panel.get_attribute("aria-label") == "Report a problem" and "What went wrong? (optional)" in panel.inner_text() and panel.locator("input").evaluate("e => e === document.activeElement")
         p, size = panel.bounding_box(), pg.viewport_size
-        assert p["y"] >= b["y"] + b["height"] - 1, "under the button"
         assert p["x"] >= 0 and p["x"] + p["width"] <= size["width"] + 1 and p["y"] + p["height"] <= size["height"], "inside the window"
         pg.keyboard.press("Escape")
-        assert pg.locator(".table-logs__panel").count() == 0
-        button.click()
-        pg.mouse.click(size["width"] / 2, size["height"] - 200)
-        assert pg.locator(".table-logs__panel").count() == 0, "a press away closes it"
-        button.click()
+        pg.wait_for_selector(".table-logs__panel", state="detached", timeout=WAIT_MS)
+        _open_report(pg)
+        pg.mouse.click(size["width"] / 2, size["height"] / 2)
+        pg.wait_for_selector(".table-logs__panel", state="detached", timeout=WAIT_MS)                                  # a press away closes it
+        panel = _open_report(pg)
         panel.locator("input").fill("The timer froze")
         panel.get_by_role("button", name="Save logs").click()
         assert any("The timer froze" in a.get("said", "") for a in _calls(pg, host, "logs.save"))
@@ -244,16 +244,14 @@ def test_the_logs_button_ends_the_tabs_row_after_stop_all_opens_its_panel_downwa
     assert not log, "\n".join(log)
 
 
-def test_the_logs_button_is_there_with_no_mana_and_with_no_goal(gui):
+def test_the_bugs_panel_is_there_with_no_mana_and_with_no_goal(gui):
     for empty in (False, True):
         host = MentionHost(empty=empty)
         host.limits = []
         pg, host, log = open_hand(gui, host=host)
         try:
-            pg.locator(".table-logs").wait_for(timeout=WAIT_MS)
-            assert pg.locator(".table-logs").count() == 1
-            pg.locator(".table-logs").click()
-            pg.locator(".table-logs__panel").wait_for(timeout=WAIT_MS)
+            pg.get_by_role("button", name="The Orkmaster's menu").wait_for(timeout=WAIT_MS)
+            assert _open_report(pg).count() == 1
         finally:
             pg.close()
         assert not log, "\n".join(log)

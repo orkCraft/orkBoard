@@ -203,7 +203,7 @@ def open_play(gui, host, tab: str = "", width=WIDE, **ctx):
     pg.locator(".table-card, .table-token").first.wait_for(timeout=WAIT_MS)
     if tab:
         open_tab(pg, tab)
-    pg.locator(".hand-die").click()
+    pg.locator(".hand-die__play").click()
     pg.locator('.table-over[data-kind="play"] .play-frame').wait_for(timeout=WAIT_MS)
     pg.frame_locator(".play-frame").locator("#watered").wait_for(timeout=WAIT_MS)                              # the product has loaded
     if tab and tab != "orkmaster":                                                                               # and the strip has settled (the frame moves down as its aspects come)

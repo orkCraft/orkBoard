@@ -12,6 +12,10 @@
 // unfinished landing out.
 // **The die in a goal's rune** (spec 128 F.3, decisions §206.8): with a goal done or at work picked, the die wears its rune's colour (`data-elem`: mana.css gives the pips and the edge orkUI's element token), its `title` and `aria-label` say *Play: <goal>* (the rest of
 // the words keep their order: *Close the preview* while it is open, *Nothing to play yet* asleep), and pressed it plays dev with that goal in it (`ideas.play {idea}`).
+// **The front face** (docs/specs/139-the-die-the-door-and-the-bug.md A.1–A.3, decisions §246.1–§246.3, orkUI 0.29.0): the die is no longer one button. The whole die is the Play press (`hand-die__play`), and the front face is a second `<button>` (`hand-die__stop`, *Stop all: stop every run
+// of this project's orks*) laid over its projected box (`lay`: measured, split at the middle between the up face's bottom and the front's top; laid again on a resize, on a draw and after a wobble, a landing or a turn). The die wears `front-stop`, and `is-orks-running` while `isWorking` says a task runs
+// (table/door.js `useOrks`): the mark is muted else, the danger's only then. Pressed it asks the host to stop everything (`halt`, door.js); then its word says *Stopped* (muted, `aria-disabled`) until work starts. Under the die its two words: *Play* · *Stop all* (*Playing*, *Stopped*),
+// *Stop all* in the danger colour only while running. A sleeping die sleeps on its up face alone: Stop all stays pressable. Resume (part B) is not here yet.
 // The seam with the play view (arena/play.js): three signals and the die's rectangle. `thrown`: the die is out on the pane (it flew from here and rolls), so this one is hidden (kept in its place: `visibility`) until the frame rises or the failure
 // takes its place; `playing`: the view is open and its build plays (the pips glow, the word says *Playing*); `warmed`: the view opened on a build already playing, so the die wobbles twice. `dieRect()` is where the throw starts.
 import { useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
@@ -23,6 +27,7 @@ import { leaving } from "../shell/store.js";
 import { litKey } from "../table/card.js";
 import { mapName, partiesAll } from "../table/data.js";
 import { nodeOf, playable } from "../table/goalmap.js";
+import { halt, useOrks } from "../table/door.js";
 
 export const thrown = signal(false);          // the die is out on the pane: this one is hidden
 export const playing = signal(false);         // the play view is open and its build plays
@@ -32,6 +37,7 @@ export const PLAY = "Play", PLAYING = "Playing", PLAY_WORDS = "Play: the project
 export const ASLEEP = "Nothing to play yet", ASLEEP_WORDS = `${ASLEEP}: say how the project opens`;
 export const FAILED_WORDS = "Play: it did not start last time", NEW_WORDS = "Play: dev has changed since you last played";
 export const PIPS_MAX = 6;
+export const STOP = "Stop all", STOPPED = "Stopped", STOP_WORDS = "Stop all: stop every run of this project's orks";
 /** *Play: 3 new goals in dev since you last played*, *Play: 1 new goal in dev …*. */
 export const newGoalsWords = (n) => `Play: ${n} new ${n === 1 ? "goal" : "goals"} in dev since you last played`;
 
@@ -71,13 +77,31 @@ export function pressPlay(goal = null) {
   openOver("play", goal ? { idea: goal.slug } : {}, o?.from || { title: mapName(tab.peek(), partiesAll()), key: "" }, "Play");
 }
 
+/** Lays the two presses over the die: the Play press over the whole die, the Stop all press over the front face's projected box (a transformed face's `getBoundingClientRect` is its projection), from the middle between the up face's bottom and the front's top (the mockup's `lay`).
+ *  Not while the cube moves (a wobble, a landing, a turn): the next `animationend` lays them again. */
+function lay(box) {
+  const die = box?.querySelector(".ork-die"), stop = box?.querySelector(".hand-die__stop");
+  if (!die || !stop || die.matches(".is-wobbling, .is-landing, .is-turning")) return;
+  const b = box.getBoundingClientRect(), up = die.querySelector(".is-up").getBoundingClientRect(), fr = die.querySelector(".is-front").getBoundingClientRect();
+  if (!fr.width) return;
+  const cut = Math.round((up.bottom + fr.top) / 2);
+  Object.assign(stop.style, { left: `${fr.left - b.left}px`, top: `${cut - b.top}px`, width: `${fr.width}px`, height: `${Math.max(0, fr.bottom - cut)}px` });
+}
+
 export function PlayDie() {
-  const [wob, setWob] = useState({ key: 0, left: 0 }), [land, setLand] = useState(false), button = useRef(null);
-  const asleep = asleepNow(), open = over.value?.kind === "play", glow = open && playing.value && !asleep, gone = thrown.value, face = faceNow(), known = !!town.value;
+  const [wob, setWob] = useState({ key: 0, left: 0 }), [land, setLand] = useState(false), box = useRef(null);
+  const asleep = asleepNow(), open = over.value?.kind === "play", glow = open && playing.value && !asleep, gone = thrown.value, face = faceNow(), known = !!town.value, orks = useOrks();
   const news = newCount(), goal = asleep ? null : runeGoal(), said = goal ? goalPlayWords(goal) : face === "no" ? FAILED_WORDS : news ? newGoalsWords(news) : face === "new" ? NEW_WORDS : PLAY_WORDS, words = open ? CLOSE_WORDS : said;
   useEffect(() => {
-    rectOf = () => button.current?.querySelector(".ork-die")?.getBoundingClientRect() || null;
+    rectOf = () => box.current?.querySelector(".ork-die")?.getBoundingClientRect() || null;
     return () => { rectOf = () => null; };
+  }, []);
+  useLayoutEffect(() => { lay(box.current); });                                         // after every draw: the die's faces are where the presses go
+  useEffect(() => {
+    const again = () => lay(box.current);
+    addEventListener("resize", again);
+    document.fonts?.ready?.then(again);
+    return () => removeEventListener("resize", again);
   }, []);
   const was = useRef(null);                                                           // the face before, null until a snapshot is known: the first one rolls nothing
   useLayoutEffect(() => {                                                             // before the paint: the new face is never seen standing for a frame before it rolls in
@@ -91,10 +115,15 @@ export function PlayDie() {
   const ended = (e) => {
     if (e.animationName === "ork-die-wobble") setWob((w) => (w.left > 1 ? { key: w.key + 1, left: w.left - 1 } : { key: w.key, left: 0 }));
     else if (e.animationName === "ork-die-land") setLand(false);
+    requestAnimationFrame(() => lay(box.current));                                    // the class comes off at the next draw, the presses are laid again after it
   };
-  return html`<button ref=${button} type="button" class=${cls("hand-die", { "is-gone": gone, "is-asleep": asleep })} data-open=${open ? "1" : undefined} data-elem=${goal?.hue || goal?.element || undefined} data-goal=${goal?.slug || undefined} aria-label=${asleep && !open ? ASLEEP_WORDS : words} title=${asleep && !open ? ASLEEP : words}
-      onClick=${() => pressPlay(goal)} onPointerEnter=${hover}>
-    <span key=${wob.key} class=${cls(`ork-die face-${face}`, { "is-playing": glow, "is-news": news > 0, "is-wobbling": wob.left > 0 && !asleep, "is-landing": land && wob.left === 0 && !asleep })} aria-hidden="true" onAnimationEnd=${ended}><${DieCube} /></span>
-    <span class="hand-die__word">${glow ? PLAYING : PLAY}</span>
-  </button>`;
+  const stopWord = orks.stopped ? STOPPED : STOP;
+  return html`<div class=${cls("hand-die", { "is-gone": gone, "is-asleep": asleep, "is-orks-running": orks.running, "is-orks-stopped": orks.stopped })} data-open=${open ? "1" : undefined} data-elem=${goal?.hue || goal?.element || undefined} data-goal=${goal?.slug || undefined}>
+    <span class="hand-die__box" ref=${box}>
+      <span key=${wob.key} class=${cls(`ork-die face-${face} front-stop`, { "is-playing": glow, "is-news": news > 0, "is-wobbling": wob.left > 0 && !asleep, "is-landing": land && wob.left === 0 && !asleep, "is-orks-running": orks.running })} aria-hidden="true" onAnimationEnd=${ended}><${DieCube} /></span>
+      <button type="button" class="hand-die__play" aria-label=${asleep && !open ? ASLEEP_WORDS : words} title=${asleep && !open ? ASLEEP : words} onClick=${() => pressPlay(goal)} onPointerEnter=${hover}></button>
+      <button type="button" class="hand-die__stop" aria-label=${STOP_WORDS} title=${STOP_WORDS} aria-disabled=${orks.stopped ? "true" : undefined} onClick=${() => { if (!orks.stopped) halt(); }}></button>
+    </span>
+    <span class="hand-die__words"><span class="hand-die__word" onClick=${() => pressPlay(goal)}>${glow ? PLAYING : PLAY}</span><i class="hand-die__dot" aria-hidden="true">·</i><span class="hand-die__orks" onClick=${() => { if (!orks.stopped) halt(); }}>${stopWord}</span></span>
+  </div>`;
 }

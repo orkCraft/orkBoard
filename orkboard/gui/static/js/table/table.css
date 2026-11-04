@@ -62,18 +62,11 @@
 /* in a row of heads the cell is barely wider than the head: the marks stand in a row over it, never on its face */
 .table[data-compact="true"] .table-marks { left: 50%; right: auto; top: -18px; margin-left: 0; transform: translateX(-50%); flex-direction: row; gap: 0; }
 .table-tabs__end { display: flex; align-items: flex-end; justify-content: flex-end; gap: var(--ork-3); min-width: 0; padding-left: var(--ork-4); overflow: hidden; }
-.table-tabs__end > .table-logs { align-self: center; }
-/* the empty chair (chairs.js) and the door (door.js): orkUI's drawings, their words beside them */
+/* the empty chair (chairs.js): orkUI's drawing, its words beside it */
 .table-chair { appearance: none; flex: 0 1 132px; display: flex; align-items: flex-end; gap: var(--ork-3); align-self: stretch; min-width: 0; padding: 0 var(--ork-2) 0 var(--ork-3); border: 0; background: none; color: var(--ork-ink-faint); cursor: pointer; text-align: left; }
 .table-chair__w { padding-bottom: var(--ork-3); min-width: 0; font: var(--ork-type-button); text-transform: uppercase; letter-spacing: var(--ork-type-button-track); }
 .table-chair:hover, .table-chair:focus-visible { color: var(--ork-ink); }
 .table-chair:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-ink); }
-.table-door { appearance: none; flex: none; display: inline-flex; align-items: flex-end; gap: var(--ork-3); align-self: stretch; padding: 0 var(--ork-2) 0 var(--ork-3); border: 0; background: none; color: var(--ork-danger); cursor: pointer;
-  font: var(--ork-type-button); text-transform: uppercase; letter-spacing: var(--ork-type-button-track); }
-.table-door__w { padding-bottom: var(--ork-3); white-space: nowrap; }
-.table-door:focus-visible { outline: 0; box-shadow: inset 0 0 0 2px var(--ork-danger); }
-.table-door.is-open { color: var(--ork-ink-muted); cursor: default; }
-.table-door.is-open:focus-visible { box-shadow: inset 0 0 0 2px var(--ork-ink); }
 .table-chip { cursor: pointer; white-space: nowrap; gap: 0; }
 button.table-chip { appearance: none; font: inherit; }
 .table-chip .ork-mark { margin-right: var(--ork-2); }
@@ -275,9 +268,6 @@ button.table-token.ork-card { position: relative; display: flex; flex-direction:
   .table-tab__txt { display: none; }
   .table-tabs__end { padding-left: var(--ork-1); gap: var(--ork-1); justify-content: space-between; align-items: center; }
   .table-chair { flex: none; width: 36px; justify-content: center; align-items: center; align-self: auto; padding: 0; }
-  .table-door { align-items: center; align-self: auto; padding: 0 var(--ork-1); gap: var(--ork-2); }
-  .table-door__w { padding-bottom: 0; }
-  .ork-btn.table-logs { margin-left: 0; min-width: 0; padding: 0 var(--ork-1); }                              /* the bug fits the row of heads after Stop all */
   .table-title { min-height: var(--ork-tap); padding-left: var(--ork-4); flex-wrap: wrap; }
   .table-phases { order: 9; flex: 1 0 100%; margin-left: 0; padding-bottom: var(--ork-2); }
   .table-title .table-grow { display: none; }
@@ -298,7 +288,7 @@ button.table-token.ork-card { position: relative; display: flex; flex-direction:
 
 /* a press is at least 44 x 44 on a touch screen (spec 94 §1.3): the drawn thing may be smaller, its target is not */
 @media (pointer: coarse) {
-  .table-tab, .table-seat, .table-menu__btn, .table-chair, .table-door, .table-title__back, .table-chip, .table-back__x, button.table-phase { min-width: var(--ork-tap); min-height: var(--ork-tap); }
+  .table-tab, .table-seat, .table-menu__btn, .table-chair, .table-title__back, .table-chip, .table-back__x, button.table-phase { min-width: var(--ork-tap); min-height: var(--ork-tap); }
   .table-seat { justify-content: center; }
   .table-menu__item { min-height: var(--ork-tap); }
 }
@@ -313,20 +303,22 @@ button.table-token.ork-card { position: relative; display: flex; flex-direction:
 @media (pointer: coarse) { .table .ork-btn.table-switch, .table[data-compact="true"] .ork-btn.table-switch { width: var(--ork-tap); min-width: var(--ork-tap); height: var(--ork-tap); min-height: var(--ork-tap); } }
 
 /* the bug under the glass (spec 107 §10, hand/logsbtn.js; at the tabs' end since decisions §190.6, spec 112): a quiet icon button after Stop all, orkUI's sign `bug` and its icon `search` laid over its lower right; its panel is a small orkUI menu over it (fixed, opening downward from it, kept inside the window) */
-.table-logs { position: relative; flex: none; pointer-events: auto; display: inline-flex; align-items: center; justify-content: center; min-width: 32px; min-height: 32px; padding: var(--ork-1); }
+.table-logs__head { display: flex; align-items: center; gap: var(--ork-3); margin: 0; font: var(--ork-type-caption); color: var(--ork-ink-muted); }
 .table-logs__pic { position: relative; display: inline-flex; }
 .table-logs__pic > .ork-icon { position: absolute; right: -4px; bottom: -4px; width: 14px; height: 14px; color: var(--ork-ink);
   filter: drop-shadow(1px 0 0 var(--ork-canvas)) drop-shadow(-1px 0 0 var(--ork-canvas)) drop-shadow(0 1px 0 var(--ork-canvas)) drop-shadow(0 -1px 0 var(--ork-canvas)); }      /* a pixel of the canvas around it, so it reads over the bug */
-.table-logs__panel { position: fixed; pointer-events: auto; z-index: 70; display: flex; flex-direction: column; gap: var(--ork-3); width: 280px; max-width: calc(100vw - 16px); padding: var(--ork-3); }
+.table-logs__panel { position: fixed; right: var(--ork-4); top: 56px; pointer-events: auto; z-index: 70; display: flex; flex-direction: column; gap: var(--ork-3); width: 280px; max-width: calc(100vw - 16px); padding: var(--ork-3); }
 .table-logs__label { margin: 0; color: var(--ork-ink-muted); font: var(--ork-type-caption); }
 .table-logs__text { margin: 0; font: var(--ork-type-body); overflow-wrap: anywhere; }
 .table-logs__error { margin: 0; max-height: 160px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; padding: var(--ork-3); background: var(--ork-canvas); border: var(--ork-line) solid var(--ork-frame); color: var(--ork-ink); font: var(--ork-type-caption); }
-.table-logs { margin-left: var(--ork-1); }
 /* the fix's states (spec 119 §4, decisions §197; the pictures are logsbtn.js `PICTURES`): the hammer over the bug's lower right as the glass was, striking while Claude works (orkUI's
    `is-striking`), a sign over it (failed's cross) the same; ready is the one state in a colour: the signal the update's own notice wears (pwa/app.css `.update-bar.is-critical`), so the
    eye finds it; working and failed are the ink */
 .table-logs__pic > .ork-sign:not(.big) { position: absolute; right: -4px; bottom: -4px; width: 14px; height: 14px; color: var(--ork-ink);
   filter: drop-shadow(1px 0 0 var(--ork-canvas)) drop-shadow(-1px 0 0 var(--ork-canvas)) drop-shadow(0 1px 0 var(--ork-canvas)) drop-shadow(0 -1px 0 var(--ork-canvas)); }
-.ork-btn.table-logs.is-working, .ork-btn.table-logs.is-failed { color: var(--ork-ink); }
-.ork-btn.table-logs.is-ready, .ork-btn.table-logs.is-ready:hover:not(:disabled), .table-logs.is-ready .table-logs__pic > .ork-icon { color: var(--ork-alert); }
-@media (pointer: coarse) { .table-logs { min-width: var(--ork-tap); min-height: var(--ork-tap); } }
+.table-logs__panel.is-ready .table-logs__pic > .ork-icon, .table-logs__panel.is-ready .table-logs__head { color: var(--ork-alert); }
+
+/* a crash the page shows (crashes.js `CrashNote`, spec 139 A.5): a card at the window's top right with Report and Close, under the bug's panel */
+.table-crash { position: fixed; right: var(--ork-4); top: 56px; z-index: 69; display: flex; flex-direction: column; gap: var(--ork-3); width: 360px; max-width: calc(100vw - 16px); padding: var(--ork-3) var(--ork-4); background: var(--ork-panel); border: var(--ork-line) solid var(--ork-frame); font: var(--ork-type-caption); pointer-events: auto; }
+.table-crash__why { margin: 0; font: var(--ork-type-body); overflow-wrap: anywhere; }
+.table-crash__acts { display: flex; gap: var(--ork-2); }
